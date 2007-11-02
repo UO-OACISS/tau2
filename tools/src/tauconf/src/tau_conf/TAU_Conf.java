@@ -6,6 +6,7 @@
 
 package tau_conf;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Vector;
 import javax.swing.*;
 import java.io.*;
@@ -17,6 +18,17 @@ public class TAU_Conf extends javax.swing.JFrame {
     
     /** Creates new form TAU_Conf */
     public TAU_Conf() {
+        
+        /*boxsetmap.put(epiloglibCheckBox,new CheckBoxSet(" -epiloglib=",epiloglibCheckBox,epiloglibTextField));
+        
+        Iterator it = boxsetmap.values().iterator();
+        CheckBoxSet tmp=null;
+        while(it.hasNext())
+        {
+            tmp=(CheckBoxSet) it.next();
+            fieldsetmap.put(tmp.textfield,tmp);
+        }*/
+        
         initComponents();
     }
     
@@ -28,6 +40,8 @@ public class TAU_Conf extends javax.swing.JFrame {
     Vector allconf= new Vector();
     HashMap commap = new HashMap(64);
     HashMap fieldmap= new HashMap(64);
+    //HashMap boxsetmap=new HashMap(64);
+   // HashMap fieldsetmap = new HashMap(64);
     
     /** This method is called from within the constructor to
      * initialize the form.
@@ -39,43 +53,47 @@ public class TAU_Conf extends javax.swing.JFrame {
         buttonGroup1 = new javax.swing.ButtonGroup();
         profstatsCheckBox = new javax.swing.JCheckBox();
         jFileChooser1 = new javax.swing.JFileChooser();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jPanel4 = new javax.swing.JPanel();
+        exitButton = new javax.swing.JButton();
+        resetButton = new javax.swing.JButton();
         tabPane = new javax.swing.JTabbedPane();
         installationPanel = new javax.swing.JPanel();
         papijPanel = new javax.swing.JPanel();
-        papiQjButton = new javax.swing.JButton();
+        papiQjButton = OptionSet.getHelpButton("-papi");
         papiCheckBox = new javax.swing.JCheckBox();
         papiButton = new javax.swing.JButton();
         papiTextField = new javax.swing.JTextField();
-        papiwallQjButton = new javax.swing.JButton();
+        papiwallQjButton = OptionSet.getHelpButton("-PAPIWALLCLOCK");
         papiwallCheckBox = new javax.swing.JCheckBox();
-        papivirtQjButton = new javax.swing.JButton();
+        papivirtQjButton = OptionSet.getHelpButton("-PAPIVIRTUAL");
         papivirtCheckBox = new javax.swing.JCheckBox();
-        multcountQjButton = new javax.swing.JButton();
+        multcountQjButton = OptionSet.getHelpButton("-MULTIPLECOUNTERS");
         multiplecountCheckBox = new javax.swing.JCheckBox();
         pdtjPanel = new javax.swing.JPanel();
-        pdtQjButton = new javax.swing.JButton();
+        pdtQjButton = OptionSet.getHelpButton("-pdt");
         pdtCheckBox = new javax.swing.JCheckBox();
         pdtButton = new javax.swing.JButton();
         pdtdirField = new javax.swing.JTextField();
-        pdtcppQjButton = new javax.swing.JButton();
+        pdtcppQjButton = OptionSet.getHelpButton("-pdt_c++");
         pdtCompilerLabel = new javax.swing.JLabel();
         String[] pdtcCompStrings = { "Default","CC","KCC","g++","xlC","cxx","pgCC","FCC","guidec++","aCC","c++","ecpc","icpc" };
         pdtcppCombo = new javax.swing.JComboBox(pdtcCompStrings);
         defpdtCheckBox = new javax.swing.JCheckBox();
         defpdtTextField = new javax.swing.JTextField();
         compilerjPanel = new javax.swing.JPanel();
-        cppQjButton = new javax.swing.JButton();
+        cppQjButton = OptionSet.getHelpButton("-c++");
         cppcompLabel = new javax.swing.JLabel();
         String[] cppCompStrings = { "Default","CC","KCC","g++","xlC","cxx","pgCC","FCC","guidec++","aCC","c++","ecpc","icpc","pathCC","qk-pgCC","orCC" };
         cppCombo = new javax.swing.JComboBox(cppCompStrings);
         defcppCheckBox = new javax.swing.JCheckBox();
         defcppTextField = new javax.swing.JTextField();
-        cQjButton = new javax.swing.JButton();
+        cQjButton = OptionSet.getHelpButton("-cc");
         cccompLabel = new javax.swing.JLabel();
         String[] ccCompStrings = { "Default","cc","gcc","KCC","pgcc","guidec","xlc","ecc","pathcc","qk-pgcc","orcc" };
         ccCombo = new javax.swing.JComboBox(ccCompStrings);
         defccCheckBox = new javax.swing.JCheckBox();
-        fortQjButton = new javax.swing.JButton();
+        fortQjButton = OptionSet.getHelpButton("-fortran");
         defccTextField = new javax.swing.JTextField();
         fortrancompLabel = new javax.swing.JLabel();
         String[] fortranCompStrings = {"Default","gnu","sgi","ibm","ibm64","hp","cray","pgi","absoft","fujitsu","sun","compaq","kai","nec","hitachi","intel","absoft","lahey","nagware","pathscale","open64"};
@@ -84,38 +102,38 @@ public class TAU_Conf extends javax.swing.JFrame {
         deffortranTextField = new javax.swing.JTextField();
         messagePannel = new javax.swing.JPanel();
         mpijPanel = new javax.swing.JPanel();
-        mpiQjButton = new javax.swing.JButton();
+        mpiQjButton = OptionSet.getHelpButton("-mpi");
         mpiCheckBox = new javax.swing.JCheckBox();
-        mpiincQjButton = new javax.swing.JButton();
+        mpiincQjButton = OptionSet.getHelpButton("-mpiinc");
         mpiincCheckBox = new javax.swing.JCheckBox();
         mpiincButton = new javax.swing.JButton();
         mpiincTextField = new javax.swing.JTextField();
-        mpilibQjButton = new javax.swing.JButton();
+        mpilibQjButton = OptionSet.getHelpButton("-mpilib");
         mpilibCheckBox = new javax.swing.JCheckBox();
         mpilibButton = new javax.swing.JButton();
         mpilibTextField = new javax.swing.JTextField();
-        altmpiQjButton = new javax.swing.JButton();
+        altmpiQjButton = OptionSet.getHelpButton("-mpilibrary");
         altmpiCheckBox = new javax.swing.JCheckBox();
         altmpiTextField = new javax.swing.JTextField();
-        tagQjButton = new javax.swing.JButton();
+        tagQjButton = OptionSet.getHelpButton("-tag");
         tagCheckBox = new javax.swing.JCheckBox();
         tagTextField = new javax.swing.JTextField();
-        nocommQjButton = new javax.swing.JButton();
+        nocommQjButton = OptionSet.getHelpButton("-nocomm");
         nocomCheckBox = new javax.swing.JCheckBox();
-        mpitraceQjButton = new javax.swing.JButton();
+        mpitraceQjButton = OptionSet.getHelpButton("-MPITRACE");
         mpitraceCheckBox = new javax.swing.JCheckBox();
         shmemjPanel = new javax.swing.JPanel();
-        shmemQjButton = new javax.swing.JButton();
+        shmemQjButton = OptionSet.getHelpButton("-shmem");
         shmemCheckBox = new javax.swing.JCheckBox();
-        shmemincQjButton = new javax.swing.JButton();
+        shmemincQjButton = OptionSet.getHelpButton("-shmeminc");
         shmemincCheckBox = new javax.swing.JCheckBox();
         shmemincButton = new javax.swing.JButton();
         shmemincTextField = new javax.swing.JTextField();
-        shmemlibQjButton = new javax.swing.JButton();
+        shmemlibQjButton = OptionSet.getHelpButton("-shmemlib");
         shmemlibCheckBox = new javax.swing.JCheckBox();
         shmemlibButton = new javax.swing.JButton();
         shmemlibTextField = new javax.swing.JTextField();
-        altshmemQjButton = new javax.swing.JButton();
+        altshmemQjButton = OptionSet.getHelpButton("-shmemlibrary");
         altshmemCheckBox = new javax.swing.JCheckBox();
         altshmemTextField = new javax.swing.JTextField();
         outputPanel = new javax.swing.JPanel();
@@ -125,11 +143,11 @@ public class TAU_Conf extends javax.swing.JFrame {
         profcallpathCheckBox = new javax.swing.JCheckBox();
         profheadroomCheckBox = new javax.swing.JCheckBox();
         profmemoryCheckBox = new javax.swing.JCheckBox();
-        memorypQjButton = new javax.swing.JButton();
-        profileQjButton = new javax.swing.JButton();
-        compensateQjButton = new javax.swing.JButton();
-        callpathQjButton = new javax.swing.JButton();
-        headroomQjButton = new javax.swing.JButton();
+        memorypQjButton = OptionSet.getHelpButton("-PROFILEMEMORY");
+        profileQjButton = OptionSet.getHelpButton("-PROFILE");
+        compensateQjButton = OptionSet.getHelpButton("-COMPENSATE");
+        callpathQjButton = OptionSet.getHelpButton("-PROFILECALLPATH");
+        headroomQjButton = OptionSet.getHelpButton("-PROFILEHEADROOM");
         tracePanel = new javax.swing.JPanel();
         traceCheckBox = new javax.swing.JCheckBox();
         epilogCheckBox = new javax.swing.JCheckBox();
@@ -142,22 +160,22 @@ public class TAU_Conf extends javax.swing.JFrame {
         epilogButton = new javax.swing.JButton();
         slog2Button = new javax.swing.JButton();
         vtfButton = new javax.swing.JButton();
-        traceQjButton = new javax.swing.JButton();
-        epilogQjButton = new javax.swing.JButton();
-        slog2QjButton = new javax.swing.JButton();
-        vtfQjButton = new javax.swing.JButton();
-        slog2eQjButton = new javax.swing.JButton();
-        otfQjButton = new javax.swing.JButton();
+        traceQjButton = OptionSet.getHelpButton("-TRACE");
+        epilogQjButton = OptionSet.getHelpButton("-epilog");
+        slog2QjButton = OptionSet.getHelpButton("-slog2");
+        vtfQjButton = OptionSet.getHelpButton("-vtf");
+        slog2eQjButton = OptionSet.getHelpButton("-slog2=");
+        otfQjButton = OptionSet.getHelpButton("-otf");
         otfCheckBox = new javax.swing.JCheckBox();
         otfButton = new javax.swing.JButton();
         otfTextField = new javax.swing.JTextField();
-        vtraceQjButton = new javax.swing.JButton();
+        vtraceQjButton = OptionSet.getHelpButton("-vampirtrace");
         vtraceCheckBox = new javax.swing.JCheckBox();
         vtraceButton = new javax.swing.JButton();
         vtraceTextField = new javax.swing.JTextField();
-        epilogbinQjButton = new javax.swing.JButton();
-        epilogincQjButton = new javax.swing.JButton();
-        epiloglibQjButton = new javax.swing.JButton();
+        epilogbinQjButton = OptionSet.getHelpButton("-epilogbin");
+        epilogincQjButton = OptionSet.getHelpButton("-epiloginc");
+        epiloglibQjButton = OptionSet.getHelpButton("-epiloglib");
         epilogbinCheckBox = new javax.swing.JCheckBox();
         epilogincCheckBox = new javax.swing.JCheckBox();
         epiloglibCheckBox = new javax.swing.JCheckBox();
@@ -170,18 +188,18 @@ public class TAU_Conf extends javax.swing.JFrame {
         jPanel5 = new javax.swing.JPanel();
         profphaseCheckBox = new javax.swing.JCheckBox();
         depthlimitCheckBox = new javax.swing.JCheckBox();
-        phaseQjButton = new javax.swing.JButton();
-        depthQjButton = new javax.swing.JButton();
+        phaseQjButton = OptionSet.getHelpButton("-PROFILEPHASE");
+        depthQjButton = OptionSet.getHelpButton("-DEPTHLIMIT");
         perfjPanel = new javax.swing.JPanel();
-        perfincQjButton = new javax.swing.JButton();
+        perfincQjButton = OptionSet.getHelpButton("-perfinc");
         perfincCheckBox = new javax.swing.JCheckBox();
         perfincButton = new javax.swing.JButton();
         perfincTextField = new javax.swing.JTextField();
-        perflibQjButton = new javax.swing.JButton();
+        perflibQjButton = OptionSet.getHelpButton("-perflib");
         perflibCheckBox = new javax.swing.JCheckBox();
         perflibButton = new javax.swing.JButton();
         perflibTextField = new javax.swing.JTextField();
-        altperfQjButton = new javax.swing.JButton();
+        altperfQjButton = OptionSet.getHelpButton("-perflibrary");
         altperfCheckBox = new javax.swing.JCheckBox();
         altperfTextField = new javax.swing.JTextField();
         threadPanel = new javax.swing.JPanel();
@@ -192,56 +210,56 @@ public class TAU_Conf extends javax.swing.JFrame {
         opariregionCheckBox = new javax.swing.JCheckBox();
         opariconstructCheckBox = new javax.swing.JCheckBox();
         opariButton = new javax.swing.JButton();
-        openmpQjButton = new javax.swing.JButton();
-        opariQjButton = new javax.swing.JButton();
-        opariregionQjButton = new javax.swing.JButton();
-        opariconstructQjButton = new javax.swing.JButton();
+        openmpQjButton = OptionSet.getHelpButton("-openmp");
+        opariQjButton = OptionSet.getHelpButton("-opari");
+        opariregionQjButton = OptionSet.getHelpButton("-opari_region");
+        opariconstructQjButton = OptionSet.getHelpButton("-opari_construct");
         charmPanel = new javax.swing.JPanel();
         charmCheckBox = new javax.swing.JCheckBox();
         charmTextField = new javax.swing.JTextField();
         charmButton = new javax.swing.JButton();
-        charmQjButton = new javax.swing.JButton();
+        charmQjButton = OptionSet.getHelpButton("-charm");
         tulipthreadsPanel = new javax.swing.JPanel();
         tulipCheckBox = new javax.swing.JCheckBox();
         tulipTextField = new javax.swing.JTextField();
         smartCheckBox = new javax.swing.JCheckBox();
         tulipButton = new javax.swing.JButton();
-        tulipQjButton = new javax.swing.JButton();
-        smartQjButton = new javax.swing.JButton();
+        tulipQjButton = OptionSet.getHelpButton("-tulipthread");
+        smartQjButton = OptionSet.getHelpButton("-smarts");
         pthreadsPanel = new javax.swing.JPanel();
         pthreadsCheckBox = new javax.swing.JCheckBox();
-        pthreadsQjButton = new javax.swing.JButton();
+        pthreadsQjButton = OptionSet.getHelpButton("-pthread");
         sprocPanel = new javax.swing.JPanel();
         sprocCheckBox = new javax.swing.JCheckBox();
-        sprocQjButton = new javax.swing.JButton();
+        sprocQjButton = OptionSet.getHelpButton("-sproc");
         generalPanel = new javax.swing.JPanel();
         dyninstPanel = new javax.swing.JPanel();
         dyninstCheckBox = new javax.swing.JCheckBox();
         dyninstTextField = new javax.swing.JTextField();
         dyninstButton = new javax.swing.JButton();
-        dyninstQjButton = new javax.swing.JButton();
+        dyninstQjButton = OptionSet.getHelpButton("-dyninst");
         pclPanel = new javax.swing.JPanel();
         pclCheckBox = new javax.swing.JCheckBox();
         pclTextField = new javax.swing.JTextField();
         pclButton = new javax.swing.JButton();
-        pclQjButton = new javax.swing.JButton();
+        pclQjButton = OptionSet.getHelpButton("-pcl");
         timePanel = new javax.swing.JPanel();
         cputimeCheckBox = new javax.swing.JCheckBox();
         craytimeCheckBox = new javax.swing.JCheckBox();
         linuxtimeCheckBox = new javax.swing.JCheckBox();
         sgitimeCheckBox = new javax.swing.JCheckBox();
         jLabel2 = new javax.swing.JLabel();
-        cputQjButton = new javax.swing.JButton();
-        craytQjButton = new javax.swing.JButton();
-        linuxtQjButton = new javax.swing.JButton();
-        sgitQjButton = new javax.swing.JButton();
+        cputQjButton = OptionSet.getHelpButton("-CPUTIME");
+        craytQjButton = OptionSet.getHelpButton("-CRAYTIMERS");
+        linuxtQjButton = OptionSet.getHelpButton("-LINUXTIMERS");
+        sgitQjButton = OptionSet.getHelpButton("-SGITIMERS");
         musePanel = new javax.swing.JPanel();
         museCheckBox = new javax.swing.JCheckBox();
         museeventCheckBox = new javax.swing.JCheckBox();
         musemultCheckBox = new javax.swing.JCheckBox();
-        musemQjButton = new javax.swing.JButton();
-        museeQjButton = new javax.swing.JButton();
-        museQjButton = new javax.swing.JButton();
+        musemQjButton = OptionSet.getHelpButton("-muse_multiple");
+        museeQjButton = OptionSet.getHelpButton("-muse_event");
+        museQjButton = OptionSet.getHelpButton("-muse");
         jPanel1 = new javax.swing.JPanel();
         pythonPanel = new javax.swing.JPanel();
         usepythonCheckBox = new javax.swing.JCheckBox();
@@ -250,34 +268,34 @@ public class TAU_Conf extends javax.swing.JFrame {
         pythonlibField = new javax.swing.JTextField();
         pythonincButton = new javax.swing.JButton();
         pythonlibButton = new javax.swing.JButton();
-        pythonincQjButton = new javax.swing.JButton();
-        pythonlibQjButton = new javax.swing.JButton();
+        pythonincQjButton = OptionSet.getHelpButton("-pythoninc");
+        pythonlibQjButton = OptionSet.getHelpButton("-pythonlib");
         jdkPanel = new javax.swing.JPanel();
         usejdkCheckBox = new javax.swing.JCheckBox();
         jdkField = new javax.swing.JTextField();
         usejavatimersCheckBox = new javax.swing.JCheckBox();
         jdkButton = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
-        jdkQjButton = new javax.swing.JButton();
-        javatQjButton = new javax.swing.JButton();
+        jdkQjButton = OptionSet.getHelpButton("-jdk");
+        javatQjButton = OptionSet.getHelpButton("-JAVACPUTIME");
         dirarcPanel = new javax.swing.JPanel();
         installdirCheckBox = new javax.swing.JCheckBox();
         installdirField = new javax.swing.JTextField();
         archdirCheckBox = new javax.swing.JCheckBox();
         archdirField = new javax.swing.JTextField();
         archLabel = new javax.swing.JLabel();
-        String[] archStrings = { "Default","bgl","ibm64","ibm64linux","solaris2-64","sgin32","sgi64","sgio32","xt3","sunx86_64" };
+        String[] archStrings = { "Default","bgl", "craycnl", "ibm64","ibm64linux", "mips","mips32", "sgi64", "sgin32","sgio32","solaris2-64","sunx86_64","xt3" };
         archCombo = new javax.swing.JComboBox(archStrings);
         useroptCheckBox = new javax.swing.JCheckBox();
         useroptField = new javax.swing.JTextField();
         noexceptCheckBox = new javax.swing.JCheckBox();
         installdirButton = new javax.swing.JButton();
         archdirButton = new javax.swing.JButton();
-        custinstQjButton = new javax.swing.JButton();
-        custarchQjButton = new javax.swing.JButton();
-        archQjButton = new javax.swing.JButton();
-        useroptQjButton = new javax.swing.JButton();
-        noexQjButton = new javax.swing.JButton();
+        custinstQjButton = OptionSet.getHelpButton("-prefix");
+        custarchQjButton = OptionSet.getHelpButton("-exec-prefix");
+        archQjButton = OptionSet.getHelpButton("-arch");
+        useroptQjButton = OptionSet.getHelpButton("-useropt");
+        noexQjButton = OptionSet.getHelpButton("-noex");
         jPanel2 = new javax.swing.JPanel();
         jPanel3 = new javax.swing.JPanel();
         allconfComboBox = new javax.swing.JComboBox(allconf);
@@ -299,21 +317,37 @@ public class TAU_Conf extends javax.swing.JFrame {
         instTextArea = new javax.swing.JTextArea();
         commandTextArea.setText(configureline);
         instButton = new javax.swing.JButton();
-        resetButton = new javax.swing.JButton();
-        exitButton = new javax.swing.JButton();
 
         profstatsCheckBox.setText("Profile Stats [-PROFILESTATS]");
         jFileChooser1.setFileSelectionMode(javax.swing.JFileChooser.DIRECTORIES_ONLY);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("TAU_Conf");
+        setMinimumSize(new java.awt.Dimension(100, 100));
+        jScrollPane1.setMaximumSize(new java.awt.Dimension(2147483647, 2147483647));
+        exitButton.setText("Exit");
+        exitButton.setToolTipText("Exits the program");
+        exitButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                exitButtonActionPerformed(evt);
+            }
+        });
+
+        resetButton.setText("Reset");
+        resetButton.setToolTipText("Returns settings to default");
+        resetButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                resetButtonActionPerformed(evt);
+            }
+        });
+
         papijPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         papiQjButton.setText("?");
         papiQjButton.setToolTipText("More Info");
         papiQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         papiQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                papiQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -344,7 +378,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         papiwallQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         papiwallQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                papiwallQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -361,7 +395,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         papivirtQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         papivirtQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                papivirtQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -378,7 +412,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         multcountQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         multcountQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                multcountQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -408,7 +442,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(papiButton)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(papiTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 481, Short.MAX_VALUE))
+                                .add(papiTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 556, Short.MAX_VALUE))
                             .add(papijPanelLayout.createSequentialGroup()
                                 .add(23, 23, 23)
                                 .add(papijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -451,7 +485,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         pdtQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         pdtQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                pdtQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -482,7 +516,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         pdtcppQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         pdtcppQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                pdtcppQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -531,9 +565,9 @@ public class TAU_Conf extends javax.swing.JFrame {
                             .add(defpdtCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 106, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(pdtjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(defpdtTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 454, Short.MAX_VALUE)
+                    .add(defpdtTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 529, Short.MAX_VALUE)
                     .add(pdtcppCombo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(pdtdirField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 454, Short.MAX_VALUE))
+                    .add(pdtdirField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 529, Short.MAX_VALUE))
                 .addContainerGap())
         );
         pdtjPanelLayout.setVerticalGroup(
@@ -563,7 +597,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         cppQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         cppQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cppQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -596,7 +630,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         cQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         cQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -622,7 +656,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         fortQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         fortQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                fortQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -689,10 +723,10 @@ public class TAU_Conf extends javax.swing.JFrame {
                         .add(compilerjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(cppCombo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                             .add(ccCombo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(defcppTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 477, Short.MAX_VALUE)))
+                            .add(defcppTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 552, Short.MAX_VALUE)))
                     .add(fortranCombo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(defccTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 477, Short.MAX_VALUE)
-                    .add(deffortranTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 477, Short.MAX_VALUE))
+                    .add(defccTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 552, Short.MAX_VALUE)
+                    .add(deffortranTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 552, Short.MAX_VALUE))
                 .addContainerGap())
         );
         compilerjPanelLayout.setVerticalGroup(
@@ -734,10 +768,10 @@ public class TAU_Conf extends javax.swing.JFrame {
             installationPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(installationPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .add(installationPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                    .add(papijPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(installationPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(compilerjPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(pdtjPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .add(pdtjPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(papijPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         installationPanelLayout.setVerticalGroup(
@@ -761,7 +795,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         mpiQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         mpiQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                mpiQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -778,7 +812,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         mpiincQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         mpiincQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                mpiincQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -809,7 +843,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         mpilibQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         mpilibQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                mpilibQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -840,12 +874,12 @@ public class TAU_Conf extends javax.swing.JFrame {
         altmpiQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         altmpiQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                altmpiQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
+        altmpiCheckBox.setText("Alt. MPI LIbrary [-mpilibrary=]:");
         altmpiCheckBox.setToolTipText("Specify a different MPI library e.g., -mpilibrary=-lmpi_r");
-        altmpiCheckBox.setLabel("Alt. MPI LIbrary [-mpilibrary=]:");
         altmpiCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 altmpiCheckBoxStateChanged(evt);
@@ -864,7 +898,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         tagQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         tagQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                tagQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -888,7 +922,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         nocommQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         nocommQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                nocommQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -905,7 +939,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         mpitraceQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         mpitraceQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                mpitraceQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -943,14 +977,14 @@ public class TAU_Conf extends javax.swing.JFrame {
                             .add(mpijPanelLayout.createSequentialGroup()
                                 .add(mpiincButton)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(mpiincTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 468, Short.MAX_VALUE))
+                                .add(mpiincTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 478, Short.MAX_VALUE))
                             .add(mpijPanelLayout.createSequentialGroup()
                                 .add(mpilibButton)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(mpijPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                    .add(mpilibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 468, Short.MAX_VALUE)
-                                    .add(altmpiTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 468, Short.MAX_VALUE)
-                                    .add(tagTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 468, Short.MAX_VALUE)))))
+                                    .add(mpilibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 478, Short.MAX_VALUE)
+                                    .add(altmpiTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 478, Short.MAX_VALUE)
+                                    .add(tagTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 478, Short.MAX_VALUE)))))
                     .add(mpijPanelLayout.createSequentialGroup()
                         .add(altmpiQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -1015,7 +1049,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         shmemQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         shmemQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                shmemQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1032,7 +1066,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         shmemincQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         shmemincQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                shmemincQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1063,7 +1097,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         shmemlibQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         shmemlibQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                shmemlibQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1094,7 +1128,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         altshmemQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         altshmemQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                altshmemQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1131,7 +1165,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(shmemincButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(shmemincTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 434, Short.MAX_VALUE))
+                        .add(shmemincTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 444, Short.MAX_VALUE))
                     .add(shmemjPanelLayout.createSequentialGroup()
                         .add(shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(shmemjPanelLayout.createSequentialGroup()
@@ -1146,8 +1180,8 @@ public class TAU_Conf extends javax.swing.JFrame {
                                 .add(altshmemCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 262, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(shmemjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(altshmemTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 434, Short.MAX_VALUE)
-                            .add(shmemlibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 434, Short.MAX_VALUE))))
+                            .add(altshmemTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 444, Short.MAX_VALUE)
+                            .add(shmemlibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 444, Short.MAX_VALUE))))
                 .addContainerGap())
         );
         shmemjPanelLayout.setVerticalGroup(
@@ -1249,7 +1283,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         memorypQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         memorypQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                memorypQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1258,7 +1292,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         profileQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         profileQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                profileQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1267,7 +1301,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         compensateQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         compensateQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                compensateQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1276,7 +1310,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         callpathQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         callpathQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                callpathQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1285,7 +1319,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         headroomQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         headroomQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                headroomQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1316,7 +1350,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                         .add(memorypQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(profmemoryCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 244, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(478, Short.MAX_VALUE))
+                .addContainerGap(488, Short.MAX_VALUE))
         );
         profilePanelLayout.setVerticalGroup(
             profilePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -1432,7 +1466,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         traceQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         traceQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                traceQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1441,7 +1475,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         epilogQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         epilogQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                epilogQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1450,7 +1484,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         slog2QjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         slog2QjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                slog2QjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1459,7 +1493,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         vtfQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         vtfQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                vtfQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1468,7 +1502,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         slog2eQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         slog2eQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                slog2eQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1477,7 +1511,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         otfQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         otfQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                otfQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1509,7 +1543,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         vtraceQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         vtraceQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                vtraceQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1541,7 +1575,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         epilogbinQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         epilogbinQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                epilogbinQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1550,7 +1584,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         epilogincQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         epilogincQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                epilogincQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1559,7 +1593,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         epiloglibQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         epiloglibQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                epiloglibQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1645,37 +1679,36 @@ public class TAU_Conf extends javax.swing.JFrame {
                             .add(tracePanelLayout.createSequentialGroup()
                                 .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
                                     .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
-                                        .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
-                                            .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
-                                                .add(epiloglibQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                                .add(epiloglibCheckBox, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                            .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
-                                                .add(epilogincQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                                .add(epilogincCheckBox)))
-                                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 110, Short.MAX_VALUE)
-                                        .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                                            .add(epilogincButton)
-                                            .add(epiloglibButton)))
-                                    .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
                                         .add(epilogQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                         .add(epilogCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 136, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                                     .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
-                                        .add(epilogbinQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                        .add(epilogbinCheckBox)
-                                        .add(84, 84, 84)
                                         .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                            .add(tracePanelLayout.createSequentialGroup()
+                                                .add(epilogbinQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                                .add(epilogbinCheckBox))
+                                            .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
+                                                .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+                                                    .add(epiloglibQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                                    .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                                    .add(epiloglibCheckBox, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                                .add(org.jdesktop.layout.GroupLayout.LEADING, tracePanelLayout.createSequentialGroup()
+                                                    .add(epilogincQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                                    .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                                    .add(epilogincCheckBox))))
+                                        .add(61, 61, 61)
+                                        .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                            .add(epiloglibButton)
+                                            .add(epilogincButton)
                                             .add(epilogbinButton)
                                             .add(epilogButton))))
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                    .add(epilogincTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 347, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                    .add(org.jdesktop.layout.GroupLayout.TRAILING, epilogbinTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 347, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                    .add(epilogTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 347, Short.MAX_VALUE)
-                                    .add(epiloglibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 347, Short.MAX_VALUE))))
+                                    .add(epilogTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 406, Short.MAX_VALUE)
+                                    .add(epiloglibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 406, Short.MAX_VALUE)
+                                    .add(org.jdesktop.layout.GroupLayout.TRAILING, epilogbinTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 406, Short.MAX_VALUE)
+                                    .add(epilogincTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 406, Short.MAX_VALUE))))
                         .addContainerGap())
                     .add(tracePanelLayout.createSequentialGroup()
                         .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -1709,10 +1742,10 @@ public class TAU_Conf extends javax.swing.JFrame {
                                 .add(vtraceCheckBox)))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(vtfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 392, Short.MAX_VALUE)
-                            .add(otfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 392, Short.MAX_VALUE)
-                            .add(vtraceTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 392, Short.MAX_VALUE)
-                            .add(slog2TextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 392, Short.MAX_VALUE))
+                            .add(vtfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 402, Short.MAX_VALUE)
+                            .add(otfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 402, Short.MAX_VALUE)
+                            .add(vtraceTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 402, Short.MAX_VALUE)
+                            .add(slog2TextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 402, Short.MAX_VALUE))
                         .add(16, 16, 16))))
         );
         tracePanelLayout.setVerticalGroup(
@@ -1732,22 +1765,26 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(epilogbinQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(epilogbinCheckBox)
-                    .add(epilogbinTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(epilogbinButton))
+                    .add(epilogbinButton)
+                    .add(epilogbinTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(epilogincQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(epilogincCheckBox)
-                    .add(epilogincButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 25, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(epilogincTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                    .add(tracePanelLayout.createSequentialGroup()
+                        .add(6, 6, 6)
+                        .add(epilogincTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                        .add(epilogincQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .add(epilogincCheckBox)
+                        .add(epilogincButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 25, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                         .add(epiloglibQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .add(epiloglibCheckBox))
-                    .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                        .add(epiloglibTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .add(epiloglibButton)))
+                        .add(epiloglibCheckBox)
+                        .add(epiloglibButton))
+                    .add(tracePanelLayout.createSequentialGroup()
+                        .add(6, 6, 6)
+                        .add(epiloglibTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(tracePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(slog2QjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -1776,7 +1813,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                     .add(vtraceCheckBox)
                     .add(vtraceButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 25, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(vtraceTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         jPanel5.setBorder(javax.swing.BorderFactory.createEtchedBorder());
@@ -1801,7 +1838,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         phaseQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         phaseQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                phaseQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1810,7 +1847,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         depthQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         depthQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                depthQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1829,7 +1866,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                         .add(depthQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(depthlimitCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 197, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
-                .add(434, 434, 434))
+                .add(541, 541, 541))
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -1851,7 +1888,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         perfincQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         perfincQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                perfincQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1882,7 +1919,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         perflibQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         perflibQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                perflibQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1913,7 +1950,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         altperfQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         altperfQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                altperfQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -1955,12 +1992,12 @@ public class TAU_Conf extends javax.swing.JFrame {
                             .add(perfincButton))
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(perfjPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(altperfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 465, Short.MAX_VALUE)
+                            .add(altperfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 475, Short.MAX_VALUE)
                             .add(org.jdesktop.layout.GroupLayout.TRAILING, perfjPanelLayout.createSequentialGroup()
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(perflibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 465, Short.MAX_VALUE))
+                                .add(perflibTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 475, Short.MAX_VALUE))
                             .add(perfjPanelLayout.createSequentialGroup()
-                                .add(perfincTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 465, Short.MAX_VALUE)
+                                .add(perfincTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 475, Short.MAX_VALUE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED))))
                     .add(perfjPanelLayout.createSequentialGroup()
                         .add(altperfQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -2000,7 +2037,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .add(outputPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(tracePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .add(profilePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(jPanel5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 796, Short.MAX_VALUE)
+                    .add(jPanel5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .add(perfjPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -2015,7 +2052,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(perfjPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(13, Short.MAX_VALUE))
+                .addContainerGap(20, Short.MAX_VALUE))
         );
         tabPane.addTab("Tracing/Profiling", outputPanel);
 
@@ -2073,7 +2110,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         openmpQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         openmpQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                openmpQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -2082,7 +2119,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         opariQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         opariQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                opariQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -2091,7 +2128,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         opariregionQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         opariregionQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                opariregionQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -2100,7 +2137,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         opariconstructQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         opariconstructQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                opariconstructQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -2125,7 +2162,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(opariButton)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(opariTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 486, Short.MAX_VALUE))
+                                .add(opariTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 496, Short.MAX_VALUE))
                             .add(opariregionCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 166, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                     .add(ompPanelLayout.createSequentialGroup()
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -2186,7 +2223,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         charmQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         charmQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                charmQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -2202,7 +2239,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(charmButton)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(charmTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 498, Short.MAX_VALUE)
+                .add(charmTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 508, Short.MAX_VALUE)
                 .addContainerGap())
         );
         charmPanelLayout.setVerticalGroup(
@@ -2253,7 +2290,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         tulipQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         tulipQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                tulipQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -2262,7 +2299,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         smartQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         smartQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                smartQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -2282,7 +2319,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(tulipButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(tulipTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 451, Short.MAX_VALUE))
+                        .add(tulipTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 461, Short.MAX_VALUE))
                     .add(tulipthreadsPanelLayout.createSequentialGroup()
                         .add(21, 21, 21)
                         .add(smartCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 168, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
@@ -2318,7 +2355,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         pthreadsQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         pthreadsQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                pthreadsQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -2331,7 +2368,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .add(pthreadsQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(pthreadsCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 148, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .add(513, 513, 513))
+                .add(620, 620, 620))
         );
         pthreadsPanelLayout.setVerticalGroup(
             pthreadsPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -2357,7 +2394,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         sprocQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         sprocQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                sprocQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -2370,7 +2407,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .add(sprocQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(sprocCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 113, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .add(548, 548, 548))
+                .add(716, 716, 716))
         );
         sprocPanelLayout.setVerticalGroup(
             sprocPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -2389,11 +2426,11 @@ public class TAU_Conf extends javax.swing.JFrame {
             .add(threadPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(threadPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(pthreadsPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 796, Short.MAX_VALUE)
-                    .add(ompPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .add(charmPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(sprocPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 796, Short.MAX_VALUE)
-                    .add(tulipthreadsPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .add(sprocPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 806, Short.MAX_VALUE)
+                    .add(tulipthreadsPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(ompPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(pthreadsPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         threadPanelLayout.setVerticalGroup(
@@ -2404,12 +2441,12 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .add(7, 7, 7)
                 .add(ompPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 135, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(charmPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 59, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(charmPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(sprocPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(tulipthreadsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(295, Short.MAX_VALUE))
+                .addContainerGap(302, Short.MAX_VALUE))
         );
         tabPane.addTab("Threads", threadPanel);
 
@@ -2443,7 +2480,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         dyninstQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         dyninstQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                dyninstQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -2459,7 +2496,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(dyninstButton)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(dyninstTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 504, Short.MAX_VALUE)
+                .add(dyninstTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 514, Short.MAX_VALUE)
                 .addContainerGap())
         );
         dyninstPanelLayout.setVerticalGroup(
@@ -2502,7 +2539,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         pclQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         pclQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                pclQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -2518,7 +2555,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(pclButton)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(pclTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 559, Short.MAX_VALUE)
+                .add(pclTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 569, Short.MAX_VALUE)
                 .addContainerGap())
         );
         pclPanelLayout.setVerticalGroup(
@@ -2573,7 +2610,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         cputQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         cputQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cputQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -2582,7 +2619,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         craytQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         craytQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                craytQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -2591,7 +2628,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         linuxtQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         linuxtQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                linuxtQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -2600,7 +2637,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         sgitQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         sgitQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                sgitQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -2629,7 +2666,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                         .add(cputimeCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 280, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                     .add(jLabel2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 120, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(cputQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .add(361, 361, 361))
+                .add(468, 468, 468))
         );
         timePanelLayout.setVerticalGroup(
             timePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -2685,7 +2722,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         musemQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         musemQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                musemQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -2694,7 +2731,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         museeQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         museeQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                museeQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -2703,7 +2740,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         museQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         museQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                museQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -2727,7 +2764,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                                 .add(musePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                                     .add(musemultCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 229, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                     .add(museeventCheckBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 190, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))))))
-                .add(411, 411, 411))
+                .add(518, 518, 518))
         );
         musePanelLayout.setVerticalGroup(
             musePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -2756,8 +2793,8 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .add(generalPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(pclPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .add(dyninstPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(musePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 796, Short.MAX_VALUE)
-                    .add(timePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 796, Short.MAX_VALUE))
+                    .add(musePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(timePanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         generalPanelLayout.setVerticalGroup(
@@ -2771,7 +2808,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .add(musePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(timePanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(299, Short.MAX_VALUE))
+                .addContainerGap(306, Short.MAX_VALUE))
         );
         tabPane.addTab("Data Tools", generalPanel);
 
@@ -2825,7 +2862,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         pythonincQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         pythonincQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                pythonincQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -2834,7 +2871,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         pythonlibQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         pythonlibQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                pythonlibQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -2857,8 +2894,8 @@ public class TAU_Conf extends javax.swing.JFrame {
                     .add(pythonlibButton))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(pythonPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(pythonincField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 439, Short.MAX_VALUE)
-                    .add(pythonlibField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 439, Short.MAX_VALUE))
+                    .add(pythonincField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 449, Short.MAX_VALUE)
+                    .add(pythonlibField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 449, Short.MAX_VALUE))
                 .addContainerGap())
         );
         pythonPanelLayout.setVerticalGroup(
@@ -2917,7 +2954,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         jdkQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         jdkQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jdkQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -2926,7 +2963,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         javatQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         javatQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                javatQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -2950,7 +2987,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(jdkButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(jdkField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 454, Short.MAX_VALUE))
+                        .add(jdkField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 464, Short.MAX_VALUE))
                     .add(jLabel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 405, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
@@ -3054,7 +3091,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         custinstQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         custinstQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                custinstQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -3063,7 +3100,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         custarchQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         custarchQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                custarchQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -3072,7 +3109,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         archQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         archQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                archQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -3081,7 +3118,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         useroptQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         useroptQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                useroptQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -3090,7 +3127,7 @@ public class TAU_Conf extends javax.swing.JFrame {
         noexQjButton.setMargin(new java.awt.Insets(1, 1, 1, 1));
         noexQjButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                noexQjButtonActionPerformed(evt);
+                QJButtonActionPerformed(evt);
             }
         });
 
@@ -3114,7 +3151,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                             .add(dirarcPanelLayout.createSequentialGroup()
                                 .add(archQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(archLabel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 326, Short.MAX_VALUE))
+                                .add(archLabel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 346, Short.MAX_VALUE))
                             .add(dirarcPanelLayout.createSequentialGroup()
                                 .add(custarchQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -3127,11 +3164,11 @@ public class TAU_Conf extends javax.swing.JFrame {
                                     .add(archdirButton))
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(dirarcPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                    .add(installdirField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 312, Short.MAX_VALUE)
-                                    .add(archdirField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 312, Short.MAX_VALUE))
+                                    .add(installdirField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 302, Short.MAX_VALUE)
+                                    .add(archdirField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 302, Short.MAX_VALUE))
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED))
                             .add(archCombo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                            .add(useroptField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)))
+                            .add(useroptField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 388, Short.MAX_VALUE)))
                     .add(dirarcPanelLayout.createSequentialGroup()
                         .add(noexQjButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -3195,7 +3232,7 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .add(jdkPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(dirarcPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(321, Short.MAX_VALUE))
+                .addContainerGap(328, Short.MAX_VALUE))
         );
         tabPane.addTab("Misc", jPanel1);
 
@@ -3247,8 +3284,7 @@ public class TAU_Conf extends javax.swing.JFrame {
             .add(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(allconfComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 664, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(savedconfComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 664, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(savedconfComboBox, 0, 778, Short.MAX_VALUE)
                     .add(jPanel3Layout.createSequentialGroup()
                         .add(loadsavedconfButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 90, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -3259,7 +3295,8 @@ public class TAU_Conf extends javax.swing.JFrame {
                     .add(jPanel3Layout.createSequentialGroup()
                         .add(saveconfButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 240, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(custconfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 522, Short.MAX_VALUE)))
+                        .add(custconfTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 532, Short.MAX_VALUE))
+                    .add(allconfComboBox, 0, 778, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
@@ -3300,7 +3337,7 @@ public class TAU_Conf extends javax.swing.JFrame {
             .add(jPanel2Layout.createSequentialGroup()
                 .add(10, 10, 10)
                 .add(jPanel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(474, Short.MAX_VALUE))
+                .addContainerGap(481, Short.MAX_VALUE))
         );
         tabPane.addTab("Configurations", jPanel2);
 
@@ -3348,8 +3385,8 @@ public class TAU_Conf extends javax.swing.JFrame {
             .add(commandPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .add(commandPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(instjScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 797, Short.MAX_VALUE)
-                    .add(confjScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 797, Short.MAX_VALUE)
+                    .add(instjScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 807, Short.MAX_VALUE)
+                    .add(confjScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 807, Short.MAX_VALUE)
                     .add(commandPanelLayout.createSequentialGroup()
                         .add(confButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 150, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -3373,155 +3410,112 @@ public class TAU_Conf extends javax.swing.JFrame {
                 .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        resetButton.setText("Reset");
-        resetButton.setToolTipText("Returns settings to default");
-        resetButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                resetButtonActionPerformed(evt);
-            }
-        });
-
-        exitButton.setText("Exit");
-        exitButton.setToolTipText("Exits the program");
-        exitButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                exitButtonActionPerformed(evt);
-            }
-        });
+        org.jdesktop.layout.GroupLayout jPanel4Layout = new org.jdesktop.layout.GroupLayout(jPanel4);
+        jPanel4.setLayout(jPanel4Layout);
+        jPanel4Layout.setHorizontalGroup(
+            jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(commandPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel4Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(exitButton)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(resetButton))
+            .add(tabPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 835, Short.MAX_VALUE)
+        );
+        jPanel4Layout.setVerticalGroup(
+            jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel4Layout.createSequentialGroup()
+                .add(tabPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 735, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(commandPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(resetButton)
+                    .add(exitButton))
+                .addContainerGap(60, Short.MAX_VALUE))
+        );
+        jScrollPane1.setViewportView(jPanel4);
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(layout.createSequentialGroup()
-                .addContainerGap()
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, tabPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 825, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                        .add(resetButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 150, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(exitButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 150, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                    .add(commandPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
+            .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 838, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
-                .add(tabPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 728, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(commandPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(exitButton)
-                    .add(resetButton))
-                .addContainerGap())
+            .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1007, Short.MAX_VALUE)
         );
         java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
-        setBounds((screenSize.width-810)/2, (screenSize.height-991)/2, 810, 991);
+        setBounds((screenSize.width-848)/2, (screenSize.height-1036)/2, 848, 1036);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void epiloglibTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epiloglibTextFieldActionPerformed
-	if(this.epiloglibCheckBox.isSelected()){
-	    
-	    String id=" -epiloglib=";
-	    //this.defccTextField
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    configureline = begin+epiloglibTextField.getText()+end;
-		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
-		    
-		    //configureline.substring(stop);
-	    commandTextArea.setText(configureline); updateITCommand();
-        }
-    }//GEN-LAST:event_epiloglibTextFieldActionPerformed
+    private void QJButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_QJButtonActionPerformed
+        OptionSet.showHelp(evt.getSource());
+    }//GEN-LAST:event_QJButtonActionPerformed
 
-    private void epilogincTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epilogincTextFieldActionPerformed
-	if(this.epilogincCheckBox.isSelected()){
-	    
-	    String id=" -epiloginc=";
-	    //this.defccTextField
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    configureline = begin+epilogincTextField.getText()+end;
-		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
-		    
-		    //configureline.substring(stop);
-	    commandTextArea.setText(configureline); updateITCommand();
-        }
-    }//GEN-LAST:event_epilogincTextFieldActionPerformed
+    
+/*private class CheckBoxSet{
+    CheckBoxSet(String com,JCheckBox cb, JTextField tb){
+        command=com;
+        checkbox=cb;
+        textfield=tb;
+    }
+    String command=null;
+    JCheckBox checkbox=null;
+    JTextField textfield=null;
+}
 
-    private void epilogbinTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epilogbinTextFieldActionPerformed
-	if(this.epilogbinCheckBox.isSelected()){
-	    
-	    String id=" -epilogbin=";
-	    //this.defccTextField
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    configureline = begin+epilogbinTextField.getText()+end;
-		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
-		    
-		    //configureline.substring(stop);
-	    commandTextArea.setText(configureline); updateITCommand();
-        }
-    }//GEN-LAST:event_epilogbinTextFieldActionPerformed
+private class QButtonSet{
+    String maintext=null;
+    String titletext=null;
+    JButton qbutton=null;
+}
 
-    private void epiloglibButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epiloglibButtonActionPerformed
-	int returnVal = jFileChooser1.showOpenDialog(null);
-	
-	if (returnVal == JFileChooser.APPROVE_OPTION) {
-	    File file = jFileChooser1.getSelectedFile();
-	    String filename = file.getAbsolutePath();
-	    epiloglibTextField.setText(filename);
-	}
-    }//GEN-LAST:event_epiloglibButtonActionPerformed
+private class BButtonSet{
+    JButton bbutton=null;
+    JTextField textfield=null;
+}
+    
+private void TextFieldListener(java.awt.event.ActionEvent evt){
+    
+    CheckBoxSet set=(CheckBoxSet) boxsetmap.get(evt.getSource());
+    
+    if(!set.checkbox.isSelected())return;
+    int start = configureline.indexOf(set.command);
+    if(start<0){
+        return;
+    }
+    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+    String end = configureline.substring(stop);
+    configureline = begin+set.textfield.getText()+end;
+    commandTextArea.setText(configureline); updateITCommand();
+}    */
 
-    private void epilogincButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epilogincButtonActionPerformed
-	int returnVal = jFileChooser1.showOpenDialog(null);
-	
-	if (returnVal == JFileChooser.APPROVE_OPTION) {
-	    File file = jFileChooser1.getSelectedFile();
-	    String filename = file.getAbsolutePath();
-	    epilogincTextField.setText(filename);
-	}
-    }//GEN-LAST:event_epilogincButtonActionPerformed
+private void TextFieldAction(boolean selected,String id, String fieldtext){
+    if(!selected)return;
+    int start = configureline.indexOf(id);
+    if(start<0){
+        return;
+    }
+    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
+    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
+    String end = configureline.substring(stop);
+    configureline = begin+fieldtext+end;
+    commandTextArea.setText(configureline); updateITCommand();
+}    
 
-    private void epilogbinButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epilogbinButtonActionPerformed
-	int returnVal = jFileChooser1.showOpenDialog(null);
-	
-	if (returnVal == JFileChooser.APPROVE_OPTION) {
-	    File file = jFileChooser1.getSelectedFile();
-	    String filename = file.getAbsolutePath();
-	    epilogbinTextField.setText(filename);
-	}
-    }//GEN-LAST:event_epilogbinButtonActionPerformed
-
-    private void epiloglibCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_epiloglibCheckBoxStateChanged
-	String entry =" -epiloglib=";
-	if(epiloglibCheckBox.isSelected()){
-	    if(configureline.indexOf(entry)==-1){
-		configureline+=entry;
-		configureline+=epiloglibTextField.getText()+" ";
+/*private void FieldCheckBoxChange(boolean selected, String id, String fieldtext)
+{
+	if(selected){
+	    if(configureline.indexOf(id)==-1){
+		configureline+=id;
+		configureline+=fieldtext+" ";
 	    }
 	}
-	
 	else{
-	    int start = configureline.indexOf(entry);
+	    int start = configureline.indexOf(id);
 	    if(start>-1){
 		int end = configureline.indexOf(" ",  start+1);
 		if(end==-1){
@@ -3529,198 +3523,26 @@ public class TAU_Conf extends javax.swing.JFrame {
 		} else{
 		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
 		}
-		
 	    }
 	}
-	
 	commandTextArea.setText(configureline); updateITCommand();
-    }//GEN-LAST:event_epiloglibCheckBoxStateChanged
+}*/
 
-    private void epiloglibQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epiloglibQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the absolute location of the epilog lib directory.",
-	"-epiloglib=<directory>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_epiloglibQjButtonActionPerformed
 
-    private void epilogincCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_epilogincCheckBoxStateChanged
-	String entry =" -epiloginc=";
-	if(epilogincCheckBox.isSelected()){
-	    if(configureline.indexOf(entry)==-1){
-		configureline+=entry;
-		configureline+=epilogincTextField.getText()+" ";
+private void FieldCheckBoxChange(boolean selected, String id, String fieldtext)
+{
+	if(selected){
+	    if(configureline.indexOf(id)==-1){
+		configureline+=id;
+		configureline+=multiArg(fieldtext)+" ";
 	    }
 	}
-	
 	else{
-	    int start = configureline.indexOf(entry);
-	    if(start>-1){
-		int end = configureline.indexOf(" ",  start+1);
-		if(end==-1){
-		    configureline = configureline.substring(0, start);
-		} else{
-		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
-		}
-		
-	    }
-	}
-	
-	commandTextArea.setText(configureline); updateITCommand();
-    }//GEN-LAST:event_epilogincCheckBoxStateChanged
-
-    private void epilogbinCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_epilogbinCheckBoxStateChanged
-	String entry =" -epilogbin=";
-	if(epilogbinCheckBox.isSelected()){
-	    if(configureline.indexOf(entry)==-1){
-		configureline+=entry;
-		configureline+=epilogbinTextField.getText()+" ";
-	    }
-	}
-	
-	else{
-	    int start = configureline.indexOf(entry);
-	    if(start>-1){
-		int end = configureline.indexOf(" ",  start+1);
-		if(end==-1){
-		    configureline = configureline.substring(0, start);
-		} else{
-		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
-		}
-		
-	    }
-	}
-	
-	commandTextArea.setText(configureline); updateITCommand();
-    }//GEN-LAST:event_epilogbinCheckBoxStateChanged
-
-    private void epilogincQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epilogincQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the absolute location of the epilog include directory.",
-	"-epiloginc=<directory>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_epilogincQjButtonActionPerformed
-
-    private void epilogbinQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epilogbinQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the absolute location of the epilog bin directory.",
-	"-epilogbin=<directory>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_epilogbinQjButtonActionPerformed
-
-    private void vtraceTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_vtraceTextFieldActionPerformed
-	if(this.vtraceCheckBox.isSelected()){
-	    
-	    String id=" -vampirtrace=";
-	    //this.defccTextField
 	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    configureline = begin+vtraceTextField.getText()+end;
-		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
-		    
-		    //configureline.substring(stop);
-	    commandTextArea.setText(configureline); updateITCommand();
-        }
-    }//GEN-LAST:event_vtraceTextFieldActionPerformed
-
-    private void otfTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_otfTextFieldActionPerformed
-	if(this.otfCheckBox.isSelected()){
-	    
-	    String id=" -otf=";
-	    //this.defccTextField
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    configureline = begin+otfTextField.getText()+end;
-		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
-		    
-		    //configureline.substring(stop);
-	    commandTextArea.setText(configureline); updateITCommand();
-        }
-    }//GEN-LAST:event_otfTextFieldActionPerformed
-
-    private void vtraceButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_vtraceButtonActionPerformed
-	int returnVal = jFileChooser1.showOpenDialog(null);
-	
-	if (returnVal == JFileChooser.APPROVE_OPTION) {
-	    File file = jFileChooser1.getSelectedFile();
-	    String filename = file.getAbsolutePath();
-	    vtraceTextField.setText(filename);
-	}
-    }//GEN-LAST:event_vtraceButtonActionPerformed
-
-    private void vtraceCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_vtraceCheckBoxStateChanged
-	String entry =" -vampirtrace=";
-	if(vtraceCheckBox.isSelected()){
-	    if(configureline.indexOf(entry)==-1){
-		configureline+=entry;
-		configureline+=vtraceTextField.getText()+" ";
-	    }
-	}
-	
-	else{
-	    int start = configureline.indexOf(entry);
-	    if(start>-1){
-		int end = configureline.indexOf(" ",  start+1);
-		if(end==-1){
-		    configureline = configureline.substring(0, start);
-		} else{
-		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
-		}
-		
-	    }
-	}
-	
-	commandTextArea.setText(configureline); updateITCommand();
-    }//GEN-LAST:event_vtraceCheckBoxStateChanged
-
-    private void vtraceQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_vtraceQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the location of the VampirTrace package.  This allows TAU to output \n"+
-".otf trace files directly.  These can be read in vampir without additional \n"+ 
-"merging or conversion.",
-	"-vampirtrace=<directory>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_vtraceQjButtonActionPerformed
-
-    private void altperfTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_altperfTextFieldActionPerformed
-	if(this.altperfCheckBox.isSelected()){
-	    
-	    String id=" -perflibrary=";
-	    //this.defccTextField
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    configureline = begin+multiArg(altperfTextField.getText())+end;
-		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
-		    
-		    //configureline.substring(stop);
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
-    }//GEN-LAST:event_altperfTextFieldActionPerformed
-
-    private void altperfCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_altperfCheckBoxStateChanged
-	String entry =" -perflibrary=";
-	if(altperfCheckBox.isSelected()){
-	    if(configureline.indexOf(entry)==-1){
-		configureline+=entry;
-		configureline+=multiArg(altperfTextField.getText())+" ";
-	    }
-	}
-	else{
-	    int start = configureline.indexOf(entry);
 	    if(start>-1){
                 String endline=" ";
                 int end=-1;
-                if(configureline.charAt(start+entry.length())=='\'')
+                if(configureline.charAt(start+id.length())=='\'')
                 {
                     endline="'";
                     end = configureline.indexOf(endline,  start+1);
@@ -3736,188 +3558,108 @@ JOptionPane.showMessageDialog(null,
 		
 	    }
 	}
-	
 	commandTextArea.setText(configureline); updateITCommand();
+}
+
+
+private void BinaryCheckBoxChange(boolean selected, String id)
+{
+	if(selected){
+	    if(configureline.indexOf(id)==-1){
+		configureline+=id;
+	    }
+	} else{
+	    if(configureline.indexOf(id)>-1)
+		configureline = configureline.replaceFirst(id,"");
+	}
+	commandTextArea.setText(configureline); updateITCommand();
+}
+
+private void BrowseButton(JTextField field){
+    	int returnVal = jFileChooser1.showOpenDialog(null);
+	
+	if (returnVal == JFileChooser.APPROVE_OPTION) {
+	    File file = jFileChooser1.getSelectedFile();
+	    String filename = file.getAbsolutePath();
+	    field.setText(filename);
+	}
+}
+
+    private void epiloglibTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epiloglibTextFieldActionPerformed
+    TextFieldAction(epiloglibCheckBox.isSelected()," -epiloglib=",epiloglibTextField.getText());
+    }//GEN-LAST:event_epiloglibTextFieldActionPerformed
+    private void epilogincTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epilogincTextFieldActionPerformed
+	    TextFieldAction(epilogincCheckBox.isSelected()," -epiloginc=",epilogincTextField.getText());
+    }//GEN-LAST:event_epilogincTextFieldActionPerformed
+    private void epilogbinTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epilogbinTextFieldActionPerformed
+	TextFieldAction(epilogbinCheckBox.isSelected()," -epilogbin=",epilogbinTextField.getText());
+    }//GEN-LAST:event_epilogbinTextFieldActionPerformed
+    private void epiloglibButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epiloglibButtonActionPerformed
+        BrowseButton(epiloglibTextField);
+    }//GEN-LAST:event_epiloglibButtonActionPerformed
+    private void epilogincButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epilogincButtonActionPerformed
+	BrowseButton(epilogincTextField);
+    }//GEN-LAST:event_epilogincButtonActionPerformed
+    private void epilogbinButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epilogbinButtonActionPerformed
+        BrowseButton(epilogbinTextField);
+    }//GEN-LAST:event_epilogbinButtonActionPerformed
+    private void epiloglibCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_epiloglibCheckBoxStateChanged
+	FieldCheckBoxChange(epiloglibCheckBox.isSelected()," -epiloglib=",epiloglibTextField.getText());
+    }                                                  private void epilogincCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-LAST:event_epiloglibCheckBoxStateChanged
+	FieldCheckBoxChange(epilogincCheckBox.isSelected()," -epiloginc=",epilogincTextField.getText());//GEN-FIRST:event_epilogincCheckBoxStateChanged
+    }//GEN-LAST:event_epilogincCheckBoxStateChanged
+    private void epilogbinCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_epilogbinCheckBoxStateChanged
+	FieldCheckBoxChange(epilogbinCheckBox.isSelected()," -epilogbin=",epilogbinTextField.getText());
+    }                                                  private void vtraceTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-LAST:event_epilogbinCheckBoxStateChanged
+	TextFieldAction(vtraceCheckBox.isSelected()," -vampirtrace=",vtraceTextField.getText());//GEN-FIRST:event_vtraceTextFieldActionPerformed
+    }//GEN-LAST:event_vtraceTextFieldActionPerformed
+    private void otfTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_otfTextFieldActionPerformed
+	TextFieldAction(otfCheckBox.isSelected()," -otf=",otfTextField.getText());
+    }//GEN-LAST:event_otfTextFieldActionPerformed
+    private void vtraceButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_vtraceButtonActionPerformed
+        BrowseButton(vtraceTextField);
+    }//GEN-LAST:event_vtraceButtonActionPerformed
+    private void vtraceCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_vtraceCheckBoxStateChanged
+	FieldCheckBoxChange(vtraceCheckBox.isSelected()," -vampirtrace=",vtraceTextField.getText());
+    }                                               private void altperfTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-LAST:event_vtraceCheckBoxStateChanged
+	TextFieldAction(altperfCheckBox.isSelected()," -perflibrary=",altperfTextField.getText());//GEN-FIRST:event_altperfTextFieldActionPerformed
+    }//GEN-LAST:event_altperfTextFieldActionPerformed
+
+    private void altperfCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_altperfCheckBoxStateChanged
+	FieldCheckBoxChange(altperfCheckBox.isSelected(), " -perflibrary=", altperfTextField.getText());
     }//GEN-LAST:event_altperfCheckBoxStateChanged
 
-    private void altperfQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_altperfQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the directory where perf library files reside. This option should\n"+
-"be used in conjunction with the -perfinc=<dir> option to generate the TAU\n"+
-"Perflib library.",
-	"-perflibrary=<lib>",JOptionPane.INFORMATION_MESSAGE);        
-    }//GEN-LAST:event_altperfQjButtonActionPerformed
-
     private void perflibTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_perflibTextFieldActionPerformed
-	if(this.perflibCheckBox.isSelected()){
-	    
-	    String id=" -perflib=";
-	    //this.defccTextField
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    configureline = begin+perflibTextField.getText()+end;
-		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
-		    
-		    //configureline.substring(stop);
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(perflibCheckBox.isSelected()," -perflib=",perflibTextField.getText());
     }//GEN-LAST:event_perflibTextFieldActionPerformed
 
     private void perflibButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_perflibButtonActionPerformed
-	int returnVal = jFileChooser1.showOpenDialog(null);
-	
-	if (returnVal == JFileChooser.APPROVE_OPTION) {
-	    File file = jFileChooser1.getSelectedFile();
-	    String filename = file.getAbsolutePath();
-	    perflibTextField.setText(filename);
-	}
+        BrowseButton(perflibTextField);
     }//GEN-LAST:event_perflibButtonActionPerformed
 
     private void perflibCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_perflibCheckBoxStateChanged
-	String entry =" -perflib=";
-	if(perflibCheckBox.isSelected()){
-	    if(configureline.indexOf(entry)==-1){
-		configureline+=entry;
-		configureline+=perflibTextField.getText()+" ";
-	    }
-	}
-	
-	else{
-	    int start = configureline.indexOf(entry);
-	    if(start>-1){
-		int end = configureline.indexOf(" ",  start+1);
-		if(end==-1){
-		    configureline = configureline.substring(0, start);
-		} else{
-		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
-		}
-		
-	    }
-	}
-	
-	commandTextArea.setText(configureline); updateITCommand();
+	FieldCheckBoxChange(perflibCheckBox.isSelected()," -perflib=",perflibTextField.getText());
     }//GEN-LAST:event_perflibCheckBoxStateChanged
 
-    private void perflibQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_perflibQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the directory where Perflib library files reside. This option should\n"+
-"be used in conjunction with the -perfinc=<dir> option to generate the TAU\n"+
-"Perflib library.",
-	"-perflib=<dir>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_perflibQjButtonActionPerformed
-
     private void perfincTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_perfincTextFieldActionPerformed
-	if(this.perfincCheckBox.isSelected()){
-	    
-	    String id=" -perfinc=";
-	    //this.defccTextField
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    configureline = begin+perfincTextField.getText()+end;
-		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
-		    
-		    //configureline.substring(stop);
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(perfincCheckBox.isSelected()," -perfinc=",perfincTextField.getText());
     }//GEN-LAST:event_perfincTextFieldActionPerformed
 
     private void perfincButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_perfincButtonActionPerformed
-	int returnVal = jFileChooser1.showOpenDialog(null);
-	
-	if (returnVal == JFileChooser.APPROVE_OPTION) {
-	    File file = jFileChooser1.getSelectedFile();
-	    String filename = file.getAbsolutePath();
-	    perfincTextField.setText(filename);
-	}
+        BrowseButton(perfincTextField);
     }//GEN-LAST:event_perfincButtonActionPerformed
 
     private void perfincCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_perfincCheckBoxStateChanged
-
-	String entry =" -perfinc=";
-	if(perfincCheckBox.isSelected()){
-	    if(configureline.indexOf(entry)==-1){
-		configureline+=entry;
-		configureline+=perfincTextField.getText()+" ";
-	    }
-	}
-	
-	else{
-	    int start = configureline.indexOf(entry);
-	    if(start>-1){
-		int end = configureline.indexOf(" ",  start+1);
-		if(end==-1){
-		    configureline = configureline.substring(0, start);
-		} else{
-		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
-		}
-		
-	    }
-	}
-	
-	commandTextArea.setText(configureline); updateITCommand();
+        FieldCheckBoxChange(perfincCheckBox.isSelected()," -perfinc=",perfincTextField.getText());
     }//GEN-LAST:event_perfincCheckBoxStateChanged
 
-    private void perfincQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_perfincQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the directory  where Perflib header files reside\n"+
-"This option also generates the TAU Perflib library that\n"+
-"generates Perflib performance data.",
-	"-perfinc=<dir>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_perfincQjButtonActionPerformed
-
     private void otfButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_otfButtonActionPerformed
-	int returnVal = jFileChooser1.showOpenDialog(null);
-	
-	if (returnVal == JFileChooser.APPROVE_OPTION) {
-	    File file = jFileChooser1.getSelectedFile();
-	    String filename = file.getAbsolutePath();
-	    otfTextField.setText(filename);
-	}
+        BrowseButton(otfTextField);
     }//GEN-LAST:event_otfButtonActionPerformed
 
     private void otfCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_otfCheckBoxStateChanged
-	if(otfCheckBox.isSelected()){
-	    if(configureline.indexOf(" -otf=")==-1){
-		configureline+=" -otf=";
-		configureline+=otfTextField.getText()+" ";
-	    }
-	    
-	    if(!traceCheckBox.isSelected()){
-		traceCheckBox.doClick();
-	    }
-	}
-	
-	else{
-	    int start = configureline.indexOf(" -otf=");
-	    if(start>-1){
-		int end = configureline.indexOf(" ",  start+1);
-		if(end==-1){
-		    configureline = configureline.substring(0, start);
-		} else{
-		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
-		}
-		
-	    }
-	}
-	
-	commandTextArea.setText(configureline); updateITCommand();
+	FieldCheckBoxChange(otfCheckBox.isSelected()," -otf",otfTextField.getText());
     }//GEN-LAST:event_otfCheckBoxStateChanged
-
-    private void otfQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_otfQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the location of the Open Trace Format (OTF) package.",
-	"-otf=<directory>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_otfQjButtonActionPerformed
 
     private void loadallconfButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadallconfButtonActionPerformed
 // TODO add your handling code here:
@@ -3961,519 +3703,88 @@ JOptionPane.showMessageDialog(null,
         //this.savedconfComboBox.addItem(savedconf.get(savedconf.size()-1));
         this.savedconfComboBox.setSelectedIndex(savedconfComboBox.getItemCount()-1);
     }//GEN-LAST:event_saveconfButtonActionPerformed
-
     private void useroptFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_useroptFieldActionPerformed
-	if(this.useroptCheckBox.isSelected()){
-	    
-	    String id=" -useropt=";
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    
-	    configureline = begin+multiArg(useroptField.getText())+end;
-
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+        TextFieldAction(useroptCheckBox.isSelected()," -useropt=",multiArg(useroptField.getText()));
     }//GEN-LAST:event_useroptFieldActionPerformed
-
     private void archdirFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_archdirFieldActionPerformed
-	if(this.archdirCheckBox.isSelected()){
-	    
-	    String id=" -exec-prefix=";
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    
-	    configureline = begin+archdirField.getText()+end;
-
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(archdirCheckBox.isSelected()," -exec-prefix=",archdirField.getText());
     }//GEN-LAST:event_archdirFieldActionPerformed
-
     private void installdirFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_installdirFieldActionPerformed
-	if(this.installdirCheckBox.isSelected()){
-	    
-	    String id=" -prefix=";
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    
-	    configureline = begin+installdirField.getText()+end;
-
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(installdirCheckBox.isSelected()," -prefix=",installdirField.getText());
     }//GEN-LAST:event_installdirFieldActionPerformed
-
     private void jdkFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jdkFieldActionPerformed
-	if(this.usejdkCheckBox.isSelected()){
-	    
-	    String id=" -jdk=";
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    
-	    configureline = begin+jdkField.getText()+end;
-
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(usejdkCheckBox.isSelected()," -jdk=",jdkField.getText());
     }//GEN-LAST:event_jdkFieldActionPerformed
-
     private void pythonincFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pythonincFieldActionPerformed
-	if(this.usepythonCheckBox.isSelected()){
-	    
-	    String id=" -pythoninc=";
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    
-	    configureline = begin+pythonincField.getText()+end;
-
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+        TextFieldAction(usepythonCheckBox.isSelected()," -pythoninc=",pythonincField.getText());
     }//GEN-LAST:event_pythonincFieldActionPerformed
-
     private void pythonlibFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pythonlibFieldActionPerformed
-	if(this.pythonlibCheckBox.isSelected()){
-	    
-	    String id=" -pythonlib=";
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    
-	    configureline = begin+pythonlibField.getText()+end;
-
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(pythonlibCheckBox.isSelected()," -pythonlib=",pythonlibField.getText());
     }//GEN-LAST:event_pythonlibFieldActionPerformed
-
     private void dyninstTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dyninstTextFieldActionPerformed
-	if(this.dyninstCheckBox.isSelected()){
-	    
-	    String id=" -dyninst=";
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    
-	    configureline = begin+dyninstTextField.getText()+end;
-
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(dyninstCheckBox.isSelected()," -dyninst=",dyninstTextField.getText());
     }//GEN-LAST:event_dyninstTextFieldActionPerformed
-
     private void pclTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pclTextFieldActionPerformed
-	if(this.pclCheckBox.isSelected()){
-	    
-	    String id=" -pcl=";
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    
-	    configureline = begin+pclTextField.getText()+end;
-
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(pclCheckBox.isSelected()," -pcl=",pclTextField.getText());
     }//GEN-LAST:event_pclTextFieldActionPerformed
-
     private void tulipTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tulipTextFieldActionPerformed
-	if(this.tulipCheckBox.isSelected()){
-	    
-	    String id=" -tulipthread=";
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    
-	    configureline = begin+tulipTextField.getText()+end;
-
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(tulipCheckBox.isSelected()," -tulipthread=",tulipTextField.getText());
     }//GEN-LAST:event_tulipTextFieldActionPerformed
-
     private void charmTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_charmTextFieldActionPerformed
-	if(this.charmCheckBox.isSelected()){
-	    
-	    String id=" -charm=";
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    
-	    configureline = begin+charmTextField.getText()+end;
-
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(charmCheckBox.isSelected()," -charm=",charmTextField.getText());
     }//GEN-LAST:event_charmTextFieldActionPerformed
-
     private void opariTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opariTextFieldActionPerformed
-	if(this.opariCheckBox.isSelected()){
-	    
-	    String id=" -opari=";
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    
-	    configureline = begin+opariTextField.getText()+end;
-
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(opariCheckBox.isSelected()," -opari=",opariTextField.getText());
     }//GEN-LAST:event_opariTextFieldActionPerformed
-
     private void vtfTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_vtfTextFieldActionPerformed
-	if(this.vtfCheckBox.isSelected()){
-	    
-	    String id=" -vtf=";
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    
-	    configureline = begin+vtfTextField.getText()+end;
-
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(vtfCheckBox.isSelected()," -vtf=",vtfTextField.getText());
     }//GEN-LAST:event_vtfTextFieldActionPerformed
-
     private void slog2TextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_slog2TextFieldActionPerformed
-	if(this.slog2CheckBox.isSelected()){
-	    
-	    String id=" -slog2=";
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    
-	    configureline = begin+slog2TextField.getText()+end;
-
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(slog2CheckBox.isSelected()," -slog2=",slog2TextField.getText());
     }//GEN-LAST:event_slog2TextFieldActionPerformed
-
     private void epilogTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epilogTextFieldActionPerformed
-	if(this.epilogCheckBox.isSelected()){
-	    
-	    String id=" -epilog=";
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    
-	    configureline = begin+epilogTextField.getText()+end;
-
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(epilogCheckBox.isSelected()," -epilog=",epilogTextField.getText());
     }//GEN-LAST:event_epilogTextFieldActionPerformed
-
     private void altshmemTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_altshmemTextFieldActionPerformed
-	if(this.altshmemCheckBox.isSelected()){
-	    
-	    String id=" -shmemlibrary=";
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    
-	    configureline = begin+multiArg(altshmemTextField.getText())+end;
-
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(altshmemCheckBox.isSelected()," -shmemlibrary=",multiArg(altshmemTextField.getText()));
     }//GEN-LAST:event_altshmemTextFieldActionPerformed
-
     private void shmemlibTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_shmemlibTextFieldActionPerformed
-	if(this.shmemlibCheckBox.isSelected()){
-	    
-	    String id=" -shmemlib=";
-	    //this.defccTextField
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    configureline = begin+shmemlibTextField.getText()+end;
-		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
-		    
-		    //configureline.substring(stop);
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(shmemlibCheckBox.isSelected()," -shmemlib=",shmemlibTextField.getText());
     }//GEN-LAST:event_shmemlibTextFieldActionPerformed
-
     private void shmemincTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_shmemincTextFieldActionPerformed
-	if(this.shmemincCheckBox.isSelected()){
-	    
-	    String id=" -shmeminc=";
-	    //this.defccTextField
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    configureline = begin+shmemincTextField.getText()+end;
-		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
-		    
-		    //configureline.substring(stop);
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(shmemincCheckBox.isSelected()," -shmeminc=",shmemincTextField.getText());
     }//GEN-LAST:event_shmemincTextFieldActionPerformed
-
     private void tagTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tagTextFieldActionPerformed
-	if(this.tagCheckBox.isSelected()){
-	    
-	    String id=" -tag=";
-	    //this.defccTextField
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    configureline = begin+tagTextField.getText()+end;
-		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
-		    
-		    //configureline.substring(stop);
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(tagCheckBox.isSelected()," -tag=",tagTextField.getText());
     }//GEN-LAST:event_tagTextFieldActionPerformed
-
     private void altmpiTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_altmpiTextFieldActionPerformed
-	if(this.altmpiCheckBox.isSelected()){
-	    
-	    String id=" -mpilibrary=";
-	    //this.defccTextField
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    configureline = begin+multiArg(altmpiTextField.getText())+end;
-		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
-		    
-		    //configureline.substring(stop);
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+        TextFieldAction(altmpiCheckBox.isSelected()," -mpilibrary=",multiArg(altmpiTextField.getText()));
     }//GEN-LAST:event_altmpiTextFieldActionPerformed
-
     private void mpilibTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mpilibTextFieldActionPerformed
-	if(this.mpilibCheckBox.isSelected()){
-	    
-	    String id=" -mpilib=";
-	    //this.defccTextField
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    configureline = begin+mpilibTextField.getText()+end;
-		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
-		    
-		    //configureline.substring(stop);
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(mpilibCheckBox.isSelected()," -mpilib=",mpilibTextField.getText());
     }//GEN-LAST:event_mpilibTextFieldActionPerformed
-
     private void mpiincTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mpiincTextFieldActionPerformed
-	if(this.mpiincCheckBox.isSelected()){
-	    
-	    String id=" -mpiinc=";
-	    //this.defccTextField
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    configureline = begin+mpiincTextField.getText()+end;
-		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
-		    
-		    //configureline.substring(stop);
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(mpiincCheckBox.isSelected()," -mpiinc=",mpiincTextField.getText());
     }//GEN-LAST:event_mpiincTextFieldActionPerformed
-
     private void papiTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_papiTextFieldActionPerformed
-	if(this.papiCheckBox.isSelected()){
-	    
-	    String id=" -papi=";
-	    //this.defccTextField
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    configureline = begin+papiTextField.getText()+end;
-		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
-		    
-		    //configureline.substring(stop);
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(papiCheckBox.isSelected()," -papi=",papiTextField.getText());
     }//GEN-LAST:event_papiTextFieldActionPerformed
-
     private void defpdtTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_defpdtTextFieldActionPerformed
-	if(this.defpdtCheckBox.isSelected()){
-	    
-	    String id=" -pdt_c++=";
-	    //this.defccTextField
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    configureline = begin+defpdtTextField.getText()+end;
-		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
-		    
-		    //configureline.substring(stop);
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(defpdtCheckBox.isSelected()," -pdt_c++=",defpdtTextField.getText());
     }//GEN-LAST:event_defpdtTextFieldActionPerformed
-
     private void pdtdirFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pdtdirFieldActionPerformed
-	if(this.pdtCheckBox.isSelected()){
-	    
-	    String id=" -pdt=";
-	    //this.defccTextField
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    configureline = begin+pdtdirField.getText()+end;
-		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
-		    
-		    //configureline.substring(stop);
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(pdtCheckBox.isSelected()," -pdt=",pdtdirField.getText());
     }//GEN-LAST:event_pdtdirFieldActionPerformed
-
     private void deffortranTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deffortranTextFieldActionPerformed
-	if(this.deffortranCheckBox.isSelected()){
-	    
-	    String id=" -fortran=";
-	    //this.defccTextField
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    configureline = begin+deffortranTextField.getText()+end;
-		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
-		    
-		    //configureline.substring(stop);
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(deffortranCheckBox.isSelected()," -fortran=",deffortranTextField.getText());
     }//GEN-LAST:event_deffortranTextFieldActionPerformed
-
     private void defcppTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_defcppTextFieldActionPerformed
-	if(this.defcppCheckBox.isSelected()){
-	    
-	    String id=" -c++=";
-	    //this.defccTextField
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    configureline = begin+defcppTextField.getText()+end;
-		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
-		    
-		    //configureline.substring(stop);
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(defcppCheckBox.isSelected()," -c++=",defcppTextField.getText());
     }//GEN-LAST:event_defcppTextFieldActionPerformed
-
     private void defccTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_defccTextFieldActionPerformed
-	if(this.defccCheckBox.isSelected()){
-	    
-	    String id=" -cc=";
-	    //this.defccTextField
-	    int start = configureline.indexOf(id);
-	    if(start<0){
-		return;
-	    }
-	    int stop = configureline.indexOf(" ", start+1);//Math.min(configureline.length()-2, configureline.indexOf(" -", start+2));
-	    String begin = configureline.substring(0,configureline.indexOf("=", start)+1);
-	    String end = configureline.substring(stop);
-	    configureline = begin+defccTextField.getText()+end;
-		    //configureline.substring(0, configureline.indexOf("=", start)+1)+
-		    
-		    //configureline.substring(stop);
-	    commandTextArea.setText(configureline); updateITCommand();
-	}
+	TextFieldAction(defccCheckBox.isSelected()," -cc=",defccTextField.getText());
     }//GEN-LAST:event_defccTextFieldActionPerformed
 
-
-    
 private void updateITCommand(){
 //    String confcop = configureline;
 //String buildinst = "";
@@ -4591,539 +3902,6 @@ private void updateITCommand(){
 	e.printStackTrace();}
 	makejButton.setEnabled(true);
     }//GEN-LAST:event_makejButtonActionPerformed
-
-    private void noexQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_noexQjButtonActionPerformed
-	JOptionPane.showMessageDialog(null,
-		"Specifies that no exceptions be used while compiling the library. This is\n"+
-		"relevant for C++.",
-		"-noex",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_noexQjButtonActionPerformed
-
-    private void useroptQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_useroptQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies additional user options such as -g or -I.  For multiple options,\n"+
-"the options list should be enclosed in a single quote.",
-	"-useropt=<options-list>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_useroptQjButtonActionPerformed
-
-    private void archQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_archQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the architecture. If the user does not specify this option,\n"+
-"configure determines the architecture. For SGI, the user can specify either\n"+
-"of sgi32, sgin32 or sgi64 for 32, n32 or 64 bit compilation modes\n"+
-"respectively. The files are installed in the <architecture>/bin and\n"+ 
-"<architecture>/lib directories.<architecture>/lib directories.",
-	"-arch=<architecture>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_archQjButtonActionPerformed
-
-    private void custarchQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_custarchQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies an alternate architecture directory name to be generated in the\n"+
-"TAU root directory. By default, the <arch> directory is named in accordance\n"+
-"with the detected or specified architecture.  This function allows multiple\n"+
-"alternate configurations to be generated on the same architecture.",
-	"-exec-prefix=<directory>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_custarchQjButtonActionPerformed
-
-    private void custinstQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_custinstQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the destination directory where the header, library and binary\n"+
-"files are copied. By default, these are copied to subdirectories <arch>/bin\n"+
-"and <arch>/lib in the TAU root directory.",
-	"-prefix=<directory>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_custinstQjButtonActionPerformed
-
-    private void javatQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_javatQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Use JVMPI thread specific cpu time.",
-	"-JAVACPUTIME",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_javatQjButtonActionPerformed
-
-    private void jdkQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jdkQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the location of the Java 2 development kit (jdk1.2+). See\n"+
-"README.JAVA on instructions on using TAU with Java 2 applications.\n"+
-"This option should only be used for configuring TAU to use JVMPI for\n"+
-"profiling and tracing of Java applications. It should not be used for\n"+ 
-"configuring paraprof, which uses java from the user's path.",
-	"-jdk=<directory>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_jdkQjButtonActionPerformed
-
-    private void pythonlibQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pythonlibQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the location of the Python lib directory. This is the directory\n"+
-"where *.py and *.pyc files (and config directory) are located. This option is\n"+
-"mandatory for IBM when Python bindings are used. For other systems, this option\n"+
-"may not be specified (but -pythoninc=<dir> needs to be specified).",
-	"-pythonlib=<dir>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_pythonlibQjButtonActionPerformed
-
-    private void pythonincQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pythonincQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the location of the Python include directory. This is the directory\n"+
-"where Python.h header file is located. This option enables python bindings to\n"+
-"be generated. The user should set the environment variable PYTHONPATH to\n"+
-"<TAUROOT>/<ARCH>/lib/bindings-<options> to use a specific version of the TAU\n"+ 
-"Python bindings. By importing package pytau, a user can manually instrument\n"+
-"the source code and use the TAU API. On the other hand, by importing tau and\n"+
-"using tau.run('<func>'), TAU can automatically generate instrumentation. See\n"+
-"examples/python directory for further information.",
-	"-pythoninc=<dir>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_pythonincQjButtonActionPerformed
-
-    private void fortQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fortQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the name of the Fortran90 compiler. Valid options are:\n"+
-"gnu, sgi, ibm, ibm64, hp, cray, pgi, absoft, fujitsu, sun, compaq, nec,\n"+
-"hitachi, kai, absoft, lahey, nagware, and intel.",
-	"-fortran=<Fortran Compiler>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_fortQjButtonActionPerformed
-
-    private void cppQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cppQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the name of the C++ compiler. Supported  C++ compilers include\n"+
-"KCC (from KAI/Intel), CC,  g++ and power64-linux-g++ (from GNU), FCC (from Fujitsu),\n"+
-"xlC(from IBM), guidec++ (from KAI/Intel), aCC (from HP), c++ (from Apple), and pgCC\n"+
-"(from PGI).",
-	"-c++=<C++ compiler>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_cppQjButtonActionPerformed
-
-    private void cQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the name of the C compiler. Supported C compilers include cc,\n"+
-"gcc and powerpc64-linux-gcc (from GNU), pgcc (from PGI), fcc (from Fujitsu),\n"+
-"xlc (from IBM), and KCC (from KAI/Intel).",
-	"-cc=<C Compiler>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_cQjButtonActionPerformed
-
-    private void smartQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_smartQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies  SMARTS (Shared Memory Asynchronous Runtime System) as the\n"+
-"threads package to be used. <directory> gives the location of the SMARTS\n"+
-"root directory. [ Ref: http://www.acl.lanl.gov/smarts ]",
-	"-smarts",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_smartQjButtonActionPerformed
-
-    private void tulipQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tulipQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies Tulip threads (HPC++) as the threads package to be used as well\n"+
-"as the location of the root directory where the package is installed.\n"+
-"[ Ref: http://www.acl.lanl.gov/tulip ]",
-	"-tulipthread=<directory>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_tulipQjButtonActionPerformed
-
-    private void sprocQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sprocQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Use the SGI sproc thread package.",
-	"-sproc",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_sprocQjButtonActionPerformed
-
-    private void charmQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_charmQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies charm++ (converse) threads as the thread package to be used.",
-	"-charm=<dir>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_charmQjButtonActionPerformed
-
-    private void opariconstructQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opariconstructQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Report performance data for only OpenMP constructs and not regions.\n"+
-"By default, both regions and constructs are profiled with Opari.",
-	"-opari_construct",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_opariconstructQjButtonActionPerformed
-
-    private void opariregionQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opariregionQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Report performance data for only OpenMP regions and not constructs.\n"+
-"By default, both regions and constructs are profiled with Opari.",
-	"-opari_region",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_opariregionQjButtonActionPerformed
-
-    private void opariQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opariQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the location of the Opari OpenMP directive rewriting tool.\n"+
-"The use of Opari source-to-source instrumentor in conjunction with\n"+
-"TAU exposes OpenMP events for instrumentation. See examples/opari directory.\n"+
-"[ Ref: http://www.fz-juelich.de/zam/kojak/opari/ ]\n"+ 
-"Note: There are two versions of Opari: standalone - (opari-pomp-1.1.tar.gz) and\n"+
-"the newer KOJAK - kojak-<ver>.tar.gz opari/ directory. Please upgrade to the\n"+
-"KOJAK version (especially if you're using IBM xlf90) and specify\n"+
-"-opari=<kojak-dir>/opari while configuring TAU.",
-	"-opari=<dir>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_opariQjButtonActionPerformed
-
-    private void openmpQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openmpQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies OpenMP as the threads package to be used.\n"+
-"[ Ref: http://www.openmp.org ]",
-	"-openmp",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_openmpQjButtonActionPerformed
-
-    private void pthreadsQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pthreadsQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies pthread as the thread package to be used. In the default mode, no\n"+
-"thread package is used.",
-	"-pthread",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_pthreadsQjButtonActionPerformed
-
-    private void altshmemQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_altshmemQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"By default, TAU uses -lsma as the shmem/pshmem library. This option allows\n"+
-"the user to specify a different shmem library.",
-	"-shmemlibrary=<lib>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_altshmemQjButtonActionPerformed
-
-    private void shmemlibQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_shmemlibQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the directory where libsma.a resides. Specifies the use of the TAU\n"+
-"SHMEM interface.",
-	"-shmemlib=<dir>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_shmemlibQjButtonActionPerformed
-
-    private void shmemincQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_shmemincQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the directory where shmem.h resides. Specifies the use of the TAU\n"+
-"SHMEM interface.",
-	"-shmeminc=<dir>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_shmemincQjButtonActionPerformed
-
-    private void shmemQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_shmemQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies use of the TAU SHMEM wrapper library.",
-	"-SHMEM",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_shmemQjButtonActionPerformed
-
-    private void mpitraceQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mpitraceQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the tracing option and generates event traces for MPI calls and\n"+
-"routines that are ancestors of MPI calls in the callstack. This option is\n"+
-"useful for generating traces that are converted to the EPILOG trace format.\n"+
-" KOJAK's Expert automatic diagnosis tool needs traces with events that\n"+
-"call MPI routines. Do not use this option with the -TRACE option.",
-	"-MPITRACE",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_mpitraceQjButtonActionPerformed
-
-    private void nocommQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nocommQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Allows the user to turn off tracking of messages (synchronous/asynchronous) in\n"+
-"TAU's MPI wrapper interposition library. Entry and exit events for MPI routines\n"+
-"are still tracked. Affects both profiling and tracing.",
-	"-nocomm",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_nocommQjButtonActionPerformed
-
-    private void tagQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tagQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies a tag in the name of the stub Makefile and TAU makefiles to\n"+
-"uniquely identify the installation. This is useful when more than one MPI\n"+
-"library may be used with different versions of compilers.\n"+
-" e.g., % configure -c++=icpc -cc=icc -tag=intel71-vmi -mpiinc=/vmi2/mpich/include",
-	"-tag=<Unique Name>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_tagQjButtonActionPerformed
-
-    private void altmpiQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_altmpiQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the directory where mpi library files reside. This option should\n"+
-"be used in conjunction with the -mpiinc=<dir> option to generate the TAU\n"+
-"MPI wrapper library.",
-	"-mpilibrary=<lib>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_altmpiQjButtonActionPerformed
-
-    private void mpilibQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mpilibQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the directory where mpi library files reside. This option should\n"+
-"be used in conjunction with the -mpiinc=<dir> option to generate the TAU\n"+
-"MPI wrapper library.",
-	"-mpilib=<dir>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_mpilibQjButtonActionPerformed
-
-    private void mpiincQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mpiincQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the directory  where mpi header files reside (such as mpi.h and\n"+
-"mpif.h). This option also generates the TAU MPI wrapper library that\n"+
-"instruments MPI routines using the MPI Profiling Interface. See the\n"+
-"examples/NPB2.3/config/make.def file for its usage with Fortran and MPI\n"+ 
-"programs and examples/pi/Makefile for a C++ example that uses MPI.",
-	"-mpiinc=<dir>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_mpiincQjButtonActionPerformed
-
-    private void mpiQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mpiQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies use of the TAU MPI wrapper library.",
-	"-MPI",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_mpiQjButtonActionPerformed
-
-    private void musemQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_musemQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies use of the MUSE/MAGNET library with monotonically increasing values.",
-	"-muse_multiple",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_musemQjButtonActionPerformed
-
-    private void museeQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_museeQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies use of the MUSE/MAGNET library with non-monotonically increasing values.",
-	"-muse_event",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_museeQjButtonActionPerformed
-
-    private void museQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_museQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the use of MAGNET/MUSE to extract low-level information from the\n"+
-"kernel. To use this configuration, Linux kernel has to be patched with MAGNET\n"+
-"and MUSE has to be install on the executing machine.  Also, magnetd has to be\n"+
-"running with the appropriate handlers and filters installed. User can specify\n"+ 
-"package by setting the environment variable TAU_MUSE_PACKAGE.  By default\n"+
-"it uses the \"count\". Please refer to README.MUSE for more information.",
-	"-muse",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_museQjButtonActionPerformed
-
-    private void dyninstQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dyninstQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the location of the DynInst (dynamic instrumentation) package.\n"+
-"See README.DYNINST for instructions on using TAU with DynInstAPI for\n"+
-"binary runtime instrumentation (instead of manual instrumentation) or\n"+
-"prior to execution by rewriting it.\n"+ 
-"[ Ref: http://www.cs.umd.edu/projects/dyninstAPI/ ]",
-	"-dyninst=<directory>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_dyninstQjButtonActionPerformed
-
-    private void pdtcppQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pdtcppQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies a different C++ compiler for PDT (tau_instrumentor). This is\n"+
-"typically used when the library is compiled with a C++ compiler\n"+
-"(specified with -c++) and the tau_instrumentor is compiled with a different\n"+
-"<pdt_c++> compiler. For e.g., -c++=pgCC -cc=pgcc -pdt_c++=KCC -openmp ...\n"+ 
-"uses PGI's OpenMP compilers for TAU's library and KCC for tau_instrumentor.",
-	"-pdt_c++=<C++ Compiler>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_pdtcppQjButtonActionPerformed
-
-    private void pdtQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pdtQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the location of the installed PDT (Program Database Toolkit) root\n"+
-"directory. PDT is used to build tau_instrumentor, a C++, C and F90\n"+
-"instrumentation program that automatically inserts TAU annotations in the\n"+
-"source code. If PDT is configured with a subdirectory option (-compdir=<opt>)\n"+ 
-"then TAU can be configured with the same option by specifying\n"+
-"-pdt=<dir> -pdtcompdir=<opt>.\n"+
-"[ http://www.cs.uoregon.edu/research/paracomp/pdtoolkit/ ]",
-	"-pdt=<directory>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_pdtQjButtonActionPerformed
-
-    private void multcountQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_multcountQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Allows TAU to track more than one quantity (multiple hardware counters, CPU\n"+
-"time, wallclock time, etc.) Configure with other options such as -papi=<dir>,\n"+
-"-pcl=<dir>, -LINUXTIMERS, -SGITIMERS, -CRAYTIMERS, -CPUTIME, -PAPIVIRTUAL,\n"+
-"etc. See examples/multicounters/README file for detailed instructions on\n"+ 
-"setting the environment variables for this option. If -MULTIPLECOUNTERS is\n"+
-"used with the -TRACE option, tracing employs the COUNTER1 variable for\n"+
-"wallclock time.",
-	"-MULTIPLECOUNTERS",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_multcountQjButtonActionPerformed
-
-    private void papivirtQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_papivirtQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Uses PAPI (must specify -papi=<dir> also) to access process virtual time.\n"+
-"This represents the user time for measurements.",
-	"-PAPIVIRTUAL",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_papivirtQjButtonActionPerformed
-
-    private void papiwallQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_papiwallQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Uses PAPI (must specify -papi=<dir> also) to access high resolution CPU\n"+
-"timers for wallclock time. The default case uses gettimeofday() which\n"+
-"has a higher overhead than this.",
-	"-PAPIWALLCLOCK",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_papiwallQjButtonActionPerformed
-
-    private void papiQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_papiQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the location of the installed PAPI (Performance API) root\n"+
-"directory. PAPI specifies a standard application programming interface (API)\n"+
-"for accessing hardware performance counters available on most modern\n"+
-"microprocessors similar. To measure floating point instructions, set the\n"+ 
-"environment variable PAPI_EVENT to PAPI_FP_INS (for example). Refer to the\n"+
-"TAU User's Guide or PAPI Documentation for other event names.\n"+
-"[ Ref : http://icl.cs.utk.edu/projects/papi/api/ ]",
-	"-papi=<directory>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_papiQjButtonActionPerformed
-
-    private void pclQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pclQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the location of the installed PCL (Performance Counter Library)\n"+
-"root directory. PCL provides a common interface to access hardware\n"+
-"performance counters on modern microprocessors. The library supports\n"+
-"Sun UltraSparc I/II, PowerPC 604e under AIX, MIPS R10000/12000 under IRIX,\n"+ 
-"HP/Compaq Alpha 21164, 21264 under Tru64 Unix and Cray Unicos (T3E) and the\n"+
-"Intel Pentium family of microprocessors under Linux. This option specifies\n"+
-"the use of hardware performance counters for profiling (instead of time).\n"+
-"To measure floating point instructions, set the environment variable\n"+
-"PCL_EVENT to PCL_FP_INSTR (for example). Refer to the TAU User's Guide or\n"+
-"PCL Documentation (pcl.h) for other event names."+
-"[ Ref : http://www.fz-juelich.de/zam/PCL ]",
-	"-pcl=<directory>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_pclQjButtonActionPerformed
-
-    private void sgitQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sgitQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies use of the free running nanosecond resolution on-chip timer on\n"+
-"the MIPS R10000. This timer has a lower overhead than the default timer on\n"+
-"SGI, and is recommended for SGIs.",
-	"-SGITIMERS",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_sgitQjButtonActionPerformed
-
-    private void linuxtQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_linuxtQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the use of the free running nanosecond resolution time stamp\n"+
-"counter (TSC) on Pentium III+ and Itanium family of processors under Linux.\n"+
-"This timer has a lower overhead than the default time and is recommended.",
-	"-LINUXTIMERS",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_linuxtQjButtonActionPerformed
-
-    private void craytQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_craytQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies use of the free running nanosecond resolution on-chip timer on\n"+
-"the CRAY X1 cpu (accessed by the rtc() syscall). This timer has a\n"+
-"significantly lower overhead than the default timer on the X1, and is\n"+
-"recommended for profiling. Since this timer is not synchronized across\n"+ 
-"different cpus, this option should not be used with the -TRACE option for\n"+
-"tracing a multi-cpu application, where a globally synchronized realtime\n"+
-"clock is required.",
-	"-CRAYTIMERS",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_craytQjButtonActionPerformed
-
-    private void cputQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cputQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Uses usertime + system time instead of wallclock time. It gives the CPU\n"+
-"time spent in the routines.  This currently works only on LINUX systems\n"+
-"for multi-threaded programs and on all systems for single-threaded programs.",
-	"-CPUTIME",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_cputQjButtonActionPerformed
-
-    private void depthQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_depthQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Allows users to enable instrumentation at runtime based on the depth of a\n"+
-"calling routine on a callstack. The depth is specified using the environment\n"+
-"variable TAU_DEPTH_LIMIT. When its value is 1, instrumentation in the\n"+
-"top-level routine such as main (in C/C++) or program (in F90) is activated.\n"+ 
-"When it is 2, only routine invoked directly by main and main are recorded.\n"+
-"When a routine appears at a depth of 2 and at 10 and we set the limit at 5,\n"+
-"then the routine is recorded when its depth is 2, and ignored when its depth\n"+
-"is 10 on the calling stack. This can be used with -PROFILECALLPATH to\n"+
-"generate a tree of height <h> from the main routine by setting\n"+
-"TAU_CALLPATH_DEPTH and TAU_DEPTH_LIMIT variables to <h>.",
-	"-DEPTHLIMIT",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_depthQjButtonActionPerformed
-
-    private void phaseQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_phaseQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"This option generates phase based profiles. It requires special\n"+
-"instrumentation to mark phases in an application (I/O, computation, etc.).\n"+
-"Phases can be static or dynamic (different phases for each loop iteration,\n"+
-"for instance). See examples/phase/README for further information.",
-	"-PROFILEPHASE",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_phaseQjButtonActionPerformed
-
-    private void vtfQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_vtfQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the location of the VTF3 trace generation package. TAU's binary\n"+
-"traces can be converted to the VTF3 format using tau2vtf, a tool that links\n"+
-"with the VTF3 library. The VTF3 format is read by Intel trace analyzer,\n"+
-"formerly known as vampir, a commercial trace visualization tool developed\n"+ 
-"by TU. Dresden, Germany.",
-	"-vtf=<directory>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_vtfQjButtonActionPerformed
-
-    private void slog2eQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_slog2eQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the location of the SLOG2 SDK trace generation package. TAU's\n"+
-"binary traces can be converted to the SLOG2 format using tau2slog2, a tool\n"+
-"that uses the SLOG2 SDK. The SLOG2 format is read by the Jumpshot4 trace\n"+
-"visualization software, a freely available trace visualizer from Argonne\n"+ 
-"National Laboratories.\n"+
-"[ Ref: http://www-unix.mcs.anl.gov/perfvis/download/index.htm#slog2sdk ]",
-	"-slog2=<directory>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_slog2eQjButtonActionPerformed
-
-    private void slog2QjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_slog2QjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the use of the SLOG2 trace generation package and the Jumpshot\n"+
-"trace visualizer that is bundled with TAU. Jumpshot v4 and SLOG2 v1.2.5delta\n"+
-"are included in the TAU distribution. When the -slog2 flag is specified,\n"+
-"tau2slog2 and jumpshot tools are copied to the <tau>/<arch>/<bin> directory.\n"+ 
-"It is important to have a working javac and java (preferably v1.4+) in your\n"+
-"path. On linux systems, where /usr/bin/java may be a place holder, you'll\n"+
-"need to modify your path accordingly.",
-	"-slog2",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_slog2QjButtonActionPerformed
-
-    private void epilogQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_epilogQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies the directory where the EPILOG tracing package [FZJ] is installed.\n"+
-"This option should be used in conjunction with the -TRACE option to generate\n"+
-"binary EPILOG traces (instead of binary TAU traces). EPILOG traces can then\n"+
-"be used with other tools such as EXPERT. EPILOG comes with its own\n"+ 
-"implementation of the MPI wrapper library and the POMP library used with\n"+
-"Opari. Using option overrides TAU's libraries for MPI, and OpenMP.\n",
-	"-epilog=<dir>",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_epilogQjButtonActionPerformed
-
-    private void traceQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_traceQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Generates event-trace logs, rather than summary profiles. Traces show when\n"+
-"and where an event occurred, in terms of the location in the source code and\n"+
-"the process that executed it. Traces can be merged and converted using\n"+
-"tau_merge and tau_convert utilities respectively, and  visualized using\n"+ 
-"Vampir, a commercial trace visualization tool. [ Ref http://www.pallas.de ]\n",
-	"-TRACE",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_traceQjButtonActionPerformed
-
-    private void memorypQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_memorypQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies tracking heap memory utilitization for each instrumented function.\n"+
-"When any function entry takes place, a sample of the heap memory used is\n"+
-"taken. This data is stored as user-defined event data in profiles/traces.\n",
-	"-PROFILEMEMORY",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_memorypQjButtonActionPerformed
-
-    private void headroomQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_headroomQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies tracking memory available in the heap (as opposed to memory\n"+
-"utilization tracking in -PROFILEMEMORY). When any function entry takes place,\n"+
-"a sample of the memory available (headroom to grow) is taken. This data is\n"+
-"stored as user-defined event data in profiles/traces. Please refer to the\n"+ 
-"examples/headroom/README file for a full explanation of these headroom\n"+
-"options and the C++/C/F90 API for evaluating the headroom.\n",
-	"-PROFILEHEADROOM",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_headroomQjButtonActionPerformed
-
-    private void callpathQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_callpathQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"This option generates call path profiles which shows the time spent in a\n"+
-"routine when it is called by another routine in the calling path. \"a => b\"\n"+
-"stands for the time spent in routine \"b\" when it is invoked by routine \"a\".\n"+
-"This option is an extension of -PROFILE, the default profiling option.\n"+ 
-"Specifying TAU_CALLPATH_DEPTH environment variable, the user can vary the\n"+
-"depth of the callpath. See examples/calltree for further information.\n",
-	"-PROFILECALLPATH",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_callpathQjButtonActionPerformed
-
-    private void compensateQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_compensateQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,
-"Specifies online compensation of performance perturbation. When this\n"+
-"option is used, TAU computes its overhead and subtracts it from the\n"+
-"profiles. It can be only used when profiling is chosen. This option works\n"+
-"with MULTIPLECOUNTERS as well, but while it is relevant for removing\n"+ 
-"perturbation with wallclock time, it cannot accurately account for\n"+
-"perturbation with hardware performance counts (e.g., L1 Data cache misses).\n"+
-"See TAU Publication [Europar04] for further information on this option.",
-	"-COMPENSATE",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_compensateQjButtonActionPerformed
-
-    private void profileQjButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_profileQjButtonActionPerformed
-JOptionPane.showMessageDialog(null,"This is the default option; it specifies summary profile files to be\n"+
-   "generated at the end of execution. Profiling generates aggregate statistics\n"+
-   "(such as the total time spent in routines and statements), and can be used\n"+
-   "in conjunction with the profile browser paraprof to analyse the performance.\n"+ 
-   "Wallclock time is used for profiling  program entities.","-PROFILE",JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_profileQjButtonActionPerformed
 
     private void confButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_confButtonActionPerformed
 	confButton.setEnabled(false);
@@ -5323,7 +4101,8 @@ if(defccCheckBox.isSelected()){
     }//GEN-LAST:event_defpdtCheckBoxItemStateChanged
 
     private void noexceptCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_noexceptCheckBoxStateChanged
-String entry=" -noex ";
+        BinaryCheckBoxChange(noexceptCheckBox.isSelected()," -noex ");
+        /*String entry=" -noex ";
 	if(noexceptCheckBox.isSelected()){
 	    if(configureline.indexOf(entry)==-1){
 		configureline+=entry;
@@ -5332,11 +4111,12 @@ String entry=" -noex ";
 	    if(configureline.indexOf(entry)>-1)
 		configureline = configureline.replaceFirst(entry,"");
 	}
-	commandTextArea.setText(configureline); updateITCommand();
+	commandTextArea.setText(configureline); updateITCommand();*/
     }//GEN-LAST:event_noexceptCheckBoxStateChanged
 
     private void useroptCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_useroptCheckBoxStateChanged
-	String entry =" -useropt=";
+	FieldCheckBoxChange(useroptCheckBox.isSelected()," -useropt=",useroptField.getText());
+        /*String entry =" -useropt=";
 	if(useroptCheckBox.isSelected()){
 	    if(configureline.indexOf(entry)==-1){
 		configureline+=entry;
@@ -5366,7 +4146,7 @@ String entry=" -noex ";
 	    }
 	}
 	
-	commandTextArea.setText(configureline); updateITCommand();
+	commandTextArea.setText(configureline); updateITCommand();*/
     }//GEN-LAST:event_useroptCheckBoxStateChanged
 
     private void archComboActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_archComboActionPerformed
@@ -5406,28 +4186,7 @@ String entry=" -noex ";
     }//GEN-LAST:event_archdirButtonActionPerformed
 
     private void archdirCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_archdirCheckBoxStateChanged
-	String entry =" -exec_prefix=";
-	if(archdirCheckBox.isSelected()){
-	    if(configureline.indexOf(entry)==-1){
-		configureline+=entry;
-		configureline+=archdirField.getText()+" ";
-	    }
-	}
-	
-	else{
-	    int start = configureline.indexOf(entry);
-	    if(start>-1){
-		int end = configureline.indexOf(" ",  start+1);
-		if(end==-1){
-		    configureline = configureline.substring(0, start);
-		} else{
-		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
-		}
-		
-	    }
-	}
-	
-	commandTextArea.setText(configureline); updateITCommand();
+	FieldCheckBoxChange(archdirCheckBox.isSelected()," -exec_prefix=",archdirField.getText());
     }//GEN-LAST:event_archdirCheckBoxStateChanged
 
     private void installdirButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_installdirButtonActionPerformed
@@ -5441,32 +4200,11 @@ String entry=" -noex ";
     }//GEN-LAST:event_installdirButtonActionPerformed
 
     private void installdirCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_installdirCheckBoxStateChanged
-	String entry =" -prefix=";
-	if(installdirCheckBox.isSelected()){
-	    if(configureline.indexOf(entry)==-1){
-		configureline+=entry;
-		configureline+=installdirField.getText()+" ";
-	    }
-	}
-	
-	else{
-	    int start = configureline.indexOf(entry);
-	    if(start>-1){
-		int end = configureline.indexOf(" ",  start+1);
-		if(end==-1){
-		    configureline = configureline.substring(0, start);
-		} else{
-		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
-		}
-		
-	    }
-	}
-	
-	commandTextArea.setText(configureline); updateITCommand();
+	FieldCheckBoxChange(installdirCheckBox.isSelected()," -prefix=",installdirField.getText());
     }//GEN-LAST:event_installdirCheckBoxStateChanged
 
     private void usejavatimersCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_usejavatimersCheckBoxStateChanged
-String entry=" -JAVACPUTIME ";
+        String entry=" -JAVACPUTIME ";
 	if(usejavatimersCheckBox.isSelected()){
     
 	if(!usejdkCheckBox.isSelected()){
@@ -5494,34 +4232,7 @@ String entry=" -JAVACPUTIME ";
     }//GEN-LAST:event_jdkButtonActionPerformed
 
     private void usejdkCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_usejdkCheckBoxStateChanged
-	String entry =" -jdk=";
-	if(usejdkCheckBox.isSelected()){
-	    if(configureline.indexOf(entry)==-1){
-		configureline+=entry;
-		configureline+=jdkField.getText()+" ";
-	    }
-	}
-	
-	else{
-	    
-	    if(usejavatimersCheckBox.isSelected())
-	    {
-		usejdkCheckBox.setSelected(true);
-		return;
-	    }
-	    
-	    int start = configureline.indexOf(entry);
-	    if(start>-1){
-		int end = configureline.indexOf(" ",  start+1);
-		if(end==-1){
-		    configureline = configureline.substring(0, start);
-		} else{
-		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
-		}
-	    }
-	}
-	
-	commandTextArea.setText(configureline); updateITCommand();
+	FieldCheckBoxChange(usejdkCheckBox.isSelected()," -jdk=",jdkField.getText());
     }//GEN-LAST:event_usejdkCheckBoxStateChanged
 
     private void pythonlibButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pythonlibButtonActionPerformed
@@ -5535,28 +4246,7 @@ String entry=" -JAVACPUTIME ";
     }//GEN-LAST:event_pythonlibButtonActionPerformed
 
     private void pythonlibCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_pythonlibCheckBoxStateChanged
-	String entry =" -pythonlib=";
-	if(pythonlibCheckBox.isSelected()){
-	    if(configureline.indexOf(entry)==-1){
-		configureline+=entry;
-		configureline+=pythonlibField.getText()+" ";
-	    }
-	}
-	
-	else{
-	    int start = configureline.indexOf(entry);
-	    if(start>-1){
-		int end = configureline.indexOf(" ",  start+1);
-		if(end==-1){
-		    configureline = configureline.substring(0, start);
-		} else{
-		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
-		}
-		
-	    }
-	}
-	
-	commandTextArea.setText(configureline); updateITCommand();
+	FieldCheckBoxChange(pythonlibCheckBox.isSelected()," -pythonlib=",pythonlibField.getText());
     }//GEN-LAST:event_pythonlibCheckBoxStateChanged
 
     private void pythonincButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pythonincButtonActionPerformed
@@ -5570,28 +4260,7 @@ String entry=" -JAVACPUTIME ";
     }//GEN-LAST:event_pythonincButtonActionPerformed
 
     private void usepythonCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_usepythonCheckBoxStateChanged
-	String entry =" -pythoninc=";
-	if(usepythonCheckBox.isSelected()){
-	    if(configureline.indexOf(entry)==-1){
-		configureline+=entry;
-		configureline+=pythonincField.getText()+" ";
-	    }
-	}
-	
-	else{
-	    int start = configureline.indexOf(entry);
-	    if(start>-1){
-		int end = configureline.indexOf(" ",  start+1);
-		if(end==-1){
-		    configureline = configureline.substring(0, start);
-		} else{
-		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
-		}
-		
-	    }
-	}
-	
-	commandTextArea.setText(configureline); updateITCommand();
+	FieldCheckBoxChange(usepythonCheckBox.isSelected()," -pythoninc=",pythonincField.getText());
     }//GEN-LAST:event_usepythonCheckBoxStateChanged
 
     private void fortranComboActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fortranComboActionPerformed
@@ -5687,28 +4356,7 @@ String entry=" -JAVACPUTIME ";
     }//GEN-LAST:event_ccComboActionPerformed
 
     private void charmCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_charmCheckBoxStateChanged
-	String entry =" -charm=";
-	if(charmCheckBox.isSelected()){
-	    if(configureline.indexOf(entry)==-1){
-		configureline+=entry;
-		configureline+=charmTextField.getText()+" ";
-	    }
-	}
-	
-	else{
-	    int start = configureline.indexOf(entry);
-	    if(start>-1){
-		int end = configureline.indexOf(" ",  start+1);
-		if(end==-1){
-		    configureline = configureline.substring(0, start);
-		} else{
-		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
-		}
-		
-	    }
-	}
-	
-	commandTextArea.setText(configureline); updateITCommand();
+	FieldCheckBoxChange(charmCheckBox.isSelected()," -charm=",charmTextField.getText());
     }//GEN-LAST:event_charmCheckBoxStateChanged
 
     private void smartCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_smartCheckBoxStateChanged
@@ -5902,37 +4550,7 @@ String entry=" -pthread ";
     }//GEN-LAST:event_pthreadsCheckBoxStateChanged
 
     private void altshmemCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_altshmemCheckBoxStateChanged
-	String entry =" -shmemlibrary=";
-	if(altshmemCheckBox.isSelected()){
-	    if(configureline.indexOf(entry)==-1){
-		configureline+=entry;
-		configureline+=multiArg(altshmemTextField.getText())+" ";
-	    }
-	}
-	
-	else{
-	    int start = configureline.indexOf(entry);
-	    if(start>-1){
-                String endline=" ";
-                int end=-1;
-                if(configureline.charAt(start+entry.length())=='\'')
-                {
-                    endline="'";
-                    end = configureline.indexOf(endline,  start+1);
-                    end = configureline.indexOf(endline,  end+1)+1;//for space
-                }
-                else
-       		    end = configureline.indexOf(endline,  start+1);
-		if(end==-1){
-		    configureline = configureline.substring(0, start);
-		} else{
-		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
-		}
-		
-	    }
-	}
-	
-	commandTextArea.setText(configureline); updateITCommand();
+	FieldCheckBoxChange(altshmemCheckBox.isSelected()," -shmemlibrary=",altshmemTextField.getText());
     }//GEN-LAST:event_altshmemCheckBoxStateChanged
 
     private void shmemlibButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_shmemlibButtonActionPerformed
@@ -5946,28 +4564,7 @@ String entry=" -pthread ";
     }//GEN-LAST:event_shmemlibButtonActionPerformed
 
     private void shmemlibCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_shmemlibCheckBoxStateChanged
-	String entry =" -shmemlib=";
-	if(shmemlibCheckBox.isSelected()){
-	    if(configureline.indexOf(entry)==-1){
-		configureline+=entry;
-		configureline+=shmemlibTextField.getText()+" ";
-	    }
-	}
-	
-	else{
-	    int start = configureline.indexOf(entry);
-	    if(start>-1){
-		int end = configureline.indexOf(" ",  start+1);
-		if(end==-1){
-		    configureline = configureline.substring(0, start);
-		} else{
-		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
-		}
-		
-	    }
-	}
-	
-	commandTextArea.setText(configureline); updateITCommand();
+	FieldCheckBoxChange(shmemlibCheckBox.isSelected()," -shmemlib=",shmemlibTextField.getText());
     }//GEN-LAST:event_shmemlibCheckBoxStateChanged
 
     private void shmemincButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_shmemincButtonActionPerformed
@@ -5981,28 +4578,7 @@ String entry=" -pthread ";
     }//GEN-LAST:event_shmemincButtonActionPerformed
 
     private void shmemincCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_shmemincCheckBoxStateChanged
-	String entry =" -shmeminc=";
-	if(shmemincCheckBox.isSelected()){
-	    if(configureline.indexOf(entry)==-1){
-		configureline+=entry;
-		configureline+=shmemincTextField.getText()+" ";
-	    }
-	}
-	
-	else{
-	    int start = configureline.indexOf(entry);
-	    if(start>-1){
-		int end = configureline.indexOf(" ",  start+1);
-		if(end==-1){
-		    configureline = configureline.substring(0, start);
-		} else{
-		    configureline = configureline.substring(0, start)+configureline.substring(end+1);
-		}
-		
-	    }
-	}
-	
-	commandTextArea.setText(configureline); updateITCommand();
+        FieldCheckBoxChange(shmemincCheckBox.isSelected()," -shmeminc=",shmemincTextField.getText());
     }//GEN-LAST:event_shmemincCheckBoxStateChanged
 
     private void shmemCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_shmemCheckBoxStateChanged
@@ -7255,7 +5831,9 @@ if(pclCheckBox.isSelected()){
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JButton javatQjButton;
     private javax.swing.JButton jdkButton;
     private javax.swing.JTextField jdkField;
