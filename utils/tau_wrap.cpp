@@ -222,8 +222,10 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
 {
   string macro("#define ");
   string func(r->name());
+  string proto(r->name());
   func.append("(");
-  impl<<r->signature()->returnType()->name()<<" "; /* put in return type */
+  proto.append("(");
+  impl<<r->signature()->returnType()->name()<<"  tau_"; /* put in return type */
   impl<<func;
 #ifdef DEBUG
   cout <<"Examining "<<r->name()<<endl;
@@ -241,15 +243,24 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
 #endif /* DEBUG */
     if (argcount != 1) { /* not a startup */
       func.append(", ");
+      proto.append(", ");
       impl<<", ";
     }
     sprintf(number, "%d", argcount);
+    proto.append((*argsit).type()->name());
+    proto.append(" ");
+    proto.append(string("a")+string(number));
     func.append(string("a")+string(number));
     impl<<(*argsit).type()->name()<<" ";
     impl<<"a"<<number;
   }
   func.append(")");
+  proto.append(")");
   impl<<") {" <<endl<<endl;
+  if (!isVoid)
+  {
+    impl<<"  "<<r->signature()->returnType()->name()<< " retval;"<<endl;
+  }
   /* Now put in the body of the routine */
   impl<<"  TAU_PROFILE_TIMER(t,\""<<r->fullName()<<"\", \"\", "
       <<group_name<<");"<<endl;
@@ -258,13 +269,13 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
   {
     impl<<"  retval  =";
   }
-  impl<<"  tau_"<<func<<";"<<endl;
+  impl<<"  "<<func<<";"<<endl;
+  impl<<"  TAU_PROFILE_STOP(t);"<<endl;
   if (!isVoid)
   {
     impl<<"  return retval;"<<endl;
   }
   impl<<endl;
-  impl<<"  TAU_PROFILE_STOP(t);"<<endl;
 
   impl<<"}"<<endl<<endl;
   macro.append(" "+func+" " +"tau_"+func);
@@ -275,6 +286,7 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
 
   /* The macro goes in header file, the implementation goes in the other file */
   header <<macro<<endl;  
+  header <<"extern "<<r->signature()->returnType()->name()<<" tau_"<<proto<<";"<<endl;
 
 
 }
@@ -412,7 +424,7 @@ int main(int argc, char **argv)
     return false;
   }
   /* files created properly */
-  header <<"#include <"<<filename<<">"<<endl;
+  //header <<"#include <"<<filename<<">"<<endl;
   impl <<"#include <"<<filename<<">"<<endl;
   impl <<"#include <"<<header_file<<">"<<endl; /* Profile/Profiler.h */
 
@@ -451,7 +463,7 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau_wrap.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2007/11/02 02:24:57 $
- * VERSION_ID: $Id: tau_wrap.cpp,v 1.1 2007/11/02 02:24:57 sameer Exp $
+ * $Revision: 1.2 $   $Date: 2007/11/02 18:55:24 $
+ * VERSION_ID: $Id: tau_wrap.cpp,v 1.2 2007/11/02 18:55:24 sameer Exp $
  ***************************************************************************/
 
