@@ -4389,11 +4389,13 @@ fi
 if [ $dyninst = yes ]
   then
     fixmakeargs="$fixmakeargs DYNINST dyninstdir=$dyninstdir"
-  if [ ! -d $dyninstdir/lib ]
-  then
-    fixmakeargs="$fixmakeargs DYNINST41"
-  fi
-
+    if [ ! -d $dyninstdir/lib ]
+	then
+	fixmakeargs="$fixmakeargs DYNINST41"
+    fi
+    if [ ! -d $dyninstdir/$PLATFORM/lib/libcommon.so ] ; then
+	fixmakeargs="$fixmakeargs DYNINST6"
+    fi
 fi
 
 if [ $pcl = yes ]
