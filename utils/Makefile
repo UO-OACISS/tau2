@@ -92,6 +92,8 @@ CWARNING	= $(WARNINGSOPT)
 #VTF#INSTALLTAU2VTF 	= $(INSTALLDEST)/tau2vtf #ENDIF#
 #VTF#INSTALLVTF2PROFILE 	= $(INSTALLDEST)/vtf2profile #ENDIF#
 #OTF#INSTALLTAU2OTF 	= $(INSTALLDEST)/tau2otf #ENDIF#
+#OTF#OTFLIBS 	= -L$(OTFDIR)/$(TAU_ARCH)/lib -lotf $(TAU_TRACE_INPUT_LIB) #ENDIF#
+#OTFSRC#OTFLIBS 	= -L$(OTFDIR)/lib -lotf -lz $(TAU_TRACE_INPUT_LIB) #ENDIF#
 #TAU2EPILOG#TAU2ELG = elgconverter/tau2elg #ENDIF#
 #TAU2EPILOG#INSTALLTAU2ELG = $(INSTALLDEST)/tau2elg #ENDIF#
 #PERFLIB#INSTALLPERF2TAU = $(INSTALLDEST)/perf2tau #ENDIF#
@@ -206,7 +208,7 @@ tau2vtf.o:	tau2vtf.cpp
 		$(CXX) $(CFLAGS)  tau2vtf.cpp -c -I$(VTFDIR)/include 
 
 tau2otf: 	tau2otf.o
-		$(CXX) $(CFLAGS) tau2otf.o -o tau2otf -lm $(LEXTRA) -L$(OTFDIR)/$(TAU_ARCH)/lib -lotf $(TAU_TRACE_INPUT_LIB)
+		$(CXX) $(CFLAGS) tau2otf.o -o tau2otf -lm $(LEXTRA) $(OTFLIBS)
 
 tau2otf.o:	tau2otf.cpp
 		$(CXX) $(CFLAGS)  tau2otf.cpp -c -I$(OTFDIR)/include 
