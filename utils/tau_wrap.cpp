@@ -350,7 +350,7 @@ int main(int argc, char **argv)
 
   if (argc < 3)
   {
-    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-noinit] [-memory] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [-rn <return_keyword>] [-rv <return_void_keyword>] [-e <exit_keyword>] [-p]"<<endl;
+    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ]"<<endl;
     cout<<"----------------------------------------------------------------------------------------------------------"<<endl;
   }
   PDB p(argv[1]); if ( !p ) return 1;
@@ -467,8 +467,8 @@ int main(int argc, char **argv)
 /* EOF */
 
 /***************************************************************************
- * $RCSfile: tau_wrap.cpp,v $   $Author: amorris $
- * $Revision: 1.5 $   $Date: 2007/11/06 19:05:21 $
- * VERSION_ID: $Id: tau_wrap.cpp,v 1.5 2007/11/06 19:05:21 amorris Exp $
+ * $RCSfile: tau_wrap.cpp,v $   $Author: sameer $
+ * $Revision: 1.6 $   $Date: 2007/11/06 22:39:49 $
+ * VERSION_ID: $Id: tau_wrap.cpp,v 1.6 2007/11/06 22:39:49 sameer Exp $
  ***************************************************************************/
 
