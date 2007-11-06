@@ -2494,6 +2494,11 @@ then
 	mpiinc=/opt/SUNWhpc/include
 	;;
   *)
+        mpiinc=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/include
+        if [ -d $mpiinc ]
+        then
+          echo "Using MPI include directory $mpiinc"
+        fi
 	;;
   esac
 fi
@@ -2544,18 +2549,6 @@ then
         mpilib=/bgl/BlueLight/ppcfloor/bglsys/lib
 	additional_mpilibs='-lmsglayer.rts -ldevices.rts -lrts.rts -ldevices.rts'
         ;;
-  i386_linux) 
-	mpilib=/usr/local/packages/mpich
-   	;;
-  sgin32 | sgi8k) 
-	mpilib=/usr/lib32
- 	;;
-  sgi64) 
-	mpilib=/usr/lib64
-	;;
-  sgio32) 
-	mpilib=/usr/lib
-	;;
   t3e|crayx1|craysv1)  
 	mpilib=/opt/ctl/mpt/mpt/lib/
 	;;
@@ -2565,15 +2558,16 @@ then
   craycnl)
 	mpilib=/opt/xt-mpt/default/mpich2-64/P/lib
 	;;
-  alpha)  
-	mpilib=/usr/lib 
-    	;;
   solaris2*)
 	mpilib=/opt/SUNWhpc/lib
 	;;
   *)    
-	mpilib=/usr/lib 
-        ;;	
+        mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/lib
+        if [ -d $mpilib ]
+        then
+          echo "Using MPI lib directory $mpilib"
+        fi
+	;;
   esac
 fi
 
