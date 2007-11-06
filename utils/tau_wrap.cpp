@@ -292,18 +292,34 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
 
 
 }
-/* -------------------------------------------------------------------------- *//* -- Instrumentation routine for a C program ------------------------------- *//* -------------------------------------------------------------------------- */bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl, string& group_name, string& header_file)
+
+/* -------------------------------------------------------------------------- */
+/* -- Extract the package name from the header file name:  netcdf.h -> netcdf */
+/* -------------------------------------------------------------------------- */
+void extractLibName(const char *filename, string& libname)
+{
+  char *name = strdup(filename);
+  int len = strlen(name); /* length */
+  int i;
+
+  for (i=0; i < len; i++)
+  {
+    if (name[i] == '.') name[i] = '\0'; /* truncate it if . is found */
+  }
+  libname=string(name);
+} 
+
+
+/* -------------------------------------------------------------------------- */
+/* -- Instrumentation routine for a C program ------------------------------- */
+/* -------------------------------------------------------------------------- */
+bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl, string& group_name, string& header_file)
 {
   //static int firsttime=0;
-  int inbufLength, i, j, space;
   string file(f->name());
-  static char inbuf[INBUF_SIZE]; // to read the line
-  string exit_expression;
-  bool abort_used = false;
-  char newline;
-  newline = '\n'; /* for C \ processing in return statements */
-  // open outfile for instrumented version of source file
+  string pkg;
   
+  extractLibName(f->name().c_str(), pkg);
   // open source file
   ifstream istr(file.c_str());
   if (!istr) {
@@ -314,10 +330,9 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
   cout << "Processing " << file << " in instrumentCFile..." << endl;
 #endif
 
-  header <<"#ifndef _TAU_"<<file<<"_H_"<<endl;
-  header <<"#define _TAU_"<<file<<"_H_"<<endl<<endl;
+  header <<"#ifndef _TAU_"<<pkg<<"_H_"<<endl;
+  header <<"#define _TAU_"<<pkg<<"_H_"<<endl<<endl;
   header <<"#include <../"<<file<<">"<<endl<<endl;
-  memset(inbuf, INBUF_SIZE, 0); // reset to zero
   // initialize reference vector
   vector<itemRef *> itemvec;
   getCReferencesForWrapper(itemvec, pdb, f);
@@ -332,11 +347,51 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
 
     }
   }
-  header <<"#endif /*  _TAU_"<<file<<"_H_ */"<<endl;
+  header <<"#endif /*  _TAU_"<<pkg<<"_H_ */"<<endl;
 
 
 }
 
+/* -------------------------------------------------------------------------- */
+/* -- Define a TAU group after <Profile/Profiler.h> ------------------------- */
+/* -------------------------------------------------------------------------- */
+void defineTauGroup(ofstream& ostr, string& group_name)
+{
+  if (strcmp(group_name.c_str(), "TAU_USER") != 0)
+  { /* Write the following lines only when -DTAU_GROUP=string is defined */
+    ostr<< "#ifndef "<<group_name<<endl;
+    ostr<< "#define "<<group_name << " TAU_GET_PROFILE_GROUP(\""<<group_name.substr(10)<<"\")"<<endl;
+    ostr<< "#endif /* "<<group_name << " */ "<<endl;
+  }
+}
+
+void generateMakefile(string& package, string &outFileName)
+{
+  string makefileName("Makefile");
+  ofstream makefile(string("wrapper/"+string(makefileName)).c_str());
+  
+  string text("include ${TAU_MAKEFILE} \n\
+CC=$(TAU_CC) \n\
+CFLAGS=$(TAU_DEFS) $(TAU_INCLUDE)  -I.. \n\
+\n\
+AR=ar \n\
+ARFLAGS=rcv \n\
+\n\
+lib"+package+"_wrap.a: "+package+"_wrap.o \n\
+	$(AR) $(ARFLAGS) $@ $<\n\
+\n\
+"+package+"_wrap.o: "+outFileName+"\n\
+	$(CC) $(CFLAGS) -c $< -o $@\n\
+clean:\n\
+	/bin/rm -f lib"+package+"_wrap.o lib+"+package+"_wrap.a\n\
+");
+
+  makefile <<text<<endl;
+}
+
+
+
+ 
 /* -------------------------------------------------------------------------- */
 /* -- Instrument the program using C, C++ or F90 instrumentation routines --- */
 /* -------------------------------------------------------------------------- */
@@ -433,6 +488,14 @@ int main(int argc, char **argv)
   impl <<"#include <"<<filename<<">"<<endl;
   impl <<"#include <"<<header_file<<">"<<endl; /* Profile/Profiler.h */
 
+  defineTauGroup(impl, group_name); 
+  string libname;
+  extractLibName(filename, libname);
+
+#ifdef DEBUG
+  cout <<"Library name is "<<libname<<endl;
+#endif /* DEBUG */
+
   bool instrumentThisFile;
   bool fuzzyMatchResult;
   bool fileInstrumented = false;
@@ -453,6 +516,8 @@ int main(int argc, char **argv)
      }
   }
 
+  generateMakefile(libname, outFileName);
+
 } /* end of main */
 
 
@@ -468,7 +533,7 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau_wrap.cpp,v $   $Author: sameer $
- * $Revision: 1.6 $   $Date: 2007/11/06 22:39:49 $
- * VERSION_ID: $Id: tau_wrap.cpp,v 1.6 2007/11/06 22:39:49 sameer Exp $
+ * $Revision: 1.7 $   $Date: 2007/11/06 23:57:29 $
+ * VERSION_ID: $Id: tau_wrap.cpp,v 1.7 2007/11/06 23:57:29 sameer Exp $
  ***************************************************************************/
 
