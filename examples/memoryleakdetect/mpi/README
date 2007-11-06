@@ -1,0 +1,8 @@
+This directory demonstrates a memory leak in the matrix.f90 MPI program. 
+Three arrays A, B, and C are allocated, but only A and B are deallocated. 
+When this program is run, it shows the memory leak at C. 
+USER EVENTS Profile :NODE 0, CONTEXT 0, THREAD 0
+---------------------------------------------------------------------------------------
+NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name
+---------------------------------------------------------------------------------------
+         1      8E+06      8E+06      8E+06          0  MEMORY LEAK! malloc size <file=matrix.f90, variable=C, line=11> : MAIN => MATRICES::ALLOCATE_MATRICES 

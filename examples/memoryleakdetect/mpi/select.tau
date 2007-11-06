@@ -1,0 +1,4 @@
+BEGIN_INSTRUMENT_SECTION
+memory file="*.f90" routine="#"
+loops routine="#"
+END_INSTRUMENT_SECTION
