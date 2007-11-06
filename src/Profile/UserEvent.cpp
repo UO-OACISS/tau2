@@ -63,13 +63,20 @@ using namespace std;
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
 #ifdef TRACING_ON
+#ifdef TAU_VAMPIRTRACE
+#include <otf.h>
+#include "Profile/TauVampirTrace.h"
+#else /* TAU_VAMPIRTRACE */
 #ifdef TAU_EPILOG
 #include "elg_trc.h"
 #else /* TAU_EPILOG */
 #define PCXX_EVENT_SRC
 #include "Profile/pcxx_events.h"
 #endif /* TAU_EPILOG */
+#endif /* TAU_VAMPIRTRACE */
 #endif // TRACING_ON 
+
+
 
 #ifdef PGI
 template void vector<TauUserEvent *>::insert_aux(vector<TauUserEvent *>::iterator, TauUserEvent *const &);
@@ -93,6 +100,10 @@ void TauUserEvent::AddEventToDB()
   DEBUGPROFMSG("Size of eventDB is " << TheEventDB().size() <<endl);
   /* Set user event id */
   EventId = RtsLayer::GenerateUniqueId();
+#ifdef TAU_VAMPIRTRACE
+  uint32_t gid = vt_def_counter_group("TAU Events");
+  EventId = vt_def_counter(GetEventName(), OTF_COUNTER_TYPE_ABS|OTF_COUNTER_SCOPE_NEXT, gid, "#");
+#endif /* TAU_VAMPIRTRACE */
   RtsLayer::UnLockDB();
   return;
 }
@@ -224,12 +235,25 @@ void TauUserEvent::SetMonotonicallyIncreasing(bool value)
 void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid)
 { 
 #ifdef TRACING_ON
+#ifdef TAU_VAMPIRTRACE
+  uint64_t time;
+  uint64_t cval;
+  int id = GetEventId();
+  time = vt_pform_wtime();
+  cval = (uint64_t) data;
+  vt_count(&time, id, 0);
+  time = vt_pform_wtime();
+  vt_count(&time, id, cval);
+  time = vt_pform_wtime();
+  vt_count(&time, id, 0);
+#else /* TAU_VAMPIRTRACE */
 #ifndef TAU_EPILOG
   TraceEvent(GetEventId(), (x_uint64) 0, tid, 0, 0); 
   TraceEvent(GetEventId(), (x_uint64) data, tid, 0, 0); 
   TraceEvent(GetEventId(), (x_uint64) 0, tid, 0, 0); 
 #endif /* TAU_EPILOG */
   /* Timestamp is 0, and use_ts is 0, so tracing layer gets timestamp */
+#endif /* TAU_VAMPIRTRACE */
 #endif /* TRACING_ON */
 
 #ifdef PROFILING_ON
@@ -704,6 +728,6 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid)
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: sameer $
- * $Revision: 1.20 $   $Date: 2006/06/27 19:26:56 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.20 2006/06/27 19:26:56 sameer Exp $ 
+ * $Revision: 1.21 $   $Date: 2007/11/06 18:53:33 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.21 2007/11/06 18:53:33 sameer Exp $ 
  ***************************************************************************/

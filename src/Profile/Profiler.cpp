@@ -663,6 +663,10 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 	
 #endif//TAU_MULTIPLE_COUNTERS
 
+        /* Should we detect memory leaks here? */
+        if (ParentProfiler == (Profiler *) NULL && TheSafeToDumpData() && !RtsLayer::isCtorDtor(ThisFunction->GetName())) {
+          TauDetectMemoryLeaks(); /* the last event should be before final exit */
+        }
 #ifdef TRACING_ON
 #ifdef TAU_VAMPIRTRACE
         TimeStamp = vt_pform_wtime();
@@ -1557,7 +1561,7 @@ int Profiler::StoreData(int tid)
 #endif /* TAUKTAU */
 
 	DEBUGPROFMSG("Profiler::StoreData( tid = "<<tid <<" ) "<<endl;);
-	TauDetectMemoryLeaks();
+	//TauDetectMemoryLeaks();
 
 #ifdef TRACING_ON
 #ifdef TAU_VAMPIRTRACE
@@ -2655,7 +2659,7 @@ int Profiler::StoreData(int tid){
 #endif //PROFILING_ON
 
   DEBUGPROFMSG("Profiler::StoreData( tid = "<<tid <<" ) "<<endl;);
-  TauDetectMemoryLeaks();
+  //TauDetectMemoryLeaks();
 
 #ifdef TRACING_ON
 #ifdef TAU_VAMPIRTRACE
@@ -3416,9 +3420,9 @@ double& Profiler::TheTauThrottlePerCall(void)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.168 $   $Date: 2007/10/25 22:04:46 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.168 2007/10/25 22:04:46 amorris Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.169 $   $Date: 2007/11/06 18:53:33 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.169 2007/11/06 18:53:33 sameer Exp $ 
  ***************************************************************************/
 
 	
