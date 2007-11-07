@@ -82,8 +82,8 @@ int DefUserEvent( void *userData, unsigned int userEventToken,
  ***************************************************************************/
 int ClockPeriod( void*  userData, double clkPeriod )
 {
-	double x=1/clkPeriod;
 	#ifdef DEBUG 
+	double x=1/clkPeriod;
 	cout << "Clock: " << x << endl;
 	#endif
 	ClockPeriodDef(clkPeriod );
@@ -138,7 +138,7 @@ int EnterState(void *userData, double time,
  ***************************************************************************/
 int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid, unsigned int stateid)
 {
-	LeaveStateDef(time,ThreadID[pair<int,int>(nid,tid)], stateid);// nid, tid,
+	LeaveStateDef(time,ThreadID[pair<int,int>(nid,tid)]);// , stateid nid, tid,
 
 	return 0;
 }

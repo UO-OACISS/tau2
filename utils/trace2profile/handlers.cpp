@@ -17,6 +17,7 @@ int ThreadDef(unsigned int nodeToken, unsigned int threadToken, unsigned int pro
 	local.threadToken=threadToken;
 	Converter::threadnames[processToken] = new string(threadName);//local.threadName=threadName;
 	local.lastState=-1;
+	local.currentState=-1;
 	local.finished=false;
 	
 	local.nextShot=-1;
@@ -282,6 +283,7 @@ int EnterStateDef(double time, unsigned int pid, unsigned int stateid)//unsigned
 	if(time>Converter::lastTime)Converter::lastTime=time;
 	//unsigned int curid=pid;
 	Thread &threadin=*(Converter::ThreadMap[pid]);
+	threadin.currentState=stateid;
 	threadin.lastTime=time;
 	//lastTime=time;
 	SnapshotControl(time,-2, threadin);
@@ -318,11 +320,12 @@ int EnterStateDef(double time, unsigned int pid, unsigned int stateid)//unsigned
  * 		This is a callback routine which must be registered by the 
  * 		trace converter. 
  ***************************************************************************/
-int LeaveStateDef(double time,unsigned int pid, unsigned int stateid)// unsigned int nid, unsigned int tid, 
+int LeaveStateDef(double time,unsigned int pid)//, unsigned int stateid unsigned int nid, unsigned int tid, 
 {
 	if(time>Converter::lastTime)Converter::lastTime=time;
 	//unsigned int curid=pid;//Converter::ThreadID[pair<int,int>(nid,tid)];
 	Thread &threadin=*(Converter::ThreadMap[pid]);
+	unsigned int stateid=threadin.currentState;
 	State &thisState=*(threadin.allstate[stateid]);
 	threadin.lastTime=time;
 	//lastTime=time;

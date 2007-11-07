@@ -11,7 +11,9 @@ uint64_t scaleUnit=1000;
 
 int OTF_handleDefinitionComment( void* firsthandlerarg, uint32_t streamid,const char* comment ) {
 	//return ( 0 == VTF3_WriteComment( ((fcbT*) firsthandlerarg)->fcb, 0, comment ) );
+#ifdef debugOTF
 	cout << "Definition Comment." << " streamid: "<< streamid << " comment: " << comment << endl; 
+#endif
 	return 0;
 }
 
@@ -20,6 +22,7 @@ int handleDeftimerresolution( void* firsthandlerarg, uint32_t streamid,uint64_t 
 
 //	return ( 0 == VTF3_WriteDefclkperiod( ((fcbT*) firsthandlerarg)->fcb,
 //		1.0  / (double) ticksPerSecond ) );
+#ifdef debugOTF
 	cout << "Def timer resolution." << " streamid: "<< streamid << " ticksPerSecond: " << ticksPerSecond << endl; 
 	//char buffer [33];
 	//int scaleUnit=1;
@@ -27,7 +30,7 @@ int handleDeftimerresolution( void* firsthandlerarg, uint32_t streamid,uint64_t 
 		//scaleUnit=1000000/ticksPerSecond;
 		
 	cout << "Scale: " << scaleUnit << endl;
-	
+#endif
 	//string result = "";
 	//if(ticksPerSecond==1000000000)
 	//	result="nanoseconds";
@@ -42,8 +45,10 @@ int handleDeftimerresolution( void* firsthandlerarg, uint32_t streamid,uint64_t 
 
 
 int handleDefprocess( void* firsthandlerarg, uint32_t streamid,uint32_t deftoken, const char* name, uint32_t parent ) {
+#ifdef debugOTF
 	cout << "Def process." << " streamid: "<< streamid << " deftoken: " << deftoken << " name: " << name << " parent: " << parent << endl; 
-//	treehash_addnode ( ((fcbT*) firsthandlerarg)->p_hashtab, deftoken, name,
+#endif
+	//	treehash_addnode ( ((fcbT*) firsthandlerarg)->p_hashtab, deftoken, name,
 //		parent );
 	//cout << strlen(name) << endl;
 	string name_s = name;
@@ -67,8 +72,10 @@ int handleDefprocess( void* firsthandlerarg, uint32_t streamid,uint32_t deftoken
 
 
 int handleDefprocessgroup( void* firsthandlerarg, uint32_t streamid,uint32_t deftoken, const char* name, uint32_t n, uint32_t* array ) {
+#ifdef debugOTF
 	cout << "Def process group." << " streamid: "<< streamid << " deftoken: " << deftoken << " name: " << name << " also has array" << endl;
-//	unsigned int* tripletarray;
+#endif
+	//	unsigned int* tripletarray;
 //	uint32_t i;
 
 
@@ -102,9 +109,10 @@ int handleDefprocessgroup( void* firsthandlerarg, uint32_t streamid,uint32_t def
 int handleDeffunction(  void* firsthandlerarg, uint32_t streamid,
 		uint32_t deftoken, const char* name, uint32_t group,
 		uint32_t scltoken ) {
-
+#ifdef debugOTF
 	cout << "Def function." << " streamid: "<< streamid << " deftoken: " << deftoken << " name: " << name << " group: " << group << " scltoken: " << scltoken << endl;
-//	return ( 0 == VTF3_WriteDefstate( ((fcbT*) firsthandlerarg)->fcb, group, deftoken,
+#endif
+	//	return ( 0 == VTF3_WriteDefstate( ((fcbT*) firsthandlerarg)->fcb, group, deftoken,
 //		name, scltoken ) );
 
 	//cout << strlen(name) << endl;
@@ -127,8 +135,9 @@ int handleDeffunction(  void* firsthandlerarg, uint32_t streamid,
 
 int handleDeffunctiongroup( void* firsthandlerarg, uint32_t streamid,
 		uint32_t deftoken, const char* name ) {
-
+#ifdef debugOTF
 	cout << "Def function group." << " streamid: "<< streamid << " deftoken: " << deftoken << " name: " << name << endl;
+#endif
 	StateGroupDef(deftoken,name);
 //	return ( 0 == VTF3_WriteDefact( ((fcbT*) firsthandlerarg)->fcb, deftoken, name ) );
 	return 0;
@@ -138,9 +147,9 @@ int handleDeffunctiongroup( void* firsthandlerarg, uint32_t streamid,
 int handleDefcounter( void* firsthandlerarg, uint32_t streamid,
 	uint32_t deftoken, const char* name, uint32_t properties, 
 	uint32_t countergroup, const char* unit ) {
-
+#ifdef debugOTF
 	cout << "Def counter." << " streamid: "<< streamid << " deftoken: " << deftoken << " name: " << name << " properties: " << properties << " countergroup: " << countergroup << " unit: " << unit << endl;
-	
+#endif
 	int dodifferentiation= ( OTF_COUNTER_TYPE_ACC == ( properties & OTF_COUNTER_TYPE_BITS ) ) ? 1 : 0;
 	UserEventDef(deftoken, name, dodifferentiation);
 		
@@ -195,9 +204,9 @@ return 0;
 
 int handleDefcountergroup( void* firsthandlerarg, uint32_t streamid,
 		uint32_t deftoken, const char* name ) {
-
+#ifdef debugOTF
 	cout << "Def counter group." << " streamid: "<< streamid << " deftoken: " << deftoken << " name: " << name << endl;
-	
+#endif
 
 //	return ( 0 == VTF3_WriteDefsampclass( ((fcbT*) firsthandlerarg)->fcb, deftoken,
 //		name ) );
@@ -207,9 +216,9 @@ int handleDefcountergroup( void* firsthandlerarg, uint32_t streamid,
 
 int handleDefCollectiveOperation( void* firsthandlerarg, uint32_t streamid,
 	uint32_t deftoken, const char* name, uint32_t type ) {
-
+#ifdef debugOTF
 	cout << "Def collective operation." << " streamid: "<< streamid << " deftoken: " << deftoken << " name: " << name << " type: " << type << endl;
-
+#endif
 
 //	return ( 0 == VTF3_WriteDefglobalop( ((fcbT*) firsthandlerarg)->fcb, deftoken,
 //		name ) );
@@ -266,7 +275,7 @@ return 0;
 int handleCounter( void* firsthandlerarg, uint64_t time, uint32_t process,
 		uint32_t token, uint64_t value ) {
 
-
+	cout << "Handle Counter." << " Time: "<< time << " process: " << process << " token: " << token << " value: " << value << endl;
 //	int sampletokenarray= token;
 //	int samplevaluetypearray= VTF3_VALUETYPE_UINT;
 //	uint64_t samplevaluearray= value;
@@ -296,7 +305,7 @@ return 0;
 int handleEnter( void* firsthandlerarg, uint64_t time, uint32_t statetoken,
 		uint32_t cpuid, uint32_t scltoken ) {
 
-
+	cout << "Handle Enter." << " Time: "<< time << " statetoken: " << statetoken << " cpuid: " << cpuid << " scltoken: " << scltoken << endl;
 //	nodeT *node = treehash_searchnode(((fcbT*) firsthandlerarg)->p_hashtab,
 //		cpuid);
 //
@@ -393,8 +402,8 @@ return 0;
 
 int handleLeave( void* firsthandlerarg, uint64_t time, uint32_t statetoken,
 		uint32_t cpuid, uint32_t scltoken ) {
-
-	LeaveStateDef(time/scaleUnit, cpuid, statetoken);
+	cout << "Handle Leave." << " Time: "<< time << " statetoken: " << statetoken << " cpuid: " << cpuid << " scltoken: " << scltoken << endl;
+	LeaveStateDef(time/scaleUnit, cpuid);//, statetoken
 //	nodeT *node = treehash_searchnode(((fcbT*) firsthandlerarg)->p_hashtab,
 //		cpuid);
 //

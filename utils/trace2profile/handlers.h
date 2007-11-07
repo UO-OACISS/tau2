@@ -12,6 +12,6 @@ int EventTriggerDef(double time,
 		unsigned int userEventToken,
 		long long userEventValue);//unsigned int nid,unsigned int tid,
 int EnterStateDef(double time, unsigned int pid, unsigned int stateid);//unsigned int nid, unsigned int tid, 
-int LeaveStateDef(double time, unsigned int pid, unsigned int stateid);//unsigned int nid, unsigned int tid, 
+int LeaveStateDef(double time, unsigned int pid);//, unsigned int stateid unsigned int nid, unsigned int tid, 
 
 #endif /*HANDLERS_H_*/

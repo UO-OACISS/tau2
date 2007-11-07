@@ -134,7 +134,6 @@ void StateLeave(double time, Thread &threadin, State &statein)
 	/*Add the exclusive time recorded since the routine was last on the top 
 	 * of the stack.  It is no longer on the stack so stop recording topTime.
 	 * Decrement the number of recursive calls to this routine.*/
-	 
 	statein.exclusive+=time-statein.topTime;
 	if(statein.exclusive <0)
 		cout << "Exclusive stamp: "<< setprecision(8) <<  time << " topTime: " << statein.topTime << endl;
@@ -860,9 +859,10 @@ int main(int argc, char **argv)
 		ReadTraceFile();
 	else
 	{
-		/*TODO: Re-enable OTF with library detection
-		ReadOTFFile();		
-		*/
+		//TODO: Re-enable OTF with library detection
+
+//		ReadOTFFile();		
+
 		Usage();
 		exit(1);
 	}

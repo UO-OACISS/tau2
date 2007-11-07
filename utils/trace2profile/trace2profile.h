@@ -170,6 +170,7 @@ class Thread {
 	unsigned int threadToken;
 	unsigned int processToken;
 	int lastState;/*The last state entered in this thread*/
+	int currentState;/*The state being exited, by virtue of being the last state entered*/
 	vector<State*> callstack;/*State IDs*/  //unsigned int
 	//const char * threadName;
 	bool finished;
