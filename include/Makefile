@@ -609,7 +609,7 @@ TAU_LINKER_OPT4 = $(LEXTRA1)
 #SUNX86_64#TAU_LINKER_OPT9 = $(EXTRALIBS) #ENDIF#
 #SOL2#TAU_LINKER_OPT9 = $(ExTRALIBS)    #ENDIF#
 
-#BGLTIMERS#TAU_LINKER_OPT10 = -L/bgl/BlueLight/ppcfloor/bglsys/lib -lrts.rts #ENDIF#
+#BGL#TAU_LINKER_OPT10 = -L/bgl/BlueLight/ppcfloor/bglsys/lib -lrts.rts #ENDIF#
 
 #USE_IBMXLC#TAU_IBM_PYTHON_SHFLAG = -Wl,-bI:$(PYTHON_LIBDIR)/config/python.exp -Wl,-einitpytau#ENDIF#
 #GNU#TAU_IBM_PYTHON_SHFLAG = -Wl,-bI:$(PYTHON_LIBDIR)/config/python.exp -Wl,-einitpytau#ENDIF#
