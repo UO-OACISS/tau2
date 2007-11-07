@@ -531,7 +531,7 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 #LAHEY_FORTRAN#TAU_CXXLIBS		= $(TAU_GNUCXXLIBS) /usr/lib/libc.a #ENDIF#
 #NAGWARE_FORTRAN#TAU_CXXLIBS		= $(TAU_GNUCXXLIBS) /usr/lib/libc.a #ENDIF#
 #PGI#TAU_CXXLIBS        	= -lstd -lC       #ENDIF#
-#CRAYCNL#TAU_CXXLIBS        	= -L$(EXTRADIR)/lib -lstd -lC       #ENDIF#
+#CRAYCNL#TAU_CXXLIBS        	= -L$(EXTRADIR)/lib -lstd -lC -lpgc     #ENDIF#
 #CRAYX1CC#TAU_CXXLIBS        	= -L/opt/ctl/CC/CC/lib -lC       #ENDIF#
 
 TAU_SGI_INIT = /usr/lib32/c++init.o 
