@@ -376,7 +376,7 @@ lib"+package+"_wrap.a: "+package+"_wrap.o \n\
 "+package+"_wrap.o: "+outFileName+"\n\
 	$(CC) $(CFLAGS) -c $< -o $@\n\
 clean:\n\
-	/bin/rm -f lib"+package+"_wrap.o lib"+package+"_wrap.a\n\
+	/bin/rm -f "+package+"_wrap.o lib"+package+"_wrap.a\n\
 ");
 
   makefile <<text<<endl;
@@ -530,7 +530,7 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau_wrap.cpp,v $   $Author: sameer $
- * $Revision: 1.9 $   $Date: 2007/11/07 00:34:21 $
- * VERSION_ID: $Id: tau_wrap.cpp,v 1.9 2007/11/07 00:34:21 sameer Exp $
+ * $Revision: 1.10 $   $Date: 2007/11/07 00:36:05 $
+ * VERSION_ID: $Id: tau_wrap.cpp,v 1.10 2007/11/07 00:36:05 sameer Exp $
  ***************************************************************************/
 
