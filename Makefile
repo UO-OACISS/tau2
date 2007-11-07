@@ -74,10 +74,11 @@ examples/cthreads examples/fortran examples/f90 $(MPIEXAMPLES) $(PDTEXAMPLE)
 
 #TAU2EPILOG#ELGCONVERTER=utils/elgconverter #ENDIF#
 
-
+#IOWRAPPER#IOWRAPPER=src/wrappers/posixio#ENDIF#
 
 # Subdirectories to make resursively
-SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) $(SLOGCONVERTER) $(ELGCONVERTER) $(TRACE2PROFILE)
+SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) $(SLOGCONVERTER) \
+          $(ELGCONVERTER) $(TRACE2PROFILE) $(IOWRAPPER)
 
 all:
 	@echo "At the installation root, use \"make install\" "

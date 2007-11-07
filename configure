@@ -286,6 +286,7 @@ stff=no
 stffdir=
 sddf=no
 sddfdir=
+iowrapper=no
 
 # debug:
 # echo $arguments
@@ -437,6 +438,11 @@ do
       papithread=yes
     shift
     ;;
+
+  -iowrapper)
+      iowrapper=yes
+      shift
+      ;;
 
   -charm=*)
       pthread=yes
@@ -1751,6 +1757,10 @@ if [ $comm = no ]
     fixmakeargs="$fixmakeargs NOCOMM"
     tauoptions="${tauoptions}-nocomm"
 fi
+
+if [ $iowrapper = yes ] ; then
+    fixmakeargs="$fixmakeargs IOWRAPPER"
+fi    
 
 if [ $profilecallstack = yes ]
   then
