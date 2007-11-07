@@ -4,11 +4,11 @@
       module matrices
       integer, parameter :: wp = selected_real_kind(15)
       real(wp), allocatable :: A(:,:), B(:,:), C(:,:)   ! scratch arrays
-      integer SIZE
-      parameter (SIZE = 1000) 
+      integer MSIZE
+      parameter (MSIZE = 1000) 
       contains
       subroutine allocate_matrices
-        allocate( A(SIZE,SIZE), B(SIZE,SIZE), C(SIZE,SIZE) )
+        allocate( A(MSIZE,MSIZE), B(MSIZE,MSIZE), C(MSIZE,MSIZE) )
         return
       end subroutine allocate_matrices
       subroutine deallocate_matrices
@@ -19,15 +19,15 @@
       subroutine initialize
 
 ! first initialize the A matrix
-        do i = 1,SIZE 
-          do j = 1,SIZE 
+        do i = 1,MSIZE 
+          do j = 1,MSIZE 
             A(j,i) = i 
           end do
         end do
 
 ! then initialize the B matrix
-        do i = 1,SIZE 
-          do j = 1,SIZE 
+        do i = 1,MSIZE 
+          do j = 1,MSIZE 
             B(j,i) = i 
           end do
         end do
@@ -35,13 +35,13 @@
       end subroutine initialize
       
       subroutine multiply_matrices(answer, buffer)
-        double precision buffer(SIZE), answer(SIZE)
+        double precision buffer(MSIZE), answer(MSIZE)
         integer i, j
 ! multiply the row with the column 
 
-        do i = 1,SIZE 
+        do i = 1,MSIZE 
           answer(i) = 0.0 
-          do j = 1,SIZE 
+          do j = 1,MSIZE 
             answer(i) = answer(i) + buffer(j)*B(j,i) 
           end do
         end do
@@ -52,7 +52,7 @@
 
 ! try changing this value to 2000 to get rid of transient effects 
 ! at startup
-      double precision buffer(SIZE), answer(SIZE)
+      double precision buffer(MSIZE), answer(MSIZE)
 
       integer myid, master, maxpe, ierr, status(MPI_STATUS_SIZE) 
       integer i, j, numsent, sender 
@@ -64,7 +64,7 @@
       print *, "Process ", myid, " of ", maxpe, " is active"
 
       master = 0 
-      matsize = SIZE
+      matsize = MSIZE
 
       if ( myid .eq. master ) then 
 ! master initializes and then dispatches 
