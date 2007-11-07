@@ -1279,7 +1279,7 @@ int main (int argc, char *argv[])
 
   fileIdx = 1;
 
-  if ( argc < 3 )
+  if ( argc < 4 )
   {
     fprintf (stderr, "usage: %s [-alog | -SDDF | -dump | -paraver [-t] |", argv[0]);
     fprintf (stderr, " -pv | -vampir [-longsymbolbugfix] [-compact] [-user|-class|-all] [-nocomm]]");
