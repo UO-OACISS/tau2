@@ -492,9 +492,9 @@ int main(int argc, char **argv)
   header <<"#ifndef _TAU_"<<libname<<"_H_"<<endl;
   header <<"#define _TAU_"<<libname<<"_H_"<<endl<<endl;
   header <<"#include <../"<<filename<<">"<<endl<<endl;
-  header <<"\#ifdef __cplusplus"<<endl;
+  header <<"#ifdef __cplusplus"<<endl;
   header <<"extern \"C\" {"<<endl;
-  header <<"\#endif /*  __cplusplus */"<<endl<<endl;
+  header <<"#endif /*  __cplusplus */"<<endl<<endl;
   bool instrumentThisFile;
   bool fuzzyMatchResult;
   bool fileInstrumented = false;
@@ -514,9 +514,9 @@ int main(int argc, char **argv)
        instrumentCFile(p, *it, header, impl, group_name, header_file);
      }
   }
-  header <<"\#ifdef __cplusplus"<<endl;
+  header <<"#ifdef __cplusplus"<<endl;
   header <<"}"<<endl;
-  header <<"\#endif /* __cplusplus */"<<endl<<endl;
+  header <<"#endif /* __cplusplus */"<<endl<<endl;
   header <<"#endif /*  _TAU_"<<libname<<"_H_ */"<<endl;
 
   generateMakefile(libname, outFileName);
@@ -535,8 +535,8 @@ int main(int argc, char **argv)
 /* EOF */
 
 /***************************************************************************
- * $RCSfile: tau_wrap.cpp,v $   $Author: sameer $
- * $Revision: 1.11 $   $Date: 2007/11/07 01:37:22 $
- * VERSION_ID: $Id: tau_wrap.cpp,v 1.11 2007/11/07 01:37:22 sameer Exp $
+ * $RCSfile: tau_wrap.cpp,v $   $Author: amorris $
+ * $Revision: 1.12 $   $Date: 2007/11/07 23:36:06 $
+ * VERSION_ID: $Id: tau_wrap.cpp,v 1.12 2007/11/07 23:36:06 amorris Exp $
  ***************************************************************************/
 
