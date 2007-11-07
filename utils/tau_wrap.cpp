@@ -68,7 +68,6 @@ extern bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector        
 
 /* Globals */
 bool memory_flag = false;   /* by default, do not insert malloc.h in instrumented C/C++ files */
-const int INBUF_SIZE = 65536;
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -317,9 +316,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl, str
 {
   //static int firsttime=0;
   string file(f->name());
-  string pkg;
   
-  extractLibName(f->name().c_str(), pkg);
   // open source file
   ifstream istr(file.c_str());
   if (!istr) {
@@ -330,9 +327,6 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl, str
   cout << "Processing " << file << " in instrumentCFile..." << endl;
 #endif
 
-  header <<"#ifndef _TAU_"<<pkg<<"_H_"<<endl;
-  header <<"#define _TAU_"<<pkg<<"_H_"<<endl<<endl;
-  header <<"#include <../"<<file<<">"<<endl<<endl;
   // initialize reference vector
   vector<itemRef *> itemvec;
   getCReferencesForWrapper(itemvec, pdb, f);
@@ -347,7 +341,6 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl, str
 
     }
   }
-  header <<"#endif /*  _TAU_"<<pkg<<"_H_ */"<<endl;
 
 
 }
@@ -496,6 +489,9 @@ int main(int argc, char **argv)
   cout <<"Library name is "<<libname<<endl;
 #endif /* DEBUG */
 
+  header <<"#ifndef _TAU_"<<libname<<"_H_"<<endl;
+  header <<"#define _TAU_"<<libname<<"_H_"<<endl<<endl;
+  header <<"#include <../"<<filename<<">"<<endl<<endl;
   bool instrumentThisFile;
   bool fuzzyMatchResult;
   bool fileInstrumented = false;
@@ -515,6 +511,7 @@ int main(int argc, char **argv)
        instrumentCFile(p, *it, header, impl, group_name, header_file);
      }
   }
+  header <<"#endif /*  _TAU_"<<libname<<"_H_ */"<<endl;
 
   generateMakefile(libname, outFileName);
 
@@ -533,7 +530,7 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau_wrap.cpp,v $   $Author: sameer $
- * $Revision: 1.7 $   $Date: 2007/11/06 23:57:29 $
- * VERSION_ID: $Id: tau_wrap.cpp,v 1.7 2007/11/06 23:57:29 sameer Exp $
+ * $Revision: 1.8 $   $Date: 2007/11/07 00:06:59 $
+ * VERSION_ID: $Id: tau_wrap.cpp,v 1.8 2007/11/07 00:06:59 sameer Exp $
  ***************************************************************************/
 
