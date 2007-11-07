@@ -75,6 +75,7 @@ static int FlushEvents[TAU_MAX_THREADS] = {0};
 
 /* -- initialization status flags ---------------------------- */
 static int TraceInitialized[TAU_MAX_THREADS] = {0};
+static int TraceFileInitialized[TAU_MAX_THREADS] = {0};
 
 #ifdef TAU_MULTIPLE_COUNTERS
 static double tracerValues[MAX_TAU_COUNTERS] = {0};
@@ -137,9 +138,39 @@ int GetFlushEvents(int tid)
   return FlushEvents[tid];
 }
 
+static int checkTraceFileInitialized(int tid) {
+  if ( !(TraceFileInitialized[tid]) && (RtsLayer::myNode() > -1)) { 
+    TraceFileInitialized[tid] = 1;
+     char *dirname, tracefilename[1024];
+    if ((dirname = getenv("TRACEDIR")) == NULL) {
+      // Use default directory name .
+      dirname  = new char[8];
+      strcpy (dirname,".");
+    }
+    sprintf(tracefilename, "%s/tautrace.%d.%d.%d.trc",dirname, 
+	    RtsLayer::myNode(), RtsLayer::myContext(), tid);
+    if ((TraceFd[tid] = open (tracefilename, O_WRONLY|O_CREAT|O_TRUNC|O_APPEND|O_BINARY|LARGEFILE_OPTION, 0600)) < 0)
+    {
+      fprintf (stderr, "TraceEvInit[open]: ");
+      perror (tracefilename);
+      exit (1);
+    }
+
+    if (TraceBuffer[tid][0].ev == PCXX_EV_INIT)
+      { /* first record is init */
+	for (int iter = 0; iter < TauCurrentEvent[tid]; iter ++)
+	  {
+	    TraceBuffer[tid][iter].nid = RtsLayer::myNode();
+	  }
+      }
+  }
+  return 0;
+}
+
 /* -- write event buffer to file ----------------------------- */
 void TraceEvFlush(int tid)
 {
+  checkTraceFileInitialized(tid);
 /*
   static PCXX_EV flush_end = { PCXX_EV_FLUSH_EXIT, 0, 0, 0L };
 */
@@ -261,23 +292,11 @@ int TraceEvInit(int tid)
     /* done with initialization */
     TraceInitialized[tid] = 1;
 
-    char *dirname, tracefilename[1024];
-    if ((dirname = getenv("TRACEDIR")) == NULL) {
-      // Use default directory name .
-      dirname  = new char[8];
-      strcpy (dirname,".");
-    }
-    sprintf(tracefilename, "%s/tautrace.%d.%d.%d.trc",dirname, 
-	    RtsLayer::myNode(), RtsLayer::myContext(), tid);
-
     init_wrap_up ();
+  
+   
 
-    if ((TraceFd[tid] = open (tracefilename, O_WRONLY|O_CREAT|O_TRUNC|O_APPEND|O_BINARY|LARGEFILE_OPTION, 0600)) < 0)
-    {
-      fprintf (stderr, "TraceEvInit[open]: ");
-      perror (tracefilename);
-      exit (1);
-    }
+
 /* there may be some records in pcxx_ev_ptr already. Make sure that the
    first record has node id set properly */
     if (TraceBuffer[tid][0].ev == PCXX_EV_INIT)
