@@ -1,0 +1,231 @@
+Sometimes we need to instrument an external library without instrumenting its source. 
+This may be necessary for libraries where the source is not available or for when the 
+library is cumbersome to re-build. TAU's wrapper generator may be used for such cases. 
+You need to configure TAU with -pdt=<dir> to build tau_wrap. 
+
+Let us wrap the HDF5 library with TAU. 
+
+STEP 1. Building the wrapper
+copy the header files to your directory. 
+% mkdir /tmp/hdf5
+% cd /tmp/hdf5
+[sameer@zorak hdf5]$ cp /usr/local/packages/hdf5-1.6.5/include/* .
+[sameer@zorak hdf5]$ ls
+H5ACpublic.h  H5Dpublic.h   H5FDlog.h       H5FDpublic.h  H5Fpublic.h   H5Ipublic.h   H5pubconf.h  H5Tpublic.h
+H5api_adpt.h  H5Epublic.h   H5FDmpi.h       H5FDsec2.h    H5Gpublic.h   H5LT.h        H5public.h   H5Zpublic.h
+H5Apublic.h   H5FDcore.h    H5FDmpio.h      H5FDsrb.h     H5HGpublic.h  H5MMpublic.h  H5Rpublic.h  hdf5.h
+H5Bpublic.h   H5FDfamily.h  H5FDmpiposix.h  H5FDstdio.h   H5HLpublic.h  H5Opublic.h   H5Spublic.h  hdf5.h.pdb
+H5Cpublic.h   H5FDgass.h    H5FDmulti.h     H5FDstream.h  H5IM.h        H5Ppublic.h   H5TA.h
+[sameer@zorak hdf5]$
+[sameer@zorak hdf5]$ cparse hdf5.h
+This creates hdf5.h.pdb file. We create the selective instrumentation file. 
+
+[sameer@zorak include]$ cat select.tau
+BEGIN_INCLUDE_LIST
+"#H5#"
+END_INCLUDE_LIST
+
+BEGIN_EXCLUDE_LIST
+"#H5Sset_space#"
+END_EXCLUDE_LIST
+
+In this case, we say that all *H5* routines should be instrumented but the H5Sset_space should be 
+excluded from instrumentation. In this case, the library was missing a symbol for H5Sset_space. 
+
+Invoking tau_wrap:
+Usage : tau_wrap <pdbfile> <sourcefile> [-o <outputfile>] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ]
+[sameer@zorak hdf5]$ tau_wrap hdf5.h.pdb hdf5.h -o hdf5.inst.c -f select.tau -g hdf5
+
+This specifies the instrumented wrapper library source (hdf5.inst.c), the instrumentation specification
+file (select.tau) and the group (hdf5). It creates the wrapper/ directory.
+
+[sameer@zorak hdf5]$ cd wrapper
+[sameer@zorak wrapper]$ ls
+hdf5.h  hdf5.inst.c  Makefile
+[sameer@zorak wrapper]$
+
+STEP 2: Building the wrapper library
+
+[sameer@zorak wrapper]$ make
+icc    -DPROFILING_ON                   -DTAU_STDCXXLIB                     -DTAU_DOT_H_LESS_HEADERS   -fPIC                              -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE                        -I/home/users/sameer/tau2/include  -I..  -c hdf5.inst.c -o hdf5_wrap.o
+ar  rcv  libhdf5_wrap.a hdf5_wrap.o
+a - hdf5_wrap.o
+[sameer@zorak wrapper]$ echo $TAU_MAKEFILE
+/home/users/sameer/tau2/include/Makefile
+[sameer@zorak wrapper]$ cat Makefile
+include ${TAU_MAKEFILE}
+CC=$(TAU_CC)
+CFLAGS=$(TAU_DEFS) $(TAU_INCLUDE)  -I..
+
+AR=ar
+ARFLAGS=rcv
+
+libhdf5_wrap.a: hdf5_wrap.o
+        $(AR) $(ARFLAGS) $@ $<
+
+hdf5_wrap.o: hdf5.inst.c
+        $(CC) $(CFLAGS) -c $< -o $@
+clean:
+        /bin/rm -f hdf5_wrap.o libhdf5_wrap.a
+
+
+STEP 3: Building your target application to use this wrapper library.
+
+% mkdir /tmp/app
+% cd /tmp/app
+[sameer@zorak app]$ cat checkhdf.c
+
+/*
+ *  This example writes data to the HDF5 file.
+ *  Data conversion is performed during write operation.
+ */
+
+#include <hdf5.h>
+
+#define FILE        "SDS.h5"
+#define DATASETNAME "IntArray"
+#define NX     5                      /* dataset dimensions */
+#define NY     6
+#define RANK   2
+
+int
+main (void)
+{
+    hid_t       file, dataset;         /* file and dataset handles */
+    hid_t       datatype, dataspace;   /* handles */
+    hsize_t     dimsf[2];              /* dataset dimensions */
+    herr_t      status;
+    int         data[NX][NY];          /* data to write */
+    int         i, j;
+
+    /*
+     * Data  and output buffer initialization.
+     */
+    for (j = 0; j < NX; j++) {
+        for (i = 0; i < NY; i++)
+            data[j][i] = i + j;
+    }
+    /*
+     * 0 1 2 3 4 5
+     * 1 2 3 4 5 6
+     * 2 3 4 5 6 7
+     * 3 4 5 6 7 8
+     * 4 5 6 7 8 9
+     */
+
+    /*
+     * Create a new file using H5F_ACC_TRUNC access,
+     * default file creation properties, and default file
+     * access properties.
+     */
+    file = H5Fcreate(FILE, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+    /*
+     * Describe the size of the array and create the data space for fixed
+     * size dataset.
+     */
+    dimsf[0] = NX;
+    dimsf[1] = NY;
+    dataspace = H5Screate_simple(RANK, dimsf, NULL);
+
+    /*
+     * Define datatype for the data in the file.
+     * We will store little endian INT numbers.
+     */
+    datatype = H5Tcopy(H5T_NATIVE_INT);
+    status = H5Tset_order(datatype, H5T_ORDER_LE);
+
+    /*
+     * Create a new dataset within the file using defined dataspace and
+     * datatype and default dataset creation properties.
+     */
+    dataset = H5Dcreate(file, DATASETNAME, datatype, dataspace,
+                        H5P_DEFAULT);
+
+    /*
+     * Write the data to the dataset using default transfer properties.
+     */
+    status = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,
+                      H5P_DEFAULT, data);
+
+    /*
+     * Close/release resources.
+     */
+    H5Sclose(dataspace);
+    H5Tclose(datatype);
+    H5Dclose(dataset);
+    H5Fclose(file);
+
+    return 0;
+}
+
+
+
+Compiling without TAU:
+% icc  -I/usr/local/packages/hdf5-1.6.5/include -c checkhdf.c
+% icc -o checkhdf checkhdf.o -L/usr/local/packages/hdf5-1.6.5/lib -lhdf5
+% ./checkhdf
+This creates the SDS.h5 file.
+
+To use TAU without the wrapper:
+[sameer@zorak app]$ tau_cc.sh -I/usr/local/packages/hdf5-1.6.5/include -c checkhdf.c
+[sameer@zorak app]$ tau_cc.sh -o checkhdf checkhdf.o -L/usr/local/packages/hdf5-1.6.5/lib -lhdf5
+[sameer@zorak app]$ ./checkhdf
+[sameer@zorak app]$ pprof
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0            1            1           1           0       1291 int main(void) C
+
+The HDF5 calls are not tracked. 
+To use the wrapper library, we must use the appropriate -I and -L flags to point to the wrapper directory and library. 
+[sameer@zorak app]$ setenv TAU_OPTIONS '-optCompile=-I/tmp/hdf5/wrapper -optLinking="-L/tmp/hdf5/wrapper/ -lhdf5_wrap" -optVerbose'
+And we re-instrument the code:
+
+[sameer@zorak app]$ tau_cc.sh -I/usr/local/packages/hdf5-1.6.5/include -c checkhdf.c
+...
+Debug: Compiling with Instrumented Code
+Executing> /usr/local/packages/intel/cce/9.1.044/bin/icc -I. -c checkhdf.inst.c -I/tmp/hdf5/wrapper -I/usr/local/packages/hdf5-1.6.5/include -DPROFILING_ON -DTAU_STDCXXLIB -DTAU_DOT_H_LESS_HEADERS -fPIC -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE -I/home/users/sameer/tau2/include -o checkhdf.o
+Looking for file: checkhdf.o
+
+
+See that -I/tmp/hdf5/wrapper comes before the other include directory. And for linking:
+
+[sameer@zorak app]$ tau_cc.sh -o checkhdf checkhdf.o -L/usr/local/packages/hdf5-1.6.5/lib -lhdf5
+Debug: Linking with TAU Options
+Executing> /usr/local/packages/intel/cce/9.1.044/bin/icc -o checkhdf checkhdf.o -L/usr/local/packages/hdf5-1.6.5/lib -lhdf5 -L/tmp/hdf5/wrapper/ -lhdf5_wrap -L/home/users/sameer/tau2/x86_64/lib -ltau-icpc-pdt -L/usr/lib/gcc/x86_64-redhat-linux/3.4.6/ -L/usr/bin/../lib64 -lstdc++ -lgcc_s -lcxa -lunwind
+
+
+The -lhdf5_wrap library gets linked in. 
+
+[sameer@zorak app]$ ./checkhdf
+[sameer@zorak app]$ ls
+checkhdf  checkhdf.c  checkhdf.o  profile.0.0.0  SDS.h5
+[sameer@zorak app]$ pprof
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0        0.057            1           1          13       1236 int main(void) C
+ 70.8        0.875        0.875           1           0        875 hid_t H5Fcreate(const char *, unsigned int, hid_t, hid_t) C
+  9.7         0.12         0.12           1           0        120 herr_t H5Fclose(hid_t) C
+  6.0        0.074        0.074           1           0         74 hid_t H5Dcreate(hid_t, const char *, hid_t, hid_t, hid_t) C
+  3.1        0.038        0.038           1           0         38 herr_t H5Dwrite(hid_t, hid_t, hid_t, hid_t, hid_t, const void *) C
+  2.6        0.032        0.032           1           0         32 herr_t H5Dclose(hid_t) C
+  2.1        0.026        0.026           1           0         26 herr_t H5check_version(unsigned int, unsigned int, unsigned int) C
+  0.6        0.008        0.008           1           0          8 hid_t H5Screate_simple(int, const hsize_t *, const hsize_t *) C
+  0.2        0.002        0.002           1           0          2 herr_t H5Tset_order(hid_t, H5T_order_t) C
+  0.2        0.002        0.002           1           0          2 hid_t H5Tcopy(hid_t) C
+  0.1        0.001        0.001           1           0          1 herr_t H5Sclose(hid_t) C
+  0.1        0.001        0.001           2           0          0 herr_t H5open(void) C
+  0.0            0            0           1           0          0 herr_t H5Tclose(hid_t) C
+
+And we see the time spent in each HDF5 call. 
+
