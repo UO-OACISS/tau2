@@ -202,11 +202,11 @@ for arg in "$@" ; do
 	mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g' -e 's#(#\\\(#g' -e 's#)#\\\)#g'`
 
 	mod_arg="$processingIncludeOrDefineArg$mod_arg"
-	optPdtCFlags="$mod_arg $optPdtCFlags"
-	optPdtCxxFlags="$mod_arg $optPdtCxxFlags"
-	optPdtF95="$mod_arg $optPdtF95"
-	optCompile="$mod_arg $optCompile"
-	optIncludeDefs="$mod_arg $optIncludeDefs"
+	optPdtCFlags="$optPdtCFlags $mod_arg"
+	optPdtCxxFlags="$optPdtCxxFlags $mod_arg"
+	optPdtF95="$optPdtF95 $mod_arg"
+	optCompile="$optCompile $mod_arg"
+	optIncludeDefs="$optIncludeDefs $mod_arg"
 	processingIncludeOrDefine=false
     else
 			
@@ -561,11 +561,11 @@ for arg in "$@" ; do
 		-I*|-D*)
 		        mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g' -e 's#(#\\\(#g' -e 's#)#\\\)#g'`
 #			mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/'\\\'\''/g' -e 's/ /\\\ /g'`
-			optPdtCFlags="$mod_arg $optPdtCFlags"
-			optPdtCxxFlags="$mod_arg $optPdtCxxFlags"
-			optPdtF95="$mod_arg $optPdtF95"
-			optCompile="$mod_arg $optCompile"
-			optIncludeDefs="$mod_arg $optIncludeDefs"
+			optPdtCFlags="$optPdtCFlags $mod_arg"
+			optPdtCxxFlags="$optPdtCxxFlags $mod_arg"
+			optPdtF95="$optPdtF95 $mod_arg"
+			optCompile="$optCompile $mod_arg"
+			optIncludeDefs="$optIncludeDefs $mod_arg"
 			;;
 
 
