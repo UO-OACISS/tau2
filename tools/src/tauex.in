@@ -40,6 +40,7 @@ fi
 
 ProfileSpecified="false"
 TraceSpecified="false"
+DisableSpecified="false"
 processT="false"
 processE="false"
 TauOptions=""
@@ -64,6 +65,8 @@ for arg in "$@" ; do
 	      ProfileSpecified="true"
 	  elif [ "$i" = "trace" ] ; then
 	      TraceSpecified="true"
+	  elif [ "$i" = "disable" ] ; then
+	      DisableSpecified="true"
 	  else
 	      TauOptions="$TauOptions $i"
 	  fi
@@ -159,7 +162,6 @@ if [ "x$binding_specified" = "x" ] ; then
 	ProfileSpecified="true"
     fi
     
-    
     if [ "$ProfileSpecified" = "true" -a "$TraceSpecified" = "false" ] ; then
 	TauOptionsExclude="trace"
     elif [ "$ProfileSpecified" = "true" -a "$TraceSpecified" = "true" ] ; then
@@ -167,6 +169,10 @@ if [ "x$binding_specified" = "x" ] ; then
     elif [ "$ProfileSpecified" = "false" -a "$TraceSpecified" = "true" ] ; then
 	TauOptionsExclude="profile"
 	TauOptions="$TauOptions trace"
+    fi
+
+    if [ "$DisableSpecified" = "false" ] ; then
+	TauOptionsExclude="disable"
     fi
     
     if [ $NumCounters -gt 1 ] ; then
@@ -196,13 +202,18 @@ if [ "x$binding_specified" = "x" ] ; then
 	done
 	bindings=$newbindings
     done
-    
-    
+
+    declare -i minLength
+    declare -i length
+    minLength=9999
     theBinding=""
     for b in $bindings ; do
-	theBinding=$b
+	length=${#b}
+	if [ "$length" -lt "$minLength" ] ; then
+	    theBinding=$b
+	    minLength=$length
+	fi
     done
-
 
     if [ "x$theBinding" = "x" ] ; then
 	echo "Error: Couldn't find a matching TAU binding"
@@ -237,8 +248,12 @@ else
 fi
 
 if [ $verbose = "true" ] ; then
-    echo "Matching bindings: $bindings"
-    echo "Using $theBinding"
+    echo "Matching bindings:"
+    echo "$bindings"
+    echo ""
+    echo "Using:"
+    echo "$theBinding"
+    echo ""
     echo "Setting LD_LIBRARY_PATH to $LD_LIBRARY_PATH"
 fi
 
