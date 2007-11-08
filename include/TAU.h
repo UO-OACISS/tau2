@@ -16,6 +16,8 @@
 #ifndef _TAU_H_
 #define _TAU_H_
 
+#define TAU_VERSION "2.17-cvs"
+
 #ifndef TAU_DISABLE_API
 #ifdef __cplusplus
 extern "C" {

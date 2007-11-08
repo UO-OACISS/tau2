@@ -391,6 +391,7 @@ static int writeMetaData(FILE *fp, bool newline, int counter) {
 
   writeXMLAttribute(fp, "TAU Architecture", TAU_ARCH, newline);
   writeXMLAttribute(fp, "TAU Config", TAU_CONFIG, newline);
+  writeXMLAttribute(fp, "TAU Version", TAU_VERSION, newline);
 
   writeXMLAttribute(fp, "pid", getpid(), newline);
 #endif
