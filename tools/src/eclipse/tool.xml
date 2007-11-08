@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Use the unqualified 'toolset' only for the old xml format.  The current version is toolset.01 -->
+<toolset.01>
+
+<!-- There may be multiple tools per tool file.  Each tool should have a unique name tag, which will be used to select it in Eclipse-->
+<tool name="VampirTrace">
+<!--  There are three distinct sections for each tool; compile, execute and analyze.  Note that each of these steps is optional  -->
+	<compile>
+<!--  By default the compiler commands set here prepend whatever compiler is already in use in Eclipse.  If you set the tag replace="true" for the compile element the compilers will be replaced entirely with the command specified here. Each compiler type, c, c++ and fortran, is defined as shown below.  --> 
+<!-- Every command referencing a file on the system should include a group tag.  The group tag indicates that the relevant binary files or scripts are located in the same place for each command sharing that tag  -->
+		<CC command="vtcc" group="vampirtrace">
+<!-- Arguments to be passed to a command may be specified with the argument tag as shown here. -->
+			<argument value="-vt:cc"/>
+		</CC>
+		<CXX command="vtcxx" group="vampirtrace">
+			<argument value="-vt:cxx"/>
+		</CXX>
+		<F90 command="vtf90" group="vampirtrace">
+			<argument value="-vt:f90"/>
+		</F90>
+	</compile>
+	<execute>
+<!-- The execute section is comprised of utilities which prepend the actual executable. -->
+		<utility command="mpirun" group="mpi">
+			<argument value="-np 4"/>
+		</utility>
+	</execute>
+	<analyze>
+<!-- The analyze section contains tools which are launched on data produced after program execution is complete.  The tools listed here will be
+run in sequence, allowing the definition of a multi-step processing procedure.  The type tag can be set to view for tools that show data or process for tools that process data and (generally) output another file.  Use caution when specifying arguments.  Some tools produce dynamically named output which is not yet supported by this plugin.  -->
+		<utility type="view" command="vampir" group="vampir">
+			<argument value="a.otf"/>
+		</utility>
+	</analyze>
+</tool>
+
+<tool name="Kojak">
+
+	<compile>
+<!-- The allcompilers compiler definition allows the same command to be used for c, c++ and fortran.  If used in conjunction with the specific compiler definitions their commands will override the allcompilers command, but arguments specified for allcompilers will be added to each individual compiler -->
+		<allcompilers command="kinst" group="kojak"/>
+	</compile>
+	<analyze>
+		<process command="expert" group="kojak">
+			<argument value="a.elg"/>
+		</process>
+		<view command="paraprof" group="tau">
+			<argument value="a.cube"/>
+		</view>
+	</analyze>
+</tool>
+
+<tool name="Perfsuite">
+	<execute>
+		<utility command="mpirun" group="mpi">
+			<argument value="-np 4"/>
+		</utility>
+		<utility command="psrun" group="perfsuite">
+		</utility>
+	</execute>
+	<analyze>
+		<utility command="psprocess" type="process" group="perfsuite">
+			<argument value="-o xmlprocess.txt"/>
+
+		</utility>
+		<utility command="paraprof" type="view" group="tau">
+			<argument value="-f psrun *.xml"/>
+		</utility>
+	</analyze>
+</tool>
+
+<tool name="Valgrind">
+	<execute>
+		<!-- Use this line only if valgrind is a shell script.  The plugin can not execute scripts natively -->
+		<utility command="bash" group="inbin"/>
+		<utility command="valgrind" group="valgrind"/>
+	</execute>
+</tool>
+
+</toolset.01>
+
