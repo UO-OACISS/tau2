@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.28 2007/06/15 22:56:56 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.29 2007/11/08 19:18:28 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.28 $
+ * @version	$Revision: 1.29 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -1583,6 +1583,9 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
         try {
             dataSource = UtilFncs.initializeDataSource(files, fileType, fixGprofNames);
+            if (dataSource == null) {
+                throw new RuntimeException("Error creating dataSource!");
+            }
             dataSource.setGenerateIntermediateCallPathData(ParaProf.preferences.getGenerateIntermediateCallPathData());
         } catch (DataSourceException e) {
 
