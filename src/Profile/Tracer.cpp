@@ -333,8 +333,10 @@ int TraceEvInit(int tid)
     encountered for a multi-threaded program */ 
 void TraceReinitialize(int oldid, int newid, int tid)
 {
+#ifndef TAU_SETNODE0
   printf("Inside TraceReinitialize : oldid = %d, newid = %d, tid = %d\n",
 	oldid, newid, tid);
+#endif
   /* We should put a record in the trace that says that oldid is mapped to newid this 
      way and have an offline program clean and transform it. Otherwise if we do it 
      online, we'd have to lock the multithreaded execution, and do if for all threads
