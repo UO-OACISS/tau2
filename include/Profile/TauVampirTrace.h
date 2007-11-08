@@ -36,6 +36,11 @@ void vt_enter(uint64_t* time, uint32_t rid);
 void vt_exit(uint64_t* time);
 uint64_t vt_pform_wtime(void);
 
+uint32_t vt_def_counter_group ( const char* gname );
+void vt_count(uint64_t* time, uint32_t cid, uint64_t cval);
+uint32_t vt_def_counter       (const char* cname, uint32_t cprop, uint32_t gid,
+                                      const char* cunit);
+
 
 #ifdef __cplusplus
 }
