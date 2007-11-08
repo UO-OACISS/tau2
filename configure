@@ -306,14 +306,14 @@ do
 
   -cc=*)
     myarg=`echo $arg | sed 's/-cc=//'`
-    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc ]
+    if [ $myarg = cc -o $myarg = gcc -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc-bgp-linux-gcc ]
       then
         c_compiler=$myarg
       else
         testxlc=`echo $myarg | sed -e 's/xlc//'`
         if [ "y$testxlc" = "y$myarg" ]
         then
-          echo "WARNING: valid options for cc are 'cc', 'gcc', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'qk-pgcc', and 'pgcc' "
+          echo "WARNING: valid options for cc are 'cc', 'gcc', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'qk-pgcc', 'powerpc-bgp-linux-gcc', and 'pgcc' "
 #       exit 1
         else
           c_compiler=$myarg
@@ -324,7 +324,7 @@ do
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ ] 
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ ] 
       then
         cxx_compiler=$myarg
       else
@@ -343,7 +343,7 @@ do
   -pdt_c++=*)
     pdt_cxx_full_path=`echo $arg | sed 's@-pdt_c++=@@g'`
     myarg=`echo $arg |  echo $arg | sed 's@-pdt_c++=@@g' | sed 's@.*/@@g'`
-    if [  $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ ]
+    if [  $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ ]
       then
         pdt_cxx_compiler=$myarg
       else
@@ -1131,7 +1131,7 @@ do
     echo "-prefix=<dir> ................ Specify a target installation directory."
     echo "-exec-prefix=<arch> .......... Specify a target architecture directory."
     echo "-arch=<architecture> ................... Specify a target architecture."
-    echo "       options              [xt3|craycnl|bgl|ibm64|ibm64linux|sunx86_64"
+    echo "       options          [xt3|craycnl|bgp|bgl|ibm64|ibm64linux|sunx86_64"
     echo "                               |solaris2-64|mips32|sgin32|sgi64|sgio32]"
     echo ""
     echo "MPI Options:"
@@ -1226,7 +1226,7 @@ do
     echo "-prefix=<dir> ................ Specify a target installation directory."
     echo "-exec-prefix=<arch> .......... Specify a target architecture directory."
     echo "-arch=<architecture> ................... Specify a target architecture."
-    echo "       options              [xt3|craycnl|bgl|ibm64|ibm64linux|sunx86_64"
+    echo "       options          [xt3|craycnl|bgp|bgl|ibm64|ibm64linux|sunx86_64"
     echo "                               |solaris2-64|mips32|sgin32|sgi64|sgio32]"
     echo "-pthread .................................. Use pthread thread package."
     echo "-papithread .................................. Use PAPI thread package."
@@ -1565,6 +1565,14 @@ case $machine in
     fi
     ;;
 
+   bgp)
+    if [ $cxx_compiler = default ]
+    then
+      cxx_compiler=bgxlC
+      c_compiler=bgxlc
+    fi
+    ;;
+
     xt3)
     if [ $cxx_compiler = default ]
     then
@@ -1792,7 +1800,7 @@ if [ $trace = yes ]
   }
 EOF
     
-    if [ $catamount = no -a ! $machine = bgl -a ! $machine = mips -a ! $machine = mips32 ] ; then
+    if [ $catamount = no -a ! $machine = bgl -a ! $machine = bgp -a ! $machine = mips -a ! $machine = mips32 ] ; then
 	$echo "Checking type sizes... ${nnl}"
 	if $c_compiler -I. $orig_useropt tau_type_test.c -o tau_type_test 1> /dev/null 2>&1 ; then
 	    if ./tau_type_test 1> /dev/null 2>&1 ; then
@@ -1942,7 +1950,7 @@ if [ $machine = apple ]
   fi
 fi
 
-if [ $machine = ppc64 -o $machine = bgl ]
+if [ $machine = ppc64 -o $machine = bgl -o $machine = bgp ]
 then
   if [ $cxx_compiler = g++ ]
   then
@@ -2488,6 +2496,9 @@ then
   bgl)
 	mpiinc=/bgl/BlueLight/ppcfloor/bglsys/include
         ;;
+  bgp)
+	mpiinc=/bgsys/drivers/ppcfloor/comm/include
+        ;;
   i386_linux) 
 	mpiinc=/usr/local/packages/mpich/include
 	;;
@@ -2559,6 +2570,10 @@ then
         mpilib=/bgl/BlueLight/ppcfloor/bglsys/lib
 	additional_mpilibs='-lmsglayer.rts -ldevices.rts -lrts.rts -ldevices.rts'
         ;;
+  bgp)
+        mpilib=/bgsys/drivers/ppcfloor/comm/lib
+	additional_mpilibs='-ldcmfcoll.cnk -ldcmf.cnk -lpthread -L/bgsys/drivers/ppcfloor/runtime/SPI -lSPI.cna' 
+	;;
   t3e|crayx1|craysv1)  
 	mpilib=/opt/ctl/mpt/mpt/lib/
 	;;
@@ -3068,6 +3083,12 @@ then
       fi 
  
 
+      if [ -f $mpilib/libfmpich.cnk.a -o -f $mpilib/libfmpich.cnk.so ]
+      then
+	mpiflibargs="-lfmpich.cnk"
+      #  wrapperlib="$wrapperlib -lfmpich.cnk"
+      fi
+
       if [ -f $mpilib/libfmpich.a -o -f $mpilib/libfmpich.so ]
       then
           #echo "Fortran fmpich.* found"
@@ -3151,9 +3172,14 @@ then
 	      if [ -r $mpilib/libmpich.rts.a ] ; then
          	  # For BG/L 
 		  mpilibrary="-lmpich.rts $additional_mpilibs"
-	      else
+              else 
+                if [ -r $mpilib/libmpich.cnk.a ]; then
+		  # For BG/P
+		  mpilibrary="-lmpich.cnk $additional_mpilibs"
+	        else
 		  mpilibrary=-lmpich
-	      fi
+	        fi
+              fi
 	  fi
 
 	  if [ -r $mpilib/libpmpich++.a -o -r $mpilib/libpmpich++.so ] ; then 
@@ -3604,10 +3630,10 @@ then
 fi
 
 ######################################################################
-if [ $cxx_compiler = g++ -o $cxx_compiler = egcs -o $cxx_compiler = powerpc64-linux-g++ -o $cxx_compiler = c++ -o $cxx_compiler = scg++ -o $cxx_compiler = mips64el-gentoo-linux-gnu-g++ ]
+if [ $cxx_compiler = g++ -o $cxx_compiler = egcs -o $cxx_compiler = powerpc64-linux-g++ -o $cxx_compiler = c++ -o $cxx_compiler = scg++ -o $cxx_compiler = mips64el-gentoo-linux-gnu-g++  -o $cxx_compiler = powerpc-bgp-linux-g++ ]
   then
     fixmakeargs="$fixmakeargs GNU"
-    if [ $machine = ibm64 -o $machine = rs6000 -o $machine = ppc64 -o $machine = bgl -o $machine = ibm64linux ]
+    if [ $machine = ibm64 -o $machine = rs6000 -o $machine = ppc64 -o $machine = bgl -o $machine = bgp -o $machine = ibm64linux ]
     then
       tauoptions="${tauoptions}-gnu"
     fi
@@ -3668,6 +3694,16 @@ case $machine in
 	fi
         ;; 
 
+     bgp)
+	echo "Found an IBM PPC-64 BG/P Linux configuration definition"
+	fixmakeargs="arch=$machine BGP $fixmakeargs"
+	if [ $papi = yes ] ; then
+	    p=$papidir/lib
+	    if [ -f $p/libpapi.a ] ; then
+		fixmakeargs="$fixmakeargs BGPPAPI"
+	    fi
+	fi
+        ;; 
      bgl)
 	echo "Found an IBM PPC-64 BGL Linux configuration definition"
 	fixmakeargs="arch=$machine BGL $fixmakeargs"
