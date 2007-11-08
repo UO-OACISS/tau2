@@ -17,12 +17,15 @@ def usage():
   
   Commands are:           Options are:                                    Arguments:
   upload (up)             -u,--username, -p,--password, -w,--workspace    ppk file, ...
+                          -e,--experiment
   download (down)         -u,--username, -p,--password, -w,--workspace    trial name
+                          -e,--experiment
   synchronize (sync)      -u,--username, -p,--password, -w,--workspace,  
                           -a,--application, -e,--experiment, 
                           --portal-only, --perfdmf-only
   list_workspaces (work)  -u,--username, -p,--password  
   list_trials (trial)     -u,--username, -p,--password, -w,--workspace  
+                          -e,--experiment
   '''
 
 def main():
