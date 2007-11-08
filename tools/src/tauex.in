@@ -230,8 +230,7 @@ done
 if [ "$SICORTEX" = "yes" ] ; then
     export LD_LIBRARY_PATH=/$PREFIX/lib32/$theBinding:$LD_LIBRARY_PATH
     export LD_LIBRARY_PATH=/$PREFIX/lib64/$theBinding:$LD_LIBRARY_PATH
-    export LD_PRELOAD=/$PREFIX/lib32/$theBinding/libTAU.so:$LD_PRELOAD
-    export LD_PRELOAD=/$PREFIX/lib64/$theBinding/libTAU.so:$LD_PRELOAD
+    export LD_PRELOAD=libTAU.so:$LD_PRELOAD
 else 
     export LD_LIBRARY_PATH=$BASEDIR/lib/$theBinding:$LD_LIBRARY_PATH
     export LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU.so
