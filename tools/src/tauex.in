@@ -21,7 +21,7 @@ usage()
     echo "        -S: Supervisor mode counts"
     echo "        -I: Interrupt mode counts"
     echo "        -a: Count all native events (implies -m)"
-    echo "        -m: Multple runs (enouch runs of exe to gather all events)"
+    echo "        -m: Multiple runs (enouch runs of exe to gather all events)"
     echo "        -e <event> : Specify PAPI preset or native event"
     echo "        -T <MPI,OPENMP,TRACE,PROFILE,CALLPATH> : specify TAU option"
     echo "        -XrunTAU-<options> : specify TAU library directly"
