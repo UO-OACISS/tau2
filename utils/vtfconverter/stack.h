@@ -93,9 +93,9 @@ public:
 		unsigned long long * a_samples, int n_samplesdim);
 	void returnfrom(int n_functionID, double n_timeStamp,
 		unsigned long long * a_samples, int n_samplesdim);
-	void stack::lastreturn(int n_functionID, double n_timeStamp, 
+	void lastreturn(int n_functionID, double n_timeStamp, 
 		unsigned long long * a_samples, int n_samplesdim);
-	void stack::norec(node * funcNode, int n_samplesdim, tray * tempTray);
+	void norec(node * funcNode, int n_samplesdim, tray * tempTray);
 }
 ;//stack
 
