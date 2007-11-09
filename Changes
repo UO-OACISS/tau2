@@ -1,14 +1,24 @@
 *****************************************************************************
 **                      TAU Portable Profiling Package                     **
-**                      http://www.cs.uoregon.edu/research/paracomp/tau    **
+**                      http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 1997-2007						   **
+**    Copyright 1997-2008						   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 *****************************************************************************
 
 Change log:
 ------------
+Version 2.17 changes (from 2.16):
+1. Added support for IBM BG/P (-arch=bgp).
+2. Added a new tool for generating wrapper libraries, tau_wrap.
+3. Improvements in Eclipse plugin for external tool support.
+4. Improvements in paraprof and perfexplorer.
+5. Improvements for SiCortex support and tauex. 
+6. Added support for atomic events in TAU library layered over VampirTrace.
+7. Added a Posix I/O wrapper (-iowrapper) for tracking volume and bandwidth of I/O.
+8. Added an MPI wrapper library for Windows Cluster 2003. 
+
 Version 2.16 changes (from 2.15):
 1. Added a new tool for correcting network time drifts in traces (tau_timecorrect).
 2. Added support for an Eclipse analysis wizard and a graphical instrumentor.
