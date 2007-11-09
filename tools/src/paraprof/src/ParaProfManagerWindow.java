@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.29 2007/11/08 19:18:28 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.30 2007/11/09 20:02:34 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.29 $
+ * @version	$Revision: 1.30 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -78,17 +78,17 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     private List databases;
 
     public void refreshDatabases() {
+        databases = Database.getDatabases();
+        Iterator dbs = databases.iterator();
+
         DefaultMutableTreeNode treeNode;
-        Iterator dbs = Database.getDatabases().iterator();
         Enumeration nodes = root.children();
         while (nodes.hasMoreElements() && dbs.hasNext()) {
             treeNode = (DefaultMutableTreeNode) nodes.nextElement();
             if (treeNode.getUserObject() != "Standard Applications") {
-                treeNode.setUserObject(dbs.next());
+                Object obj = dbs.next();
+                treeNode.setUserObject(obj);
             }
-        }
-        while (dbs.hasNext()) {
-            root.add(new DefaultMutableTreeNode(dbs.next()));
         }
 
         List toRemove = new ArrayList();
@@ -97,12 +97,16 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             toRemove.add(treeNode);
         }
 
+        while (dbs.hasNext()) {
+            Object obj = dbs.next();
+            root.add(new DefaultMutableTreeNode(obj));
+        }
+
         for (int i = 0; i < toRemove.size(); i++) {
             treeNode = (DefaultMutableTreeNode) toRemove.get(i);
             treeNode.removeFromParent();
         }
         treeModel.reload();
-        this.databases = Database.getDatabases();
     }
 
     public ParaProfManagerWindow() {
