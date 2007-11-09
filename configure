@@ -1568,8 +1568,8 @@ case $machine in
    bgp)
     if [ $cxx_compiler = default ]
     then
-      cxx_compiler=bgxlC
-      c_compiler=bgxlc
+      cxx_compiler=bgxlC_r
+      c_compiler=bgxlc_r
     fi
     ;;
 
