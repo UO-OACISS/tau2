@@ -1,8 +1,8 @@
 *****************************************************************************
 **			TAU Portable Profiling Package			   **
-**			http://www.cs.uoregon.edu/research/tau             **
+**			http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 1997-2007				   	   	   **
+**    Copyright 1997-2008				   	   	   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 **    Research Center Juelich, ZAM Germany			           **
@@ -10,7 +10,7 @@
 /*******************************************************************
  *                                                                 *
  *        Tuning and Analysis Utilities Installation Procedure     *
- *                           Version 2.16                          *
+ *                           Version 2.17                          *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -86,7 +86,7 @@ Installation Options:
 -prefix=<dir> ................ Specify a target installation directory.
 -exec-prefix=<arch> .......... Specify a target architecture directory.
 -arch=<architecture> ................... Specify a target architecture.
-       options              [xt3|craycnl|bgl|ibm64|ibm64linux|sunx86_64
+       options          [xt3|craycnl|bgp|bgl|ibm64|ibm64linux|sunx86_64
                                |solaris2-64|mips32|sgin32|sgi64|sgio32]
 
 MPI Options:
@@ -183,6 +183,7 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    /usr/bin/g++ for 32 bits and /opt/cross/bin/powerpc64-linux-g++ for 64 bit g++ 
    respectively. Under IBM Linux Power4, we use xlf90 as the default Fortran compiler with 
    g++/gcc and xlC/xlc. For IBM BlueGene/L, we recommend using the -arch=bgl option. 
+   For IBM BG/P, we recommend using the -arch=bgp. 
 
 
    
@@ -674,15 +675,18 @@ iii) To configure TAU under AIX, we strongly recommend using the -mpi option rat
    % configure -pdt=<dir> -arch=ibm64 -mpi ; make clean install
    for 64 bits. 
 
-iv) To configure TAU for Cray XT3 or IBM BGL,
+iv) To configure TAU for Cray XT3 or IBM BGL/BGP,
 
-   First configure PDT using % configure -XLC -exec-prefix=bgl; make clean install
+   First configure PDT using % configure -XLC ; make clean install
    on BGL. On XT3 you will need to configure PDT using:
    % configure -GNU -exec-prefix=xt3; make clean install
 
    Then, configure TAU using:
    % configure -arch=bgl -mpi -pdt=<dir> -pdt_c++=xlC 
-	configures TAU with MPI and PDT on BGL. Use -arch=xt3 -pdt_c++=g++ on
+	configures TAU with MPI and PDT on BGL. You may configure TAU using:
+   % configure -arch=bgp -mpi -pdt=<dir> -pdt_c++=xlC 
+        to configure TAU with MPI and PDT on IBM BG/P. 
+     Use -arch=xt3 -pdt_c++=g++ on
 	Cray XT3. Then configure for the frontend using % ./configure 
 	This creates a backend library directory <taudir>/[bgl,xt3]/lib and a front-end 
         directory <taudir>/[rs6000,x86_64]/bin which should be put in your PATH. 
@@ -691,7 +695,7 @@ iv) To configure TAU for Cray XT3 or IBM BGL,
    Catamount on the backend nodes, you will need to configure TAU with the 
    -arch=craycnl configuration option. e.g., 
 
-   % configure -arch=craycnl -mpi -pdt=<dir> -pdt_c++=pgCC -pdtarchdir=x86_64
+   % configure -arch=craycnl -mpi -pdt=<dir> -pdt_c++=pgCC 
         Configures TAU with MPI and PDT on Cray XT3/4 with Cray CNL. 
 
    TAU's -arch=xt3 configuration assumes Catamount and -arch=craycnl assumes 
@@ -946,11 +950,12 @@ I) The Profiling Library needs a recent C++ compiler. Our recommended list:
         f) SUN (http://www.sun.com) Sun CC compiler
         g) HP (http://www.hp.com) Tru64 cxx compiler  
 	h) HP (http://www.hp.com) aCC compiler 
+	i) Pathscale (http://www.pathscale.com) SiCortex Pathscale compilers.
  
 II) Platforms :
    TAU has been tested on 
-	a) IBM AIX, Linux, BGL systems
-	b) Cray XT3, XD1, X1E, SV1, T3E systems
+	a) IBM AIX, Linux, BGL, and BGP systems
+	b) Cray XT3, XT4, XD1, X1E, SV1, T3E systems
 	c) LINUX x86 PC clusters with 
 		i) 	KAI KCC compiler, 
 		ii) 	GNU g++/egcs compiler,
@@ -971,7 +976,7 @@ II) Platforms :
 	k) Hitachi SR8000 with KCC, g++, Hitachi cc and f90 compilers. 
         l) NEC SX-5 system with NEC c++, cc, and f90 compilers.
 	m) Sun Opteron Solaris with Sun CC compilers. 
-	   
+	n) SiCortex Mips Linux platform with GNU and Pathscale compilers.    
 
    TAU may work with minor modifications on other platforms.
 	
@@ -979,13 +984,6 @@ III) Software Requirements :
    a) java
    paraprof requires Java 1.4+. Java can be downloaded from http://www.sun.com
 
-   b) Tcl/Tk
-   TAU's GUI racy needs Tcl 6.4/Tk 4.0 or better. The default is 8.0. 
-   Tcl/Tk can be downloaded from http://www.scriptics.com. 
-   NOTE: Tcl/Tk is only required for running the profile browser racy. The
-   current version of TAU supports the new Java based paraprof profile browser that
-   replaces the Tcl/Tk based racy. 
-    
 8. Modifying user's Makefile for Tracing/Profiling.
 
    TAU provides a makefile stub file which is placed in the installation
@@ -1088,11 +1086,22 @@ III) Software Requirements :
      Example V:
      Profiling an OpenMP F90 program using IBM
      % configure -c++=xlC -cc=xlc -fortran=ibm -mpi -opari=<dir> -pdt=<dir> -opari=<dir>
+     % make clean install
      % cd examples/taucompiler/opari_f90
      % make 
      % setenv OMP_NUM_THREADS 2
      % mandel
      % pprof
 
+     Example VI:
+     Profiling an OpenMP+MPI application on IBM BGP
+     % configure -opari=<dir> -mpi -arch=bgp -pdt=<dir> -pdt_c++=xlC 
+     % make clean install
+     % cd examples/opari/openmpi
+     % make
+     % qsub -t 4 -n 8 -q short --env OMP_NUM_THREADS=4 ./st
+     % set path=(<taudir>/ppc64/bin $path)
+     % pprof
+     NOTE: You need to % configure ; make clean install  to build the ppc64 dir on BGP.
 
 If you have any questions, please contact us at tau-bugs@cs.uoregon.edu. 
