@@ -8,18 +8,16 @@ import java.util.Observer;
 import java.util.Vector;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
+import javax.swing.event.*;
 
+import edu.uoregon.tau.common.Common;
 import edu.uoregon.tau.common.Wget;
 import edu.uoregon.tau.common.Wget.Progress;
+import edu.uoregon.tau.common.tar.Tar;
 import edu.uoregon.tau.perfdmf.database.ConfigureFiles;
 import edu.uoregon.tau.perfdmf.database.ParseConfig;
 import edu.uoregon.tau.perfdmf.loader.Configure;
 import edu.uoregon.tau.perfdmf.loader.ConfigureTest;
-import edu.uoregon.tau.perfdmf.loader.DatabaseConfigurationException;
 
 public class DatabaseManagerWindow extends JFrame implements ActionListener, Observer, ListSelectionListener, ItemListener,
         ChangeListener {
@@ -396,17 +394,24 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(
                     new File(".perfdmf_tmp" + File.separator + "redirect.html"))));
 
-            String URL = "";
+            String URL = null;
+            String FILE = null;
+            String JAR = null;
             String line = r.readLine();
             while (line != null) {
                 if (line.startsWith("URL="))
                     URL = line.substring(4);
+                if (line.startsWith("FILE="))
+                    FILE = line.substring(5);
+                if (line.startsWith("JAR="))
+                    JAR = line.substring(4);
                 line = r.readLine();
             }
             r.close();
+
             dest = selectedFile.getAbsolutePath() + File.separator + filename;
             
-            DownloadThread downloadJar = new DownloadThread(bar, labelBar, URL, dest);
+            DownloadThread downloadJar = new DownloadThread(bar, labelBar, URL, FILE, JAR, dest);
 
             downloadJar.start();
 
@@ -425,21 +430,31 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
         private JProgressBar bar;
         private JLabel label;
         private String url;
+        private String destinationFile;
+        private String jar;
         private String file;
-
-        public DownloadThread(JProgressBar b, JLabel lab, String u, String f) {
+        
+        public DownloadThread(JProgressBar b, JLabel lab, String u, String file, String jar, String destination) {
             super();
             bar = b;
             label = lab;
             url = u;
-            file = f;
-
+            this.file = file;
+            this.jar = jar;
+            destinationFile = destination;
         }
 
         public void run() {
             DownloadProgress prg = new DownloadProgress(bar, labelBar);
             try {
-                Wget.wget(url, file, true, prg);
+                Wget.wget(url, ".perfdmf_tmp" + File.separator + file, true, prg);
+                if (jar != null) {
+                    // mysql
+                    Tar.guntar(".perfdmf_tmp" + File.separator + file);
+                    Common.copy(".perfdmf_tmp" + File.separator + jar, destinationFile);
+                } else {
+                    Common.copy(".perfdmf_tmp" + File.separator + file, destinationFile);
+                }
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
