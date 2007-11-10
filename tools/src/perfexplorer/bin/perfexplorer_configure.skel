@@ -1,6 +1,6 @@
 #!/bin/@SHELL@
 
-# $Id: perfexplorer_configure.skel,v 1.6 2007/07/03 01:09:01 khuck Exp $
+# $Id: perfexplorer_configure.skel,v 1.7 2007/11/10 01:14:37 scottb Exp $
 # $Name:  $
 
 rm -f .last_config
@@ -21,7 +21,7 @@ rroot=/usr/lib/R
 serverhostname=localhost
 objectport=9999
 registryport=1099
-configfile=$HOME/.ParaProf/perfdmf.cfg
+#configfile=$HOME/.ParaProf/perfdmf.cfg
 configdir=$HOME/.ParaProf
 tmpdir=/tmp
 
@@ -109,15 +109,31 @@ do
   esac
 done
 
+# -- set up portable echo command
+case "`echo 'x\c'`" in
+'x\c')  echo="echo -n"  nnl= ;;     #BSD
+x)      echo="echo"     nnl="\c";;  #SysV
+*)      echo 'Cannot setup echo. What weird machine do you have?' 1>2&
+        exit 1;;
+esac
+
 # check to see if PerfDMF has been executed
-if [ ! -r ${configfile} ]
-    then
+    
+ $echo "What is the name of your PerfDMF Configuration: ${nnl}"
+ read RESPONSE
+  if [ ! "$RESPONSE" ]; then
+    configfile=${configdir}/perfdmf.cfg
+  else
+    configfile=${configdir}/perfdmf.cfg."${RESPONSE}"
+  fi
+  if [ ! -r ${configfile} ]; then
     echo ""
-    echo "PerfDMF Configfile not found."
+    echo "PerfDMF Configfile named ${RESPONSE} not found."
     echo "Please run perfdmf_configure, if you haven't already done so."
     echo ""
     exit
-fi
+  fi
+RESPONSE=
 
 JDBC_JAR=`grep jdbc_db_jarfile ${configfile} | sed s/jdbc_db_jarfile://`
 LIBDIR=${tauroot}/${architecture}/lib
@@ -136,13 +152,6 @@ fi
 
 
 
-# -- set up portable echo command
-case "`echo 'x\c'`" in
-'x\c')  echo="echo -n"  nnl= ;;     #BSD
-x)      echo="echo"     nnl="\c";;  #SysV
-*)      echo 'Cannot setup echo. What weird machine do you have?' 1>2&
-        exit 1;;
-esac
 
 echo
 echo "Configuring scripts to use the following values:"
