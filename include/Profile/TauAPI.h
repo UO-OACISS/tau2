@@ -39,7 +39,7 @@
 extern "C" void Tau_start(char *name);
 extern "C" void Tau_stop(char *name);
 extern "C" void Tau_start_timer(void * function_info, int phase );
-extern "C" void Tau_stop_timer(void * function_info); 
+extern "C" int Tau_stop_timer(void * function_info); 
 extern "C" void Tau_create_top_level_timer_if_necessary(void);
 extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 extern "C" char * Tau_phase_enable(const char *group);
@@ -604,7 +604,7 @@ or tauFI->method();
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.64 $   $Date: 2007/09/18 00:46:40 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.64 2007/09/18 00:46:40 sameer Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: amorris $
+ * $Revision: 1.65 $   $Date: 2007/11/17 18:27:41 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.65 2007/11/17 18:27:41 amorris Exp $ 
  ***************************************************************************/

@@ -102,7 +102,7 @@ extern "C" void Tau_start_timer(void * function_info, int phase)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_stop_timer(void * function_info)
+extern "C" int Tau_stop_timer(void * function_info)
 {
   FunctionInfo *f = (FunctionInfo *) function_info; 
   if (f->GetProfileGroup() & RtsLayer::TheProfileMask())
@@ -120,6 +120,7 @@ extern "C" void Tau_stop_timer(void * function_info)
     p->Stop();
     delete p;
   }
+  return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -916,7 +917,7 @@ double TAUClockTime(int tid) {
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.66 $   $Date: 2007/10/18 00:16:49 $
- * VERSION: $Id: TauCAPI.cpp,v 1.66 2007/10/18 00:16:49 amorris Exp $
+ * $Revision: 1.67 $   $Date: 2007/11/17 18:27:41 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.67 2007/11/17 18:27:41 amorris Exp $
  ***************************************************************************/
 
