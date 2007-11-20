@@ -2771,6 +2771,7 @@ int printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<ite
   char *start;
   char *line;
   list<string> statements;
+  list<string>::iterator sit;
 
   ostr<<endl; /* start with a new line. Clears up residue from TAU_PROFILE_START*/
   statements.push_back(inbuf); /* initialize the list of statements to inbuf */
@@ -2857,9 +2858,9 @@ int printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<ite
   }
 //  ostr<<"\t call TAU_DEALLOC(A, "<<(*it)->line<< ", '"<< (*it)->snippet<< ", var=A')"<<endl;
   if (writetab) ostr<<"\t";
-  for (list<string>::iterator it = statements.begin(); it != statements.end();
-	it++)
-    ostr <<(*it)<<endl;
+  for (sit = statements.begin(); sit != statements.end();
+	sit++)
+    ostr <<(*sit)<<endl;
   delete [] deallocstmt;
   delete[] varname;
   return linesread;
@@ -2882,6 +2883,7 @@ int printTauIOStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef 
   char *line;
   int lineno, numlines;
   list<string> statements;
+  list<string>::iterator sit;
 
   ostr<<endl; /* start with a new line. Clears up residue from TAU_PROFILE_START*/
   statements.push_back(inbuf); /* initialize the list of statements to inbuf */
@@ -3011,9 +3013,9 @@ int printTauIOStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef 
       printf("Putting in file: varname=%s, line = %s\n", varname, line);
 #endif /* DEBUG */
   if (writetab) ostr<<"\t";
-  for (list<string>::iterator it = statements.begin(); it != statements.end();
-	it++)
-    ostr <<(*it)<<endl;
+  for (sit = statements.begin(); sit != statements.end();
+	sit++)
+    ostr <<(*sit)<<endl;
   delete [] iostmt;
   delete[] varname;
   return linesread;
@@ -4157,8 +4159,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.187 $   $Date: 2007/11/02 02:23:21 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.187 2007/11/02 02:23:21 sameer Exp $
+ * $Revision: 1.188 $   $Date: 2007/11/20 20:13:46 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.188 2007/11/20 20:13:46 sameer Exp $
  ***************************************************************************/
 
 
