@@ -574,7 +574,7 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
    double currentTime = RtsLayer::getUSecD(tid); 
 #else
    double currentTime[MAX_TAU_COUNTERS];
-   for (int c=0; c<MAX_TAU_COUNTERS; c++) {
+   for (c=0; c<MAX_TAU_COUNTERS; c++) {
      currentTime[c] = 0;
    }
    RtsLayer::getUSecD(tid, currentTime);
@@ -779,7 +779,7 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 	   prevStartTime[c] = currentTime[c] - current->StartTime[c];  
 	 }
        }
-       for (int c=0; c<MAX_TAU_COUNTERS; c++) {
+       for (c=0; c<MAX_TAU_COUNTERS; c++) {
 	 incltime[c] += inclusiveToAdd[c];
        }
 #endif
