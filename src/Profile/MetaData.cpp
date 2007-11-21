@@ -103,9 +103,10 @@ bool Tau_snapshot_initialization() {
 // Static holder for snapshot file handles
 static FILE **TauGetSnapshotFiles() {
   static FILE **snapshotFiles = NULL;
+  int i;
   if (!snapshotFiles) {
     snapshotFiles = new FILE*[TAU_MAX_THREADS];
-    for (int i=0; i<TAU_MAX_THREADS; i++) {
+    for (i=0; i<TAU_MAX_THREADS; i++) {
       snapshotFiles[i] = NULL;
     }
   }
@@ -289,15 +290,17 @@ static int writeXMLTime(FILE *fp, bool newline) {
 
 
 static char *removeRuns(char *str) {
+  int i, idx;
+  int len; 
   // replaces runs of spaces with a single space
 
   // also removes leading whitespace
   while (*str && *str == ' ') str++;
 
-  int len = strlen(str);
-  for (int i=0; i<len; i++) {
+  len = strlen(str);
+  for (i=0; i<len; i++) {
     if (str[i] == ' ') {
-      int idx = i+1;
+      idx = i+1;
       while (idx < len && str[idx] == ' ') {
 	idx++;
       }
@@ -549,6 +552,7 @@ static int writeMetaData(FILE *fp, bool newline, int counter) {
 
 int Profiler::Snapshot(char *name, bool finalize, int tid) {
    FILE *fp = TauGetSnapshotFiles()[tid];
+   int i, c;
    if (finalize && !fp) { 
      // finalize is true at the end of execution (regular profile output), if we haven't written a snapshot, don't bother
      return 0;
@@ -625,7 +629,7 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
      writeTagXML(fp, "units", "unknown", true);
      fprintf (fp, "</metric>\n");
 #else
-      for(int i=0;i<MAX_TAU_COUNTERS;i++){
+      for(i=0;i<MAX_TAU_COUNTERS;i++){
 	if(MultipleCounterLayer::getCounterUsed(i)){
 	  char *tmpChar = MultipleCounterLayer::getCounterNameAt(i);
 	  fprintf (fp, "<metric id=\"%d\">", i);
@@ -638,7 +642,7 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 
      // write out events seen (so far)
-     for (int i=0; i < numFunc; i++) {
+     for (i=0; i < numFunc; i++) {
        FunctionInfo *fi = TheFunctionDB()[i];
        writeEventXML(fp, i, fi);
      }
@@ -704,7 +708,7 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 #else
    char metricList[4096];
    char *loc = metricList;
-   for (int c=0; c<MAX_TAU_COUNTERS; c++) {
+   for (c=0; c<MAX_TAU_COUNTERS; c++) {
      if (MultipleCounterLayer::getCounterUsed(c)) {
        loc += sprintf (loc,"%d ", c);
      }
@@ -714,7 +718,7 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
 
  
-   for (int i=0; i < numFunc; i++) {
+   for (i=0; i < numFunc; i++) {
      FunctionInfo *fi = TheFunctionDB()[i];
 
 #ifndef TAU_MULTIPLE_COUNTERS
@@ -786,7 +790,7 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 	      excltime, incltime);
 #else
      fprintf (fp, "%d %ld %ld ", i, fi->GetCalls(tid), fi->GetSubrs(tid));
-     for (int c=0; c<MAX_TAU_COUNTERS; c++) {
+     for (c=0; c<MAX_TAU_COUNTERS; c++) {
        if (MultipleCounterLayer::getCounterUsed(c)) {
 	 fprintf (fp, "%.16G %.16G ", excltime[c], incltime[c]);
        }
@@ -801,7 +805,7 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
    // now write the user events
    fprintf (fp, "<atomic_data>\n");
-   for (int i=0; i < numEvents; i++) {
+   for (i=0; i < numEvents; i++) {
      TauUserEvent *ue = TheEventDB()[i];
            fprintf(fp, "%d %ld %.16G %.16G %.16G %.16G\n", 
 	     i, ue->GetNumEvents(tid), ue->GetMax(tid),
