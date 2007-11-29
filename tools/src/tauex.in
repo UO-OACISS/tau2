@@ -62,7 +62,7 @@ multiplerun=false
 allnative=false
 binding_specified=""
 unset TAU_PAPI_DOMAIN
-TAU_PAPI_DOMAIN=""
+export TAU_PAPI_DOMAIN
 
 for arg in "$@" ; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
@@ -86,6 +86,11 @@ for arg in "$@" ; do
   elif [ "$processE" = "true" ] ; then
       options=`echo $arg | sed -e 's/,/ /g'`
       for i in $options ; do
+	  if [ "$SICORTEX" = "yes" ]; then
+	      if [ "$i" != "GET_TIME_OF_DAY" -a "${i:0:5}" != "PAPI_" ]; then
+		  i=PAPI_NATIVE_$i
+	      fi
+	  fi
 	  Counters="$Counters $i"
 	  NumCounters=$(( $NumCounters + 1 ))
       done
@@ -119,7 +124,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tauex.in,v 1.14 2007/11/29 22:40:36 amorris Exp $';
+	      echo '$Id: tauex.in,v 1.15 2007/11/29 23:16:31 amorris Exp $';
 	      exit 0;
 	      ;;
 #	  -m)
@@ -327,7 +332,6 @@ else
 	counter=$(( $counter + 1 ))
 	counterlist="$counterlist $c"
     done
-    export TAU_PAPI_DOMAIN=$TAU_PAPI_DOMAIN
     export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
     export LD_PRELOAD=$TAUEX_LD_PRELOAD
     if [ $multiplerun = "true" ] ; then
