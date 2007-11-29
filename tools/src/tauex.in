@@ -12,19 +12,29 @@ PREFIX=no
 usage()
 {
     echo ""
-    echo "Usage: tauex [options] -- <exe> <exe options>"
+    echo "Usage: tauex [options] [--] <exe> <exe options>"
     echo ""
+# Common options first
     echo "Options:"
-    echo "        -v: Verbose mode"
-    echo "        -u: User mode counts"
-    echo "        -k: Kernel mode counts"
+    echo "        -d: Enable debugging output, use repeatedly for more output."
+    echo "        -h: Print this message."
+    echo "        -i: Print information about the host machine."
+    echo "        -s: Dump the shell environment variables and exit."
+    echo "        -U: User mode counts"
+    echo "        -K: Kernel mode counts"
     echo "        -S: Supervisor mode counts"
     echo "        -I: Interrupt mode counts"
-    echo "        -a: Count all native events (implies -m)"
-    echo "        -m: Multiple runs (enouch runs of exe to gather all events)"
+    echo "        -l: List events"
+    echo "        -L <event> : Describe event"
+#    echo "        -a: Count all native events (implies -m)"
+#    echo "        -m: Multiple runs (enough runs of exe to gather all events)"
     echo "        -e <event> : Specify PAPI preset or native event"
-    echo "        -T <MPI,OPENMP,TRACE,PROFILE,CALLPATH> : specify TAU option"
+# tauex specific options
+    echo "        -T <MPI,OPENMP,PROFILE,CALLPATH,TRACE,VAMPIRTRACE,EPILOG,DISABLE> : specify TAU option"
+    echo "        -v: Debug/Verbose mode"
     echo "        -XrunTAU-<options> : specify TAU library directly"
+    echo ""
+    echo "Defaults if unspecified: -U -T MPI,PROFILE -e GET_TIME_OF_DAY"
     echo ""
     echo "Example:"
     echo "    mpirun -np 2 tauex -e PAPI_TOT_CYC -e PAPI_FP_OPS -T MPI,PROFILE -- ./ring"
@@ -37,7 +47,7 @@ if [ $# = 0 ] ; then
 fi
 
 
-
+dryrun="false"
 ProfileSpecified="false"
 TraceSpecified="false"
 DisableSpecified="false"
@@ -45,14 +55,14 @@ processT="false"
 processE="false"
 TauOptions=""
 TauOptionsExclude=""
-Counters="GET_TIME_OF_DAY"
+Counters=""
 NumCounters=1
 verbose=false
 multiplerun=false
 allnative=false
 binding_specified=""
 unset TAU_PAPI_DOMAIN
-export TAU_PAPI_DOMAIN
+TAU_PAPI_DOMAIN=""
 
 for arg in "$@" ; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
@@ -83,19 +93,44 @@ for arg in "$@" ; do
       shift
   else
       case $arg in 
-	  -v)
+	  -v|-d)
 	      verbose=true
 	      shift
 	      ;;
-	  -m)
-	      multiplerun=true
+	  -help|-h|--help)
+	      usage
+	      ;;
+	  -i|-l|-L)
+	      PAPIEX=`which papiex`
+	      if [ -x $PAPIEX ]; then
+		  if [ $arg = "-L" ]; then
+		      $PAPIEX $arg $2
+		  else
+		      $PAPIEX $arg
+		  fi
+		  exit $?;
+	      else
+		  echo "This option requires papiex to be in your path."
+		  exit 1
+	      fi
+	      ;;
+	  -s)
+	      dryrun=true
 	      shift
 	      ;;
-	  -a)
-	      allnative=true
-	      multiplerun=true
-	      shift
+	  -V)
+	      echo '$Id: tauex.in,v 1.14 2007/11/29 22:40:36 amorris Exp $';
+	      exit 0;
 	      ;;
+#	  -m)
+#	      multiplerun=true
+#	      shift
+#	      ;;
+#	  -a)
+#	      allnative=true
+#	      multiplerun=true
+#	      shift
+#	      ;;
 	  -e)
 	      processE=true
 	      shift
@@ -104,11 +139,11 @@ for arg in "$@" ; do
 	      processT=true
 	      shift
 	      ;;
-	  -u) 
+	  -U) 
 	      TAU_PAPI_DOMAIN=$TAU_PAPI_DOMAIN:PAPI_DOM_USER
 	      shift
 	      ;;
-	  -k) 
+	  -K) 
 	      TAU_PAPI_DOMAIN=$TAU_PAPI_DOMAIN:PAPI_DOM_KERNEL
 	      shift
 	      ;;
@@ -125,22 +160,25 @@ for arg in "$@" ; do
 	      binding_specified="shared-$myarg"
 	      shift
 	      ;;
-	  -help)
-	      usage
-	      ;;
-	  --help)
-	      usage
-	      ;;
 	  --)
 	      shift
 	      break
 	      ;;
-	  *)
+	  -*)
 	      echo "Unknown option: $arg"
 	      exit
+# First non-option signifies end of options. This would be much easier with getopt()
+	      ;;
+	  *)
+	      break
+	      ;;
       esac
   fi
 done
+
+if [ "$Counters" = "" ] ; then
+    Counters="GET_TIME_OF_DAY"
+fi
 
 if [ $allnative = "true" ] ; then
     native=`papi_native_avail | grep "0x" | awk '{ print $1 }'`
@@ -228,23 +266,13 @@ for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 ; do
     unset COUNTER$i
 done
 
-counterlist=""
-counter=1
-for c in $Counters ; do 
-    #echo export COUNTER$counter=$c
-    export COUNTER$counter=$c
-    counter=$(( $counter + 1 ))
-    counterlist="$counterlist $c"
-done
-
-
 if [ "$SICORTEX" = "yes" ] ; then
-    export LD_LIBRARY_PATH=/$PREFIX/lib32/$theBinding:$LD_LIBRARY_PATH
-    export LD_LIBRARY_PATH=/$PREFIX/lib64/$theBinding:$LD_LIBRARY_PATH
-    export LD_PRELOAD=libTAU.so:$LD_PRELOAD
+    TAUEX_LD_LIBRARY_PATH=$PREFIX/lib32/$theBinding:$LD_LIBRARY_PATH
+    TAUEX_LD_LIBRARY_PATH=$PREFIX/lib64/$theBinding:$TAUEX_LD_LIBRARY_PATH
+    TAUEX_LD_PRELOAD=libTAU.so:$LD_PRELOAD
 else 
-    export LD_LIBRARY_PATH=$BASEDIR/lib/$theBinding:$LD_LIBRARY_PATH
-    export LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU.so
+    TAUEX_LD_LIBRARY_PATH=$BASEDIR/lib/$theBinding:$LD_LIBRARY_PATH
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU.so:$LD_PRELOAD
 fi
 
 if [ $verbose = "true" ] ; then
@@ -254,14 +282,59 @@ if [ $verbose = "true" ] ; then
     echo "Using:"
     echo "$theBinding"
     echo ""
-    echo "Setting LD_LIBRARY_PATH to $LD_LIBRARY_PATH"
+    echo "Configuration:"
+    echo "Setting TAU_PAPI_DOMAIN to $TAU_PAPI_DOMAIN"
+    counterlist=""
+    counter=1
+    for c in $Counters ; do 
+    #echo export COUNTER$counter=$c
+	echo "Setting COUNTER$counter to $c"
+	counter=$(( $counter + 1 ))
+	counterlist="$counterlist $c"
+    done
+    echo ""
+    echo "Runtime:"
+    echo "Setting LD_LIBRARY_PATH to $TAUEX_LD_LIBRARY_PATH"
+    echo "Setting LD_PRELOAD to $TAUEX_LD_PRELOAD"
+    echo ""
 fi
 
-if [ $multiplerun = "true" ] ; then
-    tauex.multiple $counterlist -- "$@"
-else 
     # execute the program
-    "$@"
+if [ $dryrun = "true" ]; then
+    counterlist=""
+    counter=1
+    for c in $Counters ; do 
+    #echo export COUNTER$counter=$c
+	echo export COUNTER$counter=$c
+	counter=$(( $counter + 1 ))
+	counterlist="$counterlist $c"
+    done
+    echo "export TAU_PAPI_DOMAIN=$TAU_PAPI_DOMAIN"
+    echo "export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
+    echo "export LD_PRELOAD=$TAUEX_LD_PRELOAD"
+    if [ $multiplerun = "true" ] ; then
+	echo tauex.multiple $counterlist -- "$@"
+    else 
+	echo "$@"
+    fi
+    exit 0;
+else
+    counterlist=""
+    counter=1
+    for c in $Counters ; do 
+    #echo export COUNTER$counter=$c
+	export COUNTER$counter=$c
+	counter=$(( $counter + 1 ))
+	counterlist="$counterlist $c"
+    done
+    export TAU_PAPI_DOMAIN=$TAU_PAPI_DOMAIN
+    export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
+    export LD_PRELOAD=$TAUEX_LD_PRELOAD
+    if [ $multiplerun = "true" ] ; then
+	tauex.multiple $counterlist -- "$@"
+    else 
+	"$@"
+    fi
 fi
 
 
