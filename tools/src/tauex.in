@@ -8,7 +8,6 @@ BASEDIR=$TAUROOT/$TAUARCH
 SICORTEX=no
 PREFIX=no
 
-
 usage()
 {
     echo ""
@@ -56,7 +55,7 @@ processE="false"
 TauOptions=""
 TauOptionsExclude=""
 Counters=""
-NumCounters=1
+NumCounters=0
 verbose=false
 multiplerun=false
 allnative=false
@@ -87,7 +86,7 @@ for arg in "$@" ; do
       options=`echo $arg | sed -e 's/,/ /g'`
       for i in $options ; do
 	  if [ "$SICORTEX" = "yes" ]; then
-	      if [ "$i" != "GET_TIME_OF_DAY" -a "${i:0:5}" != "PAPI_" ]; then
+	      if [ "$i" != "GET_TIME_OF_DAY" -a "${i:0:5}" != "PAPI_" -a "${i:0:2}" != "P_" ]; then
 		  i=PAPI_NATIVE_$i
 	      fi
 	  fi
@@ -124,7 +123,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tauex.in,v 1.15 2007/11/29 23:16:31 amorris Exp $';
+	      echo '$Id: tauex.in,v 1.16 2007/11/30 02:41:25 amorris Exp $';
 	      exit 0;
 	      ;;
 #	  -m)
@@ -180,25 +179,6 @@ for arg in "$@" ; do
       esac
   fi
 done
-
-if [ "$Counters" = "" ] ; then
-    Counters="GET_TIME_OF_DAY"
-fi
-
-if [ $allnative = "true" ] ; then
-    native=`papi_native_avail | grep "0x" | awk '{ print $1 }'`
-    for i in $native ; do
-	Counters="$Counters PAPI_NATIVE_$i"
-	NumCounters=$(( $NumCounters + 1 ))
-    done
-fi
-
-if [ $verbose = "true" ] ; then
-    echo ""
-    echo "Program to run : $@"
-    echo ""
-fi
-
 
 if [ "x$binding_specified" = "x" ] ; then
     if [ "$ProfileSpecified" = "false" -a "$TraceSpecified" = "false" ] ; then
@@ -265,6 +245,28 @@ if [ "x$binding_specified" = "x" ] ; then
 else
     theBinding=$binding_specified
 fi
+
+if [ "$NumCounters" = "0" -o "$TraceSpecified" = "true" ] ; then
+    # if no counters were specified use GET_TIME_OF_DAY
+    # if tracing, the first counter should be GET_TIME_OF_DAY
+    Counters="GET_TIME_OF_DAY $Counters"
+    NumCounters=$(( $NumCounters + 1 ))
+fi
+
+if [ $allnative = "true" ] ; then
+    native=`papi_native_avail | grep "0x" | awk '{ print $1 }'`
+    for i in $native ; do
+	Counters="$Counters PAPI_NATIVE_$i"
+	NumCounters=$(( $NumCounters + 1 ))
+    done
+fi
+
+if [ $verbose = "true" ] ; then
+    echo ""
+    echo "Program to run : $@"
+    echo ""
+fi
+
 
 # unset any counters that may be active
 for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 ; do
