@@ -915,9 +915,18 @@ double TAUClockTime(int tid) {
 }
 
 
+//////////////////////////////////////////////////////////////////////
+// Sometimes we may link in a library that needs the POMP stuff
+// Even when we're not using opari
+//////////////////////////////////////////////////////////////////////
+#ifdef TAU_FALSE_POMP
+int POMP_MAX_ID = 0;
+int *pomp_rd_table = 0;
+#endif
+
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.67 $   $Date: 2007/11/17 18:27:41 $
- * VERSION: $Id: TauCAPI.cpp,v 1.67 2007/11/17 18:27:41 amorris Exp $
+ * $Revision: 1.68 $   $Date: 2007/11/30 21:20:45 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.68 2007/11/30 21:20:45 amorris Exp $
  ***************************************************************************/
 
