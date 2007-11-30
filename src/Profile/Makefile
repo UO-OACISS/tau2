@@ -210,8 +210,14 @@ TAU_SHAREDDIR = $(INSTALLDEST)/shared$(TAU_CONFIG)
 TAU_DISABLE_SHAREDDIR = $(INSTALLDEST)/shared-disable
 
 TAU_MPI_WRAPPER=$(TAU_MPI_OBJS)
+TAU_MPI_FOR_SHARED=$(TAU_MPI_WRAPPER)
 #EPILOG#TAU_MPI_WRAPPER=$(TAU_MPI_FLIB) #ENDIF#
-#VAMPIRTRACE#TAU_MPI_WRAPPER=$(TAU_MPI_FLIB) #ENDIF#
+
+# We need a .o that uses MPI, otherwise -lvt.mpi gets disregarded
+#VAMPIRTRACE#TAU_MPI_WRAPPER=TauForceMPI.o $(TAU_MPI_FLIB) #ENDIF#
+#VAMPIRTRACE#TAU_FORCE_MPI=TauForceMPI.o #ENDIF#
+
+
 
 # Only use the wrapper if -forceshared was specified, since -lelg.mpi
 # is often not compiled with -fPIC and cannot be placed in a .so
@@ -225,7 +231,7 @@ $(TAU_TARGET):	$(OBJS)
 		$(TAU_RANLIB) $(TAU_TARGET)
 
 
-$(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS) $(MPI_WRAPPER)
+$(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS) $(MPI_WRAPPER) $(TAU_FORCE_MPI)
 		$(PRELINK_PHASE)
 		$(TAU_CXX) $(TAU_ARFLAGS)  $(TAU_SHLIB) $(OBJS) $(EXTRAOBJS) $(TAU_MPI_FOR_SHARED) $(EXTRA_LIBS) $(LEXTRA) $(LEXTRA1) $(TAU_PAPI_EXTRA_FLAGS) $(TAU_EXTRA_LIBRARY_FLAGS) $(TAUEXTRASHLIBOPTS)
 
@@ -345,6 +351,9 @@ $(INSTALLDEST)/libmpi_r.a: libmpi_r.a
 	ln -s $(TAU_BINDINGSDIR) $(INSTALLDEST)/bindings-default
 
 install:	 $(INSTALLDEST)/$(TAU_TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1) $(TAUPYTHON_INSTALL) $(SHMEM_INSTALL) $(POELIB_INSTALL)
+
+TauForceMPI.o : TauForceMPI.c
+	$(CC) $(CFLAGS) -c $(@:.o=.c)
 
 # Rules
 Profile.class	: Profile.java
