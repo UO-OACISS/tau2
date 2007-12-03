@@ -271,14 +271,26 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
 #endif//TAUKTAU_SHCTR
 
 
-  //Get the counter names from the environment.
+    //Get the counter names from the environment.
+    bool counterFound = false;
     for(int c=0; c<MAX_TAU_COUNTERS; c++)
     {
       MultipleCounterLayer::names[c] = getenv(environment[c]);
       if (MultipleCounterLayer::names[c]) {
+	counterFound = true;
 	MultipleCounterLayer::names[c] = strdup(MultipleCounterLayer::names[c]);
       }
     }
+
+#if defined(TAU_USE_DEFAULT_TIMER) || defined(TAU_USE_PAPI_TIMER)
+    if (!counterFound) {
+      char *counter = "GET_TIME_OF_DAY";
+#if defined(TAU_USE_PAPI_TIMER) && defined(TAU_PAPI)
+      counter = "P_WALL_CLOCK_TIME";
+#endif
+      MultipleCounterLayer::names[0] = strdup(counter);
+    }
+#endif // TAU_USE_DEFAULT_TIMER || TAU_USE_PAPI_TIMER
 
     //Initialize the function array with the correct active functions.
     for(int e=0; e<SIZE_OF_INIT_ARRAY; e++)
