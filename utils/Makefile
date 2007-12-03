@@ -200,7 +200,7 @@ tau_timecorrect:	tau_timecorrect.o
 
 tau_timecorrect.o:	tau_timecorrect.cpp
 		$(CXX) $(CFLAGS) tau_timecorrect.cpp -c
-		
+
 tau2vtf: 	tau2vtf.o
 		$(CXX) $(CFLAGS) tau2vtf.o -o tau2vtf -lm $(LEXTRA) -L$(VTFDIR)/$(TAU_ARCH)/lib -lvtf3 $(TAU_TRACE_INPUT_LIB)
 
@@ -214,8 +214,8 @@ tau2otf.o:	tau2otf.cpp
 		$(CXX) $(CFLAGS)  tau2otf.cpp -c -I$(OTFDIR)/include 
 
 trace2profile/trace2profile:
-		cd trace2profile; $(MAKE) "MAKE=$(MAKE)" "CFLAFS=$(CFLAGS)"
-		
+		cd trace2profile; $(MAKE) "MAKE=$(MAKE)" "CFLAGS=$(CFLAGS)"
+
 vtfconverter/vtf2profile: 	
 		cd vtfconverter; $(MAKE) "MAKE=$(MAKE)" "CFLAGS=$(CFLAGS)"
 
@@ -368,7 +368,7 @@ $(INSTALLDEST)/tau_run: tau_run
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
-		
+
 $(INSTALLDEST)/tau2vtf: tau2vtf
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
