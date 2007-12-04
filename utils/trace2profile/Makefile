@@ -14,20 +14,12 @@
 include ../../include/Makefile
 ########### Automatically modified by the configure script ############
 
-
-
-#SGICC#LEXTRA = -lCio #ENDIF#
-
-
-
-
-CONFIG_ARCH=i386_linux
+CONFIG_ARCH=x86_64
 CONFIG_CC=gcc
 CONFIG_CXX=g++
-CXX=$(CONFIG_CXX)  $(ABI) $(ISA)
-HEADERS=
+CXX=$(CONFIG_CXX) $(ABI) $(ISA)
 LIBS=$(TAU_TRACE_INPUT_LIB)
-CFLAGS=$(TAU_INCLUDE) -I.
+INCLUDES=$(TAU_INCLUDE) -I.
 RM=/bin/rm -f
 
 #The following are variables for all the files and their associated variations.
@@ -41,16 +33,16 @@ all:    trace2profile
 install:       trace2profile
 	
 trace2profile: handlers.o readTrace.o trace2profile.o
-	$(CXX) $(CFLAGS) -o $@ handlers.o readTrace.o trace2profile.o $(LIBS)
+	$(CXX) $(CFLAGS) $(INCLUDES) -o $@ handlers.o readTrace.o trace2profile.o $(LIBS)
 	
 handlers.o: handlers.h trace2profile.h handlers.cpp
-	$(CXX) $(CFLAGS) -c handlers.cpp
+	$(CXX) $(CFLAGS) $(INCLUDES) -c handlers.cpp
 
 readTrace.o: handlers.h trace2profile.h readTrace.cpp
-	$(CXX) $(CFLAGS) -c readTrace.cpp
+	$(CXX) $(CFLAGS) $(INCLUDES) -c readTrace.cpp
 	
 trace2profile.o: trace2profile.h trace2profile.cpp
-	$(CXX) $(CFLAGS) -c trace2profile.cpp
+	$(CXX) $(CFLAGS) $(INCLUDES) -c trace2profile.cpp
 
  	
 clean:
