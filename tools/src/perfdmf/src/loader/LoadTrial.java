@@ -151,6 +151,7 @@ public class LoadTrial {
         // set the meta data from the datasource
         trial.setMetaData(dataSource.getMetaData());
 
+
         if (trialID == 0) {
             saveTrial();
         } else {
@@ -323,6 +324,8 @@ public class LoadTrial {
                 fileType = DataSource.HPCTOOLKIT;
             } else if (fileTypeString.equals("gyro")) {
                 fileType = DataSource.GYRO;
+            } else if (fileTypeString.equals("fusion")) {
+                fileType = DataSource.FUSION;
             } else if (fileTypeString.equals("ompp")) {
                 fileType = DataSource.OMPP;
             } else if (fileTypeString.equals("snap")) {

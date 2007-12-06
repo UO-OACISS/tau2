@@ -541,6 +541,11 @@ public class UtilFncs {
             v.add(sourceFiles);
             dataSource = new GyroDataSource(v);
             break;
+
+         case DataSource.FUSION:
+            dataSource = new FusionDataSource(sourceFiles[0]);
+            break;
+        
         default:
             throw new RuntimeException ("Programming error: unknown format id = " + fileType);
         }
