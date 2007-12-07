@@ -1,0 +1,7 @@
+To demonstrate the use of tau_wrap to create a wrapper library for HDF5, we use:
+
+% make clean
+% make
+% ./checkhdf
+% pprof
+The profile has routines from HDF5.
