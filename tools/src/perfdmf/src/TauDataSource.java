@@ -30,6 +30,7 @@ public class TauDataSource extends DataSource {
     private boolean profileStatsPresent = false;
     private boolean groupCheck = false;
     private List dirs; // list of directories (e.g. MULTI__PAPI_FP_INS, MULTI__PAPI_L1_DCM)
+	private int currFunction = 0;
 
     private File fileToMonitor;
 
@@ -221,6 +222,7 @@ public class TauDataSource extends DataSource {
                         }
 
                         for (int j = 0; j < numFunctions; j++) {
+							this.currFunction = j;
 
                             inputString = br.readLine();
                             if (inputString == null) {
@@ -299,6 +301,7 @@ public class TauDataSource extends DataSource {
                         finished = true;
                     } catch (Exception ex) {
                         ex.printStackTrace();
+						System.out.println("Current Function: " + currFunction);
                         //System.out.println("ex:);
                         if (!(ex instanceof IOException || ex instanceof FileNotFoundException)) {
                             throw new RuntimeException(ex == null ? null : ex.toString());

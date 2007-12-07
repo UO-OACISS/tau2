@@ -542,8 +542,8 @@ public class UtilFncs {
             dataSource = new GyroDataSource(v);
             break;
 
-         case DataSource.FUSION:
-            dataSource = new FusionDataSource(sourceFiles[0]);
+         case DataSource.GPTL:
+            dataSource = new GPTLDataSource(sourceFiles[0]);
             break;
         
         default:

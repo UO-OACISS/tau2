@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Stack;
 
-public class FusionDataSource extends DataSource {
+public class GPTLDataSource extends DataSource {
 
 	private int linenumber = 0;
 	private int currentProcess = 0;
@@ -14,7 +14,7 @@ public class FusionDataSource extends DataSource {
 	private File file = null;
 	private GlobalData globalData = null;
     
-    public FusionDataSource(File file) {
+    public GPTLDataSource(File file) {
         super();
         this.file = file;
     }
@@ -47,7 +47,7 @@ public class FusionDataSource extends DataSource {
 
 		// process the global section, and do what's necessary
 		globalData = processGlobalSection(br);
-		System.out.println("Num Tasks: " + globalData.numTasks);
+		//System.out.println("Num Tasks: " + globalData.numTasks);
 
 		// process the process/thread data
 		ThreadData data = processThreadData(br);
@@ -96,7 +96,7 @@ public class FusionDataSource extends DataSource {
 		function.addGroup(this.addGroup(eventData.name));
 
 		// create a function profile for this process/thread
-		functionProfile = new FunctionProfile(function, 5+(2*globalData.metrics.size()));
+		functionProfile = new FunctionProfile(function, 3+(2*globalData.metrics.size()));
 		// add it to the current thread
 		thread.addFunctionProfile(functionProfile);
 
@@ -123,6 +123,11 @@ public class FusionDataSource extends DataSource {
 		// so use the inclusive value
 		functionProfile.setExclusive(m.getID(), inclusive.wallclockMin * 1000000);
 
+/*
+		this data shouldn't be archived -
+		it's the measurement overhead for the GPTL timers.
+*/
+/*
 		m = this.addMetric("UTR Overhead");
 		functionProfile.setInclusive(m.getID(), inclusive.utrOverhead);
 		functionProfile.setExclusive(m.getID(), exclusive.utrOverhead);
@@ -130,6 +135,7 @@ public class FusionDataSource extends DataSource {
 		m = this.addMetric("OH (cyc)");
 		functionProfile.setInclusive(m.getID(), inclusive.ohCycles);
 		functionProfile.setExclusive(m.getID(), exclusive.ohCycles);
+*/
 
 		for (int j = 0 ; j < globalData.metrics.size() ; j++ ){
 			String metric = (String)globalData.metrics.get(j);
@@ -311,7 +317,7 @@ public class FusionDataSource extends DataSource {
 						if (eventData.depth > parent.depth) {
 							eventStack.push(eventData);
 							parent.children.add(eventData);
-							eventData.callpathName = parent.callpathName + " -> " + eventData.callpathName;
+							eventData.callpathName = parent.callpathName + " => " + eventData.callpathName;
 						}
 						// if the just read event is at the same depth, pop the
 						// current parent and replace it with the just read event
@@ -319,7 +325,7 @@ public class FusionDataSource extends DataSource {
 							eventStack.pop();
 							parent = (EventData)eventStack.peek();
 							parent.children.add(eventData);
-							eventData.callpathName = parent.callpathName + " -> " + eventData.callpathName;
+							eventData.callpathName = parent.callpathName + " => " + eventData.callpathName;
 							eventStack.push(eventData);
 						}
 						// if the just read event is at a shallower depth, pop
@@ -330,7 +336,7 @@ public class FusionDataSource extends DataSource {
 								parent = (EventData)eventStack.peek();
 							}
 							parent.children.add(eventData);
-							eventData.callpathName = parent.callpathName + " -> " + eventData.callpathName;
+							eventData.callpathName = parent.callpathName + " => " + eventData.callpathName;
 							eventStack.push(eventData);
 						}
 					}
@@ -408,10 +414,10 @@ public class FusionDataSource extends DataSource {
 		public Measurements inclusive = new Measurements();
 		public Measurements getExclusive() {
 			Measurements exclusive = (Measurements)inclusive.clone();
-			System.out.println("Getting exclusive for " + callpathName);
+			//System.out.println("Getting exclusive for " + callpathName);
 			for (int i = 0 ; i < children.size() ; i++) {
 				EventData child = (EventData)children.get(i);
-				System.out.println("	Child:  " + child.name);
+				//System.out.println("	Child:  " + child.name);
 				exclusive.wallclock -= child.inclusive.wallclock;
 				exclusive.wallclockMax -= child.inclusive.wallclockMax;
 				exclusive.wallclockMin -= child.inclusive.wallclockMin;
@@ -421,6 +427,15 @@ public class FusionDataSource extends DataSource {
 					exclusive.papi[j] -= child.inclusive.papi[j];
 					exclusive.papiE6OverSeconds[j] -= child.inclusive.papiE6OverSeconds[j];
 				}
+			}
+			exclusive.wallclock = exclusive.wallclock < 0.0 ? 0.0 : exclusive.wallclock;
+			exclusive.wallclockMax = exclusive.wallclockMax < 0.0 ? 0.0 : exclusive.wallclockMax;
+			exclusive.wallclockMin = exclusive.wallclockMin < 0.0 ? 0.0 : exclusive.wallclockMin;
+			exclusive.utrOverhead = exclusive.utrOverhead < 0.0 ? 0.0 : exclusive.utrOverhead;
+			exclusive.ohCycles = exclusive.ohCycles < 0.0 ? 0.0 : exclusive.ohCycles;
+			for (int j = 0 ; j < globalData.metrics.size() ; j++ ){
+				exclusive.papi[j] = exclusive.papi[j] < 0.0 ? 0.0 : exclusive.papi[j];
+				exclusive.papiE6OverSeconds[j] = exclusive.papiE6OverSeconds[j] < 0.0 ? 0.0 : exclusive.papiE6OverSeconds[j];
 			}
 			return exclusive;
 		}
