@@ -31,22 +31,10 @@ public class FusionDataSource extends DataSource {
         //Record time.
         long time = System.currentTimeMillis();
 
-        //######
-        //Frequently used items.
-        //######
-        Function function = null;
-        FunctionProfile functionProfile = null;
-
         Node node = null;
         Context context = null;
         edu.uoregon.tau.perfdmf.Thread thread = null;
         int nodeID = -1;
-
-        String inputString = null;
-      
-      
-
-        Function callPathFunction = null;
 
         //######
         //End - Frequently used items.
@@ -74,58 +62,9 @@ public class FusionDataSource extends DataSource {
 			// cycle through the events
 			for (int i = 0 ; i < data.eventData.size() ; i++ ) {
 				EventData eventData = (EventData)data.eventData.get(i);
-
-				// for each function, create a function
-				function = this.addFunction(eventData.name);
-
-				// create a function profile for this process/thread
-				functionProfile = new FunctionProfile(function, 5+(2*globalData.metrics.size()));
-				// add it to the current thread
-				thread.addFunctionProfile(functionProfile);
-
-				// set the values for the each metric
-				functionProfile.setNumCalls(eventData.calls);
-				functionProfile.setNumSubr(eventData.children.size());
-
-				Measurements inclusive = eventData.inclusive;
-				Measurements exclusive = eventData.getExclusive();
-
-				Metric m = this.addMetric("WALL_CLOCK_TIME");
-				functionProfile.setInclusive(m.getID(), inclusive.wallclock * 1000000);
-				functionProfile.setExclusive(m.getID(), exclusive.wallclock * 1000000);
-
-				m = this.addMetric("WALL_CLOCK_TIME max");
-				functionProfile.setInclusive(m.getID(), inclusive.wallclockMax * 1000000);
-				// this is somewhat meaningless as exclusive...
-				// so use the inclusive value
-				functionProfile.setExclusive(m.getID(), inclusive.wallclockMax * 1000000);
-
-				m = this.addMetric("WALL_CLOCK_TIME min");
-				functionProfile.setInclusive(m.getID(), inclusive.wallclockMin * 1000000);
-				// this is somewhat meaningless as exclusive...
-				// so use the inclusive value
-				functionProfile.setExclusive(m.getID(), inclusive.wallclockMin * 1000000);
-
-				m = this.addMetric("UTR Overhead");
-				functionProfile.setInclusive(m.getID(), inclusive.utrOverhead);
-				functionProfile.setExclusive(m.getID(), exclusive.utrOverhead);
-
-				m = this.addMetric("OH (cyc)");
-				functionProfile.setInclusive(m.getID(), inclusive.ohCycles);
-				functionProfile.setExclusive(m.getID(), exclusive.ohCycles);
-
-				for (int j = 0 ; j < globalData.metrics.size() ; j++ ){
-					String metric = (String)globalData.metrics.get(j);
-					m = this.addMetric(metric);
-					functionProfile.setInclusive(m.getID(), inclusive.papi[j]);
-					functionProfile.setExclusive(m.getID(), exclusive.papi[j]);
-
-					m = this.addMetric(metric + " e6/sec");
-					functionProfile.setInclusive(m.getID(), inclusive.papiE6OverSeconds[j]);
-					functionProfile.setExclusive(m.getID(), exclusive.papiE6OverSeconds[j]);
-				}
+				createFunction(thread, eventData, false);
+				createFunction(thread, eventData, true);
 			}
-
 			// get next thread
 			data = processThreadData(br);
 
@@ -142,9 +81,68 @@ public class FusionDataSource extends DataSource {
     //Private Section.
     //####################################
 
-    //######
-    //fusion string processing methods.
-    //######
+	private void createFunction(Thread thread, EventData eventData, boolean doCallpath) {
+        Function function = null;
+        FunctionProfile functionProfile = null;
+
+		// for this function, create a function
+
+		if (doCallpath) { 
+			function = this.addFunction(eventData.callpathName);
+			function.addGroup(this.addGroup("TAU_CALLPATH"));
+		} else {
+			function = this.addFunction(eventData.name);
+		}
+		function.addGroup(this.addGroup(eventData.name));
+
+		// create a function profile for this process/thread
+		functionProfile = new FunctionProfile(function, 5+(2*globalData.metrics.size()));
+		// add it to the current thread
+		thread.addFunctionProfile(functionProfile);
+
+		// set the values for the each metric
+		functionProfile.setNumCalls(eventData.calls);
+		functionProfile.setNumSubr(eventData.children.size());
+
+		Measurements inclusive = eventData.inclusive;
+		Measurements exclusive = eventData.getExclusive();
+
+		Metric m = this.addMetric("WALL_CLOCK_TIME");
+		functionProfile.setInclusive(m.getID(), inclusive.wallclock * 1000000);
+		functionProfile.setExclusive(m.getID(), exclusive.wallclock * 1000000);
+
+		m = this.addMetric("WALL_CLOCK_TIME max");
+		functionProfile.setInclusive(m.getID(), inclusive.wallclockMax * 1000000);
+		// this is somewhat meaningless as exclusive...
+		// so use the inclusive value
+		functionProfile.setExclusive(m.getID(), inclusive.wallclockMax * 1000000);
+
+		m = this.addMetric("WALL_CLOCK_TIME min");
+		functionProfile.setInclusive(m.getID(), inclusive.wallclockMin * 1000000);
+		// this is somewhat meaningless as exclusive...
+		// so use the inclusive value
+		functionProfile.setExclusive(m.getID(), inclusive.wallclockMin * 1000000);
+
+		m = this.addMetric("UTR Overhead");
+		functionProfile.setInclusive(m.getID(), inclusive.utrOverhead);
+		functionProfile.setExclusive(m.getID(), exclusive.utrOverhead);
+
+		m = this.addMetric("OH (cyc)");
+		functionProfile.setInclusive(m.getID(), inclusive.ohCycles);
+		functionProfile.setExclusive(m.getID(), exclusive.ohCycles);
+
+		for (int j = 0 ; j < globalData.metrics.size() ; j++ ){
+			String metric = (String)globalData.metrics.get(j);
+			m = this.addMetric(metric);
+			functionProfile.setInclusive(m.getID(), inclusive.papi[j]);
+			functionProfile.setExclusive(m.getID(), exclusive.papi[j]);
+
+			m = this.addMetric(metric + " e6/sec");
+			functionProfile.setInclusive(m.getID(), inclusive.papiE6OverSeconds[j]);
+			functionProfile.setExclusive(m.getID(), exclusive.papiE6OverSeconds[j]);
+		}
+
+	}
 
 	private GlobalData processGlobalSection(BufferedReader br) {
 		GlobalData data = new GlobalData();
@@ -313,6 +311,7 @@ public class FusionDataSource extends DataSource {
 						if (eventData.depth > parent.depth) {
 							eventStack.push(eventData);
 							parent.children.add(eventData);
+							eventData.callpathName = parent.callpathName + " -> " + eventData.callpathName;
 						}
 						// if the just read event is at the same depth, pop the
 						// current parent and replace it with the just read event
@@ -320,6 +319,7 @@ public class FusionDataSource extends DataSource {
 							eventStack.pop();
 							parent = (EventData)eventStack.peek();
 							parent.children.add(eventData);
+							eventData.callpathName = parent.callpathName + " -> " + eventData.callpathName;
 							eventStack.push(eventData);
 						}
 						// if the just read event is at a shallower depth, pop
@@ -330,6 +330,7 @@ public class FusionDataSource extends DataSource {
 								parent = (EventData)eventStack.peek();
 							}
 							parent.children.add(eventData);
+							eventData.callpathName = parent.callpathName + " -> " + eventData.callpathName;
 							eventStack.push(eventData);
 						}
 					}
@@ -357,6 +358,7 @@ public class FusionDataSource extends DataSource {
 			// get the depth of this event
 			data.depth = inputString.length() - inputString.trim().length();
 		}
+		data.callpathName = data.name;
 		// num calls
         data.calls = Integer.parseInt(st.nextToken());
 		// recurse - what do do with this?
@@ -399,13 +401,14 @@ public class FusionDataSource extends DataSource {
 
 	private class EventData {
 		public String name;
+		public String callpathName;
 		public int depth;
 		public int calls;
 		private List children = new ArrayList();
 		public Measurements inclusive = new Measurements();
 		public Measurements getExclusive() {
 			Measurements exclusive = (Measurements)inclusive.clone();
-			System.out.println("Getting inclusive for " + name);
+			System.out.println("Getting exclusive for " + callpathName);
 			for (int i = 0 ; i < children.size() ; i++) {
 				EventData child = (EventData)children.get(i);
 				System.out.println("	Child:  " + child.name);
