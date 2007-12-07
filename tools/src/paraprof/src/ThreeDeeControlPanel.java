@@ -23,9 +23,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.8 2007/12/07 02:05:21 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.9 2007/12/07 22:13:26 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.8 $
+ * @version	$Revision: 1.9 $
  */
 public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
@@ -165,10 +165,10 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         group.add(jrb);
         addCompItem(this, jrb, gbc, 0, 3, 1, 1);
 
-        jrb = new JRadioButton(VisType.CALLGRAPH.toString(), settings.getVisType() == VisType.CALLGRAPH);
-        jrb.addActionListener(this);
-        group.add(jrb);
-        addCompItem(this, jrb, gbc, 0, 4, 1, 1);
+//        jrb = new JRadioButton(VisType.CALLGRAPH.toString(), settings.getVisType() == VisType.CALLGRAPH);
+//        jrb.addActionListener(this);
+//        group.add(jrb);
+//        addCompItem(this, jrb, gbc, 0, 4, 1, 1);
 
         createSubPanel();
 
