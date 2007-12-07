@@ -260,4 +260,7 @@ memoryleakdetect- TAU can instrument C/C++ programs that use malloc/free/realloc
                   program that led to memory allocations where corresponding 
                   deallocations were missing. See examples/memoryleakdetect.
 
- 
+iowrappers      - TAU can build POSIX I/O wrappers using ./configure -iowrapper.
+                  To build wrappers automatically for external packages (such as 
+                  HDF5), see examples/iowrappers/hdf5 and posixio. The tau_wrap tool
+                  generates wrappers for a given header file.  
