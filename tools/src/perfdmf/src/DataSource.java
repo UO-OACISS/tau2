@@ -20,9 +20,9 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.31 2007/12/07 19:28:03 khuck Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.32 2007/12/07 21:33:20 khuck Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.31 $
+ * @version $Revision: 1.32 $
  */
 public abstract class DataSource {
 
@@ -363,6 +363,50 @@ public abstract class DataSource {
         return metric;
     }
 
+
+    /**
+     * Adds a metric to the DataSource's metrics List (given as a String).
+	 * need to create this method from DataSource.  The DataSource
+	 * assumes that we are processing in this order: metric,thread,event.
+	 * The GPTL data is in thread,event,metric order.
+     * 
+     * @param metric
+     *            Name of metric to be added
+	 * @param thread
+	 *            Current thread that is being processed
+     */
+    public Metric addMetric(String metricName, Thread thread) {
+        Metric metric = null;
+		// if the metric list exists, and has values, search for this metric
+        if (metrics == null) {
+			metrics = new ArrayList();
+        } else {
+            for (Iterator it = metrics.iterator(); it.hasNext();) {
+                Metric tmp = (Metric) it.next();
+                if (tmp.getName().equals(metricName)) {
+                    metric = tmp;
+					break;
+                }
+            }
+		}
+
+		// did we find the metric?  If not, create a new one
+		if (metric == null) {
+        	metric = new Metric();
+        	metric.setName(metricName);
+        	metric.setID(this.getNumberOfMetrics());
+			metrics.add(metric);
+		}
+
+		// if the current thread doesn't have this metric, add it
+		if (thread.getNumMetrics() < this.getNumberOfMetrics()) {
+			thread.addMetric();
+		}
+
+        return metric;
+    }
+
+
     /**
      * Get a the List of Metrics
      * 
@@ -370,6 +414,14 @@ public abstract class DataSource {
      */
     public List getMetrics() {
         return metrics;
+    }
+
+    /**
+     * Clear the list of metrics
+     * 
+     */
+    public void clearMetrics() {
+        metrics = null;
     }
 
     public Metric getMetric(String name) {

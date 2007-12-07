@@ -5,6 +5,7 @@ import java.util.StringTokenizer;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Stack;
+import java.util.Iterator;
 
 public class GPTLDataSource extends DataSource {
 
@@ -53,6 +54,8 @@ public class GPTLDataSource extends DataSource {
 		ThreadData data = processThreadData(br);
 		while ( data != null ) {
 
+			//clearMetrics();
+
 			// the data is loaded, so create the node/context/thread id
 			// for this data set
           	node = this.addNode(data.processid);
@@ -65,12 +68,12 @@ public class GPTLDataSource extends DataSource {
 				createFunction(thread, eventData, false);
 				createFunction(thread, eventData, true);
 			}
+        	this.generateDerivedData();
 			// get next thread
 			data = processThreadData(br);
 
 		} // while process/thread
 
-        this.generateDerivedData();
 
         time = (System.currentTimeMillis()) - time;
         //System.out.println("Done processing data!");
@@ -107,43 +110,41 @@ public class GPTLDataSource extends DataSource {
 		Measurements inclusive = eventData.inclusive;
 		Measurements exclusive = eventData.getExclusive();
 
-		Metric m = this.addMetric("WALL_CLOCK_TIME");
+		Metric m = addMetric("WALL_CLOCK_TIME", thread);
 		functionProfile.setInclusive(m.getID(), inclusive.wallclock * 1000000);
 		functionProfile.setExclusive(m.getID(), exclusive.wallclock * 1000000);
 
-		m = this.addMetric("WALL_CLOCK_TIME max");
+		m = addMetric("WALL_CLOCK_TIME max", thread);
 		functionProfile.setInclusive(m.getID(), inclusive.wallclockMax * 1000000);
 		// this is somewhat meaningless as exclusive...
 		// so use the inclusive value
 		functionProfile.setExclusive(m.getID(), inclusive.wallclockMax * 1000000);
 
-		m = this.addMetric("WALL_CLOCK_TIME min");
+		m = this.addMetric("WALL_CLOCK_TIME min", thread);
 		functionProfile.setInclusive(m.getID(), inclusive.wallclockMin * 1000000);
 		// this is somewhat meaningless as exclusive...
 		// so use the inclusive value
 		functionProfile.setExclusive(m.getID(), inclusive.wallclockMin * 1000000);
 
+//		this data shouldn't be archived -
+//		it's the measurement overhead for the GPTL timers.
 /*
-		this data shouldn't be archived -
-		it's the measurement overhead for the GPTL timers.
-*/
-/*
-		m = this.addMetric("UTR Overhead");
+		m = this.addMetric("UTR Overhead", thread);
 		functionProfile.setInclusive(m.getID(), inclusive.utrOverhead);
 		functionProfile.setExclusive(m.getID(), exclusive.utrOverhead);
 
-		m = this.addMetric("OH (cyc)");
+		m = this.addMetric("OH (cyc)", thread);
 		functionProfile.setInclusive(m.getID(), inclusive.ohCycles);
 		functionProfile.setExclusive(m.getID(), exclusive.ohCycles);
 */
 
 		for (int j = 0 ; j < globalData.metrics.size() ; j++ ){
 			String metric = (String)globalData.metrics.get(j);
-			m = this.addMetric(metric);
+			m = this.addMetric(metric, thread);
 			functionProfile.setInclusive(m.getID(), inclusive.papi[j]);
 			functionProfile.setExclusive(m.getID(), exclusive.papi[j]);
 
-			m = this.addMetric(metric + " e6/sec");
+			m = this.addMetric(metric + " e6/sec", thread);
 			functionProfile.setInclusive(m.getID(), inclusive.papiE6OverSeconds[j]);
 			functionProfile.setExclusive(m.getID(), exclusive.papiE6OverSeconds[j]);
 		}
@@ -244,16 +245,26 @@ public class GPTLDataSource extends DataSource {
         			tmp = st.nextToken();
 					// process ID
         			tmp = st.nextToken();
-					// whatever, java
+					// parse the process ID
 					data.processid = Integer.parseInt(tmp,10);
+					// process ID again?
+        			//tmp = st.nextToken();
+					//data.threadid = Integer.parseInt(tmp);
+				}
+				// Stats for thread 0:
+				else if (inputString.trim().startsWith("Stats for thread 0:")) {
+					previousLineBlank = false;
+					inData = true;
+        			StringTokenizer st = new StringTokenizer(inputString, " \t\n\r:");
+					// Stats
+        			tmp = st.nextToken();
+					// for
+        			tmp = st.nextToken();
+					// thread
+        			tmp = st.nextToken();
 					// thread ID
         			tmp = st.nextToken();
 					data.threadid = Integer.parseInt(tmp);
-				}
-				// Stats for thread 0:
-				else if (inputString.trim().startsWith("Stats for thread")) {
-					previousLineBlank = false;
-					inData = true;
 				}
 				// Called Recurse Wallclock max min % of TOTAL UTR Overhead TOT_CYC e6/sec FP_OPS e6/sec FP_INS e6/sec OH (cyc)...
 				else if (inputString.trim().startsWith("Called")) {
@@ -369,7 +380,7 @@ public class GPTLDataSource extends DataSource {
         data.calls = Integer.parseInt(st.nextToken());
 		// recurse - what do do with this?
         st.nextToken();
-		// Wallclock
+		// Wallclock - the output is a total, so divide by the number of calls
 		data.inclusive.wallclock = Double.parseDouble(st.nextToken());
 		// WallclockMax
 		data.inclusive.wallclockMax = Double.parseDouble(st.nextToken());
@@ -383,7 +394,7 @@ public class GPTLDataSource extends DataSource {
 		data.inclusive.papi = new double[globalData.metrics.size()];
 		data.inclusive.papiE6OverSeconds = new double[globalData.metrics.size()];
 		for (int i = 0 ; i < globalData.metrics.size() ; i++) {
-			// PAPI
+			// PAPI - the output is a total, so divide by the number of calls
 			data.inclusive.papi[i] = Double.parseDouble(st.nextToken());
 			// e6/sec
 			data.inclusive.papiE6OverSeconds[i] = Double.parseDouble(st.nextToken());
@@ -425,7 +436,7 @@ public class GPTLDataSource extends DataSource {
 				exclusive.ohCycles -= child.inclusive.ohCycles;
 				for (int j = 0 ; j < globalData.metrics.size() ; j++ ){
 					exclusive.papi[j] -= child.inclusive.papi[j];
-					exclusive.papiE6OverSeconds[j] -= child.inclusive.papiE6OverSeconds[j];
+					//exclusive.papiE6OverSeconds[j] -= child.inclusive.papiE6OverSeconds[j];
 				}
 			}
 			exclusive.wallclock = exclusive.wallclock < 0.0 ? 0.0 : exclusive.wallclock;
@@ -435,7 +446,9 @@ public class GPTLDataSource extends DataSource {
 			exclusive.ohCycles = exclusive.ohCycles < 0.0 ? 0.0 : exclusive.ohCycles;
 			for (int j = 0 ; j < globalData.metrics.size() ; j++ ){
 				exclusive.papi[j] = exclusive.papi[j] < 0.0 ? 0.0 : exclusive.papi[j];
-				exclusive.papiE6OverSeconds[j] = exclusive.papiE6OverSeconds[j] < 0.0 ? 0.0 : exclusive.papiE6OverSeconds[j];
+				//exclusive.papiE6OverSeconds[j] = exclusive.papiE6OverSeconds[j] < 0.0 ? 0.0 : exclusive.papiE6OverSeconds[j];
+				// compute the E6 / seconds value for exclusive
+				exclusive.papiE6OverSeconds[j] = (exclusive.papi[j] / 1000000) / exclusive.wallclock;
 			}
 			return exclusive;
 		}
@@ -465,4 +478,5 @@ public class GPTLDataSource extends DataSource {
 			return cloned;
 		}
 	}
+
 }
