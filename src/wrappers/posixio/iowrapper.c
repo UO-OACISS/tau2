@@ -2,6 +2,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <TAU.h>
+#include <string.h>
+#include <stdlib.h>
 
 #define TAU_READ TAU_IO
 #define TAU_WRITE TAU_IO
@@ -10,7 +12,7 @@ static int CheckRead(size_t bytes)
 {
   static double prevRead = 0.0;
   double currentRead;
-  const char **inFuncs;
+  const char **inFuncs; 
   double **counterExclusiveValues;
   double **counterInclusiveValues;
   int *numOfCalls;
@@ -25,9 +27,11 @@ static int CheckRead(size_t bytes)
   return 0; /* profiling must be turned on for this to work */
 #endif /* PROFILING_ON */
  
+
   inFuncs = (const char **) malloc(sizeof(char *));
   inFuncs[0] = strdup("read()");
   inFuncs[1] = '\0';
+
   TAU_GET_FUNC_VALS(inFuncs, 1, counterExclusiveValues, 
     counterInclusiveValues, numOfCalls, numOfChildCalls, counterNames, 
     numOfCounters);
@@ -38,7 +42,7 @@ static int CheckRead(size_t bytes)
 #ifdef DEBUG
   printf("read = %g usecs %d calls bytes = %d\n", currentRead, numOfCalls[0], bytes);
 #endif /* DEBUG */
-/*
+  free(inFuncs[0]);
   free(inFuncs);
   free(counterExclusiveValues);
   free(counterInclusiveValues);
@@ -46,7 +50,6 @@ static int CheckRead(size_t bytes)
   free(numOfChildCalls);
   free(numOfChildCalls);
   free(counterNames);
-*/
   return 0;
 }
 
@@ -54,7 +57,7 @@ static int CheckWrite(size_t bytes)
 {
   static double prevWrite = 0.0;
   double currentWrite;
-  const char **inFuncs;
+  const char ** inFuncs; 
   double **counterExclusiveValues;
   double **counterInclusiveValues;
   int *numOfCalls;
@@ -80,10 +83,7 @@ static int CheckWrite(size_t bytes)
   prevWrite = counterInclusiveValues[0][0];
   TAU_EVENT(wb, bytes/currentWrite);
   TAU_EVENT(byteswritten, bytes);
-#ifdef DEBUG
-  printf("write = %g usecs %d calls bytes = %d\n", currentWrite, numOfCalls[0], bytes);
-#endif /* DEBUG */
-/*
+  free(inFuncs[0]);
   free(inFuncs);
   free(counterExclusiveValues);
   free(counterInclusiveValues);
@@ -91,7 +91,6 @@ static int CheckWrite(size_t bytes)
   free(numOfChildCalls);
   free(numOfChildCalls);
   free(counterNames);
-*/
 
   return 0;
 }
