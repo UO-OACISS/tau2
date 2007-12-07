@@ -94,9 +94,9 @@ public class ScatterPlotExample {
   
  * </pre>
  *    
- * <P>CVS $Id: ScatterPlotExample.java,v 1.5 2006/11/03 19:48:43 amorris Exp $</P>
+ * <P>CVS $Id: ScatterPlotExample.java,v 1.6 2007/12/07 02:05:22 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  */
 public class ScatterPlotExample {
 
@@ -114,7 +114,6 @@ public class ScatterPlotExample {
             values[i][2] = i * i; // value for the z axis
             values[i][3] = i; // value for the color axis
         }
-
 
         // Create the visRenderer and register it with the canvas
         VisRenderer visRenderer = new VisRenderer();

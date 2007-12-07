@@ -2,6 +2,7 @@ package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
@@ -15,15 +16,16 @@ import edu.uoregon.tau.paraprof.enums.VisType;
 import edu.uoregon.tau.perfdmf.Function;
 import edu.uoregon.tau.vis.Plot;
 import edu.uoregon.tau.vis.VisRenderer;
+import edu.uoregon.tau.perfdmf.Thread;
 
 /**
  * This is the control panel for the ThreeDeeWindow.
  *    
  * TODO : ...
  *
- * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.7 2007/03/20 19:00:06 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.8 2007/12/07 02:05:21 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  */
 public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
@@ -163,6 +165,11 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         group.add(jrb);
         addCompItem(this, jrb, gbc, 0, 3, 1, 1);
 
+        jrb = new JRadioButton(VisType.CALLGRAPH.toString(), settings.getVisType() == VisType.CALLGRAPH);
+        jrb.addActionListener(this);
+        group.add(jrb);
+        addCompItem(this, jrb, gbc, 0, 4, 1, 1);
+
         createSubPanel();
 
     }
@@ -176,6 +183,8 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
         if (settings.getVisType() == VisType.SCATTER_PLOT) {
             subPanel = createScatterPanel();
+        } else if (settings.getVisType() == VisType.CALLGRAPH) {
+            subPanel = createCallGraphPanel();
         } else {
             subPanel = createFullDataPanel();
         }
@@ -300,6 +309,55 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         addCompItem(panel, metricBox, gbc, 2, 1, 1, 1);
 
         return panel;
+    }
+
+    private JPanel createCallGraphPanel() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridBagLayout());
+        panel.setBorder(BorderFactory.createRaisedBevelBorder());
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        
+        addCompItem(panel, new JLabel("Thread"), gbc, 0, 0, 1, 1);
+        
+        List threadList = new ArrayList();
+        
+        threadList.add(ppTrial.getDataSource().getMeanData());
+        threadList.add(ppTrial.getDataSource().getStdDevData());
+        
+        threadList.addAll(ppTrial.getDataSource().getAllThreads());
+        
+        final SliderComboBox threadComboBox = new SliderComboBox(threadList.toArray());
+        
+        threadComboBox.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                // TODO Auto-generated method stub
+                settings.setSelectedThread((Thread)threadComboBox.getSelectedItem());
+                System.out.println("bargle");
+                window.redraw();
+            }});
+        
+        addCompItem(panel, threadComboBox, gbc, 1, 0, 1, 1);
+        
+        
+        tabbedPane = new JTabbedPane();
+        Plot plot = window.getPlot();
+        tabbedPane.addTab(plot.getName(), plot.getControlPanel(visRenderer));
+        tabbedPane.addTab("ColorScale", window.getColorScale().getControlPanel(visRenderer));
+        tabbedPane.addTab("Render", visRenderer.getControlPanel());
+        tabbedPane.setMinimumSize(new Dimension(300, 160));
+        tabbedPane.setSelectedIndex(0);
+
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 0.5;
+        gbc.weighty = 0.5;
+
+        addCompItem(panel, tabbedPane, gbc, 0, 1, 2, 1);
+        return panel;
+
     }
 
     private JPanel createScatterPanel() {
@@ -567,6 +625,8 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                     settings.setVisType(VisType.TRIANGLE_MESH_PLOT);
                 } else if (arg.equals(VisType.SCATTER_PLOT.toString())) {
                     settings.setVisType(VisType.SCATTER_PLOT);
+                } else if (arg.equals(VisType.CALLGRAPH.toString())) {
+                    settings.setVisType(VisType.CALLGRAPH);
                 }
 
                 window.resetSplitPane();

@@ -26,13 +26,15 @@ import com.sun.opengl.util.BufferUtil;
 /**
  * This object manages the JOGL interface.
  *    
- * <P>CVS $Id: VisRenderer.java,v 1.8 2007/05/11 01:54:17 amorris Exp $</P>
+ * <P>CVS $Id: VisRenderer.java,v 1.9 2007/12/07 02:05:22 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.8 $
+ * @version	$Revision: 1.9 $
  */
 public class VisRenderer implements GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener {
 
     private class VisAnimator extends Thread {
+
+        private volatile boolean stop = false;
 
         public void run() {
             stop = false;
@@ -49,36 +51,35 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
             }
         }
 
-        private volatile boolean stop = false;
-
         public void end() {
             stop = true;
         }
-
     }
 
-    private int prevMouseX, prevMouseY;
-    private boolean mouseRButtonDown = false;
-
+    // OpenGL objects
     private GL gl;
     private GLU glu;
     private GLAutoDrawable glDrawable;
 
+    // conversion to/from degress/radians
+    private final static float DTOR = 0.0174532925f;
+    private final static float RTOD = 57.2957795f;
+
+    // sensitivity settings
+    private final static float lateralSense = 1 * DTOR;
+    private final static float verticalSense = 1 * DTOR;
+
+    // camera information
+    private double viewAltitude = -30 * DTOR; // The angle from the x-y plane that the eye is placed 
+    private double viewAzimuth = -135 * DTOR; // The angle on the x-y plane that the eye is placed
+    private double viewDistance = 50.0; // The distance from the eye to the aim
     private Vec eye; // The location of the eye
     private Vec aim = new Vec(0, 0, 0); // Where the eye is focused at
     private Vec vup; // The canonical V-up vector
-
-    private Vec viewDirection;
-
-    final static private float rad = (float) (3.14 / 180);
-    final static private float lateralSense = 1 * rad;
-    final static private float verticalSense = 1 * rad;
-
-    private double viewAltitude = -30 * rad; // The angle from the x-y plane that the eye is placed 
-    private double viewAzimuth = -135 * rad; // The angle on the x-y plane that the eye is placed
-    private double viewDistance = 50.0; // The distance from the eye to the aim
-
-    private boolean reverseVideo = false;
+    private float camera_aperture = 45.0f;
+    private float camera_near = 1.0f;
+    private float camera_far = 500.0f;
+    private float camera_focallength = 50.0f;
 
     private Color backColor = Color.white;
     private Color foreColor = Color.black;
@@ -88,6 +89,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     private float fps; // Frames per Second
     private int framesRendered;
 
+    // dimensionality of the viewing frame (pixels on the screen)
     private int width, height;
 
     // for screenshot capability
@@ -98,23 +100,25 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     private VisAnimator visAnimator;
     private volatile float rotateSpeed = 0.5f;
 
-    private boolean antiAliasedLines = false;
-
+    // GL info
     private String glInfo_Vendor;
     private String glInfo_Renderer;
     private String glInfo_Version;
     private boolean stereo_available;
+
+    // settings
     private boolean stereo;
-
     private JCheckBox stereoCheckBox;
+    private boolean antiAliasedLines;
+    private boolean reverseVideo;
 
-    private float camera_aperture = 45.0f;
-    private float camera_near = 1.0f;
-    private float camera_far = 500.0f;
-    private float camera_focallength = 50.0f;
+    private int prevMouseX, prevMouseY;
+    private boolean mouseRButtonDown;
 
-    private float DTOR = 0.0174532925f;
-    private float RTOD = 57.2957795f;
+    public static final int CAMERA_PLOT = 0;
+    public static final int CAMERA_STICK = 1;
+
+    private int cameraMode = CAMERA_PLOT;
 
     public VisRenderer() {}
 
@@ -140,35 +144,35 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         float lightPosition[] = { 0.0f, 0.0f, 1.0f, 0.0f };
         //float lightPosition[] = { 5.7f, 5.0f, 5.6f, 1.0f };
 
-        //        float lightPosition[] = { 0f, 10.0f, 10.0f, 1.0f };
+        //float lightPosition[] = { 0f, 10.0f, 10.0f, 1.0f };
 
-        //      float lightPosition2[] = { 0.7f, -1.0f, 0.6f, 0.0f };
+        //float lightPosition2[] = { 0.7f, -1.0f, 0.6f, 0.0f };
         float whiteLight[] = { 0.75f, 0.75f, 0.75f, 1.0f };
         //float ambientLight[] = { 0.15f, 0.15f, 0.15f, 1.0f };
         float ambientLight[] = { 0.15f, 0.15f, 0.15f, 1.0f };
 
-        //      float mat_shininess[] = { 50.0f };
-        //    float mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        //float mat_shininess[] = { 50.0f };
+        //float mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
         gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, lightPosition, 0);
         gl.glLightfv(GL.GL_LIGHT0, GL.GL_DIFFUSE, whiteLight, 0);
-        //        gl.glLightfv(GL.GL_LIGHT0, GL.GL_SPECULAR, whiteLight);
+        //gl.glLightfv(GL.GL_LIGHT0, GL.GL_SPECULAR, whiteLight);
         gl.glLightfv(GL.GL_LIGHT0, GL.GL_AMBIENT, ambientLight, 0);
 
-        //        gl.glMaterialfv(GL.GL_FRONT, GL.GL_SHININESS, mat_shininess);
-        //        gl.glMaterialfv(GL.GL_FRONT, GL.GL_SPECULAR, mat_specular);
+        //gl.glMaterialfv(GL.GL_FRONT, GL.GL_SHININESS, mat_shininess);
+        //gl.glMaterialfv(GL.GL_FRONT, GL.GL_SPECULAR, mat_specular);
 
-        //    gl.glLightfv(GL.GL_LIGHT1, GL.GL_POSITION, lightPosition2);
-        //    gl.glLightfv(GL.GL_LIGHT1, GL.GL_DIFFUSE, whiteLight);
+        //gl.glLightfv(GL.GL_LIGHT1, GL.GL_POSITION, lightPosition2);
+        //gl.glLightfv(GL.GL_LIGHT1, GL.GL_DIFFUSE, whiteLight);
         //gl.glLightfv(GL.GL_LIGHT0, GL.GL_SPECULAR, whiteLight);
-        //   gl.glLightfv(GL.GL_LIGHT1, GL.GL_AMBIENT, ambientLight);
+        //gl.glLightfv(GL.GL_LIGHT1, GL.GL_AMBIENT, ambientLight);
 
         gl.glLightModelfv(GL.GL_LIGHT_MODEL_AMBIENT, ambientLight, 0);
         gl.glEnable(GL.GL_COLOR_MATERIAL);
         gl.glShadeModel(GL.GL_FLAT);
         gl.glEnable(GL.GL_LIGHTING);
         gl.glEnable(GL.GL_LIGHT0);
-        //        gl.glEnable(GL.GL_LIGHT1);
+        //gl.glEnable(GL.GL_LIGHT1);
         //gl.glEnable(GL.GL_BLEND);
 
     }
@@ -254,6 +258,11 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         eye.sety(eye.y() * viewDistance);
         eye.setz(eye.z() * viewDistance);
 
+        if (cameraMode == CAMERA_STICK) {
+            aim.setx(0);
+            aim.sety(0);
+        }
+
         eye = eye.add(aim);
     }
 
@@ -266,28 +275,34 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         }
     }
 
+    /**
+     * Rotate the camera
+     */
     private void rotate(float x, float y) {
         final float limit = 90.0f;
 
         viewAltitude += verticalSense * y;
-        if (viewAltitude < -rad * limit)
-            viewAltitude = -rad * limit;
-        if (viewAltitude > rad * limit)
-            viewAltitude = rad * limit;
+        if (viewAltitude < -DTOR * limit)
+            viewAltitude = -DTOR * limit;
+        if (viewAltitude > DTOR * limit)
+            viewAltitude = DTOR * limit;
 
         viewAzimuth += lateralSense * x;
-        if (viewAzimuth >= 2 * 3.14f)
-            viewAzimuth -= 2 * 3.14f;
-        if (viewAzimuth >= 2 * 3.14f)
-            viewAzimuth -= 2 * 3.14f;
+        if (viewAzimuth >= 2 * Math.PI)
+            viewAzimuth -= 2 * Math.PI;
+        if (viewAzimuth >= 2 * Math.PI)
+            viewAzimuth -= 2 * Math.PI;
 
         computeEye();
         redraw();
     }
 
+    /**
+     * Translate the camera
+     */
     private void translate(float x, float y) {
 
-        double oldViewAngle = viewAltitude;
+        double oldViewAltitude = viewAltitude;
         float oldz = aim.z();
 
         viewAltitude = 45.0;
@@ -310,8 +325,6 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
 
         Matrix M = rotate.multiply(translate);
 
-        Vec tmp2 = M.transform(aim);
-
         Vec diff = eye.subtract(aim);
 
         double scaleFactor = Math.sqrt(diff.length()) / 50;
@@ -329,10 +342,16 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         aim = M.transform(aim);
 
         aim.setz(oldz);
-        viewAltitude = oldViewAngle;
+        viewAltitude = oldViewAltitude;
 
         computeEye();
 
+        redraw();
+    }
+
+    private void translateStick(float x, float y) {
+        aim.setz(aim.z() - (y / 3));
+        computeEye();
         redraw();
     }
 
@@ -477,8 +496,6 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
                 glu.gluLookAt(aim.x(), aim.y(), aim.z(), eye.x(), eye.y(), eye.z(), vup.x(), vup.y(), vup.z());
             }
 
-            viewDirection = eye.subtract(aim);
-
             for (int i = 0; i < shapes.size(); i++) {
                 Shape shape = (Shape) shapes.get(i);
                 shape.render(this);
@@ -538,10 +555,8 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
                 int iR = pixelsRGB.get(q++);
                 int iG = pixelsRGB.get(q++);
                 int iB = pixelsRGB.get(q++);
-
                 pixelInts[i++] = 0xFF000000 | ((iR & 0x000000FF) << 16) | ((iG & 0x000000FF) << 8) | (iB & 0x000000FF);
             }
-
         }
 
         screenShot = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -550,10 +565,14 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
 
     public void displayChanged(GLAutoDrawable drawable, boolean modeChanged, boolean deviceChanged) {}
 
-    // Methods required for the implementation of MouseListener
+    // MouseListener implementation
     public void mouseEntered(MouseEvent e) {}
 
     public void mouseExited(MouseEvent e) {}
+
+    public void mouseClicked(MouseEvent e) {}
+
+    public void mouseMoved(MouseEvent e) {}
 
     public void mousePressed(MouseEvent e) {
         prevMouseX = e.getX();
@@ -569,9 +588,6 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         }
     }
 
-    public void mouseClicked(MouseEvent e) {}
-
-    // Methods required for the implementation of MouseMotionListener
     public void mouseDragged(MouseEvent e) {
         int x = e.getX();
         int y = e.getY();
@@ -585,7 +601,11 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         dy = y - prevMouseY;
 
         if (mouseRButtonDown) {
-            translate(-dx, -dy);
+            if (cameraMode == CAMERA_PLOT) {
+                translate(-dx, -dy);
+            } else {
+                translateStick(-dx, -dy);
+            }
         } else {
             rotate(-dx, dy);
         }
@@ -593,8 +613,6 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         prevMouseX = x;
         prevMouseY = y;
     }
-
-    public void mouseMoved(MouseEvent e) {}
 
     // Zoom in and out with the mouse wheel
     public void mouseWheelMoved(MouseWheelEvent e) {
@@ -870,7 +888,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
      * @return the direction of the camera.
      */
     public Vec getViewDirection() {
-        return viewDirection;
+        return eye.subtract(aim);
     }
 
     public boolean getAntiAliasedLines() {
@@ -907,6 +925,15 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     public void setCamera_aperture(float camera_aperture) {
         this.camera_aperture = camera_aperture;
         this.redraw();
+    }
+
+    public int getCameraMode() {
+        return cameraMode;
+    }
+
+    public void setCameraMode(int cameraMode) {
+        this.cameraMode = cameraMode;
+        computeEye();
     }
 
 }

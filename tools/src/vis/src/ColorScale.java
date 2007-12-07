@@ -38,9 +38,9 @@ import com.sun.opengl.util.GLUT;
  * allowing them to query values (0..1) and get colors in the current
  * color set. 
  *    
- * <P>CVS $Id: ColorScale.java,v 1.7 2006/11/16 17:50:36 amorris Exp $</P>
+ * <P>CVS $Id: ColorScale.java,v 1.8 2007/12/07 02:05:22 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  */
 
 /* TODO: Provide control over font size perhaps? */
@@ -265,6 +265,9 @@ public class ColorScale extends Observable implements Shape {
 
     
     private float getTextWidth(GL gl, String text) {
+        if (text == null) {
+            return 0;
+        }
         StringTokenizer st = new StringTokenizer(text, "\n");
         float maxWidth = 0;
         while (st.hasMoreTokens()) {

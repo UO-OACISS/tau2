@@ -132,6 +132,7 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
     }
 
 	public static void main (String[] args) {
+        System.out.println("MAIN!");
 
 		// set the tooltip delay to 20 seconds
 		ToolTipManager.sharedInstance().setDismissDelay(20000);

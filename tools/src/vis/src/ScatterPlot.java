@@ -29,9 +29,9 @@ import javax.swing.event.ChangeListener;
  *
  * @author Alan Morris
  *
- * <P>CVS $Id: ScatterPlot.java,v 1.5 2006/11/16 17:50:36 amorris Exp $</P>
+ * <P>CVS $Id: ScatterPlot.java,v 1.6 2007/12/07 02:05:22 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class ScatterPlot implements Plot {
 
@@ -50,7 +50,6 @@ public class ScatterPlot implements Plot {
     // rendering details
     private int displayList;
     private boolean dirty = true;
-    private GL gl;
 
     
     // grr... get rid of these

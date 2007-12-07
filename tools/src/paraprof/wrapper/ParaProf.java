@@ -4,13 +4,7 @@ import jargs.gnu.CmdLineParser;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -23,28 +17,24 @@ import edu.uoregon.tau.common.TauScripter;
 import edu.uoregon.tau.paraprof.interfaces.EclipseHandler;
 import edu.uoregon.tau.paraprof.script.ParaProfScript;
 import edu.uoregon.tau.paraprof.sourceview.SourceManager;
-import edu.uoregon.tau.perfdmf.DataSource;
-import edu.uoregon.tau.perfdmf.DataSourceExport;
-import edu.uoregon.tau.perfdmf.FileList;
-import edu.uoregon.tau.perfdmf.UtilFncs;
+import edu.uoregon.tau.perfdmf.*;
 
 /**
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.18 2007/03/26 18:19:39 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.19 2007/12/07 02:05:21 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.18 $
+ * @version $Revision: 1.19 $
  */
 public class ParaProf implements ActionListener {
 
     // This class handles uncaught throwables on the AWT-EventQueue thread
     static public class XThrowableHandler {
 
-        public XThrowableHandler() {
-        }
+        public XThrowableHandler() {}
 
         public void handle(Throwable t) throws Throwable {
             if (t instanceof Exception) {
@@ -55,7 +45,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    private final static String VERSION = "Mon Mar 26 11:19:01 PDT 2007";
+    private final static String VERSION = "Tue Jul 31 19:25:14 PDT 2007";
 
     public static int defaultNumberPrecision = 6;
 
@@ -85,10 +75,12 @@ public class ParaProf implements ActionListener {
     public static boolean JNLP = false;
     public static List scripts = new ArrayList();
     public static String scriptFile;
-    
+
     public static boolean insideEclipse;
     public static EclipseHandler eclipseHandler;
     public static SourceManager directoryManager;
+    public static String tauHome;
+    public static String tauArch;
     
     // static initializer block
     static {
@@ -101,20 +93,19 @@ public class ParaProf implements ActionListener {
         }
         return helpWindow;
     }
-    
+
     public static SourceManager getDirectoryManager() {
-    	if (directoryManager == null) {
-    		directoryManager = new SourceManager(ParaProf.preferences.getSourceLocations());
-    	}
-    	return directoryManager;
+        if (directoryManager == null) {
+            directoryManager = new SourceManager(ParaProf.preferences.getSourceLocations());
+        }
+        return directoryManager;
     }
-    
+
     public static void registerScript(ParaProfScript pps) {
         scripts.add(pps);
     }
 
-    public ParaProf() {
-    }
+    public ParaProf() {}
 
     private static void usage() {
         System.err.println("Usage: paraprof [--pack <file>] [--dump] [-p] [-m] [-i] [-f <filetype>] <files/directory>\n\n"
@@ -125,15 +116,21 @@ public class ParaProf implements ActionListener {
         System.err.println("Usage: paraprof [options] <files/directory> \n\n" + "Options:\n\n"
                 + "  -f, --filetype <filetype>       Specify type of performance data, options are:\n"
                 + "                                    profiles (default), pprof, dynaprof, mpip,\n"
-                + "                                    gprof, psrun, hpm, packed, cube, hpc\n" + "\n"
+                + "                                    gprof, psrun, hpm, packed, cube, hpc, ompp\n"
                 + "  -h, --help                      Display this help message\n"
                 + "  -p                              Use `pprof` to compute derived data\n"
-                + "  -i, --fixnames                  Use the fixnames option for gprof\n" + "\n"
+                + "  -i, --fixnames                  Use the fixnames option for gprof\n"
+                + "  -m, --monitor                   Perform runtime monitoring of profile data\n" 
+                + "\n"
+                + "The following options will run only from the console (no GUI will launch):\n"
+                + "\n"
                 + "  --pack <file>                   Pack the data into packed (.ppk) format\n"
-                + "                                    (does not launch ParaProf GUI)\n"
                 + "  --dump                          Dump profile data to TAU profile format\n"
-                + "                                    (does not launch ParaProf GUI)\n" + "\n" + "Notes:\n"
-                + "  -m, --monitor                   Perform runtime monitoring of profile data\n" + "\n"
+                + "  -o, --oss                       Print profile data in OSS style text output\n"
+                + "  -s, --summary                   Print only summary statistics\n" 
+                + "                                    (only applies to OSS output)\n" 
+                + "\n" 
+                + "Notes:\n"
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
                 + "files on the commandline, or you can specify a directory (by default the current\n"
                 + "directory).  The specified directory will be searched for profile.*.*.* files,\n"
@@ -241,9 +238,9 @@ public class ParaProf implements ActionListener {
             //URL url = ParaProf.class.getResource("/perfdmf.cfg");
             //throw new ParaProfException("URL = " + url);
 
-            URL url = ParaProf.class.getResource("/perfdmf.cfg");
-            String path = URLDecoder.decode(url.getPath());
-            ParaProf.preferences.setDatabaseConfigurationFile(path);
+//            URL url = ParaProf.class.getResource("/perfdmf.cfg");
+//            String path = URLDecoder.decode(url.getPath());
+//            ParaProf.preferences.setDatabaseConfigurationFile(path);
         }
 
         if (colorChooser == null) {
@@ -263,19 +260,20 @@ public class ParaProf implements ActionListener {
             // running as Java Web Start without permission
         }
 
-
         // Initialize, but do not show the manager window
         ParaProf.paraProfManagerWindow = new ParaProfManagerWindow();
     }
 
     public static void loadScripts() {
-        ParaProf.scripts.clear();
-        ParaProf.scriptFile = System.getProperty("user.home") + "/.ParaProf/ParaProf.py";
-        if (new File(scriptFile).exists()) {
-            try {
-                TauScripter.execfile(System.getProperty("user.home") + "/.ParaProf/ParaProf.py");
-            } catch (Exception e) {
-                new ParaProfErrorDialog("Exception while executing script: ", e);
+        if (ParaProf.JNLP == false) {
+            ParaProf.scripts.clear();
+            ParaProf.scriptFile = System.getProperty("user.home") + "/.ParaProf/ParaProf.py";
+            if (new File(scriptFile).exists()) {
+                try {
+                    TauScripter.execfile(System.getProperty("user.home") + "/.ParaProf/ParaProf.py");
+                } catch (Exception e) {
+                    new ParaProfErrorDialog("Exception while executing script: ", e);
+                }
             }
         }
     }
@@ -292,7 +290,8 @@ public class ParaProf implements ActionListener {
     public static String getInfoString() {
         long memUsage = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024;
 
-        return new String("ParaProf\n" + getVersionString() + "\nJVM Heap Size: " + memUsage + "kb\n" + "http://www.cs.uoregon.edu/research/tau\n");
+        return new String("ParaProf\n" + getVersionString() + "\nJVM Heap Size: " + memUsage + "kb\n"
+                + "http://www.cs.uoregon.edu/research/tau\n");
     }
 
     public static String getVersionString() {
@@ -369,8 +368,12 @@ public class ParaProf implements ActionListener {
         CmdLineParser.Option fixOpt = parser.addBooleanOption('i', "fixnames");
         CmdLineParser.Option packOpt = parser.addStringOption('a', "pack");
         CmdLineParser.Option unpackOpt = parser.addBooleanOption('u', "dump");
+        CmdLineParser.Option ossOpt = parser.addBooleanOption('o', "oss");
+        CmdLineParser.Option summaryOpt = parser.addBooleanOption('s', "summary");
         CmdLineParser.Option monitorOpt = parser.addBooleanOption('m', "monitor");
         CmdLineParser.Option demoOpt = parser.addBooleanOption('z', "demo");
+        CmdLineParser.Option tauHomeOpt = parser.addStringOption('t', "tauhome");
+        CmdLineParser.Option tauArchOpt = parser.addStringOption('a', "tauarch");
 
         try {
             parser.parse(args);
@@ -385,8 +388,12 @@ public class ParaProf implements ActionListener {
         Boolean fixNames = (Boolean) parser.getOptionValue(fixOpt);
         String pack = (String) parser.getOptionValue(packOpt);
         Boolean unpack = (Boolean) parser.getOptionValue(unpackOpt);
+        Boolean oss = (Boolean) parser.getOptionValue(ossOpt);
+        Boolean summary = (Boolean) parser.getOptionValue(summaryOpt);
         Boolean monitor = (Boolean) parser.getOptionValue(monitorOpt);
         Boolean demo = (Boolean) parser.getOptionValue(demoOpt);
+        ParaProf.tauHome = (String) parser.getOptionValue(tauHomeOpt);
+        ParaProf.tauArch = (String) parser.getOptionValue(tauArchOpt);
 
         demoMode = demo != null && demo.booleanValue();
 
@@ -415,28 +422,29 @@ public class ParaProf implements ActionListener {
 
         if (fileTypeString != null) {
             if (fileTypeString.equals("profiles")) {
-                ParaProf.fileType = 0;
+                ParaProf.fileType = DataSource.TAUPROFILE;
             } else if (fileTypeString.equals("pprof")) {
-                ParaProf.fileType = 1;
+                ParaProf.fileType = DataSource.PPROF;
             } else if (fileTypeString.equals("dynaprof")) {
-                ParaProf.fileType = 2;
+                ParaProf.fileType = DataSource.DYNAPROF;
             } else if (fileTypeString.equals("mpip")) {
-                ParaProf.fileType = 3;
+                ParaProf.fileType = DataSource.MPIP;
             } else if (fileTypeString.equals("hpm")) {
-                ParaProf.fileType = 4;
+                ParaProf.fileType = DataSource.HPM;
             } else if (fileTypeString.equals("gprof")) {
-                ParaProf.fileType = 5;
+                ParaProf.fileType = DataSource.GPROF;
             } else if (fileTypeString.equals("psrun")) {
-                ParaProf.fileType = 6;
+                ParaProf.fileType = DataSource.PSRUN;
             } else if (fileTypeString.equals("packed")) {
-                ParaProf.fileType = 7;
+                ParaProf.fileType = DataSource.PPK;
             } else if (fileTypeString.equals("cube")) {
-                ParaProf.fileType = 8;
+                ParaProf.fileType = DataSource.CUBE;
             } else if (fileTypeString.equals("hpc")) {
-                ParaProf.fileType = 9;
-// Disabled for 2.16.3 release
-//            } else if (fileTypeString.equals("snap")) {
-//                ParaProf.fileType = 10;
+                ParaProf.fileType = DataSource.HPCTOOLKIT;
+            } else if (fileTypeString.equals("snap")) {
+                ParaProf.fileType = DataSource.SNAP;
+            } else if (fileTypeString.equals("ompp")) {
+                ParaProf.fileType = DataSource.OMPP;
             } else {
                 System.err.println("Please enter a valid file type.");
                 ParaProf.usage();
@@ -457,6 +465,25 @@ public class ParaProf implements ActionListener {
             }
         }
 
+        
+        if (oss != null) {
+            try {
+                
+                boolean doSummary = false;
+                if (summary != null) {
+                    doSummary = true;
+                }
+                
+                DataSource dataSource = UtilFncs.initializeDataSource(sourceFiles, fileType, ParaProf.fixNames);
+                dataSource.load();
+                OSSWriter.writeOSS(dataSource, doSummary);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            System.exit(0);
+        }
+        
         if (pack != null) {
             try {
 

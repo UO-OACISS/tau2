@@ -46,7 +46,7 @@ import java.io.InputStream;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.24 2007/10/08 16:35:52 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.25 2007/12/07 02:05:21 amorris Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -105,6 +105,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 	private void doQuery () {
 		// declare the statement here, so we can reference it in the catch
 		// region, if necessary
+        System.out.println("doQuery");
 		PreparedStatement statement = null;
 		DB db = null;
 		try {
@@ -273,11 +274,11 @@ public class GeneralChartData extends RMIGeneralChartData {
 					NodeList values = null;
 	
 					try {
-						/* this is the 1.3 through 1.4 way */
-						names = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
-							"/metadata/CommonProfileAttributes/attribute/name");
-						values = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
-							"/metadata/CommonProfileAttributes/attribute/value");
+//						/* this is the 1.3 through 1.4 way */
+//						names = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
+//							"/metadata/CommonProfileAttributes/attribute/name");
+//						values = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
+//							"/metadata/CommonProfileAttributes/attribute/value");
 					} catch (NoClassDefFoundError e) {
 	
 						/* this is the 1.5 way */
@@ -640,6 +641,8 @@ public class GeneralChartData extends RMIGeneralChartData {
 		// just in case, drop the table in case it is still hanging around.
 		// This sometimes happens with Derby.
 		// Have I ever mentioned that Derby sucks?
+        System.out.println("buildCreateTableStatement");
+
 		dropTable(db, tableName);
 
 		StringBuffer buf = new StringBuffer();
@@ -879,14 +882,14 @@ public class GeneralChartData extends RMIGeneralChartData {
 
 				try {
 					/* this is the 1.3 through 1.4 way */
-					names = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
-						"/metadata/CommonProfileAttributes/attribute/name");
-					for (int i = 0 ; i < names.getLength() ; i++) {
-						Node name = (Node)names.item(i).getFirstChild();
-						set.add(name.getNodeValue());
-					}
-					names = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
-						"/metadata/ProfileAttributes/attribute/name");
+//					names = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
+//						"/metadata/CommonProfileAttributes/attribute/name");
+//					for (int i = 0 ; i < names.getLength() ; i++) {
+//						Node name = (Node)names.item(i).getFirstChild();
+//						set.add(name.getNodeValue());
+//					}
+//					names = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
+//						"/metadata/ProfileAttributes/attribute/name");
 				
 					for (int i = 0 ; i < names.getLength() ; i++) {
 						Node name = (Node)names.item(i).getFirstChild();

@@ -7,8 +7,6 @@ public class Common {
     // Copies src file to dst file.
     // If the dst file does not exist, it is created
     public static void copy(String src, String dst) throws IOException {
-        System.out.println("src = " + src);
-        System.out.println("dst = " + dst);
         InputStream in = new FileInputStream(src);
         OutputStream out = new FileOutputStream(dst);
 

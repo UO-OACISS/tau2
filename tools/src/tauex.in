@@ -130,7 +130,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tauex.in,v 1.18 2007/12/07 01:44:28 amorris Exp $';
+	      echo '$Id: tauex.in,v 1.19 2007/12/07 02:05:19 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -m)
@@ -337,7 +337,7 @@ if [ $SICORTEX = "yes" ]; then
 fi
 
 for c in $Counters ; do 
-    if [ "$i" != "GET_TIME_OF_DAY" -a "${i:0:2}" != "P_" ]; then
+    if [ "$c" != "GET_TIME_OF_DAY" -a "${c:0:2}" != "P_" ]; then
 	c=`echo $c | sed s/PAPI_NATIVE_//`
 	VT_METRICS=$VT_METRICS:$c
 	ELG_METRICS=$ELG_METRICS:$c

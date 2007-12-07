@@ -14,12 +14,16 @@ import javax.swing.*;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.enums.VisType;
+import edu.uoregon.tau.paraprof.graph.Layout;
+import edu.uoregon.tau.paraprof.graph.Vertex;
+import edu.uoregon.tau.paraprof.graph.Vertex.BackEdge;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.SortListener;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.Thread;
 import edu.uoregon.tau.vis.*;
+import edu.uoregon.tau.vis.XmasTree.Ornament;
 
 public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListener, Observer, Printable, ParaProfWindow,
         UnitListener, SortListener {
@@ -252,14 +256,288 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         plot = scatterPlot;
     }
 
+    private List createGraph(DataSource dataSource, ThreeDeeSettings settings) {
+        List backEdges;
+        Map vertexMap;
+
+        vertexMap = new HashMap();
+        backEdges = new ArrayList();
+
+        Thread thread = settings.getSelectedThread();
+        if (thread == null) {
+            thread = dataSource.getMeanData();
+        }
+        
+        CallPathUtilFuncs.buildThreadRelations(dataSource, thread);
+        List functionProfileList = thread.getFunctionProfiles();
+
+        for (int i = 0; i < functionProfileList.size(); i++) {
+            FunctionProfile fp = (FunctionProfile) functionProfileList.get(i);
+            if (fp == null) // skip it if this thread didn't call this function
+                continue;
+
+            if (!fp.isCallPathFunction()) { // skip callpath functions (we only want the actual functions)
+
+                Vertex v = new Vertex(fp, 1, 1);
+                v.setColorRatio(1);
+                vertexMap.put(fp, v);
+            }
+        }
+
+        // now we follow the call paths and eliminate back edges
+        Stack toVisit = new Stack();
+        Stack currentPath = new Stack();
+
+        for (int i = 0; i < functionProfileList.size(); i++) {
+            FunctionProfile fp = (FunctionProfile) functionProfileList.get(i);
+            if (fp == null) // skip it if this thread didn't call this function
+                continue;
+
+            if (!fp.isCallPathFunction()) { // skip callpath functions (we only want the actual functions)
+
+                // get the vertex for this FunctionProfile 
+                Vertex root = (Vertex) vertexMap.get(fp);
+
+                if (!root.getVisited()) {
+
+                    currentPath.add(fp);
+                    toVisit.add(null); // null in the toVisit stack marks the end of a set of children (they must get pushed into the stack prior to the children)
+
+                    // add all the children to the toVisit list
+                    for (Iterator it = fp.getChildProfiles(); it.hasNext();) {
+                        FunctionProfile childFp = (FunctionProfile) it.next();
+                        toVisit.add(childFp);
+                    }
+
+                    while (!toVisit.empty()) {
+                        FunctionProfile childFp = (FunctionProfile) toVisit.pop();
+
+                        if (childFp == null) {
+                            // this marks the end of a set of children, so pop the current path
+                            // and move on to the next one in toVisit
+                            currentPath.pop();
+                            continue;
+                        }
+
+                        Vertex child = (Vertex) vertexMap.get(childFp);
+                        FunctionProfile parentFp = (FunctionProfile) currentPath.peek();
+
+                        Vertex parent = (Vertex) vertexMap.get(parentFp);
+
+                        // run through the currentPath and see if childFp is in it, if so, this is a backedge
+                        boolean back = false;
+                        for (Iterator it = currentPath.iterator(); it.hasNext();) {
+                            if ((FunctionProfile) it.next() == childFp) {
+                                back = true;
+                                break;
+                            }
+                        }
+
+                        if (back) {
+                            backEdges.add(new BackEdge(parent, child));
+                        } else {
+
+                            boolean found = false;
+                            for (int j = 0; j < parent.getChildren().size(); j++) {
+                                if (parent.getChildren().get(j) == child)
+                                    found = true;
+                            }
+                            if (!found)
+                                parent.getChildren().add(child);
+
+                            found = false;
+                            for (int j = 0; j < child.getParents().size(); j++) {
+                                if (child.getParents().get(j) == parent)
+                                    found = true;
+                            }
+                            if (!found)
+                                child.getParents().add(parent);
+
+                            if (child.getVisited() == false) {
+
+                                child.setVisited(true);
+
+                                currentPath.add(childFp);
+
+                                toVisit.add(null);
+                                for (Iterator it = childFp.getChildProfiles(); it.hasNext();) {
+                                    FunctionProfile grandChildFunction = (FunctionProfile) it.next();
+
+                                    toVisit.add(grandChildFunction);
+                                }
+                            }
+
+                        }
+                    }
+                }
+            }
+        }
+        // now we should have a DAG, now find the roots
+
+        // Find Roots
+        List roots = Layout.findRoots(vertexMap);
+
+        // Assigning Levels
+        for (int i = 0; i < functionProfileList.size(); i++) {
+            FunctionProfile fp = (FunctionProfile) functionProfileList.get(i);
+            if (fp == null)
+                continue;
+
+            if (!fp.isCallPathFunction()) {
+                Vertex vertex = (Vertex) vertexMap.get(fp);
+
+                if (vertex.getLevel() == -1) {
+                    Layout.assignLevel(vertex);
+                }
+            }
+
+        }
+
+        // Insert Dummies
+        for (int i = 0; i < functionProfileList.size(); i++) {
+            FunctionProfile fp = (FunctionProfile) functionProfileList.get(i);
+            if (fp == null)
+                continue;
+
+            if (!fp.isCallPathFunction()) {
+                Vertex vertex = (Vertex) vertexMap.get(fp);
+                Layout.insertDummies(vertex);
+            }
+
+        }
+
+        // fill level lists
+        for (int i = 0; i < functionProfileList.size(); i++) {
+            FunctionProfile fp = (FunctionProfile) functionProfileList.get(i);
+            if (fp == null)
+                continue;
+
+            if (!fp.isCallPathFunction()) {
+                Vertex vertex = (Vertex) vertexMap.get(fp);
+                vertex.setVisited(false);
+            }
+
+        }
+
+        List levels = new ArrayList();
+
+        // Fill Levels
+        for (int i = 0; i < roots.size(); i++) {
+            Vertex root = (Vertex) roots.get(i);
+            Layout.fillLevels(root, levels, 0);
+        }
+
+        // Order Levels
+        Layout.runSugiyama(levels);
+        Layout.assignPositions(levels);
+        return levels;
+    }
+
+    private List decorateTree(List graphLevels, DataSource dataSource, ThreeDeeSettings settings) {
+        Map omap = new HashMap();
+        List treeLevels = new ArrayList();
+
+        Thread thread = settings.getSelectedThread();
+        if (thread == null) {
+            thread = dataSource.getMeanData();
+        }
+
+        for (int i = 0; i < graphLevels.size(); i++) {
+            List level = (List) graphLevels.get(i);
+            List treeLevel = new ArrayList();
+            int count = 0;
+
+            for (int j = 0; j < level.size(); j++) {
+                Vertex v = (Vertex) level.get(j);
+                if (v.getUserObject() != null) {
+                    count++;
+                }
+            }
+
+            //System.out.println("count = " + count + ", level.size() = " + level.size());
+
+            int c = 0;
+            for (int j = 0; j < level.size(); j++) {
+                Vertex v = (Vertex) level.get(j);
+
+                if (v.getUserObject() != null) {
+                    FunctionProfile fp = (FunctionProfile) v.getUserObject();
+                    Ornament o = new Ornament(fp.getName(), v);
+                    float size = (float) (fp.getInclusive(0) / thread.getMaxInclusive(0, 0));
+                    float color = (float) (fp.getExclusive(0) / thread.getMaxExclusive(0, 0));
+                    //float color = (float) (fp.getInclusive(0) / thread.getMaxInclusive(0, 0));
+                    //float size = (float) (fp.getExclusive(0) / thread.getMaxExclusive(0, 0));
+                    o.setSize(size);
+                    o.setColor(color);
+                    v.setGraphObject(o);
+                    omap.put(v, o);
+                    o.setPosition((float) c++ / count);
+                    treeLevel.add(o);
+                } else {
+                    // dummy node, don't make a graph cell
+                }
+
+            }
+            treeLevels.add(treeLevel);
+        }
+
+        for (int i = 0; i < graphLevels.size(); i++) {
+            List level = (List) graphLevels.get(i);
+
+            for (int j = 0; j < level.size(); j++) {
+                Vertex v = (Vertex) level.get(j);
+
+                if (v.getUserObject() != null) {
+                    Ornament a = (Ornament) v.getGraphObject();
+                    for (Iterator it = v.getChildren().iterator(); it.hasNext();) {
+                        Vertex child = (Vertex) it.next();
+                        Ornament b = (Ornament) child.getGraphObject();
+                        if (b != null && b.getUserObject() != null) {
+                            a.addChild(b);
+                        } else {
+//                            while (child.getGraphObject() == null) {
+//                                child = (Vertex) child.getChildren().get(0);
+//                            }
+//                            Ornament c = (Ornament) child.getGraphObject();
+//                            a.addChild(c);
+                        }
+                    }
+                } else {
+                    // dummy node, don't make a graph cell
+                }
+
+            }
+        }
+
+        return treeLevels;
+    }
+
+    private void generateCallGraph(boolean autoSize, ThreeDeeSettings settings) {
+        if (plot != null) {
+            plot.cleanUp();
+        }
+        List levels = createGraph(ppTrial.getDataSource(), settings);
+        List treeLevels = decorateTree(levels, ppTrial.getDataSource(), settings);
+        XmasTree xmasTree = new XmasTree(treeLevels);
+        xmasTree.setColorScale(colorScale);
+        plot = xmasTree;
+    }
+
     private void generate3dModel(boolean autoSize, ThreeDeeSettings settings) {
 
+        visRenderer.setCameraMode(VisRenderer.CAMERA_PLOT);
         if (plot != null) {
             plot.cleanUp();
         }
 
         if (settings.getVisType() == VisType.SCATTER_PLOT) {
             generateScatterPlot(autoSize, settings);
+            return;
+        }
+
+        if (settings.getVisType() == VisType.CALLGRAPH) {
+            generateCallGraph(autoSize, settings);
+            visRenderer.setCameraMode(VisRenderer.CAMERA_STICK);
             return;
         }
 
@@ -457,6 +735,12 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
                     plot.setSelectedCol(newSettings.getSelections()[1]);
                     plot.setSelectedRow(newSettings.getSelections()[0]);
                 }
+            } else if (newSettings.getVisType() == VisType.CALLGRAPH) {
+                visRenderer.removeShape(plot);
+                visRenderer.removeShape(colorScale);
+                generate3dModel(false, newSettings);
+                visRenderer.addShape(plot);
+                visRenderer.addShape(colorScale);
             }
         }
 
@@ -602,8 +886,9 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     public void help(boolean display) {
         //Show the ParaProf help window.
         ParaProf.getHelpWindow().clearText();
-        if (display)
-            ParaProf.getHelpWindow().show();
+        if (display) {
+            ParaProf.getHelpWindow().setVisible(true);
+        }
         ParaProf.getHelpWindow().writeText("This is the 3D Window");
         ParaProf.getHelpWindow().writeText("");
         ParaProf.getHelpWindow().writeText(

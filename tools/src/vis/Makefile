@@ -1,6 +1,6 @@
 
-CONFIG_ARCH=default
-TAUROOT=
+CONFIG_ARCH=x86_64
+TAUROOT=/home/amorris/tau2
 TOOLS_SRC=$(TAUROOT)/tools/src
 
 
