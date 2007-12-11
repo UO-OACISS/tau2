@@ -1,0 +1,21 @@
+Simple benchmark that does alternating phases of computation 
+followed by collective communication.
+Allows control of all parameters through environment variables.
+
+Parameters:
+The parameters include things like:
+- computational grain
+- type of collective used
+- number of processes
+- strong / weak scaling
+- different OS-metrics to be measured
+- pinning...
+... and other options. 
+Perusing bsp.c will reveal further light.
+The run.sh script sets some of these parameters.
+
+mpirun ./run.sh <number of processors>
+
+contact: Aroon Nataraj
+anataraj@cs.uoregon.edu
+
