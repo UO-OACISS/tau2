@@ -1280,6 +1280,7 @@ do
     echo "                                                   OS counters support."
     echo "-ktauinc=<dir> ............... Specify location of Linux Kernel source."
     echo "-ktauincuser=<dir> ............... Specify location of KTAU user incls."
+    echo "-ktaulib=<dir> ............ Specify location of KTAU library libktau.a."
     echo "-ktausym=<path to System.map>  ...... Specify location of Linux Kernel."
     echo "                                                          Symbol Table."
     echo "-muse ................................. Specify the use of MAGNET/MUSE." 
