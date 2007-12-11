@@ -476,14 +476,19 @@ extern "C" unsigned long long getLinuxHighResolutionTscCounter(void);
 
 #if defined(TAUKTAU) || defined(TAUKTAU_MERGE) || defined(TAUKTAU_SHCTR)
 ///////////////////////////////////////////////////////////////////////////
+extern "C" double ktau_get_tsc(void); //must move this into ktau headers. TODO
 double KTauGetMHz(void)
 {
 #ifdef KTAU_WALLCLOCK
   static double ktau_ratings = 1; //(microsec resolution from kernel)
 #else
+#if TAU_ARCH == "mips"
+  //ON MIPS we have issues with cycles_per_sec - we dont know (yet) how to read cycles from uspace.
+  static double ktau_ratings = ktau_get_tsc()/1000000;
+#else
   static double ktau_ratings = cycles_per_sec()/1000000; //we need ratings per microsec to match tau's reporting
-  //static double ktau_ratings = TauGetMHz(); //we need ratings per microsec to match tau's reporting
-#endif
+#endif //TAU_ARCH == "mips"
+#endif //KTAU_WALLCLOCK
   return ktau_ratings;
 }
 #endif /* TAUKTAU || TAUKTAU_MERGE */
@@ -1462,7 +1467,7 @@ std::string RtsLayer::GetRTTI(const char *name)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.91 $   $Date: 2007/09/22 00:34:42 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.91 2007/09/22 00:34:42 amorris Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: anataraj $
+ * $Revision: 1.92 $   $Date: 2007/12/11 01:28:01 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.92 2007/12/11 01:28:01 anataraj Exp $ 
  ***************************************************************************/
