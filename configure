@@ -615,14 +615,8 @@ do
     shift
     ;;
 
-  -opari=*)
+  -opari*)
       opari=yes
-      oparidir=`echo $arg | sed -e 's/-opari=//'`
-      if [ ! -d $oparidir ]
-      then
-        echo "Error: Cannot access OPARI directory $oparidir"
-        exit 1
-      fi
       openmp=yes
     shift
     ;;
@@ -1145,7 +1139,7 @@ do
     echo ""
     echo "OpenMP Options:"
     echo "-openmp ........................................... Use OpenMP threads."
-    echo "-opari=<dir>... Specify location of Opari OpenMP tool (use with above)."
+    echo "-opari ..................................................... Use Opari."
     echo "-opari_region ......... Report performance data for all OpenMP regions."
     echo "-opari_construct ... Report performance data for all OpenMP constructs."
     echo ""
@@ -1235,7 +1229,7 @@ do
     echo "-tulipthread=<dir> .......... Specify location of Tulip/Smarts package."
     echo "-smarts .................. Use SMARTS API for threads (use with above)."
     echo "-openmp ........................................... Use OpenMP threads."
-    echo "-opari=<dir>... Specify location of Opari OpenMP tool (use with above)."
+    echo "-opari ..................................................... Use Opari."
     echo "-opari_region ......... Report performance data for all OpenMP regions."
     echo "-opari_construct ... Report performance data for all OpenMP constructs."
     echo "-pcl=<dir> ..... Specify location of PCL (Performance Counter Library)."
@@ -4355,35 +4349,10 @@ if [ $openmp = yes ]
     tauoptions="${tauoptions}-openmp"
 fi
 
-if [ $opari = yes ]
-  then
-    if [ -f $oparidir/lib/pomp_lib.h ] 
-    then
-      kojakincdir=lib
-    else
-      kojakincdir=include
-    fi
-
-    kojakopari=`grep POMP_Finalize $oparidir/$kojakincdir/pomp_lib.h | wc -l`
-    if [ $kojakopari = 1 ] 
-    then
-      fixmakeargs="$fixmakeargs KOJAKOPARI"
-    fi
+if [ $opari = yes ] ; then
+    fixmakeargs="$fixmakeargs KOJAKOPARI"
     fixmakeargs="$fixmakeargs OPARI oparidir=$oparidir"
     tauoptions="${tauoptions}-opari"
-
-# Check if opari is in bin dir or in src dir
-    if [ -d $oparidir/tool -a -x $oparidir/tool/opari ]
-    then
-      fixmakeargs="$fixmakeargs oparitool=$oparidir/tool/opari"
-    else
-      if [ -d $oparidir/bin -a -x $oparidir/bin/opari ] 
-      then
-        fixmakeargs="$fixmakeargs oparitool=$oparidir/bin/opari"
-      else
-        echo "ERROR: Opari executable not found in $oparidir directory!"
-      fi
-    fi
 fi
 
 
