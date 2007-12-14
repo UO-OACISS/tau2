@@ -198,6 +198,9 @@ tau_convert: 	tau_convert.c
 tau_timecorrect:	tau_timecorrect.o
 		$(CXX) $(CFLAGS) tau_timecorrect.o -o tau_timecorrect -lm $(LEXTRA) $(TAU_TRACE_INPUT_LIB)
 
+opari/opari:
+		cd opari ; $(MAKE)
+
 tau_timecorrect.o:	tau_timecorrect.cpp
 		$(CXX) $(CFLAGS) tau_timecorrect.cpp -c
 
@@ -222,8 +225,8 @@ vtfconverter/vtf2profile:
 elgconverter/tau2elg:
 		cd elgconverter; $(MAKE) "MAKE=$(MAKE)"
 
-tau_merge: 	tau_merge.o tau_events.o
-		$(CXX) $(CFLAGS)  tau_merge.o tau_events.o -o tau_merge -lm $(LEXTRA)
+tau_merge: 	tau_merge.o tau_events.o 
+		$(CXX) $(CFLAGS) tau_merge.o tau_events.o -o tau_merge -lm $(LEXTRA)
 
 tau_merge.o: 	tau_merge.c
 		$(CXX) $(CFLAGS)  -c $(MERGE_CXX_OPT) tau_merge.c
@@ -305,6 +308,7 @@ user_event_data.o:	user_event_data.cpp
 
 clean:
 		/bin/rm -rf *.o $(EXECUTABLES) *.dep lib*$(LSX) *.ii *.ti ti_files cxx_repository ii_files rii_files 
+		cd opari ; make clean
 
 index:
 		ctags -wx $(HDRS) $(SRCS)
@@ -387,6 +391,12 @@ $(INSTALLDEST)/vtf2profile: vtfconverter/vtf2profile
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) vtfconverter/vtf2profile $(INSTALLDEST)
 
+$(INSTALLDEST)/opari: opari/opari
+		@echo Installing $? in $(INSTALLDEST)
+		if [ -d $(INSTALLDEST) ] ; then true; \
+                   else mkdir $(INSTALLDEST) ;fi
+		$(TAU_INSTALL) opari/opari $(INSTALLDEST)
+
 $(INSTALLDEST)/tau2elg: elgconverter/tau2elg
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
@@ -433,7 +443,7 @@ $(INSTALLDEST)/perf2tau: perf2tau
 #PCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
 #HPCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
 
-install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_reduce $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLTRACE2PROFILE) $(INSTALLTAU_TIMECORRECT) $(INSTALLPCXX) $(INSTALLINSTR) $(INSTALLTAURUN) $(INSTALLTAU2VTF) $(INSTALLVTF2PROFILE) $(INSTALLTAU2OTF) $(INSTALLTAU2ELG) $(INSTALLTAUOMPCHECK) $(INSTALLPERF2TAU) $(INSTALLWRAP)
+install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_reduce $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLDEST)/opari $(INSTALLTRACE2PROFILE) $(INSTALLTAU_TIMECORRECT) $(INSTALLPCXX) $(INSTALLINSTR) $(INSTALLTAURUN) $(INSTALLTAU2VTF) $(INSTALLVTF2PROFILE) $(INSTALLTAU2OTF) $(INSTALLTAU2ELG) $(INSTALLTAUOMPCHECK) $(INSTALLPERF2TAU) $(INSTALLWRAP)
 
 program:        $(PROGRAM)
 
