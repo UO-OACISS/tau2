@@ -1428,6 +1428,10 @@ int  MPI_Finalize(  )
   PMPI_Get_processor_name(procname, &procnamelength);
   TAU_METADATA("MPI Processor Name", procname);
 
+  /* Grab the node id, we don't always wrap mpi_init */
+  PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
+  TAU_PROFILE_SET_NODE(procid_0 ); 
+
   returnVal = PMPI_Finalize(  );
 
   TAU_PROFILE_STOP(tautimer);
