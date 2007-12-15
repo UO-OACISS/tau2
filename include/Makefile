@@ -816,7 +816,7 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
         -optPdtCxxOpts="$(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE)"\
         -optTauInstr="$(TAU_BIN_DIR)/tau_instrumentor" \
         -optNoMpi \
-	-optOpariDir="$(OPARIDIR)" -optOpariTool="$(TAU_OPARI_TOOL)" \
+	-optOpariDir="$(OPARIDIR)" -optOpariTool="$(TAU_BIN_DIR)/opari" \
 	-optTauCC="$(TAU_CC)" \
 	-optTauIncludes="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE)" \
 	-optTauDefs="$(TAU_DEFS)" \
