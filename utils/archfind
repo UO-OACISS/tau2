@@ -1,4 +1,6 @@
-#!/bin/csh -fb
+#!/bin/sh
+
+# converted to sh, (12/14/2007)
 
 # Based on parts of tcsh's tc.vers.c && PVM's aimk
 
@@ -12,146 +14,137 @@
 # -s SPECIAL.  Used to differentiate two very similar architectures
 
 #echo foo
-set ARCHTESTFILE=$0.c
-set ARCHLISTFILE=$0.txt
-set XDEV=
-set SPECIAL=
+ARCHTESTFILE=$0.c
+ARCHLISTFILE=$0.txt
+XDEV=
+SPECIAL=
 
 # TAU_CCOM may be defined by the caller to the name of the c compiler
 # for this user and system, as given on the command line.
 #
 # Not everyone uses gcc.
 
-if ( ${?TAU_CCOM} == "0" ) then
-  set TAU_CCOM=cc
-endif
+if [ "x$TAU_CCOM" = "x" ]; then
+    TAU_CCOM=cc
+fi
 
-if ( `uname -s ` == "Darwin" ) then
-  set TAU_CCOM=c++
-endif
+if [ `uname -s ` = "Darwin" ];  then
+    TAU_CCOM=c++
+fi
 
-if ( `uname -s ` == "HI-UX/MPP" ) then 
-  set ARCH=`$TAU_CCOM -msg=e -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'` 
+if [ `uname -s ` = "HI-UX/MPP" ]; then 
+    ARCH=`$TAU_CCOM -msg=e -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'` 
 else
-  set ARCH=`$TAU_CCOM -w -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'` 
-endif 
-# I HATE THIS CRAP!!!!
-# The !@!^&*% SUN Solaris compiler (slumpro) does not seem to define any
-# unique -D<defines> that separates it from cc for SunOS machines.
-# They simply define -Dunix -Dsun -Dsparc.  So how the ^%$#@!** are
-# you supposed to know if you are compiling code that uses the new
-# solaris include files, or uses the old SunOS include files?  At least
-# the gcc people know how to build a good compiler, and have 
-# added -D__svr4__ to their standard cpp defines.  To top it off, SUNPRO
-# is optional, and costs money!!  If I ever say something good about
-# SUN please slap me around until I come to my senses.
+    ARCH=`$TAU_CCOM -w -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'` 
+fi
 
 # Check for brain-dead solaris compiler
-if ( $ARCH == sun4 ) then
-  if ( `uname -r` =~ 5.* ) then
-    set ARCH=solaris2
-  endif
-endif
+if [ $ARCH = sun4 ]; then
+    VER=`uname -r`
+    if [ ${VER:0:2} = "5." ]; then
+	ARCH=solaris2
+    fi
+fi
 
 # Check for TMC cm5
-if ($ARCH == sun4 || $ARCH == solaris2) then
-  if ( -e /usr/bin/cmmd-ld ) then
-    set XDEV="cm5 $XDEV"
-  endif
-endif
+if [ $ARCH = sun4 -o $ARCH = solaris2 ]; then
+    if [ -e /usr/bin/cmmd-ld ]; then
+	XDEV="cm5 $XDEV"
+    fi
+fi
 
 # Check for SGI Symmetric Multiprocessing engine
-if ($ARCH == sgi4k || $ARCH == sgi8k) then
+if [ $ARCH = sgi4k -o $ARCH = sgi8k ]; then
   # Run "hinv" and check for the number of processors
-  /bin/hinv |& /usr/bsd/head -1 |& /bin/grep "^1 " >& /dev/null
-  if ($status == 1) then
-    set XDEV="sgimp $XDEV"
-  endif
-endif
+    /bin/hinv 2>&1 | /usr/bsd/head -1 2>&1 | /bin/grep "^1 " &> /dev/null
+    if [ $? = 1 ]; then
+	XDEV="sgimp $XDEV"
+    fi
+fi      
 
 # Check for Meiko CS2
-if ($ARCH == solaris2 && -d /opt/MEIKOcs2) then
-  set XDEV="cs2 $XDEV"
-endif
+if [ $ARCH = solaris2 -a -d /opt/MEIKOcs2 ]; then
+    XDEV="cs2 $XDEV"
+fi
 
 # Check for cray-t3d xdev environment for Cray C90
-if ($ARCH == c90 && -d /mpp/bin) then
-  set XDEV="t3d $XDEV"
-endif
- 
+if [ $ARCH = c90 -a -d /mpp/bin ]; then
+    XDEV="t3d $XDEV"
+fi
+
 # Check for Convex SPP engine
-if ($ARCH == hp9000s800) then
-  if (-d /usr/convex) then
-    set XDEV="cnxspp $XDEV"
-  endif
-endif
+if [ $ARCH = hp9000s800 ]; then
+    if [ -d /usr/convex ]; then
+	XDEV="cnxspp $XDEV"
+    fi
+fi
 
 # Check for RS6000 based IBM SPx
-if ($ARCH == rs6000) then
-  if (-f /bin/mpcc) then
-    set XDEV="sp1 $XDEV"
-  endif
-endif
+if [ $ARCH = rs6000 ]; then
+    if [ -f /bin/mpcc ]; then
+	XDEV="sp1 $XDEV"
+    fi
+fi
 
-if ($ARCH == unknown) then
+if [ $ARCH == unknown ]; then
 #See if users path finds an 'arch' command, it so, use it! (a little sloppy)
-  arch > &/dev/null
-  if ($status) then
+    arch &> /dev/null
+    if [ $? != 0 ]; then
 #This machine does not have an 'arch' command
 #Or at least one that correctly sets the arch
 
 #Try another guess....
-    if (-e /usr/bin/getcube) set ARCH=i860 
-  else
+	if [ -e /usr/bin/getcube ]; then
+	    ARCH=i860 
+	else
 # 'arch' command found, use it!
-    set ARCH = `arch`
-  endif
-endif
+	    ARCH=`arch`
+	fi
+    fi
 
-if ($ARCH == unknown) then
-  if (`uname -s` == FreeBSD) then
-    set ARCH=freebsd
-  endif
-endif
+    if [ $ARCH = unknown ]; then
+	if [ `uname -s` = FreeBSD ]; then
+	    ARCH=freebsd
+	fi
+    fi
 
-
-if ( $#argv == 1 ) then
-  if ( "$argv[1]" == "-x" ) then
-    if ( "$XDEV" == "" ) then
-      echo none
-      exit 1
-    else
-      echo $XDEV
-      exit 0
-    endif  
-  else
-    if ( "$argv[1]" == "-l" ) then
-      grep $ARCH $ARCHLISTFILE
-      if ($ARCH == unknown) then
-        exit 1
-      else
-        exit 0
-      endif  
-    else
-      if ( "$argv[1]" == "-s" ) then
-        if ( "$SPECIAL" == "" ) then
-          echo none
-          exit 1
-        else
-          echo $SPECIAL
-          exit 0
-        endif  
-      endif
-    endif
-  endif
-endif
+    if [ $# = 1 ]; then
+	if [ "$1" = "-x" ]; then
+	    if [ "x$XDEV" = "x" ]; then
+		echo none
+		exit 1
+	    else
+		echo $XDEV
+		exit 0
+	    fi
+	else
+	    if [ "$argv[1]" = "-l" ]; then
+		grep $ARCH $ARCHLISTFILE
+		if [ $ARCH = unknown ]; then
+		    exit 1
+		else
+		    exit 0
+		fi
+	    else
+		if [ "$1" = "-s" ]; then
+		    if [ "x$SPECIAL" == "x" ]; then
+			echo none
+			exit 1
+		    else
+			echo $SPECIAL
+			exit 0
+		    fi
+		fi
+	    fi
+	fi
+    fi
+fi
 
 echo $ARCH
-if ($ARCH == unknown) then
-  exit 1
+if [ $ARCH = unknown ]; then
+    exit 1
 else
-  exit 0
-endif  
-
+    exit 0
+fi
 
 
