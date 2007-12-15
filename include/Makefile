@@ -100,7 +100,8 @@ TAU_INC_DIR=$(TAU_PREFIX_INSTALL_DIR)/include
 TAU_LIB_DIR=$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
 #######################################################################
- 
+
+#OPARI#TAU_OPARI_TOOL=$(TAU_BIN_DIR)/opari        #ENDIF#
 #ENABLE64BIT#ABI 	     = -64		  #ENDIF#
 #ENABLEN32BIT#ABI 	     = -n32		  #ENDIF#
 #ENABLE32BIT#ABI 	     = -32		  #ENDIF#
@@ -816,7 +817,7 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
         -optPdtCxxOpts="$(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE)"\
         -optTauInstr="$(TAU_BIN_DIR)/tau_instrumentor" \
         -optNoMpi \
-	-optOpariDir="$(OPARIDIR)" -optOpariTool="$(TAU_BIN_DIR)/opari" \
+	-optOpariDir="$(OPARIDIR)" -optOpariTool="$(TAU_OPARI_TOOL)" \
 	-optTauCC="$(TAU_CC)" \
 	-optTauIncludes="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE)" \
 	-optTauDefs="$(TAU_DEFS)" \
