@@ -96,10 +96,10 @@ if [ $ARCH == unknown ]; then
 #Try another guess....
 	if [ -e /usr/bin/getcube ]; then
 	    ARCH=i860 
-	else
-# 'arch' command found, use it!
-	    ARCH=`arch`
 	fi
+    else
+# 'arch' command found, use it!
+	ARCH=`arch`
     fi
 
     if [ $ARCH = unknown ]; then
