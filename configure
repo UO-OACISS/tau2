@@ -615,7 +615,13 @@ do
     shift
     ;;
 
-  -opari*)
+  -opari)
+      opari=yes
+      openmp=yes
+    shift
+    ;;
+
+  -opari=*)
       opari=yes
       openmp=yes
     shift
