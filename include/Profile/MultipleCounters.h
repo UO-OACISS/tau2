@@ -28,6 +28,13 @@ extern "C" {
 #include <rts.h>
 #endif
 
+#ifdef BGP_TIMERS
+/* header files for BlueGene/P */
+#include <bgp_personality.h>
+#include <bgp_personality_inlines.h>
+#include <kernel_interface.h>
+#endif // BGP_TIMERS
+
 #ifdef TAUKTAU_SHCTR
 extern "C" {
 #include "KtauCounters.h"
@@ -120,10 +127,10 @@ class MultipleCounterLayer
   static int linuxTimerMCL_FP;
 #endif //TAU_LINUX_TIMERS
 
-#ifdef BGL_TIMERS
+#if (defined(BGL_TIMERS) || defined(BGP_TIMERS))
   static int bglTimersMCL_CP[1];
   static int bglTimersMCL_FP;
-#endif // BGL_TIMERS
+#endif // BGL_TIMERS || BGP_TIMERS
 
 #ifdef SGI_TIMERS
   static int sgiTimersMCL_CP[1];

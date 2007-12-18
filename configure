@@ -1874,6 +1874,20 @@ if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ]
   fi
 fi
 
+if [ $bgltimers = yes -a $machine = bgp ]
+then
+  echo "WARNING: You configured -BGLTIMERS on BGP. Changing it to -BGPTIMERS."
+  bgptimers=yes
+  bgltimers=no
+fi
+
+if [ $bgptimers = yes -a $machine = bgl ]
+then
+  echo "WARNING: You configured -BGPTIMERS on BGL. Changing it to -BGLTIMERS."
+  bgptimers=no
+  bgltimers=yes
+fi
+
 if [ $bgltimers = yes ]
 then
   fixmakeargs="$fixmakeargs BGLTIMERS"
