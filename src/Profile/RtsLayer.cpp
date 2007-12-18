@@ -71,6 +71,13 @@
 #include <rts.h>
 #endif // BGL_TIMERS
 
+#ifdef BGP_TIMERS
+/* header files for BlueGene/P */
+#include <bgp_personality.h>
+#include <bgp_personality_inlines.h>
+#include <kernel_interface.h>
+#endif // BGP_TIMERS
+
 #ifdef TAU_XLC
 #define strcasecmp strcmp
 #define strncasecmp strncmp 
@@ -650,6 +657,18 @@ double RtsLayer::getUSecD (int tid) {
   return (rts_get_timebase() * bgl_clockspeed);
 #endif // BGL_TIMERS
 
+#ifdef BGP_TIMERS
+  static double bgp_clockspeed = 0.0;
+
+  if (bgp_clockspeed == 0.0)
+  {
+    _BGP_Personality_t mybgp;
+    Kernel_GetPersonality(&mybgp, sizeof(_BGP_Personality_t));
+    bgp_clockspeed = 1.0/(double)BGP_Personality_clockMHz(&mybgp);
+  }
+  return (_bgp_GetTimeBase() * bgp_clockspeed);
+#endif // BGP_TIMERS
+
 #ifdef SGI_HW_COUNTERS
   return RtsLayer::GetEventCounter();
 #endif  //SGI_HW_COUNTERS
@@ -757,6 +776,10 @@ char *RtsLayer::getSingleCounterName() {
 #ifdef BGL_TIMERS
   return "BGL Timers";
 #endif // BGL_TIMERS
+
+#ifdef BGP_TIMERS
+  return "BGP Timers";
+#endif // BGP_TIMERS
 
 #ifdef SGI_HW_COUNTERS
   return "SGI_HW_COUNTERS";
@@ -1467,7 +1490,7 @@ std::string RtsLayer::GetRTTI(const char *name)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: anataraj $
- * $Revision: 1.92 $   $Date: 2007/12/11 01:28:01 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.92 2007/12/11 01:28:01 anataraj Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
+ * $Revision: 1.93 $   $Date: 2007/12/18 22:38:24 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.93 2007/12/18 22:38:24 sameer Exp $ 
  ***************************************************************************/

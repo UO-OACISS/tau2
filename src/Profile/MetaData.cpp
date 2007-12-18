@@ -43,6 +43,13 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <bglpersonality.h>
 #endif
 
+#ifdef TAU_BGP
+/* header files for BlueGene/P */
+#include <bgp_personality.h>
+#include <bgp_personality_inlines.h>
+#include <kernel_interface.h>
+#endif // TAU_BGP
+
 #include <signal.h>
 
 char * TauGetCounterString(void);
@@ -457,6 +464,67 @@ static int writeMetaData(FILE *fp, bool newline, int counter) {
   writeXMLAttribute(fp, "BGL PsetCoord", buffer, newline);
 #endif /* TAU_BGL */
 
+#ifdef TAU_BGP
+  char bgbuffer[4096];
+  char location[BGPPERSONALITY_MAX_LOCATION];
+  _BGP_Personality_t personality;
+
+  Kernel_GetPersonality(&personality, sizeof(_BGP_Personality_t));
+  BGP_Personality_getLocationString(&personality, location);
+
+  sprintf (bgbuffer, "(%d,%d,%d)", BGP_Personality_xCoord(&personality),
+	   BGP_Personality_yCoord(&personality),
+	   BGP_Personality_zCoord(&personality));
+  writeXMLAttribute(fp, "BGP Coords", bgbuffer, newline);
+
+  writeXMLAttribute(fp, "BGP Processor ID", Kernel_PhysicalProcessorID(), newline);
+
+  sprintf (bgbuffer, "(%d,%d,%d)", BGP_Personality_xSize(&personality),
+	   BGP_Personality_ySize(&personality),
+	   BGP_Personality_zSize(&personality));
+  writeXMLAttribute(fp, "BGP Size", bgbuffer, newline);
+
+
+  if (Kernel_ProcessCount() > 1) {
+    writeXMLAttribute(fp, "BGP Node Mode", "Virtual", newline);
+  } else {
+    sprintf(bgbuffer, "Coprocessor (%d)", Kernel_ProcessCount);
+    writeXMLAttribute(fp, "BGP Node Mode", bgbuffer, newline);
+  }
+
+  sprintf (bgbuffer, "(%d,%d,%d)", BGP_Personality_isTorusX(&personality),
+	   BGP_Personality_isTorusY(&personality),
+	   BGP_Personality_isTorusZ(&personality));
+  writeXMLAttribute(fp, "BGP isTorus", bgbuffer, newline);
+
+  writeXMLAttribute(fp, "BGP DDRSize (MB)", BGP_Personality_DDRSizeMB(&personality), newline);
+/* CHECK: 
+  writeXMLAttribute(fp, "BGP DDRModuleType", personality.DDRModuleType, newline);
+*/
+  writeXMLAttribute(fp, "BGP Location", location, newline);
+
+  writeXMLAttribute(fp, "BGP rankInPset", BGP_Personality_rankInPset(&personality), newline);
+  writeXMLAttribute(fp, "BGP numNodesInPset", Kernel_ProcessCount(), newline);
+  writeXMLAttribute(fp, "BGP psetNum", BGP_Personality_psetNum(&personality), newline);
+  writeXMLAttribute(fp, "BGP numPsets", BGP_Personality_numComputeNodes(&personality), newline);
+
+/* CHECK: 
+  sprintf (bgbuffer, "(%d,%d,%d)", BGP_Personality_xPsetSize(&personality),
+	   BGP_Personality_yPsetSize(&personality),
+	   BGP_Personality_zPsetSize(&personality));
+  writeXMLAttribute(fp, "BGP PsetSize", bgbuffer, newline);
+
+  sprintf (bgbuffer, "(%d,%d,%d)", BGP_Personality_xPsetOrigin(&personality),
+	   BGP_Personality_yPsetOrigin(&personality),
+	   BGP_Personality_zPsetOrigin(&personality));
+  writeXMLAttribute(fp, "BGP PsetOrigin", bgbuffer, newline);
+
+  sprintf (bgbuffer, "(%d,%d,%d)", BGP_Personality_xPsetCoord(&personality),
+	   BGP_Personality_yPsetCoord(&personality),
+	   BGP_Personality_zPsetCoord(&personality));
+  writeXMLAttribute(fp, "BGP PsetCoord", bgbuffer, newline);
+*/
+#endif /* TAU_BGP */
 
 #ifdef __linux__
   // doesn't work on ia64 for some reason

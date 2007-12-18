@@ -226,6 +226,7 @@ trace=no
 mpitrace=no
 debugprof=no
 bgltimers=no
+bgptimers=no
 sgitimers=no
 craytimers=no
 linuxtimers=no
@@ -1042,6 +1043,11 @@ do
     shift
     ;;
 
+  -BGPTIMERS)
+    bgptimers=yes
+    shift
+    ;;
+
   -SGITIMERS)
     sgitimers=yes
     shift
@@ -1188,6 +1194,7 @@ do
     echo "-MULTIPLECOUNTERS ............ Use multiple hardware counters and time."
     echo "-COMPENSATE ........ Compensate for profiling measurement perturbation."
     echo "-BGLTIMERS .... Use fast low-overhead timers on IBM BlueGene/L systems."
+    echo "-BGPTIMERS .... Use fast low-overhead timers on IBM BlueGene/P systems."
     echo "-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems."
     echo "-CRAYTIMERS ............ Use fast nanosecond timers on Cray X1 systems."
     echo "-LINUXTIMERS ......... Use low overhead TSC Counter for wallclock time."
@@ -1303,6 +1310,7 @@ do
     echo "-MULTIPLECOUNTERS ............ Use multiple hardware counters and time."
     echo "-COMPENSATE ........ Compensate for profiling measurement perturbation."
     echo "-BGLTIMERS .... Use fast low-overhead timers on IBM BlueGene/L systems."
+    echo "-BGPTIMERS .... Use fast low-overhead timers on IBM BlueGene/P systems."
     echo "-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems."
     echo "-CRAYTIMERS ............ Use fast nanosecond timers on Cray X1 systems."
     echo "-LINUXTIMERS ......... Use low overhead TSC Counter for wallclock time."
@@ -1870,6 +1878,12 @@ if [ $bgltimers = yes ]
 then
   fixmakeargs="$fixmakeargs BGLTIMERS"
   tauoptions="${tauoptions}-bgltimers"
+fi
+
+if [ $bgptimers = yes ]
+then
+  fixmakeargs="$fixmakeargs BGPTIMERS"
+  tauoptions="${tauoptions}-bgptimers"
 fi
 
 if [ $craytimers = yes ]
