@@ -23,17 +23,6 @@ extern "C" {
 }
 #endif /* TAU_PAPI */
 
-#ifdef BGL_TIMERS
-#include <bglpersonality.h>
-#include <rts.h>
-#endif
-
-#ifdef BGP_TIMERS
-/* header files for BlueGene/P */
-#include <bgp_personality.h>
-#include <bgp_personality_inlines.h>
-#include <kernel_interface.h>
-#endif // BGP_TIMERS
 
 #ifdef TAUKTAU_SHCTR
 extern "C" {

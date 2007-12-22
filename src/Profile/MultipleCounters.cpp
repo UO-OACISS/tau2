@@ -39,6 +39,18 @@ using namespace std;
 #endif /* TAU_CATAMOUNT */
 #endif // CRAY_TIMERS
 
+#ifdef BGL_TIMERS
+#include <bglpersonality.h>
+#include <rts.h>
+#endif
+
+#ifdef BGP_TIMERS
+/* header files for BlueGene/P */
+#include <bgp_personality.h>
+#include <bgp_personality_inlines.h>
+#include <kernel_interface.h>
+#endif // BGP_TIMERS
+
 #ifdef TRACING_ON
 #ifdef TAU_EPILOG
 #include "elg_trc.h"
