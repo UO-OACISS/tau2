@@ -36,6 +36,21 @@ mpilibrary=no
 tauprefix=unknown
 tauexecprefix=unknown
 
+###############################################################
+# This method will escape spaces so that you can use ./configure `cat .last_config` when you've used them
+for arg in "$@"; do
+    # Thanks to Bernd Mohr for the following that handles quotes and spaces
+    # -e 's/^x//'          removes the x at the start
+    # -e 's/"/\\\"/g'      replaces " with \"
+    # -e s,\',%@%\',g      replaces ' with %@%'
+    # -e 's/%@%/\\\/g'     replaces %@% \
+    # -e 's/ /\\\ /g'      replaces space with \space
+    modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
+    modargs="$modargs $modarg"
+done
+echo "$modargs" >> .installflags
+
+###############################################################
 # PARSE COMMAND LINE SWITCHES
 ###############################################################
 for arg in "$@";
@@ -506,18 +521,6 @@ echo " " > wishver
     make clean; make install
   fi
 
-# This method will escape spaces so that you can use ./configure `cat .last_config` when you've used them
-for arg in "$@"; do
-    # Thanks to Bernd Mohr for the following that handles quotes and spaces
-    # -e 's/^x//'          removes the x at the start
-    # -e 's/"/\\\"/g'      replaces " with \"
-    # -e s,\',%@%\',g      replaces ' with %@%'
-    # -e 's/%@%/\\\/g'     replaces %@% \
-    # -e 's/ /\\\ /g'      replaces space with \space
-    modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
-    modargs="$modargs $modarg"
-done
-echo "$modargs" >> .all_installs
 
 # Set file permissions
   chmod -R go+rX *
