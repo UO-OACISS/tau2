@@ -55,6 +55,8 @@ TAUINC	      = -I$(TAUROOT)/include
 
 CXXFLAGS        = $(DEFINES) $(CEXTRA) $(USER_OPT) $(PROFILEOPTS) $(TAUINC)  
 
+CFLAGS        = $(TAU_MPI_INCLUDE) $(CEXTRA) $(USER_OPT) $(TAUINC)  
+
 INCDIR	      = $(TAUROOT)/include/Profile
 
 HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
