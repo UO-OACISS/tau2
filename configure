@@ -3231,17 +3231,23 @@ then
 	      mpiflibargs="$mpiflibargs $mpilibrary"
 	  fi
 	  
-        if [ -r /usr/lib/librt.a -o -r /usr/lib/librt.so ] ; then 
-            #echo "librt found"
-	    mpilibargs="$mpilibargs -lrt"
-	    mpiflibargs="$mpiflibargs -lrt"
-        fi
+	  if [ -r /usr/lib/librt.a -o -r /usr/lib/librt.so ] ; then 
+              #echo "librt found"
+	      mpilibargs="$mpilibargs -lrt"
+	      mpiflibargs="$mpiflibargs -lrt"
+	  fi
+	  
+	  if [ -r /usr/lib64/libibverbs.a -o -r /usr/lib64/libibverbs.so ] ; then 
+              #echo "libibverbs found"
+	      mpilibargs="$mpilibargs -libverbs"
+	      mpiflibargs="$mpiflibargs -libverbs"
+	  fi
 
-        if [ -r $mpilib/libscdma.a -a -r $mpilib/libpmi.a ] ; then
-	  # echo "add -lscdma -lpmi to the SiCortex link line"
-	    mpilibargs="$mpilibargs -lscdma -lpmi"
-	    mpiflibargs="$mpiflibargs -lscdma -lpmi"
-	fi
+	  if [ -r $mpilib/libscdma.a -a -r $mpilib/libpmi.a ] ; then
+	      # echo "add -lscdma -lpmi to the SiCortex link line"
+	      mpilibargs="$mpilibargs -lscdma -lpmi"
+	      mpiflibargs="$mpiflibargs -lscdma -lpmi"
+	  fi
       else
 	  if [ "x$mpilibrary" != "xno" ] ; then 
 	      mpilibargs="$mpilibargs $mpilibrary"
