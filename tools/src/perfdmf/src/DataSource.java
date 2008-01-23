@@ -20,9 +20,9 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.32 2007/12/07 21:33:20 khuck Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.33 2008/01/23 02:09:47 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.32 $
+ * @version $Revision: 1.33 $
  */
 public abstract class DataSource {
 
@@ -493,6 +493,7 @@ public abstract class DataSource {
          *     D
          *     
          * Here, D is duplicate data, it is the sum of the other two
+         * 
          * The Bonus data is additional duplicate data:
          *     B1 => C => D
          *     B2 => C => D
@@ -545,7 +546,7 @@ public abstract class DataSource {
                         if (functionProfile != null) {
                             FunctionProfile bfp = thread.getFunctionProfile(bonusFunction);
                             if (bfp == null) {
-                                bfp = new FunctionProfile(bonusFunction, getNumberOfMetrics());
+                                bfp = new FunctionProfile(bonusFunction, getNumberOfMetrics(), thread.getNumSnapshots());
                                 thread.addFunctionProfile(bfp);
                             }
 
