@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # converted to sh, (12/14/2007)
 
@@ -40,8 +40,8 @@ fi
 
 # Check for brain-dead solaris compiler
 if [ $ARCH = sun4 ]; then
-    VER=`uname -r`
-    if [ ${VER:0:2} = "5." ]; then
+    VER=`uname -r | cut -c0-2`
+    if [ $VER = "5." ]; then
 	ARCH=solaris2
     fi
 fi
@@ -86,7 +86,7 @@ if [ $ARCH = rs6000 ]; then
     fi
 fi
 
-if [ $ARCH == unknown ]; then
+if [ $ARCH = unknown ]; then
 #See if users path finds an 'arch' command, it so, use it! (a little sloppy)
     arch &> /dev/null
     if [ $? != 0 ]; then
@@ -127,7 +127,7 @@ if [ $ARCH == unknown ]; then
 		fi
 	    else
 		if [ "$1" = "-s" ]; then
-		    if [ "x$SPECIAL" == "x" ]; then
+		    if [ "x$SPECIAL" = "x" ]; then
 			echo none
 			exit 1
 		    else
