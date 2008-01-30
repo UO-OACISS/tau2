@@ -5039,9 +5039,9 @@ sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'
  > ${targetdir}/${architecture}/bin/tauex
 chmod a+rx ${targetdir}/${architecture}/bin/tauex
 
-echo "TAU: installed tauinc.sh in ${targetdir}/${architecture}/bin"
-cp ${tauroot}/tools/src/tauinc.sh ${targetdir}/${architecture}/bin
-chmod a+rx  ${targetdir}/${architecture}/bin/tauinc.sh
+echo "TAU: installed tauinc.pl in ${targetdir}/${architecture}/bin"
+cp ${tauroot}/tools/src/tauinc.pl ${targetdir}/${architecture}/bin
+chmod a+rx  ${targetdir}/${architecture}/bin/tauinc.pl
 
 echo "TAU: installed TAU's PerfDMF database utilities in ${targetdir}/${architecture}/bin" 
 
