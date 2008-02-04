@@ -6,6 +6,7 @@ import java.io.File;
 import java.util.*;
 
 import javax.swing.JComponent;
+import javax.swing.JPopupMenu;
 
 import edu.uoregon.tau.paraprof.*;
 import edu.uoregon.tau.paraprof.enums.SortType;
@@ -16,9 +17,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * Compares threads from (potentially) any trial
  * 
- * <P>CVS $Id: ComparisonBarChartModel.java,v 1.9 2007/07/04 14:19:43 amorris Exp $</P>
+ * <P>CVS $Id: ComparisonBarChartModel.java,v 1.10 2008/02/04 23:16:28 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  */
 public class ComparisonBarChartModel extends AbstractBarChartModel {
 
@@ -79,12 +80,12 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
             }
             return (int) (other.getMax() - getMax());
         }
-        
+
         public int compareTo(Object arg0) {
             if (dataSorter.getDescendingOrder()) {
-                return privateCompare((RowBlob)arg0);
+                return privateCompare((RowBlob) arg0);
             } else {
-                return -privateCompare((RowBlob)arg0);
+                return -privateCompare((RowBlob) arg0);
             }
         }
 
@@ -236,12 +237,21 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
 
     public void fireValueClick(int row, int subIndex, MouseEvent e, JComponent owner) {
     // TODO Auto-generated method stub
-
     }
 
     public void fireRowLabelClick(int row, MouseEvent e, JComponent owner) {
-    // TODO Auto-generated method stub
-
+        if (ParaProfUtils.rightClick(e)) {
+            RowBlob blob = (RowBlob) rows.get(row);
+            for (Iterator it = blob.iterator(); it.hasNext();) {
+                PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next();
+                if (ppFunctionProfile != null) {
+                    JPopupMenu popup = ParaProfUtils.createFunctionClickPopUp(ppFunctionProfile.getPPTrial(),
+                            ppFunctionProfile.getFunction(), ppFunctionProfile.getThread(), owner);
+                    popup.show(owner, e.getX(), e.getY());
+                    return;
+                }
+            }
+        }
     }
 
     public String getValueToolTipText(int row, int subIndex) {
