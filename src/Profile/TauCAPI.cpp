@@ -754,15 +754,20 @@ extern "C" void Tau_profile_param1l(long data, const char * dataname)
   The following is for supporting pure and elemental fortran subroutines
 */
 
-static map<string, FunctionInfo *> pureMap;
+
+map<string, FunctionInfo *>& ThePureMap() {
+  static map<string, FunctionInfo *> pureMap;
+  return pureMap;
+}
+
 
 extern "C" void Tau_pure_start(char *name) {
   FunctionInfo *fi = 0;
   string n = string(name);
-  map<string, FunctionInfo *>::iterator it = pureMap.find(n);
-  if (it == pureMap.end()) {
+  map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
+  if (it == ThePureMap().end()) {
     tauCreateFI(&fi,n,"",TAU_USER,"TAU_USER");
-    pureMap[n] = fi;
+    ThePureMap()[n] = fi;
   } else {
     fi = (*it).second;
   }
@@ -772,8 +777,8 @@ extern "C" void Tau_pure_start(char *name) {
 extern "C" void Tau_pure_stop(char *name) {
   FunctionInfo *fi;
   string n = string(name);
-  map<string, FunctionInfo *>::iterator it = pureMap.find(n);
-  if (it == pureMap.end()) {
+  map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
+  if (it == ThePureMap().end()) {
     fprintf (stderr, "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\nTAU Error: You will likely get an overlapping timer message next\n\n", name);
   } else {
     fi = (*it).second;
@@ -784,10 +789,10 @@ extern "C" void Tau_pure_stop(char *name) {
 extern "C" void Tau_static_phase_start(char *name) {
   FunctionInfo *fi = 0;
   string n = string(name);
-  map<string, FunctionInfo *>::iterator it = pureMap.find(n);
-  if (it == pureMap.end()) {
+  map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
+  if (it == ThePureMap().end()) {
     tauCreateFI(&fi,n,"",TAU_USER,"TAU_USER | TAU_PHASE");
-    pureMap[n] = fi;
+    ThePureMap()[n] = fi;
   } else {
     fi = (*it).second;
   }   Tau_start_timer(fi,1);
@@ -796,8 +801,8 @@ extern "C" void Tau_static_phase_start(char *name) {
 extern "C" void Tau_static_phase_stop(char *name) {
   FunctionInfo *fi;
   string n = string(name);
-  map<string, FunctionInfo *>::iterator it = pureMap.find(n);
-  if (it == pureMap.end()) {
+  map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
+  if (it == ThePureMap().end()) {
     fprintf (stderr, "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\nTAU Error: You will likely get an overlapping timer message next\n\n", name);
   } else {
     fi = (*it).second;
@@ -816,13 +821,13 @@ extern "C" void Tau_dynamic_start(char *name, int iteration, int isPhase)
   printf("Checking for %s: iteration = %d\n", n.c_str(), iteration);
 #endif /* DEBUG_PROF */
 
-  map<string, FunctionInfo *>::iterator it = pureMap.find(n);
-  if (it == pureMap.end()) {
+  map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
+  if (it == ThePureMap().end()) {
     if (isPhase)
       tauCreateFI(&fi,n,"",TAU_USER,"TAU_USER | TAU_PHASE");
     else
       tauCreateFI(&fi,n,"",TAU_USER,"TAU_USER");
-    pureMap[n] = fi;
+    ThePureMap()[n] = fi;
   } else {
     fi = (*it).second;
   }   
@@ -837,8 +842,8 @@ extern "C" void Tau_dynamic_stop(char *name, int iteration, int isPhase) {
   char *newName = Tau_append_iteration_to_name(iteration, name);
   string n (newName);
   free(newName);
-  map<string, FunctionInfo *>::iterator it = pureMap.find(n);
-  if (it == pureMap.end()) {
+  map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
+  if (it == ThePureMap().end()) {
     fprintf (stderr, "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\nTAU Error: You will likely get an overlapping timer message next\n\n", name);
   } else {
     fi = (*it).second;
@@ -926,7 +931,7 @@ int *pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.68 $   $Date: 2007/11/30 21:20:45 $
- * VERSION: $Id: TauCAPI.cpp,v 1.68 2007/11/30 21:20:45 amorris Exp $
+ * $Revision: 1.69 $   $Date: 2008/02/04 22:40:46 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.69 2008/02/04 22:40:46 amorris Exp $
  ***************************************************************************/
 
