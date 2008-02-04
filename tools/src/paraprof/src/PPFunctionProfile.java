@@ -70,6 +70,10 @@ public class PPFunctionProfile implements Comparable {
     public Function getFunction() {
         return functionProfile.getFunction();
     }
+    
+    public ParaProfTrial getPPTrial() {
+        return dataSorter.getPpTrial();
+    }
 
     // handles reversed callpaths
     public String getDisplayName() {
@@ -132,12 +136,30 @@ public class PPFunctionProfile implements Comparable {
         return dataSorter;
     }
 
+       
     public double getValue() {
-        return dataSorter.getValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID(), dataSorter.getSelectedSnapshot());
+        int differential = 0;
+        int snap = dataSorter.getSelectedSnapshot();
+        if (differential == 1 && snap > 0) {
+            double value1 = dataSorter.getValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID(), snap-1);
+            double value2 = dataSorter.getValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID(), snap);
+            return value2 - value1;
+        } else {
+            return dataSorter.getValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID(), dataSorter.getSelectedSnapshot());
+        }
+
     }
 
     public double getSortValue() {
-        return dataSorter.getSortValueType().getValue(this.getFunctionProfile(), dataSorter.getSortMetric(), dataSorter.getSelectedSnapshot());
+        int differential = 0;
+        int snap = dataSorter.getSelectedSnapshot();
+        if (differential == 1 && snap > 0) {
+            double value1 = dataSorter.getSortValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID(), snap-1);
+            double value2 = dataSorter.getSortValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID(), snap);
+            return value2 - value1;
+        } else {
+            return dataSorter.getSortValueType().getValue(this.getFunctionProfile(), dataSorter.getSortMetric(), dataSorter.getSelectedSnapshot());
+        }
     }
 
     private int checkDescending(int value) {
@@ -176,8 +198,9 @@ public class PPFunctionProfile implements Comparable {
                     other.getMeanProfile()));
 
         } else if (dataSorter.getSortType() == SortType.VALUE) {
-            return checkDescending(compareToHelper(valueType.getValue(this.getFunctionProfile(), dataSorter.getSortMetric(), dataSorter.getSelectedSnapshot()),
-                    valueType.getValue(other.getFunctionProfile(), dataSorter.getSortMetric(), dataSorter.getSelectedSnapshot())));
+            return checkDescending(compareToHelper(getSortValue(), other.getSortValue()));
+//            return checkDescending(compareToHelper(valueType.getValue(this.getFunctionProfile(), dataSorter.getSortMetric(), dataSorter.getSelectedSnapshot()),
+//                    valueType.getValue(other.getFunctionProfile(), dataSorter.getSortMetric(), dataSorter.getSelectedSnapshot())));
         } else {
             throw new ParaProfException("Unexpected sort type: " + dataSorter.getSortType());
         }
