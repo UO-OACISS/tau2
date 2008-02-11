@@ -109,10 +109,10 @@ fi
 
 if [ $invoke_without_tau = yes ] ; then
 cat <<EOF > /tmp/makefile.tau.$USER.$$
-  include $MAKEFILE
-  all:
-	@\$(TAU_RUN_CC) $NON_TAUARGS
-  show:
+include $MAKEFILE
+all:
+	@\$(TAU_RUN_CC) \$(TAU_MPI_INCLUDE) $NON_TAUARGS
+show:
 	@echo \$(TAU_RUN_CC) \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_LDFLAGS) \$(TAU_CXXLIBS)
 EOF
 make -s -f /tmp/makefile.tau.$USER.$$ $SHOW

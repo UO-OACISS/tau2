@@ -103,8 +103,8 @@ fi
 
 if [ $invoke_without_tau = yes ] ; then
 cat <<EOF > /tmp/makefile.tau.$USER.$$
-  include $MAKEFILE
-  all:
+include $MAKEFILE
+all:
 	@if [ "x\$(TAU_F90)" = "x" ] ; then \
 	echo "Error, no fortran compiler specified in TAU configure (use -fortran=<>)" ; \
 	else \
