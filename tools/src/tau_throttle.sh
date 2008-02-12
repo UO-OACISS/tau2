@@ -11,5 +11,5 @@ then
 fi
 
 echo "BEGIN_EXCLUDE_LIST" > throttle.tau
-cat $*  | awk '/TAU<[-]*[0-9]*>:\ Throttle:/ {print $4 " " $5 $6 $7 $8 $9;}' | sort | uniq | sed -e s/[.\>A-Z0-9:\ ]*Throttle:// -e s/\\[.*// -e s/[\(].*[^\)]$/\&#/ >>throttle.tau
+cat $*  | awk '/TAU<[-]*[0-9]*>:\ Throttle:/ {print $4 FS $5 FS $6 FS $7 FS $8 FS $9;}' | sort | uniq | sed -e s/[.\>A-Z0-9:\ ]*Throttle:// -e s/\\[.*// -e s/[\(].*[^\)]$/\&#/ >>throttle.tau
 echo "END_EXCLUDE_LIST" >> throttle.tau
