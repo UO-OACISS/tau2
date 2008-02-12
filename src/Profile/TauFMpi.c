@@ -90,6 +90,20 @@ MPI_Fint *ierr;
   mpi_allgather_( sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm , ierr);
 }
 
+void  MPI_ALLGATHER_( sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm , ierr)
+void * sendbuf;
+MPI_Fint *sendcount;
+MPI_Fint *sendtype;
+void * recvbuf;
+MPI_Fint *recvcount;
+MPI_Fint *recvtype;
+MPI_Fint *comm;
+MPI_Fint *ierr;
+{
+  mpi_allgather_( sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm , ierr);
+}
+
+
 void  mpi_allgather( sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm , ierr)
 void * sendbuf;
 MPI_Fint *sendcount;
@@ -137,6 +151,20 @@ MPI_Fint *ierr;
 }
 
 void  MPI_ALLGATHERV( sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm , ierr)
+void * sendbuf;
+MPI_Fint *sendcount;
+MPI_Fint *sendtype;
+void * recvbuf;
+MPI_Fint * recvcounts;
+MPI_Fint * displs;
+MPI_Fint *recvtype;
+MPI_Fint *comm;
+MPI_Fint *ierr;
+{
+  mpi_allgatherv_( sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm , ierr);
+}
+
+void  MPI_ALLGATHERV_( sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm , ierr)
 void * sendbuf;
 MPI_Fint *sendcount;
 MPI_Fint *sendtype;
@@ -216,6 +244,18 @@ MPI_Fint *ierr;
   mpi_allreduce_( sendbuf, recvbuf, count, datatype, op, comm , ierr);
 }
  
+void   MPI_ALLREDUCE_( sendbuf, recvbuf, count, datatype, op, comm , ierr)
+void * sendbuf;
+void * recvbuf;
+MPI_Fint *count;
+MPI_Fint *datatype;
+MPI_Fint *op;
+MPI_Fint *comm;
+MPI_Fint *ierr;
+{
+  mpi_allreduce_( sendbuf, recvbuf, count, datatype, op, comm , ierr);
+}
+
 #ifdef TAU_IBM_MPI
 extern int mpi_in_place_;
 #endif /* TAU_IBM_MPI */
@@ -287,6 +327,20 @@ MPI_Fint *ierr;
   mpi_alltoall_( sendbuf, sendcount, sendtype, recvbuf, recvcnt, recvtype, comm , ierr);
 }
 
+void  MPI_ALLTOALL_( sendbuf, sendcount, sendtype, recvbuf, recvcnt, recvtype, comm , ierr)
+void * sendbuf;
+MPI_Fint *sendcount;
+MPI_Fint *sendtype;
+void * recvbuf;
+MPI_Fint *recvcnt;
+MPI_Fint *recvtype;
+MPI_Fint *comm;
+MPI_Fint *ierr;
+{
+  mpi_alltoall_( sendbuf, sendcount, sendtype, recvbuf, recvcnt, recvtype, comm
+, ierr);
+}
+
 void  mpi_alltoall( sendbuf, sendcount, sendtype, recvbuf, recvcnt, recvtype, comm , ierr)
 void * sendbuf;
 MPI_Fint *sendcount;
@@ -349,6 +403,22 @@ MPI_Fint *ierr;
   mpi_alltoallv_( sendbuf, sendcnts, sdispls, sendtype, recvbuf, recvcnts, rdispls, recvtype, comm , ierr);
 }
 
+void   MPI_ALLTOALLV_( sendbuf, sendcnts, sdispls, sendtype, recvbuf, recvcnts, rdispls, recvtype, comm , ierr)
+void * sendbuf;
+MPI_Fint * sendcnts;
+MPI_Fint * sdispls;
+MPI_Fint *sendtype;
+void * recvbuf;
+MPI_Fint * recvcnts;
+MPI_Fint * rdispls;
+MPI_Fint *recvtype;
+MPI_Fint *comm;
+MPI_Fint *ierr;
+{
+  mpi_alltoallv_( sendbuf, sendcnts, sdispls, sendtype, recvbuf, recvcnts, rdispls, recvtype, comm , ierr);
+}
+
+
 void   mpi_alltoallv( sendbuf, sendcnts, sdispls, sendtype, recvbuf, recvcnts, rdispls, recvtype, comm , ierr)
 void * sendbuf;
 MPI_Fint * sendcnts;
@@ -388,6 +458,13 @@ MPI_Fint *ierr;
   mpi_barrier_( comm , ierr);
 }
 
+void   MPI_BARRIER_( comm , ierr)
+MPI_Fint *comm;
+MPI_Fint *ierr;
+{
+  mpi_barrier_( comm , ierr);
+}
+
 void   mpi_barrier( comm , ierr)
 MPI_Fint *comm;
 MPI_Fint *ierr;
@@ -420,6 +497,17 @@ MPI_Fint *ierr;
 }
 
 void   MPI_BCAST( buffer, count, datatype, root, comm , ierr)
+void * buffer;
+MPI_Fint *count;
+MPI_Fint *datatype;
+MPI_Fint *root;
+MPI_Fint *comm;
+MPI_Fint *ierr;
+{
+  mpi_bcast_( buffer, count, datatype, root, comm , ierr);
+}
+
+void   MPI_BCAST_( buffer, count, datatype, root, comm , ierr)
 void * buffer;
 MPI_Fint *count;
 MPI_Fint *datatype;
@@ -490,6 +578,21 @@ MPI_Fint *ierr;
   mpi_gather_( sendbuf, sendcnt, sendtype, recvbuf, recvcount, recvtype, root, comm , ierr);
 }
 
+void  MPI_GATHER_( sendbuf, sendcnt, sendtype, recvbuf, recvcount, recvtype, root, comm , ierr)
+void * sendbuf;
+MPI_Fint *sendcnt;
+MPI_Fint *sendtype;
+void * recvbuf;
+MPI_Fint *recvcount;
+MPI_Fint *recvtype;
+MPI_Fint *root;
+MPI_Fint *comm;
+MPI_Fint *ierr;
+{
+  mpi_gather_( sendbuf, sendcnt, sendtype, recvbuf, recvcount, recvtype, root, comm , ierr);
+}
+
+
 void  mpi_gather( sendbuf, sendcnt, sendtype, recvbuf, recvcount, recvtype, root, comm , ierr)
 void * sendbuf;
 MPI_Fint *sendcnt;
@@ -554,6 +657,21 @@ MPI_Fint *ierr;
   mpi_gatherv_( sendbuf, sendcnt, sendtype, recvbuf, recvcnts, displs, recvtype, root, comm , ierr); 
 }
 
+void MPI_GATHERV_( sendbuf, sendcnt, sendtype, recvbuf, recvcnts, displs, recvtype, root, comm , ierr)
+void * sendbuf;
+MPI_Fint *sendcnt;
+MPI_Fint *sendtype;
+void * recvbuf;
+MPI_Fint * recvcnts;
+MPI_Fint * displs;
+MPI_Fint *recvtype;
+MPI_Fint *root;
+MPI_Fint *comm;
+MPI_Fint *ierr;
+{
+  mpi_gatherv_( sendbuf, sendcnt, sendtype, recvbuf, recvcnts, displs, recvtype, root, comm , ierr);
+}
+
 void mpi_gatherv( sendbuf, sendcnt, sendtype, recvbuf, recvcnts, displs, recvtype, root, comm , ierr)
 void * sendbuf;
 MPI_Fint *sendcnt;
@@ -602,6 +720,15 @@ MPI_Fint *ierr;
   mpi_op_create_( function, commute, op , ierr);
 }
 
+void MPI_OP_CREATE_( function, commute, op , ierr)
+MPI_User_function * function;
+MPI_Fint *commute;
+MPI_Fint * op;
+MPI_Fint *ierr;
+{
+  mpi_op_create_( function, commute, op , ierr);
+}
+
 void mpi_op_create( function, commute, op , ierr)
 MPI_User_function * function;
 MPI_Fint *commute;
@@ -639,6 +766,13 @@ MPI_Fint *ierr;
   mpi_op_free_( op , ierr); 
 } 
 
+void  MPI_OP_FREE_( op , ierr)
+MPI_Fint * op;
+MPI_Fint *ierr;
+{
+  mpi_op_free_( op , ierr);
+}
+
 void  mpi_op_free( op , ierr)
 MPI_Fint * op;
 MPI_Fint *ierr;
@@ -675,6 +809,18 @@ MPI_Fint *ierr;
 }
 
 void MPI_REDUCE_SCATTER( sendbuf, recvbuf, recvcnts, datatype, op, comm , ierr)
+void * sendbuf;
+void * recvbuf;
+MPI_Fint * recvcnts;
+MPI_Fint *datatype;
+MPI_Fint *op;
+MPI_Fint *comm;
+MPI_Fint *ierr;
+{
+  mpi_reduce_scatter_( sendbuf, recvbuf, recvcnts, datatype, op, comm , ierr);
+}
+
+void MPI_REDUCE_SCATTER_( sendbuf, recvbuf, recvcnts, datatype, op, comm , ierr)
 void * sendbuf;
 void * recvbuf;
 MPI_Fint * recvcnts;
@@ -740,6 +886,20 @@ MPI_Fint *ierr;
   mpi_reduce_( sendbuf, recvbuf, count, datatype, op, root, comm , ierr);
 }
 
+void MPI_REDUCE_( sendbuf, recvbuf, count, datatype, op, root, comm , ierr)
+void * sendbuf;
+void * recvbuf;
+MPI_Fint *count;
+MPI_Fint *datatype;
+MPI_Fint *op;
+MPI_Fint *root;
+MPI_Fint *comm;
+MPI_Fint *ierr;
+{
+  mpi_reduce_( sendbuf, recvbuf, count, datatype, op, root, comm , ierr);
+}
+
+
 void mpi_reduce( sendbuf, recvbuf, count, datatype, op, root, comm , ierr)
 void * sendbuf;
 void * recvbuf;
@@ -781,6 +941,18 @@ MPI_Fint *ierr;
 }
 
 void MPI_SCAN( sendbuf, recvbuf, count, datatype, op, comm, ierr)
+void * sendbuf;
+void * recvbuf;
+MPI_Fint *count;
+MPI_Fint *datatype;
+MPI_Fint *op;
+MPI_Fint *comm;
+MPI_Fint *ierr;
+{
+  mpi_scan_( sendbuf, recvbuf, count, datatype, op, comm, ierr);
+}
+
+void MPI_SCAN_( sendbuf, recvbuf, count, datatype, op, comm, ierr)
 void * sendbuf;
 void * recvbuf;
 MPI_Fint *count;
@@ -836,6 +1008,20 @@ MPI_Fint *ierr;
 }
 
 void   MPI_SCATTER( sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype, root, comm, ierr )
+void * sendbuf;
+MPI_Fint *sendcnt;
+MPI_Fint *sendtype;
+void * recvbuf;
+MPI_Fint *recvcnt;
+MPI_Fint *recvtype;
+MPI_Fint *root;
+MPI_Fint *comm;
+MPI_Fint *ierr;
+{
+  mpi_scatter_( sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype, root, comm, ierr );
+}
+
+void   MPI_SCATTER_( sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype, root, comm, ierr )
 void * sendbuf;
 MPI_Fint *sendcnt;
 MPI_Fint *sendtype;
@@ -912,6 +1098,21 @@ MPI_Fint *ierr;
   mpi_scatterv_( sendbuf, sendcnts, displs, sendtype, recvbuf, recvcnt, recvtype, root, comm , ierr);
 }
 
+void  MPI_SCATTERV_( sendbuf, sendcnts, displs, sendtype, recvbuf, recvcnt, recvtype, root, comm , ierr)
+void * sendbuf;
+MPI_Fint * sendcnts;
+MPI_Fint * displs;
+MPI_Fint *sendtype;
+void * recvbuf;
+MPI_Fint *recvcnt;
+MPI_Fint *recvtype;
+MPI_Fint *root;
+MPI_Fint *comm;
+MPI_Fint *ierr;
+{
+  mpi_scatterv_( sendbuf, sendcnts, displs, sendtype, recvbuf, recvcnt, recvtype, root, comm , ierr);
+}
+
 void  mpi_scatterv( sendbuf, sendcnts, displs, sendtype, recvbuf, recvcnt, recvtype, root, comm , ierr)
 void * sendbuf;
 MPI_Fint * sendcnts;
@@ -948,6 +1149,14 @@ MPI_Fint *ierr;
 }
 
 void   MPI_ATTR_DELETE( comm, keyval, ierr)
+MPI_Fint *comm;
+MPI_Fint *keyval;
+MPI_Fint *ierr;
+{
+  mpi_attr_delete_( comm, keyval, ierr);
+}
+
+void   MPI_ATTR_DELETE_( comm, keyval, ierr)
 MPI_Fint *comm;
 MPI_Fint *keyval;
 MPI_Fint *ierr;
@@ -997,6 +1206,16 @@ MPI_Fint *ierr;
   mpi_attr_get_( comm, keyval, attr_value, flag , ierr);
 }
 
+void MPI_ATTR_GET_( comm, keyval, attr_value, flag , ierr)
+MPI_Fint *comm;
+MPI_Fint *keyval;
+void * attr_value;
+MPI_Fint * flag;
+MPI_Fint *ierr;
+{
+  mpi_attr_get_( comm, keyval, attr_value, flag , ierr);
+}
+
 void mpi_attr_get( comm, keyval, attr_value, flag , ierr)
 MPI_Fint *comm;
 MPI_Fint *keyval;
@@ -1037,6 +1256,15 @@ MPI_Fint *ierr;
   mpi_attr_put_( comm, keyval, attr_value, ierr);
 }
 
+void   MPI_ATTR_PUT_( comm, keyval, attr_value, ierr)
+MPI_Fint *comm;
+MPI_Fint *keyval;
+void * attr_value;
+MPI_Fint *ierr;
+{
+  mpi_attr_put_( comm, keyval, attr_value, ierr);
+}
+
 void   mpi_attr_put( comm, keyval, attr_value, ierr)
 MPI_Fint *comm;
 MPI_Fint *keyval;
@@ -1068,6 +1296,15 @@ MPI_Fint *ierr;
 }
 
 void  MPI_COMM_COMPARE( comm1, comm2, result, ierr )
+MPI_Fint *comm1;
+MPI_Fint *comm2;
+MPI_Fint * result;
+MPI_Fint *ierr;
+{
+  mpi_comm_compare_( comm1, comm2, result, ierr );
+}
+
+void  MPI_COMM_COMPARE_( comm1, comm2, result, ierr )
 MPI_Fint *comm1;
 MPI_Fint *comm2;
 MPI_Fint * result;
@@ -1117,6 +1354,15 @@ MPI_Fint *ierr;
   mpi_comm_create_( comm, group, comm_out, ierr );
 }
 
+void  MPI_COMM_CREATE_( comm, group, comm_out, ierr )
+MPI_Fint *comm;
+MPI_Fint *group;
+MPI_Fint * comm_out;
+MPI_Fint *ierr;
+{
+  mpi_comm_create_( comm, group, comm_out, ierr );
+}
+
 void  mpi_comm_create( comm, group, comm_out, ierr )
 MPI_Fint *comm;
 MPI_Fint *group;
@@ -1155,6 +1401,15 @@ MPI_Fint *ierr;
   mpi_comm_dup_( comm, comm_out, ierr );
 }
 
+void   MPI_COMM_DUP_( comm, comm_out, ierr )
+MPI_Fint *comm;
+MPI_Fint * comm_out;
+MPI_Fint *ierr;
+{
+  mpi_comm_dup_( comm, comm_out, ierr );
+}
+
+
 void   mpi_comm_dup( comm, comm_out, ierr )
 MPI_Fint *comm;
 MPI_Fint * comm_out;
@@ -1183,6 +1438,13 @@ MPI_Fint *ierr;
 }
 
 void   MPI_COMM_FREE( comm, ierr)
+MPI_Fint * comm;
+MPI_Fint *ierr;
+{
+  mpi_comm_free_( comm, ierr);
+}
+
+void   MPI_COMM_FREE_( comm, ierr)
 MPI_Fint * comm;
 MPI_Fint *ierr;
 {
@@ -1226,6 +1488,14 @@ MPI_Fint *ierr;
   mpi_comm_group_( comm, group, ierr );
 }
 
+void   MPI_COMM_GROUP_( comm, group, ierr )
+MPI_Fint *comm;
+MPI_Fint * group;
+MPI_Fint *ierr;
+{
+  mpi_comm_group_( comm, group, ierr );
+}
+
 void   mpi_comm_group( comm, group, ierr )
 MPI_Fint *comm;
 MPI_Fint * group;
@@ -1255,6 +1525,14 @@ MPI_Fint *ierr;
 }
 
 void   MPI_COMM_RANK( comm, rank, ierr )
+MPI_Fint *comm;
+MPI_Fint * rank;
+MPI_Fint *ierr;
+{
+  mpi_comm_rank_( comm, rank, ierr );
+}
+
+void   MPI_COMM_RANK_( comm, rank, ierr )
 MPI_Fint *comm;
 MPI_Fint * rank;
 MPI_Fint *ierr;
@@ -1300,6 +1578,14 @@ MPI_Fint *ierr;
   mpi_comm_remote_group_( comm, group, ierr );
 }
 
+void   MPI_COMM_REMOTE_GROUP_( comm, group, ierr )
+MPI_Fint *comm;
+MPI_Fint * group;
+MPI_Fint *ierr;
+{
+  mpi_comm_remote_group_( comm, group, ierr );
+}
+
 void   mpi_comm_remote_group( comm, group, ierr )
 MPI_Fint *comm;
 MPI_Fint * group;
@@ -1336,6 +1622,14 @@ MPI_Fint *ierr;
   mpi_comm_remote_size_( comm, size, ierr );
 }
 
+void   MPI_COMM_REMOTE_SIZE_( comm, size, ierr )
+MPI_Fint *comm;
+MPI_Fint * size;
+MPI_Fint *ierr;
+{
+  mpi_comm_remote_size_( comm, size, ierr );
+}
+
 void   mpi_comm_remote_size( comm, size, ierr )
 MPI_Fint *comm;
 MPI_Fint * size;
@@ -1365,6 +1659,14 @@ MPI_Fint *ierr;
 }
 
 void   MPI_COMM_SIZE( comm, size , ierr)
+MPI_Fint *comm;
+MPI_Fint * size;
+MPI_Fint *ierr;
+{
+  mpi_comm_size_( comm, size , ierr);
+}
+
+void   MPI_COMM_SIZE_( comm, size , ierr)
 MPI_Fint *comm;
 MPI_Fint * size;
 MPI_Fint *ierr;
@@ -1415,6 +1717,17 @@ MPI_Fint *ierr;
   mpi_comm_split_( comm, color, key, comm_out, ierr );
 }
 
+void   MPI_COMM_SPLIT_( comm, color, key, comm_out, ierr )
+MPI_Fint *comm;
+MPI_Fint *color;
+MPI_Fint *key;
+MPI_Fint * comm_out;
+MPI_Fint *ierr;
+{
+  mpi_comm_split_( comm, color, key, comm_out, ierr );
+}
+
+
 void   mpi_comm_split( comm, color, key, comm_out, ierr )
 MPI_Fint *comm;
 MPI_Fint *color;
@@ -1445,6 +1758,14 @@ MPI_Fint *ierr;
 }
 
 void   MPI_COMM_TEST_INTER( comm, flag, ierr )
+MPI_Fint *comm;
+MPI_Fint * flag;
+MPI_Fint *ierr;
+{
+  mpi_comm_test_inter_( comm, flag, ierr );
+}
+
+void   MPI_COMM_TEST_INTER_( comm, flag, ierr )
 MPI_Fint *comm;
 MPI_Fint * flag;
 MPI_Fint *ierr;
@@ -1490,6 +1811,16 @@ MPI_Fint *ierr;
   mpi_group_compare_( group1, group2, result, ierr );
 }
 
+void   MPI_GROUP_COMPARE_( group1, group2, result, ierr )
+MPI_Fint *group1;
+MPI_Fint *group2;
+MPI_Fint * result;
+MPI_Fint *ierr;
+{
+  mpi_group_compare_( group1, group2, result, ierr );
+}
+
+
 void   mpi_group_compare( group1, group2, result, ierr )
 MPI_Fint *group1;
 MPI_Fint *group2;
@@ -1524,6 +1855,15 @@ MPI_Fint *ierr;
 }
 
 void   MPI_GROUP_DIFFERENCE( group1, group2, group_out, ierr )
+MPI_Fint *group1;
+MPI_Fint *group2;
+MPI_Fint * group_out;
+MPI_Fint *ierr;
+{
+  mpi_group_difference_( group1, group2, group_out, ierr );
+}
+
+void   MPI_GROUP_DIFFERENCE_( group1, group2, group_out, ierr )
 MPI_Fint *group1;
 MPI_Fint *group2;
 MPI_Fint * group_out;
@@ -1576,6 +1916,17 @@ MPI_Fint *ierr;
   mpi_group_excl_( group, n, ranks, newgroup, ierr );
 }
 
+void   MPI_GROUP_EXCL_( group, n, ranks, newgroup, ierr )
+MPI_Fint *group;
+MPI_Fint *n;
+MPI_Fint * ranks;
+MPI_Fint * newgroup;
+MPI_Fint *ierr;
+{
+  mpi_group_excl_( group, n, ranks, newgroup, ierr );
+}
+
+
 void   mpi_group_excl( group, n, ranks, newgroup, ierr )
 MPI_Fint *group;
 MPI_Fint *n;
@@ -1606,6 +1957,13 @@ MPI_Fint *ierr;
 }
 
 void   MPI_GROUP_FREE( group, ierr)
+MPI_Fint * group;
+MPI_Fint *ierr;
+{
+  mpi_group_free_( group, ierr);
+}
+
+void   MPI_GROUP_FREE_( group, ierr)
 MPI_Fint * group;
 MPI_Fint *ierr;
 {
@@ -1654,6 +2012,17 @@ MPI_Fint *ierr;
   mpi_group_incl_( group, n, ranks, group_out, ierr );
 }
 
+void   MPI_GROUP_INCL_( group, n, ranks, group_out, ierr )
+MPI_Fint *group;
+MPI_Fint *n;
+MPI_Fint * ranks;
+MPI_Fint * group_out;
+MPI_Fint *ierr;
+{
+  mpi_group_incl_( group, n, ranks, group_out, ierr );
+}
+
+
 void   mpi_group_incl( group, n, ranks, group_out, ierr )
 MPI_Fint *group;
 MPI_Fint *n;
@@ -1688,6 +2057,15 @@ MPI_Fint *ierr;
 }
 
 void   MPI_GROUP_INTERSECTION( group1, group2, group_out, ierr )
+MPI_Fint *group1;
+MPI_Fint *group2;
+MPI_Fint * group_out;
+MPI_Fint *ierr;
+{
+  mpi_group_intersection_( group1, group2, group_out, ierr );
+}
+
+void   MPI_GROUP_INTERSECTION_( group1, group2, group_out, ierr )
 MPI_Fint *group1;
 MPI_Fint *group2;
 MPI_Fint * group_out;
@@ -1732,6 +2110,15 @@ MPI_Fint *ierr;
   mpi_group_rank_( group, rank, ierr);
 }
 
+
+void   MPI_GROUP_RANK_( group, rank, ierr)
+MPI_Fint *group;
+MPI_Fint * rank;
+MPI_Fint *ierr;
+{
+  mpi_group_rank_( group, rank, ierr);
+}
+
 void   mpi_group_rank( group, rank, ierr)
 MPI_Fint *group;
 MPI_Fint * rank;
@@ -1766,6 +2153,16 @@ MPI_Fint *ierr;
 }
 
 void   MPI_GROUP_RANGE_EXCL( group, n, ranges, newgroup, ierr )
+MPI_Fint *group;
+MPI_Fint *n;
+int ranges[][3];
+MPI_Fint * newgroup;
+MPI_Fint *ierr;
+{
+  mpi_group_range_excl_( group, n, ranges, newgroup, ierr );
+}
+
+void   MPI_GROUP_RANGE_EXCL_( group, n, ranges, newgroup, ierr )
 MPI_Fint *group;
 MPI_Fint *n;
 int ranges[][3];
@@ -1822,6 +2219,17 @@ MPI_Fint *ierr;
   mpi_group_range_incl_( group, n, ranges, newgroup, ierr );
 }
 
+void   MPI_GROUP_RANGE_INCL_( group, n, ranges, newgroup, ierr )
+MPI_Fint *group;
+MPI_Fint *n;
+int ranges[][3];
+MPI_Fint * newgroup;
+MPI_Fint *ierr;
+{
+  mpi_group_range_incl_( group, n, ranges, newgroup, ierr );
+}
+
+
 void   mpi_group_range_incl( group, n, ranges, newgroup, ierr )
 MPI_Fint *group;
 MPI_Fint *n;
@@ -1852,6 +2260,14 @@ MPI_Fint *ierr;
 }
 
 void   MPI_GROUP_SIZE( group, size, ierr )
+MPI_Fint *group;
+MPI_Fint * size;
+MPI_Fint *ierr;
+{
+  mpi_group_size_( group, size, ierr );
+}
+
+void   MPI_GROUP_SIZE_( group, size, ierr )
 MPI_Fint *group;
 MPI_Fint * size;
 MPI_Fint *ierr;
@@ -1894,6 +2310,17 @@ MPI_Fint *ierr;
 }
 
 void   MPI_GROUP_TRANSLATE_RANKS( group_a, n, ranks_a, group_b, ranks_b, ierr)
+MPI_Fint *group_a;
+MPI_Fint *n;
+MPI_Fint * ranks_a;
+MPI_Fint *group_b;
+MPI_Fint * ranks_b;
+MPI_Fint *ierr;
+{
+  mpi_group_translate_ranks_( group_a, n, ranks_a, group_b, ranks_b, ierr);
+}
+
+void   MPI_GROUP_TRANSLATE_RANKS_( group_a, n, ranks_a, group_b, ranks_b, ierr)
 MPI_Fint *group_a;
 MPI_Fint *n;
 MPI_Fint * ranks_a;
@@ -1947,6 +2374,17 @@ MPI_Fint *ierr;
   mpi_group_union_( group1, group2, group_out, ierr );
 }
 
+void   MPI_GROUP_UNION_( group1, group2, group_out, ierr )
+MPI_Fint *group1;
+MPI_Fint *group2;
+MPI_Fint * group_out;
+MPI_Fint *ierr;
+{
+  mpi_group_union_( group1, group2, group_out, ierr );
+}
+
+
+
 void   mpi_group_union( group1, group2, group_out, ierr )
 MPI_Fint *group1;
 MPI_Fint *group2;
@@ -1997,6 +2435,19 @@ MPI_Fint *ierr;
   mpi_intercomm_create_( local_comm, local_leader, peer_comm, remote_leader, tag, comm_out, ierr );
 }
 
+void   MPI_INTERCOMM_CREATE_( local_comm, local_leader, peer_comm, remote_leader, tag, comm_out, ierr )
+MPI_Fint *local_comm;
+MPI_Fint *local_leader;
+MPI_Fint *peer_comm;
+MPI_Fint *remote_leader;
+MPI_Fint *tag;
+MPI_Fint * comm_out;
+MPI_Fint *ierr;
+{
+  mpi_intercomm_create_( local_comm, local_leader, peer_comm, remote_leader, tag, comm_out, ierr );
+}
+
+
 void   mpi_intercomm_create( local_comm, local_leader, peer_comm, remote_leader, tag, comm_out, ierr )
 MPI_Fint *local_comm;
 MPI_Fint *local_leader;
@@ -2041,6 +2492,16 @@ MPI_Fint *ierr;
   mpi_intercomm_merge_( comm, high, comm_out, ierr );
 }
 
+void   MPI_INTERCOMM_MERGE_( comm, high, comm_out, ierr )
+MPI_Fint *comm;
+MPI_Fint *high;
+MPI_Fint * comm_out;
+MPI_Fint *ierr;
+{
+  mpi_intercomm_merge_( comm, high, comm_out, ierr );
+}
+
+
 void   mpi_intercomm_merge( comm, high, comm_out, ierr )
 MPI_Fint *comm;
 MPI_Fint *high;
@@ -2074,6 +2535,16 @@ MPI_Fint *ierr;
 }
 
 void   MPI_KEYVAL_CREATE( copy_fn, delete_fn, keyval, extra_state, ierr )
+MPI_Copy_function * copy_fn;
+MPI_Delete_function * delete_fn;
+MPI_Fint * keyval;
+void * extra_state;
+MPI_Fint *ierr;
+{
+  mpi_keyval_create_( copy_fn, delete_fn, keyval, extra_state, ierr );
+}
+
+void   MPI_KEYVAL_CREATE_( copy_fn, delete_fn, keyval, extra_state, ierr )
 MPI_Copy_function * copy_fn;
 MPI_Delete_function * delete_fn;
 MPI_Fint * keyval;
@@ -2118,6 +2589,14 @@ MPI_Fint *ierr;
   mpi_keyval_free_( keyval, ierr );
 }
 
+void   MPI_KEYVAL_FREE_( keyval, ierr )
+MPI_Fint * keyval;
+MPI_Fint *ierr;
+{
+  mpi_keyval_free_( keyval, ierr );
+}
+
+
 void   mpi_keyval_free( keyval, ierr )
 MPI_Fint * keyval;
 MPI_Fint *ierr;
@@ -2153,6 +2632,14 @@ MPI_Fint *ierr;
   mpi_abort_( comm, errorcode , ierr);
 }
 
+void  MPI_ABORT_( comm, errorcode , ierr)
+MPI_Fint *comm;
+MPI_Fint *errorcode;
+MPI_Fint *ierr;
+{
+  mpi_abort_( comm, errorcode , ierr);
+}
+
 void  mpi_abort( comm, errorcode , ierr)
 MPI_Fint *comm;
 MPI_Fint *errorcode;
@@ -2181,6 +2668,14 @@ MPI_Fint *ierr;
 }
 
 void  MPI_ERROR_CLASS( errorcode, errorclass, ierr )
+MPI_Fint *errorcode;
+MPI_Fint * errorclass;
+MPI_Fint *ierr;
+{
+  mpi_error_class_( errorcode, errorclass, ierr );
+}
+
+void  MPI_ERROR_CLASS_( errorcode, errorclass, ierr )
 MPI_Fint *errorcode;
 MPI_Fint * errorclass;
 MPI_Fint *ierr;
@@ -2224,6 +2719,15 @@ MPI_Fint *ierr;
   mpi_errhandler_create_( function, errhandler , ierr);
 }
 
+
+void  MPI_ERRHANDLER_CREATE_( function, errhandler , ierr)
+MPI_Handler_function * function;
+MPI_Errhandler * errhandler;
+MPI_Fint *ierr;
+{
+  mpi_errhandler_create_( function, errhandler , ierr);
+}
+
 void  mpi_errhandler_create( function, errhandler , ierr)
 MPI_Handler_function * function;
 MPI_Errhandler * errhandler;
@@ -2256,6 +2760,14 @@ MPI_Fint *ierr;
 {
   mpi_errhandler_free_( errhandler, ierr );
 }
+
+void  MPI_ERRHANDLER_FREE_( errhandler, ierr )
+MPI_Errhandler * errhandler;
+MPI_Fint *ierr;
+{
+  mpi_errhandler_free_( errhandler, ierr );
+}
+
 
 void  mpi_errhandler_free( errhandler, ierr )
 MPI_Errhandler * errhandler;
@@ -2291,6 +2803,15 @@ MPI_Fint *ierr;
   mpi_errhandler_get_( comm, errhandler, ierr );
 }
 
+void  MPI_ERRHANDLER_GET_( comm, errhandler, ierr )
+MPI_Fint *comm;
+MPI_Errhandler * errhandler;
+MPI_Fint *ierr;
+{
+  mpi_errhandler_get_( comm, errhandler, ierr );
+}
+
+
 void  mpi_errhandler_get( comm, errhandler, ierr )
 MPI_Fint *comm;
 MPI_Errhandler * errhandler;
@@ -2321,6 +2842,15 @@ MPI_Fint *ierr;
 }
 
 void  MPI_ERROR_STRING( errorcode, string, resultlen, ierr )
+MPI_Fint *errorcode;
+char * string;
+MPI_Fint * resultlen;
+MPI_Fint *ierr;
+{
+  mpi_error_string_( errorcode, string, resultlen, ierr );
+}
+
+void  MPI_ERROR_STRING_( errorcode, string, resultlen, ierr )
 MPI_Fint *errorcode;
 char * string;
 MPI_Fint * resultlen;
@@ -2365,6 +2895,15 @@ MPI_Fint *ierr;
   mpi_errhandler_set_( comm, errhandler, ierr );
 }
 
+
+void  MPI_ERRHANDLER_SET_( comm, errhandler, ierr )
+MPI_Fint *comm;
+MPI_Errhandler *errhandler;
+MPI_Fint *ierr;
+{
+  mpi_errhandler_set_( comm, errhandler, ierr );
+}
+
 void  mpi_errhandler_set( comm, errhandler, ierr )
 MPI_Fint *comm;
 MPI_Errhandler *errhandler;
@@ -2389,6 +2928,12 @@ MPI_Fint *ierr;
 }
 
 void  MPI_FINALIZE( ierr )
+MPI_Fint *ierr;
+{
+  mpi_finalize_( ierr );
+}
+
+void  MPI_FINALIZE_( ierr )
 MPI_Fint *ierr;
 {
   mpi_finalize_( ierr );
@@ -2427,6 +2972,14 @@ MPI_Fint *ierr;
   mpi_get_processor_name_( name, resultlen, ierr );
 } 
 
+void  MPI_GET_PROCESSOR_NAME_( name, resultlen, ierr )
+char * name;
+MPI_Fint * resultlen;
+MPI_Fint *ierr;
+{
+  mpi_get_processor_name_( name, resultlen, ierr );
+}
+
 void  mpi_get_processor_name( name, resultlen, ierr )
 char * name; 
 MPI_Fint * resultlen;
@@ -2452,6 +3005,12 @@ MPI_Fint *ierr;
 }
 
 void  MPI_INIT( ierr)
+MPI_Fint *ierr;
+{
+  mpi_init_( ierr);
+}
+
+void  MPI_INIT_( ierr)
 MPI_Fint *ierr;
 {
   mpi_init_( ierr);
@@ -2491,6 +3050,14 @@ MPI_Fint *ierr;
   mpi_init_thread_(required, provided, ierr );
 } 
 
+void  MPI_INIT_THREAD_(required, provided, ierr )
+MPI_Fint *required;
+MPI_Fint *provided;
+MPI_Fint *ierr;
+{
+  mpi_init_thread_(required, provided, ierr );
+}
+
 void  mpi_init_thread(required, provided, ierr )
 MPI_Fint *required;
 MPI_Fint *provided;
@@ -2520,6 +3087,11 @@ double  MPI_WTICK( )
   return MPI_Wtick(  );
 }
 
+double  MPI_WTICK_( )
+{
+  return MPI_Wtick(  );
+}
+
 double  mpi_wtick( )
 {
   return MPI_Wtick(  );
@@ -2543,10 +3115,16 @@ double  MPI_WTIME(  )
   return MPI_Wtime(  );
 }
 
+double  MPI_WTIME_(  )
+{
+  return MPI_Wtime(  );
+}
+
 double  mpi_wtime(  )
 {
   return MPI_Wtime(  );
 }
+
 
 /******************************************************/
 /******************************************************/
@@ -2570,6 +3148,14 @@ MPI_Fint *ierr;
 }
 
 void  MPI_ADDRESS( location, address , ierr)
+void * location;
+MPI_Fint * address;
+MPI_Fint *ierr;
+{
+  mpi_address_( location, address , ierr);
+}
+
+void  MPI_ADDRESS_( location, address , ierr)
 void * location;
 MPI_Fint * address;
 MPI_Fint *ierr;
@@ -2612,6 +3198,18 @@ MPI_Fint *ierr;
 }
 
 void  MPI_BSEND( buf, count, datatype, dest, tag, comm, ierr )
+void * buf;
+MPI_Fint *count;
+MPI_Fint *datatype;
+MPI_Fint *dest;
+MPI_Fint *tag;
+MPI_Fint *comm;
+MPI_Fint *ierr;
+{
+  mpi_bsend_( buf, count, datatype, dest, tag, comm, ierr );
+}
+
+void  MPI_BSEND_( buf, count, datatype, dest, tag, comm, ierr )
 void * buf;
 MPI_Fint *count;
 MPI_Fint *datatype;
@@ -2679,6 +3277,19 @@ MPI_Fint *ierr;
   mpi_bsend_init_( buf, count, datatype, dest, tag, comm, request, ierr );
 }
 
+void  MPI_BSEND_INIT_( buf, count, datatype, dest, tag, comm, request, ierr )
+void * buf;
+MPI_Fint *count;
+MPI_Fint *datatype;
+MPI_Fint *dest;
+MPI_Fint *tag;
+MPI_Fint *comm;
+MPI_Fint * request;
+MPI_Fint *ierr;
+{
+  mpi_bsend_init_( buf, count, datatype, dest, tag, comm, request, ierr );
+}
+
 void  mpi_bsend_init( buf, count, datatype, dest, tag, comm, request, ierr )
 void * buf;
 MPI_Fint *count;
@@ -2719,6 +3330,15 @@ MPI_Fint *ierr;
   mpi_buffer_attach_( buffer, size, ierr );
 }
 
+void  MPI_BUFFER_ATTACH_( buffer, size, ierr )
+void * buffer;
+MPI_Fint *size;
+MPI_Fint *ierr;
+{
+  mpi_buffer_attach_( buffer, size, ierr );
+}
+
+
 void  mpi_buffer_attach( buffer, size, ierr )
 void * buffer;
 MPI_Fint *size;
@@ -2747,6 +3367,14 @@ MPI_Fint *ierr;
 }
 
 void  MPI_BUFFER_DETACH( buffer, size, ierr )
+void * buffer;
+MPI_Fint * size;
+MPI_Fint *ierr;
+{
+  mpi_buffer_detach_( buffer, size, ierr );
+}
+
+void  MPI_BUFFER_DETACH_( buffer, size, ierr )
 void * buffer;
 MPI_Fint * size;
 MPI_Fint *ierr;
@@ -2787,6 +3415,14 @@ MPI_Fint *ierr;
   mpi_cancel_( request, ierr );
 }
 
+void  MPI_CANCEL_( request, ierr )
+MPI_Fint * request;
+MPI_Fint *ierr;
+{
+  mpi_cancel_( request, ierr );
+}
+
+
 void  mpi_cancel( request, ierr )
 MPI_Fint * request;
 MPI_Fint *ierr;
@@ -2819,6 +3455,14 @@ MPI_Fint *ierr;
 {
   mpi_request_free_( request, ierr );
 }
+
+void  MPI_REQUEST_FREE_( request, ierr )
+MPI_Fint * request;
+MPI_Fint *ierr;
+{
+  mpi_request_free_( request, ierr );
+}
+
 
 void  mpi_request_free( request, ierr )
 MPI_Fint * request;
@@ -2859,6 +3503,19 @@ MPI_Fint *ierr;
 }
 
 void  MPI_RECV_INIT( buf, count, datatype, source, tag, comm, request, ierr )
+void * buf;
+MPI_Fint *count;
+MPI_Fint *datatype;
+MPI_Fint *source;
+MPI_Fint *tag;
+MPI_Fint *comm;
+MPI_Fint * request;
+MPI_Fint *ierr;
+{
+  mpi_recv_init_( buf, count, datatype, source, tag, comm, request, ierr );
+}
+
+void  MPI_RECV_INIT_( buf, count, datatype, source, tag, comm, request, ierr )
 void * buf;
 MPI_Fint *count;
 MPI_Fint *datatype;
@@ -2929,6 +3586,19 @@ MPI_Fint *ierr;
   mpi_send_init_( buf, count, datatype, dest, tag, comm, request, ierr );
 }
 
+void  MPI_SEND_INIT_( buf, count, datatype, dest, tag, comm, request, ierr )
+void * buf;
+MPI_Fint *count;
+MPI_Fint *datatype;
+MPI_Fint *dest;
+MPI_Fint *tag;
+MPI_Fint *comm;
+MPI_Fint * request;
+MPI_Fint *ierr;
+{
+  mpi_send_init_( buf, count, datatype, dest, tag, comm, request, ierr );
+}
+
 void  mpi_send_init( buf, count, datatype, dest, tag, comm, request, ierr )
 void * buf;
 MPI_Fint *count;
@@ -2974,6 +3644,16 @@ MPI_Fint *ierr;
   mpi_get_elements_( status, datatype, elements, ierr );
 }
 
+void   MPI_GET_ELEMENTS_( status, datatype, elements, ierr )
+MPI_Fint * status;
+MPI_Fint *datatype;
+MPI_Fint * elements;
+MPI_Fint *ierr;
+{
+  mpi_get_elements_( status, datatype, elements, ierr );
+}
+
+
 void   mpi_get_elements( status, datatype, elements, ierr )
 MPI_Fint * status;
 MPI_Fint *datatype;
@@ -3007,6 +3687,15 @@ MPI_Fint *ierr;
 }
 
 void  MPI_GET_COUNT( status, datatype, count, ierr )
+MPI_Fint * status;
+MPI_Fint *datatype;
+MPI_Fint * count;
+MPI_Fint *ierr;
+{
+  mpi_get_count_( status, datatype, count, ierr );
+}
+
+void  MPI_GET_COUNT_( status, datatype, count, ierr )
 MPI_Fint * status;
 MPI_Fint *datatype;
 MPI_Fint * count;
@@ -3056,6 +3745,19 @@ MPI_Fint *ierr;
 }
 
 void  MPI_IBSEND( buf, count, datatype, dest, tag, comm, request, ierr )
+void * buf;
+MPI_Fint *count;
+MPI_Fint *datatype;
+MPI_Fint *dest;
+MPI_Fint *tag;
+MPI_Fint *comm;
+MPI_Fint * request;
+MPI_Fint *ierr;
+{
+  mpi_ibsend_( buf, count, datatype, dest, tag, comm, request, ierr );
+}
+
+void  MPI_IBSEND_( buf, count, datatype, dest, tag, comm, request, ierr )
 void * buf;
 MPI_Fint *count;
 MPI_Fint *datatype;
@@ -3119,6 +3821,19 @@ MPI_Fint *ierr;
   mpi_iprobe_( source, tag, comm, flag, status, ierr );
 }
 
+void  MPI_IPROBE_( source, tag, comm, flag, status, ierr )
+MPI_Fint *source;
+MPI_Fint *tag;
+MPI_Fint *comm;
+MPI_Fint * flag;
+MPI_Fint * status;
+MPI_Fint *ierr;
+{
+  mpi_iprobe_( source, tag, comm, flag, status, ierr );
+}
+
+
+
 void  mpi_iprobe( source, tag, comm, flag, status, ierr )
 MPI_Fint *source;
 MPI_Fint *tag;
@@ -3173,6 +3888,20 @@ MPI_Fint *ierr;
 {
   mpi_irecv_( buf, count, datatype, source, tag, comm, request, ierr );
 }
+
+void  MPI_IRECV_( buf, count, datatype, source, tag, comm, request, ierr )
+void * buf;
+MPI_Fint *count;
+MPI_Fint *datatype;
+MPI_Fint *source;
+MPI_Fint *tag;
+MPI_Fint *comm;
+MPI_Fint * request;
+MPI_Fint *ierr;
+{
+  mpi_irecv_( buf, count, datatype, source, tag, comm, request, ierr );
+}
+
 
 void  mpi_irecv( buf, count, datatype, source, tag, comm, request, ierr )
 void * buf;
@@ -3231,6 +3960,21 @@ MPI_Fint *ierr;
   mpi_irsend_( buf, count, datatype, dest, tag, comm, request, ierr );
 } 
 
+
+void  MPI_IRSEND_( buf, count, datatype, dest, tag, comm, request, ierr )
+void * buf;
+MPI_Fint *count;
+MPI_Fint *datatype;
+MPI_Fint *dest;
+MPI_Fint *tag;
+MPI_Fint *comm;
+MPI_Fint * request;
+MPI_Fint *ierr;
+{
+  mpi_irsend_( buf, count, datatype, dest, tag, comm, request, ierr );
+}
+
+
 void  mpi_irsend( buf, count, datatype, dest, tag, comm, request, ierr )
 void * buf;
 MPI_Fint *count;
@@ -3276,6 +4020,19 @@ MPI_Fint *ierr;
 }
 
 void  MPI_ISEND( buf, count, datatype, dest, tag, comm, request, ierr )
+void * buf;
+MPI_Fint *count;
+MPI_Fint *datatype;
+MPI_Fint *dest;
+MPI_Fint *tag;
+MPI_Fint *comm;
+MPI_Fint * request;
+MPI_Fint *ierr;
+{
+  mpi_isend_( buf, count, datatype, dest, tag, comm, request, ierr );
+}
+
+void  MPI_ISEND_( buf, count, datatype, dest, tag, comm, request, ierr )
 void * buf;
 MPI_Fint *count;
 MPI_Fint *datatype;
@@ -3345,6 +4102,20 @@ MPI_Fint *ierr;
   mpi_issend_( buf, count, datatype, dest, tag, comm, request, ierr );
 }
 
+void  MPI_ISSEND_( buf, count, datatype, dest, tag, comm, request, ierr )
+void * buf;
+MPI_Fint *count;
+MPI_Fint *datatype;
+MPI_Fint *dest;
+MPI_Fint *tag;
+MPI_Fint *comm;
+MPI_Fint * request;
+MPI_Fint *ierr;
+{
+  mpi_issend_( buf, count, datatype, dest, tag, comm, request, ierr );
+}
+
+
 void  mpi_issend( buf, count, datatype, dest, tag, comm, request, ierr )
 void * buf;
 MPI_Fint *count;
@@ -3401,6 +4172,20 @@ MPI_Fint *ierr;
   mpi_pack_( inbuf, incount, type, outbuf, outcount, position, comm, ierr );
 }
 
+void   MPI_PACK_( inbuf, incount, type, outbuf, outcount, position, comm, ierr )
+void * inbuf;
+MPI_Fint *incount;
+MPI_Fint *type;
+void * outbuf;
+MPI_Fint *outcount;
+MPI_Fint * position;
+MPI_Fint *comm;
+MPI_Fint *ierr;
+{
+  mpi_pack_( inbuf, incount, type, outbuf, outcount, position, comm, ierr );
+}
+
+
 void   mpi_pack( inbuf, incount, type, outbuf, outcount, position, comm, ierr )
 void * inbuf;
 MPI_Fint *incount;
@@ -3438,6 +4223,16 @@ MPI_Fint *ierr;
 }
 
 void   MPI_PACK_SIZE( incount, datatype, comm, size, ierr )
+MPI_Fint *incount;
+MPI_Fint *datatype;
+MPI_Fint *comm;
+MPI_Fint * size;
+MPI_Fint *ierr;
+{
+  mpi_pack_size_( incount, datatype, comm, size, ierr );
+}
+
+void   MPI_PACK_SIZE_( incount, datatype, comm, size, ierr )
 MPI_Fint *incount;
 MPI_Fint *datatype;
 MPI_Fint *comm;
@@ -3491,6 +4286,17 @@ MPI_Fint *ierr;
 {
   mpi_probe_( source, tag, comm, status, ierr );
 }
+
+void  MPI_PROBE_( source, tag, comm, status, ierr )
+MPI_Fint *source;
+MPI_Fint *tag;
+MPI_Fint *comm;
+MPI_Fint * status;
+MPI_Fint *ierr;
+{
+  mpi_probe_( source, tag, comm, status, ierr );
+}
+
 
 void  mpi_probe( source, tag, comm, status, ierr )
 MPI_Fint *source;
@@ -3548,6 +4354,20 @@ MPI_Fint *ierr;
   mpi_recv_( buf, count, datatype, source, tag, comm, status, ierr );
 }
 
+
+void  MPI_RECV_( buf, count, datatype, source, tag, comm, status, ierr )
+void * buf;
+MPI_Fint *count;
+MPI_Fint *datatype;
+MPI_Fint *source;
+MPI_Fint *tag;
+MPI_Fint *comm;
+MPI_Fint * status;
+MPI_Fint *ierr;
+{
+  mpi_recv_( buf, count, datatype, source, tag, comm, status, ierr );
+}
+
 void  mpi_recv( buf, count, datatype, source, tag, comm, status, ierr )
 void * buf;
 MPI_Fint *count;
@@ -3589,6 +4409,18 @@ MPI_Fint *ierr;
 }
 
 void  MPI_RSEND( buf, count, datatype, dest, tag, comm, ierr )
+void * buf;
+MPI_Fint *count;
+MPI_Fint *datatype;
+MPI_Fint *dest;
+MPI_Fint *tag;
+MPI_Fint *comm;
+MPI_Fint *ierr;
+{
+  mpi_rsend_( buf, count, datatype, dest, tag, comm, ierr );
+}
+
+void  MPI_RSEND_( buf, count, datatype, dest, tag, comm, ierr )
 void * buf;
 MPI_Fint *count;
 MPI_Fint *datatype;
@@ -3656,6 +4488,20 @@ MPI_Fint *ierr;
   mpi_rsend_init_( buf, count, datatype, dest, tag, comm, request, ierr );
 }
 
+void  MPI_RSEND_INIT_( buf, count, datatype, dest, tag, comm, request, ierr )
+void * buf;
+MPI_Fint *count;
+MPI_Fint *datatype;
+MPI_Fint *dest;
+MPI_Fint *tag;
+MPI_Fint *comm;
+MPI_Fint * request;
+MPI_Fint *ierr;
+{
+  mpi_rsend_init_( buf, count, datatype, dest, tag, comm, request, ierr );
+}
+
+
 void  mpi_rsend_init( buf, count, datatype, dest, tag, comm, request, ierr ) 
 void * buf;
 MPI_Fint *count;
@@ -3695,6 +4541,18 @@ MPI_Fint *ierr;
 }
 
 void  MPI_SEND( buf, count, datatype, dest, tag, comm, ierr )
+void * buf;
+MPI_Fint *count;
+MPI_Fint *datatype;
+MPI_Fint *dest;
+MPI_Fint *tag;
+MPI_Fint *comm;
+MPI_Fint *ierr;
+{
+  mpi_send_( buf, count, datatype, dest, tag, comm, ierr );
+}
+
+void  MPI_SEND_( buf, count, datatype, dest, tag, comm, ierr )
 void * buf;
 MPI_Fint *count;
 MPI_Fint *datatype;
@@ -3777,6 +4635,25 @@ MPI_Fint *ierr;
   mpi_sendrecv_( sendbuf, sendcount, sendtype, dest, sendtag, recvbuf, recvcount, recvtype, source, recvtag, comm, status, ierr );
 }
 
+void  MPI_SENDRECV_( sendbuf, sendcount, sendtype, dest, sendtag, recvbuf, recvcount, recvtype, source, recvtag, comm, status, ierr )
+void * sendbuf;
+MPI_Fint *sendcount;
+MPI_Fint *sendtype;
+MPI_Fint *dest;
+MPI_Fint *sendtag;
+void * recvbuf;
+MPI_Fint *recvcount;
+MPI_Fint *recvtype;
+MPI_Fint *source;
+MPI_Fint *recvtag;
+MPI_Fint *comm;
+MPI_Fint * status;
+MPI_Fint *ierr;
+{
+  mpi_sendrecv_( sendbuf, sendcount, sendtype, dest, sendtag, recvbuf, recvcount, recvtype, source, recvtag, comm, status, ierr );
+}
+
+
 void  mpi_sendrecv( sendbuf, sendcount, sendtype, dest, sendtag, recvbuf, recvcount, recvtype, source, recvtag, comm, status, ierr )
 void * sendbuf;
 MPI_Fint *sendcount;
@@ -3844,6 +4721,22 @@ MPI_Fint *ierr;
   mpi_sendrecv_replace_( buf, count, datatype, dest, sendtag, source, recvtag, comm, status, ierr );
 }
 
+void  MPI_SENDRECV_REPLACE_( buf, count, datatype, dest, sendtag, source, recvtag, comm, status, ierr )
+void * buf;
+MPI_Fint *count;
+MPI_Fint *datatype;
+MPI_Fint *dest;
+MPI_Fint *sendtag;
+MPI_Fint *source;
+MPI_Fint *recvtag;
+MPI_Fint *comm;
+MPI_Fint * status;
+MPI_Fint *ierr;
+{
+  mpi_sendrecv_replace_( buf, count, datatype, dest, sendtag, source, recvtag, comm, status, ierr );
+}
+
+
 void  mpi_sendrecv_replace( buf, count, datatype, dest, sendtag, source, recvtag, comm, status, ierr )
 void * buf;
 MPI_Fint *count;
@@ -3897,6 +4790,19 @@ MPI_Fint *ierr;
 {
   mpi_ssend_( buf, count, datatype, dest, tag, comm, ierr );
 }
+
+void  MPI_SSEND_( buf, count, datatype, dest, tag, comm, ierr )
+void * buf;
+MPI_Fint *count;
+MPI_Fint *datatype;
+MPI_Fint *dest;
+MPI_Fint *tag;
+MPI_Fint *comm;
+MPI_Fint *ierr;
+{
+  mpi_ssend_( buf, count, datatype, dest, tag, comm, ierr );
+}
+
 
 void  mpi_ssend( buf, count, datatype, dest, tag, comm, ierr )
 void * buf;
@@ -3954,6 +4860,20 @@ MPI_Fint *ierr;
   mpi_ssend_init_( buf, count, datatype, dest, tag, comm, request, ierr );
 }
 
+void  MPI_SSEND_INIT_( buf, count, datatype, dest, tag, comm, request, ierr )
+void * buf;
+MPI_Fint *count;
+MPI_Fint *datatype;
+MPI_Fint *dest;
+MPI_Fint *tag;
+MPI_Fint *comm;
+MPI_Fint * request;
+MPI_Fint *ierr;
+{
+  mpi_ssend_init_( buf, count, datatype, dest, tag, comm, request, ierr );
+}
+
+
 void  mpi_ssend_init( buf, count, datatype, dest, tag, comm, request, ierr )
 void * buf;
 MPI_Fint *count;
@@ -3993,6 +4913,14 @@ MPI_Fint *ierr;
   mpi_start_( request, ierr );
 }
 
+void  MPI_START_( request, ierr )
+MPI_Fint * request;
+MPI_Fint *ierr;
+{
+  mpi_start_( request, ierr );
+}
+
+
 void  mpi_start( request, ierr )
 MPI_Fint * request;
 MPI_Fint *ierr;
@@ -4024,6 +4952,14 @@ MPI_Fint *ierr;
 }
 
 void  MPI_STARTALL( count, array_of_requests, ierr )
+MPI_Fint *count;
+MPI_Fint * array_of_requests;
+MPI_Fint *ierr;
+{
+  mpi_startall_( count, array_of_requests, ierr );
+}
+
+void  MPI_STARTALL_( count, array_of_requests, ierr )
 MPI_Fint *count;
 MPI_Fint * array_of_requests;
 MPI_Fint *ierr;
@@ -4065,6 +5001,15 @@ MPI_Fint *ierr;
 }
 
 void   MPI_TEST( request, flag, status, ierr )
+MPI_Fint * request;
+MPI_Fint * flag;
+MPI_Fint * status;
+MPI_Fint *ierr;
+{
+  mpi_test_( request, flag, status, ierr );
+}
+
+void   MPI_TEST_( request, flag, status, ierr )
 MPI_Fint * request;
 MPI_Fint * flag;
 MPI_Fint * status;
@@ -4124,6 +5069,17 @@ MPI_Fint *ierr;
   mpi_testall_( count, array_of_requests, flag, array_of_statuses, ierr );
 }
 
+void  MPI_TESTALL_( count, array_of_requests, flag, array_of_statuses, ierr )
+MPI_Fint *count;
+MPI_Fint * array_of_requests;
+MPI_Fint * flag;
+MPI_Fint * array_of_statuses;
+MPI_Fint *ierr;
+{
+  mpi_testall_( count, array_of_requests, flag, array_of_statuses, ierr );
+}
+
+
 void  mpi_testall( count, array_of_requests, flag, array_of_statuses, ierr )
 MPI_Fint *count;
 MPI_Fint * array_of_requests;
@@ -4179,6 +5135,18 @@ MPI_Fint *ierr;
   mpi_testany_( count, array_of_requests, index, flag, status, ierr );
 }
 
+void  MPI_TESTANY_( count, array_of_requests, index, flag, status, ierr )
+MPI_Fint *count;
+MPI_Fint * array_of_requests;
+MPI_Fint * index;
+MPI_Fint * flag;
+MPI_Fint * status;
+MPI_Fint *ierr;
+{
+  mpi_testany_( count, array_of_requests, index, flag, status, ierr );
+}
+
+
 void  mpi_testany( count, array_of_requests, index, flag, status, ierr )
 MPI_Fint *count;
 MPI_Fint * array_of_requests;
@@ -4218,6 +5186,15 @@ MPI_Fint *ierr;
 {
   mpi_test_cancelled_( status, flag, ierr );
 }
+
+void  MPI_TEST_CANCELLED_( status, flag, ierr )
+MPI_Fint * status;
+MPI_Fint * flag;
+MPI_Fint *ierr;
+{
+  mpi_test_cancelled_( status, flag, ierr );
+}
+
 
 void  mpi_test_cancelled( status, flag, ierr )
 MPI_Fint * status;
@@ -4277,6 +5254,17 @@ MPI_Fint *ierr;
   mpi_testsome_( incount, array_of_requests, outcount, array_of_indices, array_of_statuses, ierr );
 }
 
+void  MPI_TESTSOME_( incount, array_of_requests, outcount, array_of_indices, array_of_statuses, ierr )
+MPI_Fint *incount;
+MPI_Fint * array_of_requests;
+MPI_Fint * outcount;
+MPI_Fint * array_of_indices;
+MPI_Fint * array_of_statuses;
+MPI_Fint *ierr;
+{
+  mpi_testsome_( incount, array_of_requests, outcount, array_of_indices, array_of_statuses, ierr );
+}
+
 void  mpi_testsome( incount, array_of_requests, outcount, array_of_indices, array_of_statuses, ierr )
 MPI_Fint *incount;
 MPI_Fint * array_of_requests;
@@ -4313,6 +5301,14 @@ MPI_Fint *ierr;
 {
   mpi_type_commit_( datatype, ierr );
 } 
+
+void   MPI_TYPE_COMMIT_( datatype, ierr )
+MPI_Fint * datatype;
+MPI_Fint *ierr;
+{
+  mpi_type_commit_( datatype, ierr );
+}
+
 
 void   mpi_type_commit( datatype, ierr )
 MPI_Fint * datatype;
@@ -4354,6 +5350,15 @@ MPI_Fint *ierr;
   mpi_type_contiguous_( count, old_type, newtype, ierr );
 } 
 
+void  MPI_TYPE_CONTIGUOUS_( count, old_type, newtype, ierr )
+MPI_Fint *count;
+MPI_Fint *old_type;
+MPI_Fint * newtype;
+MPI_Fint *ierr;
+{
+  mpi_type_contiguous_( count, old_type, newtype, ierr );
+}
+
 void  mpi_type_contiguous( count, old_type, newtype, ierr )
 MPI_Fint *count;
 MPI_Fint *old_type;
@@ -4385,6 +5390,14 @@ MPI_Fint *ierr;
 }
 
 void  MPI_TYPE_EXTENT( datatype, extent, ierr )
+MPI_Fint *datatype;
+MPI_Fint * extent;
+MPI_Fint *ierr;
+{
+  mpi_type_extent_( datatype, extent, ierr );
+}
+
+void  MPI_TYPE_EXTENT_( datatype, extent, ierr )
 MPI_Fint *datatype;
 MPI_Fint * extent;
 MPI_Fint *ierr;
@@ -4424,6 +5437,14 @@ MPI_Fint *ierr;
 {
   mpi_type_free_( datatype, ierr );
 } 
+
+void   MPI_TYPE_FREE_( datatype, ierr )
+MPI_Fint * datatype;
+MPI_Fint *ierr;
+{
+  mpi_type_free_( datatype, ierr );
+}
+
 
 void   mpi_type_free( datatype, ierr )
 MPI_Fint * datatype;
@@ -4484,6 +5505,18 @@ MPI_Fint *ierr;
   mpi_type_hindexed_( count, blocklens, indices, old_type, newtype, ierr );
 }
 
+void  MPI_TYPE_HINDEXED_( count, blocklens, indices, old_type, newtype, ierr )
+MPI_Fint *count;
+MPI_Fint * blocklens;
+MPI_Fint * indices;
+MPI_Fint *old_type;
+MPI_Fint * newtype;
+MPI_Fint *ierr;
+{
+  mpi_type_hindexed_( count, blocklens, indices, old_type, newtype, ierr );
+}
+
+
 void  mpi_type_hindexed( count, blocklens, indices, old_type, newtype, ierr )
 MPI_Fint *count;
 MPI_Fint * blocklens;
@@ -4534,6 +5567,17 @@ MPI_Fint *ierr;
   mpi_type_hvector_( count, blocklen, stride, old_type, newtype, ierr );
 } 
 
+void  MPI_TYPE_HVECTOR_( count, blocklen, stride, old_type, newtype, ierr )
+MPI_Fint *count;
+MPI_Fint *blocklen;
+MPI_Fint *stride;
+MPI_Fint *old_type;
+MPI_Fint * newtype;
+MPI_Fint *ierr;
+{
+  mpi_type_hvector_( count, blocklen, stride, old_type, newtype, ierr );
+}
+
 void  mpi_type_hvector( count, blocklen, stride, old_type, newtype, ierr )
 MPI_Fint *count;
 MPI_Fint *blocklen;
@@ -4583,6 +5627,17 @@ MPI_Fint *ierr;
   mpi_type_indexed_( count, blocklens, indices, old_type, newtype, ierr );
 } 
 
+void  MPI_TYPE_INDEXED_( count, blocklens, indices, old_type, newtype, ierr )
+MPI_Fint *count;
+MPI_Fint * blocklens;
+MPI_Fint * indices;
+MPI_Fint *old_type;
+MPI_Fint * newtype;
+MPI_Fint *ierr;
+{
+  mpi_type_indexed_( count, blocklens, indices, old_type, newtype, ierr );
+}
+
 void  mpi_type_indexed( count, blocklens, indices, old_type, newtype, ierr )
 MPI_Fint *count;
 MPI_Fint * blocklens;
@@ -4623,6 +5678,15 @@ MPI_Fint *ierr;
   mpi_type_lb_( datatype, displacement, ierr );
 }
 
+void   MPI_TYPE_LB_( datatype, displacement, ierr )
+MPI_Fint *datatype;
+MPI_Fint * displacement;
+MPI_Fint *ierr;
+{
+  mpi_type_lb_( datatype, displacement, ierr );
+}
+
+
 void   mpi_type_lb( datatype, displacement, ierr )
 MPI_Fint *datatype;
 MPI_Fint * displacement;
@@ -4657,6 +5721,15 @@ MPI_Fint *ierr;
 {
   mpi_type_size_( datatype, size, ierr );
 }
+
+void   MPI_TYPE_SIZE_( datatype, size, ierr )
+MPI_Fint *datatype;
+MPI_Fint * size;
+MPI_Fint *ierr;
+{
+  mpi_type_size_( datatype, size, ierr );
+}
+
 
 void   mpi_type_size( datatype, size, ierr )
 MPI_Fint *datatype;
@@ -4721,6 +5794,17 @@ MPI_Fint *ierr;
   mpi_type_struct_( count, blocklens, indices, old_types, newtype, ierr );
 }
 
+void  MPI_TYPE_STRUCT_( count, blocklens, indices, old_types, newtype, ierr )
+MPI_Fint *count;
+MPI_Fint * blocklens;
+MPI_Fint * indices;
+MPI_Fint * old_types;
+MPI_Fint * newtype;
+MPI_Fint *ierr;
+{
+  mpi_type_struct_( count, blocklens, indices, old_types, newtype, ierr );
+}
+
 void  mpi_type_struct( count, blocklens, indices, old_types, newtype, ierr )
 MPI_Fint *count;
 MPI_Fint * blocklens;
@@ -4761,6 +5845,15 @@ MPI_Fint *ierr;
   mpi_type_ub_( datatype, displacement, ierr );
 }
 
+void   MPI_TYPE_UB_( datatype, displacement, ierr )
+MPI_Fint *datatype;
+MPI_Fint * displacement;
+MPI_Fint *ierr;
+{
+  mpi_type_ub_( datatype, displacement, ierr );
+}
+
+
 void   mpi_type_ub( datatype, displacement, ierr )
 MPI_Fint *datatype;
 MPI_Fint * displacement;
@@ -4795,6 +5888,18 @@ MPI_Fint *ierr;
 {
   mpi_type_vector_( count, blocklen, stride, old_type, newtype, ierr );
 }
+
+void  MPI_TYPE_VECTOR_( count, blocklen, stride, old_type, newtype, ierr )
+MPI_Fint *count;
+MPI_Fint *blocklen;
+MPI_Fint *stride;
+MPI_Fint *old_type;
+MPI_Fint * newtype;
+MPI_Fint *ierr;
+{
+  mpi_type_vector_( count, blocklen, stride, old_type, newtype, ierr );
+}
+
 
 void  mpi_type_vector( count, blocklen, stride, old_type, newtype, ierr )
 MPI_Fint *count;
@@ -4838,6 +5943,18 @@ MPI_Fint *ierr;
 
 void   MPI_UNPACK( inbuf, insize, position, outbuf, outcount, type, comm, ierr )
 void * inbuf;
+MPI_Fint *insize;
+MPI_Fint * position;
+void * outbuf;
+MPI_Fint *outcount;
+MPI_Fint *type;
+MPI_Fint *comm;
+MPI_Fint *ierr;
+{
+  mpi_unpack_( inbuf, insize, position, outbuf, outcount, type, comm, ierr );
+}
+
+void   MPI_UNPACK_( inbuf, insize, position, outbuf, outcount, type, comm, ierr )void * inbuf;
 MPI_Fint *insize;
 MPI_Fint * position;
 void * outbuf;
@@ -4893,6 +6010,15 @@ MPI_Fint *ierr;
   mpi_wait_( request, status, ierr );
 }
 
+void   MPI_WAIT_( request, status, ierr )
+MPI_Fint * request;
+MPI_Fint * status;
+MPI_Fint *ierr;
+{
+  mpi_wait_( request, status, ierr );
+}
+
+
 void   mpi_wait( request, status, ierr )
 MPI_Fint * request;
 MPI_Fint * status;
@@ -4932,6 +6058,15 @@ MPI_Fint *ierr;
 }
 
 void  MPI_WAITALL( count, array_of_requests, array_of_statuses, ierr )
+MPI_Fint *count;
+MPI_Fint * array_of_requests;
+MPI_Fint * array_of_statuses;
+MPI_Fint *ierr;
+{
+  mpi_waitall_( count, array_of_requests, array_of_statuses, ierr );
+}
+
+void  MPI_WAITALL_( count, array_of_requests, array_of_statuses, ierr )
 MPI_Fint *count;
 MPI_Fint * array_of_requests;
 MPI_Fint * array_of_statuses;
@@ -4986,6 +6121,16 @@ MPI_Fint *count;
 MPI_Fint * array_of_requests;
 MPI_Fint * index;
 MPI_Fint * status; 
+MPI_Fint *ierr;
+{
+  mpi_waitany_( count, array_of_requests, index, status, ierr );
+}
+
+void  MPI_WAITANY_( count, array_of_requests, index, status, ierr )
+MPI_Fint *count;
+MPI_Fint * array_of_requests;
+MPI_Fint * index;
+MPI_Fint * status;
 MPI_Fint *ierr;
 {
   mpi_waitany_( count, array_of_requests, index, status, ierr );
@@ -5054,6 +6199,18 @@ MPI_Fint *ierr;
   mpi_waitsome_( incount, array_of_requests, outcount, array_of_indices, array_of_statuses, ierr );
 } 
 
+void  MPI_WAITSOME_( incount, array_of_requests, outcount, array_of_indices, array_of_statuses, ierr )
+
+MPI_Fint *incount;
+MPI_Fint * array_of_requests;
+MPI_Fint * outcount;
+MPI_Fint * array_of_indices;
+MPI_Fint * array_of_statuses;
+MPI_Fint *ierr;
+{
+  mpi_waitsome_( incount, array_of_requests, outcount, array_of_indices, array_of_statuses, ierr );
+}
+
 void  mpi_waitsome( incount, array_of_requests, outcount, array_of_indices, array_of_statuses, ierr )
 
 MPI_Fint *incount;
@@ -5099,6 +6256,16 @@ MPI_Fint *ierr;
   mpi_cart_coords_( comm, rank, maxdims, coords, ierr );
 }
 
+void   MPI_CART_COORDS_( comm, rank, maxdims, coords, ierr )
+MPI_Fint *comm;
+MPI_Fint *rank;
+MPI_Fint *maxdims;
+MPI_Fint * coords;
+MPI_Fint *ierr;
+{
+  mpi_cart_coords_( comm, rank, maxdims, coords, ierr );
+}
+
 void   mpi_cart_coords( comm, rank, maxdims, coords, ierr )
 MPI_Fint *comm;
 MPI_Fint *rank;
@@ -5113,6 +6280,7 @@ MPI_Fint *ierr;
 /******************************************************/
 /******************************************************/
 
+#ifdef TAU_MPI_CART_CREATE
 void   mpi_cart_create_( comm_old, ndims, dims, periods, reorder, comm_cart, ierr )
 MPI_Fint *comm_old;
 MPI_Fint *ndims;
@@ -5152,6 +6320,19 @@ MPI_Fint *ierr;
   mpi_cart_create_( comm_old, ndims, dims, periods, reorder, comm_cart, ierr );
 }
 
+void   MPI_CART_CREATE_( comm_old, ndims, dims, periods, reorder, comm_cart, ierr )
+MPI_Fint *comm_old;
+MPI_Fint *ndims;
+MPI_Fint * dims;
+MPI_Fint * periods;
+MPI_Fint *reorder;
+MPI_Fint * comm_cart;
+MPI_Fint *ierr;
+{
+  mpi_cart_create_( comm_old, ndims, dims, periods, reorder, comm_cart, ierr );
+}
+
+
 void   mpi_cart_create( comm_old, ndims, dims, periods, reorder, comm_cart, ierr )
 MPI_Fint *comm_old;
 MPI_Fint *ndims;
@@ -5163,6 +6344,7 @@ MPI_Fint *ierr;
 {
   mpi_cart_create_( comm_old, ndims, dims, periods, reorder, comm_cart, ierr );
 }
+#endif /* TAU_MPI_CART_CREATE */
 
 #endif /* TAU_MPI_CART_CREATE */
 /******************************************************/
@@ -5200,6 +6382,18 @@ MPI_Fint *ierr;
 {
   mpi_cart_get_( comm, maxdims, dims, periods, coords, ierr );
 }
+
+void   MPI_CART_GET_( comm, maxdims, dims, periods, coords, ierr )
+MPI_Fint *comm;
+MPI_Fint *maxdims;
+MPI_Fint * dims;
+MPI_Fint * periods;
+MPI_Fint * coords;
+MPI_Fint *ierr;
+{
+  mpi_cart_get_( comm, maxdims, dims, periods, coords, ierr );
+}
+
 
 void   mpi_cart_get( comm, maxdims, dims, periods, coords, ierr )
 MPI_Fint *comm;
@@ -5248,6 +6442,18 @@ MPI_Fint *ierr;
   mpi_cart_map_( comm_old, ndims, dims, periods, newrank, ierr );
 }
 
+void   MPI_CART_MAP_( comm_old, ndims, dims, periods, newrank, ierr )
+MPI_Fint *comm_old;
+MPI_Fint *ndims;
+MPI_Fint * dims;
+MPI_Fint * periods;
+MPI_Fint * newrank;
+MPI_Fint *ierr;
+{
+  mpi_cart_map_( comm_old, ndims, dims, periods, newrank, ierr );
+}
+
+
 void   mpi_cart_map( comm_old, ndims, dims, periods, newrank, ierr )
 MPI_Fint *comm_old;
 MPI_Fint *ndims;
@@ -5288,6 +6494,16 @@ MPI_Fint *ierr;
 {
   mpi_cart_rank_( comm, coords, rank, ierr );
 }
+
+void   MPI_CART_RANK_( comm, coords, rank, ierr )
+MPI_Fint *comm;
+MPI_Fint * coords;
+MPI_Fint * rank;
+MPI_Fint *ierr;
+{
+  mpi_cart_rank_( comm, coords, rank, ierr );
+}
+
 
 void   mpi_cart_rank( comm, coords, rank, ierr )
 MPI_Fint *comm;
@@ -5334,6 +6550,18 @@ MPI_Fint *ierr;
   mpi_cart_shift_( comm, direction, displ, source, dest, ierr );
 }
 
+void   MPI_CART_SHIFT_( comm, direction, displ, source, dest, ierr )
+MPI_Fint *comm;
+MPI_Fint *direction;
+MPI_Fint *displ;
+MPI_Fint * source;
+MPI_Fint * dest;
+MPI_Fint *ierr;
+{
+  mpi_cart_shift_( comm, direction, displ, source, dest, ierr );
+}
+
+
 void   mpi_cart_shift( comm, direction, displ, source, dest, ierr )
 MPI_Fint *comm;
 MPI_Fint *direction;
@@ -5369,6 +6597,15 @@ MPI_Fint *ierr;
 }
 
 void   MPI_CART_SUB( comm, remain_dims, comm_new, ierr )
+MPI_Fint *comm;
+MPI_Fint * remain_dims;
+MPI_Fint * comm_new;
+MPI_Fint *ierr;
+{
+  mpi_cart_sub_( comm, remain_dims, comm_new, ierr );
+}
+
+void   MPI_CART_SUB_( comm, remain_dims, comm_new, ierr )
 MPI_Fint *comm;
 MPI_Fint * remain_dims;
 MPI_Fint * comm_new;
@@ -5413,6 +6650,15 @@ MPI_Fint *ierr;
   mpi_cartdim_get_( comm, ndims, ierr );
 }
 
+void   MPI_CARTDIM_GET_( comm, ndims, ierr )
+MPI_Fint *comm;
+MPI_Fint * ndims;
+MPI_Fint *ierr;
+{
+  mpi_cartdim_get_( comm, ndims, ierr );
+}
+
+
 void   mpi_cartdim_get( comm, ndims, ierr )
 MPI_Fint *comm;
 MPI_Fint * ndims;
@@ -5450,6 +6696,16 @@ MPI_Fint *ierr;
 {
   mpi_dims_create_( nnodes, ndims, dims, ierr );
 }
+
+void  MPI_DIMS_CREATE_( nnodes, ndims, dims, ierr )
+MPI_Fint *nnodes;
+MPI_Fint *ndims;
+MPI_Fint * dims;
+MPI_Fint *ierr;
+{
+  mpi_dims_create_( nnodes, ndims, dims, ierr );
+}
+
 
 void  mpi_dims_create( nnodes, ndims, dims, ierr )
 MPI_Fint *nnodes;
@@ -5501,6 +6757,18 @@ MPI_Fint *ierr;
   mpi_graph_create_( comm_old, nnodes, index, edges, reorder, comm_graph, ierr );
 } 
 
+void   MPI_GRAPH_CREATE_( comm_old, nnodes, index, edges, reorder, comm_graph, ierr )
+MPI_Fint *comm_old;
+MPI_Fint *nnodes;
+MPI_Fint * index;
+MPI_Fint * edges;
+MPI_Fint *reorder;
+MPI_Fint * comm_graph;
+MPI_Fint *ierr;
+{
+  mpi_graph_create_( comm_old, nnodes, index, edges, reorder, comm_graph, ierr );
+}
+
 void   mpi_graph_create( comm_old, nnodes, index, edges, reorder, comm_graph, ierr )
 MPI_Fint *comm_old;
 MPI_Fint *nnodes;
@@ -5539,6 +6807,17 @@ MPI_Fint *ierr;
 }
 
 void   MPI_GRAPH_GET( comm, maxindex, maxedges, index, edges, ierr )
+MPI_Fint *comm;
+MPI_Fint *maxindex;
+MPI_Fint *maxedges;
+MPI_Fint * index;
+MPI_Fint * edges;
+MPI_Fint *ierr;
+{
+  mpi_graph_get_( comm, maxindex, maxedges, index, edges, ierr );
+}
+
+void   MPI_GRAPH_GET_( comm, maxindex, maxedges, index, edges, ierr )
 MPI_Fint *comm;
 MPI_Fint *maxindex;
 MPI_Fint *maxedges;
@@ -5596,6 +6875,18 @@ MPI_Fint *ierr;
   mpi_graph_map_( comm_old, nnodes, index, edges, newrank, ierr );
 }
 
+void   MPI_GRAPH_MAP_( comm_old, nnodes, index, edges, newrank, ierr )
+MPI_Fint *comm_old;
+MPI_Fint *nnodes;
+MPI_Fint * index;
+MPI_Fint * edges;
+MPI_Fint * newrank;
+MPI_Fint *ierr;
+{
+  mpi_graph_map_( comm_old, nnodes, index, edges, newrank, ierr );
+}
+
+
 void   mpi_graph_map( comm_old, nnodes, index, edges, newrank, ierr )
 MPI_Fint *comm_old;
 MPI_Fint *nnodes;
@@ -5631,6 +6922,16 @@ MPI_Fint *ierr;
 }
 
 void   MPI_GRAPH_NEIGHBORS( comm, rank, maxneighbors, neighbors, ierr )
+MPI_Fint *comm;
+MPI_Fint *rank;
+int  *maxneighbors;
+MPI_Fint * neighbors;
+MPI_Fint *ierr;
+{
+  mpi_graph_neighbors_( comm, rank, maxneighbors, neighbors, ierr );
+}
+
+void   MPI_GRAPH_NEIGHBORS_( comm, rank, maxneighbors, neighbors, ierr )
 MPI_Fint *comm;
 MPI_Fint *rank;
 int  *maxneighbors;
@@ -5680,6 +6981,15 @@ MPI_Fint *ierr;
   mpi_graph_neighbors_count_( comm, rank, nneighbors, ierr );
 }
 
+void   MPI_GRAPH_NEIGHBORS_COUNT_( comm, rank, nneighbors, ierr )
+MPI_Fint *comm;
+MPI_Fint *rank;
+MPI_Fint * nneighbors;
+MPI_Fint *ierr;
+{
+  mpi_graph_neighbors_count_( comm, rank, nneighbors, ierr );
+}
+
 void   mpi_graph_neighbors_count( comm, rank, nneighbors, ierr )
 MPI_Fint *comm;
 MPI_Fint *rank;
@@ -5711,6 +7021,15 @@ MPI_Fint *ierr;
 }
 
 void   MPI_GRAPHDIMS_GET( comm, nnodes, nedges, ierr )
+MPI_Fint *comm;
+MPI_Fint * nnodes;
+MPI_Fint * nedges;
+MPI_Fint *ierr;
+{
+  mpi_graphdims_get_( comm, nnodes, nedges, ierr );
+}
+
+void   MPI_GRAPHDIMS_GET_( comm, nnodes, nedges, ierr )
 MPI_Fint *comm;
 MPI_Fint * nnodes;
 MPI_Fint * nedges;
@@ -5754,6 +7073,15 @@ MPI_Fint *ierr;
 {
   mpi_topo_test_( comm, top_type, ierr );
 }
+
+void   MPI_TOPO_TEST_( comm, top_type, ierr )
+MPI_Fint *comm;
+MPI_Fint * top_type;
+MPI_Fint *ierr;
+{
+  mpi_topo_test_( comm, top_type, ierr );
+}
+
 
 void   mpi_topo_test( comm, top_type, ierr )
 MPI_Fint *comm;

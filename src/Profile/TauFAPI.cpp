@@ -1129,7 +1129,20 @@ void TAU_PROFILE_TIMER(void **ptr, char *fname, int flen)
   return;
 }
 
+void TAU_PROFILE_TIMER_(void **ptr, char *fname, int flen)
+{
+  if (*ptr == 0) {
+    tau_profile_timer_(ptr, fname, flen);
+  }
+  return;
+}
+
 void TAU_PROFILE_START(void **profiler)
+{
+  tau_profile_start_(profiler);
+}
+
+void TAU_PROFILE_START_(void **profiler)
 {
   tau_profile_start_(profiler);
 }
@@ -1139,7 +1152,17 @@ void TAU_PROFILE_STOP(void **profiler)
   tau_profile_stop_(profiler);
 }
 
+void TAU_PROFILE_STOP_(void **profiler)
+{
+  tau_profile_stop_(profiler);
+}
+
 void TAU_PROFILE_EXIT(char *msg)
+{
+  tau_profile_exit_(msg);
+}
+
+void TAU_PROFILE_EXIT_(char *msg)
 {
   tau_profile_exit_(msg);
 }
@@ -1162,6 +1185,15 @@ void TAU_PROFILE_INIT()
   _main();
 #endif /* CRAYKAI */
   // tau_profile_init_(argc, argv);
+#ifndef TAU_MPI
+#ifndef TAU_SHMEM
+  Tau_set_node(0); 
+#endif /* TAU_SHMEM */
+#endif /* TAU_MPI */
+}
+
+void TAU_PROFILE_INIT_()
+{
 #ifndef TAU_MPI
 #ifndef TAU_SHMEM
   Tau_set_node(0); 
@@ -1979,7 +2011,7 @@ void TAU_DEALLOC(void ** ptr, int* line, char *name, int slen)
 
 
 /***************************************************************************
- * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.66 $   $Date: 2007/09/19 20:56:08 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.66 2007/09/19 20:56:08 amorris Exp $ 
+ * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
+ * $Revision: 1.67 $   $Date: 2008/02/12 01:09:01 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.67 2008/02/12 01:09:01 sameer Exp $ 
  ***************************************************************************/
