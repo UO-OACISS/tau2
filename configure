@@ -178,6 +178,7 @@ awe=no
 pthread=no
 papithread=no
 papipfm=no
+papisubdir=
 charm=no
 muse=no
 muse_event=no
@@ -578,13 +579,6 @@ do
         echo "Error: Cannot access PAPI directory $papidir"
         exit 1
       fi
-
-      if [ -f $papidir/lib/libpfm.a ]
-	  then 
-	  fixmakeargs="$fixmakeargs PAPIPFM"
-          papipfm=yes
-      fi		
-
     shift
     ;;
 
@@ -3041,6 +3035,62 @@ then
     echo "ERROR: PLEASE SPECIFY A VALID -epiloglib=<dir> option."
   fi
 fi
+
+
+if [ $papi = yes ] ; then
+    fixmakeargs="$fixmakeargs PAPI papidir=$papidir"
+    tauoptions="${tauoptions}-papi"
+    p=$papidir/lib
+    papisubdir=lib
+    if [ $machine = "mips32" ] ; then
+	papisubdir=lib32
+	fixmakeargs="$fixmakeargs papisubdir=lib32"
+    else
+	if [ -f $p/libpapi.so -o -f $p/libpapi.a -o -f $p/libpapi64.so -o -f $p/libpapi64.a -o -f $p/libpapi.rts.a ] ; then
+	    papisubdir=lib
+	    fixmakeargs="$fixmakeargs papisubdir=lib"
+	else
+	    if [ -f $p/cnos64/libpapi.so ] ; then
+		papisubdir=lib/cnos64
+		fixmakeargs="$fixmakeargs papisubdir=lib/cnos64"
+	    else
+		if [ -f $p/xt-cnl/lib/libpapi.so ] ; then 
+		    papisubdir=xt-cnl/lib
+		    fixmakeargs="$fixmakeargs papisubdir=xt-cnl/lib"
+                else 
+		    if [ -f $papidir/lib64/libpapi.so ] ; then 
+			papisubdir=lib64
+			fixmakeargs="$fixmakeargs papisubdir=lib64"
+		    else
+			papisubdir=src
+			fixmakeargs="$fixmakeargs papisubdir=src"
+		    fi
+		fi
+	    fi
+	fi
+    fi
+    
+
+      if [ -f $papidir/lib/libpfm.a ] ; then 
+
+	      cat <<EOF > tau_papi_test.c
+#include <papi.h>
+int main (int argc, char **argv) {
+  int papi_ver;
+  papi_ver = PAPI_library_init(PAPI_VER_CURRENT);
+}
+EOF
+	      if $c_compiler $orig_useropt tau_papi_test.c -I$papidir/include -L$papidir/$papisubdir -lpfm -lpapi -lpfm -o tau_papi_test 1> /dev/null 2>&1 ; then
+		  fixmakeargs="$fixmakeargs PAPIPFM"
+		  papipfm=yes
+	      fi
+	      /bin/rm -f tau_papi_test.c tau_papi_test
+      fi		
+
+
+
+fi
+
     
 if [ $mpi = yes ]
 then
@@ -4201,32 +4251,6 @@ if [ $pcl = yes ]
     tauoptions="${tauoptions}-pcl"
 fi
 
-if [ $papi = yes ] ; then
-    fixmakeargs="$fixmakeargs PAPI papidir=$papidir"
-    tauoptions="${tauoptions}-papi"
-    p=$papidir/lib
-    if [ $machine = "mips32" ] ; then
-	fixmakeargs="$fixmakeargs papisubdir=lib32"
-    else
-	if [ -f $p/libpapi.so -o -f $p/libpapi.a -o -f $p/libpapi64.so -o -f $p/libpapi64.a -o -f $p/libpapi.rts.a ] ; then
-	    fixmakeargs="$fixmakeargs papisubdir=lib"
-	else
-	    if [ -f $p/cnos64/libpapi.so ] ; then
-		fixmakeargs="$fixmakeargs papisubdir=lib/cnos64"
-	    else
-		if [ -f $p/xt-cnl/lib/libpapi.so ] ; then 
-		  fixmakeargs="$fixmakeargs papisubdir=xt-cnl/lib"
-                else 
-		  if [ -f $papidir/lib64/libpapi.so ] ; then 
-		    fixmakeargs="$fixmakeargs papisubdir=lib64"
-		  else
-		    fixmakeargs="$fixmakeargs papisubdir=src"
-		  fi
-               fi
-	    fi
-	fi
-    fi
-fi
 
 if [ $python = yes ]
   then

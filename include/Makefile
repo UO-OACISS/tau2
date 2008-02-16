@@ -433,10 +433,8 @@ FWRAPPER	       = TauFMpi.o
 #IA64PAPI#LEXTRA	       = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi #ENDIF#
 #Due to some problems with older versions of libpfm, we are using the static lib
 #IA64PAPI#LEXTRA	       =   $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a #ENDIF#
-#X86_64PAPI#LEXTRA  = -L$(PAPIDIR)/$(PAPISUBDIR)/ -L$(PAPIDIR)/lib64/ -lpapi -lperfctr #ENDIF#
 #PAPIPFM#LEXTRA	       = -L$(PAPIDIR)/$(PAPISUBDIR) -lpfm -lpapi -lpfm #ENDIF#
-#Due to some problems with older versions of libpfm, we are using the static lib
-#PAPIPFM#LEXTRA	       =   $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a #ENDIF#
+#X86_64PAPI#LEXTRA  = -L$(PAPIDIR)/$(PAPISUBDIR)/ -L$(PAPIDIR)/lib64/ -lpapi -lperfctr #ENDIF#
 #SOL2PAPI#LEXTRA	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a -lcpc #ENDIF#
 #IBMPAPI#LEXTRA  = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a -L/usr/lpp/pmtoolkit/lib -L/usr/pmapi/lib -lpmapi#ENDIF#
 #PPC64PAPI#LEXTRA  = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a #ENDIF#
