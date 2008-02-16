@@ -446,6 +446,8 @@ FWRAPPER	       = TauFMpi.o
 #SGI64PAPI#LEXTRA  = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi64 #ENDIF#
 #ALPHAPAPI#LEXTRA	       	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a /usr/lib/dcpi/dadd.a -lclu -lrt #ENDIF#
 
+TAU_PAPI_EXTRA_FLAGS	       = $(LEXTRA)
+#IA64PAPI#TAU_PAPI_EXTRA_FLAGS	       = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi #ENDIF#
 
 
 # By default make TAU_PAPI_RPATH null. Support it on a compiler by compiler basis.
