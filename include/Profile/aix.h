@@ -20,17 +20,21 @@ typedef unsigned long   size_t;
 
 
 #ifndef KAI
+#ifndef __GNUC__
 struct timeval {
         time_t          tv_sec;         /* seconds */
         long            tv_usec;        /* microseconds */
 };
+#endif /* __GNUC__ */
 #endif // KAI
 
 extern "C" {
+#ifndef __GNUC__
 int              getdtablesize(void);
 #ifndef KAI
 int gettimeofday(struct timeval *, void *);
 #endif // KAI
+#endif /* __GNUC__ */
 int  strncasecmp(const char *, const char *, size_t);
 int  strcasecmp(const char *, const char *);
 }
