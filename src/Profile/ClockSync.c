@@ -46,10 +46,9 @@
 
 #define SYNC_LOOP_COUNT 10
 
-double& TAUDECL TheTauTraceBeginningOffset();
-bool& TAUDECL TheTauTraceSyncOffsetSet();
-double& TAUDECL TheTauTraceSyncOffset();
-double TAUDECL TauSyncAdjustTimeStamp(double timestamp);
+double* TAUDECL TheTauTraceBeginningOffset();
+int* TAUDECL TheTauTraceSyncOffsetSet();
+double* TAUDECL TheTauTraceSyncOffset();
 double TAUDECL TAUClockTime(int tid);
 
 
@@ -85,9 +84,10 @@ static long getUniqueMachineIdentifier() {
   return gethostid();
 }
 
-static double getPreSyncTime(int tid = 0) { 
+static double getPreSyncTime() { 
+  int tid = 0;
   double value = TAUClockTime(tid);
-  return value - TheTauTraceBeginningOffset();
+  return value - *TheTauTraceBeginningOffset();
 }
 
 
@@ -137,6 +137,7 @@ static double slaveDetermineOffset(int master, int rank, MPI_Comm comm) {
   double tsendrecv[SYNC_LOOP_COUNT];
   double sync_time;
   MPI_Status stat;
+  double ltime;
 
   // perform ping-pong loop
   for (i = 0; i < SYNC_LOOP_COUNT; i++) {
@@ -150,27 +151,28 @@ static double slaveDetermineOffset(int master, int rank, MPI_Comm comm) {
   // recieve the sync_time from the master
   PMPI_Recv(&sync_time, 1, MPI_DOUBLE, master, 4, comm, &stat);
 
-  double ltime = tsendrecv[min];
+  ltime = tsendrecv[min];
   return sync_time - ltime;
 }
 
 
 
 static double getTimeOffset(int rank, int size) {
+  int i;
   MPI_Comm machineComm;
-  PMPI_Comm_split(MPI_COMM_WORLD, getUniqueMachineIdentifier() & 0x7FFFFFFF, 0, &machineComm);
-
   int machineRank;
   int numProcsThisMachine;
-  PMPI_Comm_rank(machineComm, &machineRank);
-  PMPI_Comm_size(machineComm, &numProcsThisMachine);
-
   // inter-machine communicator
   MPI_Comm interMachineComm;
   int numMachines;
-
   // sync rank is the rank within the inter-machine communicator
   int syncRank;
+  double startOffset;
+  double offset;
+
+  PMPI_Comm_split(MPI_COMM_WORLD, getUniqueMachineIdentifier() & 0x7FFFFFFF, 0, &machineComm);
+  PMPI_Comm_rank(machineComm, &machineRank);
+  PMPI_Comm_size(machineComm, &numProcsThisMachine);
 
   // create a communicator with one process from each machine
   PMPI_Comm_split(MPI_COMM_WORLD, machineRank, 0, &interMachineComm);
@@ -178,16 +180,15 @@ static double getTimeOffset(int rank, int size) {
   PMPI_Comm_size(interMachineComm, &numMachines);
 
   // broadcast the associated starting offset
-  double startOffset = TheTauTraceBeginningOffset();
+  startOffset = *TheTauTraceBeginningOffset();
   PMPI_Bcast(&startOffset, 1, MPI_DOUBLE, 0, machineComm);
-  TheTauTraceBeginningOffset() = startOffset;
+  *TheTauTraceBeginningOffset() = startOffset;
 
-  double offset = 0.0;
-
+  offset = 0.0;
   PMPI_Barrier(MPI_COMM_WORLD);
 
   if (machineRank == 0) {
-    for (int i = 1; i < numMachines; i++) {
+    for (i = 1; i < numMachines; i++) {
       PMPI_Barrier(interMachineComm);
       if (syncRank == i ){
 	offset = slaveDetermineOffset(0, i, interMachineComm);
@@ -205,7 +206,7 @@ static double getTimeOffset(int rank, int size) {
 }
 
 // The MPI_Finalize wrapper calls this routine
-extern "C" void TauSyncFinalClocks(int rank, int size) {
+void TauSyncFinalClocks(int rank, int size) {
   // only do this when tracing
 #ifdef TRACING_ON
 #ifndef TAU_EPILOG
@@ -219,16 +220,15 @@ extern "C" void TauSyncFinalClocks(int rank, int size) {
 }
 
 // The MPI_Init wrapper calls this routine
-extern "C" void TauSyncClocks(int rank, int size) {
+void TauSyncClocks(int rank, int size) {
+  double offset = 0;
 
   PMPI_Barrier(MPI_COMM_WORLD);
   printf ("TAU: Clock Synchonization active on node : %d\n", rank);
   // clear counter to zero, since the times might be wildly different (LINUX_TIMERS)
   // we reset to zero so that the offsets won't be so large as to give us negative numbers
   // on some nodes.  This also allows us to easily use 0 before MPI_Init.
-  TheTauTraceBeginningOffset() = getPreSyncTime();
-
-  double offset = 0;
+  *TheTauTraceBeginningOffset() = getPreSyncTime();
 
   // only do this when tracing
 #ifdef TRACING_ON
@@ -236,8 +236,8 @@ extern "C" void TauSyncClocks(int rank, int size) {
   offset = getTimeOffset(rank, size);
 #endif
 
-  TheTauTraceSyncOffset() = offset;
-  TheTauTraceSyncOffsetSet() = true;
+  *TheTauTraceSyncOffset() = offset;
+  *TheTauTraceSyncOffsetSet() = 1;
 
 #ifdef TRACING_ON
 #ifndef TAU_EPILOG

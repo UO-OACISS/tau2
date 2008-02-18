@@ -49,8 +49,8 @@ TauFMpi.o: 	TauFMpi.c
 TauMpiExtensions.o: 	TauMpiExtensions.c
 	$(CC) $(CFLAGS) -c TauMpiExtensions.c
 
-ClockSync.o :	ClockSync.cpp
-	$(CXX) $(CFLAGS) -c ClockSync.cpp
+ClockSync.o :	ClockSync.c
+	$(CC) $(CFLAGS) -c ClockSync.c
 
 $(INSTALLDEST)/$(TAU_TARGET): $(TAU_TARGET)
 		@echo Installing $? in $(INSTALLDEST)

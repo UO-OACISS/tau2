@@ -886,18 +886,18 @@ extern "C" void Tau_profile_snapshot(char *name) {
   Profiler::Snapshot(name);
 }
 
-double& TheTauTraceBeginningOffset() {
+extern "C" double* TheTauTraceBeginningOffset() {
   static double offset = 0.0;
-  return offset;
+  return &offset;
 }
-bool& TheTauTraceSyncOffsetSet() {
-  static bool value = false;
-  return value;
+extern "C" int* TheTauTraceSyncOffsetSet() {
+  static int value = 0;
+  return &value;
 }
 
-double& TheTauTraceSyncOffset() {
+extern "C" double* TheTauTraceSyncOffset() {
   static double offset = -1.0;
-  return offset;
+  return &offset;
 }
 
 double TauSyncAdjustTimeStamp(double timestamp) {
@@ -905,11 +905,11 @@ double TauSyncAdjustTimeStamp(double timestamp) {
     // return 0 until sync'd
     return 0.0;
   }
-  timestamp = timestamp - TheTauTraceBeginningOffset() + TheTauTraceSyncOffset();
+  timestamp = timestamp - *TheTauTraceBeginningOffset() + *TheTauTraceSyncOffset();
   return timestamp;
 }
 
-double TAUClockTime(int tid) {
+extern "C" double TAUClockTime(int tid) {
 #ifdef TAU_MULTIPLE_COUNTERS
   // counter 0 is the one we use
   double value = MultipleCounterLayer::getSingleCounter(tid, 0);
@@ -931,7 +931,7 @@ int *pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.69 $   $Date: 2008/02/04 22:40:46 $
- * VERSION: $Id: TauCAPI.cpp,v 1.69 2008/02/04 22:40:46 amorris Exp $
+ * $Revision: 1.70 $   $Date: 2008/02/18 23:42:05 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.70 2008/02/18 23:42:05 amorris Exp $
  ***************************************************************************/
 
