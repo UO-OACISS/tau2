@@ -27,9 +27,6 @@
 
 #include <TAU.h>
 
-// this is generally needed for mpich2
-#undef MPICH_IGNORE_CXX_SEEK
-#define MPICH_IGNORE_CXX_SEEK
 #include <mpi.h>
 #include <stdio.h>
 #include <Profile/tau_types.h>
@@ -42,7 +39,7 @@
 #define PCXX_EVENT_SRC
 #include "Profile/pcxx_events.h"
 #endif /* TAU_EPILOG */
-#endif // TRACING_ON 
+#endif /* TRACING_ON */
 
 #define SYNC_LOOP_COUNT 10
 
@@ -52,7 +49,7 @@ double* TAUDECL TheTauTraceSyncOffset();
 double TAUDECL TAUClockTime(int tid);
 
 
-// We're probably going to have to change this for some platforms
+/* We're probably going to have to change this for some platforms */
 #ifdef TAU_WINDOWS
 static long gethostid() {
   int id;
@@ -110,7 +107,7 @@ static double masterServeOffset(int slave, MPI_Comm comm) {
     trecv[i] = getPreSyncTime();
   }
 
-  // find minimum ping-pong time
+  /* find minimum ping-pong time */
   pingpong_time = trecv[0] - tsend[0];
   min = 0;
   for (i = 1; i < lcount; i++) {
@@ -122,12 +119,12 @@ static double masterServeOffset(int slave, MPI_Comm comm) {
 
   sync_time = tsend[min] + (pingpong_time / 2);
 
-  // send index of minimum ping-pong
+  /* send index of minimum ping-pong */
   PMPI_Send(&min, 1, MPI_INT, slave, 3, comm);
-  // send sync_time
+  /* send sync_time */
   PMPI_Send(&sync_time, 1, MPI_DOUBLE, slave, 4, comm);
 
-  // master has no offset
+  /* master has no offset */
   return 0.0;
 }
 
@@ -139,16 +136,16 @@ static double slaveDetermineOffset(int master, int rank, MPI_Comm comm) {
   MPI_Status stat;
   double ltime;
 
-  // perform ping-pong loop
+  /* perform ping-pong loop */
   for (i = 0; i < SYNC_LOOP_COUNT; i++) {
     PMPI_Recv(NULL, 0, MPI_INT, master, 1, comm, &stat);
     tsendrecv[i] = getPreSyncTime();
     PMPI_Send(NULL, 0, MPI_INT, master, 2, comm);
   }
 
-  // recieve the index of the ping-pong with the lowest time
+  /* receive the index of the ping-pong with the lowest time */
   PMPI_Recv(&min, 1, MPI_INT, master, 3, comm,  &stat);
-  // recieve the sync_time from the master
+  /* receive the sync_time from the master */
   PMPI_Recv(&sync_time, 1, MPI_DOUBLE, master, 4, comm, &stat);
 
   ltime = tsendrecv[min];
@@ -162,10 +159,10 @@ static double getTimeOffset(int rank, int size) {
   MPI_Comm machineComm;
   int machineRank;
   int numProcsThisMachine;
-  // inter-machine communicator
+  /* inter-machine communicator */
   MPI_Comm interMachineComm;
   int numMachines;
-  // sync rank is the rank within the inter-machine communicator
+  /* sync rank is the rank within the inter-machine communicator */
   int syncRank;
   double startOffset;
   double offset;
@@ -174,12 +171,12 @@ static double getTimeOffset(int rank, int size) {
   PMPI_Comm_rank(machineComm, &machineRank);
   PMPI_Comm_size(machineComm, &numProcsThisMachine);
 
-  // create a communicator with one process from each machine
+  /* create a communicator with one process from each machine */
   PMPI_Comm_split(MPI_COMM_WORLD, machineRank, 0, &interMachineComm);
   PMPI_Comm_rank(interMachineComm, &syncRank);
   PMPI_Comm_size(interMachineComm, &numMachines);
 
-  // broadcast the associated starting offset
+  /* broadcast the associated starting offset */
   startOffset = *TheTauTraceBeginningOffset();
   PMPI_Bcast(&startOffset, 1, MPI_DOUBLE, 0, machineComm);
   *TheTauTraceBeginningOffset() = startOffset;
@@ -198,16 +195,16 @@ static double getTimeOffset(int rank, int size) {
     }
   }
 
-  // broadcast the result to other processes on this machine
+  /* broadcast the result to other processes on this machine */
   PMPI_Bcast(&offset, 1, MPI_DOUBLE, 0, machineComm);
 
 
   return offset;
 }
 
-// The MPI_Finalize wrapper calls this routine
+/* The MPI_Finalize wrapper calls this routine */
 void TauSyncFinalClocks(int rank, int size) {
-  // only do this when tracing
+  /* only do this when tracing */
 #ifdef TRACING_ON
 #ifndef TAU_EPILOG
   double offset = getTimeOffset(rank, size);
@@ -219,18 +216,18 @@ void TauSyncFinalClocks(int rank, int size) {
 #endif
 }
 
-// The MPI_Init wrapper calls this routine
+/* The MPI_Init wrapper calls this routine */
 void TauSyncClocks(int rank, int size) {
   double offset = 0;
 
   PMPI_Barrier(MPI_COMM_WORLD);
   printf ("TAU: Clock Synchonization active on node : %d\n", rank);
-  // clear counter to zero, since the times might be wildly different (LINUX_TIMERS)
-  // we reset to zero so that the offsets won't be so large as to give us negative numbers
-  // on some nodes.  This also allows us to easily use 0 before MPI_Init.
+  /* clear counter to zero, since the times might be wildly different (LINUX_TIMERS)
+     we reset to zero so that the offsets won't be so large as to give us negative numbers
+     on some nodes.  This also allows us to easily use 0 before MPI_Init. */
   *TheTauTraceBeginningOffset() = getPreSyncTime();
 
-  // only do this when tracing
+  /* only do this when tracing */
 #ifdef TRACING_ON
   TAU_REGISTER_EVENT(beginOffset, "TauTraceClockOffsetStart");
   offset = getTimeOffset(rank, size);
