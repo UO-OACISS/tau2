@@ -99,7 +99,7 @@ typedef struct request_list_ {
 #define rq_end( head_alloc ) {\
   request_list *rq; while (head_alloc) {\
 	rq = head_alloc->next;free(head_alloc);head_alloc=rq;}}
-static request_list *requests_head_0, *requests_tail_0;
+static request_list *requests_head_0=NULL, *requests_tail_0=NULL;
 #endif /* TAU_TRACK_MSG */
 static int procid_0;
 
@@ -2570,9 +2570,9 @@ MPI_Status * status;
 
 
 #ifdef TAU_TRACK_MSG
-  if (*flag)
-    TauProcessRecv( (saverequest[*index]),
-			        status, "MPI_Testany" );
+  if (*flag && (*index != MPI_UNDEFINED)) {
+    TauProcessRecv(saverequest[*index], status, "MPI_Testany");
+  }
 
 #endif /* TAU_TRACK_MSG */
   TAU_PROFILE_STOP(tautimer);
