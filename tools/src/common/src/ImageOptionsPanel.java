@@ -20,7 +20,7 @@ public class ImageOptionsPanel extends JPanel implements PropertyChangeListener 
     private String imageQualityStrings[] = { "1.0", "0.75", "0.5", "0.25", "0.15", "0.1" };
     private JComboBox imageQuality = new JComboBox(imageQualityStrings);
 
-    private JCheckBox textAsShapes = new JCheckBox("Draw text as shapes");
+    private JCheckBox textAsShapes = new JCheckBox("Draw text as shapes", true);
     private boolean imageQualityEnabled = true;
 
     public ImageOptionsPanel(Component component, boolean dumbControls, boolean vector) {
