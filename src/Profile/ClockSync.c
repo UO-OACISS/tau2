@@ -48,6 +48,7 @@ int* TAUDECL TheTauTraceSyncOffsetSet();
 double* TAUDECL TheTauTraceSyncOffset();
 double TAUDECL TAUClockTime(int tid);
 
+long TauUserEvent_GetEventId(void *evt);
 
 /* We're probably going to have to change this for some platforms */
 #ifdef TAU_WINDOWS
@@ -208,10 +209,13 @@ void TauSyncFinalClocks(int rank, int size) {
 #ifdef TRACING_ON
 #ifndef TAU_EPILOG
   double offset = getTimeOffset(rank, size);
-  double diff = TheTauTraceSyncOffset() - offset;
+  double diff = *TheTauTraceSyncOffset() - offset;
   TAU_REGISTER_EVENT(endOffset, "TauTraceClockOffsetEnd");
   offset = getTimeOffset(rank, size);
-  TraceEvent((endOffset).GetEventId(), (x_int64) offset, 0, 0, 0);
+  TraceEvent(
+	     TauUserEvent_GetEventId(endOffset), 
+	     (x_int64) offset, 
+	     0, 0, 0);
 #endif 
 #endif
 }
@@ -238,7 +242,7 @@ void TauSyncClocks(int rank, int size) {
 
 #ifdef TRACING_ON
 #ifndef TAU_EPILOG
-  TraceEvent((beginOffset).GetEventId(), (x_int64) offset, 0, 0, 0);
+  TraceEvent(TauUserEvent_GetEventId(beginOffset), (x_int64) offset, 0, 0, 0);
 #endif
 #endif
 

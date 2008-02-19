@@ -108,13 +108,15 @@ void TauUserEvent::AddEventToDB()
   return;
 }
 
-// Constructor 
 long TauUserEvent::GetEventId(void) 
 {
   return EventId;
 }
 
-// Constructor 
+extern "C" long TauUserEvent_GetEventId(TauUserEvent *evt) {
+  return evt->GetEventId();
+}
+
 TauUserEvent::TauUserEvent(const char * EName, bool increasing)
 {
   DEBUGPROFMSG("Inside ctor of TauUserEvent EName = "<< EName << endl;);
@@ -727,7 +729,7 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid)
 }
 
 /***************************************************************************
- * $RCSfile: UserEvent.cpp,v $   $Author: sameer $
- * $Revision: 1.21 $   $Date: 2007/11/06 18:53:33 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.21 2007/11/06 18:53:33 sameer Exp $ 
+ * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
+ * $Revision: 1.22 $   $Date: 2008/02/19 18:50:41 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.22 2008/02/19 18:50:41 amorris Exp $ 
  ***************************************************************************/
