@@ -62,7 +62,7 @@ public class TauDataSource extends DataSource {
         list.add(fileToMonitor);
         return list;
     }
-
+    
     public void load() throws FileNotFoundException, IOException, DataSourceException {
         long time = System.currentTimeMillis();
 
@@ -149,7 +149,7 @@ public class TauDataSource extends DataSource {
                         FileChannel channel;
                         FileLock lock = null;
 
-                        if (modernJava) {
+                        if (modernJava && monitored) {
                             channel = fileIn.getChannel();
                             try {
                                 lock = channel.lock(0, Long.MAX_VALUE, true);

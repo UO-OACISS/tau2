@@ -20,9 +20,9 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.33 2008/01/23 02:09:47 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.34 2008/02/22 19:43:06 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.33 $
+ * @version $Revision: 1.34 $
  */
 public abstract class DataSource {
 
@@ -89,6 +89,8 @@ public abstract class DataSource {
     private boolean wellBehavedSnapshots;
     private long avgStartTime;
 
+    protected boolean monitored;
+    
     public DataSource() {
     // nothing
     }
@@ -132,6 +134,10 @@ public abstract class DataSource {
         }
     }
 
+    public void setMonitored(boolean monitored) {
+        this.monitored = monitored;
+    }
+    
     public Thread getMeanData() {
         return meanData;
     }
