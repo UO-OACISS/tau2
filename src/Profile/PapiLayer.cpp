@@ -23,6 +23,11 @@ using namespace std;
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
 
+#if (PAPI_VERSION_MAJOR(PAPI_VERSION) >= 3 && PAPI_VERSION_MINOR(PAPI_VERSION) >= 9)
+#define TAU_PAPI_COMPONENT
+#endif
+
+
 //#define TAU_PAPI_DEBUG 
 #define TAU_PAPI_DEBUG_LEVEL 0
 // level 0 will perform backward running counter checking and output critical errors
@@ -97,10 +102,14 @@ int PapiLayer::addCounter(char *name) {
 #endif
 
   rc = PAPI_event_name_to_code(name, &code);
+#ifndef TAU_PAPI_COMPONENT 
+  // There's a bug currently in PAPI-C 3.9 that causes the return code to not
+  // be PAPI_OK, even if it has succeeded, for now, we will just not check.
   if (rc != PAPI_OK) {
     fprintf (stderr, "Error: Couldn't Identify Counter '%s': %s\n", name, PAPI_strerror(rc));
     return -1;
   }
+#endif
   
   if ((PAPI_query_event(code) != PAPI_OK)) {
     fprintf (stderr, "Error: Counter %s is not available!\n", name);
