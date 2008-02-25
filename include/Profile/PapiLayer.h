@@ -18,14 +18,21 @@
 
 #ifdef TAU_PAPI
 
-extern "C" {
-#include "papi.h"
-}
+
+#define TAU_PAPI_MAX_COMPONENTS 4
+
+#ifdef TAU_MULTIPLE_COUNTERS
+#define MAX_PAPI_COUNTERS MAX_TAU_COUNTERS
+#else
+#define MAX_PAPI_COUNTERS 1
+#endif
 
 struct ThreadValue {
   int ThreadID;
-  int EventSet; 
+  int EventSet[TAU_PAPI_MAX_COMPONENTS]; 
+  int NumEvents[TAU_PAPI_MAX_COMPONENTS];
   long long *CounterValues;
+  int Comp2Metric[TAU_PAPI_MAX_COMPONENTS][MAX_PAPI_COUNTERS];
 };
 
 

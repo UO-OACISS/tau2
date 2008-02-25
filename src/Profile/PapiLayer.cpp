@@ -22,30 +22,27 @@ using namespace std;
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
+extern "C" {
+#include "papi.h"
+}
 
 #if (PAPI_VERSION_MAJOR(PAPI_VERSION) >= 3 && PAPI_VERSION_MINOR(PAPI_VERSION) >= 9)
-#define TAU_PAPI_COMPONENT
+#define TAU_COMPONENT_PAPI
+#else
+// if there is no component papi, then we pretend that there is just one component
+#define PAPI_COMPONENT_INDEX(a) 0
 #endif
 
-
 //#define TAU_PAPI_DEBUG 
-#define TAU_PAPI_DEBUG_LEVEL 0
+#define TAU_PAPI_DEBUG_LEVEL 1
 // level 0 will perform backward running counter checking and output critical errors
 // level 1 will perform output diagnostic information
 // level 10 will output all counter values, for each retrieval
-
-
-#ifdef TAU_MULTIPLE_COUNTERS
-#define MAX_PAPI_COUNTERS MAX_TAU_COUNTERS
-#else
-#define MAX_PAPI_COUNTERS 1
-#endif
 
 bool PapiLayer::papiInitialized = false;
 ThreadValue *PapiLayer::ThreadList[TAU_MAX_THREADS];
 int PapiLayer::numCounters = 0;
 int PapiLayer::counterList[MAX_PAPI_COUNTERS];
-
 
 // Some versions of PAPI don't have these defined
 // so we'll define them to 0 and if the user tries to use them
@@ -102,8 +99,8 @@ int PapiLayer::addCounter(char *name) {
 #endif
 
   rc = PAPI_event_name_to_code(name, &code);
-#ifndef TAU_PAPI_COMPONENT 
-  // There's a bug currently in PAPI-C 3.9 that causes the return code to not
+#ifndef TAU_COMPONENT_PAPI
+  // There is currently a bug in PAPI-C 3.9 that causes the return code to not
   // be PAPI_OK, even if it has succeeded, for now, we will just not check.
   if (rc != PAPI_OK) {
     fprintf (stderr, "Error: Couldn't Identify Counter '%s': %s\n", name, PAPI_strerror(rc));
@@ -139,36 +136,52 @@ int PapiLayer::initializeThread(int tid) {
   
   ThreadList[tid] = new ThreadValue;
   ThreadList[tid]->ThreadID = tid;
-  ThreadList[tid]->EventSet = PAPI_NULL;
   ThreadList[tid]->CounterValues = new long long[MAX_PAPI_COUNTERS];
 
   for (int i=0; i<MAX_PAPI_COUNTERS; i++) {
     ThreadList[tid]->CounterValues[i] = 0L;
   }
   
-  rc = PAPI_create_eventset(&(ThreadList[tid]->EventSet));
-  if (rc != PAPI_OK) {
-    fprintf (stderr, "Error creating PAPI event set: %s\n", PAPI_strerror(rc));
-    return -1;
+  for (int i=0; i<TAU_PAPI_MAX_COMPONENTS; i++) {
+    ThreadList[tid]->NumEvents[i] = 0;
+    ThreadList[tid]->EventSet[i] = PAPI_NULL;
+    rc = PAPI_create_eventset(&(ThreadList[tid]->EventSet[i]));
+    if (rc != PAPI_OK) {
+      fprintf (stderr, "Error creating PAPI event set: %s\n", PAPI_strerror(rc));
+      return -1;
+    }
   }
-  
 
 #ifndef PAPI_VERSION
-/* PAPI 2 support goes here */
-  rc = PAPI_add_events(&(ThreadList[tid]->EventSet), counterList, numCounters);
-#elif (PAPI_VERSION_MAJOR(PAPI_VERSION) == 3)
-/* PAPI 3 support goes here */
-  rc = PAPI_add_events(ThreadList[tid]->EventSet, counterList, numCounters);
-#else
-/* PAPI future support goes here */
-#error "TAU does not support this version of PAPI, please contact tau-bugs@cs.uoregon.edu"
-#endif 
+  /* PAPI 2 support goes here */
+  rc = PAPI_add_events(&(ThreadList[tid]->EventSet[0]), counterList, numCounters);
   if (rc != PAPI_OK) {
     fprintf (stderr, "Error adding PAPI events: %s\n", PAPI_strerror(rc));
     return -1;
   }
+#elif (PAPI_VERSION_MAJOR(PAPI_VERSION) == 3)
+  /* PAPI 3 support goes here */
+  for (int i=0; i<numCounters; i++) {
+    int comp = PAPI_COMPONENT_INDEX (counterList[i]);
+    rc = PAPI_add_event(ThreadList[tid]->EventSet[comp], counterList[i]);
+    if (rc != PAPI_OK) {
+      fprintf (stderr, "Error adding PAPI events: %s\n", PAPI_strerror(rc));
+      return -1;
+    }
+    // this creates a mapping from 'component', and index in that component back
+    // to the original index, since we return just a single array of values
+    ThreadList[tid]->Comp2Metric[comp][ThreadList[tid]->NumEvents[comp]++] = i;
+  }
+#else
+/* PAPI future support goes here */
+#error "TAU does not support this version of PAPI, please contact tau-bugs@cs.uoregon.edu"
+#endif 
   
-  rc = PAPI_start(ThreadList[tid]->EventSet);
+  for (int i=0; i<TAU_PAPI_MAX_COMPONENTS; i++) {
+    if (ThreadList[tid]->NumEvents[i] >= 1) { // if there were active counters for this component
+      rc = PAPI_start(ThreadList[tid]->EventSet[i]);
+    }
+  }
   
   if (rc != PAPI_OK) {
     fprintf (stderr, "Error calling PAPI_start: %s\n", PAPI_strerror(rc));
@@ -213,7 +226,7 @@ long long PapiLayer::getSingleCounter(int tid) {
   long long oldValue = ThreadList[tid]->CounterValues[0];
 #endif  
 
-  rc = PAPI_read(ThreadList[tid]->EventSet, ThreadList[tid]->CounterValues);
+  rc = PAPI_read(ThreadList[tid]->EventSet[0], ThreadList[tid]->CounterValues);
 
 #ifdef TAU_PAPI_DEBUG
   dmesg(10, "PAPI: getSingleCounter<%d> = %lld\n", tid, ThreadList[tid]->CounterValues[0]);
@@ -237,6 +250,7 @@ long long PapiLayer::getSingleCounter(int tid) {
 /////////////////////////////////////////////////
 long long *PapiLayer::getAllCounters(int tid, int *numValues) {
   int rc;
+  long long tmpCounters[MAX_PAPI_COUNTERS];
 
   if (!papiInitialized) {
     int rc = initializePAPI();
@@ -250,7 +264,6 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
     return NULL;
   }
 
-
   if (ThreadList[tid] == NULL) {
     rc = initializeThread(tid);
     if (rc != 0) {
@@ -260,7 +273,6 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
   
   *numValues = numCounters;
 
-
 #ifdef TAU_PAPI_DEBUG
   long long previousCounters[MAX_PAPI_COUNTERS];
   for (int i=0; i<numCounters; i++) {
@@ -268,7 +280,17 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
   }
 #endif
 
-  rc = PAPI_read(ThreadList[tid]->EventSet, ThreadList[tid]->CounterValues);
+  for (int comp=0; comp<TAU_PAPI_MAX_COMPONENTS; comp++) {
+    if (ThreadList[tid]->NumEvents[comp] >= 1) { // if there were active counters for this component
+      // read eventset for this component
+      rc = PAPI_read(ThreadList[tid]->EventSet[comp], tmpCounters);  
+      // now map back to original indices
+      for (int j=0; j<ThreadList[tid]->NumEvents[comp]; j++) {
+	int index = ThreadList[tid]->Comp2Metric[comp][j];
+	ThreadList[tid]->CounterValues[index] = tmpCounters[j];
+      }
+    }
+  }
 
 #ifdef TAU_PAPI_DEBUG
   for (int i=0; i<numCounters; i++) {
