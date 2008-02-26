@@ -256,6 +256,12 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             name = "";
 
         Configure config = new Configure("", "");
+        
+        File home = new File(System.getProperty("user.home") + "/.ParaProf");
+        if (!home.exists()) {
+            home.mkdir();
+        }
+            
         config.initialize(System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf.cfg");
         if (name.compareTo("Default") == 0)
             config.setConfigFileName("");
