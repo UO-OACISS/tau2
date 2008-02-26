@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import edu.uoregon.tau.common.Common;
+import edu.uoregon.tau.common.TauRuntimeException;
 import edu.uoregon.tau.common.Wget;
 import edu.uoregon.tau.common.tar.Tar;
 import edu.uoregon.tau.perfdmf.Database;
@@ -595,8 +596,9 @@ public class Configure {
 
             configWriter.close();
             return configFile.toString();
-        } catch (IOException e) {}
-        return null;
+        } catch (IOException e) {
+            throw new TauRuntimeException(e);
+        }
     }
 
     //Standard access methods for some of the fields.
@@ -695,8 +697,9 @@ public class Configure {
     public String getConfigFileName() {
         return configuration_name;
     }
+
     public void savePassword() {
-    	this.store_db_password = true;
+        this.store_db_password = true;
     }
 
     /* Test that the database exists, and if it doesn't, create it! */
@@ -792,11 +795,11 @@ public class Configure {
         ConfigureTest configTest = new ConfigureTest(tauroot);
         configTest.initialize(configFilename);
         try {
-			configTest.createDB(true);
-		} catch (DatabaseConfigurationException e) {
-		    e.printStackTrace();
+            configTest.createDB(true);
+        } catch (DatabaseConfigurationException e) {
+            e.printStackTrace();
             System.exit(0);
-		}
+        }
 
         // check to see if the database is there...
         //config.createDB();
