@@ -285,18 +285,30 @@ public class DBConnector implements DB {
             // We now load the jar file dynamically based on the filename
             // in the perfdmf configuration
 
-            File file = new File(JDBCjarFileName);
-
-            if (!file.exists()) {
-                System.err.println("Warning: file '" + JDBCjarFileName + "' does not exist!");
-            }
-
             URL[] urls = new URL[1];
 
-            if (System.getProperty("os.name").toLowerCase().trim().startsWith("windows")) {
-                urls[0] = new URL("file:\\" + JDBCjarFileName.replace('\\', '/'));
-            } else {
-                urls[0] = new URL("file://" + JDBCjarFileName);
+            if (JDBCjarFileName.toLowerCase().startsWith("http:")) {
+                // When it gets converted from a String to a File http:// turns into http:/
+                String url_string = "";
+              if (JDBCjarFileName.toLowerCase().startsWith("http://")) {
+                url_string = "http://" + JDBCjarFileName.toString().substring(7).replace('\\', '/');
+                }
+              else if (JDBCjarFileName.toLowerCase().startsWith("http:/")) {
+                url_string = "http://" + JDBCjarFileName.toString().substring(6).replace('\\', '/');
+              }
+              urls[0] = new URL(JDBCjarFileName);
+            }  else {
+                File file = new File(JDBCjarFileName);
+
+                if (!file.exists()) {
+                    System.err.println("Warning: file '" + JDBCjarFileName + "' does not exist!");
+                }
+
+	            if (System.getProperty("os.name").toLowerCase().trim().startsWith("windows")) {
+	                urls[0] = new URL("file:\\" + JDBCjarFileName.replace('\\', '/'));
+	            } else {
+	                urls[0] = new URL("file://" + JDBCjarFileName);
+	            }
             }
 
             URLClassLoader cl = new URLClassLoader(urls);

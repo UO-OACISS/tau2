@@ -12,6 +12,7 @@
 package edu.uoregon.tau.perfdmf.database;
 
 import java.io.*;
+import java.net.URL;
 import java.sql.SQLException;
 
 import edu.uoregon.tau.perfdmf.Database;
@@ -116,7 +117,23 @@ public class ConnectionManager {
             System.out.println("Did not find " + filename);
 
         try {
-            BufferedReader preader = new BufferedReader(new FileReader(readSchema));
+            BufferedReader preader;
+            if (filename.toLowerCase().startsWith("http:")) {
+                // When it gets converted from a String to a File http:// turns into http:/
+                String url_string = "";
+              if (filename.toLowerCase().startsWith("http://")) {
+                url_string = "http://" + filename.toString().substring(7).replace('\\', '/');
+                }
+              else if (filename.toLowerCase().startsWith("http:/")) {
+                url_string = "http://" + filename.toString().substring(6).replace('\\', '/');
+              }
+                URL url = new URL(url_string);
+                InputStream iostream = url.openStream();
+                InputStreamReader ireader = new InputStreamReader(iostream);
+                preader = new BufferedReader(ireader);
+            }  else {
+                preader = new BufferedReader(new FileReader(new File(filename)));
+            }
 
             while ((inputString = preader.readLine()) != null) {
                 inputString = inputString.replaceAll("@DATABASE_NAME@", config.getDBName());
