@@ -225,8 +225,10 @@ long long PapiLayer::getSingleCounter(int tid) {
 #ifdef TAU_PAPI_DEBUG
   long long oldValue = ThreadList[tid]->CounterValues[0];
 #endif  
+  
+  int comp = PAPI_COMPONENT_INDEX (counterList[0]);
 
-  rc = PAPI_read(ThreadList[tid]->EventSet[0], ThreadList[tid]->CounterValues);
+  rc = PAPI_read(ThreadList[tid]->EventSet[comp], ThreadList[tid]->CounterValues);
 
 #ifdef TAU_PAPI_DEBUG
   dmesg(10, "PAPI: getSingleCounter<%d> = %lld\n", tid, ThreadList[tid]->CounterValues[0]);
