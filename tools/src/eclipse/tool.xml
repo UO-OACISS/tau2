@@ -41,12 +41,12 @@ run in sequence, allowing the definition of a multi-step processing procedure.  
 		<allcompilers command="kinst" group="kojak"/>
 	</compile>
 	<analyze>
-		<process command="expert" group="kojak">
+		<utility command="expert" group="kojak">
 			<argument value="a.elg"/>
-		</process>
-		<view command="paraprof" group="tau">
+		</utility>
+		<utility command="paraprof" group="tau">
 			<argument value="a.cube"/>
-		</view>
+		</utility>
 	</analyze>
 </tool>
 
