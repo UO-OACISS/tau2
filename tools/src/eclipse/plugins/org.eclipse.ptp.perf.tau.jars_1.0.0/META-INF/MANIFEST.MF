@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: TAU Jars Plug-in
-Bundle-SymbolicName: org.eclipse.ptp.tau.jars
+Bundle-SymbolicName: org.eclipse.ptp.perf.tau.jars
 Bundle-Version: 1.0.0
 Bundle-ClassPath: batik-combined.jar,
  jargs.jar,

@@ -28,20 +28,20 @@ cd `dirname $0`
 echo "Installing to $1/plugins"
 echo "..."
 cp ./plugins/*.jar $PLUG_DIR
-cp -r ./plugins/org.eclipse.ptp.tau.jars_1.0.0/ $PLUG_DIR
+cp -r ./plugins/org.eclipse.ptp.perf.tau.jars_1.0.0/ $PLUG_DIR
 
-cp ../contrib/batik-combined.jar $PLUG_DIR/org.eclipse.ptp.tau.jars_1.0.0/
-cp ../contrib/jargs.jar $PLUG_DIR/org.eclipse.ptp.tau.jars_1.0.0/
-cp ../contrib/jcommon-0.9.6.jar $PLUG_DIR/org.eclipse.ptp.tau.jars_1.0.0/
-cp ../contrib/jfreechart-0.9.21.jar $PLUG_DIR/org.eclipse.ptp.tau.jars_1.0.0/
-cp ../contrib/jgraph.jar $PLUG_DIR/org.eclipse.ptp.tau.jars_1.0.0/
-cp ../contrib/jogl/jogl.jar $PLUG_DIR/org.eclipse.ptp.tau.jars_1.0.0/
-cp ../contrib/jython.jar $PLUG_DIR/org.eclipse.ptp.tau.jars_1.0.0/
-cp ../contrib/xerces.jar $PLUG_DIR/org.eclipse.ptp.tau.jars_1.0.0/
+cp ../contrib/batik-combined.jar $PLUG_DIR/org.eclipse.ptp.perf.tau.jars_1.0.0/
+cp ../contrib/jargs.jar $PLUG_DIR/org.eclipse.ptp.perf.tau.jars_1.0.0/
+cp ../contrib/jcommon-0.9.6.jar $PLUG_DIR/org.eclipse.ptp.perf.tau.jars_1.0.0/
+cp ../contrib/jfreechart-0.9.21.jar $PLUG_DIR/org.eclipse.ptp.perf.tau.jars_1.0.0/
+cp ../contrib/jgraph.jar $PLUG_DIR/org.eclipse.ptp.perf.tau.jars_1.0.0/
+cp ../contrib/jogl/jogl.jar $PLUG_DIR/org.eclipse.ptp.perf.tau.jars_1.0.0/
+cp ../contrib/jython.jar $PLUG_DIR/org.eclipse.ptp.perf.tau.jars_1.0.0/
+cp ../contrib/xerces.jar $PLUG_DIR/org.eclipse.ptp.perf.tau.jars_1.0.0/
 
-cp ../paraprof/bin/paraprof.jar $PLUG_DIR/org.eclipse.ptp.tau.jars_1.0.0/
-cp ../perfdmf/bin/perfdmf.jar $PLUG_DIR/org.eclipse.ptp.tau.jars_1.0.0/
-cp ../common/bin/tau-common.jar $PLUG_DIR/org.eclipse.ptp.tau.jars_1.0.0/
-cp ../vis/bin/vis.jar $PLUG_DIR/org.eclipse.ptp.tau.jars_1.0.0/
+cp ../paraprof/bin/paraprof.jar $PLUG_DIR/org.eclipse.ptp.perf.tau.jars_1.0.0/
+cp ../perfdmf/bin/perfdmf.jar $PLUG_DIR/org.eclipse.ptp.perf.tau.jars_1.0.0/
+cp ../common/bin/tau-common.jar $PLUG_DIR/org.eclipse.ptp.perf.tau.jars_1.0.0/
+cp ../vis/bin/vis.jar $PLUG_DIR/org.eclipse.ptp.perf.tau.jars_1.0.0/
 cd $CURRENT_DIR
 echo "Eclipse plugins installed!"
