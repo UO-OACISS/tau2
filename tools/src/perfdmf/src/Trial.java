@@ -24,7 +24,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.26 2008/02/27 17:56:51 khuck Exp $
+ * CVS $Id: Trial.java,v 1.27 2008/02/28 18:25:33 khuck Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -693,7 +693,9 @@ public class Trial implements Serializable {
                         }
                     } else {
                         int type = this.getFieldType(i);
-				        if (type == java.sql.Types.VARCHAR || type == java.sql.Types.CLOB || type == java.sql.Types.LONGVARCHAR) {
+						if (this.getField(i) == null) {
+                            statement.setNull(pos++, type);
+						} else if (type == java.sql.Types.VARCHAR || type == java.sql.Types.CLOB || type == java.sql.Types.LONGVARCHAR) {
                         	statement.setString(pos++, this.getField(i));
 				        } else if (type == java.sql.Types.INTEGER) {
                         	statement.setInt(pos++, Integer.parseInt(this.getField(i)));
