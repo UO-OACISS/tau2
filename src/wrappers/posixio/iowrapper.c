@@ -48,9 +48,9 @@ size_t TauWrapperRead(int fd, void *buf, size_t nbytes)
 
 
   /* calculate the time spent in operation */
-  currentRead = (double) (t2.tv_usec - t1.tv_usec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
+  currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  TAU_EVENT(re, nbytes/currentRead);
+  TAU_EVENT(re, (double) nbytes/currentRead);
   TAU_EVENT(bytesread, nbytes);
 
   TAU_PROFILE_STOP(t);
@@ -74,9 +74,9 @@ size_t TauWrapperWrite(int fd, void *buf, size_t nbytes)
   gettimeofday(&t2, 0);
 
   /* calculate the time spent in operation */
-  currentWrite = (double) (t2.tv_usec - t1.tv_usec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
+  currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  TAU_EVENT(wb, nbytes/currentWrite);
+  TAU_EVENT(wb, (double) nbytes/currentWrite);
   TAU_EVENT(byteswritten, nbytes);
 
   TAU_PROFILE_STOP(t);
