@@ -66,11 +66,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  *
-<<<<<<< AnalysisTask.java
- * <P>CVS $Id: AnalysisTask.java,v 1.8 2008/03/05 00:25:57 khuck Exp $</P>
-=======
- * <P>CVS $Id: AnalysisTask.java,v 1.8 2008/03/05 00:25:57 khuck Exp $</P>
->>>>>>> 1.6.8.3
+ * <P>CVS $Id: AnalysisTask.java,v 1.9 2008/03/05 00:28:11 khuck Exp $</P>
  * @author Kevin Huck
  * @version 0.1
  * @since 0.1

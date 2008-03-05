@@ -20,11 +20,7 @@ import java.sql.SQLException;
 /**
  * This class is used as a main class for configuring PerfExplorer.
  *
-<<<<<<< Configure.java
- * <P>CVS $Id: Configure.java,v 1.9 2008/03/05 00:25:53 khuck Exp $</P>
-=======
- * <P>CVS $Id: Configure.java,v 1.9 2008/03/05 00:25:53 khuck Exp $</P>
->>>>>>> 1.7.8.4
+ * <P>CVS $Id: Configure.java,v 1.10 2008/03/05 00:28:11 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1

@@ -28,11 +28,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
-<<<<<<< ChartData.java
- * <P>CVS $Id: ChartData.java,v 1.44 2008/03/05 00:25:57 khuck Exp $</P>
-=======
- * <P>CVS $Id: ChartData.java,v 1.44 2008/03/05 00:25:57 khuck Exp $</P>
->>>>>>> 1.42.4.2
+ * <P>CVS $Id: ChartData.java,v 1.45 2008/03/05 00:28:11 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1

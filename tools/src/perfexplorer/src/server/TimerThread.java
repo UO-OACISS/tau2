@@ -10,11 +10,7 @@ import edu.uoregon.tau.perfdmf.DatabaseAPI;
  * requests.  It is created by the PerfExplorerServer object, and 
  * checks the queue every 1 seconds to see if there are any new requests.
  *
-<<<<<<< TimerThread.java
- * <P>CVS $Id: TimerThread.java,v 1.9 2008/03/05 00:25:57 khuck Exp $</P>
-=======
- * <P>CVS $Id: TimerThread.java,v 1.9 2008/03/05 00:25:57 khuck Exp $</P>
->>>>>>> 1.6.8.1
+ * <P>CVS $Id: TimerThread.java,v 1.10 2008/03/05 00:28:11 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1

@@ -9,11 +9,7 @@ import java.util.List;
  * PerfExplorerServer object.  This interface defines the API for
  * passing requests to the server.
  * 
-<<<<<<< RMIPerfExplorer.java
- * <P>CVS $Id: RMIPerfExplorer.java,v 1.11 2008/03/05 00:25:53 khuck Exp $</P>
-=======
- * <P>CVS $Id: RMIPerfExplorer.java,v 1.11 2008/03/05 00:25:53 khuck Exp $</P>
->>>>>>> 1.9.2.2
+ * <P>CVS $Id: RMIPerfExplorer.java,v 1.12 2008/03/05 00:28:11 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
