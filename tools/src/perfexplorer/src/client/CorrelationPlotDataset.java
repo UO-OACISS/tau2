@@ -16,7 +16,11 @@ import java.text.FieldPosition;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper class around the RawDataInterface class.
  *
- * <P>CVS $Id: CorrelationPlotDataset.java,v 1.11 2007/05/25 18:26:56 khuck Exp $</P>
+<<<<<<< CorrelationPlotDataset.java
+ * <P>CVS $Id: CorrelationPlotDataset.java,v 1.12 2008/03/05 00:25:52 khuck Exp $</P>
+=======
+ * <P>CVS $Id: CorrelationPlotDataset.java,v 1.12 2008/03/05 00:25:52 khuck Exp $</P>
+>>>>>>> 1.10.8.1
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1

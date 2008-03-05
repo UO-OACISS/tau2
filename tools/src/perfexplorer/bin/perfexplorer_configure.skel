@@ -1,6 +1,6 @@
 #!/bin/@SHELL@
 
-# $Id: perfexplorer_configure.skel,v 1.7 2007/11/10 01:14:37 scottb Exp $
+# $Id: perfexplorer_configure.skel,v 1.8 2008/03/05 00:25:50 khuck Exp $
 # $Name:  $
 
 rm -f .last_config
@@ -238,6 +238,59 @@ if [ ! -r ${WEKA_JAR} ]; then
 	    if [ ! -r ${WEKA_JAR} ]; then
 		echo ""
 		echo "Still couldn't find $WEKA_JAR, please acquire your Weka jar file manually"
+		echo ""
+		
+		exit
+	    fi
+	else
+	    exit
+	fi
+fi
+
+RESPONSE=
+JBOSS_JAR=${targetdir}/${architecture}/lib/drools-core-3.0.6.jar
+HIBERNATE_JAR=${targetdir}/${architecture}/lib/hibernate3.jar
+JBOSS_TAR_DIR=${targetdir}/${architecture}/lib/
+    
+if [ ! -r ${JBOSS_JAR} -o ! -r ${HIBERNATE_JAR} ]; then
+    echo ""
+    echo "$JBOSS_JAR and/or $HIBERNATE_JAR not found."
+    echo ""
+
+	while [ "x$RESPONSE" = "x" ]; do
+	    $echo "Would you like to attempt to automatically download the required jar files? (y/n) ${nnl}"
+	    read RESPONSE
+	    case $RESPONSE in
+		[yY]|[Yy][Ee][Ss]) RESPONSE=y ;;
+		[nN]|[Nn][Oo]) RESPONSE=n ;;
+	    esac
+	done
+	
+	
+	if [ "${RESPONSE}" == "y" ]; then 
+		FILE=perfexplorer_jars.tgz
+		URL=http://www.cs.uoregon.edu/research/paracomp/tau/perfexplorer_jars.tgz
+		/bin/rm -f $FILE
+		echo "Getting $FILE... please be patient..."
+		#wget "$URL"
+		java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget "$URL" "$FILE" true
+		mv "$FILE" ${JBOSS_TAR_DIR}/.
+		cd ${JBOSS_TAR_DIR}/.
+		java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.tar.Tar -xvzf ${FILE}
+		/bin/rm -f $FILE
+		mv jbossrules/*.jar .
+		mv jbossrules/lib/*.jar .
+		mv hibernate-3.2/*.jar .
+		mv hibernate-3.2/lib/*.jar .
+		mv hibernate-annotations-3.3.0.GA/*.jar .
+		mv hibernate-annotations-3.3.0.GA/lib/*.jar .
+		rm -rf jbossrules
+		rm -rf hibernate-3.2
+		rm -rf hibernate-annotations-3.3.0.GA
+	    
+		if [ ! -r ${JBOSS_JAR} -o ! -r ${HIBERNATE_JAR} ]; then
+		echo ""
+		echo "Still couldn't find $JBOSS_JAR or $HIBERNATE_JAR, please acquire JBoss Rules and/or Hibernate manually."
 		echo ""
 		
 		exit

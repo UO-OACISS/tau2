@@ -9,7 +9,7 @@ package clustering;
   * This interface is used to define the methods to implement a class
   * which performs PCA, or Principle Components Analysis.
   *
-  * <P>CVS $Id: PrincipalComponentsAnalysisInterface.java,v 1.5 2007/01/23 22:57:01 khuck Exp $</P>
+  * <P>CVS $Id: PrincipalComponentsAnalysisInterface.java,v 1.6 2008/03/05 00:25:52 khuck Exp $</P>
   * @author khuck
   * @version 0.1
   * @since   0.1
@@ -69,4 +69,10 @@ public interface PrincipalComponentsAnalysisInterface {
      */
     public void reset();
     
+    /**
+     * Sets the maximum number of components returned.
+     * 
+     * @param maxComponents
+     */
+    public void setMaxComponents(int maxComponents);
 }

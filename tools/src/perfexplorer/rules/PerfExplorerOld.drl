@@ -1,0 +1,307 @@
+#created on: Apr 24, 2007
+package rules
+
+#list any import classes here.
+import rules.RuleHarnessOld.RelativeTrial;
+import rules.RuleHarnessOld.Difference;
+import rules.RuleHarnessOld.Helper;
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.IntervalEvent;
+import edu.uoregon.tau.perfdmf.Metric;
+import java.util.Iterator;
+import java.util.HashSet;
+
+#declare any global variables here
+
+/*function myFunction( ... ) 
+    function content (can have multiple functions) 
+end*/
+
+function void assertEvents(RelativeTrial b) {
+	Iterator events = b.getEventIterator();
+	while (events.hasNext()) {
+		IntervalEvent event = (IntervalEvent)events.next();
+		// don't include callpath or phase events for now
+		if ((event.getGroup().indexOf("TAU_CALLPATH") < 0) && 
+		    (event.getGroup().indexOf("TAU_PHASE") < 0)) {
+			RuleHarnessOld.workingMemory.assertObject(new Helper(event.getName(), event));
+		}
+	}
+	return;
+}
+
+function void assertGroups(RelativeTrial b) {
+	Iterator events = b.getEventIterator();
+	HashSet set = new HashSet();
+	while (events.hasNext()) {
+		IntervalEvent event = (IntervalEvent)events.next();
+		RuleHarnessOld.workingMemory.assertObject(new String("GROUP:" + event.getGroup()));
+	}
+	return;
+}
+
+function void assertMetrics(RelativeTrial b) {
+	Iterator metrics = b.getMetrics().iterator();
+	while (metrics.hasNext()) {
+		Metric metric = (Metric)metrics.next();
+		RuleHarnessOld.workingMemory.assertObject(new Helper(metric.getName(), metric));
+	}
+	return;
+}
+
+/**
+ * If the two trials have the same main event, compare them
+ * and see which one has the better performance
+ */
+rule "Compare Main"
+	no-loop true
+	when
+		// there exists a baseline trial
+		b : RelativeTrial( type == RelativeTrial.BASELINE )
+		// and a comparison trial
+		c : RelativeTrial( type == RelativeTrial.COMPARISON )
+		// and they have the same main event name
+		eval( b.getMain().getName().equalsIgnoreCase(c.getMain().getName()) )
+	then
+		// get the main inclusive time
+		double baselineTime = b.getMain().getMeanSummary().getInclusive(b.getTimeIndex());
+		// get the main inclusive time
+		double comparisonTime = c.getMain().getMeanSummary().getInclusive(c.getTimeIndex());
+		if (baselineTime > comparisonTime) {
+			// the comparison is faster than the baseline
+			assert (new Difference (Difference.FASTER, baselineTime, comparisonTime, null, null));
+		} else if (baselineTime < comparisonTime) {
+			// the comparison is slower than the baseline
+			assert (new Difference (Difference.SLOWER, baselineTime, comparisonTime, null, null));
+		} else {
+			// the comparison is the same as the baseline
+			assert (new Difference (Difference.SAME, baselineTime, comparisonTime, null, null));
+		}
+end
+
+/**
+ * If the two trials do not have the same main event, then finished.
+ */
+rule "Main Events don't Match"
+	when
+		// there exists a baseline trial
+		b : RelativeTrial( type == RelativeTrial.BASELINE )
+		// and a comparison trial
+		c : RelativeTrial( type == RelativeTrial.COMPARISON )
+		eval( !(b.getMain().getName().equalsIgnoreCase(c.getMain().getName())) )
+	then
+		System.out.println("Main events do not match: " + b.getMain().getName() + ", " + c.getMain().getName());
+end
+
+/**
+ * If the comparison trial is faster than baseline, report it,
+ * and assert the events in the trial, the metrics in the trial,
+ * and the groups.
+ */
+rule "Faster than Baseline"
+	when
+		// there exists a baseline trial
+		b : RelativeTrial( type == RelativeTrial.BASELINE )
+		// and a comparison trial
+		c : RelativeTrial( type == RelativeTrial.COMPARISON )
+		d : Difference ( type == Difference.FASTER, eventName == null, metricName == null )
+	then
+		StringBuffer buf = new StringBuffer("The selected trial (");
+		buf.append(c.getTrial().getName());
+		buf.append(") is relatively faster than the baseline trial (");
+		buf.append(b.getTrial().getName());
+		buf.append(").");
+		System.out.println(buf.toString());
+		System.out.println(d.toString());
+		// assert the events to be compared
+		assertEvents(b);
+		// assert the metrics to be compared
+		assertMetrics(b);
+		// assert the groups to be compared
+		//assertGroups(b);
+end
+
+/**
+ * If the comparison trial is slower than baseline, report it,
+ * and assert the events in the trial, the metrics in the trial,
+ * and the groups.
+ */
+rule "Slower than Baseline"
+	when
+		// there exists a baseline trial
+		b : RelativeTrial( type == RelativeTrial.BASELINE )
+		// and a comparison trial
+		c : RelativeTrial( type == RelativeTrial.COMPARISON )
+		d : Difference ( type == Difference.SLOWER, eventName == null, metricName == null )
+	then
+		StringBuffer buf = new StringBuffer("The selected trial (");
+		buf.append(c.getTrial().getName());
+		buf.append(") is relatively slower than the baseline trial (");
+		buf.append(b.getTrial().getName());
+		buf.append(").");
+		System.out.println(buf.toString());
+		System.out.println(d.toString());
+		// assert the events to be compared
+		assertEvents(b);
+		// assert the metrics to be compared
+		assertMetrics(b);
+		// assert the groups to be compared
+		//assertGroups(b);
+end
+
+rule "Same as Baseline"
+	when
+		// there exists a baseline trial
+		b : RelativeTrial( type == RelativeTrial.BASELINE )
+		// and a comparison trial
+		c : RelativeTrial( type == RelativeTrial.COMPARISON )
+		d : Difference ( type == Difference.SAME, eventName == null, metricName == null )
+	then
+		StringBuffer buf = new StringBuffer("The selected trial (");
+		buf.append(c.getTrial().getName());
+		buf.append(") and the baseline trial (");
+		buf.append(b.getTrial().getName());
+		buf.append(") have the same execution time.");
+		System.out.println(buf.toString());
+end
+
+/**
+ * If the comparison trial is faster than baseline, report it,
+ * and assert the events in the trial, the metrics in the trial,
+ * and the groups.
+ */
+rule "Faster than Baseline Event"
+	when
+		// there exists a baseline trial
+		b : RelativeTrial( type == RelativeTrial.BASELINE )
+		// and a comparison trial
+		c : RelativeTrial( type == RelativeTrial.COMPARISON )
+		d : Difference ( type == Difference.FASTER, name : eventName != null, metricName == null )
+	then
+		System.out.println(d.toString());
+end
+
+/**
+ * If the comparison trial is slower than baseline, report it,
+ * and assert the events in the trial, the metrics in the trial,
+ * and the groups.
+ */
+rule "Slower than Baseline Event"
+	when
+		// there exists a baseline trial
+		b : RelativeTrial( type == RelativeTrial.BASELINE )
+		// and a comparison trial
+		c : RelativeTrial( type == RelativeTrial.COMPARISON )
+		d : Difference ( type == Difference.SLOWER, name : eventName != null, metricName == null )
+	then
+		System.out.println(d.toString());
+end
+
+rule "Same as Baseline Event"
+	when
+		// there exists a baseline trial
+		b : RelativeTrial( type == RelativeTrial.BASELINE )
+		// and a comparison trial
+		c : RelativeTrial( type == RelativeTrial.COMPARISON )
+		Difference ( type == Difference.SAME, name : eventName != null, metricName == null )
+	then
+		// do nothing?
+end
+
+/**
+ * If the comparison trial is faster than baseline, report it,
+ * and assert the events in the trial, the metrics in the trial,
+ * and the groups.
+ */
+rule "Faster than Baseline Metric"
+	when
+		// there exists a baseline trial
+		b : RelativeTrial( type == RelativeTrial.BASELINE )
+		// and a comparison trial
+		c : RelativeTrial( type == RelativeTrial.COMPARISON )
+		d : Difference ( type == Difference.FASTER, eventName == null, name : metricName != null )
+	then
+		System.out.println(d.toString());
+end
+
+/**
+ * If the comparison trial is slower than baseline, report it,
+ * and assert the events in the trial, the metrics in the trial,
+ * and the groups.
+ */
+rule "Slower than Baseline Metric"
+	when
+		// there exists a baseline trial
+		b : RelativeTrial( type == RelativeTrial.BASELINE )
+		// and a comparison trial
+		c : RelativeTrial( type == RelativeTrial.COMPARISON )
+		d : Difference ( type == Difference.SLOWER, eventName == null, name : metricName != null )
+	then
+		System.out.println(d.toString());
+end
+
+rule "Same as Baseline Metric"
+	when
+		// there exists a baseline trial
+		b : RelativeTrial( type == RelativeTrial.BASELINE )
+		// and a comparison trial
+		c : RelativeTrial( type == RelativeTrial.COMPARISON )
+		Difference ( type == Difference.SAME, eventName == null, name : metricName != null )
+	then
+		// do nothing?
+end
+
+rule "Pairwise event comparison"
+	when
+		h : Helper ( name : name )
+		b : RelativeTrial( type == RelativeTrial.BASELINE )
+		c : RelativeTrial( type == RelativeTrial.COMPARISON )
+		d : Difference ( eventName == null, metricName == null )
+		eval ( h.getObject() instanceof IntervalEvent )
+		eval ( ! ( b.getMain().getName().equals(name) ) )
+	then
+		// get the baseline inclusive time
+		double baselineTime = b.getEvent(name).getMeanSummary().getInclusive(b.getTimeIndex());
+		// get the comparison inclusive time
+		double comparisonTime = c.getEvent(name).getMeanSummary().getInclusive(c.getTimeIndex());
+		if ( ( (baselineTime / d.getBaseline() ) > 0.02 ) || ( ( comparisonTime / d.getComparison() ) > 0.02 ) ) {
+			//System.out.println(name + " " + baselineTime + " " + comparisonTime);
+			if (baselineTime > comparisonTime) {
+				// the comparison is faster than the baseline
+				assert (new Difference (Difference.FASTER, baselineTime, comparisonTime, name, null));
+			} else if (baselineTime < comparisonTime) {
+				// the comparison is slower than the baseline
+				assert (new Difference (Difference.SLOWER, baselineTime, comparisonTime, name, null));
+			} else {
+				// the comparison is the same as the baseline
+				assert (new Difference (Difference.SAME, baselineTime, comparisonTime, name, null));
+			}
+		}
+end
+
+rule "Pairwise metric comparison"
+	when
+		h : Helper ( name : name )
+		b : RelativeTrial( type == RelativeTrial.BASELINE )
+		c : RelativeTrial( type == RelativeTrial.COMPARISON )
+		d : Difference ( eventName == null, metricName == null )
+		eval ( h.getObject() instanceof Metric )
+		// somehow check that this isn't time again...  or is that necessary?
+	then
+		// get the baseline inclusive time
+		double baselineTime = b.getMain().getMeanSummary().getInclusive(b.findMetricIndex(name));
+		// get the comparison inclusive time
+		double comparisonTime = c.getMain().getMeanSummary().getInclusive(c.findMetricIndex(name));
+		if (baselineTime > comparisonTime) {
+			// the comparison is faster than the baseline
+			assert (new Difference (Difference.FASTER, baselineTime, comparisonTime, null, name));
+		} else if (baselineTime < comparisonTime) {
+			// the comparison is slower than the baseline
+			assert (new Difference (Difference.SLOWER, baselineTime, comparisonTime, null, name));
+		} else {
+			// the comparison is the same as the baseline
+			assert (new Difference (Difference.SAME, baselineTime, comparisonTime, null, name));
+		}
+end
+

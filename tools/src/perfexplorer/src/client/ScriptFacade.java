@@ -524,6 +524,13 @@ public class ScriptFacade {
 	}
 	
 	public void runComparisonRules(Trial baseline, Trial comparison) {
-		//RuleHarness.processRules(baseline, comparison);
+		//RuleHarnessOld.processRules(baseline, comparison);
+	}
+
+	public void setShowZero(int value) {
+		if (value == 0)
+			model.setShowZero(false);
+		else
+			model.setShowZero(true);
 	}
 }

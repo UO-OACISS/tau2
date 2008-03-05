@@ -41,7 +41,17 @@ public class PerfExplorerCube {
         ColorScale colorScale = new ColorScale();
 
         // Create the scatterPlot
-        ScatterPlot scatterPlot = PlotFactory.createScatterPlot(data.getNames(0), data.getNames(1), data.getNames(2), data.getNames(3), values, true, colorScale);
+        String[] tmp = new String[4];
+        for (int i = 0 ; i < 4 ; i++) {
+        	int index = data.getNames(i).indexOf("[");
+        	if (index > 0) {
+        		tmp[i] = data.getNames(i).substring(0, index-1);
+        	} else {
+        		tmp[i] = data.getNames(i);
+        	}
+        }
+        
+        ScatterPlot scatterPlot = PlotFactory.createScatterPlot(tmp[0], tmp[1], tmp[2], tmp[3], values, true, colorScale);
         
         // Set the size
         scatterPlot.setSize(10, 10, 10);

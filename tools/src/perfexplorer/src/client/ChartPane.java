@@ -64,6 +64,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 	private JToggleButton efficiency = new JToggleButton ("Efficiency");
 	private JToggleButton constantProblem = new JToggleButton ("Strong Scaling");
 	private JToggleButton horizontal = new JToggleButton ("Horizontal");
+	private JToggleButton showZero = new JToggleButton ("Show Y-Axis Zero");
 
 	private List tableColumns = null;
 	private JLabel titleLabel = new JLabel("Chart Title:");
@@ -149,6 +150,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		this.efficiency.setSelected(false);
 		this.constantProblem.setSelected(false);
 		this.horizontal.setSelected(false);
+		this.showZero.setSelected(true);
 		// left text fields
 		// left combo boxes
 		this.dimension.setSelectedIndex(0);
@@ -309,6 +311,10 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		this.horizontal.setToolTipText("Create a horizontal chart");
 		this.horizontal.addActionListener(this);
 		top.add(this.horizontal);
+
+		this.showZero.setToolTipText("Include zero value in y-axis range");
+		this.showZero.addActionListener(this);
+		top.add(this.showZero);
 
 		return (top);
 	}
@@ -546,7 +552,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 			tmp = (String)obj;
 			facade.setEventName(null);
 			facade.setGroupName(null);
-			if (tmp.equalsIgnoreCase("interval_event.name")) {
+			if (tmp.equalsIgnoreCase(INTERVAL_EVENT_NAME)) {
 				obj = this.event.getSelectedItem();
 				tmp = (String)obj;
 				if (!tmp.equals("All Events")) {
@@ -571,6 +577,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
     	facade.setChartEfficiency(this.efficiency.isSelected()?1:0);
     	facade.setChartConstantProblem(this.constantProblem.isSelected()?1:0);
     	facade.setChartHorizontal(this.horizontal.isSelected()?1:0);
+    	facade.setShowZero(this.showZero.isSelected()?1:0);
 
 		// create the Chart
 		this.chartPanel.setVisible(false);
@@ -645,7 +652,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 				this.xmlNameLabel.setEnabled(false);
 				this.xmlName.setEnabled(false);
 			}
-			if (tmp.equalsIgnoreCase("interval_event.name") ||
+			if (tmp.equalsIgnoreCase(INTERVAL_EVENT_NAME) ||
 				tmp.equalsIgnoreCase("interval_event.group_name")) {
 				refreshDynamicControls(false, true, false);
 			}
@@ -848,7 +855,11 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		if (model.getChartLogYAxis()) {
         	LogarithmicAxis axis = new LogarithmicAxis(
 				PerfExplorerModel.getModel().getChartYAxisLabel());
-        	axis.setAutoRangeIncludesZero(true);
+    		if (model.getShowZero()) {
+    			axis.setAutoRangeIncludesZero(true);
+    		} else {
+    			axis.setAutoRangeIncludesZero(false);
+    		}
         	axis.setAllowNegativesFlag(true);
         	axis.setLog10TickLabelsFlag(true);
         	plot.setRangeAxis(0, axis);

@@ -17,7 +17,7 @@ import java.util.List;
   * method to construct the desired factory.  All other methods are implemented
   * by the specific factory classes.
   *
-  * <P>CVS $Id: AnalysisFactory.java,v 1.5 2007/01/23 22:57:01 khuck Exp $</P>
+  * <P>CVS $Id: AnalysisFactory.java,v 1.6 2008/03/05 00:25:52 khuck Exp $</P>
   * @author  Kevin Huck
   * @version 0.1
   * @since   0.1
@@ -84,6 +84,14 @@ public abstract class AnalysisFactory {
     public abstract KMeansClusterInterface createKMeansEngine();
     
     /**
+     * Method to create the KMeansClusterInterface.
+     * Any extention of the AnalysisFactory class has to implement this method.
+     *  
+     * @return
+     */
+    public abstract LinearRegressionInterface createLinearRegressionEngine();
+    
+    /**
      * Method to create a component to perform PCA analysis on the data.
      * 
      * @param cubeData The data which specifies the ordering of the dimensions
@@ -91,6 +99,15 @@ public abstract class AnalysisFactory {
      */
     public abstract PrincipalComponentsAnalysisInterface 
         createPCAEngine(RMICubeData cubeData);
+        
+    /**
+     * Method to create a component to perform PCA analysis on the data.
+     * 
+     * @param cubeData The data which specifies the ordering of the dimensions
+     * @return
+     */
+    public abstract PrincipalComponentsAnalysisInterface 
+        createPCAEngine(RawDataInterface rawData);
         
     /**
      * Method to create a component to normalize the data.
@@ -106,4 +123,6 @@ public abstract class AnalysisFactory {
      */
     public abstract void closeFactory();
 
+
+	public abstract Utilities getUtilities();
 }

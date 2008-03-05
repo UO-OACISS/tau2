@@ -16,7 +16,6 @@ import jargs.gnu.CmdLineParser;
 import java.io.InputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.File;
 
 import java.rmi.ConnectException;
 import java.rmi.Naming;
@@ -48,7 +47,7 @@ import java.util.NoSuchElementException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.62 2007/10/19 18:35:39 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.63 2008/03/05 00:25:57 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -64,6 +63,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	private static PerfExplorerServer theServer = null;
 	private AnalysisFactory factory = null;
 	private EngineType engineType;
+	private String configFile;
+	private EngineType analysisEngine;
 
 	/**
 	 * Static method to get the server instance reference.
@@ -73,6 +74,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 */
 	public static PerfExplorerServer getServer () {
 		return theServer;
+	}
+	
+	public DatabaseAPI getSession() {
+		return session;
 	}
 
 	/**
@@ -95,6 +100,13 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		return theServer;
 	}
 
+	public void resetServer () {
+		String configFile = theServer.configFile;
+		EngineType analysisEngine = theServer.analysisEngine;
+		PerfExplorerServer.theServer = null;
+		getServer(configFile, analysisEngine);
+	}
+	
 	/**
 	 * Private constructor, which uses the PerfDMF configuration file to
 	 * connect to the PerfDMF database.  A semaphore is also created to 
@@ -106,6 +118,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	private PerfExplorerServer(String configFile, EngineType analysisEngine,
 	int port, boolean quiet) throws RemoteException {
 		super(port);
+		this.configFile = configFile;
+		this.analysisEngine = analysisEngine;
 		PerfExplorerOutput.setQuiet(quiet);
 		theServer = this;
 		DatabaseAPI workerSession = null;
@@ -545,7 +559,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return
 	 */
 	public DB getDB (){
-		return session.db();
+		if (session != null)
+			return session.db();
+		return null;
 	}
 
 	/**
@@ -826,10 +842,12 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				buf.append(" group by cast (m.name as VARCHAR(256)) order by 1 desc");
 			} else if (db.getDBType().compareTo("mysql") == 0) {
 				buf.append(" group by 2 order by 1 desc");
+			//} else if (db.getDBType().compareTo("mysql") == 0) {
+					//buf.append(" group by m.name order by 1 desc");
 			} else {
 				buf.append(" group by m.name order by count(m.name) desc");
 			}
-			//PerfExplorerOutput.println(buf.toString());
+//			PerfExplorerOutput.println(buf.toString());
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 			ResultSet results = statement.executeQuery();
 			// only get the metrics that are in all trials.
@@ -1544,33 +1562,39 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	public List getChartFieldNames() {
 		DB db = this.getDB();
 		List list = new ArrayList();
-		String[] app = Application.getFieldNames(db);
 		list.add ("application.id");
 		list.add ("application.name");
-		for (int i = 0 ; i < app.length ; i++) {
-			list.add ("application." + app[i]);
+		if (db != null) {
+			String[] app = Application.getFieldNames(db);
+			for (int i = 0 ; i < app.length ; i++) {
+				list.add ("application." + app[i]);
+			}
 		}
 		list.add ("experiment.id");
 		list.add ("experiment.name");
 		list.add ("experiment.applciation");
-		String[] exp = Experiment.getFieldNames(db);
-		for (int i = 0 ; i < exp.length ; i++) {
-			list.add ("experiment." + exp[i]);
+		if (db != null) {
+			String[] exp = Experiment.getFieldNames(db);
+			for (int i = 0 ; i < exp.length ; i++) {
+				list.add ("experiment." + exp[i]);
+			}
 		}
 		list.add ("trial.id");
 		list.add ("trial.name");
 		list.add ("trial.experiment");
-		String[] trial = Trial.getFieldNames(db);
-		for (int i = 0 ; i < trial.length ; i++) {
-			if (trial[i].equalsIgnoreCase(Trial.XML_METADATA_GZ)) {
-				// don't add it
-			} else if (trial[i].equalsIgnoreCase("node_count") ||
-					   trial[i].equalsIgnoreCase("contexts_per_node")) {
-				// don't add it
-			} else if (trial[i].equalsIgnoreCase("threads_per_context")) {
-				list.add ("trial.threads_of_execution");
-			} else {
-				list.add ("trial." + trial[i]);
+		if (db != null) {
+			String[] trial = Trial.getFieldNames(db);
+			for (int i = 0 ; i < trial.length ; i++) {
+				if (trial[i].equalsIgnoreCase(Trial.XML_METADATA_GZ)) {
+					// don't add it
+				} else if (trial[i].equalsIgnoreCase("node_count") ||
+						   trial[i].equalsIgnoreCase("contexts_per_node")) {
+					// don't add it
+				} else if (trial[i].equalsIgnoreCase("threads_per_context")) {
+					list.add ("trial.threads_of_execution");
+				} else {
+					list.add ("trial." + trial[i]);
+				}
 			}
 		}
 		return list;
@@ -1695,6 +1719,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	public void setConnectionIndex(int connectionIndex) throws RemoteException {
 		this.session = (DatabaseAPI)this.sessions.get(connectionIndex);		
 		//PerfExplorerOutput.println("Switching to " + this.session.db().getConnectString() + ".");
+	}
+
+	public int getSessionCount() {
+		return this.sessions.size();
 	}
 }
 

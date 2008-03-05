@@ -23,7 +23,7 @@ import weka.attributeSelection.PrincipalComponents;
  * TODO - make this class immutable?
  * 
  * @author khuck
- * <P>CVS $Id: WekaPrincipalComponents.java,v 1.6 2007/01/23 22:57:02 khuck Exp $</P>
+ * <P>CVS $Id: WekaPrincipalComponents.java,v 1.7 2008/03/05 00:25:53 khuck Exp $</P>
  * @version 0.1
  * @since   0.1
  */
@@ -37,10 +37,12 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 	private int numAttributes = 0;
 	private double[][] correlationCoefficients = null;
 	private RMICubeData cubeData = null;
+	private RawDataInterface rawData = null;
 	private KMeansClusterInterface clusterer = null;
 	private RawDataInterface[] clusters = null;
 	private RawDataInterface transformed = null;
 	private AnalysisFactory factory = null;
+	private int maxComponents = 2;
 	
 	/**
 	 * Package-protected constructor.
@@ -54,36 +56,56 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 		this.factory = factory;
 	}
 
+	/**
+	 * Package-protected constructor.
+	 * 
+	 * @param cubeData
+	 * @param factory
+	 */
+	WekaPrincipalComponents (RawDataInterface rawData,
+	AnalysisFactory factory) {
+		this.rawData = rawData;
+		this.factory = factory;
+	}
+
 	/* (non-Javadoc)
 	 * @see clustering.PrincipalComponentsAnalysisInterface#doPCA()
 	 */
 	public void doPCA() throws ClusterException {
-		//assert instances != null : instances;
-
-/*
-		try {
-			this.pca = new PrincipalComponents();
-			if (k > 0)
-				pca.setMaximumAttributeNames(k);
-			pca.setNormalize(true);
-			//pca.setTransformBackToOriginal(true);
-			pca.buildEvaluator(instances);
-			components = pca.transformedData();
-			transformed = new WekaRawData(components);
-		} catch (Exception e) {
-		}
-*/
-		ArrayList names = new ArrayList();
-		for (int i = 0 ; i < 2 ; i++) {
-			names.add(cubeData.getNames()[i]);
-		}
-
-		transformed = factory.createRawData("Scatterplot Data",
-			names, 2,inputData.numVectors());
-		for (int i = 0 ; i < inputData.numVectors() ; i++) {
-			float[] values = cubeData.getValues(i);
-			for (int j = 0 ; j < 2 ; j++) {
-				transformed.addValue(j,i,(double)(values[j]));
+		
+		if (this.rawData != null) {
+			// this code is for performing PCA on the full data set
+			try {
+				this.pca = new PrincipalComponents();
+				if (this.maxComponents > 0)
+					pca.setMaximumAttributeNames(this.maxComponents);
+				pca.setNormalize(false);
+				pca.setTransformBackToOriginal(false);
+				pca.buildEvaluator((Instances)rawData.getData());
+				System.out.println("variance covered: " + pca.getVarianceCovered());
+				for (int i = 0 ; i < ((Instances)rawData.getData()).numAttributes() ; i++) {
+					System.out.println("merit["+i+"]: " + pca.evaluateAttribute(i));
+				}
+				components = pca.transformedData();
+				transformed = new WekaRawData(components);
+			} catch (Exception e) {
+				System.err.println("Error performing PCA on dataset");
+				e.printStackTrace(System.err);
+			}
+		} else {
+			// this code is for performing correlation analysis on two components.
+			ArrayList names = new ArrayList();
+			for (int i = 0 ; i < maxComponents ; i++) {
+				names.add(cubeData.getNames()[i]);
+			}
+	
+			transformed = factory.createRawData("Scatterplot Data",
+				names, 2,inputData.numVectors());
+			for (int i = 0 ; i < inputData.numVectors() ; i++) {
+				float[] values = cubeData.getValues(i);
+				for (int j = 0 ; j < maxComponents ; j++) {
+					transformed.addValue(j,i,(double)(values[j]));
+				}
 			}
 		}
 	}
@@ -185,6 +207,20 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
      */
 	public void setClusterer (KMeansClusterInterface clusterer) {
 		this.clusterer = clusterer;
+	}
+
+	/**
+	 * @return the maxComponents
+	 */
+	public int getMaxComponents() {
+		return maxComponents;
+	}
+
+	/**
+	 * @param maxComponents the maxComponents to set
+	 */
+	public void setMaxComponents(int maxComponents) {
+		this.maxComponents = maxComponents;
 	}
 
 }

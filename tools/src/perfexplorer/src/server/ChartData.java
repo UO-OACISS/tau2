@@ -28,7 +28,11 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.43 2007/05/30 03:23:18 khuck Exp $</P>
+<<<<<<< ChartData.java
+ * <P>CVS $Id: ChartData.java,v 1.44 2008/03/05 00:25:57 khuck Exp $</P>
+=======
+ * <P>CVS $Id: ChartData.java,v 1.44 2008/03/05 00:25:57 khuck Exp $</P>
+>>>>>>> 1.42.4.2
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -123,7 +127,7 @@ public class ChartData extends RMIChartData {
 			// all query results are organized the same, only the selection
 			// parameters are different.
 			statement = buildStatement();
-			//PerfExplorerOutput.println(buf.toString());
+			PerfExplorerOutput.println(buf.toString());
 			ResultSet results = statement.executeQuery();
 			// TODO - this query assumes a scalability study...!
 			int columnCounter = 0;
@@ -629,7 +633,7 @@ public class ChartData extends RMIChartData {
 			}
 
 //			buf.append("and ims.inclusive_percentage < 100.0 ");
-			buf.append(" and ie.group_name like '%TAU_PHASE%' order by 1, 2, 3, 4");
+			buf.append(" and ie.group_name like '%Iteration%' and ie.group_name not like '%TAU_CALLPATH%' order by 1, 2, 3, 4");
 			statement = db.prepareStatement(buf.toString());
 			if (object instanceof RMIView) {
 				statement.setString(1, metricName);
@@ -681,7 +685,7 @@ public class ChartData extends RMIChartData {
 			}
 
 			buf.append("and ims.inclusive_percentage < 100.0 ");
-			buf.append("and ie.group_name like '%TAU_PHASE%' order by 1, 2, 3, 4");
+			buf.append("and ie.group_name like '%Iteration%' and ie.group_name not like '%TAU_CALLPATH%' order by 1, 2, 3, 4");
 
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);

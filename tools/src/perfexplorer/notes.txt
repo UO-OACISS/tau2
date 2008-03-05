@@ -1,0 +1,31 @@
+Proposed Analyses:
+------------------
+k-means clustering
+correlation
+PCA
+dimension reduction - done
+hierarchical clustering 
+ -	In single-linkage clustering (also called the connectedness or minimum
+	method), we consider the distance between one cluster and another cluster
+	to be equal to the shortest distance from any member of one cluster to any
+	member of the other cluster. If the data consist of similarities, we
+	consider the similarity between one cluster and another cluster to be equal
+	to the greatest similarity from any member of one cluster to any member of
+	the other cluster.
+ -	In complete-linkage clustering (also called the diameter or maximum
+	method), we consider the distance between one cluster and another cluster
+	to be equal to the greatest distance from any member of one cluster to any
+	member of the other cluster.
+ -	In average-linkage clustering, we consider the distance between one cluster
+	and another cluster to be equal to the average distance from any member of
+	one cluster to any member of the other cluster.
+ - 	http://www.elet.polimi.it/upload/matteucc/Clustering/tutorial_html/hierarchical.html
+
+Proposed Results:
+-----------------
+TotalResults - done
+MeanResults - done
+VarianceResults - done
+StDevResults - done
+MinResults - done
+MaxResults - done

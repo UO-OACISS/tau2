@@ -66,7 +66,11 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  *
- * <P>CVS $Id: AnalysisTask.java,v 1.7 2007/06/28 06:20:44 khuck Exp $</P>
+<<<<<<< AnalysisTask.java
+ * <P>CVS $Id: AnalysisTask.java,v 1.8 2008/03/05 00:25:57 khuck Exp $</P>
+=======
+ * <P>CVS $Id: AnalysisTask.java,v 1.8 2008/03/05 00:25:57 khuck Exp $</P>
+>>>>>>> 1.6.8.3
  * @author Kevin Huck
  * @version 0.1
  * @since 0.1
@@ -118,7 +122,6 @@ public class AnalysisTask extends TimerTask {
         // save the image in the database
         try {
             DB db = session.db();
-            //db.setAutoCommit(false);
             PreparedStatement statement = null;
             StringBuffer buf = new StringBuffer();
             buf.append("insert into analysis_result (analysis_settings, ");
@@ -163,8 +166,8 @@ public class AnalysisTask extends TimerTask {
 	 */
 	public void saveAnalysisResult (RawDataInterface centroids, RawDataInterface deviations, File thumbnail, File outfile) throws PerfExplorerException {
 		// save the image in the database
+		DB db = session.db();
 		try {
-			DB db = session.db();
 			db.setAutoCommit(false);
 			PreparedStatement statement = null;
 			// for each centroid, save the data
@@ -185,12 +188,16 @@ public class AnalysisTask extends TimerTask {
 			//PerfExplorerOutput.println(statement.toString());
        		statement.executeUpdate();
        		statement.close();
-       		db.commit();
+			db.commit();
+			db.setAutoCommit(true);
 		} catch (Exception e) {
 			String error = "ERROR: Couldn't insert the analysis results into the database!";
 			System.err.println(error);
             System.err.println(e.getMessage());
 			e.printStackTrace();
+			try { 
+				db.setAutoCommit(true);
+			} catch (Exception e2) {}
 			throw new PerfExplorerException(error, e);
 		}
 	}

@@ -46,7 +46,7 @@ import java.io.InputStream;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.25 2007/12/07 02:05:21 amorris Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.26 2008/03/05 00:25:57 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -273,13 +273,13 @@ public class GeneralChartData extends RMIGeneralChartData {
 					NodeList names = null;
 					NodeList values = null;
 	
-					try {
+//					try {
 //						/* this is the 1.3 through 1.4 way */
 //						names = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
 //							"/metadata/CommonProfileAttributes/attribute/name");
 //						values = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
 //							"/metadata/CommonProfileAttributes/attribute/value");
-					} catch (NoClassDefFoundError e) {
+//					} catch (NoClassDefFoundError e) {
 	
 						/* this is the 1.5 way */
 						// build the xpath object to jump around in that document
@@ -294,7 +294,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 						values = (NodeList) 
 							xpath.evaluate("/metadata/CommonProfileAttributes/attribute/value", 
 							metadata, javax.xml.xpath.XPathConstants.NODESET);
-					}
+//					}
 			
 					for (int i = 0 ; i < names.getLength() ; i++) {
 						Node name = (Node)names.item(i).getFirstChild();
@@ -545,7 +545,6 @@ public class GeneralChartData extends RMIGeneralChartData {
 			} else if (yAxisName.indexOf("interval_total_summary") >= 0) {
 				tableName = "interval_total_summary";
 			}
-
 			buf = new StringBuffer();
 			buf.append("select ");
 			if (db.getDBType().compareTo("derby") == 0) {
@@ -641,8 +640,6 @@ public class GeneralChartData extends RMIGeneralChartData {
 		// just in case, drop the table in case it is still hanging around.
 		// This sometimes happens with Derby.
 		// Have I ever mentioned that Derby sucks?
-        System.out.println("buildCreateTableStatement");
-
 		dropTable(db, tableName);
 
 		StringBuffer buf = new StringBuffer();
@@ -880,8 +877,8 @@ public class GeneralChartData extends RMIGeneralChartData {
 
 				NodeList names = null;
 
-				try {
-					/* this is the 1.3 through 1.4 way */
+//				try {
+//					/* this is the 1.3 through 1.4 way */
 //					names = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
 //						"/metadata/CommonProfileAttributes/attribute/name");
 //					for (int i = 0 ; i < names.getLength() ; i++) {
@@ -890,12 +887,12 @@ public class GeneralChartData extends RMIGeneralChartData {
 //					}
 //					names = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
 //						"/metadata/ProfileAttributes/attribute/name");
-				
-					for (int i = 0 ; i < names.getLength() ; i++) {
-						Node name = (Node)names.item(i).getFirstChild();
-						set.add(name.getNodeValue());
-					}
-				} catch (NoClassDefFoundError e) {
+//				
+//					for (int i = 0 ; i < names.getLength() ; i++) {
+//						Node name = (Node)names.item(i).getFirstChild();
+//						set.add(name.getNodeValue());
+//					}
+//				} catch (NoClassDefFoundError e) {
 					/* this is the 1.5 way */
 					// build the xpath object to jump around in that document
 					javax.xml.xpath.XPath xpath = javax.xml.xpath.XPathFactory.newInstance().newXPath();
@@ -919,7 +916,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 						Node name = (Node)names.item(i).getFirstChild();
 						set.add(name.getNodeValue());
 					}
-				}
+//				}
 
 			} 
 			xmlResults.close();
@@ -956,21 +953,21 @@ public class GeneralChartData extends RMIGeneralChartData {
 		return list;
 	}
 
-    private static void dropTable(DB db, String name) {
-        PreparedStatement statement = null;
-        try {
-            if (db.getDBType().compareTo("oracle") == 0) {
-                statement = db.prepareStatement("truncate table " + name);
-                //System.out.println(statement.toString());
-                statement.execute();
-                statement.close();
-            }
-            statement = db.prepareStatement("drop table " + name);
-            //System.out.println(statement.toString());
-            statement.execute();
-            statement.close();
-        } catch (Exception e) {
-            // do nothing, it's ok
+	private static void dropTable(DB db, String name) {
+		PreparedStatement statement = null;
+		try {
+			if (db.getDBType().compareTo("oracle") == 0) {
+				statement = db.prepareStatement("truncate table " + name);
+				//System.out.println(statement.toString());
+				statement.execute();
+				statement.close();
+			}
+			statement = db.prepareStatement("drop table " + name);
+			//System.out.println(statement.toString());
+			statement.execute();
+			statement.close();
+		} catch (Exception e) {
+			// do nothing, it's ok
             // System.err.println("***************************************");
             // System.err.println(e.getMessage());
             // System.err.println("***************************************");
@@ -984,9 +981,8 @@ public class GeneralChartData extends RMIGeneralChartData {
             	//System.err.println(e2.getMessage());
             	//System.err.println("***************************************");
 			}
-        }
-    }
-
+		}
+	}
 
 }
 

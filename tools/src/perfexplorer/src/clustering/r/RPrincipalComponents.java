@@ -20,7 +20,7 @@ import common.RMICubeData;
  * clustering class.  To access these methods, create an AnalysisFactory,
  * and the factory will be able to create a k-means cluster object.
  *
- * <P>CVS $Id: RPrincipalComponents.java,v 1.4 2007/01/23 22:57:01 khuck Exp $</P>
+ * <P>CVS $Id: RPrincipalComponents.java,v 1.5 2008/03/05 00:25:52 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -142,6 +142,11 @@ public class RPrincipalComponents implements PrincipalComponentsAnalysisInterfac
 	public void reset() {
 		// TODO Auto-generated method stub
 
+	}
+
+	public void setMaxComponents(int maxComponents) {
+		// TODO Auto-generated method stub
+		System.err.println("NOT IMPLEMENTED");
 	}
 
 }

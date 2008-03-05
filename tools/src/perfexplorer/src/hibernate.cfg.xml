@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+		"-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+		"http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+    <session-factory>
+
+    	<!-- database connection info -->
+        <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
+        <property name="hibernate.connection.password">butter</property>
+        <property name="hibernate.connection.url">jdbc:postgresql://spaceghost.cs.uoregon.edu:5432/perfdmf_hibernate</property>
+        <property name="hibernate.connection.username">khuck</property>
+        <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
+        
+		<!-- logging stuff 
+		-->
+        <property name="show_sql">true</property>
+        <property name="format_sql">true</property>
+        
+        <!-- Drop and re-create the database schema on startup -->
+        <!-- 
+        <property name="hbm2ddl.auto">create</property>
+         -->
+
+        <!-- update the database schema on startup 
+        -->
+        <property name="hbm2ddl.auto">update</property>
+
+		<!-- 
+        <mapping class="glue.Provenance"/>
+        <mapping class="glue.AnalysisOperation"/>
+		 -->
+        
+    </session-factory>
+</hibernate-configuration>

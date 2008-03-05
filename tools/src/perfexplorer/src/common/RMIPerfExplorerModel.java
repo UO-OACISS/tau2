@@ -13,7 +13,7 @@ import java.util.ArrayList;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.31 2007/06/29 19:39:50 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.32 2008/03/05 00:25:53 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -47,6 +47,7 @@ public class RMIPerfExplorerModel implements Serializable {
 	protected boolean chartScalability = false;
 	protected boolean chartEfficiency = false;
 	protected boolean chartHorizontal = false;
+	protected boolean showZero = true;
 	protected String chartUnits = null;
 
 	// more cluster settings
@@ -102,6 +103,7 @@ public class RMIPerfExplorerModel implements Serializable {
 		this.chartScalability = source.chartScalability;
 		this.chartEfficiency = source.chartEfficiency;
 		this.chartHorizontal = source.chartHorizontal;
+		this.showZero = source.showZero;
 		this.chartUnits = source.chartUnits;
 		this.clusterMethod = source.clusterMethod;
 		this.dimensionReduction = source.dimensionReduction;
@@ -1111,12 +1113,30 @@ public class RMIPerfExplorerModel implements Serializable {
 	}
 
     /**
+     * Set the show zero on y axis chart option
+     *
+     * @param seriesName
+     */
+	public void setShowZero(boolean showZero) {
+		this.showZero = showZero;
+	}
+
+    /**
      * Get the horizontal chart option
      *
      * @return
      */
 	public boolean getChartHorizontal() {
 		return this.chartHorizontal;
+	}
+
+    /**
+     * Get the show zero on y axis chart option
+     *
+     * @return
+     */
+	public boolean getShowZero() {
+		return this.showZero;
 	}
 
 	/**

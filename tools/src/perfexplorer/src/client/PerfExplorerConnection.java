@@ -11,7 +11,7 @@ public class PerfExplorerConnection {
     private static PerfExplorerConnection theConnection = null;
 
     private RMIPerfExplorer server = null;
-    private static boolean standalone = false;
+    private static boolean standalone = true;
     private static String configFile = null;
     private static EngineType analysisEngine = EngineType.WEKA;
     private int connectionIndex = 0;
@@ -373,6 +373,15 @@ public class PerfExplorerConnection {
 		} catch (RemoteException e) {
 	    	handleError(e, "setConnectionIndex(" + connectionIndex + ")");
 		}
+	}
+
+	public void resetServer() {
+		try {
+			server.resetServer();
+		} catch (RemoteException e) {
+	    	handleError(e, "setConnectionIndex(" + connectionIndex + ")");
+		}
+		
 	}
 
 }

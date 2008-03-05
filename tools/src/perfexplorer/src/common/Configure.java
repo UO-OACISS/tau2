@@ -1,5 +1,6 @@
 package common;
 
+import edu.uoregon.tau.perfdmf.Database;
 import edu.uoregon.tau.perfdmf.database.ConnectionManager;
 import edu.uoregon.tau.perfdmf.Database;
 import edu.uoregon.tau.perfdmf.database.DB;
@@ -19,7 +20,11 @@ import java.sql.SQLException;
 /**
  * This class is used as a main class for configuring PerfExplorer.
  *
- * <P>CVS $Id: Configure.java,v 1.8 2007/05/30 03:23:18 khuck Exp $</P>
+<<<<<<< Configure.java
+ * <P>CVS $Id: Configure.java,v 1.9 2008/03/05 00:25:53 khuck Exp $</P>
+=======
+ * <P>CVS $Id: Configure.java,v 1.9 2008/03/05 00:25:53 khuck Exp $</P>
+>>>>>>> 1.7.8.4
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -36,6 +41,8 @@ public class Configure {
     private ParseConfig parser;
 
     private String configFileName;
+    
+    private String perfExplorerSchema = null;
 
     /**
      * Public constructor.
@@ -129,36 +136,47 @@ public class Configure {
             // this is our method of determining that no 'application' table exists
 
             PerfExplorerOutput.print("Perfexplorer tables not found.");
-            PerfExplorerOutput.print("Would you like to upload the schema? [y/n]: ");
-            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-
             String input = "";
-            try {
-                input = reader.readLine();
-            } catch (java.io.IOException ioe) {
-                PerfExplorerOutput.println("I/O Error occurred.");
-                System.err.println(e.getMessage());
-                ioe.printStackTrace();
-                System.exit(-1);
+
+            if (perfExplorerSchema == null) {
+	            PerfExplorerOutput.print("Would you like to upload the schema? [y/n]: ");
+	            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+	
+	            try {
+	                input = reader.readLine();
+	            } catch (java.io.IOException ioe) {
+	                PerfExplorerOutput.println("I/O Error occurred.");
+	                System.err.println(e.getMessage());
+	                ioe.printStackTrace();
+	                System.exit(-1);
+	            }
+            } else {
+            	input = "y";
             }
+            
             if (input.equals("y") || input.equals("Y")) {
 
                 String filename="";
                 
-                if (db.getDBType().compareTo("oracle") == 0) {
-                    filename = tau_root + "/etc/dbschema.oracle";
-                } else if (db.getDBType().compareTo("derby") == 0) {
-                    filename = tau_root + "/etc/dbschema.derby";
-                } else if (db.getDBType().compareTo("mysql") == 0) {
-                    filename = tau_root + "/etc/dbschema.mysql";
-                } else if (db.getDBType().compareTo("postgresql") == 0) {
-                    filename = tau_root + "/etc/dbschema.postgresql";
-                } else if (db.getDBType().compareTo("db2") == 0) {
-                    filename = tau_root + "/etc/dbschema.db2";
+                if (perfExplorerSchema == null) {
+	                if (db.getDBType().compareTo("oracle") == 0) {
+	                    filename = tau_root + "/etc/dbschema.oracle";
+	                } else if (db.getDBType().compareTo("derby") == 0) {
+	                    filename = tau_root + "/etc/dbschema.derby";
+	                } else if (db.getDBType().compareTo("mysql") == 0) {
+	                    filename = tau_root + "/etc/dbschema.mysql";
+	                } else if (db.getDBType().compareTo("postgresql") == 0) {
+	                    filename = tau_root + "/etc/dbschema.postgresql";
+	                } else if (db.getDBType().compareTo("db2") == 0) {
+	                    filename = tau_root + "/etc/dbschema.db2";
+	                } else {
+	                    PerfExplorerOutput.println("Unknown database type: " + db.getDBType());
+	                    System.exit(-1);
+	                }
                 } else {
-                    PerfExplorerOutput.println("Unknown database type: " + db.getDBType());
-                    System.exit(-1);
+                	filename = perfExplorerSchema;
                 }
+                
                 
                 PerfExplorerOutput.println("Uploading Schema: " + filename);
                 if (connector.genParentSchema(filename) == 0) {
@@ -189,7 +207,6 @@ public class Configure {
         PerfExplorerOutput.println("Configuration complete.");
     }
 
-    
     public static void main(String[] args) {
 
         CmdLineParser parser = new CmdLineParser();
@@ -232,5 +249,13 @@ public class Configure {
         config.createDB();
 
     }
+
+	public String getPerfExplorerSchema() {
+		return perfExplorerSchema;
+	}
+
+	public void setPerfExplorerSchema(String perfexplorerSchema) {
+		this.perfExplorerSchema = perfexplorerSchema;
+	}
 
 }

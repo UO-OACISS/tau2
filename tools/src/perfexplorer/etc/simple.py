@@ -2,6 +2,7 @@ from client import ScriptFacade
 from common import TransformationType
 from common import AnalysisType
 from common import EngineType
+from glue import Utilities
 
 def findMetric(metrics, findme):
 	i = 0;
@@ -136,6 +137,7 @@ def showSignificantEvents(diffs, type):
 
 def DoAnalysis(pe):
 	# set the application, experiment, trial
+	Utilities.setSession("perfdmf_test")
 	pe.setApplication("simple_papi-DSTATIC_MATRIX")
 	pe.setExperiment("-O0")
 	baseTrial = pe.setTrial("regular")

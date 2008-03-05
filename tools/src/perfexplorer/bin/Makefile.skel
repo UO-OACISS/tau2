@@ -1,4 +1,4 @@
-# $Id: Makefile.skel,v 1.26 2007/03/10 00:46:36 khuck Exp $
+# $Id: Makefile.skel,v 1.27 2008/03/05 00:25:49 khuck Exp $
 # $Name:  $
 
 R_HOME = @RROOT@
@@ -9,18 +9,19 @@ ENGINE_DEFINE = @ANALYSIS_ENGINE_DEF@
 
 ##########################
 
-JAVA_JVM_VERSION=1.4
+JAVA_JVM_VERSION=1.5
 NOW = $(shell date)
 
 OMEGAHAT_HOME = $(R_HOME)/library/SJava
 CONFIGFILE = ${HOME}/.ParaProf/perfdmf.cfg
 OMEGAHAT_JARPATH = ${OMEGAHAT_HOME}/org/omegahat/Jars
-WEBSTART_DIR = /Library/WebServer/Documents/perfexplorer
+WEBSTART_DIR = /var/www/html/PerfExplorer/.
 
 CPP = cpp -P -CC -D=USE_${ENGINE_DEFINE}_ENGINE
-JAVAC = javac -target 1.3 
+JAVAC = javac
 RMIC = rmic
 SED = sed
+JAVADOC = javadoc
 
 ##########################
 
@@ -38,7 +39,54 @@ JCOMMON_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jcommon-0.9.6.jar
 TAUCOMMON_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/tau-common.jar
 BATIK_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/batik-combined.jar
 XERCES_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/xerces.jar
+JUNIT_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/junit-3.8.1.jar
+
+##########################
+
+# JBoss Rules jars
+
+#core
+DROOLS_CORE_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/drools-core-3.0.6.jar
+
+#compiler
+DROOLS_COMIPLER_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/drools-compiler-3.0.6.jar
+ANTLR3_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/antlr-3.0ea8.jar
+COMMONS_JCI_CORE_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/commons-jci-core-1.0-406301.jar
+COMMONS_JCI_ECLIPSE_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/commons-jci-eclipse-3.2.0.666.jar
+CORE_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/core-3.2.0.666.jar
+COMMONS_LOGGING_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/commons-logging-api-1.0.4.jar
+COMMONS_LANG_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/commons-lang-2.1.jar
+STRINGTEMPLATE_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/stringtemplate-2.3b6.jar
+ANTLR2_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/antlr-2.7.6.jar
+
+#JSR-94
+DROOLS_JSR94_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/drools-jsr94-3.0.6.jar
+JSR_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jsr94-1.1.jar
+
+#decision tables
+DROOLS_DECISIONTABLES_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/drools-decisiontables-3.0.6.jar
+JXL_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jxl-2.4.2.jar
+
+JBOSS_RULES_JARS = ${DROOLS_COMIPLER_JAR}:${DROOLS_CORE_JAR}:${DROOLS_DECISIONTABLES_JAR}:${DROOLS_JSR94_JAR}
+
+##########################
+
+# Hibernate jars
+
+HIBERNATE_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/hibernate3.jar
+HIBERNATE_ANNOTATIONS_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/hibernate-annotations.jar
+HIBERNATE_EJB_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/ejb3-persistence.jar
+HIBERNATE_JARS = ${HIBERNATE_JAR}:${HIBERNATE_EJB_JAR}:${HIBERNATE_ANNOTATIONS_JAR}
+
 BATCH_SCRIPT = ${TAUROOT}/${CONFIG_ARCH}/bin/perfexplorer
+
+# DISTRIBUTION JARS
+
+DERBY_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/derby.jar
+DOM4J_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/dom4j-1.6.1.jar
+HIBERNATE_COMMONS_ANNOTATIONS_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/hibernate-commons-annotations.jar
+MYSQL_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/mysql.jar
+
 
 ##########################
 
@@ -47,8 +95,10 @@ SERVER_DYLD_LIBRARY_PATH=${OMEGAHAT_HOME}/libs:${R_HOME}/lib:${R_HOME}/bin:${R_H
 
 ##########################
 
-BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JOGL_JAR}:${VIS_JAR}:${JARGS_JAR}:${JYTHON_JAR}
-CLIENT_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JOGL_JAR}:${VIS_JAR}:${JARGS_JAR}:${TAUCOMMON_JAR}:${BATIK_JAR}:${JYTHON_JAR}
+BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JOGL_JAR}:${VIS_JAR}:${JARGS_JAR}:${JYTHON_JAR}:${JUNIT_JAR}
+GLUE_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JOGL_JAR}:${VIS_JAR}:${JARGS_JAR}:${JYTHON_JAR}:${JUNIT_JAR}:${JBOSS_RULES_JARS}:${HIBERNATE_JARS}
+CLIENT_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JOGL_JAR}:${VIS_JAR}:${JARGS_JAR}:${TAUCOMMON_JAR}:${BATIK_JAR}:${JYTHON_JAR}:${ANTLR2_JAR}:${ANTLR3_JAR}:${COMMONS_JCI_CORE_JAR}:${COMMONS_LANG_JAR}:${COMMONS_LOGGING_JAR}:${DROOLS_COMIPLER_JAR}:${DROOLS_CORE_JAR}:${DROOLS_DECISIONTABLES_JAR}:${DROOLS_JSR94_JAR}:${JSR_JAR}:${JXL_JAR}:${STRINGTEMPLATE_JAR}:${JUNIT_JAR}
+
 CLUSTERING_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${WEKA_JAR}:${OMEGAHAT_JARS}
 SERVER_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${OMEGAHAT_JARS}:${WEKA_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JARGS_JAR}:${JYTHON_JAR}:${TAUCOMMON_JAR}:${XERCES_JAR}
 
@@ -62,12 +112,14 @@ COMMON_SOURCES = ${wildcard src/common/*.java}
 CLUSTERING_SOURCES = ${wildcard src/clustering/*.java} ${wildcard src/clustering/${ENGINE_PACKAGE}/*.java} 
 CLIENT_SOURCES = ${wildcard src/client/*.java}
 SERVER_SOURCES = ${wildcard src/server/*.java}
-SOURCES = ${COMMON_SOURCES} ${SERVER_SOURCES} ${CLIENT_SOURCES} ${CLUSTERING_SOURCES}
+GLUE_SOURCES = ${wildcard src/glue/*.java} ${wildcard src/glue/psl/*.java} ${wildcard src/rules/*.java} ${wildcard src/persistence/*.java}
+SOURCES = ${COMMON_SOURCES} ${SERVER_SOURCES} ${CLIENT_SOURCES} ${CLUSTERING_SOURCES} ${GLUE_SOURCES}
 
 CONSTANT_CLASSES = ${subst src/, classes/, ${patsubst %.java, %.class, ${CONSTANT_SOURCES}}} 
 COMMON_CLASSES = ${subst src/, classes/, ${patsubst %.java, %.class, ${COMMON_SOURCES}}} 
 CLUSTERING_CLASSES = ${subst src/, classes/, ${patsubst %.java, %.class, ${CLUSTERING_SOURCES}}} 
 SERVER_CLASSES = ${subst src/, classes/, ${patsubst %.java, %.class, ${SERVER_SOURCES}}} 
+GLUE_CLASSES = ${subst src/, classes/, ${patsubst %.java, %.class, ${GLUE_SOURCES}}} 
 CLIENT_CLASSES = ${subst src/, classes/, ${patsubst %.java, %.class, ${CLIENT_SOURCES}}} 
 CLASSES = ${COMMON_CLASSES} ${SERVER_CLASSES} ${CLIENT_CLASSES} ${CLUSTERING_CLASSES}
 RMIC_CLASSES = classes/server/PerfExplorerServer_Stub.class
@@ -86,11 +138,13 @@ common: ${COMMON_CLASSES}
 
 clustering: ${CLUSTERING_CLASSES}
 
+glue: ${GLUE_CLASSES}
+
 server: ${SERVER_CLASSES} ${RMIC_CLASSES}
 
 client: ${CLIENT_CLASSES}
 
-perfexplorer.jar: ${CONSTANT_CLASSES} ${CLIENT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES}
+perfexplorer.jar: ${CONSTANT_CLASSES} ${CLIENT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${GLUE_CLASSES} ${RMIC_CLASSES}
 	jar -cvf perfexplorer.jar -C classes .
 	cp perfexplorer.jar ${TAUROOT}/${CONFIG_ARCH}/lib/.
 
@@ -109,6 +163,9 @@ ${CONSTANT_CLASSES}: Makefile ${CONSTANT_SOURCES}
 ${COMMON_CLASSES}: Makefile ${COMMON_SOURCES} ${CONSTANT_CLASSES}
 	${JAVAC} -classpath ${BUILD_CLASSPATH} -d classes ${COMMON_SOURCES}
 
+${GLUE_CLASSES}: Makefile ${GLUE_SOURCES} ${CONSTANT_CLASSES}
+	${JAVAC} -classpath ${GLUE_BUILD_CLASSPATH} -d classes ${GLUE_SOURCES}
+
 ${CLUSTERING_CLASSES}: Makefile ${CLUSTERING_SOURCES} ${CONSTANT_CLASSES} ${COMMON_CLASSES}
 	${JAVAC} -classpath ${CLUSTERING_BUILD_CLASSPATH} -d classes ${CLUSTERING_SOURCES}
 
@@ -121,6 +178,8 @@ ${RMIC_CLASSES}: Makefile ${SERVER_SOURCES} ${SERVER_CLASSES}
 ${CLIENT_CLASSES}: Makefile ${CLIENT_SOURCES} ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES}
 	${JAVAC} -classpath ${CLIENT_BUILD_CLASSPATH} -d classes ${CLIENT_SOURCES}
 	cp src/client/*.gif classes/client/.
+	cp rules/*.drl classes/rules/.
+	cp etc/*.drl classes/.
 
 ###
 ### THESE COMMANDS ARE FOR CLEANING
@@ -147,6 +206,8 @@ clean: cleanclient cleanserver cleancommon cleanclustering cleanconstants
 	rm -rf PerfExplorer-0.1/*.jar PerfExplorer-0.1/java.policy
 	rm -f PerfExplorer-0.1.tgz
 	rm -rf classes
+	rm -rf javadoc
+	rm -f perfexplorer2.jar
 
 remake: clean perfexplorer.jar
 
@@ -184,7 +245,7 @@ testviews: perfexplorer.jar
 testscript: perfexplorer.jar
 	perfexplorer -test=script
 
-install: perfexplorer.jar
+install_old: perfexplorer.jar
 	mkdir -p PerfExplorer-0.1
 	rm -rf PerfExplorer-0.1/*.jar PerfExplorer-0.1/java.policy
 	rm -f PerfExplorer-0.1.tgz
@@ -212,7 +273,7 @@ install: perfexplorer.jar
 	tar -cvf PerfExplorer-0.1.tar PerfExplorer-0.1
 	scp PerfExplorer-0.1.tar utonium.cs.uoregon.edu:/Library/WebServer/Documents/perfexplorer/PerfExplorer-0.1.tar
 
-webstart: perfexplorer.jar
+webstart_old: perfexplorer.jar
 	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore perfexplorer.jar tau
 	cp perfexplorer.jar ${WEBSTART_DIR}
 	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${PERFDMF_JAR} tau
@@ -235,6 +296,150 @@ webstart: perfexplorer.jar
 	cp ${BATIK_JAR} ${WEBSTART_DIR}
 	cp etc/java.policy ${WEBSTART_DIR}
 	chmod 755 ${WEBSTART_DIR}/*.jar
+
+perfexplorer2.jar: ${CONSTANT_CLASSES} ${CLIENT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${GLUE_CLASSES} ${RMIC_CLASSES}
+	bin/extract.sh ${PERFDMF_JAR}							# TAU
+	bin/extract.sh ${VIS_JAR}								# TAU
+	bin/extract.sh ${TAUCOMMON_JAR}							# TAU
+	bin/extract.sh ${XERCES_JAR}							# TAU (XML parsing)
+	bin/extract.sh ${JARGS_JAR}								# JARGS
+	bin/extract.sh ${JYTHON_JAR}							# JYTHON
+	bin/extract.sh ${JDBC_JAR}								# JDBC
+	bin/extract.sh ${DERBY_JAR}								# JDBC
+	bin/extract.sh ${MYSQL_JAR}								# JDBC
+	bin/extract.sh ${JOGL_JAR}								# JOGL
+	bin/extract.sh ${BATIK_JAR}								# CHARTS
+	bin/extract.sh ${JFREECHART_JAR}						# CHARTS
+	bin/extract.sh ${JCOMMON_JAR}							# CHARTS
+	bin/extract.sh ${WEKA_JAR}								# WEKA
+	bin/extract.sh ${JUNIT_JAR}								# JUNIT
+	bin/extract.sh ${DROOLS_CORE_JAR}						# JBOSS RULES
+	bin/extract.sh ${DROOLS_COMIPLER_JAR}					# JBOSS RULES
+	bin/extract.sh ${ANTLR3_JAR}							# JBOSS RULES
+	bin/extract.sh ${COMMONS_JCI_CORE_JAR}					# JBOSS RULES
+	bin/extract.sh ${COMMONS_JCI_ECLIPSE_JAR}				# JBOSS RULES
+	bin/extract.sh ${CORE_JAR}								# JBOSS RULES
+	bin/extract.sh ${COMMONS_LOGGING_JAR}					# JBOSS RULES
+	bin/extract.sh ${COMMONS_LANG_JAR}						# JBOSS RULES
+	bin/extract.sh ${STRINGTEMPLATE_JAR}					# JBOSS RULES
+	bin/extract.sh ${ANTLR2_JAR}							# JBOSS RULES
+	bin/extract.sh ${DROOLS_JSR94_JAR}						# JBOSS RULES
+	bin/extract.sh ${JSR_JAR}								# JBOSS RULES
+	bin/extract.sh ${DROOLS_DECISIONTABLES_JAR}				# JBOSS RULES
+	bin/extract.sh ${JXL_JAR}								# JBOSS RULES
+	bin/extract.sh ${HIBERNATE_JAR}							# HIBERNATE
+	bin/extract.sh ${HIBERNATE_ANNOTATIONS_JAR}				# HIBERNATE
+	bin/extract.sh ${HIBERNATE_EJB_JAR}						# HIBERNATE
+	bin/extract.sh ${HIBERNATE_COMMONS_ANNOTATIONS_JAR}		# HIBERNATE
+	cd ..
+	jar -cfm perfexplorer2.jar jar_manifest -C classes .
+
+webstart_clean: perfexplorer.jar
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore perfexplorer.jar tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${PERFDMF_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${VIS_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${TAUCOMMON_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${XERCES_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${JARGS_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${JYTHON_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${JDBC_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${DERBY_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${MYSQL_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${JOGL_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${BATIK_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${JFREECHART_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${JCOMMON_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${WEKA_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${JUNIT_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${DROOLS_CORE_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${DROOLS_COMIPLER_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${ANTLR3_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${COMMONS_JCI_CORE_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${COMMONS_JCI_ECLIPSE_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${CORE_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${COMMONS_LOGGING_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${COMMONS_LANG_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${STRINGTEMPLATE_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${ANTLR2_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${DROOLS_JSR94_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${JSR_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${DROOLS_DECISIONTABLES_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${JXL_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${HIBERNATE_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${HIBERNATE_ANNOTATIONS_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${HIBERNATE_EJB_JAR} tau
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${HIBERNATE_COMMONS_ANNOTATIONS_JAR} tau
+	cp perfexplorer.jar ${WEBSTART_DIR}
+	cp ${PERFDMF_JAR} ${WEBSTART_DIR}
+	cp ${VIS_JAR} ${WEBSTART_DIR}
+	cp ${TAUCOMMON_JAR} ${WEBSTART_DIR}
+	cp ${XERCES_JAR} ${WEBSTART_DIR}
+	cp ${JARGS_JAR} ${WEBSTART_DIR}
+	cp ${JYTHON_JAR} ${WEBSTART_DIR}
+	cp ${JDBC_JAR} ${WEBSTART_DIR}
+	cp ${DERBY_JAR} ${WEBSTART_DIR}
+	cp ${MYSQL_JAR} ${WEBSTART_DIR}
+	cp ${JOGL_JAR} ${WEBSTART_DIR}
+	cp ${BATIK_JAR} ${WEBSTART_DIR}
+	cp ${JFREECHART_JAR} ${WEBSTART_DIR}
+	cp ${JCOMMON_JAR} ${WEBSTART_DIR}
+	cp ${WEKA_JAR} ${WEBSTART_DIR}
+	cp ${JUNIT_JAR} ${WEBSTART_DIR}
+	cp ${DROOLS_CORE_JAR} ${WEBSTART_DIR}
+	cp ${DROOLS_COMIPLER_JAR} ${WEBSTART_DIR}
+	cp ${ANTLR3_JAR} ${WEBSTART_DIR}
+	cp ${COMMONS_JCI_CORE_JAR} ${WEBSTART_DIR}
+	cp ${COMMONS_JCI_ECLIPSE_JAR} ${WEBSTART_DIR}
+	cp ${CORE_JAR} ${WEBSTART_DIR}
+	cp ${COMMONS_LOGGING_JAR} ${WEBSTART_DIR}
+	cp ${COMMONS_LANG_JAR} ${WEBSTART_DIR}
+	cp ${STRINGTEMPLATE_JAR} ${WEBSTART_DIR}
+	cp ${ANTLR2_JAR} ${WEBSTART_DIR}
+	cp ${DROOLS_JSR94_JAR} ${WEBSTART_DIR}
+	cp ${JSR_JAR} ${WEBSTART_DIR}
+	cp ${DROOLS_DECISIONTABLES_JAR} ${WEBSTART_DIR}
+	cp ${JXL_JAR} ${WEBSTART_DIR}
+	cp ${HIBERNATE_JAR} ${WEBSTART_DIR}
+	cp ${HIBERNATE_ANNOTATIONS_JAR} ${WEBSTART_DIR}
+	cp ${HIBERNATE_EJB_JAR} ${WEBSTART_DIR}
+	cp ${HIBERNATE_COMMONS_ANNOTATIONS_JAR} ${WEBSTART_DIR}
+	cp etc/java.policy ${WEBSTART_DIR}
+	cp doc/index.php ${WEBSTART_DIR}
+	cp doc/perfexplorer.jnlp ${WEBSTART_DIR}
+	cp doc/jogl.jnlp ${WEBSTART_DIR}
+	chmod 755 ${WEBSTART_DIR}/*.jar
+
+webstart: perfexplorer.jar
+	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore perfexplorer.jar tau
+	cp perfexplorer.jar ${WEBSTART_DIR}
+
+BOTTOM = '<font size="-1">****************************************************************************<br>Copyright 1997-2008<br> Department of Computer and Information Science, University of Oregon<br> Advanced Computing Laboratory, Los Alamos National Laboratory<br> Juelich Supercomputing Centre, Research Center Juelich, Germany<br><a href="http://tau.uoregon.edu" target="new">http://tau.uoregon.edu</a><br>****************************************************************************<br>Permission to use, copy, modify, and distribute this software and its documentation for any purpose and without fee is hereby granted, provided that the above copyright notice appear in all copies and that both that copyright notice and this permission notice appear in supporting documentation, and that the name of University of Oregon (UO) and Los Alamos National Laboratory (LANL) not be used in advertising or publicity pertaining to distribution of the software without specific, written prior permission.  The University of Oregon and LANL makes no representations about the suitability of this software for any purpose.  It is provided "as is" without express or implied warranty.<br><br>THE UNIVERSITY OF OREGON AND LANL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL THE UNIVERSITY OF OREGON OR LANL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.<font>'
+
+javadoc: Makefile ${GLUE_SOURCES}
+	rm -rf javadoc
+	mkdir javadoc
+	${JAVADOC} -sourcepath src \
+	-overview src/overview.html \
+	-d javadoc \
+	-classpath ${GLUE_BUILD_CLASSPATH} \
+	-use \
+	-windowtitle "PerfExplorer 2.0" \
+	-doctitle "PerfExplorer 2.0" \
+	-header "<b>PerfExplorer</b> 2.0" \
+	-bottom ${BOTTOM} \
+	-public \
+	-source 1.5 \
+	-quiet \
+	-version \
+	-author \
+	-noqualifier all \
+	-nodeprecated \
+	glue 
+
+install: perfexplorer.jar javadoc
+	#rsync -a perfexplorer2.jar spaceghost:/var/www/html/PerfExplorer/.
+	rsync -a doc/* spaceghost:/var/www/html/PerfExplorer/.
+	rsync -a javadoc spaceghost:/var/www/html/PerfExplorer/.
 
 ###
 ### END

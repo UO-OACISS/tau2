@@ -351,8 +351,9 @@ public class TestHarness {
 	}
 
 	public void testRules() throws Exception {
-		//RuleHarness rules = new RuleHarness();
-		//RuleHarness.processRules();
+		//RuleHarnessOld rules = new RuleHarnessOld();
+		System.out.println("USE A SCRIPT!");
+		//RuleHarnessOld.processRules();
 	}
 
 	public void testCorrelation() throws Exception {
@@ -393,7 +394,10 @@ public class TestHarness {
 		//edu.uoregon.tau.common.TauScripter.execfile("/Users/khuck/tau2/tools/src/perfexplorer/etc/generalcharttest.py");
 		//edu.uoregon.tau.common.TauScripter.execfile("etc/generalcharttest.py");
 		//edu.uoregon.tau.common.TauScripter.execfile("etc/lu-interactive.py");
-		edu.uoregon.tau.common.TauScripter.execfile("etc/gtc.py");
+		//edu.uoregon.tau.common.TauScripter.execfile("etc/gtc.py");
+		//edu.uoregon.tau.common.TauScripter.execfile("etc/rules.py");
+		//edu.uoregon.tau.common.TauScripter.execfile("etc/correlation.py");
+		edu.uoregon.tau.common.TauScripter.execfile("etc/longrun.py");
 	}
 		
 

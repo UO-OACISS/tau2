@@ -1,0 +1,23 @@
+#created on: Aug 5, 2007
+package rules
+
+#list any import classes here.
+import glue.DifferenceMetadataOperation;
+import glue.DifferenceOperation;
+import glue.PerformanceDifferenceType;
+
+#declare any global variables here
+
+#function myFunction( ... ) 
+    #function content (can have multiple functions) 
+#end
+
+
+rule "Dummy"
+	when
+		// dummy rule
+		d : DifferenceOperation ( t : differenceType, pr : performanceRatio )
+		m : DifferenceMetadataOperation ( er : expectedRatio < pr )
+	then
+		System.out.println("...Executing dummy rule...");
+end

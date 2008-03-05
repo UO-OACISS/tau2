@@ -17,7 +17,7 @@ import javax.swing.JPanel;
  * This class takes the Weka or R cluster results, and creates a virtual
  * topology image showing which cluster each thread of execution belongs to.
  *
- * <P>CVS $Id: VirtualTopology.java,v 1.2 2007/01/04 21:20:04 khuck Exp $</P>
+ * <P>CVS $Id: VirtualTopology.java,v 1.3 2008/03/05 00:25:57 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -47,7 +47,7 @@ public class VirtualTopology extends JPanel {
 		// get the size of the image...
 		int width = 1;
 		int height = clusterer.getNumInstances();
-		while (width < height) {
+		while (width < (height/2)) {
 			height = height / 2;
 			width = width * 2;
 		}

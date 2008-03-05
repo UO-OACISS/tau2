@@ -1,0 +1,208 @@
+#created on: Aug 5, 2007
+package rules
+
+#list any import classes here.
+import glue.DifferenceMetadataOperation;
+import glue.DifferenceOperation;
+import glue.PerformanceDifferenceType;
+import glue.DataNeeded;
+import glue.MeanEventFact;
+import glue.DerivedMetrics;
+import glue.ScalabilityResult;
+
+#declare any global variables here
+
+#function myFunction( ... ) 
+    #function content (can have multiple functions) 
+#end
+
+
+rule "Differences in Processes"
+	salience 1
+	when
+		// there exists a difference operation between metadata collections
+		d : DifferenceMetadataOperation ()
+		f : FactWrapper ( factName == "node_count", factType == DifferenceMetadataOperation.NAME )
+	then 
+		String[] values = (String[])d.getDifferences().get("node_count");
+		System.out.println("Differences in processes... " + values[0] + ", " + values[1]);
+		double tmp = Double.parseDouble(values[0]) / Double.parseDouble(values[1]);
+		// an increase in processors means a decrease in time
+		d.setExpectedRatio(d.getExpectedRatio() * tmp);
+		System.out.println("New Expected Ratio: " + d.getExpectedRatio());
+		d.removeFact("node_count");
+end
+
+rule "Performance exceeds expectation"
+	salience 0
+	when
+		// there exists a difference operation between performance data
+		d : DifferenceOperation ( t : differenceType, pr : performanceRatio )
+		m : DifferenceMetadataOperation ( er : expectedRatio > pr )
+	then
+		System.out.println("The comparison trial is faster than expected, relative to the baseline trial");
+		System.out.println("Expected ratio: " + er + ", Actual ratio: " + pr);
+end
+
+rule "Superlinear Speedup"
+	salience 0
+	when
+		// there exists a difference operation between performance data
+		d : ScalabilityResult ( a : actualRatio, i : idealRatio )
+		m : DifferenceMetadataOperation ( er : expectedRatio )
+		eval ( a.doubleValue() > i.doubleValue() )
+	then
+		System.out.println("The comparison trial has superlinear speedup, relative to the baseline trial");
+		System.out.println("Expected ratio: " + i + ", Actual ratio: " + a );
+		//System.out.println("Expected ratio: " + er + ", Actual ratio: " + a );
+		System.out.println("Event / metric combinations which contribute:");
+		System.out.println(d.findPositiveReasons());
+		System.out.println("Event / metric combinations which penalize:");
+		System.out.println(d.findNegativeReasons());
+end
+
+rule "Substandard Speedup"
+	salience 0
+	when
+		// there exists a difference operation between performance data
+		d : ScalabilityResult ( a : actualRatio, i : idealRatio )
+		m : DifferenceMetadataOperation ( er : expectedRatio )
+		eval ( a.doubleValue() < i.doubleValue() )
+	then
+		System.out.println("The comparison trial has less than expected speedup, relative to the baseline trial");
+		System.out.println("Expected ratio: " + i + ", Actual ratio: " + a );
+		//System.out.println("Expected ratio: " + er + ", Actual ratio: " + a );
+		System.out.println("Event / metric combinations which penalize:");
+		System.out.println(d.findNegativeReasons());
+		System.out.println("Event / metric combinations which counteract:");
+		System.out.println(d.findPositiveReasons());
+end
+
+rule "Performance falls short of expectation"
+	salience 0
+	when
+		// there exists a difference operation between performance data
+		d : DifferenceOperation ( t : differenceType, pr : performanceRatio )
+		m : DifferenceMetadataOperation ( er : expectedRatio < pr )
+	then
+		System.out.println("The comparison trial is slower than expected, relative to the baseline trial");
+		System.out.println("Expected ratio: " + er + ", Actual ratio: " + pr);
+end
+
+rule "CLASSPATH data needed"
+	when
+		// there is no classpath data, but it is needed for further analysis
+		n : DataNeeded ( type : classpath == true )
+	then
+		System.out.println("*** Insufficient data for analysis! ***");
+		System.out.println("Please configure TAU to collect CALLPATH data, and collect additional profile data.  See $TAU_HOME/configure -help for details.");
+end
+
+rule "Hardware Floating Point data needed"
+	when
+		// there is no floating point data, but it is needed for further analysis
+		n : DataNeeded ( type : floatingPoint == true )
+	then
+		System.out.println("*** Insufficient data for analysis! ***");
+		System.out.println("Please configure TAU to collect PAPI hardware counter data, and collect additional profile data, with MULTIPLECOUNTERS if necessary.  Please collect either PAPI_FP_OPS or PAPI_FP_INS, depending on which is supported on your system.  See the TAU and/or PAPI documentation for details.");
+end
+
+rule "Hardware Total Instruction data needed"
+	when
+		// there is no total instruction data, but it is needed for further analysis
+		n : DataNeeded ( type : totalInstruction == true )
+	then
+		System.out.println("*** Insufficient data for analysis! ***");
+		System.out.println("Please configure TAU to collect PAPI hardware counter data, and collect additional profile data, with MULTIPLECOUNTERS if necessary.  Please collect either PAPI_TOT_OPS or PAPI_TOT_INS, depending on which is supported on your system.  See the TAU and/or PAPI documentation for details.");
+end
+
+rule "Time / Hardware Time data needed"
+	when
+		// there is no time data, but it is needed for further analysis
+		n : DataNeeded ( type : time == true )
+	then
+		System.out.println("*** Insufficient data for analysis! ***");
+		System.out.println("Please configure TAU to collect time data, and collect additional profile data, with MULTIPLECOUNTERS if necessary.  Please collect either Time, WALL_CLOCK_TIME or GET_TIME_OF_DAY, depending on which is supported on your system.  See the TAU and/or PAPI documentation for details.");
+end
+
+rule "Hardware L1 Cache Access data needed"
+	when
+		// there is no cache access data, but it is needed for further analysis
+		n : DataNeeded ( type : cacheAccessL1 == true )
+	then
+		System.out.println("*** Insufficient data for analysis! ***");
+		System.out.println("Please configure TAU to collect PAPI hardware counter data, and collect additional profile data, with MULTIPLECOUNTERS if necessary.  Please collect PAPI_L1_TCA.  See the TAU and/or PAPI documentation for details.");
+end
+
+rule "Hardware L1 Cache Miss data needed"
+	when
+		// there is no cache miss data, but it is needed for further analysis
+		n : DataNeeded ( type : cacheMissL1 == true )
+	then
+		System.out.println("*** Insufficient data for analysis! ***");
+		System.out.println("Please configure TAU to collect PAPI hardware counter data, and collect additional profile data, with MULTIPLECOUNTERS if necessary.  Please collect PAPI_L1_TCM or PAPI_L2_TCA, depending on which is supported on your system.  See the TAU and/or PAPI documentation for details.");
+end
+
+rule "Hardware L2 Cache Access data needed"
+	when
+		// there is no cache access data, but it is needed for further analysis
+		n : DataNeeded ( type : cacheAccessL2 == true )
+	then
+		System.out.println("*** Insufficient data for analysis! ***");
+		System.out.println("Please configure TAU to collect PAPI hardware counter data, and collect additional profile data, with MULTIPLECOUNTERS if necessary.  Please collect PAPI_L1_TCM or PAPI_L2_TCA, depending on which is supported on your system.  See the TAU and/or PAPI documentation for details.");
+end
+
+rule "Hardware L2 Cache Miss data needed"
+	when
+		// there is no cache miss data, but it is needed for further analysis
+		n : DataNeeded ( type : cacheMissL2 == true )
+	then
+		System.out.println("*** Insufficient data for analysis! ***");
+		System.out.println("Please configure TAU to collect PAPI hardware counter data, and collect additional profile data, with MULTIPLECOUNTERS if necessary.  Please collect PAPI_L2_TCM or PAPI_L3_TCA, depending on which is supported on your system.  See the TAU and/or PAPI documentation for details.");
+end
+
+rule "Large FLOP rate"
+	when 
+		// there is a FLOP rate higher than the average FLOP rate
+		f : MeanEventFact ( m : metric == DerivedMetrics.MFLOP_RATE, b : betterWorse == MeanEventFact.BETTER, severity : severity > 0.02, e : eventName, a : mainValue, v : eventValue )
+	then
+		// System.out.println ( f.toString() );
+		System.out.println("The event " + e + " has a higher than average FLOP rate.  If this is not a main computation loop, try performing fewer calculations in this event for improved performance.");
+		System.out.println("\tAverage MFLOP/second: " + a + ", Event MFLOP/second: " + v);
+		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
+end
+
+rule "Poor L1 Hit rate"
+	when 
+		// there is a L1 Cache hit rate lower than the average L1 Cache Hit rate
+		f : MeanEventFact ( m : metric == DerivedMetrics.L1_HIT_RATE, b : betterWorse == MeanEventFact.WORSE, severity : severity > 0.02, e : eventName, a : mainValue, v : eventValue )
+	then
+		//System.out.println ( f.toString() );
+		System.out.println("The event " + e + " has a lower than average L1 hit rate.  Try reducing irregular memory accesses for improved performance.");
+		System.out.println("\tAverage L1 hit rate: " + a + ", Event L1 hit rate: " + v);
+		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
+end
+
+rule "High Memory Access rate"
+	when 
+		// there is a memory access rate higher than the average memory access rate
+		f : MeanEventFact ( m : metric == DerivedMetrics.MEM_ACCESSES, b : betterWorse == MeanEventFact.BETTER, severity : severity > 0.02, e : eventName, a : mainValue, v : eventValue  )
+	then
+		//System.out.println ( f.toString() );
+		System.out.println("The event " + e + " has a higher than average memory access rate - this event seems memory bound.");
+		System.out.println("\tAverage memory accesses / second: " + a + ", Event memory accesses / second: " + v);
+		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
+end
+
+rule "Poor L2 Hit rate"
+	when 
+		// there is a L2 Cache hit rate lower than the average L2 Cache Hit rate
+		f : MeanEventFact ( m : metric == DerivedMetrics.L2_HIT_RATE, b : betterWorse == MeanEventFact.WORSE, severity : severity > 0.02, e : eventName, a : mainValue, v : eventValue  )
+	then
+		//System.out.println ( f.toString() );
+		System.out.println("The event " + e + " has a lower than average L2 hit rate.  Try reducing irregular memory accesses for improved performance.");
+		System.out.println("\tAverage L2 hit rate: " + a + ", Event L2 hit rate: " + v);
+		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
+end
+
+

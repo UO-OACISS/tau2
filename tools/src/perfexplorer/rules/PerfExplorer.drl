@@ -1,0 +1,74 @@
+#created on: Jul 11, 2007
+package rules
+
+#list any import classes here.
+import glue.DifferenceOperation;
+import glue.DifferenceMetadataOperation;
+import glue.PerformanceDifferenceType;
+import glue.PerformanceResult;
+import java.util.Hashtable;
+import java.util.Set;
+import java.util.Iterator;
+
+#declare any global variables here
+
+# declare any functions here
+/*function myFunction( ... ) 
+    function content (can have multiple functions) 
+end*/
+
+/**
+ * If the comparison trial is faster than baseline, report it,
+ * and assert the events in the trial, the metrics in the trial,
+ * and the groups.
+ */
+rule "Faster than Baseline"
+	when
+		// there exists a difference where the comparison is faster than the baseline
+		d : DifferenceOperation ( differenceType == PerformanceDifferenceType.FASTER )
+	then
+		System.out.println(d.toString());
+		// output the differences:
+		//System.out.println(d.toString());
+		// assert the events to be compared
+		// assert the metrics to be compared
+		// assert the groups to be compared
+		// assert the metadata to be compared
+end
+
+/**
+ * If the comparison trial is slower than baseline, report it,
+ * and assert the events in the trial, the metrics in the trial,
+ * and the groups.
+ */
+rule "slower than Baseline"
+	when
+		// there exists a difference where the comparison is slower than the baseline
+		d : DifferenceOperation ( differenceType == PerformanceDifferenceType.SLOWER )
+	then
+		System.out.println(d.toString());
+		// output the differences:
+		//System.out.println(d.toString());
+		// assert the events to be compared
+		// assert the metrics to be compared
+		// assert the groups to be compared
+		// assert the metadata to be compared
+end
+
+
+rule "Same as Baseline"
+	when
+		// there exists a difference where the comparison is the same as the baseline
+		d : DifferenceOperation ( differenceType == PerformanceDifferenceType.SAME )
+	then
+		System.out.println(d.toString());
+end
+
+rule "Differences in Metadata"
+	when
+		// there exists a difference operation between metadata collections
+		d : DifferenceMetadataOperation () 
+	then
+		System.out.println(d.toString());
+end
+		

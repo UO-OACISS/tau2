@@ -6,9 +6,11 @@ package clustering.weka;
 
 import clustering.AnalysisFactory;
 import clustering.KMeansClusterInterface;
+import clustering.LinearRegressionInterface;
 import clustering.PrincipalComponentsAnalysisInterface;
 import clustering.DataNormalizer;
 import clustering.RawDataInterface;
+import clustering.Utilities;
 import common.RMICubeData;
 
 import java.util.List;
@@ -18,7 +20,7 @@ import java.util.List;
  * should never be directly created - use the static method in the
  * AnalysisFactory class.
  *
- * <P>CVS $Id: WekaAnalysisFactory.java,v 1.4 2007/01/23 22:57:02 khuck Exp $</P>
+ * <P>CVS $Id: WekaAnalysisFactory.java,v 1.5 2008/03/05 00:25:53 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -49,6 +51,13 @@ public class WekaAnalysisFactory extends AnalysisFactory {
 	}
 
 	/* (non-Javadoc)
+	 * @see clustering.AnalysisFactory#createPCAEngine()
+	 */
+	public PrincipalComponentsAnalysisInterface createPCAEngine(RawDataInterface rawData) {
+		return new WekaPrincipalComponents(rawData, this);
+	}
+
+	/* (non-Javadoc)
      * @see clustering.AnalysisFactory#createDataNormalizer()
      */
     public DataNormalizer createDataNormalizer(RawDataInterface inputData) {
@@ -58,5 +67,15 @@ public class WekaAnalysisFactory extends AnalysisFactory {
 	public void closeFactory() {
 		// do nothing
 		return;
+	}
+
+	@Override
+	public LinearRegressionInterface createLinearRegressionEngine() {
+		// TODO Auto-generated method stub
+		return new WekaLinearRegression();
+	}
+
+	public Utilities getUtilities() {
+		return new WekaUtilities();
 	}
 }

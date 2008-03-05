@@ -6,9 +6,11 @@ package clustering.r;
 
 import clustering.AnalysisFactory;
 import clustering.KMeansClusterInterface;
+import clustering.LinearRegressionInterface;
 import clustering.PrincipalComponentsAnalysisInterface;
 import clustering.DataNormalizer;
 import clustering.RawDataInterface;
+import clustering.Utilities;
 import common.RMICubeData;
 
 import java.util.List;
@@ -18,7 +20,7 @@ import java.util.List;
  * should never be directly created - use the static method in the
  * AnalysisFactory class.
  *
- * <P>CVS $Id: RAnalysisFactory.java,v 1.6 2007/01/23 22:57:01 khuck Exp $</P>
+ * <P>CVS $Id: RAnalysisFactory.java,v 1.7 2008/03/05 00:25:52 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -74,4 +76,26 @@ public class RAnalysisFactory extends AnalysisFactory {
 	public void closeFactory() {
 		RSingletons.endRSession();
 	}
+
+	@Override
+	public LinearRegressionInterface createLinearRegressionEngine() {
+		// TODO Auto-generated method stub
+		System.out.println("linear regression for R is UNIMPLEMENTED");
+		return null;
+	}
+
+	@Override
+	public PrincipalComponentsAnalysisInterface createPCAEngine(RawDataInterface rawData) {
+		// TODO Auto-generated method stub
+		System.out.println("this PCA for R is UNIMPLEMENTED");
+		return null;
+	}
+
+ 	/* (non-Javadoc)
+     * @see clustering.AnalysisFactory#createDataNormalizer()
+     */
+    public Utilities getUtilities () {
+        return new RUtilities();
+    }
+
 }

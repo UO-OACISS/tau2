@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <jnlp spec="1.0+" codebase="http://proton.nic.uoregon.edu/javaws" href="jogl.jnlp">
+    <information>
+        <title>JOGL</title>
+        <vendor>Sun Microsystems, Inc.</vendor>
+        <offline-allowed/>
+    </information>
+    <security>
+      <all-permissions/>
+    </security>
+    <resources>
+        <jar href="lib/jogl.jar"/>
+    </resources>
+    <resources os="Windows">
+	<nativelib href="lib/jogl-natives-win32.jar"/>
+</resources>
+<resources os="Linux">
+<nativelib href="lib/jogl-natives-linux.jar"/>
+</resources>
+<resources os="Mac OS">
+<nativelib href="lib/jogl-natives-apple.jar"/>
+</resources>
+<component-desc/>
+</jnlp>

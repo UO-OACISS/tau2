@@ -19,9 +19,11 @@ import common.TransformationType;
 import common.PerfExplorerOutput;
 import java.io.File;
 import edu.uoregon.tau.common.VectorExport;
+import edu.uoregon.tau.common.PythonInterpreterFactory;
 
 public class PerfExplorerActionListener implements ActionListener {
 
+	public final static String DATABASE_CONFIGURATION = "Database Configuration";
 	public final static String LOADSCRIPT = "Load Analysis Script";
 	public final static String RERUNSCRIPT = "Re-run Analysis Script";
 	public final static String SAVE_MAIN = "Save Main Window As Vector Image";
@@ -71,7 +73,8 @@ public class PerfExplorerActionListener implements ActionListener {
 
 	private PerfExplorerClient mainFrame;
 
-	private String scriptName;
+	private String scriptName = null;
+	private String scriptDir = null;
 
 	public PerfExplorerActionListener (PerfExplorerClient mainFrame) {
 		super();
@@ -110,6 +113,8 @@ public class PerfExplorerActionListener implements ActionListener {
 							}
 						}
 					}
+				} else if (arg.equals(DATABASE_CONFIGURATION)) {
+					databaseConfiguration();
 				} else if (arg.equals(LOADSCRIPT)) {
 					loadScript();
 				} else if (arg.equals(RERUNSCRIPT)) {
@@ -281,12 +286,16 @@ public class PerfExplorerActionListener implements ActionListener {
 		buf.append("\nuser.country : " + System.getProperty("user.country"));
 		buf.append("\nuser.timezone : " + System.getProperty("user.timezone"));
 		buf.append("\nuser.language : " + System.getProperty("user.language"));
-		String message = new String("PerfExplorer 1.0\n" +
+		String message = new String("PerfExplorer 2.0\n" +
 					getVersionString() + "\nJVM Heap Size: " + memUsage
 					+ "kb\n" + buf.toString());
 		ImageIcon icon = createImageIcon(Utility.getResource("tau-large.png"));
 		JOptionPane.showMessageDialog(mainFrame, message, 
 			"About PerfExplorer", JOptionPane.INFORMATION_MESSAGE, icon);
+	}
+
+	public void databaseConfiguration() {
+		(new DatabaseManagerWindow(PerfExplorerClient.getMainFrame())).setVisible(true);
 	}
 
     /** Returns an ImageIcon, or null if the path was invalid. */
@@ -708,15 +717,25 @@ public class PerfExplorerActionListener implements ActionListener {
 	}
 
 	private boolean loadScript () {
+		JFileChooser fc = null;
 		// open a file chooser dialog
-		JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
+		if (scriptDir == null) {
+			fc = new JFileChooser(System.getProperty("user.dir"));
+		} else {
+			fc = new JFileChooser(scriptDir);
+		}
 		int returnVal = fc.showOpenDialog(mainFrame);
-		scriptName = fc.getSelectedFile().getAbsolutePath();
-		runScript();
-		return true;
+		if (returnVal == JFileChooser.APPROVE_OPTION) {
+			scriptName = fc.getSelectedFile().getAbsolutePath();
+			// save where we were
+			scriptDir = fc.getSelectedFile().getParent();
+			runScript();
+			return true;
+		}
+		return false;
 	}
 
-	private boolean runScript() {
+	public boolean runScript() {
 		if (scriptName == null) {
 			// make sure a script file has been loaded first
 			JOptionPane.showMessageDialog(mainFrame, 
@@ -725,11 +744,10 @@ public class PerfExplorerActionListener implements ActionListener {
 			return false;
 		} else {
 			// run the script
-			edu.uoregon.tau.common.TauScripter.execfile(scriptName);
+			PythonInterpreterFactory.defaultfactory.getPythonInterpreter().execfile(scriptName);
 			return true;
 		}
 	}
-
     public void saveThyself() {
         //System.out.println("Daemon come out!");
         try {
@@ -750,5 +768,19 @@ public class PerfExplorerActionListener implements ActionListener {
         }
         return;
     }
+
+	/**
+	 * @return the scriptName
+	 */
+	public String getScriptName() {
+		return scriptName;
+	}
+
+	/**
+	 * @param scriptName the scriptName to set
+	 */
+	public void setScriptName(String scriptName) {
+		this.scriptName = scriptName;
+	}
 
 }

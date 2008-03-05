@@ -1,0 +1,66 @@
+<?xml version='1.0' encoding='utf-8'?> <jnlp spec='1.0'
+codebase='http://spaceghost.cs.uoregon.edu/PerfExplorer'> 
+
+  <information>
+    <title>PerfExplorer</title>
+    <vendor>University of Oregon</vendor>
+    <homepage href='http://tau.uoregon.edu'/>
+    <description>PerfExplorer Analysis Browser</description>
+    <description kind='short'>TAU's Parallel Analysis Application.</description>
+	<icon href="http://spaceghost.cs.uoregon.edu/PerfExplorer/tau-large.png/" width="64" height="64"/>
+    <offline-allowed/>
+  </information>
+
+  <security>
+    <all-permissions/>
+  </security>
+ 
+  <resources>
+    <j2se href='http://java.sun.com/products/autodl/j2se' version='1.5+' max-heap-size='512m' />
+    <jar href='antlr-2.7.6.jar' main='false'/>
+    <jar href='antlr-3.0ea8.jar' main='false'/>
+    <jar href='batik-combined.jar' main='false'/>
+    <jar href='commons-jci-core-1.0-406301.jar' main='false'/>
+    <jar href='commons-jci-eclipse-3.2.0.666.jar' main='false'/>
+    <jar href='commons-lang-2.1.jar' main='false'/>
+    <jar href='commons-logging-api-1.0.4.jar' main='false'/>
+    <jar href='core-3.2.0.666.jar' main='false'/>
+    <jar href='derby.jar' main='false'/>
+    <jar href='drools-compiler-3.0.6.jar' main='false'/>
+    <jar href='drools-core-3.0.6.jar' main='false'/>
+    <jar href='drools-decisiontables-3.0.6.jar' main='false'/>
+    <jar href='drools-jsr94-3.0.6.jar' main='false'/>
+    <jar href='ejb3-persistence.jar' main='false'/>
+    <jar href='hibernate3.jar' main='false'/>
+    <jar href='hibernate-annotations.jar' main='false'/>
+    <jar href='hibernate-commons-annotations.jar' main='false'/>
+    <jar href='jargs.jar' main='false'/>
+    <jar href='jcommon-0.9.6.jar' main='false'/>
+    <jar href='jfreechart-0.9.21.jar' main='false'/>
+    <jar href='jogl.jar' main='false'/>
+    <jar href='jsr94-1.1.jar' main='false'/>
+    <jar href='junit-3.8.1.jar' main='false'/>
+    <jar href='jxl-2.4.2.jar' main='false'/>
+    <jar href='jython.jar' main='false'/>
+    <jar href='mysql.jar' main='false'/>
+    <jar href='perfdmf.jar' main='false'/>
+    <jar href='perfexplorer.jar' main='true'/>
+    <jar href='postgresql.jar' main='false'/>
+    <jar href='stringtemplate-2.3b6.jar' main='false'/>
+    <jar href='tau-common.jar' main='false'/>
+    <jar href='vis.jar' main='false'/>
+    <jar href='weka.jar' main='false'/>
+    <jar href='xerces.jar' main='false'/>
+
+    <extension name="jogl" href="http://spaceghost.cs.uoregon.edu/PerfExplorer/jogl.jnlp" />
+	<property name="derby.stream.error.field" value="client.PerfExplorerClient.DEV_NULL" />
+	<property name="derby.infolog.append" value="true" />
+  </resources>
+
+  <application-desc main-class="client.PerfExplorerClient">
+    <argument>-s</argument>
+    <argument>-e</argument>
+    <argument>weka</argument>
+  </application-desc>
+
+</jnlp>

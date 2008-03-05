@@ -10,7 +10,11 @@ import java.io.Serializable;
 /**
  * This class is used as a typesafe enumeration.
  *
- * <P>CVS $Id: TransformationType.java,v 1.3 2007/07/03 00:18:33 khuck Exp $</P>
+<<<<<<< TransformationType.java
+ * <P>CVS $Id: TransformationType.java,v 1.4 2008/03/05 00:25:53 khuck Exp $</P>
+=======
+ * <P>CVS $Id: TransformationType.java,v 1.4 2008/03/05 00:25:53 khuck Exp $</P>
+>>>>>>> 1.2.2.1
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2

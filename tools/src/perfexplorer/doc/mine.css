@@ -1,0 +1,96 @@
+body {
+	background-color: black;
+	color: silver;
+	margin-left: auto;
+	margin-right: auto;
+	text-align: center;
+}
+
+img {
+    border: 0;
+}
+
+b#white { 
+  color: white; 
+}
+
+i#white { 
+  color: white; 
+}
+
+a:link { 
+  color: white; 
+}
+
+a:visited { 
+  color: white; 
+}
+
+a:hover { 
+  color: white; 
+}
+
+.pubs {
+  margin-bottom:1em;
+}
+
+ul#normalul {
+  margin-left: auto;
+  margin-right: auto;
+  width: 90%;
+  text-align: left;
+  vertical-align: top;
+}
+
+p#normalp {
+  margin-left: auto;
+  margin-right: auto;
+  width: 90%;
+  text-align: left;
+  vertical-align: top;
+}
+
+table#index {
+  margin-top: 30px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 80%;
+  padding: 2px;
+}
+
+table#namedecoder {
+  margin-top: 30px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 80%;
+  padding: 2px;
+}
+
+.c {
+	margin-left: auto;
+	margin-right: auto;
+	text-align: center;
+	vertical-align: top;
+}
+
+.cc {
+	margin-left: auto;
+	margin-right: auto;
+	text-align: center;
+	vertical-align: middle;
+}
+
+.l {
+	margin-left: auto;
+	margin-right: auto;
+	text-align: left;
+	vertical-align: top;
+}
+
+.r {
+	margin-left: auto;
+	margin-right: auto;
+	text-align: right;
+	vertical-align: top;
+}
+

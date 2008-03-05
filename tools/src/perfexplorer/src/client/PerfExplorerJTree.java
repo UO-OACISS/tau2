@@ -3,6 +3,8 @@ package client;
 import java.util.ListIterator;
 import javax.swing.*;
 import javax.swing.tree.*;
+
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
@@ -13,6 +15,8 @@ public class PerfExplorerJTree extends JTree {
 
 	private static PerfExplorerJTree theTree = null;
 	private static List leafViews = null;
+	private static DefaultMutableTreeNode root = null;
+	private static DefaultTreeModel theModel = null;
 
 	private PerfExplorerJTree (DefaultTreeModel model) {
 		super(model);
@@ -36,9 +40,51 @@ public class PerfExplorerJTree extends JTree {
 			DefaultTreeModel model = new DefaultTreeModel(createNodes());
 			model.setAsksAllowsChildren(true);
 			theTree = new PerfExplorerJTree(model);
+			theModel = model;
 			//addTrialsForViews();
 		}
 		return theTree;
+	}
+
+	public static void refreshDatabases () {
+		DefaultMutableTreeNode root = PerfExplorerJTree.root;
+        DefaultMutableTreeNode treeNode;
+        
+		root.removeAllChildren();
+
+/*        // make a list of the nodes to remove
+        List toRemove = new ArrayList();
+        Enumeration nodes = root.children();
+        while (nodes.hasMoreElements()) {
+            treeNode = (DefaultMutableTreeNode) nodes.nextElement();
+            toRemove.add(treeNode);
+        }
+*/
+        // reset the server to get all new configurations
+		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
+		server.resetServer();
+		List strings = server.getConnectionStrings();
+
+		// add new nodes
+		for (int i = 0 ; i < strings.size() ; i++ ) {
+			String tmp = (String)strings.get(i);
+			DefaultMutableTreeNode top = new PerfExplorerTreeNode(new ConnectionNodeObject(tmp, i));
+			root.add(top);
+		}
+
+/*		// remove the original nodes
+        for (int i = 0; i < toRemove.size(); i++) {
+            treeNode = (DefaultMutableTreeNode) toRemove.get(i);
+            treeNode.removeFromParent();
+            theModel.nodeStructureChanged((TreeNode)treeNode);
+        }
+*/
+		theModel.nodeStructureChanged((TreeNode)root);
+
+		theTree.setVisible(false);
+		theTree.validate();
+		theModel.reload();
+		theTree.setVisible(true);
 	}
 
 	private static DefaultMutableTreeNode createNodes () {
@@ -50,8 +96,7 @@ public class PerfExplorerJTree extends JTree {
 			DefaultMutableTreeNode top = new PerfExplorerTreeNode(new ConnectionNodeObject(tmp, i));
 			root.add(top);
 		}
-/*
-*/
+		PerfExplorerJTree.root = root;
 		return root;
 	}
 	
