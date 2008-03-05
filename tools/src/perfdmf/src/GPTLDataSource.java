@@ -66,7 +66,10 @@ public class GPTLDataSource extends DataSource {
 			for (int i = 0 ; i < data.eventData.size() ; i++ ) {
 				EventData eventData = (EventData)data.eventData.get(i);
 				createFunction(thread, eventData, false);
-				createFunction(thread, eventData, true);
+				// for the first function, don't create callpath, just flat
+				if (i > 0) {
+					createFunction(thread, eventData, true);
+				}
 			}
         	this.generateDerivedData();
 			// get next thread
@@ -90,13 +93,13 @@ public class GPTLDataSource extends DataSource {
 
 		// for this function, create a function
 
-		if (doCallpath) { 
+		if (doCallpath) {
 			function = this.addFunction(eventData.callpathName);
 			function.addGroup(this.addGroup("TAU_CALLPATH"));
 		} else {
 			function = this.addFunction(eventData.name);
+			function.addGroup(this.addGroup("TAU_USER"));
 		}
-		function.addGroup(this.addGroup(eventData.name));
 
 		// create a function profile for this process/thread
 		functionProfile = new FunctionProfile(function, 3+(2*globalData.metrics.size()));
@@ -451,6 +454,10 @@ public class GPTLDataSource extends DataSource {
 				exclusive.papiE6OverSeconds[j] = (exclusive.papi[j] / 1000000) / exclusive.wallclock;
 			}
 			return exclusive;
+		}
+		public boolean hasChildren() {
+			if (children.size() > 0) return true;
+			return false;
 		}
 	}
 
