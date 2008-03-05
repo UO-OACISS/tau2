@@ -98,7 +98,7 @@ public class GPTLDataSource extends DataSource {
 			function.addGroup(this.addGroup("TAU_CALLPATH"));
 		} else {
 			function = this.addFunction(eventData.name);
-			function.addGroup(this.addGroup("TAU_USER"));
+			function.addGroup(this.addGroup("TAU_DEFAULT"));
 		}
 
 		// create a function profile for this process/thread
