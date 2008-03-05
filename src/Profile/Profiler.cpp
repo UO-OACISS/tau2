@@ -2766,8 +2766,6 @@ int Profiler::StoreData(int tid){
 
       fprintf(fp,"0 aggregates\n"); // For now there are no aggregates
   
-      RtsLayer::UnLockDB();
-      
       numEvents = 0;
       for (eit = TheEventDB().begin(); eit != TheEventDB().end(); eit++)
 	{
@@ -2801,6 +2799,7 @@ int Profiler::StoreData(int tid){
       }
       
       // End of userevents data
+      RtsLayer::UnLockDB();
 
       fclose(fp);
     }
@@ -3420,9 +3419,9 @@ double& Profiler::TheTauThrottlePerCall(void)
 
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.169 $   $Date: 2007/11/06 18:53:33 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.169 2007/11/06 18:53:33 sameer Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: amorris $
+ * $Revision: 1.170 $   $Date: 2008/03/05 23:13:35 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.170 2008/03/05 23:13:35 amorris Exp $ 
  ***************************************************************************/
 
 	
