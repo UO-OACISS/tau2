@@ -397,11 +397,16 @@ class CompleteDirectives
   */
   list<Directive>& findOMPStmt(const pdbStmt *s, const pdbStmt *block, int loop, PDB& pdb)
   {
+    static list<Directive> emptyDirectives;
 
-      while (directives.size() != 0 && s->stmtBegin().line() >=
-                  directives.front().getLine() && (
-                  directives.front().getType() == 1 ||
-                  directives.front().getType() == -1))
+    if (directives.size() == 0) {
+      return emptyDirectives;
+    }
+
+    while (directives.size() != 0 && s->stmtBegin().line() >=
+	   directives.front().getLine() && (
+					    directives.front().getType() == 1 ||
+					    directives.front().getType() == -1))
       {
         while (directives.front().getType() == 1)
         {
@@ -777,7 +782,8 @@ int main(int argc, char *argv[])
               
               //Retrive the statement within the routines.
               const pdbStmt *v = (*r)->body();
-            directivesToBeAdded.splice(directivesToBeAdded.end(), c.findOMPStmt(v,p));
+	      
+	      directivesToBeAdded.splice(directivesToBeAdded.end(), c.findOMPStmt(v,p));
             }
           }
         //}
@@ -847,7 +853,7 @@ int main(int argc, char *argv[])
   }
 }
 /***************************************************************************
- * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
- * $Revision: 1.12 $   $Date: 2006/05/30 19:25:22 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.12 2006/05/30 19:25:22 scottb Exp $
+ * $RCSfile: tau_ompcheck.cpp,v $   $Author: amorris $
+ * $Revision: 1.13 $   $Date: 2008/03/05 02:58:55 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.13 2008/03/05 02:58:55 amorris Exp $
  ***************************************************************************/
