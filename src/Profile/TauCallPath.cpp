@@ -250,19 +250,34 @@ void Profiler::CallPathStart(int tid)
     comparison = TauFormulateComparisonArray(this);
     DEBUGPROFMSG("Comparison string = "<<*comparison<<endl;);
 
+
     // Should I profile this path? 
     if (TauCallPathShouldBeProfiled(comparison))
     {
+
       map<TAU_CALLPATH_MAP_TYPE>::iterator it = TheCallPathMap().find(comparison);
       if (it == TheCallPathMap().end())
       {
-        string *callpathname = TauFormulateNameString(this);
-        DEBUGPROFMSG("Couldn't find string in map: "<<*comparison<<endl; );
+	RtsLayer::LockEnv();
+	it = TheCallPathMap().find(comparison);
+	if (it == TheCallPathMap().end())
+	  {
 
-	string grname = string("TAU_CALLPATH | ") + RtsLayer::PrimaryGroup(ThisFunction->GetAllGroups());
-  	CallPathFunction = new FunctionInfo(*callpathname, " ", 
-	  ThisFunction->GetProfileGroup(), (const char*) grname.c_str(), true );
-	TheCallPathMap().insert(map<TAU_CALLPATH_MAP_TYPE>::value_type(comparison, CallPathFunction));
+	    string *callpathname = TauFormulateNameString(this);
+	    DEBUGPROFMSG("Couldn't find string in map: "<<*comparison<<endl; );
+	    
+	    string grname = string("TAU_CALLPATH | ") + RtsLayer::PrimaryGroup(ThisFunction->GetAllGroups());
+	    CallPathFunction = new FunctionInfo(*callpathname, " ", 
+						ThisFunction->GetProfileGroup(), (const char*) grname.c_str(), true );
+	    TheCallPathMap().insert(map<TAU_CALLPATH_MAP_TYPE>::value_type(comparison, CallPathFunction));
+	  } 
+	else
+	  {
+	    CallPathFunction = (*it).second; 
+	    DEBUGPROFMSG("ROUTINE "<<(*it).second->GetName()<<" first = "<<(*it).first<<endl;);
+	    delete comparison; // free up memory when name is found
+	  }
+	RtsLayer::UnLockEnv();
       } 
       else
       {
@@ -270,6 +285,7 @@ void Profiler::CallPathStart(int tid)
 	DEBUGPROFMSG("ROUTINE "<<(*it).second->GetName()<<" first = "<<(*it).first<<endl;);
         delete comparison; // free up memory when name is found
       }
+
       DEBUGPROFMSG("FOUND Name = "<<CallPathFunction->GetName()<<endl;);
 
       // Set up metrics. Increment number of calls and subrs
@@ -328,6 +344,6 @@ void Profiler::CallPathStop(double TotalTime, int tid)
   
 /***************************************************************************
  * $RCSfile: TauCallPath.cpp,v $   $Author: amorris $
- * $Revision: 1.23 $   $Date: 2005/11/11 03:46:49 $
- * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.23 2005/11/11 03:46:49 amorris Exp $ 
+ * $Revision: 1.24 $   $Date: 2008/03/05 23:53:24 $
+ * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.24 2008/03/05 23:53:24 amorris Exp $ 
  ***************************************************************************/
