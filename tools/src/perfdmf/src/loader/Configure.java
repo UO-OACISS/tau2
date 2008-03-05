@@ -40,7 +40,7 @@ public class Configure {
     private String xml_parser = "xerces.jar";
     private ParseConfig parser;
     private boolean configFileFound = false;
-	private String etc = File.pathSeparator + "etc" + File.pathSeparator;
+	private String etc = File.separator + "etc" + File.separator;
 
     private String configFileName;
 
@@ -48,7 +48,7 @@ public class Configure {
         super();
         this.tau_root = tauroot;
         this.arch = arch;
-        this.perfdmf_home = tauroot + File.pathSeparator + "tools" + File.pathSeparator + "src" + File.pathSeparator + "perfdmf";
+        this.perfdmf_home = tauroot + File.separator + "tools" + File.separator + "src" + File.separator + "perfdmf";
     }
 
     public void errorPrint(String msg) {
@@ -117,9 +117,9 @@ public class Configure {
     private String getSysDepRoot() {
         String os = System.getProperty("os.name").toLowerCase();
         if (os.trim().startsWith("windows")) {
-            return tau_root + File.pathSeparator + "bin" + File.pathSeparator;
+            return tau_root + File.separator + "bin" + File.separator;
         } else {
-            return tau_root + File.pathSeparator + arch + File.pathSeparator + "lib" + File.pathSeparator;
+            return tau_root + File.separator + arch + File.separator + "lib" + File.separator;
         }
     }
 
@@ -153,7 +153,7 @@ public class Configure {
             tmpString = reader.readLine();
             if (tmpString.length() > 0) {
                 tau_root = tmpString;
-                perfdmf_home = tau_root + File.pathSeparator + "tools" + File.pathSeparator + "src" + File.pathSeparator + "perfdmf";
+                perfdmf_home = tau_root + File.separator + "tools" + File.separator + "src" + File.separator + "perfdmf";
             }
 
             String old_jdbc_db_type = jdbc_db_type;
@@ -203,7 +203,7 @@ public class Configure {
                     jdbc_db_jarfile = getSysDepRoot() + "derby.jar";
                     jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
                     db_schemafile = perfdmf_home + etc + "dbschema.derby.txt";
-                    db_dbname = tau_root + File.pathSeparator + arch + File.pathSeparator + "lib" + File.pathSeparator + "perfdmf";
+                    db_dbname = tau_root + File.separator + arch + File.separator + "lib" + File.separator + "perfdmf";
                     db_hostname = "";
                     db_portnum = "";
                 } else if (jdbc_db_type.compareTo("db2") == 0 && old_jdbc_db_type.compareTo("db2") != 0) {
@@ -218,9 +218,9 @@ public class Configure {
                     db_portnum = "446";
                 } else if (jdbc_db_type.compareTo("db2") == 0 && old_jdbc_db_type.compareTo("db2") == 0) {
                     // if the user has chosen db2 and the config file is already set for it
-                    int endIndex = jdbc_db_jarfile.indexOf("java" + File.pathSeparator + "db2java.zip:");
+                    int endIndex = jdbc_db_jarfile.indexOf("java" + File.separator + "db2java.zip:");
                     if (endIndex == -1) {
-                        endIndex = jdbc_db_jarfile.indexOf("java" + File.pathSeparator + "db2jcc.jar:");
+                        endIndex = jdbc_db_jarfile.indexOf("java" + File.separator + "db2jcc.jar:");
                         if (endIndex == -1) {
                             jdbc_db_jarfile = "";
                         } else {
@@ -259,7 +259,7 @@ public class Configure {
                     jdbc_db_jarfile = "derby.jar";
                     jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
                     db_schemafile = "dbschema.derby.txt";
-                    db_dbname = tau_root + "/" + arch + File.pathSeparator + "lib" + File.pathSeparator + "perfdmf";
+                    db_dbname = tau_root + "/" + arch + File.separator + "lib" + File.separator + "perfdmf";
                     db_hostname = "";
                     db_portnum = "";
                 } else if (jdbc_db_type.compareTo("db2") == 0) {
@@ -327,9 +327,9 @@ public class Configure {
 
                             if (jdbc_db_type.compareToIgnoreCase("postgresql") == 0) {
                                 Wget.wget("http://www.cs.uoregon.edu/research/paracomp/tau/postgresql-redirect.html",
-                                        ".perfdmf_tmp" + File.pathSeparator + "postgresql-redirect.html", false);
+                                        ".perfdmf_tmp" + File.separator + "postgresql-redirect.html", false);
                                 BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(new File(
-                                        ".perfdmf_tmp" + File.pathSeparator + "postgresql-redirect.html"))));
+                                        ".perfdmf_tmp" + File.separator + "postgresql-redirect.html"))));
 
                                 String URL = "";
                                 String line = r.readLine();
@@ -347,10 +347,10 @@ public class Configure {
                             }
                             if (jdbc_db_type.compareToIgnoreCase("mysql") == 0) {
                                 Wget.wget("http://www.cs.uoregon.edu/research/paracomp/tau/mysql-redirect.html",
-                                        ".perfdmf_tmp" + File.pathSeparator + "mysql-redirect.html", false);
+                                        ".perfdmf_tmp" + File.separator + "mysql-redirect.html", false);
 
                                 BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(new File(
-                                        ".perfdmf_tmp" + File.pathSeparator + "mysql-redirect.html"))));
+                                        ".perfdmf_tmp" + File.separator + "mysql-redirect.html"))));
 
                                 String URL = "";
                                 String FILE = "";
@@ -391,7 +391,7 @@ public class Configure {
             }
 
             if (jdbc_db_type.compareTo("db2") == 0) {
-                tmpString = jdbc_db_jarfile + File.pathSeparator + "java" + File.pathSeparator + "db2java.zip:" + jdbc_db_jarfile + File.pathSeparator + "java" + File.pathSeparator + "db2jcc.jar:" + jdbc_db_jarfile + File.pathSeparator + "function:" + jdbc_db_jarfile + File.pathSeparator + "java" + File.pathSeparator + "db2jcc_license_cu.jar";
+                tmpString = jdbc_db_jarfile + File.separator + "java" + File.separator + "db2java.zip:" + jdbc_db_jarfile + File.separator + "java" + File.separator + "db2jcc.jar:" + jdbc_db_jarfile + File.separator + "function:" + jdbc_db_jarfile + File.separator + "java" + File.separator + "db2jcc_license_cu.jar";
                 jdbc_db_jarfile = tmpString;
             }
 
@@ -527,7 +527,7 @@ public class Configure {
 
             File configFile;
             if (configuration_name.length() == 0) {
-                configFile = new File(System.getProperty("user.home") + File.pathSeparator + ".ParaProf" + File.pathSeparator + "perfdmf.cfg");
+                configFile = new File(System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf.cfg");
             } else {
                 configFile = new File(configFileName + "." + configuration_name);
             }
@@ -763,9 +763,9 @@ public class Configure {
 
         if (configFile == null) {
             if (configName == null)
-                configFile = System.getProperty("user.home") + File.pathSeparator + ".ParaProf" + File.pathSeparator + "perfdmf.cfg";
+                configFile = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf.cfg";
             else
-                configFile = System.getProperty("user.home") + File.pathSeparator + ".ParaProf" + File.pathSeparator + "perfdmf.cfg." + configName;
+                configFile = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf.cfg." + configName;
 
         }
         if (tauroot == null) {
