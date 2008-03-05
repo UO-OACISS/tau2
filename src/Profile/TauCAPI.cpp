@@ -901,7 +901,7 @@ extern "C" double* TheTauTraceSyncOffset() {
 }
 
 double TauSyncAdjustTimeStamp(double timestamp) {
-  if (TheTauTraceSyncOffsetSet() == false) {
+  if (*TheTauTraceSyncOffsetSet() == 0) {
     // return 0 until sync'd
     return 0.0;
   }
@@ -931,7 +931,7 @@ int *pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.70 $   $Date: 2008/02/18 23:42:05 $
- * VERSION: $Id: TauCAPI.cpp,v 1.70 2008/02/18 23:42:05 amorris Exp $
+ * $Revision: 1.71 $   $Date: 2008/03/05 00:08:58 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.71 2008/03/05 00:08:58 amorris Exp $
  ***************************************************************************/
 
