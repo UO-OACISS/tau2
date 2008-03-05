@@ -1,6 +1,6 @@
 #!/bin/@SHELL@
 
-# $Id: perfexplorer_configure.skel,v 1.8 2008/03/05 00:25:50 khuck Exp $
+# $Id: perfexplorer_configure.skel,v 1.9 2008/03/05 01:06:23 khuck Exp $
 # $Name:  $
 
 rm -f .last_config
@@ -24,7 +24,18 @@ registryport=1099
 #configfile=$HOME/.ParaProf/perfdmf.cfg
 configdir=$HOME/.ParaProf
 tmpdir=/tmp
+LIBDIR=${tauroot}/${architecture}/lib
 
+# check for right java version
+
+test=`java -cp $LIBDIR/tau-common.jar edu.uoregon.tau.common.VersionTester 1.5`
+if [ $test == "failed" ] ; then
+	echo ""
+	echo "Java 1.5 or newer is required to run PerfExplorer."
+	echo "Please update your Java SDK to a newer version to use PerfExplorer."
+	echo ""
+	exit
+fi
 
 # PARSE COMMAND LINE SWITCHES
 ###############################################################
@@ -136,7 +147,6 @@ esac
 RESPONSE=
 
 JDBC_JAR=`grep jdbc_db_jarfile ${configfile} | sed s/jdbc_db_jarfile://`
-LIBDIR=${tauroot}/${architecture}/lib
 JDBC_TYPE=`grep jdbc_db_type ${configfile} | sed s/jdbc_db_type://`
 
 if [ ! "${JDBC_TYPE}" = "db2" ]; then

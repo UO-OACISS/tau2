@@ -1,6 +1,6 @@
 #!/bin/@TAUSHELL@
 
-# $Id: perfexplorer.skel,v 1.23 2008/03/05 00:25:50 khuck Exp $
+# $Id: perfexplorer.skel,v 1.24 2008/03/05 01:06:23 khuck Exp $
 # $Name:  $
 
 TAUROOT=@TAUROOT@
@@ -143,6 +143,17 @@ HIBERNATE_EJB_JAR=$TAUROOT/$CONFIG_ARCH/lib/ejb3-persistence.jar
 HIBERNATE_COMMONS_ANNOTATIONS_JAR=$TAUROOT/$CONFIG_ARCH/lib/hibernate-commons-annotations.jar
 HIBERNATE_JARS=$HIBERNATE_JAR:$HIBERNATE_EJB_JAR:$HIBERNATE_ANNOTATIONS_JAR
 
+# check for right java version
+
+CLASSPATH=$TAUCOMMON_JAR
+test=`java -cp $CLASSPATH edu.uoregon.tau.common.VersionTester 1.5`
+if [ $test == "failed" ] ; then
+	echo ""
+	echo "Java 1.5 or newer is required to run PerfExplorer."
+	echo "Please update your Java SDK to a newer version to use PerfExplorer."
+	echo ""
+	exit
+fi
 
 if [ $mode == "standalone" ] ; then
 	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$OMEGAHAT_JARS:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JOGL_JAR:$VIS_JAR:$JARGS_JAR:$JYTHON_JAR:$TAUCOMMON_JAR:$BATIK_JAR:$XERCES_JAR:$JUNIT_JAR:$JBOSS_RULES_JARS:$HIBERNATE_JARS
