@@ -399,7 +399,7 @@ class CompleteDirectives
   {
     static list<Directive> emptyDirectives;
 
-    if (directives.size() == 0) {
+    if (directives.size() == 0 and openDirectives.size() == 0) {
       return emptyDirectives;
     }
 
@@ -853,7 +853,7 @@ int main(int argc, char *argv[])
   }
 }
 /***************************************************************************
- * $RCSfile: tau_ompcheck.cpp,v $   $Author: amorris $
- * $Revision: 1.13 $   $Date: 2008/03/05 02:58:55 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.13 2008/03/05 02:58:55 amorris Exp $
+ * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
+ * $Revision: 1.14 $   $Date: 2008/03/05 20:10:53 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.14 2008/03/05 20:10:53 scottb Exp $
  ***************************************************************************/
