@@ -597,7 +597,7 @@ long* TauFormulateContextComparisonArray(Profiler *p, TauUserEvent *uevent)
   int i = 0;
   int j;
   Profiler *current = p; /* argument */
-
+  
   /* initialize the array */
   for (j = 0; j < depth+1; j++)
   {
@@ -610,8 +610,8 @@ long* TauFormulateContextComparisonArray(Profiler *p, TauUserEvent *uevent)
     ary[0] = depth; /* this tells us how deep it is */
     while (current != NULL && depth != 0)
     {
-      i++; /* increment i */
-      ary[i] = (long) current->ThisFunction;
+      printf ("name : %s, assigning %ld\n", current->ThisFunction->GetName(), (long) current->ThisFunction);
+      ary[i++] = (long) current->ThisFunction;
       depth --;
       current = current->ParentProfiler;
     }
@@ -730,6 +730,6 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid)
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
- * $Revision: 1.22 $   $Date: 2008/02/19 18:50:41 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.22 2008/02/19 18:50:41 amorris Exp $ 
+ * $Revision: 1.23 $   $Date: 2008/03/06 00:15:42 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.23 2008/03/06 00:15:42 amorris Exp $ 
  ***************************************************************************/
