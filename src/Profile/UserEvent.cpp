@@ -594,7 +594,6 @@ long* TauFormulateContextComparisonArray(Profiler *p, TauUserEvent *uevent)
    * in it as the 0th index */
   long *ary = new long [depth+2];
 
-  int i = 0;
   int j;
   Profiler *current = p; /* argument */
   
@@ -605,18 +604,20 @@ long* TauFormulateContextComparisonArray(Profiler *p, TauUserEvent *uevent)
   }
   /* use the clean array now */
 
+  int index = 0;
+
   if (ary)
   {
-    ary[0] = depth; /* this tells us how deep it is */
+    ary[index++] = depth; /* this tells us how deep it is */
     while (current != NULL && depth != 0)
     {
       printf ("name : %s, assigning %ld\n", current->ThisFunction->GetName(), (long) current->ThisFunction);
-      ary[i++] = (long) current->ThisFunction;
-      depth --;
+      ary[index++] = (long) current->ThisFunction;
+      depth--;
       current = current->ParentProfiler;
     }
   }
-  ary[i] = (long) uevent; 
+  ary[index++] = (long) uevent; 
   return ary;
 }
 
@@ -701,22 +702,32 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid)
     comparison = TauFormulateContextComparisonArray(current, uevent); 
 
     map<TAU_CONTEXT_MAP_TYPE>::iterator it = TheContextMap().find(comparison);
-    if (it == TheContextMap().end())
-    {
-      string *ctxname = TauFormulateContextNameString(current);
-      string contextname(uevent->EventName  + " : " + *ctxname);
-      DEBUGPROFMSG("Couldn't find string in map: "<<*comparison<<endl; );
-      ue = new TauUserEvent((const char *)(contextname.c_str()), MonotonicallyIncreasing);
-      TheContextMap().insert(map<TAU_CONTEXT_MAP_TYPE>::value_type(comparison, ue));
-      ue->ctxevt = this; /* store the current object in the user event */
-      delete ctxname; /* free up the string memory */
-    }
-    else
-    {
+
+    if (it == TheContextMap().end()) {
+      RtsLayer::LockEnv();
+      it = TheContextMap().find(comparison);
+      if (it == TheContextMap().end()) {
+	string *ctxname = TauFormulateContextNameString(current);
+	string contextname(uevent->EventName  + " : " + *ctxname);
+	DEBUGPROFMSG("Couldn't find string in map: "<<*comparison<<endl; );
+	
+	ue = new TauUserEvent((const char *)(contextname.c_str()), MonotonicallyIncreasing);
+	TheContextMap().insert(map<TAU_CONTEXT_MAP_TYPE>::value_type(comparison, ue));
+	
+	ue->ctxevt = this; /* store the current object in the user event */
+	delete ctxname; /* free up the string memory */
+      } else {
+	/* found it! Get the user defined event from the map */
+	ue = (*it).second;
+	delete[] comparison; // free up memory when name is found
+      }
+      RtsLayer::UnLockEnv();
+    } else {
       /* found it! Get the user defined event from the map */
       ue = (*it).second;
-      delete comparison; // free up memory when name is found
+      delete[] comparison; // free up memory when name is found
     }
+
     /* Now we trigger this event */
     if (ue)
     { /* it is not null, trigger it */
@@ -730,6 +741,6 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid)
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
- * $Revision: 1.23 $   $Date: 2008/03/06 00:15:42 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.23 2008/03/06 00:15:42 amorris Exp $ 
+ * $Revision: 1.24 $   $Date: 2008/03/06 00:49:36 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.24 2008/03/06 00:49:36 amorris Exp $ 
  ***************************************************************************/
