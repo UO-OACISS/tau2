@@ -72,8 +72,7 @@ using namespace std;
 #endif /* TAU_VAMPIRTRACE */
 #endif // TRACING_ON 
 
-
-bool Tau_snapshot_initialization();
+#include <Profile/TauInit.h>
 
 //////////////////////////////////////////////////////////////////////
 // The purpose of this subclass of vector is to give us a chance to execute
@@ -99,8 +98,7 @@ public:
 vector<FunctionInfo*>& TheFunctionDB(void)
 { // FunctionDB contains pointers to each FunctionInfo static object
 
-  // we need the timestamp of the "start"
-  static bool flag = Tau_snapshot_initialization();
+  static int flag = InitializeTAU();
 
   // we now use the above FIvector, which subclasses vector
   //static vector<FunctionInfo*> FunctionDB;
@@ -503,6 +501,6 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.48 $   $Date: 2007/04/20 15:35:39 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.48 2007/04/20 15:35:39 amorris Exp $ 
+ * $Revision: 1.49 $   $Date: 2008/03/06 20:15:29 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.49 2008/03/06 20:15:29 amorris Exp $ 
  ***************************************************************************/

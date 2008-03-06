@@ -31,6 +31,7 @@
 # include <time.h>
 # include <Profile/Profiler.h>
 
+#include <Profile/TauEnv.h>
 
 #ifdef TAU_LARGEFILE
   #define LARGEFILE_OPTION O_LARGEFILE
@@ -38,9 +39,7 @@
   #define LARGEFILE_OPTION 0
 #endif
 
-#ifdef TAU_SYNCHRONIZE_CLOCKS
 extern double TauSyncAdjustTimeStamp(double timestamp);
-#endif
 
 # define PCXX_EVENT_SRC 
 # include "Profile/pcxx_events.h"
@@ -107,11 +106,11 @@ x_uint64 pcxx_GetUSecLong(int tid)
   x_uint64 value = RtsLayer::getUSecD(tid);
 #endif // TAU_MULTIPLE_COUNTERS
 
-#ifdef TAU_SYNCHRONIZE_CLOCKS
-  return (x_uint64) TauSyncAdjustTimeStamp(value);
-#else 
-  return (x_uint64) value;
-#endif
+  if (TauEnv_get_synchronize_clocks()) {
+    return (x_uint64) TauSyncAdjustTimeStamp(value);
+  } else {
+    return (x_uint64) value;
+  }
 }
 
 /* -- write event to buffer only [without overflow check] ---- */
@@ -369,9 +368,9 @@ void TraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts)
   int records_created = TraceEvInit(tid);
   PCXX_EV * pcxx_ev_ptr = &TraceBuffer[tid][TauCurrentEvent[tid]] ;  
 
-#ifdef TAU_SYNCHRONIZE_CLOCKS
-  ts = (x_uint64) TauSyncAdjustTimeStamp((double)ts);
-#endif
+  if (TauEnv_get_synchronize_clocks()) {
+    ts = (x_uint64) TauSyncAdjustTimeStamp((double)ts);
+  }
 
   if (records_created)
   {

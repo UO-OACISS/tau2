@@ -1,13 +1,13 @@
 #include <Profile/Profiler.h>
+#include <Profile/TauEnv.h>
+
 #include <stdio.h>
 #include <mpi.h>
 #include <stdlib.h>
 #define TAU_MAX_REQUESTS  4096
 
-#ifdef TAU_SYNCHRONIZE_CLOCKS
 extern void TauSyncClocks(int rank, int size);
 extern void TauSyncFinalClocks(int rank, int size);
-#endif
 
 
 /* This file uses the MPI Profiling Interface with TAU instrumentation.
@@ -1420,10 +1420,11 @@ int  MPI_Finalize(  )
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
-#ifdef TAU_SYNCHRONIZE_CLOCKS
-  PMPI_Comm_size( MPI_COMM_WORLD, &size );
-  TauSyncFinalClocks(procid_0, size);
-#endif
+
+  if (TauEnv_get_synchronize_clocks()) {
+    PMPI_Comm_size( MPI_COMM_WORLD, &size );
+    TauSyncFinalClocks(procid_0, size);
+  }
 
   PMPI_Get_processor_name(procname, &procnamelength);
   TAU_METADATA("MPI Processor Name", procname);
@@ -1482,9 +1483,9 @@ char *** argv;
   PMPI_Get_processor_name(procname, &procnamelength);
   TAU_METADATA("MPI Processor Name", procname);
 
-#ifdef TAU_SYNCHRONIZE_CLOCKS
-  TauSyncClocks(procid_0, size);
-#endif
+  if (TauEnv_get_synchronize_clocks()) {
+    TauSyncClocks(procid_0, size);
+  }
 
 #ifdef TAU_TRACK_MSG
   requests_head_0 = requests_tail_0 = 0;
@@ -1524,9 +1525,9 @@ int *provided;
   PMPI_Get_processor_name(procname, &procnamelength);
   TAU_METADATA("MPI Processor Name", procname);
 
-#ifdef TAU_SYNCHRONIZE_CLOCKS
-  TauSyncClocks(procid_0, size);
-#endif
+  if (TauEnv_get_synchronize_clocks()) {
+    TauSyncClocks(procid_0, size);
+  }
 
 #ifdef TAU_TRACK_MSG
   requests_head_0 = requests_tail_0 = 0;

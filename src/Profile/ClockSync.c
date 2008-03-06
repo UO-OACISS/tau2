@@ -43,6 +43,9 @@
 
 #define SYNC_LOOP_COUNT 10
 
+void TraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts);
+
+
 double* TAUDECL TheTauTraceBeginningOffset();
 int* TAUDECL TheTauTraceSyncOffsetSet();
 double* TAUDECL TheTauTraceSyncOffset();
@@ -212,8 +215,7 @@ void TauSyncFinalClocks(int rank, int size) {
   double diff = *TheTauTraceSyncOffset() - offset;
   TAU_REGISTER_EVENT(endOffset, "TauTraceClockOffsetEnd");
   offset = getTimeOffset(rank, size);
-  TraceEvent(
-	     TauUserEvent_GetEventId(endOffset), 
+  TraceEvent(TauUserEvent_GetEventId(endOffset), 
 	     (x_int64) offset, 
 	     0, 0, 0);
 #endif 
