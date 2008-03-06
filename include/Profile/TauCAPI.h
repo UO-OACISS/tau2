@@ -96,9 +96,9 @@ extern "C" {
                                    taufirst##event = 0; }
 				
 #define TAU_REGISTER_CONTEXT_EVENT(event, name)	static int taufirst##event = 1;\
-                                 static void *event; \
+                                 static void *event = 0; \
                                  if (taufirst##event == 1) { \
-                                   event = Tau_get_context_userevent(name); \
+                                   Tau_get_context_userevent(&event, name); \
                                    taufirst##event = 0; } 
                                    
 #define TAU_EVENT(event, data)			Tau_userevent(event, data);
@@ -268,7 +268,7 @@ extern void Tau_dump_function_values_incr(const char **functionList, int num);
 extern void Tau_register_thread();
 extern void Tau_register_fork(int nodeid, enum TauFork_t opcode);
 extern void * Tau_get_userevent(char *name);
-extern void * Tau_get_context_userevent(char *name);
+extern void Tau_get_context_userevent(void **ptr, char *name);
 extern void Tau_userevent(void *event, double data);
 extern void Tau_context_userevent(void *event, double data);
 extern void Tau_set_event_name(void *event, char * name);
@@ -435,8 +435,8 @@ extern void Tau_profile_dynamic_auto(int iteration, void **ptr, char *fname, cha
 #endif /* _TAU_CAPI_H_ */
 
 /***************************************************************************
- * $RCSfile: TauCAPI.h,v $   $Author: amorris $
- * $Revision: 1.49 $   $Date: 2007/10/16 19:09:10 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.49 2007/10/16 19:09:10 amorris Exp $
+ * $RCSfile: TauCAPI.h,v $   $Author: khuck $
+ * $Revision: 1.50 $   $Date: 2008/03/06 01:03:15 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.50 2008/03/06 01:03:15 khuck Exp $
  ***************************************************************************/
 

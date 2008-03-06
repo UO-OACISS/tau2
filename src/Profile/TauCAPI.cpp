@@ -472,11 +472,21 @@ extern "C" void Tau_userevent(void *ue, double data)
 } 
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void * Tau_get_context_userevent(char *name)
+extern "C" void Tau_get_context_userevent(void **ptr, char *name)
 {
-  TauContextUserEvent *ue;
-  ue = new TauContextUserEvent(name);
-  return (void *) ue;
+  
+  if (*ptr == 0) {
+    RtsLayer::LockEnv();
+
+    if (*ptr == 0) {
+      TauContextUserEvent *ue;
+      ue = new TauContextUserEvent(name);
+      *ptr = (void*) ue;
+    }
+
+    RtsLayer::UnLockEnv();
+  }
+  return;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -930,8 +940,8 @@ int *pomp_rd_table = 0;
 #endif
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.71 $   $Date: 2008/03/05 00:08:58 $
- * VERSION: $Id: TauCAPI.cpp,v 1.71 2008/03/05 00:08:58 amorris Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: khuck $
+ * $Revision: 1.72 $   $Date: 2008/03/06 01:03:16 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.72 2008/03/06 01:03:16 khuck Exp $
  ***************************************************************************/
 
