@@ -1,4 +1,4 @@
-# $Id: Makefile.skel,v 1.27 2008/03/05 00:25:49 khuck Exp $
+# $Id: Makefile.skel,v 1.28 2008/03/06 17:38:58 khuck Exp $
 # $Name:  $
 
 R_HOME = @RROOT@
@@ -6,6 +6,7 @@ TAUROOT = @TAUROOT@
 CONFIG_ARCH = @TAUARCH@
 ENGINE_PACKAGE = @ANALYSIS_ENGINE@
 ENGINE_DEFINE = @ANALYSIS_ENGINE_DEF@
+
 
 ##########################
 
@@ -144,7 +145,10 @@ server: ${SERVER_CLASSES} ${RMIC_CLASSES}
 
 client: ${CLIENT_CLASSES}
 
-perfexplorer.jar: ${CONSTANT_CLASSES} ${CLIENT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${GLUE_CLASSES} ${RMIC_CLASSES}
+perfexplorer.jar: ${CONSTANT_CLASSES} ${CLIENT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES} ${GLUE_CLASSES}
+	cp src/client/*.gif classes/client/.
+	cp rules/*.drl classes/rules/.
+	cp etc/*.drl classes/.
 	jar -cvf perfexplorer.jar -C classes .
 	cp perfexplorer.jar ${TAUROOT}/${CONFIG_ARCH}/lib/.
 
@@ -163,9 +167,6 @@ ${CONSTANT_CLASSES}: Makefile ${CONSTANT_SOURCES}
 ${COMMON_CLASSES}: Makefile ${COMMON_SOURCES} ${CONSTANT_CLASSES}
 	${JAVAC} -classpath ${BUILD_CLASSPATH} -d classes ${COMMON_SOURCES}
 
-${GLUE_CLASSES}: Makefile ${GLUE_SOURCES} ${CONSTANT_CLASSES}
-	${JAVAC} -classpath ${GLUE_BUILD_CLASSPATH} -d classes ${GLUE_SOURCES}
-
 ${CLUSTERING_CLASSES}: Makefile ${CLUSTERING_SOURCES} ${CONSTANT_CLASSES} ${COMMON_CLASSES}
 	${JAVAC} -classpath ${CLUSTERING_BUILD_CLASSPATH} -d classes ${CLUSTERING_SOURCES}
 
@@ -177,9 +178,9 @@ ${RMIC_CLASSES}: Makefile ${SERVER_SOURCES} ${SERVER_CLASSES}
 
 ${CLIENT_CLASSES}: Makefile ${CLIENT_SOURCES} ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES}
 	${JAVAC} -classpath ${CLIENT_BUILD_CLASSPATH} -d classes ${CLIENT_SOURCES}
-	cp src/client/*.gif classes/client/.
-	cp rules/*.drl classes/rules/.
-	cp etc/*.drl classes/.
+
+${GLUE_CLASSES}: Makefile ${GLUE_SOURCES} ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES} ${CLIENT_CLASSES}
+	${JAVAC} -classpath ${GLUE_BUILD_CLASSPATH} -d classes ${GLUE_SOURCES}
 
 ###
 ### THESE COMMANDS ARE FOR CLEANING
