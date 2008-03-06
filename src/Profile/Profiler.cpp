@@ -368,7 +368,7 @@ void Profiler::Start(int tid)
 #ifndef PROFILING_ON
 #ifdef  TRACING_ON
 #ifndef TAU_DISABLE_THROTTLE
-        if (TheTauThrottle() && (ThisFunction->GetAlreadyOnStack(tid)== false))
+        if (TauEnv_get_throttle() && (ThisFunction->GetAlreadyOnStack(tid)== false))
         {
           /* Set the callstack flag */
           AddInclFlag = true; 
@@ -700,7 +700,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #ifndef PROFILING_ON
 #ifdef  TRACING_ON
 #ifndef TAU_DISABLE_THROTTLE
-        if (TheTauThrottle() && AddInclFlag)
+        if (TauEnv_get_throttle() && AddInclFlag)
         {
 	  ThisFunction->SetAlreadyOnStack(false, tid); // while exiting
 
@@ -863,7 +863,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
           <<" TheTauThrottle = "<<TheTauThrottle() 
           <<" ThrCalls = "<<TheTauThrottleNumCalls()
 	  <<" PerCall = " <<TheTauThrottlePerCall()<<endl;);
-        if (TheTauThrottle() && (ThisFunction->GetCalls(tid) > TheTauThrottleNumCalls()) && (inclusiveTime/ThisFunction->GetCalls(tid) < TheTauThrottlePerCall()) && AddInclFlag)
+        if (TauEnv_get_throttle() && (ThisFunction->GetCalls(tid) > TauEnv_get_throttle_numcalls()) && (inclusiveTime/ThisFunction->GetCalls(tid) < TauEnv_get_throttle_percall()) && AddInclFlag)
 	{ /* Putting AddInclFlag means we can't throttle recursive calls */
 	  ThisFunction->SetProfileGroup(TAU_DISABLE, tid);
 	  ThisFunction->SetPrimaryGroupName("TAU_DISABLE");
@@ -1054,11 +1054,7 @@ void Profiler::dumpFunctionNames()
 
   Profiler::theFunctionList(&functionList, &numOfFunctions);
 
-  if ((dirname = getenv("PROFILEDIR")) == NULL) {
-    // Use default directory name .
-    dirname  = new char[8];
-    strcpy (dirname,".");
-  }
+  dirname = TauEnv_get_profiledir();
 
   //Create temp write to file.
   filename = new char[1024];
@@ -1324,11 +1320,7 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 #ifdef PROFILING_ON 
 	currenttime = RtsLayer::getUSecD(tid); 
 	RtsLayer::LockDB();
-	if ((dirname = getenv("PROFILEDIR")) == NULL) {
-	// Use default directory name .
-	   dirname  = new char[8];
-	   strcpy (dirname,".");
-	}
+	dirname = TauEnv_get_profiledir();
 	 
 	filename = new char[1024];
 	sprintf(filename,"%s/temp.%d.%d.%d",dirname, RtsLayer::myNode(),
@@ -1583,11 +1575,7 @@ int Profiler::StoreData(int tid)
 
 #ifdef PROFILING_ON 
 	RtsLayer::LockDB();
-	if ((dirname = getenv("PROFILEDIR")) == NULL) {
-	// Use default directory name .
-	   dirname  = new char[8];
-	   strcpy (dirname,".");
-	}
+	dirname = TauEnv_get_profiledir();
 	 
 	filename = new char[1024];
 
@@ -1725,40 +1713,40 @@ int Profiler::StoreData(int tid)
 #ifdef TAUKTAU_MERGE
 	    KtauFuncInfo* pKFunc = (*it)->GetKtauFuncInfo(tid);
 	    if(pKFunc) {
-		    if(top) {
-			    top = 0;
-			    double dZERO = 0;
-			    long lZERO = 0;
-			    for(int i=0; i<NO_MERGE_GRPS; i++) {
-				    fprintf(ktau_fp,"\"%s\" %ld %ld %.16G %.16G ",  
-				      merge_grp_name[i], (long)KtauFuncInfo::kernelGrpCalls[tid][i], lZERO, 
-				      KtauFuncInfo::kernelGrpExcl[tid][i]/KTauGetMHz(), KtauFuncInfo::kernelGrpIncl[tid][i]/KTauGetMHz());
-				    fprintf(ktau_fp,"0 "); // Indicating - profile calls is turned off
-				    fprintf(ktau_fp,"GROUP=\"%s\" \n", "KERNEL_GROUPS | TAU_KERNEL_MERGE");
-			    }
-
-		    }
-		    fprintf(ktau_fp,"\"%s %s\" %ld %ld %.16G %.16G ", (*it)->GetName(), 
+	      if(top) {
+		top = 0;
+		double dZERO = 0;
+		long lZERO = 0;
+		for(int i=0; i<NO_MERGE_GRPS; i++) {
+		  fprintf(ktau_fp,"\"%s\" %ld %ld %.16G %.16G ",  
+			  merge_grp_name[i], (long)KtauFuncInfo::kernelGrpCalls[tid][i], lZERO, 
+			  KtauFuncInfo::kernelGrpExcl[tid][i]/KTauGetMHz(), KtauFuncInfo::kernelGrpIncl[tid][i]/KTauGetMHz());
+		  fprintf(ktau_fp,"0 "); // Indicating - profile calls is turned off
+		  fprintf(ktau_fp,"GROUP=\"%s\" \n", "KERNEL_GROUPS | TAU_KERNEL_MERGE");
+		}
+		
+	      }
+	      fprintf(ktau_fp,"\"%s %s\" %ld %ld %.16G %.16G ", (*it)->GetName(), 
 		      (*it)->GetType(), (*it)->GetCalls(tid), (*it)->GetSubrs(tid), 
 		      (*it)->GetExclTime(tid) - (pKFunc->GetExclTicks(0)/KTauGetMHz()), (*it)->GetInclTime(tid));
-		    fprintf(ktau_fp,"0 "); // Indicating - profile calls is turned off
-		    fprintf(ktau_fp,"GROUP=\"%s\" ", (*it)->GetAllGroups());
-		    fprintf(ktau_fp,"%.16G \n", pKFunc->GetExclTicks(0)/KTauGetMHz());
-
-		    double dZERO = 0;
-		    long lZERO = 0;
-		    for(int i=0; i<NO_MERGE_GRPS; i++) {
-			    string grp_string = string((*it)->GetAllGroups());
-			    grp_string += " | KERNEL_GROUPS | TAU_KERNEL_MERGE | ";
-			    grp_string += (*it)->GetName();
-
-			    fprintf(ktau_fp,"\"%s %s => %s\" %ld %ld %.16G %.16G ", (*it)->GetName(), 
-			      (*it)->GetType() ,merge_grp_name[i], (long)pKFunc->GetExclCalls(i), lZERO, 
-			      pKFunc->GetExclKExcl(i)/KTauGetMHz(), pKFunc->GetExclTicks(i)/KTauGetMHz());
-			    fprintf(ktau_fp,"0 "); // Indicating - profile calls is turned off
-			    fprintf(ktau_fp,"GROUP=\"%s\" \n", grp_string.c_str());//(*it)->GetAllGroups());
-		    }
-
+	      fprintf(ktau_fp,"0 "); // Indicating - profile calls is turned off
+	      fprintf(ktau_fp,"GROUP=\"%s\" ", (*it)->GetAllGroups());
+	      fprintf(ktau_fp,"%.16G \n", pKFunc->GetExclTicks(0)/KTauGetMHz());
+	      
+	      double dZERO = 0;
+	      long lZERO = 0;
+	      for(int i=0; i<NO_MERGE_GRPS; i++) {
+		string grp_string = string((*it)->GetAllGroups());
+		grp_string += " | KERNEL_GROUPS | TAU_KERNEL_MERGE | ";
+		grp_string += (*it)->GetName();
+		
+		fprintf(ktau_fp,"\"%s %s => %s\" %ld %ld %.16G %.16G ", (*it)->GetName(), 
+			(*it)->GetType() ,merge_grp_name[i], (long)pKFunc->GetExclCalls(i), lZERO, 
+			pKFunc->GetExclKExcl(i)/KTauGetMHz(), pKFunc->GetExclTicks(i)/KTauGetMHz());
+		fprintf(ktau_fp,"0 "); // Indicating - profile calls is turned off
+		fprintf(ktau_fp,"GROUP=\"%s\" \n", grp_string.c_str());//(*it)->GetAllGroups());
+	      }
+	      
 	    }
 #endif /* TAUKTAU_MERGE */
 
@@ -1888,11 +1876,8 @@ int Profiler::DumpData(bool increment, int tid, char *prefix)
 #ifdef PROFILING_ON 
 	currenttime = RtsLayer::getUSecD(tid); 
 	RtsLayer::LockDB();
-	if ((dirname = getenv("PROFILEDIR")) == NULL) {
-	// Use default directory name .
-	   dirname  = new char[8];
-	   strcpy (dirname,".");
-	}
+
+	dirname = TauEnv_get_profiledir();
 	 
 	filename = new char[1024];
 	sprintf(filename,"%s/temp.%d.%d.%d",dirname, RtsLayer::myNode(),
@@ -2161,11 +2146,7 @@ bool Profiler::createDirectories(){
       //char *rmdircommand = new char[1024];
       char *mkdircommand = new char[1024];
       
-      if ((dirname = getenv("PROFILEDIR")) == NULL) {
-	// Use default directory name .
-	dirname  = new char[8];
-	strcpy (dirname,".");
-      }
+      dirname = TauEnv_get_profiledir();
       
       sprintf(newdirname,"%s/MULTI__%s",dirname,tmpChar);
       //sprintf(rmdircommand,"rm -rf %s",newdirname);
@@ -2400,12 +2381,8 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
   //Create directories for storage.
   static bool createFlag = createDirectories();
 
-  if ((dirname = getenv("PROFILEDIR")) == NULL) {
-    // Use default directory name .
-    dirname  = new char[8];
-    strcpy (dirname,".");
-  }
-
+  dirname = TauEnv_get_profiledir();
+	
   for(int i=0;i<MAX_TAU_COUNTERS;i++){
     if(MultipleCounterLayer::getCounterUsed(i)){
       char * tmpChar = MultipleCounterLayer::getCounterNameAt(i);
@@ -2685,11 +2662,7 @@ int Profiler::StoreData(int tid){
   //Create directories for storage.
   static bool createFlag = createDirectories();
 
-  if ((dirname = getenv("PROFILEDIR")) == NULL) {
-    // Use default directory name .
-    dirname  = new char[8];
-    strcpy (dirname,".");
-  }
+  dirname = TauEnv_get_profiledir();
 
   for(int i=0;i<MAX_TAU_COUNTERS;i++){
     if(MultipleCounterLayer::getCounterUsed(i)){
@@ -2844,11 +2817,7 @@ int Profiler::DumpData(bool increment, int tid, char *prefix){
   //Create directories for storage.
   static bool createFlag = createDirectories();
 
-  if ((dirname = getenv("PROFILEDIR")) == NULL) {
-    // Use default directory name .
-    dirname  = new char[8];
-    strcpy (dirname,".");
-  }
+  dirname = TauEnv_get_profiledir();
 
   for(int i=0;i<MAX_TAU_COUNTERS;i++){
     if(MultipleCounterLayer::getCounterUsed(i)){
@@ -3163,11 +3132,7 @@ void Profiler::CallStackTrace(int tid)
   ncalls++;
 
   // set up output file
-  if ((dirname = getenv("PROFILEDIR")) == NULL)
-  {
-    dirname = new char[8];
-    strcpy (dirname, ".");
-  }
+  dirname = TauEnv_get_profiledir();
   
   // create file name string
   sprintf(fname, "%s/callstack.%d.%d.%d", dirname, RtsLayer::myNode(),
@@ -3331,97 +3296,13 @@ void Profiler::SetDepthLimit(int value)
 }
 #endif /* TAU_DEPTH_LIMIT */ 
 
-//////////////////////////////////////////////////////////////////////
-//  TauGetThrottle(void)
-//  Description: Returns whether throttling is enabled or disabled 
-//////////////////////////////////////////////////////////////////////
-bool TauGetThrottle(void)
-{
-  if (getenv("TAU_THROTTLE") == (char *) NULL)
-   return false;
-  else
-   return true;
-}
-
-
-//////////////////////////////////////////////////////////////////////
-//  TauGetThrottleNumCalls(void)
-//  Description: Returns (as a double) the number of calls for throttle
-//               based control of instrumentation. 
-//////////////////////////////////////////////////////////////////////
-double TauGetThrottleNumCalls(void)
-{
-  char *numcalls = getenv("TAU_THROTTLE_NUMCALLS"); 
-  double d = TAU_THROTTLE_NUMCALLS_DEFAULT;  /* default numcalls */
-  if (numcalls)
-  {
-    d = strtod(numcalls,0); 
-  }
-  DEBUGPROFMSG("TauGetThrottleNumCalls: Returning "<<d <<" as numcalls value"<<endl;);
-  return d;
-}
-
-//////////////////////////////////////////////////////////////////////
-//  TauGetThrottlePerCall(void)
-//  Description: Returns (as a double) the per call value for throttle
-//               based control of instrumentation. 
-//////////////////////////////////////////////////////////////////////
-double TauGetThrottlePerCall(void)
-{
-  char *percall = getenv("TAU_THROTTLE_PERCALL"); 
-  double d = TAU_THROTTLE_PERCALL_DEFAULT;  /* default numcalls */
-  if (percall)
-  {
-    d = strtod(percall,0); 
-  }
-  DEBUGPROFMSG("TauGetThrottlePerCall: Returning "<<d <<" as per-call value"<<endl;);
-  return d;
-}
-
-//////////////////////////////////////////////////////////////////////
-//  Profiler::TheTauThrottle(void)
-//  Description: Returns whether throttling is enabled or disabled
-//////////////////////////////////////////////////////////////////////
-bool& Profiler::TheTauThrottle(void)
-{
-  static bool throttle = TauGetThrottle();
-  return throttle;
-}
-
-//////////////////////////////////////////////////////////////////////
-//  Profiler::TauGetThrottlePerCall(void)
-//  Description: Returns the number of calls for throttling
-//////////////////////////////////////////////////////////////////////
-double& Profiler::TheTauThrottleNumCalls(void)
-{
-  static double throttleNumcalls = TauGetThrottleNumCalls();
-  return throttleNumcalls;
-}
-
-//////////////////////////////////////////////////////////////////////
-//  Profiler::TauGetThrottlePerCall(void)
-//  Description: Returns the per call value for throttling
-//////////////////////////////////////////////////////////////////////
-double& Profiler::TheTauThrottlePerCall(void)
-{
-  static double throttlePercall = TauGetThrottlePerCall();
-  return throttlePercall;
-}
-
-
-
-
-
-
-
-
 
 
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.170 $   $Date: 2008/03/05 23:13:35 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.170 2008/03/05 23:13:35 amorris Exp $ 
+ * $Revision: 1.171 $   $Date: 2008/03/06 21:29:12 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.171 2008/03/06 21:29:12 amorris Exp $ 
  ***************************************************************************/
 
 	

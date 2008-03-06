@@ -99,47 +99,29 @@ int tau_pthread_create (pthread_t *threadp,
 
 
 
-/* We should throttle if number n > a && percall < b .a and b are given below */
-#define TAU_THROTTLE_NUMCALLS_DEFAULT 100000
-#define TAU_THROTTLE_PERCALL_DEFAULT  10
 
 #include <Profile/TauAPI.h>
 
 #if (defined(PROFILING_ON) || defined(TRACING_ON))
 
 #include <Profile/ProfileHeaders.h>
-
 #include <Profile/PthreadLayer.h>
-
 #include <Profile/TulipThreadLayer.h>
-
 #include <Profile/JavaThreadLayer.h>
-
 #include <Profile/SprocLayer.h>
-
 #include <Profile/PapiThreadLayer.h>
-
 #include <Profile/RtsLayer.h>
-
 #include <Profile/FunctionInfo.h>
-
 #include <Profile/UserEvent.h>
-
 #include <Profile/PclLayer.h>
-
 #include <Profile/PapiLayer.h>
-
 #include <Profile/MultipleCounters.h>
-
 #include <Profile/WindowsThreadLayer.h>
-
 #include <Profile/TauMemory.h>
-
 #include <Profile/TauMuse.h>
-
 #include <Profile/TauCompensate.h>
-
 #include <Profile/TauHandler.h>
+#include <Profile/TauEnv.h>
 
 #if defined(TAUKTAU)
 class KtauProfiler;
@@ -282,9 +264,6 @@ public:
 #ifdef TAU_MPITRACE
 	void EnableAllEventsOnCallStack(int tid, Profiler *current);
 #endif /* TAU_MPITRACE */
-	bool& TheTauThrottle(void);
-	double& TheTauThrottlePerCall(void);
-	double& TheTauThrottleNumCalls(void);
 
 #if defined(TAUKTAU)
 	KtauProfiler* ThisKtauProfiler;
@@ -327,6 +306,6 @@ using tau::Profiler;
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.78 $   $Date: 2007/10/16 19:09:10 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.78 2007/10/16 19:09:10 amorris Exp $ 
+ * $Revision: 1.79 $   $Date: 2008/03/06 21:28:33 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.79 2008/03/06 21:28:33 amorris Exp $ 
  ***************************************************************************/

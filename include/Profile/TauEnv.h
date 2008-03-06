@@ -24,13 +24,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+  
+  void TauEnv_initialize();
+  int TauEnv_get_synchronize_clocks();
+  int TauEnv_get_verbose();
+  int TauEnv_get_throttle();
+  double TauEnv_get_throttle_numcalls();
+  double TauEnv_get_throttle_percall();
+  char *TauEnv_get_profiledir();
+  char *TauEnv_get_tracedir();
 
-void TauEnv_initialize();
-int TauEnv_get_synchronize_clocks();
-int TauEnv_get_verbose();
-
-#define TAU_VERBOSE(message) if (TauEnv_get_verbose()) { printf (message); }
-
+  void TAU_VERBOSE(char *format, ...);
+  
 #ifdef __cplusplus
 }
 #endif
