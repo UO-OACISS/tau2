@@ -275,7 +275,7 @@ void Profiler::CallPathStart(int tid)
 	  {
 	    CallPathFunction = (*it).second; 
 	    DEBUGPROFMSG("ROUTINE "<<(*it).second->GetName()<<" first = "<<(*it).first<<endl;);
-	    delete comparison; // free up memory when name is found
+	    delete[] comparison; // free up memory when name is found
 	  }
 	RtsLayer::UnLockEnv();
       } 
@@ -283,7 +283,7 @@ void Profiler::CallPathStart(int tid)
       {
  	CallPathFunction = (*it).second; 
 	DEBUGPROFMSG("ROUTINE "<<(*it).second->GetName()<<" first = "<<(*it).first<<endl;);
-        delete comparison; // free up memory when name is found
+        delete[] comparison; // free up memory when name is found
       }
 
       DEBUGPROFMSG("FOUND Name = "<<CallPathFunction->GetName()<<endl;);
@@ -344,6 +344,6 @@ void Profiler::CallPathStop(double TotalTime, int tid)
   
 /***************************************************************************
  * $RCSfile: TauCallPath.cpp,v $   $Author: amorris $
- * $Revision: 1.24 $   $Date: 2008/03/05 23:53:24 $
- * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.24 2008/03/05 23:53:24 amorris Exp $ 
+ * $Revision: 1.25 $   $Date: 2008/03/06 00:50:40 $
+ * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.25 2008/03/06 00:50:40 amorris Exp $ 
  ***************************************************************************/
