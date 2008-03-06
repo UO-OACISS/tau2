@@ -77,6 +77,7 @@ public class GPTLDataSource extends DataSource {
 
 		} // while process/thread
 
+		setGroupNamesPresent(true);
 
         time = (System.currentTimeMillis()) - time;
         //System.out.println("Done processing data!");
