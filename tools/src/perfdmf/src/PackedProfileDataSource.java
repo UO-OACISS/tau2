@@ -3,18 +3,19 @@ package edu.uoregon.tau.perfdmf;
 import java.io.*;
 import java.net.URL;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.TreeMap;
 import java.util.zip.GZIPInputStream;
+
+import edu.uoregon.tau.common.TrackerInputStream;
 
 /**
  * Reads the ParaProf Packed Format (.ppk)
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: PackedProfileDataSource.java,v 1.16 2007/07/31 21:20:09 amorris Exp $</P>
+ * <P>CVS $Id: PackedProfileDataSource.java,v 1.17 2008/03/06 01:25:56 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  */
 public class PackedProfileDataSource extends DataSource {
 
@@ -231,37 +232,5 @@ public class PackedProfileDataSource extends DataSource {
 
         time = (System.currentTimeMillis()) - time;
         //System.out.println("Time to process (in milliseconds): " + time);
-    }
-
-    /**
-     * A stream wrapper that tracks progress
-     */
-    class TrackerInputStream extends FilterInputStream {
-        private int count;
-
-        public TrackerInputStream(InputStream in) {
-            super(in);
-        }
-
-        public int byteCount() {
-            return count;
-        }
-
-        public int read() throws IOException {
-            ++count;
-            return super.read();
-        }
-
-        public int read(byte[] buf) throws IOException {
-            count += buf.length;
-            return read(buf, 0, buf.length);
-        }
-
-        public int read(byte[] buf, int off, int len) throws IOException {
-            int actual = super.read(buf, off, len);
-            if (actual > 0)
-                count += actual;
-            return actual;
-        }
     }
 }

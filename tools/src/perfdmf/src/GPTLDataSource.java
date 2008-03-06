@@ -1,11 +1,9 @@
  package edu.uoregon.tau.perfdmf;
 
 import java.io.*;
-import java.util.StringTokenizer;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Stack;
-import java.util.Iterator;
+import java.util.*;
+
+import edu.uoregon.tau.common.TrackerInputStream;
 
 public class GPTLDataSource extends DataSource {
 
@@ -15,6 +13,10 @@ public class GPTLDataSource extends DataSource {
 	private File file = null;
 	private GlobalData globalData = null;
     
+    private volatile long totalBytes = 0;
+    private volatile TrackerInputStream tracker;
+
+	
     public GPTLDataSource(File file) {
         super();
         this.file = file;
@@ -25,6 +27,9 @@ public class GPTLDataSource extends DataSource {
     }
 
     public int getProgress() {
+        if (totalBytes != 0) {
+            return (int) ((float) tracker.byteCount() / (float) totalBytes * 100);
+        }
         return 0;
     }
 
@@ -34,17 +39,17 @@ public class GPTLDataSource extends DataSource {
 
         Node node = null;
         Context context = null;
-        edu.uoregon.tau.perfdmf.Thread thread = null;
+        Thread thread = null;
         int nodeID = -1;
 
-        //######
-        //End - Frequently used items.
-        //######
 
 		//System.out.println("Processing " + file + ", please wait ......");
 		FileInputStream fileIn = new FileInputStream(file);
-		InputStreamReader inReader = new InputStreamReader(fileIn);
+		tracker = new TrackerInputStream(fileIn);
+		InputStreamReader inReader = new InputStreamReader(tracker);
 		BufferedReader br = new BufferedReader(inReader);
+		
+		totalBytes = file.length();
 
 		// process the global section, and do what's necessary
 		globalData = processGlobalSection(br);
@@ -82,11 +87,9 @@ public class GPTLDataSource extends DataSource {
         time = (System.currentTimeMillis()) - time;
         //System.out.println("Done processing data!");
         //System.out.println("Time to process (in milliseconds): " + time);
+        fileIn.close();
     }
 
-    //####################################
-    //Private Section.
-    //####################################
 
 	private void createFunction(Thread thread, EventData eventData, boolean doCallpath) {
         Function function = null;
