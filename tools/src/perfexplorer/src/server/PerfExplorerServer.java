@@ -47,7 +47,7 @@ import java.util.NoSuchElementException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.64 2008/03/07 01:23:46 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.65 2008/03/07 20:18:21 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -940,7 +940,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					}
 				}
 			}
-			buf.append(" and group_name not like '%TAU_CALLPATH%' ");
+			buf.append(" and (group_name is null or group_name not like '%TAU_CALLPATH%') ");
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 			//PerfExplorerOutput.println(statement.toString());
 			ResultSet results = statement.executeQuery();
@@ -1277,8 +1277,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			buf.append("on ilp.interval_event = ie.id ");
 			buf.append("where ie.trial = ? and ilp.metric = ? ");
 
-			buf.append("and ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and group_name not like '%TAU_PHASE%' ");
+			buf.append("and (ie.group_name is null ");
+			buf.append("or (ie.group_name not like '%TAU_CALLPATH%' ");
+			buf.append("and group_name not like '%TAU_PHASE%')) ");
 			if (db.getDBType().compareTo("db2") == 0) {
 				buf.append("group by ie.id, cast (ie.name as VARCHAR(256)) order by cast (ie.name as VARCHAR(256)) ");
 			} else {
@@ -1353,8 +1354,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			buf.append("inner join interval_event ");
 			buf.append("on interval_event = interval_event.id ");
 			buf.append("where trial = ? and metric = ? ");
-			buf.append("and group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and group_name not like '%TAU_PHASE%' ");
+			buf.append("and (group_name is null or (");
+			buf.append("group_name not like '%TAU_CALLPATH%' ");
+			buf.append("and group_name not like '%TAU_PHASE%')) ");
 			buf.append("group by interval_event.id ");
 
 			statement = db.prepareStatement(buf.toString());

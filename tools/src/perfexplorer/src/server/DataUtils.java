@@ -62,7 +62,7 @@ public class DataUtils {
 				//sql.append("on e.id = s.interval_event and s.metric = p.metric ");
 			}
 			sql.append("where e.trial = ?");
-			sql.append(" and e.group_name not like '%TAU_CALLPATH%' ");
+			sql.append(" and (e.group_name is null or e.group_name not like '%TAU_CALLPATH%') ");
 			if (modelData.getCurrentSelection() instanceof Metric) {
 				sql.append(" and p.metric = ?");
 			}
@@ -95,7 +95,7 @@ public class DataUtils {
 				} else {
 					sql.append("where e.trial = ?");
 				}
-			sql.append(" and e.group_name not like '%TAU_CALLPATH%' ");
+			sql.append(" and (e.group_name is null or e.group_name not like '%TAU_CALLPATH%') ");
 				sql.append(" order by 1");
 				statement = db.prepareStatement(sql.toString());
 				statement.setInt(1, modelData.getTrial().getID());
@@ -149,8 +149,8 @@ public class DataUtils {
 			if (modelData.getCurrentSelection() instanceof Metric) {
 				statement.setInt(2, ((Metric)(modelData.getCurrentSelection())).getID());
 			}
-			results = statement.executeQuery();
 			//PerfExplorerOutput.println(statement.toString());
+			results = statement.executeQuery();
 			if (results.next() != false) {
 				nodes = results.getInt(1) + 1;
 				contexts = results.getInt(2) + 1;
@@ -225,7 +225,7 @@ public class DataUtils {
 			if (modelData.getCurrentSelection() instanceof Metric) {
 				sql.append(" and p.metric = ? ");
 			}
-			sql.append(" and e.group_name not like '%TAU_CALLPATH%' ");
+			sql.append(" and (e.group_name is null or e.group_name not like '%TAU_CALLPATH%') ");
 			sql.append(" order by 3,1,2 ");
 			statement = db.prepareStatement(sql.toString());
 			statement.setInt(1, modelData.getTrial().getID());
