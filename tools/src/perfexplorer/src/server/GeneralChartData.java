@@ -46,7 +46,7 @@ import java.io.InputStream;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.26 2008/03/05 00:25:57 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.27 2008/03/07 01:23:46 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -199,7 +199,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 			}
 			buf.append(") ");
 			statement = db.prepareStatement(buf.toString());
-			//System.out.println(statement.toString());
+			System.out.println(statement.toString());
 			statement.execute();
 			statement.close();
 
@@ -234,7 +234,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 					buf.append(" (trial int, metadata_name text, metadata_value text)");
 				}
 				statement = db.prepareStatement(buf.toString());
-				//System.out.println(statement.toString());
+				System.out.println(statement.toString());
 				statement.execute();
 				statement.close();
 
@@ -244,7 +244,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 					statement = db.prepareStatement("select id, XML_METADATA from temp_trial ");
 				}
 
-				//System.out.println(statement.toString());
+				System.out.println(statement.toString());
 				ResultSet xmlResults = statement.executeQuery();
 	
 				// build a factory
@@ -314,7 +314,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 							} else {
 								statement2.setString(3, value.getNodeValue());
 							}
-							//System.out.println(statement2.toString());
+							System.out.println(statement2.toString());
 							statement2.executeUpdate();
 							statement2.close();
 						}
@@ -359,7 +359,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 					statement.setString(i, tmp.toUpperCase());
 				}
 			}
-			//System.out.println(statement.toString());
+			System.out.println(statement.toString());
 			statement.execute();
 			statement.close();
 
@@ -390,7 +390,7 @@ public class GeneralChartData extends RMIGeneralChartData {
    				buf.append("and ims.metric = metricid ");
    				buf.append("and ims.inclusive = maxinclusive");
 				statement = db.prepareStatement(buf.toString());
-				//System.out.println(statement.toString());
+				System.out.println(statement.toString());
 				ResultSet results = statement.executeQuery();
 
 				while (results.next() != false) {
@@ -525,7 +525,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 				}
 			}
 
-			//System.out.println(statement.toString());
+			System.out.println(statement.toString());
 			statement.execute();
 			statement.close();
 
@@ -596,7 +596,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 				buf.append("order by 1, 2 ");
 			}
 			statement = db.prepareStatement(buf.toString());
-			//System.out.println(statement.toString());
+			System.out.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 
 			while (results.next() != false) {

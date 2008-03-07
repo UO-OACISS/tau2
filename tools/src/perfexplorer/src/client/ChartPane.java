@@ -46,6 +46,8 @@ import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.common.VectorExport;
 import java.util.StringTokenizer;
 import java.util.NoSuchElementException;
+import javax.swing.plaf.metal.*;
+import javax.swing.plaf.basic.*;
 
 public class ChartPane extends JScrollPane implements ActionListener, ImageExport {
 
@@ -323,6 +325,8 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		// create a new panel, with a vertical box layout
 		JPanel left = new JPanel();
 		left.setLayout(new BoxLayout(left, BoxLayout.Y_AXIS));
+		//left.setLayout(new FlowLayout(FlowLayout.LEFT));
+		//left.setLayout(new GridLayout(0,1,0,0));
 
 		// chart title
 		left.add(titleLabel);
@@ -367,7 +371,12 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 					"total.call", 
 					"total.subroutines", 
 					"total.inclusive_per_call", 
-					"total.sum_exclusive_squared"
+					"total.sum_exclusive_squared",
+		"atomic_location_profile.sample_count",
+		"atomic_location_profile.maximum_value",
+		"atomic_location_profile.minimum_value",
+		"atomic_location_profile.mean_value",
+		"atomic_location_profile.standard_deviation"
 					};
 		yaxisValue = new MyJComboBox(valueOptions);
 		this.yaxisValue.addActionListener(this);
@@ -840,7 +849,11 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
         // change the auto tick unit selection to integer units only...
         NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
         //rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-		rangeAxis.setAutoRangeIncludesZero(false);
+    	if (model.getShowZero()) {
+			rangeAxis.setAutoRangeIncludesZero(true);
+    	} else {
+			rangeAxis.setAutoRangeIncludesZero(false);
+    	}
 
 /*
 		if (rawData.getCategoryType() == Integer.class) {
@@ -951,6 +964,90 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
         	}
         	return size;
     	}
+
+    	public Dimension getMaximumSize() {
+        	Dimension maxSize = super.getMaximumSize();
+        	Dimension prefSize = getPreferredSize();
+        	maxSize.height = prefSize.height;
+        	return maxSize;
+    	}
+
+	}
+
+	/**
+	 * from http://www.codeguru.com/java/articles/163.shtml
+	 */
+	private class SteppedComboBoxUI extends MetalComboBoxUI {
+  		protected ComboPopup createPopup() {
+    		BasicComboPopup popup = new BasicComboPopup( comboBox ) {
+      			public void show() {
+        			Dimension popupSize = ((SteppedComboBox)comboBox).getPopupSize();
+        			popupSize.setSize( popupSize.width,
+          				getPopupHeightForRowCount( comboBox.getMaximumRowCount() ) );
+        			Rectangle popupBounds = computePopupBounds( 0,
+          				comboBox.getBounds().height, popupSize.width, popupSize.height);
+        			scroller.setMaximumSize( popupBounds.getSize() );
+        			scroller.setPreferredSize( popupBounds.getSize() );
+        			scroller.setMinimumSize( popupBounds.getSize() );
+        			list.invalidate();            
+        			int selectedIndex = comboBox.getSelectedIndex();
+        			if ( selectedIndex == -1 ) {
+          				list.clearSelection();
+        			} else {
+          				list.setSelectedIndex( selectedIndex );
+        			}            
+        			list.ensureIndexIsVisible( list.getSelectedIndex() );
+        			setLightWeightPopupEnabled( comboBox.isLightWeightPopupEnabled() );
+        			show( comboBox, popupBounds.x, popupBounds.y );
+      			}
+    		};
+    		popup.getAccessibleContext().setAccessibleParent(comboBox);
+    		return popup;
+  		}
+	}
+ 
+	/**
+	 * from http://www.codeguru.com/java/articles/163.shtml
+	 */
+	private class SteppedComboBox extends JComboBox {
+  		protected int popupWidth;
+  	
+  		public SteppedComboBox() {
+    		super();
+    		setUI(new SteppedComboBoxUI());
+    		popupWidth = 0;
+    		Dimension d = getPreferredSize();
+    		setPreferredSize(new Dimension(50, d.height));
+    		setPopupWidth(d.width);
+  		}
+
+  		public SteppedComboBox(final Object[] items) {
+    		super(items);
+    		setUI(new SteppedComboBoxUI());
+    		popupWidth = 0;
+    		Dimension d = getPreferredSize();
+    		setPreferredSize(new Dimension(50, d.height));
+    		setPopupWidth(d.width);
+  		}
+  
+  		public SteppedComboBox(List items) {
+    		super(items.toArray());
+    		setUI(new SteppedComboBoxUI());
+    		popupWidth = 0;
+    		Dimension d = getPreferredSize();
+    		setPreferredSize(new Dimension(50, d.height));
+    		setPopupWidth(d.width);
+  		}
+  
+  		public void setPopupWidth(int width) {
+    		popupWidth = width;
+  		}
+  
+  		public Dimension getPopupSize() {
+    		Dimension size = getSize();
+    		if (popupWidth < 1) popupWidth = size.width;
+    		return new Dimension(popupWidth, size.height);
+  		}
 
     	public Dimension getMaximumSize() {
         	Dimension maxSize = super.getMaximumSize();

@@ -167,7 +167,7 @@ public class PerfExplorerTableModel extends AbstractTableModel {
                 case (1):
                     return new Integer(trial.getID());
                 default:
-                    System.out.println("field " + (r-2) + " is " + trial.getField(r-2));
+                    //System.out.println("field " + (r-2) + " is " + trial.getField(r-2));
                     if (trial.getField(r - 2) != null) {
                         if (trial.getFieldName(r - 2).equalsIgnoreCase("XML_METADATA") && trial.getID() != currentTrial) {
                             try {
