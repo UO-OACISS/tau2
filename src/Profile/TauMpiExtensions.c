@@ -1,5 +1,7 @@
 #include <mpi.h>
 #include <TAU.h>
+#include <unistd.h>
+#include <stdlib.h>
 #include <Profile/TauUtil.h>
 /******************************************************/
 /******************************************************/
@@ -17,6 +19,11 @@
 #define TAU_BGL
 #undef TAU_MPIOREQUEST
 #endif
+
+#define TAU_READ TAU_IO
+#define TAU_WRITE TAU_IO
+
+
 
 
 /******************************************************
@@ -5783,10 +5790,31 @@ void mpi_file_set_atomicity__( MPI_Fint *  fh, MPI_Fint *  flag, MPI_Fint * ierr
 ******************************************************/
 int MPI_File_write( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status)
 {
-  int retvalue; 
+  int retvalue, typesize; 
+  double currentWrite = 0.0;
+  struct timeval t1, t2;
+
   TAU_PROFILE_TIMER(t, "MPI_File_write()", "", TAU_MESSAGE); 
+  TAU_REGISTER_EVENT(wb, "WRITE Bandwidth (MB/s)");
+  TAU_REGISTER_EVENT(byteswritten, "Bytes Written");
+
   TAU_PROFILE_START(t); 
+  gettimeofday(&t1, 0);
   retvalue = PMPI_File_write( fh, buf, count, datatype, status) ; 
+  gettimeofday(&t2, 0);
+
+  /* calculate the time spent in operation */
+  currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
+  /* now we trigger the events */
+  PMPI_Type_size(datatype, &typesize);
+  if (currentWrite > 1e-12) {
+    TAU_EVENT(wb, (double) count*typesize/currentWrite);
+  }
+  else {
+    printf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
+  }
+  TAU_EVENT(byteswritten, count*typesize);
+
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }
@@ -5841,10 +5869,31 @@ void mpi_file_write__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fi
 ******************************************************/
 int MPI_File_write_all( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status)
 {
-  int retvalue; 
+  int retvalue, typesize; 
+  double currentWrite = 0.0;
+  struct timeval t1, t2;
+
   TAU_PROFILE_TIMER(t, "MPI_File_write_all()", "", TAU_MESSAGE); 
+  TAU_REGISTER_EVENT(wb, "WRITE Bandwidth (MB/s)");
+  TAU_REGISTER_EVENT(byteswritten, "Bytes Written");
+
   TAU_PROFILE_START(t); 
+  gettimeofday(&t1, 0);
   retvalue = PMPI_File_write_all( fh, buf, count, datatype, status) ; 
+  gettimeofday(&t2, 0);
+
+  /* calculate the time spent in operation */
+  currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
+  /* now we trigger the events */
+  PMPI_Type_size(datatype, &typesize);
+  if (currentWrite > 1e-12) {
+    TAU_EVENT(wb, (double) count*typesize/currentWrite);
+  }
+  else {
+    printf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
+  }
+  TAU_EVENT(byteswritten, count*typesize);
+
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }
