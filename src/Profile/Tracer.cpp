@@ -140,7 +140,8 @@ int GetFlushEvents(int tid)
 static int checkTraceFileInitialized(int tid) {
   if ( !(TraceFileInitialized[tid]) && (RtsLayer::myNode() > -1)) { 
     TraceFileInitialized[tid] = 1;
-    char *dirname, tracefilename[1024];
+    const char *dirname;
+    char tracefilename[1024];
     dirname = TauEnv_get_tracedir();
     sprintf(tracefilename, "%s/tautrace.%d.%d.%d.trc",dirname, 
 	    RtsLayer::myNode(), RtsLayer::myContext(), tid);

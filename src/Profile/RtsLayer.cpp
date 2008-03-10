@@ -1333,7 +1333,7 @@ int RtsLayer::DumpEDF(int tid)
   	vector<FunctionInfo*>::iterator it;
   	vector<TauUserEvent*>::iterator uit;
 	char filename[1024], errormsg[1024];
-	char *dirname;
+	const char *dirname;
 	FILE* fp;
 	int  numEvents, numExtra;
 
@@ -1522,6 +1522,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.96 $   $Date: 2008/03/10 20:33:16 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.96 2008/03/10 20:33:16 amorris Exp $ 
+ * $Revision: 1.97 $   $Date: 2008/03/10 20:36:24 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.97 2008/03/10 20:36:24 amorris Exp $ 
  ***************************************************************************/
