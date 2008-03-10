@@ -16,6 +16,7 @@ using namespace std;
 
 #include <sys/time.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifdef TAUKTAU_SHCTR
 #include "Profile/KtauCounters.h"
