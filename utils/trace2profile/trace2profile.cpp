@@ -14,6 +14,9 @@
 #include <trace2profile.h>
 #include <sstream>
 
+#include <stdlib.h>
+#include <string.h>
+
 ofstream snapshot;
 
 char * Converter::trc = NULL;

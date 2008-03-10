@@ -3,6 +3,9 @@
 #include <TAU_tf.h>
 using namespace std;
 
+#include <string.h>
+#include <stdlib.h>
+
 Ttf_FileHandleT fh;
 
 //map<int,bool> EOF_Trace;//Id to (false: still in/true:exited)

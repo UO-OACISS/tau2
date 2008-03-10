@@ -1,6 +1,6 @@
 #include <handlers.h>
 #include <trace2profile.h>
-
+#include <string.h>
 using namespace std;
 
 /* implementation of callback routines */
