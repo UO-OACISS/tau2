@@ -1654,6 +1654,16 @@ int Profiler::DumpData(bool increment, int tid, char *prefix) {
   return writeData(tid, prefix, increment);
 }
 
+
+void getMetricHeader(int i, char *header) {
+#ifdef TAU_MULTIPLE_COUNTERS
+  sprintf(header, "templated_functions_MULTI_%s", RtsLayer::getCounterName(i));
+#else
+  sprintf(header, "%s", TauGetCounterString());
+#endif
+}
+
+
 // Stores profile data
 int Profiler::writeData(int tid, char *prefix, bool increment, const char **inFuncs, int numFuncs) {
   
@@ -1668,15 +1678,17 @@ int Profiler::writeData(int tid, char *prefix, bool increment, const char **inFu
   for (int i=0;i<MAX_TAU_COUNTERS;i++) {
     if (RtsLayer::getCounterUsed(i)) {
       
-      char *metricName = RtsLayer::getCounterName(i);
+      char metricHeader[1024];
       char profileLocation[1024];
       char fileMetricName[1024];
       char filename[1024];
+
+
+      getMetricHeader(i, metricHeader);
       getProfileLocation(i, profileLocation);
-      sprintf(fileMetricName, "templated_functions_MULTI_%s", metricName);
       sprintf(filename, "%s/temp.%d.%d.%d", profileLocation, 
 	      RtsLayer::myNode(), RtsLayer::myContext(), tid);
-      writeProfile(filename, fileMetricName, tid, i, inFuncs, numFuncs);
+      writeProfile(filename, metricHeader, tid, i, inFuncs, numFuncs);
 
       char *selectivePrefix = "";
       if (numFuncs > 0) {
@@ -1768,6 +1780,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.172 $   $Date: 2008/03/10 00:16:33 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.172 2008/03/10 00:16:33 amorris Exp $ 
+ * $Revision: 1.173 $   $Date: 2008/03/10 19:00:44 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.173 2008/03/10 19:00:44 amorris Exp $ 
  ***************************************************************************/
