@@ -359,6 +359,46 @@ double * FunctionInfo::GetInclTime(int tid){
 }
 #endif //TAU_MULTIPLE_COUNTERS
 
+
+double *FunctionInfo::getInclusiveValues(int tid) {
+  printf ("potentially evil\n");
+#ifdef TAU_MULTIPLE_COUNTERS
+  return InclTime[tid];
+#else
+  return &(InclTime[tid]);
+#endif
+}
+
+double *FunctionInfo::getExclusiveValues(int tid) {
+  printf ("potentially evil\n");
+#ifdef TAU_MULTIPLE_COUNTERS
+  return ExclTime[tid];
+#else
+  return &(ExclTime[tid]);
+#endif
+}
+
+void FunctionInfo::getInclusiveValues(int tid, double *values) {
+#ifdef TAU_MULTIPLE_COUNTERS
+  for(int i=0; i<MAX_TAU_COUNTERS; i++) {
+    values[i] = InclTime[tid][i];
+  }
+#else
+  values[0] = InclTime[tid];
+#endif
+}
+
+void FunctionInfo::getExclusiveValues(int tid, double *values) {
+#ifdef TAU_MULTIPLE_COUNTERS
+  for(int i=0; i<MAX_TAU_COUNTERS; i++) {
+    values[i] = ExclTime[tid][i];
+  }
+#else
+  values[0] = ExclTime[tid];
+#endif
+}
+
+
 #ifdef PROFILE_CALLS
 //////////////////////////////////////////////////////////////////////
 
@@ -501,6 +541,6 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.49 $   $Date: 2008/03/06 20:15:29 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.49 2008/03/06 20:15:29 amorris Exp $ 
+ * $Revision: 1.50 $   $Date: 2008/03/10 00:16:33 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.50 2008/03/10 00:16:33 amorris Exp $ 
  ***************************************************************************/

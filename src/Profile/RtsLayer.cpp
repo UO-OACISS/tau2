@@ -589,8 +589,10 @@ double TauWindowsUsecD(void)
   extern "C" int ktau_gettimeofday(struct timeval *tv, struct timezone *tz);
 #endif // TAUKTAU_MERGE 
 
+
+
 #ifdef TAU_MULTIPLE_COUNTERS
-void RtsLayer::getUSecD (int tid, double *values){
+void RtsLayer::getUSecD (int tid, double *values) {
 #if ((defined(TAU_EPILOG) && !defined(PROFILING_ON)) || (defined(TAU_VAMPIRTRACE) && !defined(PROFILING_ON)))
   return;
 #endif /* TAU_EPILOG/VAMPIRTRACE, PROFILING_ON */
@@ -736,6 +738,31 @@ double RtsLayer::getUSecD (int tid) {
 }
 #endif //TAU_MULTIPLE_COUNTERS
 
+
+int RtsLayer::getPid() {
+  #ifdef TAU_WINDOWS
+  return 0;
+  #else
+  return getpid();
+  #endif
+}
+
+bool RtsLayer::getCounterUsed(int i) {
+#ifdef TAU_MULTIPLE_COUNTERS
+  return MultipleCounterLayer::getCounterUsed(i);
+#else
+  return (i==0); // only 0 is active in single counter mode
+#endif	
+}
+
+char *RtsLayer::getCounterName(int i) {
+#ifdef TAU_MULTIPLE_COUNTERS
+  return MultipleCounterLayer::getCounterNameAt(i);
+#else
+  return getSingleCounterName();
+#endif	
+}
+
 char *RtsLayer::getSingleCounterName() {
   char name[512];
 
@@ -820,6 +847,20 @@ char *RtsLayer::getSingleCounterName() {
   // if none of those were defined (the default), we use gettimeofday
   return "Time";
 }
+
+
+void RtsLayer::getCurrentValues (int tid, double *values) {
+
+#ifdef TAU_MULTIPLE_COUNTERS
+  for (int c=0; c<MAX_TAU_COUNTERS; c++) {
+    values[c] = 0;
+  }
+  return getUSecD(tid, values);
+#else
+  values[0] = RtsLayer::getUSecD(tid);
+#endif
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 //Note: This is similar to Tulip event classes during tracing
@@ -1481,6 +1522,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.94 $   $Date: 2008/03/06 21:29:12 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.94 2008/03/06 21:29:12 amorris Exp $ 
+ * $Revision: 1.95 $   $Date: 2008/03/10 00:16:33 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.95 2008/03/10 00:16:33 amorris Exp $ 
  ***************************************************************************/

@@ -53,6 +53,8 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <signal.h>
 
 char * TauGetCounterString(void);
+static bool helperIsFunction(FunctionInfo *fi, Profiler *profiler);
+
 
 void tauSignalHandler(int sig) {
   fprintf (stderr, "Caught SIGUSR1, dumping TAU profile data\n");
@@ -61,15 +63,13 @@ void tauSignalHandler(int sig) {
 
 void tauToggleInstrumentationHandler(int sig) {
   fprintf (stderr, "Caught SIGUSR2, toggling TAU instrumentation\n");
-  if (RtsLayer::TheEnableInstrumentation())
-  {
+  if (RtsLayer::TheEnableInstrumentation()) {
     RtsLayer::TheEnableInstrumentation() = false;
-  }
-  else 
-  {
+  } else {
     RtsLayer::TheEnableInstrumentation() = true;
   }
 }
+
 static x_uint64 getTimeStamp() {
   x_uint64 timestamp;
 #ifdef TAU_WINDOWS
@@ -90,7 +90,7 @@ static x_uint64 getTimeStamp() {
 // at the earliest point.
 static x_uint64 firstTimeStamp;
 bool Tau_snapshot_initialization() {
-
+  
 #ifndef TAU_DISABLE_SIGUSR
   /* register SIGUSR1 handler */
   if (signal(SIGUSR1, tauSignalHandler) == SIG_ERR) {
@@ -324,19 +324,6 @@ static char *removeRuns(char *str) {
 
 
 
-static bool helperIsFunction(FunctionInfo *fi, Profiler *profiler) {
-  
-#ifdef TAU_CALLPATH
-  if (fi == profiler->ThisFunction || fi == profiler->CallPathFunction) {
-#else
-  if (fi == profiler->ThisFunction) { 
-#endif
-    return true;
-  }
-  return false;
-}
-
-
 
 
 static void writeEventXML(FILE *f, int id, FunctionInfo *fi) {
@@ -365,11 +352,7 @@ static int writeMetaData(FILE *fp, bool newline, int counter) {
 
 
   if (counter != -1) {
-#ifndef TAU_MULTIPLE_COUNTERS
-    writeXMLAttribute(fp, "Metric Name", RtsLayer::getSingleCounterName(), newline);
-#else
-    writeXMLAttribute(fp, "Metric Name", MultipleCounterLayer::getCounterNameAt(counter), newline);
-#endif
+    writeXMLAttribute(fp, "Metric Name", RtsLayer::getCounterName(counter), newline);
   }
 
 
@@ -611,18 +594,67 @@ static int writeMetaData(FILE *fp, bool newline, int counter) {
 
 
   fprintf (fp, "</metadata>%s", endl);
-
   return 0;
 }
 
 
 
+static int startNewSnapshotFile(char *threadid, int tid) {
+  const char *profiledir = TauEnv_get_profiledir();
+  
+  char filename[4096];
+  sprintf (filename,"%s/snapshot.%d.%d.%d", profiledir, 
+	   RtsLayer::myNode(), RtsLayer::myContext(), tid);
+  FILE *fp;
+  if ((fp = fopen (filename, "w+")) == NULL) {
+    char errormsg[4096];
+    sprintf(errormsg,"Error: Could not create %s",filename);
+    perror(errormsg);
+    RtsLayer::UnLockDB();
+    return 0;
+  }
+  
+  // assign it back to the global structure for this thread
+  TauGetSnapshotFiles()[tid] = fp;
+
+  // start of a profile block
+  fprintf (fp, "<profile_xml>\n");
+  
+  // thread identifier
+  fprintf (fp, "\n<thread id=\"%s\" node=\"%d\" context=\"%d\" thread=\"%d\">\n", 
+	   threadid, RtsLayer::myNode(), RtsLayer::myContext(), tid);
+  writeMetaData(fp, true, -1);
+  fprintf (fp, "</thread>\n");
+  
+  // definition block
+  fprintf (fp, "\n<definitions thread=\"%s\">\n", threadid);
+  
+  for (int i=0; i<MAX_TAU_COUNTERS; i++) {
+    if (RtsLayer::getCounterUsed(i)) {
+      char *tmpChar = RtsLayer::getCounterName(i);
+      fprintf (fp, "<metric id=\"%d\">", i);
+      writeTagXML(fp, "name", tmpChar, true);
+      writeTagXML(fp, "units", "unknown", true);
+      fprintf (fp, "</metric>\n");
+    }
+  }
+
+  TauGetSnapshotEventCounts()[tid] = 0;
+  TauGetSnapshotUserEventCounts()[tid] = 0;
+
+  fprintf (fp, "</definitions>\n");
+  return 0;
+}
+
 
 int Profiler::Snapshot(char *name, bool finalize, int tid) {
-   FILE *fp = TauGetSnapshotFiles()[tid];
    int i, c;
-   if (finalize && !fp) { 
-     // finalize is true at the end of execution (regular profile output), if we haven't written a snapshot, don't bother
+   FILE *fp = TauGetSnapshotFiles()[tid];
+
+   if (finalize && !fp && !(TauEnv_get_profile_format() == TAU_FORMAT_SNAPSHOT)) { 
+     // finalize is true at the end of execution (regular profile output), 
+     // if we haven't written a snapshot, don't bother, unless snapshot is the
+     // requested output format
      return 0;
    }
 
@@ -630,110 +662,27 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 
    if (!finalize) {
      // don't start the timer here, otherwise we'll go into an infinite loop
-     // since our timer will always be on the stack
+     // since our stop call will initiate another final snapshot
      TAU_PROFILE_START(timer);
    }
 
-
-   //  printf ("Writing Snapshot [node %d:%d]\n",  RtsLayer::myNode(), tid);
-
-
-#ifndef TAU_MULTIPLE_COUNTERS
-   double currentTime = RtsLayer::getUSecD(tid); 
-#else
+   // get current values
    double currentTime[MAX_TAU_COUNTERS];
-   for (c=0; c<MAX_TAU_COUNTERS; c++) {
-     currentTime[c] = 0;
-   }
-   RtsLayer::getUSecD(tid, currentTime);
-#endif	
+   RtsLayer::getCurrentValues(tid, currentTime);
 
    char threadid[4096];
-#ifdef TAU_WINDOWS
-   sprintf(threadid, "%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid);
-#else
-   sprintf(threadid, "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, getpid());
-#endif
+   sprintf(threadid, "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, RtsLayer::getPid());
 
    RtsLayer::LockDB();
    int numFunc = TheFunctionDB().size();
    int numEvents = TheEventDB().size();
 
    if (!fp) {
-     // create file 
-     const char *dirname;
-     const char *currentDirectory = ".";
-     if ((dirname = getenv("PROFILEDIR")) == NULL) {
-       dirname = currentDirectory;
-     }
-
-     char filename[4096];
-     sprintf (filename,"%s/snapshot.%d.%d.%d", dirname, 
-	      RtsLayer::myNode(), RtsLayer::myContext(), tid);
-
-     if ((fp = fopen (filename, "w+")) == NULL) {
-       char errormsg[4096];
-       sprintf(errormsg,"Error: Could not create %s",filename);
-       perror(errormsg);
-       RtsLayer::UnLockDB();
-       return 0;
-     }
-
-     // assign it back to the global structure for this thread
-     TauGetSnapshotFiles()[tid] = fp;
-
-     fprintf (fp, "<profile_xml>\n");
-
-     fprintf (fp, "\n<thread id=\"%s\" node=\"%d\" context=\"%d\" thread=\"%d\">\n", threadid,
-	      RtsLayer::myNode(), RtsLayer::myContext(), tid);
-     writeMetaData(fp, true, -1);
-     fprintf (fp, "</thread>\n");
-
-     fprintf (fp, "\n<definitions thread=\"%s\">\n", threadid);
-
-#ifndef TAU_MULTIPLE_COUNTERS
-     fprintf (fp, "<metric id=\"0\">\n");
-     writeTagXML(fp, "name", RtsLayer::getSingleCounterName(), true);
-     writeTagXML(fp, "units", "unknown", true);
-     fprintf (fp, "</metric>\n");
-#else
-      for(i=0;i<MAX_TAU_COUNTERS;i++){
-	if(MultipleCounterLayer::getCounterUsed(i)){
-	  char *tmpChar = MultipleCounterLayer::getCounterNameAt(i);
-	  fprintf (fp, "<metric id=\"%d\">", i);
-	  writeTagXML(fp, "name", tmpChar, true);
-	  writeTagXML(fp, "units", "unknown", true);
-	  fprintf (fp, "</metric>\n");
-	}
-     }
-#endif
-
-
-     // write out events seen (so far)
-     for (i=0; i < numFunc; i++) {
-       FunctionInfo *fi = TheFunctionDB()[i];
-       writeEventXML(fp, i, fi);
-     }
-
-     // remember the number of events we've written to the snapshot file
-     TauGetSnapshotEventCounts()[tid] = numFunc;
-
-     // write out user events seen (so far)
-     for (int i=0; i < numEvents; i++) {
-       TauUserEvent *ue = TheEventDB()[i];
-       writeUserEventXML(fp, i, ue);
-     }
-
-     // remember the number of userevents we've written to the snapshot file
-     TauGetSnapshotUserEventCounts()[tid] = numEvents;
-
-
-     fprintf (fp, "</definitions>\n");
+     startNewSnapshotFile(threadid, tid);
+     fp = TauGetSnapshotFiles()[tid];
    } else {
      fprintf (fp, "<profile_xml>\n");
    }
-
-
    
    // write out new events since the last snapshot
    if (TauGetSnapshotEventCounts()[tid] != numFunc) {
@@ -771,102 +720,32 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
 #endif
 
 
-#ifndef TAU_MULTIPLE_COUNTERS
-   fprintf (fp, "<interval_data metrics=\"0\">\n");
-#else
    char metricList[4096];
    char *loc = metricList;
    for (c=0; c<MAX_TAU_COUNTERS; c++) {
-     if (MultipleCounterLayer::getCounterUsed(c)) {
+     if (RtsLayer::getCounterUsed(c)) {
        loc += sprintf (loc,"%d ", c);
      }
    }
    fprintf (fp, "<interval_data metrics=\"%s\">\n", metricList);
-#endif   
 
+   updateIntermediateStatistics(tid);
 
- 
    for (i=0; i < numFunc; i++) {
      FunctionInfo *fi = TheFunctionDB()[i];
 
-#ifndef TAU_MULTIPLE_COUNTERS
-     double excltime, incltime;
-#else
-     double *excltime = NULL, *incltime = NULL;
-#endif
+     // get currently stored values
+     double *incltime = fi->getDumpInclusiveValues(tid);
+     double *excltime = fi->getDumpExclusiveValues(tid);
+  
      
-     if (!fi->GetAlreadyOnStack(tid)) {
-       // not on the callstack, the data is complete
-
-       excltime = fi->GetExclTime(tid);
-       incltime = fi->GetInclTime(tid); 
-
-     } else {
-       // this routine is currently on the callstack
-       // we will have to compute the exclusive and inclusive time it has accumulated
-
-       // Start with the data already accumulated
-       // Then walk the entire stack, when this function the function in question is found we do two things
-       // 1) Compute the current amount that should be added to the inclusive time.
-       //    This is simply the current time minus the start time of our function.
-       //    If a routine is in the callstack twice, only the highest (top-most) value
-       //    will be retained, this is correct.
-       // 2) Add to the exclusive value by subtracting the start time of the current
-       //    child (if there is one) from the duration of this function so far.
-
-       incltime = fi->GetInclTime(tid); 
-       excltime = fi->GetExclTime(tid); 
-#ifndef TAU_MULTIPLE_COUNTERS
-       double inclusiveToAdd = 0;
-       double prevStartTime = 0;
-
-       for (Profiler *current = CurrentProfiler[tid]; current != 0; current = current->ParentProfiler) {
-	 if (helperIsFunction(fi, current)) {
-	   inclusiveToAdd = currentTime - current->StartTime; 
-	   excltime += inclusiveToAdd - prevStartTime;
-	 }
-	 prevStartTime = currentTime - current->StartTime;  
-       }
-       incltime += inclusiveToAdd;
-#else
-       double inclusiveToAdd[MAX_TAU_COUNTERS];
-       double prevStartTime[MAX_TAU_COUNTERS];
-       for (int c=0; c<MAX_TAU_COUNTERS; c++) {
-	 inclusiveToAdd[c] = 0;
-	 prevStartTime[c] = 0;
-       }
-
-       for (Profiler *current = CurrentProfiler[tid]; current != 0; current = current->ParentProfiler) {
-	 if (helperIsFunction(fi, current)) {
-	   for (int c=0; c<MAX_TAU_COUNTERS; c++) {
-	     inclusiveToAdd[c] = currentTime[c] - current->StartTime[c]; 
-	     excltime[c] += inclusiveToAdd[c] - prevStartTime[c];
-	   }
-	 }
-	 for (int c=0; c<MAX_TAU_COUNTERS; c++) {
-	   prevStartTime[c] = currentTime[c] - current->StartTime[c];  
-	 }
-       }
-       for (c=0; c<MAX_TAU_COUNTERS; c++) {
-	 incltime[c] += inclusiveToAdd[c];
-       }
-#endif
-     }
-     
-#ifndef TAU_MULTIPLE_COUNTERS
-     fprintf (fp, "%d %ld %ld %.16G %.16G \n", i, fi->GetCalls(tid), fi->GetSubrs(tid), 
-	      excltime, incltime);
-#else
      fprintf (fp, "%d %ld %ld ", i, fi->GetCalls(tid), fi->GetSubrs(tid));
      for (c=0; c<MAX_TAU_COUNTERS; c++) {
-       if (MultipleCounterLayer::getCounterUsed(c)) {
+       if (RtsLayer::getCounterUsed(c)) {
 	 fprintf (fp, "%.16G %.16G ", excltime[c], incltime[c]);
        }
      }
      fprintf (fp, "\n");
-
-#endif
-     
    }
    fprintf (fp, "</interval_data>\n");
 
@@ -881,11 +760,7 @@ int Profiler::Snapshot(char *name, bool finalize, int tid) {
    }
    fprintf (fp, "</atomic_data>\n");
 
-
-
    fprintf (fp, "</profile>\n");
-
-
    fprintf (fp, "\n</profile_xml>\n");
 
 //    if (finalize) {
@@ -923,3 +798,16 @@ int Tau_writeProfileMetaData(FILE *fp, int counter) {
 }
 
 
+
+
+static bool helperIsFunction(FunctionInfo *fi, Profiler *profiler) {
+  
+#ifdef TAU_CALLPATH
+  if (fi == profiler->ThisFunction || fi == profiler->CallPathFunction) {
+#else
+  if (fi == profiler->ThisFunction) { 
+#endif
+    return true;
+  }
+  return false;
+}

@@ -363,15 +363,12 @@ bool * MultipleCounterLayer::getCounterUsedList()
 
 }
 
-bool MultipleCounterLayer::getCounterUsed(int inPosition)
-{
+bool MultipleCounterLayer::getCounterUsed(int inPosition) {
   bool tmpBool = false;
 
-  //RtsLayer::LockDB();
-  if(inPosition < MAX_TAU_COUNTERS)
+  if (inPosition < MAX_TAU_COUNTERS) {
     tmpBool = MultipleCounterLayer::counterUsed[inPosition];
-
-  //RtsLayer::UnLockDB();
+  }
 
   return tmpBool;
 
