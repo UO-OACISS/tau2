@@ -36,6 +36,7 @@ extern "C" {
   static int env_synchronize_clocks = 0;
   static int env_verbose = 0;
   static int env_throttle = 0;
+  static int env_profile_format = TAU_FORMAT_PROFILE;
   static double env_throttle_numcalls = 0;
   static double env_throttle_percall = 0;
   static char *env_profiledir = NULL;
@@ -104,6 +105,11 @@ extern "C" {
     return env_throttle_percall;
   }
 
+
+  int TauEnv_get_profile_format() {
+    return env_profile_format;
+  }
+
   void TauEnv_initialize() {
     static int initialized = 0;
 
@@ -160,10 +166,13 @@ extern "C" {
       }
       TAU_VERBOSE("TAU: Throttle NumCalls = %g\n", env_throttle_numcalls);
 
-      
+
+      char *profileFormat = getenv("TAU_PROFILE_FORMAT");
+      if (profileFormat != NULL && 0 == strcmp(profileFormat, "snapshot")) {
+	env_profile_format = TAU_FORMAT_SNAPSHOT;
+      } else {
+	env_profile_format = TAU_FORMAT_PROFILE;
+      }
     }
-    
   }
-
-
 }

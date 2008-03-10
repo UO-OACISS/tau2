@@ -34,6 +34,10 @@ extern "C" {
   char *TauEnv_get_profiledir();
   char *TauEnv_get_tracedir();
 
+#define TAU_FORMAT_PROFILE 1
+#define TAU_FORMAT_SNAPSHOT 2
+  int TauEnv_get_profile_format();
+
   void TAU_VERBOSE(char *format, ...);
   
 #ifdef __cplusplus
