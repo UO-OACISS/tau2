@@ -40,6 +40,8 @@
 using namespace std;
 #endif
 
+#include <stdlib.h>
+
 //#define DEBUG_PROF
 //int debugPrint = 0;
 // control debug printf statements
@@ -275,7 +277,7 @@ int TauRenameTimer(char *oldName, char *newName)
 
 // EOF TauHooks.cpp
 /***************************************************************************
- * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
- * $Revision: 1.24 $   $Date: 2007/03/24 01:32:54 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.24 2007/03/24 01:32:54 sameer Exp $ 
+ * $RCSfile: TauHooks.cpp,v $   $Author: amorris $
+ * $Revision: 1.25 $   $Date: 2008/03/10 19:51:24 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.25 2008/03/10 19:51:24 amorris Exp $ 
  ***************************************************************************/

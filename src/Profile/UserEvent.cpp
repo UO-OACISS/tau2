@@ -53,6 +53,7 @@
 
 #include <stdio.h>
 #include <fcntl.h>
+#include <stdlib.h>
 
 //#include <math.h>
 #ifdef TAU_DOT_H_LESS_HEADERS
@@ -740,6 +741,6 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid)
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
- * $Revision: 1.25 $   $Date: 2008/03/06 01:04:02 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.25 2008/03/06 01:04:02 amorris Exp $ 
+ * $Revision: 1.26 $   $Date: 2008/03/10 19:51:24 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.26 2008/03/10 19:51:24 amorris Exp $ 
  ***************************************************************************/

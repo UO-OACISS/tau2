@@ -58,6 +58,7 @@ using namespace std;
 #include <fcntl.h>
 #include <time.h>
 #include <stdlib.h>
+#include <limits.h>
 
 #if (!defined(TAU_WINDOWS))
 #include <sys/types.h>
@@ -1780,6 +1781,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.173 $   $Date: 2008/03/10 19:00:44 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.173 2008/03/10 19:00:44 amorris Exp $ 
+ * $Revision: 1.174 $   $Date: 2008/03/10 19:51:24 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.174 2008/03/10 19:51:24 amorris Exp $ 
  ***************************************************************************/
