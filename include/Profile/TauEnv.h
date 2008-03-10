@@ -31,14 +31,14 @@ extern "C" {
   int TauEnv_get_throttle();
   double TauEnv_get_throttle_numcalls();
   double TauEnv_get_throttle_percall();
-  char *TauEnv_get_profiledir();
-  char *TauEnv_get_tracedir();
+  const char *TauEnv_get_profiledir();
+  const char *TauEnv_get_tracedir();
 
 #define TAU_FORMAT_PROFILE 1
 #define TAU_FORMAT_SNAPSHOT 2
   int TauEnv_get_profile_format();
 
-  void TAU_VERBOSE(char *format, ...);
+  void TAU_VERBOSE(const char *format, ...);
   
 #ifdef __cplusplus
 }

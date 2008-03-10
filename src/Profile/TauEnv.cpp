@@ -32,21 +32,20 @@
 
 extern "C" {
 
-
   static int env_synchronize_clocks = 0;
   static int env_verbose = 0;
   static int env_throttle = 0;
   static int env_profile_format = TAU_FORMAT_PROFILE;
   static double env_throttle_numcalls = 0;
   static double env_throttle_percall = 0;
-  static char *env_profiledir = NULL;
-  static char *env_tracedir = NULL;
+  static const char *env_profiledir = NULL;
+  static const char *env_tracedir = NULL;
 
   double TauEnv_get_throttle_numcalls();
   double TauEnv_get_throttle_percall();
 
 
-  void TAU_VERBOSE(char *format, ...) {
+  void TAU_VERBOSE(const char *format, ...) {
     va_list args;
     if (env_verbose != 1) {
       return;
@@ -77,11 +76,11 @@ extern "C" {
   }
 
 
-  char *TauEnv_get_profiledir() {
+  const char *TauEnv_get_profiledir() {
     return env_profiledir;
   }
 
-  char *TauEnv_get_tracedir() {
+  const char *TauEnv_get_tracedir() {
     return env_tracedir;
   }
 

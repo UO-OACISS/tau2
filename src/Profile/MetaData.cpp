@@ -52,9 +52,7 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 
 #include <signal.h>
 
-char * TauGetCounterString(void);
-static bool helperIsFunction(FunctionInfo *fi, Profiler *profiler);
-
+char *TauGetCounterString(void);
 
 void tauSignalHandler(int sig) {
   fprintf (stderr, "Caught SIGUSR1, dumping TAU profile data\n");
@@ -518,7 +516,6 @@ static int writeMetaData(FILE *fp, bool newline, int counter) {
   if (f) {
     char line[4096];
     while (ReadFullLine(line, f)) {
-      char buf[4096];
       char *value = strstr(line,":")+2;
       value = removeRuns(value);
 
@@ -554,7 +551,6 @@ static int writeMetaData(FILE *fp, bool newline, int counter) {
   if (f) {
     char line[4096];
     while (ReadFullLine(line, f)) {
-      char buf[4096];
       char *value = strstr(line,":")+2;
       value = removeRuns(value);
 
@@ -795,19 +791,4 @@ int Tau_writeProfileMetaData(FILE *fp, int counter) {
   int retval;
   retval = writeMetaData(fp, false, counter);
   return retval;
-}
-
-
-
-
-static bool helperIsFunction(FunctionInfo *fi, Profiler *profiler) {
-  
-#ifdef TAU_CALLPATH
-  if (fi == profiler->ThisFunction || fi == profiler->CallPathFunction) {
-#else
-  if (fi == profiler->ThisFunction) { 
-#endif
-    return true;
-  }
-  return false;
 }

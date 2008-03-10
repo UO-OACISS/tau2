@@ -1435,7 +1435,7 @@ int RtsLayer::MergeAndConvertTracesIfNecessary(void)
     /* Now, who does the merge and conversion? */
     if ((myNode() == 0) && (myThread() == 0))
     {
-      char *outdir;
+      const char *outdir;
       char *keepfiles;
       char cmd[1024];
       char rmcmd[256]; 
@@ -1522,6 +1522,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.95 $   $Date: 2008/03/10 00:16:33 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.95 2008/03/10 00:16:33 amorris Exp $ 
+ * $Revision: 1.96 $   $Date: 2008/03/10 20:33:16 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.96 2008/03/10 20:33:16 amorris Exp $ 
  ***************************************************************************/

@@ -1004,7 +1004,7 @@ void Profiler::dumpFunctionNames() {
 
   Profiler::theFunctionList(&functionList, &numFuncs);
 
-  char *dirname = TauEnv_get_profiledir();
+  const char *dirname = TauEnv_get_profiledir();
 
   //Create temp write to file.
   char filename[1024];
@@ -1640,7 +1640,7 @@ int Profiler::StoreData(int tid) {
 
 // Returns directory name for the location of a particular metric
 static int getProfileLocation(int metric, char *str) {
-  char *profiledir = TauEnv_get_profiledir();
+  const char *profiledir = TauEnv_get_profiledir();
 #ifdef TAU_MULTIPLE_COUNTERS
   char *metricName = MultipleCounterLayer::getCounterNameAt(metric);
   sprintf (str, "%s/MULTI__%s", profiledir, metricName);
@@ -1681,9 +1681,7 @@ int Profiler::writeData(int tid, const char *prefix, bool increment, const char 
       
       char metricHeader[1024];
       char profileLocation[1024];
-      char fileMetricName[1024];
       char filename[1024];
-
 
       getMetricHeader(i, metricHeader);
       getProfileLocation(i, profileLocation);
@@ -1748,7 +1746,6 @@ int Profiler::dumpFunctionValues(const char **inFuncs,
 bool Profiler::createDirectories() {
 
 #ifdef TAU_MULTIPLE_COUNTERS
-  char *dirname;
   static bool flag = true;
   if (flag) {
     for (int i=0;i<MAX_TAU_COUNTERS;i++) {
@@ -1758,7 +1755,7 @@ bool Profiler::createDirectories() {
 	//char *rmdircommand = new char[1024];
 	char *mkdircommand = new char[1024];
 	
-	dirname = TauEnv_get_profiledir();
+	const char *dirname = TauEnv_get_profiledir();
 	
 	sprintf(newdirname,"%s/MULTI__%s",dirname,tmpChar);
 	//sprintf(rmdircommand,"rm -rf %s",newdirname);
@@ -1781,6 +1778,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.175 $   $Date: 2008/03/10 20:20:26 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.175 2008/03/10 20:20:26 amorris Exp $ 
+ * $Revision: 1.176 $   $Date: 2008/03/10 20:33:15 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.176 2008/03/10 20:33:15 amorris Exp $ 
  ***************************************************************************/
