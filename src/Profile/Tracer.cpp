@@ -103,7 +103,7 @@ x_uint64 pcxx_GetUSecLong(int tid)
   x_uint64 value = MultipleCounterLayer::getSingleCounter(tid, 0);
 
 #else //TAU_MULTIPLE_COUNTERS
-  x_uint64 value = RtsLayer::getUSecD(tid);
+  x_uint64 value = (x_uint64) RtsLayer::getUSecD(tid);
 #endif // TAU_MULTIPLE_COUNTERS
 
   if (TauEnv_get_synchronize_clocks()) {
