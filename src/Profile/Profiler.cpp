@@ -1099,7 +1099,7 @@ double *Profiler::getStartValues() {
 
 void Profiler::theCounterList(const char ***inPtr, int *numCounters) {
   *inPtr = (const char **) malloc(sizeof(const char **) * 1);
-  char *tmpChar = "default counter";
+  const char *tmpChar = "default counter";
   (*inPtr)[0] = tmpChar;
   *numCounters = 1;
 }
@@ -1651,7 +1651,7 @@ static int getProfileLocation(int metric, char *str) {
 }
 
 
-int Profiler::DumpData(bool increment, int tid, char *prefix) {
+int Profiler::DumpData(bool increment, int tid, const char *prefix) {
   return writeData(tid, prefix, increment);
 }
 
@@ -1666,7 +1666,7 @@ void getMetricHeader(int i, char *header) {
 
 
 // Stores profile data
-int Profiler::writeData(int tid, char *prefix, bool increment, const char **inFuncs, int numFuncs) {
+int Profiler::writeData(int tid, const char *prefix, bool increment, const char **inFuncs, int numFuncs) {
   
   updateIntermediateStatistics(tid);
 
@@ -1691,7 +1691,7 @@ int Profiler::writeData(int tid, char *prefix, bool increment, const char **inFu
 	      RtsLayer::myNode(), RtsLayer::myContext(), tid);
       writeProfile(filename, metricHeader, tid, i, inFuncs, numFuncs);
 
-      char *selectivePrefix = "";
+      const char *selectivePrefix = "";
       if (numFuncs > 0) {
 	selectivePrefix = "sel_";
       }
@@ -1781,6 +1781,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.174 $   $Date: 2008/03/10 19:51:24 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.174 2008/03/10 19:51:24 amorris Exp $ 
+ * $Revision: 1.175 $   $Date: 2008/03/10 20:20:26 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.175 2008/03/10 20:20:26 amorris Exp $ 
  ***************************************************************************/

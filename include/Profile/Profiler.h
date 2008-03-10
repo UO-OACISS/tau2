@@ -184,13 +184,13 @@ public:
 			  int tid = RtsLayer::myThread());
   static bool createDirectories();
   static int StoreData(int tid = RtsLayer::myThread()); 
-  static int DumpData(bool increment = false, int tid = RtsLayer::myThread(), char *prefix = "dump"); 
+  static int DumpData(bool increment = false, int tid = RtsLayer::myThread(), const char *prefix = "dump"); 
 
-  static int writeData(int tid, char *prefix = "profile", bool increment = false, 
+  static int writeData(int tid, const char *prefix = "profile", bool increment = false, 
 		       const char **inFuncs = NULL, int numFuncs = 0);
 
   static void PurgeData(int tid = RtsLayer::myThread());
-  static int Snapshot(char *name, bool finalize = false,
+  static int Snapshot(const char *name, bool finalize = false,
 		      int tid = RtsLayer::myThread()); 
   static void theFunctionList(const char ***inPtr, int *numOfFunctions,
 			      bool addName = false, const char * inString = NULL);
@@ -315,6 +315,6 @@ using tau::Profiler;
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.80 $   $Date: 2008/03/10 00:13:03 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.80 2008/03/10 00:13:03 amorris Exp $ 
+ * $Revision: 1.81 $   $Date: 2008/03/10 20:20:06 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.81 2008/03/10 20:20:06 amorris Exp $ 
  ***************************************************************************/

@@ -647,7 +647,7 @@ static int startNewSnapshotFile(char *threadid, int tid) {
 }
 
 
-int Profiler::Snapshot(char *name, bool finalize, int tid) {
+int Profiler::Snapshot(const char *name, bool finalize, int tid) {
    int i, c;
    FILE *fp = TauGetSnapshotFiles()[tid];
 
