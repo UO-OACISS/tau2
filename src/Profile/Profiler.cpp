@@ -99,7 +99,7 @@ using namespace std;
 int Tau_writeProfileMetaData(FILE *fp, int counter);
 
 static int writeUserEvents(FILE *fp, int tid);
-static bool matchFunction(FunctionInfo *fi, const char **inFuncs, int numFuncs);
+static int matchFunction(FunctionInfo *fi, const char **inFuncs, int numFuncs);
 
 //#define PROFILE_CALLS // Generate Excl Incl data for each call 
 
@@ -1123,7 +1123,6 @@ void Profiler::getFunctionValues(const char **inFuncs,
 #ifdef PROFILING_ON
   vector<FunctionInfo*>::iterator it;
   
-  int currentFuncPos = -1;
 
   int tmpNumberOfCounters;
   bool * tmpCounterUsedList;
@@ -1145,8 +1144,8 @@ void Profiler::getFunctionValues(const char **inFuncs,
   *counterExclusiveValues = (double **) malloc(sizeof(double *) * numFuncs);
   *counterInclusiveValues = (double **) malloc(sizeof(double *) * numFuncs);
   for (int i=0; i<numFuncs; i++) {
-    (*counterExclusiveValues)[i] = (double *) malloc( sizeof(double) * 1);
-    (*counterInclusiveValues)[i] = (double *) malloc( sizeof(double) * 1);
+    (*counterExclusiveValues)[i] = (double *) malloc( sizeof(double) * tmpNumberOfCounters);
+    (*counterInclusiveValues)[i] = (double *) malloc( sizeof(double) * tmpNumberOfCounters);
   }
   *numCalls = (int *) malloc(sizeof(int) * numFuncs);
   *numSubr = (int *) malloc(sizeof(int) * numFuncs);
@@ -1158,18 +1157,20 @@ void Profiler::getFunctionValues(const char **inFuncs,
   for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
     FunctionInfo *fi = *it;
 
-    if (false == matchFunction(*it, inFuncs, numFuncs)) { // skip this function
-      continue;
-    } 
+    int funcPos = matchFunction(fi, inFuncs, numFuncs);
 
-    (*numCalls)[currentFuncPos] = fi->GetCalls(tid);
-    (*numSubr)[currentFuncPos] = fi->GetSubrs(tid);
+    if (funcPos == -1) { // skip this function
+      continue;
+    }
+
+    (*numCalls)[funcPos] = fi->GetCalls(tid);
+    (*numSubr)[funcPos] = fi->GetSubrs(tid);
     
     int posCounter = 0;
     for (int m=0; m<MAX_TAU_COUNTERS; m++) {
       if (tmpCounterUsedList[m]) {
-	(*counterInclusiveValues)[currentFuncPos][posCounter] = fi->getDumpInclusiveValues(tid)[m];
-	(*counterExclusiveValues)[currentFuncPos][posCounter] = fi->getDumpExclusiveValues(tid)[m];
+	(*counterInclusiveValues)[funcPos][posCounter] = fi->getDumpInclusiveValues(tid)[m];
+	(*counterExclusiveValues)[funcPos][posCounter] = fi->getDumpExclusiveValues(tid)[m];
 	posCounter++;
       }
     }
@@ -1540,19 +1541,20 @@ int Profiler::updateIntermediateStatistics(int tid) {
 }
 
 // Checks if a function matches in a list of strings
-static bool matchFunction(FunctionInfo *fi, const char **inFuncs, int numFuncs) {
+// returns -1 if not found, otherwise, returns the index that it is found at
+// if inFuncs is NULL, or numFuncs is 0, it returns 0
+static int matchFunction(FunctionInfo *fi, const char **inFuncs, int numFuncs) {
   if (numFuncs == 0 || inFuncs == NULL) {
-    return true;
+    return 0;
   }
   bool found = false;
   const char *tmpFunctionName = fi->GetName();
   for (int i=0; i<numFuncs; i++) {
     if ((inFuncs != NULL) && (strcmp(inFuncs[i], tmpFunctionName) == 0)) {
-      found = true;
-      break;
+      return i;
     }
   }
-  return found;
+  return -1;
 }
 
 // Writes function event data
@@ -1560,7 +1562,7 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
   for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
     FunctionInfo *fi = *it;
 
-    if (false == matchFunction(*it, inFuncs, numFuncs)) { // skip this function
+    if (-1 == matchFunction(*it, inFuncs, numFuncs)) { // skip this function
       continue;
     } 
 
@@ -1771,6 +1773,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.177 $   $Date: 2008/03/11 00:11:49 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.177 2008/03/11 00:11:49 amorris Exp $ 
+ * $Revision: 1.178 $   $Date: 2008/03/11 00:36:35 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.178 2008/03/11 00:36:35 amorris Exp $ 
  ***************************************************************************/
