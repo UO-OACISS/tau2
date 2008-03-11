@@ -1,30 +1,30 @@
-/****************************************************************************
- **			TAU Portable Profiling Package			   **
- **			http://www.cs.uoregon.edu/research/tau	           **
+/*****************************************************************************
+ **			TAU Portable Profiling Package			    **
+ **			http://www.cs.uoregon.edu/research/tau	            **
  *****************************************************************************
- **    Copyright 1999  						   	   **
+ **    Copyright 1999  						   	    **
  **    Department of Computer and Information Science, University of Oregon **
  **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
  ****************************************************************************/
-/***************************************************************************
- **	File 		: Profiler.cpp					  **
- **	Description 	: TAU Profiling Package				  **
- **	Author		: Sameer Shende					  **
- **	Contact		: sameer@cs.uoregon.edu sameer@acl.lanl.gov 	  **
- **	Flags		: Compile with				          **
- **			  -DPROFILING_ON to enable profiling (ESSENTIAL)  **
- **			  -DPROFILE_STATS for Std. Deviation of Excl Time **
- **			  -DSGI_HW_COUNTERS for using SGI counters 	  **
- **			  -DPROFILE_CALLS  for trace of each invocation   **
- **                        -DSGI_TIMERS  for SGI fast nanosecs timer       **
- **			  -DTULIP_TIMERS for non-sgi Platform	 	  **
- **			  -DPOOMA_STDSTL for using STD STL in POOMA src   **
- **			  -DPOOMA_TFLOP for Intel Teraflop at SNL/NM 	  **
- **			  -DPOOMA_KAI for KCC compiler 			  **
- **			  -DDEBUG_PROF  for internal debugging messages   **
- **                        -DPROFILE_CALLSTACK to enable callstack traces  **
- **	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
- ***************************************************************************/
+/*****************************************************************************
+ **	File 		: Profiler.cpp					    **
+ **	Description 	: TAU Profiling Package				    **
+ **	Author		: Sameer Shende					    **
+ **	Contact		: sameer@cs.uoregon.edu sameer@acl.lanl.gov 	    **
+ **	Flags		: Compile with				            **
+ **			  -DPROFILING_ON to enable profiling (ESSENTIAL)    **
+ **			  -DPROFILE_STATS for Std. Deviation of Excl Time   **
+ **			  -DSGI_HW_COUNTERS for using SGI counters 	    **
+ **			  -DPROFILE_CALLS  for trace of each invocation     **
+ **                        -DSGI_TIMERS  for SGI fast nanosecs timer        **
+ **			  -DTULIP_TIMERS for non-sgi Platform	 	    **
+ **			  -DPOOMA_STDSTL for using STD STL in POOMA src     **
+ **			  -DPOOMA_TFLOP for Intel Teraflop at SNL/NM 	    **
+ **			  -DPOOMA_KAI for KCC compiler 			    **
+ **			  -DDEBUG_PROF  for internal debugging messages     **
+ **                        -DPROFILE_CALLSTACK to enable callstack traces   **
+ **	Documentation	: See http://www.cs.uoregon.edu/research/tau        **
+ ****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////
 // Include Files 
@@ -150,24 +150,17 @@ FunctionInfo** uninitialized_copy(FunctionInfo**,FunctionInfo**,FunctionInfo**);
 //////////////////////////////////////////////////////////////////////
 // TAU_DEPTH_LIMIT 
 //////////////////////////////////////////////////////////////////////
-int& TauGetDepthLimit(void)
-{
+int& TauGetDepthLimit(void) {
   static int depth = 0;
   char *depthvar; 
-
-  if (depth == 0)
-    {
-      depthvar = getenv("TAU_DEPTH_LIMIT"); 
-      if (depthvar == (char *) NULL)
-	{
-	  depth = INT_MAX; 
-	}
-      else
-	{
-	  depth = atoi(depthvar);
-	}
-    } 
-	
+  if (depth == 0) {
+    depthvar = getenv("TAU_DEPTH_LIMIT"); 
+    if (depthvar == (char *) NULL) {
+      depth = INT_MAX; 
+    } else {
+      depth = atoi(depthvar);
+    }
+  } 
   return depth; 
 }
 
@@ -176,8 +169,7 @@ int& TauGetDepthLimit(void)
 //////////////////////////////////////////////////////////////////////
 // Shutdown routine which calls TAU's shutdown
 //////////////////////////////////////////////////////////////////////
-void TauAppShutdown(void)
-{
+void TauAppShutdown(void) {
   Tau_shutdown();
 }
  
@@ -491,7 +483,7 @@ Profiler& Profiler::operator= (const Profiler& X) {
 #ifndef TAU_MULTIPLE_COUNTERS	
   StartTime = X.StartTime;
 #else //TAU_MULTIPLE_COUNTERS
-  for(int i=0;i<MAX_TAU_COUNTERS;i++){
+  for (int i=0;i<MAX_TAU_COUNTERS;i++) {
     StartTime[i] = X.StartTime[i];
   }
 #endif//TAU_MULTIPLE_COUNTERS
@@ -1021,7 +1013,7 @@ void Profiler::dumpFunctionNames() {
 
   //Write data, and close.
   fprintf(fp, "number of functions %d\n", numFuncs);
-  for(int i =0;i<numFuncs;i++){
+  for (int i =0; i<numFuncs; i++) {
     fprintf(fp, "%s\n", functionList[i]);
   }
   fclose(fp);
@@ -1072,7 +1064,7 @@ void Profiler::getUserEventValues(const char **inUserEvents, int numUserEvents,
 
   for (eit = TheEventDB().begin(); eit != TheEventDB().end(); eit++) {
     for (int i=0;i<numUserEvents;i++) {
-      if ((inUserEvents != 0) && (strcmp(inUserEvents[i], (*eit)->GetEventName()) == 0)){
+      if ((inUserEvents != 0) && (strcmp(inUserEvents[i], (*eit)->GetEventName()) == 0)) {
 	(*numEvents)[idx] = (*eit)->GetNumEvents(tid);
 	(*max)[idx] = (*eit)->GetMax(tid);
 	(*min)[idx] = (*eit)->GetMin(tid);
@@ -1441,8 +1433,7 @@ void Profiler::SetDepthLimit(int value) {
 #endif /* TAU_DEPTH_LIMIT */ 
 
 
-
-
+// writes user events to the file
 static int writeUserEvents(FILE *fp, int tid) {
   vector<TauUserEvent*>::iterator it;
 
@@ -1490,7 +1481,9 @@ static int writeHeader(FILE *fp, int numFunc, char *metricName) {
 }
 
 
-
+// This is a very important function, it must be called before writing function data to disk.
+// This function fills in the values that will be dumped to disk.
+// It performs the calculations for timers that are still on the stack.
 int Profiler::updateIntermediateStatistics(int tid) {
   
   // get current values
@@ -1778,6 +1771,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.176 $   $Date: 2008/03/10 20:33:15 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.176 2008/03/10 20:33:15 amorris Exp $ 
+ * $Revision: 1.177 $   $Date: 2008/03/11 00:11:49 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.177 2008/03/11 00:11:49 amorris Exp $ 
  ***************************************************************************/
