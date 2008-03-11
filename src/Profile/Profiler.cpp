@@ -1608,7 +1608,7 @@ static int writeProfile(char *filename, char *metricName, int tid, int metric,
   
   writeHeader(fp, TheFunctionDB().size(), metricName);
   fprintf(fp, " # ");	
-  Tau_writeProfileMetaData(fp,0);
+  Tau_writeProfileMetaData(fp, metric);
   fprintf(fp, "\n");
   fflush(fp);
   writeFunctionData(fp, tid, metric, inFuncs, numFuncs);
@@ -1773,6 +1773,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.178 $   $Date: 2008/03/11 00:36:35 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.178 2008/03/11 00:36:35 amorris Exp $ 
+ * $Revision: 1.179 $   $Date: 2008/03/11 22:26:53 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.179 2008/03/11 22:26:53 amorris Exp $ 
  ***************************************************************************/
