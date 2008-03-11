@@ -4845,6 +4845,7 @@ then
   cp ${tauroot}/tools/src/paraprof/bin/$paraprofjar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/perfexplorer/perfexplorer.jar ${tauroot}/${architecture}/lib
+  cp ${tauroot}/tools/src/perfexplorer/perfexplorer-1.4.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/vis/bin/vis.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/common/bin/tau-common.jar ${tauroot}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jargs.jar ${tauroot}/${architecture}/lib
@@ -4942,6 +4943,7 @@ else
   cp ${tauroot}/tools/src/paraprof/bin/$paraprofjar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/perfexplorer/perfexplorer.jar ${tauprefix}/${architecture}/lib
+  cp ${tauroot}/tools/src/perfexplorer/perfexplorer-1.4.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/vis/bin/vis.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/common/bin/tau-common.jar ${tauprefix}/${architecture}/lib
   cp ${tauroot}/tools/src/contrib/jargs.jar ${tauprefix}/${architecture}/lib

@@ -1,6 +1,6 @@
 #!/bin/@SHELL@
 
-# $Id: perfexplorer_configure.skel,v 1.9 2008/03/05 01:06:23 khuck Exp $
+# $Id: perfexplorer_configure.skel,v 1.10 2008/03/11 18:06:53 khuck Exp $
 # $Name:  $
 
 rm -f .last_config
@@ -25,6 +25,7 @@ registryport=1099
 configdir=$HOME/.ParaProf
 tmpdir=/tmp
 LIBDIR=${tauroot}/${architecture}/lib
+PERFEXPLORER_JAR=${LIBDIR}/perfexplorer.jar
 
 # check for right java version
 
@@ -33,8 +34,11 @@ if [ $test == "failed" ] ; then
 	echo ""
 	echo "Java 1.5 or newer is required to run PerfExplorer."
 	echo "Please update your Java SDK to a newer version to use PerfExplorer."
+	echo "You will still be able to use PerfExplorer 1.0, from the TAU v2.17 release."
+	HIBERNATE_JARS=
+	JBOSS_RULES_JARS=
+	PERFEXPLORER_JAR=${LIBDIR}/perfexplorer-1.4.jar
 	echo ""
-	exit
 fi
 
 # PARSE COMMAND LINE SWITCHES
@@ -312,7 +316,7 @@ fi
 
 # now to test the DB and upload schema (if necessary)
 
-java -Dderby.system.home=${LIBDIR} -cp ${LIBDIR}/perfexplorer.jar:${LIBDIR}/perfdmf.jar:${LIBDIR}/jargs.jar:${JDBC_JAR}:${LIBDIR}/tau-common.jar common.Configure -t ${tauroot} -a ${architecture} -g ${configfile}
+java -Dderby.system.home=${LIBDIR} -cp ${PERFEXPLORER_JAR}:${LIBDIR}/perfdmf.jar:${LIBDIR}/jargs.jar:${JDBC_JAR}:${LIBDIR}/tau-common.jar common.Configure -t ${tauroot} -a ${architecture} -g ${configfile}
 
 
 
