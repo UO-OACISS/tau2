@@ -529,7 +529,7 @@ public class PerfExplorerActionListener implements ActionListener {
 		if (!theModel.getClusterMethod().equals(AnalysisType.CORRELATION_ANALYSIS))
 			buf.append("\nMax Clusters: " + theModel.getNumberOfClusters());
 		buf.append("\nTrial: " + theModel.toString());
-		buf.append("\n\nPerform clustering with the these options?");
+		buf.append("\n\nPerform " + theModel.getClusterMethod() + " with the these options?");
 		int reply = JOptionPane.showOptionDialog(mainFrame, buf.toString(),
 			"Confirm Analysis",
 			JOptionPane.YES_NO_OPTION, 
