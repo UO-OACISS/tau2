@@ -1125,13 +1125,13 @@ void Profiler::getFunctionValues(const char **inFuncs,
   
 
   int tmpNumberOfCounters;
-  bool * tmpCounterUsedList;
   const char ** tmpCounterList;
 
 #ifndef TAU_MULTIPLE_COUNTERS
   Profiler::theCounterList(&tmpCounterList,
 			   &tmpNumberOfCounters);
 #else
+  bool *tmpCounterUsedList; // not used
   MultipleCounterLayer::theCounterListInternal(&tmpCounterList,
 					       &tmpNumberOfCounters,
 					       &tmpCounterUsedList);
@@ -1168,7 +1168,7 @@ void Profiler::getFunctionValues(const char **inFuncs,
     
     int posCounter = 0;
     for (int m=0; m<MAX_TAU_COUNTERS; m++) {
-      if (tmpCounterUsedList[m]) {
+      if (RtsLayer::getCounterUsed(m)) {
 	(*counterInclusiveValues)[funcPos][posCounter] = fi->getDumpInclusiveValues(tid)[m];
 	(*counterExclusiveValues)[funcPos][posCounter] = fi->getDumpExclusiveValues(tid)[m];
 	posCounter++;
@@ -1547,7 +1547,6 @@ static int matchFunction(FunctionInfo *fi, const char **inFuncs, int numFuncs) {
   if (numFuncs == 0 || inFuncs == NULL) {
     return 0;
   }
-  bool found = false;
   const char *tmpFunctionName = fi->GetName();
   for (int i=0; i<numFuncs; i++) {
     if ((inFuncs != NULL) && (strcmp(inFuncs[i], tmpFunctionName) == 0)) {
@@ -1773,6 +1772,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.179 $   $Date: 2008/03/11 22:26:53 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.179 2008/03/11 22:26:53 amorris Exp $ 
+ * $Revision: 1.180 $   $Date: 2008/03/12 01:28:22 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.180 2008/03/12 01:28:22 amorris Exp $ 
  ***************************************************************************/
