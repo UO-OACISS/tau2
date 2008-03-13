@@ -93,7 +93,7 @@ extern "C" {
   }
 
   int TauEnv_get_throttle() {
-    return env_verbose;
+    return env_throttle;
   }
 
   double TauEnv_get_throttle_numcalls() {
