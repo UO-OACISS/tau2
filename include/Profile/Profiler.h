@@ -72,9 +72,7 @@ int tau_pthread_create (pthread_t *threadp,
 /* This is to get TAU_START/TAU_STOP since some codes just #include <Profile/Profiler.h> */
 #include <TAU.h>
 
-#if (defined (__cplusplus ) && !defined (TAU_USE_C_API))
 
-#include <Profile/ProfileGroups.h>
 
 #ifdef TAU_MULTIPLE_COUNTERS
 #define MAX_TAU_COUNTERS 25
@@ -102,6 +100,9 @@ int tau_pthread_create (pthread_t *threadp,
 
 
 
+#if (defined (__cplusplus ) && !defined (TAU_USE_C_API))
+
+#include <Profile/ProfileGroups.h>
 #include <Profile/TauAPI.h>
 
 #if (defined(PROFILING_ON) || defined(TRACING_ON))
@@ -315,6 +316,6 @@ using tau::Profiler;
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.81 $   $Date: 2008/03/10 20:20:06 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.81 2008/03/10 20:20:06 amorris Exp $ 
+ * $Revision: 1.82 $   $Date: 2008/03/13 02:54:53 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.82 2008/03/13 02:54:53 amorris Exp $ 
  ***************************************************************************/
