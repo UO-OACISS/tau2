@@ -272,6 +272,7 @@ bool RtsLayer::initLocks(void) {
     lockDBcount[i] = 0;
   }
   threadUnLockDB();
+  return true;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -390,8 +391,8 @@ void RtsLayer::UnLockEnv(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: amorris $
- * $Revision: 1.26 $   $Date: 2008/03/13 02:54:11 $
- * VERSION: $Id: RtsThread.cpp,v 1.26 2008/03/13 02:54:11 amorris Exp $
+ * $Revision: 1.27 $   $Date: 2008/03/13 06:42:40 $
+ * VERSION: $Id: RtsThread.cpp,v 1.27 2008/03/13 06:42:40 amorris Exp $
  ***************************************************************************/
 
 
