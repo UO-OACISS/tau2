@@ -4,6 +4,7 @@ import java.rmi.*;
 import common.*;
 import server.PerfExplorerServer;
 import java.util.*;
+
 import javax.swing.*;
 
 public class PerfExplorerConnection {
@@ -383,5 +384,15 @@ public class PerfExplorerConnection {
 		}
 		
 	}
+
+	public List getPotentialAtomicEvents(PerfExplorerModel model) {
+		List events = null;
+		try {
+		    events = server.getPotentialAtomicEvents(model);
+		} catch (RemoteException e) {
+		    handleError(e, "getPotentialEvents(" + model.toString() + ")");
+		}
+		return events;
+    }
 
 }

@@ -47,7 +47,7 @@ import java.util.NoSuchElementException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.65 2008/03/07 20:18:21 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.66 2008/03/13 00:40:44 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -956,6 +956,92 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		return events;
 	}
 
+	/**
+	 * Get the events defined in these profiles.  The client passes in a model
+	 * with one or more experiments selected, and the code will get all the
+	 * events which are common among all trials for those experiemnts.
+	 * 
+	 * @param modelData
+	 * @return List
+	 */
+	public List getPotentialAtomicEvents(RMIPerfExplorerModel modelData) {
+		//PerfExplorerOutput.println("getPotentialEvents()...");
+		List events = new ArrayList();
+		try {
+			DB db = this.getDB();
+			StringBuffer buf = new StringBuffer();
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append("select distinct cast (m.name as VARCHAR(256))");
+			} else {
+				buf.append("select distinct ae.name ");
+			}
+			buf.append(" from atomic_event ae inner join trial t on ae.trial = t.id ");
+			buf.append(" inner join experiment e on t.experiment = e.id ");
+			Object object = modelData.getCurrentSelection();
+			if (object instanceof RMIView) {
+				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
+			} else {
+				List selections = modelData.getMultiSelection();
+				if (selections == null) {
+					// just one selection
+					Object selection = modelData.getCurrentSelection();
+					if (selection instanceof Application) {
+						buf.append(" where e.application = ");
+						buf.append(modelData.getApplication().getID());
+					} else if (selection instanceof Experiment) {
+						buf.append(" where t.experiment = ");
+						buf.append(modelData.getExperiment().getID());
+					} else if (selection instanceof Trial) {
+						buf.append(" where t.id = ");
+						buf.append(modelData.getTrial().getID());
+					}
+				} else {
+					Object selection = modelData.getCurrentSelection();
+					if (selection instanceof Application) {
+						buf.append(" where e.application in (");
+						for (int i = 0 ; i < selections.size() ; i++) {
+							Application app = (Application)selections.get(i);
+							if (i > 0)
+								buf.append(",");
+							buf.append(app.getID());
+						}
+						buf.append(")");
+					} else if (selection instanceof Experiment) {
+						buf.append(" where t.experiment in (");
+						for (int i = 0 ; i < selections.size() ; i++) {
+							Experiment exp = (Experiment)selections.get(i);
+							if (i > 0)
+								buf.append(",");
+							buf.append(exp.getID());
+						}
+						buf.append(")");
+					} else if (selection instanceof Trial) {
+						buf.append(" where t.id in (");
+						for (int i = 0 ; i < selections.size() ; i++) {
+							Trial trial = (Trial)selections.get(i);
+							if (i > 0)
+								buf.append(",");
+							buf.append(trial.getID());
+						}
+						buf.append(")");
+					}
+				}
+			}
+			PreparedStatement statement = db.prepareStatement(buf.toString());
+			//PerfExplorerOutput.println(statement.toString());
+			ResultSet results = statement.executeQuery();
+			while (results.next() != false) {
+				events.add(results.getString(1));
+			}
+			statement.close();
+		} catch (Exception e) {
+			String error = "ERROR: Couldn't select the events from the database!";
+			System.err.println(error);
+			e.printStackTrace();
+		}
+		return events;
+	}
+
 	private static String shortName(String longName) {
 		StringTokenizer st = new StringTokenizer(longName, "(");
 		String shorter = null;
@@ -1599,11 +1685,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				}
 			}
 		}
-		list.add("atomic_location_profile.sample_count");
-		list.add("atomic_location_profile.maximum_value");
-		list.add("atomic_location_profile.minimum_value");
-		list.add("atomic_location_profile.mean_value");
-		list.add("atomic_location_profile.standard_deviation");
 		return list;
 	}
 
@@ -1731,5 +1812,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	public int getSessionCount() {
 		return this.sessions.size();
 	}
+
 }
 

@@ -4,12 +4,13 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
 
+
 /**
  * This is the main RMI object which is used to send requests to the 
  * PerfExplorerServer object.  This interface defines the API for
  * passing requests to the server.
  * 
- * <P>CVS $Id: RMIPerfExplorer.java,v 1.12 2008/03/05 00:28:11 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorer.java,v 1.13 2008/03/13 00:40:44 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -295,5 +296,14 @@ public interface RMIPerfExplorer extends Remote {
      * @throws RemoteException
      */
     public void resetServer() throws RemoteException;
+
+    /**
+    *
+    * @param model
+    * @return
+    * @throws RemoteException
+    */
+   public List getPotentialAtomicEvents(RMIPerfExplorerModel model)
+       throws RemoteException;
 }
 

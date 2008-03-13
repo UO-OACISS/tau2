@@ -85,7 +85,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
    	private JComboBox dimension = new MyJComboBox();
 	private JLabel dimensionXLabel = new JLabel("Cutoff (0<x<100):");
 	private JTextField dimensionXValue = new MyJTextField(5);
-	private JLabel eventLabel = new JLabel("Event:");
+	private JLabel eventLabel = new JLabel("Interval Event:");
    	private JComboBox event = new MyJComboBox();
 	private JLabel metricLabel = new JLabel("Metric:");
    	private JComboBox metric = new MyJComboBox();
@@ -113,9 +113,12 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 
 	private JButton apply = null;
 	private JButton reset = null;
+	private static final String ATOMIC_EVENT_NAME = "atomic_event.name";
 	private static final String INTERVAL_EVENT_NAME = "interval_event.name";
+	private static final String INTERVAL_EVENT_GROUP_NAME = "interval_event.group_name";
 	private static final String MEAN_INCLUSIVE = "mean.inclusive";
 	private static final String MEAN_EXCLUSIVE = "mean.exclusive";
+	private static final String ATOMIC_MEAN_VALUE = "atomic.mean_value";
 
 	public static ChartPane getPane () {
 		if (thePane == null) {
@@ -231,10 +234,22 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 			if (getEvents && !this.mainOnly.isSelected()) {
 				Object obj2 = series.getSelectedItem();
 				String tmp = (String)obj2;
-				if (tmp.equalsIgnoreCase("interval_event.group_name")) {
+				if (tmp.equalsIgnoreCase(INTERVAL_EVENT_GROUP_NAME)) {
 					List events = server.getPotentialGroups(theModel);
 					this.event.addItem("All Groups");
 					this.eventLabel.setText("Group:");
+					this.event.setSelectedIndex(0);
+					for (Iterator itr = events.iterator() ; itr.hasNext() ; ) {
+						String next = (String)itr.next();
+						this.event.addItem(next);
+						if (oldEvent.equals(next))
+							this.event.setSelectedItem(next);
+					}
+				} else if (tmp.equalsIgnoreCase(ATOMIC_EVENT_NAME)) {
+					yaxisValue.setSelectedItem(ATOMIC_MEAN_VALUE);
+					List events = server.getPotentialAtomicEvents(theModel);
+					this.event.addItem("All Atomic Events");
+					this.eventLabel.setText("Atomic Event:");
 					this.event.setSelectedIndex(0);
 					for (Iterator itr = events.iterator() ; itr.hasNext() ; ) {
 						String next = (String)itr.next();
@@ -339,7 +354,8 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		left.add(seriesLabel);
 		series = new MyJComboBox(tableColumns);
 		series.addItem(INTERVAL_EVENT_NAME);
-		series.addItem("interval_event.group_name");
+		series.addItem(INTERVAL_EVENT_GROUP_NAME);
+		series.addItem(ATOMIC_EVENT_NAME);
 		series.addActionListener(this);
 		left.add(series);
 
@@ -372,11 +388,11 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 					"total.subroutines", 
 					"total.inclusive_per_call", 
 					"total.sum_exclusive_squared",
-		"atomic_location_profile.sample_count",
-		"atomic_location_profile.maximum_value",
-		"atomic_location_profile.minimum_value",
-		"atomic_location_profile.mean_value",
-		"atomic_location_profile.standard_deviation"
+					"atomic.sample_count",
+					"atomic.maximum_value",
+					"atomic.minimum_value",
+					"atomic.mean_value",
+					"atomic.standard_deviation"
 					};
 		yaxisValue = new MyJComboBox(valueOptions);
 		this.yaxisValue.addActionListener(this);
@@ -458,7 +474,14 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		// title
 		String title = chartTitle.getText();
 		if (title.length() == 0) { 
-			title = (String)metric.getSelectedItem();
+            Object obj = this.series.getSelectedItem();
+			String tmp = (String)obj;
+			if (tmp.equalsIgnoreCase(ATOMIC_EVENT_NAME)) {
+				title = (String)event.getSelectedItem();
+				title = title + " : " + (String)yaxisValue.getSelectedItem();
+			} else {
+				title = (String)metric.getSelectedItem();
+			}
 		}
     	facade.setChartTitle(title);
 
@@ -501,27 +524,37 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		// y axis
     	obj = yaxisValue.getSelectedItem();
 		tmp = (String)obj;
-		tmp = tmp.replaceAll("mean", "interval_mean_summary");
-		tmp = tmp.replaceAll("total", "interval_total_summary");
+		if (tmp.startsWith("atomic")) {
+			tmp = tmp.replaceAll("atomic", "atomic_location_profile");
+		} else {
+			tmp = tmp.replaceAll("mean", "interval_mean_summary");
+			tmp = tmp.replaceAll("total", "interval_total_summary");
+		}
 		String operation = "avg";
     	if (!this.mainOnly.isSelected()) {
 			obj = this.series.getSelectedItem();
 			tmp2 = (String)obj;
-			if (tmp2.equalsIgnoreCase("interval_event.group_name")) {
+			if (tmp2.equalsIgnoreCase(INTERVAL_EVENT_GROUP_NAME)) {
 				operation = "sum";
 			}
 		}
 		tmp = operation + "(" + tmp + ")";
 		label = yaxisName.getText();
 		if (label == null || label.length() == 0) {
-			// build something intelligible
-			//label = tmp;
-			if (tmp.indexOf("mean") >= 0) {
-				label = "Mean " + (String)this.metric.getSelectedItem();
-			} else if (tmp.indexOf("total") >= 0) {
-				label = "Total " + (String)this.metric.getSelectedItem();
+            obj = this.series.getSelectedItem();
+			String tmp3 = (String)obj;
+			if (tmp3.equalsIgnoreCase(ATOMIC_EVENT_NAME)) {
+				label = (String)yaxisValue.getSelectedItem();
 			} else {
-				label = (String)this.metric.getSelectedItem();
+				// build something intelligible
+				//label = tmp;
+				if (tmp.indexOf("mean") >= 0) {
+					label = "Mean " + (String)this.metric.getSelectedItem();
+				} else if (tmp.indexOf("total") >= 0) {
+					label = "Total " + (String)this.metric.getSelectedItem();
+				} else {
+					label = (String)this.metric.getSelectedItem();
+				}
 			}
 		}
 		label += " - "  + (String)this.units.getSelectedItem();
@@ -569,13 +602,21 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 				} else {
 					facade.setEventName(null);
 				}
-			} else if (tmp.equalsIgnoreCase("interval_event.group_name")) {
+			} else if (tmp.equalsIgnoreCase(INTERVAL_EVENT_GROUP_NAME)) {
 				obj = this.event.getSelectedItem();
 				tmp = (String)obj;
 				if (!tmp.equals("All Groups")) {
 					facade.setGroupName(tmp);
 				} else {
 					facade.setGroupName(null);
+				}
+			} else if (tmp.equalsIgnoreCase(ATOMIC_EVENT_NAME)) {
+				obj = this.event.getSelectedItem();
+				tmp = (String)obj;
+				if (!tmp.equals("All Atomic Events")) {
+					facade.setEventName(tmp);
+				} else {
+					facade.setEventName(null);
 				}
 			}
 		}
@@ -662,8 +703,21 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 				this.xmlName.setEnabled(false);
 			}
 			if (tmp.equalsIgnoreCase(INTERVAL_EVENT_NAME) ||
-				tmp.equalsIgnoreCase("interval_event.group_name")) {
+					tmp.equalsIgnoreCase(INTERVAL_EVENT_GROUP_NAME)) {
 				refreshDynamicControls(false, true, false);
+			}
+			if (tmp.equalsIgnoreCase(ATOMIC_EVENT_NAME)) {
+				this.metricLabel.setEnabled(false);
+				this.metric.setEnabled(false);
+				this.dimensionLabel.setEnabled(false);
+				this.dimension.setEnabled(false);
+				refreshDynamicControls(false, true, false);
+				this.units.setSelectedIndex(5);  // change to "units"
+			} else {
+				this.metricLabel.setEnabled(true);
+				this.metric.setEnabled(true);
+				this.dimensionLabel.setEnabled(true);
+				this.dimension.setEnabled(true);
 			}
 		}
 		drawChart();
