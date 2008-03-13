@@ -176,19 +176,10 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 	//Add function name to the name list.
 	Profiler::theFunctionList(NULL, NULL, true, (const char *)GetName());
 
-        if (InitData) 
-        {
-	  SetAlreadyOnStack(false, tid);
-      	  for (int i=0; i < TAU_MAX_THREADS; i++)
-   	  {
-// don't initialize NumCalls and AlreadyOnStack as there could be 
-// data corruption. Inspite of the lock, while one thread is being 
-// initialized, other thread may have started executing and setting 
-// these values? 
+        if (InitData) {
+      	  for (int i=0; i < TAU_MAX_THREADS; i++) {
      	    NumCalls[i] = 0;
-#ifdef JAVA
 	    SetAlreadyOnStack(false, i);
-#endif /* JAVA  */
      	    NumSubrs[i] = 0;
 #ifndef TAU_MULTIPLE_COUNTERS
 	    ExclTime[i] = 0;
@@ -460,18 +451,18 @@ void tauCreateFI(FunctionInfo **ptr, const char *name, const char *type,
 
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::LockEnv();
+      RtsLayer::LockDB();
 #else
-    RtsLayer::LockEnv();
+    RtsLayer::LockDB();
 #endif
     if (*ptr == 0) {
       *ptr = new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
     }
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::UnLockEnv();
+      RtsLayer::UnLockDB();
 #else
-    RtsLayer::UnLockEnv();
+    RtsLayer::UnLockDB();
 #endif
 
   }
@@ -482,18 +473,18 @@ void tauCreateFI(FunctionInfo **ptr, const char *name, const string& type,
   if (*ptr == 0) {
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::LockEnv();
+      RtsLayer::LockDB();
 #else
-    RtsLayer::LockEnv();
+    RtsLayer::LockDB();
 #endif
     if (*ptr == 0) {
       *ptr = new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
     }
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::UnLockEnv();
+      RtsLayer::UnLockDB();
 #else
-    RtsLayer::UnLockEnv();
+    RtsLayer::UnLockDB();
 #endif
   }
 }
@@ -503,18 +494,18 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const char *type,
   if (*ptr == 0) {
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::LockEnv();
+      RtsLayer::LockDB();
 #else
-    RtsLayer::LockEnv();
+    RtsLayer::LockDB();
 #endif
     if (*ptr == 0) {
       *ptr = new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
     }
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::UnLockEnv();
+      RtsLayer::UnLockDB();
 #else
-    RtsLayer::UnLockEnv();
+    RtsLayer::UnLockDB();
 #endif
   }
 }
@@ -524,23 +515,23 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
   if (*ptr == 0) {
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::LockEnv();
+      RtsLayer::LockDB();
 #else
-    RtsLayer::LockEnv();
+    RtsLayer::LockDB();
 #endif
     if (*ptr == 0) {
       *ptr = new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
     }
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::UnLockEnv();
+      RtsLayer::UnLockDB();
 #else
-    RtsLayer::UnLockEnv();
+    RtsLayer::UnLockDB();
 #endif
   }
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.50 $   $Date: 2008/03/10 00:16:33 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.50 2008/03/10 00:16:33 amorris Exp $ 
+ * $Revision: 1.51 $   $Date: 2008/03/13 03:02:55 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.51 2008/03/13 03:02:55 amorris Exp $ 
  ***************************************************************************/
