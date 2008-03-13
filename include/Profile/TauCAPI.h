@@ -172,23 +172,23 @@ extern "C" {
 #define TAU_STATIC_PHASE_START(name) Tau_static_phase_start(name)
 #define TAU_STATIC_PHASE_STOP(name)  Tau_static_phase_stop(name)
 #define TAU_DYNAMIC_PHASE_START(name) \
-{ static int tau_counter=1; \
-  Tau_dynamic_start(name, tau_counter++, 1); \
+{ static void *tau_counter=NULL; \
+  Tau_dynamic_start(name, &tau_counter, 1); \
 }
 
 #define TAU_DYNAMIC_PHASE_STOP(name) \
-{ static int tau_counter=1; \
-  Tau_dynamic_stop(name, tau_counter++, 1); \
+{ static void *tau_counter=NULL; \
+  Tau_dynamic_stop(name, &tau_counter, 1); \
 }
 
 #define TAU_DYNAMIC_TIMER_START(name) \
-{ static int tau_counter=1; \
-  Tau_dynamic_start(name, tau_counter++, 0); \
+{ static void *tau_counter=NULL; \
+  Tau_dynamic_start(name, &tau_counter, 0); \
 }
 
 #define TAU_DYNAMIC_TIMER_STOP(name) \
-{ static int tau_counter=1; \
-  Tau_dynamic_stop(name, tau_counter++, 0); \
+{ static void *tau_counter=NULL; \
+  Tau_dynamic_stop(name, &tau_counter, 0); \
 }
 
 #define TAU_GLOBAL_PHASE(timer, name, type, group) void * TauGlobalPhase##timer(void) \
@@ -302,110 +302,11 @@ extern void Tau_profile_snapshot(char *name);
 extern void Tau_profile_snapshot_1l(char *name, int number);
 extern void TAUDECL Tau_metadata(char *name, char *value);
 
-extern void Tau_dynamic_start(char *name, int tau_counter, int isPhase); 
-extern void Tau_dynamic_stop(char *name, int tau_counter, int isPhase); 
+extern void Tau_dynamic_start(char *name, void *tau_counter, int isPhase); 
+extern void Tau_dynamic_stop(char *name, void *tau_counter, int isPhase); 
 extern void Tau_static_phase_start(char *name);
 extern void Tau_static_phase_stop(char *name);
 extern void Tau_profile_dynamic_auto(int iteration, void **ptr, char *fname, char *type, TauGroup_t group, char *group_name, int isPhase);
-
-
-
-
-#else /* PROFILING_ON */
-/* In the absence of profiling, define the functions as null */
-#define TYPE_STRING(profileString, str)
-#define PROFILED_BLOCK(name, type)
-
-#define TAU_TYPE_STRING(profileString, str)
-#define TAU_PROFILE(name, type, group)
-#define TAU_PROFILE_TIMER(var, name, type, group)
-#define TAU_PROFILE_START(var)
-#define TAU_PROFILE_STOP(var)
-#define TAU_PROFILE_STMT(stmt)
-#define TAU_PROFILE_EXIT(msg)
-#define TAU_PROFILE_INIT(argc, argv)
-#define TAU_INIT(argc, argv)			
-#define TAU_PROFILE_SET_NODE(node)
-#define TAU_PROFILE_SET_CONTEXT(context)
-#define TAU_PROFILE_CALLSTACK()
-#define TAU_DB_DUMP()
-#define TAU_DB_DUMP_PREFIX()              
-#define TAU_DB_DUMP_INCR()
-#define TAU_DB_PURGE()
-#define TAU_GET_FUNC_NAMES(functionList, num)
-#define TAU_DUMP_FUNC_NAMES()
-#define TAU_GET_COUNTER_NAMES(counterList, num)
-#define TAU_GET_FUNC_VALS(v1,v2,v3,v4,v5,v6,v7,v8)
-#define TAU_DUMP_FUNC_VALS(functionList, num)
-#define TAU_DUMP_FUNC_VALS_incr(functionList, num)
-
-#define TAU_REGISTER_EVENT(event, name)
-#define TAU_EVENT(event, data)
-#define TAU_EVENT_SET_NAME(event, name)
-#define TAU_REPORT_STATISTICS()
-#define TAU_REPORT_THREAD_STATISTICS()
-#define TAU_EVENT_DISABLE_MIN(event)
-#define TAU_EVENT_DISABLE_MAX(event)
-#define TAU_EVENT_DISABLE_MEAN(event)
-#define TAU_EVENT_DISABLE_STDDEV(event)
-#define TAU_STORE_ALL_EVENTS
-#define TAU_REGISTER_THREAD()
-#define TAU_REGISTER_FORK(nodeid, op) 		
-#define TAU_ENABLE_INSTRUMENTATION()	
-#define TAU_DISABLE_INSTRUMENTATION()
-#define TAU_ENABLE_GROUP(group)	
-#define TAU_DISABLE_GROUP(group)
-#define TAU_ENABLE_GROUP_NAME(group)            
-#define TAU_DISABLE_GROUP_NAME(group)          
-#define TAU_GET_PROFILE_GROUP(group) 
-#define TAU_BCAST_DATA(data)  	
-#define TAU_REDUCE_DATA(data)  
-#define TAU_ALLREDUCE_DATA(data)  
-#define TAU_ALLTOALL_DATA(data)
-#define TAU_SCATTER_DATA(data)
-#define TAU_GATHER_DATA(data)
-#define TAU_ALLGATHER_DATA(data)
-#define TAU_ENABLE_TRACKING_MEMORY()
-#define TAU_DISABLE_TRACKING_MEMORY()
-#define TAU_TRACK_MEMORY()
-#define TAU_TRACK_MEMORY_HERE()
-#define TAU_ENABLE_TRACKING_MUSE_EVENTS()	
-#define TAU_DISABLE_TRACKING_MUSE_EVENTS()
-#define TAU_TRACK_MUSE_EVENTS()		
-#define TAU_SET_INTERRUPT_INTERVAL(value)
-
-#define CT(obj)
-
-#define TAU_PHASE_CREATE_STATIC(var, name, type, group) 
-#define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group) 
-#define TAU_PROFILE_TIMER_DYNAMIC(var, name, type, group) 
-#define TAU_PHASE_START(var) 
-#define TAU_PHASE_STOP(var) 
-#define TAU_STATIC_PHASE_START(name) 
-#define TAU_STATIC_PHASE_STOP(name) 
-#define TAU_DYNAMIC_PHASE_START(name)
-#define TAU_DYNAMIC_PHASE_STOP(name) 
-#define TAU_GLOBAL_PHASE(timer, name, type, group) 
-#define TAU_GLOBAL_PHASE_START(timer) 
-#define TAU_GLOBAL_PHASE_STOP(timer)  
-#define TAU_GLOBAL_PHASE_EXTERNAL(timer) 
-#define TAU_GLOBAL_TIMER(timer, name, type, group)
-#define TAU_GLOBAL_TIMER_EXTERNAL(timer)
-#define TAU_GLOBAL_TIMER_START(timer)
-#define TAU_GLOBAL_TIMER_STOP()
-#define TAU_PROFILE_PARAM1L(b,c)  	
-
-/* extensions to the PHASE/TIMER API */
-#define TAU_DYNAMIC_PHASE(name, type, group)
-#define TAU_STATIC_PHASE_START(name)
-#define TAU_STATIC_PHASE_STOP(name)
-#define TAU_DYNAMIC_PHASE_START(name)
-#define TAU_DYNAMIC_PHASE_STOP(name)
-#define TAU_DYNAMIC_TIMER_START(name)
-#define TAU_DYNAMIC_TIMER_STOP(name)
-#define TAU_PROFILE_CREATE_DYNAMIC_AUTO(var, name, type, group)
-
-
 
 #endif /* PROFILING_ON */
 
@@ -435,8 +336,8 @@ extern void Tau_profile_dynamic_auto(int iteration, void **ptr, char *fname, cha
 #endif /* _TAU_CAPI_H_ */
 
 /***************************************************************************
- * $RCSfile: TauCAPI.h,v $   $Author: khuck $
- * $Revision: 1.50 $   $Date: 2008/03/06 01:03:15 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.50 2008/03/06 01:03:15 khuck Exp $
+ * $RCSfile: TauCAPI.h,v $   $Author: amorris $
+ * $Revision: 1.51 $   $Date: 2008/03/13 03:00:50 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.51 2008/03/13 03:00:50 amorris Exp $
  ***************************************************************************/
 

@@ -47,8 +47,8 @@ extern "C" char * Tau_phase_enable(const char *group);
 extern "C" void Tau_profile_snapshot(char *name);
 extern "C" void Tau_metadata(char *name, char *value);
 extern "C" void Tau_profile_snapshot_1l(char *name, int number);
-extern "C" void Tau_dynamic_start(char *name, int tau_counter, int isPhase); 
-extern "C" void Tau_dynamic_stop(char *name, int tau_counter, int isPhase); 
+extern "C" void Tau_dynamic_start(char *name, void *tau_counter, int isPhase); 
+extern "C" void Tau_dynamic_stop(char *name, void *tau_counter, int isPhase); 
 extern "C" void Tau_static_phase_start(char *name);
 extern "C" void Tau_static_phase_stop(char *name);
 
@@ -99,13 +99,13 @@ extern "C" void Tau_static_phase_stop(char *name);
 #define TAU_STATIC_PHASE_START(name) Tau_static_phase_start(name)
 #define TAU_STATIC_PHASE_STOP(name)  Tau_static_phase_stop(name)
 #define TAU_DYNAMIC_PHASE_START(name) \
-{ static int tau_counter=1; \
-  Tau_dynamic_start(name, tau_counter++, 1); \
+{ static void *tau_counter=NULL; \
+  Tau_dynamic_start(name, &tau_counter, 1); \
 }
 
 #define TAU_DYNAMIC_PHASE_STOP(name) \
-{ static int tau_counter=1; \
-  Tau_dynamic_stop(name, tau_counter++, 1); \
+{ static void *tau_counter=NULL; \
+  Tau_dynamic_stop(name, &tau_counter, 1); \
 }
 #else
 #define TAU_DYNAMIC_PHASE TAU_DYNAMIC_PROFILE
@@ -116,13 +116,13 @@ extern "C" void Tau_static_phase_stop(char *name);
 #endif /* TAU_PROFILEPHASE */
 
 #define TAU_DYNAMIC_TIMER_START(name) \
-{ static int tau_counter=1; \
-  Tau_dynamic_start(name, tau_counter++, 0); \
+{ static void *tau_counter=NULL; \
+  Tau_dynamic_start(name, &tau_counter, 0); \
 }
 
 #define TAU_DYNAMIC_TIMER_STOP(name) \
-{ static int tau_counter=1; \
-  Tau_dynamic_stop(name, tau_counter++, 0); \
+{ static void *tau_counter=NULL; \
+  Tau_dynamic_stop(name, &tau_counter, 0); \
 }
 
 #define TAU_PROFILE_TIMER(var, name, type, group) \
@@ -234,13 +234,13 @@ or tauFI->method();
 #define TAU_STATIC_PHASE_START(name) Tau_static_phase_start(name)
 #define TAU_STATIC_PHASE_STOP(name)  Tau_static_phase_stop(name)
 #define TAU_DYNAMIC_PHASE_START(name) \
-{ static int tau_counter=1; \
-  Tau_dynamic_start(name, tau_counter++, 1); \
+{ static void *tau_counter=NULL; \
+  Tau_dynamic_start(name, &tau_counter, 1); \
 }
 
 #define TAU_DYNAMIC_PHASE_STOP(name) \
-{ static int tau_counter=1; \
-  Tau_dynamic_stop(name, tau_counter++, 1); \
+{ static void *tau_counter=NULL; \
+  Tau_dynamic_stop(name, &tau_counter, 1); \
 }
 #else
 #define TAU_DYNAMIC_PHASE TAU_DYNAMIC_PROFILE
@@ -251,13 +251,13 @@ or tauFI->method();
 #endif /* TAU_PROFILEPHASE */
 
 #define TAU_DYNAMIC_TIMER_START(name) \
-{ static int tau_counter=1; \
-  Tau_dynamic_start(name, tau_counter++, 0); \
+{ static void *tau_counter=NULL; \
+  Tau_dynamic_start(name, &tau_counter, 0); \
 }
 
 #define TAU_DYNAMIC_TIMER_STOP(name) \
-{ static int tau_counter=1; \
-  Tau_dynamic_stop(name, tau_counter++, 0); \
+{ static void *tau_counter=NULL; \
+  Tau_dynamic_stop(name, &tau_counter, 0); \
 }
 
 #define TAU_PROFILE_TIMER(var, name, type, group) \
@@ -479,105 +479,6 @@ or tauFI->method();
 #define CT(obj) RtsLayer::GetRTTI(typeid(obj).name())
 #endif //NO_RTTI
 
-#else /* PROFILING_ON */
-/* In the absence of profiling, define the functions as null */
-#define TYPE_STRING(profileString, str)
-#define PROFILED_BLOCK(name, type) 
-
-#define TAU_TYPE_STRING(profileString, str) 
-#define TAU_PROFILE(name, type, group) 
-#define TAU_PROFILE_TIMER(var, name, type, group)
-#define TAU_PROFILE_START(var)
-#define TAU_PROFILE_STOP(var)
-#define TAU_PROFILE_STMT(stmt) 
-#define TAU_PROFILE_EXIT(msg)
-#define TAU_PROFILE_INIT(argc, argv)
-#define TAU_INIT(argc, argv) 
-#define TAU_PROFILE_SET_NODE(node)
-#define TAU_PROFILE_SET_CONTEXT(context)
-#define TAU_PROFILE_SET_GROUP_NAME(newname)
-#define TAU_PROFILE_TIMER_SET_GROUP_NAME(t, newname)
-#define TAU_PROFILE_TIMER_SET_NAME(t, newname)
-#define TAU_PROFILE_TIMER_SET_TYPE(t, newname)
-#define TAU_PROFILE_TIMER_SET_GROUP(t, id)
-#define TAU_PROFILE_CALLSTACK()    
-#define TAU_DB_DUMP()
-#define TAU_DB_DUMP_PREFIX(prefix) 
-#define TAU_DB_DUMP_INCR()
-#define TAU_DB_PURGE()
-#define TAU_GET_FUNC_NAMES(functionList, num)
-#define TAU_DUMP_FUNC_NAMES()
-#define TAU_GET_COUNTER_NAMES(counterList, num)
-#define TAU_GET_FUNC_VALS(v1,v2,v3,v4,v5,v6,v7,v8)
-#define TAU_DUMP_FUNC_VALS(v1,v2)
-#define TAU_DUMP_FUNC_VALS_INCR(v1,v2)
-
-#define TAU_REGISTER_EVENT(event, name)
-#define TAU_EVENT(event, data)
-#define TAU_EVENT_SET_NAME(event, name) 	
-#define TAU_EVENT_DISABLE_MIN(event)
-#define TAU_EVENT_DISABLE_MAX(event)
-#define TAU_EVENT_DISABLE_MEAN(event)
-#define TAU_EVENT_DISABLE_STDDEV(event)
-#define TAU_REPORT_STATISTICS()
-#define TAU_REPORT_THREAD_STATISTICS()
-#define TAU_REGISTER_THREAD()
-#define TAU_REGISTER_FORK(id, op) 
-#define TAU_ENABLE_INSTRUMENTATION() 		
-#define TAU_DISABLE_INSTRUMENTATION() 	
-#define TAU_ENABLE_GROUP(group)
-#define TAU_DISABLE_GROUP(group)
-#define TAU_ENABLE_GROUP_NAME(group)
-#define TAU_DISABLE_GROUP_NAME(group)
-#define TAU_ENABLE_ALL_GROUPS()			
-#define TAU_DISABLE_ALL_GROUPS()	
-#define TAU_ENABLE_TRACKING_MEMORY()
-#define TAU_DISABLE_TRACKING_MEMORY()
-#define TAU_TRACK_MEMORY()
-#define TAU_TRACK_MEMORY_HERE()
-#define TAU_ENABLE_TRACKING_MUSE_EVENTS()	
-#define TAU_DISABLE_TRACKING_MUSE_EVENTS()
-#define TAU_TRACK_MUSE_EVENTS()		
-#define TAU_SET_INTERRUPT_INTERVAL(value)
-
-#define TAU_PHASE_CREATE_STATIC(var, name, type, group) 
-#define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group) 
-#define TAU_PHASE_START(var) 
-#define TAU_PHASE_STOP(var) 
-#define TAU_GLOBAL_PHASE(timer, name, type, group) 
-#define TAU_GLOBAL_PHASE_START(timer) 
-#define TAU_GLOBAL_PHASE_STOP(timer)  
-#define TAU_GLOBAL_PHASE_EXTERNAL(timer) 
-#define TAU_GLOBAL_TIMER(timer, name, type, group)
-#define TAU_GLOBAL_TIMER_EXTERNAL(timer)
-#define TAU_GLOBAL_TIMER_START(timer)
-#define TAU_GLOBAL_TIMER_STOP()
-
-#define TAU_REGISTER_CONTEXT_EVENT(event, name)
-#define TAU_CONTEXT_EVENT(event, data)
-#define TAU_DISABLE_CONTEXT_EVENT(event)
-#define TAU_ENABLE_CONTEXT_EVENT(event)
-#define TAU_PROFILE_PARAM1L(b,c)  
-#define TAU_TRACK_NEW(expr, size) 		expr
-#define TAU_TRACK_DELETE(expr, variable) 	expr
-
-
-#define TAU_PROFILE_SNAPSHOT(name)
-#define TAU_PROFILE_SNAPSHOT_1L(name, expr)
-
-/* extensions to the PHASE/TIMER API */
-#define TAU_DYNAMIC_PHASE(name, type, group)
-#define TAU_DYNAMIC_PROFILE(name, type, group)
-#define TAU_STATIC_PHASE_START(name)
-#define TAU_STATIC_PHASE_STOP(name) 
-#define TAU_DYNAMIC_PHASE_START(name) 
-#define TAU_DYNAMIC_PHASE_STOP(name) 
-#define TAU_DYNAMIC_TIMER_START(name)
-#define TAU_DYNAMIC_TIMER_STOP(name)
-#define TAU_PROFILE_CREATE_DYNAMIC(var, name, type, group) 
-
-#define CT(obj)
-
 #endif /* PROFILING_ON */
 
 #ifdef TRACING_ON
@@ -605,6 +506,6 @@ or tauFI->method();
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.65 $   $Date: 2007/11/17 18:27:41 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.65 2007/11/17 18:27:41 amorris Exp $ 
+ * $Revision: 1.66 $   $Date: 2008/03/13 03:00:50 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.66 2008/03/13 03:00:50 amorris Exp $ 
  ***************************************************************************/
