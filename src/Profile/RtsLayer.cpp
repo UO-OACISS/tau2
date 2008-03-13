@@ -748,18 +748,19 @@ int RtsLayer::getPid() {
   #endif
 }
 
-
-#ifdef __linux
-#include <sys/types.h>
-#include <linux/unistd.h>
-_syscall0(pid_t,gettid)
-#endif
+// IA64 doesn't like this, commented out for now, it was only for debugging anyway
+// #ifdef __linux
+// #include <sys/types.h>
+// #include <linux/unistd.h>
+// _syscall0(pid_t,gettid)
+// #endif
 
 int RtsLayer::getTid() {
 #ifdef __linux
-  return gettid();
+  //  return gettid();
+  return 0;
 #else
-   return 0;
+  return 0;
 #endif
 }
 
@@ -1538,6 +1539,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.98 $   $Date: 2008/03/13 02:54:11 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.98 2008/03/13 02:54:11 amorris Exp $ 
+ * $Revision: 1.99 $   $Date: 2008/03/13 06:45:03 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.99 2008/03/13 06:45:03 amorris Exp $ 
  ***************************************************************************/
