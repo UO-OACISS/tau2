@@ -114,8 +114,13 @@ extern "C" int Tau_stop_timer(void * function_info)
 */
     if (p->ThisFunction != f)
     {
-      printf("TAU: Runtime overlap in timers: %s and %s\n",
-        p->ThisFunction->GetName(), f->GetName());
+//       printf("TAU: Runtime overlap in timers: %s (%p) and %s (%p)\n",
+// 	     p->ThisFunction->GetName(), p->ThisFunction, f->GetName(), f);
+
+
+      printf("[%d:%d-%d] TAU: Runtime overlap: found %s (%p) on the stack, but stop called on %s (%p)\n", 
+	     RtsLayer::getPid(), RtsLayer::getTid(), RtsLayer::myThread(),
+	     p->ThisFunction->GetName(), p->ThisFunction, f->GetName(), f);
     }
     p->Stop();
     delete p;
@@ -821,44 +826,80 @@ extern "C" void Tau_static_phase_stop(char *name) {
 }
 
 /* isPhase argument is 1 for phase and 0 for timer */
-extern "C" void Tau_dynamic_start(char *name, int iteration, int isPhase)
+extern "C" void Tau_dynamic_start(char *name, void *iteration, int isPhase)
 {
+  int **iterationList = (int**) iteration;
+  if (*iterationList == NULL) {
+    RtsLayer::LockEnv();
+    if (*iterationList == NULL) {
+      *iterationList = new int[TAU_MAX_THREADS];
+      for (int i=0; i<TAU_MAX_THREADS; i++) {
+	(*iterationList)[i] = 0;
+      }
+    }
+    RtsLayer::UnLockEnv();
+  }
+  int tid = RtsLayer::myThread();
+  int itcount = (*iterationList)[tid]++;
+
   FunctionInfo *fi = 0;
-  char *newName = Tau_append_iteration_to_name(iteration, name);
+  char *newName = Tau_append_iteration_to_name(itcount, name);
   string n (newName);
   free(newName);
 #ifdef DEBUG_PROF
   printf("Checking for %s: iteration = %d\n", n.c_str(), iteration);
 #endif /* DEBUG_PROF */
-
+  
+  RtsLayer::LockDB();
   map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
   if (it == ThePureMap().end()) {
-    if (isPhase)
+    if (isPhase) {
       tauCreateFI(&fi,n,"",TAU_USER,"TAU_USER | TAU_PHASE");
-    else
+    } else {
       tauCreateFI(&fi,n,"",TAU_USER,"TAU_USER");
+    }
     ThePureMap()[n] = fi;
   } else {
     fi = (*it).second;
   }   
+  RtsLayer::UnLockDB();
   Tau_start_timer(fi,isPhase);
 }
 
 
 /* isPhase argument is ignored in Tau_dynamic_stop. For consistency with
    Tau_dynamic_start. */
-extern "C" void Tau_dynamic_stop(char *name, int iteration, int isPhase) {
+extern "C" void Tau_dynamic_stop(char *name, void *iteration, int isPhase) {
+  int **iterationList = (int**) iteration;
+
+  if (*iterationList == NULL) {
+    RtsLayer::LockEnv();
+    if (*iterationList == NULL) {
+      *iterationList = new int[TAU_MAX_THREADS];
+      for (int i=0; i<TAU_MAX_THREADS; i++) {
+	(*iterationList)[i] = 0;
+      }
+    }
+    RtsLayer::UnLockEnv();
+  }
+  int tid = RtsLayer::myThread();
+  int itcount = (*iterationList)[tid]++;
+
   FunctionInfo *fi;   
-  char *newName = Tau_append_iteration_to_name(iteration, name);
+  char *newName = Tau_append_iteration_to_name(itcount, name);
   string n (newName);
   free(newName);
+  RtsLayer::LockDB();
   map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
   if (it == ThePureMap().end()) {
     fprintf (stderr, "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\nTAU Error: You will likely get an overlapping timer message next\n\n", name);
+    RtsLayer::UnLockDB();
+    return;
   } else {
     fi = (*it).second;
-    Tau_stop_timer(fi);
   }
+  RtsLayer::UnLockDB();
+  Tau_stop_timer(fi);
 }
 
 
@@ -940,8 +981,8 @@ int *pomp_rd_table = 0;
 #endif
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: khuck $
- * $Revision: 1.72 $   $Date: 2008/03/06 01:03:16 $
- * VERSION: $Id: TauCAPI.cpp,v 1.72 2008/03/06 01:03:16 khuck Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.73 $   $Date: 2008/03/13 03:01:21 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.73 2008/03/13 03:01:21 amorris Exp $
  ***************************************************************************/
 
