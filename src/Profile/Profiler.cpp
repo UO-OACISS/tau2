@@ -242,7 +242,7 @@ void Profiler::EnableAllEventsOnCallStack(int tid, Profiler *current) {
 //////////////////////////////////////////////////////////////////////
 
 void Profiler::Start(int tid) { 
-  //   fprintf (stderr, "[%d:%d-%d] Profiler::Start for %s\n", getpid(), gettid(), tid, ThisFunction->GetName());
+//   fprintf (stderr, "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
   ParentProfiler = CurrentProfiler[tid]; // Timers
 #ifdef TAU_DEPTH_LIMIT
   int userspecifieddepth = TauGetDepthLimit();
@@ -507,7 +507,7 @@ Profiler& Profiler::operator= (const Profiler& X) {
 //////////////////////////////////////////////////////////////////////
 
 void Profiler::Stop(int tid, bool useLastTimeStamp) {
-  //   fprintf (stderr, "[%d:%d-%d] Profiler::Stop for %s\n", getpid(), gettid(), tid, ThisFunction->GetName());
+//   fprintf (stderr, "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
   x_uint64 TimeStamp = 0L; 
   if (CurrentProfiler[tid] == NULL) return;
   
@@ -1772,6 +1772,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.180 $   $Date: 2008/03/12 01:28:22 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.180 2008/03/12 01:28:22 amorris Exp $ 
+ * $Revision: 1.181 $   $Date: 2008/03/13 02:56:01 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.181 2008/03/13 02:56:01 amorris Exp $ 
  ***************************************************************************/
