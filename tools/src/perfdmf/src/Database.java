@@ -25,6 +25,8 @@ public class Database implements Serializable {
     private String metricFieldTypeNames[];
     private String intervalEventFieldNames[];
     private String intervalEventFieldTypeNames[];
+    private String atomicEventFieldNames[];
+    private String atomicEventFieldTypeNames[];
 
     public String[] getAppFieldNames() {
         return appFieldNames;
@@ -199,6 +201,34 @@ public class Database implements Serializable {
 	 */
 	public void setIntervalEventFieldTypeNames(String[] intervalEventFieldTypeNames) {
 		this.intervalEventFieldTypeNames = intervalEventFieldTypeNames;
+	}
+
+	/**
+	 * @return the atomicEventFieldNames
+	 */
+	public String[] getAtomicEventFieldNames() {
+		return atomicEventFieldNames;
+	}
+
+	/**
+	 * @param atomicEventFieldNames the atomicEventFieldNames to set
+	 */
+	public void setAtomicEventFieldNames(String[] atomicEventFieldNames) {
+		this.atomicEventFieldNames = atomicEventFieldNames;
+	}
+
+	/**
+	 * @return the atomicEventFieldTypeNames
+	 */
+	public String[] getAtomicEventFieldTypeNames() {
+		return atomicEventFieldTypeNames;
+	}
+
+	/**
+	 * @param atomicEventFieldTypeNames the atomicEventFieldTypeNames to set
+	 */
+	public void setAtomicEventFieldTypeNames(String[] atomicEventFieldTypeNames) {
+		this.atomicEventFieldTypeNames = atomicEventFieldTypeNames;
 	}
 
 }

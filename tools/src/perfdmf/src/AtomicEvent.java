@@ -1,9 +1,13 @@
 package edu.uoregon.tau.perfdmf;
 
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSetMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Vector;
+import java.util.List;
+import java.util.ArrayList;
 
 import edu.uoregon.tau.perfdmf.database.DB;
 
@@ -18,7 +22,7 @@ import edu.uoregon.tau.perfdmf.database.DB;
  * A atomic event has particular information, including the name of the atomic event, 
  * the TAU group, and the application, experiment and trial IDs.
  *
- * <P>CVS $Id: AtomicEvent.java,v 1.3 2007/05/02 19:43:28 amorris Exp $</P>
+ * <P>CVS $Id: AtomicEvent.java,v 1.4 2008/03/13 23:15:15 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -282,4 +286,74 @@ public class AtomicEvent {
         return newAtomicEventID;
     }
 
+    public static void getMetaData(DB db) {
+        // see if we've already have them
+        // need to load each time in case we are working with a new database. 
+        //        if (Trial.fieldNames != null)
+        //            return;
+
+        try {
+            ResultSet resultSet = null;
+
+            DatabaseMetaData dbMeta = db.getMetaData();
+
+            if ((db.getDBType().compareTo("oracle") == 0) || (db.getDBType().compareTo("derby") == 0)
+                    || (db.getDBType().compareTo("db2") == 0)) {
+                resultSet = dbMeta.getColumns(null, null, "ATOMIC_EVENT", "%");
+            } else {
+                resultSet = dbMeta.getColumns(null, null, "atomic_event", "%");
+            }
+
+            Vector nameList = new Vector();
+            Vector typeList = new Vector();
+            List typeNames = new ArrayList();
+            List columnSizes = new ArrayList();
+            boolean seenID = false;
+
+            ResultSetMetaData md = resultSet.getMetaData();
+            for (int i = 0 ; i < md.getColumnCount() ; i++) {
+            	//System.out.println(md.getColumnName(i));
+            }
+
+            while (resultSet.next() != false) {
+
+                int ctype = resultSet.getInt("DATA_TYPE");
+                String cname = resultSet.getString("COLUMN_NAME");
+                String typename = resultSet.getString("TYPE_NAME");
+                Integer size = new Integer(resultSet.getInt("COLUMN_SIZE"));
+
+                // this code is because of a bug in derby...
+                if (cname.equals("ID")) {
+                    if (!seenID)
+                        seenID = true;
+                    else
+                        break;
+                }
+
+                nameList.add(resultSet.getString("COLUMN_NAME"));
+                typeList.add(new Integer(ctype));
+                typeNames.add(typename);
+                columnSizes.add(size);
+            }
+            resultSet.close();
+
+            String[] fieldNames = new String[nameList.size()];
+            int[] fieldTypes = new int[typeList.size()];
+            String[] fieldTypeNames = new String[typeList.size()];
+            for (int i = 0; i < typeList.size(); i++) {
+                fieldNames[i] = (String) nameList.get(i);
+                fieldTypes[i] = ((Integer) typeList.get(i)).intValue();
+                if (((Integer)columnSizes.get(i)).intValue() > 255) {
+                    fieldTypeNames[i] = (String) typeNames.get(i) + "(" + columnSizes.get(i).toString() + ")";
+                } else {
+                    fieldTypeNames[i] = (String) typeNames.get(i);
+                }
+            }
+
+            db.getDatabase().setAtomicEventFieldNames(fieldNames);
+            db.getDatabase().setAtomicEventFieldTypeNames(fieldTypeNames);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }
