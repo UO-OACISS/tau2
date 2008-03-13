@@ -59,6 +59,9 @@ void TraceCallStack(int tid, Profiler *current);
 #endif //TAUKTAU_SHCTR
 #endif //TAUKTAU
 
+int RtsLayer::lockDBcount[TAU_MAX_THREADS];
+
+
 //////////////////////////////////////////////////////////////////////
 // myNode() returns the current node id (0..N-1)
 //////////////////////////////////////////////////////////////////////
@@ -263,12 +266,37 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
 	 
 	
      
+bool RtsLayer::initLocks(void) {
+  threadLockDB();
+  for (int i=0; i<TAU_MAX_THREADS; i++) {
+    lockDBcount[i] = 0;
+  }
+  threadUnLockDB();
+}
+
 //////////////////////////////////////////////////////////////////////
 // This ensure that the FunctionDB (global) is locked while updating
 //////////////////////////////////////////////////////////////////////
 
-void RtsLayer::LockDB(void)
-{
+void RtsLayer::LockDB(void) {
+  static bool init = initLocks();
+  int tid=myThread();
+  if (lockDBcount[tid] == 0) {
+    threadLockDB();
+  }
+  lockDBcount[tid]++;
+  return;
+}
+
+void RtsLayer::UnLockDB(void) {
+  int tid=myThread();
+  lockDBcount[tid]--;
+  if (lockDBcount[tid] == 0) {
+    threadUnLockDB();
+  }
+}
+
+void RtsLayer::threadLockDB(void) {
 #ifdef PTHREADS
   PthreadLayer::LockDB();
 #elif TAU_SPROC
@@ -283,16 +311,16 @@ void RtsLayer::LockDB(void)
   OpenMPLayer::LockDB();
 #elif TAU_PAPI_THREADS
   PapiThreadLayer::LockDB();
-#endif // PTHREADS
+#endif
   return ; // do nothing if threads are not used
 }
+
 
 
 //////////////////////////////////////////////////////////////////////
 // This ensure that the FunctionDB (global) is locked while updating
 //////////////////////////////////////////////////////////////////////
-void RtsLayer::UnLockDB(void)
-{
+void RtsLayer::threadUnLockDB(void) {
 #ifdef PTHREADS
   PthreadLayer::UnLockDB();
 #elif TAU_SPROC
@@ -307,7 +335,7 @@ void RtsLayer::UnLockDB(void)
   OpenMPLayer::UnLockDB();
 #elif TAU_PAPI_THREADS
   PapiThreadLayer::UnLockDB();
-#endif // PTHREADS
+#endif
   return;
 }
 
@@ -361,9 +389,9 @@ void RtsLayer::UnLockEnv(void)
 
 
 /***************************************************************************
- * $RCSfile: RtsThread.cpp,v $   $Author: anataraj $
- * $Revision: 1.25 $   $Date: 2007/04/19 03:21:45 $
- * VERSION: $Id: RtsThread.cpp,v 1.25 2007/04/19 03:21:45 anataraj Exp $
+ * $RCSfile: RtsThread.cpp,v $   $Author: amorris $
+ * $Revision: 1.26 $   $Date: 2008/03/13 02:54:11 $
+ * VERSION: $Id: RtsThread.cpp,v 1.26 2008/03/13 02:54:11 amorris Exp $
  ***************************************************************************/
 
 

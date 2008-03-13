@@ -117,6 +117,7 @@ public:
   static int myThread(void);
 
   static int getPid();
+  static int getTid();
 
   static void RegisterThread();
 	
@@ -129,11 +130,22 @@ public:
   static void LockEnv(void);
   static void UnLockEnv(void);
 
+
+
+private:
+
+  static void threadLockDB(void);
+  static void threadUnLockDB(void);
+
+  static int lockDBcount[TAU_MAX_THREADS];
+
+  static bool initLocks();
+
 }; 
 
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: amorris $
- * $Revision: 1.24 $   $Date: 2008/03/10 00:13:03 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.24 2008/03/10 00:13:03 amorris Exp $ 
+ * $Revision: 1.25 $   $Date: 2008/03/13 02:54:10 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.25 2008/03/13 02:54:10 amorris Exp $ 
  ***************************************************************************/
