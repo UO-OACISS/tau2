@@ -471,7 +471,7 @@ do
     ;;
 
   -ktau_merge)
-      ktau_merge=yes
+      ktau_merge=no
     shift
     ;;
 
@@ -1275,8 +1275,6 @@ do
     echo "-perflib=<dir> ................. Specify a Perflib[LANL] lib directory."
     echo "-perflibrary=<library> ... Specify a different perflib runtime library."
     echo "-ktau ........................................... Kernel TAU Profiling."
-    echo "-ktau_merge ........................ Kernel TAU Profiling with merging."
-    echo "                                                    user-space profile."
     echo "-ktau_shctr ........................ Kernel TAU Profiling with shared- "
     echo "                                                   OS counters support."
     echo "-ktauinc=<dir> ............... Specify location of Linux Kernel source."
