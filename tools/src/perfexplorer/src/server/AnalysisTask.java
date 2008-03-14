@@ -66,7 +66,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  *
- * <P>CVS $Id: AnalysisTask.java,v 1.10 2008/03/06 17:38:58 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTask.java,v 1.11 2008/03/14 13:59:21 khuck Exp $</P>
  * @author Kevin Huck
  * @version 0.1
  * @since 0.1
@@ -180,7 +180,7 @@ public class AnalysisTask extends TimerTask {
        		FileInputStream inStream2 = new FileInputStream(outfile);
        		statement.setInt(5,(int)outfile.length());
        		statement.setBinaryStream(6,inStream2,(int)outfile.length());
-			statement.setString(7, chartType.toString());
+            statement.setInt(7, Integer.parseInt(chartType.toString()));
 			//PerfExplorerOutput.println(statement.toString());
        		statement.executeUpdate();
        		statement.close();
