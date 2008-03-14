@@ -47,7 +47,7 @@ import java.io.InputStream;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.29 2008/03/14 00:10:25 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.30 2008/03/14 16:58:48 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -679,7 +679,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 				buf.append("order by 1, 2 ");
 			}
 			statement = db.prepareStatement(buf.toString());
-			// System.out.println(buf.toString());
+			//System.out.println(buf.toString());
 			//System.out.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 
@@ -688,9 +688,9 @@ public class GeneralChartData extends RMIGeneralChartData {
 				// System.out.print(results.getString(2) + ", " );
 				// System.out.println(results.getDouble(3));
 				if (db.getDBType().compareTo("derby") == 0) {
-					if (seriesName.startsWith("temp_trial.node_count")) {
+					if (seriesName.startsWith("trial.node_count")) {
 						addRow(Integer.toString(results.getInt(1) * results.getInt(2) * results.getInt(3)), results.getString(4), results.getDouble(5));
-					} else if (xAxisName.startsWith("temp_trial.node_count")) {
+					} else if (xAxisName.startsWith("trial.node_count")) {
 						addRow(results.getString(1), Integer.toString(results.getInt(2) * results.getInt(3) * results.getInt(4)), results.getDouble(5));
 					} else {
 						addRow(results.getString(1), results.getString(2), results.getDouble(3));
