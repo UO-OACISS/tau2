@@ -17,6 +17,7 @@ import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
+import edu.uoregon.tau.perfdmf.AtomicEvent;
 import edu.uoregon.tau.common.Gzip;
 
 import java.sql.PreparedStatement;
@@ -46,7 +47,7 @@ import java.io.InputStream;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.28 2008/03/13 00:40:44 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.29 2008/03/14 00:10:25 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -116,7 +117,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 ////////////////////////////////
 
 			// create and populate the temporary trial table
-			buf = buildCreateTableStatement("trial", "temp_trial", db, true);
+			buf = buildCreateTableStatement("trial", "temp_trial", db, true, false);
    			buf.append("(select trial.* from trial ");
 	        buf.append("inner join experiment ");
 			buf.append("on trial.experiment = experiment.id ");
@@ -199,7 +200,8 @@ public class GeneralChartData extends RMIGeneralChartData {
 			}
 			buf.append(") ");
 			statement = db.prepareStatement(buf.toString());
-			//System.out.println(statement.toString());
+			// System.out.println(buf.toString());
+			// System.out.println(statement.toString());
 			statement.execute();
 			statement.close();
 
@@ -227,13 +229,14 @@ public class GeneralChartData extends RMIGeneralChartData {
 			if (foundXML) {
 				// create and populate the temporary XML_METADATA table
 				buf = buildCreateTableStatement("xml_metadata",
-						"temp_xml_metadata", db, false);
+						"temp_xml_metadata", db, false, false);
 				if (db.getDBType().compareTo("derby") == 0) {
 					buf.append(" (trial int, metadata_name varchar(4000), metadata_value varchar(4000))");
 				} else {
 					buf.append(" (trial int, metadata_name text, metadata_value text)");
 				}
 				statement = db.prepareStatement(buf.toString());
+				// System.out.println(buf.toString());
 				//System.out.println(statement.toString());
 				statement.execute();
 				statement.close();
@@ -299,7 +302,6 @@ public class GeneralChartData extends RMIGeneralChartData {
 					for (int i = 0 ; i < names.getLength() ; i++) {
 						Node name = (Node)names.item(i).getFirstChild();
 						Node value = (Node)values.item(i).getFirstChild();
-						//System.out.println(name.getNodeValue()+" =? "+model.getChartMetadataFieldName());
 						if ((model.getChartMetadataFieldName() == null ||
 					     	model.getChartMetadataFieldName().equals(name.getNodeValue())) &&
 							(model.getChartMetadataFieldValue() == null ||
@@ -314,6 +316,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 							} else {
 								statement2.setString(3, value.getNodeValue());
 							}
+							// System.out.println(buf.toString());
 							//System.out.println(statement2.toString());
 							statement2.executeUpdate();
 							statement2.close();
@@ -331,7 +334,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 
 			// create and populate the temporary metric table
 			if (!model.getChartSeriesName().equals("atomic_event.name")) {
-				buf = buildCreateTableStatement("metric", "temp_metric", db, true);
+				buf = buildCreateTableStatement("metric", "temp_metric", db, true, false);
     			buf.append("(select metric.* from metric ");
 				buf.append("inner join temp_trial ");
 				buf.append("on metric.trial = temp_trial.id ");
@@ -352,7 +355,6 @@ public class GeneralChartData extends RMIGeneralChartData {
 					}
 				}
 				buf.append(") ");
-	//			System.out.println(buf.toString());
 				statement = db.prepareStatement(buf.toString());
 				if (metricNames != null) {
 					for (int i = 1 ; i <= metricNames.size() ; i++) {
@@ -360,6 +362,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 						statement.setString(i, tmp.toUpperCase());
 					}
 				}
+				// System.out.println(buf.toString());
 				//System.out.println(statement.toString());
 				statement.execute();
 				statement.close();
@@ -392,6 +395,7 @@ public class GeneralChartData extends RMIGeneralChartData {
    				buf.append("and ims.metric = metricid ");
    				buf.append("and ims.inclusive = maxinclusive");
 				statement = db.prepareStatement(buf.toString());
+				// System.out.println(buf.toString());
 				//System.out.println(statement.toString());
 				ResultSet results = statement.executeQuery();
 
@@ -412,7 +416,8 @@ public class GeneralChartData extends RMIGeneralChartData {
 
 			if (model.getChartSeriesName().equals("atomic_event.name")) {
 				// create and populate the temporary event table
-				buf = buildCreateTableStatement("event", "temp_event", db, true);
+				buf = buildCreateTableStatement("event", "temp_event", db, true,
+					model.getChartSeriesName().equals("atomic_event.name"));
 				buf.append("(select atomic_event.* from atomic_event ");
 				buf.append("inner join temp_trial ");
 				buf.append("on atomic_event.trial = temp_trial.id ");
@@ -457,7 +462,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 
 			} else {
 				// create and populate the temporary event table
-				buf = buildCreateTableStatement("event", "temp_event", db, true);
+				buf = buildCreateTableStatement("event", "temp_event", db, true, false);
 				buf.append("(select interval_event.* from interval_event ");
 				buf.append("inner join temp_trial ");
 				buf.append("on interval_event.trial = temp_trial.id ");
@@ -555,6 +560,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 			}
 
 			// build the statement
+			// System.out.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
 
 			// if we put parameters in the statement, fill them.
@@ -576,6 +582,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 				}
 			}
 
+			// System.out.println(buf.toString());
 			//System.out.println(statement.toString());
 			statement.execute();
 			statement.close();
@@ -661,7 +668,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 			if (db.getDBType().compareTo("derby") == 0) {
 				buf.append("group by " + fixClause(seriesName, db) + ", " + fixClause(xAxisName, db));
 				// add the order by clause
-				if (seriesName.startsWith("temp_trial.node_count") || xAxisName.startsWith("temp_trial.node_count")) {
+				if (seriesName.startsWith("trial.node_count") || xAxisName.startsWith("trial.node_count")) {
 					buf.append(" order by 1, 2, 3, 4 ");
 				} else {
 					buf.append(" order by 1, 2 ");					
@@ -672,6 +679,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 				buf.append("order by 1, 2 ");
 			}
 			statement = db.prepareStatement(buf.toString());
+			// System.out.println(buf.toString());
 			//System.out.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 
@@ -714,7 +722,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 		}
 	}
 
-	private static StringBuffer buildCreateTableStatement (String oldTableName, String tableName, DB db, boolean appendAs) {
+	private static StringBuffer buildCreateTableStatement (String oldTableName, String tableName, DB db, boolean appendAs, boolean doAtomic) {
 		// just in case, drop the table in case it is still hanging around.
 		// This sometimes happens with Derby.
 		// Have I ever mentioned that Derby sucks?
@@ -745,9 +753,15 @@ public class GeneralChartData extends RMIGeneralChartData {
 					names = db.getDatabase().getMetricFieldNames();
 					types = db.getDatabase().getMetricFieldTypeNames();
 				} else if (oldTableName.equalsIgnoreCase("event")) {
-					IntervalEvent.getMetaData(db);
-					names = db.getDatabase().getIntervalEventFieldNames();
-					types = db.getDatabase().getIntervalEventFieldTypeNames();
+					if (doAtomic) {
+						AtomicEvent.getMetaData(db);
+						names = db.getDatabase().getAtomicEventFieldNames();
+						types = db.getDatabase().getAtomicEventFieldTypeNames();
+					} else {
+						IntervalEvent.getMetaData(db);
+						names = db.getDatabase().getIntervalEventFieldNames();
+						types = db.getDatabase().getIntervalEventFieldTypeNames();
+					}
 				}
 				buf.append(" (");
 				for (int i = 0 ; i < java.lang.reflect.Array.getLength(names) ; i++) {
@@ -822,7 +836,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 	////////////////////////////////
 
 			// create and populate the temporary trial table
-			buf = buildCreateTableStatement("trial", "temp_trial", db, true);
+			buf = buildCreateTableStatement("trial", "temp_trial", db, true, false);
    			buf.append("(select trial.* from trial ");
 	        buf.append("inner join experiment ");
 			buf.append("on trial.experiment = experiment.id ");
@@ -905,6 +919,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 			}
 			buf.append(") ");
 			statement = db.prepareStatement(buf.toString());
+			// System.out.println(buf.toString());
 			//System.out.println(statement.toString());
 			statement.execute();
 			statement.close();

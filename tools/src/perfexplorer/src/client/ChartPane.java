@@ -236,6 +236,8 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 				String tmp = (String)obj2;
 				if (tmp.equalsIgnoreCase(INTERVAL_EVENT_GROUP_NAME)) {
 					List events = server.getPotentialGroups(theModel);
+					resetYAxisValues(true);
+					yaxisValue.setSelectedItem(MEAN_EXCLUSIVE);
 					this.event.addItem("All Groups");
 					this.eventLabel.setText("Group:");
 					this.event.setSelectedIndex(0);
@@ -246,7 +248,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 							this.event.setSelectedItem(next);
 					}
 				} else if (tmp.equalsIgnoreCase(ATOMIC_EVENT_NAME)) {
-					yaxisValue.setSelectedItem(ATOMIC_MEAN_VALUE);
+					resetYAxisValues(false);
 					List events = server.getPotentialAtomicEvents(theModel);
 					this.event.addItem("All Atomic Events");
 					this.eventLabel.setText("Atomic Event:");
@@ -259,6 +261,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 					}
 				} else {
 					series.setSelectedItem(INTERVAL_EVENT_NAME);
+					resetYAxisValues(true);
 					yaxisValue.setSelectedItem(MEAN_EXCLUSIVE);
 					List events = server.getPotentialEvents(theModel);
 					this.event.addItem("All Events");
@@ -292,6 +295,36 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 				}
 			} 
 		}
+	}
+
+	private void resetYAxisValues(boolean intervalEvent) {
+		this.yaxisValue.removeAllItems();
+		if (intervalEvent) {
+			this.yaxisValue.addItem(MEAN_INCLUSIVE);
+			this.yaxisValue.addItem(MEAN_EXCLUSIVE);
+			this.yaxisValue.addItem("mean.inclusive_percentage");
+			this.yaxisValue.addItem("mean.exclusive_percentage");
+			this.yaxisValue.addItem("mean.call");
+			this.yaxisValue.addItem("mean.subroutines");
+			this.yaxisValue.addItem("mean.inclusive_per_call");
+			this.yaxisValue.addItem("mean.sum_exclusive_squared");
+			this.yaxisValue.addItem("total.inclusive");
+			this.yaxisValue.addItem("total.exclusive");
+			this.yaxisValue.addItem("total.inclusive_percentage");
+			this.yaxisValue.addItem("total.exclusive_percentage");
+			this.yaxisValue.addItem("total.call");
+			this.yaxisValue.addItem("total.subroutines");
+			this.yaxisValue.addItem("total.inclusive_per_call");
+			this.yaxisValue.addItem("total.sum_exclusive_squared");
+		} else {
+			this.yaxisValue.addItem("atomic.sample_count");
+			this.yaxisValue.addItem("atomic.maximum_value");
+			this.yaxisValue.addItem("atomic.minimum_value");
+			this.yaxisValue.addItem(ATOMIC_MEAN_VALUE);
+			this.yaxisValue.addItem("atomic.standard_deviation");
+			yaxisValue.setSelectedItem(ATOMIC_MEAN_VALUE);
+		}
+		return;
 	}
 
 	private JPanel createTopMenu() {
@@ -371,31 +404,10 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 
 		// y axis value
 		left.add(yaxisValueLabel);
-		String[] valueOptions = {
-					MEAN_INCLUSIVE,
-					MEAN_EXCLUSIVE,
-					"mean.inclusive_percentage", 
-					"mean.exclusive_percentage", 
-					"mean.call", 
-					"mean.subroutines", 
-					"mean.inclusive_per_call", 
-					"mean.sum_exclusive_squared",
-					"total.inclusive", 
-					"total.exclusive", 
-					"total.inclusive_percentage", 
-					"total.exclusive_percentage", 
-					"total.call", 
-					"total.subroutines", 
-					"total.inclusive_per_call", 
-					"total.sum_exclusive_squared",
-					"atomic.sample_count",
-					"atomic.maximum_value",
-					"atomic.minimum_value",
-					"atomic.mean_value",
-					"atomic.standard_deviation"
-					};
+		String[] valueOptions = {"tmp"};// this will get reset in a few lines...
 		yaxisValue = new MyJComboBox(valueOptions);
 		this.yaxisValue.addActionListener(this);
+		resetYAxisValues(true);  // ...right here!
 		left.add(yaxisValue);
 		left.add(yaxisNameLabel);
 		this.yaxisName.addActionListener(this);
