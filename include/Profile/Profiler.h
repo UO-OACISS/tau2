@@ -121,6 +121,7 @@ int tau_pthread_create (pthread_t *threadp,
 #include <Profile/MultipleCounters.h>
 #include <Profile/WindowsThreadLayer.h>
 #include <Profile/TauMemory.h>
+#include <Profile/TauScalasca.h>
 #include <Profile/TauMuse.h>
 #include <Profile/TauCompensate.h>
 #include <Profile/TauHandler.h>
@@ -315,7 +316,7 @@ using tau::Profiler;
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.82 $   $Date: 2008/03/13 02:54:53 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.82 2008/03/13 02:54:53 amorris Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: sameer $
+ * $Revision: 1.83 $   $Date: 2008/03/15 02:09:51 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.83 2008/03/15 02:09:51 sameer Exp $ 
  ***************************************************************************/
