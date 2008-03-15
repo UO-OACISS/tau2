@@ -18,6 +18,13 @@ Version 2.17 changes (from 2.16):
 6. Added support for atomic events in TAU library layered over VampirTrace.
 7. Added a Posix I/O wrapper (-iowrapper) for tracking volume and bandwidth of I/O.
 8. Added an MPI wrapper library for Windows Cluster 2003. 
+9. Added support for Scalasca 1.0. Works with both Kojak and Scalasca. 
+10. Added Opari in TAU.
+11. Added IBM BG/P metadata for torus node information in profiles.
+12. PerfExplorer adds support for user-defined events and improvements in custom charts.
+13. Posix I/O tracking implemented without need for enabling profiling (for tracing).
+14. Improved tau_inc.pl for generating include lists for Scalasca/Kojak based on callpath profiling. 
+15. Eclipse TAU plugin has support for two stage communication analysis.
 
 Version 2.16 changes (from 2.15):
 1. Added a new tool for correcting network time drifts in traces (tau_timecorrect).
