@@ -145,8 +145,8 @@ int TauInitVampirTrace(void)
 //////////////////////////////////////////////////////////////////////
 int TauInitEpilog(void)
 {
-  DEBUGPROFMSG("Calling elg_open"<<endl;);
-  elg_open();
+  DEBUGPROFMSG("Calling esd_open"<<endl;);
+  esd_open();
   return 1;
 }
 #endif /* TAU_EPILOG */
@@ -220,7 +220,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 #ifdef TAU_EPILOG
         static int tau_elg_init=TauInitEpilog();
 	string tau_elg_name(Name+" "+Type);
-	FunctionId = elg_def_region(tau_elg_name.c_str(), ELG_NO_ID, ELG_NO_LNO,
+	FunctionId = esd_def_region(tau_elg_name.c_str(), ELG_NO_ID, ELG_NO_LNO,
 		ELG_NO_LNO, GroupName.c_str(), ELG_FUNCTION);
 	DEBUGPROFMSG("elg_def_region: "<<tau_elg_name<<": returns "<<FunctionId<<endl;);
 #else /* TAU_EPILOG */
@@ -531,7 +531,7 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
   }
 }
 /***************************************************************************
- * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.51 $   $Date: 2008/03/13 03:02:55 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.51 2008/03/13 03:02:55 amorris Exp $ 
+ * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
+ * $Revision: 1.52 $   $Date: 2008/03/15 02:12:27 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.52 2008/03/15 02:12:27 sameer Exp $ 
  ***************************************************************************/

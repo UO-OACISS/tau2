@@ -84,6 +84,14 @@ using namespace std;
 #else /* TAU_VAMPIRTRACE */
 #ifdef TAU_EPILOG
 #include "elg_trc.h"
+
+#ifdef TAU_SCALASCA
+extern "C" {
+void esd_enter (elg_ui4 rid);
+void esd_exit (elg_ui4 rid);
+}
+#endif /* SCALASCA */
+
 #else /* TAU_EPILOG */
 #define PCXX_EVENT_SRC
 #include "Profile/pcxx_events.h"
@@ -330,7 +338,7 @@ void Profiler::Start(int tid) {
 #ifdef TAU_EPILOG
     DEBUGPROFMSG("Calling elg_enter: ["<<ThisFunction->GetFunctionId()<<"] "
 		 << ThisFunction->GetName()<<endl;);
-    elg_enter(ThisFunction->GetFunctionId());
+    esd_enter(ThisFunction->GetFunctionId());
 #else /* TAU_EPILOG */
     TraceEvent(ThisFunction->GetFunctionId(), 1, tid, TimeStamp, 1); 
     // 1 is for entry in second parameter and for use TimeStamp in last
@@ -640,7 +648,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #else /* TAU_VAMPIRTRACE */
 #ifdef TAU_EPILOG
     DEBUGPROFMSG("Calling elg_exit(): "<< ThisFunction->GetName()<<endl;);
-    elg_exit();
+    esd_exit(ThisFunction->GetFunctionId());
 #else /* TAU_EPILOG */
 #ifdef TAU_MPITRACE
     if (RecordEvent) {
@@ -1193,7 +1201,7 @@ static void finalizeTrace(int tid) {
 #ifdef TAU_EPILOG 
   DEBUGPROFMSG("Calling elg_close()"<<endl;);
   if (RtsLayer::myThread() == 0) {
-    elg_close();
+    esd_close();
   }
 #else /* TAU_EPILOG */
   TraceEvClose(tid);
@@ -1771,7 +1779,7 @@ bool Profiler::createDirectories() {
 }
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.181 $   $Date: 2008/03/13 02:56:01 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.181 2008/03/13 02:56:01 amorris Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.182 $   $Date: 2008/03/15 02:12:27 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.182 2008/03/15 02:12:27 sameer Exp $ 
  ***************************************************************************/
