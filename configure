@@ -3014,7 +3014,6 @@ if [ $epilog = yes -a -f $epilogbindir/skin ]
 then
   fixmakeargs="$fixmakeargs SCALASCA"
   scalasca=yes
-  echo "SETTING SCALASCA as YES!"
 fi
 
 if [ $epilog = yes -a $epiloglib = no -a $epilogdir != no ]
