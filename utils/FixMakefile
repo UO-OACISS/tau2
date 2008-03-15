@@ -150,7 +150,7 @@ fi
 	;;
 
      epilogextralinkcmd=*)
-        epilogextralinkcmd=`echo $1 | sed -e 's/^epilogextralinkcmd=//'`
+        epilogextralinkcmd=`echo $1 | sed -e 's/^epilogextralinkcmd=//' -e 's/#/ /g'`
 	echo "s,^EPILOGEXTRALINKCMD=.*$,EPILOGEXTRALINKCMD=$epilogextralinkcmd,g" >> $sedout
 	;;
 
@@ -1091,6 +1091,10 @@ fi
 	;;
      EPILOG)
 	echo "NOTE: Using EPILOG Tracing Package ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SCALASCA)
+	echo "NOTE: Detected SCALASCA Package ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      EPILOGMPI)

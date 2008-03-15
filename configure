@@ -258,6 +258,7 @@ slog2=no
 internalslog2=no
 opari=no
 epilog=no
+scalasca=no
 epilogextralinkcmd=
 epiloglib=no
 epilogbin=no
@@ -3009,6 +3010,13 @@ then
   fi
 fi
 
+if [ $epilog = yes -a -f $epilogbindir/skin ]
+then
+  fixmakeargs="$fixmakeargs SCALASCA"
+  scalasca=yes
+  echo "SETTING SCALASCA as YES!"
+fi
+
 if [ $epilog = yes -a $epiloglib = no -a $epilogdir != no ]
 then
   if [ -f $epilogdir/lib/libelg.base.a ] 
@@ -3098,10 +3106,14 @@ then
 
     wrapperlib="-L$epiloglibdir -lelg.mpi"
 
-#    if [ -f $epilogbindir/kconfig -a $epiloglib = no ]
+# kconfig puts -Wl,-rpath <papidir>/lib and this messes up ifort
+#    if [ $scalasca = yes ]
 #    then
-#      echo "NOTE: Using kconfig to determine libs used in Scalasca/Epilog"
-#      wrapperlib=`$epilogbindir/kconfig --libs`
+#      if [ -f $epilogbindir/kconfig ]
+#      then
+#        echo "NOTE: Using kconfig to determine libs used in Scalasca/Epilog"
+#        wrapperlib=`$epilogbindir/kconfig --for --mpi --libs`
+#      fi
 #    fi
 
     if [ $openmp = yes ] 
@@ -3157,6 +3169,11 @@ then
       then
         mpiflibargs="$wrapperlib -lfmpi"
         wrapperlib="$wrapperlib -lfmpi"
+      fi 
+      if [ $epilog = yes -a -f $epiloglibdir/libelgfmpi.a ]
+      then
+        mpiflibargs="$wrapperlib -lelgfmpi"
+        wrapperlib="$wrapperlib -lelgfmpi"
       fi 
  
 
@@ -4444,6 +4461,11 @@ if [ $epilog = yes ]
     then
       epilogextralinkcmd="-lsz"
     fi
+    if [ -f $epiloglibdir/libcubew3.a ]
+    then
+      epilogextralinkcmd="$epilogextralinkcmd#-lcubew3"
+    fi
+
     fixmakeargs="$fixmakeargs EPILOG epilogdir=$epilogdir epiloglibdir=$epiloglibdir epilogbindir=$epilogbindir epilogextralinkcmd=$epilogextralinkcmd epilogincdir=$epilogincdir"
     tauoptions="${tauoptions}-epilog"
     if [ $mpi = yes ] 
