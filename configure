@@ -4460,9 +4460,14 @@ if [ $epilog = yes ]
     then
       epilogextralinkcmd="-lsz"
     fi
+
     if [ -f $epiloglibdir/libcubew3.a ]
     then
       epilogextralinkcmd="$epilogextralinkcmd#-lcubew3"
+    fi
+    if [ $scalasca = yes -a -f /usr/lib/libswclock.a ]
+    then
+      epilogextralinkcmd="$epilogextralinkcmd#-lswclock"
     fi
 
     fixmakeargs="$fixmakeargs EPILOG epilogdir=$epilogdir epiloglibdir=$epiloglibdir epilogbindir=$epilogbindir epilogextralinkcmd=$epilogextralinkcmd epilogincdir=$epilogincdir"
