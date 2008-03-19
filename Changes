@@ -25,6 +25,10 @@ Version 2.17 changes (from 2.16):
 13. Posix I/O tracking implemented without need for enabling profiling (for tracing).
 14. Improved tau_inc.pl for generating include lists for Scalasca/Kojak based on callpath profiling. 
 15. Eclipse TAU plugin has support for two stage communication analysis.
+16. Added -BGPTIMERS for IBM BG/P. Compatible with -BGLTIMERS.
+17. Env vars TAU_VERBOSE, TAU_SYNCHRONIZE_CLOCKS, TAU_PROFILE_FORMAT (snapshot)
+18. GCC 4.3.0 compatibility
+19. Added bandwidth and bytes written info for MPI I/O write routines.
 
 Version 2.16 changes (from 2.15):
 1. Added a new tool for correcting network time drifts in traces (tau_timecorrect).
