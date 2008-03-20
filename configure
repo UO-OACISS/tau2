@@ -1569,7 +1569,10 @@ if [ $tauarch = unknown -o $tauarch = none ]
 fi
 
 if [ $machine = apple ] ; then
-  if [ `test -f `which $cxx_compiler`` ] ; then
+  compiler_name=`which $cxx_compiler | awk '{print $1;}'`
+  if [ "$complier_name" = "no" ]; then
+    echo "NOTE: No compilers found, please use option '-c++=<compilername>' if you have a C++
+    compiler"
     architecture=$machine
     make_directories
     configure_java
