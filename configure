@@ -1568,8 +1568,9 @@ if [ $tauarch = unknown -o $tauarch = none ]
     fi
 fi
 
-if [ $machine = apple-nocompiler ] ; then
-  create_directories
+if [ $machine = apple -a `test -f $cxx_compiler` ] ; then
+  architecture=$machine
+  make_directories
   configure_java
   exit 0
 fi

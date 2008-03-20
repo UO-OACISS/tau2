@@ -42,7 +42,7 @@ if [ `test -f $TAU_CC` ]; then
 
 else
   if [ `uname -s ` = "Darwin" ];  then
-    ARCH=apple-nocompiler
+    ARCH=apple
   fi
 fi
 # Check for brain-dead solaris compiler
