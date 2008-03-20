@@ -314,12 +314,18 @@ do
         c_compiler=$myarg
       else
         testxlc=`echo $myarg | sed -e 's/xlc//'`
-        if [ "y$testxlc" = "y$myarg" ]
+        testmp=`echo $myarg | sed -e 's/^mp//'`
+        if [ "y$testxlc" = "y$myarg"  -a "y$testmp" = "y$myarg" ]
         then
           echo "WARNING: valid options for cc are 'cc', 'gcc', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'qk-pgcc', 'powerpc-bgp-linux-gcc', and 'pgcc' "
 #       exit 1
         else
-          c_compiler=$myarg
+	  if [ "y$testxlc" != "y$myarg" ]
+          then 
+            c_compiler=$myarg
+          else
+            c_compiler=`$myarg -show | awk '{ print $1; }'`
+          fi
         fi
     fi
     shift
@@ -332,12 +338,18 @@ do
         cxx_compiler=$myarg
       else
         testxlc=`echo $myarg | sed -e 's/xl//'`
-	if [ "y$testxlc" = "y$myarg" ]
+        testmp=`echo $myarg | sed -e 's/^mp//'`
+	if [ "y$testxlc" = "y$myarg" -a "y$testmp" = "y$myarg" ]
         then
           echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', 'qk-pgCC', and 'orCC'"
 #       exit 1
         else
-          cxx_compiler=$myarg
+	  if [ "y$testxlc" != "y$myarg" ]
+          then 
+            cxx_compiler=$myarg
+          else
+            cxx_compiler=`$myarg -show | awk '{ print $1; }'`
+          fi
         fi
     fi
     shift
