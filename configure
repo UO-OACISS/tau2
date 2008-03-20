@@ -1568,11 +1568,13 @@ if [ $tauarch = unknown -o $tauarch = none ]
     fi
 fi
 
-if [ $machine = apple -a `test -f $cxx_compiler` ] ; then
-  architecture=$machine
-  make_directories
-  configure_java
-  exit 0
+if [ $machine = apple ] ; then
+  if [ `test -f $cxx_compiler` ] ; then
+    architecture=$machine
+    make_directories
+    configure_java
+    exit 0
+  fi
 fi
 
 # use -m32 when specifying 32 bit on an Opteron/EM64T
