@@ -3368,6 +3368,12 @@ then
 	if [ -r $mpilib/libmpi_cxx.so ] ; then 
 	    mpilibrary='-lmpi -lmpi_cxx'
 	fi
+      
+        if [ -r $mpilib/libopen-pal.a -a ! -r $mpilib/libmpi_cxx.so ]; then
+	   echo "NOTE: OpenMPI configured with --disable_shared"
+	   mpilibrary='-lmpi_cxx -lmpi -lopen-rte -lopen-pal -lrt -lnuma -ldl -lpthread -lutil'
+        fi
+          
 	
         # See if threaded MPI should be used on AIX
         if [ $ibmxlc_r = yes -a -r $mpilib/libmpi_r.a ] ; then
