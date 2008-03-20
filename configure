@@ -1448,6 +1448,70 @@ configure_java () {
   fi
 }
 
+configure_perfexplorer () {
+
+
+echo "TAU: installed TAU's PerfDMF database utilities in ${targetdir}/${architecture}/bin" 
+
+cat ${tauroot}/tools/src/perfdmf/bin/configure.skel | 
+sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${targetdir}/${architecture}/bin/perfdmf_configure
+chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_configure
+
+cat ${tauroot}/tools/src/perfdmf/bin/createapp.skel | 
+sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${targetdir}/${architecture}/bin/perfdmf_createapp
+chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_createapp
+
+cat ${tauroot}/tools/src/perfdmf/bin/createexp.skel | 
+sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${targetdir}/${architecture}/bin/perfdmf_createexp
+chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_createexp
+
+cat ${tauroot}/tools/src/perfdmf/bin/loadtrial.skel | 
+sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${targetdir}/${architecture}/bin/perfdmf_loadtrial
+chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_loadtrial
+
+cat ${tauroot}/tools/src/perfdmf/bin/phaseconvert.skel | 
+sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${targetdir}/${architecture}/bin/phaseconvert
+chmod a+rx ${targetdir}/${architecture}/bin/phaseconvert
+
+cat ${tauroot}/tools/src/perfdmf/bin/derby.properties.skel | 
+sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${targetdir}/${architecture}/lib/derby.properties
+
+cat ${tauroot}/tools/src/perfexplorer/bin/configure.skel | 
+sed -e 's,@TAUROOTDIR@,'$tauroot',' \
+-e 's,@SHELL@,'$taushell',' \
+-e 's,@ARCH@,'$architecture',' \
+-e 's,@TARGETDIR@,'$targetdir',' \
+ > ${tauroot}/tools/src/perfexplorer/configure
+chmod a+rx ${tauroot}/tools/src/perfexplorer/configure
+
+cat ${tauroot}/tools/src/perfexplorer/bin/perfexplorer_configure.skel | 
+sed -e 's,@TAUROOTDIR@,'$targetdir',' \
+-e 's,@SHELL@,'$taushell',' \
+-e 's,@ARCH@,'$architecture',' \
+-e 's,@TARGETDIR@,'$targetdir',' \
+ > ${targetdir}/${architecture}/bin/perfexplorer_configure
+chmod a+rx ${targetdir}/${architecture}/bin/perfexplorer_configure
+
+if [ ! -d ${targetdir}/etc ] 
+  then
+    mkdir -p ${targetdir}/etc
+fi
+cp ${tauroot}/tools/src/perfexplorer/bin/perfexplorer.skel ${targetdir}/etc/.
+cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.derby ${targetdir}/etc/.
+cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.mysql ${targetdir}/etc/.
+cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.oracle ${targetdir}/etc/.
+cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.postgresql ${targetdir}/etc/.
+cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.db2 ${targetdir}/etc/.
+cp ${tauroot}/tools/src/perfexplorer/etc/java.policy ${targetdir}/etc/.
+  
+}
+
 make_directories () {
 
 if [ $tauprefix = unknown ] 
@@ -1567,15 +1631,16 @@ if [ $tauarch = unknown -o $tauarch = none ]
         fi
     fi
 fi
-
-if [ $machine = apple ] ; then
+echo $machine
+if [ "$machine" = "apple" ] ; then
   compiler_name=`which $cxx_compiler | awk '{print $1;}'`
-  if [ "$complier_name" = "no" ]; then
-    echo "NOTE: No compilers found, please use option '-c++=<compilername>' if you have a C++
-    compiler"
+  echo "1"
+  if [ "$compiler_name" = "no" -o "$compiler_name" = "" ]; then
+    echo "NOTE: No compilers found, please use option '-c++=<compilername>' if you have a C++ compiler" 
     architecture=$machine
     make_directories
     configure_java
+    configure_perfexplorer
     exit 0
   fi
 fi
@@ -5133,65 +5198,8 @@ echo "TAU: installed tauinc.pl in ${targetdir}/${architecture}/bin"
 cp ${tauroot}/tools/src/tauinc.pl ${targetdir}/${architecture}/bin
 chmod a+rx  ${targetdir}/${architecture}/bin/tauinc.pl
 
-echo "TAU: installed TAU's PerfDMF database utilities in ${targetdir}/${architecture}/bin" 
+configure_perfexplorer
 
-cat ${tauroot}/tools/src/perfdmf/bin/configure.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
- > ${targetdir}/${architecture}/bin/perfdmf_configure
-chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_configure
-
-cat ${tauroot}/tools/src/perfdmf/bin/createapp.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
- > ${targetdir}/${architecture}/bin/perfdmf_createapp
-chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_createapp
-
-cat ${tauroot}/tools/src/perfdmf/bin/createexp.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
- > ${targetdir}/${architecture}/bin/perfdmf_createexp
-chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_createexp
-
-cat ${tauroot}/tools/src/perfdmf/bin/loadtrial.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
- > ${targetdir}/${architecture}/bin/perfdmf_loadtrial
-chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_loadtrial
-
-cat ${tauroot}/tools/src/perfdmf/bin/phaseconvert.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
- > ${targetdir}/${architecture}/bin/phaseconvert
-chmod a+rx ${targetdir}/${architecture}/bin/phaseconvert
-
-cat ${tauroot}/tools/src/perfdmf/bin/derby.properties.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
- > ${targetdir}/${architecture}/lib/derby.properties
-
-cat ${tauroot}/tools/src/perfexplorer/bin/configure.skel | 
-sed -e 's,@TAUROOTDIR@,'$tauroot',' \
--e 's,@SHELL@,'$taushell',' \
--e 's,@ARCH@,'$architecture',' \
--e 's,@TARGETDIR@,'$targetdir',' \
- > ${tauroot}/tools/src/perfexplorer/configure
-chmod a+rx ${tauroot}/tools/src/perfexplorer/configure
-
-cat ${tauroot}/tools/src/perfexplorer/bin/perfexplorer_configure.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir',' \
--e 's,@SHELL@,'$taushell',' \
--e 's,@ARCH@,'$architecture',' \
--e 's,@TARGETDIR@,'$targetdir',' \
- > ${targetdir}/${architecture}/bin/perfexplorer_configure
-chmod a+rx ${targetdir}/${architecture}/bin/perfexplorer_configure
-
-if [ ! -d ${targetdir}/etc ] 
-  then
-    mkdir -p ${targetdir}/etc
-fi
-cp ${tauroot}/tools/src/perfexplorer/bin/perfexplorer.skel ${targetdir}/etc/.
-cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.derby ${targetdir}/etc/.
-cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.mysql ${targetdir}/etc/.
-cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.oracle ${targetdir}/etc/.
-cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.postgresql ${targetdir}/etc/.
-cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.db2 ${targetdir}/etc/.
-cp ${tauroot}/tools/src/perfexplorer/etc/java.policy ${targetdir}/etc/.
-  
 if [ ${tauprefix} = unknown ]
 then
   targetdir=${tauroot}
