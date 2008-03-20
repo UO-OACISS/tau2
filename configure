@@ -4575,6 +4575,10 @@ if [ $epilog = yes ]
 
     fixmakeargs="$fixmakeargs EPILOG epilogdir=$epilogdir epiloglibdir=$epiloglibdir epilogbindir=$epilogbindir epilogextralinkcmd=$epilogextralinkcmd epilogincdir=$epilogincdir"
     tauoptions="${tauoptions}-epilog"
+    if [ $scalasca = yes ]
+    then
+      tauoptions="${tauoptions}-scalasca"
+    fi
     if [ $mpi = yes ] 
     then 
       if [ $openmp = yes ] 
