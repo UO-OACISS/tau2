@@ -1569,7 +1569,7 @@ if [ $tauarch = unknown -o $tauarch = none ]
 fi
 
 if [ $machine = apple ] ; then
-  if [ `test -f $cxx_compiler` ] ; then
+  if [ `test -f `which $cxx_compiler`` ] ; then
     architecture=$machine
     make_directories
     configure_java
