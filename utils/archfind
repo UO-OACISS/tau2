@@ -30,21 +30,18 @@ fi
 
 if [ `uname -s ` = "Darwin" ];  then
     TAU_CCOM=c++
+    ARCH=apple
 fi
 
-if [ `test -f $TAU_CC` ]; then
-
-  if [ `uname -s ` = "HI-UX/MPP" ]; then 
+if [ `uname -s ` = "HI-UX/MPP" ]; then 
       ARCH=`$TAU_CCOM -msg=e -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'` 
-  else
+else
+  if [ "x$ARCH" = "x" ]; then
+# ARCH has not been assigned yet.
       ARCH=`$TAU_CCOM -w -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'` 
   fi
-
-else
-  if [ `uname -s ` = "Darwin" ];  then
-    ARCH=apple
-  fi
 fi
+
 # Check for brain-dead solaris compiler
 if [ $ARCH = sun4 ]; then
     VER=`uname -r | cut -c0-2`
