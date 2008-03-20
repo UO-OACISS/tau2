@@ -601,14 +601,28 @@ public class TauDataSource extends DataSource {
             if (userEventProfile == null) {
                 userEventProfile = new UserEventProfile(userEvent);
                 thread.addUserEventProfile(userEventProfile);
-            }
 
-            userEventProfile.setNumSamples(numSamples);
-            userEventProfile.setMaxValue(sampleMax);
-            userEventProfile.setMinValue(sampleMin);
-            userEventProfile.setMeanValue(sampleMean);
-            userEventProfile.setSumSquared(sampleSumSquared);
-            userEventProfile.updateMax();
+                userEventProfile.setNumSamples(numSamples);
+                userEventProfile.setMaxValue(sampleMax);
+                userEventProfile.setMinValue(sampleMin);
+                userEventProfile.setMeanValue(sampleMean);
+                userEventProfile.setSumSquared(sampleSumSquared);
+                userEventProfile.updateMax();
+
+            } else {
+                // we are combining two user events here, we have to recompute
+                if (userEventProfile.getNumSamples()+numSamples != 0) {
+                    double mean = (userEventProfile.getMeanValue()*userEventProfile.getNumSamples() + numSamples*sampleMean) / (userEventProfile.getNumSamples()+numSamples);
+                    userEventProfile.setMeanValue(mean);
+                } else {
+                    userEventProfile.setMeanValue(0);
+                }
+                userEventProfile.setNumSamples(numSamples + userEventProfile.getNumSamples());
+                userEventProfile.setMaxValue(Math.max(sampleMax, userEventProfile.getMaxValue()));
+                userEventProfile.setMinValue(Math.min(sampleMin, userEventProfile.getMinValue()));
+                userEventProfile.setSumSquared(sampleSumSquared + userEventProfile.getSumSquared());
+                userEventProfile.updateMax();
+            }
         }
     }
 
