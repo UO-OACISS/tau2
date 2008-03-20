@@ -92,7 +92,7 @@ if [ $makefile_specified = no ] ; then
 	    echo "ERROR: environment variable TAU_MAKEFILE is set but the file is not readable"
 	    exit 1
         fi
-    elif [ "x$DEFAULT_MAKEFILE=" != "x" ] ; then
+    elif [ "x$DEFAULT_MAKEFILE" != "x" ] ; then
 	MAKEFILE=$DEFAULT_MAKEFILE
     else
 	echo $0: "ERROR: please set the environment variable TAU_MAKEFILE"
