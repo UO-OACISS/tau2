@@ -1198,6 +1198,12 @@ bool RtsLayer::isCtorDtor(const char *name)
 
   // check the left and right side of the :: and see if they match
   const char *loc = strstr(name, "::");
+
+  // ctor/dtors on thread 0 should return true;
+  if (RtsLayer::myThread() == 0 && loc) return true;
+
+
+
   const char *pos1 = name;
   const char *pos2 = loc+2;
   while (pos1 != loc && *pos2 != 0 && *pos1 == *pos2) {
@@ -1538,7 +1544,7 @@ std::string RtsLayer::GetRTTI(const char *name)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.99 $   $Date: 2008/03/13 06:45:03 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.99 2008/03/13 06:45:03 amorris Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: sameer $
+ * $Revision: 1.100 $   $Date: 2008/03/21 20:56:57 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.100 2008/03/21 20:56:57 sameer Exp $ 
  ***************************************************************************/
