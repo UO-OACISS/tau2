@@ -1377,6 +1377,13 @@ done
 
 configure_java () {
 
+  echo "TAU: installing TAU's ParaProf profile browser" 
+  taushell=sh
+  if [ $machine = solaris2* -o $machine = alpha ]
+  then
+    taushell=ksh
+  fi
+
   x=`java -version 2>&1 | grep version | awk '{ print $3; }'| sed -e s/\"//g`
 
   oldjdk=no
@@ -1653,17 +1660,6 @@ else
   targetdir=${tauprefix}
 fi
 
-if [ "$machine" = "apple" ] ; then
-  compiler_name=`which $cxx_compiler | awk '{print $1;}'`
-  if [ "$compiler_name" = "no" -o "$compiler_name" = "" ]; then
-    echo "NOTE: No compilers found, please use option '-c++=<compilername>' if you have a C++ compiler" 
-    architecture=$machine
-    make_directories
-    configure_java
-    configure_perfexplorer
-    exit 0
-  fi
-fi
 
 # use -m32 when specifying 32 bit on an Opteron/EM64T
 if [ "x$detectarch" = "xx86_64" -a "x$machine" = "xi386_linux" ] ; then
@@ -1868,6 +1864,18 @@ case $machine in
      ;;
 
 esac
+
+if [ "$machine" = "apple" ] ; then
+  compiler_name=`which $cxx_compiler | awk '{print $1;}'`
+  if [ "$compiler_name" = "no" -o "$compiler_name" = "" ]; then
+    echo "NOTE: No compilers found, please use option '-c++=<compilername>' if you have a C++ compiler" 
+    architecture=$machine
+    make_directories
+    configure_java
+    configure_perfexplorer
+    exit 0
+  fi
+fi
 
 
 ######################################################################
@@ -5000,13 +5008,6 @@ fi
 #    echo "       % unsetenv LD_LIBRARY_PATH "
 ##    exit
 #fi
-
-echo "TAU: installing TAU's ParaProf profile browser" 
-taushell=sh
-if [ $machine = solaris2* -o $machine = alpha ]
-then
-  taushell=ksh
-fi
 
 configure_java
 
