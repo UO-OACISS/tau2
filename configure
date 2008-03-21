@@ -3455,7 +3455,7 @@ then
     # Cases
     if [ -r $mpilib/libmpi.a -o -r $mpilib/libmpi.so ] ; then
       #echo "libmpi.* found!!"
-	if [ $mpilibrary = no ] ; then 
+	if [ "x$mpilibrary" = "xno" ] ; then 
 	    mpilibrary=-lmpi
 	    if [ -r $mpilib/libmpi++.so ] ; then
 		mpilibrary='-lmpi -lmpi++'
