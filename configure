@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh 
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
 #*			http://www.cs.uoregon.edu/research/tau	           **
@@ -1644,9 +1644,17 @@ if [ $tauarch = unknown -o $tauarch = none ]
     fi
 fi
 echo $machine
+
+
+if [ ${tauprefix} = unknown ]
+then
+  targetdir=${tauroot}
+else
+  targetdir=${tauprefix}
+fi
+
 if [ "$machine" = "apple" ] ; then
   compiler_name=`which $cxx_compiler | awk '{print $1;}'`
-  echo "1"
   if [ "$compiler_name" = "no" -o "$compiler_name" = "" ]; then
     echo "NOTE: No compilers found, please use option '-c++=<compilername>' if you have a C++ compiler" 
     architecture=$machine
@@ -5211,13 +5219,6 @@ cp ${tauroot}/tools/src/tauinc.pl ${targetdir}/${architecture}/bin
 chmod a+rx  ${targetdir}/${architecture}/bin/tauinc.pl
 
 configure_perfexplorer
-
-if [ ${tauprefix} = unknown ]
-then
-  targetdir=${tauroot}
-else
-  targetdir=${tauprefix}
-fi
 
 cat ${tauroot}/tools/src/TauIL/bin/tau_analyze.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
