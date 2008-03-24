@@ -250,8 +250,17 @@ void Profiler::EnableAllEventsOnCallStack(int tid, Profiler *current) {
 //////////////////////////////////////////////////////////////////////
 
 void Profiler::Start(int tid) { 
-//   fprintf (stderr, "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
+//    fprintf (stderr, "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
+
+#ifdef TAU_OPENMP
+  if (tid != 0) {
+    Tau_create_top_level_timer_if_necessary();
+  }
+#endif
+
   ParentProfiler = CurrentProfiler[tid]; // Timers
+
+
 #ifdef TAU_DEPTH_LIMIT
   int userspecifieddepth = TauGetDepthLimit();
   if (ParentProfiler) {
@@ -515,7 +524,7 @@ Profiler& Profiler::operator= (const Profiler& X) {
 //////////////////////////////////////////////////////////////////////
 
 void Profiler::Stop(int tid, bool useLastTimeStamp) {
-//   fprintf (stderr, "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
+//    fprintf (stderr, "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
   x_uint64 TimeStamp = 0L; 
   if (CurrentProfiler[tid] == NULL) return;
   
@@ -1779,7 +1788,7 @@ bool Profiler::createDirectories() {
 }
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.182 $   $Date: 2008/03/15 02:12:27 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.182 2008/03/15 02:12:27 sameer Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: amorris $
+ * $Revision: 1.183 $   $Date: 2008/03/24 19:07:20 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.183 2008/03/24 19:07:20 amorris Exp $ 
  ***************************************************************************/

@@ -590,13 +590,27 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
  * library is used without any instrumentation in main */
 extern "C" void Tau_create_top_level_timer_if_necessary(void)
 {
+  static bool initialized = false;
+  static bool initthread[TAU_MAX_THREADS];
+  if (!initialized) {
+    RtsLayer::LockDB();
+    if (!initialized) {
+      for (int i=0; i<TAU_MAX_THREADS; i++) {
+	initthread[i] = false;
+      }
+    }
+    RtsLayer::UnLockDB();
+    initialized = true;
+  }
   int tid = RtsLayer::myThread();
+  if (initthread[tid] == true) {
+    return;
+  }
   FunctionInfo *ptr;
-  if (Profiler::CurrentProfiler[tid] == NULL) 
-  {
+  if (Profiler::CurrentProfiler[tid] == NULL) {
+    initthread[tid] = true;
     ptr = (FunctionInfo *) Tau_get_profiler(".TAU application", " ", TAU_DEFAULT, "TAU_DEFAULT");
-    if (ptr)
-    {
+    if (ptr) {
       Tau_start_timer(ptr, 0);
     }
   }
@@ -982,7 +996,7 @@ int *pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.73 $   $Date: 2008/03/13 03:01:21 $
- * VERSION: $Id: TauCAPI.cpp,v 1.73 2008/03/13 03:01:21 amorris Exp $
+ * $Revision: 1.74 $   $Date: 2008/03/24 19:07:20 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.74 2008/03/24 19:07:20 amorris Exp $
  ***************************************************************************/
 
