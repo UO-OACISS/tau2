@@ -17,6 +17,7 @@ import java.util.Map;
 import javax.swing.JFrame;
 
 import client.PerfExplorerClient;
+import client.PerfExplorerModel;
 
 import server.PerfExplorerServer;
 
@@ -48,6 +49,15 @@ public class Utilities {
             }
         }
         return null;
+	}
+
+	public static Trial getCurrentTrial () {
+		Trial trial = PerfExplorerModel.getModel().getTrial();
+		// should we check for a valid trial?
+		if (trial == null) {
+			System.out.println("Utilities.getCurrentTrial() failed: No trial selected.");
+		}
+		return trial;
 	}
 
 	private static PerfExplorerServer getServer() {
