@@ -28,7 +28,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.45 2008/03/05 00:28:11 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.46 2008/03/25 19:09:25 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -123,7 +123,7 @@ public class ChartData extends RMIChartData {
 			// all query results are organized the same, only the selection
 			// parameters are different.
 			statement = buildStatement();
-			PerfExplorerOutput.println(buf.toString());
+			//PerfExplorerOutput.println(buf.toString());
 			ResultSet results = statement.executeQuery();
 			// TODO - this query assumes a scalability study...!
 			int columnCounter = 0;
