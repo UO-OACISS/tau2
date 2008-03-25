@@ -27,7 +27,7 @@ print "Reading configurations from $oldConfigs\n";
 
 
 # determine the available options
-@availableOpts = `./configure -help | grep "^-" | awk '{print \$1}' | sed s/=.*//g`;
+@availableOpts = `./configure -fullhelp | grep "^-" | awk '{print \$1}' | sed s/=.*//g`;
 
 foreach $opt (@availableOpts) {
     chomp($opt);
