@@ -229,6 +229,7 @@ namespace {
 
   void writeTableFile(const char* rcdir, const char* tabfile) {
     ofstream tabs(tabfile);
+    unsigned int i;
     if ( !tabs ) {
       cerr << "ERROR: cannot open opari table file " << tabfile << "\n";
       cleanup_and_exit();
@@ -240,7 +241,7 @@ namespace {
     //              descriptors
     // For C/C++  : generate extern declaration for descriptor (as they
     //              are part of the C/C++ file
-    for (unsigned i=0; i<fileList.size(); ++i) {
+    for (i=0; i<fileList.size(); ++i) {
       if ( fileList[i]->lang & L_FORTRAN ) {
           tabs << "#include \"" << rcdir << "/"
                << fileList[i]->name << ".opari.inc\"\n";
@@ -257,7 +258,7 @@ namespace {
     tabs << "struct ompregdescr* pomp_rd_table[" << (IDused+1) << "] = {\n";
     if ( IDused == 0 ) tabs << "  0,\n"; // hole
     int id = -1;
-    for (unsigned i=0; i<fileList.size(); ++i) {
+    for (i=0; i<fileList.size(); ++i) {
       int d = fileList[i]->first;
       if ( d ) {
         for (int n=id+1; n<d; ++n) tabs << "  0,\n";  // hole
@@ -851,6 +852,7 @@ void init_handler(const char* inf, const char* rcf, Language l, bool g) {
 void finalize_handler(const char* rcdir,
                       const char* incfile, const char* tabfile) {
   // check region stack
+  unsigned int i;
   if ( ! regStack.empty() ) {
     cerr << "ERROR: unbalanced pragma/directive nesting\n";
     print_regstack_top();
@@ -874,7 +876,7 @@ void finalize_handler(const char* rcdir,
   }
   rcs << "<OPARIRC 1.0>\n";
   rcs << IDused << "\n";
-  for (unsigned i=0; i<fileList.size(); ++i) {
+  for (i=0; i<fileList.size(); ++i) {
     rcs << fileList[i]->name << "\n";
     rcs << fileList[i]->first << " "
         << fileList[i]->last  << " "
@@ -890,7 +892,7 @@ void finalize_handler(const char* rcdir,
 
   OMPRegion::generate_header(incs);
   if ( regions.size() ) {
-    for (unsigned i=0; i<regions.size(); ++i)
+    for (i=0; i<regions.size(); ++i)
       regions[i]->generate_descr(incs);
   }
 
@@ -898,7 +900,7 @@ void finalize_handler(const char* rcdir,
   if ( tabfile ) writeTableFile(rcdir, tabfile);
 
   // free file list
-  for (unsigned i=0; i<fileList.size(); ++i) {
+  for (i=0; i<fileList.size(); ++i) {
     delete fileList[i];
   }
 }
