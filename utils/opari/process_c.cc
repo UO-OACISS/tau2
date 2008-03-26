@@ -44,9 +44,10 @@ namespace {
                        string::size_type ppos, bool* e, bool* f, bool asd) {
     unsigned s = preStmt.size();
     bool inComment = false;
+    unsigned int i;
 
     // "remove" comments
-    for (unsigned i=0; i<s; ++i) {
+    for (i=0; i<s; ++i) {
       string::size_type pos = 0;
       string& line = preStmt[i];
       while ( pos < line.size() ) {
@@ -94,7 +95,7 @@ namespace {
       }
     }
 
-    for (unsigned i=0; i<s; ++i) os << preStmt[i] << "\n";
+    for (i=0; i<s; ++i) os << preStmt[i] << "\n";
     preStmt.clear();
     return false;
   }
