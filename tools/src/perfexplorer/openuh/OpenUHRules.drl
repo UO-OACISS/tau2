@@ -5,12 +5,10 @@ package rules
 import glue.DifferenceMetadataOperation;
 import glue.DifferenceOperation;
 import glue.PerformanceDifferenceType;
-import glue.CorrelationResult;
-import glue.CorrelationResult.FactData;
-import glue.AbstractResult;
-import java.lang.Math;
-import java.text.NumberFormat;
-import java.text.DecimalFormat;
+import glue.DataNeeded;
+import glue.MeanEventFact;
+import glue.DerivedMetrics;
+import glue.ScalabilityResult;
 
 #declare any global variables here
 
@@ -18,134 +16,26 @@ import java.text.DecimalFormat;
     #function content (can have multiple functions) 
 #end
 
-rule "Differences in Particles Per Cell"
-	salience 1
-	when
-		// there exists a difference operation between metadata collections
-		d : DifferenceMetadataOperation ()
-		f : FactWrapper ( factName == "input:micell", factType == DifferenceMetadataOperation.NAME )
-	then 
-		String[] values = (String[])d.getDifferences().get("input:micell");
-		System.out.println("Differences in particles per cell... " + values[0] + ", " + values[1]);
-		double tmp = Double.parseDouble(values[0]) / Double.parseDouble(values[1]);
-		// an increase in particles per cell means an increase in time
-		d.setExpectedRatio(d.getExpectedRatio() / tmp);
-		System.out.println("New Expected Ratio: " + d.getExpectedRatio());
-		d.removeFact("input:micell");
+
+rule "High Inefficiency"
+	when 
+		// there is a inefficiency rate higher than the average inefficiency rate
+		f : MeanEventFact ( m : metric == "(FP_OPS_RETIRED*(BACK_END_BUBBLE_ALL/CPU_CYCLES))", b : betterWorse == MeanEventFact.HIGHER, severity : severity > 0.02, e : eventName, a : mainValue, v : eventValue )
+	then
+		//System.out.println ( f.toString() );
+		System.out.println("The event " + e + " has a higher than average inefficiency");
+		System.out.println("\tAverage Inefficiency: " + a + ", Event Inefficiency: " + v);
+		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
 end
 
-rule "Differences in Timesteps"
-	salience 1
-	when
-		// there exists a difference operation between metadata collections
-		d : DifferenceMetadataOperation ()
-		f : FactWrapper ( factName == "input:mstep", factType == DifferenceMetadataOperation.NAME )
-	then 
-		String[] values = (String[])d.getDifferences().get("input:mstep");
-		double tmp = Double.parseDouble(values[0]) / Double.parseDouble(values[1]);
-		// an increase in timesteps means an increase in time
-		d.setExpectedRatio(d.getExpectedRatio() / tmp);
-		System.out.println("New Expected Ratio: " + d.getExpectedRatio());
-		d.removeFact("input:mstep");
-end
-
-rule "Direct Correlation with Metadata"
-	salience 1
-	when
-		// there exists a difference operation between metadata collections
-		c : CorrelationResult ()
-		d : FactData ( e : event, m : metric, t : type, e2 : event2, m2 : metric2 )
-		eval ( d.getType() == AbstractResult.EXCLUSIVE || d.getType() == AbstractResult.CALLS )
-		eval ( d.getType2() == CorrelationResult.CORRELATION )
-		eval ( Math.abs(d.getValue()) > 0.99 )
-	then 
-		StringBuffer buf = new StringBuffer();
-
-		buf.append(e + ": '" + m + ":" + AbstractResult.typeToString(t.intValue()));
-		buf.append("' metric is ");
-		if (d.getValue() < 0.0)
-			buf.append("inversely ");
-		buf.append("correlated with the metadata field '");
-		buf.append(e2 + "'.");
-		System.out.println(buf.toString());
-		
-		NumberFormat f = new DecimalFormat ("0.000");
-		System.out.println("\tThe correlation is " + f.format(d.getValue()) + " (direct).");
-		// c.removeFact(n);
-end
-
-rule "Very High Correlation with Metadata"
-	salience 1
-	when
-		// there exists a difference operation between metadata collections
-		c : CorrelationResult ()
-		d : FactData ( e : event, m : metric, t : type, e2 : event2, m2 : metric2 )
-		eval ( d.getType() == AbstractResult.EXCLUSIVE || d.getType() == AbstractResult.CALLS )
-		eval ( d.getType2() == CorrelationResult.CORRELATION )
-		eval ( Math.abs(d.getValue()) >= 0.95 && Math.abs(d.getValue()) < 0.99 )
-	then 
-		StringBuffer buf = new StringBuffer();
-
-		buf.append(e + ": '" + m + ":" + AbstractResult.typeToString(t.intValue()));
-		buf.append("' metric is ");
-		if (d.getValue() < 0.0)
-			buf.append("inversely ");
-		buf.append("correlated with the metadata field '");
-		buf.append(e2 + "'.");
-		System.out.println(buf.toString());
-		
-		NumberFormat f = new DecimalFormat ("0.000");
-		System.out.println("\tThe correlation is " + f.format(d.getValue()) + " (very high).");
-		// c.removeFact(n);
-end
-
-rule "High Correlation with Metadata"
-	salience 1
-	when
-		// there exists a difference operation between metadata collections
-		c : CorrelationResult ()
-		d : FactData ( e : event, m : metric, t : type, e2 : event2, m2 : metric2 )
-		eval ( d.getType() == AbstractResult.EXCLUSIVE || d.getType() == AbstractResult.CALLS )
-		eval ( d.getType2() == CorrelationResult.CORRELATION )
-		eval ( Math.abs(d.getValue()) >= 0.9 && Math.abs(d.getValue()) < 0.95 )
-	then 
-		StringBuffer buf = new StringBuffer();
-
-		buf.append(e + ": '" + m + ":" + AbstractResult.typeToString(t.intValue()));
-		buf.append("' metric is ");
-		if (d.getValue() < 0.0)
-			buf.append("inversely ");
-		buf.append("correlated with the metadata field '");
-		buf.append(e2 + "'.");
-		System.out.println(buf.toString());
-		
-		NumberFormat f = new DecimalFormat ("0.000");
-		System.out.println("\tThe correlation is " + f.format(d.getValue()) + " (high).");
-		// c.removeFact(n);
-end
-
-rule "Moderate Correlation with Metadata"
-	salience 1
-	when
-		// there exists a difference operation between metadata collections
-		c : CorrelationResult ()
-		d : FactData ( e : event, m : metric, t : type, e2 : event2, m2 : metric2 )
-		eval ( d.getType() == AbstractResult.EXCLUSIVE || d.getType() == AbstractResult.CALLS )
-		eval ( d.getType2() == CorrelationResult.CORRELATION )
-		eval ( Math.abs(d.getValue()) >= 0.85 && Math.abs(d.getValue()) < 0.90 )
-	then 
-		StringBuffer buf = new StringBuffer();
-
-		buf.append(e + ": '" + m + ":" + AbstractResult.typeToString(t.intValue()));
-		buf.append("' metric is ");
-		if (d.getValue() < 0.0)
-			buf.append("inversely ");
-		buf.append("correlated with the metadata field '");
-		buf.append(e2 + "'.");
-		System.out.println(buf.toString());
-		
-		NumberFormat f = new DecimalFormat ("0.000");
-		System.out.println("\tThe correlation is " + f.format(d.getValue()) + " (moderate).");
-		// c.removeFact(n);
+rule "Load Imbalance"
+	when 
+		// there is a inefficiency rate higher than the average inefficiency rate
+		f : MeanEventFact ( m : metric == "CPU_CYCLES (STDDEV / MEAN)", b : betterWorse == MeanEventFact.HIGHER, severity : severity > 0.02, e : eventName, a : mainValue, v : eventValue )
+	then
+		//System.out.println ( f.toString() );
+		System.out.println("The event " + e + " has a higher than average load imbalance");
+		System.out.println("\tAverage load imbalance: " + a + ", Event load imbalance: " + v);
+		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
 end
 

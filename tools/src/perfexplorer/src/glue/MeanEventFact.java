@@ -13,9 +13,11 @@ import rules.RuleHarness;
  */
 public class MeanEventFact {
 
-	public static final boolean BETTER = true;
-	public static final boolean WORSE = false;
-	private boolean betterWorse = BETTER;
+	public static final int BETTER = 0;
+	public static final int WORSE = 1;
+	public static final int HIGHER = 2;
+	public static final int LOWER = 3;
+	private int betterWorse = BETTER;
 	private String metric = null;
 	private String meaningfulMetricName = null;
 	private double mainValue = 0.0;
@@ -26,7 +28,7 @@ public class MeanEventFact {
 	/**
 	 * 
 	 */
-	private MeanEventFact(boolean betterWorse, String metric, String meaningfulMetricName, double mainValue, double eventValue, String eventName, double severity) {
+	private MeanEventFact(int betterWorse, String metric, String meaningfulMetricName, double mainValue, double eventValue, String eventName, double severity) {
 		this.betterWorse = betterWorse;
 		this.metric = metric;
 		this.meaningfulMetricName = meaningfulMetricName;
@@ -37,14 +39,18 @@ public class MeanEventFact {
 	}
 
 	public static void compareEventToMain(PerformanceResult mainInput, String mainEvent, PerformanceResult eventInput, String event) {
+		compareEventToMain(mainInput, mainEvent, eventInput, event, mainInput.getTimeMetric());
+	}
+	public static void compareEventToMain(PerformanceResult mainInput, String mainEvent, PerformanceResult eventInput, String event, String timeMetric) {
 		// don't compare main to self
 		if (mainEvent.equals(event)) {
 			return;
 		}
 		
-		double mainTime = mainInput.getInclusive(0, mainEvent, mainInput.getTimeMetric());
-		double eventTime = mainInput.getExclusive(0, event, mainInput.getTimeMetric());
+		double mainTime = mainInput.getInclusive(0, mainEvent, timeMetric);
+		double eventTime = mainInput.getExclusive(0, event, timeMetric);
 		double severity = eventTime / mainTime;
+		//System.out.println(timeMetric + " " + mainTime + " " + eventTime + " " + severity);
 		for (String metric : mainInput.getMetrics()) {
 			double mainValue = mainInput.getInclusive(0, mainEvent, metric);
 			double eventValue = eventInput.getExclusive(0, event, metric);
@@ -80,14 +86,30 @@ public class MeanEventFact {
 				// L2 cache access rate
 			} else if (metric.equals(DerivedMetrics.TOT_INS_RATE)) {
 				// Total instruction rate
+			} else { 
+				// any other metric combination
+				if (mainValue < eventValue) {
+					RuleHarness.assertObject(new MeanEventFact(HIGHER, metric, metric, mainValue, eventValue, event, severity));
+				} else if (mainValue < eventValue) {
+					RuleHarness.assertObject(new MeanEventFact(LOWER, metric, metric, mainValue, eventValue, event, severity));
+				}
 			}
+				
 		}
 	}
 	
 	public String toString () {
 		// TODO: MAKE THIS PRETTY!
 		StringBuffer buf = new StringBuffer();
-		buf.append(betterWorse ? "Better " : "Worse ");
+		if (betterWorse == BETTER) {
+			buf.append("Better ");
+		} else if (betterWorse == WORSE) {
+			buf.append("Worse ");
+		} else if (betterWorse == HIGHER) {
+			buf.append("Higher ");
+		} else { // if (betterWorse == LOWER) {
+			buf.append("Lower ");
+		}
 		//buf.append(meaningfulMetricName + " ");
 		buf.append(mainValue + " ");
 		buf.append(eventValue + " ");
@@ -101,14 +123,14 @@ public class MeanEventFact {
 	/**
 	 * @return the betterWorse
 	 */
-	public boolean isBetterWorse() {
+	public int isBetterWorse() {
 		return betterWorse;
 	}
 
 	/**
 	 * @param betterWorse the betterWorse to set
 	 */
-	public void setBetterWorse(boolean betterWorse) {
+	public void setBetterWorse(int betterWorse) {
 		this.betterWorse = betterWorse;
 	}
 

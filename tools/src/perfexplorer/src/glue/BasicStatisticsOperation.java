@@ -3,6 +3,7 @@
  */
 package glue;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -15,8 +16,15 @@ import edu.uoregon.tau.perfdmf.Trial;
  *
  */
 public class BasicStatisticsOperation extends AbstractPerformanceOperation {
+	public static int TOTAL = 0;
+	public static int MEAN = 1;
+	public static int VARIANCE = 2;
+	public static int STDDEV = 3;
+	public static int MIN = 4;
+	public static int MAX = 5;
 
 	private boolean combined = false;
+	private boolean includeNull = false;
 	
 	/**
 	 * @param input
@@ -76,6 +84,13 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 			totalMetrics.addAll(input.getMetrics());
 		}
 		
+		// make counters for each metric
+		HashMap<String,Integer> counters = new HashMap<String,Integer>();
+		for (String event : totalEvents) {
+			counters.put(event, 0);
+		}
+		
+		double calls = 0;
 //		System.out.println("Totals, mins, maxes...");
 		// add each input to the total
 		for (PerformanceResult input : inputs) {
@@ -97,13 +112,14 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 						max.putDataPoint(thread, event, metric, MaxResult.INCLUSIVE,
 								input.getInclusive(thread, event, metric));
 					}
+					calls = input.getCalls(thread, event);
+					if (calls > 0.0) {
+						counters.put(event, counters.get(event) + 1);
+					}
 					total.putCalls(thread, event, 
-							total.getCalls(thread, event) +
-							input.getCalls(thread, event));
-					min.putDataPoint(thread, event, null, MinResult.CALLS,
-							input.getCalls(thread, event));
-					max.putDataPoint(thread, event, null, MaxResult.CALLS,
-							input.getCalls(thread, event));
+							total.getCalls(thread, event) +	calls);
+					min.putDataPoint(thread, event, null, MinResult.CALLS, calls);
+					max.putDataPoint(thread, event, null, MaxResult.CALLS, calls);
 					total.putSubroutines(thread, event, 
 							total.getSubroutines(thread, event) +
 							input.getSubroutines(thread, event));
@@ -119,6 +135,9 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 		// divide the total to get the mean
 		for (Integer thread : totalThreads) {
 			for (String event : totalEvents) {
+				if (!includeNull) {
+					numInputs = counters.get(event);
+				}
 				for (String metric : totalMetrics) {
 					mean.putExclusive(thread, event, metric, 
 							total.getExclusive(thread, event, metric) / numInputs);
@@ -164,6 +183,10 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 		// divide the variances by n-1
 		for (Integer thread : totalThreads) {
 			for (String event : totalEvents) {
+				if (!includeNull) {
+					numInputs = counters.get(event);
+					numInputs = (numInputs == 1 ? 1 : numInputs - 1);
+				}
 				for (String metric : totalMetrics) {
 					variance.putExclusive(thread, event, metric,
 							variance.getExclusive(thread, event, metric) / numInputs);
@@ -215,7 +238,14 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 			totalThreads.addAll(input.getThreads());
 			totalEvents.addAll(input.getEvents());
 			totalMetrics.addAll(input.getMetrics());
-		
+
+			// make counters for each metric
+			HashMap<String,Integer> counters = new HashMap<String,Integer>();
+			for (String event : totalEvents) {
+				counters.put(event, 0);
+			}
+
+			double calls = 0;
 //			System.out.println("Totals, mins, maxes...");
 			// add each input to the total
 			for (Integer thread : totalThreads) {
@@ -236,13 +266,14 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 						max.putDataPoint(0, event, metric, MaxResult.INCLUSIVE,
 								input.getInclusive(thread, event, metric));
 					}
+					calls = input.getCalls(thread, event);
+					if (calls > 0.0) {
+						counters.put(event, counters.get(event) + 1);
+					}
 					total.putCalls(0, event, 
-							total.getCalls(0, event) +
-							input.getCalls(thread, event));
-					min.putDataPoint(0, event, null, MinResult.CALLS,
-							input.getCalls(thread, event));
-					max.putDataPoint(0, event, null, MaxResult.CALLS,
-							input.getCalls(thread, event));
+							total.getCalls(0, event) + calls);
+					min.putDataPoint(0, event, null, MinResult.CALLS, calls);
+					max.putDataPoint(0, event, null, MaxResult.CALLS, calls);
 					total.putSubroutines(0, event, 
 							total.getSubroutines(0, event) +
 							input.getSubroutines(thread, event));
@@ -254,19 +285,22 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 			}
 			
 	//		System.out.println("Means...");
-			int numInputs = inputs.size();
+			int numInputs = input.getThreads().size();
 			// divide the total to get the mean
 			for (String event : totalEvents) {
+				if (!includeNull) {
+					numInputs = counters.get(event);
+				}
 				for (String metric : totalMetrics) {
 					mean.putExclusive(0, event, metric, 
-							total.getExclusive(0, event, metric) / input.getThreads().size());
+							total.getExclusive(0, event, metric) / numInputs);
 					mean.putInclusive(0, event, metric, 
-							total.getInclusive(0, event, metric) / input.getThreads().size());
+							total.getInclusive(0, event, metric) / numInputs);
 				}
 				mean.putCalls(0, event, 
-						total.getCalls(0, event) / input.getThreads().size());
+						total.getCalls(0, event) / numInputs);
 				mean.putSubroutines(0, event, 
-						total.getSubroutines(0, event) / input.getThreads().size());
+						total.getSubroutines(0, event) / numInputs);
 			}
 
 //		System.out.println("variances...");
@@ -294,25 +328,30 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 				}
 			}
 
+			numInputs = input.getThreads().size() - 1;
 //		System.out.println("Standard Deviations...");
 			// divide the variances by n-1
 			for (String event : totalEvents) {
+				if (!includeNull) {
+					numInputs = counters.get(event);
+					numInputs = (numInputs == 1 ? 1 : numInputs - 1);
+				}
 				for (String metric : totalMetrics) {
 					variance.putExclusive(0, event, metric,
-							variance.getExclusive(0, event, metric) / input.getThreads().size()-1);
+							variance.getExclusive(0, event, metric) / numInputs);
 					stdev.putExclusive(0, event, metric,
 							java.lang.Math.sqrt(variance.getExclusive(0, event, metric)));
 					variance.putInclusive(0, event, metric, 
-							variance.getInclusive(0, event, metric) / input.getThreads().size()-1);
+							variance.getInclusive(0, event, metric) / numInputs);
 					stdev.putInclusive(0, event, metric, 
 							java.lang.Math.sqrt(variance.getInclusive(0, event, metric)));
 				}
 				variance.putCalls(0, event, 
-						variance.getCalls(0, event) / input.getThreads().size()-1);
+						variance.getCalls(0, event) / numInputs);
 				stdev.putCalls(0, event, 
 						java.lang.Math.sqrt(variance.getCalls(0, event)));
 				variance.putSubroutines(0, event, 
-						variance.getSubroutines(0, event) / input.getThreads().size()-1);
+						variance.getSubroutines(0, event) / numInputs);
 				stdev.putSubroutines(0, event, 
 						java.lang.Math.sqrt(variance.getSubroutines(0, event)));
 			}
@@ -340,5 +379,19 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 	 */
 	public void setCombined(boolean combined) {
 		this.combined = combined;
+	}
+
+	/**
+	 * @return the includeNull
+	 */
+	public boolean isIncludeNull() {
+		return includeNull;
+	}
+
+	/**
+	 * @param includeNull the includeNull to set
+	 */
+	public void setIncludeNull(boolean includeNull) {
+		this.includeNull = includeNull;
 	}
 }

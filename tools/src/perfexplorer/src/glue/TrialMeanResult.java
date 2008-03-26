@@ -92,7 +92,7 @@ public class TrialMeanResult extends AbstractResult {
 			sql.append(" order by 2,1 ");
 			
 			PreparedStatement statement = db.prepareStatement(sql.toString());
-			//System.out.println(sql.toString() + " " + metric + " " + event);
+			//System.out.println(sql.toString() + " " + trial.getID() + " " + metric + " " + event);
 			
 			statement.setInt(1, trial.getID());
 			int index = 1;

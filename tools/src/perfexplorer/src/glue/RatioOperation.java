@@ -20,6 +20,7 @@ import edu.uoregon.tau.perfdmf.Trial;
 public class RatioOperation extends AbstractPerformanceOperation {
 
 	private boolean straightRatio = true;
+	private String metricSuffix = " RATIO";
 
 	/**
 	 * @param input
@@ -27,6 +28,16 @@ public class RatioOperation extends AbstractPerformanceOperation {
 	public RatioOperation(PerformanceResult numerator, PerformanceResult denominator) {
 		super(numerator);
 		addInput(denominator);
+		// TODO Auto-generated constructor stub
+	}
+
+	/**
+	 * @param input
+	 */
+	public RatioOperation(PerformanceResult numerator, PerformanceResult denominator, String metricSuffix) {
+		super(numerator);
+		addInput(denominator);
+		this.metricSuffix = metricSuffix;
 		// TODO Auto-generated constructor stub
 	}
 
@@ -74,20 +85,20 @@ public class RatioOperation extends AbstractPerformanceOperation {
 				for (String metric : totalMetrics) {
 					// divide the numerator with the denominator
 					if (straightRatio) {
-						output.putExclusive(thread, event, metric, 
+						output.putExclusive(thread, event, metric + metricSuffix, 
 								numerator.getExclusive(thread, event, metric) /
 								denominator.getExclusive(thread, event, metric));
-						output.putInclusive(thread, event, metric, 
+						output.putInclusive(thread, event, metric + metricSuffix, 
 								numerator.getInclusive(thread, event, metric) /
 								denominator.getInclusive(thread, event, metric));
 					// or, divide the *difference* between them with
 					// the denominator
 					} else {
-						output.putExclusive(thread, event, metric, 
+						output.putExclusive(thread, event, metric + metricSuffix, 
 								Math.abs(numerator.getExclusive(thread, event, metric) -
 								    denominator.getExclusive(thread, event, metric)) /
 								denominator.getExclusive(thread, event, metric));
-						output.putInclusive(thread, event, metric, 
+						output.putInclusive(thread, event, metric + metricSuffix, 
 								Math.abs(numerator.getInclusive(thread, event, metric) -
 								    denominator.getInclusive(thread, event, metric)) /
 								denominator.getInclusive(thread, event, metric));

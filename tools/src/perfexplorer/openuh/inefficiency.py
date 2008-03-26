@@ -9,6 +9,7 @@ from glue import DeriveMetricOperation
 from glue import MergeTrialsOperation
 from glue import DerivedMetrics
 from glue import TopXEvents
+from glue import MeanEventFact
 
 ###################################################################
 
@@ -52,17 +53,19 @@ print "--- Calculating inefficiency --- "
 
 # create a rulebase for processing
 #print "Loading Rules..."
-#ruleHarness = RuleHarness.useGlobalRules("openuh/OpenUHRules.drl")
+ruleHarness = RuleHarness.useGlobalRules("openuh/OpenUHRules.drl")
 
 # load the trial
 print "loading the data..."
 
 # choose the right database configuration - a string which matches the end of the jdbc connection,
 # such as "perfdmf" to match "jdbc:derby:/Users/khuck/src/tau2/apple/lib/perfdmf"
-Utilities.setSession("perfdmf")
+Utilities.setSession("openuh")
 
 # load just the average values across all threads, input: app_name, exp_name, trial_name
-trial = TrialMeanResult(Utilities.getTrial("msap_parametric.test_static", "size.100", "4.threads"))
+trial = TrialMeanResult(Utilities.getTrial("msap_parametric.optix.static", "size.400", "16.threads"))
+mainEvent = trial.getMainEvent()
+print "Main Event: ", mainEvent
 
 # extract the non-callpath events from the trial
 extractor = ExtractNonCallpathEventOperation(trial)
@@ -78,17 +81,10 @@ thread = 0
 print "Average", inefficiency, "values for this trial:"
 for event in derived.getEvents():
 	print event, derived.getExclusive(thread, event, inefficiency)
-print
-
-# get the worst offender
-print "Getting top 1 event (sorted by exclusive time)..."
-getTop1 = TopXEvents(derived, inefficiency, AbstractResult.EXCLUSIVE, 1)
-top1 = getTop1.processData().get(0)
-for event in top1.getEvents():
-	print event, derived.getExclusive(thread, event, inefficiency)
+	MeanEventFact.compareEventToMain(derived, mainEvent, derived, event)
 print
 
 # process the rules
-#RuleHarness.getInstance().processRules()
+RuleHarness.getInstance().processRules()
 
 print "---------------- JPython test script end -------------"

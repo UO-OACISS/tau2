@@ -23,9 +23,9 @@ False = 0
 def loadRules():
 	global ruleHarness
 	print "Loading Rules..."
-	ruleHarness = RuleHarness.useGlobalRules("/rules/GeneralRules.drl")
-	ruleHarness.addRules("/rules/ApplicationRules.drl")
-	ruleHarness.addRules("/rules/MachineRules.drl")
+	ruleHarness = RuleHarness.useGlobalRules("rules/GeneralRules.drl")
+	ruleHarness.addRules("rules/ApplicationRules.drl")
+	ruleHarness.addRules("rules/MachineRules.drl")
 	return 
 
 def loaddata():
