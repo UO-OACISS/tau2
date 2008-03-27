@@ -4,6 +4,10 @@
 package glue;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import rules.RuleHarness;
 
@@ -41,6 +45,7 @@ public class MeanEventFact {
 	public static void compareEventToMain(PerformanceResult mainInput, String mainEvent, PerformanceResult eventInput, String event) {
 		compareEventToMain(mainInput, mainEvent, eventInput, event, mainInput.getTimeMetric());
 	}
+	
 	public static void compareEventToMain(PerformanceResult mainInput, String mainEvent, PerformanceResult eventInput, String event, String timeMetric) {
 		// don't compare main to self
 		if (mainEvent.equals(event)) {
@@ -97,6 +102,47 @@ public class MeanEventFact {
 				
 		}
 	}
+	
+	public static void evaluateLoadBalance(PerformanceResult means, PerformanceResult ratios, String event) {
+		evaluateLoadBalance(means, ratios, event, null);
+	}
+
+	public static void evaluateLoadBalance(PerformanceResult means, PerformanceResult ratios, String event, String testMetric) {
+		String mainEvent = means.getMainEvent();
+		
+		// don't compare main to self
+		if (mainEvent.equals(event)) {
+			return;
+		}
+		
+		String timeMetric = means.getTimeMetric();
+		if (timeMetric == null || timeMetric.equals("")) {
+			timeMetric = testMetric;
+		}
+		double mainTime = means.getInclusive(0, mainEvent, timeMetric);
+		double eventTime = means.getExclusive(0, event, timeMetric);
+		double severity = eventTime / mainTime;
+		
+		Set<String> metrics = new HashSet<String>();
+		if (testMetric != null) {
+			metrics.add(testMetric);
+		} else {
+			metrics = ratios.getMetrics();
+		}
+
+		for (String metric : metrics) {
+			double eventRatio = ratios.getExclusive(0, event, metric);
+			double eventValue = means.getExclusive(0, event, metric);
+			double mainRatio = ratios.getExclusive(0, mainEvent, metric);
+			// any other metric combination
+			if (mainRatio < eventRatio) {
+				RuleHarness.assertObject(new MeanEventFact(HIGHER, metric, metric, eventRatio, eventValue, event, severity));
+			} else if (mainRatio < eventRatio) {
+				RuleHarness.assertObject(new MeanEventFact(LOWER, metric, metric, eventRatio, eventValue, event, severity));
+			}
+		}
+	}
+	
 	
 	public String toString () {
 		// TODO: MAKE THIS PRETTY!

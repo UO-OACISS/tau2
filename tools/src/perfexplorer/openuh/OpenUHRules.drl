@@ -31,11 +31,12 @@ end
 rule "Load Imbalance"
 	when 
 		// there is a inefficiency rate higher than the average inefficiency rate
-		f : MeanEventFact ( m : metric == "CPU_CYCLES (STDDEV / MEAN)", b : betterWorse == MeanEventFact.HIGHER, severity : severity > 0.02, e : eventName, a : mainValue, v : eventValue )
+		f : MeanEventFact ( m : metric == "P_WALL_CLOCK_TIME", b : betterWorse == MeanEventFact.HIGHER, severity : severity > 0.02, e : eventName, a : mainValue, v : eventValue )
 	then
 		//System.out.println ( f.toString() );
-		System.out.println("The event " + e + " has a higher than average load imbalance");
-		System.out.println("\tAverage load imbalance: " + a + ", Event load imbalance: " + v);
+		System.out.println("The event " + e + " has a high load imbalance");
+		System.out.println("\tMean/Stddev ratio: " + a + ", Stddev actual: " + v);
 		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
+		System.out.println("If this event is an OpenMP parallel region, consider methods to balance the workload, including dynamic instead of static work assignment");
 end
 

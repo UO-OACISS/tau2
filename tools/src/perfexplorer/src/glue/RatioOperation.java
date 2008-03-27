@@ -20,7 +20,7 @@ import edu.uoregon.tau.perfdmf.Trial;
 public class RatioOperation extends AbstractPerformanceOperation {
 
 	private boolean straightRatio = true;
-	private String metricSuffix = " RATIO";
+	private String metricSuffix = "";
 
 	/**
 	 * @param input

@@ -35,35 +35,34 @@ print "loading the data..."
 Utilities.setSession("openuh")
 
 # load just the average values across all threads, input: app_name, exp_name, trial_name
-trial = TrialResult(Utilities.getTrial("Fluid Dynamic", "rib 45", "1_2"))
+#trial = TrialResult(Utilities.getTrial("Fluid Dynamic", "rib 45", "1_8"))
+trial = TrialResult(Utilities.getTrial("msap_parametric.optix.static", "size.400", "16.threads"))
+#trial = TrialResult(Utilities.getCurrentTrial())
 
 # extract the non-callpath events from the trial
 extractor = ExtractNonCallpathEventOperation(trial)
 extracted = extractor.processData().get(0)
 
 # get basic statistics
-statMaker = BasicStatisticsOperation(extracted, True)
+statMaker = BasicStatisticsOperation(extracted, False)
 stats = statMaker.processData()
 stddev = stats.get(BasicStatisticsOperation.STDDEV)
 means = stats.get(BasicStatisticsOperation.MEAN)
+totals = stats.get(BasicStatisticsOperation.TOTAL)
 mainEvent = means.getMainEvent()
 print "Main Event: ", mainEvent
 
 # get the ratio between stddev and total
-ratioMaker = RatioOperation(stddev, means, " (STDDEV / MEAN)")
+ratioMaker = RatioOperation(stddev, means)
 #ratioMaker = RatioOperation(stddev, means)
 ratios = ratioMaker.processData().get(0)
 
-merger = MergeTrialsOperation(means)
-merger.addInput(ratios)
-merged = merger.processData().get(0)
-
 # iterate over events, output imbalance derived metric
 thread = 0
-metric = "CPU_CYCLES (STDDEV / MEAN)"
-for event in merged.getEvents():
-	#print event, merged.getExclusive(thread, event, metric)
-	MeanEventFact.compareEventToMain(merged, mainEvent, merged, event, "CPU_CYCLES")
+metric = "P_WALL_CLOCK_TIME"
+for event in ratios.getEvents():
+	#print event, totals.getInclusive(thread, event, metric), means.getInclusive(thread, event, metric), stddev.getInclusive(thread, event, metric), ratios.getInclusive(thread, event, metric)
+	MeanEventFact.evaluateLoadBalance(means, ratios, event, metric)
 print
 
 # process the rules

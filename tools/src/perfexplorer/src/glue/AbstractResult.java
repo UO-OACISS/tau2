@@ -20,7 +20,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * interface.  This class has all the member data fields for the plethora
  * of anticipated subclasses.
  * 
- * <P>CVS $Id: AbstractResult.java,v 1.2 2008/03/05 00:25:53 khuck Exp $</P>
+ * <P>CVS $Id: AbstractResult.java,v 1.3 2008/03/27 01:08:25 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0
@@ -44,6 +44,7 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 
 	private String mainEvent = null;
 	private double mainInclusive = 0.0;
+	private String mainMetric = null;
 	
 	public static final int INCLUSIVE = 0;
 	public static final int EXCLUSIVE = 1;
@@ -120,10 +121,21 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 			inclusiveData.get(thread).put(event, new HashMap<String, Double>());
 		}
 		inclusiveData.get(thread).get(event).put(metric, value);
-		if (value > mainInclusive && !event.contains(" => ")) {
+		if (value > mainInclusive && !event.contains(" => ") && (mainMetric == null || mainMetric.equals(metric))) {
+//			if (this instanceof MeanResult && mainEvent != null) {
+//				System.out.println("Old: " + mainEvent + ":" + metric + " " + mainInclusive);
+//			}
 			mainInclusive = value;
 			mainEvent = event;
+			mainMetric = metric;
+//			if (this instanceof MeanResult) {
+//				System.out.println("New: " + mainEvent + ":" + metric + " " + mainInclusive);
+//			}
+//		} else if (this instanceof MeanResult && event.equals("main")) {
+//			System.out.println("MAIN: " + event + ":" + metric + " " + value);
 		}
+			
+
 	}
 	
 	public void putExclusive(Integer thread, String event, String metric, double value) {

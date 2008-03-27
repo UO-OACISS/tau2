@@ -63,16 +63,23 @@ print "loading the data..."
 Utilities.setSession("openuh")
 
 # load just the average values across all threads, input: app_name, exp_name, trial_name
-trial = TrialMeanResult(Utilities.getTrial("msap_parametric.optix.static", "size.400", "16.threads"))
-mainEvent = trial.getMainEvent()
-print "Main Event: ", mainEvent
+trial = TrialResult(Utilities.getTrial("msap_parametric.optix.static", "size.400", "16.threads"))
 
 # extract the non-callpath events from the trial
 extractor = ExtractNonCallpathEventOperation(trial)
 extracted = extractor.processData().get(0)
 
+# get basic statistics
+statMaker = BasicStatisticsOperation(extracted, True)
+stats = statMaker.processData()
+means = stats.get(BasicStatisticsOperation.MEAN)
+
+# get main event
+mainEvent = means.getMainEvent()
+print "Main Event: ", mainEvent
+
 # calculate all derived metrics
-derived, inefficiency = getInefficiency(extracted)
+derived, inefficiency = getInefficiency(means)
 
 # just one thread
 thread = 0

@@ -250,37 +250,46 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 			// add each input to the total
 			for (Integer thread : totalThreads) {
 				for (String event : totalEvents) {
-					for (String metric : totalMetrics) {
-						total.putExclusive(0, event, metric, 
-								total.getExclusive(0, event, metric) +
-								input.getExclusive(thread, event, metric));
-						min.putDataPoint(0, event, metric, MinResult.EXCLUSIVE,
-								input.getExclusive(thread, event, metric));
-						max.putDataPoint(0, event, metric, MaxResult.EXCLUSIVE, 
-								input.getExclusive(thread, event, metric));
-						total.putInclusive(0, event, metric, 
-								total.getInclusive(0, event, metric) +
-								input.getInclusive(thread, event, metric));
-						min.putDataPoint(0, event, metric, MinResult.INCLUSIVE, 
-								input.getInclusive(thread, event, metric));
-						max.putDataPoint(0, event, metric, MaxResult.INCLUSIVE,
-								input.getInclusive(thread, event, metric));
-					}
 					calls = input.getCalls(thread, event);
+					// if not called, don't bother - everything is zero
 					if (calls > 0.0) {
+						for (String metric : totalMetrics) {
+							total.putExclusive(0, event, metric, 
+									total.getExclusive(0, event, metric) +
+									input.getExclusive(thread, event, metric));
+							min.putDataPoint(0, event, metric, MinResult.EXCLUSIVE,
+									input.getExclusive(thread, event, metric));
+							max.putDataPoint(0, event, metric, MaxResult.EXCLUSIVE, 
+									input.getExclusive(thread, event, metric));
+//							if (event.equals("LOOP #3 [file:/mnt/netapp/home1/khuck/openuh/src/fpga/msap.c <63, 163>]") &&
+//									metric.equals("P_WALL_CLOCK_TIME")) {
+//								System.out.println("Adding " + input.getInclusive(thread, event, metric) + " to " + total.getInclusive(0, event, metric));
+//							}
+							total.putInclusive(0, event, metric, 
+									total.getInclusive(0, event, metric) +
+									input.getInclusive(thread, event, metric));
+//							if (event.equals("LOOP #3 [file:/mnt/netapp/home1/khuck/openuh/src/fpga/msap.c <63, 163>]") &&
+//									metric.equals("P_WALL_CLOCK_TIME")) {
+//								System.out.println("\tAfter: " + total.getInclusive(0, event, metric));
+//							}
+							min.putDataPoint(0, event, metric, MinResult.INCLUSIVE, 
+									input.getInclusive(thread, event, metric));
+							max.putDataPoint(0, event, metric, MaxResult.INCLUSIVE,
+									input.getInclusive(thread, event, metric));
+						}
 						counters.put(event, counters.get(event) + 1);
+						total.putCalls(0, event, 
+								total.getCalls(0, event) + calls);
+						min.putDataPoint(0, event, null, MinResult.CALLS, calls);
+						max.putDataPoint(0, event, null, MaxResult.CALLS, calls);
+						total.putSubroutines(0, event, 
+								total.getSubroutines(0, event) +
+								input.getSubroutines(thread, event));
+						min.putDataPoint(0, event, null, MinResult.SUBROUTINES,
+								input.getSubroutines(thread, event));
+						max.putDataPoint(0, event, null, MaxResult.SUBROUTINES,
+								input.getSubroutines(thread, event));
 					}
-					total.putCalls(0, event, 
-							total.getCalls(0, event) + calls);
-					min.putDataPoint(0, event, null, MinResult.CALLS, calls);
-					max.putDataPoint(0, event, null, MaxResult.CALLS, calls);
-					total.putSubroutines(0, event, 
-							total.getSubroutines(0, event) +
-							input.getSubroutines(thread, event));
-					min.putDataPoint(0, event, null, MinResult.SUBROUTINES,
-							input.getSubroutines(thread, event));
-					max.putDataPoint(0, event, null, MaxResult.SUBROUTINES,
-							input.getSubroutines(thread, event));
 				}
 			}
 			
@@ -292,10 +301,18 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 					numInputs = counters.get(event);
 				}
 				for (String metric : totalMetrics) {
+//					if (event.equals("LOOP #3 [file:/mnt/netapp/home1/khuck/openuh/src/fpga/msap.c <63, 163>]") &&
+//							metric.equals("P_WALL_CLOCK_TIME")) {
+//						System.out.println("Dividing " + total.getInclusive(0, event, metric) + " by " + numInputs);
+//					}
 					mean.putExclusive(0, event, metric, 
 							total.getExclusive(0, event, metric) / numInputs);
 					mean.putInclusive(0, event, metric, 
 							total.getInclusive(0, event, metric) / numInputs);
+//					if (event.equals("LOOP #3 [file:/mnt/netapp/home1/khuck/openuh/src/fpga/msap.c <63, 163>]") &&
+//							metric.equals("P_WALL_CLOCK_TIME")) {
+//						System.out.println("\tAfter: " + mean.getInclusive(0, event, metric));
+//					}
 				}
 				mean.putCalls(0, event, 
 						total.getCalls(0, event) / numInputs);
@@ -307,24 +324,26 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 		// do the sums for the stddev
 			for (Integer thread : totalThreads) {
 				for (String event : totalEvents) {
-					for (String metric : totalMetrics) {
-						variance.putExclusive(0, event, metric,
-								variance.getExclusive(0, event, metric) + 
-								java.lang.Math.pow(mean.getExclusive(0, event, metric) -
-								input.getExclusive(thread, event, metric),2.0));
-						variance.putInclusive(0, event, metric,
-								variance.getInclusive(0, event, metric) +
-								java.lang.Math.pow(mean.getInclusive(0, event, metric) -
-								input.getInclusive(thread, event, metric),2.0));
+					if (!includeNull && (input.getCalls(thread, event) > 0)) {
+						for (String metric : totalMetrics) {
+							variance.putExclusive(0, event, metric,
+									variance.getExclusive(0, event, metric) + 
+									java.lang.Math.pow(mean.getExclusive(0, event, metric) -
+									input.getExclusive(thread, event, metric),2.0));
+							variance.putInclusive(0, event, metric,
+									variance.getInclusive(0, event, metric) +
+									java.lang.Math.pow(mean.getInclusive(0, event, metric) -
+									input.getInclusive(thread, event, metric),2.0));
+						}
+						variance.putCalls(0, event,
+								variance.getCalls(0, event) +
+								java.lang.Math.pow(mean.getCalls(0, event) -
+								input.getCalls(thread, event),2.0));
+						variance.putSubroutines(0, event,
+								variance.getSubroutines(0, event) +
+								java.lang.Math.pow(mean.getSubroutines(0, event) -
+								input.getSubroutines(thread, event),2.0));
 					}
-					variance.putCalls(0, event,
-							variance.getCalls(0, event) +
-							java.lang.Math.pow(mean.getCalls(0, event) -
-							input.getCalls(thread, event),2.0));
-					variance.putSubroutines(0, event,
-							variance.getSubroutines(0, event) +
-							java.lang.Math.pow(mean.getSubroutines(0, event) -
-							input.getSubroutines(thread, event),2.0));
 				}
 			}
 
