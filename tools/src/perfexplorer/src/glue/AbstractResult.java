@@ -20,7 +20,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * interface.  This class has all the member data fields for the plethora
  * of anticipated subclasses.
  * 
- * <P>CVS $Id: AbstractResult.java,v 1.3 2008/03/27 01:08:25 khuck Exp $</P>
+ * <P>CVS $Id: AbstractResult.java,v 1.4 2008/03/27 18:22:39 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0
@@ -302,6 +302,13 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 	public String getTimeMetric() {
     	for (String metric : metrics) {
     		if (metric.toUpperCase().contains("TIME") && !metric.startsWith("("))
+    			return metric;
+    	}
+		// if time not found, use something similar
+    	for (String metric : metrics) {
+    		if (metric.toUpperCase().equals("PAPI_TOT_CYC"))
+    			return metric;
+    		else if (metric.toUpperCase().equals("CPU_CYCLES"))
     			return metric;
     	}
     	return null;
