@@ -28,9 +28,13 @@ extern "C" {
 #include "papi.h"
 }
 
+#ifdef PAPI_VERSION // 2.x doesn't have these macros
 #if (PAPI_VERSION_MAJOR(PAPI_VERSION) >= 3 && PAPI_VERSION_MINOR(PAPI_VERSION) >= 9)
 #define TAU_COMPONENT_PAPI
-#else
+#endif
+#endif
+
+#ifndef TAU_COMPONENT_PAPI
 // if there is no component papi, then we pretend that there is just one component
 #define PAPI_COMPONENT_INDEX(a) 0
 #endif
