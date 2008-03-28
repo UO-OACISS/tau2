@@ -2,7 +2,8 @@ from edu.uoregon.tau.perfdmf import Trial
 from rules import RuleHarness
 from glue import PerformanceResult
 from glue import Utilities
-from glue import TrialMeanResult
+from glue import TrialResult
+from glue import BasicStatisticsOperation
 from glue import AbstractResult
 from glue import ExtractNonCallpathEventOperation
 from glue import DeriveMetricOperation
@@ -37,14 +38,16 @@ def getInefficiency(input):
 	totalStallCycles = "BACK_END_BUBBLE_ALL"
 	totalCycles = "CPU_CYCLES"
 	fpOps = "FP_OPS_RETIRED"
+	instRetired = "IA64_INST_RETIRED_THIS"
 
 	# derive the BACK_END_BUBBLE_ALL / CPU_CYCLES term
 	# derive the FP_OPS_RETIRED * (BACK_END_BUBBLE_ALL / CPU_CYCLES) value
 	input, tmpName = deriveMetric(input, totalStallCycles, totalCycles, DeriveMetricOperation.DIVIDE)
-	input, inefficiency = deriveMetric(input, fpOps, tmpName, DeriveMetricOperation.MULTIPLY)
+	input, inefficiency1 = deriveMetric(input, instRetired, tmpName, DeriveMetricOperation.DIVIDE)
+	input, inefficiency2 = deriveMetric(input, fpOps, tmpName, DeriveMetricOperation.MULTIPLY)
 
 	# return the trial, and the new derived metric name
-	return input, inefficiency
+	return input, inefficiency1, inefficiency2
 
 ###################################################################
 
@@ -63,7 +66,8 @@ print "loading the data..."
 Utilities.setSession("openuh")
 
 # load just the average values across all threads, input: app_name, exp_name, trial_name
-trial = TrialResult(Utilities.getTrial("msap_parametric.optix.static", "size.400", "16.threads"))
+#trial = TrialResult(Utilities.getTrial("msap_parametric.optix.static", "size.400", "16.threads"))
+trial = TrialMeanResult(Utilities.getTrial("Fluid Dynamic", "rib 45", "1_8"))
 
 # extract the non-callpath events from the trial
 extractor = ExtractNonCallpathEventOperation(trial)
@@ -79,15 +83,21 @@ mainEvent = means.getMainEvent()
 print "Main Event: ", mainEvent
 
 # calculate all derived metrics
-derived, inefficiency = getInefficiency(means)
+derived, inefficiency1, inefficiency2 = getInefficiency(means)
 
 # just one thread
 thread = 0
 
 # iterate over events, output inefficiency derived metric
-print "Average", inefficiency, "values for this trial:"
+print "Average", inefficiency1, "values for this trial:"
 for event in derived.getEvents():
-	print event, derived.getExclusive(thread, event, inefficiency)
+	print event, derived.getExclusive(thread, event, inefficiency1), derived.getInclusive(thread, event, inefficiency1)
+	MeanEventFact.compareEventToMain(derived, mainEvent, derived, event)
+print
+
+print "Average", inefficiency2, "values for this trial:"
+for event in derived.getEvents():
+	print event, derived.getExclusive(thread, event, inefficiency2), derived.getInclusive(thread, event, inefficiency2)
 	MeanEventFact.compareEventToMain(derived, mainEvent, derived, event)
 print
 

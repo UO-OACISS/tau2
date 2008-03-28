@@ -39,11 +39,12 @@ def loadRules():
 
 def loaddata():
 	print "loading the data..."
-	#Utilities.setSession("openuh")
+	Utilities.setSession("openuh")
 	#Utilities.setSession("perfdmf")
 	#trial = TrialMeanResult(Utilities.getTrial("fortran", "test", "O3-2048-real.8-bounds"))
 	#trial = TrialMeanResult(Utilities.getTrial("fortran", "test", "O3-2048-real.8-options"))
-	trial = TrialMeanResult(Utilities.getTrial("msap_parametric.static", "size.400", "1.threads"))
+	#trial = TrialMeanResult(Utilities.getTrial("msap_parametric.static", "size.400", "1.threads"))
+	trial = TrialMeanResult(Utilities.getTrial("msap_parametric.optix.static", "size.400", "16.threads"))
 	return trial
 
 def extractNonCallpath(input):
@@ -261,7 +262,8 @@ trial = loaddata()
 #event = "LOOP 3"
 # BOUNDS
 #event = "sub_"
-event = "LOOP #2 [file:/home1/khuck/src/fpga/msap.c <65, 158>]"
+#event = "LOOP #2 [file:/home1/khuck/src/fpga/msap.c <65, 158>]"
+event = "LOOP #2 [file:/mnt/netapp/home1/khuck/openuh/src/fpga/msap.c <65, 158>]"
 
 # extract the non-callpath events
 #extracted = extractNonCallpath(trial)

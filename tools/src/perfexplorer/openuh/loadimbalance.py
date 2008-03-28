@@ -37,6 +37,8 @@ Utilities.setSession("openuh")
 # load just the average values across all threads, input: app_name, exp_name, trial_name
 #trial = TrialResult(Utilities.getTrial("Fluid Dynamic", "rib 45", "1_8"))
 trial = TrialResult(Utilities.getTrial("msap_parametric.optix.static", "size.400", "16.threads"))
+#trial = TrialResult(Utilities.getTrial("msap_parametric.optix.static_nowait", "size.400", "16.threads"))
+#trial = TrialResult(Utilities.getTrial("msap_parametric.optix.dynamic.1", "size.400", "16.threads"))
 #trial = TrialResult(Utilities.getCurrentTrial())
 
 # extract the non-callpath events from the trial
@@ -61,6 +63,7 @@ ratios = ratioMaker.processData().get(0)
 thread = 0
 metric = "P_WALL_CLOCK_TIME"
 for event in ratios.getEvents():
+	#for metric in ratios.getMetrics():
 	#print event, totals.getInclusive(thread, event, metric), means.getInclusive(thread, event, metric), stddev.getInclusive(thread, event, metric), ratios.getInclusive(thread, event, metric)
 	MeanEventFact.evaluateLoadBalance(means, ratios, event, metric)
 print

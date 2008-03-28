@@ -17,10 +17,11 @@ import rules.RuleHarness;
  */
 public class MeanEventFact {
 
-	public static final int BETTER = 0;
-	public static final int WORSE = 1;
-	public static final int HIGHER = 2;
-	public static final int LOWER = 3;
+	public static final int NONE = 0;
+	public static final int BETTER = 1;
+	public static final int WORSE = 2;
+	public static final int HIGHER = 3;
+	public static final int LOWER = 4;
 	private int betterWorse = BETTER;
 	private String metric = null;
 	private String meaningfulMetricName = null;
@@ -140,6 +141,36 @@ public class MeanEventFact {
 			} else if (mainRatio < eventRatio) {
 				RuleHarness.assertObject(new MeanEventFact(LOWER, metric, metric, eventRatio, eventValue, event, severity));
 			}
+		}
+	}
+	
+	public static void evaluateMetric(PerformanceResult means, String event, String testMetric) {
+		String mainEvent = means.getMainEvent();
+		
+		// don't compare main to self
+		if (mainEvent.equals(event)) {
+			return;
+		}
+		
+		String timeMetric = means.getTimeMetric();
+		if (timeMetric == null || timeMetric.equals("")) {
+			timeMetric = testMetric;
+		}
+		double mainTime = means.getInclusive(0, mainEvent, timeMetric);
+		double eventTime = means.getExclusive(0, event, timeMetric);
+		double severity = eventTime / mainTime;
+		
+		Set<String> metrics = new HashSet<String>();
+		if (testMetric != null) {
+			metrics.add(testMetric);
+		} else {
+			metrics = means.getMetrics();
+		}
+
+		for (String metric : metrics) {
+			double eventValue = means.getExclusive(0, event, metric);
+			// any other metric combination
+			RuleHarness.assertObject(new MeanEventFact(NONE, metric, metric, 0.0, eventValue, event, severity));
 		}
 	}
 	
@@ -264,9 +295,13 @@ public class MeanEventFact {
 		this.eventName = eventName;
 	}
 	
-	public String getPercentage() {
+	public String getPercentage(Double value) {
 		DecimalFormat format = new DecimalFormat("00.00%");
-		String p = format.format(this.severity);
+		String p = format.format(value);
 		return p;
+	}
+	
+	public String getPercentage() {
+		return getPercentage(this.severity);
 	}
 }

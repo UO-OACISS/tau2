@@ -17,26 +17,52 @@ import glue.ScalabilityResult;
 #end
 
 
-rule "High Inefficiency"
+rule "High FP Inefficiency"
 	when 
 		// there is a inefficiency rate higher than the average inefficiency rate
 		f : MeanEventFact ( m : metric == "(FP_OPS_RETIRED*(BACK_END_BUBBLE_ALL/CPU_CYCLES))", b : betterWorse == MeanEventFact.HIGHER, severity : severity > 0.02, e : eventName, a : mainValue, v : eventValue )
 	then
 		//System.out.println ( f.toString() );
-		System.out.println("The event " + e + " has a higher than average inefficiency");
+		System.out.println("The event " + e + " has a higher than average FP inefficiency");
 		System.out.println("\tAverage Inefficiency: " + a + ", Event Inefficiency: " + v);
+		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
+end
+
+rule "High Inefficiency"
+	when 
+		// there is a inefficiency rate higher than the average inefficiency rate
+		f : MeanEventFact ( m : metric == "(IA64_INST_RETIRED_THIS*(BACK_END_BUBBLE_ALL/CPU_CYCLES))", b : betterWorse == MeanEventFact.HIGHER, severity : severity > 0.02, e : eventName, a : mainValue, v : eventValue )
+	then
+		//System.out.println ( f.toString() );
+		System.out.println("The event " + e + " has a higher than average inefficiency");
+		System.out.println("\tAverage Inefficiency: " + f.getPercentage(a) + ", Event Inefficiency: " + f.getPercentage(v));
 		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
 end
 
 rule "Load Imbalance"
 	when 
-		// there is a inefficiency rate higher than the average inefficiency rate
-		f : MeanEventFact ( m : metric == "P_WALL_CLOCK_TIME", b : betterWorse == MeanEventFact.HIGHER, severity : severity > 0.02, e : eventName, a : mainValue, v : eventValue )
+		// there is a load imbalance for one event which is a significant event
+		// f : MeanEventFact ( m : metric == "P_WALL_CLOCK_TIME", b : betterWorse == MeanEventFact.HIGHER, severity : severity > 0.05, e : eventName, a : mainValue > 0.05, v : eventValue )
+		f : MeanEventFact ( m : metric, b : betterWorse == MeanEventFact.HIGHER, severity : severity > 0.05, e : eventName, a : mainValue > 0.05, v : eventValue )
 	then
 		//System.out.println ( f.toString() );
-		System.out.println("The event " + e + " has a high load imbalance");
+		System.out.println("The event " + e + " has a high load imbalance for metric " + m);
 		System.out.println("\tMean/Stddev ratio: " + a + ", Stddev actual: " + v);
 		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
 		System.out.println("If this event is an OpenMP parallel region, consider methods to balance the workload, including dynamic instead of static work assignment");
+end
+
+rule "Examination of Stalls"
+	when 
+		// If most of the stalls from a region of code are L1 data cache misses and FP stalls,
+		// then issue a warning to that effect.  
+		// The metric name is hairy - see the totalstalls.py script for details.
+		//f : MeanEventFact ( m : metric == "((((BE_L1D_FPU_BUBBLE_L1D+BE_EXE_BUBBLE_GRALL)-BE_EXE_BUBBLE_GRGR)/BACK_END_BUBBLE_ALL)+((BE_EXE_BUBBLE_FRALL+BE_L1D_FPU_BUBBLE_FPU)/BACK_END_BUBBLE_ALL))", severity : severity > 0.02, e : eventName, v : eventValue > 0.50 )
+		f : MeanEventFact ( m : metric == "((((BE_L1D_FPU_BUBBLE_L1D+BE_EXE_BUBBLE_GRALL)-BE_EXE_BUBBLE_GRGR)/BACK_END_BUBBLE_ALL)+((BE_EXE_BUBBLE_FRALL+BE_L1D_FPU_BUBBLE_FPU)/BACK_END_BUBBLE_ALL))", severity : severity, e : eventName, v : eventValue )
+	then
+		//System.out.println ( f.toString() );
+		System.out.println("The event " + e + " has a high percentage of stalls due to L1 data cache misses and FP Stalls.");
+		System.out.println("\tPercent of Stalls due to these two reasons: " + f.getPercentage(v));
+		System.out.println("\tPercentage of total runtime: " + f.getPercentage(severity));
 end
 
