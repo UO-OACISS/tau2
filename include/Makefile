@@ -225,7 +225,6 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #CRAY_FORTRAN#TAU_F90        = f90              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #CRAY_X1_FORTRAN#TAU_F90     = ftn              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #PGI_FORTRAN#TAU_F90         = pgf90            $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
-#CRAYCNL#TAU_F90         = ftn            $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #PGI_CATAMOUNT#TAU_F90         = qk-pgf90         $(F90_ABI) $(TAU_F90_OPT) #ENDIF#
 #ABSOFT_FORTRAN#TAU_F90      = f90              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #LAHEY_FORTRAN#TAU_F90      = lf95              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
@@ -245,6 +244,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #SC_PATHSCALE#TAU_F90     = scpathf95         $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #OPEN64ORC_FORTRAN#TAU_F90     = orf90         $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #NEC_FORTRAN#TAU_F90         = f90 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#CRAYCNL#TAU_F90         = ftn            $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 
 
 ############# Portable F90 Options #############
@@ -271,6 +271,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #INTELTFLOP#PROFILEOPT8        = -DPOOMA_TFLOP         #ENDIF#
 #NORTTI#PROFILEOPT9            = -DNO_RTTI             #ENDIF#
 #RTTI#PROFILEOPT9              = -DRTTI             #ENDIF#
+#USE_CC#PROFILEOPT10              = -DTAU_DOT_H_LESS_HEADERS #ENDIF#
 #GNU#PROFILEOPT10              = -DTAU_GNU  -DTAU_DOT_H_LESS_HEADERS -fPIC #ENDIF#
 #APPLECXX#PROFILEOPT10              = -DTAU_GNU  -DTAU_DOT_H_LESS_HEADERS -fPIC #ENDIF#
 #SOL2CC#PROFILEOPT10              = -DTAU_SOL2CC  -DTAU_DOT_H_LESS_HEADERS #ENDIF#
@@ -561,7 +562,9 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 #LAHEY_FORTRAN#TAU_CXXLIBS		= $(TAU_GNUCXXLIBS) /usr/lib/libc.a #ENDIF#
 #NAGWARE_FORTRAN#TAU_CXXLIBS		= $(TAU_GNUCXXLIBS) /usr/lib/libc.a #ENDIF#
 #PGI#TAU_CXXLIBS        	= -lstd -lC       #ENDIF#
-#CRAYCNL#TAU_CXXLIBS        	= -L$(EXTRADIR)/lib -lstd -lC -lpgc     #ENDIF#
+#PGI#TAU_CXXLIBS_PGI_CNL       	= -L$(EXTRADIR)/lib -lstd -lC -lpgc     #ENDIF#
+#PATHSCALE_FORTRAN#TAU_CXXLIBS_PATHSCALE_CNL      	= -L$(EXTRADIR)/lib -lstdc++     #ENDIF#
+#CRAYCNL#TAU_CXXLIBS       	= $(TAU_CXXLIBS_PGI_CNL) $(TAU_CXXLIBS_PATHSCALE_CNL)   #ENDIF#
 #CRAYX1CC#TAU_CXXLIBS        	= -L/opt/ctl/CC/CC/lib -lC       #ENDIF#
 
 TAU_SGI_INIT = /usr/lib32/c++init.o 
