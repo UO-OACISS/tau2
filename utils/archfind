@@ -16,6 +16,7 @@
 #echo foo
 ARCHTESTFILE=$0.c
 ARCHLISTFILE=$0.txt
+ARCH=
 XDEV=
 SPECIAL=
 
