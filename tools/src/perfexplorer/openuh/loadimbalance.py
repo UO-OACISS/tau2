@@ -25,7 +25,7 @@ print "--- Looking for load imbalances --- "
 
 # create a rulebase for processing
 print "Loading Rules..."
-ruleHarness = RuleHarness.useGlobalRules("/home/khuck/tau2/tools/src/perfexplorer/openuh/OpenUHRules.drl")
+ruleHarness = RuleHarness.useGlobalRules("openuh/OpenUHRules.drl")
 
 # load the trial
 print "loading the data..."

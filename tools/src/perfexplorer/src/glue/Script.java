@@ -20,7 +20,7 @@ public class Script {
 		super();
 	}
 	
-	public Script getInstance() {
+	public static Script getInstance() {
 		if (theInstance == null) {
 			theInstance = new Script();
 		}
@@ -36,7 +36,11 @@ public class Script {
 		return parameters;
 	}
 	
-	public static void executeScript(String scriptName) {
+	public void clearParameters() {
+		parameters = new ArrayList<Object>();
+	}
+	
+	public static void execute(String scriptName) {
 		PythonInterpreterFactory.defaultfactory.getPythonInterpreter().execfile(scriptName);
 	}
 }

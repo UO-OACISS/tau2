@@ -19,7 +19,7 @@ import persistence.HibernateUtil;
  * we store the name of the class, and some information for
  * re-constructing it?
  * 
- * <P>CVS $Id: Provenance.java,v 1.2 2008/03/05 00:25:55 khuck Exp $</P>
+ * <P>CVS $Id: Provenance.java,v 1.3 2008/04/03 06:08:56 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 
@@ -127,4 +127,23 @@ public class Provenance {
 		return buf.toString();
 	}
 	
+	public static PerformanceAnalysisOperation getLastOperation() {
+		PerformanceAnalysisOperation output = null;
+		Provenance provenance = Provenance.getCurrent();
+		int size = provenance.getOperations().size();
+		if (size > 0) {
+			output = provenance.getOperations().get(size - 1);
+		}
+		return output;
+	}
+
+	public static List<PerformanceResult> getLastOutput() {
+		List<PerformanceResult> outputs = null;
+		PerformanceAnalysisOperation last = Provenance.getLastOperation();
+		if (last != null) {
+			outputs = last.getOutputs();
+		}
+		return outputs;
+	}
+
 }

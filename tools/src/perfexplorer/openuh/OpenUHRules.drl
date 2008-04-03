@@ -5,6 +5,9 @@ package rules
 import glue.DifferenceMetadataOperation;
 import glue.DifferenceOperation;
 import glue.PerformanceDifferenceType;
+import glue.PerformanceAnalysisOperation;;
+import glue.Provenance;
+import glue.Script;
 import glue.DataNeeded;
 import glue.MeanEventFact;
 import glue.DerivedMetrics;
@@ -26,6 +29,10 @@ rule "High FP Inefficiency"
 		System.out.println("The event " + e + " has a higher than average FP inefficiency");
 		System.out.println("\tAverage Inefficiency: " + a + ", Event Inefficiency: " + v);
 		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
+		// get the last operation from the provenance
+		PerformanceAnalysisOperation operation = Provenance.getLastOperation();
+		Script.getInstance().addParameter(operation.getOutputs().get(0));
+		Script.execute("openuh/totalStalls.py");
 end
 
 rule "High Inefficiency"
@@ -37,6 +44,10 @@ rule "High Inefficiency"
 		System.out.println("The event " + e + " has a higher than average inefficiency");
 		System.out.println("\tAverage Inefficiency: " + f.getPercentage(a) + ", Event Inefficiency: " + f.getPercentage(v));
 		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
+		// get the last operation from the provenance
+		PerformanceAnalysisOperation operation = Provenance.getLastOperation();
+		Script.getInstance().addParameter(operation.getOutputs().get(0));
+		Script.execute("openuh/totalStalls.py");
 end
 
 rule "Load Imbalance"
