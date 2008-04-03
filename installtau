@@ -35,6 +35,7 @@ epilogopt=
 mpilibrary=no
 tauprefix=unknown
 tauexecprefix=unknown
+extraopts=
 
 ###############################################################
 # This method will escape spaces so that you can use ./configure `cat .last_config` when you've used them
@@ -280,8 +281,8 @@ do
     ;;
 
   *)
-    echo "ERROR: Command line switch \`$arg' not recognized" 1>&2
-    exit 1
+    echo "WARNING: Command line switch \`$arg' not recognized, passing to configure" 1>&2
+    extraopts="$extraopts $arg"
     ;;
   esac
 done
@@ -308,16 +309,16 @@ then
 fi
 
 
-# Add tauprefix to tagopt
+# Add tauprefix to tagopt $extraopts
 if [ $tauprefix != unknown ]
 then
-  tagopt="$tagopt -prefix=$tauprefix"
+  tagopt $extraopts="$tagopt $extraopts -prefix=$tauprefix"
 fi
 
-# Add exec-prefix to tagopt
+# Add exec-prefix to tagopt $extraopts
 if [ $tauexecprefix != unknown ]
 then
-  tagopt="$tagopt -exec-prefix=$tauexecprefix"
+  tagopt $extraopts="$tagopt $extraopts -exec-prefix=$tauexecprefix"
 fi
 
 # Take care of wish version prompt
@@ -362,91 +363,91 @@ echo " " > wishver
   if [ "x$mpiopts" != "x" ]
   then
 # Configure all versions with MPI
-    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt"
-    ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt $mpiopts $commopt <wishver
+    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt"
+    ./configure $fortrancompiler $ccompiler $useropts $tagopt $extraopts $archopt $pdtopt $mpiopts $commopt <wishver
     make clean; make install
     if [ "x$commopt" != "x" ]
     then
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts -nocomm"
-      ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt $mpiopts -nocomm <wishver
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts -nocomm"
+      ./configure $fortrancompiler $ccompiler $useropts $tagopt $extraopts $archopt $pdtopt $mpiopts -nocomm <wishver
       make clean; make install
     fi
 
 # configure with perflib  using perfopts
-    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt $perfopts"
-    ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt $mpiopts $commopt  $perfopts <wishver
+    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt $perfopts"
+    ./configure $fortrancompiler $ccompiler $useropts $tagopt $extraopts $archopt $pdtopt $mpiopts $commopt  $perfopts <wishver
     make clean; make install
 
 # Add callpath profiling 
-    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts -PROFILECALLPATH"
-    ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt $mpiopts -PROFILECALLPATH <wishver
+    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts -PROFILECALLPATH"
+    ./configure $fortrancompiler $ccompiler $useropts $tagopt $extraopts $archopt $pdtopt $mpiopts -PROFILECALLPATH <wishver
     make clean; make install
 
 # Add callpath profiling with compensate
-    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts -PROFILECALLPATH -COMPENSATE"
-    ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt $mpiopts -PROFILECALLPATH -COMPENSATE <wishver
+    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts -PROFILECALLPATH -COMPENSATE"
+    ./configure $fortrancompiler $ccompiler $useropts $tagopt $extraopts $archopt $pdtopt $mpiopts -PROFILECALLPATH -COMPENSATE <wishver
     make clean; make install
   
 # Add depth limit
-    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts -DEPTHLIMIT"
-    ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt $mpiopts -DEPTHLIMIT <wishver
+    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts -DEPTHLIMIT"
+    ./configure $fortrancompiler $ccompiler $useropts $tagopt $extraopts $archopt $pdtopt $mpiopts -DEPTHLIMIT <wishver
     make clean; make install
 
 # Add COMPENSATE
-    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts -COMPENSATE"
-    ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt $mpiopts -COMPENSATE <wishver
+    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts -COMPENSATE"
+    ./configure $fortrancompiler $ccompiler $useropts $tagopt $extraopts $archopt $pdtopt $mpiopts -COMPENSATE <wishver
     make clean; make install
 
 # Add TRACE
     if [ $epilog = yes -a $papi = yes ]
     then
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vptopt $vtfopt $otfopt $slogopt $epilogopt -papi=$papidir"
-      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vptopt $vtfopt $otfopt $slogopt $epilogopt -papi=$papidir<wishver
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vptopt $vtfopt $otfopt $slogopt $epilogopt -papi=$papidir"
+      ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vptopt $vtfopt $otfopt $slogopt $epilogopt -papi=$papidir<wishver
       make clean; make install
     fi
-    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vptopt $vtfopt $otfopt $slogopt"
-    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vptopt $vtfopt $otfopt  $slogopt <wishver
+    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vptopt $vtfopt $otfopt $slogopt"
+    ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE  $vptopt $vtfopt $otfopt  $slogopt <wishver
     make clean; make install
   
     if [ $papi = yes ]
     then
 # Add PAPI
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS"
-      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS <wishver
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS"
+      ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS <wishver
       make clean; make install
 # Add -TRACE -papi multiplecounters to it
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $otfopt $slogopt -papi=$papidir -MULTIPLECOUNTERS"
-    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $otfopt $slogopt -papi=$papidir -MULTIPLECOUNTERS <wishver 
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $otfopt $slogopt -papi=$papidir -MULTIPLECOUNTERS"
+    ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $otfopt $slogopt -papi=$papidir -MULTIPLECOUNTERS <wishver 
       make clean; make install
       if [ $vampirtrace = yes ]
       then 
 # No need to have -MULTIPLECOUNTERS with Vampirtrace
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $otfopt $slogopt -papi=$papidir"
-    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt $vptopt $vtfopt $otfopt $slogopt -papi=$papidir <wishver 
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -TRACE $vtfopt $otfopt $slogopt -papi=$papidir"
+    ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt $vptopt $vtfopt $otfopt $slogopt -papi=$papidir <wishver 
       fi
 # Add -PROFILECALLPATH -papi multiplecounters to it
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS -PROFILEPHASE"
-      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS -PROFILEPHASE <wishver
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS -PROFILEPHASE"
+      ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS -PROFILEPHASE <wishver
       make clean; make install
 
 # Add -COMPENSATE -PROFILECALLPATH -papi multiplecounters to it
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS -PROFILEPHASE -COMPENSATE"
-      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS -PROFILEPHASE -COMPENSATE <wishver
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS -PROFILEPHASE -COMPENSATE"
+      ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -papi=$papidir -MULTIPLECOUNTERS -PROFILEPHASE -COMPENSATE <wishver
       make clean; make install
 
     fi
 
     if [ $opari = yes ]
     then
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -opari=$oparidir"
-      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -opari=$oparidir -openmp <wishver
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -opari=$oparidir"
+      ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -opari=$oparidir -openmp <wishver
       make clean; make install
     fi 
 
     if [ $opari = yes -a $papi = yes ] 
     then
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -opari=$oparidir -papi=$papidir -MULTIPLECOUNTERS"
-      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -opari=$oparidir -openmp -papi=$papidir -MULTIPLECOUNTERS <wishver
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -opari=$oparidir -papi=$papidir -MULTIPLECOUNTERS"
+      ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -opari=$oparidir -openmp -papi=$papidir -MULTIPLECOUNTERS <wishver
       make clean; make install
     fi 
   fi
@@ -455,21 +456,21 @@ echo " " > wishver
 # Serial library with pdt
   if [ $pdt = yes ]
   then
-    echo "Configuring with $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt "
-    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt <wishver
+    echo "Configuring with $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt "
+    ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt <wishver
     make clean; make install
   fi
 
   if [ $opari = yes ]
   then
-    echo "Configuring with $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -opari=$oparidir -openmp "
-    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -opari=$oparidir -openmp <wishver
+    echo "Configuring with $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt -opari=$oparidir -openmp "
+    ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt -opari=$oparidir -openmp <wishver
     make clean; make install
 
     if [ $papi = yes ]
     then 
-      echo "Configuring with $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -opari=$oparidir -openmp -papi=$papidir -MULTIPLECOUNTERS "
-      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -opari=$oparidir -openmp -papi=$papidir -MULTIPLECOUNTERS <wishver
+      echo "Configuring with $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt -opari=$oparidir -openmp -papi=$papidir -MULTIPLECOUNTERS "
+      ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt -opari=$oparidir -openmp -papi=$papidir -MULTIPLECOUNTERS <wishver
       make clean; make install
     fi
   fi 
@@ -477,14 +478,14 @@ echo " " > wishver
   if [ $arch = no -o $archdir != bgl -a $archdir != xt3 ]
   then
 # Just Pthread
-    echo "Configuring with $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -pthread "
-    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -pthread <wishver
+    echo "Configuring with $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt -pthread "
+    ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt -pthread <wishver
     make clean; make install
   fi
   
 # Just Sequential
-  echo "Configuring with $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt "
-  ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt <wishver
+  echo "Configuring with $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt "
+  ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt <wishver
   make clean; make install
 
   if [ $papi = yes ]
@@ -493,22 +494,22 @@ echo " " > wishver
     if [ $arch = no -o $archdir != bgl -a $archdir != xt3 ]
     then
       echo "Configuring with -pthread -papi=$papidir -MULTIPLECOUNTERS "
-      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -pthread -papi=$papidir -MULTIPLECOUNTERS <wishver
+      ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt -pthread -papi=$papidir -MULTIPLECOUNTERS <wishver
       make clean; make install
     fi
 
 # PAPI with -pdt 
     if [ $pdt = yes ]
     then
-      echo "Configuring with $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt -papi=$papidir -MULTIPLECOUNTERS"
-      ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt  -papi=$papidir -MULTIPLECOUNTERS <wishver
+      echo "Configuring with $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt -papi=$papidir -MULTIPLECOUNTERS"
+      ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt  -papi=$papidir -MULTIPLECOUNTERS <wishver
       make clean; make install
     fi
   fi
   if [ $dyninst = yes ] 
   then
-    echo "Configuring with $fortrancompiler $useropts $tagopt $ccompiler $archopt -dyninst=$dyninstdir "
-    ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt -dyninst=$dyninstdir < wishver
+    echo "Configuring with $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt -dyninst=$dyninstdir "
+    ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt -dyninst=$dyninstdir < wishver
     make clean; make install
   fi
 
@@ -516,8 +517,8 @@ echo " " > wishver
   if [ "x$mpiopts" != "x" ]
   then
 # Configuring with -PROFILEPARAM
-    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $ccompiler $archopt $pdtopt $mpiopts $commopt -PROFILEPARAM"
-    ./configure $fortrancompiler $ccompiler $useropts $tagopt $archopt $pdtopt $mpiopts $commopt <wishver
+    echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -PROFILEPARAM"
+    ./configure $fortrancompiler $ccompiler $useropts $tagopt $extraopts $archopt $pdtopt $mpiopts $commopt <wishver
     make clean; make install
   fi
 
