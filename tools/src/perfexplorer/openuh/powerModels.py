@@ -95,17 +95,30 @@ def getPowerModel(input):
 	return input, PowerPerProc
 
 def getEnergy(input, PowerPerProc):
+	global mainEvent
 	time = "LINUX_TIMERS"
 
 	# convert time to seconds
-	print mainEvent, time, input.getInclusive(0, mainEvent, time)
+	#print mainEvent, time, input.getInclusive(0, mainEvent, time)
 	input, seconds = scaleMetric(input, time, (1/1000000.0), ScaleMetricOperation.MULTIPLY)
-	print mainEvent, seconds, input.getInclusive(0, mainEvent, seconds)
+	#print mainEvent, seconds, input.getInclusive(0, mainEvent, seconds)
 	input, joules = deriveMetric(input, PowerPerProc, seconds, DeriveMetricOperation.MULTIPLY)
-	print mainEvent, joules, input.getInclusive(0, mainEvent, joules)
+	#print mainEvent, joules, input.getInclusive(0, mainEvent, joules)
 
 	# return the trial, and the new derived metric name
 	return input, joules
+
+def getFlopsPerJoule(input, EnergyPerProc):
+	global mainEvent
+	#fpOps = "FP_OPS_RETIRED"
+	fpOps = "PAPI_FP_OPS"
+
+	#print mainEvent, fpOps, input.getInclusive(0, mainEvent, fpOps)
+	input, flopsPerJoule = deriveMetric(input, fpOps, EnergyPerProc, DeriveMetricOperation.DIVIDE)
+	#print mainEvent, flopsPerJoule, input.getInclusive(0, mainEvent, flopsPerJoule)
+
+	# return the trial, and the new derived metric name
+	return input, flopsPerJoule
 
 ###################################################################
 
@@ -174,7 +187,7 @@ def main():
 
 	# iterate over events, output inefficiency derived metric
 	print "Top 10 Average", PowerPerProc, "values per thread for this trial:"
-	for event in top10.getEvents():
+	for event in top10er.getSortedEventNames():
 		print event, top10.getExclusive(thread, event, PowerPerProc)
 	print
 	print mainEvent, "INCLUSIVE: ", derived.getInclusive(thread, mainEvent, PowerPerProc)
@@ -190,10 +203,26 @@ def main():
 
 	# iterate over events, output inefficiency derived metric
 	print "Top 10 Average", EnergyPerProc, "values per thread for this trial:"
-	for event in top10.getEvents():
+	for event in top10er.getSortedEventNames():
 		print event, top10.getExclusive(thread, event, EnergyPerProc)
 	print
 	print mainEvent, "INCLUSIVE: ", derived.getInclusive(thread, mainEvent, EnergyPerProc)
+	print
+
+	# compute the floating point operations per joule per event
+	print "Computing FP_OPS/joule..."
+	derived, FlopsPerJoule = getFlopsPerJoule(derived, EnergyPerProc)
+
+	# get the top 20 "power dense" events
+	top20er = TopXEvents(derived, FlopsPerJoule, AbstractResult.EXCLUSIVE, 20)
+	top20 = top20er.processData().get(0)
+
+	# iterate over events, output inefficiency derived metric
+	print "Top 20 Average", FlopsPerJoule, "values per thread for this trial:"
+	for event in top20er.getSortedEventNames():
+		print event, top20.getExclusive(thread, event, FlopsPerJoule)
+	print
+	print mainEvent, "INCLUSIVE: ", derived.getInclusive(thread, mainEvent, FlopsPerJoule)
 	print
 
 	# process the rules

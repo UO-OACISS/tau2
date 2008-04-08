@@ -19,7 +19,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * This is an implementation of the AbstractPerformanceOperation class which will perform
  * dimension reduction on the data.
  * 
- * <P>CVS $Id: TopXEvents.java,v 1.2 2008/03/05 00:25:55 khuck Exp $</P>
+ * <P>CVS $Id: TopXEvents.java,v 1.3 2008/04/08 17:03:49 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 
@@ -29,6 +29,7 @@ public class TopXEvents extends AbstractPerformanceOperation implements Serializ
 	protected Double threshold = 0.0;
 	protected String metric = null;
 	protected Integer type = 0;
+	protected List<String> sortedEventNames = new ArrayList<String>();
 	
 	/**
 	 * @param input
@@ -91,6 +92,7 @@ public class TopXEvents extends AbstractPerformanceOperation implements Serializ
 						output.putSubroutines(threadIndex, event, input.getSubroutines(threadIndex, event));
 					}
 				}
+				sortedEventNames.add(event);
 				if (++i > threshold) {
 					break;
 				}
@@ -109,4 +111,7 @@ public class TopXEvents extends AbstractPerformanceOperation implements Serializ
 		return outputs;
 	}
 
+	public List<String> getSortedEventNames() {
+		return sortedEventNames;
+	}
 }
