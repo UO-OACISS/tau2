@@ -2,16 +2,10 @@
 package rules
 
 #list any import classes here.
-import glue.DifferenceMetadataOperation;
-import glue.DifferenceOperation;
-import glue.PerformanceDifferenceType;
 import glue.PerformanceAnalysisOperation;;
 import glue.Provenance;
 import glue.Script;
-import glue.DataNeeded;
 import glue.MeanEventFact;
-import glue.DerivedMetrics;
-import glue.ScalabilityResult;
 
 #declare any global variables here
 
@@ -60,7 +54,18 @@ rule "Load Imbalance"
 		System.out.println("The event " + e + " has a high load imbalance for metric " + m);
 		System.out.println("\tMean/Stddev ratio: " + a + ", Stddev actual: " + v);
 		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
-		System.out.println("If this event is an OpenMP parallel region, consider methods to balance the workload, including dynamic instead of static work assignment");
+		assert(new FactWrapper("Imbalanced Event", e, null));
+end
+
+rule "New Schedule Suggested"
+	when
+		f1 : FactWrapper ( factName == "Imbalanced Event", e1 : factType )
+		f2 : FactWrapper ( factName == "Imbalanced Event", e2 : factType != e1 )
+		f3 : FactWrapper ( factName == "Callpath name/value", e3 : factType )
+		eval ( e3.equals( e1 + " => " + e2) )
+	then
+		System.out.println(e1 + " calls " + e2 + ", and they are both showing signs of load imbalance.");
+		System.out.println("If these events are in an OpenMP parallel region, consider methods to balance the workload, including dynamic instead of static work assignment.");
 end
 
 rule "Examination of Stalls"

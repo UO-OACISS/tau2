@@ -60,7 +60,11 @@ def getMemoryModel(input):
 # Ratio of Local Memory Accesses (PAPI_NATIVE_L3_misses - PAPI_NATIVEDATA_EAR_CACHE_LAT128) / PAPI_NATIVE_L3_misses 
 
 	# set some metric names
-	L1Hits = "PAPI_L1_TCA"
+	#L1Hits = "PAPI_L1_TCA"
+	L1Hits = "PAPI_L1_DCH"
+	L1DataStalls = "L1_DATA_STALLS"
+	InstMiss = "IMISS"
+	L2Refs = "L2_REFERENCES"
 	L2DataRef = "L2_DATA_REFERENCES_L2_ALL"
 	L2Misses = "L2_MISSES"
 	L3Misses = "L3_MISSES"
@@ -69,8 +73,13 @@ def getMemoryModel(input):
 
 	global mainEvent
 
-	# derive the L2 Hits term
+	# derive the L1 Hits term
 	print "\t", mainEvent, L1Hits, input.getInclusive(0, mainEvent, L1Hits)
+	# print "\t", mainEvent, L2Refs, input.getInclusive(0, mainEvent, L2Refs)
+	# input, L1Hits = deriveMetric(input, L1Hits, L2Refs, DeriveMetricOperation.SUBTRACT)
+	# print "\t", mainEvent, L1Hits, input.getInclusive(0, mainEvent, L1Hits)
+
+	# derive the L2 Hits term
 	print mainEvent, L2DataRef, input.getInclusive(0, mainEvent, L2DataRef)
 	print mainEvent, L2Misses, input.getInclusive(0, mainEvent, L2Misses)
 	input, L2Hits = deriveMetric(input, L2DataRef, L2Misses, DeriveMetricOperation.SUBTRACT)

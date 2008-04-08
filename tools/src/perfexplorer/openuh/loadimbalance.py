@@ -5,6 +5,7 @@ from glue import Utilities
 from glue import TrialResult
 from glue import AbstractResult
 from glue import ExtractNonCallpathEventOperation
+from glue import ExtractCallpathEventOperation
 from glue import DeriveMetricOperation
 from glue import MergeTrialsOperation
 from glue import DerivedMetrics
@@ -12,6 +13,7 @@ from glue import MeanEventFact
 from glue import BasicStatisticsOperation
 from glue import RatioOperation
 from glue import TopXEvents
+from rules import FactWrapper
 
 ###################################################################
 
@@ -67,6 +69,15 @@ for event in ratios.getEvents():
 	#print event, totals.getInclusive(thread, event, metric), means.getInclusive(thread, event, metric), stddev.getInclusive(thread, event, metric), ratios.getInclusive(thread, event, metric)
 	MeanEventFact.evaluateLoadBalance(means, ratios, event, metric)
 print
+
+# add the callpath event names to the facts in the rulebase.
+
+# extract the non-callpath events from the trial
+extractor = ExtractCallpathEventOperation(trial)
+extracted = extractor.processData().get(0)
+for event in extracted.getEvents():
+	fact = FactWrapper("Callpath name/value", event, None)
+	RuleHarness.assertObject(fact)
 
 # process the rules
 RuleHarness.getInstance().processRules()
