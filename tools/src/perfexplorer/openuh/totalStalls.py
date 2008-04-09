@@ -42,9 +42,9 @@ def loaddata():
 	#trial = TrialMeanResult(Utilities.getTrial("fortran", "test", "O3-2048-real.8-bounds"))
 	#trial = TrialMeanResult(Utilities.getTrial("fortran", "test", "O3-2048-real.8-options"))
 	#trial = TrialMeanResult(Utilities.getTrial("msap_parametric.static", "size.400", "1.threads"))
-	#trial = TrialMeanResult(Utilities.getTrial("msap_parametric.optix.static", "size.400", "16.threads"))
+	trial = TrialMeanResult(Utilities.getTrial("msap_parametric.optix.static", "size.400", "16.threads"))
 	#trial = TrialMeanResult(Utilities.getCurrentTrial())
-	trial = TrialMeanResult(Utilities.getTrial("Fluid Dynamic", "rib 45", "1_8"))
+	#trial = TrialMeanResult(Utilities.getTrial("Fluid Dynamic - Unoptimized", "rib 90", "1_16"))
 
 	return trial
 
@@ -261,7 +261,7 @@ loadRules()
 # load the trial
 trial = loaddata()
 #event = "LOOP #2 [file:/mnt/netapp/home1/khuck/openuh/src/fpga/msap.c <65, 158>]"
-event = "diff_coeff__"
+#event = "diff_coeff__"
 print "main event: ", trial.getMainEvent()
 print "time metric: ", trial.getTimeMetric()
 
@@ -272,10 +272,11 @@ extracted = extractNonCallpath(trial)
 print "Breakdown of Total Stalls:"
 derived, newMetrics = deriveMetrics(extracted)
 percentages, newMetrics = stallPercentages(derived)
-for thread in percentages.getThreads():
-	for metric in newMetrics:
-		print event, metric, "%.2f%%" % (percentages.getInclusive(thread, event, metric)*100.0)
-		MeanEventFact.evaluateMetric(percentages, event, metric)
+for event in percentages.getEvents():
+	for thread in percentages.getThreads():
+		for metric in newMetrics:
+			#print event, metric, "%.2f%%" % (percentages.getInclusive(thread, event, metric)*100.0)
+			MeanEventFact.evaluateMetric(percentages, event, metric)
 print
 
 # get the HP stall percentages, breakdown of fpstalls

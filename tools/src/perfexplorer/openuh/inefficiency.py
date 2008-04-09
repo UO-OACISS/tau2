@@ -37,14 +37,17 @@ def getInefficiency(input):
 	# set some metric names
 	totalStallCycles = "BACK_END_BUBBLE_ALL"
 	totalCycles = "CPU_CYCLES"
-	fpOps = "FP_OPS_RETIRED"
+	#fpOps = "FP_OPS_RETIRED"
+	fpOps = "PAPI_FP_OPS"
 	instRetired = "IA64_INST_RETIRED_THIS"
+	time = "LINUX_TIMERS"
 
 	# derive the BACK_END_BUBBLE_ALL / CPU_CYCLES term
 	# derive the FP_OPS_RETIRED * (BACK_END_BUBBLE_ALL / CPU_CYCLES) value
 	input, tmpName = deriveMetric(input, totalStallCycles, totalCycles, DeriveMetricOperation.DIVIDE)
-	input, inefficiency1 = deriveMetric(input, instRetired, tmpName, DeriveMetricOperation.DIVIDE)
+	input, inefficiency1 = deriveMetric(input, instRetired, tmpName, DeriveMetricOperation.MULTIPLY)
 	input, inefficiency2 = deriveMetric(input, fpOps, tmpName, DeriveMetricOperation.MULTIPLY)
+	#input, inefficiency3 = deriveMetric(input, totalStallCycles, time, DeriveMetricOperation.DIVIDE)
 
 	# return the trial, and the new derived metric name
 	return input, inefficiency1, inefficiency2
@@ -66,8 +69,8 @@ print "loading the data..."
 Utilities.setSession("openuh")
 
 # load just the average values across all threads, input: app_name, exp_name, trial_name
-trial = TrialResult(Utilities.getTrial("msap_parametric.optix.static", "size.400", "16.threads"))
-#trial = TrialResult(Utilities.getTrial("Fluid Dynamic", "rib 45", "1_8"))
+#trial = TrialResult(Utilities.getTrial("msap_parametric.optix.static", "size.400", "16.threads"))
+trial = TrialResult(Utilities.getTrial("Fluid Dynamic - Unoptimized", "rib 90", "16_1"))
 
 # extract the non-callpath events from the trial
 extractor = ExtractNonCallpathEventOperation(trial)
@@ -89,15 +92,9 @@ derived, inefficiency1, inefficiency2 = getInefficiency(means)
 thread = 0
 
 # iterate over events, output inefficiency derived metric
-print "Average", inefficiency1, "values for this trial:"
+#print "Average", inefficiency1, "values for this trial:"
 for event in derived.getEvents():
-	print event, derived.getExclusive(thread, event, inefficiency1), derived.getInclusive(thread, event, inefficiency1)
-	MeanEventFact.compareEventToMain(derived, mainEvent, derived, event)
-print
-
-print "Average", inefficiency2, "values for this trial:"
-for event in derived.getEvents():
-	print event, derived.getExclusive(thread, event, inefficiency2), derived.getInclusive(thread, event, inefficiency2)
+	#print event, derived.getExclusive(thread, event, inefficiency1), derived.getInclusive(thread, event, inefficiency1)
 	MeanEventFact.compareEventToMain(derived, mainEvent, derived, event)
 print
 

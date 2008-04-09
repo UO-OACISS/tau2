@@ -29,11 +29,13 @@ public class MeanEventFact {
 	private double eventValue = 0.0;
 	private double severity = 0.0;
 	private String eventName = null;
+	private String factType = null;
 	
 	/**
 	 * 
 	 */
-	private MeanEventFact(int betterWorse, String metric, String meaningfulMetricName, double mainValue, double eventValue, String eventName, double severity) {
+	private MeanEventFact(String factType, int betterWorse, String metric, String meaningfulMetricName, double mainValue, double eventValue, String eventName, double severity) {
+		this.factType = factType;
 		this.betterWorse = betterWorse;
 		this.metric = metric;
 		this.meaningfulMetricName = meaningfulMetricName;
@@ -64,19 +66,19 @@ public class MeanEventFact {
 				// L1 cache hit rate
 				if (mainValue > eventValue) {
 					// this event has poor memory access
-					RuleHarness.assertObject(new MeanEventFact(WORSE, metric, "L1 cache hit rate", mainValue, eventValue, event, severity));
+					RuleHarness.assertObject(new MeanEventFact("Compared to Main", WORSE, metric, "L1 cache hit rate", mainValue, eventValue, event, severity));
 				}
 			} else if (metric.equals(DerivedMetrics.L2_HIT_RATE)) {
 				// L2 cache hit rate
 				if (mainValue > eventValue) {
 					// this event has poor memory access
-					RuleHarness.assertObject(new MeanEventFact(WORSE, metric, "L2 cache hit rate", mainValue, eventValue, event, severity));
+					RuleHarness.assertObject(new MeanEventFact("Compared to Main", WORSE, metric, "L2 cache hit rate", mainValue, eventValue, event, severity));
 				}
 			} else if (metric.equals(DerivedMetrics.MFLOP_RATE)) {
 				// FLOP rate
 				if (mainValue < eventValue) {
 					// this event has higher than average FLOP rate
-					RuleHarness.assertObject(new MeanEventFact(BETTER, metric, "MFLOP/s", mainValue, eventValue, event, severity));
+					RuleHarness.assertObject(new MeanEventFact("Compared to Main", BETTER, metric, "MFLOP/s", mainValue, eventValue, event, severity));
 				}
 			} else if (metric.equals(DerivedMetrics.L1_CACHE_HITS)) {
 				// L1 cache hits
@@ -84,7 +86,7 @@ public class MeanEventFact {
 				// L1 cache access rate (aka memory accesses)
 				if (mainValue > eventValue) {
 					// this event has higher than average memory accesses
-					RuleHarness.assertObject(new MeanEventFact(WORSE, metric, "L1 cache access rate", mainValue, eventValue, event, severity));
+					RuleHarness.assertObject(new MeanEventFact("Compared to Main", WORSE, metric, "L1 cache access rate", mainValue, eventValue, event, severity));
 				}
 			} else if (metric.equals(DerivedMetrics.L2_CACHE_HITS)) {
 				// L2 cache hits
@@ -95,9 +97,9 @@ public class MeanEventFact {
 			} else { 
 				// any other metric combination
 				if (mainValue < eventValue) {
-					RuleHarness.assertObject(new MeanEventFact(HIGHER, metric, metric, mainValue, eventValue, event, severity));
+					RuleHarness.assertObject(new MeanEventFact("Compared to Main", HIGHER, metric, metric, mainValue, eventValue, event, severity));
 				} else if (mainValue < eventValue) {
-					RuleHarness.assertObject(new MeanEventFact(LOWER, metric, metric, mainValue, eventValue, event, severity));
+					RuleHarness.assertObject(new MeanEventFact("Compared to Main", LOWER, metric, metric, mainValue, eventValue, event, severity));
 				}
 			}
 				
@@ -137,9 +139,9 @@ public class MeanEventFact {
 			double mainRatio = ratios.getExclusive(0, mainEvent, metric);
 			// any other metric combination
 			if (mainRatio < eventRatio) {
-				RuleHarness.assertObject(new MeanEventFact(HIGHER, metric, metric, eventRatio, eventValue, event, severity));
+				RuleHarness.assertObject(new MeanEventFact("Load Imbalance", HIGHER, metric, metric, eventRatio, eventValue, event, severity));
 			} else if (mainRatio < eventRatio) {
-				RuleHarness.assertObject(new MeanEventFact(LOWER, metric, metric, eventRatio, eventValue, event, severity));
+				RuleHarness.assertObject(new MeanEventFact("Load Imbalance", LOWER, metric, metric, eventRatio, eventValue, event, severity));
 			}
 		}
 	}
@@ -170,7 +172,7 @@ public class MeanEventFact {
 		for (String metric : metrics) {
 			double eventValue = means.getExclusive(0, event, metric);
 			// any other metric combination
-			RuleHarness.assertObject(new MeanEventFact(NONE, metric, metric, 0.0, eventValue, event, severity));
+			RuleHarness.assertObject(new MeanEventFact("Metric", NONE, metric, metric, 0.0, eventValue, event, severity));
 		}
 	}
 	
@@ -303,5 +305,19 @@ public class MeanEventFact {
 	
 	public String getPercentage() {
 		return getPercentage(this.severity);
+	}
+
+	/**
+	 * @return the factType
+	 */
+	public String getFactType() {
+		return factType;
+	}
+
+	/**
+	 * @param factType the factType to set
+	 */
+	public void setFactType(String factType) {
+		this.factType = factType;
 	}
 }

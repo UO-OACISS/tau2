@@ -17,38 +17,100 @@ import glue.MeanEventFact;
 rule "High FP Inefficiency"
 	when 
 		// there is a inefficiency rate higher than the average inefficiency rate
-		f : MeanEventFact ( m : metric == "(FP_OPS_RETIRED*(BACK_END_BUBBLE_ALL/CPU_CYCLES))", b : betterWorse == MeanEventFact.HIGHER, severity : severity > 0.02, e : eventName, a : mainValue, v : eventValue )
+		f : MeanEventFact ( 
+			m : metric == "(FP_OPS_RETIRED*(BACK_END_BUBBLE_ALL/CPU_CYCLES))", 
+			b : betterWorse == MeanEventFact.HIGHER, 
+			severity : severity > 0.02, 
+			e : eventName, 
+			a : mainValue, 
+			v : eventValue, 
+			factType == "Compared to Main" )
 	then
 		//System.out.println ( f.toString() );
 		System.out.println("The event " + e + " has a higher than average FP inefficiency");
 		System.out.println("\tAverage Inefficiency: " + a + ", Event Inefficiency: " + v);
 		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
 		// get the last operation from the provenance
-		PerformanceAnalysisOperation operation = Provenance.getLastOperation();
+		/*PerformanceAnalysisOperation operation = Provenance.getLastOperation();
 		Script.getInstance().addParameter(operation.getOutputs().get(0));
-		Script.execute("openuh/totalStalls.py");
+		Script.execute("openuh/totalStalls.py");*/
 end
 
-rule "High Inefficiency"
+rule "High Instruction Inefficiency"
 	when 
 		// there is a inefficiency rate higher than the average inefficiency rate
-		f : MeanEventFact ( m : metric == "(IA64_INST_RETIRED_THIS*(BACK_END_BUBBLE_ALL/CPU_CYCLES))", b : betterWorse == MeanEventFact.HIGHER, severity : severity > 0.02, e : eventName, a : mainValue, v : eventValue )
+		f : MeanEventFact ( 
+			m : metric == "(IA64_INST_RETIRED_THIS*(BACK_END_BUBBLE_ALL/CPU_CYCLES))", 
+			b : betterWorse == MeanEventFact.HIGHER, 
+			severity : severity > 0.00, 
+			e : eventName, 
+			a : mainValue, 
+			v : eventValue,
+			factType == "Compared to Main" )
 	then
 		//System.out.println ( f.toString() );
 		System.out.println("The event " + e + " has a higher than average inefficiency");
 		System.out.println("\tAverage Inefficiency: " + f.getPercentage(a) + ", Event Inefficiency: " + f.getPercentage(v));
 		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
 		// get the last operation from the provenance
-		PerformanceAnalysisOperation operation = Provenance.getLastOperation();
+		/*PerformanceAnalysisOperation operation = Provenance.getLastOperation();
 		Script.getInstance().addParameter(operation.getOutputs().get(0));
-		Script.execute("openuh/totalStalls.py");
+		Script.execute("openuh/totalStalls.py");*/
+end
+
+rule "Stalls per Second"
+	when 
+		// there is a inefficiency rate higher than the average inefficiency rate
+		f : MeanEventFact ( 
+			m : metric == "(BACK_END_BUBBLE_ALL/LINUX_TIMERS)", 
+			b : betterWorse == MeanEventFact.HIGHER, severity : severity > 0.02, 
+			e : eventName, 
+			a : mainValue, 
+			v : eventValue, 
+			factType == "Compared to Main" )
+	then
+		//System.out.println ( f.toString() );
+		System.out.println("The event " + e + " has a higher than average stall / second rate");
+		System.out.println("\tAverage stalls per second (millions): " + a + ", Event stalls per second (millions): " + v);
+		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
+		// get the last operation from the provenance
+		/*PerformanceAnalysisOperation operation = Provenance.getLastOperation();
+		Script.getInstance().addParameter(operation.getOutputs().get(0));
+		Script.execute("openuh/totalStalls.py");*/
+end
+
+rule "Stalls per Cycle"
+	when 
+		// there is a inefficiency rate higher than the average inefficiency rate
+		f : MeanEventFact ( 
+			m : metric == "(BACK_END_BUBBLE_ALL/CPU_CYCLES)", 
+			b : betterWorse == MeanEventFact.HIGHER, severity : severity > 0.02, 
+			e : eventName, 
+			a : mainValue, 
+			v : eventValue, 
+			factType == "Compared to Main" )
+	then
+		//System.out.println ( f.toString() );
+		System.out.println("The event " + e + " has a higher than average stall / cycle rate");
+		System.out.println("\tAverage stalls per cycle: " + a + ", Event stalls per cycle: " + v);
+		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
+		// get the last operation from the provenance
+		/*PerformanceAnalysisOperation operation = Provenance.getLastOperation();
+		Script.getInstance().addParameter(operation.getOutputs().get(0));
+		Script.execute("openuh/totalStalls.py");*/
 end
 
 rule "Load Imbalance"
 	when 
 		// there is a load imbalance for one event which is a significant event
-		// f : MeanEventFact ( m : metric == "P_WALL_CLOCK_TIME", b : betterWorse == MeanEventFact.HIGHER, severity : severity > 0.05, e : eventName, a : mainValue > 0.05, v : eventValue )
-		f : MeanEventFact ( m : metric, b : betterWorse == MeanEventFact.HIGHER, severity : severity > 0.05, e : eventName, a : mainValue > 0.05, v : eventValue )
+		f : MeanEventFact ( 
+			m : metric, 
+			b : betterWorse == MeanEventFact.HIGHER, 
+			severity : severity > 0.05, 
+			e : eventName, 
+			a : mainValue > 0.05, 
+			v : eventValue, 
+			factType == "Load Imbalance" )
 	then
 		//System.out.println ( f.toString() );
 		System.out.println("The event " + e + " has a high load imbalance for metric " + m);
@@ -73,8 +135,11 @@ rule "Examination of Stalls"
 		// If most of the stalls from a region of code are L1 data cache misses and FP stalls,
 		// then issue a warning to that effect.  
 		// The metric name is hairy - see the totalstalls.py script for details.
-		//f : MeanEventFact ( m : metric == "((((BE_L1D_FPU_BUBBLE_L1D+BE_EXE_BUBBLE_GRALL)-BE_EXE_BUBBLE_GRGR)/BACK_END_BUBBLE_ALL)+((BE_EXE_BUBBLE_FRALL+BE_L1D_FPU_BUBBLE_FPU)/BACK_END_BUBBLE_ALL))", severity : severity > 0.02, e : eventName, v : eventValue > 0.50 )
-		f : MeanEventFact ( m : metric == "((((BE_L1D_FPU_BUBBLE_L1D+BE_EXE_BUBBLE_GRALL)-BE_EXE_BUBBLE_GRGR)/BACK_END_BUBBLE_ALL)+((BE_EXE_BUBBLE_FRALL+BE_L1D_FPU_BUBBLE_FPU)/BACK_END_BUBBLE_ALL))", severity : severity, e : eventName, v : eventValue )
+		f : MeanEventFact ( 
+			m : metric == "((((BE_L1D_FPU_BUBBLE_L1D+BE_EXE_BUBBLE_GRALL)-BE_EXE_BUBBLE_GRGR)/BACK_END_BUBBLE_ALL)+((BE_EXE_BUBBLE_FRALL+BE_L1D_FPU_BUBBLE_FPU)/BACK_END_BUBBLE_ALL))", 
+			severity : severity >= 0.02, 
+			e : eventName, 
+			v : eventValue >= 0.9 )
 	then
 		//System.out.println ( f.toString() );
 		System.out.println("The event " + e + " has a high percentage of stalls due to L1 data cache misses and FP Stalls.");
