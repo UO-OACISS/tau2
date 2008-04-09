@@ -98,7 +98,7 @@ public class MeanEventFact {
 				// any other metric combination
 				if (mainValue < eventValue) {
 					RuleHarness.assertObject(new MeanEventFact("Compared to Main", HIGHER, metric, metric, mainValue, eventValue, event, severity));
-				} else if (mainValue < eventValue) {
+				} else { //if (mainValue > eventValue) {
 					RuleHarness.assertObject(new MeanEventFact("Compared to Main", LOWER, metric, metric, mainValue, eventValue, event, severity));
 				}
 			}

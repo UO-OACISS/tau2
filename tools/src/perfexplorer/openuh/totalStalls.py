@@ -42,9 +42,9 @@ def loaddata():
 	#trial = TrialMeanResult(Utilities.getTrial("fortran", "test", "O3-2048-real.8-bounds"))
 	#trial = TrialMeanResult(Utilities.getTrial("fortran", "test", "O3-2048-real.8-options"))
 	#trial = TrialMeanResult(Utilities.getTrial("msap_parametric.static", "size.400", "1.threads"))
-	trial = TrialMeanResult(Utilities.getTrial("msap_parametric.optix.static", "size.400", "16.threads"))
+	#trial = TrialMeanResult(Utilities.getTrial("msap_parametric.optix.static", "size.400", "16.threads"))
 	#trial = TrialMeanResult(Utilities.getCurrentTrial())
-	#trial = TrialMeanResult(Utilities.getTrial("Fluid Dynamic - Unoptimized", "rib 90", "1_16"))
+	trial = TrialMeanResult(Utilities.getTrial("Fluid Dynamic - Unoptimized OpenMP", "rib 90", "1_16"))
 
 	return trial
 

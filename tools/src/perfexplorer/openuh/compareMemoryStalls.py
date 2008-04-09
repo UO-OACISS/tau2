@@ -14,6 +14,7 @@ from glue import MergeTrialsOperation
 from glue import DerivedMetrics
 from glue import TopXEvents
 from glue import MeanEventFact
+from glue import DifferenceOperation
 
 ###################################################################
 
@@ -35,6 +36,7 @@ L2Hits = ""
 L3Hits = ""
 LocalMemoryHits = ""
 RemoteMemoryHits = ""
+RemoteMemoryRatio = ""
 RatioMemoryAccesses = ""
 Total = ""
 TotalRatio = ""
@@ -92,6 +94,7 @@ def getMemoryModel(input):
 	global EarCache
 	global LocalMemoryHits
 	global RemoteMemoryHits
+	global RemoteMemoryRatio
 	global RatioMemoryAccesses
 	global Total
 	global TotalRatio
@@ -147,8 +150,8 @@ def getMemoryModel(input):
 	#print "\t", mainEvent, TotalRatio, input.getInclusive(0, mainEvent, TotalRatio)
 
 	# Ratio of Remote memory accesses (PAPI_NATIVE_DATA_EAR_CACHE_LAT128 / PAPI_NATIVE_L3_misses)
-	input, RemoteMemoryHits = deriveMetric(input, EarCache, L3Misses, DeriveMetricOperation.DIVIDE)
-	#print "\t", mainEvent, RemoteMemoryHits, input.getInclusive(0, mainEvent, RemoteMemoryHits)
+	input, RemoteMemoryRatio = deriveMetric(input, EarCache, L3Misses, DeriveMetricOperation.DIVIDE)
+	#print "\t", mainEvent, RemoteMemoryRatio, input.getInclusive(0, mainEvent, RemoteMemoryRatio)
 
 	# Ratio of Local Memory Accesses (PAPI_NATIVE_L3_misses - PAPI_NATIVEDATA_EAR_CACHE_LAT128) / PAPI_NATIVE_L3_misses 
 	input, RatioMemoryAccesses = deriveMetric(input, L3Misses, EarCache, DeriveMetricOperation.SUBTRACT)
@@ -160,55 +163,7 @@ def getMemoryModel(input):
 
 ###################################################################
 
-def main():
-	global mainEvent
-	global True
-	global False
-	global L1Hits
-	global L2Hits
-	global L3Hits
-	global L1DataStalls
-	global InstMiss
-	global L2Refs
-	global L2DataRef
-	global L2Misses
-	global L3Misses
-	global TLBPenalty
-	global EarCache
-	global LocalMemoryHits
-	global RemoteMemoryHits
-	global RatioMemoryAccesses
-	global Total
-	global TotalRatio
-	
-	print "--------------- JPython test script start ------------"
-	print "--- Calculating Memory Stall Causes --- "
-
-	# create a rulebase for processing
-	print "Loading Rules..."
-	ruleHarness = RuleHarness.useGlobalRules("openuh/OpenUHRules.drl")
-
-	# load the trial
-	print "loading the data..."
-
-	# check to see if the user has selected a trial
-	tmp = Utilities.getCurrentTrial()
-	if tmp != None:
-		trial = TrialResult(tmp)
-		print 
-	else:
-		# remove these two lines to bypass this and use the default trial
-		print "No trial selected - script exiting"
-		return
-
-		# choose the right database configuration - a string which matches the end of the jdbc connection,
-		# such as "perfdmf" to match "jdbc:derby:/Users/khuck/src/tau2/apple/lib/perfdmf"
-		#Utilities.setSession("openuh")
-
-		# load just the average values across all threads, input: app_name, exp_name, trial_name
-		#trial = TrialResult(Utilities.getTrial("msap_parametric.optix.static", "size.400", "16.threads"))
-		#trial = TrialResult(Utilities.getTrial("Fluid Dynamic - Unoptimized", "rib 45", "1_8"))
-
+def processTrial(trial):
 	# extract the non-callpath events from the trial
 	print "extracting non-callpath..."
 	extractor = ExtractNonCallpathEventOperation(trial)
@@ -232,35 +187,65 @@ def main():
 	print "Deriving memory stall metrics..."
 	derived, PowerPerProc = getMemoryModel(means)
 
-	# just one thread
-	thread = 0
+	return derived
 
-	# iterate over events, output inefficiency derived metric
-	for event in derived.getEvents():
-		MeanEventFact.compareEventToMain(derived, mainEvent, derived, event)
-	print
-	print
+def main():
+	global mainEvent
+	global True
+	global False
+	global L1Hits
+	global L2Hits
+	global L3Hits
+	global L1DataStalls
+	global InstMiss
+	global L2Refs
+	global L2DataRef
+	global L2Misses
+	global L3Misses
+	global TLBPenalty
+	global EarCache
+	global LocalMemoryHits
+	global RemoteMemoryHits
+	global RemoteMemoryRatio
+	global RatioMemoryAccesses
+	global Total
+	global TotalRatio
+
+	print "--------------- JPython test script start ------------"
+	print "--- Calculating Memory Stall Causes --- "
+
+	# load the trial
+	print "loading the data..."
+	Utilities.setSession("openuh")
+	# load just the average values across all threads, input: app_name, exp_name, trial_name
+	trial = TrialResult(Utilities.getTrial("Fluid Dynamic - Unoptimized OpenMP", "rib 90", "1_16"))
+	first = processTrial(trial)
+	trial = TrialResult(Utilities.getTrial("Fluid Dynamic - Optimized OpenMP", "rib 90", "1_16"))
+	second = processTrial(trial)
+
+	differ = DifferenceOperation(first)
+	differ.addInput(second)
+	diff = differ.processData().get(0)
 
 	# output the top 10
-	top10er = TopXEvents(derived, derived.getTimeMetric(), AbstractResult.EXCLUSIVE, 10)
+	top10er = TopXEvents(diff, diff.getTimeMetric(), AbstractResult.EXCLUSIVE, 10)
 	top10 = top10er.processData().get(0);
 	for event in top10.getEvents():
 		print
-		print event, "L1 hits: ", L1Hits, derived.getInclusive(0, event, L1Hits)
-		print event, "L2 hits: ", L2Hits, derived.getInclusive(0, event, L2Hits)
-		print event, "L3 hits: ", L3Hits, derived.getInclusive(0, event, L3Hits)
-		print event, "TLB Penalty: ", TLBPenalty, derived.getInclusive(0, event, TLBPenalty)
-		print event, "Local Memory Hits: ", LocalMemoryHits, derived.getInclusive(0, event, LocalMemoryHits)
-		print event, "Remote Memory Hits: ", RemoteMemoryHits, derived.getInclusive(0, event, RemoteMemoryHits)
-		print event, "Total: ", Total, derived.getInclusive(0, event, Total)
-		print event, "Total Ratio: ", TotalRatio, derived.getInclusive(0, event, TotalRatio)
-		print event, "local/remote ratio: ", RatioMemoryAccesses, derived.getInclusive(0, event, RatioMemoryAccesses)
+		print event, "L1 hits: ", L1Hits, diff.getInclusive(0, event, L1Hits)
+		print event, "L2 hits: ", L2Hits, diff.getInclusive(0, event, L2Hits)
+		print event, "L3 hits: ", L3Hits, diff.getInclusive(0, event, L3Hits)
+		print event, "TLB Penalty: ", TLBPenalty, diff.getInclusive(0, event, TLBPenalty)
+		print event, "Local Memory Hits: ", LocalMemoryHits, diff.getInclusive(0, event, LocalMemoryHits)
+		print event, "Remote Memory Hits: ", RemoteMemoryHits, diff.getInclusive(0, event, RemoteMemoryHits)
+		print event, "Total: ", Total, diff.getInclusive(0, event, Total)
+		print event, "Total Ratio: ", TotalRatio, diff.getInclusive(0, event, TotalRatio)
+		print event, "local/remote ratio: ", RatioMemoryAccesses, diff.getInclusive(0, event, RatioMemoryAccesses)
 		print
 
-	# process the rules
-	RuleHarness.getInstance().processRules()
 
 	print "---------------- JPython test script end -------------"
 
+	
 if __name__ == "__main__":
 	main()

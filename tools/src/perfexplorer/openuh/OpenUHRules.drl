@@ -141,9 +141,43 @@ rule "Examination of Stalls"
 			e : eventName, 
 			v : eventValue >= 0.9 )
 	then
-		//System.out.println ( f.toString() );
 		System.out.println("The event " + e + " has a high percentage of stalls due to L1 data cache misses and FP Stalls.");
 		System.out.println("\tPercent of Stalls due to these two reasons: " + f.getPercentage(v));
 		System.out.println("\tPercentage of total runtime: " + f.getPercentage(severity));
 end
+
+rule "High Remote Memory Accesses"
+	when 
+		// there is a low local/remote ratio
+		f : MeanEventFact ( 
+			m : metric == "((L3_MISSES-DATA_EAR_CACHE_LAT128)/L3_MISSES)",
+			b : betterWorse == MeanEventFact.LOWER, 
+			severity : severity > 0.02, 
+			e : eventName, 
+			a : mainValue, 
+			v : eventValue, 
+			factType == "Compared to Main" )
+	then
+		System.out.println("The event " + e + " has a lower than average local/remote memory reference ratio.");
+		System.out.println("\tAverage ratio: " + a + ", Event ratio: " + v);
+		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
+end
+
+rule "High Ratio of Cycles spent serving Memory Requests"
+	when 
+		// there is a low local/remote ratio
+		f : MeanEventFact ( 
+			m : metric == "((((((PAPI_L1_DCH+((L2_DATA_REFERENCES_L2_ALL-L2_MISSES)*2.0))+((L2_MISSES-L3_MISSES)*10.0))+(L2DTLB_MISSES*30.0))+((L3_MISSES-DATA_EAR_CACHE_LAT128)*127.0))+(DATA_EAR_CACHE_LAT128*232.0))/CPU_CYCLES)",
+			b : betterWorse == MeanEventFact.HIGHER, 
+			severity : severity > 0.02, 
+			e : eventName, 
+			a : mainValue, 
+			v : eventValue, 
+			factType == "Compared to Main" )
+	then
+		System.out.println("The event " + e + " has a higher than average number of cycles handling memory references.");
+		System.out.println("\tAverage memory cycles: " + f.getPercentage(a) + ", Event memory cycles: " + f.getPercentage(v));
+		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
+end
+
 
