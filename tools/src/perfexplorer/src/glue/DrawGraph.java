@@ -38,6 +38,7 @@ public class DrawGraph extends AbstractPerformanceOperation {
     public static final int EVENTNAME = 1;
     public static final int METRICNAME = 2;
     public static final int THREADNAME = 3;
+    public static final int USEREVENTNAME = 4;
 
     protected int seriesType = METRICNAME;  // sets the series name
     protected int categoryType = THREADNAME;  // sets the X axis
@@ -47,6 +48,7 @@ public class DrawGraph extends AbstractPerformanceOperation {
     protected String title = "My Chart";
     protected String yAxisLabel = "value";
     protected String xAxisLabel = "category";
+	protected boolean userEvents = false;
     
 	/**
 	 * @param input
@@ -86,7 +88,11 @@ public class DrawGraph extends AbstractPerformanceOperation {
             Set<Integer> threads = null;
             
             if (this._events == null) {
-            	events = input.getEvents();
+				if (userEvents) {
+					events = input.getUserEvents();
+				} else {
+            		events = input.getEvents();
+				}
             } else {
             	events = this._events;
             }
@@ -106,36 +112,61 @@ public class DrawGraph extends AbstractPerformanceOperation {
             String seriesName = "";
             String categoryName = "";
             
-            for (String event : events) {
-            	for (String metric : metrics) {
-            		for (Integer thread : threads) {
-            			// set the series name
-            			if (seriesType == TRIALNAME) {
-            				seriesName = input.toString();
-            			} else if (seriesType == EVENTNAME) {
-            				seriesName = event;
-            			} else if (seriesType == METRICNAME) {
-            				seriesName = metric;
-            			} else if (seriesType == THREADNAME) {
-            				seriesName = thread.toString();
-            			}
-            			
-            			// set the category name
-            			if (categoryType == TRIALNAME) {
-            				categoryName = input.toString();
-            			} else if (categoryType == EVENTNAME) {
-            				categoryName = event;
-            			} else if (categoryType == METRICNAME) {
-            				categoryName = metric;
-            			} else if (categoryType == THREADNAME) {
-            				categoryName = thread.toString();
-            			}
+			if (userEvents) {
+            	for (String event : events) {
+           			for (Integer thread : threads) {
+           				// set the series name
+           				if (seriesType == TRIALNAME) {
+           					seriesName = input.toString();
+           				} else if (seriesType == USEREVENTNAME) {
+           					seriesName = event;
+           				} else if (seriesType == THREADNAME) {
+           					seriesName = thread.toString();
+           				}
+           				
+           				// set the category name
+           				if (categoryType == TRIALNAME) {
+           					categoryName = input.toString();
+           				} else if (categoryType == USEREVENTNAME) {
+           					categoryName = event;
+           				} else if (categoryType == THREADNAME) {
+           					categoryName = thread.toString();
+           				}
 
-            			dataset.addValue(input.getDataPoint(thread, event, metric, valueType),
-            					seriesName, categoryName);
+           				dataset.addValue(input.getDataPoint(thread, event, null, valueType), seriesName, categoryName);
+           			}
+           		}
+			} else {
+            	for (String event : events) {
+            		for (String metric : metrics) {
+            			for (Integer thread : threads) {
+            				// set the series name
+            				if (seriesType == TRIALNAME) {
+            					seriesName = input.toString();
+            				} else if (seriesType == EVENTNAME) {
+            					seriesName = event;
+            				} else if (seriesType == METRICNAME) {
+            					seriesName = metric;
+            				} else if (seriesType == THREADNAME) {
+            					seriesName = thread.toString();
+            				}
+            			
+            				// set the category name
+            				if (categoryType == TRIALNAME) {
+            					categoryName = input.toString();
+            				} else if (categoryType == EVENTNAME) {
+            					categoryName = event;
+            				} else if (categoryType == METRICNAME) {
+            					categoryName = metric;
+            				} else if (categoryType == THREADNAME) {
+            					categoryName = thread.toString();
+            				}
+
+            				dataset.addValue(input.getDataPoint(thread, event, metric, valueType), seriesName, categoryName);
+            			}
             		}
             	}
-            }
+           	}
         }
         
         JFreeChart chart = ChartFactory.createLineChart(
@@ -354,5 +385,9 @@ public class DrawGraph extends AbstractPerformanceOperation {
 	 */
 	public void setYAxisLabel(String yAxisLabel) {
 		this.yAxisLabel = yAxisLabel;
+	}
+
+	public void setUserEvents(boolean userEvents) {
+		this.userEvents = userEvents;
 	}
 }

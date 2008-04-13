@@ -20,7 +20,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * interface.  This class has all the member data fields for the plethora
  * of anticipated subclasses.
  * 
- * <P>CVS $Id: AbstractResult.java,v 1.4 2008/03/27 18:22:39 khuck Exp $</P>
+ * <P>CVS $Id: AbstractResult.java,v 1.5 2008/04/13 23:51:15 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0
@@ -29,6 +29,7 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 	protected Set<Integer> threads = new TreeSet<Integer>();
 	protected Set<String> events = new TreeSet<String>();
 	protected Set<String> metrics = new TreeSet<String>();
+	protected Set<String> userEvents = new TreeSet<String>();
 	
 	protected Map<Integer, Map<String, Map<String, Double>>> inclusiveData = 
 			new HashMap<Integer, Map<String, Map<String, Double>>>();
@@ -42,6 +43,9 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 	protected Map<Integer, Map<String, Double>> subroutineData = 
 		new HashMap<Integer, Map<String, Double>>();
 
+	protected Map<Integer, Map<String, Double[]>> usereventData = 
+		new HashMap<Integer, Map<String, Double[]>>();
+
 	private String mainEvent = null;
 	private double mainInclusive = 0.0;
 	private String mainMetric = null;
@@ -50,6 +54,11 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 	public static final int EXCLUSIVE = 1;
 	public static final int CALLS = 2;
 	public static final int SUBROUTINES = 3;
+	public static final int USEREVENT_NUMEVENTS = 4;
+	public static final int USEREVENT_MAX = 5;
+	public static final int USEREVENT_MIN = 6;
+	public static final int USEREVENT_MEAN = 7;
+	public static final int USEREVENT_SUMSQR = 8;
 	private static List<Integer> types = null;
 	
 	public static List<Integer> getTypes() {
@@ -59,6 +68,11 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 			types.add(AbstractResult.EXCLUSIVE);
 			types.add(AbstractResult.CALLS);
 			types.add(AbstractResult.SUBROUTINES);
+			types.add(AbstractResult.USEREVENT_NUMEVENTS);
+			types.add(AbstractResult.USEREVENT_MAX);
+			types.add(AbstractResult.USEREVENT_MIN);
+			types.add(AbstractResult.USEREVENT_MEAN);
+			types.add(AbstractResult.USEREVENT_SUMSQR);
 		}
 		return types;
 	}
@@ -73,6 +87,16 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 			return "CALLS";
 		case SUBROUTINES:
 			return "SUBROUTINES";
+		case USEREVENT_NUMEVENTS:
+			return "USEREVENT_NUMEVENTS";
+		case USEREVENT_MAX:
+			return "USEREVENT_MAX";
+		case USEREVENT_MIN:
+			return "USEREVENT_MIN";
+		case USEREVENT_MEAN:
+			return "USEREVENT_MEAN";
+		case USEREVENT_SUMSQR:
+			return "USEREVENT_SUMSQR";
 		}
 		return "";
 	}
@@ -99,6 +123,18 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 				}
 				putCalls(thread, event, input.getCalls(thread, event));
 				putSubroutines(thread, event, input.getSubroutines(thread, event));
+			}
+			for (String event : input.getUserEvents()) {
+				putDataPoint(thread, event, null, USEREVENT_NUMEVENTS, 
+						getDataPoint(thread, event, null, USEREVENT_NUMEVENTS));
+				putDataPoint(thread, event, null, USEREVENT_MAX, 
+						getDataPoint(thread, event, null, USEREVENT_MAX));
+				putDataPoint(thread, event, null, USEREVENT_MIN, 
+						getDataPoint(thread, event, null, USEREVENT_MIN));
+				putDataPoint(thread, event, null, USEREVENT_MEAN, 
+						getDataPoint(thread, event, null, USEREVENT_MEAN));
+				putDataPoint(thread, event, null, USEREVENT_SUMSQR, 
+						getDataPoint(thread, event, null, USEREVENT_SUMSQR));
 			}
 		}
 	}
@@ -186,6 +222,101 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 		subroutineData.get(thread).put(event, value);
 	}
 
+	public void putUsereventNumevents(Integer thread, String event, double value) {
+		if (!threads.contains(thread)) {
+			threads.add(thread);
+		}
+		if (!userEvents.contains(event)) {
+			userEvents.add(event);
+		}
+
+		if (!usereventData.containsKey(thread)) {
+			usereventData.put(thread, new HashMap<String, Double[]>());
+		}
+		Double[] data = usereventData.get(thread).get(event);
+		if (data == null) {
+			data = new Double[5];
+		}
+		data[USEREVENT_NUMEVENTS - USEREVENT_NUMEVENTS] = value;
+		usereventData.get(thread).put(event, data);
+	}
+
+	public void putUsereventMax(Integer thread, String event, double value) {
+		if (!threads.contains(thread)) {
+			threads.add(thread);
+		}
+		if (!userEvents.contains(event)) {
+			userEvents.add(event);
+		}
+
+		if (!usereventData.containsKey(thread)) {
+			usereventData.put(thread, new HashMap<String, Double[]>());
+		}
+		Double[] data = usereventData.get(thread).get(event);
+		if (data == null) {
+			data = new Double[5];
+		}
+		data[USEREVENT_MAX - USEREVENT_NUMEVENTS] = value;
+		usereventData.get(thread).put(event, data);
+	}
+
+	public void putUsereventMin(Integer thread, String event, double value) {
+		if (!threads.contains(thread)) {
+			threads.add(thread);
+		}
+		if (!userEvents.contains(event)) {
+			userEvents.add(event);
+		}
+
+		if (!usereventData.containsKey(thread)) {
+			usereventData.put(thread, new HashMap<String, Double[]>());
+		}
+		Double[] data = usereventData.get(thread).get(event);
+		if (data == null) {
+			data = new Double[5];
+		}
+		data[USEREVENT_MIN - USEREVENT_NUMEVENTS] = value;
+		usereventData.get(thread).put(event, data);
+	}
+
+	public void putUsereventMean(Integer thread, String event, double value) {
+		if (!threads.contains(thread)) {
+			threads.add(thread);
+		}
+		if (!userEvents.contains(event)) {
+			userEvents.add(event);
+		}
+
+		if (!usereventData.containsKey(thread)) {
+			usereventData.put(thread, new HashMap<String, Double[]>());
+		}
+		Double[] data = usereventData.get(thread).get(event);
+		if (data == null) {
+			data = new Double[5];
+		}
+		data[USEREVENT_MEAN - USEREVENT_NUMEVENTS] = value;
+		usereventData.get(thread).put(event, data);
+	}
+
+	public void putUsereventSumsqr(Integer thread, String event, double value) {
+		if (!threads.contains(thread)) {
+			threads.add(thread);
+		}
+		if (!userEvents.contains(event)) {
+			userEvents.add(event);
+		}
+
+		if (!usereventData.containsKey(thread)) {
+			usereventData.put(thread, new HashMap<String, Double[]>());
+		}
+		Double[] data = usereventData.get(thread).get(event);
+		if (data == null) {
+			data = new Double[5];
+		}
+		data[USEREVENT_SUMSQR - USEREVENT_NUMEVENTS] = value;
+		usereventData.get(thread).put(event, data);
+	}
+
 	public double getInclusive(Integer thread, String event, String metric) {
 		Double value = null;
 		try {
@@ -238,6 +369,71 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 		return 0.0;
 	}
 
+	public double getUsereventNumevents(Integer thread, String event) {
+		Double[] value = null;
+		try {
+			value = usereventData.get(thread).get(event);
+			if (value != null) {
+				return (value[USEREVENT_NUMEVENTS - USEREVENT_NUMEVENTS].doubleValue());
+			}
+		} catch (NullPointerException e) {
+			return 0.0;
+		}
+		return 0.0;
+	}
+
+	public double getUsereventMax(Integer thread, String event) {
+		Double[] value = null;
+		try {
+			value = usereventData.get(thread).get(event);
+			if (value != null) {
+				return (value[USEREVENT_MAX - USEREVENT_NUMEVENTS].doubleValue());
+			}
+		} catch (NullPointerException e) {
+			return 0.0;
+		}
+		return 0.0;
+	}
+
+	public double getUsereventMin(Integer thread, String event) {
+		Double[] value = null;
+		try {
+			value = usereventData.get(thread).get(event);
+			if (value != null) {
+				return (value[USEREVENT_MIN - USEREVENT_NUMEVENTS].doubleValue());
+			}
+		} catch (NullPointerException e) {
+			return 0.0;
+		}
+		return 0.0;
+	}
+
+	public double getUsereventMean(Integer thread, String event) {
+		Double[] value = null;
+		try {
+			value = usereventData.get(thread).get(event);
+			if (value != null) {
+				return (value[USEREVENT_MEAN - USEREVENT_NUMEVENTS].doubleValue());
+			}
+		} catch (NullPointerException e) {
+			return 0.0;
+		}
+		return 0.0;
+	}
+
+	public double getUsereventSumsqr(Integer thread, String event) {
+		Double[] value = null;
+		try {
+			value = usereventData.get(thread).get(event);
+			if (value != null) {
+				return (value[USEREVENT_SUMSQR - USEREVENT_NUMEVENTS].doubleValue());
+			}
+		} catch (NullPointerException e) {
+			return 0.0;
+		}
+		return 0.0;
+	}
+
 	public Set<String> getEvents() {
 		return events;
 	}
@@ -252,6 +448,10 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 	
 	public String getMainEvent() {
 		return mainEvent;
+	}
+	
+	public Set<String> getUserEvents() {
+		return userEvents;
 	}
 	
 	/**
@@ -278,7 +478,17 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 			return getCalls(thread, event);
 		case SUBROUTINES:
 			return getSubroutines(thread, event);
-		}
+		case USEREVENT_NUMEVENTS:
+			return getUsereventNumevents(thread, event);
+		case USEREVENT_MAX:
+			return getUsereventMax(thread, event);
+		case USEREVENT_MIN:
+			return getUsereventMin(thread, event);
+		case USEREVENT_MEAN:
+			return getUsereventMean(thread, event);
+		case USEREVENT_SUMSQR:
+			return getUsereventSumsqr(thread, event);
+		}		
 		return 0.0;
 	}
 	
@@ -292,6 +502,16 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 			this.putCalls(thread, event, value);
 		case SUBROUTINES:
 			this.putSubroutines(thread, event, value);
+		case USEREVENT_NUMEVENTS:
+			this.putUsereventNumevents(thread, event, value);
+		case USEREVENT_MAX:
+			this.putUsereventMax(thread, event, value);
+		case USEREVENT_MIN:
+			this.putUsereventMin(thread, event, value);
+		case USEREVENT_MEAN:
+			this.putUsereventMean(thread, event, value);
+		case USEREVENT_SUMSQR:
+			this.putUsereventSumsqr(thread, event, value);
 		}
 	}
 	

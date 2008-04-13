@@ -51,39 +51,25 @@ def scaleMetric(input, metric, value, oper):
 
 def getPowerModel(input):
 	# set some metric names
-	totalCycles = "CPU_CYCLES"
-	totalInstructions = "IA64_INST_RETIRED_THIS"
-	#L1references = "L1_REFERENCES"
+	totalCycles = "PAPI_TOT_CYC"
+	totalInstructions = "PAPI_TOT_INS"
 	L1references = "PAPI_L1_TCA"
-	L2references = "L2_REFERENCES"
-	L3references = "L3_REFERENCES"
+	L2references = "PAPI_L2_TCA"
+	L3references = "PAPI_L3_TCA"
 	global mainEvent
 
 	# derive the CPU Power term
 	input, CPUPower = deriveMetric(input, totalInstructions, totalCycles, DeriveMetricOperation.DIVIDE)
-	#print mainEvent, totalInstructions, input.getInclusive(0, mainEvent, totalInstructions)
-	#print mainEvent, totalCycles, input.getInclusive(0, mainEvent, totalCycles)
-	#print mainEvent, CPUPower, input.getInclusive(0, mainEvent, CPUPower)
 	input, CPUPower = scaleMetric(input, CPUPower, (0.0459 * 122), ScaleMetricOperation.MULTIPLY)
-	#print "\t", mainEvent, CPUPower, input.getInclusive(0, mainEvent, CPUPower)
 	# derive the L1 Power term
-	#print mainEvent, L1references, input.getInclusive(0, mainEvent, L1references)
 	input, L1Power = deriveMetric(input, L1references, totalCycles, DeriveMetricOperation.DIVIDE)
-	#print mainEvent, L1Power, input.getInclusive(0, mainEvent, L1Power)
 	input, L1Power = scaleMetric(input, L1Power, (0.0017 * 122), ScaleMetricOperation.MULTIPLY)
-	#print "\t", mainEvent, L1Power, input.getInclusive(0, mainEvent, L1Power)
 	# derive the L2 Power term
-	#print mainEvent, L2references, input.getInclusive(0, mainEvent, L2references)
 	input, L2Power = deriveMetric(input, L2references, totalCycles, DeriveMetricOperation.DIVIDE)
-	#print mainEvent, L2Power, input.getInclusive(0, mainEvent, L2Power)
 	input, L2Power = scaleMetric(input, L2Power, (0.0171 * 122), ScaleMetricOperation.MULTIPLY)
-	#print "\t", mainEvent, L2Power, input.getInclusive(0, mainEvent, L2Power)
 	# derive the L3 Power term
-	#print mainEvent, L3references, input.getInclusive(0, mainEvent, L3references)
 	input, L3Power = deriveMetric(input, L3references, totalCycles, DeriveMetricOperation.DIVIDE)
-	#print mainEvent, L3Power, input.getInclusive(0, mainEvent, L3Power)
 	input, L3Power = scaleMetric(input, L3Power, (0.935 * 122), ScaleMetricOperation.MULTIPLY)
-	#print "\t", mainEvent, L3Power, input.getInclusive(0, mainEvent, L3Power)
 
 	# sum them all up!
 	input, PowerPerProc = deriveMetric(input, CPUPower, L1Power, DeriveMetricOperation.ADD)
@@ -99,26 +85,40 @@ def getEnergy(input, PowerPerProc):
 	time = "LINUX_TIMERS"
 
 	# convert time to seconds
-	#print mainEvent, time, input.getInclusive(0, mainEvent, time)
 	input, seconds = scaleMetric(input, time, (1/1000000.0), ScaleMetricOperation.MULTIPLY)
-	#print mainEvent, seconds, input.getInclusive(0, mainEvent, seconds)
 	input, joules = deriveMetric(input, PowerPerProc, seconds, DeriveMetricOperation.MULTIPLY)
-	#print mainEvent, joules, input.getInclusive(0, mainEvent, joules)
 
 	# return the trial, and the new derived metric name
 	return input, joules
 
 def getFlopsPerJoule(input, EnergyPerProc):
 	global mainEvent
-	#fpOps = "FP_OPS_RETIRED"
 	fpOps = "PAPI_FP_OPS"
 
-	#print mainEvent, fpOps, input.getInclusive(0, mainEvent, fpOps)
 	input, flopsPerJoule = deriveMetric(input, fpOps, EnergyPerProc, DeriveMetricOperation.DIVIDE)
-	#print mainEvent, flopsPerJoule, input.getInclusive(0, mainEvent, flopsPerJoule)
 
 	# return the trial, and the new derived metric name
 	return input, flopsPerJoule
+
+def getIPC(input):
+	global mainEvent
+	totalInstructions = "PAPI_TOT_INS"
+	totalCycles = "PAPI_TOT_CYC"
+
+	input, IPC = deriveMetric(input, totalInstructions, totalCycles, DeriveMetricOperation.DIVIDE)
+
+	# return the trial, and the new derived metric name
+	return input, IPC
+
+def getIssuedPerCycle(input):
+	global mainEvent
+	instructionsIssued = "PAPI_TOT_IIS"
+	totalCycles = "PAPI_TOT_CYC"
+
+	input, issuedPerCycle = deriveMetric(input, instructionsIssued, totalCycles, DeriveMetricOperation.DIVIDE)
+
+	# return the trial, and the new derived metric name
+	return input, issuedPerCycle
 
 ###################################################################
 
@@ -147,26 +147,14 @@ def main():
 		print "No trial selected - script exiting"
 		return
 
-		# choose the right database configuration - a string which matches the end of the jdbc connection,
-		# such as "perfdmf" to match "jdbc:derby:/Users/khuck/src/tau2/apple/lib/perfdmf"
-		#Utilities.setSession("openuh")
-
-		# load just the average values across all threads, input: app_name, exp_name, trial_name
-		#trial = TrialResult(Utilities.getTrial("msap_parametric.optix.static", "size.400", "16.threads"))
-		#trial = TrialResult(Utilities.getTrial("Fluid Dynamic - Unoptimized", "rib 45", "1_8"))
-
 	# extract the non-callpath events from the trial
 	print "extracting non-callpath..."
 	extractor = ExtractNonCallpathEventOperation(trial)
 	extracted = extractor.processData().get(0)
 
-	# print "extracting event..."
-	# extractor = ExtractEventOperation(trial, "MAIN__")
-	# extracted = extractor.processData().get(0)
-
 	# get basic statistics
 	print "computing mean..."
-	statMaker = BasicStatisticsOperation(extracted, True)
+	statMaker = BasicStatisticsOperation(extracted, False)
 	stats = statMaker.processData()
 	means = stats.get(BasicStatisticsOperation.MEAN)
 
@@ -175,20 +163,22 @@ def main():
 	print "Main Event: ", mainEvent
 
 	# calculate all derived metrics
-	print "Deriving power metrics..."
+	print
+	print "Deriving power metric..."
 	derived, PowerPerProc = getPowerModel(means)
 
-	# get the top 10 "power dense" events
-	top10er = TopXEvents(derived, PowerPerProc, AbstractResult.EXCLUSIVE, 10)
+	# get the top 10 events
+	top10er = TopXEvents(derived, derived.getTimeMetric(), AbstractResult.EXCLUSIVE, 10)
 	top10 = top10er.processData().get(0)
 
 	# just one thread
 	thread = 0
 
 	# iterate over events, output inefficiency derived metric
+	print
 	print "Top 10 Average", PowerPerProc, "values per thread for this trial:"
 	for event in top10er.getSortedEventNames():
-		print event, top10.getExclusive(thread, event, PowerPerProc)
+		print event, derived.getExclusive(thread, event, PowerPerProc)
 	print
 	print mainEvent, "INCLUSIVE: ", derived.getInclusive(thread, mainEvent, PowerPerProc)
 	print
@@ -197,37 +187,62 @@ def main():
 	print "Computing joules consumed..."
 	derived, EnergyPerProc = getEnergy(derived, PowerPerProc)
 
-	# get the top 10 "power dense" events
-	top10er = TopXEvents(derived, EnergyPerProc, AbstractResult.EXCLUSIVE, 10)
-	top10 = top10er.processData().get(0)
-
 	# iterate over events, output inefficiency derived metric
+	print
 	print "Top 10 Average", EnergyPerProc, "values per thread for this trial:"
 	for event in top10er.getSortedEventNames():
-		print event, top10.getExclusive(thread, event, EnergyPerProc)
-		#print event, top10.getExclusive(thread, event, "LINUX_TIMERS")
-		#print event, top10.getExclusive(thread, event, "(LINUX_TIMERS*1.0E-6)")
+		print event, derived.getExclusive(thread, event, EnergyPerProc)
 	print
 	print mainEvent, "INCLUSIVE: ", derived.getInclusive(thread, mainEvent, EnergyPerProc)
-	#print mainEvent, derived.getExclusive(thread, event, "LINUX_TIMERS")
-	#print mainEvent, derived.getExclusive(thread, event, "(LINUX_TIMERS*1.0E-6)")
 	print
 
 	# compute the floating point operations per joule per event
 	print "Computing FP_OPS/joule..."
 	derived, FlopsPerJoule = getFlopsPerJoule(derived, EnergyPerProc)
 
-	# get the top 10 "power dense" events
-	top10er = TopXEvents(derived, FlopsPerJoule, AbstractResult.EXCLUSIVE, 10)
-	top10 = top10er.processData().get(0)
-
 	# iterate over events, output inefficiency derived metric
+	print
 	print "Top 10 Average", FlopsPerJoule, "values per thread for this trial:"
 	for event in top10er.getSortedEventNames():
-		print event, top10.getExclusive(thread, event, FlopsPerJoule)
+		print event, derived.getExclusive(thread, event, FlopsPerJoule)
 	print
 	print mainEvent, "INCLUSIVE: ", derived.getInclusive(thread, mainEvent, FlopsPerJoule)
 	print
+
+	# compute the floating point operations per joule per event
+	print "Computing Instructions Per Cycle..."
+	derived, IPC = getIPC(derived)
+
+	# iterate over events, output inefficiency derived metric
+	print
+	print "Top 10 Average", IPC, "values per thread for this trial:"
+	for event in top10er.getSortedEventNames():
+		print event, derived.getExclusive(thread, event, IPC)
+	print
+	print mainEvent, "INCLUSIVE: ", derived.getInclusive(thread, mainEvent, IPC)
+	print
+
+	# compute the floating point operations per joule per event
+	print "Computing Issued Per Cycle..."
+	derived, issuedPerCycle = getIssuedPerCycle(derived)
+
+	# iterate over events, output inefficiency derived metric
+	print
+	print "Top 10 Average", issuedPerCycle, "values per thread for this trial:"
+	for event in top10er.getSortedEventNames():
+		print event, derived.getExclusive(thread, event, issuedPerCycle)
+	print
+
+	print mainEvent, "INCLUSIVE: ", derived.getInclusive(thread, mainEvent, issuedPerCycle)
+	print
+
+	print "Time to completion..."
+	print
+	for event in top10er.getSortedEventNames():
+		print event, derived.getExclusive(thread, event, derived.getTimeMetric())/1000000
+	print
+
+	print mainEvent, "INCLUSIVE: ", derived.getInclusive(thread, mainEvent, derived.getTimeMetric())/1000000
 
 	# process the rules
 	#RuleHarness.getInstance().processRules()

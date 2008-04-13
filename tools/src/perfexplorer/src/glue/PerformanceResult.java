@@ -13,7 +13,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * should support.  All operations should be refered to through
  * this interface, whenever possible.
  * 
- * <P>CVS $Id: PerformanceResult.java,v 1.2 2008/03/05 00:25:55 khuck Exp $</P>
+ * <P>CVS $Id: PerformanceResult.java,v 1.3 2008/04/13 23:51:15 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0
@@ -51,6 +51,14 @@ public interface PerformanceResult {
 	 * @return the set of metric names
 	 */
 	public Set<String> getMetrics();
+
+	/**
+	 * This method will return a Set of Strings, which represent the
+	 * names of the userevents in the trial.
+	 * 
+	 * @return the set of userevent names
+	 */
+	public Set<String> getUserEvents();
 
 	/**
 	 * This method will return the inclusive value stored in the trial for
@@ -93,6 +101,12 @@ public interface PerformanceResult {
 	 * @return the number of subroutines
 	 */
 	public double getSubroutines(Integer thread, String event);
+	
+	public double getUsereventNumevents(Integer thread, String event);
+	public double getUsereventMax(Integer thread, String event);
+	public double getUsereventMin(Integer thread, String event);
+	public double getUsereventMean(Integer thread, String event);
+	public double getUsereventSumsqr(Integer thread, String event);
 
 	/**
 	 * This method will save the specified value as the inclusive value for the
@@ -136,6 +150,12 @@ public interface PerformanceResult {
 	 */
 	public void putSubroutines(Integer thread, String event, double value);
 	
+	public void putUsereventNumevents(Integer thread, String event, double value);
+	public void putUsereventMax(Integer thread, String event, double value);
+	public void putUsereventMin(Integer thread, String event, double value);
+	public void putUsereventMean(Integer thread, String event, double value);
+	public void putUsereventSumsqr(Integer thread, String event, double value);
+	
 	/**
 	 * This method will return the number of threads in the trial from which this data
 	 * was derived.
@@ -161,6 +181,11 @@ public interface PerformanceResult {
 	 * @see AbstractResult#EXCLUSIVE
 	 * @see AbstractResult#CALLS
 	 * @see AbstractResult#SUBROUTINES
+	 * @see AbstractResult#USEREVENT_NUMEVENTS
+	 * @see AbstractResult#USEREVENT_MAX
+	 * @see AbstractResult#USEREVENT_MIN
+	 * @see AbstractResult#USEREVENT_MEAN
+	 * @see AbstractResult#USEREVENT_SUMSQR
 	 */
 	public double getDataPoint(Integer thread, String event, String metric, int type);
 
@@ -181,6 +206,11 @@ public interface PerformanceResult {
 	 * @see AbstractResult#EXCLUSIVE
 	 * @see AbstractResult#CALLS
 	 * @see AbstractResult#SUBROUTINES
+	 * @see AbstractResult#USEREVENT_NUMEVENTS
+	 * @see AbstractResult#USEREVENT_MAX
+	 * @see AbstractResult#USEREVENT_MIN
+	 * @see AbstractResult#USEREVENT_MEAN
+	 * @see AbstractResult#USEREVENT_SUMSQR
 	 */
 	public void putDataPoint(Integer thread, String event, String metric, int type, double value);
 	
@@ -209,6 +239,11 @@ public interface PerformanceResult {
 	 * @see AbstractResult#EXCLUSIVE
 	 * @see AbstractResult#CALLS
 	 * @see AbstractResult#SUBROUTINES
+	 * @see AbstractResult#USEREVENT_NUMEVENTS
+	 * @see AbstractResult#USEREVENT_MAX
+	 * @see AbstractResult#USEREVENT_MIN
+	 * @see AbstractResult#USEREVENT_MEAN
+	 * @see AbstractResult#USEREVENT_SUMSQR
 	 */
 	public Map<String, Double> getSortedByValue(String metric, int type, boolean ascending);
 

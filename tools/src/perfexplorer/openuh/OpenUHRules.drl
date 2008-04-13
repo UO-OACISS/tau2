@@ -109,7 +109,7 @@ rule "Load Imbalance"
 			severity : severity > 0.05, 
 			e : eventName, 
 			a : mainValue > 0.05, 
-			v : eventValue, 
+			v : eventValue > 0.25, 
 			factType == "Load Imbalance" )
 	then
 		//System.out.println ( f.toString() );
@@ -178,6 +178,16 @@ rule "High Ratio of Cycles spent serving Memory Requests"
 		System.out.println("The event " + e + " has a higher than average number of cycles handling memory references.");
 		System.out.println("\tAverage memory cycles: " + f.getPercentage(a) + ", Event memory cycles: " + f.getPercentage(v));
 		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
+end
+
+rule "Power Differences"
+	salience 0
+	when
+		// there exists a difference operation between performance data
+		d : DifferenceOperation ( t : differenceType, pr : performanceRatio > 1.0 )
+	then
+		System.out.println("The comparison trial is less than baseline");
+		System.out.println("Actual ratio: " + pr);
 end
 
 

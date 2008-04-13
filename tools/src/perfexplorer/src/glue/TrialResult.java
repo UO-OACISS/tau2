@@ -17,7 +17,7 @@ import edu.uoregon.tau.perfdmf.database.DB;
  * This class is an implementation of the AbstractResult class, and loads a trial
  * from the database into a result object.
  * 
- * <P>CVS $Id: TrialResult.java,v 1.2 2008/03/05 00:25:55 khuck Exp $</P>
+ * <P>CVS $Id: TrialResult.java,v 1.3 2008/04/13 23:51:15 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 
@@ -125,6 +125,38 @@ public class TrialResult extends AbstractResult {
 			results.close();
 			statement.close();
 
+			// now, get the user events
+			sql = new StringBuffer();
+			sql.append("select a.name, ");
+			sql.append("(p.node * " + threadsPerNode + ") + ");
+			sql.append("(p.context * " + threadsPerContext + ") + ");
+			sql.append("p.thread as thread, ");
+			sql.append("p.sample_count, ");
+			sql.append("p.maximum_value, ");
+			sql.append("p.minimum_value, ");
+			sql.append("p.mean_value, ");
+			sql.append("p.standard_deviation ");
+			sql.append("from atomic_event a ");
+			sql.append("left outer join atomic_location_profile p ");
+			sql.append("on a.id = p.atomic_event ");
+			sql.append("where a.trial = ? ");
+			sql.append(" order by 2,1 ");
+			
+			statement = db.prepareStatement(sql.toString());
+			
+			statement.setInt(1, trial.getID());
+			//System.out.println(statement.toString());
+			results = statement.executeQuery();
+			while (results.next() != false) {
+				this.putUsereventNumevents(results.getInt(2), results.getString(1), results.getDouble(3));
+				this.putUsereventMax(results.getInt(2), results.getString(1), results.getDouble(4));
+				this.putUsereventMin(results.getInt(2), results.getString(1), results.getDouble(5));
+				this.putUsereventMean(results.getInt(2), results.getString(1), results.getDouble(6));
+				this.putUsereventSumsqr(results.getInt(2), results.getString(1), results.getDouble(7));
+			}
+			results.close();
+			statement.close();
+			
 		} catch (SQLException exception) {
 			System.err.println(exception.getMessage());
 			exception.printStackTrace();

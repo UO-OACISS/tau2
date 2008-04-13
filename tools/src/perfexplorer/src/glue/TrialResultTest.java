@@ -17,7 +17,7 @@ import junit.framework.TestCase;
 /**
  * This class is a JUnit test case for the TrialResult class.
  * 
- * <P>CVS $Id: TrialResultTest.java,v 1.2 2008/03/05 00:25:55 khuck Exp $</P>
+ * <P>CVS $Id: TrialResultTest.java,v 1.3 2008/04/13 23:51:15 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 
@@ -38,8 +38,10 @@ public class TrialResultTest extends TestCase {
 		PerformanceResult result = null;
 		PerformanceResult means = null;
 		PerformanceResult totals = null;
-		Utilities.setSession("peri_gtc");
-		Trial trial = Utilities.getTrial("GTC", "ocracoke-O2", "64");
+//		Utilities.setSession("peri_gtc");
+//		Trial trial = Utilities.getTrial("GTC", "ocracoke-O2", "64");
+		Utilities.setSession("openuh");
+		Trial trial = Utilities.getTrial("msap_parametric.static", "size.100", "2.threads");
     	System.out.println("Getting full trial");
 		result = new TrialResult(trial);
 		System.out.println("Getting means");
@@ -48,18 +50,25 @@ public class TrialResultTest extends TestCase {
 		totals = new TrialTotalResult(trial, null, null);
 
 		assertNotNull(result);
-        assertEquals(result.getMainEvent(), "GTC [{main.F90} {10,9}]");
-        assertEquals(means.getMainEvent(), "GTC [{main.F90} {10,9}]");
-        assertEquals(totals.getMainEvent(), "GTC [{main.F90} {10,9}]");
+//        assertEquals(result.getMainEvent(), "GTC [{main.F90} {10,9}]");
+//        assertEquals(means.getMainEvent(), "GTC [{main.F90} {10,9}]");
+//        assertEquals(totals.getMainEvent(), "GTC [{main.F90} {10,9}]");
+        assertEquals(result.getMainEvent(), "main");
+        assertEquals(means.getMainEvent(), "LOOP #3 [file:/home1/khuck/src/fpga/msap.c <63, 163>]");
+        assertEquals(totals.getMainEvent(), "LOOP #3 [file:/home1/khuck/src/fpga/msap.c <63, 163>]");
 //        for (Integer thread : result.getThreads()) {
 //            for (String event : result.getEvents()) {
 //            	for (String metric : result.getMetrics()) {
-        assertEquals(result.getThreads().size(), 64);
-        assertEquals(result.getEvents().size(), 42);
-        assertEquals(result.getMetrics().size(), 1);
+//        assertEquals(result.getThreads().size(), 64);
+//        assertEquals(result.getEvents().size(), 42);
+//        assertEquals(result.getMetrics().size(), 1);
+        assertEquals(result.getThreads().size(), 2);
+        assertEquals(result.getEvents().size(), 41);
+        assertEquals(result.getMetrics().size(), 41);
         Integer thread = 1;
         String event = result.getMainEvent();
-        String metric = "Time";
+        String metric = "CPU_CYCLES";
+//        String metric = "Time";
 	            	System.out.print(thread + " : " + event + " : " + metric + " : inclusive : ");
 	            	System.out.println(result.getInclusive(thread, event, metric));
 	            	System.out.print(thread + " : " + event + " : " + metric + " : exclusive : ");
@@ -71,9 +80,6 @@ public class TrialResultTest extends TestCase {
             	System.out.println(result.getSubroutines(thread, event));
 //            }
 //        }
-        assertEquals(means.getThreads().size(), 1);
-        assertEquals(means.getEvents().size(), 42);
-        assertEquals(means.getMetrics().size(), 1);
 //        for (String event : means.getEvents()) {
 //        	for (String metric : means.getMetrics()) {
             	System.out.print(event + " : " + metric + " : inclusive : ");
@@ -86,9 +92,6 @@ public class TrialResultTest extends TestCase {
         	System.out.print(event + " : " + AbstractResult.SUBROUTINES + " : ");
         	System.out.println(means.getSubroutines(0, event));
 //        }
-        assertEquals(totals.getThreads().size(), 1);
-        assertEquals(totals.getEvents().size(), 42);
-        assertEquals(totals.getMetrics().size(), 1);
 //        for (String event : totals.getEvents()) {
 //        	for (String metric : totals.getMetrics()) {
             	System.out.print(event + " : " + metric + " : inclusive : ");
@@ -101,6 +104,17 @@ public class TrialResultTest extends TestCase {
         	System.out.print(event + " : " + AbstractResult.SUBROUTINES + " : ");
         	System.out.println(totals.getSubroutines(0, event));
 //        }
+            assertEquals(result.getUserEvents().size(), 5);
+            for (Integer thread2 : result.getThreads()) {
+	            for (String userEvent : result.getUserEvents()) {
+	            	System.out.print(userEvent + " " + thread2);
+	            	System.out.print(", " + result.getUsereventNumevents(thread2, userEvent));
+	            	System.out.print(", " + result.getUsereventMax(thread2, userEvent));
+	            	System.out.print(", " + result.getUsereventMin(thread2, userEvent));
+	            	System.out.print(", " + result.getUsereventMean(thread2, userEvent));
+	            	System.out.println(", " + result.getUsereventSumsqr(thread2, userEvent));
+	            }
+            }
 	}
 
 	public static void main (String[] args) {
