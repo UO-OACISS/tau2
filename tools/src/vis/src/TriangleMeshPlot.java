@@ -34,9 +34,9 @@ import com.sun.opengl.util.GLUT;
  * 
  * TODO: Back to front drawing (utilize 'direction') for correct blending.
  *
- * <P>CVS $Id: TriangleMeshPlot.java,v 1.5 2007/02/01 03:43:10 amorris Exp $</P>
+ * <P>CVS $Id: TriangleMeshPlot.java,v 1.6 2008/04/15 21:48:37 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  */
 public class TriangleMeshPlot implements Plot {
 
@@ -77,8 +77,8 @@ public class TriangleMeshPlot implements Plot {
      * @param colorValues the color values to use.
      * @param colorScale ColorScale to use for this plot.
      */
-    public void initialize(Axes axes, float xSize, float ySize, float zSize, float heightValues[][],
-            float colorValues[][], ColorScale colorScale) {
+    public void initialize(Axes axes, float xSize, float ySize, float zSize, float heightValues[][], float colorValues[][],
+            ColorScale colorScale) {
         this.nrows = heightValues.length;
         this.ncols = heightValues[0].length;
         this.heightValues = heightValues;
@@ -96,7 +96,6 @@ public class TriangleMeshPlot implements Plot {
         generateNormals();
     }
 
-    
     /**
      * Resets the data values for this <tt>TriangleMeshPlot</tt>.
      * @param xSize size in x direction.
@@ -234,14 +233,14 @@ public class TriangleMeshPlot implements Plot {
                 gl.glDeleteLists(((Integer) displayLists.get(i)).intValue(), 1);
             }
             displayLists = null;
-        } 
+        }
     }
 
     public void render(VisRenderer visRenderer) {
         GLAutoDrawable glDrawable = visRenderer.getGLAutoDrawable();
         Vec direction = visRenderer.getViewDirection();
 
-//    public void render(GLAutoDrawable glDrawable, Vec direction) {
+        //    public void render(GLAutoDrawable glDrawable, Vec direction) {
 
         GL gl = glDrawable.getGL();
         if (gl == null)
@@ -311,7 +310,6 @@ public class TriangleMeshPlot implements Plot {
 
     private void renderDL(GL gl) {
 
-
         if (dirty || displayLists == null) {
 
             if (displayLists != null) {
@@ -371,15 +369,13 @@ public class TriangleMeshPlot implements Plot {
                     Vec n2 = (Vec) normals[y + 1][x];
 
                     Color color = colorScale.getColor(c1);
-                    gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f,
-                            translucency);
+                    gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, translucency);
 
                     gl.glNormal3f(n1.x(), n1.y(), n1.z());
                     gl.glVertex3f(xPosition, yPosition, v1);
 
                     color = colorScale.getColor(c2);
-                    gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f,
-                            translucency);
+                    gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, translucency);
 
                     gl.glNormal3f(n2.x(), n2.y(), n2.z());
                     gl.glVertex3f(xPosition, yPosition + yIncrement, v2);
@@ -414,9 +410,7 @@ public class TriangleMeshPlot implements Plot {
         }
     }
 
-    
     private void renderDLX(GL gl) {
-
 
         if (dirty || displayLists == null) {
 
@@ -460,7 +454,7 @@ public class TriangleMeshPlot implements Plot {
 
             int vertexCount = 0;
 
-            for (int x = 0; x < ncols-1; x++) {
+            for (int x = 0; x < ncols - 1; x++) {
                 gl.glBegin(GL.GL_TRIANGLE_STRIP);
                 //gl.glBegin(GL.GL_LINES);
 
@@ -470,27 +464,25 @@ public class TriangleMeshPlot implements Plot {
                     float yPosition = y * yIncrement;
 
                     float v1 = heightValues[y][x];
-                    float v2 = heightValues[y][x+1];
+                    float v2 = heightValues[y][x + 1];
 
                     float c1 = colorValues[y][x];
-                    float c2 = colorValues[y][x+1];
+                    float c2 = colorValues[y][x + 1];
 
                     Vec n1 = (Vec) normals[y][x];
-                    Vec n2 = (Vec) normals[y][x+1];
+                    Vec n2 = (Vec) normals[y][x + 1];
 
                     Color color = colorScale.getColor(c1);
-                    gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f,
-                            translucency);
+                    gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, translucency);
 
                     gl.glNormal3f(n1.x(), n1.y(), n1.z());
                     gl.glVertex3f(xPosition, yPosition, v1);
 
                     color = colorScale.getColor(c2);
-                    gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f,
-                            translucency);
+                    gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, translucency);
 
                     gl.glNormal3f(n2.x(), n2.y(), n2.z());
-                    gl.glVertex3f(xPosition+xIncrement, yPosition, v2);
+                    gl.glVertex3f(xPosition + xIncrement, yPosition, v2);
 
                     vertexCount += 2;
                 }
@@ -521,7 +513,7 @@ public class TriangleMeshPlot implements Plot {
             gl.glCallList(((Integer) displayLists.get(i)).intValue());
         }
     }
-    
+
     private void renderSelectionTranslucent(GL gl) {
         if (selectedRow < 0 || selectedCol < 0)
             return;
@@ -538,8 +530,6 @@ public class TriangleMeshPlot implements Plot {
         //gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
         //gl.glBlendFunc(GL.GL_ONE, GL.GL_ZERO);
 
-     
-        
         gl.glShadeModel(GL.GL_SMOOTH);
         gl.glDisable(GL.GL_BLEND);
 
@@ -607,7 +597,7 @@ public class TriangleMeshPlot implements Plot {
         gl.glEnd();
 
         gl.glDisable(GL.GL_LIGHTING);
-        
+
         gl.glLineWidth(4.0f);
         gl.glColor3f(1.0f, 0, 0);
         gl.glBegin(GL.GL_LINE_STRIP);
@@ -675,6 +665,14 @@ public class TriangleMeshPlot implements Plot {
 
         if (selectedRow < 0 || selectedCol < 0)
             return;
+
+        if (selectedRow > heightValues.length - 1) {
+            selectedRow = heightValues.length - 1;
+        }
+
+        if (selectedCol > heightValues[selectedRow].length - 1) {
+            selectedCol = heightValues[selectedRow].length - 1;
+        }
 
         float xIncrement = xSize / 2.0f, yIncrement = ySize / 2.0f;
 
@@ -898,12 +896,12 @@ public class TriangleMeshPlot implements Plot {
         ChangeListener chageListener = new ChangeListener() {
             public void stateChanged(ChangeEvent event) {
                 try {
-                    
+
                     //double width = plotWidthSlider.getValue() / 7.5f;
-                   // width *= width;
-                    
+                    // width *= width;
+
                     //System.out.println(width);
-                    
+
                     TriangleMeshPlot.this.setSize(plotWidthSlider.getValue(), plotDepthSlider.getValue(),
                             plotHeightSlider.getValue());
                     //TriangleMeshPlot.this.setSize((int)width, plotDepthSlider.getValue(),
