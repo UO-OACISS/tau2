@@ -5,6 +5,7 @@ import common.Console;
 import common.PerfExplorerOutput;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.common.ImageExport;
+import edu.uoregon.tau.common.PythonInterpreterFactory;
 import jargs.gnu.CmdLineParser;
 import javax.swing.*;
 import java.awt.*;
@@ -37,7 +38,6 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 
 	public PerfExplorerClient (boolean standalone, String configFile,
 	EngineType analysisEngine, boolean quiet) {
-		
 		super("TAU: PerfExplorer Client");
 		
 		DBConnector.setPasswordCallback(PasswordCallback.guiPasswordCallback);
@@ -109,9 +109,6 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
     	if (url != null)
     		setIconImage(Toolkit.getDefaultToolkit().getImage(url));
 		mainFrame = this;
-		
-
-
 	}
 
 	public void actionPerformed (ActionEvent event) {
@@ -149,7 +146,6 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 	};
 
 	public static void main (String[] args) {
-
 		// DO THIS FIRST!
 		// -Dderby.stream.error.field=client.PerfExplorerClient.DEV_NULL
 		// doesn't work with JNLP, so do it here!
@@ -171,6 +167,8 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		CmdLineParser.Option quietOpt = parser.addBooleanOption('v',"verbose");
         CmdLineParser.Option tauHomeOpt = parser.addStringOption('t', "tauhome");
         CmdLineParser.Option tauArchOpt = parser.addStringOption('a', "tauarch");
+        CmdLineParser.Option noGUIOpt = parser.addBooleanOption('n', "nogui");
+        CmdLineParser.Option scriptOpt = parser.addStringOption('i', "script");
         
 		try {
 			parser.parse(args);
@@ -188,6 +186,8 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		Boolean quiet = (Boolean) parser.getOptionValue(quietOpt);
         PerfExplorerClient.tauHome = (String) parser.getOptionValue(tauHomeOpt);
         PerfExplorerClient.tauArch = (String) parser.getOptionValue(tauArchOpt);
+        Boolean noGUI = (Boolean) parser.getOptionValue(noGUIOpt);
+        String scriptName = (String) parser.getOptionValue(scriptOpt);
 
 		EngineType analysisEngine = EngineType.WEKA;
 
@@ -252,10 +252,19 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		packages.add("edu.uoregon.tau.perfdmf.database");
 		edu.uoregon.tau.common.PythonInterpreterFactory.defaultfactory.addPackagesFromList(packages);
 
-		JFrame frame = new PerfExplorerClient(standalone.booleanValue(),
-			configFile, analysisEngine, quiet.booleanValue());
-		frame.pack();
-		frame.setVisible(true);
+		if (noGUI.booleanValue()) {
+			PerfExplorerNoGUI test = new PerfExplorerNoGUI(
+				configFile, analysisEngine, quiet.booleanValue());
+			if (scriptName != null) {
+				PythonInterpreterFactory.defaultfactory.getPythonInterpreter().execfile(scriptName);
+				System.exit(0);
+			}
+		} else {
+			JFrame frame = new PerfExplorerClient(standalone.booleanValue(),
+				configFile, analysisEngine, quiet.booleanValue());
+			frame.pack();
+			frame.setVisible(true);
+		}
 	}
 
 	public static String getTauHome() {
