@@ -105,6 +105,9 @@ public class PythonInterpreterFactory {
     PySystemState sys = Py.getSystemState();
     for (Iterator i = packages.iterator(); i.hasNext(); )
       sys.add_package((String)i.next());
+	// set standard out and standard error for the interpreter
+	pythoninterpreter.setErr(System.err);
+	pythoninterpreter.setOut(System.out);
     return pythoninterpreter;
   }
  
