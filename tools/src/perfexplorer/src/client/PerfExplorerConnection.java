@@ -316,6 +316,16 @@ public class PerfExplorerConnection {
 		return conns;
 	}
 
+	public List getConfigNames() {
+		List conns = null;
+		try {
+	    	conns = server.getConfigNames();
+		} catch (RemoteException e) {
+	    	handleError(e, "getConfigNames()");
+		}
+		return conns;
+	}
+
     public ListIterator getEventList(int trialID, int metricIndex) {
 	ListIterator tmpIterator = null;
 	try {

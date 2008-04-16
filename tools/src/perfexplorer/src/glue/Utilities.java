@@ -81,10 +81,12 @@ public class Utilities {
 	public static int setSession (String name) {
 		try {
 			PerfExplorerServer server = getServer();
+			List configNames = server.getConfigNames();
 			for (int i = 0 ; i < server.getSessionCount() ; i++) {
 				server.setConnectionIndex(i);
 //				System.out.println(server.getConnectionString());
-				if (server.getConnectionString().endsWith(name)) {
+				String tmpname = (String)configNames.get(i);
+				if (tmpname.equals(name)) {
 //					System.out.println("selected: " + server.getConnectionString());
 					return i;
 				}

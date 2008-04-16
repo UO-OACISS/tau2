@@ -10,7 +10,7 @@ import java.util.List;
  * PerfExplorerServer object.  This interface defines the API for
  * passing requests to the server.
  * 
- * <P>CVS $Id: RMIPerfExplorer.java,v 1.13 2008/03/13 00:40:44 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorer.java,v 1.14 2008/04/16 22:31:32 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -231,6 +231,14 @@ public interface RMIPerfExplorer extends Remote {
      * @throws RemoteException
      */
     public List getConnectionStrings() throws RemoteException;
+
+    /**
+     * Gets the configuration names for the JDBC connections.
+     *
+     * @return The configuration names
+     * @throws RemoteException
+     */
+    public List getConfigNames() throws RemoteException;
 
     /**
      * Gets the list of events for the specified trial, metric

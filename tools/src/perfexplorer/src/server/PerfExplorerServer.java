@@ -47,7 +47,7 @@ import java.util.NoSuchElementException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.67 2008/04/16 00:58:41 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.68 2008/04/16 22:31:32 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -56,6 +56,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	private static String USAGE = "Usage: PerfExplorerClient [{-h,--help}] {-c,--configfile}=<config_file> [{-e,--engine}=<analysis_engine>] [{-p,--port}=<port_number>]\n  where analysis_engine = R or Weka";
 	private DatabaseAPI session = null;
 	private List sessions = new ArrayList();
+	private List configNames = new ArrayList();
 	private List sessionStrings = new ArrayList();
 	private List requestQueues = new ArrayList();
 	private List timerThreads = new ArrayList();
@@ -131,18 +132,22 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			configFiles = new ArrayList();
 			configFiles.add(configFile);
 		}
+        String home = System.getProperty("user.home");
+        String slash = System.getProperty("file.separator");
+        String prefix = home + slash + ".ParaProf" + slash + "perfdmf.cfg.";
 		for (Iterator iter = configFiles.iterator() ; iter.hasNext() ; ) {
 			DatabaseAPI api = null;
 			String tmpFile = (String)iter.next();
 			PerfExplorerOutput.print("Connecting...");
 			try {
 				api = new DatabaseAPI();
-				//System.out.println(tmpFile);
+				String configName = tmpFile.replaceAll(prefix, "");
 				api.initialize(tmpFile, false);
 				workerSession = new DatabaseAPI();
 				workerSession.initialize(tmpFile, false);
 				PerfExplorerOutput.println(" Connected to " + api.db().getConnectString() + ".");
 				this.sessions.add(api);
+				this.configNames.add(configName);
 				this.sessionStrings.add(api.db().getConnectString());
 				Queue requestQueue = new Queue();
 				this.requestQueues.add(requestQueue);
@@ -1605,6 +1610,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	
 	public List getConnectionStrings() {
 		return this.sessionStrings;
+	}
+	
+	public List getConfigNames() {
+		return this.configNames;
 	}
 	
 	/**
