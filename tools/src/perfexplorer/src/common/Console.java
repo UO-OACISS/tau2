@@ -9,70 +9,59 @@ package common;
     import javax.swing.text.*;
     
     public class Console extends JFrame {
-        PipedInputStream piOut;
-        PipedInputStream piErr;
-        PipedOutputStream poOut;
-        PipedOutputStream poErr;
-        JTextArea textArea = new JTextArea();
+        JTextPane textPane = new JTextPane();
+		private PrintStream out = null;
+		private PrintStream err = null;
+		private PrintStream oldOut = null;
+		private PrintStream oldErr = null;
+		private Document doc = null;
+		private SimpleAttributeSet errorStyle = null;
+		private SimpleAttributeSet outputStyle = null;
     
         public Console() throws IOException {
+			super("PerfExplorer Console");
+
+			// preserve the old out and err
+			oldOut = System.out;
+			oldErr = System.err;
+
             // Set up System.out
-            piOut = new PipedInputStream();
-            poOut = new PipedOutputStream(piOut);
-            System.setOut(new PrintStream(poOut, true));
+            ConsoleOutputStream consoleOut = new ConsoleOutputStream(this, false);
+            out = new PrintStream(consoleOut, true);
+            System.setOut(out);
     
             // Set up System.err
-            piErr = new PipedInputStream();
-            poErr = new PipedOutputStream(piErr);
-            System.setErr(new PrintStream(poErr, true));
+            ConsoleOutputStream consoleErr = new ConsoleOutputStream(this, true);
+            err = new PrintStream(consoleErr, true);
+            System.setErr(err);
     
             // Add a scrolling text area
-            textArea.setEditable(false);
-            textArea.setRows(20);
-            textArea.setColumns(50);
-            getContentPane().add(new JScrollPane(textArea), BorderLayout.CENTER);
-            pack();
-            setVisible(true);
-    
-            // Create reader threads
-            new ReaderThread(piOut).start();
-            new ReaderThread(piErr).start();
+            textPane.setEditable(false);
+            this.getContentPane().add(new JScrollPane(textPane), BorderLayout.CENTER);
+			this.setPreferredSize(new Dimension(800,600));
+            this.pack();
+            this.setVisible(true);
+
+			doc = textPane.getDocument();
+			errorStyle = new SimpleAttributeSet();
+			StyleConstants.setForeground(errorStyle, Color.red);
+			outputStyle = new SimpleAttributeSet();
+			StyleConstants.setForeground(outputStyle, Color.black);
         }
     
-        class ReaderThread extends Thread {
-            PipedInputStream pi;
+		public void print(boolean error, String record) {
+			AttributeSet attributes = outputStyle;
+			if (error) {
+				attributes = errorStyle;
+			}
+			try {
+				doc.insertString(doc.getLength(), record, attributes);
+			} catch (BadLocationException exp) {
+		        exp.printStackTrace();
+			}
+
+			// Make sure the last line is always visible
+			textPane.setCaretPosition(textPane.getDocument().getLength());
     
-            ReaderThread(PipedInputStream pi) {
-                this.pi = pi;
-            }
-    
-            public void run() {
-                final byte[] buf = new byte[1024];
-                try {
-                    while (true) {
-                        final int len = pi.read(buf);
-                        if (len == -1) {
-                            break;
-                        }
-                        SwingUtilities.invokeLater(new Runnable() {
-                            public void run() {
-                                textArea.append(new String(buf, 0, len));
-    
-                                // Make sure the last line is always visible
-                                textArea.setCaretPosition(textArea.getDocument().getLength());
-    
-                                // Keep the text area down to a certain character size
-                                int idealSize = 1000;
-                                int maxExcess = 500;
-                                int excess = textArea.getDocument().getLength() - idealSize;
-                                if (excess >= maxExcess) {
-                                    textArea.replaceRange("", 0, excess);
-                                }
-                            }
-                        });
-                    }
-                } catch (IOException e) {
-                }
-            }
-        }
+		}
     }

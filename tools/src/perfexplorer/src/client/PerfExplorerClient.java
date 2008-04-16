@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class PerfExplorerClient extends JFrame implements ImageExport {
-	private static String USAGE = "Usage: PerfExplorerClient [{-h,--help}] {-c,--configfile}=<config_file> [{-s,--standalone}] [{-e,--engine}=<analysis_engine>]\n  where analysis_engine = R or Weka";
+	private static String USAGE = "\nPerfExplorer\n****************************************************************************\nUsage: perfexplorer [OPTIONS]\nwhere [OPTIONS] are:\n[{-h,--help}]  ............................................ print this help.\n[{-g,--configfile}=<config_file>] .. specify one PerfDMF configuration file.\n[{-c,--config}=<config_name>] ........... specify one PerfDMF configuration.\n[{-e,--engine}=<analysis_engine>] ......  where analysis_engine = R or Weka.\n[{-n,--nogui}] ..................................................... no GUI.\n[{-i,--script}=<script_name>] ................ execute script <script_name>.\n";
 
 	private ActionListener listener = null;
 	private static PerfExplorerClient mainFrame = null;
@@ -109,6 +109,7 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
     	if (url != null)
     		setIconImage(Toolkit.getDefaultToolkit().getImage(url));
 		mainFrame = this;
+
 	}
 
 	public void actionPerformed (ActionEvent event) {
@@ -161,7 +162,8 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		CmdLineParser.Option standaloneOpt = parser.addBooleanOption('s',"standalone");
 		CmdLineParser.Option clientOnlyOpt = parser.addBooleanOption('l',"clientonly");
 		// no longer required!
-		CmdLineParser.Option configfileOpt = parser.addStringOption('c',"configfile");
+		CmdLineParser.Option configfileOpt = parser.addStringOption('g',"configfile");
+		CmdLineParser.Option configOpt = parser.addStringOption('c',"config");
 		// assume weka if not specified.
 		CmdLineParser.Option engineOpt = parser.addStringOption('e',"engine");
 		CmdLineParser.Option quietOpt = parser.addBooleanOption('v',"verbose");
@@ -169,6 +171,7 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
         CmdLineParser.Option tauArchOpt = parser.addStringOption('a', "tauarch");
         CmdLineParser.Option noGUIOpt = parser.addBooleanOption('n', "nogui");
         CmdLineParser.Option scriptOpt = parser.addStringOption('i', "script");
+        //CmdLineParser.Option consoleOpt = parser.addBooleanOption('y', "consoleWindow");
         
 		try {
 			parser.parse(args);
@@ -182,12 +185,15 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		Boolean standalone = (Boolean) parser.getOptionValue(standaloneOpt);
 		Boolean clientOnly = (Boolean) parser.getOptionValue(clientOnlyOpt);
 		String configFile = (String) parser.getOptionValue(configfileOpt);
+		String config = (String) parser.getOptionValue(configOpt);
 		String engine = (String) parser.getOptionValue(engineOpt);
 		Boolean quiet = (Boolean) parser.getOptionValue(quietOpt);
         PerfExplorerClient.tauHome = (String) parser.getOptionValue(tauHomeOpt);
         PerfExplorerClient.tauArch = (String) parser.getOptionValue(tauArchOpt);
         Boolean noGUI = (Boolean) parser.getOptionValue(noGUIOpt);
         String scriptName = (String) parser.getOptionValue(scriptOpt);
+        //Boolean console = (Boolean) parser.getOptionValue(consoleOpt);
+        Boolean console = new Boolean(true);
 
 		EngineType analysisEngine = EngineType.WEKA;
 
@@ -202,30 +208,30 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		// standalone is the new default!
 		if (standalone == null)  {
 			standalone = new Boolean(true);
-			//System.out.println("Running in standalone mode...");
 		}
 		if (clientOnly != null && clientOnly.booleanValue()) 
 			standalone = new Boolean(false);
 
+		if (noGUI == null)  {
+			noGUI = new Boolean(false);
+		}
+
+		if (console == null)  {
+			console = new Boolean(true);
+		}
+
 		if (standalone.booleanValue()) {
-			// no longer necessary
 			if (configFile == null) {
-				//System.out.println("No config file specified.  Will create one if necessary...");
-				//String home = System.getProperty("user.home");
-				//String slash = System.getProperty("file.separator");
-				//configFile = home + slash + ".ParaProf" + slash + "perfdmf.cfg";
-				//System.err.println("Please enter a valid config file.");
-				//System.err.println(USAGE);
-				//System.exit(-1);
+				if (config != null) {
+					String home = System.getProperty("user.home");
+					String slash = System.getProperty("file.separator");
+					configFile = home + slash + ".ParaProf" + slash + "perfdmf.cfg." + config;
+				}
 			}
 			try {
 				analysisEngine = EngineType.getType(engine);
 			} catch (Exception e) {
-				//System.out.println("No engine specifed.  Using Weka...");
 				analysisEngine = EngineType.WEKA;
-				//System.err.println("Please enter a valid engine type.");
-				//System.err.println(USAGE);
-				//System.exit(-1);
 			}
 		}
 
@@ -234,12 +240,6 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 				UIManager.getCrossPlatformLookAndFeelClassName());
 		} catch (Exception e) { }
 */
-		// send all output to a console window
-
-		/*try {
-			new Console();
-		} catch (IOException e) { } */
-
 		// make sure the Jython interpreter knows about our packages
 		// because if they aren't in the classpath, it can't find them.
 		// this is necessary when running from JNLP.
@@ -253,18 +253,41 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		edu.uoregon.tau.common.PythonInterpreterFactory.defaultfactory.addPackagesFromList(packages);
 
 		if (noGUI.booleanValue()) {
+			//System.out.println("no gui");
 			PerfExplorerNoGUI test = new PerfExplorerNoGUI(
 				configFile, analysisEngine, quiet.booleanValue());
 			if (scriptName != null) {
+				//System.out.println("running script, no gui");
 				PythonInterpreterFactory.defaultfactory.getPythonInterpreter().execfile(scriptName);
 				System.exit(0);
 			}
 		} else {
-			JFrame frame = new PerfExplorerClient(standalone.booleanValue(),
+			if (console.booleanValue()) {
+				// send all output to a console window
+				try {
+					new Console();
+				} catch (IOException e) {
+					System.err.println("An error occurred setting up the console:");
+					System.err.println(e.getMessage());
+					e.printStackTrace();
+					System.exit(-1);
+				} 
+			} 
+			//System.out.println("gui");
+			PerfExplorerClient frame = new PerfExplorerClient(standalone.booleanValue(),
 				configFile, analysisEngine, quiet.booleanValue());
 			frame.pack();
 			frame.setVisible(true);
+			frame.toFront();
+
+			if (scriptName != null) {
+				//System.out.println("running script, gui");
+				PythonInterpreterFactory.defaultfactory.getPythonInterpreter().execfile(scriptName);
+				PerfExplorerActionListener listener = (PerfExplorerActionListener)frame.getListener();
+				listener.setScriptName(scriptName);
+			}
 		}
+
 	}
 
 	public static String getTauHome() {

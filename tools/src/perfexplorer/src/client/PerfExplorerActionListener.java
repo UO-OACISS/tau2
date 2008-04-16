@@ -17,6 +17,7 @@ import common.RMISortableIntervalEvent;
 import common.RMIPerfExplorerModel;
 import common.TransformationType;
 import common.PerfExplorerOutput;
+import common.Console;
 import java.io.File;
 import edu.uoregon.tau.common.VectorExport;
 import edu.uoregon.tau.common.PythonInterpreterFactory;
@@ -28,6 +29,7 @@ public class PerfExplorerActionListener implements ActionListener {
 	public final static String RERUNSCRIPT = "Re-run Analysis Script";
 	public final static String SAVE_MAIN = "Save Main Window As Vector Image";
 	public final static String SAVE = "Save As Vector Image";
+	public final static String CONSOLE = "Open New Console Window";
 	public final static String QUIT = "Quit PerfExplorer";
 	public final static String QUIT_SERVER = "Quit PerfExplorer (Shutdown Server)";
 	public final static String LOOK_AND_FEEL = "Set Look and Feel: ";
@@ -121,6 +123,8 @@ public class PerfExplorerActionListener implements ActionListener {
 					runScript();
 				} else if (arg.equals(SAVE_MAIN)) {
 					saveMain();
+				} else if (arg.equals(CONSOLE)) {
+					new Console();
 				} else if (arg.equals(SAVE)) {
 					saveThyself();
 			// help menu items
