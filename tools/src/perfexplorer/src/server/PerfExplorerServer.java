@@ -47,7 +47,7 @@ import java.util.NoSuchElementException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.68 2008/04/16 22:31:32 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.69 2008/04/17 00:45:47 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -135,6 +135,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
         String home = System.getProperty("user.home");
         String slash = System.getProperty("file.separator");
         String prefix = home + slash + ".ParaProf" + slash + "perfdmf.cfg.";
+		// this is how you replace 1 backslash with 2 backslashes for use later 
+		// as a regular expression...
+		prefix = prefix.replaceAll("\\\\", "\\\\\\\\");
+		System.out.println(prefix);
 		for (Iterator iter = configFiles.iterator() ; iter.hasNext() ; ) {
 			DatabaseAPI api = null;
 			String tmpFile = (String)iter.next();
@@ -170,6 +174,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
             		buf.append("\nSee the PerfExplorer and/or PerfDMF");
             		buf.append("configuration utilities for details.\n");
             		System.err.println(buf.toString());
+					e.printStackTrace();
 					//System.exit(1);
 				}
         	}
