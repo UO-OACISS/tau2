@@ -6,6 +6,7 @@ import glue.PerformanceAnalysisOperation;;
 import glue.Provenance;
 import glue.Script;
 import glue.MeanEventFact;
+import glue.DifferenceOperation;
 
 #declare any global variables here
 

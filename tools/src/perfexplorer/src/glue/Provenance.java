@@ -19,7 +19,7 @@ import persistence.HibernateUtil;
  * we store the name of the class, and some information for
  * re-constructing it?
  * 
- * <P>CVS $Id: Provenance.java,v 1.3 2008/04/03 06:08:56 khuck Exp $</P>
+ * <P>CVS $Id: Provenance.java,v 1.4 2008/04/17 18:53:51 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 
@@ -28,6 +28,7 @@ import persistence.HibernateUtil;
 //@Entity
 public class Provenance {
 	private static Provenance current = null;
+	private static boolean enabled = false;
 
 	//@Id @GeneratedValue
 	private Long id = null;
@@ -144,6 +145,10 @@ public class Provenance {
 			outputs = last.getOutputs();
 		}
 		return outputs;
+	}
+
+	public static void setEnabled (boolean enabled) {
+		Provenance.enabled = enabled;
 	}
 
 }

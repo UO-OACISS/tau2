@@ -287,7 +287,6 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 				listener.setScriptName(scriptName);
 			}
 		}
-
 	}
 
 	public static String getTauHome() {

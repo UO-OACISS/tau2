@@ -70,7 +70,7 @@ Utilities.setSession("openuh")
 
 # load just the average values across all threads, input: app_name, exp_name, trial_name
 #trial = TrialResult(Utilities.getTrial("msap_parametric.optix.static", "size.400", "16.threads"))
-trial = TrialResult(Utilities.getTrial("Fluid Dynamic - Unoptimized OpenMP", "rib 90", "16_1"))
+trial = TrialResult(Utilities.getTrial("Fluid Dynamic - Unoptimized OpenMP", "rib 90", "Original OpenMP 1_16"))
 
 # extract the non-callpath events from the trial
 extractor = ExtractNonCallpathEventOperation(trial)
