@@ -1,6 +1,6 @@
 #!/bin/@SHELL@
 
-# $Id: perfexplorer_configure.skel,v 1.10 2008/03/11 18:06:53 khuck Exp $
+# $Id: perfexplorer_configure.skel,v 1.11 2008/04/23 17:04:05 khuck Exp $
 # $Name:  $
 
 rm -f .last_config
@@ -257,7 +257,9 @@ if [ ! -r ${WEKA_JAR} ]; then
 		exit
 	    fi
 	else
-	    exit
+		echo ""
+		echo "Please acquire your Weka jar file manually from http://www.cs.waikato.ac.nz/ml/weka/"
+		echo ""
 	fi
 fi
 
