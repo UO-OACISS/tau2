@@ -485,7 +485,10 @@ static int writeMetaData(FILE *fp, bool newline, int counter) {
   writeXMLAttribute(fp, "BGP Location", location, newline);
 
   writeXMLAttribute(fp, "BGP rankInPset", BGP_Personality_rankInPset(&personality), newline);
+/*
   writeXMLAttribute(fp, "BGP numNodesInPset", Kernel_ProcessCount(), newline);
+*/
+  writeXMLAttribute(fp, "BGP psetSize", BGP_Personality_psetSize(&personality), newline);
   writeXMLAttribute(fp, "BGP psetNum", BGP_Personality_psetNum(&personality), newline);
   writeXMLAttribute(fp, "BGP numPsets", BGP_Personality_numComputeNodes(&personality), newline);
 
