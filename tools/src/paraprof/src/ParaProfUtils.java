@@ -36,11 +36,11 @@ import edu.uoregon.tau.perfdmf.Thread;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.35 2007/06/01 00:06:48 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.36 2008/05/07 20:53:17 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.35 $
+ * @version $Revision: 1.36 $
  */
 public class ParaProfUtils {
 
@@ -1072,7 +1072,7 @@ public class ParaProfUtils {
             experiment.setName("New Experiment");
 
             ParaProf.paraProfManagerWindow.expandApplicationType(0, application.getID(), application);
-            ParaProf.paraProfManagerWindow.expandApplication(0, null, experiment);
+            ParaProf.paraProfManagerWindow.expandApplication(0, application, experiment);
 
             final ParaProfTrial ppTrial = new ParaProfTrial();
             ppTrial.getTrial().setDataSource(phaseDataSource);

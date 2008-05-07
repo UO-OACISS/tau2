@@ -44,6 +44,7 @@ public class PhaseConvertedDataSource extends DataSource {
                     }
 
                     FunctionProfile fp = new FunctionProfile(function, numMetrics);
+                    thread.addFunctionProfile(fp);
 
                     for (int i = 0; i < callpathDataSource.getNumberOfMetrics(); i++) {
                         fp.setExclusive(i, srcFp.getExclusive(i));
@@ -53,7 +54,6 @@ public class PhaseConvertedDataSource extends DataSource {
                     fp.setNumCalls(srcFp.getNumCalls());
                     fp.setNumSubr(srcFp.getNumSubr());
 
-                    thread.addFunctionProfile(fp);
                 } else {
                     String name = srcFp.getName();
 
