@@ -47,15 +47,13 @@ def end():
     if (errorsFound == 0):
         outputHeader ("No Errors!")
         code = 0
+        cleanup()
     else:
         print "Encountered %d errors" % errorsFound
         code = errorsFound
     if (html):
         print "</PRE></HTML>\n"
     sys.exit(code)
-
-
-
 
 
 def usesOption(makefile, option):
@@ -550,6 +548,18 @@ def usage():
     
     sys.exit(-1)
 
+def cleanup():
+    chdir(TEST_ROOT)
+    system("find . -name \"build-*\" | xargs rm -rf")
+    system("find . -name \"profile.*\" | xargs rm")
+    system("find . -name \"*.trc\" | xargs rm")
+    system("find . -name \"*.edf\" | xargs rm")
+    system("find . -name \"*.pdb\" | xargs rm")
+    system("find . -name \"*.elg\" | xargs rm")
+    system("find . -name \"core.*\" | xargs rm")
+    system("find . -name \"*.o\" | xargs rm")
+    system("find . -name \"*.inst.*\" | xargs rm")
+    system("find . -name \"simple\" | xargs rm")
 
 
 
@@ -595,21 +605,12 @@ for arg in args:
             usage()
         target = arg
 
+
+
 if optClean:
     print "Cleaning..."
     verbose = True
-    chdir(TEST_ROOT)
-    system("find . -name \"build-*\" | xargs rm -rf")
-    system("find . -name \"profile.*\" | xargs rm")
-    system("find . -name \"*.trc\" | xargs rm")
-    system("find . -name \"*.edf\" | xargs rm")
-    system("find . -name \"*.pdb\" | xargs rm")
-    system("find . -name \"*.elg\" | xargs rm")
-    system("find . -name \"core.*\" | xargs rm")
-    system("find . -name \"*.o\" | xargs rm")
-    system("find . -name \"*.inst.*\" | xargs rm")
-    system("find . -name \"simple\" | xargs rm")
-    
+    cleanup()
     sys.exit(0)
     
 
