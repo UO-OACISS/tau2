@@ -522,12 +522,13 @@ class PdtMPITestGF(PdtTest):
 
 def usage():
     print ""
-    print "Usage: tau_validate [-v] [--html] [--build] [--run] <target>"
+    print "Usage: tau_validate [-v] [--html] [--tag <tag>] [--build] [--run] <target>"
     print ""
     print "Options:"
     print ""
     print "-v           Verbose output"
     print "--html       Output results in HTML"
+    print "--tag <tag>  Validate only the subset of TAU stub makefiles matching <tag>"
     print "--build      Only build"
     print "--run        Only run"
     print "<target>     Specify an arch directory (e.g. rs6000), or the lib"
@@ -568,8 +569,14 @@ target = ""
 optRun = False
 optBuild = False
 optClean = False
+optTag = False
+nextArgTag = False
+tag = ""
 for arg in args:
-    if arg == "-v":
+    if nextArgTag == True:
+        tag = arg
+        nextArgTag = False
+    elif arg == "-v":
         verbose = True
     elif arg == "--html":
         verbose = True
@@ -580,6 +587,9 @@ for arg in args:
         optRun = True
     elif arg == "--clean":
         optClean = True
+    elif arg == "--tag":
+        optTag = True
+        nextArgTag = True
     else:
         if target != "":
             usage()
@@ -639,7 +649,12 @@ if os.path.isdir(target):
         target = target + "/lib";
 
     chdir(target)
-    makefiles = glob.glob("Makefile.tau*")
+    if optTag:
+        makefiles = glob.glob("Makefile.tau*-%s-*" % (tag))
+        makefiles = makefiles + glob.glob("Makefile.tau*-%s" % (tag))
+    else:
+        makefiles = glob.glob("Makefile.tau*")
+
 else:
     makefiles = [ target ]
 
