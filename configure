@@ -1805,7 +1805,10 @@ case $machine in
     then
       cxx_compiler=CC
       c_compiler=cc
-      fortran_compiler=pgi
+      if [ $fortran_compiler = no ]
+      then
+        fortran_compiler=pgi
+      fi
       catamount=no
     fi
     ;;
