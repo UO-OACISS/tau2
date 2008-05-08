@@ -288,7 +288,7 @@ public class Configure {
 
             tmpString = reader.readLine();
             if (tmpString.length() > 0) {
-                jdbc_db_jarfile = tmpString;
+                jdbc_db_jarfile = tmpString.replaceAll("~", System.getProperty("user.home"));
             }
 
             if (!new File(jdbc_db_jarfile).exists()) {
@@ -425,8 +425,14 @@ public class Configure {
                 System.out.print("Please enter the database name.\n(" + db_dbname + "):");
             }
             tmpString = reader.readLine();
-            if (tmpString.length() > 0)
-                db_dbname = tmpString;
+            if (tmpString.length() > 0) {
+				// if the user used the ~ shortcut, expand it to $HOME.
+            	if (jdbc_db_type.compareTo("derby") == 0) {
+                	db_dbname = tmpString.replaceAll("~", System.getProperty("user.home"));
+				} else {
+                	db_dbname = tmpString;
+				}
+			}
 
             if ((jdbc_db_type.compareTo("oracle") == 0) || (jdbc_db_type.compareTo("db2") == 0)) {
                 System.out.print("Please enter the database schema name, or your username if you are creating the tables now.\n("
@@ -487,7 +493,7 @@ public class Configure {
                 System.out.print("Please enter the PerfDMF schema file.\n(" + perfdmf_home + etc + db_schemafile + "):");
             tmpString = reader.readLine();
             if (tmpString.length() > 0)
-                db_schemafile = tmpString;
+                db_schemafile = tmpString.replaceAll("~", System.getProperty("user.home"));
             else if (!configFileFound)
                 db_schemafile = perfdmf_home + etc + db_schemafile;
 
