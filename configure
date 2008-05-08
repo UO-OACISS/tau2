@@ -1,4 +1,3 @@
-
 #!/bin/sh 
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
@@ -104,9 +103,13 @@
 # If a file name is given, it must contain all these definitions.
 # No checking is done to ensure that it does so.
 
+default=false
 
 for arg in "$@"; do
   case $arg in
+  default)
+    default=true
+    ;;	
   -help)
     echo "TAU Configuration Utility "
     echo "***********************************************************************"
@@ -323,7 +326,10 @@ for arg in "$@"; do
 done
 
 rm -f .clean
-rm -f .last_config
+
+if [ $default = false ] ; then
+    rm -f .last_config
+fi
 
 # This method will escape spaces so that you can use ./configure `cat .last_config` when you've used them
 for arg in "$@"; do
@@ -336,8 +342,11 @@ for arg in "$@"; do
     modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
     modargs="$modargs $modarg"
 done
-echo "$modargs" >> .all_configs
-echo "$modargs" > .last_config
+
+if [ $default = false ] ; then
+    echo "$modargs" >> .all_configs
+    echo "$modargs" > .last_config
+fi
 
 # test if we're using the bash shell
 usingbash=no
