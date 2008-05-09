@@ -12,7 +12,7 @@ Bundle-Vendor: University of Oregon
 Bundle-ClassPath: batik-combined.jar,jargs.jar,jcommon-0.9.6.jar,jfree
  chart-0.9.21.jar,jgraph.jar,jogl.jar,jython.jar,paraprof.jar,perfdmf.
  jar,tau-common.jar,vis.jar,xerces.jar
-Bundle-Version: 1.0.0.200804302105
+Bundle-Version: 1.0.0._
 Bundle-Localization: plugin
 Bundle-Name: TAU External Jars Plug-in
 Bundle-ManifestVersion: 2
