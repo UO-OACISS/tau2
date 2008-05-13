@@ -23,7 +23,7 @@ public class LinearRegressionOperationTest extends TestCase {
 		// create a list to store the trials in
 		List<PerformanceResult> trials = new ArrayList<PerformanceResult>();
 
-/*		Utilities.setSession("perfdmf_test");		
+		Utilities.setSession("test");		
 		// load each trial, and add them to the list
 		Trial trial = Utilities.getTrial("Meng-Shiou", "luciferin", "luciferin-1.1");
 		trials.add(new TrialMeanResult(trial));
@@ -31,14 +31,13 @@ public class LinearRegressionOperationTest extends TestCase {
 		trials.add(new TrialMeanResult(trial));
 		trial = Utilities.getTrial("Meng-Shiou", "luciferin", "luciferin-4.1");
 		trials.add(new TrialMeanResult(trial));
-*/
-		Utilities.setSession("perfdmf");		
-		// load each trial, and add them to the list
+
+/*		// load each trial, and add them to the list
 		Trial trial = Utilities.getTrial("test", "test", "1");
 		trials.add(new TrialMeanResult(trial));
 		trial = Utilities.getTrial("test", "test", "2");
 		trials.add(new TrialMeanResult(trial));
-
+*/
 		// get metadata for each trial, and get the differences
 		List<TrialMetadata> metadata = new ArrayList<TrialMetadata>();
 		for (PerformanceResult tmp : trials) {
@@ -77,7 +76,7 @@ public class LinearRegressionOperationTest extends TestCase {
 		} 
 		
 		// create a LinearRegressionOperation to predict a value for us
-		double prediction = 4.0;
+		double prediction = 6.0;
 		double predictedValue = 0.0;
 		LinearRegressionOperation regressor = new LinearRegressionOperation(correlations, "Time", "node_count", new Double(prediction));
 		List<PerformanceResult> regressions = regressor.processData();

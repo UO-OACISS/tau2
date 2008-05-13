@@ -36,6 +36,7 @@ temporary - more useful content will come at a later time.
 <p>
 <h2>For The Impatient</h2>
 <h3><a href="perfexplorer.jnlp">Click here to run PerfExplorer!</a></h3>
+(or, right-click, save the JNLP file, and open it with Java Web Start)
 </p>
 </div>
 

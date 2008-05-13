@@ -1,6 +1,6 @@
 #!/bin/@SHELL@
 
-# $Id: perfexplorer_configure.skel,v 1.11 2008/04/23 17:04:05 khuck Exp $
+# $Id: perfexplorer_configure.skel,v 1.12 2008/05/13 21:56:56 khuck Exp $
 # $Name:  $
 
 rm -f .last_config
@@ -104,9 +104,9 @@ do
     echo "-engine=<analysis_engine>  ............... specify the analysis engine."
     echo "                                                      options [weka|R]."
     echo "-rroot=<dir> ....................... specify location of the R project."
-    echo "-server=<hostname> ...... specify hostname for the perfexplorer server."
-    echo "-registryport=<number> ............. specify port for the rmi registry."
-    echo "-objectport=<number> ................ specify port for the rmi objects."
+    #echo "-server=<hostname> ...... specify hostname for the perfexplorer server."
+    #echo "-registryport=<number> ............. specify port for the rmi registry."
+    #echo "-objectport=<number> ................ specify port for the rmi objects."
     echo "-configfile=<path to file> ............... specify PerfDMF config file."
     echo "-tmpdir=<dir> ....................... specify temporary file directory."
     exit

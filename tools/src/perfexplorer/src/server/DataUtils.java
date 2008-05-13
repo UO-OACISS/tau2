@@ -5,6 +5,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
+import java.util.NoSuchElementException;
 
 import common.PerfExplorerException;
 import common.PerfExplorerOutput;
@@ -110,7 +112,7 @@ public class DataUtils {
 				eventIDs = new ArrayList();
 				while (results.next() != false) {
 					numEvents++;
-					eventIDs.add(results.getString(2));
+					eventIDs.add(shortName(results.getString(2)));
 				}
 				results.close();
 				statement.close();
@@ -279,4 +281,33 @@ public class DataUtils {
 		PerfExplorerOutput.println(" Done!");
 		return rawData;
 	}
+
+    public static String shortName(String longName) {
+        String shorter = null;
+		if (longName.trim().endsWith("]")) {
+			// fortran:
+        	StringTokenizer st = new StringTokenizer(longName, "[");
+        	try {
+            	shorter = st.nextToken();
+            	if (shorter.length() < longName.length()) {
+                	shorter = shorter.trim() + "()";
+            	}
+        	} catch (NoSuchElementException e) {
+            	shorter = longName;
+        	}
+		} else {
+			// C code:
+        	StringTokenizer st = new StringTokenizer(longName, "(");
+        	try {
+            	shorter = st.nextToken();
+            	if (shorter.length() < longName.length()) {
+                	shorter = shorter.trim() + "()";
+            	}
+        	} catch (NoSuchElementException e) {
+            	shorter = longName;
+        	}
+		}
+        return shorter;
+    }
+
 }

@@ -1,12 +1,14 @@
 
 package common;
 
-    import java.awt.*;
-    import java.awt.event.*;
-    import java.io.*;
-    import javax.swing.*;
-    import javax.swing.event.*;
-    import javax.swing.text.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
+import javax.swing.*;
+import javax.swing.event.*;
+import javax.swing.text.*;
+import java.net.URL;
+import edu.uoregon.tau.common.Utility;
     
     public class Console extends JFrame {
         JTextPane textPane = new JTextPane();
@@ -41,6 +43,10 @@ package common;
 			this.setPreferredSize(new Dimension(800,600));
             this.pack();
             this.setVisible(true);
+
+        	URL url = Utility.getResource("tau32x32.gif");
+			if (url != null) 
+				this.setIconImage(Toolkit.getDefaultToolkit().getImage(url));
 
 			doc = textPane.getDocument();
 			errorStyle = new SimpleAttributeSet();
