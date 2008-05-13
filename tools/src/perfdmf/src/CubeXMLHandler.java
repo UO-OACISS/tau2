@@ -12,9 +12,9 @@ import org.xml.sax.helpers.DefaultHandler;
  * @see <a href="http://www.fz-juelich.de/zam/kojak/">
  * http://www.fz-juelich.de/zam/kojak/</a> for more information about cube
  * 
- * <P>CVS $Id: CubeXMLHandler.java,v 1.5 2007/03/20 17:14:26 amorris Exp $</P>
+ * <P>CVS $Id: CubeXMLHandler.java,v 1.6 2008/05/13 22:36:03 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class CubeXMLHandler extends DefaultHandler {
 
@@ -283,6 +283,9 @@ public class CubeXMLHandler extends DefaultHandler {
                 }
 
                 double value = Double.parseDouble(line);
+                if (value < 0) {
+                    System.err.println("Warning: negative value found in cube file ("+value+")");
+                }
 
                 if (metric == calls) {
                     fp.setNumCalls(value);
