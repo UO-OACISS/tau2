@@ -55,10 +55,12 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		JMenuItem quitItem = new JMenuItem(
 				PerfExplorerActionListener.QUIT);
 		quitItem.setAccelerator(KeyStroke.getKeyStroke(
-			KeyEvent.VK_Q, ActionEvent.SHIFT_MASK & ActionEvent.ALT_MASK));
+			//KeyEvent.VK_Q, ActionEvent.SHIFT_MASK & ActionEvent.ALT_MASK));
+			KeyEvent.VK_Q, ActionEvent.ALT_MASK));
 		quitItem.addActionListener(listener);
 		fileMenu.add(quitItem);
 
+/*
 		//Add a menu item.
 		JMenuItem quitServerItem = new JMenuItem(
 				PerfExplorerActionListener.QUIT_SERVER);
@@ -66,6 +68,7 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 			KeyEvent.VK_Q, ActionEvent.ALT_MASK));
 		quitServerItem.addActionListener(listener);
 		fileMenu.add(quitServerItem);
+*/
 
 /*
 		try {

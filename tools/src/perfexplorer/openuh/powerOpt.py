@@ -220,6 +220,7 @@ def main():
 		print event, derived.getExclusive(thread, event, IPC)
 	print
 	print mainEvent, "INCLUSIVE: ", derived.getInclusive(thread, mainEvent, IPC)
+	print mainEvent, "INCLUSIVE: ", derived.getInclusive(thread, mainEvent, "PAPI_TOT_INS")
 	print
 
 	# compute the floating point operations per joule per event
@@ -234,6 +235,7 @@ def main():
 	print
 
 	print mainEvent, "INCLUSIVE: ", derived.getInclusive(thread, mainEvent, issuedPerCycle)
+	print mainEvent, "INCLUSIVE: ", derived.getInclusive(thread, mainEvent, "PAPI_TOT_IIS")
 	print
 
 	print "Time to completion..."

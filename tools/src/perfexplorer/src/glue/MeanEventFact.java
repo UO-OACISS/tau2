@@ -124,6 +124,8 @@ public class MeanEventFact {
 		}
 		double mainTime = means.getInclusive(0, mainEvent, timeMetric);
 		double eventTime = means.getExclusive(0, event, timeMetric);
+		//System.out.println("Event Time: " + eventTime);
+		//System.out.println("Main Time: " + mainTime);
 		double severity = eventTime / mainTime;
 		
 		Set<String> metrics = new HashSet<String>();
@@ -138,10 +140,13 @@ public class MeanEventFact {
 			double eventValue = means.getExclusive(0, event, metric);
 			double mainRatio = ratios.getExclusive(0, mainEvent, metric);
 			// any other metric combination
+			//System.out.println("Main Ratio: " + mainRatio);
 			if (mainRatio < eventRatio) {
 				RuleHarness.assertObject(new MeanEventFact("Load Imbalance", HIGHER, metric, metric, eventRatio, eventValue, event, severity));
 			} else if (mainRatio < eventRatio) {
 				RuleHarness.assertObject(new MeanEventFact("Load Imbalance", LOWER, metric, metric, eventRatio, eventValue, event, severity));
+			} else {
+				RuleHarness.assertObject(new MeanEventFact("Load Imbalance", NONE, metric, metric, eventRatio, eventValue, event, severity));
 			}
 		}
 	}

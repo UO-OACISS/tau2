@@ -103,6 +103,10 @@ public class RatioOperation extends AbstractPerformanceOperation {
 								    denominator.getInclusive(thread, event, metric)) /
 								denominator.getInclusive(thread, event, metric));
 					}
+					if (Double.isNaN(output.getExclusive(thread, event, metric + metricSuffix)))
+						output.putExclusive(thread, event, metric + metricSuffix, 0.0);
+					if (Double.isNaN(output.getInclusive(thread, event, metric + metricSuffix)))
+						output.putInclusive(thread, event, metric + metricSuffix, 0.0);
 				}
 				// divide the numerator with the denominator
 				if (straightRatio) {
@@ -124,6 +128,10 @@ public class RatioOperation extends AbstractPerformanceOperation {
 							     denominator.getSubroutines(thread, event)) /
 							denominator.getSubroutines(thread, event));
 				}
+				if (Double.isNaN(output.getCalls(thread, event)))
+					output.putCalls(thread, event, 0.0);
+				if (Double.isNaN(output.getSubroutines(thread, event)))
+					output.putSubroutines(thread, event, 0.0);
 			}
 		}
 		
