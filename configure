@@ -3093,6 +3093,7 @@ EOF
     then 
       # Wait. SiCortex's MPI2 interface is broken. 
       echo "SiCortex detected. Disabling MPI2 wrappers"
+      fixmakeargs="$fixmakeargs MPICH_IGNORE_CXX_SEEK"
     else 
       fixmakeargs="$fixmakeargs MPI2"
       mpi2=yes
