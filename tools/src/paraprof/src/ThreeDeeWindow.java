@@ -267,7 +267,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         if (thread == null) {
             thread = dataSource.getMeanData();
         }
-        
+
         CallPathUtilFuncs.buildThreadRelations(dataSource, thread);
         List functionProfileList = thread.getFunctionProfiles();
 
@@ -495,11 +495,11 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
                         if (b != null && b.getUserObject() != null) {
                             a.addChild(b);
                         } else {
-//                            while (child.getGraphObject() == null) {
-//                                child = (Vertex) child.getChildren().get(0);
-//                            }
-//                            Ornament c = (Ornament) child.getGraphObject();
-//                            a.addChild(c);
+                            //                            while (child.getGraphObject() == null) {
+                            //                                child = (Vertex) child.getChildren().get(0);
+                            //                            }
+                            //                            Ornament c = (Ornament) child.getGraphObject();
+                            //                            a.addChild(c);
                         }
                     }
                 } else {
@@ -571,7 +571,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
             for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
                 Thread thread = (Thread) it.next();
-                
+
                 if (ppTrial.getDataSource().getExecutionType() == DataSource.EXEC_TYPE_MPI) {
                     threadNames.add(Integer.toString(thread.getNodeID()));
                 } else if (ppTrial.getDataSource().getExecutionType() == DataSource.EXEC_TYPE_HYBRID) {
@@ -579,7 +579,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
                 } else {
                     threadNames.add(thread.getNodeID() + ":" + thread.getContextID() + ":" + thread.getThreadID());
                 }
-                
+
                 threads.add(thread);
             }
         }
@@ -1089,13 +1089,16 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             List axisNames = new ArrayList();
             for (int f = 0; f < scatterFunctions.length; f++) {
                 if (scatterFunctions[f] != null) {
+                    String toDisplay = ParaProfUtils.getDisplayName(scatterFunctions[f]);
+                    if (toDisplay.length() > 30) {
+                        toDisplay = toDisplay.substring(0, 30) + "...";
+                    }
                     // e.g. "MPI_Recv()\n(Exclusive, Time)"
                     if (scatterValueTypes[f] == ValueType.NUMCALLS || scatterValueTypes[f] == ValueType.NUMSUBR) {
-                        axisNames.add(ParaProfUtils.getDisplayName(scatterFunctions[f]) + "\n(" + scatterValueTypes[f].toString()
-                                + ")");
+                        axisNames.add(toDisplay + "\n(" + scatterValueTypes[f].toString() + ")");
                     } else {
-                        axisNames.add(ParaProfUtils.getDisplayName(scatterFunctions[f]) + "\n(" + scatterValueTypes[f].toString()
-                                + ", " + ppTrial.getMetricName(scatterMetricIDs[f]) + ")");
+                        axisNames.add(toDisplay + "\n(" + scatterValueTypes[f].toString() + ", "
+                                + ppTrial.getMetricName(scatterMetricIDs[f]) + ")");
                     }
                 } else {
                     axisNames.add("none");
@@ -1169,7 +1172,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             if (ppTrial.getDataSource().getExecutionType() == DataSource.EXEC_TYPE_HYBRID) {
                 threadLabel = "MPI Rank, Thread";
             }
-            
+
             fullDataPlotAxes.setStrings(threadLabel, "Function", zAxisLabel, threadNames, functionNames, zStrings);
         }
     }
