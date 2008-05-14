@@ -36,11 +36,11 @@ import edu.uoregon.tau.perfdmf.Thread;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.37 2008/05/14 23:23:57 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.38 2008/05/14 23:34:58 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.37 $
+ * @version $Revision: 1.38 $
  */
 public class ParaProfUtils {
 
@@ -254,7 +254,17 @@ public class ParaProfUtils {
                         window.closeThisWindow();
                     } else if (arg.equals("Exit ParaProf!")) {
                         ParaProf.exitParaProf(0);
+                    } else if (arg.equals("Export Profile")) {
+                        GlobalDataWindow gdw = (GlobalDataWindow) window;
+                        ParaProfUtils.exportTrial(gdw.getPpTrial(), gdw);
+                    } else if (arg.equals("Convert to Phase Profile")) {
+                        GlobalDataWindow gdw = (GlobalDataWindow) window;
+                        ParaProfUtils.phaseConvertTrial(gdw.getPpTrial(), gdw);
+                    } else if (arg.equals("Create Selective Instrumentation File")) {
+                        GlobalDataWindow gdw = (GlobalDataWindow) window;
+                        SelectiveFileGenerator.showWindow(gdw.getPpTrial(), gdw);
                     }
+
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
                 }
@@ -263,6 +273,23 @@ public class ParaProfUtils {
         };
 
         JMenu fileMenu = new JMenu("File");
+
+        if (window instanceof GlobalDataWindow) {
+            JMenuItem jMenuItem;
+            jMenuItem = new JMenuItem("Export Profile");
+            jMenuItem.addActionListener(actionListener);
+            fileMenu.add(jMenuItem);
+            jMenuItem = new JMenuItem("Convert to Phase Profile");
+            jMenuItem.addActionListener(actionListener);
+            fileMenu.add(jMenuItem);
+            jMenuItem = new JMenuItem("Create Selective Instrumentation File");
+            jMenuItem.addActionListener(actionListener);
+            fileMenu.add(jMenuItem);
+            jMenuItem = new JMenuItem("Add Mean to Comparison Window");
+            jMenuItem.addActionListener(actionListener);
+            fileMenu.add(jMenuItem);
+            fileMenu.add(new JSeparator());
+        }
 
         JMenu subMenu = new JMenu("Save ...");
         subMenu.getPopupMenu().setLightWeightPopupEnabled(false);
