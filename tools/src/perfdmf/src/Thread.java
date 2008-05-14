@@ -2,14 +2,16 @@ package edu.uoregon.tau.perfdmf;
 
 import java.util.*;
 
+import edu.uoregon.tau.common.TauRuntimeException;
+
 /**
  * This class represents a Thread.  It contains an array of FunctionProfiles and 
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.13 2007/07/14 23:31:59 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.14 2008/05/14 23:14:01 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.13 $
+ * @version	$Revision: 1.14 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -37,6 +39,7 @@ public class Thread implements Comparable {
     private ThreadData[][] threadData;
 
     private long startTime;
+    private DataSource dataSource;
 
     private static class ThreadData {
 
@@ -53,14 +56,18 @@ public class Thread implements Comparable {
         public double percentDivider;
     }
 
-    public Thread(int nodeID, int contextID, int threadID, int numMetrics) {
+    public Thread(int nodeID, int contextID, int threadID, int numMetrics, DataSource dataSource) {
         numMetrics = Math.max(numMetrics, 1);
         this.nodeID = nodeID;
         this.contextID = contextID;
         this.threadID = threadID;
         //maxData = new double[numMetrics * METRIC_SIZE];
         this.numMetrics = numMetrics;
-
+        this.dataSource = dataSource;
+        if (dataSource == null) {
+            throw new TauRuntimeException("Error: dataSource should never be null in Thread constructor");
+        }
+        
         recreateData();
 
         // create the first snapshot
@@ -367,6 +374,10 @@ public class Thread implements Comparable {
 
     public void setStartTime(long startTime) {
         this.startTime = startTime;
+    }
+
+    public DataSource getDataSource() {
+        return dataSource;
     }
 
 }

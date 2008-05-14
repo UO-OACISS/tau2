@@ -7,9 +7,9 @@ import java.util.TreeMap;
 /**
  * This class represents a Node.  It contains a set of Contexts and an ID.
  *  
- * <P>CVS $Id: Node.java,v 1.2 2007/05/02 19:43:28 amorris Exp $</P>
+ * <P>CVS $Id: Node.java,v 1.3 2008/05/14 23:14:01 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.2 $
+ * @version	$Revision: 1.3 $
  * @see		DataSource
  * @see		Context
  */
@@ -17,14 +17,16 @@ public class Node implements Comparable {
 
     private int nodeID = -1;
     private Map contexts = new TreeMap();
-
+    private DataSource dataSource;
+    
     /**
      * Creates a Node with the given ID.  This constructor is not public because Nodes should 
      * only be created by DataSource.addNode(...)
      * @param 	nodeID		ID of this Node
      */
-    Node(int nodeID) {
+    Node(int nodeID, DataSource dataSource) {
         this.nodeID = nodeID;
+        this.dataSource = dataSource;
     }
 
     /**
@@ -49,7 +51,7 @@ public class Node implements Comparable {
             return (Context) obj;
 
         // otherwise, add it and return it
-        Context context = new Context(this.nodeID, contextID);
+        Context context = new Context(this.nodeID, contextID, dataSource);
         contexts.put(new Integer(contextID), context);
         return context;
     }

@@ -52,10 +52,10 @@ public class TauPprofDataSource extends DataSource {
 
         edu.uoregon.tau.perfdmf.Thread thread = null;
 
-        meanData = new Thread(-1, -1, -1, 1);
+        meanData = new Thread(-1, -1, -1, 1, this);
         FunctionProfile meanProfile = null;
         
-        totalData = new Thread(-2, -2, -2, 1);
+        totalData = new Thread(-2, -2, -2, 1, this);
         FunctionProfile totalProfile = null;
 
         int nodeID = -1;

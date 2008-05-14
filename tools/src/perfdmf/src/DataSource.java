@@ -20,9 +20,9 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.34 2008/02/22 19:43:06 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.35 2008/05/14 23:14:01 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.34 $
+ * @version $Revision: 1.35 $
  */
 public abstract class DataSource {
 
@@ -41,11 +41,12 @@ public abstract class DataSource {
     public static final int SNAP = 10;
     public static final int OMPP = 11;
     public static final int PERIXML = 12;
-    public static final int GPTL = 13;	// General Purpose Timing Library - Jim Rosinski
+    public static final int GPTL = 13; // General Purpose Timing Library - Jim Rosinski
     public static final int GYRO = 100;
 
     public static String formatTypeStrings[] = { "Tau profiles", "Tau pprof.dat", "Dynaprof", "MpiP", "HPMToolkit", "Gprof",
-            "PSRun", "ParaProf Packed Profile", "Cube", "HPCToolkit", "TAU Snapshot", "ompP", "PERI-XML", "General Purpose Timing Library (GPTL)" };
+            "PSRun", "ParaProf Packed Profile", "Cube", "HPCToolkit", "TAU Snapshot", "ompP", "PERI-XML",
+            "General Purpose Timing Library (GPTL)" };
 
     private static boolean meanIncludeNulls = true;
 
@@ -90,7 +91,11 @@ public abstract class DataSource {
     private long avgStartTime;
 
     protected boolean monitored;
-    
+
+    protected boolean hasThreads = true;
+    protected boolean hasContexts = true;
+    protected boolean hasMPI = false;
+
     public DataSource() {
     // nothing
     }
@@ -137,7 +142,7 @@ public abstract class DataSource {
     public void setMonitored(boolean monitored) {
         this.monitored = monitored;
     }
-    
+
     public Thread getMeanData() {
         return meanData;
     }
@@ -236,10 +241,14 @@ public abstract class DataSource {
 
     public Group addGroup(String name) {
         name = name.trim();
+        if (name == "TAU_MPI") {
+            hasMPI = true;
+        }
         Object obj = groups.get(name);
-
-        if (obj != null)
+        
+        if (obj != null) {
             return (Group) obj;
+        }
 
         Group group = new Group(name, groups.size() + 1);
         groups.put(name, group);
@@ -369,49 +378,47 @@ public abstract class DataSource {
         return metric;
     }
 
-
     /**
      * Adds a metric to the DataSource's metrics List (given as a String).
-	 * need to create this method from DataSource.  The DataSource
-	 * assumes that we are processing in this order: metric,thread,event.
-	 * The GPTL data is in thread,event,metric order.
+     * need to create this method from DataSource.  The DataSource
+     * assumes that we are processing in this order: metric,thread,event.
+     * The GPTL data is in thread,event,metric order.
      * 
      * @param metric
      *            Name of metric to be added
-	 * @param thread
-	 *            Current thread that is being processed
+     * @param thread
+     *            Current thread that is being processed
      */
     public Metric addMetric(String metricName, Thread thread) {
         Metric metric = null;
-		// if the metric list exists, and has values, search for this metric
+        // if the metric list exists, and has values, search for this metric
         if (metrics == null) {
-			metrics = new ArrayList();
+            metrics = new ArrayList();
         } else {
             for (Iterator it = metrics.iterator(); it.hasNext();) {
                 Metric tmp = (Metric) it.next();
                 if (tmp.getName().equals(metricName)) {
                     metric = tmp;
-					break;
+                    break;
                 }
             }
-		}
+        }
 
-		// did we find the metric?  If not, create a new one
-		if (metric == null) {
-        	metric = new Metric();
-        	metric.setName(metricName);
-        	metric.setID(this.getNumberOfMetrics());
-			metrics.add(metric);
-		}
+        // did we find the metric?  If not, create a new one
+        if (metric == null) {
+            metric = new Metric();
+            metric.setName(metricName);
+            metric.setID(this.getNumberOfMetrics());
+            metrics.add(metric);
+        }
 
-		// if the current thread doesn't have this metric, add it
-		if (thread.getNumMetrics() < this.getNumberOfMetrics()) {
-			thread.addMetric();
-		}
+        // if the current thread doesn't have this metric, add it
+        if (thread.getNumMetrics() < this.getNumberOfMetrics()) {
+            thread.addMetric();
+        }
 
         return metric;
     }
-
 
     /**
      * Get a the List of Metrics
@@ -789,17 +796,17 @@ public abstract class DataSource {
         int numMetrics = this.getNumberOfMetrics();
         Thread firstThread = (Thread) getAllThreads().get(0);
         if (meanData == null) {
-            meanData = new Thread(-1, -1, -1, numMetrics);
+            meanData = new Thread(-1, -1, -1, numMetrics, this);
             addDerivedSnapshots(firstThread, meanData);
         }
 
         if (totalData == null) {
-            totalData = new Thread(-2, -2, -2, numMetrics);
+            totalData = new Thread(-2, -2, -2, numMetrics, this);
             addDerivedSnapshots(firstThread, totalData);
         }
 
         if (stddevData == null) {
-            stddevData = new Thread(-3, -3, -3, numMetrics);
+            stddevData = new Thread(-3, -3, -3, numMetrics, this);
             addDerivedSnapshots(firstThread, stddevData);
         }
 
@@ -962,6 +969,12 @@ public abstract class DataSource {
                 }
             }
         }
+
+        // Now we count up whether we have threads and contexts or not, this is for display purposes in ParaProf
+        int[] nct = getMaxNCTNumbers();
+        hasContexts = nct[1] > 0;
+        hasThreads = nct[2] > 0;
+
     }
 
     /**
@@ -982,7 +995,7 @@ public abstract class DataSource {
             return (Node) obj;
 
         // otherwise, add it and return it
-        Node node = new Node(nodeID);
+        Node node = new Node(nodeID, this);
         nodes.put(new Integer(nodeID), node);
         return node;
     }
@@ -1254,7 +1267,7 @@ public abstract class DataSource {
 
             Element master = null;
             List nodeProfiles = new ArrayList();
-			List profilesAdded = new ArrayList();
+            List profilesAdded = new ArrayList();
 
             // create the common attribute node
             if (metaData.size() > 0) {
@@ -1309,16 +1322,16 @@ public abstract class DataSource {
                         addit = true;
                     }
                 }
-				nodeProfiles.add(delta);
+                nodeProfiles.add(delta);
 
                 if (addit) {
                     // don't add it to the tree, unless it has items that differ from
                     // the master record
                     root.appendChild(delta);
-					profilesAdded.add(new Boolean(true));
+                    profilesAdded.add(new Boolean(true));
                 } else {
-					profilesAdded.add(new Boolean(false));
-				}
+                    profilesAdded.add(new Boolean(false));
+                }
 
             }
 
@@ -1336,7 +1349,7 @@ public abstract class DataSource {
                         && imported.getNodeName().equals("tau:metadata")) {
                     // extract it out, and add it to our tree!
                     NodeList nodes = imported.getChildNodes();
-					int nodeIndex = 0;
+                    int nodeIndex = 0;
                     for (int i = 0; i < nodes.getLength(); i++) {
                         org.w3c.dom.Node cpa = nodes.item(i);
                         // System.out.println("\t" + cpa.getNodeName());
@@ -1359,25 +1372,25 @@ public abstract class DataSource {
                             //root.appendChild(cpa);
                         } else if (cpa.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
                                 && cpa.getNodeName().equals("tau:ProfileAttributes")) {
-							Element currentDelta = (Element)nodeProfiles.get(nodeIndex);
-							if (((Boolean)profilesAdded.get(nodeIndex)).booleanValue()) {
+                            Element currentDelta = (Element) nodeProfiles.get(nodeIndex);
+                            if (((Boolean) profilesAdded.get(nodeIndex)).booleanValue()) {
 
-                            	NodeList attrs = cpa.getChildNodes();
-                            	// System.out.println("length: " + attrs.getLength());
-                            	for (int j = 0; j < attrs.getLength(); j++) {
-                                	// System.out.println("\t\tj:" + j);
-                                	org.w3c.dom.Node tmp = attrs.item(j);
-                                	if (tmp.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
-                                        	&& tmp.getNodeName().equals("tau:attribute")) {
-                                    	// System.out.println("\t\tname:" + tmp.getNodeName());
-                                    	currentDelta.appendChild(tmp);
-                                	}
-                                	// System.out.println("\t\tend j:" + j);
-                            	}
-							} else {
-                            	root.appendChild(cpa);
-							}
-							nodeIndex++;
+                                NodeList attrs = cpa.getChildNodes();
+                                // System.out.println("length: " + attrs.getLength());
+                                for (int j = 0; j < attrs.getLength(); j++) {
+                                    // System.out.println("\t\tj:" + j);
+                                    org.w3c.dom.Node tmp = attrs.item(j);
+                                    if (tmp.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
+                                            && tmp.getNodeName().equals("tau:attribute")) {
+                                        // System.out.println("\t\tname:" + tmp.getNodeName());
+                                        currentDelta.appendChild(tmp);
+                                    }
+                                    // System.out.println("\t\tend j:" + j);
+                                }
+                            } else {
+                                root.appendChild(cpa);
+                            }
+                            nodeIndex++;
                         }
                     }
                 } else {
@@ -1478,5 +1491,39 @@ public abstract class DataSource {
     public Map getUncommonMetaData() {
         return uncommonMetaData;
     }
+
+    public boolean getHasThreads() {
+        return hasThreads;
+    }
+
+    public boolean getHasContexts() {
+        return hasContexts;
+    }
+    
+    public final static int EXEC_TYPE_SINGLE = 0;
+    public final static int EXEC_TYPE_MPI = 1;
+    public final static int EXEC_TYPE_THREADED = 2;
+    public final static int EXEC_TYPE_HYBRID = 3;
+    public final static int EXEC_TYPE_OTHER = 4;
+
+    
+    public int getExecutionType() {
+        if (getAllThreads().size() == 1) {
+            if (hasMPI) {
+                return EXEC_TYPE_MPI;
+            } else {
+                return EXEC_TYPE_SINGLE;
+            }
+        }
+        
+        if (getHasContexts() == false && getHasThreads() == false) {
+            return EXEC_TYPE_MPI;
+        }
+        if (getHasContexts() == false) {
+            return EXEC_TYPE_HYBRID;
+        }
+        return EXEC_TYPE_OTHER;
+    }
+    
 
 }
