@@ -18,9 +18,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  *  1) One function across threads, or 
  *  2) One function across all phases (for one thread).
  * 
- * <P>CVS $Id: FunctionBarChartModel.java,v 1.4 2007/01/04 01:55:32 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartModel.java,v 1.5 2008/05/14 23:23:58 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 
 public class FunctionBarChartModel extends AbstractBarChartModel {
@@ -58,8 +58,7 @@ public class FunctionBarChartModel extends AbstractBarChartModel {
             } else if (ppFunctionProfile.getNodeID() == -3) {
                 barString = "std. dev.";
             } else {
-                barString = "n,c,t " + (ppFunctionProfile.getNodeID()) + "," + (ppFunctionProfile.getContextID()) + ","
-                        + (ppFunctionProfile.getThreadID());
+                barString = ParaProfUtils.getThreadLabel(ppFunctionProfile.getThread());
             }
         }
         return barString;

@@ -36,11 +36,11 @@ import edu.uoregon.tau.perfdmf.Thread;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.36 2008/05/07 20:53:17 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.37 2008/05/14 23:23:57 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.36 $
+ * @version $Revision: 1.37 $
  */
 public class ParaProfUtils {
 
@@ -1203,7 +1203,7 @@ public class ParaProfUtils {
         return removeSource(name);
     }
 
-    public static String getThreadIdentifier(Thread thread) {
+    public static String getThreadLabel(Thread thread) {
 
         if (thread.getNodeID() == -1) {
             return "Mean";
@@ -1212,6 +1212,15 @@ public class ParaProfUtils {
         } else if (thread.getNodeID() == -3) {
             return "Std. Dev.";
         } else {
+            if (ParaProf.preferences.getAutoLabels()) {
+                DataSource dataSource = thread.getDataSource();
+                if (dataSource.getHasContexts() == false && dataSource.getHasThreads() == false) {
+                    return "node " + thread.getNodeID();
+                }
+                if (dataSource.getHasContexts() == false) {
+                    return "node " + thread.getNodeID() + ", thread " + thread.getThreadID();
+                }
+            }
             return "n,c,t " + thread.getNodeID() + "," + thread.getContextID() + "," + thread.getThreadID();
         }
 

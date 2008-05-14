@@ -23,9 +23,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.9 2007/12/07 22:13:26 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.10 2008/05/14 23:23:57 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.9 $
+ * @version	$Revision: 1.10 $
  */
 public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
@@ -419,6 +419,9 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
+
+        settings.getSelections()[index] = Math.min(settings.getSelections()[index], max);   
+        settings.getSelections()[index] = Math.max(settings.getSelections()[index], min);   
 
         final JScrollBar scrollBar = new JScrollBar(JScrollBar.HORIZONTAL, settings.getSelections()[index], 1, min, max);
         scrollBar.setBlockIncrement((max - min) / 10);

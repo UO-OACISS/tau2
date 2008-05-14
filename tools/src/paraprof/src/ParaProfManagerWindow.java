@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.31 2008/02/22 19:43:38 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.32 2008/05/14 23:23:57 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.31 $
+ * @version	$Revision: 1.32 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -416,6 +416,9 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         jMenuItem = new JMenuItem("Convert to Phase Profile");
         jMenuItem.addActionListener(this);
         stdTrialPopup.add(jMenuItem);
+        jMenuItem = new JMenuItem("Create Selective Instrumentation File");
+        jMenuItem.addActionListener(this);
+        stdTrialPopup.add(jMenuItem);
         jMenuItem = new JMenuItem("Add Mean to Comparison Window");
         jMenuItem.addActionListener(this);
         stdTrialPopup.add(jMenuItem);
@@ -432,6 +435,9 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         jMenuItem.addActionListener(this);
         dbTrialPopup.add(jMenuItem);
         jMenuItem = new JMenuItem("Convert to Phase Profile");
+        jMenuItem.addActionListener(this);
+        dbTrialPopup.add(jMenuItem);
+        jMenuItem = new JMenuItem("Create Selective Instrumentation File");
         jMenuItem.addActionListener(this);
         dbTrialPopup.add(jMenuItem);
         jMenuItem = new JMenuItem("Add Mean to Comparison Window");
@@ -885,6 +891,18 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
                     ParaProfUtils.phaseConvertTrial(ppTrial, this);
 
+                } else if (arg.equals("Create Selective Instrumentation File")) {
+                    ParaProfTrial ppTrial = (ParaProfTrial) clickedOnObject;
+                    if (ppTrial.loading()) {
+                        JOptionPane.showMessageDialog(this, "Cannot convert while loading");
+                        return;
+                    }
+                    if (!isLoaded(ppTrial)) {
+                        JOptionPane.showMessageDialog(this, "Please load the trial before converting (expand the tree)");
+                        return;
+                    }
+
+                    SelectiveFileGenerator.showWindow(ppTrial, this);
                 }
             }
         } catch (Exception e) {

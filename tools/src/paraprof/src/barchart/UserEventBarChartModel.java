@@ -13,9 +13,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * A BarChartModel for displaying one User Event over all threads.
  * 
- * <P>CVS $Id: UserEventBarChartModel.java,v 1.3 2007/05/16 23:34:38 amorris Exp $</P>
+ * <P>CVS $Id: UserEventBarChartModel.java,v 1.4 2008/05/14 23:23:58 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class UserEventBarChartModel extends AbstractBarChartModel {
 
@@ -38,7 +38,7 @@ public class UserEventBarChartModel extends AbstractBarChartModel {
 
     public String getRowLabel(int row) {
         PPUserEventProfile ppUserEventProfile = (PPUserEventProfile) list.get(row);
-        return ParaProfUtils.getThreadIdentifier(ppUserEventProfile.getThread());
+        return ParaProfUtils.getThreadLabel(ppUserEventProfile.getThread());
     }
 
     public String getValueLabel(int row, int subIndex) {

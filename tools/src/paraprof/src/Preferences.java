@@ -43,6 +43,7 @@ public class Preferences implements Serializable {
     
     private ArrayList sourceLocations;
     private boolean showSourceLocation = true;
+    private boolean autoLabels = true;
     
     static final long serialVersionUID = 183442743456314793L;
 
@@ -226,6 +227,14 @@ public class Preferences implements Serializable {
 
     public void setShowSourceLocation(boolean showSourceLocation) {
         this.showSourceLocation = showSourceLocation;
+    }
+
+    public boolean getAutoLabels() {
+        return autoLabels;
+    }
+
+    public void setAutoLabels(boolean autoLabels) {
+        this.autoLabels = autoLabels;
     }
 
 }

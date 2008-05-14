@@ -40,6 +40,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
     private Font font;
 
     private JComboBox unitsBox;
+    private JCheckBox autoLabelsBox = new JCheckBox("Auto label node/context/threads");
     private JCheckBox showValuesAsPercentBox = new JCheckBox("Show Values as Percent");
     private JCheckBox showPathTitleInReverseBox = new JCheckBox("Show Path Title in Reverse");
     private JCheckBox reverseCallPathsBox = new JCheckBox("Reverse Call Paths");
@@ -63,7 +64,8 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         meanIncludeNullBox.setToolTipText("<html>There are two methods for computing the mean for a given function over all threads:<br>1. Add up the values for that function for each thread and divide by the total number of threads.<br>2. Add up the values for that function for each thread and divide by the number of threads that actually called that function.<br><br>This has the effect that if a particular function is only called by 2 threads:<br>The first method will show the mean value as 1/N where N is the total number of threads.<br>The second method will only divide by 2.<br><br>This option also affects standard deviation computation.");
         reverseCallPathsBox.setToolTipText("<html>If this option is enabled, call path names will be shown in reverse<br>(e.g. \"C &lt;= B &lt;= A\" vs. \"A =&gt; B =&gt; C\")");
         generateIntermediateCallPathDataBox.setToolTipText("<html>If this option is enabled, then the reverse calltree will be available.<br>However, it requires additional memory and should be disabled if the JVM<br>runs out of memory on large callpath datasets.</html>");
-
+        autoLabelsBox.setToolTipText("<html>If this option is enabled, execution thread labels \"n,c,t 0,0,0\" will be shortened based on the execution type (MPI, threaded, hybrid)</html>");
+        
         if (preferences.getLoaded()) {
             // Set preferences based on saved values.
             fontName = preferences.getFontName();
@@ -73,6 +75,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
             showValuesAsPercentBox.setSelected(preferences.getShowValuesAsPercent());
             showPathTitleInReverseBox.setSelected(preferences.getShowPathTitleInReverse());
             reverseCallPathsBox.setSelected(preferences.getReversedCallPaths());
+            autoLabelsBox.setSelected(preferences.getAutoLabels());
             meanIncludeNullBox.setSelected(!preferences.getComputeMeanWithoutNulls());
             generateIntermediateCallPathDataBox.setSelected(preferences.getGenerateIntermediateCallPathData());
             showSourceLocationsBox.setSelected(preferences.getShowSourceLocation());
@@ -194,6 +197,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         ParaProfUtils.addCompItem(settingsPanel, meanIncludeNullBox, gbc, 0, 4, 2, 1);
         ParaProfUtils.addCompItem(settingsPanel, generateIntermediateCallPathDataBox, gbc, 0, 5, 2, 1);
         ParaProfUtils.addCompItem(settingsPanel, showSourceLocationsBox, gbc, 0, 6, 2, 1);
+        ParaProfUtils.addCompItem(settingsPanel, autoLabelsBox, gbc, 0, 7, 2, 1);
 
         gbc.fill = GridBagConstraints.BOTH;
 
@@ -336,6 +340,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         ParaProf.preferences.setShowValuesAsPercent(showValuesAsPercentBox.isSelected());
         ParaProf.preferences.setShowPathTitleInReverse(showPathTitleInReverseBox.isSelected());
         ParaProf.preferences.setReversedCallPaths(reverseCallPathsBox.isSelected());
+        ParaProf.preferences.setAutoLabels(autoLabelsBox.isSelected());
         ParaProf.preferences.setComputeMeanWithoutNulls(!meanIncludeNullBox.isSelected());
         ParaProf.preferences.setGenerateIntermediateCallPathData(generateIntermediateCallPathDataBox.isSelected());
         ParaProf.preferences.setShowSourceLocation(showSourceLocationsBox.isSelected());
@@ -479,6 +484,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
                     showPathTitleInReverseBox.setSelected(false);
                     reverseCallPathsBox.setSelected(false);
                     meanIncludeNullBox.setSelected(true);
+                    autoLabelsBox.setSelected(true);
                     generateIntermediateCallPathDataBox.setSelected(false);
                     showSourceLocationsBox.setSelected(true);
                     setControls();
@@ -493,6 +499,10 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
     private void apply() {
         boolean needDataEvent = false;
         if (reverseCallPathsBox.isSelected() != ParaProf.preferences.getReversedCallPaths()) {
+            needDataEvent = true;
+        }
+
+        if (autoLabelsBox.isSelected() != ParaProf.preferences.getAutoLabels()) {
             needDataEvent = true;
         }
 

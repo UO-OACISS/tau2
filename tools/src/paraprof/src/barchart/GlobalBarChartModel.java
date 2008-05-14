@@ -14,9 +14,9 @@ import edu.uoregon.tau.perfdmf.Thread;
 /**
  * A BarChartModel for doing the GlobalDataWindow
  * 
- * <P>CVS $Id: GlobalBarChartModel.java,v 1.11 2007/05/04 01:44:34 amorris Exp $</P>
+ * <P>CVS $Id: GlobalBarChartModel.java,v 1.12 2008/05/14 23:23:58 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  */
 
 public class GlobalBarChartModel extends AbstractBarChartModel {
@@ -58,15 +58,7 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
     }
 
     private static String getName(Thread thread) {
-        if (thread.getNodeID() == -1) {
-            return "mean";
-        } else if (thread.getNodeID() == -2) {
-            return "total";
-        } else if (thread.getNodeID() == -3) {
-            return "std. dev.";
-        } else {
-            return "n,c,t " + (thread.getNodeID()) + "," + (thread.getContextID()) + "," + (thread.getThreadID());
-        }
+        return ParaProfUtils.getThreadLabel(thread);
     }
 
     //    public String getRowLabel(int row) {

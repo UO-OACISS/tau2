@@ -17,9 +17,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * Compares threads from (potentially) any trial
  * 
- * <P>CVS $Id: ComparisonBarChartModel.java,v 1.10 2008/02/04 23:16:28 amorris Exp $</P>
+ * <P>CVS $Id: ComparisonBarChartModel.java,v 1.11 2008/05/14 23:23:58 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  */
 public class ComparisonBarChartModel extends AbstractBarChartModel {
 
@@ -109,7 +109,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
                     ParaProfTrial ppTrial = (ParaProfTrial) ppTrials.get(index);
                     Thread thread = (Thread) threads.get(index);
 
-                    return ppTrial.getName() + " - " + ParaProfUtils.getThreadIdentifier(thread);
+                    return ppTrial.getName() + " - " + ParaProfUtils.getThreadLabel(thread);
 
                 }
 

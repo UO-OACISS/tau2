@@ -571,7 +571,15 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
             for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
                 Thread thread = (Thread) it.next();
-                threadNames.add(thread.getNodeID() + ":" + thread.getContextID() + ":" + thread.getThreadID());
+                
+                if (ppTrial.getDataSource().getExecutionType() == DataSource.EXEC_TYPE_MPI) {
+                    threadNames.add(Integer.toString(thread.getNodeID()));
+                } else if (ppTrial.getDataSource().getExecutionType() == DataSource.EXEC_TYPE_HYBRID) {
+                    threadNames.add(thread.getNodeID() + ":" + thread.getThreadID());
+                } else {
+                    threadNames.add(thread.getNodeID() + ":" + thread.getContextID() + ":" + thread.getThreadID());
+                }
+                
                 threads.add(thread);
             }
         }
@@ -1153,7 +1161,16 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             //String zAxisLabel = settings.getHeightValue().toString() + ", " + ppTrial.getMetricName(settings.getHeightMetricID());
             //String zAxisLabel = "";
 
-            fullDataPlotAxes.setStrings("Threads", "Functions", zAxisLabel, threadNames, functionNames, zStrings);
+            String threadLabel = "Thread";
+            if (ppTrial.getDataSource().getExecutionType() == DataSource.EXEC_TYPE_MPI) {
+                threadLabel = "MPI Rank";
+            }
+
+            if (ppTrial.getDataSource().getExecutionType() == DataSource.EXEC_TYPE_HYBRID) {
+                threadLabel = "MPI Rank, Thread";
+            }
+            
+            fullDataPlotAxes.setStrings(threadLabel, "Function", zAxisLabel, threadNames, functionNames, zStrings);
         }
     }
 

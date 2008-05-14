@@ -24,9 +24,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.17 2007/05/11 21:44:41 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.18 2008/05/14 23:23:57 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.17 $
+ * @version $Revision: 1.18 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -221,7 +221,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         this.ppThread = new PPThread(thread, ppTrial);
         phaseDisplay = true;
 
-        this.setTitle("TAU: ParaProf: " + ParaProfUtils.getThreadIdentifier(thread) + " - Function Data: "
+        this.setTitle("TAU: ParaProf: " + ParaProfUtils.getThreadLabel(thread) + " - Function Data: "
                 + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         ParaProfUtils.setFrameIcon(this);
 

@@ -17,9 +17,9 @@ import edu.uoregon.tau.paraprof.Searcher;
  * Clients should probably use BarChartPanel instead of BarChart
  * directly.
  * 
- * <P>CVS $Id: BarChart.java,v 1.9 2007/05/02 19:45:06 amorris Exp $</P>
+ * <P>CVS $Id: BarChart.java,v 1.10 2008/05/14 23:23:58 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  * @see BarChartPanel
  */
 public class BarChart extends JPanel implements MouseListener, MouseMotionListener, BarChartModelListener {
@@ -299,7 +299,6 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
     }
 
     private void checkPreferredSize() {
-
         if (preferredSizeSet || fontMetrics == null) {
             return;
         }
@@ -347,7 +346,9 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
                     for (int i = 0; i < model.getSubSize(); i++) {
                         int subIndexMaxWidth = (int) (maxSubValues[i] / maxRowSum * barLengthMultiple);
                         if (subIndexMaxWidth >= threshold) {
-                            maxWidth += (maxSubValues[i] / maxRowSum * barLengthMultiple) + barHorizSpacing;
+                            System.out.println("goo");
+                            //maxWidth += (maxSubValues[i] / maxRowSum * barLengthMultiple) + barHorizSpacing;
+                            maxWidth += (maxSubValues[i] / maxRowSum * barLengthMultiple);
                         }
                     }
                 }
