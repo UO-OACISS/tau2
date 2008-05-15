@@ -4,9 +4,9 @@ package edu.uoregon.tau.common;
  * TauRuntimeException.java
  * Wraps another kind of exception in a RuntimeException with an optional message
  *       
- * <P>CVS $Id: TauRuntimeException.java,v 1.1 2006/03/03 02:47:03 amorris Exp $</P>
+ * <P>CVS $Id: TauRuntimeException.java,v 1.2 2008/05/15 22:22:10 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class TauRuntimeException extends RuntimeException {
 
@@ -20,6 +20,11 @@ public class TauRuntimeException extends RuntimeException {
     public TauRuntimeException(String message, Exception e) {
         this.message = message;
         exception = e;
+    }
+
+    public TauRuntimeException(String message) {
+        this.message = message;
+        exception = null;
     }
 
     public Exception getActualException() {
