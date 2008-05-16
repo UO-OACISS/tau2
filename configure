@@ -4984,35 +4984,34 @@ configure_java
 if [ ${tauprefix} = unknown ] ; then
     targetdir=${tauroot}
 else
-  targetdir=${tauprefix}
-  if [ ! -d ${tauprefix} ] ; then
-      echo "making directory $tauprefix "
-      mkdir -p ${tauprefix}
+    targetdir=${tauprefix}
+    if [ ! -d ${tauprefix} ] ; then
+	echo "making directory $tauprefix "
+	mkdir -p ${tauprefix}
       # Copy INSTALL README LICENSE files over there 
-      cp README LICENSE CREDITS ${tauprefix}
-  fi
-  if [ ! -d ${tauprefix}/${architecture} ] ; then
-      echo "making directory $tauprefix/$architecture lib bin"
-      mkdir ${tauprefix}/${architecture}
-      mkdir ${tauprefix}/${architecture}/lib
-      mkdir ${tauprefix}/${architecture}/bin
-  else
-      if [ "x$architecture" = "x" ] ; then
-	  echo "making directory $tauprefix lib bin"
-	  if [ ! -d ${tauprefix}/bin ] ; then
-	      mkdir ${tauprefix}/bin
-	  fi
-	  if [ ! -d ${tauprefix}/lib ] ; then
-	      mkdir ${tauprefix}/lib
-	  fi
-      fi
-  fi
+	cp README LICENSE CREDITS ${tauprefix}
+    fi
+    if [ ! -d ${tauprefix}/${architecture} ] ; then
+	echo "making directory $tauprefix/$architecture lib bin"
+	mkdir ${tauprefix}/${architecture}
+	mkdir ${tauprefix}/${architecture}/lib
+	mkdir ${tauprefix}/${architecture}/bin
+    else
+	if [ "x$architecture" = "x" ] ; then
+	    echo "making directory $tauprefix lib bin"
+	    if [ ! -d ${tauprefix}/bin ] ; then
+		mkdir ${tauprefix}/bin
+	    fi
+	    if [ ! -d ${tauprefix}/lib ] ; then
+		mkdir ${tauprefix}/lib
+	    fi
+	fi
+    fi
 fi
 
 
 BINTARGET=${targetdir}/${architecture}/bin
 JARTARGET=${targetdir}/${architecture}/lib
-
 
 # Install tau_compiler.sh 
 if [ ! -f /bin/bash ] ; then
@@ -5038,22 +5037,21 @@ cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
 
   # install paraprof
 cat ${tauroot}/tools/src/paraprof/bin/paraprof.skel | 
-sed -e 's,@TAUROOTDIR@,'$tauprefix','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
     -e 's,@OLDJDK@,'$oldjdk',' > $BINTARGET/paraprof
 chmod a+rx $BINTARGET/paraprof
 
   # install ppscript
 cat ${tauroot}/tools/src/ppscript.skel | 
-sed -e 's,@TAUROOTDIR@,'$tauprefix','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
     -e 's,@OLDJDK@,'$oldjdk',' > $BINTARGET/ppscript
 chmod a+rx $BINTARGET/ppscript
 
   # install portal utils
-BINDIR=$tauprefix/$architecture/bin
-cat ${tauroot}/tools/src/tau_portal/bin/perfdmfdb.py.skel | sed -e 's,@BINDIR@,'$BINDIR',' > $BINDIR/perfdmfdb.py
-cat ${tauroot}/tools/src/tau_portal/bin/portal.py.skel | sed -e 's,@BINDIR@,'$BINDIR',' > $BINDIR/portal.py
-cp ${tauroot}/tools/src/tau_portal/bin/tau_portal.py $BINDIR
-chmod a+rx $BINDIR/tau_portal.py $BINDIR/portal.py $BINDIR/perfdmfdb.py
+cat ${tauroot}/tools/src/tau_portal/bin/perfdmfdb.py.skel | sed -e 's,@BINDIR@,'$BINTARGET',' > $BINTARGET/perfdmfdb.py
+cat ${tauroot}/tools/src/tau_portal/bin/portal.py.skel | sed -e 's,@BINDIR@,'$BINTARGET',' > $BINTARGET/portal.py
+cp ${tauroot}/tools/src/tau_portal/bin/tau_portal.py $BINTARGET
+chmod a+rx $BINTARGET/tau_portal.py $BINTARGET/portal.py $BINTARGET/perfdmfdb.py
 
 cat ${tauroot}/tools/src/perfexplorer/bin/perfexplorer.skel |
 sed -e 's,@TAUROOT@,'$targetdir',' \
