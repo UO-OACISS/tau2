@@ -119,7 +119,7 @@ public class Configure {
         if (os.trim().startsWith("windows")) {
             return tau_root + File.separator + "bin" + File.separator;
         } else {
-            return tau_root + File.separator + arch + File.separator + "lib" + File.separator;
+            return System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator;
         }
     }
 
