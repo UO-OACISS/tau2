@@ -1,6 +1,6 @@
 #!/bin/@SHELL@
 
-# $Id: perfexplorer_configure.skel,v 1.12 2008/05/13 21:56:56 khuck Exp $
+# $Id: perfexplorer_configure.skel,v 1.13 2008/05/16 00:20:10 amorris Exp $
 # $Name:  $
 
 rm -f .last_config
@@ -183,29 +183,31 @@ echo
 
 echo "TAU: installing tools in $targetdir"
 
-cat ${targetdir}/etc/perfexplorer.skel | 
-sed -e 's,@TAUROOT@,'$targetdir',' \
--e 's,@TAUSHELL@,'$taushell',' \
--e 's,@TAUARCH@,'$architecture',' \
--e 's,@RROOT@,'$rroot',' \
--e 's,@ANALYSIS_ENGINE@,'$engine',' \
--e 's,@SERVER_HOSTNAME@,'$serverhostname',' \
--e 's,@SERVER_OBJECT_PORT@,'$objectport',' \
--e 's,@SERVER_RMIREGISTRY_PORT@,'$registryport',' \
--e 's,@CONFIGFILE@,'$configfile',' \
- > ${targetdir}/${architecture}/bin/perfexplorer
-chmod a+rx ${targetdir}/${architecture}/bin/perfexplorer
+# cat ${targetdir}/etc/perfexplorer.skel | 
+# sed -e 's,@TAUROOT@,'$targetdir',' \
+# -e 's,@TAUSHELL@,'$taushell',' \
+# -e 's,@TAUARCH@,'$architecture',' \
+# -e 's,@RROOT@,'$rroot',' \
+# -e 's,@ANALYSIS_ENGINE@,'$engine',' \
+# -e 's,@SERVER_HOSTNAME@,'$serverhostname',' \
+# -e 's,@SERVER_OBJECT_PORT@,'$objectport',' \
+# -e 's,@SERVER_RMIREGISTRY_PORT@,'$registryport',' \
+# -e 's,@CONFIGFILE@,'$configfile',' \
+#  > ${targetdir}/${architecture}/bin/perfexplorer
+# chmod a+rx ${targetdir}/${architecture}/bin/perfexplorer
 
-cat ${targetdir}/etc/java.policy | 
-sed -e 's,@TMPDIR@,'$tmpdir',' \
--e 's,@CONFIGDIR@,'$configdir',' \
--e 's,@CONFIGDIR2@,'$configdir',' \
--e 's,@TAULIBDIR@,'$LIBDIR',' \
--e 's,@TAULIBDIR2@,'$LIBDIR',' \
- > ${targetdir}/${architecture}/lib/java.policy
+# cat ${targetdir}/etc/java.policy | 
+# sed -e 's,@TMPDIR@,'$tmpdir',' \
+# -e 's,@CONFIGDIR@,'$configdir',' \
+# -e 's,@CONFIGDIR2@,'$configdir',' \
+# -e 's,@TAULIBDIR@,'$LIBDIR',' \
+# -e 's,@TAULIBDIR2@,'$LIBDIR',' \
+#  > ${targetdir}/${architecture}/lib/java.policy
 
-WEKA_JAR=${targetdir}/${architecture}/lib/weka.jar
-WEKA_ZIP_DIR=${targetdir}/${architecture}/lib/
+JAR_HOME=$HOME/.ParaProf
+
+WEKA_JAR=$JAR_HOME/weka.jar
+WEKA_ZIP_DIR=$JAR_HOME
     
 if [ ! -r ${WEKA_JAR} ]; then
     echo ""
@@ -264,9 +266,9 @@ if [ ! -r ${WEKA_JAR} ]; then
 fi
 
 RESPONSE=
-JBOSS_JAR=${targetdir}/${architecture}/lib/drools-core-3.0.6.jar
-HIBERNATE_JAR=${targetdir}/${architecture}/lib/hibernate3.jar
-JBOSS_TAR_DIR=${targetdir}/${architecture}/lib/
+JBOSS_JAR=$JAR_HOME/drools-core-3.0.6.jar
+HIBERNATE_JAR=$JAR_HOME/hibernate3.jar
+JBOSS_TAR_DIR=$JAR_HOME
     
 if [ ! -r ${JBOSS_JAR} -o ! -r ${HIBERNATE_JAR} ]; then
     echo ""
