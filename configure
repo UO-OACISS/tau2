@@ -1431,57 +1431,6 @@ configure_java () {
   else
     paraprofjar=paraprof.jar
   fi
-
-
-  if [ $tauprefix = unknown ]
-  then
-    # install paraprof
-    cat ${tauroot}/tools/src/paraprof/bin/paraprof.skel | 
-    sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
-    -e 's,@OLDJDK@,'$oldjdk',' > ${tauroot}/${architecture}/bin/paraprof
-    chmod a+rx ${tauroot}/${architecture}/bin/paraprof
-
-    # install ppscript
-    cat ${tauroot}/tools/src/ppscript.skel | 
-    sed -e 's,@TAUROOTDIR@,'$tauroot','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
-    -e 's,@OLDJDK@,'$oldjdk',' > ${tauroot}/${architecture}/bin/ppscript
-    chmod a+rx ${tauroot}/${architecture}/bin/ppscript
-
-
-    if [ ! -f ${tauroot}/${architecture}/bin/jracy ]
-    then 
-      cd ${tauroot}/${architecture}/bin/; ln -s paraprof jracy; cd ${tauroot}; 
-    fi
-
-    # install portal utils
-    BINDIR=$tauroot/$architecture/bin
-    cat ${tauroot}/tools/src/tau_portal/bin/perfdmfdb.py.skel | sed -e 's,@BINDIR@,'$BINDIR',' > $BINDIR/perfdmfdb.py
-    cat ${tauroot}/tools/src/tau_portal/bin/portal.py.skel | sed -e 's,@BINDIR@,'$BINDIR',' > $BINDIR/portal.py
-    cp ${tauroot}/tools/src/tau_portal/bin/tau_portal.py $BINDIR
-    chmod a+rx $BINDIR/tau_portal.py $BINDIR/portal.py $BINDIR/perfdmfdb.py
-
-    cp ${tauroot}/tools/src/paraprof/bin/$paraprofjar ${tauroot}/${architecture}/lib
-    cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar ${tauroot}/${architecture}/lib
-    cp ${tauroot}/tools/src/perfexplorer/perfexplorer.jar ${tauroot}/${architecture}/lib
-    cp ${tauroot}/tools/src/perfexplorer/perfexplorer-1.4.jar ${tauroot}/${architecture}/lib
-    cp ${tauroot}/tools/src/vis/bin/vis.jar ${tauroot}/${architecture}/lib
-    cp ${tauroot}/tools/src/common/bin/tau-common.jar ${tauroot}/${architecture}/lib
-    cp ${tauroot}/tools/src/contrib/jargs.jar ${tauroot}/${architecture}/lib
-    cp ${tauroot}/tools/src/contrib/batik-combined.jar ${tauroot}/${architecture}/lib
-    cp ${tauroot}/tools/src/contrib/jfreechart-0.9.21.jar ${tauroot}/${architecture}/lib
-    cp ${tauroot}/tools/src/contrib/jcommon-0.9.6.jar ${tauroot}/${architecture}/lib
-    cp ${tauroot}/tools/src/contrib/jgraph.jar ${tauroot}/${architecture}/lib
-    cp ${tauroot}/tools/src/contrib/jgraph-1.3.jar ${tauroot}/${architecture}/lib
-    cp ${tauroot}/tools/src/contrib/jython.jar ${tauroot}/${architecture}/lib
-    cp ${tauroot}/tools/src/contrib/jogl/jogl.jar ${tauroot}/${architecture}/lib
-    cp ${tauroot}/tools/src/contrib/xerces.jar ${tauroot}/${architecture}/lib
-    cp ${tauroot}/tools/src/contrib/derby.jar ${tauroot}/${architecture}/lib
-    cp ${tauroot}/src/Profile/TAU.jar ${tauroot}/${architecture}/lib
-    cp ${tauroot}/tools/src/common/resources/tau-medium.png ${tauroot}/${architecture}/lib
-    echo "TAU: installed ParaProf, PerfDMF, PerfExplorer and supporting jars in:"
-    echo "${tauroot}/${architecture}/lib"
-
-  fi
 }
 
 configure_perfexplorer () {
@@ -5032,135 +4981,120 @@ fi
 
 configure_java
 
-
-# Now we look at the installation of tau_compiler.sh 
-if [ $tauprefix = unknown ]
-then
-   if [ ! -f /bin/bash ] 
-   then
-     bashpath=`which bash`
-     if [ ! -f $bashpath ]
-     then
-       echo "ERROR: You need a working bash shell in your path to use tau_compiler.sh"
-       echo "Please add bash to your path and re-run configure."
-       echo "**************************************************"
-     else
-       cat ${tauroot}/tools/src/tau_compiler.sh | sed -e 's#/bin/bash#'$bashpath'#'  > ${tauroot}/${architecture}/bin/tau_compiler.sh
-       chmod +x ${tauroot}/${architecture}/bin/tau_compiler.sh
-     fi
-   else
-     cp ${tauroot}/tools/src/tau_compiler.sh ${tauroot}/${architecture}/bin
-   fi
-
-   cp ${tauroot}/tools/src/tau_treemerge.pl ${tauroot}/${architecture}/bin
-   cp ${tauroot}/tools/src/tauex.multiple ${tauroot}/${architecture}/bin
-   cp ${tauroot}/tools/src/tau_cxx.sh ${tauroot}/${architecture}/bin
-   cp ${tauroot}/tools/src/tau_cc.sh ${tauroot}/${architecture}/bin
-   cp ${tauroot}/tools/src/tau_f90.sh ${tauroot}/${architecture}/bin
-
-
-  echo "TAU: installed tau_compiler.sh in ${tauroot}/${architecture}/bin"
-else
-  if [ ! -d ${tauprefix} ]
-  then
-    echo "making directory $tauprefix "
-    mkdir -p ${tauprefix}
-    # Copy INSTALL README LICENSE files over there 
-    cp README LICENSE CREDITS ${tauprefix}
-  fi
-  if [ ! -d ${tauprefix}/${architecture} ]
-  then
-    echo "making directory $tauprefix/$architecture lib bin"
-    mkdir ${tauprefix}/${architecture}
-    mkdir ${tauprefix}/${architecture}/lib
-    mkdir ${tauprefix}/${architecture}/bin
-  else
-    if [ "x$architecture" = "x" ]
-    then
-      echo "making directory $tauprefix lib bin"
-      if [ ! -d ${tauprefix}/bin ]
-      then
-	mkdir ${tauprefix}/bin
-      fi
-      if [ ! -d ${tauprefix}/lib ]
-      then
-	mkdir ${tauprefix}/lib
-      fi
-    fi
-  fi
-
-  # install paraprof
-  cat ${tauroot}/tools/src/paraprof/bin/paraprof.skel | 
-  sed -e 's,@TAUROOTDIR@,'$tauprefix','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
-	-e 's,@OLDJDK@,'$oldjdk',' > ${tauprefix}/${architecture}/bin/paraprof
-  chmod a+rx ${tauprefix}/${architecture}/bin/paraprof
-
-  # install ppscript
-  cat ${tauroot}/tools/src/ppscript.skel | 
-  sed -e 's,@TAUROOTDIR@,'$tauprefix','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
-	-e 's,@OLDJDK@,'$oldjdk',' > ${tauprefix}/${architecture}/bin/ppscript
-  chmod a+rx ${tauprefix}/${architecture}/bin/ppscript
-
-  # install portal utils
-  BINDIR=$tauprefix/$architecture/bin
-  cat ${tauroot}/tools/src/tau_portal/bin/perfdmfdb.py.skel | sed -e 's,@BINDIR@,'$BINDIR',' > $BINDIR/perfdmfdb.py
-  cat ${tauroot}/tools/src/tau_portal/bin/portal.py.skel | sed -e 's,@BINDIR@,'$BINDIR',' > $BINDIR/portal.py
-  cp ${tauroot}/tools/src/tau_portal/bin/tau_portal.py $BINDIR
-  chmod a+rx $BINDIR/tau_portal.py $BINDIR/portal.py $BINDIR/perfdmfdb.py
-
-  if [ ! -f ${tauprefix}/${architecture}/bin/jracy ]
-  then 
-    cd ${tauprefix}/${architecture}/bin/; ln -s paraprof jracy; cd ${tauroot}; 
-  fi
-  cp ${tauroot}/tools/src/paraprof/bin/$paraprofjar ${tauprefix}/${architecture}/lib
-  cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar ${tauprefix}/${architecture}/lib
-  cp ${tauroot}/tools/src/perfexplorer/perfexplorer.jar ${tauprefix}/${architecture}/lib
-  cp ${tauroot}/tools/src/perfexplorer/perfexplorer-1.4.jar ${tauprefix}/${architecture}/lib
-  cp ${tauroot}/tools/src/vis/bin/vis.jar ${tauprefix}/${architecture}/lib
-  cp ${tauroot}/tools/src/common/bin/tau-common.jar ${tauprefix}/${architecture}/lib
-  cp ${tauroot}/tools/src/contrib/jargs.jar ${tauprefix}/${architecture}/lib
-  cp ${tauroot}/tools/src/contrib/batik-combined.jar ${tauprefix}/${architecture}/lib
-  cp ${tauroot}/tools/src/contrib/jfreechart-0.9.21.jar ${tauprefix}/${architecture}/lib
-  cp ${tauroot}/tools/src/contrib/jcommon-0.9.6.jar ${tauprefix}/${architecture}/lib
-  cp ${tauroot}/tools/src/contrib/jgraph.jar ${tauprefix}/${architecture}/lib
-  cp ${tauroot}/tools/src/contrib/jgraph-1.3.jar ${tauprefix}/${architecture}/lib
-  cp ${tauroot}/tools/src/contrib/jython.jar ${tauprefix}/${architecture}/lib
-  cp ${tauroot}/tools/src/contrib/jogl/jogl.jar ${tauprefix}/${architecture}/lib
-  cp ${tauroot}/tools/src/contrib/xerces.jar ${tauprefix}/${architecture}/lib
-  cp ${tauroot}/tools/src/common/resources/tau16x16.gif ${tauroot}/${architecture}/lib
-  echo "TAU: installed ParaProf, PerfDMF, PerfExplorer and supporting jars in:"
-  echo "${tauprefix}/${architecture}/lib"
-# Now we look at the installation of tau_compiler.sh 
-   if [ ! -f /bin/bash ] 
-   then
-     bashpath=`which bash`
-     if [ ! -f $bashpath ]
-     then
-       echo "ERROR: You need a working bash shell in your path to use tau_compiler.sh"
-       echo "Please add bash to your path and re-run configure."
-       echo "**************************************************"
-     else
-       cat ${tauroot}/tools/src/tau_compiler.sh | sed -e 's#/bin/bash#'$bashpath'#'  > ${tauprefix}/${architecture}/bin/tau_compiler.sh
-     fi
-   else
-     cp ${tauroot}/tools/src/tau_compiler.sh ${tauprefix}/${architecture}/bin
-   fi
-
-  echo "TAU: installed tau_compiler.sh in ${tauprefix}/${architecture}/bin"
-  cp ${tauroot}/tools/src/tau_treemerge.pl ${tauprefix}/${architecture}/bin
-  cp ${tauroot}/tools/src/tau_cxx.sh ${tauprefix}/${architecture}/bin
-  cp ${tauroot}/tools/src/tau_cc.sh ${tauprefix}/${architecture}/bin
-  cp ${tauroot}/tools/src/tau_f90.sh ${tauprefix}/${architecture}/bin
-fi
-
-
-
-if [ ${tauprefix} = unknown ]
-then
-  targetdir=${tauroot}
+if [ ${tauprefix} = unknown ] ; then
+    targetdir=${tauroot}
 else
   targetdir=${tauprefix}
+  if [ ! -d ${tauprefix} ] ; then
+      echo "making directory $tauprefix "
+      mkdir -p ${tauprefix}
+      # Copy INSTALL README LICENSE files over there 
+      cp README LICENSE CREDITS ${tauprefix}
+  fi
+  if [ ! -d ${tauprefix}/${architecture} ] ; then
+      echo "making directory $tauprefix/$architecture lib bin"
+      mkdir ${tauprefix}/${architecture}
+      mkdir ${tauprefix}/${architecture}/lib
+      mkdir ${tauprefix}/${architecture}/bin
+  else
+      if [ "x$architecture" = "x" ] ; then
+	  echo "making directory $tauprefix lib bin"
+	  if [ ! -d ${tauprefix}/bin ] ; then
+	      mkdir ${tauprefix}/bin
+	  fi
+	  if [ ! -d ${tauprefix}/lib ] ; then
+	      mkdir ${tauprefix}/lib
+	  fi
+      fi
+  fi
 fi
+
+
+BINTARGET=${targetdir}/${architecture}/bin
+JARTARGET=${targetdir}/${architecture}/lib
+
+
+# Install tau_compiler.sh 
+if [ ! -f /bin/bash ] ; then
+    bashpath=`which bash`
+    if [ ! -f $bashpath ] ; then
+	echo "ERROR: You need a working bash shell in your path to use tau_compiler.sh"
+	echo "Please add bash to your path and re-run configure."
+	echo "**************************************************"
+    else
+	cat ${tauroot}/tools/src/tau_compiler.sh | sed -e 's#/bin/bash#'$bashpath'#'  > $BINTARGET/tau_compiler.sh
+    fi
+else
+    cp ${tauroot}/tools/src/tau_compiler.sh $BINTARGET
+fi
+echo "TAU: installed tau_compiler.sh in $BINTARGET"
+
+cp ${tauroot}/tools/src/tau_treemerge.pl $BINTARGET
+cp ${tauroot}/tools/src/tauex.multiple $BINTARGET
+cp ${tauroot}/tools/src/tau_cxx.sh $BINTARGET
+cp ${tauroot}/tools/src/tau_cc.sh $BINTARGET
+cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
+
+
+  # install paraprof
+cat ${tauroot}/tools/src/paraprof/bin/paraprof.skel | 
+sed -e 's,@TAUROOTDIR@,'$tauprefix','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+    -e 's,@OLDJDK@,'$oldjdk',' > $BINTARGET/paraprof
+chmod a+rx $BINTARGET/paraprof
+
+  # install ppscript
+cat ${tauroot}/tools/src/ppscript.skel | 
+sed -e 's,@TAUROOTDIR@,'$tauprefix','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+    -e 's,@OLDJDK@,'$oldjdk',' > $BINTARGET/ppscript
+chmod a+rx $BINTARGET/ppscript
+
+  # install portal utils
+BINDIR=$tauprefix/$architecture/bin
+cat ${tauroot}/tools/src/tau_portal/bin/perfdmfdb.py.skel | sed -e 's,@BINDIR@,'$BINDIR',' > $BINDIR/perfdmfdb.py
+cat ${tauroot}/tools/src/tau_portal/bin/portal.py.skel | sed -e 's,@BINDIR@,'$BINDIR',' > $BINDIR/portal.py
+cp ${tauroot}/tools/src/tau_portal/bin/tau_portal.py $BINDIR
+chmod a+rx $BINDIR/tau_portal.py $BINDIR/portal.py $BINDIR/perfdmfdb.py
+
+cat ${tauroot}/tools/src/perfexplorer/bin/perfexplorer.skel |
+sed -e 's,@TAUROOT@,'$targetdir',' \
+    -e 's,@TAUSHELL@,'$taushell',' \
+    -e 's,@TAUARCH@,'$architecture',' \
+    -e 's,@RROOT@,'$rroot',' \
+    -e 's,@ANALYSIS_ENGINE@,'weka',' \
+    -e 's,@SERVER_HOSTNAME@,'$serverhostname',' \
+    -e 's,@SERVER_OBJECT_PORT@,'$objectport',' \
+    -e 's,@SERVER_RMIREGISTRY_PORT@,'$registryport',' \
+    -e 's,@CONFIGFILE@,'$configfile',' \
+    > $BINTARGET/perfexplorer
+chmod a+rx $BINTARGET/perfexplorer
+
+
+if [ ! -f $BINTARGET/jracy ] ; then 
+    cd $BINTARGET/; ln -s paraprof jracy; cd ${tauroot}; 
+fi
+
+
+cp ${tauroot}/tools/src/paraprof/bin/$paraprofjar $JARTARGET
+cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar $JARTARGET
+cp ${tauroot}/tools/src/perfexplorer/perfexplorer.jar $JARTARGET
+cp ${tauroot}/tools/src/perfexplorer/perfexplorer-1.4.jar $JARTARGET
+cp ${tauroot}/tools/src/vis/bin/vis.jar $JARTARGET
+cp ${tauroot}/tools/src/common/bin/tau-common.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/jargs.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/batik-combined.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/jfreechart-0.9.21.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/jcommon-0.9.6.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/jgraph.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/jgraph-1.3.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/jython.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/jogl/jogl.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/xerces.jar $JARTARGET
+cp ${tauroot}/tools/src/common/resources/tau16x16.gif $JARTARGET
+
+echo "TAU: installed ParaProf, PerfDMF, PerfExplorer and supporting jars in:"
+echo "$JARTARGET"
+
+
 
 
 # Copy over tau_load.sh
