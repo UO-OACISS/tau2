@@ -143,11 +143,19 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 							total.getExclusive(thread, event, metric) / numInputs);
 					mean.putInclusive(thread, event, metric, 
 							total.getInclusive(thread, event, metric) / numInputs);
+					if (Double.isNaN(mean.getExclusive(thread, event, metric)))
+						mean.putExclusive(thread, event, metric, 0.0);
+					if (Double.isNaN(mean.getInclusive(thread, event, metric)))
+						mean.putInclusive(thread, event, metric, 0.0);
 				}
 				mean.putCalls(thread, event, 
 						total.getCalls(thread, event) / numInputs);
 				mean.putSubroutines(thread, event, 
 						total.getSubroutines(thread, event) / numInputs);
+				if (Double.isNaN(mean.getCalls(thread, event)))
+					mean.putCalls(thread, event, 0.0);
+				if (Double.isNaN(mean.getCalls(thread, event)))
+					mean.putCalls(thread, event, 0.0);
 			}
 		}
 
@@ -261,17 +269,9 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 									input.getExclusive(thread, event, metric));
 							max.putDataPoint(0, event, metric, MaxResult.EXCLUSIVE, 
 									input.getExclusive(thread, event, metric));
-//							if (event.equals("LOOP #3 [file:/mnt/netapp/home1/khuck/openuh/src/fpga/msap.c <63, 163>]") &&
-//									metric.equals("P_WALL_CLOCK_TIME")) {
-//								System.out.println("Adding " + input.getInclusive(thread, event, metric) + " to " + total.getInclusive(0, event, metric));
-//							}
 							total.putInclusive(0, event, metric, 
 									total.getInclusive(0, event, metric) +
 									input.getInclusive(thread, event, metric));
-//							if (event.equals("LOOP #3 [file:/mnt/netapp/home1/khuck/openuh/src/fpga/msap.c <63, 163>]") &&
-//									metric.equals("P_WALL_CLOCK_TIME")) {
-//								System.out.println("\tAfter: " + total.getInclusive(0, event, metric));
-//							}
 							min.putDataPoint(0, event, metric, MinResult.INCLUSIVE, 
 									input.getInclusive(thread, event, metric));
 							max.putDataPoint(0, event, metric, MaxResult.INCLUSIVE,
@@ -301,23 +301,23 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 					numInputs = counters.get(event);
 				}
 				for (String metric : totalMetrics) {
-//					if (event.equals("LOOP #3 [file:/mnt/netapp/home1/khuck/openuh/src/fpga/msap.c <63, 163>]") &&
-//							metric.equals("P_WALL_CLOCK_TIME")) {
-//						System.out.println("Dividing " + total.getInclusive(0, event, metric) + " by " + numInputs);
-//					}
 					mean.putExclusive(0, event, metric, 
 							total.getExclusive(0, event, metric) / numInputs);
 					mean.putInclusive(0, event, metric, 
 							total.getInclusive(0, event, metric) / numInputs);
-//					if (event.equals("LOOP #3 [file:/mnt/netapp/home1/khuck/openuh/src/fpga/msap.c <63, 163>]") &&
-//							metric.equals("P_WALL_CLOCK_TIME")) {
-//						System.out.println("\tAfter: " + mean.getInclusive(0, event, metric));
-//					}
+					if (Double.isNaN(mean.getExclusive(0, event, metric)))
+						mean.putExclusive(0, event, metric, 0.0);
+					if (Double.isNaN(mean.getInclusive(0, event, metric)))
+						mean.putInclusive(0, event, metric, 0.0);
 				}
 				mean.putCalls(0, event, 
 						total.getCalls(0, event) / numInputs);
 				mean.putSubroutines(0, event, 
 						total.getSubroutines(0, event) / numInputs);
+				if (Double.isNaN(mean.getCalls(0, event)))
+					mean.putCalls(0, event, 0.0);
+				if (Double.isNaN(mean.getCalls(0, event)))
+					mean.putCalls(0, event, 0.0);
 			}
 
 //		System.out.println("variances...");
