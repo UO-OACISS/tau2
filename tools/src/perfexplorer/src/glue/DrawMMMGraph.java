@@ -8,6 +8,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.Collections;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -25,6 +29,7 @@ import org.jfree.data.xy.DefaultHighLowDataset;
 
 import client.PerfExplorerChart;
 import client.MyCategoryAxis;
+import common.AlphanumComparator;
 
 import edu.uoregon.tau.perfdmf.Trial;
 
@@ -33,6 +38,8 @@ import edu.uoregon.tau.perfdmf.Trial;
  *
  */
 public class DrawMMMGraph extends DrawGraph {
+
+	private boolean sortEvents = true;
 
 	/**
 	 * @param input
@@ -82,6 +89,15 @@ public class DrawMMMGraph extends DrawGraph {
 	        } else {
 	        	events = this._events;
 	        }
+
+			// sort the events alphanumerically?
+			if (sortEvents) {
+				Set<String> tmpSet = new TreeSet(new AlphanumComparator());
+				for (String event : events) {
+					tmpSet.add(event);
+				}
+				events = tmpSet;
+			}
 	        
 	        if (this._metrics == null) {
 	        	metrics = input.getMetrics();
@@ -131,10 +147,13 @@ public class DrawMMMGraph extends DrawGraph {
 	        			maxs[i] = max.getDataPoint(thread, event, metric, valueType);
 	        			categories[i] = categoryName;
 	        			i++;
-	*/        			dataset.addValue(input.getDataPoint(thread, event, metric, valueType),
-	        					seriesName, categoryName);
-//						if (categoryName.equals("Iteration    1     => CHARGEI [{chargei.F90} {1,12}]")) 
-//							System.out.println(seriesName + ": " + input.getDataPoint(thread, event, metric, valueType));
+	*/
+						// is there a number in this value?
+						Pattern p = Pattern.compile("\\d+");
+						String candidateString = categoryName;
+					    Matcher matcher = p.matcher(candidateString);
+						dataset.addValue(input.getDataPoint(thread, event, metric, valueType),
+	        				seriesName, categoryName);
 	        		}
 	        	}
 	        }
@@ -193,6 +212,14 @@ public class DrawMMMGraph extends DrawGraph {
         
 		PerfExplorerChart chartWindow = new PerfExplorerChart(chart, "General Chart");
 		return null;
+	}
+
+	public void setSortEvents(boolean sortEvents) {
+		this.sortEvents = sortEvents;
+	}
+
+	public boolean getSortEvents() {
+		return this.sortEvents;
 	}
 
 }
