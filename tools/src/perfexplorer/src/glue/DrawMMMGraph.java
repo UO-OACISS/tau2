@@ -160,10 +160,6 @@ public class DrawMMMGraph extends DrawGraph {
 	        			categories[i] = categoryName;
 	        			i++;
 	*/
-						// is there a number in this value?
-						Pattern p = Pattern.compile("\\d+");
-						String candidateString = categoryName;
-					    Matcher matcher = p.matcher(candidateString);
 						dataset.addValue(input.getDataPoint(thread, event, metric, valueType),
 	        				seriesName, categoryName);
 	        		}
