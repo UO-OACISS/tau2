@@ -39,7 +39,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  */
 public class DrawMMMGraph extends DrawGraph {
 
-	private boolean sortEvents = false;
+	private boolean sortXAxis = false;
 
 	/**
 	 * @param input
@@ -91,12 +91,24 @@ public class DrawMMMGraph extends DrawGraph {
 	        }
 
 			// sort the events alphanumerically?
-			if (sortEvents) {
-				Set<String> tmpSet = new TreeSet(new AlphanumComparator());
-				for (String event : events) {
-					tmpSet.add(event);
-				}
-				events = tmpSet;
+			if (sortXAxis) {
+       			if (categoryType == TRIALNAME) {
+					// do nothing
+       			} else if (categoryType == EVENTNAME) {
+   					Set<String> tmpSet = new TreeSet(new AlphanumComparator());
+					for (String event : events) {
+						tmpSet.add(event);
+					}
+					events = tmpSet;
+       			} else if (categoryType == METRICNAME) {
+   					Set<String> tmpSet = new TreeSet(new AlphanumComparator());
+					for (String metric : metrics) {
+						tmpSet.add(metric);
+					}
+					metrics = tmpSet;
+       			} else if (categoryType == THREADNAME) {
+					// do nothing - they are sorted.
+       			}
 			}
 	        
 	        if (this._metrics == null) {
@@ -214,16 +226,12 @@ public class DrawMMMGraph extends DrawGraph {
 		return null;
 	}
 
-	public void setSortEvents(int sortEvents) {
-		this.sortEvents = (sortEvents == 0 ? false : true);
+	public void setSortXAxis(boolean sortXAxis) {
+		this.sortXAxis = sortXAxis;
 	}
 
-	public void setSortEvents(boolean sortEvents) {
-		this.sortEvents = sortEvents;
-	}
-
-	public boolean getSortEvents() {
-		return this.sortEvents;
+	public boolean getSortXAxis() {
+		return this.sortXAxis;
 	}
 
 }
