@@ -39,7 +39,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  */
 public class DrawMMMGraph extends DrawGraph {
 
-	private boolean sortEvents = true;
+	private boolean sortEvents = false;
 
 	/**
 	 * @param input
@@ -212,6 +212,10 @@ public class DrawMMMGraph extends DrawGraph {
         
 		PerfExplorerChart chartWindow = new PerfExplorerChart(chart, "General Chart");
 		return null;
+	}
+
+	public void setSortEvents(int sortEvents) {
+		this.sortEvents = (sortEvents == 0 ? false : true);
 	}
 
 	public void setSortEvents(boolean sortEvents) {
