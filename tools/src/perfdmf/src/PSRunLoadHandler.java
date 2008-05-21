@@ -9,61 +9,106 @@ import org.xml.sax.helpers.DefaultHandler;
 /*** SAX Handler which creates SQL to load a xml document into the database. ***/
 
 public class PSRunLoadHandler extends DefaultHandler {
+    private StringBuffer accumulator = new StringBuffer();
 
-	protected String currentElement = "";
-	protected String metricName = "";
-	protected String metricValue = "";
-	protected Hashtable metricHash = new Hashtable();
+    protected String currentElement = "";
+    protected String metricName = "";
+    protected String metricValue = "";
+    protected Hashtable metricHash = new Hashtable();
 
-	public PSRunLoadHandler() {
-		super();
-	}
+    private String fileName = "";
+    private String functionName = "";
+    private String lineno = "";
 
-	/*** Initialize the document table when begining loading a XML document.*/
+    private boolean isProfile;
 
-	public void startDocument() throws SAXException{
-    	// nothing needs to be done here.
-	}
+    private PSRunDataSource dataSource;
 
-	/*** Handle element, attributes, and the connection from this element to its parent. ***/
+    private double totalProfileValue;
 
-	public void startElement(String url, String name, String qname, Attributes attrList) throws SAXException {
-		if( name.equalsIgnoreCase("hwpcevent") ) {
-			currentElement = "hwpcevent";
-			metricName = attrList.getValue("name");
-		// } else if( name.equalsIgnoreCase("other") ) {
-			// currentElement = "other";
-		}       
-	}
+    public PSRunLoadHandler(PSRunDataSource dataSource) {
+        super();
+        this.dataSource = dataSource;
+    }
 
-	/**
- 	* Handle character data regions.
- 	*/
-	public void characters(char[] chars, int start, int length) {
-		// check if characters is whitespace, if so, return
-		boolean isWhitespace = true;
-		for (int i = start; i < start+length; i++) {		
-			if (! Character.isWhitespace(chars[i])) {
-				isWhitespace = false;
-				break;
-			}
-		}
-		if (isWhitespace == true) {
-			return;
-		}
-		String tempstr = new String(chars, start, length);
-		if (currentElement.equals("hwpcevent")) this.metricValue = tempstr;
-		// else if (currentElement.equals("other")) other = tempstr;
-	}
+    public void startDocument() throws SAXException {
+    // nothing needs to be done here.
+    }
 
-	public void endElement(String url, String name, String qname) {
-		if (name.equalsIgnoreCase("hwpcevent")){
-			// save the metric value
-			metricHash.put(metricName, new String(metricValue));
-		}
-	}
+    private String getInsensitiveValue(Attributes attributes, String key) {
+        for (int i = 0; i < attributes.getLength(); i++) {
+            if (attributes.getLocalName(i).equalsIgnoreCase(key)) {
+                return attributes.getValue(i);
+            }
+        }
+        return null;
+    }
 
-	public Hashtable getMetricHash() {
-		return metricHash;
-	}
+    public void endDocument() throws SAXException {
+        super.endDocument();
+        if (isProfile) {
+            Function function = dataSource.getFunction("Entire application");
+
+            FunctionProfile fp = new FunctionProfile(function);
+            dataSource.getThread().addFunctionProfile(fp);
+            fp.setExclusive(0, 0);
+            fp.setInclusive(0, totalProfileValue);
+        }
+    }
+
+    public void startElement(String url, String name, String qname, Attributes attrList) throws SAXException {
+        accumulator.setLength(0);
+
+        if (name.equalsIgnoreCase("hwpcprofile")) {
+            isProfile = true;
+        } else if (name.equalsIgnoreCase("hwpcevent")) {
+            currentElement = "hwpcevent";
+            metricName = attrList.getValue("name");
+            // } else if( name.equalsIgnoreCase("other") ) {
+            // currentElement = "other";
+        } else if (name.equalsIgnoreCase("file")) {
+            fileName = getInsensitiveValue(attrList, "name");
+        } else if (name.equalsIgnoreCase("function")) {
+            functionName = getInsensitiveValue(attrList, "name");
+        } else if (name.equalsIgnoreCase("line")) {
+            lineno = getInsensitiveValue(attrList, "lineno");
+        }
+    }
+
+    public void characters(char[] ch, int start, int length) throws SAXException {
+        accumulator.append(ch, start, length);
+    }
+
+    public void endElement(String url, String name, String qname) {
+        if (name.equalsIgnoreCase("hwpcevent")) {
+            if (!isProfile) {
+                metricValue = accumulator.toString();
+                metricHash.put(metricName, new String(metricValue));
+            } else {
+                dataSource.addMetric(metricName);
+            }
+        } else if (name.equalsIgnoreCase("line")) {
+            double value = Double.parseDouble(accumulator.toString());
+            totalProfileValue += value;
+            //metricHash.put(fileName + ":" + functionName + ":" + lineno, new String(metricValue));
+
+            //Function function = dataSource.addFunction(fileName + ":" + functionName + ":" + lineno);
+            Function function = dataSource.addFunction(functionName + ":" + fileName + ":" + lineno);
+
+            FunctionProfile fp = new FunctionProfile(function);
+            dataSource.getThread().addFunctionProfile(fp);
+            fp.setExclusive(0, value);
+            fp.setInclusive(0, value);
+
+        }
+
+    }
+
+    public Hashtable getMetricHash() {
+        return metricHash;
+    }
+
+    public boolean getIsProfile() {
+        return isProfile;
+    }
 }

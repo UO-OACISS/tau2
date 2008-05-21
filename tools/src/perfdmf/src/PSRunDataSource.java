@@ -34,7 +34,7 @@ public class PSRunDataSource extends DataSource {
     private FunctionProfile functionProfile = null;
     private Node node = null;
     private Context context = null;
-    private edu.uoregon.tau.perfdmf.Thread thread = null;
+    private Thread thread = null;
     private int nodeID = -1;
     private int contextID = -1;
     private int threadID = -1;
@@ -42,7 +42,7 @@ public class PSRunDataSource extends DataSource {
     boolean initialized = false;
     private Hashtable nodeHash = new Hashtable();
     private int threadCounter = 0;
-    
+
     public PSRunDataSource(Object initializeObject) {
         super();
         this.setMetrics(new Vector());
@@ -66,7 +66,7 @@ public class PSRunDataSource extends DataSource {
             // create our XML parser
             XMLReader xmlreader = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
 
-            DefaultHandler handler = new PSRunLoadHandler();
+            DefaultHandler handler = new PSRunLoadHandler(this);
             xmlreader.setContentHandler(handler);
             xmlreader.setErrorHandler(handler);
 
@@ -100,18 +100,21 @@ public class PSRunDataSource extends DataSource {
                         }
                     }
 
-                    // parse the next file
-                    xmlreader.parse(new InputSource(new FileInputStream(files[i])));
-
                     // initialize the thread/node
                     initializeThread();
 
+                    // parse the next file
+                    xmlreader.parse(new InputSource(new FileInputStream(files[i])));
+
                     PSRunLoadHandler tmpHandler = (PSRunLoadHandler) handler;
-                    Hashtable metricHash = tmpHandler.getMetricHash();
-                    for (Enumeration keys = metricHash.keys(); keys.hasMoreElements();) {
-                        String key = (String) keys.nextElement();
-                        String value = (String) metricHash.get(key);
-                        processHardwareCounter(key, value);
+
+                    if (!tmpHandler.getIsProfile()) {
+                        Hashtable metricHash = tmpHandler.getMetricHash();
+                        for (Enumeration keys = metricHash.keys(); keys.hasMoreElements();) {
+                            String key = (String) keys.nextElement();
+                            String value = (String) metricHash.get(key);
+                            processHardwareCounter(key, value);
+                        }
                     }
 
                     time = (System.currentTimeMillis()) - time;
@@ -168,5 +171,8 @@ public class PSRunDataSource extends DataSource {
         functionProfile.setNumSubr(0);
     }
 
- 
+    public Thread getThread() {
+        return thread;
+    }
+
 }
