@@ -1,89 +1,108 @@
 package edu.uoregon.tau.common;
+/*
+ * The Alphanum Algorithm is an improved sorting algorithm for strings
+ * containing numbers.  Instead of sorting numbers in ASCII order like
+ * a standard sort, this algorithm sorts numbers in numeric order.
+ *
+ * The Alphanum Algorithm is discussed at http://www.DaveKoelle.com
+ *
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
 
 import java.util.Comparator;
 
+/**
+ * This is an updated version with enhancements made by Daniel Migowski,
+ * Andre Bogus, and David Koelle
+ *
+ * To convert to use Templates (Java 1.5+):
+ *   - Change "implements Comparator" to "implements Comparator<String>"
+ *   - Change "compare(Object o1, Object o2)" to "compare(String s1, String s2)"
+ *   - Remove the type checking and casting in compare().
+ *
+ * To use this class:
+ *   Use the static "sort" method from the java.util.Collections class:
+ *   Collections.sort(your list, new AlphanumComparator());
+ */
 public class AlphanumComparator implements Comparator {
-    // TO USE THIS:
-    //   Use the static "sort" method from the java.util.Collections class:
-    //
-    //   Collections.sort(your list, new AlphanumComparator());
-    //
-
-    char[] numbers = { '1', '2', '3', '4', '5', '6', '7', '8', '9', '0' };
-
-    private boolean isIn(char ch, char[] chars) {
-        for (int i = 0; i < chars.length; i++) {
-            if (ch == chars[i])
-                return true;
-        }
-        return false;
+    private final boolean isDigit(char ch) {
+        return ch >= 48 && ch <= 57;
     }
 
-    private boolean inChunk(char ch, String s) {
-        if (s.length() == 0)
-            return true;
-
-        char s0 = s.charAt(0);
-        int chunkType = 0; // 0 = alphabetic, 1 = numeric
-
-        if (isIn(s0, numbers))
-            chunkType = 1;
-
-        if ((chunkType == 0) && (isIn(ch, numbers)))
-            return false;
-        if ((chunkType == 1) && (!isIn(ch, numbers)))
-            return false;
-
-        return true;
+    /** Length of string is passed in for improved efficiency (only need to calculate it once) **/
+    private final String getChunk(String s, int slength, int marker) {
+        StringBuffer chunk = new StringBuffer();
+        char c = s.charAt(marker);
+        chunk.append(c);
+        marker++;
+        if (isDigit(c)) {
+            while (marker < slength) {
+                c = s.charAt(marker);
+                if (!isDigit(c))
+                    break;
+                chunk.append(c);
+                marker++;
+            }
+        } else {
+            while (marker < slength) {
+                c = s.charAt(marker);
+                if (isDigit(c))
+                    break;
+                chunk.append(c);
+                marker++;
+            }
+        }
+        return chunk.toString();
     }
 
     public int compare(Object o1, Object o2) {
-        // This is soo much easier in a pattern-matching
-        // language like Perl!
-
+        if (!(o1 instanceof String) || !(o2 instanceof String)) {
+            return 0;
+        }
         String s1 = (String) o1;
         String s2 = (String) o2;
 
         int thisMarker = 0;
-        int thisNumericChunk = 0;
-        String thisChunk = new String();
         int thatMarker = 0;
-        int thatNumericChunk = 0;
-        String thatChunk = new String();
+        int s1Length = s1.length();
+        int s2Length = s2.length();
 
-        while ((thisMarker < s1.length()) && (thatMarker < s2.length())) {
-            char thisCh = s1.charAt(thisMarker);
-            char thatCh = s2.charAt(thatMarker);
+        while (thisMarker < s1Length && thatMarker < s2Length) {
+            String thisChunk = getChunk(s1, s1Length, thisMarker);
+            thisMarker += thisChunk.length();
 
-            thisChunk = "";
-            thatChunk = "";
-
-            while ((thisMarker < s1.length()) && inChunk(thisCh, thisChunk)) {
-                thisChunk = thisChunk + thisCh;
-                thisMarker++;
-                if (thisMarker < s1.length())
-                    thisCh = s1.charAt(thisMarker);
-            }
-
-            while ((thatMarker < s2.length()) && inChunk(thatCh, thatChunk)) {
-                thatChunk = thatChunk + thatCh;
-                thatMarker++;
-                if (thatMarker < s2.length())
-                    thatCh = s2.charAt(thatMarker);
-            }
-
-            int thisChunkType = isIn(thisChunk.charAt(0), numbers) ? 1 : 0;
-            int thatChunkType = isIn(thatChunk.charAt(0), numbers) ? 1 : 0;
+            String thatChunk = getChunk(s2, s2Length, thatMarker);
+            thatMarker += thatChunk.length();
 
             // If both chunks contain numeric characters, sort them numerically
             int result = 0;
-            if ((thisChunkType == 1) && (thatChunkType == 1)) {
-                thisNumericChunk = Integer.parseInt(thisChunk);
-                thatNumericChunk = Integer.parseInt(thatChunk);
-                if (thisNumericChunk < thatNumericChunk)
-                    result = -1;
-                if (thisNumericChunk > thatNumericChunk)
-                    result = 1;
+            if (isDigit(thisChunk.charAt(0)) && isDigit(thatChunk.charAt(0))) {
+                // Simple chunk comparison by length.
+                int thisChunkLength = thisChunk.length();
+                result = thisChunkLength - thatChunk.length();
+                // If equal, the first different number counts
+                if (result == 0) {
+                    for (int i = 0; i < thisChunkLength; i++) {
+                        result = thisChunk.charAt(i) - thatChunk.charAt(i);
+                        if (result != 0) {
+                            return result;
+                        }
+                    }
+                }
             } else {
                 result = thisChunk.compareTo(thatChunk);
             }
@@ -92,6 +111,6 @@ public class AlphanumComparator implements Comparator {
                 return result;
         }
 
-        return 0;
+        return s1Length - s2Length;
     }
 }
