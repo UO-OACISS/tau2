@@ -123,7 +123,11 @@ public class PSRunDataSource extends DataSource {
             }
             this.generateDerivedData();
         } catch (Exception e) {
-            throw new DataSourceException(e);
+            if (e instanceof DataSourceException) {
+                throw (DataSourceException)e;
+            } else {
+                throw new DataSourceException(e);
+            }
         }
     }
 

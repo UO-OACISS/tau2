@@ -61,6 +61,8 @@ public class PSRunLoadHandler extends DefaultHandler {
 
         if (name.equalsIgnoreCase("hwpcprofile")) {
             isProfile = true;
+        } else if (name.equalsIgnoreCase("hwpcprofiledata")) {
+            throw new DataSourceException("<html><center>This PerfSuite XML file contains unprocessed profile data.<br>Please use `psprocess -x` (from PerfSuite) to generate a processed XML file.</center></html>");
         } else if (name.equalsIgnoreCase("hwpcevent")) {
             currentElement = "hwpcevent";
             metricName = attrList.getValue("name");
