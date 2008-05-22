@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.23 2008/05/14 23:44:07 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.24 2008/05/22 01:16:27 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.23 $
+ * @version $Revision: 1.24 $
  */
 public class ParaProf implements ActionListener {
 
@@ -45,7 +45,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    private final static String VERSION = "Wed May 14 16:43:32 PDT 2008";
+    private final static String VERSION = "Wed May 21 18:14:35 PDT 2008";
 
     public static int defaultNumberPrecision = 6;
 
@@ -225,12 +225,10 @@ public class ParaProf implements ActionListener {
                     //System.out.println("Found db configuration file: "
                     //        + ParaProf.paraProfHomeDirectory.getPath() + "/perfdmf.cfg");
                     ParaProf.preferences.setDatabaseConfigurationFile(ParaProf.paraProfHomeDirectory.getPath() + "/perfdmf.cfg");
-                } else {
-                    System.out.println("Did not find db configuration file ... load manually");
                 }
 
             } else {
-                System.out.println("Did not find ParaProf home directory ... creating ...");
+                System.out.println("Did not find ParaProf home directory... creating...");
                 paraProfHomeDirectory.mkdir();
                 System.out.println("Done creating ParaProf home directory!");
             }

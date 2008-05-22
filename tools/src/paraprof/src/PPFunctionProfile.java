@@ -25,6 +25,7 @@ import java.awt.Color;
 import java.text.DecimalFormat;
 import java.util.Iterator;
 
+import edu.uoregon.tau.common.AlphanumComparator;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.perfdmf.*;
@@ -35,8 +36,8 @@ public class PPFunctionProfile implements Comparable {
     private DataSorter dataSorter;
     private Thread thread;
     private FunctionProfile functionProfile;
+    private static AlphanumComparator alphanum = new AlphanumComparator();
 
-    
     public PPFunctionProfile(DataSorter dataSorter, Thread thread, FunctionProfile fp) {
         this.dataSorter = dataSorter;
         this.thread = thread;
@@ -70,7 +71,7 @@ public class PPFunctionProfile implements Comparable {
     public Function getFunction() {
         return functionProfile.getFunction();
     }
-    
+
     public ParaProfTrial getPPTrial() {
         return dataSorter.getPpTrial();
     }
@@ -136,16 +137,17 @@ public class PPFunctionProfile implements Comparable {
         return dataSorter;
     }
 
-       
     public double getValue() {
         int differential = 0;
         int snap = dataSorter.getSelectedSnapshot();
         if (differential == 1 && snap > 0) {
-            double value1 = dataSorter.getValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID(), snap-1);
+            double value1 = dataSorter.getValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID(),
+                    snap - 1);
             double value2 = dataSorter.getValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID(), snap);
             return value2 - value1;
         } else {
-            return dataSorter.getValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID(), dataSorter.getSelectedSnapshot());
+            return dataSorter.getValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID(),
+                    dataSorter.getSelectedSnapshot());
         }
 
     }
@@ -154,11 +156,14 @@ public class PPFunctionProfile implements Comparable {
         int differential = 0;
         int snap = dataSorter.getSelectedSnapshot();
         if (differential == 1 && snap > 0) {
-            double value1 = dataSorter.getSortValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID(), snap-1);
-            double value2 = dataSorter.getSortValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID(), snap);
+            double value1 = dataSorter.getSortValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID(),
+                    snap - 1);
+            double value2 = dataSorter.getSortValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID(),
+                    snap);
             return value2 - value1;
         } else {
-            return dataSorter.getSortValueType().getValue(this.getFunctionProfile(), dataSorter.getSortMetric(), dataSorter.getSelectedSnapshot());
+            return dataSorter.getSortValueType().getValue(this.getFunctionProfile(), dataSorter.getSortMetric(),
+                    dataSorter.getSelectedSnapshot());
         }
     }
 
@@ -169,7 +174,6 @@ public class PPFunctionProfile implements Comparable {
         return value;
     }
 
-    
     private int compareNCT(PPFunctionProfile other) {
         if (other.getNodeID() != this.getNodeID()) {
             return checkDescending(this.getNodeID() - other.getNodeID());
@@ -179,7 +183,7 @@ public class PPFunctionProfile implements Comparable {
             return checkDescending(this.getThreadID() - other.getThreadID());
         }
     }
-    
+
     public int compareTo(Object inObject) {
         ValueType valueType = dataSorter.getSortValueType();
 
@@ -187,20 +191,21 @@ public class PPFunctionProfile implements Comparable {
 
         //TODO: I think valueType might need to be sortValueType???
         if (dataSorter.getSortType() == SortType.NAME) {
-            return checkDescending(other.getDisplayName().compareTo(this.getDisplayName()));
+            //return checkDescending(other.getDisplayName().compareTo(this.getDisplayName()));
+            return checkDescending(alphanum.compare(other.getDisplayName(), this.getDisplayName()));
 
         } else if (dataSorter.getSortType() == SortType.NCT) {
             return compareNCT(other);
-        
+
         } else if (dataSorter.getSortType() == SortType.MEAN_VALUE) {
-            return checkDescending(compareToHelper(valueType.getValue(this.getMeanProfile(), dataSorter.getSortMetric(), dataSorter.getSelectedSnapshot()),
-                    valueType.getValue(other.getMeanProfile(), dataSorter.getSortMetric(), dataSorter.getSelectedSnapshot()), this.getMeanProfile(),
-                    other.getMeanProfile()));
+            return checkDescending(compareToHelper(valueType.getValue(this.getMeanProfile(), dataSorter.getSortMetric(),
+                    dataSorter.getSelectedSnapshot()), valueType.getValue(other.getMeanProfile(), dataSorter.getSortMetric(),
+                    dataSorter.getSelectedSnapshot()), this.getMeanProfile(), other.getMeanProfile()));
 
         } else if (dataSorter.getSortType() == SortType.VALUE) {
             return checkDescending(compareToHelper(getSortValue(), other.getSortValue()));
-//            return checkDescending(compareToHelper(valueType.getValue(this.getFunctionProfile(), dataSorter.getSortMetric(), dataSorter.getSelectedSnapshot()),
-//                    valueType.getValue(other.getFunctionProfile(), dataSorter.getSortMetric(), dataSorter.getSelectedSnapshot())));
+            //            return checkDescending(compareToHelper(valueType.getValue(this.getFunctionProfile(), dataSorter.getSortMetric(), dataSorter.getSelectedSnapshot()),
+            //                    valueType.getValue(other.getFunctionProfile(), dataSorter.getSortMetric(), dataSorter.getSelectedSnapshot())));
         } else {
             throw new ParaProfException("Unexpected sort type: " + dataSorter.getSortType());
         }
@@ -237,17 +242,25 @@ public class PPFunctionProfile implements Comparable {
         String tmpString;
 
         DecimalFormat dF = new DecimalFormat("##0.0");
-        tmpString = UtilFncs.lpad(dF.format(functionProfile.getInclusivePercent(dataSorter.getSelectedSnapshot(),metric)), 13);
+        tmpString = UtilFncs.lpad(dF.format(functionProfile.getInclusivePercent(dataSorter.getSelectedSnapshot(), metric)), 13);
 
         if (functionProfile.getFunction().isPhase() && functionProfile.getFunction().isCallPathFunction()) {
-            tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getInclusive(dataSorter.getSelectedSnapshot(),metric), 14);
+            tmpString = tmpString + "  "
+                    + UtilFncs.getOutputString(type, functionProfile.getInclusive(dataSorter.getSelectedSnapshot(), metric), 14);
         } else {
-            tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getExclusive(dataSorter.getSelectedSnapshot(),metric), 14);
+            tmpString = tmpString + "  "
+                    + UtilFncs.getOutputString(type, functionProfile.getExclusive(dataSorter.getSelectedSnapshot(), metric), 14);
         }
-        tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getInclusive(dataSorter.getSelectedSnapshot(),metric), 16);
-        tmpString = tmpString + "  " + UtilFncs.formatDouble(functionProfile.getNumCalls(dataSorter.getSelectedSnapshot()), 12, true);
-        tmpString = tmpString + "  " + UtilFncs.formatDouble(functionProfile.getNumSubr(dataSorter.getSelectedSnapshot()), 12, true);
-        tmpString = tmpString + "  " + UtilFncs.getOutputString(type, functionProfile.getInclusivePerCall(dataSorter.getSelectedSnapshot(),metric), 19);
+        tmpString = tmpString + "  "
+                + UtilFncs.getOutputString(type, functionProfile.getInclusive(dataSorter.getSelectedSnapshot(), metric), 16);
+        tmpString = tmpString + "  "
+                + UtilFncs.formatDouble(functionProfile.getNumCalls(dataSorter.getSelectedSnapshot()), 12, true);
+        tmpString = tmpString + "  "
+                + UtilFncs.formatDouble(functionProfile.getNumSubr(dataSorter.getSelectedSnapshot()), 12, true);
+        tmpString = tmpString
+                + "  "
+                + UtilFncs.getOutputString(type, functionProfile.getInclusivePerCall(dataSorter.getSelectedSnapshot(), metric),
+                        19);
 
         //Everything should be added now except the function name.
         return tmpString;

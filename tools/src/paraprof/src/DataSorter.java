@@ -2,6 +2,7 @@ package edu.uoregon.tau.paraprof;
 
 import java.util.*;
 
+import edu.uoregon.tau.common.AlphanumComparator;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
@@ -14,9 +15,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  * functions that are in groups supposed to be shown. 
  *  
  * 
- * <P>CVS $Id: DataSorter.java,v 1.9 2007/05/04 01:44:34 amorris Exp $</P>
+ * <P>CVS $Id: DataSorter.java,v 1.10 2008/05/22 01:16:27 amorris Exp $</P>
  * @author	Alan Morris, Robert Bell
- * @version	$Revision: 1.9 $
+ * @version	$Revision: 1.10 $
  */
 public class DataSorter implements Comparator {
 
@@ -409,7 +410,8 @@ public class DataSorter implements Comparator {
                 newList.add(ppFunctionProfile);
             }
         }
-        Collections.sort(newList);
+//        Collections.sort(newList);
+        Collections.sort(newList, new AlphanumComparator());
         return newList;
     }
 
