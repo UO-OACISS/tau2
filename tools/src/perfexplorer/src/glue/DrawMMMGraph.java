@@ -29,7 +29,7 @@ import org.jfree.data.xy.DefaultHighLowDataset;
 
 import client.PerfExplorerChart;
 import client.MyCategoryAxis;
-import common.AlphanumComparator;
+import edu.uoregon.tau.common.AlphanumComparator;
 
 import edu.uoregon.tau.perfdmf.Trial;
 
