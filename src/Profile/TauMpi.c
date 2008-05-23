@@ -9,6 +9,7 @@
 extern void TauSyncClocks(int rank, int size);
 extern void TauSyncFinalClocks(int rank, int size);
 extern int Tau_write_snapshot(const char *name, int finalize);
+extern int Tau_mergeProfiles();
 
 
 /* This file uses the MPI Profiling Interface with TAU instrumentation.
@@ -1437,6 +1438,7 @@ int  MPI_Finalize(  )
   /* Create a merged profile if requested */
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
     Tau_write_snapshot("merge", 1);
+    Tau_mergeProfiles();
   }
 
   returnVal = PMPI_Finalize();

@@ -36,21 +36,24 @@ all : 		$(TAU_TARGET)
 
 install:	$(INSTALLDEST)/$(TAU_TARGET) 
 
-$(TAU_TARGET) : 	TauMpi.o ClockSync.o $(FWRAPPER) $(MPI2EXTENSIONS)
-	$(AR) $(ARFLAGS) $(TAU_TARGET) TauMpi.o ClockSync.o $(FWRAPPER) $(MPI2EXTENSIONS)
+$(TAU_TARGET) : TauMpi.o ClockSync.o ProfileMerge.o $(FWRAPPER) $(MPI2EXTENSIONS)
+	$(AR) $(ARFLAGS) $(TAU_TARGET) TauMpi.o ClockSync.o ProfileMerge.o $(FWRAPPER) $(MPI2EXTENSIONS)
 	$(TAU_RANLIB) $(TAU_TARGET)
 
-TauMpi.o :	TauMpi.c
+TauMpi.o : TauMpi.c
 	$(CC) $(CFLAGS) -c TauMpi.c
 
-TauFMpi.o: 	TauFMpi.c
+TauFMpi.o : TauFMpi.c
 	$(CC) $(CFLAGS) -c TauFMpi.c
 
-TauMpiExtensions.o: 	TauMpiExtensions.c
+TauMpiExtensions.o : 	TauMpiExtensions.c
 	$(CC) $(CFLAGS) -c TauMpiExtensions.c
 
-ClockSync.o :	ClockSync.c
+ClockSync.o : ClockSync.c
 	$(CC) $(CFLAGS) -c ClockSync.c
+
+ProfileMerge.o : ProfileMerge.c
+	$(CC) $(CFLAGS) -c ProfileMerge.c
 
 $(INSTALLDEST)/$(TAU_TARGET): $(TAU_TARGET)
 		@echo Installing $? in $(INSTALLDEST)

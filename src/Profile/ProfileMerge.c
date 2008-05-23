@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <Profile/tau_types.h>
-
+#include <Profile/TauEnv.h>
 
 int Tau_RtsLayer_myThread();
 char *getSnapshotBuffer();
@@ -15,7 +15,7 @@ int getSnapshotBufferLength();
 
 
 int Tau_mergeProfiles() {
-  int rank, size, tid, i, buflen, flag;
+  int rank, size, tid, i, buflen;
   FILE *f;
   char *buf;
   MPI_Status status;
@@ -27,11 +27,6 @@ int Tau_mergeProfiles() {
     return 0;
   }
 
-
-  PMPI_Finalized(&flag);
-  if (flag) {
-    return 0;
-  }
   
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -51,9 +46,9 @@ int Tau_mergeProfiles() {
     fwrite (buf, buflen, 1, f);
 
     for (i=1; i<size; i++) {
-      MPI_Recv(&buflen, 1, MPI_INT, MPI_ANY_SOURCE, 42, MPI_COMM_WORLD, &status);
+      PMPI_Recv(&buflen, 1, MPI_INT, MPI_ANY_SOURCE, 42, MPI_COMM_WORLD, &status);
       buf = (char*) malloc (buflen);
-      MPI_Recv(buf, buflen, MPI_CHAR, status.MPI_SOURCE, 42, MPI_COMM_WORLD, &status);
+      PMPI_Recv(buf, buflen, MPI_CHAR, status.MPI_SOURCE, 42, MPI_COMM_WORLD, &status);
       fwrite (buf, buflen, 1, f);
       free (buf);
     }

@@ -53,7 +53,6 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <signal.h>
 #include <stdarg.h>
 
-extern "C" int Tau_mergeProfiles();
 
 char *TauGetCounterString(void);
 
@@ -369,11 +368,6 @@ static char *removeRuns(char *str) {
   }
   return str;
 }
-
-
-
-
-
 
 
 static void writeEventXML(outputDevice *out, int id, FunctionInfo *fi) {
@@ -843,9 +837,6 @@ int Profiler::Snapshot(const char *name, bool finalize, int tid) {
      TAU_PROFILE_STOP(timer);
    }
 
-   if (finalize && TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
-     Tau_mergeProfiles();
-   }
 
    return 0;
 }
