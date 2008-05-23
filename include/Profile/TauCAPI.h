@@ -41,16 +41,12 @@ extern "C" {
 #if (defined(PROFILING_ON) || defined(TRACING_ON) )
 
 
+/* These can't be used in C, only C++, so they are dummy macros here */
 #define TAU_PROFILE(name, type, group) 
 #define TAU_DYNAMIC_PROFILE(name, type, group) 
-/* OLD CODE. Not thread-safe  */
-/*
-#define TAU_PROFILE_TIMER(var,name, type, group) static int taufirst##var = 1;\
-                                 static void *var; \
-                                 if (taufirst##var == 1) { \
-                                   var = Tau_get_profiler(name, type, group, #group); \
-                                   taufirst##var = 0; }
-*/
+/* C doesn't support runtime type information */
+#define CT(obj)
+
 
 #define TAU_PROFILE_TIMER(var,name, type, group) static void *var=NULL; Tau_profile_c_timer(&var, name, type, group, #group);
 
@@ -82,13 +78,6 @@ extern "C" {
 #define TAU_GET_EVENT_NAMES(eventList, num)     Tau_get_event_names(&eventList, &num);
 #define TAU_GET_EVENT_VALS(v1,v2,v3,v4,v5,v6)   Tau_get_event_vals(v1,v2,&v3,&v4,&v5,&v6);
 
-/*
-#define TAU_REGISTER_EVENT(event, name)	static int tauuser##event = 1;\
-				        static void *event; \
-					if (tauuser##event == 1) { \
-					  event = Tau_get_userevent(name); \
-					  tauuser##event = 0; }
-*/
 #define TAU_REGISTER_EVENT(event, name)	static int taufirst##event = 1;\
                                  static void *event; \
                                  if (taufirst##event == 1) { \
@@ -113,8 +102,6 @@ extern "C" {
 #define TAU_STORE_ALL_EVENTS
 #define TYPE_STRING(profileString, str)
 #define PROFILED_BLOCK(name, type)
-/* C doesn't support runtime type information */
-#define CT(obj)
 
 #define TAU_REGISTER_THREAD()			Tau_register_thread();	
 #define TAU_REGISTER_FORK(nodeid, op) 		Tau_register_fork(nodeid, op);
@@ -128,20 +115,20 @@ extern "C" {
 #define TAU_DISABLE_ALL_GROUPS()            	Tau_disable_all_groups() 
 #define TAU_DISABLE_GROUP_NAME(group)           Tau_disable_group_name(group)
 #define TAU_GET_PROFILE_GROUP(group)            Tau_get_profile_group(group)
-#define TAU_BCAST_DATA(data)  	Tau_bcast_data(data)
-#define TAU_REDUCE_DATA(data)  	Tau_reduce_data(data)
-#define TAU_ALLTOALL_DATA(data) Tau_alltoall_data(data) 
-#define TAU_SCATTER_DATA(data)  Tau_scatter_data(data) 
-#define TAU_GATHER_DATA(data)  	Tau_gather_data(data)
-#define TAU_ALLREDUCE_DATA(data)  	Tau_allreduce_data(data)
-#define TAU_ALLGATHER_DATA(data)  	Tau_allgather_data(data)
-#define TAU_REDUCESCATTER_DATA(data)  	Tau_reducescatter_data(data)
-#define TAU_SCAN_DATA(data)  		Tau_scan_data(data)
-#define TAU_ENABLE_TRACKING_MEMORY()	Tau_enable_tracking_memory()
-#define TAU_DISABLE_TRACKING_MEMORY()	Tau_disable_tracking_memory()
-#define TAU_TRACK_MEMORY()		Tau_track_memory()
-#define TAU_TRACK_MEMORY_HERE()		Tau_track_memory_here()
-#define TAU_TRACK_MEMORY_HEADROOM()	Tau_track_memory_headroom()
+#define TAU_BCAST_DATA(data)  	                Tau_bcast_data(data)
+#define TAU_REDUCE_DATA(data)  	                Tau_reduce_data(data)
+#define TAU_ALLTOALL_DATA(data)                 Tau_alltoall_data(data) 
+#define TAU_SCATTER_DATA(data)                  Tau_scatter_data(data) 
+#define TAU_GATHER_DATA(data)  	                Tau_gather_data(data)
+#define TAU_ALLREDUCE_DATA(data)  	        Tau_allreduce_data(data)
+#define TAU_ALLGATHER_DATA(data)  	        Tau_allgather_data(data)
+#define TAU_REDUCESCATTER_DATA(data)  	        Tau_reducescatter_data(data)
+#define TAU_SCAN_DATA(data)  		        Tau_scan_data(data)
+#define TAU_ENABLE_TRACKING_MEMORY()	        Tau_enable_tracking_memory()
+#define TAU_DISABLE_TRACKING_MEMORY()	        Tau_disable_tracking_memory()
+#define TAU_TRACK_MEMORY()		        Tau_track_memory()
+#define TAU_TRACK_MEMORY_HERE()	        	Tau_track_memory_here()
+#define TAU_TRACK_MEMORY_HEADROOM()        	Tau_track_memory_headroom()
 #define TAU_TRACK_MEMORY_HEADROOM_HERE()	Tau_track_memory_headroom_here()
 #define TAU_ENABLE_TRACKING_MEMORY_HEADROOM()	Tau_enable_tracking_memory_headroom()
 #define TAU_DISABLE_TRACKING_MEMORY_HEADROOM()	Tau_disable_tracking_memory_headroom()
@@ -337,7 +324,7 @@ extern void Tau_profile_dynamic_auto(int iteration, void **ptr, char *fname, cha
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: amorris $
- * $Revision: 1.51 $   $Date: 2008/03/13 03:00:50 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.51 2008/03/13 03:00:50 amorris Exp $
+ * $Revision: 1.52 $   $Date: 2008/05/23 00:43:17 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.52 2008/05/23 00:43:17 amorris Exp $
  ***************************************************************************/
 
