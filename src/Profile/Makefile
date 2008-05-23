@@ -25,7 +25,7 @@
 #**      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
 #****************************************************************************
 
-TAUROOT=
+TAUROOT=/home/amorris/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -82,7 +82,7 @@ MAKEFILE      = Makefile
 OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
 		TauHooks.o TauHandler.o TauMemory.o MetaData.o TauEnv.o \
-		TauInit.o \
+		TauInit.o ProfileMerge.o \
 		$(PARAM_O) $(EVENTS_O) $(THR_O) \
 		$(PCL_O) $(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(CALLPATH_O) $(PYTHON_O) $(MUSE_O) \
@@ -145,7 +145,7 @@ TAU_SHLIBX		= .so
 #APPLECXX#TAU_APPLE_SHLIBX  = .dylib		#ENDIF#
 #PYTHON#TAU_APPLE_SHLIBX    = .so		#ENDIF#
 #APPLECXX#TAU_SHLIBX    = $(TAU_APPLE_SHLIBX)	#ENDIF#
-#GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
+AR_SHFLAGS 		= -shared  	#ENDIF##GNU#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
 #SGICC#AR_SHFLAGS 		= -shared  	#ENDIF#
@@ -376,6 +376,9 @@ Profile.class	: Profile.java
 
 Profiler.o 	: Profiler.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+ProfileMerge.o 	: ProfileMerge.c $(HDRS)
+	$(CC) $(CFLAGS) -c $(@:.o=.c)
 
 MetaData.o 	: MetaData.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
