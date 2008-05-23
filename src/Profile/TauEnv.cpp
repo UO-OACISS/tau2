@@ -20,6 +20,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -167,8 +168,10 @@ extern "C" {
 
 
       char *profileFormat = getenv("TAU_PROFILE_FORMAT");
-      if (profileFormat != NULL && 0 == strcmp(profileFormat, "snapshot")) {
+      if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "snapshot")) {
 	env_profile_format = TAU_FORMAT_SNAPSHOT;
+      } else if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "merged")) {
+	env_profile_format = TAU_FORMAT_MERGED;
       } else {
 	env_profile_format = TAU_FORMAT_PROFILE;
       }
