@@ -82,6 +82,11 @@ int RtsLayer::myContext(void)
   return TheContext(); 
 }
 
+extern "C" int Tau_RtsLayer_myThread(void) {
+  return RtsLayer::myThread();
+}
+
+
 //////////////////////////////////////////////////////////////////////
 // myNode() returns the current node id (0..N-1)
 //////////////////////////////////////////////////////////////////////
@@ -279,6 +284,14 @@ bool RtsLayer::initLocks(void) {
 // This ensure that the FunctionDB (global) is locked while updating
 //////////////////////////////////////////////////////////////////////
 
+extern "C" void Tau_RtsLayer_LockDB() {
+  RtsLayer::LockDB();
+}
+
+extern "C" void Tau_RtsLayer_UnLockDB() {
+  RtsLayer::UnLockDB();
+}
+
 void RtsLayer::LockDB(void) {
   static bool init = initLocks();
   int tid=myThread();
@@ -391,8 +404,8 @@ void RtsLayer::UnLockEnv(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: amorris $
- * $Revision: 1.27 $   $Date: 2008/03/13 06:42:40 $
- * VERSION: $Id: RtsThread.cpp,v 1.27 2008/03/13 06:42:40 amorris Exp $
+ * $Revision: 1.28 $   $Date: 2008/05/23 00:44:46 $
+ * VERSION: $Id: RtsThread.cpp,v 1.28 2008/05/23 00:44:46 amorris Exp $
  ***************************************************************************/
 
 
