@@ -51,6 +51,9 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #endif // TAU_BGP
 
 #include <signal.h>
+#include <stdarg.h>
+
+extern "C" int Tau_mergeProfiles();
 
 char *TauGetCounterString(void);
 
@@ -105,17 +108,43 @@ bool Tau_snapshot_initialization() {
 }
 
 
+
+typedef struct outputDevice_ {
+  FILE *fp;
+  int type; // 0 = file, 1 = buffer
+  char *buffer;
+  int bufidx;
+  int buflen;
+} outputDevice;
+
+#define OUTPUT_FILE 0
+#define OUTPUT_BUFFER 1
+#define INITIAL_BUFFER 5000000
+#define THRESHOLD 100000
+
+
 // Static holder for snapshot file handles
-static FILE **TauGetSnapshotFiles() {
-  static FILE **snapshotFiles = NULL;
+static outputDevice **TauGetSnapshotFiles() {
+  static outputDevice **snapshotFiles = NULL;
   int i;
   if (!snapshotFiles) {
-    snapshotFiles = new FILE*[TAU_MAX_THREADS];
+    snapshotFiles = new outputDevice*[TAU_MAX_THREADS];
     for (i=0; i<TAU_MAX_THREADS; i++) {
       snapshotFiles[i] = NULL;
     }
   }
   return snapshotFiles;
+}
+
+extern "C" char *getSnapshotBuffer() {
+  // only support thread 0 right now
+
+  char *buf = TauGetSnapshotFiles()[0]->buffer;
+  return buf;
+}
+
+extern "C" int getSnapshotBufferLength() {
+  return TauGetSnapshotFiles()[0]->bufidx;
 }
 
 // Static holder for snapshot event counts
@@ -156,7 +185,30 @@ static int ReadFullLine(char *line, FILE *fp) {
   return i; 
 }
 
-static void writeXMLString(FILE *f, const char *s) {
+
+static int output(outputDevice *out, char *format, ...) {
+  int rs;
+  va_list args;
+  if (out->type == OUTPUT_BUFFER) {
+    va_start(args, format);
+    rs = vsprintf(out->buffer+out->bufidx, format, args);
+    va_end(args);
+    out->bufidx+=rs;
+    if (out->bufidx+THRESHOLD > out->buflen) {
+      out->buflen = out->buflen * 2;
+      out->buffer = (char*) realloc (out->buffer, out->buflen);
+    }
+
+  } else {
+    va_start(args, format);
+    rs = vfprintf(out->fp, format, args);
+    va_end(args);
+  }
+  return rs;
+}
+
+
+static void writeXMLString(outputDevice *out, const char *s) {
   if (!s) return;
   
   bool useCdata = false;
@@ -170,7 +222,7 @@ static void writeXMLString(FILE *f, const char *s) {
   }
   
   if (useCdata) {
-    fprintf (f,"<![CDATA[%s]]>",s);
+    output (out,"<![CDATA[%s]]>",s);
     return;
   }
 
@@ -208,41 +260,41 @@ static void writeXMLString(FILE *f, const char *s) {
   }
   *d = 0;
   
-  fprintf (f,"%s",str);
+  output (out,"%s",str);
   free (str);
 }
 
-static void writeTagXML(FILE *f, const char *tag, const char *s, bool newline) {
-  fprintf (f, "<%s>", tag);
-  writeXMLString(f, s);
-  fprintf (f, "</%s>",tag);
+static void writeTagXML(outputDevice *out, const char *tag, const char *s, bool newline) {
+  output (out, "<%s>", tag);
+  writeXMLString(out, s);
+  output (out, "</%s>",tag);
   if (newline) {
-    fprintf (f, "\n");
+    output (out, "\n");
   }
 }
 
 
-static void writeXMLAttribute(FILE *f, const char *name, const char *value, bool newline) {
+static void writeXMLAttribute(outputDevice *out, const char *name, const char *value, bool newline) {
   const char *endl = "";
   if (newline) {
     endl = "\n";
   }
 
-  fprintf (f, "<attribute>%s<name>", endl);
-  writeXMLString(f, name);
-  fprintf (f, "</name>%s<value>", endl);
-  writeXMLString(f, value);
-  fprintf (f, "</value>%s</attribute>%s", endl, endl);
+  output (out, "<attribute>%s<name>", endl);
+  writeXMLString(out, name);
+  output (out, "</name>%s<value>", endl);
+  writeXMLString(out, value);
+  output (out, "</value>%s</attribute>%s", endl, endl);
 }
 
 
-static void writeXMLAttribute(FILE *f, const char *name, const int value, bool newline) {
+static void writeXMLAttribute(outputDevice *out, const char *name, const int value, bool newline) {
   char str[4096];
   sprintf (str, "%d", value);
-  writeXMLAttribute(f, name, str, newline);
+  writeXMLAttribute(out, name, str, newline);
 }
 
-static int writeXMLTime(FILE *fp, bool newline) {
+static int writeXMLTime(outputDevice *out, bool newline) {
 
    time_t theTime = time(NULL);
 //    char *stringTime = ctime(&theTime);
@@ -267,7 +319,7 @@ static int writeXMLTime(FILE *fp, bool newline) {
    char buf[4096];
    struct tm *thisTime = gmtime(&theTime);
    strftime (buf,4096,"%Y-%m-%dT%H:%M:%SZ", thisTime);
-   fprintf (fp, "<attribute><name>UTC Time</name><value>%s</value></attribute>%s", buf, endl);
+   output (out, "<attribute><name>UTC Time</name><value>%s</value></attribute>%s", buf, endl);
 
    thisTime = localtime(&theTime);
    strftime (buf,4096,"%Y-%m-%dT%H:%M:%S", thisTime);
@@ -281,13 +333,13 @@ static int writeXMLTime(FILE *fp, bool newline) {
      tzone[4] = tzone[3];
      tzone[3] = ':';
    }
-   fprintf (fp, "<attribute><name>Local Time</name><value>%s%s</value></attribute>%s", buf, tzone, endl);
+   output (out, "<attribute><name>Local Time</name><value>%s%s</value></attribute>%s", buf, tzone, endl);
 
    // write out the timestamp (number of microseconds since epoch (unsigned long long)
 #ifdef TAU_WINDOWS
-   fprintf (fp, "<attribute><name>Timestamp</name><value>%I64d</value></attribute>%s", getTimeStamp(), endl);
+   output (out, "<attribute><name>Timestamp</name><value>%I64d</value></attribute>%s", getTimeStamp(), endl);
 #else
-   fprintf (fp, "<attribute><name>Timestamp</name><value>%lld</value></attribute>%s", getTimeStamp(), endl);
+   output (out, "<attribute><name>Timestamp</name><value>%lld</value></attribute>%s", getTimeStamp(), endl);
 #endif
 
    return 0;
@@ -324,33 +376,33 @@ static char *removeRuns(char *str) {
 
 
 
-static void writeEventXML(FILE *f, int id, FunctionInfo *fi) {
-  fprintf (f, "<event id=\"%d\"><name>", id);
-  writeXMLString(f, fi->GetName());
-  fprintf (f, "</name><group>");
-  writeXMLString(f, fi->GetAllGroups());
-  fprintf (f, "</group></event>\n");
+static void writeEventXML(outputDevice *out, int id, FunctionInfo *fi) {
+  output (out, "<event id=\"%d\"><name>", id);
+  writeXMLString(out, fi->GetName());
+  output (out, "</name><group>");
+  writeXMLString(out, fi->GetAllGroups());
+  output (out, "</group></event>\n");
   return;
 }
 
-static void writeUserEventXML(FILE *f, int id, TauUserEvent *ue) {
-  fprintf (f, "<userevent id=\"%d\"><name>", id);
-  writeXMLString(f, ue->GetEventName());
-  fprintf (f, "</name></userevent>\n");
+static void writeUserEventXML(outputDevice *out, int id, TauUserEvent *ue) {
+  output (out, "<userevent id=\"%d\"><name>", id);
+  writeXMLString(out, ue->GetEventName());
+  output (out, "</name></userevent>\n");
   return;
 }
 
-static int writeMetaData(FILE *fp, bool newline, int counter) {
+static int writeMetaData(outputDevice *out, bool newline, int counter) {
   const char *endl = "";
   if (newline) {
     endl = "\n";
   }
 
-  fprintf (fp, "<metadata>%s", endl);
+  output (out, "<metadata>%s", endl);
 
 
   if (counter != -1) {
-    writeXMLAttribute(fp, "Metric Name", RtsLayer::getCounterName(counter), newline);
+    writeXMLAttribute(out, "Metric Name", RtsLayer::getCounterName(counter), newline);
   }
 
 
@@ -360,31 +412,31 @@ static int writeMetaData(FILE *fp, bool newline, int counter) {
 #else
   sprintf (tmpstr, "%lld", firstTimeStamp);
 #endif
-  writeXMLAttribute(fp, "Starting Timestamp", tmpstr, newline);
+  writeXMLAttribute(out, "Starting Timestamp", tmpstr, newline);
 
-  writeXMLTime(fp, newline);
+  writeXMLTime(out, newline);
 
 #ifndef TAU_WINDOWS
 
   // try to grab meta-data
   char hostname[4096];
   gethostname(hostname,4096);
-  writeXMLAttribute(fp, "Hostname", hostname, newline);
+  writeXMLAttribute(out, "Hostname", hostname, newline);
 
   struct utsname archinfo;
 
   uname (&archinfo);
-  writeXMLAttribute(fp, "OS Name", archinfo.sysname, newline);
-  writeXMLAttribute(fp, "OS Version", archinfo.version, newline);
-  writeXMLAttribute(fp, "OS Release", archinfo.release, newline);
-  writeXMLAttribute(fp, "OS Machine", archinfo.machine, newline);
-  writeXMLAttribute(fp, "Node Name", archinfo.nodename, newline);
+  writeXMLAttribute(out, "OS Name", archinfo.sysname, newline);
+  writeXMLAttribute(out, "OS Version", archinfo.version, newline);
+  writeXMLAttribute(out, "OS Release", archinfo.release, newline);
+  writeXMLAttribute(out, "OS Machine", archinfo.machine, newline);
+  writeXMLAttribute(out, "Node Name", archinfo.nodename, newline);
 
-  writeXMLAttribute(fp, "TAU Architecture", TAU_ARCH, newline);
-  writeXMLAttribute(fp, "TAU Config", TAU_CONFIG, newline);
-  writeXMLAttribute(fp, "TAU Version", TAU_VERSION, newline);
+  writeXMLAttribute(out, "TAU Architecture", TAU_ARCH, newline);
+  writeXMLAttribute(out, "TAU Config", TAU_CONFIG, newline);
+  writeXMLAttribute(out, "TAU Version", TAU_VERSION, newline);
 
-  writeXMLAttribute(fp, "pid", getpid(), newline);
+  writeXMLAttribute(out, "pid", getpid(), newline);
 #endif
 
 
@@ -399,50 +451,50 @@ static int writeMetaData(FILE *fp, bool newline, int counter) {
   sprintf (buffer, "(%d,%d,%d)", BGLPersonality_xCoord(&personality),
 	   BGLPersonality_yCoord(&personality),
 	   BGLPersonality_zCoord(&personality));
-  writeXMLAttribute(fp, "BGL Coords", buffer, newline);
+  writeXMLAttribute(out, "BGL Coords", buffer, newline);
 
-  writeXMLAttribute(fp, "BGL Processor ID", rts_get_processor_id(), newline);
+  writeXMLAttribute(out, "BGL Processor ID", rts_get_processor_id(), newline);
 
   sprintf (buffer, "(%d,%d,%d)", BGLPersonality_xSize(&personality),
 	   BGLPersonality_ySize(&personality),
 	   BGLPersonality_zSize(&personality));
-  writeXMLAttribute(fp, "BGL Size", buffer, newline);
+  writeXMLAttribute(out, "BGL Size", buffer, newline);
 
 
   if (BGLPersonality_virtualNodeMode(&personality)) {
-    writeXMLAttribute(fp, "BGL Node Mode", "Virtual", newline);
+    writeXMLAttribute(out, "BGL Node Mode", "Virtual", newline);
   } else {
-    writeXMLAttribute(fp, "BGL Node Mode", "Coprocessor", newline);
+    writeXMLAttribute(out, "BGL Node Mode", "Coprocessor", newline);
   }
 
   sprintf (buffer, "(%d,%d,%d)", BGLPersonality_isTorusX(&personality),
 	   BGLPersonality_isTorusY(&personality),
 	   BGLPersonality_isTorusZ(&personality));
-  writeXMLAttribute(fp, "BGL isTorus", buffer, newline);
+  writeXMLAttribute(out, "BGL isTorus", buffer, newline);
 
-  writeXMLAttribute(fp, "BGL DDRSize", BGLPersonality_DDRSize(&personality), newline);
-  writeXMLAttribute(fp, "BGL DDRModuleType", personality.DDRModuleType, newline);
-  writeXMLAttribute(fp, "BGL Location", location, newline);
+  writeXMLAttribute(out, "BGL DDRSize", BGLPersonality_DDRSize(&personality), newline);
+  writeXMLAttribute(out, "BGL DDRModuleType", personality.DDRModuleType, newline);
+  writeXMLAttribute(out, "BGL Location", location, newline);
 
-  writeXMLAttribute(fp, "BGL rankInPset", BGLPersonality_rankInPset(&personality), newline);
-  writeXMLAttribute(fp, "BGL numNodesInPset", BGLPersonality_numNodesInPset(&personality), newline);
-  writeXMLAttribute(fp, "BGL psetNum", BGLPersonality_psetNum(&personality), newline);
-  writeXMLAttribute(fp, "BGL numPsets", BGLPersonality_numPsets(&personality), newline);
+  writeXMLAttribute(out, "BGL rankInPset", BGLPersonality_rankInPset(&personality), newline);
+  writeXMLAttribute(out, "BGL numNodesInPset", BGLPersonality_numNodesInPset(&personality), newline);
+  writeXMLAttribute(out, "BGL psetNum", BGLPersonality_psetNum(&personality), newline);
+  writeXMLAttribute(out, "BGL numPsets", BGLPersonality_numPsets(&personality), newline);
 
   sprintf (buffer, "(%d,%d,%d)", BGLPersonality_xPsetSize(&personality),
 	   BGLPersonality_yPsetSize(&personality),
 	   BGLPersonality_zPsetSize(&personality));
-  writeXMLAttribute(fp, "BGL PsetSize", buffer, newline);
+  writeXMLAttribute(out, "BGL PsetSize", buffer, newline);
 
   sprintf (buffer, "(%d,%d,%d)", BGLPersonality_xPsetOrigin(&personality),
 	   BGLPersonality_yPsetOrigin(&personality),
 	   BGLPersonality_zPsetOrigin(&personality));
-  writeXMLAttribute(fp, "BGL PsetOrigin", buffer, newline);
+  writeXMLAttribute(out, "BGL PsetOrigin", buffer, newline);
 
   sprintf (buffer, "(%d,%d,%d)", BGLPersonality_xPsetCoord(&personality),
 	   BGLPersonality_yPsetCoord(&personality),
 	   BGLPersonality_zPsetCoord(&personality));
-  writeXMLAttribute(fp, "BGL PsetCoord", buffer, newline);
+  writeXMLAttribute(out, "BGL PsetCoord", buffer, newline);
 #endif /* TAU_BGL */
 
 #ifdef TAU_BGP
@@ -456,63 +508,63 @@ static int writeMetaData(FILE *fp, bool newline, int counter) {
   sprintf (bgbuffer, "(%d,%d,%d)", BGP_Personality_xCoord(&personality),
 	   BGP_Personality_yCoord(&personality),
 	   BGP_Personality_zCoord(&personality));
-  writeXMLAttribute(fp, "BGP Coords", bgbuffer, newline);
+  writeXMLAttribute(out, "BGP Coords", bgbuffer, newline);
 
-  writeXMLAttribute(fp, "BGP Processor ID", Kernel_PhysicalProcessorID(), newline);
+  writeXMLAttribute(out, "BGP Processor ID", Kernel_PhysicalProcessorID(), newline);
 
   sprintf (bgbuffer, "(%d,%d,%d)", BGP_Personality_xSize(&personality),
 	   BGP_Personality_ySize(&personality),
 	   BGP_Personality_zSize(&personality));
-  writeXMLAttribute(fp, "BGP Size", bgbuffer, newline);
+  writeXMLAttribute(out, "BGP Size", bgbuffer, newline);
 
 
   if (Kernel_ProcessCount() > 1) {
-    writeXMLAttribute(fp, "BGP Node Mode", "Virtual", newline);
+    writeXMLAttribute(out, "BGP Node Mode", "Virtual", newline);
   } else {
     sprintf(bgbuffer, "Coprocessor (%d)", Kernel_ProcessCount);
-    writeXMLAttribute(fp, "BGP Node Mode", bgbuffer, newline);
+    writeXMLAttribute(out, "BGP Node Mode", bgbuffer, newline);
   }
 
   sprintf (bgbuffer, "(%d,%d,%d)", BGP_Personality_isTorusX(&personality),
 	   BGP_Personality_isTorusY(&personality),
 	   BGP_Personality_isTorusZ(&personality));
-  writeXMLAttribute(fp, "BGP isTorus", bgbuffer, newline);
+  writeXMLAttribute(out, "BGP isTorus", bgbuffer, newline);
 
-  writeXMLAttribute(fp, "BGP DDRSize (MB)", BGP_Personality_DDRSizeMB(&personality), newline);
+  writeXMLAttribute(out, "BGP DDRSize (MB)", BGP_Personality_DDRSizeMB(&personality), newline);
 /* CHECK: 
-  writeXMLAttribute(fp, "BGP DDRModuleType", personality.DDRModuleType, newline);
+  writeXMLAttribute(out, "BGP DDRModuleType", personality.DDRModuleType, newline);
 */
-  writeXMLAttribute(fp, "BGP Location", location, newline);
+  writeXMLAttribute(out, "BGP Location", location, newline);
 
-  writeXMLAttribute(fp, "BGP rankInPset", BGP_Personality_rankInPset(&personality), newline);
+  writeXMLAttribute(out, "BGP rankInPset", BGP_Personality_rankInPset(&personality), newline);
 /*
-  writeXMLAttribute(fp, "BGP numNodesInPset", Kernel_ProcessCount(), newline);
+  writeXMLAttribute(out, "BGP numNodesInPset", Kernel_ProcessCount(), newline);
 */
-  writeXMLAttribute(fp, "BGP psetSize", BGP_Personality_psetSize(&personality), newline);
-  writeXMLAttribute(fp, "BGP psetNum", BGP_Personality_psetNum(&personality), newline);
-  writeXMLAttribute(fp, "BGP numPsets", BGP_Personality_numComputeNodes(&personality), newline);
+  writeXMLAttribute(out, "BGP psetSize", BGP_Personality_psetSize(&personality), newline);
+  writeXMLAttribute(out, "BGP psetNum", BGP_Personality_psetNum(&personality), newline);
+  writeXMLAttribute(out, "BGP numPsets", BGP_Personality_numComputeNodes(&personality), newline);
 
 /* CHECK: 
   sprintf (bgbuffer, "(%d,%d,%d)", BGP_Personality_xPsetSize(&personality),
 	   BGP_Personality_yPsetSize(&personality),
 	   BGP_Personality_zPsetSize(&personality));
-  writeXMLAttribute(fp, "BGP PsetSize", bgbuffer, newline);
+  writeXMLAttribute(out, "BGP PsetSize", bgbuffer, newline);
 
   sprintf (bgbuffer, "(%d,%d,%d)", BGP_Personality_xPsetOrigin(&personality),
 	   BGP_Personality_yPsetOrigin(&personality),
 	   BGP_Personality_zPsetOrigin(&personality));
-  writeXMLAttribute(fp, "BGP PsetOrigin", bgbuffer, newline);
+  writeXMLAttribute(out, "BGP PsetOrigin", bgbuffer, newline);
 
   sprintf (bgbuffer, "(%d,%d,%d)", BGP_Personality_xPsetCoord(&personality),
 	   BGP_Personality_yPsetCoord(&personality),
 	   BGP_Personality_zPsetCoord(&personality));
-  writeXMLAttribute(fp, "BGP PsetCoord", bgbuffer, newline);
+  writeXMLAttribute(out, "BGP PsetCoord", bgbuffer, newline);
 */
 #endif /* TAU_BGP */
 
 #ifdef __linux__
   // doesn't work on ia64 for some reason
-  //fprintf (fp, "\t<linux_tid>%d</linux_tid>\n", gettid());
+  //output (out, "\t<linux_tid>%d</linux_tid>\n", gettid());
 
   // try to grab CPU info
   FILE *f = fopen("/proc/cpuinfo", "r");
@@ -523,28 +575,28 @@ static int writeMetaData(FILE *fp, bool newline, int counter) {
       value = removeRuns(value);
 
       if (strncmp(line, "vendor_id", 9) == 0) {
-	writeXMLAttribute(fp, "CPU Vendor", value, newline);
+	writeXMLAttribute(out, "CPU Vendor", value, newline);
       }
       if (strncmp(line, "cpu MHz", 7) == 0) {
-	writeXMLAttribute(fp, "CPU MHz", value, newline);
+	writeXMLAttribute(out, "CPU MHz", value, newline);
       }
       if (strncmp(line, "clock", 5) == 0) {
-	writeXMLAttribute(fp, "CPU MHz", value, newline);
+	writeXMLAttribute(out, "CPU MHz", value, newline);
       }
       if (strncmp(line, "model name", 10) == 0) {
-	writeXMLAttribute(fp, "CPU Type", value, newline);
+	writeXMLAttribute(out, "CPU Type", value, newline);
       }
       if (strncmp(line, "family", 6) == 0) {
-	writeXMLAttribute(fp, "CPU Type", value, newline);
+	writeXMLAttribute(out, "CPU Type", value, newline);
       }
       if (strncmp(line, "cpu\t", 4) == 0) {
-	writeXMLAttribute(fp, "CPU Type", value, newline);
+	writeXMLAttribute(out, "CPU Type", value, newline);
       }
       if (strncmp(line, "cache size", 10) == 0) {
-	writeXMLAttribute(fp, "Cache Size", value, newline);
+	writeXMLAttribute(out, "Cache Size", value, newline);
       }
       if (strncmp(line, "cpu cores", 9) == 0) {
-	writeXMLAttribute(fp, "CPU Cores", value, newline);
+	writeXMLAttribute(out, "CPU Cores", value, newline);
       }
     }
     fclose(f);
@@ -558,7 +610,7 @@ static int writeMetaData(FILE *fp, bool newline, int counter) {
       value = removeRuns(value);
 
       if (strncmp(line, "MemTotal", 8) == 0) {
-	writeXMLAttribute(fp, "Memory Size", value, newline);
+	writeXMLAttribute(out, "Memory Size", value, newline);
       }
     }
     fclose(f);
@@ -569,18 +621,18 @@ static int writeMetaData(FILE *fp, bool newline, int counter) {
   bzero(buffer, 4096);
   int rc = readlink("/proc/self/exe", buffer, 4096);
   if (rc != -1) {
-    writeXMLAttribute(fp, "Executable", buffer, newline);
+    writeXMLAttribute(out, "Executable", buffer, newline);
   }
   bzero(buffer, 4096);
   rc = readlink("/proc/self/cwd", buffer, 4096);
   if (rc != -1) {
-    writeXMLAttribute(fp, "CWD", buffer, newline);
+    writeXMLAttribute(out, "CWD", buffer, newline);
   }
 #endif /* __linux__ */
 
   char *user = getenv("USER");
   if (user != NULL) {
-    writeXMLAttribute(fp, "username", user, newline);
+    writeXMLAttribute(out, "username", user, newline);
   }
 
 
@@ -588,11 +640,11 @@ static int writeMetaData(FILE *fp, bool newline, int counter) {
   for (map<string,string>::iterator it = TheMetaData().begin(); it != TheMetaData().end(); ++it) {
     const char *name = it->first.c_str();
     const char *value = it->second.c_str();
-    writeXMLAttribute(fp, name, value, newline);
+    writeXMLAttribute(out, name, value, newline);
   }
 
 
-  fprintf (fp, "</metadata>%s", endl);
+  output (out, "</metadata>%s", endl);
   return 0;
 }
 
@@ -601,56 +653,74 @@ static int writeMetaData(FILE *fp, bool newline, int counter) {
 static int startNewSnapshotFile(char *threadid, int tid) {
   const char *profiledir = TauEnv_get_profiledir();
   
-  char filename[4096];
-  sprintf (filename,"%s/snapshot.%d.%d.%d", profiledir, 
-	   RtsLayer::myNode(), RtsLayer::myContext(), tid);
-  FILE *fp;
-  if ((fp = fopen (filename, "w+")) == NULL) {
-    char errormsg[4096];
-    sprintf(errormsg,"Error: Could not create %s",filename);
-    perror(errormsg);
-    RtsLayer::UnLockDB();
-    return 0;
+
+    outputDevice *out = (outputDevice*) malloc (sizeof(outputDevice));
+
+  if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
+    out->type = OUTPUT_BUFFER;
+    out->bufidx = 0;
+    out->buflen = INITIAL_BUFFER;
+    out->buffer = (char *) malloc (out->buflen);
+  } else {
+
+    char filename[4096];
+    sprintf (filename,"%s/snapshot.%d.%d.%d", profiledir, 
+	     RtsLayer::myNode(), RtsLayer::myContext(), tid);
+    FILE *fp;
+    if ((fp = fopen (filename, "w+")) == NULL) {
+      char errormsg[4096];
+      sprintf(errormsg,"Error: Could not create %s",filename);
+      perror(errormsg);
+      RtsLayer::UnLockDB();
+      return 0;
+    }
+    out->type = OUTPUT_FILE;
+    out->fp = fp;
   }
-  
+    
+
   // assign it back to the global structure for this thread
-  TauGetSnapshotFiles()[tid] = fp;
+  TauGetSnapshotFiles()[tid] = out;
 
   // start of a profile block
-  fprintf (fp, "<profile_xml>\n");
+  output (out, "<profile_xml>\n");
   
   // thread identifier
-  fprintf (fp, "\n<thread id=\"%s\" node=\"%d\" context=\"%d\" thread=\"%d\">\n", 
+  output (out, "\n<thread id=\"%s\" node=\"%d\" context=\"%d\" thread=\"%d\">\n", 
 	   threadid, RtsLayer::myNode(), RtsLayer::myContext(), tid);
-  writeMetaData(fp, true, -1);
-  fprintf (fp, "</thread>\n");
+  writeMetaData(out, true, -1);
+  output (out, "</thread>\n");
   
   // definition block
-  fprintf (fp, "\n<definitions thread=\"%s\">\n", threadid);
+  output (out, "\n<definitions thread=\"%s\">\n", threadid);
   
   for (int i=0; i<MAX_TAU_COUNTERS; i++) {
     if (RtsLayer::getCounterUsed(i)) {
       char *tmpChar = RtsLayer::getCounterName(i);
-      fprintf (fp, "<metric id=\"%d\">", i);
-      writeTagXML(fp, "name", tmpChar, true);
-      writeTagXML(fp, "units", "unknown", true);
-      fprintf (fp, "</metric>\n");
+      output (out, "<metric id=\"%d\">", i);
+      writeTagXML(out, "name", tmpChar, true);
+      writeTagXML(out, "units", "unknown", true);
+      output (out, "</metric>\n");
     }
   }
 
   TauGetSnapshotEventCounts()[tid] = 0;
   TauGetSnapshotUserEventCounts()[tid] = 0;
 
-  fprintf (fp, "</definitions>\n");
+  output (out, "</definitions>\n");
   return 0;
 }
 
 
+extern "C" int Tau_write_snapshot(const char *name, int finalize) {
+  return Profiler::Snapshot(name, finalize, RtsLayer::myThread());
+}
+
 int Profiler::Snapshot(const char *name, bool finalize, int tid) {
    int i, c;
-   FILE *fp = TauGetSnapshotFiles()[tid];
+   outputDevice *out = TauGetSnapshotFiles()[tid];
 
-   if (finalize && !fp && !(TauEnv_get_profile_format() == TAU_FORMAT_SNAPSHOT)) { 
+   if (finalize && !out && !(TauEnv_get_profile_format() == TAU_FORMAT_SNAPSHOT)) { 
      // finalize is true at the end of execution (regular profile output), 
      // if we haven't written a snapshot, don't bother, unless snapshot is the
      // requested output format
@@ -676,46 +746,46 @@ int Profiler::Snapshot(const char *name, bool finalize, int tid) {
    int numFunc = TheFunctionDB().size();
    int numEvents = TheEventDB().size();
 
-   if (!fp) {
+   if (!out) {
      startNewSnapshotFile(threadid, tid);
-     fp = TauGetSnapshotFiles()[tid];
+     out = TauGetSnapshotFiles()[tid];
    } else {
-     fprintf (fp, "<profile_xml>\n");
+     output (out, "<profile_xml>\n");
    }
    
    // write out new events since the last snapshot
    if (TauGetSnapshotEventCounts()[tid] != numFunc) {
-     fprintf (fp, "\n<definitions thread=\"%s\">\n", threadid);
+     output (out, "\n<definitions thread=\"%s\">\n", threadid);
      for (int i=TauGetSnapshotEventCounts()[tid]; i < numFunc; i++) {
        FunctionInfo *fi = TheFunctionDB()[i];
-       writeEventXML(fp, i, fi);
+       writeEventXML(out, i, fi);
      }
-     fprintf (fp, "</definitions>\n");
+     output (out, "</definitions>\n");
      TauGetSnapshotEventCounts()[tid] = numFunc;
    }
 
    // write out new user events since the last snapshot
    if (TauGetSnapshotUserEventCounts()[tid] != numEvents) {
-     fprintf (fp, "\n<definitions thread=\"%s\">\n", threadid);
+     output (out, "\n<definitions thread=\"%s\">\n", threadid);
      for (int i=TauGetSnapshotUserEventCounts()[tid]; i < numEvents; i++) {
        TauUserEvent *ue = TheEventDB()[i];
-       writeUserEventXML(fp, i, ue);
+       writeUserEventXML(out, i, ue);
      }
-     fprintf (fp, "</definitions>\n");
+     output (out, "</definitions>\n");
      TauGetSnapshotUserEventCounts()[tid] = numEvents;
    }
 
 
    // now write the actual profile data for this snapshot
-   fprintf (fp, "\n<profile thread=\"%s\">\n", threadid);
-   fprintf (fp, "<name>");
-   writeXMLString(fp, name);
-   fprintf (fp, "</name>\n");
+   output (out, "\n<profile thread=\"%s\">\n", threadid);
+   output (out, "<name>");
+   writeXMLString(out, name);
+   output (out, "</name>\n");
 
 #ifdef TAU_WINDOWS
-   fprintf (fp, "<timestamp>%I64d</timestamp>\n", getTimeStamp());
+   output (out, "<timestamp>%I64d</timestamp>\n", getTimeStamp());
 #else
-   fprintf (fp, "<timestamp>%lld</timestamp>\n", getTimeStamp());
+   output (out, "<timestamp>%lld</timestamp>\n", getTimeStamp());
 #endif
 
 
@@ -726,7 +796,7 @@ int Profiler::Snapshot(const char *name, bool finalize, int tid) {
        loc += sprintf (loc,"%d ", c);
      }
    }
-   fprintf (fp, "<interval_data metrics=\"%s\">\n", metricList);
+   output (out, "<interval_data metrics=\"%s\">\n", metricList);
 
    updateIntermediateStatistics(tid);
 
@@ -738,32 +808,32 @@ int Profiler::Snapshot(const char *name, bool finalize, int tid) {
      double *excltime = fi->getDumpExclusiveValues(tid);
   
      
-     fprintf (fp, "%d %ld %ld ", i, fi->GetCalls(tid), fi->GetSubrs(tid));
+     output (out, "%d %ld %ld ", i, fi->GetCalls(tid), fi->GetSubrs(tid));
      for (c=0; c<MAX_TAU_COUNTERS; c++) {
        if (RtsLayer::getCounterUsed(c)) {
-	 fprintf (fp, "%.16G %.16G ", excltime[c], incltime[c]);
+	 output (out, "%.16G %.16G ", excltime[c], incltime[c]);
        }
      }
-     fprintf (fp, "\n");
+     output (out, "\n");
    }
-   fprintf (fp, "</interval_data>\n");
+   output (out, "</interval_data>\n");
 
 
    // now write the user events
-   fprintf (fp, "<atomic_data>\n");
+   output (out, "<atomic_data>\n");
    for (i=0; i < numEvents; i++) {
      TauUserEvent *ue = TheEventDB()[i];
-           fprintf(fp, "%d %ld %.16G %.16G %.16G %.16G\n", 
+           output (out, "%d %ld %.16G %.16G %.16G %.16G\n", 
 	     i, ue->GetNumEvents(tid), ue->GetMax(tid),
 	     ue->GetMin(tid), ue->GetMean(tid), ue->GetSumSqr(tid));
    }
-   fprintf (fp, "</atomic_data>\n");
+   output (out, "</atomic_data>\n");
 
-   fprintf (fp, "</profile>\n");
-   fprintf (fp, "\n</profile_xml>\n");
+   output (out, "</profile>\n");
+   output (out, "\n</profile_xml>\n");
 
 //    if (finalize) {
-//      fprintf (fp, "\n</profile_xml>\n");
+//      output (out, "\n</profile_xml>\n");
 //      //     fclose(fp);
 //    }
 
@@ -771,6 +841,10 @@ int Profiler::Snapshot(const char *name, bool finalize, int tid) {
    
    if (!finalize) {
      TAU_PROFILE_STOP(timer);
+   }
+
+   if (finalize && TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
+     Tau_mergeProfiles();
    }
 
    return 0;
@@ -787,11 +861,19 @@ extern "C" void Tau_metadata(char *name, char *value) {
 }
 
 
-int Tau_writeProfileMetaData(FILE *fp, int counter) {
+int Tau_writeProfileMetaData(outputDevice *out, int counter) {
 #ifdef TAU_DISABLE_METADATA
   return 0;
 #endif
   int retval;
-  retval = writeMetaData(fp, false, counter);
+  retval = writeMetaData(out, false, counter);
   return retval;
 }
+
+int Tau_writeProfileMetaData(FILE *fp, int counter) {
+  outputDevice out;
+  out.fp = fp;
+  out.type = OUTPUT_FILE;
+  return Tau_writeProfileMetaData(&out, counter);
+}
+
