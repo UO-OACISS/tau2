@@ -31,11 +31,6 @@
 
 #if (defined(PROFILING_ON) || defined(TRACING_ON) )
 
-//////////////////////////////////////////////////////////////////////
-// TAU PROFILING API MACROS. 
-// To ensure that Profiling does not add any runtime overhead when it 
-// is turned off, these macros expand to null.
-//////////////////////////////////////////////////////////////////////
 extern "C" void Tau_start(char *name);
 extern "C" void Tau_stop(char *name);
 extern "C" void Tau_start_timer(void * function_info, int phase );
@@ -506,6 +501,6 @@ or tauFI->method();
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.66 $   $Date: 2008/03/13 03:00:50 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.66 2008/03/13 03:00:50 amorris Exp $ 
+ * $Revision: 1.67 $   $Date: 2008/05/23 00:42:13 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.67 2008/05/23 00:42:13 amorris Exp $ 
  ***************************************************************************/
