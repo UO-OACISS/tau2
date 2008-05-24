@@ -338,17 +338,8 @@ public class LoadTrial {
                 System.exit(-1);
             }
         } else {
-            if (sourceFiles.length == 1) {
-                String filename = sourceFiles[0];
-                if (filename.toLowerCase().endsWith(".ppk")) {
-                    fileType = DataSource.PPK;
-                }
-                if (filename.toLowerCase().endsWith(".cube")) {
-                    fileType = DataSource.CUBE;
-                }
-                if (filename.toLowerCase().endsWith(".mpip")) {
-                    fileType = DataSource.MPIP;
-                }
+            if (sourceFiles.length >= 1) {
+                fileType = UtilFncs.identifyData(new File(sourceFiles[0]));
             }
         }
 
