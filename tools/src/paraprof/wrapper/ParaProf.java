@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.24 2008/05/22 01:16:27 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.25 2008/05/24 00:52:08 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.24 $
+ * @version $Revision: 1.25 $
  */
 public class ParaProf implements ActionListener {
 
@@ -45,7 +45,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    private final static String VERSION = "Wed May 21 18:14:35 PDT 2008";
+    private final static String VERSION = "Fri May 23 17:51:08 PDT 2008";
 
     public static int defaultNumberPrecision = 6;
 
@@ -62,7 +62,7 @@ public class ParaProf implements ActionListener {
     private static int numWindowsOpen = 0;
 
     //Command line options related.
-    private static int fileType = 0; //0:profile, 1:pprof, 2:dynaprof, 3:mpip, 4:hpmtoolkit, 5:gprof, 6:psrun, 7:ppk, 8:cube
+    private static int fileType = 0; // See DataSource.java
     private static File sourceFiles[] = new File[0];
     private static boolean fixNames = false;
     private static boolean monitorProfiles;
@@ -81,7 +81,7 @@ public class ParaProf implements ActionListener {
     public static SourceManager directoryManager;
     public static String tauHome;
     public static String tauArch;
-    
+
     // static initializer block
     static {
         ParaProf.runtime = Runtime.getRuntime();
@@ -121,17 +121,13 @@ public class ParaProf implements ActionListener {
                 + "  -h, --help                      Display this help message\n"
                 + "  -p                              Use `pprof` to compute derived data\n"
                 + "  -i, --fixnames                  Use the fixnames option for gprof\n"
-                + "  -m, --monitor                   Perform runtime monitoring of profile data\n" 
-                + "\n"
-                + "The following options will run only from the console (no GUI will launch):\n"
-                + "\n"
+                + "  -m, --monitor                   Perform runtime monitoring of profile data\n" + "\n"
+                + "The following options will run only from the console (no GUI will launch):\n" + "\n"
                 + "  --pack <file>                   Pack the data into packed (.ppk) format\n"
                 + "  --dump                          Dump profile data to TAU profile format\n"
                 + "  -o, --oss                       Print profile data in OSS style text output\n"
-                + "  -s, --summary                   Print only summary statistics\n" 
-                + "                                    (only applies to OSS output)\n" 
-                + "\n" 
-                + "Notes:\n"
+                + "  -s, --summary                   Print only summary statistics\n"
+                + "                                    (only applies to OSS output)\n" + "\n" + "Notes:\n"
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
                 + "files on the commandline, or you can specify a directory (by default the current\n"
                 + "directory).  The specified directory will be searched for profile.*.*.* files,\n"
@@ -237,9 +233,9 @@ public class ParaProf implements ActionListener {
             //URL url = ParaProf.class.getResource("/perfdmf.cfg");
             //throw new ParaProfException("URL = " + url);
 
-//            URL url = ParaProf.class.getResource("/perfdmf.cfg");
-//            String path = URLDecoder.decode(url.getPath());
-//            ParaProf.preferences.setDatabaseConfigurationFile(path);
+            //            URL url = ParaProf.class.getResource("/perfdmf.cfg");
+            //            String path = URLDecoder.decode(url.getPath());
+            //            ParaProf.preferences.setDatabaseConfigurationFile(path);
         }
 
         if (colorChooser == null) {
@@ -454,29 +450,20 @@ public class ParaProf implements ActionListener {
                 System.exit(-1);
             }
         } else {
+
             if (sourceFilenames.length >= 1) {
-                String filename = sourceFiles[0].getName();
-                if (filename.toLowerCase().endsWith(".ppk")) {
-                    ParaProf.fileType = 7;
-                }
-                if (filename.toLowerCase().endsWith(".cube")) {
-                    ParaProf.fileType = 8;
-                }
-                if (filename.toLowerCase().endsWith(".mpip")) {
-                    ParaProf.fileType = 3;
-                }
+                ParaProf.fileType = UtilFncs.identifyData(sourceFiles[0]);
             }
         }
 
-        
         if (oss != null) {
             try {
-                
+
                 boolean doSummary = false;
                 if (summary != null) {
                     doSummary = true;
                 }
-                
+
                 DataSource dataSource = UtilFncs.initializeDataSource(sourceFiles, fileType, ParaProf.fixNames);
                 dataSource.load();
                 OSSWriter.writeOSS(dataSource, doSummary);
@@ -486,7 +473,7 @@ public class ParaProf implements ActionListener {
             }
             System.exit(0);
         }
-        
+
         if (pack != null) {
             try {
 
