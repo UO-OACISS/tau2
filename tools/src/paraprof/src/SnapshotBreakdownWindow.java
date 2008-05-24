@@ -30,8 +30,6 @@ public class SnapshotBreakdownWindow extends JFrame implements Observer, ParaPro
     private ParaProfTrial ppTrial;
     private Thread thread;
 
-    //private BarChartPanel panel;
-    //private AbstractBarChartModel model;
     private ChartPanel panel;
     private DataSorter dataSorter;
 
@@ -346,10 +344,6 @@ public class SnapshotBreakdownWindow extends JFrame implements Observer, ParaPro
             throw new ParaProfException("Unrecognized style: " + style);
         }
 
-        //chart.getPlot().
-
-        //
-
         if (timeline) {
             XYPlot plot = chart.getXYPlot();
             NumberAxis axis = new NumberAxis("Timeline (seconds)");
@@ -358,7 +352,6 @@ public class SnapshotBreakdownWindow extends JFrame implements Observer, ParaPro
         } else {
             XYPlot plot = chart.getXYPlot();
             NumberAxis axis = new NumberAxis("Snapshots");
-            System.out.println(snapshots.size());
             axis.setRange(new Range(0, (double) snapshots.size()));
             plot.setDomainAxis(0, axis);
         }
