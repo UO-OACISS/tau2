@@ -30,7 +30,7 @@ public class TauDataSource extends DataSource {
     private boolean profileStatsPresent = false;
     private boolean groupCheck = false;
     private List dirs; // list of directories (e.g. MULTI__PAPI_FP_INS, MULTI__PAPI_L1_DCM)
-	private int currFunction = 0;
+    private int currFunction = 0;
 
     private File fileToMonitor;
 
@@ -62,7 +62,7 @@ public class TauDataSource extends DataSource {
         list.add(fileToMonitor);
         return list;
     }
-    
+
     public void load() throws FileNotFoundException, IOException, DataSourceException {
         long time = System.currentTimeMillis();
 
@@ -199,10 +199,10 @@ public class TauDataSource extends DataSource {
 
                         // there may or may not be a metric name in the metadata
                         String metaDataMetricName = (String) thread.getMetaData().get("Metric Name");
-                        
+
                         // remove it if it was there
                         thread.getMetaData().remove("Metric Name");
-                        
+
                         if (metricNameProcessed == false) {
                             if (metaDataMetricName != null) {
                                 metricName = metaDataMetricName;
@@ -222,7 +222,7 @@ public class TauDataSource extends DataSource {
                         }
 
                         for (int j = 0; j < numFunctions; j++) {
-							this.currFunction = j;
+                            this.currFunction = j;
 
                             inputString = br.readLine();
                             if (inputString == null) {
@@ -301,7 +301,7 @@ public class TauDataSource extends DataSource {
                         finished = true;
                     } catch (Exception ex) {
                         ex.printStackTrace();
-						System.out.println("Current Function: " + currFunction);
+                        System.out.println("Current Function: " + currFunction);
                         //System.out.println("ex:);
                         if (!(ex instanceof IOException || ex instanceof FileNotFoundException)) {
                             throw new RuntimeException(ex == null ? null : ex.toString());
@@ -611,8 +611,9 @@ public class TauDataSource extends DataSource {
 
             } else {
                 // we are combining two user events here, we have to recompute
-                if (userEventProfile.getNumSamples()+numSamples != 0) {
-                    double mean = (userEventProfile.getMeanValue()*userEventProfile.getNumSamples() + numSamples*sampleMean) / (userEventProfile.getNumSamples()+numSamples);
+                if (userEventProfile.getNumSamples() + numSamples != 0) {
+                    double mean = (userEventProfile.getMeanValue() * userEventProfile.getNumSamples() + numSamples * sampleMean)
+                            / (userEventProfile.getNumSamples() + numSamples);
                     userEventProfile.setMeanValue(mean);
                 } else {
                     userEventProfile.setMeanValue(0);

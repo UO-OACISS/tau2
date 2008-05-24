@@ -6,59 +6,44 @@
 
 package edu.uoregon.tau.perfdmf;
 
-import java.io.File;
+import java.io.*;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.zip.GZIPInputStream;
 
 public class UtilFncs {
 
     public static class EmptyIterator implements ListIterator, Iterator {
 
         public int nextIndex() {
-            // TODO Auto-generated method stub
             return 0;
         }
 
         public int previousIndex() {
-            // TODO Auto-generated method stub
             return 0;
         }
 
-        public void remove() {
-            // TODO Auto-generated method stub
-
-        }
+        public void remove() {}
 
         public boolean hasNext() {
-            // TODO Auto-generated method stub
             return false;
         }
 
         public boolean hasPrevious() {
-            // TODO Auto-generated method stub
             return false;
         }
 
         public Object next() {
-            // TODO Auto-generated method stub
             return null;
         }
 
         public Object previous() {
-            // TODO Auto-generated method stub
             return null;
         }
 
-        public void add(Object o) {
-            // TODO Auto-generated method stub
+        public void add(Object o) {}
 
-        }
-
-        public void set(Object o) {
-            // TODO Auto-generated method stub
-
-        }
-
+        public void set(Object o) {}
     }
 
     // left pad : pad string 's' up to length plen, but put the whitespace on
@@ -117,7 +102,7 @@ public class UtilFncs {
 
     // format a double for display within 'width' chars, kind of like C-printf's %G
     public static String formatDouble(double d, int width, boolean pad) {
-        
+
         // first check if the regular toString is in exponential form
         boolean exp = false;
         String str = Double.toString(d);
@@ -364,7 +349,7 @@ public class UtilFncs {
             return str;
         }
     }
-    
+
     public static String getRightMost(String str) {
         int location = str.lastIndexOf("=>");
         if (location >= 0) {
@@ -377,12 +362,12 @@ public class UtilFncs {
     public static String getAllButRightMost(String str) {
         int location = str.lastIndexOf("=>");
         if (location >= 0) {
-            return str.substring(0,location).trim();
+            return str.substring(0, location).trim();
         } else {
             return str;
         }
     }
-    
+
     public static String getLeftSide(String str) {
         int location = str.indexOf("=>");
         if (location >= 0) {
@@ -401,7 +386,6 @@ public class UtilFncs {
         }
     }
 
-    
     public static String getContextEventRoot(String str) {
         int colon = str.indexOf(":");
         int location = str.indexOf("=>");
@@ -411,7 +395,63 @@ public class UtilFncs {
         return str.substring(colon + 1, location).trim();
     }
 
-    
+    /**
+     * Identifies profile format based on name (extension) and contents (first few lines)
+     * 
+     * @param file input file to identify
+     * @return the format, from DataSource public static finals (e.g. DataSource.PPK)
+     */
+    public static int identifyData(File file) {
+
+        // try to identify by file extension first
+        String filename = file.getName();
+        if (filename.toLowerCase().endsWith(".ppk")) {
+            return DataSource.PPK;
+        }
+        if (filename.toLowerCase().endsWith(".cube")) {
+            return DataSource.CUBE;
+        }
+        if (filename.toLowerCase().endsWith(".mpip")) {
+            return DataSource.MPIP;
+        }
+
+        // try reading a few lines and try to determine what the format is
+        try {
+
+            FileInputStream fis = new FileInputStream(file);
+            InputStream input;
+
+            // see if it is gzip'd, if not, read directly
+            try {
+                GZIPInputStream gzip = new GZIPInputStream(fis);
+                input = gzip;
+            } catch (IOException ioe) {
+                fis.close();
+                input = new FileInputStream(file);
+            }
+            InputStreamReader isr = new InputStreamReader(input);
+            BufferedReader br = new BufferedReader(isr);
+
+            for (int i = 0; i < 10; i++) {
+                String line = br.readLine();
+                //System.out.println("line = " + line);
+                if (line.startsWith("<profile_xml>")) {
+                    fis.close();
+                    return DataSource.SNAP;
+                } else if (line.startsWith("<!DOCTYPE hwpc")) {
+                    fis.close();
+                    return DataSource.PSRUN;
+                }
+            }
+
+            fis.close();
+        } catch (Exception e) {
+            // forget it, just go with the default
+        }
+
+        return DataSource.TAUPROFILE; // default
+    }
+
     public static DataSource initializeDataSource(File[] sourceFiles, int fileType, boolean fixGprofNames)
             throws DataSourceException {
         DataSource dataSource = null;
@@ -517,12 +557,9 @@ public class UtilFncs {
                 throw new DataSourceException("Sorry, HPCToolkit format requires Java 1.4");
             }
 
-            
             dataSource = new HPCToolkitDataSource(sourceFiles[0]);
             break;
 
-        
-        
         case DataSource.SNAP:
             //dataSource = new TimeSeriesDataSource(sourceFiles[0]);
             //dataSource = new SnapshotDataSource(sourceFiles[0]);
@@ -536,22 +573,21 @@ public class UtilFncs {
         case DataSource.PERIXML:
             dataSource = new PeriXMLDataSource(sourceFiles[0]);
             break;
-        
+
         case DataSource.GYRO:
             v.add(sourceFiles);
             dataSource = new GyroDataSource(v);
             break;
 
-         case DataSource.GPTL:
+        case DataSource.GPTL:
             dataSource = new GPTLDataSource(sourceFiles[0]);
             break;
-        
+
         default:
-            throw new RuntimeException ("Programming error: unknown format id = " + fileType);
+            throw new RuntimeException("Programming error: unknown format id = " + fileType);
         }
 
         return dataSource;
     }
-        
-    
+
 }
