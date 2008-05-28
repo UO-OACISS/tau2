@@ -130,7 +130,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tauex.in,v 1.20 2008/05/13 00:29:32 amorris Exp $';
+	      echo '$Id: tauex.in,v 1.21 2008/05/28 19:28:44 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -m)
@@ -177,7 +177,7 @@ for arg in "$@" ; do
 	      ;;
 	  -*)
 	      echo "Unknown option: $arg"
-	      exit
+	      exit 1
 # First non-option signifies end of options. This would be much easier with getopt()
 	      ;;
 	  *)
@@ -247,7 +247,7 @@ if [ "x$binding_specified" = "x" ] ; then
 
     if [ "x$theBinding" = "x" ] ; then
 	echo "Error: Couldn't find a matching TAU binding"
-	exit
+	exit 1
     fi
 else
     theBinding=$binding_specified
