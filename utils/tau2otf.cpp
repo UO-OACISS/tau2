@@ -384,6 +384,7 @@ int main(int argc, char **argv)
   Ttf_FileHandleT fh;
   OTF_FileManager* manager;
   int num_streams = 1;
+  int num_nodes = -1;
   int recs_read;
   char *trace_file;
   char *edf_file;
@@ -426,6 +427,11 @@ int main(int argc, char **argv)
 	if (strcmp(argv[i], "-n")==0)
         {
 	  num_streams = atoi(argv[i+1]); 
+	  i++; 
+        }
+	if (strcmp(argv[i], "-s")==0)
+        {
+	  num_nodes = atoi(argv[i+1]); 
 	  i++; 
         }
 	if (strcmp(argv[i], "-nomessage")==0)
@@ -482,43 +488,55 @@ int main(int argc, char **argv)
   OTF_Writer_writeDefCreator((OTF_Writer *)fcb, TAU_GLOBAL_STREAM_ID, "tau2otf converter version 2.15.x");
   OTF_Writer_writeDefCounterGroup((OTF_Writer *)fcb, TAU_GLOBAL_STREAM_ID, sampclassid, "TAU counter data");
 
-  /* in the first pass, we determine the no. of cpus and other group related
-   * information. In the second pass, we look at the function entry/exits */ 
 
-  Ttf_CallbacksT firstpass;
-  /* In the first pass, we just look for node/thread ids and def records */
-  firstpass.UserData = fcb;
-  firstpass.DefThread = DefThread;
-  firstpass.EndTrace = EndTrace;
-  firstpass.DefClkPeriod = ClockPeriod;
-  firstpass.DefThread = DefThread;
-  firstpass.DefStateGroup = DefStateGroup;
-  firstpass.DefState = DefState;
-  firstpass.SendMessage = 0; /* Important to declare these as null! */
-  firstpass.RecvMessage = 0; /* Important to declare these as null! */
-  firstpass.DefUserEvent = 0;
-  firstpass.EventTrigger = 0; /* these events are ignored in the first pass */
-  firstpass.EnterState = 0;   /* these events are ignored in the first pass */
-  firstpass.LeaveState = 0;   /* these events are ignored in the first pass */
+  int totalnidtids;
 
+  if (num_nodes == -1) {
+    /* in the first pass, we determine the no. of cpus and other group related
+     * information. In the second pass, we look at the function entry/exits */ 
+    
+    Ttf_CallbacksT firstpass;
+    /* In the first pass, we just look for node/thread ids and def records */
+    firstpass.UserData = fcb;
+    firstpass.DefThread = DefThread;
+    firstpass.EndTrace = EndTrace;
+    firstpass.DefClkPeriod = ClockPeriod;
+    firstpass.DefThread = DefThread;
+    firstpass.DefStateGroup = DefStateGroup;
+    firstpass.DefState = DefState;
+    firstpass.SendMessage = 0; /* Important to declare these as null! */
+    firstpass.RecvMessage = 0; /* Important to declare these as null! */
+    firstpass.DefUserEvent = 0;
+    firstpass.EventTrigger = 0; /* these events are ignored in the first pass */
+    firstpass.EnterState = 0;   /* these events are ignored in the first pass */
+    firstpass.LeaveState = 0;   /* these events are ignored in the first pass */
+    
 
-  /* Go through all trace records */
-  do {
-    recs_read = Ttf_ReadNumEvents(fh,firstpass, 1024);
+    /* Go through all trace records */
+    do {
+      recs_read = Ttf_ReadNumEvents(fh,firstpass, 1024);
 #ifdef DEBUG 
-    if (recs_read != 0)
-      cout <<"Read "<<recs_read<<" records"<<endl;
+      if (recs_read != 0)
+	cout <<"Read "<<recs_read<<" records"<<endl;
 #endif 
-  }
-  while ((recs_read >=0) && (!EndOfTrace));
-  /* reset the position of the trace to the first record */
-  for (map< pair<int,int>, int, less< pair<int,int> > >:: iterator it = 
-		  EOF_Trace.begin(); it != EOF_Trace.end(); it++)
-  { /* Explicilty mark end of trace to be not over */ 
-    (*it).second = 0;
+    }
+    while ((recs_read >=0) && (!EndOfTrace));
+    
+
+    /* reset the position of the trace to the first record */
+    for (map< pair<int,int>, int, less< pair<int,int> > >:: iterator it = 
+	   EOF_Trace.begin(); it != EOF_Trace.end(); it++)
+      { /* Explicilty mark end of trace to be not over */ 
+	(*it).second = 0;
+      }
+    totalnidtids = EOF_Trace.size(); 
+  } else {
+    totalnidtids = num_nodes;
+    for (i=0; i<num_nodes; i++) {
+      numthreads[i] = 1; 
+    }
   }
 
-  int totalnidtids = EOF_Trace.size(); 
   /* This is ok for single threaded programs. For multi-threaded programs
    * we'll need to modify the way we describe the cpus/threads */
 /* THERE'S NO NEED TO WRITE THE TOTAL NO. OF CPUS in OTF */
@@ -650,9 +668,9 @@ int main(int argc, char **argv)
 
 
 /***************************************************************************
- * $RCSfile: tau2otf.cpp,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 2006/06/21 11:43:44 $
- * VERSION_ID: $Id: tau2otf.cpp,v 1.3 2006/06/21 11:43:44 sameer Exp $
+ * $RCSfile: tau2otf.cpp,v $   $Author: amorris $
+ * $Revision: 1.4 $   $Date: 2008/05/28 15:10:49 $
+ * VERSION_ID: $Id: tau2otf.cpp,v 1.4 2008/05/28 15:10:49 amorris Exp $
  ***************************************************************************/
 
 
