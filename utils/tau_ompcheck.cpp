@@ -404,74 +404,75 @@ class CompleteDirectives
     }
 
     while (directives.size() != 0 && s->stmtBegin().line() >=
-	   directives.front().getLine() && (
-					    directives.front().getType() == 1 ||
-					    directives.front().getType() == -1))
-      {
-        while (directives.front().getType() == 1)
-        {
-          if (verbosity == Debug)  
-            cerr << "Opening Parallel OMP Directive." << endl;
-          //openDirectives.push_front(Directive(directives.front(), loop, block));
-          directives.pop_front();
-        }
-        while (directives.size() != 0 && directives.front().getType() == -1)
-        {
-          //if (openDirectives.size() == 1)
-            //cerr << "ERROR: Superfluous closing OMP Directive on line: " << directives.front().getLine() << endl;
-          if (verbosity == Debug)  
-            cerr << "Closing Parallel OMP Directive." << endl;
-          
-          directives.pop_front();
-        }
-      }
-
-      //if we have found all the directives
-      if (directives.size() == 0)
-      {
-        if (openDirectives.size() == 0)
-        {
-          if (verbosity == Debug)  
-            cerr << "all directives have been closed." << endl;
-        }
-        else
-        {
-          if (verbosity == Debug)  
-            cerr << "OMP Directive on line: " << openDirectives.front().getLine() << " has not been closed."<< endl;
-        }
-      }
-
-      //Begin searching through statements
-      //If this statement is inside a OMP Directive
-      while (directives.size() != 0 && s->stmtBegin().line() >= 
-            directives.front().getLine() && directives.front().getType() < 0 &&
-            openDirectives.size() != 0)
-      {
-        if (openDirectives.size() != 0)
-        {
-          //atempt to close directive
-          if (openDirectives.front().getType() + directives.front().getType() == 0)
-          {
-            if (verbosity == Debug)  
-              cerr << "Closing OMP Directive type: " << directives.front().getType() << endl;
-            openDirectives.pop_front();
-            directives.pop_front();
-          }
-          else 
-          {  
-            cerr << "ERROR: Mismatched closing OMP Directive on line: " << directives.front().getType() << endl;
-            if (verbosity >= Verbose)  
-              cerr << "ERROR: mismatched closing OMP Directive on line: " <<
-              s->stmtBegin().line() << " type: " << directives.front().getType() << endl;
-            openDirectives.pop_front();
-            directives.pop_front();
-          }
-        }
-        else  
-          cerr << "ERROR: Superfluous closing OMP Directive on line: " << directives.front().getLine() << endl;
-      }
-      
-      if (openDirectives.size() != 0 && openDirectives.front().getDepth() ==
+			 directives.front().getLine())
+		{
+			cerr << "type: " <<  directives.front().getType() << endl;		
+			while (
+								directives.front().getType() == 1 ||
+								directives.front().getType() == -1)
+				{
+					while (directives.front().getType() == 1)
+					{
+					printf("h");
+						if (verbosity == Debug)  
+							cerr << "Opening Parallel OMP Directive." << endl;
+						//openDirectives.push_front(Directive(directives.front(), loop, block));
+						directives.pop_front();
+					}
+					while (directives.size() != 0 && directives.front().getType() == -1)
+					{
+						//if (openDirectives.size() == 1)
+							//cerr << "ERROR: Superfluous closing OMP Directive on line: " << directives.front().getLine() << endl;
+						if (verbosity == Debug)  
+							cerr << "Closing Parallel OMP Directive." << endl;
+						
+						directives.pop_front();
+					}
+				}
+				//if we have found all the directives
+				if (directives.size() == 0)
+				{
+					if (openDirectives.size() == 0)
+					{
+						if (verbosity == Debug)  
+							cerr << "all directives have been closed." << endl;
+					}
+					else
+					{
+						if (verbosity == Debug)  
+							cerr << "OMP Directive on line: " << openDirectives.front().getLine() << " has not been closed."<< endl;
+					}
+				}
+				//Begin searching through statements
+				//If this statement is inside a OMP Directive
+				while (directives.front().getLine() && directives.front().getType() < 0 &&
+							openDirectives.size() != 0)
+				{
+					if (openDirectives.size() != 0)
+					{
+						//atempt to close directive
+						if (openDirectives.front().getType() + directives.front().getType() == 0)
+						{
+							if (verbosity == Debug)  
+								cerr << "Closing OMP Directive type: " << directives.front().getType() << endl;
+							openDirectives.pop_front();
+							directives.pop_front();
+						}//if
+						else 
+						{  
+							cerr << "ERROR: Mismatched closing OMP Directive on line: " << directives.front().getType() << endl;
+							if (verbosity >= Verbose)  
+								cerr << "ERROR: mismatched closing OMP Directive on line: " <<
+								s->stmtBegin().line() << " type: " << directives.front().getType() << endl;
+							openDirectives.pop_front();
+							directives.pop_front();
+						}//else
+					}//if 
+					else  
+						cerr << "ERROR: Superfluous closing OMP Directive on line: " << directives.front().getLine() << endl;
+			  }//end while
+    
+			if (openDirectives.size() != 0 && openDirectives.front().getDepth() ==
             loop && openDirectives.front().getType() > 1 && verbosity == Debug)
         cerr << "Could be a missing directive." << endl;
       
@@ -485,6 +486,7 @@ class CompleteDirectives
       {
         if (verbosity >= Verbose)
           cerr << "We are expecting there to be a directive closing the one on line: " << openDirectives.front().getLine() << endl;
+					cerr << "...in loop " << loop << ", directive in loop " << openDirectives.front().getDepth() << endl;
         //Create a closing for/do pragma
         //createDirective(s,openDirectives.front());
         
@@ -522,12 +524,14 @@ class CompleteDirectives
           else
           {
             if (verbosity == Debug)  
-              cerr << "Opening OMP loop directive." << endl;
+              cerr << "Opening OMP loop directive, loop " << loop << endl;
             openDirectives.push_front(Directive(directives.front(), loop, s));
           }
           directives.pop_front();
       }
+      }//end while
       
+			int nextStmtLine = block->stmtEnd().line();
 
       int i = 0;
       if (verbosity == Debug) 
@@ -854,6 +858,6 @@ int main(int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
- * $Revision: 1.14 $   $Date: 2008/03/05 20:10:53 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.14 2008/03/05 20:10:53 scottb Exp $
+ * $Revision: 1.15 $   $Date: 2008/05/28 22:57:02 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.15 2008/05/28 22:57:02 scottb Exp $
  ***************************************************************************/
