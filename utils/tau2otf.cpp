@@ -394,7 +394,7 @@ int main(int argc, char **argv)
   OTF_FileCompression compression = OTF_FILECOMPRESSION_UNCOMPRESSED; 
   int i; 
   /* main program: Usage app <trc> <edf> [-a] [-nomessage] */
-  if (argc < 3)
+  if (argc < 4)
   {
     printf("Usage: %s <TAU trace> <edf file> <out file> [-n streams] [-nomessage]  [-z] [-v]\n", 
 		    argv[0]);
@@ -669,8 +669,8 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau2otf.cpp,v $   $Author: amorris $
- * $Revision: 1.4 $   $Date: 2008/05/28 15:10:49 $
- * VERSION_ID: $Id: tau2otf.cpp,v 1.4 2008/05/28 15:10:49 amorris Exp $
+ * $Revision: 1.5 $   $Date: 2008/05/28 21:21:27 $
+ * VERSION_ID: $Id: tau2otf.cpp,v 1.5 2008/05/28 21:21:27 amorris Exp $
  ***************************************************************************/
 
 
