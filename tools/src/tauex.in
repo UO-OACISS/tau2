@@ -121,7 +121,7 @@ for arg in "$@" ; do
 		  fi
 		  exit $?;
 	      else
-		  echo "This option requires papiex to be in your path."
+		  echo "This option requires papiex to be in your path." >&2
 		  exit 1
 	      fi
 	      ;;
@@ -130,7 +130,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tauex.in,v 1.21 2008/05/28 19:28:44 amorris Exp $';
+	      echo '$Id: tauex.in,v 1.22 2008/05/28 19:34:44 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -m)
@@ -176,7 +176,7 @@ for arg in "$@" ; do
 	      break
 	      ;;
 	  -*)
-	      echo "Unknown option: $arg"
+	      echo "Unknown option: $arg" >&2
 	      exit 1
 # First non-option signifies end of options. This would be much easier with getopt()
 	      ;;
@@ -246,7 +246,7 @@ if [ "x$binding_specified" = "x" ] ; then
     done
 
     if [ "x$theBinding" = "x" ] ; then
-	echo "Error: Couldn't find a matching TAU binding"
+	echo "Error: Couldn't find a matching TAU binding" >&2
 	exit 1
     fi
 else
