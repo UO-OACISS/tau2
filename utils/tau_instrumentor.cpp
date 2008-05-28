@@ -3308,6 +3308,16 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	    int col;
 	    col = CPDB_GetSubstringCol(inbuf,"return");
 	    
+            if (col > 1 && (*it)->kind == EXIT) {
+#ifdef DEBUG
+	       cout <<"RETURN/EXIT statement was EXIT but return was found!"<<endl;
+	       cout <<"setting column to 0"<<endl;
+	       
+#endif /* DEBUG */
+               col = 0;
+            }
+	       
+            /* STOP 'COMMENT HAS RETURN IN IT' */
             /* When the return is at an incorrect location in the pdb file,
                we need to flush the buffer from the current location to the 
 	       correct location */
@@ -4159,8 +4169,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.188 $   $Date: 2007/11/20 20:13:46 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.188 2007/11/20 20:13:46 sameer Exp $
+ * $Revision: 1.189 $   $Date: 2008/05/28 18:41:34 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.189 2008/05/28 18:41:34 sameer Exp $
  ***************************************************************************/
 
 
