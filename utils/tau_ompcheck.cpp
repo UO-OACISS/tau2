@@ -406,14 +406,18 @@ class CompleteDirectives
     while (directives.size() != 0 && s->stmtBegin().line() >=
 			 directives.front().getLine())
 		{
+#ifdef DEBUG
 			cerr << "type: " <<  directives.front().getType() << endl;		
+#endif /* DEBUG */
 			while (
 								directives.front().getType() == 1 ||
 								directives.front().getType() == -1)
 				{
 					while (directives.front().getType() == 1)
 					{
+#ifdef DEBUG
 					printf("h");
+#endif /* DEBUG */
 						if (verbosity == Debug)  
 							cerr << "Opening Parallel OMP Directive." << endl;
 						//openDirectives.push_front(Directive(directives.front(), loop, block));
@@ -857,7 +861,7 @@ int main(int argc, char *argv[])
   }
 }
 /***************************************************************************
- * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
- * $Revision: 1.15 $   $Date: 2008/05/28 22:57:02 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.15 2008/05/28 22:57:02 scottb Exp $
+ * $RCSfile: tau_ompcheck.cpp,v $   $Author: sameer $
+ * $Revision: 1.16 $   $Date: 2008/05/29 01:34:11 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.16 2008/05/29 01:34:11 sameer Exp $
  ***************************************************************************/
