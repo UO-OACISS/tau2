@@ -435,24 +435,24 @@ static int writeMetaData(outputDevice *out, bool newline, int counter) {
 
 
 #ifdef TAU_BGL
-  char buffer[4096];
+  char bglbuffer[4096];
   char location[BGLPERSONALITY_MAX_LOCATION];
   BGLPersonality personality;
 
   rts_get_personality(&personality, sizeof(personality));
   BGLPersonality_getLocationString(&personality, location);
 
-  sprintf (buffer, "(%d,%d,%d)", BGLPersonality_xCoord(&personality),
+  sprintf (bglbuffer, "(%d,%d,%d)", BGLPersonality_xCoord(&personality),
 	   BGLPersonality_yCoord(&personality),
 	   BGLPersonality_zCoord(&personality));
-  writeXMLAttribute(out, "BGL Coords", buffer, newline);
+  writeXMLAttribute(out, "BGL Coords", bglbuffer, newline);
 
   writeXMLAttribute(out, "BGL Processor ID", rts_get_processor_id(), newline);
 
-  sprintf (buffer, "(%d,%d,%d)", BGLPersonality_xSize(&personality),
+  sprintf (bglbuffer, "(%d,%d,%d)", BGLPersonality_xSize(&personality),
 	   BGLPersonality_ySize(&personality),
 	   BGLPersonality_zSize(&personality));
-  writeXMLAttribute(out, "BGL Size", buffer, newline);
+  writeXMLAttribute(out, "BGL Size", bglbuffer, newline);
 
 
   if (BGLPersonality_virtualNodeMode(&personality)) {
@@ -461,10 +461,10 @@ static int writeMetaData(outputDevice *out, bool newline, int counter) {
     writeXMLAttribute(out, "BGL Node Mode", "Coprocessor", newline);
   }
 
-  sprintf (buffer, "(%d,%d,%d)", BGLPersonality_isTorusX(&personality),
+  sprintf (bglbuffer, "(%d,%d,%d)", BGLPersonality_isTorusX(&personality),
 	   BGLPersonality_isTorusY(&personality),
 	   BGLPersonality_isTorusZ(&personality));
-  writeXMLAttribute(out, "BGL isTorus", buffer, newline);
+  writeXMLAttribute(out, "BGL isTorus", bglbuffer, newline);
 
   writeXMLAttribute(out, "BGL DDRSize", BGLPersonality_DDRSize(&personality), newline);
   writeXMLAttribute(out, "BGL DDRModuleType", personality.DDRModuleType, newline);
@@ -475,54 +475,54 @@ static int writeMetaData(outputDevice *out, bool newline, int counter) {
   writeXMLAttribute(out, "BGL psetNum", BGLPersonality_psetNum(&personality), newline);
   writeXMLAttribute(out, "BGL numPsets", BGLPersonality_numPsets(&personality), newline);
 
-  sprintf (buffer, "(%d,%d,%d)", BGLPersonality_xPsetSize(&personality),
+  sprintf (bglbuffer, "(%d,%d,%d)", BGLPersonality_xPsetSize(&personality),
 	   BGLPersonality_yPsetSize(&personality),
 	   BGLPersonality_zPsetSize(&personality));
-  writeXMLAttribute(out, "BGL PsetSize", buffer, newline);
+  writeXMLAttribute(out, "BGL PsetSize", bglbuffer, newline);
 
-  sprintf (buffer, "(%d,%d,%d)", BGLPersonality_xPsetOrigin(&personality),
+  sprintf (bglbuffer, "(%d,%d,%d)", BGLPersonality_xPsetOrigin(&personality),
 	   BGLPersonality_yPsetOrigin(&personality),
 	   BGLPersonality_zPsetOrigin(&personality));
-  writeXMLAttribute(out, "BGL PsetOrigin", buffer, newline);
+  writeXMLAttribute(out, "BGL PsetOrigin", bglbuffer, newline);
 
-  sprintf (buffer, "(%d,%d,%d)", BGLPersonality_xPsetCoord(&personality),
+  sprintf (bglbuffer, "(%d,%d,%d)", BGLPersonality_xPsetCoord(&personality),
 	   BGLPersonality_yPsetCoord(&personality),
 	   BGLPersonality_zPsetCoord(&personality));
-  writeXMLAttribute(out, "BGL PsetCoord", buffer, newline);
+  writeXMLAttribute(out, "BGL PsetCoord", bglbuffer, newline);
 #endif /* TAU_BGL */
 
 #ifdef TAU_BGP
-  char bgbuffer[4096];
+  char bgpbuffer[4096];
   char location[BGPPERSONALITY_MAX_LOCATION];
   _BGP_Personality_t personality;
 
   Kernel_GetPersonality(&personality, sizeof(_BGP_Personality_t));
   BGP_Personality_getLocationString(&personality, location);
 
-  sprintf (bgbuffer, "(%d,%d,%d)", BGP_Personality_xCoord(&personality),
+  sprintf (bgpbuffer, "(%d,%d,%d)", BGP_Personality_xCoord(&personality),
 	   BGP_Personality_yCoord(&personality),
 	   BGP_Personality_zCoord(&personality));
-  writeXMLAttribute(out, "BGP Coords", bgbuffer, newline);
+  writeXMLAttribute(out, "BGP Coords", bgpbuffer, newline);
 
   writeXMLAttribute(out, "BGP Processor ID", Kernel_PhysicalProcessorID(), newline);
 
-  sprintf (bgbuffer, "(%d,%d,%d)", BGP_Personality_xSize(&personality),
+  sprintf (bgpbuffer, "(%d,%d,%d)", BGP_Personality_xSize(&personality),
 	   BGP_Personality_ySize(&personality),
 	   BGP_Personality_zSize(&personality));
-  writeXMLAttribute(out, "BGP Size", bgbuffer, newline);
+  writeXMLAttribute(out, "BGP Size", bgpbuffer, newline);
 
 
   if (Kernel_ProcessCount() > 1) {
     writeXMLAttribute(out, "BGP Node Mode", "Virtual", newline);
   } else {
-    sprintf(bgbuffer, "Coprocessor (%d)", Kernel_ProcessCount);
-    writeXMLAttribute(out, "BGP Node Mode", bgbuffer, newline);
+    sprintf(bgpbuffer, "Coprocessor (%d)", Kernel_ProcessCount);
+    writeXMLAttribute(out, "BGP Node Mode", bgpbuffer, newline);
   }
 
-  sprintf (bgbuffer, "(%d,%d,%d)", BGP_Personality_isTorusX(&personality),
+  sprintf (bgpbuffer, "(%d,%d,%d)", BGP_Personality_isTorusX(&personality),
 	   BGP_Personality_isTorusY(&personality),
 	   BGP_Personality_isTorusZ(&personality));
-  writeXMLAttribute(out, "BGP isTorus", bgbuffer, newline);
+  writeXMLAttribute(out, "BGP isTorus", bgpbuffer, newline);
 
   writeXMLAttribute(out, "BGP DDRSize (MB)", BGP_Personality_DDRSizeMB(&personality), newline);
 /* CHECK: 
@@ -539,20 +539,20 @@ static int writeMetaData(outputDevice *out, bool newline, int counter) {
   writeXMLAttribute(out, "BGP numPsets", BGP_Personality_numComputeNodes(&personality), newline);
 
 /* CHECK: 
-  sprintf (bgbuffer, "(%d,%d,%d)", BGP_Personality_xPsetSize(&personality),
+  sprintf (bgpbuffer, "(%d,%d,%d)", BGP_Personality_xPsetSize(&personality),
 	   BGP_Personality_yPsetSize(&personality),
 	   BGP_Personality_zPsetSize(&personality));
-  writeXMLAttribute(out, "BGP PsetSize", bgbuffer, newline);
+  writeXMLAttribute(out, "BGP PsetSize", bgpbuffer, newline);
 
-  sprintf (bgbuffer, "(%d,%d,%d)", BGP_Personality_xPsetOrigin(&personality),
+  sprintf (bgpbuffer, "(%d,%d,%d)", BGP_Personality_xPsetOrigin(&personality),
 	   BGP_Personality_yPsetOrigin(&personality),
 	   BGP_Personality_zPsetOrigin(&personality));
-  writeXMLAttribute(out, "BGP PsetOrigin", bgbuffer, newline);
+  writeXMLAttribute(out, "BGP PsetOrigin", bgpbuffer, newline);
 
-  sprintf (bgbuffer, "(%d,%d,%d)", BGP_Personality_xPsetCoord(&personality),
+  sprintf (bgpbuffer, "(%d,%d,%d)", BGP_Personality_xPsetCoord(&personality),
 	   BGP_Personality_yPsetCoord(&personality),
 	   BGP_Personality_zPsetCoord(&personality));
-  writeXMLAttribute(out, "BGP PsetCoord", bgbuffer, newline);
+  writeXMLAttribute(out, "BGP PsetCoord", bgpbuffer, newline);
 */
 #endif /* TAU_BGP */
 
