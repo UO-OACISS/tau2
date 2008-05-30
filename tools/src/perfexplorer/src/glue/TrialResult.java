@@ -17,7 +17,7 @@ import edu.uoregon.tau.perfdmf.database.DB;
  * This class is an implementation of the AbstractResult class, and loads a trial
  * from the database into a result object.
  * 
- * <P>CVS $Id: TrialResult.java,v 1.3 2008/04/13 23:51:15 khuck Exp $</P>
+ * <P>CVS $Id: TrialResult.java,v 1.4 2008/05/30 01:16:54 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 
@@ -27,6 +27,7 @@ public class TrialResult extends AbstractResult {
 
 	private Integer trialID = 0;
 	private Trial trial = null;
+	private boolean callPath = true;
 
 	public TrialResult() {
 		super();
@@ -48,11 +49,12 @@ public class TrialResult extends AbstractResult {
 		buildTrialResult(trial, null, null, null);
 	}
 	
-	public TrialResult(Trial trial, String metric, String event, String thread) {
+	public TrialResult(Trial trial, String metric, String event, String thread, boolean callPath) {
 		super();
 		this.trialID = trial.getID();
 		this.trial = trial;
-		buildTrialResult(trial, null, null, null);
+		this.callPath = callPath;
+		buildTrialResult(trial, metric, event, thread);
 	}
 	
 	private void buildTrialResult(Trial trial, String metric, String event, String thread) {
@@ -99,6 +101,9 @@ public class TrialResult extends AbstractResult {
 			if (thread != null) {
 				sql.append(" and thread = ? ");				
 			}
+			if (!callPath) {
+            	sql.append(" and (e.group_name is null or e.group_name not like '%TAU_CALLPATH%') ");
+			}
 			sql.append(" order by 3,2,1 ");
 			
 			PreparedStatement statement = db.prepareStatement(sql.toString());
@@ -114,7 +119,7 @@ public class TrialResult extends AbstractResult {
 			if (thread != null) {
 				statement.setString(index++, thread);
 			}
-			//System.out.println(statement.toString());
+			System.out.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 			while (results.next() != false) {
 				this.putExclusive(results.getInt(3), results.getString(1), results.getString(2), results.getDouble(4));

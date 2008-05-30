@@ -62,6 +62,9 @@ public class MeanEventFact {
 		for (String metric : mainInput.getMetrics()) {
 			double mainValue = mainInput.getInclusive(0, mainEvent, metric);
 			double eventValue = eventInput.getExclusive(0, event, metric);
+			/*if (metric.equals("((L3_MISSES-DATA_EAR_CACHE_LAT128)/L3_MISSES)")) {
+				System.out.println(event + " " + metric + " " + mainValue + " " + eventValue + " ");
+			}*/
 			if (metric.equals(DerivedMetrics.L1_HIT_RATE)) {
 				// L1 cache hit rate
 				if (mainValue > eventValue) {
