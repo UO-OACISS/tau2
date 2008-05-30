@@ -29,6 +29,7 @@ import common.EngineType;
  */
 public class Utilities {
 	public static Trial getTrial (String aName, String eName, String tName) {
+		boolean message = false;
         PerfExplorerServer server = getServer();
 		List<Application> apps = server.getApplicationList();
         for (Application app : apps ) {
@@ -45,11 +46,15 @@ public class Utilities {
             				}
             			}
 						System.out.println("Could not find trial: " + tName);
+						message = true;
             		}
             	}
-				System.out.println("Could not find experiment: " + eName);
+				if (!message)
+					System.out.println("Could not find experiment: " + eName);
+				message = true;
 			}
         }
+		if (!message)
 		System.out.println("Could not find application: " + aName);
         return null;
 	}
