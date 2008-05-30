@@ -107,7 +107,7 @@ public class TrialMeanResult extends AbstractResult {
 			if (event != null) {
 				statement.setString(index++, event);
 			}
-			System.out.println(statement.toString());
+			//System.out.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 			while (results.next() != false) {
 				String eventName = results.getString(1);

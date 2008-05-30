@@ -44,10 +44,13 @@ public class Utilities {
             					return trial;
             				}
             			}
+						System.out.println("Could not find trial: " + tName);
             		}
             	}
-            }
+				System.out.println("Could not find experiment: " + eName);
+			}
         }
+		System.out.println("Could not find application: " + aName);
         return null;
 	}
 
