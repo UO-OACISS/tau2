@@ -48,7 +48,7 @@ public class DataUtils {
             if (db.getDBType().compareTo("oracle") == 0) {
                 sql.append("select count(p.excl) ");
             } else {
-                sql.append("select count(p.exclusive) ");
+                sql.append("select count(p.inclusive) ");
             }
 
 			sql.append("from interval_event e ");
@@ -57,7 +57,7 @@ public class DataUtils {
 			if (modelData.getDimensionReduction().equals(TransformationType.OVER_X_PERCENT)) {
 				sql.append("inner join interval_mean_summary s ");
 				sql.append("on e.id = s.interval_event and s.metric = p.metric ");
-				sql.append("and s.exclusive_percentage > ");
+				sql.append("and s.inclusive_percentage > ");
 				sql.append("" + modelData.getXPercent() + "");	
 			//} else if (modelData.getCurrentSelection() instanceof Metric) {
 				//sql.append("inner join interval_mean_summary s ");
@@ -88,7 +88,7 @@ public class DataUtils {
 				if (modelData.getDimensionReduction().equals(TransformationType.OVER_X_PERCENT)) {
 					sql.append("inner join interval_mean_summary s on ");
 					sql.append("e.id = s.interval_event ");
-					sql.append("and s.exclusive_percentage > ");
+					sql.append("and s.inclusive_percentage > ");
 					sql.append("" + modelData.getXPercent() + "");
 					sql.append(" where e.trial = ? ");
 					if (modelData.getCurrentSelection() instanceof Metric) {
@@ -198,12 +198,12 @@ public class DataUtils {
                 if (db.getDBType().compareTo("oracle") == 0) {
                     sql.append(") + p.thread as thread, p.metric as metric, p.excl/1000000, ");
                 } else {
-                    sql.append(") + p.thread as thread, p.metric as metric, p.exclusive/1000000, ");
+                    sql.append(") + p.thread as thread, p.metric as metric, p.inclusive/1000000, ");
                 }
-				sql.append("p.inclusive/1000000, s.inclusive_percentage, s.exclusive_percentage ");
+				sql.append("p.inclusive/1000000, s.inclusive_percentage, s.inclusive_percentage ");
 				sql.append("from interval_event e ");
 				sql.append("inner join interval_mean_summary s ");
-				sql.append("on e.id = s.interval_event and (s.exclusive_percentage > ");
+				sql.append("on e.id = s.interval_event and (s.inclusive_percentage > ");
 				sql.append(modelData.getXPercent());
 				sql.append("or s.inclusive_percentage = 100.0) ");
 				sql.append(" left outer join interval_location_profile p ");
@@ -216,7 +216,7 @@ public class DataUtils {
                 if (db.getDBType().compareTo("oracle") == 0) {
                     sql.append(") + p.thread as thread, p.metric as metric, p.excl, ");
                 } else {
-                    sql.append(") + p.thread as thread, p.metric as metric, p.exclusive, ");
+                    sql.append(") + p.thread as thread, p.metric as metric, p.inclusive, ");
                 }
 
 				sql.append("p.inclusive/1000000, p.inclusive_percentage ");
@@ -284,29 +284,27 @@ public class DataUtils {
 
     public static String shortName(String longName) {
         String shorter = null;
-		if (longName.trim().endsWith("]")) {
-			// fortran:
-        	StringTokenizer st = new StringTokenizer(longName, "[");
-        	try {
-            	shorter = st.nextToken();
-            	if (shorter.length() < longName.length()) {
-                	shorter = shorter.trim() + "()";
-            	}
-        	} catch (NoSuchElementException e) {
-            	shorter = longName;
+		// strip off instrumentation info
+    	StringTokenizer st = new StringTokenizer(longName, "[");
+    	try {
+        	shorter = st.nextToken();
+        	if (shorter.length() < longName.length()) {
+            	shorter = shorter.trim() + "()";
         	}
-		} else {
-			// C code:
-        	StringTokenizer st = new StringTokenizer(longName, "(");
-        	try {
-            	shorter = st.nextToken();
-            	if (shorter.length() < longName.length()) {
-                	shorter = shorter.trim() + "()";
-            	}
-        	} catch (NoSuchElementException e) {
-            	shorter = longName;
+    	} catch (NoSuchElementException e) {
+        	shorter = longName;
+    	}
+		// strip off parameters
+    	st = new StringTokenizer(longName, "(");
+    	try {
+        	shorter = st.nextToken();
+        	if (shorter.length() < longName.length()) {
+            	shorter = shorter.trim() + "()";
         	}
-		}
+    	} catch (NoSuchElementException e) {
+        	shorter = longName;
+    	}
+		System.out.println(longName + " is now: " + shorter);
         return shorter;
     }
 

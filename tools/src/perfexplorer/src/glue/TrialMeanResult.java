@@ -20,6 +20,7 @@ public class TrialMeanResult extends AbstractResult {
 	private Trial trial = null;
 	private Integer trialID = 0;
 	private Integer originalThreads = 0;
+	private boolean callPath = true;
 
 	/**
 	 * 
@@ -44,9 +45,10 @@ public class TrialMeanResult extends AbstractResult {
 		buildTrialMeanResult(trial, null, null);
 	}
 	
-	public TrialMeanResult(Trial trial, String metric, String event) {
+	public TrialMeanResult(Trial trial, String metric, String event, boolean callPath) {
 		super();
 		this.trialID = trial.getID();
+		this.callPath = callPath;
 		buildTrialMeanResult(trial, null, null);
 	}
 	
@@ -89,6 +91,9 @@ public class TrialMeanResult extends AbstractResult {
 			if (event != null) {
 				sql.append(" and e.name = ? ");
 			}
+			if (!callPath) {
+            	sql.append(" and (e.group_name is null or e.group_name not like '%TAU_CALLPATH%') ");
+			}
 			sql.append(" order by 2,1 ");
 			
 			PreparedStatement statement = db.prepareStatement(sql.toString());
@@ -102,6 +107,7 @@ public class TrialMeanResult extends AbstractResult {
 			if (event != null) {
 				statement.setString(index++, event);
 			}
+			System.out.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 			while (results.next() != false) {
 				String eventName = results.getString(1);

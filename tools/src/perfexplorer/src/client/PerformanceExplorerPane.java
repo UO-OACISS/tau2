@@ -48,10 +48,10 @@ public class PerformanceExplorerPane extends JScrollPane implements ActionListen
 			(model.getCurrentSelection() instanceof Trial)) {
 			// check to see if we have these results already
 			// results = (RMIPerformanceResults)resultsHash.get(model.toString());
-			if (results == null) {
+			//if (results == null) {
 				PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 				results = server.getPerformanceResults(model);
-			}
+			//}
 			if (results.getResultCount() == 0) {
 				return;
 			}

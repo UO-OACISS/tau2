@@ -57,11 +57,14 @@ public class MeanEventFact {
 		
 		double mainTime = mainInput.getInclusive(0, mainEvent, timeMetric);
 		double eventTime = mainInput.getExclusive(0, event, timeMetric);
+		double eventIncTime = mainInput.getInclusive(0, event, timeMetric);
 		double severity = eventTime / mainTime;
+		double severityInc = eventIncTime / mainTime;
 		//System.out.println(timeMetric + " " + mainTime + " " + eventTime + " " + severity);
 		for (String metric : mainInput.getMetrics()) {
 			double mainValue = mainInput.getInclusive(0, mainEvent, metric);
 			double eventValue = eventInput.getExclusive(0, event, metric);
+			double eventIncValue = eventInput.getInclusive(0, event, metric);
 			/*if (metric.equals("((L3_MISSES-DATA_EAR_CACHE_LAT128)/L3_MISSES)")) {
 				System.out.println(event + " " + metric + " " + mainValue + " " + eventValue + " ");
 			}*/
@@ -103,6 +106,11 @@ public class MeanEventFact {
 					RuleHarness.assertObject(new MeanEventFact("Compared to Main", HIGHER, metric, metric, mainValue, eventValue, event, severity));
 				} else { //if (mainValue > eventValue) {
 					RuleHarness.assertObject(new MeanEventFact("Compared to Main", LOWER, metric, metric, mainValue, eventValue, event, severity));
+				}
+				if (mainValue < eventIncValue) {
+					RuleHarness.assertObject(new MeanEventFact("Inclusive compared to Main", HIGHER, metric, metric, mainValue, eventIncValue, event, severityInc));
+				} else { //if (mainValue > eventIncValue) {
+					RuleHarness.assertObject(new MeanEventFact("Inclusive compared to Main", LOWER, metric, metric, mainValue, eventIncValue, event, severityInc));
 				}
 			}
 				

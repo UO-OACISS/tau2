@@ -17,7 +17,7 @@ import junit.framework.TestCase;
 /**
  * This class is a JUnit test case for the TrialResult class.
  * 
- * <P>CVS $Id: TrialResultTest.java,v 1.3 2008/04/13 23:51:15 khuck Exp $</P>
+ * <P>CVS $Id: TrialResultTest.java,v 1.4 2008/05/30 03:35:02 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 
@@ -45,7 +45,7 @@ public class TrialResultTest extends TestCase {
     	System.out.println("Getting full trial");
 		result = new TrialResult(trial);
 		System.out.println("Getting means");
-		means = new TrialMeanResult(trial, null, null);
+		means = new TrialMeanResult(trial, null, null, true);
 		System.out.println("Getting totals");
 		totals = new TrialTotalResult(trial, null, null);
 

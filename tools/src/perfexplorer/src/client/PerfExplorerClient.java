@@ -171,7 +171,7 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
         CmdLineParser.Option tauArchOpt = parser.addStringOption('a', "tauarch");
         CmdLineParser.Option noGUIOpt = parser.addBooleanOption('n', "nogui");
         CmdLineParser.Option scriptOpt = parser.addStringOption('i', "script");
-        //CmdLineParser.Option consoleOpt = parser.addBooleanOption('y', "consoleWindow");
+        CmdLineParser.Option consoleOpt = parser.addBooleanOption('w', "consoleWindow");
         
 		try {
 			parser.parse(args);
@@ -192,8 +192,8 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
         PerfExplorerClient.tauArch = (String) parser.getOptionValue(tauArchOpt);
         Boolean noGUI = (Boolean) parser.getOptionValue(noGUIOpt);
         String scriptName = (String) parser.getOptionValue(scriptOpt);
-        //Boolean console = (Boolean) parser.getOptionValue(consoleOpt);
-        Boolean console = new Boolean(true);
+        Boolean console = (Boolean) parser.getOptionValue(consoleOpt);
+        //Boolean console = new Boolean(true);
 
 		EngineType analysisEngine = EngineType.WEKA;
 
@@ -262,7 +262,7 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 				System.exit(0);
 			}
 		} else {
-			if (console.booleanValue()) {
+			if (!console.booleanValue()) {
 				// send all output to a console window
 				try {
 					new Console();
