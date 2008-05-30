@@ -202,6 +202,8 @@ static double getTimeOffset(int rank, int size) {
   /* broadcast the result to other processes on this machine */
   PMPI_Bcast(&offset, 1, MPI_DOUBLE, 0, machineComm);
 
+  PMPI_Comm_free (&interMachineComm);
+  PMPI_Comm_free (&machineComm);
 
   return offset;
 }
