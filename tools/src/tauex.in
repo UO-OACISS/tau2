@@ -130,7 +130,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tauex.in,v 1.22 2008/05/28 19:34:44 amorris Exp $';
+	      echo '$Id: tauex.in,v 1.23 2008/06/03 20:57:27 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -m)
@@ -210,8 +210,10 @@ if [ "x$binding_specified" = "x" ] ; then
     fi
     
     if [ "$SICORTEX" = "yes" ] ; then
+	bindingsdir=$PREFIX/lib64 
 	bindings=`ls $PREFIX/lib64 | grep TAU-shared`
     else
+	bindingsdir=$BASEDIR/lib 
 	bindings=`ls $BASEDIR/lib | grep shared`
     fi
     
@@ -246,7 +248,7 @@ if [ "x$binding_specified" = "x" ] ; then
     done
 
     if [ "x$theBinding" = "x" ] ; then
-	echo "Error: Couldn't find a matching TAU binding" >&2
+	echo "Error: No matching binding for '$TauOptions' in directory $bindingsdir" >&2
 	exit 1
     fi
 else
