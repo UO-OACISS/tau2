@@ -184,8 +184,7 @@ static int ReadFullLine(char *line, FILE *fp) {
   return i; 
 }
 
-
-static int output(outputDevice *out, char *format, ...) {
+static int output(outputDevice *out, const char *format, ...) {
   int rs;
   va_list args;
   if (out->type == OUTPUT_BUFFER) {
