@@ -1,12 +1,7 @@
 #!/bin/sh
 
-TAUROOT=@TAUROOTDIR@
-TAUARCH=@ARCH@
+eval `tau-config`
 
-BASEDIR=$TAUROOT/$TAUARCH
-
-SICORTEX=no
-PREFIX=no
 
 usage()
 {
@@ -61,6 +56,7 @@ multiplerun=false
 allnative=false
 binding_specified=""
 OUTPUTDIR="."
+options=""
 unset TAU_PAPI_DOMAIN
 export TAU_PAPI_DOMAIN
 
@@ -76,17 +72,6 @@ for arg in "$@" ; do
 
   if [ "$processT" = "true" ] ; then
       options=`echo $arg | sed -e 's/,/ /g' | tr [A-Z] [a-z]`
-      for i in $options ; do
-	  if [ "$i" = "profile" ] ; then
-	      ProfileSpecified="true"
-	  elif [ "$i" = "trace" ] ; then
-	      TraceSpecified="true"
-	  elif [ "$i" = "disable" ] ; then
-	      DisableSpecified="true"
-	  else
-	      TauOptions="$TauOptions $i"
-	  fi
-      done
       processT="false"
       shift
   elif [ "$processE" = "true" ] ; then
@@ -130,7 +115,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tauex.in,v 1.23 2008/06/03 20:57:27 amorris Exp $';
+	      echo '$Id: tauex,v 1.1 2008/06/04 21:12:05 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -m)
@@ -188,67 +173,8 @@ for arg in "$@" ; do
 done
 
 if [ "x$binding_specified" = "x" ] ; then
-    if [ "$ProfileSpecified" = "false" -a "$TraceSpecified" = "false" ] ; then
-	ProfileSpecified="true"
-    fi
-    
-    if [ "$ProfileSpecified" = "true" -a "$TraceSpecified" = "false" ] ; then
-	TauOptionsExclude="trace"
-    elif [ "$ProfileSpecified" = "true" -a "$TraceSpecified" = "true" ] ; then
-	TauOptions="$TauOptions profile trace"
-    elif [ "$ProfileSpecified" = "false" -a "$TraceSpecified" = "true" ] ; then
-	TauOptionsExclude="profile"
-	TauOptions="$TauOptions trace"
-    fi
-
-    if [ "$DisableSpecified" = "false" ] ; then
-	TauOptionsExclude="disable"
-    fi
-    
-    if [ $NumCounters -gt 1 ] ; then
-	TauOptions="$TauOptions multiplecounters papi"
-    fi
-    
-    if [ "$SICORTEX" = "yes" ] ; then
-	bindingsdir=$PREFIX/lib64 
-	bindings=`ls $PREFIX/lib64 | grep TAU-shared`
-    else
-	bindingsdir=$BASEDIR/lib 
-	bindings=`ls $BASEDIR/lib | grep shared`
-    fi
-    
-    for opt in $TauOptions; do 
-	newbindings=""
-	for b in $bindings ; do
-	    add=`echo $b | grep -i $opt`
-	    newbindings="$newbindings $add"
-	done
-	bindings=$newbindings
-    done
-    
-    for opt in $TauOptionsExclude; do 
-	newbindings=""
-	for b in $bindings ; do
-	    add=`echo $b | grep -v -i $opt`
-	    newbindings="$newbindings $add"
-	done
-	bindings=$newbindings
-    done
-
-    declare -i minLength
-    declare -i length
-    minLength=9999
-    theBinding=""
-    for b in $bindings ; do
-	length=${#b}
-	if [ "$length" -lt "$minLength" ] ; then
-	    theBinding=$b
-	    minLength=$length
-	fi
-    done
-
-    if [ "x$theBinding" = "x" ] ; then
-	echo "Error: No matching binding for '$TauOptions' in directory $bindingsdir" >&2
+    theBinding=`taubinding $options`
+    if [ $? != 0 ] ; then
 	exit 1
     fi
 else
@@ -298,7 +224,7 @@ fi
 
 if [ $verbose = "true" ] ; then
     echo "Matching bindings:"
-    echo "$bindings"
+    taubinding --list-matching $options
     echo ""
     echo "Using:"
     echo "$theBinding"
