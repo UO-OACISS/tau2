@@ -5029,6 +5029,8 @@ fi
 echo "TAU: installed tau_compiler.sh in $BINTARGET"
 
 cp ${tauroot}/tools/src/tau_treemerge.pl $BINTARGET
+cp ${tauroot}/tools/src/tauex $BINTARGET
+cp ${tauroot}/tools/src/taucc $BINTARGET
 cp ${tauroot}/tools/src/tauex.multiple $BINTARGET
 cp ${tauroot}/tools/src/tau_cxx.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_cc.sh $BINTARGET
@@ -5163,11 +5165,11 @@ then
 fi
 
 
-echo "TAU: installed tauex in ${targetdir}/${architecture}/bin"
-cat ${tauroot}/tools/src/tauex.in | 
+
+cat ${tauroot}/tools/src/tau-config.in | 
 sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
- > ${targetdir}/${architecture}/bin/tauex
-chmod a+rx ${targetdir}/${architecture}/bin/tauex
+ > ${targetdir}/${architecture}/bin/tau-config
+chmod a+rx ${targetdir}/${architecture}/bin/tau-config
 
 echo "TAU: installed tauinc.pl in ${targetdir}/${architecture}/bin"
 cp ${tauroot}/tools/src/tauinc.pl ${targetdir}/${architecture}/bin
