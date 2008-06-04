@@ -26,10 +26,18 @@ import edu.uoregon.tau.common.LineCountBufferedReader;
 
 public class TauDataSource extends DataSource {
 
-    public class CorruptFileException extends RuntimeException {};
+    public class CorruptFileException extends RuntimeException {
+        private String message;
 
-    
-    
+        public CorruptFileException(String message) {
+            this.message = message;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+    };
+
     private volatile boolean abort = false;
     private volatile int totalFiles = 0;
     private volatile int filesRead = 0;
@@ -42,7 +50,7 @@ public class TauDataSource extends DataSource {
 
     private File currentFile;
     private int currentLine;
-    
+
     private LineCountBufferedReader br;
 
     public TauDataSource(List dirs) {
@@ -137,9 +145,13 @@ public class TauDataSource extends DataSource {
                         int[] nct = getNCT(files[i].getName());
 
                         if (nct == null && dirs.size() == 1 && files.length == 1) {
-                            throw new DataSourceException(
-                                    files[i].getName()
-                                            + ": This doesn't look like a TAU profile\nDid you mean do use the -f option to specify a file format?");
+                            if (!files[i].exists()) {
+                                throw new DataSourceException("Error: File '" + files[i].getName() + "' does not exist.");
+                            } else {
+                                throw new DataSourceException("Error: File '" + files[i].getName()
+                                        + "': This doesn't look like a TAU profile\n"
+                                        + "Did you mean do use the -f option to specify a file format?");
+                            }
                         }
 
                         if (nct == null) {
@@ -172,12 +184,11 @@ public class TauDataSource extends DataSource {
                         }
                         InputStreamReader inReader = new InputStreamReader(fileIn);
                         br = new LineCountBufferedReader(inReader);
-                        
+
                         // First Line (e.g. "601 templated_functions")
                         inputString = br.readLine();
                         if (inputString == null) {
-                            throw new DataSourceException("Unexpected end of file: " + files[i].getName()
-                                    + "\nLooking for 'templated_functions' line");
+                            throw new CorruptFileException("Unexpected end of file: Looking for 'templated_functions' line");
                         }
                         genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
 
@@ -188,8 +199,7 @@ public class TauDataSource extends DataSource {
                         try {
                             numFunctions = Integer.parseInt(tokenString);
                         } catch (NumberFormatException nfe) {
-                            throw new DataSourceException(files[i].getName()
-                                    + ": Couldn't read number of functions, bad TAU Profile?");
+                            throw new CorruptFileException("Couldn't read number of functions");
                         }
 
                         // grab the (possible) metric name
@@ -198,15 +208,18 @@ public class TauDataSource extends DataSource {
                         // Second Line (e.g. "# Name Calls Subrs Excl Incl ProfileCalls")
                         inputString = br.readLine();
                         if (inputString == null) {
-                            throw new DataSourceException("Unexpected end of file: " + files[i].getName()
-                                    + "\nLooking for '# Name Calls ...' line");
+                            throw new CorruptFileException("Unexpected end of file: Looking for '# Name Calls ...' line");
                         }
 
                         if (inputString.indexOf("<metadata>") != -1) {
                             int start = inputString.indexOf("<metadata>");
                             int end = inputString.indexOf("</metadata>") + 11;
                             String metadata = inputString.substring(start, end);
+                            try {
                             MetaDataParser.parse(thread.getMetaData(), metadata);
+                            } catch (Exception exception) {
+                                throw new CorruptFileException("Unable to parse metadata block");
+                            }
                         }
 
                         // there may or may not be a metric name in the metadata
@@ -238,8 +251,8 @@ public class TauDataSource extends DataSource {
 
                             inputString = br.readLine();
                             if (inputString == null) {
-                                throw new DataSourceException("Unexpected end of file: " + files[i].getName() + "\nOnly found "
-                                        + (j - 2) + " of " + numFunctions + " Function Lines");
+                                throw new CorruptFileException("Unexpected end of file: Only found " + (j - 2) + " of "
+                                        + numFunctions + " Function Lines");
                             }
 
                             this.processFunctionLine(inputString, thread, metric);
@@ -262,8 +275,7 @@ public class TauDataSource extends DataSource {
 
                         //A valid profile.*.*.* will always contain this line.
                         if (inputString == null) {
-                            throw new DataSourceException("Unexpected end of file: " + files[i].getName()
-                                    + "\nLooking for 'aggregates' line");
+                            throw new CorruptFileException("Unexpected end of file: Looking for 'aggregates' line");
                         }
                         genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
                         //It's first token will be the number of aggregates.
@@ -293,8 +305,8 @@ public class TauDataSource extends DataSource {
 
                                     inputString = br.readLine();
                                     if (inputString == null) {
-                                        throw new DataSourceException("Unexpected end of file: " + files[i].getName()
-                                                + "\nOnly found " + (j - 2) + " of " + numUserEvents + " User Event Lines");
+                                        throw new CorruptFileException("Unexpected end of file: Only found " + (j - 2) + " of "
+                                                + numUserEvents + " User Event Lines");
                                     }
 
                                     this.processUserEventLine(inputString, thread);
@@ -312,12 +324,15 @@ public class TauDataSource extends DataSource {
 
                         finished = true;
                     } catch (CorruptFileException cfe) {
+                        System.err.println("File '" + currentFile + "' is corrupt (at line " + br.getCurrentLine() + ") : "
+                                + cfe.getMessage());
                         // continue to the next file
                         finished = true;
+                    } catch (DataSourceException dse) {
+                        throw dse;
                     } catch (Exception ex) {
+                        System.out.println("Error: Current File: " + currentFile + ", Current Line: " + br.getCurrentLine());
                         ex.printStackTrace();
-                        System.out.println("Current Function: " + currFunction);
-                        //System.out.println("ex:);
                         if (!(ex instanceof IOException || ex instanceof FileNotFoundException)) {
                             throw new RuntimeException(ex == null ? null : ex.toString());
                         }
@@ -447,9 +462,7 @@ public class TauDataSource extends DataSource {
         }
 
         if (quoteCount == 0) {
-            System.err.println("File '" + currentFile + "' is corrupt (at line "+br.getCurrentLine()+"): Looking for function line, found '" + string
-                    + "' instead.");
-            throw new CorruptFileException();
+            throw new CorruptFileException("Looking for function line, found '" + string + "' instead.");
         }
 
         StringTokenizer st2;
@@ -487,13 +500,13 @@ public class TauDataSource extends DataSource {
         profileCalls = Integer.parseInt(st2.nextToken()); //ProfileCalls
 
         if (inclusive < 0) {
-            System.err.println("File '" + currentFile + "' is corrupt (at line "+br.getCurrentLine()+") : Negative values found in profile, ignoring! (routine: "
-                    + name + ")");
+            System.err.println("File '" + currentFile + "' is corrupt (at line " + br.getCurrentLine()
+                    + ") : Negative values found in profile, ignoring! (routine: " + name + ")");
             inclusive = 0;
         }
         if (exclusive < 0) {
-            System.err.println("File '" + currentFile + "' is corrupt (at line "+br.getCurrentLine()+") : Negative values found in profile, ignoring! (routine: "
-                    + name + ")");
+            System.err.println("File '" + currentFile + "' is corrupt (at line " + br.getCurrentLine()
+                    + ") : Negative values found in profile, ignoring! (routine: " + name + ")");
             exclusive = 0;
         }
 
