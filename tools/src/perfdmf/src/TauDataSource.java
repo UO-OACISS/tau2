@@ -22,8 +22,14 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.util.*;
 
+import edu.uoregon.tau.common.LineCountBufferedReader;
+
 public class TauDataSource extends DataSource {
 
+    public class CorruptFileException extends RuntimeException {};
+
+    
+    
     private volatile boolean abort = false;
     private volatile int totalFiles = 0;
     private volatile int filesRead = 0;
@@ -33,6 +39,11 @@ public class TauDataSource extends DataSource {
     private int currFunction = 0;
 
     private File fileToMonitor;
+
+    private File currentFile;
+    private int currentLine;
+    
+    private LineCountBufferedReader br;
 
     public TauDataSource(List dirs) {
         super();
@@ -89,7 +100,6 @@ public class TauDataSource extends DataSource {
         // name rather than just checking whether this is the first file set. This is because we
         // might skip that first file (for example if the name were profile.-1.0.0) and thus skip
         // setting the metric name.
-        //Reference bug08.
 
         boolean metricNameProcessed = false;
 
@@ -146,6 +156,8 @@ public class TauDataSource extends DataSource {
                         foundValidFile = true;
 
                         FileInputStream fileIn = new FileInputStream(files[i]);
+                        currentFile = files[i];
+                        currentLine = 0;
                         FileChannel channel;
                         FileLock lock = null;
 
@@ -159,8 +171,8 @@ public class TauDataSource extends DataSource {
                             }
                         }
                         InputStreamReader inReader = new InputStreamReader(fileIn);
-                        BufferedReader br = new BufferedReader(inReader);
-
+                        br = new LineCountBufferedReader(inReader);
+                        
                         // First Line (e.g. "601 templated_functions")
                         inputString = br.readLine();
                         if (inputString == null) {
@@ -299,6 +311,9 @@ public class TauDataSource extends DataSource {
                         fileIn.close();
 
                         finished = true;
+                    } catch (CorruptFileException cfe) {
+                        // continue to the next file
+                        finished = true;
                     } catch (Exception ex) {
                         ex.printStackTrace();
                         System.out.println("Current Function: " + currFunction);
@@ -432,7 +447,9 @@ public class TauDataSource extends DataSource {
         }
 
         if (quoteCount == 0) {
-            throw new DataSourceException("Looking for function line, found '" + string + "' instead");
+            System.err.println("File '" + currentFile + "' is corrupt (at line "+br.getCurrentLine()+"): Looking for function line, found '" + string
+                    + "' instead.");
+            throw new CorruptFileException();
         }
 
         StringTokenizer st2;
@@ -470,11 +487,13 @@ public class TauDataSource extends DataSource {
         profileCalls = Integer.parseInt(st2.nextToken()); //ProfileCalls
 
         if (inclusive < 0) {
-            System.err.println("Warning, negative values found in profile, ignoring! (routine: " + name + ")");
+            System.err.println("File '" + currentFile + "' is corrupt (at line "+br.getCurrentLine()+") : Negative values found in profile, ignoring! (routine: "
+                    + name + ")");
             inclusive = 0;
         }
         if (exclusive < 0) {
-            System.err.println("Warning, negative values found in profile, ignoring! (routine: " + name + ")");
+            System.err.println("File '" + currentFile + "' is corrupt (at line "+br.getCurrentLine()+") : Negative values found in profile, ignoring! (routine: "
+                    + name + ")");
             exclusive = 0;
         }
 
