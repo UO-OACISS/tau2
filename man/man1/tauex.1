@@ -2,7 +2,7 @@
 .\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
 .\" Instead of manually editing it, you probably should edit the DocBook XML
 .\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
-.TH "TAUEX" "1" "07/06/2007" "" "Tools"
+.TH "TAUEX" "1" "06/04/2008" "" "Tools"
 .\" disable hyphenation
 .nh
 .\" disable justification (adjust text to left margin only)
@@ -11,7 +11,7 @@
 tauex \- Allows you to choose a tau/papi configuration at runtime.
 .SH "SYNOPSIS"
 .HP 6
-\fBtauex\fR [\-v] [\-u\ \fIUser\ mode\ counts\fR] [\-k\ \fIKernel\ mode\ counts\fR] [\-S\ \fISupervisor\ mode\ counts\fR] [\-I\ \fIInterrupt\ mode\ counts\fR] [\-a] [\-m] [\-e\ \fIPAPI\ event\fR] [\-T\ \fITAU\ option\fR] [\-XrunTAU\ \fITAU\ options\fR] {\-\-} {\fIApplication\ executable\fR} [\fIApplication\ options\fR]
+\fBtauex\fR [\-v] [\-u\ \fIUser\ mode\ counts\fR] [\-k\ \fIKernel\ mode\ counts\fR] [\-S\ \fISupervisor\ mode\ counts\fR] [\-I\ \fIInterrupt\ mode\ counts\fR] [\-a] [\-m] [\-e\ \fIPAPI\ event\fR] [\-T\ \fITAU\ option\fR] [\-XrunTAU\ \fITAU\ options\fR] {\-\-} {\fIexecutable\fR} [\fIexecutable\ options\fR]
 .SH "DESCRIPTION"
 .PP
 Replace this script by the execuable during runtime to dynamically load a TAU profiling/tracing option or to select which papi events/domain to use during execuation of the application. If we compile TAU with the \-optShared option and link in the libTAU.so, At runtime tauex will set the LD_LIBRARY_PATH and pass any other parameters (or papi events) to the program and execute it with the specified TAU measurement option.

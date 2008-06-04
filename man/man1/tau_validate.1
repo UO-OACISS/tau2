@@ -2,7 +2,7 @@
 .\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
 .\" Instead of manually editing it, you probably should edit the DocBook XML
 .\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
-.TH "TAU_VALIDATE" "1" "07/06/2007" "" "Tools"
+.TH "TAU_VALIDATE" "1" "06/04/2008" "" "Tools"
 .\" disable hyphenation
 .nh
 .\" disable justification (adjust text to left margin only)
@@ -31,3 +31,14 @@ Only run
 .PP
 \fBarch directory\fR
 Specify an arch directory (e.g. rs6000), or the lib directory (rs6000/lib), or a specific makefile. Relative or absolute paths are ok.
+.SH "EXAMPLE"
+.PP
+There is a few examples:
+.sp
+.nf
+    
+bash : ./tau_validate \-\-html x86_64 &> results.html
+tcsh : ./tau_validate \-\-html x86_64 >& results.html
+.fi
+.sp
+
