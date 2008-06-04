@@ -135,10 +135,10 @@ fi
 # Find the makefile to use
 if [ $makefile_specified = no ] ; then
     if [ "x$binding_options" != "x" ] ; then
-	MAKEFILE=`taubinding --makefile $binding_options`
+	MAKEFILE=`tau-config --makefile $binding_options`
 	if [ $verbose = true ] ; then 
 	    echo "Matching bindings:"
-	    taubinding --makefile --list-matching $binding_options
+	    tau-config --makefile --list-matching $binding_options
 	    echo ""
 	fi
 	
@@ -151,7 +151,7 @@ if [ $makefile_specified = no ] ; then
     elif [ "x$DEFAULT_MAKEFILE" != "x" ] ; then
 	MAKEFILE=$DEFAULT_MAKEFILE
     else
-	MAKEFILE=`taubinding --makefile`
+	MAKEFILE=`tau-config --makefile`
     fi
 fi
 

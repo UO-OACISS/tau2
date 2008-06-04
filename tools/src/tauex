@@ -115,7 +115,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tauex,v 1.1 2008/06/04 21:12:05 amorris Exp $';
+	      echo '$Id: tauex,v 1.2 2008/06/04 21:16:47 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -m)
@@ -173,7 +173,7 @@ for arg in "$@" ; do
 done
 
 if [ "x$binding_specified" = "x" ] ; then
-    theBinding=`taubinding $options`
+    theBinding=`tau-config $options`
     if [ $? != 0 ] ; then
 	exit 1
     fi
@@ -224,7 +224,7 @@ fi
 
 if [ $verbose = "true" ] ; then
     echo "Matching bindings:"
-    taubinding --list-matching $options
+    tau-config --list-matching $options
     echo ""
     echo "Using:"
     echo "$theBinding"
