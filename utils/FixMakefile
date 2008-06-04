@@ -129,11 +129,6 @@ fi
 	echo "s,^OPARIDIR=.*$,OPARIDIR=$oparidir,g" >> $sedout
 	;;
 
-     oparitool=*)
-        oparitool=`echo $1 | sed -e 's/^oparitool=//'`
-	echo "s,^TAU_OPARI_TOOL=.*$,TAU_OPARI_TOOL=$oparitool,g" >> $sedout
-	;;
-
      vampirtracedir=*)
         vampirtracedir=`echo $1 | sed -e 's/^vampirtracedir=//'`
 	echo "s,^VAMPIRTRACEDIR=.*$,VAMPIRTRACEDIR=$vampirtracedir,g" >> $sedout
