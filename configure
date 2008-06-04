@@ -5031,6 +5031,8 @@ echo "TAU: installed tau_compiler.sh in $BINTARGET"
 cp ${tauroot}/tools/src/tau_treemerge.pl $BINTARGET
 cp ${tauroot}/tools/src/tauex $BINTARGET
 cp ${tauroot}/tools/src/taucc $BINTARGET
+cp ${tauroot}/tools/src/taucxx $BINTARGET
+cp ${tauroot}/tools/src/tauf90 $BINTARGET
 cp ${tauroot}/tools/src/tauex.multiple $BINTARGET
 cp ${tauroot}/tools/src/tau_cxx.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_cc.sh $BINTARGET
