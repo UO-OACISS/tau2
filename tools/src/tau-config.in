@@ -1,0 +1,121 @@
+#!/bin/bash
+
+TAUROOT=@TAUROOTDIR@
+TAUARCH=@ARCH@
+BASEDIR=$TAUROOT/$TAUARCH
+SICORTEX=no
+PREFIX=no
+DEFAULT_MAKEFILE=
+
+TauOptions=""
+TauOptionsExclude=""
+
+listmatching="false"
+makefile="false"
+getbinding="false"
+
+if [ $# = 0 ] ; then
+    echo "TAUROOT=$TAUROOT"
+    echo "TAUARCH=$TAUARCH"
+    echo "BASEDIR=$BASEDIR"
+    echo "SICORTEX=$SICORTEX"
+    echo "PREFIX=$PREFIX"
+    echo "DEFAULT_MAKEFILE=$DEFAULT_MAKEFILE"
+    exit 0
+fi
+
+for i in $* ; do
+    if [ "$i" = "profile" ] ; then
+        ProfileSpecified="true"
+    elif [ "$i" = "trace" ] ; then
+        TraceSpecified="true"
+    elif [ "$i" = "disable" ] ; then
+        DisableSpecified="true"
+    elif [ "$i" = "--list-matching" ] ; then
+        listmatching="true"
+    elif [ "$i" = "--makefile" ] ; then
+        makefile="true"
+    elif [ "$i" = "--binding" ] ; then
+        getbinding="true"
+    else
+        TauOptions="$TauOptions $i"
+    fi
+done
+
+
+
+if [ "$ProfileSpecified" = "false" -a "$TraceSpecified" = "false" ] ; then
+    ProfileSpecified="true"
+fi
+
+if [ "$ProfileSpecified" = "true" -a "$TraceSpecified" = "false" ] ; then
+    TauOptionsExclude="trace"
+elif [ "$ProfileSpecified" = "true" -a "$TraceSpecified" = "true" ] ; then
+    TauOptions="$TauOptions profile trace"
+elif [ "$ProfileSpecified" = "false" -a "$TraceSpecified" = "true" ] ; then
+    TauOptionsExclude="profile"
+    TauOptions="$TauOptions trace"
+fi
+
+if [ "$DisableSpecified" = "false" ] ; then
+    TauOptionsExclude="disable"
+fi
+
+if [ $makefile = true ] ; then
+    if [ "$SICORTEX" = "yes" ] ; then
+	bindingsdir=$PREFIX/lib64
+	bindings=`ls $PREFIX/lib64 | grep TAU-shared`
+    else
+	bindingsdir=$BASEDIR/lib
+	bindings=`ls $bindingsdir/Makefile.tau*`
+    fi
+else
+    if [ "$SICORTEX" = "yes" ] ; then
+	bindingsdir=$PREFIX/lib64
+	bindings=`ls $PREFIX/lib64 | grep TAU-shared`
+    else
+	bindingsdir=$BASEDIR/lib
+	bindings=`ls $BASEDIR/lib | grep shared`
+    fi
+fi
+
+for opt in $TauOptions; do
+    newbindings=""
+    for b in $bindings ; do
+        add=`echo $b | grep -i $opt`
+        newbindings="$newbindings $add"
+    done
+    bindings=$newbindings
+done
+
+for opt in $TauOptionsExclude; do
+    newbindings=""
+    for b in $bindings ; do
+        add=`echo $b | grep -v -i $opt`
+        newbindings="$newbindings $add"
+    done
+    bindings=$newbindings
+done
+
+declare -i minLength
+declare -i length
+minLength=9999
+theBinding=""
+for b in $bindings ; do
+    length=${#b}
+    if [ "$length" -lt "$minLength" ] ; then
+        theBinding=$b
+        minLength=$length
+    fi
+done
+
+if [ "x$theBinding" = "x" ] ; then
+    echo "Error: No matching binding for '$TauOptions' in directory $bindingsdir" >&2
+    exit 1
+fi
+
+if [ "$listmatching" = "true" ] ; then
+    echo "$bindings"
+else 
+    echo "$theBinding"
+fi
