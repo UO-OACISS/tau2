@@ -115,7 +115,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tauex,v 1.2 2008/06/04 21:16:47 amorris Exp $';
+	      echo '$Id: tauex,v 1.3 2008/06/05 18:22:57 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -m)
@@ -173,7 +173,7 @@ for arg in "$@" ; do
 done
 
 if [ "x$binding_specified" = "x" ] ; then
-    theBinding=`tau-config $options`
+    theBinding=`tau-config --binding $options`
     if [ $? != 0 ] ; then
 	exit 1
     fi
