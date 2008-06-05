@@ -175,8 +175,11 @@ if [ $options_specified = no ] ; then
     TAUCOMPILER_OPTIONS=$TAU_OPTIONS
 fi
 
+
 # unless verbose is specified, use -optQuiet
-if [ $verbose = false ] ; then
+if [ $verbose = true ] ; then
+    TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optVerbose"
+else
     TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optQuiet"
 fi
 
