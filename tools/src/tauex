@@ -2,7 +2,6 @@
 
 eval `tau-config`
 
-
 usage()
 {
     echo ""
@@ -42,9 +41,6 @@ fi
 
 
 dryrun="false"
-ProfileSpecified="false"
-TraceSpecified="false"
-DisableSpecified="false"
 processT="false"
 processE="false"
 TauOptions=""
@@ -56,7 +52,7 @@ multiplerun=false
 allnative=false
 binding_specified=""
 OUTPUTDIR="."
-options=""
+binding_options=""
 unset TAU_PAPI_DOMAIN
 export TAU_PAPI_DOMAIN
 
@@ -71,7 +67,7 @@ for arg in "$@" ; do
   modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
 
   if [ "$processT" = "true" ] ; then
-      options=`echo $arg | sed -e 's/,/ /g' | tr [A-Z] [a-z]`
+      binding_options=`echo $arg | sed -e 's/,/ /g' | tr [A-Z] [a-z]`
       processT="false"
       shift
   elif [ "$processE" = "true" ] ; then
@@ -115,7 +111,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tauex,v 1.3 2008/06/05 18:22:57 amorris Exp $';
+	      echo '$Id: tauex,v 1.4 2008/06/05 18:35:42 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -m)
@@ -173,7 +169,7 @@ for arg in "$@" ; do
 done
 
 if [ "x$binding_specified" = "x" ] ; then
-    theBinding=`tau-config --binding $options`
+    theBinding=`tau-config --binding $binding_options`
     if [ $? != 0 ] ; then
 	exit 1
     fi
@@ -224,7 +220,7 @@ fi
 
 if [ $verbose = "true" ] ; then
     echo "Matching bindings:"
-    tau-config --list-matching $options
+    tau-config --list-matching $binding_options
     echo ""
     echo "Using:"
     echo "$theBinding"

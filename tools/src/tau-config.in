@@ -13,6 +13,9 @@ TauOptionsExclude=""
 listmatching="false"
 makefile="false"
 getbinding="false"
+ProfileSpecified="false"
+TraceSpecified="false"
+DisableSpecified="false"
 
 if [ $# = 0 ] ; then
     echo "TAUROOT=$TAUROOT"
