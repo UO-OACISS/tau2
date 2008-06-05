@@ -621,6 +621,11 @@ static int writeMetaData(outputDevice *out, bool newline, int counter) {
   if (rc != -1) {
     writeXMLAttribute(out, "CWD", buffer, newline);
   }
+  bzero(buffer, 4096);
+  rc = readlink("/proc/self/cmdline", buffer, 4096);
+  if (rc != -1) {
+    writeXMLAttribute(out, "Command Line", buffer, newline);
+  }
 #endif /* __linux__ */
 
   char *user = getenv("USER");
