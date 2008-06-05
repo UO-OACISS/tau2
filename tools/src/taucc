@@ -52,6 +52,7 @@ next_arg_makefile=false
 next_arg_options=false
 verbose=false
 binding_options=
+opt_keepfiles=false
 
 for arg in "$@" ; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
@@ -78,6 +79,9 @@ for arg in "$@" ; do
 	      ;;
 	  -tau:verbose)
 	      verbose=true
+	      ;;
+	  -tau:keepfiles)
+	      opt_keepfiles=true
 	      ;;
 	  -tau:show)
 	      invoke_without_tau=yes
@@ -180,6 +184,10 @@ if [ $verbose = true ] ; then
     TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optVerbose"
 else
     TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optQuiet"
+fi
+
+if [ $opt_keepfiles = true ] ; then
+    TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optKeepFiles"
 fi
 
 if [ $invoke_without_tau = yes ] ; then
