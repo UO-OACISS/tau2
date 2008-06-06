@@ -583,6 +583,11 @@ public class UtilFncs {
             dataSource = new GPTLDataSource(sourceFiles[0]);
             break;
 
+        case DataSource.PARAVER:
+            //dataSource = new ParaverDataSource(sourceFiles[0]);
+            dataSource = new ParaverDataSource(sourceFiles);
+            break;
+
         default:
             throw new RuntimeException("Programming error: unknown format id = " + fileType);
         }
