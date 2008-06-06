@@ -241,8 +241,13 @@ extern "C" int tau_pthread_create (pthread_t * threadp,
   return pthread_create(threadp, attr, tau_pthread_function, (void*)pack);
 }
 
+extern "C" void tau_pthread_exit (void *value_ptr) {
+  TAU_PROFILE_EXIT("pthread_exit");
+  pthread_exit(value_ptr);
+}
+
 /***************************************************************************
  * $RCSfile: PthreadLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.14 $   $Date: 2006/05/05 19:27:25 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.14 2006/05/05 19:27:25 amorris Exp $
+ * $Revision: 1.15 $   $Date: 2008/06/06 23:15:32 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.15 2008/06/06 23:15:32 amorris Exp $
  ***************************************************************************/

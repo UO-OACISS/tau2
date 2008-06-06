@@ -57,6 +57,9 @@ pid_t tau_fork (void);
 #define pthread_create(thread, attr, function, arg) \
         tau_pthread_create(thread, attr, function, arg)
 
+#define pthread_exit(arg) \
+        tau_pthread_exit(arg)
+
 #ifdef __cplusplus
 extern "C" 
 #endif
@@ -64,6 +67,7 @@ int tau_pthread_create (pthread_t *threadp,
 			const pthread_attr_t *attr,
 			void *(*start_routine) (void *),
 			void *arg);
+void tau_pthread_exit (void *arg);
 
 #endif /* PTHREADS */
 #endif /* TAU_LIBRARY_SOURCE */
@@ -316,7 +320,7 @@ using tau::Profiler;
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.83 $   $Date: 2008/03/15 02:09:51 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.83 2008/03/15 02:09:51 sameer Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: amorris $
+ * $Revision: 1.84 $   $Date: 2008/06/06 23:15:30 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.84 2008/06/06 23:15:30 amorris Exp $ 
  ***************************************************************************/
