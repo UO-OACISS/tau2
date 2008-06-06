@@ -67,7 +67,7 @@ fi
 if [ $makefile = true ] ; then
     if [ "$SICORTEX" = "yes" ] ; then
 	bindingsdir=$PREFIX/lib64
-	bindings=`ls $PREFIX/lib64 | grep TAU-shared`
+	bindings=`ls $PREFIX/share/TAU/64/Makefile.tau*`
     else
 	bindingsdir=$BASEDIR/lib
 	bindings=`ls $bindingsdir/Makefile.tau*`
