@@ -172,11 +172,11 @@ JDKARCH                 = linux
 #############################################
 # Opari OBJECTS
 #############################################
+OPARI_O 	= TauKojakOpariDisable.o #ENDIF#
 #OPARI#OPARI_O 	= TauOpari.o #ENDIF#
 #KOJAKOPARI#OPARI_O 	= TauKojakOpari.o #ENDIF#
 #EPILOG#OPARI_O 	=  #ENDIF#
 #VAMPIRTRACE#OPARI_O 	=  #ENDIF#
-#GNU#OPARI_O 	= #ENDIF#
 
 #############################################
 # CallPath OBJECTS
