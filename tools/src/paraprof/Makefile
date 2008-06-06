@@ -5,7 +5,7 @@
 ##########################
 
 CONFIG_ARCH=x86_64
-TAUROOT=/home/amorris/tau2
+TAUROOT=/home/khuck/tau2
 
 BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java \
              ParaProfTreeCellRenderer.java OSSWriter.java \

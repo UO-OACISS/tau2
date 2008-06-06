@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.25 2008/05/24 00:52:08 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.26 2008/06/06 00:42:55 khuck Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.25 $
+ * @version $Revision: 1.26 $
  */
 public class ParaProf implements ActionListener {
 
@@ -45,7 +45,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    private final static String VERSION = "Fri May 23 17:51:08 PDT 2008";
+    private final static String VERSION = "Thu Jun  5 17:20:27 PDT 2008";
 
     public static int defaultNumberPrecision = 6;
 
@@ -444,6 +444,8 @@ public class ParaProf implements ActionListener {
                 ParaProf.fileType = DataSource.PERIXML;
             } else if (fileTypeString.equals("gptl")) {
                 ParaProf.fileType = DataSource.GPTL;
+            } else if (fileTypeString.equals("paraver")) {
+                ParaProf.fileType = DataSource.PARAVER;
             } else {
                 System.err.println("Please enter a valid file type.");
                 ParaProf.usage();
