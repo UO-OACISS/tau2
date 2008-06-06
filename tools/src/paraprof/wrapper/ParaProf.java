@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.26 2008/06/06 00:42:55 khuck Exp $
+ * CVS $Id: ParaProf.java,v 1.27 2008/06/06 22:29:30 khuck Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.26 $
+ * @version $Revision: 1.27 $
  */
 public class ParaProf implements ActionListener {
 
@@ -45,7 +45,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    private final static String VERSION = "Thu Jun  5 17:20:27 PDT 2008";
+    private final static String VERSION = "Fri Jun  6 15:28:53 PDT 2008";
 
     public static int defaultNumberPrecision = 6;
 
@@ -117,7 +117,7 @@ public class ParaProf implements ActionListener {
                 + "  -f, --filetype <filetype>       Specify type of performance data, options are:\n"
                 + "                                    profiles (default), pprof, dynaprof, mpip,\n"
                 + "                                    gprof, psrun, hpm, packed, cube, hpc, ompp\n"
-                + "                                    snap, perixml, gptl\n"
+                + "                                    snap, perixml, gptl, ipm\n"
                 + "  -h, --help                      Display this help message\n"
                 + "  -p                              Use `pprof` to compute derived data\n"
                 + "  -i, --fixnames                  Use the fixnames option for gprof\n"
@@ -446,6 +446,8 @@ public class ParaProf implements ActionListener {
                 ParaProf.fileType = DataSource.GPTL;
             } else if (fileTypeString.equals("paraver")) {
                 ParaProf.fileType = DataSource.PARAVER;
+            } else if (fileTypeString.equals("ipm")) {
+                ParaProf.fileType = DataSource.IPM;
             } else {
                 System.err.println("Please enter a valid file type.");
                 ParaProf.usage();
