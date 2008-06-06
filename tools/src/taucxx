@@ -186,6 +186,11 @@ else
     TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optQuiet"
 fi
 
+# Pathscale/Opari workaround
+if [ "$SICORTEX" = "yes" ] ; then
+    TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optOpariOpts=-nodecl"
+fi
+
 if [ $opt_keepfiles = true ] ; then
     TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optKeepFiles"
 fi
