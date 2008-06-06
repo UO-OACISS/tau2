@@ -47,7 +47,7 @@ public class LoadTrial {
                 + "  -f, --filetype <filetype>       Specify type of performance data, options are:\n"
                 + "                                    profiles (default), pprof, dynaprof, mpip,\n"
                 + "                                    gprof, psrun, hpm, packed, cube, hpc, ompp,\n"
-                + "                                    snap, perixml, gptl, paraver\n" 
+                + "                                    snap, perixml, gptl, paraver, ipm\n" 
                 + "  -t, --trialid <number>          Specify trial ID\n"
                 + "  -i, --fixnames                  Use the fixnames option for gprof\n"
                 + "  -m, --metadata <filename>       XML metadata for the trial\n\n" + "Notes:\n"
@@ -326,6 +326,8 @@ public class LoadTrial {
                 fileType = DataSource.GYRO;
             } else if (fileTypeString.equals("gptl")) {
                 fileType = DataSource.GPTL;
+            } else if (fileTypeString.equals("ipm")) {
+                fileType = DataSource.IPM;
             } else if (fileTypeString.equals("ompp")) {
                 fileType = DataSource.OMPP;
             } else if (fileTypeString.equals("snap")) {

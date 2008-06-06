@@ -20,9 +20,9 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.36 2008/06/06 00:40:26 khuck Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.37 2008/06/06 22:28:47 khuck Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.36 $
+ * @version $Revision: 1.37 $
  */
 public abstract class DataSource {
 
@@ -43,11 +43,12 @@ public abstract class DataSource {
     public static final int PERIXML = 12;
     public static final int GPTL = 13; // General Purpose Timing Library - Jim Rosinski
     public static final int PARAVER = 14; // Statistical output from Paraver - Jesus LeBarta
+    public static final int IPM = 15; // Data from IPM/NERSC
     public static final int GYRO = 100;
 
     public static String formatTypeStrings[] = { "Tau profiles", "Tau pprof.dat", "Dynaprof", "MpiP", "HPMToolkit", "Gprof",
             "PSRun", "ParaProf Packed Profile", "Cube", "HPCToolkit", "TAU Snapshot", "ompP", "PERI-XML",
-            "General Purpose Timing Library (GPTL)", "Paraver" };
+            "General Purpose Timing Library (GPTL)", "Paraver", "IPM" };
 
     private static boolean meanIncludeNulls = true;
 

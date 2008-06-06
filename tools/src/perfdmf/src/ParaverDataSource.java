@@ -116,12 +116,12 @@ public class ParaverDataSource extends DataSource {
 					} catch (ParseException pe) {/*System.err.println("Error parsing: " + tmp);*/ continue;}
 
 					// for this function, create a function
-					function = (Function)functions.get((String)functionNames.get(j));
-					if (function == null) {
+					//function = (Function)functions.get((String)functionNames.get(j));
+					//if (function == null) {
 						function = this.addFunction((String)functionNames.get(j));
-						functions.put((String)functionNames.get(j), function);
 						function.addGroup(this.addGroup("TAU_DEFAULT"));
-					}
+						//functions.put((String)functionNames.get(j), function);
+					//}
 
 					functionProfile = new FunctionProfile(function, this.files.length);
 

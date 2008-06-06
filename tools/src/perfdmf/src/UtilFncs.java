@@ -583,8 +583,11 @@ public class UtilFncs {
             dataSource = new GPTLDataSource(sourceFiles[0]);
             break;
 
+        case DataSource.IPM:
+            dataSource = new IPMDataSource(sourceFiles[0]);
+            break;
+
         case DataSource.PARAVER:
-            //dataSource = new ParaverDataSource(sourceFiles[0]);
             dataSource = new ParaverDataSource(sourceFiles);
             break;
 
