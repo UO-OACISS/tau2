@@ -54,10 +54,7 @@ public class ParaverDataSource extends DataSource {
         //Record time.
         long time = System.currentTimeMillis();
 
-        Node node = null;
-        Context context = null;
         Thread thread = null;
-        int nodeID = -1;
 
 		for(int i = 0; i < this.files.length ; i++) {
 			file = files[i];
@@ -94,7 +91,7 @@ public class ParaverDataSource extends DataSource {
 			} else if (inputString.startsWith("THREAD")) {
 				// process the function data.
         		Function function = null;
-        		FunctionProfile functionProfile = null;
+        		FunctionProfile fp = null;
 
 				// process thread data
         		StringTokenizer st = new StringTokenizer(inputString, " \t\n\r%");
@@ -103,10 +100,10 @@ public class ParaverDataSource extends DataSource {
         		StringTokenizer st2 = new StringTokenizer(tmp, ".");
         		tmp = st2.nextToken(); // ignore
         		tmp = st2.nextToken(); // process
-          		node = this.addNode(Integer.parseInt(tmp)-1);
-           		context = node.addContext(0);
+          		int node = Integer.parseInt(tmp)-1;
         		tmp = st2.nextToken(); // thread
-           		thread = context.addThread(Integer.parseInt(tmp)-1, this.files.length);
+           		thread = this.addThread(node, 0, Integer.parseInt(tmp)-1);
+				this.addMetric(metricName);
 				int j = 0;
 				while (st.hasMoreTokens()) {
         			tmp = st.nextToken(); // function value
@@ -116,24 +113,21 @@ public class ParaverDataSource extends DataSource {
 					} catch (ParseException pe) {/*System.err.println("Error parsing: " + tmp);*/ continue;}
 
 					// for this function, create a function
-					//function = (Function)functions.get((String)functionNames.get(j));
-					//if (function == null) {
-						function = this.addFunction((String)functionNames.get(j));
-						function.addGroup(this.addGroup("TAU_DEFAULT"));
-						//functions.put((String)functionNames.get(j), function);
-					//}
-
-					functionProfile = new FunctionProfile(function, this.files.length);
-
-					// add it to the current thread
-					thread.addFunctionProfile(functionProfile);
+					function = this.addFunction((String)functionNames.get(j), this.files.length); // ,1?
+					fp = thread.getFunctionProfile(function);
+					if (fp == null) {
+						fp = new FunctionProfile(function, this.files.length);
+						thread.addFunctionProfile(fp);
+					}
 
 					// set the values for each metric
-					Metric m = this.addMetric(metricName, thread);
-					functionProfile.setNumCalls(1);  // we don't have this value
-					functionProfile.setNumSubr(0);  // we don't have this value
-					functionProfile.setInclusive(m.getID(), value);
-					functionProfile.setExclusive(m.getID(), value);
+					if (i == 0) {
+						function.addGroup(this.addGroup("TAU_DEFAULT"));
+						fp.setNumCalls(1);  // we don't have this value
+						fp.setNumSubr(0);  // we don't have this value
+					}
+					fp.setInclusive(i, value);
+					fp.setExclusive(i, value);
 					j++;
 				}
 			}
