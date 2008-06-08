@@ -173,7 +173,7 @@ extern "C" {
   void pomp_flush_exit__() {}
   void POMP_FLUSH_EXIT() {}
 
-  int tau_openmp_init() {}
+  int tau_openmp_init() { return 0; }
   void TauStartOpenMPRegionTimer() {}
   void TauStopOpenMPRegionTimer() {}
 
@@ -215,18 +215,18 @@ extern "C" {
   void POMP_Destroy_lock() {}
   void POMP_Set_lock() {}
   void POMP_Unset_lock() {}
-  int  POMP_Test_lock() {}
+  int  POMP_Test_lock() { return 0; }
   void POMP_Init_nest_lock() {}
   void POMP_Destroy_nest_lock() {}
   void POMP_Set_nest_lock() {}
   void POMP_Unset_nest_lock() {}
-  int  POMP_Test_nest_lock() {}
+  int  POMP_Test_nest_lock() { return 0; }
 }
 
 /***************************************************************************
  * $RCSfile: TauKojakOpariDisable.cpp,v $   $Author: amorris $
- * $Revision: 1.1 $   $Date: 2008/06/06 18:39:06 $
- * POOMA_VERSION_ID: $Id: TauKojakOpariDisable.cpp,v 1.1 2008/06/06 18:39:06 amorris Exp $
+ * $Revision: 1.2 $   $Date: 2008/06/08 22:31:04 $
+ * POOMA_VERSION_ID: $Id: TauKojakOpariDisable.cpp,v 1.2 2008/06/08 22:31:04 amorris Exp $
  ***************************************************************************/
 
 
