@@ -42,6 +42,7 @@ usage()
     echo "   $cmd foo.f90 -o foo"
     echo "   $cmd -tau:MPI,OPENMP,TRACE foo.f90 -o foo"
     echo "   $cmd -tau:verbose -tau:PTHREAD foo.f90 -o foo"
+    echo ""
     exit 1
 }
 
