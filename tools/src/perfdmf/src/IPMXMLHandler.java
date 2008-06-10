@@ -183,6 +183,9 @@ public class IPMXMLHandler extends DefaultHandler {
 		} else {
 			this.function.addGroup(dataSource.addGroup("TAU_DEFAULT"));
 		}
+		if (data.name.startsWith("MPI_")) {
+			this.function.addGroup(dataSource.addGroup("MPI"));
+		}
 		// always get it from the current parent region
 		Set keys = this.region.measurements.keySet();
 		this.fp = new FunctionProfile (function, keys.size());

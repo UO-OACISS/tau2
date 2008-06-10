@@ -76,6 +76,7 @@ public class IPMDataSource extends DataSource {
             this.generateDerivedData();
     		this.aggregateMetaData();
     		this.buildXMLMetaData();
+			this.setGroupNamesPresent(true);
     	} catch (Exception e) {
             if (e instanceof DataSourceException) {
                 throw (DataSourceException)e;
