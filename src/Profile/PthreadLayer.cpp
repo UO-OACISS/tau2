@@ -238,7 +238,7 @@ extern "C" int tau_pthread_create (pthread_t * threadp,
   tau_pthread_pack *pack = (tau_pthread_pack*) malloc (sizeof(tau_pthread_pack));
   pack->start_routine = start_routine;
   pack->arg = arg;
-  return pthread_create(threadp, attr, tau_pthread_function, (void*)pack);
+  return pthread_create(threadp, (pthread_attr_t*) attr, tau_pthread_function, (void*)pack);
 }
 
 extern "C" void tau_pthread_exit (void *value_ptr) {
@@ -248,6 +248,6 @@ extern "C" void tau_pthread_exit (void *value_ptr) {
 
 /***************************************************************************
  * $RCSfile: PthreadLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.15 $   $Date: 2008/06/06 23:15:32 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.15 2008/06/06 23:15:32 amorris Exp $
+ * $Revision: 1.16 $   $Date: 2008/06/13 22:15:19 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.16 2008/06/13 22:15:19 amorris Exp $
  ***************************************************************************/
