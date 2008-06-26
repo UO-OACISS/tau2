@@ -2717,9 +2717,6 @@ then
   bgp)
 	mpiinc=/bgsys/drivers/ppcfloor/comm/include
         ;;
-  i386_linux) 
-	mpiinc=/usr/local/packages/mpich/include
-	;;
   t3e|crayx1|craysv1)
 	mpiinc=/opt/ctl/mpt/mpt/include
 	;;
