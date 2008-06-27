@@ -33,6 +33,7 @@ public class Utilities {
         PerfExplorerServer server = getServer();
 		List<Application> apps = server.getApplicationList();
         for (Application app : apps ) {
+            System.out.println(app.getName());
             if (app.getName().equals(aName)) {
             	//System.out.println("Found app");
             	List<Experiment> exps = server.getExperimentList(app.getID());

@@ -59,7 +59,7 @@ public class RuleHarness {
 
     public void processRules() {
         try {
-        	System.out.println("Firing rules...");
+        	System.out.println("Firing rules...\n");
             this.workingMemory.fireAllRules();   
         	System.out.println("...done with rules.");
         } catch (Throwable t) {

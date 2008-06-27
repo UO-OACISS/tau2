@@ -40,6 +40,7 @@ import edu.uoregon.tau.perfdmf.Trial;
 public class DrawMMMGraph extends DrawGraph {
 
 	private boolean sortXAxis = false;
+	private String stripValue = null;
 
 	/**
 	 * @param input
@@ -160,8 +161,14 @@ public class DrawMMMGraph extends DrawGraph {
 	        			categories[i] = categoryName;
 	        			i++;
 	*/
+						if (stripValue != null) {
+							categoryName = categoryName.replaceAll(stripValue, "");
+							// this is a total hack.  Need a true replacement method.
+							categoryName = categoryName.replaceAll("> \\]", "");
+						}
 						dataset.addValue(input.getDataPoint(thread, event, metric, valueType),
 	        				seriesName, categoryName);
+						categories.add(categoryName);
 	        		}
 	        	}
 	        }
@@ -211,9 +218,13 @@ public class DrawMMMGraph extends DrawGraph {
 		rangeAxis.setAutoRangeIncludesZero(false);
 		
         MyCategoryAxis domainAxis = null;
-		domainAxis = new MyCategoryAxis();
-		domainAxis.setTickLabelSkip(4);
-        domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_45);
+		domainAxis = new MyCategoryAxis(xAxisLabel);
+		if (categories.size() > 40){
+			domainAxis.setTickLabelSkip(categories.size()/20);
+        	domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_45);
+		} else if (categories.size() > 20) {
+        	domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_45);
+		}
         plot.setDomainAxis(domainAxis);
 
         // create categories label...
@@ -229,5 +240,10 @@ public class DrawMMMGraph extends DrawGraph {
 	public boolean getSortXAxis() {
 		return this.sortXAxis;
 	}
+
+	public void setStripXName(String value) {
+		this.stripValue = value;
+	}
+
 
 }

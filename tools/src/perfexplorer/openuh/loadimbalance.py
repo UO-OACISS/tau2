@@ -40,7 +40,7 @@ Utilities.setSession("openuh")
 #trial = TrialResult(Utilities.getTrial("Fluid Dynamic", "rib 45", "1_8"))
 #trial = TrialResult(Utilities.getTrial("msap_parametric.optix.dynamic.4", "size.400", "16.threads"))
 #trial = TrialResult(Utilities.getTrial("msap_parametric.optix.static_nowait", "size.400", "16.threads"))
-trial = TrialResult(Utilities.getTrial("msap_parametric.optix.static", "size.400", "16.threads"))
+trial = TrialResult(Utilities.getTrial("static", "size.400", "16.threads"))
 #trial = TrialResult(Utilities.getTrial("msap_parametric.optix.dynamic.1", "size.400", "16.threads"))
 #trial = TrialResult(Utilities.getCurrentTrial())
 
