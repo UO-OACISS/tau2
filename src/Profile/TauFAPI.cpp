@@ -70,7 +70,7 @@ void Tau_disable_instrumentation(void);
 void Tau_trace_sendmsg(int type, int destination, int length);
 void Tau_trace_recvmsg(int type, int source, int length);
 void * Tau_get_userevent(char *name);
-void * Tau_get_context_userevent(char *name);
+void Tau_get_context_userevent(void **ptr, char *name);
 void Tau_userevent(void *ue, double data);
 void Tau_context_userevent(void *ue, double data);
 void Tau_report_statistics(void);
@@ -1026,7 +1026,7 @@ void tau_register_context_event_(void **ptr, char *name, int slen)
 #ifdef DEBUG_PROF
     printf("Tau_get_context_userevent(%s) \n", localname);
 #endif /* DEBUG_PROF */
-    *ptr = Tau_get_context_userevent(localname);
+    Tau_get_context_userevent(ptr, localname);
     free(tmp);
     free(tmp2);
   }
@@ -2011,7 +2011,7 @@ void TAU_DEALLOC(void ** ptr, int* line, char *name, int slen)
 
 
 /***************************************************************************
- * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.67 $   $Date: 2008/02/12 01:09:01 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.67 2008/02/12 01:09:01 sameer Exp $ 
+ * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.68 $   $Date: 2008/07/03 23:29:53 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.68 2008/07/03 23:29:53 amorris Exp $ 
  ***************************************************************************/
