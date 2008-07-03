@@ -15,8 +15,8 @@ from java.util import ArrayList
 True = 1
 False = 0
 config = "hlrs"
-inApp = "mg"
-inExp = "parameter"
+inApp = "lu"
+inExp = "phases"
 inTrial = "lu.A.4"
 
 def load():
@@ -33,8 +33,7 @@ def first(input):
 	print "searching for iteration events (no classpath)..."
 	events = ArrayList()
 	for event in input.getEvents():
-		#if event.find("Iteration") >= 0 and input.getEventGroupName(event).find("TAU_PHASE") < 0:
-		if event.find("MPI_Send") >= 0 and event.find("message size") >= 0:
+		if event.find("Iteration") >= 0 and event.find("=>") < 0 and event.find("**") < 0:
 			events.add(event)
 	print "...done."
 
@@ -57,15 +56,15 @@ def second(extracted):
 		metrics = HashSet()
 		metrics.add(metric)
 		grapher.set_metrics(metrics)
-		grapher.setSortXAxis(True)
-		grapher.setLogYAxis(True)
-		grapher.setStripXName("MPI_Send\(\)   \[ <message size> = <")
-		grapher.setTitle("NPB3.2.1 mg.A.4 - MPI_Send() Performance: " + metric)
+		grapher.setSortXAxis(False)
+		grapher.setLogYAxis(False)
+		grapher.setStripXName("Iteration")
+		grapher.setTitle("NPB3.2.1 lu.A.4 - Iteration Performance: " + metric)
 		grapher.setSeriesType(DrawMMMGraph.TRIALNAME);
 		grapher.setCategoryType(DrawMMMGraph.EVENTNAME)
-		grapher.setValueType(AbstractResult.EXCLUSIVE)
-		grapher.setXAxisLabel("Message Size")
-		grapher.setYAxisLabel("Exclusive " + metric);
+		grapher.setValueType(AbstractResult.INCLUSIVE)
+		grapher.setXAxisLabel("Iteration Number")
+		grapher.setYAxisLabel("Inclusive " + metric);
 		# grapher.setLogYAxis(True)
 		grapher.processData()
 	print "...done."
