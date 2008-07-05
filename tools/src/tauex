@@ -111,7 +111,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tauex,v 1.4 2008/06/05 18:35:42 amorris Exp $';
+	      echo '$Id: tauex,v 1.5 2008/07/05 12:52:37 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -m)
@@ -286,6 +286,7 @@ if [ $dryrun = "true" ]; then
     echo "export VT_PFORM_GDIR=$OUTPUTDIR"
     echo "export VT_METRICS=$VT_METRICS"
     echo "export ELG_METRICS=$ELG_METRICS"
+    echo "export ELG_PFORM_GDIR=$OUTPUTDIR"
     echo "mkdir -p $PROFILEDIR"
 
     if [ $multiplerun = "true" ] ; then
@@ -308,6 +309,7 @@ else
     export VT_PFORM_GDIR=$OUTPUTDIR
     export VT_METRICS=$VT_METRICS
     export ELG_METRICS=$ELG_METRICS
+    export ELG_PFORM_GDIR=$OUTPUTDIR
     mkdir -p $PROFILEDIR
     export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
     export LD_PRELOAD=$TAUEX_LD_PRELOAD
