@@ -687,13 +687,19 @@ void tau_dealloc__(void ** ptr, int* line, char *name, int slen)
 {
 }
 
-void Tau_init_ref(int* argc, char ***argv) {}
+void Tau_init_ref(int* argc, char ***argv) 
+{
+}
+
+void Tau_exit(char *)
+{
+}
 
 ////////////////////////////////////////////////////////////////////////////
 } /* extern "C" */
 
 /***************************************************************************
  * $RCSfile: TauDisable.cpp,v $   $Author: amorris $
- * $Revision: 1.10 $   $Date: 2007/10/31 23:33:19 $
- * POOMA_VERSION_ID: $Id: TauDisable.cpp,v 1.10 2007/10/31 23:33:19 amorris Exp $ 
+ * $Revision: 1.11 $   $Date: 2008/07/05 12:49:26 $
+ * POOMA_VERSION_ID: $Id: TauDisable.cpp,v 1.11 2008/07/05 12:49:26 amorris Exp $ 
  ***************************************************************************/
