@@ -250,12 +250,12 @@ $(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS) $(MPI_WRAPPER) $(TAU_FORCE_MPI)
 		$(PRELINK_PHASE)
 		$(TAU_CXX) $(TAU_ARFLAGS)  $(TAU_SHLIB) $(OBJS) $(EXTRAOBJS) $(TAU_MPI_FOR_SHARED) $(EXTRA_LIBS) $(LEXTRA1) $(TAU_PAPI_EXTRA_FLAGS) $(TAU_EXTRA_LIBRARY_FLAGS) $(TAUEXTRASHLIBOPTS)
 
-$(TAU_DISABLE): TauDisable.o $(TAU_DISABLE_SHARED)
-		$(AR) $(ARFLAGS) $(TAU_DISABLE) TauDisable.o
+$(TAU_DISABLE): TauDisable.o $(TAU_DISABLE_SHARED) TauKojakOpariDisable.o
+		$(AR) $(ARFLAGS) $(TAU_DISABLE) TauDisable.o TauKojakOpariDisable.o
 		$(TAU_RANLIB) $(TAU_DISABLE)
 
-$(TAU_DISABLE_SHARED) : TauDisable.o
-		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_DISABLE_SHARED) TauDisable.o 
+$(TAU_DISABLE_SHARED) : TauDisable.o TauKojakOpariDisable.o
+		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_DISABLE_SHARED) TauDisable.o TauKojakOpariDisable.o
 
 libTauMpi$(TAU_CONFIG)$(LSX): TauMpi.c TauFMpi.c ClockSync.c ProfileMerge.c
 		$(MAKE) -f Makefile.wrapper  
