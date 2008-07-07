@@ -5092,6 +5092,7 @@ cp ${tauroot}/tools/src/contrib/jgraph.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/jgraph-1.3.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/jython.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/jogl/jogl.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/derby.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/xerces.jar $JARTARGET
 cp ${tauroot}/tools/src/common/resources/tau16x16.gif $JARTARGET
 
