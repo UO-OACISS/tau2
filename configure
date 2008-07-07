@@ -3368,6 +3368,12 @@ then
         mpiflibargs="$wrapperlib -lelgfmpi"
         wrapperlib="$wrapperlib -lelgfmpi"
       fi 
+      if [ $epilog = yes -a -f $epiloglibdir/libepk.ad.fmpi.a ]
+      then
+        mpiflibargs="$wrapperlib -lepk.ad.fmpi"
+        wrapperlib="$wrapperlib -lepk.ad.fmpi"
+      fi
+
  
 
       if [ -f $mpilib/libfmpich.cnk.a -o -f $mpilib/libfmpich.cnk.so ]
