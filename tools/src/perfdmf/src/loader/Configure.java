@@ -200,7 +200,7 @@ public class Configure {
                     db_dbname = "perfdmf";
                 } else if (jdbc_db_type.compareTo("derby") == 0 && old_jdbc_db_type.compareTo("derby") != 0) {
                     // if the user has chosen derby and the config file is not already set for it
-                    jdbc_db_jarfile = getSysDepRoot() + "derby.jar";
+                    jdbc_db_jarfile = tau_root + File.separator + arch + File.separator + "lib" + File.separator + "derby.jar";
                     jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
                     db_schemafile = perfdmf_home + etc + "dbschema.derby.txt";
                     db_dbname = tau_root + File.separator + arch + File.separator + "lib" + File.separator + "perfdmf";
@@ -274,7 +274,11 @@ public class Configure {
             }
 
             if (!configFileFound) {
-                jdbc_db_jarfile = getSysDepRoot() + jdbc_db_jarfile;
+                if (jdbc_db_type.compareTo("derby") == 0) {
+                    jdbc_db_jarfile = tau_root + File.separator + arch + File.separator + "lib" + File.separator + "derby.jar";
+                } else {
+                    jdbc_db_jarfile = getSysDepRoot() + jdbc_db_jarfile;
+                }
             }
 
             // Prompt for JDBC jar file
