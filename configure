@@ -3235,6 +3235,15 @@ then
   fi
 fi
 
+if [ $vampirtrace = yes ]
+then
+    if [ -f $vampirtracedir/lib/libvt.a ] 
+    then
+      vampirtracelibdir=lib
+    else
+      vampirtracelibdir=vtlib
+    fi
+fi
 
 if [ $papi = yes ] ; then
     fixmakeargs="$fixmakeargs PAPI papidir=$papidir"
@@ -3317,13 +3326,7 @@ then
 
   if [ $vampirtrace = yes -a $mpi = yes ]
   then
-    if [ -f $vampirtracedir/lib/libvt.mpi.a ] 
-    then
-      vampirtracelibdir=lib
-    else
-      vampirtracelibdir=vtlib
-    fi
-    if [ $vampirtrace = yes -a -f $vampirtracedir/lib/libvt.fmpi.a -o -f $vampirtracedir/vtlib/libvt.fmpi.a ] 
+    if [ $vampirtrace = yes -a -f $vampirtracedir/$vampirtracelibdir/libvt.fmpi.a -o -f $vampirtracedir/$vampirtracelibdir/libvt.fmpi.a ] 
     then
       vtfortranwrapper="-lvt.fmpi"
     fi 
@@ -3331,6 +3334,7 @@ then
     if [ $openmp = yes ] 
     then
 # should we have a -lvt.fmpi here? 
+	fixmakeargs="pcxxopt=$pcxxopt useropt=$useropt extrashlibopts=$extrashlibopts $fixmakeargs"
       wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir -lvt.ompi -lotf -lz"
     fi
   fi 
@@ -3622,8 +3626,30 @@ then
     fi # mpi _r check
 
   fi # If -d mpilib
-fi # if mpilib is specified
-
+else # if mpilib is specified
+    if [ $openmp = yes ] 
+    then
+	if [ $epilog = yes ]
+	then
+	    wrapperlib="-L$epiloglibdir#-lelg.omp#-ldl"
+	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
+	elif [ $vampirtrace = yes ]
+	then
+	    wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-lvt.omp#-lotf#-lz#-ldl"
+	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
+	fi
+    else
+	if [ $epilog = yes ]
+	then
+	    wrapperlib="-L$epiloglibdir#-lelg#-ldl"
+	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
+	elif [ $vampirtrace = yes ]
+	then
+	    wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-lvt#-lotf#-lz#-ldl"
+	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
+	fi
+    fi
+fi
 ######################################################################
 # Set default CC compiler in all Makefiles
 
