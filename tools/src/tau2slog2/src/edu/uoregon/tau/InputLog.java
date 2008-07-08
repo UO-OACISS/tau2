@@ -11,16 +11,21 @@ import java.io.DataOutputStream;
 import java.util.ArrayList;
 import java.util.EmptyStackException;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Random;
-import java.util.HashSet;
-//import java.util.Map;
 import java.util.Set;
-//import java.util.TreeMap;
-import base.drawable.*;
+
+import base.drawable.Category;
+import base.drawable.Composite;
+import base.drawable.Kind;
+import base.drawable.Primitive;
+import base.drawable.Topology;
+import base.drawable.YCoordMap;
 import base.io.BufArrayOutputStream;
-import edu.uoregon.tau.trace.*;
+import edu.uoregon.tau.trace.TraceFactory;
+import edu.uoregon.tau.trace.TraceReader;
+import edu.uoregon.tau.trace.TraceReaderCallbacks;
 
 
 class MessageEvent{
@@ -216,7 +221,7 @@ public class InputLog implements base.drawable.InputAPI
 		TraceReaderCallbacks def_cb = new TAUReaderInit();
 		TraceReader tFileDefRead=TraceFactory.OpenFileForInput(tautrc,tauedf);
 		//System.out.println()
-		tFileDefRead.setSubtractFirstTimestamp(false);
+		tFileDefRead.setSubtractFirstTimestamp(true);
 		tFileDefRead.setDefsOnly(true);
 		int recs_read=0;
 		int arch_read=0;
@@ -245,7 +250,8 @@ public class InputLog implements base.drawable.InputAPI
 		
 		ev_cb = new TAUReader();
 		tFileEvRead=TraceFactory.OpenFileForInput(tautrc,tauedf);
-		tFileDefRead.setSubtractFirstTimestamp(false);
+		tFileEvRead.setSubtractFirstTimestamp(true);
+		//tFileDefRead.setSubtractFirstTimestamp(false);
 		return true;
 	}
 
@@ -481,13 +487,14 @@ public class InputLog implements base.drawable.InputAPI
 			return 0;
 		}
 		
-		private static boolean compareEvts(MessageEvent a, MessageEvent b){
-			
-			if(a.tag==b.tag&&a.src==b.src&&a.dst==b.dst&&a.siz==b.siz&&a.com==b.com&&a.time!=b.time)
-				return true;
-			
-			return false;
-		}
+		//TODO: Use event comparison
+//		private static boolean compareEvts(MessageEvent a, MessageEvent b){
+//			
+//			if(a.tag==b.tag&&a.src==b.src&&a.dst==b.dst&&a.siz==b.siz&&a.com==b.com&&a.time!=b.time)
+//				return true;
+//			
+//			return false;
+//		}
 		
 		public int sendMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, 
 				int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageComm){
