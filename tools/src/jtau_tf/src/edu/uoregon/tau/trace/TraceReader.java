@@ -403,6 +403,9 @@ public class TraceReader extends TraceFile{
 		definitionsOnly=value;
 	}
 
+	
+	long FirstTimestamp=0;
+	
 	/* read n events and call appropriate handlers.
 	 * Returns the number of records read (can be 0).
 	 * Returns a -1 value when an error takes place. Check errno */
@@ -411,7 +414,7 @@ public class TraceReader extends TraceFile{
 		//Event checkTime=new Event();
 		int recordsRead=0, recordsToRead;
 		long otherTid, otherNid, msgLen, msgTag;
-		long FirstTimestamp=0;
+		
 
 		//if (tFile == null)
 		//	return 0; /* ERROR */
