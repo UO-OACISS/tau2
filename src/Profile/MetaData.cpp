@@ -50,6 +50,10 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <kernel_interface.h>
 #endif // TAU_BGP
 
+#if (defined (TAU_CATAMOUNT) && defined (PTHREADS))
+#define _BITS_PTHREADTYPES_H 1
+#endif
+
 #include <signal.h>
 #include <stdarg.h>
 
