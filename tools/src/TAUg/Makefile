@@ -11,8 +11,8 @@
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
  
-CONFIG_ARCH=x86_64
-TAUROOT=/home/khuck/tau2
+CONFIG_ARCH=default
+TAUROOT=
 
 include $(TAUROOT)/include/Makefile
 
