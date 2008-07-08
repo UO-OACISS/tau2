@@ -6,6 +6,7 @@ BASEDIR=$TAUROOT/$TAUARCH
 SICORTEX=no
 PREFIX=no
 DEFAULT_MAKEFILE=
+DEFAULT_BINDING=
 
 TauOptions=""
 TauOptionsExclude=""
@@ -16,6 +17,7 @@ getbinding="false"
 ProfileSpecified="false"
 TraceSpecified="false"
 DisableSpecified="false"
+SerialSpecified="false"
 
 if [ $# = 0 ] ; then
     echo "TAUROOT=$TAUROOT"
@@ -24,6 +26,7 @@ if [ $# = 0 ] ; then
     echo "SICORTEX=$SICORTEX"
     echo "PREFIX=$PREFIX"
     echo "DEFAULT_MAKEFILE=$DEFAULT_MAKEFILE"
+    echo "DEFAULT_BINDING=\"$DEFAULT_BINDING\""
     exit 0
 fi
 
@@ -32,6 +35,12 @@ for i in $* ; do
         ProfileSpecified="true"
     elif [ "$i" = "trace" ] ; then
         TraceSpecified="true"
+    elif [ "$i" = "vampirtrace" ] ; then
+        TraceSpecified="true"
+        TauOptions="$TauOptions $i"
+    elif [ "$i" = "epilog" ] ; then
+        TraceSpecified="true"
+        TauOptions="$TauOptions $i"
     elif [ "$i" = "disable" ] ; then
         DisableSpecified="true"
     elif [ "$i" = "--list-matching" ] ; then
@@ -40,6 +49,8 @@ for i in $* ; do
         makefile="true"
     elif [ "$i" = "--binding" ] ; then
         getbinding="true"
+    elif [ "$i" = "serial" ] ; then
+        SerialSpecified="true"
     else
         TauOptions="$TauOptions $i"
     fi
@@ -50,18 +61,23 @@ done
 if [ "$ProfileSpecified" = "false" -a "$TraceSpecified" = "false" ] ; then
     ProfileSpecified="true"
 fi
-
+if [ "$SerialSpecified" = "true" ] ; then
+    TauOptionsExclude="mpi"
+else
+    TauOptions="$TauOptions mpi"
+fi
 if [ "$ProfileSpecified" = "true" -a "$TraceSpecified" = "false" ] ; then
-    TauOptionsExclude="trace"
+    TauOptionsExclude="$TauOptionsExclude trace"
 elif [ "$ProfileSpecified" = "true" -a "$TraceSpecified" = "true" ] ; then
     TauOptions="$TauOptions profile trace"
 elif [ "$ProfileSpecified" = "false" -a "$TraceSpecified" = "true" ] ; then
-    TauOptionsExclude="profile"
+    TauOptionsExclude="$TauOptionsExclude profile"
     TauOptions="$TauOptions trace"
 fi
-
 if [ "$DisableSpecified" = "false" ] ; then
-    TauOptionsExclude="disable"
+    TauOptionsExclude="$TauOptionsExclude disable"
+else
+    TauOptions=""
 fi
 
 if [ $makefile = true ] ; then
@@ -85,7 +101,7 @@ fi
 for opt in $TauOptions; do
     newbindings=""
     for b in $bindings ; do
-        add=`echo $b | grep -i $opt`
+        add=`echo $b | grep -i "\-$opt"`
         newbindings="$newbindings $add"
     done
     bindings=$newbindings
@@ -94,7 +110,7 @@ done
 for opt in $TauOptionsExclude; do
     newbindings=""
     for b in $bindings ; do
-        add=`echo $b | grep -v -i $opt`
+        add=`echo $b | grep -v -i "\-$opt"`
         newbindings="$newbindings $add"
     done
     bindings=$newbindings

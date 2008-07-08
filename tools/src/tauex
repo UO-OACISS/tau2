@@ -23,14 +23,18 @@ usage()
     echo "        -m: Multiple runs (enough runs of exe to gather all events)"
     echo "        -e <event> : Specify PAPI preset or native event"
 # tauex specific options
-    echo "        -T <MPI,PTHREAD,OPENMP,PROFILE,CALLPATH,TRACE,VAMPIRTRACE,EPILOG,DISABLE> : specify TAU option"
+    echo "        -T <MPI,PTHREAD,OPENMP,SERIAL,PROFILE,CALLPATH,TRACE,VAMPIRTRACE,EPILOG,DISABLE> : specify TAU option"
     echo "        -v: Debug/Verbose mode"
     echo "        -XrunTAU-<options> : specify TAU library directly"
     echo ""
-    echo "Defaults if unspecified: -U -T MPI,PROFILE -e P_WALL_CLOCK_TIME"
+    echo "Notes:"
+    echo "	Defaults if unspecified: -U -T MPI,PROFILE -e P_WALL_CLOCK_TIME"
+    echo "	MPI is assumed unless SERIAL is specified"
+    echo "	PROFILE is assumed unless one of TRACE, VAMPIRTRACE or EPILOG is specified"
+    echo "	P_WALL_CLOCK_TIME means count real time using fastest available timer"
     echo ""
     echo "Example:"
-    echo "    mpirun -np 2 tauex -e PAPI_TOT_CYC -e PAPI_FP_OPS -T MPI,PROFILE -- ./ring"
+    echo "    mpirun -np 2 tauex -e P_WALL_CLOCK_TIME -e PAPI_TOT_INS -e PAPI_FP_INS -T MPI,PROFILE -- ./ring"
     echo ""
     exit
 }
@@ -53,10 +57,9 @@ allnative=false
 binding_specified=""
 OUTPUTDIR="."
 binding_options=""
-unset TAU_PAPI_DOMAIN
-export TAU_PAPI_DOMAIN
-
+TAU_PAPI_DEFAULT_DOMAIN=PAPI_DOM_USER
 tauex_multi=tauex.multiple
+
 if [ "$SICORTEX" = "yes" ]; then
     tauex_multi=$PREFIX/share/TAU/tauex.multiple
 fi
@@ -67,7 +70,7 @@ for arg in "$@" ; do
   modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
 
   if [ "$processT" = "true" ] ; then
-      binding_options=`echo $arg | sed -e 's/,/ /g' | tr [A-Z] [a-z]`
+      binding_options=`echo $binding_options $arg | sed -e 's/,/ /g' | tr [A-Z] [a-z]`
       processT="false"
       shift
   elif [ "$processE" = "true" ] ; then
@@ -111,7 +114,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tauex,v 1.5 2008/07/05 12:52:37 amorris Exp $';
+	      echo '$Id: tauex,v 1.6 2008/07/08 23:05:41 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -m)
@@ -132,19 +135,19 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -U) 
-	      TAU_PAPI_DOMAIN=$TAU_PAPI_DOMAIN:PAPI_DOM_USER
+	      TAU_PAPI_DOMAIN=${TAU_PAPI_DOMAIN}:PAPI_DOM_USER
 	      shift
 	      ;;
 	  -K) 
-	      TAU_PAPI_DOMAIN=$TAU_PAPI_DOMAIN:PAPI_DOM_KERNEL
+	      TAU_PAPI_DOMAIN=${TAU_PAPI_DOMAIN}:PAPI_DOM_KERNEL
 	      shift
 	      ;;
 	  -S) 
-	      TAU_PAPI_DOMAIN=$TAU_PAPI_DOMAIN:PAPI_DOM_SUPERVISOR
+	      TAU_PAPI_DOMAIN=${TAU_PAPI_DOMAIN}:PAPI_DOM_SUPERVISOR
 	      shift
 	      ;;
 	  -I) 
-	      TAU_PAPI_DOMAIN=$TAU_PAPI_DOMAIN:PAPI_DOM_OTHER
+	      TAU_PAPI_DOMAIN=${TAU_PAPI_DOMAIN}:PAPI_DOM_OTHER
 	      shift
 	      ;;
 	  -XrunTAU-*)
@@ -168,7 +171,22 @@ for arg in "$@" ; do
   fi
 done
 
+if [ "x$TAU_PAPI_DOMAIN" = "x" ]; then
+    TAU_PAPI_DOMAIN=$TAU_PAPI_DEFAULT_DOMAIN
+fi
+
 if [ "x$binding_specified" = "x" ] ; then
+    if [ "x$binding_options" = "x" ]; then
+	binding_options=$DEFAULT_BINDING
+    else
+#
+# Add MPI by default
+#
+	serial=`echo $binding_options | grep serial`
+	if [ $? != 0 ] ; then
+	    binding_options="$binding_options mpi"
+	fi
+    fi
     theBinding=`tau-config --binding $binding_options`
     if [ $? != 0 ] ; then
 	exit 1
@@ -226,15 +244,14 @@ if [ $verbose = "true" ] ; then
     echo "$theBinding"
     echo ""
     echo "Configuration:"
-    echo "Setting TAU_PAPI_DOMAIN to $TAU_PAPI_DOMAIN"
     counterlist=""
     counter=1
     for c in $Counters ; do 
-    #echo export COUNTER$counter=$c
 	echo "Setting COUNTER$counter to $c"
 	counter=$(( $counter + 1 ))
 	counterlist="$counterlist $c"
     done
+    echo "Setting TAU_PAPI_DOMAIN to $TAU_PAPI_DOMAIN"
     echo ""
     echo "Runtime:"
     echo "Setting LD_LIBRARY_PATH to $TAUEX_LD_LIBRARY_PATH"
@@ -273,22 +290,20 @@ if [ $dryrun = "true" ]; then
     counterlist=""
     counter=1
     for c in $Counters ; do 
-    #echo export COUNTER$counter=$c
 	echo export COUNTER$counter=$c
 	counter=$(( $counter + 1 ))
 	counterlist="$counterlist $c"
     done
     echo "export TAU_PAPI_DOMAIN=$TAU_PAPI_DOMAIN"
-    echo "export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
-    echo "export LD_PRELOAD=$TAUEX_LD_PRELOAD"
     echo "export PROFILEDIR=$OUTPUTDIR"
     echo "export TRACEDIR=$OUTPUTDIR"
     echo "export VT_PFORM_GDIR=$OUTPUTDIR"
     echo "export VT_METRICS=$VT_METRICS"
     echo "export ELG_METRICS=$ELG_METRICS"
-    echo "export ELG_PFORM_GDIR=$OUTPUTDIR"
-    echo "mkdir -p $PROFILEDIR"
-
+    echo "export ELG_FILE_PREFIX=$OUTPUTDIR"
+    echo "mkdir -p $OUTPUTDIR"
+    echo "export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
+    echo "export LD_PRELOAD=$TAUEX_LD_PRELOAD"
     if [ $multiplerun = "true" ] ; then
 	echo $tauex_multi $counterlist -- "$@"
     else 
@@ -299,23 +314,34 @@ else
     counterlist=""
     counter=1
     for c in $Counters ; do 
-    #echo export COUNTER$counter=$c
 	export COUNTER$counter=$c
 	counter=$(( $counter + 1 ))
 	counterlist="$counterlist $c"
     done
+    export TAU_PAPI_DOMAIN=$TAU_PAPI_DOMAIN
     export PROFILEDIR=$OUTPUTDIR
     export TRACEDIR=$OUTPUTDIR
     export VT_PFORM_GDIR=$OUTPUTDIR
     export VT_METRICS=$VT_METRICS
     export ELG_METRICS=$ELG_METRICS
-    export ELG_PFORM_GDIR=$OUTPUTDIR
-    mkdir -p $PROFILEDIR
+    export ELG_FILE_PREFIX=$OUTPUTDIR
+    mkdir -p $OUTPUTDIR
     export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
     export LD_PRELOAD=$TAUEX_LD_PRELOAD
     if [ $multiplerun = "true" ] ; then
 	$tauex_multi $counterlist -- "$@"
+	retval=$?
     else 
 	"$@"
+	retval=$?
+	case $theBinding in
+	    *\-epilog*)
+	    if [ "$SLURM_PROCID" = "0" -o "x$SLURM_PROCID" = "x" ]; then
+		if [ -f $OUTPUTDIR.elg ]; then
+		    mv $OUTPUTDIR.elg $OUTPUTDIR/$exe.elg
+		fi
+	    fi;;
+	esac
     fi
+    exit $retval
 fi
