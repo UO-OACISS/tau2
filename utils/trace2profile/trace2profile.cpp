@@ -2,9 +2,9 @@
  * tau2profile.cpp
  * Author: Wyatt Spear
  * This program reads a specified TAU trace and converts it into an equivalent set of TAU
- * profile files.  An interval may be specified in the command line to have the program 
+ * profile files.  An interval may be specified in the command line to have the program
  * produce trace file 'snapshots' of the trace-state at each interval.
- * 
+ *
  * TODO:  Improve command line/help interface.  Add more conditions for snapshot output.
  * e.g.: User Event count, state entry/exit count.
  */
@@ -54,26 +54,26 @@ void Usage();
 void PrintSnapshot(double time, int threadToken, bool printProfile);
 
 /***************************************************************************
- * 
+ *
  * This routine registers the entry into state 'stateid' from thread 'threadin' at time 'time'.
  * It returns 'threadin' with these modifications.
- * 
+ *
  ***************************************************************************/
 void StateEnter(double time, Thread &threadin, State &statein)
 {
 	/*If there is another state in the callstack then the state we are entering
-	* is a subroutine of the previous state.  The previous state's time is no 
+	* is a subroutine of the previous state.  The previous state's time is no
 	* longer exclusive so we record the exclusive time seen so far and stop.*/
-	
+
 	//State thisstate=*(threadin.allstate[stateid]);
 	State *lastcall=NULL;
 	if(!threadin.callstack.empty())
-	{		
+	{
 		lastcall=threadin.callstack.back();//)  .top();
-		
+
 		//if(threadin.processToken==1 && lastcall->stateToken==1)
 			//cout << "enter sub " << endl;
-		
+
 		lastcall->subroutines++;
 		lastcall->exclusive+=time-lastcall->topTime;
 		lastcall->topTime=-1;
@@ -82,7 +82,7 @@ void StateEnter(double time, Thread &threadin, State &statein)
 	 * the time it spends on the top of the stack.*/
 	statein.calls++;
 	Converter::allstate[statein.stateToken]->calls++;
-	
+
 	statein.topTime=time;
 	/*If this state has not exited after a previous call it is in recursion.  We
 	 * only give it a new start time if it is not in recursion.*/
@@ -90,57 +90,57 @@ void StateEnter(double time, Thread &threadin, State &statein)
 	{
 		statein.fullTime=time;
 	}
-	
+
 	if(Converter::monincids.size()>0)
 	{
 		for(map<unsigned int,MonIncEvent*>:: iterator miit=statein.allmi.begin();miit!=statein.allmi.end();miit++)
 		{
-			
+
 			if(!threadin.callstack.empty())
 			{/*Here we need to add to the previous event's exclusive time the current event's observed time minus the previous's top*/
 				MonIncEvent &thisMI=*(lastcall->allmi[(*miit).first]);
-				
+
 				//if(threadin.processToken==1 && lastcall->stateToken==1)
 					//cout << "in enter adding to ex, which is: " << thisMI.exclusive << " " << (*miit).second->holdvalue << " - " << thisMI.topCount << " = " << ((*miit).second->holdvalue-thisMI.topCount) << endl;
-			
+
 				thisMI.exclusive+=((*miit).second->holdvalue-thisMI.topCount);
 				//if(threadin.processToken==1 && lastcall->stateToken==1)
 					//cout << thisMI.exclusive << endl;
 				thisMI.topCount=-1;
 			}
-			
+
 			(*miit).second->topCount=(*miit).second->holdvalue;
 			if((*miit).second->fullCount==-1)
 			{
 				(*miit).second->fullCount=(*miit).second->holdvalue;
 			}
 		}
-	}	
-	
+	}
+
 	/*Add one the number of calls to this state currently active and put the
 	 * state on the callstack.*/
 	statein.countRec++;
 	threadin.callstack.push_back(&statein);
-	
+
 	//return threadin;
 }
 
 
 /***************************************************************************
- * 
+ *
  * This routine registers the exit of state 'stateid' from thread 'threadin' at time 'time'.
  * It returns 'threadin' with these modifications.
- * 
+ *
  ***************************************************************************/
 void StateLeave(double time, Thread &threadin, State &statein)
 {
-	/*Add the exclusive time recorded since the routine was last on the top 
+	/*Add the exclusive time recorded since the routine was last on the top
 	 * of the stack.  It is no longer on the stack so stop recording topTime.
 	 * Decrement the number of recursive calls to this routine.*/
 	statein.exclusive+=time-statein.topTime;
 	if(statein.exclusive <0)
 		cout << "Exclusive stamp: "<< setprecision(8) <<  time << " topTime: " << statein.topTime << endl;
-	
+
 	statein.topTime=-1;
 	statein.countRec--;
 	/*If we are no longer in recursion (all calls to this routine have exited)
@@ -150,7 +150,7 @@ void StateLeave(double time, Thread &threadin, State &statein)
 	{
 		statein.inclusive+=time-statein.fullTime;
 		statein.fullTime=-1;
-		
+
 		if(statein.inclusive <0)
 			cout << "Inclusive stamp: "<<  time << " topTime: " << statein.fullTime << endl;
 
@@ -160,23 +160,25 @@ void StateLeave(double time, Thread &threadin, State &statein)
 	threadin.callstack.pop_back();
 	State *lastcall=NULL;
 	if(!threadin.callstack.empty())
-	{	
+	{
 		lastcall=threadin.callstack.back();//top();
 		lastcall->topTime=time;
+		//TODO: Make sure this has no side effects for multiplecounters, or that they don't require the same.
+		threadin.currentState=lastcall->stateToken;
 	}
-	
+
 	if(Converter::monincids.size()>0)//&&Converter::printshot
 	{
 		for(map<unsigned int,MonIncEvent*>:: iterator miit=statein.allmi.begin();miit!=statein.allmi.end();miit++)
 		{
 			if((*miit).second->topCount<0)
 				cout << "First mie process not initialized (topcount)." << endl;
-			//if(threadin.processToken==1 && statein.stateToken==1)	
+			//if(threadin.processToken==1 && statein.stateToken==1)
 			//cout << "in leave adding to ex, which is: " << (*miit).second->exclusive << " " << (*miit).second->holdvalue << " - " << (*miit).second->topCount << " = " << (*miit).second->holdvalue-(*miit).second->topCount << endl;
-				
+
 			(*miit).second->exclusive+=((*miit).second->holdvalue-(*miit).second->topCount);
 			(*miit).second->topCount=-1;
-			
+
 			if(statein.countRec==0)
 			{
 				(*miit).second->inclusive+=((*miit).second->holdvalue)-((*miit).second->fullCount);
@@ -208,27 +210,27 @@ void InitSnapshot(){
 	s_prefix=s_out+filename;
 	snapshot.open(s_prefix.c_str());//, ofstream::app|ofstream::out
 	snapshot.precision(16);
-	
+
 	snapshot << "<profile_xml>" << endl;
 
 }
 
 
 void writeStringXML(string *stringIn) {
-	
+
   const char* s = stringIn->c_str();
   if (!s) return;
-  
+
   bool useCdata = false;
-  
+
   if (strchr(s, '<') || strchr(s, '&')) {
     useCdata = true;
   }
-  
+
   if (strstr(s, "]]>")) {
     useCdata = false;
   }
-  
+
   if (useCdata) {
     //fprintf (profile,"<![CDATA[%s]]>",s);
     snapshot << "<![CDATA[" << s << "]]>";
@@ -245,25 +247,25 @@ void writeStringXML(string *stringIn) {
 	strcpy (d,"&lt;");
 	d+=4;
       }
-      
+
       if (*s == '>') {
 	strcpy (d,"&gt;");
 	d+=4;
       }
-      
+
       if (*s == '&') {
 	strcpy (d,"&amp;");
 	d+=5;
       }
     } else {
       *d = *s;
-      d++; 
+      d++;
     }
-    
+
     s++;
   }
   *d = 0;
-  
+
   //fprintf (profile,"%s",str);
   snapshot << str;
   free (str);
@@ -271,10 +273,10 @@ void writeStringXML(string *stringIn) {
 
 
 void SnapshotDefs(){
-	snapshot << "<definitions thread=\""; 
-	
+	snapshot << "<definitions thread=\"";
+
 	/*bool first=true;
-	for(map<int,Thread>:: iterator threadCount = ThreadMap.begin(); 
+	for(map<int,Thread>:: iterator threadCount = ThreadMap.begin();
 	threadCount!=ThreadMap.end(); threadCount++)
 	{
 		if(!first)
@@ -285,33 +287,33 @@ void SnapshotDefs(){
 		profile << (*threadCount).first;
 	}*/
 	snapshot << "*";
-	
+
 	snapshot << "\">"  << endl
 	<< "<metric id=\""<<0<<"\" name=\"time\" units=\"microseconds\"/>" << endl;
-	for(vector<MonIncEvent*>:: iterator mieCount = Converter::allmoninc.begin(); 
+	for(vector<MonIncEvent*>:: iterator mieCount = Converter::allmoninc.begin();
 	mieCount!=Converter::allmoninc.end(); mieCount++)
 	{
-		snapshot << "<metric id=\""<< (*mieCount)->eventToken << "\" name=\""; 
-		writeStringXML(Converter::monincnames[(*mieCount)->eventToken]); 
+		snapshot << "<metric id=\""<< (*mieCount)->eventToken << "\" name=\"";
+		writeStringXML(Converter::monincnames[(*mieCount)->eventToken]);
 		snapshot << "\" units=\"Probably Not Microseconds\"/>" << endl;
 	}
-	for(map<unsigned int,State*>:: iterator stateCount = Converter::allstate.begin(); 
+	for(map<unsigned int,State*>:: iterator stateCount = Converter::allstate.begin();
 	stateCount!=Converter::allstate.end(); stateCount++)
 	{
-		//cout << "With shots: " << Converter::statenames[(*stateCount).second.stateToken] << " Index: " << (*stateCount).second.stateToken << endl; 
-		snapshot << "<event id=\""<< (*stateCount).second->stateToken << "\" name=\""; 
+		//cout << "With shots: " << Converter::statenames[(*stateCount).second.stateToken] << " Index: " << (*stateCount).second.stateToken << endl;
+		snapshot << "<event id=\""<< (*stateCount).second->stateToken << "\" name=\"";
 		 writeStringXML(Converter::statenames[(*stateCount).second->stateToken]); snapshot << "\" group=\"";
 		 writeStringXML(Converter::groupnames[(*stateCount).second->stateGroupToken]);
 		 snapshot << "\"/>" << endl;
-		
+
 		//cout << "With shots2: " << Converter::statenames[(*stateCount).second.stateToken] << " Index: " << (*stateCount).second.stateToken << endl;
-		
+
 	}
-	for(vector<UserEvent*>:: iterator eventCount = Converter::allevents.begin(); 
+	for(vector<UserEvent*>:: iterator eventCount = Converter::allevents.begin();
 	eventCount!=Converter::allevents.end(); eventCount++)
 	{
-		snapshot << "<atomic_event id=\""<< (*eventCount)->userEventToken << "\" name=\""; 
-		writeStringXML(Converter::usereventnames[(*eventCount)->userEventToken]); 
+		snapshot << "<atomic_event id=\""<< (*eventCount)->userEventToken << "\" name=\"";
+		writeStringXML(Converter::usereventnames[(*eventCount)->userEventToken]);
 		snapshot << "\"/>" << endl;
 	}
 	snapshot << "</definitions>" << endl;
@@ -320,26 +322,26 @@ void SnapshotDefs(){
 void SnapshotClose()
 {
 	snapshot << "</profile_xml>" << endl;
-	snapshot.close();	
+	snapshot.close();
 }
 
 void SnapshotThreadPrint(unsigned int curid,unsigned int nodeToken,unsigned int threadToken){
-	snapshot << "<thread id=\"" << curid << "\" node=\"" << nodeToken 
-	<< "\" context=\"0\" thread=\"" << threadToken << "\"/>" << endl;	
+	snapshot << "<thread id=\"" << curid << "\" node=\"" << nodeToken
+	<< "\" context=\"0\" thread=\"" << threadToken << "\"/>" << endl;
 }
 
 void ProcessDefs(){
 	/*For every thread in the trace*/
 	for (map<unsigned int, Thread*>:: iterator it = Converter::ThreadMap.begin(); it != Converter::ThreadMap.end(); it++)
-	{ 
+	{
 		//(*it).second->allstate=Converter::allstate;
 		/*Create a new state pointer map using pointers to copies of the global states*/
 		(*it).second->allstate=*(new map<unsigned int, State*>());
 		for(map<unsigned int, State*>:: iterator sit = Converter::allstate.begin(); sit != Converter::allstate.end(); sit++)
 		{
 			(*it).second->allstate[(*sit).first]= new State(*((*sit).second));
-			
-			
+
+
 			/*If there are monotoncally increasing events add their map to each state*/
 			if(Converter::monincids.size()>0)
 			{
@@ -352,23 +354,23 @@ void ProcessDefs(){
 				}
 			}
 		}
-		
+
 		/*Create a new user event map using pointers to copies of the global user events*/
 		(*it).second->allevents=*(new map<unsigned int, UserEvent*>());//Converter::allevents;
 		for(vector<UserEvent*>:: iterator eit = Converter::allevents.begin(); eit != Converter::allevents.end(); eit++)
 		{
 			(*it).second->allevents[(*eit)->userEventToken]= new UserEvent(*(*eit));
 		}
-		
+
 		//cout << "allstateref " << &((*it).second->allstate) << endl;
-		
+
 		/* reset the position of the trace to the first record Initialize global id map*/
 		(*it).second->finished = 0;
 		/*Print the snapshot thread definitions*/
 		SnapshotThreadPrint((*it).second->processToken,(*it).second->nodeToken,(*it).second->threadToken);
 	}
 	Converter::EndOfTrace = 0;
-	 
+
 	SnapshotDefs();
 }
 
@@ -378,13 +380,13 @@ void ProcessDefs(){
  * Given a time and a threadToken, this routine will copy the thread, exit every
  * remaining event at the given time and then print the profile data
  ***************************************************************************/
-void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,Thread>, less< pair<int,int> > 
+void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,Thread>, less< pair<int,int> >
 
 	//Thread* finalizer = Converter::ThreadMap[threadToken];
 	//Converter::printshot=true;
-	//for(map< int, Thread >:: iterator it = finalizer.begin(); it != finalizer.end(); it++)//, less< pair<int,int> > 
+	//for(map< int, Thread >:: iterator it = finalizer.begin(); it != finalizer.end(); it++)//, less< pair<int,int> >
 	//{
-	
+
 	//Thread finalizer=printThread;
 	if(useSnapshot)
 	{
@@ -396,7 +398,7 @@ void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,
 			//(*it).second=
 			//cout << Converter::miecount << " " << Converter::printshot << endl;
 			StateLeave(time,finalizer,*(finalizer.callstack.back()));//top()
-		
+
 		}
 	}
 
@@ -425,18 +427,18 @@ void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,
 			}
 		}
 		snapshot << "\">" << endl;
-		for(map<unsigned int,State*>::iterator st = finalizer.allstate.begin(); 
+		for(map<unsigned int,State*>::iterator st = finalizer.allstate.begin();
 		st !=finalizer.allstate.end();st++)
 		{
-			
+
 			//cout << "With SnapB: " <<Converter::statenames[((*st).second)->stateToken] << " Index: " << ((*st).second)->stateToken << endl;
-			
+
 			if(((*st).second)->calls>0)//allstate[(*st).second.stateToken].calls
 			{
 				snapshot << ((*st).second)->stateToken << " "
 				<< ((*st).second)->calls << " " //Was .stateName
 				<< ((*st).second)->subroutines << " " //<< " "  << "0"   " GROUP=\"" << groupids[((*st).second).stateGroupToken]<<"\""<<
-				<< ((*st).second)->exclusive << " " 
+				<< ((*st).second)->exclusive << " "
 				<< ((*st).second)->inclusive << " ";
 				if(Converter::monincids.size()>0)
 				{
@@ -454,10 +456,10 @@ void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,
 		//profile << "0 aggregates" << endl;
 		if(Converter::allevents.size()>0)
 		{
-			//profile << allevents.size() << " userevents" << endl 
+			//profile << allevents.size() << " userevents" << endl
 			//<<  "# eventname numevents max min mean sumsqr" << endl;
 			snapshot << "<atomic_data>" << endl;
-			for(map<unsigned int,UserEvent*>::iterator st = finalizer.allevents.begin(); 
+			for(map<unsigned int,UserEvent*>::iterator st = finalizer.allevents.begin();
 			st !=finalizer.allevents.end();st++)
 			{
 				mean = 0;
@@ -468,25 +470,25 @@ void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,
 					mean = sum/num;
 				}
 				snapshot << ((*st).second)->userEventToken << " " //was userEventName
-				<< ((*st).second)->numevents << " " 
-				<< ((*st).second)->max << " " 
-				<< ((*st).second)->min << " " 
+				<< ((*st).second)->numevents << " "
+				<< ((*st).second)->max << " "
+				<< ((*st).second)->min << " "
 				<< mean << " " << ((*st).second)->sumsqr << endl;
 			}
 			snapshot << "</atomic_data>" << endl;
 		}
 		snapshot << "</profile>" << endl;
-		
+
 		//Converter::printshot=false;
 	}
-		
+
 		if(printProfile)
 		{
 /***************************************************************************
  * Given a map 'mainmap' conforming to the 'whole trace' data structure, this routine will cycle
  * through each thread and state to print out the profile statistics for the whole program
  ***************************************************************************/
-//void PrintSnapshots(map<int,Thread> &mainmap)//, less< pair<int,int> > 
+//void PrintSnapshots(map<int,Thread> &mainmap)//, less< pair<int,int> >
 	//char prefix [32];
 	string s_out="";
 	string s_prefix="";
@@ -508,7 +510,7 @@ void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,
 		cmd+=s_out;
 		system(cmd.c_str());
 	}*/
-	
+
 	if(Converter::monincids.size()>0)
 	{
 		s_out+="MULTI__GET_TIME_OF_DAY/";
@@ -540,11 +542,11 @@ void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,
 		profile << "# Name Calls Subrs Excl Incl ProfileCalls" << endl;
 		for(map<unsigned int,State*>::iterator st = finalizer.allstate.begin(); st !=finalizer.allstate.end();st++)
 		{
-			//cout << "With Prof: " <<*Converter::statenames[((*st).second)->stateToken] << " Index: " << ((*st).second)->stateToken << endl; 
+			//cout << "With Prof: " <<*Converter::statenames[((*st).second)->stateToken] << " Index: " << ((*st).second)->stateToken << endl;
 			if(Converter::allstate[(*st).second->stateToken]->calls>0)
-			profile << "\"" << *Converter::statenames[((*st).second)->stateToken] << "\" " << ((*st).second)->calls 
-			<< " " << ((*st).second)->subroutines << " " << ((*st).second)->exclusive 
-			<< " " << ((*st).second)->inclusive << " " << "0" << " GROUP=\"" 
+			profile << "\"" << *Converter::statenames[((*st).second)->stateToken] << "\" " << ((*st).second)->calls
+			<< " " << ((*st).second)->subroutines << " " << ((*st).second)->exclusive
+			<< " " << ((*st).second)->inclusive << " " << "0" << " GROUP=\""
 			<< *Converter::groupnames[((*st).second)->stateGroupToken]<<"\""<< endl;
 		}
 		profile << "0 aggregates" << endl;
@@ -553,11 +555,11 @@ void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,
 			ostringstream UDEstream;
 			//profileUDEs+=Converter::allevents.size()+" userevents\n";
 			//profileUDEs+="# eventname numevents max min mean sumsqr\n";
-			
-			
-			UDEstream << Converter::allevents.size() << " userevents" << endl 
+
+
+			UDEstream << Converter::allevents.size() << " userevents" << endl
 			<<  "# eventname numevents max min mean sumsqr" << endl;
-			
+
 			for(map<unsigned int,UserEvent*>::iterator st = finalizer.allevents.begin(); st !=finalizer.allevents.end();st++)
 			{
 				mean = 0;
@@ -567,9 +569,9 @@ void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,
 					num=((*st).second)->numevents;
 					mean = sum/num;
 				}
-				
-				UDEstream << "\"" << *Converter::usereventnames[((*st).second)->userEventToken] << "\" " 
-				<< ((*st).second)->numevents << " " << ((*st).second)->max 
+
+				UDEstream << "\"" << *Converter::usereventnames[((*st).second)->userEventToken] << "\" "
+				<< ((*st).second)->numevents << " " << ((*st).second)->max
 				<< " " << ((*st).second)->min << " " << mean << " " << ((*st).second)->sumsqr << endl;
 			}
 			profileUDEs=UDEstream.str();
@@ -577,7 +579,7 @@ void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,
 		}
 		profile.close();
 	//}
-	
+
 	if(Converter::monincids.size()>0)
 	{
 		unsigned int eventID=0;
@@ -608,7 +610,7 @@ void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,
 			s_out=base+s_name+"/";
 			cmd="mkdir "+s_out;
 			system(cmd.c_str());
-			
+
 			countFunc=0;
 			for(map<unsigned int,State*>:: iterator stateCount = Converter::allstate.begin(); stateCount!=Converter::allstate.end(); stateCount++)
 			{
@@ -626,15 +628,15 @@ void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,
 				for(map<unsigned int,State*>::iterator st = finalizer.allstate.begin(); st !=finalizer.allstate.end();st++)
 				{
 					if(Converter::allstate[(*st).second->stateToken]->calls>0)
-					profile << "\"" << *Converter::statenames[((*st).second)->stateToken] << "\" " << ((*st).second)->calls 
-					<< " " << ((*st).second)->subroutines << " " << ((*st).second)->allmi[eventID]->exclusive 
-					<< " " << ((*st).second)->allmi[eventID]->inclusive << " " << "0" << " GROUP=\"" 
+					profile << "\"" << *Converter::statenames[((*st).second)->stateToken] << "\" " << ((*st).second)->calls
+					<< " " << ((*st).second)->subroutines << " " << ((*st).second)->allmi[eventID]->exclusive
+					<< " " << ((*st).second)->allmi[eventID]->inclusive << " " << "0" << " GROUP=\""
 					<< *Converter::groupnames[((*st).second)->stateGroupToken]<<"\""<< endl;
 				}
 				profile << "0 aggregates" << endl;
 				if(Converter::allevents.size()>0)
 				{
-					/*profile << Converter::allevents.size() << " userevents" << endl 
+					/*profile << Converter::allevents.size() << " userevents" << endl
 					<<  "# eventname numevents max min mean sumsqr" << endl;
 					for(map<unsigned int,UserEvent*>::iterator st = finalizer.allevents.begin(); st !=finalizer.allevents.end();st++)
 					{
@@ -645,23 +647,23 @@ void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,
 							num=((*st).second)->numevents;
 							mean = sum/num;
 						}
-						profile << "\"" << *Converter::usereventnames[((*st).second)->userEventToken] << "\" " 
-						<< ((*st).second)->numevents << " " << ((*st).second)->max 
+						profile << "\"" << *Converter::usereventnames[((*st).second)->userEventToken] << "\" "
+						<< ((*st).second)->numevents << " " << ((*st).second)->max
 						<< " " << ((*st).second)->min << " " << mean << " " << ((*st).second)->sumsqr << endl;
 					}*/
 					profile << profileUDEs;
 				}
 				profile.close();
 			}
-		}	
+		}
 	}
-	
+
 	if(finalizer.bakcallstack.size()>0)
 	{
 		finalizer.RestoreThread();
 	}
-	
-	return;	
+
+	return;
 }
 
 /***************************************************************************
@@ -671,16 +673,16 @@ void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,
  ***************************************************************************/
 void PrintProfiles()
 {
-	//map<int,Thread> finalizer = ThreadMap;//, less<pair<int,int> > 
+	//map<int,Thread> finalizer = ThreadMap;//, less<pair<int,int> >
 	//Thread finalizer = ThreadMap[threadToken];
 	//printshot=1;
 	//Converter::ThreadMap.
 	for(map<unsigned int,Thread*>:: iterator it = Converter::ThreadMap.begin(); it != Converter::ThreadMap.end(); it++)//, (map<pair<int,int>,int>:: iterator it = Converter::ThreadID.begin(); it != Converter::ThreadID.end(); it++)
 	{
 		//cout << "Final Pointer: "<< (*it).second << ": " <<  (*it).second->processToken <<endl;
-		
+
 		PrintSnapshot(Converter::lastTime,*((*it).second),true);
-		
+
 		/*while(finalizer.callstack.size()>0)//(*it) = finalizer
 		{
 			//(*it).second=
@@ -689,7 +691,7 @@ void PrintProfiles()
 	}
 	//thisShot=time;
 	//PrintProfiles(finalizer, time);
-	//printshot=0;	
+	//printshot=0;
 }
 
 
@@ -697,7 +699,7 @@ void FinishSnapshots()
 {
 	PrintProfiles();
 	if(useSnapshot)
-		SnapshotClose();	
+		SnapshotClose();
 }
 
 /***************************************************************************
@@ -717,8 +719,8 @@ void SnapshotControl(double time, int stateToken, Thread& threadin)
 		snapshot++;
 	}
 	threadin.nextShot=nextShot;
-	
-	
+
+
 	if(stateToken==Converter::trigEvent)
 	{
 		int trigSeen=threadin.trigSeen;
@@ -753,10 +755,10 @@ void Usage()
  ***************************************************************************/
 int main(int argc, char **argv)
 {
-	int i; 
+	int i;
 	bool seenedf=false;
 	useSnapshot=false;
-	
+
 	/* main program: Usage app <trc> <edf> [-a] [-nomessage] */
 	if (argc < 1)
 	{
@@ -765,18 +767,18 @@ int main(int argc, char **argv)
 	}
 	for (i = 0; i < argc ; i++)
 	{
-		switch(i) 
+		switch(i)
 		{
 			case 0:
 			break;
 			case 1:
-			/*trace_file*/ 
+			/*trace_file*/
 			Converter::trc = argv[1];
 			break;
 			//case 2:
-			/*edf_file*/ 
+			/*edf_file*/
 			//Converter::edf = argv[2];
-			//break;			
+			//break;
 			default:
 			/*if (strcmp(argv[i], "-v") == 0)
 			{
@@ -784,7 +786,7 @@ int main(int argc, char **argv)
 				break;
 			}
 			else*/
-			
+
 			//cout << argv[i] << endl;
 			/*TODO: Disabled segmentation until code update*/
 			/*
@@ -854,23 +856,23 @@ int main(int argc, char **argv)
 		}
 	}
 	/* Finished parsing commandline options, now open the trace file */
-	
+
 	if(useSnapshot)
 		InitSnapshot();
-	
+
 	if(seenedf)
 		ReadTraceFile();
 	else
 	{
 		//TODO: Re-enable OTF with library detection
 
-//		ReadOTFFile();		
+//		ReadOTFFile();
 
 		Usage();
 		exit(1);
 	}
 
-		
+
 	FinishSnapshots();
 	//ReadTraceFile();
 }
