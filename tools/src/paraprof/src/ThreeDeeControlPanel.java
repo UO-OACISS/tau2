@@ -23,9 +23,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.10 2008/05/14 23:23:57 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.11 2008/07/09 01:15:46 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.10 $
+ * @version	$Revision: 1.11 $
  */
 public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
@@ -541,6 +541,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         colorMetricBox.setMinimumSize(new Dimension(50, colorMetricBox.getMinimumSize().height));
         colorMetricBox.setPopupWidth(d.width);
         colorMetricBox.setSelectedIndex(settings.getColorMetricID());
+        colorMetricBox.addActionListener(metricChanger);
 
         tabbedPane = new JTabbedPane();
         Plot plot = window.getPlot();
