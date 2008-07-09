@@ -36,11 +36,11 @@ import edu.uoregon.tau.perfdmf.Thread;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.38 2008/05/14 23:34:58 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.39 2008/07/09 01:16:18 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.38 $
+ * @version $Revision: 1.39 $
  */
 public class ParaProfUtils {
 
@@ -418,7 +418,8 @@ public class ParaProfUtils {
                             JOptionPane.showMessageDialog(owner, "Unable to load jogl library.  Possible reasons:\n"
                                     + "libjogl.so is not in your LD_LIBRARY_PATH.\n"
                                     + "Jogl is not built for this platform.\nOpenGL is not installed\n\n"
-                                    + "Jogl is available at jogl.dev.java.net");
+                                    + "Jogl is available at jogl.dev.java.net\n\n"
+                                    + "Message : " + e.getMessage());
                         } catch (UnsupportedClassVersionError e) {
                             JOptionPane.showMessageDialog(owner,
                                     "Unsupported class version.  Are you sure you're using Java 1.4 or above?");
