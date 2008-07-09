@@ -22,9 +22,9 @@ import edu.uoregon.tau.perfdmf.Function;
 /**
  * The GlobalDataWindow shows the exclusive value for all functions/all threads for a trial.
  * 
- * <P>CVS $Id: GlobalDataWindow.java,v 1.19 2008/05/14 23:34:57 amorris Exp $</P>
+ * <P>CVS $Id: GlobalDataWindow.java,v 1.20 2008/07/09 23:05:57 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.19 $
+ * @version $Revision: 1.20 $
  * @see GlobalBarChartModel
  */
 public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow, SortListener {
@@ -389,10 +389,10 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         try {
             setVisible(false);
 
-            if (this != ppTrial.getFullDataWindow()) {
+            //if (this != ppTrial.getFullDataWindow()) {
                 ppTrial.deleteObserver(this);
                 dispose();
-            }
+            //}
             ParaProf.decrementNumWindows();
         } catch (Exception e) {
             // do nothing

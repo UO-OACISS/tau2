@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.32 2008/05/14 23:23:57 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.33 2008/07/09 23:05:57 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.32 $
+ * @version	$Revision: 1.33 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -66,6 +66,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     private JPopupMenu dbAppPopup = new JPopupMenu();
     private JPopupMenu dbExpPopup = new JPopupMenu();
     private JPopupMenu dbTrialPopup = new JPopupMenu();
+    private JPopupMenu metricPopup = new JPopupMenu();
 
     private JPopupMenu runtimePopup = new JPopupMenu();
 
@@ -132,10 +133,12 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
             //Offset a little so that we do not interfere too much with the
             //main window which comes up in the center of the screen.
-            if (xPosition > 50)
+            if (xPosition > 50) {
                 xPosition = xPosition - 50;
-            if (yPosition > 50)
+            }
+            if (yPosition > 50) {
                 yPosition = yPosition - 50;
+            }
 
             this.setLocation(xPosition, yPosition);
         } else {
@@ -199,43 +202,39 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                             if (userObject instanceof ParaProfApplication) {
                                 clickedOnObject = userObject;
                                 if (((ParaProfApplication) userObject).dBApplication()) {
-                                    dbAppPopup.show(ParaProfManagerWindow.this, evt.getX(), evt.getY()
-                                            - treeScrollPane.getVerticalScrollBar().getValue());
+                                    dbAppPopup.show(tree, evt.getX(), evt.getY());
                                 } else {
-                                    stdAppPopup.show(ParaProfManagerWindow.this, evt.getX(), evt.getY()
-                                            - treeScrollPane.getVerticalScrollBar().getValue());
+                                    stdAppPopup.show(tree, evt.getX(), evt.getY());
                                 }
                             } else if (userObject instanceof ParaProfExperiment) {
                                 clickedOnObject = userObject;
                                 if (((ParaProfExperiment) userObject).dBExperiment()) {
-                                    dbExpPopup.show(ParaProfManagerWindow.this, evt.getX(), evt.getY()
-                                            - treeScrollPane.getVerticalScrollBar().getValue());
+                                    dbExpPopup.show(tree, evt.getX(), evt.getY());
                                 } else {
-                                    stdExpPopup.show(ParaProfManagerWindow.this, evt.getX(), evt.getY()
-                                            - treeScrollPane.getVerticalScrollBar().getValue());
+                                    stdExpPopup.show(tree, evt.getX(), evt.getY());
                                 }
 
                             } else if (userObject instanceof ParaProfTrial) {
                                 clickedOnObject = userObject;
                                 if (((ParaProfTrial) userObject).dBTrial()) {
-                                    dbTrialPopup.show(ParaProfManagerWindow.this, evt.getX(), evt.getY()
-                                            - treeScrollPane.getVerticalScrollBar().getValue());
+                                    dbTrialPopup.show(tree, evt.getX(), evt.getY());
                                 } else {
-                                    stdTrialPopup.show(ParaProfManagerWindow.this, evt.getX(), evt.getY()
-                                            - treeScrollPane.getVerticalScrollBar().getValue());
+                                    stdTrialPopup.show(tree, evt.getX(), evt.getY());
                                 }
-
+                            } else if (userObject instanceof ParaProfMetric) {
+                                clickedOnObject = userObject;
+                                metricPopup.show(tree, evt.getX(), evt.getY());
                             } else {
                                 // standard or database
                                 clickedOnObject = selectedNode;
-                                popup1.show(ParaProfManagerWindow.this, evt.getX(), evt.getY()
-                                        - treeScrollPane.getVerticalScrollBar().getValue());
+                                popup1.show(tree, evt.getX(), evt.getY());
 
                             }
                         } else {
                             if (evt.getClickCount() == 2) {
                                 if (userObject instanceof ParaProfMetric) {
-                                    metricSelected((ParaProfMetric) userObject, true);
+                                    ParaProfMetric ppMetric = (ParaProfMetric) userObject;
+                                    showMetric(ppMetric);
                                 }
                             }
                         }
@@ -429,6 +428,13 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         jMenuItem = new JMenuItem("Delete");
         jMenuItem.addActionListener(this);
         stdTrialPopup.add(jMenuItem);
+
+        jMenuItem = new JMenuItem("Show metric in new window");
+        jMenuItem.addActionListener(this);
+        metricPopup.add(jMenuItem);
+        jMenuItem = new JMenuItem("Show metric in all sub-windows");
+        jMenuItem.addActionListener(this);
+        metricPopup.add(jMenuItem);
 
         // DB trial popup
         jMenuItem = new JMenuItem("Export Profile");
@@ -633,7 +639,8 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     ParaProf.getHelpWindow().writeText("");
 
                     ParaProf.getHelpWindow().writeText(
-                            "1) Navigation:" + " The window is split into two17 halves, the left side gives a tree representation"
+                            "1) Navigation:"
+                                    + " The window is split into two17 halves, the left side gives a tree representation"
                                     + " of all data. The right side gives information about items clicked on in the left"
                                     + " half. You can also update information in the right half by double clicking in"
                                     + " the fields, and entering new data.  This automatically updates the left half."
@@ -662,7 +669,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     ParaProf.getHelpWindow().writeText("");
                 } else if (arg.equals("Delete")) {
                     handleDelete(clickedOnObject);
-                    
 
                 } else if (arg.equals("Add Application")) {
                     if (clickedOnObject == standard) {
@@ -903,6 +909,13 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     }
 
                     SelectiveFileGenerator.showWindow(ppTrial, this);
+                } else if (arg.equals("Show metric in new window")) {
+                    ParaProfMetric ppMetric = (ParaProfMetric) clickedOnObject;
+                    showMetric(ppMetric);
+
+                } else if (arg.equals("Show metric in all sub-windows")) {
+                    ParaProfMetric ppMetric = (ParaProfMetric) clickedOnObject;
+                    switchToMetric(ppMetric);
                 }
             }
         } catch (Exception e) {
@@ -1413,14 +1426,20 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         }
     }
 
-    private void showMetric(ParaProfMetric metric) {
+    private void showMetric(ParaProfMetric ppMetric) {
+        ParaProfTrial ppTrial = ppMetric.getParaProfTrial();
+        ppTrial.setDefaultMetricID(ppMetric.getID());
+        ppTrial.showMainWindow();
+    }
+
+    private void switchToMetric(ParaProfMetric metric) {
         try {
             ParaProfTrial ppTrial = metric.getParaProfTrial();
             if (ppTrial.getDefaultMetricID() != metric.getID()) {
                 ppTrial.setDefaultMetricID(metric.getID());
                 ppTrial.updateRegisteredObjects("dataEvent");
             }
-            ppTrial.showMainWindow();
+            //ppTrial.showMainWindow();
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
@@ -1436,7 +1455,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         derivedMetricPanel.setArg1Field(metric.getApplicationID() + ":" + metric.getExperimentID() + ":" + metric.getTrialID()
                 + ":" + metric.getID() + " - " + metric.getName());
         if (show) {
-            this.showMetric(metric);
+            switchToMetric(metric);
         }
     }
 
@@ -1540,10 +1559,11 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             ParaProfTrial ppTrial = (ParaProfTrial) obj;
             TrialTableModel model = new TrialTableModel(this, ppTrial, treeModel);
             final JTable table = new JTable(model);
-            
+
             table.addMouseListener(model.getMouseListener(table));
-            
-            table.setDefaultRenderer(Object.class, new TrialCellRenderer(ppTrial.getTrial().getMetaData(),ppTrial.getTrial().getUncommonMetaData()));
+
+            table.setDefaultRenderer(Object.class, new TrialCellRenderer(ppTrial.getTrial().getMetaData(),
+                    ppTrial.getTrial().getUncommonMetaData()));
             return (new JScrollPane(table));
         } else {
             return (new JScrollPane(new JTable(new MetricTableModel(this, (ParaProfMetric) obj, treeModel))));
@@ -1818,8 +1838,8 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             Database db = null;
             for (int i = 0; i < root.getChildCount(); i++) {
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) root.getChildAt(i);
-                if ((node.getUserObject() instanceof Database) && 
-                		(((Database) node.getUserObject()).getConfig().getPath()).compareTo((application.getDatabase()).getConfig().getPath()) == 0) {
+                if ((node.getUserObject() instanceof Database)
+                        && (((Database) node.getUserObject()).getConfig().getPath()).compareTo((application.getDatabase()).getConfig().getPath()) == 0) {
                     dbNode = node;
                     db = (Database) node.getUserObject();
                 }

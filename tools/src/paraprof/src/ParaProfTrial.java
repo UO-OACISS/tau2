@@ -233,13 +233,10 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
     public void showMainWindow() {
         if (fullDataWindow == null) {
-            fullDataWindow = new GlobalDataWindow(this, trial.getDataSource().getTopLevelPhase());
-            fullDataWindow.setVisible(true);
             showSnapshotController();
-        } else {
-            ParaProf.incrementNumWindows();
-            fullDataWindow.setVisible(true);
         }
+        fullDataWindow = new GlobalDataWindow(this, trial.getDataSource().getTopLevelPhase());
+        fullDataWindow.setVisible(true);
     }
 
     public void showSnapshotController() {
