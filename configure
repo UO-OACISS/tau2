@@ -3335,7 +3335,7 @@ then
     then
 # should we have a -lvt.fmpi here? 
 	fixmakeargs="pcxxopt=$pcxxopt useropt=$useropt extrashlibopts=$extrashlibopts $fixmakeargs"
-      wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir -lvt.ompi -lotf -lz"
+      wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir -Wl,-whole-archive -lvt.ompi -lotf -Wl,-no-whole-archive -lz"
     fi
   fi 
   
