@@ -22,6 +22,8 @@ declare -i optResetUsed=$FALSE
 declare -i optDetectMemoryLeaks=$FALSE
 
 declare -i isVerbose=$FALSE
+declare -i isCXXUsedForC=$FALSE
+declare -i isCurrentFileC=$FALSE
 declare -i isDebug=$FALSE
 #Set isDebug=$TRUE for printing debug messages.
 
@@ -75,6 +77,7 @@ printUsage () {
 	echo -e "  -optLinking=\"\"\t\tOptions passed to the linker. Typically \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_CXXLIBS)"
 	echo -e "  -optLinkReset=\"\"\t\tReset options to the linker to the given list"
 	echo -e "  -optTauCC=\"<cc>\"\t\tSpecifies the C compiler used by TAU"
+	echo -e "  -optTauUseCXXForC\t\tSpecifies the use of a C++ compiler for compiling C code"
 	echo -e "  -optOpariTool=\"<path/opari>\"\tSpecifies the location of the Opari tool"
 	echo -e "  -optOpariDir=\"<path>\"\t\tSpecifies the location of the Opari directory"
 	echo -e "  -optOpariOpts=\"\"\t\tSpecifies optional arguments to the Opari tool"
@@ -307,6 +310,11 @@ for arg in "$@" ; do
 				echoIfDebug "\tTau C Compiler is: $optTauCC"
 				;;
 
+			-optTauUseCXXForC*)
+				isCXXUsedForC=$TRUE
+				echoIfDebug "\tTau now uses a C++ compiler to compile C code isCXXUsedForC: $isCXXUsedForC"
+				;;
+
 			-optPdtCOpts*)
 				#Assumption: This reads ${CFLAGS} 
 				optPdtCFlags="${arg#"-optPdtCOpts="} $optPdtCFlags"
@@ -517,8 +525,14 @@ for arg in "$@" ; do
 			arrFileName[$numFiles]=$arg
 			arrFileNameDirectory[$numFiles]=`dirname $arg`
 			numFiles=numFiles+1
-			pdtParserType=cparse
-			groupType=$group_c
+			if [ $isCXXUsedForC == $TRUE ]; then
+			  pdtParserType=cxxparse
+			  isCurrentFileC=$TRUE
+			  groupType=$group_c
+                        else
+			  pdtParserType=cparse
+			  groupType=$group_c
+			fi
 			;;
 
 		*.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95)
@@ -739,6 +753,11 @@ while [ $tempCounter -lt $numFiles ]; do
 	arrPdbForTau[$tempCounter]="${PDBARGSFORTAU}${newFile}"
 	if [ $pdbFileSpecified == $FALSE ]; then
 	  newFile=${base}.pdb
+	  if [ $isCXXUsedForC == $TRUE -a $isCurrentFileC == $TRUE ]; then
+            newFile=${base}.c.pdb
+	    isCurrentFileC=$FALSE
+          fi
+
 	else
 	  newFile=$optPDBFile; 
 	fi
