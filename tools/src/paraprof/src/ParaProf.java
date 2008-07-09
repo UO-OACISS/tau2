@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.78 2008/06/06 22:29:30 khuck Exp $
+ * CVS $Id: ParaProf.java,v 1.79 2008/07/09 01:16:37 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.78 $
+ * @version $Revision: 1.79 $
  */
 public class ParaProf implements ActionListener {
 
@@ -119,9 +119,6 @@ public class ParaProf implements ActionListener {
                 + "                                    gprof, psrun, hpm, packed, cube, hpc, ompp\n"
                 + "                                    snap, perixml, gptl, ipm\n"
                 + "  -h, --help                      Display this help message\n"
-                + "  -p                              Use `pprof` to compute derived data\n"
-                + "  -i, --fixnames                  Use the fixnames option for gprof\n"
-                + "  -m, --monitor                   Perform runtime monitoring of profile data\n" + "\n"
                 + "The following options will run only from the console (no GUI will launch):\n" + "\n"
                 + "  --pack <file>                   Pack the data into packed (.ppk) format\n"
                 + "  --dump                          Dump profile data to TAU profile format\n"
@@ -454,7 +451,6 @@ public class ParaProf implements ActionListener {
                 System.exit(-1);
             }
         } else {
-
             if (sourceFilenames.length >= 1) {
                 ParaProf.fileType = UtilFncs.identifyData(sourceFiles[0]);
             }
