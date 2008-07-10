@@ -1753,7 +1753,7 @@ int Profiler::writeData(int tid, const char *prefix, bool increment, const char 
 	  }
 
 	} else {
-	  if ((fp = fopen (filename, "w+")) == NULL) {
+	  if ((fp = fopen (dumpfile, "w+")) == NULL) {
 	    char errormsg[1024];
 	    sprintf(errormsg,"Error: Could not create %s",filename);
 	    perror(errormsg);
@@ -1820,6 +1820,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.184 $   $Date: 2008/07/10 19:12:57 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.184 2008/07/10 19:12:57 amorris Exp $ 
+ * $Revision: 1.185 $   $Date: 2008/07/10 23:19:37 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.185 2008/07/10 23:19:37 amorris Exp $ 
  ***************************************************************************/
