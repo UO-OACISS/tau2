@@ -108,6 +108,7 @@ int Tau_writeProfileMetaData(FILE *fp, int counter);
 
 static int writeUserEvents(FILE *fp, int tid);
 static int matchFunction(FunctionInfo *fi, const char **inFuncs, int numFuncs);
+extern "C" int Tau_get_usesMPI();
 
 //#define PROFILE_CALLS // Generate Excl Incl data for each call 
 
@@ -1612,16 +1613,8 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
 }
 
 // Writes a single profile file
-static int writeProfile(char *filename, char *metricName, int tid, int metric, 
+static int writeProfile(FILE *fp, char *metricName, int tid, int metric, 
 			const char **inFuncs, int numFuncs) {
-  FILE* fp;
-  if ((fp = fopen (filename, "w+")) == NULL) {
-    char errormsg[1024];
-    sprintf(errormsg,"Error: Could not create %s",filename);
-    perror(errormsg);
-    return 0;
-  }
-  
   writeHeader(fp, TheFunctionDB().size(), metricName);
   fprintf(fp, " # ");	
   Tau_writeProfileMetaData(fp, metric);
@@ -1693,12 +1686,12 @@ int Profiler::writeData(int tid, const char *prefix, bool increment, const char 
       char metricHeader[1024];
       char profileLocation[1024];
       char filename[1024];
+      FILE* fp;
 
       getMetricHeader(i, metricHeader);
       getProfileLocation(i, profileLocation);
-      sprintf(filename, "%s/temp.%d.%d.%d", profileLocation, 
-	      RtsLayer::myNode(), RtsLayer::myContext(), tid);
-      writeProfile(filename, metricHeader, tid, i, inFuncs, numFuncs);
+//       sprintf(filename, "%s/temp.%d.%d.%d", profileLocation, 
+// 	      RtsLayer::myNode(), RtsLayer::myContext(), tid);
 
       const char *selectivePrefix = "";
       if (numFuncs > 0) {
@@ -1724,13 +1717,51 @@ int Profiler::writeData(int tid, const char *prefix, bool increment, const char 
 	sprintf(dumpfile, "%s/%s%s__%s__.%d.%d.%d", profileLocation, selectivePrefix,
 		prefix, newStringTime,
 		RtsLayer::myNode(), RtsLayer::myContext(), tid);
-	
-	rename(filename, dumpfile);
+
+	if ((fp = fopen (filename, "w+")) == NULL) {
+	  char errormsg[1024];
+	  sprintf(errormsg,"Error: Could not create %s",filename);
+	  perror(errormsg);
+	  return 0;
+	}
+
       } else {
+	int flags = O_CREAT | O_EXCL | O_WRONLY;
+	int mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+	int node = RtsLayer::myNode();
 	sprintf(dumpfile,"%s/%s%s.%d.%d.%d", profileLocation, selectivePrefix, prefix, 
-		RtsLayer::myNode(), RtsLayer::myContext(), tid);
-	rename(filename, dumpfile);
+		node, RtsLayer::myContext(), tid);
+
+	int sicortex = 0;
+#ifdef TAU_SICORTEX
+	sicortex = 1;
+#endif
+
+	if (sicortex && !Tau_get_usesMPI()) {
+	  int test = open(dumpfile, flags, mode);
+	  while (test == -1 && node < 99999) {
+	    node++;
+	    sprintf(dumpfile,"%s/%s%s.%d.%d.%d", profileLocation, selectivePrefix, prefix, 
+		    node, RtsLayer::myContext(), tid);
+	    test = open(dumpfile, flags, mode);
+	  }
+	  if ((fp = fdopen (test, "w")) == NULL) {
+	    char errormsg[1024];
+	    sprintf(errormsg,"Error: Could not create %s",filename);
+	    perror(errormsg);
+	    return 0;
+	  }
+
+	} else {
+	  if ((fp = fopen (filename, "w+")) == NULL) {
+	    char errormsg[1024];
+	    sprintf(errormsg,"Error: Could not create %s",filename);
+	    perror(errormsg);
+	    return 0;
+	  }
+	}
       }
+      writeProfile(fp, metricHeader, tid, i, inFuncs, numFuncs);
     }
   }
   
@@ -1789,6 +1820,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.183 $   $Date: 2008/03/24 19:07:20 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.183 2008/03/24 19:07:20 amorris Exp $ 
+ * $Revision: 1.184 $   $Date: 2008/07/10 19:12:57 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.184 2008/07/10 19:12:57 amorris Exp $ 
  ***************************************************************************/
