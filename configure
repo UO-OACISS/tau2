@@ -3335,7 +3335,7 @@ then
     then
 # should we have a -lvt.fmpi here? 
 	fixmakeargs="pcxxopt=$pcxxopt useropt=$useropt extrashlibopts=$extrashlibopts $fixmakeargs"
-      wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir -Wl,-whole-archive -lvt.ompi -lotf -Wl,-no-whole-archive -lz"
+      wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir -Wl,-whole-archive -lvt.ompi -lotf -lbfd -Wl,-no-whole-archive -lz"
     fi
   fi 
   
@@ -3635,7 +3635,7 @@ else # if mpilib is specified
 	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
 	elif [ $vampirtrace = yes ]
 	then
-	    wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-lvt.omp#-lotf#-lz#-ldl"
+	    wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-lvt.omp#-lotf#-lz#-lbfd#-ldl"
 	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
 	fi
     else
@@ -3645,7 +3645,7 @@ else # if mpilib is specified
 	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
 	elif [ $vampirtrace = yes ]
 	then
-	    wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-lvt#-lotf#-lz#-ldl"
+	    wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-lvt#-lotf#-lz#-lbfd#-ldl"
 	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
 	fi
     fi
