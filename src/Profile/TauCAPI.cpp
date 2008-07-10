@@ -984,6 +984,14 @@ extern "C" double TAUClockTime(int tid) {
   return value;
 }
 
+static int Tau_usesMPI = 0;
+extern "C" void Tau_set_usesMPI(int value) {
+  Tau_usesMPI = value;
+}
+
+extern "C" int Tau_get_usesMPI() {
+  return Tau_usesMPI;
+}
 
 //////////////////////////////////////////////////////////////////////
 // Sometimes we may link in a library that needs the POMP stuff
@@ -996,7 +1004,7 @@ int *pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.74 $   $Date: 2008/03/24 19:07:20 $
- * VERSION: $Id: TauCAPI.cpp,v 1.74 2008/03/24 19:07:20 amorris Exp $
+ * $Revision: 1.75 $   $Date: 2008/07/10 19:12:29 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.75 2008/07/10 19:12:29 amorris Exp $
  ***************************************************************************/
 

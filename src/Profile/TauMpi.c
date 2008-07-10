@@ -10,6 +10,7 @@ extern void TauSyncClocks(int rank, int size);
 extern void TauSyncFinalClocks(int rank, int size);
 extern int Tau_write_snapshot(const char *name, int finalize);
 extern int Tau_mergeProfiles();
+extern void Tau_set_usesMPI(int value);
 
 
 /* This file uses the MPI Profiling Interface with TAU instrumentation.
@@ -930,8 +931,10 @@ int * rank;
   TAU_PROFILE_STOP(tautimer);
 
   /* Set the node as we did in MPI_Init */
-  if (comm == MPI_COMM_WORLD)
+  if (comm == MPI_COMM_WORLD) {
     TAU_PROFILE_SET_NODE(*rank);
+    Tau_set_usesMPI(1);
+  }
 
   return returnVal;
 }
@@ -1434,6 +1437,7 @@ int  MPI_Finalize(  )
   /* Grab the node id, we don't always wrap mpi_init */
   PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
   TAU_PROFILE_SET_NODE(procid_0 ); 
+  Tau_set_usesMPI(1);
 
   /* Create a merged profile if requested */
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
@@ -1484,6 +1488,7 @@ char *** argv;
 
   PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
   TAU_PROFILE_SET_NODE(procid_0 ); 
+  Tau_set_usesMPI(1);
 
   PMPI_Comm_size( MPI_COMM_WORLD, &size );
   tau_totalnodes(1, size); /* Set the totalnodes */
@@ -1526,6 +1531,7 @@ int *provided;
 
   PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
   TAU_PROFILE_SET_NODE(procid_0 );
+  Tau_set_usesMPI(1);
 
   PMPI_Comm_size( MPI_COMM_WORLD, &size );
   tau_totalnodes(1, size); /* Set the totalnodes */
