@@ -400,6 +400,7 @@ additional_mpilibs=
 pythoninc=
 pythonlib=
 python=no
+sicortex=yes
 extradir=
 extrashlibopts=
 awe=no
@@ -3306,7 +3307,13 @@ then
   if [ $epilog = yes -a $mpi = yes ]
   then
 
-    wrapperlib="-L$epiloglibdir -lelg.mpi"
+
+      if [ $sicortex = yes ] ; then
+	  wrapperlib="-L$epiloglibdir -Wl,-whole-archive -lelg.mpi -Wl,-no-whole-archive"
+      else
+	  wrapperlib="-L$epiloglibdir -lelg.mpi"
+      fi
+
 
 # kconfig puts -Wl,-rpath <papidir>/lib and this messes up ifort
 #    if [ $scalasca = yes ]
@@ -3318,9 +3325,12 @@ then
 #      fi
 #    fi
 
-    if [ $openmp = yes ] 
-    then
-      wrapperlib="-L$epiloglibdir -lelg.ompi"
+    if [ $openmp = yes ] ; then
+	if [ $sicortex = yes ] ; then
+	    wrapperlib="-L$epiloglibdir -Wl,-whole-archive -lelg.ompi -Wl,-no-whole-archive"
+	else
+	    wrapperlib="-L$epiloglibdir -lelg.ompi"
+	fi
     fi
   fi 
 
@@ -3629,13 +3639,15 @@ then
 else # if mpilib is specified
     if [ $openmp = yes ] 
     then
-	if [ $epilog = yes ]
-	then
-	    wrapperlib="-L$epiloglibdir#-lelg.omp#-ldl"
+	if [ $epilog = yes ] ; then
+	    if [ $sicortex = yes ] ; then
+		wrapperlib="-L$epiloglibdir#-Wl,-whole-archive#-lelg.omp#-Wl,-no-whole-archive#-ldl"
+	    else
+		wrapperlib="-L$epiloglibdir#-lelg.omp#-ldl"
+	    fi
 	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
-	elif [ $vampirtrace = yes ]
-	then
-	    wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-lvt.omp#-lotf#-lz#-lbfd#-ldl"
+	elif [ $vampirtrace = yes ] ; then
+	    wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-Wl,-whole-archive#-lvt.omp#-lotf#-Wl,-no-whole-archive#-lz#-lbfd#-ldl"
 	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
 	fi
     else
@@ -4100,6 +4112,7 @@ case $machine in
      mips32)
 	echo Found a \"$machine\" configuration definition
 	fixmakeargs="arch=$machine $fixmakeargs MIPS32 MIPS32LINUX"
+	sicortex=yes
 	if [ $papi = yes ]
  	  then
 	    fixmakeargs="$fixmakeargs MIPS32PAPI"
@@ -4109,6 +4122,7 @@ case $machine in
      mips)
 	echo Found a \"$machine\" configuration definition
 	fixmakeargs="arch=$machine $fixmakeargs MIPS64 MIPS64LINUX"
+	sicortex=yes
 	if [ $papi = yes ]
  	  then
 	    fixmakeargs="$fixmakeargs MIPS64PAPI"
