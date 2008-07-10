@@ -1759,6 +1759,9 @@ int Profiler::writeData(int tid, const char *prefix, bool increment, const char 
 	    perror(errormsg);
 	    return 0;
 	  }
+	  char cwd[1024];
+	  char *tst = getcwd(cwd, 1024);
+	  TAU_VERBOSE("TAU: Dumping profile %s, cwd = %s\n", dumpfile, cwd);
 	}
       }
       writeProfile(fp, metricHeader, tid, i, inFuncs, numFuncs);
@@ -1820,6 +1823,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.185 $   $Date: 2008/07/10 23:19:37 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.185 2008/07/10 23:19:37 amorris Exp $ 
+ * $Revision: 1.186 $   $Date: 2008/07/10 23:26:01 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.186 2008/07/10 23:26:01 amorris Exp $ 
  ***************************************************************************/
