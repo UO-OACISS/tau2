@@ -4729,6 +4729,9 @@ if [ $dyninst = yes ]
     if [ ! -d $dyninstdir/$PLATFORM/lib/libcommon.so ] ; then
 	fixmakeargs="$fixmakeargs DYNINST6"
     fi
+    if [ ! -d $dyninstdir/src/include -o ! -d $dyninstdir/include ] ; then
+	fixmakeargs="$fixmakeargs DYNINST5.2"
+    fi
 fi
 
 if [ $pcl = yes ]
