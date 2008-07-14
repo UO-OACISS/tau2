@@ -344,6 +344,10 @@ for arg in "$@"; do
 done
 
 if [ $default = false ] ; then
+#    echo "configured with:"
+#    echo ""
+#    echo "$modargs"
+#    echo ""
     echo "$modargs" >> .all_configs
     echo "$modargs" > .last_config
 fi
@@ -3327,7 +3331,7 @@ then
 
     if [ $openmp = yes ] ; then
 	if [ $sicortex = yes ] ; then
-	    wrapperlib="-L$epiloglibdir -Wl,-whole-archive -lelg.ompi -Wl,-no-whole-archive"
+	    wrapperlib="-L$epiloglibdir -Wl,-whole-archive -lelg.ompi -Wl,-no-whole-archive -Wl,-Bstatic#-lbfd#-Wl,-Bdynamic"
 	else
 	    wrapperlib="-L$epiloglibdir -lelg.ompi"
 	fi
@@ -3357,47 +3361,37 @@ then
   mpilibargs=$wrapperlib
   wrapperC=$wrapperlib
 
-  if [ -d $mpilib ]
-  then
+  if [ -d $mpilib ] ; then
     #echo "Lib dir found. adding -L$mpilib to LIB"
     mpilibargs="$mpilibargs -L$mpilib"
-    if [ -r $mpilib/libmpi_r.a -a -r $mpilib/libmpi.a ]
-    then
+    if [ -r $mpilib/libmpi_r.a -a -r $mpilib/libmpi.a ] ; then
       fixmakeargs="$fixmakeargs IBMMPI"
       ibmmpi=yes
     fi
 
-    if [ -f $mpilib/libfmpi.a -o -f $mpilib/libfmpi.so ]
-    then
+    if [ -f $mpilib/libfmpi.a -o -f $mpilib/libfmpi.so ] ; then
       #echo "Fortran fmpi.* found"
       mpiflibargs="-L$mpilib -lfmpi $wrapperlib"
     else
-      if [ $epilog = yes -a -f $epiloglibdir/libfmpi.a ]
-      then
-        mpiflibargs="$wrapperlib -lfmpi"
+      if [ $epilog = yes -a -f $epiloglibdir/libfmpi.a ] ; then
+        mpiflibargs="-lfmpi"
         wrapperlib="$wrapperlib -lfmpi"
       fi 
-      if [ $epilog = yes -a -f $epiloglibdir/libelgfmpi.a ]
-      then
-        mpiflibargs="$wrapperlib -lelgfmpi"
+      if [ $epilog = yes -a -f $epiloglibdir/libelgfmpi.a ] ; then
+        mpiflibargs="-lelgfmpi"
         wrapperlib="$wrapperlib -lelgfmpi"
       fi 
-      if [ $epilog = yes -a -f $epiloglibdir/libepk.ad.fmpi.a ]
-      then
-        mpiflibargs="$wrapperlib -lepk.ad.fmpi"
+      if [ $epilog = yes -a -f $epiloglibdir/libepk.ad.fmpi.a ] ; then
+        mpiflibargs="-lepk.ad.fmpi"
         wrapperlib="$wrapperlib -lepk.ad.fmpi"
       fi
 
- 
-
-      if [ -f $mpilib/libfmpich.cnk.a -o -f $mpilib/libfmpich.cnk.so ]
-      then
+      if [ -f $mpilib/libfmpich.cnk.a -o -f $mpilib/libfmpich.cnk.so ] ; then
 	mpiflibargs="-lfmpich.cnk"
       #  wrapperlib="$wrapperlib -lfmpich.cnk"
       fi
 
-      if [ -f $mpilib/libfmpich.a -o -f $mpilib/libfmpich.so ]
-      then
+      if [ -f $mpilib/libfmpich.a -o -f $mpilib/libfmpich.so ] ; then
           #echo "Fortran fmpich.* found"
           if [ $mpi2 = "yes" ] ; then
               #mpich2, must not use -lfmpich
@@ -3437,7 +3431,6 @@ then
       fi
     fi
   
-    #echo "mpilibargs = $mpilibargs"
     # Cases
     if [ -r $mpilib/libmpi.a -o -r $mpilib/libmpi.so ] ; then
       #echo "libmpi.* found!!"
@@ -3606,9 +3599,6 @@ then
       
     mpilibargs=`echo $mpilibargs | sed  -e 's/ /#/g'`
     mpiflibargs=`echo $mpiflibargs | sed  -e 's/ /#/g'`
-    #echo "mpiincargs= $mpiincargs"
-    #echo "mpilibargs= $mpilibargs"
-    #echo "mpiflibargs= $mpiflibargs"
     if [ $papipfm = yes -a "x$mpilib" = "x/usr/lib" ]
     then
       echo "NOTE: Adding -L<papidir> before -L<mpidir> to use PAPI's libpfm"
@@ -3641,13 +3631,13 @@ else # if mpilib is specified
     then
 	if [ $epilog = yes ] ; then
 	    if [ $sicortex = yes ] ; then
-		wrapperlib="-L$epiloglibdir#-Wl,-whole-archive#-lelg.omp#-Wl,-no-whole-archive#-ldl"
+		wrapperlib="-L$epiloglibdir#-Wl,-whole-archive#-lelg.omp#-Wl,-Bstatic#-lbfd#-Wl,-Bdynamic#-Wl,-no-whole-archive#-ldl"
 	    else
 		wrapperlib="-L$epiloglibdir#-lelg.omp#-ldl"
 	    fi
 	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
 	elif [ $vampirtrace = yes ] ; then
-	    wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-Wl,-whole-archive#-lvt.omp#-lotf#-Wl,-no-whole-archive#-lz#-lbfd#-ldl"
+	    wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-Wl,-whole-archive#-lvt.omp#-lotf#-Wl,-no-whole-archive#-lz#-Wl,-Bstatic#-lbfd#-Wl,-Bdynamic#-ldl"
 	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
 	fi
     else
@@ -3657,7 +3647,7 @@ else # if mpilib is specified
 	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
 	elif [ $vampirtrace = yes ]
 	then
-	    wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-lvt#-lotf#-lz#-lbfd#-ldl"
+	    wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-lvt#-lotf#-lz#-Wl,-Bstatic#-lbfd#-Wl,-Bdynamic#-ldl"
 	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
 	fi
     fi
