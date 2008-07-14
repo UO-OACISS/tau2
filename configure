@@ -3331,7 +3331,7 @@ then
 
     if [ $openmp = yes ] ; then
 	if [ $sicortex = yes ] ; then
-	    wrapperlib="-L$epiloglibdir -Wl,-whole-archive -lelg.ompi -Wl,-no-whole-archive -Wl,-Bstatic#-lbfd#-Wl,-Bdynamic"
+	    wrapperlib="-L$epiloglibdir -Wl,-whole-archive -lelg.ompi -Wl,-no-whole-archive -Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic"
 	else
 	    wrapperlib="-L$epiloglibdir -lelg.ompi"
 	fi
@@ -3635,14 +3635,14 @@ else # if mpilib is specified
     then
 	if [ $epilog = yes ] ; then
 	    if [ $sicortex = yes ] ; then
-		wrapperlib="-L$epiloglibdir#-Wl,-whole-archive#-lelg.omp#-Wl,-Bstatic#-lbfd#-Wl,-Bdynamic#-Wl,-no-whole-archive#-ldl"
+		wrapperlib="-L$epiloglibdir#-Wl,-whole-archive#-lelg.omp#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic#-Wl,-no-whole-archive#-ldl"
 	    else
 		wrapperlib="-L$epiloglibdir#-lelg.omp#-ldl"
 	    fi
 	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
 	elif [ $vampirtrace = yes ] ; then
 	    if [ $sicortex = yes ] ; then
-		wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-Wl,-whole-archive#-lvt.omp#-lotf#-Wl,-no-whole-archive#-lz#-Wl,-Bstatic#-lbfd#-Wl,-Bdynamic#-ldl"
+		wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-Wl,-whole-archive#-lvt.omp#-lotf#-Wl,-no-whole-archive#-lz#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic#-ldl"
 	    else
 		wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-Wl,-whole-archive#-lvt.omp#-lotf#-Wl,-no-whole-archive#-lz#-ldl"
 	    fi
@@ -3655,7 +3655,7 @@ else # if mpilib is specified
 	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
 	elif [ $vampirtrace = yes ]
 	then
-	    wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-lvt#-lotf#-lz#-Wl,-Bstatic#-lbfd#-Wl,-Bdynamic#-ldl"
+	    wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-lvt#-lotf#-lz#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic#-ldl"
 	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
 	fi
     fi
