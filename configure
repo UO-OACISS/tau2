@@ -404,7 +404,7 @@ additional_mpilibs=
 pythoninc=
 pythonlib=
 python=no
-sicortex=yes
+sicortex=no
 extradir=
 extrashlibopts=
 awe=no
@@ -3338,18 +3338,22 @@ then
     fi
   fi 
 
-  if [ $vampirtrace = yes -a $mpi = yes ]
-  then
-    if [ $vampirtrace = yes -a -f $vampirtracedir/$vampirtracelibdir/libvt.fmpi.a -o -f $vampirtracedir/$vampirtracelibdir/libvt.fmpi.a ] 
-    then
+  if [ $vampirtrace = yes -a $mpi = yes ] ; then
+    if [ $vampirtrace = yes -a -f $vampirtracedir/$vampirtracelibdir/libvt.fmpi.a -o -f $vampirtracedir/$vampirtracelibdir/libvt.fmpi.a ] ; then
       vtfortranwrapper="-lvt.fmpi"
-    fi 
+    else 
+      vtfortranwrapper=""
+    fi
+
     wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir $vtfortranwrapper -lvt.mpi -lotf -lz"
-    if [ $openmp = yes ] 
-    then
+    if [ $openmp = yes ] ; then
 # should we have a -lvt.fmpi here? 
 	fixmakeargs="pcxxopt=$pcxxopt useropt=$useropt extrashlibopts=$extrashlibopts $fixmakeargs"
-      wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir -Wl,-whole-archive -lvt.ompi -lotf -lbfd -Wl,-no-whole-archive -lz"
+	if [ $sicortex = yes ] ; then
+	    wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir -Wl,-whole-archive $vtfortranwrapper -lvt.ompi -lotf -lbfd -Wl,-no-whole-archive -lz"
+	else
+	    wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir -Wl,-whole-archive $vtfortranwrapper -lvt.ompi -lotf -Wl,-no-whole-archive -lz"
+	fi
     fi
   fi 
   
@@ -3637,7 +3641,11 @@ else # if mpilib is specified
 	    fi
 	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
 	elif [ $vampirtrace = yes ] ; then
-	    wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-Wl,-whole-archive#-lvt.omp#-lotf#-Wl,-no-whole-archive#-lz#-Wl,-Bstatic#-lbfd#-Wl,-Bdynamic#-ldl"
+	    if [ $sicortex = yes ] ; then
+		wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-Wl,-whole-archive#-lvt.omp#-lotf#-Wl,-no-whole-archive#-lz#-Wl,-Bstatic#-lbfd#-Wl,-Bdynamic#-ldl"
+	    else
+		wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-Wl,-whole-archive#-lvt.omp#-lotf#-Wl,-no-whole-archive#-lz#-ldl"
+	    fi
 	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
 	fi
     else
