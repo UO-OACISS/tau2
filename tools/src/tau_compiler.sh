@@ -1112,3 +1112,4 @@ if [ $errorStatus == $TRUE ] ; then
 	fi
 fi
 echo -e ""
+exit $errorStatus

@@ -218,6 +218,9 @@ all:
 
 EOF
 make -s -f /tmp/makefile.tau.$USER.$$ 
+x=$?
 /bin/rm -f /tmp/makefile.tau.$USER.$$
-fi
+fi 
+
+exit $x
 
