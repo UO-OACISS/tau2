@@ -312,7 +312,7 @@ class CompleteDirectives
       else if (text.substr(0,18) == "!$omp end parallel")
         return -1;
       //Match OMP DO directive
-      else if (text.substr(0,12) == "!$omp end do")
+      else if (text.substr(0,12) == "!$omp end do" || text.substr(0,13) == "!$omp enddo")
         return -3;
       else if (text.substr(0,13) == "!$omp end for")
         return -4;
@@ -861,7 +861,7 @@ int main(int argc, char *argv[])
   }
 }
 /***************************************************************************
- * $RCSfile: tau_ompcheck.cpp,v $   $Author: sameer $
- * $Revision: 1.16 $   $Date: 2008/05/29 01:34:11 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.16 2008/05/29 01:34:11 sameer Exp $
+ * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
+ * $Revision: 1.17 $   $Date: 2008/07/14 22:18:23 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.17 2008/07/14 22:18:23 scottb Exp $
  ***************************************************************************/
