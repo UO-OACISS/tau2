@@ -590,6 +590,7 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
  * library is used without any instrumentation in main */
 extern "C" void Tau_create_top_level_timer_if_necessary(void)
 {
+#ifndef TAU_EPILOG
   static bool initialized = false;
   static bool initthread[TAU_MAX_THREADS];
   if (!initialized) {
@@ -614,7 +615,9 @@ extern "C" void Tau_create_top_level_timer_if_necessary(void)
       Tau_start_timer(ptr, 0);
     }
   }
+#endif
 }
+
 
 extern "C" void Tau_stop_top_level_timer_if_necessary(void)
 {
@@ -1004,7 +1007,7 @@ int *pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.75 $   $Date: 2008/07/10 19:12:29 $
- * VERSION: $Id: TauCAPI.cpp,v 1.75 2008/07/10 19:12:29 amorris Exp $
+ * $Revision: 1.76 $   $Date: 2008/07/14 18:57:18 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.76 2008/07/14 18:57:18 amorris Exp $
  ***************************************************************************/
 
