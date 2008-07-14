@@ -114,7 +114,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tauex,v 1.6 2008/07/08 23:05:41 amorris Exp $';
+	      echo '$Id: tauex,v 1.7 2008/07/14 22:15:08 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -m)
@@ -300,6 +300,7 @@ if [ $dryrun = "true" ]; then
     echo "export VT_PFORM_GDIR=$OUTPUTDIR"
     echo "export VT_METRICS=$VT_METRICS"
     echo "export ELG_METRICS=$ELG_METRICS"
+    echo "export ELG_PFORM_GDIR=$OUTPUTDIR"
     echo "export ELG_FILE_PREFIX=$OUTPUTDIR"
     echo "mkdir -p $OUTPUTDIR"
     echo "export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
@@ -324,6 +325,7 @@ else
     export VT_PFORM_GDIR=$OUTPUTDIR
     export VT_METRICS=$VT_METRICS
     export ELG_METRICS=$ELG_METRICS
+    export ELG_PFORM_GDIR=$OUTPUTDIR
     export ELG_FILE_PREFIX=$OUTPUTDIR
     mkdir -p $OUTPUTDIR
     export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
@@ -334,6 +336,7 @@ else
     else 
 	"$@"
 	retval=$?
+	unset LD_PRELOAD
 	case $theBinding in
 	    *\-epilog*)
 	    if [ "$SLURM_PROCID" = "0" -o "x$SLURM_PROCID" = "x" ]; then
