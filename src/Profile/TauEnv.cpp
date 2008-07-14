@@ -111,6 +111,10 @@ extern "C" {
   }
 
   void TauEnv_initialize() {
+
+    // unset LD_PRELOAD so that vt_unify and elg_unify work
+    unsetenv("LD_PRELOAD");
+
     static int initialized = 0;
 
     if (!initialized) {
