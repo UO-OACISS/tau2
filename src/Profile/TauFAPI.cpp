@@ -533,7 +533,7 @@ void tau_profile_timer_(void **ptr, char *fname, int flen)
   {
 
 #ifdef TAU_OPENMP
-#pragma omp critical
+#pragma omp critical (tau_profile_timer)
     {
       if (*ptr == 0) {
 #endif /* TAU_OPENMP */
@@ -2012,6 +2012,6 @@ void TAU_DEALLOC(void ** ptr, int* line, char *name, int slen)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.68 $   $Date: 2008/07/03 23:29:53 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.68 2008/07/03 23:29:53 amorris Exp $ 
+ * $Revision: 1.69 $   $Date: 2008/07/15 20:47:15 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.69 2008/07/15 20:47:15 amorris Exp $ 
  ***************************************************************************/
