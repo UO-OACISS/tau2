@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.79 2008/07/09 01:16:37 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.80 2008/07/15 21:51:56 scottb Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.79 $
+ * @version $Revision: 1.80 $
  */
 public class ParaProf implements ActionListener {
 
@@ -66,6 +66,7 @@ public class ParaProf implements ActionListener {
     private static File sourceFiles[] = new File[0];
     private static boolean fixNames = false;
     private static boolean monitorProfiles;
+		private static String configFile;
     private static String args[];
     //End - Command line options related.
 
@@ -171,7 +172,6 @@ public class ParaProf implements ActionListener {
             // running as Java Web Start without permission
         }
     }
-
     public static void initialize() {
 
         try {
@@ -215,8 +215,8 @@ public class ParaProf implements ActionListener {
                 // try to load perfdmf.cfg.
                 File perfDMFcfg = new File(ParaProf.paraProfHomeDirectory.getPath() + "/perfdmf.cfg");
                 if (perfDMFcfg.exists()) {
-                    //System.out.println("Found db configuration file: "
-                    //        + ParaProf.paraProfHomeDirectory.getPath() + "/perfdmf.cfg");
+                    System.out.println("Found db configuration file: "
+                            + ParaProf.paraProfHomeDirectory.getPath() + "/perfdmf.cfg");
                     ParaProf.preferences.setDatabaseConfigurationFile(ParaProf.paraProfHomeDirectory.getPath() + "/perfdmf.cfg");
                 }
 
@@ -253,7 +253,8 @@ public class ParaProf implements ActionListener {
         }
 
         // Initialize, but do not show the manager window
-        ParaProf.paraProfManagerWindow = new ParaProfManagerWindow();
+				//System.out.println("creating Manager window with: " + configFile);
+        ParaProf.paraProfManagerWindow = new ParaProfManagerWindow(configFile);
     }
 
     public static void loadScripts() {
@@ -375,7 +376,8 @@ public class ParaProf implements ActionListener {
             System.exit(-1);
         }
 
-        Boolean help = (Boolean) parser.getOptionValue(helpOpt);
+        configFile = (String) parser.getOptionValue(configfileOpt);
+				Boolean help = (Boolean) parser.getOptionValue(helpOpt);
         String fileTypeString = (String) parser.getOptionValue(typeOpt);
         Boolean fixNames = (Boolean) parser.getOptionValue(fixOpt);
         String pack = (String) parser.getOptionValue(packOpt);
@@ -388,7 +390,10 @@ public class ParaProf implements ActionListener {
         ParaProf.tauArch = (String) parser.getOptionValue(tauArchOpt);
 
         demoMode = demo != null && demo.booleanValue();
-
+        if (configFile != "") {
+				    //System.out.println("commandline db config: " + configFile);
+				    ParaProf.preferences.setDatabaseConfigurationFile(configFile);
+				}
         if (monitor != null) {
             monitorProfiles = monitor.booleanValue();
         }

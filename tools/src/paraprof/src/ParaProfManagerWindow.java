@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.33 2008/07/09 23:05:57 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.34 2008/07/15 21:51:56 scottb Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.33 $
+ * @version	$Revision: 1.34 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -77,9 +77,16 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     private String dbDisplayName;
 
     private List databases;
+    private static String commandLineConfig;
 
     public void refreshDatabases() {
+		    //System.out.println("refreshing databases...");
+				//System.out.println("LOAD cfg file: " + commandLineConfig);
         databases = Database.getDatabases();
+				if (commandLineConfig != null)
+				{
+				    databases.add(new Database("Portal", commandLineConfig));
+				}
         Iterator dbs = databases.iterator();
 
         DefaultMutableTreeNode treeNode;
@@ -110,8 +117,16 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         treeModel.reload();
     }
 
-    public ParaProfManagerWindow() {
-
+	  public ParaProfManagerWindow() { 	
+				this("");
+    }
+    public ParaProfManagerWindow(String dbConfig) {
+				//System.out.println("load cfg file: " + ParaProf.preferences.getDatabaseConfigurationFile());
+				if (dbConfig != null && dbConfig != "")
+				{
+				    commandLineConfig = dbConfig;
+        }
+				
         //Window Stuff.
         int windowWidth = 800;
         int windowHeight = 515;
@@ -171,6 +186,10 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         root.add(standard);
 
         databases = Database.getDatabases();
+				if (commandLineConfig != null)
+				{
+				    databases.add(new Database("Portal", commandLineConfig));
+				}
         for (Iterator it = databases.iterator(); it.hasNext();) {
             Database database = (Database) it.next();
             DefaultMutableTreeNode dbNode = new DefaultMutableTreeNode(database);
