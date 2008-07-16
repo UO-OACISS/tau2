@@ -65,7 +65,7 @@ for arg in "$@" ; do
               # these arguments should only go to the non-tau invocation
 	      NON_TAUARGS="$NON_TAUARGS $modarg"
 	      ;;
-	  -M | -MM | -V | -v | --version | -print* | -dumpversion)
+	  -MM | -V | -v | --version | -print* | -dumpversion)
               # if any of these are specified, we invoke the regular compiler only
 	      invoke_without_tau=yes
 	      invoke_with_tau=no
