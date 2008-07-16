@@ -134,6 +134,11 @@ fi
 	echo "s,^VAMPIRTRACEDIR=.*$,VAMPIRTRACEDIR=$vampirtracedir,g" >> $sedout
 	;;
 
+     sicortexlink=*)
+        sicortexlink=`echo $1 | sed -e 's/^sicortexlink=//' -e 's/#/ /g'`
+	echo "s@^SICORTEXLINK=.*\$@SICORTEXLINK=$sicortexlink@g" >> $sedout
+	;;
+
      epilogdir=*)
         epilogdir=`echo $1 | sed -e 's/^epilogdir=//'`
 	echo "s,^EPILOGDIR=.*$,EPILOGDIR=$epilogdir,g" >> $sedout
@@ -151,7 +156,7 @@ fi
 
      epilogextralinkcmd=*)
         epilogextralinkcmd=`echo $1 | sed -e 's/^epilogextralinkcmd=//' -e 's/#/ /g'`
-	echo "s,^EPILOGEXTRALINKCMD=.*$,EPILOGEXTRALINKCMD=$epilogextralinkcmd,g" >> $sedout
+	echo "s@^EPILOGEXTRALINKCMD=.*\$@EPILOGEXTRALINKCMD=$epilogextralinkcmd@g" >> $sedout
 	;;
 
      epilogincdir=*)
@@ -832,6 +837,10 @@ fi
 	echo NOTE: Using the Gnu C Compiler, GCC
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     SICORTEX)
+        echo NOTE: Using SiCortex build options
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      FORCEIA32)
         echo NOTE: Using 32 bit mode for x86_64 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

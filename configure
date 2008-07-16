@@ -1040,6 +1040,7 @@ do
     ;;
 
   -mpiinc=*)
+    mpi=yes
     mpiinc=`echo $arg | sed -e 's/-mpiinc=//' -e 's/ /#/g'`
     if [ ! -d $mpiinc ]
     then
@@ -1050,6 +1051,7 @@ do
     ;;
 
   -mpilib=*)
+    mpi=yes
     mpilib=`echo $arg | sed -e 's/-mpilib=//' -e 's/ /#/g'`
     if [ ! -d $mpilib ]
     then
@@ -1636,6 +1638,54 @@ if [ "x$detectarch" = "xx86_64" -a "x$machine" = "xi386_linux" ] ; then
     fixmakeargs="$fixmakeargs FORCEIA32"
 fi
     
+
+if [ $machine = mips ] ; then
+    sicortex=yes
+fi
+if [ $machine = mips32 ] ; then
+    sicortex=yes
+fi
+
+if [ $sicortex = yes ] ; then
+    sicortexlink=""
+    sicortexmpi=""
+    if [ $epilog = yes ] ; then
+	elglibrary="-lelg"
+	if [ $mpi = yes -a $openmp = yes ] ; then
+	    # hybrid
+	    sicortexlink="-L$epiloglibdir#-Wl,-whole-archive#-lfmpi#-lelg.ompi#-Wl,-no-whole-archive#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic#-lscmpi"
+	elif [ $mpi = yes ] ; then
+	    # mpi
+	    sicortexlink="-L$epiloglibdir#-lfmpi#-lelg.mpi#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic#-lscmpi"
+	elif [ $openmp = yes ] ; then
+	    # openmp
+	    sicortexlink="-L$epiloglibdir#-Wl,-whole-archive#-lelg.omp#-Wl,-no-whole-archive#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic"
+	else
+	    # serial
+	    sicortexlink="-L$epiloglibdir#-lelg#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic"
+	fi
+
+    fi
+    if [ $vampirtrace = yes ] ; then
+	if [ $mpi = yes -a $openmp = yes ] ; then
+	    # hybrid
+	    sicortexlink="-L$vampirtracedir/$vampirtracelibdir#-Wl,-whole-archive#-lvt.fmpi#-lvt.ompi#-lotf#-Wl,-no-whole-archive#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic#-lscmpi"
+	elif [ $mpi = yes ] ; then
+	    # mpi
+	    sicortexlink="-L$vampirtracedir/$vampirtracelibdir#-lvt.fmpi#-lvt.mpi#-lotf#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic#-lscmpi"
+	elif [ $openmp = yes ] ; then
+	    # openmp
+	    sicortexlink="-L$vampirtracedir/$vampirtracelibdir#-Wl,-whole-archive#-lvt.omp#-lotf#-Wl,-no-whole-archive#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic"
+	else
+	    # serial
+	    sicortexlink="-L$vampirtracedir/$vampirtracelibdir#-lvt#-lotf#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic"
+	fi
+
+    fi
+
+    fixmakeargs="$fixmakeargs SICORTEX sicortexlink=${sicortexlink}"
+fi
+
 
 ######################################################################
 # If the default gcc/g++ is not used, Modify the Makefiles...
@@ -3350,7 +3400,8 @@ then
 # should we have a -lvt.fmpi here? 
 	fixmakeargs="pcxxopt=$pcxxopt useropt=$useropt extrashlibopts=$extrashlibopts $fixmakeargs"
 	if [ $sicortex = yes ] ; then
-	    wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir -Wl,-whole-archive $vtfortranwrapper -lvt.ompi -lotf -lbfd -Wl,-no-whole-archive -lz"
+	    wrapperlib="$sicortexlink"
+#-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir -Wl,-whole-archive $vtfortranwrapper -lvt.ompi -lotf -lbfd -Wl,-no-whole-archive -lz"
 	else
 	    wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir -Wl,-whole-archive $vtfortranwrapper -lvt.ompi -lotf -Wl,-no-whole-archive -lz"
 	fi
@@ -4676,6 +4727,7 @@ fi
 
 if [ $epilog = yes ]
   then
+
     if [ -f $epiloglibdir/libsz.a ]
     then
       epilogextralinkcmd="-lsz"
@@ -5011,6 +5063,9 @@ fi
 
 
 
+if [ $sicortex = yes ] ; then
+    fixmakeargs="$fixmakeargs SICORTEX extrashlibopts=${sicortexlink}"
+fi
 
 
 #############################################################################
