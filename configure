@@ -3452,8 +3452,8 @@ then
               #mpich2, must not use -lfmpich
 	      if [ -f /usr/lib/librt.a ] ; then
                  # mpich2 uses librt for aio_* routines
-		  mpiflibargs="-L$mpilib $wrapperlib -lrt"
-		  mpilibargs="$mpilibargs -lrt"
+		  mpiflibargs="-L$mpilib $wrapperlib -lpthread -lrt"
+		  mpilibargs="$mpilibargs -lpthread -lrt"
 	      else
 		  mpiflibargs="-L$mpilib $wrapperlib"
 	      fi
