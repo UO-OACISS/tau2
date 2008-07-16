@@ -598,7 +598,7 @@ for arg in "$@" ; do
 			argsRemaining="$argsRemaining $arg"
 			;;
 
-		-M|-MM|-S|-E)
+		-MM|-S|-E)
 # We ignore -M processing step for making dependencies, -S for assembly
 # and -E for preprocessing the source code. These are the options that are 
 # ignored by PDT. Add to this list if you need an additional option that should
