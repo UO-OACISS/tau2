@@ -42,6 +42,7 @@ declare -i temp=0
 
 declare -i preprocess=$FALSE
 declare -i revertOnError=$TRUE
+declare -i revertForced=$FALSE
 
 declare -i optShared=$FALSE
 
@@ -122,7 +123,9 @@ printError() {
 
 	echo -e "Error: Command(Executable) is -- $1"
 	echo -e "Error: Full Command attempted is -- $2"
-	echo -e "Error: Reverting to a Regular Make"
+	if [ $revertOnError == $TRUE ]; then
+	    echo -e "Error: Reverting to a Regular Make"
+	fi
 	echo " "
 }
 
@@ -454,6 +457,7 @@ for arg in "$@" ; do
 
 			-optRevert*)
 				revertOnError=$TRUE
+				revertForced=$TRUE
 				;;
 
 			-optKeepFiles*)
@@ -816,8 +820,16 @@ if [ $numFiles == 0 ]; then
 
 	echoIfDebug "Looking for file: $passedOutputFile"
 	if [  ! -e $passedOutputFile ]; then
-		echoIfVerbose "Error: Tried Looking for file: $passedOutputFile"
-		printError "$CMD" "$linkCmd"
+		echoIfVerbose "Error: Tried looking for file: $passedOutputFile"
+		echoIfVerbose "Error: Failed to link with TAU options"
+		if [ $revertForced == $TRUE ] ; then
+		    printError "$CMD" "$linkCmd"
+		else 
+		    revertOnError=false
+		    printError "$CMD" "$linkCmd"
+		    echo -e ""
+		    exit $errorStatus
+		fi
 	fi
 	gotoNextStep=$FALSE
 	if [ $opari == $TRUE -a $needToCleanPdbInstFiles == $TRUE ]; then
