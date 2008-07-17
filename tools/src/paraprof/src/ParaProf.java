@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.80 2008/07/15 21:51:56 scottb Exp $
+ * CVS $Id: ParaProf.java,v 1.81 2008/07/17 20:50:01 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.80 $
+ * @version $Revision: 1.81 $
  */
 public class ParaProf implements ActionListener {
 
@@ -233,6 +233,8 @@ public class ParaProf implements ActionListener {
             //            URL url = ParaProf.class.getResource("/perfdmf.cfg");
             //            String path = URLDecoder.decode(url.getPath());
             //            ParaProf.preferences.setDatabaseConfigurationFile(path);
+	    preferences = new Preferences();
+	    ParaProf.preferences.setLoaded(true);
         }
 
         if (colorChooser == null) {
