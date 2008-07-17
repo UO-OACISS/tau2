@@ -1804,8 +1804,8 @@ case $machine in
    bgp)
     if [ $cxx_compiler = default ]
     then
-      cxx_compiler=bgxlC_r
-      c_compiler=bgxlc_r
+      cxx_compiler=mpixlcxx_r
+      c_compiler=mpixlc_r
     fi
     ;;
 
@@ -3526,7 +3526,7 @@ then
       fi
     else
       #echo "libmpi.* not found!! Checking for mpich.*..."
-      if [ -r $mpilib/libmpich.*a -o -r $mpilib/libpmpich.so ] ; then 
+      if [ -r $mpilib/libmpich.a -o -r $mpilib/libpmpich.so ] ; then 
 	  fixmakeargs="$fixmakeargs MPICH_IGNORE_CXX_SEEK"
           if [ $mpi2 = yes ] ; then
 	    fixmakeargs="$fixmakeargs MPICH2_MPI_INPLACE"
