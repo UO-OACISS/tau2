@@ -30,6 +30,7 @@
 /* We should throttle if number n > a && percall < b .a and b are given below */
 #define TAU_THROTTLE_NUMCALLS_DEFAULT 100000
 #define TAU_THROTTLE_PERCALL_DEFAULT  10
+#define TAU_SYNCHRONIZE_CLOCKS_DEFAULT 1
 
 extern "C" {
 
@@ -56,9 +57,9 @@ extern "C" {
     va_end(args);
   }
  
-  static int parse_bool(char *str) {
+  static int parse_bool(char *str, int default_value = 0) {
     if (str == NULL) {
-      return 0;
+      return default_value;
     }
     static char strbuf[128];
     char* ptr = strbuf;
@@ -130,11 +131,15 @@ extern "C" {
       TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");
       
       tmp = getenv("TAU_SYNCHRONIZE_CLOCKS");
-      if (parse_bool(tmp)) {
+      if (parse_bool(tmp, TAU_SYNCHRONIZE_CLOCKS_DEFAULT)) {
 	env_synchronize_clocks = 1;
-	TAU_VERBOSE("TAU: Clock Synchronization Enabled\n");
       } else {
 	env_synchronize_clocks = 0;
+      }
+      if (env_synchronize_clocks) {
+	TAU_VERBOSE("TAU: Clock Synchronization Enabled\n");
+      } else {
+	TAU_VERBOSE("TAU: Clock Synchronization Disabled\n");
       }
 
       if ((env_profiledir = getenv("PROFILEDIR")) == NULL) {
