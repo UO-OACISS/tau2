@@ -2329,8 +2329,12 @@ case $cxx_compiler in
       fi
       ibmxlc=yes
 
+      if [ "$machine" = "bgp" ] ; then
+	  compilerLocation=`which bgxlC_r`
+      else 
+	  compilerLocation=`which $cxx_compiler`
+      fi
 
-      compilerLocation=`which $cxx_compiler`
       if [ "x$compilerLocation" = "x/usr/bin/$cxx_compiler" ] ; then
 	  # if xlc or blrts_xlc is found in /usr/bin, it is likely a
 	  # symlink.  Since we use ../lib to locate the libraries
@@ -3095,6 +3099,8 @@ EOF
       # Wait. SiCortex's MPI2 interface is broken. 
       echo "SiCortex detected. Disabling MPI2 wrappers"
       fixmakeargs="$fixmakeargs MPICH_IGNORE_CXX_SEEK"
+    elif [ "$tauarch" = "bgp" ] ; then
+      echo "BGP MPI detected. Disabling MPI2 wrappers"
     else 
       fixmakeargs="$fixmakeargs MPI2"
       mpi2=yes
