@@ -2330,12 +2330,13 @@ case $cxx_compiler in
       ibmxlc=yes
 
       if [ "$machine" = "bgp" ] ; then
-	  compilerLocation=`which bgxlC_r`
+	  ibm_compiler=bgxlC_r
       else 
-	  compilerLocation=`which $cxx_compiler`
+	  ibm_compiler=$cxx_compiler
       fi
+      compilerLocation=`which $ibm_compiler`
 
-      if [ "x$compilerLocation" = "x/usr/bin/$cxx_compiler" ] ; then
+      if [ "x$compilerLocation" = "x/usr/bin/$ibm_compiler" ] ; then
 	  # if xlc or blrts_xlc is found in /usr/bin, it is likely a
 	  # symlink.  Since we use ../lib to locate the libraries
 	  # we will dereference the symlink once.  Don't do it more 
@@ -2351,7 +2352,9 @@ case $cxx_compiler in
 	      fi
 	  fi
       fi
-      extradircxx=`echo $compilerLocation | sed s/$cxx_compiler/../`
+
+      extradircxx=`echo $compilerLocation | sed s/$ibm_compiler/../`
+
       extradir=`which xlf90 | sed s/xlf90/../`
       if [ $fortran_compiler = no ] 
       then
@@ -2363,8 +2366,8 @@ case $cxx_compiler in
 	fi
         fortran_compiler=yes
       fi
-      threadtest=`echo $cxx_compiler | sed -e 's/_r//'`
-      if [ "y$threadtest" = "y$cxx_compiler" ]
+      threadtest=`echo $ibm_compiler | sed -e 's/_r//'`
+      if [ "y$threadtest" = "y$ibm_compiler" ]
       then
 	echo "Not using the thread-safe version of the IBM compiler"
       else
