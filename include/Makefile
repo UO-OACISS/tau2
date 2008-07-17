@@ -458,7 +458,7 @@ FWRAPPER	       = TauFMpi.o
 TAU_PAPI_EXTRA_FLAGS	       = $(LEXTRA)
 #IA64PAPI#TAU_PAPI_EXTRA_FLAGS	       = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi #ENDIF#
 
-TAU_PAPI_EXTRA_FLAGS = -L$(PAPIDIR)/lib -L$(PAPIDIR)/lib64 -lpapi #SICORTEX#
+#SICORTEX#TAU_PAPI_EXTRA_FLAGS = -L$(PAPIDIR)/lib -L$(PAPIDIR)/lib64 -lpapi #ENDIF#
 
 # By default make TAU_PAPI_RPATH null. Support it on a compiler by compiler basis.
 #PAPI###TAU_PAPI_RPATH	= -rpath $(PAPIDIR)/$(PAPISUBDIR) #ENDIF#
