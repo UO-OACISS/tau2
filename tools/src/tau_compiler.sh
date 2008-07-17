@@ -60,6 +60,7 @@ printUsage () {
 	echo -e "  -optPdtCxxReset=\"\"\t\tReset options to the C++ parser to the given list"
 	echo -e "  -optPdtF90Parser=\"\"\t\tSpecify a different Fortran parser. For e.g., f90parse instead of f95parse"
 	echo -e "  -optPdtGnuFortranParser\tSpecify the GNU gfortran PDT parser gfparse instead of f95parse"
+	echo -e "  -optPdtCleanscapeParser\tSpecify the Cleanscape Fortran parser"
 	echo -e "  -optPdtUser=\"\"\t\tOptional arguments for parsing source code"
 	echo -e "  -optTauInstr=\"\"\t\tSpecify location of tau_instrumentor. Typically \$(TAUROOT)/\$(CONFIG_ARCH)/bin/tau_instrumentor"
 	echo -e "  -optPreProcess\t\tPreprocess the source code before parsing. Uses /usr/bin/cpp -P by default."
@@ -286,6 +287,13 @@ for arg in "$@" ; do
 				pdtParserF="$optPdtDir""/gfparse"
 				gfparseUsed=$TRUE
 				;;
+
+			-optPdtCleanscapeParser*)
+				fortranParserDefined=$TRUE
+				pdtParserF="$optPdtDir""/f95parse"
+				gfparseUsed=$FALSE
+				;;
+	
 
 			-optPdtF95Opts*)
 				#reads all the options needed for Parsing a Fortran file
@@ -541,8 +549,8 @@ for arg in "$@" ; do
 			arrFileNameDirectory[$numFiles]=`dirname $arg`
 			numFiles=numFiles+1
 			if [ $fortranParserDefined == $FALSE ]; then
-				#If it is not passed EXPLICITY, use the default f95parse.
-				pdtParserF="$optPdtDir""/f95parse"
+				#If it is not passed EXPLICITY, use the default gfparse.
+				pdtParserF="$optPdtDir""/gfparse"
 			fi
 			echoIfDebug "Using Fortran Parser"
 			if [ $optResetUsed == $FALSE ]; then
