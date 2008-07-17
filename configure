@@ -3104,6 +3104,7 @@ EOF
       fixmakeargs="$fixmakeargs MPICH_IGNORE_CXX_SEEK"
     elif [ "$tauarch" = "bgp" ] ; then
       echo "BGP MPI detected. Disabling MPI2 wrappers"
+      fixmakeargs="$fixmakeargs MPICH_IGNORE_CXX_SEEK"
     else 
       fixmakeargs="$fixmakeargs MPI2"
       mpi2=yes
