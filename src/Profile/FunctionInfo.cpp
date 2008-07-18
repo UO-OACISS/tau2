@@ -155,6 +155,18 @@ int TauInitEpilog(void)
 // Member Function Definitions For class FunctionInfo
 //////////////////////////////////////////////////////////////////////
 
+
+static string strip_tau_group(const char *ProfileGroupName) {
+  string source = ProfileGroupName;
+  string find = "TAU_GROUP_";
+  string replace = "";
+  size_t j;
+  for (; (j = source.find (find)) != string::npos;) {
+    source.replace(j, find.length(), replace);
+  }
+  return source;
+}
+
 //////////////////////////////////////////////////////////////////////
 // FunctionInfoInit is called by all four forms of FunctionInfo ctor
 //////////////////////////////////////////////////////////////////////
@@ -162,10 +174,10 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 	const char *ProfileGroupName, bool InitData, int tid)
 {
   //Need to keep track of all the groups this function is a member of.
-  AllGroups = ProfileGroupName;
+  AllGroups = strip_tau_group(ProfileGroupName);
 
 #ifdef TRACING_ON
-	GroupName = RtsLayer::PrimaryGroup(ProfileGroupName);
+  GroupName = RtsLayer::PrimaryGroup(AllGroups.c_str());
 #endif //TRACING_ON
 
 // Since FunctionInfo constructor is called once for each function (static)
@@ -531,7 +543,7 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
   }
 }
 /***************************************************************************
- * $RCSfile: FunctionInfo.cpp,v $   $Author: sameer $
- * $Revision: 1.52 $   $Date: 2008/03/15 02:12:27 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.52 2008/03/15 02:12:27 sameer Exp $ 
+ * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
+ * $Revision: 1.53 $   $Date: 2008/07/18 23:32:56 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.53 2008/07/18 23:32:56 amorris Exp $ 
  ***************************************************************************/
