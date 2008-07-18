@@ -14,9 +14,9 @@ import edu.uoregon.tau.perfdmf.Thread;
 /**
  * A BarChartModel for doing the GlobalDataWindow
  * 
- * <P>CVS $Id: GlobalBarChartModel.java,v 1.12 2008/05/14 23:23:58 amorris Exp $</P>
+ * <P>CVS $Id: GlobalBarChartModel.java,v 1.13 2008/07/18 22:38:18 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  */
 
 public class GlobalBarChartModel extends AbstractBarChartModel {
@@ -220,8 +220,15 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
 
         int metricID = dataSorter.getSelectedMetricID();
 
-        String exclusive = "<br>Exclusive " + metricName + ": " + fp.getExclusive(metricID);
-        String inclusive = "<br>Inclusive " + metricName + ": " + fp.getInclusive(metricID);
+        String unitsString = UtilFncs.getUnitsString(window.units(), dataSorter.isTimeMetric(), false);
+
+        String exclusiveValue = UtilFncs.getOutputString(window.units(), fp.getExclusive(metricID),
+                ParaProf.defaultNumberPrecision);
+        String inclusiveValue = UtilFncs.getOutputString(window.units(), fp.getInclusive(metricID),
+                ParaProf.defaultNumberPrecision);
+
+        String exclusive = "<br>Exclusive " + metricName + ": " + exclusiveValue + " " + unitsString;
+        String inclusive = "<br>Inclusive " + metricName + ": " + inclusiveValue + " " + unitsString;
         String calls = "<br>Calls: " + fp.getNumCalls();
         String subr = "<br>SubCalls: " + fp.getNumSubr();
 
