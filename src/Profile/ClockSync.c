@@ -229,7 +229,7 @@ void TauSyncClocks(int rank, int size) {
   double offset = 0;
 
   PMPI_Barrier(MPI_COMM_WORLD);
-  printf ("TAU: Clock Synchonization active on node : %d\n", rank);
+  TAU_VERBOSE ("TAU: Clock Synchonization active on node : %d\n", rank);
   /* clear counter to zero, since the times might be wildly different (LINUX_TIMERS)
      we reset to zero so that the offsets won't be so large as to give us negative numbers
      on some nodes.  This also allows us to easily use 0 before MPI_Init. */
