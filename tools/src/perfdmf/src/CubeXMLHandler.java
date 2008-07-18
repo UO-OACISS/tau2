@@ -12,9 +12,9 @@ import org.xml.sax.helpers.DefaultHandler;
  * @see <a href="http://www.fz-juelich.de/zam/kojak/">
  * http://www.fz-juelich.de/zam/kojak/</a> for more information about cube
  * 
- * <P>CVS $Id: CubeXMLHandler.java,v 1.6 2008/05/13 22:36:03 amorris Exp $</P>
+ * <P>CVS $Id: CubeXMLHandler.java,v 1.7 2008/07/18 21:53:13 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public class CubeXMLHandler extends DefaultHandler {
 
@@ -26,6 +26,7 @@ public class CubeXMLHandler extends DefaultHandler {
     private String regionID;
     private String csiteID;
     private String cnodeID;
+    private int threadID;
     private String callee;
     private String uom;
 
@@ -78,9 +79,10 @@ public class CubeXMLHandler extends DefaultHandler {
 
     private static class CubeThread {
         public int rank;
-
-        public CubeThread(int rank) {
+        public int id;
+        public CubeThread(int rank, int id) {
             this.rank = rank;
+            this.id = id;
         }
     }
 
@@ -136,6 +138,8 @@ public class CubeXMLHandler extends DefaultHandler {
         } else if (localName.equalsIgnoreCase("metric")) {
             metricIDStack.push(metricID);
             metricID = getInsensitiveValue(attributes, "id");
+        } else if (localName.equalsIgnoreCase("thread")) {
+            threadID = Integer.parseInt(getInsensitiveValue(attributes, "id"));
         } else if (localName.equalsIgnoreCase("region")) {
             regionID = getInsensitiveValue(attributes, "id");
         } else if (localName.equalsIgnoreCase("csite")) {
@@ -203,7 +207,7 @@ public class CubeXMLHandler extends DefaultHandler {
             cubeProcess.rank = Integer.parseInt(rank);
             rank = (String) rankStack.pop();
         } else if (localName.equalsIgnoreCase("thread")) {
-            CubeThread cubeThread = new CubeThread(Integer.parseInt(rank));
+            CubeThread cubeThread = new CubeThread(Integer.parseInt(rank), threadID);
             cubeProcess.threads.add(cubeThread);
             rank = (String) rankStack.pop();
         } else if (localName.equalsIgnoreCase("locations") || localName.equalsIgnoreCase("system")) {
@@ -214,7 +218,11 @@ public class CubeXMLHandler extends DefaultHandler {
                 for (int j = 0; j < cubeProcess.threads.size(); j++) {
                     CubeThread cubeThread = (CubeThread) cubeProcess.threads.get(j);
                     Thread thread = context.addThread(cubeThread.rank, cubeDataSource.getNumberOfMetrics());
-                    threads.add(thread);
+                    
+                    while (cubeThread.id >= threads.size()) {
+                        threads.add(null);
+                    }
+                    threads.set(cubeThread.id, thread);
                 }
             }
             numMetrics = cubeDataSource.getNumberOfMetrics();
