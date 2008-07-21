@@ -18,6 +18,7 @@ import common.RMIPerfExplorerModel;
 import common.TransformationType;
 import common.PerfExplorerOutput;
 import common.Console;
+import common.ScriptThread;
 import java.io.File;
 import edu.uoregon.tau.common.VectorExport;
 import edu.uoregon.tau.common.PythonInterpreterFactory;
@@ -748,7 +749,8 @@ public class PerfExplorerActionListener implements ActionListener {
 			return false;
 		} else {
 			// run the script
-			PythonInterpreterFactory.defaultfactory.getPythonInterpreter().execfile(scriptName);
+			//PythonInterpreterFactory.defaultfactory.getPythonInterpreter().execfile(scriptName);
+			ScriptThread runner = new ScriptThread(scriptName);
 			return true;
 		}
 	}

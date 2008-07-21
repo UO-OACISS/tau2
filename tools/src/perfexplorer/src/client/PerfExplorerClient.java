@@ -3,6 +3,7 @@ package client;
 import common.EngineType;
 import common.Console;
 import common.PerfExplorerOutput;
+import common.ScriptThread;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.common.PythonInterpreterFactory;
@@ -217,7 +218,7 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		}
 
 		if (console == null)  {
-			console = new Boolean(true);
+			console = new Boolean(false);
 		}
 
 		if (standalone.booleanValue()) {
@@ -262,7 +263,7 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 				System.exit(0);
 			}
 		} else {
-			if (!console.booleanValue()) {
+			if (console.booleanValue()) {
 				// send all output to a console window
 				try {
 					new Console();
@@ -282,9 +283,10 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 
 			if (scriptName != null) {
 				//System.out.println("running script, gui");
-				PythonInterpreterFactory.defaultfactory.getPythonInterpreter().execfile(scriptName);
 				PerfExplorerActionListener listener = (PerfExplorerActionListener)frame.getListener();
 				listener.setScriptName(scriptName);
+				//PythonInterpreterFactory.defaultfactory.getPythonInterpreter().execfile(scriptName);
+				ScriptThread scripter = new ScriptThread(scriptName);
 			}
 		}
 	}
