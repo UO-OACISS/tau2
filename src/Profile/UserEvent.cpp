@@ -526,7 +526,7 @@ struct TaultUserEventLong
    /* first check 0th index (size) */
    if (l1[0] != l2[0]) return (l1[0] < l2[0]);
    /* they're equal, see the size and iterate */
-   for (i = 0; i < l1[0] ; i++)
+   for (i = 1; i < l1[0] ; i++)
    {
      if (l1[i] != l2[i]) return l1[i] < l2[i];
    }
@@ -591,32 +591,26 @@ int& TauGetContextCallPathDepth(void)
 long* TauFormulateContextComparisonArray(Profiler *p, TauUserEvent *uevent)
 {
   int depth = TauGetContextCallPathDepth();
-  /* Create a long array with size depth+1. We need to put the depth
-   * in it as the 0th index */
-  long *ary = new long [depth+2];
+  /* Create a long array with size depth+2. We need to put the depth
+   * in it as the 0th index, the user event goes as the tail element */
 
-  int j;
-  Profiler *current = p; /* argument */
-  
+  long *ary = new long [depth+2];
+  if (!ary) return NULL;
   /* initialize the array */
-  for (j = 0; j < depth+1; j++)
-  {
+  for (int j = 0; j < depth+2; j++) {
     ary[j] = 0L;
   }
-  /* use the clean array now */
 
+  Profiler *current = p; /* argument */
   int index = 0;
 
-  if (ary)
-  {
-    ary[index++] = depth; /* this tells us how deep it is */
-    while (current != NULL && depth != 0)
-    {
-      ary[index++] = (long) current->ThisFunction;
-      depth--;
-      current = current->ParentProfiler;
-    }
+  ary[index++] = depth+2; /* this tells us the length of this array */
+  while (current != NULL && depth != 0) {
+    ary[index++] = (long) current->ThisFunction;
+    depth--;
+    current = current->ParentProfiler;
   }
+  
   ary[index++] = (long) uevent; 
   return ary;
 }
@@ -741,6 +735,6 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid)
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
- * $Revision: 1.26 $   $Date: 2008/03/10 19:51:24 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.26 2008/03/10 19:51:24 amorris Exp $ 
+ * $Revision: 1.27 $   $Date: 2008/07/21 19:38:28 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.27 2008/07/21 19:38:28 amorris Exp $ 
  ***************************************************************************/
