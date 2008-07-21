@@ -3,15 +3,16 @@ package edu.uoregon.tau.perfdmf;
 import java.awt.Color;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
  * This class represents a "function".  A function is defined over all threads
  * in the profile, so per-thread data is not stored here.
  *  
- * <P>CVS $Id: Function.java,v 1.16 2007/10/23 17:52:43 khuck Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.17 2008/07/21 18:03:44 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.16 $
+ * @version	$Revision: 1.17 $
  * @see		FunctionProfile
  */
 /**
@@ -104,7 +105,11 @@ public class Function implements Serializable, Comparable {
 
     public SourceRegion getSourceLink() {
         if (this.sourceLink == null) {
-        	this.sourceLink = getSourceLink(this.name);
+            if (isGroupMember("TAU_CALLPATH_DERIVED")) {
+                this.sourceLink = getSourceLink(UtilFncs.getLeftSide(name));
+            } else {
+                this.sourceLink = getSourceLink(this.name);
+            }
         }
         return sourceLink;
 	}
@@ -263,6 +268,16 @@ public class Function implements Serializable, Comparable {
         return false;
     }
 
+    public boolean isGroupMember(String groupName) {
+        for (Iterator it = this.groups.iterator(); it.hasNext();) {
+            Group group = (Group) it.next();
+            if (group.getName().equals(groupName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     public boolean isCallPathFunction() {
         if (!callpathFunctionSet) {
             callpathFunction = isCallPathFunction(this.name);
