@@ -106,6 +106,46 @@ static request_list *requests_head_0=NULL, *requests_tail_0=NULL;
 #endif /* TAU_TRACK_MSG */
 static int procid_0;
 
+#define track_vector( call, counts, typesize ) { \
+    int typesize, commSize, commRank, sendcount = 0, i; \
+    PMPI_Comm_rank(comm, &commRank); \
+    PMPI_Comm_size(comm, &commSize); \
+    if ( commRank == root ) { \
+      PMPI_Type_size( sendtype, &typesize ); \
+      for (i = 0; i<commSize; i++) { \
+	sendcount += counts[i]; \
+      } \
+      call(typesize*sendcount); \
+    } \
+  } 
+
+
+static int sum_array (int *counts, MPI_Datatype type, MPI_Comm comm) {
+
+  int typesize, commSize, commRank, i;
+  int total = 0;
+  PMPI_Comm_rank(comm, &commRank);
+  PMPI_Comm_size(comm, &commSize);
+  PMPI_Type_size(type, &typesize );
+  
+  for (i = 0; i<commSize; i++) {
+    total += counts[i];
+  } 
+  return total;
+}
+
+#define track_allvector( call, counts, typesize ) { \
+    int typesize, commSize, commRank, sendcount = 0, i; \
+    PMPI_Comm_rank(comm, &commRank); \
+    PMPI_Comm_size(comm, &commSize); \
+    PMPI_Type_size( sendtype, &typesize ); \
+    for (i = 0; i<commSize; i++) { \
+      sendcount += counts[i]; \
+    } \
+    call(typesize*sendcount); \
+  } 
+
+
 /* This function translates a given rank in a given communicator to the proper
    rank in MPI_COMM_WORLD */
 static int translateRankToWorld(MPI_Comm comm, int rank) {
@@ -452,8 +492,8 @@ MPI_Comm comm;
   
   returnVal = PMPI_Allgatherv( sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm );
   PMPI_Type_size( recvtype, &typesize );
-  TAU_ALLGATHER_DATA(typesize*(*recvcounts));
-  
+
+  track_allvector(TAU_ALLGATHER_DATA, recvcounts, typesize);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -519,14 +559,18 @@ MPI_Datatype recvtype;
 MPI_Comm comm;
 {
   int   returnVal;
-  int   typesize;
+  int   sendtypesize, recvtypesize;
+  int tracksize = 0;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Alltoallv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Alltoallv( sendbuf, sendcnts, sdispls, sendtype, recvbuf, recvcnts, rdispls, recvtype, comm );
-  PMPI_Type_size( sendtype, &typesize );
-  TAU_ALLTOALL_DATA(typesize*(*sendcnts));
+
+  tracksize = sum_array(sendcnts, sendtype, comm);
+  tracksize += sum_array(recvcnts, recvtype, comm);
+
+  TAU_ALLTOALL_DATA(tracksize);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -621,11 +665,7 @@ MPI_Comm comm;
 
   returnVal = PMPI_Gatherv( sendbuf, sendcnt, sendtype, recvbuf, recvcnts, displs, recvtype, root, comm );
 
-  PMPI_Comm_rank ( comm, &rank );
-  if (rank == root) {
-    PMPI_Type_size( recvtype, &typesize );
-    TAU_GATHER_DATA(typesize*(*recvcnts));
-  }
+  track_vector(TAU_GATHER_DATA, sendcnts, typesize);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -770,15 +810,14 @@ MPI_Datatype recvtype;
 int root;
 MPI_Comm comm;
 {
-  int   returnVal;
-  int   typesize;
+  int returnVal;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Scatterv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Scatterv( sendbuf, sendcnts, displs, sendtype, recvbuf, recvcnt, recvtype, root, comm );
-  PMPI_Type_size( sendtype, &typesize );
-  TAU_SCATTER_DATA(typesize*(*sendcnts));
+
+  track_vector(TAU_SCATTER_DATA, sendcnts, typesize);
 
   TAU_PROFILE_STOP(tautimer);
 
