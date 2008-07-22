@@ -30,6 +30,7 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <Profile/tau_types.h>
+#include <Profile/TauEnv.h>
 
 
 #ifdef TRACING_ON
