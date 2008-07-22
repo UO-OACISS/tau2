@@ -227,7 +227,9 @@ void TauSyncFinalClocks(int rank, int size) {
 /* The MPI_Init wrapper calls this routine */
 void TauSyncClocks(int rank, int size) {
   double offset = 0;
-
+#ifdef TRACING_ON
+  TAU_REGISTER_EVENT(beginOffset, "TauTraceClockOffsetStart");
+#endif /* TRACING_ON */
   PMPI_Barrier(MPI_COMM_WORLD);
   TAU_VERBOSE ("TAU: Clock Synchonization active on node : %d\n", rank);
   /* clear counter to zero, since the times might be wildly different (LINUX_TIMERS)
@@ -237,7 +239,6 @@ void TauSyncClocks(int rank, int size) {
 
   /* only do this when tracing */
 #ifdef TRACING_ON
-  TAU_REGISTER_EVENT(beginOffset, "TauTraceClockOffsetStart");
   offset = getTimeOffset(rank, size);
 #endif
 
