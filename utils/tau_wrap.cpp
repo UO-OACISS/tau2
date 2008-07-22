@@ -341,7 +341,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl, str
 
     }
   }
-
+  return true;
 
 }
 
@@ -535,8 +535,8 @@ int main(int argc, char **argv)
 /* EOF */
 
 /***************************************************************************
- * $RCSfile: tau_wrap.cpp,v $   $Author: amorris $
- * $Revision: 1.12 $   $Date: 2007/11/07 23:36:06 $
- * VERSION_ID: $Id: tau_wrap.cpp,v 1.12 2007/11/07 23:36:06 amorris Exp $
+ * $RCSfile: tau_wrap.cpp,v $   $Author: sameer $
+ * $Revision: 1.13 $   $Date: 2008/07/22 20:27:53 $
+ * VERSION_ID: $Id: tau_wrap.cpp,v 1.13 2008/07/22 20:27:53 sameer Exp $
  ***************************************************************************/
 
