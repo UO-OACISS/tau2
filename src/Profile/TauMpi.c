@@ -665,7 +665,7 @@ MPI_Comm comm;
 
   returnVal = PMPI_Gatherv( sendbuf, sendcnt, sendtype, recvbuf, recvcnts, displs, recvtype, root, comm );
 
-  track_vector(TAU_GATHER_DATA, sendcnts, typesize);
+  track_vector(TAU_GATHER_DATA, recvcnts, recvtype);
 
   TAU_PROFILE_STOP(tautimer);
 
