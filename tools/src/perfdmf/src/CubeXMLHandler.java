@@ -12,9 +12,9 @@ import org.xml.sax.helpers.DefaultHandler;
  * @see <a href="http://www.fz-juelich.de/zam/kojak/">
  * http://www.fz-juelich.de/zam/kojak/</a> for more information about cube
  * 
- * <P>CVS $Id: CubeXMLHandler.java,v 1.7 2008/07/18 21:53:13 amorris Exp $</P>
+ * <P>CVS $Id: CubeXMLHandler.java,v 1.8 2008/07/22 21:31:47 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 public class CubeXMLHandler extends DefaultHandler {
 
@@ -26,7 +26,7 @@ public class CubeXMLHandler extends DefaultHandler {
     private String regionID;
     private String csiteID;
     private String cnodeID;
-    private int threadID;
+    private int threadID = -1;
     private String callee;
     private String uom;
 
@@ -80,6 +80,7 @@ public class CubeXMLHandler extends DefaultHandler {
     private static class CubeThread {
         public int rank;
         public int id;
+
         public CubeThread(int rank, int id) {
             this.rank = rank;
             this.id = id;
@@ -139,7 +140,12 @@ public class CubeXMLHandler extends DefaultHandler {
             metricIDStack.push(metricID);
             metricID = getInsensitiveValue(attributes, "id");
         } else if (localName.equalsIgnoreCase("thread")) {
-            threadID = Integer.parseInt(getInsensitiveValue(attributes, "id"));
+            String tmp = getInsensitiveValue(attributes, "id");
+            if (tmp != null) {
+                threadID = Integer.parseInt(tmp);
+            } else {
+                threadID++;
+            }
         } else if (localName.equalsIgnoreCase("region")) {
             regionID = getInsensitiveValue(attributes, "id");
         } else if (localName.equalsIgnoreCase("csite")) {
@@ -218,7 +224,7 @@ public class CubeXMLHandler extends DefaultHandler {
                 for (int j = 0; j < cubeProcess.threads.size(); j++) {
                     CubeThread cubeThread = (CubeThread) cubeProcess.threads.get(j);
                     Thread thread = context.addThread(cubeThread.rank, cubeDataSource.getNumberOfMetrics());
-                    
+
                     while (cubeThread.id >= threads.size()) {
                         threads.add(null);
                     }
@@ -292,7 +298,7 @@ public class CubeXMLHandler extends DefaultHandler {
 
                 double value = Double.parseDouble(line);
                 if (value < 0) {
-                    System.err.println("Warning: negative value found in cube file ("+value+")");
+                    System.err.println("Warning: negative value found in cube file (" + value + ")");
                 }
 
                 if (metric == calls) {
