@@ -52,7 +52,8 @@ void printInstrumentList(void);
 int processInstrumentationRequests(char *fname)
 {
   ifstream input(fname); 
-  char inbuf[INBUF_SIZE];
+  char line[INBUF_SIZE];
+  char* inbuf;
   int lineno = 0; 
 
   if (!input)
@@ -63,14 +64,22 @@ int processInstrumentationRequests(char *fname)
 #ifdef DEBUG
   printf("Inside processInstrumentationRequests\n");
 #endif /* DEBUG */
-  while (input.getline(inbuf, INBUF_SIZE) || input.gcount()) {  
+  while (input.getline(line, INBUF_SIZE) || input.gcount()) {
     lineno++;
+    /* Skip whitespaces at the beginning of line */
+    inbuf = line;
+    while (isspace(*inbuf))
+      ++inbuf;
     if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
     if (strcmp(inbuf,BEGIN_EXCLUDE_TOKEN) == 0) 
     {
-      while(input.getline(inbuf,INBUF_SIZE) || input.gcount())
+      while(input.getline(line,INBUF_SIZE) || input.gcount())
       {
         lineno++;
+        /* Skip whitespaces at the beginning of line */
+        inbuf = line;
+        while (isspace(*inbuf))
+          ++inbuf;
 	if (strcmp(inbuf, END_EXCLUDE_TOKEN) == 0)
 	  break; /* Found the end of exclude list. */  
         if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
@@ -100,9 +109,13 @@ int processInstrumentationRequests(char *fname)
     }
     if (strcmp(inbuf,BEGIN_INCLUDE_TOKEN) == 0) 
     {
-      while(input.getline(inbuf,INBUF_SIZE) || input.gcount())
+      while(input.getline(line,INBUF_SIZE) || input.gcount())
       {
         lineno++;
+        /* Skip whitespaces at the beginning of line */
+        inbuf = line;
+        while (isspace(*inbuf))
+          ++inbuf;
 	if (strcmp(inbuf, END_INCLUDE_TOKEN) == 0)
 	  break; /* Found the end of exclude list. */  
         if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
@@ -133,9 +146,13 @@ int processInstrumentationRequests(char *fname)
     }
     if (strcmp(inbuf,BEGIN_FILE_INCLUDE_TOKEN) == 0) 
     {
-      while(input.getline(inbuf,INBUF_SIZE) || input.gcount())
+      while(input.getline(line,INBUF_SIZE) || input.gcount())
       {
         lineno++;
+        /* Skip whitespaces at the beginning of line */
+        inbuf = line;
+        while (isspace(*inbuf))
+          ++inbuf;
 	if (strcmp(inbuf, END_FILE_INCLUDE_TOKEN) == 0)
 	  break; /* Found the end of file include list. */  
         if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
@@ -147,9 +164,13 @@ int processInstrumentationRequests(char *fname)
     }
     if (strcmp(inbuf,BEGIN_FILE_EXCLUDE_TOKEN) == 0) 
     {
-      while(input.getline(inbuf,INBUF_SIZE) || input.gcount())
+      while(input.getline(line,INBUF_SIZE) || input.gcount())
       {
         lineno++;
+        /* Skip whitespaces at the beginning of line */
+        inbuf = line;
+        while (isspace(*inbuf))
+          ++inbuf;
 	if (strcmp(inbuf, END_FILE_EXCLUDE_TOKEN) == 0)
 	  break; /* Found the end of file exclude list. */  
         if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
@@ -158,9 +179,13 @@ int processInstrumentationRequests(char *fname)
     }
     if (strcmp(inbuf,BEGIN_INSTRUMENT_SECTION) == 0) 
     {
-      while(input.getline(inbuf,INBUF_SIZE) || input.gcount())
+      while(input.getline(line,INBUF_SIZE) || input.gcount())
       {
         lineno++;
+        /* Skip whitespaces at the beginning of line */
+        inbuf = line;
+        while (isspace(*inbuf))
+          ++inbuf;
 	if (strcmp(inbuf, END_INSTRUMENT_SECTION) == 0)
 	  break; /* Found the end of file exclude list. */  
         if ((inbuf[0] == '#') || (inbuf[0] == '\0')) continue;
@@ -443,7 +468,7 @@ bool processFileForInstrumentation(const string& file_name)
 
 
 /***************************************************************************
- * $RCSfile: tau_selective.cpp,v $   $Author: sameer $
- * $Revision: 1.15 $   $Date: 2007/11/02 02:23:21 $
- * VERSION_ID: $Id: tau_selective.cpp,v 1.15 2007/11/02 02:23:21 sameer Exp $
+ * $RCSfile: tau_selective.cpp,v $   $Author: amorris $
+ * $Revision: 1.16 $   $Date: 2008/07/22 17:27:15 $
+ * VERSION_ID: $Id: tau_selective.cpp,v 1.16 2008/07/22 17:27:15 amorris Exp $
  ***************************************************************************/
