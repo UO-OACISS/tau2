@@ -924,7 +924,7 @@ the open brace. */
 
 	  case START_LOOP_TIMER:
 		for (k = 0; k < (*it)->col-1; k++) ostr<<inbuf[k];
-		ostr<<"{ TAU_PROFILE(\""<<(*it)->snippet<<"\", \" \", TAU_USER);"<<endl;
+		ostr<<"\n{ TAU_PROFILE(\""<<(*it)->snippet<<"\", \" \", TAU_USER);"<<endl;
 		for (k = 0; k < (*it)->col-1; k++) ostr<<" "; /* put spaces */
 		/* if there is another instrumentation request on the same line */
 		
@@ -4168,9 +4168,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.189 $   $Date: 2008/05/28 18:41:34 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.189 2008/05/28 18:41:34 sameer Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
+ * $Revision: 1.190 $   $Date: 2008/07/22 18:57:19 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.190 2008/07/22 18:57:19 amorris Exp $
  ***************************************************************************/
 
 
