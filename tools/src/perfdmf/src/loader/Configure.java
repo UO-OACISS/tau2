@@ -40,7 +40,7 @@ public class Configure {
     private String xml_parser = "xerces.jar";
     private ParseConfig parser;
     private boolean configFileFound = false;
-	private String etc = File.separator + "etc" + File.separator;
+    private String etc = File.separator + "etc" + File.separator;
 
     private String configFileName;
 
@@ -350,8 +350,8 @@ public class Configure {
                                 System.out.println(" Done");
                             }
                             if (jdbc_db_type.compareToIgnoreCase("mysql") == 0) {
-                                Wget.wget("http://www.cs.uoregon.edu/research/paracomp/tau/mysql-redirect.html",
-                                        ".perfdmf_tmp" + File.separator + "mysql-redirect.html", false);
+                                Wget.wget("http://www.cs.uoregon.edu/research/paracomp/tau/mysql-redirect.html", ".perfdmf_tmp"
+                                        + File.separator + "mysql-redirect.html", false);
 
                                 BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(new File(
                                         ".perfdmf_tmp" + File.separator + "mysql-redirect.html"))));
@@ -395,7 +395,9 @@ public class Configure {
             }
 
             if (jdbc_db_type.compareTo("db2") == 0) {
-                tmpString = jdbc_db_jarfile + File.separator + "java" + File.separator + "db2java.zip:" + jdbc_db_jarfile + File.separator + "java" + File.separator + "db2jcc.jar:" + jdbc_db_jarfile + File.separator + "function:" + jdbc_db_jarfile + File.separator + "java" + File.separator + "db2jcc_license_cu.jar";
+                tmpString = jdbc_db_jarfile + File.separator + "java" + File.separator + "db2java.zip:" + jdbc_db_jarfile
+                        + File.separator + "java" + File.separator + "db2jcc.jar:" + jdbc_db_jarfile + File.separator
+                        + "function:" + jdbc_db_jarfile + File.separator + "java" + File.separator + "db2jcc_license_cu.jar";
                 jdbc_db_jarfile = tmpString;
             }
 
@@ -430,13 +432,28 @@ public class Configure {
             }
             tmpString = reader.readLine();
             if (tmpString.length() > 0) {
-				// if the user used the ~ shortcut, expand it to $HOME.
-            	if (jdbc_db_type.compareTo("derby") == 0) {
-                	db_dbname = tmpString.replaceAll("~", System.getProperty("user.home"));
-				} else {
-                	db_dbname = tmpString;
-				}
-			}
+                // if the user used the ~ shortcut, expand it to $HOME.
+                if (jdbc_db_type.compareTo("derby") == 0) {
+                    db_dbname = tmpString.replaceAll("~", System.getProperty("user.home"));
+                } else {
+                    db_dbname = tmpString;
+                }
+            }
+
+            if (jdbc_db_type.compareTo("derby") == 0) {
+                File f = new File(db_dbname);
+                if (f.exists()) {
+                    File f2 = new File(f + File.separator + "seg0");
+                    System.out.println(f2);
+                    if (!f2.exists()) {
+                        System.out.println("\n\nWarning!  Directory \""
+                                + db_dbname
+                                + "\" exists and does not appear to be a derby database.\n"
+                                + "Connection will most likely fail\n\n"
+                                + "If you are trying to create a new Derby database, please specify a path that does not exist\n\n");
+                    }
+                }
+            }
 
             if ((jdbc_db_type.compareTo("oracle") == 0) || (jdbc_db_type.compareTo("db2") == 0)) {
                 System.out.print("Please enter the database schema name, or your username if you are creating the tables now.\n("
@@ -537,7 +554,8 @@ public class Configure {
 
             File configFile;
             if (configuration_name.length() == 0) {
-                configFile = new File(System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf.cfg");
+                configFile = new File(System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator
+                        + "perfdmf.cfg");
             } else {
                 configFile = new File(configFileName + "." + configuration_name);
             }
@@ -775,7 +793,8 @@ public class Configure {
             if (configName == null)
                 configFile = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf.cfg";
             else
-                configFile = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf.cfg." + configName;
+                configFile = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf.cfg."
+                        + configName;
 
         }
         if (tauroot == null) {
