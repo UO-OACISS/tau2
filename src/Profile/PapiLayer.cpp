@@ -129,7 +129,7 @@ int PapiLayer::addCounter(char *name) {
 
 ////////////////////////////////////////////////////
 int PapiLayer::initializeThread(int tid) {
-  int rc;
+  int rc, i;
 
 #ifdef TAU_PAPI_DEBUG
   dmesg(1, "PAPI: Initializing Thread Data for TID = %d\n", tid);
@@ -144,11 +144,11 @@ int PapiLayer::initializeThread(int tid) {
   ThreadList[tid]->ThreadID = tid;
   ThreadList[tid]->CounterValues = new long long[MAX_PAPI_COUNTERS];
 
-  for (int i=0; i<MAX_PAPI_COUNTERS; i++) {
+  for (i=0; i<MAX_PAPI_COUNTERS; i++) {
     ThreadList[tid]->CounterValues[i] = 0L;
   }
   
-  for (int i=0; i<TAU_PAPI_MAX_COMPONENTS; i++) {
+  for (i=0; i<TAU_PAPI_MAX_COMPONENTS; i++) {
     ThreadList[tid]->NumEvents[i] = 0;
     ThreadList[tid]->EventSet[i] = PAPI_NULL;
     rc = PAPI_create_eventset(&(ThreadList[tid]->EventSet[i]));
@@ -167,7 +167,7 @@ int PapiLayer::initializeThread(int tid) {
   }
 #elif (PAPI_VERSION_MAJOR(PAPI_VERSION) == 3)
   /* PAPI 3 support goes here */
-  for (int i=0; i<numCounters; i++) {
+  for (i=0; i<numCounters; i++) {
     int comp = PAPI_COMPONENT_INDEX (counterList[i]);
     rc = PAPI_add_event(ThreadList[tid]->EventSet[comp], counterList[i]);
     if (rc != PAPI_OK) {
@@ -183,7 +183,7 @@ int PapiLayer::initializeThread(int tid) {
 #error "TAU does not support this version of PAPI, please contact tau-bugs@cs.uoregon.edu"
 #endif 
   
-  for (int i=0; i<TAU_PAPI_MAX_COMPONENTS; i++) {
+  for (i=0; i<TAU_PAPI_MAX_COMPONENTS; i++) {
     if (ThreadList[tid]->NumEvents[i] >= 1) { // if there were active counters for this component
       rc = PAPI_start(ThreadList[tid]->EventSet[i]);
     }
