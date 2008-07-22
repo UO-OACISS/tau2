@@ -219,8 +219,8 @@ public class Tau2Slog2
             return Integer.parseInt( size_str );
     }
 
-    private static String help_msg = "Usage: java Tau2Slog2 "
-                                   + "[options] tau_trc_file tau_edf_file.\n"
+    private static String help_msg = "\nUsage: tau2slog "
+                                   + "[options] <tau_trc_file> <tau_edf_file> -o <output.slog2>\n"
                                    + " options: \n"
                                    + "\t [-h|--h|-help|--help]             "
                                    + "\t Display HELP message.\n"
@@ -245,7 +245,10 @@ public class Tau2Slog2
                                    + "k, K, m or M,\n"
                                    + "       where k or K stands for kilobyte,"
                                    + " m or M stands for megabyte.\n"
-                                   + "       e.g. 64k means 65536 bytes.\n";
+                                   + "       e.g. 64k means 65536 bytes.\n"
+    + "\n"
+    + "Example:\n"
+    + "  tau2slog2 tau.trc tau.edf -o tau.slog2\n\n";
 
     private static void parseCmdLineArgs( String argv[] )
     {

@@ -21,8 +21,6 @@ MAIN_CLASS=edu/uoregon/tau/Tau2Slog2
 if [ -z "${TAU_LIBDIR}" -o "${TAU_LIBDIR}" = "/lib" ]; then
     echo "TAU_LIBDIR is NOT set!"
     exit 1
-else
-    echo "TAU_LIBDIR is set. TAU_LIBDIR = "${TAU_LIBDIR}
 fi
 
 java -Xmx500m -Xms32m -cp ${TAU_CLASSPATH} ${MAIN_CLASS} $@
