@@ -1508,6 +1508,7 @@ int Profiler::updateIntermediateStatistics(int tid) {
   // get current values
   double currentTime[MAX_TAU_COUNTERS];
   RtsLayer::getCurrentValues(tid, currentTime);
+  int c;
 
   for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
     FunctionInfo *fi = *it;
@@ -1534,23 +1535,23 @@ int Profiler::updateIntermediateStatistics(int tid) {
 
       double inclusiveToAdd[MAX_TAU_COUNTERS];
       double prevStartTime[MAX_TAU_COUNTERS];
-      for (int c=0; c<MAX_TAU_COUNTERS; c++) {
+      for (c=0; c<MAX_TAU_COUNTERS; c++) {
 	inclusiveToAdd[c] = 0;
 	prevStartTime[c] = 0;
       }
       
       for (Profiler *current = Profiler::CurrentProfiler[tid]; current != 0; current = current->ParentProfiler) {
 	if (helperIsFunction(fi, current)) {
-	  for (int c=0; c<MAX_TAU_COUNTERS; c++) {
+	  for (c=0; c<MAX_TAU_COUNTERS; c++) {
 	    inclusiveToAdd[c] = currentTime[c] - current->getStartValues()[c]; 
 	    excltime[c] += inclusiveToAdd[c] - prevStartTime[c];
 	  }
 	}
-	for (int c=0; c<MAX_TAU_COUNTERS; c++) {
+	for (c=0; c<MAX_TAU_COUNTERS; c++) {
 	  prevStartTime[c] = currentTime[c] - current->getStartValues()[c];  
 	}
       }
-      for (int c=0; c<MAX_TAU_COUNTERS; c++) {
+      for (c=0; c<MAX_TAU_COUNTERS; c++) {
 	incltime[c] += inclusiveToAdd[c];
       }
     }
@@ -1822,7 +1823,7 @@ bool Profiler::createDirectories() {
 }
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.186 $   $Date: 2008/07/10 23:26:01 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.186 2008/07/10 23:26:01 amorris Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.187 $   $Date: 2008/07/22 01:26:45 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.187 2008/07/22 01:26:45 sameer Exp $ 
  ***************************************************************************/
