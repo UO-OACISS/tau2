@@ -37,6 +37,7 @@ extern bool wildcardCompare(char *wild, char *string, char kleenestar);
 extern bool instrumentEntity(const string& function_name);
 extern bool fuzzyMatch(const string& a, const string& b);
 extern bool memory_flag;
+extern bool isVoidRoutine(const pdbItem* r);
 
 /* Globals */
 ///////////////////////////////////////////////////////////////////////////
@@ -1469,7 +1470,7 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 #ifdef DEBUG
         cout <<"Instrumenting exit of routine "<<(*rit)->fullName()<<endl;
 #endif /* DEBUG */
-        /* get routine entry line no. */
+        /* get routine exit line no. */
         pdbRoutine::locvec retlocations = (*rit)->returnLocations();
         for (rlit = retlocations.begin(); rlit != retlocations.end(); ++rlit)
         {
@@ -1479,6 +1480,17 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 	
 	  itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(), BEFORE));
         }
+        /* handle exit of void routines */
+        if (isVoidRoutine(*rit))
+        {
+#ifdef DEBUG
+          cout <<"at line: "<<(*rit)->bodyEnd().line()<<", col"<< (*rit)->bodyEnd().col()<<"code = "<<(*it)->getCode()<<endl;
+#endif /* DEBUG */
+
+          itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), (*it)->getCode(), BEFORE));
+        }
+
+
       } /* end of routine exit */
       if ((*it)->getKind() == TAU_LOOPS)
       { /* we need to instrument all outer loops in this routine */
@@ -1975,6 +1987,6 @@ itemRef::itemRef(const pdbItem *i, itemKind_t k, pdbLoc start, pdbLoc stop)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.49 $   $Date: 2007/11/02 02:23:21 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.49 2007/11/02 02:23:21 sameer Exp $
+ * $Revision: 1.50 $   $Date: 2008/07/23 00:30:10 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.50 2008/07/23 00:30:10 sameer Exp $
  ***************************************************************************/
