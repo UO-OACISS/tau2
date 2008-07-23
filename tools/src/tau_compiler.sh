@@ -895,7 +895,8 @@ if [ $gotoNextStep == $TRUE ]; then
 		#to strip  the fileName from the directory. Since sometime,
 		#you can be creating a pdb in the current directory using
 		#a source file located in another directory.
-		tempFileName=${arrPdb[$tempCounter]##*/}
+		#tempFileName=${arrPdb[$tempCounter]##*/}
+    tempFileName="${arrFileName[$tempCounter]}.pdb"
 		echoIfDebug "Looking for pdb file $tempFileName "
 		if [  ! -e $tempFileName  -a $disablePdtStep == $FALSE ]; then
 			echoIfVerbose "Error: Tried Looking for file: $tempFileName"
@@ -917,7 +918,8 @@ if [ $gotoNextStep == $TRUE ]; then
 
 	tempCounter=0
 	while [ $tempCounter -lt $numFiles ]; do
-		tempPdbFileName=${arrPdb[$tempCounter]##*/}
+		#tempPdbFileName=${arrPdb[$tempCounter]##*/}
+		tempPdbFileName="${arrFileName[$tempCounter]}.pdb"
 		tempInstFileName=${arrTau[$tempCounter]##*/}
 		tauCmd="$optTauInstr $tempPdbFileName ${arrFileName[$tempCounter]} -o $tempInstFileName "
 		tauCmd="$tauCmd $optTau $optTauSelectFile"
