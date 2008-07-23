@@ -637,10 +637,11 @@ void processExitOrAbort(vector<itemRef *>& itemvec, const pdbItem *rit, pdbRouti
 /* -------------------------------------------------------------------------- */
 /* -- Returns true is string is void else returns false --------------------- */
 /* -------------------------------------------------------------------------- */
-bool isVoidRoutine(itemRef * i)
+bool isVoidRoutine(const pdbItem * i)
 {
   string return_string;
-  const pdbType *t = ((pdbRoutine *)(i->item))->signature()->returnType();
+  const pdbType *t = ((const pdbRoutine*)i)->signature()->returnType();
+
   if ( const pdbGroup* gr = t->isGroup() )
     return_string = gr->name();
   else
@@ -1436,7 +1437,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 		}
 
 		/* If return type is a reference, treat it as a void */
-	        if (isVoidRoutine(*it) || isReturnTypeReference(*it))
+	        if (isVoidRoutine((*it)->item) || isReturnTypeReference(*it))
 		{
 #ifdef DEBUG 
 		  cout <<"Void return value "<<endl;
@@ -1476,7 +1477,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 
 		if (process_this_return)
 		{
-		  if (isVoidRoutine(*it))
+		  if (isVoidRoutine((*it)->item))
 		  {	
 #ifdef DEBUG 
 		    cout <<" Return for a void routine" <<endl;
@@ -4168,9 +4169,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.190 $   $Date: 2008/07/22 18:57:19 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.190 2008/07/22 18:57:19 amorris Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
+ * $Revision: 1.191 $   $Date: 2008/07/23 00:28:30 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.191 2008/07/23 00:28:30 sameer Exp $
  ***************************************************************************/
 
 
