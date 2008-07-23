@@ -37,7 +37,7 @@ extern bool wildcardCompare(char *wild, char *string, char kleenestar);
 extern bool instrumentEntity(const string& function_name);
 extern bool fuzzyMatch(const string& a, const string& b);
 extern bool memory_flag;
-extern bool isVoidRoutine(const pdbItem* r);
+bool isVoidRoutine(const pdbItem* r);
 
 /* Globals */
 ///////////////////////////////////////////////////////////////////////////
@@ -1981,12 +1981,33 @@ itemRef::itemRef(const pdbItem *i, itemKind_t k, pdbLoc start, pdbLoc stop)
     isDynamic = false; /* static by default */ 
   }
 
+/* -------------------------------------------------------------------------- */
+/* -- Returns true is string is void else returns false --------------------- */
+/* -------------------------------------------------------------------------- */
+bool isVoidRoutine(const pdbItem * i)
+{
+  string return_string;
+  const pdbType *t = ((const pdbRoutine*)i)->signature()->returnType();
+
+  if ( const pdbGroup* gr = t->isGroup() )
+    return_string = gr->name();
+  else
+    return_string = t->name();
+  /* old code
+  string return_string = ((pdbRoutine *)(i->item))->signature()->returnType()->name() ;
+  */
+  if (return_string.compare("void") == 0)
+        return true;
+  else
+        return false;
+}
+
 
 /* EOF */
 
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.50 $   $Date: 2008/07/23 00:30:10 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.50 2008/07/23 00:30:10 sameer Exp $
+ * $Revision: 1.51 $   $Date: 2008/07/23 01:08:13 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.51 2008/07/23 01:08:13 sameer Exp $
  ***************************************************************************/

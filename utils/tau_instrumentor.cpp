@@ -55,6 +55,7 @@ extern bool isInstrumentListEmpty(void);
 extern void writeAdditionalFortranDeclarations(ofstream& ostr, const pdbRoutine *routine);
 extern void writeAdditionalFortranInvocations(ofstream& ostr, const pdbRoutine *routine);
 extern bool addMoreInvocations(int routine_id, string& snippet);
+extern bool isVoidRoutine(const pdbItem* r);
 
 #include "tau_datatypes.h"
 
@@ -634,27 +635,7 @@ void processExitOrAbort(vector<itemRef *>& itemvec, const pdbItem *rit, pdbRouti
 	   }
 	}
 }	
-/* -------------------------------------------------------------------------- */
-/* -- Returns true is string is void else returns false --------------------- */
-/* -------------------------------------------------------------------------- */
-bool isVoidRoutine(const pdbItem * i)
-{
-  string return_string;
-  const pdbType *t = ((const pdbRoutine*)i)->signature()->returnType();
 
-  if ( const pdbGroup* gr = t->isGroup() )
-    return_string = gr->name();
-  else
-    return_string = t->name();
-  /* old code 
-  string return_string = ((pdbRoutine *)(i->item))->signature()->returnType()->name() ;
-  */ 
-  if (return_string.compare("void") == 0)
-	return true; 
-  else
-	return false;
-}
-	
 /* -------------------------------------------------------------------------- */
 /* -- Returns true is return type is a reference else returns false --------- */
 /* -------------------------------------------------------------------------- */
@@ -4170,8 +4151,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.191 $   $Date: 2008/07/23 00:28:30 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.191 2008/07/23 00:28:30 sameer Exp $
+ * $Revision: 1.192 $   $Date: 2008/07/23 01:08:13 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.192 2008/07/23 01:08:13 sameer Exp $
  ***************************************************************************/
 
 

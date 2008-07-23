@@ -1810,12 +1810,15 @@ case $machine in
     ;;
 
     xt3)
+    catamount=yes
     if [ $cxx_compiler = default ]
     then
-      cxx_compiler=qk-pgCC
-      c_compiler=qk-pgcc
-      fortran_compiler=pgi
-      catamount=yes
+      cxx_compiler=CC
+      c_compiler=cc
+      if [ $fortran_compiler = no ]
+      then
+        fortran_compiler=pgi
+      fi
     fi
     ;;
 
@@ -3460,7 +3463,7 @@ then
           #echo "Fortran fmpich.* found"
           if [ $mpi2 = "yes" ] ; then
               #mpich2, must not use -lfmpich
-	      if [ -f /usr/lib/librt.a ] ; then
+	      if [ -f /usr/lib/librt.a -a $catamount = no ] ; then
                  # mpich2 uses librt for aio_* routines
 		  mpiflibargs="-L$mpilib $wrapperlib -lpthread -lrt"
 		  mpilibargs="$mpilibargs -lpthread -lrt"
