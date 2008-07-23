@@ -766,7 +766,8 @@ while [ $tempCounter -lt $numFiles ]; do
 	if [ $pdbFileSpecified == $FALSE ]; then
 	  newFile=${base}.pdb
 	  if [ $isCXXUsedForC == $TRUE -a $isCurrentFileC == $TRUE ]; then
-            newFile=${base}.c.pdb
+            #newFile=${base}.c.pdb
+            newFile=${arrFileName[$tempCounter]}.pdb
 	    isCurrentFileC=$FALSE
           fi
 
@@ -774,6 +775,7 @@ while [ $tempCounter -lt $numFiles ]; do
 	  newFile=$optPDBFile; 
 	fi
 	arrPdb[$tempCounter]="${PDBARGSFORTAU}${newFile}"
+echo "arrPdb[$tempCounter] = $arrPdb[$tempCounter]"
 	tempCounter=tempCounter+1
 done
 echoIfDebug "Completed Parsing\n"
@@ -895,11 +897,15 @@ if [ $gotoNextStep == $TRUE ]; then
 		#to strip  the fileName from the directory. Since sometime,
 		#you can be creating a pdb in the current directory using
 		#a source file located in another directory.
-		#tempFileName=${arrPdb[$tempCounter]##*/}
-    tempFileName="${arrFileName[$tempCounter]}.pdb"
+
+	        saveTempFile=${arrPdb[$tempCounter]}
+		tempFileName=${arrPdb[$tempCounter]##*/}
+                if [ $isCXXUsedForC == $TRUE ]; then
+                  tempFileName=${saveTempFile}
+                fi
+
 		echoIfDebug "Looking for pdb file $tempFileName "
 		if [  ! -e $tempFileName  -a $disablePdtStep == $FALSE ]; then
-			echoIfVerbose "Error: Tried Looking for file: $tempFileName"
 			printError "$PDTPARSER" "$pdtCmd"
 			break
 		fi
@@ -918,8 +924,10 @@ if [ $gotoNextStep == $TRUE ]; then
 
 	tempCounter=0
 	while [ $tempCounter -lt $numFiles ]; do
-		#tempPdbFileName=${arrPdb[$tempCounter]##*/}
-		tempPdbFileName="${arrFileName[$tempCounter]}.pdb"
+		tempPdbFileName=${arrPdb[$tempCounter]##*/}
+                if [ $isCXXUsedForC == $TRUE ]; then
+                  tempPdbFileName=${saveTempFile}
+                fi
 		tempInstFileName=${arrTau[$tempCounter]##*/}
 		tauCmd="$optTauInstr $tempPdbFileName ${arrFileName[$tempCounter]} -o $tempInstFileName "
 		tauCmd="$tauCmd $optTau $optTauSelectFile"
