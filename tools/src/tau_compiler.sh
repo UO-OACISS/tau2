@@ -775,7 +775,6 @@ while [ $tempCounter -lt $numFiles ]; do
 	  newFile=$optPDBFile; 
 	fi
 	arrPdb[$tempCounter]="${PDBARGSFORTAU}${newFile}"
-echo "arrPdb[$tempCounter] = $arrPdb[$tempCounter]"
 	tempCounter=tempCounter+1
 done
 echoIfDebug "Completed Parsing\n"
