@@ -851,7 +851,8 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
       /* Putting AddInclFlag means we can't throttle recursive calls */
       ThisFunction->SetProfileGroup(TAU_DISABLE, tid);
       ThisFunction->SetPrimaryGroupName("TAU_DISABLE");
-      cout <<"TAU<"<<RtsLayer::myNode()<<">: Throttle: Disabling "<<ThisFunction->GetName()<<endl;
+      //cout <<"TAU<"<<RtsLayer::myNode()<<">: Throttle: Disabling "<<ThisFunction->GetName()<<endl;
+      TAU_VERBOSE("TAU<%d>: Throttle: Disabling %s\n", RtsLayer::myNode(), ThisFunction->GetName());
     }
 #endif /* TAU_DISABLE_THROTTLE */
     
@@ -1824,6 +1825,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.187 $   $Date: 2008/07/22 01:26:45 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.187 2008/07/22 01:26:45 sameer Exp $ 
+ * $Revision: 1.188 $   $Date: 2008/07/23 15:16:50 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.188 2008/07/23 15:16:50 sameer Exp $ 
  ***************************************************************************/

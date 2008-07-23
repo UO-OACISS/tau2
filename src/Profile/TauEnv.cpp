@@ -31,6 +31,7 @@
 #define TAU_THROTTLE_NUMCALLS_DEFAULT 100000
 #define TAU_THROTTLE_PERCALL_DEFAULT  10
 #define TAU_SYNCHRONIZE_CLOCKS_DEFAULT 1
+#define TAU_THROTTLE_DEFAULT 1
 
 extern "C" {
 
@@ -154,7 +155,7 @@ extern "C" {
 
       // Throttle
       tmp = getenv("TAU_THROTTLE");
-      if (parse_bool(tmp)) {
+      if (parse_bool(tmp, TAU_THROTTLE_DEFAULT)) {
 	env_throttle = 1;
 	TAU_VERBOSE("TAU: Throttling Enabled\n");
       } else {
