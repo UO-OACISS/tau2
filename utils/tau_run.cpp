@@ -587,7 +587,10 @@ int main(int argc, char **argv){
     }
     else
     {
-      fprintf(stderr, "Error: Binary rewriting did not work: No directory name returned\n");
+      fprintf(stderr, "Error: Binary rewriting did not work: No directory name \
+returned\n\nIf you are using Dyninst 5.2 this feature is no longer \
+supported and \
+tau_run will run the application using dynamic instrumentation....\n");
     }
     delete bpatch;
     return 0;
