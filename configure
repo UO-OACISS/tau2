@@ -5196,6 +5196,7 @@ fi
 cp ${tauroot}/tools/src/paraprof/bin/$paraprofjar $JARTARGET
 cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar $JARTARGET
 cp ${tauroot}/tools/src/perfexplorer/perfexplorer.jar $JARTARGET
+cp ${tauroot}/src/Profile/TAU.jar $JARTARGET
 cp ${tauroot}/tools/src/perfexplorer/perfexplorer-1.4.jar $JARTARGET
 cp ${tauroot}/tools/src/vis/bin/vis.jar $JARTARGET
 cp ${tauroot}/tools/src/common/bin/tau-common.jar $JARTARGET
