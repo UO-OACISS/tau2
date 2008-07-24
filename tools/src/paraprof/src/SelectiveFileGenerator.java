@@ -11,6 +11,7 @@ import javax.swing.border.TitledBorder;
 import edu.uoregon.tau.common.TauRuntimeException;
 import edu.uoregon.tau.perfdmf.FunctionProfile;
 import edu.uoregon.tau.perfdmf.Group;
+import edu.uoregon.tau.perfdmf.UtilFncs;
 
 public class SelectiveFileGenerator extends JFrame {
 
@@ -56,14 +57,14 @@ public class SelectiveFileGenerator extends JFrame {
         for (Iterator it = ppTrial.getMeanThread().getFunctionProfiles().iterator(); it.hasNext();) {
             FunctionProfile fp = (FunctionProfile) it.next();
             if (excludeThrottled.isSelected() && fp.getFunction().isGroupMember(throttledGroup)) {
-                buffer.append(fp.getName());
+                buffer.append(ParaProfUtils.removeSourceLocation(fp.getName()) + "\n");
             }
 
             if (excludeLightweight.isSelected() == true) {
 
                 if (fp.getNumCalls() >= numcalls_value) {
                     if (fp.getInclusivePerCall(0) >= percall_value) {
-                        buffer.append(fp.getName() + "\n");
+                        buffer.append(ParaProfUtils.removeSourceLocation(fp.getName()) + "\n");
                     }
                 }
             }
@@ -81,6 +82,17 @@ public class SelectiveFileGenerator extends JFrame {
         int windowHeight = 520;
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
         setResizable(true);
+        
+        excludeThrottled.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                updateExcluded();
+            } });
+
+        excludeLightweight.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                updateExcluded();
+            } });
+
 
         Container contentPane = getContentPane();
         contentPane.setLayout(new GridBagLayout());

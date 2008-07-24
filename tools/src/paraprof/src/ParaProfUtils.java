@@ -36,11 +36,11 @@ import edu.uoregon.tau.perfdmf.Thread;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.39 2008/07/09 01:16:18 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.40 2008/07/24 14:27:52 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.39 $
+ * @version $Revision: 1.40 $
  */
 public class ParaProfUtils {
 
@@ -418,8 +418,7 @@ public class ParaProfUtils {
                             JOptionPane.showMessageDialog(owner, "Unable to load jogl library.  Possible reasons:\n"
                                     + "libjogl.so is not in your LD_LIBRARY_PATH.\n"
                                     + "Jogl is not built for this platform.\nOpenGL is not installed\n\n"
-                                    + "Jogl is available at jogl.dev.java.net\n\n"
-                                    + "Message : " + e.getMessage());
+                                    + "Jogl is available at jogl.dev.java.net\n\n" + "Message : " + e.getMessage());
                         } catch (UnsupportedClassVersionError e) {
                             JOptionPane.showMessageDialog(owner,
                                     "Unsupported class version.  Are you sure you're using Java 1.4 or above?");
@@ -1200,6 +1199,19 @@ public class ParaProfUtils {
                 int b = str.indexOf("}]");
                 str = str.substring(0, a) + str.substring(b + 2);
             }
+        }
+        return str;
+    }
+
+    // remove the source code location, if preferences are set for it
+   public static String removeSourceLocation(String str) {
+        if (str.startsWith("Loop:")) {
+            return str;
+        }
+        while (str.indexOf("[{") != -1) {
+            int a = str.indexOf("[{");
+            int b = str.indexOf("}]");
+            str = str.substring(0, a) + str.substring(b + 2);
         }
         return str;
     }
