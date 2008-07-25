@@ -1057,6 +1057,12 @@ extern "C" void Tau_get_counter_info(const char ***counterlist, int *numcounters
 #endif
 }
 
+//////////////////////////////////////////////////////////////////////
+extern "C" int Tau_get_tid(void)
+{
+  return RtsLayer::myThread();
+}
+
 
 //////////////////////////////////////////////////////////////////////
 // Sometimes we may link in a library that needs the POMP stuff
@@ -1069,7 +1075,7 @@ int *pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.78 $   $Date: 2008/07/25 01:02:33 $
- * VERSION: $Id: TauCAPI.cpp,v 1.78 2008/07/25 01:02:33 sameer Exp $
+ * $Revision: 1.79 $   $Date: 2008/07/25 01:52:27 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.79 2008/07/25 01:52:27 sameer Exp $
  ***************************************************************************/
 
