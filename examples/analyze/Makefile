@@ -23,7 +23,7 @@ PDTPARSE 	= $(PDTDIR)/$(PDTARCHDIR)/bin/cxxparse
 
 TAUINSTR 	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/tau_instrumentor
 
-TAUANALYZE	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/tau_analyze
+TAUANALYZE	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/tau_reduce
 
 TAUPPROF	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/pprof
 
@@ -92,7 +92,7 @@ $(TARGET).inst.refined.cpp: select.out $(TARGET).pdb
 
 # Generate list for selective instrumentation
 select.out : pprof.dat
-	$(TAUANALYZE) rules.til
+	$(TAUANALYZE) -f pprof.dat -o select.out
 
 # Dump profile data for initial run to pprof.dat file, and also
 # display results of initial run
