@@ -30,13 +30,13 @@ int main(int argc, char **argv)
   int numcounters, i, j; 
   TAU_INIT(&argc, &argv);
   TAU_PROFILE_SET_NODE(0);
-  TAU_CREATE_PROFILER(ptr, "foo","", TAU_USER);
+  TAU_PROFILER_CREATE(ptr, "foo","", TAU_USER);
 
   TAU_PROFILER_START(ptr);
   foo(2);
   TAU_PROFILER_STOP(ptr);
 
-  TAU_CREATE_PROFILER(ptr, "bar", "", TAU_USER);
+  TAU_PROFILER_CREATE(ptr, "bar", "", TAU_USER);
 
   
   for (i=0; i < 5; i++) {
