@@ -38,8 +38,8 @@ size_t TauWrapperRead(int fd, void *buf, size_t nbytes)
   double currentRead = 0.0;
   struct timeval t1, t2; 
   TAU_PROFILE_TIMER(t, "read()", " ", TAU_READ);
-  TAU_REGISTER_EVENT(re, "READ Bandwidth (MB/s)");
-  TAU_REGISTER_EVENT(bytesread, "Bytes Read");
+  TAU_REGISTER_CONTEXT_EVENT(re, "READ Bandwidth (MB/s)");
+  TAU_REGISTER_CONTEXT_EVENT(bytesread, "Bytes Read");
   TAU_PROFILE_START(t);
 
   gettimeofday(&t1, 0);
@@ -51,12 +51,12 @@ size_t TauWrapperRead(int fd, void *buf, size_t nbytes)
   currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
   if (currentRead > 1e-12) {
-    TAU_EVENT(re, (double) nbytes/currentRead);
+    TAU_CONTEXT_EVENT(re, (double) nbytes/currentRead);
   }
   else {
     printf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
-  TAU_EVENT(bytesread, nbytes);
+  TAU_CONTEXT_EVENT(bytesread, nbytes);
 
   TAU_PROFILE_STOP(t);
   
@@ -70,8 +70,8 @@ size_t TauWrapperWrite(int fd, void *buf, size_t nbytes)
   double currentWrite = 0.0;
   struct timeval t1, t2; 
   TAU_PROFILE_TIMER(t, "write()", " ", TAU_WRITE);
-  TAU_REGISTER_EVENT(wb, "WRITE Bandwidth (MB/s)");
-  TAU_REGISTER_EVENT(byteswritten, "Bytes Written");
+  TAU_REGISTER_CONTEXT_EVENT(wb, "WRITE Bandwidth (MB/s)");
+  TAU_REGISTER_CONTEXT_EVENT(byteswritten, "Bytes Written");
   TAU_PROFILE_START(t);
 
   gettimeofday(&t1, 0);
@@ -82,12 +82,12 @@ size_t TauWrapperWrite(int fd, void *buf, size_t nbytes)
   currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
   if (currentWrite > 1e-12) {
-    TAU_EVENT(wb, (double) nbytes/currentWrite);
+    TAU_CONTEXT_EVENT(wb, (double) nbytes/currentWrite);
   }
   else {
     printf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
-  TAU_EVENT(byteswritten, nbytes);
+  TAU_CONTEXT_EVENT(byteswritten, nbytes);
 
   TAU_PROFILE_STOP(t);
 
