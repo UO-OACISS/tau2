@@ -1,6 +1,6 @@
-#!/bin/@SHELL@
+#!/bin/sh
 
-# $Id: perfexplorer_configure.skel,v 1.13 2008/05/16 00:20:10 amorris Exp $
+# $Id: perfexplorer_configure.skel,v 1.14 2008/07/25 23:18:20 khuck Exp $
 # $Name:  $
 
 rm -f .last_config
@@ -26,6 +26,13 @@ configdir=$HOME/.ParaProf
 tmpdir=/tmp
 LIBDIR=${tauroot}/${architecture}/lib
 PERFEXPLORER_JAR=${LIBDIR}/perfexplorer.jar
+mytest=`which unzip`
+if [ "x$mytest" == "x" ] ; then
+	echo "unzip not found!"
+	UNZIP=
+else
+	UNZIP=unzip
+fi
 
 # check for right java version
 
@@ -245,11 +252,15 @@ if [ ! -r ${WEKA_JAR} ]; then
 		java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget "$URL" "$FILE" true
 		mv "$FILE" ${WEKA_ZIP_DIR}/.
 		cd ${WEKA_ZIP_DIR}/.
-		unzip ${FILE}
-		/bin/rm -f weka-redirect.html
-		/bin/rm -f $FILE
-		cp $DIR/weka.jar .
-		/bin/rm -rf $DIR
+		if [ "x$UNZIP" == "x" ] ; then
+			echo "The Weka file ${FILE} is in ${WEKA_ZIP_DIR} - you will have to unzip it and install it manually in ${WEKA_ZIP_DIR}"
+		else
+			${UNZIP} ${FILE}
+			/bin/rm -f weka-redirect.html
+			/bin/rm -f $FILE
+			cp $DIR/weka.jar .
+			/bin/rm -rf $DIR
+		fi
 	    
 	    if [ ! -r ${WEKA_JAR} ]; then
 		echo ""
