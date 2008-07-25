@@ -1006,6 +1006,59 @@ extern "C" int Tau_get_usesMPI() {
 }
 
 //////////////////////////////////////////////////////////////////////
+extern "C" void Tau_get_calls(void *handle, long *values, int tid)
+{
+  FunctionInfo *ptr = (FunctionInfo *)handle;
+
+  values[0] = (double) ptr->GetCalls(tid);
+  return;
+}
+
+//////////////////////////////////////////////////////////////////////
+void Tau_get_child_calls(void *handle, long* values, int tid)
+{
+  FunctionInfo *ptr = (FunctionInfo *)handle;
+
+  values[0] = (double) ptr->GetSubrs(tid);
+  return;
+}
+
+//////////////////////////////////////////////////////////////////////
+extern "C" void Tau_get_inclusive_values(void *handle, double* values, int tid)
+{
+  FunctionInfo *ptr = (FunctionInfo *)handle;
+  
+  if (ptr)
+    ptr->getInclusiveValues(tid, values);
+  return;
+}
+
+//////////////////////////////////////////////////////////////////////
+extern "C" void Tau_get_exclusive_values(void *handle, double* values, int tid)
+{
+  FunctionInfo *ptr = (FunctionInfo *)handle;
+ 
+  if (ptr)
+    ptr->getExclusiveValues(tid, values);
+  return;
+}
+
+//////////////////////////////////////////////////////////////////////
+extern "C" void Tau_get_counter_info(const char ***counterlist, int *numcounters)
+{
+
+#ifndef TAU_MULTIPLE_COUNTERS
+  Profiler::theCounterList(counterlist, numcounters);
+#else
+  bool *tmpCounterUsedList; // not used
+  MultipleCounterLayer::theCounterListInternal(counterlist,
+                                               numcounters,
+                                               &tmpCounterUsedList);
+#endif
+}
+
+
+//////////////////////////////////////////////////////////////////////
 // Sometimes we may link in a library that needs the POMP stuff
 // Even when we're not using opari
 //////////////////////////////////////////////////////////////////////
@@ -1015,8 +1068,8 @@ int *pomp_rd_table = 0;
 #endif
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.77 $   $Date: 2008/07/14 20:45:46 $
- * VERSION: $Id: TauCAPI.cpp,v 1.77 2008/07/14 20:45:46 amorris Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
+ * $Revision: 1.78 $   $Date: 2008/07/25 01:02:33 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.78 2008/07/25 01:02:33 sameer Exp $
  ***************************************************************************/
 

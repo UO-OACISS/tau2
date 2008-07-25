@@ -46,6 +46,13 @@ extern "C" void Tau_dynamic_start(char *name, void *tau_counter, int isPhase);
 extern "C" void Tau_dynamic_stop(char *name, void *tau_counter, int isPhase); 
 extern "C" void Tau_static_phase_start(char *name);
 extern "C" void Tau_static_phase_stop(char *name);
+extern "C" void* Tau_get_profiler(char *name, char *type, TauGroup_t group, char *gr_name);
+extern "C" void Tau_get_calls(void *handle, long* values, int tid);
+extern "C" void Tau_get_child_calls(void *handle, long* values, int tid);
+extern "C" void Tau_get_inclusive_values(void *handle, double* values, int tid);
+extern "C" void Tau_get_exclusive_values(void *handle, double* values, int tid);
+extern "C" void Tau_get_counter_info(const char ***counterlist, int *numcounters);
+
 
 
 #define TAU_TYPE_STRING(profileString, str) static string profileString(str);
@@ -466,6 +473,17 @@ or tauFI->method();
 #define TAU_PROFILE_SNAPSHOT_1L(name, expr)     Tau_profile_snapshot_1l(name, expr);
 #define TAU_METADATA(name, value)               Tau_metadata(name, value);
 
+/* for profiler objects created by name */
+#define TAU_CREATE_PROFILER(handle, name, type, group)  handle=Tau_get_profiler(name, type, group, #group);
+#define TAU_PROFILER_START(handle) Tau_start_timer(handle, 0);
+#define TAU_PROFILER_STOP(handle) Tau_stop_timer(handle);
+#define TAU_PROFILER_GET_INCLUSIVE_VALUES(handle, data) Tau_get_inclusive_values(handle, (double *) data, 0);
+#define TAU_PROFILER_GET_EXCLUSIVE_VALUES(handle, data) Tau_get_exclusive_values(handle, (double *) data, 0);
+#define TAU_PROFILER_GET_CALLS(handle, number) Tau_get_calls(handle, number, 0)
+#define TAU_PROFILER_GET_CHILD_CALLS(handle, number) Tau_get_child_calls(handle, number, 0);
+#define TAU_PROFILER_GET_COUNTER_INFO(counters, numcounters) Tau_get_counter_info((const char ***)counters, numcounters);
+
+
 #ifdef NO_RTTI
 /* #define CT(obj) string(#obj) */
 #define CT(obj) string(" ")
@@ -473,6 +491,7 @@ or tauFI->method();
 //#define CT(obj) string(RtsLayer::CheckNotNull(typeid(obj).name())) 
 #define CT(obj) RtsLayer::GetRTTI(typeid(obj).name())
 #endif //NO_RTTI
+
 
 #endif /* PROFILING_ON */
 
@@ -500,7 +519,7 @@ or tauFI->method();
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.67 $   $Date: 2008/05/23 00:42:13 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.67 2008/05/23 00:42:13 amorris Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: sameer $
+ * $Revision: 1.68 $   $Date: 2008/07/25 01:02:59 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.68 2008/07/25 01:02:59 sameer Exp $ 
  ***************************************************************************/

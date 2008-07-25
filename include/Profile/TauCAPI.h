@@ -216,6 +216,19 @@ extern "C" {
 #define TAU_PROFILE_SNAPSHOT_1L(name, expr)     Tau_profile_snapshot(name, expr);
 #define TAU_METADATA(name, value)               Tau_metadata(name, value);
 
+/* for profiler objects created by name */
+
+#define TAU_CREATE_PROFILER(handle, name, type, group)  handle=Tau_get_profiler(name, type, group, #group);
+#define TAU_PROFILER_START(handle) Tau_start_timer(handle, 0);
+#define TAU_PROFILER_STOP(handle) Tau_stop_timer(handle);
+#define TAU_PROFILER_GET_INCLUSIVE_VALUES(handle, data) Tau_get_inclusive_values(handle, (double *) data, 0);
+#define TAU_PROFILER_GET_EXCLUSIVE_VALUES(handle, data) Tau_get_exclusive_values(handle, (double *) data, 0);
+#define TAU_PROFILER_GET_CALLS(handle, number) Tau_get_calls(handle, number, 0)
+#define TAU_PROFILER_GET_CHILD_CALLS(handle, number) Tau_get_child_calls(handle, number, 0);
+#define TAU_PROFILER_GET_COUNTER_INFO(counters, numcounters) Tau_get_counter_info((const char ***)counters, numcounters);
+
+
+
 
 extern void Tau_start(char *name);
 extern void Tau_stop(char *name);
@@ -295,6 +308,12 @@ extern void Tau_static_phase_start(char *name);
 extern void Tau_static_phase_stop(char *name);
 extern void Tau_profile_dynamic_auto(int iteration, void **ptr, char *fname, char *type, TauGroup_t group, char *group_name, int isPhase);
 
+extern void Tau_get_calls(void *handle, long* values, int tid);
+extern void Tau_get_child_calls(void *handle, long* values, int tid);
+extern void Tau_get_inclusive_values(void *handle, double* values, int tid);
+extern void Tau_get_exclusive_values(void *handle, double* values, int tid);
+extern void Tau_get_counter_info(const char ***counterlist, int *numcounters);
+
 #endif /* PROFILING_ON */
 
 #ifdef TRACING_ON
@@ -323,8 +342,8 @@ extern void Tau_profile_dynamic_auto(int iteration, void **ptr, char *fname, cha
 #endif /* _TAU_CAPI_H_ */
 
 /***************************************************************************
- * $RCSfile: TauCAPI.h,v $   $Author: amorris $
- * $Revision: 1.52 $   $Date: 2008/05/23 00:43:17 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.52 2008/05/23 00:43:17 amorris Exp $
+ * $RCSfile: TauCAPI.h,v $   $Author: sameer $
+ * $Revision: 1.53 $   $Date: 2008/07/25 01:02:59 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.53 2008/07/25 01:02:59 sameer Exp $
  ***************************************************************************/
 
