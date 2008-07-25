@@ -164,7 +164,7 @@ extern void Tau_stop(char *name);
 #define TAU_DYNAMIC_TIMER_STOP(name)
 #define TAU_PROFILE_CREATE_DYNAMIC_AUTO(var, name, type, group) 
 #define TAU_PHASE_CREATE_DYNAMIC_AUTO(var, name, type, group) 
-#define TAU_CREATE_PROFILER(handle, name, type, group)
+#define TAU_PROFILER_CREATE(handle, name, type, group)
 #define TAU_PROFILER_START(handle)
 #define TAU_PROFILER_STOP(handle)
 #define TAU_PROFILER_GET_INCLUSIVE_VALUES(handle, data)

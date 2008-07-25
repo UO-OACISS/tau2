@@ -218,7 +218,7 @@ extern "C" {
 
 /* for profiler objects created by name */
 
-#define TAU_CREATE_PROFILER(handle, name, type, group)  handle=Tau_get_profiler(name, type, group, #group);
+#define TAU_PROFILER_CREATE(handle, name, type, group)  handle=Tau_get_profiler(name, type, group, #group);
 #define TAU_PROFILER_START(handle) Tau_start_timer(handle, 0);
 #define TAU_PROFILER_STOP(handle) Tau_stop_timer(handle);
 #define TAU_PROFILER_GET_INCLUSIVE_VALUES(handle, data) Tau_get_inclusive_values(handle, (double *) data, Tau_get_tid());
@@ -344,7 +344,7 @@ extern void Tau_get_tid(void);
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.54 $   $Date: 2008/07/25 01:53:16 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.54 2008/07/25 01:53:16 sameer Exp $
+ * $Revision: 1.55 $   $Date: 2008/07/25 17:59:35 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.55 2008/07/25 17:59:35 sameer Exp $
  ***************************************************************************/
 
