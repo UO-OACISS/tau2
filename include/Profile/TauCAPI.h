@@ -313,7 +313,7 @@ extern void Tau_get_child_calls(void *handle, long* values, int tid);
 extern void Tau_get_inclusive_values(void *handle, double* values, int tid);
 extern void Tau_get_exclusive_values(void *handle, double* values, int tid);
 extern void Tau_get_counter_info(const char ***counterlist, int *numcounters);
-extern void Tau_get_tid(void);
+extern int Tau_get_tid(void);
 
 #endif /* PROFILING_ON */
 
@@ -344,7 +344,7 @@ extern void Tau_get_tid(void);
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.55 $   $Date: 2008/07/25 17:59:35 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.55 2008/07/25 17:59:35 sameer Exp $
+ * $Revision: 1.56 $   $Date: 2008/07/25 21:32:50 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.56 2008/07/25 21:32:50 sameer Exp $
  ***************************************************************************/
 
