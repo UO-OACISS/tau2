@@ -29,6 +29,15 @@ Version 2.17 changes (from 2.16):
 17. Env vars TAU_VERBOSE, TAU_SYNCHRONIZE_CLOCKS, TAU_PROFILE_FORMAT (snapshot)
 18. GCC 4.3.0 compatibility
 19. Added bandwidth and bytes written info for MPI I/O write routines.
+20. Added support for GNU, PathScale and PGI compilers on Cray XT systems [ORNL].
+21. ParaProf can now generate selective instrumentation files.
+22. TAU_THROTTLE = 0 disables throttling of events. Use TAU_VERBOSE=1 to see it.
+23. perfdmf_configure now stores weka.jar files in ~/.ParaProf directory.
+24. Added support for DyninstAPI 5.2.
+25. Bug fixes for tau_instrumentor, context events, and tau2slog2.
+26. Added support for pointer based profiling API (examples/profilercreate/README) [LSU].
+
+
 
 Version 2.16 changes (from 2.15):
 1. Added a new tool for correcting network time drifts in traces (tau_timecorrect).
