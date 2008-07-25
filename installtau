@@ -502,7 +502,7 @@ echo " " > wishver
     if [ $pdt = yes ]
     then
       echo "Configuring with $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt -papi=$papidir -MULTIPLECOUNTERS"
-      ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt  -papi=$papidir -MULTIPLECOUNTERS <wishver
+      ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt  -papi=$papidir -MULTIPLECOUNTERS -iowrapper <wishver
       make clean; make install
     fi
   fi
