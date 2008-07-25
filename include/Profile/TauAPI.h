@@ -52,6 +52,7 @@ extern "C" void Tau_get_child_calls(void *handle, long* values, int tid);
 extern "C" void Tau_get_inclusive_values(void *handle, double* values, int tid);
 extern "C" void Tau_get_exclusive_values(void *handle, double* values, int tid);
 extern "C" void Tau_get_counter_info(const char ***counterlist, int *numcounters);
+extern "C" int  Tau_get_tid(void);
 
 
 
@@ -477,10 +478,10 @@ or tauFI->method();
 #define TAU_CREATE_PROFILER(handle, name, type, group)  handle=Tau_get_profiler(name, type, group, #group);
 #define TAU_PROFILER_START(handle) Tau_start_timer(handle, 0);
 #define TAU_PROFILER_STOP(handle) Tau_stop_timer(handle);
-#define TAU_PROFILER_GET_INCLUSIVE_VALUES(handle, data) Tau_get_inclusive_values(handle, (double *) data, 0);
-#define TAU_PROFILER_GET_EXCLUSIVE_VALUES(handle, data) Tau_get_exclusive_values(handle, (double *) data, 0);
-#define TAU_PROFILER_GET_CALLS(handle, number) Tau_get_calls(handle, number, 0)
-#define TAU_PROFILER_GET_CHILD_CALLS(handle, number) Tau_get_child_calls(handle, number, 0);
+#define TAU_PROFILER_GET_INCLUSIVE_VALUES(handle, data) Tau_get_inclusive_values(handle, (double *) data, Tau_get_tid());
+#define TAU_PROFILER_GET_EXCLUSIVE_VALUES(handle, data) Tau_get_exclusive_values(handle, (double *) data, Tau_get_tid());
+#define TAU_PROFILER_GET_CALLS(handle, number) Tau_get_calls(handle, number, Tau_get_tid())
+#define TAU_PROFILER_GET_CHILD_CALLS(handle, number) Tau_get_child_calls(handle, number, Tau_get_tid());
 #define TAU_PROFILER_GET_COUNTER_INFO(counters, numcounters) Tau_get_counter_info((const char ***)counters, numcounters);
 
 
@@ -520,6 +521,6 @@ or tauFI->method();
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.68 $   $Date: 2008/07/25 01:02:59 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.68 2008/07/25 01:02:59 sameer Exp $ 
+ * $Revision: 1.69 $   $Date: 2008/07/25 01:53:16 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.69 2008/07/25 01:53:16 sameer Exp $ 
  ***************************************************************************/

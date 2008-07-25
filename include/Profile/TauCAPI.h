@@ -221,10 +221,10 @@ extern "C" {
 #define TAU_CREATE_PROFILER(handle, name, type, group)  handle=Tau_get_profiler(name, type, group, #group);
 #define TAU_PROFILER_START(handle) Tau_start_timer(handle, 0);
 #define TAU_PROFILER_STOP(handle) Tau_stop_timer(handle);
-#define TAU_PROFILER_GET_INCLUSIVE_VALUES(handle, data) Tau_get_inclusive_values(handle, (double *) data, 0);
-#define TAU_PROFILER_GET_EXCLUSIVE_VALUES(handle, data) Tau_get_exclusive_values(handle, (double *) data, 0);
-#define TAU_PROFILER_GET_CALLS(handle, number) Tau_get_calls(handle, number, 0)
-#define TAU_PROFILER_GET_CHILD_CALLS(handle, number) Tau_get_child_calls(handle, number, 0);
+#define TAU_PROFILER_GET_INCLUSIVE_VALUES(handle, data) Tau_get_inclusive_values(handle, (double *) data, Tau_get_tid());
+#define TAU_PROFILER_GET_EXCLUSIVE_VALUES(handle, data) Tau_get_exclusive_values(handle, (double *) data, Tau_get_tid());
+#define TAU_PROFILER_GET_CALLS(handle, number) Tau_get_calls(handle, number, Tau_get_tid())
+#define TAU_PROFILER_GET_CHILD_CALLS(handle, number) Tau_get_child_calls(handle, number, Tau_get_tid());
 #define TAU_PROFILER_GET_COUNTER_INFO(counters, numcounters) Tau_get_counter_info((const char ***)counters, numcounters);
 
 
@@ -313,6 +313,7 @@ extern void Tau_get_child_calls(void *handle, long* values, int tid);
 extern void Tau_get_inclusive_values(void *handle, double* values, int tid);
 extern void Tau_get_exclusive_values(void *handle, double* values, int tid);
 extern void Tau_get_counter_info(const char ***counterlist, int *numcounters);
+extern void Tau_get_tid(void);
 
 #endif /* PROFILING_ON */
 
@@ -343,7 +344,7 @@ extern void Tau_get_counter_info(const char ***counterlist, int *numcounters);
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.53 $   $Date: 2008/07/25 01:02:59 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.53 2008/07/25 01:02:59 sameer Exp $
+ * $Revision: 1.54 $   $Date: 2008/07/25 01:53:16 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.54 2008/07/25 01:53:16 sameer Exp $
  ***************************************************************************/
 
