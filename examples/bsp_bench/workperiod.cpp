@@ -27,7 +27,7 @@ double bsp_rdtsc() {
 
 double bsp_get_tsc() { return 1000000; }
 }
-#elif defined(LINUX_TIMERS)
+#elif defined(LINUX_TIMERS) || defined(TAU_LINUX_TIMERS)
 extern "C" unsigned long long getLinuxHighResolutionTscCounter(void);
 double KTauGetMHz(void);
 extern "C" {
@@ -46,6 +46,17 @@ double bsp_rdtsc() {
 double bsp_get_tsc() { return 1000000.0; }
 }
 #endif //BGL_TIMERS
+
+#ifndef TAUKTAU
+///////////////////////////////////////////////////////////////////////////
+double TauGetMHzRatings(void);
+double KTauGetMHz(void)
+{
+  static double ratings = TauGetMHzRatings();
+  return ratings;
+}
+///////////////////////////////////////////////////////////////////////////
+#endif //TAUKTAU
 
 static volatile unsigned long long ktau_inject_dummy = 0;
 //a piece of inline code that busy-loops for 'flag' number of times

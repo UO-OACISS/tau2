@@ -31,7 +31,9 @@ typedef struct _bsp_params {
 	int comm_size; //number of processors
 	int selfish; //do we get selfish started?
         long pinned; //if >= 0, then indicates number of processors/node & indicates we want to pin tasks
-        long timed; //if >= 0, then indicates we should time each comp-phase - by default its 1.
+        long timed; //if > 0, then indicates we should time each comp-phase - by default its 1.
+        long record; //if > 0, then indicates we should individually record each interval and save t file at the end, default is 0.
+        long concise; //if > 0, then indicates we should report a concise record - should be used with record. By default it is 1.
 } bsp_params;
 
 bsp_params g_params = {
@@ -47,6 +49,8 @@ bsp_params g_params = {
 	.selfish = 0,
         .pinned = -1,
 	.timed = 1,
+	.record = 0,
+	.concise = 1,
 };
 
 void get_params(bsp_params* params) {
@@ -58,8 +62,8 @@ void get_params(bsp_params* params) {
 	if(!g_rank) printf("get_params: compute_time:%ld micros.\n", params->compute_time);
 
 	if((env = getenv("BSP_STRONG"))) {
-		params->strong = 1;
-		if(!g_rank) printf("get_params: strong scaling is true.(Gave a large enough compute time?)\n");
+		params->strong = (int) strtol(env, NULL, 10);
+		if((!g_rank) && (params->strong))  printf("get_params: strong scaling is true.(Gave a large enough compute time?)\n");
 	} else {
 		if(!g_rank) printf("get_params: weak scaling is true.\n");
 	}
@@ -118,6 +122,19 @@ void get_params(bsp_params* params) {
                 params->timed = strtol(env, NULL, 10);
         }
         if(!g_rank) printf("get_params: timed:%ld. \n", params->timed);
+
+        if((env = getenv("BSP_RECORD_COMP"))) {
+                params->record = strtol(env, NULL, 10);
+        }
+        if(!g_rank) printf("get_params: record:%ld. \n", params->record);
+	
+	if(params->record) {
+		if((env = getenv("BSP_CONCISE_COMP"))) {
+			params->concise = strtol(env, NULL, 10);
+		}
+		if(!g_rank) printf("get_params: concise:%ld. \n", params->concise);
+	}
+
 }
 
 static volatile unsigned long long ktau_inject_dummy = 0;
@@ -226,6 +243,26 @@ int main(int argc, char* argv[]) {
 	}	
 	#endif //USE_SELFISH
 
+	double *record = NULL, *allrecord = NULL;
+	if(g_params.record) {
+		//setup memory space for recording the times
+		record = (double*) calloc(g_params.num_phases+1, sizeof(double));
+		if(!record) {
+			fprintf(stderr, "bsp: ERROR: g_params.record TRUE. But CANNOT allocate memory for record. ERROR. ABORTing. \n");
+			sleep(1);
+			MPI_Abort(MPI_COMM_WORLD, -20);
+		}
+		
+		if(rank == 0) {
+			allrecord = (double*) calloc((g_params.num_phases*g_params.comm_size+1), sizeof(double));
+			if(!allrecord) {
+				fprintf(stderr, "bsp: ERROR: g_params.record TRUE. But CANNOT allocate memory for all-record. ERROR. ABORTing. \n");
+				sleep(1);
+				MPI_Abort(MPI_COMM_WORLD, -20);
+			}
+		}
+	}
+
 	PMPI_Barrier(MPI_COMM_WORLD);
 	TAU_PROFILE_START(apptimer);
 	PMPI_Barrier(MPI_COMM_WORLD);
@@ -251,10 +288,30 @@ int main(int argc, char* argv[]) {
 					max = stop;
 				}
 				sum += stop;
+				if(g_params.record) {
+					record[g_params.num_phases - remain_phases - 1] = stop;
+				}
 			}
 		} else {
 			//only collective
+			if(g_params.timed) {
+				start = bsp_rdtsc();
+			}
+
 			collective(&g_params);
+
+			if(g_params.timed) {
+				stop = (bsp_rdtsc() - start);
+				if(stop < min) {
+					min = stop;
+				} else if(stop > max) {
+					max = stop;
+				}
+				sum += stop;
+				if(g_params.record) {
+					record[g_params.num_phases - remain_phases - 1] = stop;
+				}
+			}
 		}
 	}
 	
@@ -280,8 +337,67 @@ int main(int argc, char* argv[]) {
 	PMPI_Reduce(&max, &all_max, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 	PMPI_Reduce(&sum, &all_sum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 	all_avg = all_sum/g_params.comm_size;
-	
+
+	if(g_params.record) {
+		MPI_Gather(record, g_params.num_phases, MPI_DOUBLE, allrecord, g_params.num_phases, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+		if(rank != 0) {
+			goto no_file;
+		}
+
+		FILE* outfp = fopen("./record.out", "w");
+		if(!outfp) {
+			fprintf(stderr, "bsp: ERROR: Cannot open file record.out for writing.\n");	
+			goto no_file;
+		}
+
+		if(!g_params.concise) {
+			int r=0, t=0;
+			for(r=0; r<g_params.comm_size; r++) {
+				fprintf(outfp, "R: %d ", r);
+				for(t=0; t<g_params.num_phases; t++) {
+					fprintf(outfp, "T: %d %lf ",t, allrecord[(r*g_params.num_phases) + t]); 
+				}
+				fprintf(outfp, "\n");
+			}
+			fprintf(outfp, "\n");
+			fflush(outfp);
+		} else {
+			int r=0, t=0;
+			for(t=0; t<g_params.num_phases; t++) {
+				fprintf(outfp, "T: %d ", t);
+				double maxt=-9999999999999, mint=9999999999999, sumt=0;
+				int minr = -1, maxr = -1;
+				for(r=0; r<g_params.comm_size; r++) {
+					double thist = allrecord[(r*g_params.num_phases) + t];
+					if(thist > maxt) {
+						maxt = thist;
+						maxr = r;
+					}
+					if(thist < mint) {
+						mint = thist;
+						minr = r;
+					}
+					sumt += thist;
+				}
+				//convert from ticks to micros
+				mint = (mint/tsc)*1000000;
+				maxt = (maxt/tsc)*1000000;
+				sumt = (sumt/tsc)*1000000;
+
+				//<minr> <min> <maxr> <max> <avg> <range>
+				fprintf(outfp, "%d %lf %d %lf %lf %lf %lf\n", minr, mint, maxr, maxt, (sumt/g_params.comm_size), (maxt-mint), ((maxt*g_params.comm_size)-sumt)); 
+			}
+			fprintf(outfp, "\n");
+			fflush(outfp);
+		}
+
+		fclose(outfp);
+	}
+no_file:
+
 	MPI_Finalize();
+
 	//report time across by root
 	if(!g_rank) printf("GLOBAL: MIN:%lf \t MAX:%lf \t SUM:%lf \n", (all_min/tsc)*1000000, (all_max/tsc)*1000000, (all_avg/tsc)*1000000);
 

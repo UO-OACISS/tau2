@@ -4,11 +4,11 @@
 #export TRACEDIR=/var/taudata
 
 #TAU envs
-export COUNTER1=LINUX_TIMERS
-export COUNTER2=KTAU_schedule
-export COUNTER3=KTAU_smp_apic_timer_interrupt
-export COUNTER4=KTAU_INCL_smp_apic_timer_interrupt
-export COUNTER5=KTAU_NUM_smp_apic_timer_interrupt
+#export COUNTER1=LINUX_TIMERS
+#export COUNTER2=KTAU_schedule
+#export COUNTER3=KTAU_smp_apic_timer_interrupt
+#export COUNTER4=KTAU_INCL_smp_apic_timer_interrupt
+#export COUNTER5=KTAU_NUM_smp_apic_timer_interrupt
 
 #export COUNTER6=KTAU_schedule_vol
 
@@ -24,8 +24,8 @@ numphases=100
 #numphases=10000
 comptime=4000
 collective=BARRIER
-strong=1
-pin=8
+strong=0
+pin=16
 timed=0
 
 export BSP_TIMED_COMP=$timed
