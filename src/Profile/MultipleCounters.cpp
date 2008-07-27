@@ -1069,12 +1069,19 @@ inline double TauGetMHzRatingsMCL(void)
 {
   FILE *f;
   double rating;
-  char *cmd = "cat /proc/cpuinfo | egrep -i '^cpu MHz' | head -1 | sed 's/^.*: //'";
+  char *cmd1 = "cat /proc/cpuinfo | egrep -i '^cpu MHz' | head -1 | sed 's/^.*: //'";
+  char *cmd2 = "sysctl hw.cpufrequency | sed 's/^.*: //'"; /* For Apple */
+
   char buf[BUFSIZ];
-  if ((f = popen(cmd,"r"))!=NULL)
-  while (fgets(buf, BUFSIZ, f) != NULL)
-  {
-    rating = atof(buf);
+  f = popen(cmd1,"r");
+
+  /* For Apple Mac OS X */
+  if (f!=NULL) f = popen(cmd2,"r");
+  if (f!=NULL) {
+    while (fgets(buf, BUFSIZ, f) != NULL)
+    {
+      rating = atof(buf);
+    }
   }
   pclose(f);
 #ifdef DEBUG_PROF

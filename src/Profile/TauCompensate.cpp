@@ -27,6 +27,7 @@
 #include <iostream>
 using namespace std;
 #endif /* DEBUG_PROF */
+#include <stdlib.h>
 
 #ifndef TAU_MULTIPLE_COUNTERS
 double& TheTauNullTimerOverhead()

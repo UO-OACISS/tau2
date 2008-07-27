@@ -45,6 +45,7 @@ using namespace std;
 #endif /* TAU_CATAMOUNT */
 #include <catamount/catmalloc.h>
 #endif /* __QK_USER__ || __LIBCATAMOUNT__ */
+#include <stdlib.h>
 
 
 //////////////////////////////////////////////////////////////////////
@@ -558,7 +559,7 @@ int TauGetFreeMemory(void)
 #endif /* TAU_CATAMOUNT */
 
 /***************************************************************************
- * $RCSfile: TauMemory.cpp,v $   $Author: amorris $
- * $Revision: 1.28 $   $Date: 2007/05/31 18:41:03 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.28 2007/05/31 18:41:03 amorris Exp $ 
+ * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
+ * $Revision: 1.29 $   $Date: 2008/07/27 06:24:24 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.29 2008/07/27 06:24:24 sameer Exp $ 
  ***************************************************************************/
