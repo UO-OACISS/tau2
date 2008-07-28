@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: perfexplorer.skel,v 1.28 2008/07/24 16:40:40 khuck Exp $
+# $Id: perfexplorer.skel,v 1.29 2008/07/28 19:09:04 khuck Exp $
 # $Name:  $
 
 TAUROOT=@TAUROOT@
@@ -49,29 +49,29 @@ OMEGAHAT_JARS=$OMEGAHAT_HOME/inst:$OMEGAHAT_JARPATH/Environment.jar:$OMEGAHAT_JA
 
 # JBoss Rules jars
 
-ANTLR2_JAR=$JAR_HOME/lib/antlr-2.7.6.jar
-ANTLR3_JAR=$JAR_HOME/lib/antlr-3.0ea8.jar
-COMMONS_JCI_CORE_JAR=$JAR_HOME/lib/commons-jci-core-1.0-406301.jar
-COMMONS_JCI_ECLIPSE_JAR=$JAR_HOME/lib/commons-jci-eclipse-3.2.0.666.jar
-COMMONS_LANG_JAR=$JAR_HOME/lib/commons-lang-2.1.jar
-COMMONS_LOGGING_JAR=$JAR_HOME/lib/commons-logging-api-1.0.4.jar
-CORE_JAR=$JAR_HOME/lib/core-3.2.0.666.jar
-DROOLS_COMIPLER_JAR=$JAR_HOME/lib/drools-compiler-3.0.6.jar
-DROOLS_CORE_JAR=$JAR_HOME/lib/drools-core-3.0.6.jar
-DROOLS_DECISIONTABLES_JAR=$JAR_HOME/lib/drools-decisiontables-3.0.6.jar
-DROOLS_JSR94_JAR=$JAR_HOME/lib/drools-jsr94-3.0.6.jar
-JSR_JAR=$JAR_HOME/lib/jsr94-1.1.jar
-JXL_JAR=$JAR_HOME/lib/jxl-2.4.2.jar
-STRINGTEMPLATE_JAR=$JAR_HOME/lib/stringtemplate-2.3b6.jar
+ANTLR2_JAR=$JAR_HOME/antlr-2.7.6.jar
+ANTLR3_JAR=$JAR_HOME/antlr-3.0ea8.jar
+COMMONS_JCI_CORE_JAR=$JAR_HOME/commons-jci-core-1.0-406301.jar
+COMMONS_JCI_ECLIPSE_JAR=$JAR_HOME/commons-jci-eclipse-3.2.0.666.jar
+COMMONS_LANG_JAR=$JAR_HOME/commons-lang-2.1.jar
+COMMONS_LOGGING_JAR=$JAR_HOME/commons-logging-api-1.0.4.jar
+CORE_JAR=$JAR_HOME/core-3.2.0.666.jar
+DROOLS_COMIPLER_JAR=$JAR_HOME/drools-compiler-3.0.6.jar
+DROOLS_CORE_JAR=$JAR_HOME/drools-core-3.0.6.jar
+DROOLS_DECISIONTABLES_JAR=$JAR_HOME/drools-decisiontables-3.0.6.jar
+DROOLS_JSR94_JAR=$JAR_HOME/drools-jsr94-3.0.6.jar
+JSR_JAR=$JAR_HOME/jsr94-1.1.jar
+JXL_JAR=$JAR_HOME/jxl-2.4.2.jar
+STRINGTEMPLATE_JAR=$JAR_HOME/stringtemplate-2.3b6.jar
 JBOSS_RULES_JARS=$ANTLR3_JAR:$ANTLR2_JAR:$COMMONS_JCI_CORE_JAR:$COMMONS_JCI_ECLIPSE_JAR:$COMMONS_LANG_JAR:$COMMONS_LOGGING_JAR:$CORE_JAR:$DROOLS_COMIPLER_JAR:$DROOLS_CORE_JAR:$DROOLS_DECISIONTABLES_JAR:$DROOLS_JSR94_JAR:$JSR_JAR:$JXL_JAR:$STRINGTEMPLATE_JAR
 
 # Hibernate jars
 
-HIBERNATE_JAR=$JAR_HOME/lib/hibernate3.jar
-DOM4J_JAR=$JAR_HOME/lib/dom4j-1.6.1.jar
-HIBERNATE_ANNOTATIONS_JAR=$JAR_HOME/lib/hibernate-annotations.jar
-HIBERNATE_EJB_JAR=$JAR_HOME/lib/ejb3-persistence.jar
-HIBERNATE_COMMONS_ANNOTATIONS_JAR=$JAR_HOME/lib/hibernate-commons-annotations.jar
+HIBERNATE_JAR=$JAR_HOME/hibernate3.jar
+DOM4J_JAR=$JAR_HOME/dom4j-1.6.1.jar
+HIBERNATE_ANNOTATIONS_JAR=$JAR_HOME/hibernate-annotations.jar
+HIBERNATE_EJB_JAR=$JAR_HOME/ejb3-persistence.jar
+HIBERNATE_COMMONS_ANNOTATIONS_JAR=$JAR_HOME/hibernate-commons-annotations.jar
 HIBERNATE_JARS=$HIBERNATE_JAR:$HIBERNATE_EJB_JAR:$HIBERNATE_ANNOTATIONS_JAR
 
 # PARSE COMMAND LINE SWITCHES
