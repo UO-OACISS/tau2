@@ -1,4 +1,4 @@
-# $Id: Makefile.skel,v 1.30 2008/05/13 21:56:56 khuck Exp $
+# $Id: Makefile.skel,v 1.31 2008/07/29 23:44:03 khuck Exp $
 # $Name:  $
 
 R_HOME = @RROOT@
@@ -6,7 +6,7 @@ TAUROOT = @TAUROOT@
 CONFIG_ARCH = @TAUARCH@
 ENGINE_PACKAGE = @ANALYSIS_ENGINE@
 ENGINE_DEFINE = @ANALYSIS_ENGINE_DEF@
-
+JAR_HOME = ${HOME}/.ParaProf
 
 ##########################
 
@@ -14,7 +14,7 @@ JAVA_JVM_VERSION=1.5
 NOW = $(shell date)
 
 OMEGAHAT_HOME = $(R_HOME)/library/SJava
-CONFIGFILE = ${HOME}/.ParaProf/perfdmf.cfg
+CONFIGFILE = ${JAR_HOME}/perfdmf.cfg
 OMEGAHAT_JARPATH = ${OMEGAHAT_HOME}/org/omegahat/Jars
 WEBSTART_DIR = /var/www/html/PerfExplorer/.
 
@@ -47,26 +47,26 @@ JUNIT_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/junit-3.8.1.jar
 # JBoss Rules jars
 
 #core
-DROOLS_CORE_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/drools-core-3.0.6.jar
+DROOLS_CORE_JAR = ${JAR_HOME}/drools-core-3.0.6.jar
 
 #compiler
-DROOLS_COMIPLER_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/drools-compiler-3.0.6.jar
-ANTLR3_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/antlr-3.0ea8.jar
-COMMONS_JCI_CORE_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/commons-jci-core-1.0-406301.jar
-COMMONS_JCI_ECLIPSE_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/commons-jci-eclipse-3.2.0.666.jar
-CORE_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/core-3.2.0.666.jar
-COMMONS_LOGGING_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/commons-logging-api-1.0.4.jar
-COMMONS_LANG_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/commons-lang-2.1.jar
-STRINGTEMPLATE_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/stringtemplate-2.3b6.jar
-ANTLR2_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/antlr-2.7.6.jar
+DROOLS_COMIPLER_JAR = ${JAR_HOME}/drools-compiler-3.0.6.jar
+ANTLR3_JAR = ${JAR_HOME}/antlr-3.0ea8.jar
+COMMONS_JCI_CORE_JAR = ${JAR_HOME}/commons-jci-core-1.0-406301.jar
+COMMONS_JCI_ECLIPSE_JAR = ${JAR_HOME}/commons-jci-eclipse-3.2.0.666.jar
+CORE_JAR = ${JAR_HOME}/core-3.2.0.666.jar
+COMMONS_LOGGING_JAR = ${JAR_HOME}/commons-logging-api-1.0.4.jar
+COMMONS_LANG_JAR = ${JAR_HOME}/commons-lang-2.1.jar
+STRINGTEMPLATE_JAR = ${JAR_HOME}/stringtemplate-2.3b6.jar
+ANTLR2_JAR = ${JAR_HOME}/antlr-2.7.6.jar
 
 #JSR-94
-DROOLS_JSR94_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/drools-jsr94-3.0.6.jar
-JSR_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jsr94-1.1.jar
+DROOLS_JSR94_JAR = ${JAR_HOME}/drools-jsr94-3.0.6.jar
+JSR_JAR = ${JAR_HOME}/jsr94-1.1.jar
 
 #decision tables
-DROOLS_DECISIONTABLES_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/drools-decisiontables-3.0.6.jar
-JXL_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jxl-2.4.2.jar
+DROOLS_DECISIONTABLES_JAR = ${JAR_HOME}/drools-decisiontables-3.0.6.jar
+JXL_JAR = ${JAR_HOME}/jxl-2.4.2.jar
 
 JBOSS_RULES_JARS = ${DROOLS_COMIPLER_JAR}:${DROOLS_CORE_JAR}:${DROOLS_DECISIONTABLES_JAR}:${DROOLS_JSR94_JAR}
 
@@ -74,19 +74,19 @@ JBOSS_RULES_JARS = ${DROOLS_COMIPLER_JAR}:${DROOLS_CORE_JAR}:${DROOLS_DECISIONTA
 
 # Hibernate jars
 
-HIBERNATE_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/hibernate3.jar
-HIBERNATE_ANNOTATIONS_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/hibernate-annotations.jar
-HIBERNATE_EJB_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/ejb3-persistence.jar
+HIBERNATE_JAR = ${JAR_HOME}/hibernate3.jar
+HIBERNATE_ANNOTATIONS_JAR = ${JAR_HOME}/hibernate-annotations.jar
+HIBERNATE_EJB_JAR = ${JAR_HOME}/ejb3-persistence.jar
 HIBERNATE_JARS = ${HIBERNATE_JAR}:${HIBERNATE_EJB_JAR}:${HIBERNATE_ANNOTATIONS_JAR}
 
-BATCH_SCRIPT = ${TAUROOT}/${CONFIG_ARCH}/bin/perfexplorer
+BATCH_SCRIPT = ${JAR_HOME}/perfexplorer
 
 # DISTRIBUTION JARS
 
-DERBY_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/derby.jar
-DOM4J_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/dom4j-1.6.1.jar
-HIBERNATE_COMMONS_ANNOTATIONS_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/hibernate-commons-annotations.jar
-MYSQL_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/mysql.jar
+DERBY_JAR = ${JAR_HOME}/derby.jar
+DOM4J_JAR = ${JAR_HOME}/dom4j-1.6.1.jar
+HIBERNATE_COMMONS_ANNOTATIONS_JAR = ${JAR_HOME}/hibernate-commons-annotations.jar
+MYSQL_JAR = ${JAR_HOME}/mysql.jar
 
 
 ##########################
