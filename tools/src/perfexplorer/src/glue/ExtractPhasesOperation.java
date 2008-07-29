@@ -48,7 +48,7 @@ public class ExtractPhasesOperation extends AbstractPerformanceOperation {
 	public List<PerformanceResult> processData() {
 		this.outputs = new ArrayList<PerformanceResult>();
 		for (PerformanceResult input : inputs) {
-			PerformanceResult output = new DefaultResult();
+			PerformanceResult output = new DefaultResult(input.getTrial());
 			outputs.add(output);
 			Set<String> foundIterations = new HashSet<String>();
 			for (String event : input.getEvents()) {

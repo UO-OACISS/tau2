@@ -3,6 +3,8 @@
  */
 package glue;
 
+import edu.uoregon.tau.perfdmf.Trial;
+
 /**
  * @author khuck
  *
@@ -22,6 +24,10 @@ public class VarianceResult extends DefaultResult {
 	public VarianceResult(PerformanceResult input) {
 		super(input);
 		// TODO Auto-generated constructor stub
+	}
+
+	public VarianceResult(Trial trial) {
+		super(trial);
 	}
 
 	public String toString() {

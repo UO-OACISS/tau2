@@ -3,6 +3,8 @@
  */
 package glue;
 
+import edu.uoregon.tau.perfdmf.Trial;
+
 /**
  * @author khuck
  *
@@ -22,6 +24,10 @@ public class MaxResult extends DefaultResult {
 	public MaxResult(PerformanceResult input) {
 		super(input);
 		// TODO Auto-generated constructor stub
+	}
+
+	public MaxResult(Trial trial) {
+		super(trial);
 	}
 
 	/* (non-Javadoc)

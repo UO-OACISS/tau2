@@ -5,6 +5,8 @@ package glue;
 
 import java.math.*;
 
+import edu.uoregon.tau.perfdmf.Trial;
+
 /**
  * @author khuck
  *
@@ -35,6 +37,10 @@ public class ScalabilityResult extends AbstractResult {
 	public ScalabilityResult(PerformanceResult input) {
 		super(input);
 		// TODO Auto-generated constructor stub
+	}
+
+	public ScalabilityResult(Trial trial) {
+		super(trial);
 	}
 
 	/**

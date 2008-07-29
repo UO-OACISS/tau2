@@ -43,7 +43,7 @@ public class MergeTrialsOperation extends AbstractPerformanceOperation {
 	 */
 	public List<PerformanceResult> processData() {
 		this.outputs = new ArrayList<PerformanceResult>();
-		PerformanceResult output = new DefaultResult();
+		PerformanceResult output = new DefaultResult(inputs.get(0).getTrial());
 		for (PerformanceResult input : inputs) {
 			for (String event : input.getEvents()) {
 				for (Integer threadIndex : input.getThreads()) {

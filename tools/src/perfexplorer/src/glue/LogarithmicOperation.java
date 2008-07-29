@@ -45,7 +45,7 @@ public class LogarithmicOperation extends AbstractPerformanceOperation {
 		List<PerformanceResult> outputs = new ArrayList<PerformanceResult>();
 		
 		for (PerformanceResult input : inputs) {
-			PerformanceResult output = new DefaultResult();
+			PerformanceResult output = new DefaultResult(input.getTrial());
 			outputs.add(output);
 			for (Integer thread : input.getThreads()) {
 				for (String event : input.getEvents()) {

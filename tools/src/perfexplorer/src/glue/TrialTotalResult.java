@@ -17,8 +17,6 @@ import edu.uoregon.tau.perfdmf.database.DB;
  */
 public class TrialTotalResult extends AbstractResult {
 
-	private Trial trial = null;
-	private Integer trialID = 0;
 	private Integer originalThreads = 0;
 
 	/**
@@ -142,17 +140,4 @@ public class TrialTotalResult extends AbstractResult {
 		this.originalThreads = originalThreads;
 	}
 
-	/**
-	 * @return the trial
-	 */
-	public Trial getTrial() {
-		return trial;
-	}
-
-	/**
-	 * @param trial the trial to set
-	 */
-	public void setTrial(Trial trial) {
-		this.trial = trial;
-	}
 }

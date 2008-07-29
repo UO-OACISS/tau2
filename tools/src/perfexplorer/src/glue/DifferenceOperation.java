@@ -53,7 +53,7 @@ public class DifferenceOperation extends AbstractPerformanceOperation {
 		PerformanceResult comparison = inputs.get(1);
 		
 		// create a new output result matrix
-		PerformanceResult output = new DefaultResult();
+		PerformanceResult output = new DefaultResult(inputs.get(0).getTrial());
 		
 		// get the set of threads
 		Set<Integer> totalThreads = baseline.getThreads();

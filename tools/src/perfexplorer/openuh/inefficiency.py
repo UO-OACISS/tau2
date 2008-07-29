@@ -11,6 +11,7 @@ from glue import MergeTrialsOperation
 from glue import DerivedMetrics
 from glue import TopXEvents
 from glue import MeanEventFact
+from glue import SaveResultOperation
 
 ###################################################################
 
@@ -22,13 +23,25 @@ False = 0
 def deriveMetric(input, first, second, oper):
 	# derive the metric
 	derivor = DeriveMetricOperation(input, first, second, oper)
-	derived = derivor.processData().get(0)
-	newName = derived.getMetrics().toArray()[0]
-	# merge new metric with the trial
-	merger = MergeTrialsOperation(input)
-	merger.addInput(derived)
-	merged = merger.processData().get(0)
-	#print "new metric: " + newName
+	# check to see if this metric already has been derived
+	merged = None
+	newName = None
+	if (derivor.exists()):
+		print "Exists: ", newName
+		merged = input
+		newName = derivor.getNewName()
+	else:
+		derived = derivor.processData().get(0)
+		newName = derivor.getNewName()
+		# merge new metric with the trial
+		merger = MergeTrialsOperation(input)
+		merger.addInput(derived)
+		merged = merger.processData().get(0)
+		# save the newly derived metric
+		# saver = SaveResultOperation(derived)
+		# saver.setForceOverwrite(False)
+		# saver.processData()
+	print "new metric: ", newName
 	return merged, newName
 
 ###################################################################
@@ -66,18 +79,21 @@ print "loading the data..."
 
 # choose the right database configuration - a string which matches the end of the jdbc connection,
 # such as "perfdmf" to match "jdbc:derby:/Users/khuck/src/tau2/apple/lib/perfdmf"
-Utilities.setSession("openuh")
+Utilities.setSession("test")
+#Utilities.setSession("openuh")
 
 # load just the average values across all threads, input: app_name, exp_name, trial_name
 #trial = TrialResult(Utilities.getTrial("msap_parametric.optix.static", "size.400", "16.threads"))
 trial = TrialResult(Utilities.getTrial("Fluid Dynamic - Unoptimized OpenMP", "rib 90", "Original OpenMP 1_16"))
 
 # extract the non-callpath events from the trial
+print "extracting"
 extractor = ExtractNonCallpathEventOperation(trial)
 extracted = extractor.processData().get(0)
 
 # get basic statistics
-statMaker = BasicStatisticsOperation(extracted, True)
+print "stats"
+statMaker = BasicStatisticsOperation(extracted, False)
 stats = statMaker.processData()
 means = stats.get(BasicStatisticsOperation.MEAN)
 

@@ -17,7 +17,7 @@ import edu.uoregon.tau.perfdmf.database.DB;
  * This class is an implementation of the AbstractResult class, and loads a trial
  * from the database into a result object.
  * 
- * <P>CVS $Id: TrialResult.java,v 1.5 2008/05/30 03:52:52 khuck Exp $</P>
+ * <P>CVS $Id: TrialResult.java,v 1.6 2008/07/29 23:40:19 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 
@@ -25,8 +25,6 @@ import edu.uoregon.tau.perfdmf.database.DB;
 
 public class TrialResult extends AbstractResult {
 
-	private Integer trialID = 0;
-	private Trial trial = null;
 	private boolean callPath = true;
 
 	public TrialResult() {
@@ -166,22 +164,6 @@ public class TrialResult extends AbstractResult {
 			System.err.println(exception.getMessage());
 			exception.printStackTrace();
 		}
-	}
-
-	public Integer getTrialID() {
-		return trialID;
-	}
-
-	public void setTrialID(Integer trialID) {
-		this.trialID = trialID;
-	}
-
-	public Trial getTrial() {
-		return trial;
-	}
-
-	public void setTrial(Trial trial) {
-		this.trial = trial;
 	}
 
 	public String toString() {

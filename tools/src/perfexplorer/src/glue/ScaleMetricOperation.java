@@ -63,7 +63,7 @@ public class ScaleMetricOperation extends AbstractPerformanceOperation {
 	public List<PerformanceResult> processData() {
 		String newName = "(" + metric + operation + value.toString() + ")";
 		for (PerformanceResult input : inputs) {
-			PerformanceResult output = new DefaultResult();
+			PerformanceResult output = new DefaultResult(input.getTrial());
 			
 			for (String event : input.getEvents()) {
 				for (Integer thread : input.getThreads()) {

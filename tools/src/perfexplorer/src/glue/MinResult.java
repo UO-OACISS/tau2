@@ -6,6 +6,8 @@ package glue;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.uoregon.tau.perfdmf.Trial;
+
 /**
  * @author khuck
  *
@@ -25,6 +27,10 @@ public class MinResult extends DefaultResult {
 	public MinResult(PerformanceResult input) {
 		super(input);
 		// TODO Auto-generated constructor stub
+	}
+
+	public MinResult(Trial trial) {
+		super(trial);
 	}
 
 	/* (non-Javadoc)

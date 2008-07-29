@@ -11,6 +11,8 @@ import java.util.Set;
 
 import org.drools.FactHandle;
 
+import edu.uoregon.tau.perfdmf.Trial;
+
 import rules.FactWrapper;
 import rules.RuleHarness;
 import rules.SelfAsserting;
@@ -83,6 +85,10 @@ public class CorrelationResult extends DefaultResult implements SelfAsserting {
 		this.baselineType = baselineType;
 		this.comparisonType = comparisonType;
 		this.correlation = correlation;
+	}
+
+	public CorrelationResult(Trial trial) {
+		super(trial);
 	}
 
 	public String getBaselineEvent() {

@@ -43,7 +43,7 @@ public class CorrelationOperation extends DefaultOperation {
         for (PerformanceResult input : inputs) {
 			// first, since we need the average and stddev foreach event/metric,
 			// get the basic stats for this input
-			PerformanceResult correlation = new CorrelationResult();
+			PerformanceResult correlation = new CorrelationResult(input.getTrial());
 			// now, loop over all event / metric / type
 			for (String event : input.getEvents()) {
 				for (String metric : input.getMetrics()) {

@@ -21,6 +21,7 @@ public class DeriveMetricOperation extends AbstractPerformanceOperation {
 	private String firstMetric = null;
 	private String secondMetric = null;
 	private String operation = ADD;
+	private String newName = null;
 	
 	/**
 	 * @param input
@@ -54,6 +55,7 @@ public class DeriveMetricOperation extends AbstractPerformanceOperation {
 		this.firstMetric = firstMetric;
 		this.secondMetric = secondMetric;
 		this.operation = operation;
+		this.newName = "(" + firstMetric + operation + secondMetric + ")";
 	}
 
 
@@ -61,9 +63,8 @@ public class DeriveMetricOperation extends AbstractPerformanceOperation {
 	 * @see glue.PerformanceAnalysisOperation#processData()
 	 */
 	public List<PerformanceResult> processData() {
-		String newName = "(" + firstMetric + operation + secondMetric + ")";
 		for (PerformanceResult input : inputs) {
-			PerformanceResult output = new DefaultResult();
+			PerformanceResult output = new DefaultResult(input.getTrial());
 			
 			for (String event : input.getEvents()) {
 				for (Integer thread : input.getThreads()) {
@@ -101,4 +102,25 @@ public class DeriveMetricOperation extends AbstractPerformanceOperation {
 		return outputs;
 	}
 
+	/**
+	 * @return the newName
+	 */
+	public String getNewName() {
+		return newName;
+	}
+
+	/**
+	 * @param newName the newName to set
+	 */
+	public void setNewName(String newName) {
+		this.newName = newName;
+	}
+	
+	/**
+	 * Check if the derived metric already exists
+	 * 
+	 */
+	public boolean exists() {
+		return (inputs.get(0).getMetrics().contains(newName));
+	}
 }

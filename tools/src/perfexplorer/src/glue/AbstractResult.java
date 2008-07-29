@@ -15,12 +15,13 @@ import java.util.TreeSet;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
 
+
 /**
  * This class is used as an abstract implementation of the PerformanceResult
  * interface.  This class has all the member data fields for the plethora
  * of anticipated subclasses.
  * 
- * <P>CVS $Id: AbstractResult.java,v 1.6 2008/05/30 01:16:53 khuck Exp $</P>
+ * <P>CVS $Id: AbstractResult.java,v 1.7 2008/07/29 23:40:18 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0
@@ -60,6 +61,9 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 	public static final int USEREVENT_MEAN = 7;
 	public static final int USEREVENT_SUMSQR = 8;
 	private static List<Integer> types = null;
+	
+	protected Trial trial = null;
+	protected Integer trialID = null;
 	
 	public static List<Integer> getTypes() {
 		if (types == null) {
@@ -106,6 +110,14 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 	 *
 	 */
 	protected AbstractResult() {
+	}
+	
+	/**
+	 * Constructor which takes a trial to have a back pointer to the database
+	 * 
+	 */
+	public AbstractResult(Trial trial) {
+		this.trial = trial;
 	}
 	
 	/**
@@ -615,13 +627,20 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 		return sorted;
 	}
 
-	/**
-	 * This should be overridden where appropriate.
-	 * 
-	 * @see glue.PerformanceResult#getTrial()
-	 */
-	public Trial getTrial() {
-		return null;
+	public Integer getTrialID() {
+		return trialID;
 	}
 
+	public void setTrialID(Integer trialID) {
+		this.trialID = trialID;
+	}
+
+	public Trial getTrial() {
+		return trial;
+	}
+
+	public void setTrial(Trial trial) {
+		this.trial = trial;
+	}
+	
 }
