@@ -16,7 +16,8 @@
 ***************************************************************************/
 
 /* Headers */
-#include <string> 
+#include <string>
+#include <sstream>
 #include <iostream>
 using namespace std;
 #include "tau_instrument.h"
@@ -39,6 +40,8 @@ extern bool fuzzyMatch(const string& a, const string& b);
 extern bool memory_flag;
 bool isVoidRoutine(const pdbItem* r);
 int parseLanguageString(const string& str);
+void replaceAll(string& str, const string& search, const string& replace);
+string intToString(int value);
 
 
 /* Globals */
@@ -282,6 +285,38 @@ bool tauInstrument::getQualifierSpecified(void) { return qualifierSpecified; }
 bool tauInstrument::isActiveForLanguage(PDB::lang_t lang) const
 {
   return (language & lang);
+}
+
+///////////////////////////////////////////////////////////////////////////
+// tauInstrument::getCode() accesses private data member
+///////////////////////////////////////////////////////////////////////////
+string tauInstrument::getCode(const pdbLoc& loc)
+{
+  string result = code;
+
+  // Replace variables
+  replaceAll(result, "@FILE@", loc.file()->name());
+  replaceAll(result, "@LINE@", intToString(loc.line()));
+  replaceAll(result, "@COL@", intToString(loc.col()));
+
+  return result;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// tauInstrument::getCode() accesses private data member
+///////////////////////////////////////////////////////////////////////////
+string tauInstrument::getCode(const pdbLoc& loc, const pdbRoutine* r)
+{
+  string result = getCode(loc);
+
+  // Replace variables
+  replaceAll(result, "@FUNCTION@", r->fullName());
+  replaceAll(result, "@BEGIN_LINE@", intToString(r->headBegin().line()));
+  replaceAll(result, "@BEGIN_COL@", intToString(r->headBegin().col()));
+  replaceAll(result, "@END_LINE@", intToString(r->bodyEnd().line()));
+  replaceAll(result, "@END_COL@", intToString(r->bodyEnd().col()));
+
+  return result;
 }
 
 
@@ -1527,7 +1562,7 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
         /* get routine entry line no. */
         cout <<"at line: "<<(*rit)->bodyBegin().line()<<", col"<< (*rit)->bodyBegin().col()<<"code = "<<(*it)->getCode()<<endl;
 #endif /* DEBUG */
-	itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()+1, (*it)->getCode(), BEFORE));
+	itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()+1, (*it)->getCode((*rit)->bodyBegin(), *rit), BEFORE));
 	/* should the column be 1 greater than body begin's col, so 
 	   instrumentation is placed after the beginning of the routine? */
 
@@ -1545,7 +1580,7 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
           cout <<"at line: "<<(*rlit)->line()<<", col"<< (*rlit)->col()<<" code = "<<(*it)->getCode()<<endl;
 #endif /* DEBUG */
 	
-	  itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(), BEFORE));
+	  itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(**rlit, *rit), BEFORE));
         }
         /* handle exit of void routines */
         if (isVoidRoutine(*rit))
@@ -1554,7 +1589,7 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
           cout <<"at line: "<<(*rit)->bodyEnd().line()<<", col"<< (*rit)->bodyEnd().col()<<"code = "<<(*it)->getCode()<<endl;
 #endif /* DEBUG */
 
-          itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), (*it)->getCode(), BEFORE));
+          itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), (*it)->getCode((*rit)->bodyEnd(), *rit), BEFORE));
         }
       } /* end of routine exit */
       if ((*it)->getKind() == TAU_LOOPS)
@@ -1668,7 +1703,7 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
         /* We should treat snippet insertion code at routine entry like additional declarations
            that must be placed inside the routine */
         list<string> decls;
-        decls.push_back((*it)->getCode());
+        decls.push_back((*it)->getCode((*rit)->bodyBegin(), *rit));
 
         additionalDeclarations.push_back(pair<int, list<string> >((*rit)->id(), decls)); 
 	/* assign the list of strings to the list */
@@ -1689,7 +1724,7 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
           cout <<"at line: "<<(*rlit)->line()<<", col"<< (*rlit)->col()<<" code = "<<(*it)->getCode()<<endl;
 #endif /* DEBUG */
 	
-	  itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(), BEFORE));
+	  itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(**rlit, *rit), BEFORE));
         }
 	/* and then examine the stop locations */
         for (rlit = stoplocations.begin(); rlit != stoplocations.end(); ++rlit)
@@ -1698,7 +1733,7 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
           cout <<"at line: "<<(*rlit)->line()<<", col"<< (*rlit)->col()<<" code = "<<(*it)->getCode()<<endl;
 #endif /* DEBUG */
 	
-	  itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(), BEFORE));
+	  itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(**rlit, *rit), BEFORE));
         }
       } /* end of routine exit */
       if ((*it)->getKind() == TAU_LOOPS)
@@ -1863,7 +1898,7 @@ it will not enter here. */
 	*/
 	/* itemRef::itemRef(const pdbItem *i, itemKind_t k, int l, int c, string code)
 	 */
-	itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*it)->getLineNo(), 1, (*it)->getCode(), BEFORE));	
+	itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*it)->getLineNo(), 1, (*it)->getCode(pdbLoc(file, (*it)->getLineNo(), 0)), BEFORE));
       }
       /* is a region specified for phase/timer based instrumentation? */
       if ((*it)->getRegionSpecified())
@@ -2110,11 +2145,36 @@ int parseLanguageString(const string& str)
 }
 
 
+/* -------------------------------------------------------------------------- */
+/* -- Replaces all occurrences of <search> in <str> by <replace> ------------ */
+/* -------------------------------------------------------------------------- */
+void replaceAll(string& str, const string& search, const string& replace)
+{
+  string::size_type pos = str.find(search);
+  while (string::npos != pos)
+  {
+    str.replace(pos, search.length(), replace);
+    pos = str.find(search, pos + replace.length());
+  }
+}
+
+
+/* -------------------------------------------------------------------------- */
+/* -- Returns the given integer converted to a std::string ------------------ */
+/* -------------------------------------------------------------------------- */
+string intToString(int value)
+{
+  ostringstream str;
+  str << value;
+  return str.str();
+}
+
+
 /* EOF */
 
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: geimer $
- * $Revision: 1.53 $   $Date: 2008/07/30 22:12:06 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.53 2008/07/30 22:12:06 geimer Exp $
+ * $Revision: 1.54 $   $Date: 2008/07/30 22:22:00 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.54 2008/07/30 22:22:00 geimer Exp $
  ***************************************************************************/

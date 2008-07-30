@@ -79,6 +79,8 @@ class tauInstrument
     int getLineNo(void);
     bool getCodeSpecified(void) ;
     string& getCode(void) ;
+    string getCode(const pdbLoc& loc);
+    string getCode(const pdbLoc& loc, const pdbRoutine* r);
     instrumentKind_t getKind(void) ;
     bool getRegionSpecified(void);
     int getRegionStart(void);
@@ -119,6 +121,6 @@ extern bool isInstrumentListEmpty(void);
 #endif /* _TAU_INSTRUMENT_H_ */
 /***************************************************************************
  * $RCSfile: tau_instrument.h,v $   $Author: geimer $
- * $Revision: 1.4 $   $Date: 2008/07/30 22:12:06 $
- * VERSION_ID: $Id: tau_instrument.h,v 1.4 2008/07/30 22:12:06 geimer Exp $
+ * $Revision: 1.5 $   $Date: 2008/07/30 22:22:00 $
+ * VERSION_ID: $Id: tau_instrument.h,v 1.5 2008/07/30 22:22:00 geimer Exp $
  ***************************************************************************/
