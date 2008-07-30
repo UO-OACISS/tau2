@@ -38,6 +38,8 @@ extern bool instrumentEntity(const string& function_name);
 extern bool fuzzyMatch(const string& a, const string& b);
 extern bool memory_flag;
 bool isVoidRoutine(const pdbItem* r);
+int parseLanguageString(const string& str);
+
 
 /* Globals */
 ///////////////////////////////////////////////////////////////////////////
@@ -56,40 +58,40 @@ the first element of the pair (the second is the list of strings). */
 tauInstrument::tauInstrument(string f, string r, int l, string c, 
 	instrumentKind_t k): filename(f), fileSpecified(true), routineName(r),
 	lineno(l), lineSpecified (true), code(c), codeSpecified(true), kind (k),
-        regionSpecified(false), qualifierSpecified(false) 
+        regionSpecified(false), qualifierSpecified(false), language(LA_ANY)
 {}
 
 
 ///////////////////////////////////////////////////////////////////////////
 // tauInstrument() ctor
-// file = "foo.cpp" line=245 code = "TAU_NODE(0);" 
+// file = "foo.cpp" line=245 code = "TAU_NODE(0);" lang = "c++"
 ///////////////////////////////////////////////////////////////////////////
-tauInstrument::tauInstrument(string f, int l, string c, instrumentKind_t k) : 
-      	filename(f), fileSpecified(true), lineno(l), lineSpecified(true), 
+tauInstrument::tauInstrument(string f, int line, string c, instrumentKind_t k, int lang) :
+      	filename(f), fileSpecified(true), lineno(line), lineSpecified(true), 
       	routineSpecified(false), code(c), codeSpecified(true), kind(k), 
-        regionSpecified(false), qualifierSpecified(false) 
+        regionSpecified(false), qualifierSpecified(false), language(lang)
 {}
 
 ///////////////////////////////////////////////////////////////////////////
 // tauInstrument() ctor
-// entry routine="foo" code="print *, 'Hi'; " */
+// entry routine = "foo" code = "print *, 'Hi';" lang = "fortran" */
 //    /* FOR THIS TYPE, you must specify the codeSpecified argument */
 ///////////////////////////////////////////////////////////////////////////
-tauInstrument::tauInstrument(string r, string c, bool cs, instrumentKind_t k) :
+tauInstrument::tauInstrument(string r, string c, bool cs, instrumentKind_t k, int lang) :
       	routineName(r), routineSpecified(true), code(c), codeSpecified(cs), 
   	kind(k), fileSpecified(false), lineSpecified(false),
-        regionSpecified(false), qualifierSpecified(false)  
+        regionSpecified(false), qualifierSpecified(false), language(lang)
 {}
 
 ///////////////////////////////////////////////////////////////////////////
 // tauInstrument() ctor
-//    /* entry/exit file = "foo.f90" routine = "foo" code = "printf" */
+//    /* entry/exit file = "foo.f90" routine = "foo" code = "printf" lang = "fortran" */
 ///////////////////////////////////////////////////////////////////////////
-tauInstrument::tauInstrument(string f, string r, string c, instrumentKind_t k) 
+tauInstrument::tauInstrument(string f, string r, string c, instrumentKind_t k, int lang) 
 	: filename(f), fileSpecified(true), routineName(r), 
 	routineSpecified(true), code (c), codeSpecified(true), 
 	lineSpecified(false), kind (k), 
-        regionSpecified(false), qualifierSpecified(false)  
+        regionSpecified(false), qualifierSpecified(false), language(lang)
 {} 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -99,7 +101,7 @@ tauInstrument::tauInstrument(string f, string r, string c, instrumentKind_t k)
 tauInstrument::tauInstrument(string r, instrumentKind_t k ) : 
 	routineName(r), routineSpecified (true), kind (k), 
 	lineSpecified(false), fileSpecified(false), codeSpecified(false),
-        regionSpecified(false), qualifierSpecified(false)  
+        regionSpecified(false), qualifierSpecified(false), language(LA_ANY)
 {} 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -109,7 +111,8 @@ tauInstrument::tauInstrument(string r, instrumentKind_t k ) :
 tauInstrument::tauInstrument(string f, string r, instrumentKind_t k ) : 
 	filename (f), fileSpecified(true), routineName(r), 
 	routineSpecified (true), kind (k), lineSpecified(false), 
-	codeSpecified(false), regionSpecified(false), qualifierSpecified(false) 
+	codeSpecified(false), regionSpecified(false), qualifierSpecified(false),
+	language(LA_ANY)
 {} 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -119,7 +122,7 @@ tauInstrument::tauInstrument(string f, string r, instrumentKind_t k ) :
 tauInstrument::tauInstrument(itemQualifier_t q, instrumentKind_t k, string r) :
 	qualifier(q), kind(k), routineName(r), routineSpecified(true), 
 	codeSpecified(false), lineSpecified(false), fileSpecified(false), 
-        regionSpecified(false), qualifierSpecified(true)  
+        regionSpecified(false), qualifierSpecified(true), language(LA_ANY)
 {} 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -131,7 +134,7 @@ tauInstrument::tauInstrument(itemQualifier_t q, instrumentKind_t k, string n,
 	qualifier(q), kind(k), code(n), codeSpecified(true), 
         filename(f), fileSpecified(true), regionStart(linestart), 
         regionStop(linestop), regionSpecified(true), qualifierSpecified(true),
-        lineSpecified(false) /* region, not line */
+        lineSpecified(false) /* region, not line */, language(LA_ANY)
 {} 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -198,6 +201,7 @@ ostream& tauInstrument::print(ostream& ostr) const
 		 break;
        }
        if (regionSpecified) ostr <<"line (start) = "<<regionStart << " to line (stop) = "<<regionStop<<endl;
+       ostr << "Language code: " << language << endl;
        ostr<<endl;
        return ostr;
 }
@@ -271,6 +275,14 @@ itemQualifier_t tauInstrument::getQualifier(void) { return qualifier; }
 // tauInstrument::getQualifierSpecified() accesses private data member
 ///////////////////////////////////////////////////////////////////////////
 bool tauInstrument::getQualifierSpecified(void) { return qualifierSpecified; }
+
+///////////////////////////////////////////////////////////////////////////
+// tauInstrument::isActiveForLanguage() accesses private data member
+///////////////////////////////////////////////////////////////////////////
+bool tauInstrument::isActiveForLanguage(PDB::lang_t lang) const
+{
+  return (language & lang);
+}
 
 
 /* Instrumentation section */
@@ -348,6 +360,8 @@ void parseInstrumentationCommand(char *line, int lineno)
   char pfile[INBUF_SIZE]; /* parsed filename */
   char plineno[INBUF_SIZE]; /* parsed lineno */
   char pcode[INBUF_SIZE]; /* parsed code */
+  char plang[INBUF_SIZE]; /* parsed language */
+  int language = tauInstrument::LA_ANY;
   int m1, m2, m3, m4; 
   int startlineno, stoplineno;
   startlineno = stoplineno = 0;
@@ -363,8 +377,11 @@ void parseInstrumentationCommand(char *line, int lineno)
   original = line; 
   /* check the initial keyword */
   if (strncmp(line, "file", 4) == 0)
-  { 
-    /* parse: file = "foo.cc" line = 245 code = "TAU_NODE(0);" */
+  {
+#ifdef DEBUG
+    printf("Found LINE!\n");
+#endif /* DEBUG */
+    /* parse: file = "foo.cc" line = 245 code = "TAU_NODE(0);" lang = "c++" */
     line+=4; /* start checking from here */
     /* WHITE SPACES */
     WSPACE(line);
@@ -374,7 +391,7 @@ void parseInstrumentationCommand(char *line, int lineno)
     RETRIEVESTRING(pfile, line);
     filespecified = true; 
 #ifdef DEBUG
-    printf("Got name = %s\n", pfile);
+    printf("GOT name = %s\n", pfile);
 #endif 
 
     WSPACE(line); /* space  */
@@ -387,7 +404,7 @@ void parseInstrumentationCommand(char *line, int lineno)
       RETRIEVENUMBER(plineno, line);
       ret = sscanf(plineno, "%d", &value); 
 #ifdef DEBUG
-      printf("got line no = %d, line = %s\n", value, line);
+      printf("GOT line no = %d, line = %s\n", value, line);
 #endif /* DEBUG */
     }
     else parseError("<line> token not found", line, lineno, line - original);
@@ -403,18 +420,34 @@ void parseInstrumentationCommand(char *line, int lineno)
       TOKEN('"');
       RETRIEVECODE(pcode, line);
 #ifdef DEBUG
-      printf("Got code = %s\n", pcode);
+      printf("GOT code = %s\n", pcode);
 #endif /* DEBUG */
     }
     else parseError("<code> token not found", line, lineno, line - original); 
+    WSPACE(line);
+    if (strncmp(line, "lang", 4) == 0)
+    {
+      line += 4; /* move 4 spaces */
+      /* check for = <WSPACE> " */
+      WSPACE(line);
+      TOKEN('=');
+      WSPACE(line);
+      TOKEN('"');
+      RETRIEVESTRING(plang, line);
 #ifdef DEBUG
-    printf("file=%s, code = %s, line no = %d\n", pfile, pcode, value);
+      printf("GOT lang = %s\n", plang);
 #endif /* DEBUG */
-    instrumentList.push_back(new tauInstrument(string(pfile), value, string(pcode), TAU_LINE)); 
-    
+      language = parseLanguageString(plang);
+      if (language < 0)
+        parseError("<lang> token invalid", line, lineno, line - original);
+    }
+#ifdef DEBUG
+    printf("file = %s, code = %s, line no = %d, language = %d\n", pfile, pcode, value, language);
+#endif /* DEBUG */
+    instrumentList.push_back(new tauInstrument(string(pfile), value, string(pcode), TAU_LINE, language));
   }
   else
-  { /* parse: entry routine="foo()", code = "TAU_SET_NODE(0)" */
+  { /* parse: entry routine = "foo()" code = "TAU_SET_NODE(0)" lang = "c" */
     if (strncmp(line, "entry", 5) == 0)
     {
       line+=5; 
@@ -433,7 +466,7 @@ void parseInstrumentationCommand(char *line, int lineno)
 	WSPACE(line);
 	filespecified = true; 
 #ifdef DEBUG
-	printf("GOT FILE = %s\n", pfile);
+	printf("GOT file = %s\n", pfile);
 #endif /* DEBUG */
       }
       if (strncmp(line, "routine", 7) == 0)
@@ -455,21 +488,38 @@ void parseInstrumentationCommand(char *line, int lineno)
           TOKEN('"');
           RETRIEVECODE(pcode, line);
 #ifdef DEBUG
-          printf("Got code = %s\n", pcode);
+          printf("GOT code = %s\n", pcode);
 #endif /* DEBUG */
 	}
         else parseError("<code> token not found", line, lineno, line - original); 
+        WSPACE(line);
+        if (strncmp(line, "lang", 4) == 0)
+        {
+          line += 4; /* move 4 spaces */
+          /* check for = <WSPACE> " */
+          WSPACE(line);
+          TOKEN('=');
+          WSPACE(line);
+          TOKEN('"');
+          RETRIEVESTRING(plang, line);
+#ifdef DEBUG
+          printf("GOT lang = %s\n", plang);
+#endif /* DEBUG */
+          language = parseLanguageString(plang);
+          if (language < 0)
+            parseError("<lang> token invalid", line, lineno, line - original);
+        }
 #ifdef DEBUG 
-	printf("Got entry routine = %s code =%s\n", pname, pcode);
+	printf("entry routine = %s, code = %s, lang = %d\n", pname, pcode, language);
 #endif /* DEBUG */
         if (filespecified)
 	{
-          instrumentList.push_back(new tauInstrument(string(pfile), string(pname), string(pcode), TAU_ROUTINE_ENTRY)); 
+          instrumentList.push_back(new tauInstrument(string(pfile), string(pname), string(pcode), TAU_ROUTINE_ENTRY, language));
 	}
         else 
 	{
 	  bool codespecified = true; 
-          instrumentList.push_back(new tauInstrument(string(pname), string(pcode), codespecified, TAU_ROUTINE_ENTRY)); 
+          instrumentList.push_back(new tauInstrument(string(pname), string(pcode), codespecified, TAU_ROUTINE_ENTRY, language));
 	} /* file and routine are both specified for entry */
       }
       else parseError("<routine> token not found", line, lineno, line - original);
@@ -491,7 +541,7 @@ void parseInstrumentationCommand(char *line, int lineno)
 	  WSPACE(line);
 	  filespecified = true; 
 #ifdef DEBUG
-	  printf("GOT FILE = %s\n", pfile);
+	  printf("GOT file = %s\n", pfile);
 #endif /* DEBUG */
 	}
         if (strncmp(line, "routine", 7) == 0)
@@ -513,24 +563,41 @@ void parseInstrumentationCommand(char *line, int lineno)
             TOKEN('"');
             RETRIEVECODE(pcode, line);
 #ifdef DEBUG
-            printf("Got code = %s\n", pcode);
+            printf("GOT code = %s\n", pcode);
 #endif /* DEBUG */
-            if (filespecified)
-	    {
-              instrumentList.push_back(new tauInstrument(string(pfile), string(pname), string(pcode), TAU_ROUTINE_EXIT)); 
-	    }
-            else 
-	    {
-	      bool codespecified = true; 
-              instrumentList.push_back(new tauInstrument(string(pname), string(pcode), codespecified, TAU_ROUTINE_EXIT)); 
-	    } /* file and routine are both specified for entry */
 	  }
 	  else parseError("<code> token not found", line, lineno, line - original);
 	}
 	else parseError("<routine> token not found", line, lineno, line - original);
+        WSPACE(line);
+        if (strncmp(line, "lang", 4) == 0)
+        {
+          line += 4; /* move 4 spaces */
+          /* check for = <WSPACE> " */
+          WSPACE(line);
+          TOKEN('=');
+          WSPACE(line);
+          TOKEN('"');
+          RETRIEVESTRING(plang, line);
 #ifdef DEBUG
-	printf("exit routine = %s code = %s\n", pname, pcode);
+          printf("GOT lang = %s\n", plang);
 #endif /* DEBUG */
+          language = parseLanguageString(plang);
+          if (language < 0)
+            parseError("<lang> token invalid", line, lineno, line - original);
+        }
+#ifdef DEBUG
+	printf("exit routine = %s, code = %s, lang = %d\n", pname, pcode, language);
+#endif /* DEBUG */
+        if (filespecified)
+	{
+          instrumentList.push_back(new tauInstrument(string(pfile), string(pname), string(pcode), TAU_ROUTINE_EXIT, language));
+	}
+        else 
+	{
+	  bool codespecified = true; 
+          instrumentList.push_back(new tauInstrument(string(pname), string(pcode), codespecified, TAU_ROUTINE_EXIT, language));
+	} /* file and routine are both specified for entry */
       } /* end of exit */
       else 
       { /* loops */
@@ -568,7 +635,7 @@ void parseInstrumentationCommand(char *line, int lineno)
 	    WSPACE(line);
 	    filespecified = true; 
 #ifdef DEBUG
-	    printf("GOT FILE = %s\n", pfile);
+	    printf("GOT file = %s\n", pfile);
 #endif /* DEBUG */
 	  }
 	  if (strncmp(line, "routine", 7) == 0)
@@ -708,7 +775,7 @@ void parseInstrumentationCommand(char *line, int lineno)
 	    	filespecified = true; 
                 WSPACE(line);
 #ifdef DEBUG
-                printf("got file = %s\n", pfile);
+                printf("GOT file = %s\n", pfile);
 #endif /* DEBUG */
               }
               else {
@@ -723,7 +790,7 @@ void parseInstrumentationCommand(char *line, int lineno)
                 RETRIEVENUMBER(plineno, line);
                 ret = sscanf(plineno, "%d", &startlineno); 
 #ifdef DEBUG
-                printf("got start line no = %d, line = %s\n", startlineno, line);
+                printf("GOT start line no = %d, line = %s\n", startlineno, line);
 #endif /* DEBUG */
 		WSPACE(line);
                 if (strncmp (line, "to", 2) == 0)
@@ -739,7 +806,7 @@ void parseInstrumentationCommand(char *line, int lineno)
                     RETRIEVENUMBERATEOL(pcode, line);
                     ret = sscanf(pcode, "%d", &stoplineno); 
 #ifdef DEBUG
-                    printf("got stop line no = %d\n", stoplineno);
+                    printf("GOT stop line no = %d\n", stoplineno);
 #endif /* DEBUG */
                   } else { /* we got line=<no> to , but there was no line */
                     parseError("<line> token not found in the stop declaration", line, lineno, line - original);
@@ -766,9 +833,8 @@ void parseInstrumentationCommand(char *line, int lineno)
           } /* end of if static/dynamic/phase/timer */
         } /* check for phase/timer */
       } /* end of loops directive */
-    }
+    } /* exit */
   } /* entry */
-
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1412,6 +1478,7 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
   PDB::croutinevec::const_iterator rit;
   PDB::croutinevec croutines = p.getCRoutineVec();
   bool cmpResult1, cmpResult2, cmpFileResult; 
+  PDB::lang_t language = p.language();
 
 #ifdef DEBUG
   printf("Inside processCRoutinesInstrumentation!\n");
@@ -1453,7 +1520,7 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
       cout <<"Examining Routine "<<(*rit)->fullName()<<" and "<<(*it)->getRoutineName()<<endl;
 #endif /* DEBUG */
       /* examine the type of request - entry/exit */
-      if ((*it)->getKind() == TAU_ROUTINE_ENTRY)
+      if ((*it)->getKind() == TAU_ROUTINE_ENTRY && (*it)->isActiveForLanguage(language))
       {
 #ifdef DEBUG
         cout <<"Instrumenting entry of routine "<<(*rit)->fullName()<<endl;
@@ -1465,7 +1532,7 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 	   instrumentation is placed after the beginning of the routine? */
 
       }
-      if ((*it)->getKind() == TAU_ROUTINE_EXIT)
+      if ((*it)->getKind() == TAU_ROUTINE_EXIT && (*it)->isActiveForLanguage(language))
       {
 #ifdef DEBUG
         cout <<"Instrumenting exit of routine "<<(*rit)->fullName()<<endl;
@@ -1489,8 +1556,6 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 
           itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), (*it)->getCode(), BEFORE));
         }
-
-
       } /* end of routine exit */
       if ((*it)->getKind() == TAU_LOOPS)
       { /* we need to instrument all outer loops in this routine */
@@ -1549,9 +1614,12 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 
   return retval;
 }
+
 /* Process list of F routines */
 bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& it, vector<itemRef *>& itemvec, pdbFile *file) 
 {
+  PDB::lang_t language = p.language();
+
 #ifdef DEBUG
   printf("INSIDE processFRoutinesInstrumentation\n");
 #endif /* DEBUG */
@@ -1592,7 +1660,7 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
       cout <<"Examining Routine "<<(*rit)->fullName()<<" and "<<(*it)->getRoutineName()<<endl;
 #endif /* DEBUG */
       /* examine the type of request - entry/exit */
-      if ((*it)->getKind() == TAU_ROUTINE_ENTRY)
+      if ((*it)->getKind() == TAU_ROUTINE_ENTRY && (*it)->isActiveForLanguage(language))
       {
 #ifdef DEBUG
         cout <<"Instrumenting entry of routine "<<(*rit)->fullName()<<endl;
@@ -1605,7 +1673,7 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
         additionalDeclarations.push_back(pair<int, list<string> >((*rit)->id(), decls)); 
 	/* assign the list of strings to the list */
       }
-      if ((*it)->getKind() == TAU_ROUTINE_EXIT)
+      if ((*it)->getKind() == TAU_ROUTINE_EXIT && (*it)->isActiveForLanguage(language))
       {
 #ifdef DEBUG
         cout <<"Instrumenting exit of routine "<<(*rit)->fullName()<<endl;
@@ -1735,7 +1803,7 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
   bool cmpResult; 
   int column ;
   bool retval = true;
-  PDB::lang_t lang;
+  PDB::lang_t language = p.language();
   PDB::croutinevec croutines;
   PDB::froutinevec froutines; 
 
@@ -1743,7 +1811,7 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
   printf("INSIDE addFileInstrumentationRequests empty Instrumentation List? %d \n", isInstrumentListEmpty());
 #endif /* DEBUG */
 
-  if (memory_flag && p.language() == PDB::LA_FORTRAN) 
+  if (memory_flag && language == PDB::LA_FORTRAN) 
   { /* instrumentation list is empty, but the user specified a -memory flag 
        for a fortran file. This is equivalent to instrumenting all memory 
        references */
@@ -1779,7 +1847,7 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
       /* phases can also be specified in this manner, we need to distinguish 
 the two. With phases, line is not specified, rather a region is specified. So, 
 it will not enter here. */
-      if ((*it)->getLineSpecified())
+      if ((*it)->getLineSpecified() && (*it)->isActiveForLanguage(language))
       { /* Yes, a line number was specified */
 #ifdef DEBUG
 	cout << "Need to add line no. " <<(*it)->getLineNo()<<"column 1 to the list!"<<endl;
@@ -1795,8 +1863,7 @@ it will not enter here. */
 	*/
 	/* itemRef::itemRef(const pdbItem *i, itemKind_t k, int l, int c, string code)
 	 */
-	itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*it)->getLineNo(), 1, (*it)->getCode(), BEFORE));
-			
+	itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*it)->getLineNo(), 1, (*it)->getCode(), BEFORE));	
       }
       /* is a region specified for phase/timer based instrumentation? */
       if ((*it)->getRegionSpecified())
@@ -1816,7 +1883,7 @@ it will not enter here. */
           else regionQualifier=string("STATIC");
         /* Fortran has a slightly different syntax and requirements 
            compared to C/C++ */
-        if (p.language() != PDB::LA_FORTRAN)
+        if (language != PDB::LA_FORTRAN)
         { /* ASSUMPTION: If it is not Fortran it is C or C++ */
           startRegionCode = string("  TAU_")+regionQualifier+string("_")+regionKind+"_START(\""+(*it)->getCode()+"\");";
           stopRegionCode = string("  TAU_")+regionQualifier+string("_")+regionKind+"_STOP(\""+(*it)->getCode()+"\");";
@@ -1884,8 +1951,7 @@ it will not enter here. */
 #ifdef DEBUG
       cout <<"A routine is specified! "<<endl;
 #endif /* DEBUG */
-      lang = p.language();
-      switch (lang) { /* check the language first */
+      switch (language) { /* check the language first */
         case PDB::LA_C :
         case PDB::LA_CXX:
         case PDB::LA_C_or_CXX:
@@ -2003,11 +2069,52 @@ bool isVoidRoutine(const pdbItem * i)
 }
 
 
+/* -------------------------------------------------------------------------- */
+/* -- Returns an integer encoding the languages specified ------------------- */
+/* -------------------------------------------------------------------------- */
+int parseLanguageString(const string& str)
+{
+  int language = 0;
+
+  // Split given string at commas
+  string::size_type pos = 0;
+  string::size_type end = 0;
+  do {
+    end = str.find(",", pos);
+
+    // Chop off whitespaces
+    string::size_type lpos = str.find_first_not_of(" \f\n\r\t\v", pos);
+    string::size_type lend = str.find_last_not_of(", \f\n\r\t\v", end);
+    if (string::npos == lpos || string::npos == lend)
+      return -1;
+
+    // Enable language
+    string lang = str.substr(lpos, lend - lpos + 1);
+    if (0 == lang.compare("c"))
+      language |= PDB::LA_C;
+    else if (0 == lang.compare("c++"))
+      language |= PDB::LA_CXX;
+    else if (0 == lang.compare("fortran"))
+      language |= PDB::LA_FORTRAN;
+    else
+      return -1;
+
+    pos = end + 1;
+  } while (string::npos != end);
+
+#ifdef DEBUG
+  printf("Language code = %x\n", language);
+#endif
+
+  return language;  
+}
+
+
 /* EOF */
 
 
 /***************************************************************************
- * $RCSfile: tau_instrument.cpp,v $   $Author: amorris $
- * $Revision: 1.52 $   $Date: 2008/07/30 21:07:55 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.52 2008/07/30 21:07:55 amorris Exp $
+ * $RCSfile: tau_instrument.cpp,v $   $Author: geimer $
+ * $Revision: 1.53 $   $Date: 2008/07/30 22:12:06 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.53 2008/07/30 22:12:06 geimer Exp $
  ***************************************************************************/

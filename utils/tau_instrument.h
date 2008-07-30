@@ -40,14 +40,18 @@ using std::ostream;
 class tauInstrument
 {
   public:
-    /* specify everything */
-    tauInstrument(string f, string r, int l, string c, instrumentKind_t k);
-    tauInstrument(string f, int l, string c, instrumentKind_t k);
-    /* FOR THIS TYPE, you must specify the codeSpecified argument */
-    tauInstrument(string r, string c, bool cs, instrumentKind_t k);
+    enum {
+      LA_ANY = PDB::LA_C | PDB::LA_CXX | PDB::LA_FORTRAN
+    };
 
-    /* entry/exit file = "foo.f90" routine = "foo" code = "printf" */
-    tauInstrument(string f, string r, string c, instrumentKind_t k) ;
+    /* specify everything */
+    tauInstrument(string f, string r, int line, string c, instrumentKind_t k);
+    tauInstrument(string f, int line, string c, instrumentKind_t k, int lang = LA_ANY);
+    /* FOR THIS TYPE, you must specify the codeSpecified argument */
+    tauInstrument(string r, string c, bool cs, instrumentKind_t k, int lang = LA_ANY);
+
+    /* entry/exit file = "foo.f90" routine = "foo" code = "printf" lang = "fortran" */
+    tauInstrument(string f, string r, string c, instrumentKind_t k, int lang = LA_ANY) ;
 
     /* loops routine = "foo" */
     tauInstrument(string r, instrumentKind_t k ) ;
@@ -81,6 +85,7 @@ class tauInstrument
     int getRegionStop(void);
     itemQualifier_t getQualifier(void);
     bool getQualifierSpecified(void);
+    bool isActiveForLanguage(PDB::lang_t lang) const;
 
     /* private data members */
   private:
@@ -97,7 +102,8 @@ class tauInstrument
     bool qualifierSpecified; 
     int regionStart;
     int regionStop;
-    bool regionSpecified; 
+    bool regionSpecified;
+    int language;
 };
 
 extern vector<tauInstrument *> instrumentList; 
@@ -112,7 +118,7 @@ extern bool isInstrumentListEmpty(void);
 
 #endif /* _TAU_INSTRUMENT_H_ */
 /***************************************************************************
- * $RCSfile: tau_instrument.h,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 2007/09/04 19:28:54 $
- * VERSION_ID: $Id: tau_instrument.h,v 1.3 2007/09/04 19:28:54 sameer Exp $
+ * $RCSfile: tau_instrument.h,v $   $Author: geimer $
+ * $Revision: 1.4 $   $Date: 2008/07/30 22:12:06 $
+ * VERSION_ID: $Id: tau_instrument.h,v 1.4 2008/07/30 22:12:06 geimer Exp $
  ***************************************************************************/
