@@ -15,7 +15,7 @@ include ../../include/Makefile
 ########### Automatically modified by the configure script ############
 
 
-CXX=$(TAU_CXX_FE) $(ABI) $(ISA)
+COMP=$(TAU_CXX_FE) $(ABI) $(ISA)
 RM=/bin/rm -f
 
 FILES=opari.cc process_c.cc process_f.cc process_omp.cc ompragma.cc ompragma_c.cc ompragma_f.cc ompregion.cc handler.cc 
@@ -24,7 +24,7 @@ all: opari
 install: opari
 
 opari: $(FILES)
-	$(CXX) $(FILES) -o opari
+	$(COMP) $(FILES) -o opari
 
 clean:
 	$(RM) opari
