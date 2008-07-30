@@ -279,7 +279,7 @@ bool tauInstrument::getQualifierSpecified(void) { return qualifierSpecified; }
 // parseError
 // input: line number and column 
 ///////////////////////////////////////////////////////////////////////////
-void parseError(char *message, char *line, int lineno, int column)
+void parseError(const char *message, char *line, int lineno, int column)
 {
   printf("ERROR: %s: parse error at selective instrumentation file line %d col %d\n",
 	message, lineno, column);
@@ -1118,7 +1118,7 @@ int processMemBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& i
 }
 
 /* construct the timer name e.g., tio_22; */
-void getTauEntityName(char *prefix, string& varname, int line)
+void getTauEntityName(const char *prefix, string& varname, int line)
 { /* pass in tio as the prefix */
   char var[256];
   sprintf(var, "%d", line);
@@ -1254,7 +1254,7 @@ int processIOBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& it
       case pdbStmt::ST_FIO:
 #ifdef DEBUG
 	printf("IO statement: %s <%d,%d>\n",
-	s->stmtBegin().file()->name(), s->stmtBegin().line(), s->stmtBegin().col(), s->stmtBegin().file()->name());
+	s->stmtBegin().file()->name().c_str(), s->stmtBegin().line(), s->stmtBegin().col());
 #endif /* DEBUG */
 	/* write the IO tracking statement at this location */
         addFortranIOInstrumentation(ro, s->stmtBegin(), s->stmtEnd(), itemvec);
@@ -1528,14 +1528,14 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
               if (isPhaseOrTimer == TAU_PHASE) 
               {
 #ifdef DEBUG
-	        printf("Routine %s is a PHASE \n", (*rit)->fullName());
+	        printf("Routine %s is a PHASE \n", (*rit)->fullName().c_str());
 #endif /* DEBUG */
                 (*iter)->isPhase = true;
               }
               else 
               {
 #ifdef DEBUG
-	        printf("Routine %s is a TIMER \n", (*rit)->fullName());
+	        printf("Routine %s is a TIMER \n", (*rit)->fullName().c_str());
 #endif /* DEBUG */
               }
               if ((*it)->getQualifier() == DYNAMIC)               
@@ -1664,7 +1664,7 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
           { /* item's pdbItem entry is not null */
 #ifdef DEBUG
             printf("examining %s. id = %d. Current routine id = %d, kind = %d\n",
-            (*iter)->item->name(), (*iter)->item->id(), (*rit)->id(), (*iter)->kind);     
+            (*iter)->item->name().c_str(), (*iter)->item->id(), (*rit)->id(), (*iter)->kind);     
  
 #endif /* DEBUG */
             if ((*iter)->item->id() == (*rit)->id()) 
@@ -1672,7 +1672,7 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
               if (isPhaseOrTimer == TAU_PHASE) 
               {
 #ifdef DEBUG
-	        printf("Routine %s is a PHASE \n", (*rit)->fullName());
+	        printf("Routine %s is a PHASE \n", (*rit)->fullName().c_str());
 #endif /* DEBUG */
                 (*iter)->isPhase = true;
               }
@@ -1715,7 +1715,7 @@ pdbRoutine * getFRoutineFromFileAndLine(PDB& p, int line)
 #ifdef DEBUG
     printf("Iterating... routine = %s, first stmt = %d, looking for line = %d\n", 
 
-       (*rit)->fullName(), 
+       (*rit)->fullName().c_str(), 
        (*rit)->firstExecStmtLocation().line(), line);
 #endif /* DEBUG */
     if ((*rit)->firstExecStmtLocation().line() <= line) result = *rit; 
@@ -2007,7 +2007,7 @@ bool isVoidRoutine(const pdbItem * i)
 
 
 /***************************************************************************
- * $RCSfile: tau_instrument.cpp,v $   $Author: sameer $
- * $Revision: 1.51 $   $Date: 2008/07/23 01:08:13 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.51 2008/07/23 01:08:13 sameer Exp $
+ * $RCSfile: tau_instrument.cpp,v $   $Author: amorris $
+ * $Revision: 1.52 $   $Date: 2008/07/30 21:07:55 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.52 2008/07/30 21:07:55 amorris Exp $
  ***************************************************************************/

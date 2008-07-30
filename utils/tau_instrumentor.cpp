@@ -1891,7 +1891,7 @@ int CPDB_GetSubstringCol(const char *haystack, const char *needle)
 /* -------------------------------------------------------------------------- */
 /* -- Does the statement contain this keyword? ------------------------------ */
 /* -------------------------------------------------------------------------- */
-bool isKeywordPresent(char *line, char *keyword)
+bool isKeywordPresent(char *line, const char *keyword)
 {
    bool present;
    if ((!((line[0] == 'c') || (line[0] == 'C') || (line[0] == '!'))) && 
@@ -3595,7 +3595,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #endif /* DEBUG */
 		  if (is_if_stmt && (alloccol == 0)) { 
 			/* handle this separately. write the current statement */
-		     printf("TAU ERROR: <file=%s,line=%d>:  Currently we cannot handle allocate statements in this version of PDT that are on the same line as a single-if statement that uses a continuation character. Please modify the source to put an explicit then/endif clause around the allocate statement and re-try, or upgrade your PDT package.\n", f->name(), inputLineNo);
+		     printf("TAU ERROR: <file=%s,line=%d>:  Currently we cannot handle allocate statements in this version of PDT that are on the same line as a single-if statement that uses a continuation character. Please modify the source to put an explicit then/endif clause around the allocate statement and re-try, or upgrade your PDT package.\n", f->name().c_str(), inputLineNo);
 		       ostr<<inbuf<<endl;
 /* matching of ( and ) does not work in this case if the line is split up. 
 		     do {
@@ -3666,7 +3666,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #endif /* DEBUG */
                   if (is_if_stmt && (dealloccol == 0)) {
                         /* handle this separately. write the current statement */
-                     printf("TAU ERROR: <file=%s,line=%d>: Currently we cannot handle de-allocate statements in this version of PDT that are on the same line as a single-if statement that uses a continuation character. Please modify the source to put an explicit then/endif clause around the de-allocate statement and re-try, or upgrade your PDT package.\n", f->name(), inputLineNo);
+                     printf("TAU ERROR: <file=%s,line=%d>: Currently we cannot handle de-allocate statements in this version of PDT that are on the same line as a single-if statement that uses a continuation character. Please modify the source to put an explicit then/endif clause around the de-allocate statement and re-try, or upgrade your PDT package.\n", f->name().c_str(), inputLineNo);
                        ostr<<inbuf<<endl;
                   }
                   else {
@@ -3734,7 +3734,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #endif /* DEBUG */
                   if (is_if_stmt && (iocol == 0)) {
                         /* handle this separately. write the current statement */
-                     printf("TAU ERROR: <file=%s,line=%d>: Currently we cannot handle IO statements in this version of PDT that are on the same line as a single-if statement that uses a continuation character. Please modify the source to put an explicit then/endif clause around the IO statement and re-try, or upgrade your PDT package.\n", f->name(), inputLineNo);
+                     printf("TAU ERROR: <file=%s,line=%d>: Currently we cannot handle IO statements in this version of PDT that are on the same line as a single-if statement that uses a continuation character. Please modify the source to put an explicit then/endif clause around the IO statement and re-try, or upgrade your PDT package.\n", f->name().c_str(), inputLineNo);
                        ostr<<inbuf<<endl;
                   }
                   else {
@@ -4150,9 +4150,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: sameer $
- * $Revision: 1.192 $   $Date: 2008/07/23 01:08:13 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.192 2008/07/23 01:08:13 sameer Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
+ * $Revision: 1.193 $   $Date: 2008/07/30 21:07:55 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.193 2008/07/30 21:07:55 amorris Exp $
  ***************************************************************************/
 
 
