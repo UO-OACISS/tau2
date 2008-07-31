@@ -1923,10 +1923,14 @@ case $machine in
     ;;
 
    bgp)
-    if [ $cxx_compiler = default ]
-    then
+    if [ $cxx_compiler = default ] ; then
       cxx_compiler=mpixlcxx_r
       c_compiler=mpixlc_r
+    elif [ $cxx_compiler = mpicxx ] ; then
+      cxx_compiler=mpicxx
+      c_compiler=mpicc
+      gnu=yes
+      fixmakeargs="$fixmakeargs GNU BGP_GFORTRAN"
     fi
     ;;
 
@@ -2403,7 +2407,6 @@ fi
 
 ######################################################################
 # Set default C++ compiler in all Makefiles
-
 case $cxx_compiler in
    CC)
       echo "Default C++ compiler will be CC"
@@ -2687,8 +2690,16 @@ case $cxx_compiler in
       fi
       ;;
 
+    mpicxx)
+	if [ $machine = bgp ] ; then
+	    echo "Using GNU Compilers for BGP"
+	else
+	    echo "ERROR Unknown C++ compiler: $cxx_compiler"
+	    exit 1
+	fi
+	;;
    *)
-      echo "ERROR Unknown C++ compiler"
+      echo "ERROR Unknown C++ compiler: $cxx_compiler"
       exit 1
       ;;
 
