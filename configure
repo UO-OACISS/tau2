@@ -1502,6 +1502,126 @@ cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.postgresql ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.db2 ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/java.policy ${targetdir}/etc/.
   
+BINTARGET=${targetdir}/${architecture}/bin
+JARTARGET=${targetdir}/${architecture}/lib
+
+  # install paraprof
+cat ${tauroot}/tools/src/paraprof/bin/paraprof.skel | 
+sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+    -e 's,@OLDJDK@,'$oldjdk',' > $BINTARGET/paraprof
+chmod a+rx $BINTARGET/paraprof
+
+  # install ppscript
+cat ${tauroot}/tools/src/ppscript.skel | 
+sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+    -e 's,@OLDJDK@,'$oldjdk',' > $BINTARGET/ppscript
+chmod a+rx $BINTARGET/ppscript
+
+  # install portal utils
+cat ${tauroot}/tools/src/tau_portal/bin/perfdmfdb.py.skel | sed -e 's,@BINDIR@,'$BINTARGET',' > $BINTARGET/perfdmfdb.py
+cat ${tauroot}/tools/src/tau_portal/bin/portal.py.skel | sed -e 's,@BINDIR@,'$BINTARGET',' > $BINTARGET/portal.py
+cp ${tauroot}/tools/src/tau_portal/bin/tau_portal.py $BINTARGET
+chmod a+rx $BINTARGET/tau_portal.py $BINTARGET/portal.py $BINTARGET/perfdmfdb.py
+
+cat ${tauroot}/tools/src/perfexplorer/bin/perfexplorer.skel |
+sed -e 's,@TAUROOT@,'$targetdir',' \
+    -e 's,@TAUSHELL@,'$taushell',' \
+    -e 's,@TAUARCH@,'$architecture',' \
+    -e 's,@RROOT@,'$rroot',' \
+    -e 's,@ANALYSIS_ENGINE@,'weka',' \
+    -e 's,@SERVER_HOSTNAME@,'$serverhostname',' \
+    -e 's,@SERVER_OBJECT_PORT@,'$objectport',' \
+    -e 's,@SERVER_RMIREGISTRY_PORT@,'$registryport',' \
+    -e 's,@CONFIGFILE@,'$configfile',' \
+    > $BINTARGET/perfexplorer
+chmod a+rx $BINTARGET/perfexplorer
+
+
+if [ ! -f $BINTARGET/jracy ] ; then 
+    cd $BINTARGET/; ln -s paraprof jracy; cd ${tauroot}; 
+fi
+
+
+cp ${tauroot}/tools/src/paraprof/bin/$paraprofjar $JARTARGET
+cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar $JARTARGET
+cp ${tauroot}/tools/src/perfexplorer/perfexplorer.jar $JARTARGET
+cp ${tauroot}/src/Profile/TAU.jar $JARTARGET
+cp ${tauroot}/tools/src/perfexplorer/perfexplorer-1.4.jar $JARTARGET
+cp ${tauroot}/tools/src/vis/bin/vis.jar $JARTARGET
+cp ${tauroot}/tools/src/common/bin/tau-common.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/jargs.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/batik-combined.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/jfreechart-0.9.21.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/jcommon-0.9.6.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/jgraph.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/jgraph-1.3.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/jython.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/jogl/jogl.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/derby.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/xerces.jar $JARTARGET
+cp ${tauroot}/tools/src/common/resources/tau16x16.gif $JARTARGET
+
+echo "TAU: installed ParaProf, PerfDMF, PerfExplorer and supporting jars in:"
+echo "$JARTARGET"
+
+case $machine in
+    
+    apple)
+	gunzip -c tools/src/contrib/jogl/apple/libjogl.jnilib.gz > $JARTARGET/libjogl.jnilib
+	gunzip -c tools/src/contrib/jogl/apple/libjogl_awt.jnilib.gz > $JARTARGET/libjogl_awt.jnilib
+	gunzip -c tools/src/contrib/jogl/apple/libjogl_cg.jnilib.gz > $JARTARGET/libjogl_cg.jnilib
+	;;
+    
+    i386_linux)
+	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl.so.gz > $JARTARGET/libjogl.so
+	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
+	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
+	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+	;;
+    
+    x86_64)
+	gunzip -c tools/src/contrib/jogl/x86_64/libjogl.so.gz > $JARTARGET/libjogl.so
+	gunzip -c tools/src/contrib/jogl/x86_64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
+	gunzip -c tools/src/contrib/jogl/x86_64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+	gunzip -c tools/src/contrib/jogl/x86_64/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
+	;;
+
+    ia64)
+	gunzip -c tools/src/contrib/jogl/ia64/libjogl.so.gz > $JARTARGET/libjogl.so
+	gunzip -c tools/src/contrib/jogl/ia64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
+	gunzip -c tools/src/contrib/jogl/ia64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+	;;
+
+    solaris2)
+	gunzip -c tools/src/contrib/jogl/solaris2/libjogl.so.gz > $JARTARGET/libjogl.so
+	gunzip -c tools/src/contrib/jogl/solaris2/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
+	gunzip -c tools/src/contrib/jogl/solaris2/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+	;;
+
+    solaris2-64)
+	gunzip -c tools/src/contrib/jogl/solaris2-64/libjogl.so.gz > $JARTARGET/libjogl.so
+	gunzip -c tools/src/contrib/jogl/solaris2-64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
+	gunzip -c tools/src/contrib/jogl/solaris2-64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+	;;
+
+    sun386i)
+	gunzip -c tools/src/contrib/jogl/sun386i/libjogl.so.gz > $JARTARGET/libjogl.so
+	gunzip -c tools/src/contrib/jogl/sun386i/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
+	gunzip -c tools/src/contrib/jogl/sun386i/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+	;;
+
+    sunx86_64)
+	gunzip -c tools/src/contrib/jogl/sunx86_64/libjogl.so.gz > $JARTARGET/libjogl.so
+	gunzip -c tools/src/contrib/jogl/sunx86_64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
+	gunzip -c tools/src/contrib/jogl/sunx86_64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+	;;
+    
+    *)
+	$echo "Platform does not support JOGL, no 3d displays will be available in ParaProf"
+	;;
+esac
+
+
 }
 
 make_directories () {
@@ -5156,66 +5276,6 @@ cp ${tauroot}/tools/src/tau_cc.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
 
 
-  # install paraprof
-cat ${tauroot}/tools/src/paraprof/bin/paraprof.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
-    -e 's,@OLDJDK@,'$oldjdk',' > $BINTARGET/paraprof
-chmod a+rx $BINTARGET/paraprof
-
-  # install ppscript
-cat ${tauroot}/tools/src/ppscript.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
-    -e 's,@OLDJDK@,'$oldjdk',' > $BINTARGET/ppscript
-chmod a+rx $BINTARGET/ppscript
-
-  # install portal utils
-cat ${tauroot}/tools/src/tau_portal/bin/perfdmfdb.py.skel | sed -e 's,@BINDIR@,'$BINTARGET',' > $BINTARGET/perfdmfdb.py
-cat ${tauroot}/tools/src/tau_portal/bin/portal.py.skel | sed -e 's,@BINDIR@,'$BINTARGET',' > $BINTARGET/portal.py
-cp ${tauroot}/tools/src/tau_portal/bin/tau_portal.py $BINTARGET
-chmod a+rx $BINTARGET/tau_portal.py $BINTARGET/portal.py $BINTARGET/perfdmfdb.py
-
-cat ${tauroot}/tools/src/perfexplorer/bin/perfexplorer.skel |
-sed -e 's,@TAUROOT@,'$targetdir',' \
-    -e 's,@TAUSHELL@,'$taushell',' \
-    -e 's,@TAUARCH@,'$architecture',' \
-    -e 's,@RROOT@,'$rroot',' \
-    -e 's,@ANALYSIS_ENGINE@,'weka',' \
-    -e 's,@SERVER_HOSTNAME@,'$serverhostname',' \
-    -e 's,@SERVER_OBJECT_PORT@,'$objectport',' \
-    -e 's,@SERVER_RMIREGISTRY_PORT@,'$registryport',' \
-    -e 's,@CONFIGFILE@,'$configfile',' \
-    > $BINTARGET/perfexplorer
-chmod a+rx $BINTARGET/perfexplorer
-
-
-if [ ! -f $BINTARGET/jracy ] ; then 
-    cd $BINTARGET/; ln -s paraprof jracy; cd ${tauroot}; 
-fi
-
-
-cp ${tauroot}/tools/src/paraprof/bin/$paraprofjar $JARTARGET
-cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar $JARTARGET
-cp ${tauroot}/tools/src/perfexplorer/perfexplorer.jar $JARTARGET
-cp ${tauroot}/src/Profile/TAU.jar $JARTARGET
-cp ${tauroot}/tools/src/perfexplorer/perfexplorer-1.4.jar $JARTARGET
-cp ${tauroot}/tools/src/vis/bin/vis.jar $JARTARGET
-cp ${tauroot}/tools/src/common/bin/tau-common.jar $JARTARGET
-cp ${tauroot}/tools/src/contrib/jargs.jar $JARTARGET
-cp ${tauroot}/tools/src/contrib/batik-combined.jar $JARTARGET
-cp ${tauroot}/tools/src/contrib/jfreechart-0.9.21.jar $JARTARGET
-cp ${tauroot}/tools/src/contrib/jcommon-0.9.6.jar $JARTARGET
-cp ${tauroot}/tools/src/contrib/jgraph.jar $JARTARGET
-cp ${tauroot}/tools/src/contrib/jgraph-1.3.jar $JARTARGET
-cp ${tauroot}/tools/src/contrib/jython.jar $JARTARGET
-cp ${tauroot}/tools/src/contrib/jogl/jogl.jar $JARTARGET
-cp ${tauroot}/tools/src/contrib/derby.jar $JARTARGET
-cp ${tauroot}/tools/src/contrib/xerces.jar $JARTARGET
-cp ${tauroot}/tools/src/common/resources/tau16x16.gif $JARTARGET
-
-echo "TAU: installed ParaProf, PerfDMF, PerfExplorer and supporting jars in:"
-echo "$JARTARGET"
-
-
 
 
 # Copy over tau_load.sh
@@ -5684,63 +5744,6 @@ fi
 # If the default gcc/g++ is not used, Modify the Makefiles...
 # Choose the c++ and cc compiler
 
-case $machine in
-    
-    apple)
-	gunzip -c tools/src/contrib/jogl/apple/libjogl.jnilib.gz > $tautoplevel/$architecture/lib/libjogl.jnilib
-	gunzip -c tools/src/contrib/jogl/apple/libjogl_awt.jnilib.gz > $tautoplevel/$architecture/lib/libjogl_awt.jnilib
-	gunzip -c tools/src/contrib/jogl/apple/libjogl_cg.jnilib.gz > $tautoplevel/$architecture/lib/libjogl_cg.jnilib
-	;;
-    
-    i386_linux)
-	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl.so.gz > $tautoplevel/$architecture/lib/libjogl.so
-	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_awt.so.gz > $tautoplevel/$architecture/lib/libjogl_awt.so
-	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_cg.so.gz > $tautoplevel/$architecture/lib/libjogl_cg.so
-	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_drihack.so.gz > $tautoplevel/$architecture/lib/libjogl_drihack.so
-	;;
-    
-    x86_64)
-	gunzip -c tools/src/contrib/jogl/x86_64/libjogl.so.gz > $tautoplevel/$architecture/lib/libjogl.so
-	gunzip -c tools/src/contrib/jogl/x86_64/libjogl_awt.so.gz > $tautoplevel/$architecture/lib/libjogl_awt.so
-	gunzip -c tools/src/contrib/jogl/x86_64/libjogl_drihack.so.gz > $tautoplevel/$architecture/lib/libjogl_drihack.so
-	gunzip -c tools/src/contrib/jogl/x86_64/libjogl_cg.so.gz > $tautoplevel/$architecture/lib/libjogl_cg.so
-	;;
-
-    ia64)
-	gunzip -c tools/src/contrib/jogl/ia64/libjogl.so.gz > $tautoplevel/$architecture/lib/libjogl.so
-	gunzip -c tools/src/contrib/jogl/ia64/libjogl_awt.so.gz > $tautoplevel/$architecture/lib/libjogl_awt.so
-	gunzip -c tools/src/contrib/jogl/ia64/libjogl_drihack.so.gz > $tautoplevel/$architecture/lib/libjogl_drihack.so
-	;;
-
-    solaris2)
-	gunzip -c tools/src/contrib/jogl/solaris2/libjogl.so.gz > $tautoplevel/$architecture/lib/libjogl.so
-	gunzip -c tools/src/contrib/jogl/solaris2/libjogl_awt.so.gz > $tautoplevel/$architecture/lib/libjogl_awt.so
-	gunzip -c tools/src/contrib/jogl/solaris2/libjogl_drihack.so.gz > $tautoplevel/$architecture/lib/libjogl_drihack.so
-	;;
-
-    solaris2-64)
-	gunzip -c tools/src/contrib/jogl/solaris2-64/libjogl.so.gz > $tautoplevel/$architecture/lib/libjogl.so
-	gunzip -c tools/src/contrib/jogl/solaris2-64/libjogl_awt.so.gz > $tautoplevel/$architecture/lib/libjogl_awt.so
-	gunzip -c tools/src/contrib/jogl/solaris2-64/libjogl_drihack.so.gz > $tautoplevel/$architecture/lib/libjogl_drihack.so
-	;;
-
-    sun386i)
-	gunzip -c tools/src/contrib/jogl/sun386i/libjogl.so.gz > $tautoplevel/$architecture/lib/libjogl.so
-	gunzip -c tools/src/contrib/jogl/sun386i/libjogl_awt.so.gz > $tautoplevel/$architecture/lib/libjogl_awt.so
-	gunzip -c tools/src/contrib/jogl/sun386i/libjogl_drihack.so.gz > $tautoplevel/$architecture/lib/libjogl_drihack.so
-	;;
-
-    sunx86_64)
-	gunzip -c tools/src/contrib/jogl/sunx86_64/libjogl.so.gz > $tautoplevel/$architecture/lib/libjogl.so
-	gunzip -c tools/src/contrib/jogl/sunx86_64/libjogl_awt.so.gz > $tautoplevel/$architecture/lib/libjogl_awt.so
-	gunzip -c tools/src/contrib/jogl/sunx86_64/libjogl_drihack.so.gz > $tautoplevel/$architecture/lib/libjogl_drihack.so
-	;;
-
-    
-    *)
-	$echo "Platform does not support JOGL, no 3d displays will be available in ParaProf"
-	;;
-esac
 
 
 
