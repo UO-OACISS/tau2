@@ -551,15 +551,15 @@ def usage():
 def cleanup():
     chdir(TEST_ROOT)
     system("find . -name \"build-*\" | xargs rm -rf")
-    system("find . -name \"profile.*\" | xargs rm")
-    system("find . -name \"*.trc\" | xargs rm")
-    system("find . -name \"*.edf\" | xargs rm")
-    system("find . -name \"*.pdb\" | xargs rm")
-    system("find . -name \"*.elg\" | xargs rm")
-    system("find . -name \"core.*\" | xargs rm")
-    system("find . -name \"*.o\" | xargs rm")
-    system("find . -name \"*.inst.*\" | xargs rm")
-    system("find . -name \"simple\" | xargs rm")
+    system("find . -name \"profile.*\" | xargs rm -f")
+    system("find . -name \"*.trc\" | xargs rm -f")
+    system("find . -name \"*.edf\" | xargs rm -f")
+    system("find . -name \"*.pdb\" | xargs rm -f")
+    system("find . -name \"*.elg\" | xargs rm -f")
+    system("find . -name \"core.*\" | xargs rm -f")
+    system("find . -name \"*.o\" | xargs rm -f")
+    system("find . -name \"*.inst.*\" | xargs rm -f")
+    system("find . -name \"simple\" | xargs rm -f")
 
 
 
