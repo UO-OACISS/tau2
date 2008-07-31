@@ -14,7 +14,7 @@ import java.util.List;
   * Implementation of the DataNormalizer interface for Weka data.
   * TODO - make this class immutable?
   *
-  * <P>CVS $Id: WekaDataNormalizer.java,v 1.2 2007/01/23 22:57:02 khuck Exp $</P>
+  * <P>CVS $Id: WekaDataNormalizer.java,v 1.3 2008/07/31 18:43:48 khuck Exp $</P>
   * @author khuck
   * @version 0.2
   * @since   0.2
@@ -56,7 +56,7 @@ public class WekaDataNormalizer implements DataNormalizer {
 
         // create the new data
         _normalizedData =
-                new WekaRawData(name, eventNames, vectors, dimensions);
+                new WekaRawData(name, eventNames, vectors, dimensions, null);
 
         double tmp = 0;
         for (int v = 0; v < vectors; v++) {

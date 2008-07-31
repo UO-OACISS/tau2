@@ -178,7 +178,7 @@ public class DataUtils {
 		PerfExplorerOutput.println("numEvents: " + numEvents);
 		PerfExplorerOutput.println(" Done!");
 		*/
-		rawData = factory.createRawData("Cluster Test", eventIDs, numTotalThreads, numEvents);
+		rawData = factory.createRawData("Cluster Test", eventIDs, numTotalThreads, numEvents, null);
 		ResultSet results = null;
 		int currentFunction = 0;
 		int functionIndex = -1;

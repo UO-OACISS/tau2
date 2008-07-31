@@ -120,7 +120,7 @@ public class JavaHierarchicalCluster implements HierarchicalCluster {
 		attrs.add("x");
 		attrs.add("y");
 		attrs.add("z");
-		RawDataInterface data = new WekaRawData("test", attrs, vectors, dimensions);
+		RawDataInterface data = new WekaRawData("test", attrs, vectors, dimensions, null);
 		for (int i = 0 ; i < vectors ; i++) {
 			for (int j = 0 ; j < dimensions ; j++) {
 				data.addValue(i, j, Math.random());

@@ -21,7 +21,7 @@ import java.io.Serializable;
 /**
  * Implementation of the RawData interface for Weka data.
  *
- * <P>CVS $Id: WekaRawData.java,v 1.9 2007/01/23 22:57:02 khuck Exp $</P>
+ * <P>CVS $Id: WekaRawData.java,v 1.10 2008/07/31 18:43:48 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -42,7 +42,7 @@ public class WekaRawData implements RawDataInterface, Serializable {
      * @param vectors
      * @param dimensions
      */
-	WekaRawData (String name, List attributes, int vectors, int dimensions) {
+	WekaRawData (String name, List attributes, int vectors, int dimensions, List<String> classAttributes) {
 		this.vectors = vectors;
 		this.dimensions = dimensions;
 		FastVector fastAttributes = new FastVector(attributes.size());
@@ -50,16 +50,36 @@ public class WekaRawData implements RawDataInterface, Serializable {
 			String attr = (String) attributes.get(i);
 			fastAttributes.addElement(new Attribute(attr));
 		}
-		instances = new Instances(name, fastAttributes, vectors);
-		
-		for (int i = 0 ; i < vectors ; i++) {
-			double[] values = new double[dimensions];
-			for (int j = 0 ; j < dimensions ; j++) {
-				values[j] = 0.0;
+		if (classAttributes != null) {
+			String attr = "class";
+			FastVector vect = new FastVector(classAttributes.size());
+			for (String tmpClass : classAttributes) {
+				vect.addElement(tmpClass);
 			}
-			instances.add(new Instance(1.0, values));
+			Attribute tmp = new Attribute(attr, vect);
+			fastAttributes.addElement(tmp);
 		}
 		
+		instances = new Instances(name, fastAttributes, vectors);
+		
+		if (classAttributes != null) {
+			for (int i = 0 ; i < vectors ; i++) {
+				Instance tmp = new Instance(fastAttributes.size());
+				tmp.setDataset(instances);
+				for (int j = 0 ; j < dimensions ; j++) {
+					tmp.setValue(j, 0.0);
+				}
+				instances.add(tmp);
+			}
+		} else {
+			for (int i = 0 ; i < vectors ; i++) {
+				double[] values = new double[dimensions];
+				for (int j = 0 ; j < dimensions ; j++) {
+					values[j] = 0.0;
+				}
+				instances.add(new Instance(1.0, values));
+			}
+		}
 	}
 	
     /**
@@ -261,5 +281,10 @@ public class WekaRawData implements RawDataInterface, Serializable {
 	public String getMainEventName() {
 		String name = new String("");
 		return name;
+	}
+
+	public void addValue(int vectorIndex, int dimensionIndex, String value) {
+		Instance i = instances.instance(vectorIndex);
+		i.setValue(dimensionIndex, value);
 	}
 }

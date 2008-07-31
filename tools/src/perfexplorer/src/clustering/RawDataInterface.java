@@ -12,7 +12,7 @@ import java.util.List;
  * cluster output data, or PCA output data.
  * 
  * @author khuck
- * <P>CVS $Id: RawDataInterface.java,v 1.6 2007/01/04 21:20:01 khuck Exp $</P>
+ * <P>CVS $Id: RawDataInterface.java,v 1.7 2008/07/31 18:43:48 khuck Exp $</P>
  * @version 0.1
  * @since 0.1
  */
@@ -142,4 +142,12 @@ public interface RawDataInterface {
      * @return
      */
 	public String getMainEventName();
+
+	/**
+	 * Sets an attribute in the instance, where the attribute is a string.
+	 * @param thread
+	 * @param i
+	 * @param name
+	 */
+	public void addValue(int vectorIndex, int dimensionIndex, String value);
 }

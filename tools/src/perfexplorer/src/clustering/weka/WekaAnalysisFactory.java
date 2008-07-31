@@ -21,7 +21,7 @@ import java.util.List;
  * should never be directly created - use the static method in the
  * AnalysisFactory class.
  *
- * <P>CVS $Id: WekaAnalysisFactory.java,v 1.6 2008/07/31 05:34:55 khuck Exp $</P>
+ * <P>CVS $Id: WekaAnalysisFactory.java,v 1.7 2008/07/31 18:43:48 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -33,8 +33,8 @@ public class WekaAnalysisFactory extends AnalysisFactory {
 	 * @see clustering.AnalysisFactory#createRawData(java.lang.String, java.util.List, int, int)
 	 */
 	public RawDataInterface createRawData(String name, List attributes,
-			int vectors, int dimensions) {
-		return new WekaRawData(name, attributes, vectors, dimensions);
+			int vectors, int dimensions, List<String> classAttributes) {
+		return new WekaRawData(name, attributes, vectors, dimensions, classAttributes);
 	}
 
 	/* (non-Javadoc)

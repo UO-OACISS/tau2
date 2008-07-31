@@ -3,6 +3,8 @@
  */
 package clustering;
 
+import java.util.List;
+
 /**
  * @author khuck
  *
@@ -21,7 +23,7 @@ public interface ClassifierInterface {
 	 * @param inputData
 	 * @return
 	 */
-	Object classifyInstance(RawDataInterface inputData);
+	List<String> classifyInstances(RawDataInterface inputData);
 
 	/**
 	 * method for outputting the results of the classifier

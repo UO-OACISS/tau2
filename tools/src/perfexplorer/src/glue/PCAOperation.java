@@ -60,7 +60,7 @@ public class PCAOperation extends AbstractPerformanceOperation {
 
         for (PerformanceResult input : inputs) {
         	List<String> eventList = new ArrayList<String>(input.getEvents());
-        	RawDataInterface data = factory.createRawData("Cluster Test", eventList, input.getThreads().size(), eventList.size());
+        	RawDataInterface data = factory.createRawData("Cluster Test", eventList, input.getThreads().size(), eventList.size(), null);
     		for(Integer thread : input.getThreads()) {
             	int eventIndex = 0;
             	for (String event : eventList) {

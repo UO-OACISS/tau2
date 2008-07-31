@@ -21,7 +21,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * interface.  This class has all the member data fields for the plethora
  * of anticipated subclasses.
  * 
- * <P>CVS $Id: AbstractResult.java,v 1.8 2008/07/31 05:34:55 khuck Exp $</P>
+ * <P>CVS $Id: AbstractResult.java,v 1.9 2008/07/31 18:43:48 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0
@@ -64,6 +64,8 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 	
 	protected Trial trial = null;
 	protected Integer trialID = null;
+	
+	protected String name = null;
 	
 	public static List<Integer> getTypes() {
 		if (types == null) {
@@ -521,10 +523,6 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 		}
 	}
 	
-	public String toString() {
-		return this.getClass().getName();
-	}
-	
 	public String getTimeMetric() {
     	for (String metric : metrics) {
     		if (metric.toUpperCase().contains("TIME") && !metric.startsWith("("))
@@ -635,6 +633,33 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 
 	public void setTrial(Trial trial) {
 		this.trial = trial;
+	}
+
+	/**
+	 * @return the name
+	 */
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * @param name the name to set
+	 */
+	public void setName(String name) {
+		this.name = name;
+	}
+	
+	public String toString() {
+		StringBuffer buf = new StringBuffer();
+		
+		for (Integer thread : this.getThreads()) {
+			for (String event : this.getEvents()) {
+				for (String metric : this.getMetrics()) {
+					buf.append(thread + " : " + event + " : " + metric + " : " + this.getExclusive(thread, event, metric) + "\n");
+				}
+			}
+		}
+		return buf.toString();
 	}
 	
 }

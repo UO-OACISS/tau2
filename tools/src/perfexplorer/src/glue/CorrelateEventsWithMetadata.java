@@ -100,7 +100,7 @@ public class CorrelateEventsWithMetadata extends AbstractPerformanceOperation {
 						List<String> eventList = new ArrayList<String>();
 						eventList.add(event);
 						eventList.add(event2);
-						RawDataInterface data = factory.createRawData("Correlation Test", eventList, trialData.getThreads().size(), eventList.size());
+						RawDataInterface data = factory.createRawData("Correlation Test", eventList, trialData.getThreads().size(), eventList.size(), null);
 						for (Integer thread : trialData.getThreads()) {
 							// BE CAREFUL!  The first value is the predictor, and the second is the response.
 							// When working with metadata, be sure to correlate the PERFORMANCE with the METADATA!

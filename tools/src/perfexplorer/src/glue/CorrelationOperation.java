@@ -61,7 +61,7 @@ public class CorrelationOperation extends DefaultOperation {
 									List<String> eventList = new ArrayList<String>();
 									eventList.add(event);
 									eventList.add(event2);
-									RawDataInterface data = factory.createRawData("Correlation Test", eventList, input.getThreads().size(), eventList.size());
+									RawDataInterface data = factory.createRawData("Correlation Test", eventList, input.getThreads().size(), eventList.size(), null);
 									for (Integer thread : input.getThreads()) {
 										y1[thread.intValue()] = input.getDataPoint(thread, event, metric, type);
 										y2[thread.intValue()] = input.getDataPoint(thread, event2, metric2, type2);

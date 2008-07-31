@@ -17,7 +17,7 @@ import java.util.List;
   * method to construct the desired factory.  All other methods are implemented
   * by the specific factory classes.
   *
-  * <P>CVS $Id: AnalysisFactory.java,v 1.7 2008/07/31 05:34:55 khuck Exp $</P>
+  * <P>CVS $Id: AnalysisFactory.java,v 1.8 2008/07/31 18:43:48 khuck Exp $</P>
   * @author  Kevin Huck
   * @version 0.1
   * @since   0.1
@@ -70,10 +70,11 @@ public abstract class AnalysisFactory {
      * @param vectors The number of rows in the data (for initialization)
      * @param dimensions The number of dimensions to be stored 
      *          (for initialization)
+     * @param classAttributes TODO
      * @return 
      */
     public abstract RawDataInterface createRawData(String name, 
-        List attributes, int vectors, int dimensions);
+        List attributes, int vectors, int dimensions, List<String> classAttributes);
     
     /**
      * Method to create the KMeansClusterInterface.

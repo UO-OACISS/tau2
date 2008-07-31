@@ -37,11 +37,18 @@ public class WekaNaiveBayesClassifier implements ClassifierInterface {
 	/* (non-Javadoc)
 	 * @see clustering.ClassifierInterface#classifyInstance(clustering.RawDataInterface)
 	 */
-	public Object classifyInstance(RawDataInterface inputData) {
-		Object result = null;
+	public List<String> classifyInstances(RawDataInterface inputData) {
+		List<String> result = new ArrayList<String>();
 		Instances tmp = (Instances)inputData.getData();
 		try {
-			output = classifier.distributionForInstance(tmp.firstInstance());
+			// for each instance passed in...
+			for (int i = 0 ; i < tmp.numInstances(); i++) {
+				Instance current = tmp.instance(i);
+				// ...classify the instance...
+				output = classifier.distributionForInstance(current);
+				// ...the class is the last attribute.
+				result.add(Double.toString(output[output.length-1]));
+			}
 		} catch (Exception e) {
 			System.err.println("Error performing classification");
 			System.err.println(e.getMessage());

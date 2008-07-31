@@ -13,7 +13,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * should support.  All operations should be refered to through
  * this interface, whenever possible.
  * 
- * <P>CVS $Id: PerformanceResult.java,v 1.4 2008/07/29 23:40:19 khuck Exp $</P>
+ * <P>CVS $Id: PerformanceResult.java,v 1.5 2008/07/31 18:43:48 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0
@@ -316,4 +316,16 @@ public interface PerformanceResult {
 	 * @return the trial's ID
 	 */
 	public Integer getTrialID();
+	
+	/**
+	 * Get the name for this input.
+	 * @return
+	 */
+	public String getName();
+	
+	/**
+	 * Set the name for this input.
+	 *
+	 */
+	public void setName(String name);
 }

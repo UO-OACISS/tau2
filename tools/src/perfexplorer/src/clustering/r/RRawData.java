@@ -21,7 +21,7 @@ import java.io.Serializable;
  * performance data.
  * The row and column headers are stored in this class, as well.
  *
- * <P>CVS $Id: RRawData.java,v 1.7 2007/01/23 22:57:01 khuck Exp $</P>
+ * <P>CVS $Id: RRawData.java,v 1.8 2008/07/31 18:43:48 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -297,5 +297,10 @@ public class RRawData implements RawDataInterface, Serializable {
 	 */
 	public String getMainEventName() {
 		return new String(eventNames[this.mainEvent] + "(inclusive)");
+	}
+
+	public void addValue(int vectorIndex, int dimensionIndex, String value) {
+		// TODO Auto-generated method stub
+		System.err.println("addValue() not implemented for string attributes.");
 	}
 }

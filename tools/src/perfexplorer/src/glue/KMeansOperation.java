@@ -70,7 +70,7 @@ public class KMeansOperation extends AbstractPerformanceOperation {
         	List<String> eventList = new ArrayList<String>(input.getEvents());
         	System.out.println("instances: " + input.getThreads().size());
         	System.out.println("dimensions: " + input.getEvents().size());
-        	RawDataInterface data = factory.createRawData("Cluster Test", eventList, input.getThreads().size(), eventList.size());
+        	RawDataInterface data = factory.createRawData("Cluster Test", eventList, input.getThreads().size(), eventList.size(), null);
     		for(Integer thread : input.getThreads()) {
             	int eventIndex = 0;
             	for (String event : eventList) {

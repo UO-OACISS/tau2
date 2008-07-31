@@ -23,7 +23,7 @@ import weka.attributeSelection.PrincipalComponents;
  * TODO - make this class immutable?
  * 
  * @author khuck
- * <P>CVS $Id: WekaPrincipalComponents.java,v 1.7 2008/03/05 00:25:53 khuck Exp $</P>
+ * <P>CVS $Id: WekaPrincipalComponents.java,v 1.8 2008/07/31 18:43:48 khuck Exp $</P>
  * @version 0.1
  * @since   0.1
  */
@@ -100,7 +100,7 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 			}
 	
 			transformed = factory.createRawData("Scatterplot Data",
-				names, 2,inputData.numVectors());
+				names, 2,inputData.numVectors(), null);
 			for (int i = 0 ; i < inputData.numVectors() ; i++) {
 				float[] values = cubeData.getValues(i);
 				for (int j = 0 ; j < maxComponents ; j++) {
