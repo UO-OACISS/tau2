@@ -37,11 +37,11 @@ public class Utilities {
             	//System.out.println("Found app");
             	List<Experiment> exps = server.getExperimentList(app.getID());
             	for (Experiment exp : exps) {
-            		if (exp.getName().equals(eName)) {
+            		if (exp.getName().trim().equals(eName.trim())) {
                     	//System.out.println("Found exp");
             			List<Trial> trials = server.getTrialList(exp.getID());
             			for (Trial trial : trials) {
-            				if (trial.getName().equals(tName)) {
+            				if (trial.getName().trim().equals(tName.trim())) {
             					return trial;
             				}
             			}

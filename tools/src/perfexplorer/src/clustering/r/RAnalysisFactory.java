@@ -5,6 +5,7 @@
 package clustering.r;
 
 import clustering.AnalysisFactory;
+import clustering.ClassifierInterface;
 import clustering.KMeansClusterInterface;
 import clustering.LinearRegressionInterface;
 import clustering.PrincipalComponentsAnalysisInterface;
@@ -20,7 +21,7 @@ import java.util.List;
  * should never be directly created - use the static method in the
  * AnalysisFactory class.
  *
- * <P>CVS $Id: RAnalysisFactory.java,v 1.7 2008/03/05 00:25:52 khuck Exp $</P>
+ * <P>CVS $Id: RAnalysisFactory.java,v 1.8 2008/07/31 05:34:55 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -97,5 +98,13 @@ public class RAnalysisFactory extends AnalysisFactory {
     public Utilities getUtilities () {
         return new RUtilities();
     }
+
+	@Override
+	public ClassifierInterface createNaiveBayesClassifier(
+			RawDataInterface inputData) {
+		// TODO Auto-generated method stub
+		System.out.println("this Naive Bayes Classification for R is UNIMPLEMENTED");
+		return null;
+	}
 
 }

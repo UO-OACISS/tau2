@@ -5,6 +5,7 @@
 package clustering.weka;
 
 import clustering.AnalysisFactory;
+import clustering.ClassifierInterface;
 import clustering.KMeansClusterInterface;
 import clustering.LinearRegressionInterface;
 import clustering.PrincipalComponentsAnalysisInterface;
@@ -20,7 +21,7 @@ import java.util.List;
  * should never be directly created - use the static method in the
  * AnalysisFactory class.
  *
- * <P>CVS $Id: WekaAnalysisFactory.java,v 1.5 2008/03/05 00:25:53 khuck Exp $</P>
+ * <P>CVS $Id: WekaAnalysisFactory.java,v 1.6 2008/07/31 05:34:55 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -77,5 +78,11 @@ public class WekaAnalysisFactory extends AnalysisFactory {
 
 	public Utilities getUtilities() {
 		return new WekaUtilities();
+	}
+
+	@Override
+	public ClassifierInterface createNaiveBayesClassifier(
+			RawDataInterface inputData) {
+		return new WekaNaiveBayesClassifier(inputData);
 	}
 }

@@ -17,7 +17,7 @@ import java.util.List;
   * method to construct the desired factory.  All other methods are implemented
   * by the specific factory classes.
   *
-  * <P>CVS $Id: AnalysisFactory.java,v 1.6 2008/03/05 00:25:52 khuck Exp $</P>
+  * <P>CVS $Id: AnalysisFactory.java,v 1.7 2008/07/31 05:34:55 khuck Exp $</P>
   * @author  Kevin Huck
   * @version 0.1
   * @since   0.1
@@ -122,6 +122,15 @@ public abstract class AnalysisFactory {
      * Method for shutting down analysis engines, if necessary.
      */
     public abstract void closeFactory();
+    
+    /**
+     * Method for building Naive Bayes classifier
+     * 
+     * @param inputData
+     * @return
+     */
+    public abstract ClassifierInterface createNaiveBayesClassifier
+    	(RawDataInterface inputData);
 
 
 	public abstract Utilities getUtilities();

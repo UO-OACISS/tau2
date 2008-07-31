@@ -21,7 +21,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * interface.  This class has all the member data fields for the plethora
  * of anticipated subclasses.
  * 
- * <P>CVS $Id: AbstractResult.java,v 1.7 2008/07/29 23:40:18 khuck Exp $</P>
+ * <P>CVS $Id: AbstractResult.java,v 1.8 2008/07/31 05:34:55 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0
@@ -168,19 +168,13 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 		if (!inclusiveData.get(thread).containsKey(event)) {
 			inclusiveData.get(thread).put(event, new HashMap<String, Double>());
 		}
-		inclusiveData.get(thread).get(event).put(metric, value);
-		if (value > mainInclusive && !event.contains(" => ") && !event.startsWith(".TAU ") && (mainMetric == null || mainMetric.equals(metric))) {
-//			if (this instanceof MeanResult && mainEvent != null) {
-//				System.out.println("Old: " + mainEvent + ":" + metric + " " + mainInclusive);
-//			}
-			mainInclusive = value;
-			mainEvent = event;
-			mainMetric = metric;
-//			if (this instanceof MeanResult) {
-//				System.out.println("New: " + mainEvent + ":" + metric + " " + mainInclusive);
-//			}
-//		} else if (this instanceof MeanResult && event.equals("main")) {
-//			System.out.println("MAIN: " + event + ":" + metric + " " + value);
+		if (thread == 0) {
+			inclusiveData.get(thread).get(event).put(metric, value);
+			if (value > mainInclusive && !event.contains(" => ") && !event.startsWith(".TAU ") && (mainMetric == null || mainMetric.equals(metric))) {
+				mainInclusive = value;
+				mainEvent = event;
+				mainMetric = metric;
+			}
 		}
 			
 
