@@ -5404,54 +5404,17 @@ fi
 # TAU Portable profiling package just needs racy
 TAUTOOLS="taud racy"
 
-if [ $tauprefix = unknown ]
-then 
 echo " "
 echo "TAU: installing tools in ${tauroot}/${architecture}/bin"
-for tool in $TAUTOOLS
-do
-#  $echo "TAU: installing ${tool}... ${nnl}"
-  rm -f ${tauroot}/${architecture}/bin/$tool
-  cat ${tauroot}/tools/tool.skel |
-  sed -e 's,@TAUROOT@,'$tauprefix',' -e 's,@ARCH@,'$tauarch',' -e 's,@TOOL@,'$tool',' \
-      -e 's,@REMSH@,'$remotesh',' -e 's,@TKMANPATH@,'$tk_path',' \
-      -e 's,@WISHNAME@,'$wishname',' \
-      > ${tauroot}/${architecture}/bin/${tool}
-  chmod a+rx ${tauroot}/${architecture}/bin/${tool}
-#  echo "done"
+for tool in $TAUTOOLS ;  do
+    rm -f ${tauroot}/${architecture}/bin/$tool
+    cat ${tauroot}/tools/tool.skel |
+    sed -e 's,@TAUROOT@,'$targetdir',' -e 's,@ARCH@,'$architecture',' -e 's,@TOOL@,'$tool',' \
+	-e 's,@REMSH@,'$remotesh',' -e 's,@TKMANPATH@,'$tk_path',' \
+	-e 's,@WISHNAME@,'$wishname',' \
+	> ${targetdir}/${architecture}/bin/${tool}
+    chmod a+rx ${targetdir}/${architecture}/bin/${tool}
 done
-else 
-echo " "
-echo "TAU: installing tools in ${tauprefix}/${architecture}/bin"
-#Make installation directories
-
-
-if [ ! -d ${tauprefix} ]
-  then
-    echo "making directory $tauprefix "
-    mkdir -p ${tauprefix}
-  fi
-if [ ! -d ${tauprefix}/${architecture} ]
-  then
-    echo "making directory $tauprefix/$architecture lib bin"
-    mkdir ${tauprefix}/${architecture}
-    mkdir ${tauprefix}/${architecture}/lib
-    mkdir ${tauprefix}/${architecture}/bin
-  fi
-
-for tool in $TAUTOOLS
-do
-  $echo "TAU: installing ${tool}... ${nnl}"
-  rm -f ${tauprefix}/${architecture}/bin/$tool
-  cat ${tauroot}/tools/tool.skel |
-  sed -e 's,@TAUROOT@,'$tauprefix',' -e 's,@ARCH@,'$tauarch',' -e 's,@TOOL@,'$tool',' \
-      -e 's,@REMSH@,'$remotesh',' -e 's,@TKMANPATH@,'$tk_path',' \
-      -e 's,@WISHNAME@,'$wishname',' \
-      > ${tauprefix}/${architecture}/bin/${tool}
-  chmod a+rx ${tauprefix}/${architecture}/bin/${tool}
-  echo "done"
-done
-fi
 
 
 if [ $use_pcxx = yes ]
