@@ -5202,20 +5202,6 @@ if [ $sicortex = yes ] ; then
 fi
 
 
-#############################################################################
-# Set up TAU-specific configuration options
-
-# -- first, make sure the display is set - wish won't work otherwise
-#if ( xrdb -query ) 1>/dev/null 2>&1
-#  then
-#    echo "The display is okay."
-#  else
-#    echo "ERROR: You do not have permission to use the display ${DISPLAY}."
-#    echo "       Make sure the DISPLAY environment variable is set correctly."
-#    echo "       xrdb fails. If DISPLAY is ok, try "
-#    echo "       % unsetenv LD_LIBRARY_PATH "
-##    exit
-#fi
 
 configure_java
 
@@ -5376,81 +5362,10 @@ echo "TAU: installed TauIL and supporting jars in ${targetdir}/${architecture}/l
 cp ${tauroot}/tools/src/tau_throttle.sh ${targetdir}/${architecture}/bin
 echo "TAU: installed tau_throttle script"
 
-# -- determine Tcl/Tk version
-#cat << EOF > /tmp/tau$$
-#
-#  wm withdraw .
-#  puts [info tclversion]/\$tk_version
-#  if { ([info tclversion] >= 7.4) && (\$tk_version >= 4.0) } {
-#    exit 0
-#  } else {
-#    exit 1
-#  }
-	
-#EOF
 
-#if tversion=`( wish8.3 -f /tmp/tau$$ ) 2>/dev/null`
-#then
-#  wishname=wish8.3
-#  echo "Found Tcl/Tk wish $tversion"
-#else
-#  if tversion=`( wish8.2 -f /tmp/tau$$ ) 2>/dev/null`
-#  then
-#    wishname=wish8.2
-#    echo "Found Tcl/Tk wish $tversion"
-#  else
-#    if tversion=`( wish8.0 -f /tmp/tau$$ ) 2>/dev/null`
-#    then
-#      wishname=wish8.0
-#      echo "Found Tcl/Tk wish $tversion"
-#    else
-#      if tversion=`( wish -f /tmp/tau$$ ) 2>/dev/null`
-#      then
-#        wishname=wish
-#        echo "Found Tcl/Tk wish $tversion"
-#      else
-#        echo "ERROR: No working wish found - need Tcl 7.4/Tk 4.0 or higher for TAU"
-#        wishname=wish
-#        if tversion=`( $wishname -f /tmp/tau$$ ) 2>/dev/null`
-#        then
-#          echo "Found Tcl/Tk wish $tversion"
-#        else
-#          echo "Using $wishname as the wish interpreter in racy"
-#          #rm /tmp/tau$$
-#          #exit
-#        fi    
-#      fi
-#    fi
-#  fi
-#fi
 wishname=wish
 
-#rm /tmp/tau$$
-
-#echo "Using wish command: $wishname"
-#echo " "
-
-# We do not need any tkman for RACY. 
-# -- find out where tkman is installed
-#echo " "
-#echo "The TAU editor requires the manual page viewer, TkMan 1.7"  
-#echo "(compiled w/ tk4.0-) to be installed."
-#echo " "
 tk_path="/usr/local/bin/tkman"
-#if tk_path=`( which tkman ) 2>/dev/null`
-#then
-#  echo "Found tkman in $tk_path"
-#else 
-#  $echo "Please enter the absolute path/file name for the"
-#  $echo "tkman executable [/usr/local/bin/tkman]:"
-#  $echo "? ${nnl}"
-#  read tk_path
-#fi
-#if [ "x$tk_path" = "x" ]
-#  then
-#    tk_path="/usr/local/bin/tkman"
-#fi
-#echo "tkman path set to: $tk_path"
 
 # -- set name of remote shell command
 if [ $machine = "hp9000s700" -o $machine = "hp9000s800" ]
