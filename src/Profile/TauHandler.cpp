@@ -28,11 +28,11 @@
 #include <Profile/Profiler.h>
 
 #if (defined(__QK_USER__) || defined(__LIBCATAMOUNT__ ))
-#ifndef TAU_CATAMOUNT
 #define TAU_CATAMOUNT 
-#endif /* TAU_CATAMOUNT */
-#include <catamount/catmalloc.h>
 #endif /* __QK_USER__ || __LIBCATAMOUNT__ */
+#ifdef TAU_CATAMOUNT
+#include <catamount/catmalloc.h>
+#endif /* TAU_CATAMOUNT */
 
 /* Which platforms support mallinfo? */
 #ifndef TAU_HASMALLINFO
@@ -379,9 +379,9 @@ void TauTrackMuseEvents(void)
 }
   
 /***************************************************************************
- * $RCSfile: TauHandler.cpp,v $   $Author: sameer $
- * $Revision: 1.16 $   $Date: 2007/01/10 18:24:23 $
- * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.16 2007/01/10 18:24:23 sameer Exp $ 
+ * $RCSfile: TauHandler.cpp,v $   $Author: amorris $
+ * $Revision: 1.17 $   $Date: 2008/07/31 23:49:53 $
+ * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.17 2008/07/31 23:49:53 amorris Exp $ 
  ***************************************************************************/
 
 	
