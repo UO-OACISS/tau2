@@ -1936,27 +1936,44 @@ case $machine in
 
     xt3)
     catamount=yes
-    if [ $cxx_compiler = default ]
-    then
-      cxx_compiler=CC
-      c_compiler=cc
-      if [ $fortran_compiler = no ]
-      then
-        fortran_compiler=pgi
-      fi
+    if [ $cxx_compiler = default ] ; then
+	cxx_compiler=CC
+	c_compiler=cc
+	default_fortran=pgi
+	if [ "x$PE_ENV" = xPGI ] ; then
+	    tauoptions="${tauoptions}-pgi"
+	    default_fortran=pgi
+	elif [ "x$PE_ENV" = xGNU ] ; then
+	    tauoptions="${tauoptions}-gnu"
+	    default_fortran=gnu
+	elif [ "x$PE_ENV" = xPATHSCALE ] ; then
+	    tauoptions="${tauoptions}-pathscale"
+	    default_fortran=pathscale
+	fi
+	if [ $fortran_compiler = no ] ; then
+	    fortran_compiler=$default_fortran
+	fi
     fi
     ;;
 
     craycnl)
-    if [ $cxx_compiler = default ]
-    then
-      cxx_compiler=CC
-      c_compiler=cc
-      if [ $fortran_compiler = no ]
-      then
-        fortran_compiler=pgi
-      fi
-      catamount=no
+    if [ $cxx_compiler = default ] ; then
+	cxx_compiler=CC
+	c_compiler=cc
+	default_fortran=pgi
+	if [ "x$PE_ENV" = xPGI ] ; then
+	    tauoptions="${tauoptions}-pgi"
+	    default_fortran=pgi
+	elif [ "x$PE_ENV" = xGNU ] ; then
+	    tauoptions="${tauoptions}-gnu"
+	    default_fortran=gfortran
+	elif [ "x$PE_ENV" = xPATHSCALE ] ; then
+	    tauoptions="${tauoptions}-pathscale"
+	    default_fortran=pathscale
+	fi
+	if [ $fortran_compiler = no ] ; then
+	    fortran_compiler=$default_fortran
+	fi
     fi
     ;;
    hitachi)
