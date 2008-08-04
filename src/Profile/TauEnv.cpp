@@ -20,7 +20,12 @@
 
 #include <stdlib.h>
 #include <string.h>
+#ifndef TAU_WINDOWS
 #include <strings.h>
+#else
+#define strcasecmp(X,Y)  stricmp(X,Y)
+#define unsetenv(X)
+#endif
 #include <ctype.h>
 #include <stdio.h>
 #include <stdarg.h>

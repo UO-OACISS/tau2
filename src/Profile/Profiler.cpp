@@ -38,6 +38,14 @@
 typedef __int64 x_int64;
 typedef unsigned __int64 x_uint64;
 double TauWindowsUsecD(void);
+#include <io.h>
+#include <direct.h> /* for getcwd */
+#define S_IRUSR 0
+#define S_IWUSR 0
+#define S_IRGRP 0
+#define S_IWGRP 0
+#define S_IROTH 0
+#define S_IWOTH 0
 #else
 typedef long long x_int64;
 typedef unsigned long long x_uint64;
@@ -1824,7 +1832,7 @@ bool Profiler::createDirectories() {
 }
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: sameer $
- * $Revision: 1.188 $   $Date: 2008/07/23 15:16:50 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.188 2008/07/23 15:16:50 sameer Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: amorris $
+ * $Revision: 1.189 $   $Date: 2008/08/04 23:27:32 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.189 2008/08/04 23:27:32 amorris Exp $ 
  ***************************************************************************/
