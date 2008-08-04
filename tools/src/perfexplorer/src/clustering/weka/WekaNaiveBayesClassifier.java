@@ -6,6 +6,7 @@ package clustering.weka;
 import java.util.ArrayList;
 import java.util.List;
 
+import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.core.Instance;
@@ -14,24 +15,27 @@ import clustering.ClassifierInterface;
 import clustering.RawDataInterface;
 
 /**
+ * This class is an implementation of the ClassifierInterface, and is also 
+ * a base implementation for all classifiers.  Any classifer for the clustering.weka
+ * package should extend this class.
+ * 
  * @author khuck
  *
  */
 public class WekaNaiveBayesClassifier implements ClassifierInterface {
 	
 	private Instances trainingData = null;
-	private NaiveBayes classifier = null;
-	private double[] output = null;
+	private Classifier classifier = null;
 	
 	/**
 	 * 
 	 */
 	protected WekaNaiveBayesClassifier(RawDataInterface inputData) {
-		this.classifier = new NaiveBayes();
 		this.trainingData = (Instances) inputData.getData();
 		// the class attribute is the last attribute.
 		this.trainingData.setClassIndex(this.trainingData.numAttributes() - 1);
-
+		// this is equivalent?
+		this.trainingData.setClass(trainingData.attribute(this.trainingData.numAttributes() - 1));
 	}
 
 	/* (non-Javadoc)
@@ -40,14 +44,16 @@ public class WekaNaiveBayesClassifier implements ClassifierInterface {
 	public List<String> classifyInstances(RawDataInterface inputData) {
 		List<String> result = new ArrayList<String>();
 		Instances tmp = (Instances)inputData.getData();
+		tmp.setClassIndex(this.trainingData.numAttributes() - 1);
 		try {
 			// for each instance passed in...
 			for (int i = 0 ; i < tmp.numInstances(); i++) {
 				Instance current = tmp.instance(i);
 				// ...classify the instance...
-				output = classifier.distributionForInstance(current);
+				//output = classifier.distributionForInstance(current);
+				double output = classifier.classifyInstance(current);
 				// ...the class is the last attribute.
-				result.add(Double.toString(output[output.length-1]));
+				result.add(Double.toString(output));
 			}
 		} catch (Exception e) {
 			System.err.println("Error performing classification");
@@ -60,7 +66,8 @@ public class WekaNaiveBayesClassifier implements ClassifierInterface {
 
 	public void buildClassifier() {
 		try {
-			classifier.buildClassifier(trainingData);
+			this.classifier = Classifier.forName("weka.classifiers.bayes.NaiveBayes", null);
+			this.classifier.buildClassifier(trainingData);
 		} catch (Exception e) {
 			System.err.println("Error building classifier");
 			System.err.println(e.getMessage());

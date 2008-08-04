@@ -21,7 +21,7 @@ import java.io.Serializable;
 /**
  * Implementation of the RawData interface for Weka data.
  *
- * <P>CVS $Id: WekaRawData.java,v 1.10 2008/07/31 18:43:48 khuck Exp $</P>
+ * <P>CVS $Id: WekaRawData.java,v 1.11 2008/08/04 22:46:28 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -50,26 +50,28 @@ public class WekaRawData implements RawDataInterface, Serializable {
 			String attr = (String) attributes.get(i);
 			fastAttributes.addElement(new Attribute(attr));
 		}
+		Attribute tmp = null;
 		if (classAttributes != null) {
 			String attr = "class";
 			FastVector vect = new FastVector(classAttributes.size());
 			for (String tmpClass : classAttributes) {
 				vect.addElement(tmpClass);
 			}
-			Attribute tmp = new Attribute(attr, vect);
+			tmp = new Attribute(attr, vect);
 			fastAttributes.addElement(tmp);
 		}
 		
 		instances = new Instances(name, fastAttributes, vectors);
 		
 		if (classAttributes != null) {
+			instances.setClass(tmp);
 			for (int i = 0 ; i < vectors ; i++) {
-				Instance tmp = new Instance(fastAttributes.size());
-				tmp.setDataset(instances);
+				Instance tmpInst = new Instance(fastAttributes.size());
+				tmpInst.setDataset(instances);
 				for (int j = 0 ; j < dimensions ; j++) {
-					tmp.setValue(j, 0.0);
+					tmpInst.setValue(j, 0.0);
 				}
-				instances.add(tmp);
+				instances.add(tmpInst);
 			}
 		} else {
 			for (int i = 0 ; i < vectors ; i++) {

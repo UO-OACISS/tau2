@@ -27,6 +27,10 @@ public class NaiveBayesOperation extends AbstractPerformanceOperation {
     private AnalysisFactory factory = null;
     private PerfExplorerServer server = null;
     private ClassifierInterface classifier = null;
+    private List<String> classNames = null;
+    private final String trainString = "Naive Bayes Training";
+    private final String testString = "Naive Bayes Test";
+
 	
 	/**
 	 * @param input
@@ -76,7 +80,7 @@ public class NaiveBayesOperation extends AbstractPerformanceOperation {
 		RawDataInterface data = null;
     	Set<String> eventSet = new HashSet<String>();
     	int instances = 0;
-    	List<String> classNames = new ArrayList<String>();
+    	this.classNames = new ArrayList<String>();
 		
 		// ok, first loop through the inputs, and get the superset of events, and the total
     	// number of threads.
@@ -92,21 +96,21 @@ public class NaiveBayesOperation extends AbstractPerformanceOperation {
         List<String> eventList = new ArrayList<String>(eventSet);
 
         // create our data storage object
-    	System.out.println("instances: " + instances);
-    	System.out.println("dimensions: " + eventList.size());
-    	data = factory.createRawData("Naive Bayes Training", eventList, instances, eventList.size(), classNames);
+    	data = factory.createRawData(this.trainString, eventList, instances, eventList.size(), this.classNames);
 
+    	int masterIndex = 0;
         // now, iterate over the inputs, and add them to the raw data interface object.
         for (PerformanceResult input : inputs) {
     		for(Integer thread : input.getThreads()) {
             	for (int eventIndex = 0 ; eventIndex < eventList.size(); eventIndex++) {
             		String event = eventList.get(eventIndex);
-           			data.addValue(thread, eventIndex, input.getDataPoint(thread, event, metric, type));
+           			data.addValue(masterIndex, eventIndex, input.getDataPoint(thread, event, metric, type));
         		}
-    			data.addValue(thread, eventList.size(), input.getName());
+    			data.addValue(masterIndex, eventList.size(), input.getName());
+       			masterIndex++;
         	}
         }
-		this.classifier = factory.createNaiveBayesClassifier(data);
+		getClassifierFromFactory(data);
 		try {
 			classifier.buildClassifier();
 		} catch (Exception e) {
@@ -115,6 +119,13 @@ public class NaiveBayesOperation extends AbstractPerformanceOperation {
 		}
 
 		return outputs;
+	}
+
+	/**
+	 * @param data
+	 */
+	protected void getClassifierFromFactory(RawDataInterface data) {
+		this.classifier = factory.createNaiveBayesClassifier(data);
 	}
 
 	public String getMetric() {
@@ -129,9 +140,7 @@ public class NaiveBayesOperation extends AbstractPerformanceOperation {
 		List<String> categories = null;
 		
     	List<String> eventList = new ArrayList<String>(input.getEvents());
-    	System.out.println("instances: " + input.getThreads().size());
-    	System.out.println("dimensions: " + input.getEvents().size());
-    	RawDataInterface data = factory.createRawData("Naive Bayes Test", eventList, input.getThreads().size(), eventList.size(), null);
+    	RawDataInterface data = factory.createRawData(this.testString, eventList, input.getThreads().size(), eventList.size(), this.classNames);
 		for(Integer thread : input.getThreads()) {
         	int eventIndex = 0;
         	for (String event : eventList) {

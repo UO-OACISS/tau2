@@ -37,8 +37,6 @@ public class NaiveBayesOperationTest extends TestCase {
 			trainingInput2.putExclusive(i, "attr1", "dummy", Math.random());
 			trainingInput2.putExclusive(i, "attr2", "dummy", Math.random());
 		}
-		System.out.println(trainingInput1.toString());
-		System.out.println(trainingInput2.toString());
 		
 		NaiveBayesOperation oper = new NaiveBayesOperation(trainingInput1, "dummy", AbstractResult.EXCLUSIVE);
 		oper.addInput(trainingInput2);
@@ -51,10 +49,13 @@ public class NaiveBayesOperationTest extends TestCase {
 			testInput.putExclusive(i, "attr1", "dummy", Math.random() + factor1);
 			testInput.putExclusive(i, "attr2", "dummy", Math.random() + factor2);
 		}
-		System.out.println(testInput.toString());
 		
 		List<String> classes = oper.classifyInstances(testInput);
-		System.out.println(classes.toString());
+		for (int i = 0 ; i < 10 ; i++) {
+			System.out.println(testInput.getExclusive(i, "attr1", "dummy") + ", " +
+					testInput.getExclusive(i, "attr2", "dummy") + " =  " +
+					classes.get(i).toString());
+		}
 	}
 
 }
