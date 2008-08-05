@@ -21,7 +21,7 @@ import java.util.List;
  * should never be directly created - use the static method in the
  * AnalysisFactory class.
  *
- * <P>CVS $Id: RAnalysisFactory.java,v 1.9 2008/07/31 18:43:48 khuck Exp $</P>
+ * <P>CVS $Id: RAnalysisFactory.java,v 1.10 2008/08/05 00:18:17 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -104,6 +104,13 @@ public class RAnalysisFactory extends AnalysisFactory {
 			RawDataInterface inputData) {
 		// TODO Auto-generated method stub
 		System.out.println("this Naive Bayes Classification for R is UNIMPLEMENTED");
+		return null;
+	}
+
+	@Override
+	public ClassifierInterface createSupportVectorClassifier(RawDataInterface inputData) {
+		// TODO Auto-generated method stub
+		System.out.println("this Support Vector Classification for R is UNIMPLEMENTED");
 		return null;
 	}
 

@@ -24,8 +24,8 @@ import clustering.RawDataInterface;
  */
 public class WekaNaiveBayesClassifier implements ClassifierInterface {
 	
-	private Instances trainingData = null;
-	private Classifier classifier = null;
+	protected Instances trainingData = null;
+	protected Classifier classifier = null;
 	
 	/**
 	 * 

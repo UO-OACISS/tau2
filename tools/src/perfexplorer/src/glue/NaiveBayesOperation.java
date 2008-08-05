@@ -22,14 +22,14 @@ import edu.uoregon.tau.perfdmf.Trial;
  */
 public class NaiveBayesOperation extends AbstractPerformanceOperation {
 
-	private String metric = null;
-	private int type = AbstractResult.EXCLUSIVE;
-    private AnalysisFactory factory = null;
-    private PerfExplorerServer server = null;
-    private ClassifierInterface classifier = null;
-    private List<String> classNames = null;
-    private final String trainString = "Naive Bayes Training";
-    private final String testString = "Naive Bayes Test";
+	protected String metric = null;
+	protected int type = AbstractResult.EXCLUSIVE;
+    protected AnalysisFactory factory = null;
+    protected PerfExplorerServer server = null;
+    protected ClassifierInterface classifier = null;
+    protected List<String> classNames = null;
+    protected final String trainString = "Naive Bayes Training";
+    protected final String testString = "Naive Bayes Test";
 
 	
 	/**

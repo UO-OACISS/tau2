@@ -21,7 +21,7 @@ import java.util.List;
  * should never be directly created - use the static method in the
  * AnalysisFactory class.
  *
- * <P>CVS $Id: WekaAnalysisFactory.java,v 1.7 2008/07/31 18:43:48 khuck Exp $</P>
+ * <P>CVS $Id: WekaAnalysisFactory.java,v 1.8 2008/08/05 00:18:17 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -84,5 +84,10 @@ public class WekaAnalysisFactory extends AnalysisFactory {
 	public ClassifierInterface createNaiveBayesClassifier(
 			RawDataInterface inputData) {
 		return new WekaNaiveBayesClassifier(inputData);
+	}
+
+	@Override
+	public ClassifierInterface createSupportVectorClassifier(RawDataInterface inputData) {
+		return new WekaSupportVectorClassifier(inputData);
 	}
 }

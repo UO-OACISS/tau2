@@ -17,7 +17,7 @@ import java.util.List;
   * method to construct the desired factory.  All other methods are implemented
   * by the specific factory classes.
   *
-  * <P>CVS $Id: AnalysisFactory.java,v 1.8 2008/07/31 18:43:48 khuck Exp $</P>
+  * <P>CVS $Id: AnalysisFactory.java,v 1.9 2008/08/05 00:18:16 khuck Exp $</P>
   * @author  Kevin Huck
   * @version 0.1
   * @since   0.1
@@ -131,6 +131,15 @@ public abstract class AnalysisFactory {
      * @return
      */
     public abstract ClassifierInterface createNaiveBayesClassifier
+    	(RawDataInterface inputData);
+
+    /**
+     * Method for building Support Vector Machine classifier
+     * 
+     * @param inputData
+     * @return
+     */
+    public abstract ClassifierInterface createSupportVectorClassifier
     	(RawDataInterface inputData);
 
 
