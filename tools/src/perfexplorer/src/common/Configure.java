@@ -20,7 +20,7 @@ import java.sql.SQLException;
 /**
  * This class is used as a main class for configuring PerfExplorer.
  *
- * <P>CVS $Id: Configure.java,v 1.10 2008/03/05 00:28:11 khuck Exp $</P>
+ * <P>CVS $Id: Configure.java,v 1.11 2008/08/05 22:24:21 amorris Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -108,7 +108,7 @@ public class Configure {
             if (db_password != null) {
                 connector = new ConnectionManager(new Database(configFileName), db_password);
             } else {
-                connector = new ConnectionManager(new Database(configFileName));
+                connector = new ConnectionManager(new Database(configFileName), true);
             }
             connector.connect();
             PerfExplorerOutput.println();
