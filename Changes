@@ -36,6 +36,9 @@ Version 2.17 changes (from 2.16):
 24. Added support for DyninstAPI 5.2.
 25. Bug fixes for tau_instrumentor, context events, and tau2slog2.
 26. Added support for pointer based profiling API (examples/profilercreate/README) [LSU].
+27. -spec option for tau_instrumentor allows generic timer instrumentation support [FZJ].
+28. Paraprof allows new windows for multiple metrics to compare data [SiCortex].
+29. Posix I/O tracking now uses context events instead of user-defined events.
 
 
 
