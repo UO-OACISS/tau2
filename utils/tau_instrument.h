@@ -47,11 +47,15 @@ class tauInstrument
     /* specify everything */
     tauInstrument(string f, string r, int line, string c, instrumentKind_t k);
     tauInstrument(string f, int line, string c, instrumentKind_t k, int lang = LA_ANY);
+
+    /* init code = "init();" lang = "c" */
+    tauInstrument(string c, bool cs, instrumentKind_t k, int lang = LA_ANY);
+
     /* FOR THIS TYPE, you must specify the codeSpecified argument */
     tauInstrument(string r, string c, bool cs, instrumentKind_t k, int lang = LA_ANY);
 
     /* entry/exit file = "foo.f90" routine = "foo" code = "printf" lang = "fortran" */
-    tauInstrument(string f, string r, string c, instrumentKind_t k, int lang = LA_ANY) ;
+    tauInstrument(string f, string r, string c, instrumentKind_t k, int lang = LA_ANY);
 
     /* loops routine = "foo" */
     tauInstrument(string r, instrumentKind_t k ) ;
@@ -79,8 +83,7 @@ class tauInstrument
     int getLineNo(void);
     bool getCodeSpecified(void) ;
     string& getCode(void) ;
-    string getCode(const pdbLoc& loc);
-    string getCode(const pdbLoc& loc, const pdbRoutine* r);
+    string getCode(const pdbLoc& loc, const pdbRoutine* r=NULL, bool isInit=false);
     instrumentKind_t getKind(void) ;
     bool getRegionSpecified(void);
     int getRegionStart(void);
@@ -121,6 +124,6 @@ extern bool isInstrumentListEmpty(void);
 #endif /* _TAU_INSTRUMENT_H_ */
 /***************************************************************************
  * $RCSfile: tau_instrument.h,v $   $Author: geimer $
- * $Revision: 1.5 $   $Date: 2008/07/30 22:22:00 $
- * VERSION_ID: $Id: tau_instrument.h,v 1.5 2008/07/30 22:22:00 geimer Exp $
+ * $Revision: 1.6 $   $Date: 2008/08/05 19:13:34 $
+ * VERSION_ID: $Id: tau_instrument.h,v 1.6 2008/08/05 19:13:34 geimer Exp $
  ***************************************************************************/

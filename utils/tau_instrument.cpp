@@ -58,9 +58,9 @@ the first element of the pair (the second is the list of strings). */
 ///////////////////////////////////////////////////////////////////////////
 // tauInstrument() ctor which sets all the items
 ///////////////////////////////////////////////////////////////////////////
-tauInstrument::tauInstrument(string f, string r, int l, string c, 
+tauInstrument::tauInstrument(string f, string r, int line, string c, 
 	instrumentKind_t k): filename(f), fileSpecified(true), routineName(r),
-	lineno(l), lineSpecified (true), code(c), codeSpecified(true), kind (k),
+	lineno(line), lineSpecified (true), code(c), codeSpecified(true), kind (k),
         regionSpecified(false), qualifierSpecified(false), language(LA_ANY)
 {}
 
@@ -69,7 +69,7 @@ tauInstrument::tauInstrument(string f, string r, int l, string c,
 // tauInstrument() ctor
 // file = "foo.cpp" line=245 code = "TAU_NODE(0);" lang = "c++"
 ///////////////////////////////////////////////////////////////////////////
-tauInstrument::tauInstrument(string f, int line, string c, instrumentKind_t k, int lang) :
+tauInstrument::tauInstrument(string f, int line, string c, instrumentKind_t k, int lang) : 
       	filename(f), fileSpecified(true), lineno(line), lineSpecified(true), 
       	routineSpecified(false), code(c), codeSpecified(true), kind(k), 
         regionSpecified(false), qualifierSpecified(false), language(lang)
@@ -77,7 +77,17 @@ tauInstrument::tauInstrument(string f, int line, string c, instrumentKind_t k, i
 
 ///////////////////////////////////////////////////////////////////////////
 // tauInstrument() ctor
-// entry routine = "foo" code = "print *, 'Hi';" lang = "fortran" */
+// init code="init();" lang = "c" */
+///////////////////////////////////////////////////////////////////////////
+tauInstrument::tauInstrument(string c, bool cs, instrumentKind_t k, int lang) :
+        fileSpecified(false), routineName("#"), routineSpecified(true),
+        lineSpecified(false), code(c), codeSpecified(cs), kind(k),
+        qualifierSpecified(false), regionSpecified(false), language(lang)
+{}
+
+///////////////////////////////////////////////////////////////////////////
+// tauInstrument() ctor
+// entry routine="foo" code="print *, 'Hi'; " lang = "fortran" */
 //    /* FOR THIS TYPE, you must specify the codeSpecified argument */
 ///////////////////////////////////////////////////////////////////////////
 tauInstrument::tauInstrument(string r, string c, bool cs, instrumentKind_t k, int lang) :
@@ -184,6 +194,9 @@ ostream& tauInstrument::print(ostream& ostr) const
 	 case TAU_LINE:
 		 ostr<<"line:";
 		 break;
+         case TAU_ROUTINE_DECL:
+                 ostr<<"decl: ";
+                 break;
 	 case TAU_ROUTINE_ENTRY:
 		 ostr<<"entry: ";
 		 break;
@@ -199,6 +212,9 @@ ostream& tauInstrument::print(ostream& ostr) const
 	 case TAU_NOT_SPECIFIED:
 		 ostr<<"ERROR: NOT SPECIFIED KIND";
 		 break;
+         case TAU_INIT:
+                 ostr<<"init: ";
+                 break;
 	 default:
 		 ostr<<"default: ???";
 		 break;
@@ -290,7 +306,7 @@ bool tauInstrument::isActiveForLanguage(PDB::lang_t lang) const
 ///////////////////////////////////////////////////////////////////////////
 // tauInstrument::getCode() accesses private data member
 ///////////////////////////////////////////////////////////////////////////
-string tauInstrument::getCode(const pdbLoc& loc)
+string tauInstrument::getCode(const pdbLoc& loc, const pdbRoutine* r, bool isInit)
 {
   string result = code;
 
@@ -298,23 +314,19 @@ string tauInstrument::getCode(const pdbLoc& loc)
   replaceAll(result, "@FILE@", loc.file()->name());
   replaceAll(result, "@LINE@", intToString(loc.line()));
   replaceAll(result, "@COL@", intToString(loc.col()));
-
-  return result;
-}
-
-///////////////////////////////////////////////////////////////////////////
-// tauInstrument::getCode() accesses private data member
-///////////////////////////////////////////////////////////////////////////
-string tauInstrument::getCode(const pdbLoc& loc, const pdbRoutine* r)
-{
-  string result = getCode(loc);
-
-  // Replace variables
-  replaceAll(result, "@FUNCTION@", r->fullName());
-  replaceAll(result, "@BEGIN_LINE@", intToString(r->headBegin().line()));
-  replaceAll(result, "@BEGIN_COL@", intToString(r->headBegin().col()));
-  replaceAll(result, "@END_LINE@", intToString(r->bodyEnd().line()));
-  replaceAll(result, "@END_COL@", intToString(r->bodyEnd().col()));
+  if (r)
+  {
+    replaceAll(result, "@FUNCTION@", r->fullName());
+    replaceAll(result, "@BEGIN_LINE@", intToString(r->headBegin().line()));
+    replaceAll(result, "@BEGIN_COL@", intToString(r->headBegin().col()));
+    replaceAll(result, "@END_LINE@", intToString(r->bodyEnd().line()));
+    replaceAll(result, "@END_COL@", intToString(r->bodyEnd().col()));
+  }
+  if (isInit)
+  {
+    replaceAll(result, "@ARGC@", "tau_argc");
+    replaceAll(result, "@ARGV@", "tau_argv");
+  }
 
   return result;
 }
@@ -355,6 +367,8 @@ void parseError(const char *message, char *line, int lineno, int column)
   while (line[0] != '"') { \
     if (line [0] == '\0') parseError("EOL", line, lineno, line - original); \
     if ((line[0] == '\\') && (line[1] == '"')) line++; \
+    if ((line[0] == '\\') && (line[1] == 'n')) { line++; line[0] = '\n'; } \
+    if ((line[0] == '\\') && (line[1] == 't')) { line++; line[0] = '\t'; } \
     pname[i++] = line[0]; line++; \
   } \
   pname[i] = '\0';  \
@@ -634,7 +648,7 @@ void parseInstrumentationCommand(char *line, int lineno)
           instrumentList.push_back(new tauInstrument(string(pname), string(pcode), codespecified, TAU_ROUTINE_EXIT, language));
 	} /* file and routine are both specified for entry */
       } /* end of exit */
-      else 
+      else
       { /* loops */
 	m1 = strncmp(line, "loops", 5);
 	m2 = strncmp(line, "io", 2);
@@ -864,8 +878,132 @@ void parseInstrumentationCommand(char *line, int lineno)
             { /* [static/dynamic] <phase/timer> routine = "<name>" */
               instrumentList.push_back(new tauInstrument(qualifier, kind, pname));
             }
-
           } /* end of if static/dynamic/phase/timer */
+          else
+          {
+            /* parse: init code = "init();" lang = "c" */
+            if (strncmp(line, "init", 4) == 0)
+            {
+              line += 4;
+#ifdef DEBUG
+              printf("Found INIT!\n");
+#endif /* DEBUG */
+              WSPACE(line);
+              if (strncmp(line, "code", 4) == 0)
+              {
+                line += 4;
+                WSPACE(line);
+                TOKEN('=');
+                WSPACE(line);
+                TOKEN('"');
+                RETRIEVECODE(pcode, line);
+#ifdef DEBUG
+                printf("GOT code = %s\n", pcode);
+#endif /* DEBUG */
+              }
+              else parseError("<code> token not found", line, lineno, line - original); 
+              WSPACE(line);
+              if (strncmp(line, "lang", 4) == 0)
+              {
+                line += 4; /* move 4 spaces */
+                /* check for = <WSPACE> " */
+                WSPACE(line);
+                TOKEN('=');
+                WSPACE(line);
+                TOKEN('"');
+                RETRIEVESTRING(plang, line);
+#ifdef DEBUG
+                printf("GOT lang = %s\n", plang);
+#endif /* DEBUG */
+                language = parseLanguageString(plang);
+                if (language < 0)
+                  parseError("<lang> token invalid", line, lineno, line - original);
+              }
+#ifdef DEBUG
+              printf("code = %s\n", pcode);
+#endif /* DEBUG */
+              instrumentList.push_back(new tauInstrument(string(pcode), true, TAU_INIT, language)); 
+            } /* end of init directive */
+            else
+            {
+              if (strncmp(line, "decl", 4) == 0)
+              {
+                line+=4;
+#ifdef DEBUG
+                printf("Found DECL!\n");
+#endif /* DEBUG */
+                WSPACE(line);
+                if (strncmp(line, "file", 4) == 0)
+                {
+	          line+= 4;
+	          WSPACE(line);
+	          TOKEN('=');
+	          WSPACE(line);
+	          TOKEN('"');
+	          RETRIEVESTRING(pfile, line);
+	          WSPACE(line);
+	          filespecified = true; 
+#ifdef DEBUG
+	          printf("GOT file = %s\n", pfile);
+#endif /* DEBUG */
+                }
+                if (strncmp(line, "routine", 7) == 0)
+                {
+	          line+=7; 
+	          WSPACE(line);
+	          TOKEN('=');
+	          WSPACE(line);
+	          TOKEN('"');
+	          RETRIEVESTRING(pname, line);
+	          WSPACE(line);
+                  if (strncmp(line, "code", 4) == 0)
+                  { 
+                    line+= 4; /* move 4 spaces */
+                    /* check for = <WSPACE> " */
+                    WSPACE(line);
+                    TOKEN('=');
+                    WSPACE(line);
+                    TOKEN('"');
+                    RETRIEVECODE(pcode, line);
+#ifdef DEBUG
+                    printf("GOT code = %s\n", pcode);
+#endif /* DEBUG */
+	          }
+                  else parseError("<code> token not found", line, lineno, line - original); 
+                  WSPACE(line);
+                  if (strncmp(line, "lang", 4) == 0)
+                  {
+                    line += 4; /* move 4 spaces */
+                    /* check for = <WSPACE> " */
+                    WSPACE(line);
+                    TOKEN('=');
+                    WSPACE(line);
+                    TOKEN('"');
+                    RETRIEVESTRING(plang, line);
+#ifdef DEBUG
+                    printf("GOT lang = %s\n", plang);
+#endif /* DEBUG */
+                    language = parseLanguageString(plang);
+                    if (language < 0)
+                      parseError("<lang> token invalid", line, lineno, line - original);
+                  }
+#ifdef DEBUG 
+	          printf("decl routine = %s, code = %s, lang = %d\n", pname, pcode, language);
+#endif /* DEBUG */
+                  if (filespecified)
+	          {
+                    instrumentList.push_back(new tauInstrument(string(pfile), string(pname), string(pcode), TAU_ROUTINE_DECL, language));
+	          }
+                  else 
+	          {
+	            bool codespecified = true; 
+                    instrumentList.push_back(new tauInstrument(string(pname), string(pcode), codespecified, TAU_ROUTINE_DECL, language));
+	          } /* file and routine are both specified for entry */
+                }
+                else parseError("<routine> token not found", line, lineno, line - original);
+              } /* end of decl token */
+            }
+          }
         } /* check for phase/timer */
       } /* end of loops directive */
     } /* exit */
@@ -1550,48 +1688,108 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 #endif /* DEBUG */
 
       }
-
-#ifdef DEBUG
-      cout <<"Examining Routine "<<(*rit)->fullName()<<" and "<<(*it)->getRoutineName()<<endl;
-#endif /* DEBUG */
-      /* examine the type of request - entry/exit */
-      if ((*it)->getKind() == TAU_ROUTINE_ENTRY && (*it)->isActiveForLanguage(language))
+      if ( (*rit)->location().file() == file &&
+           !(*rit)->isCompilerGenerated() &&
+           (*rit)->kind() != pdbItem::RO_EXT &&
+           (*rit)->bodyBegin().line() != 0 &&
+           (*rit)->bodyEnd().line() != 0 &&
+	   instrumentEntity((*rit)->fullName()) &&
+           (*it)->isActiveForLanguage(language) )
       {
 #ifdef DEBUG
-        cout <<"Instrumenting entry of routine "<<(*rit)->fullName()<<endl;
-        /* get routine entry line no. */
-        cout <<"at line: "<<(*rit)->bodyBegin().line()<<", col"<< (*rit)->bodyBegin().col()<<"code = "<<(*it)->getCode()<<endl;
+        cout <<"Examining Routine "<<(*rit)->fullName()<<" and "<<(*it)->getRoutineName()<<endl;
 #endif /* DEBUG */
-	itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()+1, (*it)->getCode((*rit)->bodyBegin(), *rit), BEFORE));
-	/* should the column be 1 greater than body begin's col, so 
-	   instrumentation is placed after the beginning of the routine? */
-
-      }
-      if ((*it)->getKind() == TAU_ROUTINE_EXIT && (*it)->isActiveForLanguage(language))
-      {
-#ifdef DEBUG
-        cout <<"Instrumenting exit of routine "<<(*rit)->fullName()<<endl;
-#endif /* DEBUG */
-        /* get routine exit line no. */
-        pdbRoutine::locvec retlocations = (*rit)->returnLocations();
-        for (rlit = retlocations.begin(); rlit != retlocations.end(); ++rlit)
+        /* examine the type of request - decl */
+        if ((*it)->getKind() == TAU_ROUTINE_DECL)
         {
 #ifdef DEBUG
-          cout <<"at line: "<<(*rlit)->line()<<", col"<< (*rlit)->col()<<" code = "<<(*it)->getCode()<<endl;
+          cout <<"Instrumenting declaration of routine "<<(*rit)->fullName()<<endl;
+          /* get routine entry line no. */
+          cout <<"at line: "<<(*rit)->bodyBegin().line()<<", col"<< (*rit)->bodyBegin().col()<<"code = "<<(*it)->getCode()<<endl;
+#endif /* DEBUG */
+
+	  itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()+1, (*it)->getCode((*rit)->bodyBegin(), *rit), BEFORE));
+	  /* should the column be 1 greater than body begin's col, so 
+	     instrumentation is placed after the beginning of the routine? */
+        } /* end of routine decl */
+        /* examine the type of request - entry */
+        if ((*it)->getKind() == TAU_ROUTINE_ENTRY)
+        {
+#ifdef DEBUG
+          cout <<"Instrumenting entry of routine "<<(*rit)->fullName()<<endl;
+          /* get routine entry line no. */
+          cout <<"at line: "<<(*rit)->bodyBegin().line()<<", col"<< (*rit)->bodyBegin().col()<<"code = "<<(*it)->getCode()<<endl;
+#endif /* DEBUG */
+
+	  itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_BEGIN, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col(), (*it)->getCode((*rit)->bodyBegin(), *rit), BEFORE));
+        } /* end of routine entry */
+        /* examine the type of request - exit */
+        if ((*it)->getKind() == TAU_ROUTINE_EXIT)
+        {
+#ifdef DEBUG
+          cout <<"Instrumenting exit of routine "<<(*rit)->fullName()<<endl;
+#endif /* DEBUG */
+          /* get routine exit line no. */
+          pdbRoutine::locvec retlocations = (*rit)->returnLocations();
+          for (rlit = retlocations.begin(); rlit != retlocations.end(); ++rlit)
+          {
+#ifdef DEBUG
+            cout <<"at line: "<<(*rlit)->line()<<", col"<< (*rlit)->col()<<" code = "<<(*it)->getCode()<<endl;
 #endif /* DEBUG */
 	
-	  itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(**rlit, *rit), BEFORE));
-        }
-        /* handle exit of void routines */
-        if (isVoidRoutine(*rit))
-        {
+	    itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), RETURN, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(**rlit, *rit), BEFORE));
+          }
 #ifdef DEBUG
           cout <<"at line: "<<(*rit)->bodyEnd().line()<<", col"<< (*rit)->bodyEnd().col()<<"code = "<<(*it)->getCode()<<endl;
 #endif /* DEBUG */
 
-          itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), (*it)->getCode((*rit)->bodyEnd(), *rit), BEFORE));
-        }
-      } /* end of routine exit */
+          itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_END, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), (*it)->getCode((*rit)->bodyEnd(), *rit), BEFORE));
+        } /* end of routine exit */
+        /* examine the type of request - init */
+        if ((*it)->getKind() == TAU_INIT)
+        {
+          if ((*rit)->name().compare("main") == 0)
+          {
+#ifdef DEBUG
+            cout << "Instrumenting init" << endl;
+#endif /* DEBUG */
+
+            static bool needsSetup = true;
+            if (needsSetup)
+            {
+              /* Generate argc/argv temporaries */
+              string namestr = "static char * tau_unknown = \"unknown\";\n";
+              string argcstr = "\tstatic int tau_argc = ";
+              string argvstr = "\tstatic char ** tau_argv = ";
+              pdbType::argvec args = (*rit)->signature()->arguments();
+              switch (args.size())
+              {
+                case 2:
+                  if (args[0].name().compare("-") != 0 &&
+                      args[0].name().compare("-") != 0)
+                  {
+                   argcstr += args[0].name() + ";\n";
+                   argvstr += args[1].name() + ";\n";
+                   break;
+                  }
+                case 0:
+                  argcstr += "1;\n";
+                  argvstr += "&tau_unknown;\n";
+                  break;
+                default:
+                  cerr << "Hmm... main()'s signature looks weird to me." << endl
+                       << "Initialization code might be incorrect." << endl;
+                  break;
+              }
+
+              itemvec.push_back( new itemRef((pdbItem *)NULL, BODY_BEGIN, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col(), namestr + argcstr + argvstr, BEFORE));
+              needsSetup = false;
+            }
+
+            itemvec.push_back( new itemRef((pdbItem *)NULL, BODY_BEGIN, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col(), (*it)->getCode((*rit)->bodyBegin(), *rit, true), BEFORE));
+          }
+        } /* end of init */
+      }
       if ((*it)->getKind() == TAU_LOOPS)
       { /* we need to instrument all outer loops in this routine */
 	processBlock((*rit)->body(), (*rit), itemvec, 1, NULL);
@@ -1694,48 +1892,78 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 #ifdef DEBUG
       cout <<"Examining Routine "<<(*rit)->fullName()<<" and "<<(*it)->getRoutineName()<<endl;
 #endif /* DEBUG */
-      /* examine the type of request - entry/exit */
-      if ((*it)->getKind() == TAU_ROUTINE_ENTRY && (*it)->isActiveForLanguage(language))
+      if ( (*rit)->location().file() == file &&  
+           (*rit)->kind() != pdbItem::RO_FSTFN &&  
+	   (*rit)->firstExecStmtLocation().file() && 
+	   instrumentEntity((*rit)->fullName()) &&
+           (*it)->isActiveForLanguage(language) )
       {
+       /* examine the type of request - decl */
+       if ((*it)->getKind() == TAU_ROUTINE_DECL)
+       {
 #ifdef DEBUG
-        cout <<"Instrumenting entry of routine "<<(*rit)->fullName()<<endl;
+         cout <<"Instrumenting declaration of routine "<<(*rit)->fullName()<<endl;
+         /* get routine entry line no. */
+         cout <<"at line: "<<(*rit)->bodyBegin().line()<<", col"<< (*rit)->bodyBegin().col()<<"code = "<<(*it)->getCode()<<endl;
 #endif /* DEBUG */
-        /* We should treat snippet insertion code at routine entry like additional declarations
-           that must be placed inside the routine */
-        list<string> decls;
-        decls.push_back((*it)->getCode((*rit)->bodyBegin(), *rit));
 
-        additionalDeclarations.push_back(pair<int, list<string> >((*rit)->id(), decls)); 
-	/* assign the list of strings to the list */
+         /* We should treat snippet insertion code at routine entry like additional declarations
+            that must be placed inside the routine */
+         list<string> decls;
+         decls.push_back("\t" + (*it)->getCode((*rit)->bodyBegin(), *rit));
+
+         additionalDeclarations.push_back(pair<int, list<string> >((*rit)->id(), decls)); 
+	 /* assign the list of strings to the list */
+       } /* end of routine decl */
+       /* examine the type of request - entry */
+       if ((*it)->getKind() == TAU_ROUTINE_ENTRY)
+       {
+#ifdef DEBUG
+         cout <<"Instrumenting entry of routine "<<(*rit)->fullName()<<endl;
+#endif /* DEBUG */
+         itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_BEGIN, (*rit)->firstExecStmtLocation().line(), (*rit)->firstExecStmtLocation().col(), (*it)->getCode((*rit)->firstExecStmtLocation(), *rit), BEFORE));
+       }
+       /* examine the type of request - exit */
+       if ((*it)->getKind() == TAU_ROUTINE_EXIT)
+        {
+#ifdef DEBUG
+          cout <<"Instrumenting exit of routine "<<(*rit)->fullName()<<endl;
+#endif /* DEBUG */
+          /* get routine entry line no. */
+          pdbRoutine::locvec retlocations = (*rit)->returnLocations();
+          pdbRoutine::locvec stoplocations = (*rit)->stopLocations();
+	
+	  /* we first start with the return locations */
+          for (rlit = retlocations.begin(); rlit != retlocations.end(); ++rlit)
+          {
+#ifdef DEBUG
+            cout <<"at line: "<<(*rlit)->line()<<", col"<< (*rlit)->col()<<" code = "<<(*it)->getCode()<<endl;
+#endif /* DEBUG */
+	
+	    itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), RETURN, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(**rlit, *rit), BEFORE));
+          }
+	  /* and then examine the stop locations */
+          for (rlit = stoplocations.begin(); rlit != stoplocations.end(); ++rlit)
+          {
+#ifdef DEBUG
+            cout <<"at line: "<<(*rlit)->line()<<", col"<< (*rlit)->col()<<" code = "<<(*it)->getCode()<<endl;
+#endif /* DEBUG */
+	
+	    itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), EXIT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(**rlit, *rit), BEFORE));
+          }
+        } /* end of routine exit */
+        if ((*it)->getKind() == TAU_INIT)
+        {
+          if ((*rit)->kind() == pdbItem::RO_FPROG)
+          {
+#ifdef DEBUG
+            cout << "Instrumenting init" << endl;
+#endif /* DEBUG */
+    
+            itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_BEGIN, (*rit)->firstExecStmtLocation().line(), (*rit)->firstExecStmtLocation().col(), (*it)->getCode((*rit)->firstExecStmtLocation(), *rit), BEFORE));
+          }
+        }
       }
-      if ((*it)->getKind() == TAU_ROUTINE_EXIT && (*it)->isActiveForLanguage(language))
-      {
-#ifdef DEBUG
-        cout <<"Instrumenting exit of routine "<<(*rit)->fullName()<<endl;
-#endif /* DEBUG */
-        /* get routine entry line no. */
-        pdbRoutine::locvec retlocations = (*rit)->returnLocations();
-        pdbRoutine::locvec stoplocations = (*rit)->stopLocations();
-	
-	/* we first start with the return locations */
-        for (rlit = retlocations.begin(); rlit != retlocations.end(); ++rlit)
-        {
-#ifdef DEBUG
-          cout <<"at line: "<<(*rlit)->line()<<", col"<< (*rlit)->col()<<" code = "<<(*it)->getCode()<<endl;
-#endif /* DEBUG */
-	
-	  itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(**rlit, *rit), BEFORE));
-        }
-	/* and then examine the stop locations */
-        for (rlit = stoplocations.begin(); rlit != stoplocations.end(); ++rlit)
-        {
-#ifdef DEBUG
-          cout <<"at line: "<<(*rlit)->line()<<", col"<< (*rlit)->col()<<" code = "<<(*it)->getCode()<<endl;
-#endif /* DEBUG */
-	
-	  itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(**rlit, *rit), BEFORE));
-        }
-      } /* end of routine exit */
       if ((*it)->getKind() == TAU_LOOPS)
       { /* we need to instrument all outer loops in this routine */
 	processBlock((*rit)->body(), (*rit), itemvec, 1, NULL); /* level = 1 */
@@ -2175,6 +2403,6 @@ string intToString(int value)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: geimer $
- * $Revision: 1.54 $   $Date: 2008/07/30 22:22:00 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.54 2008/07/30 22:22:00 geimer Exp $
+ * $Revision: 1.55 $   $Date: 2008/08/05 19:13:34 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.55 2008/08/05 19:13:34 geimer Exp $
  ***************************************************************************/

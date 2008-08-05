@@ -73,6 +73,7 @@ char exit_keyword[EXIT_KEYWORD_SIZE] = "exit"; /* You can define your own exit k
 bool using_exit_keyword = false; /* By default, we don't use the exit keyword */
 tau_language_t tau_language; /* language of the file */
 bool use_perflib = false;   /* by default, do not insert calls for perflib package */
+bool use_spec = false;   /* by default, do not use code from specification file */
 
 list<string> current_timer; /* for Fortran loop level instrumentation. */
 
@@ -112,7 +113,7 @@ static bool locCmp(const itemRef* r1, const itemRef* r2) {
       // otherwise it just depends on which is r1 and which is r2
       // STL sort requires strict weak ordering, meaning that two elements are equal
       // then this routine must return (x,y) as false and (y,x) as false
-      if (r1->kind == BODY_BEGIN && r2->kind == BODY_BEGIN) return false;
+      if (r1->kind == r2->kind) return false;
 
       if (r1->kind == BODY_BEGIN) return true; 
       if (r2->kind == BODY_BEGIN) return false; /* body begin must always come first */
@@ -275,6 +276,37 @@ const char * getStopMeasurementEntity(itemRef *i)
 }
 
 /* -------------------------------------------------------------------------- */
+/* -- Merge instrumentation requests of same kind for same location --------- */
+/* -------------------------------------------------------------------------- */
+void mergeInstrumentationRequests(vector<itemRef *>& itemvec) {
+  /* Now merge objects of the same kind at the same location */
+  if (itemvec.size() > 1)
+  {
+    vector<itemRef *>::iterator iter = itemvec.begin()+1;
+    while (iter != itemvec.end())
+    {
+      itemRef* item1 = *(iter - 1);
+      itemRef* item2 = *iter;
+
+      if (item1->kind == item2->kind &&
+          item1->line == item2->line &&
+          item1->col  == item2->col)
+      {
+        if (item1->snippet.empty())
+          item1->snippet = item2->snippet;
+        else if (!item2->snippet.empty())
+          item1->snippet += "\n\t" + item2->snippet;
+        iter = itemvec.erase(iter);
+      }
+      else
+      {
+        ++iter;
+      }
+    }
+  }
+}
+
+/* -------------------------------------------------------------------------- */
 /* -- Get a list of instrumentation points for a C++ program ---------------- */
 /* -------------------------------------------------------------------------- */
 bool getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
@@ -407,6 +439,7 @@ bool retval;
   /* All instrumentation requests are in. Sort these now and remove duplicates */
   stable_sort(itemvec.begin(), itemvec.end(), locCmp);
   itemvec.erase(unique(itemvec.begin(), itemvec.end(),itemEqual),itemvec.end());
+  mergeInstrumentationRequests(itemvec);
 #ifdef DEBUG
   for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end();
    iter++)
@@ -492,6 +525,7 @@ void getCReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 #endif /* DEBUG */
   stable_sort(itemvec.begin(), itemvec.end(), locCmp);
   itemvec.erase(unique(itemvec.begin(), itemvec.end(),itemEqual),itemvec.end());
+  mergeInstrumentationRequests(itemvec);
 #ifdef DEBUG
   for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end();
    iter++)
@@ -581,6 +615,7 @@ void getFReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 #endif /* DEBUG */
   stable_sort(itemvec.begin(), itemvec.end(), locCmp);
   itemvec.erase(unique(itemvec.begin(), itemvec.end(),itemEqual),itemvec.end());
+  mergeInstrumentationRequests(itemvec);
 #ifdef DEBUG
   for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end();
    iter++)
@@ -737,8 +772,17 @@ bool instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name
     return retval; /* return error if we catch one */
   }
 
-  // put in code to insert <Profile/Profiler.h> 
-  ostr<< "#include <"<<header_file<<">"<<endl;
+  // put in code to insert <Profile/Profiler.h>
+  if (use_spec)
+  {
+    /* XXX Insert code here */
+  }
+  else if (use_perflib)
+  {
+    /* XXX Insert code here */
+  }
+  else
+    ostr<< "#include <"<<header_file<<">"<<endl;
   if (memory_flag)
     ostr<< "#include <malloc.h>"<<endl;
 
@@ -801,41 +845,50 @@ bool instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name
   	      // put in instrumentation for the routine HERE
   	      //ostr <<"/*** INSTRUMENTATION ***/\n"; 
 #ifdef SPACES
-  	      for (space = 0; space < (*it)->col ; space++) ostr << " " ; 
-  #endif
   	      // leave some leading spaces for formatting...
-  
-  	      ostr <<"  "<<getMeasurementEntity((*it))<<"(\"" << getInstrumentedName((*it)->item) ;
-  	      if (!((*it)->isTarget))
-  	      { // it is a template member. Help it by giving an additional ()
-  	      // if the item is a member function or a static member func give
-  	      // it a class name using CT
-  	        ostr <<"\", CT(*this), ";
-  	      } 
-   	      else // it is not a class member 
-  	      { 
-  	        ostr << "\", \" \", "; // null type arg to TAU_PROFILE 
-  	      }
-  
-  	      if (strcmp((*it)->item->name().c_str(), "main")==0) 
-  	      { /* it is main() */
-  	        ostr << "TAU_DEFAULT);" <<endl; // give an additional line 
-  #ifdef SPACES
-  	        for (space = 0; space < (*it)->col ; space++) ostr << " " ; 
-  #endif 
-  	        // leave some leading spaces for formatting...
-  	
-  	        print_tau_profile_init(ostr, (pdbCRoutine *) (*it)->item);
-  	        ostr <<"#ifndef TAU_MPI" <<endl; // set node 0
-  	        ostr <<"#ifndef TAU_SHMEM" <<endl; // set node 0
-  	        ostr <<"  TAU_PROFILE_SET_NODE(0);" <<endl; // set node 0
-  	        ostr <<"#endif /* TAU_SHMEM */" <<endl; // set node 0
-  	        ostr <<"#endif /* TAU_MPI */" <<endl; // set node 0
-  	      }
-  	      else 
-  	      {
-  	        ostr <<group_name<<");" <<endl; // give an additional line 
-  	      }
+  	      for (space = 0; space < (*it)->col ; space++) ostr << " " ; 
+#endif
+              if (use_spec)
+              {
+                /* XXX Insert code here */
+              }
+              else if (use_perflib)
+              {
+                /* XXX Insert code here */
+              }
+              else {
+  	        ostr <<"  "<<getMeasurementEntity((*it))<<"(\"" << getInstrumentedName((*it)->item) ;
+  	        if (!((*it)->isTarget))
+  	        { // it is a template member. Help it by giving an additional ()
+  	        // if the item is a member function or a static member func give
+  	        // it a class name using CT
+  	          ostr <<"\", CT(*this), ";
+  	        } 
+   	        else // it is not a class member 
+  	        { 
+  	          ostr << "\", \" \", "; // null type arg to TAU_PROFILE 
+  	        }
+
+  	        if (strcmp((*it)->item->name().c_str(), "main")==0) 
+  	        { /* it is main() */
+  	          ostr << "TAU_DEFAULT);" <<endl; // give an additional line 
+#ifdef SPACES
+  	          for (space = 0; space < (*it)->col ; space++) ostr << " " ; 
+#endif 
+  	          // leave some leading spaces for formatting...
+
+  	          print_tau_profile_init(ostr, (pdbCRoutine *) (*it)->item);
+  	          ostr <<"#ifndef TAU_MPI" <<endl; // set node 0
+  	          ostr <<"#ifndef TAU_SHMEM" <<endl; // set node 0
+  	          ostr <<"  TAU_PROFILE_SET_NODE(0);" <<endl; // set node 0
+  	          ostr <<"#endif /* TAU_SHMEM */" <<endl; // set node 0
+  	          ostr <<"#endif /* TAU_MPI */" <<endl; // set node 0
+  	        }
+  	        else 
+  	        {
+  	          ostr <<group_name<<");" <<endl; // give an additional line 
+  	        }
+              }
   	      // if its a function, it already has a ()
   	      instrumented = true;
   	      lastInstrumentedLineNo = inputLineNo; 
@@ -887,11 +940,31 @@ the open brace. */
 #ifdef DEBUG
 		  cout <<"WRITING EXIT RECORD "<<endl;
 #endif /* DEBUG */
-		  ostr <<"{ TAU_PROFILE_EXIT(\"exit\"); ";
+                  if (use_spec)
+                  {
+                    /* XXX Insert code here */
+                  }
+                  else if (use_perflib)
+                  {
+                    /* XXX Insert code here */
+                  }
+                  else {
+		    ostr <<"{ TAU_PROFILE_EXIT(\"exit\"); ";
+                  }
 		  for (k = (*it)->col-1; k < strlen(inbuf) ; k++)
 		    ostr<<inbuf[k]; 
                   ostr <<endl;
-		  ostr <<"      }";
+                  if (use_spec)
+                  {
+                    /* XXX Insert code here */
+                  }
+                  else if (use_perflib)
+                  {
+                    /* XXX Insert code here */
+                  }
+                  else {
+		    ostr <<"      }";
+                  }
 		  ostr <<endl;
 		  instrumented = true; 
 		} else {
@@ -906,7 +979,16 @@ the open brace. */
 
 	  case START_LOOP_TIMER:
 		for (k = 0; k < (*it)->col-1; k++) ostr<<inbuf[k];
-		ostr<<"\n{ TAU_PROFILE(\""<<(*it)->snippet<<"\", \" \", TAU_USER);"<<endl;
+                if (use_spec)
+                {
+                  /* XXX Insert code here */
+                }
+                else if (use_perflib)
+                {
+                  /* Insert code here */
+                }
+                else
+		  ostr<<"\n{ TAU_PROFILE(\""<<(*it)->snippet<<"\", \" \", TAU_USER);"<<endl;
 		for (k = 0; k < (*it)->col-1; k++) ostr<<" "; /* put spaces */
 		/* if there is another instrumentation request on the same line */
 		
@@ -920,7 +1002,18 @@ the open brace. */
 		    cout <<"There was a stop timer on the same line: "<<(*it)->line<<endl;
 #endif /* DEBUG */
 		    for (k=(*it)->col-1; k < write_upto; k++) ostr<<inbuf[k];
-		    ostr <<" } ";
+                    if (use_spec)
+                    {
+                      /* XXX Insert code here */
+                    }
+                    else if (use_perflib)
+                    {
+                      /* XXX Insert code here */
+                    }
+                    else
+                    {
+		      ostr <<" } ";
+                    }
 		    for (k=write_upto; k < strlen(inbuf); k++) ostr<<inbuf[k];
 		    ostr<<endl;
 		    it++; /* increment the iterator so this request is not processed again */
@@ -933,7 +1026,18 @@ the open brace. */
 	    	break;
 	  case STOP_LOOP_TIMER:
 		for (k = 0; k < (*it)->col-1; k++) ostr<<inbuf[k];
-		ostr <<"}"<<endl;
+                if (use_spec)
+                {
+                  /* XXX Insert code here */
+                }
+                else if (use_perflib)
+                {
+                  /* XXX Insert code here */
+                }
+                else
+                {
+		  ostr <<"}"<<endl;
+                }
 		for (k = (*it)->col-1; k < strlen(inbuf) ; k++)
 		  ostr<<inbuf[k]; 
 		instrumented = true;
@@ -944,10 +1048,32 @@ the open brace. */
 #ifdef DEBUG
 		cout <<"WRITING STOP LOOP TIMER RECORD "<<endl;
 #endif /* DEBUG */
-		ostr <<"{ TAU_PROFILE_STOP(lt); "; 
+                if (use_spec)
+                {
+                  /* XXX Insert code here */
+                }
+                else if (use_perflib)
+                {
+                  /* XXX Insert code here */
+                }
+                else
+                {
+		  ostr <<"{ TAU_PROFILE_STOP(lt); "; 
+                }
 		for (k = (*it)->col-1; k < strlen(inbuf) ; k++)
 		  ostr<<inbuf[k]; 
-		ostr <<" }";
+                if (use_spec)
+                {
+                  /* XXX Insert code here */
+                }
+                else if (use_perflib)
+                {
+                  /* XXX Insert code here */
+                }
+                else
+                {
+		  ostr <<" }";
+                }
 		ostr <<endl;
 		instrumented = true; 
 	    break;
@@ -1115,8 +1241,13 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i, strin
 #ifdef DEBUG
   cout <<"Return type :" << return_type<<endl;
 #endif /* DEBUG */
-  ostr <<"{\n\t"<<return_type<< " tau_ret_val; "<<endl;
-  if (use_perflib)
+  ostr <<"{\n\t"<<return_type<< " tau_ret_val;\n\t";
+  if (use_spec)
+  {
+    ostr << i->snippet << endl;
+    /* XXX Insert code here */
+  }
+  else if (use_perflib)
   {
     ostr<<"\tPerf_Update(\"" <<((pdbRoutine *)(i->item))->name() << "\", 1);"<<endl;
   }
@@ -1147,7 +1278,7 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i, strin
     }
 
     ostr <<"\t"<<getStartMeasurementEntity(i)<<"(tautimer); "<<endl;
-	
+    ostr << i->snippet << endl;
   }
 }
 
@@ -1157,7 +1288,12 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i, strin
 void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i, string& group_name)
 {
   int space;
-  if (use_perflib)
+  if (use_spec)
+  {
+    ostr << "{\n\t" << i->snippet << endl;
+    /* XXX Insert code here */
+  }
+  else if (use_perflib)
   {
     ostr<<"{ \n\tPerf_Update(\"" <<((pdbRoutine *)(i->item))->name() << "\", 1);"<<endl;
   }
@@ -1186,6 +1322,7 @@ void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i, string& 
     }
   
     ostr <<"\t"<<getStartMeasurementEntity(i)<<"(tautimer);"<<endl;
+    ostr << i->snippet << endl;
   }
 }
 
@@ -1234,27 +1371,41 @@ void processCloseLoopTimer(ostream& ostr)
 /* -------------------------------------------------------------------------- */
 void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it, char *use_string)
 {
-  if (isReturnTypeReference(it) || isBlankString(ret_expression))
+  if (isReturnTypeReference(it) ||
+      isBlankString(ret_expression) ||
+      isBlankString(it->snippet))
   {
     ostr <<"{ ";
     processCloseLoopTimer(ostr);
-    if (use_perflib)
+    if (use_spec)
+    {
+      /* XXX Insert code here */
+    }
+    else if (use_perflib)
     { 
-      ostr<<"Perf_Update(\""<< ((pdbRoutine *)(it->item))->name()<<"\", 0);"<<use_string<<" " << (ret_expression)<<"; }"<<endl;
+      ostr<<"Perf_Update(\""<< ((pdbRoutine *)(it->item))->name()<<"\", 0);";
     }
     else
-      ostr <<getStopMeasurementEntity(it)<<"(tautimer); " << use_string<<" "<< (ret_expression)<<"; }" <<endl;
+    {
+      ostr <<getStopMeasurementEntity(it)<<"(tautimer);";
+    }
+    ostr << " " << it->snippet << " " << use_string << " " << (ret_expression) << "; }" << endl;
   }
   else 
   {
-    ostr <<"{ tau_ret_val = " << ret_expression << "; ";
+    ostr <<"{ tau_ret_val = " << ret_expression << ";";
     processCloseLoopTimer(ostr);
-    if (use_perflib)
+    if (use_spec)
     {
-      ostr<<"Perf_Update(\""<< ((pdbRoutine *)(it->item))->name()<<"\", 0);"<<use_string<<" " << "(tau_ret_val); }"<<endl;
+      /* XXX Insert code here */
+    }
+    else if (use_perflib)
+    {
+      ostr<<"Perf_Update(\""<< ((pdbRoutine *)(it->item))->name()<<"\", 0);";
     }
     else
-      ostr<<getStopMeasurementEntity(it)<<"(tautimer); " << use_string<<" (tau_ret_val); }"<<endl;
+      ostr<<getStopMeasurementEntity(it)<<"(tautimer);";
+    ostr << " " << it->snippet << " " << use_string << " " << "(tau_ret_val); }" << endl;
   }
 }
 
@@ -1266,27 +1417,37 @@ void processExitExpression(ostream& ostr, string& exit_expression, itemRef *it, 
 
   ostr <<"{ ";
   if (abort_used){
-    ostr<<"int tau_exit_val = 0; ";
-    if (use_perflib)
+    ostr<<"int tau_exit_val = 0;";
+    if (use_spec)
     {
-     ostr<<"Perf_Update(\""<< ((pdbRoutine *)(it->item))->name()<<"\", 0);}"<<use_string<<" ();}"<<endl;
+      /* XXX Insert code here */
+    }
+    else if (use_perflib)
+    {
+     ostr<<"Perf_Update(\""<< ((pdbRoutine *)(it->item))->name()<<"\", 0);}";
     }
     else 
     {
-      ostr<<"TAU_PROFILE_EXIT("<<"\""<<use_string<<"\"); " << use_string<<" (); }"<<endl;
+      ostr<<"TAU_PROFILE_EXIT("<<"\""<<use_string<<"\");";
     }
+    ostr << " " << use_string << " (); }" << endl;
   }
   else 
   {
-    ostr<<"int tau_exit_val = "<<exit_expression<<";";
-    if (use_perflib)
+    ostr<<"int tau_exit_val = "<<exit_expression<<"; ";
+    if (use_spec)
     {
-      ostr<<"Perf_Update(\""<< ((pdbRoutine *)(it->item))->name()<<"\", 0);"<<use_string<<" (tau_exit_val); }"<<endl;
+      /* XXX Insert code here */
+    }
+    else if (use_perflib)
+    {
+      ostr<<"Perf_Update(\""<< ((pdbRoutine *)(it->item))->name()<<"\", 0);";
     }
     else
     {
-      ostr<<"TAU_PROFILE_EXIT("<<"\""<<use_string<<"\"); " << use_string<<" (tau_exit_val); }"<<endl;
+      ostr<<"TAU_PROFILE_EXIT("<<"\""<<use_string<<"\");";
     }
+    ostr << " " << use_string << " (tau_exit_val); }" << endl;
   }
 }
 
@@ -1329,7 +1490,11 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 
   // Begin Instrumentation
   // put in code to insert <Profile/Profiler.h>
-  if (use_perflib)
+  if (use_spec)
+  {
+    /* XXX Insert code here */
+  }
+  else if (use_perflib)
     ostr<< "void Perf_Update(char *name, int entry);"<<endl;
   else 
     ostr<< "#include <"<<header_file<<">"<<endl;
@@ -1464,12 +1629,17 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 		    cout <<" Return for a void routine" <<endl;
 #endif /* DEBUG */
 		    /* instrumentation code here */
-		    if (use_perflib)
+	            if (use_spec)
+                    {
+                      ostr << "{ " << (*it)->snippet << " " << use_return_void << "; }" << endl;
+                      /* XXX Insert code here */
+                    }
+                    else if (use_perflib)
 		    {
 		      ostr<<"{ Perf_Update(\""<< ((pdbRoutine *)((*it)->item))->name()<<"\", 0);"<<use_return_void<<";}"<<endl;
 		    }
 		    else 
-		        ostr << "{ "<<getStopMeasurementEntity(*it)<<"(tautimer); "<<use_return_void<<"; }" <<endl;
+		        ostr << "{ "<< (*it)->snippet << " " <<getStopMeasurementEntity(*it)<<"(tautimer); "<<use_return_void<<"; }" <<endl;
 		    for (k=((*it)->col)-1; inbuf[k] !=';'; k++)
 		     ;
 		    write_from = k+1;
@@ -1546,13 +1716,19 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 #ifdef DEBUG 
 		cout <<"Body End "<<endl;
 #endif /* DEBUG */
-		if (use_perflib)
+                if (use_spec)
+                {
+                  ostr << "\n}\n\t" << (*it)->snippet << endl;
+                  /* XXX Insert code here */
+                }
+                else if (use_perflib)
 		{
 		  ostr<<"\n}\n\tPerf_Update(\""<< ((pdbRoutine *)((*it)->item))->name()<<"\", 0);"<<endl;
 		}
 		else 
 		{
-		  ostr<<"\n}\n\t"<<getStopMeasurementEntity((*it))<<"(tautimer);\n"<<endl; 
+                  ostr << "\n}\n\t" << (*it)->snippet << endl;
+		  ostr<<"\t"<<getStopMeasurementEntity((*it))<<"(tautimer);\n"<<endl; 
 		}
 		instrumented = true; 
 		break;
@@ -1645,7 +1821,12 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 
     case START_LOOP_TIMER: 
 	if ((*it)->attribute == AFTER) ostr<<endl;
-	if (use_perflib)
+        if (use_spec)
+        {
+          timercode = "{ ";
+          /* XXX Insert code here */
+        }
+        else if (use_perflib)
         {
           timercode = string(string("{ Perf_Update(\"" )+(*it)->snippet+", 1); ");
         }
@@ -1668,7 +1849,12 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 	if ((*it)->attribute == AFTER) ostr<<endl;
 	/* insert spaces to make it look better */
 	for(space = 0; space < (*it)->col-1; space++) ostr<<" ";
-	if (use_perflib)
+        if (use_spec)
+        {
+          timercode = " }";
+          /* XXX Insert code here */
+        }
+        else if (use_perflib)
         {
           timercode = string(string(" Perf_Update(\"" )+(*it)->snippet+", 0); } ");
         }
@@ -1682,9 +1868,20 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 	break;
 
     case GOTO_STOP_TIMER:
-	ostr <<"{ TAU_PROFILE_STOP(lt);"; 
+        ostr << "{ ";
+        if (use_spec)
+        {
+          /* XXX Insert code here */
+        }
+        else if (use_perflib)
+        {
+          /* XXX Insert code here */
+        }
+        else {
+	  ostr <<"TAU_PROFILE_STOP(lt);";
+        }
 	for (k = (*it)->col-1; k < strlen(inbuf); k++)
-	  ostr<<inbuf[k]; 
+	  ostr<<inbuf[k];
 	ostr <<" }";
 	write_from = k+1;
 	instrumented = true;
@@ -3153,7 +3350,24 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	      // break the line
 	      ostr << endl;
 
-	      if (use_perflib) {
+              if (use_spec)
+              {
+                writeAdditionalFortranDeclarations(ostr, (pdbRoutine *)((*it)->item));
+                ostr << "\t" << (*it)->snippet << endl;
+		ostr << "      ";
+		
+		// write the rest of the original statement
+		for (k = (*it)->col-1; k < write_upto ; k++) {
+		  ostr << inbuf[k];
+		}
+		if (print_cr) {
+		  ostr << endl;
+		}
+                /* XXX Insert code here */
+                break;
+              }
+              else if (use_perflib)
+              {
 		if (pure && instrumentPure) {
 		  ostr << "      interface\n";
 		  ostr << "      pure subroutine f_perf_update(name, flag)\n";
@@ -3220,7 +3434,8 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	      }
 	      
                 writeAdditionalFortranDeclarations(ostr, (pdbRoutine *)((*it)->item));
-		
+                ostr << "\t" << (*it)->snippet << endl;
+
 		if (((pdbRoutine *)(*it)->item)->kind() == pdbItem::RO_FPROG) {
 		  // main
 		  ostr << "      call TAU_PROFILE_INIT()"<<endl;
@@ -3358,7 +3573,11 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	    /* before writing stop/exit examine the kind */
 		if ((*it)->kind == EXIT)
 		{ /* Turn off the timers. This is similar to abort/exit in C */
-		  if (use_perflib)
+                  if (use_spec)
+                  {
+                    /* XXX Insert code here */
+                  }
+                  else if (use_perflib)
 		    ostr <<"call f_perf_update('"<<stripModuleFromName((*it)->item->fullName())<<"', .false.)"<<endl;
 		  else
 		    ostr <<"call TAU_PROFILE_EXIT('exit')"<<endl;
@@ -3367,7 +3586,11 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		{ /* it is RETURN */
 		  if (pure) {
 		    if (instrumentPure) {
-		      if (use_perflib)
+	              if (use_spec)
+                      {
+                        /* XXX Insert code here */
+                      }
+                      else if (use_perflib)
 			ostr <<"call f_perf_update('" << stripModuleFromName((*it)->item->fullName())<< "', .false.)"<<endl;
 		      else
 			ostr <<"call TAU_PURE_STOP('" << instrumentedName << "')"<<endl;
@@ -3382,7 +3605,12 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #endif /* DEBUG */
 			ostr <<"call TAU_PROFILE_STOP("<<(*siter)<<")"<<endl<<"\t";
 		    }
-		    if (use_perflib)
+                    ostr << (*it)->snippet << endl;
+		    if (use_spec)
+                    {
+                      /* XXX Insert code here */
+                    }
+                    else if (use_perflib)
 		      ostr <<"call f_perf_update('"<<stripModuleFromName((*it)->item->fullName())<<"', .false.)"<<endl;
 		    else
 		      ostr <<"call "<<getStopMeasurementEntity((*it))<<"(profiler)"<<endl;
@@ -3897,6 +4125,7 @@ int main(int argc, char **argv)
     cout<<"-rv <return_void_keyword>: Specify a different keyword for return in a void routine"<<endl;
     cout<<"-e <exit_keyword>: Specify a different keyword for exit (e.g., a macro that calls exit)"<<endl;
     cout<<"-p : Generate instrumentation calls for perflib [LANL] instead of TAU" <<endl;
+    cout<<"-spec <spec_file>: Use instrumentation commands from <spec_file>"<<endl;
     cout<<"----------------------------------------------------------------------------------------------------------"<<endl;
     cout<<"e.g.,"<<endl;
     cout<<"% "<<argv[0]<<" foo.pdb foo.cpp -o foo.inst.cpp -f select.tau"<<endl;
@@ -4030,6 +4259,15 @@ int main(int argc, char **argv)
           printf("Using exit_keyword keyword: %s\n", exit_keyword);
 #endif /* DEBUG */
   	}
+        if (strcmp(argv[i], "-spec") == 0)
+        {
+          ++i;
+          processInstrumentationRequests(argv[i]);
+          use_spec = true;
+#ifdef DEBUG
+          printf("Using instrumentation code from spec file: %s\n", argv[i]);
+#endif /* DEBUG */
+        }
         break;
       }
 
@@ -4062,13 +4300,17 @@ int main(int argc, char **argv)
        if (lang_specified)
        { /* language explicitly specified on command line*/
 	 switch (tau_language) { 
-	   case tau_cplusplus : 
-         	retval = instrumentCXXFile(p, *it, outFileName, group_name, header_file);
-	        if (!retval) {
-		  cout <<"Uh Oh! There was an error in instrumenting with the C++ API, trying C next... Please do not force a C++ instrumentation API on this file: "<<(*it)->name()<<endl;
-         	  instrumentCFile(p, *it, outFileName, group_name, header_file);
-	 	}
-		
+	   case tau_cplusplus :
+                if (use_spec)
+                  instrumentCFile(p, *it, outFileName, group_name, header_file);
+                else
+                {
+         	  retval = instrumentCXXFile(p, *it, outFileName, group_name, header_file);
+	          if (!retval) {
+		    cout <<"Uh Oh! There was an error in instrumenting with the C++ API, trying C next... Please do not force a C++ instrumentation API on this file: "<<(*it)->name()<<endl;
+         	    instrumentCFile(p, *it, outFileName, group_name, header_file);
+	 	  }
+		}
 		break;
 	   case tau_c :
          	instrumentCFile(p, *it, outFileName, group_name, header_file);
@@ -4085,14 +4327,19 @@ int main(int argc, char **argv)
        { /* implicit detection of language */
          if (l == PDB::LA_CXX)
 	 {
-           retval = instrumentCXXFile(p, *it, outFileName, group_name, header_file);
-           if (!retval)
-	   {
-#ifdef DEBUG
-	     cout <<"Uh Oh! There was an error in instrumenting with the C++ API, trying C next... "<<endl;
-#endif /* DEBUG */
+           if (use_spec)
              instrumentCFile(p, *it, outFileName, group_name, header_file);
-	   }
+           else
+           {
+             retval = instrumentCXXFile(p, *it, outFileName, group_name, header_file);
+             if (!retval)
+	     {
+#ifdef DEBUG
+	       cout <<"Uh Oh! There was an error in instrumenting with the C++ API, trying C next... "<<endl;
+#endif /* DEBUG */
+               instrumentCFile(p, *it, outFileName, group_name, header_file);
+	     }
+           }
 	 }
          if (l == PDB::LA_C)
            instrumentCFile(p, *it, outFileName, group_name, header_file);
@@ -4150,9 +4397,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.193 $   $Date: 2008/07/30 21:07:55 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.193 2008/07/30 21:07:55 amorris Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: geimer $
+ * $Revision: 1.194 $   $Date: 2008/08/05 19:13:34 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.194 2008/08/05 19:13:34 geimer Exp $
  ***************************************************************************/
 
 
