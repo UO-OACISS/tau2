@@ -10,7 +10,7 @@
 #include <Profile/TauEnv.h>
 
 int TAUDECL Tau_RtsLayer_myThread();
-char TAUDECL *getSnapshotBuffer();
+char* TAUDECL getSnapshotBuffer();
 int TAUDECL getSnapshotBufferLength();
 
 
