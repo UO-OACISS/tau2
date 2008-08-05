@@ -9,7 +9,7 @@
 void TauSyncClocks(int rank, int size);
 void TauSyncFinalClocks(int rank, int size);
 int TAUDECL Tau_write_snapshot(const char *name, int finalize);
-int TAUDECL Tau_mergeProfiles();
+int Tau_mergeProfiles();
 void TAUDECL Tau_set_usesMPI(int value);
 int TAUDECL tau_totalnodes(int set_or_get, int value);
 

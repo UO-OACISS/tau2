@@ -9,9 +9,9 @@
 #include <Profile/tau_types.h>
 #include <Profile/TauEnv.h>
 
-int Tau_RtsLayer_myThread();
-char *getSnapshotBuffer();
-int getSnapshotBufferLength();
+int TAUDECL Tau_RtsLayer_myThread();
+char TAUDECL *getSnapshotBuffer();
+int TAUDECL getSnapshotBufferLength();
 
 
 int Tau_mergeProfiles() {
