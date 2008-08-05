@@ -1050,7 +1050,7 @@ void printInstrumentList(void)
 }
 
 /* using the list, write the additional statements */
-void writeStatements(ofstream& ostr, const pdbRoutine *ro, 
+void writeStatements(ostream& ostr, const pdbRoutine *ro, 
          list< pair< int, list<string> > > & additional)
 {
 
@@ -1080,18 +1080,18 @@ void writeStatements(ofstream& ostr, const pdbRoutine *ro,
   return;  /* either it is not found, or all statements were written! */
 }
 /* After profiler and save statements are written, do we need to declare any other variables? */
-void writeAdditionalFortranDeclarations(ofstream& ostr, const pdbRoutine *ro)
+void writeAdditionalDeclarations(ostream& ostr, const pdbRoutine *ro)
 {
   if (isInstrumentListEmpty()) return; /* nothing specified */
 #ifdef DEBUG 
-  printf("writeAdditionalFortranDeclarations: Name %s, id=%d\n", ro->fullName().c_str(), ro->id());
+  printf("writeAdditionalDeclarations: Name %s, id=%d\n", ro->fullName().c_str(), ro->id());
 #endif /* DEBUG */
   writeStatements(ostr, ro, additionalDeclarations);
 }
 
 /* After profiler and save statements are written, do we need 
    to call any other timer routines? */
-void writeAdditionalFortranInvocations(ofstream& ostr, const pdbRoutine *ro)
+void writeAdditionalFortranInvocations(ostream& ostr, const pdbRoutine *ro)
 {
   if (isInstrumentListEmpty()) return; /* nothing specified */
 #ifdef DEBUG 
@@ -1708,9 +1708,13 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
           cout <<"at line: "<<(*rit)->bodyBegin().line()<<", col"<< (*rit)->bodyBegin().col()<<"code = "<<(*it)->getCode()<<endl;
 #endif /* DEBUG */
 
-	  itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()+1, (*it)->getCode((*rit)->bodyBegin(), *rit), BEFORE));
-	  /* should the column be 1 greater than body begin's col, so 
-	     instrumentation is placed after the beginning of the routine? */
+          /* We treat snippet insertion code as additional declarations
+             that must be placed inside the routine */
+          list<string> decls;
+          decls.push_back("\t" + (*it)->getCode((*rit)->bodyBegin(), *rit));
+
+          additionalDeclarations.push_back(pair<int, list<string> >((*rit)->id(), decls)); 
+	  /* assign the list of strings to the list */
         } /* end of routine decl */
         /* examine the type of request - entry */
         if ((*it)->getKind() == TAU_ROUTINE_ENTRY)
@@ -1758,7 +1762,6 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
             if (needsSetup)
             {
               /* Generate argc/argv temporaries */
-              string namestr = "static char * tau_unknown = \"unknown\";\n";
               string argcstr = "\tstatic int tau_argc = ";
               string argvstr = "\tstatic char ** tau_argv = ";
               pdbType::argvec args = (*rit)->signature()->arguments();
@@ -1768,13 +1771,13 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
                   if (args[0].name().compare("-") != 0 &&
                       args[0].name().compare("-") != 0)
                   {
-                   argcstr += args[0].name() + ";\n";
-                   argvstr += args[1].name() + ";\n";
+                   argcstr += args[0].name() + ";";
+                   argvstr += args[1].name() + ";";
                    break;
                   }
                 case 0:
-                  argcstr += "1;\n";
-                  argvstr += "&tau_unknown;\n";
+                  argcstr += "1;";
+                  argvstr += "&tau_unknown;";
                   break;
                 default:
                   cerr << "Hmm... main()'s signature looks weird to me." << endl
@@ -1782,7 +1785,12 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
                   break;
               }
 
-              itemvec.push_back( new itemRef((pdbItem *)NULL, BODY_BEGIN, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col(), namestr + argcstr + argvstr, BEFORE));
+              /* Add the additional declarations for the setup code */
+              list<string> decls;
+              decls.push_back("\tstatic char * tau_unknown = \"unknown\";");
+              decls.push_back(argcstr);
+              decls.push_back(argvstr);
+              additionalDeclarations.push_back(pair<int, list<string> >((*rit)->id(), decls)); 
               needsSetup = false;
             }
 
@@ -1907,7 +1915,7 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
          cout <<"at line: "<<(*rit)->bodyBegin().line()<<", col"<< (*rit)->bodyBegin().col()<<"code = "<<(*it)->getCode()<<endl;
 #endif /* DEBUG */
 
-         /* We should treat snippet insertion code at routine entry like additional declarations
+         /* We treat snippet insertion code as additional declarations
             that must be placed inside the routine */
          list<string> decls;
          decls.push_back("\t" + (*it)->getCode((*rit)->bodyBegin(), *rit));
@@ -2403,6 +2411,6 @@ string intToString(int value)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: geimer $
- * $Revision: 1.55 $   $Date: 2008/08/05 19:13:34 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.55 2008/08/05 19:13:34 geimer Exp $
+ * $Revision: 1.56 $   $Date: 2008/08/05 21:26:17 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.56 2008/08/05 21:26:17 geimer Exp $
  ***************************************************************************/

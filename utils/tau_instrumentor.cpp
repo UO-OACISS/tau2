@@ -52,8 +52,8 @@ extern int processInstrumentationRequests(char *fname);
 extern bool instrumentEntity(const string& function_name);
 extern bool processFileForInstrumentation(const string& file_name);
 extern bool isInstrumentListEmpty(void);
-extern void writeAdditionalFortranDeclarations(ofstream& ostr, const pdbRoutine *routine);
-extern void writeAdditionalFortranInvocations(ofstream& ostr, const pdbRoutine *routine);
+extern void writeAdditionalDeclarations(ostream& ostr, const pdbRoutine *routine);
+extern void writeAdditionalFortranInvocations(ostream& ostr, const pdbRoutine *routine);
 extern bool addMoreInvocations(int routine_id, string& snippet);
 extern bool isVoidRoutine(const pdbItem* r);
 
@@ -1241,7 +1241,9 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i, strin
 #ifdef DEBUG
   cout <<"Return type :" << return_type<<endl;
 #endif /* DEBUG */
-  ostr <<"{\n\t"<<return_type<< " tau_ret_val;\n\t";
+  ostr << "{\n\t" << return_type << " tau_ret_val;\n";
+  writeAdditionalDeclarations(ostr, (pdbRoutine *)(i->item));
+  ostr << "\n\t";
   if (use_spec)
   {
     ostr << i->snippet << endl;
@@ -1249,11 +1251,11 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i, strin
   }
   else if (use_perflib)
   {
-    ostr<<"\tPerf_Update(\"" <<((pdbRoutine *)(i->item))->name() << "\", 1);"<<endl;
+    ostr<<"Perf_Update(\"" <<((pdbRoutine *)(i->item))->name() << "\", 1);"<<endl;
   }
   else
   {
-    ostr <<"\t"<<getCreateMeasurementEntity(i)<<"(tautimer, \""<<
+    ostr <<getCreateMeasurementEntity(i)<<"(tautimer, \""<<
       getInstrumentedName(i->item) << "\", \" " << "\",";
       // ((pdbRoutine *)(i->item))->signature()->name() << "\", ";
 
@@ -1288,18 +1290,21 @@ void processNonVoidRoutine(ostream& ostr, string& return_type, itemRef *i, strin
 void processVoidRoutine(ostream& ostr, string& return_type, itemRef *i, string& group_name)
 {
   int space;
+  ostr << "{\n";
+  writeAdditionalDeclarations(ostr, (pdbRoutine *)(i->item));
+  ostr << "\n\t";
   if (use_spec)
   {
-    ostr << "{\n\t" << i->snippet << endl;
+    ostr << i->snippet << endl;
     /* XXX Insert code here */
   }
   else if (use_perflib)
   {
-    ostr<<"{ \n\tPerf_Update(\"" <<((pdbRoutine *)(i->item))->name() << "\", 1);"<<endl;
+    ostr<<"Perf_Update(\"" <<((pdbRoutine *)(i->item))->name() << "\", 1);"<<endl;
   }
   else
   {
-    ostr <<"{ \n\t"<<getCreateMeasurementEntity(i)<<"(tautimer, \""<<
+    ostr <<getCreateMeasurementEntity(i)<<"(tautimer, \""<<
       getInstrumentedName(i->item) << "\", \" " << "\", ";
       //((pdbRoutine *)(i->item))->signature()->name() << "\", ";
   
@@ -1373,7 +1378,7 @@ void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it,
 {
   if (isReturnTypeReference(it) ||
       isBlankString(ret_expression) ||
-      isBlankString(it->snippet))
+      (use_spec && isBlankString(it->snippet)))
   {
     ostr <<"{ ";
     processCloseLoopTimer(ostr);
@@ -1393,7 +1398,7 @@ void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it,
   }
   else 
   {
-    ostr <<"{ tau_ret_val = " << ret_expression << ";";
+    ostr <<"{ tau_ret_val = " << ret_expression << "; ";
     processCloseLoopTimer(ostr);
     if (use_spec)
     {
@@ -1401,11 +1406,11 @@ void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it,
     }
     else if (use_perflib)
     {
-      ostr<<"Perf_Update(\""<< ((pdbRoutine *)(it->item))->name()<<"\", 0);";
+      ostr<<"Perf_Update(\""<< ((pdbRoutine *)(it->item))->name()<<"\", 0); ";
     }
     else
-      ostr<<getStopMeasurementEntity(it)<<"(tautimer);";
-    ostr << " " << it->snippet << " " << use_string << " " << "(tau_ret_val); }" << endl;
+      ostr<<getStopMeasurementEntity(it)<<"(tautimer); ";
+    ostr << it->snippet << " " << use_string << " " << "(tau_ret_val); }" << endl;
   }
 }
 
@@ -3352,7 +3357,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 
               if (use_spec)
               {
-                writeAdditionalFortranDeclarations(ostr, (pdbRoutine *)((*it)->item));
+                writeAdditionalDeclarations(ostr, (pdbRoutine *)((*it)->item));
                 ostr << "\t" << (*it)->snippet << endl;
 		ostr << "      ";
 		
@@ -3433,8 +3438,8 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		ostr << "      save profiler"<<endl<<endl;
 	      }
 	      
-                writeAdditionalFortranDeclarations(ostr, (pdbRoutine *)((*it)->item));
-                ostr << "\t" << (*it)->snippet << endl;
+                writeAdditionalDeclarations(ostr, (pdbRoutine *)((*it)->item));
+                ostr << "\n\t" << (*it)->snippet << endl;
 
 		if (((pdbRoutine *)(*it)->item)->kind() == pdbItem::RO_FPROG) {
 		  // main
@@ -4398,8 +4403,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: geimer $
- * $Revision: 1.194 $   $Date: 2008/08/05 19:13:34 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.194 2008/08/05 19:13:34 geimer Exp $
+ * $Revision: 1.195 $   $Date: 2008/08/05 21:26:17 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.195 2008/08/05 21:26:17 geimer Exp $
  ***************************************************************************/
 
 
