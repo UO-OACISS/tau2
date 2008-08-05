@@ -6,11 +6,12 @@
 #include <stdlib.h>
 #define TAU_MAX_REQUESTS  4096
 
-extern void TauSyncClocks(int rank, int size);
-extern void TauSyncFinalClocks(int rank, int size);
-extern int Tau_write_snapshot(const char *name, int finalize);
-extern int Tau_mergeProfiles();
-extern void Tau_set_usesMPI(int value);
+void TAUDECL TauSyncClocks(int rank, int size);
+void TAUDECL TauSyncFinalClocks(int rank, int size);
+int TAUDECL Tau_write_snapshot(const char *name, int finalize);
+int TAUDECL Tau_mergeProfiles();
+void TAUDECL Tau_set_usesMPI(int value);
+int TAUDECL tau_totalnodes(int set_or_get, int value);
 
 
 /* This file uses the MPI Profiling Interface with TAU instrumentation.
@@ -228,7 +229,6 @@ static int translateRankToWorld(MPI_Comm comm, int rank) {
 
   
 
-int TAUDECL tau_totalnodes(int set_or_get, int value);
 
 
 #ifdef TAU_TRACK_MSG

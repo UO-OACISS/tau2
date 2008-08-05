@@ -21,23 +21,29 @@
 #ifndef _TAU_ENV_H_
 #define _TAU_ENV_H_
 
+#if (defined(TAU_WINDOWS))
+#define TAUDECL __cdecl
+#else
+#define TAUDECL
+#endif /* TAU_WINDOWS */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
   
-  void TauEnv_initialize();
-  int TauEnv_get_synchronize_clocks();
-  int TauEnv_get_verbose();
-  int TauEnv_get_throttle();
-  double TauEnv_get_throttle_numcalls();
-  double TauEnv_get_throttle_percall();
-  const char *TauEnv_get_profiledir();
-  const char *TauEnv_get_tracedir();
+  void TAUDECL TauEnv_initialize();
+  int TAUDECL TauEnv_get_synchronize_clocks();
+  int TAUDECL TauEnv_get_verbose();
+  int TAUDECL TauEnv_get_throttle();
+  double TAUDECL TauEnv_get_throttle_numcalls();
+  double TAUDECL TauEnv_get_throttle_percall();
+  const char TAUDECL *TauEnv_get_profiledir();
+  const char TAUDECL *TauEnv_get_tracedir();
 
 #define TAU_FORMAT_PROFILE 1
 #define TAU_FORMAT_SNAPSHOT 2
 #define TAU_FORMAT_MERGED 2
-  int TauEnv_get_profile_format();
+  int TAUDECL TauEnv_get_profile_format();
 
   void TAU_VERBOSE(const char *format, ...);
   
