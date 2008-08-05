@@ -295,15 +295,15 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
       }
     }
 
-#if defined(TAU_USE_DEFAULT_TIMER) || defined(TAU_USE_PAPI_TIMER)
     if (!counterFound) {
       char *counter = "GET_TIME_OF_DAY";
 #if defined(TAU_USE_PAPI_TIMER) && defined(TAU_PAPI)
       counter = "P_WALL_CLOCK_TIME";
+#else
+      fprintf (stderr, "TAU: No counters environment variables defined (COUNTER1, COUNTER2, ...), using COUNTER1=GET_TIME_OF_DAY\n");
 #endif
       MultipleCounterLayer::names[0] = strdup(counter);
     }
-#endif // TAU_USE_DEFAULT_TIMER || TAU_USE_PAPI_TIMER
 
     //Initialize the function array with the correct active functions.
     for(int e=0; e<SIZE_OF_INIT_ARRAY; e++)
