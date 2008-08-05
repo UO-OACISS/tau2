@@ -147,10 +147,10 @@ TauMpi.obj: src\Profile\TauMpi.c
 ClockSync.obj: src\Profile\ClockSync.c
 	$(CC) $(FLAGS) $(MPICFLAGS) /Fo$@ -c src\Profile\ClockSync.c
 
-ClockSync.obj: src\Profile\ProfileMerge.c
+ProfileMerge.obj: src\Profile\ProfileMerge.c
 	$(CC) $(FLAGS) $(MPICFLAGS) /Fo$@ -c src\Profile\ProfileMerge.c
 
-TauMpi.lib : TauMpi.obj ClockSync.obj
+TauMpi.lib : TauMpi.obj ClockSync.obj ProfileMerge.obj
 	lib /OUT:"win32\lib\TauMpi.lib" TauMpi.obj ClockSync.obj ProfileMerge.obj
 
 
