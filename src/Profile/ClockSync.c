@@ -56,6 +56,7 @@ long TauUserEvent_GetEventId(void *evt);
 
 /* We're probably going to have to change this for some platforms */
 #ifdef TAU_WINDOWS
+#include <winsock.h>
 static long gethostid() {
   int id;
   char hostname[256];/* 255 is max legal DNS name */
