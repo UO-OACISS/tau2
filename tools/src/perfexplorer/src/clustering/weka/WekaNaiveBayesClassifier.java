@@ -26,6 +26,7 @@ public class WekaNaiveBayesClassifier implements ClassifierInterface {
 	
 	protected Instances trainingData = null;
 	protected Classifier classifier = null;
+	protected List<double[]> distributions = new ArrayList<double[]>();
 	
 	/**
 	 * 
@@ -52,6 +53,8 @@ public class WekaNaiveBayesClassifier implements ClassifierInterface {
 				// ...classify the instance...
 				//output = classifier.distributionForInstance(current);
 				double output = classifier.classifyInstance(current);
+				double[] distribution = classifier.distributionForInstance(current);
+				this.distributions.add(distribution);
 				// ...the class is the last attribute.
 				result.add(Double.toString(output));
 			}
@@ -90,6 +93,10 @@ public class WekaNaiveBayesClassifier implements ClassifierInterface {
 			System.exit(0);			
 		}
 		return (eval.toSummaryString("\nResults\n=======\n", false));
+	}
+
+	public List<double[]> getDistributions() {
+		return this.distributions;
 	}
 
 	

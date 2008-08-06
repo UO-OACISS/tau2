@@ -30,6 +30,7 @@ public class NaiveBayesOperation extends AbstractPerformanceOperation {
     protected List<String> classNames = null;
     protected final String trainString = "Naive Bayes Training";
     protected final String testString = "Naive Bayes Test";
+    protected List<double[]> distributions = null;
 
 	
 	/**
@@ -152,8 +153,13 @@ public class NaiveBayesOperation extends AbstractPerformanceOperation {
     	}
 		
 		categories = classifier.classifyInstances(data);
+		this.distributions = classifier.getDistributions();
 		
 		return categories;
+	}
+
+	public List<double[]> getDistributions() {
+		return distributions;
 	}
 
 }

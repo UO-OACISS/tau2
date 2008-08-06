@@ -48,10 +48,18 @@ public class SupportVectorOperationTest extends TestCase {
 		}
 		
 		List<String> classes = oper.classifyInstances(testInput);
+		List<double[]> distributions = oper.getDistributions();
 		for (int i = 0 ; i < 10 ; i++) {
-			System.out.println(testInput.getExclusive(i, "attr1", "dummy") + ", " +
-					testInput.getExclusive(i, "attr2", "dummy") + " =  " +
-					classes.get(i).toString());
+			System.out.print(testInput.getExclusive(i, "attr1", "dummy") + ", " +
+					testInput.getExclusive(i, "attr2", "dummy") + " = " +
+					classes.get(i).toString() + ", distributions: ");
+			double[] tmp = distributions.get(i);
+			for (int j = 0 ; j < tmp.length ; j++) {
+				if (j > 0)
+					System.out.print(",");
+				System.out.print(tmp[j]);
+			}
+			System.out.println("");
 		}
 	}
 

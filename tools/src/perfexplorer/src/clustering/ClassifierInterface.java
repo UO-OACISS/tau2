@@ -38,4 +38,11 @@ public interface ClassifierInterface {
 	 * @return
 	 */
 	String evaluate(RawDataInterface testData);
+
+	/**
+	 * Get the class distributions for the tested set of inputs
+	 * 
+	 * @return
+	 */
+	List<double[]> getDistributions();
 }
