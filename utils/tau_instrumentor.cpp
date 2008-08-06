@@ -3439,7 +3439,8 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	      }
 	      
                 writeAdditionalDeclarations(ostr, (pdbRoutine *)((*it)->item));
-                ostr << "\n\t" << (*it)->snippet << endl;
+                //if (!(*it)->snippet.empty())
+                //  ostr << "\n\t" << (*it)->snippet << "\n\t";
 
 		if (((pdbRoutine *)(*it)->item)->kind() == pdbItem::RO_FPROG) {
 		  // main
@@ -3610,7 +3611,8 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #endif /* DEBUG */
 			ostr <<"call TAU_PROFILE_STOP("<<(*siter)<<")"<<endl<<"\t";
 		    }
-                    ostr << (*it)->snippet << endl;
+                    if (!(*it)->snippet.empty())
+                      ostr << (*it)->snippet << "\n\t";
 		    if (use_spec)
                     {
                       /* XXX Insert code here */
@@ -4403,8 +4405,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: geimer $
- * $Revision: 1.195 $   $Date: 2008/08/05 21:26:17 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.195 2008/08/05 21:26:17 geimer Exp $
+ * $Revision: 1.196 $   $Date: 2008/08/06 22:08:39 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.196 2008/08/06 22:08:39 geimer Exp $
  ***************************************************************************/
 
 
