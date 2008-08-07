@@ -1787,8 +1787,8 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
                   0 != args[0].name().compare("-") &&
                   0 != args[1].name().compare("-"))
               {
-                setup = "tau_argc = argc;\n\t"
-                        "tau_argv = argv;\n";
+                setup = "tau_argc = " + args[0].name() + ";\n\t"
+                        "tau_argv = " + args[1].name() + ";\n";
               }
               else
               {
@@ -2419,6 +2419,6 @@ string intToString(int value)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: geimer $
- * $Revision: 1.57 $   $Date: 2008/08/07 03:52:52 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.57 2008/08/07 03:52:52 geimer Exp $
+ * $Revision: 1.58 $   $Date: 2008/08/07 17:47:32 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.58 2008/08/07 17:47:32 geimer Exp $
  ***************************************************************************/
