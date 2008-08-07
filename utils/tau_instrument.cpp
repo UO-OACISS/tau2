@@ -316,7 +316,7 @@ string tauInstrument::getCode(const pdbLoc& loc, const pdbRoutine* r, bool isIni
   replaceAll(result, "@COL@", intToString(loc.col()));
   if (r)
   {
-    replaceAll(result, "@FUNCTION@", r->fullName());
+    replaceAll(result, "@ROUTINE@", r->fullName());
     replaceAll(result, "@BEGIN_LINE@", intToString(r->headBegin().line()));
     replaceAll(result, "@BEGIN_COL@", intToString(r->headBegin().col()));
     replaceAll(result, "@END_LINE@", intToString(r->bodyEnd().line()));
@@ -2441,6 +2441,6 @@ string intToString(int value)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: geimer $
- * $Revision: 1.59 $   $Date: 2008/08/07 18:10:28 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.59 2008/08/07 18:10:28 geimer Exp $
+ * $Revision: 1.60 $   $Date: 2008/08/07 20:44:33 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.60 2008/08/07 20:44:33 geimer Exp $
  ***************************************************************************/
