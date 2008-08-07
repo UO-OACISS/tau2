@@ -541,51 +541,58 @@ void parseInstrumentationCommand(char *line, int lineno)
 	TOKEN('"');
 	RETRIEVESTRING(pname, line);
 	WSPACE(line);
-        if (strncmp(line, "code", 4) == 0)
-        { 
-          line+= 4; /* move 4 spaces */
-          /* check for = <WSPACE> " */
-          WSPACE(line);
-          TOKEN('=');
-          WSPACE(line);
-          TOKEN('"');
-          RETRIEVECODE(pcode, line);
 #ifdef DEBUG
-          printf("GOT code = %s\n", pcode);
+        printf("GOT routine = %s\n", pname);
 #endif /* DEBUG */
-	}
-        else parseError("<code> token not found", line, lineno, line - original); 
-        WSPACE(line);
-        if (strncmp(line, "lang", 4) == 0)
-        {
-          line += 4; /* move 4 spaces */
-          /* check for = <WSPACE> " */
-          WSPACE(line);
-          TOKEN('=');
-          WSPACE(line);
-          TOKEN('"');
-          RETRIEVESTRING(plang, line);
-#ifdef DEBUG
-          printf("GOT lang = %s\n", plang);
-#endif /* DEBUG */
-          language = parseLanguageString(plang);
-          if (language < 0)
-            parseError("<lang> token invalid", line, lineno, line - original);
-        }
-#ifdef DEBUG 
-	printf("entry routine = %s, code = %s, lang = %d\n", pname, pcode, language);
-#endif /* DEBUG */
-        if (filespecified)
-	{
-          instrumentList.push_back(new tauInstrument(string(pfile), string(pname), string(pcode), TAU_ROUTINE_ENTRY, language));
-	}
-        else 
-	{
-	  bool codespecified = true; 
-          instrumentList.push_back(new tauInstrument(string(pname), string(pcode), codespecified, TAU_ROUTINE_ENTRY, language));
-	} /* file and routine are both specified for entry */
       }
-      else parseError("<routine> token not found", line, lineno, line - original);
+      else
+      {
+        strcpy(pname, "#");
+      }
+      if (strncmp(line, "code", 4) == 0)
+      { 
+        line+= 4; /* move 4 spaces */
+        /* check for = <WSPACE> " */
+        WSPACE(line);
+        TOKEN('=');
+        WSPACE(line);
+        TOKEN('"');
+        RETRIEVECODE(pcode, line);
+        WSPACE(line);
+#ifdef DEBUG
+        printf("GOT code = %s\n", pcode);
+#endif /* DEBUG */
+      }
+      else parseError("<code> token not found", line, lineno, line - original); 
+      if (strncmp(line, "lang", 4) == 0)
+      {
+        line += 4; /* move 4 spaces */
+        /* check for = <WSPACE> " */
+        WSPACE(line);
+        TOKEN('=');
+        WSPACE(line);
+        TOKEN('"');
+        RETRIEVESTRING(plang, line);
+        WSPACE(line);
+#ifdef DEBUG
+        printf("GOT lang = %s\n", plang);
+#endif /* DEBUG */
+        language = parseLanguageString(plang);
+        if (language < 0)
+          parseError("<lang> token invalid", line, lineno, line - original);
+      }
+#ifdef DEBUG 
+      printf("entry routine = %s, code = %s, lang = %d\n", pname, pcode, language);
+#endif /* DEBUG */
+      if (filespecified)
+      {
+        instrumentList.push_back(new tauInstrument(string(pfile), string(pname), string(pcode), TAU_ROUTINE_ENTRY, language));
+      }
+      else 
+      {
+	bool codespecified = true; 
+        instrumentList.push_back(new tauInstrument(string(pname), string(pcode), codespecified, TAU_ROUTINE_ENTRY, language));
+      } /* file and routine are both specified for entry */
     } /* end of entry token */
     else 
     { /* parse exit, and loops */
@@ -616,23 +623,29 @@ void parseInstrumentationCommand(char *line, int lineno)
 	  TOKEN('"');
 	  RETRIEVESTRING(pname, line);
 	  WSPACE(line);
-          if (strncmp(line, "code", 4) == 0)
-          { 
-            line+= 4; /* move 4 spaces */
-            /* check for = <WSPACE> " */
-            WSPACE(line);
-            TOKEN('=');
-            WSPACE(line);
-            TOKEN('"');
-            RETRIEVECODE(pcode, line);
 #ifdef DEBUG
-            printf("GOT code = %s\n", pcode);
+          printf("GOT routine = %s\n", pname);
 #endif /* DEBUG */
-	  }
-	  else parseError("<code> token not found", line, lineno, line - original);
-	}
-	else parseError("<routine> token not found", line, lineno, line - original);
-        WSPACE(line);
+        }
+        else
+        {
+          strcpy(pname, "#");
+        }
+        if (strncmp(line, "code", 4) == 0)
+        { 
+          line+= 4; /* move 4 spaces */
+          /* check for = <WSPACE> " */
+          WSPACE(line);
+          TOKEN('=');
+          WSPACE(line);
+          TOKEN('"');
+          RETRIEVECODE(pcode, line);
+          WSPACE(line);
+#ifdef DEBUG
+          printf("GOT code = %s\n", pcode);
+#endif /* DEBUG */
+        }
+	else parseError("<code> token not found", line, lineno, line - original);
         if (strncmp(line, "lang", 4) == 0)
         {
           line += 4; /* move 4 spaces */
@@ -642,6 +655,7 @@ void parseInstrumentationCommand(char *line, int lineno)
           WSPACE(line);
           TOKEN('"');
           RETRIEVESTRING(plang, line);
+          WSPACE(line);
 #ifdef DEBUG
           printf("GOT lang = %s\n", plang);
 #endif /* DEBUG */
@@ -664,7 +678,7 @@ void parseInstrumentationCommand(char *line, int lineno)
       } /* end of exit */
       else
       { /* loops */
-	m1 = strncmp(line, "loops", 5);
+      	m1 = strncmp(line, "loops", 5);
 	m2 = strncmp(line, "io", 2);
 	m3 = strncmp(line, "memory", 6);
         if ((m1 == 0) || (m2 == 0) || (m3 == 0)) {
@@ -682,8 +696,8 @@ void parseInstrumentationCommand(char *line, int lineno)
 	        kind = TAU_MEMORY;
 	        line += 6;/* move the pointer 6 spaces (memory) for next token */
 	      }
-	   }
-	 }
+	    }
+	  }
 
 	  /* check for WSPACE */
 	  WSPACE(line);
@@ -911,12 +925,12 @@ void parseInstrumentationCommand(char *line, int lineno)
                 WSPACE(line);
                 TOKEN('"');
                 RETRIEVECODE(pcode, line);
+                WSPACE(line);
 #ifdef DEBUG
                 printf("GOT code = %s\n", pcode);
 #endif /* DEBUG */
               }
               else parseError("<code> token not found", line, lineno, line - original); 
-              WSPACE(line);
               if (strncmp(line, "lang", 4) == 0)
               {
                 line += 4; /* move 4 spaces */
@@ -926,6 +940,7 @@ void parseInstrumentationCommand(char *line, int lineno)
                 WSPACE(line);
                 TOKEN('"');
                 RETRIEVESTRING(plang, line);
+                WSPACE(line);
 #ifdef DEBUG
                 printf("GOT lang = %s\n", plang);
 #endif /* DEBUG */
@@ -970,53 +985,60 @@ void parseInstrumentationCommand(char *line, int lineno)
 	          TOKEN('"');
 	          RETRIEVESTRING(pname, line);
 	          WSPACE(line);
-                  if (strncmp(line, "code", 4) == 0)
-                  { 
-                    line+= 4; /* move 4 spaces */
-                    /* check for = <WSPACE> " */
-                    WSPACE(line);
-                    TOKEN('=');
-                    WSPACE(line);
-                    TOKEN('"');
-                    RETRIEVECODE(pcode, line);
 #ifdef DEBUG
-                    printf("GOT code = %s\n", pcode);
+                  printf("GOT routine = %s\n", pname);
 #endif /* DEBUG */
-	          }
-                  else parseError("<code> token not found", line, lineno, line - original); 
-                  WSPACE(line);
-                  if (strncmp(line, "lang", 4) == 0)
-                  {
-                    line += 4; /* move 4 spaces */
-                    /* check for = <WSPACE> " */
-                    WSPACE(line);
-                    TOKEN('=');
-                    WSPACE(line);
-                    TOKEN('"');
-                    RETRIEVESTRING(plang, line);
-#ifdef DEBUG
-                    printf("GOT lang = %s\n", plang);
-#endif /* DEBUG */
-                    language = parseLanguageString(plang);
-                    if (language < 0)
-                      parseError("<lang> token invalid", line, lineno, line - original);
-                  }
-#ifdef DEBUG 
-	          printf("decl routine = %s, code = %s, lang = %d\n", pname, pcode, language);
-#endif /* DEBUG */
-                  if (filespecified)
-	          {
-                    instrumentList.push_back(new tauInstrument(string(pfile), string(pname), string(pcode), TAU_ROUTINE_DECL, language));
-	          }
-                  else 
-	          {
-	            bool codespecified = true; 
-                    instrumentList.push_back(new tauInstrument(string(pname), string(pcode), codespecified, TAU_ROUTINE_DECL, language));
-	          } /* file and routine are both specified for entry */
                 }
-                else parseError("<routine> token not found", line, lineno, line - original);
+                else
+                {
+                  strcpy(pname, "#");
+                }
+                if (strncmp(line, "code", 4) == 0)
+                { 
+                  line+= 4; /* move 4 spaces */
+                  /* check for = <WSPACE> " */
+                  WSPACE(line);
+                  TOKEN('=');
+                  WSPACE(line);
+                  TOKEN('"');
+                  RETRIEVECODE(pcode, line);
+                  WSPACE(line);
+#ifdef DEBUG
+                  printf("GOT code = %s\n", pcode);
+#endif /* DEBUG */
+                }
+                else parseError("<code> token not found", line, lineno, line - original); 
+                if (strncmp(line, "lang", 4) == 0)
+                {
+                  line += 4; /* move 4 spaces */
+                  /* check for = <WSPACE> " */
+                  WSPACE(line);
+                  TOKEN('=');
+                  WSPACE(line);
+                  TOKEN('"');
+                  RETRIEVESTRING(plang, line);
+                  WSPACE(line);
+#ifdef DEBUG
+                  printf("GOT lang = %s\n", plang);
+#endif /* DEBUG */
+                  language = parseLanguageString(plang);
+                  if (language < 0)
+                    parseError("<lang> token invalid", line, lineno, line - original);
+                }
+#ifdef DEBUG 
+	        printf("decl routine = %s, code = %s, lang = %d\n", pname, pcode, language);
+#endif /* DEBUG */
+                if (filespecified)
+	        {
+                  instrumentList.push_back(new tauInstrument(string(pfile), string(pname), string(pcode), TAU_ROUTINE_DECL, language));
+	        }
+                else 
+	        {
+	          bool codespecified = true; 
+                  instrumentList.push_back(new tauInstrument(string(pname), string(pcode), codespecified, TAU_ROUTINE_DECL, language));
+	        } /* file and routine are both specified for entry */
               } /* end of decl token */
-            }
+            } /* end of init token */
           }
         } /* check for phase/timer */
       } /* end of loops directive */
@@ -2419,6 +2441,6 @@ string intToString(int value)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: geimer $
- * $Revision: 1.58 $   $Date: 2008/08/07 17:47:32 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.58 2008/08/07 17:47:32 geimer Exp $
+ * $Revision: 1.59 $   $Date: 2008/08/07 18:10:28 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.59 2008/08/07 18:10:28 geimer Exp $
  ***************************************************************************/
