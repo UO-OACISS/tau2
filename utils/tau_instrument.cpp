@@ -366,9 +366,23 @@ void parseError(const char *message, char *line, int lineno, int column)
 #define RETRIEVECODE(pname, line) i = 0; \
   while (line[0] != '"') { \
     if (line [0] == '\0') parseError("EOL", line, lineno, line - original); \
-    if ((line[0] == '\\') && (line[1] == '"')) line++; \
-    if ((line[0] == '\\') && (line[1] == 'n')) { line++; line[0] = '\n'; } \
-    if ((line[0] == '\\') && (line[1] == 't')) { line++; line[0] = '\t'; } \
+    if (line[0] == '\\') { \
+      switch(line[1]) { \
+        case '\\': \
+        case '"': \
+          break; \
+        case 'n': \
+          line[1] = '\n'; \
+          break; \
+        case 't': \
+          line[1] = '\t'; \
+          break; \
+        default: \
+          parseError("Unknown escape sequence", line, lineno, line - original); \
+          break; \
+      } \
+      line++; \
+    } \
     pname[i++] = line[0]; line++; \
   } \
   pname[i] = '\0';  \
@@ -1761,36 +1775,30 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
             static bool needsSetup = true;
             if (needsSetup)
             {
-              /* Generate argc/argv temporaries */
-              string argcstr = "\tstatic int tau_argc = ";
-              string argvstr = "\tstatic char ** tau_argv = ";
-              pdbType::argvec args = (*rit)->signature()->arguments();
-              switch (args.size())
-              {
-                case 2:
-                  if (args[0].name().compare("-") != 0 &&
-                      args[0].name().compare("-") != 0)
-                  {
-                   argcstr += args[0].name() + ";";
-                   argvstr += args[1].name() + ";";
-                   break;
-                  }
-                case 0:
-                  argcstr += "1;";
-                  argvstr += "&tau_unknown;";
-                  break;
-                default:
-                  cerr << "Hmm... main()'s signature looks weird to me." << endl
-                       << "Initialization code might be incorrect." << endl;
-                  break;
-              }
-
-              /* Add the additional declarations for the setup code */
               list<string> decls;
-              decls.push_back("\tstatic char * tau_unknown = \"unknown\";");
-              decls.push_back(argcstr);
-              decls.push_back(argvstr);
+              string       setup;
+
+              /* Generate argc/argv temporaries */
+              decls.push_back("\tstatic int    tau_argc;");
+              decls.push_back("\tstatic char **tau_argv;");
+
+              pdbType::argvec args = (*rit)->signature()->arguments();
+              if (2 == args.size() &&
+                  0 != args[0].name().compare("-") &&
+                  0 != args[1].name().compare("-"))
+              {
+                setup = "tau_argc = argc;\n\t"
+                        "tau_argv = argv;\n";
+              }
+              else
+              {
+                decls.push_back("\tstatic char * tau_unknown = \"unknown\";");
+
+                setup = "tau_argc = 1;\n\t"
+                        "tau_argv = &tau_unknown;\n";
+              }
               additionalDeclarations.push_back(pair<int, list<string> >((*rit)->id(), decls)); 
+              itemvec.push_back( new itemRef(static_cast<pdbItem*>(*rit), BODY_BEGIN, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col(), setup, BEFORE));
               needsSetup = false;
             }
 
@@ -2411,6 +2419,6 @@ string intToString(int value)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: geimer $
- * $Revision: 1.56 $   $Date: 2008/08/05 21:26:17 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.56 2008/08/05 21:26:17 geimer Exp $
+ * $Revision: 1.57 $   $Date: 2008/08/07 03:52:52 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.57 2008/08/07 03:52:52 geimer Exp $
  ***************************************************************************/
