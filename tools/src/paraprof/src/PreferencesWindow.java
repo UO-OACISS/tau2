@@ -47,10 +47,10 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
     private JCheckBox meanIncludeNullBox = new JCheckBox(
             "<html>Interpret threads that do not call a given function as a 0 value for statistics computation</html>");
     private JCheckBox generateIntermediateCallPathDataBox = new JCheckBox(
-    "<html>Generate data for reverse calltree<br>(requires lots of memory)<br>(does not apply to currently loaded profiles)</html>");
+            "<html>Generate data for reverse calltree<br>(requires lots of memory)<br>(does not apply to currently loaded profiles)</html>");
 
     private JCheckBox showSourceLocationsBox = new JCheckBox("<html>Show Source Locations</html>");
-    
+
     public PreferencesWindow(Preferences preferences) {
         this.preferences = preferences;
 
@@ -65,21 +65,19 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         reverseCallPathsBox.setToolTipText("<html>If this option is enabled, call path names will be shown in reverse<br>(e.g. \"C &lt;= B &lt;= A\" vs. \"A =&gt; B =&gt; C\")");
         generateIntermediateCallPathDataBox.setToolTipText("<html>If this option is enabled, then the reverse calltree will be available.<br>However, it requires additional memory and should be disabled if the JVM<br>runs out of memory on large callpath datasets.</html>");
         autoLabelsBox.setToolTipText("<html>If this option is enabled, execution thread labels \"n,c,t 0,0,0\" will be shortened based on the execution type (MPI, threaded, hybrid)</html>");
-        
-        if (preferences.getLoaded()) {
-            // Set preferences based on saved values.
-            fontName = preferences.getFontName();
-            fontStyle = preferences.getFontStyle();
-            fontSize = preferences.getFontSize();
-            unitsBox.setSelectedIndex(preferences.getUnits());
-            showValuesAsPercentBox.setSelected(preferences.getShowValuesAsPercent());
-            showPathTitleInReverseBox.setSelected(preferences.getShowPathTitleInReverse());
-            reverseCallPathsBox.setSelected(preferences.getReversedCallPaths());
-            autoLabelsBox.setSelected(preferences.getAutoLabels());
-            meanIncludeNullBox.setSelected(!preferences.getComputeMeanWithoutNulls());
-            generateIntermediateCallPathDataBox.setSelected(preferences.getGenerateIntermediateCallPathData());
-            showSourceLocationsBox.setSelected(preferences.getShowSourceLocation());
-        }
+
+        // Set preferences based on saved values.
+        fontName = preferences.getFontName();
+        fontStyle = preferences.getFontStyle();
+        fontSize = preferences.getFontSize();
+        unitsBox.setSelectedIndex(preferences.getUnits());
+        showValuesAsPercentBox.setSelected(preferences.getShowValuesAsPercent());
+        showPathTitleInReverseBox.setSelected(preferences.getShowPathTitleInReverse());
+        reverseCallPathsBox.setSelected(preferences.getReversedCallPaths());
+        autoLabelsBox.setSelected(preferences.getAutoLabels());
+        meanIncludeNullBox.setSelected(!preferences.getComputeMeanWithoutNulls());
+        generateIntermediateCallPathDataBox.setSelected(preferences.getGenerateIntermediateCallPathData());
+        showSourceLocationsBox.setSelected(preferences.getShowSourceLocation());
 
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
@@ -100,7 +98,6 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         //Window Stuff.
         setTitle("TAU: ParaProf: Preferences");
         ParaProfUtils.setFrameIcon(this);
-
 
         int windowWidth = 650;
         int windowHeight = 520;
@@ -316,13 +313,11 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
 
     public void loadSavedPreferences() {
         this.preferences = ParaProf.preferences;
-        if (preferences.getLoaded()) {
-            // Set preferences based on saved values.
-            fontName = preferences.getFontName();
-            fontStyle = preferences.getFontStyle();
-            fontSize = preferences.getFontSize();
-            font = null;
-        }
+        // Set preferences based on saved values.
+        fontName = preferences.getFontName();
+        fontStyle = preferences.getFontStyle();
+        fontSize = preferences.getFontSize();
+        font = null;
     }
 
     public Font getFont() {
@@ -377,7 +372,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
                 if (arg.equals("Show Color Map")) {
                     ParaProf.colorMap.showColorMap(this);
                 } else if (arg.equals("Edit Source Directories")) {
-                	ParaProf.getDirectoryManager().display(this);
+                    ParaProf.getDirectoryManager().display(this);
                 } else if (arg.equals("Load Preferences...")) {
 
                     JFileChooser fileChooser = new JFileChooser();

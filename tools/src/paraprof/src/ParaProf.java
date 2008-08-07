@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.82 2008/07/18 22:38:18 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.83 2008/08/07 21:36:37 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.82 $
+ * @version $Revision: 1.83 $
  */
 public class ParaProf implements ActionListener {
 
@@ -66,7 +66,7 @@ public class ParaProf implements ActionListener {
     private static File sourceFiles[] = new File[0];
     private static boolean fixNames = false;
     private static boolean monitorProfiles;
-		private static String configFile;
+    private static String configFile;
     private static String args[];
     //End - Command line options related.
 
@@ -172,6 +172,7 @@ public class ParaProf implements ActionListener {
             // running as Java Web Start without permission
         }
     }
+
     public static void initialize() {
 
         try {
@@ -197,7 +198,6 @@ public class ParaProf implements ActionListener {
 
                     ObjectInputStream inSavedPreferencesOIS = new ObjectInputStream(savedPreferenceFIS);
                     ParaProf.preferences = (Preferences) inSavedPreferencesOIS.readObject();
-                    ParaProf.preferences.setLoaded(true);
                     colorChooser = new ColorChooser(ParaProf.preferences);
                 } catch (Exception e) {
                     if (e instanceof FileNotFoundException) {
@@ -231,8 +231,7 @@ public class ParaProf implements ActionListener {
             //            URL url = ParaProf.class.getResource("/perfdmf.cfg");
             //            String path = URLDecoder.decode(url.getPath());
             //            ParaProf.preferences.setDatabaseConfigurationFile(path);
-	    preferences = new Preferences();
-	    ParaProf.preferences.setLoaded(true);
+            preferences = new Preferences();
         }
 
         if (colorChooser == null) {
@@ -253,7 +252,7 @@ public class ParaProf implements ActionListener {
         }
 
         // Initialize, but do not show the manager window
-				//System.out.println("creating Manager window with: " + configFile);
+        //System.out.println("creating Manager window with: " + configFile);
         ParaProf.paraProfManagerWindow = new ParaProfManagerWindow(configFile);
     }
 
@@ -299,7 +298,6 @@ public class ParaProf implements ActionListener {
         //Create ObjectInputStream and try to read it in.
         ObjectInputStream inSavedPreferencesOIS = new ObjectInputStream(savedPreferenceFIS);
         ParaProf.preferences = (Preferences) inSavedPreferencesOIS.readObject();
-        ParaProf.preferences.setLoaded(true);
         colorChooser = new ColorChooser(ParaProf.preferences);
 
         ParaProf.colorMap.setMap(ParaProf.preferences.getAssignedColors());
@@ -377,7 +375,7 @@ public class ParaProf implements ActionListener {
         }
 
         configFile = (String) parser.getOptionValue(configfileOpt);
-				Boolean help = (Boolean) parser.getOptionValue(helpOpt);
+        Boolean help = (Boolean) parser.getOptionValue(helpOpt);
         String fileTypeString = (String) parser.getOptionValue(typeOpt);
         Boolean fixNames = (Boolean) parser.getOptionValue(fixOpt);
         String pack = (String) parser.getOptionValue(packOpt);
@@ -391,9 +389,9 @@ public class ParaProf implements ActionListener {
 
         demoMode = demo != null && demo.booleanValue();
         if (configFile != "") {
-				    //System.out.println("commandline db config: " + configFile);
-				    ParaProf.preferences.setDatabaseConfigurationFile(configFile);
-				}
+            //System.out.println("commandline db config: " + configFile);
+            ParaProf.preferences.setDatabaseConfigurationFile(configFile);
+        }
         if (monitor != null) {
             monitorProfiles = monitor.booleanValue();
         }

@@ -18,7 +18,6 @@ import java.util.Vector;
 
 public class Preferences implements Serializable {
 
-    boolean loadedFromFile = false;
     private String paraProfFont = "SansSerif";
     private int fontStyle = Font.PLAIN;
     private int fontSize = 12;
@@ -47,13 +46,6 @@ public class Preferences implements Serializable {
     
     static final long serialVersionUID = 183442743456314793L;
 
-    public void setLoaded(boolean b) {
-        loadedFromFile = true;
-    }
-
-    public boolean getLoaded() {
-        return loadedFromFile;
-    }
 
     public void setColors(Vector vector) {
         colors = vector;
