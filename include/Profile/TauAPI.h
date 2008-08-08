@@ -31,8 +31,8 @@
 
 #if (defined(PROFILING_ON) || defined(TRACING_ON) )
 
-extern "C" void Tau_start(char *name);
-extern "C" void Tau_stop(char *name);
+extern "C" void Tau_start(const char *name);
+extern "C" void Tau_stop(const char *name);
 extern "C" void Tau_start_timer(void * function_info, int phase );
 extern "C" int Tau_stop_timer(void * function_info); 
 extern "C" void Tau_create_top_level_timer_if_necessary(void);
@@ -46,7 +46,7 @@ extern "C" void Tau_dynamic_start(char *name, void *tau_counter, int isPhase);
 extern "C" void Tau_dynamic_stop(char *name, void *tau_counter, int isPhase); 
 extern "C" void Tau_static_phase_start(char *name);
 extern "C" void Tau_static_phase_stop(char *name);
-extern "C" void* Tau_get_profiler(char *name, char *type, TauGroup_t group, char *gr_name);
+extern "C" void* Tau_get_profiler(const char *name, char *type, TauGroup_t group, char *gr_name);
 extern "C" void Tau_get_calls(void *handle, long* values, int tid);
 extern "C" void Tau_get_child_calls(void *handle, long* values, int tid);
 extern "C" void Tau_get_inclusive_values(void *handle, double* values, int tid);
@@ -520,7 +520,7 @@ or tauFI->method();
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.70 $   $Date: 2008/07/25 17:59:35 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.70 2008/07/25 17:59:35 sameer Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: amorris $
+ * $Revision: 1.71 $   $Date: 2008/08/08 22:18:17 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.71 2008/08/08 22:18:17 amorris Exp $ 
  ***************************************************************************/

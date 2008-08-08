@@ -56,7 +56,7 @@ using namespace std;
    the C layer, it remains unchanged. However, we should probably change the 
    name of this method to Tau_get_functioninfo or something. */
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void * Tau_get_profiler(char *fname, char *type, TauGroup_t group, char *gr_name)
+extern "C" void * Tau_get_profiler(const char *fname, char *type, TauGroup_t group, char *gr_name)
 {
   FunctionInfo *f;
   //Profiler *p;
@@ -802,7 +802,7 @@ map<string, FunctionInfo *>& ThePureMap() {
 }
 
 
-extern "C" void Tau_pure_start(char *name) {
+extern "C" void Tau_pure_start(const char *name) {
   FunctionInfo *fi = 0;
   string n = string(name);
   map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
@@ -815,7 +815,7 @@ extern "C" void Tau_pure_start(char *name) {
   Tau_start_timer(fi,0);
 }
 
-extern "C" void Tau_pure_stop(char *name) {
+extern "C" void Tau_pure_stop(const char *name) {
   FunctionInfo *fi;
   string n = string(name);
   map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
@@ -1074,8 +1074,8 @@ int *pomp_rd_table = 0;
 #endif
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.79 $   $Date: 2008/07/25 01:52:27 $
- * VERSION: $Id: TauCAPI.cpp,v 1.79 2008/07/25 01:52:27 sameer Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.80 $   $Date: 2008/08/08 22:18:57 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.80 2008/08/08 22:18:57 amorris Exp $
  ***************************************************************************/
 

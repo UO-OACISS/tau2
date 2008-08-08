@@ -230,8 +230,8 @@ extern "C" {
 
 
 
-extern void Tau_start(char *name);
-extern void Tau_stop(char *name);
+extern void Tau_start(const char *name);
+extern void Tau_stop(const char *name);
 extern void Tau_specify_mapping_data1(long data, const char *name);
 extern void TAUDECL Tau_bcast_data(int data);
 extern void TAUDECL Tau_reduce_data(int data);
@@ -243,7 +243,7 @@ extern void TAUDECL Tau_allgather_data(int data);
 extern void TAUDECL Tau_reducescatter_data(int data);
 extern void TAUDECL Tau_scan_data(int data);
 
-extern void * Tau_get_profiler(char *fname, char *type, TauGroup_t  group, char *gr_name);
+extern void * Tau_get_profiler(const char *fname, char *type, TauGroup_t  group, char *gr_name);
 extern void TAUDECL Tau_start_timer(void *profiler, int phase);
 extern void TAUDECL Tau_stop_timer(void *profiler);
 extern void Tau_exit(char *msg);
@@ -343,8 +343,8 @@ extern int Tau_get_tid(void);
 #endif /* _TAU_CAPI_H_ */
 
 /***************************************************************************
- * $RCSfile: TauCAPI.h,v $   $Author: sameer $
- * $Revision: 1.56 $   $Date: 2008/07/25 21:32:50 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.56 2008/07/25 21:32:50 sameer Exp $
+ * $RCSfile: TauCAPI.h,v $   $Author: amorris $
+ * $Revision: 1.57 $   $Date: 2008/08/08 22:18:17 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.57 2008/08/08 22:18:17 amorris Exp $
  ***************************************************************************/
 
