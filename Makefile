@@ -14,12 +14,12 @@
 #######################################################################
  
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=default
+CONFIG_ARCH=i386_linux
 CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
-USER_OPT=-g
-TAUROOT=
+USER_OPT=
+TAUROOT=/home/amorris/crap/tau2
 #######################################################################
  
 include include/Makefile
@@ -117,11 +117,11 @@ install: .clean
 	@echo "***************** DONE ************************"
 
 .clean:
-	@for i in ${SUBDIR} ${EXAMPLES} ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" clean); done
+	@for i in ${SUBDIR} ${EXAMPLES} ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" clean || exit 0); done
 	touch .clean
 
 clean:
-	@for i in ${SUBDIR} ${EXAMPLES} ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" clean); done
+	@for i in ${SUBDIR} ${EXAMPLES} ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" clean || exit 0); done
 
 cleandist:	clean cleangood
 cleaninstall:	clean cleangood
