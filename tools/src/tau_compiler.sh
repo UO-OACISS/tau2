@@ -410,6 +410,8 @@ for arg in "$@" ; do
 				;;
 			-optReset*)
 				optCompile=${arg#"-optReset="}
+                                optIncludes=""
+                                optDefs=""
 				echoIfDebug "\tCompiling Options are: $optCompile"
 				optResetUsed=$TRUE
 				;;
