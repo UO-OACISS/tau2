@@ -22,8 +22,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-extern void Tau_start(char *name);
-extern void Tau_stop(char *name);
+extern void Tau_start(const char *name);
+extern void Tau_stop(const char *name);
 #ifdef __cplusplus
 }
 #endif

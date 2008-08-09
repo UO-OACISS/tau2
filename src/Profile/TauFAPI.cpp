@@ -37,8 +37,8 @@
 
 
 
-extern "C" void Tau_pure_start(char *name);
-extern "C" void Tau_pure_stop(char *name);
+extern "C" void Tau_pure_start(const char *name);
+extern "C" void Tau_pure_stop(const char *name);
 
 /* Utility function to retrieve fortran strings */
 static char *getFortranName(char *name, int slen) {
@@ -470,9 +470,9 @@ void TAU_STATIC_TIMER_STOP(char *fname, int flen)
 }
 
 /* C API */
-void Tau_start(char *name)
+void Tau_start(const char *name)
 {
-  tau_pure_start(name, strlen(name));
+  Tau_pure_start(name);
 }
 
 
@@ -517,9 +517,9 @@ void tau_stop__(char *fname, int flen)
 }
 
 /* C API */
-void Tau_stop(char *name)
+void Tau_stop(const char *name)
 {
-  tau_pure_stop(name, strlen(name));
+  Tau_pure_stop(name);
 }
 
 void tau_profile_timer_(void **ptr, char *fname, int flen)
@@ -2012,6 +2012,6 @@ void TAU_DEALLOC(void ** ptr, int* line, char *name, int slen)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.69 $   $Date: 2008/07/15 20:47:15 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.69 2008/07/15 20:47:15 amorris Exp $ 
+ * $Revision: 1.70 $   $Date: 2008/08/09 00:18:18 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.70 2008/08/09 00:18:18 amorris Exp $ 
  ***************************************************************************/
