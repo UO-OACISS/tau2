@@ -73,7 +73,10 @@ char exit_keyword[EXIT_KEYWORD_SIZE] = "exit"; /* You can define your own exit k
 bool using_exit_keyword = false; /* By default, we don't use the exit keyword */
 tau_language_t tau_language; /* language of the file */
 bool use_perflib = false;   /* by default, do not insert calls for perflib package */
-bool use_spec = false;   /* by default, do not use code from specification file */
+
+/* This variable should actually be defined here. However, tau_wrap should not
+   depend on this (and it currently would). */
+extern bool use_spec;
 
 list<string> current_timer; /* for Fortran loop level instrumentation. */
 
@@ -4405,8 +4408,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: geimer $
- * $Revision: 1.196 $   $Date: 2008/08/06 22:08:39 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.196 2008/08/06 22:08:39 geimer Exp $
+ * $Revision: 1.197 $   $Date: 2008/08/09 00:05:26 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.197 2008/08/09 00:05:26 geimer Exp $
  ***************************************************************************/
 
 

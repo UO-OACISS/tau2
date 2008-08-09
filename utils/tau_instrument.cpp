@@ -52,6 +52,9 @@ list<pair<int, list<string> > > additionalInvocations;
 /* In this list resides a list of variable declarations that must be added before
 the first executable statement. It has a list of strings with the routine no. as 
 the first element of the pair (the second is the list of strings). */
+
+/* This should *really* be in tau_instrumentor.cpp ... */
+bool use_spec = false;   /* by default, do not use code from specification file */
 ///////////////////////////////////////////////////////////////////////////
 
 /* Constructors */
@@ -1761,14 +1764,23 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
           cout <<"at line: "<<(*rit)->bodyBegin().line()<<", col"<< (*rit)->bodyBegin().col()<<"code = "<<(*it)->getCode()<<endl;
 #endif /* DEBUG */
 
-	  itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_BEGIN, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col(), (*it)->getCode((*rit)->bodyBegin(), *rit), BEFORE));
+          if (!use_spec &&
+              (language == PDB::LA_CXX || language == PDB::LA_C_or_CXX))
+          {
+	    itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()+1, (*it)->getCode(), BEFORE));
+          }
+          else
+          {
+	    itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_BEGIN, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col(), (*it)->getCode((*rit)->bodyBegin(), *rit), BEFORE));
+          }
         } /* end of routine entry */
         /* examine the type of request - exit */
         if ((*it)->getKind() == TAU_ROUTINE_EXIT)
         {
 #ifdef DEBUG
-          cout <<"Instrumenting exit of routine "<<(*rit)->fullName()<<endl;
+            cout <<"Instrumenting exit of routine "<<(*rit)->fullName()<<endl;
 #endif /* DEBUG */
+
           /* get routine exit line no. */
           pdbRoutine::locvec retlocations = (*rit)->returnLocations();
           for (rlit = retlocations.begin(); rlit != retlocations.end(); ++rlit)
@@ -1776,55 +1788,74 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 #ifdef DEBUG
             cout <<"at line: "<<(*rlit)->line()<<", col"<< (*rlit)->col()<<" code = "<<(*it)->getCode()<<endl;
 #endif /* DEBUG */
-	
-	    itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), RETURN, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(**rlit, *rit), BEFORE));
+
+            if (!use_spec &&
+                (language == PDB::LA_CXX || language == PDB::LA_C_or_CXX))
+            {
+	      itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(), BEFORE));
+            }
+            else
+            {
+              itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), RETURN, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(**rlit, *rit), BEFORE));
+            }
           }
+          if (use_spec)
+          {
 #ifdef DEBUG
-          cout <<"at line: "<<(*rit)->bodyEnd().line()<<", col"<< (*rit)->bodyEnd().col()<<"code = "<<(*it)->getCode()<<endl;
+            cout <<"at line: "<<(*rit)->bodyEnd().line()<<", col"<< (*rit)->bodyEnd().col()<<"code = "<<(*it)->getCode()<<endl;
 #endif /* DEBUG */
 
-          itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_END, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), (*it)->getCode((*rit)->bodyEnd(), *rit), BEFORE));
+            itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_END, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), (*it)->getCode((*rit)->bodyEnd(), *rit), BEFORE));
+          }
         } /* end of routine exit */
         /* examine the type of request - init */
         if ((*it)->getKind() == TAU_INIT)
         {
-          if ((*rit)->name().compare("main") == 0)
+          if (!use_spec &&
+              (language == PDB::LA_CXX || language == PDB::LA_C_or_CXX))
           {
+	    itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()+1, (*it)->getCode(), BEFORE));
+          }
+          else
+          {
+            if ((*rit)->name().compare("main") == 0)
+            {
 #ifdef DEBUG
-            cout << "Instrumenting init" << endl;
+              cout << "Instrumenting init" << endl;
 #endif /* DEBUG */
 
-            static bool needsSetup = true;
-            if (needsSetup)
-            {
-              list<string> decls;
-              string       setup;
-
-              /* Generate argc/argv temporaries */
-              decls.push_back("\tstatic int    tau_argc;");
-              decls.push_back("\tstatic char **tau_argv;");
-
-              pdbType::argvec args = (*rit)->signature()->arguments();
-              if (2 == args.size() &&
-                  0 != args[0].name().compare("-") &&
-                  0 != args[1].name().compare("-"))
+              static bool needsSetup = true;
+              if (needsSetup)
               {
-                setup = "tau_argc = " + args[0].name() + ";\n\t"
-                        "tau_argv = " + args[1].name() + ";\n";
-              }
-              else
-              {
-                decls.push_back("\tstatic char * tau_unknown = \"unknown\";");
+                list<string> decls;
+                string       setup;
 
-                setup = "tau_argc = 1;\n\t"
-                        "tau_argv = &tau_unknown;\n";
+                /* Generate argc/argv temporaries */
+                decls.push_back("\tstatic int    tau_argc;");
+                decls.push_back("\tstatic char **tau_argv;");
+
+                pdbType::argvec args = (*rit)->signature()->arguments();
+                if (2 == args.size() &&
+                    0 != args[0].name().compare("-") &&
+                    0 != args[1].name().compare("-"))
+                {
+                  setup = "tau_argc = " + args[0].name() + ";\n\t"
+                          "tau_argv = " + args[1].name() + ";\n";
+                }
+                else
+                {
+                  decls.push_back("\tstatic char * tau_unknown = \"unknown\";");
+
+                  setup = "tau_argc = 1;\n\t"
+                          "tau_argv = &tau_unknown;\n";
+                }
+                additionalDeclarations.push_back(pair<int, list<string> >((*rit)->id(), decls)); 
+                itemvec.push_back( new itemRef(static_cast<pdbItem*>(*rit), BODY_BEGIN, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col(), setup, BEFORE));
+                needsSetup = false;
               }
-              additionalDeclarations.push_back(pair<int, list<string> >((*rit)->id(), decls)); 
-              itemvec.push_back( new itemRef(static_cast<pdbItem*>(*rit), BODY_BEGIN, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col(), setup, BEFORE));
-              needsSetup = false;
+
+              itemvec.push_back( new itemRef((pdbItem *)NULL, BODY_BEGIN, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col(), (*it)->getCode((*rit)->bodyBegin(), *rit, true), BEFORE));
             }
-
-            itemvec.push_back( new itemRef((pdbItem *)NULL, BODY_BEGIN, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col(), (*it)->getCode((*rit)->bodyBegin(), *rit, true), BEFORE));
           }
         } /* end of init */
       }
@@ -2441,6 +2472,6 @@ string intToString(int value)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: geimer $
- * $Revision: 1.60 $   $Date: 2008/08/07 20:44:33 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.60 2008/08/07 20:44:33 geimer Exp $
+ * $Revision: 1.61 $   $Date: 2008/08/09 00:05:27 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.61 2008/08/09 00:05:27 geimer Exp $
  ***************************************************************************/
