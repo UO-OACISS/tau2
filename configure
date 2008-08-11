@@ -523,6 +523,7 @@ stffdir=
 sddf=no
 sddfdir=
 iowrapper=no
+home=$HOME
 
 # debug:
 # echo $arguments
@@ -1471,8 +1472,7 @@ sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,
 chmod a+rx ${targetdir}/${architecture}/bin/phaseconvert
 
 cat ${tauroot}/tools/src/perfdmf/bin/derby.properties.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
- > ${targetdir}/${architecture}/lib/derby.properties
+sed -e 's,@HOME@,'${home}',' > ${home}/.ParaProf/derby.properties
 
 cat ${tauroot}/tools/src/perfexplorer/bin/configure.skel | 
 sed -e 's,@TAUROOTDIR@,'$tauroot',' \
