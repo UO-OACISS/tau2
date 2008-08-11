@@ -1471,6 +1471,10 @@ sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,
  > ${targetdir}/${architecture}/bin/phaseconvert
 chmod a+rx ${targetdir}/${architecture}/bin/phaseconvert
 
+if [ ! -d ${home}/.ParaProf ] 
+  then
+    mkdir -p ${home}/.ParaProf
+fi
 cat ${tauroot}/tools/src/perfdmf/bin/derby.properties.skel | 
 sed -e 's,@HOME@,'${home}',' > ${home}/.ParaProf/derby.properties
 
