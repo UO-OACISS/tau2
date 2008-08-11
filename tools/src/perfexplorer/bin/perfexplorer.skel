@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: perfexplorer.skel,v 1.30 2008/07/29 23:40:18 khuck Exp $
+# $Id: perfexplorer.skel,v 1.31 2008/08/11 17:39:49 khuck Exp $
 # $Name:  $
 
 TAUROOT=@TAUROOT@
@@ -167,7 +167,7 @@ if [ $mode == "standalone" ] ; then
 	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$OMEGAHAT_JARS:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JOGL_JAR:$VIS_JAR:$JARGS_JAR:$JYTHON_JAR:$TAUCOMMON_JAR:$BATIK_JAR:$XERCES_JAR:$JUNIT_JAR:$JBOSS_RULES_JARS:$HIBERNATE_JARS
 	java -Xmx500m $EXTRA_OPTIONS \
 	-classpath $CLASSPATH \
-	-Dderby.system.home=${TAUROOT}/${CONFIG_ARCH}/lib \
+	-Dderby.system.home=${JAR_HOME} \
 	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
 	client.PerfExplorerClient -s -w -e $ANALYSIS_ENGINE $arguments
 fi
@@ -177,7 +177,7 @@ if [ $mode == "test" ] ; then
 
 	java -Xmx500m \
 	-classpath $CLASSPATH \
-	-Dderby.system.home=${TAUROOT}/${CONFIG_ARCH}/lib \
+	-Dderby.system.home=${JAR_HOME} \
 	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
 	client.TestHarness -s -e $ANALYSIS_ENGINE -t $testName $arguments
 fi
@@ -192,7 +192,7 @@ if [ $mode == "server" ] ; then
 
 	java -Xmx1800m $EXTRA_OPTIONS \
 	-classpath $CLASSPATH \
-	-Dderby.system.home=${TAUROOT}/${CONFIG_ARCH}/lib \
+	-Dderby.system.home=${JAR_HOME} \
 	-Djava.security.policy=${TAUROOT}/${CONFIG_ARCH}/lib/java.policy \
 	-Djava.library.path=$SERVER_DYLD_LIBRARY_PATH \
 	${RMIOptions} \

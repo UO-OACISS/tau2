@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: perfexplorer_configure.skel,v 1.14 2008/07/25 23:18:20 khuck Exp $
+# $Id: perfexplorer_configure.skel,v 1.15 2008/08/11 17:39:49 khuck Exp $
 # $Name:  $
 
 rm -f .last_config
@@ -331,7 +331,7 @@ fi
 
 # now to test the DB and upload schema (if necessary)
 
-java -Dderby.system.home=${LIBDIR} -cp ${PERFEXPLORER_JAR}:${LIBDIR}/perfdmf.jar:${LIBDIR}/jargs.jar:${JDBC_JAR}:${LIBDIR}/tau-common.jar common.Configure -t ${tauroot} -a ${architecture} -g ${configfile}
+java -Dderby.system.home=${configdir} -cp ${PERFEXPLORER_JAR}:${LIBDIR}/perfdmf.jar:${LIBDIR}/jargs.jar:${JDBC_JAR}:${LIBDIR}/tau-common.jar common.Configure -t ${tauroot} -a ${architecture} -g ${configfile}
 
 
 
