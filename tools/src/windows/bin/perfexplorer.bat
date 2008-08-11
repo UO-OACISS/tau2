@@ -15,4 +15,4 @@ set JARS=%JAR_ROOT%/paraprof.jar;%JAR_ROOT%/vis.jar;%PERFDMF_JAR%;%JAR_ROOT%/jog
 
 set CLASSPATH=%JARS%;%JAR_ROOT%/perfexplorer.jar;%JAR_ROOT%/weka.jar
 
-java -Xmx500m -classpath %CLASSPATH% client.PerfExplorerClient -s -e weka
+java -Xmx500m -classpath %CLASSPATH% client.PerfExplorerClient -w -s -e weka
