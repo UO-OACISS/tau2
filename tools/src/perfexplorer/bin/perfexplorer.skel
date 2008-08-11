@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: perfexplorer.skel,v 1.31 2008/08/11 17:39:49 khuck Exp $
+# $Id: perfexplorer.skel,v 1.32 2008/08/11 18:04:05 khuck Exp $
 # $Name:  $
 
 TAUROOT=@TAUROOT@
@@ -34,7 +34,7 @@ PERFEXPLORER_JAR=$TAUROOT/$CONFIG_ARCH/lib/perfexplorer.jar
 PERFDMF_JAR=$TAUROOT/$CONFIG_ARCH/lib/perfdmf.jar
 JARGS_JAR=$TAUROOT/$CONFIG_ARCH/lib/jargs.jar
 JYTHON_JAR=$TAUROOT/$CONFIG_ARCH/lib/jython.jar
-WEKA_JAR=$JAR_HOME/lib/weka.jar
+WEKA_JAR=$JAR_HOME/weka.jar
 PERFEXPLORER_JAR=$TAUROOT/$CONFIG_ARCH/lib/perfexplorer.jar
 JFREECHART_JAR=$TAUROOT/$CONFIG_ARCH/lib/jfreechart-0.9.21.jar
 JCOMMON_JAR=$TAUROOT/$CONFIG_ARCH/lib/jcommon-0.9.6.jar
@@ -149,6 +149,7 @@ else
 fi
 
 # check for right java version
+PERFEXPLORER_OPTS="-w"
 
 CLASSPATH=$TAUCOMMON_JAR
 test=`java -cp $CLASSPATH edu.uoregon.tau.common.VersionTester 1.5`
@@ -161,6 +162,7 @@ if [ $test == "failed" ] ; then
 	HIBERNATE_JARS=
 	JBOSS_RULES_JARS=
 	PERFEXPLORER_JAR=$TAUROOT/$CONFIG_ARCH/lib/perfexplorer-1.4.jar
+	PERFEXPLORER_OPTS=""
 fi
 
 if [ $mode == "standalone" ] ; then
@@ -169,7 +171,7 @@ if [ $mode == "standalone" ] ; then
 	-classpath $CLASSPATH \
 	-Dderby.system.home=${JAR_HOME} \
 	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
-	client.PerfExplorerClient -s -w -e $ANALYSIS_ENGINE $arguments
+	client.PerfExplorerClient -s $PERFEXPLORER_OPTS -e $ANALYSIS_ENGINE $arguments
 fi
 
 if [ $mode == "test" ] ; then
