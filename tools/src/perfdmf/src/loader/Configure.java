@@ -281,7 +281,13 @@ public class Configure {
 
             if (!configFileFound) {
                 if (jdbc_db_type.compareTo("derby") == 0) {
-                    jdbc_db_jarfile = tau_root + File.separator + arch + File.separator + "lib" + File.separator + "derby.jar";
+                    String os = System.getProperty("os.name").toLowerCase();
+                    if (os.trim().startsWith("windows")) {
+                        jdbc_db_jarfile = tau_root + File.separator + "bin" + File.separator + "derby.jar";
+                    } else {
+                        jdbc_db_jarfile = tau_root + File.separator + arch + File.separator + "lib" + File.separator + "derby.jar";
+                    }
+
                 } else {
                     jdbc_db_jarfile = getSysDepRoot() + jdbc_db_jarfile;
                 }
