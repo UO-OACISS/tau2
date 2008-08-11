@@ -85,4 +85,4 @@ else
 fi
 
 # Launch!
-java -Xmx800m -Dderby.system.home=${LIBDIR} -Dpython.verbose=error -Djava.library.path=${LIBDIR} -cp ${JARS} ${APPLE_OPTIONS} edu/uoregon/tau/paraprof/ParaProf ${PPROFOPT} $*	
+java -Xmx800m -Dderby.system.home=${HOME}/.ParaProf -Dpython.verbose=error -Djava.library.path=${LIBDIR} -cp ${JARS} ${APPLE_OPTIONS} edu/uoregon/tau/paraprof/ParaProf ${PPROFOPT} $*	
