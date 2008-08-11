@@ -310,6 +310,26 @@ void mergeInstrumentationRequests(vector<itemRef *>& itemvec) {
 }
 
 /* -------------------------------------------------------------------------- */
+/* -- Merge instrumentation requests of same kind for same location --------- */
+/* -------------------------------------------------------------------------- */
+void postprocessInstrumentationRequests(vector<itemRef *>& itemvec)
+{
+  /* It is assumed that all instrumentation requests are in the vector at this
+     point. Now the requests can be sorted, duplicates removed, and requests
+     of the same type on the same location merged. */
+  stable_sort(itemvec.begin(), itemvec.end(), locCmp);
+  itemvec.erase(unique(itemvec.begin(), itemvec.end(),itemEqual),itemvec.end());
+  mergeInstrumentationRequests(itemvec);
+#ifdef DEBUG
+  for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end();
+   iter++)
+  {
+    cout <<"Items ("<<(*iter)->line<<", "<<(*iter)->col<<")"<<endl;
+  }
+#endif /* DEBUG */
+}
+
+/* -------------------------------------------------------------------------- */
 /* -- Get a list of instrumentation points for a C++ program ---------------- */
 /* -------------------------------------------------------------------------- */
 bool getCXXReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
@@ -432,24 +452,6 @@ bool retval;
     }
   }
 
-  /* moved selective instrumentation file processing here */
-  if (!isInstrumentListEmpty()) 
-  { /* there are finite instrumentation requests, add requests for this file */
-    retval = addFileInstrumentationRequests(pdb, file, itemvec);
-    if (!retval) return retval; /* if there's an error, propagate it up */
-  }
-
-  /* All instrumentation requests are in. Sort these now and remove duplicates */
-  stable_sort(itemvec.begin(), itemvec.end(), locCmp);
-  itemvec.erase(unique(itemvec.begin(), itemvec.end(),itemEqual),itemvec.end());
-  mergeInstrumentationRequests(itemvec);
-#ifdef DEBUG
-  for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end();
-   iter++)
-  {
-    cout <<"Items ("<<(*iter)->line<<", "<<(*iter)->col<<")"<<endl;
-  }
-#endif /* DEBUG */
   return true; /* everything is ok */
 }
 
@@ -511,32 +513,6 @@ void getCReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
 	processExitOrAbort(itemvec, *rit, c); 
     }
   }
-
-  /* moved selective instrumentation file processing here */
-  if (!isInstrumentListEmpty()) 
-  { /* there are finite instrumentation requests, add requests for this file */
-    addFileInstrumentationRequests(pdb, file, itemvec);
-  }
-  /* All instrumentation requests are in. Sort these now and remove duplicates */
-#ifdef DEBUG
-  for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end();
-   iter++)
-  {
-    cout <<"Before SORT: Items ("<<(*iter)->line<<", "<<(*iter)->col<<")"
-	 <<"snippet = "<<(*iter)->snippet<<endl;
-  }
-#endif /* DEBUG */
-  stable_sort(itemvec.begin(), itemvec.end(), locCmp);
-  itemvec.erase(unique(itemvec.begin(), itemvec.end(),itemEqual),itemvec.end());
-  mergeInstrumentationRequests(itemvec);
-#ifdef DEBUG
-  for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end();
-   iter++)
-  {
-    cout <<"Items ("<<(*iter)->line<<", "<<(*iter)->col<<")"
-	 <<"snippet = "<<(*iter)->snippet<<endl;
-  }
-#endif /* DEBUG */
 }
 
 /* -------------------------------------------------------------------------- */
@@ -597,38 +573,7 @@ void getFReferences(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
                 (*slit)->line(), (*slit)->col()));
         }
     }
-
   }
-
-  /* check if the given file has line/routine level instrumentation requests */
-  if (!isInstrumentListEmpty() || memory_flag) 
-  { /* there are finite instrumentation requests, add requests for this file */
-    addFileInstrumentationRequests(pdb, file, itemvec);
-  }
-
-  /* All instrumentation requests are in. Sort these now and remove duplicates */
-
-/* Now sort all these locations */
-#ifdef DEBUG 
-  for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end();
-   iter++)
-  {
-    cout <<"BEFORE sort: Items ("<<(*iter)->line<<", "<<(*iter)->col<<")" <<" snippet = "<<(*iter)->snippet<<endl;
-  }
-#endif /* DEBUG */
-  stable_sort(itemvec.begin(), itemvec.end(), locCmp);
-  itemvec.erase(unique(itemvec.begin(), itemvec.end(),itemEqual),itemvec.end());
-  mergeInstrumentationRequests(itemvec);
-#ifdef DEBUG
-  for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end();
-   iter++)
-  {
-    cout <<"Items ("<<(*iter)->line<<", "<<(*iter)->col<<")" <<" snippet = "<<(*iter)->snippet<<endl;
-  }
-#endif /* DEBUGnstall
- */
-  return ; /* everything is ok */
-
 }
 
 
@@ -767,13 +712,26 @@ bool instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name
 
   // initialize reference vector
   vector<itemRef *> itemvec;
-  retval = getCXXReferences(itemvec, pdb, f);
-  if (!retval){
+  if (!use_spec)
+  {
+    /* In "spec" mode, only the file instrumentation requests are used */
+    retval = getCXXReferences(itemvec, pdb, f);
+    if (!retval){
 #ifdef DEBUG
-  cout <<"instrumentCXXFile: propagating error from getCXXReferences..."<<endl;
+    cout <<"instrumentCXXFile: propagating error from getCXXReferences..."<<endl;
 #endif /* DEBUG */
-    return retval; /* return error if we catch one */
+      return retval; /* return error if we catch one */
+    }
   }
+  /* check if the given file has line/routine level instrumentation requests */
+  if (!isInstrumentListEmpty()) 
+  { /* there are finite instrumentation requests, add requests for this file */
+    retval = addFileInstrumentationRequests(pdb, f, itemvec);
+    if (!retval)
+      return retval;
+  }
+  /* All instrumentation requests are in. Now do postprocessing. */
+  postprocessInstrumentationRequests(itemvec);
 
   // put in code to insert <Profile/Profiler.h>
   if (use_spec)
@@ -1385,6 +1343,7 @@ void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it,
   {
     ostr <<"{ ";
     processCloseLoopTimer(ostr);
+    ostr << it->snippet << " ";
     if (use_spec)
     {
       /* XXX Insert code here */
@@ -1397,12 +1356,13 @@ void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it,
     {
       ostr <<getStopMeasurementEntity(it)<<"(tautimer);";
     }
-    ostr << " " << it->snippet << " " << use_string << " " << (ret_expression) << "; }" << endl;
+    ostr << use_string << " " << (ret_expression) << "; }" << endl;
   }
   else 
   {
     ostr <<"{ tau_ret_val = " << ret_expression << "; ";
     processCloseLoopTimer(ostr);
+    ostr << it->snippet << " ";
     if (use_spec)
     {
       /* XXX Insert code here */
@@ -1413,7 +1373,7 @@ void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it,
     }
     else
       ostr<<getStopMeasurementEntity(it)<<"(tautimer); ";
-    ostr << it->snippet << " " << use_string << " " << "(tau_ret_val); }" << endl;
+    ostr << use_string << " " << "(tau_ret_val); }" << endl;
   }
 }
 
@@ -1494,7 +1454,19 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
   memset(inbuf, INBUF_SIZE, 0); // reset to zero
   // initialize reference vector
   vector<itemRef *> itemvec;
-  getCReferences(itemvec, pdb, f);
+  if (!use_spec)
+  {
+    /* In "spec" mode, only the file instrumentation requests are used */
+    getCReferences(itemvec, pdb, f);
+  }
+  /* check if the given file has line/routine level instrumentation requests */
+  if (!isInstrumentListEmpty()) 
+  { /* there are finite instrumentation requests, add requests for this file */
+    addFileInstrumentationRequests(pdb, f, itemvec);
+  }
+  /* All instrumentation requests are in. Now do postprocessing. */
+  postprocessInstrumentationRequests(itemvec);
+
 
   // Begin Instrumentation
   // put in code to insert <Profile/Profiler.h>
@@ -3262,7 +3234,19 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
   memset(inbuf, INBUF_SIZE, 0); // reset to zero
   // initialize reference vector
   vector<itemRef *> itemvec;
-  getFReferences(itemvec, pdb, f);
+  if (!use_spec)
+  {
+    /* In "spec" mode, only file instrumentation requests are used */
+    getFReferences(itemvec, pdb, f);
+  }
+  /* check if the given file has line/routine level instrumentation requests */
+  if (!isInstrumentListEmpty() || memory_flag) 
+  { /* there are finite instrumentation requests, add requests for this file */
+    addFileInstrumentationRequests(pdb, f, itemvec);
+  }
+  /* All instrumentation requests are in. Now do postprocessing. */
+  postprocessInstrumentationRequests(itemvec);
+
 
   int inputLineNo = 0;
   bool is_if_stmt;
@@ -3442,9 +3426,6 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	      }
 	      
                 writeAdditionalDeclarations(ostr, (pdbRoutine *)((*it)->item));
-                //if (!(*it)->snippet.empty())
-                //  ostr << "\n\t" << (*it)->snippet << "\n\t";
-
 		if (((pdbRoutine *)(*it)->item)->kind() == pdbItem::RO_FPROG) {
 		  // main
 		  ostr << "      call TAU_PROFILE_INIT()"<<endl;
@@ -3476,6 +3457,8 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		  ostr <<"call "<<getStartMeasurementEntity((*it))<<"(profiler)"<<endl;
 		}
                 writeAdditionalFortranInvocations(ostr, (pdbRoutine *)((*it)->item));
+                if (!(*it)->snippet.empty())
+                  ostr << "\n\t" << (*it)->snippet << "\n\t";
 
 #ifdef DEBUG
 		printf("Before 2.1: (*it)->col = %d, write_upto=%d\n", (*it)->col, write_upto);
@@ -4408,8 +4391,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: geimer $
- * $Revision: 1.197 $   $Date: 2008/08/09 00:05:26 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.197 2008/08/09 00:05:26 geimer Exp $
+ * $Revision: 1.198 $   $Date: 2008/08/11 21:37:40 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.198 2008/08/11 21:37:40 geimer Exp $
  ***************************************************************************/
 
 

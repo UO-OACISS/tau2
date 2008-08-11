@@ -1772,6 +1772,9 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
           else
           {
 	    itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_BEGIN, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col(), (*it)->getCode((*rit)->bodyBegin(), *rit), BEFORE));
+
+            /* We need to create an empty BODY_END request here to close the '{' created by the BODY_BEGIN */
+	    itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_END, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), "", BEFORE));
           }
         } /* end of routine entry */
         /* examine the type of request - exit */
@@ -1799,13 +1802,22 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
               itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), RETURN, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(**rlit, *rit), BEFORE));
             }
           }
-          if (use_spec)
-          {
 #ifdef DEBUG
-            cout <<"at line: "<<(*rit)->bodyEnd().line()<<", col"<< (*rit)->bodyEnd().col()<<"code = "<<(*it)->getCode()<<endl;
+          cout <<"at line: "<<(*rit)->bodyEnd().line()<<", col"<< (*rit)->bodyEnd().col()<<"code = "<<(*it)->getCode()<<endl;
 #endif /* DEBUG */
-
-            itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_END, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), (*it)->getCode((*rit)->bodyEnd(), *rit), BEFORE));
+          if (isVoidRoutine(*rit))
+          {
+            if (!use_spec &&
+                (language == PDB::LA_CXX || language == PDB::LA_C_or_CXX))
+            {
+              itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), (*it)->getCode(), BEFORE));
+            }
+            else
+            {
+              /* We need to create an empty BODY_BEGIN request here to open the '}' created by the BODY_END */
+	      itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_BEGIN, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col(), "", BEFORE));
+              itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_END, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), (*it)->getCode((*rit)->bodyEnd(), *rit), BEFORE));
+            }
           }
         } /* end of routine exit */
         /* examine the type of request - init */
@@ -2472,6 +2484,6 @@ string intToString(int value)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: geimer $
- * $Revision: 1.61 $   $Date: 2008/08/09 00:05:27 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.61 2008/08/09 00:05:27 geimer Exp $
+ * $Revision: 1.62 $   $Date: 2008/08/11 21:37:40 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.62 2008/08/11 21:37:40 geimer Exp $
  ***************************************************************************/
