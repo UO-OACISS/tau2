@@ -1,0 +1,53 @@
+CHARM Example 
+
+= Using TAU with charm++ =
+(tested with 5.4 release 1)
+
+Note that when TAU is built with charm++, only charm++ programs can use the
+resulting library.  Additionally, no TAU calls can be made before the
+ConverseInit call.
+
+When using TAU_COMPILER with charm++, the following change must be made to
+charm/src/conv-core/converse.h :
+
+static __inline__ unsigned long long int rdtsc(void)
+{
+        unsigned long long int x;
+#ifdef CMK_IA64
+	__asm__ __volatile__("mov %0=ar.itc" : "=r"(x) :: "memory");
+#else
+        __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
+#endif
+        return x;
+}
+
+Must be changed to :
+
+static __inline__ unsigned long long int rdtsc(void)
+{
+        unsigned long long int x;
+#ifndef TAU_CHARM
+#ifdef CMK_IA64
+	__asm__ __volatile__("mov %0=ar.itc" : "=r"(x) :: "memory");
+#else
+        __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
+#endif
+#endif
+        return x;
+}
+
+This is due to the EDG front-end parse not parsing the __asm__ directive
+properly.
+
+
+
+
+
+== For building NAMD with TAU: ==
+
+FOR NAMD version 2.5 see ../../README.CHARM
+
+FOR NAMD version 2.6 and greater see:
+http://www.nic.uoregon.edu/tau-wiki/Guide:NAMDTAU
+
+for the most up to date information.
