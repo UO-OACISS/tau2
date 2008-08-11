@@ -259,7 +259,7 @@ public class Configure {
                     jdbc_db_jarfile = "derby.jar";
                     jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
                     db_schemafile = "dbschema.derby.txt";
-                    db_dbname = tau_root + "/" + arch + File.separator + "lib" + File.separator + "perfdmf";
+                    db_dbname = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf";
                     db_hostname = "";
                     db_portnum = "";
                 } else if (jdbc_db_type.compareTo("db2") == 0) {
