@@ -56,7 +56,7 @@ fi
 
 
 java \
--Dderby.system.home=${TAUROOT}/${CONFIG_ARCH}/lib \
+-Dderby.system.home=${HOME}/.ParaProf \
 -cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JARGS_JAR}:${COMMON_JAR} \
 edu.uoregon.tau.perfdmf.loader.LoadExperiment \
 $@

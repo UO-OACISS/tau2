@@ -1,1 +1,1 @@
-derby.stream.error.file=@TAUROOTDIR@/@ARCH@/lib/derby.log
+derby.stream.error.file=@HOME@/.ParaProf/derby.log
