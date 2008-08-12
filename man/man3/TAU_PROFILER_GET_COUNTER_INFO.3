@@ -214,13 +214,11 @@ const char **counters;
 int numcounters;
 
 TAU_PROFILER_GET_COUNTER_INFO(&counters, &numcounters);
-printf("Calls = %ld, child = %ld\en", calls, childcalls);
 printf("numcounters = %d\en", numcounters);
 for (j = 0; j < numcounters ; j++) 
 {
 	printf(">>>");
 	printf("counter [%d] = %s\en", j, counters[j]);
-	printf(" excl [%d] = %g, incl [%d] = %g\en", j, excl[j], j, incl[j]);
 }
 .EB lightgray adjust-for-leading-newline
 .if t \{\
