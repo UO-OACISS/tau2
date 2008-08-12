@@ -48,9 +48,9 @@ Name: TAU
 Version: 2.17.2
 Release: 1.%{disttag}
 Group: Development/Tools
-License: Copyright (c) 1999 University of Oregon, Los Alamos National Laboratory
+License: Copyright (c) 2008 University of Oregon, Research Center Juelich, Los Alamos National Laboratory
 Source0: http://www.sfr-fresh.com/unix/misc/%{program_name}-%{version}.tar.gz
-URL: http://www.cs.uoregon.edu/research/tau
+URL: http://tau.uoregon.edu
 # The source cannot be distributed:
 %if %{nosrc}
 NoSource: 0
@@ -79,14 +79,14 @@ Provides: /bin/@TAUSHELL@
 TAU (Tuning and Analysis Utilities) provides a framework for integrating
 program and performance analysis tools and components. A core tool
 component for parallel performance evaluation is a profile measurement and
-analysis package. The TAU portable profiling and tracing package was developed jointly by the University of Oregon and LANL for profiling parallel, multi-threaded C++ programs. The package implements a instrumentation library, profile analysis procedures, and a visualization tool. 
+analysis package. The TAU portable profiling and tracing package was developed jointly by the University of Oregon, Research Center Juelich, and LANL for profiling parallel, multi-threaded/MPI/hybrid Fortran, C, C++, Java, and Python programs. The package implements a instrumentation library, profile analysis procedures, and a visualization tool. 
 
-It runs on SGI Origin 2000s, Intel PCs running Linux, Sun, Compaq Alpha Tru64,
-Compaq Alpha Linux clusters, HP workstations and Cray T3E. The current release 
-(v2.6) supports C++, C and Fortran90. It works  with KAI KCC, PGI, g++, egcs, 
-Fujitsu and vendor supplied C++ compilers. See INSTALL and README files 
+It runs on Linux clusters, IBM BG/P, BG/L, pseries Linux, Cray XT4, XT3 
+(Catamount, CNL), SGI, Sun, Compaq Alpha Tru64,
+Compaq Alpha Linux clusters, HP workstations. The current release 
+(v2.17.2) supports Fortran, C++, C, Java, and Python. It works with most compilers. See INSTALL and README files 
 included with the distribution. Documentation can be found at 
-http://www.cs.uoregon.edu/research/tau
+http://tau.uoregon.edu
 
 - Sameer Shende (University of Oregon)
 Report bugs to tau-bugs@cs.uoregon.edu
@@ -197,7 +197,8 @@ fi
 # redefine lib and bin
 ####################################
 %if %{is64bit}
-%define libdir %{prefix}/%{machine}/lib64
+# TAU uses lib for all platforms
+%define libdir %{prefix}/%{machine}/lib
 %else
 %define libdir %{prefix}/%{machine}/lib
 %endif
@@ -248,7 +249,7 @@ sed -i "s#$RPM_BUILD_DIR/%{program_name}-%{version}#%{prefix}#g" $file
 echo "replacing $RPM_BUILD_DIR/%{program_name}-%{version} by %{prefix} in $file"
 done
 # more files in lib
-for file in $RPM_BUILD_ROOT%{libdir}/derby.properties $RPM_BUILD_ROOT%{libdir}/Makefile.tau;
+for file in $RPM_BUILD_ROOT%{libdir}/Makefile.tau;
 do
 sed -i "s#$RPM_BUILD_DIR/%{program_name}-%{version}#%{prefix}#g" $file
 echo "replacing $RPM_BUILD_DIR/%{program_name}-%{version} by %{prefix} in $file"
@@ -283,7 +284,7 @@ fi
 %docdir %{docdirectory}
 %{docdirectory}/*
 %{prefix}/*/bin
-%{prefix}/*/%{lib}
+%{prefix}/*/lib
 %{prefix}/tools
 %{prefix}/etc
 %if %{default_version}
