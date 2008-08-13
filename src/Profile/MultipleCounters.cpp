@@ -1076,7 +1076,7 @@ inline double TauGetMHzRatingsMCL(void)
   f = popen(cmd1,"r");
 
   /* For Apple Mac OS X */
-  if (f!=NULL) f = popen(cmd2,"r");
+  if (f==NULL) f = popen(cmd2,"r");
   if (f!=NULL) {
     while (fgets(buf, BUFSIZ, f) != NULL)
     {
