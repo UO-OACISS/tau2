@@ -22,6 +22,7 @@ using namespace std;
 #include "Profile/KtauCounters.h"
 #endif //TAUKTAU_SHCTR
 
+
 #ifdef CPU_TIME
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -1068,15 +1069,25 @@ void MultipleCounterLayer::ktauMCL(int tid, double values[]){
 inline double TauGetMHzRatingsMCL(void)
 {
   FILE *f;
+  bool isApple = false;
+  FILE *fd;
   double rating;
   char *cmd1 = "cat /proc/cpuinfo | egrep -i '^cpu MHz' | head -1 | sed 's/^.*: //'";
   char *cmd2 = "sysctl hw.cpufrequency | sed 's/^.*: //'"; /* For Apple */
 
   char buf[BUFSIZ];
-  f = popen(cmd1,"r");
 
-  /* For Apple Mac OS X */
-  if (f==NULL) f = popen(cmd2,"r");
+  if ((fd = fopen("/proc/cpuinfo", "r")) == NULL) {
+    /* Assume Mac OS X. There is no /proc/cpuinfo on Darwin.  */
+    f = popen(cmd2,"r");
+    isApple = true;
+  }
+  else 
+  { /* Linux */
+    f = popen(cmd1,"r");
+  }
+  fclose(fd); /* for testing /proc/cpuinfo */
+
   if (f!=NULL) {
     while (fgets(buf, BUFSIZ, f) != NULL)
     {
@@ -1087,7 +1098,14 @@ inline double TauGetMHzRatingsMCL(void)
 #ifdef DEBUG_PROF
   printf("Rating = %g Mhz\n", rating);
 #endif /* DEBUG_PROF */
-  return rating;
+
+  if (isApple) {
+    return rating/1E6; /* Apple returns Hz not MHz. Convert to MHz */
+  }
+  else
+  {
+    return rating; /* in MHz */
+  }
 }
 
   
