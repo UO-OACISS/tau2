@@ -1754,6 +1754,10 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 
           additionalDeclarations.push_back(pair<int, list<string> >((*rit)->id(), decls)); 
 	  /* assign the list of strings to the list */
+
+          /* We need to create empty BODY_BEGIN & BODY_END request here to get the declaration */
+          itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_BEGIN, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col(), "", BEFORE));
+          itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_END, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), "", BEFORE));
         } /* end of routine decl */
         /* examine the type of request - entry */
         if ((*it)->getKind() == TAU_ROUTINE_ENTRY)
@@ -1867,6 +1871,9 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
               }
 
               itemvec.push_back( new itemRef((pdbItem *)NULL, BODY_BEGIN, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col(), (*it)->getCode((*rit)->bodyBegin(), *rit, true), BEFORE));
+
+              /* We need to create an empty BODY_END request here to close the '{' created by the BODY_BEGIN */
+	      itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_END, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), "", BEFORE));
             }
           }
         } /* end of init */
@@ -2484,6 +2491,6 @@ string intToString(int value)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: geimer $
- * $Revision: 1.62 $   $Date: 2008/08/11 21:37:40 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.62 2008/08/11 21:37:40 geimer Exp $
+ * $Revision: 1.63 $   $Date: 2008/08/13 17:20:47 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.63 2008/08/13 17:20:47 geimer Exp $
  ***************************************************************************/
