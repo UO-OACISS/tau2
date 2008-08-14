@@ -157,6 +157,7 @@ public class LoadTrial {
         } else {
             appendToTrial();
         }
+		databaseAPI.terminate();
 
     }
 
