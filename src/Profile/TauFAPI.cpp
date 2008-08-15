@@ -102,8 +102,8 @@ void Tau_profile_snapshot_1l(char *name, int number);
 void Tau_metadata(char *name, char *value);
 void Tau_static_phase_start(char *name);
 void Tau_static_phase_stop(char *name);
-void Tau_dynamic_start(char *name, int iteration, int isPhase);
-void Tau_dynamic_stop(char *name, int iteration, int isPhase);
+void Tau_dynamic_start(char *name, void *iteration, int isPhase);
+void Tau_dynamic_stop(char *name, void *iteration, int isPhase);
 char * Tau_append_iteration_to_name(int iteration, char *name);
   
 
@@ -302,7 +302,7 @@ void TAU_STATIC_PHASE_STOP(char *fname, int flen) {
   tau_static_phase_stop(fname, flen);
 }
 
-void tau_dynamic_phase_start(int *iteration, char *fname, int flen) {
+void tau_dynamic_phase_start(void *iteration, char *fname, int flen) {
   // make a copy so that we can null terminate it
   char *localname = (char *) malloc((size_t)flen+1);
   strncpy(localname, fname, flen);
@@ -316,23 +316,23 @@ void tau_dynamic_phase_start(int *iteration, char *fname, int flen) {
     }
   }
 
-  Tau_dynamic_start(localname, *iteration, 1); /* 1 is isPhase */
+  Tau_dynamic_start(localname, iteration, 1); /* 1 is isPhase */
   free(localname);
 }
 
-void tau_dynamic_phase_start_(int *iteration, char *fname, int flen) {
+void tau_dynamic_phase_start_(void *iteration, char *fname, int flen) {
   tau_dynamic_phase_start(iteration, fname, flen);
 }
 
-void tau_dynamic_phase_start__(int *iteration, char *fname, int flen) {
+void tau_dynamic_phase_start__(void *iteration, char *fname, int flen) {
   tau_dynamic_phase_start(iteration, fname, flen);
 }
 
-void TAU_DYNAMIC_PHASE_START(int *iteration, char *fname, int flen) {
+void TAU_DYNAMIC_PHASE_START(void *iteration, char *fname, int flen) {
   tau_dynamic_phase_start(iteration, fname, flen);
 }
 
-void tau_dynamic_phase_stop(int *iteration, char *fname, int flen) {
+void tau_dynamic_phase_stop(void *iteration, char *fname, int flen) {
   // make a copy so that we can null terminate it
   char *localname = (char *) malloc((size_t)flen+1);
   strncpy(localname, fname, flen);
@@ -346,24 +346,24 @@ void tau_dynamic_phase_stop(int *iteration, char *fname, int flen) {
     }
   }
 
-  Tau_dynamic_stop(localname, *iteration, 1); /* 1 is isPhase */
+  Tau_dynamic_stop(localname, iteration, 1); /* 1 is isPhase */
   free(localname);
 }
 
-void tau_dynamic_phase_stop_(int *iteration, char *fname, int flen) {
+void tau_dynamic_phase_stop_(void *iteration, char *fname, int flen) {
   tau_dynamic_phase_stop(iteration, fname, flen);
 }
   
-void tau_dynamic_phase_stop__(int *iteration, char *fname, int flen) {
+void tau_dynamic_phase_stop__(void *iteration, char *fname, int flen) {
   tau_dynamic_phase_stop(iteration, fname, flen);
 }
 
-void TAU_DYNAMIC_PHASE_STOP(int *iteration, char *fname, int flen) {
+void TAU_DYNAMIC_PHASE_STOP(void *iteration, char *fname, int flen) {
   tau_dynamic_phase_stop(iteration, fname, flen);
 }
 
 /* TAU_DYNAMIC_TIMER_START/STOP are similar to TAU_DYNAMIC_PHASE_START/STOP */
-void tau_dynamic_timer_start(int *iteration, char *fname, int flen) {
+void tau_dynamic_timer_start(void *iteration, char *fname, int flen) {
   // make a copy so that we can null terminate it
   char *localname = (char *) malloc((size_t)flen+1);
   strncpy(localname, fname, flen);
@@ -377,19 +377,19 @@ void tau_dynamic_timer_start(int *iteration, char *fname, int flen) {
     }
   }
 
-  Tau_dynamic_start(localname, *iteration, 0); /* isPhase=0 implies a timer */
+  Tau_dynamic_start(localname, iteration, 0); /* isPhase=0 implies a timer */
   free(localname);
 }
 
-void tau_dynamic_timer_start_(int *iteration, char *fname, int flen) {
+void tau_dynamic_timer_start_(void *iteration, char *fname, int flen) {
   tau_dynamic_timer_start(iteration, fname, flen);
 }
 
-void tau_dynamic_timer_start__(int *iteration, char *fname, int flen) {
+void tau_dynamic_timer_start__(void *iteration, char *fname, int flen) {
   tau_dynamic_timer_start(iteration, fname, flen);
 }
 
-void TAU_DYNAMIC_TIMER_START(int *iteration, char *fname, int flen) {
+void TAU_DYNAMIC_TIMER_START(void *iteration, char *fname, int flen) {
   tau_dynamic_timer_start(iteration, fname, flen);
 }
 
@@ -417,7 +417,7 @@ void TAU_STATIC_TIMER_START(char *fname, int flen)
 
 
 /* TAU_DYNAMIC_TIMER_STOP */
-void tau_dynamic_timer_stop(int *iteration, char *fname, int flen) {
+void tau_dynamic_timer_stop(void *iteration, char *fname, int flen) {
   // make a copy so that we can null terminate it
   char *localname = (char *) malloc((size_t)flen+1);
   strncpy(localname, fname, flen);
@@ -431,19 +431,19 @@ void tau_dynamic_timer_stop(int *iteration, char *fname, int flen) {
     }
   }
 
-  Tau_dynamic_stop(localname, *iteration, 0); /* isPhase = 0 implies timer */
+  Tau_dynamic_stop(localname, iteration, 0); /* isPhase = 0 implies timer */
   free(localname);
 }
 
-void tau_dynamic_timer_stop_(int *iteration, char *fname, int flen) {
+void tau_dynamic_timer_stop_(void *iteration, char *fname, int flen) {
   tau_dynamic_timer_stop(iteration, fname, flen);
 }
 
-void tau_dynamic_timer_stop__(int *iteration, char *fname, int flen) {
+void tau_dynamic_timer_stop__(void *iteration, char *fname, int flen) {
   tau_dynamic_timer_stop(iteration, fname, flen);
 }
 
-void TAU_DYNAMIC_TIMER_STOP(int *iteration, char *fname, int flen) {
+void TAU_DYNAMIC_TIMER_STOP(void *iteration, char *fname, int flen) {
   tau_dynamic_timer_stop(iteration, fname, flen);
 }
 
@@ -2012,6 +2012,6 @@ void TAU_DEALLOC(void ** ptr, int* line, char *name, int slen)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.70 $   $Date: 2008/08/09 00:18:18 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.70 2008/08/09 00:18:18 amorris Exp $ 
+ * $Revision: 1.71 $   $Date: 2008/08/15 21:18:43 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.71 2008/08/15 21:18:43 amorris Exp $ 
  ***************************************************************************/

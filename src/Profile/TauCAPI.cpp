@@ -866,7 +866,7 @@ extern "C" void Tau_dynamic_start(char *name, void *iteration, int isPhase)
     RtsLayer::UnLockEnv();
   }
   int tid = RtsLayer::myThread();
-  int itcount = (*iterationList)[tid]++;
+  int itcount = (*iterationList)[tid];
 
   FunctionInfo *fi = 0;
   char *newName = Tau_append_iteration_to_name(itcount, name);
@@ -1075,7 +1075,7 @@ int *pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.80 $   $Date: 2008/08/08 22:18:57 $
- * VERSION: $Id: TauCAPI.cpp,v 1.80 2008/08/08 22:18:57 amorris Exp $
+ * $Revision: 1.81 $   $Date: 2008/08/15 21:18:43 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.81 2008/08/15 21:18:43 amorris Exp $
  ***************************************************************************/
 
