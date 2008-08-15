@@ -2258,17 +2258,17 @@ it will not enter here. */
             cout <<"at line: "<<r->bodyBegin().line()<<", col"<< r->bodyBegin().col()<<"code = "<<endl;
 #endif /* DEBUG */
             list<string> dynamicDecls;
-            dynamicDecls.push_back(string("      integer tau_iteration / 0 /"));
+            dynamicDecls.push_back(string("      integer tau_iteration(2) / 0, 0 /"));
             dynamicDecls.push_back(string("      save tau_iteration"));
 
             additionalDeclarations.push_back(pair<int, list<string> >(r->id(), 
                 dynamicDecls)); 
             /* this takes care of the entry based declarations. Now we need to
                take care of the start/stop code */
-            startRegionCode = string("      tau_iteration = tau_iteration + 1");
-  	    itemvec.push_back( new itemRef((pdbItem *)NULL, 
-              INSTRUMENTATION_POINT, (*it)->getRegionStart(), 1, 
-              startRegionCode, BEFORE));
+//             startRegionCode = string("      tau_iteration = tau_iteration + 1");
+//   	    itemvec.push_back( new itemRef((pdbItem *)NULL, 
+//               INSTRUMENTATION_POINT, (*it)->getRegionStart(), 1, 
+//               startRegionCode, BEFORE));
 
             startRegionCode = string("call TAU_")+regionQualifier+string("_")+regionKind+"_START(tau_iteration,\""+(*it)->getCode()+"\");"; 
             stopRegionCode = string("       call TAU_")+regionQualifier+string("_")+regionKind+"_STOP(tau_iteration,\""+(*it)->getCode()+"\");"; 
@@ -2490,7 +2490,7 @@ string intToString(int value)
 
 
 /***************************************************************************
- * $RCSfile: tau_instrument.cpp,v $   $Author: geimer $
- * $Revision: 1.63 $   $Date: 2008/08/13 17:20:47 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.63 2008/08/13 17:20:47 geimer Exp $
+ * $RCSfile: tau_instrument.cpp,v $   $Author: amorris $
+ * $Revision: 1.64 $   $Date: 2008/08/15 21:19:36 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.64 2008/08/15 21:19:36 amorris Exp $
  ***************************************************************************/
