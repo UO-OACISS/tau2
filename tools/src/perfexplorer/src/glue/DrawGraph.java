@@ -5,6 +5,7 @@ package glue;
 
 import java.awt.BasicStroke;
 import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.jfree.chart.ChartFactory;
@@ -39,6 +40,7 @@ public class DrawGraph extends AbstractPerformanceOperation {
     public static final int METRICNAME = 2;
     public static final int THREADNAME = 3;
     public static final int USEREVENTNAME = 4;
+    public static final int PROCESSORCOUNT = 5;
 
     protected int seriesType = METRICNAME;  // sets the series name
     protected int categoryType = THREADNAME;  // sets the X axis
@@ -80,6 +82,7 @@ public class DrawGraph extends AbstractPerformanceOperation {
 	public List<PerformanceResult> processData() {
 
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+		Set<String> categories = new HashSet<String>();
 
         for (PerformanceResult input : inputs) {
         	// THESE ARE LOCAL COPIES!
@@ -131,9 +134,12 @@ public class DrawGraph extends AbstractPerformanceOperation {
            					categoryName = event;
            				} else if (categoryType == THREADNAME) {
            					categoryName = thread.toString();
+           				} else if (categoryType == PROCESSORCOUNT) {
+           					categoryName = Integer.toString(input.getOriginalThreads());
            				}
 
            				dataset.addValue(input.getDataPoint(thread, event, null, valueType), seriesName, categoryName);
+						categories.add(categoryName);
            			}
            		}
 			} else {
@@ -160,9 +166,12 @@ public class DrawGraph extends AbstractPerformanceOperation {
             					categoryName = metric;
             				} else if (categoryType == THREADNAME) {
             					categoryName = thread.toString();
+           					} else if (categoryType == PROCESSORCOUNT) {
+           						categoryName = Integer.toString(input.getOriginalThreads());
             				}
 
             				dataset.addValue(input.getDataPoint(thread, event, metric, valueType), seriesName, categoryName);
+							categories.add(categoryName);
             			}
             		}
             	}
@@ -210,9 +219,14 @@ public class DrawGraph extends AbstractPerformanceOperation {
         //rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
 		rangeAxis.setAutoRangeIncludesZero(false);
 		
-        MyCategoryAxis domainAxis = new MyCategoryAxis();
-		domainAxis.setTickLabelSkip(2);
-        domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_45);
+        MyCategoryAxis domainAxis = null;
+        domainAxis = new MyCategoryAxis(xAxisLabel);
+        if (categories.size() > 40){
+            domainAxis.setTickLabelSkip(categories.size()/20);
+            domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_45);
+        } else if (categories.size() > 20) {
+            domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_45);
+        }
         plot.setDomainAxis(domainAxis);
 
 		PerfExplorerChart chartWindow = new PerfExplorerChart(chart, "General Chart");

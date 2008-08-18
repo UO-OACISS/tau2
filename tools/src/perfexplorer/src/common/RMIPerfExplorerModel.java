@@ -6,6 +6,8 @@ import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import java.io.Serializable;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -13,7 +15,7 @@ import java.util.ArrayList;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.32 2008/03/05 00:25:53 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.33 2008/08/18 16:39:41 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -67,6 +69,8 @@ public class RMIPerfExplorerModel implements Serializable {
 	protected int analysisID = 0;
 	protected Object[] fullPath = null;
 	protected int connectionIndex = 0;
+
+    private Map<String,String> scriptParameters = new HashMap<String,String>();
 
 	/**
 	 * Default Constructor.
@@ -1153,4 +1157,15 @@ public class RMIPerfExplorerModel implements Serializable {
 		this.connectionIndex = connectionIndex;
 	}
 
+	public Map<String,String> getScriptParameters() {
+		return scriptParameters;
+	}
+
+	public void setScriptParameters(Map<String,String> scriptParameters) {
+		this.scriptParameters = scriptParameters;
+	}
+
+	public void addScriptParameter(String name, String value) {
+		this.scriptParameters.put(name, value);
+	}
 }

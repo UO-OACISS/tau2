@@ -18,6 +18,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
 import edu.uoregon.tau.perfdmf.database.PasswordCallback;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 public class PerfExplorerClient extends JFrame implements ImageExport {
 	private static String USAGE = "\nPerfExplorer\n****************************************************************************\nUsage: perfexplorer [OPTIONS]\nwhere [OPTIONS] are:\n[{-h,--help}]  ............................................ print this help.\n[{-g,--configfile}=<config_file>] .. specify one PerfDMF configuration file.\n[{-c,--config}=<config_name>] ........... specify one PerfDMF configuration.\n[{-e,--engine}=<analysis_engine>] ......  where analysis_engine = R or Weka.\n[{-n,--nogui}] ..................................................... no GUI.\n[{-i,--script}=<script_name>] ................ execute script <script_name>.\n";
@@ -172,6 +173,7 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
         CmdLineParser.Option tauArchOpt = parser.addStringOption('a', "tauarch");
         CmdLineParser.Option noGUIOpt = parser.addBooleanOption('n', "nogui");
         CmdLineParser.Option scriptOpt = parser.addStringOption('i', "script");
+        CmdLineParser.Option paramOpt = parser.addStringOption('p', "scriptparams");
         CmdLineParser.Option consoleOpt = parser.addBooleanOption('w', "consoleWindow");
         
 		try {
@@ -193,6 +195,7 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
         PerfExplorerClient.tauArch = (String) parser.getOptionValue(tauArchOpt);
         Boolean noGUI = (Boolean) parser.getOptionValue(noGUIOpt);
         String scriptName = (String) parser.getOptionValue(scriptOpt);
+        String paramsName = (String) parser.getOptionValue(paramOpt);
         Boolean console = (Boolean) parser.getOptionValue(consoleOpt);
         //Boolean console = new Boolean(true);
 
@@ -234,6 +237,22 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 			} catch (Exception e) {
 				analysisEngine = EngineType.WEKA;
 			}
+		}
+
+		if (paramsName != null) {
+			// create the model a little early, but it's ok.
+			PerfExplorerModel model = PerfExplorerModel.getModel();
+			// extract the script parameters
+			StringTokenizer st = new StringTokenizer(paramsName, ",");
+			while(st.hasMoreTokens()) {
+				String next = st.nextToken();
+				StringTokenizer st2 = new StringTokenizer(next, "=");
+				String name = st2.nextToken();
+				String value = st2.nextToken();
+			    model.addScriptParameter(name, value);
+			}
+			if (config != null)
+			    model.addScriptParameter("config", config);
 		}
 
 /*		try {

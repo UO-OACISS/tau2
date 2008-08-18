@@ -21,7 +21,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * interface.  This class has all the member data fields for the plethora
  * of anticipated subclasses.
  * 
- * <P>CVS $Id: AbstractResult.java,v 1.9 2008/07/31 18:43:48 khuck Exp $</P>
+ * <P>CVS $Id: AbstractResult.java,v 1.10 2008/08/18 16:39:41 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0
@@ -466,6 +466,13 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 	 * @return the originalThreads
 	 */
 	public Integer getOriginalThreads() {
+		if (this.trial != null) {
+			// get the node, context, thread count for the trial
+            int nodes = Integer.parseInt(this.trial.getField("node_count"));
+            int contexts = Integer.parseInt(this.trial.getField("contexts_per_node"));
+            int threads = Integer.parseInt(this.trial.getField("threads_per_context"));
+			return (nodes*contexts*threads);
+		}
 		return this.threads.size();
 	}
 
