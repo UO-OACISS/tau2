@@ -19,7 +19,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * This is an implementation of the AbstractPerformanceOperation class which will perform
  * dimension reduction on the data.
  * 
- * <P>CVS $Id: TopXEvents.java,v 1.4 2008/08/19 05:52:03 khuck Exp $</P>
+ * <P>CVS $Id: TopXEvents.java,v 1.5 2008/08/19 06:08:31 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 
@@ -68,10 +68,8 @@ public class TopXEvents extends AbstractPerformanceOperation implements Serializ
 		// create a HashMap of values to store
 		Map<String, Double> values = new HashMap<String, Double>();
 		// for each input matrix in the set of inputs
+		
 		for (PerformanceResult input : inputs) {
-			// create a new output result matrix
-			PerformanceResult output = new DefaultResult(input.getTrial());
-			outputs.add(output);
 			// this is cheating, because we are only looking at the main thread...
 			Integer thread = 0;
 			// iterate through the events
@@ -79,9 +77,21 @@ public class TopXEvents extends AbstractPerformanceOperation implements Serializ
 				values.put(event, input.getDataPoint(thread, event, this.metric, this.type));
 			}
 			Map<String, Double> sorted = Utilities.sortHashMapByValues(values, false);
-
 			int i = 1;
 			for (String event : sorted.keySet()) {
+				sortedEventNames.add(event);
+				if (++i > threshold) {
+					break;
+				}
+			}
+		}
+			
+		for (PerformanceResult input : inputs) {
+			// create a new output result matrix
+			PerformanceResult output = new DefaultResult(input.getTrial());
+			outputs.add(output);
+
+			for (String event : sortedEventNames) {
 				for (String metric : input.getMetrics()) {
 					for (Integer threadIndex : input.getThreads()) {
 						output.putExclusive(threadIndex, event, metric, 
@@ -92,21 +102,7 @@ public class TopXEvents extends AbstractPerformanceOperation implements Serializ
 						output.putSubroutines(threadIndex, event, input.getSubroutines(threadIndex, event));
 					}
 				}
-				sortedEventNames.add(event);
-				if (++i > threshold) {
-					break;
-				}
 			}
-			
-/*			for (String event : sorted.keySet()) {
-				output.putExclusive(thread, event, metric, 
-						input.getExclusive(thread, event, metric));
-				output.putInclusive(thread, event, metric, 
-						input.getInclusive(thread, event, metric));
-				output.putCalls(thread, event, input.getCalls(thread, event));
-				output.putSubroutines(thread, event, input.getSubroutines(thread, event));
-			}
-*/
 		}
 		return outputs;
 	}
