@@ -19,7 +19,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * This is an implementation of the AbstractPerformanceOperation class which will perform
  * dimension reduction on the data.
  * 
- * <P>CVS $Id: TopXEvents.java,v 1.3 2008/04/08 17:03:49 khuck Exp $</P>
+ * <P>CVS $Id: TopXEvents.java,v 1.4 2008/08/19 05:52:03 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 
@@ -70,7 +70,7 @@ public class TopXEvents extends AbstractPerformanceOperation implements Serializ
 		// for each input matrix in the set of inputs
 		for (PerformanceResult input : inputs) {
 			// create a new output result matrix
-			PerformanceResult output = new DefaultResult();
+			PerformanceResult output = new DefaultResult(input.getTrial());
 			outputs.add(output);
 			// this is cheating, because we are only looking at the main thread...
 			Integer thread = 0;

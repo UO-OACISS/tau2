@@ -41,17 +41,20 @@ public class DrawGraph extends AbstractPerformanceOperation {
     public static final int THREADNAME = 3;
     public static final int USEREVENTNAME = 4;
     public static final int PROCESSORCOUNT = 5;
+    public static final int METADATA = 6;
 
     protected int seriesType = METRICNAME;  // sets the series name
     protected int categoryType = THREADNAME;  // sets the X axis
     protected int valueType = AbstractResult.EXCLUSIVE;
     protected boolean logYAxis = false;
     protected boolean showZero = false;
+	protected int categoryNameLength = 0;
     
     protected String title = "My Chart";
     protected String yAxisLabel = "value";
     protected String xAxisLabel = "category";
 	protected boolean userEvents = false;
+    protected String metadataField = "";
     
 	/**
 	 * @param input
@@ -141,6 +144,7 @@ public class DrawGraph extends AbstractPerformanceOperation {
 
            				dataset.addValue(input.getDataPoint(thread, event, null, valueType), seriesName, categoryName);
 						categories.add(categoryName);
+						categoryNameLength = categoryNameLength += categoryName.length();
            			}
            		}
 			} else {
@@ -169,10 +173,14 @@ public class DrawGraph extends AbstractPerformanceOperation {
             					categoryName = thread.toString();
            					} else if (categoryType == PROCESSORCOUNT) {
            						categoryName = Integer.toString(input.getOriginalThreads());
+           					} else if (categoryType == METADATA) {
+           						TrialMetadata meta = new TrialMetadata(input.getTrial());
+           						categoryName = meta.getCommonAttributes().get(this.metadataField);
             				}
 
             				dataset.addValue(input.getDataPoint(thread, event, metric, valueType), seriesName, categoryName);
 							categories.add(categoryName);
+							categoryNameLength = categoryNameLength += categoryName.length();
             			}
             		}
             	}
@@ -227,7 +235,10 @@ public class DrawGraph extends AbstractPerformanceOperation {
             domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_45);
         } else if (categories.size() > 20) {
             domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_45);
-        }
+        } else if (categoryNameLength / categories.size() > 10) {
+            domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_45);
+		}
+
         plot.setDomainAxis(domainAxis);
 
 		PerfExplorerChart chartWindow = new PerfExplorerChart(chart, "General Chart");
@@ -412,5 +423,13 @@ public class DrawGraph extends AbstractPerformanceOperation {
 
 	public boolean getShowZero() {
 		return this.showZero;
+	}
+
+	public String getMetadataField() {
+		return metadataField;
+	}
+
+	public void setMetadataField(String metadataField) {
+		this.metadataField = metadataField;
 	}
 }
