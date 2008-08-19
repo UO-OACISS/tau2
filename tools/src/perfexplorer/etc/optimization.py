@@ -52,7 +52,7 @@ def getTop5(inputs):
 	reduced = reducer.processData()
 	return reduced
 
-def drawGraph(results):
+def drawGraph(results, inclusive):
 	print "drawing charts..."
 	for metric in results.get(0).getMetrics():
 		grapher = DrawGraph(results)
@@ -63,12 +63,17 @@ def drawGraph(results):
 		grapher.setShowZero(False)
 		grapher.setTitle(inApp + ": " + inExp + ": " + metric)
 		grapher.setSeriesType(DrawGraph.EVENTNAME)
+		grapher.setUnits(DrawGraph.SECONDS)
 		grapher.setCategoryType(DrawGraph.METADATA)
 		grapher.setMetadataField("BUILD:Optimization Level")
-		#grapher.setValueType(AbstractResult.INCLUSIVE)
-		grapher.setValueType(AbstractResult.EXCLUSIVE)
 		grapher.setXAxisLabel("Optimization Level")
-		grapher.setYAxisLabel("Inclusive " + metric)
+		if inclusive == True:
+			grapher.setValueType(AbstractResult.INCLUSIVE)
+			grapher.setYAxisLabel("Inclusive " + metric + " (seconds)")
+		else:
+			grapher.setValueType(AbstractResult.EXCLUSIVE)
+			grapher.setYAxisLabel("Exclusive " + metric + " (seconds)")
+
 		grapher.processData()
 	print "...done."
 
@@ -82,9 +87,9 @@ for trial in trials:
 	loaded = TrialMeanResult(trial)
 	results.add(loaded)
 
-#extracted = extractMain(results)
+extracted = extractMain(results)
+drawGraph(extracted, True)
 extracted = getTop5(results)
-#extracted = results
-drawGraph(extracted)
+drawGraph(extracted, False)
 
 print "---------------- JPython test script end -------------"

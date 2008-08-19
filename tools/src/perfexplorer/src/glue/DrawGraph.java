@@ -43,6 +43,16 @@ public class DrawGraph extends AbstractPerformanceOperation {
     public static final int PROCESSORCOUNT = 5;
     public static final int METADATA = 6;
 
+	public static final int MICROSECONDS = 1;
+	public static final int MILLISECONDS = 1000;
+	public static final int THOUSANDS = 1000;
+	public static final int SECONDS = 1000000;
+	public static final int MILLIONS = 1000000;
+	public static final int MINUTES = 60000000;
+	public static final int BILLIONS = 1000000000;
+
+	protected int units = MICROSECONDS;
+
     protected int seriesType = METRICNAME;  // sets the series name
     protected int categoryType = THREADNAME;  // sets the X axis
     protected int valueType = AbstractResult.EXCLUSIVE;
@@ -142,7 +152,7 @@ public class DrawGraph extends AbstractPerformanceOperation {
            					categoryName = Integer.toString(input.getOriginalThreads());
            				}
 
-           				dataset.addValue(input.getDataPoint(thread, event, null, valueType), seriesName, categoryName);
+           				dataset.addValue(input.getDataPoint(thread, event, null, valueType)/this.units, seriesName, categoryName);
 						categories.add(categoryName);
 						categoryNameLength = categoryNameLength += categoryName.length();
            			}
@@ -178,7 +188,7 @@ public class DrawGraph extends AbstractPerformanceOperation {
            						categoryName = meta.getCommonAttributes().get(this.metadataField);
             				}
 
-            				dataset.addValue(input.getDataPoint(thread, event, metric, valueType), seriesName, categoryName);
+            				dataset.addValue(input.getDataPoint(thread, event, metric, valueType)/this.units, seriesName, categoryName);
 							categories.add(categoryName);
 							categoryNameLength = categoryNameLength += categoryName.length();
             			}
@@ -431,5 +441,13 @@ public class DrawGraph extends AbstractPerformanceOperation {
 
 	public void setMetadataField(String metadataField) {
 		this.metadataField = metadataField;
+	}
+
+	public void setUnits(int units) {
+		this.units = units;
+	}
+
+	public int getUnits() {
+		return this.units;
 	}
 }
