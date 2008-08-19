@@ -46,6 +46,7 @@ public class DrawGraph extends AbstractPerformanceOperation {
     protected int categoryType = THREADNAME;  // sets the X axis
     protected int valueType = AbstractResult.EXCLUSIVE;
     protected boolean logYAxis = false;
+    protected boolean showZero = false;
     
     protected String title = "My Chart";
     protected String yAxisLabel = "value";
@@ -217,7 +218,7 @@ public class DrawGraph extends AbstractPerformanceOperation {
         // change the auto tick unit selection to integer units only...
         NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
         //rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-		rangeAxis.setAutoRangeIncludesZero(false);
+		rangeAxis.setAutoRangeIncludesZero(this.showZero);
 		
         MyCategoryAxis domainAxis = null;
         domainAxis = new MyCategoryAxis(xAxisLabel);
@@ -403,5 +404,13 @@ public class DrawGraph extends AbstractPerformanceOperation {
 
 	public void setUserEvents(boolean userEvents) {
 		this.userEvents = userEvents;
+	}
+
+	public void setShowZero(boolean showZero) {
+		this.showZero = showZero;
+	}
+
+	public boolean getShowZero() {
+		return this.showZero;
 	}
 }

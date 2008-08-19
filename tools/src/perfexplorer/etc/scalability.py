@@ -8,6 +8,7 @@ from glue import MergeTrialsOperation
 from glue import TrialMeanResult
 from glue import AbstractResult
 from glue import DrawGraph
+from glue import TopXEvents
 from client import PerfExplorerModel
 from edu.uoregon.tau.perfdmf import Trial
 from java.util import HashSet
@@ -45,6 +46,12 @@ def extractMain(inputs):
 
 	return extracted
 
+def getTop5(inputs):
+	print "extracting top 5 events..."
+	reducer = TopXEvents(inputs, 5)
+	reduced = reducer.processData().get(0)
+	return reduced
+
 def drawGraph(results):
 	print "drawing charts..."
 	for metric in results.get(0).getMetrics():
@@ -54,6 +61,7 @@ def drawGraph(results):
 		grapher.set_metrics(metrics)
 		#grapher.setSortXAxis(False)
 		grapher.setLogYAxis(False)
+		grapher.setShowZero(True)
 		grapher.setTitle(inApp + ": " + inExp + ": " + metric)
 		grapher.setSeriesType(DrawGraph.EVENTNAME)
 		grapher.setCategoryType(DrawGraph.PROCESSORCOUNT)
@@ -73,7 +81,8 @@ for trial in trials:
 	loaded = TrialMeanResult(trial)
 	results.add(loaded)
 
-extracted = extractMain(results)
+#extracted = extractMain(results)
+extracted = getTop5(results)
 drawGraph(extracted)
 
 print "---------------- JPython test script end -------------"
