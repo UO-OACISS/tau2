@@ -59,7 +59,7 @@ public class LinearRegressionOperation extends AbstractPerformanceOperation {
 		List<PerformanceResult> outputs = new ArrayList<PerformanceResult>();
 
 		for (PerformanceResult input : inputs) {
-			PerformanceResult output = new DefaultResult(input.getTrial());
+			PerformanceResult output = new DefaultResult(input, false);
 			outputs.add(output);
 			for (String event : input.getEvents()) {
 				for (String metric : input.getMetrics()) {

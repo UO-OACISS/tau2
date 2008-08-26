@@ -54,7 +54,7 @@ public class ExtractEventOperation extends AbstractPerformanceOperation {
 	public List<PerformanceResult> processData() {
 		this.outputs = new ArrayList<PerformanceResult>();
 		for (PerformanceResult input : inputs) {
-			PerformanceResult output = new DefaultResult(input.getTrial());
+			PerformanceResult output = new DefaultResult(input, false);
 			outputs.add(output);
 			for (String event : events) {
 				for (String metric : input.getMetrics()) {
@@ -69,6 +69,7 @@ public class ExtractEventOperation extends AbstractPerformanceOperation {
 					}
 				}
 			}
+			output.updateEventMap();
 		}
 		return outputs;
 	}

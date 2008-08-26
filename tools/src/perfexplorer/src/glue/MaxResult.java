@@ -26,8 +26,8 @@ public class MaxResult extends DefaultResult {
 		// TODO Auto-generated constructor stub
 	}
 
-	public MaxResult(Trial trial) {
-		super(trial);
+	public MaxResult(PerformanceResult input, boolean doFullCopy) {
+		super(input, doFullCopy);
 	}
 
 	/* (non-Javadoc)

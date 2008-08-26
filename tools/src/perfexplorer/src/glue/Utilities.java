@@ -94,9 +94,13 @@ public class Utilities {
 	}
 
 	private static PerfExplorerServer getServer() {
+		return PerfExplorerServer.getServer(null, EngineType.WEKA);
+	}
+
+	private static PerfExplorerServer getServer(String configName) {
 		String home = System.getProperty("user.home");
 		String slash = System.getProperty("file.separator");
-		String configFile = home + slash + ".ParaProf" + slash + "perfdmf.cfg";
+		String configFile = home + slash + ".ParaProf" + slash + "perfdmf.cfg." + configName;
 		return PerfExplorerServer.getServer(configFile, EngineType.WEKA);
 	}
 
@@ -113,7 +117,7 @@ public class Utilities {
 
 	public static int setSession (String name) {
 		try {
-			PerfExplorerServer server = getServer();
+			PerfExplorerServer server = getServer(name);
 			List configNames = server.getConfigNames();
 			for (int i = 0 ; i < server.getSessionCount() ; i++) {
 				server.setConnectionIndex(i);

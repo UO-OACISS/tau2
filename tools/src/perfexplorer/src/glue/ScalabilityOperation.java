@@ -107,7 +107,7 @@ public class ScalabilityOperation extends AbstractPerformanceOperation {
 			}
 
 			// create a new output result matrix
-			ScalabilityResult output = new ScalabilityResult(input.getTrial());
+			ScalabilityResult output = new ScalabilityResult(input, false);
 
 			// get the ratio of threads between the trials
 			double ratio = comparison.getOriginalThreads() / baseline.getOriginalThreads();

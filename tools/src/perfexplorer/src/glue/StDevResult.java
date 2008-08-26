@@ -26,8 +26,8 @@ public class StDevResult extends DefaultResult {
 		// TODO Auto-generated constructor stub
 	}
 
-	public StDevResult(Trial trial) {
-		super(trial);
+	public StDevResult(PerformanceResult input, boolean doFullCopy) {
+		super(input, doFullCopy);
 	}
 
 	public String toString() {

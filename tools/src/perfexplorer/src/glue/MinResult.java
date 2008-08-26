@@ -29,8 +29,8 @@ public class MinResult extends DefaultResult {
 		// TODO Auto-generated constructor stub
 	}
 
-	public MinResult(Trial trial) {
-		super(trial);
+	public MinResult(PerformanceResult input, boolean doFullCopy) {
+		super(input, doFullCopy);
 	}
 
 	/* (non-Javadoc)

@@ -17,7 +17,7 @@ import edu.uoregon.tau.perfdmf.database.DB;
  * This class is an implementation of the AbstractResult class, and loads a trial
  * from the database into a result object.
  * 
- * <P>CVS $Id: TrialResult.java,v 1.6 2008/07/29 23:40:19 khuck Exp $</P>
+ * <P>CVS $Id: TrialResult.java,v 1.7 2008/08/26 23:21:53 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 
@@ -36,14 +36,13 @@ public class TrialResult extends AbstractResult {
 	 */
 	public TrialResult(TrialResult input) {
 		super(input);
-		this.trialID = input.getTrialID();
-		this.trial = input.getTrial();
 	}
 
 	public TrialResult(Trial trial) {
 		super();
 		this.trialID = trial.getID();
 		this.trial = trial;
+		this.name = this.trial.getName();
 		buildTrialResult(trial, null, null, null);
 	}
 	
@@ -52,6 +51,7 @@ public class TrialResult extends AbstractResult {
 		this.trialID = trial.getID();
 		this.trial = trial;
 		this.callPath = callPath;
+		this.name = this.trial.getName();
 		buildTrialResult(trial, metric, event, thread);
 	}
 	
@@ -83,7 +83,7 @@ public class TrialResult extends AbstractResult {
     			sql.append("p.call, ");
             }
 
-			sql.append("p.subroutines ");
+			sql.append("p.subroutines, e.id ");
 			sql.append("from interval_event e ");
 			sql.append("left outer join interval_location_profile p ");
 			sql.append("on e.id = p.interval_event ");
@@ -120,10 +120,14 @@ public class TrialResult extends AbstractResult {
 			//System.out.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 			while (results.next() != false) {
-				this.putExclusive(results.getInt(3), results.getString(1), results.getString(2), results.getDouble(4));
-				this.putInclusive(results.getInt(3), results.getString(1), results.getString(2), results.getDouble(5));
-				this.putCalls(results.getInt(3), results.getString(1), results.getDouble(6));
-				this.putSubroutines(results.getInt(3), results.getString(1), results.getDouble(7));
+				String eventName = results.getString(1);
+				Integer threadID = results.getInt(3);
+				this.putExclusive(threadID, eventName, results.getString(2), results.getDouble(4));
+				this.putInclusive(threadID, eventName, results.getString(2), results.getDouble(5));
+				this.putCalls(threadID, eventName, results.getDouble(6));
+				this.putSubroutines(threadID, eventName, results.getDouble(7));
+				Integer eventID = results.getInt(8);
+				this.eventMap.put(eventID, eventName);
 			}
 			results.close();
 			statement.close();

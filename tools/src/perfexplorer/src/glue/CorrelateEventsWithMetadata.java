@@ -80,7 +80,7 @@ public class CorrelateEventsWithMetadata extends AbstractPerformanceOperation {
         factory = server.getAnalysisFactory();
 
         
-		CorrelationResult correlation = new CorrelationResult(trialData.getTrial());
+		CorrelationResult correlation = new CorrelationResult(trialData, false);
 		outputs.add(correlation);
 		// now, loop over all event / metric / type
 		

@@ -26,8 +26,8 @@ public class MeanResult extends DefaultResult {
 		// TODO Auto-generated constructor stub
 	}
 
-	public MeanResult(Trial trial) {
-		super(trial);
+	public MeanResult(PerformanceResult input, boolean doFullCopy) {
+		super(input, doFullCopy);
 	}
 
 	public String toString() {

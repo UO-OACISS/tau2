@@ -45,7 +45,7 @@ public class ExtractRankOperation extends AbstractPerformanceOperation {
 	public List<PerformanceResult> processData() {
 		this.outputs = new ArrayList<PerformanceResult>();
 		for (PerformanceResult input : inputs) {
-			PerformanceResult output = new DefaultResult(input.getTrial());
+			PerformanceResult output = new DefaultResult(input, false);
 			outputs.add(output);
 			for (String event : input.getEvents()) {
 				for (String metric : input.getMetrics()) {
@@ -57,6 +57,7 @@ public class ExtractRankOperation extends AbstractPerformanceOperation {
 				output.putCalls(0, event, input.getCalls(threadIndex, event));
 				output.putSubroutines(0, event, input.getSubroutines(threadIndex, event));
 			}
+			output.updateEventMap();
 		}
 		return outputs;
 	}

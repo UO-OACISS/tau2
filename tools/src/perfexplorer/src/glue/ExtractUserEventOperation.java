@@ -54,7 +54,7 @@ public class ExtractUserEventOperation extends AbstractPerformanceOperation {
 	public List<PerformanceResult> processData() {
 		this.outputs = new ArrayList<PerformanceResult>();
 		for (PerformanceResult input : inputs) {
-			PerformanceResult output = new DefaultResult(input.getTrial());
+			PerformanceResult output = new DefaultResult(input, false);
 			outputs.add(output);
 			for (String event : events) {
 				for (Integer threadIndex : input.getThreads()) {
@@ -70,6 +70,7 @@ public class ExtractUserEventOperation extends AbstractPerformanceOperation {
 						input.getUsereventSumsqr(threadIndex, event));
 				}
 			}
+			output.updateEventMap();
 		}
 		return outputs;
 	}

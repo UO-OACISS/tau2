@@ -4,7 +4,6 @@
 package glue;
 
 import java.io.Serializable;
-import java.util.ListIterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
@@ -12,7 +11,6 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.TreeSet;
 
-import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
 
 
@@ -21,7 +19,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * interface.  This class has all the member data fields for the plethora
  * of anticipated subclasses.
  * 
- * <P>CVS $Id: AbstractResult.java,v 1.10 2008/08/18 16:39:41 khuck Exp $</P>
+ * <P>CVS $Id: AbstractResult.java,v 1.11 2008/08/26 23:21:52 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0
@@ -47,10 +45,6 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 	protected Map<Integer, Map<String, Double[]>> usereventData = 
 		new HashMap<Integer, Map<String, Double[]>>();
 
-	private String mainEvent = null;
-	private double mainInclusive = 0.0;
-	private String mainMetric = null;
-	
 	public static final int INCLUSIVE = 0;
 	public static final int EXCLUSIVE = 1;
 	public static final int CALLS = 2;
@@ -62,9 +56,12 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 	public static final int USEREVENT_SUMSQR = 8;
 	private static List<Integer> types = null;
 	
+	private String mainEvent = null;
+	protected double mainInclusive = 0.0;
+	protected String mainMetric = null;
 	protected Trial trial = null;
 	protected Integer trialID = null;
-	
+	protected Map<Integer, String> eventMap = new HashMap<Integer, String>();
 	protected String name = null;
 	
 	public static List<Integer> getTypes() {
@@ -115,14 +112,6 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 	}
 	
 	/**
-	 * Constructor which takes a trial to have a back pointer to the database
-	 * 
-	 */
-	public AbstractResult(Trial trial) {
-		this.trial = trial;
-	}
-	
-	/**
 	 * copy constructor
 	 *
 	 */
@@ -151,6 +140,25 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 						getDataPoint(thread, event, null, USEREVENT_SUMSQR));
 			}
 		}
+		this.copyFields(input);
+	}
+
+	/**
+	 * sort-of copy constructor
+	 *
+	 */
+	public AbstractResult(PerformanceResult input, boolean notFullCopy) {
+		this.copyFields(input);
+	}
+	
+	private void copyFields(PerformanceResult input) {
+		this.trial = input.getTrial();
+		this.eventMap = input.getEventMap();
+		this.mainEvent = input.getMainEvent();
+		this.trial = input.getTrial();
+		this.trialID = input.getTrialID();
+		this.eventMap = input.getEventMap();
+		this.name = input.getName();
 	}
 
 	public void putInclusive(Integer thread, String event, String metric, double value) {
@@ -667,6 +675,47 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 			}
 		}
 		return buf.toString();
+	}
+
+	/**
+	 * @return the eventMap
+	 */
+	public Map<Integer, String> getEventMap() {
+		return eventMap;
+	}
+
+	/**
+	 * @param eventMap the eventMap to set
+	 */
+	public void setEventMap(Map<Integer, String> eventMap) {
+		this.eventMap = eventMap;
+	}
+
+	/**
+	 * @return the mainInclusive
+	 */
+	public double getMainInclusive() {
+		return mainInclusive;
+	}
+
+	/**
+	 * @param mainInclusive the mainInclusive to set
+	 */
+	public void setMainInclusive(double mainInclusive) {
+		this.mainInclusive = mainInclusive;
+	}
+	
+	public void updateEventMap() {
+		// remove from the event map the events which are no longer here
+		Set<Integer> keys = this.eventMap.keySet();
+		Map<Integer,String> newMap = new HashMap<Integer,String>();
+		for (Integer key : keys) {
+			String event = this.eventMap.get(key);
+			if (this.events.contains(event)) {
+				newMap.put(key,event);
+			}
+		}
+		this.eventMap = newMap;
 	}
 	
 }

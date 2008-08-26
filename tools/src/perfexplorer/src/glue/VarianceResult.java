@@ -26,8 +26,8 @@ public class VarianceResult extends DefaultResult {
 		// TODO Auto-generated constructor stub
 	}
 
-	public VarianceResult(Trial trial) {
-		super(trial);
+	public VarianceResult(PerformanceResult input, boolean doFullCopy) {
+		super(input, doFullCopy);
 	}
 
 	public String toString() {

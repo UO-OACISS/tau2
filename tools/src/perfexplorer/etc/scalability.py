@@ -46,28 +46,32 @@ def extractMain(inputs):
 
 	return extracted
 
-def getTop5(inputs):
-	print "extracting top 5 events..."
-	reducer = TopXEvents(inputs, "Time", AbstractResult.EXCLUSIVE, 5)
+def getTop8(inputs):
+	print "extracting top 8 events..."
+	reducer = TopXEvents(inputs, "Time", AbstractResult.EXCLUSIVE, 8)
 	reduced = reducer.processData()
 	return reduced
 
-def drawGraph(results):
+def drawGraph(results, inclusive):
 	print "drawing charts..."
 	for metric in results.get(0).getMetrics():
 		grapher = DrawGraph(results)
 		metrics = HashSet()
 		metrics.add(metric)
 		grapher.set_metrics(metrics)
-		grapher.setLogYAxis(True)
+		grapher.setLogYAxis(False)
 		grapher.setShowZero(True)
 		grapher.setTitle(inApp + ": " + inExp + ": " + metric)
 		grapher.setSeriesType(DrawGraph.EVENTNAME)
+		grapher.setUnits(DrawGraph.SECONDS)
 		grapher.setCategoryType(DrawGraph.PROCESSORCOUNT)
-		#grapher.setValueType(AbstractResult.INCLUSIVE)
-		grapher.setValueType(AbstractResult.EXCLUSIVE)
 		grapher.setXAxisLabel("Processor Count")
-		grapher.setYAxisLabel("Inclusive " + metric)
+		if inclusive == True:
+			grapher.setValueType(AbstractResult.INCLUSIVE)
+			grapher.setYAxisLabel("Inclusive " + metric + " (seconds)")
+		else:
+			grapher.setValueType(AbstractResult.EXCLUSIVE)
+			grapher.setYAxisLabel("Exclusive " + metric + " (seconds)")
 		grapher.processData()
 	print "...done."
 
@@ -81,9 +85,9 @@ for trial in trials:
 	loaded = TrialMeanResult(trial)
 	results.add(loaded)
 
-#extracted = extractMain(results)
-extracted = getTop5(results)
-#extracted = results
-drawGraph(extracted)
+extracted = extractMain(results)
+drawGraph(extracted, True)
+extracted = getTop8(results)
+drawGraph(extracted, False)
 
 print "---------------- JPython test script end -------------"

@@ -64,7 +64,7 @@ public class DeriveMetricOperation extends AbstractPerformanceOperation {
 	 */
 	public List<PerformanceResult> processData() {
 		for (PerformanceResult input : inputs) {
-			PerformanceResult output = new DefaultResult(input.getTrial());
+			PerformanceResult output = new DefaultResult(input, false);
 			
 			for (String event : input.getEvents()) {
 				for (Integer thread : input.getThreads()) {

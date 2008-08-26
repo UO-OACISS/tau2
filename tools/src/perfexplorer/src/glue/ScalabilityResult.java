@@ -39,8 +39,8 @@ public class ScalabilityResult extends AbstractResult {
 		// TODO Auto-generated constructor stub
 	}
 
-	public ScalabilityResult(Trial trial) {
-		super(trial);
+	public ScalabilityResult(PerformanceResult input, boolean doFullCopy) {
+		super(input, doFullCopy);
 	}
 
 	/**

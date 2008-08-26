@@ -216,7 +216,7 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 			}
 		}
 //		System.out.println("Done.");
-
+		
 		outputs.add(total);
 		outputs.add(mean);
 		outputs.add(variance);
@@ -232,12 +232,12 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 	public List<PerformanceResult> processDataNotCombined() {
 		for (PerformanceResult input : inputs) {
 			// create a new output result matrices
-			PerformanceResult total = new TotalResult(input.getTrial());
-			PerformanceResult mean = new MeanResult(input.getTrial());
-			PerformanceResult variance = new VarianceResult(input.getTrial());
-			PerformanceResult stdev = new StDevResult(input.getTrial());
-			PerformanceResult min = new MinResult(input.getTrial());
-			PerformanceResult max = new MaxResult(input.getTrial());
+			PerformanceResult total = new TotalResult(input, false);
+			PerformanceResult mean = new MeanResult(input, false);
+			PerformanceResult variance = new VarianceResult(input, false);
+			PerformanceResult stdev = new StDevResult(input, false);
+			PerformanceResult min = new MinResult(input, false);
+			PerformanceResult max = new MaxResult(input, false);
 	
 			Set<Integer> totalThreads = new TreeSet<Integer>();
 			Set<String> totalMetrics = new TreeSet<String>();

@@ -26,8 +26,8 @@ public class TotalResult extends DefaultResult {
 		// TODO Auto-generated constructor stub
 	}
 
-	public TotalResult(Trial trial) {
-		super(trial);
+	public TotalResult(PerformanceResult input, boolean doFullCopy) {
+		super(input, doFullCopy);
 	}
 
 	public String toString() {

@@ -90,6 +90,7 @@ public class TopXPercentEvents extends TopXEvents {
 					output.putSubroutines(thread, event, input.getSubroutines(thread, event));
 				}
 			}
+			output.updateEventMap();
 		}
 		return outputs;
 	}

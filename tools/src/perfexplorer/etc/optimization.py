@@ -46,9 +46,9 @@ def extractMain(inputs):
 
 	return extracted
 
-def getTop5(inputs):
-	print "extracting top 5 events..."
-	reducer = TopXEvents(inputs, "Time", AbstractResult.EXCLUSIVE, 5)
+def getTop3(inputs):
+	print "extracting top 3 events..."
+	reducer = TopXEvents(inputs, "Time", AbstractResult.EXCLUSIVE, 3)
 	reduced = reducer.processData()
 	return reduced
 
@@ -89,7 +89,7 @@ for trial in trials:
 
 extracted = extractMain(results)
 drawGraph(extracted, True)
-extracted = getTop5(results)
+extracted = getTop3(results)
 drawGraph(extracted, False)
 
 print "---------------- JPython test script end -------------"

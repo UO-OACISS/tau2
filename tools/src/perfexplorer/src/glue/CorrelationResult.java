@@ -87,8 +87,8 @@ public class CorrelationResult extends DefaultResult implements SelfAsserting {
 		this.correlation = correlation;
 	}
 
-	public CorrelationResult(Trial trial) {
-		super(trial);
+	public CorrelationResult(PerformanceResult input, boolean notFullCopy) {
+		super(input, notFullCopy);
 	}
 
 	public String getBaselineEvent() {

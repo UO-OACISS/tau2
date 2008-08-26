@@ -32,14 +32,13 @@ public class TrialMeanResult extends AbstractResult {
 	 */
 	public TrialMeanResult(TrialMeanResult input) {
 		super(input);
-		this.trialID = input.getTrialID();
-		this.trial = input.getTrial();
 	}
 
 	public TrialMeanResult(Trial trial) {
 		super();
 		this.trialID = trial.getID();
 		this.trial = trial;
+		this.name = this.trial.getName();
 		buildTrialMeanResult(trial, null, null);
 	}
 	
@@ -47,7 +46,8 @@ public class TrialMeanResult extends AbstractResult {
 		super();
 		this.trialID = trial.getID();
 		this.callPath = callPath;
-		buildTrialMeanResult(trial, null, null);
+		this.name = this.trial.getName();
+		buildTrialMeanResult(trial, metric, event);
 	}
 	
 	private void buildTrialMeanResult(Trial trial, String metric, String event) {
@@ -76,7 +76,7 @@ public class TrialMeanResult extends AbstractResult {
     			sql.append("p.call, ");
             }
 
-			sql.append("p.subroutines ");
+			sql.append("p.subroutines, e.id ");
 			sql.append("from interval_event e ");
 			sql.append("left outer join interval_mean_summary p ");
 			sql.append("on e.id = p.interval_event ");
@@ -114,6 +114,8 @@ public class TrialMeanResult extends AbstractResult {
 				this.putInclusive(0, eventName, metricName, results.getDouble(4));
 				this.putCalls(0, eventName, results.getDouble(5));
 				this.putSubroutines(0, eventName, results.getDouble(6));
+				Integer eventID = results.getInt(7);
+				this.eventMap.put(eventID, eventName);
 			}
 			results.close();
 			statement.close();

@@ -7,6 +7,8 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.sql.PreparedStatement;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -44,8 +46,20 @@ public class TrialMetadata {
 	
 	private void getMetadata() {
 		try {
-			// do the trial attributes
+			// get the common attributes
+			Map metaData = trial.getMetaData();
+			Iterator iter = metaData.keySet().iterator();
+			while (iter.hasNext()) {
+				// we can safely assume that the name is a string
+				String key = (String)iter.next();
+				String value = (String)metaData.get(key);
+				commonAttributes.put(key, value);
+			}
+			
+			// add the trial name
 			commonAttributes.put("Trial.Name", trial.getName());
+			
+			// get the metadata strings from the trial
 			String[] columns = Trial.getFieldNames(PerfExplorerServer.getServer().getDB());
 			for (int index = 0 ; index < columns.length ; index++) {
 				if (columns[index].equalsIgnoreCase("XML_METADATA") || columns[index].equalsIgnoreCase("XML_METADATA_GZ")) {
@@ -58,65 +72,26 @@ public class TrialMetadata {
 				}
 			}
 			
-			// build a factory
+			// build a factory to build the document builder
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			// ask the factory for the document builder
 			DocumentBuilder builder = factory.newDocumentBuilder();
-	
+			
+			/// read the XML
 			Reader reader = new StringReader(trial.getField(Trial.XML_METADATA));
 			InputSource source = new InputSource(reader);
 			Document metadata = builder.parse(source);
-	
-			NodeList names = null;
-			NodeList values = null;
-	
-	//		try {
-	//		/* this is the 1.3 through 1.4 way */
-	//		names = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
-	//			"/metadata/CommonProfileAttributes/attribute/name");
-	//		values = org.apache.xpath.XPathAPI.selectNodeList(metadata, 
-	//			"/metadata/CommonProfileAttributes/attribute/value");
-	//		} catch (NoClassDefFoundError e) {
 	
 			/* this is the 1.5 way */
 			// build the xpath object to jump around in that document
 			javax.xml.xpath.XPath xpath = javax.xml.xpath.XPathFactory.newInstance().newXPath();
 			xpath.setNamespaceContext(new TauNamespaceContext());
 	
-			// get the common profile attributes from the metadata
-			names = (NodeList) 
-				xpath.evaluate("/metadata/CommonProfileAttributes/attribute/name", 
-				metadata, javax.xml.xpath.XPathConstants.NODESET);
-	
-			values = (NodeList) 
-				xpath.evaluate("/metadata/CommonProfileAttributes/attribute/value", 
-				metadata, javax.xml.xpath.XPathConstants.NODESET);
-	//		}
-	
-			for (int i = 0 ; i < names.getLength() ; i++) {
-				Node name = (Node)names.item(i).getFirstChild();
-				Node value = (Node)values.item(i).getFirstChild();
-				if (value == null) { // if there is no value
-					commonAttributes.put(name.getNodeValue(), "");
-				} else {
-					commonAttributes.put(name.getNodeValue(), value.getNodeValue());
-				}
-			}
-			
 			// get the profile attributes from the metadata
-			
 			NodeList profileAttributes = (NodeList) xpath.evaluate("/metadata/ProfileAttributes", metadata, javax.xml.xpath.XPathConstants.NODESET);
-	
+
+			// iterate through the "uncommon" profile attributes (different for each thread)
 			for (int i = 0 ; i < profileAttributes.getLength() ; i++) {
-//				System.out.println("Got profile attributes..." + i);
-				NamedNodeMap attributes = profileAttributes.item(i).getAttributes();
-				String node = attributes.getNamedItem("node").getNodeValue();
-				String context = attributes.getNamedItem("context").getNodeValue();
-				String thread = attributes.getNamedItem("thread").getNodeValue();
-				// TODO - calcluate the thread id properly from the node, context, thread values
 				NodeList children = profileAttributes.item(i).getChildNodes();
-				// TODO : this is a hack for sweep3d support - REMOVE IT!
-				int neighbors = 0;
 				for (int j = 0 ; j < children.getLength(); j++) {
 					Node attributeElement = children.item(j);
 					Node name = attributeElement.getFirstChild();

@@ -13,7 +13,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * should support.  All operations should be refered to through
  * this interface, whenever possible.
  * 
- * <P>CVS $Id: PerformanceResult.java,v 1.5 2008/07/31 18:43:48 khuck Exp $</P>
+ * <P>CVS $Id: PerformanceResult.java,v 1.6 2008/08/26 23:21:53 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0
@@ -328,4 +328,20 @@ public interface PerformanceResult {
 	 *
 	 */
 	public void setName(String name);
+
+	/**
+	 * @return the eventMap
+	 */
+	public Map<Integer, String> getEventMap();
+
+	/**
+	 * @param eventMap the eventMap to set
+	 */
+	public void setEventMap(Map<Integer, String> eventMap);
+	
+	/**
+	 * update the event map - remove what's missing, essentially
+	 *
+	 */
+	public void updateEventMap();
 }

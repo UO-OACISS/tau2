@@ -66,7 +66,7 @@ public class RatioOperation extends AbstractPerformanceOperation {
 		PerformanceResult denominator = inputs.get(1);
 		
 		// create a new output result matrix
-		PerformanceResult output = new DefaultResult(inputs.get(0).getTrial());
+		PerformanceResult output = new DefaultResult(inputs.get(0), false);
 		
 		// get the set of threads
 		Set<Integer> totalThreads = numerator.getThreads();
