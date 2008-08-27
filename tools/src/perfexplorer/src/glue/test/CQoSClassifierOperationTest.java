@@ -37,11 +37,23 @@ public class CQoSClassifierOperationTest extends TestCase {
 		CQoSClassifierOperation classifier = new CQoSClassifierOperation(outputs, result.getTimeMetric(), metadataFields, methodField);
 		classifier.processData();
 		
+        System.out.println("");
         for (int i = 0 ; i < 5 ; i++) {
     		Map<String,String> inputFields = new HashMap<String,String>();
         	inputFields.put("sleep value", Integer.toString(i));
 	        System.out.println(inputFields + ", " + classifier.getClass(inputFields) + ", confidence: " + classifier.getConfidence());
         }
+        
+        String fileName = "/tmp/pleasework.classifier";
+        CQoSClassifierOperation.writeClassifier(fileName, classifier);
+        CQoSClassifierOperation classifier2 = CQoSClassifierOperation.readClassifier(fileName);
+
+        System.out.println("");
+        for (int i = 0 ; i < 5 ; i++) {
+    		Map<String,String> inputFields = new HashMap<String,String>();
+        	inputFields.put("sleep value", Integer.toString(i));
+	        System.out.println(inputFields + ", " + classifier2.getClass(inputFields) + ", confidence: " + classifier2.getConfidence());
+        }    
 	}
 
 }
