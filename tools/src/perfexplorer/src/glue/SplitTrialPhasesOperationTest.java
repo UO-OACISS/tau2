@@ -21,7 +21,7 @@ public class SplitTrialPhasesOperationTest extends TestCase {
 	 */
 	public final void testProcessData() {
 		int sessionid = Utilities.setSession("cqos");
-		Trial trial = Utilities.getTrial("simple", "test", "method 1");
+		Trial trial = Utilities.getTrial("simple", "test", "method 2");
 		TrialMeanResult result = new TrialMeanResult(trial);
 		PerformanceAnalysisOperation operator = new SplitTrialPhasesOperation(result, "Iteration");
 		List<PerformanceResult> outputs = operator.processData();
@@ -33,8 +33,9 @@ public class SplitTrialPhasesOperationTest extends TestCase {
 			}
 			System.out.println(output.getName() + ": Main: " + output.getMainEvent());
 			System.out.println(output.getEventMap());
+			TrialMetadata meta = new TrialMetadata(output);
+			System.out.println(meta.toString());
 			System.out.println("");
 		}
 	}
-
 }

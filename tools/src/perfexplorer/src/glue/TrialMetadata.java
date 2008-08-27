@@ -5,16 +5,15 @@ package glue;
 
 import java.io.Reader;
 import java.io.StringReader;
-import java.sql.PreparedStatement;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
@@ -24,6 +23,15 @@ import common.PerfExplorerOutput;
 import edu.uoregon.tau.perfdmf.Trial;
 import server.PerfExplorerServer;
 import server.TauNamespaceContext;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+
+import server.PerfExplorerServer;
+import edu.uoregon.tau.perfdmf.IntervalEvent;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.database.DB;
 
 /**
  * @author khuck
@@ -33,6 +41,7 @@ public class TrialMetadata {
 	private Hashtable<String,String> commonAttributes = new Hashtable<String,String>();
 	private Hashtable<String,Double> accumulator = new Hashtable<String,Double>();
 	private Trial trial = null;
+	private PerformanceResult performanceResult = null;
 
 	public TrialMetadata (int id) {
 		this.trial = PerfExplorerServer.getServer().getSession().setTrial(id);
@@ -41,6 +50,12 @@ public class TrialMetadata {
 	
 	public TrialMetadata (Trial trial) {
 		this.trial = trial;
+		getMetadata();
+	}
+	
+	public TrialMetadata (PerformanceResult input) {
+		this.trial = input.getTrial();
+		this.performanceResult = input;
 		getMetadata();
 	}
 	
@@ -125,6 +140,46 @@ public class TrialMetadata {
 					commonAttributes.put(key, Double.toString(accumulator.get(key) / profileAttributes.getLength()));
 				}
 			}
+			
+			if (this.performanceResult != null) {
+				// get the metadata from the CQoS tables!
+				DB db = PerfExplorerServer.getServer().getDB();
+				StringBuffer sql = new StringBuffer();
+				PreparedStatement statement = null;
+				
+				try {
+					// if this table doesn't exist, then an exception will be thrown.
+					sql.append("select interval_event, category_name, parameter_name, ");
+					sql.append("parameter_type, parameter_value from metadata_parameters ");
+					sql.append("where trial = ?");
+					statement = db.prepareStatement(sql.toString());
+					
+					statement.setInt(1, trial.getID());
+					ResultSet results = statement.executeQuery();
+					// if the eventID is null, then this metadata field applies to the whole trial.
+					while (results.next() != false) {
+						Integer eventID = results.getInt(1);
+						String eventName = null;
+						if (eventID != null)
+							// if this is phase profile, this will point to a dynamic phase event.
+							// the assumption is that the trial has been split by the
+							// SplitTrialPhasesOperation already...
+							eventName = this.performanceResult.getEventMap().get(eventID);
+						if (eventID == null || eventName != null) {
+							String categoryName = results.getString(2);
+							String parameterName = results.getString(3);
+							String parameterType = results.getString(4);
+							String parameterValue = results.getString(5);
+							commonAttributes.put(parameterName, parameterValue);
+						}
+					}
+					results.close();
+					statement.close();
+				} catch (SQLException sqle) {
+					System.err.println(sqle.getMessage());
+					sqle.printStackTrace();
+				}
+			}
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
 			e.printStackTrace();
@@ -159,5 +214,13 @@ public class TrialMetadata {
 		this.trial = trial;
 	}
 	
+	public String toString() {
+		StringBuffer buf = new StringBuffer();
+		Set<String> keys = this.commonAttributes.keySet();
+		for (String key : keys) {
+			buf.append(key + ": " + this.commonAttributes.get(key) + "\n");
+		}
+		return buf.toString();
+	}
 	
 }
