@@ -1,4 +1,4 @@
-# $Id: Makefile.skel,v 1.32 2008/08/27 06:43:16 khuck Exp $
+# $Id: Makefile.skel,v 1.33 2008/08/29 00:18:47 khuck Exp $
 # $Name:  $
 
 R_HOME = @RROOT@
@@ -97,6 +97,7 @@ SERVER_DYLD_LIBRARY_PATH=${OMEGAHAT_HOME}/libs:${R_HOME}/lib:${R_HOME}/bin:${R_H
 ##########################
 
 BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JOGL_JAR}:${VIS_JAR}:${JARGS_JAR}:${JYTHON_JAR}:${JUNIT_JAR}:${TAUCOMMON_JAR}
+CQOS_BUILD_CLASSPATH = classes:${WEKA_JAR}
 GLUE_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JOGL_JAR}:${VIS_JAR}:${JARGS_JAR}:${JYTHON_JAR}:${JUNIT_JAR}:${JBOSS_RULES_JARS}:${HIBERNATE_JARS}:${TAUCOMMON_JAR}:${WEKA_JAR}
 CLIENT_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JOGL_JAR}:${VIS_JAR}:${JARGS_JAR}:${TAUCOMMON_JAR}:${BATIK_JAR}:${JYTHON_JAR}:${ANTLR2_JAR}:${ANTLR3_JAR}:${COMMONS_JCI_CORE_JAR}:${COMMONS_LANG_JAR}:${COMMONS_LOGGING_JAR}:${DROOLS_COMIPLER_JAR}:${DROOLS_CORE_JAR}:${DROOLS_DECISIONTABLES_JAR}:${DROOLS_JSR94_JAR}:${JSR_JAR}:${JXL_JAR}:${STRINGTEMPLATE_JAR}:${JUNIT_JAR}
 
@@ -111,6 +112,7 @@ CONSTANT_CPP_OUTPUT = ${patsubst %.cpp, %.java, ${CONSTANT_CPP_INPUT}}
 CONSTANT_SOURCES = ${CONSTANT_CPP_OUTPUT}
 COMMON_SOURCES = ${wildcard src/common/*.java}
 CLUSTERING_SOURCES = ${wildcard src/clustering/*.java} ${wildcard src/clustering/${ENGINE_PACKAGE}/*.java} 
+CQOS_SOURCES = ${wildcard src/cqos/*.java}
 CLIENT_SOURCES = ${wildcard src/client/*.java}
 SERVER_SOURCES = ${wildcard src/server/*.java}
 GLUE_SOURCES = ${wildcard src/glue/*.java} ${wildcard src/glue/psl/*.java} ${wildcard src/rules/*.java} ${wildcard src/persistence/*.java}
@@ -118,11 +120,12 @@ SOURCES = ${COMMON_SOURCES} ${SERVER_SOURCES} ${CLIENT_SOURCES} ${CLUSTERING_SOU
 
 CONSTANT_CLASSES = ${subst src/, classes/, ${patsubst %.java, %.class, ${CONSTANT_SOURCES}}} 
 COMMON_CLASSES = ${subst src/, classes/, ${patsubst %.java, %.class, ${COMMON_SOURCES}}} 
+CQOS_CLASSES = ${subst src/, classes/, ${patsubst %.java, %.class, ${CQOS_SOURCES}}} 
 CLUSTERING_CLASSES = ${subst src/, classes/, ${patsubst %.java, %.class, ${CLUSTERING_SOURCES}}} 
 SERVER_CLASSES = ${subst src/, classes/, ${patsubst %.java, %.class, ${SERVER_SOURCES}}} 
 GLUE_CLASSES = ${subst src/, classes/, ${patsubst %.java, %.class, ${GLUE_SOURCES}}} 
 CLIENT_CLASSES = ${subst src/, classes/, ${patsubst %.java, %.class, ${CLIENT_SOURCES}}} 
-CLASSES = ${COMMON_CLASSES} ${SERVER_CLASSES} ${CLIENT_CLASSES} ${CLUSTERING_CLASSES}
+CLASSES = ${COMMON_CLASSES} ${CQOS_CLASSES} ${SERVER_CLASSES} ${CLIENT_CLASSES} ${CLUSTERING_CLASSES}
 RMIC_CLASSES = classes/server/PerfExplorerServer_Stub.class
 
 default: perfexplorer.jar
@@ -137,6 +140,8 @@ constants: ${CONSTANT_CLASSES}
 
 common: ${COMMON_CLASSES}
 
+cqos: ${CQOS_CLASSES}
+
 clustering: ${CLUSTERING_CLASSES}
 
 glue: ${GLUE_CLASSES}
@@ -145,7 +150,7 @@ server: ${SERVER_CLASSES} ${RMIC_CLASSES}
 
 client: ${CLIENT_CLASSES}
 
-perfexplorer.jar: ${CONSTANT_CLASSES} ${CLIENT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES} ${GLUE_CLASSES}
+perfexplorer.jar: ${CONSTANT_CLASSES} ${CLIENT_CLASSES} ${CQOS_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES} ${GLUE_CLASSES}
 	cp src/client/*.gif classes/client/.
 	cp rules/*.drl classes/rules/.
 	cp etc/*.drl classes/.
@@ -167,6 +172,9 @@ ${CONSTANT_CLASSES}: Makefile ${CONSTANT_SOURCES}
 ${COMMON_CLASSES}: Makefile ${COMMON_SOURCES} ${CONSTANT_CLASSES}
 	${JAVAC} -classpath ${BUILD_CLASSPATH} -d classes ${COMMON_SOURCES}
 
+${CQOS_CLASSES}: Makefile ${CQOS_SOURCES}
+	${JAVAC} -classpath ${CQOS_BUILD_CLASSPATH} -d classes ${CQOS_SOURCES}
+
 ${CLUSTERING_CLASSES}: Makefile ${CLUSTERING_SOURCES} ${CONSTANT_CLASSES} ${COMMON_CLASSES}
 	${JAVAC} -classpath ${CLUSTERING_BUILD_CLASSPATH} -d classes ${CLUSTERING_SOURCES}
 
@@ -179,7 +187,7 @@ ${RMIC_CLASSES}: Makefile ${SERVER_SOURCES} ${SERVER_CLASSES}
 ${CLIENT_CLASSES}: Makefile ${CLIENT_SOURCES} ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES}
 	${JAVAC} -classpath ${CLIENT_BUILD_CLASSPATH} -d classes ${CLIENT_SOURCES}
 
-${GLUE_CLASSES}: Makefile ${GLUE_SOURCES} ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES} ${CLIENT_CLASSES}
+${GLUE_CLASSES}: Makefile ${GLUE_SOURCES} ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES} ${CLIENT_CLASSES} ${CQOS_CLASSES}
 	${JAVAC} -classpath ${GLUE_BUILD_CLASSPATH} -d classes ${GLUE_SOURCES}
 
 ###
@@ -298,7 +306,7 @@ webstart_old: perfexplorer.jar
 	cp etc/java.policy ${WEBSTART_DIR}
 	chmod 755 ${WEBSTART_DIR}/*.jar
 
-perfexplorer2.jar: ${CONSTANT_CLASSES} ${CLIENT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${GLUE_CLASSES} ${RMIC_CLASSES}
+perfexplorer2.jar: ${CONSTANT_CLASSES} ${CLIENT_CLASSES} ${CQOS_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${GLUE_CLASSES} ${RMIC_CLASSES}
 	bin/extract.sh ${PERFDMF_JAR}							# TAU
 	bin/extract.sh ${VIS_JAR}								# TAU
 	bin/extract.sh ${TAUCOMMON_JAR}							# TAU

@@ -17,7 +17,7 @@ import edu.uoregon.tau.perfdmf.database.DB;
  * This class is an implementation of the AbstractResult class, and loads a trial
  * from the database into a result object.
  * 
- * <P>CVS $Id: TrialResult.java,v 1.7 2008/08/26 23:21:53 khuck Exp $</P>
+ * <P>CVS $Id: TrialResult.java,v 1.8 2008/08/29 00:18:47 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 
@@ -58,11 +58,13 @@ public class TrialResult extends AbstractResult {
 	private void buildTrialResult(Trial trial, String metric, String event, String thread) {
 		// hit the databsae, and get the data for this trial
 		DB db = PerfExplorerServer.getServer().getDB();
+		StringBuffer sql = null;
+		PreparedStatement statement = null;
 		
 		try {
 			int threadsPerContext = Integer.parseInt(trial.getField("threads_per_context"));
 			int threadsPerNode = Integer.parseInt(trial.getField("contexts_per_node")) * threadsPerContext;
-			StringBuffer sql = new StringBuffer();
+			sql = new StringBuffer();
 			sql.append("select e.name, ");
 			sql.append("m.name, ");
 			sql.append("(p.node * " + threadsPerNode + ") + ");
@@ -104,10 +106,10 @@ public class TrialResult extends AbstractResult {
 			}
 			sql.append(" order by 3,2,1 ");
 			
-			PreparedStatement statement = db.prepareStatement(sql.toString());
+			statement = db.prepareStatement(sql.toString());
 			
 			statement.setInt(1, trial.getID());
-			int index = 1;
+			int index = 2;
 			if (metric != null) {
 				statement.setString(index++, metric);
 			}
@@ -167,6 +169,10 @@ public class TrialResult extends AbstractResult {
 		} catch (SQLException exception) {
 			System.err.println(exception.getMessage());
 			exception.printStackTrace();
+			if (statement != null)
+				System.err.println(statement);
+			else
+				System.err.println(sql);
 		}
 	}
 
