@@ -214,7 +214,7 @@ public class WekaClassifierWrapper implements Serializable {
 			for (int i = 0 ; i < this.metadataFields.length ; i++) {
 				String value = (String)tmpMap.get(this.metadataFields[i]);
 				try {
-					Double test = Double.parseDouble(value);
+					double test = Double.parseDouble(value);
 				} catch (Exception e) {
 					nominalAttributes[i] = new HashSet();
 				}
@@ -458,7 +458,7 @@ public class WekaClassifierWrapper implements Serializable {
 			// do some classifying with it
 			System.out.println("\n" + wrapper.getClassifierType());
 	        for (int i = 0 ; i < 5 ; i++) {
-	    		Map<String,String> inputFields = new HashMap<String,String>();
+	    		Map/*<String,String>*/ inputFields = new HashMap/*<String,String>*/();
 	        	inputFields.put("sleep value", Integer.toString(i));
 	        	inputFields.put("bogus", (i<2?"A":"B"));
 	        	// notice there's no noise fields!  We don't need ALL the training data...
@@ -474,7 +474,7 @@ public class WekaClassifierWrapper implements Serializable {
 			// do some classifying with it
 			System.out.println("\n" + wrapper.getClassifierType());
 	        for (int i = 0 ; i < 5 ; i++) {
-	    		Map<String,String> inputFields = new HashMap<String,String>();
+	    		Map/*<String,String>*/ inputFields = new HashMap/*<String,String>*/();
 	        	inputFields.put("sleep value", Integer.toString(i));
 	        	inputFields.put("bogus", (i<2?"A":"B"));
 	        	// this test does have the noise variables
@@ -492,7 +492,7 @@ public class WekaClassifierWrapper implements Serializable {
 			// do some classifying with it
 			System.out.println("\n" + wrapper.getClassifierType());
 	        for (int i = 0 ; i < 5 ; i++) {
-	    		Map<String,String> inputFields = new HashMap<String,String>();
+	    		Map/*<String,String>*/ inputFields = new HashMap/*<String,String>*/();
 	        	inputFields.put("sleep value", Integer.toString(i));
 	        	inputFields.put("bogus", (i<2?"A":"B"));
 				inputFields.put("noise", "A");
@@ -513,7 +513,7 @@ public class WekaClassifierWrapper implements Serializable {
 			// do some classifying with it
 			System.out.println("\n" + wrapper.getClassifierType());
 	        for (int i = 0 ; i < 5 ; i++) {
-	    		Map<String,String> inputFields = new HashMap<String,String>();
+	    		Map/*<String,String>*/ inputFields = new HashMap/*<String,String>*/();
 	        	inputFields.put("sleep value", Integer.toString(i));
 	        	inputFields.put("bogus", (i<2?"A":"B"));
 				inputFields.put("noise", "A");

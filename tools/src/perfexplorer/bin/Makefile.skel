@@ -1,4 +1,4 @@
-# $Id: Makefile.skel,v 1.33 2008/08/29 00:18:47 khuck Exp $
+# $Id: Makefile.skel,v 1.34 2008/08/29 17:41:57 khuck Exp $
 # $Name:  $
 
 R_HOME = @RROOT@
@@ -128,6 +128,9 @@ CLIENT_CLASSES = ${subst src/, classes/, ${patsubst %.java, %.class, ${CLIENT_SO
 CLASSES = ${COMMON_CLASSES} ${CQOS_CLASSES} ${SERVER_CLASSES} ${CLIENT_CLASSES} ${CLUSTERING_CLASSES}
 RMIC_CLASSES = classes/server/PerfExplorerServer_Stub.class
 
+# remove this for normal make output
+.SILENT:
+
 default: perfexplorer.jar
 
 ###
@@ -157,6 +160,12 @@ perfexplorer.jar: ${CONSTANT_CLASSES} ${CLIENT_CLASSES} ${CQOS_CLASSES} ${COMMON
 	jar -cvf perfexplorer.jar -C classes .
 	cp perfexplorer.jar ${TAUROOT}/${CONFIG_ARCH}/lib/.
 
+classifier.jar: clean ${CQOS_CLASSES}
+	@ echo -e "\n***** Make sure you build classifier.jar with Java 1.4! *****\n"
+	echo "Main-Class: cqos.WekaClassifierWrapper" > Manifest.txt
+	jar -cvf classifier.jar Manifest.txt -C classes .
+	rm -f Manifest.txt
+
 ########################
 # for the javac command, specify -target 1.3 for older java versions,
 # otherwise specify -source 1.4 to enable assertions.
@@ -173,6 +182,7 @@ ${COMMON_CLASSES}: Makefile ${COMMON_SOURCES} ${CONSTANT_CLASSES}
 	${JAVAC} -classpath ${BUILD_CLASSPATH} -d classes ${COMMON_SOURCES}
 
 ${CQOS_CLASSES}: Makefile ${CQOS_SOURCES}
+	mkdir -p classes
 	${JAVAC} -classpath ${CQOS_BUILD_CLASSPATH} -d classes ${CQOS_SOURCES}
 
 ${CLUSTERING_CLASSES}: Makefile ${CLUSTERING_SOURCES} ${CONSTANT_CLASSES} ${COMMON_CLASSES}
