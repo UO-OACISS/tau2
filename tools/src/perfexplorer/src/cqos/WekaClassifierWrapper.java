@@ -378,6 +378,7 @@ public class WekaClassifierWrapper implements Serializable {
 	 */
 	public static void main(String[] args) throws Exception {
 		
+		final String USAGE = "usage: cqos.WekaClassifierWrapper [read [filename] | write [filename]]";
 		// create one of those there wrappers...
 		WekaClassifierWrapper wrapper = null;
 		
@@ -387,17 +388,25 @@ public class WekaClassifierWrapper implements Serializable {
 		boolean read = true;
 		boolean write = true;
 		
-		// if the user wants just reading or writing, let them do so... (testing purposes)
-		if (args.length > 1) {
-			if (args[0].equals("write")) {
-				read = false;
-			} else if (args[0].equals("read")) {
-				write = false;
+		try {
+			// if the user wants just reading or writing, let them do so... (testing purposes)
+			if (args.length >= 1) {
+				if (args[0].equals("write")) {
+					read = false;
+				} else if (args[0].equals("read")) {
+					write = false;
+				} else {
+					throw new Exception("bad first argument");
+				}
+				if (args.length == 2) {
+					fileName = args[1];
+					System.out.println(fileName);
+				}
 			}
-			if (args.length == 2) {
-				fileName = args[1];
-				System.out.println(fileName);
-			}
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+			System.err.println(USAGE);
+			System.exit(0);
 		}
 		
 		// train that classifier!
