@@ -84,7 +84,7 @@ public class WekaClassifierWrapper implements Serializable {
 	 * @param classLabel The key in the maps which identifies the class of each instance
 	 * @throws Exception If you don't pass in the right data...
 	 */
-	WekaClassifierWrapper (List/*<Map<String,String>>*/ trainingData, String classLabel) throws Exception {
+	public WekaClassifierWrapper (List/*<Map<String,String>>*/ trainingData, String classLabel) throws Exception {
 		this.trainingData = trainingData;
 		this.classLabel = classLabel;
 		
@@ -379,16 +379,22 @@ public class WekaClassifierWrapper implements Serializable {
 		// create one of those there wrappers...
 		WekaClassifierWrapper wrapper = null;
 		
+		String fileName = "/tmp/pleasework";
+		
 		// default behavior - do both the read and the write
 		boolean read = true;
 		boolean write = true;
 		
 		// if the user wants just reading or writing, let them do so... (testing purposes)
-		if (args.length == 1) {
+		if (args.length > 1) {
 			if (args[0].equals("write")) {
 				read = false;
 			} else if (args[0].equals("read")) {
 				write = false;
+			}
+			if (args.length == 2) {
+				fileName = args[1];
+				System.out.println(fileName);
 			}
 		}
 		
@@ -502,13 +508,13 @@ public class WekaClassifierWrapper implements Serializable {
 	        }    
 			
 	        // serialize it to disk!
-			WekaClassifierWrapper.writeClassifier("/tmp/pleasework", wrapper);
+			WekaClassifierWrapper.writeClassifier(fileName, wrapper);
 		}
 		
 		if (read) {
 			System.out.println("Reading...");
 			// read in our classifier
-			wrapper = WekaClassifierWrapper.readClassifier("/tmp/pleasework");
+			wrapper = WekaClassifierWrapper.readClassifier(fileName);
 			
 			// do some classifying with it
 			System.out.println("\n" + wrapper.getClassifierType());

@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import cqos.WekaClassifierWrapper;
+
 
 import junit.framework.TestCase;
 
@@ -45,15 +47,7 @@ public class CQoSClassifierOperationTest extends TestCase {
         }
         
         String fileName = "/tmp/pleasework.classifier";
-        CQoSClassifierOperation.writeClassifier(fileName, classifier);
-        CQoSClassifierOperation classifier2 = CQoSClassifierOperation.readClassifier(fileName);
-
-        System.out.println("");
-        for (int i = 0 ; i < 5 ; i++) {
-    		Map<String,String> inputFields = new HashMap<String,String>();
-        	inputFields.put("sleep value", Integer.toString(i));
-	        System.out.println(inputFields + ", " + classifier2.getClass(inputFields) + ", confidence: " + classifier2.getConfidence());
-        }    
+        classifier.writeClassifier(fileName);
 	}
 
 }
