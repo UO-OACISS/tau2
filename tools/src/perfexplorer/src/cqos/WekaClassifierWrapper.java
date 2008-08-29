@@ -145,13 +145,15 @@ public class WekaClassifierWrapper implements Serializable {
 				// this is a nominal attribute.
 				attr = new Attribute(key, classes);
 				
-				// if this is our class attribute, remember that.  It BETTER be the first one.
-				if (key.equals(this.classLabel))
-					classAttr = attr;
 			} else {
 				// this is a numeric attribute.
 				attr = new Attribute(key);
 			}
+
+			// if this is our class attribute, remember that.  It BETTER be the first one.
+			if (key.equals(this.classLabel))
+				classAttr = attr;
+
 			// add our attributes to our local array, and to the Weka FastVector
 			attArray[index] = attr;
 			this.attributes.addElement(attr);
@@ -254,10 +256,15 @@ public class WekaClassifierWrapper implements Serializable {
 		for (int i = 0 ; i < attArray.length ; i++) {
 			String tmp = (String)inputFields.get(attArray[i].name());
 			if (tmp != null) {
-				if (attArray[i].isNumeric())
-					inst.setValue(attArray[i], Double.parseDouble(tmp));
-				else
-					inst.setValue(attArray[i], tmp);
+				try {
+					if (attArray[i].isNumeric())
+						inst.setValue(attArray[i], Double.parseDouble(tmp));
+					else
+						inst.setValue(attArray[i], tmp);
+				} catch (IllegalArgumentException e) {
+					// the user passed in a value that our classifier doesn't know.
+					// just swallow the exception, and move on.
+				}
 			}
 			if (attArray[i].name().equals(this.classLabel))
 				classIndex = i;
@@ -273,11 +280,6 @@ public class WekaClassifierWrapper implements Serializable {
         try {
         	// get the classification, which comes back as probabilities for each class.
 	        double[] dist = cls.distributionForInstance(inst);
-	        
-//	        System.out.print(" [");
-//	        for (int i = 0 ; i < dist.length ; i++)
-//	            System.out.print (dist[i] + ",");
-//	        System.out.print("] ");
 	        
 	        // choose the class with the highest probability.
 			int i = 0;
@@ -521,8 +523,8 @@ public class WekaClassifierWrapper implements Serializable {
 	        for (int i = 0 ; i < 5 ; i++) {
 	    		Map/*<String,String>*/ inputFields = new HashMap/*<String,String>*/();
 	        	inputFields.put("sleep value", Integer.toString(i));
-	        	inputFields.put("bogus", (i<2?"A":"B"));
-				inputFields.put("noise", "A");
+	        	inputFields.put("bogus", (i<2?"A":i<4?"B":"C"));    /// one bad value - C wasn't used in training
+				inputFields.put("noise", (i==0?"A":i==1?"B":i==2?"C":i==3?"D":"E"));  // four bad values!
 				inputFields.put("more noise", "0.0");
 		        System.out.println(inputFields + ", " + wrapper.getClass(inputFields) + 
 		        		", confidence: " + wrapper.getConfidence());
