@@ -66,23 +66,42 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 			// create a reduced hashtable
 			if (this.metadataFields != null) {
 				for (String key : this.metadataFields) {
-					localMeta.put(key, meta.get(key));
+					// don't include the class label - we want just the "best" method for that parameter - not all of them
+					if (!key.equals(this.classLabel))
+						localMeta.put(key, meta.get(key));
 				}
 			// otherwise, if the user didn't specify a set of properties, use them all (?)
 			} else {
 				for (String key : meta.keySet()) {
-					localMeta.put(key, meta.get(key));
+					// don't include the class label - we want just the "best" method for that parameter - not all of them
+					if (!key.equals(this.classLabel))
+						localMeta.put(key, meta.get(key));
 				}				
 			}
-			// put the hashtable in the set: if its performance is "better" than the existing one
-			// or if it doesn't exist yet.
-			PerformanceResult result = tuples.get(localMeta);
-			if (result == null) {
-				tuples.put(localMeta,input);
+			// check if the metric is one of the metrics, or a metadata field
+			if (!input.getMetrics().contains(metric)) {
+				// put the hashtable in the set: if its performance is "better" than the existing one
+				// or if it doesn't exist yet.
+				PerformanceResult result = tuples.get(localMeta);
+				if (result == null) {
+					tuples.put(localMeta,input);
+				} else {
+					if (Double.parseDouble(meta.get(metric)) < 
+							Double.parseDouble((new TrialMetadata(result)).getCommonAttributes().get(metric))) {
+						tuples.put(localMeta,input);
+					}
+				}
 			} else {
-				if (input.getInclusive(0, input.getMainEvent(), metric) < 
-						result.getInclusive(0, result.getMainEvent(), this.metric)) {
-					tuples.put(localMeta,input);					
+				// put the hashtable in the set: if its performance is "better" than the existing one
+				// or if it doesn't exist yet.
+				PerformanceResult result = tuples.get(localMeta);
+				if (result == null) {
+					tuples.put(localMeta,input);
+				} else {
+					if (input.getInclusive(0, input.getMainEvent(), metric) < 
+							result.getInclusive(0, result.getMainEvent(), this.metric)) {
+						tuples.put(localMeta,input);					
+					}
 				}
 			}
 		}
@@ -93,11 +112,17 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 		for (Hashtable<String,String> tmp : tuples.keySet()) {
 			Map<String,String> tmpMap = new HashMap<String,String>();
 			
-			tmpMap.put(this.classLabel, (new TrialMetadata(tuples.get(tmp)).getCommonAttributes().get(classLabel)));
 			// set the independent parameters
-			for (String metaKey : this.metadataFields) {
-				tmpMap.put(metaKey, tmp.get(metaKey));
+			if (this.metadataFields != null) {
+				for (String metaKey : this.metadataFields) {
+					tmpMap.put(metaKey, tmp.get(metaKey));
+				}
+			} else {
+				for (String metaKey : tmp.keySet()) {
+					tmpMap.put(metaKey, tmp.get(metaKey));
+				}
 			}
+			tmpMap.put(this.classLabel, (new TrialMetadata(tuples.get(tmp)).getCommonAttributes().get(classLabel)));
 			trainingData.add(tmpMap);
 		}
 		

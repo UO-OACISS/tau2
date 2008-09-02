@@ -133,7 +133,7 @@ public class WekaClassifierWrapper implements Serializable {
 			// if not, it's a numeric attribute.
 			if (this.nominalAttributes[index] != null) {
 
-				// create a vector fo classes for the possible values
+				// create a vector of classes for the possible values
 				FastVector classes = new FastVector();
 				
 				// iterate through them, and put them in the FastVector
