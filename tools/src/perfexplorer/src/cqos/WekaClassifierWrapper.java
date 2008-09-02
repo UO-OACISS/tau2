@@ -59,9 +59,9 @@ public class WekaClassifierWrapper implements Serializable {
 	private static final long serialVersionUID = -3288768059845773266L;
 	
 	// here are the classifiers which have been tested.
-	private static final String SUPPORT_VECTOR_MACHINE = "weka.classifiers.functions.SMO";
-	private static final String NAIVE_BAYES = "weka.classifiers.bayes.NaiveBayes";
-    private static final String MULTILAYER_PERCEPTRON = "weka.classifiers.functions.MultilayerPerceptron";
+	public static final String SUPPORT_VECTOR_MACHINE = "weka.classifiers.functions.SMO";
+	public static final String NAIVE_BAYES = "weka.classifiers.bayes.NaiveBayes";
+    public static final String MULTILAYER_PERCEPTRON = "weka.classifiers.functions.MultilayerPerceptron";
 	
     // member variables.
 	private String classifierType = WekaClassifierWrapper.MULTILAYER_PERCEPTRON;

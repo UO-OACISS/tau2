@@ -30,11 +30,16 @@ import weka.filters.unsupervised.attribute.StringToNominal;
  */
 public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 
+	public static final String SUPPORT_VECTOR_MACHINE = WekaClassifierWrapper.SUPPORT_VECTOR_MACHINE;
+	public static final String NAIVE_BAYES = WekaClassifierWrapper.NAIVE_BAYES;
+    public static final String MULTILAYER_PERCEPTRON = WekaClassifierWrapper.MULTILAYER_PERCEPTRON;
+
 	private String metric = "Time";
 	private Set<String> metadataFields = null;
 	private String classLabel = null;
 	private WekaClassifierWrapper wrapper = null;
-	
+	private String classifierType = MULTILAYER_PERCEPTRON;
+		
 	/**
 	 * @param inputs
 	 */
@@ -117,6 +122,17 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 
 	public void writeClassifier(String fileName) {
 		WekaClassifierWrapper.writeClassifier(fileName, this.wrapper);
+	}
+
+	public String getClassifierType() {
+		return this.classifierType;
+	}
+
+	public void setClassifierType(String classifierType) {
+		this.classifierType = classifierType;			
+		if (this.wrapper != null) {
+			this.wrapper.setClassifierType(classifierType);
+		}
 	}
 	
 }

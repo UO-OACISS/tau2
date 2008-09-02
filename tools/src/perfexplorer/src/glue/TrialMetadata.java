@@ -176,8 +176,9 @@ public class TrialMetadata {
 					results.close();
 					statement.close();
 				} catch (SQLException sqle) {
-					System.err.println(sqle.getMessage());
-					sqle.printStackTrace();
+					// This table may not exist, so ignore the exception.
+					// System.err.println(sqle.getMessage());
+					// sqle.printStackTrace();
 				}
 			}
 		} catch (Exception e) {
