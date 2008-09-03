@@ -126,6 +126,9 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 			trainingData.add(tmpMap);
 		}
 		
+		System.out.println("Total instances for training: " + trainingData.size());
+		System.out.println("Using keys: " + this.metadataFields.toString());
+
 		try {
 			this.wrapper = new WekaClassifierWrapper (trainingData, this.classLabel);
 			this.wrapper.buildClassifier();

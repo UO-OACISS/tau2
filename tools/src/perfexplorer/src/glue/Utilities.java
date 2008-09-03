@@ -84,6 +84,22 @@ public class Utilities {
         return null;
 	}
 
+	public static List<Experiment> getExperimentsForApplication (String aName) {
+		boolean message = false;
+        PerfExplorerServer server = getServer();
+		List<Application> apps = server.getApplicationList();
+        for (Application app : apps ) {
+            if (app.getName().equals(aName)) {
+            	//System.out.println("Found app");
+            	List<Experiment> exps = server.getExperimentList(app.getID());
+				return exps;
+			}
+        }
+		if (!message)
+		System.out.println("Could not find application: " + aName);
+        return null;
+	}
+
 	public static Trial getCurrentTrial () {
 		Trial trial = PerfExplorerModel.getModel().getTrial();
 		// should we check for a valid trial?

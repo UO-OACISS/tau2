@@ -6,6 +6,7 @@ from glue import TrialMeanResult
 from glue import AbstractResult
 from client import PerfExplorerModel
 from edu.uoregon.tau.perfdmf import Trial
+from edu.uoregon.tau.perfdmf import Experiment
 from java.util import HashSet
 from java.util import ArrayList
 
@@ -13,7 +14,7 @@ True = 1
 False = 0
 config = "local"
 inApp = "GAMESS"
-inExp = "CQoS"
+# inExp = "CQoS"
 inTrial = ""
 parameterMap = None
 fileName = "/tmp/classifier.serialized"
@@ -31,16 +32,23 @@ def getParameters():
 		print key, parameterMap.get(key)
 	config = parameterMap.get("config")
 	inApp = parameterMap.get("app")
-	inExp = parameterMap.get("exp")
+	# inExp = parameterMap.get("exp")
 	fileName = parameterMap.get("fileName")
 	print "...done."
 
-def load():
+def loadTrials():
 	print "loading data..."
 	Utilities.setSession(config)
 	trials = Utilities.getTrialsForExperiment(inApp, inExp)
 	print "...done."
 	return trials
+
+def loadExperiments():
+	print "loading data..."
+	Utilities.setSession(config)
+	experiments = Utilities.getExperimentsForApplication(inApp)
+	print "...done."
+	return experiments
 
 def buildClassifier(results):
 	print "building classifier..."
@@ -51,6 +59,10 @@ def buildClassifier(results):
 	metadataFields.add("scf type")
 	metadataFields.add("node count")
 	metadataFields.add("core count")
+	# metadataFields.add("CPU MHz") # i.e. 1995.002
+	# metadataFields.add("CPU Cores") # i.e. 2
+	# metadataFields.add("OS Machine") # i.e. Linux
+	# metadataFields.add("Cache Size") # i.e. 4096 KB
 	# for performance
 	classifier = CQoSClassifierOperation(results, "Time", metadataFields, "scf type")
 	# for accuracy
@@ -65,13 +77,26 @@ def buildClassifier(results):
 print "--------------- JPython test script start ------------"
 
 getParameters()
-trials = load()
 results = ArrayList()
+
 print "getting trials..."
-for trial in trials:
-	loaded = TrialMeanResult(trial)
-	results.add(loaded)
+
+# trials = loadTrials()
+# for trial in trials:
+	# loaded = TrialMeanResult(trial)
+	# results.add(loaded)
+
+experiments = loadExperiments()
+for experiment in experiments:
+	inExp = experiment.getName();
+	print "processing experiment: ", inExp
+	trials = loadTrials()
+	for trial in trials:
+		loaded = TrialMeanResult(trial)
+		results.add(loaded)
+
 print "...done."
+print "Total Trials:", results.size()
 
 buildClassifier(results)
 
