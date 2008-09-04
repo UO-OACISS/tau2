@@ -63,7 +63,7 @@ public class SelectiveFileGenerator extends JFrame {
             if (excludeLightweight.isSelected() == true) {
 
                 if (fp.getNumCalls() >= numcalls_value) {
-                    if (fp.getInclusivePerCall(0) >= percall_value) {
+                    if (fp.getInclusivePerCall(0) <= percall_value) {
                         buffer.append(ParaProfUtils.removeSourceLocation(fp.getName()) + "\n");
                     }
                 }
@@ -82,17 +82,18 @@ public class SelectiveFileGenerator extends JFrame {
         int windowHeight = 520;
         setSize(new java.awt.Dimension(windowWidth, windowHeight));
         setResizable(true);
-        
+
         excludeThrottled.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 updateExcluded();
-            } });
+            }
+        });
 
         excludeLightweight.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 updateExcluded();
-            } });
-
+            }
+        });
 
         Container contentPane = getContentPane();
         contentPane.setLayout(new GridBagLayout());
@@ -123,22 +124,23 @@ public class SelectiveFileGenerator extends JFrame {
 
             public void keyPressed(KeyEvent e) {}
 
-            public void keyReleased(KeyEvent e) {}
-
-            public void keyTyped(KeyEvent e) {
+            public void keyReleased(KeyEvent e) {
                 updateExcluded();
+
             }
+
+            public void keyTyped(KeyEvent e) {}
         });
 
         numcalls.addKeyListener(new KeyListener() {
 
             public void keyPressed(KeyEvent e) {}
 
-            public void keyReleased(KeyEvent e) {}
-
-            public void keyTyped(KeyEvent e) {
+            public void keyReleased(KeyEvent e) {
                 updateExcluded();
             }
+
+            public void keyTyped(KeyEvent e) {}
         });
 
         gbc.fill = GridBagConstraints.BOTH;
@@ -194,7 +196,8 @@ public class SelectiveFileGenerator extends JFrame {
                     outWriter.close();
                     out.close();
 
-                    JOptionPane.showMessageDialog(owner, "Selective Instrumentation file written to \""+fileLocation.getText()+"\"");
+                    JOptionPane.showMessageDialog(owner, "Selective Instrumentation file written to \"" + fileLocation.getText()
+                            + "\"");
 
                 } catch (FileNotFoundException fnfe) {
                     throw new TauRuntimeException(fnfe);

@@ -4,8 +4,8 @@
 #Makefile creates the ParaProf jar file.
 ##########################
 
-CONFIG_ARCH=default
-TAUROOT=
+CONFIG_ARCH=x86_64
+TAUROOT=/home/amorris/tau2
 
 BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java \
              ParaProfTreeCellRenderer.java OSSWriter.java \

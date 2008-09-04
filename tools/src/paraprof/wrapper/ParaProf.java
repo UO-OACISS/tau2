@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.27 2008/06/06 22:29:30 khuck Exp $
+ * CVS $Id: ParaProf.java,v 1.28 2008/09/04 20:02:30 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.27 $
+ * @version $Revision: 1.28 $
  */
 public class ParaProf implements ActionListener {
 
@@ -45,7 +45,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    private final static String VERSION = "Fri Jun  6 15:28:53 PDT 2008";
+    private final static String VERSION = "Thu Sep  4 13:02:11 PDT 2008";
 
     public static int defaultNumberPrecision = 6;
 
@@ -66,6 +66,7 @@ public class ParaProf implements ActionListener {
     private static File sourceFiles[] = new File[0];
     private static boolean fixNames = false;
     private static boolean monitorProfiles;
+    private static String configFile;
     private static String args[];
     //End - Command line options related.
 
@@ -119,9 +120,6 @@ public class ParaProf implements ActionListener {
                 + "                                    gprof, psrun, hpm, packed, cube, hpc, ompp\n"
                 + "                                    snap, perixml, gptl, ipm\n"
                 + "  -h, --help                      Display this help message\n"
-                + "  -p                              Use `pprof` to compute derived data\n"
-                + "  -i, --fixnames                  Use the fixnames option for gprof\n"
-                + "  -m, --monitor                   Perform runtime monitoring of profile data\n" + "\n"
                 + "The following options will run only from the console (no GUI will launch):\n" + "\n"
                 + "  --pack <file>                   Pack the data into packed (.ppk) format\n"
                 + "  --dump                          Dump profile data to TAU profile format\n"
@@ -200,7 +198,6 @@ public class ParaProf implements ActionListener {
 
                     ObjectInputStream inSavedPreferencesOIS = new ObjectInputStream(savedPreferenceFIS);
                     ParaProf.preferences = (Preferences) inSavedPreferencesOIS.readObject();
-                    ParaProf.preferences.setLoaded(true);
                     colorChooser = new ColorChooser(ParaProf.preferences);
                 } catch (Exception e) {
                     if (e instanceof FileNotFoundException) {
@@ -218,8 +215,6 @@ public class ParaProf implements ActionListener {
                 // try to load perfdmf.cfg.
                 File perfDMFcfg = new File(ParaProf.paraProfHomeDirectory.getPath() + "/perfdmf.cfg");
                 if (perfDMFcfg.exists()) {
-                    //System.out.println("Found db configuration file: "
-                    //        + ParaProf.paraProfHomeDirectory.getPath() + "/perfdmf.cfg");
                     ParaProf.preferences.setDatabaseConfigurationFile(ParaProf.paraProfHomeDirectory.getPath() + "/perfdmf.cfg");
                 }
 
@@ -236,6 +231,7 @@ public class ParaProf implements ActionListener {
             //            URL url = ParaProf.class.getResource("/perfdmf.cfg");
             //            String path = URLDecoder.decode(url.getPath());
             //            ParaProf.preferences.setDatabaseConfigurationFile(path);
+            preferences = new Preferences();
         }
 
         if (colorChooser == null) {
@@ -256,7 +252,8 @@ public class ParaProf implements ActionListener {
         }
 
         // Initialize, but do not show the manager window
-        ParaProf.paraProfManagerWindow = new ParaProfManagerWindow();
+        //System.out.println("creating Manager window with: " + configFile);
+        ParaProf.paraProfManagerWindow = new ParaProfManagerWindow(configFile);
     }
 
     public static void loadScripts() {
@@ -301,7 +298,6 @@ public class ParaProf implements ActionListener {
         //Create ObjectInputStream and try to read it in.
         ObjectInputStream inSavedPreferencesOIS = new ObjectInputStream(savedPreferenceFIS);
         ParaProf.preferences = (Preferences) inSavedPreferencesOIS.readObject();
-        ParaProf.preferences.setLoaded(true);
         colorChooser = new ColorChooser(ParaProf.preferences);
 
         ParaProf.colorMap.setMap(ParaProf.preferences.getAssignedColors());
@@ -378,6 +374,7 @@ public class ParaProf implements ActionListener {
             System.exit(-1);
         }
 
+        configFile = (String) parser.getOptionValue(configfileOpt);
         Boolean help = (Boolean) parser.getOptionValue(helpOpt);
         String fileTypeString = (String) parser.getOptionValue(typeOpt);
         Boolean fixNames = (Boolean) parser.getOptionValue(fixOpt);
@@ -391,7 +388,10 @@ public class ParaProf implements ActionListener {
         ParaProf.tauArch = (String) parser.getOptionValue(tauArchOpt);
 
         demoMode = demo != null && demo.booleanValue();
-
+        if (configFile != "") {
+            //System.out.println("commandline db config: " + configFile);
+            ParaProf.preferences.setDatabaseConfigurationFile(configFile);
+        }
         if (monitor != null) {
             monitorProfiles = monitor.booleanValue();
         }
@@ -454,7 +454,6 @@ public class ParaProf implements ActionListener {
                 System.exit(-1);
             }
         } else {
-
             if (sourceFilenames.length >= 1) {
                 ParaProf.fileType = UtilFncs.identifyData(sourceFiles[0]);
             }
