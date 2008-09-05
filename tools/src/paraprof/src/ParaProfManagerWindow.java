@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.34 2008/07/15 21:51:56 scottb Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.35 2008/09/05 18:24:53 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.34 $
+ * @version	$Revision: 1.35 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -80,13 +80,12 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     private static String commandLineConfig;
 
     public void refreshDatabases() {
-		    //System.out.println("refreshing databases...");
-				//System.out.println("LOAD cfg file: " + commandLineConfig);
+        //System.out.println("refreshing databases...");
+        //System.out.println("LOAD cfg file: " + commandLineConfig);
         databases = Database.getDatabases();
-				if (commandLineConfig != null)
-				{
-				    databases.add(new Database("Portal", commandLineConfig));
-				}
+        if (commandLineConfig != null) {
+            databases.add(new Database("Portal", commandLineConfig));
+        }
         Iterator dbs = databases.iterator();
 
         DefaultMutableTreeNode treeNode;
@@ -117,16 +116,16 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         treeModel.reload();
     }
 
-	  public ParaProfManagerWindow() { 	
-				this("");
+    public ParaProfManagerWindow() {
+        this("");
     }
+
     public ParaProfManagerWindow(String dbConfig) {
-				//System.out.println("load cfg file: " + ParaProf.preferences.getDatabaseConfigurationFile());
-				if (dbConfig != null && dbConfig != "")
-				{
-				    commandLineConfig = dbConfig;
+        //System.out.println("load cfg file: " + ParaProf.preferences.getDatabaseConfigurationFile());
+        if (dbConfig != null && dbConfig != "") {
+            commandLineConfig = dbConfig;
         }
-				
+
         //Window Stuff.
         int windowWidth = 800;
         int windowHeight = 515;
@@ -186,10 +185,9 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         root.add(standard);
 
         databases = Database.getDatabases();
-				if (commandLineConfig != null)
-				{
-				    databases.add(new Database("Portal", commandLineConfig));
-				}
+        if (commandLineConfig != null) {
+            databases.add(new Database("Portal", commandLineConfig));
+        }
         for (Iterator it = databases.iterator(); it.hasNext();) {
             Database database = (Database) it.next();
             DefaultMutableTreeNode dbNode = new DefaultMutableTreeNode(database);
@@ -1454,11 +1452,8 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     private void switchToMetric(ParaProfMetric metric) {
         try {
             ParaProfTrial ppTrial = metric.getParaProfTrial();
-            if (ppTrial.getDefaultMetricID() != metric.getID()) {
-                ppTrial.setDefaultMetricID(metric.getID());
-                ppTrial.updateRegisteredObjects("dataEvent");
-            }
-            //ppTrial.showMainWindow();
+            ppTrial.setDefaultMetricID(metric.getID());
+            ppTrial.updateRegisteredObjects("dataEvent");
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
