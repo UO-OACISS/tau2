@@ -168,6 +168,7 @@ void tau_phase_stop_(void **profiler)
 {
 }
 
+#ifdef linux
 #include <pthread.h>
 #pragma weak pthread_create
 #pragma weak pthread_exit
@@ -181,6 +182,7 @@ int tau_pthread_create (pthread_t * threadp,
 void tau_pthread_exit (void *value_ptr) {
   pthread_exit(value_ptr);
 }
+#endif
 
 /* Cray F90 specific extensions */
 #ifdef CRAYKAI
@@ -713,6 +715,6 @@ void Tau_exit(char *)
 
 /***************************************************************************
  * $RCSfile: TauDisable.cpp,v $   $Author: amorris $
- * $Revision: 1.13 $   $Date: 2008/07/14 22:26:37 $
- * POOMA_VERSION_ID: $Id: TauDisable.cpp,v 1.13 2008/07/14 22:26:37 amorris Exp $ 
+ * $Revision: 1.14 $   $Date: 2008/09/05 19:00:44 $
+ * POOMA_VERSION_ID: $Id: TauDisable.cpp,v 1.14 2008/09/05 19:00:44 amorris Exp $ 
  ***************************************************************************/
