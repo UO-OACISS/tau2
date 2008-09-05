@@ -9,9 +9,9 @@ import edu.uoregon.tau.common.TauRuntimeException;
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.14 2008/05/14 23:14:01 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.15 2008/09/05 18:07:00 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.14 $
+ * @version	$Revision: 1.15 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -67,7 +67,7 @@ public class Thread implements Comparable {
         if (dataSource == null) {
             throw new TauRuntimeException("Error: dataSource should never be null in Thread constructor");
         }
-        
+
         recreateData();
 
         // create the first snapshot
@@ -78,6 +78,9 @@ public class Thread implements Comparable {
     public String toString() {
         if (nodeID == -1) {
             return "Mean";
+        }
+        if (nodeID == -2) {
+            return "Total";
         }
         if (nodeID == -3) {
             return "Standard Deviation";
@@ -191,7 +194,7 @@ public class Thread implements Comparable {
             return (FunctionProfile) functionProfiles.get(function.getID());
         return null;
     }
-    
+
     public FunctionProfile getOrCreateFunctionProfile(Function function, int numMetrics) {
         FunctionProfile fp = getFunctionProfile(function);
         if (fp == null) {
@@ -253,7 +256,11 @@ public class Thread implements Comparable {
 
     // compute max values and percentages for threads (not mean/total)
     private void setThreadValues(int startMetric, int endMetric, int startSnapshot, int endSnapshot) {
-
+        
+        // the recreateData() call wipes out all the threadData structures, so we have to recreate all of them for now.
+        startMetric = 0;
+        endMetric = getNumMetrics()-1;
+        
         String startString = (String) getMetaData().get("Starting Timestamp");
         if (startString != null) {
             setStartTime(Long.parseLong(startString));
@@ -300,7 +307,7 @@ public class Thread implements Comparable {
                 // us out of sticky situations when call path data is present (this skews attempts to calculate
                 // the total exclusive value unless checks are made to ensure that we do not 
                 // include call path objects).
-                if (this.getNodeID() > -1) { // don't do this for mean/total
+                if (this.getNodeID() >= 0) { // don't do this for mean/total
                     data.percentDivider = data.maxInclusive / 100.0;
                 }
 
@@ -357,6 +364,7 @@ public class Thread implements Comparable {
     }
 
     public double getPercentDivider(int metric, int snapshot) {
+        double val = threadData[snapshot][metric].percentDivider;
         return threadData[snapshot][metric].percentDivider;
     }
 

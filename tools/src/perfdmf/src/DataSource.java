@@ -20,9 +20,9 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.37 2008/06/06 22:28:47 khuck Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.38 2008/09/05 18:07:00 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.37 $
+ * @version $Revision: 1.38 $
  */
 public abstract class DataSource {
 
@@ -825,7 +825,7 @@ public abstract class DataSource {
         for (int snapshot = 0; snapshot < meanData.getNumSnapshots(); snapshot++) {
 
             // must always iterate through all metrics regardless to find the top level timers, I think???
-            for (int i = 0; i < numMetrics; i++) { // for each metric
+            for (int i = startMetric; i <= endMetric; i++) { // for each metric
                 for (Iterator it = allThreads.iterator(); it.hasNext();) { // for each thread
                     Thread thread = (Thread) it.next();
                     if (wellBehavedSnapshots) {
