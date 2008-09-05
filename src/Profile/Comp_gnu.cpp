@@ -20,14 +20,13 @@
 #  include <config.h>
 #endif
 
-#define VT_BFD
 
-#ifdef VT_BFD
+#ifdef TAU_BFD
 #  include "bfd.h"
 #  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
 #    include "demangle.h"
 #  endif /* HAVE_GNU_DEMANGLE */
-#endif /* VT_BFD */
+#endif /* TAU_BFD */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -96,7 +95,7 @@ static HashNode* hash_get(long h) {
   return NULL;
 }
 
-#ifdef VT_BFD
+#ifdef TAU_BFD
 
 /*
  * Get symbol table by using BFD
@@ -198,7 +197,7 @@ static void get_symtab_bfd(void) {
  */
 static void get_symtab(void)
 {
-#ifdef VT_BFD
+#ifdef TAU_BFD
     get_symtab_bfd();
 #else
     printf("No symbol list file given. Please set the environment variable VT_NMFILE to the path of your symbol list file, created with 'nm'.");
