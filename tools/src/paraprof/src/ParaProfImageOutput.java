@@ -82,6 +82,8 @@ public class ParaProfImageOutput {
         // I'm doing this twice right now because the getImageSize won't be correct until 
         // renderIt has been called with the appropriate settings.  Stupid, I know.
         Dimension d = ref.getImageSize(paraProfImageOptionsPanel.isFullScreen(), paraProfImageOptionsPanel.isPrependHeader());
+        d.height = Math.max(d.height, 1);
+        d.width = Math.max(d.width, 1);
         BufferedImage bi = new BufferedImage((int) d.getWidth(), (int) d.getHeight(), BufferedImage.TYPE_INT_RGB);
         Graphics2D g2D = bi.createGraphics();
 
@@ -89,6 +91,8 @@ public class ParaProfImageOutput {
         ref.export(g2D, false, paraProfImageOptionsPanel.isFullScreen(), paraProfImageOptionsPanel.isPrependHeader());
 
         d = ref.getImageSize(paraProfImageOptionsPanel.isFullScreen(), paraProfImageOptionsPanel.isPrependHeader());
+        d.height = Math.max(d.height, 1);
+        d.width = Math.max(d.width, 1);
         bi = new BufferedImage((int) d.getWidth(), (int) d.getHeight(), BufferedImage.TYPE_INT_RGB);
         g2D = bi.createGraphics();
 
