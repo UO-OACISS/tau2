@@ -25,6 +25,7 @@ declare -i isVerbose=$FALSE
 declare -i isCXXUsedForC=$FALSE
 declare -i isCurrentFileC=$FALSE
 declare -i isDebug=$FALSE
+#declare -i isDebug=$TRUE
 #Set isDebug=$TRUE for printing debug messages.
 
 declare -i opari=$FALSE
@@ -45,6 +46,7 @@ declare -i revertOnError=$TRUE
 declare -i revertForced=$FALSE
 
 declare -i optShared=$FALSE
+declare -i optCompInst=$FALSE
 
 preprocessorOpts="-P  -traditional-cpp"
 
@@ -92,7 +94,8 @@ printUsage () {
 	echo -e "  -optAppCC=\"<cc>\"\t\tSpecifies the fallback C compiler."
 	echo -e "  -optAppCXX=\"<cxx>\"\t\tSpecifies the fallback C++ compiler."
 	echo -e "  -optAppF90=\"<f90>\"\t\tSpecifies the fallback F90 compiler."
-
+	echo -e "  -optCompInst"
+	
 	if [ $1 == 0 ]; then #Means there are no other option passed with the myscript. It is better to exit then.
 		exit
 	fi
@@ -522,6 +525,12 @@ for arg in "$@" ; do
 				echoIfDebug "\tUsing shared library"
 				;;
 
+			-optCompInst)
+				optCompInst=$TRUE
+				disablePdtStep=$TRUE
+				echoIfDebug "\tUsing Compiler-based Instrumentation"
+				;;
+
 			esac #end case for parsing script Options
 			;;
 
@@ -762,7 +771,11 @@ while [ $tempCounter -lt $numFiles ]; do
           fi
 	  arrFileName[$tempCounter]=$base$suf
 	fi
-	newFile=${base}.inst${suf}
+	if [ $optCompInst == $FALSE ] ; then
+	    newFile=${base}.inst${suf}
+	else
+	    newFile=${base}${suf}
+	fi
 	arrTau[$tempCounter]="${OUTPUTARGSFORTAU}${newFile}"
 	arrPdbForTau[$tempCounter]="${PDBARGSFORTAU}${newFile}"
 	if [ $pdbFileSpecified == $FALSE ]; then
@@ -783,8 +796,13 @@ echoIfDebug "Completed Parsing\n"
 
 
 
+if [ $optCompInst == $TRUE ]; then
+    echoIfVerbose "Debug: Using compiler-based instrumentation"
+    argsRemaining="$argsRemaining -g -finstrument-functions"
+    optLinking="$optLinking -lbfd -liberty"
 
-
+#    exit
+fi
 ####################################################################
 #Linking if there are no Source Files passed.
 ####################################################################
@@ -884,14 +902,16 @@ if [ $gotoNextStep == $TRUE ]; then
 
 		esac
 
-		if [ $disablePdtStep == $FALSE ]; then
-		  if [ $pdbFileSpecified == $FALSE ]; then
-		    evalWithDebugMessage "$pdtCmd" "Parsing with PDT Parser"
-		  fi
-		else
-		  echo "tau_compiler.sh> WARNING: Disabling instrumentation of source code. TAU was not configured with -pdt=<dir> option."
-		  gotoNextStep=$FALSE
-		  errorStatus=$TRUE
+		if [ $optCompInst == $FALSE ]; then
+		    if [ $disablePdtStep == $FALSE ]; then
+			if [ $pdbFileSpecified == $FALSE ]; then
+			    evalWithDebugMessage "$pdtCmd" "Parsing with PDT Parser"
+			fi
+		    else
+			echo "tau_compiler.sh> WARNING: Disabling instrumentation of source code. TAU was not configured with -pdt=<dir> option."
+			gotoNextStep=$FALSE
+			errorStatus=$TRUE
+		    fi
 		fi
 
 		#Assumption: The pdb file would be formed in the current directory, so need 
@@ -916,12 +936,10 @@ fi
 
 
 
-
-
 ####################################################################
 #Instrumenting the Code
 ####################################################################
-if [ $gotoNextStep == $TRUE ]; then
+if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE ]; then
 
 	tempCounter=0
 	while [ $tempCounter -lt $numFiles ]; do
@@ -953,8 +971,6 @@ if [ $gotoNextStep == $TRUE ]; then
 		tempCounter=tempCounter+1
 	done
 fi
-
-
 
 
 
