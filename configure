@@ -3466,6 +3466,8 @@ then
     fi
 fi
 
+
+
 if [ $papi = yes ] ; then
     fixmakeargs="$fixmakeargs PAPI papidir=$papidir"
     tauoptions="${tauoptions}-papi"
@@ -4017,6 +4019,22 @@ else
 fi
 /bin/rm -f f1.o f1.c
 
+
+######################################################################
+# Check for BFD
+######################################################################
+  cat <<EOF > conftest_bfd.c
+  #include <bfd.h>
+EOF
+$echo "Checking for bfd.h... ${nnl}"
+if $c_compiler $orig_useropt -c conftest_bfd.c 1> /dev/null 2>&1 ; then
+    fixmakeargs="$fixmakeargs TAU_BFD"
+    echo "yes"
+else
+    echo "no"
+fi
+/bin/rm -f conftest_bfd.o conftest_bfd.c
+######################################################################
 
 ######################################################################
 cat <<EOF > get_typeinfo1.C
