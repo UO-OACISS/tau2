@@ -287,6 +287,7 @@ private:
 TAU_STD_NAMESPACE vector<FunctionInfo*>& TheFunctionDB(void); 
 int& TheSafeToDumpData(void);
 int& TheUsingDyninst(void);
+int& TheUsingCompInst(void);
 
 //
 // For efficiency, make the timing updates inline.
@@ -358,6 +359,6 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: amorris $
- * $Revision: 1.43 $   $Date: 2008/03/10 00:13:03 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.43 2008/03/10 00:13:03 amorris Exp $ 
+ * $Revision: 1.44 $   $Date: 2008/09/08 17:43:32 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.44 2008/09/08 17:43:32 amorris Exp $ 
  ***************************************************************************/
