@@ -101,16 +101,14 @@ printUsage () {
     fi
 }
 
-#Assumption: pass only one argument. Concatenate them if there
-#are multiple
+# Assumption: pass only one argument. Concatenate them if there are multiple
 echoIfVerbose () {
     if [ $isDebug == $TRUE ] || [ $isVerbose == $TRUE ]; then
 	echo -e $1
     fi
 }
 
-#Assumption: pass only one argument. Concatenate them if there
-#are multiple
+#Assumption: pass only one argument. Concatenate them if there are multiple
 echoIfDebug () {
     if [ $isDebug == $TRUE ]; then
 	echo -e $1
@@ -119,10 +117,10 @@ echoIfDebug () {
 
 
 printError() {
+    # This steps ensures that the final regular command is executed
     errorStatus=$TRUE 
-	#This steps ensures that the final regular command is executed
+    # This steps ensures that all the intermediate steps are ignored
     gotoNextStep=$FALSE 
-	#This steps ensures that all the intermediate steps are ignored.
 
     echo -e "Error: Command(Executable) is -- $1"
     echo -e "Error: Full Command attempted is -- $2"
@@ -247,20 +245,20 @@ for arg in "$@" ; do
 			;;
 
 		    -optCPP=*)
-                    preprocessor=${arg#"-optCPP="}
-		    preprocess=$TRUE
-		    echoIfDebug "\tPreprocessing $preprocess. preprocessor used is $preprocessor with options $preprocessorOpts"
-		    ;;
-
+                        preprocessor=${arg#"-optCPP="}
+			preprocess=$TRUE
+			echoIfDebug "\tPreprocessing $preprocess. preprocessor used is $preprocessor with options $preprocessorOpts"
+			;;
+		    
 		    -optCPPOpts=*)
-		    preprocessorOpts="$preprocessorOpts ${arg#"-optCPPOpts="}"
-		    echoIfDebug "\tPreprocessing $preprocess. preprocessor used is $preprocessor with options $preprocessorOpts"
-		    ;;
+		        preprocessorOpts="$preprocessorOpts ${arg#"-optCPPOpts="}"
+			echoIfDebug "\tPreprocessing $preprocess. preprocessor used is $preprocessor with options $preprocessorOpts"
+			;;
 		    -optCPPReset=*)
-                    preprocessorOpts="${arg#"-optCPPReset="}"
-		    echoIfDebug "\tPreprocessing $preprocess. preprocessor used is $preprocessor with options $preprocessorOpts"
-		    ;;
-
+                        preprocessorOpts="${arg#"-optCPPReset="}"
+			echoIfDebug "\tPreprocessing $preprocess. preprocessor used is $preprocessor with options $preprocessorOpts"
+			;;
+		    
 		    -optPdtF90Parser*)
 				#Assumption: This should be passed with complete path to the
 				#parser executable. However, if the path is defined in the
@@ -367,10 +365,10 @@ for arg in "$@" ; do
 			;;
 
 		    -optTau=*)
-		    optTauInstrOpts=${arg#"-optTau="}
-		    echoIfDebug "\tTau Options are: $optTau"
-		    optTau="$optTauInstrOpts $optTau"
-		    ;;
+		        optTauInstrOpts=${arg#"-optTau="}
+			echoIfDebug "\tTau Options are: $optTau"
+			optTau="$optTauInstrOpts $optTau"
+			;;
 
 		    -optLinking*)
 			optLinking="${arg#"-optLinking="} $optLinking"
@@ -382,22 +380,22 @@ for arg in "$@" ; do
 			echoIfDebug "\tLinking Options are: $optLinking"
 			;;
 		    -optTauDefs=*)
-		    optTauDefs="${arg#"-optTauDefs="}"
-		    echoIfDebug "\tCompiling Defines Options from TAU are: $optTauDefs"
-		    echoIfDebug "\tFrom optTauDefs: $optTauDefs"
-		    optDefs="$optDefs $optTauDefs"
-		    ;;
+		        optTauDefs="${arg#"-optTauDefs="}"
+			echoIfDebug "\tCompiling Defines Options from TAU are: $optTauDefs"
+			echoIfDebug "\tFrom optTauDefs: $optTauDefs"
+			optDefs="$optDefs $optTauDefs"
+			;;
 		    -optTauIncludes=*)
-		    optTauIncludes="${arg#"-optTauIncludes="}"
-		    echoIfDebug "\tCompiling Include Options from TAU are: $optTauIncludes"
-		    echoIfDebug "\tFrom optTauIncludes: $optTauIncludes"
-		    optIncludes="$optIncludes $optTauIncludes"
-		    ;;
+		        optTauIncludes="${arg#"-optTauIncludes="}"
+			echoIfDebug "\tCompiling Include Options from TAU are: $optTauIncludes"
+			echoIfDebug "\tFrom optTauIncludes: $optTauIncludes"
+			optIncludes="$optIncludes $optTauIncludes"
+			;;
 		    -optIncludeMemory=*)
-		    optIncludeMemory="${arg#"-optIncludeMemory="}"
-		    echoIfDebug "\tCompiling Include Memory Options from TAU are: $optIncludeMemory"
-		    echoIfDebug "\tFrom optIncludeMemory: $optIncludeMemory"
-		    ;;
+		        optIncludeMemory="${arg#"-optIncludeMemory="}"
+			echoIfDebug "\tCompiling Include Memory Options from TAU are: $optIncludeMemory"
+			echoIfDebug "\tFrom optIncludeMemory: $optIncludeMemory"
+			;;
 		    -optDetectMemoryLeaks)
 			optDetectMemoryLeaks=$TRUE
 			optIncludes="$optIncludes $optIncludeMemory"
@@ -526,13 +524,13 @@ for arg in "$@" ; do
 			;;
 
 		    -optCompInstOption=*)
-		    optCompInstOption="${arg#"-optCompInstOption="}"
-		    echoIfDebug "\tCompiler-based Instrumentation option is: $optCompInstOption"
-		    ;;
+		        optCompInstOption="${arg#"-optCompInstOption="}"
+			echoIfDebug "\tCompiler-based Instrumentation option is: $optCompInstOption"
+			;;
 		    -optCompInstLinking=*)
-		    optCompInstLinking="${arg#"-optCompInstLinking="}"
-		    echoIfDebug "\tCompiler-based Instrumentation linking is: $optCompInstLinking"
-		    ;;
+		        optCompInstLinking="${arg#"-optCompInstLinking="}"
+			echoIfDebug "\tCompiler-based Instrumentation linking is: $optCompInstLinking"
+			;;
 		    -optCompInst)
 			optCompInst=$TRUE
 			disablePdtStep=$TRUE
