@@ -2665,7 +2665,7 @@ case $cxx_compiler in
 	
    icpc)
       echo "Default C++ compiler will be Intel icpc C++ compiler"
-      fixmakeargs="$fixmakeargs USE_INTELCXX"
+      fixmakeargs="$fixmakeargs USE_INTELCXX COMPINST_INTEL9"
       tauoptions="${tauoptions}-icpc"
       intel=yes
       if [ $fortran_compiler = no ]
@@ -4211,7 +4211,7 @@ fi
 ######################################################################
 if [ $cxx_compiler = g++ -o $cxx_compiler = egcs -o $cxx_compiler = powerpc64-linux-g++ -o $cxx_compiler = c++ -o $cxx_compiler = scg++ -o $cxx_compiler = mips64el-gentoo-linux-gnu-g++  -o $cxx_compiler = powerpc-bgp-linux-g++ ]
   then
-    fixmakeargs="$fixmakeargs GNU"
+    fixmakeargs="$fixmakeargs GNU COMPINST_GNU"
     if [ $machine = ibm64 -o $machine = rs6000 -o $machine = ppc64 -o $machine = bgl -o $machine = bgp -o $machine = ibm64linux ]
     then
       tauoptions="${tauoptions}-gnu"
@@ -5144,7 +5144,7 @@ if [ $fortran_compiler = intel ] ; then
       ifort -v 2>&1 | grep "Version 10" > /dev/null
       if [ $? = 0 ] ; then
           echo "Intel v10.0+ compilers used"
-          fixmakeargs="$fixmakeargs INTEL10FIX" 
+          fixmakeargs="$fixmakeargs INTEL10FIX COMPINST_GNU" 
       fi
     fi
   fi

@@ -525,6 +525,14 @@ for arg in "$@" ; do
 				echoIfDebug "\tUsing shared library"
 				;;
 
+			-optCompInstOption=*)
+				optCompInstOption="${arg#"-optCompInstOption="}"
+				echoIfDebug "\tCompiler-based Instrumentation option is: $optCompInstOption"
+				;;
+			-optCompInstLinking=*)
+				optCompInstLinking="${arg#"-optCompInstLinking="}"
+				echoIfDebug "\tCompiler-based Instrumentation linking is: $optCompInstLinking"
+				;;
 			-optCompInst)
 				optCompInst=$TRUE
 				disablePdtStep=$TRUE
@@ -798,11 +806,19 @@ echoIfDebug "Completed Parsing\n"
 
 if [ $optCompInst == $TRUE ]; then
     echoIfVerbose "Debug: Using compiler-based instrumentation"
-    argsRemaining="$argsRemaining -g -finstrument-functions"
-    optLinking="$optLinking -lbfd -liberty"
+#    argsRemaining="$argsRemaining -g -finstrument-functions"
+#    argsRemaining="$argsRemaining -g -tcollect"
+#    optLinking="$optLinking -lbfd -liberty"
 
-#    exit
+    if [ "x$optCompInstOption" = x ] ; then
+	echo "Error: Compiler instrumentation with this compiler not supported, remove -optCompInst"
+	exit 1
+    fi
+
+    argsRemaining="$argsRemaining $optCompInstOption"
+    optLinking="$optLinking $optCompInstLinking"
 fi
+
 ####################################################################
 #Linking if there are no Source Files passed.
 ####################################################################

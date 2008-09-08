@@ -740,6 +740,19 @@ PDTARCHDIR=$(PDTARCHDIRFINAL)
 
 
 ##############################################
+# Compiler Instrumentation
+##############################################
+
+#COMPINST_INTEL9#TAU_COMPINST_OPTION=-tcollect #ENDIF#
+#COMPINST_INTEL9#TAU_COMPINST_LINKING= #ENDIF#
+#COMPINST_GNU#TAU_COMPINST_OPTION=-g -finstrument-functions #ENDIF#
+#COMPINST_GNU#TAU_COMPINST_LINKING=-lbfd -liberty #ENDIF#
+
+##############################################
+
+
+
+##############################################
 
 PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT5)  $(PROFILEOPT6)  $(PROFILEOPT7)  $(PROFILEOPT8)  \
@@ -869,7 +882,9 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
         -optLinking="$(TAU_MPI_FLIBS) $(TAU_LIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS)"\
         -optSharedLinking="$(TAU_MPI_FLIBS) $(TAU_EXLIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS)"\
 	$(TAU_COMPILER_EXTRA_OPTIONS) \
-        -optIncludeMemory="$(TAU_INCLUDE_MEMORY)"
+        -optIncludeMemory="$(TAU_INCLUDE_MEMORY)"\
+	-optCompInstOption="$(TAU_COMPINST_OPTION)"\
+	-optCompInstLinking="$(TAU_COMPINST_LINKING)"
 #############################################
 
 TAU_SHAREDLIBS=$(TAUHELPER) -L$(TAU_LIB_DIR) -lTAU $(TAU_LINKER_OPTS) $(TAU_LINKER_SHOPTS)
