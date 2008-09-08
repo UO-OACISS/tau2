@@ -83,7 +83,8 @@ class FIvector : public vector<FunctionInfo*> {
 public: 
   ~FIvector() {
     if ((TheUsingDyninst() || TheUsingCompInst()) && TheSafeToDumpData()) {
-      //TAU_PROFILE_EXIT("FunctionDB destructor");
+      //printf ("FIvector destructor\n");
+      TAU_PROFILE_EXIT("FunctionDB destructor");
       TheSafeToDumpData() = 0;
     }
   }
@@ -552,6 +553,6 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.54 $   $Date: 2008/09/08 17:44:23 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.54 2008/09/08 17:44:23 amorris Exp $ 
+ * $Revision: 1.55 $   $Date: 2008/09/08 17:51:57 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.55 2008/09/08 17:51:57 amorris Exp $ 
  ***************************************************************************/
