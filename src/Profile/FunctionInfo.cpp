@@ -82,9 +82,8 @@ using namespace std;
 class FIvector : public vector<FunctionInfo*> {
 public: 
   ~FIvector() {
-    //printf ("FIvector destructor!\n");
-    if (TheUsingDyninst() && TheSafeToDumpData()) {
-      TAU_PROFILE_EXIT("FunctionDB destructor");
+    if ((TheUsingDyninst() || TheUsingCompInst()) && TheSafeToDumpData()) {
+      //TAU_PROFILE_EXIT("FunctionDB destructor");
       TheSafeToDumpData() = 0;
     }
   }
@@ -125,6 +124,15 @@ int& TheUsingDyninst()
 { 
   static int UsingDyninst=0;
   return UsingDyninst;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Set when uning Compiler Instrumentation
+//////////////////////////////////////////////////////////////////////
+int& TheUsingCompInst()
+{ 
+  static int UsingCompInst=0;
+  return UsingCompInst;
 }
 
 #ifdef TAU_VAMPIRTRACE
@@ -544,6 +552,6 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.53 $   $Date: 2008/07/18 23:32:56 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.53 2008/07/18 23:32:56 amorris Exp $ 
+ * $Revision: 1.54 $   $Date: 2008/09/08 17:44:23 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.54 2008/09/08 17:44:23 amorris Exp $ 
  ***************************************************************************/
