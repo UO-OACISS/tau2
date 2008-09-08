@@ -743,11 +743,12 @@ PDTARCHDIR=$(PDTARCHDIRFINAL)
 # Compiler Instrumentation
 ##############################################
 
+#TAU_BFD#TAU_BFDLIB=-lbfd -liberty #ENDIF#
 #COMPINST_INTEL9#TAU_COMPINST_OPTION=-tcollect #ENDIF#
 #COMPINST_INTEL9#TAU_COMPINST_LINKING= #ENDIF#
 #COMPINST_GNU#TAU_COMPINST_OPTION=-g -finstrument-functions #ENDIF#
 #COMPINST_GNU#TAU_COMPINST_LINKING=-lbfd -liberty #ENDIF#
-
+#COMPINST_GNU#TAU_LINKER_OPT13=$(TAU_BFDLIB) #ENDIF#
 ##############################################
 
 
@@ -789,7 +790,8 @@ TAU_INTERNAL_FLAGS = $(TAU_INTERNAL_FLAG1)
 TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
                   $(TAU_LINKER_OPT4) $(TAU_LINKER_OPT5) $(TAU_LINKER_OPT6) \
                   $(TAU_LINKER_OPT7) $(TAU_LINKER_OPT8) $(TAU_LINKER_OPT9) \
-                  $(TAU_LINKER_OPT10) $(TAU_LINKER_OPT11) $(TAU_LINKER_OPT12)
+                  $(TAU_LINKER_OPT10) $(TAU_LINKER_OPT11) $(TAU_LINKER_OPT12) \
+		  $(TAU_LINKER_OPT13)
 
 ##############################################
 
