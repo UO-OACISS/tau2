@@ -49,7 +49,6 @@ typedef struct HN {
   const char* name;   /* associated function name       */
   const char* fname;  /*            file name           */
   int lno;            /*            line number         */
-  int vtid;      /* associated region identifier   */
   FunctionInfo *fi;
   struct HN* next;
 } HashNode;
@@ -72,7 +71,6 @@ static void hash_put(long h, const char* n, const char* fn, int lno) {
   add->name  = n;
   add->fname = fn ? (const char*)strdup(fn) : fn;
   add->lno   = lno;
-  add->vtid = VT_NO_ID;
   add->fi = NULL;
   add->next = htab[id];
   htab[id] = add;
@@ -203,11 +201,6 @@ static void get_symtab(void) {
 #endif
 }
 
-static void register_region(HashNode *hn) {
-  static int counter=0;
-  hn->vtid = counter++;
-}
-
 
 
 extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
@@ -232,23 +225,6 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 
   /* -- get region identifier -- */
   if ( (hn = hash_get((long)funcptr))) {
-    if ( hn->vtid == VT_NO_ID ) {
-      /* -- region entered the first time, register region -- */
-#     if defined (TAU_OPENMP)
-      if (omp_in_parallel()) {
-#       pragma omp critical (vt_comp_gnu_1)
-	{
-	  if ( hn->vtid == VT_NO_ID ) {
-	    register_region(hn);
-	  }
-	}
-      } else {
-	register_region(hn);
-      }
-#     else
-      register_region(hn);
-#     endif
-    }
 
     if ( hn->fi == NULL) {
 
@@ -273,7 +249,7 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
     //    printf ("name = %s : ", hn->name);
   } else {
 
-    printf ("NOT FOUND! : \n");
+    //printf ("NOT FOUND! : \n");
   }
 
   //  printf ("enter, func = %p, callsite = %p\n", func, callsite);
@@ -300,7 +276,7 @@ extern "C" void __cyg_profile_func_exit(void* func, void* callsite) {
     Tau_stop_timer(hn->fi);
     //TAU_STOP(hn->name);
   } else {
-    printf ("NOT FOUND! : ");
+    //printf ("NOT FOUND! : ");
   }
 
   //printf ("exit, func = %p, callsite = %p\n", func, callsite);
