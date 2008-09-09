@@ -220,6 +220,7 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
     //    atexit(atexit_handler);
     TheUsingCompInst() = 1;
     // initialization
+    TAU_PROFILE_SET_NODE(0);
   }
 
 
