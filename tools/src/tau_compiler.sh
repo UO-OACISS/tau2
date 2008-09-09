@@ -94,7 +94,8 @@ printUsage () {
     echo -e "  -optAppCC=\"<cc>\"\t\tSpecifies the fallback C compiler."
     echo -e "  -optAppCXX=\"<cxx>\"\t\tSpecifies the fallback C++ compiler."
     echo -e "  -optAppF90=\"<f90>\"\t\tSpecifies the fallback F90 compiler."
-    echo -e "  -optCompInst"
+    echo -e "  -optShared\t\t\tUse shared library version of TAU."
+    echo -e "  -optCompInst\t\t\tUse compiler-based instrumentation."
     
     if [ $1 == 0 ]; then #Means there are no other option passed with the myscript. It is better to exit then.
 	exit
@@ -719,15 +720,15 @@ fi
 
 tempCounter=0
 while [ $tempCounter -lt $numFiles ]; do
-	#Here arrays holding sourcefiles, .inst. and .pdb files
-	#are created based on the baseName of the source file.
+    # Here arrays holding sourcefiles, .inst. and .pdb files
+    # are created based on the baseName of the source file.
     echoIfDebug "FileName: ${arrFileName[$tempCounter]}" 
     base=`echo ${arrFileName[$tempCounter]} | sed -e 's/\.[^\.]*$//' -e's/.*\///'`
-	# this transforms /this/file\ name/has/spaces/ver1.0.2/foo.pp.F90 to foo.pp for base
+    # this transforms /this/file\ name/has/spaces/ver1.0.2/foo.pp.F90 to foo.pp for base
     suf=`echo ${arrFileName[$tempCounter]} | sed -e 's/.*\./\./' `
-	# suf gets .F90 in the example above.
-	#echoIfDebug "suffix here is -- $suf"
-	# If we need to pre-process the source code, we should do so here!
+    # suf gets .F90 in the example above.
+    #echoIfDebug "suffix here is -- $suf"
+    # If we need to pre-process the source code, we should do so here!
     if [ $preprocess = $TRUE -a $groupType == $group_f_F ]; then
 	base=${base}.pp
 	cmdToExecute="${preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} $base$suf"
@@ -739,9 +740,9 @@ while [ $tempCounter -lt $numFiles ]; do
 	arrFileName[$tempCounter]=$base$suf
 	echoIfDebug "Completed Preprocessing\n"
     fi
-	# Before we pass it to Opari for OpenMP instrumentation
-	# we should use tau_ompcheck to verify that OpenMP constructs are 
-	# used correctly.
+    # Before we pass it to Opari for OpenMP instrumentation
+    # we should use tau_ompcheck to verify that OpenMP constructs are 
+    # used correctly.
     if [ $opari == $TRUE -a $pdtUsed == $TRUE ]; then
 	
 	case $groupType in
@@ -766,7 +767,7 @@ while [ $tempCounter -lt $numFiles ]; do
 	base=${base}.chk
 	evalWithDebugMessage "$ompcheckCmd" "Using tau_ompcheck:" 
     fi
-	# And then pass it on to opari for OpenMP programs.
+    # And then pass it on to opari for OpenMP programs.
     if [ $opari = $TRUE ]; then
 	base=${base}.pomp
 	cmdToExecute="${optOpariTool} $optOpariOpts ${arrFileName[$tempCounter]} $base$suf"
@@ -801,7 +802,6 @@ done
 echoIfDebug "Completed Parsing\n"
 
 
-
 if [ $optCompInst == $TRUE ]; then
     echoIfVerbose "Debug: Using compiler-based instrumentation"
 
@@ -811,11 +811,11 @@ if [ $optCompInst == $TRUE ]; then
     fi
 
     argsRemaining="$argsRemaining $optCompInstOption"
-    optLinking="$optLinking $optCompInstLinking"
+#    optLinking="$optLinking $optCompInstLinking"
 fi
 
 ####################################################################
-#Linking if there are no Source Files passed.
+# Linking if there are no Source Files passed.
 ####################################################################
 if [ $numFiles == 0 ]; then
     echoIfDebug "The number of source files is zero"
@@ -877,16 +877,16 @@ fi
 
 
 ####################################################################
-#Parsing the Code
+# Parsing the Code
 ####################################################################
 if [ $gotoNextStep == $TRUE ]; then
     tempCounter=0
 
     while [ $tempCounter -lt $numFiles ]; do
 
-		#Now all the types of all the flags, cFlags, fFlags.
-		#optPdtF95 is a generic opt for all fortran files
-		#and hence is appended for .f, .F, .F90 and .F95
+        #Now all the types of all the flags, cFlags, fFlags.
+        #optPdtF95 is a generic opt for all fortran files
+        #and hence is appended for .f, .F, .F90 and .F95
 	
 	case $groupType in
 	    $group_f_F)
@@ -925,10 +925,10 @@ if [ $gotoNextStep == $TRUE ]; then
 	    fi
 	fi
 
-		#Assumption: The pdb file would be formed in the current directory, so need 
-		#to strip  the fileName from the directory. Since sometime,
-		#you can be creating a pdb in the current directory using
-		#a source file located in another directory.
+        #Assumption: The pdb file would be formed in the current directory, so need 
+        #to strip the fileName from the directory. Since sometime,
+        #you can be creating a pdb in the current directory using
+        #a source file located in another directory.
 
 	saveTempFile=${arrPdb[$tempCounter]}
 	tempFileName=${arrPdb[$tempCounter]##*/}
@@ -948,7 +948,7 @@ fi
 
 
 ####################################################################
-#Instrumenting the Code
+# Instrumenting the Code
 ####################################################################
 if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE ]; then
 
@@ -990,52 +990,56 @@ fi
 ####################################################################
 if [ $gotoNextStep == $TRUE ]; then
 
-	#optCompile= $TAU_DEFS + $TAU_INCLUDE + $TAU_MPI_INCLUDE 
-	#Assumption: If -o option is not specified for compilation, then simply produce
-	#an output -o with filebaseName.o as the output for EACH file. This is because, in the
-	#common.mk file, even though there was no output generated by the regular command
-	#description, the compilation of the scripted code created one with -o option.
-	#The output is often needed for compilation of the instrumented phase.
-	#e.g. see compliation of mpi.c. So do not attempt to modify it simply 
-	#by placing the output to "a.out".
+    #optCompile= $TAU_DEFS + $TAU_INCLUDE + $TAU_MPI_INCLUDE 
+    #Assumption: If -o option is not specified for compilation, then simply produce
+    #an output -o with filebaseName.o as the output for EACH file. This is because, in the
+    #common.mk file, even though there was no output generated by the regular command
+    #description, the compilation of the scripted code created one with -o option.
+    #The output is often needed for compilation of the instrumented phase.
+    #e.g. see compliation of mpi.c. So do not attempt to modify it simply 
+    #by placing the output to "a.out".
 
     if [ $isForCompilation == $TRUE ]; then
-		#The number of files could be more than one. Check for creation of each .o file.
+	# The number of files could be more than one.  Check for creation of each .o file.
 	tempCounter=0
 	while [ $tempCounter -lt $numFiles ]; do
-	    base=`echo ${arrFileName[$tempCounter]} | sed -e 's/\.[^\.]*$//'  -e's/.*\///'`
+	    base=`echo ${arrFileName[$tempCounter]} | sed -e 's/\.[^\.]*$//' -e's/.*\///'`
 	    suf=`echo ${arrFileName[$tempCounter]} | sed -e 's/.*\./\./' `
-	    outputFile=${base##*/}.o	#strip it off the directory
-			# Remove the .pomp from the name of the output file. 
+	    outputFile=${base##*/}.o  # strip off the directory
+	    
+            # remove the .pp from the name of the output file
 	    if [ $preprocess == $TRUE ]; then
 		outputFile=`echo $outputFile | sed -e 's/\.pp//'`
 	    fi
+
+            # remove the .pomp from the name of the output file
 	    if [ $opari == $TRUE -a $pdtUsed == $TRUE ]; then
 		outputFile=`echo $outputFile | sed -e 's/\.chk\.pomp//'`
 	    fi
 	    
 	    
-			#echoIfDebug "\n\nThe output file passed is $passedOutputFile"
-			#echoIfDebug "The output file generated locally is $outputFile"
+            #echoIfDebug "\n\nThe output file passed is $passedOutputFile"
+	    #echoIfDebug "The output file generated locally is $outputFile"
 
 	    tempTauFileName=${arrTau[$tempCounter]##*/}
 	    instrumentedFileForCompilation="$tempTauFileName"
-#			newCmd="$CMD  $argsRemaining $instrumentedFileForCompilation  $OUTPUTARGSFORTAU $optCompile"
-	    newCmd="$CMD -I${arrFileNameDirectory[$tempCounter]} $argsRemaining $instrumentedFileForCompilation  $OUTPUTARGSFORTAU $optCompile"
+            #newCmd="$CMD  $argsRemaining $instrumentedFileForCompilation $OUTPUTARGSFORTAU $optCompile"
+	    newCmd="$CMD -I${arrFileNameDirectory[$tempCounter]} $argsRemaining $instrumentedFileForCompilation $OUTPUTARGSFORTAU $optCompile"
 
-			#echoIfDebug "cmd before appending the .o file is $newCmd"
+	    echo "OUTPUTARGSFORTAU = $OUTPUTARGSFORTAU"
+
+	    #echoIfDebug "cmd before appending the .o file is $newCmd"
 	    if [ $hasAnOutputFile == $TRUE ]; then
 		newCmd="$newCmd -o $passedOutputFile" 
 	    else
 		newCmd="$newCmd -o $outputFile" 
 	    fi
 	    echoIfDebug "PassedOutFile: $passedOutputFile outputFile: $outputFile"
-			#echoIfDebug "cmd after appending the .o file is $newCmd"
+	    #echoIfDebug "cmd after appending the .o file is $newCmd"
 
 	    evalWithDebugMessage "$newCmd" "Compiling with Instrumented Code"
 	    echoIfVerbose "Looking for file: $outputFile "
 	    if [ $hasAnOutputFile == $TRUE ]; then
-
 		if [  ! -e $passedOutputFile ]; then
 		    echoIfVerbose "Error: Tried Looking for file: $passedOutputFile"
 		    printError "$CMD" "$newCmd"
@@ -1066,7 +1070,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	    tempTauFileName=${arrTau[$tempCounter]##*/}
 	    instrumentedFileForCompilation=" $tempTauFileName"
 
-#			newCmd="$CMD $argsRemaining  -c $instrumentedFileForCompilation  $OUTPUTARGSFORTAU $optCompile -o $outputFile"
+            # newCmd="$CMD $argsRemaining  -c $instrumentedFileForCompilation  $OUTPUTARGSFORTAU $optCompile -o $outputFile"
 	    newCmd="$CMD $argsRemaining  -I${arrFileNameDirectory[$tempCounter]} -c $instrumentedFileForCompilation  $OUTPUTARGSFORTAU $optCompile -o $outputFile"
 
 	    evalWithDebugMessage "$newCmd" "Compiling (Individually) with Instrumented Code"
