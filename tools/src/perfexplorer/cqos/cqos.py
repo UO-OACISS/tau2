@@ -66,7 +66,7 @@ def buildClassifier(results):
 	# for performance
 	classifier = CQoSClassifierOperation(results, "Time", metadataFields, "scf type")
 	# for accuracy
-	#classifier = CQoSClassifierOperation(results, "accuracy", metadataFields, "basis set")
+	# classifier = CQoSClassifierOperation(results, "accuracy", metadataFields, "basis set")
 	#classifier.setClassifierType(CQoSClassifierOperation.NAIVE_BAYES)
 	#classifier.setClassifierType(CQoSClassifierOperation.SUPPORT_VECTOR_MACHINE)
 	classifier.processData()

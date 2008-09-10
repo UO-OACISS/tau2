@@ -114,7 +114,7 @@ public class TrialMetadata {
 						name = name.getNextSibling();
 					}
 					Node value = name.getNextSibling();
-					while (value.getFirstChild() == null || value.getFirstChild().getNodeValue() == null) {
+					while (value != null && (value.getFirstChild() == null || value.getFirstChild().getNodeValue() == null)) {
 						value = value.getNextSibling();
 					}
 					if (value == null) { // if there is no value
