@@ -2,7 +2,7 @@
 CONFIG_ARCH=apple
 TAUROOT=/Users/khuck/src/tau2
 
-JAVA_JVM_VERSION=1.4
+JAVA_JVM_VERSION=1.5
 
 # these are classpaths for the build.  The second classpath is for the 
 # loader directory.  The first is for everything else.

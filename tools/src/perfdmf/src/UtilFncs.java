@@ -591,6 +591,10 @@ public class UtilFncs {
             dataSource = new ParaverDataSource(sourceFiles);
             break;
 
+        case DataSource.GAMESS:
+            dataSource = new GAMESSDataSource(sourceFiles[0]);
+            break;
+
         default:
             throw new RuntimeException("Programming error: unknown format id = " + fileType);
         }

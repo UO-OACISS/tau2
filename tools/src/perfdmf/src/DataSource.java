@@ -20,9 +20,9 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.38 2008/09/05 18:07:00 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.39 2008/09/10 05:33:51 khuck Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.38 $
+ * @version $Revision: 1.39 $
  */
 public abstract class DataSource {
 
@@ -45,6 +45,7 @@ public abstract class DataSource {
     public static final int PARAVER = 14; // Statistical output from Paraver - Jesus LeBarta
     public static final int IPM = 15; // Data from IPM/NERSC
     public static final int GYRO = 100;
+    public static final int GAMESS = 101;  // application log data
 
     public static String formatTypeStrings[] = { "Tau profiles", "Tau pprof.dat", "Dynaprof", "MpiP", "HPMToolkit", "Gprof",
             "PSRun", "ParaProf Packed Profile", "Cube", "HPCToolkit", "TAU Snapshot", "ompP", "PERI-XML",

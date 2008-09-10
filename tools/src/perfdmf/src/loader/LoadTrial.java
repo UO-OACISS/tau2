@@ -325,6 +325,8 @@ public class LoadTrial {
                 fileType = DataSource.HPCTOOLKIT;
             } else if (fileTypeString.equals("gyro")) {
                 fileType = DataSource.GYRO;
+            } else if (fileTypeString.equals("gamess")) {
+                fileType = DataSource.GAMESS;
             } else if (fileTypeString.equals("gptl")) {
                 fileType = DataSource.GPTL;
             } else if (fileTypeString.equals("ipm")) {
