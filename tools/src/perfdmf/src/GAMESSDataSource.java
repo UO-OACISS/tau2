@@ -69,25 +69,22 @@ public class GAMESSDataSource extends DataSource {
 	}
 
 	/* (non-Javadoc)
-	 * @see edu.uoregon.tau.perfdmf.DataSource#cancelLoad()
-	 */
-	@Override
-	public void cancelLoad() {
-		return;
-	}
+     * @see edu.uoregon.tau.perfdmf.DataSource#cancelLoad()
+     */
+    public void cancelLoad() {
+            return;
+    }
 
-	/* (non-Javadoc)
-	 * @see edu.uoregon.tau.perfdmf.DataSource#getProgress()
-	 */
-	@Override
-	public int getProgress() {
-		return 0;
-	}
+    /* (non-Javadoc)
+     * @see edu.uoregon.tau.perfdmf.DataSource#getProgress()
+     */
+    public int getProgress() {
+            return 0;
+    }
 
-	/* (non-Javadoc)
+    /* (non-Javadoc)
 	 * @see edu.uoregon.tau.perfdmf.DataSource#load()
 	 */
-	@Override
 	public void load() throws FileNotFoundException, IOException,
 			DataSourceException, SQLException {
         try {
@@ -110,7 +107,8 @@ public class GAMESSDataSource extends DataSource {
 				if (inputString.startsWith("FINAL RHF ENERGY IS")) {
 					parseAccuracy();
 				} else if (inputString.startsWith("....")) {
-					if (!inputString.contains("PI ENERGY ANALYSIS"))
+					if (!inputString.equals("...... PI ENERGY ANALYSIS ......") &&
+						!inputString.equals("...... END OF PI ENERGY ANALYSIS ......"))
 						parsePhaseName();
 				} else if (inputString.startsWith("ON NODE")) {
 					parseStepTime(true);
