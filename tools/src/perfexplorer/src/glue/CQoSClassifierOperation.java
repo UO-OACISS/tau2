@@ -131,6 +131,7 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 
 		try {
 			this.wrapper = new WekaClassifierWrapper (trainingData, this.classLabel);
+			this.wrapper.setClassifierType(classifierType);
 			this.wrapper.buildClassifier();
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
@@ -158,9 +159,6 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 
 	public void setClassifierType(String classifierType) {
 		this.classifierType = classifierType;			
-		if (this.wrapper != null) {
-			this.wrapper.setClassifierType(classifierType);
-		}
 	}
 	
 }

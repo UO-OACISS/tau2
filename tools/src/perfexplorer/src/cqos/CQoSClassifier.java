@@ -59,8 +59,8 @@ public class CQoSClassifier {
 		for (String moleculeName : molecules) {
 			for (String basisSet : bases) {
 //			for (String scfType : scf) {
-		        for (int n = 1 ; n < 5 ; n++) {
-		            for (int c = 1 ; c < 5 ; c++) {
+		        for (int n = 1 ; n < 9 ; n++) {
+		            for (int c = 1 ; c < 9 ; c++) {
 			    		Map/*<String,String>*/ inputFields = new HashMap/*<String,String>*/();
 			        	inputFields.put("molecule name", moleculeName);
 			        	inputFields.put("basis set", basisSet);

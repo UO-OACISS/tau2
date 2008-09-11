@@ -134,7 +134,7 @@ public class DrawGraph extends AbstractPerformanceOperation {
            			for (Integer thread : threads) {
            				// set the series name
            				if (seriesType == TRIALNAME) {
-           					seriesName = input.toString();
+            				seriesName = input.getTrial().getName();
            				} else if (seriesType == USEREVENTNAME) {
            					seriesName = event;
            				} else if (seriesType == THREADNAME) {
@@ -143,7 +143,7 @@ public class DrawGraph extends AbstractPerformanceOperation {
            				
            				// set the category name
            				if (categoryType == TRIALNAME) {
-           					categoryName = input.toString();
+            				categoryName = input.getTrial().getName();
            				} else if (categoryType == USEREVENTNAME) {
            					categoryName = event;
            				} else if (categoryType == THREADNAME) {
@@ -163,7 +163,7 @@ public class DrawGraph extends AbstractPerformanceOperation {
             			for (Integer thread : threads) {
             				// set the series name
             				if (seriesType == TRIALNAME) {
-            					seriesName = input.toString();
+            					seriesName = input.getTrial().getName();
             				} else if (seriesType == EVENTNAME) {
             					seriesName = event;
             				} else if (seriesType == METRICNAME) {
@@ -174,7 +174,7 @@ public class DrawGraph extends AbstractPerformanceOperation {
             			
             				// set the category name
             				if (categoryType == TRIALNAME) {
-            					categoryName = input.toString();
+            					categoryName = input.getTrial().getName();
             				} else if (categoryType == EVENTNAME) {
             					categoryName = event;
             				} else if (categoryType == METRICNAME) {

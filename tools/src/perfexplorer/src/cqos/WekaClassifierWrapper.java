@@ -369,6 +369,7 @@ public class WekaClassifierWrapper implements Serializable {
 	 */
 	public void setClassifierType(String classifierType) {
 		this.classifierType = classifierType;
+		System.out.println("Set classifier type to: " + classifierType);
 	}
 
 	/**
