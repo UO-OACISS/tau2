@@ -19,6 +19,8 @@ False = 0
 config = "proton"
 inApp = "Flash"
 inExp = "Flash Regression"
+outFile1 = "/tmp/test1.eps"
+outFile2 = "/tmp/test2.eps"
 inTrial = ""
 
 def load():
@@ -73,6 +75,10 @@ def drawGraph(results, inclusive):
 			grapher.setValueType(AbstractResult.EXCLUSIVE)
 			grapher.setYAxisLabel("Exclusive " + metric + " (seconds)")
 		grapher.processData()
+		if inclusive == True:
+			grapher.drawChartToFile(outFile1)
+		else:
+			grapher.drawChartToFile(outFile2)
 	print "...done."
 
 	return

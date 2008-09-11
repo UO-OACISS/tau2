@@ -7,6 +7,7 @@ import java.awt.BasicStroke;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
+import java.io.File;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -24,6 +25,7 @@ import client.MyCategoryAxis;
 import client.PerfExplorerChart;
 
 import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.common.VectorExport;
 
 /**
  * @author khuck
@@ -65,6 +67,7 @@ public class DrawGraph extends AbstractPerformanceOperation {
     protected String xAxisLabel = "category";
 	protected boolean userEvents = false;
     protected String metadataField = "";
+	protected PerfExplorerChart chartWindow = null;
     
 	/**
 	 * @param input
@@ -251,7 +254,7 @@ public class DrawGraph extends AbstractPerformanceOperation {
 
         plot.setDomainAxis(domainAxis);
 
-		PerfExplorerChart chartWindow = new PerfExplorerChart(chart, "General Chart");
+		this.chartWindow = new PerfExplorerChart(chart, "General Chart");
 		return null;
 	}
 
@@ -449,5 +452,15 @@ public class DrawGraph extends AbstractPerformanceOperation {
 
 	public int getUnits() {
 		return this.units;
+	}
+
+	public void drawChartToFile(String fileName) {
+		try {
+			VectorExport.export(chartWindow, new File(fileName), true, "PerfExplorer", true, true);
+		} catch (Exception e) {
+			System.err.println("Could not write graph to file:");
+			System.err.println(e.getMessage());
+			e.printStackTrace();
+		}
 	}
 }

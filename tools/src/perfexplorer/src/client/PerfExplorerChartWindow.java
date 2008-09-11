@@ -24,6 +24,7 @@ import edu.uoregon.tau.common.VectorExport;
 import java.net.URL;
 import edu.uoregon.tau.common.Utility;
 import java.awt.Toolkit;
+import javax.swing.JPanel;
 
 public class PerfExplorerChartWindow extends JFrame implements ActionListener, ImageExport {
 
@@ -130,6 +131,5 @@ public class PerfExplorerChartWindow extends JFrame implements ActionListener, I
         panel.paintAll(g2D);
         panel.setDoubleBuffered(true);
     }
-
 
 }
