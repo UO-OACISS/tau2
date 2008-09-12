@@ -14,12 +14,12 @@
 #######################################################################
  
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=i386_linux
+CONFIG_ARCH=default
 CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
-USER_OPT=
-TAUROOT=/home/amorris/crap/tau2
+USER_OPT=-g
+TAUROOT=
 #######################################################################
  
 include include/Makefile
