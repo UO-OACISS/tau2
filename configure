@@ -2045,6 +2045,7 @@ if [ "$machine" = "apple" ] ; then
     make_directories
     configure_java
     configure_perfexplorer
+		cp tools/src/common/resources/tau-medium.png apple/lib/
     exit 0
   fi
 fi
