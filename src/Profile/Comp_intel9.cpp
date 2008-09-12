@@ -93,6 +93,7 @@ extern "C" void __VT_IntelEntry(char* str, int* id, int* id2) {
   if (intel_init) { // initialization
     intel_init = 0;
     TheUsingCompInst() = 1;
+    TAU_PROFILE_SET_NODE(0);
   }
 
 #ifdef USE_MAP
