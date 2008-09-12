@@ -2686,7 +2686,7 @@ case $cxx_compiler in
       ;;
    pathCC|scpathCC)
       echo "Default C++ compiler will be PathScale pathCC C++ compiler"
-      fixmakeargs="$fixmakeargs USE_PATHCC"
+      fixmakeargs="$fixmakeargs USE_PATHCC COMPINST_GNU"
       tauoptions="${tauoptions}-pathcc"
       pathscale=yes
       if [ $fortran_compiler = no ]
