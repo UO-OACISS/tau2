@@ -132,9 +132,8 @@ do
     shift
     ;;
 
-  -opari=*)
+  -opari*)
     opari=yes
-    oparidir=`echo $arg | sed -e 's/-opari=//'`
     openmp=yes
     shift
     ;;
@@ -269,7 +268,7 @@ do
     echo "-mpi"
     echo "-tag=<unique name> "
     echo "-nocomm"
-    echo "-opari=<oparidir>  "
+    echo "-opari  "
     echo "-epilog=<epilogdir>  "
     echo "-epiloginc=<absolute path to epilog include dir> (<epilog>/include default) "
     echo "-epilogbin=<absolute path to epilog bin dir> (<epilog>/bin default)  "
@@ -439,15 +438,15 @@ echo " " > wishver
 
     if [ $opari = yes ]
     then
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -opari=$oparidir"
-      ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -opari=$oparidir -openmp <wishver
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -opari"
+      ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -opari -openmp <wishver
       make clean; make install
     fi 
 
     if [ $opari = yes -a $papi = yes ] 
     then
-      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -opari=$oparidir -papi=$papidir -MULTIPLECOUNTERS"
-      ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -opari=$oparidir -openmp -papi=$papidir -MULTIPLECOUNTERS <wishver
+      echo "Configuring with ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -opari -papi=$papidir -MULTIPLECOUNTERS"
+      ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt $mpiopts $commopt -opari -openmp -papi=$papidir -MULTIPLECOUNTERS <wishver
       make clean; make install
     fi 
   fi
@@ -463,14 +462,14 @@ echo " " > wishver
 
   if [ $opari = yes ]
   then
-    echo "Configuring with $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt -opari=$oparidir -openmp "
-    ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt -opari=$oparidir -openmp <wishver
+    echo "Configuring with $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt -opari -openmp "
+    ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt -opari -openmp <wishver
     make clean; make install
 
     if [ $papi = yes ]
     then 
-      echo "Configuring with $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt -opari=$oparidir -openmp -papi=$papidir -MULTIPLECOUNTERS "
-      ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt -opari=$oparidir -openmp -papi=$papidir -MULTIPLECOUNTERS <wishver
+      echo "Configuring with $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt -opari -openmp -papi=$papidir -MULTIPLECOUNTERS "
+      ./configure $fortrancompiler $useropts $tagopt $extraopts $ccompiler $archopt $pdtopt -opari -openmp -papi=$papidir -MULTIPLECOUNTERS <wishver
       make clean; make install
     fi
   fi 
