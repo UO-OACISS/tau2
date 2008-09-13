@@ -111,15 +111,28 @@ extern "C" void __VT_IntelEntry(char* str, int* id, int* id2) {
 
 #else
 
-  if ((hn = hash_get((long)id2))) {
-    Tau_start_timer(hn->fi,0);
+//   if ((hn = hash_get((long)id2))) {
+//     Tau_start_timer(hn->fi,0);
+//   } else {
+//     hn = hash_put((long)id2);
+//     printf ("Registered %s for %p:%p\n", str, id, id2);
+//     void *handle=NULL;
+//     TAU_PROFILER_CREATE(handle, str, "", TAU_DEFAULT);
+//     hn->fi = (FunctionInfo*) handle;
+//     Tau_start_timer(hn->fi,0);
+//   }
+
+  if (*id != 0) {
+    Tau_start_timer(TheFunctionDB()[*id],0);
   } else {
-    hn = hash_put((long)id2);
+    //printf ("Registered %s for %p:%p\n", str, id, id2);
     void *handle=NULL;
     TAU_PROFILER_CREATE(handle, str, "", TAU_DEFAULT);
-    hn->fi = (FunctionInfo*) handle;
-    Tau_start_timer(hn->fi,0);
+    FunctionInfo *fi = (FunctionInfo*)handle;
+    Tau_start_timer(fi,0);
+    *id = TheFunctionDB().size()-1;
   }
+  *id2 = *id;
 #endif
 
   //printf ("VT Entry: %s, %p(%d), %p(%d)\n", str, id, *id, id2, *id2);
@@ -132,16 +145,17 @@ extern "C" void VT_IntelEntry(char* str, int* id, int* id2) {
 
 extern "C" void __VT_IntelExit(int* id2) {
 #ifdef USE_MAP
-  map<int*, FunctionInfo*>::iterator it = theMap.find(id2);
-  if (it != theMap.end()) {
-    FunctionInfo *fi = (*it).second;
-    Tau_stop_timer(fi);
-  }  
+//   map<int*, FunctionInfo*>::iterator it = theMap.find(id2);
+//   if (it != theMap.end()) {
+//     FunctionInfo *fi = (*it).second;
+//     Tau_stop_timer(fi);
+//   }  
 #else
-  HashNode *hn;
-  if ((hn = hash_get((long)id2))) {
-    Tau_stop_timer(hn->fi);
-  }
+//   HashNode *hn;
+//   if ((hn = hash_get((long)id2))) {
+//     Tau_stop_timer(hn->fi);
+//   }
+  Tau_stop_timer(TheFunctionDB()[*id2]);
 #endif
 
 
