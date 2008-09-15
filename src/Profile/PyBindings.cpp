@@ -11,6 +11,9 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyBindings.cpp,v $
+// Revision 1.4  2008/09/15 23:25:49  sameer
+// Added pytau_setNode(<nodeid>) number for the Python API.
+//
 // Revision 1.3  2007/03/02 02:36:51  amorris
 // Added snapshot API for python.
 //
@@ -81,12 +84,14 @@ struct PyMethodDef pytau_methods[] = {
     {pytau_profileTimer__name__, pytau_profileTimer, METH_VARARGS | METH_KEYWORDS, pytau_profileTimer__doc__}, 
     {pytau_start__name__, pytau_start, METH_VARARGS, pytau_start__doc__}, 
     {pytau_stop__name__, pytau_stop, METH_VARARGS, pytau_stop__doc__}, 
+// runtime system
+    {pytau_setNode__name__, pytau_setNode, METH_VARARGS, pytau_setNode__doc__}, 
 
 // Sentinel
     {0, 0}
 };
 
 // version
-// $Id: PyBindings.cpp,v 1.3 2007/03/02 02:36:51 amorris Exp $
+// $Id: PyBindings.cpp,v 1.4 2008/09/15 23:25:49 sameer Exp $
 
 // End of file

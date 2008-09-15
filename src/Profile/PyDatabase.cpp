@@ -11,6 +11,9 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyDatabase.cpp,v $
+// Revision 1.7  2008/09/15 23:25:49  sameer
+// Added pytau_setNode(<nodeid>) number for the Python API.
+//
 // Revision 1.6  2007/03/02 02:36:51  amorris
 // Added snapshot API for python.
 //
@@ -328,9 +331,32 @@ PyObject * pytau_dumpFuncValsIncr(PyObject *, PyObject * args)
     return Py_None;
 }
 
+char pytau_setNode__name__[] = "setNode";
+char pytau_setNode__doc__[] = "set node number for genrating profile.<node>.0.0";
+PyObject * pytau_setNode(PyObject *self, PyObject *args)
+{
+    int node_number;
+
+    node_number = 0;
+
+    // extract function list from Python args
+    int ok = PyArg_ParseTuple(args, "i:nodeNumber", &node_number);
+    if (!ok) {
+        return 0;
+    }
+
+#ifdef DEBUG_PROF
+    printf("pytau_setnode: %d\n", node_number);
+#endif /* DEBUG_PROF */
+    TAU_PROFILE_SET_NODE(node_number);
+
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
 
 // version
-// $Id: PyDatabase.cpp,v 1.6 2007/03/02 02:36:51 amorris Exp $
+// $Id: PyDatabase.cpp,v 1.7 2008/09/15 23:25:49 sameer Exp $
 
 // End of file
   
