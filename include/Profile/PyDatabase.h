@@ -11,6 +11,16 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyDatabase.h,v $
+// Revision 1.3  2008/09/15 23:27:45  sameer
+// Added pytau_setNode(<node>) API call:
+// import pytau
+// pytau.setNode(353)
+//
+// 	creates profile.353.0.0 file.
+// Scott,
+// 	Would you please document this in the users guide?
+// 	Thanks!
+//
 // Revision 1.2  2007/03/02 02:35:37  amorris
 // Added snapshot API for python
 //
@@ -84,9 +94,14 @@ extern char pytau_dumpFuncValsIncr__doc__[];
 extern "C"
 PyObject * pytau_dumpFuncValsIncr(PyObject *, PyObject *);
 
+extern char pytau_setNode__name__[];
+extern char pytau_setNode__doc__[];
+extern "C"
+PyObject * pytau_setNode(PyObject *, PyObject *);
+
 #endif // pytau_database_h
 
 // version
-// $Id: PyDatabase.h,v 1.2 2007/03/02 02:35:37 amorris Exp $
+// $Id: PyDatabase.h,v 1.3 2008/09/15 23:27:45 sameer Exp $
 
 // End of file
