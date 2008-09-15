@@ -202,6 +202,7 @@ for arg in "$@"; do
     echo "-PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation."
     echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
     echo "-noex .................. Use no exceptions while compiling the library."
+    echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
     echo "-help ...................................... display this help message."
     echo "-fullhelp .............................. display the full help message."
     echo ""
@@ -318,6 +319,7 @@ for arg in "$@"; do
     echo "-PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation."
     echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
     echo "-noex .................. Use no exceptions while compiling the library."
+    echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
     echo "-help ...................................... display this help message."
     echo "-fullhelp .............................. display the full help message."
     exit
@@ -419,6 +421,7 @@ muse_multiple=no
 comm=yes
 sproc=no
 noex=no
+disableshared=no
 setnode0=no
 tulipthread=no
 compensate=no
@@ -1344,6 +1347,12 @@ do
   -noex)
     # NO exceptions to be used while building the lib.
     noex=yes
+    shift
+    ;;
+
+  -DISABLESHARED)
+    # NO exceptions to be used while building the lib.
+    disableshared=yes
     shift
     ;;
 
@@ -5184,6 +5193,11 @@ if [ $fujitsu = yes ]
   then
     tauoptions="${tauoptions}-fujitsu"
 fi 
+
+if [ $disableshared = yes ]
+then
+    fixmakeargs="$fixmakeargs NOSHARED"
+fi
 
 if [ $noex = yes ]
   then

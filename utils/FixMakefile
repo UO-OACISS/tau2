@@ -1519,7 +1519,10 @@ ALPHATIMERS)
 	echo "NOTE: Using Shared Libraries by default"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-
+     NOSHARED)
+	echo "NOTE: Disabling building of shared objects"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      *)
 	echo "ERROR: Unknown argument directive \`$1' to FixMakefile"
 	;;
