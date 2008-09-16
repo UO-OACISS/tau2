@@ -851,10 +851,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     /* when multiple counters are not used, it is a single metric or double */
 #endif /* MULTIPLE_COUNTERS */
     DEBUGPROFMSG("Calls = "<<ThisFunction->GetCalls(tid)
-		 <<" inclusiveTime = "<<inclusiveTime
-		 <<" TheTauThrottle = "<<TheTauThrottle() 
-		 <<" ThrCalls = "<<TheTauThrottleNumCalls()
-		 <<" PerCall = " <<TheTauThrottlePerCall()<<endl;);
+		 <<" inclusiveTime = "<<inclusiveTime<<endl);
     if (TauEnv_get_throttle() && (ThisFunction->GetCalls(tid) > TauEnv_get_throttle_numcalls()) && (inclusiveTime/ThisFunction->GetCalls(tid) < TauEnv_get_throttle_percall()) && AddInclFlag) { 
       /* Putting AddInclFlag means we can't throttle recursive calls */
       ThisFunction->SetProfileGroup(TAU_DISABLE, tid);
@@ -1832,7 +1829,7 @@ bool Profiler::createDirectories() {
 }
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.189 $   $Date: 2008/08/04 23:27:32 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.189 2008/08/04 23:27:32 amorris Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.190 $   $Date: 2008/09/16 20:42:29 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.190 2008/09/16 20:42:29 sameer Exp $ 
  ***************************************************************************/
