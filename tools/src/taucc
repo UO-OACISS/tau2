@@ -187,6 +187,8 @@ else
     TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optQuiet"
 fi
 
+TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optCompInst"
+
 # Pathscale/Opari workaround
 if [ "$SICORTEX" = "yes" ] ; then
     TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optOpariOpts=-nodecl"
