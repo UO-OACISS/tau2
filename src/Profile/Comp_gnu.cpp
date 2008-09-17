@@ -213,7 +213,7 @@ static void get_symtab(void) {
 #ifdef TAU_BFD
   get_symtab_bfd();
 #else
-  fprintf(stderr, "TAU: Error: BFD not found, symbols will not be resolved\n");
+  fprintf(stderr, "TAU: Warning! BFD not found, symbols will not be resolved\n");
 #endif
 }
 
@@ -264,6 +264,22 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 
     //    printf ("name = %s : ", hn->name);
   } else {
+
+    hash_put((long)funcptr, "foo", "foo", -1);
+    hn = hash_get((long)funcptr);
+
+    if ( hn->fi == NULL) {
+
+      char routine[2048];
+
+      sprintf (routine, "%p", funcptr);
+      void *handle=NULL;
+      TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
+      hn->fi = (FunctionInfo*) handle;
+    } 
+
+    Tau_start_timer(hn->fi,0);
+
 
     //printf ("NOT FOUND! : \n");
   }
