@@ -96,6 +96,7 @@ printUsage () {
     echo -e "  -optAppF90=\"<f90>\"\t\tSpecifies the fallback F90 compiler."
     echo -e "  -optShared\t\t\tUse shared library version of TAU."
     echo -e "  -optCompInst\t\t\tUse compiler-based instrumentation."
+    echo -e "  -optPDTInst\t\t\tUse PDT-based instrumentation."
     
     if [ $1 == 0 ]; then #Means there are no other option passed with the myscript. It is better to exit then.
 	exit
@@ -536,6 +537,11 @@ for arg in "$@" ; do
 			optCompInst=$TRUE
 			disablePdtStep=$TRUE
 			echoIfDebug "\tUsing Compiler-based Instrumentation"
+			;;
+		    -optPDTInst)
+			optCompInst=$FALSE
+			disablePdtStep=$FALSE
+			echoIfDebug "\tUsing PDT-based Instrumentation"
 			;;
 
 		esac #end case for parsing script Options
