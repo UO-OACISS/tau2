@@ -21,6 +21,7 @@ public class LoadTrial {
     public String trialName;
     public String problemFile;
     public String configuration;
+    public boolean terminate = true;
 
     private DatabaseAPI databaseAPI;
     private Trial trial;
@@ -157,8 +158,9 @@ public class LoadTrial {
         } else {
             appendToTrial();
         }
-		databaseAPI.terminate();
-
+        if (this.terminate) {
+        	databaseAPI.terminate();
+        }
     }
 
     public void saveTrial() {
@@ -167,7 +169,7 @@ public class LoadTrial {
         System.err.println("TrialName: " + trialName);
         trial.setExperimentID(expID);
         try {
-            databaseAPI.uploadTrial(trial, summaryOnly);
+            trialID = databaseAPI.uploadTrial(trial, summaryOnly);
         } catch (DatabaseException e) {
             e.printStackTrace();
             Exception e2 = e.getException();
@@ -374,5 +376,21 @@ public class LoadTrial {
         trans.loadTrial(fileType);
         // the trial will be saved when the load is finished (update is called)
     }
+
+	public void setMetadataFile(String metadataFile) {
+		this.metadataFile = metadataFile;
+	}
+
+	public void setFixNames(boolean fixNames) {
+		this.fixNames = fixNames;
+	}
+
+	public void setSummaryOnly(boolean summaryOnly) {
+		this.summaryOnly = summaryOnly;
+	}
+
+	public DatabaseAPI getDatabaseAPI() {
+		return databaseAPI;
+	}
 
 }
