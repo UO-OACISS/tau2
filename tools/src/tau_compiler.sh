@@ -1026,8 +1026,6 @@ if [ $gotoNextStep == $TRUE ]; then
             #newCmd="$CMD  $argsRemaining $instrumentedFileForCompilation $OUTPUTARGSFORTAU $optCompile"
 	    newCmd="$CMD -I${arrFileNameDirectory[$tempCounter]} $argsRemaining $instrumentedFileForCompilation $OUTPUTARGSFORTAU $optCompile"
 
-	    echo "OUTPUTARGSFORTAU = $OUTPUTARGSFORTAU"
-
 	    #echoIfDebug "cmd before appending the .o file is $newCmd"
 	    if [ $hasAnOutputFile == $TRUE ]; then
 		newCmd="$newCmd -o $passedOutputFile" 
