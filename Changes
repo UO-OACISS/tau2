@@ -39,6 +39,12 @@ Version 2.17 changes (from 2.16):
 27. -spec option for tau_instrumentor allows generic timer instrumentation support [FZJ].
 28. Paraprof allows new windows for multiple metrics to compare data [SiCortex].
 29. Posix I/O tracking now uses context events instead of user-defined events.
+30. Added support for compiler based instrumentation for Intel 9.1, 10.x, GNU, and PathScale compilers. 
+31. Added extensions in PerfExplorer to support CQoS analysis, drawing charts from script [CCA]. 
+32. Bug fixes in paraprof for selective instrumentation, printer support [NASA].
+33. taucxx, taucc, tauf90 now use -optCompInst by default, tau_[cxx,cc,f90].sh use -optPDTInst by default.
+34. Added -opari support in installtau. 
+35. Fixes for IBM BGL/BGP configuration.
 
 
 
