@@ -11,16 +11,37 @@ invoke_with_tau=yes
 DEFAULT_MAKEFILE=
 
 if [ $# = 0 ] ; then
-  echo "Usage $0 [-tau_makefile=<tau_stub_makefile>] [-tau_options=<tau_compiler_opts>] <opts> <file>"
-  echo "If -tau_makefile option is not used, "
-  echo "TAU uses the file specified in the TAU_MAKEFILE environment variable"
-  echo "e.g., "
-  echo "% $0 -tau_makefile=/usr/local/tau-2.x/ia64/lib/Makefile.tau-mpi-pdt  -tau_options=-optVerbose -c foo.c"
-  echo " 	or"
-  echo "% setenv TAU_MAKEFILE /usr/local/tau-2.x/include/Makefile"
-  echo "% setenv TAU_OPTIONS -optVerbose -optTauSelectFile=select.tau"
-  echo "% $0 -c foo.c"
-  exit 1
+    cmd=`basename $0`
+    echo ""
+    echo " $cmd - C compiler wrapper for TAU"
+    echo ""
+    echo " Usage: $cmd [-tau_makefile=<tau_stub_makefile>]"
+    echo "             [-tau_options=<tau_compiler_opts>] <opts> <file>"
+    echo ""
+    echo " If -tau_makefile option is not used, "
+    echo " TAU uses the file specified in the TAU_MAKEFILE environment variable"
+    echo " e.g., "
+    echo " % $cmd -tau_makefile=/usr/local/tau-2.x/ia64/lib/Makefile.tau-mpi-pdt "
+    echo "        -tau_options=-optVerbose -c foo.c"
+    echo "    or"
+    echo " % setenv TAU_MAKEFILE /usr/local/tau-2.x/include/Makefile"
+    echo " % setenv TAU_OPTIONS -optVerbose -optTauSelectFile=select.tau"
+    echo " % $cmd -c foo.c"
+    echo ""
+    echo "TAU_OPTIONS:"
+    echo ""
+    echo -e "  -optVerbose\t\t\tTurn on verbose debugging message"
+    echo -e "  -optDetectMemoryLeaks\t\tTrack mallocs/frees using TAU's memory wrapper"
+    echo -e "  -optPdtGnuFortranParser\tSpecify the GNU gfortran PDT parser gfparse instead of f95parse"
+    echo -e "  -optPdtCleanscapeParser\tSpecify the Cleanscape Fortran parser"
+    echo -e "  -optTauSelectFile=\"\"\t\tSpecify selective instrumentation file for tau_instrumentor"
+    echo -e "  -optPreProcess\t\tPreprocess the source code before parsing. Uses /usr/bin/cpp -P by default."
+    echo -e "  -optKeepFiles\t\t\tDoes not remove intermediate .pdb and .inst.* files" 
+    echo -e "  -optShared\t\t\tUse shared library version of TAU."
+    echo -e "  -optCompInst\t\t\tUse compiler-based instrumentation."
+    echo -e "  -optPDTInst\t\t\tUse PDT-based instrumentation."
+    echo ""
+    exit 1
 fi
 
 TAUARGS=
