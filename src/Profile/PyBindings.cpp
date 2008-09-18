@@ -11,6 +11,9 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyBindings.cpp,v $
+// Revision 1.5  2008/09/18 23:50:29  sameer
+// Added memory tracking extensions.
+//
 // Revision 1.4  2008/09/15 23:25:49  sameer
 // Added pytau_setNode(<nodeid>) number for the Python API.
 //
@@ -49,6 +52,7 @@
 #include "Profile/PyDatabase.h"
 #include "Profile/PyGroups.h"
 #include "Profile/PyTimer.h"
+#include "Profile/PyMemory.h"
 
 
 // method table
@@ -87,11 +91,22 @@ struct PyMethodDef pytau_methods[] = {
 // runtime system
     {pytau_setNode__name__, pytau_setNode, METH_VARARGS, pytau_setNode__doc__}, 
 
+// memory events
+    {pytau_trackMemory__name__, pytau_trackMemory, METH_VARARGS, pytau_trackMemory__doc__}, 
+    {pytau_trackMemoryHeadroom__name__, pytau_trackMemoryHeadroom, METH_VARARGS, pytau_trackMemoryHeadroom__doc__}, 
+    {pytau_trackMemoryHere__name__, pytau_trackMemoryHere, METH_VARARGS, pytau_trackMemoryHere__doc__}, 
+    {pytau_trackMemoryHeadroomHere__name__, pytau_trackMemoryHeadroomHere, METH_VARARGS, pytau_trackMemoryHeadroomHere__doc__}, 
+    {pytau_enableTrackingMemory__name__, pytau_enableTrackingMemory, METH_VARARGS, pytau_enableTrackingMemory__doc__}, 
+    {pytau_disableTrackingMemory__name__, pytau_disableTrackingMemory, METH_VARARGS, pytau_disableTrackingMemory__doc__}, 
+    {pytau_enableTrackingMemoryHeadroom__name__, pytau_enableTrackingMemoryHeadroom, METH_VARARGS, pytau_enableTrackingMemoryHeadroom__doc__}, 
+    {pytau_disableTrackingMemoryHeadroom__name__, pytau_disableTrackingMemoryHeadroom, METH_VARARGS, pytau_disableTrackingMemoryHeadroom__doc__}, 
+    {pytau_setInterruptInterval__name__, pytau_setInterruptInterval, METH_VARARGS, pytau_setInterruptInterval__doc__}, 
+
 // Sentinel
     {0, 0}
 };
 
 // version
-// $Id: PyBindings.cpp,v 1.4 2008/09/15 23:25:49 sameer Exp $
+// $Id: PyBindings.cpp,v 1.5 2008/09/18 23:50:29 sameer Exp $
 
 // End of file
