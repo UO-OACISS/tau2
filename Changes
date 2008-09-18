@@ -45,6 +45,7 @@ Version 2.17 changes (from 2.16):
 33. taucxx, taucc, tauf90 now use -optCompInst by default, tau_[cxx,cc,f90].sh use -optPDTInst by default.
 34. Added -opari support in installtau. 
 35. Fixes for IBM BGL/BGP configuration.
+36. Added support for tracking memory utilization and headroom in Python [ALCF].
 
 
 
