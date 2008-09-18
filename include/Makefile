@@ -188,7 +188,7 @@ OPARI_O 	= TauKojakOpariDisable.o #ENDIF#
 #############################################
 # Python Binding OBJECTS
 #############################################
-#PYTHON#PYTHON_O  = PyGroups.o PyExceptions.o PyDatabase.o PyBindings.o PyTimer.o PyTau.o #ENDIF#
+#PYTHON#PYTHON_O  = PyGroups.o PyExceptions.o PyDatabase.o PyBindings.o PyTimer.o PyTau.o PyMemory.o #ENDIF#
 
 #############################################
 # DYNINST DEFAULT ARCH
