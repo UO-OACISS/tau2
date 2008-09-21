@@ -403,7 +403,7 @@ class CompleteDirectives
       return emptyDirectives;
     }
 
-    while (directives.size() != 0 && s->stmtBegin().line() >=
+    while ( s->stmtBegin().line() >=
 			 directives.front().getLine())
 		{
 #ifdef DEBUG
@@ -433,6 +433,9 @@ class CompleteDirectives
 						directives.pop_front();
 					}
 				}
+				if (verbosity == Debug)  
+					cerr << "checking whether directives have closed." << endl;
+
 				//if we have found all the directives
 				if (directives.size() == 0)
 				{
@@ -489,8 +492,10 @@ class CompleteDirectives
       directives.front().getType() + openDirectives.front().getType() == 0)))
       {
         if (verbosity >= Verbose)
+				{
           cerr << "We are expecting there to be a directive closing the one on line: " << openDirectives.front().getLine() << endl;
 					cerr << "...in loop " << loop << ", directive in loop " << openDirectives.front().getDepth() << endl;
+				}
         //Create a closing for/do pragma
         //createDirective(s,openDirectives.front());
         
@@ -557,7 +562,7 @@ class CompleteDirectives
       }  
       //Move to the next statement
       //Must maintain monotomy, ie don't follow loops.
-      if (s->downStmt() != NULL && s->downStmt()->stmtBegin().line() >=
+      if ((s->downStmt() != NULL || s->kind() == pdbItem::RO_EXT) && s->downStmt()->stmtBegin().line() >=
       s->stmtBegin().line())
       {  
         addDirectives.splice(addDirectives.end(), findOMPStmt(s->downStmt(), s, loop + 1, pdb));
@@ -781,6 +786,8 @@ int main(int argc, char *argv[])
           for (PDB::froutinevec::iterator r = p.getFRoutineVec().begin();
             r!=p.getFRoutineVec().end(); r++)
           {
+            if (verbosity >= Verbose)
+              cerr << "preprocesing rountine: " << (*r)->name() << endl;
             if ((*r)->body() != NULL && (*r)->kind() != pdbItem::RO_EXT)
             {
               if (verbosity >= Verbose)
@@ -862,6 +869,6 @@ int main(int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
- * $Revision: 1.17 $   $Date: 2008/07/14 22:18:23 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.17 2008/07/14 22:18:23 scottb Exp $
+ * $Revision: 1.18 $   $Date: 2008/09/21 20:43:27 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.18 2008/09/21 20:43:27 scottb Exp $
  ***************************************************************************/
