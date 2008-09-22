@@ -404,10 +404,11 @@ class CompleteDirectives
     }
 
     while ( s->stmtBegin().line() >=
-			 directives.front().getLine())
+			 directives.front().getLine() && ( openDirectives.size() > 0 ||
+			 directives.size() > 0))
 		{
 #ifdef DEBUG
-			cerr << "type: " <<  directives.front().getType() << endl;		
+			cerr << "open type: " <<  openDirectives.front().getType() << endl;		
 #endif /* DEBUG */
 			while (
 								directives.front().getType() == 1 ||
@@ -433,8 +434,8 @@ class CompleteDirectives
 						directives.pop_front();
 					}
 				}
-				if (verbosity == Debug)  
-					cerr << "checking whether directives have closed." << endl;
+				//if (verbosity == Debug)  
+					//cerr << "checking whether directives have closed." << endl;
 
 				//if we have found all the directives
 				if (directives.size() == 0)
@@ -446,17 +447,19 @@ class CompleteDirectives
 					}
 					else
 					{
-						if (verbosity == Debug)  
-							cerr << "OMP Directive on line: " << openDirectives.front().getLine() << " has not been closed."<< endl;
+						//if (verbosity == Debug)  
+							//cerr << "OMP Directive on line: " << openDirectives.front().getLine() << " has not been closed."<< endl;
 					}
 				}
 				//Begin searching through statements
 				//If this statement is inside a OMP Directive
+				//printf("directive type: %d", directives.front().getType());
 				while (directives.front().getLine() && directives.front().getType() < 0 &&
 							openDirectives.size() != 0)
 				{
 					if (openDirectives.size() != 0)
 					{
+					  printf("inside if..\n");
 						//atempt to close directive
 						if (openDirectives.front().getType() + directives.front().getType() == 0)
 						{
@@ -486,10 +489,14 @@ class CompleteDirectives
 			int nextStmtLine = block->stmtEnd().line();
 			
 			//Are we expecting any more pragmas to be closed before this statement?
-      while (openDirectives.size() != 0 && openDirectives.front().getDepth() ==
-      loop && openDirectives.front().getType() > 1 && ( directives.size() == 0
-      || !((nextStmtLine-1) >= directives.front().getLine() &&
-      directives.front().getType() + openDirectives.front().getType() == 0)))
+      while (openDirectives.size() != 0 && 
+				openDirectives.front().getDepth() == loop && 
+				openDirectives.front().getType() > 1 && 
+				( directives.size() == 0 ||
+        	!((nextStmtLine-1) >= directives.front().getLine() &&
+      		directives.front().getType() + openDirectives.front().getType() == 0)
+				)
+			)
       {
         if (verbosity >= Verbose)
 				{
@@ -502,9 +509,11 @@ class CompleteDirectives
         //if (s->downStmt() == NULL)
         //  cerr << "Directives opening a loop are only allowed immediately before the loop body." << endl;
         //else
-          addDirectives.push_front(Directive(openDirectives.front(), openDirectives.front().getType(), loop, openDirectives.front().getBlock()));
+        addDirectives.push_front(Directive(openDirectives.front(), openDirectives.front().getType(), loop, openDirectives.front().getBlock()));
         
         openDirectives.pop_front();
+				if (directives.size() == 0)
+				  return addDirectives;
       }
       
       //Are we expecting to close any parallel OMP directives.
@@ -516,7 +525,7 @@ class CompleteDirectives
         //createDirective(s,openDirectives.front());
         
         
-        
+        //printf("pop 1\n");
         openDirectives.pop_front();
       }
       
@@ -524,6 +533,7 @@ class CompleteDirectives
       directives.front().getLine() && directives.front().getType() > 1)
           
       {
+          //printf("pop 2\n");
           //open new directive        
           if (s->kind() != pdbStmt::ST_FDO && s->kind() != pdbStmt::ST_FOR)
           {  
@@ -565,6 +575,8 @@ class CompleteDirectives
       if ((s->downStmt() != NULL || s->kind() == pdbItem::RO_EXT) && s->downStmt()->stmtBegin().line() >=
       s->stmtBegin().line())
       {  
+        if (verbosity == Debug)
+          cerr << "recurising (a) " << endl;
         addDirectives.splice(addDirectives.end(), findOMPStmt(s->downStmt(), s, loop + 1, pdb));
         if (s->nextStmt() == NULL)
         {
@@ -577,17 +589,26 @@ class CompleteDirectives
           endBlock.nextStmt(s->nextStmt());
           endBlock.downStmt(NULL);
           endBlock.extraStmt(NULL);
+        if (verbosity == Debug)
+          cerr << "recurising (b) " << endl;
           addDirectives.splice(addDirectives.end(), findOMPStmt(&endBlock, block, loop, pdb));  
         }
       }
       if (s->extraStmt() != NULL && s->extraStmt()->stmtBegin().line() >=
-            s->stmtBegin().line())
+            s->stmtBegin().line()) 
+			{
+        if (verbosity == Debug)
+          cerr << "recurising (c) " << endl;
         addDirectives.splice(addDirectives.end(), findOMPStmt(s->extraStmt(), s, loop + 1, pdb));
+			}
 
       if (s->nextStmt() != NULL && s->nextStmt()->stmtBegin().line() >=
                   s->stmtBegin().line())
+			{
+        if (verbosity == Debug)
+          cerr << "recurising (d) " << endl;
         addDirectives.splice(addDirectives.end(), findOMPStmt(s->nextStmt(), block, loop, pdb));  
-  
+      }
       //Need to make sure that the end of this block is analyzed.
       if ((s->kind() == pdbStmt::ST_FOR || s->kind() == pdbStmt::ST_FDO)
       && (s->nextStmt() == NULL || s->nextStmt()->stmtBegin().line() == 0))
@@ -602,6 +623,8 @@ class CompleteDirectives
         closeBlock.nextStmt(NULL);
         closeBlock.downStmt(NULL);
         closeBlock.extraStmt(NULL);
+        if (verbosity == Debug)
+          cerr << "recurising (e) "<< endl;
         addDirectives.splice(addDirectives.end(), findOMPStmt(&closeBlock, block, loop, pdb));  
       }
       
@@ -798,6 +821,8 @@ int main(int argc, char *argv[])
               //Retrive the statement within the routines.
               const pdbStmt *v = (*r)->body();
 	      
+        if (verbosity == Debug)
+          cerr << "recurising (f) " << endl;
 	      directivesToBeAdded.splice(directivesToBeAdded.end(), c.findOMPStmt(v,p));
             }
           }
@@ -869,6 +894,6 @@ int main(int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
- * $Revision: 1.18 $   $Date: 2008/09/21 20:43:27 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.18 2008/09/21 20:43:27 scottb Exp $
+ * $Revision: 1.19 $   $Date: 2008/09/22 17:58:15 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.19 2008/09/22 17:58:15 scottb Exp $
  ***************************************************************************/
