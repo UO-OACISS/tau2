@@ -1975,7 +1975,8 @@ case $machine in
 	c_compiler=cc
 	default_fortran=pgi
 	if [ "x$PE_ENV" = xPGI ] ; then
-	    tauoptions="${tauoptions}-pgi"
+	    #tauoptions="${tauoptions}-pgi"
+	    pgi=yes
 	    default_fortran=pgi
 	elif [ "x$PE_ENV" = xGNU ] ; then
 	    tauoptions="${tauoptions}-gnu"
