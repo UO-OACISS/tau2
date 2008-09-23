@@ -10,17 +10,21 @@ from glue import AbstractResult
 from glue import DrawGraph
 from glue import TopXEvents
 from client import PerfExplorerModel
+from client import ScriptFacade
 from edu.uoregon.tau.perfdmf import Trial
 from java.util import HashSet
 from java.util import ArrayList
 
 True = 1
 False = 0
-config = "proton"
-inApp = "Flash"
-inExp = "Flash Regression"
-outFile1 = "/tmp/test1.eps"
-outFile2 = "/tmp/test2.eps"
+#config = "proton"
+#inApp = "Flash"
+#inExp = "Flash Regression"
+config = "proton_postgresql"
+inApp = "FACETS-Core"
+inExp = "FACETS-Core Regression"
+outFile1 = "regression1.eps"
+outFile2 = "regression2.eps"
 inTrial = ""
 
 def load():
@@ -97,3 +101,5 @@ extracted = getTop1(results)
 drawGraph(extracted, False)
 
 print "---------------- JPython test script end -------------"
+pe = ScriptFacade()
+pe.exit()
