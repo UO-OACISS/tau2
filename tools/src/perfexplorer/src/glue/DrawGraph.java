@@ -6,7 +6,9 @@ package glue;
 import java.awt.BasicStroke;
 import java.util.List;
 import java.util.HashSet;
+import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.io.File;
 
 import org.jfree.chart.ChartFactory;
@@ -68,6 +70,7 @@ public class DrawGraph extends AbstractPerformanceOperation {
 	protected boolean userEvents = false;
     protected String metadataField = "";
 	protected PerfExplorerChart chartWindow = null;
+	protected boolean shortenNames = false;
     
 	/**
 	 * @param input
@@ -168,7 +171,11 @@ public class DrawGraph extends AbstractPerformanceOperation {
             				if (seriesType == TRIALNAME) {
             					seriesName = input.getTrial().getName();
             				} else if (seriesType == EVENTNAME) {
-            					seriesName = event;
+            					if (shortenNames) {
+            						seriesName = this.shortName(event);
+            					} else {
+            						seriesName = event;
+            					}
             				} else if (seriesType == METRICNAME) {
             					seriesName = metric;
             				} else if (seriesType == THREADNAME) {
@@ -179,7 +186,11 @@ public class DrawGraph extends AbstractPerformanceOperation {
             				if (categoryType == TRIALNAME) {
             					categoryName = input.getTrial().getName();
             				} else if (categoryType == EVENTNAME) {
-            					categoryName = event;
+            					if (shortenNames) {
+            						categoryName = this.shortName(event);
+            					} else {
+            						categoryName = event;
+            					}
             				} else if (categoryType == METRICNAME) {
             					categoryName = metric;
             				} else if (categoryType == THREADNAME) {
@@ -462,5 +473,41 @@ public class DrawGraph extends AbstractPerformanceOperation {
 			System.err.println(e.getMessage());
 			e.printStackTrace();
 		}
+	}
+	
+	private String shortName(String longName) {
+		StringTokenizer st = new StringTokenizer(longName, "(");
+		String shorter = null;
+		try {
+			shorter = st.nextToken();
+			if (shorter.length() < longName.length()) {
+				shorter = shorter + "()";
+			}
+		} catch (NoSuchElementException e) {
+			shorter = longName;
+		}
+		longName = shorter;
+		st = new StringTokenizer(longName, "[{");
+		shorter = null;
+		try {
+			shorter = st.nextToken();
+		} catch (NoSuchElementException e) {
+			shorter = longName;
+		}
+		return shorter;
+	}
+
+	/**
+	 * @return the shortenNames
+	 */
+	public boolean isShortenNames() {
+		return shortenNames;
+	}
+
+	/**
+	 * @param shortenNames the shortenNames to set
+	 */
+	public void setShortenNames(boolean shortenNames) {
+		this.shortenNames = shortenNames;
 	}
 }

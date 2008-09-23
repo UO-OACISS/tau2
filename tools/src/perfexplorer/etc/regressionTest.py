@@ -9,6 +9,7 @@ from glue import TrialMeanResult
 from glue import AbstractResult
 from glue import DrawGraph
 from glue import TopXEvents
+from client import ScriptFacade
 from client import PerfExplorerModel
 from client import ScriptFacade
 from edu.uoregon.tau.perfdmf import Trial
@@ -72,6 +73,7 @@ def drawGraph(results, inclusive):
 		grapher.setUnits(DrawGraph.SECONDS)
 		grapher.setCategoryType(DrawGraph.TRIALNAME)
 		grapher.setXAxisLabel("Trial Date")
+		grapher.setShortenNames(True)
 		if inclusive == True:
 			grapher.setValueType(AbstractResult.INCLUSIVE)
 			grapher.setYAxisLabel("Inclusive " + metric + " (seconds)")
@@ -99,6 +101,9 @@ extracted = extractMain(results)
 drawGraph(extracted, True)
 extracted = getTop1(results)
 drawGraph(extracted, False)
+pe = ScriptFacade()
+pe.exit()
+
 
 print "---------------- JPython test script end -------------"
 pe = ScriptFacade()
