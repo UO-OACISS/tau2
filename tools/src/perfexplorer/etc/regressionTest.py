@@ -18,9 +18,9 @@ from java.util import ArrayList
 
 True = 1
 False = 0
-#config = "proton"
-#inApp = "Flash"
-#inExp = "Flash Regression"
+config = "proton"
+inApp = "Flash"
+inExp = "Flash Regression"
 config = "proton_postgresql"
 inApp = "FACETS-Core"
 inExp = "FACETS-Core Regression"
@@ -30,13 +30,13 @@ inTrial = ""
 
 def load():
 	print "loading data..."
-# 	 parameterMap = PerfExplorerModel.getModel().getScriptParameters()
-# 	 keys = parameterMap.keySet()
-# 	 for key in keys:
-# 	 	print key, parameterMap.get(key)
-# 	 config = parameterMap.get("config")
-# 	 inApp = parameterMap.get("app")
-# 	 inExp = parameterMap.get("exp")
+	parameterMap = PerfExplorerModel.getModel().getScriptParameters()
+	keys = parameterMap.keySet()
+	for key in keys:
+		print key, parameterMap.get(key)
+	config = parameterMap.get("config")
+	inApp = parameterMap.get("app")
+	inExp = parameterMap.get("exp")
 	Utilities.setSession(config)
 	trials = Utilities.getTrialsForExperiment(inApp, inExp)
 	print "...done."
