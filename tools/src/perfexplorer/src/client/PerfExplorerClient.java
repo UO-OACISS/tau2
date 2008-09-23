@@ -162,7 +162,7 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		CmdLineParser.Option helpOpt = parser.addBooleanOption('h',"help");
 		// this is the new default... have to specify client if you want it
 		CmdLineParser.Option standaloneOpt = parser.addBooleanOption('s',"standalone");
-		CmdLineParser.Option clientOnlyOpt = parser.addBooleanOption('l',"clientonly");
+		CmdLineParser.Option clientOnlyOpt = parser.addBooleanOption('l',"client");
 		// no longer required!
 		CmdLineParser.Option configfileOpt = parser.addStringOption('g',"configfile");
 		CmdLineParser.Option configOpt = parser.addStringOption('c',"config");
