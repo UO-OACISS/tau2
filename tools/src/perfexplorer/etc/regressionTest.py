@@ -29,13 +29,13 @@ inTrial = ""
 
 def load():
 	print "loading data..."
-	# parameterMap = PerfExplorerModel.getModel().getScriptParameters()
-	# keys = parameterMap.keySet()
-	# for key in keys:
-	# 	print key, parameterMap.get(key)
-	# config = parameterMap.get("config")
-	# inApp = parameterMap.get("app")
-	# inExp = parameterMap.get("exp")
+# 	 parameterMap = PerfExplorerModel.getModel().getScriptParameters()
+# 	 keys = parameterMap.keySet()
+# 	 for key in keys:
+# 	 	print key, parameterMap.get(key)
+# 	 config = parameterMap.get("config")
+# 	 inApp = parameterMap.get("app")
+# 	 inExp = parameterMap.get("exp")
 	Utilities.setSession(config)
 	trials = Utilities.getTrialsForExperiment(inApp, inExp)
 	print "...done."
@@ -53,8 +53,8 @@ def extractMain(inputs):
 	return extracted
 
 def getTop1(inputs):
-	print "extracting top 1 events..."
-	reducer = TopXEvents(inputs, "Time", AbstractResult.EXCLUSIVE, 1)
+	print "extracting top events..."
+	reducer = TopXEvents(inputs, "Time", AbstractResult.EXCLUSIVE, 5)
 	reduced = reducer.processData()
 	return reduced
 
