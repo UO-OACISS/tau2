@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: perfexplorer.skel,v 1.32 2008/08/11 18:04:05 khuck Exp $
+# $Id: perfexplorer.skel,v 1.33 2008/09/23 23:01:10 khuck Exp $
 # $Name:  $
 
 TAUROOT=@TAUROOT@
@@ -171,7 +171,7 @@ if [ $mode == "standalone" ] ; then
 	-classpath $CLASSPATH \
 	-Dderby.system.home=${JAR_HOME} \
 	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
-	client.PerfExplorerClient -s $PERFEXPLORER_OPTS -e $ANALYSIS_ENGINE $arguments
+	client.PerfExplorerClient -s $PERFEXPLORER_OPTS -e $ANALYSIS_ENGINE $@
 fi
 
 if [ $mode == "test" ] ; then
