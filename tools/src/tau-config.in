@@ -63,8 +63,6 @@ if [ "$ProfileSpecified" = "false" -a "$TraceSpecified" = "false" ] ; then
 fi
 if [ "$SerialSpecified" = "true" ] ; then
     TauOptionsExclude="mpi"
-else
-    TauOptions="$TauOptions mpi"
 fi
 if [ "$ProfileSpecified" = "true" -a "$TraceSpecified" = "false" ] ; then
     TauOptionsExclude="$TauOptionsExclude trace"
