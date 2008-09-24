@@ -22,14 +22,15 @@ import junit.framework.TestCase;
 public class CQoSClassifierOperationTest extends TestCase {
 
 	public void testProcessData() {
-		Utilities.setSession("cqos");
-		Trial trial = Utilities.getTrial("simple", "test", "method 2");
+		Utilities.setSession("local");
+		Trial trial = Utilities.getTrial("simple", "test", "method2");
 		TrialMeanResult result = new TrialMeanResult(trial);
 		PerformanceAnalysisOperation operator = new SplitTrialPhasesOperation(result, "Iteration");
 		operator.addInput(new TrialMeanResult(trial));
-		trial = Utilities.getTrial("simple", "test", "method 1");
-		operator.addInput(new TrialMeanResult(trial));
-		operator.addInput(new TrialMeanResult(trial));
+		Trial trial2 = Utilities.getTrial("simple", "test", "method1");
+		operator.addInput(new TrialMeanResult(trial2));
+		Trial trial3 = Utilities.getTrial("simple", "test", "method 3");
+		operator.addInput(new TrialMeanResult(trial3));
 		List<PerformanceResult> outputs = operator.processData();
 		
 		Set<String> metadataFields = new HashSet<String>();

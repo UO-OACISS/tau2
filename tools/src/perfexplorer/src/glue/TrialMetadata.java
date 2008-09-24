@@ -158,14 +158,16 @@ public class TrialMetadata {
 					ResultSet results = statement.executeQuery();
 					// if the eventID is null, then this metadata field applies to the whole trial.
 					while (results.next() != false) {
-						Integer eventID = results.getInt(1);
+/*						Integer eventID = results.getInt(1);
 						String eventName = null;
 						if (eventID != null)
 							// if this is phase profile, this will point to a dynamic phase event.
 							// the assumption is that the trial has been split by the
 							// SplitTrialPhasesOperation already...
 							eventName = this.performanceResult.getEventMap().get(eventID);
-						if (eventID == null || eventName != null) {
+*/						String eventName = results.getString(1);
+//						if (eventID == null || eventName != null) {
+						if (eventName != null && this.performanceResult.getEvents().contains(eventName)) {
 							String categoryName = results.getString(2);
 							String parameterName = results.getString(3);
 							String parameterType = results.getString(4);

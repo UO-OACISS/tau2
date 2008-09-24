@@ -24,8 +24,8 @@ public class SplitTrialPhasesOperationTest extends TestCase {
 	 * Test method for {@link glue.SplitTrialPhasesOperation#processData()}.
 	 */
 	public final void testProcessData() {
-		Utilities.setSession("cqos");
-		Trial trial = Utilities.getTrial("simple", "test", "method 2");
+		Utilities.setSession("local");
+		Trial trial = Utilities.getTrial("simple", "test", "method2");
 		TrialMeanResult result = new TrialMeanResult(trial);
 		PerformanceAnalysisOperation operator = new SplitTrialPhasesOperation(result, "Iteration");
 		List<PerformanceResult> outputs = operator.processData();
