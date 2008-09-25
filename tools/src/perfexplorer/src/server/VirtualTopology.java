@@ -13,11 +13,13 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
+import constants.Constants;
+
 /**
  * This class takes the Weka or R cluster results, and creates a virtual
  * topology image showing which cluster each thread of execution belongs to.
  *
- * <P>CVS $Id: VirtualTopology.java,v 1.3 2008/03/05 00:25:57 khuck Exp $</P>
+ * <P>CVS $Id: VirtualTopology.java,v 1.4 2008/09/25 19:39:59 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -84,7 +86,7 @@ public class VirtualTopology extends JPanel {
 	}
 
 	public String getImage() {
-		String filename = "/tmp/clusterImage." + description + ".png";
+		String filename = Constants.TMPDIR + "clusterImage." + description + ".png";
 		File outFile = new File(filename);
 		try {
 			ImageIO.write(img, "PNG", outFile);
@@ -98,7 +100,7 @@ public class VirtualTopology extends JPanel {
 	}
 
 	public String getThumbnail() {
-		String filename = "/tmp/clusterImage.thumb." + description + ".png";
+		String filename = Constants.TMPDIR + "clusterImage.thumb." + description + ".png";
 		return filename;
 	}
 }

@@ -25,6 +25,7 @@ import org.jfree.data.xy.XYDataset;
 
 import common.ChartType;
 import common.RMIPerfExplorerModel;
+import constants.Constants;
 
 import clustering.DataNormalizer;
 import clustering.RawDataInterface;
@@ -57,7 +58,7 @@ public class ImageUtils {
             true,                            // tooltips
             false                            // urls
         );
-        File outfile = new File("/tmp/thumbnail." + modelData.toShortString() + ".png");
+        File outfile = new File(Constants.TMPDIR + "thumbnail." + modelData.toShortString() + ".png");
         try {
         		ChartUtilities.saveChartAsPNG(outfile, chart, 100, 100);
         } catch (IOException e) {
@@ -105,7 +106,7 @@ public class ImageUtils {
              true,                            // tooltips
              false                            // urls
          );
-         File outfile = new File("/tmp/image." + modelData.toShortString() + ".png");
+         File outfile = new File(Constants.TMPDIR + "image." + modelData.toShortString() + ".png");
          try {
          		ChartUtilities.saveChartAsPNG(outfile, chart, 500, 500);
          } catch (IOException e) {
@@ -137,7 +138,7 @@ public class ImageUtils {
             true,                            // tooltips
             false                            // urls
         );
-        File outfile = new File("/tmp/thumbnail." + modelData.toShortString() + ".png");
+        File outfile = new File(Constants.TMPDIR + "thumbnail." + modelData.toShortString() + ".png");
         try {
         		ChartUtilities.saveChartAsPNG(outfile, chart, 100, 100);
         } catch (IOException e) {
@@ -171,7 +172,7 @@ public class ImageUtils {
              true,                            // tooltips
              false                            // urls
          );
-         File outfile = new File("/tmp/image." + modelData.toShortString() + ".png");
+         File outfile = new File(Constants.TMPDIR + "image." + modelData.toShortString() + ".png");
          try {
          		ChartUtilities.saveChartAsPNG(outfile, chart, 500, 500);
          } catch (IOException e) {
@@ -195,7 +196,7 @@ public class ImageUtils {
 	        XYDataset data = new PCAPlotDataset(clusters);
 	        JFreeChart chart = ChartFactory.createScatterPlot(
 	            null, null, null, data, PlotOrientation.VERTICAL, false, false, false);
-	        outfile = new File("/tmp/thumbnail." + modelData.toShortString() + ".png");
+	        outfile = new File(Constants.TMPDIR + "thumbnail." + modelData.toShortString() + ".png");
 	        try {
         			ChartUtilities.saveChartAsPNG(outfile, chart, 100, 100);
 	        } catch (IOException e) {
@@ -237,7 +238,7 @@ public class ImageUtils {
 	            false,
 	            false
 	        );
-	        outfile = new File("/tmp/image." + modelData.toShortString() + ".png");
+	        outfile = new File(Constants.TMPDIR + "image." + modelData.toShortString() + ".png");
 	        try {
 	        		ChartUtilities.saveChartAsPNG(outfile, chart, 500, 500);
 	        } catch (IOException e) {
@@ -265,7 +266,7 @@ public class ImageUtils {
             modelData.toString(), i, j, correlateToMain);
             JFreeChart chart = ChartFactory.createScatterPlot(
             null, null, null, data, PlotOrientation.VERTICAL, false, false, false);
-            outfile = new File("/tmp/thumbnail." + modelData.toShortString() + ".png");
+            outfile = new File(Constants.TMPDIR + "thumbnail." + modelData.toShortString() + ".png");
             try {
                 ChartUtilities.saveChartAsPNG(outfile, chart, 100, 100);
             } catch (IOException e) {
@@ -337,7 +338,7 @@ public class ImageUtils {
                  rCorrelation, JFreeChart.DEFAULT_TITLE_FONT, plot, true);
      
      
-             outfile = new File("/tmp/image." + modelData.toShortString() + ".png");
+             outfile = new File(Constants.TMPDIR + "image." + modelData.toShortString() + ".png");
              try {
                  ChartUtilities.saveChartAsPNG(outfile, chart, 500, 500);
              } catch (IOException e) {
