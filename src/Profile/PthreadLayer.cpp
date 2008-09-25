@@ -246,8 +246,38 @@ extern "C" void tau_pthread_exit (void *value_ptr) {
   pthread_exit(value_ptr);
 }
 
+
+#ifdef TAU_PTHREAD_PRELOAD
+#include <dlfcn.h>
+
+static int (*_pthread_create) (pthread_t* thread, const pthread_attr_t* attr, 
+			       void *(*start_routine)(void*), void* arg) = NULL;
+static void (*_pthread_exit) (void *value_ptr) = NULL;
+
+extern "C" int pthread_create (pthread_t* thread, const pthread_attr_t* attr, 
+		    void *(*start_routine)(void*), void* arg) {
+  if (_pthread_create == NULL) {
+    _pthread_create = (int (*) (pthread_t* thread, const pthread_attr_t* attr, void *(*start_routine)(void*), void* arg)) dlsym(RTLD_NEXT, "pthread_create");
+  }
+
+  tau_pthread_pack *pack = (tau_pthread_pack*) malloc (sizeof(tau_pthread_pack));
+  pack->start_routine = start_routine;
+  pack->arg = arg;
+  return _pthread_create(thread, (pthread_attr_t*) attr, tau_pthread_function, (void*)pack);
+}
+
+extern "C" void pthread_exit (void *value_ptr) {
+
+  if (_pthread_exit == NULL) {
+    _pthread_exit = (void (*) (void *value_ptr)) dlsym(RTLD_NEXT, "pthread_exit");
+  }
+  TAU_PROFILE_EXIT("pthread_exit");
+  _pthread_exit(value_ptr);
+}
+#endif
+
 /***************************************************************************
  * $RCSfile: PthreadLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.16 $   $Date: 2008/06/13 22:15:19 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.16 2008/06/13 22:15:19 amorris Exp $
+ * $Revision: 1.17 $   $Date: 2008/09/25 23:31:59 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.17 2008/09/25 23:31:59 amorris Exp $
  ***************************************************************************/
