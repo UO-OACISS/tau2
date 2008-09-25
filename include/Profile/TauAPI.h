@@ -53,6 +53,7 @@ extern "C" void Tau_get_inclusive_values(void *handle, double* values, int tid);
 extern "C" void Tau_get_exclusive_values(void *handle, double* values, int tid);
 extern "C" void Tau_get_counter_info(const char ***counterlist, int *numcounters);
 extern "C" int  Tau_get_tid(void);
+extern "C" void Tau_destructor_trigger();
 
 
 
@@ -521,6 +522,6 @@ or tauFI->method();
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.71 $   $Date: 2008/08/08 22:18:17 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.71 2008/08/08 22:18:17 amorris Exp $ 
+ * $Revision: 1.72 $   $Date: 2008/09/25 19:25:22 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.72 2008/09/25 19:25:22 amorris Exp $ 
  ***************************************************************************/
