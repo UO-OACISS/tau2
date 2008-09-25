@@ -1,6 +1,7 @@
 package server;
 
 import common.*;
+import constants.*;
 
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
@@ -16,6 +17,7 @@ import jargs.gnu.CmdLineParser;
 import java.io.InputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.File;
 
 import java.rmi.ConnectException;
 import java.rmi.Naming;
@@ -47,7 +49,7 @@ import java.util.NoSuchElementException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.69 2008/04/17 00:45:47 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.70 2008/09/25 19:23:32 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -94,6 +96,19 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		try {
 			if (theServer == null)
 				theServer = new PerfExplorerServer (configFile, analysisEngine, 0, false);
+        	//System.out.println("Checking for " + Constants.TMPDIR);
+
+        	File dir = new File(Constants.TMPDIR);
+        	if (!dir.exists()) {
+            	System.out.println("Temporary directory not found, creating " + Constants.TMPDIR);
+            	boolean success = dir.mkdirs();
+				if (success) {
+            		System.out.println("Created " + Constants.TMPDIR);
+				} else {
+            		System.err.println("Failed to create " + Constants.TMPDIR);
+				}
+        	}
+
 		} catch (Exception e) {
 			System.err.println("getServer exception: " + e.getMessage());
 			e.printStackTrace();
