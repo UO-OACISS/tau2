@@ -162,10 +162,19 @@ static int *TauGetSnapshotUserEventCounts() {
   return userEventCounts;
 }
 
+
+
+class MetaDataRepo : public map<string,string> {
+public :
+  ~MetaDataRepo() {
+    Tau_destructor_trigger();
+  }
+};
+
 // Static holder for metadata name/value pairs
 // These come from TAU_METADATA calls
 static map<string,string> &TheMetaData() {
-  static map<string,string> metadata;
+  static MetaDataRepo metadata;
   return metadata;
 }
 

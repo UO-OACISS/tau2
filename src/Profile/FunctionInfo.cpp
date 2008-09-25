@@ -73,6 +73,7 @@ using namespace std;
 #endif // TRACING_ON 
 
 #include <Profile/TauInit.h>
+#include <Profile/TauCAPI.h>
 
 //////////////////////////////////////////////////////////////////////
 // The purpose of this subclass of vector is to give us a chance to execute
@@ -82,11 +83,7 @@ using namespace std;
 class FIvector : public vector<FunctionInfo*> {
 public: 
   ~FIvector() {
-    if ((TheUsingDyninst() || TheUsingCompInst()) && TheSafeToDumpData()) {
-      //printf ("FIvector destructor\n");
-      TAU_PROFILE_EXIT("FunctionDB destructor");
-      TheSafeToDumpData() = 0;
-    }
+    Tau_destructor_trigger();
   }
 };
 
@@ -553,6 +550,6 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.55 $   $Date: 2008/09/08 17:51:57 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.55 2008/09/08 17:51:57 amorris Exp $ 
+ * $Revision: 1.56 $   $Date: 2008/09/25 19:26:54 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.56 2008/09/25 19:26:54 amorris Exp $ 
  ***************************************************************************/

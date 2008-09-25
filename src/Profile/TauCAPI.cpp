@@ -1063,6 +1063,15 @@ extern "C" int Tau_get_tid(void)
   return RtsLayer::myThread();
 }
 
+// this routine is called by the destructors of our static objects
+// ensuring that the profiles are written out while the objects are still valid
+void Tau_destructor_trigger() {
+  if ((TheUsingDyninst() || TheUsingCompInst()) && TheSafeToDumpData()) {
+    //printf ("FIvector destructor\n");
+    TAU_PROFILE_EXIT("FunctionDB destructor");
+    TheSafeToDumpData() = 0;
+  }
+}
 
 //////////////////////////////////////////////////////////////////////
 // Sometimes we may link in a library that needs the POMP stuff
@@ -1075,7 +1084,7 @@ int *pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.81 $   $Date: 2008/08/15 21:18:43 $
- * VERSION: $Id: TauCAPI.cpp,v 1.81 2008/08/15 21:18:43 amorris Exp $
+ * $Revision: 1.82 $   $Date: 2008/09/25 19:26:54 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.82 2008/09/25 19:26:54 amorris Exp $
  ***************************************************************************/
 
