@@ -44,7 +44,7 @@ enum {Standard, Verbose, Debug};
  *************************************************************/         
 class Directive
 {
-  int type;
+  const int type;
   int line;
   int col;
   int depth;
@@ -58,10 +58,23 @@ class Directive
    * int l         : the line number in the source file where the
    *                 direcitve is declared.
    */
-  Directive(int t, int l)
+  /*Directive(Directive& d) : type(d.getType())
+	{
+    line = d.getLine();
+		col =  d.getCol();
+		depth = d.getDepth();
+		block = d.getBlock();
+	}*/
+  Directive(const int t, const int l) : type(t)
   {
-    type = t;
-    line = l;
+    //type = t;
+		line = l;
+	  printf("CONSTRCTOR (1), type: %d\n", type);
+	  if (type > 4 || type < -4)
+		{
+		  printf("ERROR reading type.\n");
+			exit(1);
+		}
   }
   /*
    * Constructor IN: 
@@ -72,15 +85,21 @@ class Directive
    * const pdbStmt* s : The pdbStmt which follows the opening
    *                    directive - a block statement.
    */
-  Directive(Directive d, int l, const pdbStmt* s)
+  Directive(Directive d, const int l, const pdbStmt* s) : type(d.getType())
   {
-    type = d.getType();
+    //type = d.getType();
     line = s->stmtEnd().line();
     col = s->stmtEnd().col();
     if (type > 1 || type < -1 )
       col++;
     depth = l;
     block = s;
+	  printf("CONSTRCTOR (2), type: %d\n", type);
+		if (type > 4 || type < -4)
+		{
+		  printf("ERROR reading type.\n");
+			exit(1);
+		}
   }
   /*
    * Constructor IN: 
@@ -92,15 +111,24 @@ class Directive
    * const pdbStmt* s : The pdbStmt which follows the opening
    *                    directive - a block statement.
    */
-  Directive(Directive d, int t, int l, const pdbStmt* s)
+  Directive(Directive d, const int t, const int l, const pdbStmt* s) : type(-t)
   {
-    type = -t;
+    //type = -t;
+		printf("hello: %d\n", s->id());
+		int k = s->kind();
+		printf("hello: %d\n", s->id());
     line = s->stmtEnd().line();
     col = s->stmtEnd().col();
     if ((type > 1 || type < -1))
       col++;
     depth = l;
     block = s;
+	  printf("CONSTRCTOR (3), type: %d\n", type);
+		if (type > 4 || type < -4)
+		{
+		  printf("ERROR reading type.\n");
+			exit(1);
+		}
   }  
   /*
    * Constructor IN: 
@@ -108,13 +136,19 @@ class Directive
    * int l            : the line number in the source file where the
    *                    direcitve is declared.
    */
-  Directive(Directive d, int l)
+  Directive(Directive d, const int l) : type(d.getType())
   {
-    type = d.getType();
+    //type = d.getType();
     line = d.getLine();
     depth = l;
+	  printf("CONSTRCTOR (4), type: %d\n", type);
+		if (type > 4 || type < -4)
+		{
+		  printf("ERROR reading type.\n");
+			exit(1);
+		}
   }
-  int getType()
+  int getType() const 
   { return type; }
   int getCol() const
   { return col; }
@@ -122,10 +156,10 @@ class Directive
   { return line; }
   const pdbStmt* getBlock()
   { return block; }
-  int getDepth()
+  int getDepth() const 
   { return depth; }
-  void setType(int t)
-  {  type = t; }
+  /*void setType(int t)
+  {  type = t; }*/
   void setCol(int l)
   { col = l; }
   void setLine(int l)
@@ -167,11 +201,15 @@ class CompleteDirectives
   /* A list of Directives that should be inserted in this routine. */
   list<Directive> addDirectives;
   int language;
-
   /* the line number at the begining this routine. */
   int beginRoutine;
   /* the line number at the end this routine. */
   int endRoutine;
+
+	static const int CompleteDirectives::STATE_CLOSED = 0;
+	static const int CompleteDirectives::STATE_OPEN = 1;
+	static const int CompleteDirectives::STATE_EXPECTING = 2;
+	static const int CompleteDirectives::STATE_ADD = 3;
 
   public:
     
@@ -361,7 +399,7 @@ class CompleteDirectives
      * close of the routine.
      *
      *      Head statement (created) -> s1 -> ... -> s2
-     */
+    */
     pdbStmt head(-1);
     //pdbStmt tail(-1);
     //pdbStmt state(*s);
@@ -378,13 +416,20 @@ class CompleteDirectives
     tail.extraStmt(NULL);
     state.nextStmt(&tail);
     state.downStmt(s);*/
-    return findOMPStmt(&head,s,0, pdb);
+    static list<Directive> emptyDirectives;
+    if (directives.size() == 0 and openDirectives.size() == 0) {
+      return emptyDirectives;
+    }
+		else {
+		return findOMPStmt(STATE_CLOSED, &head,s,0, pdb);
+		}
   }
  /*
   * findOMPStmt     : recursivesly processes each statemet in
   *                   the routine opening and closing directives and
   *                   inserting directive when need.
   * IN:
+  * int state       : The Logical state we are in.
   * pdbStmt *s      : The statement of which to begin processing.
   * pdbStmt *block  : The statement that defines the block the s statement is
   *                   in.
@@ -395,21 +440,119 @@ class CompleteDirectives
   * list<Directive>&: A list of all the directives that need to be added to this
   *                   routine to complete each open directive.
   */
-  list<Directive>& findOMPStmt(const pdbStmt *s, const pdbStmt *block, int loop, PDB& pdb)
+  list<Directive>& findOMPStmt(const int state, const pdbStmt *s, const pdbStmt *block, int loop, PDB& pdb)
   {
-    static list<Directive> emptyDirectives;
+    if (verbosity == Debug)
+			printLocation(s, block, loop);
 
-    if (directives.size() == 0 and openDirectives.size() == 0) {
-      return emptyDirectives;
+    int currentLine = s->stmtBegin().line();
+		Directive nextDirective = directives.front();
+	  //int depth = loop - openDirectives.front().getDepth();
+    switch(state)
+    {	
+			case STATE_CLOSED:
+			{
+    		if (verbosity == Debug)
+				  printf("In state: STATE_CLOSED\n");
+			  //if we have encountered an OMP directive
+				if (directives.size() > 0)
+				{
+					if (!checkForDirective(state, s, block, loop, pdb))
+					{
+						//move to the next stmt
+						return gotoNextStmt(STATE_CLOSED, s, block, loop, pdb);
+					}
+					printf("nothing else to do...\n");
+					return gotoNextStmt(STATE_CLOSED, s, block, loop, pdb);
+				}
+				else
+				{
+          return addDirectives;
+				}
+      }
+			case STATE_OPEN:
+			{
+    		if (openDirectives.size() == 0)
+				{
+          return findOMPStmt(STATE_CLOSED, s, block, loop, pdb);
+				}
+				else
+				{
+					if (verbosity == Debug)
+						printf("In state: STATE_OPEN\n");
+
+					int depth = loop - openDirectives.front().getDepth();
+					printf("directive depth: %d\n", openDirectives.front().getDepth());
+					printf("loop depth: %d\n", depth);
+					if (depth == 0 && openDirectives.front().getLine() < (s->stmtBegin().line() - 1))
+					{
+						addDirectives.splice(addDirectives.end(),findOMPStmt(STATE_EXPECTING, s, block, loop, pdb));
+						printf("back in open...\n");
+						return addDirectives;
+					}
+					else
+					{ 
+					  if (s->nextStmt() != NULL) { printf("NOT null"); }
+						return gotoNextStmt(STATE_OPEN, s, block, loop, pdb);
+					}
+				}
+			}
+			case STATE_EXPECTING:
+			{
+    		if (verbosity == Debug)
+				  printf("In state: STATE_EXPECTING\n");
+			  
+				//is there already a directive closing the one open?
+				if (directives.front().getLine() == currentLine + 1 &&
+				directives.front().getType() + openDirectives.front().getType() == 0)
+        {
+          directives.pop_front();
+					openDirectives.pop_front();
+					if (openDirectives.size() == 0)
+					{
+            return gotoNextStmt(STATE_CLOSED, s, block, loop, pdb);
+					}
+					else
+					{
+            return gotoNextStmt(STATE_OPEN, s, block, loop, pdb);
+					}
+				}
+				else
+				{
+					addDirectives.splice(addDirectives.end(),findOMPStmt(STATE_ADD, s, block, loop, pdb));
+					printf("back in expecting...\n");
+					return addDirectives;
+				}  
+			}
+			case STATE_ADD:
+			{
+    		if (verbosity == Debug)
+				  printf("In state: STATE_ADD\n");
+        printf("open type: %d", openDirectives.front().getType()); 
+				addDirectives.push_front(Directive(openDirectives.front(), openDirectives.front().getType(), loop, openDirectives.front().getBlock()));
+				printf("open size: %d\n", openDirectives.size());
+				openDirectives.pop_front();
+				printf("open size: %d\n", openDirectives.size());
+				if (openDirectives.size() < 1)
+				{
+					printf("all directives closed.\n");
+					return gotoNextStmt(STATE_CLOSED, s, block, loop, pdb);
+				}
+				else
+				{
+					return gotoNextStmt(STATE_OPEN, s, block, loop, pdb);
+				}
+			}
     }
 
+		/*
     while ( s->stmtBegin().line() >=
 			 directives.front().getLine() && ( openDirectives.size() > 0 ||
 			 directives.size() > 0))
 		{
 #ifdef DEBUG
 			cerr << "open type: " <<  openDirectives.front().getType() << endl;		
-#endif /* DEBUG */
+#endif 
 			while (
 								directives.front().getType() == 1 ||
 								directives.front().getType() == -1)
@@ -418,7 +561,7 @@ class CompleteDirectives
 					{
 #ifdef DEBUG
 					printf("h");
-#endif /* DEBUG */
+#endif
 						if (verbosity == Debug)  
 							cerr << "Opening Parallel OMP Directive." << endl;
 						//openDirectives.push_front(Directive(directives.front(), loop, block));
@@ -487,14 +630,18 @@ class CompleteDirectives
         cerr << "Could be a missing directive." << endl;
       
 			int nextStmtLine = block->stmtEnd().line();
-			
+		
+      if (openDirectives.size() > 0 && openDirectives.front().getDepth() ==
+			loop)
+			  printf("shoud we consider closing directive?\n");
+
 			//Are we expecting any more pragmas to be closed before this statement?
       while (openDirectives.size() != 0 && 
 				openDirectives.front().getDepth() == loop && 
 				openDirectives.front().getType() > 1 && 
-				( directives.size() == 0 ||
-        	!((nextStmtLine-1) >= directives.front().getLine() &&
-      		directives.front().getType() + openDirectives.front().getType() == 0)
+				( !((nextStmtLine-1) >= directives.front().getLine() &&
+      		directives.front().getType() + openDirectives.front().getType() == 0
+					)
 				)
 			)
       {
@@ -629,8 +776,163 @@ class CompleteDirectives
       }
       
   
-      return addDirectives;
-  }                            
+      return addDirectives;*/
+  }      
+  bool checkForDirective(const int state, const pdbStmt *s, const pdbStmt *block, int loop, PDB& pdb)
+	{
+    int currentLine = s->stmtBegin().line();
+		Directive nextDirective = directives.front();
+		if (currentLine >= nextDirective.getLine())
+		{
+			//if the directive is valid
+			if (//loop == nextDirective.getDepth() && 
+			    nextDirective.getType() > 0) 
+			{
+			  printf("directive pointer %p\n", openDirectives);
+				if (verbosity == Debug)
+					cerr << "open type: " <<  directives.front().getType() << endl;		
+					
+
+				if (verbosity == Debug)  
+					cerr << "Opening OMP loop directive, loop " << loop << endl;
+
+				openDirectives.push_front(directives.front());
+        openDirectives.front().setDepth(loop);
+        openDirectives.front().setBlock(s);
+				directives.pop_front();
+				addDirectives.splice(addDirectives.end(),findOMPStmt(STATE_OPEN,s,block,loop,pdb));
+			}
+			else
+			{
+				printf("ERROR: Mismatched OMP directives\n");
+				directives.pop_front();
+				addDirectives.splice(addDirectives.end(),findOMPStmt(state, s, block, loop, pdb));
+			}
+					printf("back in check returning true...\n");
+			return true;
+		}
+					printf("back in check returning false...\n");
+		return false;
+	}
+	const pdbStmt* followingStmt(const pdbStmt *s)
+	{
+		if ((s->downStmt() != NULL || s->kind() == pdbItem::RO_EXT) && s->downStmt()->stmtBegin().line() >=
+		s->stmtBegin().line())
+		{
+		  return s->downStmt();
+		}
+		else if (s->extraStmt() != NULL && s->extraStmt()->stmtBegin().line() >=
+					s->stmtBegin().line()) 
+		{
+		  return s->extraStmt();
+		}
+		else if (s->nextStmt() != NULL && s->nextStmt()->stmtBegin().line() >=
+								s->stmtBegin().line())
+    {
+      return s->nextStmt();
+		}
+		else if ((s->kind() == pdbStmt::ST_FOR || s->kind() == pdbStmt::ST_FDO)
+		&& (s->nextStmt() == NULL || s->nextStmt()->stmtBegin().line() == 0))
+		{
+      //return s->stmtEnd();
+			return NULL;
+		}
+		else
+		{
+		  //printf("Fatal Error: Cannot parse PDB file.");
+      //exit(1);
+			return NULL;
+		}
+	}
+  list<Directive>& gotoNextStmt(const int state, const pdbStmt *s, const pdbStmt *block, int loop, PDB& pdb)
+	{
+		//Move to the next statement
+		//Must maintain monotomy, ie don't follow loops.
+    if (s->nextStmt() != NULL) { printf("[1] moving to next stmt.\n"); }
+		if ((s->downStmt() != NULL || s->kind() == pdbItem::RO_EXT) && s->downStmt()->stmtBegin().line() >=
+		s->stmtBegin().line())
+		{  
+			if (verbosity == Debug)
+				printf("recurising (a) \n");
+			addDirectives.splice(addDirectives.end(), findOMPStmt(state, s->downStmt(), s, loop + 1, pdb));
+			if (s->nextStmt() == NULL)
+			{
+				if (verbosity == Debug)
+					printf("ending block: %d\n", s->stmtBegin().line());
+				pdbFile f(-1);
+				pdbStmt endBlock(-1);
+				endBlock.stmtBegin(pdbLoc(&f,block->stmtEnd().line(),s->stmtEnd().col()));
+				endBlock.stmtEnd(pdbLoc(&f,block->stmtEnd().line(),s->stmtEnd().col()));
+				endBlock.nextStmt(s->nextStmt());
+				endBlock.downStmt(NULL);
+				endBlock.extraStmt(NULL);
+			if (verbosity == Debug)
+				printf("recurising (b) \n");
+				addDirectives.splice(addDirectives.end(), findOMPStmt(state, &endBlock, block, loop, pdb));  
+			}
+		}
+    if (s->nextStmt() != NULL) { printf("[3] moving to next stmt.\n"); }
+		if (s->extraStmt() != NULL && s->extraStmt()->stmtBegin().line() >=
+					s->stmtBegin().line()) 
+		{
+			if (verbosity == Debug)
+				printf("recurising (c) \n");
+			addDirectives.splice(addDirectives.end(), findOMPStmt(state, s->extraStmt(), s, loop + 1, pdb));
+		}
+    if (s->nextStmt() != NULL) { printf("moving to next stmt.\n"); }
+		if (s->nextStmt() != NULL && s->nextStmt()->stmtBegin().line() >=
+								s->stmtBegin().line())
+		{
+			if (verbosity == Debug)
+				printf("recurising (d) \n");
+			addDirectives.splice(addDirectives.end(), findOMPStmt(state, s->nextStmt(), block, loop, pdb));  
+		}
+		//Need to make sure that the end of this block is analyzed.
+		if ((s->kind() == pdbStmt::ST_FOR || s->kind() == pdbStmt::ST_FDO)
+		&& (s->nextStmt() == NULL || s->nextStmt()->stmtBegin().line() == 0))
+		{
+			if (verbosity == Debug)
+				printf("ending block\n");
+				
+			pdbFile file(-1);
+			pdbStmt closeBlock(-1);
+			closeBlock.stmtBegin(pdbLoc(&file,block->stmtEnd().line(),s->stmtEnd().col()));
+			closeBlock.stmtEnd(pdbLoc(&file,block->stmtEnd().line(),s->stmtEnd().col()));
+			closeBlock.nextStmt(NULL);
+			closeBlock.downStmt(NULL);
+			closeBlock.extraStmt(NULL);
+			if (verbosity == Debug)
+				printf("recurising (e) \n");
+			addDirectives.splice(addDirectives.end(), findOMPStmt(state, &closeBlock,
+			block, loop - 1, pdb));  
+		}
+		if (verbosity == Debug)
+			printf("stopped recurising.\n");
+		
+		return addDirectives;
+	}
+  void printLocation(const pdbStmt* s, const pdbStmt* block, int loop)
+	{
+      int i = 0;
+			int nextStmtLine = block->stmtEnd().line();
+      if (verbosity == Debug) 
+      {
+        while (i < loop) 
+        { printf("\t"); i++; }
+        printf( "%d(%d)",s->stmtBegin().line(), s->stmtBegin().col());
+        if (s->downStmt() != NULL)
+          printf(" |%d",(*s->downStmt()).stmtBegin().line());
+        else 
+          printf(" |NA");
+        if (s->nextStmt() != NULL)
+          printf(" -%d",(*s->nextStmt()).stmtBegin().line());
+        else
+          printf(" -NA");
+        printf(" L%d  N%d", block->stmtBegin().line(), nextStmtLine);
+				printf("  D%d",directives.size());
+        printf("  O%d  L%d\n", openDirectives.size(), loop);
+      }
+	}
 
   void createDirective(const pdbStmt* s, Directive match)
   {
@@ -821,9 +1123,9 @@ int main(int argc, char *argv[])
               //Retrive the statement within the routines.
               const pdbStmt *v = (*r)->body();
 	      
-        if (verbosity == Debug)
-          cerr << "recurising (f) " << endl;
-	      directivesToBeAdded.splice(directivesToBeAdded.end(), c.findOMPStmt(v,p));
+							if (verbosity == Debug)
+								cerr << "recurising (f) " << endl;
+							directivesToBeAdded.splice(directivesToBeAdded.end(), c.findOMPStmt(v,p));
             }
           }
         //}
@@ -894,6 +1196,6 @@ int main(int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
- * $Revision: 1.19 $   $Date: 2008/09/22 17:58:15 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.19 2008/09/22 17:58:15 scottb Exp $
+ * $Revision: 1.20 $   $Date: 2008/09/26 01:23:20 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.20 2008/09/26 01:23:20 scottb Exp $
  ***************************************************************************/
