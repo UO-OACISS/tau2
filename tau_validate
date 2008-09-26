@@ -423,16 +423,10 @@ class PdtTestGF(PdtTest):
 
         # strip off PDTDIR=, and newline
         pdtdir = os.popen("grep \"^PDTDIR=\" "+self.fullmakefile).read()[7:-1]
-
-        pdtarchdir = os.popen("grep \"^PDTARCHDIR=\" "+self.fullmakefile).read()[11:-1]
-        if pdtarchdir == "$(TAU_ARCH)":
-            pdtarchdir = os.popen("grep \"^TAU_ARCH=\" "+self.fullmakefile).read()[9:-1]
-
-        gfparse = pdtdir + "/" + pdtarchdir + "/bin/gfparse"
+        pdtarch = os.popen("grep \"^PDTARCHITECTURE=\" "+self.fullmakefile).read()[16:-1]
+        gfparse = pdtdir + "/" + pdtarch + "/bin/gfparse"
         if os.path.exists(gfparse) == False:
             return False
-
-        print pdtdir
         return True
 
 
@@ -671,6 +665,7 @@ for makefile in makefiles:
     else:
         fullmakefile = os.path.realpath(target)
             
+
 
     runTest(CTest(fullmakefile),tests)
     runTest(PdtTestC(fullmakefile),tests)
