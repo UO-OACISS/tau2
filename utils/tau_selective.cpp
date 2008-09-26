@@ -58,7 +58,7 @@ int processInstrumentationRequests(char *fname)
 
   if (!input)
   {
-    cout << "ERROR: Cannot open file" << fname<<endl;
+    cout << "ERROR: Cannot open file: " << fname<<endl;
     return 0; 
   }
 #ifdef DEBUG
@@ -469,6 +469,6 @@ bool processFileForInstrumentation(const string& file_name)
 
 /***************************************************************************
  * $RCSfile: tau_selective.cpp,v $   $Author: amorris $
- * $Revision: 1.16 $   $Date: 2008/07/22 17:27:15 $
- * VERSION_ID: $Id: tau_selective.cpp,v 1.16 2008/07/22 17:27:15 amorris Exp $
+ * $Revision: 1.17 $   $Date: 2008/09/26 22:31:02 $
+ * VERSION_ID: $Id: tau_selective.cpp,v 1.17 2008/09/26 22:31:02 amorris Exp $
  ***************************************************************************/
