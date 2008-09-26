@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include <mpi.h>
+#include <stdio.h>
 
 static const int anz = 512;
 class C {
