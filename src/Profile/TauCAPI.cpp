@@ -272,8 +272,10 @@ extern "C" void Tau_disable_instrumentation(void)
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_shutdown(void)
 {
-  RtsLayer::TheShutdown() = true;
-  TAU_DISABLE_INSTRUMENTATION();
+  if (!TheUsingCompInst()) {
+    RtsLayer::TheShutdown() = true;
+    TAU_DISABLE_INSTRUMENTATION();
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1084,7 +1086,7 @@ int *pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.82 $   $Date: 2008/09/25 19:26:54 $
- * VERSION: $Id: TauCAPI.cpp,v 1.82 2008/09/25 19:26:54 amorris Exp $
+ * $Revision: 1.83 $   $Date: 2008/09/26 21:20:15 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.83 2008/09/26 21:20:15 amorris Exp $
  ***************************************************************************/
 
