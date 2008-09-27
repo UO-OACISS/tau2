@@ -208,6 +208,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #PGIOPENMP#TAU_F90_OPT = -mp                #ENDIF#
 #INTELOPENMP#TAU_F90_OPT = -openmp          #ENDIF#
 #HITACHI_OPENMP#TAU_F90_OPT =               #ENDIF#
+#GNUOPENMP#TAU_F90_OPT = -fopenmp          #ENDIF#
 
 #THREADSAFE_COMPILERS#TAU_R         =_r     #ENDIF#
 

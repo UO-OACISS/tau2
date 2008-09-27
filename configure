@@ -1954,9 +1954,11 @@ case $machine in
 	c_compiler=cc
 	default_fortran=pgi
 	if [ "x$PE_ENV" = xPGI ] ; then
-	    tauoptions="${tauoptions}-pgi"
+	    #tauoptions="${tauoptions}-pgi"
+	    pgi=yes
 	    default_fortran=pgi
 	elif [ "x$PE_ENV" = xGNU ] ; then
+	    gnu=yes
 	    tauoptions="${tauoptions}-gnu"
 	    default_fortran=gnu
 	elif [ "x$PE_ENV" = xPATHSCALE ] ; then
@@ -1979,6 +1981,7 @@ case $machine in
 	    pgi=yes
 	    default_fortran=pgi
 	elif [ "x$PE_ENV" = xGNU ] ; then
+	    gnu=yes
 	    tauoptions="${tauoptions}-gnu"
 	    default_fortran=gfortran
 	elif [ "x$PE_ENV" = xPATHSCALE ] ; then
