@@ -206,10 +206,10 @@ class CompleteDirectives
   /* the line number at the end this routine. */
   int endRoutine;
 
-	static const int CompleteDirectives::STATE_CLOSED = 0;
-	static const int CompleteDirectives::STATE_OPEN = 1;
-	static const int CompleteDirectives::STATE_EXPECTING = 2;
-	static const int CompleteDirectives::STATE_ADD = 3;
+  static const int STATE_CLOSED = 0;
+  static const int STATE_OPEN = 1;
+  static const int STATE_EXPECTING = 2;
+  static const int STATE_ADD = 3;
 
   public:
     
@@ -1195,7 +1195,7 @@ int main(int argc, char *argv[])
   }
 }
 /***************************************************************************
- * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
- * $Revision: 1.20 $   $Date: 2008/09/26 01:23:20 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.20 2008/09/26 01:23:20 scottb Exp $
+ * $RCSfile: tau_ompcheck.cpp,v $   $Author: amorris $
+ * $Revision: 1.21 $   $Date: 2008/09/27 00:32:41 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.21 2008/09/27 00:32:41 amorris Exp $
  ***************************************************************************/
