@@ -85,6 +85,8 @@ template TauUserEvent** copy_backward(TauUserEvent**,TauUserEvent**,TauUserEvent
 template TauUserEvent** uninitialized_copy(TauUserEvent**,TauUserEvent**,TauUserEvent**);
 #endif // PGI
 
+
+
 vector<TauUserEvent*>& TheEventDB(void)
 {
   static vector<TauUserEvent*> EventDB;
@@ -414,6 +416,7 @@ void TauUserEvent::SetDisableStdDev(bool value)
 TauUserEvent::~TauUserEvent(void)
 {
   DEBUGPROFMSG(" DTOR CALLED for " << GetEventName() << endl;); 
+  Tau_destructor_trigger();
 }
 
 void TauUserEvent::ReportStatistics(bool ForEachThread)
@@ -735,6 +738,6 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid)
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
- * $Revision: 1.27 $   $Date: 2008/07/21 19:38:28 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.27 2008/07/21 19:38:28 amorris Exp $ 
+ * $Revision: 1.28 $   $Date: 2008/09/27 16:12:12 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.28 2008/09/27 16:12:12 amorris Exp $ 
  ***************************************************************************/
