@@ -222,21 +222,15 @@ static void get_symtab(void) {
 #endif
 extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
   HashNode *hn;
-
   void * funcptr = func;
-
-
 #ifdef __ia64__
   funcptr = *( void ** )func;
 #endif
 
-  /* -- if not yet initialized, initialize VampirTrace -- */
   if ( gnu_init ) {
     gnu_init = 0;
     get_symtab();
-    //    atexit(atexit_handler);
     TheUsingCompInst() = 1;
-    // initialization
     TAU_PROFILE_SET_NODE(0);
   }
 
