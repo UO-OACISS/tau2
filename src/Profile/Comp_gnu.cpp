@@ -48,7 +48,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
-#if (defined (VT_OMPI) || defined (VT_OMP))
+#ifdef TAU_OPENMP
 #  include <omp.h>
 #endif
 
@@ -76,9 +76,6 @@ static HashNode* htab[HASH_MAX];
 /*
  * Stores function name `n' under hash code `h'
  */
-
-#define VT_NO_ID -1
-#define VT_NO_LNO 0
 
 static void hash_put(long h, const char* n, const char* fn, int lno) {
   long id = h % HASH_MAX;
@@ -130,7 +127,6 @@ static void get_symtab_bfd(void) {
    /* initialize BFD */
    bfd_init();
 
-   /* get executable path from environment var. VT_APPPATH */
    /* get executable image */
    BfdImage = bfd_openr("/proc/self/exe", 0 );
    if ( ! BfdImage )
@@ -174,7 +170,7 @@ static void get_symtab_bfd(void) {
       /* get filename and linenumber from debug info */
       /* needs -g */
       filename = NULL;
-      lno = VT_NO_LNO;
+      lno = -1;
       if ( do_getsrc ) {
 	bfd_find_nearest_line(BfdImage, bfd_get_section(syms[i]), syms,
 			      syms[i]->value, &filename, &funcname, &lno);
