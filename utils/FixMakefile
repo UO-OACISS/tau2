@@ -1512,6 +1512,9 @@ ALPHATIMERS)
      COMPINST_GNU)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     COMPINST_PGI)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      COMPINST_INTEL9)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;

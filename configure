@@ -2556,6 +2556,8 @@ case $cxx_compiler in
       pgi=yes
       pgiflag=`pgCC -help | head -1 | grep 1.7 | wc -l` 
 	
+      fixmakeargs="$fixmakeargs COMPINST_PGI"
+
       if [ $pgiflag = 1 ] 
       then
 	echo  "Using PGI ver 1.7 Compiler"
@@ -2714,7 +2716,7 @@ case $cxx_compiler in
     qk-pgCC)
       echo "Default C++ compiler will be PGI pgCC C++ Compiler"
       pgi=yes
-      fixmakeargs="$fixmakeargs PGI PGICC"
+      fixmakeargs="$fixmakeargs PGI PGICC COMPINST_PGI"
       fixmakeargs="$fixmakeargs PGINOPRELINK"
 
       if [ $fortran_compiler = no ]

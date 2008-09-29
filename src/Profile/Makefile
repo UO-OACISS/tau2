@@ -82,7 +82,7 @@ MAKEFILE      = Makefile
 OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
 		TauHooks.o TauHandler.o TauMemory.o MetaData.o TauEnv.o \
-		TauInit.o Comp_intel9.o \
+		TauInit.o Comp_intel9.o Comp_pgi.o \
 		$(PARAM_O) $(EVENTS_O) $(THR_O) \
 		$(PCL_O) $(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(CALLPATH_O) $(PYTHON_O) $(MUSE_O) \
@@ -409,6 +409,9 @@ Comp_gnu.o 	: Comp_gnu.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 Comp_intel9.o 	: Comp_intel9.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+Comp_pgi.o 	: Comp_pgi.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 RtsLayer.o 	: RtsLayer.cpp $(HDRS)
