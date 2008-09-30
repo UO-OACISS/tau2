@@ -493,20 +493,6 @@ class PdtMPITestGF(PdtTest):
             return False
         if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
             return False
-
-
-        # strip off PDTDIR=, and newline
-        pdtdir = os.popen("grep \"^PDTDIR=\" "+self.fullmakefile).read()[7:-1]
-
-        pdtarchdir = os.popen("grep \"^PDTARCHDIR=\" "+self.fullmakefile).read()[11:-1]
-        if pdtarchdir == "$(TAU_ARCH)":
-            pdtarchdir = os.popen("grep \"^TAU_ARCH=\" "+self.fullmakefile).read()[9:-1]
-
-        gfparse = pdtdir + "/" + pdtarchdir + "/bin/gfparse"
-        if os.path.exists(gfparse) == False:
-            return False
-
-        print pdtdir
         return True
     def runTest(self):
         output ("Skipping Test (we won't run MPI tests yet)")
