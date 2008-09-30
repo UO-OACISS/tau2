@@ -511,10 +511,12 @@ class CompleteDirectives
 					openDirectives.pop_front();
 					if (openDirectives.size() == 0)
 					{
+					  //printf("found.\n");
             return gotoNextStmt(STATE_CLOSED, s, block, loop, pdb);
 					}
 					else
 					{
+					  //printf("wanting.\n");
             return gotoNextStmt(STATE_OPEN, s, block, loop, pdb);
 					}
 				}
@@ -789,20 +791,20 @@ class CompleteDirectives
 		{
 			//if the directive is valid
 			if (//loop == nextDirective.getDepth() && 
-			    nextDirective.getType() > 0) 
+			    nextDirective.getType() > 0 && (directives.size() > 0 ))
 			{
 				if (verbosity == Debug)
 				{
 					cerr << "open type: " <<  directives.front().getType() << endl;		
 				}	
-
-				if (verbosity == Debug)  
+        if (verbosity == Debug)  
 					cerr << "Opening OMP loop directive, loop " << loop << endl;
 
 				openDirectives.push_front(directives.front());
         openDirectives.front().setDepth(loop);
         openDirectives.front().setBlock(s);
 				directives.pop_front();
+				//list<Directive> *newDirectives = findOMPStmt(STATE_OPEN,s,block,loop,pdb);
 				addDirectives.splice(addDirectives.end(),findOMPStmt(STATE_OPEN,s,block,loop,pdb));
 			}
 			else
@@ -851,6 +853,63 @@ class CompleteDirectives
 	{
 		if (verbosity == Debug)
 			printf("going to next stmt, at line: %d \n", s->stmtBegin().line());
+	  //are we at the start of a loop
+    if ((s->kind() == pdbStmt::ST_FOR || s->kind() == pdbStmt::ST_FDO ||
+		s->kind() == pdbStmt::ST_FIF) && s->downStmt() != NULL)
+    {
+			//enter the loop
+			if (verbosity == Debug)
+				printf("recurising (down) \n");
+			addDirectives.splice(addDirectives.end(), findOMPStmt(state, s->downStmt(), s, loop + 1, pdb));
+			
+			
+			//process the end of the loop by creating a stmt located there.
+				if (verbosity == Debug)
+					printf("ending block: %d\n", s->stmtEnd().line());
+				pdbFile f(-1);
+				pdbStmt endBlock(-1);
+				endBlock.stmtBegin(pdbLoc(&f,s->stmtEnd().line(),s->stmtEnd().col()));
+				endBlock.stmtEnd(pdbLoc(&f,s->stmtEnd().line(),s->stmtEnd().col()));
+				endBlock.nextStmt(s->nextStmt());
+				endBlock.downStmt(NULL);
+				endBlock.extraStmt(NULL);
+			if (verbosity == Debug)
+				printf("recurising (end block) \n");
+      //end of the loop
+      addDirectives.splice(addDirectives.end(), findOMPStmt(state, &endBlock, block, loop, pdb));  
+
+		  if (s->nextStmt() != NULL)
+			{
+				if (verbosity == Debug)
+					printf("recurising (next after loop) \n");
+				addDirectives.splice(addDirectives.end(), findOMPStmt(state, s->nextStmt(), block, loop, pdb));  
+			}
+		}
+		else 
+		{
+		  if (s->nextStmt() != NULL)
+			{
+				if (verbosity == Debug)
+					printf("recurising (next) \n");
+				addDirectives.splice(addDirectives.end(), findOMPStmt(state, s->nextStmt(), block, loop, pdb));  
+			}
+			if (s->extraStmt() != NULL)
+			{
+				if (verbosity == Debug)
+					printf("recurising (extra) \n");
+				addDirectives.splice(addDirectives.end(), findOMPStmt(state, s->extraStmt(), s, loop + 1, pdb));
+			}
+			else
+			{
+				if (verbosity == Debug)
+					printf("no more statements, returning \n");
+        addDirectives;
+			}
+    }
+		return addDirectives;
+	  /*
+		if (verbosity == Debug)
+			printf("going to next stmt, at line: %d \n", s->stmtBegin().line());
 		//Move to the next statement
 		//Must maintain monotomy, ie don't follow loops.
     //if (s->nextStmt() != NULL) { printf("[1] moving to next stmt.\n"); }
@@ -877,7 +936,7 @@ class CompleteDirectives
 			}
 		}
     //if (s->nextStmt() != NULL) { printf("[3] moving to next stmt.\n"); }
-		if (s->extraStmt() != NULL && s->extraStmt()->stmtBegin().line() >=
+		else if (s->extraStmt() != NULL && s->extraStmt()->stmtBegin().line() >=
 					s->stmtBegin().line()) 
 		{
 			if (verbosity == Debug)
@@ -885,7 +944,7 @@ class CompleteDirectives
 			addDirectives.splice(addDirectives.end(), findOMPStmt(state, s->extraStmt(), s, loop + 1, pdb));
 		}
     //if (s->nextStmt() != NULL) { printf("moving to next stmt.\n"); }
-		if (s->nextStmt() != NULL && s->nextStmt()->stmtBegin().line() >=
+		else if (s->nextStmt() != NULL && s->nextStmt()->stmtBegin().line() >=
 								s->stmtBegin().line())
 		{
 			if (verbosity == Debug)
@@ -893,7 +952,7 @@ class CompleteDirectives
 			addDirectives.splice(addDirectives.end(), findOMPStmt(state, s->nextStmt(), block, loop, pdb));  
 		}
 		//Need to make sure that the end of this block is analyzed.
-		if ((s->kind() == pdbStmt::ST_FOR || s->kind() == pdbStmt::ST_FDO)
+		else if ((s->kind() == pdbStmt::ST_FOR || s->kind() == pdbStmt::ST_FDO)
 		&& (s->nextStmt() == NULL || s->nextStmt()->stmtBegin().line() == 0))
 		{
 			if (verbosity == Debug)
@@ -914,7 +973,7 @@ class CompleteDirectives
 		if (verbosity == Debug)
 			printf("stopped recurising.\n");
 		
-		return addDirectives;
+		return addDirectives;*/
 	}
   void printLocation(const pdbStmt* s, const pdbStmt* block, int loop)
 	{
@@ -1128,8 +1187,6 @@ int main(int argc, char *argv[])
               //Retrive the statement within the routines.
               const pdbStmt *v = (*r)->body();
 	      
-							if (verbosity == Debug)
-								cerr << "recurising (f) " << endl;
 							directivesToBeAdded.splice(directivesToBeAdded.end(), c.findOMPStmt(v,p));
             }
           }
@@ -1201,6 +1258,6 @@ int main(int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
- * $Revision: 1.22 $   $Date: 2008/09/29 19:29:56 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.22 2008/09/29 19:29:56 scottb Exp $
+ * $Revision: 1.23 $   $Date: 2008/09/30 22:51:16 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.23 2008/09/30 22:51:16 scottb Exp $
  ***************************************************************************/
