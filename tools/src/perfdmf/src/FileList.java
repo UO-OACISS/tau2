@@ -52,8 +52,7 @@ class ProfileFileFilter implements FilenameFilter {
 }
 
 class MultiFileFilter implements FilenameFilter {
-    public MultiFileFilter() {
-    }
+    public MultiFileFilter() {}
 
     public boolean accept(File okplace, String name) {
         if (name.startsWith("MULTI_")) {
@@ -63,10 +62,8 @@ class MultiFileFilter implements FilenameFilter {
     }
 }
 
-
 class TimeSeriesFileFilter implements FilenameFilter {
-    public TimeSeriesFileFilter() {
-    }
+    public TimeSeriesFileFilter() {}
 
     public boolean accept(File okplace, String name) {
         if (name.startsWith("snapshot_")) {
@@ -76,11 +73,9 @@ class TimeSeriesFileFilter implements FilenameFilter {
     }
 }
 
-
 public class FileList {
 
-
-    public List helperFindProfilesPrefix(String path, String prefix) {
+    public List helperFindProfilesPrefixMulti(String path, String prefix) {
 
         //String prefix = "\\Aprofile\\..*\\..*\\..*\\z";
         List v = new ArrayList();
@@ -109,7 +104,21 @@ public class FileList {
         }
         return v;
     }
+    
 
+    public File[] helperFindProfilesPrefix(String path, String prefix) {
+
+        //String prefix = "\\Aprofile\\..*\\..*\\..*\\z";
+        
+        File file = new File(path);
+        if (file.isDirectory() == false) {
+            return new File[0];
+        }
+        FilenameFilter prefixFilter = new ProfileFileFilter(prefix);
+        File files[] = file.listFiles(prefixFilter);
+        return files;
+    }
+    
     public List helperFindTimeSeriesProfilesPrefix(String path, String prefix) {
 
         List v = new ArrayList();
@@ -130,7 +139,7 @@ public class FileList {
             List list = Arrays.asList(timeSeriesDirs);
             Collections.sort(list);
             timeSeriesDirs = (File[]) list.toArray(timeSeriesDirs);
-            
+
             for (int i = 0; i < timeSeriesDirs.length; i++) {
                 File finalFiles[] = timeSeriesDirs[i].listFiles(prefixFilter);
                 v.add(finalFiles);
@@ -150,14 +159,17 @@ public class FileList {
         return v;
     }
 
-    
     public List helperFindProfiles(String path) {
 
-        List v = helperFindProfilesPrefix(path, "profile");
+        List v = helperFindProfilesPrefixMulti(path, "profile");
         if (v.size() == 0) {
-            v = helperFindProfilesPrefix(path, "dump");
+            v = helperFindProfilesPrefixMulti(path, "dump");
         }
         return v;
+    }
+
+    public File[] helperFindSnapshots(String path) {
+        return helperFindProfilesPrefix(path, "snapshot");
     }
 
     public static String getPathReverse(String string) {

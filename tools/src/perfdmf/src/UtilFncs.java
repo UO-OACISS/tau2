@@ -464,8 +464,9 @@ public class UtilFncs {
 
             if (sourceFiles.length < 1) {
                 v = fl.helperFindProfiles(System.getProperty("user.dir"));
-                if (v.size() == 0)
+                if (v.size() == 0) {
                     throw new DataSourceException("profiles type: no profiles specified");
+                }
             } else {
                 if (sourceFiles[0].isDirectory()) {
                     if (sourceFiles.length > 1) {
@@ -561,9 +562,16 @@ public class UtilFncs {
             break;
 
         case DataSource.SNAP:
-            //dataSource = new TimeSeriesDataSource(sourceFiles[0]);
-            //dataSource = new SnapshotDataSource(sourceFiles[0]);
-            dataSource = new SnapshotDataSource(sourceFiles);
+            if (sourceFiles.length >= 1) {
+                dataSource = new SnapshotDataSource(sourceFiles);
+            } else {
+                fl = new FileList();
+                File[] list = fl.helperFindSnapshots(System.getProperty("user.dir"));
+                if (list.length == 0) {
+                    throw new DataSourceException("snapshot type: no snapshots found");
+                }
+                dataSource = new SnapshotDataSource(list);
+            }
             break;
 
         case DataSource.OMPP:
@@ -601,5 +609,4 @@ public class UtilFncs {
 
         return dataSource;
     }
-
 }

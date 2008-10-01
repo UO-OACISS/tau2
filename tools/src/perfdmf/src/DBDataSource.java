@@ -17,9 +17,9 @@ import edu.uoregon.tau.perfdmf.database.DB;
 /**
  * Reads a single trial from the database
  *  
- * <P>CVS $Id: DBDataSource.java,v 1.10 2007/10/12 22:11:24 amorris Exp $</P>
+ * <P>CVS $Id: DBDataSource.java,v 1.11 2008/10/01 23:21:01 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  */
 public class DBDataSource extends DataSource {
 
@@ -85,6 +85,10 @@ public class DBDataSource extends DataSource {
 
         StringBuffer where = new StringBuffer();
 
+        if (metricMap.size() == 0) {
+            return;
+        }
+            
         where.append(" WHERE p.metric in (");
         for (Iterator it = metricMap.keySet().iterator(); it.hasNext();) {
             int metricID = ((Integer) it.next()).intValue();
