@@ -1681,7 +1681,6 @@ int Profiler::writeData(int tid, const char *prefix, bool increment, const char 
   
   updateIntermediateStatistics(tid);
 
-
 #ifdef PROFILING_ON 
   RtsLayer::LockDB();
 
@@ -1692,7 +1691,6 @@ int Profiler::writeData(int tid, const char *prefix, bool increment, const char 
       
       char metricHeader[1024];
       char profileLocation[1024];
-      char filename[1024];
       FILE* fp;
 
       getMetricHeader(i, metricHeader);
@@ -1725,12 +1723,16 @@ int Profiler::writeData(int tid, const char *prefix, bool increment, const char 
 		prefix, newStringTime,
 		RtsLayer::myNode(), RtsLayer::myContext(), tid);
 
-	if ((fp = fopen (filename, "w+")) == NULL) {
+	if ((fp = fopen (dumpfile, "w+")) == NULL) {
 	  char errormsg[1024];
-	  sprintf(errormsg,"Error: Could not create %s",filename);
+	  sprintf(errormsg,"Error: Could not create %s",dumpfile);
 	  perror(errormsg);
 	  return 0;
 	}
+
+	char cwd[1024];
+	char *tst = getcwd(cwd, 1024);
+	TAU_VERBOSE("TAU: Writing profile %s, cwd = %s\n", dumpfile, cwd);
 
       } else {
 	int flags = O_CREAT | O_EXCL | O_WRONLY;
@@ -1754,7 +1756,7 @@ int Profiler::writeData(int tid, const char *prefix, bool increment, const char 
 	  }
 	  if ((fp = fdopen (test, "w")) == NULL) {
 	    char errormsg[1024];
-	    sprintf(errormsg,"Error: Could not create %s",filename);
+	    sprintf(errormsg,"Error: Could not create %s",dumpfile);
 	    perror(errormsg);
 	    return 0;
 	  }
@@ -1762,7 +1764,7 @@ int Profiler::writeData(int tid, const char *prefix, bool increment, const char 
 	} else {
 	  if ((fp = fopen (dumpfile, "w+")) == NULL) {
 	    char errormsg[1024];
-	    sprintf(errormsg,"Error: Could not create %s",filename);
+	    sprintf(errormsg,"Error: Could not create %s",dumpfile);
 	    perror(errormsg);
 	    return 0;
 	  }
@@ -1830,6 +1832,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.191 $   $Date: 2008/09/30 19:03:22 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.191 2008/09/30 19:03:22 amorris Exp $ 
+ * $Revision: 1.192 $   $Date: 2008/10/01 22:10:19 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.192 2008/10/01 22:10:19 amorris Exp $ 
  ***************************************************************************/
