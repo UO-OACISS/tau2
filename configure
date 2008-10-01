@@ -2480,7 +2480,7 @@ case $cxx_compiler in
 
    *xl*)
       echo "Default C++ compiler will be IBMs xlC C++ compiler"
-      fixmakeargs="$fixmakeargs USE_IBMXLC"
+      fixmakeargs="$fixmakeargs USE_IBMXLC COMPINST_XL"
       if [ "$machine" = "apple" ] 
       then
         fixmakeargs="$fixmakeargs IBMXLCAPPLE"

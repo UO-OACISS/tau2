@@ -19,12 +19,12 @@
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
 /****************************************************************************
-**	File 		: Comp_gnu.cpp  				   **
+**	File 		: Comp_pgi.cpp  				   **
 **	Description 	: TAU Profiling Package				   **
 **	Contact		: tau-bugs@cs.uoregon.edu               	   **
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
 **                                                                         **
-**      Description     : This file contains the hooks for Intel 9 based   **
+**      Description     : This file contains the hooks for PGI based       **
 **                        compiler instrumentation                         **
 **                                                                         **
 ****************************************************************************/
