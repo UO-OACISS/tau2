@@ -42,7 +42,7 @@ extern "C" {
 
 #define TAU_FORMAT_PROFILE 1
 #define TAU_FORMAT_SNAPSHOT 2
-#define TAU_FORMAT_MERGED 2
+#define TAU_FORMAT_MERGED 3
   int TAUDECL TauEnv_get_profile_format();
 
   void TAU_VERBOSE(const char *format, ...);
