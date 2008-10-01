@@ -317,7 +317,7 @@ fi
 # Add exec-prefix to tagopt $extraopts
 if [ $tauexecprefix != unknown ]
 then
-  tagopt $extraopts="$tagopt $extraopts -exec-prefix=$tauexecprefix"
+  tagopt="$tagopt $extraopts -exec-prefix=$tauexecprefix"
 fi
 
 # Take care of wish version prompt
