@@ -32,6 +32,10 @@
 #include <TAU.h>
 
 
+#ifdef TAU_OPENMP
+#include <omp.h>
+#endif
+
 typedef struct HN {
   long id;            /* hash code (address of function */
   FunctionInfo *fi;
@@ -65,8 +69,6 @@ static HashNode *hash_get(long h) {
 }
 
 static HashNode *register_region(char *func, char *file, int lno) {
-  uint32_t rid;
-  uint32_t fid;
   HashNode* nhn;
 
   char routine[2048];
