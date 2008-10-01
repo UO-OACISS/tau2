@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.28 2008/09/04 20:02:30 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.29 2008/10/01 23:21:44 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.28 $
+ * @version $Revision: 1.29 $
  */
 public class ParaProf implements ActionListener {
 
@@ -45,7 +45,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    private final static String VERSION = "Thu Sep  4 13:02:11 PDT 2008";
+    private final static String VERSION = "Wed Oct  1 16:21:19 PDT 2008";
 
     public static int defaultNumberPrecision = 6;
 
@@ -120,6 +120,7 @@ public class ParaProf implements ActionListener {
                 + "                                    gprof, psrun, hpm, packed, cube, hpc, ompp\n"
                 + "                                    snap, perixml, gptl, ipm\n"
                 + "  -h, --help                      Display this help message\n"
+                + "\n"
                 + "The following options will run only from the console (no GUI will launch):\n" + "\n"
                 + "  --pack <file>                   Pack the data into packed (.ppk) format\n"
                 + "  --dump                          Dump profile data to TAU profile format\n"
@@ -159,7 +160,7 @@ public class ParaProf implements ActionListener {
 
         try {
 
-            if (fileType == 7) {
+            if (fileType == DataSource.PPK) {
                 for (int i = 0; i < sourceFiles.length; i++) {
                     File files[] = new File[1];
                     files[0] = sourceFiles[i];
@@ -436,6 +437,8 @@ public class ParaProf implements ActionListener {
                 ParaProf.fileType = DataSource.CUBE;
             } else if (fileTypeString.equals("hpc")) {
                 ParaProf.fileType = DataSource.HPCTOOLKIT;
+            } else if (fileTypeString.equals("snapshot")) {
+                ParaProf.fileType = DataSource.SNAP;
             } else if (fileTypeString.equals("snap")) {
                 ParaProf.fileType = DataSource.SNAP;
             } else if (fileTypeString.equals("ompp")) {
