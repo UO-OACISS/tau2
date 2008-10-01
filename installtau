@@ -311,7 +311,7 @@ fi
 # Add tauprefix to tagopt $extraopts
 if [ $tauprefix != unknown ]
 then
-  tagopt $extraopts="$tagopt $extraopts -prefix=$tauprefix"
+  tagopt="$tagopt $extraopts -prefix=$tauprefix"
 fi
 
 # Add exec-prefix to tagopt $extraopts
