@@ -2730,6 +2730,7 @@ case $cxx_compiler in
     mpicxx)
 	if [ $machine = bgp ] ; then
 	    echo "Using GNU Compilers for BGP"
+	    tauoptions="${tauoptions}-gnu"
 	else
 	    echo "ERROR Unknown C++ compiler: $cxx_compiler"
 	    exit 1
