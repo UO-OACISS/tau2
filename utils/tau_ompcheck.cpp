@@ -862,6 +862,13 @@ class CompleteDirectives
 				printf("recurising (down) \n");
 			addDirectives.splice(addDirectives.end(), findOMPStmt(state, s->downStmt(), s, loop + 1, pdb));
 			
+			//process the else in an if stmt.
+			if (s->extraStmt() != NULL)
+			{
+				if (verbosity == Debug)
+					printf("recurising (extra) \n");
+				addDirectives.splice(addDirectives.end(), findOMPStmt(state, s->extraStmt(), s, loop + 1, pdb));
+			}
 			
 			//process the end of the loop by creating a stmt located there.
 				if (verbosity == Debug)
@@ -992,6 +999,10 @@ class CompleteDirectives
           printf(" -%d",(*s->nextStmt()).stmtBegin().line());
         else
           printf(" -NA");
+        if (s->extraStmt() != NULL)
+          printf(" *%d",(*s->extraStmt()).stmtBegin().line());
+        else
+          printf(" *NA");
         printf(" L%d  N%d", block->stmtBegin().line(), nextStmtLine);
 				printf("  D%d",directives.size());
         printf("  O%d  L%d\n", openDirectives.size(), loop);
@@ -1258,6 +1269,6 @@ int main(int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
- * $Revision: 1.23 $   $Date: 2008/09/30 22:51:16 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.23 2008/09/30 22:51:16 scottb Exp $
+ * $Revision: 1.24 $   $Date: 2008/10/01 18:35:01 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.24 2008/10/01 18:35:01 scottb Exp $
  ***************************************************************************/
