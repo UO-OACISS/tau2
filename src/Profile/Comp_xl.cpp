@@ -31,6 +31,7 @@
 
 #include <TAU.h>
 
+#include <stdio.h>
 
 #ifdef TAU_OPENMP
 #include <omp.h>
