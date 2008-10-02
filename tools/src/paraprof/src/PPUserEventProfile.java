@@ -79,23 +79,23 @@ public class PPUserEventProfile implements Comparable {
     }
 
     public double getNumSamples() {
-        return userEventProfile.getNumSamples();
+        return userEventProfile.getNumSamples(dataSorter.getSelectedSnapshot());
     }
 
     public double getMinValue() {
-        return userEventProfile.getMinValue();
+        return userEventProfile.getMinValue(dataSorter.getSelectedSnapshot());
     }
 
     public double getMaxValue() {
-        return userEventProfile.getMaxValue();
+        return userEventProfile.getMaxValue(dataSorter.getSelectedSnapshot());
     }
 
     public double getMeanValue() {
-        return userEventProfile.getMeanValue();
+        return userEventProfile.getMeanValue(dataSorter.getSelectedSnapshot());
     }
 
     public double getStdDev() {
-        return userEventProfile.getStdDev();
+        return userEventProfile.getStdDev(dataSorter.getSelectedSnapshot());
     }
 
     public String getUserEventStatString(int precision) {

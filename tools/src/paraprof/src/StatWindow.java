@@ -447,7 +447,6 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
     //Updates this window's data copy.
     private void sortLocalData() {
-
         if (sortByName) {
             dataSorter.setSortType(SortType.NAME);
         } else {

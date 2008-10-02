@@ -21,12 +21,13 @@ import edu.uoregon.tau.perfdmf.UserEvent;
 /**
  * The UserEventWindow shows one User Event over all threads.
  * 
- * <P>CVS $Id: UserEventWindow.java,v 1.29 2008/05/14 23:23:57 amorris Exp $</P>
+ * <P>CVS $Id: UserEventWindow.java,v 1.30 2008/10/02 18:02:09 amorris Exp $</P>
  * @author  Alan Morris, Robert Bell
- * @version $Revision: 1.29 $
+ * @version $Revision: 1.30 $
  * @see GlobalBarChartModel
  */
-public class UserEventWindow extends JFrame implements ActionListener, KeyListener, Observer, ChangeListener, ParaProfWindow, SearchableOwner {
+public class UserEventWindow extends JFrame implements ActionListener, KeyListener, Observer, ChangeListener, ParaProfWindow,
+        SearchableOwner {
 
     private ParaProfTrial ppTrial;
     private DataSorter dataSorter;
@@ -64,7 +65,7 @@ public class UserEventWindow extends JFrame implements ActionListener, KeyListen
         ppTrial.addObserver(this);
 
         this.dataSorter = new DataSorter(ppTrial);
-        
+
         int windowWidth = 750;
         int windowHeight = 650;
 
@@ -72,9 +73,9 @@ public class UserEventWindow extends JFrame implements ActionListener, KeyListen
         setLocation(WindowPlacer.getNewLocation(this, invoker));
 
         //Now set the title.
-        this.setTitle("TAU: ParaProf: User Event Window: " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        this.setTitle("TAU: ParaProf: User Event Window: "
+                + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         ParaProfUtils.setFrameIcon(this);
-
 
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -89,7 +90,6 @@ public class UserEventWindow extends JFrame implements ActionListener, KeyListen
         }
 
         model = new UserEventThreadBarChartModel(this, dataSorter, thread);
-
 
         panel = new BarChartPanel(model, null);
 
@@ -159,12 +159,10 @@ public class UserEventWindow extends JFrame implements ActionListener, KeyListen
 
         this.addKeyListener(this);
 
-
         panel = new BarChartPanel(model, null);
 
         panel.getBarChart().setBarLength(barLengthSlider.getValue());
         setupMenus();
-
 
         //Setting up the layout system for the main window.
         gbl = new GridBagLayout();
@@ -233,7 +231,7 @@ public class UserEventWindow extends JFrame implements ActionListener, KeyListen
             sortByName.addActionListener(this);
             optionsMenu.add(sortByName);
         }
-        
+
         //Set the value type options.
         subMenu = new JMenu("Select Value Type");
         group = new ButtonGroup();
@@ -346,11 +344,9 @@ public class UserEventWindow extends JFrame implements ActionListener, KeyListen
         }
     }
 
-    public void menuDeselected(MenuEvent evt) {
-    }
+    public void menuDeselected(MenuEvent evt) {}
 
-    public void menuCanceled(MenuEvent evt) {
-    }
+    public void menuCanceled(MenuEvent evt) {}
 
     public void update(Observable o, Object arg) {
         String tmpString = (String) arg;
@@ -388,7 +384,7 @@ public class UserEventWindow extends JFrame implements ActionListener, KeyListen
 
     public void sortLocalData() {
         dataSorter.setDescendingOrder(descendingOrder.isSelected());
-        
+
         if (sortByNCT != null && sortByNCT.isSelected()) {
             dataSorter.setSortType(SortType.NCT);
         } else {
@@ -399,7 +395,6 @@ public class UserEventWindow extends JFrame implements ActionListener, KeyListen
             dataSorter.setSortType(SortType.NAME);
         }
 
-        
         dataSorter.setUserEventValueType(userEventValueType);
         model.reloadData();
     }
@@ -531,7 +526,7 @@ public class UserEventWindow extends JFrame implements ActionListener, KeyListen
         showFindPanelBox.setSelected(show);
         validate();
     }
-    
+
     public void keyPressed(KeyEvent e) {
         if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_F) {
             showSearchPanel(true);
@@ -539,13 +534,13 @@ public class UserEventWindow extends JFrame implements ActionListener, KeyListen
     }
 
     public void keyReleased(KeyEvent e) {
-        // TODO Auto-generated method stub
-        
+    // TODO Auto-generated method stub
+
     }
 
     public void keyTyped(KeyEvent e) {
-        // TODO Auto-generated method stub
-        
+    // TODO Auto-generated method stub
+
     }
 
 }

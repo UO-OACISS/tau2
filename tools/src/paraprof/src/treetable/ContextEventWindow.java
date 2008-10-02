@@ -20,6 +20,7 @@ import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.common.treetable.AbstractTreeTableModel;
 import edu.uoregon.tau.common.treetable.JTreeTable;
 import edu.uoregon.tau.paraprof.*;
+import edu.uoregon.tau.paraprof.barchart.BarChart;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 import edu.uoregon.tau.perfdmf.Thread;
@@ -238,8 +239,8 @@ public class ContextEventWindow extends JFrame implements Observer, ParaProfWind
     }
 
     public void update(Observable o, Object arg) {
-    // TODO Auto-generated method stub
-
+        treeTable.repaint();
+        //setupData();
     }
 
     public void closeThisWindow() {

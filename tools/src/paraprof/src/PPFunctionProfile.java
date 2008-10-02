@@ -237,7 +237,6 @@ public class PPFunctionProfile implements Comparable {
     }
 
     public String getStatString(int type) {
-
         int metric = dataSorter.getSelectedMetricID();
         String tmpString;
 
