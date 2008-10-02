@@ -10,6 +10,7 @@ import java.io.*;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 public class UtilFncs {
 
@@ -608,5 +609,34 @@ public class UtilFncs {
         }
 
         return dataSource;
+    }
+
+    public static void mergeSnapshots(File[] sourceFiles, String outfile) throws Exception {
+        FileOutputStream fos = new FileOutputStream(outfile);
+        GZIPOutputStream gzipout = new GZIPOutputStream(fos);
+        
+        for (int i = 0; i < sourceFiles.length; i++) {
+            FileInputStream fis = new FileInputStream(sourceFiles[i]);
+
+            InputStream input;
+
+            // see if it is gzip'd, if not, read directly
+            try {
+                GZIPInputStream gzip = new GZIPInputStream(fis);
+                input = gzip;
+            } catch (IOException ioe) {
+                fis.close();
+                input = new FileInputStream(sourceFiles[i]);
+            }
+
+            int count=0;
+            byte[] buffer = new byte[4096];
+            while ((count = input.read(buffer)) >= 0) {
+                gzipout.write(buffer, 0, count);
+            }
+            fis.close();
+        }
+        gzipout.close();
+        fos.close();
     }
 }
