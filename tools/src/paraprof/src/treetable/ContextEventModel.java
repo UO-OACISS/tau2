@@ -2,8 +2,6 @@ package edu.uoregon.tau.paraprof.treetable;
 
 import java.util.*;
 
-import speedTest.database;
-
 import edu.uoregon.tau.common.treetable.AbstractTreeTableModel;
 import edu.uoregon.tau.common.treetable.TreeTableModel;
 import edu.uoregon.tau.paraprof.*;
