@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.84 2008/10/01 23:21:44 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.85 2008/10/02 20:39:51 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.84 $
+ * @version $Revision: 1.85 $
  */
 public class ParaProf implements ActionListener {
 
@@ -122,6 +122,7 @@ public class ParaProf implements ActionListener {
                 + "  -h, --help                      Display this help message\n"
                 + "\n"
                 + "The following options will run only from the console (no GUI will launch):\n" + "\n"
+                + "  --merge <file.gz>               Merges snapshot profiles\n"
                 + "  --pack <file>                   Pack the data into packed (.ppk) format\n"
                 + "  --dump                          Dump profile data to TAU profile format\n"
                 + "  -o, --oss                       Print profile data in OSS style text output\n"
@@ -358,6 +359,7 @@ public class ParaProf implements ActionListener {
         CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configfile");
         CmdLineParser.Option typeOpt = parser.addStringOption('f', "filetype");
         CmdLineParser.Option fixOpt = parser.addBooleanOption('i', "fixnames");
+        CmdLineParser.Option mergeOpt = parser.addStringOption('a', "merge");
         CmdLineParser.Option packOpt = parser.addStringOption('a', "pack");
         CmdLineParser.Option unpackOpt = parser.addBooleanOption('u', "dump");
         CmdLineParser.Option ossOpt = parser.addBooleanOption('o', "oss");
@@ -379,6 +381,7 @@ public class ParaProf implements ActionListener {
         Boolean help = (Boolean) parser.getOptionValue(helpOpt);
         String fileTypeString = (String) parser.getOptionValue(typeOpt);
         Boolean fixNames = (Boolean) parser.getOptionValue(fixOpt);
+        String merge = (String) parser.getOptionValue(mergeOpt);
         String pack = (String) parser.getOptionValue(packOpt);
         Boolean unpack = (Boolean) parser.getOptionValue(unpackOpt);
         Boolean oss = (Boolean) parser.getOptionValue(ossOpt);
@@ -462,6 +465,36 @@ public class ParaProf implements ActionListener {
             }
         }
 
+        if (merge != null) {
+            try {
+
+                if (sourceFiles.length == 0) {
+                    FileList fl = new FileList();
+                    sourceFiles = fl.helperFindSnapshots(System.getProperty("user.dir"));
+                }
+                
+                if (sourceFiles.length == 0) {
+                    System.err.println("No snapshots found\n");
+                    System.exit(-1);
+                }
+                
+                for (int i=0; i<sourceFiles.length; i++) {
+                    if (DataSource.SNAP != UtilFncs.identifyData(sourceFiles[i])) {
+                        System.err.println("Error: File '"+sourceFiles[i]+"' is not a snapshot profile\n");
+                        System.exit(-1);
+                    }
+                }
+                
+                // merge and write
+                UtilFncs.mergeSnapshots(sourceFiles, merge);
+                
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            System.exit(0);
+        }
+        
+        
         if (oss != null) {
             try {
 
