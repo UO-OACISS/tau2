@@ -53,25 +53,25 @@ public class ExtractPhasesOperation extends AbstractPerformanceOperation {
 			Set<String> foundIterations = new HashSet<String>();
 			for (String event : input.getEvents()) {
 				if (event.startsWith(phaseNamePrefix)) {
-					int phaseID = Integer.parseInt(event.replaceAll(phaseNamePrefix, "").trim());
+					String phaseID = event.replaceAll(phaseNamePrefix, "").trim();
 					for (String metric : input.getMetrics()) {
 						for (Integer threadIndex : input.getThreads()) {
 							output.putExclusive(foundIterations.size(), phaseNamePrefix + " measurement", metric,
 									output.getExclusive(foundIterations.size(), phaseNamePrefix + " measurement", metric) + 
 									input.getExclusive(threadIndex, event, metric));
-							output.putExclusive(foundIterations.size(), phaseNamePrefix + " ID", metric, phaseID);
+							//output.putExclusive(foundIterations.size(), phaseNamePrefix + " ID", metric, phaseID);
 							output.putInclusive(foundIterations.size(), phaseNamePrefix + " measurement", metric,
 									output.getInclusive(foundIterations.size(), phaseNamePrefix + " measurement", metric) + 
 									input.getInclusive(threadIndex, event, metric));
-							output.putInclusive(foundIterations.size(), phaseNamePrefix + " ID", metric, phaseID);
+							//output.putInclusive(foundIterations.size(), phaseNamePrefix + " ID", metric, phaseID);
 							output.putCalls(foundIterations.size(), phaseNamePrefix + " measurement",
 									output.getCalls(foundIterations.size(), phaseNamePrefix + " measurement") + 
 									input.getCalls(threadIndex, event));
-							output.putCalls(foundIterations.size(), phaseNamePrefix + " ID", phaseID);
+							//output.putCalls(foundIterations.size(), phaseNamePrefix + " ID", phaseID);
 							output.putSubroutines(foundIterations.size(), phaseNamePrefix + " measurement",
 									output.getSubroutines(foundIterations.size(), phaseNamePrefix + " measurement") + 
 									input.getSubroutines(threadIndex, event));
-							output.putSubroutines(foundIterations.size(), phaseNamePrefix + " ID", phaseID);
+							//output.putSubroutines(foundIterations.size(), phaseNamePrefix + " ID", phaseID);
 						}
 						output.putExclusive(foundIterations.size(), phaseNamePrefix + " measurement", metric,
 								output.getExclusive(foundIterations.size(), phaseNamePrefix + " measurement", metric) /

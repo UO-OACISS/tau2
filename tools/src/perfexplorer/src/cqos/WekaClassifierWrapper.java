@@ -25,6 +25,8 @@ import weka.core.Attribute;
 import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.SelectedTag;
+import weka.classifiers.functions.LinearRegression;
 
 /**
  * This class is a wrapper around the Weka classifier.  The intention is that PerfExplorer
@@ -62,6 +64,7 @@ public class WekaClassifierWrapper implements Serializable {
 	public static final String SUPPORT_VECTOR_MACHINE = "weka.classifiers.functions.SMO";
 	public static final String NAIVE_BAYES = "weka.classifiers.bayes.NaiveBayes";
     public static final String MULTILAYER_PERCEPTRON = "weka.classifiers.functions.MultilayerPerceptron";
+    public static final String LINEAR_REGRESSION = "weka.classifiers.functions.LinearRegression";
 	
     // member variables.
 	private String classifierType = WekaClassifierWrapper.MULTILAYER_PERCEPTRON;
@@ -189,7 +192,15 @@ public class WekaClassifierWrapper implements Serializable {
 
 		try {
 	        // build the classifier!
-	        this.cls = Classifier.forName(this.classifierType, null);
+			if (this.classifierType == LINEAR_REGRESSION) {
+				LinearRegression tmp = new LinearRegression();
+				tmp.turnChecksOff();
+				tmp.setAttributeSelectionMethod(new SelectedTag(tmp.SELECTION_NONE, tmp.TAGS_SELECTION));
+				tmp.setEliminateColinearAttributes(false);
+				this.cls = tmp;
+			} else {
+	        	this.cls = Classifier.forName(this.classifierType, null);
+			}
 	        // train the classifier!
 			this.cls.buildClassifier(train);
 		} catch (Exception e) {
@@ -362,6 +373,18 @@ public class WekaClassifierWrapper implements Serializable {
 	 */
 	public String getClassifierType() {
 		return classifierType;
+	}
+
+	/**
+	 * @return the classifier coefficients
+	 */
+	public double[] getCoefficients() {
+		double[] coeffs = null;
+		if (cls instanceof weka.classifiers.functions.LinearRegression) {
+			LinearRegression tmp = (LinearRegression)cls;
+			coeffs = tmp.coefficients();
+		}
+		return coeffs;
 	}
 
 	/**

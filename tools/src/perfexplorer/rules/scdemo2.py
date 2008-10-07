@@ -1,27 +1,10 @@
-from glue import PerformanceResult
-from glue import Utilities
-from glue import TopXEvents
-from glue import TrialResult
-from glue import AbstractResult
-from glue import DataNeeded
-from glue import DeriveMetricOperation
-from glue import ExtractEventOperation
-from glue import ExtractNonCallpathEventOperation
-from glue import ExtractCallpathEventOperation
-from glue import DeriveMetricOperation
-from glue import DeriveAllMetricsOperation
-from glue import MergeTrialsOperation
-from glue import MeanEventFact
-from glue import DerivedMetrics
-from rules import RuleHarness
-from glue import TrialThreadMetadata
-from glue import CorrelateEventsWithMetadata
+from glue import *
+from rules import *
 
 True = 1
 False = 0
 
 def loadRules():
-	global ruleHarness
 	print "Loading Rules..."
 	ruleHarness = RuleHarness.useGlobalRules("rules/GeneralRules.drl")
 	ruleHarness.addRules("rules/ApplicationRules.drl")
@@ -65,7 +48,7 @@ def correlateMetadata(input, meta):
 
 print "--------------- JPython test script start ------------"
 
-print "doing single trial analysis for gtc on jaguar"
+print "doing single trial analysis for Sweep3D on jaguar"
 
 # create a rulebase for processing
 loadRules()

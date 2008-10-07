@@ -25,7 +25,8 @@ public class SplitTrialPhasesOperationTest extends TestCase {
 	 */
 	public final void testProcessData() {
 		Utilities.setSession("local");
-		Trial trial = Utilities.getTrial("simple", "test", "method2");
+//		Trial trial = Utilities.getTrial("simple", "test", "method2");
+		Trial trial = Utilities.getTrial("./ex27_2", "0x0", "1");
 		TrialMeanResult result = new TrialMeanResult(trial);
 		PerformanceAnalysisOperation operator = new SplitTrialPhasesOperation(result, "Iteration");
 		List<PerformanceResult> outputs = operator.processData();

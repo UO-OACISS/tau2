@@ -64,7 +64,7 @@ public class SplitTrialPhasesOperation extends AbstractPerformanceOperation {
 				// iterate through the events, and find the events in JUST THIS PHASE
 				for (String event : input.getEvents()) {
 					// find the events which start with the phase prefix
-					if (event.startsWith(currentPhase)) {
+					if (event.equals(currentPhase) || event.startsWith(currentPhase + " => ")) {
 						phaseEvents.add(event);
 					}
 				}
