@@ -47,7 +47,10 @@ declare -i revertForced=$FALSE
 
 declare -i optShared=$FALSE
 declare -i optCompInst=$FALSE
+declare -i optHeaderInst=$TRUE
 
+headerInstDir=".tau_tmp_$$"
+headerInstFlag=""
 preprocessorOpts="-P  -traditional-cpp"
 
 printUsage () {
@@ -97,6 +100,7 @@ printUsage () {
     echo -e "  -optShared\t\t\tUse shared library version of TAU."
     echo -e "  -optCompInst\t\t\tUse compiler-based instrumentation."
     echo -e "  -optPDTInst\t\t\tUse PDT-based instrumentation."
+    echo -e "  -optDisableHeaderInst\t\tDisable instrumentation of headers"
     
     if [ $1 == 0 ]; then #Means there are no other option passed with the myscript. It is better to exit then.
 	exit
@@ -542,6 +546,14 @@ for arg in "$@" ; do
 			optCompInst=$FALSE
 			disablePdtStep=$FALSE
 			echoIfDebug "\tUsing PDT-based Instrumentation"
+			;;
+		    -optHeaderInst)
+			optHeaderInst=$TRUE
+			echoIfDebug "\tUsing Header Instrumentation"
+			;;
+		    -optDisableHeaderInst)
+			optHeaderInst=$FALSE
+			echoIfDebug "\tUsing Header Instrumentation"
 			;;
 
 		esac #end case for parsing script Options
@@ -989,6 +1001,46 @@ if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE ]; then
     done
 fi
 
+if [ $optHeaderInst == $TRUE ]; then
+#     echo ""
+#     echo "*****************************"
+#     echo "*** Instrumenting headers ***"
+#     echo "*****************************"
+#     echo ""
+
+    headerInstFlag="-I.tau_tmp_$$"
+    tempCounter=0
+    while [ $tempCounter -lt $numFiles ]; do
+	instFileName=${arrTau[$tempCounter]##*/}
+	rm -rf $headerInstDir
+	mkdir "$headerInstDir"
+	pdbFile=${arrPdb[$tempCounter]##*/}
+        if [ $isCXXUsedForC == $TRUE ]; then
+            pdbFile=${saveTempFile}
+        fi
+
+	headerlister=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_headerlist@'` 
+	headerreplacer=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_header_replace.pl@'` 
+
+	for header in `$headerlister $pdbFile` ; do
+# 	    echo "Header: $header"
+	    filename=`echo ${header} | sed -e's/.*\///'`
+	    tauCmd="$optTauInstr $pdbFile $header -o $headerInstDir/tau_$filename "
+	    tauCmd="$tauCmd $optTau $optTauSelectFile"
+	    evalWithDebugMessage "$tauCmd" "Instrumenting header with TAU"
+#	    echo "$headerreplacer $pdbFile $headerInstDir/tau_$filename > $headerInstDir/tau_hr_$filename"
+	    $headerreplacer $pdbFile $headerInstDir/tau_$filename > $headerInstDir/tau_hr_$filename
+	done
+
+	base=`echo ${instFileName} | sed -e 's/\.[^\.]*$//' -e's/.*\///'`
+	suf=`echo ${instFileName} | sed -e 's/.*\./\./' `
+	newfile=${base}.hr${suf}
+	
+	$headerreplacer $pdbFile $instFileName > $newfile
+	arrTau[$tempCounter]=$newfile
+	tempCounter=tempCounter+1
+    done
+fi
 
 
 ####################################################################
@@ -1030,7 +1082,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	    tempTauFileName=${arrTau[$tempCounter]##*/}
 	    instrumentedFileForCompilation="$tempTauFileName"
             #newCmd="$CMD  $argsRemaining $instrumentedFileForCompilation $OUTPUTARGSFORTAU $optCompile"
-	    newCmd="$CMD -I${arrFileNameDirectory[$tempCounter]} $argsRemaining $instrumentedFileForCompilation $OUTPUTARGSFORTAU $optCompile"
+	    newCmd="$CMD $headerInstFlag -I${arrFileNameDirectory[$tempCounter]} $argsRemaining $instrumentedFileForCompilation $OUTPUTARGSFORTAU $optCompile"
 
 	    #echoIfDebug "cmd before appending the .o file is $newCmd"
 	    if [ $hasAnOutputFile == $TRUE ]; then
@@ -1075,7 +1127,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	    instrumentedFileForCompilation=" $tempTauFileName"
 
             # newCmd="$CMD $argsRemaining  -c $instrumentedFileForCompilation  $OUTPUTARGSFORTAU $optCompile -o $outputFile"
-	    newCmd="$CMD $argsRemaining  -I${arrFileNameDirectory[$tempCounter]} -c $instrumentedFileForCompilation  $OUTPUTARGSFORTAU $optCompile -o $outputFile"
+	    newCmd="$CMD $argsRemaining $headerInstFlag -I${arrFileNameDirectory[$tempCounter]} -c $instrumentedFileForCompilation  $OUTPUTARGSFORTAU $optCompile -o $outputFile"
 
 	    evalWithDebugMessage "$newCmd" "Compiling (Individually) with Instrumented Code"
 	    if [  ! -e $outputFile ]; then
@@ -1139,6 +1191,10 @@ if [ $needToCleanPdbInstFiles == $TRUE ]; then
 	fi
 	tempCounter=tempCounter+1
     done
+
+    if [ $optHeaderInst == $TRUE ] ; then
+	evalWithDebugMessage "/bin/rm -rf $headerInstDir" "cleaning header instrumentation directory"
+    fi
 fi
 
 
