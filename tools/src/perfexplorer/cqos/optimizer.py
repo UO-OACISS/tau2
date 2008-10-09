@@ -8,7 +8,7 @@ True = 1
 False = 0
 config = "optimizer"
 inApp = "optimizeme"
-inExp = "test.5"
+inExp = "test"
 inTrial = ""
 parameterMap = None
 #fileName = "/tmp/classifier.serialized"
@@ -47,14 +47,14 @@ def loadExperiments():
 def buildClassifier(results):
 	print "building classifier..."
 	metadataFields = HashSet()
+	metadataFields.add("Time")
 	metadataFields.add("A")
 	metadataFields.add("B")
-	#metadataFields.add("C")
-	#metadataFields.add("AB")
-	#metadataFields.add("AC")
-	#metadataFields.add("BC")
-	#metadataFields.add("ABC")
-	metadataFields.add("Time")
+	metadataFields.add("C")
+	# metadataFields.add("A-B")
+	# metadataFields.add("A-C")
+	# metadataFields.add("B-C")
+	# metadataFields.add("ABC")
 	# for performance
 	classifier = LinearOptimizerOperation(results, "Time", metadataFields, "Time")
 	classifier.processData()
@@ -79,27 +79,16 @@ print "Total Trials:", results.size()
 
 classifier = buildClassifier(results)
 r = classifier.getCoefficients()
-r[0] = r[0]/1000000
-r[1] = r[1]/1000000
-r[2] = r[2]/1000000
-r[3] = r[3]/1000000
-#r[4] = r[4]/1000000
-#r[5] = r[5]/1000000
-#r[6] = r[6]/1000000
-#r[7] = r[7]/1000000
-#r[8] = r[8]/1000000
+
 print r
-# Using keys: [Time, AB, A, BC, C, AC, B, ABC]
-# Using keys: [Time, A, C, B]
-# a=3, b=1, c=1
-p = 3 * r[1]
-p = p + (1 * r[2])
-#p = p + (1 * r[3])
-p = p + r[3]
-#p = p + (5 * r[5])
-#p = p + (0 * r[6])
-#p = p + (5 * r[7])
-#p = p + r[8]
-print p
+for a in range(0,11):
+	for b in range(0,11):
+		for c in range(0,11):
+			if a+b+c == 10:
+				inputFields = HashMap()
+				inputFields.put("A", `a`)
+				inputFields.put("B", `b`)
+				inputFields.put("C", `c`)
+				print a, b, c, " = ", classifier.classifyInstance(inputFields)
 
 print "---------------- JPython test script end -------------"

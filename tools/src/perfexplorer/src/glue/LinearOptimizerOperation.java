@@ -148,6 +148,10 @@ public class LinearOptimizerOperation extends AbstractPerformanceOperation {
 		return wrapper.getClass(inputFields);
 	}
 
+	public double classifyInstance(Map<String,String> inputFields) {
+		return wrapper.classifyInstance(inputFields);
+	}
+
 	public double getConfidence() {
 		return wrapper.getConfidence();
 	}

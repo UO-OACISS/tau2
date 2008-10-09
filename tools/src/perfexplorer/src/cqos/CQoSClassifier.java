@@ -3,10 +3,7 @@
  */
 package cqos;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author khuck
@@ -25,55 +22,36 @@ public class CQoSClassifier {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		System.out.println("Reading...");
+
+		if (args.length < 2) {
+			System.out.println("\nUsage: java -jar classifier.jar <fileName> <name:value> [<name:value>...]");
+			System.err.println("Example: java -jar classifier.jar /tmp/classifier.serialized parm1:value1 parm2:'value 2'\n");
+			System.exit(1);
+		}
+		
+		// first parameter is the serialized classifier
 		String fileName = args[0];
 		// read in our classifier
+		System.out.print("Reading " + fileName + "...");
 		WekaClassifierWrapper wrapper = WekaClassifierWrapper.readClassifier(fileName);
+		System.out.println("Done.");
 
-/*		for molecule_name in benzo_a_naphthacene benzo_b_triphenylene dibenz_ah_anthracene dibenz_aj_anthracene pentacene picene ; do
-		    for basis_set in CCD N31-6-1-1 N31-6-1 N31-6 ; do
-		        for run_type in ENERGY ; do
-		            for scf_type in DIR CON ; do
-		                for nodes in 1 2 4 ; do
-		                    for cores in 1 2 4 ; do*/
+		Map/*<String,String>*/ inputFields = new HashMap/*<String,String>*/();
 
-		Set<String> molecules = new HashSet<String>();
-		molecules.add("benzo_a_naphthacene");
-		molecules.add("benzo_b_triphenylene");
-		molecules.add("dibenz_ah_anthracene");
-		molecules.add("dibenz_aj_anthracene");
-		molecules.add("pentacene");
-		molecules.add("picene");
-		Set<String> bases = new HashSet<String>();
-		bases.add("CCD");
-		bases.add("N31-6-1-1");
-		bases.add("N31-6-1");
-		bases.add("N31-6");
-		String runType = "ENERGY";
-		Set<String> scf = new HashSet<String>();
-		scf.add("DIR");
-		scf.add("CON");
-		
-		// do some classifying with it
-		System.out.println("\n" + wrapper.getClassifierType());
-		for (String moleculeName : molecules) {
-			for (String basisSet : bases) {
-//			for (String scfType : scf) {
-		        for (int n = 1 ; n < 9 ; n++) {
-		            for (int c = 1 ; c < 9 ; c++) {
-			    		Map/*<String,String>*/ inputFields = new HashMap/*<String,String>*/();
-			        	inputFields.put("molecule name", moleculeName);
-			        	inputFields.put("basis set", basisSet);
-//			        	inputFields.put("scf type", scfType);
-//			        	inputFields.put("run type", runType);
-			        	inputFields.put("node count", Integer.toString(n));
-			        	inputFields.put("core count", Integer.toString(c));
-				        System.out.println(inputFields + ", " + wrapper.getClass(inputFields) + 
-				        		", confidence: " + wrapper.getConfidence());
-		            }
-		        }    
+		// the remaining parameters are name/value pairs to test the classifier.
+		for (int i = 1 ; i < args.length ; i++) {
+			StringTokenizer st = new StringTokenizer(args[i], ":");
+			String name = st.nextToken();
+			String value = st.nextToken();
+			// strip the beginning and ending single quotes, if necessary
+			if (value.startsWith("'") && value.startsWith("'")) {
+				value = value.substring(1,value.length()-1);
 			}
+			inputFields.put(name, value);
 		}
+
+		System.out.println(inputFields + ":\n" + wrapper.getClass(inputFields) + 
+			", confidence: " + wrapper.getConfidence());
 	}
 
 }

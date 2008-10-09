@@ -27,6 +27,7 @@ import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.SelectedTag;
 import weka.classifiers.functions.LinearRegression;
+import weka.classifiers.functions.PaceRegression;
 
 /**
  * This class is a wrapper around the Weka classifier.  The intention is that PerfExplorer
@@ -152,6 +153,7 @@ public class WekaClassifierWrapper implements Serializable {
 				// this is a numeric attribute.
 				attr = new Attribute(key);
 			}
+			System.out.println("new attribute: " + key);
 
 			// if this is our class attribute, remember that.  It BETTER be the first one.
 			if (key.equals(this.classLabel))
@@ -193,10 +195,10 @@ public class WekaClassifierWrapper implements Serializable {
 		try {
 	        // build the classifier!
 			if (this.classifierType == LINEAR_REGRESSION) {
-				LinearRegression tmp = new LinearRegression();
-				tmp.turnChecksOff();
-				tmp.setAttributeSelectionMethod(new SelectedTag(tmp.SELECTION_NONE, tmp.TAGS_SELECTION));
-				tmp.setEliminateColinearAttributes(false);
+				PaceRegression tmp = new PaceRegression();
+				//tmp.turnChecksOff();
+				//tmp.setAttributeSelectionMethod(new SelectedTag(tmp.SELECTION_NONE, tmp.TAGS_SELECTION));
+				//tmp.setEliminateColinearAttributes(false);
 				this.cls = tmp;
 			} else {
 	        	this.cls = Classifier.forName(this.classifierType, null);
@@ -380,11 +382,58 @@ public class WekaClassifierWrapper implements Serializable {
 	 */
 	public double[] getCoefficients() {
 		double[] coeffs = null;
-		if (cls instanceof weka.classifiers.functions.LinearRegression) {
-			LinearRegression tmp = (LinearRegression)cls;
+		if (cls instanceof weka.classifiers.functions.PaceRegression) {
+			PaceRegression tmp = (PaceRegression)cls;
 			coeffs = tmp.coefficients();
 		}
 		return coeffs;
+	}
+
+	public double classifyInstance(Map/*<String,String>*/ inputFields) {
+		
+		// create the weka data structures - this looks silly that we create an "Instances"
+		// object with one instance, but initializing it with the array of Weka Attributes
+		// makes everything work "better".
+        Instances test = new Instances("test", this.attributes, 1);
+    	Instance inst = new Instance(attArray.length);
+    	
+    	// iterate over the input fields, and set the Weka Attributes in the Weka Instance
+    	int classIndex = 0;
+		for (int i = 0 ; i < attArray.length ; i++) {
+			String tmp = (String)inputFields.get(attArray[i].name());
+			if (tmp != null) {
+				try {
+					if (attArray[i].isNumeric())
+						inst.setValue(attArray[i], Double.parseDouble(tmp));
+					else
+						inst.setValue(attArray[i], tmp);
+				} catch (IllegalArgumentException e) {
+					// the user passed in a value that our classifier doesn't know.
+					// just swallow the exception, and move on.
+				}
+			}
+			if (attArray[i].name().equals(this.classLabel))
+				classIndex = i;
+		}
+		
+		// put our one instance into the instances object
+		test.add(inst);
+		// tell the instances object which attribute is the "class"
+		test.setClassIndex(classIndex);
+        
+		// get our instance back - it may have changed from the previous command (Weka side effects!)
+		inst = test.firstInstance();
+		double dist = 0.0;
+        try {
+        	// get the classification, which comes back as probabilities for each class.
+	        dist = cls.classifyInstance(inst);
+        } catch (Exception e) {
+        	// oopsie!
+        	System.err.println(e.getMessage());
+        	e.printStackTrace();
+        }
+		
+		return dist;
 	}
 
 	/**
