@@ -63,6 +63,7 @@ public class SmartKMeansOperation extends AbstractPerformanceOperation {
         	for (int i = 1 ; i <= this.maxClusters ; i++) {
         		System.out.println("Clustering with k = " + i);
 				KMeansOperation kmeans = new KMeansOperation(input, metric, type, i);
+				kmeans.setComputeGapStatistic(true);
 				tmpOutputs = kmeans.processData();
 				// 0 - cluster centroids
 				// 1 - cluster standard deviations

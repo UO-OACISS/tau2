@@ -34,6 +34,7 @@ public class KMeansOperation extends AbstractPerformanceOperation {
 	private int B = 10;  // number of reference data sets to build for gap statistic computation
 	private double gapStatistic = 0.0;
 	private double gapStatisticError = 0.0;
+	private boolean computeGapStatistic = false;
 	
 	/**
 	 * @param input
@@ -97,33 +98,35 @@ public class KMeansOperation extends AbstractPerformanceOperation {
     		adjustedEvaluation = evaluation / adjuster;
     		System.out.println(this.maxClusters + " clusters, Total adjusted squared distance from centroids: "+ adjustedEvaluation);
 
-    		System.out.println("Computing Gap Statistic");
-    		double w_k = computeErrorMeasure(input, this.clusterer);
-    		System.out.println("Error Measure: " + w_k);
-    		double[] ref_w_k = new double[B];
-    		double l_bar = 0.0;
-    		// generate uniform distribution reference dataset
-    		for (int b = 0 ; b < B ; b++) {
-    			PerformanceResult reference = generateReferenceDataset(input, mins, maxs);
-    			KMeansClusterInterface tmpClusterer = doClustering(factory, reference);
-        		ref_w_k[b] = computeErrorMeasure(reference, tmpClusterer);
-        		// we are computing a sum, so sum
-        		l_bar += ref_w_k[b];
+    		if (computeGapStatistic) {
+	    		System.out.println("Computing Gap Statistic");
+	    		double w_k = computeErrorMeasure(input, this.clusterer);
+	    		System.out.println("Error Measure: " + w_k);
+	    		double[] ref_w_k = new double[B];
+	    		double l_bar = 0.0;
+	    		// generate uniform distribution reference dataset
+	    		for (int b = 0 ; b < B ; b++) {
+	    			PerformanceResult reference = generateReferenceDataset(input, mins, maxs);
+	    			KMeansClusterInterface tmpClusterer = doClustering(factory, reference);
+	        		ref_w_k[b] = computeErrorMeasure(reference, tmpClusterer);
+	        		// we are computing a sum, so sum
+	        		l_bar += ref_w_k[b];
+	    		}
+	    		// the sum is divided by the number of reference data sets
+	    		l_bar = l_bar / B;
+	    		System.out.println("Error Measure (reference): " + l_bar);
+	    		// COMPUTE THE GAP STATISTIC!
+	    		this.gapStatistic  = l_bar - w_k;
+	    		// now, compute the sd_k term
+	    		double sd_k = 0.0;
+	    		for (int b = 0 ; b < B ; b++) {
+	    			sd_k += Math.pow((ref_w_k[b] - l_bar), 2.0);
+	    		}
+	    		sd_k = sd_k / B;
+	    		sd_k = Math.pow(sd_k, 0.5);
+	    		// which is used to compute the gapStatisticError term, which is our error for this reference
+	    		this.gapStatisticError  = sd_k * (Math.sqrt(1+(1/B)));
     		}
-    		// the sum is divided by the number of reference data sets
-    		l_bar = l_bar / B;
-    		System.out.println("Error Measure (reference): " + l_bar);
-    		// COMPUTE THE GAP STATISTIC!
-    		this.gapStatistic  = l_bar - w_k;
-    		// now, compute the sd_k term
-    		double sd_k = 0.0;
-    		for (int b = 0 ; b < B ; b++) {
-    			sd_k += Math.pow((ref_w_k[b] - l_bar), 2.0);
-    		}
-    		sd_k = sd_k / B;
-    		sd_k = Math.pow(sd_k, 0.5);
-    		// which is used to compute the gapStatisticError term, which is our error for this reference
-    		this.gapStatisticError  = sd_k * (Math.sqrt(1+(1/B)));
         }
 
 		return outputs;
@@ -176,6 +179,7 @@ public class KMeansOperation extends AbstractPerformanceOperation {
 				}
 			}
 			double range = max - min;
+			System.out.println(event + " Range: " + min + " - " + max);
 			// now that we have the range, we can generate random data in that range.
 			for (Integer thread : input.getThreads()) {
 				double value = (Math.random() * range) + min;
@@ -274,6 +278,14 @@ public class KMeansOperation extends AbstractPerformanceOperation {
 	 */
 	public double getGapStatisticError() {
 		return gapStatisticError;
+	}
+
+	public boolean isComputeGapStatistic() {
+		return computeGapStatistic;
+	}
+
+	public void setComputeGapStatistic(boolean computeGapStatistic) {
+		this.computeGapStatistic = computeGapStatistic;
 	}
 
 }

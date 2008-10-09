@@ -9,7 +9,7 @@ import glue.SmartKMeansOperation;
 import glue.PerformanceAnalysisOperation;
 import glue.PerformanceResult;
 import glue.TopXEvents;
-import glue.TrialResult;
+import glue.DefaultResult;
 import glue.Utilities;
 
 import java.util.List;
@@ -47,21 +47,38 @@ public class SmartKMeansOperationTest extends TestCase {
 		System.out.println("Loading data...");
 		PerformanceResult result = new TrialResult(trial);*/
 		
-		Utilities.setSession("peris3d");
+/*		Utilities.setSession("peris3d");
 		Trial trial = Utilities.getTrial("S3D", "hybrid-study", "XT3/XT4");
 		int type = AbstractResult.EXCLUSIVE;
 		String metric = "P_WALL_CLOCK_TIME";
 		System.out.println("Loading data...");
-		PerformanceResult result = new TrialResult(trial, null, null, null, false);
-
-		System.out.println("Reducing data...");
-		PerformanceAnalysisOperation reducer = new TopXEvents(result, metric, type, 11);
-		List<PerformanceResult> reduced = reducer.processData(); 
-		for (String event : reduced.get(0).getEvents())
-			System.out.println(event + " ");
-		System.out.println("\nClustering data...");
-		PerformanceAnalysisOperation kmeans = new SmartKMeansOperation(reduced.get(0), metric, type, 10);
-		kmeans.processData();
+		PerformanceResult result = new TrialResult(trial, null, null, null, false);*/
+		
+		Utilities.setSession("peris3d");
+		int type = AbstractResult.EXCLUSIVE;
+		String metric = "P_WALL_CLOCK_TIME";
+		System.out.println("Generating data...");
+		PerformanceResult result = new DefaultResult();
+		
+		// synthesize some data with 2 natural clusters
+		for (int outer = 1 ; outer <= 5 ; outer++) {
+			for (int i = 0 ; i < 100 ; i+=outer) {
+				for (int inner = 0 ; inner < outer ; inner++) {
+					result.putDataPoint(i+inner, "x", metric, type, Math.random()+(5*inner));
+					result.putDataPoint(i+inner, "y", metric, type, Math.random()+(5*inner));
+				}
+			}
+	
+/*			System.out.println("Reducing data...");
+			PerformanceAnalysisOperation reducer = new TopXEvents(result, metric, type, 11);
+			List<PerformanceResult> reduced = reducer.processData(); 
+			for (String event : reduced.get(0).getEvents())
+				System.out.println(event + " ");*/
+			System.out.println("\nClustering data...");
+			PerformanceAnalysisOperation kmeans = new SmartKMeansOperation(result, metric, type, 10);
+			List<PerformanceResult> clusterResult = kmeans.processData();
+			assertEquals(outer, clusterResult.get(0).getThreads().size());
+		}
 	}
 
 }
