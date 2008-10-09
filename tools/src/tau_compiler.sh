@@ -615,12 +615,12 @@ for arg in "$@" ; do
 		optIncludeDefs="$theDefine $optIncludeDefs"
 		;;
 
-	    -I|-D)
+	    -I|-D|-U)
                 processingIncludeOrDefineArg=$arg
               	processingIncludeOrDefine=true
 		;;
 
-	    -I*|-D*)
+	    -I*|-D*|-U*)
 		mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g' -e 's#(#\\\(#g' -e 's#)#\\\)#g'`
 #			mod_arg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/'\\\'\''/g' -e 's/ /\\\ /g'`
 		optPdtCFlags="$optPdtCFlags $mod_arg"
