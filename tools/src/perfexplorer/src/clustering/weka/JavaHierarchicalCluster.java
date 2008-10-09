@@ -91,8 +91,8 @@ public class JavaHierarchicalCluster implements HierarchicalCluster {
 			//ok, we found the two closest.  Now what?
 			// remove the second index from the hash set
 			remainingIndices.remove(new Integer(location[0]));
-			PerfExplorerOutput.print(" " + location[0]);
-			if (++newline % 20 == 0) PerfExplorerOutput.println(" : " + newline / 20);
+			//PerfExplorerOutput.print(" " + location[0]);
+			//if (++newline % 20 == 0) PerfExplorerOutput.println(" : " + newline / 20);
 			
 			// create a new tree node, with the left and right leaves
 			newTree = new DendrogramTree(location[1], min);

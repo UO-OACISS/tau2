@@ -4,10 +4,12 @@
  */
 package clustering.weka;
 
+import clustering.DendrogramTree;
 import clustering.KMeansClusterInterface;
 import clustering.ClusterException;
 import clustering.ClusterDescription;
 import clustering.RawDataInterface;
+import clustering.DistanceMatrix;
 import common.PerfExplorerOutput;
 import weka.core.Instances;
 import weka.attributeSelection.PrincipalComponents;
@@ -16,7 +18,7 @@ import weka.attributeSelection.PrincipalComponents;
  * This class is used as a list of names and values to describe 
  * a cluster created during some type of clustering operation.
  * 
- * <P>CVS $Id: WekaKMeansCluster.java,v 1.6 2007/01/23 22:57:02 khuck Exp $</P>
+ * <P>CVS $Id: WekaKMeansCluster.java,v 1.7 2008/10/09 23:13:56 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since 0.1
@@ -35,6 +37,8 @@ public class WekaKMeansCluster implements KMeansClusterInterface {
 	private Instances clusterMinimums = null;
 	private Instances clusterStandardDeviations = null;
 	private ImprovedSimpleKMeans kmeans = null;
+	private RawDataInterface inputData = null;
+	private boolean hierarchicalInitialize = true;
 	
 	/**
 	 * Default constructor - package protected
@@ -60,7 +64,8 @@ public class WekaKMeansCluster implements KMeansClusterInterface {
 	 * @see clustering.KMeansClusterInterface#setInputData(RawDataInterface)
 	 */
 	public void setInputData(RawDataInterface inputData) {
-		this.instances = (Instances) inputData.getData();		
+		this.instances = (Instances) inputData.getData();
+		this.inputData = inputData;
 	}
 
 	/* (non-Javadoc)
@@ -81,13 +86,13 @@ public class WekaKMeansCluster implements KMeansClusterInterface {
 				localInstances = pca.transformedData();
 			} else localInstances = this.instances;
 			// get the initial centers
-			/*
-			DistanceMatrix distances = new DistanceMatrix(inputData.numVectors());
-			distances.solveManhattanDistances(inputData);
-			JavaHierarchicalCluster hclust = new JavaHierarchicalCluster(distances);
-			DendrogramTree newTree = hclust.buildDendrogramTree();
-			kmeans.setInitialCenters(newTree.findCenters(k));
-			*/
+			if (hierarchicalInitialize) {
+				DistanceMatrix distances = new DistanceMatrix(localInstances.numInstances());
+				distances.solveManhattanDistances(inputData);
+				JavaHierarchicalCluster hclust = new JavaHierarchicalCluster(distances);
+				DendrogramTree newTree = hclust.buildDendrogramTree();
+				kmeans.setInitialCenters(newTree.findCenters(k));
+			}
 
 			kmeans.buildClusterer(localInstances);
 			this.clusterCentroids = kmeans.getClusterCentroids();
@@ -204,5 +209,9 @@ public class WekaKMeansCluster implements KMeansClusterInterface {
 			PerfExplorerOutput.println ("EXCEPTION: " + e.getMessage());
 			e.printStackTrace();
 		}
+	}
+
+	public void doSmartInitialization(boolean b) {
+		this.hierarchicalInitialize = b;
 	}
 }

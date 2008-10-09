@@ -61,7 +61,7 @@ public class SmartKMeansOperation extends AbstractPerformanceOperation {
 		double previousGapStat = 0.0;
         for (PerformanceResult input : inputs) {
         	for (int i = 1 ; i <= this.maxClusters ; i++) {
-        		System.out.println("Clustering with k = " + i);
+//        		System.out.println("Clustering with k = " + i);
 				KMeansOperation kmeans = new KMeansOperation(input, metric, type, i);
 				kmeans.setComputeGapStatistic(true);
 				tmpOutputs = kmeans.processData();
@@ -77,9 +77,10 @@ public class SmartKMeansOperation extends AbstractPerformanceOperation {
 					// we have a new winner!
 					outputs = tmpOutputs;
 					previousGapStat = kmeans.getGapStatistic();
-				} else {
+				// make sure we are at least more accurate than noise!
+				} else if ((kmeans.getGapStatistic() - kmeans.getGapStatisticError()) > 0.0) {
 					// early termination.
-					break;
+//					break;
 				}
         	}
         }

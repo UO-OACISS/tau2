@@ -9,7 +9,7 @@ package clustering;
   * This interface is used to define the methods to implement a hierarchical 
   * clustering class.
   *
-  * <P>CVS $Id: KMeansClusterInterface.java,v 1.4 2007/01/23 22:57:01 khuck Exp $</P>
+  * <P>CVS $Id: KMeansClusterInterface.java,v 1.5 2008/10/09 23:13:55 khuck Exp $</P>
   * @author khuck
   * @version 0.1
   * @since   0.1
@@ -114,4 +114,12 @@ public interface KMeansClusterInterface {
      * @return
      */
     public int getNumInstances();
+    
+    /**
+     * Initialize the K means with good initial centers, rather than random
+     * This is slower, but more accurate.
+     * 
+     * @param b
+     */
+	public void doSmartInitialization(boolean b);
 }

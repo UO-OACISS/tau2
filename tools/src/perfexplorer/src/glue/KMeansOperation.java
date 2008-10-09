@@ -72,8 +72,8 @@ public class KMeansOperation extends AbstractPerformanceOperation {
         factory = server.getAnalysisFactory();
 
         for (PerformanceResult input : inputs) {
-        	System.out.println("instances: " + input.getThreads().size());
-        	System.out.println("dimensions: " + input.getEvents().size());
+//        	System.out.println("instances: " + input.getThreads().size());
+//        	System.out.println("dimensions: " + input.getEvents().size());
         	this.clusterer = doClustering(factory, input);
 			PerformanceResult centroids = new ClusterOutputResult(clusterer.getClusterCentroids(), metric, type);
 			outputs.add(centroids);
@@ -91,17 +91,17 @@ public class KMeansOperation extends AbstractPerformanceOperation {
             	}
         	}
     		evaluation = Math.sqrt(evaluation / this.maxClusters);
-    		System.out.println(this.maxClusters + " clusters, Total squared distance from centroids: "+ evaluation);
+//    		System.out.println(this.maxClusters + " clusters, Total squared distance from centroids: "+ evaluation);
     		double adjuster = (input.getThreads().size() - this.maxClusters);
     		adjuster = adjuster / input.getThreads().size();
     		adjuster = Math.sqrt(adjuster);
     		adjustedEvaluation = evaluation / adjuster;
-    		System.out.println(this.maxClusters + " clusters, Total adjusted squared distance from centroids: "+ adjustedEvaluation);
+//    		System.out.println(this.maxClusters + " clusters, Total adjusted squared distance from centroids: "+ adjustedEvaluation);
 
     		if (computeGapStatistic) {
-	    		System.out.println("Computing Gap Statistic");
+//	    		System.out.println("Computing Gap Statistic");
 	    		double w_k = computeErrorMeasure(input, this.clusterer);
-	    		System.out.println("Error Measure: " + w_k);
+//	    		System.out.println("Error Measure: " + w_k);
 	    		double[] ref_w_k = new double[B];
 	    		double l_bar = 0.0;
 	    		// generate uniform distribution reference dataset
@@ -114,7 +114,7 @@ public class KMeansOperation extends AbstractPerformanceOperation {
 	    		}
 	    		// the sum is divided by the number of reference data sets
 	    		l_bar = l_bar / B;
-	    		System.out.println("Error Measure (reference): " + l_bar);
+//	    		System.out.println("Error Measure (reference): " + l_bar);
 	    		// COMPUTE THE GAP STATISTIC!
 	    		this.gapStatistic  = l_bar - w_k;
 	    		// now, compute the sd_k term
@@ -151,6 +151,7 @@ public class KMeansOperation extends AbstractPerformanceOperation {
 		}
 		KMeansClusterInterface clusterer = factory.createKMeansEngine();
 		clusterer.setInputData(data);
+		clusterer.doSmartInitialization(true);
 		clusterer.setK(this.maxClusters);
 		try {
 			clusterer.findClusters();
@@ -179,7 +180,7 @@ public class KMeansOperation extends AbstractPerformanceOperation {
 				}
 			}
 			double range = max - min;
-			System.out.println(event + " Range: " + min + " - " + max);
+//			System.out.println(event + " Range: " + min + " - " + max);
 			// now that we have the range, we can generate random data in that range.
 			for (Integer thread : input.getThreads()) {
 				double value = (Math.random() * range) + min;
@@ -199,12 +200,18 @@ public class KMeansOperation extends AbstractPerformanceOperation {
 		int numThreads = input.getThreads().size();
 		double[] distance = new double[this.maxClusters];
 		int[] sizes = clusterer.getClusterSizes();
+		if (sizes.length < this.maxClusters)
+			System.err.println("\n**************** not enough clusters! **************\n");
 		double w_k = 0.0;
 		// for each cluster...
-		for(int r = 0 ; r < this.maxClusters ; r++) {
+//		System.out.print(this.maxClusters + " " + sizes.length + " ");
+//		for(int x = 0 ; x < sizes.length ; x++)
+//			System.out.print(sizes[x] + " ");
+//		System.out.println("");
+		for(int r = 0 ; r < sizes.length ; r++) {
 			distance[r] = 0.0;
 			// get the sum of the pairwise distances for all points in this cluster
-			// question... all distances, twice?
+			// question... all distances, twice?  The paper is ambiguous.
 			for(int i = 0 ; i < numThreads ; i++) {
 				int id1 = clusterer.clusterInstance(i);
 				for(int iprime = i ; iprime < numThreads ; iprime++) {
@@ -217,7 +224,9 @@ public class KMeansOperation extends AbstractPerformanceOperation {
 					}
 				}
 			}
-			w_k += distance[r] / (2 * sizes[r]);
+			// ambiguity in the paper... 
+			// w_k += distance[r] / (2 * sizes[r]);
+			w_k += distance[r] / sizes[r];
 		}
 		w_k = Math.log(w_k);
 		return w_k;

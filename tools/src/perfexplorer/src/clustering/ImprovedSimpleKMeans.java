@@ -43,7 +43,7 @@ import weka.classifiers.rules.DecisionTable;
  *
  * @author Mark Hall (mhall@cs.waikato.ac.nz)
  * @author Eibe Frank (eibe@cs.waikato.ac.nz)
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  * @see Clusterer
  * @see OptionHandler
  */
@@ -132,7 +132,7 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
   	for (int i = 0 ; i < initialCenters.length ; i++) { 
   		// the passed-in initialCenters are 1 indexed, instead of 0, so subtract 1
   		this.m_initialCenters[--j] = (initialCenters[i] - 1);
-  		System.out.println(initialCenters[i]);
+  		//System.out.println(initialCenters[i]);
   	}
 	if (initialCenters.length == 6) {
 		this.m_initialCenters[0] = 253;

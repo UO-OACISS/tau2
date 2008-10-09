@@ -20,7 +20,7 @@ import org.omegahat.R.Java.REvaluator;
  * clustering class.  To access these methods, create an AnalysisFactory,
  * and the factory will be able to create a k-means cluster object.
  *
- * <P>CVS $Id: RKMeansCluster.java,v 1.5 2007/01/23 22:57:01 khuck Exp $</P>
+ * <P>CVS $Id: RKMeansCluster.java,v 1.6 2008/10/09 23:13:55 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -39,6 +39,7 @@ public class RKMeansCluster implements KMeansClusterInterface {
 	private DendrogramTree dendrogramTree = null;
 	private int[] clusterSizes = null;
 	private int[] clusters = null;
+	private boolean doHierarchical = true;
 	
 	/**
 	 * Default constructor
@@ -239,7 +240,7 @@ public class RKMeansCluster implements KMeansClusterInterface {
 	private boolean findInitialCenters() {
 		boolean retval = false;
  		// arbitrary choice of 4098 to prevent crashes...
-		if (inputData.numVectors() < 4098) {
+		if (this.doHierarchical && inputData.numVectors() < 4098) {
 			PerfExplorerOutput.print("Getting distances...");
 			rEvaluator.voidEval("threads <- dist(raw, method=\"manhattan\")");
 			PerfExplorerOutput.println(" Done!");
@@ -277,6 +278,11 @@ public class RKMeansCluster implements KMeansClusterInterface {
 			finder.put(new Integer(i+1), newTree);
 		}
 		return newTree;
+	}
+
+	public void doSmartInitialization(boolean b) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }
