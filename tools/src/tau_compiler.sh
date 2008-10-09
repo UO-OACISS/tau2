@@ -1019,7 +1019,7 @@ if [ $optHeaderInst == $TRUE ]; then
             pdbFile=${saveTempFile}
         fi
 
-	headerlister=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_headerlist@'` 
+	headerlister=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_header_list@'` 
 	headerreplacer=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_header_replace.pl@'` 
 
 	for header in `$headerlister $pdbFile` ; do
