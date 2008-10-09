@@ -343,7 +343,7 @@ class PdtTest(Test):
             self.buildresult = "fail"
             return
 
-        if len(glob.glob("*.inst.*")) != 1:
+        if len(glob.glob("*.inst.*")) < 1:
             self.error("Error: failed to instrument")
             self.buildresult = "fail"
             return
