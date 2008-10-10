@@ -170,7 +170,7 @@ static void get_symtab_bfd(void) {
       /* get filename and linenumber from debug info */
       /* needs -g */
       filename = NULL;
-      lno = -1;
+      lno = 0;
       if ( do_getsrc ) {
 	bfd_find_nearest_line(BfdImage, bfd_get_section(syms[i]), syms,
 			      syms[i]->value, &filename, &funcname, &lno);
