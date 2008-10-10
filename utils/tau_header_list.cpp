@@ -21,7 +21,7 @@
 #include "pdb.h"
 #include "pdbRoutine.h"
 
-static void printIncludes(const pdbFile *f) {
+static void printIncludes(const pdbFile *f, bool first) {
   pdbFile::incvec i = f->includes();
   for (pdbFile::incvec::iterator it=i.begin(); it!=i.end(); ++it) {
     if (!(*it)->isSystemFile()) { // exclude system files
@@ -32,10 +32,12 @@ static void printIncludes(const pdbFile *f) {
 	  ptr+=2;
 	}
       }
-      // output the name
-      cout << ptr << endl;
+      if (!first) {
+	// output the name
+	cout << ptr << endl;
+      }
     }
-    printIncludes(*it);
+    printIncludes(*it, false);
   }
 }
 
@@ -54,6 +56,6 @@ int main(int argc, char *argv[]) {
   }
 
   pdbFile *topFile = pdb.fileTree();
-  printIncludes(topFile);
+  printIncludes(topFile, true);
   return 0;
 }
