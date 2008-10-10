@@ -419,17 +419,7 @@ class PdtTestGF(PdtTest):
             return False
         if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
             return False
-
-
-        # strip off PDTDIR=, and newline
-        pdtdir = os.popen("grep \"^PDTDIR=\" "+self.fullmakefile).read()[7:-1]
-        pdtarch = os.popen("grep \"^PDTARCHITECTURE=\" "+self.fullmakefile).read()[16:-1]
-        gfparse = pdtdir + "/" + pdtarch + "/bin/gfparse"
-        if os.path.exists(gfparse) == False:
-            return False
         return True
-
-
 
 class PdtMPITestC(PdtTest):
     def __init__(self, makefile):
