@@ -5153,19 +5153,33 @@ EOF
 fi
 
 
-if [ $fortran_compiler = intel ] ; then
-  intelifort=`which ifort 2>/dev/null`
-  if [ "y$intelifort" != "y" ] ;  then 
-    if [ -x $intelifort ] ; then
-      echo "Checking version (10.0+) of Intel compilers"
-      ifort -v 2>&1 | grep "Version 10" > /dev/null
-      if [ $? = 0 ] ; then
-          echo "Intel v10.0+ compilers used"
-          fixmakeargs="$fixmakeargs INTEL10FIX COMPINST_GNU" 
-      fi
+if [ $cxx_compiler = icpc ] ; then
+    echo "Checking version (10.0+) of Intel compilers"
+    version=`icpc -v 2>&1`
+    t="Version 1"
+    testarg=${version#$t}
+
+    if [ "y$testarg" != "y$version" ]
+    then
+        echo "Intel v10.0+ compilers found"
+        fixmakeargs="$fixmakeargs INTEL10FIX COMPINST_GNU" 
+    else
+	echo "Intel v10.0+ compilers NOT found"
     fi
-  fi
+  
 fi
+
+# if [ $fortran_compiler = intel ] ; then
+#   intelifort=`which ifort 2>/dev/null`
+#   if [ "y$intelifort" != "y" ] ;  then 
+#     if [ -x $intelifort ] ; then
+#       echo "Checking version (10.0+) of Intel compilers"
+#       ifort -v 2>&1 | grep "Version 10" > /dev/null
+#       if [ $? = 0 ] ; then
+#       fi
+#     fi
+#   fi
+# fi
 
 if [ $ibmxlc = yes ]
 then
