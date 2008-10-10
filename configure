@@ -2689,8 +2689,7 @@ case $cxx_compiler in
         fixmakeargs="$fixmakeargs INTEL32_FORTRAN"
         fortran_compiler=intel
         intelifort=`which ifort 2>/dev/null`
-        if [ "y$intelifort" != "y"  -a -x "$intelifort" ]
-        then 
+        if [ "y$intelifort" != "y"  -a -x "$intelifort" ] ; then 
           extradir=`which ifort | sed -e 's/\/bin\/ifort$//'`
         fi
       fi
@@ -5159,14 +5158,32 @@ if [ $cxx_compiler = icpc ] ; then
     t="Version 1"
     testarg=${version#$t}
 
-    if [ "y$testarg" != "y$version" ]
-    then
+    if [ "y$testarg" != "y$version" ] ; then
         echo "Intel v10.0+ compilers found"
         fixmakeargs="$fixmakeargs INTEL10FIX COMPINST_GNU" 
     else
 	echo "Intel v10.0+ compilers NOT found"
     fi
   
+    var=`which ifort | sed 's/\/bin\/ifort$//'`
+    libdir="$var/lib"
+    if [ ! -d "$var" ] ; then
+	var=`which ifort | sed 's/\/bin\/intel64\/ifort$//'`
+	libdir="$var/lib/intel64"
+    fi
+    if [ ! -d "$var" ] ; then
+	var=`which ifort | sed 's/\/bin\/ia32\/ifort$//'`
+	libdir="$var/lib/ia32"
+    fi
+    if [ ! -d "$var" ] ; then
+	var=`which ifort | sed 's/\/bin\/ia64\/ifort$//'`
+	libdir="$var/lib/ia64"
+    fi
+    if [ ! -d "$var" ] ; then
+	echo "Error: Unable to identify ifort lib directory"
+    fi
+
+    fixmakeargs="$fixmakeargs ifortlibdir=$libdir" 
 fi
 
 # if [ $fortran_compiler = intel ] ; then

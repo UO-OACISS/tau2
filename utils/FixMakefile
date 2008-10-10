@@ -109,6 +109,11 @@ fi
         echo "s,^TAUGCCLIBDIR=.*$,TAUGCCLIBDIR=$taugcclibdir,g" >> $sedout
         ;;
 
+     ifortlibdir=*)
+        ifortlibdir=`echo $1 | sed -e 's/^ifortlibdir=//'`
+        echo "s,^IFORTLIBDIR=.*$,IFORTLIBDIR=$ifortlibdir,g" >> $sedout
+        ;;
+
      taugfortranlibdir=*)
         taugfortranlibdir=`echo $1 | sed -e 's/^taugfortranlibdir=//'`
         echo "s,^TAUGFORTRANLIBDIR=.*$,TAUGFORTRANLIBDIR=$taugfortranlibdir,g" >> $sedout
