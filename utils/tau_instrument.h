@@ -36,7 +36,7 @@ using std::ostream;
 
 
 /* This class contains entries that are read in from the BEGIN_INSTRUMENT_SECTION ... END_INSTRUMENT_SECTION */
-
+#ifndef TAU_DYNINST
 class tauInstrument
 {
   public:
@@ -112,6 +112,7 @@ class tauInstrument
 };
 
 extern vector<tauInstrument *> instrumentList; 
+#endif //TAU_DYNINST
 
 /*
 extern int addFileInstrumentationRequests(pdbFile *file, vector<itemRef *>& itemvec);
@@ -123,7 +124,7 @@ extern bool isInstrumentListEmpty(void);
 
 #endif /* _TAU_INSTRUMENT_H_ */
 /***************************************************************************
- * $RCSfile: tau_instrument.h,v $   $Author: geimer $
- * $Revision: 1.6 $   $Date: 2008/08/05 19:13:34 $
- * VERSION_ID: $Id: tau_instrument.h,v 1.6 2008/08/05 19:13:34 geimer Exp $
+ * $RCSfile: tau_instrument.h,v $   $Author: scottb $
+ * $Revision: 1.7 $   $Date: 2008/10/13 23:00:39 $
+ * VERSION_ID: $Id: tau_instrument.h,v 1.7 2008/10/13 23:00:39 scottb Exp $
  ***************************************************************************/
