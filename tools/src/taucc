@@ -1,5 +1,10 @@
 #!/bin/sh
 
+# If an outside makefile has specified -w, our wrapper will generate extra/incorrect 
+# output unless we remove the flags
+MAKEFLAGS=
+MFLAGS=
+
 # Get configuration
 PATH=$PATH:`dirname $0`
 eval `tau-config`
