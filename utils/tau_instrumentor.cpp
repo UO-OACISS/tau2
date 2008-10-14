@@ -1584,21 +1584,27 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 		if (strncmp((const char *)&inbuf[((*it)->col)-1], 
 			return_void_string, strlen(return_void_string))==0)
 		{
-		  process_this_return = true; 
-		  strcpy(use_return_void, return_void_string);
+		  if (!isalnum(inbuf[((*it)->col)-1 + strlen(return_void_string)])) {
+		    process_this_return = true; 
+		    strcpy(use_return_void, return_void_string);
+		  }
 	        }
 		if (strncmp((const char *)&inbuf[((*it)->col)-1], 
 			return_nonvoid_string, strlen(return_nonvoid_string))==0)
 		{
-		  process_this_return = true; 
-		  strcpy(use_return_nonvoid, return_nonvoid_string);
+		  if (!isalnum(inbuf[((*it)->col)-1 + strlen(return_nonvoid_string)])) {
+		    process_this_return = true; 
+		    strcpy(use_return_nonvoid, return_nonvoid_string);
+		  }
 	        }
 		if (strncmp((const char *)&inbuf[((*it)->col)-1], 
 			"return", strlen("return")) == 0)
 		{
-		  process_this_return = true;
-		  strcpy(use_return_void, "return");
-		  strcpy(use_return_nonvoid, "return");
+		  if (!isalnum(inbuf[((*it)->col)-1 + strlen("return")])) {
+		      process_this_return = true;
+		      strcpy(use_return_void, "return");
+		      strcpy(use_return_nonvoid, "return");
+		  }
 		}
 
 		if (process_this_return)
@@ -4390,9 +4396,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: geimer $
- * $Revision: 1.198 $   $Date: 2008/08/11 21:37:40 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.198 2008/08/11 21:37:40 geimer Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
+ * $Revision: 1.199 $   $Date: 2008/10/14 00:23:37 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.199 2008/10/14 00:23:37 amorris Exp $
  ***************************************************************************/
 
 
