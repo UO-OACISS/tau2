@@ -47,7 +47,7 @@ declare -i revertForced=$FALSE
 
 declare -i optShared=$FALSE
 declare -i optCompInst=$FALSE
-declare -i optHeaderInst=$TRUE
+declare -i optHeaderInst=$FALSE
 
 headerInstDir=".tau_tmp_$$"
 headerInstFlag=""
