@@ -641,6 +641,32 @@ for arg in "$@" ; do
 		argsRemaining="$argsRemaining $arg"
 		;;
 
+	    # if we recognize a request for 132 chars, convert it for gfparse
+	    -132)
+		optPdtF95="$optPdtF95 -ffixed-line-length-132"
+		argsRemaining="$argsRemaining $arg"
+		;;
+
+	    -ffixed-line-length-132)
+		optPdtF95="$optPdtF95 -ffixed-line-length-132"
+		argsRemaining="$argsRemaining $arg"
+		;;
+
+	    -qfixed=132)
+		optPdtF95="$optPdtF95 -ffixed-line-length-132"
+		argsRemaining="$argsRemaining $arg"
+		;;
+
+	    -Mextend)
+		optPdtF95="$optPdtF95 -ffixed-line-length-132"
+		argsRemaining="$argsRemaining $arg"
+		;;
+
+	    -extend_source)
+		optPdtF95="$optPdtF95 -ffixed-line-length-132"
+		argsRemaining="$argsRemaining $arg"
+		;;
+
 	    -c)
 		isForCompilation=$TRUE
 		argsRemaining="$argsRemaining $arg"
