@@ -15,9 +15,9 @@ import edu.uoregon.tau.common.XMLRootWrapInputStream;
 /**
  * Snapshot data reader, the real work is done in the XML Handler
  *
- * <P>CVS $Id: SnapshotDataSource.java,v 1.10 2008/05/24 00:49:15 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotDataSource.java,v 1.11 2008/10/16 18:10:17 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  */
 public class SnapshotDataSource extends DataSource {
 
@@ -33,7 +33,7 @@ public class SnapshotDataSource extends DataSource {
     public void cancelLoad() {}
 
     public int getProgress() {
-        if (totalBytes != 0) {
+        if (totalBytes != 0 && tracker != null) {
             return (int) ((float) (bytesRead + tracker.byteCount()) / (float) totalBytes * 100);
         }
         return 0;
