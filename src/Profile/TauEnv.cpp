@@ -35,8 +35,12 @@
 /* We should throttle if number n > a && percall < b .a and b are given below */
 #define TAU_THROTTLE_NUMCALLS_DEFAULT 100000
 #define TAU_THROTTLE_PERCALL_DEFAULT  10
-#define TAU_SYNCHRONIZE_CLOCKS_DEFAULT 1
 #define TAU_THROTTLE_DEFAULT 1
+#ifdef TAU_MPI
+  #define TAU_SYNCHRONIZE_CLOCKS_DEFAULT 1
+#else
+  #define TAU_SYNCHRONIZE_CLOCKS_DEFAULT 0
+#endif /* TAU_MPI */
 
 extern "C" {
 
