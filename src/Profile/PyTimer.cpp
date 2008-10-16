@@ -12,6 +12,9 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyTimer.cpp,v $
+// Revision 1.8  2008/10/16 22:58:24  amorris
+// The current Profiler object was not being deleted in stop, causing a big memory leak.  Try GPAW now Sameer!
+//
 // Revision 1.7  2007/03/02 02:36:24  amorris
 // Made explicit the phase calls, true and false.
 //
@@ -205,6 +208,7 @@ PyObject * pytau_stop(PyObject *self, PyObject *args)
 #endif /* DEBUG */
       p->Stop();
       // It was stopped properly
+      delete p;
       Py_INCREF(Py_None);
       return Py_None;
     }
@@ -219,7 +223,7 @@ PyObject * pytau_stop(PyObject *self, PyObject *args)
 }
 
 // version
-// $Id: PyTimer.cpp,v 1.7 2007/03/02 02:36:24 amorris Exp $
+// $Id: PyTimer.cpp,v 1.8 2008/10/16 22:58:24 amorris Exp $
 
 // End of file
   
