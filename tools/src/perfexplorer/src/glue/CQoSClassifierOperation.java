@@ -31,14 +31,21 @@ import weka.filters.unsupervised.attribute.StringToNominal;
 public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 
 	public static final String SUPPORT_VECTOR_MACHINE = WekaClassifierWrapper.SUPPORT_VECTOR_MACHINE;
+	//public static final String SUPPORT_VECTOR_MACHINE2 = WekaClassifierWrapper.SUPPORT_VECTOR_MACHINE2;
 	public static final String NAIVE_BAYES = WekaClassifierWrapper.NAIVE_BAYES;
     public static final String MULTILAYER_PERCEPTRON = WekaClassifierWrapper.MULTILAYER_PERCEPTRON;
+    public static final String LINEAR_REGRESSION = WekaClassifierWrapper.LINEAR_REGRESSION;
+    public static final String J48 = WekaClassifierWrapper.J48;
+    //public static final String AODE = WekaClassifierWrapper.AODE;
+    public static final String ALTERNATING_DECISION_TREE = WekaClassifierWrapper.ALTERNATING_DECISION_TREE;
+    public static final String RANDOM_TREE = WekaClassifierWrapper.RANDOM_TREE;
 
 	private String metric = "Time";
 	private Set<String> metadataFields = null;
 	private String classLabel = null;
 	private WekaClassifierWrapper wrapper = null;
 	private String classifierType = MULTILAYER_PERCEPTRON;
+	private int trainingSize = 0;
 		
 	/**
 	 * @param inputs
@@ -83,12 +90,15 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 				// put the hashtable in the set: if its performance is "better" than the existing one
 				// or if it doesn't exist yet.
 				PerformanceResult result = tuples.get(localMeta);
-				if (result == null) {
-					tuples.put(localMeta,input);
-				} else {
-					if (Double.parseDouble(meta.get(metric)) < 
-							Double.parseDouble((new TrialMetadata(result)).getCommonAttributes().get(metric))) {
+				String tmpSuccess = localMeta.get("success");
+				if (tmpSuccess == null || tmpSuccess.equals("1")) { // don't save this value if it didn't converge!
+					if (result == null) {
 						tuples.put(localMeta,input);
+					} else {
+						if (Double.parseDouble(meta.get(metric)) < 
+								Double.parseDouble((new TrialMetadata(result)).getCommonAttributes().get(metric))) {
+							tuples.put(localMeta,input);
+						}
 					}
 				}
 			} else {
@@ -126,7 +136,8 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 			trainingData.add(tmpMap);
 		}
 		
-		System.out.println("Total instances for training: " + trainingData.size());
+		trainingSize  = trainingData.size();
+		System.out.println("Total instances for training: " + trainingSize);
 		System.out.println("Using keys: " + this.metadataFields.toString());
 
 		try {
@@ -160,5 +171,9 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 	public void setClassifierType(String classifierType) {
 		this.classifierType = classifierType;			
 	}
-	
+
+	public String crossValidateModel() {
+		return this.wrapper.crossValidateModel(Math.max(trainingSize/100, 10));
+	}
+
 }

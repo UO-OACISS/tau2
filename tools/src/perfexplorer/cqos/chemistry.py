@@ -12,6 +12,7 @@ inApp = "GAMESS"
 inTrial = ""
 parameterMap = None
 fileName = "/tmp/classifier.serialized"
+results = ArrayList()
 
 def getParameters():
 	global parameterMap
@@ -31,26 +32,37 @@ def getParameters():
 	print "...done."
 
 def loadTrials():
-	print "loading data..."
+	global results
+	global inExp
+	print "loading trials for experiment..."
 	Utilities.setSession(config)
 	trials = Utilities.getTrialsForExperiment(inApp, inExp)
+	for trial in trials:
+		loaded = TrialMeanResult(trial)
+		results.add(loaded)
 	print "...done."
-	return trials
+	return results
 
 def loadExperiments():
-	print "loading data..."
+	global results
+	global inExp
+	print "loading experiments..."
 	Utilities.setSession(config)
 	experiments = Utilities.getExperimentsForApplication(inApp)
+	for experiment in experiments:
+		inExp = experiment.getName();
+		print "processing experiment: ", inExp
+		results = loadTrials()
 	print "...done."
-	return experiments
+	return results
 
 def buildClassifier(results):
 	print "building classifier..."
 	metadataFields = HashSet()
 	metadataFields.add("molecule name")
-	metadataFields.add("basis set")
-	metadataFields.add("run type")
-	metadataFields.add("scf type")
+	#metadataFields.add("basis set")
+	#metadataFields.add("run type")
+	#metadataFields.add("scf type")
 	metadataFields.add("node count")
 	metadataFields.add("core count")
 	metadataFields.add("mplevl")
@@ -59,59 +71,70 @@ def buildClassifier(results):
 	# metadataFields.add("CPU Cores") # i.e. 2
 	# metadataFields.add("OS Machine") # i.e. Linux
 	# metadataFields.add("Cache Size") # i.e. 4096 KB
-	# for performance
-	classifier = CQoSClassifierOperation(results, "Time", metadataFields, "dirscf")
 	# for accuracy
 	# classifier = CQoSClassifierOperation(results, "accuracy", metadataFields, "basis set")
-	# classifier.setClassifierType(CQoSClassifierOperation.MULTILAYER_PERCEPTRON)
+	# for performance
 	# classifier.setClassifierType(CQoSClassifierOperation.NAIVE_BAYES)
+	# classifier.setClassifierType(CQoSClassifierOperation.SUPPORT_VECTOR_MACHINE)
+	classifier = CQoSClassifierOperation(results, "Time", metadataFields, "dirscf")
+	classifier.setClassifierType(CQoSClassifierOperation.MULTILAYER_PERCEPTRON)
+	classifier.processData()
+	print classifier.crossValidateModel()
+	classifier = CQoSClassifierOperation(results, "Time", metadataFields, "dirscf")
+	classifier.setClassifierType(CQoSClassifierOperation.ALTERNATING_DECISION_TREE)
+	classifier.processData()
+	print classifier.crossValidateModel()
+	classifier = CQoSClassifierOperation(results, "Time", metadataFields, "dirscf")
+	classifier.setClassifierType(CQoSClassifierOperation.NAIVE_BAYES)
+	classifier.processData()
+	print classifier.crossValidateModel()
+	classifier = CQoSClassifierOperation(results, "Time", metadataFields, "dirscf")
+	classifier.setClassifierType(CQoSClassifierOperation.RANDOM_TREE)
+	classifier.processData()
+	print classifier.crossValidateModel()
+	classifier = CQoSClassifierOperation(results, "Time", metadataFields, "dirscf")
 	classifier.setClassifierType(CQoSClassifierOperation.SUPPORT_VECTOR_MACHINE)
 	classifier.processData()
+	print classifier.crossValidateModel()
+	classifier = CQoSClassifierOperation(results, "Time", metadataFields, "dirscf")
+	classifier.setClassifierType(CQoSClassifierOperation.J48)
+	classifier.processData()
+	print classifier.crossValidateModel()
 	classifier.writeClassifier(fileName)
 	print "...done."
 	return classifier
+
+def test(classifier):
+	# test the classifier
+	mols = ['AT', 'bz', 'bz-dimer', 'C60', 'GC', 'np', 'np-dimer']
+	mps = ['MP0', 'MP2']
+	for m in mols:
+		for mp in mps:
+			for nodes in ['1','2','4','8','16','32']:
+				inputFields = HashMap()
+				inputFields.put("molecule name", m)
+				#inputFields.put("basis set", "CCD")
+				#inputFields.put("run type", "ENERGY")
+				#inputFields.put("scf type", "RHF")
+				inputFields.put("node count", nodes)
+				inputFields.put("core count", "8")
+				inputFields.put("mplevl", mp)
+				print inputFields, "Direct / Conventional: ", classifier.getClass(inputFields),  classifier.getConfidence()
 
 
 print "--------------- JPython test script start ------------"
 
 getParameters()
-results = ArrayList()
 
 print "getting trials..."
 
-trials = loadTrials()
-for trial in trials:
-	loaded = TrialMeanResult(trial)
-	results.add(loaded)
-
-#experiments = loadExperiments()
-#for experiment in experiments:
-	#inExp = experiment.getName();
-	#print "processing experiment: ", inExp
-	#trials = loadTrials()
-	#for trial in trials:
-		#loaded = TrialMeanResult(trial)
-		#results.add(loaded)
+#results = loadTrials()
+results = loadExperiments()
 
 print "...done."
 print "Total Trials:", results.size()
 
 classifier = buildClassifier(results)
-
-# test the classifier
-mols = ['AT', 'bz', 'bz-dimer', 'C60', 'GC', 'np', 'np-dimer']
-mps = ['MP0', 'MP2']
-for m in mols:
-	for mp in mps:
-		inputFields = HashMap()
-		inputFields.put("molecule name", m)
-		inputFields.put("basis set", "CCD")
-		inputFields.put("run type", "ENERGY")
-		inputFields.put("scf type", "RHF")
-		inputFields.put("node count", "8")
-		inputFields.put("core count", "8")
-		inputFields.put("mplevl", mp)
-		print inputFields
-		print "Direct / Conventional: ", classifier.getClass(inputFields),  classifier.getConfidence()
+# test(classifier)
 
 print "---------------- JPython test script end -------------"

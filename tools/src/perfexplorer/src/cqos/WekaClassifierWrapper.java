@@ -19,8 +19,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Random;
 
 import weka.classifiers.Classifier;
+import weka.classifiers.Evaluation;
 import weka.core.Attribute;
 import weka.core.FastVector;
 import weka.core.Instance;
@@ -63,9 +65,14 @@ public class WekaClassifierWrapper implements Serializable {
 	
 	// here are the classifiers which have been tested.
 	public static final String SUPPORT_VECTOR_MACHINE = "weka.classifiers.functions.SMO";
+	public static final String SUPPORT_VECTOR_MACHINE2 = "weka.classifiers.functions.SMOreg";
 	public static final String NAIVE_BAYES = "weka.classifiers.bayes.NaiveBayes";
     public static final String MULTILAYER_PERCEPTRON = "weka.classifiers.functions.MultilayerPerceptron";
     public static final String LINEAR_REGRESSION = "weka.classifiers.functions.LinearRegression";
+    public static final String J48 = "weka.classifiers.trees.J48";
+    public static final String AODE = "weka.classifiers.bayes.AODE";
+    public static final String ALTERNATING_DECISION_TREE = "weka.classifiers.trees.ADTree";
+    public static final String RANDOM_TREE = "weka.classifiers.trees.RandomTree";
 	
     // member variables.
 	private String classifierType = WekaClassifierWrapper.MULTILAYER_PERCEPTRON;
@@ -80,6 +87,7 @@ public class WekaClassifierWrapper implements Serializable {
 	private double confidence = 0.0;          // the confidence of the class prediction
 	private String className = null;          // the class prediction
 	private Set[]/*String*/ nominalAttributes = null;    // this helps us figure out what's a numeric variable and what isn't
+	private Instances train = null;
 	
 	/**
 	 * The one and only constructor.  The Constructor will use the trainingData passed in to build the
@@ -165,7 +173,7 @@ public class WekaClassifierWrapper implements Serializable {
 		}
 		
 		// create the set of training instances
-        Instances train = new Instances("train", this.attributes, this.trainingData.size());
+        train = new Instances("train", this.attributes, this.trainingData.size());
         
         // set the class for the instances to be the first attribute, the dependent variable
         train.setClass(classAttr);
@@ -195,10 +203,10 @@ public class WekaClassifierWrapper implements Serializable {
 		try {
 	        // build the classifier!
 			if (this.classifierType == LINEAR_REGRESSION) {
-				PaceRegression tmp = new PaceRegression();
-				//tmp.turnChecksOff();
-				//tmp.setAttributeSelectionMethod(new SelectedTag(tmp.SELECTION_NONE, tmp.TAGS_SELECTION));
-				//tmp.setEliminateColinearAttributes(false);
+				LinearRegression tmp = new LinearRegression();
+				tmp.turnChecksOff();
+				tmp.setAttributeSelectionMethod(new SelectedTag(tmp.SELECTION_NONE, tmp.TAGS_SELECTION));
+				tmp.setEliminateColinearAttributes(false);
 				this.cls = tmp;
 			} else {
 	        	this.cls = Classifier.forName(this.classifierType, null);
@@ -444,6 +452,36 @@ public class WekaClassifierWrapper implements Serializable {
 		System.out.println("Set classifier type to: " + classifierType);
 	}
 
+	/**
+	 * Cross validate the model to make sure it works ok
+	 * 
+	 * @return
+	 */
+	public String crossValidateModel(int foldValue) {
+		String output = null;
+		try {
+			Evaluation eval = new Evaluation(train);
+			eval.crossValidateModel(cls, train, foldValue, new Random(123));
+			output = eval.toMatrixString();
+			output += eval.toSummaryString();
+			//System.out.println("avgCost: " + eval.avgCost());
+			//System.out.println("correct: " + eval.correct());
+			//System.out.println("incorrect: " + eval.incorrect());
+			//System.out.println("errorRate: " + eval.errorRate());
+			System.out.println("falseNegatives, 0: " + eval.numFalseNegatives(0));
+			System.out.println("falsePositives, 0: " + eval.numFalsePositives(0));
+			System.out.println("falseNegatives, 1: " + eval.numFalseNegatives(1));
+			System.out.println("falsePositives, 1: " + eval.numFalsePositives(1));
+			//System.out.println("pctCorrect: " + eval.pctCorrect());
+			//System.out.println("pctIncorrect: " + eval.pctIncorrect());
+			//System.out.println(eval.toSummaryString());
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+			e.printStackTrace();
+		}
+		return output;
+	}
+	
 	/**
 	 * Main method for testing this wrapper.
 	 * 
