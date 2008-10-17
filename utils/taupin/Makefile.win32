@@ -46,4 +46,4 @@ $(WRAPPER_OBJFILE): $(WRAPPER_CXXFILE)
 		$(CC) $(W_CXXFLAGS) $(WRAPPER_CXXFILE)  		  	
 
 clean:
-	del -f $(TAUPIN_OBJFILES)  $(WRAPPER_OBJFILE)   
+	del *.obj *.exe *.pdb *.dll *.exp *.idb
