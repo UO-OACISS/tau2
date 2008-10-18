@@ -3046,6 +3046,24 @@ then
 fi
 
 
+
+
+if [ "x$mpiinc" != "x" ] ; then
+    # Check for OpenMPI and add additional include directory
+    if [ -d $mpiinc/openmpi ] ; then
+	echo "NOTE: Using OpenMPI"
+	additional_mpiincs="-I$mpiinc/openmpi/ompi -I$mpiinc/openmpi"
+    fi
+    
+    if [ -d $mpiinc ] ; then
+        #echo "Include dir found. adding -I$mpiinc to INC"
+	mpiincargs="$mpiincargs -I$mpiinc $additional_mpiincs"
+	mpiincargs=`echo $mpiincargs | sed  -e 's/ /#/g'`
+	fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs"
+    fi
+fi
+
+
 # Next, check the properties of the MPI implementation.
 if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ]
 then
@@ -3077,6 +3095,9 @@ EOF
     # echo "mpiinc is specified"
     mpi_include=-I$mpiinc
   fi
+
+  mpi_include="$mpi_include $mpiincargs"
+  mpi_include=`echo $mpi_include | sed  -e 's/#/ /g'`
      
   cat <<EOF > mpi2.$msuf
   #include <mpi.h>
@@ -3155,6 +3176,34 @@ EOF
     return MPI_Pack_external_size( datarep, incount, datatype, size) ;
   }
 
+EOF
+
+  cat <<EOF > mpi2file.$msuf
+  #include <mpi.h>
+  #include <stdio.h>
+
+int main( int argc, char *argv[] )
+{
+    MPI_Fint handleA, handleB;
+    int rc;
+    int errs = 0;
+    int rank;
+    MPI_File cFile;
+
+    MPI_Init( &argc, &argv );
+    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+    rc = MPI_File_open( MPI_COMM_WORLD, "temp", MPI_MODE_RDWR | MPI_MODE_DELETE_ON_CLOSE | MPI_MODE_CREATE, MPI_INFO_NULL, &cFile );
+    if (rc) {
+        printf( "Unable to open file \"temp\"\n" );fflush(stdout);
+    }
+    else {
+        MPI_File_close( &cFile );
+    }
+    MPI_Finalize();
+    return 0;
+}
+ 
+   
 EOF
 
   cat <<EOF > mpi2grequest.$msuf
@@ -3283,10 +3332,8 @@ EOF
     fi
 
   fi
-  if $mpicompiler $orig_useropt $mpi_include -c mpi2grequest.$msuf  1> /dev/null 2>&1
-  then
-    if [ $mpi2 = yes ]  
-    then 
+  if $mpicompiler $orig_useropt $mpi_include -c mpi2grequest.$msuf  1> /dev/null 2>&1 ; then
+    if [ $mpi2 = yes ] ; then 
       echo "MPI-2 Grequest Interface is defined..."
       fixmakeargs="$fixmakeargs MPIGREQUEST"
     fi
@@ -3338,6 +3385,14 @@ EOF
     fixmakeargs="$fixmakeargs MPIATTR"
   fi
 
+  if $mpicompiler $orig_useropt $mpi_include -c mpi2file.$msuf  1> /dev/null 2>&1 ; then
+      echo "MPI-2 MPI_File functions are defined..."
+      fixmakeargs="$fixmakeargs MPIFILE"
+  else
+      echo "MPI-2 MPI_File functions are NOT defined..."
+      echo $mpicompiler $orig_useropt $mpi_include -c mpi2file.$msuf
+  fi
+
   if $mpicompiler $orig_useropt $mpi_include -c mpi2typeex.$msuf  1> /dev/null 2>&1
   then
     echo "MPI-2 MPI_Type_dup and MPI_Exscan are defined..."
@@ -3358,7 +3413,7 @@ EOF
     fixmakeargs="$fixmakeargs MPINEEDSTATUSCONV"
   fi
 
-  /bin/rm -rf mpi_thread_test.$msuf mpi_thread_test.o mpi2.$msuf mpi2.o mpi2iorequest.o mpi2iorequest.$msuf mpi2grequest.o mpi2grequest.$msuf mpi2datarep.$msuf mpi2datarep.o mpi2errhandler.o mpi2errhandler.$msuf mpi2hpconst.o mpi2hpconst.$msuf mpi2attr.o mpi2attr.$msuf mpi2typeex.o mpi2typeex.$msuf mpi2add.o mpi2add.$msuf mpistatus.o mpistatus.$msuf
+  /bin/rm -rf mpi_thread_test.$msuf mpi_thread_test.o mpi2.$msuf mpi2.o mpi2iorequest.o mpi2iorequest.$msuf mpi2grequest.o mpi2grequest.$msuf mpi2datarep.$msuf mpi2datarep.o mpi2errhandler.o mpi2errhandler.$msuf mpi2hpconst.o mpi2hpconst.$msuf mpi2attr.o mpi2attr.$msuf mpi2typeex.o mpi2typeex.$msuf mpi2add.o mpi2add.$msuf mpistatus.o mpistatus.$msuf mpi2file.$msuf mpi2file.o
 else
   fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
 fi
@@ -3366,25 +3421,6 @@ fi
 
 
   
-
-if [ "x$mpiinc" != "x" ]
-then 
-
-    # Check for OpenMPI and add additional include directory
-    if [ -d $mpiinc/openmpi ]
-	then
-	echo "NOTE: Using OpenMPI"
-	additional_mpiincs="-I$mpiinc/openmpi/ompi -I$mpiinc/openmpi"
-    fi
-
-  if [ -d $mpiinc ]
-  then
-    #echo "Include dir found. adding -I$mpiinc to INC"
-    mpiincargs="$mpiincargs -I$mpiinc $additional_mpiincs"
-    mpiincargs=`echo $mpiincargs | sed  -e 's/ /#/g'`
-    fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs"
-  fi
-fi
   
   
 
