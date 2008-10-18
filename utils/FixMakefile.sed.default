@@ -57,3 +57,4 @@ s@^KTAU_INCUSERDIR=\(.*\)@KTAU_INCUSERDIR=@g
 s@^KTAU_LIB=\(.*\)@KTAU_LIB=@g
 s@^FULL_CXX=\(.*\)@FULL_CXX=@g
 s@^FULL_CC=\(.*\)@FULL_CC=@g
+s,^IFORTLIBDIR=.*$,IFORTLIBDIR=,g
