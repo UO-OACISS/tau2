@@ -2863,6 +2863,7 @@ void mpi_free_mem__( MPI_Aint * base, MPI_Fint * ierr)
 /******************************************************/
 /******************************************************/
 
+#ifdef TAU_MPIFILE
 
 /******************************************************
 ***      MPI_File_open wrapper function 
@@ -4089,6 +4090,8 @@ void mpi_file_sync__( MPI_Fint *  fh, MPI_Fint * ierr)
 /******************************************************/
 /******************************************************/
 
+#endif /* TAU_MPIFILE */
+
 
 /******************************************************
 ***      MPI_Type_create_subarray wrapper function 
@@ -4201,6 +4204,7 @@ void mpi_type_create_darray__( MPI_Fint *  size, MPI_Fint *  rank, MPI_Fint *  n
 /******************************************************/
 /******************************************************/
 
+#ifdef TAU_MPIFILE
 #ifdef TAU_MPIERRHANDLER
 
 /******************************************************
@@ -6448,6 +6452,8 @@ void mpi_file_write_shared__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count,
   return ; 
 }
 
+#endif /* TAU_MPIFILE */
+
 /******************************************************/
 /******************************************************/
 
@@ -7324,6 +7330,7 @@ void mpi_comm_get_name__( MPI_Fint *  comm, char * comm_name, MPI_Fint *  result
 /******************************************************/
 /******************************************************/
 
+#ifdef TAU_MPIFILE
 #ifdef TAU_MPIERRHANDLER
 
 /******************************************************
@@ -7377,6 +7384,7 @@ void mpi_file_call_errhandler__( MPI_Fint *  fh, MPI_Fint *  errorcode, MPI_Fint
 }
 
 #endif /* TAU_MPIERRHANDLER */
+#endif /* TAU_MPIFILE */
 
 /******************************************************/
 /******************************************************/
