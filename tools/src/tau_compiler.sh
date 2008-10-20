@@ -641,6 +641,12 @@ for arg in "$@" ; do
 		argsRemaining="$argsRemaining $arg"
 		;;
 
+	    -std:c99)
+		optPdtCFlags="$optPdtCFlags --c99"
+		argsRemaining="$argsRemaining $arg"
+		;;
+		
+
 	    # if we recognize a request for 132 chars, convert it for gfparse
 	    -132)
 		optPdtF95="$optPdtF95 -ffixed-line-length-132"
