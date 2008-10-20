@@ -215,6 +215,8 @@ extern "C" {
 #define TAU_PROFILE_SNAPSHOT(name)              Tau_profile_snapshot(name);
 #define TAU_PROFILE_SNAPSHOT_1L(name, expr)     Tau_profile_snapshot(name, expr);
 #define TAU_METADATA(name, value)               Tau_metadata(name, value);
+#define TAU_CONTEXT_METADATA(name, value)       Tau_context_metadata(name, value);
+#define TAU_PHASE_METADATA(name, value)         Tau_phase_metadata(name, value);
 
 /* for profiler objects created by name */
 
@@ -301,6 +303,8 @@ extern char * Tau_phase_enable_once(const char *group, void **ptr);
 extern void Tau_profile_snapshot(char *name);
 extern void Tau_profile_snapshot_1l(char *name, int number);
 extern void TAUDECL Tau_metadata(char *name, char *value);
+extern void TAUDECL Tau_phase_metadata(char *name, char *value);
+extern void TAUDECL Tau_context_metadata(char *name, char *value);
 
 extern void Tau_dynamic_start(char *name, void *tau_counter, int isPhase); 
 extern void Tau_dynamic_stop(char *name, void *tau_counter, int isPhase); 
@@ -344,7 +348,7 @@ extern int Tau_get_tid(void);
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: amorris $
- * $Revision: 1.57 $   $Date: 2008/08/08 22:18:17 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.57 2008/08/08 22:18:17 amorris Exp $
+ * $Revision: 1.58 $   $Date: 2008/10/20 23:53:21 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.58 2008/10/20 23:53:21 amorris Exp $
  ***************************************************************************/
 

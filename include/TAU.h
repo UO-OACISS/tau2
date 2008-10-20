@@ -152,6 +152,8 @@ extern void Tau_stop(const char *name);
 #define TAU_PROFILE_SNAPSHOT(name)
 #define TAU_PROFILE_SNAPSHOT_1L(name, expr)
 #define TAU_METADATA(name, value)
+#define TAU_PHASE_METADATA(name, value)
+#define TAU_CONTEXT_METADATA(name, value)
 
 /* extensions to the PHASE/TIMER API */
 #define TAU_DYNAMIC_PHASE(name, type, group)

@@ -868,6 +868,46 @@ extern "C" void Tau_metadata(char *name, char *value) {
   RtsLayer::UnLockDB();
 }
 
+extern "C" void Tau_context_metadata(char *name, char *value) {
+  // get the current calling context
+  Profiler *current = Profiler::CurrentProfiler[RtsLayer::getTid()];
+  FunctionInfo *fi = current->ThisFunction;
+  const char *fname = fi->GetName();
+
+  char *myName = (char*) malloc (strlen(name) + strlen(fname) + 10);
+  sprintf (myName, "%s => %s", fname, name);
+  char *myValue = strdup(value);
+  RtsLayer::LockDB();
+  TheMetaData()[myName] = myValue;
+  RtsLayer::UnLockDB();
+}
+
+extern "C" void Tau_phase_metadata(char *name, char *value) {
+  #ifdef TAU_PROFILEPHASE
+  // get the current calling context
+  std::string myString = "";
+  Profiler *current = Profiler::CurrentProfiler[RtsLayer::getTid()];
+  while (current != NULL) {
+    if (current->GetPhase()) {
+      FunctionInfo *fi = current->ThisFunction;
+      const char *fname = fi->GetName();
+      myString = std::string(fname) + " => " + myString;
+    }    
+    current = current->ParentProfiler;
+  }
+
+  myString = myString + name;
+  char *myName = strdup(myString.c_str());
+  char *myValue = strdup(value);
+ 
+  RtsLayer::LockDB();
+  TheMetaData()[myName] = myValue;
+  RtsLayer::UnLockDB();
+  #else
+  Tau_context_metadata(name, value);
+  #endif
+}
+
 
 int Tau_writeProfileMetaData(outputDevice *out, int counter) {
 #ifdef TAU_DISABLE_METADATA
