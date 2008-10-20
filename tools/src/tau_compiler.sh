@@ -641,7 +641,7 @@ for arg in "$@" ; do
 		argsRemaining="$argsRemaining $arg"
 		;;
 
-	    -std:c99)
+	    -std=c99)
 		optPdtCFlags="$optPdtCFlags --c99"
 		argsRemaining="$argsRemaining $arg"
 		;;
