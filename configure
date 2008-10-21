@@ -837,14 +837,31 @@ do
   -bfd=*)
       bfd=yes
       bfddir=`echo $arg | sed -e 's/-bfd=//'`
+      if [ "x$bfddir" = xdownload ] ; then
+	  bfddir=`pwd`/binutils-2.18
+	  if [ -r "$bfddir/lib/libbfd.a" ] ; then
+	      echo "BFD download already found, skipping"
+	  else
+	      mkdir .tmp
+	      cd .tmp
+	      wget http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.18.tar.gz
+	      tar -xzf binutils-2.18.tar.gz
+	      cd binutils-2.18
+	      ./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir
+	      make && make install
+	      cd ..
+	      cd ..
+	      rm -rf .tmp
+	  fi
+      fi
       fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib"
       fixmakeargs="$fixmakeargs bfdinclude=-I$bfddir/include"
       if [ ! -d $bfddir ]
       then
-        echo "Error: Cannot access BFD directory $bfddir"
-        exit 1
+          echo "Error: Cannot access BFD directory $bfddir"
+          exit 1
       fi
-    shift
+      shift
     ;;
 
   -perfinc=*)
