@@ -296,9 +296,11 @@ class CompleteDirectives
     
     // iterate through the pragma vector added to the list each one that appears
     // with this routine.
+		//cerr << "looking for prgmas/comments" << endl;
     for (PDB::pragmavec::iterator r = pdbHead.getPragmaVec().begin();
           r!=pdbHead.getPragmaVec().end(); r++)
     { 
+					//cerr << "found pragmas" << endl;
 		  if (getDirectiveType(**r) != 1 && getDirectiveType(**r) != -1)
 			{
 				if (verbosity == Debug)
@@ -332,13 +334,14 @@ class CompleteDirectives
   int getDirectiveType(pdbPragma p)
   {
     //Transform pragma text to lower case
+		//cerr << "in getDirectiveType." << endl;
     string text = p.text();
     std::transform (text.begin(), text.end(), text.begin(), (int(*)(int)) tolower);
     
     if (language == Fortran)
     {
 		  int startChar = 0;
-		  startChar = text.find("!$omp");
+		  startChar = text.find("$omp");
 			if (startChar != string::npos)
 			{ /*
 			  cerr << "evaulating text=" << text << endl;
@@ -346,24 +349,24 @@ class CompleteDirectives
 				cerr << "evaluating substr=" << text.substr(startChar,17) <<
 				endl;*/
 				//Match OMP PARALLEL directive
-				if (text.substr(startChar,17) == "!$omp parallel do")
+				if (text.substr(startChar,17) == "$omp parallel do")
 					return 2;
-				else if (text.substr(startChar,14) == "!$omp parallel")
+				else if (text.substr(startChar,14) == "$omp parallel")
 					return 1;
 				//Match OMP DO directive
-				else if (text.substr(startChar,8) == "!$omp do")
+				else if (text.substr(startChar,8) == "$omp do")
 					return 3;
-				else if (text.substr(startChar,9) == "!$omp for")
+				else if (text.substr(startChar,9) == "$omp for")
 					return 4;
 				//Match OMP END PARALLEL directive
-				else if (text.substr(startChar,21) == "!$omp end parallel do")
+				else if (text.substr(startChar,21) == "$omp end parallel do")
 					return -2;
-				else if (text.substr(startChar,18) == "!$omp end parallel")
+				else if (text.substr(startChar,18) == "$omp end parallel")
 					return -1;
 				//Match OMP DO directive
-				else if (text.substr(startChar,12) == "!$omp end do" || text.substr(0,13) == "!$omp enddo")
+				else if (text.substr(startChar,12) == "$omp end do" || text.substr(0,13) == "$omp enddo")
 					return -3;
-				else if (text.substr(startChar,13) == "!$omp end for")
+				else if (text.substr(startChar,13) == "$omp end for")
 					return -4;
 				else
 					return 0;
@@ -458,11 +461,17 @@ class CompleteDirectives
 			printLocation(s, block, loop);
 
     int currentLine = s->stmtBegin().line();
-		Directive nextDirective = directives.front();
+		Directive *nextDirective = &directives.front();
+	  while (nextDirective->getLine() < s->stmtBegin().line())
+		{
+      if (verbosity == Debug)
+			  printf("passed directive, removing it.\n");
+
+			directives.pop_front();
+		  nextDirective = &directives.front();
+		}
 	  //int depth = loop - openDirectives.front().getDepth();
-    switch(state)
-    {	
-			case STATE_CLOSED:
+			if (state == STATE_CLOSED)
 			{
     		if (verbosity == Debug)
 				  printf("In state: STATE_CLOSED\n");
@@ -482,8 +491,17 @@ class CompleteDirectives
           return addDirectives;
 				}
       }
-			case STATE_OPEN:
+			else if (state == STATE_OPEN)
 			{
+				int depth = loop - openDirectives.front().getDepth();
+				if (verbosity == Debug)
+				{
+					printf("In state: STATE_OPEN\n");
+					printf("last open directive: %d type: %d\n",
+					openDirectives.front().getLine(), openDirectives.front().getType());
+					printf("directive depth: %d\n", openDirectives.front().getDepth());
+					printf("loop depth: %d\n", depth);
+        }
     		if (openDirectives.size() == 0)
 				{
           return findOMPStmt(STATE_CLOSED, s, block, loop, pdb);
@@ -491,22 +509,15 @@ class CompleteDirectives
 				if (directives.size() > 0 && (directives.front().getType() +
 				openDirectives.front().getType() == 0))
 				{
+				  //printf("checking for directives...\n");
 					checkForDirective(state, s, block, loop, pdb);
 				}
 				else
 				{
-					int depth = loop - openDirectives.front().getDepth();
-					if (verbosity == Debug)
-					{
-						printf("In state: STATE_OPEN\n");
-						printf("last open directive: %d type: %d\n",
-						openDirectives.front().getLine(), openDirectives.front().getType());
-						printf("directive depth: %d\n", openDirectives.front().getDepth());
-						printf("loop depth: %d\n", depth);
-          }
 					if (depth == 0 && openDirectives.front().getLine() <
 					(s->stmtBegin().line() - 1))
 					{
+					  printf("we should see a directive.\n");
 					  //parallel do open
 						if (openDirectives.front().getType() != 1)
 						{
@@ -536,7 +547,7 @@ class CompleteDirectives
 					}
 				}
 			}
-			case STATE_EXPECTING:
+			else if (state == STATE_EXPECTING)
 			{
     		if (verbosity == Debug)
 				  printf("In state: STATE_EXPECTING\n");
@@ -565,7 +576,7 @@ class CompleteDirectives
 					return addDirectives;
 				}  
 			}
-			case STATE_ADD:
+			else if (state == STATE_ADD)
 			{
     		if (verbosity == Debug)
 				{
@@ -587,8 +598,11 @@ class CompleteDirectives
 					return gotoNextStmt(STATE_OPEN, s, block, loop, pdb);
 				}
 			}
-    }
-
+      else 
+			{
+			  return addDirectives;
+			}
+			return addDirectives;
 		/*
     while ( s->stmtBegin().line() >=
 			 directives.front().getLine() && ( openDirectives.size() > 0 ||
@@ -953,6 +967,7 @@ class CompleteDirectives
 			}
     }
 		return addDirectives;
+		}
 	  /*
 		if (verbosity == Debug)
 			printf("going to next stmt, at line: %d \n", s->stmtBegin().line());
@@ -1020,7 +1035,6 @@ class CompleteDirectives
 			printf("stopped recurising.\n");
 		
 		return addDirectives;*/
-	}
   void printLocation(const pdbStmt* s, const pdbStmt* block, int loop)
 	{
       int i = 0;
@@ -1308,6 +1322,6 @@ int main(int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
- * $Revision: 1.25 $   $Date: 2008/10/03 17:50:53 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.25 2008/10/03 17:50:53 scottb Exp $
+ * $Revision: 1.26 $   $Date: 2008/10/21 19:25:26 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.26 2008/10/21 19:25:26 scottb Exp $
  ***************************************************************************/
