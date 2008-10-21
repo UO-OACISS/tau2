@@ -104,6 +104,16 @@ fi
 	echo "s,^PAPIDIR=.*$,PAPIDIR=$papidir,g" >> $sedout
 	;;
 
+     bfdlink=*)
+        bfdlink=`echo $1 | sed -e 's/^bfdlink=//'`
+	echo "s,^BFDLINK=.*$,BFDLINK=$bfdlink,g" >> $sedout
+	;;
+
+     bfdinclude=*)
+        bfdinclude=`echo $1 | sed -e 's/^bfdinclude=//'`
+	echo "s,^BFDINCLUDE=.*$,BFDINCLUDE=$bfdinclude,g" >> $sedout
+	;;
+
      taugcclibdir=*)
         taugcclibdir=`echo $1 | sed -e 's/^taugcclibdir=//'`
         echo "s,^TAUGCCLIBDIR=.*$,TAUGCCLIBDIR=$taugcclibdir,g" >> $sedout
@@ -363,6 +373,10 @@ fi
         ;;
      TAU_BFD)
         echo NOTE: Using BFD support
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     TAU_BFDSHAREDLINK)
+        echo NOTE: Using BFD Shared Linking support
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 

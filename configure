@@ -428,6 +428,8 @@ compensate=no
 smarts=no
 pcl=no
 papi=no
+bfd=no
+bfddir=
 perf=no
 perfincdir=
 perflibdir=
@@ -827,6 +829,19 @@ do
       if [ ! -d $papidir ]
       then
         echo "Error: Cannot access PAPI directory $papidir"
+        exit 1
+      fi
+    shift
+    ;;
+
+  -bfd=*)
+      bfd=yes
+      bfddir=`echo $arg | sed -e 's/-bfd=//'`
+      fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib"
+      fixmakeargs="$fixmakeargs bfdinclude=-I$bfddir/include"
+      if [ ! -d $bfddir ]
+      then
+        echo "Error: Cannot access BFD directory $bfddir"
         exit 1
       fi
     shift
@@ -4076,7 +4091,12 @@ fi
 # Check for BFD
 ######################################################################
   cat <<EOF > conftest_bfd.c
-  #include <bfd.h>
+#include <bfd.h>
+void foo() {
+   bfd_init();
+   bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
+   return;
+}
 EOF
 $echo "Checking for bfd.h... ${nnl}"
 if $c_compiler $orig_useropt -c conftest_bfd.c 1> /dev/null 2>&1 ; then
@@ -4086,6 +4106,37 @@ else
     echo "no"
 fi
 /bin/rm -f conftest_bfd.o conftest_bfd.c
+######################################################################
+
+######################################################################
+# Check if BFD can be linked into a shared library
+######################################################################
+  cat <<EOF > conftest_bfd.c
+#include <bfd.h>
+void foo() {
+   bfd_init();
+   bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
+   return;
+}
+EOF
+$echo "Checking for shared library compatible libbfd... ${nnl}"
+shared_opt="-shared -fPIC"
+if [ $bfd = yes ] ; then
+    bfd_opt="-I$bfddir/include -L$bfddir/lib"
+else
+    bfd_opt=
+fi
+
+#echo $c_compiler $orig_useropt $shared_opt -o conftest_bfd.so conftest_bfd.c -fPIC $bfd_opt -lbfd
+
+if $c_compiler $orig_useropt $shared_opt -o conftest_bfd.so conftest_bfd.c -fPIC $bfd_opt -lbfd 1> /dev/null 2>&1 ; then
+    fixmakeargs="$fixmakeargs TAU_BFDSHAREDLINK"
+    echo "yes"
+else
+    echo "no"
+fi
+/bin/rm -f conftest_bfd.o conftest_bfd.c conftest_bfd.so
+#exit
 ######################################################################
 
 ######################################################################
