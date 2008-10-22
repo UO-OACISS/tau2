@@ -60,22 +60,16 @@ def buildClassifier(results):
 	print "building classifier..."
 	metadataFields = HashSet()
 	metadataFields.add("molecule name")
-	#metadataFields.add("basis set")
-	#metadataFields.add("run type")
-	#metadataFields.add("scf type")
+	metadataFields.add("basis set")
+	metadataFields.add("run type")
+	metadataFields.add("scf type")
 	metadataFields.add("node count")
 	metadataFields.add("core count")
 	metadataFields.add("mplevl")
 	metadataFields.add("dirscf")
-	# metadataFields.add("CPU MHz") # i.e. 1995.002
-	# metadataFields.add("CPU Cores") # i.e. 2
-	# metadataFields.add("OS Machine") # i.e. Linux
-	# metadataFields.add("Cache Size") # i.e. 4096 KB
 	# for accuracy
 	# classifier = CQoSClassifierOperation(results, "accuracy", metadataFields, "basis set")
 	# for performance
-	# classifier.setClassifierType(CQoSClassifierOperation.NAIVE_BAYES)
-	# classifier.setClassifierType(CQoSClassifierOperation.SUPPORT_VECTOR_MACHINE)
 	classifier = CQoSClassifierOperation(results, "Time", metadataFields, "dirscf")
 	classifier.setClassifierType(CQoSClassifierOperation.MULTILAYER_PERCEPTRON)
 	classifier.processData()
@@ -113,9 +107,9 @@ def test(classifier):
 			for nodes in ['1','2','4','8','16','32']:
 				inputFields = HashMap()
 				inputFields.put("molecule name", m)
-				#inputFields.put("basis set", "CCD")
-				#inputFields.put("run type", "ENERGY")
-				#inputFields.put("scf type", "RHF")
+				inputFields.put("basis set", "CCD")
+				inputFields.put("run type", "ENERGY")
+				inputFields.put("scf type", "RHF")
 				inputFields.put("node count", nodes)
 				inputFields.put("core count", "8")
 				inputFields.put("mplevl", mp)

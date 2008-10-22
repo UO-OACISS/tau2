@@ -43,7 +43,7 @@ import weka.classifiers.rules.DecisionTable;
  *
  * @author Mark Hall (mhall@cs.waikato.ac.nz)
  * @author Eibe Frank (eibe@cs.waikato.ac.nz)
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  * @see Clusterer
  * @see OptionHandler
  */
@@ -138,16 +138,6 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
       this.m_initialCenters[--j] = (initialCenters[i] - 1);
       //System.out.println(initialCenters[i]);
     }
-	/*
-    if (initialCenters.length == 6) {
-      this.m_initialCenters[0] = 253;
-      this.m_initialCenters[1] = 241;
-      this.m_initialCenters[2] = 177;
-      this.m_initialCenters[3] = 161;
-      this.m_initialCenters[4] = 124;
-      this.m_initialCenters[5] = 65;
-    }
-	*/
   }
   
   public void buildClusterer(Instances data) throws Exception {

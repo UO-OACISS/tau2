@@ -112,6 +112,22 @@ public class TrialThreadMetadata extends AbstractResult {
 			}
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
+			// no metadata?  ok, at least put the node, context, thread ids in the metadata
+			int nodes = Integer.parseInt(trial.getField("node_count"));
+			int contexts = Integer.parseInt(trial.getField("contexts_per_node"));
+			int threads = Integer.parseInt(trial.getField("threads_per_context"));
+			int index = 0;
+			for (int n = 0 ; n < nodes ; n++) {
+				for (int c = 0 ; c < contexts ; c++) {
+					for (int t = 0 ; t < threads ; t++) {
+						this.putExclusive(index, "node", "METADATA", n);
+						this.putExclusive(index, "context", "METADATA", c);
+						this.putExclusive(index, "thread", "METADATA", t);
+						this.putExclusive(index, "MPI Rank", "METADATA", index);
+						index++;
+					}
+				}
+			}
 		}
 
 	}

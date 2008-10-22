@@ -66,7 +66,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  *
- * <P>CVS $Id: AnalysisTask.java,v 1.11 2008/03/14 13:59:21 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTask.java,v 1.12 2008/10/22 00:18:32 khuck Exp $</P>
  * @author Kevin Huck
  * @version 0.1
  * @since 0.1
@@ -269,6 +269,7 @@ public class AnalysisTask extends TimerTask {
 						KMeansClusterInterface clusterer = factory.createKMeansEngine();
 						clusterer.setInputData(reducedData);
 						clusterer.setK(i);
+						clusterer.doSmartInitialization(false); // this takes too long - disable by default
 						clusterer.findClusters();
 						// get the centroids
 						RawDataInterface centroids = clusterer.getClusterCentroids();

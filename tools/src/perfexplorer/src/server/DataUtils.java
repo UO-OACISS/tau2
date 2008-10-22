@@ -57,7 +57,7 @@ public class DataUtils {
 			if (modelData.getDimensionReduction().equals(TransformationType.OVER_X_PERCENT)) {
 				sql.append("inner join interval_mean_summary s ");
 				sql.append("on e.id = s.interval_event and s.metric = p.metric ");
-				sql.append("and s.inclusive_percentage > ");
+				sql.append("and s.exclusive_percentage > ");
 				sql.append("" + modelData.getXPercent() + "");	
 			//} else if (modelData.getCurrentSelection() instanceof Metric) {
 				//sql.append("inner join interval_mean_summary s ");
@@ -88,7 +88,7 @@ public class DataUtils {
 				if (modelData.getDimensionReduction().equals(TransformationType.OVER_X_PERCENT)) {
 					sql.append("inner join interval_mean_summary s on ");
 					sql.append("e.id = s.interval_event ");
-					sql.append("and s.inclusive_percentage > ");
+					sql.append("and s.exclusive_percentage > ");
 					sql.append("" + modelData.getXPercent() + "");
 					sql.append(" where e.trial = ? ");
 					if (modelData.getCurrentSelection() instanceof Metric) {
@@ -200,10 +200,10 @@ public class DataUtils {
                 } else {
                     sql.append(") + p.thread as thread, p.metric as metric, p.inclusive/1000000, ");
                 }
-				sql.append("p.inclusive/1000000, s.inclusive_percentage, s.inclusive_percentage ");
+				sql.append("p.inclusive/1000000, s.inclusive_percentage, s.exclusive_percentage ");
 				sql.append("from interval_event e ");
 				sql.append("inner join interval_mean_summary s ");
-				sql.append("on e.id = s.interval_event and (s.inclusive_percentage > ");
+				sql.append("on e.id = s.interval_event and (s.exclusive_percentage > ");
 				sql.append(modelData.getXPercent());
 				sql.append("or s.inclusive_percentage = 100.0) ");
 				sql.append(" left outer join interval_location_profile p ");
@@ -304,7 +304,7 @@ public class DataUtils {
     	} catch (NoSuchElementException e) {
         	shorter = longName;
     	}
-		System.out.println(longName + " is now: " + shorter);
+		//System.out.println(longName + " is now: " + shorter);
         return shorter;
     }
 
