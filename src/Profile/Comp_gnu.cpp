@@ -261,7 +261,7 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
     //    printf ("name = %s : ", hn->name);
   } else {
 
-    hash_put((long)funcptr, "foo", "foo", -1);
+    hash_put((long)funcptr, "UNKNOWN", "UNKNOWN", -1);
     hn = hash_get((long)funcptr);
 
     if ( hn->fi == NULL) {
