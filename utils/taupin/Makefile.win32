@@ -3,20 +3,24 @@ CC = cl
 LINKER = link.exe
 MT = mt.exe
 
-TAUPIN_LIBS = pin.lib libxed.lib libcpmt.lib libcmt.lib pinvm.lib kernel32.lib ntdll-32.lib tau-profile-static.lib msmpi.lib  msmpe.lib
+TAUPIN_LIBS = pin.lib libxed.lib libcpmt.lib libcmt.lib pinvm.lib kernel32.lib ntdll-32.lib tau-profile-static.lib msmpi.lib msmpe.lib
+TAUPIN_LIBS_NOMPI = pin.lib libxed.lib libcpmt.lib libcmt.lib pinvm.lib kernel32.lib ntdll-32.lib tau-profile-static.lib
 
 TAUPIN_CFILES = MpiHooks.c 
 
 TAUPIN_CXXFILES = Arguments.cpp SpecManager.cpp TauPin.cpp TraceManager.cpp
 
 TAUPIN_OBJFILES = Arguments.obj SpecManager.obj TauPin.obj TraceManager.obj MpiHooks.obj
+TAUPIN_OBJFILES_NOMPI = Arguments.obj SpecManager.obj TauPin.obj TraceManager.obj MpiHooks.obj
+
 
 WRAPPER_CXXFILE = tauprofile.cpp stdafx.cpp
 WRAPPER_OBJFILE = tauprofile.obj stdafx.obj
 WRAPPER_LIBS =  kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib
 
-TARGET = taupin wrapper  
-TAUPIN_release = "TauPin.dll"
+
+TARGET = taupin taupin-nompi wrapper 
+TAUPIN_RELEASE = "TauPin.dll"
 TAUPIN_PDB = "TauPin.pdb"
 
 
@@ -26,15 +30,26 @@ TAUPIN_LDFLAGS = /OUT:"TauPin.dll" /INCREMENTAL:NO /NOLOGO /LIBPATH:"c:\tau\pin\
 W_CXXFLAGS = /O2 /GL /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_UNICODE" /D "UNICODE" /FD /EHsc /MD /W3 /nologo /c /Wp64 /Zi /TP /errorReport:prompt 
 W_LDFLAGS = /OUT:"tau_pin.exe" /INCREMENTAL:NO /NOLOGO /MANIFEST /MANIFESTFILE:"tau_pin.exe.intermediate.manifest"  /DEBUG /PDB:"tau_pin.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /MACHINE:X86 /ERRORREPORT:PROMPT
 
+CFLAGS_NOMPI = /O2 /Oi -I"C:\Program Files\Microsoft Compute Cluster Pack\Include" /I "c:\tau\pin\include" /I "c:\tau\pin\include\gen" /I "..\..\include" /D "NOMPI" /D "TARGET_IA32" /D "HOST_IA32" /D "TARGET_WINDOWS" /D "BIGARRAY_MULTIPLIER=1" /D "USING_XED" /D "_CRT_SECURE_NO_DEPRECATE" /D "WIN32" /FD /MT /GS- /Gy  /W3 /nologo /c /TC /wd4530 /errorReport:prompt  /EHs- /EHa- /Gs0x7FFFFFFF
+CXXFLAGS_NOMPI =/O2 /Oi -I"C:\Program Files\Microsoft Compute Cluster Pack\Include" /I "c:\tau\pin\include" /I "c:\tau\pin\include\gen" /I "..\..\include" /D "NOMPI" /D "TARGET_IA32" /D "HOST_IA32" /D "TARGET_WINDOWS" /D "BIGARRAY_MULTIPLIER=1" /D "USING_XED" /D "_CRT_SECURE_NO_DEPRECATE" /D "WIN32" /FD /MT /GS- /Gy  /W3 /nologo /c /TP /wd4530 /errorReport:prompt  /EHs- /EHa- /Gs0x7FFFFFFF
+TAUPIN_LDFLAGS_NOMPI = /OUT:"TauPinNoMpi.dll" /INCREMENTAL:NO /NOLOGO /LIBPATH:"c:\tau\pin\lib" /LIBPATH:"..\..\win32\lib" /LIBPATH:"../libs/x86/regexp" /LIBPATH:"C:\Program Files\Microsoft Compute Cluster Pack\Lib\i386"  /DLL /MANIFEST:NO /DEBUG /PDB:"TauPinNoMpi.pdb" /OPT:REF /ENTRY:"Ptrace_DllMainCRTStartup@12" /BASE:"0x55000000" /MACHINE:X86 /ERRORREPORT:PROMPT /export:main
+
 all : $(TARGET)
 
 taupin : $(TAUPIN_OBJFILES)
 	$(LINKER) $(TAUPIN_LDFLAGS) $(TAUPIN_OBJFILES)  $(TAUPIN_LIBS)
 	
+taupin-nompi : TAUPIN_OBJFILES_NOMPI
+	$(LINKER) $(TAUPIN_LDFLAGS_NOMPI) $(TAUPIN_OBJFILES_NOMPI)  $(TAUPIN_LIBS_NOMPI)
 
 $(TAUPIN_OBJFILES) : $(TAUPIN_CXXFILES) $(TAUPIN_CFILES)
 		$(CC) $(CXXFLAGS) $(TAUPIN_CXXFILES)
 		$(CC) $(CFLAGS) $(TAUPIN_CFILES) 
+
+TAUPIN_OBJFILES_NOMPI : $(TAUPIN_CXXFILES)
+		echo NOMPI
+		$(CC) $(CXXFLAGS_NOMPI) $(TAUPIN_CXXFILES)
+		$(CC) $(CFLAGS_NOMPI) $(TAUPIN_CFILES)
 
 wrapper: $(WRAPPER_OBJFILE) 
 	$(LINKER) $(W_LDFLAGS) $(WRAPPER_OBJFILE) $(WRAPPER_LIBS)
@@ -46,4 +61,4 @@ $(WRAPPER_OBJFILE): $(WRAPPER_CXXFILE)
 		$(CC) $(W_CXXFLAGS) $(WRAPPER_CXXFILE)  		  	
 
 clean:
-	del *.obj *.exe *.pdb *.dll *.exp *.idb
+	del *.obj *.exe *.pdb *.dll *.exp *.idb *.manifest *.lib

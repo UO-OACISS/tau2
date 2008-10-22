@@ -14,6 +14,7 @@ The instrumented version of the routines use PMPI interface provided by MSMPI.
 #include <mpi.h>
 #include <stdlib.h>
 
+#ifndef NOMPI
 
 #ifdef DBG_MPI
 #define DBG_TR_MPI(exp) printf("%s::%s\n",exp,__FUNCTION__);\
@@ -1468,10 +1469,6 @@ void MpiSetUp()
     TAU_PROFILE_SET_NODE(procid_0 ); 
 }
 
-void SetupProfileFile()
-{
-	TAU_PROFILE_SET_NODE(0);
-}
 
 int MPIAPI HMPI_Init( argc, argv )
 int * argc;
@@ -3339,7 +3336,12 @@ int * top_type;
 
   return returnVal;
 }
+#endif
 
+void SetupProfileFile()
+{
+	TAU_PROFILE_SET_NODE(0);
+}
 
 void DumpTrace()
 {

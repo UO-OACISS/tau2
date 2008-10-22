@@ -10,6 +10,7 @@
 #include <stdlib.h>
 using namespace std;
 
+string GetMpiArgs(int argc,char** argv );
 //displays the help
 void Usage()
 {
@@ -134,13 +135,17 @@ void SpawnProfiler(char * cmd, string params )
 }
 
 //get the pintool path  
-string GetTauPin()
+string GetTauPin(int argc, char** argv)
 {
 	//for now just getting the dll
 	//string taupin="\""+GetTauPinPath();
 	//taupin.append("\\TauPin.dll\"");
 	//return taupin;
-	return "TauPin.dll";
+	string mpi_arg = GetMpiArgs(argc,argv);
+	if(mpi_arg.length()!=0)
+		return "TauPin.dll";
+	else 
+		return "TauPinNoMpi.dll";
 }
 //get the PIN tool
 string GetMyPin()
@@ -239,7 +244,7 @@ string GetToolArgs(int argc, char** argv)
 	//string args("pin.exe -t TauPin.dll ");
 	string args=GetMyPin();
 	args.append(" -t ");
-	args.append(GetTauPin());
+	args.append(GetTauPin(argc, argv));
 	args.append(" ");
 	string target_app=GetTargetApp(argc,argv);
 	target_app=ExtractExeName(target_app);

@@ -1,6 +1,6 @@
 #pragma once
 #include "SpecManager.h"
-#include "pin.h"
+#include "pin.h" 
 #include<mpi.h>
 #include<list>
 #include<fstream>
@@ -72,6 +72,7 @@ public:
 	bool IsNormal(RTN myrtn);
 	void LogMessage(string msg);
 };
+
 
 extern "C" {
    //this was a hack to fix around rewriting thr existing code

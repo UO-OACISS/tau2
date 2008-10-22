@@ -194,9 +194,12 @@ void TraceManager::InstApply(IMG img)
 
 				DBG_TRACE(RTN_Name(myrtn));
 				//cerr<<RTN_Name(myrtn)<<endl;
+
 				if(IsMpiRtn(RTN_Name(myrtn)))
 				{
+#ifndef NOMPI
 					MpiInstRtn(myrtn);
+#endif
 					myrtn=RTN_Next(myrtn);
 					continue;
 				}
@@ -315,7 +318,7 @@ RTN RTN_FindLoop(IMG img, string rtn_name)
 	return empty;
 }
 
-
+#ifndef NOMPI
 VOID MpiInst(IMG img)
 {
 	//the following lists take care of instrumenting 
@@ -1876,3 +1879,4 @@ VOID MpiInstRtn(RTN myrtn)
 	}
 		
 }
+#endif
