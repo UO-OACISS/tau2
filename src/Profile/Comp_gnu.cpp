@@ -213,6 +213,11 @@ static void get_symtab(void) {
 #endif
 }
 
+
+void runOnExit() {
+  Tau_destructor_trigger();
+}
+
 #ifdef TAU_SICORTEX
 #pragma weak __cyg_profile_func_enter
 #endif
@@ -224,7 +229,6 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 #endif
 
   if ( gnu_init ) {
-    gnu_init = 0;
     get_symtab();
     TheUsingCompInst() = 1;
     TAU_PROFILE_SET_NODE(0);
@@ -277,6 +281,14 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
   }
 
   //  printf ("enter, func = %p, callsite = %p\n", func, callsite);
+
+  if ( gnu_init ) {
+    gnu_init = 0;
+    // we register this here at the end so that it is called 
+    // before the VT objects are destroyed.  Objects are destroyed and atexit targets are 
+    // called in the opposite order in which they are created and registered.
+    atexit(runOnExit);
+  }
 
 }
 
