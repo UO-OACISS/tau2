@@ -354,6 +354,7 @@ for arg in "$@" ; do
 
 		    -optTauSelectFile*)
 			optTauSelectFile=${arg#"-optTauSelectFile="}
+			tauSelectFile=${arg#"-optTauSelectFile="}
 			echoIfDebug "\tTauSelectFile is: "$optTauSelectFile
 				#Passing a blank file name with -f option would cause ERROR 
 				#And so if it is blank, -f option should not be appended at the start.
@@ -860,7 +861,7 @@ if [ $optCompInst == $TRUE ]; then
 	exit 1
     fi
 
-    argsRemaining="$argsRemaining $optCompInstOption"
+#    argsRemaining="$argsRemaining $optCompInstOption"
 #    optLinking="$optLinking $optCompInstLinking"
 fi
 
@@ -1114,7 +1115,20 @@ if [ $gotoNextStep == $TRUE ]; then
 	    tempTauFileName=${arrTau[$tempCounter]##*/}
 	    instrumentedFileForCompilation="$tempTauFileName"
             #newCmd="$CMD  $argsRemaining $instrumentedFileForCompilation $OUTPUTARGSFORTAU $optCompile"
-	    newCmd="$CMD $headerInstFlag -I${arrFileNameDirectory[$tempCounter]} $argsRemaining $instrumentedFileForCompilation $OUTPUTARGSFORTAU $optCompile"
+
+	    # Should we use compiler-based instrumentation on this file?
+	    extraopt=
+	    if [ $optCompInst == $TRUE ]; then
+		useCompInst=yes
+		if [ "x$tauSelectFile" != "x" ] ; then
+		    selectfile=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@'` 
+		    useCompInst=`$selectfile $tauSelectFile $tempTauFileName`
+		fi
+		if [ $useCompInst = yes ]; then
+		    extraopt=$optCompInstOption
+		fi
+	    fi
+	    newCmd="$CMD $headerInstFlag -I${arrFileNameDirectory[$tempCounter]} $argsRemaining $instrumentedFileForCompilation $OUTPUTARGSFORTAU $optCompile $extraopt"
 
 	    #echoIfDebug "cmd before appending the .o file is $newCmd"
 	    if [ $hasAnOutputFile == $TRUE ]; then
@@ -1158,8 +1172,21 @@ if [ $gotoNextStep == $TRUE ]; then
 	    tempTauFileName=${arrTau[$tempCounter]##*/}
 	    instrumentedFileForCompilation=" $tempTauFileName"
 
+	    # Should we use compiler-based instrumentation on this file?
+	    extraopt=
+	    if [ $optCompInst == $TRUE ]; then
+		useCompInst=yes
+		if [ "x$tauSelectFile" != "x" ] ; then
+		    selectfile=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@'` 
+		    useCompInst=`$selectfile $tauSelectFile $tempTauFileName`
+		fi
+		if [ $useCompInst = yes ]; then
+		    extraopt=$optCompInstOption
+		fi
+	    fi
+
             # newCmd="$CMD $argsRemaining  -c $instrumentedFileForCompilation  $OUTPUTARGSFORTAU $optCompile -o $outputFile"
-	    newCmd="$CMD $argsRemaining $headerInstFlag -I${arrFileNameDirectory[$tempCounter]} -c $instrumentedFileForCompilation  $OUTPUTARGSFORTAU $optCompile -o $outputFile"
+	    newCmd="$CMD $argsRemaining $headerInstFlag -I${arrFileNameDirectory[$tempCounter]} -c $instrumentedFileForCompilation  $OUTPUTARGSFORTAU $optCompile -o $outputFile $extraopt"
 
 	    evalWithDebugMessage "$newCmd" "Compiling (Individually) with Instrumented Code"
 	    if [  ! -e $outputFile ]; then
