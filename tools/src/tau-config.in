@@ -18,6 +18,7 @@ ProfileSpecified="false"
 TraceSpecified="false"
 DisableSpecified="false"
 SerialSpecified="false"
+MPISpecified="false"
 
 if [ $# = 0 ] ; then
     echo "TAUROOT=$TAUROOT"
@@ -51,6 +52,9 @@ for i in $* ; do
         getbinding="true"
     elif [ "$i" = "serial" ] ; then
         SerialSpecified="true"
+    elif [ "$i" = "mpi" ] ; then
+        MPISpecified="true"
+        TauOptions="$TauOptions $i"
     else
         TauOptions="$TauOptions $i"
     fi
@@ -63,6 +67,9 @@ if [ "$ProfileSpecified" = "false" -a "$TraceSpecified" = "false" ] ; then
 fi
 if [ "$SerialSpecified" = "true" ] ; then
     TauOptionsExclude="mpi"
+fi
+if [ "$MPISpecified" = false -a $SerialSpecified = false ] ; then
+    TauOptions="$TauOptions mpi"
 fi
 if [ "$ProfileSpecified" = "true" -a "$TraceSpecified" = "false" ] ; then
     TauOptionsExclude="$TauOptionsExclude trace"
