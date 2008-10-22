@@ -4109,7 +4109,7 @@ int main(int argc, char **argv)
 
   if (argc < 3) 
   { 
-    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-noinit] [-memory] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [-rn <return_keyword>] [-rv <return_void_keyword>] [-e <exit_keyword>] [-p]"<<endl;
+    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-noinit] [-memory] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [-rn <return_keyword>] [-rv <return_void_keyword>] [-e <exit_keyword>] [-p] [-check <filename>]"<<endl;
     cout<<"----------------------------------------------------------------------------------------------------------"<<endl;
     cout <<"-noinline: disables the instrumentation of inline functions in C++"<<endl;
     cout <<"-noinit: does not call TAU_INIT(&argc,&argv). This disables a.out --profile <group[+<group>]> processing."<<endl;
@@ -4125,16 +4125,16 @@ int main(int argc, char **argv)
     cout<<"-e <exit_keyword>: Specify a different keyword for exit (e.g., a macro that calls exit)"<<endl;
     cout<<"-p : Generate instrumentation calls for perflib [LANL] instead of TAU" <<endl;
     cout<<"-spec <spec_file>: Use instrumentation commands from <spec_file>"<<endl;
+    cout<<"-check <filename>: Check match of filename in selective instrumentation file"<<endl;
     cout<<"----------------------------------------------------------------------------------------------------------"<<endl;
     cout<<"e.g.,"<<endl;
     cout<<"% "<<argv[0]<<" foo.pdb foo.cpp -o foo.inst.cpp -f select.tau"<<endl;
     cout<<"----------------------------------------------------------------------------------------------------------"<<endl;
     return 1;
   }
-  PDB p(argv[1]); if ( !p ) return 1;
-  setGroupName(p, group_name);
   bool outFileNameSpecified = false;
   int i; 
+
   const char *filename; 
   for(i=0; i < argc; i++)
   {
@@ -4267,6 +4267,15 @@ int main(int argc, char **argv)
           printf("Using instrumentation code from spec file: %s\n", argv[i]);
 #endif /* DEBUG */
         }
+        if (strcmp(argv[i], "-check") == 0) {
+          ++i;
+	  if (processFileForInstrumentation(argv[i])) {
+	    printf ("yes\n");
+	  } else {
+	    printf ("no\n");
+	  }
+	  return 0;
+        }
         break;
       }
 
@@ -4276,6 +4285,9 @@ int main(int argc, char **argv)
     outFileName = string(filename + string(".ins"));
   }
 
+
+  PDB p(argv[1]); if ( !p ) return 1;
+  setGroupName(p, group_name);
 
   bool instrumentThisFile;
   bool fuzzyMatchResult;
@@ -4397,8 +4409,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.199 $   $Date: 2008/10/14 00:23:37 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.199 2008/10/14 00:23:37 amorris Exp $
+ * $Revision: 1.200 $   $Date: 2008/10/22 00:19:53 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.200 2008/10/22 00:19:53 amorris Exp $
  ***************************************************************************/
 
 
