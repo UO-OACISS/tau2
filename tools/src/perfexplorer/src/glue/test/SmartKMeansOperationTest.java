@@ -54,9 +54,10 @@ public class SmartKMeansOperationTest extends TestCase {
 		for (int outer = 1 ; outer < 11 ; outer++) {
 			for (int i = 0 ; i < 100 ; i+=outer) {
 				for (int inner = 0 ; inner < outer ; inner++) {
-					result.putDataPoint(i+inner, "x", metric, type, generator.nextGaussian()+5+(100*inner));
-//					result.putDataPoint(i+inner, "y", metric, type, generator.nextGaussian()+5+(100*inner));
-//					result.putDataPoint(i+inner, "z", metric, type, generator.nextGaussian()+5+(100*inner));
+					result.putDataPoint(i+inner, "w", metric, type, Math.random()+(5*inner));
+					result.putDataPoint(i+inner, "x", metric, type, Math.random()+(5*inner));
+					//result.putDataPoint(i+inner, "y", metric, type, Math.random()+(5*inner));
+					//result.putDataPoint(i+inner, "z", metric, type, Math.random()+(5*inner));
 				}
 			}
 	

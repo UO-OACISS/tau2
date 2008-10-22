@@ -147,9 +147,7 @@ def main():
 		print "No trial selected - script exiting"
 		return
 
-		# choose the right database configuration - a string which matches the end of the jdbc connection,
-		# such as "perfdmf" to match "jdbc:derby:/Users/khuck/src/tau2/apple/lib/perfdmf"
-		#Utilities.setSession("openuh")
+		Utilities.setSession("openuh")
 
 		# load just the average values across all threads, input: app_name, exp_name, trial_name
 		#trial = TrialResult(Utilities.getTrial("msap_parametric.optix.static", "size.400", "16.threads"))

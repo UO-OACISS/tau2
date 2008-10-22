@@ -74,8 +74,13 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 			if (this.metadataFields != null) {
 				for (String key : this.metadataFields) {
 					// don't include the class label - we want just the "best" method for that parameter - not all of them
-					if (!key.equals(this.classLabel))
-						localMeta.put(key, meta.get(key));
+					if (!key.equals(this.classLabel)) {
+						String tmpStr = meta.get(key);
+						if (tmpStr == null) 
+							System.out.println("NO VALUE FOUND FOR KEY: "+ key);
+						else
+							localMeta.put(key, meta.get(key));
+					}
 				}
 			// otherwise, if the user didn't specify a set of properties, use them all (?)
 			} else {
