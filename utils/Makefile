@@ -82,6 +82,7 @@ CWARNING	= $(WARNINGSOPT)
 #PDT#WRAP 		= tau_wrap #ENDIF#
 #PDT#PDTOMPCHECK	= tau_ompcheck #ENDIF#
 #PDT#HEADERLIST 	= tau_header_list #ENDIF#
+SELECTFILE 	= tau_selectfile
 #OPARI#TAUOMPCHECK    = $(PDTOMPCHECK) #ENDIF#
 #DYNINST#TAURUN 	= tau_run #ENDIF#
 #TRACE#TRACE2PROFILE	= trace2profile/trace2profile #ENDIF#
@@ -152,6 +153,7 @@ INSTALLDEST	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin
 #PDT#INSTALLWRAP 	= $(INSTALLDEST)/tau_wrap #ENDIF#
 #PDT#INSTALLPDTOMPCHECK 	= $(INSTALLDEST)/tau_ompcheck #ENDIF#
 #PDT#INSTALLHEADERLIST = $(INSTALLDEST)/tau_header_list #ENDIF#
+INSTALLSELECTFILE = $(INSTALLDEST)/tau_selectfile
 #OPARI#INSTALLTAUOMPCHECK 	= $(INSTALLPDTOMPCHECK) #ENDIF#
 #DYNINST#INSTALLTAURUN 	= $(INSTALLDEST)/tau_run #ENDIF#
 #DYNINST#INSTALLTAURUN 	= $(INSTALLDEST)/tau_run #ENDIF#
@@ -258,10 +260,17 @@ tau_instrumentor.o: tau_instrumentor.cpp
 tau_header_list: tau_header_list.cpp
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include tau_header_list.cpp -o $@ $(PDTOPTS) -lm $(LEXTRA) 
 
+tau_selectfile: tau_selectfile.cpp tau_selective_dyn.o
+		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include tau_selectfile.cpp tau_selective_dyn.o -o $@ $(PDTOPTS) -lm $(LEXTRA) 
+
 tau_instrument.o: tau_instrument.cpp 
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include -c tau_instrument.cpp
+
 tau_selective.o: tau_selective.cpp 
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include -c tau_selective.cpp
+
+tau_selective_dyn.o: tau_selective.cpp 
+		$(PDT_CXX_COMP) $(PDT_CFLAGS) -DTAU_DYNINST -I$(PDTDIR)/include -c tau_selective.cpp -o tau_selective_dyn.o
 
 tau_run: 	tau_run.o tau_selective.o  
 		$(CXX) $(CFLAGS) tau_run.o tau_selective.o -o $@ $(DYNLIBS) $(LEXTRA) 
@@ -379,6 +388,12 @@ $(INSTALLDEST)/tau_header_list: tau_header_list
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
 
+$(INSTALLDEST)/tau_selectfile: tau_selectfile
+		@echo Installing $? in $(INSTALLDEST)
+		if [ -d $(INSTALLDEST) ] ; then true; \
+                   else mkdir $(INSTALLDEST) ;fi
+		$(TAU_INSTALL) $? $(INSTALLDEST)
+
 $(INSTALLDEST)/tau_wrap: tau_wrap
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
@@ -467,7 +482,7 @@ $(INSTALLDEST)/perf2tau: perf2tau
 #PCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
 #HPCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
 
-install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_reduce $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLDEST)/opari $(INSTALLTRACE2PROFILE) $(INSTALLTAU_TIMECORRECT) $(INSTALLPCXX) $(INSTALLINSTR) $(INSTALLTAURUN) $(INSTALLTAU2VTF) $(INSTALLVTF2PROFILE) $(INSTALLTAU2OTF) $(INSTALLTAU2ELG) $(INSTALLTAUOMPCHECK) $(INSTALLPERF2TAU) $(INSTALLWRAP) $(INSTALLHEADERLIST)
+install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_reduce $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLDEST)/opari $(INSTALLTRACE2PROFILE) $(INSTALLTAU_TIMECORRECT) $(INSTALLPCXX) $(INSTALLINSTR) $(INSTALLTAURUN) $(INSTALLTAU2VTF) $(INSTALLVTF2PROFILE) $(INSTALLTAU2OTF) $(INSTALLTAU2ELG) $(INSTALLTAUOMPCHECK) $(INSTALLPERF2TAU) $(INSTALLWRAP) $(INSTALLHEADERLIST) $(INSTALLSELECTFILE)
 
 program:        $(PROGRAM)
 
