@@ -1177,10 +1177,15 @@ if [ $gotoNextStep == $TRUE ]; then
 	    if [ $optCompInst == $TRUE ]; then
 		useCompInst=yes
 		if [ "x$tauSelectFile" != "x" ] ; then
-		    selectfile=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@'` 
-		    useCompInst=`$selectfile $tauSelectFile $tempTauFileName`
+		    if [ -r "$tauSelectFile" ] ; then
+			selectfile=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@'` 
+			useCompInst=`$selectfile $tauSelectFile $tempTauFileName`
+		    else
+			echo "Error: Unable to read $tauSelectFile"
+			useCompInst=yes
+		    fi
 		fi
-		if [ $useCompInst = yes ]; then
+		if [ "x$useCompInst" = "xyes" ]; then
 		    extraopt=$optCompInstOption
 		fi
 	    fi
