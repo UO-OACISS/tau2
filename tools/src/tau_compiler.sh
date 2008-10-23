@@ -832,7 +832,7 @@ while [ $tempCounter -lt $numFiles ]; do
     if [ $optCompInst == $FALSE ] ; then
 	newFile=${base}.inst${suf}
     else
-	newFile=${base}${suf}
+	newFile=${arrFileName[$tempCounter]}
     fi
     arrTau[$tempCounter]="${OUTPUTARGSFORTAU}${newFile}"
     arrPdbForTau[$tempCounter]="${PDBARGSFORTAU}${newFile}"
@@ -1034,6 +1034,9 @@ if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE ]; then
     done
 fi
 
+####################################################################
+# Header file instrumentation
+####################################################################
 if [ $optHeaderInst == $TRUE ]; then
 #     echo ""
 #     echo "*****************************"
@@ -1056,12 +1059,10 @@ if [ $optHeaderInst == $TRUE ]; then
 	headerreplacer=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_header_replace.pl@'` 
 
 	for header in `$headerlister $pdbFile` ; do
-# 	    echo "Header: $header"
 	    filename=`echo ${header} | sed -e's/.*\///'`
 	    tauCmd="$optTauInstr $pdbFile $header -o $headerInstDir/tau_$filename "
 	    tauCmd="$tauCmd $optTau $optTauSelectFile"
 	    evalWithDebugMessage "$tauCmd" "Instrumenting header with TAU"
-#	    echo "$headerreplacer $pdbFile $headerInstDir/tau_$filename > $headerInstDir/tau_hr_$filename"
 	    $headerreplacer $pdbFile $headerInstDir/tau_$filename > $headerInstDir/tau_hr_$filename
 	done
 
@@ -1076,8 +1077,30 @@ if [ $optHeaderInst == $TRUE ]; then
 fi
 
 
+# filesToClean=
+# ####################################################################
+# # Add "#include <TAU.h>" to compiler-instrumentation C/C++ files (for pthread wrapping)
+# ####################################################################
+# if [ $optCompInst == $TRUE ]; then
+#     if [ $groupType != $group_f_F ]; then
+# 	tempCounter=0
+# 	while [ $tempCounter -lt $numFiles ]; do
+# 	    instFileName=${arrFileName[$tempCounter]}
+# 	    base=`echo ${instFileName} | sed -e 's/\.[^\.]*$//' -e's/.*\///'`
+# 	    suf=`echo ${instFileName} | sed -e 's/.*\./\./' `
+# 	    newfile=${base}.tau${suf}
+# 	    echo "#include <TAU.h>" > $newfile
+# 	    cat $instFileName >> $newfile
+# 	    arrTau[$tempCounter]=$newfile
+# 	    filesToClean="$filesToClean $newfile"
+# 	    tempCounter=tempCounter+1
+# 	done
+#     fi
+# fi
+
+
 ####################################################################
-#Compiling the Instrumented Source Code
+# Compiling the Instrumented Source Code
 ####################################################################
 if [ $gotoNextStep == $TRUE ]; then
 
@@ -1119,6 +1142,8 @@ if [ $gotoNextStep == $TRUE ]; then
 	    # Should we use compiler-based instrumentation on this file?
 	    extraopt=
 	    if [ $optCompInst == $TRUE ]; then
+		tempTauFileName=${arrTau[$tempCounter]}
+		instrumentedFileForCompilation=" $tempTauFileName"
 		useCompInst=yes
 		if [ "x$tauSelectFile" != "x" ] ; then
 		    selectfile=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@'` 
@@ -1175,6 +1200,8 @@ if [ $gotoNextStep == $TRUE ]; then
 	    # Should we use compiler-based instrumentation on this file?
 	    extraopt=
 	    if [ $optCompInst == $TRUE ]; then
+		tempTauFileName=${arrTau[$tempCounter]}
+		instrumentedFileForCompilation=" $tempTauFileName"
 		useCompInst=yes
 		if [ "x$tauSelectFile" != "x" ] ; then
 		    if [ -r "$tauSelectFile" ] ; then
@@ -1189,9 +1216,9 @@ if [ $gotoNextStep == $TRUE ]; then
 		    extraopt=$optCompInstOption
 		fi
 	    fi
-
+	    
             # newCmd="$CMD $argsRemaining  -c $instrumentedFileForCompilation  $OUTPUTARGSFORTAU $optCompile -o $outputFile"
-	    newCmd="$CMD $argsRemaining $headerInstFlag -I${arrFileNameDirectory[$tempCounter]} -c $instrumentedFileForCompilation  $OUTPUTARGSFORTAU $optCompile -o $outputFile $extraopt"
+	    newCmd="$CMD $argsRemaining $headerInstFlag -I${arrFileNameDirectory[$tempCounter]} -c $instrumentedFileForCompilation $OUTPUTARGSFORTAU $optCompile -o $outputFile $extraopt"
 
 	    evalWithDebugMessage "$newCmd" "Compiling (Individually) with Instrumented Code"
 	    if [  ! -e $outputFile ]; then
@@ -1258,6 +1285,10 @@ if [ $needToCleanPdbInstFiles == $TRUE ]; then
 
     if [ $optHeaderInst == $TRUE ] ; then
 	evalWithDebugMessage "/bin/rm -rf $headerInstDir" "cleaning header instrumentation directory"
+    fi
+
+    if [ "x$filesToClean" != "x" ] ; then
+	evalWithDebugMessage "/bin/rm -f $filesToClean" "cleaning inst file"
     fi
 fi
 
