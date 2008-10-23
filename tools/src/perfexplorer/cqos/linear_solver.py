@@ -47,14 +47,6 @@ def loadExperiments():
 def buildClassifier(results):
 	print "building classifier..."
 	metadataFields = HashSet()
-	# metadataFields.add("cflini")
-	# metadataFields.add("fnorm")
-	# metadataFields.add("grashof")
-	# #metadataFields.add("ksp")
-	# metadataFields.add("lidvelocity")
-	# metadataFields.add("problemsize")
-	# metadataFields.add("procs")
-	# metadataFields.add("snes")
 	metadataFields.add("procs")
 	metadataFields.add("gridsize")
 	metadataFields.add("cflini")
@@ -64,12 +56,13 @@ def buildClassifier(results):
 	metadataFields.add("snes")
 	metadataFields.add("ksp")
 	metadataFields.add("pc")
-	metadataFields.add("fnorm")
+	#metadataFields.add("fnorm")
 	metadataFields.add("matrixsize")
 	metadataFields.add("snesrtol")
 	metadataFields.add("ksprtol")
 	metadataFields.add("success")
-	metadataFields.add("fnorm")
+	metadataFields.add("snes_success")
+	metadataFields.add("snes_fnorm")
 	metadataFields.add("cfl")
 
 	# chose the linear solver
@@ -78,15 +71,7 @@ def buildClassifier(results):
 	classifier.processData()
 	print classifier.crossValidateModel()
 	classifier = CQoSClassifierOperation(results, "P_WALL_CLOCK_TIME", metadataFields, "ksp")
-	classifier.setClassifierType(CQoSClassifierOperation.ALTERNATING_DECISION_TREE)
-	classifier.processData()
-	print classifier.crossValidateModel()
-	classifier = CQoSClassifierOperation(results, "P_WALL_CLOCK_TIME", metadataFields, "ksp")
 	classifier.setClassifierType(CQoSClassifierOperation.NAIVE_BAYES)
-	classifier.processData()
-	print classifier.crossValidateModel()
-	classifier = CQoSClassifierOperation(results, "P_WALL_CLOCK_TIME", metadataFields, "ksp")
-	classifier.setClassifierType(CQoSClassifierOperation.RANDOM_TREE)
 	classifier.processData()
 	print classifier.crossValidateModel()
 	classifier = CQoSClassifierOperation(results, "P_WALL_CLOCK_TIME", metadataFields, "ksp")
@@ -104,13 +89,6 @@ def buildClassifier(results):
 def testClassifier(classifier):
 	# test the classifier
 	inputFields = HashMap()
-	# inputFields.put("cflini", "0.1")
-	# inputFields.put("fnorm", "0.001")
-	# inputFields.put("grashof", "100000")
-	# inputFields.put("lidvelocity", "100")
-	# inputFields.put("problemsize", "0x0")
-	# inputFields.put("procs", "2")
-	# inputFields.put("snes", "ls")
 	inputFields.put("procs", "2")
 	inputFields.put("gridsize", "16x16")
 	inputFields.put("cflini", "0.1")
@@ -119,12 +97,12 @@ def testClassifier(classifier):
 	inputFields.put("grashof", "100000")
 	inputFields.put("snes", "ls")
 	inputFields.put("pc", "mg")
-	inputFields.put("fnorm", "3.266912311248e+03")
+	#inputFields.put("fnorm", "3.266912311248e+03")
 	inputFields.put("matrixsize", "3844x3844")
 	inputFields.put("snesrtol", "1.000000e-03")
 	inputFields.put("ksprtol", "1.000000e-05")
-	inputFields.put("success", "1")
-	inputFields.put("fnorm", "3562.78")
+	inputFields.put("fnorm", "3.562758437961e+03")
+	inputFields.put("snes_fnorm", "3562.78")
 	inputFields.put("cfl", "0.100865")
 	print inputFields
 	print "Solver: ", classifier.getClass(inputFields),  classifier.getConfidence()
@@ -139,13 +117,21 @@ results = ArrayList()
 print "getting trials..."
 
 trials = loadTrials()
+fred = 1
 for trial in trials:
-	loaded = TrialMeanResult(trial)
-	# important - split the trial, because it's iterative, and each iteration has its own metadata
-	operator = SplitTrialPhasesOperation(loaded, "Iteration");
-	outputs = operator.processData();
-	for output in outputs:
-		results.add(output)
+	#if fred < 2:
+		loaded = TrialMeanResult(trial)
+		# important - split the trial, because it's iterative, and each iteration has its own metadata
+		operator = SplitTrialPhasesOperation(loaded, "Iteration");
+		outputs = operator.processData();
+		#barney = 1
+		for output in outputs:
+			#if barney < 2:
+				results.add(output)
+			#barney = barney + 1
+		#break
+	#else:
+	#fred = fred + 1
 
 # experiments = loadExperiments()
 # for experiment in experiments:

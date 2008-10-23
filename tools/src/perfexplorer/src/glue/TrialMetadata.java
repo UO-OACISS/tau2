@@ -173,6 +173,8 @@ public class TrialMetadata {
 							String parameterType = results.getString(4);
 							String parameterValue = results.getString(5);
 							commonAttributes.put(parameterName, parameterValue);
+//							if (eventName==null)
+//								System.out.println(eventName+":"+parameterName+"="+parameterValue);
 						}
 					}
 					results.close();

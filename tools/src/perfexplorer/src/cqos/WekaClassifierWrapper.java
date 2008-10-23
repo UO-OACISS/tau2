@@ -151,7 +151,12 @@ public class WekaClassifierWrapper implements Serializable {
 				// iterate through them, and put them in the FastVector
 				Iterator classIter = this.nominalAttributes[index].iterator();
 				while(classIter.hasNext()) {
-					classes.addElement(classIter.next());
+					Object tmp = classIter.next();
+					if (tmp != null) {
+						classes.addElement(tmp);
+//						if (key.equals(this.classLabel))
+//							System.out.println(key+":"+tmp);
+					}
 				}
 				
 				// this is a nominal attribute.
@@ -161,7 +166,8 @@ public class WekaClassifierWrapper implements Serializable {
 				// this is a numeric attribute.
 				attr = new Attribute(key);
 			}
-			System.out.println("new attribute: " + key);
+//			if (key.equals(this.classLabel))
+//				System.out.println("new attribute: " + key);
 
 			// if this is our class attribute, remember that.  It BETTER be the first one.
 			if (key.equals(this.classLabel))
@@ -194,7 +200,8 @@ public class WekaClassifierWrapper implements Serializable {
 				try {
 					inst.setValue(attArray[i], Double.parseDouble(value));
 				} catch (Exception e) {
-					inst.setValue(attArray[i], value);
+					if (value != null)
+						inst.setValue(attArray[i], value);
 				}
 			}
 			train.add(inst);
@@ -468,10 +475,10 @@ public class WekaClassifierWrapper implements Serializable {
 			//System.out.println("correct: " + eval.correct());
 			//System.out.println("incorrect: " + eval.incorrect());
 			//System.out.println("errorRate: " + eval.errorRate());
-			System.out.println("falseNegatives, 0: " + eval.numFalseNegatives(0));
-			System.out.println("falsePositives, 0: " + eval.numFalsePositives(0));
-			System.out.println("falseNegatives, 1: " + eval.numFalseNegatives(1));
-			System.out.println("falsePositives, 1: " + eval.numFalsePositives(1));
+			//System.out.println("falseNegatives, 0: " + eval.numFalseNegatives(0));
+			//System.out.println("falsePositives, 0: " + eval.numFalsePositives(0));
+			//System.out.println("falseNegatives, 1: " + eval.numFalseNegatives(1));
+			//System.out.println("falsePositives, 1: " + eval.numFalsePositives(1));
 			//System.out.println("pctCorrect: " + eval.pctCorrect());
 			//System.out.println("pctIncorrect: " + eval.pctIncorrect());
 			//System.out.println(eval.toSummaryString());

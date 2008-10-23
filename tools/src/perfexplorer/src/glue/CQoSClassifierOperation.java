@@ -59,6 +59,7 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 	}
 
  	public List<PerformanceResult> processData() {
+		try {
 		// create a map to store the UNIQUE tuples
 		Map<Hashtable<String,String>,PerformanceResult> tuples = 
 			new HashMap<Hashtable<String,String>,PerformanceResult>();
@@ -76,10 +77,11 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 					// don't include the class label - we want just the "best" method for that parameter - not all of them
 					if (!key.equals(this.classLabel)) {
 						String tmpStr = meta.get(key);
-						if (tmpStr == null) 
+						if (tmpStr == null) {
 							System.out.println("NO VALUE FOUND FOR KEY: "+ key);
-						else
+						} else {
 							localMeta.put(key, meta.get(key));
+						}
 					}
 				}
 			// otherwise, if the user didn't specify a set of properties, use them all (?)
@@ -151,7 +153,11 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 			this.wrapper.buildClassifier();
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
-			e.printStackTrace();			
+			//e.printStackTrace();			
+		}
+		// in case of a stack overflow
+		} catch (Exception e2) {
+			System.err.println(e2.getMessage());
 		}
 		
 		return null;
