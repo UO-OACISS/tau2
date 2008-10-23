@@ -28,7 +28,7 @@
 **                        compiler instrumentation                         **
 **                                                                         **
 ****************************************************************************/
-
+ 
 
 #include <TAU.h>
 
@@ -85,6 +85,12 @@ static void hash_put(long h, const char* n, const char* fn, int lno) {
   add->fname = fn ? (const char*)strdup(fn) : fn;
   add->lno   = lno;
   add->fi = NULL;
+  add->next = htab[id];
+  htab[id] = add;
+}
+
+static void hash_put(long h, HashNode *add) {
+  long id = h % HASH_MAX;
   add->next = htab[id];
   htab[id] = add;
 }
@@ -162,10 +168,10 @@ static void get_symtab_bfd(void) {
       const char* funcname;
       unsigned int lno;
       
-      /* ignore system functions */
-      if ( strncmp(syms[i]->name, "__", 2) == 0 ||
-	   strncmp(syms[i]->name, "bfd_", 4) == 0 ||
-	   strstr(syms[i]->name, "@@") != NULL ) continue;
+//       /* ignore system functions */
+//       if ( strncmp(syms[i]->name, "__", 2) == 0 ||
+// 	   strncmp(syms[i]->name, "bfd_", 4) == 0 ||
+// 	   strstr(syms[i]->name, "@@") != NULL ) continue;
 
       /* get filename and linenumber from debug info */
       /* needs -g */
@@ -222,6 +228,8 @@ void runOnExit() {
 #pragma weak __cyg_profile_func_enter
 #endif
 extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
+
+
   HashNode *hn;
   void * funcptr = func;
 #ifdef __ia64__
@@ -240,41 +248,63 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 
     if ( hn->fi == NULL) {
 
-      // remove the path
-      const char *filename = hn->fname;
-      while (strchr(filename,'/') != NULL) {
-	filename = strchr(filename,'/')+1;
+#ifdef TAU_OPENMP
+#     pragma omp critical (tau_comp_xl_b)
+      {
+#endif /* TAU_OPENMP */
+
+      if ( hn->fi == NULL) {
+
+	// remove the path
+	const char *filename = hn->fname;
+	while (strchr(filename,'/') != NULL) {
+	  filename = strchr(filename,'/')+1;
+	}
+	
+	char routine[2048];
+	sprintf (routine, "%s [{%s} {%d,0}]", hn->name, filename, hn->lno);
+	void *handle=NULL;
+	TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
+	hn->fi = (FunctionInfo*) handle;
+      } 
+
+#ifdef TAU_OPENMP
       }
-
-
-      char routine[2048];
-
-      sprintf (routine, "%s [{%s} {%d,0}]", hn->name, filename, hn->lno);
-      void *handle=NULL;
-      TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
-      hn->fi = (FunctionInfo*) handle;
-    } 
-
+#endif /* TAU_OPENMP */
+    }
     Tau_start_timer(hn->fi,0);
     //TAU_START(hn->name);
+
 
     //    printf ("name = %s : ", hn->name);
   } else {
 
-    hash_put((long)funcptr, "UNKNOWN", "UNKNOWN", -1);
-    hn = hash_get((long)funcptr);
-
-    if ( hn->fi == NULL) {
-
-      char routine[2048];
-
-      sprintf (routine, "%p", funcptr);
-      void *handle=NULL;
-      TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
-      hn->fi = (FunctionInfo*) handle;
-    } 
-
-    Tau_start_timer(hn->fi,0);
+#ifdef TAU_OPENMP
+#     pragma omp critical (tau_comp_xl_b)
+    {
+#endif /* TAU_OPENMP */
+      
+      if ( (hn = hash_get((long)funcptr))) {
+	Tau_start_timer(hn->fi,0);
+      } else {	
+	char routine[2048];
+	
+	sprintf (routine, "%p", funcptr);
+	void *handle=NULL;
+	TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
+	
+	HashNode *add = (HashNode*)malloc(sizeof(HashNode));
+	add->id = (long)funcptr;
+	add->name  = "UNKNOWN";
+	add->fname = "UNKNOWN";
+	add->lno   = -1;
+	add->fi = (FunctionInfo*) handle;
+	hash_put((long)funcptr, add);
+	Tau_start_timer(add->fi,0);
+      }
+#ifdef TAU_OPENMP
+    }
+#endif /* TAU_OPENMP */
 
 
     //printf ("NOT FOUND! : \n");
@@ -289,7 +319,6 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
     // called in the opposite order in which they are created and registered.
     atexit(runOnExit);
   }
-
 }
 
 extern "C" void _cyg_profile_func_enter(void* func, void* callsite) {
