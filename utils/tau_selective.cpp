@@ -22,6 +22,8 @@
 #include <string>
 #include <vector> 
 #include "tau_instrument.h"
+#include <string.h>
+#include <stdlib.h>
 
 using namespace std;
 
@@ -469,6 +471,6 @@ bool processFileForInstrumentation(const string& file_name)
 
 /***************************************************************************
  * $RCSfile: tau_selective.cpp,v $   $Author: amorris $
- * $Revision: 1.17 $   $Date: 2008/09/26 22:31:02 $
- * VERSION_ID: $Id: tau_selective.cpp,v 1.17 2008/09/26 22:31:02 amorris Exp $
+ * $Revision: 1.18 $   $Date: 2008/10/23 21:56:24 $
+ * VERSION_ID: $Id: tau_selective.cpp,v 1.18 2008/10/23 21:56:24 amorris Exp $
  ***************************************************************************/
