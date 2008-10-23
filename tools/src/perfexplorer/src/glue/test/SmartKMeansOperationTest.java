@@ -50,8 +50,29 @@ public class SmartKMeansOperationTest extends TestCase {
 		result = new DefaultResult();
 		Random generator = new Random();
 		
+		result.putDataPoint(0, "ENSDART", metric, type, 1352);
+		result.putDataPoint(1, "ENSDART", metric, type, 1141);
+		result.putDataPoint(2, "ENSDART", metric, type, 705);
+		result.putDataPoint(3, "ENSDART", metric, type, 694);
+		result.putDataPoint(4, "ENSDART", metric, type, 327);
+		result.putDataPoint(5, "ENSDART", metric, type, 324);
+		result.putDataPoint(6, "ENSDART", metric, type, 321);
+		result.putDataPoint(7, "ENSDART", metric, type, 316);
+		result.putDataPoint(8, "ENSDART", metric, type, 308);
+		result.putDataPoint(9, "ENSDART", metric, type, 306);
+		result.putDataPoint(10, "ENSDART", metric, type, 305);
+		result.putDataPoint(11, "ENSDART", metric, type, 300);
+		result.putDataPoint(12, "ENSDART", metric, type, 295);
+		result.putDataPoint(13, "ENSDART", metric, type, 294);
+		result.putDataPoint(14, "ENSDART", metric, type, 294);
+
+		System.out.println("\nClustering data...");
+		kmeans = new SmartKMeansOperation(result, metric, type, 10);
+		clusterResult = kmeans.processData();
+		System.out.println("Estimated value for k: " + clusterResult.get(0).getThreads().size());
+
 		// synthesize some data with 2 natural clusters
-		for (int outer = 1 ; outer < 11 ; outer++) {
+/*		for (int outer = 1 ; outer < 11 ; outer++) {
 			for (int i = 0 ; i < 100 ; i+=outer) {
 				for (int inner = 0 ; inner < outer ; inner++) {
 					result.putDataPoint(i+inner, "w", metric, type, Math.random()+(5*inner));
@@ -61,17 +82,12 @@ public class SmartKMeansOperationTest extends TestCase {
 				}
 			}
 	
-/*			System.out.println("Reducing data...");
-			PerformanceAnalysisOperation reducer = new TopXEvents(result, metric, type, 11);
-			List<PerformanceResult> reduced = reducer.processData(); 
-			for (String event : reduced.get(0).getEvents())
-				System.out.println(event + " ");*/
 			System.out.println("\nClustering data...");
 			kmeans = new SmartKMeansOperation(result, metric, type, 10);
 			clusterResult = kmeans.processData();
 			System.out.println("Estimated value for k: " + clusterResult.get(0).getThreads().size());
 			assertEquals(outer, clusterResult.get(0).getThreads().size());
-		}
+		}*/
 
 /*		Utilities.setSession("apart");
 		trial = Utilities.getTrial("gtc", "jaguar", "256");
@@ -105,7 +121,7 @@ public class SmartKMeansOperationTest extends TestCase {
 		System.out.println("Estimated value for k: " + clusterResult.get(0).getThreads().size());
 		assertEquals(3, clusterResult.get(0).getThreads().size());*/
 		
-		Utilities.setSession("peris3d");
+/*		Utilities.setSession("peris3d");
 		trial = Utilities.getTrial("S3D", "hybrid-study", "XT3/XT4");
 		type = AbstractResult.EXCLUSIVE;
 		metric = "GET_TIME_OF_DAY";
@@ -116,7 +132,7 @@ public class SmartKMeansOperationTest extends TestCase {
 		kmeans = new SmartKMeansOperation(result, metric, type, 10);
 		clusterResult = kmeans.processData();
 		System.out.println("Estimated value for k: " + clusterResult.get(0).getThreads().size());
-		assertEquals(2, clusterResult.get(0).getThreads().size());
+		assertEquals(2, clusterResult.get(0).getThreads().size());*/
 		
 	}
 	

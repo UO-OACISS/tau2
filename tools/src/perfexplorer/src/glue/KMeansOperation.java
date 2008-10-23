@@ -100,21 +100,21 @@ public class KMeansOperation extends AbstractPerformanceOperation {
 
     		if (computeGapStatistic) {
 //	    		System.out.println("Computing Gap Statistic");
-	    		double w_k = computeErrorMeasure(input, this.clusterer);
-//	    		System.out.println("Error Measure: " + w_k);
+	    		double w_k = computeErrorMeasure(input, this.clusterer, true);
+	    		//System.out.println("Error Measure: " + w_k);
 	    		double[] ref_w_k = new double[B];
 	    		double l_bar = 0.0;
 	    		// generate uniform distribution reference dataset
 	    		for (int b = 0 ; b < B ; b++) {
 	    			PerformanceResult reference = generateReferenceDataset(input, mins, maxs);
 	    			KMeansClusterInterface tmpClusterer = doClustering(factory, reference);
-	        		ref_w_k[b] = computeErrorMeasure(reference, tmpClusterer);
+	        		ref_w_k[b] = computeErrorMeasure(reference, tmpClusterer, true);
 	        		// we are computing a sum, so sum
 	        		l_bar += ref_w_k[b];
 	    		}
 	    		// the sum is divided by the number of reference data sets
 	    		l_bar = l_bar / B;
-//	    		System.out.println("Error Measure (reference): " + l_bar);
+	    		//System.out.println("Error Measure (reference): " + l_bar);
 	    		// COMPUTE THE GAP STATISTIC!
 	    		this.gapStatistic  = l_bar - w_k;
 	    		// now, compute the sd_k term
@@ -194,7 +194,7 @@ public class KMeansOperation extends AbstractPerformanceOperation {
 	 * @param input
 	 * @param eventList
 	 */
-	private double computeErrorMeasure(PerformanceResult input, KMeansClusterInterface clusterer) {
+	private double computeErrorMeasure(PerformanceResult input, KMeansClusterInterface clusterer, boolean print) {
 		Set<String> eventList = input.getEvents();
 		// compute the Gap Statistic!
 		int numThreads = input.getThreads().size();
@@ -225,9 +225,10 @@ public class KMeansOperation extends AbstractPerformanceOperation {
 				}
 			}
 			// ambiguity in the paper... 
-			// w_k += distance[r] / (2 * sizes[r]);
-			w_k += distance[r] / sizes[r];
+			w_k += distance[r] / (2 * sizes[r]);
+			//w_k += distance[r] / sizes[r];
 		}
+   		//if (print) System.out.println("Error Measure: " + w_k);
 		w_k = Math.log(w_k);
 		return w_k;
 	}

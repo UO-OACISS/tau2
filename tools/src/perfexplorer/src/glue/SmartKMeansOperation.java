@@ -73,14 +73,14 @@ public class SmartKMeansOperation extends AbstractPerformanceOperation {
 				if (i == 1) {
 					outputs = tmpOutputs;
 					previousGapStat = kmeans.getGapStatistic();
-				} else if ((kmeans.getGapStatistic() - kmeans.getGapStatisticError()) > previousGapStat) {
+				// make sure we are at least more accurate than noise!
+				} else if (previousGapStat < 0.0 || ((kmeans.getGapStatistic() - (1*kmeans.getGapStatisticError())) > previousGapStat)) {
 					// we have a new winner!
 					outputs = tmpOutputs;
 					previousGapStat = kmeans.getGapStatistic();
-				// make sure we are at least more accurate than noise!
-				} else if ((kmeans.getGapStatistic() - kmeans.getGapStatisticError()) > 0.0) {
+				} else {
 					// early termination.
-//					break;
+					break;
 				}
         	}
         }
