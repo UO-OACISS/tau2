@@ -30,6 +30,7 @@
 ****************************************************************************/
 
 #include <TAU.h>
+#include <Profile/TauInit.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -66,6 +67,7 @@ extern "C" void __rouexit() {
 
 // called during program initialization
 extern "C" void __rouinit() {
+  InitializeTAU();
   TheUsingCompInst() = 1;
   TAU_PROFILE_SET_NODE(0);
   atexit(__rouexit);

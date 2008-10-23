@@ -30,6 +30,7 @@
 ****************************************************************************/
 
 #include <TAU.h>
+#include <Profile/TauInit.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -90,6 +91,7 @@ extern "C" void __func_trace_enter(char* name, char* fname, int lno) {
 
   if (initialized == 0) {
     initialized = 1;
+    InitializeTAU();
     TheUsingCompInst() = 1;
     TAU_PROFILE_SET_NODE(0);
   }

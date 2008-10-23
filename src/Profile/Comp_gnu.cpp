@@ -31,6 +31,7 @@
  
 
 #include <TAU.h>
+#include <Profile/TauInit.h>
 
 #if HAVE_CONFIG_H
 #  include <config.h>
@@ -238,6 +239,7 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 
   if ( gnu_init ) {
     get_symtab();
+    InitializeTAU();
     TheUsingCompInst() = 1;
     TAU_PROFILE_SET_NODE(0);
   }
