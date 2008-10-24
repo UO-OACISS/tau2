@@ -11,6 +11,9 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyDatabase.h,v $
+// Revision 1.4  2008/10/24 22:48:46  sameer
+// Added pytau.exit(msg) binding.
+//
 // Revision 1.3  2008/09/15 23:27:45  sameer
 // Added pytau_setNode(<node>) API call:
 // import pytau
@@ -48,6 +51,11 @@ extern char pytau_snapshot__name__[];
 extern char pytau_snapshot__doc__[];
 extern "C"
 PyObject * pytau_snapshot(PyObject *, PyObject *);
+
+extern char pytau_exit__name__[];
+extern char pytau_exit__doc__[];
+extern "C"
+PyObject * pytau_exit(PyObject *, PyObject *);
 
 extern char pytau_dbDump__name__[];
 extern char pytau_dbDump__doc__[];
@@ -102,6 +110,6 @@ PyObject * pytau_setNode(PyObject *, PyObject *);
 #endif // pytau_database_h
 
 // version
-// $Id: PyDatabase.h,v 1.3 2008/09/15 23:27:45 sameer Exp $
+// $Id: PyDatabase.h,v 1.4 2008/10/24 22:48:46 sameer Exp $
 
 // End of file
