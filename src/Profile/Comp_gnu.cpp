@@ -220,8 +220,9 @@ static void get_symtab(void) {
 #endif
 }
 
-
+static int executionFinished = 0;
 void runOnExit() {
+  executionFinished = 1;
   Tau_destructor_trigger();
 }
 
@@ -230,6 +231,9 @@ void runOnExit() {
 #endif
 extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 
+  if (executionFinished) {
+    return;
+  }
 
   HashNode *hn;
   void * funcptr = func;
@@ -266,6 +270,7 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 	char routine[2048];
 	sprintf (routine, "%s [{%s} {%d,0}]", hn->name, filename, hn->lno);
 	void *handle=NULL;
+	printf ("Registering %s\n", routine);
 	TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
 	hn->fi = (FunctionInfo*) handle;
       } 
@@ -337,6 +342,10 @@ extern "C" void _cyg_profile_func_enter(void* func, void* callsite) {
 #pragma weak __cyg_profile_func_exit
 #endif
 extern "C" void __cyg_profile_func_exit(void* func, void* callsite) {
+  if (executionFinished) {
+    return;
+  }
+
   HashNode *hn;
   void * funcptr = func;
 
