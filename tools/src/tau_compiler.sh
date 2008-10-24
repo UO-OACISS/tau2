@@ -646,6 +646,11 @@ for arg in "$@" ; do
 		optPdtCFlags="$optPdtCFlags --c99"
 		argsRemaining="$argsRemaining $arg"
 		;;
+
+	    -std=gnu99)
+		optPdtCFlags="$optPdtCFlags --c99"
+		argsRemaining="$argsRemaining $arg"
+		;;
 		
 
 	    # if we recognize a request for 132 chars, convert it for gfparse
