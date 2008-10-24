@@ -1317,6 +1317,7 @@ int main(int argc, char *argv[])
       it++;
       *output << c;
     }
+		*output << endl;
   }
   while (getline(input, buffer) != 0)
   {
@@ -1326,6 +1327,6 @@ int main(int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
- * $Revision: 1.27 $   $Date: 2008/10/24 22:14:48 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.27 2008/10/24 22:14:48 scottb Exp $
+ * $Revision: 1.28 $   $Date: 2008/10/24 23:51:55 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.28 2008/10/24 23:51:55 scottb Exp $
  ***************************************************************************/
