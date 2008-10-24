@@ -41,6 +41,8 @@ using namespace std;
 #endif /* TAU_DOT_H_LESS_HEADERS */
 #include "Profile/Profiler.h"
 
+#include <stdlib.h>
+
 #ifdef TAU_CHARM
 extern "C" {
 #include <cpthreads.h>
@@ -278,6 +280,6 @@ extern "C" void pthread_exit (void *value_ptr) {
 
 /***************************************************************************
  * $RCSfile: PthreadLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.17 $   $Date: 2008/09/25 23:31:59 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.17 2008/09/25 23:31:59 amorris Exp $
+ * $Revision: 1.18 $   $Date: 2008/10/24 00:46:34 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.18 2008/10/24 00:46:34 amorris Exp $
  ***************************************************************************/
