@@ -343,30 +343,31 @@ class CompleteDirectives
 		  int startChar = 0;
 		  startChar = text.find("$omp");
 			if (startChar != string::npos)
-			{ /*
-			  cerr << "evaulating text=" << text << endl;
+			{ 
+			  /*cerr << "evaulating text=" << text << endl;
 				cerr << "starting char search at: " << startChar << endl;
-				cerr << "evaluating substr=" << text.substr(startChar,17) <<
+				cerr << "evaluating substr='" << text.substr(startChar,16) << "'" <<
 				endl;*/
 				//Match OMP PARALLEL directive
-				if (text.substr(startChar,17) == "$omp parallel do")
+				if (text.substr(startChar,16) == "$omp parallel do")
 					return 2;
-				else if (text.substr(startChar,14) == "$omp parallel")
+				else if (text.substr(startChar,13) == "$omp parallel")
 					return 1;
 				//Match OMP DO directive
-				else if (text.substr(startChar,8) == "$omp do")
+				else if (text.substr(startChar,7) == "$omp do")
 					return 3;
-				else if (text.substr(startChar,9) == "$omp for")
+				else if (text.substr(startChar,8) == "$omp for")
 					return 4;
 				//Match OMP END PARALLEL directive
-				else if (text.substr(startChar,21) == "$omp end parallel do")
+				else if (text.substr(startChar,20) == "$omp end parallel do")
 					return -2;
-				else if (text.substr(startChar,18) == "$omp end parallel")
+				else if (text.substr(startChar,17) == "$omp end parallel")
 					return -1;
 				//Match OMP DO directive
-				else if (text.substr(startChar,12) == "$omp end do" || text.substr(0,13) == "$omp enddo")
+				else if (text.substr(startChar,11) == "$omp end do" ||
+				text.substr(startChar,10) == "$omp enddo")
 					return -3;
-				else if (text.substr(startChar,13) == "$omp end for")
+				else if (text.substr(startChar,12) == "$omp end for")
 					return -4;
 				else
 					return 0;
@@ -415,6 +416,7 @@ class CompleteDirectives
      *
      *      Head statement (created) -> s1 -> ... -> s2
     */
+		//cerr << "in findOMPStmt" << endl;
     pdbStmt head(-1);
     //pdbStmt tail(-1);
     //pdbStmt state(*s);
@@ -433,10 +435,12 @@ class CompleteDirectives
     state.downStmt(s);*/
     static list<Directive> emptyDirectives;
     if (directives.size() == 0 and openDirectives.size() == 0) {
+		  cerr << "no directives to find.\n" << endl;
       return emptyDirectives;
     }
 		else {
-		return findOMPStmt(STATE_CLOSED, &head,s,0, pdb);
+		  //cerr << "finding OMP stmts...\n" << endl;
+		  return findOMPStmt(STATE_CLOSED, &head,s,0, pdb);
 		}
   }
  /*
@@ -462,14 +466,6 @@ class CompleteDirectives
 
     int currentLine = s->stmtBegin().line();
 		Directive *nextDirective = &directives.front();
-	  while (nextDirective->getLine() < s->stmtBegin().line())
-		{
-      if (verbosity == Debug)
-			  printf("passed directive, removing it.\n");
-
-			directives.pop_front();
-		  nextDirective = &directives.front();
-		}
 	  //int depth = loop - openDirectives.front().getDepth();
 			if (state == STATE_CLOSED)
 			{
@@ -602,6 +598,14 @@ class CompleteDirectives
 			{
 			  return addDirectives;
 			}
+	  while (!directives.empty() and nextDirective->getLine() < s->stmtBegin().line())
+		{
+      if (verbosity == Debug)
+			  printf("passed directive, removing it.\n");
+
+			directives.pop_front();
+		  nextDirective = &directives.front();
+		}
 			return addDirectives;
 		/*
     while ( s->stmtBegin().line() >=
@@ -1250,7 +1254,7 @@ int main(int argc, char *argv[])
               
               //Retrive the statement within the routines.
               const pdbStmt *v = (*r)->body();
-	      
+	            //printf("hello\n");
 							directivesToBeAdded.splice(directivesToBeAdded.end(), c.findOMPStmt(v,p));
             }
           }
@@ -1322,6 +1326,6 @@ int main(int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
- * $Revision: 1.26 $   $Date: 2008/10/21 19:25:26 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.26 2008/10/21 19:25:26 scottb Exp $
+ * $Revision: 1.27 $   $Date: 2008/10/24 22:14:48 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.27 2008/10/24 22:14:48 scottb Exp $
  ***************************************************************************/
