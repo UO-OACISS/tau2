@@ -854,7 +854,7 @@ do
 	      rm -rf .tmp
 	  fi
       fi
-      fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib"
+      fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64"
       fixmakeargs="$fixmakeargs bfdinclude=-I$bfddir/include"
       if [ ! -d $bfddir ]
       then

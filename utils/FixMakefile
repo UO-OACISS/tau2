@@ -105,7 +105,7 @@ fi
 	;;
 
      bfdlink=*)
-        bfdlink=`echo $1 | sed -e 's/^bfdlink=//'`
+        bfdlink=`echo $1 | sed -e 's/^bfdlink=//' -e 's/#/ /g'`
 	echo "s,^BFDLINK=.*$,BFDLINK=$bfdlink,g" >> $sedout
 	;;
 
