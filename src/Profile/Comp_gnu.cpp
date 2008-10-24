@@ -270,7 +270,6 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 	char routine[2048];
 	sprintf (routine, "%s [{%s} {%d,0}]", hn->name, filename, hn->lno);
 	void *handle=NULL;
-	printf ("Registering %s\n", routine);
 	TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
 	hn->fi = (FunctionInfo*) handle;
       } 
