@@ -11,6 +11,9 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyDatabase.cpp,v $
+// Revision 1.8  2008/10/24 22:48:18  sameer
+// Added a pytau.exit("message") binding for TAU_PROFILE_EXIT(msg).
+//
 // Revision 1.7  2008/09/15 23:25:49  sameer
 // Added pytau_setNode(<nodeid>) number for the Python API.
 //
@@ -128,6 +131,28 @@ PyObject * pytau_dbPurge(PyObject *, PyObject *)
 {
     // call Tau function to purge statistics
     TAU_DB_PURGE();
+
+    // return
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+char pytau_exit__name__[] = "exit";
+char pytau_exit__doc__[] = "close the callstack and flush the Tau statistics";
+PyObject * pytau_exit(PyObject *self, PyObject *args)
+{
+    char *message = "pythonexit";
+    int len = 10;
+
+    // Check to see if a prefix is specified
+    if (PyArg_ParseTuple(args, "|s", &message, &len))
+    {
+      // extracted the prefix, call dump routine
+#ifdef DEBUG
+      printf("dbDump: extracted message = %s, len = %d\n", message, len);
+#endif /* DEBUG */
+    }
+    TAU_PROFILE_EXIT(message);
 
     // return
     Py_INCREF(Py_None);
@@ -356,7 +381,7 @@ PyObject * pytau_setNode(PyObject *self, PyObject *args)
 }
 
 // version
-// $Id: PyDatabase.cpp,v 1.7 2008/09/15 23:25:49 sameer Exp $
+// $Id: PyDatabase.cpp,v 1.8 2008/10/24 22:48:18 sameer Exp $
 
 // End of file
   
