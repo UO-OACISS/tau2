@@ -1079,14 +1079,20 @@ void Tau_destructor_trigger() {
 // Sometimes we may link in a library that needs the POMP stuff
 // Even when we're not using opari
 //////////////////////////////////////////////////////////////////////
+
+#ifdef TAU_SICORTEX
+#define TAU_FALSE_POMP
+#endif
 #ifdef TAU_FALSE_POMP
-int POMP_MAX_ID = 0;
-int *pomp_rd_table = 0;
+#pragma weak POMP_MAX_ID=TAU_POMP_MAX_ID
+int TAU_POMP_MAX_ID = 0;
+#pragma weak pomp_rd_table=tau_pomp_rd_table
+int *tau_pomp_rd_table = 0;
 #endif
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.83 $   $Date: 2008/09/26 21:20:15 $
- * VERSION: $Id: TauCAPI.cpp,v 1.83 2008/09/26 21:20:15 amorris Exp $
+ * $Revision: 1.84 $   $Date: 2008/10/25 00:41:06 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.84 2008/10/25 00:41:06 amorris Exp $
  ***************************************************************************/
 
