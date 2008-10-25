@@ -63,7 +63,6 @@ public class ExtractEventOperation extends AbstractPerformanceOperation {
 								input.getExclusive(threadIndex, event, metric));
 						output.putInclusive(threadIndex, event, metric, 
 								input.getInclusive(threadIndex, event, metric));
-//						System.out.println(event + " " + metric + " " + input.getInclusive(threadIndex, event, metric));
 						output.putCalls(threadIndex, event, input.getCalls(threadIndex, event));
 						output.putSubroutines(threadIndex, event, input.getSubroutines(threadIndex, event));
 					}

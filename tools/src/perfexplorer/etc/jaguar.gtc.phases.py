@@ -18,57 +18,65 @@ False = 0
 def glue():
 	print "doing phase test for gtc on jaguar"
 	# load the trial
-	Utilities.setSession("perfdmf.demo")
-	trial1 = Utilities.getTrial("gtc_bench", "Jaguar Compiler Options", "fastsse")
+	print "loading the data..."
+	Utilities.setSession("perigtc")
+	trial1 = Utilities.getTrial("GTC", "Jaguar Compiler Options", "fastsse")
 	result1 = TrialResult(trial1)
 
 	# get the iteration inclusive totals
 
+	print "getting phases..."
 	events = ArrayList()
 	for event in result1.getEvents():
 		#if event.find("Iteration") >= 0 and result1.getEventGroupName(event).find("TAU_PHASE") < 0:
 		if event.find("Iteration") >= 0 and event.find("=>") < 0:
 			events.add(event)
 
+	print "extracting phases..."
 	extractor = ExtractEventOperation(result1, events)
 	extracted = extractor.processData().get(0)
 
 	# derive metrics
 
+	print "deriving metrics (1)..."
 	derivor = DeriveMetricOperation(extracted, "PAPI_L1_TCA", "PAPI_L1_TCM", DeriveMetricOperation.SUBTRACT)
 	derived = derivor.processData().get(0)
 	merger = MergeTrialsOperation(extracted)
 	merger.addInput(derived)
 	extracted = merger.processData().get(0)
-	derivor = DeriveMetricOperation(extracted, "PAPI_L1_TCA-PAPI_L1_TCM", "PAPI_L1_TCA", DeriveMetricOperation.DIVIDE)
+	print "deriving metrics (2)..."
+	derivor = DeriveMetricOperation(extracted, "(PAPI_L1_TCA-PAPI_L1_TCM)", "PAPI_L1_TCA", DeriveMetricOperation.DIVIDE)
 	derived = derivor.processData().get(0)
 	merger = MergeTrialsOperation(extracted)
 	merger.addInput(derived)
 	extracted = merger.processData().get(0)
+	print "deriving metrics (3)..."
 	derivor = DeriveMetricOperation(extracted, "PAPI_L1_TCM", "PAPI_L2_TCM", DeriveMetricOperation.SUBTRACT)
 	derived = derivor.processData().get(0)
 	merger = MergeTrialsOperation(extracted)
 	merger.addInput(derived)
 	extracted = merger.processData().get(0)
-	derivor = DeriveMetricOperation(extracted, "PAPI_L1_TCM-PAPI_L2_TCM", "PAPI_L1_TCM", DeriveMetricOperation.DIVIDE)
+	print "deriving metrics (4)..."
+	derivor = DeriveMetricOperation(extracted, "(PAPI_L1_TCM-PAPI_L2_TCM)", "PAPI_L1_TCM", DeriveMetricOperation.DIVIDE)
 	derived = derivor.processData().get(0)
 	merger = MergeTrialsOperation(extracted)
 	merger.addInput(derived)
 	extracted = merger.processData().get(0)
 
-	print "extracted phases..."
+	print "doing stats..."
 
 	# get the Statistics
 	dostats = BasicStatisticsOperation(extracted, False)
 	stats = dostats.processData()
 
-	print "got stats..."
+	print "drawing..."
 
-	"""for metric in stats.get(0).getMetrics():
+	for metric in stats.get(0).getMetrics():
 		grapher = DrawMMMGraph(stats)
 		metrics = HashSet()
 		metrics.add(metric)
 		grapher.set_metrics(metrics)
+		# grapher.setSortXAxis(True)
 		grapher.setTitle("GTC Phase Breakdown: " + metric)
 		grapher.setSeriesType(DrawMMMGraph.TRIALNAME);
 		grapher.setCategoryType(DrawMMMGraph.EVENTNAME)
@@ -77,8 +85,7 @@ def glue():
 		grapher.setYAxisLabel("Inclusive " + metric);
 		# grapher.setLogYAxis(True)
 		grapher.processData()
-
-	return"""
+	return
 
 	# graph the significant events in the iteration
 
@@ -111,6 +118,7 @@ def glue():
 			metrics = HashSet()
 			metrics.add(metric)
 			grapher.set_metrics(metrics)
+			grapher.setSortXAxis(True)
 			grapher.setTitle(subsetevent + ", " + metric)
 			grapher.setSeriesType(DrawMMMGraph.TRIALNAME);
 			grapher.setCategoryType(DrawMMMGraph.EVENTNAME)

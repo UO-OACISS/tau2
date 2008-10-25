@@ -56,7 +56,7 @@ def buildClassifier(results):
 	metadataFields.add("snes")
 	metadataFields.add("ksp")
 	metadataFields.add("pc")
-	#metadataFields.add("fnorm")
+	metadataFields.add("fnorm")
 	metadataFields.add("matrixsize")
 	metadataFields.add("snesrtol")
 	metadataFields.add("ksprtol")

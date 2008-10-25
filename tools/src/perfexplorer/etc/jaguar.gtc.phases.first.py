@@ -18,10 +18,8 @@ False = 0
 def glue():
 	print "doing phase test for gtc on jaguar"
 	# load the trial
-	Utilities.setSession("perfdmf.demo")
-	trial1 = Utilities.getTrial("gtc_bench", "Jaguar Compiler Options", "fastsse")
-	# Utilities.setSession("peri_gtc")
-	# trial1 = Utilities.getTrial("GTC", "Jaguar Compiler Options", "fastsse")
+	Utilities.setSession("perigtc")
+	trial1 = Utilities.getTrial("GTC", "Jaguar Compiler Options", "fastsse")
 	result1 = TrialResult(trial1)
 
 	print "got the data"

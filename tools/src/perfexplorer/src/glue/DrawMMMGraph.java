@@ -74,9 +74,9 @@ public class DrawMMMGraph extends DrawGraph {
 		DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 		
 		List<PerformanceResult> series = new ArrayList<PerformanceResult>();
-		series.add(inputs.get(1));
-		series.add(inputs.get(4));
-		series.add(inputs.get(5));
+		series.add(inputs.get(BasicStatisticsOperation.MEAN));
+		series.add(inputs.get(BasicStatisticsOperation.MIN));
+		series.add(inputs.get(BasicStatisticsOperation.MAX));
 		Set<String> categories = new HashSet<String>();
 
 		for (PerformanceResult input : series) {
