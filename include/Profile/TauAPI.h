@@ -48,7 +48,7 @@ extern "C" void Tau_dynamic_start(char *name, void *tau_counter, int isPhase);
 extern "C" void Tau_dynamic_stop(char *name, void *tau_counter, int isPhase); 
 extern "C" void Tau_static_phase_start(char *name);
 extern "C" void Tau_static_phase_stop(char *name);
-extern "C" void* Tau_get_profiler(const char *name, char *type, TauGroup_t group, char *gr_name);
+extern "C" void* Tau_get_profiler(const char *name, const char *type, TauGroup_t group, const char *gr_name);
 extern "C" void Tau_get_calls(void *handle, long* values, int tid);
 extern "C" void Tau_get_child_calls(void *handle, long* values, int tid);
 extern "C" void Tau_get_inclusive_values(void *handle, double* values, int tid);
@@ -526,6 +526,6 @@ or tauFI->method();
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.73 $   $Date: 2008/10/20 23:53:21 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.73 2008/10/20 23:53:21 amorris Exp $ 
+ * $Revision: 1.74 $   $Date: 2008/10/27 22:00:20 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.74 2008/10/27 22:00:20 amorris Exp $ 
  ***************************************************************************/

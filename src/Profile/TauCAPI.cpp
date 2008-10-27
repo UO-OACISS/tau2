@@ -56,7 +56,7 @@ using namespace std;
    the C layer, it remains unchanged. However, we should probably change the 
    name of this method to Tau_get_functioninfo or something. */
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void * Tau_get_profiler(const char *fname, char *type, TauGroup_t group, char *gr_name)
+extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup_t group, const char *gr_name)
 {
   FunctionInfo *f;
   //Profiler *p;
@@ -1092,7 +1092,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.84 $   $Date: 2008/10/25 00:41:06 $
- * VERSION: $Id: TauCAPI.cpp,v 1.84 2008/10/25 00:41:06 amorris Exp $
+ * $Revision: 1.85 $   $Date: 2008/10/27 22:00:42 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.85 2008/10/27 22:00:42 amorris Exp $
  ***************************************************************************/
 
