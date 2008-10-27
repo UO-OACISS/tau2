@@ -11,27 +11,29 @@
  **/
 
 /****************************************************************************
-**			TAU Portable Profiling Package			   **
-**			http://www.cs.uoregon.edu/research/tau	           **
-*****************************************************************************
-**    Copyright 2008  						   	   **
-**    Department of Computer and Information Science, University of Oregon **
-**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
-****************************************************************************/
+ **			TAU Portable Profiling Package			   **
+ **			http://www.cs.uoregon.edu/research/tau	           **
+ *****************************************************************************
+ **    Copyright 2008  						   	   **
+ **    Department of Computer and Information Science, University of Oregon **
+ **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+ ****************************************************************************/
 /****************************************************************************
-**	File 		: Comp_gnu.cpp  				   **
-**	Description 	: TAU Profiling Package				   **
-**	Contact		: tau-bugs@cs.uoregon.edu               	   **
-**	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
-**                                                                         **
-**      Description     : This file contains the hooks for GNU based       **
-**                        compiler instrumentation                         **
-**                                                                         **
-****************************************************************************/
+ **	File 		: Comp_gnu.cpp  				   **
+ **	Description 	: TAU Profiling Package				   **
+ **	Contact		: tau-bugs@cs.uoregon.edu               	   **
+ **	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
+ **                                                                         **
+ **      Description     : This file contains the hooks for GNU based       **
+ **                        compiler instrumentation                         **
+ **                                                                         **
+ ****************************************************************************/
  
 
 #include <TAU.h>
 #include <Profile/TauInit.h>
+#include <vector>
+using namespace std;
 
 #if HAVE_CONFIG_H
 #  include <config.h>
@@ -62,7 +64,7 @@ static int gnu_init = 1;       /* is initialization needed? */
  */
 
 typedef struct HN {
-  long id;            /* hash code (address of function */
+  unsigned long id;            /* hash code (address of function */
   const char* name;   /* associated function name       */
   const char* fname;  /*            file name           */
   int lno;            /*            line number         */
@@ -78,7 +80,7 @@ static HashNode* htab[HASH_MAX];
  * Stores function name `n' under hash code `h'
  */
 
-static void hash_put(long h, const char* n, const char* fn, int lno) {
+static void hash_put(unsigned long h, const char* n, const char* fn, int lno) {
   long id = h % HASH_MAX;
   HashNode *add = (HashNode*)malloc(sizeof(HashNode));
   add->id = h;
@@ -90,7 +92,7 @@ static void hash_put(long h, const char* n, const char* fn, int lno) {
   htab[id] = add;
 }
 
-static void hash_put(long h, HashNode *add) {
+static void hash_put(unsigned long h, HashNode *add) {
   long id = h % HASH_MAX;
   add->next = htab[id];
   htab[id] = add;
@@ -101,7 +103,7 @@ static void hash_put(long h, HashNode *add) {
  * Returns hash table entry if already stored, otherwise NULL
  */
 
-static HashNode* hash_get(long h) {
+static HashNode* hash_get(unsigned long h) {
   long id = h % HASH_MAX;
   HashNode *curr = htab[id];
   while ( curr ) {
@@ -119,93 +121,92 @@ static HashNode* hash_get(long h) {
  * Get symbol table by using BFD
  */
 
-static void get_symtab_bfd(void) {
-   bfd * BfdImage = 0;
-   int nr_all_syms;
-   int i; 
-   size_t size;
-   char* exe_env;
-   asymbol **syms;
-   int do_getsrc = 1;
+static void get_symtab_bfd(const char *module, unsigned long offset) {
+  bfd * BfdImage = 0;
+  int nr_all_syms;
+  int i; 
+  size_t size;
+  asymbol **syms;
+  int do_getsrc = 1;
 #if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
-   int do_demangle = 1;
+  int do_demangle = 1;
 #endif /* HAVE_GNU_DEMANGLE */
 
-   /* initialize BFD */
-   bfd_init();
+  /* initialize BFD */
+  bfd_init();
 
-   /* get executable image */
-   BfdImage = bfd_openr("/proc/self/exe", 0 );
-   if ( ! BfdImage )
-     fprintf (stderr,"BFD: bfd_openr(): failed\n");
+  /* get executable image */
+  BfdImage = bfd_openr(module, 0 );
+  if ( ! BfdImage )
+    fprintf (stderr,"BFD: bfd_openr(): failed\n");
    
 
-   /* check image format */
-   if ( ! bfd_check_format(BfdImage, bfd_object) ) { 
-     printf("BFD: bfd_check_format(): failed");
-   }
+  /* check image format */
+  if ( ! bfd_check_format(BfdImage, bfd_object) ) { 
+    printf("BFD: bfd_check_format(): failed");
+  }
    
-   /* return if file has no symbols at all */
-   if ( ! ( bfd_get_file_flags(BfdImage) & HAS_SYMS ) )
-     printf("BFD: bfd_get_file_flags(): failed");
+  /* return if file has no symbols at all */
+  if ( ! ( bfd_get_file_flags(BfdImage) & HAS_SYMS ) )
+    printf("BFD: bfd_get_file_flags(): failed");
    
-   /* get the upper bound number of symbols */
-   size = bfd_get_symtab_upper_bound(BfdImage);
+  /* get the upper bound number of symbols */
+  size = bfd_get_symtab_upper_bound(BfdImage);
    
-   /* HAS_SYMS can be set even with no symbols in the file! */
-   if ( size < 1 )
-     printf("BFD: bfd_get_symtab_upper_bound(): < 1");
+  /* HAS_SYMS can be set even with no symbols in the file! */
+  if ( size < 1 )
+    printf("BFD: bfd_get_symtab_upper_bound(): < 1");
    
-   /* read canonicalized symbols */
-   syms = (asymbol **)malloc(size);
-   nr_all_syms = bfd_canonicalize_symtab(BfdImage, syms);
-   if ( nr_all_syms < 1 )
-     printf("BFD: bfd_canonicalize_symtab(): < 1");
+  /* read canonicalized symbols */
+  syms = (asymbol **)malloc(size);
+  nr_all_syms = bfd_canonicalize_symtab(BfdImage, syms);
+  if ( nr_all_syms < 1 )
+    printf("BFD: bfd_canonicalize_symtab(): < 1");
    
-   for (i=0; i<nr_all_syms; ++i) {
-      char* dem_name = 0;
-      long addr;
-      const char* filename;
-      const char* funcname;
-      unsigned int lno;
+  for (i=0; i<nr_all_syms; ++i) {
+    char* dem_name = 0;
+    unsigned long addr;
+    const char* filename;
+    const char* funcname;
+    unsigned int lno;
       
-//       /* ignore system functions */
-//       if ( strncmp(syms[i]->name, "__", 2) == 0 ||
-// 	   strncmp(syms[i]->name, "bfd_", 4) == 0 ||
-// 	   strstr(syms[i]->name, "@@") != NULL ) continue;
+    //       /* ignore system functions */
+    //       if ( strncmp(syms[i]->name, "__", 2) == 0 ||
+    // 	   strncmp(syms[i]->name, "bfd_", 4) == 0 ||
+    // 	   strstr(syms[i]->name, "@@") != NULL ) continue;
 
-      /* get filename and linenumber from debug info */
-      /* needs -g */
-      filename = NULL;
-      lno = 0;
-      if ( do_getsrc ) {
-	bfd_find_nearest_line(BfdImage, bfd_get_section(syms[i]), syms,
-			      syms[i]->value, &filename, &funcname, &lno);
-      }
+    /* get filename and linenumber from debug info */
+    /* needs -g */
+    filename = NULL;
+    lno = 0;
+    if ( do_getsrc ) {
+      bfd_find_nearest_line(BfdImage, bfd_get_section(syms[i]), syms,
+			    syms[i]->value, &filename, &funcname, &lno);
+    }
 
-      /* calculate function address */
-      addr = syms[i]->section->vma+syms[i]->value;
+    /* calculate function address */
+    addr = syms[i]->section->vma+syms[i]->value;
 
-      /* use demangled name if possible */
+    /* use demangled name if possible */
 #if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
-      if ( do_demangle ) {
-	dem_name = cplus_demangle(syms[i]->name,
-				  DMGL_PARAMS | DMGL_ANSI 
-				  | DMGL_VERBOSE | DMGL_TYPES);
-      }
+    if ( do_demangle ) {
+      dem_name = cplus_demangle(syms[i]->name,
+				DMGL_PARAMS | DMGL_ANSI 
+				| DMGL_VERBOSE | DMGL_TYPES);
+    }
 #endif /* HAVE_GNU_DEMANGLE */
 
-      if( dem_name ) {
-	hash_put(addr, dem_name, filename, lno);
-      } else {
-	char *n = strdup(syms[i]->name);
-	hash_put(addr, n, filename, lno);
-      }
-   }
+    if( dem_name ) {
+      hash_put(offset+addr, dem_name, filename, lno);
+    } else {
+      char *n = strdup(syms[i]->name);
+      hash_put(offset+addr, n, filename, lno);
+    }
+  }
 
-   free(syms);
-   bfd_close(BfdImage);
-   return;
+  free(syms);
+  bfd_close(BfdImage);
+  return;
 }
 #endif
 
@@ -214,17 +215,131 @@ static void get_symtab_bfd(void) {
  */
 static void get_symtab(void) {
 #ifdef TAU_BFD
-  get_symtab_bfd();
+  get_symtab_bfd("/proc/self/exe", 0);
 #else
   fprintf(stderr, "TAU: Warning! BFD not found, symbols will not be resolved\n");
 #endif
 }
+
+typedef struct addrmap_t {
+  unsigned long start, end, offset;
+  int loaded;
+  char name[256];
+} addrmap;
+
+
+vector<addrmap> *addressMap = NULL;
+
+static int updateMaps() {
+
+  if (addressMap == NULL) {
+    addressMap = new vector<addrmap>();
+  }
+  addressMap->clear();
+
+  FILE *mapsfile = fopen ("/proc/self/maps", "r");
+  if (mapsfile == NULL) {
+    return -1;
+  }
+  
+  char line[4096];
+  while (!feof(mapsfile)) {
+    fgets(line, 4096, mapsfile);
+    //printf ("=> %s", line);
+    unsigned long start, end, offset;
+    char module[4096];
+    char perms[5];
+    module[0] = 0;
+    sscanf(line, "%lx-%lx %s %lx %*s %*u %[^\n]", &start, &end, perms, &offset, module);
+
+    if (*module && ((strcmp(perms, "r-xp") == 0) || (strcmp(perms, "rwxp") == 0))) {
+      //printf ("got %s, %p-%p (%p)\n", module, start, end, offset);
+      addrmap entry;
+      entry.start = start;
+      entry.end = end;
+      entry.offset = offset;
+      entry.loaded = 0;
+      sprintf (entry.name, module);
+      addressMap->push_back(entry);
+    }
+  }
+  return 0;
+}
+
+
+
+static addrmap *getAddressMap(unsigned long addr) {
+  for (unsigned int i=0;i<addressMap->size();i++) {
+    if (addr >= (*addressMap)[i].start && addr <= (*addressMap)[i].end) {
+      return &((*addressMap)[i]);
+    }
+  }
+
+  // Wasn't found in any ranges, try updating the maps
+  updateMaps();
+
+  for (unsigned int i=0;i<addressMap->size();i++) {
+    if (addr >= (*addressMap)[i].start && addr <= (*addressMap)[i].end) {
+      return &((*addressMap)[i]);
+    }
+  }
+
+  // Still not found?  Give up
+  return NULL;
+}
+
+
+static HashNode *createHashNode(long addr) {
+  addrmap *map = getAddressMap(addr);
+
+  if (map && map->loaded == 0) {
+    get_symtab_bfd(map->name, map->start);
+    map->loaded = true;
+    
+    HashNode *hn = hash_get(addr);
+    if (hn) {
+      if ( hn->fi == NULL) {
+
+	// remove the path
+	const char *filename = hn->fname;
+	while (strchr(filename,'/') != NULL) {
+	  filename = strchr(filename,'/')+1;
+	}
+	
+	char routine[2048];
+	sprintf (routine, "%s [{%s} {%d,0}]", hn->name, filename, hn->lno);
+	void *handle=NULL;
+	TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
+	hn->fi = (FunctionInfo*) handle;
+      } 
+      return hn;
+    }
+  }
+
+
+  // Unknown
+  char routine[2048];
+  sprintf (routine, "addr=<%p>", (void*)addr);
+  void *handle=NULL;
+  TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
+  
+  HashNode *add = (HashNode*)malloc(sizeof(HashNode));
+  add->id = addr;
+  add->name  = "UNKNOWN";
+  add->fname = "UNKNOWN";
+  add->lno   = -1;
+  add->fi = (FunctionInfo*) handle;
+  hash_put(addr, add);
+  return add;
+}
+
 
 static int executionFinished = 0;
 void runOnExit() {
   executionFinished = 1;
   Tau_destructor_trigger();
 }
+
 
 #ifdef TAU_SICORTEX
 #pragma weak __cyg_profile_func_enter
@@ -246,83 +361,62 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
     InitializeTAU();
     TheUsingCompInst() = 1;
     TAU_PROFILE_SET_NODE(0);
+    updateMaps();
   }
 
 
-  /* -- get region identifier -- */
-  if ( (hn = hash_get((long)funcptr))) {
-
-    if ( hn->fi == NULL) {
+  if ((hn = hash_get((long)funcptr))) {
+    if (hn->fi == NULL) {
 
 #ifdef TAU_OPENMP
-#     pragma omp critical (tau_comp_xl_b)
+#     pragma omp critical (tau_comp_gnu_b)
       {
 #endif /* TAU_OPENMP */
 
-      if ( hn->fi == NULL) {
-
-	// remove the path
-	const char *filename = hn->fname;
-	while (strchr(filename,'/') != NULL) {
-	  filename = strchr(filename,'/')+1;
-	}
-	
-	char routine[2048];
-	sprintf (routine, "%s [{%s} {%d,0}]", hn->name, filename, hn->lno);
-	void *handle=NULL;
-	TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
-	hn->fi = (FunctionInfo*) handle;
-      } 
+	if ( hn->fi == NULL) {
+	  // remove the path
+	  const char *filename = hn->fname;
+	  while (strchr(filename,'/') != NULL) {
+	    filename = strchr(filename,'/')+1;
+	  }
+	  char routine[2048];
+	  sprintf (routine, "%s [{%s} {%d,0}]", hn->name, filename, hn->lno);
+	  void *handle=NULL;
+	  TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
+	  hn->fi = (FunctionInfo*) handle;
+	} 
 
 #ifdef TAU_OPENMP
       }
 #endif /* TAU_OPENMP */
     }
     Tau_start_timer(hn->fi,0);
-    //TAU_START(hn->name);
-
-
-    //    printf ("name = %s : ", hn->name);
   } else {
 
 #ifdef TAU_OPENMP
-#     pragma omp critical (tau_comp_xl_b)
+#     pragma omp critical (tau_comp_gnu_b)
     {
 #endif /* TAU_OPENMP */
       
       if ( (hn = hash_get((long)funcptr))) {
 	Tau_start_timer(hn->fi,0);
-      } else {	
-	char routine[2048];
-	
-	sprintf (routine, "%p", funcptr);
-	void *handle=NULL;
-	TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
-	
-	HashNode *add = (HashNode*)malloc(sizeof(HashNode));
-	add->id = (long)funcptr;
-	add->name  = "UNKNOWN";
-	add->fname = "UNKNOWN";
-	add->lno   = -1;
-	add->fi = (FunctionInfo*) handle;
-	hash_put((long)funcptr, add);
-	Tau_start_timer(add->fi,0);
+      } else {
+	HashNode *node = createHashNode((long)funcptr);
+	Tau_start_timer(node->fi,0);
       }
 #ifdef TAU_OPENMP
     }
 #endif /* TAU_OPENMP */
-
-
-    //printf ("NOT FOUND! : \n");
   }
-
-  //  printf ("enter, func = %p, callsite = %p\n", func, callsite);
 
   if ( gnu_init ) {
     gnu_init = 0;
     // we register this here at the end so that it is called 
     // before the VT objects are destroyed.  Objects are destroyed and atexit targets are 
     // called in the opposite order in which they are created and registered.
+
+    // Note: This doesn't work work VT with MPI, they re-register their atexit routine
+    //       During MPI_Init.
     atexit(runOnExit);
   }
 }
@@ -332,11 +426,6 @@ extern "C" void _cyg_profile_func_enter(void* func, void* callsite) {
 }
 
 
-/*
- * This function is called at the exit of each function
- * The call is generated by the GNU/Intel (>=v10) compilers
- */
-
 #ifdef TAU_SICORTEX
 #pragma weak __cyg_profile_func_exit
 #endif
@@ -344,26 +433,17 @@ extern "C" void __cyg_profile_func_exit(void* func, void* callsite) {
   if (executionFinished) {
     return;
   }
-
   HashNode *hn;
   void * funcptr = func;
-
-  //  TAU_GLOBAL_TIMER_STOP();
-
 #ifdef __ia64__
   funcptr = *( void ** )func;
 #endif
 
   if ( (hn = hash_get((long)funcptr)) ) {
-    //printf ("name = %s : ", hn->name);
     Tau_stop_timer(hn->fi);
-    //TAU_STOP(hn->name);
   } else {
     //printf ("NOT FOUND! : ");
   }
-
-  //printf ("exit, func = %p, callsite = %p\n", func, callsite);
-
 }
 
 extern "C" void _cyg_profile_func_exit(void* func, void* callsite) {
