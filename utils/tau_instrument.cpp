@@ -2270,7 +2270,7 @@ it will not enter here. */
 //               INSTRUMENTATION_POINT, (*it)->getRegionStart(), 1, 
 //               startRegionCode, BEFORE));
 
-            startRegionCode = string("call TAU_")+regionQualifier+string("_")+regionKind+"_START(tau_iteration,\""+(*it)->getCode()+"\");"; 
+            startRegionCode = string("       call TAU_")+regionQualifier+string("_")+regionKind+"_START(tau_iteration,\""+(*it)->getCode()+"\");"; 
             stopRegionCode = string("       call TAU_")+regionQualifier+string("_")+regionKind+"_STOP(tau_iteration,\""+(*it)->getCode()+"\");"; 
 
           }
@@ -2491,6 +2491,6 @@ string intToString(int value)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: amorris $
- * $Revision: 1.64 $   $Date: 2008/08/15 21:19:36 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.64 2008/08/15 21:19:36 amorris Exp $
+ * $Revision: 1.65 $   $Date: 2008/10/28 18:58:15 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.65 2008/10/28 18:58:15 amorris Exp $
  ***************************************************************************/
