@@ -115,13 +115,13 @@ static HashNode* hash_get(unsigned long h) {
   return NULL;
 }
 
-#ifdef TAU_BFD
 
 /*
  * Get symbol table by using BFD
  */
 
 static void get_symtab_bfd(const char *module, unsigned long offset) {
+#ifdef TAU_BFD
   bfd * BfdImage = 0;
   int nr_all_syms;
   int i; 
@@ -206,9 +206,9 @@ static void get_symtab_bfd(const char *module, unsigned long offset) {
 
   free(syms);
   bfd_close(BfdImage);
+#endif
   return;
 }
-#endif
 
 /*
  * Get symbol table either by using BFD or by parsing nm-file
