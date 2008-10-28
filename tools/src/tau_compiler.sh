@@ -975,7 +975,11 @@ if [ $gotoNextStep == $TRUE ]; then
 		    evalWithDebugMessage "$pdtCmd" "Parsing with PDT Parser"
 		fi
 	    else
-		echo "tau_compiler.sh> WARNING: Disabling instrumentation of source code. TAU was not configured with -pdt=<dir> option."
+		echo ""
+		echo "WARNING: Disabling instrumentation of source code."
+		echo "         Please either configure with -pdt=<dir> option"
+		echo "         or switch to compiler based instrumentation with -optCompInst"
+		echo ""
 		gotoNextStep=$FALSE
 		errorStatus=$TRUE
 	    fi
