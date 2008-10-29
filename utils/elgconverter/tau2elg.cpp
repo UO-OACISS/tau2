@@ -14,6 +14,7 @@
 *************************************************************************/
 #include <TAU_tf.h>
 #include <stdio.h>
+#include <string.h>
 #include <iostream>
 #include <stddef.h>
 #include <elg_rw.h>
