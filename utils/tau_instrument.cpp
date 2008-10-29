@@ -1822,6 +1822,11 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 	      itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_BEGIN, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col(), "", BEFORE));
               itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_END, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), (*it)->getCode((*rit)->bodyEnd(), *rit), BEFORE));
             }
+          } else if (use_spec) {
+            /* We need to create an empty BODY_BEGIN to emit the 'tau_ret_val' declaration, */
+            /* however, this also requires an empty BODY_END to have matching braces. */
+	    itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_BEGIN, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col(), "", BEFORE));
+            itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_END, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), "", BEFORE));
           }
         } /* end of routine exit */
         /* examine the type of request - init */
@@ -2490,7 +2495,7 @@ string intToString(int value)
 
 
 /***************************************************************************
- * $RCSfile: tau_instrument.cpp,v $   $Author: amorris $
- * $Revision: 1.65 $   $Date: 2008/10/28 18:58:15 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.65 2008/10/28 18:58:15 amorris Exp $
+ * $RCSfile: tau_instrument.cpp,v $   $Author: geimer $
+ * $Revision: 1.66 $   $Date: 2008/10/29 13:59:35 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.66 2008/10/29 13:59:35 geimer Exp $
  ***************************************************************************/
