@@ -53,8 +53,10 @@ list<pair<int, list<string> > > additionalInvocations;
 the first executable statement. It has a list of strings with the routine no. as 
 the first element of the pair (the second is the list of strings). */
 
-/* This should *really* be in tau_instrumentor.cpp ... */
+/* These should *really* be in tau_instrumentor.cpp ... */
+bool noinline_flag = false; /* instrument inlined functions by default */
 bool use_spec = false;   /* by default, do not use code from specification file */
+
 ///////////////////////////////////////////////////////////////////////////
 
 /* Constructors */
@@ -1738,6 +1740,10 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 #ifdef DEBUG
         cout <<"Examining Routine "<<(*rit)->fullName()<<" and "<<(*it)->getRoutineName()<<endl;
 #endif /* DEBUG */
+        /* Eventually skip inline functions */
+        if ((*rit)->isInline() && noinline_flag)
+          continue;
+
         /* examine the type of request - decl */
         if ((*it)->getKind() == TAU_ROUTINE_DECL)
         {
@@ -2496,6 +2502,6 @@ string intToString(int value)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: geimer $
- * $Revision: 1.66 $   $Date: 2008/10/29 13:59:35 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.66 2008/10/29 13:59:35 geimer Exp $
+ * $Revision: 1.67 $   $Date: 2008/10/30 13:27:23 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.67 2008/10/30 13:27:23 geimer Exp $
  ***************************************************************************/

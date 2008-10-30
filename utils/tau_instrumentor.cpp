@@ -63,8 +63,6 @@ const int INBUF_SIZE = 65536;
 
 
 #define EXIT_KEYWORD_SIZE 256
-/* For Pooma, add a -noinline flag */
-bool noinline_flag = false; /* instrument inlined functions by default */
 bool noinit_flag = false;   /* initialize using TAU_INIT(&argc, &argv) by default */
 bool memory_flag = false;   /* by default, do not insert malloc.h in instrumented C/C++ files */
 bool lang_specified = false; /* implicit detection of source language using PDB file */
@@ -74,9 +72,11 @@ bool using_exit_keyword = false; /* By default, we don't use the exit keyword */
 tau_language_t tau_language; /* language of the file */
 bool use_perflib = false;   /* by default, do not insert calls for perflib package */
 
-/* This variable should actually be defined here. However, tau_wrap should not
-   depend on this (and it currently would). */
+/* These variables should actually be defined here. However, tau_wrap should
+   not depend on them (but it currently would). */
 extern bool use_spec;
+/* For Pooma, add a -noinline flag */
+extern bool noinline_flag;
 
 list<string> current_timer; /* for Fortran loop level instrumentation. */
 
@@ -4408,9 +4408,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.200 $   $Date: 2008/10/22 00:19:53 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.200 2008/10/22 00:19:53 amorris Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: geimer $
+ * $Revision: 1.201 $   $Date: 2008/10/30 13:27:23 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.201 2008/10/30 13:27:23 geimer Exp $
  ***************************************************************************/
 
 
