@@ -1334,13 +1334,31 @@ void Profiler::PurgeData(int tid) {
   // Now Re-register callstack entries
   curr = CurrentProfiler[tid];
   curr->ThisFunction->IncrNumCalls(tid);
-  curr->StartTime = RtsLayer::getUSecD(tid) ;
+
+
+#ifdef TAU_MULTIPLE_COUNTERS 
+    for (int i=0;i<MAX_TAU_COUNTERS;i++) {
+      curr->StartTime[i]=0;
+    }
+    RtsLayer::getUSecD(tid, curr->StartTime);	  
+#else
+    curr->StartTime = RtsLayer::getUSecD(tid) ;
+#endif
+
+
   curr = curr->ParentProfiler;
 
   while (curr != 0) {
     curr->ThisFunction->IncrNumCalls(tid);
     curr->ThisFunction->IncrNumSubrs(tid);
+#ifdef TAU_MULTIPLE_COUNTERS 
+    for (int i=0;i<MAX_TAU_COUNTERS;i++) {
+      curr->StartTime[i]=0;
+    }
+    RtsLayer::getUSecD(tid, curr->StartTime);	  
+#else
     curr->StartTime = RtsLayer::getUSecD(tid) ;
+#endif
     curr = curr->ParentProfiler;
   }
   
@@ -1921,6 +1939,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.195 $   $Date: 2008/10/31 01:27:32 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.195 2008/10/31 01:27:32 amorris Exp $ 
+ * $Revision: 1.196 $   $Date: 2008/10/31 17:36:55 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.196 2008/10/31 17:36:55 amorris Exp $ 
  ***************************************************************************/
