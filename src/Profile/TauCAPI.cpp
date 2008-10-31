@@ -871,7 +871,7 @@ extern "C" void Tau_dynamic_start(char *name, void *iteration, int isPhase)
   int itcount = (*iterationList)[tid];
 
   // increment the counter
-  (*iterationList)[tid]++;
+  //(*iterationList)[tid]++;
 
   FunctionInfo *fi = 0;
   char *newName = Tau_append_iteration_to_name(itcount, name);
@@ -1098,7 +1098,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.86 $   $Date: 2008/10/29 21:40:39 $
- * VERSION: $Id: TauCAPI.cpp,v 1.86 2008/10/29 21:40:39 amorris Exp $
+ * $Revision: 1.87 $   $Date: 2008/10/31 00:44:21 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.87 2008/10/31 00:44:21 amorris Exp $
  ***************************************************************************/
 

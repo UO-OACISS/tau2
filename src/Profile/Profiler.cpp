@@ -34,6 +34,12 @@
 #include "Profile/Profiler.h"
 #include "tauarch.h"
 
+#ifdef TAU_PERFSUITE
+  #include <pshwpc.h>
+  extern "C" int ps_hwpc_xml_write(const char *filename);
+  extern "C" int ps_hwpc_reset();
+#endif
+
 #ifdef TAU_WINDOWS
 typedef __int64 x_int64;
 typedef unsigned __int64 x_uint64;
@@ -259,7 +265,7 @@ void Profiler::EnableAllEventsOnCallStack(int tid, Profiler *current) {
 //////////////////////////////////////////////////////////////////////
 
 void Profiler::Start(int tid) { 
-//    fprintf (stderr, "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
+  //    fprintf (stderr, "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
 
 #ifdef TAU_OPENMP
   if (tid != 0) {
@@ -292,6 +298,26 @@ void Profiler::Start(int tid) {
       ThisFunction->AllGroups.append(" | TAU_PHASE"); 
     }
   }
+
+#ifdef TAU_PERFSUITE
+  if (GetPhase()) {
+    static int perfsuiteInit = 0;
+    if (perfsuiteInit == 0) {
+      perfsuiteInit = 1;
+      int ierr = ps_hwpc_init();
+      if (ierr != 0) {
+	printf ("Error on ps_hwpc_init: %d\n", ierr);
+      }
+    }
+
+    printf ("tau-perfsuite: starting\n");
+    int ierr = ps_hwpc_start();
+    if (ierr != 0) {
+      printf ("Error on ps_hwpc_start: %d\n", ierr);
+    }
+  }
+#endif /* TAU_PERFSUITE */
+
 #endif /* TAU_PROFILEPHASE */
   
   x_uint64 TimeStamp = 0L;
@@ -532,11 +558,68 @@ Profiler& Profiler::operator= (const Profiler& X) {
 
 //////////////////////////////////////////////////////////////////////
 
+x_uint64 Tau_get_firstTimeStamp();
+static x_uint64 getTimeStamp() {
+  x_uint64 timestamp;
+#ifdef TAU_WINDOWS
+  timestamp = TauWindowsUsecD();
+#else
+  struct timeval tp;
+  gettimeofday (&tp, 0);
+  timestamp = (x_uint64)tp.tv_sec * (x_uint64)1e6 + (x_uint64)tp.tv_usec;
+#endif
+  return timestamp;
+}
+
+
 void Profiler::Stop(int tid, bool useLastTimeStamp) {
-//    fprintf (stderr, "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
+  //fprintf (stderr, "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
   x_uint64 TimeStamp = 0L; 
   if (CurrentProfiler[tid] == NULL) return;
   
+
+#ifdef TAU_PROFILEPHASE
+#ifdef TAU_PERFSUITE
+  if (GetPhase()) {
+    static int sequence=0;
+    char annotation[4096];
+
+    sprintf (annotation, "TAU^seq^%d^phase^%s^nct^%d:%d:%d^timestamp^%lld^start^%lld^", sequence, 
+	     ThisFunction->GetName(), RtsLayer::myNode(), RtsLayer::myContext(), RtsLayer::myThread(), 
+	     getTimeStamp(), Tau_get_firstTimeStamp());
+    printf ("tau-perfsuite: stopping %s\n", ThisFunction->GetName());
+    setenv("PS_HWPC_ANNOTATION", annotation, 1);
+//    int ierr = ps_hwpc_stop(ThisFunction->GetName());
+    char seqstring[256];
+    sprintf (seqstring, "TAU.%d", sequence);
+//     int ierr = ps_hwpc_stop(seqstring);
+//     if (ierr != 0) {
+//       printf ("Error on ps_hwpc_stop: %d\n", ierr);
+//     }
+    int ierr;
+
+    ierr = ps_hwpc_suspend();
+    if (ierr != 0) {
+      printf ("Error on ps_hwpc_suspend: %d\n", ierr);
+    }
+
+    printf ("writing!\n");
+    ierr = ps_hwpc_xml_write(seqstring);
+    if (ierr != 0) {
+      printf ("Error on ps_hwpc_xml_write: %d\n", ierr);
+    }
+
+    ierr = ps_hwpc_reset();
+    if (ierr != 0) {
+      printf ("Error on ps_hwpc_reset: %d\n", ierr);
+    }
+
+
+    sequence++;
+  }
+#endif /* TAU_PERFSUITE */
+#endif /* TAU_PROFILEPHASE */
+
 #ifdef TAU_DEPTH_LIMIT
   int userspecifieddepth = TauGetDepthLimit();
   int mydepth = GetDepthLimit(); 
@@ -1832,6 +1915,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.192 $   $Date: 2008/10/01 22:10:19 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.192 2008/10/01 22:10:19 amorris Exp $ 
+ * $Revision: 1.193 $   $Date: 2008/10/31 00:44:21 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.193 2008/10/31 00:44:21 amorris Exp $ 
  ***************************************************************************/

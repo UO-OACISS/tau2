@@ -111,6 +111,11 @@ bool Tau_snapshot_initialization() {
 }
 
 
+x_uint64 Tau_get_firstTimeStamp() {
+  return firstTimeStamp;
+}
+
+
 
 typedef struct outputDevice_ {
   FILE *fp;

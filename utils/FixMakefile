@@ -114,6 +114,16 @@ fi
 	echo "s,^BFDINCLUDE=.*$,BFDINCLUDE=$bfdinclude,g" >> $sedout
 	;;
 
+     perfsuitelink=*)
+        perfsuitelink=`echo $1 | sed -e 's/^perfsuitelink=//' -e 's/#/ /g'`
+	echo "s,^PERFSUITELINK=.*$,PERFSUITELINK=$perfsuitelink,g" >> $sedout
+	;;
+
+     perfsuiteinclude=*)
+        perfsuiteinclude=`echo $1 | sed -e 's/^perfsuiteinclude=//'`
+	echo "s,^PERFSUITEINCLUDE=.*$,PERFSUITEINCLUDE=$perfsuiteinclude,g" >> $sedout
+	;;
+
      taugcclibdir=*)
         taugcclibdir=`echo $1 | sed -e 's/^taugcclibdir=//'`
         echo "s,^TAUGCCLIBDIR=.*$,TAUGCCLIBDIR=$taugcclibdir,g" >> $sedout
@@ -377,6 +387,10 @@ fi
         ;;
      TAU_BFDSHAREDLINK)
         echo NOTE: Using BFD Shared Linking support
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     TAU_PERFSUITE)
+        echo NOTE: Using PerfSuite support
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 

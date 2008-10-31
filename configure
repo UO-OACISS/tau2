@@ -428,6 +428,8 @@ compensate=no
 smarts=no
 pcl=no
 papi=no
+perfsuite=no
+perfsuitedir=
 bfd=no
 bfddir=
 perf=no
@@ -832,6 +834,20 @@ do
         exit 1
       fi
     shift
+    ;;
+
+  -perfsuite=*)
+      perfsuite=yes
+      perfsuitedir=`echo $arg | sed -e 's/-perfsuite=//'`
+      fixmakeargs="$fixmakeargs TAU_PERFSUITE"
+      fixmakeargs="$fixmakeargs perfsuitelink=-L$perfsuitedir/lib#-lpshwpc"
+      fixmakeargs="$fixmakeargs perfsuiteinclude=-I$perfsuitedir/include"
+      if [ ! -d $perfsuitedir ]
+      then
+          echo "Error: Cannot access PerfSuite directory $perfsuitedir"
+          exit 1
+      fi
+      shift
     ;;
 
   -bfd=*)
