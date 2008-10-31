@@ -169,6 +169,7 @@ extern "C" {
 	TAU_VERBOSE("TAU: Throttling Enabled\n");
       } else {
 	env_throttle = 0;
+	TAU_VERBOSE("TAU: Throttling Disabled\n");
       }
 
       char *percall = getenv("TAU_THROTTLE_PERCALL"); 
