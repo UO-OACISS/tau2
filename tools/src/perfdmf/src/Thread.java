@@ -9,9 +9,9 @@ import edu.uoregon.tau.common.TauRuntimeException;
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.15 2008/09/05 18:07:00 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.16 2008/10/31 00:45:01 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.15 $
+ * @version	$Revision: 1.16 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -118,7 +118,6 @@ public class Thread implements Comparable {
     }
 
     public Snapshot addSnapshot(String name) {
-
         if (!firstSnapshotFound) {
             firstSnapshotFound = true;
             Snapshot snapshot = (Snapshot) snapshots.get(0);
@@ -144,13 +143,17 @@ public class Thread implements Comparable {
         }
 
         recreateData();
-
         return snapshot;
     }
 
+    public void addSnapshots(int max) {
+        firstSnapshotFound = true;
+        while (snapshots.size() < max) {
+            addSnapshot("UNKNOWN");
+        }
+    }
+
     private void recreateData() {
-        int numSnapshots = getNumSnapshots();
-        int numMetrics = getNumMetrics();
         threadData = new ThreadData[getNumSnapshots()][getNumMetrics()];
         for (int s = 0; s < getNumSnapshots(); s++) {
             for (int m = 0; m < getNumMetrics(); m++) {
@@ -256,11 +259,11 @@ public class Thread implements Comparable {
 
     // compute max values and percentages for threads (not mean/total)
     private void setThreadValues(int startMetric, int endMetric, int startSnapshot, int endSnapshot) {
-        
+
         // the recreateData() call wipes out all the threadData structures, so we have to recreate all of them for now.
         startMetric = 0;
-        endMetric = getNumMetrics()-1;
-        
+        endMetric = getNumMetrics() - 1;
+
         String startString = (String) getMetaData().get("Starting Timestamp");
         if (startString != null) {
             setStartTime(Long.parseLong(startString));

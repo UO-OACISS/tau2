@@ -11,15 +11,13 @@
 
 package edu.uoregon.tau.perfdmf;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.StringReader;
+import java.io.*;
+import java.net.URL;
 import java.util.*;
 
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
 class NoOpEntityResolver implements EntityResolver {
@@ -29,19 +27,12 @@ class NoOpEntityResolver implements EntityResolver {
 }
 
 public class PSRunDataSource extends DataSource {
-    private int metric = 0;
-    private Function function = null;
-    private FunctionProfile functionProfile = null;
-    private Node node = null;
-    private Context context = null;
     private Thread thread = null;
     private int nodeID = -1;
     private int contextID = -1;
     private int threadID = -1;
-    private List v = null;
-    boolean initialized = false;
-    private Hashtable nodeHash = new Hashtable();
     private int threadCounter = 0;
+    PSRunLoadHandler handler;
 
     public PSRunDataSource(Object initializeObject) {
         super();
@@ -60,18 +51,19 @@ public class PSRunDataSource extends DataSource {
     }
 
     public void load() throws DataSourceException {
+        Debug.dataSource = this;
+
         try {
-            boolean firstFile = true;
-            v = (List) initializeObject;
-            // create our XML parser
+            List v = (List) initializeObject;
             XMLReader xmlreader = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
 
-            DefaultHandler handler = new PSRunLoadHandler(this);
+            handler = new PSRunLoadHandler(this);
             xmlreader.setContentHandler(handler);
             xmlreader.setErrorHandler(handler);
 
             xmlreader.setEntityResolver(new NoOpEntityResolver());
             for (Iterator e = v.iterator(); e.hasNext();) {
+
                 File files[] = (File[]) e.next();
                 for (int i = 0; i < files.length; i++) {
                     long time = System.currentTimeMillis();
@@ -82,12 +74,13 @@ public class PSRunDataSource extends DataSource {
                         // increment the node counter - there's a file for each node
                         nodeID++;
                     } else {
-                        String prefix = st.nextToken();
+                        st.nextToken(); // prefix
 
                         String tid = st.nextToken();
                         try {
                             threadID = Integer.parseInt(tid);
                             String nid = st.nextToken();
+                            Hashtable nodeHash = new Hashtable();
                             Integer tmpID = (Integer) nodeHash.get(nid);
                             if (tmpID == null) {
                                 nodeID = nodeHash.size();
@@ -100,16 +93,27 @@ public class PSRunDataSource extends DataSource {
                         }
                     }
 
-                    // initialize the thread/node
-                    initializeThread();
+                    // reset the thread
+                    thread = null;
+                    //Debug.foo("IT-BEFORE");
 
+                    File file = files[i];
+                    InputStream istream;
+                    if (file.toString().toLowerCase().startsWith("http:")) {
+                        // When it gets converted from a String to a File http:// turns into http:/
+                        URL url = new URL("http://" + file.toString().substring(6).replace('\\', '/'));
+                        istream = url.openStream();
+                    }  else {
+                        istream = new FileInputStream(file);
+                    }
+                    
+                    
                     // parse the next file
-                    xmlreader.parse(new InputSource(new FileInputStream(files[i])));
+                    xmlreader.parse(new InputSource(istream));
+                    //Debug.foo("IT-AFTER");
 
-                    PSRunLoadHandler tmpHandler = (PSRunLoadHandler) handler;
-
-                    if (!tmpHandler.getIsProfile()) {
-                        Hashtable metricHash = tmpHandler.getMetricHash();
+                    if (!handler.getIsProfile()) {
+                        Hashtable metricHash = handler.getMetricHash();
                         for (Enumeration keys = metricHash.keys(); keys.hasMoreElements();) {
                             String key = (String) keys.nextElement();
                             String value = (String) metricHash.get(key);
@@ -121,62 +125,82 @@ public class PSRunDataSource extends DataSource {
                     //System.out.println("Time to process file (in milliseconds): " + time);
                 }
             }
+            processSnapshots();
             this.generateDerivedData();
         } catch (Exception e) {
             if (e instanceof DataSourceException) {
-                throw (DataSourceException)e;
+                throw (DataSourceException) e;
             } else {
                 throw new DataSourceException(e);
             }
         }
     }
 
-    private void initializeThread() {
-        function = this.addFunction("Entire application", 1);
+    private void processSnapshots() {
+        for (Iterator it = getThreads().iterator(); it.hasNext();) {
+            Thread thread = (Thread) it.next();
+            for (int i = 1; i < thread.getNumSnapshots(); i++) {
+                for (Iterator it2 = getFunctions(); it2.hasNext();) {
+                    Function function = (Function) it2.next();
+                    FunctionProfile fp = thread.getFunctionProfile(function);
+                    if (fp != null) {
+                        double prevEx = fp.getExclusive(i - 1, 0);
+                        double prevIn = fp.getInclusive(i - 1, 0);
+                        double currEx = fp.getExclusive(i, 0);
+                        double currIn = fp.getInclusive(i, 0);
+                        fp.setExclusive(i, 0, prevEx + currEx);
+                        fp.setInclusive(i, 0, prevIn + currIn);
+                    }
+                }
+            }
+        }
+    }
 
-        // make sure we start at zero for all counters
+    private void initializeThread() {
         nodeID = (nodeID == -1) ? 0 : nodeID;
         contextID = (contextID == -1) ? 0 : contextID;
         threadID = (threadID == -1) ? 0 : threadID;
 
-        //Get the node,context,thread.
-        node = this.getNode(nodeID);
-        if (node == null)
-            node = this.addNode(nodeID);
-        context = node.getContext(contextID);
-        if (context == null)
-            context = node.addContext(contextID);
-        thread = context.getThread(threadID);
-        if (thread == null) {
-            thread = context.addThread(threadID);
-        }
-
-        functionProfile = thread.getFunctionProfile(function);
-        if (functionProfile == null) {
-            functionProfile = new FunctionProfile(function);
-            thread.addFunctionProfile(functionProfile);
-        }
-    }
-
-    private void processHardwareCounter(String key, String value) {
-        thread.addMetric();
-        double eventValue = 0;
-        eventValue = Double.parseDouble(value);
-
-        metric = this.getNumberOfMetrics();
-        //Set the metric name.
-        Metric newMetric = this.addMetric(key);
-        metric = newMetric.getID();
-
-        functionProfile.setExclusive(metric, eventValue);
-        functionProfile.setInclusive(metric, eventValue);
-        //functionProfile.setInclusivePerCall(metric, eventValue);
-        functionProfile.setNumCalls(1);
-        functionProfile.setNumSubr(0);
+        // create a thread
+        Node node = this.addNode(nodeID);
+        Context context = node.addContext(contextID);
+        thread = context.addThread(threadID);
     }
 
     public Thread getThread() {
+        if (thread == null) {
+            Map attribMap = handler.getAttributes();
+            String nct = (String) attribMap.get("nct");
+            if (nct != null) {
+                String[] nums = nct.split(":");
+                nodeID = Integer.parseInt(nums[0]);
+                contextID = Integer.parseInt(nums[1]);
+                threadID = Integer.parseInt(nums[2]);
+
+            }
+            initializeThread();
+        }
         return thread;
+    }
+
+    private void processHardwareCounter(String metricName, String value) {
+        Thread thread = getThread();
+        double eventValue = Double.parseDouble(value);
+
+        Metric metric = addMetric(metricName);
+        int metricId = metric.getID();
+
+        Function function = addFunction("Entire application");
+        FunctionProfile functionProfile = thread.getFunctionProfile(function);
+        if (functionProfile == null) {
+            functionProfile = new FunctionProfile(function, getNumberOfMetrics());
+        }
+
+        thread.addFunctionProfile(functionProfile);
+        functionProfile.setExclusive(metricId, eventValue);
+        functionProfile.setInclusive(metricId, eventValue);
+        functionProfile.setNumCalls(1);
+        functionProfile.setNumSubr(0);
     }
 
 }

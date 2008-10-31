@@ -7,9 +7,9 @@ import java.util.TreeMap;
 /**
  * This class represents a Context.  It contains a set of Threads, a nodeID and an contextID.
  *  
- * <P>CVS $Id: Context.java,v 1.3 2008/05/14 23:14:01 amorris Exp $</P>
+ * <P>CVS $Id: Context.java,v 1.4 2008/10/31 00:45:01 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  * @see		Node
  * @see		Thread
  */
@@ -27,7 +27,7 @@ public class Context implements Comparable {
      * @param nodeID		ID of the node this context is a member of
      * @param contextID		ID of this context
      */
-    Context(int nodeID, int contextID, DataSource dataSource) {
+    public Context(int nodeID, int contextID, DataSource dataSource) {
         this.nodeID = nodeID;
         this.contextID = contextID;
         this.dataSource = dataSource;
@@ -58,7 +58,7 @@ public class Context implements Comparable {
      * @return				Newly added (or existing) Thread
      */
     public Thread addThread(int threadID) {
-        return addThread(threadID, 1);
+        return addThread(threadID, dataSource.getNumberOfMetrics());
     }
 
     /**
@@ -72,8 +72,9 @@ public class Context implements Comparable {
         Object obj = threads.get(new Integer(threadID));
 
         // return the Node if found
-        if (obj != null)
+        if (obj != null) {
             return (Thread) obj;
+        }
 
         // otherwise, add it and return it
         Thread thread = new Thread(this.nodeID, this.contextID, threadID, capacity, dataSource);

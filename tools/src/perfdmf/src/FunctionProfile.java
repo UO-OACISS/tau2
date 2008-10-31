@@ -5,9 +5,9 @@ import java.util.*;
 /**
  * This class represents a single function profile on a single thread.
  *
- * <P>CVS $Id: FunctionProfile.java,v 1.11 2007/05/04 01:38:43 amorris Exp $</P>
+ * <P>CVS $Id: FunctionProfile.java,v 1.12 2008/10/31 00:45:01 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.11 $
+ * @version	$Revision: 1.12 $
  * @see		Function
  */
 public class FunctionProfile {
@@ -73,18 +73,11 @@ public class FunctionProfile {
     }
 
     public void setExclusive(int metric, double value) {
-        //System.out.println(this + ".setExclusive(" + metric + "," + value + ")");
         this.putDouble(metric, EXCLUSIVE, value);
     }
 
     public void setExclusive(int snapshot, int metric, double value) {
-        try {
         this.putDouble(snapshot, metric, EXCLUSIVE, value);
-
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-
     }
 
     public double getExclusive(int snapshot, int metric) {
@@ -101,7 +94,7 @@ public class FunctionProfile {
         double value = this.getDouble(metric, EXCLUSIVE);
 
         ///System.out.println(this + ".getExclusive(" + metric + ") = " + value);
-
+        
         return value;
     }
 
@@ -234,15 +227,12 @@ public class FunctionProfile {
         double[] newArray = new double[(newMetricSize + 1) * METRIC_SIZE * numSnapshots];
 
         for (int s = 0; s < numSnapshots; s++) {
-
             int source = (s * METRIC_SIZE * (numMetrics + 1));
             int dest = (s * METRIC_SIZE * (newMetricSize + 1));
             for (int m = 0; m < METRIC_SIZE * (numMetrics + 1); m++) {
                 newArray[dest + m] = data[source + m];
             }
-
         }
-
         data = newArray;
     }
 

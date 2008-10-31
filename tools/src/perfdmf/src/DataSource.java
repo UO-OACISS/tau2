@@ -20,9 +20,9 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.39 2008/09/10 05:33:51 khuck Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.40 2008/10/31 00:45:01 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.39 $
+ * @version $Revision: 1.40 $
  */
 public abstract class DataSource {
 
@@ -365,7 +365,6 @@ public abstract class DataSource {
      *            Name of metric to be added
      */
     public Metric addMetric(String metricName) {
-        //System.err.println("addMetric("+metricName+")");
         if (metrics != null) {
             for (Iterator it = metrics.iterator(); it.hasNext();) {
                 Metric metric = (Metric) it.next();
@@ -994,8 +993,9 @@ public abstract class DataSource {
         Object obj = nodes.get(new Integer(nodeID));
 
         // return the Node if found
-        if (obj != null)
+        if (obj != null) {
             return (Node) obj;
+        }
 
         // otherwise, add it and return it
         Node node = new Node(nodeID, this);
