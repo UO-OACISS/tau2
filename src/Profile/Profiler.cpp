@@ -1321,37 +1321,27 @@ void Profiler::PurgeData(int tid) {
   
   DEBUGPROFMSG("Profiler::PurgeData( tid = "<<tid <<" ) "<<endl;);
   RtsLayer::LockDB();
+
   
-  // record the current callstack
-  stack<FunctionInfo*> callstack;
-  curr = CurrentProfiler[tid];
-  while (curr != 0) {
-    callstack.push(curr->ThisFunction);
-    curr = curr->ParentProfiler;
-  }
-
-  // stop all timers
-  TheSafeToDumpData() = false; // we set this to that a profile doesn't get written
-  curr = CurrentProfiler[tid];
-  while (curr != 0) {
-    curr->Stop();
-    curr = CurrentProfiler[tid];
-  }
-  TheSafeToDumpData() = true; // re-enable profile writing
-
-  // reset data
+  // Reset The Function Database (save callstack entries)
   for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
+    // May be able to recycle fns which never get called again??
     (*it)->SetCalls(tid,0);
     (*it)->SetSubrs(tid,0);
     (*it)->SetExclTimeZero(tid);
     (*it)->SetInclTimeZero(tid);
   }
+  // Now Re-register callstack entries
+  curr = CurrentProfiler[tid];
+  curr->ThisFunction->IncrNumCalls(tid);
+  curr->StartTime = RtsLayer::getUSecD(tid) ;
+  curr = curr->ParentProfiler;
 
-  // restart timers that were on the callstack
-  while (!callstack.empty()) {
-    // I'm just using 0 here for the phases, we may need to fix this
-    Tau_start_timer(callstack.top(), 0); 
-    callstack.pop();
+  while (curr != 0) {
+    curr->ThisFunction->IncrNumCalls(tid);
+    curr->ThisFunction->IncrNumSubrs(tid);
+    curr->StartTime = RtsLayer::getUSecD(tid) ;
+    curr = curr->ParentProfiler;
   }
   
   // Reset the Event Database
@@ -1931,6 +1921,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.194 $   $Date: 2008/10/31 00:59:11 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.194 2008/10/31 00:59:11 amorris Exp $ 
+ * $Revision: 1.195 $   $Date: 2008/10/31 01:27:32 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.195 2008/10/31 01:27:32 amorris Exp $ 
  ***************************************************************************/
