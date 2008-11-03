@@ -915,3 +915,4 @@ TAU_COMPILER=$(TAU_BIN_DIR)/tau_compiler.sh $(TAUCOMPILEROPTS) $(SHAREDEXTRAS)
 # Also ignore TAULIBS when Profiling/Tracing is not used.
 #############################################
 
+print-%:; @echo $($*)
