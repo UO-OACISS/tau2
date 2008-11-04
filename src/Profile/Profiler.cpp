@@ -1331,8 +1331,22 @@ void Profiler::PurgeData(int tid) {
     (*it)->SetExclTimeZero(tid);
     (*it)->SetInclTimeZero(tid);
   }
+  // Reset the Event Database
+  for (eit = TheEventDB().begin(); eit != TheEventDB().end(); eit++) {
+    (*eit)->LastValueRecorded[tid] = 0;
+    (*eit)->NumEvents[tid] = 0L;
+    (*eit)->MinValue[tid] = 9999999;
+    (*eit)->MaxValue[tid] = -9999999;
+    (*eit)->SumSqrValue[tid] = 0;
+    (*eit)->SumValue[tid] = 0;
+  }
   // Now Re-register callstack entries
   curr = CurrentProfiler[tid];
+	if (curr == NULL)
+	{
+	  RtsLayer::UnLockDB();
+    return;	
+	}
   curr->ThisFunction->IncrNumCalls(tid);
 
 
@@ -1362,15 +1376,6 @@ void Profiler::PurgeData(int tid) {
     curr = curr->ParentProfiler;
   }
   
-  // Reset the Event Database
-  for (eit = TheEventDB().begin(); eit != TheEventDB().end(); eit++) {
-    (*eit)->LastValueRecorded[tid] = 0;
-    (*eit)->NumEvents[tid] = 0L;
-    (*eit)->MinValue[tid] = 9999999;
-    (*eit)->MaxValue[tid] = -9999999;
-    (*eit)->SumSqrValue[tid] = 0;
-    (*eit)->SumValue[tid] = 0;
-  }
   
   RtsLayer::UnLockDB();
 }
@@ -1938,7 +1943,7 @@ bool Profiler::createDirectories() {
 }
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.196 $   $Date: 2008/10/31 17:36:55 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.196 2008/10/31 17:36:55 amorris Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: scottb $
+ * $Revision: 1.197 $   $Date: 2008/11/04 21:47:59 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.197 2008/11/04 21:47:59 scottb Exp $ 
  ***************************************************************************/
