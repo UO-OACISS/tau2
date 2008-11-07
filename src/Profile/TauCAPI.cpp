@@ -1092,7 +1092,7 @@ void Tau_destructor_trigger() {
 #define TAU_FALSE_POMP
 #endif
 
-//#ifdef TAU_FALSE_POMP
+#ifdef TAU_FALSE_POMP
 
 #pragma weak POMP_MAX_ID=TAU_POMP_MAX_ID
 int TAU_POMP_MAX_ID = 0;
@@ -1117,13 +1117,13 @@ extern "C" {
   }
 }
 #endif
-//#endif
+#endif
 
                     
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.88 $   $Date: 2008/11/07 19:56:32 $
- * VERSION: $Id: TauCAPI.cpp,v 1.88 2008/11/07 19:56:32 amorris Exp $
+ * $Revision: 1.89 $   $Date: 2008/11/07 19:57:24 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.89 2008/11/07 19:57:24 amorris Exp $
  ***************************************************************************/
 
