@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/sh
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
 #*			http://www.cs.uoregon.edu/research/tau	           **
@@ -2804,7 +2804,10 @@ case $fortran_compiler in
       then
         fixmakeargs="$fixmakeargs SC_GFORTRAN"
       else
-	taugfortranlibdir=`gfortran -print-libgcc-file-name | sed s/libgcc.a//`
+	gfortran=`which gfortran 2>&1`
+	if [ -x gfortran ] ; then
+	    taugfortranlibdir=`gfortran -print-libgcc-file-name | sed s/libgcc.a//`
+	fi
 	fixmakeargs="$fixmakeargs taugfortranlibdir=$taugfortranlibdir" 
         fixmakeargs="$fixmakeargs GNU_GFORTRAN"
       fi
