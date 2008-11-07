@@ -1076,8 +1076,10 @@ extern "C" int Tau_get_tid(void)
 void Tau_destructor_trigger() {
   if ((TheUsingDyninst() || TheUsingCompInst()) && TheSafeToDumpData()) {
     //printf ("FIvector destructor\n");
+#ifndef TAU_VAMPIRTRACE
     TAU_PROFILE_EXIT("FunctionDB destructor");
     TheSafeToDumpData() = 0;
+#endif
   }
 }
 
@@ -1089,16 +1091,39 @@ void Tau_destructor_trigger() {
 #ifdef TAU_SICORTEX
 #define TAU_FALSE_POMP
 #endif
-#ifdef TAU_FALSE_POMP
+
+//#ifdef TAU_FALSE_POMP
+
 #pragma weak POMP_MAX_ID=TAU_POMP_MAX_ID
 int TAU_POMP_MAX_ID = 0;
 #pragma weak pomp_rd_table=tau_pomp_rd_table
 int *tau_pomp_rd_table = 0;
+
+// #pragma weak omp_get_thread_num=tau_omp_get_thread_num
+// extern "C" int tau_omp_get_thread_num() {
+//   return 0;
+// }
+
+#ifdef TAU_OPENMP
+extern "C" {
+
+  void pomp_parallel_begin();
+  void pomp_parallel_fork_();
+  void POMP_Parallel_fork();
+  void _tau_pomp_will_not_be_called() {
+    pomp_parallel_begin();
+    pomp_parallel_fork_();
+    POMP_Parallel_fork();
+  }
+}
 #endif
+//#endif
+
+                    
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.87 $   $Date: 2008/10/31 00:44:21 $
- * VERSION: $Id: TauCAPI.cpp,v 1.87 2008/10/31 00:44:21 amorris Exp $
+ * $Revision: 1.88 $   $Date: 2008/11/07 19:56:32 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.88 2008/11/07 19:56:32 amorris Exp $
  ***************************************************************************/
 
