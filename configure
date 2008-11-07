@@ -4147,6 +4147,7 @@ if $c_compiler $orig_useropt tau_weak_test.c -c 1> /dev/null 2>&1 ; then
 else
     echo "no"
 fi
+/bin/rm -f tau_weak_test.o tau_weak_test.c
 ##########################################################################
 
 ######################################################################
