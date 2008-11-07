@@ -377,6 +377,10 @@ fi
 
 
 
+     TAU_WEAK_SUPPORTED)
+        echo NOTE: Using Weak Symbol support
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      TAU_LARGEFILE)
         echo NOTE: Using the O_LARGEFILE flag to open 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

@@ -2246,6 +2246,8 @@ if [ $stff = yes ]
       fi
 fi
 
+
+
 if [ $trace = yes ]
   then
     cat <<EOF > tau_type_test.c
@@ -4122,6 +4124,30 @@ else
 fi
 /bin/rm -f f1.o f1.c
 
+
+##########################################################################
+# Check if weak symbols are supported
+##########################################################################
+cat <<EOF > tau_weak_test.c
+#pragma weak omp_get_thread_num=tau_omp_get_thread_num
+int tau_omp_get_thread_num() {
+  return 0;
+}
+EOF
+
+$echo "Checking for weak symbols... ${nnl}"
+if $c_compiler $orig_useropt tau_weak_test.c -c 1> /dev/null 2>&1 ; then
+    weakfound=`nm tau_weak_test.o |  awk '{ print $2 ; }' | head -n 1`
+    if [ "x$weakfound" = "xW" ] ; then
+	echo "yes"
+	fixmakeargs="$fixmakeargs TAU_WEAK_SUPPORTED"
+    else
+	echo "no"
+    fi
+else
+    echo "no"
+fi
+##########################################################################
 
 ######################################################################
 # Check for BFD
