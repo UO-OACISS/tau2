@@ -1322,16 +1322,15 @@ void Profiler::PurgeData(int tid) {
   DEBUGPROFMSG("Profiler::PurgeData( tid = "<<tid <<" ) "<<endl;);
   RtsLayer::LockDB();
 
-  
-  // Reset The Function Database (save callstack entries)
+  // Reset The Function Database
   for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
-    // May be able to recycle fns which never get called again??
     (*it)->SetCalls(tid,0);
     (*it)->SetSubrs(tid,0);
     (*it)->SetExclTimeZero(tid);
     (*it)->SetInclTimeZero(tid);
   }
-  // Reset the Event Database
+  
+  // Reset the Atomit/User Event Database
   for (eit = TheEventDB().begin(); eit != TheEventDB().end(); eit++) {
     (*eit)->LastValueRecorded[tid] = 0;
     (*eit)->NumEvents[tid] = 0L;
@@ -1340,15 +1339,16 @@ void Profiler::PurgeData(int tid) {
     (*eit)->SumSqrValue[tid] = 0;
     (*eit)->SumValue[tid] = 0;
   }
+
+  if (CurrentProfiler[tid] == NULL) {
+    // There are no active timers, we are finished!
+    RtsLayer::UnLockDB();
+    return;	
+  }
+
   // Now Re-register callstack entries
   curr = CurrentProfiler[tid];
-	if (curr == NULL)
-	{
-	  RtsLayer::UnLockDB();
-    return;	
-	}
   curr->ThisFunction->IncrNumCalls(tid);
-
 
 #ifdef TAU_MULTIPLE_COUNTERS 
     for (int i=0;i<MAX_TAU_COUNTERS;i++) {
@@ -1358,7 +1358,6 @@ void Profiler::PurgeData(int tid) {
 #else
     curr->StartTime = RtsLayer::getUSecD(tid) ;
 #endif
-
 
   curr = curr->ParentProfiler;
 
@@ -1375,7 +1374,6 @@ void Profiler::PurgeData(int tid) {
 #endif
     curr = curr->ParentProfiler;
   }
-  
   
   RtsLayer::UnLockDB();
 }
@@ -1943,7 +1941,7 @@ bool Profiler::createDirectories() {
 }
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: scottb $
- * $Revision: 1.197 $   $Date: 2008/11/04 21:47:59 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.197 2008/11/04 21:47:59 scottb Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: amorris $
+ * $Revision: 1.198 $   $Date: 2008/11/07 19:57:57 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.198 2008/11/07 19:57:57 amorris Exp $ 
  ***************************************************************************/
