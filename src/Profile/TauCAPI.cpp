@@ -1018,7 +1018,7 @@ extern "C" void Tau_get_calls(void *handle, long *values, int tid)
 {
   FunctionInfo *ptr = (FunctionInfo *)handle;
 
-  values[0] = (double) ptr->GetCalls(tid);
+  values[0] = (long) ptr->GetCalls(tid);
   return;
 }
 
@@ -1027,7 +1027,7 @@ void Tau_get_child_calls(void *handle, long* values, int tid)
 {
   FunctionInfo *ptr = (FunctionInfo *)handle;
 
-  values[0] = (double) ptr->GetSubrs(tid);
+  values[0] = (long) ptr->GetSubrs(tid);
   return;
 }
 
@@ -1123,7 +1123,7 @@ extern "C" {
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.90 $   $Date: 2008/11/08 02:18:56 $
- * VERSION: $Id: TauCAPI.cpp,v 1.90 2008/11/08 02:18:56 amorris Exp $
+ * $Revision: 1.91 $   $Date: 2008/11/08 02:21:14 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.91 2008/11/08 02:21:14 amorris Exp $
  ***************************************************************************/
 
