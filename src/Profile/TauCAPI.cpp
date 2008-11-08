@@ -803,6 +803,11 @@ map<string, FunctionInfo *>& ThePureMap() {
   return pureMap;
 }
 
+map<string, int *>& TheIterationMap() {
+  static map<string, int *> iterationMap;
+  return iterationMap;
+}
+
 
 extern "C" void Tau_pure_start(const char *name) {
   FunctionInfo *fi = 0;
@@ -853,27 +858,31 @@ extern "C" void Tau_static_phase_stop(char *name) {
   }
 }
 
-/* isPhase argument is 1 for phase and 0 for timer */
-extern "C" void Tau_dynamic_start(char *name, void *iteration, int isPhase)
-{
-  int **iterationList = (int**) iteration;
-  if (*iterationList == NULL) {
+
+static int *getIterationList(char *name) {
+  string searchName(name);
+  map<string, int *>::iterator iit = TheIterationMap().find(searchName);
+  if (iit == TheIterationMap().end()) {
     RtsLayer::LockEnv();
-    if (*iterationList == NULL) {
-      *iterationList = new int[TAU_MAX_THREADS];
-      for (int i=0; i<TAU_MAX_THREADS; i++) {
-	(*iterationList)[i] = 0;
-      }
+    int *iterationList = new int[TAU_MAX_THREADS];
+    for (int i=0; i<TAU_MAX_THREADS; i++) {
+      iterationList[i] = 0;
     }
+    TheIterationMap()[searchName] = iterationList;
     RtsLayer::UnLockEnv();
   }
+  return TheIterationMap()[searchName];
+}
+
+/* isPhase argument is 1 for phase and 0 for timer */
+extern "C" void Tau_dynamic_start(char *name, int isPhase)
+{
+  int *iterationList = getIterationList(name);
+
   int tid = RtsLayer::myThread();
-  int itcount = (*iterationList)[tid];
+  int itcount = iterationList[tid];
 
-  // increment the counter
-  //(*iterationList)[tid]++;
-
-  FunctionInfo *fi = 0;
+  FunctionInfo *fi = NULL;
   char *newName = Tau_append_iteration_to_name(itcount, name);
   string n (newName);
   free(newName);
@@ -900,26 +909,17 @@ extern "C" void Tau_dynamic_start(char *name, void *iteration, int isPhase)
 
 /* isPhase argument is ignored in Tau_dynamic_stop. For consistency with
    Tau_dynamic_start. */
-extern "C" void Tau_dynamic_stop(char *name, void *iteration, int isPhase) {
-  int **iterationList = (int**) iteration;
+extern "C" void Tau_dynamic_stop(char *name, int isPhase) {
+  
+  int *iterationList = getIterationList(name);
 
-  if (*iterationList == NULL) {
-    RtsLayer::LockEnv();
-    if (*iterationList == NULL) {
-      *iterationList = new int[TAU_MAX_THREADS];
-      for (int i=0; i<TAU_MAX_THREADS; i++) {
-	(*iterationList)[i] = 0;
-      }
-    }
-    RtsLayer::UnLockEnv();
-  }
   int tid = RtsLayer::myThread();
-  int itcount = (*iterationList)[tid];
+  int itcount = iterationList[tid];
 
   // increment the counter
-  (*iterationList)[tid]++;
+  iterationList[tid]++;
   
-  FunctionInfo *fi;   
+  FunctionInfo *fi = NULL;   
   char *newName = Tau_append_iteration_to_name(itcount, name);
   string n (newName);
   free(newName);
@@ -1123,7 +1123,7 @@ extern "C" {
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.89 $   $Date: 2008/11/07 19:57:24 $
- * VERSION: $Id: TauCAPI.cpp,v 1.89 2008/11/07 19:57:24 amorris Exp $
+ * $Revision: 1.90 $   $Date: 2008/11/08 02:18:56 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.90 2008/11/08 02:18:56 amorris Exp $
  ***************************************************************************/
 

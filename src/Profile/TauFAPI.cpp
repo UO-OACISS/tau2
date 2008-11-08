@@ -102,8 +102,8 @@ void Tau_profile_snapshot_1l(char *name, int number);
 void Tau_metadata(char *name, char *value);
 void Tau_static_phase_start(char *name);
 void Tau_static_phase_stop(char *name);
-void Tau_dynamic_start(char *name, void *iteration, int isPhase);
-void Tau_dynamic_stop(char *name, void *iteration, int isPhase);
+void Tau_dynamic_start(char *name, int isPhase);
+void Tau_dynamic_stop(char *name, int isPhase);
 char * Tau_append_iteration_to_name(int iteration, char *name);
   
 
@@ -316,7 +316,7 @@ void tau_dynamic_phase_start(void *iteration, char *fname, int flen) {
     }
   }
 
-  Tau_dynamic_start(localname, iteration, 1); /* 1 is isPhase */
+  Tau_dynamic_start(localname, 1); /* 1 is isPhase */
   free(localname);
 }
 
@@ -346,7 +346,7 @@ void tau_dynamic_phase_stop(void *iteration, char *fname, int flen) {
     }
   }
 
-  Tau_dynamic_stop(localname, iteration, 1); /* 1 is isPhase */
+  Tau_dynamic_stop(localname, 1); /* 1 is isPhase */
   free(localname);
 }
 
@@ -377,7 +377,7 @@ void tau_dynamic_timer_start(void *iteration, char *fname, int flen) {
     }
   }
 
-  Tau_dynamic_start(localname, iteration, 0); /* isPhase=0 implies a timer */
+  Tau_dynamic_start(localname, 0); /* isPhase=0 implies a timer */
   free(localname);
 }
 
@@ -431,7 +431,7 @@ void tau_dynamic_timer_stop(void *iteration, char *fname, int flen) {
     }
   }
 
-  Tau_dynamic_stop(localname, iteration, 0); /* isPhase = 0 implies timer */
+  Tau_dynamic_stop(localname, 0); /* isPhase = 0 implies timer */
   free(localname);
 }
 
@@ -2012,6 +2012,6 @@ void TAU_DEALLOC(void ** ptr, int* line, char *name, int slen)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.71 $   $Date: 2008/08/15 21:18:43 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.71 2008/08/15 21:18:43 amorris Exp $ 
+ * $Revision: 1.72 $   $Date: 2008/11/08 02:18:56 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.72 2008/11/08 02:18:56 amorris Exp $ 
  ***************************************************************************/
