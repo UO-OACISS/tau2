@@ -938,11 +938,14 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     DEBUGPROFMSG("Calls = "<<ThisFunction->GetCalls(tid)
 		 <<" inclusiveTime = "<<inclusiveTime<<endl);
     if (TauEnv_get_throttle() && (ThisFunction->GetCalls(tid) > TauEnv_get_throttle_numcalls()) && (inclusiveTime/ThisFunction->GetCalls(tid) < TauEnv_get_throttle_percall()) && AddInclFlag) { 
+      RtsLayer::LockDB();
       /* Putting AddInclFlag means we can't throttle recursive calls */
       ThisFunction->SetProfileGroup(TAU_DISABLE, tid);
       ThisFunction->SetPrimaryGroupName("TAU_DISABLE");
       //cout <<"TAU<"<<RtsLayer::myNode()<<">: Throttle: Disabling "<<ThisFunction->GetName()<<endl;
       TAU_VERBOSE("TAU<%d>: Throttle: Disabling %s\n", RtsLayer::myNode(), ThisFunction->GetName());
+      RtsLayer::UnLockDB();
+
     }
 #endif /* TAU_DISABLE_THROTTLE */
     
@@ -1942,6 +1945,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.198 $   $Date: 2008/11/07 19:57:57 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.198 2008/11/07 19:57:57 amorris Exp $ 
+ * $Revision: 1.199 $   $Date: 2008/11/08 00:02:46 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.199 2008/11/08 00:02:46 amorris Exp $ 
  ***************************************************************************/
