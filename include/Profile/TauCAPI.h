@@ -158,25 +158,11 @@ extern "C" {
 #define TAU_PHASE_STOP(var) Tau_stop_timer(var##finfo)
 #define TAU_STATIC_PHASE_START(name) Tau_static_phase_start(name)
 #define TAU_STATIC_PHASE_STOP(name)  Tau_static_phase_stop(name)
-#define TAU_DYNAMIC_PHASE_START(name) \
-{ static void *tau_counter=NULL; \
-  Tau_dynamic_start(name, &tau_counter, 1); \
-}
 
-#define TAU_DYNAMIC_PHASE_STOP(name) \
-{ static void *tau_counter=NULL; \
-  Tau_dynamic_stop(name, &tau_counter, 1); \
-}
-
-#define TAU_DYNAMIC_TIMER_START(name) \
-{ static void *tau_counter=NULL; \
-  Tau_dynamic_start(name, &tau_counter, 0); \
-}
-
-#define TAU_DYNAMIC_TIMER_STOP(name) \
-{ static void *tau_counter=NULL; \
-  Tau_dynamic_stop(name, &tau_counter, 0); \
-}
+#define TAU_DYNAMIC_PHASE_START(name) Tau_dynamic_start(name, 1);
+#define TAU_DYNAMIC_PHASE_STOP(name) Tau_dynamic_stop(name, 1);
+#define TAU_DYNAMIC_TIMER_START(name) Tau_dynamic_start(name, 0);
+#define TAU_DYNAMIC_TIMER_STOP(name) Tau_dynamic_stop(name, 0);
 
 #define TAU_GLOBAL_PHASE(timer, name, type, group) void * TauGlobalPhase##timer(void) \
 { static void *ptr = NULL; \
@@ -306,8 +292,8 @@ extern void TAUDECL Tau_metadata(char *name, char *value);
 extern void TAUDECL Tau_phase_metadata(char *name, char *value);
 extern void TAUDECL Tau_context_metadata(char *name, char *value);
 
-extern void Tau_dynamic_start(char *name, void *tau_counter, int isPhase); 
-extern void Tau_dynamic_stop(char *name, void *tau_counter, int isPhase); 
+extern void Tau_dynamic_start(char *name, int isPhase); 
+extern void Tau_dynamic_stop(char *name, int isPhase); 
 extern void Tau_static_phase_start(char *name);
 extern void Tau_static_phase_stop(char *name);
 extern void Tau_profile_dynamic_auto(int iteration, void **ptr, char *fname, char *type, TauGroup_t group, char *group_name, int isPhase);
@@ -348,7 +334,7 @@ extern int Tau_get_tid(void);
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: amorris $
- * $Revision: 1.58 $   $Date: 2008/10/20 23:53:21 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.58 2008/10/20 23:53:21 amorris Exp $
+ * $Revision: 1.59 $   $Date: 2008/11/08 02:18:04 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.59 2008/11/08 02:18:04 amorris Exp $
  ***************************************************************************/
 
