@@ -88,11 +88,11 @@ for arg in "$@" ; do
       shift
   else
       case $arg in 
-	  -v|-d)
+	  -v|-d|-verbose|--verbose)
 	      verbose=true
 	      shift
 	      ;;
-	  -help|-h|--help)
+	  -h|-help|--help)
 	      usage
 	      ;;
 	  -i|-l|-L)
@@ -114,7 +114,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tauex,v 1.7 2008/07/14 22:15:08 amorris Exp $';
+	      echo '$Id: tauex,v 1.8 2008/11/10 19:50:23 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -m)
