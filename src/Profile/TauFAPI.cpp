@@ -76,6 +76,7 @@ void Tau_context_userevent(void *ue, double data);
 void Tau_report_statistics(void);
 void Tau_report_thread_statistics(void);
 void Tau_dump(void);
+void Tau_purge(void);
 void Tau_dump_prefix(char *prefix);
 void tau_extract_groupinfo(char *& fname, TauGroup_t & gr, char *& gr_name);
 TauGroup_t Tau_get_profile_group(char * group) ; 
@@ -722,6 +723,12 @@ void tau_db_dump_(void)
   return;
 }
 
+void tau_db_purge_(void)
+{
+  Tau_purge();
+  return;
+}
+
 void tau_db_dump_prefix_(char *prefix)
 {
   Tau_dump_prefix(prefix);
@@ -1173,6 +1180,11 @@ void TAU_DB_DUMP(void)
   return;
 }
 
+void TAU_DB_PURGE(void)
+{
+  Tau_purge();
+  return;
+}
 void TAU_DB_DUMP_PREFIX(char *prefix)
 {
   Tau_dump_prefix(prefix);
@@ -1426,6 +1438,11 @@ void tau_db_dump(void)
   Tau_dump();
 }
 
+void tau_db_purge(void)
+{
+  Tau_purge();
+}
+
 void tau_db_dump_prefix(char *prefix)
 {
   Tau_dump_prefix(prefix);
@@ -1522,6 +1539,12 @@ void tau_profile_exit__(char *msg)
 void tau_db_dump__(void)
 {
   Tau_dump();
+  return;
+}
+
+void tau_db_purge__(void)
+{
+  Tau_purge();
   return;
 }
 
@@ -2011,7 +2034,7 @@ void TAU_DEALLOC(void ** ptr, int* line, char *name, int slen)
 
 
 /***************************************************************************
- * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.72 $   $Date: 2008/11/08 02:18:56 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.72 2008/11/08 02:18:56 amorris Exp $ 
+ * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
+ * $Revision: 1.73 $   $Date: 2008/11/11 00:03:26 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.73 2008/11/11 00:03:26 sameer Exp $ 
  ***************************************************************************/
