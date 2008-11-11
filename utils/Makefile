@@ -29,8 +29,10 @@ DYNINSTDIR=
 #MIPSR8K#ISA          = -mips4		   #ENDIF#
 
 ############# Standard Defines ##############
-CC = $(TAU_CC_FE) $(ABI) $(ISA)
-CXX = $(TAU_CXX_FE) $(ABI) $(ISA)
+#CC = $(TAU_CC_FE) $(ABI) $(ISA)
+#CXX = $(TAU_CXX_FE) $(ABI) $(ISA)
+CC = $(CONFIG_CC) $(ABI) $(ISA)
+CXX = $(CONFIG_CXX) $(ABI) $(ISA)
 TAU_INSTALL = /bin/cp
 TAU_SHELL = /bin/sh
 LSX = .a
