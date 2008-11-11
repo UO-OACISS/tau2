@@ -1104,26 +1104,25 @@ int *tau_pomp_rd_table = 0;
 //   return 0;
 // }
 
-#ifdef TAU_OPENMP
-extern "C" {
-
-  void pomp_parallel_begin();
-  void pomp_parallel_fork_();
-  void POMP_Parallel_fork();
-  void _tau_pomp_will_not_be_called() {
-    pomp_parallel_begin();
-    pomp_parallel_fork_();
-    POMP_Parallel_fork();
-  }
-}
-#endif
+// #ifdef TAU_OPENMP
+// extern "C" {
+//   void pomp_parallel_begin();
+//   void pomp_parallel_fork_();
+//   void POMP_Parallel_fork();
+//   void _tau_pomp_will_not_be_called() {
+//     pomp_parallel_begin();
+//     pomp_parallel_fork_();
+//     POMP_Parallel_fork();
+//   }
+// }
+// #endif
 #endif
 
                     
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.91 $   $Date: 2008/11/08 02:21:14 $
- * VERSION: $Id: TauCAPI.cpp,v 1.91 2008/11/08 02:21:14 amorris Exp $
+ * $Revision: 1.92 $   $Date: 2008/11/11 01:55:49 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.92 2008/11/11 01:55:49 amorris Exp $
  ***************************************************************************/
 
