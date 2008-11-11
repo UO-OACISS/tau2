@@ -216,7 +216,7 @@ tau_timecorrect:	tau_timecorrect.o
 		$(CXX) $(CFLAGS) tau_timecorrect.o -o tau_timecorrect -lm $(LEXTRA) $(TAU_TRACE_INPUT_LIB)
 
 opari/opari:
-		cd opari ; $(MAKE)
+		cd opari ; $(MAKE) opari
 
 tau_timecorrect.o:	tau_timecorrect.cpp
 		$(CXX) $(CFLAGS) tau_timecorrect.cpp -c
