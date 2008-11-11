@@ -1832,13 +1832,14 @@ if [ $sicortex = yes ] ; then
     sicortexlink=""
     sicortexmpi=""
     if [ $epilog = yes ] ; then
+	epiloglibdir=$epilogdir/lib
 	elglibrary="-lelg"
 	if [ $mpi = yes -a $openmp = yes ] ; then
 	    # hybrid
-	    sicortexlink="-L$epiloglibdir#-Wl,-whole-archive#-lfmpi#-lelg.ompi#-Wl,-no-whole-archive#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic#-lscmpi"
+	    sicortexlink="-L$epiloglibdir#-Wl,-whole-archive#-lfmpi#-lelg.ompi#-Wl,-no-whole-archive#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic"
 	elif [ $mpi = yes ] ; then
 	    # mpi
-	    sicortexlink="-L$epiloglibdir#-lfmpi#-lelg.mpi#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic#-lscmpi"
+	    sicortexlink="-L$epiloglibdir#-lfmpi#-lelg.mpi#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic"
 	elif [ $openmp = yes ] ; then
 	    # openmp
 	    sicortexlink="-L$epiloglibdir#-Wl,-whole-archive#-lelg.omp#-Wl,-no-whole-archive#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic"
@@ -1849,12 +1850,13 @@ if [ $sicortex = yes ] ; then
 
     fi
     if [ $vampirtrace = yes ] ; then
+	vampirtracelibdir=lib
 	if [ $mpi = yes -a $openmp = yes ] ; then
 	    # hybrid
-	    sicortexlink="-L$vampirtracedir/$vampirtracelibdir#-Wl,-whole-archive#-lvt.fmpi#-lvt.ompi#-lotf#-Wl,-no-whole-archive#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic#-lscmpi"
+	    sicortexlink="-L$vampirtracedir/$vampirtracelibdir#-Wl,-whole-archive#-lvt.fmpi#-lvt.ompi#-lotf#-Wl,-no-whole-archive#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic"
 	elif [ $mpi = yes ] ; then
 	    # mpi
-	    sicortexlink="-L$vampirtracedir/$vampirtracelibdir#-lvt.fmpi#-lvt.mpi#-lotf#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic#-lscmpi"
+	    sicortexlink="-L$vampirtracedir/$vampirtracelibdir#-lvt.fmpi#-lvt.mpi#-lotf#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic"
 	elif [ $openmp = yes ] ; then
 	    # openmp
 	    sicortexlink="-L$vampirtracedir/$vampirtracelibdir#-Wl,-whole-archive#-lvt.omp#-lotf#-Wl,-no-whole-archive#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic"
@@ -3713,6 +3715,9 @@ then
         mpiflibargs="-lepk.ad.fmpi"
         wrapperlib="$wrapperlib -lepk.ad.fmpi"
       fi
+      if [ $epilog = yes -a -f $epiloglibdir/libcubew3.a ] ; then
+          wrapperlib="$wrapperlib -lcubew3"
+      fi
 
       if [ -f $mpilib/libfmpich.cnk.a -o -f $mpilib/libfmpich.cnk.so ] ; then
 	mpiflibargs="-lfmpich.cnk"
@@ -3958,24 +3963,22 @@ else # if mpilib is specified
     if [ $openmp = yes ] 
     then
 	if [ $epilog = yes ] ; then
-	    if [ $sicortex = yes ] ; then
-		wrapperlib="-L$epiloglibdir#-Wl,-whole-archive#-lelg.omp#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic#-Wl,-no-whole-archive#-ldl"
-	    else
-		wrapperlib="-L$epiloglibdir#-lelg.omp#-ldl"
+	    wrapperlib="-L$epiloglibdir#-lelg.omp#-ldl"
+	    if [ -f $epiloglibdir/libcubew3.a ] ; then
+		wrapperlib="$wrapperlib#-lcubew3"
 	    fi
 	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
 	elif [ $vampirtrace = yes ] ; then
-	    if [ $sicortex = yes ] ; then
-		wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-Wl,-whole-archive#-lvt.omp#-lotf#-Wl,-no-whole-archive#-lz#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic#-ldl"
-	    else
-		wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-Wl,-whole-archive#-lvt.omp#-lotf#-Wl,-no-whole-archive#-lz#-ldl"
-	    fi
+	    wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-Wl,-whole-archive#-lvt.omp#-lotf#-Wl,-no-whole-archive#-lz#-ldl"
 	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
 	fi
     else
 	if [ $epilog = yes ]
 	then
-	    wrapperlib="-L$epiloglibdir#-lelg#-ldl"
+	    wrapperlib="-L$epiloglibdir#-lelg.ser#-ldl"
+	    if [ -f $epiloglibdir/libcubew3.a ] ; then
+		wrapperlib="$wrapperlib#-lcubew3"
+	    fi
 	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
 	elif [ $vampirtrace = yes ]
 	then
