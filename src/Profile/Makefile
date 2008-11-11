@@ -424,6 +424,9 @@ Comp_intel9.o 	: Comp_intel9.cpp $(HDRS)
 Comp_pgi.o 	: Comp_pgi.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
+Comp_xl.o 	: Comp_xl.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
 RtsLayer.o 	: RtsLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
