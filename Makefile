@@ -113,7 +113,7 @@ install: .clean
          else echo System previously configured as a `utils/ConfigQuery -arch` ; fi
 	@echo "*********** RECURSIVELY MAKING SUBDIRECTORIES ***********"
 	@for i in ${SUBDIR}; do (echo "*** COMPILING $$i DIRECTORY"; cd $$i;\
-             $(MAKE) "MAKE=$(MAKE)" "CC=$(CC)" "CXX=$(CXX)" "LINKER=$(LINKER)" HOSTTYPE=$(HOSTTYPE) install) || exit $$?; done
+             $(MAKE) "MAKE=$(MAKE)" install ) || exit $$?; done
 	@echo "***************** DONE ************************"
 
 .clean:
