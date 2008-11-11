@@ -915,4 +915,6 @@ TAU_COMPILER=$(TAU_BIN_DIR)/tau_compiler.sh $(TAUCOMPILEROPTS) $(SHAREDEXTRAS)
 # Also ignore TAULIBS when Profiling/Tracing is not used.
 #############################################
 
-print-%:; @echo $($*)
+# I had to comment the following out, with IBM make, this becomes the default
+# make target, so it will screw up any makefile that includes the TAU stub makefile
+#print-%:; @echo $($*)
