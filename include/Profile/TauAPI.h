@@ -335,6 +335,7 @@ or tauFI->method();
 #define TAU_INIT(argc, argv) RtsLayer::ProfileInit(*argc, *argv);
 #define TAU_PROFILE_SET_NODE(node) RtsLayer::setMyNode(node);
 #define TAU_PROFILE_SET_CONTEXT(context) RtsLayer::setMyContext(context);
+#define TAU_PROFILE_SET_THREAD(thread) RtsLayer::setMyThread(thread);
 
 #define TAU_GLOBAL_TIMER(timer, name, type, group) FunctionInfo& timer (void) { \
 	static FunctionInfo *timer##fi = NULL; \
@@ -506,6 +507,6 @@ or tauFI->method();
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.75 $   $Date: 2008/11/08 02:18:04 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.75 2008/11/08 02:18:04 amorris Exp $ 
+ * $Revision: 1.76 $   $Date: 2008/11/12 01:07:03 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.76 2008/11/12 01:07:03 amorris Exp $ 
  ***************************************************************************/

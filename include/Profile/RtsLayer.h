@@ -97,6 +97,8 @@ public:
 
   static int setMyContext(int ContextId);
 
+  static int setMyThread(int tid);
+
   static char* getSingleCounterName(); 
   static char* getCounterName(int i); 
   static bool getCounterUsed(int i); 
@@ -146,6 +148,6 @@ private:
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: amorris $
- * $Revision: 1.25 $   $Date: 2008/03/13 02:54:10 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.25 2008/03/13 02:54:10 amorris Exp $ 
+ * $Revision: 1.26 $   $Date: 2008/11/12 01:07:03 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.26 2008/11/12 01:07:03 amorris Exp $ 
  ***************************************************************************/

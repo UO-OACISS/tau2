@@ -62,6 +62,7 @@ extern "C" {
 #define TAU_INIT(argc, argv)			Tau_init_ref(argc, argv);
 #define TAU_PROFILE_SET_NODE(node) 		Tau_set_node(node);
 #define TAU_PROFILE_SET_CONTEXT(context)	Tau_set_context(context);
+#define TAU_PROFILE_SET_THREAD(thread)          Tau_set_thread(thread);
 #define TAU_PROFILE_CALLSTACK()			Tau_profile_callstack();
 #define TAU_DB_DUMP()                           Tau_dump();
 #define TAU_DB_DUMP_PREFIX(prefix)              Tau_dump_prefix(prefix);
@@ -334,7 +335,7 @@ extern int Tau_get_tid(void);
 
 /***************************************************************************
  * $RCSfile: TauCAPI.h,v $   $Author: amorris $
- * $Revision: 1.59 $   $Date: 2008/11/08 02:18:04 $
- * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.59 2008/11/08 02:18:04 amorris Exp $
+ * $Revision: 1.60 $   $Date: 2008/11/12 01:07:03 $
+ * POOMA_VERSION_ID: $Id: TauCAPI.h,v 1.60 2008/11/12 01:07:03 amorris Exp $
  ***************************************************************************/
 

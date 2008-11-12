@@ -59,6 +59,7 @@ class PthreadLayer
         static int InitializeDBMutexData(void);     // init tauDB mutex
         static int InitializeEnvMutexData(void);     // init tauEnv mutex
 	static int GetThreadId(void); 	 // gets 0..N-1 thread id
+	static void SetThreadId(int); 	 // gets 0..N-1 thread id
 	static int LockDB(void);	 // locks the tauDBMutex
 	static int UnLockDB(void);	 // unlocks the tauDBMutex
 	static int LockEnv(void);	 // locks the tauEnvMutex
@@ -81,8 +82,8 @@ class PthreadLayer
 
 /***************************************************************************
  * $RCSfile: PthreadLayer.h,v $   $Author: amorris $
- * $Revision: 1.7 $   $Date: 2006/05/05 19:17:02 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.h,v 1.7 2006/05/05 19:17:02 amorris Exp $
+ * $Revision: 1.8 $   $Date: 2008/11/12 01:07:03 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.h,v 1.8 2008/11/12 01:07:03 amorris Exp $
  ***************************************************************************/
 
 
