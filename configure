@@ -3013,7 +3013,11 @@ then
 	mpiinc=/opt/xt-mpt/default/mpich2-64/P2/include
 	;;
   craycnl)
-	mpiinc=/opt/xt-mpt/default/mpich2-64/P2/include
+	mpiinc=/opt/xt-mpt/default/mpich2-64/P/include
+	if [ ! -r $mpiinc ] 
+        then
+	  mpiinc=/opt/xt-mpt/default/mpich2-64/P2/include
+        fi
 	;;
   solaris2*)
 	mpiinc=/opt/SUNWhpc/include
@@ -3085,7 +3089,11 @@ then
 	mpilib=/opt/xt-mpt/default/mpich2-64/P2/lib
 	;;
   craycnl)
-	mpilib=/opt/xt-mpt/default/mpich2-64/P2/lib
+	mpilib=/opt/xt-mpt/default/mpich2-64/P/lib
+	if [ ! -r $mpilib ]
+        then
+	  mpilib=/opt/xt-mpt/default/mpich2-64/P2/lib
+        fi
 	;;
   solaris2*)
 	mpilib=/opt/SUNWhpc/lib
