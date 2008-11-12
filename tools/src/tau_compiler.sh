@@ -867,7 +867,7 @@ if [ $optCompInst == $TRUE ]; then
     fi
 
 #    argsRemaining="$argsRemaining $optCompInstOption"
-#    optLinking="$optLinking $optCompInstLinking"
+    optLinking="$optLinking $optCompInstLinking"
 fi
 
 ####################################################################
