@@ -2007,13 +2007,16 @@ case $machine in
 	    #tauoptions="${tauoptions}-pgi"
 	    pgi=yes
 	    default_fortran=pgi
+	    fixmakeargs="$fixmakeargs COMPINST_PGI"
 	elif [ "x$PE_ENV" = xGNU ] ; then
 	    gnu=yes
 	    tauoptions="${tauoptions}-gnu"
 	    default_fortran=gnu
+	    fixmakeargs="$fixmakeargs COMPINST_GNU"
 	elif [ "x$PE_ENV" = xPATHSCALE ] ; then
 	    tauoptions="${tauoptions}-pathscale"
 	    default_fortran=pathscale
+	    fixmakeargs="$fixmakeargs COMPINST_GNU"
 	fi
 	if [ $fortran_compiler = no ] ; then
 	    fortran_compiler=$default_fortran
@@ -2030,13 +2033,16 @@ case $machine in
 	    #tauoptions="${tauoptions}-pgi"
 	    pgi=yes
 	    default_fortran=pgi
+	    fixmakeargs="$fixmakeargs COMPINST_PGI"
 	elif [ "x$PE_ENV" = xGNU ] ; then
 	    gnu=yes
 	    tauoptions="${tauoptions}-gnu"
 	    default_fortran=gfortran
+	    fixmakeargs="$fixmakeargs COMPINST_GNU"
 	elif [ "x$PE_ENV" = xPATHSCALE ] ; then
 	    tauoptions="${tauoptions}-pathscale"
 	    default_fortran=pathscale
+	    fixmakeargs="$fixmakeargs COMPINST_GNU"
 	fi
 	if [ $fortran_compiler = no ] ; then
 	    fortran_compiler=$default_fortran
