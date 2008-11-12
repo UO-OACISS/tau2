@@ -51,7 +51,7 @@ public class PSRunDataSource extends DataSource {
     }
 
     public void load() throws DataSourceException {
-        Debug.dataSource = this;
+        //Debug.dataSource = this;
 
         try {
             List v = (List) initializeObject;

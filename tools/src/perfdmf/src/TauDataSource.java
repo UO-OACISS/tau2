@@ -58,10 +58,19 @@ public class TauDataSource extends DataSource {
         this.dirs = dirs;
 
         if (dirs.size() > 0) {
-            File[] files = (File[]) dirs.get(0);
-            if (files.length > 0) {
-                fileToMonitor = files[0];
-            }
+			if (dirs.get(0) instanceof File[]) {
+            	File[] files = (File[]) dirs.get(0);
+            	if (files.length > 0) {
+                	fileToMonitor = files[0];
+            	}
+            } else {
+				this.dirs = new ArrayList();
+				File[] files = new File[1];
+				files[0] = (File) dirs.get(0);
+				this.dirs.add(files);
+               	fileToMonitor = files[0];
+				//System.out.println(files[0].toString());
+			}
         }
     }
 
@@ -380,17 +389,18 @@ public class TauDataSource extends DataSource {
                     "Didn't find any valid files.\nAre you sure these are TAU profiles? (e.g. profile.*.*.*)");
         }
 
-        //time = (System.currentTimeMillis()) - time;
-        //System.out.println("Time to process (in milliseconds): " + time);
-        //        time = System.currentTimeMillis();
+        long thistime = (System.currentTimeMillis()) - time;
+        //System.out.println("Time to process (in milliseconds): " + thistime);
+		//System.out.print(thistime + ", ");
 
         //Generate derived data.
         this.generateDerivedData();
         this.aggregateMetaData();
         this.buildXMLMetaData();
 
-        //time = (System.currentTimeMillis()) - time;
-        //System.out.println("Time to process (in milliseconds): " + time);
+        time = (System.currentTimeMillis()) - time;
+        //System.out.println("Total Time to process (in milliseconds): " + time);
+		//System.out.println(time + "");
     }
 
     public String toString() {

@@ -38,8 +38,8 @@ public class GAMESSDataSource extends DataSource {
     private Hashtable nodeHash = new Hashtable();
     private int threadCounter = 0;
 	private File file = null;
-	private int nodeCount = 0;
-	private int coreCount = 0;
+	private int nodeCount = 1;
+	private int coreCount = 1;
 	private String moleculeName;
 	private String basisSet;
 	private String runType;
@@ -94,9 +94,6 @@ public class GAMESSDataSource extends DataSource {
     		contextID = 0;
 			threadID = 0;
 
-			// parse metadata from filename
-			parseFileName(this.file.getName());
-			
             // parse the next file			
 			FileInputStream fileIn = new FileInputStream(file);
 			InputStreamReader inReader = new InputStreamReader(fileIn);
@@ -104,7 +101,9 @@ public class GAMESSDataSource extends DataSource {
 
 			while((inputString = br.readLine()) != null){
 				inputString = inputString.trim();
-				if (inputString.startsWith("FINAL RHF ENERGY IS")) {
+				if (inputString.startsWith("PARALLEL VERSION RUNNING ON")) {
+					parseNodeCount();
+				} else if (inputString.startsWith("FINAL RHF ENERGY IS")) {
 					parseAccuracy();
 				} else if (inputString.startsWith("....")) {
 					if (!inputString.equals("...... PI ENERGY ANALYSIS ......") &&
@@ -131,7 +130,6 @@ public class GAMESSDataSource extends DataSource {
 						this.createFunction(this.thread, tmp, false);
 						this.createFunction(this.thread, tmp, true);
 					}
-					this.setMetadata();
 				}
 			}
 			
@@ -150,7 +148,21 @@ public class GAMESSDataSource extends DataSource {
         }
 	}
 
-    private void createEvent() {
+    private void parseNodeCount() {
+    	//  PARALLEL VERSION RUNNING ON    32 PROCESSORS IN     8 NODES.
+    	StringTokenizer st = new StringTokenizer(inputString, " ");
+    	String dummy = st.nextToken(); // PARALLEL
+    	dummy = st.nextToken(); // VERSION
+    	dummy = st.nextToken(); // RUNNING
+    	dummy = st.nextToken(); // ON
+    	int tmp = Integer.parseInt(st.nextToken());
+    	dummy = st.nextToken(); // PROCESSORS
+    	dummy = st.nextToken(); // IN
+    	this.nodeCount = Integer.parseInt(st.nextToken());
+    	this.coreCount = tmp / this.nodeCount;
+	}
+
+	private void createEvent() {
     	MyEvent event = new MyEvent(this.phaseName.toString(), this.cpuTime, this.currentWallClockTime, 0);
     	this.events.add(event);
 	}
@@ -237,44 +249,12 @@ public class GAMESSDataSource extends DataSource {
             thread = context.addThread(threadID);
         }
         
-        setMetadata();
     }
-
-    private void setMetadata() {
-   		this.getThread().getMetaData().put("molecule name", this.moleculeName);
-   		this.getThread().getMetaData().put("basis set", this.basisSet);
-   		this.getThread().getMetaData().put("run type", this.runType);
-   		this.getThread().getMetaData().put("scf type", this.scfType);
-   		this.getThread().getMetaData().put("node count", Integer.toString(this.nodeCount));
-   		this.getThread().getMetaData().put("core count", Integer.toString(this.coreCount));
-   		this.getThread().getMetaData().put("accuracy", this.accuracy);
-	}
 
 	public Thread getThread() {
         return thread;
     }
 
-    private void parseFileName(String fileName) {
-    	try {
-	    	StringTokenizer st = new StringTokenizer(fileName, ".");
-	   		moleculeName = st.nextToken();
-			basisSet = st.nextToken();
-			runType = st.nextToken();
-			String token = st.nextToken();
-	   		StringTokenizer st2 = new StringTokenizer(token, "-");
-			scfType = st2.nextToken();
-			token = st2.nextToken();
-	   		StringTokenizer st3 = new StringTokenizer(token, "x");
-	   		String tmp = st3.nextToken();
-	   		this.nodeCount = Integer.parseInt(tmp);
-	   		tmp = st3.nextToken();
-	   		this.coreCount = Integer.parseInt(tmp);
-    	} catch (Exception e) {
-    		// filename wasn't what we expected.
-    	}
-    	return;
-    }
-    
 	/** THe order that these are done is very important. */
 	private void createFunction(Thread thread, MyEvent event, boolean callPath) {
 		if (callPath) {
@@ -309,11 +289,20 @@ public class GAMESSDataSource extends DataSource {
 		String metric3 = "CPU UTILIZATION";
 		Metric m3 = addMetric(metric3, thread);
 		if (event.name.equals("MAIN")) {
-			fp.setInclusive(m3.getID(), event.cpu/event.wall);
+			if (event.wall == 0.0) {
+				fp.setInclusive(m3.getID(), 0.0);
+			} else {
+				fp.setInclusive(m3.getID(), event.cpu/event.wall);
+			}
 			fp.setExclusive(m3.getID(), 1.0);
 		} else {
-			fp.setInclusive(m3.getID(), event.cpu/event.wall);
-			fp.setExclusive(m3.getID(), event.cpu/event.wall);
+			if (event.wall == 0.0) {
+				fp.setInclusive(m3.getID(), 0.0);
+				fp.setExclusive(m3.getID(), 0.0);
+			} else {
+				fp.setInclusive(m3.getID(), event.cpu/event.wall);
+				fp.setExclusive(m3.getID(), event.cpu/event.wall);
+			}
 		}
 	}
     

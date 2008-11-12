@@ -13,20 +13,20 @@ import edu.uoregon.tau.perfdmf.database.ParseConfig;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.20 2007/10/12 22:30:25 scottb Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.21 2008/11/12 01:18:08 khuck Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.20 $
+ * @version $Revision: 1.21 $
  */
 public class DatabaseAPI {
 
     private Application application = null;
     private Experiment experiment = null;
     private Trial trial = null;
-    private Vector nodes = null;
-    private Vector contexts = null;
-    private Vector threads = null;
+    private List nodes = null;
+    private List contexts = null;
+    private List threads = null;
     private Vector intervalEvents = null;
     private List metrics = null;
     private Vector intervalEventData = null;
@@ -313,10 +313,11 @@ public class DatabaseAPI {
         IntervalEvent intervalEvent = null;
         this.intervalEvents = new Vector();
         intervalEvent = getIntervalEvent(id);
-        if (intervalEvent != null)
+        if (intervalEvent != null) {
             this.intervalEvents.addElement(intervalEvent);
-        // we need this to get the metric data...
-        setTrial(intervalEvent.getTrialID(), false);
+        	// we need this to get the metric data...
+        	setTrial(intervalEvent.getTrialID(), false);
+		}
         return intervalEvent;
     }
 
@@ -330,6 +331,36 @@ public class DatabaseAPI {
         return atomicEvent;
     }
 
+    // clears the interval event selection
+	public void clearIntervalEvents() {
+        this.intervalEvents = null;
+		return;
+	}
+
+    // sets the current node ID
+    public void setNode(int id) {
+        Integer node = new Integer(id);
+        this.nodes = new ArrayList();
+        this.nodes.add(node);
+        return;
+    }
+
+    // sets the current context ID
+    public void setContext(int id) {
+        Integer context = new Integer(id);
+        this.contexts = new ArrayList();
+        this.contexts.add(context);
+        return;
+    }
+
+    // sets the current thread ID
+    public void setThread(int id) {
+        Integer thread = new Integer(id);
+        this.threads = new ArrayList();
+        this.threads.add(thread);
+        return;
+    }
+
     public List getIntervalEventData() throws SQLException {
         // check to make sure this is a meaningful request
         if (trial == null && intervalEvents == null) {
@@ -338,9 +369,9 @@ public class DatabaseAPI {
         }
 
         // get the hash of intervalEvent names first
-        if (intervalEvents == null) {
-            getIntervalEvents();
-        }
+        //if (intervalEvents == null) {
+            //getIntervalEvents();
+        //}
 
         // get the metric count
         int metricCount = 0;
@@ -375,10 +406,10 @@ public class DatabaseAPI {
         if (nodes != null && nodes.size() > 0) {
             buf.append(" AND p.node IN (");
             Integer node;
-            for (Enumeration en = nodes.elements(); en.hasMoreElements();) {
-                node = (Integer) en.nextElement();
+            for (Iterator iter = nodes.iterator(); iter.hasNext();) {
+                node = (Integer) iter.next();
                 buf.append(node);
-                if (en.hasMoreElements())
+                if (iter.hasNext())
                     buf.append(", ");
                 else
                     buf.append(") ");
@@ -387,10 +418,10 @@ public class DatabaseAPI {
         if (contexts != null && contexts.size() > 0) {
             buf.append(" AND p.context IN (");
             Integer context;
-            for (Enumeration en = contexts.elements(); en.hasMoreElements();) {
-                context = (Integer) en.nextElement();
+            for (Iterator iter = contexts.iterator(); iter.hasNext();) {
+                context = (Integer) iter.next();
                 buf.append(context);
-                if (en.hasMoreElements())
+                if (iter.hasNext())
                     buf.append(", ");
                 else
                     buf.append(") ");
@@ -399,10 +430,10 @@ public class DatabaseAPI {
         if (threads != null && threads.size() > 0) {
             buf.append(" AND p.thread IN (");
             Integer thread;
-            for (Enumeration en = threads.elements(); en.hasMoreElements();) {
-                thread = (Integer) en.nextElement();
+            for (Iterator iter = threads.iterator(); iter.hasNext();) {
+                thread = (Integer) iter.next();
                 buf.append(thread);
-                if (en.hasMoreElements())
+                if (iter.hasNext())
                     buf.append(", ");
                 else
                     buf.append(") ");
@@ -461,10 +492,10 @@ public class DatabaseAPI {
         if (nodes != null && nodes.size() > 0) {
             buf.append(" AND p.node IN (");
             Integer node;
-            for (Enumeration en = nodes.elements(); en.hasMoreElements();) {
-                node = (Integer) en.nextElement();
+            for (Iterator iter = nodes.iterator(); iter.hasNext();) {
+                node = (Integer) iter.next();
                 buf.append(node);
-                if (en.hasMoreElements())
+                if (iter.hasNext())
                     buf.append(", ");
                 else
                     buf.append(") ");
@@ -473,10 +504,10 @@ public class DatabaseAPI {
         if (contexts != null && contexts.size() > 0) {
             buf.append(" AND p.context IN (");
             Integer context;
-            for (Enumeration en = contexts.elements(); en.hasMoreElements();) {
-                context = (Integer) en.nextElement();
+            for (Iterator iter = contexts.iterator(); iter.hasNext();) {
+                context = (Integer) iter.next();
                 buf.append(context);
-                if (en.hasMoreElements())
+                if (iter.hasNext())
                     buf.append(", ");
                 else
                     buf.append(") ");
@@ -485,10 +516,10 @@ public class DatabaseAPI {
         if (threads != null && threads.size() > 0) {
             buf.append(" AND p.thread IN (");
             Integer thread;
-            for (Enumeration en = threads.elements(); en.hasMoreElements();) {
-                thread = (Integer) en.nextElement();
+            for (Iterator iter = threads.iterator(); iter.hasNext();) {
+                thread = (Integer) iter.next();
                 buf.append(thread);
-                if (en.hasMoreElements())
+                if (iter.hasNext())
                     buf.append(", ");
                 else
                     buf.append(") ");

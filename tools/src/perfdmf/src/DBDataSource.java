@@ -17,9 +17,9 @@ import edu.uoregon.tau.perfdmf.database.DB;
 /**
  * Reads a single trial from the database
  *  
- * <P>CVS $Id: DBDataSource.java,v 1.11 2008/10/01 23:21:01 amorris Exp $</P>
+ * <P>CVS $Id: DBDataSource.java,v 1.12 2008/11/12 01:18:08 khuck Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  */
 public class DBDataSource extends DataSource {
 
@@ -148,6 +148,7 @@ public class DBDataSource extends DataSource {
         ResultSet resultSet = db.executeQuery(buf.toString());
         time = (System.currentTimeMillis()) - time;
         //System.out.println("Query : " + time);
+        //System.out.print(time + ", ");
 
         time = System.currentTimeMillis();
         while (resultSet.next() != false) {
@@ -182,6 +183,7 @@ public class DBDataSource extends DataSource {
         }
         time = (System.currentTimeMillis()) - time;
         //System.out.println("Processing : " + time);
+        //System.out.print(time + ", ");
 
         resultSet.close();
     }
@@ -216,7 +218,7 @@ public class DBDataSource extends DataSource {
 
     public void load() throws SQLException {
 
-        // System.out.println("Processing data, please wait ......");
+        //System.out.println("Processing data, please wait ......");
         long time = System.currentTimeMillis();
 
         DB db = databaseAPI.getDb();
@@ -290,6 +292,7 @@ public class DBDataSource extends DataSource {
 
         time = (System.currentTimeMillis()) - time;
         //System.out.println("Time to download file (in milliseconds): " + time);
+        //System.out.println(time);
 
         // We actually discard the mean and total values by calling this
         // But, we need to compute other statistics anyway
