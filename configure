@@ -3022,7 +3022,7 @@ then
 	mpiinc=/opt/xt-mpt/default/mpich2-64/P/include
 	if [ ! -r $mpiinc ] 
         then
-	  mpiinc=/opt/xt-mpt/default/mpich2-64/P2/include
+	  mpiinc=/opt/mpt/default/xt/mpich2-$default_fortran/include
         fi
 	;;
   solaris2*)
@@ -3098,7 +3098,7 @@ then
 	mpilib=/opt/xt-mpt/default/mpich2-64/P/lib
 	if [ ! -r $mpilib ]
         then
-	  mpilib=/opt/xt-mpt/default/mpich2-64/P2/lib
+	  mpilib=/opt/mpt/default/xt/mpich2-$default_fortran/lib/
         fi
 	;;
   solaris2*)
