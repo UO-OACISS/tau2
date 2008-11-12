@@ -8,7 +8,7 @@ True = 1
 False = 0
 config = "local"
 inApp = "GAMESS"
-inExp = "Bassi.Hiro"
+inExp = "Bassi.Hiro.C60"
 inTrial = ""
 parameterMap = None
 fileName = "/tmp/classifier.gamess"
@@ -76,9 +76,7 @@ def buildClassifier(results):
 	# for accuracy
 	# classifier = CQoSClassifierOperation(results, "accuracy", metadataFields, "basis set")
 	# for performance
-	#classifier = CQoSClassifierOperation(results, "Time", metadataFields, "dirscf")
-	classifier = CQoSClassifierOperation(results, "CPU UTILIZATION", metadataFields, "dirscf")
-	#classifier = CQoSClassifierOperation(results, "CPU TIME", metadataFields, "dirscf")
+	classifier = CQoSClassifierOperation(results, "Time", metadataFields, "dirscf")
 	classifier.setClassifierType(CQoSClassifierOperation.ALTERNATING_DECISION_TREE)
 	classifier.processData()
 	classifier.writeClassifier(fileName + ".adt")
@@ -88,27 +86,27 @@ def buildClassifier(results):
 	classifier.processData()
 	classifier.writeClassifier(fileName + ".nb")
 	print classifier.crossValidateModel()
-	#test(classifier)
+	test(classifier)
 	classifier.setClassifierType(CQoSClassifierOperation.RANDOM_TREE)
 	classifier.processData()
 	classifier.writeClassifier(fileName + ".rt")
 	print classifier.crossValidateModel()
-	#test(classifier)
+	test(classifier)
 	classifier.setClassifierType(CQoSClassifierOperation.SUPPORT_VECTOR_MACHINE)
 	classifier.processData()
 	classifier.writeClassifier(fileName + ".svm")
 	print classifier.crossValidateModel()
-	#test(classifier)
+	test(classifier)
 	classifier.setClassifierType(CQoSClassifierOperation.J48)
 	classifier.processData()
 	classifier.writeClassifier(fileName + ".j48")
 	print classifier.crossValidateModel()
-	#test(classifier)
+	test(classifier)
 	classifier.setClassifierType(CQoSClassifierOperation.MULTILAYER_PERCEPTRON)
 	classifier.processData()
 	classifier.writeClassifier(fileName + ".mp")
 	print classifier.crossValidateModel()
-	#test(classifier)
+	test(classifier)
 	classifier.writeClassifier(fileName)
 	print "...done."
 	return classifier
@@ -116,11 +114,12 @@ def buildClassifier(results):
 def test(classifier):
 	# test the classifier
 	#mols = ['bz','C60']
-	mols = ['AT', 'bz', 'bz-dimer', 'C60', 'GC', 'np', 'np-dimer']
+	mols = ['C60']
+	#mols = ['AT', 'bz', 'bz-dimer', 'C60', 'GC', 'np', 'np-dimer']
 	mps = ['MP0', 'MP2']
 	for m in mols:
 		for mp in mps:
-			for nodes in ['8','16','12','32']:
+			for nodes in ['1','2','4','8','16','32']:
 				inputFields = HashMap()
 				inputFields.put("molecule name", m)
 				inputFields.put("basis set", "CCD")
@@ -139,8 +138,8 @@ getParameters()
 
 print "getting trials..."
 
-#results = loadTrials()
-results = loadExperiments()
+results = loadTrials()
+#results = loadExperiments()
 
 print "...done."
 print "Total Trials:", results.size()

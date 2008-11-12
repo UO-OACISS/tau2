@@ -13,6 +13,7 @@ import java.io.ObjectOutput;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import weka.core.*;
 import weka.classifiers.Classifier;
 import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.StringToNominal;
+import java.io.*;
 
 /**
  * @author khuck
@@ -46,6 +48,8 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 	private WekaClassifierWrapper wrapper = null;
 	private String classifierType = MULTILAYER_PERCEPTRON;
 	private int trainingSize = 0;
+	protected List<Map<String,String>> trainingData = null;
+	private Map<String,Set<String>> validation = new HashMap<String,Set<String>>();
 		
 	/**
 	 * @param inputs
@@ -56,16 +60,28 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 		this.metric = metric;
 		this.metadataFields = metadataFields;
 		this.classLabel = classLabel;
+		getUniqueTuples();
 	}
 
- 	public List<PerformanceResult> processData() {
+	private CQoSClassifierOperation(String fileName) {
+		super();
+		this.wrapper = WekaClassifierWrapper.readClassifier(fileName);
+	}
+
+ 	private void getUniqueTuples() {
 		try {
 		// create a map to store the UNIQUE tuples
 		Map<Hashtable<String,String>,PerformanceResult> tuples = 
 			new HashMap<Hashtable<String,String>,PerformanceResult>();
-		
+		System.out.println("Finding unique tuples...");
 		// iterate through the inputs
+		int index = 1;
+		int discarded = 0;
 		for (PerformanceResult input : this.inputs) {
+			boolean abort1 = false;
+			boolean abort2 = false;
+			System.out.print("\rProcessing " + index + " of " + this.inputs.size() + " (" + index*100/this.inputs.size() + "% done, " + discarded + " discarded)");
+			index += 1;
 			// create a local Hashtable 
 			Hashtable<String,String> localMeta = new Hashtable<String,String>();
 			// get the input's metadata
@@ -79,8 +95,16 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 						String tmpStr = meta.get(key);
 						if (tmpStr == null) {
 							System.out.println("NO VALUE FOUND FOR KEY: "+ key);
+							abort1 = true;
 						} else {
-							localMeta.put(key, meta.get(key));
+							String value = meta.get(key);
+							//if ((key.equals("success") || key.endsWith("_success")) && value.trim().equals("0")) {
+							if (key.endsWith("_success") && value.trim().equals("0")) {
+								//System.out.println("Aborting (success=0) Trial: " + input.getTrial().getName());
+								abort2 = true;
+							} else {
+								localMeta.put(key, meta.get(key));
+							}
 						}
 					}
 				}
@@ -92,6 +116,16 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 						localMeta.put(key, meta.get(key));
 				}				
 			}
+			
+			// if this iteration was not successful, then don't save it's values.
+			if (abort1 || abort2) {
+				discarded++;
+				if(abort1) {
+					System.out.println("\n" + input.getTrial().getName());
+				}
+				continue;
+			}
+			
 			// check if the metric is one of the metrics, or a metadata field
 			if (!input.getMetrics().contains(metric)) {
 				// put the hashtable in the set: if its performance is "better" than the existing one
@@ -123,28 +157,77 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 			}
 		}
 		
-		List<Map<String,String>> trainingData = new ArrayList<Map<String,String>>();
+		System.out.println("Done.");
+		this.trainingData = new ArrayList<Map<String,String>>();
 
+		FileWriter fstream = new FileWriter("/tmp/data.csv");
+		BufferedWriter out = new BufferedWriter(fstream);
+		String output = new String();
+		for (String metaKey : this.metadataFields) {
+			output = output + metaKey + ", ";
+		}
+		output = output + "time";
+		out.write(output);
+		out.newLine();
+
+		System.out.println("Processing unique tuples...");
 		// ok, we have the set of "optimal" methods for each unique tuple.  Convert them to Instances.
+		index = 1;
 		for (Hashtable<String,String> tmp : tuples.keySet()) {
+			System.out.print("\rProcessing " + index + " of " + tuples.keySet().size() + " (" + index*100/tuples.keySet().size() + "% done)");
+			index += 1;
 			Map<String,String> tmpMap = new HashMap<String,String>();
 			
+			output = new String();
 			// set the independent parameters
 			if (this.metadataFields != null) {
 				for (String metaKey : this.metadataFields) {
 					tmpMap.put(metaKey, tmp.get(metaKey));
+					Set valid = validation.get(metaKey);
+					if (valid == null) {
+						valid = new HashSet<String>();
+						validation.put(metaKey, valid);
+					}
+					valid.add(tmp.get(metaKey));
+					if (metaKey.equals(this.classLabel)) {
+						output = output + (new TrialMetadata(tuples.get(tmp)).getCommonAttributes().get(classLabel)) + ", ";
+					} else {
+						output = output + tmp.get(metaKey) + ", ";
+					}
 				}
 			} else {
 				for (String metaKey : tmp.keySet()) {
 					tmpMap.put(metaKey, tmp.get(metaKey));
 				}
 			}
+			PerformanceResult result = tuples.get(tmp);
+			output = output + result.getInclusive(0, result.getMainEvent(), this.metric);
+			out.write(output);
+			out.newLine();
 			tmpMap.put(this.classLabel, (new TrialMetadata(tuples.get(tmp)).getCommonAttributes().get(classLabel)));
 			trainingData.add(tmpMap);
 		}
+		System.out.println("Done.");
+
+		out.close();
 		
-		trainingSize  = trainingData.size();
-		System.out.println("Total instances for training: " + trainingSize);
+		for (String first : validation.keySet()) {
+			System.out.print(first + ": ");
+			for (String second : validation.get(first)) {
+				System.out.print(second + ", ");
+			}
+			System.out.println("");
+		}
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+			e.printStackTrace();			
+		}
+	}
+		
+
+ 	public List<PerformanceResult> processData() {
+		trainingSize  = this.trainingData.size();
+		System.out.println("Total instances for training: " + this.trainingSize);
 		System.out.println("Using keys: " + this.metadataFields.toString());
 
 		try {
@@ -153,13 +236,9 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 			this.wrapper.buildClassifier();
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
-			//e.printStackTrace();			
+			e.printStackTrace();			
 		}
-		// in case of a stack overflow
-		} catch (Exception e2) {
-			System.err.println(e2.getMessage());
-		}
-		
+	
 		return null;
 	}
 	
@@ -175,6 +254,10 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 		WekaClassifierWrapper.writeClassifier(fileName, this.wrapper);
 	}
 
+	public static CQoSClassifierOperation readClassifier(String fileName) {
+		return new CQoSClassifierOperation(fileName);
+	}
+
 	public String getClassifierType() {
 		return this.classifierType;
 	}
@@ -184,7 +267,8 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 	}
 
 	public String crossValidateModel() {
-		return this.wrapper.crossValidateModel(Math.max(trainingSize/100, 10));
+		//return this.wrapper.crossValidateModel(Math.max(trainingSize/100, 10));
+		return this.wrapper.crossValidateModel(3);
 	}
 
 }

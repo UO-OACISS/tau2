@@ -80,7 +80,7 @@ public class SmartKMeansOperation extends AbstractPerformanceOperation {
 					previousGapStat = kmeans.getGapStatistic();
 				} else {
 					// early termination.
-					break;
+					//break;
 				}
         	}
         }

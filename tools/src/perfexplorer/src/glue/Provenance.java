@@ -19,7 +19,7 @@ import persistence.HibernateUtil;
  * we store the name of the class, and some information for
  * re-constructing it?
  * 
- * <P>CVS $Id: Provenance.java,v 1.4 2008/04/17 18:53:51 khuck Exp $</P>
+ * <P>CVS $Id: Provenance.java,v 1.5 2008/11/12 01:05:52 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 
@@ -56,7 +56,7 @@ public class Provenance {
 	// make this package-private, so only glue objects can do this.
 	static void addOperation(PerformanceAnalysisOperation operation) {
 		Provenance current = getCurrent();
-		if (!current.operations.contains(operation)) {
+		if (!current.operations.contains(operation) && enabled) {
 			current.operations.add(operation);
 		}
 	}
@@ -86,21 +86,23 @@ public class Provenance {
 	}
 
 	public static void save() {
-		Provenance current = getCurrent();
+		if (enabled) {
+			Provenance current = getCurrent();
 		
-		Session session = HibernateUtil.getSessionFactory().openSession();
-		Transaction tx = session.beginTransaction();
+			Session session = HibernateUtil.getSessionFactory().openSession();
+			Transaction tx = session.beginTransaction();
 		
-		try {
-			Long msgId = (Long)session.save(current);
-		} catch (MappingException ex) {
-			// create the Mapping table in the database
-		}
+			try {
+				Long msgId = (Long)session.save(current);
+			} catch (MappingException ex) {
+				// create the Mapping table in the database
+			}
 		
-		tx.commit();
-		session.close();
+			tx.commit();
+			session.close();
 
-		//DB4OUtilities.saveObject(current);
+			//DB4OUtilities.saveObject(current);
+		}
 	}
 	
 	public static void listAll() {

@@ -151,7 +151,7 @@ public class TrialMetadata {
 					// if this table doesn't exist, then an exception will be thrown.
 					sql.append("select interval_event, category_name, parameter_name, ");
 					sql.append("parameter_type, parameter_value from metadata_parameters ");
-					sql.append("where trial = ?");
+					sql.append("where trial = ? order by 1");
 					statement = db.prepareStatement(sql.toString());
 					
 					statement.setInt(1, trial.getID());
@@ -167,7 +167,9 @@ public class TrialMetadata {
 							eventName = this.performanceResult.getEventMap().get(eventID);
 */						String eventName = results.getString(1);
 //						if (eventID == null || eventName != null) {
-						if (eventName == null || (eventName != null && this.performanceResult.getEvents().contains(eventName))) {
+						if (eventName == null || 
+								(eventName != null && this.performanceResult.getEvents().contains(eventName)) ||
+								(eventName != null && this.performanceResult.getEvents().contains(this.performanceResult.getMainEvent() + "  => " + eventName))) {
 							String categoryName = results.getString(2);
 							String parameterName = results.getString(3);
 							String parameterType = results.getString(4);

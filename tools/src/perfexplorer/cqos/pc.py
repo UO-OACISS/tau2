@@ -13,7 +13,7 @@ inApp = "./ex27_2"
 inExp = "0x0"
 inTrial = ""
 parameterMap = None
-fileName = "/tmp/classifier.nosplit"
+fileName = "/tmp/classifier.pc"
 
 def getParameters():
 	global parameterMap
@@ -84,7 +84,7 @@ def buildClassifier(results):
 
 	# chose the linear solver
 	start = time.clock()
-	classifier = CQoSClassifierOperation(results, "P_WALL_CLOCK_TIME", metadataFields, "ksp")
+	classifier = CQoSClassifierOperation(results, "P_WALL_CLOCK_TIME", metadataFields, "pc")
 	end = time.clock()
 	print end - start, " seconds to initialize classifier"
 	classifier.setClassifierType(CQoSClassifierOperation.J48)

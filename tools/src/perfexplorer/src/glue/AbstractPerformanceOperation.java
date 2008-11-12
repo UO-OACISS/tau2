@@ -15,7 +15,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * interface.  This class has all the member data fields for the plethora
  * of anticipated subclasses.
  * 
- * <P>CVS $Id: AbstractPerformanceOperation.java,v 1.2 2008/03/05 00:25:53 khuck Exp $</P>
+ * <P>CVS $Id: AbstractPerformanceOperation.java,v 1.3 2008/11/12 01:05:52 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 */
@@ -30,7 +30,7 @@ public abstract class AbstractPerformanceOperation implements PerformanceAnalysi
 	/**
 	 * Default constructor
 	 */
-	private AbstractPerformanceOperation() {
+	protected AbstractPerformanceOperation() {
 		Provenance.addOperation(this);
 	}
 

@@ -67,7 +67,8 @@ public class SplitTrialPhasesOperation extends AbstractPerformanceOperation {
 				List<String> tmpPhases = new ArrayList<String>();
 				// remove the "base" iteration events.  I really don't like this.  I need to convince Boyana and Van to do something different.  But what?
 				for (String currentPhase : phases) {
-					if (currentPhase.matches(regEx))
+//					if (currentPhase.matches(regEx))  // changed by Kevin, Oct. 27, 3:18 PM - to fix accuracy of classifier
+					if (!currentPhase.matches(regEx))  // changed by Kevin, Oct. 27, 3:18 PM - to fix accuracy of classifier
 						tmpPhases.add(currentPhase);
 				}
 				phases = tmpPhases;
@@ -76,20 +77,20 @@ public class SplitTrialPhasesOperation extends AbstractPerformanceOperation {
 			// now, iterate through the phase events
 			for (String currentPhase : phases) {
 				String currentPhasePrefix = "";
-				if (nestedPhases) {
+/*				if (nestedPhases) {  // changed by Kevin, Oct. 27, 3:18 PM - to fix accuracy of classifier
 					int start = currentPhase.indexOf("_", phasePrefix.length());
 					currentPhasePrefix = currentPhase.substring(0, start);
 				}
-				List<String> phaseEvents = new ArrayList<String>();				
+*/				List<String> phaseEvents = new ArrayList<String>();				
 				// iterate through the events, and find the events in JUST THIS PHASE
 				for (String event : input.getEvents()) {
 					String tmpRelation = currentPhasePrefix + "  => " + currentPhase;
 					// find the events which start with the phase prefix
 					if (event.equals(currentPhase) || event.startsWith(currentPhase + "  => ")) {
 						phaseEvents.add(event);
-					} else if (nestedPhases && (event.equals(currentPhasePrefix) || event.equals(tmpRelation))) {
-						phaseEvents.add(event);						
-					}
+/*					} else if (nestedPhases && (event.equals(currentPhasePrefix) || event.equals(tmpRelation))) {
+						phaseEvents.add(event);						  // changed by Kevin, Oct. 27, 3:18 PM - to fix accuracy of classifier
+*/					}
 				}
 			
 				// now, call ExtractEventOperation on this puppy

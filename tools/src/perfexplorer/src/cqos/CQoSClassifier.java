@@ -32,9 +32,9 @@ public class CQoSClassifier {
 		// first parameter is the serialized classifier
 		String fileName = args[0];
 		// read in our classifier
-		System.out.print("Reading " + fileName + "...");
+		//System.out.print("Reading " + fileName + "...");
 		WekaClassifierWrapper wrapper = WekaClassifierWrapper.readClassifier(fileName);
-		System.out.println("Done.");
+		//System.out.println("Done.");
 
 		Map/*<String,String>*/ inputFields = new HashMap/*<String,String>*/();
 
@@ -50,8 +50,8 @@ public class CQoSClassifier {
 			inputFields.put(name, value);
 		}
 
-		System.out.println(inputFields + ":\n" + wrapper.getClass(inputFields) + 
-			", confidence: " + wrapper.getConfidence());
+		//System.out.println(inputFields + ":\n" + wrapper.getClass(inputFields) + 
+		System.out.println(wrapper.getClass(inputFields) + ", confidence: " + wrapper.getConfidence());
 	}
 
 }

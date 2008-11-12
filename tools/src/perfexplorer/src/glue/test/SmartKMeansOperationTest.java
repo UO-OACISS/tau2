@@ -43,7 +43,7 @@ public class SmartKMeansOperationTest extends TestCase {
 		PerformanceAnalysisOperation kmeans = null;
 		List<PerformanceResult> clusterResult = null;
 		
-		Utilities.setSession("peris3d");
+/*		Utilities.setSession("peris3d");
 		type = AbstractResult.EXCLUSIVE;
 		metric = "P_WALL_CLOCK_TIME";
 		System.out.println("Generating data...");
@@ -69,7 +69,7 @@ public class SmartKMeansOperationTest extends TestCase {
 		System.out.println("\nClustering data...");
 		kmeans = new SmartKMeansOperation(result, metric, type, 10);
 		clusterResult = kmeans.processData();
-		System.out.println("Estimated value for k: " + clusterResult.get(0).getThreads().size());
+		System.out.println("Estimated value for k: " + clusterResult.get(0).getThreads().size());*/
 
 		// synthesize some data with 2 natural clusters
 /*		for (int outer = 1 ; outer < 11 ; outer++) {
@@ -105,7 +105,7 @@ public class SmartKMeansOperationTest extends TestCase {
 		System.out.println("Estimated value for k: " + clusterResult.get(0).getThreads().size());
 		assertEquals(2, clusterResult.get(0).getThreads().size());*/
 		
-/*		Utilities.setSession("spaceghost");
+		Utilities.setSession("spaceghost");
 		trial = Utilities.getTrial("sPPM", "Frost", "16.16");
 		type = AbstractResult.EXCLUSIVE;
 		metric = "PAPI_FP_INS";
@@ -119,7 +119,7 @@ public class SmartKMeansOperationTest extends TestCase {
 		kmeans = new SmartKMeansOperation(reduced, metric, type, 10);
 		clusterResult = kmeans.processData();
 		System.out.println("Estimated value for k: " + clusterResult.get(0).getThreads().size());
-		assertEquals(3, clusterResult.get(0).getThreads().size());*/
+		assertEquals(3, clusterResult.get(0).getThreads().size());
 		
 /*		Utilities.setSession("peris3d");
 		trial = Utilities.getTrial("S3D", "hybrid-study", "XT3/XT4");
