@@ -112,6 +112,12 @@ int RtsLayer::myThread(void)
 #endif // PTHREADS
 }
 
+int RtsLayer::setMyThread(int tid) {
+#ifdef PTHREADS
+  PthreadLayer::SetThreadId(tid);
+#endif // PTHREADS
+  return 0;
+}
 
 //////////////////////////////////////////////////////////////////////
 // RegisterThread is called before any other profiling function in a 
@@ -404,8 +410,8 @@ void RtsLayer::UnLockEnv(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: amorris $
- * $Revision: 1.28 $   $Date: 2008/05/23 00:44:46 $
- * VERSION: $Id: RtsThread.cpp,v 1.28 2008/05/23 00:44:46 amorris Exp $
+ * $Revision: 1.29 $   $Date: 2008/11/12 01:08:49 $
+ * VERSION: $Id: RtsThread.cpp,v 1.29 2008/11/12 01:08:49 amorris Exp $
  ***************************************************************************/
 
 

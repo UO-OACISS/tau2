@@ -159,6 +159,12 @@ extern "C" void Tau_set_context(int context)
 }
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_set_thread(int thread)
+{
+  TAU_PROFILE_SET_THREAD(thread);
+}
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_profile_callstack(void)
 {
   TAU_PROFILE_CALLSTACK();
@@ -1122,7 +1128,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.92 $   $Date: 2008/11/11 01:55:49 $
- * VERSION: $Id: TauCAPI.cpp,v 1.92 2008/11/11 01:55:49 amorris Exp $
+ * $Revision: 1.93 $   $Date: 2008/11/12 01:08:49 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.93 2008/11/12 01:08:49 amorris Exp $
  ***************************************************************************/
 

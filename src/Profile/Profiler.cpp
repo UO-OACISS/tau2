@@ -146,16 +146,24 @@ Profiler * Profiler::CurrentProfiler[] = {0}; // null to start with
 // Default value of Node.
 //int RtsLayer::Node = -1;
 
+#ifdef TAU_OPENMP 
+#define TAU_TRACK_IDLE_THREADS
+#endif
+
+#ifdef TAU_TRACK_PTHREAD_IDLE
+#define TAU_TRACK_IDLE_THREADS
+#endif
+
 //////////////////////////////////////////////////////////////////////
 // For OpenMP
 //////////////////////////////////////////////////////////////////////
-#ifdef TAU_OPENMP 
+#ifdef TAU_TRACK_IDLE_THREADS
 #ifndef TAU_MULTIPLE_COUNTERS
 double TheLastTimeStamp[TAU_MAX_THREADS]; 
 #else /* FOR MULTIPLE COUNTERS */
 double TheLastTimeStamp[TAU_MAX_THREADS][MAX_TAU_COUNTERS]; 
 #endif /* MULTIPLE_COUNTERS */
-#endif /* TAU_OPENMP */
+#endif /* TAU_TRACK_IDLE_THREADS */
 //////////////////////////////////////////////////////////////////////
 // Explicit Instantiations for templated entities needed for ASCI Red
 //////////////////////////////////////////////////////////////////////
@@ -267,9 +275,9 @@ void Profiler::EnableAllEventsOnCallStack(int tid, Profiler *current) {
 //////////////////////////////////////////////////////////////////////
 
 void Profiler::Start(int tid) { 
-  //    fprintf (stderr, "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
+  //  fprintf (stderr, "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
 
-#ifdef TAU_OPENMP
+#ifdef TAU_TRACK_IDLE_THREADS
   if (tid != 0) {
     Tau_create_top_level_timer_if_necessary();
   }
@@ -656,9 +664,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     if (useLastTimeStamp) {
       /* for openmp parallel regions */
       /* .TAU Application needs to be stopped */
-#ifdef TAU_OPENMP 
+#ifdef TAU_TRACK_IDLE_THREADS 
       CurrentTime = TheLastTimeStamp[tid]; 
-#endif /* TAU_OPENMP */
+#endif /* TAU_TRACK_IDLE_THREADS */
     } else { /* use the usual mechanism */
       CurrentTime = RtsLayer::getUSecD(tid);
     }
@@ -673,9 +681,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     double TotalTime = CurrentTime - StartTime;
     TimeStamp += (x_uint64) CurrentTime; 
     
-#ifdef TAU_OPENMP
+#ifdef TAU_TRACK_IDLE_THREADS
     TheLastTimeStamp[tid] = CurrentTime;
-#endif /* TAU_OPENMP */
+#endif /* TAU_TRACK_IDLE_THREADS */
     
 #if (defined(TAU_COMPENSATE ) && defined(PROFILING_ON))
     /* To compensate for timing overhead, shrink the totaltime! */
@@ -695,20 +703,20 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     if (useLastTimeStamp) {
       /* for openmp parallel regions */
       /* .TAU Application needs to be stopped */
-#ifdef TAU_OPENMP 
+#ifdef TAU_TRACK_IDLE_THREADS 
       for (i=0; i < MAX_TAU_COUNTERS; i++) {
 	CurrentTime[i] = TheLastTimeStamp[tid][i]; 
       }
-#endif /* TAU_OPENMP */
+#endif /* TAU_TRACK_IDLE_THREADS */
     } else { 
       /* use the usual mechanism */
       RtsLayer::getUSecD(tid, CurrentTime);
     }
-#ifdef TAU_OPENMP
+#ifdef TAU_TRACK_IDLE_THREADS
     for (i=0; i < MAX_TAU_COUNTERS; i++) {
       TheLastTimeStamp[tid][i] = CurrentTime[i]; 
     }
-#endif /* TAU_OPENMP */
+#endif /* TAU_TRACK_IDLE_THREADS */
 
 #if defined(TAUKTAU)
 #ifdef KTAU_DEBUGPROF
@@ -1004,7 +1012,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 	  ThisKtauProfiler->KernProf.DumpKProfileOut();
 #endif /*TAUKTAU */
 
-#ifdef TAU_OPENMP /* Check if we need to shut off .TAU applications on other tids */
+#ifdef TAU_TRACK_IDLE_THREADS /* Check if we need to shut off .TAU applications on other tids */
 	  if (tid == 0) {
 	    int i; 
 	    for (i = 1; i < TAU_MAX_THREADS; i++) {  
@@ -1017,7 +1025,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 	    }
 	  }
 	      
-#endif /* TAU_OPENMP */
+#endif /* TAU_TRACK_IDLE_THREADST */
 	      
 	}
 	// dump data here. Dump it only at the exit of top level profiler.
@@ -1945,6 +1953,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.199 $   $Date: 2008/11/08 00:02:46 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.199 2008/11/08 00:02:46 amorris Exp $ 
+ * $Revision: 1.200 $   $Date: 2008/11/12 01:08:49 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.200 2008/11/12 01:08:49 amorris Exp $ 
  ***************************************************************************/

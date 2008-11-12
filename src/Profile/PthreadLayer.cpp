@@ -96,6 +96,7 @@ int PthreadLayer::RegisterThread(void)
 
   pthread_mutex_unlock(&tauThreadcountMutex);
   pthread_setspecific(tauPthreadId, threadId);
+
   return 0;
 }
 
@@ -107,45 +108,50 @@ int PthreadLayer::RegisterThread(void)
 // main thread that lets us identify it as thread 0. It is the only 
 // thread that doesn't do a PthreadLayer::RegisterThread(). 
 ////////////////////////////////////////////////////////////////////////
-int PthreadLayer::GetThreadId(void) 
-{
+int PthreadLayer::GetThreadId(void) {
 #ifdef TAU_CHARM
   if (RtsLayer::myNode() == -1)
     return 0;
 #endif
 
-  int *id; 
   static int initflag = PthreadLayer::InitializeThreadData();
   // if its in here the first time, setup mutexes etc.
 
-  id = (int *) pthread_getspecific(tauPthreadId);
+  int *id = (int *) pthread_getspecific(tauPthreadId);
   
-  if (id == NULL)
-  {
+  if (id == NULL) {
     return 0; // main() thread 
-  } 
-  else
-  { 
+  } else { 
     return *id;
   }
-
 }
+
+
+void PthreadLayer::SetThreadId(int tid) {
+  static int initflag = PthreadLayer::InitializeThreadData();
+  int *id = new int;
+  *id = tid;
+  pthread_setspecific(tauPthreadId, id);
+  return;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 // InitializeThreadData is called before any thread operations are performed. 
 // It sets the default values for static private data members of the 
 // PthreadLayer class.
 ////////////////////////////////////////////////////////////////////////
-int PthreadLayer::InitializeThreadData(void)
-{
-  // Initialize the mutex
-  pthread_key_create(&tauPthreadId, NULL);
-  pthread_mutexattr_init(&tauThreadcountAttr);
-  pthread_mutex_init(&tauThreadcountMutex, &tauThreadcountAttr);
-  
-  //cout << "PthreadLayer::Initialize() done! " <<endl;
-
-  return 1;
+int PthreadLayer::InitializeThreadData(void) {
+  static int initflag = 0;
+  if (initflag == 0) {
+    initflag = 1;
+    // Initialize the mutex
+    pthread_key_create(&tauPthreadId, NULL);
+    pthread_mutexattr_init(&tauThreadcountAttr);
+    pthread_mutex_init(&tauThreadcountMutex, &tauThreadcountAttr);
+    //cout << "PthreadLayer::Initialize() done! " <<endl;
+  }
+  return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -225,11 +231,16 @@ int PthreadLayer::UnLockEnv(void)
 typedef struct tau_pthread_pack {
   void *(*start_routine) (void *);
   void *arg;
+  int id;
 } tau_pthread_pack;
 
 extern "C" void *tau_pthread_function (void *arg) {
   tau_pthread_pack *pack = (tau_pthread_pack*)arg;
-  TAU_REGISTER_THREAD();
+  if (pack->id != -1) {
+    TAU_PROFILE_SET_THREAD(pack->id);
+  } else {
+    TAU_REGISTER_THREAD();
+  }
   return pack->start_routine(pack->arg);
 }
 
@@ -240,12 +251,25 @@ extern "C" int tau_pthread_create (pthread_t * threadp,
   tau_pthread_pack *pack = (tau_pthread_pack*) malloc (sizeof(tau_pthread_pack));
   pack->start_routine = start_routine;
   pack->arg = arg;
+  pack->id = -1; // none specified
   return pthread_create(threadp, (pthread_attr_t*) attr, tau_pthread_function, (void*)pack);
 }
 
 extern "C" void tau_pthread_exit (void *value_ptr) {
   TAU_PROFILE_EXIT("pthread_exit");
   pthread_exit(value_ptr);
+}
+
+
+extern "C" int tau_track_pthread_create (pthread_t * threadp,
+			  const pthread_attr_t *attr,
+			  void *(*start_routine) (void *),
+			  void *arg, int id) {
+  tau_pthread_pack *pack = (tau_pthread_pack*) malloc (sizeof(tau_pthread_pack));
+  pack->start_routine = start_routine;
+  pack->arg = arg;
+  pack->id = id; // set to the specified id
+  return pthread_create(threadp, (pthread_attr_t*) attr, tau_pthread_function, (void*)pack);
 }
 
 
@@ -280,6 +304,6 @@ extern "C" void pthread_exit (void *value_ptr) {
 
 /***************************************************************************
  * $RCSfile: PthreadLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.18 $   $Date: 2008/10/24 00:46:34 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.18 2008/10/24 00:46:34 amorris Exp $
+ * $Revision: 1.19 $   $Date: 2008/11/12 01:08:49 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.19 2008/11/12 01:08:49 amorris Exp $
  ***************************************************************************/
