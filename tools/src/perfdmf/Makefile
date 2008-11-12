@@ -1,6 +1,6 @@
 # settings set automatically by the configure script.
-CONFIG_ARCH=x86_64
-TAUROOT=/home/khuck/tau2
+CONFIG_ARCH=default
+TAUROOT=
 
 JAVA_JVM_VERSION=1.5
 
