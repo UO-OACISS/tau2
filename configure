@@ -1399,7 +1399,7 @@ do
     ;;
 
   -DISABLESHARED)
-    # NO exceptions to be used while building the lib.
+    # Disable shared library creation
     disableshared=yes
     shift
     ;;
@@ -5398,6 +5398,13 @@ if [ $fujitsu = yes ]
   then
     tauoptions="${tauoptions}-fujitsu"
 fi 
+
+
+if [ $epilog = yes -o $vampirtrace = yes ] ; then
+    if [ $sicortex = no ] ; then
+	disableshared=yes
+    fi
+fi
 
 if [ $disableshared = yes ]
 then
