@@ -1993,7 +1993,7 @@ case $machine in
       cxx_compiler=mpicxx
       c_compiler=mpicc
       gnu=yes
-      fixmakeargs="$fixmakeargs GNU BGP_GFORTRAN"
+      fixmakeargs="$fixmakeargs GNU BGP_GFORTRAN COMPINST_GNU"
     fi
     ;;
 
