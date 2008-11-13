@@ -235,6 +235,12 @@ class SimpleTest(Test):
                 self.runresult = "pass"
             elif usesOption(self.makefile, "epilog") == True:
                 self.runresult = "pass"
+            elif usesOption(self.makefile, "vampirtrace") == True:
+                if os.path.exists("simple.otf") == True:
+                    self.runresult = "pass"
+                else:
+                    self.error("Error: run succeeded, but no trace found")
+                    self.runresult = "fail"
             else:
                 self.error("Error: run succeeded, but no profiles found")
                 self.runresult = "fail"
