@@ -229,6 +229,10 @@ class SimpleTest(Test):
             if os.path.exists("profile.0.0.0") == True:
                 retval = system("pprof")
                 self.runresult = "pass"
+            elif os.path.exists("tautrace.0.0.0.trc"):
+                self.runresult = "pass"
+            elif os.path.exists("MULTI__GET_TIME_OF_DAY/profile.0.0.0"):
+                self.runresult = "pass"
             else:
                 self.error("Error: run succeeded, but no profiles found")
                 self.runresult = "fail"
