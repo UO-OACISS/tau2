@@ -233,6 +233,8 @@ class SimpleTest(Test):
                 self.runresult = "pass"
             elif os.path.exists("MULTI__GET_TIME_OF_DAY/profile.0.0.0"):
                 self.runresult = "pass"
+            elif usesOption(self.makefile, "epilog") == True:
+                self.runresult = "pass"
             else:
                 self.error("Error: run succeeded, but no profiles found")
                 self.runresult = "fail"
@@ -691,6 +693,13 @@ for makefile in makefiles:
 
     runTest(CTest(fullmakefile),tests)
 
+    runTest(FflinkTest(fullmakefile),tests)
+    runTest(FcpplinkTest(fullmakefile),tests)
+    runTest(FclinkTest(fullmakefile),tests)
+
+    runTest(MpiCTest(fullmakefile),tests)
+    runTest(MpiFTest(fullmakefile),tests)
+
     runTest(CompInstCTest(fullmakefile),tests)
     runTest(CompInstCPPTest(fullmakefile),tests)
     runTest(CompInstF90Test(fullmakefile),tests)
@@ -699,13 +708,6 @@ for makefile in makefiles:
     runTest(PdtTestCPP(fullmakefile),tests)
     runTest(PdtTestF(fullmakefile),tests)
     runTest(PdtTestGF(fullmakefile),tests)
-
-    runTest(FflinkTest(fullmakefile),tests)
-    runTest(FcpplinkTest(fullmakefile),tests)
-    runTest(FclinkTest(fullmakefile),tests)
-
-    runTest(MpiCTest(fullmakefile),tests)
-    runTest(MpiFTest(fullmakefile),tests)
 
     runTest(PdtMPITestC(fullmakefile),tests)
     runTest(PdtMPITestCPP(fullmakefile),tests)
