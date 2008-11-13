@@ -226,12 +226,12 @@ class SimpleTest(Test):
             self.error("Error: failed to run")
             self.runresult = "fail"
         else:
-            if os.path.exists(self.buildpath + "/profile.0.0.0") == False:
+            if os.path.exists("profile.0.0.0") == True:
+                retval = system("pprof")
                 self.runresult = "pass"
             else:
                 self.error("Error: run succeeded, but no profiles found")
                 self.runresult = "fail"
-                
 
 
 class CTest(SimpleTest):
