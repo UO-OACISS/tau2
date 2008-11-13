@@ -257,6 +257,9 @@ TAU_MPI_FOR_SHARED=$(TAU_MPI_WRAPPER)
 
 #SICORTEX#####TAU_MPI_FOR_SHARED= $(TAU_FORCE_MPI_OBJECT) #ENDIF#
 
+CRAY_PGI_HACK=
+#CRAYCNL#CRAY_PGI_HACK=$(INSTALLDEST)/libpgnod_prof.a #ENDIF#
+
 
 all:		$(TAU_TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) $(TAUPYTHON) $(SHMEM_WRAPPER) $(POELIB)
 
@@ -338,6 +341,8 @@ $(TAU_BINDINGSDIR)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 		$(RM) $(TAU_BINDINGSDIR)/tau.py $(TAU_BINDINGSDIR)/$(TAUPYTHON)
 		cd $(TAU_BINDINGSDIR) && cp ../tau.py . && cp ../$(TAUPYTHON) $(TAUPYTHON) && /bin/rm -f libTAU.so &&  ln -s $(TAUPYTHON) libTAU.so
 
+$(INSTALLDEST)/libpgnod_prof.a : 
+	ar rcs $(INSTALLDEST)/libpgnod_prof.a
 
 
 # break apart libelg.mpi.a to build into libmpi_r.a for tau_poe (AIX)
@@ -385,7 +390,7 @@ $(INSTALLDEST)/libmpi_r.a: libmpi_r.a
 	$(RM) -f $(INSTALLDEST)/bindings-default
 	ln -s $(TAU_BINDINGSDIR) $(INSTALLDEST)/bindings-default
 
-install:	 $(INSTALLDEST)/$(TAU_TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1) $(TAUPYTHON_INSTALL) $(SHMEM_INSTALL) $(POELIB_INSTALL)
+install:	 $(INSTALLDEST)/$(TAU_TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1) $(TAUPYTHON_INSTALL) $(SHMEM_INSTALL) $(POELIB_INSTALL) $(CRAY_PGI_HACK)
 
 TauForceMPI.o : TauForceMPI.c
 	$(CC) $(CFLAGS) -c $(@:.o=.c)
