@@ -373,32 +373,32 @@ if [ "x$mpiopts" != "x" ] ; then
 	make clean; make install
     fi
     
-# configure with perflib  using perfopts
+    # configure with perflib  using perfopts
     echo "Configuring with ./configure $common $pdtopt $mpiopts $commopt $perfopts"
     ./configure $common $pdtopt $mpiopts $commopt  $perfopts <wishver
     make clean; make install
 
-# Add callpath profiling 
+    # Add callpath profiling 
     echo "Configuring with ./configure $common $pdtopt $mpiopts -PROFILECALLPATH"
     ./configure $common $pdtopt $mpiopts -PROFILECALLPATH <wishver
     make clean; make install
 
-# Add callpath profiling with compensate
+    # Add callpath profiling with compensate
     echo "Configuring with ./configure $common $pdtopt $mpiopts -PROFILECALLPATH -COMPENSATE"
     ./configure $common $pdtopt $mpiopts -PROFILECALLPATH -COMPENSATE <wishver
     make clean; make install
   
-# Add depth limit
+    # Add depth limit
     echo "Configuring with ./configure $common $pdtopt $mpiopts -DEPTHLIMIT"
     ./configure $common $pdtopt $mpiopts -DEPTHLIMIT <wishver
     make clean; make install
 
-# Add COMPENSATE
+    # Add COMPENSATE
     echo "Configuring with ./configure $common $pdtopt $mpiopts -COMPENSATE"
     ./configure $common $pdtopt $mpiopts -COMPENSATE <wishver
     make clean; make install
 
-# Add TRACE
+    # Add TRACE
     if [ $epilog = yes -a $papi = yes ] ; then
 	echo "Configuring with ./configure $common $pdtopt $mpiopts $commopt -TRACE $vptopt $vtfopt $otfopt $slogopt $epilogopt -papi=$papidir"
 	./configure $common $pdtopt $mpiopts $commopt -TRACE  $vptopt $vtfopt $otfopt $slogopt $epilogopt -papi=$papidir<wishver
@@ -474,7 +474,7 @@ if [ $arch = no -o $archdir != bgl -a $archdir != xt3 ] ; then
     make clean; make install
 fi
 
-  # Just Sequential
+# Just Sequential
 echo "Configuring with $common $pdtopt "
 ./configure $common $pdtopt <wishver
 make clean; make install
