@@ -2,7 +2,7 @@
 .\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
 .\" Instead of manually editing it, you probably should edit the DocBook XML
 .\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
-.TH "TAU_COMPILER.SH" "1" "08/11/2008" "" "Tools"
+.TH "TAU_COMPILER.SH" "1" "11/12/2008" "" "Tools"
 .\" disable hyphenation
 .nh
 .\" disable justification (adjust text to left margin only)
@@ -11,14 +11,11 @@
 tau_compiler.sh \- Instrumenting source files.
 .SH "SYNOPSIS"
 .HP 16
-\fBtau_compiler.sh\fR [\fB\-p\fR\ \fIprofile\fR] [\fB\-optVerbose\fR] [\fB\-optQuiet\fR] [\fB\-optPdtDir=\fR\fIdir\fR] [\fB\-optPdtF95Opts=\fR\fIopts\fR] [\fB\-optPdtF95Reset=\fR\fIopts\fR] [\fB\-optPdtCOpts=\fR\fIopts\fR] [\fB\-optPdtCReset=\fR\fIopts\fR] [\fB\-optPdtCxxOpts=\fR\fIopts\fR] [\fB\-optPdtCReset=\fR\fIopts\fR] [\fB\-optPdtF90Parser=\fR\fIparser\fR] [\fB\-optGnuFortranParser=\fR\fIparser\fR] [\fB\-optPdtUser=\fR\fIopts\fR] [\fB\-optTauInstr=\fR\fIpath\fR] [\fB\-optDetectMemoryLeaks\fR] [\fB\-optIncludeMemory\fR] [\fB\-optPreProcess\fR] [\fB\-optCPP=\fR\fIpath\fR] [\fB\-optCPPOpts=\fR\fIoptions\fR] [\fB\-optCPPReset=\fR\fIoptions\fR] [\fB\-optTauSelectFile=\fR\fIfile\fR] [\fB\-optPDBFile=\fR\fIfile\fR] [\fB\-optTau=\fR\fIopts\fR] [\fB\-optCompile=\fR\fIopts\fR] [\fB\-optTauDefs=\fR\fIopts\fR] [\fB\-optTauIncludes=\fR\fIopts\fR] [\fB\-optReset=\fR\fIopts\fR] [\fB\-optLinking=\fR\fIopts\fR] [\fB\-optLinkReset=\fR\fIopts\fR] [\fB\-optTauCC=\fR\fIcc\fR] [\fB\-optOpariTool=\fR\fIpath/opari\fR] [\fB\-optOpariDir=\fR\fIpath\fR] [\fB\-optOpariOpts=\fR\fIopts\fR] [\fB\-optOpariReset=\fR\fIopts\fR] [\fB\-optNoMpi\fR] [\fB\-optMpi\fR] [\fB\-optNoRevert\fR] [\fB\-optRevert\fR] [\fB\-optKeepFiles\fR] [\fB\-optAppC\fR] [\fB\-optAppCXX\fR] [\fB\-optAppF90\fR] {\fIcompiler\fR} [\fIcompiler_options\fR]
+\fBtau_compiler.sh\fR [\fB\-p\fR\ \fIprofile\fR] [\fB\-optVerbose\fR] [\fB\-optQuiet\fR] [\fB\-optPdtDir=\fR\fIdir\fR] [\fB\-optPdtF95Opts=\fR\fIopts\fR] [\fB\-optPdtF95Reset=\fR\fIopts\fR] [\fB\-optPdtCOpts=\fR\fIopts\fR] [\fB\-optPdtCReset=\fR\fIopts\fR] [\fB\-optPdtCxxOpts=\fR\fIopts\fR] [\fB\-optPdtCReset=\fR\fIopts\fR] [\fB\-optPdtF90Parser=\fR\fIparser\fR] [\fB\-optGnuFortranParser\fR] [\fB\-optGnuCleanscapeParser\fR] [\fB\-optPdtUser=\fR\fIopts\fR] [\fB\-optTauInstr=\fR\fIpath\fR] [\fB\-optDetectMemoryLeaks\fR] [\fB\-optIncludeMemory\fR] [\fB\-optPreProcess\fR] [\fB\-optCPP=\fR\fIpath\fR] [\fB\-optCPPOpts=\fR\fIoptions\fR] [\fB\-optCPPReset=\fR\fIoptions\fR] [\fB\-optTauSelectFile=\fR\fIfile\fR] [\fB\-optPDBFile=\fR\fIfile\fR] [\fB\-optTau=\fR\fIopts\fR] [\fB\-optCompile=\fR\fIopts\fR] [\fB\-optTauDefs=\fR\fIopts\fR] [\fB\-optTauIncludes=\fR\fIopts\fR] [\fB\-optReset=\fR\fIopts\fR] [\fB\-optLinking=\fR\fIopts\fR] [\fB\-optLinkReset=\fR\fIopts\fR] [\fB\-optTauCC=\fR\fIcc\fR] [\fB\-optOpariTool=\fR\fIpath/opari\fR] [\fB\-optOpariDir=\fR\fIpath\fR] [\fB\-optOpariOpts=\fR\fIopts\fR] [\fB\-optOpariReset=\fR\fIopts\fR] [\fB\-optNoMpi\fR] [\fB\-optMpi\fR] [\fB\-optNoRevert\fR] [\fB\-optRevert\fR] [\fB\-optKeepFiles\fR] [\fB\-optAppC\fR] [\fB\-optAppCXX\fR] [\fB\-optAppF90\fR] [\fB\-optShared\fR] [\fB\-optCompInst\fR] [\fB\-optPDTInst\fR] [\fB\-optDisableHeaderInst\fR] {\fIcompiler\fR} [\fIcompiler_options\fR]
 .SH "DESCRIPTION"
 .PP
 The TAU Compiler provides a simple way to automatically instrument an entire project. The TAU Compiler can be used on C, C++, fixed form Fortran, and free form Fortran.
 .SH "OPTIONS"
-.PP
-\fB\-f tracefile\fR
-\-Specify the Vampir tracefile to be converted.
 .PP
 \fB\-optVerbose\fR
 Turn on verbose debugging messages.
@@ -62,6 +59,11 @@ Specify the GNU
 Fortran parser
 \fBgfparse\fRinstead of
 \fBf95parse\fR
+.PP
+\fB\-optGnuCleanscapeParser\fR
+Uses the Cleanscape Fortran parser
+\fBf95parse\fRinstead of GNU's
+\fBgfparse\fR
 .PP
 \fB\-optPdtUser=<opts>\fR
 Optional arguments for parsing source code.
@@ -165,3 +167,15 @@ Sets the failsafe C++ compiler.
 .PP
 \fB\-optAppF90\fR
 Sets the failsafe F90 compiler
+.PP
+\fB\-optShared\fR
+Use shared library version of TAU
+.PP
+\fB\-optCompInst\fR
+Use compiler\-based instrumentation
+.PP
+\fB\-optPDTInst\fR
+Use PDT\-based instrumentation
+.PP
+\fB\-optDisableHeaderInst\fR
+Disable instrumentation of headers
