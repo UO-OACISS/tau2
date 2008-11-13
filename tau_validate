@@ -272,7 +272,7 @@ class CompInstCPPTest(SimpleTest):
     def __init__(self, makefile):
         SimpleTest.__init__(self, "CompInst (C++)", makefile)
     def getActualTest(self):
-        return "compc"
+        return "compcpp"
     def checkApplicable(self):
         if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
             return False
@@ -284,7 +284,7 @@ class CompInstF90Test(SimpleTest):
     def __init__(self, makefile):
         SimpleTest.__init__(self, "CompInst (F90)", makefile)
     def getActualTest(self):
-        return "compc"
+        return "compf"
     def checkApplicable(self):
         if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
             return False
