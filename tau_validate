@@ -226,7 +226,12 @@ class SimpleTest(Test):
             self.error("Error: failed to run")
             self.runresult = "fail"
         else:
-            self.runresult = "pass"
+            if os.path.exists(self.buildpath + "/profile.0.0.0") == False:
+                self.runresult = "pass"
+            else:
+                self.error("Error: run succeeded, but no profiles found")
+                self.runresult = "fail"
+                
 
 
 class CTest(SimpleTest):
@@ -238,6 +243,43 @@ class CTest(SimpleTest):
         if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
             return False
         return True
+
+class CompInstCTest(SimpleTest):
+    def __init__(self, makefile):
+        SimpleTest.__init__(self, "CompInst (C)", makefile)
+    def getActualTest(self):
+        return "compc"
+    def checkApplicable(self):
+        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+            return False
+        if system("grep \"^TAU_COMPINST_OPTION\" "+self.fullmakefile) != 0:
+            return False
+        return True
+
+class CompInstCPPTest(SimpleTest):
+    def __init__(self, makefile):
+        SimpleTest.__init__(self, "CompInst (C++)", makefile)
+    def getActualTest(self):
+        return "compc"
+    def checkApplicable(self):
+        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+            return False
+        if system("grep \"^TAU_COMPINST_OPTION\" "+self.fullmakefile) != 0:
+            return False
+        return True
+
+class CompInstF90Test(SimpleTest):
+    def __init__(self, makefile):
+        SimpleTest.__init__(self, "CompInst (F90)", makefile)
+    def getActualTest(self):
+        return "compc"
+    def checkApplicable(self):
+        if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
+            return False
+        if system("grep \"^TAU_COMPINST_OPTION\" "+self.fullmakefile) != 0:
+            return False
+        return True
+
 
 class FflinkTest(SimpleTest):
     def __init__(self, makefile):
@@ -644,6 +686,11 @@ for makefile in makefiles:
 
 
     runTest(CTest(fullmakefile),tests)
+
+    runTest(CompInstCTest(fullmakefile),tests)
+    runTest(CompInstCPPTest(fullmakefile),tests)
+    runTest(CompInstF90Test(fullmakefile),tests)
+
     runTest(PdtTestC(fullmakefile),tests)
     runTest(PdtTestCPP(fullmakefile),tests)
     runTest(PdtTestF(fullmakefile),tests)
