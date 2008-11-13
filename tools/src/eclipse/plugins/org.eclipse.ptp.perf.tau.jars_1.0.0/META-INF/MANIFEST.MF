@@ -8,13 +8,13 @@ Export-Package: edu.uoregon.tau.common,edu.uoregon.tau.common.resource
  araprof.util,edu.uoregon.tau.perfdmf,edu.uoregon.tau.perfdmf.analysis
  ,edu.uoregon.tau.perfdmf.database,edu.uoregon.tau.perfdmf.loader,edu.
  uoregon.tau.vis
-Bundle-Vendor: University of Oregon
+Bundle-Vendor: %pluginProvider
 Bundle-ClassPath: batik-combined.jar,jargs.jar,jcommon-0.9.6.jar,jfree
  chart-0.9.21.jar,jgraph.jar,jogl.jar,jython.jar,paraprof.jar,perfdmf.
  jar,tau-common.jar,vis.jar,xerces.jar
-Bundle-Version: 1.0.0._
+Bundle-Version: 1.0.0.200811121723
 Bundle-Localization: plugin
-Bundle-Name: TAU External Jars Plug-in
+Bundle-Name: %pluginName
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.eclipse.ptp.perf.tau.jars
 
