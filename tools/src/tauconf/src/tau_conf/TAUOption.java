@@ -61,7 +61,7 @@ public class TAUOption {
         optToggle=new JCheckBox();
     }
     
-    protected void QButton()
+    protected void ShowQButtonDialog()
     {
         JOptionPane.showMessageDialog(null,helpText,helpCommand,JOptionPane.INFORMATION_MESSAGE);
     }
