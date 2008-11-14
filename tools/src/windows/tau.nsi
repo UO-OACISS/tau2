@@ -120,6 +120,7 @@ Section "" ;No components page, name is not important
   CreateDirectory "$SMPROGRAMS\${NAME}"
   CreateShortCut "$SMPROGRAMS\${NAME}\ParaProf.lnk" $INSTDIR\bin\paraprof.bat "" "$INSTDIR\bin\tau.ico"
   CreateShortCut "$SMPROGRAMS\${NAME}\Readme.lnk" $INSTDIR\Readme.txt
+  CreateShortCut "$SMPROGRAMS\${NAME}\README-PIN.lnk" $INSTDIR\README-PIN.txt
   CreateShortCut "$SMPROGRAMS\${NAME}\JumpShot.lnk" $INSTDIR\bin\jumpshot.bat
   CreateShortCut "$SMPROGRAMS\${NAME}\PerfDMF_Configure.lnk" $INSTDIR\bin\perfdmf_configure.bat "" "$INSTDIR\bin\tau.ico"
   CreateShortCut "$SMPROGRAMS\${NAME}\PerfExplorer_Configure.lnk" $INSTDIR\bin\perfexplorer_configure.bat "" "$INSTDIR\bin\tau.ico"
