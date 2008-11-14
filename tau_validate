@@ -221,6 +221,11 @@ class SimpleTest(Test):
             output("Nothing to run")
             return
         chdir(self.buildpath)
+        os.environ['COUNTER1'] = 'GET_TIME_OF_DAY'
+        os.environ['COUNTER2'] = ''
+        os.environ['COUNTER3'] = ''
+        os.environ['COUNTER4'] = ''
+        os.environ['COUNTER5'] = ''
         retval = system("./simple")
         if retval != 0:
             self.error("Error: failed to run")
