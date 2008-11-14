@@ -2,7 +2,7 @@
 .\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
 .\" Instead of manually editing it, you probably should edit the DocBook XML
 .\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
-.TH "TAU_VALIDATE" "1" "08/11/2008" "" "Tools"
+.TH "TAU_VALIDATE" "1" "11/13/2008" "" "Tools"
 .\" disable hyphenation
 .nh
 .\" disable justification (adjust text to left margin only)
@@ -11,7 +11,7 @@
 tau_validate \- Validates a TAU installation by performing various tests on each TAU stub Makefile
 .SH "SYNOPSIS"
 .HP 13
-\fBtau_validate\fR [\fB\-v\fR] [\fB\-\-html\fR] [\fB\-\-build\fR] [\fB\-\-run\fR] {\fIarch\ directory\fR}
+\fBtau_validate\fR [\fB\-v\fR] [\fB\-\-html\fR] [\fB\-\-build\fR] [\fB\-\-run\fR] [\fB\-\-tag\fR] {\fIarch\ directory\fR}
 .SH "DESCRIPTION"
 .PP
 tau_validate will attempt to validate a TAU installation by performing various tests on each TAU stub Makefile. Some degree of logic exists to know where a given test applies to a given makefile, but it's not perfect.
@@ -28,6 +28,13 @@ Only build
 .PP
 \fBrun\fR
 Only run
+.PP
+\fBtag\fR
+Only check configurations containing the tag. ie.
+\-\-tag papi
+checks only libraries with the
+\-papi
+in their name.
 .PP
 \fBarch directory\fR
 Specify an arch directory (e.g. rs6000), or the lib directory (rs6000/lib), or a specific makefile. Relative or absolute paths are ok.
