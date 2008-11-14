@@ -687,6 +687,7 @@ TAU_LINKER_OPT4 = $(LEXTRA1)
 
 #USE_IBMXLC#TAU_IBM_LD_FLAGS = -binitfini:poe_remote_main #ENDIF#
 #GNU#TAU_IBM_LD_FLAGS = -Wl,-binitfini:poe_remote_main #ENDIF#
+#MPICH2_MPI_INPLACE#TAU_IBM_LD_FLAGS = #ENDIF#
 #KAI#TAU_IBM_LD_FLAGS = --backend -binitfini:poe_remote_main #ENDIF#
 
 
