@@ -137,31 +137,34 @@ static void get_symtab_bfd(const char *module, unsigned long offset) {
 
   /* get executable image */
   BfdImage = bfd_openr(module, 0 );
-  if ( ! BfdImage )
-    fprintf (stderr,"BFD: bfd_openr(): failed\n");
-   
+  if ( ! BfdImage ) {
+    fprintf (stderr,"TAU: BFD: bfd_openr(%s): failed\n", module);
+  }
 
   /* check image format */
   if ( ! bfd_check_format(BfdImage, bfd_object) ) { 
-    printf("BFD: bfd_check_format(): failed");
+    printf("TAU: BFD: bfd_check_format(): failed");
   }
    
   /* return if file has no symbols at all */
-  if ( ! ( bfd_get_file_flags(BfdImage) & HAS_SYMS ) )
-    printf("BFD: bfd_get_file_flags(): failed");
+  if ( ! ( bfd_get_file_flags(BfdImage) & HAS_SYMS ) ) {
+    printf("TAU: BFD: bfd_get_file_flags(): failed");
+  }
    
   /* get the upper bound number of symbols */
   size = bfd_get_symtab_upper_bound(BfdImage);
    
   /* HAS_SYMS can be set even with no symbols in the file! */
-  if ( size < 1 )
-    printf("BFD: bfd_get_symtab_upper_bound(): < 1");
+  if ( size < 1 ) {
+    printf("TAU: BFD: bfd_get_symtab_upper_bound(): < 1");
+  }
    
   /* read canonicalized symbols */
   syms = (asymbol **)malloc(size);
   nr_all_syms = bfd_canonicalize_symtab(BfdImage, syms);
-  if ( nr_all_syms < 1 )
-    printf("BFD: bfd_canonicalize_symtab(): < 1");
+  if ( nr_all_syms < 1 ) {
+    printf("TAU: BFD: bfd_canonicalize_symtab(): < 1");
+  }
    
   for (i=0; i<nr_all_syms; ++i) {
     char* dem_name = 0;
