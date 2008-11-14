@@ -16,15 +16,19 @@ md %ROOT%\tau-windows\JavaDLL
 md %ROOT%\tau-windows\include
 md %ROOT%\tau-windows\lib\VC7
 md %ROOT%\tau-windows\lib\VC8
+md %ROOT%\tau-windows\lib\VC9
+
+call vc9
+call update-tauwindows.bat
+move %ROOT%\tau-windows\lib\*.* %ROOT%\tau-windows\lib\VC9
 
 call vc7
 call update-tauwindows.bat
-move %ROOT%\tau-windows\lib\tau-*.* %ROOT%\tau-windows\lib\VC7
+move %ROOT%\tau-windows\lib\*.* %ROOT%\tau-windows\lib\VC7
 
 call vc8
 call update-tauwindows.bat
-move %ROOT%\tau-windows\lib\tau-*.* %ROOT%\tau-windows\lib\VC8
-
+move %ROOT%\tau-windows\lib\*.* %ROOT%\tau-windows\lib\VC8
 
 rmdir /q /s zip
 mkdir %ROOT%\zip
