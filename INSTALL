@@ -10,7 +10,7 @@
 /*******************************************************************
  *                                                                 *
  *        Tuning and Analysis Utilities Installation Procedure     *
- *                           Version 2.17                          *
+ *                           Version 2.18                          *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -679,7 +679,7 @@ iv) To configure TAU for Cray XT3 or IBM BGL/BGP,
 
    First configure PDT using % configure -XLC ; make clean install
    on BGL. On XT3 you will need to configure PDT using:
-   % configure -GNU -exec-prefix=xt3; make clean install
+   % configure -GNU; make clean install
 
    Then, configure TAU using:
    % configure -arch=bgl -mpi -pdt=<dir> -pdt_c++=xlC 
@@ -687,11 +687,12 @@ iv) To configure TAU for Cray XT3 or IBM BGL/BGP,
    % configure -arch=bgp -mpi -pdt=<dir> -pdt_c++=xlC 
         to configure TAU with MPI and PDT on IBM BG/P. 
      Use -arch=xt3 -pdt_c++=g++ on
-	Cray XT3. Then configure for the frontend using % ./configure 
-	This creates a backend library directory <taudir>/[bgl,xt3]/lib and a front-end 
+	Cray XT3 (Catamount). Then configure for the frontend using 
+	% ./configure This creates a backend library directory 
+	<taudir>/[bgl,xt3]/lib and a front-end 
         directory <taudir>/[rs6000,x86_64]/bin which should be put in your PATH. 
 
-   For Cray XT4 or systems running Cray Compute Node Linux (CNL) instead of 
+   For Cray XT4/XT5 or systems running Cray Compute Node Linux (CNL) instead of 
    Catamount on the backend nodes, you will need to configure TAU with the 
    -arch=craycnl configuration option. e.g., 
 
@@ -699,7 +700,8 @@ iv) To configure TAU for Cray XT3 or IBM BGL/BGP,
         Configures TAU with MPI and PDT on Cray XT3/4 with Cray CNL. 
 
    TAU's -arch=xt3 configuration assumes Catamount and -arch=craycnl assumes 
-   Cray Compute Node Linux on the backend nodes respectively. 
+   Cray Compute Node Linux on the backend nodes respectively. See TAU wiki for
+   further details and examples.
 
 v) To configure TAU for SGI Altix system, you may use
    % ./configure -c++=icpc  -cc=icc -fortran=intel -mpi ...
@@ -713,7 +715,7 @@ vi) To configure TAU with VampirTrace using Intel Fortran compilers under Linux,
     % make clean; make ; make install
     Then, you may configure TAU using:
 
-    % cd tau-2.<x>; ./configure -papi=/usr/local/packages/papi-3.5.0 -vampirtrace=/usr/local/packages/vampirtrace-5.2.5-mpich2 -cc=icc -c++=icpc -fortran=intel -pdt=/usr/local/packages/pdtoolkit-3.9 -mpiinc=/usr/local/packages/mpich2-1.0.4p1/intel-9.1/include -mpilib=/usr/local/packages/mpich2-1.0.4p1/intel-9.1/lib
+    % cd tau-2.<x>; ./configure -papi=/usr/local/packages/papi-3.5.0 -vampirtrace=/usr/local/packages/vampirtrace-5.2.5-mpich2 -cc=icc -c++=icpc -fortran=intel -pdt=/usr/local/packages/pdtoolkit-3.14 -mpiinc=/usr/local/packages/mpich2-1.0.4p1/intel-9.1/include -mpilib=/usr/local/packages/mpich2-1.0.4p1/intel-9.1/lib
     % make clean install
 
 vi) % ./configure -TRACE -PROFILE 
@@ -779,19 +781,29 @@ Usage: installtau [OPTIONS]
    To verify that an installation is correct, please use the tau_validate tool:
 
    % ./tau_validate -help
-     Usage: tau_validate [-v] [--html] [--build] [--run] <target>
-
-     -v           Verbose output
-     --html       Output results in HTML
-     --build      Only build
-     --run        Only run
-     <target>     Specify an arch directory (e.g. rs6000), or the lib
-                  directory (rs6000/lib), or a specific makefile.
-                  Relative or absolute paths are ok.
-
-      bash : ./tau_validate --html x86_64 &> results.html
-      tcsh : ./tau_validate --html x86_64 >& results.html
-
+    Usage: tau_validate [-v] [--html] [--tag <tag>] [--build] [--run] <target>
+    
+    Options:
+    
+    -v           Verbose output
+    --html       Output results in HTML
+    --tag <tag>  Validate only the subset of TAU stub makefiles matching <tag>
+    --build      Only build
+    --run        Only run
+    <target>     Specify an arch directory (e.g. rs6000), or the lib
+                 directory (rs6000/lib), or a specific makefile.
+                 Relative or absolute paths are ok.
+    
+    Notes:
+    tau_validate will attempt to validate a TAU installation by performing
+    various tests on each TAU stub Makefile.  Some degree of logic exists
+    to determine if a given test applies to a given makefile, but it's not
+    perfect.
+    
+    Example:
+    
+    bash : ./tau_validate --html x86_64 &> results.html
+    tcsh : ./tau_validate --html --tag pgi --build craycnl >& results.html
 
    To upgrade from an older version of TAU, please use the tau_upgrade tool. 
    ./upgradetau  <path/to/old/tau> [extra args]
@@ -821,6 +833,19 @@ Usage: installtau [OPTIONS]
    Instrumentation can be controlled by passing options to the TAU compiler. See:
    tau_compiler.sh -help for a complete listing of options and see section 8 below. 
 
+   NEW: If you wish to use compiler-based instrumentation, simply insert
+   the -optCompInst option in the TAU_OPTIONS environment variable:
+   % setenv TAU_MAKEFILE <taudir>/<arch>/lib/Makefile.tau-mpi-pdt
+   % setenv TAU_OPTIONS '-optCompInst -optVerbose' 
+   % tau_f90.sh -c app.f90; tau_cc.sh -c foo.c; tau_f90.sh app.o -o app
+   This option will use the compiler to insert calls to the TAU measurement
+   API. TAU currently support GNU, IBM, Pathscale, Intel and PGI compilers.
+
+   Under Windows, we also support instrumentation using Intel PIN. Use:
+   c:\> tau_pin \Path\To\Application.exe
+   to spawn the program under PIN. See PIN documentation in TAU for further
+   information.
+
    JAVA requires no special instrumentation. To use TAU with JAVA, the 
    LD_LIBRARY_PATH environment variable must have the TAU <arch>/lib directory
    in its path. See README.JAVA on instructions regarding its usage.
@@ -841,7 +866,7 @@ Usage: installtau [OPTIONS]
       Linux clusters. 
 
    b. Install TAU using the -pdt configuration option.
-      % ./configure -pdt=/usr/local/packages/pdtoolkit-3.9 -c++=icpc -cc=icc ...
+      % ./configure -pdt=/usr/local/packages/pdtoolkit-3.14 -c++=icpc -cc=icc ...
 
    c. Modify the makefile to invoke tau_cxx.sh as the compiler. It generates a 
       program database file (.pdb) that contains program  entities (such as 
@@ -869,7 +894,9 @@ Usage: installtau [OPTIONS]
       inclusive time, it is disabled at runtime, when TAU_THROTTLE is set. You
       may set environment variables TAU_THROTTLE_NUMCALLS and 
       TAU_THROTTLE_PERCALL to change the default values of 100000 and 10 
-      respectively. See the TAU wiki on the TAU webpage for more details. 
+      respectively. See the TAU wiki on the TAU webpage for more details. It
+      is turned on by default now. You may set TAU_THROTTLE to 0 to turn it 
+      off. 
 
    To illustrate the use of TAU Fortran 90 instrumentation API, we have 
    included the NAS Parallel Benchmarks 2.3 LU and SP suites in the 
@@ -955,7 +982,7 @@ I) The Profiling Library needs a recent C++ compiler. Our recommended list:
 II) Platforms :
    TAU has been tested on 
 	a) IBM AIX, Linux, BGL, and BGP systems
-	b) Cray XT3, XT4, XD1, X1E, SV1, T3E systems
+	b) Cray XT3, XT4, XT5, XD1, X1E, SV1, T3E systems
 	c) LINUX x86 PC clusters with 
 		i) 	KAI KCC compiler, 
 		ii) 	GNU g++/egcs compiler,
@@ -967,8 +994,8 @@ II) Platforms :
                 viii)   Leahy F90 compilers.
                 ix)     Absoft F90 compilers.
 	d) Sun Solaris2 with g++, KCC. 
-	e) Microsoft Windows. Tested with MS Visual C++ v6.0.
-	f) Apple OS X ppc64, x86 with GNU, Absoft, IBM xlC, and xlf compilers.
+	e) Microsoft Windows. Tested with MS Visual C++ v6.0, 7.0, 8.0, Windows Cluster 2003, XP, Vista.
+	f) Apple OS X ppc64, x86_64 with GNU, Absoft, IBM xlC, and xlf compilers.
 	g) HP PA-RISC systems running HP-UX with g++, and aCC. 
 	h) HP Tru64 Alpha with g++, cxx.
         i) HP Alpha Linux clusters with g++.
@@ -984,18 +1011,12 @@ III) Software Requirements :
    a) java
    paraprof requires Java 1.4+. Java can be downloaded from http://www.sun.com
 
-8. Modifying user's Makefile for Tracing/Profiling.
+8. Modifying user's Makefile for Tracing/Profiling. We recommend Java 1.5+.
 
    TAU provides a makefile stub file which is placed in the installation
    directory <prefix>/<arch>/lib/Makefile.tau[-optionlist]. 
 
-   [NEW] To ease the process of instrumentation of source code, users can 
-   use the $(TAU_COMPILER) makefile variable to parse, instrument, compile
-   and link the applications. This option should be used with PDT. See 
-   examples/taucompiler and tools/doc/tau_compiler.txt files for options. 
-   <arch>/bin/tau_compiler.sh can be used without TAU's stub Makefiles as well. 
-
-   You may also use tau_f90.sh, tau_cxx.sh and tau_cc.sh as names of your 
+   You may use tau_f90.sh, tau_cxx.sh and tau_cc.sh as names of your 
    compiler and set the TAU_MAKEFILE and TAU_OPTIONS environment variables 
    to point to the TAU stub makefiles and options to tau_compiler.sh. See
    tau_compiler.sh -help to see a full list of options. For e.g.,
