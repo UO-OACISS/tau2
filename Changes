@@ -9,7 +9,7 @@
 
 Change log:
 ------------
-Version 2.18 changes (from 2.16):
+Version 2.18 changes (from 2.17):
 1. Added support for PIN based runtime instrumentation for Windows.
 2. Added support for compiler based instrumentation for PGI and IBM compilers.
 3. Added support for thread-safe throttling of events.
@@ -20,8 +20,7 @@ Version 2.18 changes (from 2.16):
 8. tau_ompcheck now supports more OpenMP directives. 
 9. PerfExplorer now includes a CQoS classifier and a gap computing module.
 10. Compiler based instrumentation supports selective instrumentation for the file level. 
-11. Added a -bfd=download option which will download and build binutils with -fPIC for compiler
-based instrumentation. 
+11. Added a -bfd=download configure option which will download and build binutils with -fPIC for compiler based instrumentation. 
 12. Added support for Intel v11 compilers. 
 13. Snapshot enhancements (read snapshot.*.*.* files, paraprof -f snapshot)
 14. Better configuration support for SiCortex, IBM BG/P and Cray XT5 (PGI, Pathscale, GNU), Intel compilers for Apple.
