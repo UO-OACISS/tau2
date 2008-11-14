@@ -75,9 +75,10 @@ extern "C" void __rouinit() {
 
 // called at the beginning of each profiled routine
 extern "C" void ___rouent2(struct s1 *p) {
+  char routine[2048];
 
   if (!p->isseen) {
-    char* rname =  p->rout;
+    sprintf (routine, "%s [{%s} {%d,0}]", p->rout, p->file, p->lineno);
     char* modpos;
     
     /* fix opari output file names */
@@ -92,7 +93,7 @@ extern "C" void ___rouent2(struct s1 *p) {
       {
 	if (!p->isseen) {	
 	  void *handle=NULL;
-	  TAU_PROFILER_CREATE(handle, rname, "", TAU_DEFAULT);
+	  TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
 	  FunctionInfo *fi = (FunctionInfo*)handle;
 	  Tau_start_timer(fi,0);
 	  p->rid = TheFunctionDB().size()-1;
@@ -101,7 +102,7 @@ extern "C" void ___rouent2(struct s1 *p) {
       }
     } else {
       void *handle=NULL;
-      TAU_PROFILER_CREATE(handle, rname, "", TAU_DEFAULT);
+      TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
       FunctionInfo *fi = (FunctionInfo*)handle;
       Tau_start_timer(fi,0);
       p->rid = TheFunctionDB().size()-1;
@@ -109,7 +110,7 @@ extern "C" void ___rouent2(struct s1 *p) {
     }
 #else
     void *handle=NULL;
-    TAU_PROFILER_CREATE(handle, rname, "", TAU_DEFAULT);
+    TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
     FunctionInfo *fi = (FunctionInfo*)handle;
     Tau_start_timer(fi,0);
     p->rid = TheFunctionDB().size()-1;
