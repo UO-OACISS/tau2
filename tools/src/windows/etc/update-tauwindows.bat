@@ -11,14 +11,25 @@ nmake /f Makefile.win32 /k
 nmake /f Makefile.win32 JDK=%ROOT%\j2sdk1.4.2_13 java
 nmake /f Makefile.win32 PDT=%ROOT%\pdtoolkit tau_instrumentor
 nmake /f Makefile.win32 VTF=%ROOT%\vtf3\binaries tau2vtf
-nmake /f makefile.win32 JDK=%ROOT%\j2sdk1.4.2_13 SLOG2=%ROOT%\slog2sdk-1.2.5beta tau2slog2
+nmake /f Makefile.win32 JDK=%ROOT%\j2sdk1.4.2_13 SLOG2=%ROOT%\slog2sdk-1.2.5beta tau2slog2
+cd %ROOT%\tau2\utils\taupin
+nmake /f Makefile.win32 clean
+nmake /f Makefile.win32
+
+cd %ROOT%\tau2
 del %ROOT%\tau2\win32\bin\TraceInput.exp
 del %ROOT%\tau2\win32\bin\TraceInput.lib
 
+copy utils\taupin\tau_pin.exe %ROOT%\tau-windows\bin
+copy utils\taupin\*.dll %ROOT%\tau-windows\bin
+copy utils\taupin\README-PIN.txt %ROOT%\tau-windows
+copy %ROOT%\pin\*.* %ROOT%\tau-windows\bin
 
 copy tools\src\windows\bin\* %ROOT%\tau-windows\bin
 copy src\Profiles\TAU.jar %ROOT%\tau-windows\bin
 xcopy /e /y tools\src\windows\examples %ROOT%\tau-windows\examples
+md %ROOT%\tau-windows\examples\pin
+copy %ROOT%\pin\examples\*.* %ROOT%\tau-windows\examples\pin
 md %ROOT%\tau-windows\tools\src\perfdmf\etc
 md %ROOT%\tau-windows\etc
 md %ROOT%\tau-windows\contrib
