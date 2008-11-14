@@ -4179,12 +4179,13 @@ void foo() {
 }
 EOF
 $echo "Checking for bfd.h... ${nnl}"
-if $c_compiler $orig_useropt -c conftest_bfd.c 1> /dev/null 2>&1 ; then
+if $c_compiler $orig_useropt -c conftest_bfd.c -I$bfddir/include 1> /dev/null 2>&1 ; then
     fixmakeargs="$fixmakeargs TAU_BFD"
     echo "yes"
 else
     echo "no"
 fi
+
 /bin/rm -f conftest_bfd.o conftest_bfd.c
 ######################################################################
 
