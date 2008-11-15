@@ -452,12 +452,6 @@ if [ "x$mpiopts" != "x" ] ; then
 fi
 # MPI options are over
 
-# Serial library with pdt
-if [ $pdt = yes ] ; then
-    echo "Configuring with $common $pdtopt "
-    ./configure $common $pdtopt <wishver
-    make clean; make install
-fi
 
 if [ $opari = yes ] ; then
     echo "Configuring with $common $pdtopt -opari -openmp "
@@ -499,6 +493,11 @@ if [ $dyninst = yes ] ; then
     ./configure $common -dyninst=$dyninstdir < wishver
     make clean; make install
 fi
+
+# Serial library
+echo "Configuring with $common $pdtopt "
+./configure $common $pdtopt <wishver
+make clean; make install
 
 # Set file permissions
 chmod -R go+rX *
