@@ -82,7 +82,7 @@ VAMPIRTRACEDIR=
 KTAU_INCDIR=
 KTAU_INCUSERDIR=
 KTAU_LIB=
-KTAU_KALLSYMS_PATH=
+KTAU_KALLSYMS_PATH=/proc/kallsyms
 PYTHON_INCDIR=
 PYTHON_LIBDIR=
 PERFINCDIR=
@@ -215,6 +215,8 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #HITACHI_OPENMP#TAU_F90_OPT =               #ENDIF#
 #GNUOPENMP#TAU_F90_OPT = -fopenmp          #ENDIF#
 
+#ZEPTO_GFORTRAN#TAU_F90_OPT = -fno-underscoring     #ENDIF#
+
 #THREADSAFE_COMPILERS#TAU_R         =_r     #ENDIF#
 
 ############# Fortran Compiler #############
@@ -253,6 +255,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #OPEN64ORC_FORTRAN#TAU_F90     = orf90         $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #NEC_FORTRAN#TAU_F90         = f90 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #CRAYCNL#TAU_F90         = ftn            $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#ZEPTO_GFORTRAN#TAU_F90         = /bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gfortran    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 
 
 ############# Portable F90 Options #############
@@ -537,6 +540,7 @@ TAU_GCCLIB	= -lgcc_s
 
 #IBMXLFAPPLE#TAU_FORTRANLIBS	       = -L$(EXTRADIR)/lib -lxlf90 -lxlfmath -lxl      #ENDIF#
 
+#ZEPTO_GFORTRAN#TAU_FORTRANLIBS = -lgfortran -lgfortranbegin -lm #ENDIF#
 #CRAY_FORTRAN#TAU_FORTRANLIBS	       =        #ENDIF#
 #CRAY_X1_FORTRAN#TAU_FORTRANLIBS	       =        #ENDIF#
 #PGI_FORTRAN#TAU_FORTRANLIBS	       = $(EXTRADIR)/lib/f90main.o -lpgf90 -lpgf90rtl -lpgf90_rpm1 -lpgf902 -lpgftnrtl -lrt #ENDIF#
@@ -595,6 +599,9 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 #BGP_GFORTRAN#TAU_CXXLIBS		= -lstdc++ #ENDIF#
 #BGP_GFORTRAN#TAU_GNULIBS		= -lstdc++ #ENDIF#
 #BGP_GFORTRAN#TAU_CXXLIBS_GNU_CNL	= -lstdc++ #ENDIF#
+
+## Set the gfortran options on Zepto BGP
+#ZEPTO_GFORTRAN#TAU_CXXLIBS		= -lstdc++ #ENDIF#
 
 TAU_SGI_INIT = /usr/lib32/c++init.o 
 #ENABLE64BIT#TAU_SGI_INIT  = /usr/lib64/c++init.o #ENDIF#
@@ -746,7 +753,7 @@ TAU_AR                 = ar             #ENDIF#
 # You can specify -pdtcompdir=intel -pdtarchdir=x86_64
 # If nothing is specified, PDTARCHDIR uses TAU_ARCH
 PDTARCHDIRORIG=$(TAU_ARCH)
-PDTARCHITECTURE=intel
+PDTARCHITECTURE=ppc64
 PDTARCHDIRFINAL=$(PDTARCHDIRORIG)
 #PDTARCHITECTURE#PDTARCHDIRFINAL=$(PDTARCHITECTURE)#ENDIF#
 PDTARCHDIR=$(PDTARCHDIRFINAL)

@@ -947,6 +947,10 @@ fi
 	echo "NOTE: *** Using gfortran. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     ZEPTO_GFORTRAN)
+	echo "NOTE: *** Using ZeptoOS BGP gfortran. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      BGPPAPI)
 	echo "NOTE: *** IBM BlueGene/P PAPI found. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

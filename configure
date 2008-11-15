@@ -1086,6 +1086,8 @@ do
     disableshared=yes
     c_compiler=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc
     cxx_compiler=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-g++
+    fortran_compiler=yes
+    fixmakeargs="$fixmakeargs ZEPTO_GFORTRAN"
     shift
     ;;
  
@@ -3060,7 +3062,7 @@ then
             echo "ERROR: Cannot access Zepto COMM include directory [$zeptodir/prebuilt/DCMF/install/comm/include]. Aborting."
             exit 1
           fi
-          additional_mpiincs="$additional_mpiincs -Wall -DUSE_MPI -D__ZCL__ -DZCL_AD_HOC -I$zeptodir/prebuilt/DCMF/install/comm/include/ -I$zeptodir/prebuilt"
+          additional_mpiincs="$additional_mpiincs -DUSE_MPI -D__ZCL__ -DZCL_AD_HOC -I$zeptodir/prebuilt/DCMF/install/comm/include/ -I$zeptodir/prebuilt"
         fi
         ;;
   *)
