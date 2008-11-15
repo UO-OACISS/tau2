@@ -91,7 +91,7 @@ do
   -papi=*)
     papi=yes
     papidir=`echo $arg | sed -e 's/-papi=//'`
-    papiopts="-papi=$papidir"
+    papiopt="-papi=$papidir"
     shift
     ;;
 
@@ -352,21 +352,23 @@ common="$archopt $ccompiler $fortrancompiler $useropts $tagopt $extraopts"
 # configure TAU
 if [ "x$mpiopts" != "x" ] ; then
     # configure all versions with MPI
-    echo "Configuring with ./configure $common $pdtopt $mpiopts $commopt"
-    ./configure $common $mpiopts $commopt <wishver
+
+    # PDT
+    echo "Configuring with ./configure $common $pdtopt $mpiopts"
+    ./configure $common $pdtopt $mpiopts <wishver
     make clean; make install
 
     # Use the -nocomm option, if given
     if [ "x$commopt" != "x" ] ; then
-	echo "Configuring with ./configure $common $pdtopt $mpiopts -nocomm"
-	./configure $common $pdtopt $mpiopts -nocomm <wishver
+	echo "Configuring with ./configure $common $pdtopt $mpiopts $commopt"
+	./configure $common $pdtopt $mpiopts $commopt <wishver
 	make clean; make install
     fi
     
     # configure with perflib using perfopts
     if [ $perf = yes ] ; then
-	echo "Configuring with ./configure $common $pdtopt $mpiopts $commopt $perfopts"
-	./configure $common $pdtopt $mpiopts $commopt $perfopts <wishver
+	echo "Configuring with ./configure $common $pdtopt $mpiopts $perfopts"
+	./configure $common $pdtopt $mpiopts $perfopts <wishver
 	make clean; make install
     fi
 
@@ -380,64 +382,73 @@ if [ "x$mpiopts" != "x" ] ; then
     ./configure $common $pdtopt $mpiopts -PROFILECALLPATH -COMPENSATE <wishver
     make clean; make install
   
-    # Add depth limit
+    # -DEPTHLIMIT
     echo "Configuring with ./configure $common $pdtopt $mpiopts -DEPTHLIMIT"
     ./configure $common $pdtopt $mpiopts -DEPTHLIMIT <wishver
     make clean; make install
 
-    # Add COMPENSATE
+    # -COMPENSATE
     echo "Configuring with ./configure $common $pdtopt $mpiopts -COMPENSATE"
     ./configure $common $pdtopt $mpiopts -COMPENSATE <wishver
     make clean; make install
 
-    # Add TRACE
+    # -PROFILEPARAM
+    echo "Configuring with ./configure $common $pdtopt $mpiopts -PROFILEPARAM"
+    ./configure $common $pdtopt $mpiopts -PROFILEPARAM <wishver
+    make clean; make install
+
+    # -TRACE
+    echo "Configuring with ./configure $common $pdtopt $mpiopts -TRACE $vtfopt $otfopt $slogopt"
+    ./configure $common $pdtopt $mpiopts -TRACE $vtfopt $otfopt $slogopt <wishver
+    make clean; make install
+
+    # Epilog
     if [ $epilog = yes ] ; then
-	echo "Configuring with ./configure $common $pdtopt $mpiopts $commopt -TRACE $vtfopt $otfopt $slogopt $epilogopt $papiopts"
-	./configure $common $pdtopt $mpiopts $commopt -TRACE $vtfopt $otfopt $slogopt $epilogopt $papiopts<wishver
+	echo "Configuring with ./configure $common $pdtopt $mpiopts -TRACE $vtfopt $otfopt $slogopt $epilogopt $papiopt"
+	./configure $common $pdtopt $mpiopts -TRACE $vtfopt $otfopt $slogopt $epilogopt $papiopt <wishver
 	make clean; make install
     fi
 
+    # VampirTrace
     if [ $vampirtrace = yes ] ; then
-	echo "Configuring with ./configure $common $pdtopt $mpiopts $commopt -TRACE $vtfopt $otfopt $slogopt $vptopt $papiopts"
-	./configure $common $pdtopt $mpiopts $commopt -TRACE $vtfopt $otfopt $slogopt $vptopt $papiopts<wishver
+	echo "Configuring with ./configure $common $pdtopt $mpiopts -TRACE $vtfopt $otfopt $slogopt $vptopt $papiopt"
+	./configure $common $pdtopt $mpiopts -TRACE $vtfopt $otfopt $slogopt $vptopt $papiopt <wishver
 	make clean; make install
     fi
-    echo "Configuring with ./configure $common $pdtopt $mpiopts $commopt -TRACE $vtfopt $otfopt $slogopt"
-    ./configure $common $pdtopt $mpiopts $commopt -TRACE $vtfopt $otfopt $slogopt <wishver
-    make clean; make install
     
     if [ $papi = yes ] ; then
       # PAPI
-      echo "Configuring with ./configure $common $pdtopt $mpiopts $commopt $papiopts -MULTIPLECOUNTERS"
-      ./configure $common $pdtopt $mpiopts $commopt $papiopts -MULTIPLECOUNTERS <wishver
+      echo "Configuring with ./configure $common $pdtopt $mpiopts $papiopt -MULTIPLECOUNTERS"
+      ./configure $common $pdtopt $mpiopts $papiopt -MULTIPLECOUNTERS <wishver
       make clean; make install
       #Add -TRACE -papi multiplecounters to it
-      echo "Configuring with ./configure $common $pdtopt $mpiopts $commopt -TRACE $vtfopt $otfopt $slogopt $papiopts -MULTIPLECOUNTERS"
-      ./configure $common $pdtopt $mpiopts $commopt -TRACE $vtfopt $otfopt $slogopt $papiopts -MULTIPLECOUNTERS <wishver 
+      echo "Configuring with ./configure $common $pdtopt $mpiopts -TRACE $vtfopt $otfopt $slogopt $papiopt -MULTIPLECOUNTERS"
+      ./configure $common $pdtopt $mpiopts -TRACE $vtfopt $otfopt $slogopt $papiopt -MULTIPLECOUNTERS <wishver 
       make clean; make install
       # Add -PROFILECALLPATH -papi multiplecounters to it
-      echo "Configuring with ./configure $common $pdtopt $mpiopts $commopt $papiopts -MULTIPLECOUNTERS -PROFILEPHASE"
-      ./configure $common $pdtopt $mpiopts $commopt $papiopts -MULTIPLECOUNTERS -PROFILEPHASE <wishver
+      echo "Configuring with ./configure $common $pdtopt $mpiopts $papiopt -MULTIPLECOUNTERS -PROFILEPHASE"
+      ./configure $common $pdtopt $mpiopts $papiopt -MULTIPLECOUNTERS -PROFILEPHASE <wishver
       make clean; make install
       
       # Add -COMPENSATE -PROFILECALLPATH -papi multiplecounters to it
-      echo "Configuring with ./configure $common $pdtopt $mpiopts $commopt $papiopts -MULTIPLECOUNTERS -PROFILEPHASE -COMPENSATE"
-      ./configure $common $pdtopt $mpiopts $commopt $papiopts -MULTIPLECOUNTERS -PROFILEPHASE -COMPENSATE <wishver
+      echo "Configuring with ./configure $common $pdtopt $mpiopts $papiopt -MULTIPLECOUNTERS -PROFILEPHASE -COMPENSATE"
+      ./configure $common $pdtopt $mpiopts $papiopt -MULTIPLECOUNTERS -PROFILEPHASE -COMPENSATE <wishver
       make clean; make install
       
     fi
 
     if [ $opari = yes ] ; then
-	echo "Configuring with ./configure $common $pdtopt $mpiopts $commopt -opari"
-	./configure $common $pdtopt $mpiopts $commopt -opari -openmp <wishver
+	echo "Configuring with ./configure $common $pdtopt $mpiopts -opari"
+	./configure $common $pdtopt $mpiopts -opari -openmp <wishver
 	make clean; make install
     fi 
 
     if [ $opari = yes -a $papi = yes ] ; then
-	echo "Configuring with ./configure $common $pdtopt $mpiopts $commopt -opari $papiopts -MULTIPLECOUNTERS"
-	./configure $common $pdtopt $mpiopts $commopt -opari -openmp $papiopts -MULTIPLECOUNTERS <wishver
+	echo "Configuring with ./configure $common $pdtopt $mpiopts -opari $papiopt -MULTIPLECOUNTERS"
+	./configure $common $pdtopt $mpiopts -opari -openmp $papiopt -MULTIPLECOUNTERS <wishver
 	make clean; make install
     fi 
+
 fi
 # MPI options are over
 
@@ -454,8 +465,8 @@ if [ $opari = yes ] ; then
     make clean; make install
     
     if [ $papi = yes ] ; then 
-	echo "Configuring with $common $pdtopt -opari -openmp $papiopts -MULTIPLECOUNTERS "
-	./configure $common $pdtopt -opari -openmp $papiopts -MULTIPLECOUNTERS <wishver
+	echo "Configuring with $common $pdtopt -opari -openmp $papiopt -MULTIPLECOUNTERS "
+	./configure $common $pdtopt -opari -openmp $papiopt -MULTIPLECOUNTERS <wishver
 	make clean; make install
     fi
 fi 
@@ -467,23 +478,18 @@ if [ $arch = no -o $archdir != bgl -a $archdir != xt3 ] ; then
     make clean; make install
 fi
 
-# Just Sequential
-echo "Configuring with $common $pdtopt "
-./configure $common $pdtopt <wishver
-make clean; make install
-
 if [ $papi = yes ] ; then 
     # PAPI with PTHREAD 
     if [ $arch = no -o $archdir != bgl -a $archdir != xt3 ] ; then
-	echo "Configuring with -pthread $papiopts -MULTIPLECOUNTERS "
-	./configure $common $pdtopt -pthread $papiopts -MULTIPLECOUNTERS <wishver
+	echo "Configuring with -pthread $papiopt -MULTIPLECOUNTERS "
+	./configure $common $pdtopt -pthread $papiopt -MULTIPLECOUNTERS <wishver
 	make clean; make install
     fi
     
     # PAPI with -pdt 
     if [ $pdt = yes ] ; then
-	echo "Configuring with $common $pdtopt $papiopts -MULTIPLECOUNTERS"
-	./configure $common $pdtopt $papiopts -MULTIPLECOUNTERS -iowrapper <wishver
+	echo "Configuring with $common $pdtopt $papiopt -MULTIPLECOUNTERS"
+	./configure $common $pdtopt $papiopt -MULTIPLECOUNTERS -iowrapper <wishver
 	make clean; make install
     fi
 fi
@@ -493,15 +499,6 @@ if [ $dyninst = yes ] ; then
     ./configure $common -dyninst=$dyninstdir < wishver
     make clean; make install
 fi
-
-# One final library to build with -PROFILEPARAM and MPI!
-if [ "x$mpiopts" != "x" ] ; then
-    # Configuring with -PROFILEPARAM
-    echo "Configuring with ./configure $common $pdtopt $mpiopts $commopt -PROFILEPARAM"
-    ./configure $common $pdtopt $mpiopts $commopt -PROFILEPARAM <wishver
-    make clean; make install
-fi
-
 
 # Set file permissions
 chmod -R go+rX *
