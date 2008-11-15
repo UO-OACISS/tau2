@@ -320,6 +320,8 @@ for arg in "$@"; do
     echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
     echo "-noex .................. Use no exceptions while compiling the library."
     echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
+    echo "-zeptodir=<dir> ............................. ZeptoOS install location."
+    echo "                              See http://www-unix.mcs.anl.gov/zeptoos/." 
     echo "-help ...................................... display this help message."
     echo "-fullhelp .............................. display the full help message."
     exit
@@ -531,6 +533,8 @@ sddf=no
 sddfdir=
 iowrapper=no
 home=$HOME
+zepto=no
+zeptodir=
 
 # debug:
 # echo $arguments
@@ -1071,6 +1075,20 @@ do
     shift
     ;;
 
+  -zeptodir=*)
+    zeptodir=`echo $arg | sed -e 's/-zeptodir=//' -e 's/ /#/g'`
+    if [ ! -e $zeptodir ]
+    then
+      echo "ERROR: Cannot access the Zepto directory provided [$zeptodir]. Aborting."
+      exit 1
+    fi
+    zepto=yes
+    disableshared=yes
+    c_compiler=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc
+    cxx_compiler=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-g++
+    shift
+    ;;
+ 
   -useropt=*)
 # Note you might be passed -g#-O3 which becomes -g -O3
     orig_useropt=`echo $arg | sed -e 's/-useropt=//' -e 's/#/ /g'`
@@ -3028,6 +3046,23 @@ then
   solaris2*)
 	mpiinc=/opt/SUNWhpc/include
 	;;
+  ppc)
+        if [ $zepto = yes ] 
+        then
+	  mpiinc=$zeptodir/prebuilt/mpich2-working/include
+          if [ ! -e $mpiinc ]
+          then
+            echo "ERROR: Cannot access Zepto MPI include directory [$zeptodir/prebuilt/mpich2-working/include]. Aborting."
+            exit 1
+          fi
+          if [ ! -e $zeptodir/prebuilt/DCMF/install/comm/include ]
+          then
+            echo "ERROR: Cannot access Zepto COMM include directory [$zeptodir/prebuilt/DCMF/install/comm/include]. Aborting."
+            exit 1
+          fi
+          additional_mpiincs="$additional_mpiincs -Wall -DUSE_MPI -D__ZCL__ -DZCL_AD_HOC -I$zeptodir/prebuilt/DCMF/install/comm/include/ -I$zeptodir/prebuilt"
+        fi
+        ;;
   *)
         mpiinc=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/include
         if [ -d $mpiinc ]
@@ -3104,6 +3139,24 @@ then
   solaris2*)
 	mpilib=/opt/SUNWhpc/lib
 	;;
+  ppc)
+        if [ $zepto = yes ] 
+        then
+	  mpilib=$zeptodir/prebuilt/mpich2-working/lib
+          if [ ! -e $mpilib ]
+          then
+            echo "ERROR: Cannot access Zepto MPI lib directory [$zeptodir/prebuilt/mpich2-working/lib]. Aborting"
+            exit 1
+          fi
+          if [ ! -e $zeptodir/prebuilt/DCMF/install/comm/lib ]
+          then
+            echo "ERROR: Cannot access Zepto COMM include directory [$zeptodir/prebuilt/DCMF/install/comm/lib]. Aborting."
+            exit 1
+          fi
+          additional_mpilibs="-L$zeptodir/prebuilt/mpich2-working/lib -lmpich.zcl -L$zeptodir/prebuilt/DCMF/install/comm/lib/ -ldcmfcoll.zcl -ldcmf.zcl -lSPI.zcl -lzcl -lzoid_cn -lrt -lpthread -lm"
+	  mpilibrary="$additional_mpilibs"
+        fi
+        ;;
   *)    
         mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/lib
         if [ -d $mpilib ]
@@ -4914,6 +4967,11 @@ if [ $python = yes ]
       echo "ERROR: For IBM systems, please specify the -pythonlib=<dir> flag where *.py files and the config directory are located!"
       exit 1
     fi
+fi
+
+if [ $zepto = yes ]
+  then
+    tauoptions="${tauoptions}-zepto"
 fi
 
 if [ $ktau = yes ]
