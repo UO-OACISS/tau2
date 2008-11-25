@@ -2127,6 +2127,7 @@ case $machine in
 esac
 
 if [ "$machine" = "apple" ] ; then
+	cp tools/src/common/resources/tau-medium.png apple/lib/
   compiler_name=`which $cxx_compiler | awk '{print $1;}'`
   if [ "$compiler_name" = "no" -o "$compiler_name" = "" ]; then
     echo "NOTE: No compilers found, please use option '-c++=<compilername>' if you have a C++ compiler" 
@@ -2134,7 +2135,6 @@ if [ "$machine" = "apple" ] ; then
     make_directories
     configure_java
     configure_perfexplorer
-		cp tools/src/common/resources/tau-medium.png apple/lib/
     exit 0
   fi
 fi
