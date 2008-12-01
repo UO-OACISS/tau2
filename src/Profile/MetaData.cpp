@@ -57,7 +57,6 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <signal.h>
 #include <stdarg.h>
 
-
 char *TauGetCounterString(void);
 
 void tauSignalHandler(int sig) {
@@ -110,12 +109,9 @@ bool Tau_snapshot_initialization() {
   return true;
 }
 
-
 x_uint64 Tau_get_firstTimeStamp() {
   return firstTimeStamp;
 }
-
-
 
 typedef struct outputDevice_ {
   FILE *fp;
@@ -166,8 +162,6 @@ static int *TauGetSnapshotUserEventCounts() {
   static int userEventCounts[TAU_MAX_THREADS];
   return userEventCounts;
 }
-
-
 
 class MetaDataRepo : public map<string,string> {
 public :
@@ -222,7 +216,6 @@ static int output(outputDevice *out, const char *format, ...) {
   }
   return rs;
 }
-
 
 static void writeXMLString(outputDevice *out, const char *s) {
   if (!s) return;
@@ -411,11 +404,9 @@ static int writeMetaData(outputDevice *out, bool newline, int counter) {
 
   output (out, "<metadata>%s", endl);
 
-
   if (counter != -1) {
     writeXMLAttribute(out, "Metric Name", RtsLayer::getCounterName(counter), newline);
   }
-
 
   char tmpstr[1024];
 #ifdef TAU_WINDOWS
@@ -428,7 +419,6 @@ static int writeMetaData(outputDevice *out, bool newline, int counter) {
   writeXMLTime(out, newline);
 
 #ifndef TAU_WINDOWS
-
   // try to grab meta-data
   char hostname[4096];
   gethostname(hostname,4096);
@@ -449,7 +439,6 @@ static int writeMetaData(outputDevice *out, bool newline, int counter) {
 
   writeXMLAttribute(out, "pid", getpid(), newline);
 #endif
-
 
 #ifdef TAU_BGL
   char bglbuffer[4096];
@@ -627,7 +616,6 @@ static int writeMetaData(outputDevice *out, bool newline, int counter) {
     fclose(f);
   }
 
-
   char buffer[4096];
   bzero(buffer, 4096);
   int rc = readlink("/proc/self/exe", buffer, 4096);
@@ -652,13 +640,22 @@ static int writeMetaData(outputDevice *out, bool newline, int counter) {
   }
 
 
+  // Write data from the TAU_METADATA environment variable
+  char *tauMetaDataEnvVar = getenv("TAU_METADATA");
+  if (tauMetaDataEnvVar != NULL) {
+    if (strncmp(tauMetaDataEnvVar, "<attribute>", strlen("<attribute>")) != 0) {
+      fprintf (stderr, "Error in formating TAU_METADATA environment variable\n");
+    } else {
+      output (out, tauMetaDataEnvVar);
+    }
+  }
+
   // write out the user-specified (some from TAU) attributes
   for (map<string,string>::iterator it = TheMetaData().begin(); it != TheMetaData().end(); ++it) {
     const char *name = it->first.c_str();
     const char *value = it->second.c_str();
     writeXMLAttribute(out, name, value, newline);
   }
-
 
   output (out, "</metadata>%s", endl);
   return 0;
@@ -669,8 +666,7 @@ static int writeMetaData(outputDevice *out, bool newline, int counter) {
 static int startNewSnapshotFile(char *threadid, int tid) {
   const char *profiledir = TauEnv_get_profiledir();
   
-
-    outputDevice *out = (outputDevice*) malloc (sizeof(outputDevice));
+  outputDevice *out = (outputDevice*) malloc (sizeof(outputDevice));
 
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
     out->type = OUTPUT_BUFFER;
@@ -694,7 +690,6 @@ static int startNewSnapshotFile(char *threadid, int tid) {
     out->fp = fp;
   }
     
-
   // assign it back to the global structure for this thread
   TauGetSnapshotFiles()[tid] = out;
 
@@ -791,7 +786,6 @@ int Profiler::Snapshot(const char *name, bool finalize, int tid) {
      TauGetSnapshotUserEventCounts()[tid] = numEvents;
    }
 
-
    // now write the actual profile data for this snapshot
    output (out, "\n<profile thread=\"%s\">\n", threadid);
    output (out, "<name>");
@@ -803,7 +797,6 @@ int Profiler::Snapshot(const char *name, bool finalize, int tid) {
 #else
    output (out, "<timestamp>%lld</timestamp>\n", getTimeStamp());
 #endif
-
 
    char metricList[4096];
    char *loc = metricList;
@@ -858,7 +851,6 @@ int Profiler::Snapshot(const char *name, bool finalize, int tid) {
    if (!finalize) {
      TAU_PROFILE_STOP(timer);
    }
-
 
    return 0;
 }
