@@ -887,14 +887,21 @@ if [ $numFiles == 0 ]; then
 	echoIfDebug "Before filtering -l*mpi* options command is: $regularCmd"
 	regularCmd=`echo "$regularCmd" | sed -e 's/-l[a-zA-Z0-9]*mpi[a-zA-Z.0-9+_]*//g'`
 	echoIfDebug "After filtering -l*mpi* options command is: $regularCmd"
+
+	# also check for IBM -lvtd_r, and if found, move it to the end
+	checkvtd=`echo "$regularCmd" | sed -e 's/.*\(-lvtd_r\).*/\1/g'`
+	regularCmd=`echo "$regularCmd" | sed -e 's/-lvtd_r//g'`
+	if [ "x$checkvtd" = "-lvtd_r" ] ; then
+	    optLinking="$optLinking -lvtd_r"
+	fi
     fi
 
     if [ $hasAnOutputFile == $FALSE ]; then
 	passedOutputFile="a.out"
 	linkCmd="$compilerSpecified $regularCmd $optLinking -o $passedOutputFile"
     else
+	#Do not add -o, since the regular command has it already.
 	linkCmd="$compilerSpecified $regularCmd $optLinking"
-		#Do not add -o, since the regular command has it already.
     fi	
 
     if [ $opari == $TRUE ]; then
