@@ -74,6 +74,7 @@ extern "C" void __rouinit() {
 }
 
 // called at the beginning of each profiled routine
+#pragma save_all_gp_regs
 extern "C" void ___rouent2(struct s1 *p) {
   char routine[2048];
 
