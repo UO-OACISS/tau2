@@ -76,8 +76,8 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
         );
         XYPlot plot = chart.getXYPlot();
 		NumberAxis axis = new NumberAxis("Percentage of Total " + PerfExplorerModel.getModel().getMetricName());
-        axis.setRange(new Range(0,100));
-        plot.setRangeAxis(0, axis);
+        //axis.setRange(new Range(0,100));
+        //plot.setRangeAxis(0, axis);
 
 		return new PerfExplorerChart(chart, "Total " + PerfExplorerModel.getModel().getMetricName() + " Breakdown");
 	}

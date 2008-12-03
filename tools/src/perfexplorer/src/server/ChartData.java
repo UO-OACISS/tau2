@@ -28,7 +28,7 @@ import java.util.List;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.46 2008/03/25 19:09:25 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.47 2008/12/03 23:13:33 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -266,6 +266,7 @@ public class ChartData extends RMIChartData {
 			buf.append(model.getXPercent());
 			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
+			buf.append("and ie.group_name not like '%TAU_PARAM%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%')");
 			buf.append("or ims.exclusive_percentage = 100.0) ");
 			buf.append("order by 1, 2, 3, 4");
@@ -467,6 +468,7 @@ public class ChartData extends RMIChartData {
 			buf.append(model.getXPercent());
 			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
+			buf.append("and ie.group_name not like '%TAU_PARAM%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%')");
 			buf.append("or ims.exclusive_percentage = 100.0) ");
 			buf.append("and ims.inclusive_percentage < 100.0) ");
@@ -629,7 +631,10 @@ public class ChartData extends RMIChartData {
 			}
 
 //			buf.append("and ims.inclusive_percentage < 100.0 ");
-			buf.append(" and ie.group_name like '%Iteration%' and ie.group_name not like '%TAU_CALLPATH%' order by 1, 2, 3, 4");
+			buf.append(" and ie.group_name like '%Iteration%' ");
+			buf.append(" and ie.group_name not like '%TAU_CALLPATH%' ");
+			buf.append(" and ie.group_name not like '%TAU_PARAM%' ");
+			buf.append(" order by 1, 2, 3, 4");
 			statement = db.prepareStatement(buf.toString());
 			if (object instanceof RMIView) {
 				statement.setString(1, metricName);
@@ -681,7 +686,10 @@ public class ChartData extends RMIChartData {
 			}
 
 			buf.append("and ims.inclusive_percentage < 100.0 ");
-			buf.append("and ie.group_name like '%Iteration%' and ie.group_name not like '%TAU_CALLPATH%' order by 1, 2, 3, 4");
+			buf.append("and ie.group_name like '%Iteration%' ");
+			buf.append("and ie.group_name not like '%TAU_CALLPATH%' ");
+			buf.append("and ie.group_name not like '%TAU_PARAM%' ");
+			buf.append("order by 1, 2, 3, 4");
 
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
@@ -716,6 +724,7 @@ public class ChartData extends RMIChartData {
 			buf.append("and p.metric = ? ");
 			buf.append("and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
+			buf.append("and ie.group_name not like '%TAU_PARAM%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%')");
 			buf.append("or s.exclusive_percentage = 100.0) ");
 			buf.append(" order by 1,2 ");
@@ -797,6 +806,7 @@ public class ChartData extends RMIChartData {
 			buf.append(model.getXPercent());
 			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
+			buf.append("and ie.group_name not like '%TAU_PARAM%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%')");
 			buf.append("or ims.exclusive_percentage = 100.0) group by t.node_count, t.contexts_per_node, t.threads_per_context order by 1, 2, 3");
 			
@@ -825,6 +835,7 @@ public class ChartData extends RMIChartData {
 			buf.append(model.getXPercent());
 			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
+			buf.append("and ie.group_name not like '%TAU_PARAM%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%'));");
 			*/
 
@@ -902,6 +913,7 @@ public class ChartData extends RMIChartData {
 			//buf.append(model.getXPercent());
 			buf.append(" and (ie.group_name is null or (");
 			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
+			buf.append("and ie.group_name not like '%TAU_PARAM%' ");
 			buf.append("and ie.group_name not like '%TAU_PHASE%')");
 			buf.append("or ims.exclusive_percentage = 100.0) ");
 			buf.append("group by t.node_count, t.contexts_per_node, t.threads_per_context order by 2, 3, 4 ");
