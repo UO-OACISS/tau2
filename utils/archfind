@@ -34,12 +34,16 @@ if [ `uname -s ` = "Darwin" ];  then
     ARCH=apple
 fi
 
+
 if [ `uname -s ` = "HI-UX/MPP" ]; then 
       ARCH=`$TAU_CCOM -msg=e -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'` 
 else
   if [ "x$ARCH" = "x" ]; then
 # ARCH has not been assigned yet.
       ARCH=`$TAU_CCOM -w -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'` 
+      if [ "x$ARCH" = "x" ] ; then 
+	  exit
+      fi
   fi
 fi
 
