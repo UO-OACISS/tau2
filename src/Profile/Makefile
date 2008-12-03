@@ -89,6 +89,7 @@ MAKEFILE      = Makefile
 
 PGIACC_O=
 #PGIACC#PGIACC_O = PgiAcc.o #ENDIF#
+#PGI#PGIACC_STATIC_O = PgiAcc.o #ENDIF#
 
 OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
@@ -100,7 +101,7 @@ OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
 		$(COMPENSATE_O) $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O)
 
-STATIC_OBJS   = Comp_gnu.o PgiAcc.o
+STATIC_OBJS   = Comp_gnu.o $(PGIACC_STATIC_O)
 SHARED_OBJS   = $(PGIACC_O)
 #SICORTEX#SHARED_OBJS = Comp_gnu.o #ENDIF#
 #TAU_BFDSHAREDLINK#SHARED_OBJS = Comp_gnu.o #ENDIF#
