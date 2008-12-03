@@ -155,9 +155,7 @@ extern "C" void __pgi_cu_launch( CUfunction func, int gridx, int gridy, int grid
   TAU_PROFILE_START(stimer);
   __pgi_cu_launch_p(func, gridx, gridy, gridz, blockx, blocky, blockz);
   TAU_PROFILE_STOP(stimer);
-  }
 }
-
 
 
 
