@@ -1,6 +1,9 @@
 
 #include <TAU.h>
 #include <stdlib.h>
+#include <map>
+using namespace std;
+
 // extern "C" {
 // #include <nv.h>
 // }
@@ -37,6 +40,8 @@ typedef void* CUstream;
 
 TAU_GLOBAL_TIMER(pgi_acc_region_timer, "pgi accelerator region", "", TAU_DEFAULT);
 
+static map<CUfunction,string> functionMap;
+
 extern "C" void __pgi_cu_init_p();
 extern "C" void __pgi_cu_init() {
   TAU_GLOBAL_TIMER_START(pgi_acc_region_timer);
@@ -59,7 +64,9 @@ extern "C" void __pgi_cu_module(void *image) {
 extern "C" CUfunction __pgi_cu_module_function_p(char *name);
 extern "C" CUfunction __pgi_cu_module_function(char *name) {
   TAU_PROFILE("__pgi_cu_module_function","",TAU_DEFAULT);
-  return __pgi_cu_module_function_p(name);
+  CUfunction func = __pgi_cu_module_function_p(name);
+  functionMap[func] = name;
+  return func;
 }
 
 extern "C" CUdeviceptr __pgi_cu_alloc_p(size_t size);
@@ -137,8 +144,18 @@ extern "C" void __pgi_cu_paramset( CUfunction func, void* ptr, unsigned long byt
 
 extern "C" void __pgi_cu_launch_p( CUfunction func, int gridx, int gridy, int gridz, int blockx, int blocky, int blockz );
 extern "C" void __pgi_cu_launch( CUfunction func, int gridx, int gridy, int gridz, int blockx, int blocky, int blockz ) {
-  TAU_PROFILE("__pgi_cu_launch","",TAU_DEFAULT);
+  //  printf ("gridx = %d, gridy = %d, gridz = %d, blockx = %d, blocky = %d, blockz = %d\n", gridx, gridy, gridz, blockx, blocky, blockz);
+  //  TAU_PROFILE("__pgi_cu_launch","",TAU_DEFAULT);
+  
+  string name = functionMap[func];
+  char routine[4096];
+  sprintf (routine, "__pgi_cu_launch(%s,gx=%d,gy=%d,gz=%d,bx=%d,by=%d,bz=%d)",name.c_str(),gridx,gridy,gridz,blockx,blocky,blockz);
+ 
+  TAU_PROFILE_TIMER_DYNAMIC(stimer, routine, "", TAU_DEFAULT);
+  TAU_PROFILE_START(stimer);
   __pgi_cu_launch_p(func, gridx, gridy, gridz, blockx, blocky, blockz);
+  TAU_PROFILE_STOP(stimer);
+  }
 }
 
 
