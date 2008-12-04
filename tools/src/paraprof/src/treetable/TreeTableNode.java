@@ -14,9 +14,9 @@ import edu.uoregon.tau.perfdmf.FunctionProfile;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableNode.java,v 1.8 2007/07/14 23:33:16 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableNode.java,v 1.9 2008/12/04 20:06:14 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 public class TreeTableNode extends DefaultMutableTreeNode implements Comparable {
     private List children;
@@ -72,11 +72,11 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
 
             List functionProfileList = model.getThread().getFunctionProfiles();
 
+            boolean foundAsInternal = false;
             // If we are B, this will be true if there is "A => B => C", but there is
             // no "A => B".  This should never happen with TAU, but will happen all the time
             // with multi-level mpiP data.
 
-            boolean foundAsInternal = false;
             Map potentialChildren = new HashMap();
 
             boolean foundActual = false;
@@ -114,7 +114,16 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
                     // fname = "main => a => b => MPI_Send"
                     // want "main => a"
 
-                    if (loc != -1) {
+                    if (loc == 0) {
+                        String remainder = fname.substring(thisName.length()).trim();
+
+                        int loc2 = remainder.lastIndexOf(pathDelimeter);
+                        if (loc2 == 0) {
+                            foundActual = true;
+                            TreeTableNode node = new TreeTableNode(fp, model, null);
+                            children.add(node);
+                        }
+                    } else if (loc != -1) {
                         int loc2 = fname.indexOf(pathDelimeter, loc + thisName.length());
 
                         int loc3 = fname.indexOf(pathDelimeter, loc2 + 1);
@@ -141,16 +150,7 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
 
                     }
 
-                    if (loc == 0) {
-                        String remainder = fname.substring(thisName.length()).trim();
-
-                        int loc2 = remainder.lastIndexOf(pathDelimeter);
-                        if (loc2 == 0) {
-                            foundActual = true;
-                            TreeTableNode node = new TreeTableNode(fp, model, null);
-                            children.add(node);
-                        }
-                    }
+                  
                 }
             }
 
