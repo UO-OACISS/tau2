@@ -20,7 +20,7 @@ public class Common {
         out.close();
     }
 
-    public static void deltree(File infile)  {
+    public static void deltree(File infile) {
         if (infile.isDirectory()) {
             String[] files = infile.list();
             for (int i = 0; i < files.length; i++) {
@@ -34,4 +34,20 @@ public class Common {
             }
         }
     }
+
+    public static String HTMLEntityEncode(String s) {
+        StringBuffer buf = new StringBuffer();
+        int len = (s == null ? -1 : s.length());
+
+        for (int i = 0; i < len; i++) {
+            char c = s.charAt(i);
+            if (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9') {
+                buf.append(c);
+            } else {
+                buf.append("&#" + (int) c + ";");
+            }
+        }
+        return buf.toString();
+    }
+
 }
