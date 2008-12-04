@@ -45,4 +45,4 @@ if [ ! -r ${HOME}/.ParaProf ]
     mkdir ${HOME}/.ParaProf
 fi
 
-java -cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JARGS_JAR}:${COMMON_JAR} edu.uoregon.tau.perfdmf.loader.Configure -t ${TAUROOT} -a ${CONFIG_ARCH}
+java -cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JARGS_JAR}:${COMMON_JAR} edu.uoregon.tau.perfdmf.loader.Configure -t ${TAUROOT} -a ${CONFIG_ARCH} $@

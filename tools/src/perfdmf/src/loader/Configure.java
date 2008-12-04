@@ -15,7 +15,7 @@ import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.database.*;
 
 public class Configure {
-    private static String Usage = "Usage: configure [{-h,--help}] [{-g,--configfile} filename] [{-c --config} configuration_name] [{-t,--tauroot} path]";
+    private static String Usage = "Usage: configure [{-h,--help}] --create-default [{-g,--configfile} filename] [{-c --config} configuration_name] [{-t,--tauroot} path]";
     private static String Greeting = "\nWelcome to the configuration program for PerfDMF.\n"
             + "This program will prompt you for some information necessary to ensure\n"
             + "the desired behavior for the PerfDMF tools.\n";
@@ -62,8 +62,6 @@ public class Configure {
 
     public void initialize(String configFileNameIn) {
 
-        // Welcome the user to the program
-        System.out.println(Greeting);
 
         try {
             // Check to see if the configuration file exists
@@ -122,8 +120,26 @@ public class Configure {
             return System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator;
         }
     }
+		public void useDefaults()
+		{
+				String os = System.getProperty("os.name").toLowerCase();
+				if (os.trim().startsWith("windows")) {
+						jdbc_db_jarfile = tau_root + File.separator + "bin" + File.separator + "derby.jar";
+				} else {
+						jdbc_db_jarfile = tau_root + File.separator + arch + File.separator + "lib" + File.separator + "derby.jar";
+				}
+       	db_dbname = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf";
+				jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
+				db_schemafile = perfdmf_home + etc + "dbschema.derby.txt";
+				db_hostname = "";
+				db_portnum = "";
+        store_db_password = true;
+		}
 
     public void promptForData() {
+        // Welcome the user to the program
+        System.out.println(Greeting);
+
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String tmpString;
 
@@ -782,6 +798,7 @@ public class Configure {
         CmdLineParser.Option homeOpt = parser.addStringOption('t', "tauroot");
         CmdLineParser.Option archOpt = parser.addStringOption('a', "arch");
         CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
+        CmdLineParser.Option defaultOpt = parser.addBooleanOption('d', "create-default");
         try {
             parser.parse(args);
         } catch (CmdLineParser.OptionException e) {
@@ -789,12 +806,12 @@ public class Configure {
             System.err.println(Usage);
             System.exit(-1);
         }
-
         String configFile = (String) parser.getOptionValue(configfileOpt);
         String configName = (String) parser.getOptionValue(configOpt);
         String tauroot = (String) parser.getOptionValue(homeOpt);
         String arch = (String) parser.getOptionValue(archOpt);
         Boolean help = (Boolean) parser.getOptionValue(helpOpt);
+        Boolean useDefaults = (Boolean) parser.getOptionValue(defaultOpt);
 
         if (help != null && help.booleanValue()) {
             System.err.println(Usage);
@@ -815,15 +832,24 @@ public class Configure {
         if (arch == null) {
             arch = new String("");
         }
+        if (useDefaults == null) {
+            useDefaults = false;
+        }
 
         // Create a new Configure object, which will walk the user through
         // the process of creating/editing a configuration file.
         Configure config = new Configure(tauroot, arch);
         config.initialize(configFile);
 
-        // Give the user the ability to modify any/everything
-        config.promptForData();
-
+				if (useDefaults)
+				{
+        	config.useDefaults();
+				}
+				else
+				{
+          // Give the user the ability to modify any/everything
+          config.promptForData();
+        }
         // Test the database connection
         //config.testDBConnection();
 
@@ -836,7 +862,7 @@ public class Configure {
         ConfigureTest configTest = new ConfigureTest(tauroot);
         configTest.initialize(configFilename);
         try {
-            configTest.createDB(true);
+            configTest.createDB(false);
         } catch (DatabaseConfigurationException e) {
             e.printStackTrace();
             System.exit(0);
