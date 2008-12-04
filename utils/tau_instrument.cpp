@@ -2013,6 +2013,9 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 
          additionalDeclarations.push_back(pair<int, list<string> >((*rit)->id(), decls)); 
 	 /* assign the list of strings to the list */
+
+        /* We need to create empty BODY_BEGIN request here to get the declaration */
+         itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_BEGIN, (*rit)->firstExecStmtLocation().line(), (*rit)->firstExecStmtLocation().col(), "", BEFORE));
        } /* end of routine decl */
        /* examine the type of request - entry */
        if ((*it)->getKind() == TAU_ROUTINE_ENTRY)
@@ -2502,6 +2505,6 @@ string intToString(int value)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: geimer $
- * $Revision: 1.67 $   $Date: 2008/10/30 13:27:23 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.67 2008/10/30 13:27:23 geimer Exp $
+ * $Revision: 1.68 $   $Date: 2008/12/04 12:24:17 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.68 2008/12/04 12:24:17 geimer Exp $
  ***************************************************************************/

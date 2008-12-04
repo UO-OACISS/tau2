@@ -3361,7 +3361,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		if (print_cr) {
 		  ostr << endl;
 		}
-                /* XXX Insert code here */
+                instrumented = true;
                 break;
               }
               else if (use_perflib)
@@ -4409,8 +4409,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: geimer $
- * $Revision: 1.201 $   $Date: 2008/10/30 13:27:23 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.201 2008/10/30 13:27:23 geimer Exp $
+ * $Revision: 1.202 $   $Date: 2008/12/04 12:24:17 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.202 2008/12/04 12:24:17 geimer Exp $
  ***************************************************************************/
 
 
