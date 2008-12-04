@@ -7,6 +7,7 @@ import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 
+import edu.uoregon.tau.common.Common;
 import edu.uoregon.tau.paraprof.*;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.Thread;
@@ -14,9 +15,9 @@ import edu.uoregon.tau.perfdmf.Thread;
 /**
  * A BarChartModel for doing the GlobalDataWindow
  * 
- * <P>CVS $Id: GlobalBarChartModel.java,v 1.13 2008/07/18 22:38:18 amorris Exp $</P>
+ * <P>CVS $Id: GlobalBarChartModel.java,v 1.14 2008/12/04 20:10:56 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  */
 
 public class GlobalBarChartModel extends AbstractBarChartModel {
@@ -232,7 +233,7 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
         String calls = "<br>Calls: " + fp.getNumCalls();
         String subr = "<br>SubCalls: " + fp.getNumSubr();
 
-        return "<html>" + name + exclusive + inclusive + calls + subr + "</html>";
+        return "<html>" + Common.HTMLEntityEncode(name) + exclusive + inclusive + calls + subr + "</html>";
 
     }
 
