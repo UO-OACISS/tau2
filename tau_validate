@@ -291,6 +291,8 @@ class CompInstF90Test(SimpleTest):
     def getActualTest(self):
         return "compf"
     def checkApplicable(self):
+        if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
+            return False
         if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
             return False
         if system("grep \"^TAU_COMPINST_OPTION\" "+self.fullmakefile) != 0:
