@@ -91,6 +91,13 @@ PGIACC_O=
 #PGIACC#PGIACC_O = PgiAcc.o #ENDIF#
 #PGI#PGIACC_STATIC_O = PgiAcc.o #ENDIF#
 
+
+#############################################
+# Python Binding OBJECTS
+#############################################
+#PYTHON#PYTHON_O  = PyGroups.o PyExceptions.o PyDatabase.o PyBindings.o PyTimer.o PyTau.o PyMemory.o ctau_impl.o #ENDIF#
+
+
 OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
 		TauHooks.o TauHandler.o TauMemory.o MetaData.o TauEnv.o \
@@ -333,17 +340,20 @@ $(TAU_JAVA_INSTALLDIR)/Profile.class: Profile.class
 		$(TAU_INSTALL) $? $(TAU_JAVA_INSTALLDIR)
 
 $(TAU_BINDINGSDIR)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
-		@echo Installing $(TAUPYTHON) and tau.py in $(INSTALLDEST)
+		@echo Installing $(TAUPYTHON), ctau.py, and tau.py in $(INSTALLDEST)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
 		   else mkdir $(INSTALLDEST) ;fi
-		$(RM) $(INSTALLDEST)/$(TAUPYTHON)
-		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) $(TAUPYTHON)
+		$(RM) $(INSTALLDEST)/$(TAUPYTHON) $(INSTALLDEST)/ctau_impl$(TAU_SHLIBX)
 		$(TAU_INSTALL) tau.py $(INSTALLDEST)
-		@echo Installing $(TAUPYTHON) and tau.py in $(TAU_BINDINGSDIR)
+		$(TAU_INSTALL) ctau.py $(INSTALLDEST)
+		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) $(TAUPYTHON)
+		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) ctau_impl$(TAU_SHLIBX)
+		@echo Installing $(TAUPYTHON), ctau.py, and tau.py in $(TAU_BINDINGSDIR)
 		@if [ -d $(TAU_BINDINGSDIR) ] ; then true; \
 		    else mkdir $(TAU_BINDINGSDIR); fi
-		$(RM) $(TAU_BINDINGSDIR)/tau.py $(TAU_BINDINGSDIR)/$(TAUPYTHON)
-		cd $(TAU_BINDINGSDIR) && cp ../tau.py . && cp ../$(TAUPYTHON) $(TAUPYTHON) && /bin/rm -f libTAU.so &&  ln -s $(TAUPYTHON) libTAU.so
+		$(RM) $(TAU_BINDINGSDIR)/*
+		cd $(TAU_BINDINGSDIR) && ln -s ../$(TAU_SHLIB) $(TAUPYTHON) && ln -s ../$(TAU_SHLIB) ctau_impl$(TAU_SHLIBX)
+		cd $(TAU_BINDINGSDIR) && ln -s ../tau.py . && ln -s ../ctau.py .
 
 $(INSTALLDEST)/libpgnod_prof.a : 
 	ar rcs $(INSTALLDEST)/libpgnod_prof.a
@@ -534,6 +544,9 @@ PyTimer.o 	: PyTimer.cpp $(HDRS)
 
 PyTau.o 	: PyTau.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+ctau_impl.o 	: ctau_impl.c $(HDRS)
+	$(CC) $(CFLAGS) -c $(@:.o=.c)
 
 TauMuse.o 	: TauMuse.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
