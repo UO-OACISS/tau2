@@ -130,7 +130,8 @@ class Profile:
             methodname = fcode.co_filename
             methodname = methodname[methodname.rfind("/")+1:]
         tauname = classname + methodname
-        tautype = '[{' + fcode.co_filename + '} {' + str(fcode.co_firstlineno) + '}]'
+        filename = fcode.co_filename[fcode.co_filename.rfind("/")+1:]
+        tautype = '[{' + filename + '}{' + str(fcode.co_firstlineno) + '}]'
 
         # exclude the "? <string>" timer
         if not fcode.co_filename == "<string>":
