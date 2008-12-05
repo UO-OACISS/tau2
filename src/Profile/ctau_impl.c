@@ -407,13 +407,13 @@ static ProfilerEntry *newProfilerEntry(ProfilerObject *pObj, void *key, PyObject
     while (strchr(co_filename,'/')) {
       co_filename = strchr(co_filename,'/')+1;
     }
-    co_firstlineno =frame->f_code->co_firstlineno;
-    
-    sprintf (routine,"%s [{%s}{%d}]", key, co_name, co_filename, co_firstlineno);
+    co_firstlineno = frame->f_code->co_firstlineno;
+    sprintf (routine,"%s [{%s}{%d}]", co_name, co_filename, co_firstlineno);
     TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
   } else {
     if (strcmp (cname, "start") && strcmp (cname, "stop") && strcmp (cname, "disable")) {
-      sprintf (routine,"C [%s]", key, cname);
+/*       sprintf (routine,"C [%s]", cname); */
+      sprintf (routine,"%s", cname);
       TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
     }
   }
@@ -479,8 +479,11 @@ static void clearEntries(ProfilerObject *pObj) {
 static void Stop(ProfilerObject *pObj, ProfilerContext *self, ProfilerEntry *entry) {
 }
 
+
+
 static void ptrace_enter_call(PyObject *self, void *key, PyObject *userObj, PyFrameObject *frame, char *cname) {
   //  char *name;
+
   //  PyObject *stringObj;
   //  printf ("enter:\n");
 
@@ -498,6 +501,7 @@ static void ptrace_enter_call(PyObject *self, void *key, PyObject *userObj, PyFr
   ProfilerObject *pObj = (ProfilerObject*)self;
   ProfilerEntry *profEntry;
   ProfilerContext *pContext;
+
 
   profEntry = getEntry(pObj, key);
   if (profEntry == NULL) {
@@ -557,12 +561,15 @@ static void ptrace_leave_call(PyObject *self, void *key) {
 /*   pObj->freelistProfilerContext = pContext; */
 }
 
+
+
 static int profiler_callback(PyObject *self, PyFrameObject *frame, int what, PyObject *arg) {
   PyCFunctionObject *fn;
 
 /*   char routine[4096]; */
 /*   char *co_name, *co_filename; */
 /*   int co_firstlineno; */
+
 
 /*   co_name = PyString_AsString(frame->f_code->co_name); */
 /*   co_filename = PyString_AsString(frame->f_code->co_filename); */
@@ -576,15 +583,15 @@ static int profiler_callback(PyObject *self, PyFrameObject *frame, int what, PyO
 
     /* the 'frame' of a called function is about to start its execution */
   case PyTrace_CALL:
-/*     printf ("Py Enter: %s\n", routine); */
-    ptrace_enter_call(self, (void *)frame->f_code,
-		      (PyObject *)frame->f_code, frame, NULL);
+/*      printf ("Py Enter: %s\n", routine);  */
+     ptrace_enter_call(self, (void *)frame->f_code,
+		       (PyObject *)frame->f_code, frame, NULL);
     break;
 
     /* the 'frame' of a called function is about to finish
        (either normally or with an exception) */
   case PyTrace_RETURN:
-/*     printf ("Py Exit: %s\n", routine); */
+/*      printf ("Py Exit: %s\n", routine);  */
     ptrace_leave_call(self, (void *)frame->f_code);
     break;
 
