@@ -190,10 +190,6 @@ OPARI_O 	= TauKojakOpariDisable.o #ENDIF#
 #PROFILECALLPATH#CALLPATH_O  = TauCallPath.o #ENDIF#
 #PROFILEPARAM#PARAM_O  = ProfileParam.o #ENDIF#
 
-#############################################
-# Python Binding OBJECTS
-#############################################
-#PYTHON#PYTHON_O  = PyGroups.o PyExceptions.o PyDatabase.o PyBindings.o PyTimer.o PyTau.o PyMemory.o #ENDIF#
 
 #############################################
 # DYNINST DEFAULT ARCH
