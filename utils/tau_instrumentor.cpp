@@ -3604,7 +3604,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 			ostr <<"call TAU_PROFILE_STOP("<<(*siter)<<")"<<endl<<"\t";
 		    }
                     if (!(*it)->snippet.empty())
-                      ostr << (*it)->snippet << "\n\t";
+                      ostr << (*it)->snippet << "\n";
 		    if (use_spec)
                     {
                       /* XXX Insert code here */
@@ -4409,8 +4409,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: geimer $
- * $Revision: 1.202 $   $Date: 2008/12/04 12:24:17 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.202 2008/12/04 12:24:17 geimer Exp $
+ * $Revision: 1.203 $   $Date: 2008/12/10 18:57:19 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.203 2008/12/10 18:57:19 geimer Exp $
  ***************************************************************************/
 
 
