@@ -1385,7 +1385,9 @@ void processExitExpression(ostream& ostr, string& exit_expression, itemRef *it, 
 
   ostr <<"{ ";
   if (abort_used){
-    ostr<<"int tau_exit_val = 0;";
+    ostr<<"int tau_exit_val = 0; ";
+    if (!it->snippet.empty())
+      ostr<<it->snippet<<endl;
     if (use_spec)
     {
       /* XXX Insert code here */
@@ -1403,6 +1405,8 @@ void processExitExpression(ostream& ostr, string& exit_expression, itemRef *it, 
   else 
   {
     ostr<<"int tau_exit_val = "<<exit_expression<<"; ";
+    if (!it->snippet.empty())
+      ostr<<it->snippet<<endl;
     if (use_spec)
     {
       /* XXX Insert code here */
@@ -1786,14 +1790,14 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 #ifdef DEBUG 
 		    cout <<"exit_expression = "<<exit_expression<<endl;
 #endif /* DEBUG */
-		    processExitExpression(ostr, exit_expression, *it, exit_type, abort_used); 
+		    processExitExpression(ostr, exit_expression, *it, exit_type, abort_used);
 		}
 		else { /* exit_type was null! Couldn't find anything here */
 		  fprintf (stderr, "Warning: exit was found at line %d, column %d, but wasn't found in the source code.\n",(*it)->line, (*it)->col);
 		  fprintf (stderr, "If the exit call occurs in a macro (likely), make sure you place a \"TAU_PROFILE_EXIT\" before it (note: this warning will still appear)\n");
-		  instrumented = true;
 		  // write the input line in the output stream
 		}            
+                instrumented = true;
 		break; 
 	
     case INSTRUMENTATION_POINT:
@@ -3571,9 +3575,12 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	    /* before writing stop/exit examine the kind */
 		if ((*it)->kind == EXIT)
 		{ /* Turn off the timers. This is similar to abort/exit in C */
+                  if (!(*it)->snippet.empty())
+                    ostr << (*it)->snippet << "\n\t";
                   if (use_spec)
                   {
                     /* XXX Insert code here */
+                      ostr << endl;
                   }
                   else if (use_perflib)
 		    ostr <<"call f_perf_update('"<<stripModuleFromName((*it)->item->fullName())<<"', .false.)"<<endl;
@@ -4410,8 +4417,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: geimer $
- * $Revision: 1.204 $   $Date: 2008/12/11 08:58:08 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.204 2008/12/11 08:58:08 geimer Exp $
+ * $Revision: 1.205 $   $Date: 2008/12/11 16:02:22 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.205 2008/12/11 16:02:22 geimer Exp $
  ***************************************************************************/
 
 

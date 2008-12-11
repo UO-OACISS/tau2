@@ -208,6 +208,9 @@ ostream& tauInstrument::print(ostream& ostr) const
 	 case TAU_ROUTINE_EXIT:
 		 ostr<<"exit: ";
 		 break;
+         case TAU_ABORT:
+                 ostr<<"abort: ";
+                 break;
 	 case TAU_PHASE:
 		 ostr<<"phase: ";
 		 break;
@@ -600,7 +603,7 @@ void parseInstrumentationCommand(char *line, int lineno)
       } /* file and routine are both specified for entry */
     } /* end of entry token */
     else 
-    { /* parse exit, and loops */
+    { /* parse: exit routine = "foo()" code = "bar()" lang = "c" */
       if (strncmp(line, "exit", 4) == 0)
       {
         line+=4; 
@@ -679,36 +682,20 @@ void parseInstrumentationCommand(char *line, int lineno)
 	{
 	  bool codespecified = true; 
           instrumentList.push_back(new tauInstrument(string(pname), string(pcode), codespecified, TAU_ROUTINE_EXIT, language));
-	} /* file and routine are both specified for entry */
+	} /* file and routine are both specified for exit */
       } /* end of exit */
       else
-      { /* loops */
-      	m1 = strncmp(line, "loops", 5);
-	m2 = strncmp(line, "io", 2);
-	m3 = strncmp(line, "memory", 6);
-        if ((m1 == 0) || (m2 == 0) || (m3 == 0)) {
-	  if (m1 == 0) { 
-	    kind = TAU_LOOPS; 
-	    line += 5; /* move the pointer 5 spaces (loops) for next token */
-	  }
-	  else {  
-            if (m2 == 0) {
-	      kind = TAU_IO;
-	      line += 2;/* move the pointer 2 spaces (io) for next token */
-	    }
-	    else {
-	      if (m3 == 0) {
-	        kind = TAU_MEMORY;
-	        line += 6;/* move the pointer 6 spaces (memory) for next token */
-	      }
-	    }
-	  }
-
-	  /* check for WSPACE */
-	  WSPACE(line);
+      { /* parse: abort routine = "foo()" code = "bar()" lang = "c" */
+        if (strncmp(line, "abort", 5) == 0)
+        {
+          line+=5; 
+    #ifdef DEBUG
+          printf("Found ABORT!\n");
+    #endif /* DEBUG */
+          WSPACE(line);
           if (strncmp(line, "file", 4) == 0)
           {
-     	    line+= 4;
+	    line+= 4;
 	    WSPACE(line);
 	    TOKEN('=');
 	    WSPACE(line);
@@ -716,107 +703,113 @@ void parseInstrumentationCommand(char *line, int lineno)
 	    RETRIEVESTRING(pfile, line);
 	    WSPACE(line);
 	    filespecified = true; 
-#ifdef DEBUG
+    #ifdef DEBUG
 	    printf("GOT file = %s\n", pfile);
-#endif /* DEBUG */
-	  }
-	  if (strncmp(line, "routine", 7) == 0)
-	  {
-	    line+=7;
-	    /* found routine */ 
+    #endif /* DEBUG */
+          }
+          if (strncmp(line, "routine", 7) == 0)
+          {
+	    line+=7; 
 	    WSPACE(line);
 	    TOKEN('=');
 	    WSPACE(line);
 	    TOKEN('"');
 	    RETRIEVESTRING(pname, line);
-#ifdef DEBUG
-	    printf("got loops routine = %s\n", pname);
-#endif /* DEBUG */
-	    if (filespecified)
-	    {
-	      instrumentList.push_back(new tauInstrument(string(pfile), string(pname), kind));
+	    WSPACE(line);
+    #ifdef DEBUG
+            printf("GOT routine = %s\n", pname);
+    #endif /* DEBUG */
+          }
+          else
+          {
+            strcpy(pname, "#");
+          }
+          if (strncmp(line, "code", 4) == 0)
+          { 
+            line+= 4; /* move 4 spaces */
+            /* check for = <WSPACE> " */
+            WSPACE(line);
+            TOKEN('=');
+            WSPACE(line);
+            TOKEN('"');
+            RETRIEVECODE(pcode, line);
+            WSPACE(line);
+    #ifdef DEBUG
+            printf("GOT code = %s\n", pcode);
+    #endif /* DEBUG */
+          }
+          else parseError("<code> token not found", line, lineno, line - original); 
+          if (strncmp(line, "lang", 4) == 0)
+          {
+            line += 4; /* move 4 spaces */
+            /* check for = <WSPACE> " */
+            WSPACE(line);
+            TOKEN('=');
+            WSPACE(line);
+            TOKEN('"');
+            RETRIEVESTRING(plang, line);
+            WSPACE(line);
+    #ifdef DEBUG
+            printf("GOT lang = %s\n", plang);
+    #endif /* DEBUG */
+            language = parseLanguageString(plang);
+            if (language < 0)
+              parseError("<lang> token invalid", line, lineno, line - original);
+          }
+    #ifdef DEBUG 
+          printf("entry routine = %s, code = %s, lang = %d\n", pname, pcode, language);
+    #endif /* DEBUG */
+          if (filespecified)
+          {
+            instrumentList.push_back(new tauInstrument(string(pfile), string(pname), string(pcode), TAU_ABORT, language));
+          }
+          else 
+          {
+	    bool codespecified = true; 
+            instrumentList.push_back(new tauInstrument(string(pname), string(pcode), codespecified, TAU_ABORT, language));
+          } /* file and routine are both specified for abort */
+        } /* end of abort token */
+        else
+        { /* loops */
+      	  m1 = strncmp(line, "loops", 5);
+	  m2 = strncmp(line, "io", 2);
+	  m3 = strncmp(line, "memory", 6);
+          if ((m1 == 0) || (m2 == 0) || (m3 == 0)) {
+	    if (m1 == 0) { 
+	      kind = TAU_LOOPS; 
+	      line += 5; /* move the pointer 5 spaces (loops) for next token */
 	    }
-	    else
-	    {
-	      instrumentList.push_back(new tauInstrument(string(pname), kind));
-	    }
-	  }
-	  else parseError("<routine> token not found", line, lineno, line - original);
-	}
-        else 
-        { /* check for static/dynamic phase ... */
-	  m1 = strncmp(line, "static", 6);
-	  m2 = strncmp(line, "dynamic", 7);
-	  m3 = strncmp(line, "phase", 5);
-	  m4 = strncmp(line, "timer", 5);
-          if ((m1 == 0) || (m2 == 0) || (m3 == 0) || (m4 == 0)) {
-	    if (m1 == 0) { /* static */
-              staticspecified = true;
-	      qualifier = STATIC; 
-	      line += 6; /* move the pointer 6 spaces (static) for next token */
-#ifdef DEBUG
-	printf("GOT static lineno = %d\n", lineno);
-#endif /* DEBUG */
-	    }
-            else {
-	      if (m2 == 0) { /* dynamic */
-                dynamicspecified = true;
-		qualifier = DYNAMIC;
-	        line += 7; /* move the pointer 7 spaces (dynamic) for next token */
-#ifdef DEBUG
-	printf("GOT dynamic lineno = %d\n", lineno);
-#endif /* DEBUG */
+	    else {  
+              if (m2 == 0) {
+	        kind = TAU_IO;
+	        line += 2;/* move the pointer 2 spaces (io) for next token */
 	      }
-              else {
-	        if (m3 == 0) { /* phase */
-                  phasespecified = true;
-	          kind = TAU_PHASE;
-	          line += 5; /* move the pointer 5 spaces (static) for next token */
-#ifdef DEBUG
-	printf("GOT phase lineno = %d\n", lineno);
-#endif /* DEBUG */
+	      else {
+	        if (m3 == 0) {
+	          kind = TAU_MEMORY;
+	          line += 6;/* move the pointer 6 spaces (memory) for next token */
 	        }
-                else {
-                  if (m4 == 0) { /* timer */
-                    timerspecified = true;
-                    kind = TAU_TIMER;
-                    line += 5;  /* move the pointer 5 spaces (timer) for next token */
-#ifdef DEBUG
-	printf("GOT timer lineno = %d\n", lineno);
-#endif /* DEBUG */
-                  }
-                }
-              } 
-            }
-            /* we have either static/dynamic phase/timer ... */
-            if (staticspecified || dynamicspecified) {
-              /* proceed to the next keyword */
-              WSPACE(line); 
-              /* go to phase/timer */
-              if (strncmp(line, "phase", 5) == 0)
-              { 
-                phasespecified = true;
-                kind = TAU_PHASE;
-#ifdef DEBUG
-	printf("GOT phase command lineno = %d\n", lineno);
-#endif /* DEBUG */
-              } else {
-                if (strncmp(line, "timer", 5) == 0)
-                { 
-                  timerspecified = true;
-                  kind = TAU_TIMER;
-#ifdef DEBUG
-	printf("GOT timer command lineno = %d\n", lineno);
-#endif /* DEBUG */
-                }
-                else parseError("<phase/timer> token not found", line, lineno, line - original);      
-              } /* at this stage we have static/dynamic phase/timer definition */
-              line += 5;  /* move the pointer 5 spaces (timer) for next token */
-            } /* static || dynamic specified */
-            
-            WSPACE(line); /* it can be routine or name */
-            if (strncmp(line, "routine", 7) == 0) 
-            { /* static/dynamic phase/timer routine = "..." */
+	      }
+	    }
+
+	    /* check for WSPACE */
+	    WSPACE(line);
+            if (strncmp(line, "file", 4) == 0)
+            {
+     	      line+= 4;
+	      WSPACE(line);
+	      TOKEN('=');
+	      WSPACE(line);
+	      TOKEN('"');
+	      RETRIEVESTRING(pfile, line);
+	      WSPACE(line);
+	      filespecified = true; 
+  #ifdef DEBUG
+	      printf("GOT file = %s\n", pfile);
+  #endif /* DEBUG */
+	    }
+	    if (strncmp(line, "routine", 7) == 0)
+	    {
 	      line+=7;
 	      /* found routine */ 
 	      WSPACE(line);
@@ -824,193 +817,211 @@ void parseInstrumentationCommand(char *line, int lineno)
 	      WSPACE(line);
 	      TOKEN('"');
 	      RETRIEVESTRING(pname, line);
-#ifdef DEBUG
-	      printf("s/d p/t got routine = %s\n", pname);
-#endif /* DEBUG */
-            } else {
-              if (strncmp(line, "name", 4) == 0) 
-              { /* static/dynamic phase/timer name = "..." file=<name> line = <no> to line = <no> */
-	        line+=4;
-	        /* found name */ 
+  #ifdef DEBUG
+	      printf("got loops routine = %s\n", pname);
+  #endif /* DEBUG */
+	      if (filespecified)
+	      {
+	        instrumentList.push_back(new tauInstrument(string(pfile), string(pname), kind));
+	      }
+	      else
+	      {
+	        instrumentList.push_back(new tauInstrument(string(pname), kind));
+	      }
+	    }
+	    else parseError("<routine> token not found", line, lineno, line - original);
+	  }
+          else 
+          { /* check for static/dynamic phase ... */
+	    m1 = strncmp(line, "static", 6);
+	    m2 = strncmp(line, "dynamic", 7);
+	    m3 = strncmp(line, "phase", 5);
+	    m4 = strncmp(line, "timer", 5);
+            if ((m1 == 0) || (m2 == 0) || (m3 == 0) || (m4 == 0)) {
+	      if (m1 == 0) { /* static */
+                staticspecified = true;
+	        qualifier = STATIC; 
+	        line += 6; /* move the pointer 6 spaces (static) for next token */
+  #ifdef DEBUG
+	  printf("GOT static lineno = %d\n", lineno);
+  #endif /* DEBUG */
+	      }
+              else {
+	        if (m2 == 0) { /* dynamic */
+                  dynamicspecified = true;
+		  qualifier = DYNAMIC;
+	          line += 7; /* move the pointer 7 spaces (dynamic) for next token */
+  #ifdef DEBUG
+	  printf("GOT dynamic lineno = %d\n", lineno);
+  #endif /* DEBUG */
+	        }
+                else {
+	          if (m3 == 0) { /* phase */
+                    phasespecified = true;
+	            kind = TAU_PHASE;
+	            line += 5; /* move the pointer 5 spaces (static) for next token */
+  #ifdef DEBUG
+	  printf("GOT phase lineno = %d\n", lineno);
+  #endif /* DEBUG */
+	          }
+                  else {
+                    if (m4 == 0) { /* timer */
+                      timerspecified = true;
+                      kind = TAU_TIMER;
+                      line += 5;  /* move the pointer 5 spaces (timer) for next token */
+  #ifdef DEBUG
+	  printf("GOT timer lineno = %d\n", lineno);
+  #endif /* DEBUG */
+                    }
+                  }
+                } 
+              }
+              /* we have either static/dynamic phase/timer ... */
+              if (staticspecified || dynamicspecified) {
+                /* proceed to the next keyword */
+                WSPACE(line); 
+                /* go to phase/timer */
+                if (strncmp(line, "phase", 5) == 0)
+                { 
+                  phasespecified = true;
+                  kind = TAU_PHASE;
+  #ifdef DEBUG
+	  printf("GOT phase command lineno = %d\n", lineno);
+  #endif /* DEBUG */
+                } else {
+                  if (strncmp(line, "timer", 5) == 0)
+                  { 
+                    timerspecified = true;
+                    kind = TAU_TIMER;
+  #ifdef DEBUG
+	  printf("GOT timer command lineno = %d\n", lineno);
+  #endif /* DEBUG */
+                  }
+                  else parseError("<phase/timer> token not found", line, lineno, line - original);      
+                } /* at this stage we have static/dynamic phase/timer definition */
+                line += 5;  /* move the pointer 5 spaces (timer) for next token */
+              } /* static || dynamic specified */
+
+              WSPACE(line); /* it can be routine or name */
+              if (strncmp(line, "routine", 7) == 0) 
+              { /* static/dynamic phase/timer routine = "..." */
+	        line+=7;
+	        /* found routine */ 
 	        WSPACE(line);
 	        TOKEN('=');
 	        WSPACE(line);
 	        TOKEN('"');
 	        RETRIEVESTRING(pname, line);
-                WSPACE(line);
-#ifdef DEBUG
-	        printf("s/d p/t got name = %s\n", pname);
-#endif /* DEBUG */
-              }
-              else { /* name or routine not specified */
-                parseError("<routine/name> token not found", line, lineno, line - original);      
-              }
-              /* name was parsed. Look for line = <no> to line = <no> next */
-              if (strncmp(line, "file", 4) == 0)
-              { /* got line token, get line no. */
-                line += 4; 
-                WSPACE(line);
-                TOKEN('=');
-                WSPACE(line);
-	    	TOKEN('"');
-	    	RETRIEVESTRING(pfile, line);
-	    	filespecified = true; 
-                WSPACE(line);
-#ifdef DEBUG
-                printf("GOT file = %s\n", pfile);
-#endif /* DEBUG */
-              }
-              else {
-                parseError("<file> token not found", line, lineno, line - original); 
-              }
-              if (strncmp(line, "line", 4) == 0)
-              { /* got line token, get line no. */
-                line += 4; 
-                WSPACE(line);
-                TOKEN('=');
-                WSPACE(line);
-                RETRIEVENUMBER(plineno, line);
-                ret = sscanf(plineno, "%d", &startlineno); 
-#ifdef DEBUG
-                printf("GOT start line no = %d, line = %s\n", startlineno, line);
-#endif /* DEBUG */
-		WSPACE(line);
-                if (strncmp (line, "to", 2) == 0)
-                {
-                  line += 2; 
-                  WSPACE(line); /* look for line=<no> next */
-                  if (strncmp (line, "line", 4) == 0)
-                  {
-                    line += 4; 
-                    WSPACE(line); 
-                    TOKEN('=');
-                    WSPACE(line);
-                    RETRIEVENUMBERATEOL(pcode, line);
-                    ret = sscanf(pcode, "%d", &stoplineno); 
-#ifdef DEBUG
-                    printf("GOT stop line no = %d\n", stoplineno);
-#endif /* DEBUG */
-                  } else { /* we got line=<no> to , but there was no line */
-                    parseError("<line> token not found in the stop declaration", line, lineno, line - original);
-                  } /* parsed to clause */
-                }
-                else { /* hey, line = <no> is there, but there is no "to" */
-                  parseError("<to> token not found", line, lineno, line - original);
-                } /* we have parsed all the tokens now. Let us see what was specified phase/timer routine = <name> or phase/timer name =<name> line = <no> to line = <no> */
-
-              }  else { 
-                parseError("<line> token not found in the start declaration", line, lineno, line - original); 
-              } /* line specified */ 
-            } /* end of routine/name processing */
-            /* create instrumentation requests here */
-	    if (filespecified) 
-            { /* [static/dynamic] <phase/timer> name = "<name>" file="<name>" line=a to line=b */
-              instrumentList.push_back(new tauInstrument(qualifier, kind, pname, pfile, startlineno, stoplineno));
-            }
-            else 
-            { /* [static/dynamic] <phase/timer> routine = "<name>" */
-              instrumentList.push_back(new tauInstrument(qualifier, kind, pname));
-            }
-          } /* end of if static/dynamic/phase/timer */
-          else
-          {
-            /* parse: init code = "init();" lang = "c" */
-            if (strncmp(line, "init", 4) == 0)
-            {
-              line += 4;
-#ifdef DEBUG
-              printf("Found INIT!\n");
-#endif /* DEBUG */
-              WSPACE(line);
-              if (strncmp(line, "code", 4) == 0)
-              {
-                line += 4;
-                WSPACE(line);
-                TOKEN('=');
-                WSPACE(line);
-                TOKEN('"');
-                RETRIEVECODE(pcode, line);
-                WSPACE(line);
-#ifdef DEBUG
-                printf("GOT code = %s\n", pcode);
-#endif /* DEBUG */
-              }
-              else parseError("<code> token not found", line, lineno, line - original); 
-              if (strncmp(line, "lang", 4) == 0)
-              {
-                line += 4; /* move 4 spaces */
-                /* check for = <WSPACE> " */
-                WSPACE(line);
-                TOKEN('=');
-                WSPACE(line);
-                TOKEN('"');
-                RETRIEVESTRING(plang, line);
-                WSPACE(line);
-#ifdef DEBUG
-                printf("GOT lang = %s\n", plang);
-#endif /* DEBUG */
-                language = parseLanguageString(plang);
-                if (language < 0)
-                  parseError("<lang> token invalid", line, lineno, line - original);
-              }
-#ifdef DEBUG
-              printf("code = %s\n", pcode);
-#endif /* DEBUG */
-              instrumentList.push_back(new tauInstrument(string(pcode), true, TAU_INIT, language)); 
-            } /* end of init directive */
-            else
-            {
-              if (strncmp(line, "decl", 4) == 0)
-              {
-                line+=4;
-#ifdef DEBUG
-                printf("Found DECL!\n");
-#endif /* DEBUG */
-                WSPACE(line);
-                if (strncmp(line, "file", 4) == 0)
-                {
-	          line+= 4;
-	          WSPACE(line);
-	          TOKEN('=');
-	          WSPACE(line);
-	          TOKEN('"');
-	          RETRIEVESTRING(pfile, line);
-	          WSPACE(line);
-	          filespecified = true; 
-#ifdef DEBUG
-	          printf("GOT file = %s\n", pfile);
-#endif /* DEBUG */
-                }
-                if (strncmp(line, "routine", 7) == 0)
-                {
-	          line+=7; 
+  #ifdef DEBUG
+	        printf("s/d p/t got routine = %s\n", pname);
+  #endif /* DEBUG */
+              } else {
+                if (strncmp(line, "name", 4) == 0) 
+                { /* static/dynamic phase/timer name = "..." file=<name> line = <no> to line = <no> */
+	          line+=4;
+	          /* found name */ 
 	          WSPACE(line);
 	          TOKEN('=');
 	          WSPACE(line);
 	          TOKEN('"');
 	          RETRIEVESTRING(pname, line);
-	          WSPACE(line);
-#ifdef DEBUG
-                  printf("GOT routine = %s\n", pname);
-#endif /* DEBUG */
+                  WSPACE(line);
+  #ifdef DEBUG
+	          printf("s/d p/t got name = %s\n", pname);
+  #endif /* DEBUG */
                 }
-                else
-                {
-                  strcpy(pname, "#");
+                else { /* name or routine not specified */
+                  parseError("<routine/name> token not found", line, lineno, line - original);      
                 }
+                /* name was parsed. Look for line = <no> to line = <no> next */
+                if (strncmp(line, "file", 4) == 0)
+                { /* got line token, get line no. */
+                  line += 4; 
+                  WSPACE(line);
+                  TOKEN('=');
+                  WSPACE(line);
+	    	  TOKEN('"');
+	    	  RETRIEVESTRING(pfile, line);
+	    	  filespecified = true; 
+                  WSPACE(line);
+  #ifdef DEBUG
+                  printf("GOT file = %s\n", pfile);
+  #endif /* DEBUG */
+                }
+                else {
+                  parseError("<file> token not found", line, lineno, line - original); 
+                }
+                if (strncmp(line, "line", 4) == 0)
+                { /* got line token, get line no. */
+                  line += 4; 
+                  WSPACE(line);
+                  TOKEN('=');
+                  WSPACE(line);
+                  RETRIEVENUMBER(plineno, line);
+                  ret = sscanf(plineno, "%d", &startlineno); 
+  #ifdef DEBUG
+                  printf("GOT start line no = %d, line = %s\n", startlineno, line);
+  #endif /* DEBUG */
+		  WSPACE(line);
+                  if (strncmp (line, "to", 2) == 0)
+                  {
+                    line += 2; 
+                    WSPACE(line); /* look for line=<no> next */
+                    if (strncmp (line, "line", 4) == 0)
+                    {
+                      line += 4; 
+                      WSPACE(line); 
+                      TOKEN('=');
+                      WSPACE(line);
+                      RETRIEVENUMBERATEOL(pcode, line);
+                      ret = sscanf(pcode, "%d", &stoplineno); 
+  #ifdef DEBUG
+                      printf("GOT stop line no = %d\n", stoplineno);
+  #endif /* DEBUG */
+                    } else { /* we got line=<no> to , but there was no line */
+                      parseError("<line> token not found in the stop declaration", line, lineno, line - original);
+                    } /* parsed to clause */
+                  }
+                  else { /* hey, line = <no> is there, but there is no "to" */
+                    parseError("<to> token not found", line, lineno, line - original);
+                  } /* we have parsed all the tokens now. Let us see what was specified phase/timer routine = <name> or phase/timer name =<name> line = <no> to line = <no> */
+
+                }  else { 
+                  parseError("<line> token not found in the start declaration", line, lineno, line - original); 
+                } /* line specified */ 
+              } /* end of routine/name processing */
+              /* create instrumentation requests here */
+	      if (filespecified) 
+              { /* [static/dynamic] <phase/timer> name = "<name>" file="<name>" line=a to line=b */
+                instrumentList.push_back(new tauInstrument(qualifier, kind, pname, pfile, startlineno, stoplineno));
+              }
+              else 
+              { /* [static/dynamic] <phase/timer> routine = "<name>" */
+                instrumentList.push_back(new tauInstrument(qualifier, kind, pname));
+              }
+            } /* end of if static/dynamic/phase/timer */
+            else
+            {
+              /* parse: init code = "init();" lang = "c" */
+              if (strncmp(line, "init", 4) == 0)
+              {
+                line += 4;
+  #ifdef DEBUG
+                printf("Found INIT!\n");
+  #endif /* DEBUG */
+                WSPACE(line);
                 if (strncmp(line, "code", 4) == 0)
-                { 
-                  line+= 4; /* move 4 spaces */
-                  /* check for = <WSPACE> " */
+                {
+                  line += 4;
                   WSPACE(line);
                   TOKEN('=');
                   WSPACE(line);
                   TOKEN('"');
                   RETRIEVECODE(pcode, line);
                   WSPACE(line);
-#ifdef DEBUG
+  #ifdef DEBUG
                   printf("GOT code = %s\n", pcode);
-#endif /* DEBUG */
+  #endif /* DEBUG */
                 }
                 else parseError("<code> token not found", line, lineno, line - original); 
                 if (strncmp(line, "lang", 4) == 0)
@@ -1023,30 +1034,108 @@ void parseInstrumentationCommand(char *line, int lineno)
                   TOKEN('"');
                   RETRIEVESTRING(plang, line);
                   WSPACE(line);
-#ifdef DEBUG
+  #ifdef DEBUG
                   printf("GOT lang = %s\n", plang);
-#endif /* DEBUG */
+  #endif /* DEBUG */
                   language = parseLanguageString(plang);
                   if (language < 0)
                     parseError("<lang> token invalid", line, lineno, line - original);
                 }
-#ifdef DEBUG 
-	        printf("decl routine = %s, code = %s, lang = %d\n", pname, pcode, language);
-#endif /* DEBUG */
-                if (filespecified)
-	        {
-                  instrumentList.push_back(new tauInstrument(string(pfile), string(pname), string(pcode), TAU_ROUTINE_DECL, language));
-	        }
-                else 
-	        {
-	          bool codespecified = true; 
-                  instrumentList.push_back(new tauInstrument(string(pname), string(pcode), codespecified, TAU_ROUTINE_DECL, language));
-	        } /* file and routine are both specified for entry */
-              } /* end of decl token */
-            } /* end of init token */
-          }
-        } /* check for phase/timer */
-      } /* end of loops directive */
+  #ifdef DEBUG
+                printf("code = %s\n", pcode);
+  #endif /* DEBUG */
+                instrumentList.push_back(new tauInstrument(string(pcode), true, TAU_INIT, language)); 
+              } /* end of init directive */
+              else
+              {
+                if (strncmp(line, "decl", 4) == 0)
+                {
+                  line+=4;
+  #ifdef DEBUG
+                  printf("Found DECL!\n");
+  #endif /* DEBUG */
+                  WSPACE(line);
+                  if (strncmp(line, "file", 4) == 0)
+                  {
+	            line+= 4;
+	            WSPACE(line);
+	            TOKEN('=');
+	            WSPACE(line);
+	            TOKEN('"');
+	            RETRIEVESTRING(pfile, line);
+	            WSPACE(line);
+	            filespecified = true; 
+  #ifdef DEBUG
+	            printf("GOT file = %s\n", pfile);
+  #endif /* DEBUG */
+                  }
+                  if (strncmp(line, "routine", 7) == 0)
+                  {
+	            line+=7; 
+	            WSPACE(line);
+	            TOKEN('=');
+	            WSPACE(line);
+	            TOKEN('"');
+	            RETRIEVESTRING(pname, line);
+	            WSPACE(line);
+  #ifdef DEBUG
+                    printf("GOT routine = %s\n", pname);
+  #endif /* DEBUG */
+                  }
+                  else
+                  {
+                    strcpy(pname, "#");
+                  }
+                  if (strncmp(line, "code", 4) == 0)
+                  { 
+                    line+= 4; /* move 4 spaces */
+                    /* check for = <WSPACE> " */
+                    WSPACE(line);
+                    TOKEN('=');
+                    WSPACE(line);
+                    TOKEN('"');
+                    RETRIEVECODE(pcode, line);
+                    WSPACE(line);
+  #ifdef DEBUG
+                    printf("GOT code = %s\n", pcode);
+  #endif /* DEBUG */
+                  }
+                  else parseError("<code> token not found", line, lineno, line - original); 
+                  if (strncmp(line, "lang", 4) == 0)
+                  {
+                    line += 4; /* move 4 spaces */
+                    /* check for = <WSPACE> " */
+                    WSPACE(line);
+                    TOKEN('=');
+                    WSPACE(line);
+                    TOKEN('"');
+                    RETRIEVESTRING(plang, line);
+                    WSPACE(line);
+  #ifdef DEBUG
+                    printf("GOT lang = %s\n", plang);
+  #endif /* DEBUG */
+                    language = parseLanguageString(plang);
+                    if (language < 0)
+                      parseError("<lang> token invalid", line, lineno, line - original);
+                  }
+  #ifdef DEBUG 
+	          printf("decl routine = %s, code = %s, lang = %d\n", pname, pcode, language);
+  #endif /* DEBUG */
+                  if (filespecified)
+	          {
+                    instrumentList.push_back(new tauInstrument(string(pfile), string(pname), string(pcode), TAU_ROUTINE_DECL, language));
+	          }
+                  else 
+	          {
+	            bool codespecified = true; 
+                    instrumentList.push_back(new tauInstrument(string(pname), string(pcode), codespecified, TAU_ROUTINE_DECL, language));
+	          } /* file and routine are both specified for entry */
+                } /* end of decl token */
+              } /* end of init token */
+            }
+          } /* check for phase/timer */
+        } /* end of loops directive */
+      } /* abort */
     } /* exit */
   } /* entry */
 }
@@ -1841,6 +1930,46 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
               itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_END, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), "", BEFORE));
           }
         } /* end of routine exit */
+        /* examine the type of request - abort */
+        if ((*it)->getKind() == TAU_ABORT)
+        {
+#ifdef DEBUG
+            cout <<"Instrumenting exit/abort statements in routine "<<(*rit)->fullName()<<endl;
+#endif /* DEBUG */
+
+          pdbRoutine::callvec callees = (*rit)->callees();
+          pdbRoutine::callvec::iterator cit = callees.begin();
+	  while (cit != callees.end())
+	  { 
+	     const pdbRoutine *rr = (*cit)->call(); 
+#ifdef DEBUG 
+	     cout <<"Callee " << rr->name() << " location line " << (*cit)->line() << " col " << (*cit)->col() <<endl; 
+#endif /* DEBUG */
+	     /* we do not want to call TAU_PROFILE_EXIT before obj->exit or 
+	        obj->abort. Ignore the routines that have a parent group */
+             if (rr->parentGroup() == NULL)
+             { /* routine name matches and it is not a member of a class */
+               if (rr->name() == "exit")
+               { 
+#ifdef DEBUG
+               cout <<"Exit keyword matched"<<endl;
+#endif /* DEBUG */
+	         /* routine calls exit */
+	         itemvec.push_back(new itemRef(static_cast<pdbItem *>(*rit), EXIT, (*cit)->line(), (*cit)->col(), (*it)->getCode(**cit, *rit), BEFORE));
+	       } 
+
+	       if (rr->name() == "abort")
+	       {
+#ifdef DEBUG
+               cout <<"Abort keyword matched"<<endl;
+#endif /* DEBUG */
+                 /* routine calls abort */
+	         itemvec.push_back(new itemRef(static_cast<pdbItem *>(*rit), EXIT, (*cit)->line(), (*cit)->col(), (*it)->getCode(**cit, *rit), BEFORE));
+	       }
+             }
+             ++cit;
+	  }
+        } /* end of routine abort */
         /* examine the type of request - init */
         if ((*it)->getKind() == TAU_INIT)
         {
@@ -2039,9 +2168,8 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 #endif /* DEBUG */
           /* get routine entry line no. */
           pdbRoutine::locvec retlocations = (*rit)->returnLocations();
-          pdbRoutine::locvec stoplocations = (*rit)->stopLocations();
 	
-	  /* we first start with the return locations */
+	  /* examine the return locations */
           for (rlit = retlocations.begin(); rlit != retlocations.end(); ++rlit)
           {
 #ifdef DEBUG
@@ -2050,7 +2178,17 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 	
 	    itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), RETURN, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(**rlit, *rit), BEFORE));
           }
-	  /* and then examine the stop locations */
+        } /* end of routine exit */
+        /* examine the type of request - abort */
+        if ((*it)->getKind() == TAU_ABORT)
+        {
+#ifdef DEBUG
+            cout <<"Instrumenting exit/abort statements in routine "<<(*rit)->fullName()<<endl;
+#endif /* DEBUG */
+
+          pdbRoutine::locvec stoplocations = (*rit)->stopLocations();
+
+	  /* examine the stop locations */
           for (rlit = stoplocations.begin(); rlit != stoplocations.end(); ++rlit)
           {
 #ifdef DEBUG
@@ -2059,7 +2197,7 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 	
 	    itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), EXIT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(**rlit, *rit), BEFORE));
           }
-        } /* end of routine exit */
+        } /* end of routine abort */
         if ((*it)->getKind() == TAU_INIT)
         {
           if ((*rit)->kind() == pdbItem::RO_FPROG)
@@ -2511,6 +2649,6 @@ string intToString(int value)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: geimer $
- * $Revision: 1.69 $   $Date: 2008/12/10 18:29:59 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.69 2008/12/10 18:29:59 geimer Exp $
+ * $Revision: 1.70 $   $Date: 2008/12/11 16:02:22 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.70 2008/12/11 16:02:22 geimer Exp $
  ***************************************************************************/
