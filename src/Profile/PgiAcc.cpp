@@ -49,6 +49,14 @@ extern "C" void __pgi_cu_init() {
   __pgi_cu_init_p();
 }
 
+
+extern "C" void __pgi_cu_sync_p();
+extern "C" void __pgi_cu_sync() {
+  TAU_GLOBAL_TIMER_START(pgi_acc_region_timer);
+  TAU_PROFILE("__pgi_cu_sync","",TAU_DEFAULT);
+  __pgi_cu_sync_p();
+}
+
 extern "C" void __pgi_cu_fini_p();
 extern "C" void __pgi_cu_fini() {
   TAU_PROFILE("__pgi_cu_fini","",TAU_DEFAULT);
