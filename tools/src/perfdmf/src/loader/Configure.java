@@ -62,7 +62,6 @@ public class Configure {
 
     public void initialize(String configFileNameIn) {
 
-
         try {
             // Check to see if the configuration file exists
             configFileName = configFileNameIn;
@@ -120,21 +119,21 @@ public class Configure {
             return System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator;
         }
     }
-		public void useDefaults()
-		{
-				String os = System.getProperty("os.name").toLowerCase();
-				if (os.trim().startsWith("windows")) {
-						jdbc_db_jarfile = tau_root + File.separator + "bin" + File.separator + "derby.jar";
-				} else {
-						jdbc_db_jarfile = tau_root + File.separator + arch + File.separator + "lib" + File.separator + "derby.jar";
-				}
-       	db_dbname = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf";
-				jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
-				db_schemafile = perfdmf_home + etc + "dbschema.derby.txt";
-				db_hostname = "";
-				db_portnum = "";
+
+    public void useDefaults() {
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.trim().startsWith("windows")) {
+            jdbc_db_jarfile = tau_root + File.separator + "bin" + File.separator + "derby.jar";
+        } else {
+            jdbc_db_jarfile = tau_root + File.separator + arch + File.separator + "lib" + File.separator + "derby.jar";
+        }
+        db_dbname = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf";
+        jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
+        db_schemafile = perfdmf_home + etc + "dbschema.derby.txt";
+        db_hostname = "";
+        db_portnum = "";
         store_db_password = true;
-		}
+    }
 
     public void promptForData() {
         // Welcome the user to the program
@@ -301,7 +300,8 @@ public class Configure {
                     if (os.trim().startsWith("windows")) {
                         jdbc_db_jarfile = tau_root + File.separator + "bin" + File.separator + "derby.jar";
                     } else {
-                        jdbc_db_jarfile = tau_root + File.separator + arch + File.separator + "lib" + File.separator + "derby.jar";
+                        jdbc_db_jarfile = tau_root + File.separator + arch + File.separator + "lib" + File.separator
+                                + "derby.jar";
                     }
 
                 } else {
@@ -833,7 +833,7 @@ public class Configure {
             arch = new String("");
         }
         if (useDefaults == null) {
-            useDefaults = false;
+            useDefaults = Boolean.FALSE;
         }
 
         // Create a new Configure object, which will walk the user through
@@ -841,14 +841,11 @@ public class Configure {
         Configure config = new Configure(tauroot, arch);
         config.initialize(configFile);
 
-				if (useDefaults)
-				{
-        	config.useDefaults();
-				}
-				else
-				{
-          // Give the user the ability to modify any/everything
-          config.promptForData();
+        if (useDefaults == Boolean.TRUE) {
+            config.useDefaults();
+        } else {
+            // Give the user the ability to modify any/everything
+            config.promptForData();
         }
         // Test the database connection
         //config.testDBConnection();
