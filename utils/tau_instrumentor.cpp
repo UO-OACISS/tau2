@@ -3604,10 +3604,11 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 			ostr <<"call TAU_PROFILE_STOP("<<(*siter)<<")"<<endl<<"\t";
 		    }
                     if (!(*it)->snippet.empty())
-                      ostr << (*it)->snippet << "\n";
+                      ostr << (*it)->snippet << "\n\t";
 		    if (use_spec)
                     {
                       /* XXX Insert code here */
+                      ostr << endl;
                     }
                     else if (use_perflib)
 		      ostr <<"call f_perf_update('"<<stripModuleFromName((*it)->item->fullName())<<"', .false.)"<<endl;
@@ -4409,8 +4410,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: geimer $
- * $Revision: 1.203 $   $Date: 2008/12/10 18:57:19 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.203 2008/12/10 18:57:19 geimer Exp $
+ * $Revision: 1.204 $   $Date: 2008/12/11 08:58:08 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.204 2008/12/11 08:58:08 geimer Exp $
  ***************************************************************************/
 
 
