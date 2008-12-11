@@ -24,7 +24,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.27 2008/02/28 18:25:33 khuck Exp $
+ * CVS $Id: Trial.java,v 1.28 2008/12/11 00:08:23 khuck Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -510,7 +510,7 @@ public class Trial implements Serializable {
             buf.append(" from " + db.getSchemaPrefix() + "trial t inner join " + db.getSchemaPrefix() + "experiment e ");
             buf.append("on t.experiment = e.id ");
             buf.append(whereClause);
-            buf.append(" order by t.id ");
+            buf.append(" order by t.name ");
 
             Vector trials = new Vector();
 
