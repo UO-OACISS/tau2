@@ -9,6 +9,7 @@ import org.xml.sax.*;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
+import edu.uoregon.tau.common.AlphanumComparator;
 import edu.uoregon.tau.common.Gzip;
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfdmf.database.DBConnector;
@@ -24,7 +25,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.28 2008/12/11 00:08:23 khuck Exp $
+ * CVS $Id: Trial.java,v 1.29 2008/12/11 01:19:55 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -37,7 +38,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * @see IntervalEvent
  * @see AtomicEvent
  */
-public class Trial implements Serializable {
+public class Trial implements Serializable, Comparable {
     public static final String XML_METADATA = "XML_METADATA";
     public static final String XML_METADATA_GZ = "XML_METADATA_GZ";
 
@@ -53,6 +54,8 @@ public class Trial implements Serializable {
     private Database database;
     private Map metaData = new TreeMap();
     private Map uncommonMetaData = new TreeMap();
+    
+    private static AlphanumComparator alphanum = new AlphanumComparator();
 
     private static class XMLParser extends DefaultHandler {
         private StringBuffer accumulator = new StringBuffer();
@@ -559,6 +562,8 @@ public class Trial implements Serializable {
                 trial.getTrialMetrics(db);
             }
 
+            Collections.sort(trials);
+            
             return trials;
 
         } catch (Exception ex) {
@@ -1035,6 +1040,10 @@ public class Trial implements Serializable {
 
     public void setUncommonMetaData(Map uncommonMetaData) {
         this.uncommonMetaData = uncommonMetaData;
+    }
+
+    public int compareTo(Object arg0) {
+        return alphanum.compare(this.getName(), ((Trial)arg0).getName());
     }
 
 }
