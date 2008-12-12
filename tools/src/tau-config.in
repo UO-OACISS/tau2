@@ -1,145 +1,179 @@
-#!/bin/bash
+#!/usr/bin/env perl
+use strict;
+use File::Basename;
+use Cwd qw(realpath);
 
-TAUROOT=@TAUROOTDIR@
-TAUARCH=@ARCH@
-BASEDIR=$TAUROOT/$TAUARCH
-SICORTEX=no
-PREFIX=no
-DEFAULT_MAKEFILE=
-DEFAULT_BINDING=
+my $TAUROOT="@TAUROOTDIR@";
+my $TAUARCH="@ARCH@";
+my $BASEDIR="$TAUROOT/$TAUARCH";
+my $SICORTEX="no";
+my $PREFIX="no";
+my $DEFAULT_MAKEFILE="";
+my $DEFAULT_BINDING="";
 
-TauOptions=""
-TauOptionsExclude=""
+my $TauOptions="";
+my $TauOptionsExclude="";
 
-listmatching="false"
-makefile="false"
-getbinding="false"
-ProfileSpecified="false"
-TraceSpecified="false"
-DisableSpecified="false"
-SerialSpecified="false"
-MPISpecified="false"
+my $listmatching="false";
+my $makefile="false";
+my $getbinding="false";
+my $ProfileSpecified="false";
+my $TraceSpecified="false";
+my $DisableSpecified="false";
+my $SerialSpecified="false";
+my $MPISpecified="false";
+my $listoptions="false";
 
-if [ $# = 0 ] ; then
-    echo "TAUROOT=$TAUROOT"
-    echo "TAUARCH=$TAUARCH"
-    echo "BASEDIR=$BASEDIR"
-    echo "SICORTEX=$SICORTEX"
-    echo "PREFIX=$PREFIX"
-    echo "DEFAULT_MAKEFILE=$DEFAULT_MAKEFILE"
-    echo "DEFAULT_BINDING=\"$DEFAULT_BINDING\""
+if (@ARGV == 0) {
+    print "TAUROOT=$TAUROOT\n";
+    print "TAUARCH=$TAUARCH\n";
+    print "BASEDIR=$BASEDIR\n";
+    print "SICORTEX=$SICORTEX\n";
+    print "PREFIX=$PREFIX\n";
+    print "DEFAULT_MAKEFILE=$DEFAULT_MAKEFILE\n";
+    print "DEFAULT_BINDING=\"$DEFAULT_BINDING\"\n";
     exit 0
-fi
+}
 
-for i in $* ; do
-    if [ "$i" = "profile" ] ; then
-        ProfileSpecified="true"
-    elif [ "$i" = "trace" ] ; then
-        TraceSpecified="true"
-    elif [ "$i" = "vampirtrace" ] ; then
-        TraceSpecified="true"
-        TauOptions="$TauOptions $i"
-    elif [ "$i" = "epilog" ] ; then
-        TraceSpecified="true"
-        TauOptions="$TauOptions $i"
-    elif [ "$i" = "disable" ] ; then
-        DisableSpecified="true"
-    elif [ "$i" = "--list-matching" ] ; then
-        listmatching="true"
-    elif [ "$i" = "--makefile" ] ; then
-        makefile="true"
-    elif [ "$i" = "--binding" ] ; then
-        getbinding="true"
-    elif [ "$i" = "serial" ] ; then
-        SerialSpecified="true"
-    elif [ "$i" = "mpi" ] ; then
-        MPISpecified="true"
-        TauOptions="$TauOptions $i"
-    else
-        TauOptions="$TauOptions $i"
-    fi
-done
+foreach my $argnum (0 .. $#ARGV) {
+    my $arg = $ARGV[$argnum];
+    if ($arg eq "profile") {
+        $ProfileSpecified="true";
+    } elsif ($arg eq "trace") {
+        $TraceSpecified="true";
+    } elsif ($arg eq "vampirtrace") {
+        $TraceSpecified="true";
+        $TauOptions="$TauOptions $arg";
+    } elsif ($arg eq "epilog") {
+        $TraceSpecified="true";
+	$TauOptions="$TauOptions $arg";
+    } elsif ($arg eq "disable") {
+        $DisableSpecified="true";
+    } elsif ($arg eq "--list-matching") {
+        $listmatching="true";
+    } elsif ($arg eq "--makefile") {
+        $makefile="true";
+    } elsif ($arg eq "--list-options") {
+        $listoptions="true";
+    } elsif ($arg eq "--binding") {
+        $getbinding="true";
+    } elsif ($arg eq "serial") {
+        $SerialSpecified="true";
+    } elsif ($arg eq "mpi") {
+        $MPISpecified="true";
+	$TauOptions="$TauOptions $arg";
+    } else {
+	$TauOptions="$TauOptions $arg";
+    }
+}
 
 
 
-if [ "$ProfileSpecified" = "false" -a "$TraceSpecified" = "false" ] ; then
-    ProfileSpecified="true"
-fi
-if [ "$SerialSpecified" = "true" ] ; then
-    TauOptionsExclude="mpi"
-fi
-if [ "$MPISpecified" = false -a $SerialSpecified = false ] ; then
-    TauOptions="$TauOptions mpi"
-fi
-if [ "$ProfileSpecified" = "true" -a "$TraceSpecified" = "false" ] ; then
-    TauOptionsExclude="$TauOptionsExclude trace"
-elif [ "$ProfileSpecified" = "true" -a "$TraceSpecified" = "true" ] ; then
-    TauOptions="$TauOptions profile trace"
-elif [ "$ProfileSpecified" = "false" -a "$TraceSpecified" = "true" ] ; then
-    TauOptionsExclude="$TauOptionsExclude profile"
-    TauOptions="$TauOptions trace"
-fi
-if [ "$DisableSpecified" = "false" ] ; then
-    TauOptionsExclude="$TauOptionsExclude disable"
-else
-    TauOptions=""
-fi
+if ("$ProfileSpecified" eq "false" && "$TraceSpecified" eq "false") {
+    $ProfileSpecified="true";
+}
 
-if [ $makefile = true ] ; then
-    if [ "$SICORTEX" = "yes" ] ; then
-	bindingsdir=$PREFIX/lib64
-	bindings=`ls $PREFIX/share/TAU/64/Makefile.tau*`
-    else
-	bindingsdir=$BASEDIR/lib
-	bindings=`ls $bindingsdir/Makefile.tau*`
-    fi
-else
-    if [ "$SICORTEX" = "yes" ] ; then
-	bindingsdir=$PREFIX/lib64
-	bindings=`ls $PREFIX/lib64 | grep TAU-shared`
-    else
-	bindingsdir=$BASEDIR/lib
-	bindings=`ls $BASEDIR/lib | grep shared`
-    fi
-fi
+if ("$SerialSpecified" eq "true") {
+    $TauOptionsExclude="mpi";
+}
 
-for opt in $TauOptions; do
-    newbindings=""
-    for b in $bindings ; do
-        add=`echo $b | grep -i "\-$opt"`
-        newbindings="$newbindings $add"
-    done
-    bindings=$newbindings
-done
+if ("$MPISpecified" eq "false" && $SerialSpecified eq "false") {
+    $TauOptions="$TauOptions mpi";
+}
 
-for opt in $TauOptionsExclude; do
-    newbindings=""
-    for b in $bindings ; do
-        add=`echo $b | grep -v -i "\-$opt"`
-        newbindings="$newbindings $add"
-    done
-    bindings=$newbindings
-done
+if ("$ProfileSpecified" eq "true" && "$TraceSpecified" eq "false") {
+    $TauOptionsExclude="$TauOptionsExclude trace";
+} elsif ("$ProfileSpecified" eq "true" && "$TraceSpecified" eq "true") {
+    $TauOptions="$TauOptions profile trace"
+} elsif ("$ProfileSpecified" eq "false" && "$TraceSpecified" eq "true") {
+    $TauOptionsExclude="$TauOptionsExclude profile";
+    $TauOptions="$TauOptions trace";
+}
 
-declare -i minLength
-declare -i length
-minLength=9999
-theBinding=""
-for b in $bindings ; do
-    length=${#b}
-    if [ "$length" -lt "$minLength" ] ; then
-        theBinding=$b
-        minLength=$length
-    fi
-done
+if ("$DisableSpecified" eq "false") {
+    $TauOptionsExclude="$TauOptionsExclude disable";
+} else {
+    $TauOptions="";
+}
 
-if [ "x$theBinding" = "x" ] ; then
-    echo "Error: No matching binding for '$TauOptions' in directory $bindingsdir" >&2
-    exit 1
-fi
+my $bindingsdir;
+my @bindings;
 
-if [ "$listmatching" = "true" ] ; then
-    echo "$bindings"
-else 
-    echo "$theBinding"
-fi
+if ($makefile eq "true") {
+    if ("$SICORTEX" eq "yes") {
+	$bindingsdir="$PREFIX/lib64";
+	@bindings=`ls $PREFIX/share/TAU/64/Makefile.tau*`;
+    } else {
+	$bindingsdir="$BASEDIR/lib";
+	@bindings=`ls $bindingsdir/Makefile.tau*`
+    }
+} else {
+    if ("$SICORTEX" eq "yes") {
+	$bindingsdir="$PREFIX/lib64";
+	@bindings=`ls $PREFIX/lib64 | grep TAU-shared`;
+    } else {
+	$bindingsdir="$BASEDIR/lib";
+	@bindings=`ls $BASEDIR/lib | grep shared`;
+    }
+}
+
+chomp(@bindings);
+
+if ($listoptions eq "true") {
+    my %options;
+    foreach my $b (@bindings) {
+	my @opts = split ('-',$b);
+	foreach my $o (@opts) {
+	    $options{$o} = 1;
+	}
+    }
+    delete $options{"shared"};
+    delete $options{"opari"};
+    $options{"profile"} = 1;
+    $options{"serial"} = 1;
+    my @keys = keys(%options);
+    @keys = sort @keys;
+    map{$_ = uc($_)} @keys;
+    $"=","; # sets delimeter to comma for printing arrays
+    print "@keys\n";
+    $"=" "; # set it back to space
+    exit
+}
+
+my @opts = split(" ", $TauOptions);
+foreach my $opt (@opts) {
+    my $newbindings="";
+    foreach my $b (@bindings) {
+	my $proc="-$b-";
+	if ($proc =~ /-$opt-/) {
+	    $newbindings="$newbindings $b";
+	}
+    }
+    @bindings=split(" ",$newbindings);
+}
+
+my @opts = split(" ", $TauOptionsExclude);
+foreach my $opt (@opts) {
+    my $newbindings="";
+    chomp(@bindings);
+    foreach my $b (@bindings) {
+	my $proc="-$b-";
+	if (!($proc =~ /-$opt-/)) {
+	    $newbindings="$newbindings $b";
+	}
+    }
+    @bindings=split(" ",$newbindings);
+}
+
+my @sorted = sort { length $a <=> length $b } @bindings;
+
+if ($#sorted <= 0) {
+    die "Error: No matching binding for '$TauOptions' in directory $bindingsdir"
+}
+
+if ("$listmatching" eq "true" ) {
+    print "@bindings\n";
+} else { 
+    print "$sorted[0]\n";
+}
+
