@@ -591,31 +591,32 @@ void processExitOrAbort(vector<itemRef *>& itemvec, const pdbItem *rit, pdbRouti
 #endif /* DEBUG */
 	   /* we do not want to call TAU_PROFILE_EXIT before obj->exit or 
 	      obj->abort. Ignore the routines that have a parent group */
-           if ((rr->parentGroup() == (const pdbGroup *) NULL) && 
-	       (strcmp(rr->name().c_str(), exit_keyword)== 0))
-	   { /* routine name matches and it is not a member of a class */
-	     /* routine calls exit */
-#ifdef DEBUG
-             cout <<"Exit keyword matched"<<endl;
-#endif /* DEBUG */
-	     itemvec.push_back(new itemRef(rit, EXIT, (*cit)->line(), 
-		(*cit)->col()));
-	   } 
-	   else if (using_exit_keyword)
-	   { /* also check for "exit" where it occurs */
-	     if (strcmp(rr->name().c_str(), "exit")== 0)
-	     {
+           if (rr->parentGroup() == (const pdbGroup *) NULL) {
+             if (strcmp(rr->name().c_str(), exit_keyword)== 0)
+	     { /* routine name matches and it is not a member of a class */
 	       /* routine calls exit */
+#ifdef DEBUG
+               cout <<"Exit keyword matched"<<endl;
+#endif /* DEBUG */
 	       itemvec.push_back(new itemRef(rit, EXIT, (*cit)->line(), 
-		(*cit)->col()));
-	     }
-	   } /* using exit keyword */
+		  (*cit)->col()));
+	     } 
+	     else if (using_exit_keyword)
+	     { /* also check for "exit" where it occurs */
+	       if (strcmp(rr->name().c_str(), "exit")== 0)
+	       {
+	         /* routine calls exit */
+	         itemvec.push_back(new itemRef(rit, EXIT, (*cit)->line(), 
+		  (*cit)->col()));
+	       }
+	     } /* using exit keyword */
 
-	   if (strcmp(rr->name().c_str(), "abort") == 0)
-	   { /* routine calls abort */
-	     itemvec.push_back(new itemRef(rit, EXIT, (*cit)->line(), 
-		(*cit)->col()));
-	   }
+	     if (strcmp(rr->name().c_str(), "abort") == 0)
+	     { /* routine calls abort */
+	       itemvec.push_back(new itemRef(rit, EXIT, (*cit)->line(), 
+		  (*cit)->col()));
+	     }
+           }
 	}
 }	
 
@@ -901,6 +902,9 @@ the open brace. */
 #ifdef DEBUG
 		  cout <<"WRITING EXIT RECORD "<<endl;
 #endif /* DEBUG */
+                  ostr<<"{\n";
+                  if (!(*it)->snippet.empty())
+                    ostr<<(*it)->snippet<<endl;
                   if (use_spec)
                   {
                     /* XXX Insert code here */
@@ -910,32 +914,21 @@ the open brace. */
                     /* XXX Insert code here */
                   }
                   else {
-		    ostr <<"{ TAU_PROFILE_EXIT(\"exit\"); ";
+		    ostr <<"TAU_PROFILE_EXIT(\"exit\"); ";
                   }
 		  for (k = (*it)->col-1; k < strlen(inbuf) ; k++)
 		    ostr<<inbuf[k]; 
-                  ostr <<endl;
-                  if (use_spec)
-                  {
-                    /* XXX Insert code here */
-                  }
-                  else if (use_perflib)
-                  {
-                    /* XXX Insert code here */
-                  }
-                  else {
-		    ostr <<"      }";
-                  }
-		  ostr <<endl;
+                  ostr <<endl<<"      }";
 		  instrumented = true; 
 		} else {
 		  fprintf (stderr, "Warning: exit was found at line %d, column %d, but wasn't found in the source code.\n",(*it)->line, (*it)->col);
 		  fprintf (stderr, "If the exit call occurs in a macro (likely), make sure you place a \"TAU_PROFILE_EXIT\" before it (note: this warning will still appear)\n");
 		  for (k = (*it)->col-1; k < strlen(inbuf); k++)
-		    ostr<<inbuf[k]; 
+		    ostr<<inbuf[k];
 		  instrumented = true;
 		  // write the input line in the output stream
-		}            
+		}
+                ostr<<endl;
             break;
 
 	  case START_LOOP_TIMER:
@@ -1749,7 +1742,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 		    cout <<"Return for a non void routine "<<endl;
 #endif /* DEBUG */
 		exit_expression.clear();
-		if (exit_type != '\0')
+		if (exit_type[0] != '\0')
 		{ /* is it null, or did we copy something into this string? */
 		  for (k = (*it)->col+strlen(exit_type)-1; (inbuf[k] != ';') && (k<inbufLength) ; k++)
 		    exit_expression.append(&inbuf[k], 1);
@@ -4417,8 +4410,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: geimer $
- * $Revision: 1.205 $   $Date: 2008/12/11 16:02:22 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.205 2008/12/11 16:02:22 geimer Exp $
+ * $Revision: 1.206 $   $Date: 2008/12/12 09:13:10 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.206 2008/12/12 09:13:10 geimer Exp $
  ***************************************************************************/
 
 
