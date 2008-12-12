@@ -510,6 +510,7 @@ epiloglibdir=no
 epilogbindir=bin
 epilogincdir=
 vampirtrace=no
+forceshared=no
 opari_region=no
 opari_construct=no
 dyninst=no
@@ -721,6 +722,7 @@ do
 
 
   -forceshared)
+     forceshared=yes
      fixmakeargs="$fixmakeargs FORCESHARED"
     shift
     ;;
@@ -5465,8 +5467,8 @@ fi
 
 
 if [ $epilog = yes -o $vampirtrace = yes ] ; then
-    if [ $sicortex = no ] ; then
-	disableshared=yes
+    if [ $forceshared = no -a $sicortex = no ] ; then
+ 	disableshared=yes
     fi
 fi
 
