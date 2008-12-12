@@ -1861,16 +1861,16 @@ if [ $sicortex = yes ] ; then
 	elglibrary="-lelg"
 	if [ $mpi = yes -a $openmp = yes ] ; then
 	    # hybrid
-	    sicortexlink="-L$epiloglibdir#-Wl,-whole-archive#-lfmpi#-lelg.ompi#-Wl,-no-whole-archive#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic"
+	    sicortexlink="-L$epiloglibdir#-Wl,-whole-archive#-lfmpi#-lelg.ompi#-Wl,-no-whole-archive#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic#-lscmpi"
 	elif [ $mpi = yes ] ; then
 	    # mpi
-	    sicortexlink="-L$epiloglibdir#-lfmpi#-lelg.mpi#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic"
+	    sicortexlink="-L$epiloglibdir#-lfmpi#-lelg.mpi#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic#-lscmpi"
 	elif [ $openmp = yes ] ; then
 	    # openmp
-	    sicortexlink="-L$epiloglibdir#-Wl,-whole-archive#-lelg.omp#-Wl,-no-whole-archive#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic"
+	    sicortexlink="-L$epiloglibdir#-Wl,-whole-archive#-lelg.omp#-Wl,-no-whole-archive#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic#-lscmpi"
 	else
 	    # serial
-	    sicortexlink="-L$epiloglibdir#-lelg#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic"
+	    sicortexlink="-L$epiloglibdir#-lelg#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic#-lscmpi"
 	fi
 
     fi
@@ -1878,16 +1878,16 @@ if [ $sicortex = yes ] ; then
 	vampirtracelibdir=lib
 	if [ $mpi = yes -a $openmp = yes ] ; then
 	    # hybrid
-	    sicortexlink="-L$vampirtracedir/$vampirtracelibdir#-Wl,-whole-archive#-lvt.fmpi#-lvt.ompi#-lotf#-Wl,-no-whole-archive#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic"
+	    sicortexlink="-L$vampirtracedir/$vampirtracelibdir#-Wl,-whole-archive#-lvt.fmpi#-lvt.ompi#-lotf#-Wl,-no-whole-archive#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic#-lscmpi"
 	elif [ $mpi = yes ] ; then
 	    # mpi
-	    sicortexlink="-L$vampirtracedir/$vampirtracelibdir#-lvt.fmpi#-lvt.mpi#-lotf#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic"
+	    sicortexlink="-L$vampirtracedir/$vampirtracelibdir#-lvt.fmpi#-lvt.mpi#-lotf#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic#-lscmpi"
 	elif [ $openmp = yes ] ; then
 	    # openmp
-	    sicortexlink="-L$vampirtracedir/$vampirtracelibdir#-Wl,-whole-archive#-lvt.omp#-lotf#-Wl,-no-whole-archive#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic"
+	    sicortexlink="-L$vampirtracedir/$vampirtracelibdir#-Wl,-whole-archive#-lvt.omp#-lotf#-Wl,-no-whole-archive#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic#-lscmpi"
 	else
 	    # serial
-	    sicortexlink="-L$vampirtracedir/$vampirtracelibdir#-lvt#-lotf#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic"
+	    sicortexlink="-L$vampirtracedir/$vampirtracelibdir#-lvt#-lotf#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic#-lscmpi"
 	fi
 
     fi
