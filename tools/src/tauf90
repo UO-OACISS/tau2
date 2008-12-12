@@ -193,12 +193,15 @@ else
     TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optQuiet"
 fi
 
-TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optCompInst"
 
-# Pathscale/Opari workaround
+# SiCortex Pathscale/Opari workarounds
 if [ "$SICORTEX" = "yes" ] ; then
     TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optOpariOpts=-nodecl"
+else
+    # default only for non-sicortex platforms
+    TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optCompInst"
 fi
+
 
 if [ $opt_keepfiles = true ] ; then
     TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optKeepFiles"
