@@ -41,7 +41,7 @@ usage()
     echo "                              CALLPATH,TRACE,VAMPIRTRACE,EPILOG>"
     echo ""
     echo "   -tau:makefile <file> Specify TAU stub Makefile"
-    echo " "
+    echo ""
     echo " Notes:"
     echo "   If the -tau:makefile option is not used, the TAU_MAKEFILE"
     echo "   environment variable will be checked, if it is not specified,"
@@ -168,7 +168,7 @@ if [ $makefile_specified = no ] ; then
 	
     elif [ "x$TAU_MAKEFILE" != "x" ] ; then
 	if [ ! -r $MAKEFILE ] ; then
-	    echo "ERROR: environment variable TAU_MAKEFILE is set but the file is not readable"
+	    echo "ERROR: environment variable TAU_MAKEFILE is set but the file is not readable" >&2
 	    exit 1
         fi
 	MAKEFILE=$TAU_MAKEFILE
