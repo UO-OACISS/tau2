@@ -1,0 +1,56 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAUCXX" "1" "12/12/2008" "" "Tools"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+taucxx \- C++ compiler wrapper for TAU
+.SH "SYNOPSIS"
+.HP 7
+\fBtaucxx\fR [options] ...
+.SH "OPTIONS"
+.TP
+\fB\-tau:help\fR
+Displays help
+.TP
+\fB\-tau:verbose\fR
+Enable verbose mode
+.TP
+\fB\-tau:keepfiles\fR
+Keep intermediate files
+.TP
+\fB\-tau:show\fR
+Do not invoke, just show what would be done
+.TP
+\fB\-tau:pdtinst\fR
+Use PDT instrumentation
+.TP
+\fB\-tau:compinst\fR
+Use compiler instrumentation
+.TP
+\fB\-tau:headerinst\fR
+Instrument headers
+.TP
+\fB\-tau:<options>\fR
+Specify measurement/instrumentation options. Sample options: mpi,pthread,openmp,profile,callpath,trace,vampirtrace,epilog
+.TP
+\fB\-tau:makefile \fR\fB\fItau_stub_makefile\fR\fR
+Specify tau stub makefile
+.SH "NOTES"
+.PP
+If the \-tau:makefile option is not used, the TAU_MAKEFILE environment variable will be checked, if it is not specified, then the \-tau:<options> will be used to identify a binding.
+.SH "EXAMPLES"
+.PP
+taucxx foo.cpp \-o foo
+.PP
+taucxx \-tau:MPI,OPENMP,TRACE foo.cpp \-o foo
+.PP
+taucxx \-tau:verbose \-tau:PTHREAD foo.cpp \-o foo
+.SH "DOCUMENTATION"
+.PP
+Complete documentation can be found at
+\fIhttp://www.cs.uoregon.edu/research/tau/tau\-usersguide.pdf\fR
