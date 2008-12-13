@@ -98,8 +98,8 @@ for arg in "$@" ; do
 	      usage
 	      ;;
 	  -i|-l|-L)
-	      PAPIEX=`which papiex`
-	      if [ -x $PAPIEX ]; then
+	      PAPIEX=`which papiex 2>/dev/null`
+	      if [ -x "$PAPIEX" ]; then
 		  if [ $arg = "-L" ]; then
 		      $PAPIEX $arg $2
 		  else
@@ -116,7 +116,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tauex,v 1.10 2008/12/13 00:39:45 amorris Exp $';
+	      echo '$Id: tauex,v 1.11 2008/12/13 00:46:52 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -m)
