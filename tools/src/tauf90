@@ -94,6 +94,7 @@ for arg in "$@" ; do
 	      command_options="$command_options -optKeepFiles"
 	      ;;
 	  -tau:pdtinst)
+	      binding_options="$binding_options pdt"
 	      command_options="$command_options -optPDTInst"
 	      ;;
 	  -tau:compinst)
