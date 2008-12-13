@@ -23,7 +23,7 @@ usage()
     echo "        -m: Multiple runs (enough runs of exe to gather all events)"
     echo "        -e <event> : Specify PAPI preset or native event"
 # tauex specific options
-    options=`tau-config.pl --list-options`
+    options=`tau-config --list-options`
     echo "        -T <$options> : specify TAU option"
 #    echo "        -T <MPI,PTHREAD,OPENMP,SERIAL,PROFILE,CALLPATH,TRACE,VAMPIRTRACE,EPILOG,DISABLE> : specify TAU option"
     echo "        -v: Debug/Verbose mode"
@@ -116,7 +116,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tauex,v 1.9 2008/12/12 23:44:17 amorris Exp $';
+	      echo '$Id: tauex,v 1.10 2008/12/13 00:39:45 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -m)
