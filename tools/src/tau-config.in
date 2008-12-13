@@ -167,7 +167,7 @@ foreach my $opt (@opts) {
 
 my @sorted = sort { length $a <=> length $b } @bindings;
 
-if ($#sorted <= 0) {
+if ($#sorted < 0) {
     die "Error: No matching binding for '$TauOptions' in directory $bindingsdir\n"
 }
 
