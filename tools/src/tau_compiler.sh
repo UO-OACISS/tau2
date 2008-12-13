@@ -100,6 +100,7 @@ printUsage () {
     echo -e "  -optShared\t\t\tUse shared library version of TAU."
     echo -e "  -optCompInst\t\t\tUse compiler-based instrumentation."
     echo -e "  -optPDTInst\t\t\tUse PDT-based instrumentation."
+    echo -e "  -optHeaderInst\t\tEnable instrumentation of headers"
     echo -e "  -optDisableHeaderInst\t\tDisable instrumentation of headers"
     
     if [ $1 == 0 ]; then #Means there are no other option passed with the myscript. It is better to exit then.
@@ -554,7 +555,7 @@ for arg in "$@" ; do
 			;;
 		    -optDisableHeaderInst)
 			optHeaderInst=$FALSE
-			echoIfDebug "\tUsing Header Instrumentation"
+			echoIfDebug "\tDisabling Header Instrumentation"
 			;;
 
 		esac #end case for parsing script Options
