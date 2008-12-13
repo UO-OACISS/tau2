@@ -2,53 +2,71 @@
 .\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
 .\" Instead of manually editing it, you probably should edit the DocBook XML
 .\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
-.TH "TAUEX" "1" "08/11/2008" "" "Tools"
+.TH "TAUEX" "1" "12/12/2008" "" "Tools"
 .\" disable hyphenation
 .nh
 .\" disable justification (adjust text to left margin only)
 .ad l
 .SH "NAME"
-tauex \- Allows you to choose a tau/papi configuration at runtime.
+tauex \- Allows you to choose a tau configuration at runtime.
 .SH "SYNOPSIS"
 .HP 6
-\fBtauex\fR [\-v] [\-u\ \fIUser\ mode\ counts\fR] [\-k\ \fIKernel\ mode\ counts\fR] [\-S\ \fISupervisor\ mode\ counts\fR] [\-I\ \fIInterrupt\ mode\ counts\fR] [\-a] [\-m] [\-e\ \fIPAPI\ event\fR] [\-T\ \fITAU\ option\fR] [\-XrunTAU\ \fITAU\ options\fR] {\-\-} {\fIexecutable\fR} [\fIexecutable\ options\fR]
+\fBtauex\fR [\fIOPTION\fR] [\-\-] {\fIexecutable\fR} [\fIexecutable\ options\fR]
 .SH "DESCRIPTION"
 .PP
-Replace this script by the execuable during runtime to dynamically load a TAU profiling/tracing option or to select which papi events/domain to use during execuation of the application. If we compile TAU with the \-optShared option and link in the libTAU.so, At runtime tauex will set the LD_LIBRARY_PATH and pass any other parameters (or papi events) to the program and execute it with the specified TAU measurement option.
+Use this script o dynamically load a TAU profiling/tracing library or to select which papi events/domain to use during execuation of the application. At runtime tauex will set the LD_LIBRARY_PATH and pass any other parameters (or papi events) to the program and execute it with the specified TAU measurement options.
 .SH "OPTIONS"
 .TP
-\-v
-Verbose mode.
+\-d
+Enable debugging output, use repeatedly for more output.
+.TP
+\-h
+Print help message.
+.TP
+\-i
+Print information about the host machine.
+.TP
+\-s
+Dump the shell environment variables and exit.
+.TP
+\-U
+User mode counts
+.TP
+\-K
+Kernel mode counts
+.TP
+\-S
+Supervisor mode counts
+.TP
+\-I
+Interrupt mode counts
+.TP
+\-l
+List events
+.TP
+\-L <event>
+Describe event
 .TP
 \-a
-Count all native events (implies \-m).
+Count all native events (implies \-m)
 .TP
-\-m
-Multiple runs (enough runs to gather all events).
+\-n
+Multiple runs (enough runs of exe to gather all events)
 .TP
-\-u User mode counts
-Instructs PAPI to only count user events.
+\-e <event>
+Specify PAPI preset or native event
 .TP
-\-k Kernel mode counts
-Instructs PAPI to only count kernel events.
+\-T <option>
+Specify TAU option
 .TP
-\-S Supervisor mode counts
-Instructs PAPI to only count Supervisor/Hypervisor events.
+\-v
+Debug/Verbose mode
 .TP
-\-I Interrupt mode counts
-Instructs PAPI to only count Interrupt events.
-.TP
-\-e PAPI event
-set the PAPI to profile this native or local event.
-.TP
-\-T TAU option
-Profiles the application with this TAU option (requires TAU to be built with this option).
-.TP
-Application executable
-The Application you want TAU or PAPI to profile.
-.TP
-Application option
-Any Application options you need to specify.
+\-XrunTAU\-<options>
+specify TAU library directly
+.SH "NOTES"
+.PP
+Defaults if unspecified: \-U \-T MPI,PROFILE \-e P_WALL_CLOCK_TIME MPI is assumed unless SERIAL is specified PROFILE is assumed unless one of TRACE, VAMPIRTRACE or EPILOG is specified P_WALL_CLOCK_TIME means count real time using fastest available timer
 .SH "EXAMPLE"
 .PP
 mpirun \-np 2 tauex \-e PAPI_TOT_CYC \-e PAPI_FP_OPS \-T MPI,PROFILE \-\- ./ring
