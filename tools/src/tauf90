@@ -24,17 +24,21 @@ usage()
     echo ""
     echo " $cmd - Fortran compiler wrapper for TAU"
     echo ""
-    echo " Usage: $cmd [-tau:help] [-tau:<options>] [-tau:makefile <tau_stub_makefile>] "
-    echo "             [-tau:verbose] [-tau:keepfiles] [-tau:show] ..."
+    echo " Usage: $cmd [options] ..."
     echo ""
     echo " Options:"
     echo "   -tau:help            Show this help message"
     echo "   -tau:verbose         Enable verbose mode"
     echo "   -tau:keepfiles       Keep intermediate files"
     echo "   -tau:show            Do not invoke, just show what would be done"
+    echo ""
+    echo "   -tau:pdtinst         Use PDT instrumentation"
+    echo "   -tau:compinst        Use compiler instrumentation"
+    echo "   -tau:headerinst      Instrument headers"
+    echo ""
     echo "   -tau:<options>       Specify comma separated list of TAU options"
-    echo "                        <MPI,PTHREAD,OPENMP,PROFILE,"
-    echo "                         CALLPATH,TRACE,VAMPIRTRACE,EPILOG>"
+    echo "                        e.g. <MPI,PTHREAD,OPENMP,PROFILE,"
+    echo "                              CALLPATH,TRACE,VAMPIRTRACE,EPILOG>"
     echo " "
     echo " Notes:"
     echo "   If the -tau:makefile option is not used, the TAU_MAKEFILE"
@@ -58,7 +62,7 @@ next_arg_makefile=false
 next_arg_options=false
 verbose=false
 binding_options=
-opt_keepfiles=false
+command_options=
 
 for arg in "$@" ; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
@@ -87,7 +91,16 @@ for arg in "$@" ; do
 	      verbose=true
 	      ;;
 	  -tau:keepfiles)
-	      opt_keepfiles=true
+	      command_options="$command_options -optKeepFiles"
+	      ;;
+	  -tau:pdtinst)
+	      command_options="$command_options -optPDTInst"
+	      ;;
+	  -tau:compinst)
+	      command_options="$command_options -optCompInst"
+	      ;;
+	  -tau:headerinst)
+	      command_options="$command_options -optHeaderInst"
 	      ;;
 	  -tau:show)
 	      invoke_without_tau=yes
@@ -203,9 +216,7 @@ else
 fi
 
 
-if [ $opt_keepfiles = true ] ; then
-    TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optKeepFiles"
-fi
+TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS $command_options"
 
 if [ $invoke_without_tau = yes ] ; then
 cat <<EOF > /tmp/makefile.tau.$USER.$$
