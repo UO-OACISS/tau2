@@ -140,7 +140,14 @@ if ($listoptions eq "true") {
     exit
 }
 
+# Remove duplicates by putting the options into a hash
+my %optHash;
 my @opts = split(" ", $TauOptions);
+foreach my $opt (@opts) {
+    $optHash{$opt} = 1;
+}
+@opts = keys(%optHash);
+
 foreach my $opt (@opts) {
     my $newbindings="";
     foreach my $b (@bindings) {
