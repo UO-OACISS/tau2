@@ -18,12 +18,14 @@ from java.util import ArrayList
 
 True = 1
 False = 0
-config = "proton"
-inApp = "Flash"
-inExp = "Flash Regression"
-config = "proton_postgresql"
-inApp = "FACETS-Core"
-inExp = "FACETS-Core Regression"
+# config = "proton"
+# inApp = "Flash"
+# inExp = "Flash Regression"
+config = "regression"
+# inApp = "FACETS-Core"
+# inExp = "FACETS-Core Regression"
+inApp = "FACETS"
+inExp = "FACETS Sigma Regression"
 outFile1 = "regression1.eps"
 outFile2 = "regression2.eps"
 inTrial = ""
