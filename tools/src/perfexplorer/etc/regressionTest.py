@@ -37,8 +37,8 @@ def load():
 	for key in keys:
 		print key, parameterMap.get(key)
 	config = parameterMap.get("config")
-	inApp = parameterMap.get("app")
-	inExp = parameterMap.get("exp")
+# 	inApp = parameterMap.get("app")
+# 	inExp = parameterMap.get("exp")
 	Utilities.setSession(config)
 	trials = Utilities.getTrialsForExperiment(inApp, inExp)
 	print "...done."
