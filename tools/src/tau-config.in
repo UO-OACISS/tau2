@@ -35,6 +35,7 @@ if (@ARGV == 0) {
     exit 0
 }
 
+# process command line arguments
 foreach my $argnum (0 .. $#ARGV) {
     my $arg = $ARGV[$argnum];
     if ($arg eq "profile") {
@@ -68,31 +69,38 @@ foreach my $argnum (0 .. $#ARGV) {
 }
 
 
-
-if ("$ProfileSpecified" eq "false" && "$TraceSpecified" eq "false") {
+# if neither profiling or tracing is specified, assume profiling
+if ($ProfileSpecified eq "false" && $TraceSpecified eq "false") {
     $ProfileSpecified="true";
 }
 
-if ("$SerialSpecified" eq "true") {
+# if serial is specified, exclude all mpi builds
+if ($SerialSpecified eq "true") {
     $TauOptionsExclude="mpi";
 }
 
-if ("$MPISpecified" eq "false" && $SerialSpecified eq "false") {
+# if neither mpi or serial is specified, assume mpi
+if ($MPISpecified eq "false" && $SerialSpecified eq "false") {
     $TauOptions="$TauOptions mpi";
 }
 
-if ("$ProfileSpecified" eq "true" && "$TraceSpecified" eq "false") {
+if ($ProfileSpecified eq "true" && $TraceSpecified eq "false") {
+    # exclude trace
     $TauOptionsExclude="$TauOptionsExclude trace";
-} elsif ("$ProfileSpecified" eq "true" && "$TraceSpecified" eq "true") {
+} elsif ($ProfileSpecified eq "true" && $TraceSpecified eq "true") {
+    # require both
     $TauOptions="$TauOptions profile trace"
-} elsif ("$ProfileSpecified" eq "false" && "$TraceSpecified" eq "true") {
+} elsif ($ProfileSpecified eq "false" && $TraceSpecified eq "true") {
+    # exclude profile, require trace
     $TauOptionsExclude="$TauOptionsExclude profile";
     $TauOptions="$TauOptions trace";
 }
 
-if ("$DisableSpecified" eq "false") {
+if ($DisableSpecified eq "false") {
+    # exclude disable if not specified
     $TauOptionsExclude="$TauOptionsExclude disable";
 } else {
+    # exclude was specified
     $TauOptions="";
 }
 
@@ -100,6 +108,7 @@ my $bindingsdir;
 my @bindings;
 
 if ($makefile eq "true") {
+    # we are searching for makefiles
     if ("$SICORTEX" eq "yes") {
 	$bindingsdir="$PREFIX/lib64";
 	@bindings=`ls $PREFIX/share/TAU/64/Makefile.tau*`;
@@ -108,6 +117,7 @@ if ($makefile eq "true") {
 	@bindings=`ls $bindingsdir/Makefile.tau*`
     }
 } else {
+    # we are searching for shared library bindings directories
     if ("$SICORTEX" eq "yes") {
 	$bindingsdir="$PREFIX/lib64";
 	@bindings=`ls $PREFIX/lib64 | grep TAU-shared`;
@@ -120,6 +130,10 @@ if ($makefile eq "true") {
 chomp(@bindings);
 
 if ($listoptions eq "true") {
+    # list the available options, then quit
+
+    # process the list of bindings, split on "-" and add to a hash 
+    # (to avoid duplicates)
     my %options;
     foreach my $b (@bindings) {
 	my @opts = split ('-',$b);
@@ -127,10 +141,15 @@ if ($listoptions eq "true") {
 	    $options{$o} = 1;
 	}
     }
+
+    # don't print 'shared' or 'opari'
     delete $options{"shared"};
     delete $options{"opari"};
+
+    # always print 'profile' and 'serial'
     $options{"profile"} = 1;
     $options{"serial"} = 1;
+
     my @keys = keys(%options);
     @keys = sort @keys;
     map{$_ = uc($_)} @keys;
@@ -140,8 +159,10 @@ if ($listoptions eq "true") {
     exit
 }
 
+# process included options
 my @opts = split(" ", $TauOptions);
 foreach my $opt (@opts) {
+    # for each option, search the bindings for matches
     my $newbindings="";
     foreach my $b (@bindings) {
 	my $proc="-$b-";
@@ -152,8 +173,10 @@ foreach my $opt (@opts) {
     @bindings=split(" ",$newbindings);
 }
 
+# process excluded options
 my @opts = split(" ", $TauOptionsExclude);
 foreach my $opt (@opts) {
+    # for each option, search the bindings for matches
     my $newbindings="";
     chomp(@bindings);
     foreach my $b (@bindings) {
@@ -165,9 +188,11 @@ foreach my $opt (@opts) {
     @bindings=split(" ",$newbindings);
 }
 
+# sort by length so that we get the one with the minimal extra options
 my @sorted = sort { length $a <=> length $b } @bindings;
 
 if ($#sorted < 0) {
+    # no matches
     die "Error: No matching binding for '$TauOptions' in directory $bindingsdir\n"
 }
 
