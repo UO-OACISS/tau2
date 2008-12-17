@@ -2,8 +2,10 @@ package edu.uoregon.tau.perfdmf;
 
 import java.io.*;
 import java.sql.*;
+import java.util.Collections;
 import java.util.Vector;
 
+import edu.uoregon.tau.common.AlphanumComparator;
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfdmf.database.DBConnector;
 
@@ -15,7 +17,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * An experiment is associated with an application, and has one or more
  * trials associated with it.
  *
- * <P>CVS $Id: Experiment.java,v 1.8 2007/05/23 01:40:18 amorris Exp $</P>
+ * <P>CVS $Id: Experiment.java,v 1.9 2008/12/17 19:19:55 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -24,13 +26,15 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * @see		Application
  * @see		Trial
  */
-public class Experiment implements Serializable {
+public class Experiment implements Serializable, Comparable {
 
     private int experimentID;
     private int applicationID;
     private String name;
     private String fields[];
     private Database database;
+
+    private static AlphanumComparator alphanum = new AlphanumComparator();
 
     public Experiment() {
         this.fields = new String[0];
@@ -285,6 +289,8 @@ public class Experiment implements Serializable {
             }
             resultSet.close();
 
+            Collections.sort(experiments);
+
             return experiments;
 
         } catch (SQLException e) {
@@ -411,5 +417,9 @@ public class Experiment implements Serializable {
     public void setDatabase(Database database) {
         this.database = database;
         fields = new String[database.getExpFieldNames().length];
+    }
+
+    public int compareTo(Object arg0) {
+        return alphanum.compare(this.getName(), ((Experiment)arg0).getName());
     }
 }
