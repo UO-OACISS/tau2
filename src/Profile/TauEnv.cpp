@@ -35,6 +35,7 @@
 /* We should throttle if number n > a && percall < b .a and b are given below */
 #define TAU_THROTTLE_NUMCALLS_DEFAULT 100000
 #define TAU_THROTTLE_PERCALL_DEFAULT  10
+#define TAU_CALLPATH_DEPTH_DEFAULT  2
 
 /* If TAU is built with -PROFILECALLPATH, we turn callpath profiling on by default */
 #ifdef TAU_CALLPATH
@@ -56,6 +57,7 @@ extern "C" {
   static int env_verbose = 0;
   static int env_throttle = 0;
   static int env_callpath = 0;
+  static int env_callpath_depth = 0;
   static int env_profile_format = TAU_FORMAT_PROFILE;
   static double env_throttle_numcalls = 0;
   static double env_throttle_percall = 0;
@@ -119,6 +121,10 @@ extern "C" {
 
   int TauEnv_get_callpath() {
     return env_callpath;
+  }
+
+  int TauEnv_get_callpath_depth() {
+    return env_callpath_depth;
   }
 
   double TauEnv_get_throttle_numcalls() {
@@ -185,7 +191,7 @@ extern "C" {
 	TAU_VERBOSE("TAU: Throttling Disabled\n");
       }
 
-      // Callpath
+      // callpath
       tmp = getenv("TAU_CALLPATH");
       if (parse_bool(tmp, TAU_CALLPATH_DEFAULT)) {
 	env_callpath = 1;
@@ -195,20 +201,35 @@ extern "C" {
 	TAU_VERBOSE("TAU: Callpath Profiling Disabled\n");
       }
 
+      // callpath depth
+      char *depth = getenv("TAU_CALLPATH_DEPTH"); 
+      env_callpath_depth = TAU_CALLPATH_DEPTH_DEFAULT;
+      if (depth) {
+	env_callpath_depth = atoi(depth);
+	if (env_callpath_depth <= 1) {
+	  env_callpath_depth = TAU_CALLPATH_DEPTH_DEFAULT;
+	}
+      }
+      if (env_callpath) {
+	TAU_VERBOSE("TAU: Callpath Depth = %d\n", env_callpath_depth);
+      }
+
       char *percall = getenv("TAU_THROTTLE_PERCALL"); 
       env_throttle_percall = TAU_THROTTLE_PERCALL_DEFAULT;
       if (percall) {
 	env_throttle_percall = strtod(percall,0); 
       }
-      TAU_VERBOSE("TAU: Throttle PerCall = %g\n", env_throttle_percall);
 
       char *numcalls = getenv("TAU_THROTTLE_NUMCALLS"); 
       env_throttle_numcalls = TAU_THROTTLE_NUMCALLS_DEFAULT;
       if (numcalls) {
 	env_throttle_numcalls = strtod(numcalls,0); 
       }
-      TAU_VERBOSE("TAU: Throttle NumCalls = %g\n", env_throttle_numcalls);
 
+      if (env_throttle) {
+	TAU_VERBOSE("TAU: Throttle PerCall = %g\n", env_throttle_percall);
+	TAU_VERBOSE("TAU: Throttle NumCalls = %g\n", env_throttle_numcalls);
+      }
 
       char *profileFormat = getenv("TAU_PROFILE_FORMAT");
       if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "snapshot")) {

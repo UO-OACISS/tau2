@@ -548,52 +548,11 @@ map<TAU_CONTEXT_MAP_TYPE >& TheContextMap(void)
   return contextmap;
 }
 
-//////////////////////////////////////////////////////////////////////
-#define TAU_DEFAULT_CONTEXT_CALLPATH_DEPTH 2
-
-//////////////////////////////////////////////////////////////////////
-// How deep should the callpath be? The default value is 2
-//////////////////////////////////////////////////////////////////////
-int& TauGetContextCallPathDepth(void)
-{
-  char *depth;
-  static int value = 0;
-
-  
-  if (value == 0)
-  {
-    if ((depth = getenv("TAU_CALLPATH_DEPTH")) != NULL)
-    {
-      value = atoi(depth);
-      if (value > 1)
-      {
-        return value;
-      }
-      else
-      {
-        value = TAU_DEFAULT_CONTEXT_CALLPATH_DEPTH;
-        return value; /* default value */
-      }
-    }
-    else
-    {
-      value = TAU_DEFAULT_CONTEXT_CALLPATH_DEPTH;
-      return value;
-    }
-  }
-  else
-    return value;
-}
-
-
-    
-
 ////////////////////////////////////////////////////////////////////////////
 // Formulate Context Comparison Array
 //////////////////////////////////////////////////////////////////////
-long* TauFormulateContextComparisonArray(Profiler *p, TauUserEvent *uevent)
-{
-  int depth = TauGetContextCallPathDepth();
+long* TauFormulateContextComparisonArray(Profiler *p, TauUserEvent *uevent) {
+  int depth = TauEnv_get_callpath_depth();
   /* Create a long array with size depth+2. We need to put the depth
    * in it as the 0th index, the user event goes as the tail element */
 
@@ -624,7 +583,7 @@ long* TauFormulateContextComparisonArray(Profiler *p, TauUserEvent *uevent)
 string * TauFormulateContextNameString(Profiler *p)
 {
   DEBUGPROFMSG("Inside TauFormulateContextNameString()"<<endl;);
-  int depth = TauGetContextCallPathDepth();
+  int depth = TauEnv_get_callpath_depth();
   Profiler *current = p;
   string delimiter(" => ");
   string *name = new string("");
@@ -738,6 +697,6 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid)
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
- * $Revision: 1.28 $   $Date: 2008/09/27 16:12:12 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.28 2008/09/27 16:12:12 amorris Exp $ 
+ * $Revision: 1.29 $   $Date: 2008/12/18 23:24:42 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.29 2008/12/18 23:24:42 amorris Exp $ 
  ***************************************************************************/

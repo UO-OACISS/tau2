@@ -36,6 +36,7 @@ extern "C" {
   int TAUDECL TauEnv_get_verbose();
   int TAUDECL TauEnv_get_throttle();
   int TAUDECL TauEnv_get_callpath();
+  int TAUDECL TauEnv_get_callpath_depth();
   double TAUDECL TauEnv_get_throttle_numcalls();
   double TAUDECL TauEnv_get_throttle_percall();
   const char *TauEnv_get_profiledir();

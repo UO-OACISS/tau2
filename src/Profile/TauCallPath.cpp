@@ -45,13 +45,10 @@ using namespace std;
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
-#define TAU_DEFAULT_CALLPATH_DEPTH 2
 //////////////////////////////////////////////////////////////////////
 // How deep should the callpath be? The default value is 2
 //////////////////////////////////////////////////////////////////////
-int& TauGetCallPathDepth(void)
-{
-  char *depth; 
+int& TauGetCallPathDepth(void) {
   static int value = 0;
 
 #ifdef TAU_PROFILEPHASE
@@ -59,29 +56,10 @@ int& TauGetCallPathDepth(void)
   return value;
 #endif /* TAU_PROFILEPHASE */
 
-  if (value == 0)
-  {
-    if ((depth = getenv("TAU_CALLPATH_DEPTH")) != NULL)
-    {
-      value = atoi(depth);
-      if (value > 1) 
-      {
-        return value;
-      }
-      else 
-      {
-        value = TAU_DEFAULT_CALLPATH_DEPTH;
-        return value; /* default value */
-      }
-    }
-    else 
-    {
-      value = TAU_DEFAULT_CALLPATH_DEPTH;
-      return value;
-    }
+  if (value == 0) {
+    value = TauEnv_get_callpath_depth();
   }
-  else
-    return value;
+  return value;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -344,6 +322,6 @@ void Profiler::CallPathStop(double TotalTime, int tid)
   
 /***************************************************************************
  * $RCSfile: TauCallPath.cpp,v $   $Author: amorris $
- * $Revision: 1.25 $   $Date: 2008/03/06 00:50:40 $
- * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.25 2008/03/06 00:50:40 amorris Exp $ 
+ * $Revision: 1.26 $   $Date: 2008/12/18 23:24:42 $
+ * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.26 2008/12/18 23:24:42 amorris Exp $ 
  ***************************************************************************/
