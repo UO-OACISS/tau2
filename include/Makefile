@@ -187,7 +187,6 @@ OPARI_O 	= TauKojakOpariDisable.o #ENDIF#
 #############################################
 # CallPath OBJECTS
 #############################################
-#PROFILECALLPATH#CALLPATH_O  = TauCallPath.o #ENDIF#
 #PROFILEPARAM#PARAM_O  = ProfileParam.o #ENDIF#
 
 

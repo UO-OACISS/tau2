@@ -363,9 +363,9 @@ void Profiler::Start(int tid) {
     TimeStamp += (unsigned long long) StartTime[0]; // USE COUNTER1 for tracing
 #endif//TAU_MULTIPLE_COUNTERS
     
-#ifdef TAU_CALLPATH
-    CallPathStart(tid);
-#endif // TAU_CALLPATH
+    if (TauEnv_get_callpath()) {
+      CallPathStart(tid);
+    }
 #ifdef TAU_PROFILEPARAM
     ProfileParamFunction = NULL;
     if (ParentProfiler && ParentProfiler->ProfileParamFunction ) {
@@ -800,15 +800,16 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     
 #ifdef PROFILING_ON  // Calculations relevent to profiling only 
     
-#ifdef TAU_CALLPATH
-    CallPathStop(TotalTime, tid);
-#endif // TAU_CALLPATH
+    if (TauEnv_get_callpath()) {
+      CallPathStop(TotalTime, tid);
+    }
     
 #ifdef RENCI_STFF
-#ifdef TAU_CALLPATH
-    RenciSTFF::recordValues(CallPathFunction, TimeStamp, TotalTime, tid);
-#endif //TAU_CALLPATH
-    RenciSTFF::recordValues(ThisFunction, TimeStamp, TotalTime, tid);
+    if (TauEnv_get_callpath()) {
+      RenciSTFF::recordValues(CallPathFunction, TimeStamp, TotalTime, tid);
+    } else {
+      RenciSTFF::recordValues(ThisFunction, TimeStamp, TotalTime, tid);
+    }
 #endif //RENCI_STFF
 
 #ifdef TAU_PROFILEPARAM
@@ -852,11 +853,12 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     
 #ifdef TAU_COMPENSATE
     ThisFunction->ResetExclTimeIfNegative(tid); 
-#ifdef TAU_CALLPATH
-    if (ParentProfiler != NULL) {
-      CallPathFunction->ResetExclTimeIfNegative(tid); 
+
+    if (TauEnv_get_callpath()) {
+      if (ParentProfiler != NULL) {
+	CallPathFunction->ResetExclTimeIfNegative(tid); 
+      }
     }
-#endif /* TAU_CALLPATH */
 #ifdef TAU_PROFILEPARAM
     if (ParentProfiler != NULL) {
       ProfileParamFunction->ResetExclTimeIfNegative(tid);
@@ -876,11 +878,12 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     
 #ifdef PROFILE_CALLS
     ThisFunction->AppendExclInclTimeThisCall(ExclTimeThisCall, TotalTime);
-#ifdef TAU_CALLPATH
-    if (CallPathFunction) {
-      CallPathFunction->AppendExclInclTimeThisCall(ExclTimeThisCall, TotalTime);
+
+    if (TauEnv_get_callpath()) {
+      if (CallPathFunction) {
+	CallPathFunction->AppendExclInclTimeThisCall(ExclTimeThisCall, TotalTime);
+      }
     }
-#endif /* TAU_CALLPATH */
 #ifdef TAU_PROFILEPARAM
     if (ProfileParamFunction) {
       ProfileParamFunction->AppendExclInclTimeThisCall(ExclTimeThisCall, TotalTime);
@@ -890,11 +893,12 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 
 #ifdef PROFILE_STATS
     ThisFunction->AddSumExclSqr(ExclTimeThisCall*ExclTimeThisCall, tid);
-#ifdef TAU_CALLPATH
-    if (CallPathFunction) {
-      CallPathFunction->AddSumExclSqr(ExclTimeThisCall*ExclTimeThisCall, tid);
+
+    if (TauEnv_get_callpath()) {
+      if (CallPathFunction) {
+	CallPathFunction->AddSumExclSqr(ExclTimeThisCall*ExclTimeThisCall, tid);
+      }
     }
-#endif /* TAU_CALLPATH */
 #ifdef TAU_PROFILEPARAM
     if (ProfileParamFunction) {
       ProfileParamFunction->AddSumExclSqr(ExclTimeThisCall*ExclTimeThisCall, tid);
@@ -1217,15 +1221,15 @@ void Profiler::theCounterList(const char ***inPtr, int *numCounters) {
 }
 
 static bool helperIsFunction(FunctionInfo *fi, Profiler *profiler) {
-#ifdef TAU_CALLPATH
-  if (fi == profiler->ThisFunction || fi == profiler->CallPathFunction) {
-    return true;
+  if (TauEnv_get_callpath()) {
+    if (fi == profiler->ThisFunction || fi == profiler->CallPathFunction) {
+      return true;
+    }
+  } else {
+    if (fi == profiler->ThisFunction) { 
+      return true;
+    }
   }
-#else
-  if (fi == profiler->ThisFunction) { 
-    return true;
-  }
-#endif
   return false;
 }
 
@@ -1953,6 +1957,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.200 $   $Date: 2008/11/12 01:08:49 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.200 2008/11/12 01:08:49 amorris Exp $ 
+ * $Revision: 1.201 $   $Date: 2008/12/18 23:03:31 $
+ * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.201 2008/12/18 23:03:31 amorris Exp $ 
  ***************************************************************************/

@@ -35,6 +35,14 @@
 /* We should throttle if number n > a && percall < b .a and b are given below */
 #define TAU_THROTTLE_NUMCALLS_DEFAULT 100000
 #define TAU_THROTTLE_PERCALL_DEFAULT  10
+
+/* If TAU is built with -PROFILECALLPATH, we turn callpath profiling on by default */
+#ifdef TAU_CALLPATH
+# define TAU_CALLPATH_DEFAULT 1
+#else
+# define TAU_CALLPATH_DEFAULT 0
+#endif
+
 #define TAU_THROTTLE_DEFAULT 1
 #ifdef TAU_MPI
   #define TAU_SYNCHRONIZE_CLOCKS_DEFAULT 1
@@ -47,6 +55,7 @@ extern "C" {
   static int env_synchronize_clocks = 0;
   static int env_verbose = 0;
   static int env_throttle = 0;
+  static int env_callpath = 0;
   static int env_profile_format = TAU_FORMAT_PROFILE;
   static double env_throttle_numcalls = 0;
   static double env_throttle_percall = 0;
@@ -106,6 +115,10 @@ extern "C" {
 
   int TauEnv_get_throttle() {
     return env_throttle;
+  }
+
+  int TauEnv_get_callpath() {
+    return env_callpath;
   }
 
   double TauEnv_get_throttle_numcalls() {
@@ -170,6 +183,16 @@ extern "C" {
       } else {
 	env_throttle = 0;
 	TAU_VERBOSE("TAU: Throttling Disabled\n");
+      }
+
+      // Callpath
+      tmp = getenv("TAU_CALLPATH");
+      if (parse_bool(tmp, TAU_CALLPATH_DEFAULT)) {
+	env_callpath = 1;
+	TAU_VERBOSE("TAU: Callpath Profiling Enabled\n");
+      } else {
+	env_callpath = 0;
+	TAU_VERBOSE("TAU: Callpath Profiling Disabled\n");
       }
 
       char *percall = getenv("TAU_THROTTLE_PERCALL"); 

@@ -171,14 +171,12 @@ public:
   /* Clean up data from this invocation. */
   void Stop(int tid = RtsLayer::myThread(), bool useLastTimeStamp = false);
   ~Profiler();
-#ifdef TAU_CALLPATH
   void CallPathStart(int tid);
 #ifdef TAU_MULTIPLE_COUNTERS
   void CallPathStop(double* totaltime, int tid);
 #else  /* TAU_MULTIPLE_COUNTERS  */
   void CallPathStop(double totaltime, int tid);
 #endif /* TAU_MULTIPLE_COUNTERS  */
-#endif /* TAU_CALLPATH  */
   
 #ifdef TAU_PROFILEPARAM
 #ifdef TAU_MULTIPLE_COUNTERS
@@ -247,10 +245,8 @@ public:
   double TotalTime[MAX_TAU_COUNTERS];
 #endif /* TAU_MULTIPLE_COUNTERS */
   FunctionInfo * ThisFunction;
-#ifdef TAU_CALLPATH
   FunctionInfo * CallPathFunction;
   bool 	       AddInclCallPathFlag; 
-#endif /* TAU_CALLPATH */
 #ifdef TAU_PROFILEPARAM
   FunctionInfo * ProfileParamFunction; 
   bool 	       AddInclProfileParamFlag; 
@@ -326,6 +322,6 @@ using tau::Profiler;
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.85 $   $Date: 2008/11/12 01:07:03 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.85 2008/11/12 01:07:03 amorris Exp $ 
+ * $Revision: 1.86 $   $Date: 2008/12/18 23:03:31 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.86 2008/12/18 23:03:31 amorris Exp $ 
  ***************************************************************************/

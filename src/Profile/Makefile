@@ -101,10 +101,10 @@ PGIACC_O=
 OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
 		TauHooks.o TauHandler.o TauMemory.o MetaData.o TauEnv.o \
-		TauInit.o Comp_intel9.o Comp_pgi.o Comp_xl.o \
+		TauInit.o Comp_intel9.o Comp_pgi.o Comp_xl.o TauCallPath.o \
 		$(PARAM_O) $(EVENTS_O) $(THR_O) \
 		$(PCL_O) $(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
-		$(MULT_O) $(PLATFORM_O) $(CALLPATH_O) $(PYTHON_O) $(MUSE_O) \
+		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) $(MUSE_O) \
 		$(COMPENSATE_O) $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O)
 
