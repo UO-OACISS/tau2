@@ -42,6 +42,8 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+
+extern int Tau_Global_numCounters;
 #define TAU_STORAGE(type, variable) type variable[TAU_MAX_THREADS]
 #ifdef TAU_MULTIPLE_COUNTERS
 #define TAU_MULTSTORAGE(type, variable) type variable[TAU_MAX_THREADS][MAX_TAU_COUNTERS]
@@ -227,7 +229,7 @@ public:
 
   void SetExclTimeZero(int tid) {
 #ifdef TAU_MULTIPLE_COUNTERS
-    for(int i=0;i<MAX_TAU_COUNTERS;i++) {
+    for(int i=0;i<Tau_Global_numCounters;i++) {
       ExclTime[tid][i] = 0;
     }
 #else
@@ -236,7 +238,7 @@ public:
   }
   void SetInclTimeZero(int tid) {
 #ifdef TAU_MULTIPLE_COUNTERS
-    for(int i=0;i<MAX_TAU_COUNTERS;i++) {
+    for(int i=0;i<Tau_Global_numCounters;i++) {
       InclTime[tid][i] = 0;
     }
 #else
@@ -255,12 +257,12 @@ public:
   double *GetExclTime(int tid);
   double *GetInclTime(int tid);
   void SetExclTime(int tid, double *excltime) {
-    for(int i=0;i<MAX_TAU_COUNTERS;i++) {
+    for(int i=0;i<Tau_Global_numCounters;i++) {
       ExclTime[tid][i] = excltime[i];
     }
   }
   void SetInclTime(int tid, double *incltime) { 
-    for(int i=0;i<MAX_TAU_COUNTERS;i++)
+    for(int i=0;i<Tau_Global_numCounters;i++)
       InclTime[tid][i] = incltime[i];
   }
 
@@ -310,20 +312,20 @@ inline void FunctionInfo::AddExclTime(double t, int tid) {
 inline void FunctionInfo::ExcludeTime(double *t, int tid) { 
   // called by a function to decrease its parent functions time
   // exclude from it the time spent in child function
-  for (int i=0; i<MAX_TAU_COUNTERS; i++) {
+  for (int i=0; i<Tau_Global_numCounters; i++) {
     ExclTime[tid][i] -= t[i];
   }
 }
 	
 
 inline void FunctionInfo::AddInclTime(double *t, int tid) {
-  for (int i=0; i<MAX_TAU_COUNTERS; i++) {
+  for (int i=0; i<Tau_Global_numCounters; i++) {
     InclTime[tid][i] += t[i]; // Add Inclusive time
   }
 }
 
 inline void FunctionInfo::AddExclTime(double *t, int tid) {
-  for (int i=0; i<MAX_TAU_COUNTERS; i++) {
+  for (int i=0; i<Tau_Global_numCounters; i++) {
     ExclTime[tid][i] += t[i]; // Add Total Time to Exclusive time (-ve)
   }
 }
@@ -359,6 +361,6 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: amorris $
- * $Revision: 1.44 $   $Date: 2008/09/08 17:43:32 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.44 2008/09/08 17:43:32 amorris Exp $ 
+ * $Revision: 1.45 $   $Date: 2008/12/22 22:59:27 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.45 2008/12/22 22:59:27 amorris Exp $ 
  ***************************************************************************/

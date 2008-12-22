@@ -32,6 +32,7 @@ extern "C" {
 
 #define SIZE_OF_INIT_ARRAY 14 //!!Change this if functions are added to the system!!
 
+extern int Tau_Global_numCounters;
 
 //Some useful typedefs
 typedef bool (*firstListType)(int);
@@ -41,7 +42,7 @@ class MultipleCounterLayer
 {
  public:
   static bool initializeMultiCounterLayer(void);
-  static bool * getCounterUsedList();
+  static bool *getCounterUsedList();
   static bool getCounterUsed(int inPosition);
   static int  getNumberOfCountersUsed(void);
   static void setCounterUsed(bool inValue, int inPosition);
