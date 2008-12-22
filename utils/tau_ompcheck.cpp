@@ -866,7 +866,7 @@ class CompleteDirectives
 			}
 			else
 			{
-				printf("ERROR: Mismatched OMP directives at line: %d.\n", s->stmtBegin().line());
+				printf("WARNING: OMP directives at line: %d maybe be mismatched.\n", s->stmtBegin().line());
 				directives.pop_front();
 				addDirectives.splice(addDirectives.end(),findOMPStmt(state, s, block, loop, pdb));
 			}
@@ -1327,6 +1327,6 @@ int main(int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
- * $Revision: 1.28 $   $Date: 2008/10/24 23:51:55 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.28 2008/10/24 23:51:55 scottb Exp $
+ * $Revision: 1.29 $   $Date: 2008/12/22 21:55:52 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.29 2008/12/22 21:55:52 scottb Exp $
  ***************************************************************************/
