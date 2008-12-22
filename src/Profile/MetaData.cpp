@@ -746,10 +746,6 @@ int Profiler::Snapshot(const char *name, bool finalize, int tid) {
      TAU_PROFILE_START(timer);
    }
 
-   // get current values
-   double currentTime[MAX_TAU_COUNTERS];
-   RtsLayer::getCurrentValues(tid, currentTime);
-
    char threadid[4096];
    sprintf(threadid, "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, RtsLayer::getPid());
 
