@@ -87,6 +87,12 @@ extern TauUserEvent& TheAllgatherEvent(void);
 #endif /* TAU_MPI */
 
 
+// Global Variable holding the number of counters
+int Tau_Global_numCounters = -1;
+
+
+
+
 //Initialize static members.
 char MultipleCounterLayer::environment[25][10] = {
   {"COUNTER1"},{"COUNTER2"},{"COUNTER3"},{"COUNTER4"},{"COUNTER5"},
@@ -287,15 +293,14 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
 
     //Get the counter names from the environment.
     bool counterFound = false;
-    for(int c=0; c<MAX_TAU_COUNTERS; c++)
-    {
+    for (int c=0; c<MAX_TAU_COUNTERS; c++) {
       MultipleCounterLayer::names[c] = getenv(environment[c]);
       if (MultipleCounterLayer::names[c]) {
 	counterFound = true;
 	MultipleCounterLayer::names[c] = strdup(MultipleCounterLayer::names[c]);
       }
     }
-
+    
     if (!counterFound) {
       char *counter = "GET_TIME_OF_DAY";
 #if defined(TAU_USE_PAPI_TIMER) && defined(TAU_PAPI)
@@ -307,21 +312,19 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
     }
 
     //Initialize the function array with the correct active functions.
-    for(int e=0; e<SIZE_OF_INIT_ARRAY; e++)
-    {
-      if(MultipleCounterLayer::initArray[e](functionPosition)){
-	  //If this check is true, then this function is active,
-	  //and has taken a position in the function array.
-	  //Update the function array position.
-	  functionPosition++;
+    for (int e=0; e<SIZE_OF_INIT_ARRAY; e++) {
+      if (MultipleCounterLayer::initArray[e](functionPosition)) {
+	//If this check is true, then this function is active,
+	//and has taken a position in the function array.
+	//Update the function array position.
+	functionPosition++;
 	  //Update the number of active functions.
-	  numberOfActiveFunctions++;
-	  //cout <<"numberOfActiveFunctions = "<<numberOfActiveFunctions<<endl;
-
-	  // cout << "Adding function to position: " 
-	  //      << e << " of the init array." << endl;
-      }
-      else{
+	numberOfActiveFunctions++;
+	//cout <<"numberOfActiveFunctions = "<<numberOfActiveFunctions<<endl;
+	
+	// cout << "Adding function to position: " 
+	//      << e << " of the init array." << endl;
+      } else {
 	//cout << "Not function to position: " 
 	//     << e << " of the init array." << endl;
       }
@@ -330,16 +333,16 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
     //Check to see that we have at least one counter defined.
     //Give a warning of not.  It should not break the system,
     //but it is nice to give a warning.
-    if(numberOfActiveFunctions == 0)
-      cout << "Warning: No multi counter fncts active ... are the env variables COUNTER<1-N> set?" << endl;
+    if (numberOfActiveFunctions == 0) {
+      fprintf (stderr, "Warning: No multi counter fncts active ... are the env variables COUNTER<1-N> set?\n");
+    }
 #ifdef TRACING_ON
    int countersUsed = getNumberOfCountersUsed();
    counterEvents = new TauUserEvent * [countersUsed] ; 
    /* We obtain the timestamp from COUNTER1, so we only need to trigger 
       COUNTER2-N or i=1 through no. of active functions not through 0 */
    RtsLayer::UnLockDB(); // mutual exclusion primitive AddEventToDB locks it
-   for (int i = 1; i < countersUsed; i++)
-   {
+   for (int i = 1; i < countersUsed; i++) {
      counterEvents[i] = new TauUserEvent(names[i], true);
      /* the second arg is MonotonicallyIncreasing which is true (HW counters)*/ 
    }
@@ -347,22 +350,38 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void)
 #endif /* TRACING_ON */
   }
   RtsLayer::UnLockDB(); // mutual exclusion primitive
-   
+  
+
+
+  /* Temporary hack until this code is cleaned up */
+
+  int count = 0;
+  int i;
+  for (i=0;i<MAX_TAU_COUNTERS;i++){
+    char *tmpChar = getCounterNameAt(i);
+    if((tmpChar != NULL) && (MultipleCounterLayer::getCounterUsed(i))){
+      count = i+1;
+    }
+  }
+
+
+//   Tau_Global_numCounters = getNumberOfCountersUsed();
+  Tau_Global_numCounters = count;
+//   printf ("set Tau_Global_numCounters to %d\n", Tau_Global_numCounters);
+
   return returnValue;
 }
 
-bool * MultipleCounterLayer::getCounterUsedList()
-{
+bool *MultipleCounterLayer::getCounterUsedList() {
   bool *tmpPtr = (bool *) malloc(sizeof(bool *) * MAX_TAU_COUNTERS);
 
   RtsLayer::LockDB();
-  for(int i=0;i< MAX_TAU_COUNTERS;i++){
+  for(int i=0;i< MAX_TAU_COUNTERS;i++) {
     tmpPtr[i] = MultipleCounterLayer::counterUsed[i];
   }
   RtsLayer::UnLockDB();
 
   return tmpPtr;
-
 }
 
 bool MultipleCounterLayer::getCounterUsed(int inPosition) {
@@ -376,16 +395,14 @@ bool MultipleCounterLayer::getCounterUsed(int inPosition) {
 
 }
 
-void MultipleCounterLayer::setCounterUsed(bool inValue, int inPosition)
-{
+void MultipleCounterLayer::setCounterUsed(bool inValue, int inPosition) {
   RtsLayer::LockDB();
   if(inPosition < MAX_TAU_COUNTERS)
     MultipleCounterLayer::counterUsed[inPosition] = inValue;
   RtsLayer::UnLockDB();
 }
 
-void MultipleCounterLayer::getCounters(int tid, double values[])
-{
+void MultipleCounterLayer::getCounters(int tid, double values[]) {
   static bool initFlag = initializeMultiCounterLayer();
 
   //Just cycle through the list of function in the active function array.
@@ -416,8 +433,7 @@ char * MultipleCounterLayer::getCounterNameAt(int position)
     return NULL;
 }
 
-void MultipleCounterLayer::theCounterList(const char ***inPtr, int *numOfCounters)
-{
+void MultipleCounterLayer::theCounterList(const char ***inPtr, int *numOfCounters) {
   static const char **counterList = ( char const **) malloc( sizeof(char *) * MAX_TAU_COUNTERS);
   int numberOfCounters = 0;
 
@@ -443,8 +459,7 @@ void MultipleCounterLayer::theCounterList(const char ***inPtr, int *numOfCounter
 
 void MultipleCounterLayer::theCounterListInternal(const char ***inPtr,
 						  int *numOfCounters,
-						  bool **tmpPtr)
-{
+						  bool **tmpPtr) {
   //For situations where a consistency is needed between the elements
   //in the counterUsed array and those in the counter names array.
   //As such, we grab the counter used list array atomically,
@@ -480,9 +495,9 @@ void MultipleCounterLayer::theCounterListInternal(const char ***inPtr,
 }
 
 bool MultipleCounterLayer::gettimeofdayMCLInit(int functionPosition){
-  for(int i=0; i<MAX_TAU_COUNTERS; i++){
-      if(MultipleCounterLayer::names[i] != NULL){
-	if(strcmp(MultipleCounterLayer::names[i], "GET_TIME_OF_DAY") == 0){
+  for (int i=0; i<MAX_TAU_COUNTERS; i++) {
+      if (MultipleCounterLayer::names[i] != NULL) {
+	if (strcmp(MultipleCounterLayer::names[i], "GET_TIME_OF_DAY") == 0) {
 	  gettimeofdayMCL_CP[0] = i;
 	  MultipleCounterLayer::counterUsed[i] = true;
 	  MultipleCounterLayer::numberOfCounters[i] = 1;
@@ -848,11 +863,11 @@ bool MultipleCounterLayer::linuxTimerMCLInit(int functionPosition){
 return false;
 #endif//TAU_LINUX_TIMERS
 }
+
 void MultipleCounterLayer::gettimeofdayMCL(int tid, double values[]){
   struct timeval tp;
   gettimeofday (&tp, 0);
-  values[gettimeofdayMCL_CP[0]] = ( (double) tp.tv_sec * 1e6 + tp.tv_usec );
-
+  values[gettimeofdayMCL_CP[0]] = ((double)tp.tv_sec * 1e6 + tp.tv_usec);
 }
 
 void MultipleCounterLayer::bglTimersMCL(int tid, double values[]){
@@ -1137,8 +1152,7 @@ void MultipleCounterLayer::linuxTimerMCL(int tid, double values[]){
 /////////////////////////////////////////////////
 // Get number of counters
 /////////////////////////////////////////////////
-int MultipleCounterLayer::getNumberOfCountersUsed(void)
-{
+int MultipleCounterLayer::getNumberOfCountersUsed(void) {
   int i, numberOfCounters=0;
   for(i=0;i<MAX_TAU_COUNTERS;i++){
     char *tmpChar = getCounterNameAt(i);
