@@ -28,14 +28,13 @@ LDFLAGS=
 O=.obj
 
 
-TAU_PROFILE_SRCS= src\Profile\TauInit.cpp src\Profile\TauEnv.cpp src\profile\FunctionInfo.cpp src\profile\Profiler.cpp src\profile\RtsLayer.cpp src\profile\RtsThread.cpp src\profile\TauCAPI.cpp src\profile\TauFAPI.cpp src\profile\TauHandler.cpp src\profile\TauHooks.cpp src\profile\TauMapping.cpp src\profile\TauMemory.cpp src\profile\UserEvent.cpp src\profile\WindowsThreadLayer.cpp src\profile\MetaData.cpp
-TAU_CALLPATH_SRCS= src\Profile\TauInit.cpp src\Profile\TauEnv.cpp src\profile\TauCallPath.cpp src\profile\FunctionInfo.cpp src\profile\Profiler.cpp src\profile\RtsLayer.cpp src\profile\RtsThread.cpp src\profile\TauCAPI.cpp src\profile\TauFAPI.cpp src\profile\TauHandler.cpp src\profile\TauHooks.cpp src\profile\TauMapping.cpp src\profile\TauMemory.cpp src\profile\UserEvent.cpp src\profile\WindowsThreadLayer.cpp src\profile\MetaData.cpp
+TAU_PROFILE_SRCS= src\Profile\TauInit.cpp src\Profile\TauEnv.cpp src\profile\TauCallPath.cpp src\profile\FunctionInfo.cpp src\profile\Profiler.cpp src\profile\RtsLayer.cpp src\profile\RtsThread.cpp src\profile\TauCAPI.cpp src\profile\TauFAPI.cpp src\profile\TauHandler.cpp src\profile\TauHooks.cpp src\profile\TauMapping.cpp src\profile\TauMemory.cpp src\profile\UserEvent.cpp src\profile\WindowsThreadLayer.cpp src\profile\MetaData.cpp
 TAU_TRACE_SRCS= src\Profile\TauInit.cpp src\Profile\TauEnv.cpp src\profile\FunctionInfo.cpp src\profile\Profiler.cpp src\profile\RtsLayer.cpp src\profile\RtsThread.cpp src\profile\TauCAPI.cpp src\profile\TauFAPI.cpp src\profile\TauHandler.cpp src\profile\TauHooks.cpp src\profile\TauMapping.cpp src\profile\TauMemory.cpp src\profile\Tracer.cpp src\profile\UserEvent.cpp src\profile\WindowsThreadLayer.cpp src\profile\MetaData.cpp
 TAU_JAVA_SRC= src\profile\JavaThreadLayer.cpp src\profile\TauJava.cpp src\profile\TauJAPI.cpp src\profile\MetaData.cpp
 TAU_MPI_SRC= src\profile\TauMpi.c src\profile\ClockSync.c src\profile\ProfileMerge.c
 
 TAU_PROFILE_OBJS= $(TAU_PROFILE_SRCS:.cpp=.obj) 
-TAU_CALLPATH_OBJS= $(TAU_CALLPATH_SRCS:.cpp=.obj) 
+TAU_CALLPATH_OBJS= $(TAU_PROFILE_SRCS:.cpp=.obj) 
 TAU_TRACE_OBJS= $(TAU_TRACE_SRCS:.cpp=.obj)
 TAU_JAVA_OBJS= $(TAU_JAVA_SRC:.cpp=.obj)
 #TAU_MPI_OBJS= $(TAU_MPI_SRC:.c=.obj)
