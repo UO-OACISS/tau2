@@ -938,30 +938,34 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 
 #endif //PROFILING_ON
 
-  /* if the frequency of events is high, disable them */
-#ifndef TAU_DISABLE_THROTTLE /* unless we are overriding the throttle */
-  double inclusiveTime; 
+  /********************************************************************************/
+  /*** Throttling Code ***/
+  /********************************************************************************/
+  if (TauEnv_get_throttle()) {
+    /* if the frequency of events is high, disable them */
+    double inclusiveTime; 
 #ifdef TAU_MULTIPLE_COUNTERS
-  inclusiveTime = ThisFunction->GetInclTimeForCounter(tid, 0); 
-  /* here we get the array of double values representing the double 
-     metrics. We choose the first counter */
+    inclusiveTime = ThisFunction->GetInclTimeForCounter(tid, 0); 
+    /* here we get the array of double values representing the double 
+       metrics. We choose the first counter */
 #else  /* TAU_MULTIPLE_COUNTERS */
-  inclusiveTime = ThisFunction->GetInclTime(tid); 
-  /* when multiple counters are not used, it is a single metric or double */
+    inclusiveTime = ThisFunction->GetInclTime(tid); 
+    /* when multiple counters are not used, it is a single metric or double */
 #endif /* MULTIPLE_COUNTERS */
-  DEBUGPROFMSG("Calls = "<<ThisFunction->GetCalls(tid)
-	       <<" inclusiveTime = "<<inclusiveTime<<endl);
-  if (TauEnv_get_throttle() && (ThisFunction->GetCalls(tid) > TauEnv_get_throttle_numcalls()) && (inclusiveTime/ThisFunction->GetCalls(tid) < TauEnv_get_throttle_percall()) && AddInclFlag) { 
-    RtsLayer::LockDB();
-    /* Putting AddInclFlag means we can't throttle recursive calls */
-    ThisFunction->SetProfileGroup(TAU_DISABLE, tid);
-    ThisFunction->SetPrimaryGroupName("TAU_DISABLE");
-    //cout <<"TAU<"<<RtsLayer::myNode()<<">: Throttle: Disabling "<<ThisFunction->GetName()<<endl;
-    TAU_VERBOSE("TAU<%d>: Throttle: Disabling %s\n", RtsLayer::myNode(), ThisFunction->GetName());
-    RtsLayer::UnLockDB();
-
+    
+    if ((ThisFunction->GetCalls(tid) > TauEnv_get_throttle_numcalls()) && (inclusiveTime/ThisFunction->GetCalls(tid) < TauEnv_get_throttle_percall()) && AddInclFlag) { 
+      RtsLayer::LockDB();
+      /* Putting AddInclFlag means we can't throttle recursive calls */
+      ThisFunction->SetProfileGroup(TAU_DISABLE, tid);
+      ThisFunction->SetPrimaryGroupName("TAU_DISABLE");
+      //cout <<"TAU<"<<RtsLayer::myNode()<<">: Throttle: Disabling "<<ThisFunction->GetName()<<endl;
+      TAU_VERBOSE("TAU<%d>: Throttle: Disabling %s\n", RtsLayer::myNode(), ThisFunction->GetName());
+      RtsLayer::UnLockDB();
+    }
   }
-#endif /* TAU_DISABLE_THROTTLE */
+  /********************************************************************************/
+  /*** Throttling Code ***/
+  /********************************************************************************/
     
     
   // First check if timers are overlapping.
@@ -1963,6 +1967,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.203 $   $Date: 2008/12/23 19:26:14 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.203 2008/12/23 19:26:14 amorris Exp $ 
+ * $Revision: 1.204 $   $Date: 2008/12/23 22:32:10 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.204 2008/12/23 22:32:10 amorris Exp $ 
  ***************************************************************************/
