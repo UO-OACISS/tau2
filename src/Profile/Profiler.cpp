@@ -685,7 +685,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #endif /* TAUKTAU */
   
   double TotalTime = CurrentTime - StartTime;
-  TimeStamp = (x_uint64) CurrentTime; 
   
   
 #if (defined(TAU_COMPENSATE) && defined(PROFILING_ON))
@@ -748,7 +747,12 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #endif//TAU_MULTIPLE_COUNTERS
     
 #ifdef TRACING_ON
-  TimeStamp = (unsigned long long) CurrentTime[0]; // USE COUNTER1
+#ifdef TAU_MULTIPLE_COUNTERS 
+  TimeStamp = (x_uint64) CurrentTime[0]; // USE COUNTER1
+#else
+  TimeStamp = (x_uint64) CurrentTime; 
+#endif TAU_MULTIPLE_COUNTERS 
+
 #ifdef TAU_VAMPIRTRACE
   TimeStamp = vt_pform_wtime();
   DEBUGPROFMSG("Calling vt_exit(): "<< ThisFunction->GetName()<<
@@ -1959,6 +1963,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.202 $   $Date: 2008/12/22 23:00:49 $
- * POOMA_VERSION_ID: $Id: Profiler.cpp,v 1.202 2008/12/22 23:00:49 amorris Exp $ 
+ * $Revision: 1.203 $   $Date: 2008/12/23 19:26:14 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.203 2008/12/23 19:26:14 amorris Exp $ 
  ***************************************************************************/
