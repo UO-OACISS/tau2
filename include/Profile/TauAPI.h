@@ -342,7 +342,7 @@ or tauFI->method();
         tauCreateFI(&timer##fi, name, type, group, #group); \
 	return *timer##fi; }
 
-#define TAU_GLOBAL_TIMER_START(timer) { static FunctionInfo *timer##fptr= & timer (); \
+#define TAU_GLOBAL_TIMER_START(timer) { FunctionInfo *timer##fptr= & timer (); \
 	int tau_tid = RtsLayer::myThread(); \
 	tau::Profiler *t = new tau::Profiler (timer##fptr, timer##fptr != (FunctionInfo *) 0 ? timer##fptr->GetProfileGroup() : TAU_DEFAULT, true, tau_tid); \
         t->Start(tau_tid); }
@@ -507,6 +507,6 @@ or tauFI->method();
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.76 $   $Date: 2008/11/12 01:07:03 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.76 2008/11/12 01:07:03 amorris Exp $ 
+ * $Revision: 1.77 $   $Date: 2008/12/24 08:57:12 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.77 2008/12/24 08:57:12 amorris Exp $ 
  ***************************************************************************/
