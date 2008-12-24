@@ -162,13 +162,16 @@ int TauInitEpilog(void)
 //////////////////////////////////////////////////////////////////////
 
 
-static string strip_tau_group(const char *ProfileGroupName) {
-  string source = ProfileGroupName;
-  string find = "TAU_GROUP_";
-  string replace = "";
-  size_t j;
-  for (; (j = source.find (find)) != string::npos;) {
-    source.replace(j, find.length(), replace);
+static char *strip_tau_group(const char *ProfileGroupName) {
+  char *source = strdup(ProfileGroupName);
+  const char *find = "TAU_GROUP_";
+  char *ptr;
+
+  while (ptr = strstr(source,find)) {
+    char *endptr = ptr+strlen(find);
+    while (*endptr != NULL) {
+      *ptr++ = *endptr++;
+    }
   }
   return source;
 }
@@ -294,7 +297,6 @@ FunctionInfo::FunctionInfo(const char *name, const char *type,
 {
       DEBUGPROFMSG("FunctionInfo::FunctionInfo: MyProfileGroup_ = " << ProfileGroup 
         << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
-
       Name = name;
       Type = type;
 
@@ -442,13 +444,13 @@ void FunctionInfo::ResetExclTimeIfNegative(int tid)
 { /* if exclusive time is negative (at Stop) we set it to zero during
      compensation. This function is used to reset it to zero for single
      and multiple counters */
-  	int i;
 #ifndef TAU_MULTIPLE_COUNTERS
 	if (ExclTime[tid] < 0)
         {
           ExclTime[tid] = 0.0;
         }
 #else /* TAU_MULTIPLE_COUNTERS */
+	int i;
 	for (i=0; i < MAX_TAU_COUNTERS; i++)
 	{
 	  if (ExclTime[tid][i] < 0)
@@ -550,6 +552,6 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.56 $   $Date: 2008/09/25 19:26:54 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.56 2008/09/25 19:26:54 amorris Exp $ 
+ * $Revision: 1.57 $   $Date: 2008/12/24 09:50:08 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.57 2008/12/24 09:50:08 amorris Exp $ 
  ***************************************************************************/
