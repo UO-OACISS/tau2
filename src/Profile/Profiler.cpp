@@ -751,7 +751,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   TimeStamp = (x_uint64) CurrentTime[0]; // USE COUNTER1
 #else
   TimeStamp = (x_uint64) CurrentTime; 
-#endif TAU_MULTIPLE_COUNTERS 
+#endif /* TAU_MULTIPLE_COUNTERS */
 
 #ifdef TAU_VAMPIRTRACE
   TimeStamp = vt_pform_wtime();
@@ -1967,6 +1967,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.204 $   $Date: 2008/12/23 22:32:10 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.204 2008/12/23 22:32:10 amorris Exp $ 
+ * $Revision: 1.205 $   $Date: 2008/12/24 22:06:01 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.205 2008/12/24 22:06:01 amorris Exp $ 
  ***************************************************************************/
