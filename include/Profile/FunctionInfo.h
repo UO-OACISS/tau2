@@ -247,30 +247,30 @@ public:
   }
 
 #ifndef TAU_MULTIPLE_COUNTERS
-  double GetExclTime(int tid) { return ExclTime[tid]; }
-  void SetExclTime(int tid, double excltime) { ExclTime[tid] = excltime; }
-  double GetInclTime(int tid) { return InclTime[tid]; }
-  void SetInclTime(int tid, double incltime) { InclTime[tid] = incltime; }
+  inline double GetExclTime(int tid) { return ExclTime[tid]; }
+  inline void SetExclTime(int tid, double excltime) { ExclTime[tid] = excltime; }
+  inline double GetInclTime(int tid) { return InclTime[tid]; }
+  inline void SetInclTime(int tid, double incltime) { InclTime[tid] = incltime; }
 #else//TAU_MULTIPLE_COUNTERS
   //Returns the array of exclusive counter values.
   //double * GetExclTime(int tid) { return ExclTime[tid]; }
   double *GetExclTime(int tid);
   double *GetInclTime(int tid);
-  void SetExclTime(int tid, double *excltime) {
+  inline void SetExclTime(int tid, double *excltime) {
     for(int i=0;i<Tau_Global_numCounters;i++) {
       ExclTime[tid][i] = excltime[i];
     }
   }
-  void SetInclTime(int tid, double *incltime) { 
+  inline void SetInclTime(int tid, double *incltime) { 
     for(int i=0;i<Tau_Global_numCounters;i++)
       InclTime[tid][i] = incltime[i];
   }
 
 
-  void AddInclTimeForCounter(double value, int tid, int counter) { InclTime[tid][counter] += value; }
-  void AddExclTimeForCounter(double value, int tid, int counter) { ExclTime[tid][counter] += value; }
-  double GetInclTimeForCounter(int tid, int counter) { return InclTime[tid][counter]; }
-  double GetExclTimeForCounter(int tid, int counter) { return InclTime[tid][counter]; }
+  inline void AddInclTimeForCounter(double value, int tid, int counter) { InclTime[tid][counter] += value; }
+  inline void AddExclTimeForCounter(double value, int tid, int counter) { ExclTime[tid][counter] += value; }
+  inline double GetInclTimeForCounter(int tid, int counter) { return InclTime[tid][counter]; }
+  inline double GetExclTimeForCounter(int tid, int counter) { return InclTime[tid][counter]; }
 #endif//TAU_MULTIPLE_COUNTERS
 
   TauGroup_t GetProfileGroup(int tid = RtsLayer::myThread()) const {return MyProfileGroup_[tid]; }
@@ -361,6 +361,6 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: amorris $
- * $Revision: 1.45 $   $Date: 2008/12/22 22:59:27 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.45 2008/12/22 22:59:27 amorris Exp $ 
+ * $Revision: 1.46 $   $Date: 2008/12/29 20:15:34 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.46 2008/12/29 20:15:34 amorris Exp $ 
  ***************************************************************************/
