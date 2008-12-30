@@ -1079,10 +1079,8 @@ void MultipleCounterLayer::ktauMCL(int tid, double values[]){
 }
 
 #ifdef TAU_LINUX_TIMERS
-
 ///////////////////////////////////////////////////////////////////////////
-inline double TauGetMHzRatingsMCL(void)
-{
+inline double TauGetMHzRatingsMCL(void) {
   FILE *f;
   bool isApple = false;
   FILE *fd;
@@ -1116,36 +1114,18 @@ inline double TauGetMHzRatingsMCL(void)
 
   if (isApple) {
     return rating/1E6; /* Apple returns Hz not MHz. Convert to MHz */
-  }
-  else
-  {
+  } else {
     return rating; /* in MHz */
   }
 }
-
-  
-///////////////////////////////////////////////////////////////////////////
-inline double TauGetMHzMCL(void)
-{
-  static double ratings = TauGetMHzRatingsMCL();
-  return ratings;
-}
-///////////////////////////////////////////////////////////////////////////
-// Fix Intel compiler does not support this asm statements
-extern "C" unsigned long long getLinuxHighResolutionTscCounter(void);
-inline unsigned long long getLinuxHighResolutionTscCounterMCL(void)
-{
-  return getLinuxHighResolutionTscCounter();
-}
-///////////////////////////////////////////////////////////////////////////
-
 #endif //TAU_LINUX_TIMERS
   
 ///////////////////////////////////////////////////////////////////////////
-void MultipleCounterLayer::linuxTimerMCL(int tid, double values[]){
+extern "C" unsigned long long getLinuxHighResolutionTscCounter(void);
+void MultipleCounterLayer::linuxTimerMCL(int tid, double values[]) {
 #ifdef TAU_LINUX_TIMERS
-  values[linuxTimerMCL_CP[0]] = 
-    (double) getLinuxHighResolutionTscCounterMCL()/TauGetMHzMCL();
+  static double ratings = TauGetMHzRatingsMCL();
+  values[linuxTimerMCL_CP[0]] = (double) getLinuxHighResolutionTscCounter()/ratings;
 #endif //TAU_LINUX_TIMERS
 }
 
