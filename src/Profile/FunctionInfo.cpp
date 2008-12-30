@@ -169,7 +169,7 @@ static char *strip_tau_group(const char *ProfileGroupName) {
 
   while (ptr = strstr(source,find)) {
     char *endptr = ptr+strlen(find);
-    while (*endptr != NULL) {
+    while (*endptr != '\0') {
       *ptr++ = *endptr++;
     }
   }
@@ -552,6 +552,6 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.57 $   $Date: 2008/12/24 09:50:08 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.57 2008/12/24 09:50:08 amorris Exp $ 
+ * $Revision: 1.58 $   $Date: 2008/12/30 06:30:22 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.58 2008/12/30 06:30:22 amorris Exp $ 
  ***************************************************************************/
