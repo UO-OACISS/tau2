@@ -550,6 +550,13 @@ void RtsLayer::getUSecD (int tid, double *values) {
   MultipleCounterLayer::getCounters(tid, values);
 }
 #else //TAU_MULTIPLE_COUNTERS
+
+
+#ifdef TAU_LINUX_TIMERS
+unsigned long long getLinuxHighResolutionTscCounter(void);
+double TauGetMHz(void);
+#endif
+
 double RtsLayer::getUSecD (int tid) {
 
 #if ((defined(TAU_EPILOG) && !defined(PROFILING_ON)) || (defined(TAU_VAMPIRTRACE) && !defined(PROFILING_ON)))
@@ -1495,6 +1502,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.102 $   $Date: 2008/12/30 01:53:43 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.102 2008/12/30 01:53:43 amorris Exp $ 
+ * $Revision: 1.103 $   $Date: 2008/12/30 06:12:47 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.103 2008/12/30 06:12:47 amorris Exp $ 
  ***************************************************************************/
