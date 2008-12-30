@@ -1788,8 +1788,13 @@ int Profiler::StoreData(int tid) {
 static int getProfileLocation(int metric, char *str) {
   const char *profiledir = TauEnv_get_profiledir();
 #ifdef TAU_MULTIPLE_COUNTERS
-  char *metricName = MultipleCounterLayer::getCounterNameAt(metric);
-  sprintf (str, "%s/MULTI__%s", profiledir, metricName);
+
+  if (Tau_Global_numCounters <= 1) { 
+    sprintf (str, "%s", profiledir);
+  } else {
+    char *metricName = MultipleCounterLayer::getCounterNameAt(metric);
+    sprintf (str, "%s/MULTI__%s", profiledir, metricName);
+  }
 #else
   sprintf (str, "%s", profiledir);
 #endif
@@ -1967,6 +1972,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.205 $   $Date: 2008/12/24 22:06:01 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.205 2008/12/24 22:06:01 amorris Exp $ 
+ * $Revision: 1.206 $   $Date: 2008/12/30 00:23:02 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.206 2008/12/30 00:23:02 amorris Exp $ 
  ***************************************************************************/
