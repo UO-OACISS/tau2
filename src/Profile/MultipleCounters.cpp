@@ -405,6 +405,7 @@ void MultipleCounterLayer::setCounterUsed(bool inValue, int inPosition) {
 void MultipleCounterLayer::getCounters(int tid, double values[]) {
   static bool initFlag = initializeMultiCounterLayer();
 
+//   printf ("numberOfActiveFunctions = %d\n",numberOfActiveFunctions);
   //Just cycle through the list of function in the active function array.
   for(int i=0; i<numberOfActiveFunctions; i++){
     if(functionArray[i] != NULL) //Need this check just in case a function is deactivated.
@@ -1080,51 +1081,16 @@ void MultipleCounterLayer::ktauMCL(int tid, double values[]){
 
 #ifdef TAU_LINUX_TIMERS
 ///////////////////////////////////////////////////////////////////////////
-inline double TauGetMHzRatingsMCL(void) {
-  FILE *f;
-  bool isApple = false;
-  FILE *fd;
-  double rating;
-  char *cmd1 = "cat /proc/cpuinfo | egrep -i '^cpu MHz' | head -1 | sed 's/^.*: //'";
-  char *cmd2 = "sysctl hw.cpufrequency | sed 's/^.*: //'"; /* For Apple */
 
-  char buf[BUFSIZ];
+extern "C" double TauGetMHz(void);
 
-  if ((fd = fopen("/proc/cpuinfo", "r")) == NULL) {
-    /* Assume Mac OS X. There is no /proc/cpuinfo on Darwin.  */
-    f = popen(cmd2,"r");
-    isApple = true;
-  }
-  else 
-  { /* Linux */
-    f = popen(cmd1,"r");
-  }
-  fclose(fd); /* for testing /proc/cpuinfo */
-
-  if (f!=NULL) {
-    while (fgets(buf, BUFSIZ, f) != NULL)
-    {
-      rating = atof(buf);
-    }
-  }
-  pclose(f);
-#ifdef DEBUG_PROF
-  printf("Rating = %g Mhz\n", rating);
-#endif /* DEBUG_PROF */
-
-  if (isApple) {
-    return rating/1E6; /* Apple returns Hz not MHz. Convert to MHz */
-  } else {
-    return rating; /* in MHz */
-  }
-}
 #endif //TAU_LINUX_TIMERS
   
 ///////////////////////////////////////////////////////////////////////////
 extern "C" unsigned long long getLinuxHighResolutionTscCounter(void);
 void MultipleCounterLayer::linuxTimerMCL(int tid, double values[]) {
 #ifdef TAU_LINUX_TIMERS
-  static double ratings = TauGetMHzRatingsMCL();
+  static double ratings = TauGetMHz();
   values[linuxTimerMCL_CP[0]] = (double) getLinuxHighResolutionTscCounter()/ratings;
 #endif //TAU_LINUX_TIMERS
 }

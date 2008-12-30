@@ -431,56 +431,6 @@ double getUserTimeInSec(void)
   return current_time; 
 }
 
-#ifdef TAU_LINUX_TIMERS
-
-///////////////////////////////////////////////////////////////////////////
-int TauReadFullLine(char *line, FILE *fp) {
-  int ch, i;
-  i = 0; 
-  while ( (ch = fgetc(fp)) && ch != EOF && ch != (int) '\n') {
-    line[i++] = (unsigned char) ch;
-  }
-  line[i] = '\0'; 
-  if (ch == EOF) {
-    return -1;
-  }
-  return i; 
-}
-
-///////////////////////////////////////////////////////////////////////////
-double TauGetMHzRatings(void) {
-  float ret = 0;
-  char line[2048];
-  FILE *fp = fopen("/proc/cpuinfo", "r");
-
-  if (fp) {
-    while (TauReadFullLine(line, fp) != -1) {
-      if (strncmp(line, "cpu MHz", 7) == 0) {
-        sscanf(line,"cpu MHz         : %f", &ret);
-        return (double) ret; 
-      }
-      if (strncmp(line, "timebase", 8) == 0) {
-        sscanf(line,"timebase        : %f", &ret);
-        return (double) ret / 1.0e6; 
-      }
-    }
-  } else {
-    perror("/proc/cpuinfo file not found:");
-  }
-  return (double) ret;
-}
-  
-///////////////////////////////////////////////////////////////////////////
-inline double TauGetMHz(void)
-{
-  static double ratings = TauGetMHzRatings();
-  return ratings;
-}
-///////////////////////////////////////////////////////////////////////////
-extern "C" unsigned long long getLinuxHighResolutionTscCounter(void);
-// Moved to TauLinuxTimers.c 
-
-#endif /* TAU_LINUX_TIMERS */
 
 #if defined(TAUKTAU) || defined(TAUKTAU_MERGE) || defined(TAUKTAU_SHCTR)
 ///////////////////////////////////////////////////////////////////////////
@@ -1544,7 +1494,7 @@ std::string RtsLayer::GetRTTI(const char *name)
 }
 
 /***************************************************************************
- * $RCSfile: RtsLayer.cpp,v $   $Author: anataraj $
- * $Revision: 1.101 $   $Date: 2008/11/15 06:06:47 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.101 2008/11/15 06:06:47 anataraj Exp $ 
+ * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
+ * $Revision: 1.102 $   $Date: 2008/12/30 01:53:43 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.102 2008/12/30 01:53:43 amorris Exp $ 
  ***************************************************************************/
