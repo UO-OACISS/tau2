@@ -19,6 +19,7 @@
 ****************************************************************************/
 
 #include <Profile/TauEnv.h>
+#include <TAU.h>
 
 
 bool Tau_snapshot_initialization();
@@ -36,7 +37,11 @@ extern "C" int InitializeTAU() {
   Tau_snapshot_initialization();
   
   // other initialization code should go here
-  
+
+#ifdef TAU_MULTIPLE_COUNTERS
+  MultipleCounterLayer::initializeMultiCounterLayer();
+#endif
+
   initialized = true;
   return 0;
 }

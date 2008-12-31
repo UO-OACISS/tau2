@@ -82,9 +82,11 @@ double TauGetMHzRatings(void) {
 }
   
 double TauGetMHz(void) {
-  static double ratings = -1;
-  if (ratings < 0) {
+  static double init = 0;
+  static double ratings;
+  if (init == 0) {
     ratings = TauGetMHzRatings();
+    init = 1;
   }
   return ratings;
 }

@@ -655,7 +655,8 @@ double RtsLayer::getUSecD (int tid) {
 #endif /* TAU_ALPHA_TIMERS */
 
 #ifdef TAU_LINUX_TIMERS
-  return (double) getLinuxHighResolutionTscCounter()/TauGetMHz();
+  static double mhz = TauGetMHz();
+  return (double) getLinuxHighResolutionTscCounter()/mhz;
 #endif /* TAU_LINUX_TIMERS */
 
 #ifdef TULIP_TIMERS
@@ -1502,6 +1503,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.104 $   $Date: 2008/12/30 06:16:41 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.104 2008/12/30 06:16:41 amorris Exp $ 
+ * $Revision: 1.105 $   $Date: 2008/12/31 01:04:33 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.105 2008/12/31 01:04:33 amorris Exp $ 
  ***************************************************************************/

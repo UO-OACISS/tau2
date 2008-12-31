@@ -195,15 +195,13 @@ char * MultipleCounterLayer::names[] = { };
 int MultipleCounterLayer::numberOfCounters[] = { };
 bool MultipleCounterLayer::counterUsed[] = { };
 
-bool MultipleCounterLayer::initializeMultiCounterLayer(void)
-{
+bool MultipleCounterLayer::initializeMultiCounterLayer(void) {
   static bool flag = true;
   bool returnValue = true;
   int functionPosition = 0;
 
   RtsLayer::LockDB();
-  if (flag)
-  { 
+  if (flag) { 
     flag = false;
 
     //Initializing data.
@@ -403,10 +401,6 @@ void MultipleCounterLayer::setCounterUsed(bool inValue, int inPosition) {
 }
 
 void MultipleCounterLayer::getCounters(int tid, double values[]) {
-  static bool initFlag = initializeMultiCounterLayer();
-
-//   printf ("numberOfActiveFunctions = %d\n",numberOfActiveFunctions);
-  //Just cycle through the list of function in the active function array.
   for(int i=0; i<numberOfActiveFunctions; i++){
     if(functionArray[i] != NULL) //Need this check just in case a function is deactivated.
       MultipleCounterLayer::functionArray[i](tid, values);
@@ -415,7 +409,6 @@ void MultipleCounterLayer::getCounters(int tid, double values[]) {
 
 // a low overhead way to get a single counter without getting all the others
 double MultipleCounterLayer::getSingleCounter(int tid, int counter) {
-  static bool initFlag = initializeMultiCounterLayer();
   static double values[MAX_TAU_COUNTERS];;
 
   if (functionArray[counter] == NULL) {
