@@ -1,14 +1,4 @@
-from glue import PerformanceResult
-from glue import PerformanceAnalysisOperation
-from glue import ExtractEventOperation
-from glue import Utilities
-from glue import BasicStatisticsOperation
-from glue import DeriveMetricOperation
-from glue import MergeTrialsOperation
-from glue import TrialMeanResult
-from glue import AbstractResult
-from glue import DrawGraph
-from glue import TopXEvents
+from glue import *
 from client import ScriptFacade
 from client import PerfExplorerModel
 from client import ScriptFacade
@@ -58,7 +48,9 @@ def extractMain(inputs):
 def getTop1(inputs):
 	print "extracting top events..."
 	reducer = TopXEvents(inputs, "Time", AbstractResult.EXCLUSIVE, 5)
+#	reducer = TopXPercentEvents(inputs, "Time", AbstractResult.EXCLUSIVE, 5.0)
 	reduced = reducer.processData()
+#	print reduced
 	return reduced
 
 def drawGraph(results, inclusive):
