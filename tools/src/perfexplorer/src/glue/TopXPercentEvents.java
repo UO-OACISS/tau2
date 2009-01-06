@@ -60,7 +60,7 @@ public class TopXPercentEvents extends TopXEvents {
 		// for each input matrix in the set of inputs
 		for (PerformanceResult input : this.inputs) {
 			// create a new output result matrix
-			PerformanceResult output = new DefaultResult();
+		    PerformanceResult output = new DefaultResult(input,false);
 			this.outputs.add(output);
 			// get the list of event names
 			Set<String> events = input.getEvents();
