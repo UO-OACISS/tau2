@@ -182,8 +182,8 @@ private:
   double dumpInclusiveValues[TAU_MAX_THREADS][MAX_TAU_COUNTERS];
 
 public:
-  string Name;
-  string Type;
+  char *Name;
+  char *Type;
   string GroupName;
   string AllGroups;
   long   FunctionId;
@@ -198,10 +198,10 @@ public:
   }
 
   // Cough up the information about this function.
-  void SetName(string& str) { Name = str; }
-  const char* GetName() const { return Name.c_str(); }
-  void SetType(string& str) { Type = str; }
-  const char* GetType() const { return Type.c_str(); }
+  void SetName(string& str) { Name = strdup(str.c_str()); }
+  const char* GetName() const { return Name; }
+  void SetType(string& str) { Type = strdup(str.c_str()); }
+  const char* GetType() const { return Type; }
   const char* GetPrimaryGroup() const { return GroupName.c_str(); }
   const char* GetAllGroups() const { return AllGroups.c_str(); }
   void SetPrimaryGroupName(const char *newname) { 
@@ -361,6 +361,6 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: amorris $
- * $Revision: 1.46 $   $Date: 2008/12/29 20:15:34 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.46 2008/12/29 20:15:34 amorris Exp $ 
+ * $Revision: 1.47 $   $Date: 2009/01/07 02:38:37 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.47 2009/01/07 02:38:37 amorris Exp $ 
  ***************************************************************************/

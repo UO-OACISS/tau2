@@ -293,51 +293,47 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 //////////////////////////////////////////////////////////////////////
 FunctionInfo::FunctionInfo(const char *name, const char *type, 
 	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
-	int tid)
-{
-      DEBUGPROFMSG("FunctionInfo::FunctionInfo: MyProfileGroup_ = " << ProfileGroup 
-        << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
-      Name = name;
-      Type = type;
-
-      FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
+	int tid) {
+  DEBUGPROFMSG("FunctionInfo::FunctionInfo: MyProfileGroup_ = " << ProfileGroup 
+	       << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
+  Name = strdup(name);
+  Type = strdup(type);
+  
+  FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
 }
 
 //////////////////////////////////////////////////////////////////////
 
 FunctionInfo::FunctionInfo(const char *name, const string& type, 
-	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
-	int tid)
-{
-      Name = name;
-      Type = type;
-
-      FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
+			   TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
+			   int tid) {
+  Name = strdup(name);
+  Type = strdup(type.c_str());
+  
+  FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
 }
 
 //////////////////////////////////////////////////////////////////////
 
 FunctionInfo::FunctionInfo(const string& name, const char * type, 
 	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
-	int tid)
-{
-      Name = name;
-      Type = type;
-
-      FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
+	int tid) {
+  Name = strdup(name.c_str());
+  Type = strdup(type);
+  
+  FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
 }
 
 //////////////////////////////////////////////////////////////////////
 
 FunctionInfo::FunctionInfo(const string& name, const string& type, 
 	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
-	int tid)
-{
-
-      Name = name;
-      Type = type;
- 
-      FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
+	int tid) {
+  
+  Name = strdup(name.c_str());
+  Type = strdup(type.c_str());
+  
+  FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -552,6 +548,6 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.58 $   $Date: 2008/12/30 06:30:22 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.58 2008/12/30 06:30:22 amorris Exp $ 
+ * $Revision: 1.59 $   $Date: 2009/01/07 02:38:38 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.59 2009/01/07 02:38:38 amorris Exp $ 
  ***************************************************************************/
