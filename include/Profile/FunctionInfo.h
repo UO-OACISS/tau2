@@ -184,8 +184,8 @@ private:
 public:
   char *Name;
   char *Type;
-  string GroupName;
-  string AllGroups;
+  char *GroupName;
+  char *AllGroups;
   long   FunctionId;
 
 
@@ -202,15 +202,15 @@ public:
   const char* GetName() const { return Name; }
   void SetType(string& str) { Type = strdup(str.c_str()); }
   const char* GetType() const { return Type; }
-  const char* GetPrimaryGroup() const { return GroupName.c_str(); }
-  const char* GetAllGroups() const { return AllGroups.c_str(); }
+  const char* GetPrimaryGroup() const { return GroupName; }
+  const char* GetAllGroups() const { return AllGroups; }
   void SetPrimaryGroupName(const char *newname) { 
-    GroupName = newname;
-    AllGroups = newname; /* to make it to the profile */
+    GroupName = strdup(newname);
+    AllGroups = strdup(newname); /* to make it to the profile */
   }
   void SetPrimaryGroupName(string newname) { 
-    GroupName = newname; 
-    AllGroups = newname; /* to make it to the profile */
+    GroupName = strdup(newname.c_str()); 
+    AllGroups = strdup(newname.c_str()); /* to make it to the profile */
   }
 
   long GetFunctionId() ;
@@ -361,6 +361,6 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: amorris $
- * $Revision: 1.47 $   $Date: 2009/01/07 02:38:37 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.47 2009/01/07 02:38:37 amorris Exp $ 
+ * $Revision: 1.48 $   $Date: 2009/01/07 02:46:30 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.48 2009/01/07 02:46:30 amorris Exp $ 
  ***************************************************************************/
