@@ -21,24 +21,23 @@ public class DataSorterWrapper extends DataSorter {
 
     private DataSorter parentDataSorter;
     private Map metricMap;
-    
+
     public DataSorterWrapper(DataSorter dataSorter, ParaProfTrial ppTrial) {
         super(ppTrial);
         this.parentDataSorter = dataSorter;
-    
+
         ParaProfTrial parentTrial = dataSorter.getPpTrial();
-   
-        metricMap = new HashMap(); 
-        for (int i=0; i < parentTrial.getNumberOfMetrics(); i++) {
-            for (int j=0; j < ppTrial.getNumberOfMetrics(); j++) {
+
+        metricMap = new HashMap();
+        for (int i = 0; i < parentTrial.getNumberOfMetrics(); i++) {
+            for (int j = 0; j < ppTrial.getNumberOfMetrics(); j++) {
                 if (parentTrial.getMetricName(i).compareTo(ppTrial.getMetricName(j)) == 0) {
-                    // Where's java 1.5 for autoboxing!
-                    metricMap.put(new Integer(i),new Integer(j));
+                    // Where's java 1.5 for autoboxing?!
+                    metricMap.put(new Integer(i), new Integer(j));
                 }
             }
-            
+
         }
-        
     }
 
     public boolean getDescendingOrder() {
@@ -51,6 +50,10 @@ public class DataSorterWrapper extends DataSorter {
 
     public SortType getSortType() {
         return parentDataSorter.getSortType();
+    }
+
+    public ValueType getSortValueType() {
+        return parentDataSorter.getSortValueType();
     }
 
     public boolean isDerivedMetric() {
@@ -68,7 +71,7 @@ public class DataSorterWrapper extends DataSorter {
     public int getSelectedMetricID() {
         // map to parent
         int parentMetricID = parentDataSorter.getSelectedMetricID();
-        Integer metricID = (Integer)metricMap.get(new Integer(parentMetricID));
+        Integer metricID = (Integer) metricMap.get(new Integer(parentMetricID));
         if (metricID == null) {
             return 0;
         }

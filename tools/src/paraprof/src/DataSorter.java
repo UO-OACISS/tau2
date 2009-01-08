@@ -15,9 +15,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  * functions that are in groups supposed to be shown. 
  *  
  * 
- * <P>CVS $Id: DataSorter.java,v 1.10 2008/05/22 01:16:27 amorris Exp $</P>
+ * <P>CVS $Id: DataSorter.java,v 1.11 2009/01/08 17:50:40 amorris Exp $</P>
  * @author	Alan Morris, Robert Bell
- * @version	$Revision: 1.10 $
+ * @version	$Revision: 1.11 $
  */
 public class DataSorter implements Comparator {
 
@@ -410,7 +410,7 @@ public class DataSorter implements Comparator {
                 newList.add(ppFunctionProfile);
             }
         }
-//        Collections.sort(newList);
+        //        Collections.sort(newList);
         Collections.sort(newList, new AlphanumComparator());
         return newList;
     }
@@ -503,8 +503,8 @@ public class DataSorter implements Comparator {
                     left.getFunction().getMeanProfile(), right.getFunction().getMeanProfile());
 
         } else if (sortType == SortType.VALUE) {
-            return compareToHelper(type.getValue(left, getSortMetric(), getSelectedSnapshot()), type.getValue(right, getSortMetric(),
-                    getSelectedSnapshot()));
+            return compareToHelper(type.getValue(left, getSortMetric(), getSelectedSnapshot()), type.getValue(right,
+                    getSortMetric(), getSelectedSnapshot()));
         } else {
             throw new ParaProfException("Unexpected sort type: " + sortType);
         }
@@ -613,11 +613,11 @@ public class DataSorter implements Comparator {
     }
 
     public double getValue(FunctionProfile fp) {
-        return valueType.getValue(fp, selectedMetricID, getSelectedSnapshot());
+        return getValueType().getValue(fp, selectedMetricID, getSelectedSnapshot());
     }
 
     public double getValue(FunctionProfile fp, int snapshot) {
-        return valueType.getValue(fp, selectedMetricID, snapshot);
+        return getValueType().getValue(fp, selectedMetricID, snapshot);
     }
 
     public int getSelectedMetricID() {
@@ -637,7 +637,7 @@ public class DataSorter implements Comparator {
     }
 
     public SortType getSortType() {
-        return this.sortType;
+        return sortType;
     }
 
     public void setValueType(ValueType valueType) {
@@ -645,7 +645,7 @@ public class DataSorter implements Comparator {
     }
 
     public ValueType getValueType() {
-        return this.valueType;
+        return valueType;
     }
 
     public void setPhase(Function phase) {
