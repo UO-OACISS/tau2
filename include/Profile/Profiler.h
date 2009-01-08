@@ -276,7 +276,7 @@ public:
   void SetDepthLimit(int value);
 #endif /* TAU_DEPTH_LIMIT */ 
 #ifdef TAU_MPITRACE
-  void EnableAllEventsOnCallStack(int tid, Profiler *current);
+  static void EnableAllEventsOnCallStack(int tid, Profiler *current);
 #endif /* TAU_MPITRACE */
   
 #if defined(TAUKTAU)
@@ -320,6 +320,6 @@ using tau::Profiler;
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.87 $   $Date: 2009/01/08 23:03:57 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.87 2009/01/08 23:03:57 amorris Exp $ 
+ * $Revision: 1.88 $   $Date: 2009/01/08 23:55:39 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.88 2009/01/08 23:55:39 amorris Exp $ 
  ***************************************************************************/
