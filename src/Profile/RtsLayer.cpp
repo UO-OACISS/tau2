@@ -673,7 +673,6 @@ double RtsLayer::getUSecD (int tid) {
   return TauMuseMultipleQuery(data,size);
 #endif
 
-
 #ifdef TAU_LOGICAL_CLOCK
   static long long value = 0;
   return value++;
@@ -824,6 +823,9 @@ char *RtsLayer::getSingleCounterName() {
   return "MUSE_MULTIPLE_TIME";
 #endif
 
+#ifdef TAU_LOGICAL_CLOCK
+  return "Logical Clock";
+#endif
   // if none of those were defined (the default), we use gettimeofday
   return "Time";
 }
@@ -1508,6 +1510,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.106 $   $Date: 2009/01/08 19:00:50 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.106 2009/01/08 19:00:50 amorris Exp $ 
+ * $Revision: 1.107 $   $Date: 2009/01/08 19:04:32 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.107 2009/01/08 19:04:32 amorris Exp $ 
  ***************************************************************************/
