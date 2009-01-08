@@ -1794,7 +1794,7 @@ static int getProfileLocation(int metric, char *str) {
   if (Tau_Global_numCounters <= 1) { 
     sprintf (str, "%s", profiledir);
   } else {
-    char *metricName = MultipleCounterLayer::getCounterNameAt(metric);
+    const char *metricName = MultipleCounterLayer::getCounterNameAt(metric);
     sprintf (str, "%s/MULTI__%s", profiledir, metricName);
   }
 #else
@@ -1946,7 +1946,7 @@ bool Profiler::createDirectories() {
   if (flag) {
     for (int i=0;i<MAX_TAU_COUNTERS;i++) {
       if (MultipleCounterLayer::getCounterUsed(i)) {
-	char * tmpChar = MultipleCounterLayer::getCounterNameAt(i);
+	const char * tmpChar = MultipleCounterLayer::getCounterNameAt(i);
 	char *newdirname = new char[1024];
 	//char *rmdircommand = new char[1024];
 	char *mkdircommand = new char[1024];
@@ -1974,6 +1974,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.207 $   $Date: 2009/01/08 23:06:17 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.207 2009/01/08 23:06:17 amorris Exp $ 
+ * $Revision: 1.208 $   $Date: 2009/01/08 23:51:30 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.208 2009/01/08 23:51:30 amorris Exp $ 
  ***************************************************************************/
