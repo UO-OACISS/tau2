@@ -734,7 +734,7 @@ bool RtsLayer::getCounterUsed(int i) {
 #endif	
 }
 
-char *RtsLayer::getCounterName(int i) {
+const char *RtsLayer::getCounterName(int i) {
 #ifdef TAU_MULTIPLE_COUNTERS
   return MultipleCounterLayer::getCounterNameAt(i);
 #else
@@ -742,14 +742,11 @@ char *RtsLayer::getCounterName(int i) {
 #endif	
 }
 
-char *RtsLayer::getSingleCounterName() {
-  char name[512];
+const char *RtsLayer::getSingleCounterName() {
 
 #if ((defined(TAU_EPILOG) && !defined(PROFILING_ON)) || (defined(TAU_VAMPIRTRACE) && !defined(PROFILING_ON)))
   return "none";
 #endif /* TAU_EPILOG/VAMPIRTRACE, PROFILING_ON */
-
-  char *tau_env = NULL;
 
 #ifdef TAU_PCL
   return getenv("PCL_EVENT");
@@ -1510,6 +1507,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.107 $   $Date: 2009/01/08 19:04:32 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.107 2009/01/08 19:04:32 amorris Exp $ 
+ * $Revision: 1.108 $   $Date: 2009/01/08 23:13:49 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.108 2009/01/08 23:13:49 amorris Exp $ 
  ***************************************************************************/

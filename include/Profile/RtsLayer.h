@@ -99,8 +99,8 @@ public:
 
   static int setMyThread(int tid);
 
-  static char* getSingleCounterName(); 
-  static char* getCounterName(int i); 
+  static const char* getSingleCounterName(); 
+  static const char* getCounterName(int i); 
   static bool getCounterUsed(int i); 
 
   // For tracing 
@@ -148,6 +148,6 @@ private:
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: amorris $
- * $Revision: 1.26 $   $Date: 2008/11/12 01:07:03 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.26 2008/11/12 01:07:03 amorris Exp $ 
+ * $Revision: 1.27 $   $Date: 2009/01/08 23:13:34 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.27 2009/01/08 23:13:34 amorris Exp $ 
  ***************************************************************************/

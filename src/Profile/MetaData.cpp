@@ -707,7 +707,7 @@ static int startNewSnapshotFile(char *threadid, int tid) {
   
   for (int i=0; i<MAX_TAU_COUNTERS; i++) {
     if (RtsLayer::getCounterUsed(i)) {
-      char *tmpChar = RtsLayer::getCounterName(i);
+      const char *tmpChar = RtsLayer::getCounterName(i);
       output (out, "<metric id=\"%d\">", i);
       writeTagXML(out, "name", tmpChar, true);
       writeTagXML(out, "units", "unknown", true);

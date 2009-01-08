@@ -362,7 +362,7 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void) {
   int count = 0;
   int i;
   for (i=0;i<MAX_TAU_COUNTERS;i++){
-    char *tmpChar = getCounterNameAt(i);
+    const char *tmpChar = getCounterNameAt(i);
     if((tmpChar != NULL) && (MultipleCounterLayer::getCounterUsed(i))){
       count = i+1;
     }
@@ -425,8 +425,7 @@ double MultipleCounterLayer::getSingleCounter(int tid, int counter) {
   return values[counter];
 }
 
-char * MultipleCounterLayer::getCounterNameAt(int position)
-{
+const char * MultipleCounterLayer::getCounterNameAt(int position) {
   if(position < MAX_TAU_COUNTERS)
     return MultipleCounterLayer::names[position];
   else
@@ -440,7 +439,7 @@ void MultipleCounterLayer::theCounterList(const char ***inPtr, int *numOfCounter
   //With a look toward future developements, this list might
   //change from call to call.  Thus, build it each time.
   for(int i=0;i<MAX_TAU_COUNTERS;i++){
-    char *tmpChar = getCounterNameAt(i);
+    const char *tmpChar = getCounterNameAt(i);
     if((tmpChar != NULL) && (MultipleCounterLayer::getCounterUsed(i))){
       counterList[i] = tmpChar;
       numberOfCounters++;
@@ -474,7 +473,7 @@ void MultipleCounterLayer::theCounterListInternal(const char ***inPtr,
   static const char **counterList = ( char const **) malloc( sizeof(char *) * MAX_TAU_COUNTERS);
   int numberOfCounters = 0;
   for(int i=0;i<MAX_TAU_COUNTERS;i++){
-    char *tmpChar = getCounterNameAt(i);
+    const char *tmpChar = getCounterNameAt(i);
     if((tmpChar != NULL) && (tmpCounterUsedList[i])){
       counterList[i] = tmpChar;
       numberOfCounters++;
@@ -1118,7 +1117,7 @@ void MultipleCounterLayer::linuxTimerMCL(int tid, double values[]) {
 int MultipleCounterLayer::getNumberOfCountersUsed(void) {
   int i, numberOfCounters=0;
   for(i=0;i<MAX_TAU_COUNTERS;i++){
-    char *tmpChar = getCounterNameAt(i);
+    const char *tmpChar = getCounterNameAt(i);
     if((tmpChar != NULL) && (MultipleCounterLayer::getCounterUsed(i))){
       numberOfCounters++;
     }

@@ -48,7 +48,7 @@ class MultipleCounterLayer
   static void setCounterUsed(bool inValue, int inPosition);
   static void getCounters(int tid, double values[]);
   static double getSingleCounter(int tid, int counter);
-  static char * getCounterNameAt(int position);
+  static const char * getCounterNameAt(int position);
   static void theCounterList(const char ***inPtr, int *numOfCounters);
   static void theCounterListInternal(const char ***inPtr, int *numOfCounters, bool **tmpPtr);
 #ifdef TRACING_ON
