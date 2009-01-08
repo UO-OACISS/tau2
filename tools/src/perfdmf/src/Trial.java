@@ -25,7 +25,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.29 2008/12/11 01:19:55 amorris Exp $
+ * CVS $Id: Trial.java,v 1.30 2009/01/08 17:46:15 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -54,7 +54,7 @@ public class Trial implements Serializable, Comparable {
     private Database database;
     private Map metaData = new TreeMap();
     private Map uncommonMetaData = new TreeMap();
-    
+
     private static AlphanumComparator alphanum = new AlphanumComparator();
 
     private static class XMLParser extends DefaultHandler {
@@ -563,7 +563,7 @@ public class Trial implements Serializable, Comparable {
             }
 
             Collections.sort(trials);
-            
+
             return trials;
 
         } catch (Exception ex) {
@@ -698,21 +698,23 @@ public class Trial implements Serializable, Comparable {
                         }
                     } else {
                         int type = this.getFieldType(i);
-						if (this.getField(i) == null) {
+                        if (this.getField(i) == null) {
                             statement.setNull(pos++, type);
-						} else if (type == java.sql.Types.VARCHAR || type == java.sql.Types.CLOB || type == java.sql.Types.LONGVARCHAR) {
-                        	statement.setString(pos++, this.getField(i));
-				        } else if (type == java.sql.Types.INTEGER) {
-                        	statement.setInt(pos++, Integer.parseInt(this.getField(i)));
-				        } else if (type == java.sql.Types.DECIMAL || type == java.sql.Types.DOUBLE || type == java.sql.Types.FLOAT) {
-                        	statement.setDouble(pos++, Double.parseDouble(this.getField(i)));
-				        } else if (type == java.sql.Types.TIME || type == java.sql.Types.TIMESTAMP) {
-                        	statement.setString(pos++, this.getField(i));
-                    	} else {
-                    		// give up
+                        } else if (type == java.sql.Types.VARCHAR || type == java.sql.Types.CLOB
+                                || type == java.sql.Types.LONGVARCHAR) {
+                            statement.setString(pos++, this.getField(i));
+                        } else if (type == java.sql.Types.INTEGER) {
+                            statement.setInt(pos++, Integer.parseInt(this.getField(i)));
+                        } else if (type == java.sql.Types.DECIMAL || type == java.sql.Types.DOUBLE
+                                || type == java.sql.Types.FLOAT) {
+                            statement.setDouble(pos++, Double.parseDouble(this.getField(i)));
+                        } else if (type == java.sql.Types.TIME || type == java.sql.Types.TIMESTAMP) {
+                            statement.setString(pos++, this.getField(i));
+                        } else {
+                            // give up
                             statement.setNull(pos++, type);
-                    	}
-					}
+                        }
+                    }
                 }
             }
 
@@ -1043,7 +1045,7 @@ public class Trial implements Serializable, Comparable {
     }
 
     public int compareTo(Object arg0) {
-        return alphanum.compare(this.getName(), ((Trial)arg0).getName());
+        return alphanum.compare(this.getName(), ((Trial) arg0).getName());
     }
 
 }

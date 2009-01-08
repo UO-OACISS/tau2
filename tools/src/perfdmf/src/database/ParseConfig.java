@@ -31,12 +31,12 @@ public class ParseConfig implements Serializable {
 
     public ParseConfig(String configLoc) {
 
-    	path = configLoc;
+        path = configLoc;
         String[] split = configLoc.split("\\.");
-        name = split[split.length-1];
+        name = split[split.length - 1];
         if (name.compareTo("cfg") == 0)
-        	name = "Default";
-    	String inputString;
+            name = "Default";
+        String inputString;
         String name;
         String value;
 
@@ -44,21 +44,20 @@ public class ParseConfig implements Serializable {
             BufferedReader reader;
             if (configLoc.toLowerCase().startsWith("http:")) {
                 // When it gets converted from a String to a File http:// turns into http:/
-            	String url_string = "";
-              if (configLoc.toLowerCase().startsWith("http://")) {
-                url_string = "http://" + configLoc.toString().substring(7).replace('\\', '/');
-            	}
-              else if (configLoc.toLowerCase().startsWith("http:/")) {
-                url_string = "http://" + configLoc.toString().substring(6).replace('\\', '/');
-              }
-            	URL url = new URL(url_string);
-            	InputStream iostream = url.openStream();
+                String url_string = "";
+                if (configLoc.toLowerCase().startsWith("http://")) {
+                    url_string = "http://" + configLoc.toString().substring(7).replace('\\', '/');
+                } else if (configLoc.toLowerCase().startsWith("http:/")) {
+                    url_string = "http://" + configLoc.toString().substring(6).replace('\\', '/');
+                }
+                URL url = new URL(url_string);
+                InputStream iostream = url.openStream();
                 InputStreamReader ireader = new InputStreamReader(iostream);
                 reader = new BufferedReader(ireader);
-            }  else {
+            } else {
                 reader = new BufferedReader(new FileReader(new File(configLoc)));
             }
-            
+
             // The following is for reading perfdmf.cfg out of the jar file for Java Web Start
             //        URL url = ParseConfig.class.getResource("/perfdmf.cfg");
             //        
@@ -107,8 +106,8 @@ public class ParseConfig implements Serializable {
             reader.close();
         } catch (Exception e) {
             // wrap it up in a runtime exception
-        	
-          e.printStackTrace();
+
+            e.printStackTrace();
             //throw new TauRuntimeException("Unable to parse \"" + configLoc + "\"", e);
         }
     }
@@ -131,8 +130,7 @@ public class ParseConfig implements Serializable {
             if (getDBType().equals("oracle")) {
                 connectionString = "jdbc:oracle:thin:@//" + getDBHost() + ":" + getDBPort() + "/" + getDBName();
             } else {
-                connectionString = "jdbc:" + getDBType() + "://" + getDBHost() + ":" + getDBPort() + "/"
-                        + getDBName();
+                connectionString = "jdbc:" + getDBType() + "://" + getDBHost() + ":" + getDBPort() + "/" + getDBName();
             }
         }
         return connectionString;
@@ -194,12 +192,12 @@ public class ParseConfig implements Serializable {
     public String getXMLSAXParser() {
         return xmlSAXParser;
     }
-    public String getName()
-    {
-    	return name;
+
+    public String getName() {
+        return name;
     }
-    public String getPath()
-    {
-    	return path;
+
+    public String getPath() {
+        return path;
     }
 }
