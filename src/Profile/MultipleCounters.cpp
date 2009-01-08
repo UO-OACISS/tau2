@@ -134,6 +134,8 @@ int MultipleCounterLayer::javaCpuTimeMCL_CP[1];
 int MultipleCounterLayer::javaCpuTimeMCL_FP;
 #endif // JAVA_CPU_TIME
 
+int MultipleCounterLayer::logicalClockMCL_CP[1];
+int MultipleCounterLayer::logicalClockMCL_FP;
 
 #ifdef TAU_MUSE
 int MultipleCounterLayer::tauMUSEMCL_CP[1];
@@ -180,6 +182,7 @@ firstListType MultipleCounterLayer::initArray[] = {gettimeofdayMCLInit,
 						   sgiTimersMCLInit,
 						   cpuTimeMCLInit,
 						   javaCpuTimeMCLInit,
+						   logicalClockMCLInit,
 						   crayTimersMCLInit,
 						   tauMUSEMCLInit,
 						   tauMPIMessageSizeMCLInit,
@@ -256,6 +259,9 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void) {
     MultipleCounterLayer::javaCpuTimeMCL_CP[0] = -1;
     MultipleCounterLayer::javaCpuTimeMCL_FP = -1;
 #endif // JAVA_CPU_TIME
+
+    MultipleCounterLayer::logicalClockMCL_CP[0] = -1;
+    MultipleCounterLayer::logicalClockMCL_FP = -1;
 
 #ifdef TAU_MUSE
     MultipleCounterLayer::tauMUSEMCL_CP[0] = -1;
@@ -605,6 +611,23 @@ bool MultipleCounterLayer::javaCpuTimeMCLInit(int functionPosition){
 #endif//JAVA_CPU_TIME
 }
 
+bool MultipleCounterLayer::logicalClockMCLInit(int functionPosition){
+  for(int i=0; i<MAX_TAU_COUNTERS; i++){
+    if(MultipleCounterLayer::names[i] != NULL){
+      if(strcmp(MultipleCounterLayer::names[i], "LOGICAL") == 0){
+	logicalClockMCL_CP[0] = i;
+	MultipleCounterLayer::counterUsed[i] = true;
+	MultipleCounterLayer::numberOfCounters[i] = 1;
+	MultipleCounterLayer::functionArray[functionPosition] = logicalClockMCL;
+	logicalClockMCL_FP = functionPosition;
+	return true;
+      }
+    }
+  }
+  return false;
+}
+
+
 bool MultipleCounterLayer::tauMUSEMCLInit(int functionPosition){
 #ifdef TAU_MUSE
   for(int i=0; i<MAX_TAU_COUNTERS; i++){
@@ -923,12 +946,13 @@ void MultipleCounterLayer::cpuTimeMCL(int tid, double values[]){
 
 void MultipleCounterLayer::javaCpuTimeMCL(int tid, double values[]){
 #ifdef  JAVA_CPU_TIME
-  struct rusage current_usage;
-
-  getrusage (RUSAGE_SELF, &current_usage);
-
   values[javaCpuTimeMCL_CP[0]] = JavaThreadLayer::getCurrentThreadCpuTime();
 #endif//JAVA_CPU_TIME
+}
+
+void MultipleCounterLayer::logicalClockMCL(int tid, double values[]){
+  static long long value = 0;
+  values[logicalClockMCL_CP[0]] = value++;
 }
 
 

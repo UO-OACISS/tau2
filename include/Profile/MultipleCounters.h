@@ -30,7 +30,7 @@ extern "C" {
 }
 #endif /* TAUKTAU_SHCTR */
 
-#define SIZE_OF_INIT_ARRAY 14 //!!Change this if functions are added to the system!!
+#define SIZE_OF_INIT_ARRAY 15 //!!Change this if functions are added to the system!!
 
 extern int Tau_Global_numCounters;
 
@@ -60,7 +60,7 @@ class MultipleCounterLayer
   //counters to see our conventions.
   //*********************
   
- private:
+  // private:
   static bool gettimeofdayMCLInit(int functionPosition);
   static void gettimeofdayMCL(int tid, double values[]);
 
@@ -81,6 +81,9 @@ class MultipleCounterLayer
 
   static bool javaCpuTimeMCLInit(int functionPosition);
   static void javaCpuTimeMCL(int tid, double values[]);
+
+  static bool logicalClockMCLInit(int functionPosition);
+  static void logicalClockMCL(int tid, double values[]);
 
   static bool tauMUSEMCLInit(int functionPosition);
   static void tauMUSEMCL(int tid, double values[]);
@@ -141,6 +144,9 @@ class MultipleCounterLayer
   static int javaCpuTimeMCL_CP[1];
   static int javaCpuTimeMCL_FP;
 #endif // JAVA_CPU_TIME
+
+  static int logicalClockMCL_CP[1];
+  static int logicalClockMCL_FP;
 
 #ifdef TAU_MUSE
   static int tauMUSEMCL_CP[1];
