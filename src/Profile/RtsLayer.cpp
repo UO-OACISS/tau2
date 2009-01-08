@@ -674,6 +674,11 @@ double RtsLayer::getUSecD (int tid) {
 #endif
 
 
+#ifdef TAU_LOGICAL_CLOCK
+  static long long value = 0;
+  return value++;
+#endif
+
 #ifdef TAU_WINDOWS
   return TauWindowsUsecD();
 
@@ -1503,6 +1508,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.105 $   $Date: 2008/12/31 01:04:33 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.105 2008/12/31 01:04:33 amorris Exp $ 
+ * $Revision: 1.106 $   $Date: 2009/01/08 19:00:50 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.106 2009/01/08 19:00:50 amorris Exp $ 
  ***************************************************************************/
