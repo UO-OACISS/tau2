@@ -241,8 +241,6 @@ public:
   double StartTime;
 #else /* TAU_MULTIPLE_COUNTERS */
   double StartTime[MAX_TAU_COUNTERS];
-  double CurrentTime[MAX_TAU_COUNTERS];
-  double TotalTime[MAX_TAU_COUNTERS];
 #endif /* TAU_MULTIPLE_COUNTERS */
   FunctionInfo * ThisFunction;
   FunctionInfo * CallPathFunction;
@@ -322,6 +320,6 @@ using tau::Profiler;
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.86 $   $Date: 2008/12/18 23:03:31 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.86 2008/12/18 23:03:31 amorris Exp $ 
+ * $Revision: 1.87 $   $Date: 2009/01/08 23:03:57 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.87 2009/01/08 23:03:57 amorris Exp $ 
  ***************************************************************************/
