@@ -698,6 +698,8 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 
 #else //TAU_MULTIPLE_COUNTERS
   // first initialize the CurrentTime
+  double CurrentTime[MAX_TAU_COUNTERS];
+  double TotalTime[MAX_TAU_COUNTERS];
 
 #ifdef TAU_TRACK_IDLE_THREADS
   int i;
@@ -745,7 +747,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #endif // PROFILING_ON
     
 #endif//TAU_MULTIPLE_COUNTERS
-    
+
 #ifdef TRACING_ON
 #ifdef TAU_MULTIPLE_COUNTERS 
   TimeStamp = (x_uint64) CurrentTime[0]; // USE COUNTER1
@@ -1972,6 +1974,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.206 $   $Date: 2008/12/30 00:23:02 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.206 2008/12/30 00:23:02 amorris Exp $ 
+ * $Revision: 1.207 $   $Date: 2009/01/08 23:06:17 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.207 2009/01/08 23:06:17 amorris Exp $ 
  ***************************************************************************/
