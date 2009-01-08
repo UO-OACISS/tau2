@@ -977,6 +977,20 @@ if [ $gotoNextStep == $TRUE ]; then
 
 	esac
 
+        #Assumption: The pdb file would be formed in the current directory, so need 
+        #to strip the fileName from the directory. Since sometime,
+        #you can be creating a pdb in the current directory using
+        #a source file located in another directory.
+
+	saveTempFile=${arrPdb[$tempCounter]}
+	pdbOutputFile=${arrPdb[$tempCounter]##*/}
+        if [ $isCXXUsedForC == $TRUE ]; then
+            pdbOutputFile=${saveTempFile}
+        fi
+
+	# First we remove the pdb file, otherwise the parse may fail and we can get confused
+	/bin/rm -f $pdbOutputFile
+
 	if [ $optCompInst == $FALSE ]; then
 	    if [ $disablePdtStep == $FALSE ]; then
 		if [ $pdbFileSpecified == $FALSE ]; then
@@ -993,19 +1007,9 @@ if [ $gotoNextStep == $TRUE ]; then
 	    fi
 	fi
 
-        #Assumption: The pdb file would be formed in the current directory, so need 
-        #to strip the fileName from the directory. Since sometime,
-        #you can be creating a pdb in the current directory using
-        #a source file located in another directory.
 
-	saveTempFile=${arrPdb[$tempCounter]}
-	tempFileName=${arrPdb[$tempCounter]##*/}
-        if [ $isCXXUsedForC == $TRUE ]; then
-            tempFileName=${saveTempFile}
-        fi
-
-	echoIfDebug "Looking for pdb file $tempFileName "
-	if [  ! -e $tempFileName  -a $disablePdtStep == $FALSE ]; then
+	echoIfDebug "Looking for pdb file $pdbOutputFile "
+	if [  ! -e $pdbOutputFile  -a $disablePdtStep == $FALSE ]; then
 	    printError "$PDTPARSER" "$pdtCmd"
 	    break
 	fi
