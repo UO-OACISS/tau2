@@ -186,7 +186,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   AllGroups = strip_tau_group(ProfileGroupName);
 
 #ifdef TRACING_ON
-  GroupName = RtsLayer::PrimaryGroup(AllGroups.c_str());
+  GroupName = strdup(RtsLayer::PrimaryGroup(AllGroups).c_str());
 #endif //TRACING_ON
 
 // Since FunctionInfo constructor is called once for each function (static)
@@ -548,6 +548,6 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.59 $   $Date: 2009/01/07 02:38:38 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.59 2009/01/07 02:38:38 amorris Exp $ 
+ * $Revision: 1.60 $   $Date: 2009/01/08 23:54:22 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.60 2009/01/08 23:54:22 amorris Exp $ 
  ***************************************************************************/
