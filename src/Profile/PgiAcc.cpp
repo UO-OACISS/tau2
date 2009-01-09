@@ -41,12 +41,17 @@ typedef void* CUstream;
 TAU_GLOBAL_TIMER(pgi_acc_region_timer, "pgi accelerator region", "", TAU_DEFAULT);
 
 static map<CUfunction,string> functionMap;
+static char* TauPgiFile; 
+static char* TauPgiFunc; 
 
 extern "C" void __pgi_cu_init_p( char* file, char* func, long lineno);
 extern "C" void __pgi_cu_init( char* file, char* func, long lineno) {
   TAU_GLOBAL_TIMER_START(pgi_acc_region_timer);
+  TauPgiFile = file;
+  TauPgiFunc = func;
   char sourceinfo[1024];
-  sprintf(sourceinfo, "%s [{%s}{%ld}]", func, file, lineno);
+  sprintf(sourceinfo, "%s [{%s}{%ld}]", TauPgiFunc, TauPgiFile, lineno);
+  
   TAU_PROFILE("__pgi_cu_init",sourceinfo,TAU_DEFAULT);
   __pgi_cu_init_p(file, func, lineno);
 }
@@ -56,7 +61,7 @@ extern "C" void __pgi_cu_sync_p(long lineno);
 extern "C" void __pgi_cu_sync(long lineno) {
   TAU_GLOBAL_TIMER_START(pgi_acc_region_timer);
   char sourceinfo[1024];
-  sprintf(sourceinfo, "[{%ld}]", lineno);
+  sprintf(sourceinfo, "%s [{%s}{%ld}]", TauPgiFunc, TauPgiFile, lineno);
   TAU_PROFILE("__pgi_cu_sync",sourceinfo,TAU_DEFAULT);
   __pgi_cu_sync_p(lineno);
 }
@@ -70,7 +75,7 @@ extern "C" void __pgi_cu_fini() {
 extern "C" void __pgi_cu_module_p(void *image, long lineno);
 extern "C" void __pgi_cu_module(void *image, long lineno) {
   char sourceinfo[1024];
-  sprintf(sourceinfo, "[{%ld}]", lineno);
+  sprintf(sourceinfo, "%s [{%s}{%ld}]", TauPgiFunc, TauPgiFile, lineno);
   TAU_PROFILE("__pgi_cu_module",sourceinfo,TAU_DEFAULT);
   __pgi_cu_module_p(image, lineno);
 }
@@ -78,7 +83,7 @@ extern "C" void __pgi_cu_module(void *image, long lineno) {
 extern "C" CUfunction __pgi_cu_module_function_p(char *name, long lineno);
 extern "C" CUfunction __pgi_cu_module_function(char *name, long lineno) {
   char sourceinfo[1024];
-  sprintf(sourceinfo, "[{%ld}]", lineno);
+  sprintf(sourceinfo, "%s [{%s}{%ld}]", TauPgiFunc, TauPgiFile, lineno);
   TAU_PROFILE("__pgi_cu_module_function",sourceinfo,TAU_DEFAULT);
   CUfunction func = __pgi_cu_module_function_p(name, lineno);
   functionMap[func] = name;
@@ -88,7 +93,7 @@ extern "C" CUfunction __pgi_cu_module_function(char *name, long lineno) {
 extern "C" CUdeviceptr __pgi_cu_alloc_p(size_t size, long lineno, char *name);
 extern "C" CUdeviceptr __pgi_cu_alloc(size_t size, long lineno, char *name) {
   char sourceinfo[1024];
-  sprintf(sourceinfo, "%s [{%ld}]", name, lineno);
+  sprintf(sourceinfo, "%s [{%s}{%ld}]", TauPgiFunc, TauPgiFile, lineno);
   TAU_PROFILE("__pgi_cu_alloc",sourceinfo, TAU_DEFAULT);
   return __pgi_cu_alloc_p(size, lineno, name);
 }
@@ -97,7 +102,7 @@ extern "C" CUdeviceptr __pgi_cu_alloc(size_t size, long lineno, char *name) {
 extern "C" void __pgi_cu_upload_p( CUdeviceptr devptr, void* hostptr, size_t size, long lineno, char *name );
 extern "C" void __pgi_cu_upload( CUdeviceptr devptr, void* hostptr, size_t size, long lineno, char *name ) {
   char sourceinfo[1024];
-  sprintf(sourceinfo, "%s [{%ld}]", name, lineno);
+  sprintf(sourceinfo, "%s [{%s}{%ld}]", TauPgiFunc, TauPgiFile, lineno);
   TAU_PROFILE("__pgi_cu_upload",sourceinfo,TAU_DEFAULT);
   __pgi_cu_upload_p(devptr, hostptr, size, lineno, name );
 }
@@ -113,7 +118,7 @@ extern "C" void __pgi_cu_upload1(CUdeviceptr devptr, void* hostptr,
                                  long lineno, char *name) {
   
   char sourceinfo[1024];
-  sprintf(sourceinfo, "%s [{%ld}]", name, lineno);
+  sprintf(sourceinfo, "%s var=%s [{%s}{%ld}]", TauPgiFunc, name, TauPgiFile, lineno);
   TAU_PROFILE("__pgi_cu_upload1",sourceinfo,TAU_DEFAULT);
   __pgi_cu_upload1_p(devptr, hostptr,
 		     devx, hostx,
@@ -131,7 +136,7 @@ extern "C" void __pgi_cu_upload2(CUdeviceptr devptr, void* hostptr,
 				  size_t hoststride1, size_t hoststride2, size_t elementsize,
 				  long lineno, char *name) {
   char sourceinfo[1024];
-  sprintf(sourceinfo, "%s [{%ld}]", name, lineno);
+  sprintf(sourceinfo, "%s var=%s [{%s}{%ld}]", TauPgiFunc, name, TauPgiFile, lineno);
   TAU_PROFILE("__pgi_cu_upload2",sourceinfo,TAU_DEFAULT);
   __pgi_cu_upload2_p(devptr, hostptr,
 		     devx, devy, hostx, hosty,
@@ -155,7 +160,7 @@ extern "C" void __pgi_cu_upload3( CUdeviceptr devptr, void* hostptr,
 				  size_t hoststride1, size_t hoststride2, size_t hoststride3,
 				  size_t elementsize, long lineno, char *name ) {
   char sourceinfo[1024];
-  sprintf(sourceinfo, "%s [{%ld}]", name, lineno);
+  sprintf(sourceinfo, "%s var=%s [{%s}{%ld}]", TauPgiFunc, name, TauPgiFile, lineno);
   TAU_PROFILE("__pgi_cu_upload3",sourceinfo,TAU_DEFAULT);
   __pgi_cu_upload3_p(devptr, hostptr,
 		     devx, devy, devz,
@@ -194,7 +199,7 @@ extern "C" void __pgi_cu_launch( CUfunction func, int gridx, int gridy, int grid
 extern "C" void __pgi_cu_download_p( CUdeviceptr devptr, void* hostptr, size_t size, long lineno );
 extern "C" void __pgi_cu_download( CUdeviceptr devptr, void* hostptr, size_t size, long lineno) {
   char sourceinfo[1024];
-  sprintf(sourceinfo, "[{%ld}]", lineno);
+  sprintf(sourceinfo, "%s [{%s}{%ld}]", TauPgiFunc, TauPgiFile, lineno);
   TAU_PROFILE("__pgi_cu_download",sourceinfo, TAU_DEFAULT);
   __pgi_cu_download_p(devptr, hostptr, size, lineno );
 }
@@ -209,7 +214,7 @@ extern "C" void __pgi_cu_download1(CUdeviceptr devptr, void* hostptr,
 				 size_t size, size_t hoststride, size_t elementsize, 
 				 long lineno, char *name) {
   char sourceinfo[1024];
-  sprintf(sourceinfo, "%s [{%ld}]", name, lineno);
+  sprintf(sourceinfo, "%s var=%s [{%s}{%ld}]", TauPgiFunc, name, TauPgiFile, lineno);
   TAU_PROFILE("__pgi_cu_download1",sourceinfo,TAU_DEFAULT);
   __pgi_cu_download1_p(devptr, hostptr,
 		     devx, hostx,
@@ -227,7 +232,7 @@ extern "C" void __pgi_cu_download2(CUdeviceptr devptr, void* hostptr,
 				  size_t hoststride1, size_t hoststride2, size_t elementsize, 
 				  long lineno, char *name) {
   char sourceinfo[1024];
-  sprintf(sourceinfo, "%s [{%ld}]", name, lineno);
+  sprintf(sourceinfo, "%s var=%s [{%s}{%ld}]", TauPgiFunc, name, TauPgiFile, lineno);
   TAU_PROFILE("__pgi_cu_download2",sourceinfo,TAU_DEFAULT);
   __pgi_cu_download2_p(devptr, hostptr,
 		     devx, devy, hostx, hosty,
@@ -251,7 +256,7 @@ extern "C" void __pgi_cu_download3( CUdeviceptr devptr, void* hostptr,
 				  size_t hoststride1, size_t hoststride2, size_t hoststride3,
 				  size_t elementsize, long lineno, char *name ) {
   char sourceinfo[1024];
-  sprintf(sourceinfo, "%s [{%ld}]", name, lineno);
+  sprintf(sourceinfo, "%s var=%s [{%s}{%ld}]", TauPgiFunc, name, TauPgiFile, lineno);
   TAU_PROFILE("__pgi_cu_download3",sourceinfo,TAU_DEFAULT);
   __pgi_cu_download3_p(devptr, hostptr,
 		     devx, devy, devz,
