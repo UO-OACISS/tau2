@@ -1,55 +1,15 @@
 #! /usr/bin/env python
-#
-# Class for profiling python code. rev 1.0  6/2/94
-#
-# Based on prior profile module by Sjoerd Mullender...
-#   which was hacked somewhat by: Guido van Rossum
-#
-# See profile.doc for more information
 
-"""Class for profiling Python code."""
-
-# Copyright 1994, by InfoSeek Corporation, all rights reserved.
-# Written by James Roskind
-#
-# Permission to use, copy, modify, and distribute this Python software
-# and its associated documentation for any purpose (subject to the
-# restriction in the following sentence) without fee is hereby granted,
-# provided that the above copyright notice appears in all copies, and
-# that both that copyright notice and this permission notice appear in
-# supporting documentation, and that the name of InfoSeek not be used in
-# advertising or publicity pertaining to distribution of the software
-# without specific, written prior permission.  This permission is
-# explicitly restricted to the copying and modification of the software
-# to remain in Python, compiled Python, or other languages (such as C)
-# wherein the modified or derived code is exclusively imported into a
-# Python module.
-#
-# INFOSEEK CORPORATION DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
-# SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
-# FITNESS. IN NO EVENT SHALL INFOSEEK CORPORATION BE LIABLE FOR ANY
-# SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
-# RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
-# CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-# CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-
-
-
-import sys
-import os
-import time
-import marshal
-import pytau
-from optparse import OptionParser
+"""Python interface for the 'lsprof' profiler.
+   Compatible with the 'profile' module.
+"""
 
 __all__ = ["run", "runctx", "help", "Profile"]
 
+import ctau_impl
 
-#**************************************************************************
-# The following are the static member functions for the profiler class
-# Note that an instance of Profile() is *not* needed to call them.
-#**************************************************************************
-
+# ____________________________________________________________
+# Simple interface
 
 def run(statement, filename=None, sort=-1):
     """Run statement under profiler optionally saving results in filename
@@ -63,11 +23,18 @@ def run(statement, filename=None, sort=-1):
     each line.
     """
     prof = Profile()
+    result = None
     try:
-        prof = prof.run(statement)
-    except SystemExit:
-        pass
-    pytau.stop()
+        try:
+            prof = prof.run(statement)
+        except SystemExit:
+            pass
+    finally:
+        if filename is not None:
+            prof.dump_stats(filename)
+        else:
+            result = prof.print_stats(sort)
+    return result
 
 def runctx(statement, globals, locals, filename=None):
     """Run statement under profiler, supplying your own globals and locals,
@@ -76,121 +43,88 @@ def runctx(statement, globals, locals, filename=None):
     statement and filename have the same semantics as profile.run
     """
     prof = Profile()
+    result = None
     try:
-        prof = prof.runctx(statement, globals, locals)
-    except SystemExit:
-        pass
-    pytau.stop()
+        try:
+            prof = prof.runctx(statement, globals, locals)
+        except SystemExit:
+            pass
+    finally:
+        if filename is not None:
+            prof.dump_stats(filename)
+        else:
+            result = prof.print_stats()
+    return result
 
-
-
-# print help
+# Backwards compatibility.
 def help():
-    for dirname in sys.path:
-        fullname = os.path.join(dirname, 'profile.doc')
-        if os.path.exists(fullname):
-            sts = os.system('${PAGER-more} ' + fullname)
-            if sts: print '*** Pager exit status:', sts
-            break
-    else:
-        print 'Sorry, can\'t find the help file "profile.doc"',
-        print 'along the Python search path.'
+    print "Documentation for the profile/cProfile modules can be found "
+    print "in the Python Library Reference, section 'The Python Profiler'."
 
+# ____________________________________________________________
 
+class Profile(ctau_impl.Profiler):
+    """Profile(custom_timer=None, time_unit=None, subcalls=True, builtins=True)
 
-class Profile:
+    Builds a profiler object using the specified timer function.
+    The default timer is a fast built-in one based on real time.
+    For custom timer functions returning integers, time_unit can
+    be a float specifying a scale (i.e. how long each integer unit
+    is, in seconds).
+    """
 
-    def __init__(self, timer=None):
-        self.c_func_name = ""
-        self.dispatcher = self.trace_dispatch
+    # Most of the functionality is in the base class.
+    # This subclass only adds convenient and backward-compatible methods.
 
-    def trace_dispatch(self, frame, event, arg):
-        if event == "c_call":
-            self.c_func_name = arg.__name__
-        self.dispatch[event](self, frame)
+    def print_stats(self, sort=-1):
+        import pstats
+#        pstats.Stats(self).strip_dirs().sort_stats(sort).print_stats()
 
-    def trace_dispatch_exception(self, frame):
-        return 1
+    def dump_stats(self, file):
+        import marshal
+        f = open(file, 'wb')
+        self.create_stats()
+        marshal.dump(self.stats, f)
+        f.close()
 
-    def trace_dispatch_call(self, frame):
-        fcode = frame.f_code
+    def create_stats(self):
+        self.disable()
+        self.snapshot_stats()
 
-        classname = ""
-        if frame.f_locals:
-            obj = frame.f_locals.get("self", None)
-            if not obj is None:
-                classname = obj.__class__.__name__ + "::"
-            else:
-                classname = ""
-
-        methodname = fcode.co_name
-        # methods with "?" are usually the files themselves (no method)
-        # we now name them based on the file
-        if methodname == "?":
-            methodname = fcode.co_filename
-            methodname = methodname[methodname.rfind("/")+1:]
-        tauname = classname + methodname
-        filename = fcode.co_filename[fcode.co_filename.rfind("/")+1:]
-        tautype = '[{' + filename + '}{' + str(fcode.co_firstlineno) + '}]'
-
-        # exclude the "? <string>" timer
-        if not fcode.co_filename == "<string>":
-            tautimer = pytau.profileTimer(tauname, tautype)
-            pytau.start(tautimer)
-
-    def trace_dispatch_return(self, frame):
-        # exclude the "? <string>" timer
-        if not frame.f_code.co_filename == "<string>":
-            pytau.stop()
-
-
-    def trace_dispatch_c_call (self, frame):
-        if self.c_func_name == "start" or self.c_func_name == "stop" or self.c_func_name == "profileTimer" or self.c_func_name == "setprofile":
-            pass
-        else:
-            tautimer = pytau.profileTimer(self.c_func_name, "")
-            pytau.start(tautimer)
-
-
-    def trace_dispatch_c_return(self, frame):
-        if self.c_func_name == "start" or self.c_func_name == "stop" or self.c_func_name == "profileTimer":
-            pass
-        else:
-            pytau.stop()
-
-
-    dispatch = {
-        "call": trace_dispatch_call,
-        "exception": trace_dispatch_exception,
-        "return": trace_dispatch_return,
-        "c_call": trace_dispatch_c_call,
-        "c_exception": trace_dispatch_return,  # the C function returned
-        "c_return": trace_dispatch_c_return,
-        }
-
-
-    class fake_code:
-        def __init__(self, filename, line, name):
-            self.co_filename = filename
-            self.co_line = line
-            self.co_name = name
-            self.co_firstlineno = 0
-
-        def __repr__(self):
-            return repr((self.co_filename, self.co_line, self.co_name))
-
-    class fake_frame:
-        def __init__(self, code, prior, local):
-            self.f_code = code
-            self.f_back = prior
-            self.f_locals = local
-
-    def simulate_call(self, name):
-        code = self.fake_code('profile', 0, name)
-        frame = self.fake_frame(code, None, None)
-        self.dispatch['call'](self, frame)
-
-
+    def snapshot_stats(self):
+        entries = self.getstats()
+        self.stats = {}
+        callersdicts = {}
+        # call information
+        for entry in entries:
+            func = label(entry.code)
+            nc = entry.callcount         # ncalls column of pstats (before '/')
+            cc = nc - entry.reccallcount # ncalls column of pstats (after '/')
+            tt = entry.inlinetime        # tottime column of pstats
+            ct = entry.totaltime         # cumtime column of pstats
+            callers = {}
+            callersdicts[id(entry.code)] = callers
+            self.stats[func] = cc, nc, tt, ct, callers
+        # subcall information
+        for entry in entries:
+            if entry.calls:
+                func = label(entry.code)
+                for subentry in entry.calls:
+                    try:
+                        callers = callersdicts[id(subentry.code)]
+                    except KeyError:
+                        continue
+                    nc = subentry.callcount
+                    cc = nc - subentry.reccallcount
+                    tt = subentry.inlinetime
+                    ct = subentry.totaltime
+                    if func in callers:
+                        prev = callers[func]
+                        nc += prev[0]
+                        cc += prev[1]
+                        tt += prev[2]
+                        ct += prev[3]
+                    callers[func] = nc, cc, tt, ct
 
     # The following two methods can be called by clients to use
     # a profiler to profile a statement, given as a string.
@@ -201,43 +135,45 @@ class Profile:
         return self.runctx(cmd, dict, dict)
 
     def runctx(self, cmd, globals, locals):
-        self.simulate_call(cmd)
-        sys.setprofile(self.dispatcher)
+        self.enable()
         try:
             exec cmd in globals, locals
         finally:
-            sys.setprofile(None)
+            self.disable()
         return self
 
     # This method is more useful to profile a single function call.
     def runcall(self, func, *args, **kw):
-        self.simulate_call(repr(func))
-        sys.setprofile(self.dispatcher)
+        self.enable()
         try:
             return func(*args, **kw)
         finally:
-            sys.setprofile(None)
+            self.disable()
 
+# ____________________________________________________________
 
+def label(code):
+    if isinstance(code, str):
+        return ('~', 0, code)    # built-in functions ('~' sorts at the end)
+    else:
+        return (code.co_filename, code.co_firstlineno, code.co_name)
 
-# When invoked as main program, invoke the profiler on a script
-if __name__ == '__main__':
-    usage = "tau.py scriptfile [arg] ..."
-    if not sys.argv[1:]:
-        print "Usage: ", usage
-        sys.exit(2)
+# ____________________________________________________________
 
-    class ProfileParser(OptionParser):
-        def __init__(self, usage):
-            OptionParser.__init__(self)
-            self.usage = usage
-
-    parser = ProfileParser(usage)
+def main():
+    import os, sys
+    from optparse import OptionParser
+    usage = "cProfile.py [-o output_file_path] [-s sort] scriptfile [arg] ..."
+    parser = OptionParser(usage=usage)
     parser.allow_interspersed_args = False
     parser.add_option('-o', '--outfile', dest="outfile",
         help="Save stats to <outfile>", default=None)
     parser.add_option('-s', '--sort', dest="sort",
         help="Sort order when printing to stdout, based on pstats.Stats class", default=-1)
+
+    if not sys.argv[1:]:
+        parser.print_usage()
+        sys.exit(2)
 
     (options, args) = parser.parse_args()
     sys.argv[:] = args
@@ -246,4 +182,9 @@ if __name__ == '__main__':
         sys.path.insert(0, os.path.dirname(sys.argv[0]))
         run('execfile(%r)' % (sys.argv[0],), options.outfile, options.sort)
     else:
-        print "Usage: ", usage
+        parser.print_usage()
+    return parser
+
+# When invoked as main program, invoke the profiler on a script
+if __name__ == '__main__':
+    main()
