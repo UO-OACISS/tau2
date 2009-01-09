@@ -305,8 +305,11 @@ void Profiler::Start(int tid) {
   
 #ifdef TAU_PROFILEPHASE
   if (ParentProfiler == (Profiler *) NULL) {
-    if (ThisFunction->AllGroups.find("TAU_PHASE", 0) == string::npos) {
-      ThisFunction->AllGroups.append(" | TAU_PHASE"); 
+    string AllGroups = ThisFunction->AllGroups;
+    if (AllGroups.find("TAU_PHASE", 0) == string::npos) {
+      AllGroups.append(" | TAU_PHASE");
+      free(ThisFunction->AllGroups);
+      ThisFunction->AllGroups = strdup(AllGroups.c_str());
     }
   }
 
@@ -1974,6 +1977,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.208 $   $Date: 2009/01/08 23:51:30 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.208 2009/01/08 23:51:30 amorris Exp $ 
+ * $Revision: 1.209 $   $Date: 2009/01/09 17:45:37 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.209 2009/01/09 17:45:37 amorris Exp $ 
  ***************************************************************************/
