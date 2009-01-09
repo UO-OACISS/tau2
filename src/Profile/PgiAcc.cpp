@@ -42,19 +42,23 @@ TAU_GLOBAL_TIMER(pgi_acc_region_timer, "pgi accelerator region", "", TAU_DEFAULT
 
 static map<CUfunction,string> functionMap;
 
-extern "C" void __pgi_cu_init_p();
-extern "C" void __pgi_cu_init() {
+extern "C" void __pgi_cu_init_p( char* file, char* func, long lineno);
+extern "C" void __pgi_cu_init( char* file, char* func, long lineno) {
   TAU_GLOBAL_TIMER_START(pgi_acc_region_timer);
-  TAU_PROFILE("__pgi_cu_init","",TAU_DEFAULT);
-  __pgi_cu_init_p();
+  char sourceinfo[1024];
+  sprintf(sourceinfo, "%s [{%s}{%ld}]", func, file, lineno);
+  TAU_PROFILE("__pgi_cu_init",sourceinfo,TAU_DEFAULT);
+  __pgi_cu_init_p(file, func, lineno);
 }
 
 
-extern "C" void __pgi_cu_sync_p();
-extern "C" void __pgi_cu_sync() {
+extern "C" void __pgi_cu_sync_p(long lineno);
+extern "C" void __pgi_cu_sync(long lineno) {
   TAU_GLOBAL_TIMER_START(pgi_acc_region_timer);
-  TAU_PROFILE("__pgi_cu_sync","",TAU_DEFAULT);
-  __pgi_cu_sync_p();
+  char sourceinfo[1024];
+  sprintf(sourceinfo, "[{%ld}]", lineno);
+  TAU_PROFILE("__pgi_cu_sync",sourceinfo,TAU_DEFAULT);
+  __pgi_cu_sync_p(lineno);
 }
 
 extern "C" void __pgi_cu_fini_p();
@@ -63,59 +67,76 @@ extern "C" void __pgi_cu_fini() {
   __pgi_cu_fini_p();
 }
 
-extern "C" void __pgi_cu_module_p(void *image);
-extern "C" void __pgi_cu_module(void *image) {
-  TAU_PROFILE("__pgi_cu_module","",TAU_DEFAULT);
-  __pgi_cu_module_p(image);
+extern "C" void __pgi_cu_module_p(void *image, long lineno);
+extern "C" void __pgi_cu_module(void *image, long lineno) {
+  char sourceinfo[1024];
+  sprintf(sourceinfo, "[{%ld}]", lineno);
+  TAU_PROFILE("__pgi_cu_module",sourceinfo,TAU_DEFAULT);
+  __pgi_cu_module_p(image, lineno);
 }
 
-extern "C" CUfunction __pgi_cu_module_function_p(char *name);
-extern "C" CUfunction __pgi_cu_module_function(char *name) {
-  TAU_PROFILE("__pgi_cu_module_function","",TAU_DEFAULT);
-  CUfunction func = __pgi_cu_module_function_p(name);
+extern "C" CUfunction __pgi_cu_module_function_p(char *name, long lineno);
+extern "C" CUfunction __pgi_cu_module_function(char *name, long lineno) {
+  char sourceinfo[1024];
+  sprintf(sourceinfo, "[{%ld}]", lineno);
+  TAU_PROFILE("__pgi_cu_module_function",sourceinfo,TAU_DEFAULT);
+  CUfunction func = __pgi_cu_module_function_p(name, lineno);
   functionMap[func] = name;
   return func;
 }
 
-extern "C" CUdeviceptr __pgi_cu_alloc_p(size_t size);
-extern "C" CUdeviceptr __pgi_cu_alloc(size_t size) {
-  TAU_PROFILE("__pgi_cu_alloc","",TAU_DEFAULT);
-  return __pgi_cu_alloc_p(size);
+extern "C" CUdeviceptr __pgi_cu_alloc_p(size_t size, long lineno, char *name);
+extern "C" CUdeviceptr __pgi_cu_alloc(size_t size, long lineno, char *name) {
+  char sourceinfo[1024];
+  sprintf(sourceinfo, "%s [{%ld}]", name, lineno);
+  TAU_PROFILE("__pgi_cu_alloc",sourceinfo, TAU_DEFAULT);
+  return __pgi_cu_alloc_p(size, lineno, name);
 }
 
 
-extern "C" void __pgi_cu_upload_p( CUdeviceptr devptr, void* hostptr, size_t size );
-extern "C" void __pgi_cu_upload( CUdeviceptr devptr, void* hostptr, size_t size ) {
-  TAU_PROFILE("__pgi_cu_upload","",TAU_DEFAULT);
-  __pgi_cu_upload_p(devptr, hostptr, size );
+extern "C" void __pgi_cu_upload_p( CUdeviceptr devptr, void* hostptr, size_t size, long lineno, char *name );
+extern "C" void __pgi_cu_upload( CUdeviceptr devptr, void* hostptr, size_t size, long lineno, char *name ) {
+  char sourceinfo[1024];
+  sprintf(sourceinfo, "%s [{%ld}]", name, lineno);
+  TAU_PROFILE("__pgi_cu_upload",sourceinfo,TAU_DEFAULT);
+  __pgi_cu_upload_p(devptr, hostptr, size, lineno, name );
 }
 
 
 extern "C" void __pgi_cu_upload1_p(CUdeviceptr devptr, void* hostptr,
 				   size_t devx, size_t hostx,
-				   size_t size, size_t hoststride, size_t elementsize);
+				   size_t size, size_t hoststride, size_t elementsize, 
+				   long lineno, char *name);
 extern "C" void __pgi_cu_upload1(CUdeviceptr devptr, void* hostptr,
 				 size_t devx, size_t hostx,
-				 size_t size, size_t hoststride, size_t elementsize) {
-  TAU_PROFILE("__pgi_cu_upload1","",TAU_DEFAULT);
+				 size_t size, size_t hoststride, size_t elementsize, 
+                                 long lineno, char *name) {
+  
+  char sourceinfo[1024];
+  sprintf(sourceinfo, "%s [{%ld}]", name, lineno);
+  TAU_PROFILE("__pgi_cu_upload1",sourceinfo,TAU_DEFAULT);
   __pgi_cu_upload1_p(devptr, hostptr,
 		     devx, hostx,
-		     size, hoststride, elementsize);
+		     size, hoststride, elementsize, lineno, name);
 }
 
 extern "C" void __pgi_cu_upload2_p(CUdeviceptr devptr, void* hostptr,
 				    size_t devx, size_t devy, size_t hostx, size_t hosty,
 				    size_t size1, size_t size2, size_t devstride2,
-				    size_t hoststride1, size_t hoststride2, size_t elementsize);
+				    size_t hoststride1, size_t hoststride2, size_t elementsize, 
+				    long lineno, char *name);
 extern "C" void __pgi_cu_upload2(CUdeviceptr devptr, void* hostptr,
 				  size_t devx, size_t devy, size_t hostx, size_t hosty,
 				  size_t size1, size_t size2, size_t devstride2,
-				  size_t hoststride1, size_t hoststride2, size_t elementsize) {
-  TAU_PROFILE("__pgi_cu_upload2","",TAU_DEFAULT);
+				  size_t hoststride1, size_t hoststride2, size_t elementsize,
+				  long lineno, char *name) {
+  char sourceinfo[1024];
+  sprintf(sourceinfo, "%s [{%ld}]", name, lineno);
+  TAU_PROFILE("__pgi_cu_upload2",sourceinfo,TAU_DEFAULT);
   __pgi_cu_upload2_p(devptr, hostptr,
 		     devx, devy, hostx, hosty,
 		     size1, size2, devstride2,
-		     hoststride1, hoststride2, elementsize);
+		     hoststride1, hoststride2, elementsize, lineno, name);
 }
 
 extern "C" void __pgi_cu_upload3_p( CUdeviceptr devptr, void* hostptr,
@@ -124,7 +145,7 @@ extern "C" void __pgi_cu_upload3_p( CUdeviceptr devptr, void* hostptr,
 			      size_t size1, size_t size2, size_t size3,
 			      size_t devstride2, size_t devstride3,
 			      size_t hoststride1, size_t hoststride2, size_t hoststride3,
-			      size_t elementsize );
+			      size_t elementsize, long lineno, char *name );
 
 extern "C" void __pgi_cu_upload3( CUdeviceptr devptr, void* hostptr,
 				  size_t devx, size_t devy, size_t devz,
@@ -132,15 +153,17 @@ extern "C" void __pgi_cu_upload3( CUdeviceptr devptr, void* hostptr,
 				  size_t size1, size_t size2, size_t size3,
 				  size_t devstride2, size_t devstride3,
 				  size_t hoststride1, size_t hoststride2, size_t hoststride3,
-				  size_t elementsize ) {
-  TAU_PROFILE("__pgi_cu_upload3","",TAU_DEFAULT);
+				  size_t elementsize, long lineno, char *name ) {
+  char sourceinfo[1024];
+  sprintf(sourceinfo, "%s [{%ld}]", name, lineno);
+  TAU_PROFILE("__pgi_cu_upload3",sourceinfo,TAU_DEFAULT);
   __pgi_cu_upload3_p(devptr, hostptr,
 		     devx, devy, devz,
 		     hostx, hosty, hostz,
 		     size1, size2, size3,
 		     devstride2, devstride3,
 		     hoststride1, hoststride2, hoststride3,
-		     elementsize);
+		     elementsize, lineno, name);
 }
 
 
@@ -150,56 +173,66 @@ extern "C" void __pgi_cu_paramset( CUfunction func, void* ptr, unsigned long byt
   __pgi_cu_paramset_p(func, ptr, bytes, sharedbytes );
 }
 
-extern "C" void __pgi_cu_launch_p( CUfunction func, int gridx, int gridy, int gridz, int blockx, int blocky, int blockz );
-extern "C" void __pgi_cu_launch( CUfunction func, int gridx, int gridy, int gridz, int blockx, int blocky, int blockz ) {
+extern "C" void __pgi_cu_launch_p( CUfunction func, int gridx, int gridy, int gridz, int blockx, int blocky, int blockz, long lineno );
+extern "C" void __pgi_cu_launch( CUfunction func, int gridx, int gridy, int gridz, int blockx, int blocky, int blockz, long lineno ) {
   //  printf ("gridx = %d, gridy = %d, gridz = %d, blockx = %d, blocky = %d, blockz = %d\n", gridx, gridy, gridz, blockx, blocky, blockz);
   //  TAU_PROFILE("__pgi_cu_launch","",TAU_DEFAULT);
   
   string name = functionMap[func];
   char routine[4096];
-  sprintf (routine, "__pgi_cu_launch(%s,gx=%d,gy=%d,gz=%d,bx=%d,by=%d,bz=%d)",name.c_str(),gridx,gridy,gridz,blockx,blocky,blockz);
+  sprintf (routine, "__pgi_cu_launch (%s,gx=%d,gy=%d,gz=%d,bx=%d,by=%d,bz=%d) [{%ld}]",name.c_str(),gridx,gridy,gridz,blockx,blocky,blockz,lineno);
  
   TAU_PROFILE_TIMER_DYNAMIC(stimer, routine, "", TAU_DEFAULT);
   TAU_PROFILE_START(stimer);
-  __pgi_cu_launch_p(func, gridx, gridy, gridz, blockx, blocky, blockz);
+  __pgi_cu_launch_p(func, gridx, gridy, gridz, blockx, blocky, blockz, lineno);
   TAU_PROFILE_STOP(stimer);
 }
 
 
 
 
-extern "C" void __pgi_cu_download_p( CUdeviceptr devptr, void* hostptr, size_t size );
-extern "C" void __pgi_cu_download( CUdeviceptr devptr, void* hostptr, size_t size ) {
-  TAU_PROFILE("__pgi_cu_download","",TAU_DEFAULT);
-  __pgi_cu_download_p(devptr, hostptr, size );
+extern "C" void __pgi_cu_download_p( CUdeviceptr devptr, void* hostptr, size_t size, long lineno );
+extern "C" void __pgi_cu_download( CUdeviceptr devptr, void* hostptr, size_t size, long lineno) {
+  char sourceinfo[1024];
+  sprintf(sourceinfo, "[{%ld}]", lineno);
+  TAU_PROFILE("__pgi_cu_download",sourceinfo, TAU_DEFAULT);
+  __pgi_cu_download_p(devptr, hostptr, size, lineno );
 }
 
 
 extern "C" void __pgi_cu_download1_p(CUdeviceptr devptr, void* hostptr,
 				   size_t devx, size_t hostx,
-				   size_t size, size_t hoststride, size_t elementsize);
+				   size_t size, size_t hoststride, size_t elementsize, 
+				   long lineno, char *name);
 extern "C" void __pgi_cu_download1(CUdeviceptr devptr, void* hostptr,
 				 size_t devx, size_t hostx,
-				 size_t size, size_t hoststride, size_t elementsize) {
-  TAU_PROFILE("__pgi_cu_download1","",TAU_DEFAULT);
+				 size_t size, size_t hoststride, size_t elementsize, 
+				 long lineno, char *name) {
+  char sourceinfo[1024];
+  sprintf(sourceinfo, "%s [{%ld}]", name, lineno);
+  TAU_PROFILE("__pgi_cu_download1",sourceinfo,TAU_DEFAULT);
   __pgi_cu_download1_p(devptr, hostptr,
 		     devx, hostx,
-		     size, hoststride, elementsize);
+		     size, hoststride, elementsize, lineno, name);
 }
 
 extern "C" void __pgi_cu_download2_p(CUdeviceptr devptr, void* hostptr,
 				    size_t devx, size_t devy, size_t hostx, size_t hosty,
 				    size_t size1, size_t size2, size_t devstride2,
-				    size_t hoststride1, size_t hoststride2, size_t elementsize);
+				    size_t hoststride1, size_t hoststride2, size_t elementsize,
+				    long lineno, char *name);
 extern "C" void __pgi_cu_download2(CUdeviceptr devptr, void* hostptr,
 				  size_t devx, size_t devy, size_t hostx, size_t hosty,
 				  size_t size1, size_t size2, size_t devstride2,
-				  size_t hoststride1, size_t hoststride2, size_t elementsize) {
-  TAU_PROFILE("__pgi_cu_download2","",TAU_DEFAULT);
+				  size_t hoststride1, size_t hoststride2, size_t elementsize, 
+				  long lineno, char *name) {
+  char sourceinfo[1024];
+  sprintf(sourceinfo, "%s [{%ld}]", name, lineno);
+  TAU_PROFILE("__pgi_cu_download2",sourceinfo,TAU_DEFAULT);
   __pgi_cu_download2_p(devptr, hostptr,
 		     devx, devy, hostx, hosty,
 		     size1, size2, devstride2,
-		     hoststride1, hoststride2, elementsize);
+		     hoststride1, hoststride2, elementsize, lineno, name);
 }
 
 extern "C" void __pgi_cu_download3_p( CUdeviceptr devptr, void* hostptr,
@@ -208,7 +241,7 @@ extern "C" void __pgi_cu_download3_p( CUdeviceptr devptr, void* hostptr,
 			      size_t size1, size_t size2, size_t size3,
 			      size_t devstride2, size_t devstride3,
 			      size_t hoststride1, size_t hoststride2, size_t hoststride3,
-			      size_t elementsize );
+			      size_t elementsize, long lineno, char *name );
 
 extern "C" void __pgi_cu_download3( CUdeviceptr devptr, void* hostptr,
 				  size_t devx, size_t devy, size_t devz,
@@ -216,15 +249,17 @@ extern "C" void __pgi_cu_download3( CUdeviceptr devptr, void* hostptr,
 				  size_t size1, size_t size2, size_t size3,
 				  size_t devstride2, size_t devstride3,
 				  size_t hoststride1, size_t hoststride2, size_t hoststride3,
-				  size_t elementsize ) {
-  TAU_PROFILE("__pgi_cu_download3","",TAU_DEFAULT);
+				  size_t elementsize, long lineno, char *name ) {
+  char sourceinfo[1024];
+  sprintf(sourceinfo, "%s [{%ld}]", name, lineno);
+  TAU_PROFILE("__pgi_cu_download3",sourceinfo,TAU_DEFAULT);
   __pgi_cu_download3_p(devptr, hostptr,
 		     devx, devy, devz,
 		     hostx, hosty, hostz,
 		     size1, size2, size3,
 		     devstride2, devstride3,
 		     hoststride1, hoststride2, hoststride3,
-		     elementsize);
+		     elementsize, lineno, name);
 }
 
 
