@@ -2,148 +2,101 @@
 **			TAU Portable Profiling Package			   **
 **			http://www.cs.uoregon.edu/research/tau	           **
 *****************************************************************************
-**    Copyright 1999  						   	   **
+**    Copyright 1999-2009					   	   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
-/***************************************************************************
-**	File 		: Profiler.cpp					  **
-**	Description 	: TAU Mappings for relating profile data from one **
-**			  layer to another				  **
-**	Author		: Sameer Shende					  **
-**	Contact		: sameer@cs.uoregon.edu sameer@acl.lanl.gov 	  **
-**	Flags		: Compile with				          **
-**			  -DPROFILING_ON to enable profiling (ESSENTIAL)  **
-**			  -DPROFILE_STATS for Std. Deviation of Excl Time **
-**			  -DSGI_HW_COUNTERS for using SGI counters 	  **
-**			  -DPROFILE_CALLS  for trace of each invocation   **
-**                        -DSGI_TIMERS  for SGI fast nanosecs timer       **
-**			  -DTULIP_TIMERS for non-sgi Platform	 	  **
-**			  -DPOOMA_STDSTL for using STD STL in POOMA src   **
-**			  -DPOOMA_TFLOP for Intel Teraflop at SNL/NM 	  **
-**			  -DPOOMA_KAI for KCC compiler 			  **
-**			  -DDEBUG_PROF  for internal debugging messages   **
-**                        -DPROFILE_CALLSTACK to enable callstack traces  **
-**	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
-***************************************************************************/
-/* TAU Mappings */
+/****************************************************************************
+**	File 		: Profiler.cpp					   **
+**	Description 	: TAU Mappings for relating profile data from one  **
+**			  layer to another				   **
+**	Author		: Sameer Shende					   **
+**	Contact		: tau-bugs@cs.uoregon.edu                	   **
+**	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
+****************************************************************************/
+
 #ifndef _TAU_MAPPING_H_
 #define _TAU_MAPPING_H_
 
 #if (PROFILING_ON || TRACING_ON)
 // For Mapping, global variables used between layers
-FunctionInfo *& TheTauMapFI(TauGroup_t ProfileGroup=TAU_DEFAULT);
+FunctionInfo *& TheTauMapFI(TauGroup_t key=TAU_DEFAULT);
 
-
-#if (TAU_MAX_THREADS == 1)
-// If we're not multi-threaded, just use the non-thread-safe static initializer
-
-#define TAU_MAPPING(stmt, group)   \
-  { \
-    static FunctionInfo TauMapFI(#stmt, " " , group, #group); \
-    static tau::Profiler *TauMapProf = new tau::Profiler(&TauMapFI, group, true); \
-    TheTauMapFI(group) = &TauMapFI; \
-    TauMapProf->Start(); \
-    stmt; \
-    TauMapProf->Stop(); \
-  }
-
-#else
-// Multithreaded, we should use thread-safe tauCreateFI to create the FunctionInfo object
-// Note: It's still not absolutely theoretically 100% thread-safe, since the static 
-// initializer is not in a lock, but we don't want to pay that price for every function call 
-
-#define TAU_MAPPING(stmt, group)   \
+#define TAU_MAPPING(stmt, key) \
   { \
     static FunctionInfo *TauMapFI = NULL; \
-    tauCreateFI(&TauMapFI, #stmt, " " , group, #group); \
-    static tau::Profiler *TauMapProf = new tau::Profiler(TauMapFI, group, true); \
-    TheTauMapFI(group) = TauMapFI; \
+    tauCreateFI(&TauMapFI, #stmt, " " , key, #key); \
+    static tau::Profiler *TauMapProf = new tau::Profiler(TauMapFI, key, true); \
+    TheTauMapFI(key) = TauMapFI; \
     TauMapProf->Start(); \
     stmt; \
     TauMapProf->Stop(); \
     delete TauMapProf; \
   } 
 
-#endif
-
-#define TAU_MAPPING_REGISTER(stmt, group)  { \
+#define TAU_MAPPING_REGISTER(stmt, key)  { \
     static FunctionInfo *TauMapFI = NULL; \
-    tauCreateFI(&TauMapFI,stmt, " " , group, #group); \
-    TheTauMapFI(group) = TauMapFI; \
+    tauCreateFI(&TauMapFI,stmt, " " , key, #key); \
+    TheTauMapFI(key) = TauMapFI; \
   } 
 
 #define TAU_MAPPING_CREATE(name, type, key, groupname, tid)  { FunctionInfo *TauMapFI = new FunctionInfo(name, type, key, groupname, true, tid); \
     if (TauMapFI == (FunctionInfo *) NULL) { \
-	printf("ERROR: new returns NULL"); exit(1); \
+	printf("ERROR: new returned NULL"); exit(1); \
     } \
     TheTauMapFI(key) = TauMapFI; \
   } 
-/* TAU_MAPPING_OBJECT creates a functionInfo pointer that may be stored in the 
-   object that is used to relate a lower level layer with a higher level layer 
-*/
 
-#define TAU_MAPPING_CREATE1(name, type, key1, groupid, groupname, tid)  { FunctionInfo *TauMapFI = new FunctionInfo(name, type, groupid, groupname, true, tid); \
+#define TAU_MAPPING_CREATE1(name, type, key, groupid, groupname, tid)  { FunctionInfo *TauMapFI = new FunctionInfo(name, type, groupid, groupname, true, tid); \
     if (TauMapFI == (FunctionInfo *) NULL) { \
-	printf("ERROR: new returns NULL"); exit(1); \
+	printf("ERROR: new returned NULL"); exit(1); \
     } \
-    TheTauMapFI(key1) = TauMapFI; \
+    TheTauMapFI(key) = TauMapFI; \
   } 
-/* TAU_MAPPING_OBJECT creates a functionInfo pointer that may be stored in the 
-   object that is used to relate a lower level layer with a higher level layer 
-*/
 
 /* TAU_MAPPING_TIMER_CREATE creates a functionInfo pointer with a specified 
    group name. */
 #define TAU_MAPPING_TIMER_CREATE(t, name, type, gr, group_name) t = new FunctionInfo((string &) name, type, gr, group_name, true, RtsLayer::myThread());
 
-#define TAU_MAPPING_OBJECT(FuncInfoVar) FunctionInfo * FuncInfoVar;
+/* TAU_MAPPING_OBJECT creates a functionInfo pointer that may be stored in the 
+   object that is used to relate a lower level layer with a higher level layer */
+#define TAU_MAPPING_OBJECT(FuncInfoVar) FunctionInfo *FuncInfoVar;
 
 /* TAU_MAPPING_LINK gets in a var the function info object associated with the 
-   given key (Group) 
-*/
-/*
-This error should be reported when FuncInfoVar is NULL
-	  //printf("ERROR: TAU_MAPPING_LINK map returns NULL FunctionInfo *\n"); \
-There's no error when FunctionInfo * is NULL. A region may not be active.
-*/
-/* OLD --> did a return. Instead tau::Profiler should check for Null. */
-/*
-#define TAU_MAPPING_LINK(FuncInfoVar, Group) FuncInfoVar = TheTauMapFI(Group); \
-	if (FuncInfoVar == (FunctionInfo *)NULL) { \
- 	  return; \
-        } 
-*/
-#define TAU_MAPPING_LINK(FuncInfoVar, Group) FuncInfoVar = TheTauMapFI(Group); 
+   given key (Group) */
+#define TAU_MAPPING_LINK(FuncInfoVar, key) FuncInfoVar = TheTauMapFI(key); 
 
 /* TAU_MAPPING_PROFILE profiles the entire routine by creating a profiler objeca
    and this behaves pretty much like TAU_PROFILE macro, except this gives in the
-   FunctionInfo object pointer instead of name and type strings. 
-*/
-#define TAU_MAPPING_PROFILE(FuncInfoVar) tau::Profiler FuncInfoVar##Prof(FuncInfoVar, FuncInfoVar != (FunctionInfo *) 0 ? FuncInfoVar->GetProfileGroup() : TAU_DEFAULT, false);
+   FunctionInfo object pointer instead of name and type strings. */
+#define TAU_MAPPING_PROFILE(FuncInfoVar) \
+  if (FuncInfoVar != NULL) { \
+    tau::Profiler FuncInfoVar##Prof(FuncInfoVar, FuncInfoVar->GetProfileGroup(), false); \
+  }
 
 /* TAU_MAPPING_PROFILE_TIMER acts like TAU_PROFILE_TIMER by creating a profiler
    object that can be subsequently used with TAU_PROFILE_START and 
-   TAU_PROFILE_STOP
-*/
-#define TAU_MAPPING_PROFILE_TIMER(Timer, FuncInfoVar, tid) tau::Profiler *Timer; \
-   Timer = new tau::Profiler(FuncInfoVar,  FuncInfoVar != (FunctionInfo *) 0 ? FuncInfoVar->GetProfileGroup() : TAU_DEFAULT, true, tid); \
+   TAU_PROFILE_STOP */
+#define TAU_MAPPING_PROFILE_TIMER(Timer, FuncInfoVar, tid) \
+  tau::Profiler *Timer;					   \
+  if (FuncInfoVar != NULL) { \
+   Timer = new tau::Profiler(FuncInfoVar, FuncInfoVar->GetProfileGroup(), true, tid); \
    if (Timer == (tau::Profiler *) NULL) {\
      printf("ERROR: TAU_MAPPING_PROFILE_TIMER: new returns NULL Profiler *\n");\
-   }
+   } \
+  }
    
-
-/* TAU_MAPPING_PROFILE_START acts like TAU_PROFILE_START by starting the timer 
-*/
+/* TAU_MAPPING_PROFILE_START acts like TAU_PROFILE_START by starting the timer */
 #define TAU_MAPPING_PROFILE_START(Timer, tid) Timer->Start(tid);
 
-/* TAU_MAPPING_PROFILE_STOP acts like TAU_PROFILE_STOP by stopping the timer 
-*/
+/* TAU_MAPPING_PROFILE_STOP acts like TAU_PROFILE_STOP by stopping the timer */
 #define TAU_MAPPING_PROFILE_STOP(tid) { tau::Profiler *cur = tau::Profiler::CurrentProfiler[tid]; cur->Stop(tid); delete cur; }
-#define TAU_MAPPING_PROFILE_EXIT(msg, tid)  tau::Profiler::ProfileExit(msg, tid); 
-#define TAU_MAPPING_DB_DUMP(tid)  tau::Profiler::DumpData(tid); 
-#define TAU_MAPPING_DB_PURGE(tid)  tau::Profiler::PurgeData(tid); 
-#define TAU_MAPPING_PROFILE_SET_NODE(node, tid)  RtsLayer::setMyNode(node, tid); 
+
+#define TAU_MAPPING_PROFILE_EXIT(msg, tid)  TAU_PROFILE_EXIT(msg); 
+#define TAU_MAPPING_DB_DUMP(tid)  TAU_DB_DUMP(); 
+#define TAU_MAPPING_DB_PURGE(tid)  TAU_DB_PURGE(); 
+#define TAU_MAPPING_PROFILE_SET_NODE(node, tid)  TAU_PROFILE_SET_NODE(node); 
+
 #define TAU_MAPPING_PROFILE_SET_GROUP_NAME(timer, name) timer->SetPrimaryGroupName(name);
 #define TAU_MAPPING_PROFILE_GET_GROUP_NAME(timer) timer->GetPrimaryGroup();
 #define TAU_MAPPING_PROFILE_GET_GROUP(timer) timer->GetProfileGroup();
