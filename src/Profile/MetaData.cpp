@@ -571,7 +571,10 @@ static int writeMetaData(outputDevice *out, bool newline, int counter) {
   if (f) {
     char line[4096];
     while (ReadFullLine(line, f)) {
-      char *value = strstr(line,":")+2;
+      char *value = strstr(line,":");
+      if (!value) break;
+      else value += 2;
+
       value = removeRuns(value);
 
       if (strncmp(line, "vendor_id", 9) == 0) {
@@ -606,7 +609,11 @@ static int writeMetaData(outputDevice *out, bool newline, int counter) {
   if (f) {
     char line[4096];
     while (ReadFullLine(line, f)) {
-      char *value = strstr(line,":")+2;
+      char *value = strstr(line,":");
+
+      if (!value) break;
+      else value += 2;
+
       value = removeRuns(value);
 
       if (strncmp(line, "MemTotal", 8) == 0) {
