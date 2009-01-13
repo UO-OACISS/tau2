@@ -361,7 +361,7 @@ static char *removeRuns(char *str) {
   // replaces runs of spaces with a single space
 
   // also removes leading whitespace
-  while (*str && *str == ' ') str++;
+  while (str && *str && *str == ' ') str++;
 
   len = strlen(str);
   for (i=0; i<len; i++) {

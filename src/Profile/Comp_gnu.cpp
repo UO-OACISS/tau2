@@ -315,9 +315,14 @@ static HashNode *createHashNode(long addr) {
 
 	// remove the path
 	const char *filename = hn->fname;
-	while (strchr(filename,'/') != NULL) {
-	  filename = strchr(filename,'/')+1;
-	}
+        if (filename) {
+	  while (strchr(filename,'/') != NULL) {
+	    filename = strchr(filename,'/')+1;
+	  }
+        }
+        else {
+          filename = "(unknown)";
+        }
 	
 	char routine[2048];
 	sprintf (routine, "%s [{%s} {%d,0}]", hn->name, filename, hn->lno);
@@ -389,9 +394,15 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 	if ( hn->fi == NULL) {
 	  // remove the path
 	  const char *filename = hn->fname;
-	  while (strchr(filename,'/') != NULL) {
-	    filename = strchr(filename,'/')+1;
-	  }
+          if (filename) {
+	    while (strchr(filename,'/') != NULL) {
+	      filename = strchr(filename,'/')+1;
+	    }
+          }
+          else {
+            filename = "(unknown)";
+          }
+
 	  char routine[2048];
 	  sprintf (routine, "%s [{%s} {%d,0}]", hn->name, filename, hn->lno);
 	  void *handle=NULL;
