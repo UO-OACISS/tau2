@@ -133,6 +133,39 @@ void context_events() {
   TAU_ENABLE_CONTEXT_EVENT(tau_context_event);
 }
 
+void mapping() {
+  int x;
+  TAU_MAPPING(x=5, TAU_DEFAULT);
+}
+
+
+void mapping_profile() {
+  /* this tests when the object is NULL */
+  TAU_MAPPING_OBJECT(timer);
+  TAU_MAPPING_PROFILE(timer);
+}
+
+void mapping_profile2() {
+  /* this tests when the object is NULL */
+  TAU_MAPPING_CREATE("mapping1", "" , /* key */ 42, "TAU_USER", 0);
+
+  TAU_MAPPING_OBJECT(timer);
+  TAU_MAPPING_LINK(timer, /* key */ 42);
+  TAU_MAPPING_PROFILE(timer);
+}
+
+void mapping_profile3() {
+  /* this tests when the object is NULL */
+  TAU_MAPPING_CREATE("mapping2", "" , /* key */ 43, "TAU_USER", 0);
+
+  TAU_MAPPING_OBJECT(timer);
+  TAU_MAPPING_LINK(timer, /* key */ 43);
+  TAU_MAPPING_PROFILE_TIMER(profiler, timer, 0);
+  TAU_MAPPING_PROFILE_START(profiler, 0);
+  TAU_MAPPING_PROFILE_STOP(0);
+
+}
+
 
 TAU_GLOBAL_TIMER_EXTERNAL(gtimer);
 TAU_GLOBAL_TIMER(gtimer, "global_timer", "", TAU_DEFAULT);
@@ -141,11 +174,23 @@ TAU_GLOBAL_PHASE_EXTERNAL(gphase);
 TAU_GLOBAL_PHASE(gphase, "global_phase", "", TAU_DEFAULT);
 
 
-int main (int argc, char **argv) {
+ void memory() {
+  TAU_ENABLE_TRACKING_MEMORY();
+  TAU_DISABLE_TRACKING_MEMORY();
+    
+  TAU_DISABLE_TRACKING_MEMORY_HEADROOM();
+  TAU_ENABLE_TRACKING_MEMORY_HEADROOM();
 
+  TAU_TRACK_MEMORY();
+  TAU_TRACK_MEMORY_HEADROOM();
+  TAU_TRACK_MEMORY_HERE();
+  TAU_TRACK_MEMORY_HEADROOM_HERE();
 
-  TAU_PROFILE("profile","",TAU_DEFAULT);
-  TAU_INIT(&argc, &argv);
+ }
+void stuff() {
+  TAU_DB_PURGE();
+
+  TAU_PROFILE("stuff","",TAU_DEFAULT);
   TAU_PROFILE_SET_NODE(0);
   TAU_PROFILE_SET_CONTEXT(0);
   TAU_PROFILE_SET_THREAD(0);
@@ -185,6 +230,12 @@ int main (int argc, char **argv) {
 
   set_attribs();
   db_access();
+
+  mapping();
+  mapping_profile();
+  mapping_profile2();
+  mapping_profile3();
+
 
   TAU_DB_DUMP();
   TAU_DB_DUMP_PREFIX("prefix");
@@ -236,21 +287,22 @@ int main (int argc, char **argv) {
 
 
 
-  TAU_ENABLE_TRACKING_MEMORY();
-  TAU_DISABLE_TRACKING_MEMORY();
-    
-  TAU_DISABLE_TRACKING_MEMORY_HEADROOM();
-  TAU_ENABLE_TRACKING_MEMORY_HEADROOM();
-
-  TAU_TRACK_MEMORY();
-  TAU_TRACK_MEMORY_HEADROOM();
-  TAU_TRACK_MEMORY_HERE();
-  TAU_TRACK_MEMORY_HEADROOM_HERE();
+  //memory();
 
 
     
-  TAU_DB_PURGE();
-  TAU_PROFILE_EXIT("message");
+
+}
+
+int main (int argc, char **argv) {
+
+
+  TAU_PROFILE("profile","",TAU_DEFAULT);
+  TAU_INIT(&argc, &argv);
+
+  stuff();
+  TAU_PROFILE_EXIT("foo");
+
   return 0;
 }
 
