@@ -94,7 +94,7 @@ public:
 	static char * TauGroupNameUsed = Tau_phase_enable(#group); \
         static FunctionInfo tauFInfo(name, type, tau_group, TauGroupNameUsed); \
 	Tau_Profile_Wrapper tauFProf(&tauFInfo, 1);
-#else /* TAU_PROFILEPHASE */
+#else /* TAU_PROFILEPHASE  */
 #define TAU_PHASE TAU_PROFILE
 #endif /* TAU_PROFILEPHASE */
 
@@ -205,7 +205,7 @@ or tauFI->method();
 	static FunctionInfo *tauFI = NULL; \
         if (tauFI == 0) \
           tauCreateFI(&tauFI, name, type, tau_gr, #group); \
-	Tau_Profile_Wrapper tauFProf(&tauFI);
+	Tau_Profile_Wrapper tauFProf(tauFI);
 
 #ifdef TAU_PROFILEPHASE
 #define TAU_PHASE(name, type, group) \
@@ -213,7 +213,7 @@ or tauFI->method();
 	static FunctionInfo *tauFInfo = NULL; \
 	static char * TauGroupNameUsed = Tau_phase_enable(#group); \
         tauCreateFI(&tauFInfo, name, type, tau_group, TauGroupNameUsed); \
-	Tau_Profile_Wrapper tauFProf(&tauFIInfo,1);
+	Tau_Profile_Wrapper tauFProf(tauFIInfo,1);
 #else
 #define TAU_PHASE TAU_PROFILE
 #endif /* TAU_PROFILEPHASE */
@@ -517,6 +517,6 @@ or tauFI->method();
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.78 $   $Date: 2009/01/14 00:54:27 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.78 2009/01/14 00:54:27 amorris Exp $ 
+ * $Revision: 1.79 $   $Date: 2009/01/14 18:55:25 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.79 2009/01/14 18:55:25 amorris Exp $ 
  ***************************************************************************/
