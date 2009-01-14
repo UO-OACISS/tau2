@@ -251,7 +251,6 @@ char *TauGetCounterString(void) {
 //////////////////////////////////////////////////////////////////////
 
 #ifdef TAU_MPITRACE
-
 //////////////////////////////////////////////////////////////////////
 void Profiler::EnableAllEventsOnCallStack(int tid, Profiler *current) {
   /* Go up the callstack and enable all events on it */
@@ -276,7 +275,7 @@ void Profiler::EnableAllEventsOnCallStack(int tid, Profiler *current) {
 
 
 void Profiler::Start(int tid) { 
-  //  fprintf (stderr, "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
+  //fprintf (stderr, "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
 
 #ifdef TAU_TRACK_IDLE_THREADS
   if (tid != 0) {
@@ -495,6 +494,9 @@ void Profiler::Start(int tid) {
 
 Profiler::Profiler( FunctionInfo * function, TauGroup_t ProfileGroup, 
 		    bool StartStop, int tid) {
+
+  fprintf (stderr, "Do not call this constructor!!!!\n");
+  exit(-1);
 #if defined(TAUKTAU) 
   ThisKtauProfiler = KtauProfiler::GetKtauProfiler(tid);
 #endif /* defined(TAUKTAU) */
@@ -519,63 +521,6 @@ Profiler::Profiler( FunctionInfo * function, TauGroup_t ProfileGroup,
 }
 
 
-//////////////////////////////////////////////////////////////////////
-
-Profiler::Profiler( const Profiler& X)
-  : ThisFunction(X.ThisFunction),
-    ParentProfiler(X.ParentProfiler),
-    MyProfileGroup_(X.MyProfileGroup_),
-    StartStopUsed_(X.StartStopUsed_) {
-#if defined(TAUKTAU)
-  ThisKtauProfiler = KtauProfiler::GetKtauProfiler();
-#endif /* defined(TAUKTAU) */
-  
-#ifndef TAU_MULTIPLE_COUNTERS	
-  StartTime = X.StartTime;
-#else //TAU_MULTIPLE_COUNTERS
-  
-  for (int i=0;i<MAX_TAU_COUNTERS;i++) {
-    StartTime[i] = X.StartTime[i];
-  }
-#endif//TAU_MULTIPLE_COUNTERS
-
-#ifdef TAU_PROFILEPHASE
-  PhaseFlag = X.PhaseFlag;
-#endif /* TAU_PROFILEPHASE */ 
-
-  CurrentProfiler[RtsLayer::myThread()] = this;
-  
-#if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
-  ExclTimeThisCall = X.ExclTimeThisCall;
-#endif //PROFILE_CALLS || PROFILE_STATS || PROFILE_CALLSTACK
-}
-
-//////////////////////////////////////////////////////////////////////
-
-Profiler& Profiler::operator= (const Profiler& X) {
-#ifndef TAU_MULTIPLE_COUNTERS	
-  StartTime = X.StartTime;
-#else //TAU_MULTIPLE_COUNTERS
-  for (int i=0;i<MAX_TAU_COUNTERS;i++) {
-    StartTime[i] = X.StartTime[i];
-  }
-#endif//TAU_MULTIPLE_COUNTERS
-  
-  ThisFunction = X.ThisFunction;
-  ParentProfiler = X.ParentProfiler; 
-  MyProfileGroup_ = X.MyProfileGroup_;
-  StartStopUsed_ = X.StartStopUsed_;
-#ifdef TAU_PROFILEPHASE
-  PhaseFlag = X.PhaseFlag;
-#endif /* TAU_PROFILEPHASE */ 
-  
-  DEBUGPROFMSG(" Profiler& Profiler::operator= (const Profiler& X)" <<endl;);
-  
-#if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
-  ExclTimeThisCall = X.ExclTimeThisCall;
-#endif //PROFILE_CALLS || PROFILE_STATS || PROFILE_CALLSTACK
-  return (*this) ;
-}
 
 //////////////////////////////////////////////////////////////////////
 
@@ -1070,44 +1015,19 @@ Profiler::~Profiler() {
 
 //////////////////////////////////////////////////////////////////////
 
+extern "C" int Tau_profile_exit();
 void Profiler::ProfileExit(const char *message, int tid) {
-  Profiler *current;
+  Tau_profile_exit();
   
-  current = CurrentProfiler[tid];
-  
-  DEBUGPROFMSG("nct "<< RtsLayer::myNode() << " RtsLayer::ProfileExit called :"
-	       << message << endl;);
-  if (current == 0) {   
-    DEBUGPROFMSG("Current is NULL, No need to store data TID = " << tid << endl;);
-    //StoreData(tid);
-  } else {  
-    while (current != NULL) {
-      DEBUGPROFMSG("Thr "<< RtsLayer::myNode() << " ProfileExit() calling Stop:"
-		   << current->ThisFunction->GetName() << " " 
-		   << current->ThisFunction->GetType() << endl;);
-      current->Stop(tid); // clean up 
-      
-      if (current->ParentProfiler == 0) {
-        if (!RtsLayer::isCtorDtor(current->ThisFunction->GetName())) {
-	  // Not a destructor of a static object - its a function like main
-	  DEBUGPROFMSG("Thr " << RtsLayer::myNode()
-		       << " ProfileExit() : Reached top level function - dumping data"
-		       << endl;);
-        }
-      }
-      
 #if defined(TAUKTAU)
-      KtauProfiler::PutKtauProfiler();
+  KtauProfiler::PutKtauProfiler();
 #endif /* TAUKTAU */
-      
-      current = CurrentProfiler[tid]; // Stop should set it
-    }
-  }
-
+  
 #ifdef RENCI_STFF  
   RenciSTFF::cleanup();
 #endif // RENCI_STFF  
 }
+
 
 //////////////////////////////////////////////////////////////////////
 
@@ -1977,6 +1897,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.209 $   $Date: 2009/01/09 17:45:37 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.209 2009/01/09 17:45:37 amorris Exp $ 
+ * $Revision: 1.210 $   $Date: 2009/01/14 00:54:41 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.210 2009/01/14 00:54:41 amorris Exp $ 
  ***************************************************************************/

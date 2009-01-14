@@ -35,6 +35,7 @@ extern "C" void Tau_start(const char *name);
 extern "C" void Tau_stop(const char *name);
 extern "C" void Tau_start_timer(void * function_info, int phase );
 extern "C" int Tau_stop_timer(void * function_info); 
+extern "C" int Tau_stop_current_timer();
 extern "C" void Tau_create_top_level_timer_if_necessary(void);
 extern "C" void Tau_stop_top_level_timer_if_necessary(void);
 extern "C" char * Tau_phase_enable(const char *group);
@@ -57,6 +58,24 @@ extern "C" void Tau_get_counter_info(const char ***counterlist, int *numcounters
 extern "C" int  Tau_get_tid(void);
 extern "C" void Tau_destructor_trigger();
 
+class FunctionInfo;
+class Tau_Profile_Wrapper {
+public:
+  FunctionInfo *fi;
+
+  inline Tau_Profile_Wrapper(FunctionInfo *fi, int phase = 0) {
+    this->fi = fi;
+    if (fi != 0) {
+      Tau_start_timer(fi, phase);
+    }
+  }
+
+  inline ~Tau_Profile_Wrapper() {
+    if (fi != 0) {
+      Tau_stop_timer(fi);
+    }
+  }
+};
 
 
 #define TAU_TYPE_STRING(profileString, str) static string profileString(str);
@@ -67,15 +86,14 @@ extern "C" void Tau_destructor_trigger();
 #define TAU_PROFILE(name, type, group) \
         static TauGroup_t tau_gr = group; \
         static FunctionInfo tauFI(name, type, tau_gr, #group); \
-        tau::Profiler tauFP(&tauFI, tau_gr);
+	Tau_Profile_Wrapper tauFP(&tauFI);
 
 #ifdef TAU_PROFILEPHASE
 #define TAU_PHASE(name, type, group) \
         static TauGroup_t tau_group = group; \
 	static char * TauGroupNameUsed = Tau_phase_enable(#group); \
         static FunctionInfo tauFInfo(name, type, tau_group, TauGroupNameUsed); \
-        tau::Profiler tauFProf(&tauFInfo, tau_group); \
-	tauFProf.SetPhase(1);
+	Tau_Profile_Wrapper tauFProf(&tauFInfo, 1);
 #else /* TAU_PROFILEPHASE */
 #define TAU_PHASE TAU_PROFILE
 #endif /* TAU_PROFILEPHASE */
@@ -87,7 +105,7 @@ extern "C" void Tau_destructor_trigger();
         char tau_timer_iteration_number[128]; \
         sprintf(tau_timer_iteration_number, " [%d]", ++tau_timer_counter); \
         tauCreateFI(&tauFInfo, string(name)+string(tau_timer_iteration_number), type, tau_dy_group, #group); \
-	tau::Profiler tauFProf(tauFInfo, tau_dy_group); 
+	Tau_Profile_Wrapper tauFProf(tauFInfo);
 
 #ifdef TAU_PROFILEPHASE
 #define TAU_DYNAMIC_PHASE(name, type, group) \
@@ -98,8 +116,7 @@ extern "C" void Tau_destructor_trigger();
         char tau_iteration_number[128]; \
         sprintf(tau_iteration_number, " [%d]", ++tau_phase_counter); \
         tauCreateFI(&tauFInfo, string(name)+string(tau_iteration_number), type, tau_group, TauGroupNameUsed); \
-	tau::Profiler tauFProf(tauFInfo, tau_group); \
-	tauFProf.SetPhase(1);
+	Tau_Profile_Wrapper tauFProf(&tauFInfo, 1);
 
 
 #define TAU_STATIC_PHASE_START(name) Tau_static_phase_start(name)
@@ -188,7 +205,7 @@ or tauFI->method();
 	static FunctionInfo *tauFI = NULL; \
         if (tauFI == 0) \
           tauCreateFI(&tauFI, name, type, tau_gr, #group); \
-	tau::Profiler tauFP(tauFI, tau_gr); 
+	Tau_Profile_Wrapper tauFProf(&tauFI);
 
 #ifdef TAU_PROFILEPHASE
 #define TAU_PHASE(name, type, group) \
@@ -196,8 +213,7 @@ or tauFI->method();
 	static FunctionInfo *tauFInfo = NULL; \
 	static char * TauGroupNameUsed = Tau_phase_enable(#group); \
         tauCreateFI(&tauFInfo, name, type, tau_group, TauGroupNameUsed); \
-	tau::Profiler tauFProf(tauFInfo, tau_group); \
-	tauFProf.SetPhase(1);
+	Tau_Profile_Wrapper tauFProf(&tauFIInfo,1);
 #else
 #define TAU_PHASE TAU_PROFILE
 #endif /* TAU_PROFILEPHASE */
@@ -343,15 +359,9 @@ or tauFI->method();
 	return *timer##fi; }
 
 #define TAU_GLOBAL_TIMER_START(timer) { FunctionInfo *timer##fptr= & timer (); \
-	int tau_tid = RtsLayer::myThread(); \
-	tau::Profiler *t = new tau::Profiler (timer##fptr, timer##fptr != (FunctionInfo *) 0 ? timer##fptr->GetProfileGroup() : TAU_DEFAULT, true, tau_tid); \
-        t->Start(tau_tid); }
+    Tau_start_timer(timer##fptr, 0); }
 
-#define TAU_GLOBAL_TIMER_STOP()  {int tau_threadid = RtsLayer::myThread(); \
-                tau::Profiler *p = tau::Profiler::CurrentProfiler[tau_threadid]; \
-		p->Stop(tau_threadid); \
-		delete p; \
-		}
+#define TAU_GLOBAL_TIMER_STOP() Tau_stop_current_timer();
 
 #define TAU_GLOBAL_TIMER_EXTERNAL(timer)  extern FunctionInfo& timer(void);
 
@@ -507,6 +517,6 @@ or tauFI->method();
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.77 $   $Date: 2008/12/24 08:57:12 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.77 2008/12/24 08:57:12 amorris Exp $ 
+ * $Revision: 1.78 $   $Date: 2009/01/14 00:54:27 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.78 2009/01/14 00:54:27 amorris Exp $ 
  ***************************************************************************/

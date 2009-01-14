@@ -78,18 +78,61 @@ extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup
   return (void *) f;
 }
 
+
+
+#define STACK_DEPTH_INCREMENT 100
+static Profiler *Tau_global_stack[TAU_MAX_THREADS];
+static int Tau_global_stackdepth[TAU_MAX_THREADS];
+static int Tau_global_stackpos[TAU_MAX_THREADS];
+
+
+extern "C" void Tau_stack_initialization() {
+  int i;
+  for (i=0; i<TAU_MAX_THREADS; i++) {
+    Tau_global_stackdepth[i] = 0;
+    Tau_global_stackpos[i] = -1;
+    Tau_global_stack[i] = NULL;
+  }
+}
+
+
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_start_timer(void * function_info, int phase)
-{
-  FunctionInfo *f = (FunctionInfo *) function_info; 
-  TauGroup_t gr = f->GetProfileGroup();
-  if (gr & RtsLayer::TheProfileMask())
-  {
-    Profiler *p = new Profiler(f, gr, true);
-/*
-#pragma omp critical
-  printf("START tid = %d, profiler= %x\n", RtsLayer::myThread(), p);
-*/
+extern "C" void Tau_start_timer(void *functionInfo, int phase) {
+  int tid = RtsLayer::myThread();
+  FunctionInfo *fi = (FunctionInfo *) functionInfo; 
+
+  if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+    return; /* group is disabled */
+  }
+
+  // move the stack pointer
+  Tau_global_stackpos[tid]++; /* push */
+
+
+  if (Tau_global_stackpos[tid] >= Tau_global_stackdepth[tid]) {
+    int oldDepth = Tau_global_stackdepth[tid];
+    int newDepth = oldDepth + STACK_DEPTH_INCREMENT;
+    Profiler *newStack = (Profiler *) malloc(sizeof(Profiler)*newDepth);
+    memcpy(newStack, Tau_global_stack[tid], oldDepth*sizeof(Profiler));
+    Tau_global_stack[tid] = newStack;
+    Tau_global_stackdepth[tid] = newDepth;
+  }
+
+  Profiler *p = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
+
+  p->MyProfileGroup_ = fi->GetProfileGroup();
+  p->ThisFunction = fi; 
+
+  
+
+#ifdef TAU_MPITRACE
+  p->RecordEvent = false; /* by default, we don't record this event */
+#endif /* TAU_MPITRACE */
+#ifdef TAU_PROFILEPHASE
+  p->SetPhase(false); /* By default it is not in phase */
+#endif /* TAU_PROFILEPHASE */ 
+
+  
 #ifdef TAU_PROFILEPHASE
   if (phase)
    p->SetPhase(true);
@@ -97,36 +140,73 @@ extern "C" void Tau_start_timer(void * function_info, int phase)
    p->SetPhase(false);
 #endif /* TAU_PROFILEPHASE */
 
-    p->Start();
-  }
+  p->Start();
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
+  printf("[%d:%d-%d] TAU: Runtime overlap: found %s (%p) on the stack, but stop called on %s (%p)\n", 
+	 RtsLayer::getPid(), RtsLayer::getTid(), RtsLayer::myThread(),
+	 stack->GetName(), stack, caller->GetName(), caller);
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" int Tau_stop_timer(void * function_info)
-{
-  FunctionInfo *f = (FunctionInfo *) function_info; 
-  if (f->GetProfileGroup() & RtsLayer::TheProfileMask())
-  {
-    Profiler *p = Profiler::CurrentProfiler[RtsLayer::myThread()];
-/*
-#pragma omp critical
-  printf("STOP tid = %d, profiler= %x\n", RtsLayer::myThread(), p);
-*/
-    if (p->ThisFunction != f)
-    {
-//       printf("TAU: Runtime overlap in timers: %s (%p) and %s (%p)\n",
-// 	     p->ThisFunction->GetName(), p->ThisFunction, f->GetName(), f);
+extern "C" int Tau_stop_timer(void *function_info) {
+  FunctionInfo *functionInfo = (FunctionInfo *) function_info; 
+  int tid = RtsLayer::myThread();
+  Profiler *profiler;
+
+  if (Tau_global_stackpos[tid] < 0) return 0;
+
+  if (!(functionInfo->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+    return 0; /* group is disabled */
+  }
+  
+  profiler = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
+  Tau_global_stackpos[tid]--; /* pop */
+  
+  if (profiler->ThisFunction != functionInfo) { /* Check for overlapping timers */
+    reportOverlap (profiler->ThisFunction, functionInfo);
+  }
+  profiler->Stop();
+  return 0;
+}
 
 
-      printf("[%d:%d-%d] TAU: Runtime overlap: found %s (%p) on the stack, but stop called on %s (%p)\n", 
-	     RtsLayer::getPid(), RtsLayer::getTid(), RtsLayer::myThread(),
-	     p->ThisFunction->GetName(), p->ThisFunction, f->GetName(), f);
-    }
-    p->Stop();
-    delete p;
+///////////////////////////////////////////////////////////////////////////
+extern "C" int Tau_stop_current_timer() {
+  FunctionInfo *functionInfo;
+  Profiler *profiler;
+  int tid;
+
+  tid = RtsLayer::myThread();
+
+  if (Tau_global_stackpos[tid] < 0) return 0;
+
+  profiler = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
+  functionInfo = profiler->ThisFunction;
+
+  if (functionInfo->GetProfileGroup() & RtsLayer::TheProfileMask()) {
+    profiler->Stop();
+    Tau_global_stackpos[tid]--;
   }
   return 0;
 }
+///////////////////////////////////////////////////////////////////////////
+
+
+
+extern "C" int Tau_profile_exit() {
+  int tid = RtsLayer::myThread();
+  while (Tau_global_stackpos[tid] >= 0) {
+    Profiler *p = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
+    p->Stop();
+    Tau_global_stackpos[tid]--;
+  }
+  return 0;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_exit(char * msg)
@@ -1128,7 +1208,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.93 $   $Date: 2008/11/12 01:08:49 $
- * VERSION: $Id: TauCAPI.cpp,v 1.93 2008/11/12 01:08:49 amorris Exp $
+ * $Revision: 1.94 $   $Date: 2009/01/14 00:54:41 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.94 2009/01/14 00:54:41 amorris Exp $
  ***************************************************************************/
 

@@ -164,10 +164,11 @@ class Profiler
 public:
   Profiler(FunctionInfo * fi, TauGroup_t ProfileGroup = TAU_DEFAULT, 
 	   bool StartStop = false, int tid = RtsLayer::myThread());
+
+  Profiler() {};
   
   void Start(int tid = RtsLayer::myThread());
-  Profiler(const Profiler& X);
-  Profiler& operator= (const Profiler& X);
+
   /* Clean up data from this invocation. */
   void Stop(int tid = RtsLayer::myThread(), bool useLastTimeStamp = false);
   ~Profiler();
@@ -286,7 +287,7 @@ public:
 #endif /* TAUKTAU_MERGE */
 #endif /* TAUKTAU */
   
-private:
+public:
   TauGroup_t MyProfileGroup_;
   bool	StartStopUsed_;
   bool 	AddInclFlag; 
@@ -320,6 +321,6 @@ using tau::Profiler;
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.88 $   $Date: 2009/01/08 23:55:39 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.88 2009/01/08 23:55:39 amorris Exp $ 
+ * $Revision: 1.89 $   $Date: 2009/01/14 00:54:27 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.89 2009/01/14 00:54:27 amorris Exp $ 
  ***************************************************************************/
