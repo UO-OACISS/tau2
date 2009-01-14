@@ -80,13 +80,16 @@ public:
 
 #define TAU_TYPE_STRING(profileString, str) static string profileString(str);
 
+
+#define TAU_PROFILE(name, type, group) \
+	static FunctionInfo *tauFI = 0; \
+        if (tauFI == 0) tauCreateFI(&tauFI, name, type, (TauGroup_t) group, #group); \
+	Tau_Profile_Wrapper tauFProf(tauFI);
+
+
 #if (TAU_MAX_THREADS == 1)
 // If we're not multi-threaded, just use the non-thread-safe static initializer
 
-#define TAU_PROFILE(name, type, group) \
-        static TauGroup_t tau_gr = group; \
-        static FunctionInfo tauFI(name, type, tau_gr, #group); \
-	Tau_Profile_Wrapper tauFP(&tauFI);
 
 #ifdef TAU_PROFILEPHASE
 #define TAU_PHASE(name, type, group) \
@@ -189,7 +192,7 @@ a new call for multi-threaded applications and with a static constructor when
 a single thread of execution is used. Correspondingly we either use tauFI.method() 
 or tauFI->method();
 */
-#define TAU_PROFILE_SET_GROUP_NAME(newname) tauFI.SetPrimaryGroupName(newname);
+#define TAU_PROFILE_SET_GROUP_NAME(newname) tauFI->SetPrimaryGroupName(newname);
 #define TAU_PROFILE_TIMER_SET_GROUP_NAME(t, newname) t##fi.SetPrimaryGroupName(newname);
 #define TAU_PROFILE_TIMER_SET_NAME(t, newname)	t##fi.SetName(newname);
 #define TAU_PROFILE_TIMER_SET_TYPE(t, newname)  t##fi.SetType(newname);
@@ -197,15 +200,6 @@ or tauFI->method();
 
 
 #else  /* TAU_MAX_THREADS */
-// Multithreaded, we should use thread-safe tauCreateFI to create the FunctionInfo object
-// Note: It's still not absolutely theoretically 100% thread-safe, since the static 
-// initializer is not in a lock, but we don't want to pay that price for every function call 
-#define TAU_PROFILE(name, type, group) \
-	static TauGroup_t tau_gr = group; \
-	static FunctionInfo *tauFI = NULL; \
-        if (tauFI == 0) \
-          tauCreateFI(&tauFI, name, type, tau_gr, #group); \
-	Tau_Profile_Wrapper tauFProf(tauFI);
 
 #ifdef TAU_PROFILEPHASE
 #define TAU_PHASE(name, type, group) \
@@ -213,7 +207,7 @@ or tauFI->method();
 	static FunctionInfo *tauFInfo = NULL; \
 	static char * TauGroupNameUsed = Tau_phase_enable(#group); \
         tauCreateFI(&tauFInfo, name, type, tau_group, TauGroupNameUsed); \
-	Tau_Profile_Wrapper tauFProf(tauFIInfo,1);
+	Tau_Profile_Wrapper tauFProf(tauFInfo,1);
 #else
 #define TAU_PHASE TAU_PROFILE
 #endif /* TAU_PROFILEPHASE */
@@ -225,7 +219,7 @@ or tauFI->method();
         char tau_timer_iteration_number[128]; \
         sprintf(tau_timer_iteration_number, " [%d]", ++tau_timer_counter); \
         tauCreateFI(&tauFInfo, string(name)+string(tau_timer_iteration_number), type, tau_dy_group, #group); \
-	tau::Profiler tauFProf(tauFInfo, tau_dy_group); 
+	Tau_Profile_Wrapper tauFProf(tauFInfo);
 
 #ifdef TAU_PROFILEPHASE
 #define TAU_DYNAMIC_PHASE(name, type, group) \
@@ -236,8 +230,7 @@ or tauFI->method();
         char tau_iteration_number[128]; \
         sprintf(tau_iteration_number, " [%d]", ++tau_phase_counter); \
         tauCreateFI(&tauFInfo, string(name)+string(tau_iteration_number), type, tau_group, TauGroupNameUsed); \
-	tau::Profiler tauFProf(tauFInfo, tau_group); \
-	tauFProf.SetPhase(1);
+	Tau_Profile_Wrapper tauFProf(tauFInfo, 1);
 
 
 #define TAU_STATIC_PHASE_START(name) Tau_static_phase_start(name)
@@ -252,15 +245,8 @@ or tauFI->method();
 #define TAU_DYNAMIC_PHASE_STOP TAU_DYNAMIC_TIMER_STOP
 #endif /* TAU_PROFILEPHASE */
 
-#define TAU_DYNAMIC_TIMER_START(name) \
-{ static void *tau_counter=NULL; \
-  Tau_dynamic_start(name, &tau_counter, 0); \
-}
-
-#define TAU_DYNAMIC_TIMER_STOP(name) \
-{ static void *tau_counter=NULL; \
-  Tau_dynamic_stop(name, &tau_counter, 0); \
-}
+#define TAU_DYNAMIC_TIMER_START(name) Tau_dynamic_start(name, 0);
+#define TAU_DYNAMIC_TIMER_STOP(name) Tau_dynamic_stop(name, 0);
 
 #define TAU_PROFILE_TIMER(var, name, type, group) \
 	static TauGroup_t var##tau_gr = group; \
@@ -277,7 +263,8 @@ or tauFI->method();
         TauGroup_t var##tau_gr = group; \
         static int tau_timer_dy_counter = 0; \
         char tau_timer_iteration_number[128]; \
-        sprintf(tau_timer_iteration_number,  " [%d]", ++tau_timer_dy_counter); \        FunctionInfo *var##fi = new FunctionInfo(string(name)+string(tau_timer_iteration_number), type, var##tau_gr, #group);
+        sprintf(tau_timer_iteration_number,  " [%d]", ++tau_timer_dy_counter); \
+        FunctionInfo *var##fi = new FunctionInfo(string(name)+string(tau_timer_iteration_number), type, var##tau_gr, #group);
 
 
 #ifdef TAU_PROFILEPHASE
@@ -358,9 +345,7 @@ or tauFI->method();
         tauCreateFI(&timer##fi, name, type, group, #group); \
 	return *timer##fi; }
 
-#define TAU_GLOBAL_TIMER_START(timer) { FunctionInfo *timer##fptr= & timer (); \
-    Tau_start_timer(timer##fptr, 0); }
-
+#define TAU_GLOBAL_TIMER_START(timer) Tau_start_timer(&timer(), 0);
 #define TAU_GLOBAL_TIMER_STOP() Tau_stop_current_timer();
 
 #define TAU_GLOBAL_TIMER_EXTERNAL(timer)  extern FunctionInfo& timer(void);
@@ -368,15 +353,10 @@ or tauFI->method();
 #ifdef TAU_PROFILEPHASE
 #define TAU_GLOBAL_PHASE(timer, name, type, group) FunctionInfo& timer() { \
 	static FunctionInfo *timer##fi = NULL; \
-        tauCreateFI(&timer##fi, name, type, group, Tau_enable_phase(#group)); \
+        tauCreateFI(&timer##fi, name, type, group, Tau_phase_enable(#group)); \
 	return *timer##fi; }
 
-#define TAU_GLOBAL_PHASE_START(timer) { static FunctionInfo *timer##fptr= & timer (); \
-	int tau_tid = RtsLayer::myThread(); \
-	tau::Profiler *t = new tau::Profiler (timer##fptr, timer##fptr != (FunctionInfo *) 0 ? timer##fptr->GetProfileGroup() : TAU_DEFAULT, true, tau_tid); \
-	t->SetPhase(1); \
-        t->Start(tau_tid); }
-
+#define TAU_GLOBAL_PHASE_START(timer) Tau_start_timer(&timer(), 1);
 #define TAU_GLOBAL_PHASE_STOP(timer) Tau_stop_timer(&timer()); 
 
 #define TAU_GLOBAL_PHASE_EXTERNAL(timer) extern FunctionInfo& timer(void);
@@ -517,6 +497,6 @@ or tauFI->method();
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.79 $   $Date: 2009/01/14 18:55:25 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.79 2009/01/14 18:55:25 amorris Exp $ 
+ * $Revision: 1.80 $   $Date: 2009/01/14 20:05:43 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.80 2009/01/14 20:05:43 amorris Exp $ 
  ***************************************************************************/
