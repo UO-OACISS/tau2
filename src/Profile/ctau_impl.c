@@ -566,6 +566,12 @@ static void ptrace_leave_call(PyObject *self, void *key) {
 static int profiler_callback(PyObject *self, PyFrameObject *frame, int what, PyObject *arg) {
   PyCFunctionObject *fn;
 
+  static int init = 0;
+  if (init == 0) {
+    TAU_PROFILE_SET_NODE(0);
+    init = 1;
+  }
+
 /*   char routine[4096]; */
 /*   char *co_name, *co_filename; */
 /*   int co_firstlineno; */
