@@ -36,10 +36,8 @@
 using namespace std;
 #endif
 
-struct lTauGroup
-{
-  bool operator()(const TauGroup_t s1, const TauGroup_t s2) const
-  {
+struct lTauGroup {
+  bool operator()(const TauGroup_t s1, const TauGroup_t s2) const {
     return s1 < s2;
   }
 };
@@ -51,11 +49,9 @@ struct lTauGroup
 // the FunctionInfo * pointer that contains the id of the function 
 // being mapped. The key is currently in the form of a profile group.
 //////////////////////////////////////////////////////////////////////
-FunctionInfo *& TheTauMapFI(TauGroup_t Pgroup )
-{ 
+void *& TheTauMapFI(TauGroup_t key) { 
   //static FunctionInfo *TauMapFI = (FunctionInfo *) NULL;
-  static map<TauGroup_t, FunctionInfo *, lTauGroup > TauMapGroups;
-
-  return TauMapGroups[Pgroup];
+  static map<TauGroup_t, void*, lTauGroup > TauMapGroups;
+  return TauMapGroups[key];
 }
 // EOF

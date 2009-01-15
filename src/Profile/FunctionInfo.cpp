@@ -461,7 +461,7 @@ void FunctionInfo::ResetExclTimeIfNegative(int tid)
 
 
 //////////////////////////////////////////////////////////////////////
-void tauCreateFI(FunctionInfo **ptr, const char *name, const char *type, 
+void tauCreateFI(void **ptr, const char *name, const char *type, 
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName) {
   if (*ptr == 0) {
 
@@ -484,7 +484,7 @@ void tauCreateFI(FunctionInfo **ptr, const char *name, const char *type,
   }
 }
 
-void tauCreateFI(FunctionInfo **ptr, const char *name, const string& type, 
+void tauCreateFI(void **ptr, const char *name, const string& type, 
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName) {
   if (*ptr == 0) {
 #ifdef TAU_CHARM
@@ -505,7 +505,7 @@ void tauCreateFI(FunctionInfo **ptr, const char *name, const string& type,
   }
 }
 
-void tauCreateFI(FunctionInfo **ptr, const string& name, const char *type, 
+void tauCreateFI(void **ptr, const string& name, const char *type, 
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName) {
   if (*ptr == 0) {
 #ifdef TAU_CHARM
@@ -526,7 +526,7 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const char *type,
   }
 }
 
-void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type, 
+void tauCreateFI(void **ptr, const string& name, const string& type, 
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName) {
   if (*ptr == 0) {
 #ifdef TAU_CHARM
@@ -548,6 +548,6 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.61 $   $Date: 2009/01/15 19:08:07 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.61 2009/01/15 19:08:07 amorris Exp $ 
+ * $Revision: 1.62 $   $Date: 2009/01/15 23:51:52 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.62 2009/01/15 23:51:52 amorris Exp $ 
  ***************************************************************************/

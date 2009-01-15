@@ -43,21 +43,7 @@ using namespace std;
 #endif /* TAU_WINDOWS */
 
 
-///////////////////////////////////////////////////////////////////////////
-// Wrappers for corresponding C++ functions follow
-
-/* Note: Our old scheme relied on getting a profiler object. This doesn't 
-   work well with threads, all threads start/stop the same profiler & 
-   profiler is supposed to be for each invocation (thread) as it has a single
-   scalar for storing StartTime. So, we changed this so that each 
-   Tau_get_profiler returns a functionInfo object which can then have 
-   independent profilers associated with it. Each start/stop timer call creates 
-   and destroys a profiler object now. Since the Fortran layer is built atop 
-   the C layer, it remains unchanged. However, we should probably change the 
-   name of this method to Tau_get_functioninfo or something. */
-///////////////////////////////////////////////////////////////////////////
-extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup_t group, const char *gr_name)
-{
+extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup_t group, const char *gr_name) {
   FunctionInfo *f;
   //Profiler *p;
 
@@ -243,16 +229,19 @@ extern "C" void Tau_profile_callstack(void) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump(void) {
   tau::Profiler::DumpData();
+  return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_prefix(char *prefix) {
  tau::Profiler::DumpData(false, RtsLayer::myThread(), prefix);
+  return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_incr(void) {
   tau::Profiler::DumpData(true);
+  return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -357,6 +346,47 @@ extern "C" TauGroup_t Tau_disable_group_name(char * group) {
   return RtsLayer::disableProfileGroupName(group);
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_profile_set_group_name(void *ptr, const char *groupname) {
+  FunctionInfo *f = (FunctionInfo*)ptr;
+  f->SetPrimaryGroupName(groupname);
+}
+
+extern "C" void Tau_profile_set_name(void *ptr, const char *name) {
+  FunctionInfo *f = (FunctionInfo*)ptr;
+  f->Name = strdup(name);
+}
+
+extern "C" void Tau_profile_set_type(void *ptr, const char *type) {
+  FunctionInfo *f = (FunctionInfo*)ptr;
+  f->Type = strdup(type);
+}
+
+extern "C" void Tau_profile_set_group(void *ptr, TauGroup_t group) {
+  FunctionInfo *f = (FunctionInfo*)ptr;
+  f->SetProfileGroup(group);
+}
+
+extern "C" const char *Tau_profile_get_group_name(void *ptr) {
+  FunctionInfo *f = (FunctionInfo*)ptr;
+  return f->GroupName;
+}
+
+extern "C" const char *Tau_profile_get_name(void *ptr) {
+  FunctionInfo *f = (FunctionInfo*)ptr;
+  return f->Name;
+}
+
+extern "C" const char *Tau_profile_get_type(void *ptr) {
+  FunctionInfo *f = (FunctionInfo*)ptr;
+  return f->Type;
+}
+
+extern "C" TauGroup_t Tau_profile_get_group(void *ptr) {
+  FunctionInfo *f = (FunctionInfo*)ptr;
+  return f->GetProfileGroup();
+}
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" TauGroup_t Tau_get_profile_group(char * group) {
@@ -564,15 +594,13 @@ extern "C" void Tau_get_context_userevent(void **ptr, char *name)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_context_userevent(void *ue, double data)
-{
+extern "C" void Tau_context_userevent(void *ue, double data) {
   TauContextUserEvent *t = (TauContextUserEvent *) ue;
   t->TriggerEvent(data);
 } 
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_set_event_name(void *ue, char *name)
-{
+extern "C" void Tau_set_event_name(void *ue, char *name) {
   TauUserEvent *t = (TauUserEvent *) ue;
   t->SetEventName(name);
 }
@@ -588,29 +616,25 @@ extern "C" void Tau_report_thread_statistics(void) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_event_disable_min(void *ue)
-{
+extern "C" void Tau_event_disable_min(void *ue) {
   TauUserEvent *t = (TauUserEvent *) ue;
   t->SetDisableMin(true);
 } 
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_event_disable_max(void *ue)
-{
+extern "C" void Tau_event_disable_max(void *ue) {
   TauUserEvent *t = (TauUserEvent *) ue;
   t->SetDisableMax(true);
 } 
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_event_disable_mean(void *ue)
-{
+extern "C" void Tau_event_disable_mean(void *ue) {
   TauUserEvent *t = (TauUserEvent *) ue;
   t->SetDisableMean(true);
 } 
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_event_disable_stddev(void *ue)
-{
+extern "C" void Tau_event_disable_stddev(void *ue) {
   TauUserEvent *t = (TauUserEvent *) ue;
   t->SetDisableStdDev(true);
 } 
@@ -618,8 +642,7 @@ extern "C" void Tau_event_disable_stddev(void *ue)
 ///////////////////////////////////////////////////////////////////////////
 
 extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGroup_t group, 
-	char *group_name)
-{
+	char *group_name) {
 #ifdef DEBUG_PROF
   printf("Inside Tau_profile_timer_ fname=%s *ptr = %x\n", fname, *ptr);
 #endif /* DEBUG_PROF */
@@ -631,7 +654,7 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
     
     if (*ptr == 0) {  
       // remove garbage characters from the end of name
-      for(int i=0; i<strlen(fname); i++) {
+      for(unsigned int i=0; i<strlen(fname); i++) {
 	if (!isprint(fname[i])) {
 	  fname[i] = '\0';
 	  break;
@@ -873,7 +896,7 @@ extern "C" void Tau_pure_start(const char *name) {
   string n = string(name);
   map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
   if (it == ThePureMap().end()) {
-    tauCreateFI(&fi,n,"",TAU_USER,"TAU_USER");
+    tauCreateFI((void**)&fi,n,"",TAU_USER,"TAU_USER");
     ThePureMap()[n] = fi;
   } else {
     fi = (*it).second;
@@ -898,7 +921,7 @@ extern "C" void Tau_static_phase_start(char *name) {
   string n = string(name);
   map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
   if (it == ThePureMap().end()) {
-    tauCreateFI(&fi,n,"",TAU_USER,"TAU_USER");
+    tauCreateFI((void**)&fi,n,"",TAU_USER,"TAU_USER");
     Tau_mark_group_as_phase(fi);
     ThePureMap()[n] = fi;
   } else {
@@ -956,7 +979,7 @@ extern "C" void Tau_dynamic_start(char *name, int isPhase) {
   RtsLayer::LockDB();
   map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
   if (it == ThePureMap().end()) {
-    tauCreateFI(&fi,n,"",TAU_USER,"TAU_USER");
+    tauCreateFI((void**)&fi,n,"",TAU_USER,"TAU_USER");
     if (isPhase) {
       Tau_mark_group_as_phase(fi);
     }
@@ -1184,7 +1207,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.96 $   $Date: 2009/01/15 19:30:40 $
- * VERSION: $Id: TauCAPI.cpp,v 1.96 2009/01/15 19:30:40 amorris Exp $
+ * $Revision: 1.97 $   $Date: 2009/01/15 23:51:52 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.97 2009/01/15 23:51:52 amorris Exp $
  ***************************************************************************/
 

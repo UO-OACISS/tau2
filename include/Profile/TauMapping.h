@@ -20,11 +20,11 @@
 
 #if (PROFILING_ON || TRACING_ON)
 // For Mapping, global variables used between layers
-FunctionInfo *& TheTauMapFI(TauGroup_t key=TAU_DEFAULT);
+void *& TheTauMapFI(TauGroup_t key=TAU_DEFAULT);
 
 #define TAU_MAPPING(stmt, key) \
   { \
-    static FunctionInfo *TauMapFI = NULL; \
+    static void *TauMapFI = NULL; \
     tauCreateFI(&TauMapFI, #stmt, " " , key, #key); \
     TheTauMapFI(key) = TauMapFI; \
     Tau_start_timer(TauMapFI, 0); \
@@ -33,20 +33,24 @@ FunctionInfo *& TheTauMapFI(TauGroup_t key=TAU_DEFAULT);
   } 
 
 #define TAU_MAPPING_REGISTER(stmt, key)  { \
-    static FunctionInfo *TauMapFI = NULL; \
+    static void *TauMapFI = NULL; \
     tauCreateFI(&TauMapFI,stmt, " " , key, #key); \
     TheTauMapFI(key) = TauMapFI; \
   } 
 
-#define TAU_MAPPING_CREATE(name, type, key, groupname, tid)  { FunctionInfo *TauMapFI = new FunctionInfo(name, type, key, groupname, true, tid); \
-    if (TauMapFI == (FunctionInfo *) NULL) { \
+#define TAU_MAPPING_CREATE(name, type, key, groupname, tid)  { \
+    void *TauMapFI = NULL; \
+    tauCreateFI(&TauMapFI, name, type, key, groupname); \
+    if (TauMapFI == 0) { \
 	printf("ERROR: new returned NULL"); exit(1); \
     } \
     TheTauMapFI(key) = TauMapFI; \
   } 
 
-#define TAU_MAPPING_CREATE1(name, type, key, groupid, groupname, tid)  { FunctionInfo *TauMapFI = new FunctionInfo(name, type, groupid, groupname, true, tid); \
-    if (TauMapFI == (FunctionInfo *) NULL) { \
+#define TAU_MAPPING_CREATE1(name, type, key, groupid, groupname, tid)  { \
+    void *TauMapFI = NULL; \
+    tauCreateFI(&TauMapFI, name, type, groupid, groupname); \
+    if (TauMapFI == 0) { \
 	printf("ERROR: new returned NULL"); exit(1); \
     } \
     TheTauMapFI(key) = TauMapFI; \
@@ -54,11 +58,12 @@ FunctionInfo *& TheTauMapFI(TauGroup_t key=TAU_DEFAULT);
 
 /* TAU_MAPPING_TIMER_CREATE creates a functionInfo pointer with a specified 
    group name. */
-#define TAU_MAPPING_TIMER_CREATE(t, name, type, gr, group_name) t = new FunctionInfo((string &) name, type, gr, group_name, true, RtsLayer::myThread());
+#define TAU_MAPPING_TIMER_CREATE(t, name, type, gr, groupname) \
+  tauCreateFI(&t, name, type, gr, groupname);
 
 /* TAU_MAPPING_OBJECT creates a functionInfo pointer that may be stored in the 
    object that is used to relate a lower level layer with a higher level layer */
-#define TAU_MAPPING_OBJECT(timer) FunctionInfo *timer = NULL;
+#define TAU_MAPPING_OBJECT(timer) void *timer = NULL;
 
 /* TAU_MAPPING_LINK gets in a var the function info object associated with the given key (Group) */
 #define TAU_MAPPING_LINK(timer, key) timer = TheTauMapFI(key); 
@@ -66,11 +71,11 @@ FunctionInfo *& TheTauMapFI(TauGroup_t key=TAU_DEFAULT);
 /* TAU_MAPPING_PROFILE profiles the entire routine by creating a profiler objeca
    and this behaves pretty much like TAU_PROFILE macro, except this gives in the
    FunctionInfo object pointer instead of name and type strings. */
-#define TAU_MAPPING_PROFILE(FuncInfoVar) Tau_Profile_Wrapper FuncInfoVar##tauFP(FuncInfoVar);
+#define TAU_MAPPING_PROFILE(timer) Tau_Profile_Wrapper timer##tauFP(timer);
 
 /* TAU_MAPPING_PROFILE_TIMER acts like TAU_PROFILE_TIMER by creating a profiler
    object that can be subsequently used with TAU_PROFILE_START and TAU_PROFILE_STOP */
-#define TAU_MAPPING_PROFILE_TIMER(timer, FuncInfoVar, tid) FunctionInfo *timer = FuncInfoVar;
+#define TAU_MAPPING_PROFILE_TIMER(timer, FuncInfoVar, tid) void *timer = FuncInfoVar;
    
 /* TAU_MAPPING_PROFILE_START acts like TAU_PROFILE_START by starting the timer */
 #define TAU_MAPPING_PROFILE_START(timer, tid) Tau_start_timer(timer, 0);
@@ -83,14 +88,17 @@ FunctionInfo *& TheTauMapFI(TauGroup_t key=TAU_DEFAULT);
 #define TAU_MAPPING_DB_PURGE(tid)  TAU_DB_PURGE(); 
 #define TAU_MAPPING_PROFILE_SET_NODE(node, tid)  TAU_PROFILE_SET_NODE(node); 
 
-#define TAU_MAPPING_PROFILE_SET_GROUP_NAME(timer, name) timer->SetPrimaryGroupName(name);
-#define TAU_MAPPING_PROFILE_GET_GROUP_NAME(timer) timer->GetPrimaryGroup();
-#define TAU_MAPPING_PROFILE_GET_GROUP(timer) timer->GetProfileGroup();
-#define TAU_MAPPING_PROFILE_SET_NAME(timer, name) timer->SetName(name);
-#define TAU_MAPPING_PROFILE_GET_NAME(timer) timer->GetName();
-#define TAU_MAPPING_PROFILE_SET_TYPE(timer, name) timer->SetType(name);
-#define TAU_MAPPING_PROFILE_GET_TYPE(timer) timer->GetType();
-#define TAU_MAPPING_PROFILE_SET_GROUP(timer, id) timer->SetProfileGroup(id);
+#define TAU_MAPPING_PROFILE_SET_NAME(timer, name) Tau_profile_set_name(timer,name);
+#define TAU_MAPPING_PROFILE_SET_TYPE(timer, name) Tau_profile_set_type(timer,name);
+#define TAU_MAPPING_PROFILE_SET_GROUP(timer, id) Tau_profile_set_group(timer,id); 
+#define TAU_MAPPING_PROFILE_SET_GROUP_NAME(timer, name) Tau_profile_set_group_name(timer,name);
+
+#define TAU_MAPPING_PROFILE_GET_NAME(timer) Tau_profile_get_name(timer)
+#define TAU_MAPPING_PROFILE_GET_TYPE(timer) Tau_profile_get_type(timer)
+#define TAU_MAPPING_PROFILE_GET_GROUP(timer) Tau_profile_get_group(timer)
+#define TAU_MAPPING_PROFILE_GET_GROUP_NAME(timer) Tau_profile_get_group_name(timer)
+
+
 
 #else
 /* Create null , except the main statement which should be executed as it is*/
