@@ -345,10 +345,10 @@ $(TAU_BINDINGSDIR)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 		   else mkdir $(INSTALLDEST) ;fi
 		$(RM) $(INSTALLDEST)/$(TAUPYTHON) $(INSTALLDEST)/ctau_impl$(TAU_SHLIBX)
 		$(TAU_INSTALL) tau.py $(INSTALLDEST)
-		$(TAU_INSTALL) ctau.py $(INSTALLDEST)
+		$(TAU_INSTALL) ltau.py $(INSTALLDEST)
 		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) $(TAUPYTHON)
 		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) ctau_impl$(TAU_SHLIBX)
-		@echo Installing $(TAUPYTHON), ctau.py, and tau.py in $(TAU_BINDINGSDIR)
+		@echo Installing $(TAUPYTHON), ltau.py, and tau.py in $(TAU_BINDINGSDIR)
 		@if [ -d $(TAU_BINDINGSDIR) ] ; then true; \
 		    else mkdir $(TAU_BINDINGSDIR); fi
 		$(RM) $(TAU_BINDINGSDIR)/*
