@@ -143,6 +143,10 @@ or tauFI->method();
 #define TAU_PROFILE_TIMER_SET_GROUP(t, id) Tau_profile_set_group(t,id); 
 #define TAU_PROFILE_TIMER_SET_GROUP_NAME(t, newname) Tau_profile_set_group_name(t,newname);
 
+#define TAU_PROFILE_TIMER_GET_NAME(timer) Tau_profile_get_name(timer)
+#define TAU_PROFILE_TIMER_GET_TYPE(timer) Tau_profile_get_type(timer)
+#define TAU_PROFILE_TIMER_GET_GROUP(timer) Tau_profile_get_group(timer)
+#define TAU_PROFILE_TIMER_GET_GROUP_NAME(timer) Tau_profile_get_group_name(timer)
 
 
 /**************************************************************************/
@@ -173,6 +177,6 @@ or tauFI->method();
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.83 $   $Date: 2009/01/15 23:51:13 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.83 2009/01/15 23:51:13 amorris Exp $ 
+ * $Revision: 1.84 $   $Date: 2009/01/15 23:57:22 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.84 2009/01/15 23:57:22 amorris Exp $ 
  ***************************************************************************/

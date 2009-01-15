@@ -20,7 +20,7 @@
 
 #if (PROFILING_ON || TRACING_ON)
 // For Mapping, global variables used between layers
-void *& TheTauMapFI(TauGroup_t key=TAU_DEFAULT);
+void* &TheTauMapFI(TauGroup_t key=TAU_DEFAULT);
 
 #define TAU_MAPPING(stmt, key) \
   { \
@@ -83,20 +83,22 @@ void *& TheTauMapFI(TauGroup_t key=TAU_DEFAULT);
 /* TAU_MAPPING_PROFILE_STOP acts like TAU_PROFILE_STOP by stopping the timer */
 #define TAU_MAPPING_PROFILE_STOP(tid) TAU_GLOBAL_TIMER_STOP();
 
+
+
+/* These are all worthless macros which have non "MAPPING" versions, they should
+   never have been created, but are left here for "legacy" purposes */
 #define TAU_MAPPING_PROFILE_EXIT(msg, tid)  TAU_PROFILE_EXIT(msg); 
 #define TAU_MAPPING_DB_DUMP(tid)  TAU_DB_DUMP(); 
 #define TAU_MAPPING_DB_PURGE(tid)  TAU_DB_PURGE(); 
 #define TAU_MAPPING_PROFILE_SET_NODE(node, tid)  TAU_PROFILE_SET_NODE(node); 
-
-#define TAU_MAPPING_PROFILE_SET_NAME(timer, name) Tau_profile_set_name(timer,name);
-#define TAU_MAPPING_PROFILE_SET_TYPE(timer, name) Tau_profile_set_type(timer,name);
-#define TAU_MAPPING_PROFILE_SET_GROUP(timer, id) Tau_profile_set_group(timer,id); 
-#define TAU_MAPPING_PROFILE_SET_GROUP_NAME(timer, name) Tau_profile_set_group_name(timer,name);
-
-#define TAU_MAPPING_PROFILE_GET_NAME(timer) Tau_profile_get_name(timer)
-#define TAU_MAPPING_PROFILE_GET_TYPE(timer) Tau_profile_get_type(timer)
-#define TAU_MAPPING_PROFILE_GET_GROUP(timer) Tau_profile_get_group(timer)
-#define TAU_MAPPING_PROFILE_GET_GROUP_NAME(timer) Tau_profile_get_group_name(timer)
+#define TAU_MAPPING_PROFILE_SET_NAME(timer, name) TAU_PROFILE_TIMER_SET_NAME(timer,name);
+#define TAU_MAPPING_PROFILE_SET_TYPE(timer, name) TAU_PROFILE_TIMER_SET_TYPE(timer,name);
+#define TAU_MAPPING_PROFILE_SET_GROUP(timer, id) TAU_PROFILE_TIMER_SET_GROUP(timer,id); 
+#define TAU_MAPPING_PROFILE_SET_GROUP_NAME(timer, name) TAU_PROFILE_TIMER_SET_GROUP_NAME(timer,name);
+#define TAU_MAPPING_PROFILE_GET_NAME(timer) TAU_PROFILE_TIMER_GET_NAME(timer)
+#define TAU_MAPPING_PROFILE_GET_TYPE(timer) TAU_PROFILE_TIMER_GET_TYPE(timer)
+#define TAU_MAPPING_PROFILE_GET_GROUP(timer) TAU_PROFILE_TIMER_GET_GROUP(timer)
+#define TAU_MAPPING_PROFILE_GET_GROUP_NAME(timer) TAU_PROFILE_TIMER_GET_GROUP_NAME(timer)
 
 
 
