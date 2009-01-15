@@ -21,7 +21,7 @@
 
 #include <stdio.h>
 #include <Profile/Profiler.h>
-#if (defined(__APPLE_CC__) || defined(TAU_APPLE_XLC))
+#if (defined(__APPLE_CC__) || defined(TAU_APPLE_XLC) || defined(TAU_APPLE_PGI))
 #include <malloc/malloc.h>
 #else
 #ifdef TAU_FREEBSD
@@ -560,7 +560,7 @@ int TauGetFreeMemory(void)
 #endif /* TAU_CATAMOUNT */
 
 /***************************************************************************
- * $RCSfile: TauMemory.cpp,v $   $Author: amorris $
- * $Revision: 1.30 $   $Date: 2008/07/31 23:49:53 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.30 2008/07/31 23:49:53 amorris Exp $ 
+ * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
+ * $Revision: 1.31 $   $Date: 2009/01/15 19:24:09 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.31 2009/01/15 19:24:09 sameer Exp $ 
  ***************************************************************************/

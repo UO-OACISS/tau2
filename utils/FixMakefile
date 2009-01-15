@@ -859,6 +859,10 @@ fi
 	echo NOTE: Apple c++ compiler will be used
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     APPLEPGI)
+	echo NOTE: PGI c++ compiler on Mac OS X will be used
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      USE_CC)
 	echo "NOTE: Using default cc compiler."
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

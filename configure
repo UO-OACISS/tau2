@@ -118,7 +118,7 @@ for arg in "$@"; do
     echo ""
     echo "Compiler Options:"
     echo "-c++=<compiler>  ............................ specify the C++ compiler."
-    echo "          options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|"
+    echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
     echo "                                      icpc|scgcc|scpathCC|pathCC|orCC]."
     echo "-cc=<compiler> ................................ specify the C compiler."
     echo "          options [cc|gcc|scgcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc|orcc]."
@@ -127,7 +127,7 @@ for arg in "$@"; do
     echo "       g95|open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale]"
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
     echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
-    echo "          options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|"
+    echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
     echo "                                               icpc|scgcc|pathCC|orCC]."
     echo "-useropt='<parameters>' ... optional arguments to compilers (e.g. -O3)."
     echo ""
@@ -217,12 +217,12 @@ for arg in "$@"; do
     echo "  where [OPTIONS] are:"
     echo "-c++=<compiler>  ............................ specify the C++ compiler."
     echo "          options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|"
-    echo "                                      icpc|scgcc|scpathCC|pathCC|orCC]."
+    echo "                                pgcpp|icpc|scgcc|scpathCC|pathCC|orCC]."
     echo "-cc=<compiler> ................................ specify the C compiler."
     echo "          options [cc|gcc|scgcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc|orcc]."
     echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
     echo "         options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|"
-    echo "                                               icpc|scgcc|pathCC|orCC]."
+    echo "                                        pgcpp|icpc|scgcc|pathCC|orCC]."
     echo "-pdtcompdir=<compilerdir> . specify a different PDT compiler directory."
     echo "-pdtarchdir=<archdir> . specify a different PDT architecture directory."
     echo "-fortran=<compiler> ..................... specify the Fortran compiler."
@@ -579,7 +579,7 @@ do
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = mpicxx ] 
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = mpicxx ] 
       then
         cxx_compiler=$myarg
       else
@@ -587,7 +587,7 @@ do
         testmp=`echo $myarg | sed -e 's/^mp//'`
 	if [ "y$testxlc" = "y$myarg" -a "y$testmp" = "y$myarg" ]
         then
-          echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', 'qk-pgCC', and 'orCC'"
+          echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', 'qk-pgCC', and 'orCC'"
 #       exit 1
         else
 	  if [ "y$testxlc" != "y$myarg" ]
@@ -604,14 +604,14 @@ do
   -pdt_c++=*)
     pdt_cxx_full_path=`echo $arg | sed 's@-pdt_c++=@@g'`
     myarg=`echo $arg |  echo $arg | sed 's@-pdt_c++=@@g' | sed 's@.*/@@g'`
-    if [  $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ ]
+    if [  $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ ]
       then
         pdt_cxx_compiler=$myarg
       else
         testxlc=`echo $myarg | sed -e 's/xl//'`
         if [ "y$testxlc" = "y$myarg" ]
         then
-          echo "WARNING: valid options for pdt_c++ are 'CC', 'KCC', 'g++', '*xlC*', 'cxx' , 'egcs', 'pgCC', 'FCC', 'guidec++', 'aCC', 'c++', and 'orCC'"
+          echo "WARNING: valid options for pdt_c++ are 'CC', 'KCC', 'g++', '*xlC*', 'cxx' , 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'c++', and 'orCC'"
 #       exit 1
         else
           pdt_cxx_compiler=$myarg
@@ -2449,6 +2449,10 @@ if [ $machine = apple ]
     then
       fixmakeargs="$fixmakeargs APPLECXX"
   fi
+  if [ $cxx_compiler = pgCC -o $cxx_compiler = pgcpp ] 
+    then
+      fixmakeargs="$fixmakeargs APPLEPGI"
+  fi
   if [ $fortran_compiler = ibm -o $fortran_compiler = ibm64 ]
     then
       fixmakeargs="$fixmakeargs IBMXLFAPPLE"
@@ -2634,10 +2638,10 @@ case $cxx_compiler in
       fixmakeargs="$fixmakeargs KAI"
       ;;
 
-   pgCC)
+   pgCC|pgcpp)
       echo "Default C++ compiler will be PGI pgCC C++ Compiler"
       pgi=yes
-      pgiflag=`pgCC -help | head -1 | grep 1.7 | wc -l` 
+      pgiflag=`pgcc -help | head -1 | grep 1.7 | wc -l` 
 	
       fixmakeargs="$fixmakeargs COMPINST_PGI"
 
@@ -2651,7 +2655,7 @@ case $cxx_compiler in
 
       if [ $fortran_compiler = no ]
       then 
-        extradir=`which pgCC | sed s/pgCC/../`
+        extradir=`which pgcc | sed s/pgcc/../`
         fixmakeargs="$fixmakeargs PGI_FORTRAN"
         fortran_compiler=yes
       fi
@@ -2890,7 +2894,7 @@ case $fortran_compiler in
 
    pgi)
       echo "Default Fortran compiler will be PGI"
-      extradir=`which pgCC | sed s/pgCC/../`
+      extradir=`which pgcc | sed s/pgcc/../`
       fixmakeargs="$fixmakeargs PGI_FORTRAN"
       ;;
 
@@ -4314,7 +4318,7 @@ fi
 rm -f get_typeinfo1.C get_typeinfo2.C get_typeinfo*.o *.ti *.ii
 
 ######################################################################
-if [ $cxx_compiler = pgCC ] 
+if [ $cxx_compiler = pgCC -o $cxx_compiler = pgcpp ] 
 then
   cat <<EOF > pgitest.C
 int foo(int x)
