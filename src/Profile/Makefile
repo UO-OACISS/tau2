@@ -340,7 +340,7 @@ $(TAU_JAVA_INSTALLDIR)/Profile.class: Profile.class
 		$(TAU_INSTALL) $? $(TAU_JAVA_INSTALLDIR)
 
 $(TAU_BINDINGSDIR)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
-		@echo Installing $(TAUPYTHON), ctau.py, and tau.py in $(INSTALLDEST)
+		@echo Installing $(TAUPYTHON), ltau.py, and tau.py in $(INSTALLDEST)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
 		   else mkdir $(INSTALLDEST) ;fi
 		$(RM) $(INSTALLDEST)/$(TAUPYTHON) $(INSTALLDEST)/ctau_impl$(TAU_SHLIBX)
@@ -353,7 +353,7 @@ $(TAU_BINDINGSDIR)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 		    else mkdir $(TAU_BINDINGSDIR); fi
 		$(RM) $(TAU_BINDINGSDIR)/*
 		cd $(TAU_BINDINGSDIR) && ln -s ../$(TAU_SHLIB) $(TAUPYTHON) && ln -s ../$(TAU_SHLIB) ctau_impl$(TAU_SHLIBX)
-		cd $(TAU_BINDINGSDIR) && ln -s ../tau.py . && ln -s ../ctau.py .
+		cd $(TAU_BINDINGSDIR) && ln -s ../tau.py . && ln -s ../ltau.py .
 
 $(INSTALLDEST)/libpgnod_prof.a : 
 	ar rcs $(INSTALLDEST)/libpgnod_prof.a
