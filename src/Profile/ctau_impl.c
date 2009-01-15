@@ -402,14 +402,16 @@ static ProfilerEntry *newProfilerEntry(ProfilerObject *pObj, void *key, PyObject
   self->calls = EMPTY_ROTATING_TREE;
 
   if (frame != NULL) {
-    co_name = PyString_AsString(frame->f_code->co_name);
-    co_filename = PyString_AsString(frame->f_code->co_filename);
-    while (strchr(co_filename,'/')) {
-      co_filename = strchr(co_filename,'/')+1;
-    }
-    co_firstlineno = frame->f_code->co_firstlineno;
-    sprintf (routine,"%s [{%s}{%d}]", co_name, co_filename, co_firstlineno);
-    TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
+      co_name = PyString_AsString(frame->f_code->co_name);
+      co_filename = PyString_AsString(frame->f_code->co_filename);
+      while (strchr(co_filename,'/')) {
+	co_filename = strchr(co_filename,'/')+1;
+      }
+      co_firstlineno = frame->f_code->co_firstlineno;
+      sprintf (routine,"%s [{%s}{%d}]", co_name, co_filename, co_firstlineno);
+      if (strcmp(co_filename,"<string>") != 0) { // suppress "? <string>"
+	TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
+      }
   } else {
     if (strcmp (cname, "start") && strcmp (cname, "stop") && strcmp (cname, "disable")) {
 /*       sprintf (routine,"C [%s]", cname); */

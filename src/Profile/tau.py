@@ -137,7 +137,11 @@ class Profile(ctau_impl.Profiler):
     def runctx(self, cmd, globals, locals):
         self.enable()
         try:
+            import pytau
+            x = pytau.profileTimer(cmd)
+            pytau.start(x)
             exec cmd in globals, locals
+            pytau.stop(x)
         finally:
             self.disable()
         return self
