@@ -267,11 +267,11 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 	  << " Type : " << GetType() << endl;);
 
 #ifdef TAU_PROFILEMEMORY
-	MemoryEvent = new TauUserEvent(string(Name+" "+Type+" - Heap Memory Used (KB)").c_str());
+	MemoryEvent = new TauUserEvent(string(string(Name)+" "+Type+" - Heap Memory Used (KB)").c_str());
 #endif /* TAU_PROFILEMEMORY */
 
 #ifdef TAU_PROFILEHEADROOM
-	HeadroomEvent = new TauUserEvent(string(Name+" "+Type+" - Memory Headroom Available (MB)").c_str());
+	HeadroomEvent = new TauUserEvent(string(string(Name)+" "+Type+" - Memory Headroom Available (MB)").c_str());
 #endif /* TAU_PROFILEHEADROOM */
 
 #ifdef RENCI_STFF
@@ -548,6 +548,6 @@ void tauCreateFI(FunctionInfo **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.60 $   $Date: 2009/01/08 23:54:22 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.60 2009/01/08 23:54:22 amorris Exp $ 
+ * $Revision: 1.61 $   $Date: 2009/01/15 19:08:07 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.61 2009/01/15 19:08:07 amorris Exp $ 
  ***************************************************************************/
