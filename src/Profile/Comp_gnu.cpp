@@ -319,8 +319,7 @@ static HashNode *createHashNode(long addr) {
 	  while (strchr(filename,'/') != NULL) {
 	    filename = strchr(filename,'/')+1;
 	  }
-        }
-        else {
+        } else {
           filename = "(unknown)";
         }
 	
@@ -398,8 +397,7 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 	    while (strchr(filename,'/') != NULL) {
 	      filename = strchr(filename,'/')+1;
 	    }
-          }
-          else {
+          } else {
             filename = "(unknown)";
           }
 

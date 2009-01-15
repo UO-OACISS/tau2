@@ -360,8 +360,12 @@ static char *removeRuns(char *str) {
   int len; 
   // replaces runs of spaces with a single space
 
+  if (!str) {
+    return str; /* do nothing with a null string */
+  }
+
   // also removes leading whitespace
-  while (str && *str && *str == ' ') str++;
+  while (*str && *str == ' ') str++;
 
   len = strlen(str);
   for (i=0; i<len; i++) {
