@@ -12,6 +12,9 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyTimer.cpp,v $
+// Revision 1.9  2009/01/15 02:47:23  amorris
+// Changes for C++ measurement API
+//
 // Revision 1.8  2008/10/16 22:58:24  amorris
 // The current Profiler object was not being deleted in stop, causing a big memory leak.  Try GPAW now Sameer!
 //
@@ -159,23 +162,15 @@ PyObject * pytau_start(PyObject *self, PyObject *args)
 #endif /* DEBUG */
     int tid = RtsLayer::myThread();
     /* Get the FunctionInfo object */
-    Profiler *p = new Profiler(f,  f != (FunctionInfo *) 0 ? f->GetProfileGroup() : 
-      TAU_DEFAULT, true, tid);
-    if (p == (Profiler *) NULL) { 
-      printf("ERROR: Out of Memory in pytau_start! new returns NULL!\n");
-      return NULL;
-    }
 
-#ifdef TAU_PROFILEPHASE
     bool isPhase = phaseMap[id];
+    int phase = 0;
     if (isPhase) {
-      p->SetPhase(true);
-    } else {
-      p->SetPhase(false);
+      phase = 1;
     }
-#endif
 
-    p->Start(tid);
+    Tau_start_timer(f, phase);
+
     Py_INCREF(Py_None);
     return Py_None;
 
@@ -201,19 +196,12 @@ PyObject * pytau_stop(PyObject *self, PyObject *args)
     static int taunode = tau_check_and_set_nodeid();
 
     Profiler *p = Profiler::CurrentProfiler[tid];
-    if (p != (Profiler *) NULL)
-    {
-#ifdef DEBUG
-      printf("Looking at function %s\n", p->ThisFunction->GetName());
-#endif /* DEBUG */
-      p->Stop();
-      // It was stopped properly
-      delete p;
+
+    if (p != (Profiler *) NULL) {
+      Tau_stop_timer(p->ThisFunction);
       Py_INCREF(Py_None);
       return Py_None;
-    }
-    else
-    {
+    } else {
       printf("pytau_stop: Stack error. Profiler is NULL!");
       return NULL;
     }
@@ -223,7 +211,7 @@ PyObject * pytau_stop(PyObject *self, PyObject *args)
 }
 
 // version
-// $Id: PyTimer.cpp,v 1.8 2008/10/16 22:58:24 amorris Exp $
+// $Id: PyTimer.cpp,v 1.9 2009/01/15 02:47:23 amorris Exp $
 
 // End of file
   
