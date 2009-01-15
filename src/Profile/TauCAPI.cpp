@@ -402,8 +402,8 @@ extern "C" int& tau_totalnodes(int set_or_get, int value)
 
 
 #ifdef TAU_MPI
-#define TAU_GEN_EVENT(e, msg) TauUserEvent& e () { \
-	static TauUserEvent u(msg); return u; } 
+#define TAU_GEN_EVENT(e, msg) TauUserEvent* e () { \
+	static TauUserEvent u(msg); return &u; } 
 
 TAU_GEN_EVENT(TheSendEvent,"Message size sent to all nodes")
 TAU_GEN_EVENT(TheRecvEvent,"Message size received from all nodes")
@@ -1184,7 +1184,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.95 $   $Date: 2009/01/15 00:27:48 $
- * VERSION: $Id: TauCAPI.cpp,v 1.95 2009/01/15 00:27:48 amorris Exp $
+ * $Revision: 1.96 $   $Date: 2009/01/15 19:30:40 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.96 2009/01/15 19:30:40 amorris Exp $
  ***************************************************************************/
 
