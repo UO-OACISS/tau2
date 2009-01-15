@@ -124,20 +124,17 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase) {
   p->ThisFunction = fi; 
 
   
-
 #ifdef TAU_MPITRACE
   p->RecordEvent = false; /* by default, we don't record this event */
 #endif /* TAU_MPITRACE */
-#ifdef TAU_PROFILEPHASE
-  p->SetPhase(false); /* By default it is not in phase */
-#endif /* TAU_PROFILEPHASE */ 
 
   
 #ifdef TAU_PROFILEPHASE
-  if (phase)
-   p->SetPhase(true);
-  else
-   p->SetPhase(false);
+  if (phase) {
+    p->SetPhase(true);
+  } else {
+    p->SetPhase(false);
+  }
 #endif /* TAU_PROFILEPHASE */
 
   p->Start();
@@ -209,87 +206,72 @@ extern "C" int Tau_profile_exit() {
 
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_exit(char * msg)
-{
-  TAU_PROFILE_EXIT(msg);
+extern "C" void Tau_exit(char * msg) {
+  tau::Profiler::ProfileExit(msg);
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_init_ref(int* argc, char ***argv)
-{
-  TAU_INIT(argc, argv);
+extern "C" void Tau_init_ref(int* argc, char ***argv) {
+  RtsLayer::ProfileInit(*argc, *argv);
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_init(int argc, char **argv)
-{
-  TAU_PROFILE_INIT(argc, argv);
+extern "C" void Tau_init(int argc, char **argv) {
+  RtsLayer::ProfileInit(argc, argv);
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_set_node(int node)
-{
-  TAU_PROFILE_SET_NODE(node);
+extern "C" void Tau_set_node(int node) {
+  RtsLayer::setMyNode(node);
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_set_context(int context)
-{
-  TAU_PROFILE_SET_CONTEXT(context);
+extern "C" void Tau_set_context(int context) {
+  RtsLayer::setMyContext(context);
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_set_thread(int thread)
-{
-  TAU_PROFILE_SET_THREAD(thread);
+extern "C" void Tau_set_thread(int thread) {
+  RtsLayer::setMyThread(thread);
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_profile_callstack(void)
-{
-  TAU_PROFILE_CALLSTACK();
+extern "C" void Tau_profile_callstack(void) {
+  /* removed */
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" int Tau_dump(void)
-{
-  return TAU_DB_DUMP();
+extern "C" int Tau_dump(void) {
+  tau::Profiler::DumpData();
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" int Tau_dump_prefix(char *prefix)
-{
-  return TAU_DB_DUMP_PREFIX(prefix);
+extern "C" int Tau_dump_prefix(char *prefix) {
+ tau::Profiler::DumpData(false, RtsLayer::myThread(), prefix);
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" int Tau_dump_incr(void)
-{
-  return TAU_DB_DUMP_INCR();
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_purge(void)
-{
-  TAU_DB_PURGE();
-}
-
-extern "C" void Tau_the_function_list(const char ***functionList, int *num)
-{
-  TAU_GET_FUNC_NAMES(*functionList, *num);
+extern "C" int Tau_dump_incr(void) {
+  tau::Profiler::DumpData(true);
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_dump_function_names()
-{
-  TAU_DUMP_FUNC_NAMES();
+extern "C" void Tau_purge(void) {
+  tau::Profiler::PurgeData();
+}
+
+extern "C" void Tau_the_function_list(const char ***functionList, int *num) {
+  tau::Profiler::theFunctionList(functionList, num);
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_dump_function_names() {
+  tau::Profiler::dumpFunctionNames();
 }
   
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_the_counter_names(const char **counterList, int num)
-{
-  TAU_GET_COUNTER_NAMES(counterList, num);
+extern "C" void Tau_get_counter_names(const char ***counterList, int *num) {
+  tau::Profiler::theCounterList(counterList, num);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -297,126 +279,127 @@ extern "C" void Tau_get_function_values(const char **inFuncs, int numOfFuncs,
 					double ***counterExclusiveValues,
 					double ***counterInclusiveValues,
 					int **numOfCalls, int **numOfSubRoutines,
-					const char ***counterNames, int *numOfCounters)
-{
-  TAU_GET_FUNC_VALS(inFuncs,numOfFuncs,*counterExclusiveValues,*counterInclusiveValues,
-		    *numOfCalls,*numOfSubRoutines,*counterNames,*numOfCounters);
+					const char ***counterNames, int *numOfCounters) {
+   tau::Profiler::getFunctionValues(inFuncs,numOfFuncs,counterExclusiveValues,counterInclusiveValues,
+				    numOfCalls,numOfSubRoutines,counterNames,numOfCounters);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_get_event_names(const char ***eventList, int *num) {
-  TAU_GET_EVENT_NAMES(*eventList, *num);
+  tau::Profiler::getUserEventList(eventList, num);
 }
-
 
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_get_event_vals(const char **inUserEvents, int numUserEvents,
 				  int **numEvents, double **max, double **min,
 				  double **mean, double **sumSqr) {
-  TAU_GET_EVENT_VALS(inUserEvents, numUserEvents, *numEvents, *max, *min,
-		     *mean, *sumSqr);
+  tau::Profiler::getUserEventValues(inUserEvents, numUserEvents, numEvents, max, min,
+		     mean, sumSqr);
 }
 
-///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_dump_function_values(const char **functionList, int num)
-{
-  TAU_DUMP_FUNC_VALS(functionList,num);
-}
+
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_dump_function_values_incr(const char **functionList, int num)
-{
-  TAU_DUMP_FUNC_VALS_INCR(functionList,num);
+extern "C" void Tau_dump_function_values(const char **functionList, int num) {
+  tau::Profiler::dumpFunctionValues(functionList,num);;
 }
 
-///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_register_thread(void)
-{
-  TAU_REGISTER_THREAD();
-}
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_register_fork(int nodeid, enum TauFork_t opcode)
-{
-  TAU_REGISTER_FORK(nodeid, opcode);
+extern "C" void Tau_dump_function_values_incr(const char **functionList, int num) {
+  tau::Profiler::dumpFunctionValues(functionList,num,true);;
 }
 
-///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_enable_instrumentation(void)
-{
-  TAU_ENABLE_INSTRUMENTATION();
-}
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_disable_instrumentation(void)
-{
-  TAU_DISABLE_INSTRUMENTATION();
+extern "C" void Tau_register_thread(void) {
+  RtsLayer::RegisterThread();;
 }
 
+
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_shutdown(void)
-{
+extern "C" void Tau_register_fork(int nodeid, enum TauFork_t opcode) {
+  RtsLayer::RegisterFork(nodeid, opcode);;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_enable_instrumentation(void) {
+  RtsLayer::TheEnableInstrumentation() = true;;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_disable_instrumentation(void) {
+  RtsLayer::TheEnableInstrumentation() = false;;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_shutdown(void) {
   if (!TheUsingCompInst()) {
     RtsLayer::TheShutdown() = true;
-    TAU_DISABLE_INSTRUMENTATION();
+    RtsLayer::TheEnableInstrumentation() = false;;
   }
 }
 
-///////////////////////////////////////////////////////////////////////////
-extern "C" TauGroup_t Tau_enable_group_name(char * group)
-{
-  return TAU_ENABLE_GROUP_NAME(group);
-}
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" TauGroup_t Tau_disable_group_name(char * group)
-{
-  return TAU_DISABLE_GROUP_NAME(group);
+extern "C" TauGroup_t Tau_enable_group_name(char * group) {
+  return RtsLayer::enableProfileGroupName(group);
 }
+
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" TauGroup_t Tau_get_profile_group(char * group)
-{
-  return TAU_GET_PROFILE_GROUP(group);
+extern "C" TauGroup_t Tau_disable_group_name(char * group) {
+  return RtsLayer::disableProfileGroupName(group);
 }
+
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_enable_group(TauGroup_t group)
-{
-  TAU_ENABLE_GROUP(group);
+extern "C" TauGroup_t Tau_get_profile_group(char * group) {
+  return RtsLayer::getProfileGroup(group);
 }
+
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_disable_group(TauGroup_t group)
-{
-  TAU_DISABLE_GROUP(group);
+extern "C" void Tau_enable_group(TauGroup_t group) {
+  RtsLayer::enableProfileGroup(group);
 }
+
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" TauGroup_t Tau_enable_all_groups(void)
-{
-  return TAU_ENABLE_ALL_GROUPS();
+extern "C" void Tau_disable_group(TauGroup_t group) {
+  RtsLayer::disableProfileGroup(group);
 }
+
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" TauGroup_t Tau_disable_all_groups(void)
-{
-  return TAU_DISABLE_ALL_GROUPS();
+extern "C" TauGroup_t Tau_enable_all_groups(void) {
+  return RtsLayer::enableAllGroups();
 }
 
-/* TAU's totalnodes implementation follows */
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" TauGroup_t Tau_disable_all_groups(void) {
+  return RtsLayer::disableAllGroups();
+}
+
+
+
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int& tau_totalnodes(int set_or_get, int value)
 {
   static int nodes = 1;
-  if (set_or_get == 1) /* SET (in is 1) , GET (out is 0) */
-  {
-    nodes = value;
-  }
+  if (set_or_get == 1)
+    {
+      nodes = value;
+    }
   return nodes;
 }
+
 
 #ifdef TAU_MPI
 #define TAU_GEN_EVENT(e, msg) TauUserEvent& e () { \
@@ -550,16 +533,14 @@ extern "C" void Tau_trace_recvmsg(int type, int source, int length)
 ///////////////////////////////////////////////////////////////////////////
 // User Defined Events 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void * Tau_get_userevent(char *name)
-{
+extern "C" void * Tau_get_userevent(char *name) {
   TauUserEvent *ue;
   ue = new TauUserEvent(name);
   return (void *) ue;
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_userevent(void *ue, double data)
-{
+extern "C" void Tau_userevent(void *ue, double data) {
   TauUserEvent *t = (TauUserEvent *) ue;
   t->TriggerEvent(data);
 } 
@@ -597,15 +578,13 @@ extern "C" void Tau_set_event_name(void *ue, char *name)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_report_statistics(void)
-{
-  TAU_REPORT_STATISTICS();
+extern "C" void Tau_report_statistics(void) {
+  TauUserEvent::ReportStatistics();
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_report_thread_statistics(void)
-{
-  TAU_REPORT_THREAD_STATISTICS();
+extern "C" void Tau_report_thread_statistics(void) {
+  TauUserEvent::ReportStatistics(true);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -728,89 +707,86 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void)
   }
 }
 
-    
-///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_track_memory(void)
-{
-  TAU_TRACK_MEMORY();
-} 
 
-///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_track_memory_here(void)
-{
-  TAU_TRACK_MEMORY_HERE();
-} 
+extern "C" void Tau_disable_context_event(void *event) {
+  TauContextUserEvent *e = (TauContextUserEvent *) event;
+  e->SetDisableContext(true);
+}
 
-///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_track_memory_headroom(void)
-{
-  TAU_TRACK_MEMORY_HEADROOM();
-} 
-
-///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_track_memory_headroom_here(void)
-{
-  TAU_TRACK_MEMORY_HEADROOM_HERE();
-} 
-
-///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_track_muse_events(void)
-{
-  TAU_TRACK_MUSE_EVENTS();
-} 
-
-///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_enable_tracking_memory(void)
-{
-  TAU_ENABLE_TRACKING_MEMORY();
-} 
-
-///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_disable_tracking_memory(void)
-{
-  TAU_DISABLE_TRACKING_MEMORY();
-} 
-
-///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_enable_tracking_memory_headroom(void)
-{
-  TAU_ENABLE_TRACKING_MEMORY_HEADROOM();
-} 
-
-///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_disable_tracking_memory_headroom(void)
-{
-  TAU_DISABLE_TRACKING_MEMORY_HEADROOM();
-} 
-
-///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_enable_tracking_muse_events(void)
-{
-  TAU_ENABLE_TRACKING_MUSE_EVENTS();
-} 
+extern "C" void Tau_enable_context_event(void *event) {
+  TauContextUserEvent *e = (TauContextUserEvent *) event;
+  e->SetDisableContext(false);
+}
 
 
-///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_disable_tracking_muse_events(void)
-{
-  TAU_DISABLE_TRACKING_MUSE_EVENTS();
-} 
+
+extern "C" void Tau_track_memory(void) {
+  TauTrackMemoryUtilization(true);
+}
+
+
+extern "C" void Tau_track_memory_here(void) {
+  TauTrackMemoryHere();
+}
+
+
+extern "C" void Tau_track_memory_headroom(void) {
+  TauTrackMemoryUtilization(false);
+}
+
+
+extern "C" void Tau_track_memory_headroom_here(void) {
+  TauTrackMemoryHeadroomHere();
+}
+
+
+extern "C" void Tau_track_muse_events(void) {
+  TauTrackMuseEvents();
+}
+
+
+extern "C" void Tau_enable_tracking_memory(void) {
+  TauEnableTrackingMemory();
+}
+
+
+extern "C" void Tau_disable_tracking_memory(void) {
+  TauDisableTrackingMemory();
+}
+
+
+extern "C" void Tau_enable_tracking_memory_headroom(void) {
+  TauEnableTrackingMemoryHeadroom();
+}
+
+
+extern "C" void Tau_disable_tracking_memory_headroom(void) {
+  TauDisableTrackingMemoryHeadroom();
+}
+
+
+extern "C" void Tau_enable_tracking_muse_events(void) {
+  TauEnableTrackingMuseEvents();
+}
+
+
+
+extern "C" void Tau_disable_tracking_muse_events(void) {
+  TauDisableTrackingMuseEvents();
+}
+
+
+extern "C" void Tau_set_interrupt_interval(int value) {
+  TauSetInterruptInterval(value);
+}
+
+
+extern "C" void Tau_global_stop(void) {
+  Tau_stop_current_timer();;
+}
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_set_interrupt_interval(int value)
-{
-  TAU_SET_INTERRUPT_INTERVAL(value);
-} 
-
-///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_global_stop(void)
-{
-  TAU_GLOBAL_TIMER_STOP();
-} 
-
-///////////////////////////////////////////////////////////////////////////
-extern "C" char * Tau_phase_enable(const char *group)
-{
+extern "C" char * Tau_phase_enable(const char *group) {
 #ifdef TAU_PROFILEPHASE
   char *newgroup = new char[strlen(group)+16];
   sprintf(newgroup, "%s | TAU_PHASE", group);
@@ -821,30 +797,26 @@ extern "C" char * Tau_phase_enable(const char *group)
 } 
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" char * Tau_phase_enable_once(const char *group, void **ptr)
-{
+extern "C" char * Tau_phase_enable_once(const char *group, void **ptr) {
   /* We don't want to parse the group name string every time this is invoked.
      we compare a pointer and if necessary, perform the string operations  
      on the group name (adding  | TAU_PHASE to it). */
   if (*ptr == 0) {
     return Tau_phase_enable(group);
-  }
-  else
+  } else {
     return (char *) NULL;
+  }
 } 
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_mark_group_as_phase(void **ptr)
-{
-  FunctionInfo *fptr = (FunctionInfo *) *ptr;
+extern "C" void Tau_mark_group_as_phase(void *ptr) {
+  FunctionInfo *fptr = (FunctionInfo *) ptr;
   char *newgroup = Tau_phase_enable(fptr->GetAllGroups()); 
   fptr->SetPrimaryGroupName(newgroup); 
-
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" char * Tau_append_iteration_to_name(int iteration, char *name)
-{
+extern "C" char * Tau_append_iteration_to_name(int iteration, char *name) {
   char tau_iteration_number[128];
   sprintf(tau_iteration_number, " [%d]", iteration);
   string iterationName = string(name)+string(tau_iteration_number);
@@ -872,10 +844,11 @@ extern "C" void Tau_profile_dynamic_auto(int iteration, void **ptr, char *fname,
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_profile_param1l(long data, const char * dataname)
-{
+extern "C" void Tau_profile_param1l(long data, const char *dataname) {
   string dname(dataname);
-  TAU_PROFILE_PARAM1L(data, dname);
+#ifdef TAU_PROFILEPARAM
+  tau::Profiler::AddProfileParamData(data, dataname);
+#endif
 }
 
 
@@ -925,7 +898,8 @@ extern "C" void Tau_static_phase_start(char *name) {
   string n = string(name);
   map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
   if (it == ThePureMap().end()) {
-    tauCreateFI(&fi,n,"",TAU_USER,"TAU_USER | TAU_PHASE");
+    tauCreateFI(&fi,n,"",TAU_USER,"TAU_USER");
+    Tau_mark_group_as_phase(fi);
     ThePureMap()[n] = fi;
   } else {
     fi = (*it).second;
@@ -961,8 +935,11 @@ static int *getIterationList(char *name) {
 }
 
 /* isPhase argument is 1 for phase and 0 for timer */
-extern "C" void Tau_dynamic_start(char *name, int isPhase)
-{
+extern "C" void Tau_dynamic_start(char *name, int isPhase) {
+#ifndef TAU_PROFILEPHASE
+  isPhase = 0;
+#endif
+
   int *iterationList = getIterationList(name);
 
   int tid = RtsLayer::myThread();
@@ -979,10 +956,9 @@ extern "C" void Tau_dynamic_start(char *name, int isPhase)
   RtsLayer::LockDB();
   map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
   if (it == ThePureMap().end()) {
+    tauCreateFI(&fi,n,"",TAU_USER,"TAU_USER");
     if (isPhase) {
-      tauCreateFI(&fi,n,"",TAU_USER,"TAU_USER | TAU_PHASE");
-    } else {
-      tauCreateFI(&fi,n,"",TAU_USER,"TAU_USER");
+      Tau_mark_group_as_phase(fi);
     }
     ThePureMap()[n] = fi;
   } else {
@@ -1208,7 +1184,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.94 $   $Date: 2009/01/14 00:54:41 $
- * VERSION: $Id: TauCAPI.cpp,v 1.94 2009/01/14 00:54:41 amorris Exp $
+ * $Revision: 1.95 $   $Date: 2009/01/15 00:27:48 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.95 2009/01/15 00:27:48 amorris Exp $
  ***************************************************************************/
 
