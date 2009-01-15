@@ -115,98 +115,7 @@ public:
 	Tau_Profile_Wrapper tauFProf(tauFInfo, 1);
 
 
-#define TAU_DYNAMIC_TIMER_START(name) Tau_dynamic_start(name, 0);
-#define TAU_DYNAMIC_TIMER_STOP(name) Tau_dynamic_stop(name, 0);
 
-#define TAU_PROFILE_TIMER(var, name, type, group) \
-	static FunctionInfo *var##fi = NULL; \
-        if (var##fi == 0) tauCreateFI(&var##fi, name, type, (TauGroup_t) group, #group); 
-
-#define TAU_PROFILE_TIMER_DYNAMIC(var, name, type, group) \
-        TauGroup_t var##tau_gr = group; \
-        FunctionInfo *var##fi = new FunctionInfo(name, type, var##tau_gr, #group);
-
-/* TAU_PROFILE_CREATE_DYNAMIC_AUTO embeds the counter in the name. */
-#define TAU_PROFILE_CREATE_DYNAMIC_AUTO(var, name, type, group) \
-        TauGroup_t var##tau_gr = group; \
-        static int tau_timer_dy_counter = 0; \
-        char tau_timer_iteration_number[128]; \
-        sprintf(tau_timer_iteration_number,  " [%d]", ++tau_timer_dy_counter); \
-        FunctionInfo *var##fi = new FunctionInfo(string(name)+string(tau_timer_iteration_number), type, var##tau_gr, #group);
-
-
-
-#define TAU_DYNAMIC_TIMER_START(name) Tau_dynamic_start(name, 0);
-#define TAU_DYNAMIC_TIMER_STOP(name) Tau_dynamic_stop(name, 0);
-
-
-#define TAU_PROFILE_TIMER_DYNAMIC(var, name, type, group) \
-        TauGroup_t var##tau_gr = group; \
-        FunctionInfo *var##fi = new FunctionInfo(name, type, var##tau_gr, #group);
-
-/* TAU_PROFILE_CREATE_DYNAMIC_AUTO embeds the counter in the name. */
-#define TAU_PROFILE_CREATE_DYNAMIC_AUTO(var, name, type, group) \
-        TauGroup_t var##tau_gr = group; \
-        static int tau_timer_dy_counter = 0; \
-        char tau_timer_iteration_number[128]; \
-        sprintf(tau_timer_iteration_number,  " [%d]", ++tau_timer_dy_counter); \
-        FunctionInfo *var##fi = new FunctionInfo(string(name)+string(tau_timer_iteration_number), type, var##tau_gr, #group);
-
-
-
-// Construct a tau::Profiler obj and a FunctionInfo obj with an extended name
-// e.g., FunctionInfo loop1fi(); tau::Profiler loop1(); 
-#define TAU_PROFILE_START(var) Tau_start_timer(var##fi, 0);
-#define TAU_PROFILE_STOP(var) Tau_stop_timer(var##fi);
-
-
-
-
-
-#ifdef TAU_PROFILEPHASE
-#define TAU_STATIC_PHASE_START(name) Tau_static_phase_start(name)
-#define TAU_STATIC_PHASE_STOP(name)  Tau_static_phase_stop(name)
-#define TAU_DYNAMIC_PHASE_START(name) Tau_dynamic_start(name, 1);
-#define TAU_DYNAMIC_PHASE_STOP(name) Tau_dynamic_stop(name, 1);
-
-#define TAU_PHASE_CREATE_STATIC(var, name, type, group) \
-	static TauGroup_t var##tau_group = group; \
-	static FunctionInfo *var##finfo = NULL; \
-	static char * TauGroupNameUsed##var = Tau_phase_enable(#group); \
-        tauCreateFI(&var##finfo, name, type, var##tau_group, TauGroupNameUsed##var); 
-
-#define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group) \
-	TauGroup_t var##tau_group = group; \
-	FunctionInfo *var##finfo = NULL; \
-	static char * TauGroupNameUsed##var = Tau_phase_enable(#group); \
-        tauCreateFI(&var##finfo, name, type, var##tau_group, TauGroupNameUsed##var); 
-
-/* TAU_PHASE_CREATE_DYNAMIC_AUTO creates and embeds a unique id in the name */
-#define TAU_PHASE_CREATE_DYNAMIC_AUTO(var, name, type, group) \
-        TauGroup_t var##tau_group = group; \
-        static int tau_phase_dy_counter = 0; \
-        char tau_phase_iteration_number[128]; \
-        sprintf(tau_phase_iteration_number, " [%d]", ++tau_phase_dy_counter); \
-	static char * TauGroupNameUsed##var = Tau_phase_enable(#group); \
-	FunctionInfo *var##finfo = new FunctionInfo(string(name)+string(tau_phase_iteration_number), type, var##tau_group,  TauGroupNameUsed##var); 
-
-
-#define TAU_PHASE_START(var) if (var##tau_group & RtsLayer::TheProfileMask()) \
-                                Tau_start_timer(var##finfo, 1);
-#define TAU_PHASE_STOP(var)  if (var##tau_group & RtsLayer::TheProfileMask()) \
-                                Tau_stop_timer(var##finfo);
-
-#else
-#define TAU_STATIC_PHASE_START TAU_STATIC_TIMER_START
-#define TAU_STATIC_PHASE_STOP TAU_STATIC_TIMER_STOP
-#define TAU_DYNAMIC_PHASE_START TAU_DYNAMIC_TIMER_START
-#define TAU_DYNAMIC_PHASE_STOP TAU_DYNAMIC_TIMER_STOP
-#define TAU_PHASE_CREATE_STATIC TAU_PROFILE_TIMER
-#define TAU_PHASE_CREATE_DYNAMIC TAU_PROFILE_TIMER_DYNAMIC
-#define TAU_PHASE_CREATE_DYNAMIC_AUTO TAU_PROFILE_CREATE_DYNAMIC_AUTO
-#define TAU_PHASE_START TAU_PROFILE_START
-#define TAU_PHASE_STOP  TAU_PROFILE_STOP
-#endif /* TAU_PROFILEPHASE */
 
 
 
@@ -224,178 +133,24 @@ or tauFI->method();
 
 
 
-
-
-
-
 /**************************************************************************/
 
 
 
-
-#ifdef TAU_PROFILEPARAM
-#define TAU_PROFILE_PARAM1L(b,c)  	tau::Profiler::AddProfileParamData(b,c)
-#else   /* TAU_PROFILEPARAM */
-#define TAU_PROFILE_PARAM1L(b,c)  
-#endif /* TAU_PROFILEPARAM */
-
-
-
-#define TAU_PROFILE_STMT(stmt) stmt;
-#define TAU_PROFILE_EXIT(msg)  tau::Profiler::ProfileExit(msg); 
-#define TAU_PROFILE_INIT(argc, argv) RtsLayer::ProfileInit(argc, argv);
-#define TAU_INIT(argc, argv) RtsLayer::ProfileInit(*argc, *argv);
-#define TAU_PROFILE_SET_NODE(node) RtsLayer::setMyNode(node);
-#define TAU_PROFILE_SET_CONTEXT(context) RtsLayer::setMyContext(context);
-#define TAU_PROFILE_SET_THREAD(thread) RtsLayer::setMyThread(thread);
-
-#define TAU_GLOBAL_TIMER(timer, name, type, group) FunctionInfo& timer (void) { \
-	static FunctionInfo *timer##fi = NULL; \
-        tauCreateFI(&timer##fi, name, type, group, #group); \
-	return *timer##fi; }
-
-#define TAU_GLOBAL_TIMER_START(timer) Tau_start_timer(&timer(), 0);
-#define TAU_GLOBAL_TIMER_STOP() Tau_stop_current_timer();
-
-#define TAU_GLOBAL_TIMER_EXTERNAL(timer)  extern FunctionInfo& timer(void);
-
-#ifdef TAU_PROFILEPHASE
-#define TAU_GLOBAL_PHASE(timer, name, type, group) FunctionInfo& timer() { \
-	static FunctionInfo *timer##fi = NULL; \
-        tauCreateFI(&timer##fi, name, type, group, Tau_phase_enable(#group)); \
-	return *timer##fi; }
-
-#define TAU_GLOBAL_PHASE_START(timer) Tau_start_timer(&timer(), 1);
-#define TAU_GLOBAL_PHASE_STOP(timer) Tau_stop_timer(&timer()); 
-
-#define TAU_GLOBAL_PHASE_EXTERNAL(timer) extern FunctionInfo& timer(void);
-#else /* TAU_PROFILEPHASE */
-#define TAU_GLOBAL_PHASE 	TAU_GLOBAL_TIMER
-#define TAU_GLOBAL_PHASE_START	TAU_GLOBAL_TIMER_START
-#define TAU_GLOBAL_PHASE_STOP(timer)	TAU_GLOBAL_TIMER_STOP()
-#define TAU_GLOBAL_PHASE_EXTERNAL TAU_GLOBAL_TIMER_EXTERNAL
-
-#endif /* TAU_PROFILEPHASE */
-
-/* The above macros are for use with global timers in a multi-threaded application */
-
-#ifdef PROFILE_CALLSTACK
-#define TAU_PROFILE_CALLSTACK()    tau::Profiler::CallStackTrace();
-#else
-#define TAU_PROFILE_CALLSTACK() 
-#endif /* PROFILE_CALLSTACK */
-
-#define TAU_DB_DUMP() tau::Profiler::DumpData();
-#define TAU_DB_DUMP_PREFIX(prefix) tau::Profiler::DumpData(false, RtsLayer::myThread(), prefix);
-#define TAU_DB_DUMP_INCR() tau::Profiler::DumpData(true);
-#define TAU_DB_PURGE() tau::Profiler::PurgeData();
-#define TAU_GET_FUNC_NAMES(functionList, num) tau::Profiler::theFunctionList(&functionList, &num);
-#define TAU_DUMP_FUNC_NAMES() tau::Profiler::dumpFunctionNames();
-#ifdef TAU_MULTIPLE_COUNTERS
-#define TAU_GET_COUNTER_NAMES(counterList, num) MultipleCounterLayer::theCounterList(&counterList, &num);
-#else //TAU_MULTIPLE_COUNTERS
-#define TAU_GET_COUNTER_NAMES(counterList, num) tau::Profiler::theCounterList(&counterList, &num);
-#endif //TAU_MULTIPLE_COUNTERS
-#define TAU_GET_FUNC_VALS(v1,v2,v3,v4,v5,v6,v7,v8) \
-                               tau::Profiler::getFunctionValues(v1,v2,&v3,&v4,&v5,&v6,&v7,&v8);
-#define TAU_DUMP_FUNC_VALS(v1,v2) \
-                               tau::Profiler::dumpFunctionValues(v1,v2);
-#define TAU_DUMP_FUNC_VALS_INCR(v1,v2) \
-                               tau::Profiler::dumpFunctionValues(v1,v2,true);
-
-
-// UserEvents
-
-#define TAU_GET_EVENT_NAMES(eventList, num) tau::Profiler::getUserEventList(&eventList, &num);
-#define TAU_GET_EVENT_VALS(v1,v2,v3,v4,v5,v6,v7) \
-                               tau::Profiler::getUserEventValues(v1,v2,&v3,&v4,&v5,&v6,&v7);
-
-#define TAU_REGISTER_EVENT(event, name)  	static TauUserEvent event(name);
-#define TAU_EVENT(event, data) 		 	(event).TriggerEvent(data);
-#define TAU_EVENT_SET_NAME(event, name) 	(event).SetEventName(name);
-#define TAU_EVENT_DISABLE_MIN(event) 		(event).SetDisableMin(true);
-#define TAU_EVENT_DISABLE_MAX(event) 		(event).SetDisableMax(true);
-#define TAU_EVENT_DISABLE_MEAN(event) 		(event).SetDisableMean(true);
-#define TAU_EVENT_DISABLE_STDDEV(event) 	(event).SetDisableStdDev(true);
-#define TAU_REPORT_STATISTICS()			TauUserEvent::ReportStatistics();
-#define TAU_REPORT_THREAD_STATISTICS()		TauUserEvent::ReportStatistics(true);
-
-#define TAU_REGISTER_CONTEXT_EVENT(event, name) static TauContextUserEvent event(name);
-#define TAU_CONTEXT_EVENT(event, data)		(event).TriggerEvent(data);
-#define TAU_DISABLE_CONTEXT_EVENT(event)	(event).SetDisableContext(true);
-#define TAU_ENABLE_CONTEXT_EVENT(event)		(event).SetDisableContext(false);
-
-
-
-#define TAU_REGISTER_THREAD()			RtsLayer::RegisterThread();
-#define TAU_REGISTER_FORK(id, op) 		RtsLayer::RegisterFork(id, op);
-#define TAU_ENABLE_INSTRUMENTATION() 		RtsLayer::TheEnableInstrumentation() = true;
-#define TAU_DISABLE_INSTRUMENTATION() 		RtsLayer::TheEnableInstrumentation() = false;
-#define TAU_ENABLE_GROUP(group)			RtsLayer::enableProfileGroup(group)
-#define TAU_DISABLE_GROUP(group)		RtsLayer::disableProfileGroup(group)
-#define TAU_ENABLE_GROUP_NAME(group)		RtsLayer::enableProfileGroupName(group)
-#define TAU_DISABLE_GROUP_NAME(group)		RtsLayer::disableProfileGroupName(group)
-#define TAU_ENABLE_ALL_GROUPS()			RtsLayer::enableAllGroups()
-#define TAU_DISABLE_ALL_GROUPS()		RtsLayer::disableAllGroups()
-#define TAU_GET_PROFILE_GROUP(group)		RtsLayer::getProfileGroup(group)
-#define TAU_ENABLE_TRACKING_MEMORY()		TauEnableTrackingMemory()
-#define TAU_DISABLE_TRACKING_MEMORY()		TauDisableTrackingMemory()
-#define TAU_ENABLE_TRACKING_MEMORY_HEADROOM()	TauEnableTrackingMemoryHeadroom()
-#define TAU_DISABLE_TRACKING_MEMORY_HEADROOM()	TauDisableTrackingMemoryHeadroom()
-#define TAU_TRACK_MEMORY()			TauTrackMemoryUtilization(true)
-#define TAU_TRACK_MEMORY_HEADROOM()		TauTrackMemoryUtilization(false)
-#define TAU_TRACK_MEMORY_HERE()			TauTrackMemoryHere()
-#define TAU_TRACK_MEMORY_HEADROOM_HERE()	TauTrackMemoryHeadroomHere()
-#define TAU_ENABLE_TRACKING_MUSE_EVENTS()	TauEnableTrackingMuseEvents()
-#define TAU_DISABLE_TRACKING_MUSE_EVENTS()	TauDisableTrackingMuseEvents()
-#define TAU_TRACK_MUSE_EVENTS()			TauTrackMuseEvents()
-#define TAU_SET_INTERRUPT_INTERVAL(value)	TauSetInterruptInterval(value)
 #define TAU_NEW(expr, size) 			Tau_new(__FILE__, __LINE__, size, expr)
 #define TAU_DELETE(expr, variable) 		Tau_track_memory_deallocation(__FILE__, __LINE__, variable) , expr
 
-#define TAU_PROFILE_SNAPSHOT(name)              Tau_profile_snapshot(name);
-#define TAU_PROFILE_SNAPSHOT_1L(name, expr)     Tau_profile_snapshot_1l(name, expr);
-#define TAU_METADATA(name, value)               Tau_metadata(name, value);
-#define TAU_CONTEXT_METADATA(name, value)       Tau_context_metadata(name, value);
-#define TAU_PHASE_METADATA(name, value)         Tau_phase_metadata(name, value);
 
-/* for profiler objects created by name */
-#define TAU_PROFILER_CREATE(handle, name, type, group)  handle=Tau_get_profiler(name, type, group, #group);
-#define TAU_PROFILER_START(handle) Tau_start_timer(handle, 0);
-#define TAU_PROFILER_STOP(handle) Tau_stop_timer(handle);
-#define TAU_PROFILER_GET_INCLUSIVE_VALUES(handle, data) Tau_get_inclusive_values(handle, (double *) data, Tau_get_tid());
-#define TAU_PROFILER_GET_EXCLUSIVE_VALUES(handle, data) Tau_get_exclusive_values(handle, (double *) data, Tau_get_tid());
-#define TAU_PROFILER_GET_CALLS(handle, number) Tau_get_calls(handle, number, Tau_get_tid())
-#define TAU_PROFILER_GET_CHILD_CALLS(handle, number) Tau_get_child_calls(handle, number, Tau_get_tid());
-#define TAU_PROFILER_GET_COUNTER_INFO(counters, numcounters) Tau_get_counter_info((const char ***)counters, numcounters);
 
 
 #ifdef NO_RTTI
-/* #define CT(obj) string(#obj) */
 #define CT(obj) string(" ")
 #else // RTTI is present
-//#define CT(obj) string(RtsLayer::CheckNotNull(typeid(obj).name())) 
 #define CT(obj) RtsLayer::GetRTTI(typeid(obj).name())
 #endif //NO_RTTI
 
 
 #endif /* PROFILING_ON */
-
-#ifdef TRACING_ON
-#define TAU_TRACE_SENDMSG(type, destination, length) \
-	RtsLayer::TraceSendMsg(type, destination, length); 
-#define TAU_TRACE_RECVMSG(type, source, length) \
-	RtsLayer::TraceRecvMsg(type, source, length); 
-
-#else /* TRACING_ON */
-#define TAU_TRACE_SENDMSG(type, destination, length) 
-#define TAU_TRACE_RECVMSG(type, source, length)
-#endif /* TRACING_ON */
-
-/* for consistency, we provide the long form */
-#define TAU_STATIC_TIMER_START TAU_START
-#define TAU_STATIC_TIMER_STOP TAU_STOP
-
 
 #ifdef DEBUG_PROF
 #define DEBUGPROFMSG(msg) { cout<< msg; }
@@ -406,6 +161,6 @@ or tauFI->method();
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.81 $   $Date: 2009/01/14 20:32:20 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.81 2009/01/14 20:32:20 amorris Exp $ 
+ * $Revision: 1.82 $   $Date: 2009/01/15 00:27:15 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.82 2009/01/15 00:27:15 amorris Exp $ 
  ***************************************************************************/

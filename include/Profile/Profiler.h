@@ -318,9 +318,11 @@ using tau::Profiler;
 #include <Profile/TauCAPI.h> /* For C program */
 #endif /* __cplusplus && ! TAU_USE_C_API */
 
+#include <Profile/TauCommonAPI.h>
+
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.89 $   $Date: 2009/01/14 00:54:27 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.89 2009/01/14 00:54:27 amorris Exp $ 
+ * $Revision: 1.90 $   $Date: 2009/01/15 00:27:15 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.90 2009/01/15 00:27:15 amorris Exp $ 
  ***************************************************************************/
