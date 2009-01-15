@@ -2,7 +2,7 @@
 **                      TAU Portable Profiling Package                     **
 **                      http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 1997-2008						   **
+**    Copyright 1997-2009						   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 *****************************************************************************
@@ -26,6 +26,12 @@ Version 2.18 changes (from 2.17):
 14. Better configuration support for SiCortex, IBM BG/P and Cray XT5 (PGI, Pathscale, GNU), Intel compilers for Apple.
 15. Added support for preloading pthread calls enable with -useropt=-DTAU_PTHREAD_PRELOAD
 16. Added support for -DISABLESHARED configure option that does not build libTAU.so.
+17. Callpath profiling is now a runtime option enabled by setting the TAU_CALLPATH env var.
+18. PGI Accelerator API support, pgi 7.x stl string fix for OpenMP, pgi 8.0 Fortran compiler based instrumentation fix.
+19. Python C-API offers lower overhead than legacy ltau.py API. Now it is the default. 
+20. TAU_PROFILE_FORMAT "merged" generates merged profiles. 
+21. perfdmf_configure --create-default creates a Derby DB without any questions.
+22. Eclipse plugin uses a new XML workflow for uploading performance data on disk to db. 
 
 Version 2.17 changes (from 2.16):
 1. Added support for IBM BG/P (-arch=bgp).
