@@ -584,6 +584,9 @@ static int writeMetaData(outputDevice *out, bool newline, int counter) {
       if (strncmp(line, "vendor_id", 9) == 0) {
 	writeXMLAttribute(out, "CPU Vendor", value, newline);
       }
+      if (strncmp(line, "vendor", 6) == 0) {
+	writeXMLAttribute(out, "CPU Vendor", value, newline);
+      }
       if (strncmp(line, "cpu MHz", 7) == 0) {
 	writeXMLAttribute(out, "CPU MHz", value, newline);
       }
