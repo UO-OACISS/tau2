@@ -186,7 +186,6 @@ for arg in "$@"; do
     echo "-PROFILECALLPATH ......................... Generate call path profiles."
     echo "-PROFILEPARAM .... Generate profiles with parameter mapped event data ."
     echo "-PROFILEPHASE .......................... Generate phase based profiles."
-    echo "-PROFILESTATS .................. Enable standard deviation calculation."
     echo "-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth."
     echo "-PROFILEMEMORY .. Track heap memory utilization at each function entry."
     echo "-PROFILEHEADROOM .. Track memory free (or headroom) at each func entry."
@@ -302,7 +301,6 @@ for arg in "$@"; do
     echo "-PROFILECALLPATH ......................... Generate call path profiles."
     echo "-PROFILEPARAM .... Generate profiles with parameter mapped event data ."
     echo "-PROFILEPHASE .......................... Generate phase based profiles."
-    echo "-PROFILESTATS .................. Enable standard deviation calculation."
     echo "-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth."
     echo "-PROFILEMEMORY .. Track heap memory utilization at each function entry."
     echo "-PROFILEHEADROOM .. Track memory free (or headroom) at each func entry."
@@ -1304,9 +1302,8 @@ do
     ;;
 
   -PROFILESTATS)
-    profile=yes
-    profilestats=yes
-    shift
+    echo "-PROFILESTATS is no longer supported, try downgrading to TAU 2.18.1"
+    exit 0
     ;;
 
   -PROFILEMEMORY)
