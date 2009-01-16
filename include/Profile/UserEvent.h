@@ -81,34 +81,9 @@ class TauContextUserEvent {
 
 
 TAU_STD_NAMESPACE vector<TauUserEvent*>& TheEventDB(void);
-/*    
-#ifdef PROFILING_ON
-#define TAU_REGISTER_EVENT(event, name)  	TauUserEvent event(name);
-#define TAU_EVENT(event, data) 		 	(event).TriggerEvent(data);
-#define TAU_EVENT_DISABLE_MIN(event) 		(event).SetDisableMin(true);
-#define TAU_EVENT_DISABLE_MAX(event) 		(event).SetDisableMax(true);
-#define TAU_EVENT_DISABLE_MEAN(event) 		(event).SetDisableMean(true);
-#define TAU_EVENT_DISABLE_STDDEV(event) 	(event).SetDisableStdDev(true);
-#define TAU_REPORT_STATISTICS()			TauUserEvent::ReportStatistics()
-#define TAU_REPORT_THREAD_STATISTICS()		TauUserEvent::ReportStatistics(true)
-
-#else // PROFILING is disabled
-#define TAU_REGISTER_EVENT(event, name)
-#define TAU_EVENT(event, data)
-#define TAU_EVENT_DISABLE_MIN(event)
-#define TAU_EVENT_DISABLE_MAX(event)
-#define TAU_EVENT_DISABLE_MEAN(event)
-#define TAU_EVENT_DISABLE_STDDEV(event)
-#define TAU_STORE_ALL_EVENTS
-#define TAU_REPORT_STATISTICS()
-#define TAU_REPORT_THREAD_STATISTICS()
-
-
-#endif // PROFILING_ON 
-*/
 
 /***************************************************************************
  * $RCSfile: UserEvent.h,v $   $Author: amorris $
- * $Revision: 1.15 $   $Date: 2009/01/16 00:46:32 $
- * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.15 2009/01/16 00:46:32 amorris Exp $ 
+ * $Revision: 1.16 $   $Date: 2009/01/16 02:24:51 $
+ * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.16 2009/01/16 02:24:51 amorris Exp $ 
  ***************************************************************************/

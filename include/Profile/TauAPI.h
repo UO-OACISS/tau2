@@ -235,8 +235,6 @@ extern "C" {
 
 
 
-/* for profiler objects created by name */
-
 #define TAU_PROFILER_CREATE(handle, name, type, group)  handle=Tau_get_profiler(name, type, group, #group);
 #define TAU_PROFILER_START(handle) Tau_start_timer(handle, 0);
 #define TAU_PROFILER_STOP(handle) Tau_stop_timer(handle);
@@ -245,16 +243,6 @@ extern "C" {
 #define TAU_PROFILER_GET_CALLS(handle, number) Tau_get_calls(handle, number, Tau_get_tid())
 #define TAU_PROFILER_GET_CHILD_CALLS(handle, number) Tau_get_child_calls(handle, number, Tau_get_tid());
 #define TAU_PROFILER_GET_COUNTER_INFO(counters, numcounters) Tau_get_counter_info((const char ***)counters, numcounters);
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -272,17 +260,8 @@ extern "C" {
 
 
 
-
-
-
-
-
-
-
-
 /* dead macros */
 #define TAU_PROFILE_CALLSTACK()
-#define TAU_STORE_ALL_EVENTS
 #define PROFILED_BLOCK(name, type)
 #define TAU_ENABLE_TRACKING_MUSE_EVENTS()
 #define TAU_DISABLE_TRACKING_MUSE_EVENTS()
@@ -291,7 +270,9 @@ extern "C" {
 
 
 
-  /****************************/
+/****************************
+* Forward declarations
+*****************************/
 
 TauGroup_t Tau_enable_all_groups(void);
 TauGroup_t Tau_disable_all_groups(void);
@@ -451,8 +432,8 @@ void Tau_track_memory_headroom_here(void);
 
 
 #ifdef __cplusplus
+/* Include the C++ API header */
 #include <Profile/TauCppAPI.h>
-
 #else /* __cplusplus */
 /* These can't be used in C, only C++, so they are dummy macros here */
 #define TAU_PROFILE(name, type, group) 
@@ -462,11 +443,8 @@ void Tau_track_memory_headroom_here(void);
 #endif /* __cplusplus */ 
 
 
-
-
-
 #ifdef __cplusplus
-}
+} /* for extern "C" */
 #endif /* __cplusplus */
 
 
@@ -502,6 +480,6 @@ void Tau_track_memory_headroom_here(void);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.86 $   $Date: 2009/01/16 02:19:28 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.86 2009/01/16 02:19:28 amorris Exp $ 
+ * $Revision: 1.87 $   $Date: 2009/01/16 02:24:51 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.87 2009/01/16 02:24:51 amorris Exp $ 
  ***************************************************************************/
