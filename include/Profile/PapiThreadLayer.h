@@ -7,23 +7,10 @@
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
 /***************************************************************************
-**	File 		: Papi_ThreadLayer.h				  **
-**	Description 	: TAU Profiling Package Papi Thread Support Layer **
-**	Author		: Sameer Shende					  **
-**	Contact		: sameer@cs.uoregon.edu sameer@acl.lanl.gov 	  **
-**	Flags		: Compile with				          **
-**			  -DPROFILING_ON to enable profiling (ESSENTIAL)  **
-**			  -DPROFILE_STATS for Std. Deviation of Excl Time **
-**			  -DSGI_HW_COUNTERS for using SGI counters 	  **
-**			  -DPROFILE_CALLS  for trace of each invocation   **
-**			  -DSGI_TIMERS  for SGI fast nanosecs timer	  **
-**			  -DTULIP_TIMERS for non-sgi Platform	 	  **
-**			  -DPOOMA_STDSTL for using STD STL in POOMA src   **
-**			  -DPOOMA_TFLOP for Intel Teraflop at SNL/NM 	  **
-**			  -DPOOMA_KAI for KCC compiler 			  **
-**			  -DDEBUG_PROF  for internal debugging messages   **
-**                        -DPROFILE_CALLSTACK to enable callstack traces  **
-**	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
+**	File 		: Papi_ThreadLayer.h				   **
+**	Description 	: TAU Profiling Package Papi Thread Support Layer  **
+**	Contact		: tau-team@cs.uoregon.edu 		 	   **
+**	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
 ***************************************************************************/
 
 
@@ -68,8 +55,8 @@ class PapiThreadLayer
 
 /***************************************************************************
  * $RCSfile: PapiThreadLayer.h,v $   $Author: amorris $
- * $Revision: 1.1 $   $Date: 2007/03/16 23:48:09 $
- * POOMA_VERSION_ID: $Id: PapiThreadLayer.h,v 1.1 2007/03/16 23:48:09 amorris Exp $
+ * $Revision: 1.2 $   $Date: 2009/01/16 00:46:32 $
+ * POOMA_VERSION_ID: $Id: PapiThreadLayer.h,v 1.2 2009/01/16 00:46:32 amorris Exp $
  ***************************************************************************/
 
 

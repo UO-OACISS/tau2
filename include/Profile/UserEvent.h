@@ -2,27 +2,14 @@
 **			TAU Portable Profiling Package			   **
 **			http://www.cs.uoregon.edu/research/tau	           **
 *****************************************************************************
-**    Copyright 1997  						   	   **
+**    Copyright 1997-2009					   	   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
 /***************************************************************************
 **	File 		: UserEvent.h					  **
 **	Description 	: TAU Profiling Package				  **
-**	Author		: Sameer Shende					  **
-**	Contact		: sameer@cs.uoregon.edu sameer@acl.lanl.gov 	  **
-**	Flags		: Compile with				          **
-**			  -DPROFILING_ON to enable profiling (ESSENTIAL)  **
-**			  -DPROFILE_STATS for Std. Deviation of Excl Time **
-**			  -DSGI_HW_COUNTERS for using SGI counters 	  **
-**			  -DPROFILE_CALLS  for trace of each invocation   **
-**                        -DSGI_TIMERS  for SGI fast nanosecs timer       **
-**			  -DTULIP_TIMERS for non-sgi Platform	 	  **
-**			  -DPOOMA_STDSTL for using STD STL in POOMA src   **
-**			  -DPOOMA_TFLOP for Intel Teraflop at SNL/NM 	  **
-**			  -DPOOMA_KAI for KCC compiler 			  **
-**			  -DDEBUG_PROF  for internal debugging messages   **
-**                        -DPROFILE_CALLSTACK to enable callstack traces  **
+*	Contact		: tau-team@cs.uoregon.edu 		 	  **
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
@@ -121,7 +108,7 @@ TAU_STD_NAMESPACE vector<TauUserEvent*>& TheEventDB(void);
 */
 
 /***************************************************************************
- * $RCSfile: UserEvent.h,v $   $Author: sameer $
- * $Revision: 1.14 $   $Date: 2006/06/27 19:24:44 $
- * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.14 2006/06/27 19:24:44 sameer Exp $ 
+ * $RCSfile: UserEvent.h,v $   $Author: amorris $
+ * $Revision: 1.15 $   $Date: 2009/01/16 00:46:32 $
+ * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.15 2009/01/16 00:46:32 amorris Exp $ 
  ***************************************************************************/

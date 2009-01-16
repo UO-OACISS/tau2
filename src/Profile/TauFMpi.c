@@ -9,20 +9,7 @@
 /***************************************************************************
 **      File            : TauFMpi.cpp                                     **
 **      Description     : TAU Profiling Package MPI wrapper for F77/F90   **
-**      Author          : Sameer Shende                                   **
-**      Contact         : sameer@cs.uoregon.edu sameer@acl.lanl.gov       **
-**      Flags           : Compile with                                    **
-**                        -DPROFILING_ON to enable profiling (ESSENTIAL)  **
-**                        -DPROFILE_STATS for Std. Deviation of Excl Time **
-**                        -DSGI_HW_COUNTERS for using SGI counters        **
-**                        -DPROFILE_CALLS  for trace of each invocation   **
-**                        -DSGI_TIMERS  for SGI fast nanosecs timer       **
-**                        -DTULIP_TIMERS for non-sgi Platform             **
-**                        -DPOOMA_STDSTL for using STD STL in POOMA src   **
-**                        -DPOOMA_TFLOP for Intel Teraflop at SNL/NM      **
-**                        -DPOOMA_KAI for KCC compiler                    **
-**                        -DDEBUG_PROF  for internal debugging messages   **
-**                        -DPROFILE_CALLSTACK to enable callstack traces  **
+**	Contact		: tau-team@cs.uoregon.edu 		 	  **
 **      Documentation   : See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 

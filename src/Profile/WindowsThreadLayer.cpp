@@ -7,23 +7,10 @@
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
 /***************************************************************************
-**	File 		: WindowsThreadLayer.cpp				  **
-**	Description 	: TAU Profiling Package RTS Layer definitions     **
-**			  for supporting Microsoft Windows' Threads 			  **
-**	Author		: Robert Ansell-Bell					  **
-**	Contact		: bertie@cs.uoregon.edu 	  **
-**	Flags		: Compile with				          **
-**			  -DPROFILING_ON to enable profiling (ESSENTIAL)  **
-**			  -DPROFILE_STATS for Std. Deviation of Excl Time **
-**			  -DSGI_HW_COUNTERS for using SGI counters 	  **
-**			  -DPROFILE_CALLS  for trace of each invocation   **
-**			  -DSGI_TIMERS  for SGI fast nanosecs timer	  **
-**			  -DTULIP_TIMERS for non-sgi Platform	 	  **
-**			  -DPOOMA_STDSTL for using STD STL in POOMA src   **
-**			  -DPOOMA_TFLOP for Intel Teraflop at SNL/NM 	  **
-**			  -DPOOMA_KAI for KCC compiler 			  **
-**			  -DDEBUG_PROF  for internal debugging messages   **
-**                        -DPROFILE_CALLSTACK to enable callstack traces  **
+**	File 		: WindowsThreadLayer.cpp			  **
+**	Description 	: RTS Layer definitions                           **
+**			  for supporting Microsoft Windows' Threads 	  **
+**	Contact		: tau-team@cs.uoregon.edu 		 	  **
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 #ifdef TAU_WINDOWS

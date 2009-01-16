@@ -10,19 +10,7 @@
 **	File 		: RtsLayer.h					   **
 **	Description 	: TAU Profiling Package Runtime System Layer	   **
 **	Author		: Sameer Shende					   **
-**	Contact		: sameer@cs.uoregon.edu sameer@acl.lanl.gov 	   **
-**	Flags		: Compile with				           **
-**			  -DPROFILING_ON to enable profiling (ESSENTIAL)   **
-**			  -DPROFILE_STATS for Std. Deviation of Excl Time  **
-**			  -DSGI_HW_COUNTERS for using SGI counters 	   **
-**			  -DPROFILE_CALLS  for trace of each invocation    **
-**			  -DSGI_TIMERS  for SGI fast nanosecs timer	   **
-**			  -DTULIP_TIMERS for non-sgi Platform	 	   **
-**			  -DPOOMA_STDSTL for using STD STL in POOMA src    **
-**			  -DPOOMA_TFLOP for Intel Teraflop at SNL/NM 	   **
-**			  -DPOOMA_KAI for KCC compiler 			   **
-**			  -DDEBUG_PROF  for internal debugging messages    **
-**                        -DPROFILE_CALLSTACK to enable callstack traces   **
+**	Contact		: tau-bugs@cs.uoregon.edu                	   **
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
 ****************************************************************************/
 
@@ -148,6 +136,6 @@ private:
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: amorris $
- * $Revision: 1.27 $   $Date: 2009/01/08 23:13:34 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.27 2009/01/08 23:13:34 amorris Exp $ 
+ * $Revision: 1.28 $   $Date: 2009/01/16 00:46:32 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.28 2009/01/16 00:46:32 amorris Exp $ 
  ***************************************************************************/

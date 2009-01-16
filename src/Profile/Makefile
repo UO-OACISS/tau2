@@ -11,17 +11,7 @@
 #**      File            : Makefile                                        **
 #**      Description     : TAU Profiling Package                           **
 #**      Author          : Sameer Shende                                   **
-#**      Contact         : sameer@cs.uoregon.edu        		   **
-#**      Flags           : Compile with                                    **
-#**                        -DPROFILING_ON to enable profiling (ESSENTIAL)  **
-#**                        -DPROFILE_STATS for Std. Deviation of Excl Time **
-#**                        -DSGI_HW_COUNTERS for using SGI counters        **
-#**                        -DPROFILE_CALLS  for trace of each invocation   **
-#**                        -DSGI_TIMERS  for SGI fast nanosecs timer       **
-#**                        -DPOOMA_TFLOP for Intel Teraflop at SNL/NM      **
-#**                        -DUSE_STDCXXLIB for KCC compiler                **
-#**                        -DDEBUG_PROF  for internal debugging messages   **
-#**			   These flags are set by configure script	   **
+#**	 Contact	 : tau-team@cs.uoregon.edu  		 	   **
 #**      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
 #****************************************************************************
 

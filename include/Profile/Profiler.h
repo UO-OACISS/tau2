@@ -10,19 +10,7 @@
 **	File 		: Profiler.h					  **
 **	Description 	: TAU Profiling Package				  **
 **	Author		: Sameer Shende					  **
-**	Contact		: sameer@cs.uoregon.edu sameer@acl.lanl.gov 	  **
-**	Flags		: Compile with				          **
-**			  -DPROFILING_ON to enable profiling (ESSENTIAL)  **
-**			  -DPROFILE_STATS for Std. Deviation of Excl Time **
-**			  -DSGI_HW_COUNTERS for using SGI counters 	  **
-**			  -DPROFILE_CALLS  for trace of each invocation   **
-**			  -DSGI_TIMERS  for SGI fast nanosecs timer	  **
-**			  -DTULIP_TIMERS for non-sgi Platform	 	  **
-**			  -DPOOMA_STDSTL for using STD STL in POOMA src   **
-**			  -DPOOMA_TFLOP for Intel Teraflop at SNL/NM 	  **
-**			  -DPOOMA_KAI for KCC compiler 			  **
-**			  -DDEBUG_PROF  for internal debugging messages   **
-**                        -DPROFILE_CALLSTACK to enable callstack traces  **
+**	Contact		: tau-bugs@cs.uoregon.edu               	  **
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 #ifndef PROFILER_H
@@ -229,10 +217,10 @@ public:
 				 double **mean, double **sumSqr, 
 				 int tid = RtsLayer::myThread());
   
-#if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) ) 
+#ifdef PROFILE_STATS
   int ExcludeTimeThisCall(double t);
   double ExclTimeThisCall; /* for this invocation of the function */
-#endif /* PROFILE_CALLS || PROFILE_STATS */
+#endif /* PROFILE_STATS */
   
   static Profiler * CurrentProfiler[TAU_MAX_THREADS];
 
@@ -262,12 +250,6 @@ public:
   Profiler * ParentProfiler; 
   
   
-  
-#ifdef PROFILE_CALLSTACK
-  double InclTime_cs;
-  double ExclTime_cs;
-  static void CallStackTrace(int tid = RtsLayer::myThread());
-#endif /* PROFILE_CALLSTACK  */
 #ifdef TAU_PROFILEPHASE
   bool GetPhase(void);
   void SetPhase(bool flag);
@@ -323,6 +305,6 @@ using tau::Profiler;
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.90 $   $Date: 2009/01/15 00:27:15 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.90 2009/01/15 00:27:15 amorris Exp $ 
+ * $Revision: 1.91 $   $Date: 2009/01/16 00:46:32 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.91 2009/01/16 00:46:32 amorris Exp $ 
  ***************************************************************************/

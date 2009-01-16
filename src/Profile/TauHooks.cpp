@@ -9,20 +9,7 @@
 /***************************************************************************
 **	File 		: TauHooks.cpp					  **
 **	Description 	: TAU hooks for DynInst (Dynamic Instrumentation) **
-**	Author		: Sameer Shende					  **
-**	Contact		: sameer@cs.uoregon.edu sameer@acl.lanl.gov 	  **
-**	Flags		: Compile with				          **
-**			  -DPROFILING_ON to enable profiling (ESSENTIAL)  **
-**			  -DPROFILE_STATS for Std. Deviation of Excl Time **
-**			  -DSGI_HW_COUNTERS for using SGI counters 	  **
-**			  -DPROFILE_CALLS  for trace of each invocation   **
-**                        -DSGI_TIMERS  for SGI fast nanosecs timer       **
-**			  -DTULIP_TIMERS for non-sgi Platform	 	  **
-**			  -DPOOMA_STDSTL for using STD STL in POOMA src   **
-**			  -DPOOMA_TFLOP for Intel Teraflop at SNL/NM 	  **
-**			  -DPOOMA_KAI for KCC compiler 			  **
-**			  -DDEBUG_PROF  for internal debugging messages   **
-**                        -DPROFILE_CALLSTACK to enable callstack traces  **
+**	Contact		: tau-team@cs.uoregon.edu 		 	  **
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
@@ -278,6 +265,6 @@ int TauRenameTimer(char *oldName, char *newName)
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: amorris $
- * $Revision: 1.25 $   $Date: 2008/03/10 19:51:24 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.25 2008/03/10 19:51:24 amorris Exp $ 
+ * $Revision: 1.26 $   $Date: 2009/01/16 00:46:53 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.26 2009/01/16 00:46:53 amorris Exp $ 
  ***************************************************************************/

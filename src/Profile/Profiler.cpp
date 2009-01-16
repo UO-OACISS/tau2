@@ -10,19 +10,7 @@
  **	File 		: Profiler.cpp					    **
  **	Description 	: TAU Profiling Package				    **
  **	Author		: Sameer Shende					    **
- **	Contact		: sameer@cs.uoregon.edu sameer@acl.lanl.gov 	    **
- **	Flags		: Compile with				            **
- **			  -DPROFILING_ON to enable profiling (ESSENTIAL)    **
- **			  -DPROFILE_STATS for Std. Deviation of Excl Time   **
- **			  -DSGI_HW_COUNTERS for using SGI counters 	    **
- **			  -DPROFILE_CALLS  for trace of each invocation     **
- **                        -DSGI_TIMERS  for SGI fast nanosecs timer        **
- **			  -DTULIP_TIMERS for non-sgi Platform	 	    **
- **			  -DPOOMA_STDSTL for using STD STL in POOMA src     **
- **			  -DPOOMA_TFLOP for Intel Teraflop at SNL/NM 	    **
- **			  -DPOOMA_KAI for KCC compiler 			    **
- **			  -DDEBUG_PROF  for internal debugging messages     **
- **                        -DPROFILE_CALLSTACK to enable callstack traces   **
+ **	Contact		: tau-bugs@cs.uoregon.edu                 	    **
  **	Documentation	: See http://www.cs.uoregon.edu/research/tau        **
  ****************************************************************************/
 
@@ -125,8 +113,6 @@ int Tau_writeProfileMetaData(FILE *fp, int counter);
 static int writeUserEvents(FILE *fp, int tid);
 static int matchFunction(FunctionInfo *fi, const char **inFuncs, int numFuncs);
 extern "C" int Tau_get_usesMPI();
-
-//#define PROFILE_CALLS // Generate Excl Incl data for each call 
 
 //////////////////////////////////////////////////////////////////////
 //Initialize static data
@@ -473,9 +459,9 @@ void Profiler::Start(int tid) {
 		   << CurrentProfiler[tid] << " = this = "<<this<<endl;);
     }
     
-#if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
+#ifdef PROFILE_STATS
     ExclTimeThisCall = 0;
-#endif //PROFILE_CALLS || PROFILE_STATS || PROFILE_CALLSTACK
+#endif //PROFILE_STATS
     
     /********* KTAU CODE *************************/
     
@@ -818,7 +804,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #endif /* TAU_PROFILEPARAM */
 #endif /* TAU_COMPENSATE */
 
-#if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS)|| defined(PROFILE_CALLSTACK) )
+#ifdef PROFILE_STATS
   ExclTimeThisCall += TotalTime;
   DEBUGPROFMSG("nct "<< RtsLayer::myNode()  << ","
 	       << RtsLayer::myContext() << "," << tid  << " " 
@@ -826,22 +812,8 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 	       << ThisFunction->GetName() << " ExclTimeThisCall = "
 	       << ExclTimeThisCall << " InclTimeThisCall " << TotalTime << endl;);
     
-#endif //PROFILE_CALLS || PROFILE_STATS || PROFILE_CALLSTACK
+#endif // PROFILE_STATS
     
-#ifdef PROFILE_CALLS
-  ThisFunction->AppendExclInclTimeThisCall(ExclTimeThisCall, TotalTime);
-
-  if (TauEnv_get_callpath()) {
-    if (CallPathFunction) {
-      CallPathFunction->AppendExclInclTimeThisCall(ExclTimeThisCall, TotalTime);
-    }
-  }
-#ifdef TAU_PROFILEPARAM
-  if (ProfileParamFunction) {
-    ProfileParamFunction->AppendExclInclTimeThisCall(ExclTimeThisCall, TotalTime);
-  }
-#endif /* TAU_PROFILEPARAM */
-#endif // PROFILE_CALLS
 
 #ifdef PROFILE_STATS
   ThisFunction->AddSumExclSqr(ExclTimeThisCall*ExclTimeThisCall, tid);
@@ -875,9 +847,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
       cout <<"ParentProfiler's Function info is NULL" <<endl;
     }
       
-#if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
+#ifdef PROFILE_STATS
     ParentProfiler->ExcludeTimeThisCall(TotalTime);
-#endif //PROFILE_CALLS || PROFILE_STATS || PROFILE_CALLSTACK
+#endif //PROFILE_STATS
       
 #ifdef TAU_COMPENSATE
     ParentProfiler->AddNumChildren(GetNumChildren()+1);
@@ -1328,128 +1300,15 @@ void Profiler::PurgeData(int tid) {
 }
 
 
-#if ( defined(PROFILE_CALLS) || defined(PROFILE_STATS) || defined(PROFILE_CALLSTACK) )
+#ifdef PROFILE_STATS
 int Profiler::ExcludeTimeThisCall(double t) {
   ExclTimeThisCall -= t;
   return 1;
 }
-#endif //PROFILE_CALLS || PROFILE_STATS || PROFILE_CALLSTACK
+#endif
 
 /////////////////////////////////////////////////////////////////////////
 
-#ifdef PROFILE_CALLSTACK
-
-//////////////////////////////////////////////////////////////////////
-//  Profiler::CallStackTrace()
-//
-//  Author:  Mike Kaufman
-//           mikek@cs.uoregon.edu
-//  output stack of active Profiler objects
-//////////////////////////////////////////////////////////////////////
-void Profiler::CallStackTrace(int tid) {
-  char      *dirname;            // directory name of output file
-  char      fname[1024];         // output file name 
-  char      errormsg[1024];      // error message buffer
-  FILE      *fp;
-  Profiler  *curr;               // current Profiler object in stack traversal
-  double    now;                 // current wallclock time 
-  double    totalTime;           // now - profiler's start time
-  double    prevTotalTime;       // inclusive time of last Profiler object 
-  //   stack
-  static int ncalls = 0;         // number of times CallStackTrace()
-  //   has been called
-  
-  // get wallclock time
-  now = RtsLayer::getUSecD(tid);  
-  
-  DEBUGPROFMSG("CallStackTrace started at " << now << endl;);
-  
-  // increment num of calls to trace
-  ncalls++;
-
-  // set up output file
-  dirname = TauEnv_get_profiledir();
-  
-  // create file name string
-  sprintf(fname, "%s/callstack.%d.%d.%d", dirname, RtsLayer::myNode(),
-	  RtsLayer::myContext(), tid);
-  
-  // traverse stack and set all FunctionInfo's *_cs fields to zero
-  curr = CurrentProfiler[tid];
-  while (curr != 0) {
-    curr->ThisFunction->ExclTime_cs = curr->ThisFunction->GetExclTime(tid);
-    curr = curr->ParentProfiler;
-  }  
-
-  prevTotalTime = 0;
-  // calculate time info
-  curr = CurrentProfiler[tid];
-  while (curr != 0 ) {
-    totalTime = now - curr->StartTime;
- 
-    // set profiler's inclusive time
-    curr->InclTime_cs = totalTime;
-
-    // calc Profiler's exclusive time
-    curr->ExclTime_cs = totalTime + curr->ExclTimeThisCall
-      - prevTotalTime;
-     
-    if (curr->AddInclFlag == true) {
-      // calculate inclusive time for profiler's FunctionInfo
-      curr->ThisFunction->InclTime_cs = curr->ThisFunction->GetInclTime(tid)  
-	+ totalTime;
-    }
-    
-    // calculate exclusive time for each profiler's FunctionInfo
-    curr->ThisFunction->ExclTime_cs += totalTime - prevTotalTime;
-    
-    // keep total of inclusive time
-    prevTotalTime = totalTime;
-    
-    // next profiler
-    curr = curr->ParentProfiler;
-  }
- 
-  // open file
-  if (ncalls == 1) {
-    fp = fopen(fname, "w+");
-  } else {
-    fp = fopen(fname, "a");
-  }
-  if (fp == NULL) {
-    // error opening file
-    sprintf(errormsg, "Error:  Could not create %s", fname);
-    perror(errormsg);
-    return;
-  }
-
-  if (ncalls == 1) {
-    fprintf(fp,"%s%s","# Name Type Calls Subrs Prof-Incl ",
-	    "Prof-Excl Func-Incl Func-Excl\n");
-    fprintf(fp, 
-	    "# -------------------------------------------------------------\n");
-  } else {
-    fprintf(fp, "\n");
-  }
-
-  // output time of callstack dump
-  fprintf(fp, "%.16G\n", now);
-  // output call stack info
-  curr = CurrentProfiler[tid];
-  while (curr != 0) {
-    fprintf(fp, "\"%s %s\" %ld %ld %.16G %.16G %.16G %.16G\n",
-	    curr->ThisFunction->GetName(),  curr->ThisFunction->GetType(),
-	    curr->ThisFunction->GetCalls(tid),curr->ThisFunction->GetSubrs(tid),
-	    curr->InclTime_cs, curr->ExclTime_cs,
-	    curr->ThisFunction->InclTime_cs, curr->ThisFunction->ExclTime_cs);
-    curr = curr->ParentProfiler;
-  } 
-
-  // close file
-  fclose(fp);
-}
-#endif //PROFILE_CALLSTACK
-/*-----------------------------------------------------------------*/
 
 #ifdef TAU_COMPENSATE
 //////////////////////////////////////////////////////////////////////
@@ -1662,18 +1521,8 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
     fprintf(fp,"%.16G ", fi->GetSumExclSqr(tid));
 #endif
     
-#ifdef PROFILE_CALLS
-    long listSize = (long) fi->ExclInclCallList->size(); 
-    long numCalls = fi->GetCalls(tid);
-    fprintf(fp,"%ld\n", listSize); // number of records to follow
-    list<pair<double,double> >::iterator iter;
-    for (iter = fi->ExclInclCallList->begin(); iter != fi->ExclInclCallList->end(); iter++) {
-      fprintf(fp,"%G %G\n", (*iter).first , (*iter).second);
-    }
-#else
     fprintf(fp,"0 "); // Indicating that profile calls is turned off
     fprintf(fp,"GROUP=\"%s\" \n", fi->GetAllGroups());
-#endif
   }
 
   return 0;
@@ -1897,6 +1746,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.210 $   $Date: 2009/01/14 00:54:41 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.210 2009/01/14 00:54:41 amorris Exp $ 
+ * $Revision: 1.211 $   $Date: 2009/01/16 00:46:52 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.211 2009/01/16 00:46:52 amorris Exp $ 
  ***************************************************************************/

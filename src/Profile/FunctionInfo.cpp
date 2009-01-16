@@ -9,20 +9,7 @@
 /***************************************************************************
 **	File 		: FunctionInfo.cpp				  **
 **	Description 	: TAU Profiling Package				  **
-**	Author		: Sameer Shende					  **
-**	Contact		: sameer@cs.uoregon.edu sameer@acl.lanl.gov 	  **
-**	Flags		: Compile with				          **
-**			  -DPROFILING_ON to enable profiling (ESSENTIAL)  **
-**			  -DPROFILE_STATS for Std. Deviation of Excl Time **
-**			  -DSGI_HW_COUNTERS for using SGI counters 	  **
-**			  -DPROFILE_CALLS  for trace of each invocation   **
-**			  -DSGI_TIMERS  for SGI fast nanosecs timer	  **
-**			  -DTULIP_TIMERS for non-sgi Platform	 	  **
-**			  -DPOOMA_STDSTL for using STD STL in POOMA src   **
-**			  -DPOOMA_TFLOP for Intel Teraflop at SNL/NM 	  **
-**			  -DPOOMA_KAI for KCC compiler 			  **
-**			  -DDEBUG_PROF  for internal debugging messages   **
-**                        -DPROFILE_CALLSTACK to enable callstack traces  **
+*	Contact		: tau-team@cs.uoregon.edu 		 	  **
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
@@ -218,9 +205,6 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 	SumExclSqr[tid] = 0;
 #endif //PROFILE_STATS
 
-#ifdef PROFILE_CALLS
-	ExclInclCallList = new list<pair<double, double> >();
-#endif //PROFILE_CALLS
 	// Make this a ptr to a list so that ~FunctionInfo doesn't destroy it.
 	
 	for (int i=0; i<TAU_MAX_THREADS; i++) {
@@ -406,32 +390,19 @@ void FunctionInfo::getExclusiveValues(int tid, double *values) {
 }
 
 
-#ifdef PROFILE_CALLS
 //////////////////////////////////////////////////////////////////////
-
-int FunctionInfo::AppendExclInclTimeThisCall(double ex, double in)
-{
-	ExclInclCallList->push_back(pair<double,double>(ex,in));
-	return 1;
-}
-
-#endif //PROFILE_CALLS
-//////////////////////////////////////////////////////////////////////
-long FunctionInfo::GetFunctionId(void) 
-{
-   // To avoid data races, we use a lock if the id has not been created
-  	if (FunctionId == 0)
-	{
+long FunctionInfo::GetFunctionId(void) {
+  // To avoid data races, we use a lock if the id has not been created
+  if (FunctionId == 0) {
 #ifdef DEBUG_PROF
-  	  printf("Fid = 0! \n");
+    printf("Fid = 0! \n");
 #endif // DEBUG_PROF
-	  while (FunctionId ==0)
-	  {
-	    RtsLayer::LockDB();
-	    RtsLayer::UnLockDB();
-	  }
-	}
-	return FunctionId;
+    while (FunctionId ==0) {
+      RtsLayer::LockDB();
+      RtsLayer::UnLockDB();
+    }
+  }
+  return FunctionId;
 }
 	    
 
@@ -548,6 +519,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.62 $   $Date: 2009/01/15 23:51:52 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.62 2009/01/15 23:51:52 amorris Exp $ 
+ * $Revision: 1.63 $   $Date: 2009/01/16 00:46:52 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.63 2009/01/16 00:46:52 amorris Exp $ 
  ***************************************************************************/

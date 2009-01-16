@@ -10,20 +10,7 @@
 **	File 		: PthreadLayer.cpp				  **
 **	Description 	: TAU Profiling Package RTS Layer definitions     **
 **			  for supporting pthreads 			  **
-**	Author		: Sameer Shende					  **
-**	Contact		: sameer@cs.uoregon.edu sameer@acl.lanl.gov 	  **
-**	Flags		: Compile with				          **
-**			  -DPROFILING_ON to enable profiling (ESSENTIAL)  **
-**			  -DPROFILE_STATS for Std. Deviation of Excl Time **
-**			  -DSGI_HW_COUNTERS for using SGI counters 	  **
-**			  -DPROFILE_CALLS  for trace of each invocation   **
-**			  -DSGI_TIMERS  for SGI fast nanosecs timer	  **
-**			  -DTULIP_TIMERS for non-sgi Platform	 	  **
-**			  -DPOOMA_STDSTL for using STD STL in POOMA src   **
-**			  -DPOOMA_TFLOP for Intel Teraflop at SNL/NM 	  **
-**			  -DPOOMA_KAI for KCC compiler 			  **
-**			  -DDEBUG_PROF  for internal debugging messages   **
-**                        -DPROFILE_CALLSTACK to enable callstack traces  **
+**	Contact		: tau-team@cs.uoregon.edu 		 	  **
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
@@ -305,6 +292,6 @@ extern "C" void pthread_exit (void *value_ptr) {
 
 /***************************************************************************
  * $RCSfile: PthreadLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.20 $   $Date: 2008/12/12 19:39:04 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.20 2008/12/12 19:39:04 amorris Exp $
+ * $Revision: 1.21 $   $Date: 2009/01/16 00:46:52 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.21 2009/01/16 00:46:52 amorris Exp $
  ***************************************************************************/

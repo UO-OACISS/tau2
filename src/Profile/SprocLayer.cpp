@@ -10,20 +10,7 @@
 **	File 		: SprocLayer.cpp				  **
 **	Description 	: TAU Profiling Package RTS Layer definitions     **
 **			  for supporting pthreads 			  **
-**	Author		: Sameer Shende					  **
-**	Contact		: sameer@cs.uoregon.edu sameer@acl.lanl.gov 	  **
-**	Flags		: Compile with				          **
-**			  -DPROFILING_ON to enable profiling (ESSENTIAL)  **
-**			  -DPROFILE_STATS for Std. Deviation of Excl Time **
-**			  -DSGI_HW_COUNTERS for using SGI counters 	  **
-**			  -DPROFILE_CALLS  for trace of each invocation   **
-**			  -DSGI_TIMERS  for SGI fast nanosecs timer	  **
-**			  -DTULIP_TIMERS for non-sgi Platform	 	  **
-**			  -DPOOMA_STDSTL for using STD STL in POOMA src   **
-**			  -DPOOMA_TFLOP for Intel Teraflop at SNL/NM 	  **
-**			  -DPOOMA_KAI for KCC compiler 			  **
-**			  -DDEBUG_PROF  for internal debugging messages   **
-**                        -DPROFILE_CALLSTACK to enable callstack traces  **
+**	Contact		: tau-team@cs.uoregon.edu 		 	  **
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
@@ -256,8 +243,8 @@ int SprocLayer::UnLockEnv(void)
 
 /***************************************************************************
  * $RCSfile: SprocLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.5 $   $Date: 2005/11/11 03:46:49 $
- * POOMA_VERSION_ID: $Id: SprocLayer.cpp,v 1.5 2005/11/11 03:46:49 amorris Exp $
+ * $Revision: 1.6 $   $Date: 2009/01/16 00:46:52 $
+ * POOMA_VERSION_ID: $Id: SprocLayer.cpp,v 1.6 2009/01/16 00:46:52 amorris Exp $
  ***************************************************************************/
 
 

@@ -9,20 +9,7 @@
 /***************************************************************************
 **	File 		: RtsLayer.cpp					  **
 **	Description 	: TAU Profiling Package RTS Layer definitions     **
-**	Author		: Sameer Shende					  **
-**	Contact		: sameer@cs.uoregon.edu sameer@acl.lanl.gov 	  **
-**	Flags		: Compile with				          **
-**			  -DPROFILING_ON to enable profiling (ESSENTIAL)  **
-**			  -DPROFILE_STATS for Std. Deviation of Excl Time **
-**			  -DSGI_HW_COUNTERS for using SGI counters 	  **
-**			  -DPROFILE_CALLS  for trace of each invocation   **
-**			  -DSGI_TIMERS  for SGI fast nanosecs timer	  **
-**			  -DTULIP_TIMERS for non-sgi Platform	 	  **
-**			  -DPOOMA_STDSTL for using STD STL in POOMA src   **
-**			  -DPOOMA_TFLOP for Intel Teraflop at SNL/NM 	  **
-**			  -DPOOMA_KAI for KCC compiler 			  **
-**			  -DDEBUG_PROF  for internal debugging messages   **
-**                        -DPROFILE_CALLSTACK to enable callstack traces  **
+**	Contact		: tau-team@cs.uoregon.edu 		 	  **
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
@@ -1507,6 +1494,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.108 $   $Date: 2009/01/08 23:13:49 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.108 2009/01/08 23:13:49 amorris Exp $ 
+ * $Revision: 1.109 $   $Date: 2009/01/16 00:46:52 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.109 2009/01/16 00:46:52 amorris Exp $ 
  ***************************************************************************/
