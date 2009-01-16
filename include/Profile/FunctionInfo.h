@@ -149,9 +149,6 @@ private:
   TAU_MULTSTORAGE(double, InclTime);
 #endif//TAU_MULTIPLE_COUNTERS
   TAU_STORAGE(bool, AlreadyOnStack);
-#ifdef PROFILE_STATS
-  TAU_STORAGE(double, SumExclSqr);
-#endif //PROFILE_STATS 
 
   double dumpExclusiveValues[TAU_MAX_THREADS][MAX_TAU_COUNTERS];
   double dumpInclusiveValues[TAU_MAX_THREADS][MAX_TAU_COUNTERS];
@@ -250,11 +247,6 @@ public:
 
   TauGroup_t GetProfileGroup(int tid = RtsLayer::myThread()) const {return MyProfileGroup_[tid]; }
   void SetProfileGroup(TauGroup_t gr, int tid = RtsLayer::myThread()) {MyProfileGroup_[tid] = gr; }
-#ifdef PROFILE_STATS 
-  double GetSumExclSqr(int tid) { return SumExclSqr[tid]; }
-  void SetSumExclSqr(int tid, double s) { SumExclSqr[tid] = s; }
-  void AddSumExclSqr(double ExclSqr, int tid) { SumExclSqr[tid] += ExclSqr; }
-#endif // PROFILE_STATS 
 
 private:
   TauGroup_t MyProfileGroup_[TAU_MAX_THREADS];
@@ -336,6 +328,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: amorris $
- * $Revision: 1.51 $   $Date: 2009/01/16 01:50:04 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.51 2009/01/16 01:50:04 amorris Exp $ 
+ * $Revision: 1.52 $   $Date: 2009/01/16 23:21:24 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.52 2009/01/16 23:21:24 amorris Exp $ 
  ***************************************************************************/

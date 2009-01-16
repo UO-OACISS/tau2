@@ -216,10 +216,6 @@ public:
 				 double **mean, double **sumSqr, 
 				 int tid = RtsLayer::myThread());
   
-#ifdef PROFILE_STATS
-  int ExcludeTimeThisCall(double t);
-  double ExclTimeThisCall; /* for this invocation of the function */
-#endif /* PROFILE_STATS */
   
   static Profiler * CurrentProfiler[TAU_MAX_THREADS];
 
@@ -299,6 +295,6 @@ using tau::Profiler;
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.92 $   $Date: 2009/01/16 02:19:28 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.92 2009/01/16 02:19:28 amorris Exp $ 
+ * $Revision: 1.93 $   $Date: 2009/01/16 23:21:24 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.93 2009/01/16 23:21:24 amorris Exp $ 
  ***************************************************************************/
