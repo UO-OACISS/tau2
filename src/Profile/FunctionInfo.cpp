@@ -200,10 +200,6 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
  	  }
 	}
 
-#ifdef PROFILE_STATS
-	SumExclSqr[tid] = 0;
-#endif //PROFILE_STATS
-
 	// Make this a ptr to a list so that ~FunctionInfo doesn't destroy it.
 	
 	for (int i=0; i<TAU_MAX_THREADS; i++) {
@@ -518,6 +514,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.64 $   $Date: 2009/01/16 02:25:16 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.64 2009/01/16 02:25:16 amorris Exp $ 
+ * $Revision: 1.65 $   $Date: 2009/01/16 23:21:45 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.65 2009/01/16 23:21:45 amorris Exp $ 
  ***************************************************************************/

@@ -7,7 +7,7 @@
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
 /***************************************************************************
-**	File 		: RtsThread.cpp				  **
+**	File 		: RtsThread.cpp				          **
 **	Description 	: TAU Profiling Package RTS Layer definitions     **
 **			  for supporting threads 			  **
 **	Contact		: tau-team@cs.uoregon.edu 		 	  **
@@ -201,9 +201,6 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
          (*it)->SetExclTimeZero(tid);
          (*it)->SetInclTimeZero(tid);
 #endif//TAU_MULTIPLE_COUNTERS
-#ifdef PROFILE_STATS
-	 (*it)->SetSumExclSqr(tid, 0);
-#endif // PROFILE_STATS 
 	/* Do we need to change AlreadyOnStack? No*/
 	DEBUGPROFMSG("FI Zap: Inside "<< (*it)->GetName() <<endl;);
 #ifdef TAUKTAU_MERGE
@@ -236,9 +233,6 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
 	     current->StartTime[j] = CurrentTimeOrCounts[j];
 	 }
 #endif//TAU_MULTIPLE_COUNTERS
-#ifdef PROFILE_STATS
-	 current->ExclTimeThisCall = 0;
-#endif // PROFILE_STATS
 	 current = current->ParentProfiler;
        } // Until the top of the stack
 #endif   // PROFILING_ON
@@ -397,8 +391,8 @@ void RtsLayer::UnLockEnv(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: amorris $
- * $Revision: 1.30 $   $Date: 2009/01/16 00:46:52 $
- * VERSION: $Id: RtsThread.cpp,v 1.30 2009/01/16 00:46:52 amorris Exp $
+ * $Revision: 1.31 $   $Date: 2009/01/16 23:21:45 $
+ * VERSION: $Id: RtsThread.cpp,v 1.31 2009/01/16 23:21:45 amorris Exp $
  ***************************************************************************/
 
 

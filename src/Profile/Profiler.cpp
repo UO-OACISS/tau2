@@ -459,9 +459,6 @@ void Profiler::Start(int tid) {
 		   << CurrentProfiler[tid] << " = this = "<<this<<endl;);
     }
     
-#ifdef PROFILE_STATS
-    ExclTimeThisCall = 0;
-#endif //PROFILE_STATS
     
     /********* KTAU CODE *************************/
     
@@ -804,52 +801,14 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #endif /* TAU_PROFILEPARAM */
 #endif /* TAU_COMPENSATE */
 
-#ifdef PROFILE_STATS
-  ExclTimeThisCall += TotalTime;
-  DEBUGPROFMSG("nct "<< RtsLayer::myNode()  << ","
-	       << RtsLayer::myContext() << "," << tid  << " " 
-	       << "Profiler::Stop() : Name " 
-	       << ThisFunction->GetName() << " ExclTimeThisCall = "
-	       << ExclTimeThisCall << " InclTimeThisCall " << TotalTime << endl;);
-    
-#endif // PROFILE_STATS
     
 
-#ifdef PROFILE_STATS
-  ThisFunction->AddSumExclSqr(ExclTimeThisCall*ExclTimeThisCall, tid);
-
-  if (TauEnv_get_callpath()) {
-    if (CallPathFunction) {
-      CallPathFunction->AddSumExclSqr(ExclTimeThisCall*ExclTimeThisCall, tid);
-    }
-  }
-#ifdef TAU_PROFILEPARAM
-  if (ProfileParamFunction) {
-    ProfileParamFunction->AddSumExclSqr(ExclTimeThisCall*ExclTimeThisCall, tid);
-  }
-#endif /* TAU_PROFILEPARAM */
-#endif // PROFILE_STATS
-    
   if (ParentProfiler != (Profiler *) NULL) {
-      
-    DEBUGPROFMSG("nct "<< RtsLayer::myNode()  << ","
-		 << RtsLayer::myContext() << "," << tid  
-		 << " Profiler::Stop(): ParentProfiler Function Name : " 
-		 << ParentProfiler->ThisFunction->GetName() << endl;);
-    DEBUGPROFMSG("nct "<< RtsLayer::myNode()  << ","
-		 << RtsLayer::myContext() << "," << tid
-		 << " Exiting from "<<ThisFunction->GetName() << " Returning to "
-		 << ParentProfiler->ThisFunction->GetName() << endl;);
-      
     if (ParentProfiler->ThisFunction != (FunctionInfo *) NULL)
       ParentProfiler->ThisFunction->ExcludeTime(TotalTime, tid);
     else {
       cout <<"ParentProfiler's Function info is NULL" <<endl;
     }
-      
-#ifdef PROFILE_STATS
-    ParentProfiler->ExcludeTimeThisCall(TotalTime);
-#endif //PROFILE_STATS
       
 #ifdef TAU_COMPENSATE
     ParentProfiler->AddNumChildren(GetNumChildren()+1);
@@ -1300,13 +1259,6 @@ void Profiler::PurgeData(int tid) {
 }
 
 
-#ifdef PROFILE_STATS
-int Profiler::ExcludeTimeThisCall(double t) {
-  ExclTimeThisCall -= t;
-  return 1;
-}
-#endif
-
 /////////////////////////////////////////////////////////////////////////
 
 
@@ -1415,9 +1367,6 @@ static int writeHeader(FILE *fp, int numFunc, char *metricName) {
   sprintf(header,"%d %s\n", numFunc, metricName);
   strcat(header,"# Name Calls Subrs Excl Incl ");
   
-#ifdef PROFILE_STATS
-  strcat(header,"SumExclSqr ");
-#endif
   strcat(header,"ProfileCalls");
   fprintf(fp, "%s", header);	
   return 0;
@@ -1516,10 +1465,6 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
     fprintf(fp,"\"%s %s\" %ld %ld %.16G %.16G ", fi->GetName(), 
 	    fi->GetType(), fi->GetCalls(tid), fi->GetSubrs(tid), 
 	    excltime, incltime);
-    
-#ifdef PROFILE_STATS 
-    fprintf(fp,"%.16G ", fi->GetSumExclSqr(tid));
-#endif
     
     fprintf(fp,"0 "); // Indicating that profile calls is turned off
     fprintf(fp,"GROUP=\"%s\" \n", fi->GetAllGroups());
@@ -1746,6 +1691,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.211 $   $Date: 2009/01/16 00:46:52 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.211 2009/01/16 00:46:52 amorris Exp $ 
+ * $Revision: 1.212 $   $Date: 2009/01/16 23:21:45 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.212 2009/01/16 23:21:45 amorris Exp $ 
  ***************************************************************************/
