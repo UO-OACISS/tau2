@@ -62,7 +62,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/TauAPI.h 	 $(INCDIR)/ProfileHeaders.h   \
 		$(INCDIR)/PthreadLayer.h $(INCDIR)/RtsLayer.h         \
 		$(INCDIR)/FunctionInfo.h $(INCDIR)/UserEvent.h        \
-		$(INCDIR)/TauCAPI.h 	 $(INCDIR)/TulipTimers.h      \
+		$(INCDIR)/TauCppAPI.h 	 $(INCDIR)/TulipTimers.h      \
 	        $(INCDIR)/bstring.h	 $(INCDIR)/TulipThreadLayer.h \
 		$(INCDIR)/TauFAPI.h 	 $(INCDIR)/PclLayer.h         \
 		$(INCDIR)/PapiLayer.h    $(INCDIR)/JavaThreadLayer.h  \

@@ -60,7 +60,6 @@ using namespace std;
 #endif // TRACING_ON 
 
 #include <Profile/TauInit.h>
-#include <Profile/TauCAPI.h>
 
 //////////////////////////////////////////////////////////////////////
 // The purpose of this subclass of vector is to give us a chance to execute
@@ -519,6 +518,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.63 $   $Date: 2009/01/16 00:46:52 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.63 2009/01/16 00:46:52 amorris Exp $ 
+ * $Revision: 1.64 $   $Date: 2009/01/16 02:25:16 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.64 2009/01/16 02:25:16 amorris Exp $ 
  ***************************************************************************/
