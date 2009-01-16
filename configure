@@ -1739,7 +1739,7 @@ case "`echo 'x\c'`" in
 'x\c')  echo="echo -n"  nnl= ;;     #BSD
 x)      echo="echo"     nnl="\c";;  #SysV
 *)      echo 'Cannot setup echo. What weird machine do you have?' 1>2&
-        exit 1;;
+        echo="echo"  nnl="\c" ;;
 esac
 
 # lth@cs.uoregon.edu: don't mess with the compiler if it is 'default'.
