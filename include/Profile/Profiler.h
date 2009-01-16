@@ -81,14 +81,12 @@ void tau_pthread_exit (void *arg);
 
 
 #ifndef TAU_MAX_THREADS
-
 #ifdef TAU_CHARM
 #define TAU_MAX_THREADS 512
-#else
+#else /* TAU_CHARM */
 #define TAU_MAX_THREADS 128
 #endif
-
-#endif
+#endif /* TAU_MAX_THREADS */
 
 #else
 #define TAU_MAX_THREADS 1
@@ -96,11 +94,11 @@ void tau_pthread_exit (void *arg);
 
 
 
+#include <Profile/ProfileGroups.h>
+#include <Profile/TauAPI.h>
 
 #if (defined (__cplusplus ) && !defined (TAU_USE_C_API))
 
-#include <Profile/ProfileGroups.h>
-#include <Profile/TauAPI.h>
 
 #if (defined(PROFILING_ON) || defined(TRACING_ON))
 
@@ -123,6 +121,7 @@ void tau_pthread_exit (void *arg);
 #include <Profile/TauCompensate.h>
 #include <Profile/TauHandler.h>
 #include <Profile/TauEnv.h>
+#include <Profile/TauMapping.h>
 
 #if defined(TAUKTAU)
 class KtauProfiler;
@@ -239,6 +238,7 @@ public:
   bool 	       AddInclProfileParamFlag; 
   static void AddProfileParamData(long key, string& keyname);
 #endif /* TAU_PROFILEPARAM */
+
 #ifdef TAU_COMPENSATE
   /* Compensate for instrumentation overhead based on total number of 
      child calls executed under the given timer */
@@ -247,7 +247,6 @@ public:
   long GetNumChildren(void);
   void AddNumChildren(long value);
 #endif /* TAU_COMPENSATE */
-  Profiler * ParentProfiler; 
   
   
 #ifdef TAU_PROFILEPHASE
@@ -270,14 +269,12 @@ public:
 #endif /* TAUKTAU */
   
 public:
+  Profiler *ParentProfiler; 
   TauGroup_t MyProfileGroup_;
   bool	StartStopUsed_;
   bool 	AddInclFlag; 
-  /* There is a class that will do some initialization
-	   of FunctionStack that can't be done with
-	   just the constructor.
-	   friend class ProfilerInitializer; */
   bool 	PhaseFlag;
+
 #ifdef TAU_DEPTH_LIMIT
   int  profiledepth; 
 #endif /* TAU_DEPTH_LIMIT */
@@ -285,6 +282,7 @@ public:
 #ifdef TAU_MPITRACE
   bool 	RecordEvent; /* true when an MPI call is in the callpath */
 #endif /* TAU_MPITRACE */
+
 };
 };
 #ifdef TAU_LIBRARY_SOURCE
@@ -294,17 +292,13 @@ using tau::Profiler;
 
 
 #endif /* PROFILING_ON || TRACING_ON */
-#include <Profile/TauMapping.h>
 /* included after class Profiler is defined. */
-#else /* __cplusplus && ! TAU_USE_C_API */
-#include <Profile/TauCAPI.h> /* For C program */
 #endif /* __cplusplus && ! TAU_USE_C_API */
 
-#include <Profile/TauCommonAPI.h>
 
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.91 $   $Date: 2009/01/16 00:46:32 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.91 2009/01/16 00:46:32 amorris Exp $ 
+ * $Revision: 1.92 $   $Date: 2009/01/16 02:19:28 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.92 2009/01/16 02:19:28 amorris Exp $ 
  ***************************************************************************/

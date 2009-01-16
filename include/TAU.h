@@ -31,6 +31,9 @@ extern void Tau_stop(const char *name);
 /* define the easy to use API */
 #define TAU_START(name) Tau_start(name)
 #define TAU_STOP(name) Tau_stop(name)
+/* for consistency, we provide the long form */
+#define TAU_STATIC_TIMER_START TAU_START
+#define TAU_STATIC_TIMER_STOP TAU_STOP
 #else /* TAU_DISABLE_API is defined! Define these two to nulls */
 #define TAU_START(name) 
 #define TAU_STOP(name)
