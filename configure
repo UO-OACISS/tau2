@@ -454,7 +454,6 @@ intel=no
 gnu=no
 profile=no
 monitor=no
-profilecounters=no
 multiplecounters=no
 profilestats=no
 profilememory=no
@@ -463,8 +462,6 @@ callpath=no
 profileparam=no
 depthlimit=no
 phase=no
-profilecalls=no
-profilecallstack=no
 trace=no
 mpitrace=no
 debugprof=no
@@ -1275,21 +1272,14 @@ do
     shift
     ;;
 
-  -PROFILECOUNTERS)
-    profile=yes
-    profilecounters=yes
-    shift
-    ;;
-
   -MULTIPLECOUNTERS)
     multiplecounters=yes
     shift
     ;;
 
   -PROFILECALLS)
-    profile=yes
-    profilecalls=yes
-    shift
+    echo "-PROFILECALLS is no longer supported, try downgrading to TAU 2.18.1"
+    exit 0
     ;;
 
   -PROFILEPHASE)
@@ -1332,9 +1322,8 @@ do
     ;;
 
   -PROFILECALLSTACK)
-    profile=yes
-    profilecallstack=yes
-    shift
+    echo "-PROFILECALLSTACK is no longer supported, try downgrading to TAU 2.18.1"
+    exit 0
     ;;
 
   -TRACE)
@@ -2192,11 +2181,6 @@ if [ $java = yes ]
     tauoptions="${tauoptions}-jdk"
 fi
 
-if [ $profilecalls = yes ]
-  then
-    fixmakeargs="$fixmakeargs PROFILECALLS"
-fi
-
 if [ $profilestats = yes ]
   then
     fixmakeargs="$fixmakeargs PROFILESTATS"
@@ -2265,11 +2249,6 @@ if [ $iowrapper = yes ] ; then
     fixmakeargs="$fixmakeargs IOWRAPPER"
 fi    
 
-if [ $profilecallstack = yes ]
-  then
-      fixmakeargs="$fixmakeargs CALLSTACK"
-fi
-
 if [ $stff = yes ]
   then
       fixmakeargs="$fixmakeargs RENCI_STFF stffdir=${stffdir} sddfdir=${sddfdir}"
@@ -2332,15 +2311,6 @@ if [ $monitor = yes ]
     fixmakeargs="$fixmakeargs MONITOR"
 fi
 
-if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ] 
-  then
-  if [ $profilecounters = yes ]
-    then
-      fixmakeargs="$fixmakeargs SGICOUNTERS"
-      tauoptions="${tauoptions}-counters"
-  fi
-fi
-
 if [ $linuxtimers = yes ]
 then
   fixmakeargs="$fixmakeargs LINUXTIMERS"
@@ -2351,15 +2321,6 @@ if [ $alphatimers = yes ]
 then
   fixmakeargs="$fixmakeargs ALPHATIMERS"
   tauoptions="${tauoptions}-alphatimers"
-fi
-
-if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ] 
-  then
-  if [ $profilecounters = no -a $sgitimers = yes ]
-    then
-      fixmakeargs="$fixmakeargs SGITIMERS"
-      tauoptions="${tauoptions}-sgitimers"
-  fi
 fi
 
 if [ $bgltimers = yes -a $machine = bgp ]
@@ -2414,10 +2375,10 @@ if [ $multiplecounters = yes ]
   then
     fixmakeargs="$fixmakeargs MULTIPLECOUNTERS"
     tauoptions="${tauoptions}-multiplecounters"
-    if [ $profilecalls = yes -o $profilestats = yes -o $profilecounters = yes ]
+    if [ $profilestats = yes ]
     then
       echo "******** ERROR : -MULTIPLECOUNTERS option is incompatible with "
-      echo "**************** -PROFILECOUNTERS, -PROFILECALLS, or -PROFILESTATS"
+      echo "**************** -PROFILESTATS"
       echo "**************** Please reconfigure TAU without these."
       echo "******** EXITING .... "
       exit 1
