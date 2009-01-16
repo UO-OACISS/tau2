@@ -307,11 +307,11 @@ inline void FunctionInfo::AddExclTime(double *t, int tid) {
 #endif //TAU_MULTIPLE_COUNTERS
 
 inline void FunctionInfo::IncrNumCalls(int tid) {
-  NumCalls[tid] ++; // Increment number of calls
+  NumCalls[tid]++; // Increment number of calls
 } 
 
 inline void FunctionInfo::IncrNumSubrs(int tid) {
-  NumSubrs[tid] ++;  // increment # of subroutines
+  NumSubrs[tid]++;  // increment # of subroutines
 }
 
 inline void FunctionInfo::SetAlreadyOnStack(bool value, int tid) {
@@ -336,6 +336,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: amorris $
- * $Revision: 1.50 $   $Date: 2009/01/16 00:46:32 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.50 2009/01/16 00:46:32 amorris Exp $ 
+ * $Revision: 1.51 $   $Date: 2009/01/16 01:50:04 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.51 2009/01/16 01:50:04 amorris Exp $ 
  ***************************************************************************/

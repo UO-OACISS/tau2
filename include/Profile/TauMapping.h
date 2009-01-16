@@ -104,27 +104,6 @@ void* &TheTauMapFI(TauGroup_t key=TAU_DEFAULT);
 
 #else
 /* Create null , except the main statement which should be executed as it is*/
-#define TAU_MAPPING(stmt, group) stmt
-#define TAU_MAPPING_OBJECT(FuncInfoVar) 
-#define TAU_MAPPING_LINK(FuncInfoVar, Group) 
-#define TAU_MAPPING_PROFILE(FuncInfoVar) 
-#define TAU_MAPPING_CREATE(name, type, key, groupname, tid) 
-#define TAU_MAPPING_PROFILE_TIMER(Timer, FuncInfoVar, tid)
-#define TAU_MAPPING_TIMER_CREATE(t, name, type, gr, group_name)
-#define TAU_MAPPING_PROFILE_START(Timer, tid) 
-#define TAU_MAPPING_PROFILE_STOP(tid) 
-#define TAU_MAPPING_PROFILE_EXIT(msg, tid)  
-#define TAU_MAPPING_DB_DUMP(tid)
-#define TAU_MAPPING_DB_PURGE(tid)
-#define TAU_MAPPING_PROFILE_SET_NODE(node, tid)  
-#define TAU_MAPPING_PROFILE_SET_GROUP_NAME(timer, name)
-#define TAU_MAPPING_PROFILE_SET_NAME(timer, name) 
-#define TAU_MAPPING_PROFILE_SET_TYPE(timer, name)
-#define TAU_MAPPING_PROFILE_SET_GROUP(timer, id) 
-#define TAU_MAPPING_PROFILE_GET_GROUP_NAME(timer) 
-#define TAU_MAPPING_PROFILE_GET_GROUP(timer) 
-#define TAU_MAPPING_PROFILE_GET_NAME(timer) 
-#define TAU_MAPPING_PROFILE_GET_TYPE(timer) 
 
 #endif /* PROFILING_ON or TRACING_ON  */
 #endif /* _TAU_MAPPING_H_ */

@@ -59,11 +59,18 @@ extern void Tau_stop(const char *name);
 #define TAU_PROFILE_INIT(argc, argv)
 #define TAU_PROFILE_SET_NODE(node)
 #define TAU_PROFILE_SET_CONTEXT(context)
+#define TAU_PROFILE_SET_THREAD(thread)
 #define TAU_PROFILE_SET_GROUP_NAME(newname)
 #define TAU_PROFILE_TIMER_SET_GROUP_NAME(t, newname)
 #define TAU_PROFILE_CALLSTACK()    
 #define TAU_DB_DUMP()
 #define TAU_DB_PURGE()
+#define TAU_DB_DUMP_PREFIX(prefix)
+#define TAU_DB_DUMP_INCR()
+#define TAU_GET_FUNC_NAMES(functionList, num)
+#define TAU_DUMP_FUNC_NAMES()
+#define TAU_GET_PROFILE_GROUP(group)
+#define TAU_INIT(argc, argv)
 
 
 #define TAU_REGISTER_CONTEXT_EVENT(event, name)
@@ -132,6 +139,7 @@ extern void Tau_stop(const char *name);
 #define TAU_MAPPING_PROFILE_GET_TYPE(timer)
 
 
+
 #define TAU_PHASE(name, type, group) 
 #define TAU_PHASE_CREATE_STATIC(var, name, type, group) 
 #define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group) 
@@ -174,6 +182,27 @@ extern void Tau_stop(const char *name);
 #define TAU_PROFILER_GET_CALLS(handle, number)
 #define TAU_PROFILER_GET_CHILD_CALLS(handle, number)
 #define TAU_PROFILER_GET_COUNTER_INFO(counters, numcounters)
+
+#define TAU_PROFILE_TIMER_DYNAMIC(var,name, type, group)
+#define TAU_GET_FUNC_NAMES(functionList, num)
+#define TAU_GET_COUNTER_NAMES(counterList, num)
+
+#define TAU_GET_FUNC_VALS(v1,v2,v3,v4,v5,v6,v7,v8)
+#define TAU_DUMP_FUNC_VALS(functionList, num)
+#define TAU_DUMP_FUNC_VALS_INCR(functionList, num)
+#define TAU_GET_EVENT_NAMES(eventList, num)
+#define TAU_GET_EVENT_VALS(v1,v2,v3,v4,v5,v6,v7)
+#define TAU_EVENT_SET_NAME(event, name)
+
+#define TAU_ENABLE_TRACKING_MEMORY()
+#define TAU_DISABLE_TRACKING_MEMORY()
+#define TAU_TRACK_MEMORY()	
+#define TAU_TRACK_MEMORY_HERE()	     
+#define TAU_TRACK_MEMORY_HEADROOM()   
+#define TAU_TRACK_MEMORY_HEADROOM_HERE()
+#define TAU_ENABLE_TRACKING_MEMORY_HEADROOM()
+#define TAU_DISABLE_TRACKING_MEMORY_HEADROOM()
+
 
 #endif /* PROFILING_ON || TRACING_ON */
 
