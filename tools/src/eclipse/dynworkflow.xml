@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<toolset.01>
+<!--This workflow has the same effect as selecting the 'automatic' option for TAU selective instrumentation in Eclipse.  It will generate a selective instrumentation file from an initial program run and collect performance data from a second. -->
+<tool name="TAU_AutoSelect" id="TAU">
+        <compile replace="true">
+                <CC command="tau_cc.sh" group="tau"/>
+                <CXX command="tau_cxx.sh" group="tau"/>
+                <F90 command="tau_f90.sh" group="tau"/>
+                <allcompilers group="tau">
+                <optionpane title="Tau Compiler" virtual="true"/>
+                <optionpane title="tau_makefile" virtual="true"/>
+                <optionpane title="selective_instrumentation_arg" virtual="true"/>
+                </allcompilers>
+        </compile>
+        <execute />
+        <analyze>
+                <utility command="pprof" group="tau" outtofile="pprof.txt">
+                        <argument flag="-d"/>
+                </utility>
+                <utility command="tau_reduce" group="tau">
+                        <argument flag="-f" separator=" " value="pprof.txt" localdir="true"/>
+                        <argument flag="-o" separator=" " value="tau_select.txt" localdir="true"/>
+                </utility>
+        </analyze>
+        <compile replace="true">
+                <CC command="tau_cc.sh" group="tau"/>
+                <CXX command="tau_cxx.sh" group="tau"/>
+                <F90 command="tau_f90.sh" group="tau"/>
+                <allcompilers group="tau">
+                <optionpane title="Tau Compiler" virtual="true"/>
+                <optionpane title="tau_makefile" virtual="true"/>
+                <argument flag="-optTauSelectFile" separator="=" value="tau_select.txt" localdir="true"/>
+                </allcompilers>
+        </compile>
+        <execute/>
+        <analyze>
+                <utility command="process-TAU-data" group="internal"/>
+        </analyze>
+</tool>
+</toolset.01>

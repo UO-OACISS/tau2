@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<toolset.01>
+<!--This wofkflow demonstrates performance data management.  The user will be prompted for a directory containing TAU trace files.  The files will be merged, converted to slog2 and displayed in jumpshot-->
+<tool name="TAU Tracing">
+<analyze>
+<utility command="tau_treemerge.pl" group="tau"/>
+<utility command="tau2slog2" group="tau">
+	<argument value="tau.trc tau.edf -o tau.slog2"/>
+</utility>
+<utility command="jumpshot" group="slog2">
+	<argument value="tau.slog2"/>
+</utility>
+</analyze>
+</tool>
+</toolset.01>

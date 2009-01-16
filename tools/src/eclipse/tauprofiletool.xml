@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--This workflow has the same effect as running the built in TAU workflow with 'execute only' selected.  It uses the internal profile management system so the TAU plugins must be installed-->
+<toolset.01>
+<tool name="TAU Profiling">
+<analyze>
+<utility command="process-TAU-data" group="internal"/>
+</analyze>
+</tool>
+</toolset.01>
