@@ -62,8 +62,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/TauAPI.h 	 $(INCDIR)/ProfileHeaders.h   \
 		$(INCDIR)/PthreadLayer.h $(INCDIR)/RtsLayer.h         \
 		$(INCDIR)/FunctionInfo.h $(INCDIR)/UserEvent.h        \
-		$(INCDIR)/TauCppAPI.h 	 $(INCDIR)/TulipTimers.h      \
-	        $(INCDIR)/bstring.h	 $(INCDIR)/TulipThreadLayer.h \
+		$(INCDIR)/TauCppAPI.h 	 $(INCDIR)/bstring.h	      \
 		$(INCDIR)/TauFAPI.h 	 $(INCDIR)/PclLayer.h         \
 		$(INCDIR)/PapiLayer.h    $(INCDIR)/JavaThreadLayer.h  \
 		$(INCDIR)/OpenMPLayer.h  $(INCDIR)/TauJAPI.h	      \
@@ -88,7 +87,7 @@ PGIACC_O=
 #PYTHON#PYTHON_O  = PyGroups.o PyExceptions.o PyDatabase.o PyBindings.o PyTimer.o PyTau.o PyMemory.o ctau_impl.o #ENDIF#
 
 
-OBJS	      = Profiler.o TulipTimers.o UserEvent.o FunctionInfo.o \
+OBJS	      = Profiler.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
 		TauHooks.o TauHandler.o TauMemory.o MetaData.o TauEnv.o \
 		TauInit.o Comp_intel9.o Comp_pgi.o Comp_xl.o TauCallPath.o \
@@ -106,7 +105,7 @@ SHARED_OBJS   = $(PGIACC_O)
 
 PRINT	      = pr
 
-SRCS	      = Profiler.cpp TulipTimers.cpp UserEvent.cpp FunctionInfo.cpp \
+SRCS	      = Profiler.cpp UserEvent.cpp FunctionInfo.cpp \
 		TauCAPI.cpp TauFAPI.cpp TauMapping.cpp TauHooks.cpp 
 
 AR	      = $(TAU_AR)
@@ -418,9 +417,6 @@ TauEnv.o 	: TauEnv.cpp $(HDRS)
 TauInit.o 	: TauInit.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
-TulipTimers.o 	: TulipTimers.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
-
 UserEvent.o 	: UserEvent.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
@@ -467,9 +463,6 @@ PapiThreadLayer.o   : PapiThreadLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 JavaThreadLayer.o   : JavaThreadLayer.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
-
-TulipThreadLayer.o   : TulipThreadLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauCAPI.o   : TauCAPI.cpp $(HDRS)

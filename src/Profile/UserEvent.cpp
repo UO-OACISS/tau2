@@ -58,8 +58,7 @@ using namespace std;
 #ifdef TAU_EPILOG
 #include "elg_trc.h"
 #else /* TAU_EPILOG */
-#define PCXX_EVENT_SRC
-#include "Profile/pcxx_events.h"
+#include <Profile/TauTrace.h>
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
 #endif // TRACING_ON 
@@ -684,6 +683,6 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid)
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
- * $Revision: 1.30 $   $Date: 2009/01/16 00:46:53 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.30 2009/01/16 00:46:53 amorris Exp $ 
+ * $Revision: 1.31 $   $Date: 2009/01/17 00:09:07 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.31 2009/01/17 00:09:07 amorris Exp $ 
  ***************************************************************************/

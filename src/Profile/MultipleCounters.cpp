@@ -53,14 +53,11 @@ using namespace std;
 #include <kernel_interface.h>
 #endif // BGP_TIMERS
 
-#ifdef TRACING_ON
 #ifdef TAU_EPILOG
 #include "elg_trc.h"
 #else /* TAU_EPILOG */
-#define PCXX_EVENT_SRC
-#include "Profile/pcxx_events.h"
+#include <Profile/TauTrace.h>
 #endif /* TAU_EPILOG */
-#endif // TRACING_ON
 
 #if (defined(__QK_USER__) || defined(__LIBCATAMOUNT__ ))
 #ifndef TAU_CATAMOUNT
@@ -172,9 +169,7 @@ int MultipleCounterLayer::ktauMCL_CP[MAX_TAU_COUNTERS];
 int MultipleCounterLayer::ktauMCL_FP;
 #endif//TAUKTAU_SHCTR
 
-#ifdef TRACING_ON
 TauUserEvent **MultipleCounterLayer::counterEvents; 
-#endif /* TRACING_ON */
 
 firstListType MultipleCounterLayer::initArray[] = {gettimeofdayMCLInit,
 						   linuxTimerMCLInit,
@@ -1125,13 +1120,13 @@ int MultipleCounterLayer::getNumberOfCountersUsed(void) {
   return numberOfCounters; 
 }
 
-#if ( defined(TAU_MULTIPLE_COUNTERS) && defined(TRACING_ON))
 
 /////////////////////////////////////////////////
 // Trigger user defined events associated with each counter 
 /////////////////////////////////////////////////
 void MultipleCounterLayer::triggerCounterEvents(unsigned long long timestamp, double *values, int tid)
 {
+#ifdef TRACING_ON
   int i;
   static int countersUsed = MultipleCounterLayer::getNumberOfCountersUsed();
 #ifndef TAU_EPILOG
@@ -1141,9 +1136,8 @@ void MultipleCounterLayer::triggerCounterEvents(unsigned long long timestamp, do
     // 1 in the last parameter is for use timestamp 
   }
 #endif /* TAU_EPILOG */
-
+#endif TRACING_ON
 }
-#endif /* TAU_MULTIPLE_COUNTERS && TRACING_ON */
 
 /////////////////////////////////////////////////
 //

@@ -97,8 +97,7 @@ void esd_exit (elg_ui4 rid);
 #endif /* SCALASCA */
 
 #else /* TAU_EPILOG */
-#define PCXX_EVENT_SRC
-#include "Profile/pcxx_events.h"
+#include <Profile/TauTrace.h>
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
 #endif // TRACING_ON 
@@ -1691,6 +1690,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.212 $   $Date: 2009/01/16 23:21:45 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.212 2009/01/16 23:21:45 amorris Exp $ 
+ * $Revision: 1.213 $   $Date: 2009/01/17 00:09:07 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.213 2009/01/17 00:09:07 amorris Exp $ 
  ***************************************************************************/

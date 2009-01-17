@@ -51,9 +51,7 @@ class MultipleCounterLayer
   static const char * getCounterNameAt(int position);
   static void theCounterList(const char ***inPtr, int *numOfCounters);
   static void theCounterListInternal(const char ***inPtr, int *numOfCounters, bool **tmpPtr);
-#ifdef TRACING_ON
   static void triggerCounterEvents(unsigned long long timestamp, double *values, int tid);
-#endif /* TRACING_ON */
   //*********************
   //The list of counter functions, and their init. functions.
   //Please see the help files on multiple
@@ -191,9 +189,7 @@ class MultipleCounterLayer
   static char * names[MAX_TAU_COUNTERS];
   static bool counterUsed[MAX_TAU_COUNTERS];
   static int numberOfCounters[MAX_TAU_COUNTERS];
-#ifdef TRACING_ON
   static TauUserEvent **counterEvents;
-#endif /* TRACING_ON */
 };
 
 #endif /* TAU_MULTIPLE_COUNTERS */

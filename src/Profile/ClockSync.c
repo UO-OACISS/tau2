@@ -37,7 +37,6 @@
 #ifdef TAU_EPILOG
 #include "elg_trc.h"
 #else /* TAU_EPILOG */
-#define PCXX_EVENT_SRC
 #include "Profile/pcxx_events.h"
 #endif /* TAU_EPILOG */
 #endif /* TRACING_ON */

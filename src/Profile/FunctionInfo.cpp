@@ -34,14 +34,6 @@ using namespace std;
 
 #if (!defined(TAU_WINDOWS))
  #include <unistd.h>
- #if (defined(POOMA_TFLOP) || !defined(TULIP_TIMERS))
-  #include <sys/time.h>
- #else
-  #ifdef TULIP_TIMERS 
-   #include "Profile/TulipTimers.h"
-  #endif //TULIP_TIMERS 
- #endif //POOMA_TFLOP
-
 #else
   #include <vector>
 #endif //TAU_WINDOWS
@@ -53,8 +45,7 @@ using namespace std;
 #ifdef TAU_EPILOG
 #include "elg_trc.h"
 #else /* TAU_EPILOG */
-#define PCXX_EVENT_SRC
-#include "Profile/pcxx_events.h"
+#include <Profile/TauTrace.h>
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
 #endif // TRACING_ON 
@@ -514,6 +505,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.65 $   $Date: 2009/01/16 23:21:45 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.cpp,v 1.65 2009/01/16 23:21:45 amorris Exp $ 
+ * $Revision: 1.66 $   $Date: 2009/01/17 00:09:07 $
+ * VERSION_ID: $Id: FunctionInfo.cpp,v 1.66 2009/01/17 00:09:07 amorris Exp $ 
  ***************************************************************************/

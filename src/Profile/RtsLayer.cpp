@@ -117,10 +117,7 @@ using namespace std;
 
 #endif //TAU_WINDOWS
 
-#ifdef TRACING_ON
-#define PCXX_EVENT_SRC
-#include "Profile/pcxx_events.h"
-#endif // TRACING_ON 
+#include <Profile/TauTrace.h>
 
 #ifdef TAUKTAU
 #include <Profile/ktau_timer.h>
@@ -1494,6 +1491,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.109 $   $Date: 2009/01/16 00:46:52 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.109 2009/01/16 00:46:52 amorris Exp $ 
+ * $Revision: 1.110 $   $Date: 2009/01/17 00:09:07 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.110 2009/01/17 00:09:07 amorris Exp $ 
  ***************************************************************************/

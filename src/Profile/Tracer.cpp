@@ -32,6 +32,7 @@
 # include <Profile/Profiler.h>
 
 #include <Profile/TauEnv.h>
+#include <Profile/TauTrace.h>
 
 #ifdef TAU_LARGEFILE
   #define LARGEFILE_OPTION O_LARGEFILE
@@ -41,8 +42,6 @@
 
 extern double TauSyncAdjustTimeStamp(double timestamp);
 
-# define PCXX_EVENT_SRC 
-# include "Profile/pcxx_events.h"
 
 /* extern "C" time_t time(time_t * t);
  use time.h */

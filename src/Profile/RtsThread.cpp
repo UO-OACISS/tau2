@@ -29,8 +29,7 @@ using namespace std;
 #include "Profile/OpenMPLayer.h"
 
 #ifdef TRACING_ON
-#define PCXX_EVENT_SRC
-#include "Profile/pcxx_events.h"
+#include <Profile/TauTrace.h>
 void TraceCallStack(int tid, Profiler *current);
 #endif // TRACING_ON
 
@@ -391,8 +390,8 @@ void RtsLayer::UnLockEnv(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: amorris $
- * $Revision: 1.31 $   $Date: 2009/01/16 23:21:45 $
- * VERSION: $Id: RtsThread.cpp,v 1.31 2009/01/16 23:21:45 amorris Exp $
+ * $Revision: 1.32 $   $Date: 2009/01/17 00:09:07 $
+ * VERSION: $Id: RtsThread.cpp,v 1.32 2009/01/17 00:09:07 amorris Exp $
  ***************************************************************************/
 
 
