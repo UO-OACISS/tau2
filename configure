@@ -4305,23 +4305,6 @@ EOF
 fi
 
 ######################################################################
-# Save C++ compiler, C compiler, and USEROPT for build
-
-echo "$machine: cxx         = $cxx_compiler" >> ./build/Config.info
-echo "$machine: cc          = $c_compiler" >> ./build/Config.info
-opt=`echo $useropt | sed -e 's/_/ /g'`
-echo "$machine: useropt     = $opt" >> ./build/Config.info
-echo "$machine: stdincludes = $stdinc" >> ./build/Config.info 
-echo "" >> ./build/Config.info
-
-######################################################################
-## STATIC ANALYSIS: Ductape/Program Database Toolkit/IL Analyser
-    
-# NOW PDT configuration handled in PDT
-######################################################################
-
-
-######################################################################
 # test whether C++ compiler supports AT&T task library
 
 echo "#include <task.h>" > /tmp/tau$$.C
