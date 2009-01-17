@@ -447,9 +447,6 @@ RtsThread.o 	: RtsThread.cpp $(HDRS)
 ProfileParam.o   : ProfileParam.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
-pcxx_events.o   : pcxx_events.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
-
 Tracer.o   	: Tracer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
