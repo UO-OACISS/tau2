@@ -62,14 +62,6 @@ LEXTRA =
 #CM5#CEXTRA = -D__CM5__#ENDIF#
 #SGICC#CEXTRA = -LANG:std -D__SGIMP__#ENDIF#
 #SGICC#CEXTRA = -D_STANDARD_C_PLUS_PLUS -D__SGIMP__#ENDIF#
-#PCXX#RUNTIME1 = pcxx_merge#ENDIF#
-#PCXX#RUNTIME2 = pcxx_convert#ENDIF#
-#PCXX#RUNTIME3 = pcxx_dump#ENDIF#
-#HPCXX#RUNTIME1 = pcxx_merge#ENDIF#
-#HPCXX#RUNTIME2 = pcxx_convert#ENDIF#
-#HPCXX#RUNTIME3 = pcxx_dump#ENDIF#
-#HPCXX#RUNTIME4 = pcxx2ar#ENDIF#
-#HPCXX#RUNTIME5 = ar2pcxx#ENDIF#
 WARNINGSOPT	= -w 
 #CRAYX1CC#WARNINGSOPT	= #ENDIF#
 #CRAYCC#WARNINGSOPT= -DCRAYCC  #ENDIF#
@@ -168,10 +160,6 @@ PDTCFLAGS     = $(USER_OPT) -I../include $(CEXTRA) $(CWARNING) $(COMPSPECIFIC) $
 
 HDRS	      =
 
-EVHEADER      = $(SAGE1DIR)/tulip/include/pcxx_events_def.h \
-		$(SAGE1DIR)/tulip/include/pcxx_events.h \
-                $(SAGE1DIR)/tulip/include/pcxx_ansi.h \
-		$(SAGE1DIR)/tulip/include/pcxx_machines.h
 
 LDFLAGS	      = $(PCXX_OPT)
 
@@ -184,26 +172,10 @@ OBJS	      = tau_reduce.o pprof.o  tau_events.o tau_merge.o tau_selective.o \
 
 PRINT	      = pr
 
-SRCS	      = pcxx_merge.c \
-		pcxx_convert.c
-
 EXECUTABLES =	tau_reduce pprof tau_convert tau_merge $(RUNTIME1) $(RUNTIME2) $(RUNTIME3)\
 		$(RUNTIME4) $(RUNTIME5) $(INSTR) $(TAURUN) $(TRACE2PROFILE) $(TAU_TIMECORRECT) $(TAU2VTF) $(VTF2PROFILE) $(TAU2OTF) $(TAU2ELG) $(TAUOMPCHECK) $(PERF2TAU) $(WRAP) $(HEADERLIST)
 
 all:		$(EXECUTABLES)
-
-pcxx_merge:	pcxx_merge.c $(EVHEADER)
-		$(LINKER) -D__PCXX__ $(LDFLAGS) $(CEXTRA) -I$(SAGE1DIR)/tulip/include \
-		pcxx_merge.c -o pcxx_merge $(LEXTRA)
-
-pcxx_convert:	pcxx_convert.c $(EVHEADER)
-		$(LINKER) -D__PCXX__ $(LDFLAGS) $(CEXTRA) -I$(SAGE1DIR)/tulip/include \
-		pcxx_convert.c -o pcxx_convert
-
-pcxx2ar : pcxx2ar.c $(EVHEADER)
-		$(LINKER)  -D__PCXX__ $(LDFLAGS) $(CEXTRA) \
-		   -I$(SAGE1DIR)/tulip/include \
-		   pcxx2ar.c -o pcxx2ar
 
 tau_convert: 	tau_convert.c 
 		$(CXX) $(CFLAGS)  tau_convert.c -o tau_convert -lm $(LEXTRA)
@@ -308,9 +280,6 @@ $(PDTDIR)/$(PDTARCHDIR)/lib/libpdb.a:
 		@echo "******************************************************"
 	        @exit
 
-ar2pcxx : ar2pcxx.c 
-		$(LINKER) ar2pcxx.c -o $@
-
 tau_reduce:	tau_reduce.o pprof_elem.o
 		$(CXX) $(CFLAGS) tau_reduce.o pprof_elem.o -o tau_reduce -lm $(LEXTRA)
 
@@ -338,9 +307,6 @@ user_event_data.o:	user_event_data.cpp
 clean:
 		/bin/rm -rf *.o $(EXECUTABLES) *.dep lib*$(LSX) *.ii *.ti ti_files cxx_repository ii_files rii_files 
 		cd opari ; make clean
-
-index:
-		ctags -wx $(HDRS) $(SRCS)
 
 $(INSTALLDEST)/pprof: pprof
 		@echo Installing $? in $(INSTALLDEST)
@@ -450,39 +416,6 @@ $(INSTALLDEST)/perf2tau: perf2tau
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) perf2tau $(INSTALLDEST)
 
-#$(INSTALLDEST)/$(RUNTIME1): $(RUNTIME1)
-#		@echo Installing $? in $(INSTALLDEST)
-#		if [ -d $(INSTALLDEST) ] ; then true; \
-#                   else mkdir $(INSTALLDEST) ;fi
-#		$(TAU_INSTALL) $? $(INSTALLDEST)
-#
-#$(INSTALLDEST)/$(RUNTIME2): $(RUNTIME2)
-#		@echo Installing $? in $(INSTALLDEST)
-#		if [ -d $(INSTALLDEST) ] ; then true; \
-#                   else mkdir $(INSTALLDEST) ;fi
-#		$(TAU_INSTALL) $? $(INSTALLDEST)
-#
-#$(INSTALLDEST)/$(RUNTIME3): $(INSTALLDEST)/$(RUNTIME2)
-#		@echo Installing $? in $(INSTALLDEST)
-#		if [ -d $(INSTALLDEST) ] ; then true; \
-#                   else mkdir $(INSTALLDEST) ;fi
-#		rm -f $(INSTALLDEST)/$(RUNTIME3)
-#		ln $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3)
-#
-#$(INSTALLDEST)/$(RUNTIME4): $(RUNTIME4)
-#		@echo Installing $? in $(INSTALLDEST)
-#		if [ -d $(INSTALLDEST) ] ; then true; \
-#                   else mkdir $(INSTALLDEST) ;fi
-#		$(TAU_INSTALL) $? $(INSTALLDEST)
-#
-#$(INSTALLDEST)/$(RUNTIME5): $(RUNTIME5)
-#		@echo Installing $? in $(INSTALLDEST)
-#		if [ -d $(INSTALLDEST) ] ; then true; \
-#                   else mkdir $(INSTALLDEST) ;fi
-#		$(TAU_INSTALL) $? $(INSTALLDEST)
-#
-#PCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
-#HPCXX#INSTALLPCXX = $(INSTALLDEST)/$(RUNTIME1) $(INSTALLDEST)/$(RUNTIME2) $(INSTALLDEST)/$(RUNTIME3) $(INSTALLDEST)/$(RUNTIME4) $(INSTALLDEST)/$(RUNTIME5)#ENDIF#
 
 install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_reduce $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLDEST)/opari $(INSTALLTRACE2PROFILE) $(INSTALLTAU_TIMECORRECT) $(INSTALLPCXX) $(INSTALLINSTR) $(INSTALLTAURUN) $(INSTALLTAU2VTF) $(INSTALLVTF2PROFILE) $(INSTALLTAU2OTF) $(INSTALLTAU2ELG) $(INSTALLTAUOMPCHECK) $(INSTALLPERF2TAU) $(INSTALLWRAP) $(INSTALLHEADERLIST) $(INSTALLSELECTFILE)
 
