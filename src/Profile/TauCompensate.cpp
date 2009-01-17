@@ -83,7 +83,6 @@ int TauCalibrateNullTimer(void)
   TAU_PROFILE_TIMER(tnull, ".TAU null timer overhead", " ", TAU_DEFAULT);
   TAU_PROFILE_TIMER(tone,  ".TAU 1000 null timers overhead", " ", TAU_DEFAULT);
   int i, tid;
-  double tnull, toverhead; 
   char *iter;
   int iterations;
 
@@ -119,16 +118,16 @@ int TauCalibrateNullTimer(void)
 
   /* Get thread id */
   tid = RtsLayer::myThread();
-  int n = tnullfi->GetCalls(tid);
+  int n = ((FunctionInfo*)tnull)->GetCalls(tid);
 
 #ifndef TAU_MULTIPLE_COUNTERS 
-  TheTauNullTimerOverhead() = tnullfi->GetInclTime(tid)/n;
+  TheTauNullTimerOverhead() = ((FunctionInfo*)tnull)->GetInclTime(tid)/n;
   /* n*(a+b+c+d) + b+c = tone */
   /* a+b+c+d = Toverhead = (tone - tnull) / n */
-  TheTauFullTimerOverhead() = (tonefi->GetInclTime(tid) - TheTauNullTimerOverhead() ) / n; 
+  TheTauFullTimerOverhead() = (((FunctionInfo*)tone)->GetInclTime(tid) - TheTauNullTimerOverhead() ) / n; 
 #else /* TAU_MULTIPLE_COUNTERS */
-  double *nullincltime = tnullfi->GetInclTime(tid);
-  double *oneincltime  = tonefi->GetInclTime(tid);
+  double *nullincltime = ((FunctionInfo*)tnull)->GetInclTime(tid);
+  double *oneincltime  = ((FunctionInfo*)tone)->GetInclTime(tid);
   for (i=0; i < MAX_TAU_COUNTERS; i++) 
   {
     /* n*(a+b+c+d) + b+c = tone */
