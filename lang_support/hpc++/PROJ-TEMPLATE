@@ -1,5 +1,0 @@
-/* This is an HPC++ application template
- *   (c) 1996 Kurt Windisch
- */
-
-#include <hpcxx_profiler.h>
