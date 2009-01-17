@@ -141,7 +141,6 @@ extern void pcxx_EvFlush ();
 #define pcxx_LongEvent(e, l, p)
 #define pcxx_EvClose()
 #define pcxx_EvFlush()
-#define pcxx_AriadneTrace(ec, ev, pid, oid, rwtype, mtag, par) 
 
 #endif /* TRACING_ON */
 
