@@ -1317,18 +1317,10 @@ ALPHATIMERS)
 	echo "NOTE: Using Phase Based Profiling Using Callpaths"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     PROFILECALLS)
-	echo "NOTE: Using PROFILECALLS for tracing timings for each function invocation "
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
      DEPTHLIMIT)
 	echo "NOTE: Disabling instrumentation beyond a certain callstack depth"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     CALLSTACK)
-        echo "NOTE:  Using PROFILECALLSTACK for callstack tracing"
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-        ;;
      INTELCXXLIBICC)
 	echo "NOTE: Using INTEL's -cxxlib-icc compilation option"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

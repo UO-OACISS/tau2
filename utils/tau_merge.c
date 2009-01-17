@@ -51,10 +51,7 @@ int getdtablesize(void);
 #include <string.h>
 
 #define TRACING_ON
-#define PCXX_EVENT_SRC
-
-#include "Profile/pcxx_events.h"
-#include "Profile/pcxx_ansi.h"
+#include <Profile/TauTrace.h>
 
 #ifndef TRUE
 #   define FALSE  0

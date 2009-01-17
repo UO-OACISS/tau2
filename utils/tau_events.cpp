@@ -21,15 +21,8 @@
 
 # include <string.h>
 
-# define TRACING_ON
-# define PCXX_EVENT_SRC
-
-# ifdef __PCXX__
-#   include "Profile/pcxx_events_def.h"
-# else
-#   include "Profile/pcxx_events.h"
-# endif
-# include "Profile/pcxx_ansi.h"
+#define TRACING_ON
+#include <Profile/TauTrace.h>
 
 # ifndef TRUE
 #   define FALSE  0
