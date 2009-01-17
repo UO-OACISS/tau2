@@ -239,7 +239,6 @@ for arg in "$@"; do
     echo "-papithread .................................. Use PAPI thread package."
     echo "-charm=<dir> .............................. Use charm++ thread package."
     echo "-sproc .................................. Use SGI sproc thread package."
-    echo "-tulipthread=<dir> .......... Specify location of Tulip/Smarts package."
     echo "-smarts .................. Use SMARTS API for threads (use with above)."
     echo "-openmp ........................................... Use OpenMP threads."
     echo "-opari ..................................................... Use Opari."
@@ -423,7 +422,6 @@ sproc=no
 noex=no
 disableshared=no
 setnode0=no
-tulipthread=no
 compensate=no
 smarts=no
 pcl=no
@@ -804,17 +802,6 @@ do
 
   -smarts)
       smarts=yes
-    shift
-    ;;
-
-  -tulipthread=*)
-      tulipthread=yes
-      tulipdir=`echo $arg | sed -e 's/-tulipthread=//'`
-      if [ ! -d $tulipdir ]
-      then
-        echo "Error: Cannot access TULIP directory $tulipdir"
-        exit 1
-      fi
     shift
     ;;
 
@@ -5197,7 +5184,7 @@ fi
 
 if [ $opari = yes ]
   then
-    if [ $pthread = yes -o $tulipthread = yes -o $smarts = yes -o $java = yes ]
+    if [ $pthread = yes -o $smarts = yes -o $java = yes ]
     then
       echo "ERROR: -opari option requires OpenMP threads package."
       echo "*****************************************************"
@@ -5210,19 +5197,6 @@ if [ $opari = yes ]
     if [ $opari_construct = no -a $opari_region = yes ]
     then
       fixmakeargs="$fixmakeargs OPARI_REGION"
-    fi
-fi
-
-if [ $tulipthread = yes ]
-  then
-    fixmakeargs="$fixmakeargs TULIPTHREADS tulipdir=$tulipdir"
-    echo "$machine: TULIPDIR = $tulipdir" >> ./build/Config.info
-    if [ $smarts = yes ]
-    then
-      fixmakeargs="$fixmakeargs SMARTS"
-      tauoptions="${tauoptions}-smarts"
-    else
-      tauoptions="${tauoptions}-tulip"
     fi
 fi
 
