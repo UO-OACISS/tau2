@@ -67,10 +67,6 @@ extern unsigned long int pcxx_ev_class;
 
 #ifdef TAU_LIBRARY_SOURCE
 
-
-extern int MyNodeNumber;
-
-
 #ifndef PCXX_BUFSIZE
 #define PCXX_BUFSIZE 65536  /* -- 64 K -- */
 #endif
@@ -86,55 +82,54 @@ extern int MyNodeNumber;
 #endif /* TAU_LIBRARY_SOURCE */
 
 #ifdef __cplusplus
-        extern "C" {
+extern "C" {
 #endif /* __cplusplus */
-
-        /* -- event record buffer descriptor ------------------------- */
-        typedef struct
-        {
-          x_int32            ev;    /* -- event id        -- */
-          x_uint16           nid;   /* -- node id         -- */
-          x_uint16           tid;   /* -- thread id       -- */
-          x_int64            par;   /* -- event parameter -- */
-          x_uint64           ti;    /* -- time [us]?      -- */
-        } PCXX_EV;
-
+  
+  /* -- event record buffer descriptor ------------------------- */
+  typedef struct {
+    x_int32            ev;    /* -- event id        -- */
+    x_uint16           nid;   /* -- node id         -- */
+    x_uint16           tid;   /* -- thread id       -- */
+    x_int64            par;   /* -- event parameter -- */
+    x_uint64           ti;    /* -- time [us]?      -- */
+  } PCXX_EV;
+  
 #ifdef TAU_LIBRARY_SOURCE
-
-        /* -- pointer to next free element of event record buffer ---- */
-        extern PCXX_EV *pcxx_ev_ptr;
-
-        /* -- pointer to last available element of event record buffer */
-        extern PCXX_EV *pcxx_ev_max;
-
+  
+  /* -- pointer to next free element of event record buffer ---- */
+  extern PCXX_EV *pcxx_ev_ptr;
+  
+  /* -- pointer to last available element of event record buffer */
+  extern PCXX_EV *pcxx_ev_max;
+  
 #endif /* TAU_LIBRARY_SOURCE */
-
-      /* -- pcxx monitor routines ------------------------------------ */
+  
+  /* -- pcxx monitor routines ------------------------------------ */
 #define PCXX_EVENT(c,e,p) if (pcxx_ev_class&(c)) pcxx_Event(e,p)
 #define PCXX_LONG_EVENT(c,e,l,p) if (pcxx_ev_class&(c)) pcxx_LongEvent(e,l,p)
 #ifdef __cplusplus
-        void pcxx_EvInit (char *n);
-        void pcxx_Event (long int e, x_int64 p);
-        void pcxx_LongEvent (long int e, int l, char *p);
-        void pcxx_EvClose ();
-        void pcxx_EvFlush ();
-	/* New tracing interface */
-	int TraceEvInit(int tid);
-	void TraceUnInitialize(int tid);
- 	void TraceReinitialize(int oldid, int newid, int tid);
-        void TraceEventOnly(long int ev, x_int64 par, int tid);
-        void TraceEvFlush(int tid);
- 	void TraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts = 0L, int use_ts = 0);
-	void TraceEvClose(int tid);
-	void SetFlushEvents(int tid);
-        int  GetFlushEvents(int tid);
-        }
+  void pcxx_EvInit (char *n);
+  void pcxx_Event (long int e, x_int64 p);
+  void pcxx_LongEvent (long int e, int l, char *p);
+  void pcxx_EvClose ();
+  void pcxx_EvFlush ();
+  /* New tracing interface */
+  int TraceEvInit(int tid);
+  void TraceUnInitialize(int tid);
+  void TraceReinitialize(int oldid, int newid, int tid);
+  void TraceEventOnly(long int ev, x_int64 par, int tid);
+  void TraceEvFlush(int tid);
+  void TraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts = 0L, int use_ts = 0);
+  void TraceEvClose(int tid);
+  void SetFlushEvents(int tid);
+  int  GetFlushEvents(int tid);
+}
 #else
-        extern void pcxx_EvInit(char *n);
-        extern void pcxx_Event(long int e, long long p);
-        extern void pcxx_LongEvent(long int e, int l, char *p);
-        extern void pcxx_EvClose ();
-        extern void pcxx_EvFlush ();
+extern void pcxx_EvInit(char *n);
+extern void pcxx_Event(long int e, long long p);
+extern void pcxx_LongEvent(long int e, int l, char *p);
+extern void pcxx_EvClose ();
+extern void pcxx_EvFlush ();
 #endif /* __cplusplus */
 
 #else
@@ -149,6 +144,5 @@ extern int MyNodeNumber;
 #define pcxx_AriadneTrace(ec, ev, pid, oid, rwtype, mtag, par) 
 
 #endif /* TRACING_ON */
-
 
 #endif /* _TAU_TRACE_H_ */
