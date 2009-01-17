@@ -40,23 +40,16 @@
 #include <iostream>   
 using namespace std;  
 
-/* TAU specific headers */
-#define PCXX_EVENT_SRC 
-#include <Profile/pcxx_events.h>
-#include <Profile/pcxx_ansi.h>
-
-
-
-
 
 
 /* TAU trace library specific headers */
+#include <Profile/TauTrace.h>
 #include <TAU_tf_decl.h>
 
 #endif /* _TAU_TF_HEADERS_H_ */
 
 /********************************************************************************
  * $RCSfile: TAU_tf_headers.h,v $   $Author: amorris $
- * $Revision: 1.4 $   $Date: 2005/08/23 21:11:09 $
- * TAU_VERSION_ID: $Id: TAU_tf_headers.h,v 1.4 2005/08/23 21:11:09 amorris Exp $ 
+ * $Revision: 1.5 $   $Date: 2009/01/17 02:24:48 $
+ * TAU_VERSION_ID: $Id: TAU_tf_headers.h,v 1.5 2009/01/17 02:24:48 amorris Exp $ 
  *******************************************************************************/
