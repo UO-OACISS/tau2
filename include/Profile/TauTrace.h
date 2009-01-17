@@ -1,19 +1,26 @@
-/*********************************************************************/
-/*                  pC++/Sage++  Copyright (C) 1994                  */
-/*  Indiana University  University of Oregon  University of Rennes   */
-/*********************************************************************/
+/****************************************************************************
+**			TAU Portable Profiling Package                     **
+**			http://www.cs.uoregon.edu/research/tau             **
+*****************************************************************************
+**    Copyright 2008  						   	   **
+**    Department of Computer and Information Science, University of Oregon **
+**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+**    Forschungszentrum Juelich                                            **
+****************************************************************************/
+/****************************************************************************
+**	File 		: TauTrace.h 			        	   **
+**	Description 	: TAU Profiling Package				   **
+**	Contact		: tau-bugs@cs.uoregon.edu               	   **
+**	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
+**                                                                         **
+**      Description     : TAU Tracing                                      **
+**                                                                         **
+****************************************************************************/
 
-/*
- *
- * pcxx_events.h: simple SW monitor routines
- *
- * (c) 1994 Jerry Manic Saftware
- *
- * Version 3.0
- */
+#ifndef _TAU_TRACE_H_
+#define _TAU_TRACE_H_
 
-# ifndef __PCXX_EVENTS__H__
-# define __PCXX_EVENTS__H__
+#ifdef TRACING_ON
 
 #include "tau_types.h"
 
@@ -30,9 +37,7 @@
 extern unsigned long int pcxx_ev_class;
 
 
-#ifdef TRACING_ON
-
-        /* -- pcxx tracer events ------------------- */
+/* -- pcxx tracer events ------------------- */
 #define PCXX_EV_INIT         60000
 #define PCXX_EV_FLUSH_ENTER  60001
 #define PCXX_EV_FLUSH_EXIT   60002
@@ -40,8 +45,18 @@ extern unsigned long int pcxx_ev_class;
 #define PCXX_EV_INITM        60004
 #define PCXX_EV_WALL_CLOCK   60005
 #define PCXX_EV_CONT_EVENT   60006
-#define TAU_MESSAGE_SEND	    60007
-#define TAU_MESSAGE_RECV	    60008
+#define TAU_MESSAGE_SEND     60007
+#define TAU_MESSAGE_RECV     60008
+
+/* -- the following two events are only the ----- */
+/* -- base numbers, actually both represent ----- */
+/* -- 64 events (60[1234]00 to 60[1234]64)  ----- */
+#define PCXX_WTIMER_CLEAR    60199
+#define PCXX_WTIMER_START    60100
+#define PCXX_WTIMER_STOP     60200
+#define PCXX_UTIMER_CLEAR    60399
+#define PCXX_UTIMER_START    60300
+#define PCXX_UTIMER_STOP     60400
 
 /* from pcxx_machines.h */
 #define PCXX_MAXPROCS 4096
@@ -56,31 +71,17 @@ extern unsigned long int pcxx_ev_class;
 extern int MyNodeNumber;
 
 
-        /* -- the following two events are only the ----- */
-        /* -- base numbers, actually both represent ----- */
-        /* -- 64 events (60[1234]00 to 60[1234]64)  ----- */
-#  define PCXX_WTIMER_CLEAR    60199
-#  define PCXX_WTIMER_START    60100
-#  define PCXX_WTIMER_STOP     60200
-#  define PCXX_UTIMER_CLEAR    60399
-#  define PCXX_UTIMER_START    60300
-#  define PCXX_UTIMER_STOP     60400
+#ifndef PCXX_BUFSIZE
+#define PCXX_BUFSIZE 65536  /* -- 64 K -- */
+#endif
 
-	
-
-#  ifndef PCXX_BUFSIZE
-#    define PCXX_BUFSIZE 65536  /* -- 64 K -- */
-#  endif
-
-        /* -- event classes ----------------------------- */
-#  ifndef PCXX_EC_NULL
-#    define PCXX_EC_NULL       0x00000000
-
-#    define PCXX_EC_TRACER     0x00000001
-#    define PCXX_EC_TIMER      0x00000002
-
-#    define PCXX_EC_ALL        0xFFFFFFFF
-#  endif
+/* -- event classes ----------------------------- */
+#ifndef PCXX_EC_NULL
+#define PCXX_EC_NULL       0x00000000
+#define PCXX_EC_TRACER     0x00000001
+#define PCXX_EC_TIMER      0x00000002
+#define PCXX_EC_ALL        0xFFFFFFFF
+#endif
 
 #endif /* TAU_LIBRARY_SOURCE */
 
@@ -127,7 +128,6 @@ extern int MyNodeNumber;
 	void TraceEvClose(int tid);
 	void SetFlushEvents(int tid);
         int  GetFlushEvents(int tid);
-
         }
 #else
         extern void pcxx_EvInit(char *n);
@@ -137,7 +137,7 @@ extern int MyNodeNumber;
         extern void pcxx_EvFlush ();
 #endif /* __cplusplus */
 
-#   else
+#else
 
 #define PCXX_EVENT(c, e, p)
 #define PCXX_LONG_EVENT(c, e, l, p)
@@ -148,8 +148,7 @@ extern int MyNodeNumber;
 #define pcxx_EvFlush()
 #define pcxx_AriadneTrace(ec, ev, pid, oid, rwtype, mtag, par) 
 
-#   endif /* TRACING_ON */
+#endif /* TRACING_ON */
 
 
-
-# endif /* !__PCXX_EVENTS_H__ */
+#endif /* _TAU_TRACE_H_ */
