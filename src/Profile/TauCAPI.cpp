@@ -456,94 +456,84 @@ int register_events(void)
   return 0;
 }
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_trace_sendmsg(int type, int destination, int length)
-{
+extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
   static int initialize = register_events();
+
 #ifdef TAU_PROFILEPARAM
 #ifndef TAU_DISABLE_PROFILEPARAM_IN_MPI
   static string s("message size");
   TAU_PROFILE_PARAM1L(length, s);
 #endif /* TAU_DISABLE_PROFILEPARAM_IN_MPI */
 #endif  /* TAU_PROFILEPARAM */
-#ifdef DEBUG_PROF
-  printf("Node %d: Tau_trace_sendmsg: type %d dest %d len %d\n", 
-        RtsLayer::myNode(), type, destination, length);
-#endif /* DEBUG_PROF */
+
   TAU_EVENT(TheSendEvent(), length);
+
 #ifdef TAU_EACH_SEND
   TheMsgVolEvent()[destination]->TriggerEvent(length, RtsLayer::myThread());
 #endif /* TAU_EACH_SEND */
-  if (destination >= 0)
-    TAU_TRACE_SENDMSG(type, destination, length);
+  if (destination >= 0) {
+    RtsLayer::TraceSendMsg(type, destination, length);
+  }
 }
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_trace_recvmsg(int type, int source, int length)
-{
+extern "C" void Tau_trace_recvmsg(int type, int source, int length) {
   TAU_EVENT(TheRecvEvent(), length);
+
 #ifdef TAU_PROFILEPARAM
 #ifndef TAU_DISABLE_PROFILEPARAM_IN_MPI
   static string s("message size");
   TAU_PROFILE_PARAM1L(length, s);
 #endif /* TAU_DISABLE_PROFILEPARAM_IN_MPI */
 #endif  /* TAU_PROFILEPARAM */
-  if (source >= 0) 
-    TAU_TRACE_RECVMSG(type, source, length);
+
+  if (source >= 0) {
+    RtsLayer::TraceRecvMsg(type, source, length);
+  }
 }
 
-extern "C" void Tau_bcast_data(int data)
-{
+extern "C" void Tau_bcast_data(int data) {
   TAU_EVENT(TheBcastEvent(), data);
 }
 
-extern "C" void Tau_reduce_data(int data)
-{
+extern "C" void Tau_reduce_data(int data) {
   TAU_EVENT(TheReduceEvent(), data);
 }
 
-extern "C" void Tau_alltoall_data(int data)
-{
+extern "C" void Tau_alltoall_data(int data) {
   TAU_EVENT(TheAlltoallEvent(), data);
 }
 
-extern "C" void Tau_scatter_data(int data)
-{
+extern "C" void Tau_scatter_data(int data) {
   TAU_EVENT(TheScatterEvent(), data);
 }
 
-extern "C" void Tau_gather_data(int data)
-{
+extern "C" void Tau_gather_data(int data) {
   TAU_EVENT(TheGatherEvent(), data);
 }
 
-extern "C" void Tau_allgather_data(int data)
-{
+extern "C" void Tau_allgather_data(int data) {
   TAU_EVENT(TheAllgatherEvent(), data);
 }
 
-extern "C" void Tau_allreduce_data(int data)
-{
+extern "C" void Tau_allreduce_data(int data) {
   TAU_EVENT(TheGatherEvent(), data);
 }
 
-extern "C" void Tau_scan_data(int data)
-{
+extern "C" void Tau_scan_data(int data) {
   TAU_EVENT(TheScanEvent(), data);
 }
 
-extern "C" void Tau_reducescatter_data(int data)
-{
+extern "C" void Tau_reducescatter_data(int data) {
   TAU_EVENT(TheReduceScatterEvent(), data);
 }
 #else /* !TAU_MPI */
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_trace_sendmsg(int type, int destination, int length)
-{
-  TAU_TRACE_SENDMSG(type, destination, length);
+extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
+  RtsLayer::TraceSendMsg(type, destination, length);
 }
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_trace_recvmsg(int type, int source, int length)
-{
-  TAU_TRACE_RECVMSG(type, source, length);
+extern "C" void Tau_trace_recvmsg(int type, int source, int length) {
+  RtsLayer::TraceRecvMsg(type, source, length);
 }
 #endif /* TAU_MPI */
 
@@ -1194,7 +1184,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.98 $   $Date: 2009/01/16 00:46:52 $
- * VERSION: $Id: TauCAPI.cpp,v 1.98 2009/01/16 00:46:52 amorris Exp $
+ * $Revision: 1.99 $   $Date: 2009/01/20 22:13:20 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.99 2009/01/20 22:13:20 amorris Exp $
  ***************************************************************************/
 
