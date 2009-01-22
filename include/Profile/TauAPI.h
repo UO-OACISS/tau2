@@ -281,8 +281,6 @@ void Tau_enable_group(TauGroup_t group);
 
 void Tau_start(const char *name);
 void Tau_stop(const char *name);
-void Tau_start_timer(void * function_info, int phase );
-int Tau_stop_timer(void * function_info); 
 int Tau_stop_current_timer();
 void Tau_create_top_level_timer_if_necessary(void);
 void Tau_stop_top_level_timer_if_necessary(void);
@@ -348,6 +346,7 @@ extern void TAUDECL Tau_reducescatter_data(int data);
 extern void TAUDECL Tau_scan_data(int data);
 
 extern void * Tau_get_profiler(const char *name, const char *type, TauGroup_t group, const char *gr_name);
+
 
 extern void TAUDECL Tau_start_timer(void *profiler, int phase);
 extern int TAUDECL Tau_stop_timer(void *profiler);
@@ -480,6 +479,6 @@ void Tau_track_memory_headroom_here(void);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.87 $   $Date: 2009/01/16 02:24:51 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.87 2009/01/16 02:24:51 amorris Exp $ 
+ * $Revision: 1.88 $   $Date: 2009/01/22 22:39:58 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.88 2009/01/22 22:39:58 amorris Exp $ 
  ***************************************************************************/
