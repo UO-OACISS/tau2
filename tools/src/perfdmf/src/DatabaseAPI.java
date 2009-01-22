@@ -13,11 +13,11 @@ import edu.uoregon.tau.perfdmf.database.ParseConfig;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.21 2008/11/12 01:18:08 khuck Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.22 2009/01/22 23:06:25 khuck Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.21 $
+ * @version $Revision: 1.22 $
  */
 public class DatabaseAPI {
 
@@ -230,6 +230,29 @@ public class DatabaseAPI {
         // create a string to hit the database
         String whereClause;
         whereClause = " WHERE t.id = " + id;
+        Vector trials = Trial.getTrialList(db, whereClause);
+        if (trials.size() == 1) {
+            this.trial = (Trial) trials.elementAt(0);
+        } //else exception?
+
+        return this.trial;
+    }
+
+    // set the Trial for this session
+    public Trial setTrial(String trialName) {
+        return setTrial(trialName, true);
+    }
+
+    private Trial setTrial(String trialName, boolean clearHashes) {
+        this.trial = null;
+        this.metrics = null;
+        if (clearHashes) {
+            this.intervalEventHash = null;
+            this.atomicEventHash = null;
+        }
+        // create a string to hit the database
+        String whereClause;
+        whereClause = " WHERE t.name = '" + trialName +"'";
         Vector trials = Trial.getTrialList(db, whereClause);
         if (trials.size() == 1) {
             this.trial = (Trial) trials.elementAt(0);
