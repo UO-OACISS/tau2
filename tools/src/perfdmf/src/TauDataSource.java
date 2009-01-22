@@ -96,7 +96,7 @@ public class TauDataSource extends DataSource {
 
         boolean modernJava = false;
         try {
-            Method m = FileInputStream.class.getMethod("getChannel", null);
+            Method m = FileInputStream.class.getMethod("getChannel", (Class[])null);
             modernJava = true;
         } catch (NoSuchMethodException nsme) {
             // way to go java 1.3
