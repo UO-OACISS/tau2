@@ -12,6 +12,9 @@ import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -54,6 +57,8 @@ public class GAMESSDataSource extends DataSource {
 	private double totalWallClockTime = 0;
 	private double currentWallClockTime = 0;
 	private FunctionProfile fp;
+	private Map metadata = new HashMap();
+	private Map atomCounts = new HashMap();
 
     public GAMESSDataSource(File file) {
         super();
@@ -98,8 +103,14 @@ public class GAMESSDataSource extends DataSource {
 			FileInputStream fileIn = new FileInputStream(file);
 			InputStreamReader inReader = new InputStreamReader(fileIn);
 			BufferedReader br = new BufferedReader(inReader);
+			// initialize the atom counters (that we care about)
+			atomCounts.put(new String("C"),new Integer(0));
+			atomCounts.put(new String("N"),new Integer(0));
+			atomCounts.put(new String("H"),new Integer(0));
+			atomCounts.put(new String("O"),new Integer(0));
 
 			while((inputString = br.readLine()) != null){
+				// trim leading, trailing spaces
 				inputString = inputString.trim();
 				if (inputString.startsWith("PARALLEL VERSION RUNNING ON")) {
 					parseNodeCount();
@@ -116,6 +127,28 @@ public class GAMESSDataSource extends DataSource {
 				} else if (inputString.startsWith("TOTAL WALL CLOCK TIME")) {
 					parseTime();
 					createEvent();
+				} else if ((inputString.startsWith("TOTAL NUMBER OF ")) ||
+				           (inputString.startsWith("NUMBER OF ")) ||
+				           (inputString.startsWith("SPIN MULTIPLICITY")) ||
+				           (inputString.startsWith("THE NUCLEAR REPULSION"))) {
+					parseMetadata();
+				} else if (inputString.startsWith("ATOM      ATOMIC                      COORDINATES (BOHR)")) {
+					inputString = br.readLine(); // skip the next line
+					while((inputString = br.readLine()) != null){
+						inputString = inputString.trim();
+						if (inputString.equals("")) {
+							break;
+						} else {
+    						StringTokenizer st = new StringTokenizer(inputString, " ");
+    						String atom = st.nextToken(); // ATOM NAME
+							Integer counter = (Integer)atomCounts.get(atom);
+							if (counter == null) {
+								counter = new Integer(0);
+							}
+							counter++;
+							atomCounts.put(atom, counter);
+						}
+					}
 				}
 			}
 	    	MyEvent mainEvent = new MyEvent("MAIN", this.totalCpuTime, this.totalWallClockTime, this.events.size());
@@ -130,6 +163,7 @@ public class GAMESSDataSource extends DataSource {
 						this.createFunction(this.thread, tmp, false);
 						this.createFunction(this.thread, tmp, true);
 					}
+					this.setMetadata();
 				}
 			}
 			
@@ -305,7 +339,49 @@ public class GAMESSDataSource extends DataSource {
 			}
 		}
 	}
+
+	private void parseMetadata () {
+		if ((inputString.startsWith("TOTAL NUMBER OF")) ||
+		    (inputString.startsWith("NUMBER OF ")) ||
+		    (inputString.startsWith("SPIN MULTIPLICITY"))) {
+    		StringTokenizer st = new StringTokenizer(inputString, "=");
+    		String name = st.nextToken().trim(); // name
+    		String value = st.nextToken().trim(); // value
+			metadata.put(name, value);
+		} else if (inputString.startsWith("THE NUCLEAR REPULSION")) {
+    		StringTokenizer st = new StringTokenizer(inputString, " ");
+    		st.nextToken().trim(); // THE
+    		String name = st.nextToken().trim(); // NUCLEAR
+    		name += " " + st.nextToken().trim(); // REPULSION
+    		name += " " + st.nextToken().trim(); // ENERGY
+    		st.nextToken().trim(); // IS
+    		String value = st.nextToken().trim(); // value
+			metadata.put(name, value);
+		}
+	}
     
+    private void setMetadata() {
+		Iterator iter = metadata.keySet().iterator();
+		String name;
+		String value;
+		// get the explicit values in the file
+		while (iter.hasNext()) {
+			name = (String)iter.next();
+			value = (String)metadata.get(name);
+   			this.getThread().getMetaData().put(name, value);
+		}
+		// get the counters
+		iter = atomCounts.keySet().iterator();
+		String atom;
+		Integer count;
+		while (iter.hasNext()) {
+			atom = (String)iter.next();
+			count = (Integer)atomCounts.get(atom);
+   			this.getThread().getMetaData().put("NUMBER OF ATOMS: " + atom, count.toString());
+		}
+		iter = atomCounts.keySet().iterator();
+	}
+
     private class MyEvent {
     	public String name = new String();
     	public double cpu = 0.0;
