@@ -25,7 +25,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.30 2009/01/08 17:46:15 amorris Exp $
+ * CVS $Id: Trial.java,v 1.31 2009/01/22 23:05:40 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -123,6 +123,7 @@ public class Trial implements Serializable, Comparable {
         this.metaData = trial.metaData;
         this.uncommonMetaData = trial.uncommonMetaData;
         this.database = trial.database;
+        this.dataSource = trial.dataSource;
     }
 
     ///////////////////////////////////////////////////////
