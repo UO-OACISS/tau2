@@ -145,7 +145,7 @@ public class GAMESSDataSource extends DataSource {
 							if (counter == null) {
 								counter = new Integer(0);
 							}
-							counter++;
+							counter = new Integer(counter.intValue()+1);
 							atomCounts.put(atom, counter);
 						}
 					}

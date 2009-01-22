@@ -102,6 +102,14 @@ public class LoadTrial {
         }
     }
 
+    public boolean checkForTrialName(String trialName) {
+        Trial tmpTrial = databaseAPI.setTrial(trialName);
+        if (tmpTrial == null)
+            return false;
+        else
+            return true;
+    }
+
     public boolean checkForTrial(String trialid) {
         Trial tmpTrial = databaseAPI.setTrial(Integer.parseInt(trialid));
         if (tmpTrial == null)
