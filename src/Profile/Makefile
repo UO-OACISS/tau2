@@ -344,7 +344,7 @@ $(TAU_BINDINGSDIR)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 		@if [ -d $(TAU_BINDINGSDIR) ] ; then true; \
 		    else mkdir $(TAU_BINDINGSDIR); fi
 		$(RM) $(TAU_BINDINGSDIR)/*
-		cd $(TAU_BINDINGSDIR) && ln -s ../$(TAU_SHLIB) $(TAUPYTHON) && ln -s ../$(TAU_SHLIB) ctau_impl$(TAU_SHLIBX)
+		cd $(TAU_BINDINGSDIR) && ln -s ../$(TAU_SHLIB) $(TAUPYTHON) && ln -s ../$(TAU_SHLIB) ctau_impl$(TAU_SHLIBX) && ln -s ../$(TAU_SHLIB) libTAU$(TAU_SHLIBX)
 		cd $(TAU_BINDINGSDIR) && ln -s ../tau.py . && ln -s ../ltau.py .
 
 $(INSTALLDEST)/libpgnod_prof.a : 
