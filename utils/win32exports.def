@@ -13,7 +13,7 @@ EXPORTS
   Tau_purge
   Tau_the_function_list
   Tau_dump_function_names
-  Tau_the_counter_names
+  Tau_get_counter_names
   Tau_get_function_values
   Tau_dump_function_values
   Tau_dump_function_values_incr
