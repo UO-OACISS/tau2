@@ -41,6 +41,7 @@ public class RegressionGraph {
     public boolean horizontal = false;
     public boolean legend = true;
     public boolean angledXaxis = true;
+    public boolean singleTrial = false;
 
     public int stringLimit = 60;
     public boolean logScale = false;
@@ -64,6 +65,17 @@ public class RegressionGraph {
         this.exps.add(trials);
         this.expnames = new ArrayList();
         this.expnames.add("wallclock");
+    }
+
+    public static RegressionGraph createChart() {
+        RegressionGraph chart = new RegressionGraph();
+        return chart;
+    }
+
+    public static RegressionGraph createChart(ParaProfTrial trial) {
+        List trials = new ArrayList();
+        trials.add(trial);
+        return createBasicChart(trials);
     }
 
     public static RegressionGraph createBasicChart(List trials) {
@@ -216,7 +228,7 @@ public class RegressionGraph {
 
             List fps = dataSorter.getFunctionProfiles(ppTrial.getMeanThread());
 
-            PPFunctionProfile topfp = (PPFunctionProfile) fps.get(0);
+            PPFunctionProfile topfp = getTopLevelTimer(ppTrial);
             double topValue = topfp.getInclusiveValue();
             double threshhold = topValue * percent;
             for (Iterator it2 = fps.iterator(); it2.hasNext();) {
@@ -293,6 +305,37 @@ public class RegressionGraph {
         return dataSet;
     }
 
+    private CategoryDataset getSingleDataSet() {
+
+
+        ParaProfTrial ppTrial = (ParaProfTrial) trials.get(0);
+
+        PPFunctionProfile topfp = getTopLevelTimer(ppTrial);
+        double topValue = topfp.getInclusiveValue();
+        double threshhold = topValue * percent;
+        DefaultCategoryDataset dataSet = new DefaultCategoryDataset();
+
+        DataSorter dataSorter = new DataSorter(ppTrial);
+        dataSorter.setSortType(SortType.VALUE);
+        dataSorter.setSortValueType(valueType);
+        dataSorter.setValueType(valueType);
+
+        List fps = dataSorter.getFunctionProfiles(ppTrial.getMeanThread());
+
+        for (Iterator it2 = fps.iterator(); it2.hasNext();) {
+            PPFunctionProfile fp = (PPFunctionProfile) it2.next();
+            if (fp.getExclusiveValue() > threshhold) {
+                String displayName = fp.getDisplayName();
+
+                double value = valueType.getValue(fp.getFunctionProfile(), metric) * unitMultiple;
+
+                dataSet.addValue(value, displayName, displayName);
+            }
+        }
+
+        return dataSet;
+    }
+
     public JFreeChart getChart() {
 
         ParaProf.preferences.setShowSourceLocation(false);
@@ -302,7 +345,9 @@ public class RegressionGraph {
 
         CategoryDataset dataSet = null;
         XYDataset xyDataSet = null;
-        if (scalingChart) {
+        if (singleTrial) {
+            dataSet = getSingleDataSet();
+        } else if (scalingChart) {
             xyDataSet = getScalingDataSet();
         } else if (mainOnly) {
             dataSet = getMainOnlyDataSet();
@@ -601,6 +646,10 @@ public class RegressionGraph {
         this.exps = exps;
         this.expnames = expnames;
         this.trials = (List) this.exps.get(0);
+    }
+
+    public void setSingleTrial(boolean singleTrial) {
+        this.singleTrial = singleTrial;
     }
 
 }
