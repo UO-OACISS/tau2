@@ -27,8 +27,7 @@ import edu.uoregon.tau.common.ImageOptionsPanel;
 public class ParaProfImageOutput {
 
     // do not allow instantiation
-    private ParaProfImageOutput() {
-    }
+    private ParaProfImageOutput() {}
 
     public static void saveImage(ImageExport ref) throws IOException {
 
@@ -52,9 +51,8 @@ public class ParaProfImageOutput {
         if (resultValue != JFileChooser.APPROVE_OPTION) {
             return;
         }
-
-        //Get both the file and FileFilter.
         File file = fileChooser.getSelectedFile();
+        //Get both the file and FileFilter.
         String path = file.getCanonicalPath();
 
         ImageFormatFileFilter paraProfImageFormatFileFilter = null;
@@ -66,7 +64,8 @@ public class ParaProfImageOutput {
             //???
         }
         String extension = ImageFormatFileFilter.getExtension(file);
-        if (extension == null || ((extension.toUpperCase().compareTo("JPG")!=0) && (extension.toUpperCase().compareTo("PNG")!=0)) ) {
+        if (extension == null
+                || ((extension.toUpperCase().compareTo("JPG") != 0) && (extension.toUpperCase().compareTo("PNG") != 0))) {
             extension = paraProfImageFormatFileFilter.getExtension();
             path = path + "." + extension;
             file = new File(path);
@@ -78,19 +77,34 @@ public class ParaProfImageOutput {
             if (response == JOptionPane.CANCEL_OPTION)
                 return;
         }
+        saveImage(ref, file, paraProfImageOptionsPanel.isFullScreen(), paraProfImageOptionsPanel.isPrependHeader(),
+                paraProfImageOptionsPanel.getImageQuality());
+    }
 
+    public static void saveImage(ImageExport ref, File file) throws IOException {
+        saveImage(ref, file, false, true, 100);
+    }
+
+    public static void saveImage(ImageExport ref, String file) throws IOException {
+        saveImage(ref, new File(file), false, true, 100);
+    }
+
+    public static void saveImage(ImageExport ref, File file, boolean fullScreen, boolean prependHeader, float imageQuality)
+            throws IOException {
+        String extension = ImageFormatFileFilter.getExtension(file);
+        
         // I'm doing this twice right now because the getImageSize won't be correct until 
         // renderIt has been called with the appropriate settings.  Stupid, I know.
-        Dimension d = ref.getImageSize(paraProfImageOptionsPanel.isFullScreen(), paraProfImageOptionsPanel.isPrependHeader());
+        Dimension d = ref.getImageSize(fullScreen, prependHeader);
         d.height = Math.max(d.height, 1);
         d.width = Math.max(d.width, 1);
         BufferedImage bi = new BufferedImage((int) d.getWidth(), (int) d.getHeight(), BufferedImage.TYPE_INT_RGB);
         Graphics2D g2D = bi.createGraphics();
 
         //Draw to this graphics object.
-        ref.export(g2D, false, paraProfImageOptionsPanel.isFullScreen(), paraProfImageOptionsPanel.isPrependHeader());
+        ref.export(g2D, false, fullScreen, prependHeader);
 
-        d = ref.getImageSize(paraProfImageOptionsPanel.isFullScreen(), paraProfImageOptionsPanel.isPrependHeader());
+        d = ref.getImageSize(fullScreen, prependHeader);
         d.height = Math.max(d.height, 1);
         d.width = Math.max(d.width, 1);
         bi = new BufferedImage((int) d.getWidth(), (int) d.getHeight(), BufferedImage.TYPE_INT_RGB);
@@ -104,7 +118,7 @@ public class ParaProfImageOutput {
         g2D.setColor(Color.black);
 
         //Draw to this graphics object.
-        ref.export(g2D, false, paraProfImageOptionsPanel.isFullScreen(), paraProfImageOptionsPanel.isPrependHeader());
+        ref.export(g2D, false, fullScreen, prependHeader);
 
         //Now write the image to file.
         ImageWriter writer = null;
@@ -113,7 +127,8 @@ public class ParaProfImageOutput {
             writer = (ImageWriter) iter.next();
         }
         if (writer == null) {
-            JOptionPane.showMessageDialog((Component)ref, "Couldn't find Image Writer for extension '." + extension.toUpperCase() + "'");
+            JOptionPane.showMessageDialog((Component) ref, "Couldn't find Image Writer for extension '."
+                    + extension.toUpperCase() + "'");
             return;
         }
         ImageOutputStream imageOut = ImageIO.createImageOutputStream(file);
@@ -124,7 +139,7 @@ public class ParaProfImageOutput {
         if (extension.toUpperCase().compareTo("JPG") == 0) {
             ImageWriteParam iwp = writer.getDefaultWriteParam();
             iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-            iwp.setCompressionQuality(paraProfImageOptionsPanel.getImageQuality());
+            iwp.setCompressionQuality(imageQuality);
             writer.write(null, iioImage, iwp);
         } else {
             writer.write(iioImage);
@@ -147,7 +162,7 @@ public class ParaProfImageOutput {
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
         final ImageOptionsPanel paraProfImageOptionsPanel = new ImageOptionsPanel((Component) ref, false, false);
-        fileChooser.setAccessory(paraProfImageOptionsPanel); 
+        fileChooser.setAccessory(paraProfImageOptionsPanel);
         fileChooser.addPropertyChangeListener(paraProfImageOptionsPanel);
         int resultValue = fileChooser.showSaveDialog((Component) ref);
         if (resultValue != JFileChooser.APPROVE_OPTION) {

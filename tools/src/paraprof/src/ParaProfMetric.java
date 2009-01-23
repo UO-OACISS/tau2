@@ -17,7 +17,6 @@ public class ParaProfMetric extends Metric implements ParaProfTreeNodeUserObject
     private ParaProfTrial ppTrial = null;
     private DefaultMutableTreeNode defaultMutableTreeNode = null;
     private TreePath treePath = null;
-    private boolean derivedMetric = false;
     
     public ParaProfMetric() {
     }
@@ -44,14 +43,6 @@ public class ParaProfMetric extends Metric implements ParaProfTreeNodeUserObject
 
     public TreePath getTreePath() {
         return treePath;
-    }
-
-    public void setDerivedMetric(boolean derivedMetric) {
-        this.derivedMetric = derivedMetric;
-    }
-
-    public boolean getDerivedMetric() {
-        return derivedMetric;
     }
 
     public int getApplicationID() {

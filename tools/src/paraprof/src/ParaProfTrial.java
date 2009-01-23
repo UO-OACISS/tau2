@@ -304,6 +304,10 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         return (ParaProfMetric) trial.getDataSource().getMetric(metricID);
     }
 
+    public Metric getRegularMetric(int metricID) {
+        return trial.getDataSource().getMetric(metricID);
+    }
+    
     public String getMetricName(int metricID) {
         return trial.getDataSource().getMetricName(metricID);
     }

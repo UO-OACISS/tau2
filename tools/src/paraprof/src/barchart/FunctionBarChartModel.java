@@ -18,9 +18,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  *  1) One function across threads, or 
  *  2) One function across all phases (for one thread).
  * 
- * <P>CVS $Id: FunctionBarChartModel.java,v 1.5 2008/05/14 23:23:58 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartModel.java,v 1.6 2009/01/23 02:11:11 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 
 public class FunctionBarChartModel extends AbstractBarChartModel {
@@ -104,7 +104,7 @@ public class FunctionBarChartModel extends AbstractBarChartModel {
         } else if (function.isGroupMember(ppTrial.getHighlightedGroup())) {
             return ppTrial.getColorChooser().getGroupHighlightColor();
         }
-        return null;
+        return Color.black;
     }
 
     public void reloadData() {
