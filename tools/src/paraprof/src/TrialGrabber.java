@@ -43,13 +43,17 @@ public class TrialGrabber {
 
             List trials = new ArrayList();
             for (int j = 0; j < ppkfiles.length; j++) {
-                trials.add(loadTrial(ppkfiles[j]));
+                trials.add(getTrial(ppkfiles[j]));
             }
             exps.add(trials);
         }
     }
 
-    private static ParaProfTrial loadTrial(File file) {
+    public static ParaProfTrial getTrial(String file) {
+        return getTrial(new File(file));
+    }
+
+    public static ParaProfTrial getTrial(File file) {
         DataSource dataSource = new PackedProfileDataSource(file);
         try {
             dataSource.load();
@@ -78,7 +82,7 @@ public class TrialGrabber {
         Collections.sort(sorted, new AlphanumComparator());
 
         for (int i = 0; i < sorted.size(); i++) {
-            trials.add(loadTrial((File) sorted.get(i)));
+            trials.add(getTrial((File) sorted.get(i)));
         }
 
         return trials;
