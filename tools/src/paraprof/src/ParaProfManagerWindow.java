@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.35 2008/09/05 18:24:53 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.36 2009/01/23 00:38:42 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.35 $
+ * @version	$Revision: 1.36 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -413,6 +413,9 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         jMenuItem = new JMenuItem("Add Trial");
         jMenuItem.addActionListener(this);
         stdExpPopup.add(jMenuItem);
+        //jMenuItem = new JMenuItem("Add all trials to Comparison Window");
+        //jMenuItem.addActionListener(this);
+        //stdExpPopup.add(jMenuItem);
         jMenuItem = new JMenuItem("Delete");
         jMenuItem.addActionListener(this);
         stdExpPopup.add(jMenuItem);
@@ -421,6 +424,10 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         jMenuItem = new JMenuItem("Add Trial");
         jMenuItem.addActionListener(this);
         dbExpPopup.add(jMenuItem);
+        //jMenuItem = new JMenuItem("Add all trials to Comparison Window");
+        //jMenuItem.addActionListener(this);
+        //dbExpPopup.add(jMenuItem);
+
         jMenuItem = new JMenuItem("Delete");
         jMenuItem.addActionListener(this);
         dbExpPopup.add(jMenuItem);
@@ -782,7 +789,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     });
                     thread.start();
                 } else if (arg.equals("Export Application to Filesystem")) {
-                    //???
 
                     ParaProfApplication dbApp = (ParaProfApplication) clickedOnObject;
 
@@ -856,37 +862,13 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     });
                     thread.start();
 
+                } else if (arg.equals("Add all trials to Comparison Window")) {
+                    ParaProfExperiment clickedOnExp = (ParaProfExperiment) clickedOnObject;
+                    compareAllTrials(clickedOnExp);
+
                 } else if (arg.equals("Add Mean to Comparison Window")) {
                     ParaProfTrial ppTrial = (ParaProfTrial) clickedOnObject;
-                    if (ppTrial.loading()) {
-                        JOptionPane.showMessageDialog(this, "Cannot perform operation while loading");
-                    } else {
-                        boolean loaded = true;
-
-                        if (ppTrial.dBTrial()) {
-                            loaded = false;
-                            for (Enumeration e = loadedDBTrials.elements(); e.hasMoreElements();) {
-                                ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
-                                if ((ppTrial.getID() == loadedTrial.getID())
-                                        && (ppTrial.getExperimentID() == loadedTrial.getExperimentID())
-                                        && (ppTrial.getApplicationID() == loadedTrial.getApplicationID())) {
-                                    loaded = true;
-                                }
-                            }
-                        }
-
-                        if (!loaded) {
-                            JOptionPane.showMessageDialog(this, "Please load the trial first (expand the tree)");
-                        } else {
-                            if (ParaProf.theComparisonWindow == null) {
-                                ParaProf.theComparisonWindow = FunctionBarChartWindow.CreateComparisonWindow(ppTrial,
-                                        ppTrial.getDataSource().getMeanData(), this);
-                            } else {
-                                ParaProf.theComparisonWindow.addThread(ppTrial, ppTrial.getDataSource().getMeanData());
-                            }
-                            ParaProf.theComparisonWindow.setVisible(true);
-                        }
-                    }
+                    addMeanToComparisonWindow(ppTrial);
 
                 } else if (arg.equals("Export Profile")) {
                     ParaProfTrial ppTrial = (ParaProfTrial) clickedOnObject;
@@ -938,6 +920,49 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
+    }
+
+    private void addMeanToComparisonWindow(ParaProfTrial ppTrial) {
+        if (ppTrial.loading()) {
+            JOptionPane.showMessageDialog(this, "Cannot perform operation while loading");
+        } else {
+            boolean loaded = true;
+
+            if (ppTrial.dBTrial()) {
+                loaded = false;
+                for (Enumeration e = loadedDBTrials.elements(); e.hasMoreElements();) {
+                    ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+                    if ((ppTrial.getID() == loadedTrial.getID()) && (ppTrial.getExperimentID() == loadedTrial.getExperimentID())
+                            && (ppTrial.getApplicationID() == loadedTrial.getApplicationID())) {
+                        loaded = true;
+                    }
+                }
+            }
+
+            if (!loaded) {
+                JOptionPane.showMessageDialog(this, "Please load the trial first (expand the tree)");
+            } else {
+                if (ParaProf.theComparisonWindow == null) {
+                    ParaProf.theComparisonWindow = FunctionBarChartWindow.CreateComparisonWindow(ppTrial,
+                            ppTrial.getDataSource().getMeanData(), this);
+                } else {
+                    ParaProf.theComparisonWindow.addThread(ppTrial, ppTrial.getDataSource().getMeanData());
+                }
+                ParaProf.theComparisonWindow.setVisible(true);
+            }
+        }
+    }
+
+    private void compareAllTrials(ParaProfExperiment ppExp) {
+//        for (Iterator it = ppExp.getTrialList(); it.hasNext();) {
+//            ParaProfTrial ppTrial = (ParaProfTrial) it.next();
+//            System.out.println(ppTrial);
+//            //addMeanToComparisonWindow(ppTrial);
+//        }
+        RegressionGraph chart = RegressionGraph.createBasicChart(ppExp.getTrials());
+        Frame frame = chart.createFrame();
+        //chart.savePNG("/home/amorris/foo.png");
+        frame.setVisible(true);
     }
 
     private ParaProfApplication uploadApplication(ParaProfApplication ppApp, boolean allowOverwrite, boolean uploadChildren)
