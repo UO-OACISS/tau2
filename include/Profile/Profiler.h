@@ -149,8 +149,6 @@ namespace tau {
 class Profiler
 {
 public:
-  Profiler(FunctionInfo * fi, TauGroup_t ProfileGroup = TAU_DEFAULT, 
-	   bool StartStop = false, int tid = RtsLayer::myThread());
 
   Profiler() {};
   
@@ -295,6 +293,6 @@ using tau::Profiler;
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.93 $   $Date: 2009/01/16 23:21:24 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.93 2009/01/16 23:21:24 amorris Exp $ 
+ * $Revision: 1.94 $   $Date: 2009/01/28 01:32:36 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.94 2009/01/28 01:32:36 amorris Exp $ 
  ***************************************************************************/

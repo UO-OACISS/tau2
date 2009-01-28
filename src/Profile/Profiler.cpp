@@ -474,38 +474,6 @@ void Profiler::Start(int tid) {
 
 //////////////////////////////////////////////////////////////////////
 
-Profiler::Profiler( FunctionInfo * function, TauGroup_t ProfileGroup, 
-		    bool StartStop, int tid) {
-
-  fprintf (stderr, "Do not call this constructor!!!!\n");
-  exit(-1);
-#if defined(TAUKTAU) 
-  ThisKtauProfiler = KtauProfiler::GetKtauProfiler(tid);
-#endif /* defined(TAUKTAU) */
-  
-  StartStopUsed_ = StartStop; // will need it later in ~Profiler
-  MyProfileGroup_ = function->GetProfileGroup(tid) ;
-  //MyProfileGroup_ = ProfileGroup;
-  /* Get the latest profile group from the function. For throttling. */
-  ThisFunction = function ; 
-#ifdef TAU_MPITRACE
-  RecordEvent = false; /* by default, we don't record this event */
-#endif /* TAU_MPITRACE */
-#ifdef TAU_PROFILEPHASE
-  SetPhase(false); /* By default it is not in phase */
-#endif /* TAU_PROFILEPHASE */ 
-  DEBUGPROFMSG("Profiler::Profiler: MyProfileGroup_ = " << MyProfileGroup_ 
-	       << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
-  
-  if(!StartStopUsed_) { // Profiler ctor/dtor interface used
-    Start(tid); 
-  }
-}
-
-
-
-//////////////////////////////////////////////////////////////////////
-
 x_uint64 Tau_get_firstTimeStamp();
 static x_uint64 getTimeStamp() {
   x_uint64 timestamp;
@@ -1690,6 +1658,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.213 $   $Date: 2009/01/17 00:09:07 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.213 2009/01/17 00:09:07 amorris Exp $ 
+ * $Revision: 1.214 $   $Date: 2009/01/28 01:32:37 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.214 2009/01/28 01:32:37 amorris Exp $ 
  ***************************************************************************/
