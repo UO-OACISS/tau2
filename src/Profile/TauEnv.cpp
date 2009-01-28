@@ -44,6 +44,18 @@
 # define TAU_CALLPATH_DEFAULT 0
 #endif
 
+#ifdef TRACING_ON
+# define TAU_TRACING_DEFAULT 1
+#else
+# define TAU_TRACING_DEFAULT 0
+#endif
+
+#ifdef PROFILING_ON
+# define TAU_PROFILING_DEFAULT 1
+#else
+# define TAU_PROFILING_DEFAULT 0
+#endif
+
 #define TAU_THROTTLE_DEFAULT 1
 #ifdef TAU_MPI
   #define TAU_SYNCHRONIZE_CLOCKS_DEFAULT 1
@@ -57,6 +69,8 @@ extern "C" {
   static int env_verbose = 0;
   static int env_throttle = 0;
   static int env_callpath = 0;
+  static int env_profiling = 0;
+  static int env_tracing = 0;
   static int env_callpath_depth = 0;
   static int env_profile_format = TAU_FORMAT_PROFILE;
   static double env_throttle_numcalls = 0;
@@ -121,6 +135,14 @@ extern "C" {
 
   int TauEnv_get_callpath() {
     return env_callpath;
+  }
+
+  int TauEnv_get_profiling() {
+    return env_profiling;
+  }
+
+  int TauEnv_get_tracing() {
+    return env_tracing;
   }
 
   int TauEnv_get_callpath_depth() {
@@ -199,6 +221,26 @@ extern "C" {
       } else {
 	env_callpath = 0;
 	TAU_VERBOSE("TAU: Callpath Profiling Disabled\n");
+      }
+
+      // profiling
+      tmp = getenv("TAU_PROFILING");
+      if (parse_bool(tmp, TAU_PROFILING_DEFAULT)) {
+	env_profiling = 1;
+	TAU_VERBOSE("TAU: Profiling Enabled\n");
+      } else {
+	env_profiling = 0;
+	TAU_VERBOSE("TAU: Profiling Disabled\n");
+      }
+
+      // tracing
+      tmp = getenv("TAU_TRACING");
+      if (parse_bool(tmp, TAU_TRACING_DEFAULT)) {
+	env_tracing = 1;
+	TAU_VERBOSE("TAU: Tracing Enabled\n");
+      } else {
+	env_tracing = 0;
+	TAU_VERBOSE("TAU: Tracing Disabled\n");
       }
 
       // callpath depth
