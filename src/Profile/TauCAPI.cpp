@@ -949,9 +949,6 @@ extern "C" void Tau_dynamic_start(char *name, int isPhase) {
   char *newName = Tau_append_iteration_to_name(itcount, name);
   string n (newName);
   free(newName);
-#ifdef DEBUG_PROF
-  printf("Checking for %s: iteration = %d\n", n.c_str(), iteration);
-#endif /* DEBUG_PROF */
   
   RtsLayer::LockDB();
   map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
@@ -1184,7 +1181,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.99 $   $Date: 2009/01/20 22:13:20 $
- * VERSION: $Id: TauCAPI.cpp,v 1.99 2009/01/20 22:13:20 amorris Exp $
+ * $Revision: 1.100 $   $Date: 2009/01/29 00:46:16 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.100 2009/01/29 00:46:16 amorris Exp $
  ***************************************************************************/
 
