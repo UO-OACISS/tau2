@@ -1459,41 +1459,10 @@ configure_java () {
 
   echo "TAU: installing TAU's ParaProf profile browser" 
   taushell=sh
-  if [ $machine = solaris2* -o $machine = alpha ]
-  then
+  if [ $machine = solaris2* -o $machine = alpha ] ; then
     taushell=ksh
   fi
 
-  x=`java -version 2>&1 | grep version | awk '{ print $3; }'| sed -e s/\"//g`
-
-  oldjdk=no
-
-  if [ `echo $x | sed -e s/1.1\.*// | wc -c` -eq 1 ]
-  then
-    oldjdk=no
-  else
-    if [ `echo $x | sed -e s/1.2\.*// | wc -c` -eq 1 ]
-    then
-      echo "jdk version 1.2 found"
-      oldjdk=yes
-    else
-      if [ `echo $x | sed -e s/1.3\.*// | wc -c` -eq 1 ]
-      then
-        echo "jdk version 1.3 found"
-        oldjdk=yes
-      else
-        echo "jdk version 1.4 or better found"
-        oldjdk=no;
-      fi
-    fi
-  fi
-
-  if [ $oldjdk = yes ]
-  then
-    paraprofjar=paraprof-1.3.jar
-  else
-    paraprofjar=paraprof.jar
-  fi
 }
 
 configure_perfexplorer () {
@@ -1566,14 +1535,12 @@ JARTARGET=${targetdir}/${architecture}/lib
 
   # install paraprof
 cat ${tauroot}/tools/src/paraprof/bin/paraprof.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
-    -e 's,@OLDJDK@,'$oldjdk',' > $BINTARGET/paraprof
+sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > $BINTARGET/paraprof
 chmod a+rx $BINTARGET/paraprof
 
   # install ppscript
 cat ${tauroot}/tools/src/ppscript.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
-    -e 's,@OLDJDK@,'$oldjdk',' > $BINTARGET/ppscript
+sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > $BINTARGET/ppscript
 chmod a+rx $BINTARGET/ppscript
 
   # install portal utils
@@ -1601,7 +1568,7 @@ if [ ! -f $BINTARGET/jracy ] ; then
 fi
 
 
-cp ${tauroot}/tools/src/paraprof/bin/$paraprofjar $JARTARGET
+cp ${tauroot}/tools/src/paraprof/bin/paraprof.jar $JARTARGET
 cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar $JARTARGET
 cp ${tauroot}/tools/src/perfexplorer/perfexplorer.jar $JARTARGET
 cp ${tauroot}/src/Profile/TAU.jar $JARTARGET
@@ -5559,7 +5526,7 @@ sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,
 chmod a+rx ${targetdir}/${architecture}/bin/slog2print
 
 cat ${tauroot}/tools/src/tau2slog2/bin/tau2slog2.skel | 
-sed -e 's,@OLDJDK@,'$oldjdk',' -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/tau2slog2
+sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/tau2slog2
 chmod a+rx ${targetdir}/${architecture}/bin/tau2slog2
 
 echo "TAU: installed tau2slog2, slog2print and jumpshot in ${targetdir}/${architecture}/bin"
