@@ -29,6 +29,7 @@ public class SelectiveFileGenerator extends JFrame {
     private JButton chooseFileButton = new JButton("...");
     private JButton saveButton = new JButton("save");
     private JButton closeButton = new JButton("close");
+    private JCheckBox mergeFile = new JCheckBox("Merge", true);
 
     private String lastDirectory;
 
@@ -179,15 +180,13 @@ public class SelectiveFileGenerator extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 try {
                     File file = new File(fileLocation.getText());
-                    FileOutputStream out = new FileOutputStream(file);
+                    FileOutputStream out = new FileOutputStream(file,mergeFile.isSelected());
                     OutputStreamWriter outWriter = new OutputStreamWriter(out);
                     BufferedWriter bw = new BufferedWriter(outWriter);
 
-                    bw.write("BEGIN_EXCLUDE_LIST\n");
-
+                    bw.write("\nBEGIN_EXCLUDE_LIST\n");
                     bw.write(excludedFunctions.getText());
-
-                    bw.write("END_EXCLUDE_LIST\n");
+                    bw.write("END_EXCLUDE_LIST\n\n");
 
                     bw.close();
                     outWriter.close();
@@ -226,6 +225,7 @@ public class SelectiveFileGenerator extends JFrame {
         gbc.weighty = 0.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         ParaProfUtils.addCompItem(getContentPane(), saveButton, gbc, 0, 5, 1, 1);
+        ParaProfUtils.addCompItem(getContentPane(), mergeFile, gbc, 1, 5, 1, 1);
         ParaProfUtils.addCompItem(getContentPane(), closeButton, gbc, 2, 5, 1, 1);
 
         //setEnabledRecursively(lightweightPanel, false);
