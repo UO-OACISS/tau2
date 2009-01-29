@@ -1,7 +1,6 @@
 #!/bin/@SHELL@
 TAUROOT=@TAUROOTDIR@
 MACHINE=@ARCH@
-OLDJDK=@OLDJDK@
 
 LIBDIR=${TAUROOT}/${MACHINE}/lib
 JARDIR=${TAUROOT}/${MACHINE}/lib
@@ -78,10 +77,17 @@ else
 fi
 PPROFOPT="${PPROFOPT} -t ${TAUROOT} -a ${MACHINE}"
 # Invoke ParaProf with the optional PPROFOPT argument. For large profiles, increase 1000m (1000MB). If you run out of memory, decrease this number.
-if [ "$OLDJDK" = "yes" ] ; then
-    JARS=${JARDIR}/paraprof-1.3.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph-1.3.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:{JARDIR}/jfreechart-0.9.21.jar:${JARDIR}/jcommon-0.9.6.jar:${JARDIR}/jython.jar
-else
-    JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis.jar:${JARDIR}/jogl.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-0.9.21.jar:${JARDIR}/jcommon-0.9.6.jar:${JARDIR}/jython.jar
+JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis.jar:${JARDIR}/jogl.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-0.9.21.jar:${JARDIR}/jcommon-0.9.6.jar:${JARDIR}/jython.jar
+
+# Test for java 1.4+
+test=`java -cp ${JARS} edu.uoregon.tau.common.VersionTester 1.4`
+if [ $test == "failed" ] ; then
+    echo  ""
+    echo "Java 1.4 or newer is required to run ParaProf."
+    echo "Please update your Java SDK to a newer version to use ParaProf."
+    echo "The final TAU version with Java 1.3 support was TAU 2.18.1."
+    echo ""
+    exit
 fi
 
 # Launch!
