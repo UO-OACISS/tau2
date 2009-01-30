@@ -149,25 +149,20 @@ void tau_extract_groupinfo(char *& fname, TauGroup_t & gr, char *& gr_name)
   /* See if a > appears in the function name. If it does, it separates the
      group name from the function name. Separate these two */
   char *first, *second;
+
   first = strtok(fname, ">"); 
-  if (first != 0)
-  {
+  if (first != 0) {
     second = strtok(NULL,  ">");
-    if (second == NULL) 
-    {
+    if (second == NULL) {
       fname = first; 
       gr = TAU_USER;
-      gr_name = fname; 
-    }
-    else
-    {
+      gr_name = "TAU_DEFAULT"; 
+    } else {
       gr = Tau_get_profile_group(first); 
       gr_name = first;
       fname = second;
     }
   }
-  
-
 }
 
 
@@ -2022,6 +2017,6 @@ void TAU_DEALLOC(void ** ptr, int* line, char *name, int slen)
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.75 $   $Date: 2009/01/16 00:46:52 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.75 2009/01/16 00:46:52 amorris Exp $ 
+ * $Revision: 1.76 $   $Date: 2009/01/30 01:44:27 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.76 2009/01/30 01:44:27 amorris Exp $ 
  ***************************************************************************/
