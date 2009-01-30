@@ -1,79 +1,46 @@
-##########################
-#Author: Robert Bell
-
-#Makefile creates the ParaProf jar file.
-##########################
+# Makefile for ParaProf
 
 CONFIG_ARCH=default
 TAUROOT=
 
-BASE_SOURCES=ApplicationManager.java DerivedMetrics.java DerivedMetricPanel.java \
-             ParaProfTreeCellRenderer.java OSSWriter.java \
-             HistogramWindow.java ParaProfTrial.java \
-             ParaProfApplication.java SystemEvents.java \
-             CallPathDrawObject.java CallPathTextWindow.java HelpWindow.java PrefSpacingPanel.java \
-             CallPathTextWindowPanel.java Preferences.java FunctionBarChartWindow.java \
-             ColorChooser.java ParaProfExperiment.java \
-             ColorPair.java LedgerWindow.java \
-             ParaProfFileFilter.java LedgerDataElement.java \
-	     DataSorter.java CallGraphWindow.java \
-             PPThread.java LedgerWindowPanel.java PPFunctionProfile.java \
-             UserEventWindow.java DBConfiguration.java ParaProfMetric.java \
-	     PPUserEventProfile.java LoadTrialProgressWindow.java ColorBar.java FunctionOrdering.java \
-             ParaProfManagerWindow.java StatWindow.java SnapshotThreadWindow.java LoadTrialWindow.java \
-             ParaProfManagerTableModel.java StatWindowPanel.java \
-             GlobalDataWindow.java ParaProfTreeNodeUserObject.java \
-	     ParaProfUtils.java ParaProfException.java ParaProfErrorDialog.java \
-	     ColorDefaultsWindow.java ColorMap.java ColorMapWindow.java PreferencesWindow.java \
-	     Searcher.java SearchPanel.java FunctionSelectorDialog.java WindowPlacer.java \
-	     DataSorterWrapper.java FunctionFilterDialog.java \
-	     SnapshotBreakdownWindow.java SnapshotControlWindow.java \
-	     DatabaseManagerWindow.java SelectiveFileGenerator.java RegressionGraph.java TrialGrabber.java
+BASE_SRC = $(wildcard src/enums/*.java) $(wildcard src/interfaces/*.java) $(wildcard src/treetable/*.java) $(wildcard src/barchart/*.java) $(wildcard src/util/*.java) $(wildcard src/script/*.java) $(wildcard src/sourceview/*.java) $(wildcard src/tablemodel/*.java) $(wildcard src/graph/*.java) $(wildcard src/*.java)
 
-VIS_SOURCES = ThreeDeeWindow.java ThreeDeeSettings.java ThreeDeeControlPanel.java  
-OTHER_SRC = $(wildcard src/enums/*.java) $(wildcard src/interfaces/*.java) $(wildcard src/treetable/*.java) $(wildcard src/barchart/*.java) $(wildcard src/util/*.java) $(wildcard src/script/*.java) $(wildcard src/sourceview/*.java) $(wildcard src/tablemodel/*.java) $(wildcard src/graph/*.java)
-
-BASE_SRC=$(addprefix src/, $(BASE_SOURCES))
-VIS_SRC=$(addprefix src/, $(VIS_SOURCES))
-
-NEW_SOURCES=$(BASE_SRC) $(VIS_SRC) $(OTHER_SRC) src/ParaProfImageOutput.java src/JVMDependent.java 
-
-OLD_SOURCES=$(BASE_SRC) $(OTHER_SRC) ./wrapper/ParaProfImageOutput.java \
-	    ./wrapper/ThreeDeeWindow.java ./wrapper/JVMDependent.java
-
-TOOLS_SRC=$(TAUROOT)/tools/src
-
-CC=javac
-CC-OLD=javac
+# Remove ParaProf.java from the list since we will used the `sed` replaced one
+SOURCES = $(filter-out src/ParaProf.java, $(BASE_SRC))
 
 NOW = $(shell date)
 
+TOOLS_SRC = $(TAUROOT)/tools/src
+CLASSPATH = $(TOOLS_SRC)/perfdmf/bin/perfdmf.jar:$(TOOLS_SRC)/contrib/jargs.jar:$(TOOLS_SRC)/contrib/batik-combined.jar:$(TOOLS_SRC)/common/bin/tau-common.jar:$(TOOLS_SRC)/contrib/jfreechart-0.9.21.jar:$(TOOLS_SRC)/contrib/jcommon-0.9.6.jar:$(TOOLS_SRC)/contrib/jython.jar:$(TOOLS_SRC)/contrib/jgraph.jar:$(TOOLS_SRC)/vis/bin/vis.jar
 
-CP_CORE = $(TOOLS_SRC)/perfdmf/bin/perfdmf.jar:$(TOOLS_SRC)/contrib/jargs.jar:$(TOOLS_SRC)/contrib/batik-combined.jar:$(TOOLS_SRC)/common/bin/tau-common.jar:$(TOOLS_SRC)/contrib/jfreechart-0.9.21.jar:$(TOOLS_SRC)/contrib/jcommon-0.9.6.jar:$(TOOLS_SRC)/contrib/jython.jar
-CP13 = $(CP_CORE):$(TOOLS_SRC)/contrib/jgraph-1.3.jar
-CP14 = $(CP_CORE):$(TOOLS_SRC)/contrib/jgraph.jar:$(TOOLS_SRC)/vis/bin/vis.jar
+TARGET_JAR=$(TOOLS_SRC)/paraprof/bin/paraprof.jar
 
-new: $(TOOLS_SRC)/paraprof/bin/paraprof.jar
+# We only want to use Java 1.4
+JAVA_FOUR=$(shell java -version 2>&1 | grep version | /usr/bin/awk '{ print $$3; }'| sed -e s/\"//g | sed -e s/1\.4\..*// | wc -c)
+ifeq ($(JAVA_FOUR),1)
+  TARGET=build
+else
+  TARGET=badversion
+endif
 
-old: ../bin/paraprof-1.3.jar
+all : $(TARGET)
 
-$(TOOLS_SRC)/paraprof/bin/paraprof.jar: $(NEW_SOURCES)
-	rm -rf classes
-	mkdir classes
+build : $(TARGET_JAR)
+
+$(TARGET_JAR): $(SOURCES)
+	rm -rf classes	
+	mkdir classes	
 	sed "s/XXXXX/$(NOW)/" src/ParaProf.java > wrapper/ParaProf.java
-	$(CC) -d ./classes -classpath $(CP14) $(NEW_SOURCES) wrapper/ParaProf.java
+	javac -d ./classes -classpath $(CLASSPATH) $(SOURCES) wrapper/ParaProf.java
 	jar -cvf bin/paraprof.jar -C ./classes edu
 	rm -f $(TAUROOT)/$(CONFIG_ARCH)/lib/paraprof.jar
 	cp $(TOOLS_SRC)/paraprof/bin/paraprof.jar $(TAUROOT)/$(CONFIG_ARCH)/lib
+	echo $(JAVAC_VERSION)
 
-../bin/paraprof-1.3.jar: $(OLD_SOURCES) classes
-	rm -rf classes
-	mkdir classes
-	sed "s/XXXXX/$(NOW)/" src/ParaProf.java > wrapper/ParaProf.java
-	$(CC) -d ./classes -classpath $(CP13) $(OLD_SOURCES) wrapper/ParaProf.java
-	jar -cvf bin/paraprof-1.3.jar -C ./classes edu
-	rm -f $(TAUROOT)/$(CONFIG_ARCH)/lib/paraprof-1.3.jar
-	cp $(TOOLS_SRC)/paraprof/bin/paraprof-1.3.jar $(TAUROOT)/$(CONFIG_ARCH)/lib
+badversion:
+	@echo "Error, ParaProf must be compiled with Java 1.4, use 'make override' to proceed anyway"
+
+override: build
 
 clean:
-	rm -rf classes wrapper/ParaProf.java bin/paraprof.jar bin/paraprof-1.3.jar
+	rm -rf classes wrapper/ParaProf.java bin/paraprof.jar
