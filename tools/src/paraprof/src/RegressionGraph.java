@@ -5,12 +5,15 @@ import java.awt.Color;
 import java.awt.Font;
 import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.*;
 
 import javax.swing.JFrame;
 
 import org.jfree.chart.*;
 import org.jfree.chart.axis.*;
+import org.jfree.chart.labels.StandardXYLabelGenerator;
+import org.jfree.chart.labels.XYLabelGenerator;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
@@ -375,7 +378,15 @@ public class RegressionGraph {
             renderer.setStroke(new BasicStroke(2f, BasicStroke.JOIN_ROUND, BasicStroke.JOIN_BEVEL));
             StandardLegend legend = (StandardLegend) chart.getLegend();
             legend.setDisplaySeriesShapes(true);
-
+            
+            XYLabelGenerator generator = new StandardXYLabelGenerator("{2}", new DecimalFormat("0.00"),new DecimalFormat("0.00"));
+            renderer.setLabelGenerator(generator);
+            renderer.setItemLabelsVisible(true);
+            
+            ValueAxis xAxis = (ValueAxis) plot.getDomainAxis();
+            TickUnitSource units = NumberAxis.createIntegerTickUnits();
+            xAxis.setStandardTickUnits(units);
+            
         } else if (barChart) {
             chart = ChartFactory.createStackedBarChart(title, // title
                     xaxisLabel, // domain axis label
