@@ -1,8 +1,6 @@
 # settings set automatically by the configure script.
-CONFIG_ARCH=x86_64
-TAUROOT=/home/khuck/tau2
-
-JAVA_JVM_VERSION=1.5
+CONFIG_ARCH=default
+TAUROOT=
 
 # these are classpaths for the build.  The second classpath is for the 
 # loader directory.  The first is for everything else.
@@ -25,34 +23,29 @@ CLASSES = $(subst ./src/, ./classes/, $(patsubst %.java, %.class, $(SOURCES)))
 
 
 
-default: bin/perfdmf.jar 
+# We only want to use Java 1.4
+JAVA_FOUR=$(shell java -version 2>&1 | grep version | /usr/bin/awk '{ print $$3; }'| sed -e s/\"//g | sed -e s/1\.4\..*// | wc -c)
+ifeq ($(JAVA_FOUR),1)
+  TARGET=build
+else
+  TARGET=badversion
+endif
 
 
-all: perfdmf.jar javadoc rebuilddb buildtest simple
+all: $(TARGET)
 
-#./classes/%.class : ./src/%.java
-#	javac -d $(CLASSPATH) -classpath $(CLASSPATH) $<
+build: bin/perfdmf.jar 
+
+
+#all: perfdmf.jar javadoc rebuilddb buildtest simple
+
+
 
 bin/perfdmf.jar: $(SOURCES) classes
 	javac -d $(CLASSPATH) -classpath $(LOADER_CLASSPATH) $(SOURCES)
 	jar -cvf bin/perfdmf.jar -C classes .
 	cp bin/perfdmf.jar $(TAUROOT)/$(CONFIG_ARCH)/lib/perfdmf.jar
 
-#dms.jar: $(DATABASE_CLASSES) $(DSS_CLASSES) $(LOADER_CLASSES) $(ANALYSIS_CLASSES)
-#	jar -cvf dms.jar -C classes .
-
-
-# $(DATABASE_CLASSES): $(DATABASE_SOURCES)
-# 	javac -d $(CLASSPATH) -classpath $(CLASSPATH) $(DATABASE_SOURCES)
-
-# $(LOADER_CLASSES): $(LOADER_SOURCES) $(DSS_CLASSES)
-# 	javac -d $(CLASSPATH) -classpath $(LOADER_CLASSPATH) $(LOADER_SOURCES)
-
-# $(DSS_CLASSES): $(DSS_SOURCES) $(DATABASE_CLASSES)
-# 	javac -d $(CLASSPATH) -classpath $(CLASSPATH) $(DSS_SOURCES)
-
-# $(ANALYSIS_CLASSES): $(ANALYSIS_SOURCES) $(DSS_CLASSES)
-# 	javac -d $(CLASSPATH) -classpath $(CLASSPATH) $(ANALYSIS_SOURCES)
 
 
 $(EXAMPLE_CLASSES): perfdmf.jar $(EXAMPLE_SOURCES)
@@ -109,3 +102,11 @@ rebuilddb_and_test: rebuilddb simple buildtest
 
 classes:
 	mkdir classes
+
+
+badversion:
+	@echo "Error, ParaProf must be compiled with Java 1.4, use 'make override' to proceed anyway"
+
+override: build
+
+
