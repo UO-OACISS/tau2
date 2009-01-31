@@ -63,7 +63,7 @@ void* &TheTauMapFI(TauGroup_t key=TAU_DEFAULT);
 
 /* TAU_MAPPING_OBJECT creates a functionInfo pointer that may be stored in the 
    object that is used to relate a lower level layer with a higher level layer */
-#define TAU_MAPPING_OBJECT(timer) void *timer = NULL;
+#define TAU_MAPPING_OBJECT(timer) void *timer;
 
 /* TAU_MAPPING_LINK gets in a var the function info object associated with the given key (Group) */
 #define TAU_MAPPING_LINK(timer, key) timer = TheTauMapFI(key); 

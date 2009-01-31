@@ -158,7 +158,7 @@ public:
   char *Type;
   char *GroupName;
   char *AllGroups;
-  long   FunctionId;
+  long FunctionId;
 
 
   inline double *getDumpExclusiveValues(int tid) {
@@ -328,6 +328,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: amorris $
- * $Revision: 1.52 $   $Date: 2009/01/16 23:21:24 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.52 2009/01/16 23:21:24 amorris Exp $ 
+ * $Revision: 1.53 $   $Date: 2009/01/31 01:26:16 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.53 2009/01/31 01:26:16 amorris Exp $ 
  ***************************************************************************/

@@ -230,7 +230,7 @@ public:
 #ifdef TAU_PROFILEPARAM
   FunctionInfo * ProfileParamFunction; 
   bool 	       AddInclProfileParamFlag; 
-  static void AddProfileParamData(long key, string& keyname);
+  static void AddProfileParamData(long key, const char *keyname);
 #endif /* TAU_PROFILEPARAM */
 
 #ifdef TAU_COMPENSATE
@@ -293,6 +293,6 @@ using tau::Profiler;
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.94 $   $Date: 2009/01/28 01:32:36 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.94 2009/01/28 01:32:36 amorris Exp $ 
+ * $Revision: 1.95 $   $Date: 2009/01/31 01:26:16 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.95 2009/01/31 01:26:16 amorris Exp $ 
  ***************************************************************************/

@@ -424,6 +424,7 @@ void Tau_disable_tracking_memory_headroom();
 void Tau_track_memory_here(void);
 void Tau_track_memory_headroom(void);
 void Tau_track_memory_headroom_here(void);
+void Tau_profile_param1l(long data, const char *dataname);
 
 
 #ifdef __cplusplus
@@ -475,6 +476,6 @@ void Tau_track_memory_headroom_here(void);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.89 $   $Date: 2009/01/22 22:57:38 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.89 2009/01/22 22:57:38 amorris Exp $ 
+ * $Revision: 1.90 $   $Date: 2009/01/31 01:26:16 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.90 2009/01/31 01:26:16 amorris Exp $ 
  ***************************************************************************/
