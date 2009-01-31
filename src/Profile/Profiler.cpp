@@ -260,17 +260,23 @@ void Profiler::EnableAllEventsOnCallStack(int tid, Profiler *current) {
 
 
 void Profiler::Start(int tid) { 
-  //fprintf (stderr, "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
+#ifdef DEBUG_PROF
+  fprintf (stderr, "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
+#endif
 
 #ifdef TAU_TRACK_IDLE_THREADS
+  /* If we are performing idle thread tracking, we start a top level timer */
   if (tid != 0) {
     Tau_create_top_level_timer_if_necessary();
   }
 #endif
 
-  ParentProfiler = CurrentProfiler[tid]; // Timers
+  ParentProfiler = CurrentProfiler[tid];
 
-
+  
+  /********************************************************************************/
+  /*** Depth Limit Code ***/
+  /********************************************************************************/
 #ifdef TAU_DEPTH_LIMIT
   int userspecifieddepth = TauGetDepthLimit();
   if (ParentProfiler) {
@@ -286,6 +292,10 @@ void Profiler::Start(int tid) {
     return; 
   }
 #endif /* TAU_DEPTH_LIMIT */
+  /********************************************************************************/
+  /*** Depth Limit Code ***/
+  /********************************************************************************/
+
   
 #ifdef TAU_PROFILEPHASE
   if (ParentProfiler == (Profiler *) NULL) {
@@ -320,80 +330,63 @@ void Profiler::Start(int tid) {
   
   x_uint64 TimeStamp = 0L;
   
-  DEBUGPROFMSG("Profiler::Start: MyProfileGroup_ = " << MyProfileGroup_ 
-	       << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
-  if ((MyProfileGroup_ & RtsLayer::TheProfileMask()) 
-      && RtsLayer::TheEnableInstrumentation()) {
-    if (ThisFunction == (FunctionInfo *) NULL) return; // Mapping
-    DEBUGPROFMSG("Profiler::Start Entering " << ThisFunction->GetName()<<endl;);
-    
+  
 #ifdef TAU_PROFILEMEMORY
-    ThisFunction->GetMemoryEvent()->TriggerEvent(TauGetMaxRSS());
+  ThisFunction->GetMemoryEvent()->TriggerEvent(TauGetMaxRSS());
 #endif /* TAU_PROFILEMEMORY */
 #ifdef TAU_PROFILEHEADROOM
-    ThisFunction->GetHeadroomEvent()->TriggerEvent((double)TauGetFreeMemory());
+  ThisFunction->GetHeadroomEvent()->TriggerEvent((double)TauGetFreeMemory());
 #endif /* TAU_PROFILEHEADROOM */
 #ifdef TAU_COMPENSATE
-    SetNumChildren(0); /* for instrumentation perturbation compensation */
+  SetNumChildren(0); /* for instrumentation perturbation compensation */
 #endif /* TAU_COMPENSATE */
-    // Initialization is over, now record the time it started
-#ifndef TAU_MULTIPLE_COUNTERS 
-    StartTime = RtsLayer::getUSecD(tid);
-    TimeStamp += (x_uint64) StartTime;
-#else //TAU_MULTIPLE_COUNTERS
-    //Initialize the array to zero, as some of the elements will
-    //not be set by counting functions.
-    //int localvalue = Tau_Global_numCounters;
-    //    static int localvalue = getfunvalue();
 
-    //    memset (StartTime, '\0', MAX_TAU_COUNTERS * sizeof(double));
-//     static int localvalue = 1;
-//     // int localvalue = MAX_TAU_COUNTERS;
-//     for (int i=0;i<localvalue;i++) {
-//     //for (int i=0;i<MAX_TAU_COUNTERS;i++) {
-//       StartTime[i]=0;
-//     }
-    //Now get the start times.
-    RtsLayer::getUSecD(tid, StartTime);	  
-    TimeStamp += (unsigned long long) StartTime[0]; // USE COUNTER1 for tracing
+
+  // Initialization is over, now record the time it started
+#ifndef TAU_MULTIPLE_COUNTERS 
+  StartTime = RtsLayer::getUSecD(tid);
+  TimeStamp += (x_uint64) StartTime;
+#else //TAU_MULTIPLE_COUNTERS
+  RtsLayer::getUSecD(tid, StartTime);	  
+  TimeStamp += (unsigned long long) StartTime[0]; // USE COUNTER1 for tracing
 #endif//TAU_MULTIPLE_COUNTERS
-    
-    if (TauEnv_get_callpath()) {
-      CallPathStart(tid);
-    }
+  
+  if (TauEnv_get_callpath()) {
+    CallPathStart(tid);
+  }
 #ifdef TAU_PROFILEPARAM
-    ProfileParamFunction = NULL;
-    if (ParentProfiler && ParentProfiler->ProfileParamFunction ) {
-      ParentProfiler->ProfileParamFunction->IncrNumSubrs(tid);
-    }
+  ProfileParamFunction = NULL;
+  if (ParentProfiler && ParentProfiler->ProfileParamFunction ) {
+    ParentProfiler->ProfileParamFunction->IncrNumSubrs(tid);
+  }
 #endif /* TAU_PROFILEPARAM */
-    
+  
 #ifdef TRACING_ON
 #ifdef TAU_MPITRACE
-    if (MyProfileGroup_ & TAU_MESSAGE) {
-      /* if we're in the group, we must first enable all the other events
-       * on the callstack */
-      DEBUGPROFMSG(RtsLayer::myNode()<< " Function is enabled: "<<ThisFunction->GetName()<<endl;);
-      EnableAllEventsOnCallStack(tid, this);
-    }
+  if (MyProfileGroup_ & TAU_MESSAGE) {
+    /* if we're in the group, we must first enable all the other events
+     * on the callstack */
+    DEBUGPROFMSG(RtsLayer::myNode()<< " Function is enabled: "<<ThisFunction->GetName()<<endl;);
+    EnableAllEventsOnCallStack(tid, this);
+  }
 #else /* TAU_MPITRACE */
 #ifdef TAU_VAMPIRTRACE 
-    TimeStamp = vt_pform_wtime();
-    
-    DEBUGPROFMSG("Calling vt_enter: ["<<ThisFunction->GetFunctionId()<<"] "
-		 << ThisFunction->GetName()<<" Time" <<TimeStamp<<endl;);
-    vt_enter((uint64_t *) &TimeStamp, ThisFunction->GetFunctionId());
+  TimeStamp = vt_pform_wtime();
+  
+  DEBUGPROFMSG("Calling vt_enter: ["<<ThisFunction->GetFunctionId()<<"] "
+	       << ThisFunction->GetName()<<" Time" <<TimeStamp<<endl;);
+  vt_enter((uint64_t *) &TimeStamp, ThisFunction->GetFunctionId());
 #else /* TAU_VAMPITRACE */
 #ifdef TAU_EPILOG
-    DEBUGPROFMSG("Calling elg_enter: ["<<ThisFunction->GetFunctionId()<<"] "
-		 << ThisFunction->GetName()<<endl;);
-    esd_enter(ThisFunction->GetFunctionId());
+  DEBUGPROFMSG("Calling elg_enter: ["<<ThisFunction->GetFunctionId()<<"] "
+	       << ThisFunction->GetName()<<endl;);
+  esd_enter(ThisFunction->GetFunctionId());
 #else /* TAU_EPILOG */
-    TraceEvent(ThisFunction->GetFunctionId(), 1, tid, TimeStamp, 1); 
-    // 1 is for entry in second parameter and for use TimeStamp in last
-    DEBUGPROFMSG("Start TimeStamp for Tracing = "<<TimeStamp<<endl;);
+  TraceEvent(ThisFunction->GetFunctionId(), 1, tid, TimeStamp, 1); 
+  // 1 is for entry in second parameter and for use TimeStamp in last
+  DEBUGPROFMSG("Start TimeStamp for Tracing = "<<TimeStamp<<endl;);
 #ifdef TAU_MULTIPLE_COUNTERS 
-    MultipleCounterLayer::triggerCounterEvents(TimeStamp, StartTime, tid);
+  MultipleCounterLayer::triggerCounterEvents(TimeStamp, StartTime, tid);
 #endif /* TAU_MULTIPLE_COUNTERS */
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
@@ -406,70 +399,52 @@ void Profiler::Start(int tid) {
 #ifndef PROFILING_ON
 #ifdef  TRACING_ON
 #ifndef TAU_DISABLE_THROTTLE
-    if (TauEnv_get_throttle() && (ThisFunction->GetAlreadyOnStack(tid)== false)) {
-      /* Set the callstack flag */
-      AddInclFlag = true; 
-      ThisFunction->SetAlreadyOnStack(true, tid); // it is on callstack now
-      
-      // Next, increment the number of calls
-      ThisFunction->IncrNumCalls(tid);
-    }
+  if (TauEnv_get_throttle() && (ThisFunction->GetAlreadyOnStack(tid)== false)) {
+    /* Set the callstack flag */
+    AddInclFlag = true; 
+    ThisFunction->SetAlreadyOnStack(true, tid); // it is on callstack now
+    
+    // Next, increment the number of calls
+    ThisFunction->IncrNumCalls(tid);
+  }
 #endif /* TAU_DISABLE_THROTTLE is off */
 #endif /* TRACING is on */
 #endif /* PROFILING is off */
-    
+  
 #ifdef PROFILING_ON
-    // First, increment the number of calls
-    ThisFunction->IncrNumCalls(tid);
+  // First, increment the number of calls
+  ThisFunction->IncrNumCalls(tid);
+  
+  // now increment parent's NumSubrs()
+  if (ParentProfiler != 0) {
+    ParentProfiler->ThisFunction->IncrNumSubrs(tid);	
+  }
+  
+  // Next, if this function is not already on the call stack, put it
+  if (ThisFunction->GetAlreadyOnStack(tid) == false) { 
+    AddInclFlag = true; 
+    // We need to add Inclusive time when it gets over as 
+    // it is not already on callstack.
     
-    // now increment parent's NumSubrs()
-    if (ParentProfiler != 0) {
-      ParentProfiler->ThisFunction->IncrNumSubrs(tid);	
-    }
+    ThisFunction->SetAlreadyOnStack(true, tid); // it is on callstack now
+  } else { // the function is already on callstack, no need to add inclusive time
+    AddInclFlag = false;
+  }
     
-    // Next, if this function is not already on the call stack, put it
-    if (ThisFunction->GetAlreadyOnStack(tid) == false) { 
-      AddInclFlag = true; 
-      // We need to add Inclusive time when it gets over as 
-      // it is not already on callstack.
-
-      ThisFunction->SetAlreadyOnStack(true, tid); // it is on callstack now
-    } else { // the function is already on callstack, no need to add inclusive time
-      AddInclFlag = false;
-    }
-    
-    DEBUGPROFMSG("Start Time = "<< StartTime<<endl;);
+  DEBUGPROFMSG("Start Time = "<< StartTime<<endl;);
 #endif // PROFILING_ON
     
     
-    DEBUGPROFMSG("nct "<< RtsLayer::myNode() << "," 
-		 << RtsLayer::myContext() << ","  << tid 
-		 << " Profiler::Start (tid)  : Name : " 
-		 << ThisFunction->GetName() <<" Type : " << ThisFunction->GetType() 
-		 << endl; );
+  CurrentProfiler[tid] = this;
     
-    CurrentProfiler[tid] = this;
-    if (ParentProfiler != 0) {
-      DEBUGPROFMSG("nct "<< RtsLayer::myNode() << ","
-		   << RtsLayer::myContext() << ","  << tid
-		   << " Inside "<< ThisFunction->GetName()<< " Setting ParentProfiler "
-		   << ParentProfiler->ThisFunction->GetName()<<endl
-		   << " ParentProfiler = "<<ParentProfiler << " CurrProf = "
-		   << CurrentProfiler[tid] << " = this = "<<this<<endl;);
-    }
-    
-    
-    /********* KTAU CODE *************************/
-    
+
+  /********************************************************************************/
+  /*** KTAU Code ***/
+  /********************************************************************************/
 #if defined(TAUKTAU)
-    ThisKtauProfiler->Start(this);
+  ThisKtauProfiler->Start(this);
 #endif /* TAUKTAU */
 
-  } else { 
-    /* If instrumentation is disabled, set the CurrentProfiler */
-    ParentProfiler = CurrentProfiler[tid] ;
-    CurrentProfiler[tid] = this;
-  } /* this is so Stop can access CurrentProfiler as well */
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -489,9 +464,10 @@ static x_uint64 getTimeStamp() {
 
 
 void Profiler::Stop(int tid, bool useLastTimeStamp) {
-  //fprintf (stderr, "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
+#ifdef DEBUG_PROF
+  fprintf (stderr, "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
+#endif
   x_uint64 TimeStamp = 0L; 
-  if (CurrentProfiler[tid] == NULL) return;
 
   /********************************************************************************/
   /*** PerfSuite Integration Code ***/
@@ -542,17 +518,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   }
 #endif /* TAU_DEPTH_LIMIT */
 
-  if (!((MyProfileGroup_ & RtsLayer::TheProfileMask()) 
-	&& RtsLayer::TheEnableInstrumentation())) {
-    /* set current profiler properly */
-    CurrentProfiler[tid] = ParentProfiler; 
-    return;
-  }
-   
-  if (ThisFunction == (FunctionInfo *) NULL) {
-    return; // Mapping
-  }
-  
 #ifdef TAU_COMPENSATE
 #ifndef TAU_MULTIPLE_COUNTERS 
   double tover = TauGetTimerOverhead(TauFullTimerOverhead);
@@ -625,11 +590,13 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   ThisKtauProfiler->Stop(this, AddInclFlag);
 #endif /* TAUKTAU */
     
+
 #ifdef PROFILING_ON
 #ifdef TAU_COMPENSATE
   double *tover = TauGetTimerOverhead(TauFullTimerOverhead);
   double *tnull = TauGetTimerOverhead(TauNullTimerOverhead);
 #endif /* TAU_COMPENSATE */
+
 
   for (int k=0; k<Tau_Global_numCounters; k++) {
     TotalTime[k] = CurrentTime[k] - StartTime[k];
@@ -722,25 +689,11 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   }
 #endif /* TAU_PROFILEPARAM */
 
-  DEBUGPROFMSG("nct "<< RtsLayer::myNode()  << "," 
-	       << RtsLayer::myContext() << "," << tid 
-	       << " Profiler::Stop() : Name : "<< ThisFunction->GetName() 
-	       << " Start : " <<StartTime <<" TotalTime : " << TotalTime
-	       << " AddInclFlag : " << AddInclFlag << endl;);
-    
   if (AddInclFlag == true) { // The first time it came on call stack
     ThisFunction->SetAlreadyOnStack(false, tid); // while exiting
       
-    DEBUGPROFMSG("nct "<< RtsLayer::myNode()  << "," 
-		 << RtsLayer::myContext() << "," << tid  << " "  
-		 << "STOP: After SetAlreadyOnStack Going for AddInclTime" <<endl; );
-      
     // And its ok to add both excl and incl times
     ThisFunction->AddInclTime(TotalTime, tid);
-    DEBUGPROFMSG("nct "<< RtsLayer::myNode() << ","
-		 << RtsLayer::myContext() << "," << tid
-		 << " AddInclFlag true in Stop Name: "<< ThisFunction->GetName()
-		 << " Type: " << ThisFunction->GetType() << endl; );
   } 
   // If its already on call stack, don't change AlreadyOnStack
   ThisFunction->AddExclTime(TotalTime, tid);
@@ -769,19 +722,14 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #endif /* TAU_COMPENSATE */
 
     
-
-  if (ParentProfiler != (Profiler *) NULL) {
-    if (ParentProfiler->ThisFunction != (FunctionInfo *) NULL)
+  
+  if (ParentProfiler != NULL) {
       ParentProfiler->ThisFunction->ExcludeTime(TotalTime, tid);
-    else {
-      cout <<"ParentProfiler's Function info is NULL" <<endl;
-    }
-      
+    
 #ifdef TAU_COMPENSATE
-    ParentProfiler->AddNumChildren(GetNumChildren()+1);
-    /* Add 1 and my children to my parents total number of children */
+      ParentProfiler->AddNumChildren(GetNumChildren()+1);
+      /* Add 1 and my children to my parents total number of children */
 #endif /* TAU_COMPENSATE */
-
   }
 
 #endif //PROFILING_ON
@@ -816,39 +764,10 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   /********************************************************************************/
     
     
-  // First check if timers are overlapping.
-  if (CurrentProfiler[tid] != this) {
-    DEBUGPROFMSG("nct "<< RtsLayer::myNode() << ","
-		 << RtsLayer::myContext() << "," << tid
-		 << " ERROR: Timers Overlap. Illegal operation Profiler::Stop " 
-		 << ThisFunction->GetName() << " " 
-		 << ThisFunction->GetType() <<endl;);
-    if (CurrentProfiler[tid] != (Profiler *) NULL) {
-      if (CurrentProfiler[tid]->ThisFunction != (FunctionInfo *)NULL) {
-#ifdef TAU_OPENMP
-#pragma omp critical
-#endif /* TAU_OPENMP */
-	cout << "Overlapping function = "
-	     << CurrentProfiler[tid]->ThisFunction->GetName () << " " 
-	     << CurrentProfiler[tid]->ThisFunction->GetType() 
-	     << " Other function " << this->ThisFunction->GetName()
-	     << this->ThisFunction->GetType()<< " Tid = "<<tid<<endl;
-      } else {
-	cout <<"CurrentProfiler is not Null but its FunctionInfo is"<<endl;
-      }
-    }
-  }
   // While exiting, reset value of CurrentProfiler to reflect the parent
   CurrentProfiler[tid] = ParentProfiler;
-  DEBUGPROFMSG("nct "<< RtsLayer::myNode() << ","
-	       << RtsLayer::myContext() << "," << tid
-	       << " Stop: " << ThisFunction->GetName() 
-	       << " TheSafeToDumpData() = " << TheSafeToDumpData()
-	       << " CurrProf = "<<CurrentProfiler[tid] << " this = "
-	       << this<<endl;);
     
   if (ParentProfiler == (Profiler *) NULL) {
-
 
     /* Should we detect memory leaks here? */
     if (TheSafeToDumpData() && !RtsLayer::isCtorDtor(ThisFunction->GetName())) {
@@ -857,18 +776,19 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 
     // For Dyninst. tcf gets called after main and all the data structures may not be accessible
     // after main exits. Still needed on Linux - we use TauProgramTermination()
-    if (strcmp(ThisFunction->GetName(), "_fini") == 0) TheSafeToDumpData() = 0;
+    if (strcmp(ThisFunction->GetName(), "_fini") == 0) {
+      TheSafeToDumpData() = 0;
+    }
+
 #ifndef TAU_WINDOWS
     atexit(TauAppShutdown);
 #endif //TAU_WINDOWS
+
     if (TheSafeToDumpData()) {
       if (!RtsLayer::isCtorDtor(ThisFunction->GetName())) {
 	// Not a destructor of a static object - its a function like main
-	DEBUGPROFMSG("nct " << RtsLayer::myNode() << "," 
-		     << RtsLayer::myContext() << "," << tid  << " "
-		     << "Profiler::Stop() : Reached top level function: dumping data"
-		     << ThisFunction->GetName() <<endl;);
-	  
+
+	// Write profile data
 	StoreData(tid);
 	  
 #if defined(TAUKTAU) 
@@ -889,29 +809,15 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 	    }
 	  }
 	}
-	      
-#endif /* TAU_TRACK_IDLE_THREADST */
-	      
+#endif /* TAU_TRACK_IDLE_THREADS */
+	
       }
-      // dump data here. Dump it only at the exit of top level profiler.
     }
   }
 }
 
 //////////////////////////////////////////////////////////////////////
 
-Profiler::~Profiler() {
-  if (!StartStopUsed_) {
-    Stop();
-  } // If ctor dtor interface is used then call Stop. 
-  // If the Profiler object is going out of scope without Stop being
-  // called, call it now!
-#if defined(TAUKTAU)
-  KtauProfiler::PutKtauProfiler();
-#endif /* TAUKTAU */
-}
-
-//////////////////////////////////////////////////////////////////////
 
 extern "C" int Tau_profile_exit();
 void Profiler::ProfileExit(const char *message, int tid) {
@@ -1658,6 +1564,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.214 $   $Date: 2009/01/28 01:32:37 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.214 2009/01/28 01:32:37 amorris Exp $ 
+ * $Revision: 1.215 $   $Date: 2009/01/31 01:27:34 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.215 2009/01/31 01:27:34 amorris Exp $ 
  ***************************************************************************/

@@ -203,16 +203,6 @@ extern "C" {
       }
       TAU_VERBOSE("TAU: TRACEDIR is \"%s\"\n", env_tracedir);
 
-      // Throttle
-      tmp = getenv("TAU_THROTTLE");
-      if (parse_bool(tmp, TAU_THROTTLE_DEFAULT)) {
-	env_throttle = 1;
-	TAU_VERBOSE("TAU: Throttling Enabled\n");
-      } else {
-	env_throttle = 0;
-	TAU_VERBOSE("TAU: Throttling Disabled\n");
-      }
-
       // callpath
       tmp = getenv("TAU_CALLPATH");
       if (parse_bool(tmp, TAU_CALLPATH_DEFAULT)) {
@@ -254,6 +244,17 @@ extern "C" {
       }
       if (env_callpath) {
 	TAU_VERBOSE("TAU: Callpath Depth = %d\n", env_callpath_depth);
+      }
+
+
+      // Throttle
+      tmp = getenv("TAU_THROTTLE");
+      if (parse_bool(tmp, TAU_THROTTLE_DEFAULT)) {
+	env_throttle = 1;
+	TAU_VERBOSE("TAU: Throttling Enabled\n");
+      } else {
+	env_throttle = 0;
+	TAU_VERBOSE("TAU: Throttling Disabled\n");
       }
 
       char *percall = getenv("TAU_THROTTLE_PERCALL"); 

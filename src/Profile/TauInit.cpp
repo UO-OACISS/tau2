@@ -24,6 +24,7 @@
 
 bool Tau_snapshot_initialization();
 extern "C" void Tau_stack_initialization();
+extern "C" int Tau_compensate_initialization();
 
 extern "C" int InitializeTAU() {
   static bool initialized = false;
@@ -44,6 +45,11 @@ extern "C" int InitializeTAU() {
 #endif
 
   Tau_stack_initialization();
+
+#ifdef TAU_COMPENSATE
+  Tau_compensate_initialization();
+#endif TAU_COMPENSATE
+
 
   initialized = true;
   return 0;

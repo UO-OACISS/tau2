@@ -72,11 +72,15 @@ public:
 vector<FunctionInfo*>& TheFunctionDB(void)
 { // FunctionDB contains pointers to each FunctionInfo static object
 
-  static int flag = InitializeTAU();
-
   // we now use the above FIvector, which subclasses vector
   //static vector<FunctionInfo*> FunctionDB;
   static FIvector FunctionDB;
+
+  static int flag = 1;
+  if (flag) {
+    flag = 0;
+    InitializeTAU();
+  }
 
   return FunctionDB;
 }
@@ -157,109 +161,106 @@ static char *strip_tau_group(const char *ProfileGroupName) {
 // FunctionInfoInit is called by all four forms of FunctionInfo ctor
 //////////////////////////////////////////////////////////////////////
 void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, 
-	const char *ProfileGroupName, bool InitData, int tid)
-{
+	const char *ProfileGroupName, bool InitData, int tid) {
   //Need to keep track of all the groups this function is a member of.
   AllGroups = strip_tau_group(ProfileGroupName);
-
-#ifdef TRACING_ON
   GroupName = strdup(RtsLayer::PrimaryGroup(AllGroups).c_str());
-#endif //TRACING_ON
 
-// Since FunctionInfo constructor is called once for each function (static)
-// we know that it couldn't be already on the call stack.
-	RtsLayer::LockDB();
-// Use LockDB to avoid a possible race condition.
-
-	//Add function name to the name list.
-	Profiler::theFunctionList(NULL, NULL, true, (const char *)GetName());
-
-        if (InitData) {
-      	  for (int i=0; i < TAU_MAX_THREADS; i++) {
-     	    NumCalls[i] = 0;
-	    SetAlreadyOnStack(false, i);
-     	    NumSubrs[i] = 0;
+  // Since FunctionInfo constructor is called once for each function (static)
+  // we know that it couldn't be already on the call stack.
+  RtsLayer::LockDB();
+  // Use LockDB to avoid a possible race condition.
+  
+  //Add function name to the name list.
+  Profiler::theFunctionList(NULL, NULL, true, (const char *)GetName());
+  
+  if (InitData) {
+    for (int i=0; i < TAU_MAX_THREADS; i++) {
+      NumCalls[i] = 0;
+      SetAlreadyOnStack(false, i);
+      NumSubrs[i] = 0;
 #ifndef TAU_MULTIPLE_COUNTERS
-	    ExclTime[i] = 0;
-       	    InclTime[i] = 0;
+      ExclTime[i] = 0;
+      InclTime[i] = 0;
 #else //TAU_MULTIPLE_COUNTERS
-	    for(int j=0;j<MAX_TAU_COUNTERS;j++){
-	      ExclTime[i][j] = 0;
-	      InclTime[i][j] = 0;
-	    } 
+      for(int j=0;j<MAX_TAU_COUNTERS;j++){
+	ExclTime[i][j] = 0;
+	InclTime[i][j] = 0;
+      } 
 #endif//TAU_MULTIPLE_COUNTERS
- 	  }
-	}
-
-	// Make this a ptr to a list so that ~FunctionInfo doesn't destroy it.
-	
-	for (int i=0; i<TAU_MAX_THREADS; i++) {
-	  MyProfileGroup_[i] = ProfileGroup;
-	}
-	// While accessing the global function database, lock it to ensure
-	// an atomic operation in the push_back and size() operations. 
-	// Important in the presence of concurrent threads.
-	TheFunctionDB().push_back(this);
+    }
+  }
+  
+  // Make this a ptr to a list so that ~FunctionInfo doesn't destroy it.
+  
+  for (int i=0; i<TAU_MAX_THREADS; i++) {
+    MyProfileGroup_[i] = ProfileGroup;
+  }
+  // While accessing the global function database, lock it to ensure
+  // an atomic operation in the push_back and size() operations. 
+  // Important in the presence of concurrent threads.
+  TheFunctionDB().push_back(this);
 #ifdef TRACING_ON
 #ifdef TAU_VAMPIRTRACE
-        static int tau_vt_init=TauInitVampirTrace();
-        string tau_vt_name(Name+" "+Type);
-	FunctionId = vt_def_region(tau_vt_name.c_str(), VT_NO_ID, VT_NO_LNO,
-		VT_NO_LNO, GroupName.c_str(), VT_FUNCTION);
-	DEBUGPROFMSG("vt_def_region: "<<tau_vt_name<<": returns "<<FunctionId<<endl;);
+  static int tau_vt_init=TauInitVampirTrace();
+  string tau_vt_name(Name+" "+Type);
+  FunctionId = vt_def_region(tau_vt_name.c_str(), VT_NO_ID, VT_NO_LNO,
+			     VT_NO_LNO, GroupName.c_str(), VT_FUNCTION);
+  DEBUGPROFMSG("vt_def_region: "<<tau_vt_name<<": returns "<<FunctionId<<endl;);
 #else /* TAU_VAMPIRTRACE */
 #ifdef TAU_EPILOG
-        static int tau_elg_init=TauInitEpilog();
-	string tau_elg_name(Name+" "+Type);
-	FunctionId = esd_def_region(tau_elg_name.c_str(), ELG_NO_ID, ELG_NO_LNO,
-		ELG_NO_LNO, GroupName.c_str(), ELG_FUNCTION);
-	DEBUGPROFMSG("elg_def_region: "<<tau_elg_name<<": returns "<<FunctionId<<endl;);
+  static int tau_elg_init=TauInitEpilog();
+  string tau_elg_name(Name+" "+Type);
+  FunctionId = esd_def_region(tau_elg_name.c_str(), ELG_NO_ID, ELG_NO_LNO,
+			      ELG_NO_LNO, GroupName.c_str(), ELG_FUNCTION);
+  DEBUGPROFMSG("elg_def_region: "<<tau_elg_name<<": returns "<<FunctionId<<endl;);
 #else /* TAU_EPILOG */
-	// FOR Tracing, we should make the two a single operation 
-	// when threads are supported for traces. There needs to be 
-	// a lock in RtsLayer that can be locked while the push_back
-	// and size operations are done (this should be atomic). 
-	// Function Id is the index into the DB vector
-	/* OLD:
-	 * FunctionId = TheFunctionDB().size();
-	 */
-	FunctionId = RtsLayer::GenerateUniqueId();
-	SetFlushEvents(tid);
+  // FOR Tracing, we should make the two a single operation 
+  // when threads are supported for traces. There needs to be 
+  // a lock in RtsLayer that can be locked while the push_back
+  // and size operations are done (this should be atomic). 
+  // Function Id is the index into the DB vector
+  /* OLD:
+   * FunctionId = TheFunctionDB().size();
+   */
+  FunctionId = RtsLayer::GenerateUniqueId();
+  SetFlushEvents(tid);
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
 #endif //TRACING_ON
-	RtsLayer::UnLockDB();
-		
-        DEBUGPROFMSG("nct "<< RtsLayer::myNode() <<"," 
-	  << RtsLayer::myContext() << ", " << tid 
-          << " FunctionInfo::FunctionInfo(n,t) : Name : "<< GetName() 
-          << " Group :  " << GetProfileGroup()
-	  << " Type : " << GetType() << endl;);
-
+  RtsLayer::UnLockDB();
+  
+  DEBUGPROFMSG("nct "<< RtsLayer::myNode() <<"," 
+	       << RtsLayer::myContext() << ", " << tid 
+	       << " FunctionInfo::FunctionInfo(n,t) : Name : "<< GetName() 
+	       << " Group :  " << GetProfileGroup()
+	       << " Type : " << GetType() << endl;);
+  
 #ifdef TAU_PROFILEMEMORY
-	MemoryEvent = new TauUserEvent(string(string(Name)+" "+Type+" - Heap Memory Used (KB)").c_str());
+  MemoryEvent = new TauUserEvent(string(string(Name)+" "+Type+" - Heap Memory Used (KB)").c_str());
 #endif /* TAU_PROFILEMEMORY */
-
+  
 #ifdef TAU_PROFILEHEADROOM
-	HeadroomEvent = new TauUserEvent(string(string(Name)+" "+Type+" - Memory Headroom Available (MB)").c_str());
+  HeadroomEvent = new TauUserEvent(string(string(Name)+" "+Type+" - Memory Headroom Available (MB)").c_str());
 #endif /* TAU_PROFILEHEADROOM */
-
+  
 #ifdef RENCI_STFF
 #ifdef TAU_MULTIPLE_COUNTERS
-    for (int t=0; t < TAU_MAX_THREADS; t++) {
-        for (int i=0; i < MAX_TAU_COUNTERS; i++) {
-            Signatures[t][i] = NULL;
-        }
+  for (int t=0; t < TAU_MAX_THREADS; t++) {
+    for (int i=0; i < MAX_TAU_COUNTERS; i++) {
+      Signatures[t][i] = NULL;
     }
- #else // TAU_MULTIPLE_COUNTERS
-    for (int t=0; t < TAU_MAX_THREADS; t++) {
-        Signatures[t] = NULL;
-    }
+  }
+#else // TAU_MULTIPLE_COUNTERS
+  for (int t=0; t < TAU_MAX_THREADS; t++) {
+    Signatures[t] = NULL;
+  }
 #endif // TAU_MULTIPLE_COUNTERS
 #endif //RENCI_STFF
-
-	return;
+  
+  return;
 }
+
 //////////////////////////////////////////////////////////////////////
 FunctionInfo::FunctionInfo(const char *name, const char *type, 
 	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
@@ -505,6 +506,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.66 $   $Date: 2009/01/17 00:09:07 $
- * VERSION_ID: $Id: FunctionInfo.cpp,v 1.66 2009/01/17 00:09:07 amorris Exp $ 
+ * $Revision: 1.67 $   $Date: 2009/01/31 01:27:34 $
+ * VERSION_ID: $Id: FunctionInfo.cpp,v 1.67 2009/01/31 01:27:34 amorris Exp $ 
  ***************************************************************************/

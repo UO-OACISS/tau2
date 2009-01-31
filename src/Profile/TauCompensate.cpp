@@ -29,6 +29,21 @@ using namespace std;
 #endif /* DEBUG_PROF */
 #include <stdlib.h>
 
+
+
+
+extern "C" int Tau_compensate_initialization() {
+#ifndef TAU_MULTIPLE_COUNTERS 
+  double tover = TauGetTimerOverhead(TauFullTimerOverhead);
+  double tnull = TauGetTimerOverhead(TauNullTimerOverhead);
+#else
+  double *tover = TauGetTimerOverhead(TauFullTimerOverhead);
+  double *tnull = TauGetTimerOverhead(TauNullTimerOverhead);
+#endif
+}
+
+
+
 #ifndef TAU_MULTIPLE_COUNTERS
 double& TheTauNullTimerOverhead()
 {
@@ -101,7 +116,9 @@ int TauCalibrateNullTimer(void)
   TauGetDepthLimit() = INT_MAX;
 #endif /* TAU_DEPTH_LIMIT */
 
-  Tau_create_top_level_timer_if_necessary();
+  bool oldSafeValue = TheSafeToDumpData();
+  TheSafeToDumpData() = false;
+  //Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tone);
     /* nested */
   for(i=0; i< iterations; i++)
@@ -110,7 +127,8 @@ int TauCalibrateNullTimer(void)
     TAU_PROFILE_STOP(tnull);
   }
   TAU_PROFILE_STOP(tone);
-  Tau_stop_top_level_timer_if_necessary();
+  //Tau_stop_top_level_timer_if_necessary();
+  TheSafeToDumpData() = oldSafeValue;
 
 #ifdef TAU_DEPTH_LIMIT
   TauGetDepthLimit() = original; /* reset! */

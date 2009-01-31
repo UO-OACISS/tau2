@@ -143,10 +143,10 @@ FunctionInfo * TauGetProfileParamFI(int tid, long key, string& keyname)
 
 }
 	
-void Profiler::AddProfileParamData(long key, string& keyname)
-{
+void Profiler::AddProfileParamData(long key, const char *keyname) {
+  string keystring(keyname);
   int tid = RtsLayer::myThread();
-  FunctionInfo *f = TauGetProfileParamFI(tid, key, keyname);
+  FunctionInfo *f = TauGetProfileParamFI(tid, key, keystring);
   Profiler *current = CurrentProfiler[tid];
   if (!current) return; 
   current->ProfileParamFunction = f; 
@@ -155,10 +155,8 @@ void Profiler::AddProfileParamData(long key, string& keyname)
   if (f->GetAlreadyOnStack(tid) == false) { /* is it on the callstack? */
     current->AddInclProfileParamFlag = true; 
     f->SetAlreadyOnStack(true, tid); // it is on callstack now 
-  }
-  else
-  {
-   current->AddInclProfileParamFlag = false; // no need to add incl time
+  } else {
+    current->AddInclProfileParamFlag = false; // no need to add incl time
   }
  
   return;  
@@ -193,6 +191,6 @@ void Profiler::ProfileParamStop(double TotalTime, int tid)
   
 /***************************************************************************
  * $RCSfile: ProfileParam.cpp,v $   $Author: amorris $
- * $Revision: 1.3 $   $Date: 2009/01/16 00:46:52 $
- * TAU_VERSION_ID: $Id: ProfileParam.cpp,v 1.3 2009/01/16 00:46:52 amorris Exp $ 
+ * $Revision: 1.4 $   $Date: 2009/01/31 01:27:34 $
+ * TAU_VERSION_ID: $Id: ProfileParam.cpp,v 1.4 2009/01/31 01:27:34 amorris Exp $ 
  ***************************************************************************/

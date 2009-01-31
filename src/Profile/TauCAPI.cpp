@@ -74,8 +74,8 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase) {
   int tid = RtsLayer::myThread();
   FunctionInfo *fi = (FunctionInfo *) functionInfo; 
 
-  if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
-    return; /* group is disabled */
+  if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask()) || !RtsLayer::TheEnableInstrumentation()) {
+    return; /* disabled */
   }
 
   // move the stack pointer
@@ -123,21 +123,22 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_stop_timer(void *function_info) {
-  FunctionInfo *functionInfo = (FunctionInfo *) function_info; 
+
+  FunctionInfo *fi = (FunctionInfo *) function_info; 
   int tid = RtsLayer::myThread();
   Profiler *profiler;
 
   if (Tau_global_stackpos[tid] < 0) return 0;
 
-  if (!(functionInfo->GetProfileGroup() & RtsLayer::TheProfileMask())) {
-    return 0; /* group is disabled */
+  if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask()) || !RtsLayer::TheEnableInstrumentation()) {
+    return 0; /* disabled */
   }
   
   profiler = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
   Tau_global_stackpos[tid]--; /* pop */
   
-  if (profiler->ThisFunction != functionInfo) { /* Check for overlapping timers */
-    reportOverlap (profiler->ThisFunction, functionInfo);
+  if (profiler->ThisFunction != fi) { /* Check for overlapping timers */
+    reportOverlap (profiler->ThisFunction, fi);
   }
   profiler->Stop();
   return 0;
@@ -156,12 +157,7 @@ extern "C" int Tau_stop_current_timer() {
 
   profiler = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
   functionInfo = profiler->ThisFunction;
-
-  if (functionInfo->GetProfileGroup() & RtsLayer::TheProfileMask()) {
-    profiler->Stop();
-    Tau_global_stackpos[tid]--;
-  }
-  return 0;
+  return Tau_stop_timer(functionInfo);
 }
 ///////////////////////////////////////////////////////////////////////////
 
@@ -357,6 +353,7 @@ extern "C" void Tau_profile_set_group(void *ptr, TauGroup_t group) {
 
 extern "C" const char *Tau_profile_get_group_name(void *ptr) {
   FunctionInfo *f = (FunctionInfo*)ptr;
+  printf ("returning %s\n", f->GroupName);
   return f->GroupName;
 }
 
@@ -461,8 +458,7 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
 
 #ifdef TAU_PROFILEPARAM
 #ifndef TAU_DISABLE_PROFILEPARAM_IN_MPI
-  static string s("message size");
-  TAU_PROFILE_PARAM1L(length, s);
+  TAU_PROFILE_PARAM1L(length, "message size");
 #endif /* TAU_DISABLE_PROFILEPARAM_IN_MPI */
 #endif  /* TAU_PROFILEPARAM */
 
@@ -481,8 +477,7 @@ extern "C" void Tau_trace_recvmsg(int type, int source, int length) {
 
 #ifdef TAU_PROFILEPARAM
 #ifndef TAU_DISABLE_PROFILEPARAM_IN_MPI
-  static string s("message size");
-  TAU_PROFILE_PARAM1L(length, s);
+  TAU_PROFILE_PARAM1L(length, "message size");
 #endif /* TAU_DISABLE_PROFILEPARAM_IN_MPI */
 #endif  /* TAU_PROFILEPARAM */
 
@@ -782,7 +777,7 @@ extern "C" void Tau_set_interrupt_interval(int value) {
 
 
 extern "C" void Tau_global_stop(void) {
-  Tau_stop_current_timer();;
+  Tau_stop_current_timer();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1181,7 +1176,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.100 $   $Date: 2009/01/29 00:46:16 $
- * VERSION: $Id: TauCAPI.cpp,v 1.100 2009/01/29 00:46:16 amorris Exp $
+ * $Revision: 1.101 $   $Date: 2009/01/31 01:27:34 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.101 2009/01/31 01:27:34 amorris Exp $
  ***************************************************************************/
 
