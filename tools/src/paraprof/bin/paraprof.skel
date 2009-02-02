@@ -81,7 +81,7 @@ JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JAR
 
 # Test for java 1.4+
 test=`java -cp ${JARS} edu.uoregon.tau.common.VersionTester 1.4`
-if [ $test == "failed" ] ; then
+if [ $test = "failed" ] ; then
     echo  ""
     echo "Java 1.4 or newer is required to run ParaProf."
     echo "Please update your Java SDK to a newer version to use ParaProf."
