@@ -203,16 +203,16 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 #ifdef TRACING_ON
 #ifdef TAU_VAMPIRTRACE
   static int tau_vt_init=TauInitVampirTrace();
-  string tau_vt_name(Name+" "+Type);
+  string tau_vt_name(string(Name)+" "+string(Type));
   FunctionId = vt_def_region(tau_vt_name.c_str(), VT_NO_ID, VT_NO_LNO,
-			     VT_NO_LNO, GroupName.c_str(), VT_FUNCTION);
+			     VT_NO_LNO, GroupName, VT_FUNCTION);
   DEBUGPROFMSG("vt_def_region: "<<tau_vt_name<<": returns "<<FunctionId<<endl;);
 #else /* TAU_VAMPIRTRACE */
 #ifdef TAU_EPILOG
   static int tau_elg_init=TauInitEpilog();
-  string tau_elg_name(Name+" "+Type);
+  string tau_elg_name(string(Name)+" "+string(Type));
   FunctionId = esd_def_region(tau_elg_name.c_str(), ELG_NO_ID, ELG_NO_LNO,
-			      ELG_NO_LNO, GroupName.c_str(), ELG_FUNCTION);
+			      ELG_NO_LNO, GroupName, ELG_FUNCTION);
   DEBUGPROFMSG("elg_def_region: "<<tau_elg_name<<": returns "<<FunctionId<<endl;);
 #else /* TAU_EPILOG */
   // FOR Tracing, we should make the two a single operation 
@@ -506,6 +506,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.67 $   $Date: 2009/01/31 01:27:34 $
- * VERSION_ID: $Id: FunctionInfo.cpp,v 1.67 2009/01/31 01:27:34 amorris Exp $ 
+ * $Revision: 1.68 $   $Date: 2009/02/06 19:14:23 $
+ * VERSION_ID: $Id: FunctionInfo.cpp,v 1.68 2009/02/06 19:14:23 amorris Exp $ 
  ***************************************************************************/
