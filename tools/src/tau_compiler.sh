@@ -633,12 +633,24 @@ for arg in "$@" ; do
 		;;
 
 
+	    # IBM fixed and free
 	    -qfixed*)
 		optPdtF95="$optPdtF95 -R fixed"
 		argsRemaining="$argsRemaining $arg"
 		;;
 
 	    -qfree*)
+		optPdtF95="$optPdtF95 -R free"
+		argsRemaining="$argsRemaining $arg"
+		;;
+
+	    # PGI fixed and free flags
+	    -Mfixed*)
+		optPdtF95="$optPdtF95 -R fixed"
+		argsRemaining="$argsRemaining $arg"
+		;;
+
+	    -Mfree*)
 		optPdtF95="$optPdtF95 -R free"
 		argsRemaining="$argsRemaining $arg"
 		;;
