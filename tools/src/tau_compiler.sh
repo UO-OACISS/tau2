@@ -1045,6 +1045,7 @@ if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE ]; then
 	tempInstFileName=${arrTau[$tempCounter]##*/}
 	tauCmd="$optTauInstr $tempPdbFileName ${arrFileName[$tempCounter]} -o $tempInstFileName "
 	tauCmd="$tauCmd $optTau $optTauSelectFile"
+
 	if [ $disablePdtStep == $FALSE ]; then
 	    evalWithDebugMessage "$tauCmd" "Instrumenting with TAU"
 	else
@@ -1063,6 +1064,23 @@ if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE ]; then
 	    printError "$optTauInstr" "$tauCmd"
 	    break
 	fi
+
+
+	if [ "x$TAU_GENERATE_TESTS" = "xyes" ] ; then
+	    TEST_HOME=$HOME/tau_instrumentor_tests
+	    mkdir -p $TEST_HOME
+	    cp $tempPdbFileName $TEST_HOME
+	    cp ${arrFileName[$tempCounter]} $TEST_HOME
+	    cp $tempInstFileName $TEST_HOME/$tempInstFileName.check
+	    if [ "x$tauSelectFile" = "x" ] ; then
+		echo "$tempPdbFileName ${arrFileName[$tempCounter]} $tempInstFileName.check none" >> $TEST_HOME/list
+	    else
+		cp $tauSelectFile $TEST_HOME/${arrFileName[$tempCounter]}.select
+		echo "$tempPdbFileName ${arrFileName[$tempCounter]} $tempInstFileName.check ${arrFileName[$tempCounter]}.select" >> $TEST_HOME/list
+	    fi
+	fi
+
+
 	tempCounter=tempCounter+1
     done
 fi
