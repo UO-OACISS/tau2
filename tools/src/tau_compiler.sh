@@ -1068,16 +1068,17 @@ if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE ]; then
 
 	if [ "x$TAU_GENERATE_TESTS" = "xyes" ] ; then
 	    TEST_HOME=$HOME/tau_instrumentor_tests
-	    mkdir -p $TEST_HOME
-	    cp $tempPdbFileName $TEST_HOME
+	    mkdir -p $TEST_HOME 
+	    cat $tempPdbFileName | sed -e "s/\.\.\///g" -e "s/\/.*\///g" > $TEST_HOME/$tempPdbFileName
 	    cp ${arrFileName[$tempCounter]} $TEST_HOME
 	    cp $tempInstFileName $TEST_HOME/$tempInstFileName.check
 	    if [ "x$tauSelectFile" = "x" ] ; then
-		echo "$tempPdbFileName ${arrFileName[$tempCounter]} $tempInstFileName.check none" >> $TEST_HOME/list
+		line="$tempPdbFileName ${arrFileName[$tempCounter]} $tempInstFileName.check none"
 	    else
 		cp $tauSelectFile $TEST_HOME/${arrFileName[$tempCounter]}.select
-		echo "$tempPdbFileName ${arrFileName[$tempCounter]} $tempInstFileName.check ${arrFileName[$tempCounter]}.select" >> $TEST_HOME/list
+		line="$tempPdbFileName ${arrFileName[$tempCounter]} $tempInstFileName.check ${arrFileName[$tempCounter]}.select"
 	    fi
+	    echo $line | sed -e "s/\.\.\///g" -e "s/\/.*\///g" >> $TEST_HOME/list
 	fi
 
 
