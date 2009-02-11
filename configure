@@ -408,7 +408,6 @@ python=no
 sicortex=no
 extradir=
 extrashlibopts=
-awe=no
 pthread=no
 papithread=no
 papipfm=no
@@ -660,12 +659,6 @@ do
 
   -task)
       task=yes
-    shift
-    ;;
-
-  -awe=*)
-      awe=yes
-      awedir=`echo $arg | sed -e 's/-awe=//'`
     shift
     ;;
 
@@ -4787,16 +4780,8 @@ echo \#define TAU_ARCH \"$machine\" >> ./include/tauarch.h
 
 make_directories
 
-if [ $awe = yes ]
-  then
-    fixmakeargs="$fixmakeargs AWE_AVAILABLE awedir=$awedir"
-    echo "$machine: AWEDIR = $awedir" >> ./build/Config.info
-fi
-
-if [ $pthread = yes ]
-  then
+if [ $pthread = yes ] ; then
     fixmakeargs="$fixmakeargs PTHREAD_AVAILABLE ptdir=$ptdir"
-    echo "$machine: PTDIR = $ptdir" >> ./build/Config.info
     tauoptions="${tauoptions}-pthread"
 fi
 
@@ -4819,10 +4804,8 @@ if [ $papithread = yes ] ; then
     tauoptions="${tauoptions}-papithread"
 fi
 
-if [ $charm = yes ]
-    then
+if [ $charm = yes ] ; then
     fixmakeargs="$fixmakeargs TAU_CHARM charmdir=$charmdir"
-    echo "$machine: CHARMDIR = $charmdir" >> ./build/Config.info
     tauoptions="${tauoptions}-charm"
 fi
 
@@ -5697,11 +5680,9 @@ echo $fixmakeargs >> ./utils/FixMakefile.info
 utils/FixMakefile $fixmakeargs
 
 # Use default setups, forget everything else (PHB)
-if [ $machine = default ]
-  then
+if [ $machine = default ] ; then
     /bin/cp ./utils/FixMakefile.sed.default  ./utils/FixMakefile.sed
     /bin/cp ./utils/FixMakefile.info.default ./utils/FixMakefile.info
-    /bin/cp ./build/Config.info.default      ./build/Config.info
 fi
 
     sedout="./utils/FixMakefile.sed"
@@ -5743,37 +5724,6 @@ fi
 echo " "
 echo "Configuring TAU Build scripts..."
 
-# -- Save C++ compiler, C compiler, and USEROPT for pC++
-if [ $use_pcxx = yes ]
-then
-echo "$machine: pcxx_root    = $sage1dir" >> \
-        ./build/pc++/Config.info
-echo "$machine: pcxx_cxx     = $cxx_compiler" >> \
-        ./build/pc++/Config.info
-echo "$machine: pcxx_cc      = $c_compiler" >> \
-        ./build/pc++/Config.info
-opt=`echo $useropt | sed -e 's/_/ /g'`
-echo "$machine: pcxx_useropt = $opt" >> \
-        ./build/pc++/Config.info
-echo "" >> ./build/pc++/Config.info
-fi
-
-# -- Save C++ compiler, C compiler, and USEROPT for HPC++
-if [ $use_hpcxx = yes ]
-then
-opt=`echo $useropt | sed -e 's/_/ /g'`
-echo "$machine: hpcxx_useropt = $opt" >> \
-        ./build/hpc++/Config.info
-echo "$machine: hpcxx_sage1 = $sage1dir" >> \
-        ./build/hpc++/Config.info
-echo "$machine: hpcxx_sage2 = $sage2dir" >> \
-        ./build/hpc++/Config.info
-echo "$machine: hpcxx_pstl = $pstldir" >> \
-        ./build/hpc++/Config.info
-echo "$machine: hpcxx_hpnx = $hpnxdir" >> \
-        ./build/hpc++/Config.info
-echo "" >> ./build/hpc++/Config.info
-fi
 
 # Modify the Makefiles so include/Makefile is replaced by the TAU options 
 # for specific examples
