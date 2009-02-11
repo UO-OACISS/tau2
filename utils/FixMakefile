@@ -79,11 +79,6 @@ if [ -d target ]
 fi
 	;;
 
-     awedir=*)
-        awedir=`echo $1 | sed -e 's/^awedir=//'`
-	echo "s,^AWEDIR=.*$,AWEDIR=$awedir,g" >> $sedout
-	;;
-
      ptdir=*)
         ptdir=`echo $1 | sed -e 's/^ptdir=//'`
 	echo "s,^PTDIR=.*$,PTDIR=$ptdir,g" >> $sedout
@@ -1019,9 +1014,6 @@ fi
        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
        ;;
      TCLTK)
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
-     AWE_AVAILABLE)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      TAU_CHARM)
