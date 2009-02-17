@@ -762,7 +762,9 @@ PDTARCHDIR=$(PDTARCHDIRFINAL)
 # Compiler Instrumentation
 ##############################################
 
-#TAU_BFD#TAU_BFDLIB=-lbfd -liberty #ENDIF#
+BFDLINK=
+
+#TAU_BFD#TAU_BFDLIB=$(BFDLINK) -lbfd -liberty #ENDIF#
 #COMPINST_INTEL9#TAU_COMPINST_OPTION=-tcollect #ENDIF#
 #COMPINST_INTEL9#TAU_COMPINST_LINKING= #ENDIF#
 #COMPINST_GNU#TAU_COMPINST_OPTION=-g -finstrument-functions #ENDIF#
