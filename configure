@@ -837,6 +837,7 @@ do
   -bfd=*)
       bfd=yes
       bfddir=`echo $arg | sed -e 's/-bfd=//'`
+      shift
     ;;
 
   -perfinc=*)
@@ -1715,35 +1716,6 @@ fi
 
 
 
-
-if [ "x$bfd" = "xyes" ] ; then
-    if [ "x$bfddir" = xdownload ] ; then
-	bfddir=$targetdir
-	echo "bfddir=$bfddir"
-	if [ -r "$bfddir/lib/libbfd.a" ] ; then
-	    echo "BFD download already found, skipping"
-	else
-	    tempdir=".tmp_bfdbuild_$$"
-	    mkdir $tempdir
-	    cd $tempdir
-	    wget http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.18.tar.gz
-	    tar -xzf binutils-2.18.tar.gz
-	    cd binutils-2.18
-	    ./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir
-	    make && make install
-	    cd ..
-	    cd ..
-	    rm -rf $tempdir
-	fi
-    fi
-    fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64"
-    fixmakeargs="$fixmakeargs bfdinclude=-I$bfddir/include"
-    if [ ! -d $bfddir ] ; then
-        echo "Error: Cannot access BFD directory $bfddir"
-        exit 1
-    fi
-    shift
-fi
 
 
 
@@ -4786,6 +4758,36 @@ else
     architecture=$execprefix
   fi
 fi
+
+
+
+if [ "x$bfd" = "xyes" ] ; then
+    if [ "x$bfddir" = xdownload ] ; then
+	bfddir=${targetdir}/${architecture}
+	if [ -r "$bfddir/lib/libbfd.a" ] ; then
+	    echo "BFD download already found, skipping"
+	else
+	    tempdir=".tmp_bfdbuild_$$"
+	    mkdir $tempdir
+	    cd $tempdir
+	    wget http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.18.tar.gz
+	    tar -xzf binutils-2.18.tar.gz
+	    cd binutils-2.18
+	    ./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir
+	    make && make install
+	    cd ..
+	    cd ..
+	    rm -rf $tempdir
+	fi
+    fi
+    fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64"
+    fixmakeargs="$fixmakeargs bfdinclude=-I$bfddir/include"
+    if [ ! -d $bfddir ] ; then
+        echo "Error: Cannot access BFD directory $bfddir"
+        exit 1
+    fi
+fi
+
 
 # write out .h file to define this architecture __easily__
 echo \#define TAU_$machine > ./include/tauarch.h
