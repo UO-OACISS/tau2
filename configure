@@ -1723,8 +1723,9 @@ if [ "x$bfd" = "xyes" ] ; then
 	if [ -r "$bfddir/lib/libbfd.a" ] ; then
 	    echo "BFD download already found, skipping"
 	else
-	    mkdir .tmp
-	    cd .tmp
+	    tempdir=".tmp_bfdbuild_$$"
+	    mkdir $tempdir
+	    cd $tempdir
 	    wget http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.18.tar.gz
 	    tar -xzf binutils-2.18.tar.gz
 	    cd binutils-2.18
@@ -1732,7 +1733,7 @@ if [ "x$bfd" = "xyes" ] ; then
 	    make && make install
 	    cd ..
 	    cd ..
-	    rm -rf .tmp
+	    rm -rf $tempdir
 	fi
     fi
     fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64"
