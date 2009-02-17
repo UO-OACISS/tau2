@@ -1424,11 +1424,6 @@ done
 
 
 
-if [ ${tauprefix} = unknown ] ; then
-  targetdir=${tauroot}
-else
-  targetdir=${tauprefix}
-fi
 
 
 # -- some functions
@@ -1683,6 +1678,13 @@ echo "-------------------- TAU configure script ---------------"
 
 
 tauroot=`pwd | sed -e 's,^/tmp_mnt/nfs,,' -e 's,^/tmp_mnt,,'`
+
+if [ ${tauprefix} = unknown ] ; then
+  targetdir=${tauroot}
+else
+  targetdir=${tauprefix}
+fi
+
 echo \#define TAUROOT \"$tauroot\" > include/tauroot.h
 if [ $tauprefix != unknown ]
 then
@@ -1717,6 +1719,7 @@ fi
 if [ "x$bfd" = "xyes" ] ; then
     if [ "x$bfddir" = xdownload ] ; then
 	bfddir=$targetdir
+	echo "bfddir=$bfddir"
 	if [ -r "$bfddir/lib/libbfd.a" ] ; then
 	    echo "BFD download already found, skipping"
 	else
