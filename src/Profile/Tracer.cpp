@@ -76,7 +76,7 @@ static double tracerValues[MAX_TAU_COUNTERS] = {0};
 
 
 /* -- Use Profiling interface for time -- */
-x_uint64 pcxx_GetUSecLong(int tid) { 
+x_uint64 tautrace_getTimeStamp(int tid) { 
   // If you're modifying the behavior of this routine, note that in 
   // Profiler::Start and Stop, we obtain the timestamp for tracing explicitly. 
   // The same changes would have to be made there as well (e.g., using COUNTER1
@@ -110,7 +110,7 @@ x_uint64 pcxx_GetUSecLong(int tid) {
 void TraceEventOnly(long int ev, x_int64 par, int tid) {
   PCXX_EV * pcxx_ev_ptr = &TraceBuffer[tid][TauCurrentEvent[tid]] ;  
   pcxx_ev_ptr->ev   = ev;
-  pcxx_ev_ptr->ti   = pcxx_GetUSecLong(tid);
+  pcxx_ev_ptr->ti   = tautrace_getTimeStamp(tid);
   pcxx_ev_ptr->par  = par;
   pcxx_ev_ptr->nid  = RtsLayer::myNode();
   pcxx_ev_ptr->tid  = tid;
@@ -333,17 +333,13 @@ void TraceUnInitialize(int tid) {
 void TraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts) {
   int i;
   int records_created = TraceEvInit(tid);
-  PCXX_EV * pcxx_ev_ptr = &TraceBuffer[tid][TauCurrentEvent[tid]] ;  
+  PCXX_EV *event = &TraceBuffer[tid][TauCurrentEvent[tid]];  
 
   if (TauEnv_get_synchronize_clocks()) {
     ts = (x_uint64) TauSyncAdjustTimeStamp((double)ts);
   }
 
   if (records_created) {
-#ifdef DEBUG
-    printf("TraceEvent(): TID %d records_created in TraceEvInit = %d\n",
-	RtsLayer::myThread(), records_created);
-#endif /* DEBUG */
     /* one or more records were created in TraceEvInit. We must initialize
     the timestamps of those records to the current timestamp. */
     if (use_ts) {
@@ -355,42 +351,42 @@ void TraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts) {
       }
     }
   }
+
   if (!(TraceInitialized[tid]) && (TauCurrentEvent[tid] == 0)) {
   /* not initialized  and its the first time */
     if (ev != PCXX_EV_INIT) {
 	/* we need to ensure that INIT is the first event */
-      pcxx_ev_ptr->ev = PCXX_EV_INIT; 
+      event->ev = PCXX_EV_INIT; 
       /* Should we use the timestamp provided to us? */
-      if (use_ts)
-      {
-        pcxx_ev_ptr->ti   = ts;
+      if (use_ts) {
+        event->ti = ts;
+      } else {
+        event->ti = tautrace_getTimeStamp(tid);
       }
-      else 
-      {
-        pcxx_ev_ptr->ti   = pcxx_GetUSecLong(tid);
-      }
-      pcxx_ev_ptr->par  = pcxx_ev_class; /* init event */ 
+      event->par = pcxx_ev_class; /* init event */ 
       /* probably the nodeid is not set yet */
-      pcxx_ev_ptr->nid  = RtsLayer::myNode();
-      pcxx_ev_ptr->tid  = tid;
+      event->nid = RtsLayer::myNode();
+      event->tid = tid;
  
       TauCurrentEvent[tid] ++;
-      pcxx_ev_ptr = &TraceBuffer[tid][TauCurrentEvent[tid]];
+      event = &TraceBuffer[tid][TauCurrentEvent[tid]];
     } 
   } 
         
-  pcxx_ev_ptr->ev   = ev;
+  event->ev  = ev;
   if (use_ts) {
-    pcxx_ev_ptr->ti   = ts;
+    event->ti = ts;
   } else {
-    pcxx_ev_ptr->ti   = pcxx_GetUSecLong(tid);
+    event->ti = tautrace_getTimeStamp(tid);
   }
-  pcxx_ev_ptr->par  = par;
-  pcxx_ev_ptr->nid  = RtsLayer::myNode();
-  pcxx_ev_ptr->tid  = tid ;
+  event->par = par;
+  event->nid = RtsLayer::myNode();
+  event->tid = tid ;
   TauCurrentEvent[tid] ++;
 
-  if ( TauCurrentEvent[tid] >= TAU_MAX_RECORDS - 1 ) TraceEvFlush(tid); 
+  if (TauCurrentEvent[tid] >= TAU_MAX_RECORDS-1) {
+    TraceEvFlush(tid); 
+  }
 }
 
 void pcxx_Event(long int ev, x_int64 par) {
