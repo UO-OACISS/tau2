@@ -4795,7 +4795,6 @@ if $c_compiler $orig_useropt $shared_opt -o conftest_bfd.so conftest_bfd.c -fPIC
 else
     echo "no"
 fi
-exit
 /bin/rm -f conftest_bfd.o conftest_bfd.c conftest_bfd.so
 ######################################################################
 
