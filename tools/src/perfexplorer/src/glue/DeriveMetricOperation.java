@@ -56,6 +56,11 @@ public class DeriveMetricOperation extends AbstractPerformanceOperation {
 		this.secondMetric = secondMetric;
 		this.operation = operation;
 		this.newName = "(" + firstMetric + operation + secondMetric + ")";
+		// validate the input?
+		if (!(input.getMetrics().contains(firstMetric)))
+			System.err.println("\n\n *** ERROR: Trial does not have a metric named: " + firstMetric + " ***\n\n");
+		if (!(input.getMetrics().contains(secondMetric)))
+			System.err.println("\n\n *** ERROR: Trial does not have a metric named: " + secondMetric + " ***\n\n");
 	}
 
 

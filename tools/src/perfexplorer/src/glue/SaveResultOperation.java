@@ -146,16 +146,16 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 		buf.append("select node_count, contexts_per_node, threads_per_context from trial where id = ?");
 		statement = db.prepareStatement(buf.toString());
 		statement.setInt(1, trial.getID());
-		System.out.println(statement);
+		//System.out.println(statement);
 		ResultSet results = statement.executeQuery();
 		if (results.next() != false) {
 			this.maxNodes = results.getInt(1);
 			this.maxContexts = results.getInt(2);
 			this.maxThreads = results.getInt(3);
 		}
-		System.out.println("Max Nodes: " + maxNodes);
-		System.out.println("Max Contexts: " + maxContexts);
-		System.out.println("Max Threads: " + maxThreads);
+		//System.out.println("Max Nodes: " + maxNodes);
+		//System.out.println("Max Contexts: " + maxContexts);
+		//System.out.println("Max Threads: " + maxThreads);
 		results.close();
 		statement.close();		
 	}
@@ -181,9 +181,17 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 		statement.setInt(3, curContext);
 		statement.setInt(4, curThread);
 		statement.setInt(5, metricID);
-		statement.setDouble(6, input.getInclusive(thread, event, metric)/mainInclusive);
+		if (mainInclusive == 0.0) {
+			statement.setDouble(6, 0.0);
+		} else {
+			statement.setDouble(6, input.getInclusive(thread, event, metric)/mainInclusive);
+		}
 		statement.setDouble(7, input.getInclusive(thread, event, metric));
-		statement.setDouble(8, input.getExclusive(thread, event, metric)/mainInclusive);
+		if (mainInclusive == 0.0) {
+			statement.setDouble(8, 0.0);
+		} else {
+			statement.setDouble(8, input.getExclusive(thread, event, metric)/mainInclusive);
+		}
 		statement.setDouble(9, input.getExclusive(thread, event, metric));
 		statement.setDouble(10, input.getCalls(thread, event));
 		statement.setDouble(11, input.getSubroutines(thread, event));
@@ -193,12 +201,18 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 			statement.setDouble(12, input.getInclusive(thread, event, metric)/input.getCalls(thread, event));
 			accumulators[6] += input.getInclusive(thread, event, metric)/input.getCalls(thread, event);
 		}
-		System.out.println(statement);
+		//System.out.println(statement);
 		statement.execute();
 		statement.close();		
-		accumulators[0] += input.getInclusive(thread, event, metric)/mainInclusive;
+		if (mainInclusive == 0.0) {
+		} else {
+			accumulators[0] += input.getInclusive(thread, event, metric)/mainInclusive;
+		}
 		accumulators[1] += input.getInclusive(thread, event, metric);
-		accumulators[2] += input.getExclusive(thread, event, metric)/mainInclusive;
+		if (mainInclusive == 0.0) {
+		} else {
+			accumulators[2] += input.getExclusive(thread, event, metric)/mainInclusive;
+		}
 		accumulators[3] += input.getExclusive(thread, event, metric);
 		accumulators[4] += input.getCalls(thread, event);
 		accumulators[5] += input.getSubroutines(thread, event);
@@ -220,7 +234,7 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 		statement.setDouble(7, accumulators[4]);
 		statement.setDouble(8, accumulators[5]);
 		statement.setDouble(9, accumulators[6]);
-		System.out.println(statement);
+		//System.out.println(statement);
 		statement.execute();
 		statement.close();		
 
@@ -240,7 +254,7 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 		statement.setDouble(7, accumulators[4]/totalThreads);
 		statement.setDouble(8, accumulators[5]/totalThreads);
 		statement.setDouble(9, accumulators[6]/totalThreads);
-		System.out.println(statement);
+		//System.out.println(statement);
 		statement.execute();
 		statement.close();		
 	}
@@ -253,7 +267,7 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 		statement = db.prepareStatement(buf.toString());
 		statement.setInt(1, trial.getID());
 		statement.setString(2, event);
-		System.out.println(statement);
+		//System.out.println(statement);
 		ResultSet results = statement.executeQuery();
 		if (results.next() != false) {
 			eventID = results.getInt(1);
@@ -267,7 +281,7 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 			statement = db.prepareStatement(buf.toString());
 			statement.setInt(1, trial.getID());
 			statement.setString(2, event);
-			System.out.println(statement);
+			//System.out.println(statement);
 			statement.execute();			
 			statement.close();		
 		}
@@ -291,7 +305,7 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 		statement = db.prepareStatement(buf.toString());
 		statement.setInt(1, trial.getID());
 		statement.setString(2, metric);
-		System.out.println(statement);
+		//System.out.println(statement);
 		statement.execute();
 		statement.close();
 		statement.close();

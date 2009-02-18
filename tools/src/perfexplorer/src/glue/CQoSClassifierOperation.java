@@ -94,7 +94,7 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 					if (!key.equals(this.classLabel)) {
 						String tmpStr = meta.get(key);
 						if (tmpStr == null) {
-							System.out.println("NO VALUE FOUND FOR KEY: "+ key);
+							//System.out.println("NO VALUE FOUND FOR KEY: "+ key);
 							abort1 = true;
 						} else {
 							String value = meta.get(key);
@@ -120,9 +120,9 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 			// if this iteration was not successful, then don't save it's values.
 			if (abort1 || abort2) {
 				discarded++;
-				if(abort1) {
-					System.out.println("\n" + input.getTrial().getName());
-				}
+				//if(abort1) {
+					//System.out.println("\n" + input.getTrial().getName());
+				//}
 				continue;
 			}
 			

@@ -59,6 +59,7 @@ codebase='http://spaceghost.cs.uoregon.edu/PerfExplorer'>
 
   <application-desc main-class="client.PerfExplorerClient">
     <argument>-s</argument>
+    <argument>-w</argument>
     <argument>-e</argument>
     <argument>weka</argument>
   </application-desc>

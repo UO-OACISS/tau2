@@ -198,7 +198,7 @@ public class DataUtils {
                 if (db.getDBType().compareTo("oracle") == 0) {
                     sql.append(") + p.thread as thread, p.metric as metric, p.excl/1000000, ");
                 } else {
-                    sql.append(") + p.thread as thread, p.metric as metric, p.inclusive/1000000, ");
+                    sql.append(") + p.thread as thread, p.metric as metric, p.exclusive/1000000, ");
                 }
 				sql.append("p.inclusive/1000000, s.inclusive_percentage, s.exclusive_percentage ");
 				sql.append("from interval_event e ");
@@ -216,7 +216,7 @@ public class DataUtils {
                 if (db.getDBType().compareTo("oracle") == 0) {
                     sql.append(") + p.thread as thread, p.metric as metric, p.excl, ");
                 } else {
-                    sql.append(") + p.thread as thread, p.metric as metric, p.inclusive, ");
+                    sql.append(") + p.thread as thread, p.metric as metric, p.exclusive, ");
                 }
 
 				sql.append("p.inclusive/1000000, p.inclusive_percentage ");
