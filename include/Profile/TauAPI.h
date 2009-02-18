@@ -16,9 +16,7 @@
 #ifndef _TAU_API_H_
 #define _TAU_API_H_
 
-#if (defined(PROFILING_ON) || defined(TRACING_ON) )
-
-
+#ifdef TAU_ENABLED
 
 #ifdef __cplusplus
 extern "C" {
@@ -221,15 +219,10 @@ extern "C" {
 
 
 
-#ifdef TRACING_ON
 #define TAU_TRACE_SENDMSG(type, destination, length) \
         Tau_trace_sendmsg(type, destination, length);
 #define TAU_TRACE_RECVMSG(type, source, length) \
         Tau_trace_recvmsg(type, source, length);
-#else /* TRACING_ON */
-#define TAU_TRACE_SENDMSG(type, destination, length)
-#define TAU_TRACE_RECVMSG(type, source, length)
-#endif /* TRACING_ON */
 
 
 
@@ -470,12 +463,12 @@ void Tau_profile_param1l(long data, const char *dataname);
 
 
 
-#endif /* PROFILING_ON */
+#endif /* TAU_ENABLED */
 
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.90 $   $Date: 2009/01/31 01:26:16 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.90 2009/01/31 01:26:16 amorris Exp $ 
+ * $Revision: 1.91 $   $Date: 2009/02/18 20:32:47 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.91 2009/02/18 20:32:47 amorris Exp $ 
  ***************************************************************************/

@@ -43,7 +43,12 @@ extern void Tau_stop(const char *name);
 #define TAU_STATIC_TIMER_START TAU_START
 #define TAU_STATIC_TIMER_STOP TAU_STOP
 
+
 #if (defined(PROFILING_ON) || defined(TRACING_ON))
+#define TAU_ENABLED
+#endif
+
+#ifdef TAU_ENABLED
 #include <Profile/Profiler.h>
 #else
 
@@ -207,6 +212,6 @@ extern void Tau_stop(const char *name);
 #define TAU_DISABLE_TRACKING_MEMORY_HEADROOM()
 
 
-#endif /* PROFILING_ON || TRACING_ON */
+#endif /* TAU_ENABLED */
 
 #endif /* _TAU_H_ */

@@ -18,7 +18,8 @@
 #ifndef _TAU_MAPPING_H_
 #define _TAU_MAPPING_H_
 
-#if (PROFILING_ON || TRACING_ON)
+#ifdef TAU_ENABLED
+
 // For Mapping, global variables used between layers
 void* &TheTauMapFI(TauGroup_t key=TAU_DEFAULT);
 
@@ -105,5 +106,5 @@ void* &TheTauMapFI(TauGroup_t key=TAU_DEFAULT);
 #else
 /* Create null , except the main statement which should be executed as it is*/
 
-#endif /* PROFILING_ON or TRACING_ON  */
+#endif /* TAU_ENABLED */
 #endif /* _TAU_MAPPING_H_ */

@@ -100,7 +100,7 @@ void tau_pthread_exit (void *arg);
 #if (defined (__cplusplus ) && !defined (TAU_USE_C_API))
 
 
-#if (defined(PROFILING_ON) || defined(TRACING_ON))
+#ifdef TAU_ENABLED
 
 #include <Profile/ProfileHeaders.h>
 #include <Profile/PthreadLayer.h>
@@ -285,7 +285,7 @@ using tau::Profiler;
 
 
 
-#endif /* PROFILING_ON || TRACING_ON */
+#endif /* TAU_ENABLED */
 /* included after class Profiler is defined. */
 #endif /* __cplusplus && ! TAU_USE_C_API */
 
@@ -293,6 +293,6 @@ using tau::Profiler;
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.95 $   $Date: 2009/01/31 01:26:16 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.95 2009/01/31 01:26:16 amorris Exp $ 
+ * $Revision: 1.96 $   $Date: 2009/02/18 20:32:47 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.96 2009/02/18 20:32:47 amorris Exp $ 
  ***************************************************************************/
