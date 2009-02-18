@@ -772,6 +772,13 @@ for arg in "$@" ; do
     fi
 done
 
+
+# Some sanity checks
+
+if [ $optCompInst = $TRUE ] ; then
+    optHeaderInst=$FALSE
+fi
+
 echoIfDebug "Number of files: $numFiles; File Group is $groupType"
 
 if [ $counterForOptions == 0 ]; then
