@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #define TAU_MAX_REQUESTS  4096
 
-void TauSyncClocks(int rank, int size);
-void TauSyncFinalClocks(int rank, int size);
+void TauSyncClocks();
+void TauSyncFinalClocks();
 int TAUDECL Tau_write_snapshot(const char *name, int finalize);
 int Tau_mergeProfiles();
 void TAUDECL Tau_set_usesMPI(int value);
@@ -1466,8 +1466,7 @@ int  MPI_Finalize(  )
   
 
   if (TauEnv_get_synchronize_clocks()) {
-    PMPI_Comm_size( MPI_COMM_WORLD, &size );
-    TauSyncFinalClocks(procid_0, size);
+    TauSyncFinalClocks();
   }
 
   PMPI_Get_processor_name(procname, &procnamelength);
@@ -1536,7 +1535,7 @@ char *** argv;
   TAU_METADATA("MPI Processor Name", procname);
 
   if (TauEnv_get_synchronize_clocks()) {
-    TauSyncClocks(procid_0, size);
+    TauSyncClocks();
   }
 
 #ifdef TAU_TRACK_MSG

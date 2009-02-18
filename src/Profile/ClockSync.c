@@ -31,15 +31,7 @@
 #include <stdio.h>
 #include <Profile/tau_types.h>
 #include <Profile/TauEnv.h>
-
-
-#ifdef TRACING_ON
-#ifdef TAU_EPILOG
-#include "elg_trc.h"
-#else /* TAU_EPILOG */
 #include <Profile/TauTrace.h>
-#endif /* TAU_EPILOG */
-#endif /* TRACING_ON */
 
 #define SYNC_LOOP_COUNT 10
 
@@ -134,7 +126,7 @@ static double masterServeOffset(int slave, MPI_Comm comm) {
 }
 
 
-static double slaveDetermineOffset(int master, int rank, MPI_Comm comm) {
+static double slaveDetermineOffset(int master, MPI_Comm comm) {
   int i, min;
   double tsendrecv[SYNC_LOOP_COUNT];
   double sync_time;
@@ -159,7 +151,7 @@ static double slaveDetermineOffset(int master, int rank, MPI_Comm comm) {
 
 
 
-static double getTimeOffset(int rank, int size) {
+static double getTimeOffset() {
   int i;
   MPI_Comm machineComm;
   int machineRank;
@@ -193,7 +185,7 @@ static double getTimeOffset(int rank, int size) {
     for (i = 1; i < numMachines; i++) {
       PMPI_Barrier(interMachineComm);
       if (syncRank == i ){
-	offset = slaveDetermineOffset(0, i, interMachineComm);
+	offset = slaveDetermineOffset(0, interMachineComm);
       } else if (syncRank == 0) {
 	offset = masterServeOffset(i, interMachineComm);
       }
@@ -210,46 +202,49 @@ static double getTimeOffset(int rank, int size) {
 }
 
 /* The MPI_Finalize wrapper calls this routine */
-void TauSyncFinalClocks(int rank, int size) {
+void TauSyncFinalClocks() {
+  int rank, size;
   /* only do this when tracing */
-#ifdef TRACING_ON
-#ifndef TAU_EPILOG
-  double offset = getTimeOffset(rank, size);
-  double diff = *TheTauTraceSyncOffset() - offset;
+
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_size(MPI_COMM_WORLD, &size );
+
+  double offset = getTimeOffset();
   TAU_REGISTER_EVENT(endOffset, "TauTraceClockOffsetEnd");
-  offset = getTimeOffset(rank, size);
+  offset = getTimeOffset();
+
+#ifdef TRACING_ON
   TraceEvent(TauUserEvent_GetEventId(endOffset), 
 	     (x_int64) offset, 
 	     0, 0, 0);
-#endif 
 #endif
 }
 
 /* The MPI_Init wrapper calls this routine */
-void TauSyncClocks(int rank, int size) {
+void TauSyncClocks() {
+  int rank, size;
   double offset = 0;
-#ifdef TRACING_ON
+
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_size(MPI_COMM_WORLD, &size );
+
   TAU_REGISTER_EVENT(beginOffset, "TauTraceClockOffsetStart");
-#endif /* TRACING_ON */
   PMPI_Barrier(MPI_COMM_WORLD);
   TAU_VERBOSE ("TAU: Clock Synchonization active on node : %d\n", rank);
+
   /* clear counter to zero, since the times might be wildly different (LINUX_TIMERS)
      we reset to zero so that the offsets won't be so large as to give us negative numbers
      on some nodes.  This also allows us to easily use 0 before MPI_Init. */
   *TheTauTraceBeginningOffset() = getPreSyncTime();
 
   /* only do this when tracing */
-#ifdef TRACING_ON
-  offset = getTimeOffset(rank, size);
-#endif
+  offset = getTimeOffset();
 
   *TheTauTraceSyncOffset() = offset;
   *TheTauTraceSyncOffsetSet() = 1;
 
 #ifdef TRACING_ON
-#ifndef TAU_EPILOG
   TraceEvent(TauUserEvent_GetEventId(beginOffset), (x_int64) offset, 0, 0, 0);
-#endif
 #endif
 
   PMPI_Barrier(MPI_COMM_WORLD);
