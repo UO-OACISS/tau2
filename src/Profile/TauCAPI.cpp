@@ -898,7 +898,8 @@ extern "C" void Tau_static_phase_start(char *name) {
     ThePureMap()[n] = fi;
   } else {
     fi = (*it).second;
-  }   Tau_start_timer(fi,1);
+  }   
+  Tau_start_timer(fi,1);
 }
 
 extern "C" void Tau_static_phase_stop(char *name) {
@@ -1176,7 +1177,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.101 $   $Date: 2009/01/31 01:27:34 $
- * VERSION: $Id: TauCAPI.cpp,v 1.101 2009/01/31 01:27:34 amorris Exp $
+ * $Revision: 1.102 $   $Date: 2009/02/18 20:24:24 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.102 2009/02/18 20:24:24 amorris Exp $
  ***************************************************************************/
 
