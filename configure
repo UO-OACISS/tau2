@@ -4120,58 +4120,6 @@ fi
 /bin/rm -f tau_weak_test.o tau_weak_test.c
 ##########################################################################
 
-######################################################################
-# Check for BFD
-######################################################################
-  cat <<EOF > conftest_bfd.c
-#include <bfd.h>
-void foo() {
-   bfd_init();
-   bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
-   return;
-}
-EOF
-$echo "Checking for bfd.h... ${nnl}"
-if $c_compiler $orig_useropt -c conftest_bfd.c -I$bfddir/include 1> /dev/null 2>&1 ; then
-    fixmakeargs="$fixmakeargs TAU_BFD"
-    echo "yes"
-else
-    echo "no"
-fi
-
-/bin/rm -f conftest_bfd.o conftest_bfd.c
-######################################################################
-
-######################################################################
-# Check if BFD can be linked into a shared library
-######################################################################
-  cat <<EOF > conftest_bfd.c
-#include <bfd.h>
-void foo() {
-   bfd_init();
-   bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
-   return;
-}
-EOF
-$echo "Checking for shared library compatible libbfd... ${nnl}"
-shared_opt="-shared -fPIC"
-if [ $bfd = yes ] ; then
-    bfd_opt="-I$bfddir/include -L$bfddir/lib"
-else
-    bfd_opt=
-fi
-
-#echo $c_compiler $orig_useropt $shared_opt -o conftest_bfd.so conftest_bfd.c -fPIC $bfd_opt -lbfd
-
-if $c_compiler $orig_useropt $shared_opt -o conftest_bfd.so conftest_bfd.c -fPIC $bfd_opt -lbfd 1> /dev/null 2>&1 ; then
-    fixmakeargs="$fixmakeargs TAU_BFDSHAREDLINK"
-    echo "yes"
-else
-    echo "no"
-fi
-/bin/rm -f conftest_bfd.o conftest_bfd.c conftest_bfd.so
-#exit
-######################################################################
 
 ######################################################################
 cat <<EOF > get_typeinfo1.C
@@ -4761,6 +4709,19 @@ fi
 
 
 
+
+
+# write out .h file to define this architecture __easily__
+echo \#define TAU_$machine > ./include/tauarch.h
+echo \#define TAU_ARCH \"$machine\" >> ./include/tauarch.h
+
+make_directories
+
+
+######################################################################
+# Install BFD if requested
+######################################################################
+
 if [ "x$bfd" = "xyes" ] ; then
     if [ "x$bfddir" = xdownload ] ; then
 	bfddir=${targetdir}/${architecture}
@@ -4780,8 +4741,10 @@ if [ "x$bfd" = "xyes" ] ; then
 	    rm -rf $tempdir
 	fi
     fi
+    bfdinclude="-I$bfddir/include"
+    bfdlink="-L$bfddir/lib -L$bfddir/lib64"
+    fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
     fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64"
-    fixmakeargs="$fixmakeargs bfdinclude=-I$bfddir/include"
     if [ ! -d $bfddir ] ; then
         echo "Error: Cannot access BFD directory $bfddir"
         exit 1
@@ -4789,11 +4752,53 @@ if [ "x$bfd" = "xyes" ] ; then
 fi
 
 
-# write out .h file to define this architecture __easily__
-echo \#define TAU_$machine > ./include/tauarch.h
-echo \#define TAU_ARCH \"$machine\" >> ./include/tauarch.h
 
-make_directories
+######################################################################
+# Check for BFD
+######################################################################
+  cat <<EOF > conftest_bfd.c
+#include <bfd.h>
+void foo() {
+   bfd_init();
+   bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
+   return;
+}
+EOF
+$echo "Checking for bfd.h... ${nnl}"
+if $c_compiler $orig_useropt -c conftest_bfd.c $bfdinclude 1> /dev/null 2>&1 ; then
+    fixmakeargs="$fixmakeargs TAU_BFD"
+    echo "yes"
+else
+    echo "no"
+fi
+
+/bin/rm -f conftest_bfd.o conftest_bfd.c
+######################################################################
+
+######################################################################
+# Check if BFD can be linked into a shared library
+######################################################################
+  cat <<EOF > conftest_bfd.c
+#include <bfd.h>
+void foo() {
+   bfd_init();
+   bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
+   return;
+}
+EOF
+$echo "Checking for shared library compatible libbfd... ${nnl}"
+shared_opt="-shared -fPIC"
+
+if $c_compiler $orig_useropt $shared_opt -o conftest_bfd.so conftest_bfd.c -fPIC $bfdinclude $bfdlink -lbfd 1> /dev/null 2>&1 ; then
+    fixmakeargs="$fixmakeargs TAU_BFDSHAREDLINK"
+    echo "yes"
+else
+    echo "no"
+fi
+exit
+/bin/rm -f conftest_bfd.o conftest_bfd.c conftest_bfd.so
+######################################################################
+
 
 if [ $pthread = yes ] ; then
     fixmakeargs="$fixmakeargs PTHREAD_AVAILABLE ptdir=$ptdir"
