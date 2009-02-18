@@ -399,7 +399,7 @@ void Profiler::Start(int tid) {
 #ifndef PROFILING_ON
 #ifdef  TRACING_ON
 #ifndef TAU_DISABLE_THROTTLE
-  if (TauEnv_get_throttle() && (ThisFunction->GetAlreadyOnStack(tid)== false)) {
+  if (TauEnv_get_throttle() && (ThisFunction->GetAlreadyOnStack(tid) == false)) {
     /* Set the callstack flag */
     AddInclFlag = true; 
     ThisFunction->SetAlreadyOnStack(true, tid); // it is on callstack now
@@ -749,7 +749,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     /* when multiple counters are not used, it is a single metric or double */
 #endif /* MULTIPLE_COUNTERS */
     
-    if ((ThisFunction->GetCalls(tid) > TauEnv_get_throttle_numcalls()) && (inclusiveTime/ThisFunction->GetCalls(tid) < TauEnv_get_throttle_percall()) && AddInclFlag) { 
+    if ((ThisFunction->GetCalls(tid) > TauEnv_get_throttle_numcalls()) 
+	&& (inclusiveTime/ThisFunction->GetCalls(tid) < TauEnv_get_throttle_percall()) 
+	&& AddInclFlag) { 
       RtsLayer::LockDB();
       /* Putting AddInclFlag means we can't throttle recursive calls */
       ThisFunction->SetProfileGroup(TAU_DISABLE, tid);
@@ -1564,6 +1566,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.215 $   $Date: 2009/01/31 01:27:34 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.215 2009/01/31 01:27:34 amorris Exp $ 
+ * $Revision: 1.216 $   $Date: 2009/02/18 20:23:51 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.216 2009/02/18 20:23:51 amorris Exp $ 
  ***************************************************************************/
