@@ -388,7 +388,7 @@ void TraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts) {
   }
 }
 
-void pcxx_Event(long int ev, x_int64 par) {
+void tautrace_Event(long int ev, x_int64 par) {
   TraceEvent(ev, par, RtsLayer::myThread());
 }
 
