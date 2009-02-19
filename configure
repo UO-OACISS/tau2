@@ -390,7 +390,6 @@ intelifort=no
 intel=no
 gnu=no
 profile=no
-monitor=no
 multiplecounters=no
 profilestats=no
 profilememory=no
@@ -1167,11 +1166,6 @@ do
 
   -MPITRACE)
     mpitrace=yes
-    shift
-    ;;
-
-  -MONITOR)
-    monitor=yes
     shift
     ;;
 
@@ -2109,11 +2103,6 @@ fi
 if [ $mpitrace = yes ]
   then
     fixmakeargs="$fixmakeargs MPITRACE"
-fi
-
-if [ $monitor = yes ]
-  then
-    fixmakeargs="$fixmakeargs MONITOR"
 fi
 
 if [ $linuxtimers = yes ]
