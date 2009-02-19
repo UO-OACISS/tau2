@@ -20,22 +20,22 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.40 2008/10/31 00:45:01 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.41 2009/02/19 20:53:43 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.40 $
+ * @version $Revision: 1.41 $
  */
 public abstract class DataSource {
 
     public static final SimpleDateFormat dateTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
-    public static final int TAUPROFILE = 0;
-    public static final int PPROF = 1;
+    public static final int PPK = 0;
+    public static final int TAUPROFILE = 1;
     public static final int DYNAPROF = 2;
     public static final int MPIP = 3;
     public static final int HPM = 4;
     public static final int GPROF = 5;
     public static final int PSRUN = 6;
-    public static final int PPK = 7;
+    public static final int PPROF = 7;
     public static final int CUBE = 8;
     public static final int HPCTOOLKIT = 9;
     public static final int SNAP = 10;
@@ -47,8 +47,8 @@ public abstract class DataSource {
     public static final int GYRO = 100;
     public static final int GAMESS = 101;  // application log data
 
-    public static String formatTypeStrings[] = { "Tau profiles", "Tau pprof.dat", "Dynaprof", "MpiP", "HPMToolkit", "Gprof",
-            "PSRun", "ParaProf Packed Profile", "Cube", "HPCToolkit", "TAU Snapshot", "ompP", "PERI-XML",
+    public static String formatTypeStrings[] = { "ParaProf Packed Profile", "Tau profiles", "Dynaprof", "MpiP", "HPMToolkit", "Gprof",
+            "PSRun", "Tau pprof.dat", "Cube", "HPCToolkit", "TAU Snapshot", "ompP", "PERI-XML",
             "General Purpose Timing Library (GPTL)", "Paraver", "IPM" };
 
     private static boolean meanIncludeNulls = true;

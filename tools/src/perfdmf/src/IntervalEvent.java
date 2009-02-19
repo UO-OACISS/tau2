@@ -29,7 +29,7 @@ import edu.uoregon.tau.perfdmf.database.DB;
  * index of the metric in the Trial object should be used to indicate which total/mean
  * summary object to return.
  *
- * <P>CVS $Id: IntervalEvent.java,v 1.5 2007/06/26 03:28:05 khuck Exp $</P>
+ * <P>CVS $Id: IntervalEvent.java,v 1.6 2009/02/19 20:53:44 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -277,7 +277,7 @@ public class IntervalEvent {
                         + "interval_event where dbms_lob.instr(name, ?) > 0");
             else if (db.getDBType().compareTo("derby") == 0)
                 statement = db.prepareStatement("SELECT id FROM " + db.getSchemaPrefix()
-                        + "interval_event where cast(name as varchar(256) = ?");
+                        + "interval_event where cast(name as varchar(256)) = ?");
             else
                 statement = db.prepareStatement("SELECT id FROM " + db.getSchemaPrefix()
                         + "interval_event where name = ?");

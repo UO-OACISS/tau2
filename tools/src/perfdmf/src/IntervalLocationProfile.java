@@ -25,7 +25,7 @@ import edu.uoregon.tau.perfdmf.database.DB;
  * passed in to get data for a particular metric.  If there is only one metric, then no metric
  * index need be passed in.
  *
- * <P>CVS $Id: IntervalLocationProfile.java,v 1.5 2007/05/02 19:43:28 amorris Exp $</P>
+ * <P>CVS $Id: IntervalLocationProfile.java,v 1.6 2009/02/19 20:53:44 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -530,7 +530,7 @@ public class IntervalLocationProfile extends Object {
                 } else if (db.getDBType().compareTo("derby") == 0) {
                     statement = db.prepareStatement("INSERT INTO "
                             + db.getSchemaPrefix()
-                            + "interval_mean_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, num_calls, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                            + "interval_mean_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, num_calls, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 } else if (db.getDBType().compareTo("mysql") == 0) {
                     statement = db.prepareStatement("INSERT INTO "
                             + db.getSchemaPrefix()
@@ -573,7 +573,7 @@ public class IntervalLocationProfile extends Object {
                 } else if (db.getDBType().compareTo("derby") == 0) {
                     statement = db.prepareStatement("INSERT INTO "
                             + db.getSchemaPrefix()
-                            + "interval_total_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, num_calls, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                            + "interval_total_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, num_calls, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 } else if (db.getDBType().compareTo("mysql") == 0) {
                     statement = db.prepareStatement("INSERT INTO "
                             + db.getSchemaPrefix()
