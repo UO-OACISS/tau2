@@ -107,13 +107,7 @@ using namespace std;
 #if (!defined(TAU_WINDOWS))
 #include <unistd.h>
 
-#if (defined(POOMA_TFLOP) || !defined(TULIP_TIMERS))
 #include <sys/time.h>
-#else
-#ifdef TULIP_TIMERS 
-#include "Profile/TulipTimers.h"
-#endif //TULIP_TIMERS 
-#endif //POOMA_TFLOP
 
 #endif //TAU_WINDOWS
 
@@ -642,20 +636,6 @@ double RtsLayer::getUSecD (int tid) {
   static double mhz = TauGetMHz();
   return (double) getLinuxHighResolutionTscCounter()/mhz;
 #endif /* TAU_LINUX_TIMERS */
-
-#ifdef TULIP_TIMERS
-  return pcxx_GetUSecD();
-#endif
-
-#ifdef TAU_MUSE
-  return TauMuseQuery();
-#endif /* TAU_MUSE */
-
-#ifdef TAU_MUSE_MULTIPLE
-  double data[10];
-  int size=10; 
-  return TauMuseMultipleQuery(data,size);
-#endif
 
 #ifdef TAU_LOGICAL_CLOCK
   static long long value = 0;
@@ -1240,7 +1220,7 @@ void RtsLayer::TraceSendMsg(int type, int destination, int length)
       (xcomm << 58 >> 16);
 
 
-    pcxx_Event(TAU_MESSAGE_SEND, parameter); 
+    tautrace_Event(TAU_MESSAGE_SEND, parameter); 
 #ifdef DEBUG_PROF
     printf("Node %d TraceSendMsg, type %x dest %x len %x par %lx \n", 
   	RtsLayer::myNode(), type, destination, length, parameter);
@@ -1280,7 +1260,7 @@ void RtsLayer::TraceRecvMsg(int type, int source, int length)
       (xcomm << 58 >> 16);
 
 
-    pcxx_Event(TAU_MESSAGE_RECV, parameter); 
+    tautrace_Event(TAU_MESSAGE_RECV, parameter); 
   
 #ifdef DEBUG_PROF
     printf("Node %d TraceRecvMsg, type %x src %x len %x par %lx \n", 
@@ -1491,6 +1471,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.110 $   $Date: 2009/01/17 00:09:07 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.110 2009/01/17 00:09:07 amorris Exp $ 
+ * $Revision: 1.111 $   $Date: 2009/02/19 01:57:47 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.111 2009/02/19 01:57:47 amorris Exp $ 
  ***************************************************************************/

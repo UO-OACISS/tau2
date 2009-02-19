@@ -34,9 +34,6 @@
 #endif	/* ANSI C */
 
 
-extern unsigned long int pcxx_ev_class;
-
-
 /* -- pcxx tracer events ------------------- */
 #define PCXX_EV_INIT         60000
 #define PCXX_EV_FLUSH_ENTER  60001
@@ -71,13 +68,6 @@ extern unsigned long int pcxx_ev_class;
 #define PCXX_BUFSIZE 65536  /* -- 64 K -- */
 #endif
 
-/* -- event classes ----------------------------- */
-#ifndef PCXX_EC_NULL
-#define PCXX_EC_NULL       0x00000000
-#define PCXX_EC_TRACER     0x00000001
-#define PCXX_EC_TIMER      0x00000002
-#define PCXX_EC_ALL        0xFFFFFFFF
-#endif
 
 #endif /* TAU_LIBRARY_SOURCE */
 
@@ -105,14 +95,12 @@ extern "C" {
 #endif /* TAU_LIBRARY_SOURCE */
   
   /* -- pcxx monitor routines ------------------------------------ */
-#define PCXX_EVENT(c,e,p) if (pcxx_ev_class&(c)) pcxx_Event(e,p)
-#define PCXX_LONG_EVENT(c,e,l,p) if (pcxx_ev_class&(c)) pcxx_LongEvent(e,l,p)
 #ifdef __cplusplus
-  void pcxx_EvInit (char *n);
-  void pcxx_Event (long int e, x_int64 p);
-  void pcxx_LongEvent (long int e, int l, char *p);
-  void pcxx_EvClose ();
-  void pcxx_EvFlush ();
+  void tautrace_EvInit (char *n);
+  void tautrace_Event (long int e, x_int64 p);
+  void tautrace_LongEvent (long int e, int l, char *p);
+  void tautrace_EvClose ();
+  void tautrace_EvFlush ();
   /* New tracing interface */
   int TraceEvInit(int tid);
   void TraceUnInitialize(int tid);
@@ -125,17 +113,15 @@ extern "C" {
   int  GetFlushEvents(int tid);
 }
 #else
-extern void pcxx_EvInit(char *n);
-extern void pcxx_Event(long int e, long long p);
-extern void pcxx_LongEvent(long int e, int l, char *p);
-extern void pcxx_EvClose ();
-extern void pcxx_EvFlush ();
+extern void tautrace_EvInit(char *n);
+extern void tautrace_Event(long int e, long long p);
+extern void tautrace_LongEvent(long int e, int l, char *p);
+extern void tautrace_EvClose ();
+extern void tautrace_EvFlush ();
 #endif /* __cplusplus */
 
 #else
 
-#define PCXX_EVENT(c, e, p)
-#define PCXX_LONG_EVENT(c, e, l, p)
 #define pcxx_EvInit(n)
 #define pcxx_Event(e, p)
 #define pcxx_LongEvent(e, l, p)

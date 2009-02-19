@@ -48,7 +48,8 @@
 extern double TauSyncAdjustTimeStamp(double timestamp);
 
 
-unsigned long int pcxx_ev_class = PCXX_EC_TRACER | PCXX_EC_TIMER;
+
+#define INIT_PARAM 3
 
 /* -- event record buffer ------------------------------------ */
 #define TAU_MAX_RECORDS 64*1024
@@ -281,7 +282,7 @@ int TraceEvInit(int tid) {
       /* either the first record is blank - in which case we should
 	 put INIT record, or it is an error */
       if (TauCurrentEvent[tid] == 0) { 
-        TraceEvent(PCXX_EV_INIT, pcxx_ev_class, tid);
+        TraceEvent(PCXX_EV_INIT, INIT_PARAM, tid);
         retvalue ++; /* one record generated */
       } else { 
 	/* error */ 
@@ -289,11 +290,9 @@ int TraceEvInit(int tid) {
       }
     } /* first record was not INIT */
     
-    if ( pcxx_ev_class & PCXX_EC_TRACER ) { 
-      /* generate a wallclock time record */
-      TraceEvent (PCXX_EV_WALL_CLOCK, time((time_t *)0), tid);
-      retvalue ++;
-    }
+    /* generate a wallclock time record */
+    TraceEvent (PCXX_EV_WALL_CLOCK, time((time_t *)0), tid);
+    retvalue ++;
   }
   return retvalue; 
 }
@@ -324,7 +323,7 @@ void TraceUnInitialize(int tid) {
       child process, trying to clear its parent records) -- */
    TraceInitialized[tid] = 0;
    TauCurrentEvent[tid] = 0;
-   TraceEventOnly(PCXX_EV_INIT, pcxx_ev_class, tid);
+   TraceEventOnly(PCXX_EV_INIT, INIT_PARAM, tid);
 }
 
 
@@ -363,7 +362,7 @@ void TraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts) {
       } else {
         event->ti = tautrace_getTimeStamp(tid);
       }
-      event->par = pcxx_ev_class; /* init event */ 
+      event->par = INIT_PARAM; /* init event */ 
       /* probably the nodeid is not set yet */
       event->nid = RtsLayer::myNode();
       event->tid = tid;
@@ -395,10 +394,8 @@ void pcxx_Event(long int ev, x_int64 par) {
 
 /* -- terminate SW tracing ----------------------------------- */
 void TraceEvClose(int tid) {
-  if (pcxx_ev_class & PCXX_EC_TRACER) {
-    TraceEvent (PCXX_EV_CLOSE, 0, tid);
-    TraceEvent (PCXX_EV_WALL_CLOCK, time((time_t *)0), tid);
-  }
+  TraceEvent (PCXX_EV_CLOSE, 0, tid);
+  TraceEvent (PCXX_EV_WALL_CLOCK, time((time_t *)0), tid);
   TraceEvFlush (tid);
   //close (TraceFd[tid]); 
   // Just in case the same thread writes to this file again, don't close it.
