@@ -34,42 +34,18 @@
 #endif	/* ANSI C */
 
 
-/* -- pcxx tracer events ------------------- */
-#define PCXX_EV_INIT         60000
-#define PCXX_EV_FLUSH_ENTER  60001
-#define PCXX_EV_FLUSH_EXIT   60002
-#define PCXX_EV_CLOSE        60003
-#define PCXX_EV_INITM        60004
-#define PCXX_EV_WALL_CLOCK   60005
-#define PCXX_EV_CONT_EVENT   60006
+/* -- tau tracer events ------------------- */
+#define TAU_EV_INIT         60000
+#define TAU_EV_FLUSH_ENTER  60001
+#define TAU_EV_FLUSH_EXIT   60002
+#define TAU_EV_CLOSE        60003
+#define TAU_EV_INITM        60004
+#define TAU_EV_WALL_CLOCK   60005
+#define TAU_EV_CONT_EVENT   60006
 #define TAU_MESSAGE_SEND     60007
 #define TAU_MESSAGE_RECV     60008
 
-/* -- the following two events are only the ----- */
-/* -- base numbers, actually both represent ----- */
-/* -- 64 events (60[1234]00 to 60[1234]64)  ----- */
-#define PCXX_WTIMER_CLEAR    60199
-#define PCXX_WTIMER_START    60100
-#define PCXX_WTIMER_STOP     60200
-#define PCXX_UTIMER_CLEAR    60399
-#define PCXX_UTIMER_START    60300
-#define PCXX_UTIMER_STOP     60400
 
-/* from pcxx_machines.h */
-#define PCXX_MAXPROCS 4096
-#define PCXX_MALLOC malloc
-#define PCXX_SUGGESTED_MSG_SIZE -1
-#define PCXX_MYNODE   RtsLayer::myNode()
-#define PCXX_MYTHREAD 0
-
-#ifdef TAU_LIBRARY_SOURCE
-
-#ifndef PCXX_BUFSIZE
-#define PCXX_BUFSIZE 65536  /* -- 64 K -- */
-#endif
-
-
-#endif /* TAU_LIBRARY_SOURCE */
 
 #ifdef __cplusplus
 extern "C" {
@@ -77,24 +53,23 @@ extern "C" {
   
   /* -- event record buffer descriptor ------------------------- */
   typedef struct {
-    x_int32            ev;    /* -- event id        -- */
-    x_uint16           nid;   /* -- node id         -- */
-    x_uint16           tid;   /* -- thread id       -- */
-    x_int64            par;   /* -- event parameter -- */
-    x_uint64           ti;    /* -- time [us]?      -- */
-  } PCXX_EV;
+    x_int32  ev;    /* -- event id        -- */
+    x_uint16 nid;   /* -- node id         -- */
+    x_uint16 tid;   /* -- thread id       -- */
+    x_int64  par;   /* -- event parameter -- */
+    x_uint64 ti;    /* -- time [us]?      -- */
+  } TAU_EV;
   
 #ifdef TAU_LIBRARY_SOURCE
   
   /* -- pointer to next free element of event record buffer ---- */
-  extern PCXX_EV *pcxx_ev_ptr;
+  extern TAU_EV *tau_ev_ptr;
   
   /* -- pointer to last available element of event record buffer */
-  extern PCXX_EV *pcxx_ev_max;
+  extern TAU_EV *tau_ev_max;
   
 #endif /* TAU_LIBRARY_SOURCE */
   
-  /* -- pcxx monitor routines ------------------------------------ */
 #ifdef __cplusplus
   void tautrace_EvInit (char *n);
   void tautrace_Event (long int e, x_int64 p);
@@ -122,11 +97,11 @@ extern void tautrace_EvFlush ();
 
 #else
 
-#define pcxx_EvInit(n)
-#define pcxx_Event(e, p)
-#define pcxx_LongEvent(e, l, p)
-#define pcxx_EvClose()
-#define pcxx_EvFlush()
+#define tautrace_EvInit(n)
+#define tautrace_Event(e, p)
+#define tautrace_LongEvent(e, l, p)
+#define tautrace_EvClose()
+#define tautrace_EvFlush()
 
 #endif /* TRACING_ON */
 

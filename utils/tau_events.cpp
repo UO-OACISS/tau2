@@ -123,10 +123,10 @@ struct trcdescr
   unsigned long lasttime;  /* -- timestamp of previous event record        -- */
   unsigned long offset;    /* -- offset of timestamp                       -- */
 
-  PCXX_EV  *buffer;    /* -- input buffer                              -- */
-  PCXX_EV  *erec;      /* -- current event record                      -- */
-  PCXX_EV  *next;      /* -- next available event record in buffer     -- */
-  PCXX_EV  *last;      /* -- last event record in buffer               -- */
+  TAU_EV  *buffer;    /* -- input buffer                              -- */
+  TAU_EV  *erec;      /* -- current event record                      -- */
+  TAU_EV  *next;      /* -- next available event record in buffer     -- */
+  TAU_EV  *last;      /* -- last event record in buffer               -- */
 } ;
 extern struct trcdescr *trcdes;
 map<const char*, EventDescr *, ltstr> eventNameMap;

@@ -4,7 +4,7 @@
 /*********************************************************************/
 
 /*
- * pcxx_merge.c: merge local traces 
+ * tau_merge.c: merge local traces 
  *
  * (c) 1994 Jerry Manic Saftware
  *
@@ -18,6 +18,9 @@
 # include <stdlib.h>
 # include <sys/types.h>
 # include <fcntl.h>
+
+
+#define TAU_MAXPROCS 4096
 
 
 #ifdef TAU_LARGEFILE
@@ -60,7 +63,7 @@ int getdtablesize(void);
 
 #define F_EXISTS    0
 
-#define CONTLEN  (sizeof(PCXX_EV) - sizeof(long int))
+#define CONTLEN  (sizeof(TAU_EV) - sizeof(long int))
 
 #define STDOUT 1
 
@@ -95,10 +98,10 @@ struct trcdescr
   x_uint64 lasttime;  /* -- timestamp of previous event record        -- */
   x_uint64 offset;    /* -- offset of timestamp                       -- */
 
-/*   PCXX_EV  *buffer;    /\* -- input buffer                              -- *\/ */
-/*   PCXX_EV  *erec;      /\* -- current event record                      -- *\/ */
-/*   PCXX_EV  *next;      /\* -- next available event record in buffer     -- *\/ */
-/*   PCXX_EV  *last;      /\* -- last event record in buffer               -- *\/ */
+/*   TAU_EV  *buffer;    /\* -- input buffer                              -- *\/ */
+/*   TAU_EV  *erec;      /\* -- current event record                      -- *\/ */
+/*   TAU_EV  *next;      /\* -- next available event record in buffer     -- *\/ */
+/*   TAU_EV  *last;      /\* -- last event record in buffer               -- *\/ */
 
   void  *buffer;    /* -- input buffer                              -- */
   void  *erec;      /* -- current event record                      -- */
@@ -135,7 +138,7 @@ typedef struct {
   x_uint16           tid;   /* -- thread id       -- */
   x_int64            par;   /* -- event parameter -- */
   x_uint64           ti;    /* -- time [us]?      -- */
-} PCXX_EV32;
+} TAU_EV32;
 
 /* for 64 bit platforms */
 typedef struct {
@@ -145,10 +148,10 @@ typedef struct {
   x_uint32           padding; /*  space wasted for 8-byte aligning the next item */ 
   x_int64            par;   /* -- event parameter -- */
   x_uint64           ti;    /* -- time [us]?      -- */
-} PCXX_EV64;
+} TAU_EV64;
 
 
-typedef PCXX_EV PCXX_EV_NATIVE;
+typedef TAU_EV TAU_EV_NATIVE;
 
 
 
@@ -176,8 +179,8 @@ typedef PCXX_EV PCXX_EV_NATIVE;
 /* Endian/bitsize stuff */
 
 /* void convertEvent(struct trcdescr *tdes, void *event, int index) { */
-/*   PCXX_EV32 *event32; */
-/*   PCXX_EV64 *event64; */
+/*   TAU_EV32 *event32; */
+/*   TAU_EV64 *event64; */
 
 /*   switch (tdes->format) { */
 /*   case FORMAT_NATIVE: */
@@ -186,7 +189,7 @@ typedef PCXX_EV PCXX_EV_NATIVE;
 /*     return; */
 
 /*   case FORMAT_32_SWAP: */
-/*     event32 = (PCXX_EV32*) event; */
+/*     event32 = (TAU_EV32*) event; */
 /*     event32[index].ev = swap32(event32[index].ev); */
 /*     event32[index].nid = swap16(event32[index].nid); */
 /*     event32[index].tid = swap16(event32[index].tid); */
@@ -195,7 +198,7 @@ typedef PCXX_EV PCXX_EV_NATIVE;
 /*     return; */
 
 /*   case FORMAT_64_SWAP: */
-/*     event64 = (PCXX_EV64*) event; */
+/*     event64 = (TAU_EV64*) event; */
 /*     event64[index].ev = swap64(event64[index].ev); */
 /*     event64[index].nid = swap16(event64[index].nid); */
 /*     event64[index].tid = swap16(event64[index].tid); */
@@ -210,60 +213,60 @@ typedef PCXX_EV PCXX_EV_NATIVE;
 /* } */
 
 x_int32 event_GetEv(struct trcdescr *tFile, void *event, int index) {
-  PCXX_EV_NATIVE *nativeEvent;
-  PCXX_EV32 *event32;
-  PCXX_EV64 *event64;
+  TAU_EV_NATIVE *nativeEvent;
+  TAU_EV32 *event32;
+  TAU_EV64 *event64;
 
   switch (tFile->format) {
   case FORMAT_NATIVE:
-    nativeEvent = (PCXX_EV_NATIVE*)event;
+    nativeEvent = (TAU_EV_NATIVE*)event;
     return nativeEvent[index].ev;
     
   case FORMAT_32:
-    event32 = (PCXX_EV32*) event;
+    event32 = (TAU_EV32*) event;
     return event32[index].ev;
   case FORMAT_32_SWAP:
-    event32 = (PCXX_EV32*) event;
+    event32 = (TAU_EV32*) event;
     return swap32(event32[index].ev);
 
   case FORMAT_64:
-    event64 = (PCXX_EV64*) event;
+    event64 = (TAU_EV64*) event;
     return event64[index].ev;
   case FORMAT_64_SWAP:
-    event64 = (PCXX_EV64*) event;
+    event64 = (TAU_EV64*) event;
     return swap64(event64[index].ev);
   }
   return 0;
 }
 
 void event_SetEv(struct trcdescr *tFile, void *event, int index, x_int32 value) {
-  PCXX_EV_NATIVE *nativeEvent;
-  PCXX_EV32 *event32;
-  PCXX_EV64 *event64;
+  TAU_EV_NATIVE *nativeEvent;
+  TAU_EV32 *event32;
+  TAU_EV64 *event64;
   x_int64 tmpValue;
 
   switch (tFile->format) {
   case FORMAT_NATIVE:
-    nativeEvent = (PCXX_EV_NATIVE*)event;
+    nativeEvent = (TAU_EV_NATIVE*)event;
     nativeEvent[index].ev = value;
     break;
 
   case FORMAT_32:
-    event32 = (PCXX_EV32*) event;
+    event32 = (TAU_EV32*) event;
     event32[index].ev = value;
     break;
   case FORMAT_32_SWAP:
-    event32 = (PCXX_EV32*) event;
+    event32 = (TAU_EV32*) event;
     event32[index].ev = swap32(value);
     break;
 
   case FORMAT_64:
-    event64 = (PCXX_EV64*) event;
+    event64 = (TAU_EV64*) event;
     event64[index].ev = value;
     break;
   case FORMAT_64_SWAP:
     tmpValue = value;
-    event64 = (PCXX_EV64*) event;
+    event64 = (TAU_EV64*) event;
     event64[index].ev = swap64(tmpValue);
     break;
   }
@@ -271,56 +274,56 @@ void event_SetEv(struct trcdescr *tFile, void *event, int index, x_int32 value) 
 }
 
 x_uint64 event_GetTi(struct trcdescr *tFile, void *event, int index) {
-  PCXX_EV_NATIVE *nativeEvent;
-  PCXX_EV32 *event32;
-  PCXX_EV64 *event64;
+  TAU_EV_NATIVE *nativeEvent;
+  TAU_EV32 *event32;
+  TAU_EV64 *event64;
 
   switch (tFile->format) {
   case FORMAT_NATIVE:
-    nativeEvent = (PCXX_EV_NATIVE*)event;
+    nativeEvent = (TAU_EV_NATIVE*)event;
     return nativeEvent[index].ti;
     
   case FORMAT_32:
-    event32 = (PCXX_EV32*) event;
+    event32 = (TAU_EV32*) event;
     return event32[index].ti;
   case FORMAT_32_SWAP:
-    event32 = (PCXX_EV32*) event;
+    event32 = (TAU_EV32*) event;
     return swap64(event32[index].ti);
 
   case FORMAT_64:
-    event64 = (PCXX_EV64*) event;
+    event64 = (TAU_EV64*) event;
     return event64[index].ti;
   case FORMAT_64_SWAP:
-    event64 = (PCXX_EV64*) event;
+    event64 = (TAU_EV64*) event;
     return swap64(event64[index].ti);
   }
   return 0;
 }
 
 void event_SetTi(struct trcdescr *tFile, void *event, int index, x_uint64 value) {
-  PCXX_EV_NATIVE *nativeEvent;
-  PCXX_EV32 *event32;
-  PCXX_EV64 *event64;
+  TAU_EV_NATIVE *nativeEvent;
+  TAU_EV32 *event32;
+  TAU_EV64 *event64;
 
   switch (tFile->format) {
   case FORMAT_NATIVE:
-    nativeEvent = (PCXX_EV_NATIVE*)event;
+    nativeEvent = (TAU_EV_NATIVE*)event;
     nativeEvent[index].ti = value;
     break;
   case FORMAT_32:
-    event32 = (PCXX_EV32*) event;
+    event32 = (TAU_EV32*) event;
     event32[index].ti = value;
     break;
   case FORMAT_32_SWAP:
-    event32 = (PCXX_EV32*) event;
+    event32 = (TAU_EV32*) event;
     event32[index].ti = swap64(value);
     break;
   case FORMAT_64:
-    event64 = (PCXX_EV64*) event;
+    event64 = (TAU_EV64*) event;
     event64[index].ti = value;
     break;
   case FORMAT_64_SWAP:
-    event64 = (PCXX_EV64*) event;
+    event64 = (TAU_EV64*) event;
     event64[index].ti = swap64(value);
     break;
   }
@@ -329,58 +332,58 @@ void event_SetTi(struct trcdescr *tFile, void *event, int index, x_uint64 value)
 
 
 x_uint16 event_GetNid(struct trcdescr *tFile, void *event, int index) {
-  PCXX_EV_NATIVE *nativeEvent;
-  PCXX_EV32 *event32;
-  PCXX_EV64 *event64;
+  TAU_EV_NATIVE *nativeEvent;
+  TAU_EV32 *event32;
+  TAU_EV64 *event64;
 
   switch (tFile->format) {
   case FORMAT_NATIVE:
-    nativeEvent = (PCXX_EV_NATIVE*)event;
+    nativeEvent = (TAU_EV_NATIVE*)event;
     return nativeEvent[index].nid;
     
   case FORMAT_32:
-    event32 = (PCXX_EV32*) event;
+    event32 = (TAU_EV32*) event;
     return event32[index].nid;
   case FORMAT_32_SWAP:
-    event32 = (PCXX_EV32*) event;
+    event32 = (TAU_EV32*) event;
     return swap16(event32[index].nid);
 
   case FORMAT_64:
-    event64 = (PCXX_EV64*) event;
+    event64 = (TAU_EV64*) event;
     return event64[index].nid;
   case FORMAT_64_SWAP:
-    event64 = (PCXX_EV64*) event;
+    event64 = (TAU_EV64*) event;
     return swap16(event64[index].nid);
   }
   return 0;
 }
 
 void event_SetNid(struct trcdescr *tFile, void *event, int index, x_uint16 value) {
-  PCXX_EV_NATIVE *nativeEvent;
-  PCXX_EV32 *event32;
-  PCXX_EV64 *event64;
+  TAU_EV_NATIVE *nativeEvent;
+  TAU_EV32 *event32;
+  TAU_EV64 *event64;
 
   switch (tFile->format) {
   case FORMAT_NATIVE:
-    nativeEvent = (PCXX_EV_NATIVE*)event;
+    nativeEvent = (TAU_EV_NATIVE*)event;
     nativeEvent[index].nid = value;
     break;
 
   case FORMAT_32:
-    event32 = (PCXX_EV32*) event;
+    event32 = (TAU_EV32*) event;
     event32[index].nid = value;
     break;
   case FORMAT_32_SWAP:
-    event32 = (PCXX_EV32*) event;
+    event32 = (TAU_EV32*) event;
     event32[index].nid = swap16(value);
     break;
 
   case FORMAT_64:
-    event64 = (PCXX_EV64*) event;
+    event64 = (TAU_EV64*) event;
     event64[index].nid = value;
     break;
   case FORMAT_64_SWAP:
-    event64 = (PCXX_EV64*) event;
+    event64 = (TAU_EV64*) event;
     event64[index].nid = swap16(value);
     break;
   }
@@ -389,27 +392,27 @@ void event_SetNid(struct trcdescr *tFile, void *event, int index, x_uint16 value
 
 
 x_uint16 event_GetTid(struct trcdescr *tFile, void *event, int index) {
-  PCXX_EV_NATIVE *nativeEvent;
-  PCXX_EV32 *event32;
-  PCXX_EV64 *event64;
+  TAU_EV_NATIVE *nativeEvent;
+  TAU_EV32 *event32;
+  TAU_EV64 *event64;
 
   switch (tFile->format) {
   case FORMAT_NATIVE:
-    nativeEvent = (PCXX_EV_NATIVE*)event;
+    nativeEvent = (TAU_EV_NATIVE*)event;
     return nativeEvent[index].tid;
     
   case FORMAT_32:
-    event32 = (PCXX_EV32*) event;
+    event32 = (TAU_EV32*) event;
     return event32[index].tid;
   case FORMAT_32_SWAP:
-    event32 = (PCXX_EV32*) event;
+    event32 = (TAU_EV32*) event;
     return swap16(event32[index].tid);
 
   case FORMAT_64:
-    event64 = (PCXX_EV64*) event;
+    event64 = (TAU_EV64*) event;
     return event64[index].tid;
   case FORMAT_64_SWAP:
-    event64 = (PCXX_EV64*) event;
+    event64 = (TAU_EV64*) event;
     return swap16(event64[index].tid);
   }
   return 0;
@@ -417,27 +420,27 @@ x_uint16 event_GetTid(struct trcdescr *tFile, void *event, int index) {
 
 
 x_uint64 event_GetPar(struct trcdescr *tFile, void *event, int index) {
-  PCXX_EV_NATIVE *nativeEvent;
-  PCXX_EV32 *event32;
-  PCXX_EV64 *event64;
+  TAU_EV_NATIVE *nativeEvent;
+  TAU_EV32 *event32;
+  TAU_EV64 *event64;
 
   switch (tFile->format) {
   case FORMAT_NATIVE:
-    nativeEvent = (PCXX_EV_NATIVE*)event;
+    nativeEvent = (TAU_EV_NATIVE*)event;
     return nativeEvent[index].par;
     
   case FORMAT_32:
-    event32 = (PCXX_EV32*) event;
+    event32 = (TAU_EV32*) event;
     return event32[index].par;
   case FORMAT_32_SWAP:
-    event32 = (PCXX_EV32*) event;
+    event32 = (TAU_EV32*) event;
     return swap64(event32[index].par);
 
   case FORMAT_64:
-    event64 = (PCXX_EV64*) event;
+    event64 = (TAU_EV64*) event;
     return event64[index].par;
   case FORMAT_64_SWAP:
-    event64 = (PCXX_EV64*) event;
+    event64 = (TAU_EV64*) event;
     return swap64(event64[index].par);
   }
   return 0;
@@ -447,13 +450,13 @@ x_uint64 event_GetPar(struct trcdescr *tFile, void *event, int index) {
 void determineFormat(struct trcdescr *tdes) {
   int bytesRead;
   int formatFound;
-  PCXX_EV32 event32;
-  PCXX_EV64 event64;
+  TAU_EV32 event32;
+  TAU_EV64 event64;
 
   formatFound = 0;
 /*   printf ("determining format!\n"); */
-/*   printf ("sizeof(PCXX_EV32) = %d\n", sizeof(PCXX_EV32)); */
-/*   printf ("sizeof(PCXX_EV64) = %d\n", sizeof(PCXX_EV64)); */
+/*   printf ("sizeof(TAU_EV32) = %d\n", sizeof(TAU_EV32)); */
+/*   printf ("sizeof(TAU_EV64) = %d\n", sizeof(TAU_EV64)); */
 
 
 /*   printf ("par32 : %d\n", (long)&event32.par - (long)&event32); */
@@ -461,15 +464,15 @@ void determineFormat(struct trcdescr *tdes) {
 
 
 /*   lseek(tdes->fd, 0, SEEK_SET); */
-  bytesRead = read(tdes->fd, &event32, sizeof(PCXX_EV32));
+  bytesRead = read(tdes->fd, &event32, sizeof(TAU_EV32));
   lseek(tdes->fd, 0, SEEK_SET);
-  bytesRead = read(tdes->fd, &event64, sizeof(PCXX_EV64));
+  bytesRead = read(tdes->fd, &event64, sizeof(TAU_EV64));
   lseek(tdes->fd, 0, SEEK_SET);
 
   /* 32 bit regular */
   if (event32.par == 3) {
     tdes->format = FORMAT_32;
-    tdes->eventSize = sizeof(PCXX_EV32);
+    tdes->eventSize = sizeof(TAU_EV32);
     formatFound = 1;
 /*     printf ("32 regular!\n"); */
   }
@@ -479,11 +482,11 @@ void determineFormat(struct trcdescr *tdes) {
   if (swap64(event32.par) == 3) {
     if (formatFound == 1) { /* shouldn't happen, if it does, go to native */
       tdes->format = FORMAT_NATIVE;
-      tdes->eventSize = sizeof(PCXX_EV_NATIVE);
+      tdes->eventSize = sizeof(TAU_EV_NATIVE);
       return;
     }
     tdes->format = FORMAT_32_SWAP;
-    tdes->eventSize = sizeof(PCXX_EV32);
+    tdes->eventSize = sizeof(TAU_EV32);
     formatFound = 1;
 /*     printf ("32 swapped!\n"); */
   }
@@ -492,11 +495,11 @@ void determineFormat(struct trcdescr *tdes) {
   if (event64.par == 3) {
     if (formatFound == 1) { /* shouldn't happen, if it does, go to native*/
       tdes->format = FORMAT_NATIVE;
-      tdes->eventSize = sizeof(PCXX_EV_NATIVE);
+      tdes->eventSize = sizeof(TAU_EV_NATIVE);
       return;
     }
     tdes->format = FORMAT_64;
-    tdes->eventSize = sizeof(PCXX_EV64);
+    tdes->eventSize = sizeof(TAU_EV64);
     formatFound = 1;
 /*     printf ("64 regular!\n"); */
   }
@@ -506,11 +509,11 @@ void determineFormat(struct trcdescr *tdes) {
   if (swap64(event64.par) == 3) {
     if (formatFound == 1) { /* shouldn't happen, if it does, go to native*/
       tdes->format = FORMAT_NATIVE;
-      tdes->eventSize = sizeof(PCXX_EV_NATIVE);
+      tdes->eventSize = sizeof(TAU_EV_NATIVE);
       return;
     }
     tdes->format = FORMAT_64_SWAP;
-    tdes->eventSize = sizeof(PCXX_EV64);
+    tdes->eventSize = sizeof(TAU_EV64);
     formatFound = 1;
 /*     printf ("64 swapped!\n"); */
   }
@@ -518,7 +521,7 @@ void determineFormat(struct trcdescr *tdes) {
   if (formatFound == 0) {
     fprintf (stderr, "Warning: couldn't determine format, using native!\n");
     tdes->format = FORMAT_NATIVE;
-    tdes->eventSize = sizeof(PCXX_EV_NATIVE);
+    tdes->eventSize = sizeof(TAU_EV_NATIVE);
   }
 
 /*   printf ("event32.par = 0x%x\n", event32.par); */
@@ -568,7 +571,7 @@ static void *get_next_rec(struct trcdescr *tdes)
   if ( (tdes->last == NULL) || (tdes->next > tdes->last) )
   {
     /* -- input buffer empty: read new records from file -------------------- */
-    /*if ( (no = read (tdes->fd, tdes->buffer, INMAX * sizeof(PCXX_EV))) != (INMAX * sizeof(PCXX_EV)) )*/
+    /*if ( (no = read (tdes->fd, tdes->buffer, INMAX * sizeof(TAU_EV))) != (INMAX * sizeof(TAU_EV)) )*/
     if ( (no = read (tdes->fd, tdes->buffer, INMAX * tdes->eventSize)) != (INMAX * tdes->eventSize) ) {
       if ( no == 0 ) {
 		
@@ -594,7 +597,7 @@ static void *get_next_rec(struct trcdescr *tdes)
 #endif /* DEBUG */
 	      close(tdes->fd);
 	      tdes->fd = -1;
-              return ( (PCXX_EV *) NULL);
+              return ( (TAU_EV *) NULL);
 	    }
 	    else
 	    {
@@ -623,7 +626,7 @@ static void *get_next_rec(struct trcdescr *tdes)
 	      if ((no < 0) || (no % tdes->eventSize != 0)) {
 		close(tdes->fd);
 		tdes->fd = -1;
-		return ((PCXX_EV *)NULL);
+		return ((TAU_EV *)NULL);
 	      } else {
 #ifdef DEBUG
 	        printf("Got trace data!\n");
@@ -752,7 +755,7 @@ int cannot_get_enough_fd(int need)
 
 
 /* -------------------------------------------------------------------------- */
-/* -- PCXX_MERGE MAIN PROGRAM ----------------------------------------------- */
+/* -- TAU_MERGE MAIN PROGRAM ----------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
 extern char *optarg;
@@ -778,7 +781,7 @@ int main(int argc, char *argv[])
   x_uint64 last_time;
 # endif
 
-  PCXX_EV nativeEvent;
+  TAU_EV nativeEvent;
   edfcount   = 0;
   numtrc     = 0;
   numrec     = 0;
@@ -901,7 +904,7 @@ int main(int argc, char *argv[])
       /* We can't do this check because the event is EV_INIT, but its ev id
        * is different from original creation time after merging */
       /* -- check first event record ---------------------------------------- */
-      /* else if ( (erec->ev != PCXX_EV_INIT) && (erec->ev != PCXX_EV_INITM) )
+      /* else if ( (erec->ev != TAU_EV_INIT) && (erec->ev != TAU_EV_INITM) )
       {
         fprintf (stderr, "%s: no valid event trace\n", trcdes[numtrc].name);
         exit (1);
@@ -911,16 +914,16 @@ int main(int argc, char *argv[])
 
 /* 	printf ("first record has Ev = %d\n", event_GetEv(trcdes+numtrc,erec,0)); */
 
-        if ( event_GetNid(trcdes+numtrc, erec, 0) > PCXX_MAXPROCS )
+        if ( event_GetNid(trcdes+numtrc, erec, 0) > TAU_MAXPROCS )
           fprintf (stderr,
            "%s: warning: node id %d too big for this machine (max. %d nodes)\n",
-           trcdes[numtrc].name, event_GetNid(trcdes, erec, 0), PCXX_MAXPROCS);
+           trcdes[numtrc].name, event_GetNid(trcdes, erec, 0), TAU_MAXPROCS);
 
         trcdes[numtrc].numrec = 1L;
-        if ( event_GetEv(trcdes+numtrc, erec, 0) == PCXX_EV_INIT ) {
+        if ( event_GetEv(trcdes+numtrc, erec, 0) == TAU_EV_INIT ) {
 	  if (!dynamic) { /* for dynamic trace, don't change this to INITM */
-            /*erec->ev = PCXX_EV_INITM;*/
-	    event_SetEv(trcdes+numtrc, erec, 0, PCXX_EV_INITM);
+            /*erec->ev = TAU_EV_INITM;*/
+	    event_SetEv(trcdes+numtrc, erec, 0, TAU_EV_INITM);
 	  }
           /*trcdes[numtrc].nid = erec->nid;*/
           trcdes[numtrc].nid = event_GetNid(trcdes+numtrc, erec, 0);
@@ -1003,7 +1006,7 @@ int main(int argc, char *argv[])
     }
   }
 
-# if defined(__ksr__) && defined(__PCXX__)
+# if defined(__ksr__) && defined(__TAU__)
   /* ------------------------------------------------------------------------ */
   /* -- determine clock offset for KSR-1 ------------------------------------ */
   /* -- NB: really need a better algorithm here ----------------------------- */
@@ -1023,14 +1026,14 @@ int main(int argc, char *argv[])
     /* -- store sequence number --------------------------------------------- */
     for (i=0; i<numtrc; i++)
     {
-      if ( trcdes[i].nid == (PCXX_MAXPROCS-1) ) {
+      if ( trcdes[i].nid == (TAU_MAXPROCS-1) ) {
 	/* master */
         num_pthreads = numtrc - 1;
         last_pthread = numtrc - 2;
       } else {
         do {
           erec = get_next_rec (trcdes + i);
-        } while ( (erec != NULL) && (erec->ev != PCXX_IN_BARRIER) );
+        } while ( (erec != NULL) && (erec->ev != TAU_IN_BARRIER) );
 	
         if ( erec == NULL )
           break;
@@ -1057,7 +1060,7 @@ int main(int argc, char *argv[])
 
   /* -- only on the first worker pthread trace we should run into EndOfTrace  */
   /* -- This is normally trace 0 unless trace 0 is the master pthread trace - */
-  if ( i > (0 + (trcdes[0].nid == (PCXX_MAXPROCS - 1))) )
+  if ( i > (0 + (trcdes[0].nid == (TAU_MAXPROCS - 1))) )
   {
     fprintf (stderr, "%s: missing barrier\n", trcdes[i].name);
     exit (1);
@@ -1090,10 +1093,10 @@ int main(int argc, char *argv[])
 
     erec = get_next_rec (trcdes + i);
     trcdes[i].numrec = 1L;
-    if ( erec->ev == PCXX_EV_INIT )
+    if ( erec->ev == TAU_EV_INIT )
     {
       if (!dynamic) { /* don't change this for dynamic */
-        erec->ev = PCXX_EV_INITM;
+        erec->ev = TAU_EV_INITM;
       }
       trcdes[i].nid = erec->nid;
     }
@@ -1104,7 +1107,7 @@ int main(int argc, char *argv[])
   }
   printf ("\n");
 # else
-#   if defined(__CM5__) && defined(__PCXX__)
+#   if defined(__CM5__) && defined(__TAU__)
     /* ---------------------------------------------------------------------- */
     /* -- determine clock offset for TMC CM-5 ------------------------------- */
     /* ---------------------------------------------------------------------- */
@@ -1118,7 +1121,7 @@ int main(int argc, char *argv[])
       {
         erec = get_next_rec (trcdes + i);
       }
-      while ( (erec != NULL) && (erec->ev != PCXX_SYNC_MARK) );
+      while ( (erec != NULL) && (erec->ev != TAU_SYNC_MARK) );
 
       if ( erec == NULL )
       {
@@ -1147,9 +1150,9 @@ int main(int argc, char *argv[])
 
       erec = get_next_rec (trcdes + i);
       trcdes[i].numrec = 1L;
-      if ( erec->ev == PCXX_EV_INIT )
+      if ( erec->ev == TAU_EV_INIT )
       {
-        erec->ev = PCXX_EV_INITM;
+        erec->ev = TAU_EV_INITM;
         trcdes[i].nid = erec->nid;
       }
       else
@@ -1214,7 +1217,7 @@ int main(int argc, char *argv[])
 
 
 
-    /*    output (outfd, (char *) trcdes[source].erec, sizeof(PCXX_EV));*/
+    /*    output (outfd, (char *) trcdes[source].erec, sizeof(TAU_EV));*/
 
     nativeEvent.ev = event_GetEv(trcdes+source,trcdes[source].erec,0);
     nativeEvent.nid = event_GetNid(trcdes+source,trcdes[source].erec,0);
@@ -1222,16 +1225,16 @@ int main(int argc, char *argv[])
     nativeEvent.par = event_GetPar(trcdes+source,trcdes[source].erec,0);
     nativeEvent.ti = event_GetTi(trcdes+source,trcdes[source].erec,0);
 /*     printf ("writing out record with ev = %d\n", nativeEvent.ev); */
-    output (outfd, (char *) &nativeEvent, sizeof(PCXX_EV));
+    output (outfd, (char *) &nativeEvent, sizeof(TAU_EV));
 
     numrec++;
 
-# if defined(__ksr__) && defined(__PCXX__)
+# if defined(__ksr__) && defined(__TAU__)
     erec = trcdes[source].erec;
-    if ( erec->ev == PCXX_IN_BARRIER )
+    if ( erec->ev == TAU_IN_BARRIER )
     {
       if ( ((last_pthread + 1) % num_pthreads) != erec->par )
-        fprintf (stderr, "pcxx_Barrier sequence error at %ld (%d -> %d)\n",
+        fprintf (stderr, "tau_Barrier sequence error at %ld (%d -> %d)\n",
                  erec->ti, last_pthread, erec->par);
       last_pthread = erec->par;
     }
@@ -1272,8 +1275,8 @@ int main(int argc, char *argv[])
 
       }
     }
-    /*while ( erec->ev == PCXX_EV_CONT_EVENT );*/
-    while ( event_GetEv(trcdes+source,erec,0) == PCXX_EV_CONT_EVENT );
+    /*while ( erec->ev == TAU_EV_CONT_EVENT );*/
+    while ( event_GetEv(trcdes+source,erec,0) == TAU_EV_CONT_EVENT );
   }
   while ( active > 0 );
   for (i=0; i<numtrc; i++)

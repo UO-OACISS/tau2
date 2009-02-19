@@ -27,8 +27,8 @@ extern "C" {
 
 
 void convertEvent(Ttf_fileT *tFile, void *event, int index) {
-  PCXX_EV32 *event32;
-  PCXX_EV64 *event64;
+  TAU_EV32 *event32;
+  TAU_EV64 *event64;
 
   switch (tFile->format) {
   case FORMAT_NATIVE:
@@ -37,7 +37,7 @@ void convertEvent(Ttf_fileT *tFile, void *event, int index) {
     return;
 
   case FORMAT_32_SWAP:
-    event32 = (PCXX_EV32*) event;
+    event32 = (TAU_EV32*) event;
     event32[index].ev = swap32(event32[index].ev);
     event32[index].nid = swap16(event32[index].nid);
     event32[index].tid = swap16(event32[index].tid);
@@ -46,7 +46,7 @@ void convertEvent(Ttf_fileT *tFile, void *event, int index) {
     return;
 
   case FORMAT_64_SWAP:
-    event64 = (PCXX_EV64*) event;
+    event64 = (TAU_EV64*) event;
     event64[index].ev = swap64(event64[index].ev);
     event64[index].nid = swap16(event64[index].nid);
     event64[index].tid = swap16(event64[index].tid);
@@ -68,92 +68,92 @@ void convertEvent(Ttf_fileT *tFile, void *event, int index) {
 #define EVENT_TI  4;
 
 int event_GetEv(Ttf_fileT *tFile, void *event, int index) {
-  PCXX_EV_NATIVE *nativeEvent;
-  PCXX_EV32 *event32;
-  PCXX_EV64 *event64;
+  TAU_EV_NATIVE *nativeEvent;
+  TAU_EV32 *event32;
+  TAU_EV64 *event64;
 
   switch (tFile->format) {
   case FORMAT_NATIVE:
-    nativeEvent = (PCXX_EV_NATIVE*)event;
+    nativeEvent = (TAU_EV_NATIVE*)event;
     return nativeEvent[index].ev;
     
   case FORMAT_32:
   case FORMAT_32_SWAP:
-    event32 = (PCXX_EV32*) event;
+    event32 = (TAU_EV32*) event;
     return event32[index].ev;
 
   case FORMAT_64:
   case FORMAT_64_SWAP:
-    event64 = (PCXX_EV64*) event;
+    event64 = (TAU_EV64*) event;
     return event64[index].ev;
   }
   return 0;
 }
 
 x_uint64 event_GetTi(Ttf_fileT *tFile, void *event, int index) {
-  PCXX_EV_NATIVE *nativeEvent;
-  PCXX_EV32 *event32;
-  PCXX_EV64 *event64;
+  TAU_EV_NATIVE *nativeEvent;
+  TAU_EV32 *event32;
+  TAU_EV64 *event64;
 
   switch (tFile->format) {
   case FORMAT_NATIVE:
-    nativeEvent = (PCXX_EV_NATIVE*)event;
+    nativeEvent = (TAU_EV_NATIVE*)event;
     return nativeEvent[index].ti;
     
   case FORMAT_32:
   case FORMAT_32_SWAP:
-    event32 = (PCXX_EV32*) event;
+    event32 = (TAU_EV32*) event;
     return event32[index].ti;
 
   case FORMAT_64:
   case FORMAT_64_SWAP:
-    event64 = (PCXX_EV64*) event;
+    event64 = (TAU_EV64*) event;
     return event64[index].ti;
   }
   return 0;
 }
 
 int event_GetNid(Ttf_fileT *tFile, void *event, int index) {
-  PCXX_EV_NATIVE *nativeEvent;
-  PCXX_EV32 *event32;
-  PCXX_EV64 *event64;
+  TAU_EV_NATIVE *nativeEvent;
+  TAU_EV32 *event32;
+  TAU_EV64 *event64;
 
   switch (tFile->format) {
   case FORMAT_NATIVE:
-    nativeEvent = (PCXX_EV_NATIVE*)event;
+    nativeEvent = (TAU_EV_NATIVE*)event;
     return nativeEvent[index].nid;
     
   case FORMAT_32:
   case FORMAT_32_SWAP:
-    event32 = (PCXX_EV32*) event;
+    event32 = (TAU_EV32*) event;
     return event32[index].nid;
 
   case FORMAT_64:
   case FORMAT_64_SWAP:
-    event64 = (PCXX_EV64*) event;
+    event64 = (TAU_EV64*) event;
     return event64[index].nid;
   }
   return 0;
 }
 
 int event_GetTid(Ttf_fileT *tFile, void *event, int index) {
-  PCXX_EV_NATIVE *nativeEvent;
-  PCXX_EV32 *event32;
-  PCXX_EV64 *event64;
+  TAU_EV_NATIVE *nativeEvent;
+  TAU_EV32 *event32;
+  TAU_EV64 *event64;
 
   switch (tFile->format) {
   case FORMAT_NATIVE:
-    nativeEvent = (PCXX_EV_NATIVE*)event;
+    nativeEvent = (TAU_EV_NATIVE*)event;
     return nativeEvent[index].tid;
     
   case FORMAT_32:
   case FORMAT_32_SWAP:
-    event32 = (PCXX_EV32*) event;
+    event32 = (TAU_EV32*) event;
     return event32[index].tid;
 
   case FORMAT_64:
   case FORMAT_64_SWAP:
-    event64 = (PCXX_EV64*) event;
+    event64 = (TAU_EV64*) event;
     return event64[index].tid;
   }
   return 0;
@@ -161,23 +161,23 @@ int event_GetTid(Ttf_fileT *tFile, void *event, int index) {
 
 
 x_int64 event_GetPar(Ttf_fileT *tFile, void *event, int index) {
-  PCXX_EV_NATIVE *nativeEvent;
-  PCXX_EV32 *event32;
-  PCXX_EV64 *event64;
+  TAU_EV_NATIVE *nativeEvent;
+  TAU_EV32 *event32;
+  TAU_EV64 *event64;
 
   switch (tFile->format) {
   case FORMAT_NATIVE:
-    nativeEvent = (PCXX_EV_NATIVE*)event;
+    nativeEvent = (TAU_EV_NATIVE*)event;
     return nativeEvent[index].par;
     
   case FORMAT_32:
   case FORMAT_32_SWAP:
-    event32 = (PCXX_EV32*) event;
+    event32 = (TAU_EV32*) event;
     return event32[index].par;
 
   case FORMAT_64:
   case FORMAT_64_SWAP:
-    event64 = (PCXX_EV64*) event;
+    event64 = (TAU_EV64*) event;
     return event64[index].par;
   }
   return 0;
@@ -189,60 +189,60 @@ x_int64 event_GetPar(Ttf_fileT *tFile, void *event, int index) {
 void determineFormat(Ttf_fileT *tFile) {
   int bytesRead;
   bool formatFound = false;
-  PCXX_EV32 event32;
-  PCXX_EV64 event64;
+  TAU_EV32 event32;
+  TAU_EV64 event64;
 
   // 32 bit regular
-  bytesRead = read(tFile->Fid, &event32, sizeof(PCXX_EV32));
+  bytesRead = read(tFile->Fid, &event32, sizeof(TAU_EV32));
   lseek(tFile->Fid, 0, SEEK_SET);
   if (event32.par == 3) {
     tFile->format = FORMAT_32;
-    tFile->eventSize = sizeof(PCXX_EV32);
+    tFile->eventSize = sizeof(TAU_EV32);
     formatFound = true;
 //     printf ("32 regular!\n");
   }
 
   // 32 bit swapped
-  bytesRead = read(tFile->Fid, &event32, sizeof(PCXX_EV32));
+  bytesRead = read(tFile->Fid, &event32, sizeof(TAU_EV32));
   lseek(tFile->Fid, 0, SEEK_SET);
   if (swap64(event32.par) == 3) {
     if (formatFound == true) { // shouldn't happen, if it does, go to native
       tFile->format = FORMAT_NATIVE;
-      tFile->eventSize = sizeof(PCXX_EV_NATIVE);
+      tFile->eventSize = sizeof(TAU_EV_NATIVE);
       return;
     }
     tFile->format = FORMAT_32_SWAP;
-    tFile->eventSize = sizeof(PCXX_EV32);
+    tFile->eventSize = sizeof(TAU_EV32);
     formatFound = true;
 //     printf ("32 swapped!\n");
   }
 
   // 64 bit regular
-  bytesRead = read(tFile->Fid, &event64, sizeof(PCXX_EV64));
+  bytesRead = read(tFile->Fid, &event64, sizeof(TAU_EV64));
   lseek(tFile->Fid, 0, SEEK_SET);
   if (event64.par == 3) {
     if (formatFound == true) { // shouldn't happen, if it does, go to native
       tFile->format = FORMAT_NATIVE;
-      tFile->eventSize = sizeof(PCXX_EV_NATIVE);
+      tFile->eventSize = sizeof(TAU_EV_NATIVE);
       return;
     }
     tFile->format = FORMAT_64;
-    tFile->eventSize = sizeof(PCXX_EV64);
+    tFile->eventSize = sizeof(TAU_EV64);
     formatFound = true;
 //     printf ("64 regular!\n");
   }
 
   // 64 bit swapped
-  bytesRead = read(tFile->Fid, &event64, sizeof(PCXX_EV64));
+  bytesRead = read(tFile->Fid, &event64, sizeof(TAU_EV64));
   lseek(tFile->Fid, 0, SEEK_SET);
   if (swap64(event64.par) == 3) {
     if (formatFound == true) { // shouldn't happen, if it does, go to native
       tFile->format = FORMAT_NATIVE;
-      tFile->eventSize = sizeof(PCXX_EV_NATIVE);
+      tFile->eventSize = sizeof(TAU_EV_NATIVE);
       return;
     }
     tFile->format = FORMAT_64_SWAP;
-    tFile->eventSize = sizeof(PCXX_EV64);
+    tFile->eventSize = sizeof(TAU_EV64);
     formatFound = true;
 //     printf ("64 swapped!\n");
   }
@@ -251,7 +251,7 @@ void determineFormat(Ttf_fileT *tFile) {
   if (formatFound == false) {
     fprintf (stderr, "couldn't determine format, using native!\n");
     tFile->format = FORMAT_NATIVE;
-    tFile->eventSize = sizeof(PCXX_EV_NATIVE);
+    tFile->eventSize = sizeof(TAU_EV_NATIVE);
   }
 }
 
@@ -886,6 +886,6 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 
 /***************************************************************************
  * $RCSfile: TAU_tf.cpp,v $   $Author: amorris $
- * $Revision: 1.19 $   $Date: 2006/06/21 18:50:45 $
- * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.19 2006/06/21 18:50:45 amorris Exp $ 
+ * $Revision: 1.20 $   $Date: 2009/02/19 22:30:03 $
+ * TAU_VERSION_ID: $Id: TAU_tf.cpp,v 1.20 2009/02/19 22:30:03 amorris Exp $ 
  ***************************************************************************/

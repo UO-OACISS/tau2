@@ -67,7 +67,7 @@ typedef struct {
   x_uint16           tid;   /* -- thread id       -- */
   x_int64            par;   /* -- event parameter -- */
   x_uint64           ti;    /* -- time [us]?      -- */
-} PCXX_EV32;
+} TAU_EV32;
 
 /* for 64 bit platforms */
 typedef struct {
@@ -77,11 +77,11 @@ typedef struct {
   x_uint32           padding; /*  space wasted for 8-byte aligning the next item */ 
   x_int64            par;   /* -- event parameter -- */
   x_uint64           ti;    /* -- time [us]?      -- */
-} PCXX_EV64;
+} TAU_EV64;
 
 
-typedef PCXX_EV32 EVENT;
-typedef PCXX_EV PCXX_EV_NATIVE;
+typedef TAU_EV32 EVENT;
+typedef TAU_EV TAU_EV_NATIVE;
 
 
 
@@ -149,6 +149,6 @@ extern "C" int isEventIDRegistered(Ttf_fileT *tFile, long int eid);
 
 /***************************************************************************
  * $RCSfile: TAU_tf_decl.h,v $   $Author: amorris $
- * $Revision: 1.6 $   $Date: 2006/06/21 18:50:45 $
- * TAU_VERSION_ID: $Id: TAU_tf_decl.h,v 1.6 2006/06/21 18:50:45 amorris Exp $ 
+ * $Revision: 1.7 $   $Date: 2009/02/19 22:30:03 $
+ * TAU_VERSION_ID: $Id: TAU_tf_decl.h,v 1.7 2009/02/19 22:30:03 amorris Exp $ 
  ***************************************************************************/

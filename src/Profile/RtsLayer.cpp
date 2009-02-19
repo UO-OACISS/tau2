@@ -850,7 +850,7 @@ int RtsLayer::setAndParseProfileGroups(char *prog, char *str)
 	  break;
  	case 'h' :
 	case 'H' :
-	  RtsLayer::enableProfileGroup(TAU_HPCXX);
+	  RtsLayer::enableProfileGroup(TAU_HTAU);
 	  break;
         case 'i' :
 	case 'I' : // DiskIO, Other IO 
@@ -1354,13 +1354,13 @@ int RtsLayer::DumpEDF(int tid)
 	  fprintf(fp, "%ld TAUEVENT %d \"%s\" TriggerValue\n", (*uit)->GetEventId(), monoinc, (*uit)->GetEventName());
 	}
 	// Now add the nine extra events 
-	fprintf(fp,"%ld TRACER 0 \"EV_INIT\" none\n", (long) PCXX_EV_INIT); 
-	fprintf(fp,"%ld TRACER 0 \"FLUSH_ENTER\" none\n", (long) PCXX_EV_FLUSH_ENTER); 
-	fprintf(fp,"%ld TRACER 0 \"FLUSH_EXIT\" none\n", (long) PCXX_EV_FLUSH_EXIT); 
-	fprintf(fp,"%ld TRACER 0 \"FLUSH_CLOSE\" none\n", (long) PCXX_EV_CLOSE); 
-	fprintf(fp,"%ld TRACER 0 \"FLUSH_INITM\" none\n", (long) PCXX_EV_INITM); 
-	fprintf(fp,"%ld TRACER 0 \"WALL_CLOCK\" none\n", (long) PCXX_EV_WALL_CLOCK); 
-	fprintf(fp,"%ld TRACER 0 \"CONT_EVENT\" none\n", (long) PCXX_EV_CONT_EVENT); 
+	fprintf(fp,"%ld TRACER 0 \"EV_INIT\" none\n", (long) TAU_EV_INIT); 
+	fprintf(fp,"%ld TRACER 0 \"FLUSH_ENTER\" none\n", (long) TAU_EV_FLUSH_ENTER); 
+	fprintf(fp,"%ld TRACER 0 \"FLUSH_EXIT\" none\n", (long) TAU_EV_FLUSH_EXIT); 
+	fprintf(fp,"%ld TRACER 0 \"FLUSH_CLOSE\" none\n", (long) TAU_EV_CLOSE); 
+	fprintf(fp,"%ld TRACER 0 \"FLUSH_INITM\" none\n", (long) TAU_EV_INITM); 
+	fprintf(fp,"%ld TRACER 0 \"WALL_CLOCK\" none\n", (long) TAU_EV_WALL_CLOCK); 
+	fprintf(fp,"%ld TRACER 0 \"CONT_EVENT\" none\n", (long) TAU_EV_CONT_EVENT); 
 	fprintf(fp,"%ld TAU_MESSAGE -7 \"MESSAGE_SEND\" par\n", (long) TAU_MESSAGE_SEND); 
 	fprintf(fp,"%ld TAU_MESSAGE -8 \"MESSAGE_RECV\" par\n", (long) TAU_MESSAGE_RECV); 
 
@@ -1471,6 +1471,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.111 $   $Date: 2009/02/19 01:57:47 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.111 2009/02/19 01:57:47 amorris Exp $ 
+ * $Revision: 1.112 $   $Date: 2009/02/19 22:30:02 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.112 2009/02/19 22:30:02 amorris Exp $ 
  ***************************************************************************/

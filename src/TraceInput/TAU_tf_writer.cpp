@@ -143,27 +143,27 @@ extern "C" {
 
     Ttf_EventDescrT newEventDesc;
 
-    newEventDesc.Eid = PCXX_EV_INIT;
+    newEventDesc.Eid = TAU_EV_INIT;
     newEventDesc.Group = "TRACER";
     newEventDesc.EventName = "EV_INIT";
     newEventDesc.Tag = 0;
     newEventDesc.Param = "none";
-    (*tFile->EventIdMap)[PCXX_EV_INIT] = newEventDesc;
+    (*tFile->EventIdMap)[TAU_EV_INIT] = newEventDesc;
 
-    newEventDesc.Eid = PCXX_EV_CLOSE;
+    newEventDesc.Eid = TAU_EV_CLOSE;
     newEventDesc.Group = "TRACER";
     newEventDesc.EventName = "FLUSH_CLOSE";
     newEventDesc.Tag = 0;
     newEventDesc.Param = "none";
-    (*tFile->EventIdMap)[PCXX_EV_CLOSE] = newEventDesc;
+    (*tFile->EventIdMap)[TAU_EV_CLOSE] = newEventDesc;
 
 
-    newEventDesc.Eid = PCXX_EV_WALL_CLOCK;
+    newEventDesc.Eid = TAU_EV_WALL_CLOCK;
     newEventDesc.Group = "TRACER";
     newEventDesc.EventName = "WALL_CLOCK";
     newEventDesc.Tag = 0;
     newEventDesc.Param = "none";
-    (*tFile->EventIdMap)[PCXX_EV_WALL_CLOCK] = newEventDesc;
+    (*tFile->EventIdMap)[TAU_EV_WALL_CLOCK] = newEventDesc;
 
 
     newEventDesc.Eid = TAU_MESSAGE_SEND;
@@ -198,7 +198,7 @@ extern "C" {
     Ttf_fileT *tFile = (Ttf_fileT*)file;
     if (!tFile->initialized) {
       int pos = 0;
-      tFile->traceBuffer[pos].ev = PCXX_EV_INIT;
+      tFile->traceBuffer[pos].ev = TAU_EV_INIT;
       tFile->traceBuffer[pos].nid = nodeToken;
       tFile->traceBuffer[pos].tid = threadToken;
       tFile->traceBuffer[pos].ti = (x_uint64) time;
@@ -310,7 +310,7 @@ extern "C" {
 
       checkFlush(tFile);
       int pos = tFile->tracePosition;
-      tFile->traceBuffer[pos].ev = PCXX_EV_CLOSE;
+      tFile->traceBuffer[pos].ev = TAU_EV_CLOSE;
       tFile->traceBuffer[pos].nid = nidtid.first;
       tFile->traceBuffer[pos].tid = nidtid.second;
       tFile->traceBuffer[pos].ti = (x_uint64) tFile->lastTimestamp;
@@ -318,7 +318,7 @@ extern "C" {
       tFile->tracePosition++;
       
       pos = tFile->tracePosition;
-      tFile->traceBuffer[pos].ev = PCXX_EV_WALL_CLOCK;
+      tFile->traceBuffer[pos].ev = TAU_EV_WALL_CLOCK;
       tFile->traceBuffer[pos].nid = nidtid.first;
       tFile->traceBuffer[pos].tid = nidtid.second;
       tFile->traceBuffer[pos].ti = (x_uint64) tFile->lastTimestamp;

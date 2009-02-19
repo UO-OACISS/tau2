@@ -53,10 +53,10 @@ extern double TauSyncAdjustTimeStamp(double timestamp);
 
 /* -- event record buffer ------------------------------------ */
 #define TAU_MAX_RECORDS 64*1024
-#define TAU_BUFFER_SIZE sizeof(PCXX_EV)*TAU_MAX_RECORDS
+#define TAU_BUFFER_SIZE sizeof(TAU_EV)*TAU_MAX_RECORDS
 
 /* -- buffer that holds the events before they are flushed to disk -- */
-static PCXX_EV *TraceBuffer[TAU_MAX_THREADS]; 
+static TAU_EV *TraceBuffer[TAU_MAX_THREADS]; 
 
 /* -- current record pointer for each thread -- */
 static int TauCurrentEvent[TAU_MAX_THREADS] = {0}; 
@@ -109,12 +109,12 @@ x_uint64 tautrace_getTimeStamp(int tid) {
 
 /* -- write event to buffer only [without overflow check] ---- */
 void TraceEventOnly(long int ev, x_int64 par, int tid) {
-  PCXX_EV * pcxx_ev_ptr = &TraceBuffer[tid][TauCurrentEvent[tid]] ;  
-  pcxx_ev_ptr->ev   = ev;
-  pcxx_ev_ptr->ti   = tautrace_getTimeStamp(tid);
-  pcxx_ev_ptr->par  = par;
-  pcxx_ev_ptr->nid  = RtsLayer::myNode();
-  pcxx_ev_ptr->tid  = tid;
+  TAU_EV * tau_ev_ptr = &TraceBuffer[tid][TauCurrentEvent[tid]] ;  
+  tau_ev_ptr->ev   = ev;
+  tau_ev_ptr->ti   = tautrace_getTimeStamp(tid);
+  tau_ev_ptr->par  = par;
+  tau_ev_ptr->nid  = RtsLayer::myNode();
+  tau_ev_ptr->tid  = tid;
   TauCurrentEvent[tid] ++;
 }
 
@@ -142,7 +142,7 @@ static int checkTraceFileInitialized(int tid) {
       exit (1);
     }
 
-    if (TraceBuffer[tid][0].ev == PCXX_EV_INIT) { 
+    if (TraceBuffer[tid][0].ev == TAU_EV_INIT) { 
       /* first record is init */
       for (int iter = 0; iter < TauCurrentEvent[tid]; iter ++) {
 	TraceBuffer[tid][iter].nid = RtsLayer::myNode();
@@ -156,7 +156,7 @@ static int checkTraceFileInitialized(int tid) {
 void TraceEvFlush(int tid) {
   checkTraceFileInitialized(tid);
 /*
-  static PCXX_EV flush_end = { PCXX_EV_FLUSH_EXIT, 0, 0, 0L };
+  static TAU_EV flush_end = { TAU_EV_FLUSH_EXIT, 0, 0, 0L };
 */
   int ret;
   if (TraceFd[tid] == 0) {
@@ -181,7 +181,7 @@ void TraceEvFlush(int tid) {
   DEBUGPROFMSG("Tid "<<tid<<": TraceEvFlush()"<<endl;);
   if ( numEventsToBeFlushed != 0) {
     /*-- there are a finite no. of records --*/
-    ret = write (TraceFd[tid], TraceBuffer[tid], (numEventsToBeFlushed) * sizeof(PCXX_EV));
+    ret = write (TraceFd[tid], TraceBuffer[tid], (numEventsToBeFlushed) * sizeof(TAU_EV));
     if (ret < 0) {
 #ifdef DEBUG_PROF
       printf("Error: TraceFd[%d] = %d, numEvents = %d ", tid, TraceFd[tid], 
@@ -258,7 +258,7 @@ bool *TauBufferAllocated() {
    the trace file is initialized -- */
 int TraceEvInit(int tid) {
    if (!TauBufferAllocated()[tid]) {
-     TraceBuffer[tid] = (PCXX_EV*) malloc(TAU_BUFFER_SIZE);
+     TraceBuffer[tid] = (TAU_EV*) malloc(TAU_BUFFER_SIZE);
      TauBufferAllocated()[tid] = true;
    }
   int retvalue = 0; 
@@ -271,9 +271,9 @@ int TraceEvInit(int tid) {
 
     init_wrap_up ();
   
-    /* there may be some records in pcxx_ev_ptr already. Make sure that the
+    /* there may be some records in tau_ev_ptr already. Make sure that the
        first record has node id set properly */
-    if (TraceBuffer[tid][0].ev == PCXX_EV_INIT) { 
+    if (TraceBuffer[tid][0].ev == TAU_EV_INIT) { 
       /* first record is init */
       for (int iter = 0; iter < TauCurrentEvent[tid]; iter ++) {
         TraceBuffer[tid][iter].nid = RtsLayer::myNode();
@@ -282,7 +282,7 @@ int TraceEvInit(int tid) {
       /* either the first record is blank - in which case we should
 	 put INIT record, or it is an error */
       if (TauCurrentEvent[tid] == 0) { 
-        TraceEvent(PCXX_EV_INIT, INIT_PARAM, tid);
+        TraceEvent(TAU_EV_INIT, INIT_PARAM, tid);
         retvalue ++; /* one record generated */
       } else { 
 	/* error */ 
@@ -291,7 +291,7 @@ int TraceEvInit(int tid) {
     } /* first record was not INIT */
     
     /* generate a wallclock time record */
-    TraceEvent (PCXX_EV_WALL_CLOCK, time((time_t *)0), tid);
+    TraceEvent (TAU_EV_WALL_CLOCK, time((time_t *)0), tid);
     retvalue ++;
   }
   return retvalue; 
@@ -312,7 +312,7 @@ void TraceReinitialize(int oldid, int newid, int tid) {
   return ;
 }
 
-void pcxx_EvInit(char *name) { 
+void tau_EvInit(char *name) { 
   /*-- dummy function for compatibility with the earlier ver. Remove later -- */ 
   TraceEvInit(RtsLayer::myThread());
 } 
@@ -323,7 +323,7 @@ void TraceUnInitialize(int tid) {
       child process, trying to clear its parent records) -- */
    TraceInitialized[tid] = 0;
    TauCurrentEvent[tid] = 0;
-   TraceEventOnly(PCXX_EV_INIT, INIT_PARAM, tid);
+   TraceEventOnly(TAU_EV_INIT, INIT_PARAM, tid);
 }
 
 
@@ -332,7 +332,7 @@ void TraceUnInitialize(int tid) {
 void TraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts) {
   int i;
   int records_created = TraceEvInit(tid);
-  PCXX_EV *event = &TraceBuffer[tid][TauCurrentEvent[tid]];  
+  TAU_EV *event = &TraceBuffer[tid][TauCurrentEvent[tid]];  
 
   if (TauEnv_get_synchronize_clocks()) {
     ts = (x_uint64) TauSyncAdjustTimeStamp((double)ts);
@@ -353,9 +353,9 @@ void TraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts) {
 
   if (!(TraceInitialized[tid]) && (TauCurrentEvent[tid] == 0)) {
   /* not initialized  and its the first time */
-    if (ev != PCXX_EV_INIT) {
+    if (ev != TAU_EV_INIT) {
 	/* we need to ensure that INIT is the first event */
-      event->ev = PCXX_EV_INIT; 
+      event->ev = TAU_EV_INIT; 
       /* Should we use the timestamp provided to us? */
       if (use_ts) {
         event->ti = ts;
@@ -394,8 +394,8 @@ void tautrace_Event(long int ev, x_int64 par) {
 
 /* -- terminate SW tracing ----------------------------------- */
 void TraceEvClose(int tid) {
-  TraceEvent (PCXX_EV_CLOSE, 0, tid);
-  TraceEvent (PCXX_EV_WALL_CLOCK, time((time_t *)0), tid);
+  TraceEvent (TAU_EV_CLOSE, 0, tid);
+  TraceEvent (TAU_EV_WALL_CLOCK, time((time_t *)0), tid);
   TraceEvFlush (tid);
   //close (TraceFd[tid]); 
   // Just in case the same thread writes to this file again, don't close it.
@@ -407,7 +407,7 @@ void TraceEvClose(int tid) {
 #endif /* TAU_OPENMP */
 }
 
-void pcxx_EvClose(void) {
+void tau_EvClose(void) {
   TraceEvClose(RtsLayer::myThread());
 }
 
