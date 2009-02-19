@@ -48,7 +48,7 @@ extern "C" int InitializeTAU() {
 
 #ifdef TAU_COMPENSATE
   Tau_compensate_initialization();
-#endif TAU_COMPENSATE
+#endif /* TAU_COMPENSATE */
 
 
   initialized = true;
