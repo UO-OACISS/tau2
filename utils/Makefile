@@ -17,7 +17,6 @@ CONFIG_ARCH=default
 CONFIG_CC=gcc
 CONFIG_CXX=g++
 PDT_CXX=
-PCXX_OPT=-g
 USER_OPT=-g
 TAU_PREFIX_INSTALL_DIR=
 VTFDIR=
@@ -159,9 +158,6 @@ PDTCFLAGS     = $(USER_OPT) -I../include $(CEXTRA) $(CWARNING) $(COMPSPECIFIC) $
 
 
 HDRS	      =
-
-
-LDFLAGS	      = $(PCXX_OPT)
 
 MAKEFILE      = Makefile
 
