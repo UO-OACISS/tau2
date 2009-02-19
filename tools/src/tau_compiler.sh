@@ -1074,20 +1074,24 @@ if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE ]; then
 
 
 	if [ "x$TAU_GENERATE_TESTS" = "xyes" ] ; then
+	    test_source=${arrFileName[$tempCounter]}
+	    test_source_base=`basename ${arrFileName[$tempCounter]}`
+	    test_pdb=$tempPdbFileName
+	    test_pdb_base=`basename $tempPdbFileName`
+	    test_instfile=$tempInstFileName
+	    test_instfile_base=`basename $tempInstFileName`
 	    TEST_HOME=$HOME/tau_instrumentor_tests
 	    mkdir -p $TEST_HOME 
-	    cat $tempPdbFileName | sed -e "s/\.\.\///g" -e "s/\/.*\///g" > $TEST_HOME/$tempPdbFileName
-	    cp ${arrFileName[$tempCounter]} $TEST_HOME
-	    cp $tempInstFileName $TEST_HOME/$tempInstFileName.check
+	    cat $test_pdb | sed -e "s#$test_source#$test_source_base#g" > $TEST_HOME/${test_source_base}.pdb
+	    cp $test_source $TEST_HOME
+	    cp $test_instfile $TEST_HOME/$test_instfile_base.check
 	    if [ "x$tauSelectFile" = "x" ] ; then
-		line="$tempPdbFileName ${arrFileName[$tempCounter]} $tempInstFileName.check none"
+		line="${test_source_base}.pdb $test_source_base $test_instfile_base.check none"
 	    else
-		cp $tauSelectFile $TEST_HOME/${arrFileName[$tempCounter]}.select
-		line="$tempPdbFileName ${arrFileName[$tempCounter]} $tempInstFileName.check ${arrFileName[$tempCounter]}.select"
+		cp $tauSelectFile $TEST_HOME/$test_source_base.select
+		line="${test_source_base}.pdb $test_source_base $test_instfile_base.check $test_source_base.select"
 	    fi
-	    echo $line | sed -e "s/\.\.\///g" -e "s/\/.*\///g" >> $TEST_HOME/list
 	fi
-
 
 	tempCounter=tempCounter+1
     done
