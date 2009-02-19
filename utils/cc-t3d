@@ -1,5 +1,0 @@
-#!/bin/csh
-setenv TARGET cray-t3d
-unsetenv MPP_NPES
-set path=(/mpp/bin $path)
-/mpp/bin/cc $argv
