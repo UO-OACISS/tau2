@@ -377,8 +377,6 @@ perf=no
 perfincdir=
 perflibdir=
 perflibrary=
-task=no
-lwp=no
 tcltk=yes
 tcltkfile="/"
 kai=no
@@ -596,19 +594,9 @@ do
     shift
     ;;
 
-  -task)
-      task=yes
-    shift
-    ;;
-
   -tag=*)
       tag=yes
       tautag=`echo $arg | sed -e 's/-tag=//'`
-    shift
-    ;;
-
-  -lwp)
-      lwp=yes
     shift
     ;;
 
@@ -4077,20 +4065,6 @@ EOF
 fi
 
 ######################################################################
-# test whether C++ compiler supports AT&T task library
-
-echo "#include <task.h>" > /tmp/tau$$.C
-echo "class IamReallyATTtask : public object {};" >> /tmp/tau$$.C
-
-if $cxx_compiler -c /tmp/tau$$.C 1> /dev/null 2>&1
-then
-#  echo "AT&T task library found; using it"
-  task=yes
-fi
-rm -f /tmp/tau$$.C tau$$.o
-
-
-######################################################################
 # test whether C++ compiler supports Std C++ Library (KAI KCC compiler) 
 echo "Testing for Standard C++ Library support for string class"
 cat <<EOF > /tmp/tau$$.C
@@ -4116,16 +4090,6 @@ else
   echo "Did not find <string> Standard C++ Library header file. Using <bstring.h> "
 fi 
 rm -f /tmp/tau$$.C tau$$.o
-
-
-######################################################################
-# test whether C++ compiler supports SUN LWP thread library
-
-if [ -f /usr/include/lwp/lwp.h ]
-then
-  echo "SUN LWP thread library found; using it"
-  lwp=yes
-fi
 
 
 ######################################################################
@@ -5259,26 +5223,6 @@ fi
 #### END OF TAU OPTIONS. Make changes above this line 
 fixmakeargs="$fixmakeargs tauoptions=$tauoptions"
 
-
-if [ $lwp = yes ]
-  then
-    fixmakeargs="$fixmakeargs LWP_AVAILABLE"
-fi
-
-if [ $task = yes ]
-  then
-    if [ -d XtraP ] 
-    then
-      XtraPRoot=${tauroot}/XtraP
-      if [ $machine != default ]
-        then
-          echo \#define XTRAPROOT \"$XtraPRoot\"> ${XtraPRoot}/include/XtraPRoot.h
-          fixmakeargs="$fixmakeargs TASK_AVAILABLE"
-        else
-          echo \#define XTRAPROOT \"\" > ${XtraPRoot}/include/XtraPRoot.h
-      fi
-    fi
-fi
 
 if [ $use_ansic = yes ] 
 then	

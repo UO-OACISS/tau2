@@ -1200,18 +1200,6 @@ fi
 	echo "NOTE: Using multi-threaded access to H/W Performance Counters ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     LWP_AVAILABLE)
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
-     TASK_AVAILABLE)
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
-     PCXX)
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
-     HPCXX)
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
      ANSIC)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
