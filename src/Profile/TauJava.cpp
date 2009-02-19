@@ -164,7 +164,11 @@ char *s2;
 void TauJavaLayer::NotifyEvent(JVMPI_Event *event) {
   int tid = JavaThreadLayer::GetThreadId(event->env_id);
 #ifndef TAU_MPI
-  static int j = TAU_MAPPING_PROFILE_SET_NODE(0, tid);
+  static int j = 0;
+  if (j == 0) {
+    j=1;
+    TAU_PROFILE_SET_NODE(0);
+  }
 #else  /* TAU_MPI */
   //static int j = TAU_MAPPING_PROFILE_SET_NODE(getpid(), tid);
 #endif /* TAU_MPI */
@@ -293,7 +297,7 @@ void TauJavaLayer::MethodEntry(JVMPI_Event *event)
   TAU_MAPPING_LINK(TauMethodName, (long) event->u.method.method_id);
   
   // If the method is not masked, (has non-zero group id), execute it
-  if(TauMethodName && TauMethodName->GetProfileGroup()) { 
+  if (TauMethodName) { 
     TAU_MAPPING_PROFILE_TIMER(TauTimer, TauMethodName, tid);
     TAU_MAPPING_PROFILE_START(TauTimer, tid);
 
@@ -312,7 +316,7 @@ void TauJavaLayer::MethodExit(JVMPI_Event *event)
   TAU_MAPPING_OBJECT(TauMethodName=NULL);
   TAU_MAPPING_LINK(TauMethodName, (long) event->u.method.method_id);
   
-  if(TauMethodName && TauMethodName->GetProfileGroup()) { // stop only if it has a finite group 
+  if (TauMethodName) { // stop only if it has a finite group 
     TAU_MAPPING_PROFILE_STOP(tid);
 #ifdef DEBUG_PROF
   fprintf(stdout, "TAU> Method Exit : %ld, TID = %d\n",
@@ -426,7 +430,7 @@ void TauJavaLayer::DataPurge(JVMPI_Event *event)
 
 /***************************************************************************
  * $RCSfile: TauJava.cpp,v $   $Author: amorris $
- * $Revision: 1.29 $   $Date: 2009/01/16 00:46:53 $
- * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.29 2009/01/16 00:46:53 amorris Exp $
+ * $Revision: 1.30 $   $Date: 2009/02/19 20:08:29 $
+ * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.30 2009/02/19 20:08:29 amorris Exp $
  ***************************************************************************/
 

@@ -78,19 +78,7 @@ JNIEXPORT void JNICALL Java_TAU_Profile_NativeStart
 
   f = (FunctionInfo *) env->GetLongField(obj, fid); 
 
-  Profiler *p = new Profiler(f, f != (FunctionInfo *) 0 ? f->GetProfileGroup() : TAU_DEFAULT, true); 
-
-  if (p == (Profiler *) NULL)
-  {
-    cout << "ERROR: Profiler new returns NULL: Memory problem"<<endl;
-  }
-  else 
-  {
-    /* Everything went well. Start the Profiler */
-    p->Start(RtsLayer::myThread()); 
-    DEBUGPROFMSG("TAU STMT START: Profiler = "<< p<< " Name = "<<
-	p->ThisFunction->GetName()<<endl);
-  }
+  TAU_PROFILE_START(f);
 }
 
 
@@ -102,24 +90,15 @@ JNIEXPORT void JNICALL Java_TAU_Profile_NativeStart
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_TAU_Profile_NativeStop
-  (JNIEnv * env, jobject obj)
-{
-
-  /* Stop the Current profiler */
-  int tid = RtsLayer::myThread();
-  Profiler *p = Profiler::CurrentProfiler[tid];
-  p->Stop(tid);
-  DEBUGPROFMSG("TAU STMT STOP: Profiler = "<< p<< " Name = "<<
-	p->ThisFunction->GetName()<<endl);
-  delete p;
-
+  (JNIEnv * env, jobject obj) {
+  TAU_GLOBAL_TIMER_STOP();
 }
 
 /* EOF Profile.cpp */
 
 /***************************************************************************
- * $RCSfile: TauJAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 2000/12/02 20:44:25 $
- * TAU_VERSION_ID: $Id: TauJAPI.cpp,v 1.2 2000/12/02 20:44:25 sameer Exp $
+ * $RCSfile: TauJAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.3 $   $Date: 2009/02/19 20:08:29 $
+ * TAU_VERSION_ID: $Id: TauJAPI.cpp,v 1.3 2009/02/19 20:08:29 amorris Exp $
  ***************************************************************************/
 
