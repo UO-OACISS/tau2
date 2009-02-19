@@ -1,4 +1,0 @@
-#define hline2_width 6
-#define hline2_height 6
-static unsigned char hline2_bits[] = {
-  0x09, 0x09, 0x09, 0x09, 0x09, 0x09, };

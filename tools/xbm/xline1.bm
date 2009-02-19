@@ -1,4 +1,0 @@
-#define xline1_width 4
-#define xline1_height 4
-static unsigned char xline1_bits[] = {
-  0x01, 0x02, 0x04, 0x08, };

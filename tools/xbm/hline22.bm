@@ -1,4 +1,0 @@
-#define hline22_width 4
-#define hline22_height 4
-static unsigned char hline22_bits[] = {
-  0x03, 0x03, 0x03, 0x03, };

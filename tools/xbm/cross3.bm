@@ -1,4 +1,0 @@
-#define cross3_width 4
-#define cross3_height 4
-static unsigned char cross3_bits[] = {
-  0x0a, 0x0f, 0x0a, 0x0f, };

@@ -1,4 +1,0 @@
-#define cross0_width 6
-#define cross0_height 6
-static unsigned char cross0_bits[] = {
-  0x1e, 0x2d, 0x33, 0x33, 0x2d, 0x1e, };

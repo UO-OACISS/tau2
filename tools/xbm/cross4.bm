@@ -1,4 +1,0 @@
-#define cross4_width 4
-#define cross4_height 4
-static unsigned char cross4_bits[] = {
-  0x05, 0x00, 0x05, 0x00, };

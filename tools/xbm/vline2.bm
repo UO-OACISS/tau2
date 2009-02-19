@@ -1,4 +1,0 @@
-#define vline2_width 6
-#define vline2_height 6
-static unsigned char vline2_bits[] = {
-  0x3f, 0x00, 0x00, 0x3f, 0x00, 0x00, };

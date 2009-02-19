@@ -1,4 +1,0 @@
-#define cross5_width 5
-#define cross5_height 5
-static unsigned char cross5_bits[] = {
-  0x13, 0x1e, 0x0c, 0x1e, 0x13, };

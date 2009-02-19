@@ -1,4 +1,0 @@
-#define cline22_width 4
-#define cline22_height 4
-static unsigned char cline22_bits[] = {
-  0x0f, 0x0f, 0x00, 0x00, };

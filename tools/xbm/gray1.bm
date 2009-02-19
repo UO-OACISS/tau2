@@ -1,4 +1,0 @@
-#define gray1_width 6
-#define gray1_height 6
-static unsigned char gray1_bits[] = {
-  0x15, 0x2a, 0x15, 0x2a, 0x15, 0x2a, };
