@@ -1940,8 +1940,7 @@ case $machine in
     ;;
 
     xt3)
-    catamount=yes
-    if [ $cxx_compiler = default ] ; then
+	catamount=yes
 	cxx_compiler=CC
 	c_compiler=cc
 	default_fortran=pgi
@@ -1963,11 +1962,9 @@ case $machine in
 	if [ $fortran_compiler = no ] ; then
 	    fortran_compiler=$default_fortran
 	fi
-    fi
     ;;
 
     craycnl)
-    if [ $cxx_compiler = default ] ; then
 	cxx_compiler=CC
 	c_compiler=cc
 	default_fortran=pgi
@@ -1989,7 +1986,6 @@ case $machine in
 	if [ $fortran_compiler = no ] ; then
 	    fortran_compiler=$default_fortran
 	fi
-    fi
     ;;
    hitachi)
      if [ $cxx_compiler = default ]
