@@ -46,62 +46,7 @@
 # Based on the configure script for Sage/pC++ by:
 #   Pete Beckman 9/6/93
 #   Lars Thomas Hansen 2/27/95 (Solaris fix)
-#
-# New options for TAU/HPC++:
-#   -pcxx <sageroot directory>
-#   -sage2 <edg-sage2 directory>
-#   -pstl <pstl directory>
-#   -hpnx <hpc++lib/nexus directory>
-#
-# Options for Configure :
-#   ./configure -cc=<C Compiler> -c++=<C++ Compiler> -useropt=<User options>
-#   -gnu  -PROFILE -TRACE  
-# 
-# Recommended configuration for testing on SGI:
-#   ./configure -useropt=-64 -PROFILE
-# For testing with KAI's KCC compiler 
-#   ./configure -cc=cc -c++=KCC -PROFILE 
-# If your C++ compiler does not support STL, you could use something like:
-#   ./configure -useropt='-I/usr/local/packages/SGI-STL/' 
-# after downloading the Standard Templates Library.
-# This configure script has been tested on SGI, LINUX, SOLARIS2 and HP
-#
 
-# Currently this configure file modifies Makefiles within Sage to the
-# following architecture names (see ./utils/archfind) :
-#   ptx             a Sequent Symmetry running DYNIX/ptx (386/486 based)
-#   symmetry        a Sequent Symmetry running DYNIX 3 (386/486 based)
-#   hp9000s700      an HP 9000, series 700, running hpux
-#   hp9000s800      an HP 9000, series 800, running hpux
-#   decstation      a DecStation XXXX
-#   rs6000	    an IBM RS6000 running AIX
-#   sun4            a Sun Microsystems series 4 workstation (SPARC based)
-#   solaris2	    a Sun Workstation running SVR4 Solaris 
-#   next            a NeXT computer
-#   sgi4k           an SGI R4K-based machine
-#   sgi8k           an SGI R8K-based (Power) machine
-#   cm5             a Thinking Machines Corporation CM-5
-#   paragon         an Intel paragon
-#   tc2000          a BBN Butterfly tc2000
-#   ksr1            a Kendall Square KSR1
-#   unknown         default setup, no machine selected (original)
-#   alpha           an HP/Compaq Alpha running OSF/1 Tru64
-#   c90             a Cray C90 running Unicos
-#   t3d             a Cray T3D (Alpha-based) computer array
-#   i386_linux 	    an Intel ix86 PC running LINUX
-#   default         Returns all files to "distribution" snapshot. 
-#                      This MUST be done before any CVS commands are called
-#
-# The tkfile may contain definitions of environment variables in the
-# style of /bin/sh, e.g. (these are the defaults)
-#
-#   tcltkheader="-I/usr/local/include"
-#   tcltklib="-L/usr/local/lib -ltk4.0 -ltcl7.4"
-#   x11header="-I/usr/include"
-#   x11lib="-L/usr/lib -lX11"
-#
-# If a file name is given, it must contain all these definitions.
-# No checking is done to ensure that it does so.
 
 default=false
 
@@ -383,7 +328,6 @@ c_compiler=default
 cxx_compiler=default
 pdt_cxx_compiler=default
 fixmakeargs=""
-pcxxopt=-g
 useropt=
 tag=no
 tautag=
@@ -470,12 +414,7 @@ cputime=no
 javacputime=no
 papiwallclock=no
 papivirtual=no
-use_pcxx=no
-use_hpcxx=no
 use_ansic=no
-use_sage2=no
-use_pstl=no
-use_hpnx=no
 tauarch=unknown
 pdtcompdir=unknown
 pdtarchdir=unknown
@@ -1026,11 +965,6 @@ do
     shift
     ;;
     
-    -pcxxopt=*)
-    pcxxopt=`echo $arg | sed -e 's/-pcxxopt=//' -e 's/ /_/g'`
-    shift
-    ;;
-
   -zeptodir=*)
     zeptodir=`echo $arg | sed -e 's/-zeptodir=//' -e 's/ /#/g'`
     if [ ! -e $zeptodir ]
@@ -1171,48 +1105,7 @@ do
     ;;
 
   -opt=*)
-    pcxxopt=`echo $arg | sed -e 's/-opt=//' -e 's/ /_/g'`
-    useropt="$pcxxopt"
-    shift
-    ;;
-
-  -pcxx=*)
-    use_pcxx=yes
-    sage1dir=`echo $arg | sed -e 's/-pcxx=//' -e 's/ /_/g'`
-    shift
-    ;;
-
-  -sage2=*)
-    use_sage2=yes
-    sage2dir=`echo $arg | sed -e 's/-sage2=//' -e 's/ /_/g'`
-    shift
-    ;;
-
-  -hpcxx)
-    use_hpcxx=yes
-    shift
-    ;;
-
-  -hpcxx=*)
-    use_hpcxx=yes
-    sage2dir=`echo $arg | sed -e 's/-hpcxx=//' -e 's/ /_/g'`
-    shift
-    ;;
-
-  -pstl=*)
-    use_pstl=yes
-    pstldir=`echo $arg | sed -e 's/-pstl=//' -e 's/ /_/g'`
-    shift
-    ;;
-
-  -hpnx=*)
-    use_hpnx=yes
-    hpnxdir=`echo $arg | sed -e 's/-hpnx=//' -e 's/ /_/g'`
-    shift
-    ;;
-
-  -tkfile=*)
-    tcltkfile=`echo $arg | sed -e 's/-tkfile=//' -e 's/ /_/g'`
+    useropt=`echo $arg | sed -e 's/-opt=//' -e 's/ /_/g'`
     shift
     ;;
 
@@ -3636,7 +3529,7 @@ then
     wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir $vtfortranwrapper -lvt.mpi -lotf -lz"
     if [ $openmp = yes ] ; then
 # should we have a -lvt.fmpi here? 
-	fixmakeargs="pcxxopt=$pcxxopt useropt=$useropt extrashlibopts=$extrashlibopts $fixmakeargs"
+	fixmakeargs="useropt=$useropt extrashlibopts=$extrashlibopts $fixmakeargs"
 	if [ $sicortex = yes ] ; then
 	    wrapperlib="$sicortexlink"
 #-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir -Wl,-whole-archive $vtfortranwrapper -lvt.ompi -lotf -lbfd -Wl,-no-whole-archive -lz"
@@ -4028,15 +3921,6 @@ fi
 ######################################################################
 # Set default compiler options
 
-if [ $use_pcxx = yes ]
-then
-  opt=`echo $pcxxopt | sed -e 's/_/ /g' -e 's/^$/(none)/'`
-  echo "Default compiler options for pC++ programs are $opt"
-  opt=`echo $useropt | sed -e 's/_/ /g' -e 's/^$/(none)/'`
-  echo "Default compiler options for pC++ user programs are $opt"
-
-  fixmakeargs="pcxxopt=$pcxxopt useropt=$useropt extrashlibopts=$extrashlibopts $fixmakeargs"
-fi
 
 fixmakeargs="c_compiler=$c_compiler cxx_compiler=$cxx_compiler useropt=$useropt extradir=$extradir extradircxx=$extradircxx extrashlibopts=$extrashlibopts $fixmakeargs"
 
@@ -5396,16 +5280,6 @@ if [ $task = yes ]
     fi
 fi
 
-if [ $use_pcxx = yes ] 
-then	
-  fixmakeargs="$fixmakeargs PCXX sage1dir=$sage1dir"
-fi
-
-if [ $use_hpcxx = yes ] 
-then	
-  fixmakeargs="$fixmakeargs HPCXX"
-fi
-
 if [ $use_ansic = yes ] 
 then	
   fixmakeargs="$fixmakeargs ANSIC"
@@ -5620,70 +5494,6 @@ for tool in $TAUTOOLS ;  do
     chmod a+rx ${targetdir}/${architecture}/bin/${tool}
 done
 
-
-if [ $use_pcxx = yes ]
-then
-
-$echo "TAU: installing breezy... ${nnl}"
-rm -f ${tauroot}/bin/${architecture}/breezy
-cat lang_support/pc++/breezy/userAgent/tool.skel |
-sed -e 's,@TAUROOT@,'${tauroot}',' -e 's,@ARCH@,'${architecture}',' -e 's,@TOOL@,'breezy',' \
-> ${tauroot}/bin/${architecture}/breezy
-chmod a+rx ${tauroot}/bin/${architecture}/breezy
-echo "done"
-
-if [ $tcltkfile  = "/" ]
-then
-  echo ""
-  echo "For compiling the breezy user interface, we need the very"
-  echo "site-specific locations for header files and libraries for"
-  echo "X11 and Tcl/Tk. Typing <return> after the questions will use"
-  echo "the specified default locations in brackets."
-  echo ""
-
-  echo "Options for including Tcl/Tk headers [-I/usr/local/include]"
-  $echo "? ${nnl}"
-  read tcltkheader
-  if [ "x$tcltkheader" = "x" ]; then tcltkheader="-I/usr/local/include"; fi
-
-  foo="`echo $tcltkheader | sed -e 's/-I/-L/' -e 's/include/lib/'` -ltk4.0 -ltcl7.4"
-  echo "Options for linking Tcl/Tk [$foo]"
-  $echo "? ${nnl}"
-  read tcltklib
-  if [ "x$tcltklib" = "x" ]; then tcltklib="$foo"; fi
-
-  echo "Options for including X11 headers [-I/usr/include]"
-  $echo "? ${nnl}"
-  read x11header
-  if [ "x$x11header" = "x" ]; then x11header="-I/usr/include"; fi
-
-  foo="`echo $x11header | sed -e 's/-I/-L/' -e 's/include/lib/'` -lX11"
-  echo "Options for linking X11 [$foo]"
-  $echo "? ${nnl}"
-  read x11lib
-  if [ "x$x11lib" = "x" ]; then x11lib="$foo"; fi
-
-  echo ""
-else
-  echo "TAU: using make info from file $tcltkfile"
-  . $tcltkfile
-fi
-
-sed -e 's,^TCLTKHEADER =.*$,TCLTKHEADER = '"$tcltkheader"',' \
-    -e 's,^X11HEADER   =.*$,X11HEADER   = '"$x11header"','   \
-    -e 's,^X11LIB      =.*$,X11LIB      = '"$x11lib"','      \
-    -e 's,^TCLTKLIB    =.*$,TCLTKLIB    = '"$tcltklib"','    \
-    lang_support/pc++/breezy/userAgent/Makefile > tmpmake
-mv tmpmake lang_support/pc++/breezy/userAgent/Makefile
-
-fi  # if breezy
-
-if [ $use_hpcxx = yes ]
-then
-# Fix the file info for preprocessor in lang_support/hpc++/include-clean
-sed -e 's,^#1 ".*/lang_support/hpc++/include/hpc++.h",'#1\ \"$tauroot/lang_support/hpc++/include/hpc++.h\"',' lang_support/hpc++/include-clean/hpc++.h > tmplib
-mv tmplib lang_support/hpc++/include-clean/hpc++.h
-fi
 
 # Save the FixMakefile args
 # Clear any old data
