@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.85 2008/10/02 20:39:51 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.86 2009/02/19 20:54:16 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.85 $
+ * @version $Revision: 1.86 $
  */
 public class ParaProf implements ActionListener {
 
@@ -61,14 +61,11 @@ public class ParaProf implements ActionListener {
     public static Runtime runtime;
     private static int numWindowsOpen = 0;
 
-    //Command line options related.
-    private static int fileType = 0; // See DataSource.java
+    private static int fileType = DataSource.TAUPROFILE;
     private static File sourceFiles[] = new File[0];
     private static boolean fixNames = false;
     private static boolean monitorProfiles;
     private static String configFile;
-    private static String args[];
-    //End - Command line options related.
 
     public static boolean demoMode;
     public static boolean usePathNameInTrial = false;
@@ -348,7 +345,6 @@ public class ParaProf implements ActionListener {
 
     // Main entry point
     static public void main(String[] args) {
-        ParaProf.args = args;
 
         // Set the tooltip delay to 20 seconds
         ToolTipManager.sharedInstance().setDismissDelay(20000);

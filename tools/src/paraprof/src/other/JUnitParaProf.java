@@ -1,4 +1,4 @@
-package edu.uoregon.tau.paraprof;
+package edu.uoregon.tau.paraprof.other;
 
 import java.awt.Component;
 import java.awt.event.ActionEvent;
@@ -16,6 +16,7 @@ import junit.extensions.jfcunit.finder.ComponentFinder;
 import junit.extensions.jfcunit.finder.JMenuItemFinder;
 import junit.extensions.jfcunit.finder.NamedComponentFinder;
 import junit.framework.Assert;
+import edu.uoregon.tau.paraprof.*;
 import edu.uoregon.tau.paraprof.treetable.TreeTableWindow;
 import edu.uoregon.tau.perfdmf.*;
 

@@ -12,9 +12,9 @@ import edu.uoregon.tau.perfdmf.DataSource;
 /**
  * A window that lets the user select a profile format and launch a JFileChooser
  * 
- * <P>CVS $Id: LoadTrialWindow.java,v 1.5 2007/11/20 21:29:30 amorris Exp $</P>
+ * <P>CVS $Id: LoadTrialWindow.java,v 1.6 2009/02/19 20:54:16 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class LoadTrialWindow extends JFrame implements ActionListener {
 
@@ -81,7 +81,7 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
         selectButton.addActionListener(this);
 
         trialTypes = new JComboBox(DataSource.formatTypeStrings);
-        trialTypes.setMaximumRowCount(13);
+        trialTypes.setMaximumRowCount(DataSource.formatTypeStrings.length);
         trialTypes.addActionListener(this);
         // must be after action listener
         trialTypes.setSelectedIndex(defaultIndex);
@@ -236,7 +236,7 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
                 }
                 closeThisWindow();
             } else if (arg.equals("comboBoxChanged")) {
-                if (trialTypes.getSelectedIndex() == 0) {
+                if (trialTypes.getSelectedIndex() == DataSource.TAUPROFILE) {
                     selectButton.setText("Select Directory");
                     dirLocationField.setEditable(true);
                     monitorTrialCheckBox.setEnabled(true);

@@ -28,9 +28,11 @@ public class TrialGrabber {
         File expdirs[] = (new File(path)).listFiles();
 
         List sorted = new ArrayList();
-      
+
         for (int i = 0; i < expdirs.length; i++) {
-            sorted.add(expdirs[i]);
+            if (expdirs[i].isDirectory()) {
+                sorted.add(expdirs[i]);
+            }
         }
         Collections.sort(sorted, new AlphanumComparator());
 
