@@ -1837,6 +1837,12 @@ case $machine in
 	if [ $fortran_compiler = no ] ; then
 	    fortran_compiler=$default_fortran
 	fi
+
+	# unless specified, use g++
+	if [ $pdt_cxx_compiler = default ] ; then
+	    pdt_cxx_full_path=/usr/bin/g++
+	    pdt_cxx_compiler=/usr/bin/g++
+	fi
     ;;
 
     craycnl)
@@ -1860,6 +1866,12 @@ case $machine in
 	fi
 	if [ $fortran_compiler = no ] ; then
 	    fortran_compiler=$default_fortran
+	fi
+
+	# unless specified, use g++
+	if [ $pdt_cxx_compiler = default ] ; then
+	    pdt_cxx_full_path=/usr/bin/g++
+	    pdt_cxx_compiler=/usr/bin/g++
 	fi
     ;;
    hitachi)
@@ -4771,6 +4783,24 @@ then
   fi
 fi
 
+
+if [ $pdt_cxx_compiler != default ] ; then
+# Check if they specified -pdt_c++=/usr/bin/g++ instead of just g++ 
+    if [ "x$pdt_cxx_full_path" != "x$pdt_cxx_compiler" ] ; then
+	pdt_cxx_used=$pdt_cxx_full_path
+    else
+	pdt_cxx_used=$pdt_cxx_compiler
+    fi
+    
+    fixmakeargs="$fixmakeargs PDTCXX pdtcxx=$pdt_cxx_used"
+    if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ] ; then
+	if [ $pdt_cxx_compiler = CC ] ; then
+	    fixmakeargs="$fixmakeargs PDTSGICC"
+	fi
+    fi
+fi
+
+
 if [ $pdt = yes ]
 then
   fixmakeargs="$fixmakeargs PDT pdtdir=$pdtdir"
@@ -4785,25 +4815,6 @@ then
     fixmakeargs="$fixmakeargs PDTARCHITECTURE pdtarchdir=$pdtarchdir"
   fi
 
-  if [ $pdt_cxx_compiler != default ]
-  then
-# Check if they specified -pdt_c++=/usr/bin/g++ instead of just g++ 
-    if [ "x$pdt_cxx_full_path" != "x$pdt_cxx_compiler" ]
-    then
-      pdt_cxx_used=$pdt_cxx_full_path
-    else
-      pdt_cxx_used=$pdt_cxx_compiler
-    fi
-
-    fixmakeargs="$fixmakeargs PDTCXX pdtcxx=$pdt_cxx_used"
-    if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ]
-    then
-      if [ $pdt_cxx_compiler = CC ]
-      then
-        fixmakeargs="$fixmakeargs PDTSGICC"
-      fi
-    fi
-  fi
 
 # Check if PDT has Fortran statement level information
   cat <<EOF > checkpdt.cpp
