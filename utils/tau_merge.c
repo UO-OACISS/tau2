@@ -1,15 +1,12 @@
-/*********************************************************************/
-/*                  pC++/Sage++  Copyright (C) 1994                  */
-/*  Indiana University  University of Oregon  University of Rennes   */
-/*********************************************************************/
-
-/*
- * tau_merge.c: merge local traces 
- *
- * (c) 1994 Jerry Manic Saftware
- *
- * Version 3.0
- */
+/****************************************************************************
+ **                      TAU Portable Profiling Package                     **
+ **                      http://www.cs.uoregon.edu/research/tau             **
+ *****************************************************************************
+ **    Copyright 2007                                                       **
+ **    Department of Computer and Information Science, University of Oregon **
+ **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+ **    Forschungszentrum Juelich                                            **
+ ****************************************************************************/
 
 #ifdef __SP1__
 # include <Profile/aix.h> /* if its an IBM */
@@ -20,7 +17,7 @@
 # include <fcntl.h>
 
 
-#define TAU_MAXPROCS 4096
+#define TAU_MAXPROCS 65536
 
 
 #ifdef TAU_LARGEFILE
@@ -36,15 +33,13 @@ int getdtablesize(void);
 }
 #endif /* TAU_NEC */
 
-#ifndef NeXT
-  #ifdef TAU_WINDOWS
-    #include <windows.h>	
-    #include <io.h>
-    #include "getopt.h"
-  #else
-    #define O_BINARY 0
-    #include <unistd.h>
-  #endif
+#ifdef TAU_WINDOWS
+  #include <windows.h>	
+  #include <io.h>
+  #include "getopt.h"
+#else
+  #define O_BINARY 0
+  #include <unistd.h>
 #endif
 
 #ifdef FUJITSU
