@@ -384,7 +384,6 @@ pgi=no
 fujitsu=no
 guidef90=no
 stdcxxlib=no
-inteltflop=no
 intelcxxlibicc=no
 intelifort=no
 intel=no
@@ -1229,11 +1228,6 @@ do
     shift
     ;; 
 
-  -INTELTFLOP)
-    inteltflop=yes
-    shift
-    ;; 
-
   -noex)
     # NO exceptions to be used while building the lib.
     noex=yes
@@ -1545,7 +1539,7 @@ if [ "$c_compiler" != "" -a "$c_compiler" != "default" ]; then
 fi
 
 
-echo "-------------------- TAU configure script ---------------"
+echo "-------------------- TAU configure script ------------------"
 
 
 tauroot=`pwd | sed -e 's,^/tmp_mnt/nfs,,' -e 's,^/tmp_mnt,,'`
@@ -1564,12 +1558,9 @@ fi
 
 echo "  The TAU source code has just been configured to use the"
 echo "  tau root directory $tauroot."
-echo "  If you move the Tau distribution, you must either"
-echo "    * set an environment variable TAUROOT containing the new"
-echo "      location before running any TAU tools"
-echo "  or"
-echo "    * run configure again and recompile"
-echo "-----------------------------------------------------------------"
+echo "  If you move the Tau distribution, you must run configure"
+echo "  again and recompile"
+echo "------------------------------------------------------------"
 
 fixmakeargs="$fixmakeargs tauroot=$tauroot"
 # Try and figure out architecture
@@ -1577,10 +1568,8 @@ detectarch=unknown
 cd utils
 detectarch=`./archfind` 
 detectxdev=`./archfind -x` 
-detectspec=`./archfind -s` 
 cd ..
-if [ "x$detectarch" = "x" ] 
-  then
+if [ "x$detectarch" = "x" ] ; then
     detectarch=unknown
 fi
 
@@ -1614,11 +1603,9 @@ if [ $tauarch = unknown -o $tauarch = none ]
       fi
   else
     machine=$tauarch
-    if [ $detectarch != unknown -a $machine != unknown ]
-      then
+    if [ $detectarch != unknown -a $machine != unknown ] ; then
         detectxdev=$machine
-        if [ $detectarch != $machine ]
-           then
+        if [ $detectarch != $machine ] ; then
 	     echo WARNING\!\! Auto-detect:$detectarch overridden with $machine
         fi
     fi
@@ -2281,12 +2268,6 @@ if [ $debugprof = yes ]
   then
     fixmakeargs="$fixmakeargs DEBUGPROF"
 fi
-
-if [ $inteltflop = yes ]
-  then
-      fixmakeargs="$fixmakeargs INTELTFLOP"
-fi 
-    
 
 
 ######################################################################
@@ -4053,12 +4034,6 @@ case $machine in
 		fixmakeargs="PDTHPACC $fixmakeargs"
 	fi
 
-# Check for Convex SPP enviroment
-	if [ $detectxdev = cnxspp ]
-	  then
-	    fixmakeargs="$fixmakeargs CNXSPP"
-	fi
-
 	;;
 
      decstation)
@@ -4174,11 +4149,6 @@ case $machine in
  	  then
 	    fixmakeargs="$fixmakeargs IBMPAPI"
 	fi
-# Check for SP1 xdev enviroment
-#        if [ $detectxdev = sp1 ]
-#          then
-#            fixmakeargs="$fixmakeargs SP1"
-#        fi
 	;;
 
      alpha)
@@ -4262,8 +4232,6 @@ case $machine in
 	fixmakeargs="arch=$machine NEXT_CLIB $fixmakeargs"
 	;;
 
-# Currently cm5 cross-development environments are NOT supported
-# for solaris2 machines....
      solaris2*)
 	echo Found a \"$machine\" configuration definition
 	fixmakeargs="arch=$machine SOL2 $fixmakeargs"
@@ -4289,16 +4257,7 @@ case $machine in
               fortran_compiler=yes
             fi
         fi
-	 
-		
-
-# Check for Meiko CS2 xdev enviroment
-        if [ $detectxdev = cs2 ]
-          then
-            fixmakeargs="$fixmakeargs CS2"
-        fi
 	;;
-
      sun386i)
 	echo Found a \"$machine\" configuration definition
 	fixmakeargs="arch=$machine SUN386I $fixmakeargs"
@@ -4320,15 +4279,12 @@ case $machine in
      sunx86_64)
 	echo Found a \"$machine\" configuration definition
 	fixmakeargs="arch=$machine $fixmakeargs SUNX86_64"
-	if [ $cxx_compiler = CC ]  
-	  then
+	if [ $cxx_compiler = CC ] ; then
 	    fixmakeargs="$fixmakeargs SOL2CC"
-	    if [ $openmp = yes ]
-	    then
+	    if [ $openmp = yes ] ; then
 	      fixmakeargs="$fixmakeargs SOL2CC_OPENMP"
 	    fi
-	    if [ $fortran_compiler = no ]  
-	    then
+	    if [ $fortran_compiler = no ] ; then
 	      fixmakeargs="$fixmakeargs SUN_FORTRAN"
               fortran_compiler=yes
             fi
@@ -4336,26 +4292,10 @@ case $machine in
 	;;
 
 
-     sun4 | cm5)
+     sun4)
 	echo Found a \"$machine\" configuration definition
         fixmakeargs="arch=$machine $fixmakeargs"
-
-# Check for cm5 xdev enviroment
-        if [ $machine = cm5 -o $detectxdev = cm5 ]
-          then
-            fixmakeargs="$fixmakeargs CM5"
-        fi
 	;;
-
-     ptx)
-	echo Found a \"$machine\" configuration definition
-	fixmakeargs="arch=$machine PTX HP-ALLOCA $fixmakeargs"
-        ;;
-
-     tc2000)
-	echo Found a \"$machine\" configuration definition
-	fixmakeargs="arch=$machine TC2000 $fixmakeargs"
-        ;;
 
      c90)
 	echo Found a \"$machine\" configuration definition
@@ -4376,21 +4316,6 @@ case $machine in
           fortran_compiler=yes
         fi
         ;;
-
-     ksr1)
-	echo Found a \"$machine\" configuration definition
-	fixmakeargs="arch=$machine KSR NO_RANLIB $fixmakeargs"
-        ;;
-
-     paragon)
-	echo Found a \"$machine\" configuration definition
-	fixmakeargs="arch=$machine PARAGON $fixmakeargs"
-        ;;
-
-     symmetry)
-	echo Found a \"$machine\" configuration definition
-	fixmakeargs="arch=$machine SYMMETRY $fixmakeargs"
-	;;
 
      unknown)
         echo unknown architecture.
