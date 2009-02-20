@@ -1,3 +1,4 @@
+#define MPICH_IGNORE_CXX_SEEK
 #include <mpi.h>
 #include <stdio.h>
 
