@@ -430,3 +430,45 @@ void TraceCallStack(int tid, Profiler *current) {
     DEBUGPROFMSG("TRACE CORRECTED: "<<current->ThisFunction->GetName()<<endl;);
   }
 }
+
+
+
+
+
+extern "C" double* TheTauTraceBeginningOffset() {
+  static double offset = 0.0;
+  return &offset;
+}
+extern "C" int* TheTauTraceSyncOffsetSet() {
+  static int value = 0;
+  return &value;
+}
+
+extern "C" double* TheTauTraceSyncOffset() {
+  static double offset = -1.0;
+  return &offset;
+}
+
+double TauSyncAdjustTimeStamp(double timestamp) {
+  if (*TheTauTraceSyncOffsetSet() == 0) {
+    // return 0 until sync'd
+    return 0.0;
+  }
+  timestamp = timestamp - *TheTauTraceBeginningOffset() + *TheTauTraceSyncOffset();
+  return timestamp;
+}
+
+extern "C" double TAUClockTime(int tid) {
+#ifdef TAU_MULTIPLE_COUNTERS
+  // counter 0 is the one we use
+  double value = MultipleCounterLayer::getSingleCounter(tid, 0);
+#else
+  double value = RtsLayer::getUSecD(tid);
+#endif
+  return value;
+}
+
+
+
+
+

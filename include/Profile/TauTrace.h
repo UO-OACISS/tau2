@@ -24,6 +24,13 @@
 
 #include "tau_types.h"
 
+#if (defined(TAU_WINDOWS))
+#pragma warning( disable : 4786 )
+#define TAUDECL __cdecl
+#else
+#define TAUDECL
+#endif /* TAU_WINDOWS */
+
 
 /* TAU tracer events */
 #define TAU_EV_INIT         60000
@@ -62,6 +69,15 @@ extern "C" {
   void TraceEvClose(int tid);
   void SetFlushEvents(int tid);
   int  GetFlushEvents(int tid);
+
+
+  
+  double* TAUDECL TheTauTraceBeginningOffset();
+  int* TAUDECL TheTauTraceSyncOffsetSet();
+  double* TAUDECL TheTauTraceSyncOffset();
+  double TAUDECL TAUClockTime(int tid);
+
+
 
 #ifdef __cplusplus
 }

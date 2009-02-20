@@ -36,12 +36,6 @@
 #define SYNC_LOOP_COUNT 10
 
 
-
-double* TAUDECL TheTauTraceBeginningOffset();
-int* TAUDECL TheTauTraceSyncOffsetSet();
-double* TAUDECL TheTauTraceSyncOffset();
-double TAUDECL TAUClockTime(int tid);
-
 long TauUserEvent_GetEventId(void *evt);
 
 /* We're probably going to have to change this for some platforms */
