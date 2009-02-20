@@ -167,7 +167,6 @@ for arg in "$@"; do
     echo "-papithread .................................. Use PAPI thread package."
     echo "-charm=<dir> .............................. Use charm++ thread package."
     echo "-sproc .................................. Use SGI sproc thread package."
-    echo "-smarts .................. Use SMARTS API for threads (use with above)."
     echo "-openmp ........................................... Use OpenMP threads."
     echo "-opari ..................................................... Use Opari."
     echo "-opari_region ......... Report performance data for all OpenMP regions."
@@ -215,11 +214,6 @@ for arg in "$@"; do
     echo "-ktaulib=<dir> ............ Specify location of KTAU library libktau.a."
     echo "-ktausym=<path to System.map>  ...... Specify location of Linux Kernel."
     echo "                                                          Symbol Table."
-    echo "-muse ................................. Specify the use of MAGNET/MUSE." 
-    echo "-muse_event ............................Specify the use of MAGNET/MUSE."
-    echo "                                w/ non-monotonically increasing values." 
-    echo "-muse_multiple ........................ Specify the use of MAGNET/MUSE." 
-    echo "                                    w/ monotonically increasing values." 
     echo "-stff=<dir> .... Location of RENCI Scalable Time-series filter library."
     echo "-sddf=<dir> ...... SDDF library location; Only required for RENCI STFF."
     echo "-TRACE ..................................... Generate TAU event traces."
@@ -303,9 +297,6 @@ fi
 echo "#define TAU_CONFIG \"$modmodargs\"" > include/tau_config.h
 
 START_DIR=`pwd`
-
-# Record all the arguments
-arguments=$*
 
 # Default compilers and options
 c_compiler=default
@@ -448,20 +439,16 @@ home=$HOME
 zepto=no
 zeptodir=
 
-# debug:
-# echo $arguments
-
 # Reset include/Makefile before starting anything else
-for i in include/Makefile
-do
+for i in include/Makefile ; do
     sed -f utils/FixMakefile.sed.default < ${i} > ${i}~~0
     mv ${i}~~0 ${i}
 done
 
-# PARSE COMMAND LINE SWITCHES
 ###############################################################
-for arg in "$@";
-do
+# PARSE OPTIONS
+###############################################################
+for arg in "$@"; do
   case $arg in
 
   -cc=*)
@@ -677,21 +664,6 @@ do
     shift
     ;;
  
-  -muse)
-      muse=yes
-    shift
-    ;;
-
-  -muse_event)
-      muse_event=yes
-    shift
-    ;;
-
-  -muse_multiple)
-      muse_multiple=yes
-    shift
-    ;;
-
   -nocomm)
       comm=no
     shift
@@ -699,11 +671,6 @@ do
 
   -sproc)
       sproc=yes
-    shift
-    ;;
-
-  -smarts)
-      smarts=yes
     shift
     ;;
 
@@ -721,13 +688,12 @@ do
   -papi=*)
       papi=yes
       papidir=`echo $arg | sed -e 's/-papi=//'`
-      if [ ! -d $papidir ]
-      then
-        echo "Error: Cannot access PAPI directory $papidir"
-        exit 1
+      if [ ! -d $papidir ] ; then
+          echo "Error: Cannot access PAPI directory $papidir"
+          exit 1
       fi
-    shift
-    ;;
+      shift
+      ;;
 
   -perfsuite=*)
       perfsuite=yes
@@ -735,19 +701,18 @@ do
       fixmakeargs="$fixmakeargs TAU_PERFSUITE"
       fixmakeargs="$fixmakeargs perfsuitelink=-L$perfsuitedir/lib#-lpshwpc"
       fixmakeargs="$fixmakeargs perfsuiteinclude=-I$perfsuitedir/include"
-      if [ ! -d $perfsuitedir ]
-      then
+      if [ ! -d $perfsuitedir ] ; then
           echo "Error: Cannot access PerfSuite directory $perfsuitedir"
           exit 1
       fi
       shift
-    ;;
+      ;;
 
   -bfd=*)
       bfd=yes
       bfddir=`echo $arg | sed -e 's/-bfd=//'`
       shift
-    ;;
+      ;;
 
   -perfinc=*)
       perf=yes
@@ -757,106 +722,102 @@ do
         echo "Error: Cannot access PERF include directory $perfincdir"
         exit 1
       fi
-    shift
-    ;;
-
+      shift
+      ;;
+      
   -perflib=*)
       perf=yes
       perflibdir=`echo $arg | sed -e 's/-perflib=//'`
-      if [ ! -d $perflibdir ]
-      then
-        echo "Error: Cannot access PERF lib directory $perflibdir"
-        exit 1
+      if [ ! -d $perflibdir ] ; then
+          echo "Error: Cannot access PERF lib directory $perflibdir"
+          exit 1
       fi
-    shift
-    ;;
-
+      shift
+      ;;
+      
   -perflibrary=*)
       perf=yes
       perflibrary=`echo $arg | sed -e 's/-perflibrary=//' -e 's/ /#/g'`
-    shift
-    ;;
-
+      shift
+      ;;
+      
   -opari)
       opari=yes
       openmp=yes
-    shift
-    ;;
+      shift
+      ;;
 
   -opari=*)
       opari=yes
       openmp=yes
-    shift
-    ;;
+      shift
+      ;;
 
   -opari_region)
       opari_region=yes
-    shift
-    ;;
+      shift
+      ;;
 
   -opari_construct)
       opari_construct=yes
-    shift
-    ;;
+      shift
+      ;;
 
   -vampirtrace=*)
       vampirtrace=yes
       trace=yes
       vampirtracedir=`echo $arg | sed -e 's/-vampirtrace=//'`
-      if [ ! -d $vampirtracedir ]
-      then
-        echo "Error: Cannot access VAMPIRTRACE directory $vampirtracedir"
-        exit 1
+      if [ ! -d $vampirtracedir ] ; then
+          echo "Error: Cannot access VAMPIRTRACE directory $vampirtracedir"
+          exit 1
       fi
-    shift
-    ;;
+      shift
+      ;;
 
   -epilog=*)
       epilog=yes
       trace=yes
       epilogdir=`echo $arg | sed -e 's/-epilog=//'`
-      if [ ! -d $epilogdir ]
-      then
-        echo "Error: Cannot access EPILOG directory $epilogdir"
-        exit 1
+      if [ ! -d $epilogdir ] ; then
+          echo "Error: Cannot access EPILOG directory $epilogdir"
+          exit 1
       fi
-    shift
-    ;;
+      shift
+      ;;
 
   -epiloglib=*)
       epilog=yes
       epiloglib=yes
       trace=yes
       epiloglibdir=`echo $arg | sed -e 's/-epiloglib=//'`
-    shift
-    ;;
+      shift
+      ;;
 
   -epilogbin=*)
       epilog=yes
       epilogbin=yes
       trace=yes
       epilogbindir=`echo $arg | sed -e 's/-epilogbin=//'`
-    shift
-    ;;
+      shift
+      ;;
 
   -epiloginc=*)
       epilog=yes
       epiloginc=yes
       trace=yes
       epilogincdir=`echo $arg | sed -e 's/-epiloginc=//'`
-    shift
-    ;;
+      shift
+      ;;
 
   -pdt=*)
       pdt=yes
       pdtdir=`echo $arg | sed -e 's/-pdt=//'`
-      if [ ! -d $pdtdir ]
-      then
-        echo "Error: Cannot access PDT directory $pdtdir"
-        exit 1
+      if [ ! -d $pdtdir ] ; then
+          echo "Error: Cannot access PDT directory $pdtdir"
+          exit 1
       fi
-    shift
-    ;;
+      shift
+      ;;
 
   -vtf=*)
       vtf=yes
