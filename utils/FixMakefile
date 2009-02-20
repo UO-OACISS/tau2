@@ -890,14 +890,6 @@ fi
         echo NOTE: Using 32 bit mode for x86_64 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
-     CM5)
-	echo "NOTE: *** CM5 development enviroment found ***"
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
-     PARAGON)
-	echo "NOTE: *** Paragon development environment found. ***"
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
      SP1)
 	echo "NOTE: *** SP development environment found. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -981,37 +973,13 @@ fi
 	echo "NOTE: *** Using Solaris 64 bit options.  ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     CNXSPP)
-	echo "NOTE: *** Convex SPP development environment found. ***"
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
-     CS2)
-	echo "NOTE: *** Meiko CS2 development environment found. ***"
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
      C90)
 	echo "NOTE: *** Cray C90 development environment found. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     KSR)
-	echo "NOTE: *** Kendall Square KSR-1 development environment found. ***"
+     RENCI_STFF)
+        echo "NOTE: Using RENCI STFF library. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
-     PTX)
-	echo "NOTE: *** Symmetry PTX development environment found. ***"
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
-     TC2000)
-        echo "Bernd, I dont know what to do here...."
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
-     SYMMETRY)
-	echo "NOTE: *** Symmetry Dynix development environment found. ***"
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
-    RENCI_STFF)
-       echo "NOTE: Using RENCI STFF library. ***"
-       echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
        ;;
      TCLTK)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1034,18 +1002,6 @@ fi
         ;;
      TAU_SPROC)
 	echo "NOTE: Using SGI sproc as the thread package. ***"
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
-     TULIPTHREADS)
-	echo "NOTE: Using Tulip Threads as the thread package. ***"
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
-     SMARTS)
-	echo "NOTE: Using SMARTS interface for Tulip threads. ***"
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
-     PCL)
-	echo "NOTE: Using PCL interface for Hardware Performance Counters ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PAPI)
@@ -1192,10 +1148,6 @@ fi
 	echo "NOTE: Using Compaq f90 options with Guide ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     PCLPTHREAD)
-	echo "NOTE: Using multi-threaded access to H/W Performance Counters ***"
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
      PAPIPTHREAD)
 	echo "NOTE: Using multi-threaded access to H/W Performance Counters ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1299,10 +1251,6 @@ ALPHATIMERS)
 	;;
      INTELCXXLIBICC)
 	echo "NOTE: Using INTEL's -cxxlib-icc compilation option"
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
-     INTELTFLOP)
-	echo "NOTE: Using INTEL TeraFlop Profiling Options -DPOOMA_TFLOP"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      DEBUGPROF)

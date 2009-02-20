@@ -4227,11 +4227,6 @@ case $machine in
         fi
 	;;
 
-     next)
-	echo Found a \"$machine\" configuration definition
-	fixmakeargs="arch=$machine NEXT_CLIB $fixmakeargs"
-	;;
-
      solaris2*)
 	echo Found a \"$machine\" configuration definition
 	fixmakeargs="arch=$machine SOL2 $fixmakeargs"
@@ -4258,6 +4253,7 @@ case $machine in
             fi
         fi
 	;;
+
      sun386i)
 	echo Found a \"$machine\" configuration definition
 	fixmakeargs="arch=$machine SUN386I $fixmakeargs"
