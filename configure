@@ -4522,31 +4522,25 @@ case $machine in
 	;;
     esac
 
-if [ $machine = x86_64 -o $machine = i386_linux -o $machine = ia64 ]
-then
-        if [ $cxx_compiler = CC ]
-          then
-            fixmakeargs="$fixmakeargs SUNCC"
-            if [ $openmp = yes ]
-            then
-              fixmakeargs="$fixmakeargs SUNCC_OPENMP"
-            fi
-            if [ $fortran_compiler = no ]
-            then
-              fixmakeargs="$fixmakeargs SUN_FORTRAN"
-              fortran_compiler=yes
-            fi
+if [ $machine = x86_64 -o $machine = i386_linux -o $machine = ia64 ] ; then
+    if [ $cxx_compiler = CC ] ; then
+        fixmakeargs="$fixmakeargs SUNCC"
+        if [ $openmp = yes ] ; then
+            fixmakeargs="$fixmakeargs SUNCC_OPENMP"
         fi
+        if [ $fortran_compiler = no ] ; then
+            fixmakeargs="$fixmakeargs SUN_FORTRAN"
+            fortran_compiler=yes
+        fi
+    fi
 fi
 
 
-if [ $tauarch = none ]
-then
+if [ $tauarch = none ] ; then
   architecture=
   fixmakeargs="$fixmakeargs arch= "
 else
-  if [ $execprefix = unknown ]
-  then
+  if [ $execprefix = unknown ] ; then
     architecture=$machine
   else
     architecture=$execprefix
@@ -4674,95 +4668,63 @@ if [ $charm = yes ] ; then
     tauoptions="${tauoptions}-charm"
 fi
 
-if [ $compensate = yes ]
-  then 
+if [ $compensate = yes ] ; then 
     fixmakeargs="$fixmakeargs COMPENSATE"
     tauoptions="${tauoptions}-compensate"
 fi
    
-if [ $muse = yes ]
-  then
-    fixmakeargs="$fixmakeargs MUSE"
-    tauoptions="${tauoptions}-muse"
-fi
-
-if [ $muse_event = yes ]
-  then
-    fixmakeargs="$fixmakeargs MUSE_EVENT"
-    tauoptions="${tauoptions}-muse_event"
-fi
-
-if [ $muse_multiple = yes ]
-  then
-    fixmakeargs="$fixmakeargs MUSE_MULTIPLE"
-    tauoptions="${tauoptions}-muse_multiple"
-fi
-
-if [ $sproc = yes ]
-  then
+if [ $sproc = yes ] ; then
     fixmakeargs="$fixmakeargs TAU_SPROC"
     tauoptions="${tauoptions}-sproc"
 fi
 
-if [ $pcl = yes ]
-  then
+if [ $pcl = yes ] ; then
     fixmakeargs="$fixmakeargs PCL pcldir=$pcldir"
     tauoptions="${tauoptions}-pcl"
 fi
 
 
-if [ $python = yes ]
-  then
+if [ $python = yes ] ; then
     fixmakeargs="$fixmakeargs PYTHON pythoninc=$pythoninc pythonlib=$pythonlib"
     tauoptions="${tauoptions}-python"
-    if [ $machine = rs6000 -a "x$pythonlib" = "x" ] 
-    then
+    if [ $machine = rs6000 -a "x$pythonlib" = "x" ] ; then
       echo "ERROR: For IBM systems, please specify the -pythonlib=<dir> flag where *.py files and the config directory are located!"
       exit 1
     fi
 fi
 
-if [ $zepto = yes ]
-  then
+if [ $zepto = yes ] ; then
     tauoptions="${tauoptions}-zepto"
 fi
 
-if [ $ktau = yes ]
-  then
+if [ $ktau = yes ] ; then
     fixmakeargs="$fixmakeargs KTAU ktauinc=$ktauinc ktauincuser=$ktauincuser ktaulib=$ktaulib ktausym=$ktausym"
     tauoptions="${tauoptions}-ktau"
 fi
 
-if [ $ktau_merge = yes ]
-  then
+if [ $ktau_merge = yes ] ; then
     fixmakeargs="$fixmakeargs KTAU_MERGE ktauinc=$ktauinc ktauincuser=$ktauincuser ktaulib=$ktaulib ktausym=$ktausym"
     tauoptions="${tauoptions}-ktau_merge"
 fi
 
-if [ $ktau_shctr = yes ]
-  then
+if [ $ktau_shctr = yes ] ; then
     fixmakeargs="$fixmakeargs KTAU_SHCTR ktauinc=$ktauinc ktauincuser=$ktauincuser ktaulib=$ktaulib ktausym=$ktausym"
     tauoptions="${tauoptions}-ktau_shctr"
 fi
 
-if [ $vtf = yes ]
-then
+if [ $vtf = yes ] ; then
   fixmakeargs="$fixmakeargs VTF vtfdir=$vtfdir"
 fi
 
-if [ $otf = yes ]
-then
+if [ $otf = yes ] ; then
   fixmakeargs="$fixmakeargs OTF otfdir=$otfdir"
-  if [ ! -d $otfdir/${architecture} ] 
-  then
+  if [ ! -d $otfdir/${architecture} ] ; then
     fixmakeargs="$fixmakeargs OTFSRC"
   fi  
 fi
 
-if [ $slog2 = yes ]
-then
-  if [ $internalslog2 = yes ]
-  then
+if [ $slog2 = yes ] ; then
+  if [ $internalslog2 = yes ] ; then
      slog2dir=$tauroot/tools/src/contrib/slog2sdk/
       if [ ! -d $slog2dir ]
       then
@@ -4771,8 +4733,7 @@ then
       fi
   fi
   fixmakeargs="$fixmakeargs SLOG2 slog2dir=$slog2dir"
-  if [ "x$jdkdir" = "x" ]
-  then
+  if [ "x$jdkdir" = "x" ] ; then
     jdkdir=$JAVA_HOME 
     #`which javac | sed s/javac/../`
     if [ "x$jdkdir" = "x" ]
@@ -4801,20 +4762,16 @@ if [ $pdt_cxx_compiler != default ] ; then
 fi
 
 
-if [ $pdt = yes ]
-then
+if [ $pdt = yes ] ; then
   fixmakeargs="$fixmakeargs PDT pdtdir=$pdtdir"
   tauoptions="${tauoptions}-pdt"
-  if [ $pdtcompdir != unknown ]
-  then
+  if [ $pdtcompdir != unknown ] ; then
     fixmakeargs="$fixmakeargs PDTARCH pdtcompdir=$pdtcompdir"
   fi
 
-  if [ $pdtarchdir != unknown ]
-  then
+  if [ $pdtarchdir != unknown ] ; then
     fixmakeargs="$fixmakeargs PDTARCHITECTURE pdtarchdir=$pdtarchdir"
   fi
-
 
 # Check if PDT has Fortran statement level information
   cat <<EOF > checkpdt.cpp
@@ -4829,21 +4786,20 @@ EOF
   if [ $machine = alpha -a $cxx_compiler = cxx ]; then
     orig_useropt="$orig_useropt -x c++ -D__USE_STD_IOSTREAM"
   fi
-  if $cxx_compiler $orig_useropt -I$pdtdir/include -c checkpdt.cpp 1> /dev/null 2>&1
-  then
-    echo "PDT supports Fortran Loop Level information"
+  if $cxx_compiler $orig_useropt -I$pdtdir/include -c checkpdt.cpp 1> /dev/null 2>&1 ; then
+      echo "PDT supports Fortran Loop Level information"
   else
-    echo "IMPORTANT NOTE: Your PDT does not support Fortran Loop Level information."
-    echo "***************You may want to upgrade to a newer release."
-    echo "See http://www.cs.uoregon.edu/research/pdt"
-    fixmakeargs="$fixmakeargs PDTNOFSTMTS"
+      echo "IMPORTANT NOTE: Your PDT does not support Fortran Loop Level information."
+      echo "***************You may want to upgrade to a newer release."
+      echo "See http://www.cs.uoregon.edu/research/pdt"
+      fixmakeargs="$fixmakeargs PDTNOFSTMTS"
   fi
   /bin/rm -f checkpdt.o checkpdt.cpp
 fi
 
 
 if [ $vampirtrace = yes ]; then
-cat <<EOF>vttest.cpp
+    cat <<EOF>vttest.cpp
 #include "Profile/Profiler.h"
 #include "Profile/TauVampirTrace.h"
 int foo(void)
@@ -4852,26 +4808,23 @@ int foo(void)
   return 0;
 }
 EOF
-  if $cxx_compiler $orig_useropt -Iinclude -I$vampirtracedir/include -c vttest.cpp -DTRACING_ON -DTAU_DOT_H_LESS_HEADERS 1> /dev/null 2>&1
-  then
-    echo "VampirTrace check successful"
-  else
-    echo "Using VampirTrace options for compiling"
-    fixmakeargs="$fixmakeargs VAMPIRTRACEINTS"
-  fi
-  /bin/rm -f vttest.cpp
+    if $cxx_compiler $orig_useropt -Iinclude -I$vampirtracedir/include -c vttest.cpp -DTRACING_ON -DTAU_DOT_H_LESS_HEADERS 1> /dev/null 2>&1 ; then
+	echo "VampirTrace check successful"
+    else
+	echo "Using VampirTrace options for compiling"
+	fixmakeargs="$fixmakeargs VAMPIRTRACEINTS"
+    fi
+    /bin/rm -f vttest.cpp
 fi
     
  
 
 
-if [ $java = yes ]
-  then
+if [ $java = yes ] ; then
     fixmakeargs="$fixmakeargs JAVA jdkdir=$jdkdir"
 fi
 
-if [ $openmp = yes ]
-  then
+if [ $openmp = yes ] ; then
     fixmakeargs="$fixmakeargs OPENMP"
     tauoptions="${tauoptions}-openmp"
 fi
@@ -4883,75 +4836,60 @@ if [ $opari = yes ] ; then
 fi
 
 
-if [ $vampirtrace = yes ]
-  then
+if [ $vampirtrace = yes ] ; then
     fixmakeargs="$fixmakeargs VAMPIRTRACE vampirtracedir=$vampirtracedir"
     tauoptions="${tauoptions}-vampirtrace"
-    if [ $mpi = yes ] 
-    then 
-      if [ $openmp = yes ] 
-      then
+    if [ $mpi = yes ] ; then 
+      if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs VAMPIRTRACEOMPI" 
       else
         fixmakeargs="$fixmakeargs VAMPIRTRACEMPI" 
       fi 
     else
-      if [ $openmp = yes ]
-      then
+      if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs VAMPIRTRACEOMP" 
       fi
     fi
 fi
 
-if [ $epilog = yes ]
-  then
+if [ $epilog = yes ] ; then
 
-    if [ -f $epiloglibdir/libsz.a ]
-    then
+    if [ -f $epiloglibdir/libsz.a ] ; then
       epilogextralinkcmd="-lsz"
     fi
 
-    if [ -f $epiloglibdir/libcubew3.a ]
-    then
+    if [ -f $epiloglibdir/libcubew3.a ] ; then
       epilogextralinkcmd="$epilogextralinkcmd#-lcubew3"
     fi
 
-    if [ -f $epiloglibdir/libepk.util.a ]
-    then
+    if [ -f $epiloglibdir/libepk.util.a ] ; then
       epilogextralinkcmd="$epilogextralinkcmd#-lepk.util"
     fi
-    if [ $scalasca = yes -a -f /usr/lib/libswclock.a ]
-    then
+    if [ $scalasca = yes -a -f /usr/lib/libswclock.a ] ; then
       epilogextralinkcmd="$epilogextralinkcmd#-lswclock"
     fi
 
     fixmakeargs="$fixmakeargs EPILOG epilogdir=$epilogdir epiloglibdir=$epiloglibdir epilogbindir=$epilogbindir epilogextralinkcmd=$epilogextralinkcmd epilogincdir=$epilogincdir"
     tauoptions="${tauoptions}-epilog"
-    if [ $scalasca = yes ]
-    then
+    if [ $scalasca = yes ] ; then
       tauoptions="${tauoptions}-scalasca"
     fi
-    if [ $mpi = yes ] 
-    then 
-      if [ $openmp = yes ] 
-      then
+    if [ $mpi = yes ] ; then 
+      if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs EPILOGOMPI" 
       else
         fixmakeargs="$fixmakeargs EPILOGMPI" 
       fi 
     else
-      if [ $openmp = yes ]
-      then
+      if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs EPILOGOMP" 
       fi
     fi
 fi
 
-if [ $dyninst = yes ]
-  then
+if [ $dyninst = yes ] ; then
     fixmakeargs="$fixmakeargs DYNINST dyninstdir=$dyninstdir"
-    if [ ! -d $dyninstdir/lib ]
-	then
+    if [ ! -d $dyninstdir/lib ] ; then
 	fixmakeargs="$fixmakeargs DYNINST41"
     fi
     if [ ! -d $dyninstdir/$PLATFORM/lib/libcommon.so ] ; then
@@ -4962,85 +4900,66 @@ if [ $dyninst = yes ]
     fi
 fi
 
-if [ $pcl = yes ]
-  then
-    if [ $pthread = yes  -o $openmp = yes ]
-    then 
+if [ $pcl = yes ] ; then
+    if [ $pthread = yes  -o $openmp = yes ] ; then 
       fixmakeargs="$fixmakeargs PCLPTHREAD"
     fi
 fi
 
-if [ $papi = yes ]
-  then
-    if [ $pthread = yes -o $openmp = yes ]
-    then
+if [ $papi = yes ] ; then
+    if [ $pthread = yes -o $openmp = yes ] ; then
       fixmakeargs="$fixmakeargs PAPIPTHREAD"
     fi
 fi
 
-if [ $opari = yes ]
-  then
-    if [ $pthread = yes -o $smarts = yes -o $java = yes ]
-    then
+if [ $opari = yes ] ; then
+    if [ $pthread = yes -o $smarts = yes -o $java = yes ] ; then
       echo "ERROR: -opari option requires OpenMP threads package."
       echo "*****************************************************"
       exit 1
     fi
-    if [ $opari_construct = yes -a $opari_region = no ]
-    then
+    if [ $opari_construct = yes -a $opari_region = no ] ; then
       fixmakeargs="$fixmakeargs OPARI_CONSTRUCT"
     fi
-    if [ $opari_construct = no -a $opari_region = yes ]
-    then
+    if [ $opari_construct = no -a $opari_region = yes ] ; then
       fixmakeargs="$fixmakeargs OPARI_REGION"
     fi
 fi
 
-if [ $trace = yes ]
-  then
-    if [ $profile = yes ] 
-      then
+if [ $trace = yes ] ; then
+    if [ $profile = yes ] ; then
         tauoptions="${tauoptions}-profile"
     fi
-    if [ $profilestats = yes ] 
-      then
+    if [ $profilestats = yes ] ; then
         tauoptions="${tauoptions}-profilestats"
     fi
     tauoptions="${tauoptions}-trace"
 fi
 
-if [ $mpitrace = yes ]
-  then
+if [ $mpitrace = yes ] ;  then
     tauoptions="${tauoptions}-mpitrace"
 fi
 
-if [ $kai = yes ]
-  then
+if [ $kai = yes ] ; then
     tauoptions="${tauoptions}-kcc"
 fi 
 
-if [ $pgi = yes ]
-  then
+if [ $pgi = yes ] ; then
     tauoptions="${tauoptions}-pgi"
-    if [ $openmp = yes ]
-    then
+    if [ $openmp = yes ] ; then
       fixmakeargs="$fixmakeargs PGIOPENMP"
     fi
 fi 
 
-if [ $intel = yes ]
-  then
-    if [ $openmp = yes ]
-    then
+if [ $intel = yes ] ; then
+    if [ $openmp = yes ] ; then
       fixmakeargs="$fixmakeargs INTELOPENMP"
     fi
 fi 
 
 
-if [ $gnu = yes ]
-  then
-    if [ $openmp = yes ]
-    then
+if [ $gnu = yes ] ; then
+    if [ $openmp = yes ] ; then
       fixmakeargs="$fixmakeargs GNUOPENMP"
     fi
 fi 
@@ -5151,49 +5070,30 @@ if [ $cxx_compiler = icpc ] ; then
     fixmakeargs="$fixmakeargs ifortlibdir=$libdir" 
 fi
 
-# if [ $fortran_compiler = intel ] ; then
-#   intelifort=`which ifort 2>/dev/null`
-#   if [ "y$intelifort" != "y" ] ;  then 
-#     if [ -x $intelifort ] ; then
-#       echo "Checking version (10.0+) of Intel compilers"
-#       ifort -v 2>&1 | grep "Version 10" > /dev/null
-#       if [ $? = 0 ] ; then
-#       fi
-#     fi
-#   fi
-# fi
 
-if [ $ibmxlc = yes ]
-then
-  if [ $openmp = yes ]
-  then
+if [ $ibmxlc = yes ] ; then
+  if [ $openmp = yes ] ; then
     fixmakeargs="$fixmakeargs IBMXLC_OPENMP"
   fi
 fi
 	
-if [ $machine = hitachi ]
-then
-  if [ $openmp = yes ]
-  then
+if [ $machine = hitachi ] ; then
+  if [ $openmp = yes ] ; then
     fixmakeargs="$fixmakeargs HITACHI_OPENMP"
   fi
 fi
 
-if [ $cxx_compiler = cxx ]
-then
-  if [ $openmp = yes ]
-  then
+if [ $cxx_compiler = cxx ] ; then
+  if [ $openmp = yes ] ; then
     fixmakeargs="$fixmakeargs COMPAQCXX_OPENMP"
   fi
-  if [ $pthread = yes ]
-  then
+  if [ $pthread = yes ] ; then
     fixmakeargs="$fixmakeargs COMPAQCXX_PTHREAD"
   fi
 fi
    
 
-if [ $fujitsu = yes ]
-  then
+if [ $fujitsu = yes ] ; then
     tauoptions="${tauoptions}-fujitsu"
 fi 
 
@@ -5204,16 +5104,13 @@ if [ $epilog = yes -o $vampirtrace = yes ] ; then
     fi
 fi
 
-if [ $disableshared = yes ]
-then
+if [ $disableshared = yes ] ; then
     fixmakeargs="$fixmakeargs NOSHARED"
 fi
 
-if [ $noex = yes ]
-  then
+if [ $noex = yes ] ; then
     tauoptions="${tauoptions}-noex"
-    if [ $kai = yes ]
-      then
+    if [ $kai = yes ] ; then
         fixmakeargs="$fixmakeargs KAINOEX"
     else
     # OTHER COMPILERS NO EXCEPTIONS... SGICC needs this 
@@ -5225,8 +5122,7 @@ fi
 fixmakeargs="$fixmakeargs tauoptions=$tauoptions"
 
 
-if [ $use_ansic = yes ] 
-then	
+if [ $use_ansic = yes ] ; then	
   fixmakeargs="$fixmakeargs ANSIC"
 fi
 
@@ -5302,15 +5198,13 @@ cp ${tauroot}/tools/src/contrib/tcollect10.ini $BINTARGET
 
 
 # Copy over tau_load.sh
-if [ $mpi = yes ]
-then
+if [ $mpi = yes ] ; then
   cat ${tauroot}/tools/src/tau_load.sh | sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/tau_load.sh
   chmod a+rx ${targetdir}/${architecture}/bin/tau_load.sh
   echo "TAU: installed tau_load.sh in ${targetdir}/${architecture}/bin"
 fi
 
-if [ $ibmmpi = yes ]
-then
+if [ $ibmmpi = yes ] ; then
   cat ${tauroot}/tools/src/tau_poe | sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/tau_poe
   chmod a+rx ${targetdir}/${architecture}/bin/tau_poe
   echo "TAU: installed tau_poe in ${targetdir}/${architecture}/bin"
@@ -5320,8 +5214,6 @@ cp ${tauroot}/tools/src/jtau_tf/bin/TAU_tf.jar ${targetdir}/${architecture}/lib
 echo "TAU: installed Java trace reader/writer api in ${targetdir}/${architecture}/lib"
 
 
-#if [ $trace = yes ]
-#then
 cat ${tauroot}/tools/src/contrib/slog2sdk/bin/jumpshot.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/jumpshot
 chmod a+rx ${targetdir}/${architecture}/bin/jumpshot
@@ -5341,13 +5233,10 @@ cp ${tauroot}/tools/src/contrib/slog2sdk/lib/traceTOslog2.jar ${targetdir}/${arc
 cp ${tauroot}/tools/src/contrib/slog2sdk/lib/slog2printserial.jar ${targetdir}/${architecture}/lib
 cp ${tauroot}/tools/src/tau2slog2/bin/tau2slog2.jar ${targetdir}/${architecture}/lib
 echo "TAU: installed required slog2sdk jars in ${targetdir}/${architecture}/lib"
-#fi
 
 
-if [ $slog2 = yes ]
-then
-  if [ $internalslog2 = yes ]
-  then
+if [ $slog2 = yes ] ; then
+  if [ $internalslog2 = yes ] ; then
     cat ${tauroot}/tools/src/contrib/slog2sdk/bin/jumpshot.skel | 
     sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/jumpshot
     chmod a+rx ${targetdir}/${architecture}/bin/jumpshot
@@ -5416,14 +5305,13 @@ if [ $machine = default ] ; then
     /bin/cp ./utils/FixMakefile.info.default ./utils/FixMakefile.info
 fi
 
-    sedout="./utils/FixMakefile.sed"
+sedout="./utils/FixMakefile.sed"
 echo "Applying script to all Makefiles, please wait, this may take a while..."
 
 # Change back to $START_DIR (defined at the top) to ensure we're in the tau2 directory
 # before we execute this fairly dangerous 'find' command
 cd $START_DIR
 for i in `find . -name Makefile -print `
-#for i in $tauroot/include/Makefile $tauroot/src/Profile/Makefile $tauroot/utils/Makefile $tauroot/Makefile
   do 
     $echo ".${nnl}"
     sed -f $sedout < ${i} > ${i}~~0
@@ -5431,26 +5319,16 @@ for i in `find . -name Makefile -print `
 done
 echo .
 
-if [ $tauprefix != unknown ]
-  then 
+if [ $tauprefix != unknown ] ; then 
     echo "TAU: Copying include directory to ${tauprefix}"
     cp -r include ${tauprefix}
     echo "TAU: Copying man directory to ${tauprefix}"
     cp -r man ${tauprefix}
 fi
 
-# Attempt to install metatext (jev)
-if [ -f ./metatext/configure ]
-  then
-    cd ./metatext
-    ./configure  1> /dev/null 2>&1
-    cd ..
-fi
-
 
 
 #############################################################################
-# Set up TAU-specific build system
 
 echo " "
 echo "Configuring TAU Build scripts..."
@@ -5469,92 +5347,74 @@ pr=examples
 exampleslist="instrument/Makefile mapping/embedded/Makefile \
   mapping/external/Makefile fork/Makefile selectiveAccess/Makefile"
 
-if [ $fortran_compiler != no ] 
-then
+if [ $fortran_compiler != no ] ; then
   exampleslist="$exampleslist fortran/Makefile f90/Makefile"
 fi
 
 # Rules for adding examples follow...
 # If PDT is specified, then modify the following makefiles
-if [ $pdt = yes ]
-then
+if [ $pdt = yes ] ; then
   exampleslist="$exampleslist autoinstrument/Makefile reduce/Makefile cinstrument/Makefile"
-  if [ $fortran_compiler != no ]
-  then
+  if [ $fortran_compiler != no ] ; then
     exampleslist="$exampleslist selective/Makefile"
   fi
 fi
 
 # If PDT is specified WITH MPI
-if [ $pdt = yes -a $mpi = yes ]
-then
+if [ $pdt = yes -a $mpi = yes ] ; then
   exampleslist="$exampleslist pdt_mpi/c++/Makefile pdt_mpi/c/Makefile" 
-  if [ $pthread = yes ]
-  then
+  if [ $pthread = yes ] ; then
     exampleslist="$exampleslist mixedmode/Makefile"
   fi
 
-  if [ $fortran_compiler != no ]
-  then
+  if [ $fortran_compiler != no ] ; then
     exampleslist="$exampleslist pdt_mpi/f90/Makefile"
   fi 
 fi
 
-if [ $mpi = yes ]
-then
+if [ $mpi = yes ] ; then
   exampleslist="$exampleslist pi/Makefile mpishlib/Makefile"
-  if [ $fortran_compiler != no ]
-  then
+  if [ $fortran_compiler != no ] ; then
     exampleslist="$exampleslist NPB2.3/config/make.def"
   fi
-  if [ $openmp = yes ]
-  then 
+  if [ $openmp = yes ] ; then 
     exampleslist="$exampleslist openmpi/Makefile"
   fi
 fi
 
-if [ $opari = yes ] 
-then
+if [ $opari = yes ] ; then
   exampleslist="$exampleslist opari/c++/Makefile"
-  if [ $pdt = yes -a $fortran_compiler != no ]
-  then 
+  if [ $pdt = yes -a $fortran_compiler != no ] ; then 
     exampleslist="$exampleslist opari/pdt_f90/Makefile"
   fi
 
-  if [ $mpi = yes ]
-  then
+  if [ $mpi = yes ] ; then
     exampleslist="$exampleslist opari/openmpi/Makefile"
   fi
 fi
 
-if [ $trace = yes ]
-then
+if [ $trace = yes ] ; then
   exampleslist="$exampleslist traceinput/c++/Makefile traceinput/c/Makefile"
 fi
 
-if [ $callpath = yes ]
-then
+if [ $callpath = yes ] ; then
   exampleslist="$exampleslist callpath/Makefile"
 fi
 
-if [ $python = yes -o $java = yes -o $dyninst = yes ]
-then
+if [ $python = yes -o $java = yes -o $dyninst = yes ] ; then
 # RESET the exampleslist, the C, C++, F90 examples don't matter!
   exampleslist=""
 fi
 
-if [ $pthread = yes ]
-then
+if [ $pthread = yes ] ; then
   exampleslist="$exampleslist threads/Makefile cthreads/Makefile"
 fi
 
-if [ $sproc = yes ]
-then
+if [ $sproc = yes ] ; then
   exampleslist="$exampleslist sproc/Makefile"
 fi
 
-if [ $papi = yes -o $pcl = yes ]
-then
+if [ $papi = yes -o $pcl = yes ] ; then
   exampleslist="$exampleslist papi/Makefile multicounter/Makefile"
   if [ $pthread = yes ]
   then
@@ -5563,21 +5423,8 @@ then
 fi
 
 
-
-
-
-
-######################################################################
-# If the default gcc/g++ is not used, Modify the Makefiles...
-# Choose the c++ and cc compiler
-
-
-
-
-
 # Modify the Makefiles only if prefix is not specified. 
-if [ $tauprefix = unknown ]
-then 
+if [ $tauprefix = unknown ] ; then 
   for i in $exampleslist
   do 
     $echo ".${nnl}"
@@ -5590,8 +5437,7 @@ fi
 echo .
 
 # If it is default, restore to original state
-if [ "y$1"  = "ydefault" ]
-then
+if [ "y$1"  = "ydefault" ] ; then
   echo "Fixing examples Makefiles..."
   echo "s@include \(.*\)TAUROOTDIR\(.*\)@include $\(TAUROOTDIR\)/include/Makefile@g" >utils/sedexamples.out
   sedex="./utils/sedexamples.out"
@@ -5603,20 +5449,17 @@ then
   done
 fi
     
-if [ $perf = yes ]
-then
+if [ $perf = yes ] ;then
     cp include/Makefile $tautoplevel/$architecture/lib/Makefile.tau$tauoptions
 fi
   
 
-if [ $slog2 = yes ]
-then
+if [ $slog2 = yes ] ;then
   /bin/rm -f utils/slogconverter/trace_impl.h
   utils/slogconverter/slogtest $jdkdir > utils/slogconverter/trace_impl.h
 fi
 
-if [ $tauprefix != unknown ]
-then
+if [ $tauprefix != unknown ] ;then
   cp -r examples ${tauprefix}
   cp .all_configs .last_config ${tauprefix}
 fi
