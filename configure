@@ -3942,87 +3942,8 @@ fi
 
 rm -f get_stdinc.C find_stdinc.awk
 
-#####################################################################
-cat << EOF > f1.c
-      #define  _LARGEFILE64_SOURCE    1 
-      #include <sys/types.h>
-      #include <sys/stat.h>
-      #include <fcntl.h>
-
-      int main(int argc, char** argv) {
-         int file = open ("asdf", O_LARGEFILE, 0600);
-      }
-EOF
 
 
-$echo "Checking if open takes O_LARGEFILE... ${nnl}"
-if $c_compiler $orig_useropt -c f1.c 1> /dev/null 2>&1 ; then
-    fixmakeargs="$fixmakeargs TAU_LARGEFILE"
-    echo "yes"
-else
-    echo "no"
-fi
-/bin/rm -f f1.o f1.c
-
-
-##########################################################################
-# Check if weak symbols are supported
-##########################################################################
-cat <<EOF > tau_weak_test.c
-#pragma weak omp_get_thread_num=tau_omp_get_thread_num
-int tau_omp_get_thread_num() {
-  return 0;
-}
-EOF
-
-$echo "Checking for weak symbols... ${nnl}"
-if $c_compiler $orig_useropt tau_weak_test.c -c 1> /dev/null 2>&1 ; then
-    weakfound=`nm tau_weak_test.o |  awk '{ print $2 ; }' | head -n 1`
-    if [ "x$weakfound" = "xW" ] ; then
-	echo "yes"
-	fixmakeargs="$fixmakeargs TAU_WEAK_SUPPORTED"
-    else
-	echo "no"
-    fi
-else
-    echo "no"
-fi
-/bin/rm -f tau_weak_test.o tau_weak_test.c
-##########################################################################
-
-
-######################################################################
-cat <<EOF > get_typeinfo1.C
-#include <typeinfo> 
-using std::type_info;
-#ifdef __GNUC__
-#include <cxxabi.h>
-using namespace std;
-#endif /* GNUC */
-
-EOF
-
-if $cxx_compiler $orig_useropt -c get_typeinfo1.C 1> /dev/null 2>&1 
-then 
-  echo "C++ compiler supports Std Runtime Type Information (default)"
-  if [ $cxx_compiler = g++ -o $cxx_compiler = c++ -o $cxx_compiler = powerpc64-linux-g++ ] 
-  then 
-    echo "Supporting GNU RTTI options"
-  fi
-else
-cat <<EOF > get_typeinfo2.C
-#include <typeinfo.h>
-EOF
-  if $cxx_compiler $orig_useropt -c get_typeinfo2.C 1> /dev/null 2>&1 
-  then
-    echo "C++ compiler supports RTTI"
-    fixmakeargs="$fixmakeargs RTTI"
-  else
-    echo "C++ compiler doesn't support Runtime Type Information"
-    fixmakeargs="$fixmakeargs NORTTI"
-  fi 
-fi
-rm -f get_typeinfo1.C get_typeinfo2.C get_typeinfo*.o *.ti *.ii
 
 ######################################################################
 if [ $cxx_compiler = pgCC -o $cxx_compiler = pgcpp ] 
@@ -4066,32 +3987,6 @@ EOF
   rm -f elgtest.C elgtest.o 
 fi
 
-######################################################################
-# test whether C++ compiler supports Std C++ Library (KAI KCC compiler) 
-echo "Testing for Standard C++ Library support for string class"
-cat <<EOF > /tmp/tau$$.C
-#include <string>
-#include <vector>
-#include <list>
-#include <map>
-using std::string;
-using std::vector;
-using std::pair;
-using std::list;
-using std::map;
-void foo(void) { string s1; return; }
-EOF
-
-if $cxx_compiler -c /tmp/tau$$.C 1> /dev/null 2>&1
-then 
-  echo "Found support for Standard C++ Library string"
-  echo "NOTE: Compiling Profiling Library and Applications with -DTAU_STDCXXLIB"
-  echo "***********************************************************************"
-  stdcxxlib=yes
-else
-  echo "Did not find <string> Standard C++ Library header file. Using <bstring.h> "
-fi 
-rm -f /tmp/tau$$.C tau$$.o
 
 
 ######################################################################
@@ -4558,6 +4453,125 @@ echo \#define TAU_ARCH \"$machine\" >> ./include/tauarch.h
 make_directories
 
 
+echo "***********************************************************************"
+#####################################################################
+# Compile/Link/Run checks
+#####################################################################
+
+
+#####################################################################
+# Test for C++ string library
+#####################################################################
+$echo "Checking for standard C++ library <string>... ${nnl}"
+cat <<EOF > /tmp/tau$$.C
+#include <string>
+#include <vector>
+#include <list>
+#include <map>
+using std::string;
+using std::vector;
+using std::pair;
+using std::list;
+using std::map;
+void foo(void) { string s1; return; }
+EOF
+
+if $cxx_compiler -c /tmp/tau$$.C 1> /dev/null 2>&1 ; then 
+    echo "yes"
+    stdcxxlib=yes
+else
+    echo "no (using <bstring.h> instead)"
+fi 
+rm -f /tmp/tau$$.C tau$$.o
+
+
+#####################################################################
+# Check Runtime type info
+#####################################################################
+cat <<EOF > get_typeinfo1.C
+#include <typeinfo> 
+using std::type_info;
+#ifdef __GNUC__
+#include <cxxabi.h>
+using namespace std;
+#endif /* GNUC */
+
+EOF
+
+$echo "Checking if C++ compiler supports Std Runtime Type Information... ${nnl}"
+if $cxx_compiler $orig_useropt -c get_typeinfo1.C 1> /dev/null 2>&1 ; then 
+    echo "yes"
+else
+    echo "no"
+    cat <<EOF > get_typeinfo2.C
+#include <typeinfo.h>
+EOF
+
+    $echo "Checking if C++ compiler supports Runtime Type Information (RTTI)... ${nnl}"
+    if $cxx_compiler $orig_useropt -c get_typeinfo2.C 1> /dev/null 2>&1 ; then
+	echo "yes"
+	fixmakeargs="$fixmakeargs RTTI"
+    else
+	echo "no"
+	fixmakeargs="$fixmakeargs NORTTI"
+    fi 
+fi
+rm -f get_typeinfo1.C get_typeinfo2.C get_typeinfo*.o *.ti *.ii
+
+
+
+#####################################################################
+# Check if the open call accepts O_LARGEFILE
+#####################################################################
+cat << EOF > f1.c
+      #define  _LARGEFILE64_SOURCE    1 
+      #include <sys/types.h>
+      #include <sys/stat.h>
+      #include <fcntl.h>
+
+      int main(int argc, char** argv) {
+         int file = open ("asdf", O_LARGEFILE, 0600);
+      }
+EOF
+
+
+$echo "Checking if open takes O_LARGEFILE... ${nnl}"
+if $c_compiler $orig_useropt -c f1.c 1> /dev/null 2>&1 ; then
+    fixmakeargs="$fixmakeargs TAU_LARGEFILE"
+    echo "yes"
+else
+    echo "no"
+fi
+/bin/rm -f f1.o f1.c
+
+
+##########################################################################
+# Check if weak symbols are supported
+##########################################################################
+cat <<EOF > tau_weak_test.c
+#pragma weak omp_get_thread_num=tau_omp_get_thread_num
+int tau_omp_get_thread_num() {
+  return 0;
+}
+EOF
+
+$echo "Checking for weak symbols... ${nnl}"
+if $c_compiler $orig_useropt tau_weak_test.c -c 1> /dev/null 2>&1 ; then
+    weakfound=`nm tau_weak_test.o |  awk '{ print $2 ; }' | head -n 1`
+    if [ "x$weakfound" = "xW" ] ; then
+	echo "yes"
+	fixmakeargs="$fixmakeargs TAU_WEAK_SUPPORTED"
+    else
+	echo "no"
+    fi
+else
+    echo "no"
+fi
+/bin/rm -f tau_weak_test.o tau_weak_test.c
+##########################################################################
+
+
+
 ######################################################################
 # Install BFD if requested
 ######################################################################
@@ -4637,6 +4651,7 @@ else
 fi
 /bin/rm -f conftest_bfd.o conftest_bfd.c conftest_bfd.so
 ######################################################################
+echo "***********************************************************************"
 
 
 if [ $pthread = yes ] ; then
