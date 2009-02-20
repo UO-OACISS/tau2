@@ -1306,7 +1306,6 @@ done
 
 configure_java () {
 
-  echo "TAU: installing TAU's ParaProf profile browser" 
   taushell=sh
   if [ $machine = solaris2* -o $machine = alpha ] ; then
     taushell=ksh
@@ -1317,7 +1316,6 @@ configure_java () {
 configure_perfexplorer () {
 
 
-echo "TAU: installed TAU's PerfDMF database utilities in ${targetdir}/${architecture}/bin" 
 
 cat ${tauroot}/tools/src/perfdmf/bin/configure.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
@@ -1434,9 +1432,6 @@ cp ${tauroot}/tools/src/contrib/jogl/jogl.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/derby.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/xerces.jar $JARTARGET
 cp ${tauroot}/tools/src/common/resources/tau16x16.gif $JARTARGET
-
-echo "TAU: installed ParaProf, PerfDMF, PerfExplorer and supporting jars in:"
-echo "$JARTARGET"
 
 case $machine in
     
@@ -4652,7 +4647,7 @@ fi
 /bin/rm -f conftest_bfd.o conftest_bfd.c conftest_bfd.so
 ######################################################################
 echo "***********************************************************************"
-
+echo "Installing utilities..."
 
 if [ $pthread = yes ] ; then
     fixmakeargs="$fixmakeargs PTHREAD_AVAILABLE ptdir=$ptdir"
@@ -5195,7 +5190,6 @@ if [ ! -f /bin/bash ] ; then
 else
     cp ${tauroot}/tools/src/tau_compiler.sh $BINTARGET
 fi
-echo "TAU: installed tau_compiler.sh in $BINTARGET"
 
 cp ${tauroot}/tools/src/tau_treemerge.pl $BINTARGET
 cp ${tauroot}/tools/src/tau_header_replace.pl $BINTARGET
@@ -5216,17 +5210,14 @@ cp ${tauroot}/tools/src/contrib/tcollect10.ini $BINTARGET
 if [ $mpi = yes ] ; then
   cat ${tauroot}/tools/src/tau_load.sh | sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/tau_load.sh
   chmod a+rx ${targetdir}/${architecture}/bin/tau_load.sh
-  echo "TAU: installed tau_load.sh in ${targetdir}/${architecture}/bin"
 fi
 
 if [ $ibmmpi = yes ] ; then
   cat ${tauroot}/tools/src/tau_poe | sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/tau_poe
   chmod a+rx ${targetdir}/${architecture}/bin/tau_poe
-  echo "TAU: installed tau_poe in ${targetdir}/${architecture}/bin"
 fi
 
 cp ${tauroot}/tools/src/jtau_tf/bin/TAU_tf.jar ${targetdir}/${architecture}/lib
-echo "TAU: installed Java trace reader/writer api in ${targetdir}/${architecture}/lib"
 
 
 cat ${tauroot}/tools/src/contrib/slog2sdk/bin/jumpshot.skel | 
@@ -5241,13 +5232,10 @@ cat ${tauroot}/tools/src/tau2slog2/bin/tau2slog2.skel |
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/tau2slog2
 chmod a+rx ${targetdir}/${architecture}/bin/tau2slog2
 
-echo "TAU: installed tau2slog2, slog2print and jumpshot in ${targetdir}/${architecture}/bin"
-
 cp ${tauroot}/tools/src/contrib/slog2sdk/lib/jumpshot.jar ${targetdir}/${architecture}/lib
 cp ${tauroot}/tools/src/contrib/slog2sdk/lib/traceTOslog2.jar ${targetdir}/${architecture}/lib
 cp ${tauroot}/tools/src/contrib/slog2sdk/lib/slog2printserial.jar ${targetdir}/${architecture}/lib
 cp ${tauroot}/tools/src/tau2slog2/bin/tau2slog2.jar ${targetdir}/${architecture}/lib
-echo "TAU: installed required slog2sdk jars in ${targetdir}/${architecture}/lib"
 
 
 if [ $slog2 = yes ] ; then
@@ -5259,17 +5247,14 @@ if [ $slog2 = yes ] ; then
     cat ${tauroot}/tools/src/contrib/slog2sdk/bin/slog2print.skel | 
     sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/slog2print
     chmod a+rx ${targetdir}/${architecture}/bin/slog2print
-    echo "TAU: installed slog2print and jumpshot in ${targetdir}/${architecture}/bin"
     cp ${tauroot}/tools/src/contrib/slog2sdk/lib/jumpshot.jar ${targetdir}/${architecture}/lib
     cp ${tauroot}/tools/src/contrib/slog2sdk/lib/traceTOslog2.jar ${targetdir}/${architecture}/lib
     cp ${tauroot}/tools/src/contrib/slog2sdk/lib/slog2printserial.jar ${targetdir}/${architecture}/lib
-    echo "TAU: installed required slog2sdk jars in ${targetdir}/${architecture}/lib"
     
     slog2dir=$targetdir/$architecture
   fi
   utils/slogconverter/tau2slog2.skel $jdkdir $targetdir $slog2dir $architecture > $targetdir/$architecture/bin/tau2slog2JNI
   chmod a+rx ${targetdir}/${architecture}/bin/tau2slog2JNI
-  echo "TAU: installed tau2slog2JNI in ${targetdir}/${architecture}/bin"
 fi
 
 
@@ -5279,7 +5264,6 @@ sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'
  > ${targetdir}/${architecture}/bin/tau-config
 chmod a+rx ${targetdir}/${architecture}/bin/tau-config
 
-echo "TAU: installed tauinc.pl in ${targetdir}/${architecture}/bin"
 cp ${tauroot}/tools/src/tauinc.pl ${targetdir}/${architecture}/bin
 chmod a+rx  ${targetdir}/${architecture}/bin/tauinc.pl
 
@@ -5289,18 +5273,13 @@ cat ${tauroot}/tools/src/TauIL/bin/tau_analyze.skel |
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${targetdir}/${architecture}/bin/tau_analyze
 chmod a+rx ${targetdir}/${architecture}/bin/tau_analyze
-echo "TAU: installed tau_analyze in ${targetdir}/${architecture}/bin"
 
 cat ${tauroot}/tools/src/TauIL/Makefile.inc.skel |
 sed -e 's,@TAUROOTDIR@,'$tauroot',' \
 > ${tauroot}/tools/src/TauIL/Makefile.inc
-echo "TAU: installed Makefile.inc in ${tauroot}/tools/src/TauIL"
 
 cp ${tauroot}/tools/src/TauIL/bin/*.jar ${targetdir}/${architecture}/lib
-echo "TAU: installed TauIL and supporting jars in ${targetdir}/${architecture}/lib"
-
 cp ${tauroot}/tools/src/tau_throttle.sh ${targetdir}/${architecture}/bin
-echo "TAU: installed tau_throttle script"
 
 
 
