@@ -35,7 +35,6 @@
 
 #define SYNC_LOOP_COUNT 10
 
-void TraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts);
 
 
 double* TAUDECL TheTauTraceBeginningOffset();

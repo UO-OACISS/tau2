@@ -1171,14 +1171,12 @@ string RtsLayer::PrimaryGroup(const char *ProfileGroupName)
 //////////////////////////////////////////////////////////////////////
 // TraceSendMsg traces the message send
 //////////////////////////////////////////////////////////////////////
-void RtsLayer::TraceSendMsg(int type, int destination, int length)
-{
+void RtsLayer::TraceSendMsg(int type, int destination, int length) {
 #ifdef TRACING_ON 
   x_int64 parameter;
   x_uint64 xother, xtype, xlength, xcomm;
 
-  if (RtsLayer::isEnabled(TAU_MESSAGE))
-  {
+  if (RtsLayer::isEnabled(TAU_MESSAGE)) {
     parameter = 0;
     /* for send, othernode is receiver or destination */
     xtype = type;
@@ -1220,11 +1218,7 @@ void RtsLayer::TraceSendMsg(int type, int destination, int length)
       (xcomm << 58 >> 16);
 
 
-    tautrace_Event(TAU_MESSAGE_SEND, parameter); 
-#ifdef DEBUG_PROF
-    printf("Node %d TraceSendMsg, type %x dest %x len %x par %lx \n", 
-  	RtsLayer::myNode(), type, destination, length, parameter);
-#endif //DEBUG_PROF
+    TraceEventSimple(TAU_MESSAGE_SEND, parameter, RtsLayer::myThread()); 
   } 
 #endif //TRACING_ON
 }
@@ -1233,15 +1227,13 @@ void RtsLayer::TraceSendMsg(int type, int destination, int length)
 //////////////////////////////////////////////////////////////////////
 // TraceRecvMsg traces the message recv
 //////////////////////////////////////////////////////////////////////
-void RtsLayer::TraceRecvMsg(int type, int source, int length)
-{
+void RtsLayer::TraceRecvMsg(int type, int source, int length) {
 #ifdef TRACING_ON
   x_int64 parameter;
   x_uint64 xother, xtype, xlength, xcomm;
 
 
-  if (RtsLayer::isEnabled(TAU_MESSAGE)) 
-  {
+  if (RtsLayer::isEnabled(TAU_MESSAGE)) {
     parameter = 0;
     /* for recv, othernode is sender or source*/
     xtype = type;
@@ -1260,12 +1252,7 @@ void RtsLayer::TraceRecvMsg(int type, int source, int length)
       (xcomm << 58 >> 16);
 
 
-    tautrace_Event(TAU_MESSAGE_RECV, parameter); 
-  
-#ifdef DEBUG_PROF
-    printf("Node %d TraceRecvMsg, type %x src %x len %x par %lx \n", 
-  	RtsLayer::myNode(), type, source, length, parameter);
-#endif //DEBUG_PROF
+    TraceEventSimple(TAU_MESSAGE_RECV, parameter, RtsLayer::myThread()); 
   }
 #endif //TRACING_ON
 }
@@ -1471,6 +1458,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.112 $   $Date: 2009/02/19 22:30:02 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.112 2009/02/19 22:30:02 amorris Exp $ 
+ * $Revision: 1.113 $   $Date: 2009/02/20 02:06:08 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.113 2009/02/20 02:06:08 amorris Exp $ 
  ***************************************************************************/

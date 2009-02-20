@@ -23,18 +23,15 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <time.h>
 
 #ifdef TAU_WINDOWS
   #include <io.h>
-  typedef __int64 x_int64;
-  typedef unsigned __int64 x_uint64;
 #else
   #include <unistd.h>
   #define O_BINARY 0
-  typedef long long x_int64;
-  typedef unsigned long long x_uint64;
 #endif
-#include <time.h>
+
 #include <Profile/Profiler.h>
 #include <Profile/TauEnv.h>
 #include <Profile/TauTrace.h>
@@ -45,10 +42,23 @@
   #define LARGEFILE_OPTION 0
 #endif
 
+
+
+#if defined (__cplusplus) || defined (__STDC__) || defined (_AIX) || (defined (__mips) && defined (_SYSTYPE_SVR4))
+#define SIGNAL_TYPE	void
+#define SIGNAL_ARG_TYPE	int
+#else	/* Not ANSI C.  */
+#define SIGNAL_TYPE	int
+#define SIGNAL_ARG_TYPE
+#endif	/* ANSI C */
+
+
+
+
 extern double TauSyncAdjustTimeStamp(double timestamp);
 
 
-
+/* Magic number, parameter for certain events */
 #define INIT_PARAM 3
 
 /* -- event record buffer ------------------------------------ */
@@ -168,14 +178,11 @@ void TraceEvFlush(int tid) {
 
   }
 
-//#ifdef TRACEMONITORING
-// Do this by default. 
   if (FlushEvents[tid]) { 
-    /* Dump the EDF file before writing trace data: Monitoring */
+    /* Dump the EDF file before writing trace data */
     RtsLayer::DumpEDF(tid);
     FlushEvents[tid]=0;
   }
-//#endif /* TRACEMONITORING */
   
   int numEventsToBeFlushed = TauCurrentEvent[tid]; /* starting from 0 */
   DEBUGPROFMSG("Tid "<<tid<<": TraceEvFlush()"<<endl;);
@@ -202,11 +209,7 @@ static SIGNAL_TYPE (*sighdlr[NSIG])(SIGNAL_ARG_TYPE);
 static void wrap_up(int sig) {
   fprintf (stderr, "signal %d on %d - flushing event buffer...\n", sig, RtsLayer::myNode());
   TAU_PROFILE_EXIT("signal");
-  /* TraceEvFlush (RtsLayer::myThread());
-   * */
   fprintf (stderr, "done.\n");
-  /* if ( sighdlr[sig] != SIG_IGN ) (* sighdlr)(sig);
-   */
   exit (1);
 }
 
@@ -282,7 +285,7 @@ int TraceEvInit(int tid) {
       /* either the first record is blank - in which case we should
 	 put INIT record, or it is an error */
       if (TauCurrentEvent[tid] == 0) { 
-        TraceEvent(TAU_EV_INIT, INIT_PARAM, tid);
+        TraceEventSimple(TAU_EV_INIT, INIT_PARAM, tid);
         retvalue ++; /* one record generated */
       } else { 
 	/* error */ 
@@ -291,7 +294,7 @@ int TraceEvInit(int tid) {
     } /* first record was not INIT */
     
     /* generate a wallclock time record */
-    TraceEvent (TAU_EV_WALL_CLOCK, time((time_t *)0), tid);
+    TraceEventSimple (TAU_EV_WALL_CLOCK, time((time_t *)0), tid);
     retvalue ++;
   }
   return retvalue; 
@@ -329,6 +332,11 @@ void TraceUnInitialize(int tid) {
 
 
 /* -- write event to buffer ---------------------------------- */
+void TraceEventSimple(long int ev, x_int64 par, int tid) {
+  TraceEvent(ev, par, tid, 0, 0);
+}
+
+
 void TraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts) {
   int i;
   int records_created = TraceEvInit(tid);
@@ -381,21 +389,17 @@ void TraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts) {
   event->par = par;
   event->nid = RtsLayer::myNode();
   event->tid = tid ;
-  TauCurrentEvent[tid] ++;
+  TauCurrentEvent[tid]++;
 
   if (TauCurrentEvent[tid] >= TAU_MAX_RECORDS-1) {
     TraceEvFlush(tid); 
   }
 }
 
-void tautrace_Event(long int ev, x_int64 par) {
-  TraceEvent(ev, par, RtsLayer::myThread());
-}
-
 /* -- terminate SW tracing ----------------------------------- */
 void TraceEvClose(int tid) {
-  TraceEvent (TAU_EV_CLOSE, 0, tid);
-  TraceEvent (TAU_EV_WALL_CLOCK, time((time_t *)0), tid);
+  TraceEventSimple (TAU_EV_CLOSE, 0, tid);
+  TraceEventSimple (TAU_EV_WALL_CLOCK, time((time_t *)0), tid);
   TraceEvFlush (tid);
   //close (TraceFd[tid]); 
   // Just in case the same thread writes to this file again, don't close it.
@@ -422,7 +426,7 @@ void TraceCallStack(int tid, Profiler *current) {
   } else {
     // Trace all the previous records before tracing self
     TraceCallStack(tid, current->ParentProfiler);
-    TraceEvent(current->ThisFunction->GetFunctionId(), 1, tid);
+    TraceEventSimple(current->ThisFunction->GetFunctionId(), 1, tid);
     DEBUGPROFMSG("TRACE CORRECTED: "<<current->ThisFunction->GetName()<<endl;);
   }
 }
