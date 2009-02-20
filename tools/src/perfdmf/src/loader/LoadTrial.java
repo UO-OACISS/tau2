@@ -48,7 +48,7 @@ public class LoadTrial {
                 + "  -f, --filetype <filetype>       Specify type of performance data, options are:\n"
                 + "                                    profiles (default), pprof, dynaprof, mpip,\n"
                 + "                                    gprof, psrun, hpm, packed, cube, hpc, ompp,\n"
-                + "                                    snap, perixml, gptl, paraver, ipm\n" 
+                + "                                    snap, perixml, gptl, paraver, ipm\n"
                 + "  -t, --trialid <number>          Specify trial ID\n"
                 + "  -i, --fixnames                  Use the fixnames option for gprof\n"
                 + "  -m, --metadata <filename>       XML metadata for the trial\n\n" + "Notes:\n"
@@ -128,9 +128,8 @@ public class LoadTrial {
         try {
             dataSource = UtilFncs.initializeDataSource(files, fileType, fixNames);
         } catch (DataSourceException e) {
-
-            if (files == null || files.length != 0) // We don't output an error message if paraprof was just invoked with no parameters.
-                e.printStackTrace();
+            e.printStackTrace();
+            System.err.println("Error: Unable to initialize datasource!");
             return;
         }
 
@@ -160,14 +159,13 @@ public class LoadTrial {
         // set the meta data from the datasource
         trial.setMetaData(dataSource.getMetaData());
 
-
         if (trialID == 0) {
             saveTrial();
         } else {
             appendToTrial();
         }
         if (this.terminate) {
-        	databaseAPI.terminate();
+            databaseAPI.terminate();
         }
     }
 
@@ -311,7 +309,7 @@ public class LoadTrial {
 
         String sourceFiles[] = parser.getRemainingArgs();
 
-        int fileType = 0;
+        int fileType = DataSource.TAUPROFILE;
         if (fileTypeString != null) {
             if (fileTypeString.equals("profiles")) {
                 fileType = DataSource.TAUPROFILE;
@@ -360,6 +358,7 @@ public class LoadTrial {
             }
         }
 
+
         if (trialName == null) {
             trialName = "";
         }
@@ -376,6 +375,7 @@ public class LoadTrial {
             trans.checkForTrial(trialID);
             trans.trialID = Integer.parseInt(trialID);
         }
+
         trans.trialName = trialName;
         //trans.problemFile = problemFile;
         trans.fixNames = fixNames.booleanValue();
@@ -385,20 +385,20 @@ public class LoadTrial {
         // the trial will be saved when the load is finished (update is called)
     }
 
-	public void setMetadataFile(String metadataFile) {
-		this.metadataFile = metadataFile;
-	}
+    public void setMetadataFile(String metadataFile) {
+        this.metadataFile = metadataFile;
+    }
 
-	public void setFixNames(boolean fixNames) {
-		this.fixNames = fixNames;
-	}
+    public void setFixNames(boolean fixNames) {
+        this.fixNames = fixNames;
+    }
 
-	public void setSummaryOnly(boolean summaryOnly) {
-		this.summaryOnly = summaryOnly;
-	}
+    public void setSummaryOnly(boolean summaryOnly) {
+        this.summaryOnly = summaryOnly;
+    }
 
-	public DatabaseAPI getDatabaseAPI() {
-		return databaseAPI;
-	}
+    public DatabaseAPI getDatabaseAPI() {
+        return databaseAPI;
+    }
 
 }

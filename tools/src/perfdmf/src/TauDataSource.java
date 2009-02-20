@@ -58,19 +58,19 @@ public class TauDataSource extends DataSource {
         this.dirs = dirs;
 
         if (dirs.size() > 0) {
-			if (dirs.get(0) instanceof File[]) {
-            	File[] files = (File[]) dirs.get(0);
-            	if (files.length > 0) {
-                	fileToMonitor = files[0];
-            	}
+            if (dirs.get(0) instanceof File[]) {
+                File[] files = (File[]) dirs.get(0);
+                if (files.length > 0) {
+                    fileToMonitor = files[0];
+                }
             } else {
-				this.dirs = new ArrayList();
-				File[] files = new File[1];
-				files[0] = (File) dirs.get(0);
-				this.dirs.add(files);
-               	fileToMonitor = files[0];
-				//System.out.println(files[0].toString());
-			}
+                this.dirs = new ArrayList();
+                File[] files = new File[1];
+                files[0] = (File) dirs.get(0);
+                this.dirs.add(files);
+                fileToMonitor = files[0];
+                //System.out.println(files[0].toString());
+            }
         }
     }
 
@@ -96,7 +96,7 @@ public class TauDataSource extends DataSource {
 
         boolean modernJava = false;
         try {
-            Method m = FileInputStream.class.getMethod("getChannel", (Class[])null);
+            Method m = FileInputStream.class.getMethod("getChannel", (Class[]) null);
             modernJava = true;
         } catch (NoSuchMethodException nsme) {
             // way to go java 1.3
@@ -225,8 +225,9 @@ public class TauDataSource extends DataSource {
                             int end = inputString.indexOf("</metadata>") + 11;
                             String metadata = inputString.substring(start, end);
                             try {
-                            MetaDataParser.parse(thread.getMetaData(), metadata);
+                                MetaDataParser.parse(thread.getMetaData(), metadata);
                             } catch (Exception exception) {
+                                //exception.printStackTrace();
                                 throw new CorruptFileException("Unable to parse metadata block");
                             }
                         }
@@ -391,7 +392,7 @@ public class TauDataSource extends DataSource {
 
         long thistime = (System.currentTimeMillis()) - time;
         //System.out.println("Time to process (in milliseconds): " + thistime);
-		//System.out.print(thistime + ", ");
+        //System.out.print(thistime + ", ");
 
         //Generate derived data.
         this.generateDerivedData();
@@ -400,7 +401,7 @@ public class TauDataSource extends DataSource {
 
         time = (System.currentTimeMillis()) - time;
         //System.out.println("Total Time to process (in milliseconds): " + time);
-		//System.out.println(time + "");
+        //System.out.println(time + "");
     }
 
     public String toString() {
