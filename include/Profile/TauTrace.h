@@ -20,15 +20,7 @@
 #ifndef _TAU_TRACE_H_
 #define _TAU_TRACE_H_
 
-
-#include "tau_types.h"
-
-#if (defined(TAU_WINDOWS))
-#pragma warning( disable : 4786 )
-#define TAUDECL __cdecl
-#else
-#define TAUDECL
-#endif /* TAU_WINDOWS */
+#include <tau_library.h>
 
 
 /* TAU tracer events */
@@ -58,24 +50,23 @@ extern "C" {
 #endif /* __cplusplus */
   
   
-  int  TraceEvInit(int tid);
-  void TraceUnInitialize(int tid);
-  void TraceReinitialize(int oldid, int newid, int tid);
-  void TraceEventOnly(long int ev, x_int64 par, int tid);
-  void TraceEvFlush(int tid);
-  void TraceEventSimple(long int ev, x_int64 par, int tid);
-  void TraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts);
-  void TraceEvClose(int tid);
-  void SetFlushEvents(int tid);
-  int  GetFlushEvents(int tid);
+  int  TauTraceInit(int tid);
+  void TauTraceUnInitialize(int tid);
+  void TauTraceReinitialize(int oldid, int newid, int tid);
+  void TauTraceEventOnly(long int ev, x_int64 par, int tid);
+  void TauTraceFlush(int tid);
+  void TauTraceEventSimple(long int ev, x_int64 par, int tid);
+  void TauTraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts);
+  void TauTraceClose(int tid);
+  void TauTraceSetFlushEvents(int tid);
+  int  TauTraceGetFlushEvents(int tid);
 
 
   double* TAUDECL TheTauTraceBeginningOffset();
   int* TAUDECL TheTauTraceSyncOffsetSet();
   double* TAUDECL TheTauTraceSyncOffset();
   double TAUDECL TAUClockTime(int tid);
-  
-
+  double TauSyncAdjustTimeStamp(double timestamp);
 
 
 #ifdef __cplusplus

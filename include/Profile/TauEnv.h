@@ -21,11 +21,7 @@
 #ifndef _TAU_ENV_H_
 #define _TAU_ENV_H_
 
-#if (defined(TAU_WINDOWS))
-#define TAUDECL __cdecl
-#else
-#define TAUDECL
-#endif /* TAU_WINDOWS */
+#include <tau_library.h>
 
 #ifdef __cplusplus
 extern "C" {
