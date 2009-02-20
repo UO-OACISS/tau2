@@ -935,8 +935,7 @@ for arg in "$@"; do
   -mpiinc=*)
     mpi=yes
     mpiinc=`echo $arg | sed -e 's/-mpiinc=//' -e 's/ /#/g'`
-    if [ ! -d $mpiinc ]
-    then
+    if [ ! -d $mpiinc ] ; then
       echo "Error: Cannot access MPI include directory $mpiinc"
       exit 1
     fi
@@ -946,8 +945,7 @@ for arg in "$@"; do
   -mpilib=*)
     mpi=yes
     mpilib=`echo $arg | sed -e 's/-mpilib=//' -e 's/ /#/g'`
-    if [ ! -d $mpilib ]
-    then
+    if [ ! -d $mpilib ] ; then
       echo "Error: Cannot access MPI lib directory $mpilib"
       exit 1
     fi
@@ -2830,11 +2828,7 @@ then
 	mpilib=/opt/xt-mpt/default/mpich2-64/P2/lib
 	;;
   craycnl)
-	mpilib=/opt/xt-mpt/default/mpich2-64/P/lib
-	if [ ! -r $mpilib ]
-        then
-	  mpilib=/opt/mpt/default/xt/mpich2-$default_fortran/lib/
-        fi
+	mpilib=
 	;;
   solaris2*)
 	mpilib=/opt/SUNWhpc/lib
@@ -3458,7 +3452,7 @@ then
   mpilibargs=$wrapperlib
   wrapperC=$wrapperlib
 
-  if [ -d $mpilib ] ; then
+  if [ "x$mpilib" != "x" -a -d $mpilib ] ; then
     #echo "Lib dir found. adding -L$mpilib to LIB"
     mpilibargs="$mpilibargs -L$mpilib"
     if [ -r $mpilib/libmpi_r.a -a -r $mpilib/libmpi.a ] ; then
