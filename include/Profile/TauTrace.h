@@ -20,7 +20,6 @@
 #ifndef _TAU_TRACE_H_
 #define _TAU_TRACE_H_
 
-#ifdef TRACING_ON
 
 #include "tau_types.h"
 
@@ -71,11 +70,11 @@ extern "C" {
   int  GetFlushEvents(int tid);
 
 
-  
   double* TAUDECL TheTauTraceBeginningOffset();
   int* TAUDECL TheTauTraceSyncOffsetSet();
   double* TAUDECL TheTauTraceSyncOffset();
   double TAUDECL TAUClockTime(int tid);
+  
 
 
 
@@ -83,6 +82,7 @@ extern "C" {
 }
 #endif /* __cplusplus */
 
-#endif /* TRACING_ON */
+
+
 
 #endif /* _TAU_TRACE_H_ */
