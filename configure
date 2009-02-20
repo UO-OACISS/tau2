@@ -5399,34 +5399,6 @@ cp ${tauroot}/tools/src/tau_throttle.sh ${targetdir}/${architecture}/bin
 echo "TAU: installed tau_throttle script"
 
 
-wishname=wish
-
-tk_path="/usr/local/bin/tkman"
-
-# -- set name of remote shell command
-if [ $machine = "hp9000s700" -o $machine = "hp9000s800" ]
-then
-  remotesh=remsh
-else
-  remotesh=rsh
-fi
-
-# -- now install the TAU tools
-#TAUTOOLS="tau taud fancy classy cagey racy dandy cosy dumpy speedy handy spiffy"
-# TAU Portable profiling package just needs racy
-TAUTOOLS="taud racy"
-
-echo " "
-echo "TAU: installing tools in ${tauroot}/${architecture}/bin"
-for tool in $TAUTOOLS ;  do
-    rm -f ${tauroot}/${architecture}/bin/$tool
-    cat ${tauroot}/tools/tool.skel |
-    sed -e 's,@TAUROOT@,'$targetdir',' -e 's,@ARCH@,'$architecture',' -e 's,@TOOL@,'$tool',' \
-	-e 's,@REMSH@,'$remotesh',' -e 's,@TKMANPATH@,'$tk_path',' \
-	-e 's,@WISHNAME@,'$wishname',' \
-	> ${targetdir}/${architecture}/bin/${tool}
-    chmod a+rx ${targetdir}/${architecture}/bin/${tool}
-done
 
 
 # Save the FixMakefile args
