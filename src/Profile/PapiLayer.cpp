@@ -101,7 +101,7 @@ int PapiLayer::addCounter(char *name) {
   int code, rc;
 
 #ifdef TAU_PAPI_DEBUG
-  dmesg(1, "PAPI: Adding counter %s\n", name);
+  dmesg(1, "TAU: PAPI: Adding counter %s\n", name);
 #endif
 
   rc = PAPI_event_name_to_code(name, &code);
@@ -109,13 +109,13 @@ int PapiLayer::addCounter(char *name) {
   // There is currently a bug in PAPI-C 3.9 that causes the return code to not
   // be PAPI_OK, even if it has succeeded, for now, we will just not check.
   if (rc != PAPI_OK) {
-    fprintf (stderr, "Error: Couldn't Identify Counter '%s': %s\n", name, PAPI_strerror(rc));
+    fprintf (stderr, "TAU: Error: Couldn't Identify Counter '%s': %s\n", name, PAPI_strerror(rc));
     return -1;
   }
 #endif
   
   if ((PAPI_query_event(code) != PAPI_OK)) {
-    fprintf (stderr, "Error: Counter %s is not available!\n", name);
+    fprintf (stderr, "TAU: Error: Counter %s is not available!\n", name);
     return -1;
   }
 
@@ -132,11 +132,11 @@ int PapiLayer::initializeThread(int tid) {
   int rc, i;
 
 #ifdef TAU_PAPI_DEBUG
-  dmesg(1, "PAPI: Initializing Thread Data for TID = %d\n", tid);
+  dmesg(1, "TAU: PAPI: Initializing Thread Data for TID = %d\n", tid);
 #endif
 
   if (tid >= TAU_MAX_THREADS) {
-    fprintf (stderr, "Exceeded max thread count of TAU_MAX_THREADS\n");
+    fprintf (stderr, "TAU: Exceeded max thread count of TAU_MAX_THREADS\n");
     return -1;
   }
   
@@ -153,7 +153,7 @@ int PapiLayer::initializeThread(int tid) {
     ThreadList[tid]->EventSet[i] = PAPI_NULL;
     rc = PAPI_create_eventset(&(ThreadList[tid]->EventSet[i]));
     if (rc != PAPI_OK) {
-      fprintf (stderr, "Error creating PAPI event set: %s\n", PAPI_strerror(rc));
+      fprintf (stderr, "TAU: Error creating PAPI event set: %s\n", PAPI_strerror(rc));
       return -1;
     }
   }
@@ -162,7 +162,7 @@ int PapiLayer::initializeThread(int tid) {
   /* PAPI 2 support goes here */
   rc = PAPI_add_events(&(ThreadList[tid]->EventSet[0]), counterList, numCounters);
   if (rc != PAPI_OK) {
-    fprintf (stderr, "Error adding PAPI events: %s\n", PAPI_strerror(rc));
+    fprintf (stderr, "TAU: Error adding PAPI events: %s\n", PAPI_strerror(rc));
     return -1;
   }
 #elif (PAPI_VERSION_MAJOR(PAPI_VERSION) == 3)
@@ -171,7 +171,7 @@ int PapiLayer::initializeThread(int tid) {
     int comp = PAPI_COMPONENT_INDEX (counterList[i]);
     rc = PAPI_add_event(ThreadList[tid]->EventSet[comp], counterList[i]);
     if (rc != PAPI_OK) {
-      fprintf (stderr, "Error adding PAPI events: %s\n", PAPI_strerror(rc));
+      fprintf (stderr, "TAU: Error adding PAPI events: %s\n", PAPI_strerror(rc));
       return -1;
     }
     // this creates a mapping from 'component', and index in that component back
@@ -190,7 +190,7 @@ int PapiLayer::initializeThread(int tid) {
   }
   
   if (rc != PAPI_OK) {
-    fprintf (stderr, "Error calling PAPI_start: %s\n", PAPI_strerror(rc));
+    fprintf (stderr, "TAU: Error calling PAPI_start: %s\n", PAPI_strerror(rc));
     return -1;
   }
   
@@ -237,18 +237,18 @@ long long PapiLayer::getSingleCounter(int tid) {
   rc = PAPI_read(ThreadList[tid]->EventSet[comp], ThreadList[tid]->CounterValues);
 
 #ifdef TAU_PAPI_DEBUG
-  dmesg(10, "PAPI: getSingleCounter<%d> = %lld\n", tid, ThreadList[tid]->CounterValues[0]);
+  dmesg(10, "TAU: PAPI: getSingleCounter<%d> = %lld\n", tid, ThreadList[tid]->CounterValues[0]);
 
   long long difference = ThreadList[tid]->CounterValues[0] - oldValue;
-  dmesg(10, "PAPI: Difference = %lld\n", difference);
-  if (difference < 0) dmesg (0, "PAPI: Counter running backwards?\n");
-  dmesg(difference < 0 ? 0 : 10, "PAPI: Previous value = %lld\n", oldValue);
-  dmesg(difference < 0 ? 0 : 10, "PAPI: Current  value = %lld\n", ThreadList[tid]->CounterValues[0]);
-  dmesg(difference < 0 ? 0 : 10, "PAPI: Difference     = %lld\n", difference);
+  dmesg(10, "TAU: PAPI: Difference = %lld\n", difference);
+  if (difference < 0) dmesg (0, "TAU: PAPI: Counter running backwards?\n");
+  dmesg(difference < 0 ? 0 : 10, "TAU: PAPI: Previous value = %lld\n", oldValue);
+  dmesg(difference < 0 ? 0 : 10, "TAU: PAPI: Current  value = %lld\n", ThreadList[tid]->CounterValues[0]);
+  dmesg(difference < 0 ? 0 : 10, "TAU: PAPI: Difference     = %lld\n", difference);
 #endif  
 
   if (rc != PAPI_OK) {
-    fprintf (stderr, "Error reading PAPI counters: %s\n", PAPI_strerror(rc));
+    fprintf (stderr, "TAU: Error reading PAPI counters: %s\n", PAPI_strerror(rc));
     return -1;
   }
 
@@ -303,18 +303,18 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
 #ifdef TAU_PAPI_DEBUG
   for (int i=0; i<numCounters; i++) {
     long long difference = ThreadList[tid]->CounterValues[i] - previousCounters[i];
-    dmesg(10, "PAPI: Difference[%d] = %lld\n", i, difference);
+    dmesg(10, "TAU: PAPI: Difference[%d] = %lld\n", i, difference);
     if (difference < 0) {
-      dmesg(0, "PAPI: Counter running backwards?\n");
-      dmesg(0, "PAPI: Previous value[%d] = %lld\n", i, previousCounters[i]);
-      dmesg(0, "PAPI: Current  value[%d] = %lld\n", i, ThreadList[tid]->CounterValues[i]);
-      dmesg(0, "PAPI: Difference    [%d] = %lld\n", i, difference);
+      dmesg(0, "TAU: PAPI: Counter running backwards?\n");
+      dmesg(0, "TAU: PAPI: Previous value[%d] = %lld\n", i, previousCounters[i]);
+      dmesg(0, "TAU: PAPI: Current  value[%d] = %lld\n", i, ThreadList[tid]->CounterValues[i]);
+      dmesg(0, "TAU: PAPI: Difference    [%d] = %lld\n", i, difference);
     }
   }
 #endif
 
   if (rc != PAPI_OK) {
-    fprintf (stderr, "Error reading PAPI counters: %s\n", PAPI_strerror(rc));
+    fprintf (stderr, "TAU: Error reading PAPI counters: %s\n", PAPI_strerror(rc));
     return NULL;
   }
   
@@ -326,7 +326,7 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
 /////////////////////////////////////////////////
 int PapiLayer::reinitializePAPI() {
 #ifdef TAU_PAPI_DEBUG
-  dmesg(1, "PapiLayer::reinitializePAPI\n");
+  dmesg(1, "TAU: PapiLayer::reinitializePAPI\n");
 #endif
   // This function is called from the fork() handler
   // We need to clean up the ThreadList and then reinitialize PAPI
@@ -355,7 +355,7 @@ int PapiLayer::initializeSingleCounter() {
   // Add the counter named by PAPI_EVENT
   char *papi_event = getenv("PAPI_EVENT");
   if (papi_event == NULL) {
-    fprintf (stderr, "Error - You must define the PAPI_EVENT environment variable.\n");
+    fprintf (stderr, "TAU: Error: You must define the PAPI_EVENT environment variable.\n");
     return -1;
   }
 
@@ -389,7 +389,7 @@ unsigned long papi_thread_gettid(void) {
 /////////////////////////////////////////////////
 void PapiLayer::checkDomain(int domain, char *domainstr) {
   if (domain == 0) {
-    fprintf (stderr, "Warning: PAPI domain \"%s\" is not available with this version of PAPI\n", domainstr);
+    fprintf (stderr, "TAU: Warning: PAPI domain \"%s\" is not available with this version of PAPI\n", domainstr);
   }
 }
 
@@ -397,7 +397,7 @@ void PapiLayer::checkDomain(int domain, char *domainstr) {
 /////////////////////////////////////////////////
 int PapiLayer::initializePAPI() {
 #ifdef TAU_PAPI_DEBUG
-  dmesg(1, "PapiLayer::initializePAPI\n");
+  dmesg(1, "TAU: PapiLayer::initializePAPI\n");
 #endif
 
   papiInitialized = true;
@@ -410,9 +410,9 @@ int PapiLayer::initializePAPI() {
   int papi_ver = PAPI_library_init(PAPI_VER_CURRENT);
   if (papi_ver != PAPI_VER_CURRENT) {
     if (papi_ver > 0) {
-      fprintf(stderr, "Error initializing PAPI: version mismatch: %d\n", papi_ver);
+      fprintf(stderr, "TAU: Error initializing PAPI: version mismatch: %d\n", papi_ver);
     } else {
-      fprintf(stderr, "Error initializing PAPI: %s\n", PAPI_strerror(papi_ver));
+      fprintf(stderr, "TAU: Error initializing PAPI: %s\n", PAPI_strerror(papi_ver));
     }
     return -1;
   }
@@ -441,7 +441,7 @@ int PapiLayer::initializePAPI() {
 
   
   if (rc != PAPI_OK) {
-    fprintf(stderr, "Error Initializing PAPI: %s\n", PAPI_strerror(rc));
+    fprintf(stderr, "TAU: Error Initializing PAPI: %s\n", PAPI_strerror(rc));
     return -1;
   }
 #endif /* __alpha */
@@ -465,7 +465,7 @@ int PapiLayer::initializePAPI() {
       } else if (!strcmp(token,"PAPI_DOM_ALL")) {
 	thisDomain |= PAPI_DOM_ALL;
       } else {
-	fprintf (stderr, "Warning: Unknown PAPI domain, \"%s\"\n", token);
+	fprintf (stderr, "TAU: Warning: Unknown PAPI domain, \"%s\"\n", token);
       }
 
       checkDomain(thisDomain, token);
@@ -474,11 +474,11 @@ int PapiLayer::initializePAPI() {
     }
     
     if (domain == 0) {
-      fprintf (stderr, "Warning, No valid PAPI domains specified\n");
+      fprintf (stderr, "TAU: Warning, No valid PAPI domains specified\n");
     }
     rc = PAPI_set_domain(domain);
     if (rc != PAPI_OK) {
-      fprintf(stderr, "Error setting PAPI domain: %s\n", PAPI_strerror(rc));
+      fprintf(stderr, "TAU: Error setting PAPI domain: %s\n", PAPI_strerror(rc));
       return -1;
     }
   }
@@ -514,9 +514,9 @@ long long PapiLayer::getWallClockTime(void) {
   newvalue = PAPI_get_real_usec();
   if (newvalue < oldvalue) {
     offset += UINT_MAX;
-    DEBUGPROFMSG("WARNING: papi counter overflow. Fixed in TAU! new = "
+    DEBUGPROFMSG("TAU: WARNING: papi counter overflow. Fixed in TAU! new = "
 		 <<newvalue <<" old = " <<oldvalue<<" offset = "<<offset <<endl;);
-    DEBUGPROFMSG("Returning "<<newvalue + offset<<endl;);
+    DEBUGPROFMSG("TAU: Returning "<<newvalue + offset<<endl;);
   }
   oldvalue = newvalue;
   return (newvalue + offset);
