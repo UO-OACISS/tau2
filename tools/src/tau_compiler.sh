@@ -1091,6 +1091,7 @@ if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE ]; then
 		cp $tauSelectFile $TEST_HOME/$test_source_base.select
 		line="${test_source_base}.pdb $test_source_base $test_instfile_base.check $test_source_base.select"
 	    fi
+	    echo $line >> $TEST_HOME/list
 	fi
 
 	tempCounter=tempCounter+1
