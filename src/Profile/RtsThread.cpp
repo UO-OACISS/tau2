@@ -237,7 +237,7 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
 #endif   // PROFILING_ON
 #ifdef TRACING_ON    
        DEBUGPROFMSG("Tracing Correct: "<<endl;);
-       TraceUnInitialize(tid); // Zap the earlier contents of the trace buffer  
+       TauTraceUnInitialize(tid); // Zap the earlier contents of the trace buffer  
        TraceCallStack(tid, Profiler::CurrentProfiler[tid]); 
 #endif   // TRACING_ON
 
@@ -390,8 +390,8 @@ void RtsLayer::UnLockEnv(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: amorris $
- * $Revision: 1.32 $   $Date: 2009/01/17 00:09:07 $
- * VERSION: $Id: RtsThread.cpp,v 1.32 2009/01/17 00:09:07 amorris Exp $
+ * $Revision: 1.33 $   $Date: 2009/02/20 23:42:36 $
+ * VERSION: $Id: RtsThread.cpp,v 1.33 2009/02/20 23:42:36 amorris Exp $
  ***************************************************************************/
 
 

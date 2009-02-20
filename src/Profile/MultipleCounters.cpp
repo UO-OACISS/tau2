@@ -1132,7 +1132,7 @@ void MultipleCounterLayer::triggerCounterEvents(unsigned long long timestamp, do
 #ifndef TAU_EPILOG
   for (i = 1; i < countersUsed; i++)
   { /* for each event */
-    TraceEvent(counterEvents[i]->GetEventId(), (long long) values[i], tid, timestamp, 1);
+    TauTraceEvent(counterEvents[i]->GetEventId(), (long long) values[i], tid, timestamp, 1);
     // 1 in the last parameter is for use timestamp 
   }
 #endif /* TAU_EPILOG */

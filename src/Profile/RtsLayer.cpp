@@ -285,7 +285,7 @@ int RtsLayer::setMyNode(int NodeId, int tid) {
     and invokes the SET_NODE with the correct rank. Handshaking between multiple
     levels of instrumentation. */
     
-    TraceReinitialize(oldid, newid, tid); 
+    TauTraceReinitialize(oldid, newid, tid); 
   } 
 #endif // TRACING WITH THREADS
   TheNode() = NodeId;
@@ -297,7 +297,7 @@ int RtsLayer::setMyNode(int NodeId, int tid) {
 #ifdef TAU_EPILOG
 // EPILOG specific function not needed here. 
 #else /* TAU_EPILOG */
-  TraceEvInit(tid);
+  TauTraceInit(tid);
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
 #endif // TRACING_ON
@@ -1218,7 +1218,7 @@ void RtsLayer::TraceSendMsg(int type, int destination, int length) {
       (xcomm << 58 >> 16);
 
 
-    TraceEventSimple(TAU_MESSAGE_SEND, parameter, RtsLayer::myThread()); 
+    TauTraceEventSimple(TAU_MESSAGE_SEND, parameter, RtsLayer::myThread()); 
   } 
 #endif //TRACING_ON
 }
@@ -1252,7 +1252,7 @@ void RtsLayer::TraceRecvMsg(int type, int source, int length) {
       (xcomm << 58 >> 16);
 
 
-    TraceEventSimple(TAU_MESSAGE_RECV, parameter, RtsLayer::myThread()); 
+    TauTraceEventSimple(TAU_MESSAGE_RECV, parameter, RtsLayer::myThread()); 
   }
 #endif //TRACING_ON
 }
@@ -1277,9 +1277,9 @@ int RtsLayer::DumpEDF(int tid)
 	if (tid != 0) 
 	{ 
 #ifdef DEBUG_PROF
-	  printf("DumpEDF: FlushEvents = %d\n",GetFlushEvents(tid));
+	  printf("DumpEDF: FlushEvents = %d\n",TauTraceGetFlushEvents(tid));
 #endif /* DEBUG_PROF */
-	  if (GetFlushEvents(tid) == 0)
+	  if (TauTraceGetFlushEvents(tid) == 0)
 	    return 1; 
 	}
 	RtsLayer::LockDB();
@@ -1458,6 +1458,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.113 $   $Date: 2009/02/20 02:06:08 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.113 2009/02/20 02:06:08 amorris Exp $ 
+ * $Revision: 1.114 $   $Date: 2009/02/20 23:42:36 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.114 2009/02/20 23:42:36 amorris Exp $ 
  ***************************************************************************/

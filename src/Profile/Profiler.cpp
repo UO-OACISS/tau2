@@ -247,7 +247,7 @@ void Profiler::EnableAllEventsOnCallStack(int tid, Profiler *current) {
       EnableAllEventsOnCallStack(tid, current->ParentProfiler);
       /* process the current event */
       DEBUGPROFMSG(RtsLayer::myNode()<<" Processing EVENT "<<current->ThisFunction->GetName()<<endl;);
-      TraceEvent(current->ThisFunction->GetFunctionId(), 1, tid, (x_uint64) current->StartTime, 1); 
+      TauTraceEvent(current->ThisFunction->GetFunctionId(), 1, tid, (x_uint64) current->StartTime, 1); 
 #ifdef TAU_MULTIPLE_COUNTERS 
       MultipleCounterLayer::triggerCounterEvents((x_uint64) current->StartTime[0], current->StartTime, tid);
 #endif /* TAU_MULTIPLE_COUNTERS */
@@ -382,7 +382,7 @@ void Profiler::Start(int tid) {
 	       << ThisFunction->GetName()<<endl;);
   esd_enter(ThisFunction->GetFunctionId());
 #else /* TAU_EPILOG */
-  TraceEvent(ThisFunction->GetFunctionId(), 1, tid, TimeStamp, 1); 
+  TauTraceEvent(ThisFunction->GetFunctionId(), 1, tid, TimeStamp, 1); 
   // 1 is for entry in second parameter and for use TimeStamp in last
   DEBUGPROFMSG("Start TimeStamp for Tracing = "<<TimeStamp<<endl;);
 #ifdef TAU_MULTIPLE_COUNTERS 
@@ -633,7 +633,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #ifdef TAU_MPITRACE
   if (RecordEvent) {
 #endif /* TAU_MPITRACE */
-    TraceEvent(ThisFunction->GetFunctionId(), -1, tid, TimeStamp, 1); 
+    TauTraceEvent(ThisFunction->GetFunctionId(), -1, tid, TimeStamp, 1); 
     // -1 is for exit, 1 is for use TimeStamp in the last argument
     DEBUGPROFMSG("Stop TimeStamp for Tracing = "<<TimeStamp<<endl;);
 #ifdef TAU_MULTIPLE_COUNTERS 
@@ -1060,7 +1060,7 @@ static void finalizeTrace(int tid) {
     esd_close();
   }
 #else /* TAU_EPILOG */
-  TraceEvClose(tid);
+  TauTraceClose(tid);
   RtsLayer::DumpEDF(tid);
   RtsLayer::MergeAndConvertTracesIfNecessary();
 #endif /* TAU_EPILOG */
@@ -1566,6 +1566,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.216 $   $Date: 2009/02/18 20:23:51 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.216 2009/02/18 20:23:51 amorris Exp $ 
+ * $Revision: 1.217 $   $Date: 2009/02/20 23:42:36 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.217 2009/02/20 23:42:36 amorris Exp $ 
  ***************************************************************************/
