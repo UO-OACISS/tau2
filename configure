@@ -3,7 +3,7 @@
 #*			TAU Portable Profiling Package			   **
 #*			http://www.cs.uoregon.edu/research/tau	           **
 #****************************************************************************
-#*    Copyright 1997-2003						   **
+#*    Copyright 1997-2009						   **
 #*    Department of Computer and Information Science, University of Oregon **
 #*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 #*    Research Center Juelich, ZAM Germany                                 **
@@ -29,23 +29,6 @@
 #*  CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
 #*  CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #****************************************************************************
-#****************************************************************************
-#*  Authors :    Sameer Shende (sameer@cs.uoregon.edu) (UO, LANL)
-#*		 Peter Beckman, Steve Karmesin (ACL, LANL)
-#*		 Kathleen Lindlan, Ariya Lohavanichbutr (UO)		
-#*  Principal Investigators : 
-#*		 Janice Cuny, Allen Malony (UO)
-#*  TAU project was developed by Bernd Mohr, Lars Hansen, Kurt Windisch, 
-#*  Darryl Brown, et. al. and directed by Allen Malony at University of Oregon.
-#*  The TAU Portable Profiling Package uses part of TAU.
-#****************************************************************************
-
-# Configure script for TAU
-#   Sameer Shende 11/12/97 for TAU Portable Profiling Package
-#   Kurt Windisch 12/9/96
-# Based on the configure script for Sage/pC++ by:
-#   Pete Beckman 9/6/93
-#   Lars Thomas Hansen 2/27/95 (Solaris fix)
 
 
 default=false
@@ -271,6 +254,7 @@ for arg in "$@"; do
   esac
 done
 
+# this causes `make install` to clean, since configure has been run
 rm -f .clean
 
 if [ $default = false ] ; then

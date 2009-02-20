@@ -42,8 +42,7 @@ echo "s/\(.*\)#ENDIF#\(.*\)/$bs\2$bs\1#ENDIF#/g" >> $sedout
 ###############################################################
 # PARSE AN ARGUMENT
 ###############################################################
-while [ x$1 != x ]
-do
+while [ x$1 != x ] ; do
 
 #echo Parsing $1
 case $1 in
@@ -56,27 +55,6 @@ case $1 in
         config_arch=`echo $1 | sed 's/^arch=//'`
 	echo "s/^CONFIG_ARCH=\(.*\)/CONFIG_ARCH=$config_arch/g" >> $sedout
 	echo "s/^TAU_ARCH=\(.*\)/TAU_ARCH=$config_arch/g" >> $sedout
-if [ -d target ]
-  then
-        pvm_arch=default
-	pvm_homedir=default
-
-        echo "s/#PVM_INSTALLED#\(.*\)/$bs\1#PVM_INSTALLED#/g" >> $sedout
-	echo "s/^PVM_ARCH=\(.*\)/PVM_ARCH=$pvm_arch/g" >> $sedout
-	echo "s@^PVM_DIR=\(.*\)@PVM_DIR=$pvm_homedir@g" >> $sedout
-
-# make dir if it does not exist
-	if [ ! -d target/pvm/lib ] 
-	  then
-		mkdir target/pvm/lib
-	fi
- 
-# make dir if it does not exist
-	if [ ! -d target/pvm/lib/$pvm_arch ] 
-	  then
-		mkdir target/pvm/lib/$pvm_arch
-	fi
-fi
 	;;
 
      ptdir=*)
@@ -276,11 +254,6 @@ fi
 	echo "s,^SDDF_DIR=.*$,SDDF_DIR=$sddfdir,g" >> $sedout
 	;;
 
-     tulipdir=*)
-        tulipdir=`echo $1 | sed -e 's/^tulipdir=//'`
-	echo "s,^TULIPDIR=.*$,TULIPDIR=$tulipdir,g" >> $sedout
-	;;
-
      ktauinc=*)
         ktauinc=`echo $1 | sed -e 's/^ktauinc=//'`
 	echo "s,^KTAU_INCDIR=.*$,KTAU_INCDIR=$ktauinc,g" >> $sedout
@@ -367,10 +340,6 @@ fi
         cxx_compiler=`echo $1 | sed -e 's/^cxx_compiler=//'`
 	echo "s@^CONFIG_CXX=\(.*\)@CONFIG_CXX=$cxx_compiler@g" >> $sedout
         ;;
-
-
-
-
 
      TAU_WEAK_SUPPORTED)
         echo NOTE: Using Weak Symbol support
@@ -559,74 +528,8 @@ fi
         config_arch=`echo $1 | sed 's/^arch=//'`
 	echo "s/^CONFIG_ARCH=\(.*\)/CONFIG_ARCH=$config_arch/g" >> $sedout
 	echo "s/^TAU_ARCH=\(.*\)/TAU_ARCH=$config_arch/g" >> $sedout
-
-###############################################################
-# Set up PVM stuff if possible
-###############################################################
-
-#Only do the PVM stuff if this is a pC++ distribution
-if [ -d target ]
-  then
-        xdev_arch=`utils/archfind -x`
-        pvm_arch=`grep "^$config_arch" utils/pvm_arches | awk '{print $2;}'`
-        pvm_parch=`grep "^$xdev_arch" utils/pvm_arches | awk '{print $2;}'`
-
-	pvm_homedir=`utils/checkPVM`
-	if [ $pvm_homedir = no ]
-	  then
-            echo PVM:  Could not find a PVM installation, PVM run-time will not be compiled
-	  else
-	    echo PVM:  Found PVM installation at $pvm_homedir
-	    echo PVM:  PVM run-time module will be installed
-            echo "s/#PVM_INSTALLED#\(.*\)/$bs\1#PVM_INSTALLED#/g" >> $sedout
-	fi
-
-# used to be "xnone"
-        if [ x$pvm_parch = x$pvm_parch ]
-          then
-            if [ x$pvm_arch = x ]
-              then
-                echo PVM:  No matching PVM architecture name in utils/pvm_arches for $config_arch
-                echo PVM:  Configuring pC++ PVM runtime module for UNKNOWN
-	        pvm_arch=UNKNOWN
-            else
-              echo PVM:  Matching PVM-style architecture name is $pvm_arch
-            fi
-          else
-            echo PVM:  Found Parallel PVM machine $pvm_parch
-            pvm_arch=$pvm_parch
-	fi
-
-	echo "s/^PVM_ARCH=\(.*\)/PVM_ARCH=$pvm_arch/g" >> $sedout
-	echo "s@^PVM_DIR=\(.*\)@PVM_DIR=$pvm_homedir@g" >> $sedout
-
-# make dir if it does not exist
-	if [ ! -d target/pvm/lib ] 
-	  then
-		mkdir target/pvm/lib
-	fi
- 
-# make dir if it does not exist
-	if [ ! -d target/pvm/lib/$pvm_arch ] 
-	  then
-		mkdir target/pvm/lib/$pvm_arch
-	fi
-fi
 	;;
 
-     sage1dir=*)
-        sage1dir=`echo $1 | sed -e 's/^sage1dir=//' -e 's/_/ /'`
-	echo "s@^SAGE1DIR=\(.*\)@SAGE1DIR=$sage1dir@g" >> $sedout
-        ;;
-
-     sage2dir=*)
-        sage2dir=`echo $1 | sed -e 's/^sage2dir=//' -e 's/_/ /'`
-	echo "s@^SAGE2DIR=\(.*\)@SAGE2DIR=$sage2dir@g" >> $sedout
-        ;;
-
-###############################################################
-# Else, just do the standard modification based on the keyword
-###############################################################
      NO_RANLIB)
 	echo NOTE: ranlib not required for this architecture.
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -823,10 +726,6 @@ fi
 	echo NOTE: Using Fujitsu f90 Fortran compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
-     NEXT_CLIB)
-	echo NOTE: The NeXTs do not have a libc.a
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
      USE_CFRONT)
 	echo "NOTE: Using the 'CC' C++ Compiler"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
