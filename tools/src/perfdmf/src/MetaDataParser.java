@@ -22,11 +22,11 @@ public class MetaDataParser {
         }
 
         public void startDocument() throws SAXException {
-//            System.out.println("startDocument");
+        //            System.out.println("startDocument");
         }
 
         public void endDocument() throws SAXException {
-//            System.out.println("endDocument");
+        //            System.out.println("endDocument");
         }
 
         public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
@@ -47,8 +47,24 @@ public class MetaDataParser {
         }
     }
 
+    /* From: http://cse-mjmcl.cse.bris.ac.uk/blog/2007/02/14/1171465494443.html */
+    public static String stripNonValidXMLCharacters(String in) {
+        StringBuffer out = new StringBuffer(); // Used to hold the output.
+        char current; // Used to reference the current character.
+
+        if (in == null || ("".equals(in)))
+            return ""; // vacancy test.
+        for (int i = 0; i < in.length(); i++) {
+            current = in.charAt(i); // NOTE: No IndexOutOfBoundsException caught here; it should not happen.
+            if ((current == 0x9) || (current == 0xA) || (current == 0xD) || ((current >= 0x20) && (current <= 0xD7FF))
+                    || ((current >= 0xE000) && (current <= 0xFFFD)) || ((current >= 0x10000) && (current <= 0x10FFFF)))
+                out.append(current);
+        }
+        return out.toString();
+    }
+
     public static void parse(Map metadataMap, String string) {
-//        System.out.println("parse: " + string);
+        //        System.out.println("parse: " + string);
         try {
 
             XMLReader xmlreader = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
@@ -58,7 +74,7 @@ public class MetaDataParser {
             xmlreader.setContentHandler(parser);
             xmlreader.setErrorHandler(parser);
 
-            ByteArrayInputStream input = new ByteArrayInputStream(string.getBytes());
+            ByteArrayInputStream input = new ByteArrayInputStream(stripNonValidXMLCharacters(string).getBytes());
 
             xmlreader.parse(new InputSource(input));
 
