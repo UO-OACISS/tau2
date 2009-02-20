@@ -5219,17 +5219,6 @@ then
   fixmakeargs="$fixmakeargs ANSIC"
 fi
 
-if [ $use_sage2 = yes ]
-then
-  fixmakeargs="sage2dir=$sage2dir $fixmakeargs"
-fi
-
-if [ $tcltk = yes ]
-then
-  fixmakeargs="$fixmakeargs TCLTK"
-fi
-
-
 
 if [ $sicortex = yes ] ; then
     fixmakeargs="$fixmakeargs SICORTEX extrashlibopts=${sicortexlink}"
