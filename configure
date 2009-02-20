@@ -2594,16 +2594,17 @@ case $fortran_compiler in
 
    gfortran)
       echo "Default Fortran compiler will be GNU gfortran"
-      if [ $cxx_compiler = scg++ ] 
-      then
-        fixmakeargs="$fixmakeargs SC_GFORTRAN"
+      if [ $cxx_compiler = scg++ ] ; then
+          fixmakeargs="$fixmakeargs SC_GFORTRAN"
       else
-	gfortran=`which gfortran 2>&1`
-	if [ -x $gfortran ] ; then
-	    taugfortranlibdir=`gfortran -print-libgcc-file-name | sed s/libgcc.a//`
-	fi
-	fixmakeargs="$fixmakeargs taugfortranlibdir=$taugfortranlibdir" 
-        fixmakeargs="$fixmakeargs GNU_GFORTRAN"
+	  gfortran=`which gfortran 2>&1`
+	  if [ "x$gfortran" != "x" ] ; then
+	      if [ -x $gfortran ] ; then
+		  taugfortranlibdir=`gfortran -print-libgcc-file-name | sed s/libgcc.a//`
+	    fi
+	      fixmakeargs="$fixmakeargs taugfortranlibdir=$taugfortranlibdir" 
+              fixmakeargs="$fixmakeargs GNU_GFORTRAN"
+	  fi
       fi
       ;;
 
