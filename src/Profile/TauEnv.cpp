@@ -187,11 +187,18 @@ extern "C" {
       } else {
 	env_synchronize_clocks = 0;
       }
+
+#ifndef TAU_MPI
+      /* If there is no MPI, there can't be any sync, so forget it */
+      env_synchronize_clocks = 0;
+      TAU_VERBOSE("TAU: Clock Synchronization Disabled (MPI not available)\n");
+#else
       if (env_synchronize_clocks) {
 	TAU_VERBOSE("TAU: Clock Synchronization Enabled\n");
       } else {
 	TAU_VERBOSE("TAU: Clock Synchronization Disabled\n");
       }
+#endif
 
       if ((env_profiledir = getenv("PROFILEDIR")) == NULL) {
 	env_profiledir = "."; // current directory
