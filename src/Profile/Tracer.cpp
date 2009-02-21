@@ -307,11 +307,6 @@ void TauTraceReinitialize(int oldid, int newid, int tid) {
   return ;
 }
 
-void tau_EvInit(char *name) { 
-  /*-- dummy function for compatibility with the earlier ver. Remove later -- */ 
-  TauTraceInit(RtsLayer::myThread());
-} 
-
 /* -- Reset the trace  --------------------------------------- */
 void TauTraceUnInitialize(int tid) {
 /* -- to set the trace as uninitialized and clear the current buffers (for forked
