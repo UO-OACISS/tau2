@@ -163,11 +163,11 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 	private void insertILP(PerformanceResult input, int metricID, int eventID, Integer thread, String event, String metric) throws SQLException {
 		curThread++;
 		if (curThread >= maxThreads) {
-			curThread = 1;
+			curThread = 0;
 			curContext++;
 		}
 		if (curContext >= maxContexts) {
-			curContext = 1;
+			curContext = 0;
 			curNode++;
 		}
 		buf = new StringBuffer();
