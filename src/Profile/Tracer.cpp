@@ -64,6 +64,19 @@ static double tracerValues[MAX_TAU_COUNTERS] = {0};
 #endif // TAU_MULTIPLE_COUNTERS
 
 
+double TauSyncAdjustTimeStamp(double timestamp) {
+  TauTraceOffsetInfo *offsetInfo = TheTauTraceOffsetInfo();
+
+  if (offsetInfo->enabled == 1) {
+    timestamp = timestamp - offsetInfo->beginOffset + offsetInfo->syncOffset;
+    return timestamp;
+  } else {
+    // return 0 until sync'd
+    return 0.0;
+  }
+}
+
+
 /* -- Use Profiling interface for time -- */
 x_uint64 TauTraceGetTimeStamp(int tid) { 
   // If you're modifying the behavior of this routine, note that in 
@@ -414,32 +427,7 @@ void TraceCallStack(int tid, Profiler *current) {
 
 
 
-
-
-extern "C" double* TheTauTraceBeginningOffset() {
-  static double offset = 0.0;
-  return &offset;
-}
-extern "C" int* TheTauTraceSyncOffsetSet() {
-  static int value = 0;
-  return &value;
-}
-
-extern "C" double* TheTauTraceSyncOffset() {
-  static double offset = -1.0;
-  return &offset;
-}
-
-double TauSyncAdjustTimeStamp(double timestamp) {
-  if (*TheTauTraceSyncOffsetSet() == 0) {
-    // return 0 until sync'd
-    return 0.0;
-  }
-  timestamp = timestamp - *TheTauTraceBeginningOffset() + *TheTauTraceSyncOffset();
-  return timestamp;
-}
-
-extern "C" double TAUClockTime(int tid) {
+double TauTraceGetTime(int tid) {
 #ifdef TAU_MULTIPLE_COUNTERS
   // counter 0 is the one we use
   double value = MultipleCounterLayer::getSingleCounter(tid, 0);
@@ -449,6 +437,18 @@ extern "C" double TAUClockTime(int tid) {
   return value;
 }
 
+
+TauTraceOffsetInfo *TheTauTraceOffsetInfo() {
+  static int init = 1;
+  static TauTraceOffsetInfo offsetInfo;
+  if (init) {
+    init = 0;
+    offsetInfo.enabled = 0;
+    offsetInfo.beginOffset = 0.0;
+    offsetInfo.syncOffset = -1.0;
+  }
+  return &offsetInfo;
+}
 
 
 

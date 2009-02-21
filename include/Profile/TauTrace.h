@@ -44,6 +44,12 @@ typedef struct {
   x_uint64 ti;    /* timestamp (in microseconds) */
 } TAU_EV;
 
+/* structure to hold clocksync offset info */
+typedef struct {
+  int enabled;
+  double beginOffset;
+  double syncOffset;
+} TauTraceOffsetInfo;
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,14 +66,10 @@ extern "C" {
   void TauTraceClose(int tid);
   void TauTraceSetFlushEvents(int tid);
   int  TauTraceGetFlushEvents(int tid);
+  double TauTraceGetTime(int tid);
 
-
-  double* TAUDECL TheTauTraceBeginningOffset();
-  int* TAUDECL TheTauTraceSyncOffsetSet();
-  double* TAUDECL TheTauTraceSyncOffset();
-  double TAUDECL TAUClockTime(int tid);
-  double TauSyncAdjustTimeStamp(double timestamp);
-
+  /* Returns a pointer to the (singleton) offset info struct */
+  TauTraceOffsetInfo *TheTauTraceOffsetInfo();
 
 #ifdef __cplusplus
 }

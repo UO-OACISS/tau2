@@ -73,8 +73,9 @@ static long getUniqueMachineIdentifier() {
 
 static double getPreSyncTime() { 
   int tid = 0;
-  double value = TAUClockTime(tid);
-  return value - *TheTauTraceBeginningOffset();
+  double value = TauTraceGetTime(tid);
+  TauTraceOffsetInfo *offsetInfo = TheTauTraceOffsetInfo();
+  return value - offsetInfo->beginOffset;
 }
 
 
@@ -156,6 +157,9 @@ static double getTimeOffset() {
   int syncRank;
   double startOffset;
   double offset;
+  TauTraceOffsetInfo *offsetInfo;
+
+  offsetInfo = TheTauTraceOffsetInfo();
 
   PMPI_Comm_split(MPI_COMM_WORLD, getUniqueMachineIdentifier() & 0x7FFFFFFF, 0, &machineComm);
   PMPI_Comm_rank(machineComm, &machineRank);
@@ -167,9 +171,9 @@ static double getTimeOffset() {
   PMPI_Comm_size(interMachineComm, &numMachines);
 
   /* broadcast the associated starting offset */
-  startOffset = *TheTauTraceBeginningOffset();
+  startOffset = offsetInfo->beginOffset;
   PMPI_Bcast(&startOffset, 1, MPI_DOUBLE, 0, machineComm);
-  *TheTauTraceBeginningOffset() = startOffset;
+  offsetInfo->beginOffset = startOffset;
 
   offset = 0.0;
   PMPI_Barrier(MPI_COMM_WORLD);
@@ -215,6 +219,8 @@ void TauSyncFinalClocks() {
 void TauSyncClocks() {
   int rank, size;
   double offset = 0;
+  TauTraceOffsetInfo *offsetInfo;
+
 
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &size );
@@ -226,13 +232,12 @@ void TauSyncClocks() {
   /* clear counter to zero, since the times might be wildly different (LINUX_TIMERS)
      we reset to zero so that the offsets won't be so large as to give us negative numbers
      on some nodes.  This also allows us to easily use 0 before MPI_Init. */
-  *TheTauTraceBeginningOffset() = getPreSyncTime();
 
-  /* only do this when tracing */
-  offset = getTimeOffset();
+  offsetInfo = TheTauTraceOffsetInfo();
 
-  *TheTauTraceSyncOffset() = offset;
-  *TheTauTraceSyncOffsetSet() = 1;
+  offsetInfo->beginOffset = getPreSyncTime();
+  offsetInfo->syncOffset = getTimeOffset();
+  offsetInfo->enabled = 1;
 
 #ifdef TRACING_ON
   TraceEventSimple(TauUserEvent_GetEventId(beginOffset), (x_int64) offset, 0);
