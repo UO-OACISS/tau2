@@ -216,13 +216,8 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   DEBUGPROFMSG("elg_def_region: "<<tau_elg_name<<": returns "<<FunctionId<<endl;);
 #else /* TAU_EPILOG */
   // FOR Tracing, we should make the two a single operation 
-  // when threads are supported for traces. There needs to be 
-  // a lock in RtsLayer that can be locked while the push_back
-  // and size operations are done (this should be atomic). 
-  // Function Id is the index into the DB vector
-  /* OLD:
-   * FunctionId = TheFunctionDB().size();
-   */
+  // when threads are supported for traces. 
+
   FunctionId = RtsLayer::GenerateUniqueId();
   TauTraceSetFlushEvents(tid);
 #endif /* TAU_EPILOG */
@@ -506,6 +501,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.69 $   $Date: 2009/02/20 23:42:36 $
- * VERSION_ID: $Id: FunctionInfo.cpp,v 1.69 2009/02/20 23:42:36 amorris Exp $ 
+ * $Revision: 1.70 $   $Date: 2009/02/21 00:56:12 $
+ * VERSION_ID: $Id: FunctionInfo.cpp,v 1.70 2009/02/21 00:56:12 amorris Exp $ 
  ***************************************************************************/

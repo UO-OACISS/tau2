@@ -30,12 +30,6 @@
 #include <Profile/TauEnv.h>
 #include <Profile/TauTrace.h>
 
-
-
-
-
-
-
 /* Magic number, parameter for certain events */
 #define INIT_PARAM 3
 
@@ -177,7 +171,7 @@ void TauTraceFlush(int tid) {
   
   int numEventsToBeFlushed = TauCurrentEvent[tid]; /* starting from 0 */
   DEBUGPROFMSG("Tid "<<tid<<": TauTraceFlush()"<<endl;);
-  if ( numEventsToBeFlushed != 0) {
+  if (numEventsToBeFlushed != 0) {
     /*-- there are a finite no. of records --*/
     ret = write (TraceFd[tid], TraceBuffer[tid], (numEventsToBeFlushed) * sizeof(TAU_EV));
     if (ret < 0) {

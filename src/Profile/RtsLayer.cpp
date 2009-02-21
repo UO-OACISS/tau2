@@ -144,8 +144,8 @@ bool& RtsLayer::TheEnableInstrumentation(void)
 }
 
 /////////////////////////////////////////////////////////////////////////
-long RtsLayer::GenerateUniqueId(void)
-{ /* This routine is called in a locked region (RtsLayer::LockDB/UnLockDB)*/
+long RtsLayer::GenerateUniqueId(void) {
+  /* This routine is called in a locked region (RtsLayer::LockDB/UnLockDB)*/
   static long UniqueId = 0;
   return ++UniqueId;
 }
@@ -1263,99 +1263,79 @@ void RtsLayer::TraceRecvMsg(int type, int source, int length) {
 // DumpEDF() writes the function information in the edf.<node> file
 // The function info consists of functionId, group, name, type, parameters
 //////////////////////////////////////////////////////////////////////
-int RtsLayer::DumpEDF(int tid)
-{
+int RtsLayer::DumpEDF(int tid) {
+
 #ifdef TRACING_ON 
-  	vector<FunctionInfo*>::iterator it;
-  	vector<TauUserEvent*>::iterator uit;
-	char filename[1024], errormsg[1024];
-	const char *dirname;
-	FILE* fp;
-	int  numEvents, numExtra;
-
-
-	if (tid != 0) 
-	{ 
-#ifdef DEBUG_PROF
-	  printf("DumpEDF: FlushEvents = %d\n",TauTraceGetFlushEvents(tid));
-#endif /* DEBUG_PROF */
-	  if (TauTraceGetFlushEvents(tid) == 0)
-	    return 1; 
-	}
-	RtsLayer::LockDB();
-	// Only thread 0 on a node should write the edf files.
-	dirname = TauEnv_get_tracedir();
-
-	sprintf(filename,"%s/events.%d.edf",dirname, RtsLayer::myNode());
-	DEBUGPROFMSG("Creating " << filename << endl;);
-	if ((fp = fopen (filename, "w+")) == NULL) {
-		sprintf(errormsg,"Error: Could not create %s",filename);
-		perror(errormsg);
-		return 0;
-	}
-	
-	// Data Format 
-	// <no.> events
-	// # or \n ignored
-	// %s %s %d "%s %s" %s 
-	// id group tag "name type" parameters
-
-	numExtra = 9; // Number of extra events
-	/* OLD
-	numEvents = TheFunctionDB().size();
-	*/
-	numEvents = TheFunctionDB().size() + TheEventDB().size();
-
-	numEvents += numExtra;
-
-	fprintf(fp,"%d dynamic_trace_events\n", numEvents);
-
-	fprintf(fp,"# FunctionId Group Tag \"Name Type\" Parameters\n");
-
- 	for (it = TheFunctionDB().begin(); 
-	  it != TheFunctionDB().end(); it++)
-	{
-  	  DEBUGPROFMSG("Node: "<< RtsLayer::myNode() <<  " Dumping EDF Id : " 
-	    << (*it)->GetFunctionId() << " " << (*it)->GetPrimaryGroup() 
-	    << " 0 " << (*it)->GetName() << " " << (*it)->GetType() 
-	    << " EntryExit" << endl;); 
-	
-	  fprintf(fp, "%ld %s 0 \"%s %s\" EntryExit\n", (*it)->GetFunctionId(),
-	    (*it)->GetPrimaryGroup(), (*it)->GetName(), (*it)->GetType() );
-	}
-
-	/* Now write the user defined event */
- 	for (uit = TheEventDB().begin(); 
-	  uit != TheEventDB().end(); uit++)
-	{
-	  int monoinc = 0; 
-	  if ((*uit)->GetMonotonicallyIncreasing())
-	  { /* if it is true */
-	    monoinc = 1;
-	  }
-  	  DEBUGPROFMSG("Node: "<< RtsLayer::myNode() <<  " Dumping EDF Id : " 
-	    << (*uit)->GetEventId() << " " 
-	    << monoinc<<" " << (*uit)->GetEventName() << " " 
-	    << " TriggerValue" << endl;); 
-	
-	  fprintf(fp, "%ld TAUEVENT %d \"%s\" TriggerValue\n", (*uit)->GetEventId(), monoinc, (*uit)->GetEventName());
-	}
-	// Now add the nine extra events 
-	fprintf(fp,"%ld TRACER 0 \"EV_INIT\" none\n", (long) TAU_EV_INIT); 
-	fprintf(fp,"%ld TRACER 0 \"FLUSH_ENTER\" none\n", (long) TAU_EV_FLUSH_ENTER); 
-	fprintf(fp,"%ld TRACER 0 \"FLUSH_EXIT\" none\n", (long) TAU_EV_FLUSH_EXIT); 
-	fprintf(fp,"%ld TRACER 0 \"FLUSH_CLOSE\" none\n", (long) TAU_EV_CLOSE); 
-	fprintf(fp,"%ld TRACER 0 \"FLUSH_INITM\" none\n", (long) TAU_EV_INITM); 
-	fprintf(fp,"%ld TRACER 0 \"WALL_CLOCK\" none\n", (long) TAU_EV_WALL_CLOCK); 
-	fprintf(fp,"%ld TRACER 0 \"CONT_EVENT\" none\n", (long) TAU_EV_CONT_EVENT); 
-	fprintf(fp,"%ld TAU_MESSAGE -7 \"MESSAGE_SEND\" par\n", (long) TAU_MESSAGE_SEND); 
-	fprintf(fp,"%ld TAU_MESSAGE -8 \"MESSAGE_RECV\" par\n", (long) TAU_MESSAGE_RECV); 
-
+  vector<FunctionInfo*>::iterator it;
+  vector<TauUserEvent*>::iterator uit;
+  char filename[1024], errormsg[1024];
+  const char *dirname;
+  FILE* fp;
+  int  numEvents, numExtra;
   
-	fclose(fp);
-	RtsLayer::UnLockDB();
+  if (tid != 0) { 
+    if (TauTraceGetFlushEvents(tid) == 0) {
+      return 1; 
+    }
+  }
+
+  RtsLayer::LockDB();
+  dirname = TauEnv_get_tracedir();
+  
+  sprintf(filename,"%s/events.%d.edf",dirname, RtsLayer::myNode());
+  if ((fp = fopen (filename, "w+")) == NULL) {
+    sprintf(errormsg,"Error: Could not create %s",filename);
+    perror(errormsg);
+    return 0;
+  }
+  
+  // Data Format 
+  // <no.> events
+  // # or \n ignored
+  // %s %s %d "%s %s" %s 
+  // id group tag "name type" parameters
+  
+  numExtra = 9; // Number of extra events
+  /* OLD
+     numEvents = TheFunctionDB().size();
+  */
+  numEvents = TheFunctionDB().size() + TheEventDB().size();
+  
+  numEvents += numExtra;
+  
+  fprintf(fp,"%d dynamic_trace_events\n", numEvents);
+  
+  fprintf(fp,"# FunctionId Group Tag \"Name Type\" Parameters\n");
+  
+  for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
+    fprintf(fp, "%ld %s 0 \"%s %s\" EntryExit\n", (*it)->GetFunctionId(),
+	    (*it)->GetPrimaryGroup(), (*it)->GetName(), (*it)->GetType() );
+  }
+  
+  /* Now write the user defined event */
+  for (uit = TheEventDB().begin(); uit != TheEventDB().end(); uit++) {
+    int monoinc = 0; 
+    if ((*uit)->GetMonotonicallyIncreasing()) { 
+      monoinc = 1;
+    }
+    fprintf(fp, "%ld TAUEVENT %d \"%s\" TriggerValue\n", (*uit)->GetEventId(), monoinc, (*uit)->GetEventName());
+  }
+
+  // Now add the nine extra events 
+  fprintf(fp,"%ld TRACER 0 \"EV_INIT\" none\n", (long) TAU_EV_INIT); 
+  fprintf(fp,"%ld TRACER 0 \"FLUSH_ENTER\" none\n", (long) TAU_EV_FLUSH_ENTER); 
+  fprintf(fp,"%ld TRACER 0 \"FLUSH_EXIT\" none\n", (long) TAU_EV_FLUSH_EXIT); 
+  fprintf(fp,"%ld TRACER 0 \"FLUSH_CLOSE\" none\n", (long) TAU_EV_CLOSE); 
+  fprintf(fp,"%ld TRACER 0 \"FLUSH_INITM\" none\n", (long) TAU_EV_INITM); 
+  fprintf(fp,"%ld TRACER 0 \"WALL_CLOCK\" none\n", (long) TAU_EV_WALL_CLOCK); 
+  fprintf(fp,"%ld TRACER 0 \"CONT_EVENT\" none\n", (long) TAU_EV_CONT_EVENT); 
+  fprintf(fp,"%ld TAU_MESSAGE -7 \"MESSAGE_SEND\" par\n", (long) TAU_MESSAGE_SEND); 
+  fprintf(fp,"%ld TAU_MESSAGE -8 \"MESSAGE_RECV\" par\n", (long) TAU_MESSAGE_RECV); 
+  
+  fclose(fp);
+  RtsLayer::UnLockDB();
 #endif //TRACING_ON
-	return 1;
+  return 1;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1458,6 +1438,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.114 $   $Date: 2009/02/20 23:42:36 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.114 2009/02/20 23:42:36 amorris Exp $ 
+ * $Revision: 1.115 $   $Date: 2009/02/21 00:56:12 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.115 2009/02/21 00:56:12 amorris Exp $ 
  ***************************************************************************/
