@@ -48,6 +48,14 @@
 #endif
 
 
+#ifdef TAU_WINDOWS
+ #define TAUROOT "root"
+ #define TAU_ARCH "win32"
+#else
+ #include "tauroot.h"
+ #include "tauarch.h"
+#endif
+
 
 
 #endif /* _TAU_LIBRARY_H_ */
