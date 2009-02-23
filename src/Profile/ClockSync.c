@@ -211,7 +211,7 @@ void TauSyncFinalClocks() {
   offset = getTimeOffset();
 
 #ifdef TRACING_ON
-  TraceEventSimple(TauUserEvent_GetEventId(endOffset), (x_int64) offset ,0);
+  TauTraceEventSimple(TauUserEvent_GetEventId(endOffset), (x_int64) offset ,0);
 #endif
 }
 
@@ -240,7 +240,7 @@ void TauSyncClocks() {
   offsetInfo->enabled = 1;
 
 #ifdef TRACING_ON
-  TraceEventSimple(TauUserEvent_GetEventId(beginOffset), (x_int64) offset, 0);
+  TauTraceEventSimple(TauUserEvent_GetEventId(beginOffset), (x_int64) offset, 0);
 #endif
 
   PMPI_Barrier(MPI_COMM_WORLD);
