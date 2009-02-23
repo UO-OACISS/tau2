@@ -104,7 +104,8 @@ x_uint64 TauTraceGetTimeStamp(int tid) {
   }
 }
 
-/* -- write event to buffer only [without overflow check] ---- */
+
+/* Write event to buffer only [without overflow check] */
 void TauTraceEventOnly(long int ev, x_int64 par, int tid) {
   TAU_EV * tau_ev_ptr = &TraceBuffer[tid][TauCurrentEvent[tid]] ;  
   tau_ev_ptr->ev   = ev;
@@ -115,20 +116,21 @@ void TauTraceEventOnly(long int ev, x_int64 par, int tid) {
   TauCurrentEvent[tid] ++;
 }
 
-/* -- Set the flag to flush the EDF file --------------------- */
+/* Set the flag for flushing the EDF file, 1 means flush edf file. */
 void TauTraceSetFlushEvents(int value) {
   RtsLayer::LockDB();
   TauTraceFlushEvents = value;
   RtsLayer::UnLockDB();
 } 
 
-/* -- Get the flag to flush the EDF file. 1 means flush edf file. ------ */
+/* Get the flag for flushing the EDF file, 1 means flush edf file. */
 int TauTraceGetFlushEvents() {
   RtsLayer::LockDB();
   return TauTraceFlushEvents;
   RtsLayer::UnLockDB();
 }
 
+/* Check that the trace file is initialized */
 static int checkTraceFileInitialized(int tid) {
   if ( !(TraceFileInitialized[tid]) && (RtsLayer::myNode() > -1)) { 
     TraceFileInitialized[tid] = 1;
@@ -153,12 +155,10 @@ static int checkTraceFileInitialized(int tid) {
   return 0;
 }
 
-/* -- write event buffer to file ----------------------------- */
+/* Flush the trace buffer */
 void TauTraceFlushBuffer(int tid) {
   checkTraceFileInitialized(tid);
-/*
-  static TAU_EV flush_end = { TAU_EV_FLUSH_EXIT, 0, 0, 0L };
-*/
+
   int ret;
   if (TraceFd[tid] == 0) {
     printf("Error: TauTraceFlush(%d): Fd is -1. Trace file not initialized \n", tid);
@@ -166,7 +166,6 @@ void TauTraceFlushBuffer(int tid) {
       fprintf (stderr, "ERROR in configuration. Trace file not initialized. If this is an MPI application, please ensure that TAU MPI wrapper library is linked. If not, please ensure that TAU_PROFILE_SET_NODE(id); is called in the program (0 for sequential).\n");
       exit(1);
     }
-
   }
 
   if (TauTraceGetFlushEvents()) { 
@@ -178,7 +177,6 @@ void TauTraceFlushBuffer(int tid) {
   int numEventsToBeFlushed = TauCurrentEvent[tid]; /* starting from 0 */
   DEBUGPROFMSG("Tid "<<tid<<": TauTraceFlush()"<<endl;);
   if (numEventsToBeFlushed != 0) {
-    /*-- there are a finite no. of records --*/
     ret = write (TraceFd[tid], TraceBuffer[tid], (numEventsToBeFlushed) * sizeof(TAU_EV));
     if (ret < 0) {
 #ifdef DEBUG_PROF
@@ -191,9 +189,7 @@ void TauTraceFlushBuffer(int tid) {
 }
 
 
-
-/* -- current record pointer for each thread -- */
-
+/* static list of flags specifying if the buffer has been allocated for a given thread */
 bool *TauBufferAllocated() {
   static bool flag = true;
   static bool allocated[TAU_MAX_THREADS];
@@ -206,9 +202,8 @@ bool *TauBufferAllocated() {
   return allocated;
 }
 
-/* -- initialize SW monitor and open trace file(s) ----------- */
-/* -- TauTraceInit should be called in every trace routine to ensure that 
-   the trace file is initialized -- */
+/* Initialize tracing. TauTraceInit should be called in every trace routine to ensure that 
+   the trace file is initialized */
 int TauTraceInit(int tid) {
    if (!TauBufferAllocated()[tid]) {
      TraceBuffer[tid] = (TAU_EV*) malloc(TAU_BUFFER_SIZE);
@@ -248,8 +243,8 @@ int TauTraceInit(int tid) {
   return retvalue; 
 }
 
- /* This routine is typically invoked when multiple SET_NODE calls are 
-    encountered for a multi-threaded program */ 
+/* This routine is typically invoked when multiple SET_NODE calls are 
+   encountered for a multi-threaded program */ 
 void TauTraceReinitialize(int oldid, int newid, int tid) {
 #ifndef TAU_SETNODE0
   printf("Inside TauTraceReinitialize : oldid = %d, newid = %d, tid = %d\n",
@@ -263,23 +258,24 @@ void TauTraceReinitialize(int oldid, int newid, int tid) {
   return ;
 }
 
-/* -- Reset the trace  --------------------------------------- */
+/* Reset the trace */
 void TauTraceUnInitialize(int tid) {
-/* -- to set the trace as uninitialized and clear the current buffers (for forked
-      child process, trying to clear its parent records) -- */
-   TauTraceInitialized[tid] = 0;
-   TauCurrentEvent[tid] = 0;
-   TauTraceEventOnly(TAU_EV_INIT, INIT_PARAM, tid);
+  /* to set the trace as uninitialized and clear the current buffers (for forked
+     child process, trying to clear its parent records) */
+  TauTraceInitialized[tid] = 0;
+  TauCurrentEvent[tid] = 0;
+  TauTraceEventOnly(TAU_EV_INIT, INIT_PARAM, tid);
 }
 
 
 
-/* -- write event to buffer ---------------------------------- */
+/* Write event to buffer */
 void TauTraceEventSimple(long int ev, x_int64 par, int tid) {
   TauTraceEvent(ev, par, tid, 0, 0);
 }
 
 
+/* Write event to buffer */
 void TauTraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts) {
   int i;
   int records_created = TauTraceInit(tid);
@@ -339,10 +335,11 @@ void TauTraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts) {
   }
 }
 
-/* -- terminate SW tracing ----------------------------------- */
+/* Close the trace */
 void TauTraceClose(int tid) {
   TauTraceEventSimple (TAU_EV_CLOSE, 0, tid);
   TauTraceEventSimple (TAU_EV_WALL_CLOCK, time((time_t *)0), tid);
+  TauTraceDumpEDF(tid);
   TauTraceFlushBuffer (tid);
   //close (TraceFd[tid]); 
   // Just in case the same thread writes to this file again, don't close it.
@@ -396,16 +393,8 @@ TauTraceOffsetInfo *TheTauTraceOffsetInfo() {
 }
 
 
-
-
-
-//////////////////////////////////////////////////////////////////////
-// DumpEDF() writes the function information in the edf.<node> file
-// The function info consists of functionId, group, name, type, parameters
-//////////////////////////////////////////////////////////////////////
+/* Write event definition file (EDF) */
 int TauTraceDumpEDF(int tid) {
-
-#ifdef TRACING_ON 
   vector<FunctionInfo*>::iterator it;
   vector<TauUserEvent*>::iterator uit;
   char filename[1024], errormsg[1024];
@@ -426,7 +415,7 @@ int TauTraceDumpEDF(int tid) {
   if ((fp = fopen (filename, "w+")) == NULL) {
     sprintf(errormsg,"Error: Could not create %s",filename);
     perror(errormsg);
-    return 0;
+    return -1;
   }
   
   // Data Format 
@@ -474,8 +463,7 @@ int TauTraceDumpEDF(int tid) {
   
   fclose(fp);
   RtsLayer::UnLockDB();
-#endif //TRACING_ON
-  return 1;
+  return 0;
 }
 
 
@@ -486,59 +474,64 @@ int TauTraceDumpEDF(int tid) {
 
 int TauTraceMergeAndConvertTracesIfNecessary(void) { 
   char *outfile;
-  /* Get environment variables */
-  if ((outfile = getenv("TAU_TRACEFILE")) != NULL) { 
-    /* output file is defined. We need to merge the traces */
-    /* Now, who does the merge and conversion? */
-    if ((RtsLayer::myNode() == 0) && (RtsLayer::myThread() == 0)) {
-      const char *outdir;
-      char *keepfiles;
-      char cmd[1024];
-      char rmcmd[256]; 
-      char cdcmd[1024];
-      char *tauroot=TAUROOT;
-      char *tauarch=TAU_ARCH;
-      char *conv="tau2vtf";
-      char converter[1024] = {0}; 
-      FILE *in;
-  
-      /* If we can't find tau2vtf, use tau_convert! */
-      sprintf(converter, "%s/%s/bin/%s",tauroot, tauarch, conv);
-      if ((in = fopen(converter, "r")) == NULL) {
-        sprintf(converter, "%s/%s/bin/tau_convert", tauroot, tauarch);
-      } else {
-        fclose(in);
-      }
 
-      /* Should we get rid of intermediate trace files? */
-      if((keepfiles = getenv("TAU_KEEP_TRACEFILES")) == NULL) {
-	strcpy(rmcmd, "/bin/rm -f app12345678.trc tautrace.*.trc tau.edf events.*.edf");
-      } else { 
-	strcpy(rmcmd," "); /* NOOP */
-      }
-      
-      /* Next, look for trace directory */
-      outdir = TauEnv_get_tracedir();
-      sprintf(cdcmd, "cd %s;", outdir);
+  outfile = getenv("TAU_TRACEFILE");
 
-      /* create the command */
-      sprintf(cmd, "%s /bin/rm -f app12345678.trc; %s/%s/bin/tau_merge tautrace.*.trc app12345678.trc; %s app12345678.trc tau.edf %s; %s", cdcmd,tauroot, tauarch, converter, outfile, rmcmd);
-#ifdef DEBUG_PROF
-      printf("The merge/convert cmd is: %s\n", cmd);
-#endif /* DEBUG_PROF */
-
-      /* and execute it */
-#ifndef TAU_CATAMOUNT
-/* NOTE: BGL will not execute this code as well because the compute node 
-   kernels cannot fork tasks. So, on BGL, nothing will happen when the 
-   following system command executes */
-      system(cmd);
-#endif /* TAU_CATAMOUNT */
-    } /* on node 0, thread 0 */
-  } /* if output file is defined */
-  else 
-  { /* output file not defined, just exit normally */
+  if (outfile == NULL) {
+    /* output file not defined, just exit normally */
     return 0;
   }
-  return 1;
+
+  /* output file is defined. We need to merge the traces */
+  /* Now, who does the merge and conversion? */
+  if ((RtsLayer::myNode() != 0) || (RtsLayer::myThread() != 0)) {
+    /* only node/thread 0 should do this */
+    return 0;
+  }
+  
+  const char *outdir;
+  char *keepfiles;
+  char cmd[1024];
+  char rmcmd[256]; 
+  char cdcmd[1024];
+  char *tauroot=TAUROOT;
+  char *tauarch=TAU_ARCH;
+  char *conv="tau2vtf";
+  char converter[1024] = {0}; 
+  FILE *in;
+  
+  /* If we can't find tau2vtf, use tau_convert! */
+  sprintf(converter, "%s/%s/bin/%s",tauroot, tauarch, conv);
+  if ((in = fopen(converter, "r")) == NULL) {
+    sprintf(converter, "%s/%s/bin/tau_convert", tauroot, tauarch);
+  } else {
+    fclose(in);
+  }
+  
+  /* Should we get rid of intermediate trace files? */
+  if ((keepfiles = getenv("TAU_KEEP_TRACEFILES")) == NULL) {
+    strcpy(rmcmd, "/bin/rm -f app12345678.trc tautrace.*.trc tau.edf events.*.edf");
+  } else { 
+    strcpy(rmcmd," "); /* NOOP */
+  }
+  
+  /* Next, look for trace directory */
+  outdir = TauEnv_get_tracedir();
+  sprintf(cdcmd, "cd %s;", outdir);
+  
+  /* create the command */
+  sprintf(cmd, "%s /bin/rm -f app12345678.trc; %s/%s/bin/tau_merge tautrace.*.trc app12345678.trc; %s app12345678.trc tau.edf %s; %s", cdcmd,tauroot, tauarch, converter, outfile, rmcmd);
+#ifdef DEBUG_PROF
+  printf("The merge/convert cmd is: %s\n", cmd);
+#endif /* DEBUG_PROF */
+  
+  /* and execute it */
+#ifndef TAU_CATAMOUNT
+  /* NOTE: BGL will not execute this code as well because the compute node 
+     kernels cannot fork tasks. So, on BGL, nothing will happen when the 
+     following system command executes */
+  system(cmd);
+#endif /* TAU_CATAMOUNT */
+
+  return 0;
 }
