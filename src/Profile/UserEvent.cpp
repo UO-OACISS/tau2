@@ -2,14 +2,14 @@
 **			TAU Portable Profiling Package			   **
 **			http://www.cs.uoregon.edu/research/tau	           **
 *****************************************************************************
-**    Copyright 1997  						   	   **
+**    Copyright 1997-2009	          			   	   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
 /***************************************************************************
 **	File 		: UserEvent.cpp					  **
 **	Description 	: TAU Profiling Package				  **
-**	Contact		: tau-team@cs.uoregon.edu 		 	  **
+**	Contact		: tau-bugs@cs.uoregon.edu 		 	  **
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
@@ -233,29 +233,31 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid) {
   NumEvents[tid] ++;
 
   // Compute relevant statistics for the data 
-  if (!GetDisableMin()) 
-  {  // Min is not disabled
+  if (!GetDisableMin()) {  
+    // Min is not disabled
      if (NumEvents[tid] > 1) {
-     	MinValue[tid] = data < MinValue[tid] ? data : MinValue[tid];
-     } else
+       MinValue[tid] = data < MinValue[tid] ? data : MinValue[tid];
+     } else {
 	MinValue[tid] = data;
+     }
   }
   
-  if (!GetDisableMax())
-  {  // Max is not disabled
+  if (!GetDisableMax()) {  
+    // Max is not disabled
      if (NumEvents[tid] > 1) {
        MaxValue[tid] = MaxValue[tid] < data ? data : MaxValue[tid];
-     } else
+     } else {
        MaxValue[tid] = data;
+     }
   }
 
-  if (!GetDisableMean())
-  {  // Mean is not disabled 
+  if (!GetDisableMean()) {  
+    // Mean is not disabled 
      SumValue[tid] += data; 
   }
      
-  if (!GetDisableStdDev())
-  {  // Standard Deviation is not disabled
+  if (!GetDisableStdDev()) {  
+    // Standard Deviation is not disabled
      SumSqrValue[tid] += data*data; 
   }
 
@@ -623,6 +625,6 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid) {
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
- * $Revision: 1.33 $   $Date: 2009/02/23 23:42:43 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.33 2009/02/23 23:42:43 amorris Exp $ 
+ * $Revision: 1.34 $   $Date: 2009/02/23 23:45:19 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.34 2009/02/23 23:45:19 amorris Exp $ 
  ***************************************************************************/
