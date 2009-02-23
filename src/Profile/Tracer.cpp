@@ -349,6 +349,8 @@ void TauTraceClose(int tid) {
     close(TauTraceFd[tid]);
   }
 #endif /* TAU_OPENMP */
+
+  TauTraceMergeAndConvertTracesIfNecessary();
 }
 
 //////////////////////////////////////////////////////////////////////
