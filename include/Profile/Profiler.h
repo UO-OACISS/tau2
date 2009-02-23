@@ -117,7 +117,6 @@ void tau_pthread_exit (void *arg);
 #include <Profile/WindowsThreadLayer.h>
 #include <Profile/TauMemory.h>
 #include <Profile/TauScalasca.h>
-#include <Profile/TauMuse.h>
 #include <Profile/TauCompensate.h>
 #include <Profile/TauHandler.h>
 #include <Profile/TauEnv.h>
@@ -293,6 +292,6 @@ using tau::Profiler;
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.96 $   $Date: 2009/02/18 20:32:47 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.96 2009/02/18 20:32:47 amorris Exp $ 
+ * $Revision: 1.97 $   $Date: 2009/02/23 23:50:42 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.97 2009/02/23 23:50:42 amorris Exp $ 
  ***************************************************************************/
