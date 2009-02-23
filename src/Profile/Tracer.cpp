@@ -33,23 +33,26 @@
 /* Magic number, parameter for certain events */
 #define INIT_PARAM 3
 
-/* -- event record buffer ------------------------------------ */
+/* Trace buffer settings */
 #define TAU_MAX_RECORDS 64*1024
 #define TAU_BUFFER_SIZE sizeof(TAU_EV)*TAU_MAX_RECORDS
 
-/* -- buffer that holds the events before they are flushed to disk -- */
+/* Trace buffer */
 static TAU_EV *TraceBuffer[TAU_MAX_THREADS]; 
 
-/* -- current record pointer for each thread -- */
+/* Trace buffer pointer for each threads */
 static int TauCurrentEvent[TAU_MAX_THREADS] = {0}; 
 
-/* -- event trace file descriptor ---------------------------- */
+/* Trace file descriptors */
 static int TraceFd[TAU_MAX_THREADS] = {0};
 
-/* -- do event files need to be re-written ------------------- */
-static int FlushEvents[TAU_MAX_THREADS] = {0};
+/* Flags for whether or not EDF files need to be rewritten when this thread's
+   trace buffer is flushed.  Because any thread can introduce new functions and
+   need to be flushed, we can't always wait for thread 0 */
+static int TauTraceFlushEvents = 0;
 
-/* -- initialization status flags ---------------------------- */
+
+/* Initialization status flags */
 static int TauTraceInitialized[TAU_MAX_THREADS] = {0};
 static int TraceFileInitialized[TAU_MAX_THREADS] = {0};
 
@@ -71,7 +74,6 @@ double TauSyncAdjustTimeStamp(double timestamp) {
 }
 
 
-/* -- Use Profiling interface for time -- */
 x_uint64 TauTraceGetTimeStamp(int tid) { 
   // If you're modifying the behavior of this routine, note that in 
   // Profiler::Start and Stop, we obtain the timestamp for tracing explicitly. 
@@ -114,13 +116,17 @@ void TauTraceEventOnly(long int ev, x_int64 par, int tid) {
 }
 
 /* -- Set the flag to flush the EDF file --------------------- */
-void TauTraceSetFlushEvents(int tid) {
-  FlushEvents[tid] = 1;
+void TauTraceSetFlushEvents(int value) {
+  RtsLayer::LockDB();
+  TauTraceFlushEvents = value;
+  RtsLayer::UnLockDB();
 } 
 
 /* -- Get the flag to flush the EDF file. 1 means flush edf file. ------ */
-int TauTraceGetFlushEvents(int tid) {
-  return FlushEvents[tid];
+int TauTraceGetFlushEvents() {
+  RtsLayer::LockDB();
+  return TauTraceFlushEvents;
+  RtsLayer::UnLockDB();
 }
 
 static int checkTraceFileInitialized(int tid) {
@@ -148,7 +154,7 @@ static int checkTraceFileInitialized(int tid) {
 }
 
 /* -- write event buffer to file ----------------------------- */
-void TauTraceFlush(int tid) {
+void TauTraceFlushBuffer(int tid) {
   checkTraceFileInitialized(tid);
 /*
   static TAU_EV flush_end = { TAU_EV_FLUSH_EXIT, 0, 0, 0L };
@@ -163,10 +169,10 @@ void TauTraceFlush(int tid) {
 
   }
 
-  if (FlushEvents[tid]) { 
+  if (TauTraceGetFlushEvents()) { 
     /* Dump the EDF file before writing trace data */
     TauTraceDumpEDF(tid);
-    FlushEvents[tid]=0;
+    TauTraceSetFlushEvents(0);
   }
   
   int numEventsToBeFlushed = TauCurrentEvent[tid]; /* starting from 0 */
@@ -176,8 +182,7 @@ void TauTraceFlush(int tid) {
     ret = write (TraceFd[tid], TraceBuffer[tid], (numEventsToBeFlushed) * sizeof(TAU_EV));
     if (ret < 0) {
 #ifdef DEBUG_PROF
-      printf("Error: TraceFd[%d] = %d, numEvents = %d ", tid, TraceFd[tid], 
-	numEventsToBeFlushed);
+      printf("Error: TraceFd[%d] = %d, numEvents = %d ", tid, TraceFd[tid], numEventsToBeFlushed);
       perror("Write Error in TauTraceFlush()");
 #endif
     }
@@ -379,7 +384,7 @@ void TauTraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts) {
   TauCurrentEvent[tid]++;
 
   if (TauCurrentEvent[tid] >= TAU_MAX_RECORDS-1) {
-    TauTraceFlush(tid); 
+    TauTraceFlushBuffer(tid); 
   }
 }
 
@@ -387,7 +392,7 @@ void TauTraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts) {
 void TauTraceClose(int tid) {
   TauTraceEventSimple (TAU_EV_CLOSE, 0, tid);
   TauTraceEventSimple (TAU_EV_WALL_CLOCK, time((time_t *)0), tid);
-  TauTraceFlush (tid);
+  TauTraceFlushBuffer (tid);
   //close (TraceFd[tid]); 
   // Just in case the same thread writes to this file again, don't close it.
   // for OpenMP.
@@ -458,7 +463,7 @@ int TauTraceDumpEDF(int tid) {
   int  numEvents, numExtra;
   
   if (tid != 0) { 
-    if (TauTraceGetFlushEvents(tid) == 0) {
+    if (TauTraceGetFlushEvents() == 0) {
       return 1; 
     }
   }

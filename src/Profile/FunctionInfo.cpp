@@ -219,7 +219,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   // when threads are supported for traces. 
 
   FunctionId = RtsLayer::GenerateUniqueId();
-  TauTraceSetFlushEvents(tid);
+  TauTraceSetFlushEvents(1);
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
 #endif //TRACING_ON
@@ -501,6 +501,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.70 $   $Date: 2009/02/21 00:56:12 $
- * VERSION_ID: $Id: FunctionInfo.cpp,v 1.70 2009/02/21 00:56:12 amorris Exp $ 
+ * $Revision: 1.71 $   $Date: 2009/02/23 22:59:11 $
+ * VERSION_ID: $Id: FunctionInfo.cpp,v 1.71 2009/02/23 22:59:11 amorris Exp $ 
  ***************************************************************************/
