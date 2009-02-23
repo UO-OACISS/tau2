@@ -33,21 +33,19 @@ using namespace std;
 
 extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup_t group, const char *gr_name) {
   FunctionInfo *f;
-  //Profiler *p;
 
   DEBUGPROFMSG("Inside get_profiler group = " << group<<endl;);
 
   // since we're using new, we should set InitData to true in FunctionInfoInit
-  if (group == TAU_MESSAGE)
-  {
-    if (gr_name && strcmp(gr_name, "TAU_MESSAGE") == 0)
+  if (group == TAU_MESSAGE) {
+    if (gr_name && strcmp(gr_name, "TAU_MESSAGE") == 0) {
       f = new FunctionInfo(fname, type, group, "MPI", true);
-    else 
+    } else {
       f = new FunctionInfo(fname, type, group, gr_name, true);
-  }
-  else 
+    }
+  } else {
     f = new FunctionInfo(fname, type, group, gr_name, true);
-//  p = new Profiler(f, group, true);
+  }
 
   return (void *) f;
 }
@@ -467,13 +465,16 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
 #ifdef TAU_EACH_SEND
   TheMsgVolEvent()[destination]->TriggerEvent(length, RtsLayer::myThread());
 #endif /* TAU_EACH_SEND */
+
+#ifdef TRACING_ON
   if (destination >= 0) {
     TauTraceSendMsg(type, destination, length);
   }
+#endif
 }
+
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_recvmsg(int type, int source, int length) {
-  TAU_EVENT(TheRecvEvent(), length);
 
 #ifdef TAU_PROFILEPARAM
 #ifndef TAU_DISABLE_PROFILEPARAM_IN_MPI
@@ -481,9 +482,13 @@ extern "C" void Tau_trace_recvmsg(int type, int source, int length) {
 #endif /* TAU_DISABLE_PROFILEPARAM_IN_MPI */
 #endif  /* TAU_PROFILEPARAM */
 
+  TAU_EVENT(TheRecvEvent(), length);
+
+#ifdef TRACING_ON
   if (source >= 0) {
     TauTraceRecvMsg(type, source, length);
   }
+#endif
 }
 
 extern "C" void Tau_bcast_data(int data) {
@@ -1145,7 +1150,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.104 $   $Date: 2009/02/23 23:51:33 $
- * VERSION: $Id: TauCAPI.cpp,v 1.104 2009/02/23 23:51:33 amorris Exp $
+ * $Revision: 1.105 $   $Date: 2009/02/23 23:56:40 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.105 2009/02/23 23:56:40 amorris Exp $
  ***************************************************************************/
 

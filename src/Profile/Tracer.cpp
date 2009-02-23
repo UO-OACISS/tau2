@@ -541,7 +541,6 @@ int TauTraceMergeAndConvertTracesIfNecessary(void) {
 // TraceSendMsg traces the message send
 //////////////////////////////////////////////////////////////////////
 void TauTraceSendMsg(int type, int destination, int length) {
-#ifdef TRACING_ON 
   x_int64 parameter;
   x_uint64 xother, xtype, xlength, xcomm;
 
@@ -586,10 +585,8 @@ void TauTraceSendMsg(int type, int destination, int length) {
       ((xother & 0xFF) << 24) |
       (xcomm << 58 >> 16);
 
-
     TauTraceEventSimple(TAU_MESSAGE_SEND, parameter, RtsLayer::myThread()); 
   } 
-#endif //TRACING_ON
 }
 
   
@@ -597,10 +594,8 @@ void TauTraceSendMsg(int type, int destination, int length) {
 // TraceRecvMsg traces the message recv
 //////////////////////////////////////////////////////////////////////
 void TauTraceRecvMsg(int type, int source, int length) {
-#ifdef TRACING_ON
   x_int64 parameter;
   x_uint64 xother, xtype, xlength, xcomm;
-
 
   if (RtsLayer::isEnabled(TAU_MESSAGE)) {
     parameter = 0;
@@ -620,9 +615,7 @@ void TauTraceRecvMsg(int type, int source, int length) {
       ((xother & 0xFF) << 24) |
       (xcomm << 58 >> 16);
 
-
     TauTraceEventSimple(TAU_MESSAGE_RECV, parameter, RtsLayer::myThread()); 
   }
-#endif //TRACING_ON
 }
 
