@@ -60,12 +60,12 @@ extern "C" {
   void TauTraceUnInitialize(int tid);
   void TauTraceReinitialize(int oldid, int newid, int tid);
   void TauTraceEventOnly(long int ev, x_int64 par, int tid);
-  void TauTraceFlush(int tid);
+  void TauTraceFlushBuffer(int tid);
   void TauTraceEventSimple(long int ev, x_int64 par, int tid);
   void TauTraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts);
   void TauTraceClose(int tid);
-  void TauTraceSetFlushEvents(int tid);
-  int  TauTraceGetFlushEvents(int tid);
+  void TauTraceSetFlushEvents(int value);
+  int  TauTraceGetFlushEvents();
   double TauTraceGetTime(int tid);
   int TauTraceDumpEDF(int tid);
   int TauTraceMergeAndConvertTracesIfNecessary(void);
