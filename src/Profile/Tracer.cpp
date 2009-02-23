@@ -190,53 +190,6 @@ void TauTraceFlushBuffer(int tid) {
   TauCurrentEvent[tid] = 0;
 }
 
-/* -- signal catching to flush event buffers ----------------- */
-#if defined (__cplusplus) || defined (__STDC__) || defined (_AIX) || (defined (__mips) && defined (_SYSTYPE_SVR4))
-#define SIGNAL_TYPE	void
-#define SIGNAL_ARG_TYPE	int
-#else	/* Not ANSI C.  */
-#define SIGNAL_TYPE	int
-#define SIGNAL_ARG_TYPE
-#endif	/* ANSI C */
-# ifndef NSIG
-#   define NSIG 32
-# endif
-static SIGNAL_TYPE (*sighdlr[NSIG])(SIGNAL_ARG_TYPE);
-
-static void wrap_up(int sig) {
-  fprintf (stderr, "TAU: signal %d on %d - flushing event buffer...\n", sig, RtsLayer::myNode());
-  TAU_PROFILE_EXIT("signal");
-  fprintf (stderr, "TAU: done.\n");
-  exit (1);
-}
-
-static void init_wrap_up() {
-# ifdef SIGINT
-  sighdlr[SIGINT ] = signal (SIGINT , wrap_up);
-# endif
-# ifdef SIGQUIT
-  sighdlr[SIGQUIT] = signal (SIGQUIT, wrap_up);
-# endif
-# ifdef SIGILL
-  sighdlr[SIGILL ] = signal (SIGILL , wrap_up);
-# endif
-# ifdef SIGFPE
-  sighdlr[SIGFPE ] = signal (SIGFPE , wrap_up);
-# endif
-# ifdef SIGBUS
-  sighdlr[SIGBUS ] = signal (SIGBUS , wrap_up);
-# endif
-# ifdef SIGTERM
-  sighdlr[SIGTERM] = signal (SIGTERM, wrap_up);
-# endif
-# ifdef SIGABRT
-  sighdlr[SIGABRT] = signal (SIGABRT, wrap_up);
-# endif
-# ifdef SIGSEGV
-  sighdlr[SIGSEGV] = signal (SIGSEGV, wrap_up);
-# endif
-}
-
 
 
 /* -- current record pointer for each thread -- */
@@ -269,8 +222,6 @@ int TauTraceInit(int tid) {
     /* done with initialization */
     TauTraceInitialized[tid] = 1;
 
-    init_wrap_up ();
-  
     /* there may be some records in tau_ev_ptr already. Make sure that the
        first record has node id set properly */
     if (TraceBuffer[tid][0].ev == TAU_EV_INIT) { 
