@@ -402,13 +402,14 @@ int TauTraceDumpEDF(int tid) {
   FILE* fp;
   int  numEvents, numExtra;
   
+  RtsLayer::LockDB();
+
   if (tid != 0) { 
     if (TauTraceGetFlushEvents() == 0) {
       return 1; 
     }
   }
 
-  RtsLayer::LockDB();
   dirname = TauEnv_get_tracedir();
   
   sprintf(filename,"%s/events.%d.edf",dirname, RtsLayer::myNode());
@@ -424,12 +425,9 @@ int TauTraceDumpEDF(int tid) {
   // %s %s %d "%s %s" %s 
   // id group tag "name type" parameters
   
-  numExtra = 9; // Number of extra events
-  /* OLD
-     numEvents = TheFunctionDB().size();
-  */
   numEvents = TheFunctionDB().size() + TheEventDB().size();
   
+  numExtra = 9; // Number of extra events
   numEvents += numExtra;
   
   fprintf(fp,"%d dynamic_trace_events\n", numEvents);
@@ -443,11 +441,11 @@ int TauTraceDumpEDF(int tid) {
   
   /* Now write the user defined event */
   for (uit = TheEventDB().begin(); uit != TheEventDB().end(); uit++) {
-    int monoinc = 0; 
+    int monoInc = 0; 
     if ((*uit)->GetMonotonicallyIncreasing()) { 
-      monoinc = 1;
+      monoInc = 1;
     }
-    fprintf(fp, "%ld TAUEVENT %d \"%s\" TriggerValue\n", (*uit)->GetEventId(), monoinc, (*uit)->GetEventName());
+    fprintf(fp, "%ld TAUEVENT %d \"%s\" TriggerValue\n", (*uit)->GetEventId(), monoInc, (*uit)->GetEventName());
   }
 
   // Now add the nine extra events 
