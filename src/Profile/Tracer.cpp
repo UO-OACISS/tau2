@@ -44,7 +44,7 @@ static TAU_EV *TraceBuffer[TAU_MAX_THREADS];
 static int TauCurrentEvent[TAU_MAX_THREADS] = {0}; 
 
 /* Trace file descriptors */
-static int TraceFd[TAU_MAX_THREADS] = {0};
+static int TauTraceFd[TAU_MAX_THREADS] = {0};
 
 /* Flags for whether or not EDF files need to be rewritten when this thread's
    trace buffer is flushed.  Because any thread can introduce new functions and
@@ -80,16 +80,16 @@ x_uint64 TauTraceGetTimeStamp(int tid) {
   // The same changes would have to be made there as well (e.g., using COUNTER1
   // for tracing in multiplecounters case) for consistency.
 #ifdef TAU_MULTIPLE_COUNTERS
-  //In the presence of multiple counters, the system always
-  //assumes that counter1 contains the tracing metric.
-  //Thus, if you want gettimeofday, make sure that you
-  //define counter1 to be GETTIMEOFDAY.
-  //Just return values[0] as that is the position of counter1 (whether it
-  //is active or not).
-
-// THE SLOW WAY!
-//   RtsLayer::getUSecD(tid, tracerValues);
-//   double value = tracerValues[0];
+  // In the presence of multiple counters, the system always
+  // assumes that COUNTER1 contains the tracing metric.
+  // Thus, if you want gettimeofday, make sure that you
+  // define counter1 to be GETTIMEOFDAY.
+  // Just return values[0] as that is the position of counter1 (whether it
+  // is active or not).
+  
+  // THE SLOW WAY!
+  //   RtsLayer::getUSecD(tid, tracerValues);
+  //   double value = tracerValues[0];
 
   x_uint64 value = MultipleCounterLayer::getSingleCounter(tid, 0);
 
@@ -139,7 +139,7 @@ static int checkTraceFileInitialized(int tid) {
     dirname = TauEnv_get_tracedir();
     sprintf(tracefilename, "%s/tautrace.%d.%d.%d.trc",dirname, 
 	    RtsLayer::myNode(), RtsLayer::myContext(), tid);
-    if ((TraceFd[tid] = open (tracefilename, O_WRONLY|O_CREAT|O_TRUNC|O_APPEND|O_BINARY|LARGEFILE_OPTION, 0600)) < 0) {
+    if ((TauTraceFd[tid] = open (tracefilename, O_WRONLY|O_CREAT|O_TRUNC|O_APPEND|O_BINARY|LARGEFILE_OPTION, 0600)) < 0) {
       fprintf (stderr, "TAU: TauTraceInit[open]: ");
       perror (tracefilename);
       exit (1);
@@ -160,7 +160,7 @@ void TauTraceFlushBuffer(int tid) {
   checkTraceFileInitialized(tid);
 
   int ret;
-  if (TraceFd[tid] == 0) {
+  if (TauTraceFd[tid] == 0) {
     printf("Error: TauTraceFlush(%d): Fd is -1. Trace file not initialized \n", tid);
     if (RtsLayer::myNode() == -1) {
       fprintf (stderr, "ERROR in configuration. Trace file not initialized. If this is an MPI application, please ensure that TAU MPI wrapper library is linked. If not, please ensure that TAU_PROFILE_SET_NODE(id); is called in the program (0 for sequential).\n");
@@ -177,10 +177,10 @@ void TauTraceFlushBuffer(int tid) {
   int numEventsToBeFlushed = TauCurrentEvent[tid]; /* starting from 0 */
   DEBUGPROFMSG("Tid "<<tid<<": TauTraceFlush()"<<endl;);
   if (numEventsToBeFlushed != 0) {
-    ret = write (TraceFd[tid], TraceBuffer[tid], (numEventsToBeFlushed) * sizeof(TAU_EV));
+    ret = write (TauTraceFd[tid], TraceBuffer[tid], (numEventsToBeFlushed) * sizeof(TAU_EV));
     if (ret < 0) {
 #ifdef DEBUG_PROF
-      printf("Error: TraceFd[%d] = %d, numEvents = %d ", tid, TraceFd[tid], numEventsToBeFlushed);
+      printf("Error: TauTraceFd[%d] = %d, numEvents = %d ", tid, TauTraceFd[tid], numEventsToBeFlushed);
       perror("Write Error in TauTraceFlush()");
 #endif
     }
@@ -341,12 +341,12 @@ void TauTraceClose(int tid) {
   TauTraceEventSimple (TAU_EV_WALL_CLOCK, time((time_t *)0), tid);
   TauTraceDumpEDF(tid);
   TauTraceFlushBuffer (tid);
-  //close (TraceFd[tid]); 
+  //close (TauTraceFd[tid]); 
   // Just in case the same thread writes to this file again, don't close it.
   // for OpenMP.
 #ifndef TAU_OPENMP
   if ((RtsLayer::myNode() == 0) && (RtsLayer::myThread() == 0)) {
-    close(TraceFd[tid]);
+    close(TauTraceFd[tid]);
   }
 #endif /* TAU_OPENMP */
 }
