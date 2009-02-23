@@ -29,6 +29,7 @@ using namespace std;
 #include <unistd.h>
 #endif /* TAU_WINDOWS */
 
+#include <Profile/TauTrace.h>
 
 extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup_t group, const char *gr_name) {
   FunctionInfo *f;
@@ -80,7 +81,6 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase) {
 
   // move the stack pointer
   Tau_global_stackpos[tid]++; /* push */
-
 
   if (Tau_global_stackpos[tid] >= Tau_global_stackdepth[tid]) {
     int oldDepth = Tau_global_stackdepth[tid];
@@ -468,7 +468,7 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
   TheMsgVolEvent()[destination]->TriggerEvent(length, RtsLayer::myThread());
 #endif /* TAU_EACH_SEND */
   if (destination >= 0) {
-    RtsLayer::TraceSendMsg(type, destination, length);
+    TauTraceSendMsg(type, destination, length);
   }
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -482,7 +482,7 @@ extern "C" void Tau_trace_recvmsg(int type, int source, int length) {
 #endif  /* TAU_PROFILEPARAM */
 
   if (source >= 0) {
-    RtsLayer::TraceRecvMsg(type, source, length);
+    TauTraceRecvMsg(type, source, length);
   }
 }
 
@@ -1145,7 +1145,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.103 $   $Date: 2009/02/20 19:57:53 $
- * VERSION: $Id: TauCAPI.cpp,v 1.103 2009/02/20 19:57:53 amorris Exp $
+ * $Revision: 1.104 $   $Date: 2009/02/23 23:51:33 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.104 2009/02/23 23:51:33 amorris Exp $
  ***************************************************************************/
 

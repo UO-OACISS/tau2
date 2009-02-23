@@ -59,8 +59,6 @@ public:
   static void ProfileInit(int& argc, char**& argv);
   static string PrimaryGroup(const char *ProfileGroupName);
   static bool isCtorDtor(const char *name);
-  static void TraceSendMsg(int type, int destination, int length);
-  static void TraceRecvMsg(int type, int source, int length);
 
   static std::string GetRTTI(const char *name); 
   inline static const char * CheckNotNull(const char * str) {
@@ -129,6 +127,6 @@ private:
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: amorris $
- * $Revision: 1.29 $   $Date: 2009/02/23 22:32:29 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.29 2009/02/23 22:32:29 amorris Exp $ 
+ * $Revision: 1.30 $   $Date: 2009/02/23 23:51:09 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.30 2009/02/23 23:51:09 amorris Exp $ 
  ***************************************************************************/

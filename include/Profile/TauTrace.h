@@ -70,6 +70,10 @@ extern "C" {
   int TauTraceDumpEDF(int tid);
   int TauTraceMergeAndConvertTracesIfNecessary(void);
 
+  void TauTraceSendMsg(int type, int destination, int length);
+  void TauTraceRecvMsg(int type, int source, int length);
+
+
   /* Returns a pointer to the (singleton) offset info struct */
   TauTraceOffsetInfo *TheTauTraceOffsetInfo();
 

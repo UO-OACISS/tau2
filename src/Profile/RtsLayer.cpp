@@ -1013,94 +1013,6 @@ string RtsLayer::PrimaryGroup(const char *ProfileGroupName) {
 
 }
 
-//////////////////////////////////////////////////////////////////////
-// TraceSendMsg traces the message send
-//////////////////////////////////////////////////////////////////////
-void RtsLayer::TraceSendMsg(int type, int destination, int length) {
-#ifdef TRACING_ON 
-  x_int64 parameter;
-  x_uint64 xother, xtype, xlength, xcomm;
-
-  if (RtsLayer::isEnabled(TAU_MESSAGE)) {
-    parameter = 0;
-    /* for send, othernode is receiver or destination */
-    xtype = type;
-    xlength = length;
-    xother = destination;
-    xcomm = 0;
-
-    /* Format for parameter is
-       63 ..... 56 55 ..... 48 47............. 32
-          other       type          length
-
-       These are the high order bits, below are the low order bits
-
-       31 ..... 24 23 ..... 16 15..............0
-          other       type          length       
-
-       e.g.
-
-       xtype = 0xAABB;
-       xother = 0xCCDD;
-       xlength = 0xDEADBEEF;
-       result = 0xccaaDEADdddbbBEEF
-
-     parameter = ((xlength >> 16) << 32) | 
-       ((xtype >> 8 & 0xFF) << 48) |
-       ((xother >> 8 & 0xFF) << 56) |
-       (xlength & 0xFFFF) | 
-       ((xtype & 0xFF)  << 16) | 
-       ((xother & 0xFF) << 24);
-
-     */
-
-    parameter = (xlength >> 16 << 54 >> 22) |
-      ((xtype >> 8 & 0xFF) << 48) |
-      ((xother >> 8 & 0xFF) << 56) |
-      (xlength & 0xFFFF) | 
-      ((xtype & 0xFF)  << 16) | 
-      ((xother & 0xFF) << 24) |
-      (xcomm << 58 >> 16);
-
-
-    TauTraceEventSimple(TAU_MESSAGE_SEND, parameter, RtsLayer::myThread()); 
-  } 
-#endif //TRACING_ON
-}
-
-  
-//////////////////////////////////////////////////////////////////////
-// TraceRecvMsg traces the message recv
-//////////////////////////////////////////////////////////////////////
-void RtsLayer::TraceRecvMsg(int type, int source, int length) {
-#ifdef TRACING_ON
-  x_int64 parameter;
-  x_uint64 xother, xtype, xlength, xcomm;
-
-
-  if (RtsLayer::isEnabled(TAU_MESSAGE)) {
-    parameter = 0;
-    /* for recv, othernode is sender or source*/
-    xtype = type;
-    xlength = length;
-    xother = source;
-    xcomm = 0;
-
-    // see TraceSendMsg for documentation
-
-    parameter = (xlength >> 16 << 54 >> 22) |
-      ((xtype >> 8 & 0xFF) << 48) |
-      ((xother >> 8 & 0xFF) << 56) |
-      (xlength & 0xFFFF) | 
-      ((xtype & 0xFF)  << 16) | 
-      ((xother & 0xFF) << 24) |
-      (xcomm << 58 >> 16);
-
-
-    TauTraceEventSimple(TAU_MESSAGE_RECV, parameter, RtsLayer::myThread()); 
-  }
-#endif //TRACING_ON
-}
 
 //////////////////////////////////////////////////////////////////////
 
@@ -1131,6 +1043,6 @@ std::string RtsLayer::GetRTTI(const char *name) {
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.117 $   $Date: 2009/02/23 22:32:50 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.117 2009/02/23 22:32:50 amorris Exp $ 
+ * $Revision: 1.118 $   $Date: 2009/02/23 23:51:33 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.118 2009/02/23 23:51:33 amorris Exp $ 
  ***************************************************************************/
