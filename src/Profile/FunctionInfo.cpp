@@ -200,6 +200,8 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   // an atomic operation in the push_back and size() operations. 
   // Important in the presence of concurrent threads.
   TheFunctionDB().push_back(this);
+  FunctionId = RtsLayer::GenerateUniqueId();
+
 #ifdef TRACING_ON
 #ifdef TAU_VAMPIRTRACE
   static int tau_vt_init=TauInitVampirTrace();
@@ -214,15 +216,10 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   FunctionId = esd_def_region(tau_elg_name.c_str(), ELG_NO_ID, ELG_NO_LNO,
 			      ELG_NO_LNO, GroupName, ELG_FUNCTION);
   DEBUGPROFMSG("elg_def_region: "<<tau_elg_name<<": returns "<<FunctionId<<endl;);
-#else /* TAU_EPILOG */
-  // FOR Tracing, we should make the two a single operation 
-  // when threads are supported for traces. 
-
-  FunctionId = RtsLayer::GenerateUniqueId();
-  TauTraceSetFlushEvents(1);
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
 #endif //TRACING_ON
+  TauTraceSetFlushEvents(1);
   RtsLayer::UnLockDB();
   
   DEBUGPROFMSG("nct "<< RtsLayer::myNode() <<"," 
@@ -501,6 +498,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.71 $   $Date: 2009/02/23 22:59:11 $
- * VERSION_ID: $Id: FunctionInfo.cpp,v 1.71 2009/02/23 22:59:11 amorris Exp $ 
+ * $Revision: 1.72 $   $Date: 2009/02/23 23:37:12 $
+ * VERSION_ID: $Id: FunctionInfo.cpp,v 1.72 2009/02/23 23:37:12 amorris Exp $ 
  ***************************************************************************/

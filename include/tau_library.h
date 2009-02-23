@@ -42,8 +42,16 @@
 
 #ifdef TAU_WINDOWS
   #include <io.h>
+  #include <direct.h> /* for getcwd */
+  #define S_IRUSR 0
+  #define S_IWUSR 0
+  #define S_IRGRP 0
+  #define S_IWGRP 0
+  #define S_IROTH 0
+  #define S_IWOTH 0
 #else
   #include <unistd.h>
+  #include <sys/time.h>
   #define O_BINARY 0
 #endif
 

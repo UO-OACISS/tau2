@@ -20,7 +20,7 @@
 
 //#define DEBUG_PROF // For Debugging Messages from Profiler.cpp
 #include "Profile/Profiler.h"
-#include "tauarch.h"
+#include <tau_library.h>
 
 #ifdef TAU_PERFSUITE
   #include <pshwpc.h>
@@ -29,20 +29,7 @@
 #endif
 
 #ifdef TAU_WINDOWS
-typedef __int64 x_int64;
-typedef unsigned __int64 x_uint64;
 double TauWindowsUsecD(void);
-#include <io.h>
-#include <direct.h> /* for getcwd */
-#define S_IRUSR 0
-#define S_IWUSR 0
-#define S_IRGRP 0
-#define S_IWGRP 0
-#define S_IROTH 0
-#define S_IWOTH 0
-#else
-typedef long long x_int64;
-typedef unsigned long long x_uint64;
 #endif
 
 //#ifndef TAU_WINDOWS
@@ -64,22 +51,12 @@ using namespace std;
 #include <stdlib.h>
 #include <limits.h>
 
-#if (!defined(TAU_WINDOWS))
+#ifdef TAU_WINDOWS
 #include <sys/types.h>
 #include <sys/stat.h>
 #ifndef TAU_DISABLE_METADATA
 #include <sys/utsname.h> // for host identification (uname)
 #endif
-#include <unistd.h>
-
-#if (defined(POOMA_TFLOP) || !defined(TULIP_TIMERS))
-#include <sys/time.h>
-#else
-#ifdef TULIP_TIMERS 
-#include "Profile/TulipTimers.h"
-#endif //TULIP_TIMERS 
-#endif //POOMA_TFLOP
-
 #endif //TAU_WINDOWS
 
 #ifdef TRACING_ON
@@ -354,6 +331,7 @@ void Profiler::Start(int tid) {
   if (TauEnv_get_callpath()) {
     CallPathStart(tid);
   }
+
 #ifdef TAU_PROFILEPARAM
   ProfileParamFunction = NULL;
   if (ParentProfiler && ParentProfiler->ProfileParamFunction ) {
@@ -382,9 +360,7 @@ void Profiler::Start(int tid) {
 	       << ThisFunction->GetName()<<endl;);
   esd_enter(ThisFunction->GetFunctionId());
 #else /* TAU_EPILOG */
-  TauTraceEvent(ThisFunction->GetFunctionId(), 1, tid, TimeStamp, 1); 
-  // 1 is for entry in second parameter and for use TimeStamp in last
-  DEBUGPROFMSG("Start TimeStamp for Tracing = "<<TimeStamp<<endl;);
+  TauTraceEvent(ThisFunction->GetFunctionId(), 1 /* entry */, tid, TimeStamp, 1 /* use supplied timestamp */); 
 #ifdef TAU_MULTIPLE_COUNTERS 
   MultipleCounterLayer::triggerCounterEvents(TimeStamp, StartTime, tid);
 #endif /* TAU_MULTIPLE_COUNTERS */
@@ -633,9 +609,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #ifdef TAU_MPITRACE
   if (RecordEvent) {
 #endif /* TAU_MPITRACE */
-    TauTraceEvent(ThisFunction->GetFunctionId(), -1, tid, TimeStamp, 1); 
-    // -1 is for exit, 1 is for use TimeStamp in the last argument
-    DEBUGPROFMSG("Stop TimeStamp for Tracing = "<<TimeStamp<<endl;);
+    TauTraceEvent(ThisFunction->GetFunctionId(), -1 /* exit */, tid, TimeStamp, 1 /* use supplied timestamp */); 
 #ifdef TAU_MULTIPLE_COUNTERS 
     MultipleCounterLayer::triggerCounterEvents(TimeStamp, CurrentTime, tid);
 #endif /* TAU_MULTIPLE_COUNTERS */
@@ -1564,6 +1538,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.219 $   $Date: 2009/02/23 23:27:14 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.219 2009/02/23 23:27:14 amorris Exp $ 
+ * $Revision: 1.220 $   $Date: 2009/02/23 23:37:12 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.220 2009/02/23 23:37:12 amorris Exp $ 
  ***************************************************************************/
