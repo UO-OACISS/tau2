@@ -4653,7 +4653,7 @@ EOF
 	echo "Using VampirTrace options for compiling"
 	fixmakeargs="$fixmakeargs VAMPIRTRACEINTS"
     fi
-    /bin/rm -f vttest.cpp
+    /bin/rm -f vttest.cpp vttest.o
 fi
     
  
