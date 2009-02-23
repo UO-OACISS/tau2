@@ -192,11 +192,6 @@ case $1 in
 	echo "s,^OTFDIR=.*$,OTFDIR=$otfdir,g" >> $sedout
 	;;
 
-     slog2dir=*)
-        slog2dir=`echo $1 | sed -e 's/^slog2dir=//'`
-	echo "s,^SLOG2DIR=.*$,SLOG2DIR=$slog2dir,g" >> $sedout
-	;;
-
      pdtcompdir=*)
         pdtcompdir=`echo $1 | sed -e 's/^pdtcompdir=//'`
 	echo "s,^PDTCOMPDIR=.*$,PDTCOMPDIR=$pdtcompdir,g" >> $sedout

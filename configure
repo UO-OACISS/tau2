@@ -98,7 +98,6 @@ for arg in "$@"; do
     echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
-    echo "-slog2 ........ Specify use of TAU internal SLOG2 SDK/Jumpshot Package."
     echo "-nocomm  ........ Disable tracking communication events in MPI library."
     echo "-epilog=<dir>  ............ Specify location of EPILOG Tracing package."
     echo "-epiloglib=<dir> ........... Specify full path to EPILOG lib directory."
@@ -178,8 +177,6 @@ for arg in "$@"; do
     echo "-dyninst=<dir> ................... Specify location of DynInst Package."
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
-    echo "-slog2=<dir> .......... Specify location of SLOG2 SDK/Jumpshot Package."
-    echo "-slog2 ........ Specify use of TAU internal SLOG2 SDK/Jumpshot Package."
     echo "-mpi .......................... Specify use of TAU MPI wrapper library."
     echo "-mpiinc=<dir> ............. Specify location of MPI include dir and use"
     echo "                           the TAU MPI Profiling and Tracing Interface."
@@ -398,8 +395,6 @@ pdt_root_dir="."
 pdt=no
 vtf=no
 otf=no
-slog2=no
-internalslog2=no
 opari=no
 epilog=no
 scalasca=no
@@ -877,22 +872,13 @@ for arg in "$@"; do
     ;;
 
   -slog2=*)
-      slog2=yes
       trace=yes
-      slog2dir=`echo $arg | sed -e 's/-slog2=//'`
-      if [ ! -d $slog2dir ]
-      then
-        echo "Error: Cannot access SLOG2 directory $slog2dir"
-        exit 1
-      fi
     shift
     ;;
 
 
   -slog2)
-      slog2=yes
       trace=yes
-      internalslog2=yes
     shift
     ;;
     
@@ -4597,27 +4583,6 @@ if [ $otf = yes ] ; then
   fi  
 fi
 
-if [ $slog2 = yes ] ; then
-  if [ $internalslog2 = yes ] ; then
-     slog2dir=$tauroot/tools/src/contrib/slog2sdk/
-      if [ ! -d $slog2dir ]
-      then
-        echo "Error: Cannot access SLOG2 directory $slog2dir"
-        exit 1
-      fi
-  fi
-  fixmakeargs="$fixmakeargs SLOG2 slog2dir=$slog2dir"
-  if [ "x$jdkdir" = "x" ] ; then
-    jdkdir=$JAVA_HOME 
-    #`which javac | sed s/javac/../`
-    if [ "x$jdkdir" = "x" ]
-    then
-      echo "You must set the JAVA_HOME environment variable to compile the jni version of tau2slog2. Please re-configure TAU."
-    fi
-    fixmakeargs="$fixmakeargs jdkdir=$jdkdir"
-  fi
-fi
-
 
 if [ $pdt_cxx_compiler != default ] ; then
 # Check if they specified -pdt_c++=/usr/bin/g++ instead of just g++ 
@@ -5105,26 +5070,6 @@ cp ${tauroot}/tools/src/contrib/slog2sdk/lib/slog2printserial.jar ${targetdir}/$
 cp ${tauroot}/tools/src/tau2slog2/bin/tau2slog2.jar ${targetdir}/${architecture}/lib
 
 
-if [ $slog2 = yes ] ; then
-  if [ $internalslog2 = yes ] ; then
-    cat ${tauroot}/tools/src/contrib/slog2sdk/bin/jumpshot.skel | 
-    sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/jumpshot
-    chmod a+rx ${targetdir}/${architecture}/bin/jumpshot
-    
-    cat ${tauroot}/tools/src/contrib/slog2sdk/bin/slog2print.skel | 
-    sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/slog2print
-    chmod a+rx ${targetdir}/${architecture}/bin/slog2print
-    cp ${tauroot}/tools/src/contrib/slog2sdk/lib/jumpshot.jar ${targetdir}/${architecture}/lib
-    cp ${tauroot}/tools/src/contrib/slog2sdk/lib/traceTOslog2.jar ${targetdir}/${architecture}/lib
-    cp ${tauroot}/tools/src/contrib/slog2sdk/lib/slog2printserial.jar ${targetdir}/${architecture}/lib
-    
-    slog2dir=$targetdir/$architecture
-  fi
-  utils/slogconverter/tau2slog2.skel $jdkdir $targetdir $slog2dir $architecture > $targetdir/$architecture/bin/tau2slog2JNI
-  chmod a+rx ${targetdir}/${architecture}/bin/tau2slog2JNI
-fi
-
-
 
 cat ${tauroot}/tools/src/tau-config.in | 
 sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
@@ -5314,11 +5259,6 @@ if [ $perf = yes ] ; then
     cp include/Makefile $tautoplevel/$architecture/lib/Makefile.tau$tauoptions
 fi
   
-
-if [ $slog2 = yes ] ; then
-  /bin/rm -f utils/slogconverter/trace_impl.h
-  utils/slogconverter/slogtest $jdkdir > utils/slogconverter/trace_impl.h
-fi
 
 if [ $tauprefix != unknown ] ; then
   cp -r examples ${tauprefix}
