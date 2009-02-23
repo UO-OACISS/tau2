@@ -18,6 +18,8 @@
 // Include Files 
 //////////////////////////////////////////////////////////////////////
 
+#include <tau_library.h>
+
 //#define DEBUG_PROF
 #ifdef TAU_AIX
 #include "Profile/aix.h" 
@@ -29,13 +31,7 @@
 #include "Profile/hitachi.h"
 #endif /* HITACHI */
 #include "Profile/Profiler.h"
-#ifdef TAU_WINDOWS
- #define TAUROOT "root"
- #define TAU_ARCH "win32"
-#else
- #include "tauroot.h"
- #include "tauarch.h"
-#endif
+
 
 #if (defined(__QK_USER__) || defined(__LIBCATAMOUNT__ ))
 #ifndef TAU_CATAMOUNT
@@ -97,7 +93,7 @@ using namespace std;
 //include the header for windows time functions.
 #include <Windows.h>	//Various defines needed in Winbase.h.
 #include <Winbase.h>	//For QueryPerformanceCounter/Frequency function (down to microsecond
-						//resolution depending on the platform. 
+                        //resolution depending on the platform. 
 #include <sys/timeb.h>	//For _ftime function (millisecond resolution).
 //Map strncasecmp and strcasecmp to strnicmp and stricmp.
 #define strcasecmp stricmp
@@ -106,9 +102,7 @@ using namespace std;
 
 #if (!defined(TAU_WINDOWS))
 #include <unistd.h>
-
 #include <sys/time.h>
-
 #endif //TAU_WINDOWS
 
 #include <Profile/TauTrace.h>
@@ -128,16 +122,16 @@ using namespace std;
 /////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////
-TauGroup_t& RtsLayer::TheProfileMask(void)
-{ // to avoid initialization problems of non-local static variables
+TauGroup_t& RtsLayer::TheProfileMask(void) { 
+  // to avoid initialization problems of non-local static variables
   static TauGroup_t ProfileMask = TAU_DEFAULT;
 
   return ProfileMask;
 }
 
 /////////////////////////////////////////////////////////////////////////
-bool& RtsLayer::TheEnableInstrumentation(void)
-{ // to avoid initialization problems of non-local static variables
+bool& RtsLayer::TheEnableInstrumentation(void) {
+  // to avoid initialization problems of non-local static variables
   static bool EnableInstrumentation = true;
 
   return EnableInstrumentation;
@@ -151,8 +145,7 @@ long RtsLayer::GenerateUniqueId(void) {
 }
 
 /////////////////////////////////////////////////////////////////////////
-int& RtsLayer::TheNode(void)
-{
+int& RtsLayer::TheNode(void) {
 #ifdef TAU_SETNODE0
   static int Node = 0;
 #else /* TAU_SETNODE0  */
@@ -163,10 +156,8 @@ int& RtsLayer::TheNode(void)
 }
 
 /////////////////////////////////////////////////////////////////////////
-int& RtsLayer::TheContext(void)
-{
+int& RtsLayer::TheContext(void) {
   static int Context = 0;
- 
   return Context;
 }
 
@@ -181,7 +172,6 @@ bool& RtsLayer::TheShutdown(void) {
 
 ProfileMap_t& RtsLayer::TheProfileMap(void) {
   static ProfileMap_t *profilemap = new ProfileMap_t;
-  
   return *profilemap;
 }
 
@@ -191,17 +181,16 @@ ProfileMap_t& RtsLayer::TheProfileMap(void) {
 TauGroup_t RtsLayer::getProfileGroup(char * ProfileGroup) {
   ProfileMap_t::iterator it = TheProfileMap().find(string(ProfileGroup));
   TauGroup_t gr;
-  if (it == TheProfileMap().end())
-  {
+  if (it == TheProfileMap().end()) {
 #ifdef DEBUG_PROF
     cout <<ProfileGroup << " not found, adding ... "<<endl;
 #endif /* DEBUG_PROF */
     gr = generateProfileGroup();
     TheProfileMap()[string(ProfileGroup)] = gr; // Add
     return gr; 
-  }
-  else
+  } else {
     return (*it).second; // The group that was found
+  }
 
 }
 
@@ -278,12 +267,12 @@ int RtsLayer::setMyNode(int NodeId, int tid) {
 #if (defined(TRACING_ON) && (TAU_MAX_THREADS != 1))
   int oldid = TheNode();
   int newid = NodeId;
-  if ((oldid != -1) && (oldid != newid))
-  { /* ie if SET_NODE macro was invoked twice for a threaded program : as 
-    in MPI+JAVA where JAVA initializes it with pid and then MPI_INIT is 
-    invoked several thousand events later, and TAU computes the process rank
-    and invokes the SET_NODE with the correct rank. Handshaking between multiple
-    levels of instrumentation. */
+  if ((oldid != -1) && (oldid != newid)) {
+    /* ie if SET_NODE macro was invoked twice for a threaded program : as 
+       in MPI+JAVA where JAVA initializes it with pid and then MPI_INIT is 
+       invoked several thousand events later, and TAU computes the process rank
+       and invokes the SET_NODE with the correct rank. Handshaking between multiple
+       levels of instrumentation. */
     
     TauTraceReinitialize(oldid, newid, tid); 
   } 
@@ -332,8 +321,7 @@ extern "C" {
 
 //////////////////////////////////////////////////////////////////////
 #ifdef SGI_HW_COUNTERS 
-int RtsLayer::SetEventCounter()
-{
+int RtsLayer::SetEventCounter() {
   int e0, e1;
   int start;
 
@@ -362,8 +350,7 @@ int RtsLayer::SetEventCounter()
 
 /////////////////////////////////////////////////////////////////////////
 #ifdef SGI_HW_COUNTERS 
-double RtsLayer::GetEventCounter()
-{
+double RtsLayer::GetEventCounter() {
   static int gen_start = SetEventCounter();
   int gen_read;
   int e0 = 0, e1 = 0;
@@ -390,8 +377,7 @@ double RtsLayer::GetEventCounter()
 #endif //SGI_HW_COUNTERS
 
 ///////////////////////////////////////////////////////////////////////////
-double getUserTimeInSec(void)
-{
+double getUserTimeInSec(void) {
   double current_time = 0;
 #ifdef CPU_TIME
   
@@ -413,8 +399,7 @@ double getUserTimeInSec(void)
 #if defined(TAUKTAU) || defined(TAUKTAU_MERGE) || defined(TAUKTAU_SHCTR)
 ///////////////////////////////////////////////////////////////////////////
 extern "C" double ktau_get_tsc(void); //must move this into ktau headers. TODO
-double KTauGetMHz(void)
-{
+double KTauGetMHz(void) {
 #ifdef KTAU_WALLCLOCK
   static double ktau_ratings = 1; //(microsec resolution from kernel)
 #else
@@ -449,61 +434,50 @@ double TauWindowsUsecD(void)
   ClockValue.QuadPart = 0;
 
   //Testing clock.  This will only be done ONCE!
-  if(!PerfClockCheckedBefore)
-  {
-	  //Intializing!
-	  Frequency.HighPart = 0;
-	  Frequency.LowPart = 0;
-	  Frequency.QuadPart = 0;
-	  
-	  PerformanceClock = QueryPerformanceFrequency(&Frequency);
-	  PerfClockCheckedBefore = true;
-	  if(PerformanceClock)
-	  {
+  if (!PerfClockCheckedBefore) {
+    //Intializing!
+    Frequency.HighPart = 0;
+    Frequency.LowPart = 0;
+    Frequency.QuadPart = 0;
+    
+    PerformanceClock = QueryPerformanceFrequency(&Frequency);
+    PerfClockCheckedBefore = true;
+    if (PerformanceClock) {
 #ifdef DEBUG_PROF
-		  cout << "Frequency high part is: " << Frequency.HighPart << endl;
-		  cout << "Frequency low part is: " << Frequency.LowPart << endl;
-		  cout << "Frequency quad part is: " << (double) Frequency.QuadPart << endl;			
+      cout << "Frequency high part is: " << Frequency.HighPart << endl;
+      cout << "Frequency low part is: " << Frequency.LowPart << endl;
+      cout << "Frequency quad part is: " << (double) Frequency.QuadPart << endl;			
 #endif /* DEBUG_PROF */
-		  //Shall be using Frequency.QuadPart and assuming a double as the main TAU
-		  //system does.
-		  
-		  //Checking for zero divide ... should not be one if the clock is working,
-		  //but need to be on the safe side!
-		  if(Frequency.QuadPart != 0)
-		  {
-			  Multiplier = (double) 1000000/Frequency.QuadPart;
-			  cout << "The value of the multiplier is: " << Multiplier << endl;
-		  }
-		  else
-		  {
-			  cout << "There was a problem with the counter ... should not have happened!!" << endl;
-			  return -1;
-		  }
-	  }
-	  else
-		  cout << "No performace clock available ... using millisecond timers." << endl;
+      //Shall be using Frequency.QuadPart and assuming a double as the main TAU
+      //system does.
+      
+      //Checking for zero divide ... should not be one if the clock is working,
+      //but need to be on the safe side!
+      if (Frequency.QuadPart != 0) {
+	Multiplier = (double) 1000000/Frequency.QuadPart;
+	cout << "The value of the multiplier is: " << Multiplier << endl;
+      } else {
+	cout << "There was a problem with the counter ... should not have happened!!" << endl;
+	return -1;
+      }
+    } else {
+      cout << "No performace clock available ... using millisecond timers." << endl;
+    }
   }
 
   //Getting clock value.
-  if(PerformanceClock)
-  {
-	  if(QueryPerformanceCounter(&ClockValue))
-	  {
-		  //As mentioned above, assuming double value.
-		  return Multiplier * (double) ClockValue.QuadPart;
-	  }
-	  else
-	  {
-		  cout << "There was a problem with the counter ... should not have happened!!" << endl;
-		  return -1;
-	  }
-  }
-  else
-  {
-	  struct _timeb tp;
-	  _ftime(&tp);
-	  return ( (double) tp.time * 1e6 + tp.millitm * 1e3);
+  if (PerformanceClock) {
+    if (QueryPerformanceCounter(&ClockValue)) {
+      //As mentioned above, assuming double value.
+      return Multiplier * (double) ClockValue.QuadPart;
+    } else {
+      cout << "There was a problem with the counter ... should not have happened!!" << endl;
+      return -1;
+    }
+  } else {
+    struct _timeb tp;
+    _ftime(&tp);
+    return ( (double) tp.time * 1e6 + tp.millitm * 1e3);
   }
 #else  /* TAU_WINDOWS */
   return 0; 
@@ -574,8 +548,7 @@ double RtsLayer::getUSecD (int tid) {
   double timestamp;
   ktau_gettimeofday (&tp, 0);
   timestamp = (double) tp.tv_sec * 1e6 + tp.tv_usec;
-  if (timestamp < last_timestamp)
-  {
+  if (timestamp < last_timestamp) {
      DEBUGPROFMSG("RtsLayer::getUSecD(): ktau_gettimeofday() goes back in time. Fixing ...."<<endl;);
      timestamp = last_timestamp;
   }
@@ -586,8 +559,7 @@ double RtsLayer::getUSecD (int tid) {
 #ifdef BGL_TIMERS
   static double bgl_clockspeed = 0.0;
 
-  if (bgl_clockspeed == 0.0)
-  {
+  if (bgl_clockspeed == 0.0) {
     BGLPersonality mybgl;
     rts_get_personality(&mybgl, sizeof(BGLPersonality));
     bgl_clockspeed = 1.0e6/(double)BGLPersonality_clockHz(&mybgl);
@@ -598,8 +570,7 @@ double RtsLayer::getUSecD (int tid) {
 #ifdef BGP_TIMERS
   static double bgp_clockspeed = 0.0;
 
-  if (bgp_clockspeed == 0.0)
-  {
+  if (bgp_clockspeed == 0.0) {
     _BGP_Personality_t mybgp;
     Kernel_GetPersonality(&mybgp, sizeof(_BGP_Personality_t));
     bgp_clockspeed = 1.0/(double)BGP_Personality_clockMHz(&mybgp);
@@ -808,137 +779,20 @@ void RtsLayer::getCurrentValues (int tid, double *values) {
 ///////////////////////////////////////////////////////////////////////////
 //Note: This is similar to Tulip event classes during tracing
 ///////////////////////////////////////////////////////////////////////////
-int RtsLayer::setAndParseProfileGroups(char *prog, char *str)
-{
+int RtsLayer::setAndParseProfileGroups(char *prog, char *str) {
   char *end;
   
-  if ( str )
-  { 
-    while (str && *str) 
-    {
+  if ( str ) { 
+    while (str && *str) {
       if ( ( end = strchr (str, '+')) != NULL) *end = '\0';
  
-      switch ( str[0] )
-      {
-	      /*
-        case 'a' :
-	case 'A' : // Assign Expression Evaluation Group
-	  if (strncasecmp(str,"ac", 2) == 0) {
-	    RtsLayer::enableProfileGroup(TAU_ACLMPL); 
-	    // ACLMPL enabled 
-	  } 
-	  else 
-	    RtsLayer::enableProfileGroup(TAU_ASSIGN);
-	  break;
-	case 'b' : 
-	case 'B' : // Blitz++ profile group
-	  RtsLayer::enableProfileGroup(TAU_BLITZ);
-	  break; // Blitz++ enabled
-        case 'f' :
-	case 'F' : // Field Group
-	  if (strncasecmp(str, "ff", 2) == 0) {
-	    RtsLayer::enableProfileGroup(TAU_FFT);
-	    // FFT enabled 
-	  }
-	  else 
-	    RtsLayer::enableProfileGroup(TAU_FIELD);
-	    // Field enabled 
-	  break;
-	case 'c' :
-	case 'C' : 
-	  RtsLayer::enableProfileGroup(TAU_COMMUNICATION);
-	  break;
- 	case 'h' :
-	case 'H' :
-	  RtsLayer::enableProfileGroup(TAU_HTAU);
-	  break;
-        case 'i' :
-	case 'I' : // DiskIO, Other IO 
-	  RtsLayer::enableProfileGroup(TAU_IO);
-	  break;
-        case 'l' :
-	case 'L' : // Field Layout Group
-	  RtsLayer::enableProfileGroup(TAU_LAYOUT);
-	  break;
-	case 'm' : 
-	case 'M' : 
-          if (strncasecmp(str,"mesh", 4) == 0) {
-  	    RtsLayer::enableProfileGroup(TAU_MESHES);
-	    // Meshes enabled
- 	  } 
- 	  else 
-	    RtsLayer::enableProfileGroup(TAU_MESSAGE);
-	    // Message Profile Group enabled 
-  	  break;
-        case 'p' :
-	case 'P' : 
-          if (strncasecmp(str, "paws1", 5) == 0) {
-	    RtsLayer::enableProfileGroup(TAU_PAWS1); 
-	  } 
-	  else {
-	    if (strncasecmp(str, "paws2", 5) == 0) {
-	      RtsLayer::enableProfileGroup(TAU_PAWS2); 
-	    } 
-	    else {
-	      if (strncasecmp(str, "paws3", 5) == 0) {
-	        RtsLayer::enableProfileGroup(TAU_PAWS3); 
-	      } 
-	      else {
-	        if (strncasecmp(str,"pa",2) == 0) {
-	          RtsLayer::enableProfileGroup(TAU_PARTICLE);
-	          // Particle enabled 
-	        } 
-		else {
-	          RtsLayer::enableProfileGroup(TAU_PETE);
-	    	  // PETE Profile Group enabled 
-	 	}
-	      }
-	    } 
- 	  } 
-	  
-	  break;
-  	case 'r' : 
-	case 'R' : // Region Group 
-	  RtsLayer::enableProfileGroup(TAU_REGION);
-	  break;
-        case 's' :
-	case 'S' : 
-	  if (strncasecmp(str,"su",2) == 0) {
-	    RtsLayer::enableProfileGroup(TAU_SUBFIELD);
-	    // SubField enabled 
-	  } 
- 	  else
-	    RtsLayer::enableProfileGroup(TAU_SPARSE);
-	    // Sparse Index Group
-	  break;
-        case 'd' :
-	case 'D' : // Domainmap Group
-	  if (strncasecmp(str,"de",2) == 0) {
-	    RtsLayer::enableProfileGroup(TAU_DESCRIPTOR_OVERHEAD);
-	  } else  
-	     RtsLayer::enableProfileGroup(TAU_DOMAINMAP);
-	  break;
- 	case 'u' :
-        case 'U' : // User or Utility 
-          if (strncasecmp(str,"ut", 2) == 0) { 
-	    RtsLayer::enableProfileGroup(TAU_UTILITY);
-	  }
-	  else // default - for u is USER 
- 	    RtsLayer::enableProfileGroup(TAU_USER);
-	  break;
-        case 'v' :
-	case 'V' : // ACLVIZ Group
-	  RtsLayer::enableProfileGroup(TAU_VIZ);
-	  break;
-	  // Old stuff. Delete it!
-	  */
+      switch ( str[0] ) {
  	case '0' :
 	  RtsLayer::enableProfileGroup(TAU_GROUP_0);
 	  printf("ENABLING 0!\n");
 	  break;
 	case '1' : // User1
-	  switch (str[1])
-	  {
+	  switch (str[1]) {
 	    case '0':
 	      RtsLayer::enableProfileGroup(TAU_GROUP_10);
 	      break; 
@@ -976,8 +830,7 @@ int RtsLayer::setAndParseProfileGroups(char *prog, char *str)
 	  break;
 	 
 	case '2' : // User2
-          switch (str[1])
-          {
+          switch (str[1]) {
             case '0':
               RtsLayer::enableProfileGroup(TAU_GROUP_20);
               break;
@@ -1014,8 +867,7 @@ int RtsLayer::setAndParseProfileGroups(char *prog, char *str)
 	  }
 	  break;
 	case '3' : // User3
-          switch (str[1])
-          {
+          switch (str[1]) {
             case '0':
               RtsLayer::enableProfileGroup(TAU_GROUP_30);
               break;
@@ -1052,15 +904,14 @@ int RtsLayer::setAndParseProfileGroups(char *prog, char *str)
       } 
       if (( str = end) != NULL) *str++ = '+';
     }
-  }
-  else 
+  } else {
     enableProfileGroup(TAU_DEFAULT); // Enable everything 
+  }
   return 1;
 }
 
 //////////////////////////////////////////////////////////////////////
-void RtsLayer::ProfileInit(int& argc, char**& argv)
-{
+void RtsLayer::ProfileInit(int& argc, char**& argv) {
   int i;
   int ret_argc;
   char **ret_argv;
@@ -1071,8 +922,8 @@ void RtsLayer::ProfileInit(int& argc, char**& argv)
   if (tover < 0) tover = 0;
 #else /* TAU_MULTIPLE_COUNTERS */
   double* tover = TauGetTimerOverhead(TauNullTimerOverhead);
-  for (i = 0; i < MAX_TAU_COUNTERS; i++)
-  { /* iterate through all counters and reset null overhead to zero 
+  for (i = 0; i < MAX_TAU_COUNTERS; i++) { 
+    /* iterate through all counters and reset null overhead to zero 
        if necessary */
     if (tover[i] < 0) tover[i] = 0;
   }
@@ -1091,9 +942,7 @@ void RtsLayer::ProfileInit(int& argc, char**& argv)
            RtsLayer::setAndParseProfileGroups(argv[0], argv[i+1]);
 	   i++; // ignore the argv after --profile 
         }
-    }
-    else
-    {
+    } else {
 	ret_argv[ret_argc++] = argv[i];
     }
   }
@@ -1104,8 +953,7 @@ void RtsLayer::ProfileInit(int& argc, char**& argv)
 
 
 //////////////////////////////////////////////////////////////////////
-bool RtsLayer::isCtorDtor(const char *name)
-{
+bool RtsLayer::isCtorDtor(const char *name) {
   /* other threads are not affected by this logic. Only on thread 0, do not
      call StoreData() when the name contains a :: and it is a top level routine */
 
@@ -1128,8 +976,6 @@ bool RtsLayer::isCtorDtor(const char *name)
   // ctor/dtors on thread 0 should return true;
   if (RtsLayer::myThread() == 0 && loc) return true;
 
-
-
   const char *pos1 = name;
   const char *pos2 = loc+2;
   while (pos1 != loc && *pos2 != 0 && *pos1 == *pos2) {
@@ -1150,8 +996,7 @@ bool RtsLayer::isCtorDtor(const char *name)
 // This is needed in tracing as Vampir can handle only one group per
 // function. PrimaryGroup("TAU_FIELD | TAU_USER") should return "TAU_FIELD"
 //////////////////////////////////////////////////////////////////////
-string RtsLayer::PrimaryGroup(const char *ProfileGroupName) 
-{
+string RtsLayer::PrimaryGroup(const char *ProfileGroupName) {
   string groups = ProfileGroupName;
   string primary; 
   string separators = " |"; 
@@ -1342,15 +1187,13 @@ int RtsLayer::DumpEDF(int tid) {
 // MergeAndConvertTracesIfNecessary does just that!
 //////////////////////////////////////////////////////////////////////
 
-int RtsLayer::MergeAndConvertTracesIfNecessary(void)
-{ 
+int RtsLayer::MergeAndConvertTracesIfNecessary(void) { 
   char *outfile;
   /* Get environment variables */
-  if ((outfile = getenv("TAU_TRACEFILE")) != NULL)
-  { /* output file is defined. We need to merge the traces */
+  if ((outfile = getenv("TAU_TRACEFILE")) != NULL) { 
+    /* output file is defined. We need to merge the traces */
     /* Now, who does the merge and conversion? */
-    if ((myNode() == 0) && (myThread() == 0))
-    {
+    if ((myNode() == 0) && (myThread() == 0)) {
       const char *outdir;
       char *keepfiles;
       char cmd[1024];
@@ -1364,28 +1207,19 @@ int RtsLayer::MergeAndConvertTracesIfNecessary(void)
   
       /* If we can't find tau2vtf, use tau_convert! */
       sprintf(converter, "%s/%s/bin/%s",tauroot, tauarch, conv);
-      if ((in = fopen(converter, "r")) == NULL)
-      {
-#ifdef DEBUG_PROF
-        printf("Couldn't open %s\n", converter);
-#endif /* DEBUG_PROF */
+      if ((in = fopen(converter, "r")) == NULL) {
         sprintf(converter, "%s/%s/bin/tau_convert", tauroot, tauarch);
-      }
-      else
-      { /* close it */
+      } else {
         fclose(in);
       }
 
       /* Should we get rid of intermediate trace files? */
-      if((keepfiles = getenv("TAU_KEEP_TRACEFILES")) == NULL)
-      {
+      if((keepfiles = getenv("TAU_KEEP_TRACEFILES")) == NULL) {
 	strcpy(rmcmd, "/bin/rm -f app12345678.trc tautrace.*.trc tau.edf events.*.edf");
-      }
-      else
-      { 
+      } else { 
 	strcpy(rmcmd," "); /* NOOP */
       }
-
+      
       /* Next, look for trace directory */
       outdir = TauEnv_get_tracedir();
       sprintf(cdcmd, "cd %s;", outdir);
@@ -1419,8 +1253,7 @@ int RtsLayer::MergeAndConvertTracesIfNecessary(void)
 #endif /* __GNUC__ */
 
 /////////////////////////////////////////////////////////////////////////
-std::string RtsLayer::GetRTTI(const char *name)
-{
+std::string RtsLayer::GetRTTI(const char *name) {
 #ifdef __GNUC__
 #ifndef NO_RTTI
   std::size_t len;
@@ -1438,6 +1271,6 @@ std::string RtsLayer::GetRTTI(const char *name)
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.115 $   $Date: 2009/02/21 00:56:12 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.115 2009/02/21 00:56:12 amorris Exp $ 
+ * $Revision: 1.116 $   $Date: 2009/02/23 22:26:40 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.116 2009/02/23 22:26:40 amorris Exp $ 
  ***************************************************************************/
