@@ -1061,8 +1061,8 @@ static void finalizeTrace(int tid) {
   }
 #else /* TAU_EPILOG */
   TauTraceClose(tid);
-  RtsLayer::DumpEDF(tid);
-  RtsLayer::MergeAndConvertTracesIfNecessary();
+  TauTraceDumpEDF(tid);
+  TauTraceMergeAndConvertTracesIfNecessary();
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
 #endif // TRACING_ON 
@@ -1566,6 +1566,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.217 $   $Date: 2009/02/20 23:42:36 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.217 2009/02/20 23:42:36 amorris Exp $ 
+ * $Revision: 1.218 $   $Date: 2009/02/23 22:32:50 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.218 2009/02/23 22:32:50 amorris Exp $ 
  ***************************************************************************/

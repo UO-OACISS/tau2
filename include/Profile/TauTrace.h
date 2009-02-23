@@ -67,6 +67,8 @@ extern "C" {
   void TauTraceSetFlushEvents(int tid);
   int  TauTraceGetFlushEvents(int tid);
   double TauTraceGetTime(int tid);
+  int TauTraceDumpEDF(int tid);
+  int TauTraceMergeAndConvertTracesIfNecessary(void);
 
   /* Returns a pointer to the (singleton) offset info struct */
   TauTraceOffsetInfo *TheTauTraceOffsetInfo();

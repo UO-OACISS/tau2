@@ -31,8 +31,8 @@
 
 typedef std::map<std::string, TauGroup_t, std::less<string> > ProfileMap_t;
 
-class RtsLayer 
-{ // Layer for Profiler to interact with the Runtime System
+class RtsLayer {
+  // Layer for Profiler to interact with the Runtime System
 public:
  	
   RtsLayer () { }  // defaults
@@ -45,15 +45,15 @@ public:
   static int& TheContext(void);
   static long GenerateUniqueId(void);
   static ProfileMap_t& TheProfileMap(void);
-  static TauGroup_t  getProfileGroup(char *  ProfileGroup) ;
-  static TauGroup_t  enableProfileGroup(TauGroup_t  ProfileGroup) ;
-  static TauGroup_t  disableProfileGroup(TauGroup_t  ProfileGroup) ;
-  static TauGroup_t  generateProfileGroup(void) ;
-  static TauGroup_t  enableProfileGroupName(char * ProfileGroup) ;
-  static TauGroup_t  disableProfileGroupName(char * ProfileGroup) ;
-  static TauGroup_t  enableAllGroups(void) ;
-  static TauGroup_t  disableAllGroups(void) ;
-  static TauGroup_t  resetProfileGroup(void) ;
+  static TauGroup_t getProfileGroup(char *  ProfileGroup) ;
+  static TauGroup_t enableProfileGroup(TauGroup_t  ProfileGroup) ;
+  static TauGroup_t disableProfileGroup(TauGroup_t  ProfileGroup) ;
+  static TauGroup_t generateProfileGroup(void) ;
+  static TauGroup_t enableProfileGroupName(char * ProfileGroup) ;
+  static TauGroup_t disableProfileGroupName(char * ProfileGroup) ;
+  static TauGroup_t enableAllGroups(void) ;
+  static TauGroup_t disableAllGroups(void) ;
+  static TauGroup_t resetProfileGroup(void) ;
   static int setAndParseProfileGroups (char *prog, char *str) ;
   static bool isEnabled(TauGroup_t  ProfileGroup) ; 
   static void ProfileInit(int& argc, char**& argv);
@@ -63,20 +63,19 @@ public:
   static void TraceRecvMsg(int type, int source, int length);
 
   static std::string GetRTTI(const char *name); 
-  inline
-  static const char * CheckNotNull(const char * str) {
+  inline static const char * CheckNotNull(const char * str) {
     if (str == 0) return "  ";
     else return str;
   }
 
 
   static int 	SetEventCounter(void);
-  static double 	GetEventCounter(void);
+  static double GetEventCounter(void);
 
 #ifndef TAU_MULTIPLE_COUNTERS
-  static double   getUSecD(int tid); 
+  static double getUSecD(int tid); 
 #else  //TAU_MULTIPLE_COUNTERS
-  static void     getUSecD(int tid, double *values);
+  static void   getUSecD(int tid, double *values);
 #endif //TAU_MULTIPLE_COUNTERS
 
   static void getCurrentValues(int tid, double *values);
@@ -90,12 +89,6 @@ public:
   static const char* getSingleCounterName(); 
   static const char* getCounterName(int i); 
   static bool getCounterUsed(int i); 
-
-  // For tracing 
-  static int DumpEDF(int tid); 
-
-  // For tracing
-  static int MergeAndConvertTracesIfNecessary();
 
   // Return the number of the 'current' node.
   static int myNode(void);
@@ -136,6 +129,6 @@ private:
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: amorris $
- * $Revision: 1.28 $   $Date: 2009/01/16 00:46:32 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.28 2009/01/16 00:46:32 amorris Exp $ 
+ * $Revision: 1.29 $   $Date: 2009/02/23 22:32:29 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.29 2009/02/23 22:32:29 amorris Exp $ 
  ***************************************************************************/
