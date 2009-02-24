@@ -2,7 +2,7 @@
  **			TAU Portable Profiling Package			    **
  **			http://www.cs.uoregon.edu/research/tau	            **
  *****************************************************************************
- **    Copyright 1999  						   	    **
+ **    Copyright 1997-2009					   	    **
  **    Department of Computer and Information Science, University of Oregon **
  **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
  ****************************************************************************/
@@ -14,11 +14,7 @@
  **	Documentation	: See http://www.cs.uoregon.edu/research/tau        **
  ****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////
-// Include Files 
-//////////////////////////////////////////////////////////////////////
-
-//#define DEBUG_PROF // For Debugging Messages from Profiler.cpp
+//#define DEBUG_PROF
 #include "Profile/Profiler.h"
 #include <tau_library.h>
 
@@ -274,6 +270,10 @@ void Profiler::Start(int tid) {
   /********************************************************************************/
 
   
+
+  /********************************************************************************/
+  /*** Phase Profiling ***/
+  /********************************************************************************/
 #ifdef TAU_PROFILEPHASE
   if (ParentProfiler == (Profiler *) NULL) {
     string AllGroups = ThisFunction->AllGroups;
@@ -302,30 +302,33 @@ void Profiler::Start(int tid) {
     }
   }
 #endif /* TAU_PERFSUITE */
-
 #endif /* TAU_PROFILEPHASE */
-  
-  x_uint64 TimeStamp = 0L;
-  
+  /********************************************************************************/
+  /*** Phase Profiling ***/
+  /********************************************************************************/
+
   
 #ifdef TAU_PROFILEMEMORY
   ThisFunction->GetMemoryEvent()->TriggerEvent(TauGetMaxRSS());
 #endif /* TAU_PROFILEMEMORY */
+
 #ifdef TAU_PROFILEHEADROOM
   ThisFunction->GetHeadroomEvent()->TriggerEvent((double)TauGetFreeMemory());
 #endif /* TAU_PROFILEHEADROOM */
+
 #ifdef TAU_COMPENSATE
   SetNumChildren(0); /* for instrumentation perturbation compensation */
 #endif /* TAU_COMPENSATE */
 
 
-  // Initialization is over, now record the time it started
+  x_uint64 TimeStamp;
+
 #ifndef TAU_MULTIPLE_COUNTERS 
   StartTime = RtsLayer::getUSecD(tid);
-  TimeStamp += (x_uint64) StartTime;
+  TimeStamp = (x_uint64) StartTime;
 #else //TAU_MULTIPLE_COUNTERS
   RtsLayer::getUSecD(tid, StartTime);	  
-  TimeStamp += (unsigned long long) StartTime[0]; // USE COUNTER1 for tracing
+  TimeStamp = (x_uint64) StartTime[0]; // USE COUNTER1 for tracing
 #endif//TAU_MULTIPLE_COUNTERS
   
   if (TauEnv_get_callpath()) {
@@ -339,6 +342,9 @@ void Profiler::Start(int tid) {
   }
 #endif /* TAU_PROFILEPARAM */
   
+  /********************************************************************************/
+  /*** Tracing ***/
+  /********************************************************************************/
 #ifdef TRACING_ON
 #ifdef TAU_MPITRACE
   if (MyProfileGroup_ & TAU_MESSAGE) {
@@ -350,14 +356,9 @@ void Profiler::Start(int tid) {
 #else /* TAU_MPITRACE */
 #ifdef TAU_VAMPIRTRACE 
   TimeStamp = vt_pform_wtime();
-  
-  DEBUGPROFMSG("Calling vt_enter: ["<<ThisFunction->GetFunctionId()<<"] "
-	       << ThisFunction->GetName()<<" Time" <<TimeStamp<<endl;);
   vt_enter((uint64_t *) &TimeStamp, ThisFunction->GetFunctionId());
 #else /* TAU_VAMPITRACE */
 #ifdef TAU_EPILOG
-  DEBUGPROFMSG("Calling elg_enter: ["<<ThisFunction->GetFunctionId()<<"] "
-	       << ThisFunction->GetName()<<endl;);
   esd_enter(ThisFunction->GetFunctionId());
 #else /* TAU_EPILOG */
   TauTraceEvent(ThisFunction->GetFunctionId(), 1 /* entry */, tid, TimeStamp, 1 /* use supplied timestamp */); 
@@ -368,52 +369,33 @@ void Profiler::Start(int tid) {
 #endif /* TAU_VAMPIRTRACE */
 #endif /* TAU_MPITRACE */
 #endif /* TRACING_ON */
+  /********************************************************************************/
+  /*** Tracing ***/
+  /********************************************************************************/
 
-    /* What do we maintain if PROFILING is turned off and tracing is turned on and
-       throttling is not disabled? We need to maintain enough info to generate 
-       inclusive time and keep information about AddInclFlag */
-#ifndef PROFILING_ON
-#ifdef  TRACING_ON
-#ifndef TAU_DISABLE_THROTTLE
-  if (TauEnv_get_throttle() && (ThisFunction->GetAlreadyOnStack(tid) == false)) {
-    /* Set the callstack flag */
-    AddInclFlag = true; 
-    ThisFunction->SetAlreadyOnStack(true, tid); // it is on callstack now
-    
-    // Next, increment the number of calls
-    ThisFunction->IncrNumCalls(tid);
-  }
-#endif /* TAU_DISABLE_THROTTLE is off */
-#endif /* TRACING is on */
-#endif /* PROFILING is off */
-  
-#ifdef PROFILING_ON
-  // First, increment the number of calls
+
+  // Inncrement the number of calls
   ThisFunction->IncrNumCalls(tid);
   
-  // now increment parent's NumSubrs()
+  // Increment the parent's NumSubrs()
   if (ParentProfiler != 0) {
     ParentProfiler->ThisFunction->IncrNumSubrs(tid);	
   }
   
-  // Next, if this function is not already on the call stack, put it
+  // If this function is not already on the call stack, put it
   if (ThisFunction->GetAlreadyOnStack(tid) == false) { 
     AddInclFlag = true; 
     // We need to add Inclusive time when it gets over as 
     // it is not already on callstack.
     
     ThisFunction->SetAlreadyOnStack(true, tid); // it is on callstack now
-  } else { // the function is already on callstack, no need to add inclusive time
+  } else { 
+    // the function is already on callstack, no need to add inclusive time
     AddInclFlag = false;
   }
     
-  DEBUGPROFMSG("Start Time = "<< StartTime<<endl;);
-#endif // PROFILING_ON
-    
-    
   CurrentProfiler[tid] = this;
     
-
   /********************************************************************************/
   /*** KTAU Code ***/
   /********************************************************************************/
@@ -786,7 +768,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 	  }
 	}
 #endif /* TAU_TRACK_IDLE_THREADS */
-	
       }
     }
   }
@@ -1538,6 +1519,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.220 $   $Date: 2009/02/23 23:37:12 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.220 2009/02/23 23:37:12 amorris Exp $ 
+ * $Revision: 1.221 $   $Date: 2009/02/24 00:34:26 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.221 2009/02/24 00:34:26 amorris Exp $ 
  ***************************************************************************/
