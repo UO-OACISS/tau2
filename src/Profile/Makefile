@@ -72,7 +72,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/RenciSTFF.h    $(INCDIR)/PapiThreadLayer.h  \
 		$(INCDIR)/TauEnv.h	 $(INCDIR)/TauInit.h          \
 		$(INCDIR)/TauTrace.h                                  \
-		$(TAUROOT)/include/tau_library.h
+		$(TAUROOT)/include/tau_internal.h
 
 LDFLAGS	      = $(PCXX_OPT) 
 

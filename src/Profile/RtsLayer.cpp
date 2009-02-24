@@ -18,7 +18,7 @@
 // Include Files 
 //////////////////////////////////////////////////////////////////////
 
-#include <tau_library.h>
+#include <tau_internal.h>
 
 //#define DEBUG_PROF
 #ifdef TAU_AIX
@@ -1029,6 +1029,6 @@ std::string RtsLayer::GetRTTI(const char *name) {
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.120 $   $Date: 2009/02/24 20:22:15 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.120 2009/02/24 20:22:15 amorris Exp $ 
+ * $Revision: 1.121 $   $Date: 2009/02/24 20:26:59 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.121 2009/02/24 20:26:59 amorris Exp $ 
  ***************************************************************************/

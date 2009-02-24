@@ -20,7 +20,7 @@
 #ifndef _TAU_TRACE_H_
 #define _TAU_TRACE_H_
 
-#include <tau_library.h>
+#include <tau_internal.h>
 
 
 /* TAU tracer events */

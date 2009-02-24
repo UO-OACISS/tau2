@@ -21,7 +21,7 @@
 #ifndef _TAU_ENV_H_
 #define _TAU_ENV_H_
 
-#include <tau_library.h>
+#include <tau_internal.h>
 
 #ifdef __cplusplus
 extern "C" {

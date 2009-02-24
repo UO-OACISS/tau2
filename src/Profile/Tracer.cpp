@@ -25,7 +25,7 @@
 #include <signal.h>
 #include <time.h>
 
-#include <tau_library.h>
+#include <tau_internal.h>
 #include <Profile/Profiler.h>
 #include <Profile/TauEnv.h>
 #include <Profile/TauTrace.h>

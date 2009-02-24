@@ -27,7 +27,7 @@
 //#define DEBUG_PROF
 
 #include "Profile/Profiler.h"
-#include <tau_library.h>
+#include <tau_internal.h>
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -623,6 +623,6 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid) {
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
- * $Revision: 1.35 $   $Date: 2009/02/24 01:24:49 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.35 2009/02/24 01:24:49 amorris Exp $ 
+ * $Revision: 1.36 $   $Date: 2009/02/24 20:26:59 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.36 2009/02/24 20:26:59 amorris Exp $ 
  ***************************************************************************/
