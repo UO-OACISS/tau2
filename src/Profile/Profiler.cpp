@@ -41,15 +41,17 @@ using namespace std;
 #include <stack.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
-#include <stdio.h> 
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <fcntl.h>
+
+
+#include <stdio.h> 
 #include <time.h>
 #include <stdlib.h>
 #include <limits.h>
 
 #ifdef TAU_WINDOWS
-#include <sys/types.h>
-#include <sys/stat.h>
 #ifndef TAU_DISABLE_METADATA
 #include <sys/utsname.h> // for host identification (uname)
 #endif
@@ -1521,6 +1523,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.223 $   $Date: 2009/02/24 01:24:49 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.223 2009/02/24 01:24:49 amorris Exp $ 
+ * $Revision: 1.224 $   $Date: 2009/02/24 19:28:24 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.224 2009/02/24 19:28:24 amorris Exp $ 
  ***************************************************************************/
