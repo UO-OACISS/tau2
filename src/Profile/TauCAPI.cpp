@@ -529,11 +529,11 @@ extern "C" void Tau_reducescatter_data(int data) {
 #else /* !TAU_MPI */
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
-  RtsLayer::TraceSendMsg(type, destination, length);
+  TauTraceSendMsg(type, destination, length);
 }
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_recvmsg(int type, int source, int length) {
-  RtsLayer::TraceRecvMsg(type, source, length);
+  TauTraceRecvMsg(type, source, length);
 }
 #endif /* TAU_MPI */
 
@@ -1150,7 +1150,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.106 $   $Date: 2009/02/24 01:24:49 $
- * VERSION: $Id: TauCAPI.cpp,v 1.106 2009/02/24 01:24:49 amorris Exp $
+ * $Revision: 1.107 $   $Date: 2009/02/24 01:30:18 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.107 2009/02/24 01:30:18 amorris Exp $
  ***************************************************************************/
 
