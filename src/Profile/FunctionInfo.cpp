@@ -38,18 +38,15 @@ using namespace std;
   #include <vector>
 #endif //TAU_WINDOWS
 
-#ifdef TRACING_ON
 #ifdef TAU_VAMPIRTRACE 
 #include <Profile/TauVampirTrace.h>
 #else /* TAU_VAMPIRTRACE */
 #ifdef TAU_EPILOG
 #include "elg_trc.h"
-#else /* TAU_EPILOG */
-#include <Profile/TauTrace.h>
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
-#endif // TRACING_ON 
 
+#include <Profile/TauTrace.h>
 #include <Profile/TauInit.h>
 
 //////////////////////////////////////////////////////////////////////
@@ -498,6 +495,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.72 $   $Date: 2009/02/23 23:37:12 $
- * VERSION_ID: $Id: FunctionInfo.cpp,v 1.72 2009/02/23 23:37:12 amorris Exp $ 
+ * $Revision: 1.73 $   $Date: 2009/02/24 01:09:33 $
+ * VERSION_ID: $Id: FunctionInfo.cpp,v 1.73 2009/02/24 01:09:33 amorris Exp $ 
  ***************************************************************************/
