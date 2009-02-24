@@ -49,7 +49,7 @@ import java.util.NoSuchElementException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.71 2009/02/24 00:53:45 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.72 2009/02/24 23:38:46 wspear Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -1454,14 +1454,38 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			DB db = this.getDB();
 			PreparedStatement statement = null;
 			StringBuffer buf = new StringBuffer();
-			if (db.getDBType().compareTo("oracle") == 0) {
-				buf.append("select interval_event.id, stddev(excl) ");
-			} else if (db.getDBType().compareTo("derby") == 0) {
-				//sttdev is unsupported in derby!
-				buf.append("select interval_event.id, avg(exclusive) ");
-			} else {
-				buf.append("select interval_event.id, stddev(exclusive) ");
+			String clusterType=model.getClusterValueType();
+			String clusterPerType="inclusive_percentage";
+			if(clusterType.compareTo("inclusive")!=0){
+				if (db.getDBType().compareTo("oracle") == 0) {
+					clusterType="excl";
+				}
+				else{
+					clusterType="exclusive";
+				}
+				clusterPerType="exclusive_percentage";
 			}
+//			if(clusterType.compareTo("inclusive")==0)
+//			{
+//				if (db.getDBType().compareTo("derby") == 0) {
+//					//sttdev is unsupported in derby!
+//					buf.append("select interval_event.id, avg(inclusive) ");
+//				} else {
+//					buf.append("select interval_event.id, stddev(inclusive) ");
+//				}
+//			}
+//			else{
+//				if (db.getDBType().compareTo("oracle") == 0) {
+//					buf.append("select interval_event.id, stddev(excl) ");
+//				} else 
+					
+				if (db.getDBType().compareTo("derby") == 0) {
+					//sttdev is unsupported in derby!
+					buf.append("select interval_event.id, avg("+clusterType+") ");
+				} else {
+					buf.append("select interval_event.id, stddev("+clusterType+") ");
+				}
+			//}
 			buf.append("from interval_location_profile ");
 			buf.append("inner join interval_event ");
 			buf.append("on interval_event = interval_event.id ");
@@ -1514,9 +1538,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				}
 				statement.close();
 
-				buf.append("select interval_event.id, cast (name as varchar(256)), (stddev(exclusive)/ ");
-				buf.append("(max(exclusive)-min(exclusive)))* ");
-				buf.append("avg(exclusive_percentage) ");
+				buf.append("select interval_event.id, cast (name as varchar(256)), (stddev("+clusterType+")/ ");
+				buf.append("(max("+clusterType+")-min("+clusterType+")))* ");
+				buf.append("avg("+clusterPerType+") ");
 				buf.append("from interval_location_profile ");
 				buf.append("inner join interval_event ");
 				buf.append("on interval_event = interval_event.id ");
@@ -1525,17 +1549,18 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				buf.append("group by interval_event.id, cast (name as varchar(256))");
 
 			} else {
-				if (db.getDBType().compareTo("oracle") == 0) {
-					buf.append("select interval_event.id, name, (stddev(excl)/ ");
-					buf.append("(max(excl)-min(excl))) * ");
-					buf.append("avg(exclusive_percentage) ");
-				} else if (db.getDBType().compareTo("derby") == 0) {
+//				if (db.getDBType().compareTo("oracle") == 0) {
+//					buf.append("select interval_event.id, name, (stddev(excl)/ ");
+//					buf.append("(max(excl)-min(excl))) * ");
+//					buf.append("avg(exclusive_percentage) ");
+//				} else 
+				if (db.getDBType().compareTo("derby") == 0) {
 					// stddev is unsupported!
-					buf.append("select interval_event.id, name, avg(exclusive) ");
+					buf.append("select interval_event.id, name, avg("+clusterType+") ");
 				} else {
-					buf.append("select interval_event.id, name, (stddev(exclusive)/ ");
-					buf.append("(max(exclusive)-min(exclusive)))* ");
-					buf.append("avg(exclusive_percentage) ");
+					buf.append("select interval_event.id, name, (stddev("+clusterType+")/ ");
+					buf.append("(max("+clusterType+")-min("+clusterType+")))* ");
+					buf.append("avg("+clusterPerType+") ");
 				}
 				buf.append("from interval_location_profile ");
 				buf.append("inner join interval_event ");
@@ -1576,12 +1601,14 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			data.setNames(names);
 
 			buf = new StringBuffer();
-			if (db.getDBType().compareTo("oracle") == 0) {
-				buf.append("select node, context, thread, name, excl ");
-			} else if (db.getDBType().compareTo("db2") == 0) {
-				buf.append("select node, context, thread, cast (name as varchar(256)), exclusive ");
+//			if (db.getDBType().compareTo("oracle") == 0) {
+//				buf.append("select node, context, thread, name, excl ");
+//			} else 
+				
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append("select node, context, thread, cast (name as varchar(256)), "+clusterType+" ");
 			} else {
-				buf.append("select node, context, thread, name, exclusive ");
+				buf.append("select node, context, thread, name, "+clusterType+" ");
 			}
 			buf.append("from interval_location_profile ");
 			buf.append("inner join interval_event ");

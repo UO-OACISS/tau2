@@ -15,7 +15,7 @@ import java.util.ArrayList;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.34 2009/02/24 00:53:37 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.35 2009/02/24 23:38:47 wspear Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -70,7 +70,17 @@ public class RMIPerfExplorerModel implements Serializable {
 	protected Object[] fullPath = null;
 	protected int connectionIndex = 0;
 
-    private Map<String,String> scriptParameters = new HashMap<String,String>();
+	protected String clusterValueType = null;
+	
+    public String getClusterValueType() {
+		return clusterValueType;
+	}
+
+	public void setClusterValueType(String clusterValueType) {
+		this.clusterValueType = clusterValueType;
+	}
+
+	private Map<String,String> scriptParameters = new HashMap<String,String>();
 
 	/**
 	 * Default Constructor.
@@ -124,6 +134,8 @@ public class RMIPerfExplorerModel implements Serializable {
 		this.analysisID = source.analysisID;
 		this.fullPath = source.fullPath;
 		this.connectionIndex = source.connectionIndex;
+		
+		this.clusterValueType = source.clusterValueType;
 	}
 
 	/**

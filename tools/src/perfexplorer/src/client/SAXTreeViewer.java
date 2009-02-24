@@ -135,8 +135,53 @@ public class SAXTreeViewer extends JFrame {
         throws IOException, SAXException {
 
         // Create instances needed for parsing
-        XMLReader reader = 
-            XMLReaderFactory.createXMLReader(vendorParserClass);
+    	
+    	XMLReader reader; //= XMLReaderFactory.createXMLReader(vendorParserClass);
+    	
+    	 try { // Xerces
+    		 reader = XMLReaderFactory.createXMLReader(
+    				 vendorParserClass
+    		    );
+    		  }
+    		  catch (SAXException e1) {
+    		    try { // Crimson
+    		    	 reader = XMLReaderFactory.createXMLReader(
+    		       "org.apache.crimson.parser.XMLReaderImpl"
+    		      );
+    		    }
+    		    catch (SAXException e2) { 
+    		      try { // Ælfred
+    		    	  reader= XMLReaderFactory.createXMLReader(
+    		         "gnu.xml.aelfred2.XmlReader"
+    		        );
+    		      }
+    		      catch (SAXException e3) {
+    		        try { // Piccolo
+    		          reader = XMLReaderFactory.createXMLReader(
+    		            "com.bluecast.xml.Piccolo"
+    		          );
+    		        }
+    		        catch (SAXException e4) {
+    		          try { // Oracle
+    		        	  reader = XMLReaderFactory.createXMLReader(
+    		              "oracle.xml.parser.v2.SAXParser"
+    		            );
+    		          }
+    		          catch (SAXException e5) {
+    		            try { // default
+    		            	 reader = XMLReaderFactory.createXMLReader();
+    		            }
+    		            catch (SAXException e6) {
+    		              throw new NoClassDefFoundError(
+    		                "No SAX parser is available");
+    		            }
+    		          }
+    		        }
+    		      }
+    		    } 
+    		  }
+    	
+        
         JTreeContentHandler jTreeTableContentHandler = new JTreeContentHandler();
         ErrorHandler jTreeTableErrorHandler = new JTreeErrorHandler();
         JTreeLexicalHandler lexicalHandler = new JTreeLexicalHandler(jTreeTableContentHandler);

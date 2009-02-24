@@ -38,13 +38,27 @@ public class DataUtils {
 	    RawDataInterface rawData = null;
 	    double maximum = 0.0;
 	    List eventIDs = null;
+	    String clusterType=modelData.getClusterValueType();
+		String clusterPerType="inclusive_percentage";
+		
 		PerfExplorerOutput.print("Getting constants...");
 		try {
 			DB db = session.db();
+			
+			if(clusterType.compareTo("inclusive")!=0){
+				if (db.getDBType().compareTo("oracle") == 0) {
+					clusterType="excl";
+				}
+				else{
+					clusterType="exclusive";
+				}
+				clusterPerType="exclusive_percentage";
+			}
+			
 			PreparedStatement statement = null;
 			// First, get the total number of rows we are expecting
 			StringBuffer sql = new StringBuffer();
-
+			
             if (db.getDBType().compareTo("oracle") == 0) {
                 sql.append("select count(p.excl) ");
             } else {
@@ -195,11 +209,20 @@ public class DataUtils {
 				sql.append(") + (p.context*");
 				sql.append(threads);
                 
-                if (db.getDBType().compareTo("oracle") == 0) {
-                    sql.append(") + p.thread as thread, p.metric as metric, p.excl/1000000, ");
-                } else {
-                    sql.append(") + p.thread as thread, p.metric as metric, p.exclusive/1000000, ");
-                }
+				//TODO: This will request the data that gets used for clustering
+//				if(clusterType.compareTo("inclusive")==0)
+//				{
+//					sql.append(") + p.thread as thread, p.metric as metric, p.inclusive/1000000, ");
+//				}
+//				else{
+//                if (db.getDBType().compareTo("oracle") == 0) {
+//                    sql.append(") + p.thread as thread, p.metric as metric, p.excl/1000000, ");
+//                } else {
+//                    sql.append(") + p.thread as thread, p.metric as metric, p.exclusive/1000000, ");
+//                }}
+				
+				sql.append(") + p.thread as thread, p.metric as metric, p."+clusterType+"/1000000, ");
+				
 				sql.append("p.inclusive/1000000, s.inclusive_percentage, s.exclusive_percentage ");
 				sql.append("from interval_event e ");
 				sql.append("inner join interval_mean_summary s ");
@@ -213,12 +236,20 @@ public class DataUtils {
 				sql.append("select e.id, (p.node*" + (contexts * threads) + "");
 				sql.append(") + (p.context*" + threads + "");
                 
-                if (db.getDBType().compareTo("oracle") == 0) {
-                    sql.append(") + p.thread as thread, p.metric as metric, p.excl, ");
-                } else {
-                    sql.append(") + p.thread as thread, p.metric as metric, p.exclusive, ");
-                }
-
+				//TODO: This will request the data that gets used for clustering
+//				if(clusterType.compareTo("inclusive")==0)
+//				{
+//					sql.append(") + p.thread as thread, p.metric as metric, p.inclusive, ");
+//				}
+//				else{
+//					if (db.getDBType().compareTo("oracle") == 0) {
+//						sql.append(") + p.thread as thread, p.metric as metric, p.excl, ");
+//					} else {
+//						sql.append(") + p.thread as thread, p.metric as metric, p.exclusive, ");
+//					}
+//				}
+				sql.append(") + p.thread as thread, p.metric as metric, p."+clusterType+", ");
+				
 				sql.append("p.inclusive/1000000, p.inclusive_percentage ");
 				sql.append("from interval_event e ");
 				sql.append("left outer join interval_location_profile p ");

@@ -42,6 +42,7 @@ public class PerfExplorerActionListener implements ActionListener {
 	public final static String NORMALIZATION = "Select Normalization Method";
 	public final static String NUM_CLUSTERS = "Set Maximum Number of Clusters";
 	public final static String DO_CLUSTERING = "Do Clustering";
+	public final static String DO_INC_CLUSTERING = "Do Inclusive Clustering";
 	public final static String DO_CORRELATION_ANALYSIS = "Do Correlation Analysis";
 	public final static String DO_CORRELATION_CUBE = "Do 3D Correlation Cube";
 	public final static String DO_VARIATION_ANALYSIS = "Show Data Summary";
@@ -144,7 +145,10 @@ public class PerfExplorerActionListener implements ActionListener {
 					createClusterSizeWindow();
 				} else if (arg.equals(DO_CLUSTERING)) {
 					if (validAnalysisSelection())
-						createDoClusteringWindow();
+						createDoClusteringWindow(false);
+				} else if (arg.equals(DO_INC_CLUSTERING)) {
+					if (validAnalysisSelection())
+						createDoClusteringWindow(true);
 				} else if (arg.equals(DO_CORRELATION_ANALYSIS)) {
 					if (validCorrelationSelection())
 						createDoCorrelationWindow();
@@ -373,8 +377,14 @@ public class PerfExplorerActionListener implements ActionListener {
 			PerfExplorerModel.getModel().setNumberOfClusters(reply);
 	}
 
-	public void createDoClusteringWindow() {
+	public void createDoClusteringWindow(boolean inclusive) {
 		PerfExplorerModel theModel = PerfExplorerModel.getModel();
+		if(inclusive){
+			theModel.setClusterValueType("inclusive");
+		}
+		else{
+			theModel.setClusterValueType("exclusive");
+		}
 		Object selection = theModel.getCurrentSelection();
 		String status = null;
 		if (selection instanceof Application) {

@@ -185,6 +185,12 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 				PerfExplorerActionListener.DO_CLUSTERING);
 		doItem.addActionListener(listener);
 		analysisMenu.add(doItem);
+		
+		//Add a menu item.
+		JMenuItem doIncItem = new JMenuItem(
+				PerfExplorerActionListener.DO_INC_CLUSTERING);
+		doIncItem.addActionListener(listener);
+		analysisMenu.add(doIncItem);
 
 		//Add a menu item.
 		JMenuItem correlateItem = new JMenuItem(
