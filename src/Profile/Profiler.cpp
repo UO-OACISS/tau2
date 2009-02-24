@@ -209,14 +209,14 @@ char *TauGetCounterString(void) {
 
 #ifdef TAU_MPITRACE
 //////////////////////////////////////////////////////////////////////
-void Profiler::EnableAllEventsOnCallStack(int tid, Profiler *current) {
+void TauProfiler_EnableAllEventsOnCallStack(int tid, Profiler *current) {
   /* Go up the callstack and enable all events on it */
   if (current != (Profiler *) NULL) {
     DEBUGPROFMSG(RtsLayer::myNode()<<" This func = "<<current->ThisFunction->GetName()<<" RecordEvent = "<<current->RecordEvent<<endl;);
     if (!current->RecordEvent) { 
       DEBUGPROFMSG(RtsLayer::myNode()<< " Enabling event "<<current->ThisFunction->GetName()<<endl;);
       current->RecordEvent = true;
-      EnableAllEventsOnCallStack(tid, current->ParentProfiler);
+      TauProfiler_EnableAllEventsOnCallStack(tid, current->ParentProfiler);
       /* process the current event */
       DEBUGPROFMSG(RtsLayer::myNode()<<" Processing EVENT "<<current->ThisFunction->GetName()<<endl;);
       TauTraceEvent(current->ThisFunction->GetFunctionId(), 1, tid, (x_uint64) current->StartTime, 1); 
@@ -347,7 +347,7 @@ void Profiler::Start(int tid) {
     /* if we're in the group, we must first enable all the other events
      * on the callstack */
     DEBUGPROFMSG(RtsLayer::myNode()<< " Function is enabled: "<<ThisFunction->GetName()<<endl;);
-    EnableAllEventsOnCallStack(tid, this);
+    TauProfiler_EnableAllEventsOnCallStack(tid, this);
   }
 #else /* TAU_MPITRACE */
 #ifdef TAU_VAMPIRTRACE 
@@ -742,7 +742,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 	// Not a destructor of a static object - its a function like main
 
 	// Write profile data
-	StoreData(tid);
+	TauProfiler_StoreData(tid);
 	  
 #if defined(TAUKTAU) 
 	//AN Removed - New func inside 
@@ -768,26 +768,10 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   }
 }
 
-//////////////////////////////////////////////////////////////////////
-
-
-extern "C" int Tau_profile_exit();
-void Profiler::ProfileExit(const char *message, int tid) {
-  Tau_profile_exit();
-  
-#if defined(TAUKTAU)
-  KtauProfiler::PutKtauProfiler();
-#endif /* TAUKTAU */
-  
-#ifdef RENCI_STFF  
-  RenciSTFF::cleanup();
-#endif // RENCI_STFF  
-}
-
 
 //////////////////////////////////////////////////////////////////////
 
-void Profiler::theFunctionList(const char ***inPtr, int *numFuncs, bool addName, const char * inString) {
+void TauProfiler_theFunctionList(const char ***inPtr, int *numFuncs, bool addName, const char * inString) {
   static int numberOfFunctions = 0;
 
   if (addName) {
@@ -803,12 +787,12 @@ void Profiler::theFunctionList(const char ***inPtr, int *numFuncs, bool addName,
   }
 }
 
-void Profiler::dumpFunctionNames() {
+void TauProfiler_dumpFunctionNames() {
 
   int numFuncs;
   const char ** functionList;
 
-  Profiler::theFunctionList(&functionList, &numFuncs);
+  TauProfiler_theFunctionList(&functionList, &numFuncs);
 
   const char *dirname = TauEnv_get_profiledir();
 
@@ -839,7 +823,7 @@ void Profiler::dumpFunctionNames() {
   rename(filename, dumpfile);
 }
 
-void Profiler::getUserEventList(const char ***inPtr, int *numUserEvents) {
+void TauProfiler_getUserEventList(const char ***inPtr, int *numUserEvents) {
 
   *numUserEvents = 0;
 
@@ -857,7 +841,7 @@ void Profiler::getUserEventList(const char ***inPtr, int *numUserEvents) {
 }
 
 
-void Profiler::getUserEventValues(const char **inUserEvents, int numUserEvents,
+void TauProfiler_getUserEventValues(const char **inUserEvents, int numUserEvents,
 				  int **numEvents, double **max, double **min,
 				  double **mean, double **sumSqr, int tid) {
 
@@ -903,7 +887,7 @@ double *Profiler::getStartValues() {
 #endif
 }
 
-void Profiler::theCounterList(const char ***inPtr, int *numCounters) {
+void TauProfiler_theCounterList(const char ***inPtr, int *numCounters) {
   *inPtr = (const char **) malloc(sizeof(const char **) * 1);
   const char *tmpChar = "default counter";
   (*inPtr)[0] = tmpChar;
@@ -923,7 +907,7 @@ static bool helperIsFunction(FunctionInfo *fi, Profiler *profiler) {
   return false;
 }
 
-void Profiler::getFunctionValues(const char **inFuncs,
+void TauProfiler_getFunctionValues(const char **inFuncs,
 				 int numFuncs,
 				 double ***counterExclusiveValues,
 				 double ***counterInclusiveValues,
@@ -942,7 +926,7 @@ void Profiler::getFunctionValues(const char **inFuncs,
   const char ** tmpCounterList;
 
 #ifndef TAU_MULTIPLE_COUNTERS
-  Profiler::theCounterList(&tmpCounterList,
+  TauProfiler_theCounterList(&tmpCounterList,
 			   &tmpNumberOfCounters);
 #else
   bool *tmpCounterUsedList; // not used
@@ -964,7 +948,7 @@ void Profiler::getFunctionValues(const char **inFuncs,
   *numCalls = (int *) malloc(sizeof(int) * numFuncs);
   *numSubr = (int *) malloc(sizeof(int) * numFuncs);
 
-  updateIntermediateStatistics(tid);
+  TauProfiler_updateIntermediateStatistics(tid);
 
   RtsLayer::LockDB();
   
@@ -1017,7 +1001,7 @@ static void finalizeTrace(int tid) {
 #endif /* TAU_VAMPIRTRACE */
 }
 
-void Profiler::PurgeData(int tid) {
+void TauProfiler_PurgeData(int tid) {
   
   vector<FunctionInfo*>::iterator it;
   vector<TauUserEvent*>::iterator eit;
@@ -1200,7 +1184,7 @@ static int writeHeader(FILE *fp, int numFunc, char *metricName) {
 // This is a very important function, it must be called before writing function data to disk.
 // This function fills in the values that will be dumped to disk.
 // It performs the calculations for timers that are still on the stack.
-int Profiler::updateIntermediateStatistics(int tid) {
+int TauProfiler_updateIntermediateStatistics(int tid) {
   
   // get current values
   double currentTime[MAX_TAU_COUNTERS];
@@ -1312,14 +1296,14 @@ static int writeProfile(FILE *fp, char *metricName, int tid, int metric,
 }
 
 // Store profile data at the end of execution (when top level timer stops)
-int Profiler::StoreData(int tid) {
+int TauProfiler_StoreData(int tid) {
 
   finalizeTrace(tid);
 
-  Snapshot("final", true, tid);
+  TauProfiler_Snapshot("final", true, tid);
 
   if (TauEnv_get_profile_format() == TAU_FORMAT_PROFILE) {
-    DumpData(false, tid, "profile");
+    TauProfiler_DumpData(false, tid, "profile");
   }
   return 1;
 } 
@@ -1343,8 +1327,8 @@ static int getProfileLocation(int metric, char *str) {
 }
 
 
-int Profiler::DumpData(bool increment, int tid, const char *prefix) {
-  return writeData(tid, prefix, increment);
+int TauProfiler_DumpData(bool increment, int tid, const char *prefix) {
+  return TauProfiler_writeData(tid, prefix, increment);
 }
 
 
@@ -1358,14 +1342,14 @@ void getMetricHeader(int i, char *header) {
 
 
 // Stores profile data
-int Profiler::writeData(int tid, const char *prefix, bool increment, const char **inFuncs, int numFuncs) {
+int TauProfiler_writeData(int tid, const char *prefix, bool increment, const char **inFuncs, int numFuncs) {
   
-  updateIntermediateStatistics(tid);
+  TauProfiler_updateIntermediateStatistics(tid);
 
 #ifdef PROFILING_ON 
   RtsLayer::LockDB();
 
-  static bool createFlag = createDirectories();
+  static bool createFlag = TauProfiler_createDirectories();
 
   for (int i=0;i<MAX_TAU_COUNTERS;i++) {
     if (RtsLayer::getCounterUsed(i)) {
@@ -1466,19 +1450,19 @@ int Profiler::writeData(int tid, const char *prefix, bool increment, const char 
 
 
 
-int Profiler::dumpFunctionValues(const char **inFuncs,
+int TauProfiler_dumpFunctionValues(const char **inFuncs,
 				 int numFuncs,
 				 bool increment,
 				 int tid, char *prefix) {
   
   TAU_PROFILE("TAU_DUMP_FUNC_VALS()", " ", TAU_IO);
 
-  writeData(tid, prefix, increment, inFuncs, numFuncs);
+  TauProfiler_writeData(tid, prefix, increment, inFuncs, numFuncs);
   return 0;
 }
 
 
-bool Profiler::createDirectories() {
+bool TauProfiler_createDirectories() {
 
 #ifdef TAU_MULTIPLE_COUNTERS
   static bool flag = true;
@@ -1513,6 +1497,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.228 $   $Date: 2009/02/24 21:30:23 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.228 2009/02/24 21:30:23 amorris Exp $ 
+ * $Revision: 1.229 $   $Date: 2009/02/24 22:30:59 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.229 2009/02/24 22:30:59 amorris Exp $ 
  ***************************************************************************/

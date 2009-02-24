@@ -128,7 +128,7 @@ FunctionInfo * TauGetProfileParamFI(int tid, long key, string& keyname) {
   }
 }
 	
-void Profiler::AddProfileParamData(long key, const char *keyname) {
+void TauProfiler_AddProfileParamData(long key, const char *keyname) {
   string keystring(keyname);
   int tid = RtsLayer::myThread();
   FunctionInfo *f = TauGetProfileParamFI(tid, key, keystring);
@@ -174,6 +174,6 @@ void Profiler::ProfileParamStop(double TotalTime, int tid)
   
 /***************************************************************************
  * $RCSfile: ProfileParam.cpp,v $   $Author: amorris $
- * $Revision: 1.5 $   $Date: 2009/02/24 21:30:23 $
- * TAU_VERSION_ID: $Id: ProfileParam.cpp,v 1.5 2009/02/24 21:30:23 amorris Exp $ 
+ * $Revision: 1.6 $   $Date: 2009/02/24 22:30:59 $
+ * TAU_VERSION_ID: $Id: ProfileParam.cpp,v 1.6 2009/02/24 22:30:59 amorris Exp $ 
  ***************************************************************************/

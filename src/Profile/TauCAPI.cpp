@@ -178,7 +178,15 @@ extern "C" int Tau_profile_exit() {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_exit(char * msg) {
-  tau::Profiler::ProfileExit(msg);
+  Tau_profile_exit();
+  
+#if defined(TAUKTAU)
+  KtauProfiler::PutKtauProfiler();
+#endif /* TAUKTAU */
+  
+#ifdef RENCI_STFF  
+  RenciSTFF::cleanup();
+#endif // RENCI_STFF  
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -213,39 +221,39 @@ extern "C" void Tau_profile_callstack(void) {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump(void) {
-  tau::Profiler::DumpData();
+  TauProfiler_DumpData();
   return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_prefix(char *prefix) {
- tau::Profiler::DumpData(false, RtsLayer::myThread(), prefix);
+  TauProfiler_DumpData(false, RtsLayer::myThread(), prefix);
   return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_incr(void) {
-  tau::Profiler::DumpData(true);
+  TauProfiler_DumpData(true);
   return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_purge(void) {
-  tau::Profiler::PurgeData();
+  TauProfiler_PurgeData();
 }
 
 extern "C" void Tau_the_function_list(const char ***functionList, int *num) {
-  tau::Profiler::theFunctionList(functionList, num);
+  TauProfiler_theFunctionList(functionList, num);
 }
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_dump_function_names() {
-  tau::Profiler::dumpFunctionNames();
+  TauProfiler_dumpFunctionNames();
 }
   
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_get_counter_names(const char ***counterList, int *num) {
-  tau::Profiler::theCounterList(counterList, num);
+  TauProfiler_theCounterList(counterList, num);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -254,14 +262,14 @@ extern "C" void Tau_get_function_values(const char **inFuncs, int numOfFuncs,
 					double ***counterInclusiveValues,
 					int **numOfCalls, int **numOfSubRoutines,
 					const char ***counterNames, int *numOfCounters) {
-   tau::Profiler::getFunctionValues(inFuncs,numOfFuncs,counterExclusiveValues,counterInclusiveValues,
-				    numOfCalls,numOfSubRoutines,counterNames,numOfCounters);
+  TauProfiler_getFunctionValues(inFuncs,numOfFuncs,counterExclusiveValues,counterInclusiveValues,
+				numOfCalls,numOfSubRoutines,counterNames,numOfCounters);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_get_event_names(const char ***eventList, int *num) {
-  tau::Profiler::getUserEventList(eventList, num);
+  TauProfiler_getUserEventList(eventList, num);
 }
 
 
@@ -269,21 +277,21 @@ extern "C" void Tau_get_event_names(const char ***eventList, int *num) {
 extern "C" void Tau_get_event_vals(const char **inUserEvents, int numUserEvents,
 				  int **numEvents, double **max, double **min,
 				  double **mean, double **sumSqr) {
-  tau::Profiler::getUserEventValues(inUserEvents, numUserEvents, numEvents, max, min,
-		     mean, sumSqr);
+  TauProfiler_getUserEventValues(inUserEvents, numUserEvents, numEvents, max, min,
+				 mean, sumSqr);
 }
 
 
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_dump_function_values(const char **functionList, int num) {
-  tau::Profiler::dumpFunctionValues(functionList,num);;
+  TauProfiler_dumpFunctionValues(functionList,num);;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_dump_function_values_incr(const char **functionList, int num) {
-  tau::Profiler::dumpFunctionValues(functionList,num,true);;
+  TauProfiler_dumpFunctionValues(functionList,num,true);;
 }
 
 
@@ -831,7 +839,7 @@ extern "C" void Tau_profile_dynamic_auto(int iteration, void **ptr, char *fname,
 extern "C" void Tau_profile_param1l(long data, const char *dataname) {
   string dname(dataname);
 #ifdef TAU_PROFILEPARAM
-  tau::Profiler::AddProfileParamData(data, dataname);
+  TauProfiler_AddProfileParamData(data, dataname);
 #endif
 }
 
@@ -1008,11 +1016,11 @@ extern "C" pid_t tau_fork() {
 extern "C" void Tau_profile_snapshot_1l(char *name, int number) {
   char buffer[4096];
   sprintf (buffer, "%s %d", name, number);
-  Profiler::Snapshot(buffer);
+  TauProfiler_Snapshot(buffer);
 }
 
 extern "C" void Tau_profile_snapshot(char *name) {
-  Profiler::Snapshot(name);
+  TauProfiler_Snapshot(name);
 }
 
 
@@ -1026,8 +1034,7 @@ extern "C" int Tau_get_usesMPI() {
 }
 
 //////////////////////////////////////////////////////////////////////
-extern "C" void Tau_get_calls(void *handle, long *values, int tid)
-{
+extern "C" void Tau_get_calls(void *handle, long *values, int tid) {
   FunctionInfo *ptr = (FunctionInfo *)handle;
 
   values[0] = (long) ptr->GetCalls(tid);
@@ -1035,8 +1042,7 @@ extern "C" void Tau_get_calls(void *handle, long *values, int tid)
 }
 
 //////////////////////////////////////////////////////////////////////
-void Tau_get_child_calls(void *handle, long* values, int tid)
-{
+void Tau_get_child_calls(void *handle, long* values, int tid) {
   FunctionInfo *ptr = (FunctionInfo *)handle;
 
   values[0] = (long) ptr->GetSubrs(tid);
@@ -1044,8 +1050,7 @@ void Tau_get_child_calls(void *handle, long* values, int tid)
 }
 
 //////////////////////////////////////////////////////////////////////
-extern "C" void Tau_get_inclusive_values(void *handle, double* values, int tid)
-{
+extern "C" void Tau_get_inclusive_values(void *handle, double* values, int tid) {
   FunctionInfo *ptr = (FunctionInfo *)handle;
   
   if (ptr)
@@ -1054,8 +1059,7 @@ extern "C" void Tau_get_inclusive_values(void *handle, double* values, int tid)
 }
 
 //////////////////////////////////////////////////////////////////////
-extern "C" void Tau_get_exclusive_values(void *handle, double* values, int tid)
-{
+extern "C" void Tau_get_exclusive_values(void *handle, double* values, int tid) {
   FunctionInfo *ptr = (FunctionInfo *)handle;
  
   if (ptr)
@@ -1064,11 +1068,10 @@ extern "C" void Tau_get_exclusive_values(void *handle, double* values, int tid)
 }
 
 //////////////////////////////////////////////////////////////////////
-extern "C" void Tau_get_counter_info(const char ***counterlist, int *numcounters)
-{
+extern "C" void Tau_get_counter_info(const char ***counterlist, int *numcounters) {
 
 #ifndef TAU_MULTIPLE_COUNTERS
-  Profiler::theCounterList(counterlist, numcounters);
+  TauProfiler_theCounterList(counterlist, numcounters);
 #else
   bool *tmpCounterUsedList; // not used
   MultipleCounterLayer::theCounterListInternal(counterlist,
@@ -1078,8 +1081,7 @@ extern "C" void Tau_get_counter_info(const char ***counterlist, int *numcounters
 }
 
 //////////////////////////////////////////////////////////////////////
-extern "C" int Tau_get_tid(void)
-{
+extern "C" int Tau_get_tid(void) {
   return RtsLayer::myThread();
 }
 
@@ -1134,7 +1136,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.109 $   $Date: 2009/02/24 21:30:23 $
- * VERSION: $Id: TauCAPI.cpp,v 1.109 2009/02/24 21:30:23 amorris Exp $
+ * $Revision: 1.110 $   $Date: 2009/02/24 22:30:59 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.110 2009/02/24 22:30:59 amorris Exp $
  ***************************************************************************/
 

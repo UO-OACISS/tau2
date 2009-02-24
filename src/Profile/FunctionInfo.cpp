@@ -169,7 +169,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   // Use LockDB to avoid a possible race condition.
   
   //Add function name to the name list.
-  Profiler::theFunctionList(NULL, NULL, true, (const char *)GetName());
+  TauProfiler_theFunctionList(NULL, NULL, true, (const char *)GetName());
   
   if (InitData) {
     for (int i=0; i < TAU_MAX_THREADS; i++) {
@@ -493,6 +493,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.74 $   $Date: 2009/02/24 01:24:49 $
- * VERSION_ID: $Id: FunctionInfo.cpp,v 1.74 2009/02/24 01:24:49 amorris Exp $ 
+ * $Revision: 1.75 $   $Date: 2009/02/24 22:30:59 $
+ * VERSION_ID: $Id: FunctionInfo.cpp,v 1.75 2009/02/24 22:30:59 amorris Exp $ 
  ***************************************************************************/

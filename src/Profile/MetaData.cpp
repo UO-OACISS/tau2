@@ -738,10 +738,10 @@ static int startNewSnapshotFile(char *threadid, int tid) {
 
 
 extern "C" int Tau_write_snapshot(const char *name, int finalize) {
-  return Profiler::Snapshot(name, finalize, RtsLayer::myThread());
+  return TauProfiler_Snapshot(name, finalize, RtsLayer::myThread());
 }
 
-int Profiler::Snapshot(const char *name, bool finalize, int tid) {
+int TauProfiler_Snapshot(const char *name, bool finalize, int tid) {
    int i, c;
    outputDevice *out = TauGetSnapshotFiles()[tid];
 
@@ -817,7 +817,7 @@ int Profiler::Snapshot(const char *name, bool finalize, int tid) {
    }
    output (out, "<interval_data metrics=\"%s\">\n", metricList);
 
-   updateIntermediateStatistics(tid);
+   TauProfiler_updateIntermediateStatistics(tid);
 
    for (i=0; i < numFunc; i++) {
      FunctionInfo *fi = TheFunctionDB()[i];

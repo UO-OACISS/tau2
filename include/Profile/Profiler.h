@@ -171,49 +171,6 @@ public:
 #endif /* TAU_MULTIPLE_COUNTERS */
 #endif /* TAU_PROFILEPARAM */
   
-
-  static int updateIntermediateStatistics(int tid);
-
-  static void ProfileExit(const char *message=0, 
-			  int tid = RtsLayer::myThread());
-  static bool createDirectories();
-  static int StoreData(int tid = RtsLayer::myThread()); 
-  static int DumpData(bool increment = false, int tid = RtsLayer::myThread(), const char *prefix = "dump"); 
-
-  static int writeData(int tid, const char *prefix = "profile", bool increment = false, 
-		       const char **inFuncs = NULL, int numFuncs = 0);
-
-  static void PurgeData(int tid = RtsLayer::myThread());
-  static int Snapshot(const char *name, bool finalize = false,
-		      int tid = RtsLayer::myThread()); 
-  static void theFunctionList(const char ***inPtr, int *numOfFunctions,
-			      bool addName = false, const char * inString = NULL);
-  static void dumpFunctionNames();
-  static void theCounterList(const char ***inPtr, int *numOfCounters);
-  
-  static void getFunctionValues(const char **inFuncs,
-				int numFuncs,
-				double ***counterExclusiveValues,
-				double ***counterInclusiveValues,
-				int **numOfCalls,
-				int **numOfSubRoutines,
-				const char ***counterNames,
-				int *numOfCounters,
-				int tid = RtsLayer::myThread());
-  static int dumpFunctionValues(const char **inFuncs,
-				int numFuncs,
-				bool increment = false,
-				int tid = RtsLayer::myThread(), 
-				char *prefix = "dump");
-  
-  static void getUserEventList(const char ***inPtr, int *numUserEvents);
-  
-  static void getUserEventValues(const char **inUserEvents, int numUserEvents,
-				 int **numEvents, double **max, double **min,
-				 double **mean, double **sumSqr, 
-				 int tid = RtsLayer::myThread());
-  
-  
   double *getStartValues();
   
 #ifndef TAU_MULTIPLE_COUNTERS
@@ -227,7 +184,6 @@ public:
 #ifdef TAU_PROFILEPARAM
   FunctionInfo * ProfileParamFunction; 
   bool 	       AddInclProfileParamFlag; 
-  static void AddProfileParamData(long key, const char *keyname);
 #endif /* TAU_PROFILEPARAM */
 
 #ifdef TAU_COMPENSATE
@@ -248,9 +204,6 @@ public:
   int  GetDepthLimit(void);
   void SetDepthLimit(int value);
 #endif /* TAU_DEPTH_LIMIT */ 
-#ifdef TAU_MPITRACE
-  static void EnableAllEventsOnCallStack(int tid, Profiler *current);
-#endif /* TAU_MPITRACE */
   
 #if defined(TAUKTAU)
   KtauProfiler* ThisKtauProfiler;
@@ -283,6 +236,55 @@ using tau::Profiler;
 
 extern "C" Profiler *TauInternal_CurrentProfiler(int tid);
 
+int TauProfiler_updateIntermediateStatistics(int tid);
+bool TauProfiler_createDirectories();
+int TauProfiler_StoreData(int tid = RtsLayer::myThread()); 
+int TauProfiler_DumpData(bool increment = false, int tid = RtsLayer::myThread(), const char *prefix = "dump"); 
+int TauProfiler_writeData(int tid, const char *prefix = "profile", bool increment = false, 
+		       const char **inFuncs = NULL, int numFuncs = 0);
+void TauProfiler_PurgeData(int tid = RtsLayer::myThread());
+
+int TauProfiler_Snapshot(const char *name, bool finalize = false,
+		      int tid = RtsLayer::myThread()); 
+
+
+
+void TauProfiler_theFunctionList(const char ***inPtr, int *numOfFunctions,
+				 bool addName = false, const char * inString = NULL);
+void TauProfiler_dumpFunctionNames();
+
+void TauProfiler_theCounterList(const char ***inPtr, int *numOfCounters);
+  
+void TauProfiler_getFunctionValues(const char **inFuncs,
+				   int numFuncs,
+				   double ***counterExclusiveValues,
+				   double ***counterInclusiveValues,
+				   int **numOfCalls,
+				   int **numOfSubRoutines,
+				   const char ***counterNames,
+				   int *numOfCounters,
+				   int tid = RtsLayer::myThread());
+int TauProfiler_dumpFunctionValues(const char **inFuncs,
+				   int numFuncs,
+				   bool increment = false,
+				   int tid = RtsLayer::myThread(), 
+				   char *prefix = "dump");
+
+void TauProfiler_getUserEventList(const char ***inPtr, int *numUserEvents);
+
+void TauProfiler_getUserEventValues(const char **inUserEvents, int numUserEvents,
+				    int **numEvents, double **max, double **min,
+				    double **mean, double **sumSqr, 
+				    int tid = RtsLayer::myThread());
+
+
+void TauProfiler_AddProfileParamData(long key, const char *keyname);
+
+
+#ifdef TAU_MPITRACE
+void TauProfiler_EnableAllEventsOnCallStack(int tid, Profiler *current);
+#endif /* TAU_MPITRACE */
+
 
 #endif /* TAU_ENABLED */
 /* included after class Profiler is defined. */
@@ -292,6 +294,6 @@ extern "C" Profiler *TauInternal_CurrentProfiler(int tid);
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.98 $   $Date: 2009/02/24 21:30:09 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.98 2009/02/24 21:30:09 amorris Exp $ 
+ * $Revision: 1.99 $   $Date: 2009/02/24 22:30:42 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.99 2009/02/24 22:30:42 amorris Exp $ 
  ***************************************************************************/
