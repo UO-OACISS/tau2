@@ -2,29 +2,29 @@
 #*			TAU Portable Profiling Package			   **
 #*			http://www.cs.uoregon.edu/research/paracomp/tau    **
 #****************************************************************************
-#*    Copyright 1997  						   	   **
+#*    Copyright 1997-2009					   	   **
 #*    Department of Computer and Information Science, University of Oregon **
 #*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 #****************************************************************************
-#######################################################################
-##                  pC++/Sage++  Copyright (C) 1993,1995             ##
-##  Indiana University  University of Oregon  University of Rennes   ##
-#######################################################################
- 
-include ../../include/Makefile
-########### Automatically modified by the configure script ############
 
+include ../../include/Makefile
 
 COMP=$(TAU_CXX_FE) $(ABI) $(ISA)
 RM=/bin/rm -f
 
-FILES=opari.cc process_c.cc process_f.cc process_omp.cc ompragma.cc ompragma_c.cc ompragma_f.cc ompregion.cc handler.cc 
+SOURCES=opari.cc process_c.cc process_f.cc process_omp.cc ompragma.cc ompragma_c.cc ompragma_f.cc ompregion.cc handler.cc 
+
+OBJECTS=opari.o process_c.o process_f.o process_omp.o ompragma.o ompragma_c.o ompragma_f.o ompregion.o handler.o 
+
 
 all: opari
 install: opari
 
-opari: $(FILES)
-	$(COMP) $(FILES) -o opari
+opari: $(OBJECTS)
+	$(COMP) $(OBJECTS) -o opari
+
+.cc.o:
+	$(COMP) -c -o $@ $<
 
 clean:
-	$(RM) opari
+	$(RM) opari $(OBJECTS)
