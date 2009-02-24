@@ -203,7 +203,7 @@ extern "C" {
       }
 
       // profiling
-      tmp = getenv("TAU_PROFILING");
+      tmp = getenv("TAU_PROFILE");
       if (parse_bool(tmp, TAU_PROFILING_DEFAULT)) {
 	env_profiling = 1;
 	TAU_VERBOSE("TAU: Profiling Enabled\n");
@@ -213,7 +213,7 @@ extern "C" {
       }
 
       // tracing
-      tmp = getenv("TAU_TRACING");
+      tmp = getenv("TAU_TRACE");
       if (parse_bool(tmp, TAU_TRACING_DEFAULT)) {
 	env_tracing = 1;
 	TAU_VERBOSE("TAU: Tracing Enabled\n");
