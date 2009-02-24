@@ -205,12 +205,6 @@ public:
   void SetPhase(bool flag);
 #endif /* TAU_PROFILEPHASE */
 
-#ifdef TAU_DEPTH_LIMIT
-  int profiledepth; 
-  int  GetDepthLimit(void);
-  void SetDepthLimit(int value);
-#endif /* TAU_DEPTH_LIMIT */ 
-  
 #if defined(TAUKTAU)
   KtauProfiler* ThisKtauProfiler;
 #if defined(TAUKTAU_MERGE)
@@ -290,6 +284,6 @@ void TauProfiler_EnableAllEventsOnCallStack(int tid, Profiler *current);
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.100 $   $Date: 2009/02/24 22:49:36 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.100 2009/02/24 22:49:36 amorris Exp $ 
+ * $Revision: 1.101 $   $Date: 2009/02/24 22:58:44 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.101 2009/02/24 22:58:44 amorris Exp $ 
  ***************************************************************************/

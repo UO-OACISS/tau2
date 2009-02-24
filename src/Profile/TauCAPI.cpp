@@ -84,6 +84,25 @@ extern "C" Profiler *TauInternal_ParentProfiler(int tid) {
   return &(Tau_global_stack[tid][pos]);
 }
 
+
+//////////////////////////////////////////////////////////////////////
+// TAU_DEPTH_LIMIT 
+//////////////////////////////////////////////////////////////////////
+static int& TauGetDepthLimit(void) {
+  static int depth = 0;
+  char *depthvar; 
+  if (depth == 0) {
+    depthvar = getenv("TAU_DEPTH_LIMIT"); 
+    if (depthvar == (char *) NULL) {
+      depth = INT_MAX; 
+    } else {
+      depth = atoi(depthvar);
+    }
+  } 
+  return depth; 
+}
+
+
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_start_timer(void *functionInfo, int phase) {
   int tid = RtsLayer::myThread();
@@ -124,8 +143,19 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase) {
   }
 #endif /* TAU_PROFILEPHASE */
 
+#ifdef TAU_DEPTH_LIMIT
+  static int userspecifieddepth = TauGetDepthLimit();
+  int mydepth = Tau_global_stackpos[tid];
+  if (mydepth >= userspecifieddepth) { 
+    return; 
+  }
+#endif /* TAU_DEPTH_LIMIT */
+
   p->Start();
 }
+
+
+
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -154,6 +184,16 @@ extern "C" int Tau_stop_timer(void *function_info) {
   if (profiler->ThisFunction != fi) { /* Check for overlapping timers */
     reportOverlap (profiler->ThisFunction, fi);
   }
+
+
+#ifdef TAU_DEPTH_LIMIT
+  static int userspecifieddepth = TauGetDepthLimit();
+  int mydepth = Tau_global_stackpos[tid]+1;
+  if (mydepth >= userspecifieddepth) { 
+    return 0; 
+  }
+#endif /* TAU_DEPTH_LIMIT */
+
   profiler->Stop();
   return 0;
 }
@@ -1148,7 +1188,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.111 $   $Date: 2009/02/24 22:49:50 $
- * VERSION: $Id: TauCAPI.cpp,v 1.111 2009/02/24 22:49:50 amorris Exp $
+ * $Revision: 1.112 $   $Date: 2009/02/24 22:59:08 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.112 2009/02/24 22:59:08 amorris Exp $
  ***************************************************************************/
 

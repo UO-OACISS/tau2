@@ -140,24 +140,6 @@ FunctionInfo** uninitialized_copy(FunctionInfo**,FunctionInfo**,FunctionInfo**);
 //std::basic_ostream<char, std::char_traits<char> > & std::operator<< (std::basic_ostream<char, std::char_traits<char> > &, const char * );
 #endif /* PGI */
 
-//////////////////////////////////////////////////////////////////////
-// TAU_DEPTH_LIMIT 
-//////////////////////////////////////////////////////////////////////
-int& TauGetDepthLimit(void) {
-  static int depth = 0;
-  char *depthvar; 
-  if (depth == 0) {
-    depthvar = getenv("TAU_DEPTH_LIMIT"); 
-    if (depthvar == (char *) NULL) {
-      depth = INT_MAX; 
-    } else {
-      depth = atoi(depthvar);
-    }
-  } 
-  return depth; 
-}
-
-
 
 //////////////////////////////////////////////////////////////////////
 // Shutdown routine which calls TAU's shutdown
@@ -244,27 +226,6 @@ void Profiler::Start(int tid) {
 #endif
 
   ParentProfiler = TauInternal_ParentProfiler(tid);
-
-  
-  /********************************************************************************/
-  /*** Depth Limit Code ***/
-  /********************************************************************************/
-#ifdef TAU_DEPTH_LIMIT
-  int userspecifieddepth = TauGetDepthLimit();
-  if (ParentProfiler) {
-    SetDepthLimit(ParentProfiler->GetDepthLimit()+1);
-  } else {
-    SetDepthLimit(1);
-  }
-  int mydepth = GetDepthLimit();
-  DEBUGPROFMSG("Start: Name: "<< ThisFunction->GetName()<<" mydepth = "<<mydepth<<", userspecifieddepth = "<<userspecifieddepth<<endl;);
-  if (mydepth > userspecifieddepth) { 
-    return; 
-  }
-#endif /* TAU_DEPTH_LIMIT */
-  /********************************************************************************/
-  /*** Depth Limit Code ***/
-  /********************************************************************************/
 
   
 
@@ -460,13 +421,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   /*** PerfSuite Integration Code ***/
   /********************************************************************************/
 
-#ifdef TAU_DEPTH_LIMIT
-  int userspecifieddepth = TauGetDepthLimit();
-  int mydepth = GetDepthLimit(); 
-  if (mydepth > userspecifieddepth) {
-    return;
-  }
-#endif /* TAU_DEPTH_LIMIT */
 
 #ifdef TAU_COMPENSATE
 #ifndef TAU_MULTIPLE_COUNTERS 
@@ -1114,25 +1068,6 @@ void Profiler::SetPhase(bool flag) {
 }
 #endif /* TAU_PROFILEPHASE */
 
-#ifdef TAU_DEPTH_LIMIT 
-//////////////////////////////////////////////////////////////////////
-//  Profiler::GetDepthLimit(void)
-//  Description: GetDepthLimit returns the callstack depth beyond which
-//               all instrumentation is disabled
-//////////////////////////////////////////////////////////////////////
-int Profiler::GetDepthLimit(void) {
-  return profiledepth;
-}
-
-//////////////////////////////////////////////////////////////////////
-//  Profiler::SetDepthLimit(int value)
-//  Description: SetDepthLimit sets the callstack instrumentation depth
-//////////////////////////////////////////////////////////////////////
-void Profiler::SetDepthLimit(int value) {
-  profiledepth = value;
-}
-#endif /* TAU_DEPTH_LIMIT */ 
-
 
 // writes user events to the file
 static int writeUserEvents(FILE *fp, int tid) {
@@ -1495,6 +1430,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.230 $   $Date: 2009/02/24 22:49:50 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.230 2009/02/24 22:49:50 amorris Exp $ 
+ * $Revision: 1.231 $   $Date: 2009/02/24 22:59:08 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.231 2009/02/24 22:59:08 amorris Exp $ 
  ***************************************************************************/
