@@ -69,7 +69,19 @@ extern "C" void Tau_stack_initialization() {
 
 
 extern "C" Profiler *TauInternal_CurrentProfiler(int tid) {
-  return Tau_global_stack[tid];
+  int pos = Tau_global_stackpos[tid];
+  if (pos < 0) {
+    return NULL;
+  }
+  return &(Tau_global_stack[tid][pos]);
+}
+
+extern "C" Profiler *TauInternal_ParentProfiler(int tid) {
+  int pos = Tau_global_stackpos[tid]-1;
+  if (pos < 0) {
+    return NULL;
+  }
+  return &(Tau_global_stack[tid][pos]);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1136,7 +1148,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.110 $   $Date: 2009/02/24 22:30:59 $
- * VERSION: $Id: TauCAPI.cpp,v 1.110 2009/02/24 22:30:59 amorris Exp $
+ * $Revision: 1.111 $   $Date: 2009/02/24 22:49:50 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.111 2009/02/24 22:49:50 amorris Exp $
  ***************************************************************************/
 

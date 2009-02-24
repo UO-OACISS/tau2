@@ -243,7 +243,7 @@ void Profiler::Start(int tid) {
   }
 #endif
 
-  ParentProfiler = TauInternal_CurrentProfiler(tid);
+  ParentProfiler = TauInternal_ParentProfiler(tid);
 
   
   /********************************************************************************/
@@ -719,9 +719,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   /*** Throttling Code ***/
   /********************************************************************************/
     
-    
   if (ParentProfiler == (Profiler *) NULL) {
-
     /* Should we detect memory leaks here? */
     if (TheSafeToDumpData() && !RtsLayer::isCtorDtor(ThisFunction->GetName())) {
       TauDetectMemoryLeaks(); /* the last event should be before final exit */
@@ -1497,6 +1495,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.229 $   $Date: 2009/02/24 22:30:59 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.229 2009/02/24 22:30:59 amorris Exp $ 
+ * $Revision: 1.230 $   $Date: 2009/02/24 22:49:50 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.230 2009/02/24 22:49:50 amorris Exp $ 
  ***************************************************************************/

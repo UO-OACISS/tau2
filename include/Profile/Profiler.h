@@ -149,13 +149,22 @@ class Profiler
 {
 public:
 
+  Profiler *ParentProfiler; 
+  TauGroup_t MyProfileGroup_;
+  bool StartStopUsed_;
+  bool AddInclFlag; 
+  bool PhaseFlag;
+  bool AddInclCallPathFlag; 
+  FunctionInfo *ThisFunction;
+  FunctionInfo *CallPathFunction;
+
   Profiler() {};
+  ~Profiler() {};
   
   void Start(int tid = RtsLayer::myThread());
-
-  /* Clean up data from this invocation. */
   void Stop(int tid = RtsLayer::myThread(), bool useLastTimeStamp = false);
-  ~Profiler();
+  double *getStartValues();
+
   void CallPathStart(int tid);
 #ifdef TAU_MULTIPLE_COUNTERS
   void CallPathStop(double* totaltime, int tid);
@@ -164,6 +173,8 @@ public:
 #endif /* TAU_MULTIPLE_COUNTERS  */
   
 #ifdef TAU_PROFILEPARAM
+  FunctionInfo *ProfileParamFunction; 
+  bool 	       AddInclProfileParamFlag; 
 #ifdef TAU_MULTIPLE_COUNTERS
   void ProfileParamStop(double* totaltime, int tid);
 #else  /* TAU_MULTIPLE_COUNTERS  */
@@ -171,20 +182,13 @@ public:
 #endif /* TAU_MULTIPLE_COUNTERS */
 #endif /* TAU_PROFILEPARAM */
   
-  double *getStartValues();
   
 #ifndef TAU_MULTIPLE_COUNTERS
   double StartTime;
 #else /* TAU_MULTIPLE_COUNTERS */
   double StartTime[MAX_TAU_COUNTERS];
 #endif /* TAU_MULTIPLE_COUNTERS */
-  FunctionInfo * ThisFunction;
-  FunctionInfo * CallPathFunction;
-  bool 	       AddInclCallPathFlag; 
-#ifdef TAU_PROFILEPARAM
-  FunctionInfo * ProfileParamFunction; 
-  bool 	       AddInclProfileParamFlag; 
-#endif /* TAU_PROFILEPARAM */
+
 
 #ifdef TAU_COMPENSATE
   /* Compensate for instrumentation overhead based on total number of 
@@ -200,7 +204,9 @@ public:
   bool GetPhase(void);
   void SetPhase(bool flag);
 #endif /* TAU_PROFILEPHASE */
+
 #ifdef TAU_DEPTH_LIMIT
+  int profiledepth; 
   int  GetDepthLimit(void);
   void SetDepthLimit(int value);
 #endif /* TAU_DEPTH_LIMIT */ 
@@ -212,19 +218,8 @@ public:
 #endif /* TAUKTAU_MERGE */
 #endif /* TAUKTAU */
   
-public:
-  Profiler *ParentProfiler; 
-  TauGroup_t MyProfileGroup_;
-  bool	StartStopUsed_;
-  bool 	AddInclFlag; 
-  bool 	PhaseFlag;
-
-#ifdef TAU_DEPTH_LIMIT
-  int  profiledepth; 
-#endif /* TAU_DEPTH_LIMIT */
-  
 #ifdef TAU_MPITRACE
-  bool 	RecordEvent; /* true when an MPI call is in the callpath */
+  bool RecordEvent; /* true when an MPI call is in the callpath */
 #endif /* TAU_MPITRACE */
 
 };
@@ -234,7 +229,8 @@ using tau::Profiler;
 #endif /* TAU_LIBRARY_SOURCE */
 
 
-extern "C" Profiler *TauInternal_CurrentProfiler(int tid);
+extern "C" tau::Profiler *TauInternal_CurrentProfiler(int tid);
+extern "C" tau::Profiler *TauInternal_ParentProfiler(int tid);
 
 int TauProfiler_updateIntermediateStatistics(int tid);
 bool TauProfiler_createDirectories();
@@ -294,6 +290,6 @@ void TauProfiler_EnableAllEventsOnCallStack(int tid, Profiler *current);
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.99 $   $Date: 2009/02/24 22:30:42 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.99 2009/02/24 22:30:42 amorris Exp $ 
+ * $Revision: 1.100 $   $Date: 2009/02/24 22:49:36 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.100 2009/02/24 22:49:36 amorris Exp $ 
  ***************************************************************************/
