@@ -52,6 +52,61 @@ public class Load {
 		return new ExpLoadHandler(getDB(), application);
     }
 
+    
+    private XMLReader getXMLReader(String parserClass){
+    	XMLReader parser;
+        
+    	try{//Passed in
+    		parser = XMLReaderFactory.createXMLReader(parserClass);
+    	}catch(SAXException e0){
+    	
+    	  try { // Xerces
+    	    parser = XMLReaderFactory.createXMLReader(
+    	     "org.apache.xerces.parsers.SAXParser"
+    	    );
+    	  }
+    	  catch (SAXException e1) {
+    	    try { // Crimson
+    	      parser = XMLReaderFactory.createXMLReader(
+    	       "org.apache.crimson.parser.XMLReaderImpl"
+    	      );
+    	    }
+    	    catch (SAXException e2) { 
+    	      try { // Ælfred
+    	        parser = XMLReaderFactory.createXMLReader(
+    	         "gnu.xml.aelfred2.XmlReader"
+    	        );
+    	      }
+    	      catch (SAXException e3) {
+    	        try { // Piccolo
+    	          parser = XMLReaderFactory.createXMLReader(
+    	            "com.bluecast.xml.Piccolo"
+    	          );
+    	        }
+    	        catch (SAXException e4) {
+    	          try { // Oracle
+    	            parser = XMLReaderFactory.createXMLReader(
+    	              "oracle.xml.parser.v2.SAXParser"
+    	            );
+    	          }
+    	          catch (SAXException e5) {
+    	            try { // default
+    	              parser = XMLReaderFactory.createXMLReader();
+    	            }
+    	            catch (SAXException e6) {
+    	              throw new NoClassDefFoundError(
+    	                "No SAX parser is available");
+    	            }
+    	          }
+    	        }
+    	      }
+    	    } 
+    	  }
+    	}
+    	return parser;
+    }
+    
+    
     /*** Parse an XML file related to a trial using a SAX parser
 	 Note: the parser in <parserClass> MUST be included in the Java CLASSPATH. ***/
 
@@ -61,7 +116,7 @@ public class Load {
 	    
 		// put the problemFile into a string
 		String problemDefinition = getProblemString(problemFile);
-	    XMLReader xmlreader = XMLReaderFactory.createXMLReader(parserClass);
+	    XMLReader xmlreader = getXMLReader(parserClass);
 	    
 	    DefaultHandler handler;
 	   	handler = this.newHandler(trialid, problemDefinition);
@@ -77,8 +132,6 @@ public class Load {
 	    } catch (IOException ioe) {
 			ioe.printStackTrace();
 	    }
-	} catch (SAXException ex) {
-	    ex.printStackTrace();
 	} catch (NullPointerException ex) {
 	    ex.printStackTrace();
 	}
@@ -90,7 +143,7 @@ public class Load {
     public String parseApp(String appFile) {
 	
 	try {
-	    XMLReader xmlreader = XMLReaderFactory.createXMLReader(parserClass);
+	    XMLReader xmlreader = getXMLReader(parserClass);
 	    
 	    DefaultHandler handler = this.newAppHandler();
 	    xmlreader.setContentHandler(handler);
@@ -105,8 +158,6 @@ public class Load {
 	    } catch (IOException ioe) {
 		ioe.printStackTrace();
 	    }
-	} catch (SAXException ex) {
-	    ex.printStackTrace();
 	} catch (NullPointerException ex) {
 	    ex.printStackTrace();
 	}
@@ -118,7 +169,7 @@ public class Load {
     public String parseExp(String expFile, String application) {
 	
 	try {
-	    XMLReader xmlreader = XMLReaderFactory.createXMLReader(parserClass);
+	    XMLReader xmlreader = getXMLReader(parserClass);
 	    
 	    DefaultHandler handler = this.newExpHandler(application);
 	    xmlreader.setContentHandler(handler);
@@ -133,8 +184,6 @@ public class Load {
 	    } catch (IOException ioe) {
 		ioe.printStackTrace();
 	    }
-	} catch (SAXException ex) {
-	    ex.printStackTrace();
 	} catch (NullPointerException ex) {
 	    ex.printStackTrace();
 	}
