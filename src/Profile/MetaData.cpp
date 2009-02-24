@@ -877,7 +877,7 @@ extern "C" void Tau_metadata(char *name, char *value) {
 
 extern "C" void Tau_context_metadata(char *name, char *value) {
   // get the current calling context
-  Profiler *current = Profiler::CurrentProfiler[RtsLayer::getTid()];
+  Profiler *current = TauInternal_CurrentProfiler(RtsLayer::getTid());
   FunctionInfo *fi = current->ThisFunction;
   const char *fname = fi->GetName();
 
@@ -892,8 +892,8 @@ extern "C" void Tau_context_metadata(char *name, char *value) {
 extern "C" void Tau_phase_metadata(char *name, char *value) {
   #ifdef TAU_PROFILEPHASE
   // get the current calling context
+  Profiler *current = TauInternal_CurrentProfiler(RtsLayer::getTid());
   std::string myString = "";
-  Profiler *current = Profiler::CurrentProfiler[RtsLayer::getTid()];
   while (current != NULL) {
     if (current->GetPhase()) {
       FunctionInfo *fi = current->ThisFunction;

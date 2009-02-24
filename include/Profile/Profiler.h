@@ -214,8 +214,6 @@ public:
 				 int tid = RtsLayer::myThread());
   
   
-  static Profiler * CurrentProfiler[TAU_MAX_THREADS];
-
   double *getStartValues();
   
 #ifndef TAU_MULTIPLE_COUNTERS
@@ -283,6 +281,8 @@ using tau::Profiler;
 #endif /* TAU_LIBRARY_SOURCE */
 
 
+extern "C" Profiler *TauInternal_CurrentProfiler(int tid);
+
 
 #endif /* TAU_ENABLED */
 /* included after class Profiler is defined. */
@@ -292,6 +292,6 @@ using tau::Profiler;
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.97 $   $Date: 2009/02/23 23:50:42 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.97 2009/02/23 23:50:42 amorris Exp $ 
+ * $Revision: 1.98 $   $Date: 2009/02/24 21:30:09 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.98 2009/02/24 21:30:09 amorris Exp $ 
  ***************************************************************************/

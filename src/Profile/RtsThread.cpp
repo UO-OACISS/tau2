@@ -140,8 +140,7 @@ void RtsLayer::RegisterThread()
 // RegisterFork is called before any other profiling function in a 
 // process that is forked off (child process)
 //////////////////////////////////////////////////////////////////////
-void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
-{
+void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode) {
 #ifdef PROFILING_ON
   vector<FunctionInfo*>::iterator it;
   Profiler *current;
@@ -168,8 +167,7 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
 
   TAU_PROFILE_SET_NODE(nodeid);
   // First, set the new id 
-  if (opcode == TAU_EXCLUDE_PARENT_DATA)
-  {
+  if (opcode == TAU_EXCLUDE_PARENT_DATA) {
   // If opcode is TAU_EXCLUDE_PARENT_DATA then we clear out the 
   // previous values in the TheFunctionDB()
 
@@ -183,11 +181,11 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
      }
      getUSecD(myThread(), CurrentTimeOrCounts);
 #endif//TAU_MULTIPLE_COUNTERS
-     for (int tid = 0; tid < TAU_MAX_THREADS; tid++)
-     { // For each thread of execution 
+     for (int tid = 0; tid < TAU_MAX_THREADS; tid++) { 
+       // For each thread of execution 
 #ifdef PROFILING_ON
-       for(it=TheFunctionDB().begin(); it!=TheFunctionDB().end(); it++)
-       { // Iterate through each FunctionDB item 
+       for(it=TheFunctionDB().begin(); it!=TheFunctionDB().end(); it++) { 
+	 // Iterate through each FunctionDB item 
 	 // Clear all values 
 	 (*it)->SetCalls(tid, 0);
 	 (*it)->SetSubrs(tid, 0);
@@ -201,8 +199,8 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
 	/* Do we need to change AlreadyOnStack? No*/
 	DEBUGPROFMSG("FI Zap: Inside "<< (*it)->GetName() <<endl;);
 #ifdef TAUKTAU_MERGE
-         DEBUGPROFMSG("RtsLayer::RegisterFork: GetKtauFuncInfo(tid)->ResetAllCounters(tid): Func:"<< (*it)->GetName() <<endl;);
-	 (*it)->GetKtauFuncInfo(tid)->ResetAllCounters(tid);
+	DEBUGPROFMSG("RtsLayer::RegisterFork: GetKtauFuncInfo(tid)->ResetAllCounters(tid): Func:"<< (*it)->GetName() <<endl;);
+	(*it)->GetKtauFuncInfo(tid)->ResetAllCounters(tid);
 #endif //TAUKTAU_MERGE
        }
 #ifdef TAUKTAU_MERGE
@@ -212,39 +210,39 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
        DEBUGPROFMSG("RtsLayer::RegisterFork: Running-Up Stack\n");
        // Now that the FunctionDB is cleared, we need to add values to it 
        //	corresponding to the present state.
-       current = Profiler::CurrentProfiler[tid];
-       while (current != 0) 
-       { // Iterate through each profiler on the callstack and 
+       current = TauInternal_CurrentProfiler(tid);
+       while (current != 0) { 
+	 // Iterate through each profiler on the callstack and 
 	 // fill Values in it 
 	 DEBUGPROFMSG("P Correct: Inside "<< current->ThisFunction->GetName() 
-			<<endl;);
+		      <<endl;);
 	 current->ThisFunction->IncrNumCalls(tid);
-	 if (current->ParentProfiler != 0)
-	 { // Increment the number of called functions in its parent
+	 if (current->ParentProfiler != 0) { 
+	   // Increment the number of called functions in its parent
 	   current->ParentProfiler->ThisFunction->IncrNumSubrs(tid);
 	 }
 #ifndef TAU_MULTIPLE_COUNTERS
 	 current->StartTime = CurrentTimeOrCounts;
 #else //TAU_MULTIPLE_COUNTERS
 	 for(int j=0;j<MAX_TAU_COUNTERS;j++){
-	     current->StartTime[j] = CurrentTimeOrCounts[j];
+	   current->StartTime[j] = CurrentTimeOrCounts[j];
 	 }
 #endif//TAU_MULTIPLE_COUNTERS
 	 current = current->ParentProfiler;
        } // Until the top of the stack
 #endif   // PROFILING_ON
-
-
+       
+       
        if (TauEnv_get_tracing()) {
 	 DEBUGPROFMSG("Tracing Correct: "<<endl;);
 	 TauTraceUnInitialize(tid); // Zap the earlier contents of the trace buffer  
-	 TraceCallStack(tid, Profiler::CurrentProfiler[tid]); 
+	 TraceCallStack(tid, TauInternal_CurrentProfiler(tid)); 
        }
-
+       
 #ifdef TAUKTAU
-       DEBUGPROFMSG("RtsLayer::RegisterFork: CurrentProfiler:"<<Profiler::CurrentProfiler[tid]<<endl;);
-       if(Profiler::CurrentProfiler[tid] != NULL) {
-	       Profiler::CurrentProfiler[tid]->ThisKtauProfiler->RegisterFork(Profiler::CurrentProfiler[tid], tid, nodeid, opcode);
+       DEBUGPROFMSG("RtsLayer::RegisterFork: CurrentProfiler:"<<TauInternal_CurrentProfiler(tid)<<endl;);
+       if (TauInternal_CurrentProfiler(tid) != NULL) {
+	 TauInternal_CurrentProfiler(tid)->ThisKtauProfiler->RegisterFork(TauInternal_CurrentProfiler(tid), tid, nodeid, opcode);
        }
 #endif //TAUKTAU
 
@@ -254,9 +252,7 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
    // If it is TAU_INCLUDE_PARENT_DATA then there's no need to do anything.
    // fork would copy over all the parent data as it is. 
 }
-	 
-	
-     
+
 bool RtsLayer::initLocks(void) {
   threadLockDB();
   for (int i=0; i<TAU_MAX_THREADS; i++) {
@@ -390,8 +386,8 @@ void RtsLayer::UnLockEnv(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: amorris $
- * $Revision: 1.34 $   $Date: 2009/02/24 01:24:49 $
- * VERSION: $Id: RtsThread.cpp,v 1.34 2009/02/24 01:24:49 amorris Exp $
+ * $Revision: 1.35 $   $Date: 2009/02/24 21:30:23 $
+ * VERSION: $Id: RtsThread.cpp,v 1.35 2009/02/24 21:30:23 amorris Exp $
  ***************************************************************************/
 
 

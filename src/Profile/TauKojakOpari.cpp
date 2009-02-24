@@ -760,17 +760,14 @@ void TauStopOpenMPRegionTimer(struct ompregdescr *r, int index)
 #endif
     TauGroup_t gr = f->GetProfileGroup();
 
-    int tau_threadid = RtsLayer::myThread(); 
-    Profiler *p = Profiler::CurrentProfiler[tau_threadid]; 
+    int tid = RtsLayer::myThread(); 
+    Profiler *p =TauInternal_CurrentProfiler(tid); 
     if (p->ThisFunction == f) {
       Tau_stop_timer(f);
     } else {
       // nothing, it must have been disabled/throttled
     }
 }
-
-
-
 
 
 
@@ -1462,8 +1459,8 @@ int  POMP_Test_nest_lock(omp_nest_lock_t *s) {
 
 /***************************************************************************
  * $RCSfile: TauKojakOpari.cpp,v $   $Author: amorris $
- * $Revision: 1.7 $   $Date: 2009/01/21 00:42:37 $
- * POOMA_VERSION_ID: $Id: TauKojakOpari.cpp,v 1.7 2009/01/21 00:42:37 amorris Exp $
+ * $Revision: 1.8 $   $Date: 2009/02/24 21:30:23 $
+ * POOMA_VERSION_ID: $Id: TauKojakOpari.cpp,v 1.8 2009/02/24 21:30:23 amorris Exp $
  ***************************************************************************/
 
 

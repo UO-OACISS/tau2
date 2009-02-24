@@ -8,7 +8,7 @@
 **    Forschungszentrum Juelich                                            **
 ****************************************************************************/
 /****************************************************************************
-**	File 		: tau_library.h			        	   **
+**	File 		: tau_internal.h			        	   **
 **	Description 	: TAU Profiling Package				   **
 **	Contact		: tau-bugs@cs.uoregon.edu               	   **
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
@@ -18,8 +18,8 @@
 **                                                                         **
 ****************************************************************************/
 
-#ifndef _TAU_LIBRARY_H_
-#define _TAU_LIBRARY_H_
+#ifndef _TAU_INTERNAL_H_
+#define _TAU_INTERNAL_H_
 
 
 #if (defined(TAU_WINDOWS))
@@ -66,4 +66,5 @@
 
 
 
-#endif /* _TAU_LIBRARY_H_ */
+
+#endif /* _TAU_INTERNAL_H_ */

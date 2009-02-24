@@ -12,6 +12,11 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyTimer.cpp,v $
+// Revision 1.10  2009/02/24 21:30:23  amorris
+// Getting rid of Profiler::CurrentProfiler, it doesn't make sense to maintain
+// this linked list if we have an explicit data structure for the callstack.  It's
+// replaced with a routine: TauInternal_CurrentProfiler(tid)
+//
 // Revision 1.9  2009/01/15 02:47:23  amorris
 // Changes for C++ measurement API
 //
@@ -195,7 +200,7 @@ PyObject * pytau_stop(PyObject *self, PyObject *args)
     int tid = RtsLayer::myThread();
     static int taunode = tau_check_and_set_nodeid();
 
-    Profiler *p = Profiler::CurrentProfiler[tid];
+    Profiler *p = TauInternal_CurrentProfiler(tid);
 
     if (p != (Profiler *) NULL) {
       Tau_stop_timer(p->ThisFunction);
@@ -211,7 +216,7 @@ PyObject * pytau_stop(PyObject *self, PyObject *args)
 }
 
 // version
-// $Id: PyTimer.cpp,v 1.9 2009/01/15 02:47:23 amorris Exp $
+// $Id: PyTimer.cpp,v 1.10 2009/02/24 21:30:23 amorris Exp $
 
 // End of file
   

@@ -68,6 +68,10 @@ extern "C" void Tau_stack_initialization() {
 }
 
 
+extern "C" Profiler *TauInternal_CurrentProfiler(int tid) {
+  return Tau_global_stack[tid];
+}
+
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_start_timer(void *functionInfo, int phase) {
   int tid = RtsLayer::myThread();
@@ -655,8 +659,7 @@ extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGrou
 /* We need a routine that will create a top level parent profiler and give
  * it a dummy name for the application, if just the MPI wrapper interposition
  * library is used without any instrumentation in main */
-extern "C" void Tau_create_top_level_timer_if_necessary(void)
-{
+extern "C" void Tau_create_top_level_timer_if_necessary(void) {
   int disabled = 0;
 #ifdef TAU_VAMPIRTRACE
   disabled = 1;
@@ -685,7 +688,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary(void)
     return;
   }
   FunctionInfo *ptr;
-  if (Profiler::CurrentProfiler[tid] == NULL) {
+  if (TauInternal_CurrentProfiler(tid) == NULL) {
     initthread[tid] = true;
     ptr = (FunctionInfo *) Tau_get_profiler(".TAU application", " ", TAU_DEFAULT, "TAU_DEFAULT");
     if (ptr) {
@@ -695,13 +698,11 @@ extern "C" void Tau_create_top_level_timer_if_necessary(void)
 }
 
 
-extern "C" void Tau_stop_top_level_timer_if_necessary(void)
-{
+extern "C" void Tau_stop_top_level_timer_if_necessary(void) {
   int tid = RtsLayer::myThread();
-  if (Profiler::CurrentProfiler[tid] && 
-      Profiler::CurrentProfiler[tid]->ParentProfiler == NULL && 
-      strcmp(Profiler::CurrentProfiler[tid]->ThisFunction->GetName(), ".TAU application") == 0)
-  {
+  if (TauInternal_CurrentProfiler(tid) && 
+      TauInternal_CurrentProfiler(tid)->ParentProfiler == NULL && 
+      strcmp(TauInternal_CurrentProfiler(tid)->ThisFunction->GetName(), ".TAU application") == 0) {
     DEBUGPROFMSG("Found top level .TAU application timer"<<endl;);  
     TAU_GLOBAL_TIMER_STOP();
   }
@@ -1133,7 +1134,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.108 $   $Date: 2009/02/24 20:22:15 $
- * VERSION: $Id: TauCAPI.cpp,v 1.108 2009/02/24 20:22:15 amorris Exp $
+ * $Revision: 1.109 $   $Date: 2009/02/24 21:30:23 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.109 2009/02/24 21:30:23 amorris Exp $
  ***************************************************************************/
 

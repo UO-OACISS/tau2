@@ -580,7 +580,7 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid) {
     long *comparison = 0;
     TauUserEvent *ue;
     /* context tracking is enabled */
-    Profiler *current = Profiler::CurrentProfiler[tid];
+    Profiler *current = TauInternal_CurrentProfiler(tid);
     comparison = TauFormulateContextComparisonArray(current, uevent); 
 
     map<TAU_CONTEXT_MAP_TYPE>::iterator it = TheContextMap().find(comparison);
@@ -623,6 +623,6 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid) {
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
- * $Revision: 1.36 $   $Date: 2009/02/24 20:26:59 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.36 2009/02/24 20:26:59 amorris Exp $ 
+ * $Revision: 1.37 $   $Date: 2009/02/24 21:30:23 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.37 2009/02/24 21:30:23 amorris Exp $ 
  ***************************************************************************/

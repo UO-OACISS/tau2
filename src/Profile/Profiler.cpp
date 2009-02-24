@@ -16,7 +16,9 @@
 
 //#define DEBUG_PROF
 #include "Profile/Profiler.h"
-#include <tau_internal.h>
+
+
+//#include <tau_internal.h>
 
 #ifdef TAU_PERFSUITE
   #include <pshwpc.h>
@@ -92,7 +94,7 @@ extern "C" int Tau_get_usesMPI();
 
 // No need to initialize FunctionDB. using TheFunctionDB() instead.
 // vector<FunctionInfo*> FunctionInfo::FunctionDB[TAU_MAX_THREADS] ;
-Profiler * Profiler::CurrentProfiler[] = {0}; // null to start with
+//Profiler * Profiler::CurrentProfiler[] = {0}; // null to start with
 
 #if defined(TAUKTAU)
 #include <Profile/KtauProfiler.h>
@@ -241,7 +243,7 @@ void Profiler::Start(int tid) {
   }
 #endif
 
-  ParentProfiler = CurrentProfiler[tid];
+  ParentProfiler = TauInternal_CurrentProfiler(tid);
 
   
   /********************************************************************************/
@@ -257,8 +259,6 @@ void Profiler::Start(int tid) {
   int mydepth = GetDepthLimit();
   DEBUGPROFMSG("Start: Name: "<< ThisFunction->GetName()<<" mydepth = "<<mydepth<<", userspecifieddepth = "<<userspecifieddepth<<endl;);
   if (mydepth > userspecifieddepth) { 
-    /* set the profiler */
-    CurrentProfiler[tid] = this;
     return; 
   }
 #endif /* TAU_DEPTH_LIMIT */
@@ -391,8 +391,6 @@ void Profiler::Start(int tid) {
     AddInclFlag = false;
   }
     
-  CurrentProfiler[tid] = this;
-    
   /********************************************************************************/
   /*** KTAU Code ***/
   /********************************************************************************/
@@ -466,8 +464,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   int userspecifieddepth = TauGetDepthLimit();
   int mydepth = GetDepthLimit(); 
   if (mydepth > userspecifieddepth) {
-    CurrentProfiler[tid] = ParentProfiler; 
-    DEBUGPROFMSG("Stop: mydepth = "<<mydepth<<", userspecifieddepth = "<<userspecifieddepth<<endl;);
     return;
   }
 #endif /* TAU_DEPTH_LIMIT */
@@ -538,7 +534,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 
 #if defined(TAUKTAU)
 #ifdef KTAU_DEBUGPROF
-  printf("Profiler::Stop: --EXIT-- %s \n", CurrentProfiler[tid]->ThisFunction->GetName());
+  printf("Profiler::Stop: --EXIT-- %s \n", TauInternal_CurrentProfiler(tid)->ThisFunction->GetName());
 #endif /*KTAU_DEBUGPROF*/
   ThisKtauProfiler->Stop(this, AddInclFlag);
 #endif /* TAUKTAU */
@@ -724,9 +720,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   /********************************************************************************/
     
     
-  // While exiting, reset value of CurrentProfiler to reflect the parent
-  CurrentProfiler[tid] = ParentProfiler;
-    
   if (ParentProfiler == (Profiler *) NULL) {
 
     /* Should we detect memory leaks here? */
@@ -762,7 +755,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 	  int i; 
 	  for (i = 1; i < TAU_MAX_THREADS; i++) {  
 	    /* for all other threads */
-	    Profiler *cp = CurrentProfiler[i];
+	    Profiler *cp = TauInternal_CurrentProfiler(i);
 	    if (cp && strncmp(cp->ThisFunction->GetName(),".TAU", 4) == 0) {
 	      bool uselasttimestamp = true;
 	      cp->Stop(i,uselasttimestamp); /* force it to write the data*/
@@ -1051,14 +1044,14 @@ void Profiler::PurgeData(int tid) {
     (*eit)->SumValue[tid] = 0;
   }
 
-  if (CurrentProfiler[tid] == NULL) {
+  if (TauInternal_CurrentProfiler(tid) == NULL) {
     // There are no active timers, we are finished!
     RtsLayer::UnLockDB();
     return;	
   }
 
   // Now Re-register callstack entries
-  curr = CurrentProfiler[tid];
+  curr = TauInternal_CurrentProfiler(tid);
   curr->ThisFunction->IncrNumCalls(tid);
 
 #ifdef TAU_MULTIPLE_COUNTERS 
@@ -1245,7 +1238,7 @@ int Profiler::updateIntermediateStatistics(int tid) {
 	prevStartTime[c] = 0;
       }
       
-      for (Profiler *current = Profiler::CurrentProfiler[tid]; current != 0; current = current->ParentProfiler) {
+      for (Profiler *current = TauInternal_CurrentProfiler(tid); current != 0; current = current->ParentProfiler) {
 	if (helperIsFunction(fi, current)) {
 	  for (c=0; c<MAX_TAU_COUNTERS; c++) {
 	    inclusiveToAdd[c] = currentTime[c] - current->getStartValues()[c]; 
@@ -1520,6 +1513,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.227 $   $Date: 2009/02/24 20:29:10 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.227 2009/02/24 20:29:10 amorris Exp $ 
+ * $Revision: 1.228 $   $Date: 2009/02/24 21:30:23 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.228 2009/02/24 21:30:23 amorris Exp $ 
  ***************************************************************************/

@@ -28,14 +28,7 @@
 
 #include "Profile/Profiler.h"
 
-
-#ifdef TAU_WINDOWS
-  typedef __int64 x_int64;
-  typedef unsigned __int64 x_uint64;
-#else
-  typedef long long x_int64;
-  typedef unsigned long long x_uint64;
-#endif
+#include "tau_internal.h"
 
 
 #include <stdio.h>
@@ -62,10 +55,8 @@ using namespace std;
  * they're equal. If they two arrays have the same depth, then we iterate
  * through the array and compare each array element till the end */
 /////////////////////////////////////////////////////////////////////////
-struct TaultProfileParamLong
-{
-  bool operator() (const long *l1, const long *l2) const
- {
+struct TaultProfileParamLong {
+  bool operator() (const long *l1, const long *l2) const {
    int i;
    /* first check 0th index (size) */
    if (l1[0] != l2[0]) return (l1[0] < l2[0]);
@@ -82,15 +73,14 @@ struct TaultProfileParamLong
 /////////////////////////////////////////////////////////////////////////
 // We use one global map to store the callpath information
 /////////////////////////////////////////////////////////////////////////
-map<TAU_PROFILE_PARAM_TYPE >& TheTimerProfileParamMap(void)
-{ // to avoid initialization problems of non-local static variables
+map<TAU_PROFILE_PARAM_TYPE >& TheTimerProfileParamMap(void) { 
+  // to avoid initialization problems of non-local static variables
   static map<TAU_PROFILE_PARAM_TYPE > timerappdatamap;
 
   return timerappdatamap;
 }
 
-long * TauCreateProfileParamArray(long FuncId, long key)
-{
+long * TauCreateProfileParamArray(long FuncId, long key) {
   int depth = 3; 
   long *retary = new long[depth+1]; 
   retary[0] = depth; /* encode the depth first */
@@ -99,55 +89,50 @@ long * TauCreateProfileParamArray(long FuncId, long key)
   return retary;
 }
 
-FunctionInfo * TauGetProfileParamFI(int tid, long key, string& keyname)
-{
+FunctionInfo * TauGetProfileParamFI(int tid, long key, string& keyname) {
   /* Get the FunctionInfo Object of the current Profiler */
-  Profiler *current = Profiler::CurrentProfiler[tid];
+  Profiler *current = TauInternal_CurrentProfiler(tid);
   if (!current) return NULL; /* not in a valid profiler */
   FunctionInfo *f = current->ThisFunction; 
   if (!f) return NULL;  /* proceed if we are in a valid function */
-
+  
   /* we have a timer definition. We need to examine the key and see if
    * it has appeared before. If not, we need to create a new functionInfo 
    * and a mapping between the key and the newly created functionInfo */
   
   long *ary = TauCreateProfileParamArray((long) f, key);
-
-   /* We've set the key */
-   map<TAU_PROFILE_PARAM_TYPE >::iterator it = TheTimerProfileParamMap().find(ary);
-
-  if (it == TheTimerProfileParamMap().end())
-  {
+  
+  /* We've set the key */
+  map<TAU_PROFILE_PARAM_TYPE >::iterator it = TheTimerProfileParamMap().find(ary);
+  
+  if (it == TheTimerProfileParamMap().end()) {
     /* Couldn't find it */
     char keystr[256]; 
     sprintf(keystr, "%ld", key); 
-
+    
     string name ( f->GetName() + string(" ") + f->GetType()+ string(" [ <")
-	    +keyname+ string("> = <")+ keystr + string("> ]")); 
+		  +keyname+ string("> = <")+ keystr + string("> ]")); 
     DEBUGPROFMSG("Name created = "<<name<<endl;);
     string grname = string("TAU_PARAM | ") + RtsLayer::PrimaryGroup(f->GetAllGroups());
-
+    
     FunctionInfo *fnew = new FunctionInfo(name, " ", 
-		    f->GetProfileGroup(),
-		    (const char *)grname.c_str(), true, tid); 
+					  f->GetProfileGroup(),
+					  (const char *)grname.c_str(), true, tid); 
     TheTimerProfileParamMap().insert(map<TAU_PROFILE_PARAM_TYPE >::value_type(ary, fnew)); /* Add it to the map */
     return fnew; 
-  }
-  else
-  { /* found it. (*it).second refers to the functionInfo object corresponding
+  } else { 
+    /* found it. (*it).second refers to the functionInfo object corresponding
        to our particular instance */
     DEBUGPROFMSG("Found name = "<<(*it).second->GetName()<<endl;);
     return (*it).second; 
-
   }
-
 }
 	
 void Profiler::AddProfileParamData(long key, const char *keyname) {
   string keystring(keyname);
   int tid = RtsLayer::myThread();
   FunctionInfo *f = TauGetProfileParamFI(tid, key, keystring);
-  Profiler *current = CurrentProfiler[tid];
+  Profiler *current = TauInternal_CurrentProfiler(tid);
   if (!current) return; 
   current->ProfileParamFunction = f; 
 
@@ -169,8 +154,7 @@ void Profiler::ProfileParamStop(double* TotalTime, int tid)
 void Profiler::ProfileParamStop(double TotalTime, int tid)
 #endif // TAU_MULTIPLE_COUNTERS
 {
-  if (ProfileParamFunction)
-  {
+  if (ProfileParamFunction) {
     DEBUGPROFMSG("Inside ProfileParamStop "<<ThisFunction->GetName()<<endl;);
     if (AddInclProfileParamFlag == true) { // The first time it came on call stack
       ProfileParamFunction->SetAlreadyOnStack(false, tid); // while exiting
@@ -185,12 +169,11 @@ void Profiler::ProfileParamStop(double TotalTime, int tid)
     }
 
     ProfileParamFunction->AddExclTime(TotalTime, tid);  
-
   }
 }
   
 /***************************************************************************
  * $RCSfile: ProfileParam.cpp,v $   $Author: amorris $
- * $Revision: 1.4 $   $Date: 2009/01/31 01:27:34 $
- * TAU_VERSION_ID: $Id: ProfileParam.cpp,v 1.4 2009/01/31 01:27:34 amorris Exp $ 
+ * $Revision: 1.5 $   $Date: 2009/02/24 21:30:23 $
+ * TAU_VERSION_ID: $Id: ProfileParam.cpp,v 1.5 2009/02/24 21:30:23 amorris Exp $ 
  ***************************************************************************/
