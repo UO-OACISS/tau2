@@ -384,11 +384,8 @@ TauGroup_t Tau_enable_group_name(char *group);
 TauGroup_t Tau_disable_group_name(char *group);
 TauGroup_t Tau_get_profile_group(char *group);
 void Tau_track_memory(void);
-void Tau_track_muse_events(void);
 void Tau_enable_tracking_memory(void);
 void Tau_disable_tracking_memory(void);
-void Tau_enable_tracking_muse_events(void);
-void Tau_disable_tracking_muse_events(void);
 void Tau_set_interrupt_interval(int value);
 void Tau_enable_instrumentation(void);
 void Tau_disable_instrumentation(void);
@@ -469,6 +466,6 @@ void Tau_profile_param1l(long data, const char *dataname);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.91 $   $Date: 2009/02/18 20:32:47 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.91 2009/02/18 20:32:47 amorris Exp $ 
+ * $Revision: 1.92 $   $Date: 2009/02/24 20:22:03 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.92 2009/02/24 20:22:03 amorris Exp $ 
  ***************************************************************************/

@@ -95,7 +95,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o \
 		TauInit.o Comp_intel9.o Comp_pgi.o Comp_xl.o TauCallPath.o \
 		$(PARAM_O) Tracer.o $(THR_O) \
 		$(PCL_O) $(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
-		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) $(MUSE_O) \
+		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) \
 		$(COMPENSATE_O) $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O)
 
@@ -532,18 +532,6 @@ PyTau.o 	: PyTau.cpp $(HDRS)
 
 ctau_impl.o 	: ctau_impl.c $(HDRS)
 	$(CC) $(CFLAGS) -c $(@:.o=.c)
-
-TauMuse.o 	: TauMuse.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
-
-TauMuseFilters.o : TauMuseFilters.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
-
-TauMuseHandlers.o : TauMuseHandlers.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
-
-TauMusePackages.o : TauMusePackages.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauCompensate.o : TauCompensate.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)

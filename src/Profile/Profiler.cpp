@@ -198,9 +198,6 @@ char *TauGetCounterString(void) {
     return "templated_functions_hw_counters";
   }
 #else  // ! (TAU_PAPI/PCL) => SGI_TIMERS, TULIP_TIMERS 
-#ifdef TAU_MUSE
-  return "templated_functions_hw_counters";
-#endif /* TAU_MUSE */
   return "templated_functions";
 #endif // ALL options
 }
@@ -1523,6 +1520,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.224 $   $Date: 2009/02/24 19:28:24 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.224 2009/02/24 19:28:24 amorris Exp $ 
+ * $Revision: 1.225 $   $Date: 2009/02/24 20:22:15 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.225 2009/02/24 20:22:15 amorris Exp $ 
  ***************************************************************************/

@@ -111,9 +111,6 @@ extern void Tau_stop(const char *name);
 #define TAU_DISABLE_TRACKING_MEMORY()
 #define TAU_TRACK_MEMORY()
 #define TAU_TRACK_MEMORY_HERE()
-#define TAU_ENABLE_TRACKING_MUSE_EVENTS()	
-#define TAU_DISABLE_TRACKING_MUSE_EVENTS()
-#define TAU_TRACK_MUSE_EVENTS()		
 #define TAU_SET_INTERRUPT_INTERVAL(value)
 
 #define CT(obj)
@@ -213,5 +210,12 @@ extern void Tau_stop(const char *name);
 
 
 #endif /* TAU_ENABLED */
+
+
+/* Old/Dead API calls */
+#define TAU_ENABLE_TRACKING_MUSE_EVENTS()	
+#define TAU_DISABLE_TRACKING_MUSE_EVENTS()
+#define TAU_TRACK_MUSE_EVENTS()		
+
 
 #endif /* _TAU_H_ */

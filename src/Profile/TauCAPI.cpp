@@ -740,11 +740,6 @@ extern "C" void Tau_track_memory_headroom_here(void) {
 }
 
 
-extern "C" void Tau_track_muse_events(void) {
-  TauTrackMuseEvents();
-}
-
-
 extern "C" void Tau_enable_tracking_memory(void) {
   TauEnableTrackingMemory();
 }
@@ -763,18 +758,6 @@ extern "C" void Tau_enable_tracking_memory_headroom(void) {
 extern "C" void Tau_disable_tracking_memory_headroom(void) {
   TauDisableTrackingMemoryHeadroom();
 }
-
-
-extern "C" void Tau_enable_tracking_muse_events(void) {
-  TauEnableTrackingMuseEvents();
-}
-
-
-
-extern "C" void Tau_disable_tracking_muse_events(void) {
-  TauDisableTrackingMuseEvents();
-}
-
 
 extern "C" void Tau_set_interrupt_interval(int value) {
   TauSetInterruptInterval(value);
@@ -1150,7 +1133,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.107 $   $Date: 2009/02/24 01:30:18 $
- * VERSION: $Id: TauCAPI.cpp,v 1.107 2009/02/24 01:30:18 amorris Exp $
+ * $Revision: 1.108 $   $Date: 2009/02/24 20:22:15 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.108 2009/02/24 20:22:15 amorris Exp $
  ***************************************************************************/
 

@@ -30,7 +30,7 @@ extern "C" {
 }
 #endif /* TAUKTAU_SHCTR */
 
-#define SIZE_OF_INIT_ARRAY 15 //!!Change this if functions are added to the system!!
+#define SIZE_OF_INIT_ARRAY 14 //!!Change this if functions are added to the system!!
 
 extern int Tau_Global_numCounters;
 
@@ -83,9 +83,6 @@ class MultipleCounterLayer
   static bool logicalClockMCLInit(int functionPosition);
   static void logicalClockMCL(int tid, double values[]);
 
-  static bool tauMUSEMCLInit(int functionPosition);
-  static void tauMUSEMCL(int tid, double values[]);
-  
   static bool tauMPIMessageSizeMCLInit(int functionPosition);
   static void tauMPIMessageSizeMCL(int tid, double values[]);
   
@@ -145,11 +142,6 @@ class MultipleCounterLayer
 
   static int logicalClockMCL_CP[1];
   static int logicalClockMCL_FP;
-
-#ifdef TAU_MUSE
-  static int tauMUSEMCL_CP[1];
-  static int tauMUSEMCL_FP;
-#endif // TAU_MUSE
 
 #ifdef TAU_MPI
   static int tauMPIMessageSizeMCL_CP[1];

@@ -134,11 +134,6 @@ int MultipleCounterLayer::javaCpuTimeMCL_FP;
 int MultipleCounterLayer::logicalClockMCL_CP[1];
 int MultipleCounterLayer::logicalClockMCL_FP;
 
-#ifdef TAU_MUSE
-int MultipleCounterLayer::tauMUSEMCL_CP[1];
-int MultipleCounterLayer::tauMUSEMCL_FP;
-#endif /* TAU_MUSE */
-
 #ifdef TAU_MPI
 int MultipleCounterLayer::tauMPIMessageSizeMCL_CP[1];
 int MultipleCounterLayer::tauMPIMessageSizeMCL_FP;
@@ -179,7 +174,6 @@ firstListType MultipleCounterLayer::initArray[] = {gettimeofdayMCLInit,
 						   javaCpuTimeMCLInit,
 						   logicalClockMCLInit,
 						   crayTimersMCLInit,
-						   tauMUSEMCLInit,
 						   tauMPIMessageSizeMCLInit,
 						   papiMCLInit,
 						   papiWallClockMCLInit,
@@ -257,11 +251,6 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void) {
 
     MultipleCounterLayer::logicalClockMCL_CP[0] = -1;
     MultipleCounterLayer::logicalClockMCL_FP = -1;
-
-#ifdef TAU_MUSE
-    MultipleCounterLayer::tauMUSEMCL_CP[0] = -1;
-    MultipleCounterLayer::tauMUSEMCL_FP = -1;
-#endif /* TAU_MUSE */
 
 #ifdef TAU_MPI
     MultipleCounterLayer::tauMPIMessageSizeMCL_CP[0] = -1;
@@ -625,26 +614,6 @@ bool MultipleCounterLayer::logicalClockMCLInit(int functionPosition){
 }
 
 
-bool MultipleCounterLayer::tauMUSEMCLInit(int functionPosition){
-#ifdef TAU_MUSE
-  for(int i=0; i<MAX_TAU_COUNTERS; i++){
-    if(MultipleCounterLayer::names[i] != NULL){
-      if(strcmp(MultipleCounterLayer::names[i], "TAU_MUSE") == 0){
-	tauMUSEMCL_CP[0] = i;
-	MultipleCounterLayer::counterUsed[i] = true;
-	MultipleCounterLayer::numberOfCounters[i] = 1;
-	MultipleCounterLayer::functionArray[functionPosition] = tauMUSEMCL;
-	tauMUSEMCL_FP = functionPosition;
-	return true;
-      }
-    }
-  }
-  return false;
-#else //TAU_MUSE
-  return false;
-#endif//TAU_MUSE
-}
-
 bool MultipleCounterLayer::tauMPIMessageSizeMCLInit(int functionPosition){
 #ifdef TAU_MPI
   for(int i=0; i<MAX_TAU_COUNTERS; i++){
@@ -952,12 +921,6 @@ void MultipleCounterLayer::logicalClockMCL(int tid, double values[]){
   values[logicalClockMCL_CP[0]] = value++;
 }
 
-
-void MultipleCounterLayer::tauMUSEMCL(int tid, double values[]){
-#ifdef TAU_MUSE 
-  values[tauMUSEMCL_CP[0]] = TauMuseQuery();
-#endif//TAU_MUSE
-}
 
 void MultipleCounterLayer::tauMPIMessageSizeMCL(int tid, double values[]){
 #ifdef TAU_MPI
