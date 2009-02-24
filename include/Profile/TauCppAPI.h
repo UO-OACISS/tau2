@@ -37,10 +37,10 @@
 
 class Tau_Profile_Wrapper {
 public:
-  void *fi;
+  void *fInfo;
 
   inline Tau_Profile_Wrapper(void *fi, int phase = 0) {
-    this->fi = fi;
+    this->fInfo = fi;
 #ifndef TAU_PROFILEPHASE
     phase = 0;
 #endif
@@ -50,8 +50,8 @@ public:
   }
 
   inline ~Tau_Profile_Wrapper() {
-    if (fi != 0) {
-      Tau_stop_timer(fi);
+    if (fInfo != 0) {
+      Tau_stop_timer(fInfo);
     }
   }
 };
