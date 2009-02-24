@@ -249,13 +249,14 @@ int origkey = 1;
   {
     /* Create FunctionInfo objects for each of these methods */
 
-#ifdef TRACING_ON
+  if (TauEnv_get_tracing()) {
     sprintf(funcname, "%s  %s", event->u.class_load.class_name, 
-	event->u.class_load.methods[i].method_name); 
-#else
+	    event->u.class_load.methods[i].method_name); 
+  } else {
     sprintf(funcname, "%s  %s %s", event->u.class_load.class_name, 
-	event->u.class_load.methods[i].method_name, 
-	event->u.class_load.methods[i].method_signature); 
+	    event->u.class_load.methods[i].method_name, 
+	    event->u.class_load.methods[i].method_signature); 
+  }
 #endif /* signature is too much for tau_convert to handle */
 
     sprintf(classname, "%s", event->u.class_load.class_name); 
@@ -430,7 +431,7 @@ void TauJavaLayer::DataPurge(JVMPI_Event *event)
 
 /***************************************************************************
  * $RCSfile: TauJava.cpp,v $   $Author: amorris $
- * $Revision: 1.30 $   $Date: 2009/02/19 20:08:29 $
- * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.30 2009/02/19 20:08:29 amorris Exp $
+ * $Revision: 1.31 $   $Date: 2009/02/24 01:24:49 $
+ * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.31 2009/02/24 01:24:49 amorris Exp $
  ***************************************************************************/
 

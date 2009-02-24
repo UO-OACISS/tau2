@@ -101,9 +101,9 @@ extern "C" int InitializeTAU() {
   Tau_compensate_initialization();
 #endif /* TAU_COMPENSATE */
 
-#ifdef TRACING_ON
-  TauInitialize_kill_handlers();
-#endif
+  if (TauEnv_get_tracing()) {
+    TauInitialize_kill_handlers();
+  }
 
   initialized = true;
   return 0;

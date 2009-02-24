@@ -199,7 +199,6 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   TheFunctionDB().push_back(this);
   FunctionId = RtsLayer::GenerateUniqueId();
 
-#ifdef TRACING_ON
 #ifdef TAU_VAMPIRTRACE
   static int tau_vt_init=TauInitVampirTrace();
   string tau_vt_name(string(Name)+" "+string(Type));
@@ -215,7 +214,6 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   DEBUGPROFMSG("elg_def_region: "<<tau_elg_name<<": returns "<<FunctionId<<endl;);
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
-#endif //TRACING_ON
   TauTraceSetFlushEvents(1);
   RtsLayer::UnLockDB();
   
@@ -495,6 +493,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.73 $   $Date: 2009/02/24 01:09:33 $
- * VERSION_ID: $Id: FunctionInfo.cpp,v 1.73 2009/02/24 01:09:33 amorris Exp $ 
+ * $Revision: 1.74 $   $Date: 2009/02/24 01:24:49 $
+ * VERSION_ID: $Id: FunctionInfo.cpp,v 1.74 2009/02/24 01:24:49 amorris Exp $ 
  ***************************************************************************/

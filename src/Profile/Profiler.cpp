@@ -55,10 +55,10 @@ using namespace std;
 #endif
 #endif //TAU_WINDOWS
 
-#ifdef TRACING_ON
 #ifdef TAU_VAMPIRTRACE
 #include "Profile/TauVampirTrace.h"
-#else /* TAU_VAMPIRTRACE */
+#endif /* TAU_VAMPIRTRACE */
+
 #ifdef TAU_EPILOG
 #include "elg_trc.h"
 
@@ -68,12 +68,10 @@ void esd_enter (elg_ui4 rid);
 void esd_exit (elg_ui4 rid);
 }
 #endif /* SCALASCA */
-
-#else /* TAU_EPILOG */
-#include <Profile/TauTrace.h>
 #endif /* TAU_EPILOG */
-#endif /* TAU_VAMPIRTRACE */
-#endif // TRACING_ON 
+
+#include <Profile/TauTrace.h>
+
 
 #ifdef RENCI_STFF
 #include "Profile/RenciSTFF.h"
@@ -345,7 +343,6 @@ void Profiler::Start(int tid) {
   /********************************************************************************/
   /*** Tracing ***/
   /********************************************************************************/
-#ifdef TRACING_ON
 #ifdef TAU_MPITRACE
   if (MyProfileGroup_ & TAU_MESSAGE) {
     /* if we're in the group, we must first enable all the other events
@@ -361,14 +358,15 @@ void Profiler::Start(int tid) {
 #ifdef TAU_EPILOG
   esd_enter(ThisFunction->GetFunctionId());
 #else /* TAU_EPILOG */
-  TauTraceEvent(ThisFunction->GetFunctionId(), 1 /* entry */, tid, TimeStamp, 1 /* use supplied timestamp */); 
+  if (TauEnv_get_tracing()) {
+    TauTraceEvent(ThisFunction->GetFunctionId(), 1 /* entry */, tid, TimeStamp, 1 /* use supplied timestamp */); 
 #ifdef TAU_MULTIPLE_COUNTERS 
-  MultipleCounterLayer::triggerCounterEvents(TimeStamp, StartTime, tid);
+    MultipleCounterLayer::triggerCounterEvents(TimeStamp, StartTime, tid);
 #endif /* TAU_MULTIPLE_COUNTERS */
+  }
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
 #endif /* TAU_MPITRACE */
-#endif /* TRACING_ON */
   /********************************************************************************/
   /*** Tracing ***/
   /********************************************************************************/
@@ -425,7 +423,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #ifdef DEBUG_PROF
   fprintf (stderr, "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
 #endif
-  x_uint64 TimeStamp = 0L; 
 
   /********************************************************************************/
   /*** PerfSuite Integration Code ***/
@@ -573,7 +570,8 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   /********************************************************************************/
   /*** Tracing ***/
   /********************************************************************************/
-#ifdef TRACING_ON
+  x_uint64 TimeStamp = 0L; 
+
 #ifdef TAU_MULTIPLE_COUNTERS 
   TimeStamp = (x_uint64) CurrentTime[0]; // USE COUNTER1
 #else
@@ -593,10 +591,12 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #ifdef TAU_MPITRACE
   if (RecordEvent) {
 #endif /* TAU_MPITRACE */
-    TauTraceEvent(ThisFunction->GetFunctionId(), -1 /* exit */, tid, TimeStamp, 1 /* use supplied timestamp */); 
+    if (TauEnv_get_tracing()) {
+      TauTraceEvent(ThisFunction->GetFunctionId(), -1 /* exit */, tid, TimeStamp, 1 /* use supplied timestamp */); 
 #ifdef TAU_MULTIPLE_COUNTERS 
-    MultipleCounterLayer::triggerCounterEvents(TimeStamp, CurrentTime, tid);
+      MultipleCounterLayer::triggerCounterEvents(TimeStamp, CurrentTime, tid);
 #endif /* TAU_MULTIPLE_COUNTERS */
+    }
 #ifdef TAU_MPITRACE
   }
 #endif /* TAU_MPITRACE */
@@ -621,7 +621,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   }
 #endif /* PROFILING is off */
 
-#endif //TRACING_ON
   /********************************************************************************/
   /*** Tracing ***/
   /********************************************************************************/
@@ -1006,7 +1005,6 @@ void Profiler::getFunctionValues(const char **inFuncs,
 
 static void finalizeTrace(int tid) {
 
-#ifdef TRACING_ON
 #ifdef TAU_VAMPIRTRACE
   DEBUGPROFMSG("Calling vt_close()"<<endl;);
   if (RtsLayer::myThread() == 0) {
@@ -1019,10 +1017,12 @@ static void finalizeTrace(int tid) {
     esd_close();
   }
 #else /* TAU_EPILOG */
-  TauTraceClose(tid);
+
+  if (TauEnv_get_tracing()) {
+    TauTraceClose(tid);
+  }
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
-#endif // TRACING_ON 
 }
 
 void Profiler::PurgeData(int tid) {
@@ -1322,9 +1322,7 @@ static int writeProfile(FILE *fp, char *metricName, int tid, int metric,
 // Store profile data at the end of execution (when top level timer stops)
 int Profiler::StoreData(int tid) {
 
-#ifdef TRACING_ON
   finalizeTrace(tid);
-#endif // TRACING_ON 
 
   Snapshot("final", true, tid);
 
@@ -1523,6 +1521,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.222 $   $Date: 2009/02/24 00:53:14 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.222 2009/02/24 00:53:14 amorris Exp $ 
+ * $Revision: 1.223 $   $Date: 2009/02/24 01:24:49 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.223 2009/02/24 01:24:49 amorris Exp $ 
  ***************************************************************************/

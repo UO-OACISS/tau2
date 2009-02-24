@@ -28,10 +28,8 @@ using namespace std;
 #include "Profile/Profiler.h"
 #include "Profile/OpenMPLayer.h"
 
-#ifdef TRACING_ON
 #include <Profile/TauTrace.h>
 void TraceCallStack(int tid, Profiler *current);
-#endif // TRACING_ON
 
 #include <stdio.h>
 
@@ -235,11 +233,13 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode)
 	 current = current->ParentProfiler;
        } // Until the top of the stack
 #endif   // PROFILING_ON
-#ifdef TRACING_ON    
-       DEBUGPROFMSG("Tracing Correct: "<<endl;);
-       TauTraceUnInitialize(tid); // Zap the earlier contents of the trace buffer  
-       TraceCallStack(tid, Profiler::CurrentProfiler[tid]); 
-#endif   // TRACING_ON
+
+
+       if (TauEnv_get_tracing()) {
+	 DEBUGPROFMSG("Tracing Correct: "<<endl;);
+	 TauTraceUnInitialize(tid); // Zap the earlier contents of the trace buffer  
+	 TraceCallStack(tid, Profiler::CurrentProfiler[tid]); 
+       }
 
 #ifdef TAUKTAU
        DEBUGPROFMSG("RtsLayer::RegisterFork: CurrentProfiler:"<<Profiler::CurrentProfiler[tid]<<endl;);
@@ -390,8 +390,8 @@ void RtsLayer::UnLockEnv(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: amorris $
- * $Revision: 1.33 $   $Date: 2009/02/20 23:42:36 $
- * VERSION: $Id: RtsThread.cpp,v 1.33 2009/02/20 23:42:36 amorris Exp $
+ * $Revision: 1.34 $   $Date: 2009/02/24 01:24:49 $
+ * VERSION: $Id: RtsThread.cpp,v 1.34 2009/02/24 01:24:49 amorris Exp $
  ***************************************************************************/
 
 

@@ -335,18 +335,21 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void) {
     if (numberOfActiveFunctions == 0) {
       fprintf (stderr, "Warning: No multi counter fncts active ... are the env variables COUNTER<1-N> set?\n");
     }
-#ifdef TRACING_ON
-   int countersUsed = getNumberOfCountersUsed();
-   counterEvents = new TauUserEvent * [countersUsed] ; 
-   /* We obtain the timestamp from COUNTER1, so we only need to trigger 
-      COUNTER2-N or i=1 through no. of active functions not through 0 */
-   RtsLayer::UnLockDB(); // mutual exclusion primitive AddEventToDB locks it
-   for (int i = 1; i < countersUsed; i++) {
-     counterEvents[i] = new TauUserEvent(names[i], true);
-     /* the second arg is MonotonicallyIncreasing which is true (HW counters)*/ 
-   }
-   RtsLayer::LockDB(); // We do this to prevent a deadlock. Lock it again!
-#endif /* TRACING_ON */
+
+    if (TauEnv_get_tracing()) {
+      
+      int countersUsed = getNumberOfCountersUsed();
+      counterEvents = new TauUserEvent * [countersUsed] ; 
+      /* We obtain the timestamp from COUNTER1, so we only need to trigger 
+	 COUNTER2-N or i=1 through no. of active functions not through 0 */
+      RtsLayer::UnLockDB(); // mutual exclusion primitive AddEventToDB locks it
+      for (int i = 1; i < countersUsed; i++) {
+	counterEvents[i] = new TauUserEvent(names[i], true);
+	/* the second arg is MonotonicallyIncreasing which is true (HW counters)*/ 
+      }
+      RtsLayer::LockDB(); // We do this to prevent a deadlock. Lock it again!
+    }
+
   }
   RtsLayer::UnLockDB(); // mutual exclusion primitive
   
@@ -1124,19 +1127,16 @@ int MultipleCounterLayer::getNumberOfCountersUsed(void) {
 /////////////////////////////////////////////////
 // Trigger user defined events associated with each counter 
 /////////////////////////////////////////////////
-void MultipleCounterLayer::triggerCounterEvents(unsigned long long timestamp, double *values, int tid)
-{
-#ifdef TRACING_ON
+void MultipleCounterLayer::triggerCounterEvents(unsigned long long timestamp, double *values, int tid) {
   int i;
   static int countersUsed = MultipleCounterLayer::getNumberOfCountersUsed();
 #ifndef TAU_EPILOG
-  for (i = 1; i < countersUsed; i++)
-  { /* for each event */
+  for (i = 1; i < countersUsed; i++) { 
+    /* for each event */
     TauTraceEvent(counterEvents[i]->GetEventId(), (long long) values[i], tid, timestamp, 1);
     // 1 in the last parameter is for use timestamp 
   }
 #endif /* TAU_EPILOG */
-#endif TRACING_ON
 }
 
 /////////////////////////////////////////////////

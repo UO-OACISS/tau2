@@ -278,18 +278,12 @@ int RtsLayer::setMyNode(int NodeId, int tid) {
   } 
 #endif // TRACING WITH THREADS
   TheNode() = NodeId;
-// At this stage, we should create the trace file because we know the node id
-#ifdef TRACING_ON
-#ifdef TAU_VAMPIRTRACE
-// Vampirtrace specific function not needed here 
-#else
-#ifdef TAU_EPILOG
-// EPILOG specific function not needed here. 
-#else /* TAU_EPILOG */
-  TauTraceInit(tid);
-#endif /* TAU_EPILOG */
-#endif /* TAU_VAMPIRTRACE */
-#endif // TRACING_ON
+
+  // At this stage, we should create the trace file because we know the node id
+  if (TauEnv_get_tracing()) {
+    TauTraceInit(tid);
+  }
+
   return TheNode();
 }
 
@@ -1043,6 +1037,6 @@ std::string RtsLayer::GetRTTI(const char *name) {
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.118 $   $Date: 2009/02/23 23:51:33 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.118 2009/02/23 23:51:33 amorris Exp $ 
+ * $Revision: 1.119 $   $Date: 2009/02/24 01:24:49 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.119 2009/02/24 01:24:49 amorris Exp $ 
  ***************************************************************************/

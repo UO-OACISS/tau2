@@ -466,11 +466,11 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
   TheMsgVolEvent()[destination]->TriggerEvent(length, RtsLayer::myThread());
 #endif /* TAU_EACH_SEND */
 
-#ifdef TRACING_ON
-  if (destination >= 0) {
-    TauTraceSendMsg(type, destination, length);
+  if (TauEnv_get_tracing()) {
+    if (destination >= 0) {
+      TauTraceSendMsg(type, destination, length);
+    }
   }
-#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -484,11 +484,11 @@ extern "C" void Tau_trace_recvmsg(int type, int source, int length) {
 
   TAU_EVENT(TheRecvEvent(), length);
 
-#ifdef TRACING_ON
-  if (source >= 0) {
-    TauTraceRecvMsg(type, source, length);
+  if (TauEnv_get_tracing()) {
+    if (source >= 0) {
+      TauTraceRecvMsg(type, source, length);
+    }
   }
-#endif
 }
 
 extern "C" void Tau_bcast_data(int data) {
@@ -1150,7 +1150,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.105 $   $Date: 2009/02/23 23:56:40 $
- * VERSION: $Id: TauCAPI.cpp,v 1.105 2009/02/23 23:56:40 amorris Exp $
+ * $Revision: 1.106 $   $Date: 2009/02/24 01:24:49 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.106 2009/02/24 01:24:49 amorris Exp $
  ***************************************************************************/
 

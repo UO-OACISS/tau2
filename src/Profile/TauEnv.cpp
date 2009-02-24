@@ -44,7 +44,7 @@
 # define TAU_CALLPATH_DEFAULT 0
 #endif
 
-#ifdef TRACING_ON
+#if (defined(MPI_TRACE) || defined(TRACING_ON))
 # define TAU_TRACING_DEFAULT 1
 #else
 # define TAU_TRACING_DEFAULT 0
@@ -181,24 +181,6 @@ extern "C" {
 
       TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");
       
-      tmp = getenv("TAU_SYNCHRONIZE_CLOCKS");
-      if (parse_bool(tmp, TAU_SYNCHRONIZE_CLOCKS_DEFAULT)) {
-	env_synchronize_clocks = 1;
-      } else {
-	env_synchronize_clocks = 0;
-      }
-
-#ifndef TAU_MPI
-      /* If there is no MPI, there can't be any sync, so forget it */
-      env_synchronize_clocks = 0;
-      TAU_VERBOSE("TAU: Clock Synchronization Disabled (MPI not available)\n");
-#else
-      if (env_synchronize_clocks) {
-	TAU_VERBOSE("TAU: Clock Synchronization Enabled\n");
-      } else {
-	TAU_VERBOSE("TAU: Clock Synchronization Disabled\n");
-      }
-#endif
 
       if ((env_profiledir = getenv("PROFILEDIR")) == NULL) {
 	env_profiledir = "."; // current directory
@@ -238,6 +220,29 @@ extern "C" {
       } else {
 	env_tracing = 0;
 	TAU_VERBOSE("TAU: Tracing Disabled\n");
+      }
+
+      // clock synchronization
+      if (env_tracing == 0) {
+	env_synchronize_clocks = 0;
+      } else {
+	tmp = getenv("TAU_SYNCHRONIZE_CLOCKS");
+	if (parse_bool(tmp, TAU_SYNCHRONIZE_CLOCKS_DEFAULT)) {
+	  env_synchronize_clocks = 1;
+	} else {
+	  env_synchronize_clocks = 0;
+	}
+#ifndef TAU_MPI
+	/* If there is no MPI, there can't be any sync, so forget it */
+	env_synchronize_clocks = 0;
+	TAU_VERBOSE("TAU: Clock Synchronization Disabled (MPI not available)\n");
+#else
+	if (env_synchronize_clocks) {
+	  TAU_VERBOSE("TAU: Clock Synchronization Enabled\n");
+	} else {
+	  TAU_VERBOSE("TAU: Clock Synchronization Disabled\n");
+	}
+#endif
       }
 
       // callpath depth

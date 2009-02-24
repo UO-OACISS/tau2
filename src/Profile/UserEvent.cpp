@@ -41,18 +41,16 @@ using namespace std;
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
-#ifdef TRACING_ON
 #ifdef TAU_VAMPIRTRACE
 #include <otf.h>
 #include "Profile/TauVampirTrace.h"
-#else /* TAU_VAMPIRTRACE */
+#endif /* TAU_VAMPIRTRACE */
+
 #ifdef TAU_EPILOG
 #include "elg_trc.h"
-#else /* TAU_EPILOG */
-#include <Profile/TauTrace.h>
 #endif /* TAU_EPILOG */
-#endif /* TAU_VAMPIRTRACE */
-#endif // TRACING_ON 
+
+#include <Profile/TauTrace.h>
 
 
 
@@ -203,7 +201,6 @@ void TauUserEvent::SetMonotonicallyIncreasing(bool value) {
 ///////////////////////////////////////////////////////////
 
 void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid) { 
-#ifdef TRACING_ON
 #ifdef TAU_VAMPIRTRACE
   uint64_t time;
   uint64_t cval;
@@ -217,13 +214,14 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid) {
   vt_count(&time, id, 0);
 #else /* TAU_VAMPIRTRACE */
 #ifndef TAU_EPILOG
-  TauTraceEvent(GetEventId(), (x_uint64) 0, tid, 0, 0); 
-  TauTraceEvent(GetEventId(), (x_uint64) data, tid, 0, 0); 
-  TauTraceEvent(GetEventId(), (x_uint64) 0, tid, 0, 0); 
+  if (TauEnv_get_tracing()) {
+    TauTraceEvent(GetEventId(), (x_uint64) 0, tid, 0, 0); 
+    TauTraceEvent(GetEventId(), (x_uint64) data, tid, 0, 0); 
+    TauTraceEvent(GetEventId(), (x_uint64) 0, tid, 0, 0); 
+  }
 #endif /* TAU_EPILOG */
   /* Timestamp is 0, and use_ts is 0, so tracing layer gets timestamp */
 #endif /* TAU_VAMPIRTRACE */
-#endif /* TRACING_ON */
 
 #ifdef PROFILING_ON
   // Record this value  
@@ -625,6 +623,6 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid) {
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
- * $Revision: 1.34 $   $Date: 2009/02/23 23:45:19 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.34 2009/02/23 23:45:19 amorris Exp $ 
+ * $Revision: 1.35 $   $Date: 2009/02/24 01:24:49 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.35 2009/02/24 01:24:49 amorris Exp $ 
  ***************************************************************************/
