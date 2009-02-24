@@ -16,7 +16,7 @@
 
 //#define DEBUG_PROF
 #include "Profile/Profiler.h"
-#include <tau_interal.h>
+#include <tau_internal.h>
 
 #ifdef TAU_PERFSUITE
   #include <pshwpc.h>
@@ -1520,6 +1520,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.226 $   $Date: 2009/02/24 20:26:59 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.226 2009/02/24 20:26:59 amorris Exp $ 
+ * $Revision: 1.227 $   $Date: 2009/02/24 20:29:10 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.227 2009/02/24 20:29:10 amorris Exp $ 
  ***************************************************************************/
