@@ -2,12 +2,13 @@
  * Created February 14, 2006
  * 
  */
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.tree.*;
-import common.RMIView;
+
+import edu.uoregon.tau.perfexplorer.common.RMIView;
 
 
 public class PerfExplorerTreeNode extends DefaultMutableTreeNode {

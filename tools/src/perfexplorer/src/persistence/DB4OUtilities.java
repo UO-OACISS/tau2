@@ -1,7 +1,7 @@
 /**
  * 
  */
-package persistence;
+package edu.uoregon.tau.perfexplorer.persistence;
 
 //import com.db4o.ObjectContainer;
 //import com.db4o.Db4o;

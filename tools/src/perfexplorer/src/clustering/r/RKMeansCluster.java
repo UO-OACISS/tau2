@@ -2,17 +2,18 @@
  * Created on Mar 16, 2005
  *
  */
-package clustering.r;
+package edu.uoregon.tau.perfexplorer.clustering.r;
 
-import clustering.KMeansClusterInterface;
-import clustering.DendrogramTree;
-import clustering.ClusterException;
-import clustering.ClusterDescription;
-import clustering.RawDataInterface;
-import common.PerfExplorerOutput;
 
 import java.util.Hashtable;
 import org.omegahat.R.Java.REvaluator;
+
+import edu.uoregon.tau.perfexplorer.clustering.ClusterDescription;
+import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
+import edu.uoregon.tau.perfexplorer.clustering.DendrogramTree;
+import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 
 /**
  * This class is the R implementation of the k-means clustering operation.
@@ -20,7 +21,7 @@ import org.omegahat.R.Java.REvaluator;
  * clustering class.  To access these methods, create an AnalysisFactory,
  * and the factory will be able to create a k-means cluster object.
  *
- * <P>CVS $Id: RKMeansCluster.java,v 1.6 2008/10/09 23:13:55 khuck Exp $</P>
+ * <P>CVS $Id: RKMeansCluster.java,v 1.7 2009/02/24 00:53:35 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1

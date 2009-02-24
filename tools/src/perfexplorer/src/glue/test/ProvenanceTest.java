@@ -1,13 +1,13 @@
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.AbstractResult;
-import glue.PerformanceAnalysisOperation;
-import glue.PerformanceResult;
-import glue.Provenance;
-import glue.TopXEvents;
-import glue.TrialMeanResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.Provenance;
+import edu.uoregon.tau.perfexplorer.glue.TopXEvents;
+import edu.uoregon.tau.perfexplorer.glue.TrialMeanResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 
 import junit.framework.TestCase;
 
@@ -18,7 +18,7 @@ public class ProvenanceTest extends TestCase {
 	}
 	
 	public final void testSave() {
-		Utilities.setSession("peri_gtc");
+		Utilities.setSession("perigtc");
 		Trial trial = Utilities.getTrial("GTC", "ocracoke-O2", "64");
 		PerformanceResult result = new TrialMeanResult(trial);
 		String metric = "Time";

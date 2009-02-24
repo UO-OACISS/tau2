@@ -1,10 +1,8 @@
 #created on: Apr 24, 2007
-package rules
+package edu.uoregon.tau.perfexplorer.rules
 
 #list any import classes here.
-import rules.RuleHarnessOld.RelativeTrial;
-import rules.RuleHarnessOld.Difference;
-import rules.RuleHarnessOld.Helper;
+import edu.uoregon.tau.perfexplorer.rules.RuleHarnessOld.*;
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.IntervalEvent;

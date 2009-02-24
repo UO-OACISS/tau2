@@ -1,13 +1,13 @@
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.CopyOperation;
-import glue.PerformanceAnalysisOperation;
-import glue.PerformanceResult;
-import glue.TrialMeanResult;
-import glue.TrialResult;
-import glue.TrialTotalResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.CopyOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialMeanResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialTotalResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ import junit.framework.TestCase;
 public class CopyOperationTest extends TestCase {
 
 	public final void testProcessData() {
-		Utilities.setSession("peri_gtc");
+		Utilities.setSession("perigtc");
 		Trial trial = Utilities.getTrial("GTC", "ocracoke-O2", "64");
 		PerformanceResult input = new TrialResult(trial);
 		PerformanceAnalysisOperation operation = new CopyOperation(input);

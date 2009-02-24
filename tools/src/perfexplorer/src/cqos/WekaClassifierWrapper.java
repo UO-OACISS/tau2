@@ -1,7 +1,7 @@
 /**
  * 
  */
-package cqos;
+package edu.uoregon.tau.perfexplorer.cqos;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;

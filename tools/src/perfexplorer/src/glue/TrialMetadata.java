@@ -1,7 +1,7 @@
 /**
  * 
  */
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 
 import java.io.Reader;
 import java.io.StringReader;
@@ -18,20 +18,19 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
-import common.PerfExplorerOutput;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import server.PerfExplorerServer;
-import server.TauNamespaceContext;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-import server.PerfExplorerServer;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.database.DB;
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
+import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
+import edu.uoregon.tau.perfexplorer.server.TauNamespaceContext;
 
 /**
  * @author khuck

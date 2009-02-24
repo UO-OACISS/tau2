@@ -1,7 +1,7 @@
 /**
  * 
  */
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -11,7 +11,8 @@ import java.util.List;
 import javax.persistence.*;
 import org.hibernate.*;
 import org.hibernate.stat.Statistics;
-import persistence.HibernateUtil;
+
+import edu.uoregon.tau.perfexplorer.persistence.HibernateUtil;
 
 /**
  * For this class, do we know what we want to store, or do
@@ -19,7 +20,7 @@ import persistence.HibernateUtil;
  * we store the name of the class, and some information for
  * re-constructing it?
  * 
- * <P>CVS $Id: Provenance.java,v 1.5 2008/11/12 01:05:52 khuck Exp $</P>
+ * <P>CVS $Id: Provenance.java,v 1.6 2009/02/24 00:53:39 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 

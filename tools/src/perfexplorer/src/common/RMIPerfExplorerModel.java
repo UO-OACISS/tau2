@@ -1,4 +1,4 @@
-package common;
+package edu.uoregon.tau.perfexplorer.common;
 
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
@@ -15,7 +15,7 @@ import java.util.ArrayList;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.33 2008/08/18 16:39:41 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.34 2009/02/24 00:53:37 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1

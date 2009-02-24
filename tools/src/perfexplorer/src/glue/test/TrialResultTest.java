@@ -1,21 +1,21 @@
 /**
  * 
  */
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.AbstractResult;
-import glue.PerformanceResult;
-import glue.TrialMeanResult;
-import glue.TrialResult;
-import glue.TrialTotalResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialMeanResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialTotalResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 import junit.framework.TestCase;
 
 /**
  * This class is a JUnit test case for the TrialResult class.
  * 
- * <P>CVS $Id: TrialResultTest.java,v 1.1 2008/08/27 01:32:05 khuck Exp $</P>
+ * <P>CVS $Id: TrialResultTest.java,v 1.2 2009/02/24 00:53:44 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 
@@ -30,13 +30,13 @@ public class TrialResultTest extends TestCase {
 	}
 
 	/**
-	 * Test method for {@link glue.TrialResult#TrialResult(edu.uoregon.tau.perfdmf.Trial)}.
+	 * Test method for {@link edu.uoregon.tau.perfexplorer.glue.TrialResult#TrialResult(edu.uoregon.tau.perfdmf.Trial)}.
 	 */
 	public final void testTrialResultTrial() {
 		PerformanceResult result = null;
 		PerformanceResult means = null;
 		PerformanceResult totals = null;
-//		Utilities.setSession("peri_gtc");
+//		Utilities.setSession("perigtc");
 //		Trial trial = Utilities.getTrial("GTC", "ocracoke-O2", "64");
 		Utilities.setSession("openuh");
 		Trial trial = Utilities.getTrial("msap_parametric.static", "size.100", "2.threads");

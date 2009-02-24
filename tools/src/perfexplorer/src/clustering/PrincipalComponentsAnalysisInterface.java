@@ -2,14 +2,14 @@
  * Created on Apr 1, 2005
  *
  */
-package clustering;
+package edu.uoregon.tau.perfexplorer.clustering;
 
 
  /**
   * This interface is used to define the methods to implement a class
   * which performs PCA, or Principle Components Analysis.
   *
-  * <P>CVS $Id: PrincipalComponentsAnalysisInterface.java,v 1.6 2008/03/05 00:25:52 khuck Exp $</P>
+  * <P>CVS $Id: PrincipalComponentsAnalysisInterface.java,v 1.7 2009/02/24 00:53:35 khuck Exp $</P>
   * @author khuck
   * @version 0.1
   * @since   0.1

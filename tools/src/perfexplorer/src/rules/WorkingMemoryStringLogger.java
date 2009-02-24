@@ -1,7 +1,7 @@
 /**
  * 
  */
-package rules;
+package edu.uoregon.tau.perfexplorer.rules;
 
 import java.util.ArrayList;
 import java.util.List;

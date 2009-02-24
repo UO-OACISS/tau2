@@ -1,13 +1,8 @@
 #created on: Aug 5, 2007
-package rules
+package edu.uoregon.tau.perfexplorer.rules
 
 #list any import classes here.
-import glue.DifferenceMetadataOperation;
-import glue.DifferenceOperation;
-import glue.PerformanceDifferenceType;
-import glue.CorrelationResult;
-import glue.CorrelationResult.FactData;
-import glue.AbstractResult;
+import edu.uoregon.tau.perfexplorer.glue.*;
 import java.lang.Math;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package glue.psl;
+package edu.uoregon.tau.perfexplorer.glue.psl;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -10,7 +10,8 @@ import java.util.Set;
 import edu.uoregon.tau.perfdmf.Function;
 import edu.uoregon.tau.perfdmf.SourceRegion;
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.TrialResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialResult;
+
 import java.util.Iterator;
 
 /**

@@ -1,12 +1,12 @@
-package rules;
+package edu.uoregon.tau.perfexplorer.rules;
 
 import junit.framework.TestCase;
-import client.ScriptFacade;
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.DifferenceMetadataOperation;
-import glue.Utilities;
-import glue.TrialResult;
-import glue.DifferenceOperation;
+import edu.uoregon.tau.perfexplorer.client.ScriptFacade;
+import edu.uoregon.tau.perfexplorer.glue.DifferenceMetadataOperation;
+import edu.uoregon.tau.perfexplorer.glue.DifferenceOperation;
+import edu.uoregon.tau.perfexplorer.glue.TrialResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 
 public class RuleHarnessTest extends TestCase {
 

@@ -2,15 +2,16 @@
  * Created on Mar 16, 2005
  *
  */
-package clustering.r;
+package edu.uoregon.tau.perfexplorer.clustering.r;
 
 
 import java.util.List;
 import java.util.ArrayList;
 
-import clustering.RawDataInterface;
 
 import java.io.Serializable;
+
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 
 /**
  * This class is the R implementation of the analysis data class.
@@ -21,7 +22,7 @@ import java.io.Serializable;
  * performance data.
  * The row and column headers are stored in this class, as well.
  *
- * <P>CVS $Id: RRawData.java,v 1.8 2008/07/31 18:43:48 khuck Exp $</P>
+ * <P>CVS $Id: RRawData.java,v 1.9 2009/02/24 00:53:35 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package clustering.weka;
+package edu.uoregon.tau.perfexplorer.clustering.weka;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,8 +11,8 @@ import weka.classifiers.Evaluation;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.core.Instance;
 import weka.core.Instances;
-import clustering.ClassifierInterface;
-import clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.clustering.ClassifierInterface;
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 
 /**
  * This class is an implementation of the ClassifierInterface, and is also 

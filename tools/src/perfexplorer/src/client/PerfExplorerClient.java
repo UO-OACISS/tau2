@@ -1,9 +1,5 @@
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
-import common.EngineType;
-import common.Console;
-import common.PerfExplorerOutput;
-import common.ScriptThread;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.common.PythonInterpreterFactory;
@@ -16,6 +12,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import edu.uoregon.tau.perfdmf.database.DBConnector;
 import edu.uoregon.tau.perfdmf.database.PasswordCallback;
+import edu.uoregon.tau.perfexplorer.common.Console;
+import edu.uoregon.tau.perfexplorer.common.EngineType;
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
+import edu.uoregon.tau.perfexplorer.common.ScriptThread;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.util.StringTokenizer;

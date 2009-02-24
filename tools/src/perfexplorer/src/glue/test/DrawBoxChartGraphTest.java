@@ -1,18 +1,18 @@
 /**
  * 
  */
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.AbstractResult;
-import glue.DrawBoxChartGraph;
-import glue.DrawGraph;
-import glue.ExtractEventOperation;
-import glue.ExtractMetricOperation;
-import glue.PerformanceAnalysisOperation;
-import glue.PerformanceResult;
-import glue.TrialResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
+import edu.uoregon.tau.perfexplorer.glue.DrawBoxChartGraph;
+import edu.uoregon.tau.perfexplorer.glue.DrawGraph;
+import edu.uoregon.tau.perfexplorer.glue.ExtractEventOperation;
+import edu.uoregon.tau.perfexplorer.glue.ExtractMetricOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +26,7 @@ import junit.framework.TestCase;
 public class DrawBoxChartGraphTest extends TestCase {
 
 	/**
-	 * Test method for {@link glue.DrawGraph#processData()}.
+	 * Test method for {@link edu.uoregon.tau.perfexplorer.glue.DrawGraph#processData()}.
 	 */
 	public final void testProcessData() {
 		Utilities.getClient();

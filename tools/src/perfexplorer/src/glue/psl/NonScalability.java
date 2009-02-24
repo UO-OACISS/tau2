@@ -1,9 +1,9 @@
 /**
  * 
  */
-package glue.psl;
+package edu.uoregon.tau.perfexplorer.glue.psl;
 
-import glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
 
 import java.util.List;
 import java.lang.Math;

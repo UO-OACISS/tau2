@@ -1,12 +1,13 @@
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
-import common.RMIView;
 import javax.swing.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import javax.swing.tree.DefaultTreeModel;
+
+import edu.uoregon.tau.perfexplorer.common.RMIView;
 
 public class PerfExplorerViews {
 

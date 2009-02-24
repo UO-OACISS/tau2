@@ -3,26 +3,26 @@
 /**
  * 
  */
-package server;
+package edu.uoregon.tau.perfexplorer.server;
 
-import clustering.AnalysisFactory;
-import clustering.ClusterException;
-import clustering.DataNormalizer;
-import clustering.KMeansClusterInterface;
-import clustering.PrincipalComponentsAnalysisInterface;
-import clustering.RawDataInterface;
 
-import common.EngineType;
-import common.AnalysisType;
-import common.ChartType;
-import common.TransformationType;
-import common.PerfExplorerException;
-import common.PerfExplorerOutput;
-import common.RMIPerfExplorerModel;
 
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.database.DB;
+import edu.uoregon.tau.perfexplorer.clustering.AnalysisFactory;
+import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
+import edu.uoregon.tau.perfexplorer.clustering.DataNormalizer;
+import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
+import edu.uoregon.tau.perfexplorer.clustering.PrincipalComponentsAnalysisInterface;
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.common.AnalysisType;
+import edu.uoregon.tau.perfexplorer.common.ChartType;
+import edu.uoregon.tau.perfexplorer.common.EngineType;
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerException;
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
+import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
+import edu.uoregon.tau.perfexplorer.common.TransformationType;
 
 import java.awt.Color;
 
@@ -66,7 +66,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  *
- * <P>CVS $Id: AnalysisTask.java,v 1.12 2008/10/22 00:18:32 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTask.java,v 1.13 2009/02/24 00:53:45 khuck Exp $</P>
  * @author Kevin Huck
  * @version 0.1
  * @since 0.1

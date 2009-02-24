@@ -1,11 +1,11 @@
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.ExtractEventOperation;
-import glue.PerformanceAnalysisOperation;
-import glue.PerformanceResult;
-import glue.TrialMeanResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.ExtractEventOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialMeanResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +15,7 @@ import junit.framework.TestCase;
 public class ExtractEventOperationTest extends TestCase {
 
 	public final void testProcessData() {
-		Utilities.setSession("peri_gtc");
+		Utilities.setSession("perigtc");
 		Trial trial = Utilities.getTrial("GTC", "jacquard", "64");
 		PerformanceResult result = new TrialMeanResult(trial);
 		String event = result.getMainEvent();

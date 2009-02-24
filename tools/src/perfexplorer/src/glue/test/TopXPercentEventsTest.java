@@ -1,12 +1,12 @@
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.AbstractResult;
-import glue.PerformanceAnalysisOperation;
-import glue.PerformanceResult;
-import glue.TopXPercentEvents;
-import glue.TrialMeanResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.TopXPercentEvents;
+import edu.uoregon.tau.perfexplorer.glue.TrialMeanResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,7 +21,7 @@ public class TopXPercentEventsTest extends TestCase {
 	}
 
 	public final void testProcessData() {
-		Utilities.setSession("peri_gtc");
+		Utilities.setSession("perigtc");
 		Trial trial = Utilities.getTrial("GTC", "ocracoke-O2", "64");
 //		PerformanceResult result = new TrialResult(trial);
 		boolean doingMean = true;

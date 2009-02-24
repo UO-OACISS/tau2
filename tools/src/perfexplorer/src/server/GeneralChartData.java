@@ -1,15 +1,9 @@
-package server;
+package edu.uoregon.tau.perfexplorer.server;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import common.*;
 
-import common.ChartDataType;
-import common.PerfExplorerOutput;
-import common.RMIChartData;
-import common.RMIPerfExplorerModel;
-import common.RMIView;
 
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfdmf.Experiment;
@@ -18,6 +12,7 @@ import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.AtomicEvent;
+import edu.uoregon.tau.perfexplorer.common.*;
 import edu.uoregon.tau.common.Gzip;
 
 import java.sql.PreparedStatement;
@@ -47,7 +42,7 @@ import java.io.InputStream;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.30 2008/03/14 16:58:48 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.31 2009/02/24 00:53:45 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2

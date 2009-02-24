@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: perfexplorer.skel,v 1.34 2008/09/23 23:12:29 khuck Exp $
+# $Id: perfexplorer.skel,v 1.35 2009/02/24 00:53:29 khuck Exp $
 # $Name:  $
 
 TAUROOT=@TAUROOT@
@@ -156,7 +156,7 @@ if [ $mode == "standalone" ] ; then
 	-classpath $CLASSPATH \
 	-Dderby.system.home=${JAR_HOME} \
 	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
-	client.PerfExplorerClient -s $PERFEXPLORER_OPTS -e $ANALYSIS_ENGINE $@
+	edu.uoregon.tau.perfexplorer.client.PerfExplorerClient -s $PERFEXPLORER_OPTS -e $ANALYSIS_ENGINE $@
 fi
 
 if [ $mode == "test" ] ; then
@@ -166,7 +166,7 @@ if [ $mode == "test" ] ; then
 	-classpath $CLASSPATH \
 	-Dderby.system.home=${JAR_HOME} \
 	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
-	client.TestHarness -s -e $ANALYSIS_ENGINE -t $testName $arguments
+	edu.uoregon.tau.perfexplorer.client.TestHarness -s -e $ANALYSIS_ENGINE -t $testName $arguments
 fi
 
 if [ $mode == "server" ] ; then
@@ -184,7 +184,7 @@ if [ $mode == "server" ] ; then
 	-Djava.library.path=$SERVER_DYLD_LIBRARY_PATH \
 	${RMIOptions} \
 	-Dsun.rmi.server.exceptionTrace=true \
-	server.PerfExplorerServer -e $ANALYSIS_ENGINE -p $SERVER_OBJECT_PORT $arguments
+	edu.uoregon.tau.perfexplorer.server.PerfExplorerServer -e $ANALYSIS_ENGINE -p $SERVER_OBJECT_PORT $arguments
 
 	echo "Killing rmiregistry..."
 	killall rmiregistry
@@ -199,6 +199,6 @@ if [ $mode == "client" ] ; then
 	-Djava.security.policy=${TAUROOT}/${CONFIG_ARCH}/lib/java.policy \
 	-Djava.library.path=${CLIENT_DYLD_LIBRARY_PATH} \
 	-Djava.rmi.server.hostname=$SERVER_HOSTNAME \
-	client.PerfExplorerClient $arguments
+	edu.uoregon.tau.perfexplorer.client.PerfExplorerClient $arguments
 fi
 

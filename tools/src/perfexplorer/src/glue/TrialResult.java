@@ -1,23 +1,23 @@
 /**
  * 
  */
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-import server.PerfExplorerServer;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.database.DB;
+import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 /**
  * This class is an implementation of the AbstractResult class, and loads a trial
  * from the database into a result object.
  * 
- * <P>CVS $Id: TrialResult.java,v 1.8 2008/08/29 00:18:47 khuck Exp $</P>
+ * <P>CVS $Id: TrialResult.java,v 1.9 2009/02/24 00:53:40 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 

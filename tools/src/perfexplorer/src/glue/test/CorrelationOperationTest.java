@@ -1,14 +1,14 @@
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.AbstractResult;
-import glue.CorrelationOperation;
-import glue.CorrelationResult;
-import glue.ExtractEventOperation;
-import glue.PerformanceAnalysisOperation;
-import glue.PerformanceResult;
-import glue.TrialResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
+import edu.uoregon.tau.perfexplorer.glue.CorrelationOperation;
+import edu.uoregon.tau.perfexplorer.glue.CorrelationResult;
+import edu.uoregon.tau.perfexplorer.glue.ExtractEventOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 
 import java.util.ArrayList;
 import java.util.List;

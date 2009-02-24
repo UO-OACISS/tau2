@@ -1,7 +1,7 @@
 /**
  * 
  */
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 
 import java.io.Serializable;
 import java.util.List;
@@ -19,7 +19,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * interface.  This class has all the member data fields for the plethora
  * of anticipated subclasses.
  * 
- * <P>CVS $Id: AbstractResult.java,v 1.12 2008/10/25 01:49:01 khuck Exp $</P>
+ * <P>CVS $Id: AbstractResult.java,v 1.13 2009/02/24 00:53:38 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0

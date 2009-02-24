@@ -1,7 +1,7 @@
 /**
  * 
  */
-package rules;
+package edu.uoregon.tau.perfexplorer.rules;
 
 import java.io.FileReader;
 import java.io.InputStreamReader;

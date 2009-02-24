@@ -1,11 +1,12 @@
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
 import java.rmi.*;
-import common.*;
-import server.PerfExplorerServer;
 import java.util.*;
 
 import javax.swing.*;
+
+import edu.uoregon.tau.perfexplorer.common.*;
+import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 public class PerfExplorerConnection {
 

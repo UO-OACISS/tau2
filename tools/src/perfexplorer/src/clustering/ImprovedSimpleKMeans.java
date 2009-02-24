@@ -19,7 +19,7 @@
  *    Copyright (C) 2000 Mark Hall
  *
  */
-package clustering;
+package edu.uoregon.tau.perfexplorer.clustering;
 
 import  java.util.Vector;
 import java.util.Enumeration;
@@ -43,7 +43,7 @@ import weka.classifiers.rules.DecisionTable;
  *
  * @author Mark Hall (mhall@cs.waikato.ac.nz)
  * @author Eibe Frank (eibe@cs.waikato.ac.nz)
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  * @see Clusterer
  * @see OptionHandler
  */

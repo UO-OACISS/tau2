@@ -1,4 +1,4 @@
-package server;
+package edu.uoregon.tau.perfexplorer.server;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -8,16 +8,16 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.NoSuchElementException;
 
-import common.PerfExplorerException;
-import common.PerfExplorerOutput;
-import common.TransformationType;
-import common.RMIPerfExplorerModel;
-import clustering.AnalysisFactory;
-import clustering.RawDataInterface;
 
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.database.DB;
+import edu.uoregon.tau.perfexplorer.clustering.AnalysisFactory;
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerException;
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
+import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
+import edu.uoregon.tau.perfexplorer.common.TransformationType;
 
 public class DataUtils {
 	/**

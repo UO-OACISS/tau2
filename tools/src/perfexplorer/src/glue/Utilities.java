@@ -1,12 +1,16 @@
 /**
  * 
  */
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfexplorer.client.PerfExplorerClient;
+import edu.uoregon.tau.perfexplorer.client.PerfExplorerModel;
+import edu.uoregon.tau.perfexplorer.common.EngineType;
+import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,12 +20,8 @@ import java.util.Map;
 
 import javax.swing.JFrame;
 
-import client.PerfExplorerClient;
-import client.PerfExplorerModel;
 
-import server.PerfExplorerServer;
 
-import common.EngineType;
 
 /**
  * @author khuck

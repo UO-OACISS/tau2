@@ -1,4 +1,4 @@
-package common;
+package edu.uoregon.tau.perfexplorer.common;
 
 import java.io.Serializable;
 import java.util.List;
@@ -9,7 +9,7 @@ import java.util.ArrayList;
  * results from either correlation or some other type of background
  * analysis.
  *
- * <P>CVS $Id: RMIVarianceData.java,v 1.2 2005/07/20 22:46:17 khuck Exp $</P>
+ * <P>CVS $Id: RMIVarianceData.java,v 1.3 2009/02/24 00:53:37 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1

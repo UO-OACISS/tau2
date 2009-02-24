@@ -1,4 +1,4 @@
-package common;
+package edu.uoregon.tau.perfexplorer.common;
 
 import edu.uoregon.tau.perfdmf.database.DB;
 import java.sql.DatabaseMetaData;
@@ -17,7 +17,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
  * This class is the RMI class which contains the tree of views to be 
  * constructed in the PerfExplorerClient.
  *
- * <P>CVS $Id: RMIView.java,v 1.9 2007/04/06 22:20:49 khuck Exp $</P>
+ * <P>CVS $Id: RMIView.java,v 1.10 2009/02/24 00:53:37 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1

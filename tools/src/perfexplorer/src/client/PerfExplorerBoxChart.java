@@ -5,10 +5,8 @@
  *
  */
 
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
-import common.RMIChartData;
-import common.ChartDataType;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -33,6 +31,9 @@ import org.jfree.chart.labels.CategoryToolTipGenerator;
 import org.jfree.data.category.CategoryDataset;
 import java.net.URL;
 import edu.uoregon.tau.common.Utility;
+import edu.uoregon.tau.perfexplorer.common.ChartDataType;
+import edu.uoregon.tau.perfexplorer.common.RMIChartData;
+
 import java.awt.Toolkit;
 
 /**

@@ -1,8 +1,6 @@
-from glue import Utilities
+from edu.uoregon.tau.perfexplorer.glue import *
 from edu.uoregon.tau.perfdmf import Trial
-from glue import DifferenceOperation
-from glue import DifferenceMetadataOperation
-from rules import RuleHarness
+from edu.uoregon.tau.perfexplorer.rules import RuleHarness
 
 
 True = 1

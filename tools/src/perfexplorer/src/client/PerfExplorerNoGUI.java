@@ -1,7 +1,7 @@
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
-import common.EngineType;
-import common.PerfExplorerOutput;
+import edu.uoregon.tau.perfexplorer.common.EngineType;
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 
 public class PerfExplorerNoGUI {
 	private static String tauHome;

@@ -1,7 +1,5 @@
-package server;
+package edu.uoregon.tau.perfexplorer.server;
 
-import common.*;
-import constants.*;
 
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
@@ -11,6 +9,10 @@ import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.database.DB;
+import edu.uoregon.tau.perfexplorer.clustering.AnalysisFactory;
+import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
+import edu.uoregon.tau.perfexplorer.common.*;
+import edu.uoregon.tau.perfexplorer.constants.*;
 
 import jargs.gnu.CmdLineParser;
 
@@ -37,8 +39,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Collections;
-import clustering.AnalysisFactory;
-import clustering.ClusterException;
 import java.util.StringTokenizer;
 import java.util.NoSuchElementException;
 
@@ -49,7 +49,7 @@ import java.util.NoSuchElementException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.70 2008/09/25 19:23:32 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.71 2009/02/24 00:53:45 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -204,7 +204,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		//System.out.println("getting factory");
 		if (factory == null) {
 			try {
-        		factory = clustering.AnalysisFactory.buildFactory(this.engineType);
+        		factory = edu.uoregon.tau.perfexplorer.clustering.AnalysisFactory.buildFactory(this.engineType);
         	} catch (ClusterException e) {
             	System.err.println(e.getMessage());
 				System.err.println(this.engineType);

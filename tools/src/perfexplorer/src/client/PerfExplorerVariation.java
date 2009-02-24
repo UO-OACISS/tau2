@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
 
 import java.awt.Point;
@@ -15,9 +15,10 @@ import javax.swing.JFrame;
 import javax.swing.JTable;
 import javax.swing.JScrollPane;
 import javax.swing.JScrollBar;
-import common.RMIVarianceData;
 import java.net.URL;
 import edu.uoregon.tau.common.Utility;
+import edu.uoregon.tau.perfexplorer.common.RMIVarianceData;
+
 import java.awt.Toolkit;
 
 /**

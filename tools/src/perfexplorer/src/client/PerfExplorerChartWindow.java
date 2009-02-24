@@ -1,6 +1,5 @@
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
-import common.RMIChartData;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.JFrame;
@@ -23,6 +22,8 @@ import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.common.VectorExport;
 import java.net.URL;
 import edu.uoregon.tau.common.Utility;
+import edu.uoregon.tau.perfexplorer.common.RMIChartData;
+
 import java.awt.Toolkit;
 import javax.swing.JPanel;
 

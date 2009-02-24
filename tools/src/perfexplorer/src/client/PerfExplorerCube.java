@@ -1,4 +1,4 @@
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
 import java.awt.*;
 
@@ -8,8 +8,8 @@ import javax.swing.JTabbedPane;
 import java.net.URL;
 import edu.uoregon.tau.common.Utility;
 
-import common.RMICubeData;
 
+import edu.uoregon.tau.perfexplorer.common.RMICubeData;
 import edu.uoregon.tau.vis.*;
 
 public class PerfExplorerCube {

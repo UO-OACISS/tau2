@@ -1,4 +1,4 @@
-package clustering;
+package edu.uoregon.tau.perfexplorer.clustering;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,7 +8,7 @@ import java.util.List;
  * This class specifies the nodes in a dendrogram representing the results
  * of a hierarchical clustering.  This dendrogram is a simple binary tree.
  *
- * <P>CVS $Id: DendrogramTree.java,v 1.2 2007/01/04 21:20:01 khuck Exp $</P>
+ * <P>CVS $Id: DendrogramTree.java,v 1.3 2009/02/24 00:53:35 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1

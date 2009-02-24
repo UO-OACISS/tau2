@@ -1,4 +1,4 @@
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 /**
  * This class was found on this web page:
  * http://home.online.no/~pjacklam/notes/invnorm/

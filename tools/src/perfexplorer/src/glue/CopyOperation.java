@@ -1,13 +1,13 @@
 /**
  * 
  */
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 
 import java.util.List;
 
-import clustering.AnalysisFactory;
 
 import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfexplorer.clustering.AnalysisFactory;
 
 /**
  * @author khuck

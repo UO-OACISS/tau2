@@ -1,7 +1,7 @@
 /**
  * 
  */
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 
 import java.awt.BasicStroke;
 import java.util.List;
@@ -23,10 +23,10 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
 
-import client.MyCategoryAxis;
-import client.PerfExplorerChart;
 
 import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfexplorer.client.MyCategoryAxis;
+import edu.uoregon.tau.perfexplorer.client.PerfExplorerChart;
 import edu.uoregon.tau.common.VectorExport;
 
 /**

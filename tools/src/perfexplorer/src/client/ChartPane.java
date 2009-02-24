@@ -1,4 +1,4 @@
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
 import javax.swing.*;
 
@@ -6,11 +6,9 @@ import java.awt.*;
 import java.util.Hashtable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import common.*;
 import edu.uoregon.tau.perfdmf.*;
-import common.RMIChartData;
-import common.RMIGeneralChartData;
-import common.ChartDataType;
+import edu.uoregon.tau.perfexplorer.common.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.BasicStroke;
@@ -796,11 +794,11 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 					new Integer(rawData.getMaximum()));
 
 				// get the baseline values
-				common.RMIGeneralChartData.CategoryDataRow baseline = rawData.getRowData(0);
+				edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow baseline = rawData.getRowData(0);
 
 				// iterate through the values
 				for (int i = 0 ; i < rawData.getRows() ; i++) {
-					common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
+					edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
 					if (!shortName(row.series).equals(shortName(baseline.series))) {
 						baseline = row;
 					}
@@ -833,11 +831,11 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 				*/
 
 				// get the baseline values
-				common.RMIGeneralChartData.CategoryDataRow baseline = rawData.getRowData(0);
+				edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow baseline = rawData.getRowData(0);
 
 				// iterate through the values
 				for (int i = 0 ; i < rawData.getRows() ; i++) {
-					common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
+					edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
 					if (!shortName(row.series).equals(shortName(baseline.series))) {
 						baseline = row;
 					}
@@ -864,14 +862,14 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 			} else {
 				// iterate through the values
 				for (int i = 0 ; i < rawData.getRows() ; i++) {
-					common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
+					edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
         			dataset.addValue(row.value / conversion, shortName(row.series), row.categoryInteger);
 				}
 			}
 		} else {
 			// iterate through the values
 			for (int i = 0 ; i < rawData.getRows() ; i++) {
-				common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
+				edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
         		dataset.addValue(row.value / conversion, shortName(row.series), row.categoryString);
 			}
 		}

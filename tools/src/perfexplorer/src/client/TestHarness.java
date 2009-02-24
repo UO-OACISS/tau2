@@ -1,9 +1,9 @@
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
-import common.*;
 
 import jargs.gnu.CmdLineParser;
 import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfexplorer.common.*;
 
 import javax.swing.*;
 import java.io.FileInputStream;

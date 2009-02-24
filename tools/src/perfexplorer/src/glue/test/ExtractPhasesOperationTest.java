@@ -1,14 +1,15 @@
 /**
  * 
  */
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.ExtractPhasesOperation;
-import glue.PerformanceAnalysisOperation;
-import glue.PerformanceResult;
-import glue.TrialMeanResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.ExtractPhasesOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialMeanResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
+
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -20,7 +21,7 @@ import junit.framework.TestCase;
 public class ExtractPhasesOperationTest extends TestCase {
 
 	/**
-	 * Test method for {@link glue.ExtractPhasesOperation#processData()}.
+	 * Test method for {@link edu.uoregon.tau.perfexplorer.glue.ExtractPhasesOperation#processData()}.
 	 */
 	public final void testProcessData() {
 		Utilities.setSession("perfdmf_test");

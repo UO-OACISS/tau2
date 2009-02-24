@@ -1,7 +1,7 @@
 /**
  * 
  */
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -12,10 +12,10 @@ import java.util.Set;
 import org.drools.FactHandle;
 
 import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfexplorer.rules.FactWrapper;
+import edu.uoregon.tau.perfexplorer.rules.RuleHarness;
+import edu.uoregon.tau.perfexplorer.rules.SelfAsserting;
 
-import rules.FactWrapper;
-import rules.RuleHarness;
-import rules.SelfAsserting;
 
 /**
  * @author khuck
@@ -33,7 +33,7 @@ public class CorrelationResult extends DefaultResult implements SelfAsserting {
 	private Double slope = 0.0;
 	private Double correlation = 0.0;
 	Hashtable<String,FactHandle> assertedFacts = new Hashtable<String,FactHandle>();
-	public final static String NAME = glue.CorrelationResult.class.getName();
+	public final static String NAME = edu.uoregon.tau.perfexplorer.glue.CorrelationResult.class.getName();
 	private RuleHarness ruleHarness = null;
 	
 	public static final int CORRELATION = 0;

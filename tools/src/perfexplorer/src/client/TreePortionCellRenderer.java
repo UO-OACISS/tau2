@@ -1,4 +1,4 @@
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -12,9 +12,9 @@ import org.jfree.chart.ChartColor;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreePortionCellRenderer.java,v 1.2 2007/02/20 01:27:48 khuck Exp $</P>
+ * <P>CVS $Id: TreePortionCellRenderer.java,v 1.3 2009/02/24 00:53:34 khuck Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class TreePortionCellRenderer extends DefaultTreeCellRenderer {
 

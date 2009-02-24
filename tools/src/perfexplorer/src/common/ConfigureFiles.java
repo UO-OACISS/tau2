@@ -1,4 +1,4 @@
-package common;
+package edu.uoregon.tau.perfexplorer.common;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;

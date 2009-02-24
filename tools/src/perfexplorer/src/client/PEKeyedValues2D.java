@@ -29,7 +29,7 @@
  * Original Author:  David Gilbert (for Object Refinery Limited);
  * Contributor(s):   Andreas Schroeder;
  *
- * $Id: PEKeyedValues2D.java,v 1.1 2007/02/08 00:54:13 khuck Exp $
+ * $Id: PEKeyedValues2D.java,v 1.2 2009/02/24 00:53:32 khuck Exp $
  *
  * Changes
  * -------
@@ -43,7 +43,7 @@
  *  
  */
 
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
 import org.jfree.data.*;
 import java.io.Serializable;

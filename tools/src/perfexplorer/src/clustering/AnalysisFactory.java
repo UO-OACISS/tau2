@@ -3,12 +3,13 @@
  *
  */
 
-package clustering;
+package edu.uoregon.tau.perfexplorer.clustering;
 
-import common.EngineType;
-import common.RMICubeData;
 
 import java.util.List;
+
+import edu.uoregon.tau.perfexplorer.common.EngineType;
+import edu.uoregon.tau.perfexplorer.common.RMICubeData;
 
 /**
   * The top-level analysis factory class.  This class is used to construct
@@ -17,7 +18,7 @@ import java.util.List;
   * method to construct the desired factory.  All other methods are implemented
   * by the specific factory classes.
   *
-  * <P>CVS $Id: AnalysisFactory.java,v 1.9 2008/08/05 00:18:16 khuck Exp $</P>
+  * <P>CVS $Id: AnalysisFactory.java,v 1.10 2009/02/24 00:53:34 khuck Exp $</P>
   * @author  Kevin Huck
   * @version 0.1
   * @since   0.1
@@ -44,9 +45,9 @@ public abstract class AnalysisFactory {
 
         try {
             if (factoryType == EngineType.RPROJECT) {
-                return (AnalysisFactory)(Class.forName("clustering.r.RAnalysisFactory").newInstance());
+                return (AnalysisFactory)(Class.forName("edu.uoregon.tau.perfexplorer.clustering.r.RAnalysisFactory").newInstance());
             } else if (factoryType == EngineType.WEKA) {
-                return (AnalysisFactory)(Class.forName("clustering.weka.WekaAnalysisFactory").newInstance());
+                return (AnalysisFactory)(Class.forName("edu.uoregon.tau.perfexplorer.clustering.weka.WekaAnalysisFactory").newInstance());
             } else if (factoryType == EngineType.OCTAVE) {
                 throw new ClusterException("Unsupported factory type");
             } else {

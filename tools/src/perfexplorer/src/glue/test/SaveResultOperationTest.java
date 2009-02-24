@@ -1,14 +1,14 @@
 /**
  * 
  */
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
-import glue.DeriveMetricOperation;
-import glue.PerformanceAnalysisOperation;
-import glue.PerformanceResult;
-import glue.SaveResultOperation;
-import glue.TrialResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.DeriveMetricOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.SaveResultOperation;
+import edu.uoregon.tau.perfexplorer.glue.TrialResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 import junit.framework.TestCase;
 
 /**
@@ -25,7 +25,7 @@ public class SaveResultOperationTest extends TestCase {
 	}
 
 	/**
-	 * Test method for {@link glue.SaveResultOperation#processData()}.
+	 * Test method for {@link edu.uoregon.tau.perfexplorer.glue.SaveResultOperation#processData()}.
 	 */
 	public final void testProcessData() {
 		Utilities.setSession("test");

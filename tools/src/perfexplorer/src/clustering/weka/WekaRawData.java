@@ -2,7 +2,7 @@
  * Created on Mar 17, 2005
  *
  */
-package clustering.weka;
+package edu.uoregon.tau.perfexplorer.clustering.weka;
 
 
 import weka.core.Instances;
@@ -14,14 +14,15 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Enumeration;
 
-import clustering.RawDataInterface;
 
 import java.io.Serializable;
+
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 
 /**
  * Implementation of the RawData interface for Weka data.
  *
- * <P>CVS $Id: WekaRawData.java,v 1.11 2008/08/04 22:46:28 khuck Exp $</P>
+ * <P>CVS $Id: WekaRawData.java,v 1.12 2009/02/24 00:53:36 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1

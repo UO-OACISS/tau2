@@ -1,4 +1,4 @@
-package common;
+package edu.uoregon.tau.perfexplorer.common;
 
 import edu.uoregon.tau.perfdmf.Database;
 import edu.uoregon.tau.perfdmf.database.ConnectionManager;
@@ -20,7 +20,7 @@ import java.sql.SQLException;
 /**
  * This class is used as a main class for configuring PerfExplorer.
  *
- * <P>CVS $Id: Configure.java,v 1.11 2008/08/05 22:24:21 amorris Exp $</P>
+ * <P>CVS $Id: Configure.java,v 1.12 2009/02/24 00:53:36 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1

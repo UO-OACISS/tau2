@@ -2,26 +2,27 @@
  * Created on Mar 18, 2005
  *
  */
-package clustering.weka;
+package edu.uoregon.tau.perfexplorer.clustering.weka;
 
-import clustering.AnalysisFactory;
-import clustering.ClassifierInterface;
-import clustering.KMeansClusterInterface;
-import clustering.LinearRegressionInterface;
-import clustering.PrincipalComponentsAnalysisInterface;
-import clustering.DataNormalizer;
-import clustering.RawDataInterface;
-import clustering.Utilities;
-import common.RMICubeData;
 
 import java.util.List;
+
+import edu.uoregon.tau.perfexplorer.clustering.AnalysisFactory;
+import edu.uoregon.tau.perfexplorer.clustering.ClassifierInterface;
+import edu.uoregon.tau.perfexplorer.clustering.DataNormalizer;
+import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
+import edu.uoregon.tau.perfexplorer.clustering.LinearRegressionInterface;
+import edu.uoregon.tau.perfexplorer.clustering.PrincipalComponentsAnalysisInterface;
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.clustering.Utilities;
+import edu.uoregon.tau.perfexplorer.common.RMICubeData;
 
 /**
  * This class is an extention of the AnalysisFactory class.  This class
  * should never be directly created - use the static method in the
  * AnalysisFactory class.
  *
- * <P>CVS $Id: WekaAnalysisFactory.java,v 1.8 2008/08/05 00:18:17 khuck Exp $</P>
+ * <P>CVS $Id: WekaAnalysisFactory.java,v 1.9 2009/02/24 00:53:36 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1

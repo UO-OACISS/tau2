@@ -5,14 +5,14 @@
  * Window - Preferences - Java - Code Style - Code Templates
  */
 
-package clustering.r;
+package edu.uoregon.tau.perfexplorer.clustering.r;
 
-import clustering.PrincipalComponentsAnalysisInterface;
-import clustering.KMeansClusterInterface;
-import clustering.ClusterException;
-import clustering.ClusterDescription;
-import clustering.RawDataInterface;
-import common.RMICubeData;
+import edu.uoregon.tau.perfexplorer.clustering.ClusterDescription;
+import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
+import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
+import edu.uoregon.tau.perfexplorer.clustering.PrincipalComponentsAnalysisInterface;
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.common.RMICubeData;
 
 /**
  * This class is the R implementation of the k-means clustering operation.
@@ -20,7 +20,7 @@ import common.RMICubeData;
  * clustering class.  To access these methods, create an AnalysisFactory,
  * and the factory will be able to create a k-means cluster object.
  *
- * <P>CVS $Id: RPrincipalComponents.java,v 1.5 2008/03/05 00:25:52 khuck Exp $</P>
+ * <P>CVS $Id: RPrincipalComponents.java,v 1.6 2009/02/24 00:53:35 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1

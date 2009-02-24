@@ -1,9 +1,5 @@
-from client import ScriptFacade
-from glue import PerformanceResult
-from glue import PerformanceAnalysisOperation
-from glue import Utilities
-from glue import TrialResult
-from glue import BasicStatisticsOperation
+from edu.uoregon.tau.perfexplorer.client import ScriptFacade
+from edu.uoregon.tau.perfexplorer.glue import *
 from edu.uoregon.tau.perfdmf import Trial
 
 def glue():

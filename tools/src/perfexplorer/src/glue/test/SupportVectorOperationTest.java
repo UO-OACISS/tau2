@@ -1,14 +1,14 @@
 /**
  * 
  */
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
-import glue.AbstractResult;
-import glue.DefaultResult;
-import glue.NaiveBayesOperation;
-import glue.PerformanceResult;
-import glue.SupportVectorOperation;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
+import edu.uoregon.tau.perfexplorer.glue.DefaultResult;
+import edu.uoregon.tau.perfexplorer.glue.NaiveBayesOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.SupportVectorOperation;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 
 import java.util.List;
 
@@ -21,7 +21,7 @@ import junit.framework.TestCase;
 public class SupportVectorOperationTest extends TestCase {
 
 	/**
-	 * Test method for {@link glue.NaiveBayesOperation#processData()}.
+	 * Test method for {@link edu.uoregon.tau.perfexplorer.glue.NaiveBayesOperation#processData()}.
 	 */
 	public final void testProcessData() {
 		

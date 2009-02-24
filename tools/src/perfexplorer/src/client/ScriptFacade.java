@@ -1,27 +1,25 @@
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.List;
 
-import clustering.RawDataInterface;
 
 
-import common.AnalysisType;
-import common.PerfExplorerOutput;
-import common.RMIPerfExplorerModel;
-import common.RMIVarianceData;
-import common.TransformationType;
-import common.AnalysisType;
-import common.TransformationType;
-import common.EngineType;
 
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.UtilFncs;
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.common.AnalysisType;
+import edu.uoregon.tau.perfexplorer.common.EngineType;
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
+import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
+import edu.uoregon.tau.perfexplorer.common.RMIVarianceData;
+import edu.uoregon.tau.perfexplorer.common.TransformationType;
 
 /**
  * The facade interface to the application for scripting purpose. This facade

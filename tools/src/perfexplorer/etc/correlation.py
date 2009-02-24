@@ -1,12 +1,5 @@
-from client import ScriptFacade
-from glue import PerformanceResult
-from glue import PerformanceAnalysisOperation
-from glue import ExtractEventOperation
-from glue import CorrelationOperation
-from glue import Utilities
-from glue import TrialResult
-from glue import AbstractResult
-from glue import CorrelationResult
+from edu.uoregon.tau.perfexplorer.client import ScriptFacade
+from edu.uoregon.tau.perfexplorer.glue import *
 from edu.uoregon.tau.perfdmf import Trial
 from java.util import ArrayList
 

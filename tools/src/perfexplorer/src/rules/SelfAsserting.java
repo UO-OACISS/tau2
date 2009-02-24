@@ -1,7 +1,7 @@
 /**
  * 
  */
-package rules;
+package edu.uoregon.tau.perfexplorer.rules;
 
 /**
  * @author khuck

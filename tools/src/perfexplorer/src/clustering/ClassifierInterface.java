@@ -1,7 +1,7 @@
 /**
  * 
  */
-package clustering;
+package edu.uoregon.tau.perfexplorer.clustering;
 
 import java.util.List;
 

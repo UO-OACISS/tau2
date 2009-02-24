@@ -2,14 +2,14 @@
  * Created on Mar 16, 2005
  *
  */
-package clustering;
+package edu.uoregon.tau.perfexplorer.clustering;
 
 
  /**
   * This interface is used to define the methods to implement a hierarchical 
   * clustering class.
   *
-  * <P>CVS $Id: KMeansClusterInterface.java,v 1.5 2008/10/09 23:13:55 khuck Exp $</P>
+  * <P>CVS $Id: KMeansClusterInterface.java,v 1.6 2009/02/24 00:53:35 khuck Exp $</P>
   * @author khuck
   * @version 0.1
   * @since   0.1

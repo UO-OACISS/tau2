@@ -1,12 +1,12 @@
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
 import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
+import edu.uoregon.tau.perfexplorer.common.RMIView;
 
 import javax.swing.table.*;
 import javax.swing.*;
 
-import common.RMIView;
-import common.RMISortableIntervalEvent;
 
 import java.awt.Dimension;
 import java.sql.SQLException;

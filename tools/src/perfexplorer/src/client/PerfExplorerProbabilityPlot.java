@@ -1,6 +1,5 @@
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
-import common.*;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
@@ -21,6 +20,8 @@ import java.text.DecimalFormat;
 import java.text.FieldPosition;
 import java.net.URL;
 import edu.uoregon.tau.common.Utility;
+import edu.uoregon.tau.perfexplorer.common.*;
+
 import java.awt.Toolkit;
 
 public class PerfExplorerProbabilityPlot extends PerfExplorerChartWindow {

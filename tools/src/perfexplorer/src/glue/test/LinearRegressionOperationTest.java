@@ -1,19 +1,19 @@
 /**
  * 
  */
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.AbstractResult;
-import glue.CorrelateEventsWithMetadata;
-import glue.CorrelationResult;
-import glue.LinearRegressionOperation;
-import glue.LogarithmicOperation;
-import glue.PerformanceAnalysisOperation;
-import glue.PerformanceResult;
-import glue.TrialMeanResult;
-import glue.TrialMetadata;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
+import edu.uoregon.tau.perfexplorer.glue.CorrelateEventsWithMetadata;
+import edu.uoregon.tau.perfexplorer.glue.CorrelationResult;
+import edu.uoregon.tau.perfexplorer.glue.LinearRegressionOperation;
+import edu.uoregon.tau.perfexplorer.glue.LogarithmicOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialMeanResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialMetadata;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -27,7 +27,7 @@ import junit.framework.TestCase;
 public class LinearRegressionOperationTest extends TestCase {
 
 	/**
-	 * Test method for {@link glue.LinearRegressionOperation#processData()}.
+	 * Test method for {@link edu.uoregon.tau.perfexplorer.glue.LinearRegressionOperation#processData()}.
 	 */
 	public final void testProcessData() {
 		// create a list to store the trials in

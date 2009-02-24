@@ -1,14 +1,14 @@
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import server.PerfExplorerServer;
-import clustering.AnalysisFactory;
-import clustering.KMeansClusterInterface;
-import clustering.PrincipalComponentsAnalysisInterface;
-import clustering.RawDataInterface;
 import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfexplorer.clustering.AnalysisFactory;
+import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
+import edu.uoregon.tau.perfexplorer.clustering.PrincipalComponentsAnalysisInterface;
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 /**
  * 

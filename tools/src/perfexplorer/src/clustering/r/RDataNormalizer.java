@@ -1,17 +1,17 @@
 /**
  * Created Feb. 13, 2006
  */
-package clustering.r;
+package edu.uoregon.tau.perfexplorer.clustering.r;
 
 
-import clustering.DataNormalizer;
-import clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.clustering.DataNormalizer;
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 
 /**
  * Implementation of the DataNormalizer interface for R data.
  * TODO - make this class immutable?
  *
- * <P>CVS $Id: RDataNormalizer.java,v 1.2 2007/01/23 22:57:01 khuck Exp $</P>
+ * <P>CVS $Id: RDataNormalizer.java,v 1.3 2009/02/24 00:53:35 khuck Exp $</P>
  * @author khuck
  * @version 0.2
  * @since   0.2

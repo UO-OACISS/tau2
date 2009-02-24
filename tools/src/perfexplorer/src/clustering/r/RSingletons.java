@@ -1,11 +1,11 @@
-package clustering.r;
+package edu.uoregon.tau.perfexplorer.clustering.r;
 
 import org.omegahat.R.Java.REvaluator;
 import org.omegahat.R.Java.ROmegahatInterpreter;
 
 /**
  *
- * <P>CVS $Id: RSingletons.java,v 1.3 2007/01/04 21:20:02 khuck Exp $</P>
+ * <P>CVS $Id: RSingletons.java,v 1.4 2009/02/24 00:53:35 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1

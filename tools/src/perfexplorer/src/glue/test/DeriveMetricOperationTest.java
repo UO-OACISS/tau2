@@ -1,13 +1,13 @@
 /**
  * 
  */
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.DeriveMetricOperation;
-import glue.PerformanceResult;
-import glue.TrialResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.DeriveMetricOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 import junit.framework.TestCase;
 
 
@@ -18,7 +18,7 @@ import junit.framework.TestCase;
 public class DeriveMetricOperationTest extends TestCase {
 
 	/**
-	 * Test method for {@link glue.DeriveMetricOperation#processData()}.
+	 * Test method for {@link edu.uoregon.tau.perfexplorer.glue.DeriveMetricOperation#processData()}.
 	 */
 	public final void testProcessData() {
 	    Utilities.setSession("perfdmf_test");

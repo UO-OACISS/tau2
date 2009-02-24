@@ -1,15 +1,16 @@
 /**
  * 
  */
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.PerformanceAnalysisOperation;
-import glue.PerformanceResult;
-import glue.SplitTrialPhasesOperation;
-import glue.TrialMeanResult;
-import glue.TrialMetadata;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.SplitTrialPhasesOperation;
+import edu.uoregon.tau.perfexplorer.glue.TrialMeanResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialMetadata;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
+
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -21,7 +22,7 @@ import junit.framework.TestCase;
 public class SplitTrialPhasesOperationTest extends TestCase {
 
 	/**
-	 * Test method for {@link glue.SplitTrialPhasesOperation#processData()}.
+	 * Test method for {@link edu.uoregon.tau.perfexplorer.glue.SplitTrialPhasesOperation#processData()}.
 	 */
 	public final void testProcessData() {
 		Utilities.setSession("local");

@@ -2,7 +2,7 @@
  * Created on Feb 17, 2006
  *
  */
-package common;
+package edu.uoregon.tau.perfexplorer.common;
 
 import java.io.Serializable;
 
@@ -10,7 +10,7 @@ import java.io.Serializable;
 /**
  * This class is used as a typesafe enumeration.
  *
- * <P>CVS $Id: TransformationType.java,v 1.5 2008/03/05 00:28:11 khuck Exp $</P>
+ * <P>CVS $Id: TransformationType.java,v 1.6 2009/02/24 00:53:37 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2

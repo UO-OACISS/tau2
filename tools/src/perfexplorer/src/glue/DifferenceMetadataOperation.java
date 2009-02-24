@@ -1,7 +1,7 @@
 /**
  * 
  */
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -9,11 +9,11 @@ import java.util.Set;
 
 import org.drools.FactHandle;
 
-import rules.FactWrapper;
-import rules.RuleHarness;
-import rules.SelfAsserting;
 
 import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfexplorer.rules.FactWrapper;
+import edu.uoregon.tau.perfexplorer.rules.RuleHarness;
+import edu.uoregon.tau.perfexplorer.rules.SelfAsserting;
 
 /**
  * @author khuck
@@ -25,7 +25,7 @@ public class DifferenceMetadataOperation implements SelfAsserting {
 	Hashtable<String,String[]> differences = new Hashtable<String,String[]>();
 	double expectedRatio = 1.0;
 	Hashtable<String,FactHandle> assertedFacts = new Hashtable<String,FactHandle>();
-	public final static String NAME = glue.DifferenceMetadataOperation.class.getName();
+	public final static String NAME = edu.uoregon.tau.perfexplorer.glue.DifferenceMetadataOperation.class.getName();
 	private RuleHarness ruleHarness = null;
 	
 	public double getExpectedRatio() {

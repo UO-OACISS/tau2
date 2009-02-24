@@ -1,7 +1,7 @@
 /**
  * 
  */
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,11 +12,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
-import server.PerfExplorerServer;
 
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.database.DB;
+import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 /**
  * @author khuck

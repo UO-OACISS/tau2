@@ -1,9 +1,10 @@
-package server;
+package edu.uoregon.tau.perfexplorer.server;
 
-import clustering.RawDataInterface;
-import common.PerfExplorerOutput;
 
 import org.jfree.data.xy.AbstractXYDataset;
+
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 
 /**
  * Dataset to store scatterplot data.
@@ -11,7 +12,7 @@ import org.jfree.data.xy.AbstractXYDataset;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper around the RawDataInterface class.
  * 
- * <P>CVS $Id: PCAPlotDataset.java,v 1.6 2007/01/23 22:57:02 khuck Exp $</P>
+ * <P>CVS $Id: PCAPlotDataset.java,v 1.7 2009/02/24 00:53:45 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1

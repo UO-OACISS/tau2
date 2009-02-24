@@ -1,14 +1,15 @@
 /**
  * 
  */
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.PerformanceResult;
-import glue.ScalabilityOperation;
-import glue.ScalabilityResult;
-import glue.TrialMeanResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.ScalabilityOperation;
+import edu.uoregon.tau.perfexplorer.glue.ScalabilityResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialMeanResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
+
 import java.util.List;
 
 import junit.framework.TestCase;

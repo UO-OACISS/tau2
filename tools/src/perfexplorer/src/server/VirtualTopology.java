@@ -2,10 +2,8 @@
  * Created on Jun 29, 2005
  *
  */
-package server;
+package edu.uoregon.tau.perfexplorer.server;
 
-import clustering.KMeansClusterInterface;
-import common.RMIPerfExplorerModel;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -13,13 +11,15 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
-import constants.Constants;
+import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
+import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
+import edu.uoregon.tau.perfexplorer.constants.Constants;
 
 /**
  * This class takes the Weka or R cluster results, and creates a virtual
  * topology image showing which cluster each thread of execution belongs to.
  *
- * <P>CVS $Id: VirtualTopology.java,v 1.4 2008/09/25 19:39:59 khuck Exp $</P>
+ * <P>CVS $Id: VirtualTopology.java,v 1.5 2009/02/24 00:53:45 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1

@@ -1,11 +1,11 @@
 /**
  * 
  */
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 
 import java.util.List;
 
-import clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 
 /**
  * @author khuck

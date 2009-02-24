@@ -4,18 +4,19 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package clustering.weka;
+package edu.uoregon.tau.perfexplorer.clustering.weka;
 
-import clustering.PrincipalComponentsAnalysisInterface;
-import clustering.KMeansClusterInterface;
-import clustering.AnalysisFactory;
-import clustering.ClusterException;
-import clustering.ClusterDescription;
-import clustering.RawDataInterface;
-import common.RMICubeData;
 import weka.core.Instances;
 import weka.core.Instance;
 import java.util.ArrayList;
+
+import edu.uoregon.tau.perfexplorer.clustering.AnalysisFactory;
+import edu.uoregon.tau.perfexplorer.clustering.ClusterDescription;
+import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
+import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
+import edu.uoregon.tau.perfexplorer.clustering.PrincipalComponentsAnalysisInterface;
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.common.RMICubeData;
 import weka.attributeSelection.PrincipalComponents;
 
 /**
@@ -23,7 +24,7 @@ import weka.attributeSelection.PrincipalComponents;
  * TODO - make this class immutable?
  * 
  * @author khuck
- * <P>CVS $Id: WekaPrincipalComponents.java,v 1.8 2008/07/31 18:43:48 khuck Exp $</P>
+ * <P>CVS $Id: WekaPrincipalComponents.java,v 1.9 2009/02/24 00:53:36 khuck Exp $</P>
  * @version 0.1
  * @since   0.1
  */

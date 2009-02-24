@@ -1,4 +1,4 @@
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
 import java.awt.*;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;

@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package clustering;
+package edu.uoregon.tau.perfexplorer.clustering;
 
 
 /**
@@ -13,7 +13,7 @@ package clustering;
  * of the Exception class.
 
  * @author khuck
- * <P>CVS $Id: ClusterException.java,v 1.2 2007/01/04 21:20:01 khuck Exp $</P>
+ * <P>CVS $Id: ClusterException.java,v 1.3 2009/02/24 00:53:35 khuck Exp $</P>
  * @version 0.1
  * @since   0.1
  *

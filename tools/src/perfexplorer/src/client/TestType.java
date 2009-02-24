@@ -1,4 +1,4 @@
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
 public final class TestType {
 	private final transient String _name;

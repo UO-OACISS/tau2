@@ -1,4 +1,4 @@
-package common;
+package edu.uoregon.tau.perfexplorer.common;
 
 import java.io.Serializable;
 import java.util.List;
@@ -8,7 +8,7 @@ import java.util.ArrayList;
  * This class represents the data to be used to create a scalability or
  * runtime breakdown chart.  
  *
- * <P>CVS $Id: RMIGeneralChartData.java,v 1.3 2007/02/07 06:37:17 khuck Exp $</P>
+ * <P>CVS $Id: RMIGeneralChartData.java,v 1.4 2009/02/24 00:53:37 khuck Exp $</P>
  * @author khuck
  * @version 0.2
  * @since   0.2

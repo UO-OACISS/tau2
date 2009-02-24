@@ -1,13 +1,13 @@
 /**
  * 
  */
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.LogarithmicOperation;
-import glue.PerformanceResult;
-import glue.TrialMeanResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.LogarithmicOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialMeanResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +21,7 @@ import junit.framework.TestCase;
 public class LogarithmicOperationTest extends TestCase {
 
 	/**
-	 * Test method for {@link glue.LogarithmicOperation#processData()}.
+	 * Test method for {@link edu.uoregon.tau.perfexplorer.glue.LogarithmicOperation#processData()}.
 	 */
 	public void testProcessData() {
 		Utilities.setSession("perfdmf_test");

@@ -1,11 +1,8 @@
 #created on: Jul 11, 2007
-package rules
+package edu.uoregon.tau.perfexplorer.rules
 
 #list any import classes here.
-import glue.DifferenceOperation;
-import glue.DifferenceMetadataOperation;
-import glue.PerformanceDifferenceType;
-import glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.*;
 import java.util.Hashtable;
 import java.util.Set;
 import java.util.Iterator;

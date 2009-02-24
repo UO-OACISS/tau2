@@ -1,17 +1,17 @@
 /**
  * 
  */
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.AbstractResult;
-import glue.SmartKMeansOperation;
-import glue.PerformanceAnalysisOperation;
-import glue.PerformanceResult;
-import glue.TopXEvents;
-import glue.DefaultResult;
-import glue.TrialResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
+import edu.uoregon.tau.perfexplorer.glue.DefaultResult;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.SmartKMeansOperation;
+import edu.uoregon.tau.perfexplorer.glue.TopXEvents;
+import edu.uoregon.tau.perfexplorer.glue.TrialResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 
 import java.util.List;
 import java.util.Random;
@@ -32,7 +32,7 @@ public class SmartKMeansOperationTest extends TestCase {
 	}
 
 	/**
-	 * Test method for {@link glue.SmartKMeansOperation#processData()}.
+	 * Test method for {@link edu.uoregon.tau.perfexplorer.glue.SmartKMeansOperation#processData()}.
 	 */
 	public final void testProcessData() {
 		

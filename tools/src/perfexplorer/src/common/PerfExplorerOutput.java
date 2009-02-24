@@ -1,9 +1,9 @@
-package common;
+package edu.uoregon.tau.perfexplorer.common;
 
 /**
  * Wrapper class for supporting console output.
  *
- * <P>CVS $Id: PerfExplorerOutput.java,v 1.2 2007/01/04 21:20:03 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerOutput.java,v 1.3 2009/02/24 00:53:37 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1

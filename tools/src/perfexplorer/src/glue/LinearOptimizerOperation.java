@@ -1,7 +1,7 @@
 /**
  * 
  */
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import cqos.WekaClassifierWrapper;
+import edu.uoregon.tau.perfexplorer.cqos.WekaClassifierWrapper;
 import weka.core.*;
 import weka.classifiers.Classifier;
 import weka.filters.Filter;

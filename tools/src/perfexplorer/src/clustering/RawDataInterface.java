@@ -2,7 +2,7 @@
  * Created on Mar 16, 2005
  *
  */
-package clustering;
+package edu.uoregon.tau.perfexplorer.clustering;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ import java.util.List;
  * cluster output data, or PCA output data.
  * 
  * @author khuck
- * <P>CVS $Id: RawDataInterface.java,v 1.7 2008/07/31 18:43:48 khuck Exp $</P>
+ * <P>CVS $Id: RawDataInterface.java,v 1.8 2009/02/24 00:53:35 khuck Exp $</P>
  * @version 0.1
  * @since 0.1
  */

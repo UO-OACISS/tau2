@@ -2,7 +2,7 @@
  * Created on Feb 13, 2006
  *
  */
-package common;
+package edu.uoregon.tau.perfexplorer.common;
 
 import java.io.Serializable;
 
@@ -10,7 +10,7 @@ import java.io.Serializable;
 /**
  * This class is used as a typesafe enumeration.
  *
- * <P>CVS $Id: ChartType.java,v 1.1 2006/09/13 23:28:20 khuck Exp $</P>
+ * <P>CVS $Id: ChartType.java,v 1.2 2009/02/24 00:53:36 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2

@@ -1,14 +1,14 @@
 /**
  * 
  */
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.ExtractRankOperation;
-import glue.PerformanceAnalysisOperation;
-import glue.PerformanceResult;
-import glue.TrialResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.ExtractRankOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 
 import java.util.List;
 
@@ -21,10 +21,10 @@ import junit.framework.TestCase;
 public class ExtractRankOperationTest extends TestCase {
 
 	/**
-	 * Test method for {@link glue.ExtractRankOperation#processData()}.
+	 * Test method for {@link edu.uoregon.tau.perfexplorer.glue.ExtractRankOperation#processData()}.
 	 */
 	public final void testProcessData() {
-		Utilities.setSession("peri_gtc");
+		Utilities.setSession("perigtc");
 		Trial trial = Utilities.getTrial("GTC", "ocracoke-O2", "64");
 		PerformanceResult result = new TrialResult(trial);
 		int thread = 4;

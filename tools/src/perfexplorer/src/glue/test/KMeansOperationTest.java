@@ -1,16 +1,16 @@
 /**
  * 
  */
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.AbstractResult;
-import glue.KMeansOperation;
-import glue.PerformanceAnalysisOperation;
-import glue.PerformanceResult;
-import glue.TopXPercentEvents;
-import glue.TrialResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
+import edu.uoregon.tau.perfexplorer.glue.KMeansOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.TopXPercentEvents;
+import edu.uoregon.tau.perfexplorer.glue.TrialResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 
 import java.util.List;
 
@@ -23,10 +23,10 @@ import junit.framework.TestCase;
 public class KMeansOperationTest extends TestCase {
 
 	/**
-	 * Test method for {@link glue.KMeansOperation#processData()}.
+	 * Test method for {@link edu.uoregon.tau.perfexplorer.glue.KMeansOperation#processData()}.
 	 */
 	public final void testProcessData() {
-//		Utilities.setSession("peri_gtc");
+//		Utilities.setSession("perigtc");
 //		Trial trial = Utilities.getTrial("GTC", "ocracoke-O2", "64");
 		Utilities.setSession("local");
 		Trial trial = Utilities.getTrial("sweep3d", "jaguar", "256");

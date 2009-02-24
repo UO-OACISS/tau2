@@ -1,11 +1,11 @@
-package common;
+package edu.uoregon.tau.perfexplorer.common;
 
 import java.lang.Exception;
 
 /**
  * Base exception class for the PerfExplorer application.
  *
- * <P>CVS $Id: PerfExplorerException.java,v 1.1 2005/07/05 22:29:52 amorris Exp $</P>
+ * <P>CVS $Id: PerfExplorerException.java,v 1.2 2009/02/24 00:53:37 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1

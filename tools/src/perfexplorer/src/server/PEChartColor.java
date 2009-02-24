@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package server;
+package edu.uoregon.tau.perfexplorer.server;
 
 import org.jfree.chart.ChartColor;
 import java.awt.Color;
@@ -12,7 +12,7 @@ import java.awt.Color;
 /**
  * Description
  *
- * <P>CVS $Id: PEChartColor.java,v 1.1 2005/07/05 22:29:53 amorris Exp $</P>
+ * <P>CVS $Id: PEChartColor.java,v 1.2 2009/02/24 00:53:45 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1

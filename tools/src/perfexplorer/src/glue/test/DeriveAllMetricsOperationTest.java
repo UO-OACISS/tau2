@@ -1,15 +1,16 @@
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
-import glue.AbstractResult;
-import glue.DeriveAllMetricsOperation;
-import glue.ExtractEventOperation;
-import glue.PerformanceAnalysisOperation;
-import glue.PerformanceResult;
-import glue.TrialMeanResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
+import edu.uoregon.tau.perfexplorer.glue.DeriveAllMetricsOperation;
+import edu.uoregon.tau.perfexplorer.glue.ExtractEventOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialMeanResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
+import edu.uoregon.tau.perfexplorer.rules.RuleHarness;
+
 import java.util.List;
 
-import rules.RuleHarness;
 
 import junit.framework.TestCase;
 
@@ -21,7 +22,7 @@ public class DeriveAllMetricsOperationTest extends TestCase {
 	    ruleHarness.addRules("rules/ApplicationRules.drl");
 	    ruleHarness.addRules("rules/MachineRules.drl");
 
-	    Utilities.setSession("PERI_DB_production");
+	    Utilities.setSession("spaceghost_apart");
 	    PerformanceResult trial = new TrialMeanResult(Utilities.getTrial("gtc", "jaguar", "64"));
 
 /*	    List<PerformanceResult> outputs = new ArrayList<PerformanceResult>();

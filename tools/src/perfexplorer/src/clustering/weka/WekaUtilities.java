@@ -1,7 +1,7 @@
 
-package clustering.weka;
+package edu.uoregon.tau.perfexplorer.clustering.weka;
 
-import clustering.Utilities;
+import edu.uoregon.tau.perfexplorer.clustering.Utilities;
 import weka.core.Utils;
 
 public class WekaUtilities implements Utilities {

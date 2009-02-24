@@ -1,20 +1,5 @@
-from glue import PerformanceResult
-from glue import Utilities
-from glue import TopXEvents
-from glue import TrialResult
-from glue import AbstractResult
-from glue import DataNeeded
-from glue import DeriveMetricOperation
-from glue import ExtractEventOperation
-from glue import ExtractNonCallpathEventOperation
-from glue import ExtractCallpathEventOperation
-from glue import DeriveMetricOperation
-from glue import DeriveAllMetricsOperation
-from glue import MergeTrialsOperation
-from glue import MeanEventFact
-from glue import DerivedMetrics
-from rules import RuleHarness
-from glue import KMeansOperation
+from edu.uoregon.tau.perfexplorer.glue import *
+from edu.uoregon.tau.perfexplorer.rules import *
 
 True = 1
 False = 0

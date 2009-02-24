@@ -6,5 +6,5 @@
  * @since 1.0 
  * @see edu.uoregon.tau.perfdmf
  */ 
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 

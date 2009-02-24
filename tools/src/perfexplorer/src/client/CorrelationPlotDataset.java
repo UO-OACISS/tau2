@@ -1,10 +1,10 @@
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
 import org.jfree.data.xy.AbstractXYDataset;
 import org.jfree.data.xy.XYDataset;
 
-import clustering.RawDataInterface;
-import common.RMIChartData;
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.common.RMIChartData;
 
 import java.util.List;
 import java.text.DecimalFormat;
@@ -16,7 +16,7 @@ import java.text.FieldPosition;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper class around the RawDataInterface class.
  *
- * <P>CVS $Id: CorrelationPlotDataset.java,v 1.13 2008/03/05 00:28:11 khuck Exp $</P>
+ * <P>CVS $Id: CorrelationPlotDataset.java,v 1.14 2009/02/24 00:53:32 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1

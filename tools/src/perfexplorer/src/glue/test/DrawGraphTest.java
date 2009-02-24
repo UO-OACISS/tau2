@@ -1,13 +1,13 @@
 /**
  * 
  */
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.DrawGraph;
-import glue.PerformanceResult;
-import glue.TrialResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.DrawGraph;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -20,11 +20,11 @@ import junit.framework.TestCase;
 public class DrawGraphTest extends TestCase {
 
 	/**
-	 * Test method for {@link glue.DrawGraph#processData()}.
+	 * Test method for {@link edu.uoregon.tau.perfexplorer.glue.DrawGraph#processData()}.
 	 */
 	public final void testProcessData() {
 		Utilities.getClient();
-		Utilities.setSession("peri_gtc");
+		Utilities.setSession("perigtc");
 		Trial trial = Utilities.getTrial("GTC", "jacquard", "64");
 		PerformanceResult result = new TrialResult(trial);
 		String event = result.getMainEvent();

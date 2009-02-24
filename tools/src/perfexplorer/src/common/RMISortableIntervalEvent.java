@@ -1,4 +1,4 @@
-package common;
+package edu.uoregon.tau.perfexplorer.common;
 
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
@@ -19,7 +19,7 @@ import java.text.FieldPosition;
  * This class is the RMI class which contains the tree of views to be 
  * constructed in the PerfExplorerClient.
  *
- * <P>CVS $Id: RMISortableIntervalEvent.java,v 1.2 2006/06/14 04:25:00 khuck Exp $</P>
+ * <P>CVS $Id: RMISortableIntervalEvent.java,v 1.3 2009/02/24 00:53:37 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1

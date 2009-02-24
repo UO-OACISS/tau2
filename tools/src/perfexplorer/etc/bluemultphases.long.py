@@ -1,19 +1,7 @@
-from client import ScriptFacade
-from glue import PerformanceResult
-from glue import PerformanceAnalysisOperation
-from glue import MergeTrialsOperation
-from glue import ExtractPhasesOperation
-from glue import ExtractEventOperation
-from glue import CorrelationOperation
-from glue import Utilities
-from glue import TrialResult
-from glue import AbstractResult
-from glue import CorrelationResult
-from glue import BasicStatisticsOperation
-from glue import DrawMMMGraph
-from edu.uoregon.tau.perfdmf import Trial
-from java.util import HashSet
-from java.util import ArrayList
+from edu.uoregon.tau.perfexplorer.client import ScriptFacade
+from edu.uoregon.tau.perfexplorer.glue import *
+from edu.uoregon.tau.perfdmf import *
+from java.util import *
 
 True = 1
 

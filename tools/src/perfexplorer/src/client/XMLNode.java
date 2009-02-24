@@ -1,7 +1,7 @@
 /**
  * 
  */
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
 import java.io.File;
 import java.util.List;

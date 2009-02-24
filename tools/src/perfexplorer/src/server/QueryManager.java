@@ -1,4 +1,4 @@
-package server;
+package edu.uoregon.tau.perfexplorer.server;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
 import java.util.ListIterator;
 import javax.swing.*;
@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import edu.uoregon.tau.perfdmf.*;
-import common.RMIView;;
+import edu.uoregon.tau.perfexplorer.common.RMIView;
 
 public class PerfExplorerJTree extends JTree {
 

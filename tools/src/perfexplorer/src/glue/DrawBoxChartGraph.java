@@ -1,7 +1,7 @@
 /**
  * 
  */
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 
 import java.awt.BasicStroke;
 import java.util.ArrayList;
@@ -23,9 +23,9 @@ import org.jfree.chart.renderer.category.CategoryItemRenderer;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
 
-import client.PerfExplorerChart;
 
 import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfexplorer.client.PerfExplorerChart;
 
 /**
  * @author khuck

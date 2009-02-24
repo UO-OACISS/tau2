@@ -29,7 +29,7 @@
  * Original Author:  David Gilbert;
  * Contributor(s):   -;
  *
- * $Id: MyCategoryAxis.java,v 1.2 2008/03/05 00:25:52 khuck Exp $
+ * $Id: MyCategoryAxis.java,v 1.3 2009/02/24 00:53:32 khuck Exp $
  *
  * Changes (from 21-Aug-2001)
  * --------------------------
@@ -59,7 +59,7 @@
  *
  */
 
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
 import java.awt.Graphics2D;
 import java.awt.Insets;

@@ -1,13 +1,13 @@
 /**
  * 
  */
-package clustering.weka;
+package edu.uoregon.tau.perfexplorer.clustering.weka;
 
 import java.util.List;
 import java.util.ArrayList;
 
-import clustering.LinearRegressionInterface;
-import clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.clustering.LinearRegressionInterface;
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 
 import weka.classifiers.functions.LinearRegression;
 import weka.core.Instances;

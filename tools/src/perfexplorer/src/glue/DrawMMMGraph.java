@@ -1,7 +1,7 @@
 /**
  * 
  */
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 
 import java.awt.BasicStroke;
 import java.util.ArrayList;
@@ -27,11 +27,11 @@ import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.statistics.DefaultStatisticalCategoryDataset;
 import org.jfree.data.xy.DefaultHighLowDataset;
 
-import client.PerfExplorerChart;
-import client.MyCategoryAxis;
 import edu.uoregon.tau.common.AlphanumComparator;
 
 import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfexplorer.client.MyCategoryAxis;
+import edu.uoregon.tau.perfexplorer.client.PerfExplorerChart;
 
 /**
  * @author khuck

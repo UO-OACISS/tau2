@@ -1,4 +1,4 @@
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;

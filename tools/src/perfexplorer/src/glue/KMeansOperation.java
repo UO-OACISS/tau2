@@ -1,7 +1,7 @@
 /**
  * 
  */
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,15 +9,15 @@ import java.util.Map;
 import java.util.Set;
 import java.lang.Math;
 
-import server.PerfExplorerServer;
-import clustering.AnalysisFactory;
-import clustering.KMeansClusterInterface;
-import clustering.RawDataInterface;
 
-import common.RMIPerfExplorerModel;
 
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfexplorer.clustering.AnalysisFactory;
+import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
+import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 /**
  * @author khuck

@@ -1,4 +1,4 @@
-package server;
+package edu.uoregon.tau.perfexplorer.server;
 
 import java.util.Iterator;
 import javax.xml.*;

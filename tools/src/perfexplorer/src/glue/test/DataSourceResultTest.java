@@ -1,11 +1,11 @@
 /**
  * 
  */
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.DataSource;
-import glue.DataSourceResult;
-import glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.DataSourceResult;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
 import junit.framework.TestCase;
 
 /**
@@ -22,7 +22,7 @@ public class DataSourceResultTest extends TestCase {
 	}
 
 	/**
-	 * Test method for {@link glue.DataSourceResult#DataSourceResult(int, java.lang.String[], boolean)}.
+	 * Test method for {@link edu.uoregon.tau.perfexplorer.glue.DataSourceResult#DataSourceResult(int, java.lang.String[], boolean)}.
 	 */
 	public final void testDataSourceResultIntStringArrayBoolean() {
 		String home = System.getProperty("user.home");

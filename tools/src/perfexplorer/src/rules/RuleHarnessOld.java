@@ -1,4 +1,4 @@
-package rules;
+package edu.uoregon.tau.perfexplorer.rules;
 
 import java.io.FileReader;
 import java.io.InputStreamReader;
@@ -16,7 +16,6 @@ import org.drools.WorkingMemory;
 import org.drools.compiler.PackageBuilder;
 import org.drools.rule.Package;
 
-import client.ScriptFacade;
 
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
@@ -24,6 +23,7 @@ import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.IntervalLocationProfile;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfexplorer.client.ScriptFacade;
 
 public class RuleHarnessOld {
 

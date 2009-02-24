@@ -1,4 +1,4 @@
-package persistence;
+package edu.uoregon.tau.perfexplorer.persistence;
 
 import org.hibernate.*;
 import org.hibernate.cfg.*;

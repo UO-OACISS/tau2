@@ -1,12 +1,12 @@
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.BasicStatisticsOperation;
-import glue.ExtractEventOperation;
-import glue.PerformanceAnalysisOperation;
-import glue.PerformanceResult;
-import glue.TrialResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.BasicStatisticsOperation;
+import edu.uoregon.tau.perfexplorer.glue.ExtractEventOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +17,7 @@ public class BasicStatisticsOperationTest extends TestCase {
 
 	public final void testProcessData() {
 		return;
-/*		Utilities.setSession("peri_gtc");
+/*		Utilities.setSession("perigtc");
 		Trial trial = Utilities.getTrial("GTC", "ocracoke-O2", "64");
 		Trial trial2 = Utilities.getTrial("GTC", "ocracoke-O2", "128");
 		Trial trial3 = Utilities.getTrial("GTC", "ocracoke-O2", "256");
@@ -66,7 +66,7 @@ public class BasicStatisticsOperationTest extends TestCase {
 */	}
 	
 	public final void testProcessData2() {
-		Utilities.setSession("perfdmf_uploaded");
+		Utilities.setSession("spaceghost");
 		Trial trial = Utilities.getTrial("NPB", "LU.W.4-metadata", "p1");
 		PerformanceResult result = new TrialResult(trial);
 		List<String> events = new ArrayList<String>();

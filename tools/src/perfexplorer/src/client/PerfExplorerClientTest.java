@@ -1,8 +1,8 @@
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
 import javax.swing.JFrame;
 
-import common.EngineType;
+import edu.uoregon.tau.perfexplorer.common.EngineType;
 
 import junit.framework.TestCase;
 

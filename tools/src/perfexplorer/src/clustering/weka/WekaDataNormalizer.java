@@ -1,12 +1,13 @@
 /**
  * Created Feb. 13, 2006
  */
-package clustering.weka;
+package edu.uoregon.tau.perfexplorer.clustering.weka;
 
-import clustering.DataNormalizer;
-import clustering.RawDataInterface;
 
 import java.util.List;
+
+import edu.uoregon.tau.perfexplorer.clustering.DataNormalizer;
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 
 
 
@@ -14,7 +15,7 @@ import java.util.List;
   * Implementation of the DataNormalizer interface for Weka data.
   * TODO - make this class immutable?
   *
-  * <P>CVS $Id: WekaDataNormalizer.java,v 1.3 2008/07/31 18:43:48 khuck Exp $</P>
+  * <P>CVS $Id: WekaDataNormalizer.java,v 1.4 2009/02/24 00:53:36 khuck Exp $</P>
   * @author khuck
   * @version 0.2
   * @since   0.2

@@ -1,6 +1,6 @@
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 
-import common.PerfExplorerException;
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerException;
 
 public final class PerformanceDifferenceType {
     /**

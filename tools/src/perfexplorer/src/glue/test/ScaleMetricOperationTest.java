@@ -1,13 +1,13 @@
 /**
  * 
  */
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.PerformanceResult;
-import glue.ScaleMetricOperation;
-import glue.TrialResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.ScaleMetricOperation;
+import edu.uoregon.tau.perfexplorer.glue.TrialResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 import junit.framework.TestCase;
 
 
@@ -18,7 +18,7 @@ import junit.framework.TestCase;
 public class ScaleMetricOperationTest extends TestCase {
 
 	/**
-	 * Test method for {@link glue.ScaleMetricOperation#processData()}.
+	 * Test method for {@link edu.uoregon.tau.perfexplorer.glue.ScaleMetricOperation#processData()}.
 	 */
 	public final void testProcessData() {
 	    Utilities.setSession("perfdmf_test");

@@ -1,14 +1,8 @@
 #created on: Aug 5, 2007
-package rules
+package edu.uoregon.tau.perfexplorer.rules
 
 #list any import classes here.
-import glue.DifferenceMetadataOperation;
-import glue.DifferenceOperation;
-import glue.PerformanceDifferenceType;
-import glue.DataNeeded;
-import glue.MeanEventFact;
-import glue.DerivedMetrics;
-import glue.ScalabilityResult;
+import edu.uoregon.tau.perfexplorer.glue.*
 
 #declare any global variables here
 

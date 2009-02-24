@@ -1,8 +1,8 @@
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.TrialThreadMetadata;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.TrialThreadMetadata;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 import junit.framework.TestCase;
 
 public class TrialThreadMetadataTest extends TestCase {

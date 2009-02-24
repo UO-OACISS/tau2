@@ -1,7 +1,7 @@
-from client import ScriptFacade
-from common import TransformationType
-from common import AnalysisType
-from common import EngineType
+from edu.uoregon.tau.perfexplorer.client import ScriptFacade
+from edu.uoregon.tau.perfexplorer.common import TransformationType
+from edu.uoregon.tau.perfexplorer.common import AnalysisType
+from edu.uoregon.tau.perfexplorer.common import EngineType
 
 def GTC_s(pe):
 	# simple database

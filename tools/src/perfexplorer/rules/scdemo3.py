@@ -1,24 +1,5 @@
-from glue import PerformanceResult
-from glue import Utilities
-from glue import TopXEvents
-from glue import TrialMeanResult
-from glue import AbstractResult
-from glue import DataNeeded
-from glue import DeriveMetricOperation
-from glue import ExtractEventOperation
-from glue import ExtractNonCallpathEventOperation
-from glue import ExtractCallpathEventOperation
-from glue import DeriveMetricOperation
-from glue import DeriveAllMetricsOperation
-from glue import MergeTrialsOperation
-from glue import TrialMetadata
-from glue import MeanEventFact
-from glue import DerivedMetrics
-from rules import RuleHarness
-from glue import ScalabilityOperation
-from glue import ScalabilityResult
-from glue import DifferenceMetadataOperation
-from glue import DifferenceOperation
+from edu.uoregon.tau.perfexplorer.glue import *
+from edu.uoregon.tau.perfexplorer.rules import *
 from java.util import ArrayList
 
 True = 1

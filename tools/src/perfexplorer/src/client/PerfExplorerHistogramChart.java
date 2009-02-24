@@ -5,9 +5,8 @@
  *
  */
 
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
-import common.*;
 import java.io.IOException;
 import java.util.List;
 import javax.swing.JFrame;
@@ -27,6 +26,8 @@ import org.jfree.chart.labels.XYToolTipGenerator;
 import org.jfree.data.xy.XYDataset;
 import java.net.URL;
 import edu.uoregon.tau.common.Utility;
+import edu.uoregon.tau.perfexplorer.common.*;
+
 import java.awt.Toolkit;
 
 /**

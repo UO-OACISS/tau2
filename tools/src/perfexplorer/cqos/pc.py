@@ -1,5 +1,5 @@
-from glue import *
-from client import PerfExplorerModel
+from edu.uoregon.tau.perfexplorer.glue import *
+from edu.uoregon.tau.perfexplorer.client import PerfExplorerModel
 from edu.uoregon.tau.perfdmf import Trial
 from edu.uoregon.tau.perfdmf import Experiment
 from java.util import *

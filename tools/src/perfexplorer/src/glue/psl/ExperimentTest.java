@@ -1,9 +1,9 @@
-package glue.psl;
+package edu.uoregon.tau.perfexplorer.glue.psl;
 
 import junit.framework.TestCase;
-import glue.Utilities;
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.TrialResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 
 public class ExperimentTest extends TestCase {
 

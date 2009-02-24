@@ -1,14 +1,7 @@
-from client import ScriptFacade
-from glue import PerformanceResult
-from glue import PerformanceAnalysisOperation
-from glue import Utilities
-from glue import TrialResult
-from glue import AbstractResult
-from glue import KMeansOperation
-from glue import TopXEvents
+from edu.uoregon.tau.perfexplorer.client import ScriptFacade
+from edu.uoregon.tau.perfexplorer.glue import *
 from edu.uoregon.tau.perfdmf import Trial
-from java.util import HashSet
-from java.util import ArrayList
+from java.util import *
 
 True = 1
 

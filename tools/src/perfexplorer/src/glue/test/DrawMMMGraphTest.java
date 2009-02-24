@@ -1,19 +1,19 @@
 /**
  * 
  */
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.AbstractResult;
-import glue.BasicStatisticsOperation;
-import glue.DrawGraph;
-import glue.DrawMMMGraph;
-import glue.ExtractEventOperation;
-import glue.ExtractMetricOperation;
-import glue.PerformanceAnalysisOperation;
-import glue.PerformanceResult;
-import glue.TrialResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
+import edu.uoregon.tau.perfexplorer.glue.BasicStatisticsOperation;
+import edu.uoregon.tau.perfexplorer.glue.DrawGraph;
+import edu.uoregon.tau.perfexplorer.glue.DrawMMMGraph;
+import edu.uoregon.tau.perfexplorer.glue.ExtractEventOperation;
+import edu.uoregon.tau.perfexplorer.glue.ExtractMetricOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -27,7 +27,7 @@ import junit.framework.TestCase;
 public class DrawMMMGraphTest extends TestCase {
 
 	/**
-	 * Test method for {@link glue.DrawMMMGraph#processData()}.
+	 * Test method for {@link edu.uoregon.tau.perfexplorer.glue.DrawMMMGraph#processData()}.
 	 */
 	public final void testProcessData() {
 		Utilities.getClient();

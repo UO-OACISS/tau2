@@ -1,4 +1,4 @@
-package common;
+package edu.uoregon.tau.perfexplorer.common;
 
 import edu.uoregon.tau.common.PythonInterpreterFactory;
 
@@ -7,7 +7,7 @@ import edu.uoregon.tau.common.PythonInterpreterFactory;
  * requests.  It is created by the PerfExplorerServer object, and 
  * checks the queue every 1 seconds to see if there are any new requests.
  *
- * <P>CVS $Id: ScriptThread.java,v 1.1 2008/07/21 23:14:56 khuck Exp $</P>
+ * <P>CVS $Id: ScriptThread.java,v 1.2 2009/02/24 00:53:37 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1

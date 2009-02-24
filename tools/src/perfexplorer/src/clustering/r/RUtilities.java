@@ -1,7 +1,7 @@
 
-package clustering.r;
+package edu.uoregon.tau.perfexplorer.clustering.r;
 
-import clustering.Utilities;
+import edu.uoregon.tau.perfexplorer.clustering.Utilities;
 
 public class RUtilities implements Utilities {
 

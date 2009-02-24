@@ -1,10 +1,10 @@
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import java.util.Hashtable;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.TrialMetadata;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.TrialMetadata;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 import junit.framework.TestCase;
 
 public class TrialMetadataTest extends TestCase {

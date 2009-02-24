@@ -1,7 +1,7 @@
 /**
  * 
  */
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -9,7 +9,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import rules.RuleHarness;
+import edu.uoregon.tau.perfexplorer.rules.RuleHarness;
+
 
 /**
  * @author khuck

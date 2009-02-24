@@ -1,18 +1,18 @@
 /**
  * 
  */
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import java.util.List;
 import java.util.Map;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.AbstractResult;
-import glue.PerformanceAnalysisOperation;
-import glue.PerformanceResult;
-import glue.TopXEvents;
-import glue.TrialResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.TopXEvents;
+import edu.uoregon.tau.perfexplorer.glue.TrialResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 import junit.framework.TestCase;
 
 /**
@@ -29,10 +29,10 @@ public class TopXEventsTest extends TestCase {
 	}
 
 	/**
-	 * Test method for {@link glue.TopXEvents#processData()}.
+	 * Test method for {@link edu.uoregon.tau.perfexplorer.glue.TopXEvents#processData()}.
 	 */
 	public final void testProcessData() {
-		Utilities.setSession("peri_gtc");
+		Utilities.setSession("perigtc");
 		Trial trial = Utilities.getTrial("GTC", "ocracoke-O2", "64");
 		PerformanceResult result = new TrialResult(trial);
 		boolean doingMean = false;

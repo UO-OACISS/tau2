@@ -1,8 +1,5 @@
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
-import common.RMIChartData;
-import common.RMIGeneralChartData;
-import common.ChartDataType;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.BasicStroke;
@@ -35,6 +32,10 @@ import org.jfree.chart.labels.StandardXYToolTipGenerator;
 import java.text.DecimalFormat;
 import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.common.VectorExport;
+import edu.uoregon.tau.perfexplorer.common.ChartDataType;
+import edu.uoregon.tau.perfexplorer.common.RMIChartData;
+import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData;
+
 import java.util.StringTokenizer;
 import java.util.NoSuchElementException;
 
@@ -209,11 +210,11 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 					new Integer(rawData.getMaximum()));
 
 				// get the baseline values
-				common.RMIGeneralChartData.CategoryDataRow baseline = rawData.getRowData(0);
+				edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow baseline = rawData.getRowData(0);
 
 				// iterate through the values
 				for (int i = 0 ; i < rawData.getRows() ; i++) {
-					common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
+					edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
 					if (!shortName(row.series).equals(shortName(baseline.series))) {
 						//System.out.println(shortName(row.series));
 						baseline = row;
@@ -241,14 +242,14 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			} else {
 				// iterate through the values
 				for (int i = 0 ; i < rawData.getRows() ; i++) {
-					common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
+					edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
         			dataset.addValue(row.value / 1000000, shortName(row.series), row.categoryInteger);
 				}
 			}
 		} else {
 			// iterate through the values
 			for (int i = 0 ; i < rawData.getRows() ; i++) {
-				common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
+				edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
         		dataset.addValue(row.value / 1000000, shortName(row.series), row.categoryString);
 			}
 		}

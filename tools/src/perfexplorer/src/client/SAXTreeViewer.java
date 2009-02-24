@@ -40,7 +40,7 @@
 
  */
 
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
 import java.io.IOException;
 import java.io.StringReader;

@@ -1,15 +1,16 @@
 /**
  * 
  */
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.AbstractResult;
-import glue.MergeTrialsOperation;
-import glue.PerformanceAnalysisOperation;
-import glue.PerformanceResult;
-import glue.TrialResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
+import edu.uoregon.tau.perfexplorer.glue.MergeTrialsOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
+
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -21,7 +22,7 @@ import junit.framework.TestCase;
 public class MergeTrialsOperationTest extends TestCase {
 
 	/**
-	 * Test method for {@link glue.MergeTrialsOperation#processData()}.
+	 * Test method for {@link edu.uoregon.tau.perfexplorer.glue.MergeTrialsOperation#processData()}.
 	 */
 	public final void testProcessData() {
 		Utilities.setSession("perfdmf_test");

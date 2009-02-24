@@ -1,6 +1,6 @@
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
-import common.*;
+import edu.uoregon.tau.perfexplorer.common.*;
 
 public class PerfExplorerModel extends RMIPerfExplorerModel {
 	private static PerfExplorerModel theModel = null;

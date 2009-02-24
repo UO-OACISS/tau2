@@ -1,11 +1,12 @@
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
-import common.RMIView;
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
+import edu.uoregon.tau.perfexplorer.common.RMIView;
+
 import java.util.List;
 import javax.swing.*;
 import javax.swing.event.*;

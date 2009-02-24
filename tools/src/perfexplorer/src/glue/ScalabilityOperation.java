@@ -1,7 +1,7 @@
 /**
  * 
  */
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.analysis.Scalability;

@@ -1,4 +1,4 @@
-package server;
+package edu.uoregon.tau.perfexplorer.server;
 
 import java.awt.Color;
 import java.io.File;
@@ -23,12 +23,12 @@ import org.jfree.data.general.DatasetUtilities;
 import org.jfree.data.statistics.Regression;
 import org.jfree.data.xy.XYDataset;
 
-import common.ChartType;
-import common.RMIPerfExplorerModel;
-import constants.Constants;
 
-import clustering.DataNormalizer;
-import clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.clustering.DataNormalizer;
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.common.ChartType;
+import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
+import edu.uoregon.tau.perfexplorer.constants.Constants;
 
 public class ImageUtils {
 	

@@ -1,10 +1,10 @@
 /**
  * 
  */
-package clustering.weka;
+package edu.uoregon.tau.perfexplorer.clustering.weka;
 
 import weka.classifiers.Classifier;
-import clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 
 /**
  * @author khuck

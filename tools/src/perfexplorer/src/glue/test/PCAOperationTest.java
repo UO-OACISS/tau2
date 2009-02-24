@@ -1,15 +1,15 @@
 /**
  * 
  */
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.AbstractResult;
-import glue.DefaultResult;
-import glue.PCAOperation;
-import glue.PerformanceResult;
-import glue.TrialResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
+import edu.uoregon.tau.perfexplorer.glue.DefaultResult;
+import edu.uoregon.tau.perfexplorer.glue.PCAOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 
 import java.util.List;
 
@@ -22,10 +22,10 @@ import junit.framework.TestCase;
 public class PCAOperationTest extends TestCase {
 
 	/**
-	 * Test method for {@link glue.PCAOperation#processData()}.
+	 * Test method for {@link edu.uoregon.tau.perfexplorer.glue.PCAOperation#processData()}.
 	 */
 	public final void testProcessData() {
-		Utilities.setSession("peri_gtc");
+		Utilities.setSession("perigtc");
 		PerformanceResult result = new DefaultResult();
 		result.putExclusive(0, "x", "time", 2.5);
 		result.putExclusive(1, "x", "time", 0.5);

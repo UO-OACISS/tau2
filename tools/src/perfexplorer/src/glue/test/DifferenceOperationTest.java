@@ -1,19 +1,19 @@
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
 import java.util.List;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import glue.DifferenceOperation;
-import glue.PerformanceAnalysisOperation;
-import glue.PerformanceResult;
-import glue.TrialResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.DifferenceOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 import junit.framework.TestCase;
 
 public class DifferenceOperationTest extends TestCase {
 
 	public final void testProcessData() {
-		Utilities.setSession("peri_gtc");
+		Utilities.setSession("perigtc");
 		Trial trial = Utilities.getTrial("GTC", "ocracoke-O2", "64");
 		Trial trial2 = Utilities.getTrial("GTC", "ocracoke-O2", "128");
 		PerformanceResult result = new TrialResult(trial);

@@ -1,5 +1,5 @@
-from glue import *
-from rules import *
+from edu.uoregon.tau.perfexplorer.glue import *
+from edu.uoregon.tau.perfexplorer.rules import *
 
 True = 1
 False = 0

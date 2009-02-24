@@ -2,15 +2,15 @@
  * Created on Mar 16, 2005
  *
  */
-package clustering.weka;
+package edu.uoregon.tau.perfexplorer.clustering.weka;
 
-import clustering.DendrogramTree;
-import clustering.KMeansClusterInterface;
-import clustering.ClusterException;
-import clustering.ClusterDescription;
-import clustering.RawDataInterface;
-import clustering.DistanceMatrix;
-import common.PerfExplorerOutput;
+import edu.uoregon.tau.perfexplorer.clustering.ClusterDescription;
+import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
+import edu.uoregon.tau.perfexplorer.clustering.DendrogramTree;
+import edu.uoregon.tau.perfexplorer.clustering.DistanceMatrix;
+import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 import weka.core.Instances;
 import weka.attributeSelection.PrincipalComponents;
 
@@ -18,7 +18,7 @@ import weka.attributeSelection.PrincipalComponents;
  * This class is used as a list of names and values to describe 
  * a cluster created during some type of clustering operation.
  * 
- * <P>CVS $Id: WekaKMeansCluster.java,v 1.7 2008/10/09 23:13:56 khuck Exp $</P>
+ * <P>CVS $Id: WekaKMeansCluster.java,v 1.8 2009/02/24 00:53:36 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since 0.1

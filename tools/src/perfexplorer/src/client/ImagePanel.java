@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package client;
+package edu.uoregon.tau.perfexplorer.client;
 
 import javax.swing.JPanel;
 import java.awt.*;
@@ -13,7 +13,7 @@ import java.awt.image.*;
 /**
  * Description
  *
- * <P>CVS $Id: ImagePanel.java,v 1.1 2005/07/05 22:29:47 amorris Exp $</P>
+ * <P>CVS $Id: ImagePanel.java,v 1.2 2009/02/24 00:53:32 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1

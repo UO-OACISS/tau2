@@ -1,10 +1,10 @@
 #created on: Apr 24, 2007
-package client
+package edu.uoregon.tau.perfexplorer.client
 
 #list any import classes here.
-import client.RuleHarness.RelativeTrial;
-import client.RuleHarness.Difference;
-import client.RuleHarness.Helper;
+import edu.uoregon.tau.perfexplorer.client.RuleHarness.RelativeTrial;
+import edu.uoregon.tau.perfexplorer.client.RuleHarness.Difference;
+import edu.uoregon.tau.perfexplorer.client.RuleHarness.Helper;
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.IntervalEvent;

@@ -1,11 +1,11 @@
-package glue.test;
+package edu.uoregon.tau.perfexplorer.glue.test;
 
-import glue.AbstractPerformanceOperation;
-import glue.DefaultOperation;
-import glue.DefaultResult;
-import glue.PerformanceAnalysisOperation;
-import glue.PerformanceResult;
-import glue.Provenance;
+import edu.uoregon.tau.perfexplorer.glue.AbstractPerformanceOperation;
+import edu.uoregon.tau.perfexplorer.glue.DefaultOperation;
+import edu.uoregon.tau.perfexplorer.glue.DefaultResult;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.Provenance;
 
 import java.util.List;
 
@@ -15,7 +15,7 @@ import junit.framework.TestCase;
  * This class is a JUnit test for the default operation class.
  * It also tests the Provenance class.
  * 
- * <P>CVS $Id: DefaultOperationTest.java,v 1.1 2008/08/27 01:32:04 khuck Exp $</P>
+ * <P>CVS $Id: DefaultOperationTest.java,v 1.2 2009/02/24 00:53:43 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0

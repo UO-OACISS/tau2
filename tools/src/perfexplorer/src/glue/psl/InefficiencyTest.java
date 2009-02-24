@@ -1,15 +1,15 @@
 /**
  * 
  */
-package glue.psl;
+package edu.uoregon.tau.perfexplorer.glue.psl;
 
-import glue.AbstractResult;
-import glue.PerformanceAnalysisOperation;
-import glue.PerformanceResult;
-import glue.TopXPercentEvents;
-import glue.TrialMeanResult;
-import glue.TrialResult;
-import glue.Utilities;
+import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.TopXPercentEvents;
+import edu.uoregon.tau.perfexplorer.glue.TrialMeanResult;
+import edu.uoregon.tau.perfexplorer.glue.TrialResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +30,7 @@ public class InefficiencyTest extends TestCase {
 	}
 
 	/**
-	 * Test method for {@link glue.psl.Inefficiency#Inefficiency(glue.PerformanceResult, glue.PerformanceResult, java.lang.Integer, java.lang.String, java.lang.String, int)}.
+	 * Test method for {@link edu.uoregon.tau.perfexplorer.glue.psl.Inefficiency#Inefficiency(edu.uoregon.tau.perfexplorer.glue.PerformanceResult, edu.uoregon.tau.perfexplorer.glue.PerformanceResult, java.lang.Integer, java.lang.String, java.lang.String, int)}.
 	 */
 	public final void testInefficiency() {
 

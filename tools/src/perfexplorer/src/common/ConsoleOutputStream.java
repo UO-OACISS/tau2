@@ -1,4 +1,4 @@
-package common;
+package edu.uoregon.tau.perfexplorer.common;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

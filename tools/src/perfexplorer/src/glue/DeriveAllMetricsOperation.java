@@ -1,13 +1,13 @@
 /**
  * 
  */
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 
 import java.util.List;
 
-import rules.RuleHarness;
 
 import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfexplorer.rules.RuleHarness;
 
 /**
  * @author khuck

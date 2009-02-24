@@ -2,17 +2,18 @@
  * Created on Mar 16, 2005
  *
  */
-package clustering.weka;
+package edu.uoregon.tau.perfexplorer.clustering.weka;
 
-import clustering.HierarchicalCluster;
-import clustering.DistanceMatrix;
-import clustering.DendrogramTree;
-import clustering.RawDataInterface;
-import common.PerfExplorerOutput;
 
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ArrayList;
+
+import edu.uoregon.tau.perfexplorer.clustering.DendrogramTree;
+import edu.uoregon.tau.perfexplorer.clustering.DistanceMatrix;
+import edu.uoregon.tau.perfexplorer.clustering.HierarchicalCluster;
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 
 /**
  * This class solves a hierarchical clustering for a RawData object.

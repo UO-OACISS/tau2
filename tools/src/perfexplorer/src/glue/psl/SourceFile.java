@@ -1,7 +1,7 @@
 /**
  * 
  */
-package glue.psl;
+package edu.uoregon.tau.perfexplorer.glue.psl;
 
 import java.util.ArrayList;
 import java.util.HashSet;

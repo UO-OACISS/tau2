@@ -1,10 +1,11 @@
-package server;
+package edu.uoregon.tau.perfexplorer.server;
 
-import common.PerfExplorerOutput;
 
 import com.sun.image.codec.jpeg.JPEGCodec;
 import com.sun.image.codec.jpeg.JPEGEncodeParam;
 import com.sun.image.codec.jpeg.JPEGImageEncoder;
+
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 
 import java.awt.Container;
 import java.awt.Graphics2D;
@@ -21,7 +22,7 @@ import java.io.FileOutputStream;
  * This code generates a thumbnail image from a larger JPG or PNG file.
  * This code was taken from http://www.geocities.com/marcoschmidt.geo/java-save-jpeg-thumbnail.html
  *
- * <P>CVS $Id: Thumbnail.java,v 1.3 2007/01/04 21:20:04 khuck Exp $</P>
+ * <P>CVS $Id: Thumbnail.java,v 1.4 2009/02/24 00:53:45 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 
 import java.util.Map;
 import java.util.Set;
@@ -13,7 +13,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * should support.  All operations should be refered to through
  * this interface, whenever possible.
  * 
- * <P>CVS $Id: PerformanceResult.java,v 1.6 2008/08/26 23:21:53 khuck Exp $</P>
+ * <P>CVS $Id: PerformanceResult.java,v 1.7 2009/02/24 00:53:39 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0

@@ -1,4 +1,4 @@
-package constants;
+package edu.uoregon.tau.perfexplorer.constants;
 
 import java.io.File;
 

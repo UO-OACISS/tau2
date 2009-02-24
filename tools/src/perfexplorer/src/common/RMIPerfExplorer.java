@@ -1,4 +1,4 @@
-package common;
+package edu.uoregon.tau.perfexplorer.common;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -10,7 +10,7 @@ import java.util.List;
  * PerfExplorerServer object.  This interface defines the API for
  * passing requests to the server.
  * 
- * <P>CVS $Id: RMIPerfExplorer.java,v 1.14 2008/04/16 22:31:32 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorer.java,v 1.15 2009/02/24 00:53:37 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1

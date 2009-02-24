@@ -1,16 +1,16 @@
 /**
  * 
  */
-package glue;
+package edu.uoregon.tau.perfexplorer.glue;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import common.EngineType;
-import common.PerfExplorerException;
 
 import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfexplorer.common.EngineType;
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerException;
 
 /**
  * @author khuck
