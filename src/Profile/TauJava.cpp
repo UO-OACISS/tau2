@@ -37,8 +37,7 @@ bool& TheTauExcludeMethodsFlag()
 
 // profiler agent entry point
 extern "C" {
-  JNIEXPORT jint JNICALL JVM_OnLoad(JavaVM *jvm, char *options, void *reserved)
-{
+  JNIEXPORT jint JNICALL JVM_OnLoad(JavaVM *jvm, char *options, void *reserved) {
 #ifdef DEBUG_PROF
     fprintf(stdout, "TAU> initializing ..... \n");
 #endif /* DEBUG_PROF */
@@ -59,8 +58,7 @@ extern "C" {
     TauJavaLayer::Init(options);
 
     // enabling class load event notification
-    if (!TheTauExcludeMethodsFlag())
-    {
+    if (!TheTauExcludeMethodsFlag()) {
       CALL(EnableEvent)(JVMPI_EVENT_CLASS_LOAD, NULL);
       CALL(EnableEvent)(JVMPI_EVENT_METHOD_ENTRY, NULL);
       CALL(EnableEvent)(JVMPI_EVENT_METHOD_EXIT, NULL);
@@ -96,33 +94,29 @@ extern "C" {
 
 static char **TauExcludeList=NULL;
 static int TauExcludeListSize = 0;
-void TauJavaLayer::Init(char *options){
-char *token;
-static int num_tokens = 0; /* This can be called more than once! TauJAPI */
-int token_len;
-char *s1;
-char *s2;
-
+void TauJavaLayer::Init(char *options) {
+  char *token;
+  static int num_tokens = 0; /* This can be called more than once! TauJAPI */
+  int token_len;
+  char *s1;
+  char *s2;
+  
 #ifdef DEBUG_PROF
   printf("Inside TauJavaLayer::Init options = %s\n",options);
 #endif // DEBUG_PROF
-
-  if(options && strlen(options))
-  {
+  
+  if(options && strlen(options)) {
 #ifdef DEBUG_PROF
     fprintf(stdout,"Init: options = %s, len=%d\n", options, strlen(options));
 #endif // DEBUG_PROF
 
     // There are problems with strtok. Since this is called twice,
     // we allocate new strings before using with strtok. Crashes otherwise 	
-    if (num_tokens == 0)
-    {
+    if (num_tokens == 0) {
       s1 = new char [strlen (options) + 1];
       strcpy(s1, options);
       token=strtok(s1, "=,");
-    }
-    else
-    {
+    } else {
       s2 = new char [strlen (options) + 1];
       strcpy(s2, options);
       token=strtok(s2, "=,");
@@ -137,11 +131,7 @@ char *s2;
         TauExcludeList = (char **) malloc(256*sizeof(char*)); // 256 items max in exclude list
 	// This ensures that if it is coming here again then the list is not blank
       }
-      while(token=strtok(NULL,"=,")) 
-      {
-#ifdef DEBUG_PROF
-        printf("token=%s\n",token);
-#endif // DEBUG_PROF
+      while(token=strtok(NULL,"=,")) {
 	token_len = strlen(token);
 	TauExcludeList[num_tokens]=(char *)malloc(token_len+1);
 	strcpy(TauExcludeList[num_tokens], token);
@@ -149,14 +139,12 @@ char *s2;
       }
       TauExcludeListSize = num_tokens;
     }
-
+    
 #ifdef DEBUG_PROF
-    for(int i = 0; i < TauExcludeListSize; i++)
-    {
+    for(int i = 0; i < TauExcludeListSize; i++) {
       printf("ExcludeList[%d] = %s\n", i, TauExcludeList[i]);
     }
 #endif // DEBUG_PROF
-    
   }
 }
 
@@ -218,8 +206,7 @@ void TauJavaLayer::NotifyEvent(JVMPI_Event *event) {
   }
 }
 
-void TauJavaLayer::ClassLoad(JVMPI_Event *event)
-{
+void TauJavaLayer::ClassLoad(JVMPI_Event *event) {
   char funcname[2048], classname[1024];
   char *groupname;
   int i;
@@ -231,13 +218,10 @@ void TauJavaLayer::ClassLoad(JVMPI_Event *event)
 
 int origkey = 1;
   
-  if (TauExcludeListSize) 
-  {
-    for (i=0; i < TauExcludeListSize; i++)
-    {
+  if (TauExcludeListSize) {
+    for (i=0; i < TauExcludeListSize; i++) {
       if (strncmp(event->u.class_load.class_name, 
-	  TauExcludeList[i], strlen(TauExcludeList[i])) == 0) 
-      {
+		  TauExcludeList[i], strlen(TauExcludeList[i])) == 0) {
 #ifdef DEBUG_PROF
         printf("Excluding %s\n", event->u.class_load.class_name);
 #endif // DEBUG_PROF
@@ -245,20 +229,18 @@ int origkey = 1;
       }
     }
   }
-  for (i = 0; i < event->u.class_load.num_methods; i++)
-  {
+  for (i = 0; i < event->u.class_load.num_methods; i++) {
     /* Create FunctionInfo objects for each of these methods */
 
-  if (TauEnv_get_tracing()) {
-    sprintf(funcname, "%s  %s", event->u.class_load.class_name, 
-	    event->u.class_load.methods[i].method_name); 
-  } else {
-    sprintf(funcname, "%s  %s %s", event->u.class_load.class_name, 
-	    event->u.class_load.methods[i].method_name, 
-	    event->u.class_load.methods[i].method_signature); 
-  }
-#endif /* signature is too much for tau_convert to handle */
-
+    if (TauEnv_get_tracing()) {
+      sprintf(funcname, "%s  %s", event->u.class_load.class_name, 
+	      event->u.class_load.methods[i].method_name); 
+    } else {
+      sprintf(funcname, "%s  %s %s", event->u.class_load.class_name, 
+	      event->u.class_load.methods[i].method_name, 
+	      event->u.class_load.methods[i].method_signature); 
+    }
+    
     sprintf(classname, "%s", event->u.class_load.class_name); 
     groupname = strtok(classname, " /=");
 
@@ -267,32 +249,29 @@ int origkey = 1;
 	  (long)  event->u.class_load.methods[i].method_id, 
 		     groupname, tid); 
 */
-    if (origkey == 1)
-    {
+    if (origkey == 1) {
       TAU_MAPPING_CREATE(funcname, " ",
-	  (long)  event->u.class_load.methods[i].method_id, 
-		     groupname, tid); 
+			 (long)  event->u.class_load.methods[i].method_id, 
+			 groupname, tid); 
     } else {
-/* NO NEED TO CREATE THIS OBJECT! */ 
-/*
-      TAU_MAPPING_CREATE1(funcname, " ",
-	  (long)  event->u.class_load.methods[i].method_id, origkey,
-		     groupname, tid); 
-*/
+      /* NO NEED TO CREATE THIS OBJECT! */ 
+      /*
+	TAU_MAPPING_CREATE1(funcname, " ",
+	(long)  event->u.class_load.methods[i].method_id, origkey,
+	groupname, tid); 
+      */
     }
-   
-
+    
+    
 #ifdef DEBUG_PROF 
     printf("TAU> %s, id: %ld group:  %s\n", funcname,
-		event->u.class_load.methods[i].method_id, groupname);
+	   event->u.class_load.methods[i].method_id, groupname);
 #endif /* DEBUG_PROF */
     /* name, type, key, group name  are the four arguments above */
   }
-	
 }
 
-void TauJavaLayer::MethodEntry(JVMPI_Event *event)
-{
+void TauJavaLayer::MethodEntry(JVMPI_Event *event) {
   int tid = JavaThreadLayer::GetThreadId(event->env_id);
   TAU_MAPPING_OBJECT(TauMethodName=NULL);
   TAU_MAPPING_LINK(TauMethodName, (long) event->u.method.method_id);
@@ -310,8 +289,7 @@ void TauJavaLayer::MethodEntry(JVMPI_Event *event)
   }
 }
 
-void TauJavaLayer::MethodExit(JVMPI_Event *event)
-{
+void TauJavaLayer::MethodExit(JVMPI_Event *event) {
   int tid = JavaThreadLayer::GetThreadId(event->env_id);
 
   TAU_MAPPING_OBJECT(TauMethodName=NULL);
@@ -320,22 +298,21 @@ void TauJavaLayer::MethodExit(JVMPI_Event *event)
   if (TauMethodName) { // stop only if it has a finite group 
     TAU_MAPPING_PROFILE_STOP(tid);
 #ifdef DEBUG_PROF
-  fprintf(stdout, "TAU> Method Exit : %ld, TID = %d\n",
-	 	(long) event->u.method.method_id, tid);
+    fprintf(stdout, "TAU> Method Exit : %ld, TID = %d\n",
+	    (long) event->u.method.method_id, tid);
 #endif /* DEBUG_PROF */
   }
 }
 
 void TauJavaLayer::CreateTopLevelRoutine(char *name, char *type, char *groupname, 
-			int tid)
-{
+			int tid) {
 #ifdef DEBUG_PROF
   fprintf(stdout, "Inside CreateTopLevelRoutine: name = %s, type = %s, group = %s, tid = %d\n",
-	name, type, groupname, tid); 
+	  name, type, groupname, tid); 
 #endif
   /* Create a top-level routine that is always called. Use the thread name in it */
   TAU_MAPPING_CREATE(name, type, 1, groupname, tid); 
-
+  
   TAU_MAPPING_OBJECT(TauMethodName);
   TAU_MAPPING_LINK(TauMethodName, (long) 1);
   
@@ -343,8 +320,7 @@ void TauJavaLayer::CreateTopLevelRoutine(char *name, char *type, char *groupname
   TAU_MAPPING_PROFILE_START(TauTimer, tid);
 }
 
-void TauJavaLayer::ThreadStart(JVMPI_Event *event)
-{
+void TauJavaLayer::ThreadStart(JVMPI_Event *event) {
   int * ptid = JavaThreadLayer::RegisterThread(event->env_id);
   int tid = *ptid;
 
@@ -359,8 +335,7 @@ void TauJavaLayer::ThreadStart(JVMPI_Event *event)
   CreateTopLevelRoutine(thread_name, " ", "THREAD", tid); 
 }
 
-void TauJavaLayer::ThreadEnd(JVMPI_Event *event)
-{
+void TauJavaLayer::ThreadEnd(JVMPI_Event *event) {
   int tid = JavaThreadLayer::GetThreadId(event->env_id);
 #ifdef DEBUG_PROF
   fprintf(stdout, "TAU> Thread End : id = %d \n", tid);
@@ -369,8 +344,7 @@ void TauJavaLayer::ThreadEnd(JVMPI_Event *event)
     TAU_MAPPING_PROFILE_EXIT("END...", tid);
 }
 
-void TauJavaLayer::ShutDown(JVMPI_Event *event)
-{
+void TauJavaLayer::ShutDown(JVMPI_Event *event) {
   int tid = JavaThreadLayer::GetThreadId(event->env_id);
   JVMPI_RawMonitor shutdown_lock = CALL(RawMonitorCreate)("Shutdown lock");
 #ifdef DEBUG_PROF
@@ -378,36 +352,29 @@ void TauJavaLayer::ShutDown(JVMPI_Event *event)
 #endif 
 
   CALL(RawMonitorEnter)(shutdown_lock);
-  for(int i = 0; i < JavaThreadLayer::TotalThreads(); i++)
-  {
+  for(int i = 0; i < JavaThreadLayer::TotalThreads(); i++) {
     TAU_MAPPING_PROFILE_EXIT("Forcing Shutdown of Performance Data",i);
   }
   CALL(RawMonitorExit)(shutdown_lock);
-
-  
 }
 
 
-void TauJavaLayer::DataDump(JVMPI_Event *event)
-{
+void TauJavaLayer::DataDump(JVMPI_Event *event) {
   int tid = JavaThreadLayer::GetThreadId(event->env_id);
   JVMPI_RawMonitor dump_lock = CALL(RawMonitorCreate)("Dump lock");
-
+  
 #ifdef DEBUG_PROF
   fprintf(stdout, "TAU> JVM DUMP : id = %d \n", tid);
 #endif 
 
   CALL(RawMonitorEnter)(dump_lock);
-  for(int i = 0; i < JavaThreadLayer::TotalThreads(); i++)
-  {
+  for(int i = 0; i < JavaThreadLayer::TotalThreads(); i++) {
     TAU_MAPPING_DB_DUMP(i);
   }
   CALL(RawMonitorExit)(dump_lock);
-  
 }
 
-void TauJavaLayer::DataPurge(JVMPI_Event *event)
-{
+void TauJavaLayer::DataPurge(JVMPI_Event *event) {
   int tid = JavaThreadLayer::GetThreadId(event->env_id);
   JVMPI_RawMonitor purge_lock = CALL(RawMonitorCreate)("Purge lock");
 
@@ -416,14 +383,12 @@ void TauJavaLayer::DataPurge(JVMPI_Event *event)
 #endif 
 
   CALL(RawMonitorEnter)(purge_lock);
-  for(int i = 0; i < JavaThreadLayer::TotalThreads(); i++)
-  {
-/* Disabled to retain profile DB integrity on Ctrl-\ (DUMP/PURGE)
-    TAU_MAPPING_DB_PURGE(i);
-*/
+  for(int i = 0; i < JavaThreadLayer::TotalThreads(); i++) {
+    /* Disabled to retain profile DB integrity on Ctrl-\ (DUMP/PURGE)
+       TAU_MAPPING_DB_PURGE(i);
+    */
   }
   CALL(RawMonitorExit)(purge_lock);
-  
 }
 
 /* EOF : TauJava.cpp */
@@ -431,7 +396,7 @@ void TauJavaLayer::DataPurge(JVMPI_Event *event)
 
 /***************************************************************************
  * $RCSfile: TauJava.cpp,v $   $Author: amorris $
- * $Revision: 1.31 $   $Date: 2009/02/24 01:24:49 $
- * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.31 2009/02/24 01:24:49 amorris Exp $
+ * $Revision: 1.32 $   $Date: 2009/02/24 19:43:42 $
+ * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.32 2009/02/24 19:43:42 amorris Exp $
  ***************************************************************************/
 
