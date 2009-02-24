@@ -68,8 +68,7 @@ using namespace std;
 //////////////////////////////////////////////////////////////////////
 // Is TAU tracking memory events? Set to true/false.
 //////////////////////////////////////////////////////////////////////
-bool& TheIsTauTrackingMemory(void)
-{
+bool& TheIsTauTrackingMemory(void) {
   static bool isit = false; /* TAU is not tracking memory */
   return isit;
 }
@@ -77,26 +76,15 @@ bool& TheIsTauTrackingMemory(void)
 //////////////////////////////////////////////////////////////////////
 // Is TAU tracking memory headroom events? Set to true/false.
 //////////////////////////////////////////////////////////////////////
-bool& TheIsTauTrackingMemoryHeadroom(void)
-{
+bool& TheIsTauTrackingMemoryHeadroom(void) {
   static bool isit = false; /* TAU is not tracking memory headroom */
-  return isit;
-}
-
-//////////////////////////////////////////////////////////////////////
-// Is TAU using MUSE's user defined events? Set to true/false.
-//////////////////////////////////////////////////////////////////////
-bool& TheIsTauTrackingMuseEvents(void)
-{
-  static bool isit = false; /* TAU is not tracking MUSE events */
   return isit;
 }
 
 //////////////////////////////////////////////////////////////////////
 // Start tracking memory 
 //////////////////////////////////////////////////////////////////////
-int TauEnableTrackingMemory(void)
-{
+int TauEnableTrackingMemory(void) {
   // Set tracking to true
   TheIsTauTrackingMemory() = true;
   return 1; 
@@ -105,29 +93,16 @@ int TauEnableTrackingMemory(void)
 //////////////////////////////////////////////////////////////////////
 // Start tracking memory 
 //////////////////////////////////////////////////////////////////////
-int TauEnableTrackingMemoryHeadroom(void)
-{
+int TauEnableTrackingMemoryHeadroom(void) {
   // Set tracking to true
   TheIsTauTrackingMemoryHeadroom() = true;
   return 1; 
 }
 
 //////////////////////////////////////////////////////////////////////
-// Start tracking MUSE events 
-//////////////////////////////////////////////////////////////////////
-void TauEnableTrackingMuseEvents(void)
-{
-  // Set tracking to true
-#ifdef TAU_MUSE_EVENT
-  TheIsTauTrackingMuseEvents() = true;
-#endif /* TAU_MUSE_EVENT */
-}
-
-//////////////////////////////////////////////////////////////////////
 // Stop tracking memory 
 //////////////////////////////////////////////////////////////////////
-int TauDisableTrackingMemory(void)
-{
+int TauDisableTrackingMemory(void) {
   TheIsTauTrackingMemory() = false;
   return 0;
 }
@@ -135,25 +110,15 @@ int TauDisableTrackingMemory(void)
 //////////////////////////////////////////////////////////////////////
 // Stop tracking memory headroom
 //////////////////////////////////////////////////////////////////////
-int TauDisableTrackingMemoryHeadroom(void)
-{
+int TauDisableTrackingMemoryHeadroom(void) {
   TheIsTauTrackingMemoryHeadroom() = false;
   return 0;
 }
 
 //////////////////////////////////////////////////////////////////////
-// Stop tracking MUSE events 
-//////////////////////////////////////////////////////////////////////
-void TauDisableTrackingMuseEvents(void)
-{
-  TheIsTauTrackingMuseEvents() = false;
-}
-
-//////////////////////////////////////////////////////////////////////
 // Get memory size (max resident set size) in KB 
 //////////////////////////////////////////////////////////////////////
-double TauGetMaxRSS(void)
-{
+double TauGetMaxRSS(void) {
 #ifdef TAU_HASMALLINFO
   struct mallinfo minfo = mallinfo();
   /* compute the memory used */
@@ -170,8 +135,7 @@ double TauGetMaxRSS(void)
 #ifdef TAU_CATAMOUNT
   size_t fragments;
   unsigned long total_free, largest_free, total_used;
-  if (heap_info(&fragments, &total_free, &largest_free, &total_used) == 0)
-  {
+  if (heap_info(&fragments, &total_free, &largest_free, &total_used) == 0) {
     return  total_used/1024.0; 
   }
 #endif /* TAU_CATAMOUNT */
@@ -190,8 +154,7 @@ double TauGetMaxRSS(void)
 //////////////////////////////////////////////////////////////////////
 // Set interrupt interval
 //////////////////////////////////////////////////////////////////////
-int& TheTauInterruptInterval(void)
-{ 
+int& TheTauInterruptInterval(void) { 
   static int interval = 10; /* interrupt every 10 seconds */
   return interval; 
 }
@@ -199,8 +162,7 @@ int& TheTauInterruptInterval(void)
 //////////////////////////////////////////////////////////////////////
 // Set interrupt interval
 //////////////////////////////////////////////////////////////////////
-void TauSetInterruptInterval(int interval)
-{
+void TauSetInterruptInterval(int interval) {
   /* Set the interval */
   TheTauInterruptInterval() = interval;
 }
@@ -208,8 +170,7 @@ void TauSetInterruptInterval(int interval)
 //////////////////////////////////////////////////////////////////////
 // Get user defined event
 //////////////////////////////////////////////////////////////////////
-TauUserEvent& TheTauMemoryEvent(void)
-{
+TauUserEvent& TheTauMemoryEvent(void) {
   static TauUserEvent mem("Memory Utilization (heap, in KB)");
   return mem;
 }
@@ -217,8 +178,7 @@ TauUserEvent& TheTauMemoryEvent(void)
 //////////////////////////////////////////////////////////////////////
 // Get user defined event
 //////////////////////////////////////////////////////////////////////
-TauContextUserEvent& TheTauMemoryHeadroomEvent(void)
-{
+TauContextUserEvent& TheTauMemoryHeadroomEvent(void) {
   static TauContextUserEvent mem("Memory Headroom Left (in MB)");
   return mem;
 }
@@ -226,58 +186,17 @@ TauContextUserEvent& TheTauMemoryHeadroomEvent(void)
 //////////////////////////////////////////////////////////////////////
 // TAU's alarm signal handler
 //////////////////////////////////////////////////////////////////////
-void TauAlarmHandler(int signum)
-{
-#ifdef TAU_MUSE_EVENT
-  double musedata[MAXNUMOF_COUNTERS];
-  static int flag = 0; 
-  static TauUserEvent *e[MAXNUMOF_COUNTERS];
-  int i, numevents;
-  if (flag == 0)
-  {
-    char *eventnames[MAXNUMOF_COUNTERS]; 
-    /* toggle flag. This code executes the first time the block is entered */
-    flag = 1;
-    for (i = 0; i < MAXNUMOF_COUNTERS; i++)
-    { /* allocate memory for event names */
-      eventnames[i] = new char[MAX_METRIC_LEN];
-    }
-    /* Fill the eventnames array inside the MUSE call. */
-    numevents = TauMuseGetMetricsNonMono(eventnames, MAXNUMOF_COUNTERS);
-    for(i=0; i<numevents; i++)
-    { /* for the event names that we've received */
-      e[i] = new TauUserEvent(eventnames[i]);
-      /* we've created e, an array of numevents user defined events */
-      /* delete the event name allocated */
-      delete eventnames[i]; 
-    }
-
-  }
-
-#endif /* TAU_MUSE_EVENT */
+void TauAlarmHandler(int signum) {
    /* Check and see if we're tracking memory events */
-  if (TheIsTauTrackingMemory())
-  {
+  if (TheIsTauTrackingMemory()) {
     /* trigger an event with the memory used */
     TheTauMemoryEvent().TriggerEvent(TauGetMaxRSS());
   }
 
-  if (TheIsTauTrackingMemoryHeadroom())
-  {
+  if (TheIsTauTrackingMemoryHeadroom()) {
     /* trigger an event with the memory headroom available */
     TheTauMemoryHeadroomEvent().TriggerEvent((double)TauGetFreeMemory());
   }
-
-#ifdef TAU_MUSE_EVENT 
-  if (TheIsTauTrackingMuseEvents())
-  { /* get an array of doubles from MUSE */
-    numevents = TauMuseEventQuery(musedata, MAXNUMOF_COUNTERS); 
-    for (i = 0; i < numevents; i++)
-    { /* iterate over numevents and trigger these user defined events */
-      e[i]->TriggerEvent(musedata[i]);
-    }
-  }
-#endif /* TAU_MUSE_EVENT */
 
   /* Set alarm for the next interrupt */
 #ifndef TAU_WINDOWS
@@ -288,29 +207,30 @@ void TauAlarmHandler(int signum)
 //////////////////////////////////////////////////////////////////////
 // Track Memory
 //////////////////////////////////////////////////////////////////////
-void TauTrackMemoryUtilization(bool allocated)
+void TauTrackMemoryUtilization(bool allocated) {
 //////////////////////////////////////////////////////////////////////
 // Argument: allocated. TauTrackMemoryUtilization can keep track of memory
 // allocated or memory free (headroom to grow). Accordingly, it is true
 // for tracking memory allocated, and false to check the headroom 
 //////////////////////////////////////////////////////////////////////
-{
+
 #ifndef TAU_WINDOWS
   struct sigaction new_action, old_action;
 
   // Are we tracking memory or headroom. Check the allocated argument. 
-  if (allocated)
+  if (allocated) {
     TheIsTauTrackingMemory() = true; 
-  else
+  } else {
     TheIsTauTrackingMemoryHeadroom() = true; 
+  }
 
   // set signal handler 
   new_action.sa_handler = TauAlarmHandler; 
  
   new_action.sa_flags = 0;
   sigaction(SIGALRM, NULL, &old_action);
-  if (old_action.sa_handler != SIG_IGN)
-  { /* by default it is set to ignore */
+  if (old_action.sa_handler != SIG_IGN) {
+    /* by default it is set to ignore */
     sigaction(SIGALRM, &new_action, NULL);
   }
   
@@ -321,14 +241,12 @@ void TauTrackMemoryUtilization(bool allocated)
 //////////////////////////////////////////////////////////////////////
 // Track Memory events at this location in the source code
 //////////////////////////////////////////////////////////////////////
-void TauTrackMemoryHere(void)
-{
+void TauTrackMemoryHere(void) {
   /* Enable tracking memory by default */
   static int flag = TauEnableTrackingMemory();
  
   /* Check and see if we're *still* tracking memory events */
-  if (TheIsTauTrackingMemory())
-  {
+  if (TheIsTauTrackingMemory()) {
     /* trigger an event with the memory used */
     TheTauMemoryEvent().TriggerEvent(TauGetMaxRSS());
   }
@@ -337,51 +255,23 @@ void TauTrackMemoryHere(void)
 //////////////////////////////////////////////////////////////////////
 // Track Memory headroom events at this location in the source code
 //////////////////////////////////////////////////////////////////////
-void TauTrackMemoryHeadroomHere(void)
-{
+void TauTrackMemoryHeadroomHere(void) {
   /* Enable tracking memory by default */
   static int flag = TauEnableTrackingMemoryHeadroom();
  
   /* Check and see if we're *still* tracking memory events */
-  if (TheIsTauTrackingMemoryHeadroom())
-  {
+  if (TheIsTauTrackingMemoryHeadroom()) {
     /* trigger an event with the memory headroom available */
-    
     TheTauMemoryHeadroomEvent().TriggerEvent((double)TauGetFreeMemory());
   }
 }
 
 
-//////////////////////////////////////////////////////////////////////
-// Track MUSE events
-//////////////////////////////////////////////////////////////////////
-void TauTrackMuseEvents(void)
-{
-#ifndef TAU_WINDOWS
-  struct sigaction new_action, old_action;
-
-  // we're tracking memory
-  TheIsTauTrackingMuseEvents() = true; 
-
-  // set signal handler 
-  new_action.sa_handler = TauAlarmHandler; 
- 
-  new_action.sa_flags = 0;
-  sigaction(SIGALRM, NULL, &old_action);
-  if (old_action.sa_handler != SIG_IGN)
-  { /* by default it is set to ignore */
-    sigaction(SIGALRM, &new_action, NULL);
-  }
-  
-  /* activate alarm */
-  alarm(TheTauInterruptInterval());
-#endif
-}
   
 /***************************************************************************
  * $RCSfile: TauHandler.cpp,v $   $Author: amorris $
- * $Revision: 1.17 $   $Date: 2008/07/31 23:49:53 $
- * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.17 2008/07/31 23:49:53 amorris Exp $ 
+ * $Revision: 1.18 $   $Date: 2009/02/24 20:16:43 $
+ * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.18 2009/02/24 20:16:43 amorris Exp $ 
  ***************************************************************************/
 
 	
