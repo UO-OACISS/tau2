@@ -484,7 +484,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #endif /* TAU_COMPENSATE */
   
 #ifndef TAU_MULTIPLE_COUNTERS
-
   double CurrentTime; 
   
 #ifdef TAU_TRACK_IDLE_THREADS
@@ -571,6 +570,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     
 #endif//TAU_MULTIPLE_COUNTERS
 
+  /********************************************************************************/
+  /*** Tracing ***/
+  /********************************************************************************/
 #ifdef TRACING_ON
 #ifdef TAU_MULTIPLE_COUNTERS 
   TimeStamp = (x_uint64) CurrentTime[0]; // USE COUNTER1
@@ -600,13 +602,11 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #endif /* TAU_MPITRACE */
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
-#endif //TRACING_ON
-    
+
+
   /* What should we do while exiting when profiling is off, tracing is on and 
      throttling is on? */
 #ifndef PROFILING_ON
-#ifdef  TRACING_ON
-#ifndef TAU_DISABLE_THROTTLE
   if (TauEnv_get_throttle() && AddInclFlag) {
     ThisFunction->SetAlreadyOnStack(false, tid); // while exiting
       
@@ -619,9 +619,13 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     ThisFunction->AddInclTime(TimeTaken, tid);
 #endif /* TAU_MULTIPLE_COUNTERS */ /* we only maintain inclusive time for counter 0 */
   }
-#endif /* TAU_DISABLE_THROTTLE is off */
-#endif /* TRACING is on */
 #endif /* PROFILING is off */
+
+#endif //TRACING_ON
+  /********************************************************************************/
+  /*** Tracing ***/
+  /********************************************************************************/
+    
     
 #ifdef PROFILING_ON  // Calculations relevent to profiling only 
     
@@ -1519,6 +1523,6 @@ bool Profiler::createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.221 $   $Date: 2009/02/24 00:34:26 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.221 2009/02/24 00:34:26 amorris Exp $ 
+ * $Revision: 1.222 $   $Date: 2009/02/24 00:53:14 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.222 2009/02/24 00:53:14 amorris Exp $ 
  ***************************************************************************/
