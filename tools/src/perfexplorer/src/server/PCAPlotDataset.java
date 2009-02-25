@@ -4,7 +4,6 @@ package edu.uoregon.tau.perfexplorer.server;
 import org.jfree.data.xy.AbstractXYDataset;
 
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
-import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 
 /**
  * Dataset to store scatterplot data.
@@ -12,13 +11,17 @@ import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper around the RawDataInterface class.
  * 
- * <P>CVS $Id: PCAPlotDataset.java,v 1.7 2009/02/24 00:53:45 khuck Exp $</P>
+ * <P>CVS $Id: PCAPlotDataset.java,v 1.8 2009/02/25 19:51:46 wspear Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
  */
 public class PCAPlotDataset extends AbstractXYDataset {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6708684835661097166L;
 	private RawDataInterface[] clusters = null;
 
 	/**
@@ -41,7 +44,7 @@ public class PCAPlotDataset extends AbstractXYDataset {
 	/* (non-Javadoc)
 	 * @see org.jfree.data.general.SeriesDataset#getSeriesName(int)
 	 */
-	public String getSeriesName(int arg0) {
+	public String getSeriesKey(int arg0) {
 		return new String("Cluster " + arg0);
 	}
 

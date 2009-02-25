@@ -1,34 +1,30 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.net.URL;
+
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import java.util.List;
-import org.jfree.chart.ChartFactory;
+
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.data.xy.DefaultTableXYDataset;
-import org.jfree.data.xy.XYSeriesCollection;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.StandardLegend;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.chart.labels.StandardXYToolTipGenerator;
-import java.text.DecimalFormat;
-import edu.uoregon.tau.common.ImageExport;
-import edu.uoregon.tau.common.VectorExport;
-import java.net.URL;
-import edu.uoregon.tau.common.Utility;
-import edu.uoregon.tau.perfexplorer.common.RMIChartData;
 
-import java.awt.Toolkit;
-import javax.swing.JPanel;
+import edu.uoregon.tau.common.ImageExport;
+import edu.uoregon.tau.common.Utility;
+import edu.uoregon.tau.common.VectorExport;
 
 public class PerfExplorerChartWindow extends JFrame implements ActionListener, ImageExport {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5011632640191017358L;
 	public final static String ABOUT = "About PerfExplorer";
 	public final static String SEARCH = "Search For Help On...";
 	public final static String SAVE = "Save As Vector Image";

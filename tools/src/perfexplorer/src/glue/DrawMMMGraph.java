@@ -9,14 +9,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.Collections;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.StandardLegend;
-import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.axis.LogarithmicAxis;
 import org.jfree.chart.axis.NumberAxis;
@@ -24,11 +19,8 @@ import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.data.statistics.DefaultStatisticalCategoryDataset;
-import org.jfree.data.xy.DefaultHighLowDataset;
 
 import edu.uoregon.tau.common.AlphanumComparator;
-
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.client.MyCategoryAxis;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerChart;
@@ -39,6 +31,10 @@ import edu.uoregon.tau.perfexplorer.client.PerfExplorerChart;
  */
 public class DrawMMMGraph extends DrawGraph {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 9035232637754955690L;
 	private boolean sortXAxis = false;
 	private String stripValue = null;
 
@@ -186,19 +182,19 @@ public class DrawMMMGraph extends DrawGraph {
         );
 		// customize the chart!
         
-        
-        StandardLegend legend = (StandardLegend) chart.getLegend();
-        legend.setDisplaySeriesShapes(true);
+        //TODO: This is probably no longer needed.
+        //StandardLegend legend = (StandardLegend) chart.getLegend();
+        //legend.setDisplaySeriesShapes(true);
         
         // get a reference to the plot for further customisation...
         CategoryPlot plot = (CategoryPlot)chart.getPlot();
      
         //StandardXYItemRenderer renderer = (StandardXYItemRenderer) plot.getRenderer();
 		LineAndShapeRenderer renderer = (LineAndShapeRenderer)plot.getRenderer();
-        renderer.setDefaultShapesFilled(true);
-        renderer.setDrawShapes(true);
-        renderer.setDrawLines(true);
-        renderer.setItemLabelsVisible(true);
+        renderer.setBaseShapesFilled(true);
+        renderer.setBaseShapesVisible(true);
+        renderer.setDrawOutlines(true);
+        renderer.setBaseItemLabelsVisible(true);
 
 		for (int i = 0 ; i < dataset.getRowCount() ; i++) {
 			renderer.setSeriesStroke(i, new BasicStroke(2.0f));

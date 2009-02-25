@@ -8,7 +8,7 @@ import java.util.ArrayList;
  * This class represents the data to be used to create a scalability or
  * runtime breakdown chart.  
  *
- * <P>CVS $Id: RMIChartData.java,v 1.7 2009/02/24 00:53:37 khuck Exp $</P>
+ * <P>CVS $Id: RMIChartData.java,v 1.8 2009/02/25 19:51:46 wspear Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -16,12 +16,16 @@ import java.util.ArrayList;
  */
 public class RMIChartData implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5974297775713831594L;
 	protected ChartDataType dataType = ChartDataType.FRACTION_OF_TOTAL;
 	int rows = 0;
 	int columns = 0;
 
-	protected List newData = null;
-	protected List rowLabels = null;
+	protected List<List<double[]>> newData = null;
+	protected List<String> rowLabels = null;
 
 	/**
 	 * Constructor.
@@ -30,8 +34,8 @@ public class RMIChartData implements Serializable {
 	 */
 	public RMIChartData (ChartDataType dataType) {
 		this.dataType = dataType;
-		this.newData = new ArrayList();
-		this.rowLabels = new ArrayList();
+		this.newData = new ArrayList<List<double[]>>();
+		this.rowLabels = new ArrayList<String>();
 	}
 
 	/**
@@ -40,7 +44,7 @@ public class RMIChartData implements Serializable {
 	 * @param label
 	 */
 	public void addRow(String label) {
-		newData.add(new ArrayList());
+		newData.add(new ArrayList<double[]>());
 		rowLabels.add(label);
 		rows++;
 	}
@@ -53,7 +57,7 @@ public class RMIChartData implements Serializable {
 	 * @param v2
 	 */
 	public void addColumn(int rowIndex, double v1, double v2) {
-		List row = (List)newData.get(rowIndex);
+		List<double[]> row = newData.get(rowIndex);
 		double[] values = new double[2];
 		values[0] = v1;
 		values[1] = v2;
@@ -81,7 +85,7 @@ public class RMIChartData implements Serializable {
      *
      * @return
     */
-	public List getRowLabels() { return rowLabels; }
+	public List<String> getRowLabels() { return rowLabels; }
 
 	/**
       * Get the List of values for a particular row (series) in the chart data.
@@ -89,5 +93,5 @@ public class RMIChartData implements Serializable {
       * @param index
       * @return
     */
-	public List getRowData(int index) { return (List)newData.get(index); }
+	public List<double[]> getRowData(int index) { return newData.get(index); }
 }

@@ -199,8 +199,8 @@ public class PerfExplorerConnection {
 	return groups;
     }
 
-    public List getPotentialMetrics(PerfExplorerModel model) {
-	List metrics = null;
+    public List<String> getPotentialMetrics(PerfExplorerModel model) {
+	List<String> metrics = null;
 	try {
 	    metrics = server.getPotentialMetrics(model);
 	} catch (RemoteException e) {
@@ -396,8 +396,8 @@ public class PerfExplorerConnection {
 		
 	}
 
-	public List getPotentialAtomicEvents(PerfExplorerModel model) {
-		List events = null;
+	public List<String> getPotentialAtomicEvents(PerfExplorerModel model) {
+		List<String> events = null;
 		try {
 		    events = server.getPotentialAtomicEvents(model);
 		} catch (RemoteException e) {

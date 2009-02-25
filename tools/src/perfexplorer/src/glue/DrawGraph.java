@@ -4,17 +4,15 @@
 package edu.uoregon.tau.perfexplorer.glue;
 
 import java.awt.BasicStroke;
-import java.util.List;
+import java.io.File;
 import java.util.HashSet;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.io.File;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.StandardLegend;
-import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.axis.LogarithmicAxis;
 import org.jfree.chart.axis.NumberAxis;
@@ -23,11 +21,10 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
 
-
+import edu.uoregon.tau.common.VectorExport;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.client.MyCategoryAxis;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerChart;
-import edu.uoregon.tau.common.VectorExport;
 
 /**
  * @author khuck
@@ -35,7 +32,11 @@ import edu.uoregon.tau.common.VectorExport;
  */
 public class DrawGraph extends AbstractPerformanceOperation {
 
-    protected Set<String> _events = null;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -5587605162968129610L;
+	protected Set<String> _events = null;
     protected Set<String> _metrics = null;
     protected Set<Integer> _threads = null;
 	
@@ -221,19 +222,19 @@ public class DrawGraph extends AbstractPerformanceOperation {
             true,                            // tooltips
             false                            // urls
         );
-		// customize the chart!
-        StandardLegend legend = (StandardLegend) chart.getLegend();
-        legend.setDisplaySeriesShapes(true);
+		// customize the chart! //TODO: This is probably no longer necessary
+        //StandardLegend legend = (StandardLegend) chart.getLegend();
+        //legend.setDisplaySeriesShapes(true);
         
         // get a reference to the plot for further customisation...
         CategoryPlot plot = (CategoryPlot)chart.getPlot();
      
         //StandardXYItemRenderer renderer = (StandardXYItemRenderer) plot.getRenderer();
 		LineAndShapeRenderer renderer = (LineAndShapeRenderer)plot.getRenderer();
-        renderer.setDefaultShapesFilled(true);
-        renderer.setDrawShapes(true);
-        renderer.setDrawLines(true);
-        renderer.setItemLabelsVisible(true);
+        renderer.setBaseShapesFilled(true);
+        renderer.setBaseShapesVisible(true);
+        renderer.setDrawOutlines(true);
+        renderer.setBaseItemLabelsVisible(true);
 
 		for (int i = 0 ; i < dataset.getRowCount() ; i++) {
 			renderer.setSeriesStroke(i, new BasicStroke(2.0f));

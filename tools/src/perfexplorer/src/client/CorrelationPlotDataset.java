@@ -1,14 +1,13 @@
 package edu.uoregon.tau.perfexplorer.client;
 
+import java.text.DecimalFormat;
+import java.text.FieldPosition;
+import java.util.List;
+
 import org.jfree.data.xy.AbstractXYDataset;
 import org.jfree.data.xy.XYDataset;
 
-import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 import edu.uoregon.tau.perfexplorer.common.RMIChartData;
-
-import java.util.List;
-import java.text.DecimalFormat;
-import java.text.FieldPosition;
 
 /**
  * Dataset to store scatterplot data.
@@ -16,15 +15,19 @@ import java.text.FieldPosition;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper class around the RawDataInterface class.
  *
- * <P>CVS $Id: CorrelationPlotDataset.java,v 1.14 2009/02/24 00:53:32 khuck Exp $</P>
+ * <P>CVS $Id: CorrelationPlotDataset.java,v 1.15 2009/02/25 19:51:45 wspear Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
  */
 public class CorrelationPlotDataset extends AbstractXYDataset implements XYDataset {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2371762530237884209L;
 	private RMIChartData data = null;
-	private List seriesNames = null;
+	private List<String> seriesNames = null;
 	private int x = 0;
 	private int y = 1;
 	private boolean main = false;
@@ -73,11 +76,11 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 	/* (non-Javadoc)
 	 * @see org.jfree.data.general.SeriesDataset#getSeriesName(int)
 	 */
-	public String getSeriesName(int arg0) {
+	public Comparable<String> getSeriesKey(int arg0) {//TODO: Was getSeriesName
 		if (main) {
-			return PerfExplorerChart.shortName((String)(seriesNames.get(arg0)));
+			return PerfExplorerChart.shortName((seriesNames.get(arg0)));
 		} else {
-			String tmp = PerfExplorerChart.shortName((String)(seriesNames.get(arg0+1)));
+			String tmp = PerfExplorerChart.shortName((seriesNames.get(arg0+1)));
 			return tmp + ", r = " + getCorrelation(0, arg0+1);
 		}
 	}
@@ -97,9 +100,9 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 		if (!main)
 			arg0++;
 		// get the row
-		List row = data.getRowData(arg0);
+		List<double[]> row = data.getRowData(arg0);
 		// get the mth column from that row
-		double[] values = (double[])row.get(arg1);
+		double[] values = row.get(arg1);
 		//return new Double(java.lang.Math.log(values[x])/java.lang.Math.log(2));
 		return new Double(values[x]);
 	}
@@ -112,9 +115,9 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 		if (!main)
 			arg0++;
 		// get the row
-		List row = data.getRowData(arg0);
+		List<double[]> row = data.getRowData(arg0);
 		// get the mth column from that row
-		double[] values = (double[])row.get(arg1);
+		double[] values = row.get(arg1);
 		//if (constantProblem) {
 			//double[] values2 = (double[])row.get(0);
 			//return new Double(values[y]*(values[x]/values2[x]));
@@ -130,14 +133,14 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 		double yAvg = 0.0;
 		double xStDev = 0.0;
 		double yStDev = 0.0;
-		double sum = 0.0;
-		List xRow = data.getRowData(x);
-		List yRow = data.getRowData(y);
+		//double sum = 0.0;//TODO: Use this
+		List<double[]> xRow = data.getRowData(x);
+		List<double[]> yRow = data.getRowData(y);
 
 		for (int i = 0 ; (i < xRow.size() && i < yRow.size()) ; i++ ) {
-			double[] tmp = (double[])xRow.get(i);
+			double[] tmp = xRow.get(i);
 			xAvg += tmp[1];
-			tmp = (double[])yRow.get(i);
+			tmp = yRow.get(i);
 			yAvg += tmp[1];
 		}
 
@@ -148,9 +151,9 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 
 
 		for (int i = 0 ; (i < xRow.size() && i < yRow.size()) ; i++ ) {
-			double[] tmp = (double[])xRow.get(i);
+			double[] tmp = xRow.get(i);
 			xStDev += (tmp[1] - xAvg) * (tmp[1] - xAvg);
-			tmp = (double[])yRow.get(i);
+			tmp = yRow.get(i);
 			yStDev += (tmp[1] - yAvg) * (tmp[1] - yAvg);
 		}
 
@@ -166,9 +169,9 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 		double tmp1 = 0.0;
 		double tmp2 = 0.0;
 		for (int i = 0 ; (i < xRow.size() && i < yRow.size()) ; i++ ) {
-			double[] tmp = (double[])xRow.get(i);
+			double[] tmp = xRow.get(i);
 			tmp1 = (tmp[1] - xAvg) / xStDev;
-			tmp = (double[])yRow.get(i);
+			tmp = yRow.get(i);
 			tmp2 = (tmp[1] - yAvg) / yStDev;
 			r += tmp1 * tmp2;
 		}

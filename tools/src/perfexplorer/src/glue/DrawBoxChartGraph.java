@@ -3,26 +3,18 @@
  */
 package edu.uoregon.tau.perfexplorer.glue;
 
-import java.awt.BasicStroke;
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.awt.Color;
 
-import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.StandardLegend;
 import org.jfree.chart.axis.CategoryAxis;
-import org.jfree.chart.axis.CategoryLabelPositions;
-import org.jfree.chart.axis.LogarithmicAxis;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.BoxAndWhiskerRenderer;
 import org.jfree.chart.renderer.category.CategoryItemRenderer;
-import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
-
 
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerChart;
@@ -32,6 +24,11 @@ import edu.uoregon.tau.perfexplorer.client.PerfExplorerChart;
  *
  */
 public class DrawBoxChartGraph extends DrawGraph {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6431239612339815694L;
 
 	/**
 	 * @param input

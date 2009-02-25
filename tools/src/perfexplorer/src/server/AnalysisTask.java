@@ -7,57 +7,26 @@ package edu.uoregon.tau.perfexplorer.server;
 
 
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.sql.PreparedStatement;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.TimerTask;
+
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfexplorer.clustering.AnalysisFactory;
 import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
-import edu.uoregon.tau.perfexplorer.clustering.DataNormalizer;
 import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
 import edu.uoregon.tau.perfexplorer.clustering.PrincipalComponentsAnalysisInterface;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 import edu.uoregon.tau.perfexplorer.common.AnalysisType;
 import edu.uoregon.tau.perfexplorer.common.ChartType;
-import edu.uoregon.tau.perfexplorer.common.EngineType;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerException;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
-import edu.uoregon.tau.perfexplorer.common.TransformationType;
-
-import java.awt.Color;
-
-import java.awt.Shape;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.TimerTask;
-
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartUtilities;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.DefaultXYItemRenderer;
-import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
-import org.jfree.data.Range;
-import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.data.function.Function2D;
-import org.jfree.data.function.LineFunction2D;
-import org.jfree.data.function.PowerFunction2D;
-import org.jfree.data.general.DatasetUtilities;
-import org.jfree.data.statistics.Regression;
-import org.jfree.data.xy.XYDataset;
 
 
 /**
@@ -66,7 +35,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  *
- * <P>CVS $Id: AnalysisTask.java,v 1.13 2009/02/24 00:53:45 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTask.java,v 1.14 2009/02/25 19:51:46 wspear Exp $</P>
  * @author Kevin Huck
  * @version 0.1
  * @since 0.1
@@ -82,7 +51,7 @@ public class AnalysisTask extends TimerTask {
     private int analysisID = 0;
     private int numTotalThreads = 0;
     private RawDataInterface rawData = null;
-    private List eventIDs = null;
+    private List<String> eventIDs = null;
     private double rCorrelation = 0.0;
     private boolean correlateToMain = false;
     private int connectionIndex = 0;
@@ -212,18 +181,18 @@ public class AnalysisTask extends TimerTask {
 		DendrogramTree rightLeaf = null;
 		DendrogramTree newTree = null;
 		//Hashtable finder = new Hashtable(height.length);
-		Hashtable finder = new Hashtable(merge.length);
+		Hashtable<Integer,DendrogramTree> finder = new Hashtable<Integer,DendrogramTree>(merge.length);
 		int j = 0;
 		for (int i = 0 ; i < height.length ; i++) {
 			if (merge[j] < 0)
 				leftLeaf = new DendrogramTree(merge[j], 0.0);
 			else
-				leftLeaf = (DendrogramTree)finder.get(new Integer(merge[j]));
+				leftLeaf = finder.get(new Integer(merge[j]));
 			j++;
 			if (merge[j] < 0)
 				rightLeaf = new DendrogramTree(merge[j], 0.0);
 			else
-				rightLeaf = (DendrogramTree)finder.get(new Integer(merge[j]));
+				rightLeaf = finder.get(new Integer(merge[j]));
 			j++;
 			newTree = new DendrogramTree(i+1, height[i]);
 			newTree.setLeftAndRight(leftLeaf, rightLeaf);
@@ -276,8 +245,8 @@ public class AnalysisTask extends TimerTask {
 						RawDataInterface deviations = clusterer.getClusterStandardDeviations();
 						int[] clusterSizes = clusterer.getClusterSizes();
 						// do histograms
-						File thumbnail = ImageUtils.generateClusterSizeThumbnail(modelData, clusterSizes, eventIDs);
-						File chart = ImageUtils.generateClusterSizeImage(modelData, clusterSizes, eventIDs);
+						File thumbnail = ImageUtils.generateClusterSizeThumbnail(modelData, clusterSizes);//, eventIDs //TODO: These aren't used.
+						File chart = ImageUtils.generateClusterSizeImage(modelData, clusterSizes);//, eventIDs
 						// TODO - fix this to save the cluster sizes, too!
 						chartType = ChartType.HISTOGRAM;
 						saveAnalysisResult(centroids, deviations, thumbnail, chart);

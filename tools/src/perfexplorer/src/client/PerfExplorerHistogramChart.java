@@ -7,33 +7,38 @@
 
 package edu.uoregon.tau.perfexplorer.client;
 
-import java.io.IOException;
+import java.awt.Toolkit;
+import java.net.URL;
 import java.util.List;
+
 import javax.swing.JFrame;
-import java.lang.Math;
-import org.jfree.data.Range;
-import org.jfree.chart.axis.NumberAxis;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.labels.XYToolTipGenerator;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.data.Range;
 import org.jfree.data.statistics.HistogramDataset;
 import org.jfree.data.xy.IntervalXYDataset;
-import org.jfree.ui.ApplicationFrame;
-import org.jfree.ui.RefineryUtilities;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
-import org.jfree.chart.labels.XYToolTipGenerator;
 import org.jfree.data.xy.XYDataset;
-import java.net.URL;
-import edu.uoregon.tau.common.Utility;
-import edu.uoregon.tau.perfexplorer.common.*;
 
-import java.awt.Toolkit;
+import edu.uoregon.tau.common.Utility;
+import edu.uoregon.tau.perfexplorer.common.ChartDataType;
+import edu.uoregon.tau.perfexplorer.common.RMIChartData;
+import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
 
 /**
  * A demo of the {@link HistogramDataset} class.
  */
 public class PerfExplorerHistogramChart extends PerfExplorerChartWindow {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6247716923954756815L;
 
 	public PerfExplorerHistogramChart(JFreeChart chart, String name) {
 		super(chart, name);
@@ -59,9 +64,9 @@ public class PerfExplorerHistogramChart extends PerfExplorerChartWindow {
 		ChartPanel panel = new ChartPanel(chart);
 		panel.setDisplayToolTips(true);
 		XYItemRenderer renderer = chart.getXYPlot().getRenderer();
-        renderer.setToolTipGenerator(new XYToolTipGenerator() {
+        renderer.setBaseToolTipGenerator(new XYToolTipGenerator() {
             public String generateToolTip(XYDataset dataset, int arg1, int arg2) {
-                return "<html>Event: " + dataset.getSeriesName(arg1) + 
+                return "<html>Event: " + dataset.getSeriesKey(arg1) + 
                 "<BR>Count: " + dataset.getYValue(arg1, arg2) + "</html>";
             }
         });

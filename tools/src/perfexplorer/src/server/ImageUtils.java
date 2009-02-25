@@ -41,13 +41,13 @@ public class ImageUtils {
 	 * @param rowLabels
 	 * @return
 	 */
-	public static File generateBreakdownThumbnail(RMIPerfExplorerModel modelData, RawDataInterface centroids, RawDataInterface deviations, List rowLabels) {
+	public static File generateBreakdownThumbnail(RMIPerfExplorerModel modelData, RawDataInterface centroids, RawDataInterface deviations, List<String> rowLabels) {
 		// create a JFreeChart of this analysis data.  Create a stacked bar chart
 		// with standard deviation bars?
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 		for (int x = 0 ; x < centroids.numVectors() ; x++) {
 			for (int y = 0 ; y < centroids.numDimensions() ; y++) {
-				dataset.addValue(centroids.getValue(x,y), (String)rowLabels.get(y), new String(Integer.toString(x)));
+				dataset.addValue(centroids.getValue(x,y), rowLabels.get(y), new String(Integer.toString(x)));
 			}
 		}
         JFreeChart chart = ChartFactory.createStackedBarChart(
@@ -77,13 +77,13 @@ public class ImageUtils {
  	 * @param rowLabels
  	 * @return
  	 */
- 	public static File generateBreakdownImage(ChartType chartType, RMIPerfExplorerModel modelData, RawDataInterface centroids, RawDataInterface deviations, List rowLabels) {
+ 	public static File generateBreakdownImage(ChartType chartType, RMIPerfExplorerModel modelData, RawDataInterface centroids, RawDataInterface deviations, List<String> rowLabels) {
  		// create a JFreeChart of this analysis data.  Create a stacked bar chart
  		// with standard deviation bars?
          DefaultCategoryDataset dataset = new DefaultCategoryDataset();
  		for (int x = 0 ; x < centroids.numVectors() ; x++) {
  			for (int y = 0 ; y < centroids.numDimensions() ; y++) {
- 				dataset.addValue(centroids.getValue(x,y), (String) rowLabels.get(y), new String(Integer.toString(x)));
+ 				dataset.addValue(centroids.getValue(x,y), rowLabels.get(y), new String(Integer.toString(x)));
  			}
  		}
  		String chartTitle = modelData.toString();
@@ -123,7 +123,7 @@ public class ImageUtils {
 	 * @param rowLabels
 	 * @return
 	 */
-	public static File generateClusterSizeThumbnail(RMIPerfExplorerModel modelData, int[] clusterSizes, List rowLabels) {
+	public static File generateClusterSizeThumbnail(RMIPerfExplorerModel modelData, int[] clusterSizes) {//, List rowLabels
 		// create a JFreeChart of this analysis data.  Create a stacked bar chart
 		// with standard deviation bars?
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
@@ -155,7 +155,7 @@ public class ImageUtils {
  	 * @param rowLabels
  	 * @return
  	 */
- 	public static File generateClusterSizeImage(RMIPerfExplorerModel modelData, int[] clusterSizes, List rowLabels) {
+ 	public static File generateClusterSizeImage(RMIPerfExplorerModel modelData, int[] clusterSizes) {//, List rowLabels
  		// create a JFreeChart of this analysis data.  Create a stacked bar chart
  		// with standard deviation bars?
          DefaultCategoryDataset dataset = new DefaultCategoryDataset();
@@ -303,7 +303,7 @@ public class ImageUtils {
                      yAxis = new NumberAxis((String)(normalData.getEventNames().get(j)));
              yAxis.setAutoRangeIncludesZero(false);
              StandardXYItemRenderer dotRenderer = new StandardXYItemRenderer(StandardXYItemRenderer.SHAPES);
-             dotRenderer.setShapesFilled(true);
+             dotRenderer.setBaseShapesFilled(true); //TODO: setSeriesShapesFilled? setBaseShapesVisible?
              if (correlateToMain)
                      dotRenderer.setSeriesPaint(0,Color.green);
              XYPlot plot = new XYPlot(data, xAxis, yAxis, dotRenderer);
@@ -311,7 +311,7 @@ public class ImageUtils {
              // linear regression
              double[] coefficients = Regression.getOLSRegression(data, 0);
              Function2D curve = new LineFunction2D(coefficients[0], coefficients[1]);
-             Range range = DatasetUtilities.findDomainExtent(data);
+             Range range = DatasetUtilities.findDomainBounds(data);
              XYDataset regressionData = DatasetUtilities.sampleFunction2D(
                      curve, range.getLowerBound(), range.getUpperBound(), 
                      100, "Fitted Linear Regression Line");

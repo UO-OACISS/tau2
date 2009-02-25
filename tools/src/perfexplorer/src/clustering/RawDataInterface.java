@@ -12,7 +12,7 @@ import java.util.List;
  * cluster output data, or PCA output data.
  * 
  * @author khuck
- * <P>CVS $Id: RawDataInterface.java,v 1.8 2009/02/24 00:53:35 khuck Exp $</P>
+ * <P>CVS $Id: RawDataInterface.java,v 1.9 2009/02/25 19:51:46 wspear Exp $</P>
  * @version 0.1
  * @since 0.1
  */
@@ -72,7 +72,7 @@ public interface RawDataInterface {
 	 *
      * @return
      */
-	public List getEventNames();
+	public List<String> getEventNames();
 	
 	/**
      * Returns the number of vectors in this data set.

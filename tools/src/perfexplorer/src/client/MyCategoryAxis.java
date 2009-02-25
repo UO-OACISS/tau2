@@ -29,7 +29,7 @@
  * Original Author:  David Gilbert;
  * Contributor(s):   -;
  *
- * $Id: MyCategoryAxis.java,v 1.3 2009/02/24 00:53:32 khuck Exp $
+ * $Id: MyCategoryAxis.java,v 1.4 2009/02/25 19:51:45 wspear Exp $
  *
  * Changes (from 21-Aug-2001)
  * --------------------------
@@ -62,19 +62,26 @@
 package edu.uoregon.tau.perfexplorer.client;
 
 import java.awt.Graphics2D;
-import java.awt.Insets;
 import java.awt.Shape;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.jfree.chart.axis.*;
+import org.jfree.chart.axis.AxisSpace;
+import org.jfree.chart.axis.AxisState;
+import org.jfree.chart.axis.CategoryAnchor;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.CategoryLabelPosition;
+import org.jfree.chart.axis.CategoryLabelPositions;
+import org.jfree.chart.axis.CategoryLabelWidthType;
+import org.jfree.chart.axis.CategoryTick;
+import org.jfree.chart.axis.Tick;
 import org.jfree.chart.entity.EntityCollection;
 import org.jfree.chart.entity.TickLabelEntity;
 import org.jfree.chart.event.AxisChangeEvent;
@@ -86,18 +93,24 @@ import org.jfree.text.TextBlock;
 import org.jfree.text.TextUtilities;
 import org.jfree.ui.RectangleAnchor;
 import org.jfree.ui.RectangleEdge;
+import org.jfree.ui.RectangleInsets;
 import org.jfree.ui.Size2D;
 import org.jfree.util.Log;
 import org.jfree.util.LogContext;
-import org.jfree.util.ObjectUtils;
-import org.jfree.util.ShapeUtils;
+import org.jfree.util.ObjectUtilities;
+import org.jfree.util.ShapeUtilities;
 
 /**
  * An axis that displays categories.
  */
 public class MyCategoryAxis extends CategoryAxis {
 
-    /** The default margin for the axis (used for both lower and upper margins). */
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -7337850315319162409L;
+
+	/** The default margin for the axis (used for both lower and upper margins). */
     public static final double DEFAULT_AXIS_MARGIN = 0.05;
 
     /** The default margin between categories (a percentage of the overall axis length). */
@@ -676,10 +689,10 @@ public class MyCategoryAxis extends CategoryAxis {
             state.setTicks(ticks);        
           
             int categoryIndex = 0;
-            Iterator iterator = ticks.iterator();
+            Iterator<CategoryTick> iterator = ticks.iterator();
             while (iterator.hasNext()) {
                 
-                CategoryTick tick = (CategoryTick) iterator.next();
+                CategoryTick tick = iterator.next();
                 // Added by Isaac (14-June-2007)
                 if ( categoryIndex % tickLabelsSkip != tickLabelsSkip-1) {
                    categoryIndex ++;
@@ -718,18 +731,19 @@ public class MyCategoryAxis extends CategoryAxis {
                     x1 = x0 - state.getMax();
                 }
                 Rectangle2D area = new Rectangle2D.Double(x0, y0, (x1 - x0), (y1 - y0));
-                double[] anchorPoint = RectangleAnchor.coordinates(
+                Point2D anchorPoint = 
+                	RectangleAnchor.coordinates(
                     area, position.getCategoryAnchor()
                 );
                 TextBlock block = tick.getLabel();
                 block.draw(
                     g2, 
-                    (float) anchorPoint[0], (float) anchorPoint[1], position.getLabelAnchor(), 
-                    (float) anchorPoint[0], (float) anchorPoint[1], position.getAngle()
+                    (float)anchorPoint.getX(), (float)anchorPoint.getY(), position.getLabelAnchor(), 
+                    (float)anchorPoint.getX(), (float)anchorPoint.getY(), position.getAngle()
                 );
                 Shape bounds = block.calculateBounds(
-                    g2, (float) anchorPoint[0], (float) anchorPoint[1], position.getLabelAnchor(), 
-                    (float) anchorPoint[0], (float) anchorPoint[1], position.getAngle()
+                    g2, (float) anchorPoint.getX(), (float) anchorPoint.getY(), position.getLabelAnchor(), 
+                    (float) anchorPoint.getX(), (float) anchorPoint.getY(), position.getAngle()
                 );
                 if (plotState != null) {
                     EntityCollection entities = plotState.getOwner().getEntityCollection();
@@ -737,7 +751,7 @@ public class MyCategoryAxis extends CategoryAxis {
                         String tooltip = (String) this.categoryLabelToolTips.get(
                             tick.getCategory()
                         );
-                        entities.addEntity(new TickLabelEntity(bounds, tooltip, null));   
+                        entities.add(new TickLabelEntity(bounds, tooltip, null));   
                     }
                 }
                 categoryIndex++;
@@ -866,11 +880,11 @@ public class MyCategoryAxis extends CategoryAxis {
                                              CategoryLabelPosition position, 
                                              Graphics2D g2) {
                                                     
-        Insets insets = getTickLabelInsets();
+        RectangleInsets insets = getTickLabelInsets();
         Size2D size = block.calculateDimensions(g2);
         Rectangle2D box = new Rectangle2D.Double(0.0, 0.0, size.getWidth(), size.getHeight());
-        Shape rotatedBox = ShapeUtils.rotateShape(box, position.getAngle(), 0.0f, 0.0f);
-        double w = rotatedBox.getBounds2D().getWidth() + insets.top + insets.bottom;
+        Shape rotatedBox = ShapeUtilities.rotateShape(box, position.getAngle(), 0.0f, 0.0f);
+        double w = rotatedBox.getBounds2D().getWidth() + insets.getTop() + insets.getBottom();
         return w;
         
     }
@@ -888,11 +902,11 @@ public class MyCategoryAxis extends CategoryAxis {
                                               CategoryLabelPosition position, 
                                               Graphics2D g2) {
                                                     
-        Insets insets = getTickLabelInsets();
+        RectangleInsets insets = getTickLabelInsets();
         Size2D size = block.calculateDimensions(g2);
         Rectangle2D box = new Rectangle2D.Double(0.0, 0.0, size.getWidth(), size.getHeight());
-        Shape rotatedBox = ShapeUtils.rotateShape(box, position.getAngle(), 0.0f, 0.0f);
-        double h = rotatedBox.getBounds2D().getHeight() + insets.top + insets.bottom;
+        Shape rotatedBox = ShapeUtilities.rotateShape(box, position.getAngle(), 0.0f, 0.0f);
+        double h = rotatedBox.getBounds2D().getHeight() + insets.getTop() + insets.getBottom();
         return h;
         
     }
@@ -929,10 +943,10 @@ public class MyCategoryAxis extends CategoryAxis {
             boolean b2 = (axis.categoryMargin == this.categoryMargin);
             boolean b3 = (axis.maxCategoryLabelWidthRatio == this.maxCategoryLabelWidthRatio);
             boolean b4 = (axis.categoryLabelPositionOffset == this.categoryLabelPositionOffset);
-            boolean b5 = ObjectUtils.equal(
+            boolean b5 = ObjectUtilities.equal(
                 axis.categoryLabelPositions, this.categoryLabelPositions
             );
-            boolean b6 = ObjectUtils.equal(
+            boolean b6 = ObjectUtilities.equal(
                 axis.categoryLabelToolTips, this.categoryLabelToolTips
             );
             return b0 && b1 && b2 && b3 && b4 && b5 && b6;

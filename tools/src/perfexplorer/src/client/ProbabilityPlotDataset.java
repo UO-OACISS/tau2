@@ -1,16 +1,15 @@
 package edu.uoregon.tau.perfexplorer.client;
 
+import java.text.DecimalFormat;
+import java.text.FieldPosition;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.jfree.data.xy.AbstractXYDataset;
 import org.jfree.data.xy.XYDataset;
 
-import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 import edu.uoregon.tau.perfexplorer.common.RMIChartData;
-
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.text.DecimalFormat;
-import java.text.FieldPosition;
 
 /**
  * Dataset to store scatterplot data.
@@ -18,13 +17,17 @@ import java.text.FieldPosition;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper class around the RawDataInterface class.
  *
- * <P>CVS $Id: ProbabilityPlotDataset.java,v 1.3 2009/02/24 00:53:33 khuck Exp $</P>
+ * <P>CVS $Id: ProbabilityPlotDataset.java,v 1.4 2009/02/25 19:51:45 wspear Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
  */
 public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDataset {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6688676122111354782L;
 	private List seriesNames = null;
 	private List dataset = null;  // List of List of Points
 	private List metrics = null;
@@ -160,7 +163,7 @@ public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDatas
 	/* (non-Javadoc)
 	 * @see org.jfree.data.general.SeriesDataset#getSeriesName(int)
 	 */
-	public String getSeriesName(int arg0) {
+	public String getSeriesKey(int arg0) {
 		if (arg0 == dataset.size() -1)
 			return new String("Ideal normal");
 		else {

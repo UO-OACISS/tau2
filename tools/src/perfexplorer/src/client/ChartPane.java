@@ -1,54 +1,54 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import javax.swing.*;
-
-import java.awt.*;
-import java.util.Hashtable;
+import java.awt.BasicStroke;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import edu.uoregon.tau.perfdmf.*;
-import edu.uoregon.tau.perfexplorer.common.*;
-
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.BasicStroke;
-import javax.swing.JFrame;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
+
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.JToggleButton;
+import javax.swing.plaf.basic.BasicComboPopup;
+import javax.swing.plaf.basic.ComboPopup;
+import javax.swing.plaf.metal.MetalComboBoxUI;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.data.xy.DefaultTableXYDataset;
-import org.jfree.data.xy.XYSeriesCollection;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYDataset;
-import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.data.Range;
-import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.axis.CategoryAxis;
-import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.axis.LogarithmicAxis;
-import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
-import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.chart.StandardLegend;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
-import org.jfree.chart.labels.StandardXYToolTipGenerator;
-import java.text.DecimalFormat;
+
 import edu.uoregon.tau.common.ImageExport;
-import edu.uoregon.tau.common.VectorExport;
-import java.util.StringTokenizer;
-import java.util.NoSuchElementException;
-import javax.swing.plaf.metal.*;
-import javax.swing.plaf.basic.*;
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfexplorer.common.ChartDataType;
+import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData;
+import edu.uoregon.tau.perfexplorer.common.TransformationType;
 
 public class ChartPane extends JScrollPane implements ActionListener, ImageExport {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8971827392560223964L;
 	private static ChartPane thePane = null;
 	private PerfExplorerConnection server = null;
 
@@ -211,11 +211,11 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		    (selection instanceof Experiment) ||
 		    (selection instanceof Trial)) {
 			if (getMetrics) {
-				List metrics = server.getPotentialMetrics(theModel);
+				List<String> metrics = server.getPotentialMetrics(theModel);
 				//this.metric.setSelectedIndex(0);
 				boolean gotTime = false;
-				for (Iterator itr = metrics.iterator() ; itr.hasNext() ; ) {
-					String next = (String)itr.next();
+				for (Iterator<String> itr = metrics.iterator() ; itr.hasNext() ; ) {
+					String next = itr.next();
 					if (next.toUpperCase().indexOf("TIME") > 0) {
 						gotTime = true;
 					}
@@ -247,12 +247,12 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 					}
 				} else if (tmp.equalsIgnoreCase(ATOMIC_EVENT_NAME)) {
 					resetYAxisValues(false);
-					List events = server.getPotentialAtomicEvents(theModel);
+					List<String> events = server.getPotentialAtomicEvents(theModel);
 					this.event.addItem("All Atomic Events");
 					this.eventLabel.setText("Atomic Event:");
 					this.event.setSelectedIndex(0);
-					for (Iterator itr = events.iterator() ; itr.hasNext() ; ) {
-						String next = (String)itr.next();
+					for (Iterator<String> itr = events.iterator() ; itr.hasNext() ; ) {
+						String next = itr.next();
 						this.event.addItem(next);
 						if (oldEvent.equals(next))
 							this.event.setSelectedItem(next);
@@ -280,9 +280,9 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 				String tmp2 = (String)obj3;
 				if (tmp.equalsIgnoreCase("trial.xml_metadata") ||
 					tmp2.equalsIgnoreCase("trial.xml_metadata")) {
-					List xmlEvents = server.getXMLFields(theModel);
-					for (Iterator itr = xmlEvents.iterator(); itr.hasNext();) {
-						String next = (String)itr.next();
+					List<String> xmlEvents = server.getXMLFields(theModel);
+					for (Iterator<String> itr = xmlEvents.iterator(); itr.hasNext();) {
+						String next = itr.next();
 						this.xmlName.addItem(next);
 						if (oldXML.equals("") && next.equalsIgnoreCase("UTC Time"))
 							this.xmlName.setSelectedItem(next);
@@ -889,19 +889,19 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
             true,                            // tooltips
             false                            // urls
         );
-		// customize the chart!
-        StandardLegend legend = (StandardLegend) chart.getLegend();
-        legend.setDisplaySeriesShapes(true);
+		// customize the chart! //TODO: This code is no longer required
+        //LegendTitle legend = chart.getLegend();
+        //legend.setDisplaySeriesShapes(true);
         
         // get a reference to the plot for further customisation...
         CategoryPlot plot = (CategoryPlot)chart.getPlot();
      
         //StandardXYItemRenderer renderer = (StandardXYItemRenderer) plot.getRenderer();
 		LineAndShapeRenderer renderer = (LineAndShapeRenderer)plot.getRenderer();
-        renderer.setDefaultShapesFilled(true);
-        renderer.setDrawShapes(true);
-        renderer.setDrawLines(true);
-        renderer.setItemLabelsVisible(true);
+        renderer.setBaseShapesFilled(true);
+        renderer.setBaseShapesVisible(true);//Was drawshapes
+        renderer.setDrawOutlines(true);//Was drawlines
+        renderer.setBaseItemLabelsVisible(true);
 		if (model.getChartScalability()) {
 			//renderer.setDrawShapes(false);
 		}

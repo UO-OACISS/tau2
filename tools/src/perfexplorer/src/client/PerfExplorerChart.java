@@ -25,9 +25,9 @@ import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.chart.StandardLegend;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
+import org.jfree.chart.title.LegendTitle;
 import org.jfree.chart.labels.StandardXYToolTipGenerator;
 import java.text.DecimalFormat;
 import edu.uoregon.tau.common.ImageExport;
@@ -127,14 +127,14 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
         plot.mapDatasetToRangeAxis(1, 1);
         StandardXYItemRenderer renderer2 = new StandardXYItemRenderer();
         renderer2.setSeriesPaint(0, Color.black);
-        renderer2.setPlotShapes(true);
+        renderer2.setBaseShapesVisible(true);
         renderer2.setSeriesStroke(
             0, new BasicStroke(
                 2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
                 1.0f, new float[] {10.0f, 6.0f}, 0.0f
             )
         );
-		renderer2.setToolTipGenerator(new StandardXYToolTipGenerator(
+		renderer2.setBaseToolTipGenerator(new StandardXYToolTipGenerator(
 			StandardXYToolTipGenerator.DEFAULT_TOOL_TIP_FORMAT,
 			new DecimalFormat("processors: #######"), 
 			new DecimalFormat("value: #,##0.00")));
@@ -269,19 +269,19 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
             true,                            // tooltips
             false                            // urls
         );
-		// customize the chart!
-        StandardLegend legend = (StandardLegend) chart.getLegend();
-        legend.setDisplaySeriesShapes(true);
+		// customize the chart! TODO: This is probably unnecessary
+       // LegendTitle legend = chart.getLegend();
+       // legend.setDisplaySeriesShapes(true);
         
         // get a reference to the plot for further customisation...
         CategoryPlot plot = (CategoryPlot)chart.getPlot();
      
         //StandardXYItemRenderer renderer = (StandardXYItemRenderer) plot.getRenderer();
 		LineAndShapeRenderer renderer = (LineAndShapeRenderer)plot.getRenderer();
-        renderer.setDefaultShapesFilled(true);
-        renderer.setDrawShapes(true);
-        renderer.setDrawLines(true);
-        renderer.setItemLabelsVisible(true);
+        renderer.setBaseShapesFilled(true);
+        renderer.setBaseShapesVisible(true);
+        renderer.setDrawOutlines(true);
+        renderer.setBaseItemLabelsVisible(true);
 		if (model.getChartScalability()) {
 			//renderer.setDrawShapes(false);
 		}
@@ -299,7 +299,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			// don't mess with the domain axis
 		} else {
         	CategoryAxis domainAxis = plot.getDomainAxis();
-			domainAxis.setSkipCategoryLabelsToFit(true);
+			//domainAxis.setSkipCategoryLabelsToFit(true);//TODO: This was removed but can be faked. Do we need it?
 			domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_45);
 		}
 
@@ -824,9 +824,9 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 
 
 	private static void customizeChart (JFreeChart chart, int rows, boolean lastLineIdeal) {
-		// customize the chart!
-        StandardLegend legend = (StandardLegend) chart.getLegend();
-        legend.setDisplaySeriesShapes(true);
+		// customize the chart!  TODO: THis is probably unnecessary
+        //StandardLegend legend = (StandardLegend) chart.getLegend();
+        //legend.setDisplaySeriesShapes(true);
         
         // get a reference to the plot for further customisation...
         XYPlot plot = chart.getXYPlot();
@@ -837,10 +837,10 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			renderer = new SpeedupXYLineAndShapeRenderer(rows);
 		else
 			renderer = new XYLineAndShapeRenderer();
-        renderer.setDefaultShapesFilled(true);
+        renderer.setBaseShapesFilled(true);
         //renderer.setPlotShapes(true);
-        renderer.setItemLabelsVisible(true);
-		renderer.setToolTipGenerator(
+        renderer.setBaseItemLabelsVisible(true);
+		renderer.setBaseToolTipGenerator(
 			new StandardXYToolTipGenerator(
 				StandardXYToolTipGenerator.DEFAULT_TOOL_TIP_FORMAT,
 					new DecimalFormat("processors: #######"), new DecimalFormat("value: #,##0.00")));

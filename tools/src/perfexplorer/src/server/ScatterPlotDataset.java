@@ -12,19 +12,23 @@ import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper class around the RawDataInterface class.
  *
- * <P>CVS $Id: ScatterPlotDataset.java,v 1.6 2009/02/24 00:53:45 khuck Exp $</P>
+ * <P>CVS $Id: ScatterPlotDataset.java,v 1.7 2009/02/25 19:51:46 wspear Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
  */
 public class ScatterPlotDataset extends AbstractXYDataset implements XYDataset {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6304604972636260368L;
 	private RawDataInterface data = null;
 	private String seriesName = null;
 	private int x = 0;
 	private int y = 1;
 	private boolean useMainValue = false;
-	private String debug = null;
+	//private String debug = null;
 	
 	/**
 	 * Constructor.
@@ -54,7 +58,7 @@ public class ScatterPlotDataset extends AbstractXYDataset implements XYDataset {
 	/* (non-Javadoc)
 	 * @see org.jfree.data.general.SeriesDataset#getSeriesName(int)
 	 */
-	public String getSeriesName(int arg0) {
+	public String getSeriesKey(int arg0) {
 		return seriesName;
 	}
 
