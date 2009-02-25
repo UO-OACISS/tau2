@@ -111,6 +111,8 @@ public class RegressionGraph {
 
     private XYDataset getScalingDataSet() {
         XYSeriesCollection dataSet = new XYSeriesCollection();
+        XYSeries idealSeries = new XYSeries("ideal");
+        dataSet.addSeries(idealSeries);
 
         double maxProcCount = Double.MIN_VALUE;
         double minProcCount = Double.MAX_VALUE;
@@ -150,11 +152,8 @@ public class RegressionGraph {
         }
 
         if (speedupChart) {
-            XYSeries series = new XYSeries("ideal");
-            System.out.println(minProcCount);
-            series.add(1.0, minProcCount);
-            series.add(maxProcCount, maxProcCount);
-            dataSet.addSeries(series);
+            idealSeries.add(1.0, minProcCount);
+            idealSeries.add(maxProcCount, maxProcCount);
         }
 
         return dataSet;
@@ -310,7 +309,6 @@ public class RegressionGraph {
 
     private CategoryDataset getSingleDataSet() {
 
-
         ParaProfTrial ppTrial = (ParaProfTrial) trials.get(0);
 
         PPFunctionProfile topfp = getTopLevelTimer(ppTrial);
@@ -379,15 +377,33 @@ public class RegressionGraph {
             //TODO: This is probably unnecessary
             //StandardLegend legend = (StandardLegend) chart.getLegend();
             //legend.setDisplaySeriesShapes(true);
-            
-            XYItemLabelGenerator generator = new StandardXYItemLabelGenerator("{2}", new DecimalFormat("0.00"),new DecimalFormat("0.00"));
-            renderer.setBaseItemLabelGenerator(generator);
-            renderer.setBaseItemLabelsVisible(true);
-            
+
+            if (speedupChart) {
+                renderer.setSeriesShapesVisible(0, false);
+            }
+
+            XYItemLabelGenerator generator = new StandardXYItemLabelGenerator("{2}", new DecimalFormat("0.00"),
+                    new DecimalFormat("0.00"));
+            //            renderer.setBaseItemLabelGenerator(generator);
+            //            renderer.setBaseItemLabelsVisible(true);
+
+            renderer.setSeriesItemLabelGenerator(xyDataSet.getSeriesCount() - 1, generator);
+            renderer.setSeriesItemLabelsVisible(xyDataSet.getSeriesCount() - 1, true);
+
             ValueAxis xAxis = (ValueAxis) plot.getDomainAxis();
             TickUnitSource units = NumberAxis.createIntegerTickUnits();
             xAxis.setStandardTickUnits(units);
             
+            renderer.setSeriesPaint(0, Color.gray);
+            renderer.setSeriesPaint(1, Color.blue);
+            renderer.setSeriesPaint(2, Color.green);
+            renderer.setSeriesPaint(3, Color.magenta);
+            renderer.setSeriesPaint(4, Color.cyan);
+            renderer.setSeriesPaint(5, Color.pink);
+            renderer.setSeriesPaint(6, Color.red);
+            renderer.setSeriesPaint(7, Color.orange);
+            renderer.setSeriesPaint(8, Color.lightGray);
+
         } else if (barChart) {
             chart = ChartFactory.createStackedBarChart(title, // title
                     xaxisLabel, // domain axis label
@@ -445,13 +461,25 @@ public class RegressionGraph {
             xAxis.setLabelFont(smallFont);
             xAxis.setTickLabelFont(tickFont);
             yAxis = (ValueAxis) plot.getRangeAxis();
+
+            chart.getXYPlot().setBackgroundPaint(Color.white);
+            chart.getXYPlot().setDomainGridlinePaint(Color.gray);
+            chart.getXYPlot().setDomainMinorGridlinePaint(Color.gray);
+            chart.getXYPlot().setRangeGridlinePaint(Color.gray);
+            chart.getXYPlot().setRangeMinorGridlinePaint(Color.gray);
         } else {
             CategoryPlot plot = chart.getCategoryPlot();
             CategoryAxis xAxis = (CategoryAxis) plot.getDomainAxis();
             xAxis.setLabelFont(smallFont);
             xAxis.setTickLabelFont(tickFont);
             yAxis = (ValueAxis) plot.getRangeAxis();
+
+            chart.getCategoryPlot().setBackgroundPaint(Color.white);
+            chart.getCategoryPlot().setDomainGridlinePaint(Color.gray);
+            chart.getCategoryPlot().setRangeGridlinePaint(Color.gray);
+
         }
+        chart.setBackgroundPaint(new Color(238, 238, 238));
 
         if (logScale) {
             LogarithmicAxis logAxis = new LogarithmicAxis("");

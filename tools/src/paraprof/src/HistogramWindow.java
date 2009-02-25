@@ -36,9 +36,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * HistogramWindow
  * This is the histogram window
  *  
- * <P>CVS $Id: HistogramWindow.java,v 1.5 2006/11/08 23:17:58 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindow.java,v 1.6 2009/02/25 23:24:48 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  * @see     HistogramWindowPanel
  */
 public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, ParaProfWindow,
@@ -438,6 +438,15 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         chart.getXYPlot().getDomainAxis().setUpperBound(maxValue);
         chart.getXYPlot().getDomainAxis().setLowerBound(minValue);
 
+        chart.getXYPlot().setOutlinePaint(Color.black);
+
+        chart.getXYPlot().setBackgroundPaint(Color.white);
+        chart.getXYPlot().setDomainGridlinePaint(Color.gray);
+        chart.getXYPlot().setDomainMinorGridlinePaint(Color.gray);
+        chart.getXYPlot().setRangeGridlinePaint(Color.gray);
+        chart.getXYPlot().setRangeMinorGridlinePaint(Color.gray);
+        chart.setBackgroundPaint(new Color(238,238,238));
+        
         NumberAxis numberAxis = (NumberAxis) chart.getXYPlot().getDomainAxis();
         numberAxis.setNumberFormatOverride(ParaProfUtils.createNumberFormatter(units()));
         numberAxis.setTickLabelsVisible(true);
