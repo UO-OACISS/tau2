@@ -20,6 +20,7 @@
 
 #include <Profile/TauEnv.h>
 #include <TAU.h>
+#include <stdlib.h>
 
 
 bool Tau_snapshot_initialization();
