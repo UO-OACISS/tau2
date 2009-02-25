@@ -1327,8 +1327,8 @@ cp ${tauroot}/tools/src/vis/bin/vis.jar $JARTARGET
 cp ${tauroot}/tools/src/common/bin/tau-common.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/jargs.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/batik-combined.jar $JARTARGET
-cp ${tauroot}/tools/src/contrib/jfreechart-0.9.21.jar $JARTARGET
-cp ${tauroot}/tools/src/contrib/jcommon-0.9.6.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/jfreechart-1.0.12.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/jcommon-1.0.15.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/jgraph.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/jython.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/jogl/jogl.jar $JARTARGET
