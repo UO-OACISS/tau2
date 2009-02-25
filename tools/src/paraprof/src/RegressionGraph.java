@@ -441,6 +441,8 @@ public class RegressionGraph {
             renderer.setSeriesPaint(7, Color.orange);
             renderer.setSeriesPaint(8, Color.lightGray);
 
+            renderer.setSeriesPaint(dataSet.getRowCount()-1, Color.black);
+
         }
 
         if (angledXaxis && !scalingChart) {
