@@ -18,7 +18,7 @@ import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
-import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
@@ -371,7 +371,7 @@ public class RegressionGraph {
 
             //XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
             //plot.setRenderer(renderer);
-            StandardXYItemRenderer renderer = (StandardXYItemRenderer) plot.getRenderer();
+            XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer) plot.getRenderer();
             renderer.setBaseShapesVisible(true);
 
             renderer.setBaseShapesFilled(true);
