@@ -22,6 +22,7 @@ using namespace std;
 #include "Profile/Profiler.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 
 #if (!defined(TAU_WINDOWS)) 
 /* Needed for fork */
@@ -1187,8 +1188,8 @@ int *tau_pomp_rd_table = 0;
                     
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.112 $   $Date: 2009/02/24 22:59:08 $
- * VERSION: $Id: TauCAPI.cpp,v 1.112 2009/02/24 22:59:08 amorris Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: khuck $
+ * $Revision: 1.113 $   $Date: 2009/02/25 17:49:58 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.113 2009/02/25 17:49:58 khuck Exp $
  ***************************************************************************/
 
