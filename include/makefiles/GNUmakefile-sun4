@@ -1,9 +1,0 @@
-LSMARTS = -L$(TULIPDIR)/lib -lsmarts -lthread
-INCLUDE = -I. -I../../include -I../../Smartslib -I../../machine-specific/sun4/STL -I../../machine-specific/sun4/CUT/lib 
-CXX	= CC
-CXXFLAGS =   $(INCLUDE)  -g  -DUSE_PTHREADS -DUSECUT -pta -xar
-#-pta -ptv -Bstatic
-CFLAGS =    -O  $(INCLUDE) -g
-LIBS = -lthread
-
-LIB = ../../Smartslib/libsmarts.a 

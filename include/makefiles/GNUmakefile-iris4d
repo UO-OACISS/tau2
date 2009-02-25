@@ -1,1 +1,0 @@
-LSMARTS = -L$(TULIPDIR)/lib -lsmarts -lfetchop
