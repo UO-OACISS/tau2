@@ -70,14 +70,12 @@ examples/cthreads examples/fortran examples/f90 $(MPIEXAMPLES) $(PDTEXAMPLE)
 
 #VTF#VTFCONVERTER=utils/vtfconverter#ENDIF#
 
-#SLOG2#SLOGCONVERTER=utils/slogconverter/src#ENDIF#
-
 #TAU2EPILOG#ELGCONVERTER=utils/elgconverter #ENDIF#
 
 #IOWRAPPER#IOWRAPPER=src/wrappers/posixio#ENDIF#
 
 # Subdirectories to make resursively
-SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) $(SLOGCONVERTER) \
+SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) \
           $(ELGCONVERTER) $(TRACE2PROFILE) $(IOWRAPPER)
 
 all:
