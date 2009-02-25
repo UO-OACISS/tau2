@@ -170,7 +170,6 @@ for arg in "$@"; do
     echo "-opari ..................................................... Use Opari."
     echo "-opari_region ......... Report performance data for all OpenMP regions."
     echo "-opari_construct ... Report performance data for all OpenMP constructs."
-    echo "-pcl=<dir> ..... Specify location of PCL (Performance Counter Library)."
     echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
     echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
@@ -230,7 +229,6 @@ for arg in "$@"; do
     echo "-CRAYTIMERS ............ Use fast nanosecond timers on Cray X1 systems."
     echo "-LINUXTIMERS ......... Use low overhead TSC Counter for wallclock time."
     echo "-CPUTIME .......... Use usertime+system time instead of wallclock time."
-    echo "-JAVACPUTIME ...................... Use JVMPI thread specific cpu time."
     echo "-PAPIWALLCLOCK ........ Use PAPI to access wallclock time. Needs -papi."
     echo "-PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation."
     echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
@@ -339,7 +337,6 @@ disableshared=no
 setnode0=no
 compensate=no
 smarts=no
-pcl=no
 papi=no
 perfsuite=no
 perfsuitedir=
@@ -379,7 +376,6 @@ craytimers=no
 linuxtimers=no
 alphatimers=no
 cputime=no
-javacputime=no
 papiwallclock=no
 papivirtual=no
 use_ansic=no
@@ -666,17 +662,6 @@ for arg in "$@"; do
 
   -sproc)
       sproc=yes
-    shift
-    ;;
-
-  -pcl=*)
-      pcl=yes
-      pcldir=`echo $arg | sed -e 's/-pcl=//'`
-      if [ ! -d $pcldir ]
-      then
-        echo "Error: Cannot access PCL directory $pcldir"
-        exit 1
-      fi
     shift
     ;;
 
@@ -1134,11 +1119,6 @@ for arg in "$@"; do
 
   -CPUTIME)
     cputime=yes
-    shift
-    ;;
-
-  -JAVACPUTIME)
-    javacputime=yes
     shift
     ;;
 
@@ -2075,11 +2055,6 @@ fi
 if [ $cputime = yes ]
   then
     fixmakeargs="$fixmakeargs CPUTIME"
-fi
-
-if [ $javacputime = yes ]
-  then
-    fixmakeargs="$fixmakeargs JAVACPUTIME"
 fi
 
 if [ $papiwallclock = yes ]
@@ -4538,12 +4513,6 @@ if [ $sproc = yes ] ; then
     tauoptions="${tauoptions}-sproc"
 fi
 
-if [ $pcl = yes ] ; then
-    fixmakeargs="$fixmakeargs PCL pcldir=$pcldir"
-    tauoptions="${tauoptions}-pcl"
-fi
-
-
 if [ $python = yes ] ; then
     fixmakeargs="$fixmakeargs PYTHON pythoninc=$pythoninc pythonlib=$pythonlib"
     tauoptions="${tauoptions}-python"
@@ -4736,12 +4705,6 @@ if [ $dyninst = yes ] ; then
     fi
     if [ ! -d $dyninstdir/src/include -o ! -d $dyninstdir/include ] ; then
 	fixmakeargs="$fixmakeargs DYNINST5.2"
-    fi
-fi
-
-if [ $pcl = yes ] ; then
-    if [ $pthread = yes  -o $openmp = yes ] ; then 
-      fixmakeargs="$fixmakeargs PCLPTHREAD"
     fi
 fi
 
@@ -5220,7 +5183,7 @@ if [ $sproc = yes ] ; then
   exampleslist="$exampleslist sproc/Makefile"
 fi
 
-if [ $papi = yes -o $pcl = yes ] ; then
+if [ $papi = yes ] ; then
   exampleslist="$exampleslist papi/Makefile multicounter/Makefile"
   if [ $pthread = yes ]
   then
