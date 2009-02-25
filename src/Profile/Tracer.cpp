@@ -494,9 +494,9 @@ int TauTraceMergeAndConvertTracesIfNecessary(void) {
   char cmd[1024];
   char rmcmd[256]; 
   char cdcmd[1024];
-  char *tauroot=TAUROOT;
-  char *tauarch=TAU_ARCH;
-  char *conv="tau2vtf";
+  const char *tauroot=TAUROOT;
+  const char *tauarch=TAU_ARCH;
+  const char *conv="tau2vtf";
   char converter[1024] = {0}; 
   FILE *in;
   

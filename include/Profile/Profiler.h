@@ -239,7 +239,7 @@ int TauProfiler_Snapshot(const char *name, bool finalize = false,
 
 
 void TauProfiler_theFunctionList(const char ***inPtr, int *numOfFunctions,
-				 bool addName = false, const char * inString = NULL);
+				 bool addName = false, const char *inString = NULL);
 void TauProfiler_dumpFunctionNames();
 
 void TauProfiler_theCounterList(const char ***inPtr, int *numOfCounters);
@@ -257,7 +257,7 @@ int TauProfiler_dumpFunctionValues(const char **inFuncs,
 				   int numFuncs,
 				   bool increment = false,
 				   int tid = RtsLayer::myThread(), 
-				   char *prefix = "dump");
+				   const char *prefix = "dump");
 
 void TauProfiler_getUserEventList(const char ***inPtr, int *numUserEvents);
 
@@ -283,6 +283,6 @@ void TauProfiler_EnableAllEventsOnCallStack(int tid, Profiler *current);
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.102 $   $Date: 2009/02/25 18:03:15 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.102 2009/02/25 18:03:15 amorris Exp $ 
+ * $Revision: 1.103 $   $Date: 2009/02/25 23:45:37 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.103 2009/02/25 23:45:37 amorris Exp $ 
  ***************************************************************************/

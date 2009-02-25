@@ -247,7 +247,7 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void) {
     }
     
     if (!counterFound) {
-      char *counter = "GET_TIME_OF_DAY";
+      const char *counter = "GET_TIME_OF_DAY";
 #if defined(TAU_USE_PAPI_TIMER) && defined(TAU_PAPI)
       counter = "P_WALL_CLOCK_TIME";
 #else

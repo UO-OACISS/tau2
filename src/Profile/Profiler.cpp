@@ -151,7 +151,7 @@ void TauAppShutdown(void) {
 //////////////////////////////////////////////////////////////////////
 // Get the string containing the counter name
 //////////////////////////////////////////////////////////////////////
-char *TauGetCounterString(void) {
+const char *TauGetCounterString(void) {
 #ifdef SGI_HW_COUNTERS
   return "templated_functions_hw_counters";
 #elif (defined (TAU_PAPI) \
@@ -1381,7 +1381,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 int TauProfiler_dumpFunctionValues(const char **inFuncs,
 				 int numFuncs,
 				 bool increment,
-				 int tid, char *prefix) {
+				 int tid, const char *prefix) {
   
   TAU_PROFILE("TAU_DUMP_FUNC_VALS()", " ", TAU_IO);
 
@@ -1425,6 +1425,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.232 $   $Date: 2009/02/25 18:03:34 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.232 2009/02/25 18:03:34 amorris Exp $ 
+ * $Revision: 1.233 $   $Date: 2009/02/25 23:45:54 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.233 2009/02/25 23:45:54 amorris Exp $ 
  ***************************************************************************/

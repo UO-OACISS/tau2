@@ -308,7 +308,7 @@ void Tau_disable_context_event(void *event);
 void Tau_enable_context_event(void *event);
 
 void Tau_the_function_list(const char ***functionList, int *num);
-int Tau_dump_prefix(char *prefix);
+int Tau_dump_prefix(const char *prefix);
 
 void Tau_get_event_names(const char ***eventList, int *num);
 void Tau_get_event_vals(const char **inUserEvents, int numUserEvents,
@@ -317,7 +317,7 @@ void Tau_get_event_vals(const char **inUserEvents, int numUserEvents,
 
 
 void Tau_profile_dynamic_auto(int iteration, void **ptr, char *fname, char *type, TauGroup_t group, char *group_name, int isPhase);
-void Tau_exit(char *msg);
+void Tau_exit(const char *msg);
 
 void Tau_start(const char *name);
 void Tau_stop(const char *name);
@@ -326,7 +326,8 @@ void Tau_specify_mapping_data1(long data, const char *name);
 void *Tau_get_profiler(const char *name, const char *type, TauGroup_t group, const char *gr_name);
 
 
-void TAUDECL Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGroup_t group, char *group_name);
+void TAUDECL Tau_profile_c_timer(void **ptr, const char *fname, const char *type, TauGroup_t group, const char *group_name);
+
 void TAUDECL Tau_bcast_data(int data);
 void TAUDECL Tau_reduce_data(int data);
 void TAUDECL Tau_alltoall_data(int data);
@@ -341,14 +342,12 @@ void TAUDECL Tau_start_timer(void *profiler, int phase);
 int TAUDECL Tau_stop_timer(void *profiler);
 void TAUDECL Tau_trace_sendmsg(int type, int destination, int length);
 void TAUDECL Tau_trace_recvmsg(int type, int source, int length);
-void TAUDECL Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGroup_t group, char *group_name);
 void TAUDECL Tau_create_top_level_timer_if_necessary(void);
 void TAUDECL Tau_stop_top_level_timer_if_necessary(void);
 void TAUDECL Tau_metadata(char *name, char *value);
 void TAUDECL Tau_phase_metadata(char *name, char *value);
 void TAUDECL Tau_context_metadata(char *name, char *value);
 
-void Tau_exit(char *msg);
 void Tau_init(int argc, char **argv);
 void Tau_init_ref(int* argc, char ***argv);
 void Tau_set_context(int context);
@@ -466,6 +465,6 @@ void Tau_profile_param1l(long data, const char *dataname);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.92 $   $Date: 2009/02/24 20:22:03 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.92 2009/02/24 20:22:03 amorris Exp $ 
+ * $Revision: 1.93 $   $Date: 2009/02/25 23:45:37 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.93 2009/02/25 23:45:37 amorris Exp $ 
  ***************************************************************************/

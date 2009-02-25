@@ -230,7 +230,7 @@ extern "C" int Tau_profile_exit() {
 
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_exit(char * msg) {
+extern "C" void Tau_exit(const char * msg) {
   Tau_profile_exit();
   
 #if defined(TAUKTAU)
@@ -279,7 +279,7 @@ extern "C" int Tau_dump(void) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" int Tau_dump_prefix(char *prefix) {
+extern "C" int Tau_dump_prefix(const char *prefix) {
   TauProfiler_DumpData(false, RtsLayer::myThread(), prefix);
   return 0;
 }
@@ -338,37 +338,37 @@ extern "C" void Tau_get_event_vals(const char **inUserEvents, int numUserEvents,
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_dump_function_values(const char **functionList, int num) {
-  TauProfiler_dumpFunctionValues(functionList,num);;
+  TauProfiler_dumpFunctionValues(functionList,num);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_dump_function_values_incr(const char **functionList, int num) {
-  TauProfiler_dumpFunctionValues(functionList,num,true);;
+  TauProfiler_dumpFunctionValues(functionList,num,true);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_register_thread(void) {
-  RtsLayer::RegisterThread();;
+  RtsLayer::RegisterThread();
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_register_fork(int nodeid, enum TauFork_t opcode) {
-  RtsLayer::RegisterFork(nodeid, opcode);;
+  RtsLayer::RegisterFork(nodeid, opcode);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_enable_instrumentation(void) {
-  RtsLayer::TheEnableInstrumentation() = true;;
+  RtsLayer::TheEnableInstrumentation() = true;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_disable_instrumentation(void) {
-  RtsLayer::TheEnableInstrumentation() = false;;
+  RtsLayer::TheEnableInstrumentation() = false;
 }
 
 
@@ -376,7 +376,7 @@ extern "C" void Tau_disable_instrumentation(void) {
 extern "C" void Tau_shutdown(void) {
   if (!TheUsingCompInst()) {
     RtsLayer::TheShutdown() = true;
-    RtsLayer::TheEnableInstrumentation() = false;;
+    RtsLayer::TheEnableInstrumentation() = false;
   }
 }
 
@@ -683,34 +683,24 @@ extern "C" void Tau_event_disable_stddev(void *ue) {
 
 ///////////////////////////////////////////////////////////////////////////
 
-extern "C" void Tau_profile_c_timer(void **ptr, char *fname, char *type, TauGroup_t group, 
-	char *group_name) {
-#ifdef DEBUG_PROF
-  printf("Inside Tau_profile_timer_ fname=%s *ptr = %x\n", fname, *ptr);
-#endif /* DEBUG_PROF */
-
-
+extern "C" void Tau_profile_c_timer(void **ptr, const char *name, const char *type, TauGroup_t group, 
+	const char *group_name) {
   if (*ptr == 0) {
-    
     RtsLayer::LockEnv();
-    
     if (*ptr == 0) {  
       // remove garbage characters from the end of name
-      for(unsigned int i=0; i<strlen(fname); i++) {
-	if (!isprint(fname[i])) {
-	  fname[i] = '\0';
+      char *fixedname = strdup(name);
+      for (unsigned int i=0; i<strlen(fixedname); i++) {
+	if (!isprint(fixedname[i])) {
+	  fixedname[i] = '\0';
 	  break;
 	}
       }
-      *ptr = Tau_get_profiler(fname, type, group, group_name);
+      *ptr = Tau_get_profiler(fixedname, type, group, group_name);
+      free (fixedname);
     }
     RtsLayer::UnLockEnv();
   }
-  
-#ifdef DEBUG_PROF
-  printf("get_profiler returns %x\n", *ptr);
-#endif /* DEBUG_PROF */
-
   return;
 }
 
@@ -1188,8 +1178,8 @@ int *tau_pomp_rd_table = 0;
                     
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: khuck $
- * $Revision: 1.113 $   $Date: 2009/02/25 17:49:58 $
- * VERSION: $Id: TauCAPI.cpp,v 1.113 2009/02/25 17:49:58 khuck Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.114 $   $Date: 2009/02/25 23:45:54 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.114 2009/02/25 23:45:54 amorris Exp $
  ***************************************************************************/
 
