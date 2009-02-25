@@ -77,7 +77,7 @@ else
 fi
 PPROFOPT="${PPROFOPT} -t ${TAUROOT} -a ${MACHINE}"
 # Invoke ParaProf with the optional PPROFOPT argument. For large profiles, increase 1000m (1000MB). If you run out of memory, decrease this number.
-JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis.jar:${JARDIR}/jogl.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-0.9.21.jar:${JARDIR}/jcommon-0.9.6.jar:${JARDIR}/jython.jar
+JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis.jar:${JARDIR}/jogl.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar
 
 # Test for java 1.4+
 test=`java -cp ${JARS} edu.uoregon.tau.common.VersionTester 1.4`
