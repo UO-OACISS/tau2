@@ -1901,6 +1901,9 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
               itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), RETURN, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(**rlit, *rit), BEFORE));
             }
           }
+          /* Always instrument the end of main() as the return statement is optional for C++ and C99 */
+          if ((*rit)->name() == "main")
+            itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_END, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), (*it)->getCode((*rit)->bodyEnd(), *rit), BEFORE));
 #ifdef DEBUG
           cout <<"at line: "<<(*rit)->bodyEnd().line()<<", col"<< (*rit)->bodyEnd().col()<<"code = "<<(*it)->getCode()<<endl;
 #endif /* DEBUG */
@@ -1921,13 +1924,7 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
             /* We need to create an empty BODY_BEGIN to emit the 'tau_ret_val' declaration, */
             /* however, this also requires an empty BODY_END to have matching braces. */
 	    itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_BEGIN, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col(), "", BEFORE));
-
-            /* For C++, always instrument the end of main() as the return statement is optional */
-            if ((language == PDB::LA_CXX || language == PDB::LA_C_or_CXX) &&
-                ("main" == (*rit)->name()))
-              itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_END, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), (*it)->getCode((*rit)->bodyEnd(), *rit), BEFORE));
-            else
-              itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_END, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), "", BEFORE));
+            itemvec.push_back( new itemRef(static_cast<pdbItem *>(*rit), BODY_END, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), "", BEFORE));
           }
         } /* end of routine exit */
         /* examine the type of request - abort */
@@ -2649,6 +2646,6 @@ string intToString(int value)
 
 /***************************************************************************
  * $RCSfile: tau_instrument.cpp,v $   $Author: geimer $
- * $Revision: 1.70 $   $Date: 2008/12/11 16:02:22 $
- * VERSION_ID: $Id: tau_instrument.cpp,v 1.70 2008/12/11 16:02:22 geimer Exp $
+ * $Revision: 1.71 $   $Date: 2009/02/25 08:38:20 $
+ * VERSION_ID: $Id: tau_instrument.cpp,v 1.71 2009/02/25 08:38:20 geimer Exp $
  ***************************************************************************/
