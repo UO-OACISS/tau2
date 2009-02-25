@@ -77,9 +77,7 @@ extern "C" {
   static double env_throttle_percall = 0;
   static const char *env_profiledir = NULL;
   static const char *env_tracedir = NULL;
-
-  double TauEnv_get_throttle_numcalls();
-  double TauEnv_get_throttle_percall();
+  static const char *env_metrics = NULL;
 
 
   void TAU_VERBOSE(const char *format, ...) {
@@ -112,6 +110,9 @@ extern "C" {
     }
   }
 
+  const char *TauEnv_get_metrics() {
+    return env_metrics;
+  }
 
   const char *TauEnv_get_profiledir() {
     return env_profiledir;
@@ -285,6 +286,18 @@ extern "C" {
 	TAU_VERBOSE("TAU: Throttle PerCall = %g\n", env_throttle_percall);
 	TAU_VERBOSE("TAU: Throttle NumCalls = %g\n", env_throttle_numcalls);
       }
+
+      env_metrics = NULL;
+      char *taumetrics = getenv ("TAU_METRICS");
+      if (taumetrics && strlen(taumetrics) == 0) {
+	taumetrics = NULL;
+      }
+      if (taumetrics) {
+	env_metrics = taumetrics;
+      } else {
+	env_metrics = "GET_TIME_OF_DAY";
+      }
+      TAU_VERBOSE("TAU: Using Metrics: %s\n", env_metrics);
 
       char *profileFormat = getenv("TAU_PROFILE_FORMAT");
       if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "snapshot")) {

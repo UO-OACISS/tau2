@@ -39,6 +39,7 @@ extern "C" {
   double TAUDECL TauEnv_get_throttle_percall();
   const char *TauEnv_get_profiledir();
   const char *TauEnv_get_tracedir();
+  const char *TauEnv_get_metrics();
 
 #define TAU_FORMAT_PROFILE 1
 #define TAU_FORMAT_SNAPSHOT 2
