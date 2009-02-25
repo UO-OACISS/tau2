@@ -1923,7 +1923,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 #define WRITE_TAB(os, column) if (column < 7) os<<"\t";
 
 /* The macro below assumes that ostr, inbuf and print_cr are defined */
-#define WRITE_SNIPPET(attr, col, write_upto, snippetcode) { \
+#define WRITE_SNIPPET(attr, col, write_upto, snippetcode, tab) { \
 	int i; /* the index into the array */ \
                 if (attr == BEFORE)  \
 		{ \
@@ -1932,7 +1932,8 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
                     ostr <<inbuf[i]; \
 		  } \
                   ostr << snippetcode <<endl; \
-		  ostr <<"\t";  /* write a tab */ \
+                  if (tab) \
+		    ostr <<"\t";  /* write a tab */ \
                   for (i=col-1; i < write_upto; i++) \
                     ostr <<inbuf[i]; \
                   if (print_cr) ostr<<endl; \
@@ -3461,7 +3462,9 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		}
                 writeAdditionalFortranInvocations(ostr, (pdbRoutine *)((*it)->item));
                 if (!(*it)->snippet.empty())
-                  ostr << "\n\t" << (*it)->snippet << "\n\t";
+                  ostr << "\n\t" << (*it)->snippet << "\n";
+                if (use_spec)
+                  ostr << "\t";
 
 #ifdef DEBUG
 		printf("Before 2.1: (*it)->col = %d, write_upto=%d\n", (*it)->col, write_upto);
@@ -3673,12 +3676,12 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		  }
 		  else
                   {
-		    WRITE_SNIPPET((*it)->attribute, (*it)->col, 0, (*it)->snippet);
+		    WRITE_SNIPPET((*it)->attribute, (*it)->col, 0, (*it)->snippet, true);
                   }
 		  /* if there is another instrumentation point on the same line, it will take care of the write_upto part */
 		}
 		else {
-		  WRITE_SNIPPET((*it)->attribute, (*it)->col, write_upto, (*it)->snippet);
+		  WRITE_SNIPPET((*it)->attribute, (*it)->col, write_upto, (*it)->snippet, false);
 		}
 		instrumented = true;
 		break;
@@ -3710,7 +3713,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 // #endif /* DEBUG */
 // 		}
 		codesnippet = string("       call TAU_PROFILE_START(")+(*it)->snippet+")";
-		WRITE_SNIPPET((*it)->attribute, docol, write_upto, codesnippet);
+		WRITE_SNIPPET((*it)->attribute, docol, write_upto, codesnippet, true);
                 instrumented = true;
 		/* Push the current timer name on the stack */
 	 	current_timer.push_front((*it)->snippet); 
@@ -3748,13 +3751,13 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #endif /* DEBUG */
 		  
 		  codesnippet = string("\t then \n       call TAU_PROFILE_STOP(")+(*it)->snippet+")";
-		  WRITE_SNIPPET(BEFORE, gotocol, write_upto, codesnippet);
+		  WRITE_SNIPPET(BEFORE, gotocol, write_upto, codesnippet, true);
 		  ostr <<"\t endif"<<endl;
 		}
 		else
 		{
 		  codesnippet = string("       call TAU_PROFILE_STOP(")+(*it)->snippet+")";
-		  WRITE_SNIPPET((*it)->attribute, (*it)->col, write_upto, codesnippet);
+		  WRITE_SNIPPET((*it)->attribute, (*it)->col, write_upto, codesnippet, true);
 		}
                 instrumented = true;
 	        /* We maintain the current outer loop level timer active. We need to pop the stack */
@@ -3767,7 +3770,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #endif /* DEBUG */
 
 		codesnippet = string("       call TAU_PROFILE_STOP(")+(*it)->snippet+")";
-		WRITE_SNIPPET((*it)->attribute, (*it)->col, write_upto, codesnippet);
+		WRITE_SNIPPET((*it)->attribute, (*it)->col, write_upto, codesnippet, true);
                 instrumented = true;
 	        /* We maintain the current outer loop level timer active. We need to pop the stack */
 		if (!current_timer.empty()) current_timer.pop_front();
@@ -4410,8 +4413,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: geimer $
- * $Revision: 1.206 $   $Date: 2008/12/12 09:13:10 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.206 2008/12/12 09:13:10 geimer Exp $
+ * $Revision: 1.207 $   $Date: 2009/02/25 08:37:47 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.207 2009/02/25 08:37:47 geimer Exp $
  ***************************************************************************/
 
 
