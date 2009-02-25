@@ -12,8 +12,8 @@ import javax.swing.JFrame;
 
 import org.jfree.chart.*;
 import org.jfree.chart.axis.*;
-import org.jfree.chart.labels.StandardXYLabelGenerator;
-import org.jfree.chart.labels.XYLabelGenerator;
+import org.jfree.chart.labels.StandardXYItemLabelGenerator;
+import org.jfree.chart.labels.XYItemLabelGenerator;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
@@ -372,16 +372,17 @@ public class RegressionGraph {
             //XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
             //plot.setRenderer(renderer);
             StandardXYItemRenderer renderer = (StandardXYItemRenderer) plot.getRenderer();
-            renderer.setPlotShapes(true);
+            renderer.setBaseShapesVisible(true);
 
-            renderer.setShapesFilled(true);
-            renderer.setStroke(new BasicStroke(2f, BasicStroke.JOIN_ROUND, BasicStroke.JOIN_BEVEL));
-            StandardLegend legend = (StandardLegend) chart.getLegend();
-            legend.setDisplaySeriesShapes(true);
+            renderer.setBaseShapesFilled(true);
+            renderer.setBaseStroke(new BasicStroke(2f, BasicStroke.JOIN_ROUND, BasicStroke.JOIN_BEVEL));
+            //TODO: This is probably unnecessary
+            //StandardLegend legend = (StandardLegend) chart.getLegend();
+            //legend.setDisplaySeriesShapes(true);
             
-            XYLabelGenerator generator = new StandardXYLabelGenerator("{2}", new DecimalFormat("0.00"),new DecimalFormat("0.00"));
-            renderer.setLabelGenerator(generator);
-            renderer.setItemLabelsVisible(true);
+            XYItemLabelGenerator generator = new StandardXYItemLabelGenerator("{2}", new DecimalFormat("0.00"),new DecimalFormat("0.00"));
+            renderer.setBaseItemLabelGenerator(generator);
+            renderer.setBaseItemLabelsVisible(true);
             
             ValueAxis xAxis = (ValueAxis) plot.getDomainAxis();
             TickUnitSource units = NumberAxis.createIntegerTickUnits();
@@ -410,9 +411,9 @@ public class RegressionGraph {
 
             CategoryPlot plot = chart.getCategoryPlot();
             LineAndShapeRenderer renderer = (LineAndShapeRenderer) plot.getRenderer();
-            renderer.setDrawShapes(true);
-            renderer.setDefaultShapesFilled(true);
-            renderer.setStroke(new BasicStroke(2f, BasicStroke.JOIN_ROUND, BasicStroke.JOIN_BEVEL));
+            renderer.setBaseShapesVisible(true);
+            renderer.setBaseShapesFilled(true);
+            renderer.setBaseStroke(new BasicStroke(2f, BasicStroke.JOIN_ROUND, BasicStroke.JOIN_BEVEL));
 
             renderer.setSeriesPaint(0, Color.red);
             renderer.setSeriesPaint(1, Color.blue);
