@@ -11,7 +11,7 @@ SOURCES = $(filter-out src/ParaProf.java, $(BASE_SRC))
 NOW = $(shell date)
 
 TOOLS_SRC = $(TAUROOT)/tools/src
-CLASSPATH = $(TOOLS_SRC)/perfdmf/bin/perfdmf.jar:$(TOOLS_SRC)/contrib/jargs.jar:$(TOOLS_SRC)/contrib/batik-combined.jar:$(TOOLS_SRC)/common/bin/tau-common.jar:$(TOOLS_SRC)/contrib/jfreechart-0.9.21.jar:$(TOOLS_SRC)/contrib/jcommon-0.9.6.jar:$(TOOLS_SRC)/contrib/jython.jar:$(TOOLS_SRC)/contrib/jgraph.jar:$(TOOLS_SRC)/vis/bin/vis.jar
+CLASSPATH = $(TOOLS_SRC)/perfdmf/bin/perfdmf.jar:$(TOOLS_SRC)/contrib/jargs.jar:$(TOOLS_SRC)/contrib/batik-combined.jar:$(TOOLS_SRC)/common/bin/tau-common.jar:$(TOOLS_SRC)/contrib/jfreechart-1.0.12.jar:$(TOOLS_SRC)/contrib/jcommon-1.0.15.jar:$(TOOLS_SRC)/contrib/jython.jar:$(TOOLS_SRC)/contrib/jgraph.jar:$(TOOLS_SRC)/vis/bin/vis.jar
 
 TARGET_JAR=$(TOOLS_SRC)/paraprof/bin/paraprof.jar
 
