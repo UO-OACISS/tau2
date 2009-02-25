@@ -154,17 +154,13 @@ void TauAppShutdown(void) {
 char *TauGetCounterString(void) {
 #ifdef SGI_HW_COUNTERS
   return "templated_functions_hw_counters";
-#elif (defined (TAU_PAPI) || defined (TAU_PCL)	\
+#elif (defined (TAU_PAPI) \
        || defined(TAU_PAPI_WALLCLOCKTIME)	\
        || defined(TAU_PAPI_VIRTUAL))
   char *tau_env = NULL;
 
 #ifdef TAU_PAPI
   tau_env = getenv("PAPI_EVENT");
-#else  /* TAU_PAPI */
-#ifdef TAU_PCL
-  tau_env = getenv("PCL_EVENT");
-#endif /* TAU_PCL */
 #endif /* TAU_PAPI */
   if (tau_env) {
     char *header = new char[1024];
@@ -181,7 +177,7 @@ char *TauGetCounterString(void) {
 #endif /* TAU_PAPI_VIRTUAL */
     return "templated_functions_hw_counters";
   }
-#else  // ! (TAU_PAPI/PCL) => SGI_TIMERS, TULIP_TIMERS 
+#else  // ! (TAU_PAPI) => SGI_TIMERS
   return "templated_functions";
 #endif // ALL options
 }
@@ -529,8 +525,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 
 #ifdef TAU_VAMPIRTRACE
   TimeStamp = vt_pform_wtime();
-  DEBUGPROFMSG("Calling vt_exit(): "<< ThisFunction->GetName()<<
-	       "With Timestamp = "<<TimeStamp<<endl;);
+  DEBUGPROFMSG("Calling vt_exit(): "<< ThisFunction->GetName() << "With Timestamp = " << TimeStamp<<endl;);
   vt_exit((uint64_t *)&TimeStamp);
 #else /* TAU_VAMPIRTRACE */
 #ifdef TAU_EPILOG
@@ -1430,6 +1425,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.231 $   $Date: 2009/02/24 22:59:08 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.231 2009/02/24 22:59:08 amorris Exp $ 
+ * $Revision: 1.232 $   $Date: 2009/02/25 18:03:34 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.232 2009/02/25 18:03:34 amorris Exp $ 
  ***************************************************************************/

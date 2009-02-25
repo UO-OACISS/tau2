@@ -60,7 +60,6 @@ TAUGCCLIBDIR=
 IFORTLIBDIR=
 PERFSUITELINK=
 TAUGFORTRANLIBDIR=
-PCLDIR=
 PAPIDIR=
 PAPISUBDIR=
 CHARMDIR=
@@ -193,8 +192,6 @@ OPARI_O 	= TauKojakOpariDisable.o #ENDIF#
 DYNINST_PLATFORM 	= $(PLATFORM)
 
 
-#PCL##include $(TAU_INC_DIR)/makefiles/PCLMakefile.stub	  #ENDIF#
-
 ############# OpenMP Fortran Option ########
 #OPENMP#TAU_F90_OPT = -mp                   #ENDIF#
 #SOL2CC_OPENMP#TAU_F90_OPT = -xopenmp       #ENDIF#
@@ -260,9 +257,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 
 ############# Profiling Options #############
 #PROFILE#PROFILEOPT1           = -DPROFILING_ON        #ENDIF#
-#PCL#PROFILEOPT3       	       = -DTAU_PCL -I$(PCLDIR)/include #ENDIF#
 #PAPI#PROFILEOPT3              = -DTAU_PAPI -I$(PAPIDIR)/src -I$(PAPIDIR)/include #ENDIF#
-#PCL#PCL_O       	       = PclLayer.o 	       #ENDIF#
 #PAPI#PAPI_O       	       = PapiLayer.o 	       #ENDIF#
 #MULTIPLECOUNTERS#MULT_O       = MultipleCounters.o    #ENDIF#
 #PROFILEOPT4
@@ -330,7 +325,6 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #BGL#TAU_PIC_PROFILEOPT21           = #ENDIF#
 #USE_IBMXLC#PROFILEOPT21	       = -DTAU_DOT_H_LESS_HEADERS -DTAU_XLC $(TAU_PIC_PROFILEOPT21) #ENDIF#
 #IBMXLCAPPLE#PROFILEOPT21	       = -DTAU_DOT_H_LESS_HEADERS -DTAU_XLC -DTAU_APPLE_XLC #ENDIF#
-#PCLPTHREAD#PROFILEOPT22	       = -DPCL_MUTEX_LOCK #ENDIF#
 #JAVA#PROFILEOPT23	       = -DJAVA 		#ENDIF#
 PROFILEOPT24 =
 #JAVA#PROFILEOPT25 = -I$(JDKDIR)/include -I$(JDKDIR)/include/$(JDKARCH) #ENDIF#
@@ -390,7 +384,6 @@ PROFILEOPT24 =
 #DEPTHLIMIT#PROFILEOPT56      = -DTAU_DEPTH_LIMIT       #ENDIF#
 #TAU_CHARM#PROFILEOPT57 = -DTAU_CHARM -I$(CHARMDIR)/include #ENDIF#
 #PROFILEHEADROOM#PROFILEOPT58  = -DTAU_PROFILEHEADROOM   #ENDIF#
-#JAVACPUTIME#PROFILEOPT59           = -DJAVA_CPU_TIME          #ENDIF#
 #TAU_LARGEFILE#PROFILEOPT60           = -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE     #ENDIF#
 #BGP#PROFILEOPT60           = -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE #ENDIF#
 # Omit the -D_LARGETFILE64_SOURCE till we can check the IBM crash
@@ -436,8 +429,6 @@ FWRAPPER	       = TauFMpi.o
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
 #ALPHATIMERS#LEXTRA	       = -lrt 	       #ENDIF#
-#SOL2#PCL_EXTRA_LIBS = -lcpc #ENDIF#
-#PCL#LEXTRA	       	       = -L$(PCLDIR)/lib -lpcl $(PCL_EXTRA_LIBS)      #ENDIF#
 #PAPI#LEXTRA	       	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a #ENDIF#
 #IA64PAPI#LEXTRA	       = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi #ENDIF#
 #Due to some problems with older versions of libpfm, we are using the static lib

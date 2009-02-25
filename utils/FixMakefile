@@ -67,11 +67,6 @@ case $1 in
 	echo "s,^CHARMDIR=.*$,CHARMDIR=$charmdir,g" >> $sedout
 	;;
 
-     pcldir=*)
-        pcldir=`echo $1 | sed -e 's/^pcldir=//'`
-	echo "s,^PCLDIR=.*$,PCLDIR=$pcldir,g" >> $sedout
-	;;
-
      papidir=*)
         papidir=`echo $1 | sed -e 's/^papidir=//'`
 	echo "s,^PAPIDIR=.*$,PAPIDIR=$papidir,g" >> $sedout
@@ -272,10 +267,6 @@ case $1 in
 ###############################################################
 # Set the default optimization flags for compiling pcxx und user programs
 ###############################################################
-     pcxxopt=*)
-        pcxxopt=`echo $1 | sed -e 's/^pcxxopt=//' -e 's/_/ /'`
-	echo "s@^PCXX_OPT=\(.*\)@PCXX_OPT=$pcxxopt@g" >> $sedout
-        ;;
      useropt=*)
         useropt=`echo $1 | sed -e 's/^useropt=//' -e 's/#/ /g'`
 	echo "s@^USER_OPT=\(.*\)@USER_OPT=$useropt@g" >> $sedout
@@ -1101,10 +1092,6 @@ ALPHATIMERS)
 	;;
      CPUTIME)
 	echo "NOTE: Using usertime + system time for Profiling"
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
-     JAVACPUTIME)
-	echo "NOTE: Using JVMPI thread specific cpu time"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PAPIWALLCLOCK)

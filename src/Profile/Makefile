@@ -63,7 +63,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/PthreadLayer.h $(INCDIR)/RtsLayer.h         \
 		$(INCDIR)/FunctionInfo.h $(INCDIR)/UserEvent.h        \
 		$(INCDIR)/TauCppAPI.h 	 $(INCDIR)/bstring.h	      \
-		$(INCDIR)/TauFAPI.h 	 $(INCDIR)/PclLayer.h         \
+		$(INCDIR)/TauFAPI.h 	 \
 		$(INCDIR)/PapiLayer.h    $(INCDIR)/JavaThreadLayer.h  \
 		$(INCDIR)/OpenMPLayer.h  $(INCDIR)/TauJAPI.h	      \
 		$(INCDIR)/SprocLayer.h   $(INCDIR)/PyGroups.h         \
@@ -74,7 +74,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/TauTrace.h                                  \
 		$(TAUROOT)/include/tau_internal.h
 
-LDFLAGS	      = $(PCXX_OPT) 
+LDFLAGS	      =
 
 MAKEFILE      = Makefile
 
@@ -94,7 +94,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o \
 		TauHooks.o TauHandler.o TauMemory.o MetaData.o TauEnv.o \
 		TauInit.o Comp_intel9.o Comp_pgi.o Comp_xl.o TauCallPath.o \
 		$(PARAM_O) Tracer.o $(THR_O) \
-		$(PCL_O) $(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
+		$(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) \
 		$(COMPENSATE_O) $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O)
@@ -481,9 +481,6 @@ TauHooks.o   : TauHooks.cpp $(HDRS)
 
 TauJava.o :	TauJava.cpp
 	$(CXX) $(CXXFLAGS) -c TauJava.cpp
-
-PclLayer.o 	: PclLayer.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 PapiLayer.o 	: PapiLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)

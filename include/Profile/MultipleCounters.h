@@ -30,7 +30,7 @@ extern "C" {
 }
 #endif /* TAUKTAU_SHCTR */
 
-#define SIZE_OF_INIT_ARRAY 14 //!!Change this if functions are added to the system!!
+#define SIZE_OF_INIT_ARRAY 12 //!!Change this if functions are added to the system!!
 
 extern int Tau_Global_numCounters;
 
@@ -77,9 +77,6 @@ class MultipleCounterLayer
   static bool cpuTimeMCLInit(int functionPosition);
   static void cpuTimeMCL(int tid, double values[]);
 
-  static bool javaCpuTimeMCLInit(int functionPosition);
-  static void javaCpuTimeMCL(int tid, double values[]);
-
   static bool logicalClockMCLInit(int functionPosition);
   static void logicalClockMCL(int tid, double values[]);
 
@@ -94,9 +91,6 @@ class MultipleCounterLayer
 
   static bool papiVirtualMCLInit(int functionPosition);
   static void papiVirtualMCL(int tid, double values[]);
-
-  static bool pclMCLInit(int functionPosition);
-  static void pclMCL(int tid, double values[]);
 
   static bool ktauMCLInit(int functionPosition);
   static void ktauMCL(int tid, double values[]);
@@ -135,11 +129,6 @@ class MultipleCounterLayer
   static int cpuTimeMCL_FP;
 #endif // CPU_TIME
 
-#ifdef JAVA_CPU_TIME
-  static int javaCpuTimeMCL_CP[1];
-  static int javaCpuTimeMCL_FP;
-#endif // JAVA_CPU_TIME
-
   static int logicalClockMCL_CP[1];
   static int logicalClockMCL_FP;
 
@@ -156,19 +145,6 @@ class MultipleCounterLayer
   static int papiWallClockMCL_FP;
   static int papiVirtualMCL_FP;
 #endif//TAU_PAPI
-
-#ifdef TAU_PCL
-  static int pclMCL_CP[MAX_TAU_COUNTERS];
-  static int pclMCL_FP;
-  //Data specific to the pclMCL function.
-  static int numberOfPCLHWCounters;
-  static int PCL_CounterCodeList[MAX_TAU_COUNTERS];
-  static unsigned int PCL_Mode;
-  static PCL_DESCR_TYPE descr;
-  static bool threadInit[TAU_MAX_THREADS];
-  static PCL_CNT_TYPE CounterList[MAX_TAU_COUNTERS];
-  static PCL_FP_CNT_TYPE FpCounterList[MAX_TAU_COUNTERS];
-#endif//TAU_PCL
 
 #ifdef TAUKTAU_SHCTR
   static int ktauMCL_CP[MAX_TAU_COUNTERS];

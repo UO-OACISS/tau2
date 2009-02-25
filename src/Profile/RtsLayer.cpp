@@ -509,10 +509,6 @@ double RtsLayer::getUSecD (int tid) {
   return 0;
 #endif /* TAU_EPILOG/VAMPIRTRACE, PROFILING_ON */
 
-#ifdef TAU_PCL
-  return PCL_Layer::getCounters(tid);
-#endif  // TAU_PCL
-
 #ifdef TAU_PAPI
   static const char *papi_env = getenv("PAPI_EVENT");
   if (papi_env != NULL)
@@ -676,10 +672,6 @@ const char *RtsLayer::getSingleCounterName() {
 #if ((defined(TAU_EPILOG) && !defined(PROFILING_ON)) || (defined(TAU_VAMPIRTRACE) && !defined(PROFILING_ON)))
   return "none";
 #endif /* TAU_EPILOG/VAMPIRTRACE, PROFILING_ON */
-
-#ifdef TAU_PCL
-  return getenv("PCL_EVENT");
-#endif // TAU_PCL
 
 #ifdef TAU_PAPI
 #ifdef TAU_PAPI_WALLCLOCKTIME
@@ -1029,6 +1021,6 @@ std::string RtsLayer::GetRTTI(const char *name) {
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.121 $   $Date: 2009/02/24 20:26:59 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.121 2009/02/24 20:26:59 amorris Exp $ 
+ * $Revision: 1.122 $   $Date: 2009/02/25 18:03:34 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.122 2009/02/25 18:03:34 amorris Exp $ 
  ***************************************************************************/

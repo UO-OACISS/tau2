@@ -111,7 +111,6 @@ void tau_pthread_exit (void *arg);
 #include <Profile/RtsLayer.h>
 #include <Profile/FunctionInfo.h>
 #include <Profile/UserEvent.h>
-#include <Profile/PclLayer.h>
 #include <Profile/PapiLayer.h>
 #include <Profile/MultipleCounters.h>
 #include <Profile/WindowsThreadLayer.h>
@@ -284,6 +283,6 @@ void TauProfiler_EnableAllEventsOnCallStack(int tid, Profiler *current);
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.101 $   $Date: 2009/02/24 22:58:44 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.101 2009/02/24 22:58:44 amorris Exp $ 
+ * $Revision: 1.102 $   $Date: 2009/02/25 18:03:15 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.102 2009/02/25 18:03:15 amorris Exp $ 
  ***************************************************************************/

@@ -29,10 +29,6 @@ using namespace std;
 #include <unistd.h>
 #endif // CPU_TIME
 
-#ifdef JAVA_CPU_TIME
-#include "Profile/JavaThreadLayer.h"
-#endif // JAVA_CPU_TIME
-
 #ifdef CRAY_TIMERS
 #ifndef TAU_CATAMOUNT
 /* These header files are for Cray X1 */
@@ -126,11 +122,6 @@ int MultipleCounterLayer::cpuTimeMCL_CP[1];
 int MultipleCounterLayer::cpuTimeMCL_FP;
 #endif // CPU_TIME
 
-#ifdef JAVA_CPU_TIME
-int MultipleCounterLayer::javaCpuTimeMCL_CP[1];
-int MultipleCounterLayer::javaCpuTimeMCL_FP;
-#endif // JAVA_CPU_TIME
-
 int MultipleCounterLayer::logicalClockMCL_CP[1];
 int MultipleCounterLayer::logicalClockMCL_FP;
 
@@ -147,17 +138,6 @@ int MultipleCounterLayer::papiMCL_FP;
 int MultipleCounterLayer::papiWallClockMCL_FP;
 int MultipleCounterLayer::papiVirtualMCL_FP;
 #endif//TAU_PAPI
-#ifdef TAU_PCL
-int MultipleCounterLayer::pclMCL_CP[MAX_TAU_COUNTERS];
-int MultipleCounterLayer::pclMCL_FP;
-int MultipleCounterLayer::numberOfPCLHWCounters;
-int MultipleCounterLayer::PCL_CounterCodeList[MAX_TAU_COUNTERS];
-unsigned int MultipleCounterLayer::PCL_Mode = PCL_MODE_USER;
-PCL_DESCR_TYPE MultipleCounterLayer::descr;
-bool MultipleCounterLayer::threadInit[TAU_MAX_THREADS];
-PCL_CNT_TYPE MultipleCounterLayer::CounterList[MAX_TAU_COUNTERS];
-PCL_FP_CNT_TYPE MultipleCounterLayer::FpCounterList[MAX_TAU_COUNTERS];
-#endif//TAU_PCL
 
 #ifdef TAUKTAU_SHCTR
 int MultipleCounterLayer::ktauMCL_CP[MAX_TAU_COUNTERS];
@@ -171,14 +151,12 @@ firstListType MultipleCounterLayer::initArray[] = {gettimeofdayMCLInit,
 						   bglTimersMCLInit,
 						   sgiTimersMCLInit,
 						   cpuTimeMCLInit,
-						   javaCpuTimeMCLInit,
 						   logicalClockMCLInit,
 						   crayTimersMCLInit,
 						   tauMPIMessageSizeMCLInit,
 						   papiMCLInit,
 						   papiWallClockMCLInit,
 						   papiVirtualMCLInit,
-						   pclMCLInit,
 						   ktauMCLInit};
 
 int MultipleCounterLayer::numberOfActiveFunctions = 0;
@@ -205,22 +183,10 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void) {
 #ifdef TAU_PAPI 
       MultipleCounterLayer::papiMCL_CP[a] = -1;
 #endif//TAU_PAPI
-#ifdef TAU_PCL
-      MultipleCounterLayer::pclMCL_CP[a] = -1;
-      MultipleCounterLayer::PCL_CounterCodeList[a] = -1;
-      MultipleCounterLayer::CounterList[a] = 0;
-      MultipleCounterLayer::FpCounterList[a] = 0;      
-#endif//TAU_PCL
 #ifdef TAUKTAU_SHCTR
       MultipleCounterLayer::ktauMCL_CP[a] = -1;
 #endif//TAUKTAU_SHCTR
     }
-
-#ifdef TAU_PCL
-    for(int a=0; a<TAU_MAX_THREADS; a++){
-      MultipleCounterLayer::threadInit[a] = false;
-    }
-#endif
 
     MultipleCounterLayer::gettimeofdayMCL_CP[0] = -1;
     MultipleCounterLayer::gettimeofdayMCL_FP = -1;
@@ -244,11 +210,6 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void) {
     MultipleCounterLayer::cpuTimeMCL_FP = -1;
 #endif // CPU_TIME
 
-#ifdef JAVA_CPU_TIME
-    MultipleCounterLayer::javaCpuTimeMCL_CP[0] = -1;
-    MultipleCounterLayer::javaCpuTimeMCL_FP = -1;
-#endif // JAVA_CPU_TIME
-
     MultipleCounterLayer::logicalClockMCL_CP[0] = -1;
     MultipleCounterLayer::logicalClockMCL_FP = -1;
 
@@ -270,10 +231,6 @@ bool MultipleCounterLayer::initializeMultiCounterLayer(void) {
     MultipleCounterLayer::papiWallClockMCL_FP = -1;
     MultipleCounterLayer::papiVirtualMCL_FP = -1;
 #endif//TAU_PAPI
-#ifdef TAU_PCL
-    MultipleCounterLayer::numberOfPCLHWCounters = 0;
-    MultipleCounterLayer::pclMCL_FP = -1;
-#endif//TAU_PCL
 #ifdef TAUKTAU_SHCTR
     MultipleCounterLayer::ktauMCL_FP = -1;
 #endif//TAUKTAU_SHCTR
@@ -577,26 +534,6 @@ bool MultipleCounterLayer::cpuTimeMCLInit(int functionPosition){
 #endif//CPU_TIME
 }
 
-bool MultipleCounterLayer::javaCpuTimeMCLInit(int functionPosition){
-#ifdef JAVA_CPU_TIME
-  for(int i=0; i<MAX_TAU_COUNTERS; i++){
-    if(MultipleCounterLayer::names[i] != NULL){
-      if(strcmp(MultipleCounterLayer::names[i], "JAVA_CPU_TIME") == 0){
-	javaCpuTimeMCL_CP[0] = i;
-	MultipleCounterLayer::counterUsed[i] = true;
-	MultipleCounterLayer::numberOfCounters[i] = 1;
-	MultipleCounterLayer::functionArray[functionPosition] = javaCpuTimeMCL;
-	javaCpuTimeMCL_FP = functionPosition;
-	return true;
-      }
-    }
-  }
-  return false;
-#else //JAVA_CPU_TIME
-  return false;
-#endif//JAVA_CPU_TIME
-}
-
 bool MultipleCounterLayer::logicalClockMCLInit(int functionPosition){
   for(int i=0; i<MAX_TAU_COUNTERS; i++){
     if(MultipleCounterLayer::names[i] != NULL){
@@ -726,42 +663,6 @@ bool MultipleCounterLayer::papiVirtualMCLInit(int functionPosition){
 #else  // TAU_PAPI
   return false;
 #endif // TAU_PAPI
-}
-
-bool MultipleCounterLayer::pclMCLInit(int functionPosition){
-#ifdef  TAU_PCL
-  for(int i=0; i<MAX_TAU_COUNTERS; i++){
-    if(MultipleCounterLayer::names[i] != NULL){
-      if (strstr(MultipleCounterLayer::names[i],"PCL") != NULL) {
-	PCL_Layer::multiCounterPCLInit(&MultipleCounterLayer::descr);
-	int tmpCode = PCL_Layer::map_eventnames(MultipleCounterLayer::names[i]);
-	if(tmpCode != -1){
-	  pclMCL_CP[numberOfPCLHWCounters] = i;
-	  MultipleCounterLayer::PCL_CounterCodeList[numberOfPCLHWCounters] = tmpCode;
-	  numberOfPCLHWCounters++;
-	}
-      }
-    }
-  }
-  if(numberOfPCLHWCounters != 0){
-    //Check whether these pcl events are possible.
-    if(PCLquery(descr, PCL_CounterCodeList, numberOfPCLHWCounters, PCL_Mode) == PCL_SUCCESS){
-      for(int j=0;j<numberOfPCLHWCounters;j++){
-	MultipleCounterLayer::counterUsed[pclMCL_CP[j]] = true;
-	MultipleCounterLayer::numberOfCounters[pclMCL_CP[j]] = 1;
-      }
-      MultipleCounterLayer::functionArray[functionPosition] = pclMCL;
-      return true;
-    }
-    else{
-      cout << "Requested pcl events, or event combination not possible!" << endl;
-      return false;
-    } 
-  }
-
-#else //TAU_PCL
-  return false;
-#endif//TAU_PCL
 }
 
 
@@ -910,12 +811,6 @@ void MultipleCounterLayer::cpuTimeMCL(int tid, double values[]){
 #endif//CPU_TIME
 }
 
-void MultipleCounterLayer::javaCpuTimeMCL(int tid, double values[]){
-#ifdef  JAVA_CPU_TIME
-  values[javaCpuTimeMCL_CP[0]] = JavaThreadLayer::getCurrentThreadCpuTime();
-#endif//JAVA_CPU_TIME
-}
-
 void MultipleCounterLayer::logicalClockMCL(int tid, double values[]){
   static long long value = 0;
   values[logicalClockMCL_CP[0]] = value++;
@@ -977,57 +872,6 @@ void MultipleCounterLayer::papiVirtualMCL(int tid, double values[]){
 #endif // TAU_PAPI
 }
 
-void MultipleCounterLayer::pclMCL(int tid, double values[]){
-#ifdef  TAU_PCL
-  //******************************************
-  //Start peformance counting.
-  //This section is run once for each thread.
-  //******************************************
-  if(threadInit[tid] == 0)
-    {
-      //Since this is also the first call to
-      //getCounters for this thread, just return
-      //zero.
-      if(tid >= TAU_MAX_THREADS){
-	cout << "Exceeded max thread count of TAU_MAX_THREADS" << endl;
-      }
-      threadInit[tid] = 1;
-
-      //Starting the counter.
-      if((PCLstart(descr, PCL_CounterCodeList,
-		   numberOfPCLHWCounters, PCL_Mode)) != PCL_SUCCESS){
-	cout << "Error starting PCL counters!" << endl;
-      }
-
-      //Initialize the array the Pcl portion of the passed in values
-      //array to zero.
-      for(int i=0;i<numberOfPCLHWCounters;i++){
-	values[pclMCL_CP[i]] = 0;
-      }
-    }
-  else{
-    //If here, it means that the thread has already been registered
-    //and we need to just read and update the counters.
-  
-    //*****************************************
-    //Reading the performance counters and
-    //outputting the counter values.
-    //*****************************************
-    if( PCLread(descr, CounterList, FpCounterList, numberOfPCLHWCounters) != PCL_SUCCESS){
-      cout << "Error reading PCL counters!" << endl;
-    }
-
-    for(int i=0;i<numberOfPCLHWCounters;i++){
-      if(PCL_CounterCodeList[i]<PCL_MFLOPS){
-	values[pclMCL_CP[i]] = CounterList[i];
-      }
-      else{
-	values[pclMCL_CP[i]] = FpCounterList[i];
-      }
-    }
-  }
-#endif//TAU_PCL
-}
 
 
 void MultipleCounterLayer::ktauMCL(int tid, double values[]){
