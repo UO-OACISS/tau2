@@ -21,7 +21,9 @@
 #include <Profile/TauEnv.h>
 #include <TAU.h>
 #include <stdlib.h>
+#include <stdio.h>
 
+#include <TauMetrics.h>
 
 bool Tau_snapshot_initialization();
 extern "C" void Tau_stack_initialization();
@@ -101,6 +103,8 @@ extern "C" int InitializeTAU() {
 #ifdef TAU_COMPENSATE
   Tau_compensate_initialization();
 #endif /* TAU_COMPENSATE */
+
+  TauMetrics_init();
 
   if (TauEnv_get_tracing()) {
     TauInitialize_kill_handlers();
