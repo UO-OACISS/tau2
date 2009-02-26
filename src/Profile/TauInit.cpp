@@ -18,12 +18,12 @@
 **                                                                         **
 ****************************************************************************/
 
-#include <Profile/TauEnv.h>
 #include <TAU.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <TauMetrics.h>
+#include <Profile/TauEnv.h>
+#include <Profile/TauMetrics.h>
 
 bool Tau_snapshot_initialization();
 extern "C" void Tau_stack_initialization();
