@@ -9,7 +9,11 @@ package edu.uoregon.tau.perfexplorer.client;
 import javax.swing.table.AbstractTableModel;
 
 class MyTableModel extends AbstractTableModel {
-    private Object[] columnNames = null;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -4998342584738455742L;
+	private Object[] columnNames = null;
     private Object[][] data = null;
 
     	public MyTableModel(Object[] cols, Object[][] data) {
@@ -34,7 +38,7 @@ class MyTableModel extends AbstractTableModel {
         return data[row][col];
     }
 
-    public Class getColumnClass(int c) {
+    public Class<? extends Object> getColumnClass(int c) {
         return getValueAt(0, c).getClass();
     }
 

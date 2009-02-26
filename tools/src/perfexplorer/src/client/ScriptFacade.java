@@ -3,21 +3,16 @@ package edu.uoregon.tau.perfexplorer.client;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.Vector;
-import java.util.List;
-
-
-
 
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.UtilFncs;
-import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 import edu.uoregon.tau.perfexplorer.common.AnalysisType;
 import edu.uoregon.tau.perfexplorer.common.EngineType;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
-import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
 import edu.uoregon.tau.perfexplorer.common.RMIVarianceData;
 import edu.uoregon.tau.perfexplorer.common.TransformationType;
 
@@ -76,8 +71,8 @@ public class ScriptFacade {
             throw new IllegalArgumentException("Application name cannot be an empty string.");
 
         boolean found = false;
-        for (ListIterator apps = connection.getApplicationList(); apps.hasNext() && !found; ) {
-            app = (Application)apps.next();
+        for (ListIterator<Application> apps = connection.getApplicationList(); apps.hasNext() && !found; ) {
+            app = apps.next();
             if (app.getName().equals(name)) {
                 model.setCurrentSelection(app);;
                 found = true;
@@ -105,9 +100,9 @@ public class ScriptFacade {
         if (app == null)
             throw new NullPointerException("Application selection is null. Please select an Application before setting the Experiment.");
         boolean found = false;
-        for (ListIterator exps = connection.getExperimentList(app.getID());
+        for (ListIterator<Experiment> exps = connection.getExperimentList(app.getID());
              exps.hasNext() && !found;) {
-            exp = (Experiment)exps.next();
+            exp = exps.next();
             if (exp.getName().equals(name)) {
                 model.setCurrentSelection(exp);
                 found = true;
@@ -135,9 +130,9 @@ public class ScriptFacade {
         if (exp == null)
             throw new NullPointerException("Experiment selection is null.  Please select an Experiment before setting the Trial.");
         boolean found = false;
-        for (ListIterator trials = connection.getTrialList(exp.getID());
+        for (ListIterator<Trial> trials = connection.getTrialList(exp.getID());
              trials.hasNext() && !found;) {
-            trial = (Trial)trials.next();
+            trial = trials.next();
             if (trial.getName().equals(name)) {
                 model.setCurrentSelection(trial);
                 found = true;
@@ -164,9 +159,9 @@ public class ScriptFacade {
         if (trial == null)
             throw new NullPointerException("Trial selection is null.  Please select a Trial before setting the Metric.");
         boolean found = false;
-        Vector metrics = trial.getMetrics();
+        Vector<Metric> metrics = trial.getMetrics();
         for (int i = 0, size = metrics.size(); i < size && !found ; i++) {
-            Metric metric = (Metric)metrics.elementAt(i);
+            Metric metric = metrics.elementAt(i);
             if (metric.getName().equals(name)) {
                 model.setCurrentSelection(metric);
                 found = true;
@@ -335,9 +330,9 @@ public class ScriptFacade {
             throw new IllegalArgumentException("Application name cannot be an empty string.");
 
         boolean found = false;
-        for (ListIterator apps = connection.getApplicationList();
+        for (ListIterator<Application> apps = connection.getApplicationList();
              apps.hasNext() && !found;) {
-            Application app = (Application)apps.next();
+            Application app = apps.next();
             if (app.getName().equals(name)) {
                 model.addSelection(app);
                 found = true;
@@ -363,9 +358,9 @@ public class ScriptFacade {
         if (app == null)
             throw new NullPointerException("Application selection is null. Please select an Application before setting the Experiment.");
         boolean found = false;
-        for (ListIterator exps = connection.getExperimentList(app.getID());
+        for (ListIterator<Experiment> exps = connection.getExperimentList(app.getID());
              exps.hasNext() && !found;) {
-            Experiment exp = (Experiment)exps.next();
+            Experiment exp = exps.next();
             if (exp.getName().equals(name)) {
                 model.addSelection(exp);
                 found = true;
@@ -505,19 +500,19 @@ public class ScriptFacade {
 		this.setChartHorizontal(0);
 	}
 
-	public ListIterator getApplicationList() {
+	public ListIterator<Application> getApplicationList() {
 		return connection.getApplicationList();
 	}
 
-	public ListIterator getExperimentList() {
+	public ListIterator<Experiment> getExperimentList() {
 		return connection.getExperimentList(model.getApplication().getID());
 	}
 
-	public ListIterator getTrialList() {
+	public ListIterator<Trial> getTrialList() {
 		return connection.getTrialList(model.getExperiment().getID());
 	}
 
-	public ListIterator getEventList(Trial trial, int metricIndex) {
+	public ListIterator<IntervalEvent> getEventList(Trial trial, int metricIndex) {
 		return connection.getEventList(trial.getID(), metricIndex);
 	}
 	

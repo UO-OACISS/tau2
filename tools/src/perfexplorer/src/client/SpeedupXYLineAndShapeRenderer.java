@@ -4,6 +4,10 @@ import java.awt.*;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 
 public class SpeedupXYLineAndShapeRenderer extends XYLineAndShapeRenderer {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 4962881172454711849L;
 	private int numRows = 0;
 
 	public SpeedupXYLineAndShapeRenderer (int numRows) {

@@ -12,13 +12,18 @@ import org.jfree.chart.ChartColor;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreePortionCellRenderer.java,v 1.3 2009/02/24 00:53:34 khuck Exp $</P>
+ * <P>CVS $Id: TreePortionCellRenderer.java,v 1.4 2009/02/26 00:41:16 wspear Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class TreePortionCellRenderer extends DefaultTreeCellRenderer {
 
-    public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf,
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -3707397471318701237L;
+
+	public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf,
             int row, boolean hasFocus) {
         super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
 

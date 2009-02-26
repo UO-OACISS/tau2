@@ -42,12 +42,17 @@
 
 package edu.uoregon.tau.perfexplorer.client;
 
+import java.awt.BorderLayout;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Enumeration;
 import java.util.Map;
+
+import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.tree.DefaultMutableTreeNode;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.ErrorHandler;
@@ -56,17 +61,11 @@ import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
 import org.xml.sax.ext.LexicalHandler;
+import org.xml.sax.helpers.XMLReaderFactory;
 
 import edu.uoregon.tau.common.treetable.AbstractTreeTableModel;
 import edu.uoregon.tau.common.treetable.JTreeTable;
-import edu.uoregon.tau.common.treetable.TreeTableModel;
-
-// This is an XML book - no need for explicit Swing imports
-import java.awt.*;
-import javax.swing.*;
-import javax.swing.tree.*;
 
 /**
  * <b><code>SAXTreeViewer</code></b> uses Swing to graphically
@@ -74,7 +73,12 @@ import javax.swing.tree.*;
  */
 public class SAXTreeViewer extends JFrame {
 
-    /** Default parser to use */
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -176395314854266217L;
+
+	/** Default parser to use */
     private String vendorParserClass = 
         "org.apache.xerces.parsers.SAXParser";
 
@@ -99,8 +103,7 @@ public class SAXTreeViewer extends JFrame {
      * @param filename <code>String</code> path to XML document.
      */
     public void init(String xml) throws IOException, SAXException {
-        DefaultMutableTreeNode base = 
-            new DefaultMutableTreeNode("XML String");
+        DefaultMutableTreeNode base = new DefaultMutableTreeNode("XML String");
         
         // Construct the tree hierarchy
         buildTree(xml);

@@ -63,7 +63,12 @@ import javax.swing.table.*;
  */
 
 public class TableSorter extends AbstractTableModel {
-    protected TableModel tableModel;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -292575144874378551L;
+
+	protected TableModel tableModel;
 
     public static final int DESCENDING = -1;
     public static final int NOT_SORTED = 0;
@@ -89,7 +94,7 @@ public class TableSorter extends AbstractTableModel {
     private MouseListener mouseListener;
     private TableModelListener tableModelListener;
     private Map columnComparators = new HashMap();
-    private List sortingColumns = new ArrayList();
+    private List<Directive> sortingColumns = new ArrayList<Directive>();
 
     public TableSorter() {
         this.mouseListener = new MouseHandler();

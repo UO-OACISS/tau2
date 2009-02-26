@@ -2,14 +2,25 @@ package edu.uoregon.tau.perfexplorer.client;
 
 
 import jargs.gnu.CmdLineParser;
-import edu.uoregon.tau.perfdmf.*;
-import edu.uoregon.tau.perfexplorer.common.*;
 
-import javax.swing.*;
-import java.io.FileInputStream;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.ListIterator;
+import java.util.Vector;
+
+import javax.swing.JFrame;
+import javax.swing.ToolTipManager;
+
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfexplorer.common.AnalysisType;
+import edu.uoregon.tau.perfexplorer.common.EngineType;
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
+import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
+import edu.uoregon.tau.perfexplorer.common.RMIView;
+import edu.uoregon.tau.perfexplorer.common.TransformationType;
 
 public class TestHarness {
 	private static String USAGE = "Usage: TestHarness [{-h,--help}] {-c,--configfile}=<config_file> [{-s,--standalone}] [{-e,--engine}=<analysis_engine>] [{-t,--test}=<test_type>]\n  where analysis_engine = R or Weka and test_type = charts, cluster, correlation, viz, script or all ";
@@ -92,7 +103,7 @@ public class TestHarness {
 				System.out.println("Testing views...");
 				viewList = null;
 				foundView = false;
-				getViews("0", new ArrayList());
+				getViews("0", new ArrayList<RMIView>());
 				System.out.print("Selecting: ");
 				for(int i = 0 ; i < viewList.length ; i++) 
 					System.out.print(viewList[i] + ": ");
@@ -173,9 +184,9 @@ public class TestHarness {
 	private Application setApplication(String name) {
 		Application app = null;
 		System.out.println("******** Applications *********");
-		for (ListIterator apps = connection.getApplicationList(); 
+		for (ListIterator<Application> apps = connection.getApplicationList(); 
 			apps.hasNext() ; ) {
-			app = (Application)apps.next();
+			app = apps.next();
 			System.out.println("\t" + app.getName());
 			if (app.getName().equalsIgnoreCase(name)) {
 				break;
@@ -187,9 +198,9 @@ public class TestHarness {
 	private Experiment setExperiment(Application app, String name) {
 		Experiment exp = null;
 		System.out.println("******** Experiments *********");
-		for (ListIterator exps = connection.getExperimentList(app.getID()); 
+		for (ListIterator<Experiment> exps = connection.getExperimentList(app.getID()); 
 			exps.hasNext() ; ) {
-			exp = (Experiment)exps.next();
+			exp = exps.next();
 			System.out.println("\t" + exp.getName());
 			if (exp.getName().equalsIgnoreCase(name)) {
 				break;
@@ -201,9 +212,9 @@ public class TestHarness {
 	private Trial setTrial(Experiment exp, String name) {
 		Trial trial = null;
 		System.out.println("******** Trials *********");
-		for (ListIterator trials = connection.getTrialList(exp.getID()); 
+		for (ListIterator<Trial> trials = connection.getTrialList(exp.getID()); 
 			trials.hasNext() ; ) {
-			trial = (Trial)trials.next();
+			trial = trials.next();
 			System.out.println("\t" + trial.getName());
 			if (trial.getName().trim().equalsIgnoreCase(name)) {
 				break;
@@ -311,17 +322,17 @@ public class TestHarness {
 //public int createNewView(String name, int parent, String tableName, String columnName, String oper, String value) throws RemoteException;
 	}
 
-	public void getViews(String parent, ArrayList list) throws Exception {
-        java.util.List viewVector = connection.getViews(Integer.parseInt(parent));
-        Iterator views = viewVector.iterator();
+	public void getViews(String parent, ArrayList<RMIView> list) throws Exception {
+        java.util.List<RMIView> viewVector = connection.getViews(Integer.parseInt(parent));
+        Iterator<RMIView> views = viewVector.iterator();
         while (views.hasNext()) {
-            RMIView view = (RMIView) views.next();
+            RMIView view = views.next();
 			System.out.println("VIEW: " + view.getField("NAME"));
 			//if (view.getField("VALUE").equals("gyro-b1"))
 			//if (view.getField("VALUE").equals("B1-std.tg"))
 			if (view.getField("VALUE").equals("gyro.B1-std.HPM"))
 				foundView = true;
-			ArrayList newList = new ArrayList(list);
+			ArrayList<RMIView> newList = new ArrayList<RMIView>(list);
 			newList.add(view);
             getViews(view.getField("ID"), newList);
         }
@@ -329,7 +340,7 @@ public class TestHarness {
 			if (viewList == null && foundView) {
 				viewList = list.toArray();
 			}
-            ListIterator trials = connection.getTrialsForView(list);
+            ListIterator<Trial> trials = connection.getTrialsForView(list);
             Trial trial = null;
             while(trials.hasNext())
             {

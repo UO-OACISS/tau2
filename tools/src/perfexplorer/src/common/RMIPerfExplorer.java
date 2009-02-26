@@ -4,13 +4,18 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
 
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.IntervalEvent;
+import edu.uoregon.tau.perfdmf.Trial;
+
 
 /**
  * This is the main RMI object which is used to send requests to the 
  * PerfExplorerServer object.  This interface defines the API for
  * passing requests to the server.
  * 
- * <P>CVS $Id: RMIPerfExplorer.java,v 1.16 2009/02/25 19:51:46 wspear Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorer.java,v 1.17 2009/02/26 00:41:17 wspear Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -31,7 +36,7 @@ public interface RMIPerfExplorer extends Remote {
      * @return
      * @throws RemoteException
      */
-    public List getApplicationList() throws RemoteException;
+    public List<Application> getApplicationList() throws RemoteException;
 
     /**
      * Returns the full list of experiments in the database for the
@@ -41,7 +46,7 @@ public interface RMIPerfExplorer extends Remote {
      * @return
      * @throws RemoteException
      */
-    public List getExperimentList(int applicationID) throws RemoteException;
+    public List<Experiment> getExperimentList(int applicationID) throws RemoteException;
 
     /**
      * Returns the full list of trials in the database for the specified
@@ -51,7 +56,7 @@ public interface RMIPerfExplorer extends Remote {
      * @return
      * @throws RemoteException
      */
-    public List getTrialList(int experimentID) throws RemoteException;
+    public List<Trial> getTrialList(int experimentID) throws RemoteException;
 
     /**
      * Requests analysis using the settings specified in the model.
@@ -111,7 +116,7 @@ public interface RMIPerfExplorer extends Remote {
      * @return
      * @throws RemoteException
      */
-    public List getPotentialGroups(RMIPerfExplorerModel model)
+    public List<String> getPotentialGroups(RMIPerfExplorerModel model)
         throws RemoteException;
 
     /**
@@ -131,7 +136,7 @@ public interface RMIPerfExplorer extends Remote {
      * @return
      * @throws RemoteException
      */
-    public List getPotentialEvents(RMIPerfExplorerModel model)
+    public List<String> getPotentialEvents(RMIPerfExplorerModel model)
         throws RemoteException;
 
     /**
@@ -176,7 +181,7 @@ public interface RMIPerfExplorer extends Remote {
      * @return
      * @throws RemoteException
      */
-    public List getViews(int parent) throws RemoteException;
+    public List<RMIView> getViews(int parent) throws RemoteException;
 
     /**
      * Get the trials which are filtered by the specifed views.
@@ -185,7 +190,7 @@ public interface RMIPerfExplorer extends Remote {
      * @return
      * @throws RemoteException
      */
-    public List getTrialsForView(List views) throws RemoteException;
+    public List<Trial> getTrialsForView(List<RMIView> views) throws RemoteException;
 
     /**
      * Gets the correlation results for the specified model.
@@ -248,7 +253,7 @@ public interface RMIPerfExplorer extends Remote {
      * @return a list of event names
      * @throws RemoteException
      */
-	public List getEventList(int trialID, int metricIndex) throws RemoteException; 
+	public List<IntervalEvent> getEventList(int trialID, int metricIndex) throws RemoteException; 
 
     /**
      * Returns the full list of trials in the database for the specified
@@ -275,7 +280,7 @@ public interface RMIPerfExplorer extends Remote {
      * @return a list of table.column names
      * @throws RemoteException
      */
-    public List getChartFieldNames() throws RemoteException;
+    public List<Object> getChartFieldNames() throws RemoteException;
 
     /**
      * Requests data for generating comparison charts for the specified model.
@@ -284,7 +289,7 @@ public interface RMIPerfExplorer extends Remote {
      * @return list of XML fields
      * @throws RemoteException
      */
-    public List getXMLFields(RMIPerfExplorerModel model) throws RemoteException;
+    public List<String> getXMLFields(RMIPerfExplorerModel model) throws RemoteException;
 
     /**
      * Because PerfExplorer now supports multiple database connections, specify

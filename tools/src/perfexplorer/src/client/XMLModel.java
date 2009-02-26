@@ -3,11 +3,6 @@
  */
 package edu.uoregon.tau.perfexplorer.client;
 
-import java.io.File;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.List;
-
 import edu.uoregon.tau.common.treetable.AbstractTreeTableModel;
 import edu.uoregon.tau.common.treetable.TreeTableModel;
 
@@ -17,7 +12,7 @@ public class XMLModel extends AbstractTreeTableModel implements TreeTableModel {
     String[] cNames = { "Element", "Value" };
 
     // Types of the columns.
-    Class[] cTypes = { TreeTableModel.class, String.class };
+    Class<?>[] cTypes = { TreeTableModel.class, String.class };
 
     // The the returned file length for directories. 
     final Integer ZERO = new Integer(0);
@@ -62,7 +57,7 @@ public class XMLModel extends AbstractTreeTableModel implements TreeTableModel {
         return cNames[column];
     }
 
-    public Class getColumnClass(int column) {
+    public Class<?> getColumnClass(int column) {
         return cTypes[column];
     }
 

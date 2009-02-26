@@ -5,6 +5,11 @@ import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 
 public class SpeedupLineAndShapeRenderer extends LineAndShapeRenderer {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5002401689897783294L;
+
 	public SpeedupLineAndShapeRenderer (int numRows) {
 		super();
 	}

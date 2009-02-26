@@ -13,13 +13,17 @@ import java.awt.image.*;
 /**
  * Description
  *
- * <P>CVS $Id: ImagePanel.java,v 1.2 2009/02/24 00:53:32 khuck Exp $</P>
+ * <P>CVS $Id: ImagePanel.java,v 1.3 2009/02/26 00:41:16 wspear Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
  *
  */
 public class ImagePanel extends JPanel implements ImageObserver {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 791074488185846908L;
 	private Image img = null;
 	
 	public ImagePanel(Image img) {

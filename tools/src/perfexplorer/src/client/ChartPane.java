@@ -54,7 +54,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 
 	private JPanel mainPanel = null;
 	private ScriptFacade facade = null;
-	private static String UPDATE_COMMAND = "UPDATE_COMMAND";
+	//private static String UPDATE_COMMAND = "UPDATE_COMMAND";
 	private JPanel chartPanel = null;
 
 	private JToggleButton mainOnly = new JToggleButton ("Main Only");
@@ -66,7 +66,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 	private JToggleButton horizontal = new JToggleButton ("Horizontal");
 	private JToggleButton showZero = new JToggleButton ("Show Y-Axis Zero");
 
-	private List tableColumns = null;
+	private List<Object> tableColumns = null;
 	private JLabel titleLabel = new JLabel("Chart Title:");
 	private JTextField chartTitle = new MyJTextField(5);
 	private JLabel seriesLabel = new JLabel("Series Name/Value:");
@@ -89,8 +89,8 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
    	private JComboBox metric = new MyJComboBox();
 	private JLabel unitsLabel = new JLabel("Units:");
    	private JComboBox units = new MyJComboBox();
-	private JLabel valueLabel = new JLabel("Value:");
-   	private JComboBox value = new MyJComboBox();
+	//private JLabel valueLabel = new JLabel("Value:");
+   	//private JComboBox value = new MyJComboBox();
 	private JLabel xmlNameLabel = new JLabel("XML Field:");
    	private JComboBox xmlName = new MyJComboBox();
 	//private JLabel xmlValueLabel = new JLabel("XML Value:");
@@ -167,7 +167,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		//this.xmlValue.setEnabled(false);
 
 		// series name 
-		for (Iterator itr = tableColumns.iterator() ; itr.hasNext() ; ) {
+		for (Iterator<Object> itr = tableColumns.iterator() ; itr.hasNext() ; ) {
 			Object o = itr.next();
 			String tmp = (String)o;
 			if (tmp.equalsIgnoreCase("experiment.name")) {
@@ -233,13 +233,13 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 				Object obj2 = series.getSelectedItem();
 				String tmp = (String)obj2;
 				if (tmp.equalsIgnoreCase(INTERVAL_EVENT_GROUP_NAME)) {
-					List events = server.getPotentialGroups(theModel);
+					List<String> events = server.getPotentialGroups(theModel);
 					resetYAxisValues(true);
 					yaxisValue.setSelectedItem(MEAN_EXCLUSIVE);
 					this.event.addItem("All Groups");
 					this.eventLabel.setText("Group:");
 					this.event.setSelectedIndex(0);
-					for (Iterator itr = events.iterator() ; itr.hasNext() ; ) {
+					for (Iterator<String> itr = events.iterator() ; itr.hasNext() ; ) {
 						String next = (String)itr.next();
 						this.event.addItem(next);
 						if (oldEvent.equals(next))
@@ -261,12 +261,12 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 					series.setSelectedItem(INTERVAL_EVENT_NAME);
 					resetYAxisValues(true);
 					yaxisValue.setSelectedItem(MEAN_EXCLUSIVE);
-					List events = server.getPotentialEvents(theModel);
+					List<String> events = server.getPotentialEvents(theModel);
 					this.event.addItem("All Events");
 					this.eventLabel.setText("Event:");
 					this.event.setSelectedIndex(0);
-					for (Iterator itr = events.iterator() ; itr.hasNext() ; ) {
-						String next = (String)itr.next();
+					for (Iterator<String> itr = events.iterator() ; itr.hasNext() ; ) {
+						String next = itr.next();
 						this.event.addItem(next);
 						if (oldEvent.equals(next))
 							this.event.setSelectedItem(next);
@@ -971,7 +971,12 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 
 	private class MyJTextField extends javax.swing.JTextField
 	{   
-    	public MyJTextField() {
+    	/**
+		 * 
+		 */
+		private static final long serialVersionUID = -7156539927712296439L;
+
+		public MyJTextField() {
         	super();
     	}
     	public MyJTextField(String value, int columns) {
@@ -1004,7 +1009,12 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 
 	private class MyJComboBox extends javax.swing.JComboBox
 	{   
-    	public MyJComboBox(Object[] items) {
+    	/**
+		 * 
+		 */
+		private static final long serialVersionUID = -7805756500468380965L;
+
+		public MyJComboBox(Object[] items) {
         	super(items);
 			setPrototypeDisplayValue("WWWWW");
     	}
@@ -1014,7 +1024,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 			setPrototypeDisplayValue("WWWWW");
     	}
 
-    	public MyJComboBox(List items) {
+    	public MyJComboBox(List<Object> items) {
         	super(items.toArray());
 			setPrototypeDisplayValue("WWWWW");
     	}
@@ -1044,7 +1054,12 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 	private class SteppedComboBoxUI extends MetalComboBoxUI {
   		protected ComboPopup createPopup() {
     		BasicComboPopup popup = new BasicComboPopup( comboBox ) {
-      			public void show() {
+      			/**
+				 * 
+				 */
+				private static final long serialVersionUID = -992135884016287671L;
+
+				public void show() {
         			Dimension popupSize = ((SteppedComboBox)comboBox).getPopupSize();
         			popupSize.setSize( popupSize.width,
           				getPopupHeightForRowCount( comboBox.getMaximumRowCount() ) );
@@ -1074,7 +1089,11 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 	 * from http://www.codeguru.com/java/articles/163.shtml
 	 */
 	private class SteppedComboBox extends JComboBox {
-  		protected int popupWidth;
+  		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -6511789381891153830L;
+		protected int popupWidth;
   	
   		public SteppedComboBox() {
     		super();
@@ -1094,7 +1113,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
     		setPopupWidth(d.width);
   		}
   
-  		public SteppedComboBox(List items) {
+  		public SteppedComboBox(List<Object> items) {
     		super(items.toArray());
     		setUI(new SteppedComboBoxUI());
     		popupWidth = 0;
@@ -1121,9 +1140,9 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
     	}
 	}
 
-	private class ChartPanelException extends Exception {
-		ChartPanelException (String message) {
-			super(message);
-		}
-	}
+//	private class ChartPanelException extends Exception {
+//		ChartPanelException (String message) {
+//			super(message);
+//		}
+//	}
 }

@@ -24,7 +24,7 @@ public class ProvenanceTest extends TestCase {
 		String metric = "Time";
 		PerformanceAnalysisOperation top10 = new TopXEvents(result, metric, AbstractResult.EXCLUSIVE, 10);
 		top10.processData();
-		Provenance.save();
+		//Provenance.save();
 		Provenance.listAll();
 	}
 }

@@ -8,6 +8,11 @@ import java.awt.*;
  */
 public class AnalysisManagementPane extends JScrollPane {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7842930560904862098L;
+
 	private static AnalysisManagementPane thePane = null;
 
 	private JTable dataTable = null;

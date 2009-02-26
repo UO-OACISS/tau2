@@ -9,38 +9,37 @@ package edu.uoregon.tau.perfexplorer.client;
 
 
 import java.awt.Color;
-import java.awt.Dimension;
-import javax.swing.JFrame;
+import java.awt.Toolkit;
+import java.net.URL;
 import java.util.List;
 
-import javax.swing.JPanel;
+import javax.swing.JFrame;
 
-import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.labels.CategoryToolTipGenerator;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.renderer.category.BoxAndWhiskerRenderer;
 import org.jfree.chart.renderer.category.CategoryItemRenderer;
+import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.statistics.BoxAndWhiskerCategoryDataset;
 import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
-import org.jfree.ui.ApplicationFrame;
-import org.jfree.ui.RefineryUtilities;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
-import org.jfree.chart.labels.CategoryToolTipGenerator;
-import org.jfree.data.category.CategoryDataset;
-import java.net.URL;
+
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfexplorer.common.ChartDataType;
 import edu.uoregon.tau.perfexplorer.common.RMIChartData;
-
-import java.awt.Toolkit;
 
 /**
  * A simple demonstration application showing how to create a box-and-whisker
  * chart.
  */
 public class PerfExplorerBoxChart extends PerfExplorerChartWindow {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5123404083269413029L;
 
 	public PerfExplorerBoxChart (JFreeChart chart, String name) {
 		super (chart, name);
@@ -71,10 +70,10 @@ public class PerfExplorerBoxChart extends PerfExplorerChartWindow {
         int CATEGORY_COUNT = 1;
         DefaultBoxAndWhiskerCategoryDataset result
             = new DefaultBoxAndWhiskerCategoryDataset();
-        List names = data.getRowLabels();
+        List<String> names = data.getRowLabels();
         for (int s = 0; s < SERIES_COUNT; s++) {
             for (int c = 0; c < CATEGORY_COUNT; c++) {
-                List values = createValueList(data.getRowData(s));
+                List<Double> values = createValueList(data.getRowData(s));
                 //result.add(values, (String)names.get(s), "Category " + c);
                 result.add(values, (String)names.get(s), "");
             }
@@ -82,15 +81,15 @@ public class PerfExplorerBoxChart extends PerfExplorerChartWindow {
         return result;
     }
    
-    private static List createValueList(List inData) {
-    		List result = new java.util.ArrayList();
-    		double min = ((double[])(inData.get(0)))[1];
+    private static List<Double> createValueList(List<double[]> inData) {
+    		List<Double> result = new java.util.ArrayList<Double>();
+    		double min = ((inData.get(0)))[1];
      		double max = min;  
     		for (int i = 1; i < inData.size(); i++) {
-    			if (min > ((double[])(inData.get(i)))[1])
-    				min = ((double[])(inData.get(i)))[1];
-    			if (max < ((double[])(inData.get(i)))[1])
-    				max = ((double[])(inData.get(i)))[1];
+    			if (min > ((inData.get(i)))[1])
+    				min = ((inData.get(i)))[1];
+    			if (max < ((inData.get(i)))[1])
+    				max = ((inData.get(i)))[1];
     		}
     		double range = max - min;
     		//System.out.println("Min: " + min + ", Max: " + max + ", Range: " + range);
@@ -100,15 +99,15 @@ public class PerfExplorerBoxChart extends PerfExplorerChartWindow {
     		return result;
     }
 
-    private static List createValueList(double lowerBound, double upperBound,
-                                        int count) {
-        List result = new java.util.ArrayList();
-        for (int i = 0; i < count; i++) {
-            double v = lowerBound + (Math.random() * (upperBound - lowerBound));
-            result.add(new Double(v));   
-        }
-        return result;
-    }
+//    private static List<Double> createValueList(double lowerBound, double upperBound,
+//                                        int count) {
+//        List<Double> result = new java.util.ArrayList<Double>();
+//        for (int i = 0; i < count; i++) {
+//            double v = lowerBound + (Math.random() * (upperBound - lowerBound));
+//            result.add(new Double(v));   
+//        }
+//        return result;
+//    }
    
     /**
      * Creates a sample chart.
@@ -122,7 +121,7 @@ public class PerfExplorerBoxChart extends PerfExplorerChartWindow {
         CategoryAxis domainAxis = new CategoryAxis(null);
         NumberAxis rangeAxis = new NumberAxis("Value");
         CategoryItemRenderer renderer = new BoxAndWhiskerRenderer();
-        renderer.setToolTipGenerator(new CategoryToolTipGenerator() {
+        renderer.setBaseToolTipGenerator(new CategoryToolTipGenerator() {
             public String generateToolTip(CategoryDataset inDataset, int arg1, int arg2) {
 				BoxAndWhiskerCategoryDataset dataset = 
 					(BoxAndWhiskerCategoryDataset) inDataset;

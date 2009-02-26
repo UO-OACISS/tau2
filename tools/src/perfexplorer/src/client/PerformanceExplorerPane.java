@@ -12,6 +12,11 @@ import edu.uoregon.tau.perfexplorer.common.*;
 
 public class PerformanceExplorerPane extends JScrollPane implements ActionListener {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2397547783148145635L;
+
 	private static PerformanceExplorerPane thePane = null;
 
 	private JPanel imagePanel = null;

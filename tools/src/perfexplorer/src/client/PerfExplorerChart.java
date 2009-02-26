@@ -1,45 +1,40 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import java.awt.*;
-import java.awt.event.*;
 import java.awt.BasicStroke;
-import javax.swing.JFrame;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
+import java.awt.Color;
+import java.text.DecimalFormat;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
+
 import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.data.xy.DefaultTableXYDataset;
-import org.jfree.data.xy.XYSeriesCollection;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYDataset;
-import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.data.Range;
-import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.axis.LogarithmicAxis;
-import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.chart.renderer.category.LineAndShapeRenderer;
-import org.jfree.chart.title.LegendTitle;
+import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.labels.StandardXYToolTipGenerator;
-import java.text.DecimalFormat;
-import edu.uoregon.tau.common.ImageExport;
-import edu.uoregon.tau.common.VectorExport;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.category.LineAndShapeRenderer;
+import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.xy.DefaultTableXYDataset;
+import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
+
 import edu.uoregon.tau.perfexplorer.common.ChartDataType;
 import edu.uoregon.tau.perfexplorer.common.RMIChartData;
 import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData;
 
-import java.util.StringTokenizer;
-import java.util.NoSuchElementException;
-
 public class PerfExplorerChart extends PerfExplorerChartWindow {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8313521188602064044L;
 
 	public PerfExplorerChart (JFreeChart chart, String name) {
 		super(chart, name);
@@ -54,12 +49,12 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			ChartDataType.FRACTION_OF_TOTAL);
 
         DefaultTableXYDataset dataset = new DefaultTableXYDataset();
-		List rowLabels = rawData.getRowLabels();
+		List<String> rowLabels = rawData.getRowLabels();
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
-			List row = rawData.getRowData(y);
-			XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
+			List<double[]> row = rawData.getRowData(y);
+			XYSeries s = new XYSeries(shortName(rowLabels.get(y)), true, false);
 			for (int x = 0 ; x < row.size() ; x++) {
-				double[] values = (double[])(row.get(x));
+				double[] values = (row.get(x));
 				s.add(values[0], values[1]);
 			}
 			dataset.addSeries(s);
@@ -75,8 +70,8 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
             true,                            // tooltips
             false                            // urls
         );
-        XYPlot plot = chart.getXYPlot();
-		NumberAxis axis = new NumberAxis("Percentage of Total " + PerfExplorerModel.getModel().getMetricName());
+        //XYPlot plot = chart.getXYPlot();
+		//NumberAxis axis = new NumberAxis("Percentage of Total " + PerfExplorerModel.getModel().getMetricName());
         //axis.setRange(new Range(0,100));
         //plot.setRangeAxis(0, axis);
 
@@ -152,14 +147,14 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			ChartDataType.RELATIVE_EFFICIENCY);
 
         XYSeriesCollection dataset = new XYSeriesCollection();
-		List rowLabels = rawData.getRowLabels();
+		List<String> rowLabels = rawData.getRowLabels();
 		double ideal, ratio = 0;
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
-			List row = rawData.getRowData(y);
+			List<double[]> row = rawData.getRowData(y);
         	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
-				double[] baseline = (double[])(row.get(0));
+				double[] baseline = (row.get(0));
 				for (int x = 0 ; x < row.size() ; x++) {
-					double[] values = (double[])(row.get(x));
+					double[] values = (row.get(x));
 					ratio = baseline[0]/values[0];
 					if (PerfExplorerModel.getModel().getConstantProblem().booleanValue())
 						ideal = baseline[1] * ratio;
@@ -233,7 +228,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 				}
 
 				// create an "ideal" line.
-				List keys = dataset.getColumnKeys();
+				List<Integer> keys = dataset.getColumnKeys();
 				for (int i = 0 ; i < keys.size() ; i++) {
 					Integer key = (Integer)keys.get(i);
         			dataset.addValue(key.doubleValue()/rawData.getMinimum(), "Ideal", key);
@@ -324,14 +319,14 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			ChartDataType.RELATIVE_EFFICIENCY_EVENTS);
 
         XYSeriesCollection dataset = new XYSeriesCollection();
-		List rowLabels = rawData.getRowLabels();
+		List<String> rowLabels = rawData.getRowLabels();
 		double ideal, ratio = 0;
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
-			List row = rawData.getRowData(y);
-        	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
-			double[] baseline = (double[])(row.get(0));
+			List<double[]> row = rawData.getRowData(y);
+        	XYSeries s = new XYSeries(shortName(rowLabels.get(y)), true, false);
+			double[] baseline = (row.get(0));
 			for (int x = 0 ; x < row.size() ; x++) {
-				double[] values = (double[])(row.get(x));
+				double[] values = (row.get(x));
 				ratio = baseline[0]/values[0];
 				if (PerfExplorerModel.getModel().getConstantProblem().booleanValue())
 					ideal = baseline[1] * ratio;
@@ -367,14 +362,14 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			ChartDataType.RELATIVE_EFFICIENCY_ONE_EVENT);
 
         XYSeriesCollection dataset = new XYSeriesCollection();
-		List rowLabels = rawData.getRowLabels();
+		List<String> rowLabels = rawData.getRowLabels();
 		double ideal, ratio = 0;
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
-			List row = rawData.getRowData(y);
-        	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
-			double[] baseline = (double[])(row.get(0));
+			List<double[]> row = rawData.getRowData(y);
+        	XYSeries s = new XYSeries(shortName(rowLabels.get(y)), true, false);
+			double[] baseline = (row.get(0));
 			for (int x = 0 ; x < row.size() ; x++) {
-				double[] values = (double[])(row.get(x));
+				double[] values = (row.get(x));
 				ratio = baseline[0]/values[0];
 				if (PerfExplorerModel.getModel().getConstantProblem().booleanValue())
 					ideal = baseline[1] * ratio;
@@ -411,15 +406,15 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 
         XYSeriesCollection dataset = new XYSeriesCollection();
 
-		List rowLabels = rawData.getRowLabels();
+		List<String> rowLabels = rawData.getRowLabels();
 		double minx = 99999, maxx = 0;
 		double ideal, ratio, efficiency = 0;
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
-			List row = rawData.getRowData(y);
-        	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
-			double[] baseline = (double[])(row.get(0));
+			List<double[]> row = rawData.getRowData(y);
+        	XYSeries s = new XYSeries(shortName(rowLabels.get(y)), true, false);
+			double[] baseline = (row.get(0));
 			for (int x = 0 ; x < row.size() ; x++) {
-				double[] values = (double[])(row.get(x));
+				double[] values = (row.get(x));
 				ratio = baseline[0]/values[0];
 				if (PerfExplorerModel.getModel().getConstantProblem().booleanValue())
 					ideal = baseline[1] * ratio;
@@ -465,15 +460,15 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			ChartDataType.RELATIVE_EFFICIENCY_EVENTS);
 
         XYSeriesCollection dataset = new XYSeriesCollection();
-		List rowLabels = rawData.getRowLabels();
+		List<String> rowLabels = rawData.getRowLabels();
 		double minx = 99999, maxx = 0;
 		double ideal = 0, ratio = 0, efficiency = 0;
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
-			List row = rawData.getRowData(y);
-        	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
-			double[] baseline = (double[])(row.get(0));
+			List<double[]> row = rawData.getRowData(y);
+        	XYSeries s = new XYSeries(shortName(rowLabels.get(y)), true, false);
+			double[] baseline = (row.get(0));
 			for (int x = 0 ; x < row.size() ; x++) {
-				double[] values = (double[])(row.get(x));
+				double[] values = (row.get(x));
 				ratio = baseline[0]/values[0];
 				if (PerfExplorerModel.getModel().getConstantProblem().booleanValue())
 					ideal = baseline[1] * ratio;

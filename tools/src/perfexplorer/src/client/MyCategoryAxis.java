@@ -29,7 +29,7 @@
  * Original Author:  David Gilbert;
  * Contributor(s):   -;
  *
- * $Id: MyCategoryAxis.java,v 1.4 2009/02/25 19:51:45 wspear Exp $
+ * $Id: MyCategoryAxis.java,v 1.5 2009/02/26 00:41:17 wspear Exp $
  *
  * Changes (from 21-Aug-2001)
  * --------------------------
@@ -685,14 +685,14 @@ public class MyCategoryAxis extends CategoryAxis {
         if (isTickLabelsVisible()) {
             g2.setFont(getTickLabelFont());
             g2.setPaint(getTickLabelPaint());
-            List ticks = refreshTicks(g2, state, plotArea, dataArea, edge);
+            List<Tick> ticks = refreshTicks(g2, state, plotArea, dataArea, edge);
             state.setTicks(ticks);        
           
             int categoryIndex = 0;
-            Iterator<CategoryTick> iterator = ticks.iterator();
+            Iterator<Tick> iterator = ticks.iterator();
             while (iterator.hasNext()) {
                 
-                CategoryTick tick = iterator.next();
+                CategoryTick tick = (CategoryTick)iterator.next();
                 // Added by Isaac (14-June-2007)
                 if ( categoryIndex % tickLabelsSkip != tickLabelsSkip-1) {
                    categoryIndex ++;
@@ -788,13 +788,13 @@ public class MyCategoryAxis extends CategoryAxis {
      * 
      * @return A list of ticks.
      */
-    public List refreshTicks(Graphics2D g2, 
+    public List<Tick> refreshTicks(Graphics2D g2, 
                              AxisState state,
                              Rectangle2D plotArea, 
                              Rectangle2D dataArea,
                              RectangleEdge edge) {
 
-        List ticks = new java.util.ArrayList();
+        List<Tick> ticks = new java.util.ArrayList<Tick>();
         
         // sanity check for data area...
         if (dataArea.getHeight() <= 0.0 || dataArea.getWidth() < 0.0) {

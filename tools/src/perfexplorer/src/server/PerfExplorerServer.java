@@ -49,7 +49,7 @@ import java.util.NoSuchElementException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.72 2009/02/24 23:38:46 wspear Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.73 2009/02/26 00:41:17 wspear Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -1670,7 +1670,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param trialID
 	 * @return List of PerfDMF IntervalEvent objects.
 	 */
-	public List getEventList(int trialID, int metricIndex) {
+	public List<IntervalEvent> getEventList(int trialID, int metricIndex) {
 		try {
 			this.session.setTrial(trialID);
 		} catch (DatabaseException e) {}

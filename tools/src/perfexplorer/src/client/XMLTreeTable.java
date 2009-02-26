@@ -5,9 +5,8 @@ import java.awt.event.WindowEvent;
 
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
 
-import edu.uoregon.tau.common.treetable.*;
+import edu.uoregon.tau.common.treetable.JTreeTable;
 
 public class XMLTreeTable {
 
@@ -27,7 +26,7 @@ public class XMLTreeTable {
 	
 	        frame.getContentPane().add(new JScrollPane(treeTable));
 	        frame.pack();
-	        frame.show();
+	        frame.setVisible(true);//.show();
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
 			e.printStackTrace();

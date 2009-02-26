@@ -29,7 +29,7 @@
  * Original Author:  David Gilbert (for Object Refinery Limited);
  * Contributor(s):   -;
  *
- * $Id: PECategoryDataset.java,v 1.2 2009/02/24 00:53:32 khuck Exp $
+ * $Id: PECategoryDataset.java,v 1.3 2009/02/26 00:41:17 wspear Exp $
  *
  * Changes
  * -------
@@ -56,7 +56,11 @@ import org.jfree.data.general.DatasetChangeEvent;
 public class PECategoryDataset extends AbstractDataset
                                     implements CategoryDataset, Serializable {
 
-    /** A storage structure for the data. */
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 684848401025454478L;
+	/** A storage structure for the data. */
     private PEKeyedValues2D data;
 
     /**

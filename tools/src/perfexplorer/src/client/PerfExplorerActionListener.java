@@ -1,14 +1,29 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import javax.swing.*;
-import java.awt.event.*;
-import java.awt.Frame;
 import java.awt.Component;
 import java.awt.Container;
-import java.util.List;
+import java.awt.Frame;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.ListIterator;
-import edu.uoregon.tau.perfdmf.*;
+
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JTree;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+
+import edu.uoregon.tau.common.Utility;
+import edu.uoregon.tau.common.VectorExport;
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.common.AnalysisType;
 import edu.uoregon.tau.perfexplorer.common.Console;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
@@ -18,10 +33,6 @@ import edu.uoregon.tau.perfexplorer.common.RMIView;
 import edu.uoregon.tau.perfexplorer.common.ScriptThread;
 import edu.uoregon.tau.perfexplorer.common.TransformationType;
 import edu.uoregon.tau.perfexplorer.constants.Constants;
-import edu.uoregon.tau.common.Utility;
-import java.io.File;
-import edu.uoregon.tau.common.VectorExport;
-import edu.uoregon.tau.common.PythonInterpreterFactory;
 
 public class PerfExplorerActionListener implements ActionListener {
 
@@ -104,7 +115,7 @@ public class PerfExplorerActionListener implements ActionListener {
 							try {
 								PerfExplorerClient frame = PerfExplorerClient.getMainFrame();
 								UIManager.setLookAndFeel(info[i].getClassName());
-								Frame[] frames = frame.getFrames();
+								Frame[] frames = Frame.getFrames();
 								for (int x = 0 ; x < frames.length ; x++) {
 									Component[] comps = frame.getComponents();
 									for (int y = 0 ; y < comps.length ; y++) {
@@ -392,16 +403,16 @@ public class PerfExplorerActionListener implements ActionListener {
 			if (reply == 1) {
 				Application application = (Application)selection;
 				PerfExplorerConnection server = PerfExplorerConnection.getConnection();
-				ListIterator experiments = server.getExperimentList(application.getID());
+				ListIterator<Experiment> experiments = server.getExperimentList(application.getID());
 				Experiment experiment = null;
 				boolean failed = false;
 				while (experiments.hasNext() && !failed) {
-					experiment = (Experiment) experiments.next();
+					experiment = experiments.next();
 					theModel.setCurrentSelection(experiment);
-					ListIterator trials = server.getTrialList(experiment.getID());
+					ListIterator<Trial> trials = server.getTrialList(experiment.getID());
 					Trial trial = null;
 					while (trials.hasNext() && !failed) {
-						trial = (Trial) trials.next();
+						trial = trials.next();
 						theModel.setCurrentSelection(trial);
 						List metrics = trial.getMetrics();
 						for (int i = 0; i < metrics.size(); i++) {
@@ -433,11 +444,11 @@ public class PerfExplorerActionListener implements ActionListener {
 			if (reply == 1) {
 				Experiment experiment = (Experiment)selection;
 				PerfExplorerConnection server = PerfExplorerConnection.getConnection();
-				ListIterator trials = server.getTrialList(experiment.getID());
+				ListIterator<Trial> trials = server.getTrialList(experiment.getID());
 				Trial trial = null;
 				boolean failed = false;
 				while (trials.hasNext() && !failed) {
-					trial = (Trial) trials.next();
+					trial = trials.next();
 					theModel.setCurrentSelection(trial);
 					List metrics = trial.getMetrics();
 					for (int i = 0; i < metrics.size(); i++) {
@@ -715,7 +726,7 @@ public class PerfExplorerActionListener implements ActionListener {
 		PerfExplorerModel theModel = PerfExplorerModel.getModel();
 		Boolean constantProblem = theModel.getConstantProblem();
 		if (forceIt || constantProblem == null) {
-			List answers = new ArrayList();
+			List<String> answers = new ArrayList<String>();
 			answers.add("The problem size remains constant. (strong scaling)");
 			answers.add("The problem size increases as the processor count increases. (weak scaling)");
 			Object[] options = answers.toArray();

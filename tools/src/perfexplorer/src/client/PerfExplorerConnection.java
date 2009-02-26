@@ -5,6 +5,10 @@ import java.util.*;
 
 import javax.swing.*;
 
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.IntervalEvent;
+import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.common.*;
 import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
@@ -99,8 +103,8 @@ public class PerfExplorerConnection {
     }
 
     
-    public ListIterator getApplicationList() {
-	ListIterator tmpIterator = null;
+    public ListIterator<Application> getApplicationList() {
+	ListIterator<Application> tmpIterator = null;
 	try {
 	    tmpIterator = server.getApplicationList().listIterator();
 	} catch (RemoteException e) {
@@ -109,8 +113,8 @@ public class PerfExplorerConnection {
 	return tmpIterator;
     }
 
-    public ListIterator getExperimentList(int applicationID) {
-	ListIterator tmpIterator = null;
+    public ListIterator<Experiment> getExperimentList(int applicationID) {
+	ListIterator<Experiment> tmpIterator = null;
 	try {
 	    tmpIterator =
 		server.getExperimentList(applicationID).listIterator();
@@ -120,8 +124,8 @@ public class PerfExplorerConnection {
 	return tmpIterator;
     }
 
-    public ListIterator getTrialList(int experimentID) {
-	ListIterator tmpIterator = null;
+    public ListIterator<Trial> getTrialList(int experimentID) {
+	ListIterator<Trial> tmpIterator = null;
 	try {
 	    tmpIterator =
 		server.getTrialList(experimentID).listIterator();
@@ -189,8 +193,8 @@ public class PerfExplorerConnection {
 	return data;
     }
 
-    public List getPotentialGroups(PerfExplorerModel model) {
-	List groups = null;
+    public List<String> getPotentialGroups(PerfExplorerModel model) {
+	List<String> groups = null;
 	try {
 	    groups = server.getPotentialGroups(model);
 	} catch (RemoteException e) {
@@ -209,8 +213,8 @@ public class PerfExplorerConnection {
 	return metrics;
     }
 
-    public List getPotentialEvents(PerfExplorerModel model) {
-	List events = null;
+    public List<String> getPotentialEvents(PerfExplorerModel model) {
+	List<String> events = null;
 	try {
 	    events = server.getPotentialEvents(model);
 	} catch (RemoteException e) {
@@ -257,8 +261,8 @@ public class PerfExplorerConnection {
 		}
     }
 
-    public List getViews(int parent) {
-	List views = null;
+    public List<RMIView> getViews(int parent) {
+	List<RMIView> views = null;
 	try {
 	    views = server.getViews(parent);
 	} catch (RemoteException e) {
@@ -267,8 +271,8 @@ public class PerfExplorerConnection {
 	return views;
     }
 
-    public ListIterator getTrialsForView(List views) {
-	ListIterator trials = null;
+    public ListIterator<Trial> getTrialsForView(List<RMIView> views) {
+	ListIterator<Trial> trials = null;
 	try {
 	    trials = server.getTrialsForView(views).listIterator();
 	} catch (RemoteException e) {
@@ -327,8 +331,8 @@ public class PerfExplorerConnection {
 		return conns;
 	}
 
-    public ListIterator getEventList(int trialID, int metricIndex) {
-	ListIterator tmpIterator = null;
+    public ListIterator<IntervalEvent> getEventList(int trialID, int metricIndex) {
+	ListIterator<IntervalEvent> tmpIterator = null;
 	try {
 	    tmpIterator = server.getEventList(trialID, metricIndex).listIterator();
 	} catch (RemoteException e) {
@@ -347,8 +351,8 @@ public class PerfExplorerConnection {
 		return list;
 	}
 
-	public List getChartFieldNames() {
-		List list = null;
+	public List<Object> getChartFieldNames() {
+		List<Object> list = null;
 		try {
 			list = server.getChartFieldNames();
 		} catch (RemoteException e) {
@@ -357,8 +361,8 @@ public class PerfExplorerConnection {
 		return list;
 	}
 
-    public List getXMLFields(PerfExplorerModel model) {
-		List results = null;
+    public List<String> getXMLFields(PerfExplorerModel model) {
+		List<String> results = null;
 		try {
 	    	results = server.getXMLFields(model);
 		} catch (RemoteException e) {

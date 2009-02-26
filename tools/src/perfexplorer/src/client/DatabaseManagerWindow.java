@@ -381,7 +381,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                 if ((jFileChooser.showOpenDialog(this)) != JFileChooser.APPROVE_OPTION) {
                     return;
                 }
-                JProgressBar bar = new JProgressBar();
+                //JProgressBar bar = new JProgressBar(); //TODO: Possibly referring to the field?
                 //bar.setIndeterminate(true);
 
                 this.bar.setVisible(true);
@@ -472,7 +472,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
 
     public class DownloadThread extends Thread {
         private JProgressBar bar;
-        private JLabel label;
+        //private JLabel label;
         private String url;
         private String destinationFile;
         private String jar;
@@ -481,7 +481,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
         public DownloadThread(JProgressBar b, JLabel lab, String u, String file, String jar, String destination) {
             super();
             bar = b;
-            label = lab;
+            //label = lab;
             url = u;
             this.file = file;
             this.jar = jar;

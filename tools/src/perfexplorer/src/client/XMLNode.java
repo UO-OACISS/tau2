@@ -3,10 +3,10 @@
  */
 package edu.uoregon.tau.perfexplorer.client;
 
-import java.io.File;
 import java.util.List;
 
 import javax.swing.tree.DefaultMutableTreeNode;
+
 import org.xml.sax.Attributes;
 
 /**
@@ -14,6 +14,10 @@ import org.xml.sax.Attributes;
  *
  */
 class XMLNode extends DefaultMutableTreeNode {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3853818864930661976L;
 	protected String value = null;
 	
 	public XMLNode (String name){
@@ -48,6 +52,10 @@ class XMLNode extends DefaultMutableTreeNode {
  *
  */
 class XMLElementNode extends XMLNode {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 4895724419279342816L;
 	protected String namespaceURI = null;
 	protected String localName = null;
 	protected String qName = null;
@@ -92,6 +100,10 @@ class XMLElementNode extends XMLNode {
  *
  */
 class XMLProfileNode extends XMLElementNode {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5607269166475965279L;
 	private String nodeID = null;
 	private String contextID = null;
 	private String threadID = null;
@@ -161,6 +173,11 @@ class XMLProfileNode extends XMLElementNode {
  *
  */
 class XMLTAUAttributeElementNode extends XMLElementNode {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 4332065123389902910L;
+
 	public XMLTAUAttributeElementNode (String namespaceURI, String localName,
                            String qName, Attributes attributes, String prefix) {
 		super(namespaceURI, localName, qName, attributes, prefix);
@@ -187,18 +204,24 @@ class XMLTAUAttributeElementNode extends XMLElementNode {
  * 
  */
 class XMLAttributeNode extends XMLNode {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -9164129127206723743L;
 	private String localName = null;
-	private String qName = null;
-	private String type = null;
-	private String uri = null;
+//	private String qName = null;
+//	private String type = null;
+//	private String uri = null;
 	
 	public XMLAttributeNode (String localName, String qName, String type, String value, String uri) {
 		super();
 		this.localName = localName;
-		this.qName = qName;
-		this.type = type;
+//		this.qName = qName;
+//		this.type = type;
+//		this.uri = uri;
+		
 		this.value = value;
-		this.uri = uri;
+		
 		this.allowsChildren = false;
 	}
 	
@@ -221,6 +244,10 @@ class XMLAttributeNode extends XMLNode {
  * 
  */
 class XMLCommentNode extends XMLNode {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2614871497154677837L;
 	public XMLCommentNode (String value) {
 		this.value = value;
 	}

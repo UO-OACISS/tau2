@@ -17,7 +17,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIChartData;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper class around the RawDataInterface class.
  *
- * <P>CVS $Id: ProbabilityPlotDataset.java,v 1.4 2009/02/25 19:51:45 wspear Exp $</P>
+ * <P>CVS $Id: ProbabilityPlotDataset.java,v 1.5 2009/02/26 00:41:16 wspear Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -28,10 +28,10 @@ public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDatas
 	 * 
 	 */
 	private static final long serialVersionUID = -6688676122111354782L;
-	private List seriesNames = null;
-	private List dataset = null;  // List of List of Points
-	private List metrics = null;
-	private List normalizedMetrics = null;
+	private List<String> seriesNames = null;
+	private List<List<Point>> dataset = null;  // List of List of Points
+	private List<Metric> metrics = null;
+	private List<Metric> normalizedMetrics = null;
 
 	/**
 	 * Constructor.
@@ -42,21 +42,21 @@ public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDatas
 	public ProbabilityPlotDataset(RMIChartData data) {
 		super();
 		this.seriesNames = data.getRowLabels();
-		this.dataset = new ArrayList();
-		this.metrics = new ArrayList();
-		this.normalizedMetrics = new ArrayList();
+		this.dataset = new ArrayList<List<Point>>();
+		this.metrics = new ArrayList<Metric>();
+		this.normalizedMetrics = new ArrayList<Metric>();
 
 		for (int y = 0 ; y < data.getRows() ; y++) {
 		//for (int y = 2 ; y < 3 ; y++) {
-			List row = data.getRowData(y);
+			List<double[]> row = data.getRowData(y);
 
 			// put the values in a sortable list, and capture the min and max
-			List points = new ArrayList();
+			List<Point> points = new ArrayList<Point>();
 			double max = 0.0, min = 0.0;
 			double normalizedMax = 0.0, normalizedMin = 0.0;
 
 			// initialize min and max
-			double[] tmp = (double[])(row.get(0));
+			double[] tmp = (row.get(0));
 			min = tmp[1];
 			max = tmp[1];
 
@@ -67,7 +67,7 @@ public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDatas
 			double normalizedStDev = 0.0;
 
 			for (int x = 0 ; x < row.size() ; x++) {
-				double[] values = (double[])(row.get(x));
+				double[] values = (row.get(x));
 				Point p = new Point(values[0], values[1]);
 				points.add(p);
 				// update min and max
@@ -84,7 +84,7 @@ public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDatas
 			double range = max - min;
 			// normalize data from 0.0 to 1.0
 			for (int x = 0 ; x < points.size() ; x++) {
-				Point p = (Point)points.get(x);
+				Point p = points.get(x);
 				p.n = (p.y - min)/range;
 				// update avg
 				avg += p.y;
@@ -104,7 +104,7 @@ public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDatas
 
 			// calculate the residuals and the standard deviations
 			for (int x = 0 ; x < points.size() ; x++) {
-				Point p = (Point)points.get(x);
+				Point p = points.get(x);
 				p.rn = p.n - normalizedAvg;
 				p.r = p.y - avg;
 				//normalizedStDev += p.rn * p.rn;
@@ -123,7 +123,7 @@ public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDatas
 
 			// convert values to z-score
 			for (int x = 0 ; x < points.size() ; x++) {
-				Point p = (Point)points.get(x);
+				Point p = points.get(x);
 				p.z = (p.r)/stDev;
 			}
 
@@ -145,7 +145,7 @@ public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDatas
 			}
 			dataset.add(points);
 		}
-		List points = new ArrayList();
+		List<Point> points = new ArrayList<Point>();
 		Point p = new Point(-3, -3);
 		points.add(p);
 		Point p2 = new Point(3, 3);
@@ -176,7 +176,7 @@ public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDatas
 	 * @see org.jfree.data.xy.XYDataset#getItemCount(int)
 	 */
 	public int getItemCount(int arg0) {
-		List series = (List)dataset.get(arg0);
+		List<Point> series = dataset.get(arg0);
 		return series.size();
 	}
 
@@ -185,9 +185,9 @@ public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDatas
 	 */
 	public Number getX(int arg0, int arg1) {
 		// get the row
-		List row = (List)dataset.get(arg0);
+		List<Point> row = dataset.get(arg0);
 		// get the mth column from that row
-		Point p = (Point)row.get(arg1);
+		Point p = row.get(arg1);
 		return new Double(p.y);
 	}
 
@@ -196,9 +196,9 @@ public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDatas
 	 */
 	public String getTooltip(int arg0, int arg1) {
 		// get the row
-		List row = (List)dataset.get(arg0);
+		List<Point> row = dataset.get(arg0);
 		// get the mth column from that row
-		Point p = (Point)row.get(arg1);
+		Point p = row.get(arg1);
 		DecimalFormat format = new DecimalFormat("0.00");
 		FieldPosition f = new FieldPosition(0);
 		StringBuffer buf = new StringBuffer();
@@ -262,21 +262,21 @@ public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDatas
 	 */
 	public Number getY(int arg0, int arg1) {
 		// get the row
-		List row = (List)dataset.get(arg0);
+		List<Point> row = dataset.get(arg0);
 		// get the mth column from that row
-		Point p = (Point)row.get(arg1);
+		Point p = row.get(arg1);
 		return new Double(p.z);
 	}
 
 	public String getCorrelation (int series) {
 		double r = 0.0;
-		List row = (List)dataset.get(series);
+		List<Point> row = dataset.get(series);
 
 		// solve for r
 		double tmp1 = 0.0;
 		double tmp2 = 0.0;
 		for (int i = 0 ; i < row.size() ; i++ ) {
-			Point p = (Point)row.get(i);
+			Point p = row.get(i);
 			r += p.z * p.y;
 		}
 		r = r / (row.size() - 1);
