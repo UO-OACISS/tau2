@@ -502,6 +502,7 @@ make clean; make install
 # Set file permissions
 chmod -R go+rX *
 
+/bin/rm -f wishver
 
   
 
