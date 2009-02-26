@@ -104,7 +104,7 @@ extern "C" int InitializeTAU() {
   Tau_compensate_initialization();
 #endif /* TAU_COMPENSATE */
 
-  TauMetrics_init();
+  // TauMetrics_init();
 
   if (TauEnv_get_tracing()) {
     TauInitialize_kill_handlers();
