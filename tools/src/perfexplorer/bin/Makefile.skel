@@ -1,4 +1,4 @@
-# $Id: Makefile.skel,v 1.36 2009/02/25 21:28:29 khuck Exp $
+# $Id: Makefile.skel,v 1.37 2009/02/26 00:53:27 wspear Exp $
 # $Name:  $
 
 R_HOME = @RROOT@
@@ -74,10 +74,10 @@ JBOSS_RULES_JARS = ${DROOLS_COMIPLER_JAR}:${DROOLS_CORE_JAR}:${DROOLS_DECISIONTA
 
 # Hibernate jars
 
-HIBERNATE_JAR = ${JAR_HOME}/hibernate3.jar
-HIBERNATE_ANNOTATIONS_JAR = ${JAR_HOME}/hibernate-annotations.jar
-HIBERNATE_EJB_JAR = ${JAR_HOME}/ejb3-persistence.jar
-HIBERNATE_JARS = ${HIBERNATE_JAR}:${HIBERNATE_EJB_JAR}:${HIBERNATE_ANNOTATIONS_JAR}
+#HIBERNATE_JAR = ${JAR_HOME}/hibernate3.jar
+#HIBERNATE_ANNOTATIONS_JAR = ${JAR_HOME}/hibernate-annotations.jar
+#HIBERNATE_EJB_JAR = ${JAR_HOME}/ejb3-persistence.jar
+#HIBERNATE_JARS = ${HIBERNATE_JAR}:${HIBERNATE_EJB_JAR}:${HIBERNATE_ANNOTATIONS_JAR}
 
 BATCH_SCRIPT = ${JAR_HOME}/perfexplorer
 
@@ -85,7 +85,7 @@ BATCH_SCRIPT = ${JAR_HOME}/perfexplorer
 
 DERBY_JAR = ${JAR_HOME}/derby.jar
 DOM4J_JAR = ${JAR_HOME}/dom4j-1.6.1.jar
-HIBERNATE_COMMONS_ANNOTATIONS_JAR = ${JAR_HOME}/hibernate-commons-annotations.jar
+#HIBERNATE_COMMONS_ANNOTATIONS_JAR = ${JAR_HOME}/hibernate-commons-annotations.jar
 MYSQL_JAR = ${JAR_HOME}/mysql.jar
 
 
@@ -98,7 +98,7 @@ SERVER_DYLD_LIBRARY_PATH=${OMEGAHAT_HOME}/libs:${R_HOME}/lib:${R_HOME}/bin:${R_H
 
 BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JOGL_JAR}:${VIS_JAR}:${JARGS_JAR}:${JYTHON_JAR}:${JUNIT_JAR}:${TAUCOMMON_JAR}
 CQOS_BUILD_CLASSPATH = classes:${WEKA_JAR}
-GLUE_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JOGL_JAR}:${VIS_JAR}:${JARGS_JAR}:${JYTHON_JAR}:${JUNIT_JAR}:${JBOSS_RULES_JARS}:${HIBERNATE_JARS}:${TAUCOMMON_JAR}:${WEKA_JAR}
+GLUE_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JOGL_JAR}:${VIS_JAR}:${JARGS_JAR}:${JYTHON_JAR}:${JUNIT_JAR}:${JBOSS_RULES_JARS}:${TAUCOMMON_JAR}:${WEKA_JAR}
 CLIENT_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JOGL_JAR}:${VIS_JAR}:${JARGS_JAR}:${TAUCOMMON_JAR}:${BATIK_JAR}:${JYTHON_JAR}:${ANTLR2_JAR}:${ANTLR3_JAR}:${COMMONS_JCI_CORE_JAR}:${COMMONS_LANG_JAR}:${COMMONS_LOGGING_JAR}:${DROOLS_COMIPLER_JAR}:${DROOLS_CORE_JAR}:${DROOLS_DECISIONTABLES_JAR}:${DROOLS_JSR94_JAR}:${JSR_JAR}:${JXL_JAR}:${STRINGTEMPLATE_JAR}:${JUNIT_JAR}
 
 CLUSTERING_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${WEKA_JAR}:${OMEGAHAT_JARS}
@@ -346,10 +346,10 @@ perfexplorer2.jar: ${CONSTANT_CLASSES} ${CLIENT_CLASSES} ${CQOS_CLASSES} ${COMMO
 	bin/extract.sh ${JSR_JAR}								# JBOSS RULES
 	bin/extract.sh ${DROOLS_DECISIONTABLES_JAR}				# JBOSS RULES
 	bin/extract.sh ${JXL_JAR}								# JBOSS RULES
-	bin/extract.sh ${HIBERNATE_JAR}							# HIBERNATE
-	bin/extract.sh ${HIBERNATE_ANNOTATIONS_JAR}				# HIBERNATE
-	bin/extract.sh ${HIBERNATE_EJB_JAR}						# HIBERNATE
-	bin/extract.sh ${HIBERNATE_COMMONS_ANNOTATIONS_JAR}		# HIBERNATE
+#	bin/extract.sh ${HIBERNATE_JAR}							# HIBERNATE
+#	bin/extract.sh ${HIBERNATE_ANNOTATIONS_JAR}				# HIBERNATE
+#	bin/extract.sh ${HIBERNATE_EJB_JAR}						# HIBERNATE
+#	bin/extract.sh ${HIBERNATE_COMMONS_ANNOTATIONS_JAR}		# HIBERNATE
 	cd ..
 	jar -cfm perfexplorer2.jar jar_manifest -C classes .
 
@@ -384,10 +384,10 @@ webstart_clean: perfexplorer.jar
 	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${JSR_JAR} tau
 	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${DROOLS_DECISIONTABLES_JAR} tau
 	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${JXL_JAR} tau
-	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${HIBERNATE_JAR} tau
-	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${HIBERNATE_ANNOTATIONS_JAR} tau
-	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${HIBERNATE_EJB_JAR} tau
-	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${HIBERNATE_COMMONS_ANNOTATIONS_JAR} tau
+#	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${HIBERNATE_JAR} tau
+#	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${HIBERNATE_ANNOTATIONS_JAR} tau
+#	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${HIBERNATE_EJB_JAR} tau
+#	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${HIBERNATE_COMMONS_ANNOTATIONS_JAR} tau
 	cp perfexplorer.jar ${WEBSTART_DIR}
 	cp ${PERFDMF_JAR} ${WEBSTART_DIR}
 	cp ${VIS_JAR} ${WEBSTART_DIR}
@@ -418,10 +418,10 @@ webstart_clean: perfexplorer.jar
 	cp ${JSR_JAR} ${WEBSTART_DIR}
 	cp ${DROOLS_DECISIONTABLES_JAR} ${WEBSTART_DIR}
 	cp ${JXL_JAR} ${WEBSTART_DIR}
-	cp ${HIBERNATE_JAR} ${WEBSTART_DIR}
-	cp ${HIBERNATE_ANNOTATIONS_JAR} ${WEBSTART_DIR}
-	cp ${HIBERNATE_EJB_JAR} ${WEBSTART_DIR}
-	cp ${HIBERNATE_COMMONS_ANNOTATIONS_JAR} ${WEBSTART_DIR}
+#	cp ${HIBERNATE_JAR} ${WEBSTART_DIR}
+#	cp ${HIBERNATE_ANNOTATIONS_JAR} ${WEBSTART_DIR}
+#	cp ${HIBERNATE_EJB_JAR} ${WEBSTART_DIR}
+#	cp ${HIBERNATE_COMMONS_ANNOTATIONS_JAR} ${WEBSTART_DIR}
 	cp etc/java.policy ${WEBSTART_DIR}
 	cp doc/index.php ${WEBSTART_DIR}
 	cp doc/perfexplorer.jnlp ${WEBSTART_DIR}

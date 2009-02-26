@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: perfexplorer_configure.skel,v 1.16 2009/02/24 00:53:29 khuck Exp $
+# $Id: perfexplorer_configure.skel,v 1.17 2009/02/26 00:53:27 wspear Exp $
 # $Name:  $
 
 rm -f .last_config
@@ -42,7 +42,7 @@ if [ $test == "failed" ] ; then
 	echo "Java 1.5 or newer is required to run PerfExplorer."
 	echo "Please update your Java SDK to a newer version to use PerfExplorer."
 	echo "You will still be able to use PerfExplorer 1.0, from the TAU v2.17 release."
-	HIBERNATE_JARS=
+#	HIBERNATE_JARS=
 	JBOSS_RULES_JARS=
 	PERFEXPLORER_JAR=${LIBDIR}/perfexplorer-1.4.jar
 	echo ""
@@ -278,12 +278,12 @@ fi
 
 RESPONSE=
 JBOSS_JAR=$JAR_HOME/drools-core-3.0.6.jar
-HIBERNATE_JAR=$JAR_HOME/hibernate3.jar
+#HIBERNATE_JAR=$JAR_HOME/hibernate3.jar
 JBOSS_TAR_DIR=$JAR_HOME
     
-if [ ! -r ${JBOSS_JAR} -o ! -r ${HIBERNATE_JAR} ]; then
+if [ ! -r ${JBOSS_JAR} ]; then
     echo ""
-    echo "$JBOSS_JAR and/or $HIBERNATE_JAR not found."
+    echo "$JBOSS_JAR not found."
     echo ""
 
 	while [ "x$RESPONSE" = "x" ]; do
@@ -309,17 +309,17 @@ if [ ! -r ${JBOSS_JAR} -o ! -r ${HIBERNATE_JAR} ]; then
 		/bin/rm -f $FILE
 		mv jbossrules/*.jar .
 		mv jbossrules/lib/*.jar .
-		mv hibernate-3.2/*.jar .
-		mv hibernate-3.2/lib/*.jar .
-		mv hibernate-annotations-3.3.0.GA/*.jar .
-		mv hibernate-annotations-3.3.0.GA/lib/*.jar .
+#		mv hibernate-3.2/*.jar .
+#		mv hibernate-3.2/lib/*.jar .
+#		mv hibernate-annotations-3.3.0.GA/*.jar .
+#		mv hibernate-annotations-3.3.0.GA/lib/*.jar .
 		rm -rf jbossrules
-		rm -rf hibernate-3.2
-		rm -rf hibernate-annotations-3.3.0.GA
+#		rm -rf hibernate-3.2
+#		rm -rf hibernate-annotations-3.3.0.GA
 	    
-		if [ ! -r ${JBOSS_JAR} -o ! -r ${HIBERNATE_JAR} ]; then
+		if [ ! -r ${JBOSS_JAR} ]; then
 		echo ""
-		echo "Still couldn't find $JBOSS_JAR or $HIBERNATE_JAR, please acquire JBoss Rules and/or Hibernate manually."
+		echo "Still couldn't find $JBOSS_JAR, please acquire JBoss Rules manually."
 		echo ""
 		
 		exit
