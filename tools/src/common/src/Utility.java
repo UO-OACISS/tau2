@@ -6,6 +6,8 @@ import java.net.URL;
 import javax.swing.ImageIcon;
 
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.XYPlot;
 
 public class Utility {
@@ -33,19 +35,20 @@ public class Utility {
 
     public static void applyDefaultChartTheme(JFreeChart chart) {
         chart.setBackgroundPaint(new Color(238, 238, 238));
-
-        chart.getPlot().setBackgroundPaint(Color.white);
-        if (chart.getXYPlot() != null) {
-            XYPlot plot = chart.getXYPlot();
-            plot.setDomainGridlinePaint(Color.gray);
-            plot.setDomainMinorGridlinePaint(Color.gray);
-            plot.setRangeGridlinePaint(Color.gray);
-            plot.setRangeMinorGridlinePaint(Color.gray);
-
-        } else if (chart.getCategoryPlot() != null) {
-            chart.getCategoryPlot().setBackgroundPaint(Color.white);
-            chart.getCategoryPlot().setDomainGridlinePaint(Color.gray);
-            chart.getCategoryPlot().setRangeGridlinePaint(Color.gray);
+        Plot plot = chart.getPlot();
+        
+        plot.setBackgroundPaint(Color.white);
+        if (plot instanceof XYPlot) {
+            XYPlot xyplot = (XYPlot) plot;
+            xyplot.setDomainGridlinePaint(Color.gray);
+            xyplot.setDomainMinorGridlinePaint(Color.gray);
+            xyplot.setRangeGridlinePaint(Color.gray);
+            xyplot.setRangeMinorGridlinePaint(Color.gray);
+        } else if (plot instanceof CategoryPlot) {
+            CategoryPlot cplot = (CategoryPlot) plot; 
+            cplot.setBackgroundPaint(Color.white);
+            cplot.setDomainGridlinePaint(Color.gray);
+            cplot.setRangeGridlinePaint(Color.gray);
         }
     }
 }
