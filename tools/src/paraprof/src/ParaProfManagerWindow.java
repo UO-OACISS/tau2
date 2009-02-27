@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.36 2009/01/23 00:38:42 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.37 2009/02/27 22:54:09 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.36 $
+ * @version	$Revision: 1.37 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -934,6 +934,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
                     if ((ppTrial.getID() == loadedTrial.getID()) && (ppTrial.getExperimentID() == loadedTrial.getExperimentID())
                             && (ppTrial.getApplicationID() == loadedTrial.getApplicationID())) {
+                        ppTrial = loadedTrial;
                         loaded = true;
                     }
                 }
