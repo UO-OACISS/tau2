@@ -2,6 +2,7 @@ package edu.uoregon.tau.perfexplorer.client;
 
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -36,6 +37,7 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 
 import edu.uoregon.tau.common.ImageExport;
+import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Trial;
@@ -891,13 +893,12 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
             true,                            // tooltips
             false                            // urls
         );
-		// customize the chart! //TODO: This code is no longer required
-        //LegendTitle legend = chart.getLegend();
-        //legend.setDisplaySeriesShapes(true);
+		// set the chart to a common style
+		Utility.applyDefaultChartTheme(chart);
         
         // get a reference to the plot for further customisation...
         CategoryPlot plot = (CategoryPlot)chart.getPlot();
-     
+
         //StandardXYItemRenderer renderer = (StandardXYItemRenderer) plot.getRenderer();
 		LineAndShapeRenderer renderer = (LineAndShapeRenderer)plot.getRenderer();
         renderer.setBaseShapesFilled(true);

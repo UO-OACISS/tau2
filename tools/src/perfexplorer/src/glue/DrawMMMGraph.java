@@ -22,6 +22,7 @@ import org.jfree.data.category.DefaultCategoryDataset;
 
 import edu.uoregon.tau.common.AlphanumComparator;
 import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfexplorer.client.MyCategoryAxis;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerChart;
 
@@ -187,11 +188,8 @@ public class DrawMMMGraph extends DrawGraph {
             true,                            // tooltips
             false                            // urls
         );
-		// customize the chart!
-        
-        //TODO: This is probably no longer needed.
-        //StandardLegend legend = (StandardLegend) chart.getLegend();
-        //legend.setDisplaySeriesShapes(true);
+		// set to a common theme
+		Utility.applyDefaultChartTheme(chart);
         
         // get a reference to the plot for further customisation...
         CategoryPlot plot = (CategoryPlot)chart.getPlot();

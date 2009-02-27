@@ -26,6 +26,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import edu.uoregon.tau.perfexplorer.common.ChartDataType;
+import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfexplorer.common.RMIChartData;
 import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData;
 
@@ -820,12 +821,8 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 
 
 	private static void customizeChart (JFreeChart chart, int rows, boolean lastLineIdeal) {
-		// customize the chart!  TODO: THis is probably unnecessary
-        //StandardLegend legend = (StandardLegend) chart.getLegend();
-        //legend.setDisplaySeriesShapes(true);
-        
-        // get a reference to the plot for further customisation...
-        XYPlot plot = chart.getXYPlot();
+		// set the chart to a common style
+		Utility.applyDefaultChartTheme(chart);
      
         //StandardXYItemRenderer renderer = (StandardXYItemRenderer) plot.getRenderer();
 		XYLineAndShapeRenderer renderer = null;
@@ -859,6 +856,9 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
         // change the auto tick unit selection to integer units only...
         //NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
         //rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+
+		// get a reference to the plot for further customisation...
+		XYPlot plot = chart.getXYPlot();
 
 		// if the last line is the "ideal" line, make it black, with no points.
 		plot.setRenderer(renderer);

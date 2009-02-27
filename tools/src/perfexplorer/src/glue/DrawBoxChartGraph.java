@@ -17,6 +17,7 @@ import org.jfree.chart.renderer.category.CategoryItemRenderer;
 import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
 
 import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerChart;
 
 /**
@@ -172,6 +173,7 @@ public class DrawBoxChartGraph extends DrawGraph {
             dataset, domainAxis, rangeAxis, renderer
         );
         JFreeChart chart = new JFreeChart("Box-and-Whisker Chart Demo 1", plot);
+		Utility.applyDefaultChartTheme(chart);
 
         chart.setBackgroundPaint(Color.white);
 
