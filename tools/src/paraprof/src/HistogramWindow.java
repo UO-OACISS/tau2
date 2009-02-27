@@ -26,6 +26,7 @@ import org.jfree.data.statistics.HistogramDataset;
 import org.jfree.data.xy.XYDataset;
 
 import edu.uoregon.tau.common.ImageExport;
+import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
@@ -36,9 +37,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * HistogramWindow
  * This is the histogram window
  *  
- * <P>CVS $Id: HistogramWindow.java,v 1.6 2009/02/25 23:24:48 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindow.java,v 1.7 2009/02/27 19:49:05 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  * @see     HistogramWindowPanel
  */
 public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, ParaProfWindow,
@@ -438,15 +439,9 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         chart.getXYPlot().getDomainAxis().setUpperBound(maxValue);
         chart.getXYPlot().getDomainAxis().setLowerBound(minValue);
 
-        chart.getXYPlot().setOutlinePaint(Color.black);
+        Utility.applyDefaultChartTheme(chart);
+       
 
-        chart.getXYPlot().setBackgroundPaint(Color.white);
-        chart.getXYPlot().setDomainGridlinePaint(Color.gray);
-        chart.getXYPlot().setDomainMinorGridlinePaint(Color.gray);
-        chart.getXYPlot().setRangeGridlinePaint(Color.gray);
-        chart.getXYPlot().setRangeMinorGridlinePaint(Color.gray);
-        chart.setBackgroundPaint(new Color(238,238,238));
-        
         NumberAxis numberAxis = (NumberAxis) chart.getXYPlot().getDomainAxis();
         numberAxis.setNumberFormatOverride(ParaProfUtils.createNumberFormatter(units()));
         numberAxis.setTickLabelsVisible(true);

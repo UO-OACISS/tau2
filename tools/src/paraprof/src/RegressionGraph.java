@@ -26,6 +26,7 @@ import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 
@@ -464,11 +465,6 @@ public class RegressionGraph {
             xAxis.setTickLabelFont(tickFont);
             yAxis = (ValueAxis) plot.getRangeAxis();
 
-            chart.getXYPlot().setBackgroundPaint(Color.white);
-            chart.getXYPlot().setDomainGridlinePaint(Color.gray);
-            chart.getXYPlot().setDomainMinorGridlinePaint(Color.gray);
-            chart.getXYPlot().setRangeGridlinePaint(Color.gray);
-            chart.getXYPlot().setRangeMinorGridlinePaint(Color.gray);
         } else {
             CategoryPlot plot = chart.getCategoryPlot();
             CategoryAxis xAxis = (CategoryAxis) plot.getDomainAxis();
@@ -476,12 +472,10 @@ public class RegressionGraph {
             xAxis.setTickLabelFont(tickFont);
             yAxis = (ValueAxis) plot.getRangeAxis();
 
-            chart.getCategoryPlot().setBackgroundPaint(Color.white);
-            chart.getCategoryPlot().setDomainGridlinePaint(Color.gray);
-            chart.getCategoryPlot().setRangeGridlinePaint(Color.gray);
 
         }
-        chart.setBackgroundPaint(new Color(238, 238, 238));
+        
+        Utility.applyDefaultChartTheme(chart);
 
         if (logScale) {
             LogarithmicAxis logAxis = new LogarithmicAxis("");
