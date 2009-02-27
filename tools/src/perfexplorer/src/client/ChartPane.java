@@ -223,7 +223,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 					if (oldMetric.equals(next))
 						this.metric.setSelectedItem(next);
 				}
-				if (!gotTime) {
+				if (gotTime) {
 					this.metric.addItem("TIME");
 					if (oldMetric.equals("TIME"))
 						this.metric.setSelectedItem("TIME");

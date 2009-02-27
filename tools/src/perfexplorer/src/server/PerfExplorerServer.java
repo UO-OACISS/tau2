@@ -51,7 +51,7 @@ import java.util.Queue;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.74 2009/02/27 00:45:10 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.75 2009/02/27 19:05:25 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -882,12 +882,13 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 			ResultSet results = statement.executeQuery();
 			// only get the metrics that are in all trials.
-			int trialCount = 0;
+			// KAH - changed - get all metrics from all trials.
+//			int trialCount = 0;
 			while (results.next() != false) {
-				if (trialCount == 0)
+/*				if (trialCount == 0)
 					trialCount = results.getInt(1);
 				if (results.getInt(1) == trialCount)
-					metrics.add(results.getString(2));
+*/					metrics.add(results.getString(2));
 			}
 			results.close();
 			statement.close();
