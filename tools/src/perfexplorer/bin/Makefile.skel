@@ -1,4 +1,4 @@
-# $Id: Makefile.skel,v 1.38 2009/02/27 23:22:16 khuck Exp $
+# $Id: Makefile.skel,v 1.39 2009/02/27 23:48:55 khuck Exp $
 # $Name:  $
 
 R_HOME = @RROOT@
@@ -106,18 +106,24 @@ CLUSTERING_SOURCES = ${wildcard src/clustering/*.java} ${wildcard src/clustering
 CQOS_SOURCES = ${wildcard src/cqos/*.java}
 CLIENT_SOURCES = ${wildcard src/client/*.java}
 SERVER_SOURCES = ${wildcard src/server/*.java}
-GLUE_SOURCES = ${wildcard src/glue/*.java} ${wildcard src/glue/psl/*.java} ${wildcard src/rules/*.java} ${wildcard src/persistence/*.java}
+GLUE_SOURCES = ${wildcard src/glue/*.java} ${wildcard src/glue/psl/*.java} ${wildcard src/rules/*.java}
 SOURCES = ${COMMON_SOURCES} ${SERVER_SOURCES} ${CLIENT_SOURCES} ${CLUSTERING_SOURCES} ${GLUE_SOURCES}
+
+##########################
 
 CONSTANT_CLASSES = ${subst src/, classes/edu/uoregon/tau/perfexplorer/, ${patsubst %.java, %.class, ${CONSTANT_SOURCES}}} 
 COMMON_CLASSES = ${subst src/, classes/edu/uoregon/tau/perfexplorer/, ${patsubst %.java, %.class, ${COMMON_SOURCES}}} 
 CQOS_CLASSES = ${subst src/, classes/edu/uoregon/tau/perfexplorer/, ${patsubst %.java, %.class, ${CQOS_SOURCES}}} 
 CLUSTERING_CLASSES = ${subst src/, classes/edu/uoregon/tau/perfexplorer/, ${patsubst %.java, %.class, ${CLUSTERING_SOURCES}}} 
 SERVER_CLASSES = ${subst src/, classes/edu/uoregon/tau/perfexplorer/, ${patsubst %.java, %.class, ${SERVER_SOURCES}}} 
-GLUE_CLASSES = ${subst src/, classes/edu/uoregon/tau/perfexplorer/, ${patsubst %.java, %.class, ${GLUE_SOURCES}}} 
+GLUE_CLASSES_TMP = ${subst src/, classes/edu/uoregon/tau/perfexplorer/, ${patsubst %.java, %.class, ${GLUE_SOURCES}}}
+GLUE_CLASSES = ${subst classes/edu/uoregon/tau/perfexplorer/glue/package-info.class, , ${GLUE_CLASSES_TMP}}
+
 CLIENT_CLASSES = ${subst src/, classes/edu/uoregon/tau/perfexplorer/, ${patsubst %.java, %.class, ${CLIENT_SOURCES}}} 
 CLASSES = ${COMMON_CLASSES} ${CQOS_CLASSES} ${SERVER_CLASSES} ${CLIENT_CLASSES} ${CLUSTERING_CLASSES}
 RMIC_CLASSES = classes/edu/uoregon/tau/perfexplorer/server/PerfExplorerServer_Stub.class
+
+##########################
 
 # remove this for normal make output
 #.SILENT:
