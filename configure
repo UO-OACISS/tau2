@@ -3570,8 +3570,7 @@ echo "***********************************************************************"
 
 
 # Next, check the properties of the MPI implementation.
-if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ]
-then
+if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
   #echo "MPI is specified"
   mpi=yes
   fixmakeargs="$fixmakeargs MPI"
@@ -3925,24 +3924,14 @@ fi
     
 if [ $mpi = yes ] ; then
   wrapperlib="-L$tautoplevel/$machine/lib -lTauMpi\$(TAU_CONFIG)"
+
+  # Epilog
   if [ $epilog = yes -a $mpi = yes ] ; then
-      
       if [ $sicortex = yes ] ; then
 	  wrapperlib="-L$epiloglibdir -Wl,-whole-archive -lelg.mpi -Wl,-no-whole-archive"
       else
 	  wrapperlib="-L$epiloglibdir -lelg.mpi"
       fi
-
-
-# kconfig puts -Wl,-rpath <papidir>/lib and this messes up ifort
-#    if [ $scalasca = yes ]
-#    then
-#      if [ -f $epilogbindir/kconfig ]
-#      then
-#        echo "NOTE: Using kconfig to determine libs used in Scalasca/Epilog"
-#        wrapperlib=`$epilogbindir/kconfig --for --mpi --libs`
-#      fi
-#    fi
 
     if [ $openmp = yes ] ; then
 	if [ $sicortex = yes ] ; then
@@ -3953,6 +3942,7 @@ if [ $mpi = yes ] ; then
     fi
   fi 
 
+  # VampirTrace
   if [ $vampirtrace = yes -a $mpi = yes ] ; then
     if [ $vampirtrace = yes -a -f $vampirtracedir/$vampirtracelibdir/libvt.fmpi.a -o -f $vampirtracedir/$vampirtracelibdir/libvt.fmpi.a ] ; then
       vtfortranwrapper="-lvt.fmpi"
@@ -3980,7 +3970,8 @@ if [ $mpi = yes ] ; then
   mpilibargs=$wrapperlib
   wrapperC=$wrapperlib
 
-  if [ "x$mpilib" != "x" -a -d $mpilib ] ; then
+  if [ "x$mpilib" != "x" ] ; then
+  if [ -d $mpilib ] ; then
     #echo "Lib dir found. adding -L$mpilib to LIB"
     mpilibargs="$mpilibargs -L$mpilib"
     if [ -r $mpilib/libmpi_r.a -a -r $mpilib/libmpi.a ] ; then
@@ -4197,23 +4188,20 @@ if [ $mpi = yes ] ; then
       mpiflibargs="$mpiflibargs -lmpiif -ldl -lrt"
     fi
     # Special check for HPMPI
-    if [ -r $mpilib/libmpi_hmp.a ]
-    then
+    if [ -r $mpilib/libmpi_hmp.a ] ; then
       echo "This looks like an HP/MPI installation."
       mpilibargs="$mpilibargs -ldl"
       mpiflibargs="$mpiflibargs -ldl"
     fi
     # Special check for ChaMPIon/Pro 
-    if [ -r $mpilib/libcmpi.a ]
-    then
+    if [ -r $mpilib/libcmpi.a ] ; then
       echo "This looks like a ChaMPIon/Pro installation."
       mpiextraargs=`cmpicc -v -echo | cut -c8- `
       mpilibargs="$mpilibargs $mpiextraargs"
       mpiflibargs="$mpiflibargs $mpiextraargs -lcmpi_fort"
     fi
     # Special check for VMI [NCSA] MPICH
-    if [ -r $mpilib/libvmi.a ]
-    then
+    if [ -r $mpilib/libvmi.a ] ; then
       echo "This looks like a VMI MPICH installation. Adding -lvmi -lpthread -ldl to link command line"
       mpilibargs="$mpilibargs -lvmi -lpthread -ldl"
       mpiflibargs="$mpiflibargs -lvmi -lpthread -ldl"
@@ -4221,8 +4209,7 @@ if [ $mpi = yes ] ; then
       
     mpilibargs=`echo $mpilibargs | sed  -e 's/ /#/g'`
     mpiflibargs=`echo $mpiflibargs | sed  -e 's/ /#/g'`
-    if [ $papipfm = yes -a "x$mpilib" = "x/usr/lib" ]
-    then
+    if [ $papipfm = yes -a "x$mpilib" = "x/usr/lib" ] ; then
       echo "NOTE: Adding -L<papidir> before -L<mpidir> to use PAPI's libpfm"
       mpilibargs="-L$papidir/$\(PAPISUBDIR\)#$mpilibargs"
       mpiflibargs="-L$papidir/$\(PAPISUBDIR\)#$mpiflibargs"
@@ -4239,8 +4226,7 @@ if [ $mpi = yes ] ; then
 
     # Check to see if the MPI library contains a _r 
     mpithreadtest=`echo $mpilibrary | sed -e 's/_r//'`
-    if [ "y$mpithreadtest" = "y$mpilibrary" ] 
-    then
+    if [ "y$mpithreadtest" = "y$mpilibrary" ] ; then
       echo "NOTE: MPI library does not have a threaded _r suffix "
     else
       echo "NOTE: MPI library has a threaded _r suffix "
@@ -4248,6 +4234,7 @@ if [ $mpi = yes ] ; then
     fi # mpi _r check
 
   fi # If -d mpilib
+  fi 
 else # if mpilib is specified
     if [ $openmp = yes ] 
     then
@@ -4279,6 +4266,12 @@ fi
 
 
 
+
+if [ $mpi = yes -a "x$machine" = "xcraycnl" ] ; then
+    mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)"
+    mpiflibargs=$mpilibargs
+    fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
+fi
 
 
 #####################################################################
