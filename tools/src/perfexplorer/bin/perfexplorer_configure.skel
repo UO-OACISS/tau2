@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: perfexplorer_configure.skel,v 1.17 2009/02/26 00:53:27 wspear Exp $
+# $Id: perfexplorer_configure.skel,v 1.18 2009/02/27 23:22:16 khuck Exp $
 # $Name:  $
 
 rm -f .last_config
@@ -278,7 +278,6 @@ fi
 
 RESPONSE=
 JBOSS_JAR=$JAR_HOME/drools-core-3.0.6.jar
-#HIBERNATE_JAR=$JAR_HOME/hibernate3.jar
 JBOSS_TAR_DIR=$JAR_HOME
     
 if [ ! -r ${JBOSS_JAR} ]; then
@@ -297,8 +296,8 @@ if [ ! -r ${JBOSS_JAR} ]; then
 	
 	
 	if [ "${RESPONSE}" == "y" ]; then 
-		FILE=perfexplorer_jars.tgz
-		URL=http://www.cs.uoregon.edu/research/paracomp/tau/perfexplorer_jars.tgz
+		FILE=PE2_jars.tgz
+		URL=http://www.cs.uoregon.edu/research/paracomp/tau/$FILE
 		/bin/rm -f $FILE
 		echo "Getting $FILE... please be patient..."
 		#wget "$URL"
@@ -309,13 +308,7 @@ if [ ! -r ${JBOSS_JAR} ]; then
 		/bin/rm -f $FILE
 		mv jbossrules/*.jar .
 		mv jbossrules/lib/*.jar .
-#		mv hibernate-3.2/*.jar .
-#		mv hibernate-3.2/lib/*.jar .
-#		mv hibernate-annotations-3.3.0.GA/*.jar .
-#		mv hibernate-annotations-3.3.0.GA/lib/*.jar .
 		rm -rf jbossrules
-#		rm -rf hibernate-3.2
-#		rm -rf hibernate-annotations-3.3.0.GA
 	    
 		if [ ! -r ${JBOSS_JAR} ]; then
 		echo ""

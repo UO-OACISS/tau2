@@ -7,16 +7,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-//import persistence.DB4OUtilities;
-//import javax.persistence.*;
-
 /**
  * For this class, do we know what we want to store, or do
  * we just store reflection information?   For example, should
  * we store the name of the class, and some information for
  * re-constructing it?
  * 
- * <P>CVS $Id: Provenance.java,v 1.7 2009/02/26 00:41:17 wspear Exp $</P>
+ * <P>CVS $Id: Provenance.java,v 1.8 2009/02/27 23:22:16 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 
@@ -82,25 +79,10 @@ public class Provenance {
 		this.operations = operations;
 	}
 
-//	public static void save() {
-//		if (enabled) {
-//			Provenance current = getCurrent();
-//		
-//			Session session = HibernateUtil.getSessionFactory().openSession();
-//			Transaction tx = session.beginTransaction();
-//		
-//			try {
-//				Long msgId = (Long)session.save(current);
-//			} catch (MappingException ex) {
-//				// create the Mapping table in the database
-//			}
-//		
-//			tx.commit();
-//			session.close();
-//
-//			//DB4OUtilities.saveObject(current);
-//		}
-//	}
+	public static void save() {
+		// TODO - this should get a list of operations, and all the options of how
+		// to recreate it, and save it to the trial as XML metadata.
+	}
 	
 	public static void listAll() {
 		//DB4OUtilities.listAll(new Provenance(true));
@@ -121,7 +103,7 @@ public class Provenance {
 				buf.append("\n\t\tinput: " + input.toString());
 			}
 			for (PerformanceResult output : operation.getOutputs()) {
-				buf.append("\n\t\tinput: " + output.toString());
+				buf.append("\n\t\toutput: " + output.toString());
 			}
 		}
 		return buf.toString();

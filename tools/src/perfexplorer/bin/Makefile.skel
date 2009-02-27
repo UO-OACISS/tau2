@@ -1,4 +1,4 @@
-# $Id: Makefile.skel,v 1.37 2009/02/26 00:53:27 wspear Exp $
+# $Id: Makefile.skel,v 1.38 2009/02/27 23:22:16 khuck Exp $
 # $Name:  $
 
 R_HOME = @RROOT@
@@ -72,20 +72,11 @@ JBOSS_RULES_JARS = ${DROOLS_COMIPLER_JAR}:${DROOLS_CORE_JAR}:${DROOLS_DECISIONTA
 
 ##########################
 
-# Hibernate jars
-
-#HIBERNATE_JAR = ${JAR_HOME}/hibernate3.jar
-#HIBERNATE_ANNOTATIONS_JAR = ${JAR_HOME}/hibernate-annotations.jar
-#HIBERNATE_EJB_JAR = ${JAR_HOME}/ejb3-persistence.jar
-#HIBERNATE_JARS = ${HIBERNATE_JAR}:${HIBERNATE_EJB_JAR}:${HIBERNATE_ANNOTATIONS_JAR}
-
 BATCH_SCRIPT = ${JAR_HOME}/perfexplorer
 
 # DISTRIBUTION JARS
 
 DERBY_JAR = ${JAR_HOME}/derby.jar
-DOM4J_JAR = ${JAR_HOME}/dom4j-1.6.1.jar
-#HIBERNATE_COMMONS_ANNOTATIONS_JAR = ${JAR_HOME}/hibernate-commons-annotations.jar
 MYSQL_JAR = ${JAR_HOME}/mysql.jar
 
 
@@ -346,10 +337,6 @@ perfexplorer2.jar: ${CONSTANT_CLASSES} ${CLIENT_CLASSES} ${CQOS_CLASSES} ${COMMO
 	bin/extract.sh ${JSR_JAR}								# JBOSS RULES
 	bin/extract.sh ${DROOLS_DECISIONTABLES_JAR}				# JBOSS RULES
 	bin/extract.sh ${JXL_JAR}								# JBOSS RULES
-#	bin/extract.sh ${HIBERNATE_JAR}							# HIBERNATE
-#	bin/extract.sh ${HIBERNATE_ANNOTATIONS_JAR}				# HIBERNATE
-#	bin/extract.sh ${HIBERNATE_EJB_JAR}						# HIBERNATE
-#	bin/extract.sh ${HIBERNATE_COMMONS_ANNOTATIONS_JAR}		# HIBERNATE
 	cd ..
 	jar -cfm perfexplorer2.jar jar_manifest -C classes .
 
@@ -384,10 +371,6 @@ webstart_clean: perfexplorer.jar
 	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${JSR_JAR} tau
 	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${DROOLS_DECISIONTABLES_JAR} tau
 	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${JXL_JAR} tau
-#	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${HIBERNATE_JAR} tau
-#	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${HIBERNATE_ANNOTATIONS_JAR} tau
-#	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${HIBERNATE_EJB_JAR} tau
-#	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore ${HIBERNATE_COMMONS_ANNOTATIONS_JAR} tau
 	cp perfexplorer.jar ${WEBSTART_DIR}
 	cp ${PERFDMF_JAR} ${WEBSTART_DIR}
 	cp ${VIS_JAR} ${WEBSTART_DIR}
@@ -418,10 +401,6 @@ webstart_clean: perfexplorer.jar
 	cp ${JSR_JAR} ${WEBSTART_DIR}
 	cp ${DROOLS_DECISIONTABLES_JAR} ${WEBSTART_DIR}
 	cp ${JXL_JAR} ${WEBSTART_DIR}
-#	cp ${HIBERNATE_JAR} ${WEBSTART_DIR}
-#	cp ${HIBERNATE_ANNOTATIONS_JAR} ${WEBSTART_DIR}
-#	cp ${HIBERNATE_EJB_JAR} ${WEBSTART_DIR}
-#	cp ${HIBERNATE_COMMONS_ANNOTATIONS_JAR} ${WEBSTART_DIR}
 	cp etc/java.policy ${WEBSTART_DIR}
 	cp doc/index.php ${WEBSTART_DIR}
 	cp doc/perfexplorer.jnlp ${WEBSTART_DIR}
