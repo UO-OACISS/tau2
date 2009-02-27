@@ -12,9 +12,10 @@ public class QueryManager {
 	 * 
 	 * @throws PerfExplorerException
 	 */
-	public static List getTrialList (String criteria) {
+	@SuppressWarnings("unchecked")  // for Trial.getTrialList() call
+	public static List<Trial> getTrialList (String criteria) {
 		PerfExplorerServer server = PerfExplorerServer.getServer();
-		List list = null;
+		List<Trial> list = null;
 		try {
 			// get the database connection
 			DB db = server.getDB();
@@ -30,7 +31,7 @@ public class QueryManager {
 		}
 		if (list == null) {
 			// return an empty list
-			list = new ArrayList();
+			list = new ArrayList<Trial>();
 		}
 		return list;
 	}

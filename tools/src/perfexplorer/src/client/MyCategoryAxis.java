@@ -29,7 +29,7 @@
  * Original Author:  David Gilbert;
  * Contributor(s):   -;
  *
- * $Id: MyCategoryAxis.java,v 1.5 2009/02/26 00:41:17 wspear Exp $
+ * $Id: MyCategoryAxis.java,v 1.6 2009/02/27 00:45:07 khuck Exp $
  *
  * Changes (from 21-Aug-2001)
  * --------------------------
@@ -141,7 +141,7 @@ public class MyCategoryAxis extends CategoryAxis {
     private CategoryLabelPositions categoryLabelPositions;
     
     /** Storage for the category label tooltips (if any). */
-    private Map categoryLabelToolTips;
+    private Map<Comparable, String> categoryLabelToolTips;
     
     /** Access to logging facilities. */
     protected static final LogContext logger = Log.createContext(MyCategoryAxis.class);
@@ -193,7 +193,7 @@ public class MyCategoryAxis extends CategoryAxis {
         
         this.categoryLabelPositionOffset = 4;
         this.categoryLabelPositions = CategoryLabelPositions.STANDARD;
-        this.categoryLabelToolTips = new HashMap();
+        this.categoryLabelToolTips = new HashMap<Comparable, String>();
         
     }
 
@@ -748,7 +748,7 @@ public class MyCategoryAxis extends CategoryAxis {
                 if (plotState != null) {
                     EntityCollection entities = plotState.getOwner().getEntityCollection();
                     if (entities != null) {
-                        String tooltip = (String) this.categoryLabelToolTips.get(
+                        String tooltip = this.categoryLabelToolTips.get(
                             tick.getCategory()
                         );
                         entities.add(new TickLabelEntity(bounds, tooltip, null));   

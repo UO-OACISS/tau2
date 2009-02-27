@@ -15,7 +15,7 @@ import java.util.ArrayList;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.35 2009/02/24 23:38:47 wspear Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.36 2009/02/27 00:45:09 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -25,13 +25,13 @@ public class RMIPerfExplorerModel implements Serializable {
 	public final static int MAX_CLUSTERS = 10;
 	public final static double X_PERCENT = 1.0;
 
-	protected List multiSelections = null;
+	protected List<Object> multiSelections = null;
 	protected SelectionType multiSelectionType = SelectionType.NO_MULTI;
 
 	// constants for chart parameters
-	protected List groupNames = null;
-	protected List metricNames = null;
-	protected List eventNames = null;
+	protected List<String> groupNames = null;
+	protected List<String> metricNames = null;
+	protected List<String> eventNames = null;
 	protected String totalTimesteps = null;
 	protected Boolean constantProblem = null;
 	protected boolean eventNoCallpath = true;
@@ -511,7 +511,7 @@ public class RMIPerfExplorerModel implements Serializable {
      * @param objects
      * @return
      */
-	public boolean setMultiSelection(List objects) {
+	public boolean setMultiSelection(List<Object> objects) {
 		for (int i = 0 ; i < objects.size() ; i++) {
 			if (objects.get(i) instanceof Application) {
 				if (multiSelectionType != SelectionType.APPLICATION &&
@@ -562,7 +562,7 @@ public class RMIPerfExplorerModel implements Serializable {
 		totalTimesteps = null;
 		constantProblem = null;
 		if (multiSelections == null) {
-			multiSelections = new ArrayList();
+			multiSelections = new ArrayList<Object>();
 			multiSelections.add(currentSelection);
 		}
 		multiSelections.add(obj);
@@ -574,7 +574,7 @@ public class RMIPerfExplorerModel implements Serializable {
      *
      * @return
      */
-	public List getMultiSelection() {
+	public List<Object> getMultiSelection() {
 		return multiSelections;
 	}
 
@@ -585,7 +585,7 @@ public class RMIPerfExplorerModel implements Serializable {
 	public String getGroupName () {
 		String tmp = null;
 		if (groupNames != null) {
-			tmp = (String)groupNames.get(0);
+			tmp = groupNames.get(0);
 		}
 		return tmp;
 	}
@@ -595,7 +595,7 @@ public class RMIPerfExplorerModel implements Serializable {
      *
      * @return
      */
-	public List getGroupNames () {
+	public List<String> getGroupNames () {
 		return groupNames;
 	}
 
@@ -604,7 +604,7 @@ public class RMIPerfExplorerModel implements Serializable {
      *
      * @return
      */
-	public List getEventNames () {
+	public List<String> getEventNames () {
 		return eventNames;
 	}
 
@@ -617,7 +617,7 @@ public class RMIPerfExplorerModel implements Serializable {
 		if (groupName == null) {
 			this.groupNames = null;
 		} else {
-			this.groupNames = new ArrayList();
+			this.groupNames = new ArrayList<String>();
 			this.groupNames.add(groupName);
 		}
 	}
@@ -629,7 +629,7 @@ public class RMIPerfExplorerModel implements Serializable {
      */
 	public String getMetricName () {
 		if (metricNames != null)
-			return (String)metricNames.get(0);
+			return metricNames.get(0);
 		if (currentSelection instanceof Metric) {
 			Metric met = (Metric)currentSelection;
 			return met.getName();
@@ -648,7 +648,7 @@ public class RMIPerfExplorerModel implements Serializable {
      *
      * @return
      */
-	public List getMetricNames () {
+	public List<String> getMetricNames () {
 		return metricNames;
 	}
 
@@ -675,7 +675,7 @@ public class RMIPerfExplorerModel implements Serializable {
 		if (metricName == null) {
 			this.metricNames = null;
 		} else {
-			this.metricNames = new ArrayList();
+			this.metricNames = new ArrayList<String>();
 			this.metricNames.add(metricName);
 		}
 	}
@@ -687,7 +687,7 @@ public class RMIPerfExplorerModel implements Serializable {
      */
 	public void addMetricName (String metricName) {
 		if (this.metricNames == null) {
-			this.metricNames = new ArrayList();
+			this.metricNames = new ArrayList<String>();
 		}
 		this.metricNames.add(metricName);
 	}
@@ -699,7 +699,7 @@ public class RMIPerfExplorerModel implements Serializable {
      */
 	public void addGroupName (String groupName) {
 		if (this.groupNames == null) {
-			this.groupNames = new ArrayList();
+			this.groupNames = new ArrayList<String>();
 		}
 		this.groupNames.add(groupName);
 	}
@@ -711,7 +711,7 @@ public class RMIPerfExplorerModel implements Serializable {
      */
 	public void addEventName (String eventName) {
 		if (this.eventNames == null) {
-			this.eventNames = new ArrayList();
+			this.eventNames = new ArrayList<String>();
 		}
 		this.eventNames.add(eventName);
 	}
@@ -744,7 +744,7 @@ public class RMIPerfExplorerModel implements Serializable {
 	public String getEventName () {
 		String tmp = null;
 		if (eventNames != null) {
-			tmp = (String)eventNames.get(0);
+			tmp = eventNames.get(0);
 		}
 		return tmp;
 	}
@@ -757,7 +757,7 @@ public class RMIPerfExplorerModel implements Serializable {
 		if (eventName == null) {
 			this.eventNames = null;
 		} else {
-			this.eventNames = new ArrayList();
+			this.eventNames = new ArrayList<String>();
 			this.eventNames.add(eventName);
 		}
 	}

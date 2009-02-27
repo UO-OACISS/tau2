@@ -37,10 +37,12 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Collections;
 import java.util.StringTokenizer;
 import java.util.NoSuchElementException;
+import java.util.Queue;
 
 /**
  * The main PerfExplorer Server class.  This class is defined as a singleton,
@@ -49,7 +51,7 @@ import java.util.NoSuchElementException;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.73 2009/02/26 00:41:17 wspear Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.74 2009/02/27 00:45:10 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -57,12 +59,12 @@ import java.util.NoSuchElementException;
 public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfExplorer {
 	private static String USAGE = "Usage: PerfExplorerClient [{-h,--help}] {-c,--configfile}=<config_file> [{-e,--engine}=<analysis_engine>] [{-p,--port}=<port_number>]\n  where analysis_engine = R or Weka";
 	private DatabaseAPI session = null;
-	private List sessions = new ArrayList();
-	private List configNames = new ArrayList();
-	private List sessionStrings = new ArrayList();
-	private List requestQueues = new ArrayList();
-	private List timerThreads = new ArrayList();
-	private List timers = new ArrayList();
+	private List<DatabaseAPI> sessions = new ArrayList<DatabaseAPI>();
+	private List<String> configNames = new ArrayList<String>();
+	private List<String> sessionStrings = new ArrayList<String>();
+	private List<Queue<RMIPerfExplorerModel>> requestQueues = new ArrayList<Queue<RMIPerfExplorerModel>>();
+	private List<Thread> timerThreads = new ArrayList<Thread>();
+	private List<TimerThread> timers = new ArrayList<TimerThread>();
 	private static PerfExplorerServer theServer = null;
 	private AnalysisFactory factory = null;
 	private EngineType engineType;
@@ -141,10 +143,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		DatabaseAPI workerSession = null;
 		this.engineType = analysisEngine;
 		int i = 0;
-		List configFiles = ConfigureFiles.getConfigurationNames();
+		List<String> configFiles = ConfigureFiles.getConfigurationNames();
 		if (configFile != null && configFile.length() > 0) {
 			// if the user supplied a config file, use just that one
-			configFiles = new ArrayList();
+			configFiles = new ArrayList<String>();
 			configFiles.add(configFile);
 		}
         String home = System.getProperty("user.home");
@@ -154,9 +156,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		// as a regular expression...
 		prefix = prefix.replaceAll("\\\\", "\\\\\\\\");
 		System.out.println(prefix);
-		for (Iterator iter = configFiles.iterator() ; iter.hasNext() ; ) {
+		for (Iterator<String> iter = configFiles.iterator() ; iter.hasNext() ; ) {
 			DatabaseAPI api = null;
-			String tmpFile = (String)iter.next();
+			String tmpFile = iter.next();
 			PerfExplorerOutput.print("Connecting...");
 			try {
 				api = new DatabaseAPI();
@@ -168,7 +170,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				this.sessions.add(api);
 				this.configNames.add(configName);
 				this.sessionStrings.add(api.db().getConnectString());
-				Queue requestQueue = new Queue();
+				Queue<RMIPerfExplorerModel> requestQueue = new LinkedList<RMIPerfExplorerModel>();
 				this.requestQueues.add(requestQueue);
 				TimerThread timer = new TimerThread(this, workerSession, i++);
 				this.timers.add(timer);
@@ -229,9 +231,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * 
 	 * @return List of PerfDMF Application objects.
 	 */
-	public List getApplicationList() {
+	@SuppressWarnings("unchecked")  // for getApplicationList() call
+	public List<Application> getApplicationList() {
 		//PerfExplorerOutput.println("getApplicationList()...");
-		List applications = this.session.getApplicationList();
+		List<Application> applications = this.session.getApplicationList();
 		return applications;
 	}
 
@@ -242,10 +245,11 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param applicationID
 	 * @return List of PerfDMF Experiment objects.
 	 */
-	public List getExperimentList(int applicationID) {
+	@SuppressWarnings("unchecked")  // for getExperimentList() call
+	public List<Experiment> getExperimentList(int applicationID) {
 		//PerfExplorerOutput.println("getExperimentList(" + applicationID + ")...");
 		this.session.setApplication(applicationID);
-		List experiments = null;
+		List<Experiment> experiments = null;
 		try {
 			experiments = this.session.getExperimentList();
 		} catch (DatabaseException e) {}
@@ -260,19 +264,20 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param experimentID
 	 * @return List of PerfDMF Trial objects.
 	 */
-	public List getTrialList(int experimentID) {
+	@SuppressWarnings("unchecked")  // for getTrialList() call
+	public List<Trial> getTrialList(int experimentID) {
 		//PerfExplorerOutput.println("getTrialList(" + experimentID + ")...");
 		try {
 			this.session.setExperiment(experimentID);
 		} catch (DatabaseException e) {}
-		List trials = this.session.getTrialList();
+		List<Trial> trials = this.session.getTrialList();
 		return trials;
 	}
 
 	public void stopServer() {
 		PerfExplorerOutput.println("stopServer()...");
 		for (int i = 0 ; i < timers.size(); i++ ) {
-			TimerThread timer = (TimerThread)timers.get(i);
+			TimerThread timer = timers.get(i);
 			timer.cancel();
 		}
 		try{
@@ -304,8 +309,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			status.append("Request " + analysisID + " queued.");
 			model.setAnalysisID(analysisID);
 			status.append("\nRequest accepted.");
-			Queue requestQueue = (Queue)requestQueues.get(model.getConnectionIndex());
-			requestQueue.enqueue(model);
+			Queue<RMIPerfExplorerModel> requestQueue = requestQueues.get(model.getConnectionIndex());
+			requestQueue.add(model);
 		} catch (PerfExplorerException e) {
 			String tmp = e.getMessage();
 			Throwable exec = e.getCause();
@@ -562,8 +567,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * 
 	 */
 	public void taskFinished (int connectionIndex) {
-		Queue requestQueue = (Queue)requestQueues.get(connectionIndex);
-		RMIPerfExplorerModel model = requestQueue.dequeue();
+		Queue<RMIPerfExplorerModel> requestQueue = requestQueues.get(connectionIndex);
+		RMIPerfExplorerModel model = requestQueue.remove();
 		//PerfExplorerOutput.println(model.toString() + " finished!");
 		// endRSession();
 	}
@@ -575,8 +580,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return
 	 */
 	public RMIPerfExplorerModel getNextRequest (int connectionIndex) {
-		Queue requestQueue = (Queue)requestQueues.get(connectionIndex);
-		RMIPerfExplorerModel model = requestQueue.peekNext();
+		Queue<RMIPerfExplorerModel> requestQueue = requestQueues.get(connectionIndex);
+		RMIPerfExplorerModel model = requestQueue.peek();
 		return model;
 	}
 
@@ -706,8 +711,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param modelData
 	 * @return List
 	 */
-	public List getXMLFields(RMIPerfExplorerModel modelData) {
-		List chartData = GeneralChartData.getXMLFields(modelData);
+	public List<String> getXMLFields(RMIPerfExplorerModel modelData) {
+		List<String> chartData = GeneralChartData.getXMLFields(modelData);
 		return chartData;
 	}
 
@@ -719,9 +724,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param modelData
 	 * @return List
 	 */
-	public List getPotentialGroups(RMIPerfExplorerModel modelData) {
+	public List<String> getPotentialGroups(RMIPerfExplorerModel modelData) {
 		//PerfExplorerOutput.println("getPotentialGroups()...");
-		List groups = new ArrayList();
+		List<String> groups = new ArrayList<String>();
 		try {
 			DB db = this.getDB();
 			StringBuffer buf;
@@ -801,9 +806,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param modelData
 	 * @return List
 	 */
-	public List getPotentialMetrics(RMIPerfExplorerModel modelData) {
+	public List<String> getPotentialMetrics(RMIPerfExplorerModel modelData) {
 		//PerfExplorerOutput.println("getPotentialMetrics()...");
-		List metrics = new ArrayList();
+		List<String> metrics = new ArrayList<String>();
 		StringBuffer buf = new StringBuffer();
 		try {
 			DB db = this.getDB();
@@ -903,9 +908,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param modelData
 	 * @return List
 	 */
-	public List getPotentialEvents(RMIPerfExplorerModel modelData) {
+	public List<String> getPotentialEvents(RMIPerfExplorerModel modelData) {
 		//PerfExplorerOutput.println("getPotentialEvents()...");
-		List events = new ArrayList();
+		List<String> events = new ArrayList<String>();
 		try {
 			DB db = this.getDB();
 			StringBuffer buf = new StringBuffer();
@@ -990,9 +995,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param modelData
 	 * @return List
 	 */
-	public List getPotentialAtomicEvents(RMIPerfExplorerModel modelData) {
+	public List<String> getPotentialAtomicEvents(RMIPerfExplorerModel modelData) {
 		//PerfExplorerOutput.println("getPotentialEvents()...");
-		List events = new ArrayList();
+		List<String> events = new ArrayList<String>();
 		try {
 			DB db = this.getDB();
 			StringBuffer buf = new StringBuffer();
@@ -1118,9 +1123,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param columnName
 	 * @return List
 	 */
-	public List getPossibleValues (String tableName, String columnName) {
+	public List<String> getPossibleValues (String tableName, String columnName) {
 		//PerfExplorerOutput.println("getPossibleValues()...");
-		List values = new ArrayList();
+		List<String> values = new ArrayList<String>();
 		try {
 			DB db = this.getDB();
 			StringBuffer buf = new StringBuffer("select distinct ");
@@ -1231,12 +1236,12 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param parent
 	 * @return List of views
 	 */
-	public List getViews (int parent) {
+	public List<RMIView> getViews (int parent) {
 		//PerfExplorerOutput.println("getViews()...");
-		List views = new ArrayList();
+		List<RMIView> views = new ArrayList<RMIView>();
 		try {
 			DB db = this.getDB();
-			Iterator names = RMIView.getFieldNames(db);
+			Iterator<String> names = RMIView.getFieldNames(db);
 			if (!names.hasNext()) {
 				// the database is not modified to support views
 				throw new Exception ("The Database is not modified to support views.");
@@ -1285,9 +1290,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	/* (non-Javadoc)
 	 * @see common.RMIPerfExplorer#getTrialsForView(java.util.List)
 	 */
-	public List getTrialsForView (List views) {
+	@SuppressWarnings("unchecked")  // for Trial.getTrialList() call
+	public List<Trial> getTrialsForView (List<RMIView> views) {
 		//PerfExplorerOutput.println("getTrialsForView()...");
-		List trials = new ArrayList();
+		List<Trial> trials = new ArrayList<Trial>();
 		try {
 			DB db = this.getDB();
 			StringBuffer whereClause = new StringBuffer();
@@ -1296,7 +1302,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				if (i > 0) {
 					whereClause.append (" AND ");
 				}
-				RMIView view = (RMIView) views.get(i);
+				RMIView view = views.get(i);
 
 				if (db.getDBType().compareTo("db2") == 0) {
 					whereClause.append(" cast (");
@@ -1504,7 +1510,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			ResultSet results = statement.executeQuery();
 			StringBuffer idString = new StringBuffer();
 			boolean gotOne = false;
-			List goodMethods = new ArrayList();
+			List<String> goodMethods = new ArrayList<String>();
 			while (results.next() != false) {
 				if ((results.getString(2) != null) &&
 					(!(results.getString(2).trim().equalsIgnoreCase("NaN"))) &&
@@ -1531,8 +1537,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 
 				// populate it
 				statement = db.prepareStatement("insert into SESSION.working_table (id) values (?)");
-				for (Iterator i = goodMethods.iterator() ; i.hasNext() ; ) {
-					int next = Integer.parseInt((String)i.next());
+				for (Iterator<String> i = goodMethods.iterator() ; i.hasNext() ; ) {
+					int next = Integer.parseInt(i.next());
 					statement.setInt(1, next);
 					statement.execute();
 				}
@@ -1577,7 +1583,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			int count = 0;
 			int ids[] = new int[4];
 			String names[] = new String[4];
-			HashMap nameIndex = new HashMap();
+			HashMap<String, Integer> nameIndex = new HashMap<String, Integer>();
 			while (results.next() != false && count < 4) {
 				ids[count]= results.getInt(1);
 				names[count] = results.getString(2);
@@ -1636,7 +1642,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					context = results.getInt(2);
 					thread = results.getInt(3);
 				}
-				values[((Integer)nameIndex.get(results.getString(4))).intValue()] = results.getFloat(5);
+				values[nameIndex.get(results.getString(4)).intValue()] = results.getFloat(5);
 			}
 			data.addValues(values);
 			results.close();
@@ -1655,11 +1661,11 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		return session.db().getConnectString();
 	}
 	
-	public List getConnectionStrings() {
+	public List<String> getConnectionStrings() {
 		return this.sessionStrings;
 	}
 	
-	public List getConfigNames() {
+	public List<String> getConfigNames() {
 		return this.configNames;
 	}
 	
@@ -1670,14 +1676,15 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param trialID
 	 * @return List of PerfDMF IntervalEvent objects.
 	 */
-	public List<IntervalEvent> getEventList(int trialID, int metricIndex) {
+	@SuppressWarnings("unchecked")
+	public List<RMISortableIntervalEvent> getEventList(int trialID, int metricIndex) {
 		try {
 			this.session.setTrial(trialID);
 		} catch (DatabaseException e) {}
-		List events = this.session.getIntervalEvents();
-		List sortedEvents = new ArrayList();
-		for (Iterator i = events.iterator() ; i.hasNext() ; ) {
-			IntervalEvent e = (IntervalEvent)i.next();
+		List<IntervalEvent> events = this.session.getIntervalEvents();
+		List<RMISortableIntervalEvent> sortedEvents = new ArrayList<RMISortableIntervalEvent>();
+		for (Iterator<IntervalEvent> i = events.iterator() ; i.hasNext() ; ) {
+			IntervalEvent e = i.next();
 			sortedEvents.add(new RMISortableIntervalEvent(e, this.session, metricIndex));
 		}
 		Collections.sort(sortedEvents);
@@ -1692,7 +1699,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 *		  criteria for selecting the trial
 	 * @return List of PerfDMF Trial objects.
 	 */
-	public List getTrialList(String criteria) {
+	public List<Trial> getTrialList(String criteria) {
 		return QueryManager.getTrialList(criteria);
 	}
 
@@ -1704,9 +1711,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 *		  criteria for selecting the trial
 	 * @return List of PerfDMF Trial objects.
 	 */
-	public List getChartFieldNames() {
+	public List<String> getChartFieldNames() {
 		DB db = this.getDB();
-		List list = new ArrayList();
+		List<String> list = new ArrayList<String>();
 		list.add ("application.id");
 		list.add ("application.name");
 		if (db != null) {
@@ -1862,7 +1869,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	}
 
 	public void setConnectionIndex(int connectionIndex) throws RemoteException {
-		this.session = (DatabaseAPI)this.sessions.get(connectionIndex);		
+		this.session = this.sessions.get(connectionIndex);		
 		//PerfExplorerOutput.println("Switching to " + this.session.db().getConnectString() + ".");
 	}
 

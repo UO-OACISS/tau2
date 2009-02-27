@@ -226,9 +226,10 @@ public class TestHarness {
 	private Metric setMetric(Trial trial, String name) {
 		Metric metric = null;
 		System.out.println("******** Metrics *********");
-		Vector metrics = trial.getMetrics();
+		@SuppressWarnings("unchecked")
+		Vector<Metric> metrics = trial.getMetrics();
 		for (int i = 0 ; i < metrics.size() ; i++) {
-			metric = (Metric)metrics.elementAt(i);
+			metric = metrics.elementAt(i);
 			System.out.println("\t" + metric.getName());
 			if (metric.getName().equalsIgnoreCase(name)) {
 				break;
@@ -344,7 +345,7 @@ public class TestHarness {
             Trial trial = null;
             while(trials.hasNext())
             {
-                trial = (Trial) trials.next();
+                trial = trials.next();
 				System.out.println("TRIAL: " + trial.getName());
             }
         }

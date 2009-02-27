@@ -42,7 +42,7 @@ import java.io.InputStream;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.31 2009/02/24 00:53:45 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.32 2009/02/27 00:45:10 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -800,12 +800,12 @@ public class GeneralChartData extends RMIGeneralChartData {
 		return outString;
 	}
 
-	public static List getXMLFields (RMIPerfExplorerModel model) {
+	public static List<String> getXMLFields (RMIPerfExplorerModel model) {
 		// declare the statement here, so we can reference it in the catch
 		// region, if necessary
 		StringBuffer buf = null;
 		PreparedStatement statement = null;
-		HashSet set = new HashSet();
+		HashSet<String> set = new HashSet<String>();
 		DB db = null;
 		try {
 			db = PerfExplorerServer.getServer().getDB();
@@ -826,7 +826,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 			}
 			if (!foundXML) {
 				// return an empty list
-				return new ArrayList();
+				return new ArrayList<String>();
 			}
 	////////////////////////////////
 
@@ -1036,7 +1036,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 			dropTable(db, "temp_trial");
 		}
 
-		List list = new ArrayList(set);
+		List<String> list = new ArrayList<String>(set);
 		Collections.sort(list, String.CASE_INSENSITIVE_ORDER);
 		return list;
 	}

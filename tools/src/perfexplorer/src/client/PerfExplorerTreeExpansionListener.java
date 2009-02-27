@@ -63,9 +63,10 @@ public class PerfExplorerTreeExpansionListener implements TreeExpansionListener,
 				object = pNode.getUserObject();
 				Trial trial = (Trial)object;
 				// find the metric index
-				List metrics = trial.getMetrics();
+				@SuppressWarnings("unchecked") // for trial.getMetrics() call
+				List<Metric> metrics = trial.getMetrics();
 				for (int i = 0; i < metrics.size() ; i++) {
-					Metric m = (Metric)metrics.get(i);
+					Metric m = metrics.get(i);
 					if (m.getID() == metric.getID()) {
 						PerfExplorerJTree.addEventNodes (node, trial, i);
 						break;

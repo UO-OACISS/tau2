@@ -29,6 +29,7 @@ import  weka.core.*;
 import  weka.filters.Filter;
 import  weka.filters.unsupervised.attribute.ReplaceMissingValues;
 import weka.classifiers.rules.DecisionTable;
+import weka.classifiers.rules.DecisionTable.hashKey;
 
 /**
  * Simple k means clustering class.
@@ -43,7 +44,7 @@ import weka.classifiers.rules.DecisionTable;
  *
  * @author Mark Hall (mhall@cs.waikato.ac.nz)
  * @author Eibe Frank (eibe@cs.waikato.ac.nz)
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  * @see Clusterer
  * @see OptionHandler
  */
@@ -167,7 +168,7 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
     
     Random RandomO = new Random(m_Seed);
     int instIndex;
-    HashMap initC = new HashMap();
+    HashMap<DecisionTable.hashKey,Object> initC = new HashMap<DecisionTable.hashKey,Object>();
     DecisionTable.hashKey hk = null;
 
     int centerIndex = 0;
@@ -468,8 +469,8 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
    * @return an enumeration of all the available options.
    *
    **/
-  public Enumeration listOptions () {
-    Vector newVector = new Vector(2);
+  public Enumeration<Option> listOptions () {
+    Vector<Option> newVector = new Vector<Option>(2);
 
      newVector.addElement(new Option("\tnumber of clusters. (default = 2)." 
                                     , "N", 1, "-N <num>"));

@@ -29,7 +29,7 @@
  * Original Author:  David Gilbert (for Object Refinery Limited);
  * Contributor(s):   -;
  *
- * $Id: PECategoryDataset.java,v 1.3 2009/02/26 00:41:17 wspear Exp $
+ * $Id: PECategoryDataset.java,v 1.4 2009/02/27 00:45:07 khuck Exp $
  *
  * Changes
  * -------
@@ -53,6 +53,7 @@ import org.jfree.data.general.DatasetChangeEvent;
 /**
  * A default implementation of the {@link CategoryDataset} interface.
  */
+@SuppressWarnings("unchecked")  // because JFreeChart doesn't use generics!
 public class PECategoryDataset extends AbstractDataset
                                     implements CategoryDataset, Serializable {
 

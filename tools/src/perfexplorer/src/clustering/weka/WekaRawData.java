@@ -22,7 +22,7 @@ import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 /**
  * Implementation of the RawData interface for Weka data.
  *
- * <P>CVS $Id: WekaRawData.java,v 1.12 2009/02/24 00:53:36 khuck Exp $</P>
+ * <P>CVS $Id: WekaRawData.java,v 1.13 2009/02/27 00:45:08 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -43,12 +43,12 @@ public class WekaRawData implements RawDataInterface, Serializable {
      * @param vectors
      * @param dimensions
      */
-	WekaRawData (String name, List attributes, int vectors, int dimensions, List<String> classAttributes) {
+	WekaRawData (String name, List<String> attributes, int vectors, int dimensions, List<String> classAttributes) {
 		this.vectors = vectors;
 		this.dimensions = dimensions;
 		FastVector fastAttributes = new FastVector(attributes.size());
 		for (int i = 0 ; i < attributes.size() ; i++) {
-			String attr = (String) attributes.get(i);
+			String attr = attributes.get(i);
 			fastAttributes.addElement(new Attribute(attr));
 		}
 		Attribute tmp = null;
@@ -164,9 +164,9 @@ public class WekaRawData implements RawDataInterface, Serializable {
 	/* (non-Javadoc)
 	 * @see clustering.RawDataInterface#getEventNames()
 	 */
-	public List getEventNames() {
+	public List<String> getEventNames() {
 		Enumeration e = instances.enumerateAttributes();
-		List names = new ArrayList (instances.numDistinctValues(0));
+		List<String> names = new ArrayList<String> (instances.numDistinctValues(0));
 		while (e.hasMoreElements()) {
 			Attribute tmp = (Attribute) e.nextElement();
 			names.add(tmp.name());

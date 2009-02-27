@@ -10,6 +10,7 @@ import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerClient;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerModel;
 import edu.uoregon.tau.perfexplorer.common.EngineType;
+import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
 import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 import java.util.ArrayList;
@@ -172,8 +173,8 @@ public class Utilities {
 		return someMap;
 	} 
 	
-	public static List<IntervalEvent> getEventsForTrial(Trial trial, int metricIndex) {
-		List<IntervalEvent> events = null;
+	public static List<RMISortableIntervalEvent> getEventsForTrial(Trial trial, int metricIndex) {
+		List<RMISortableIntervalEvent> events = null;
         PerfExplorerServer server = getServer();
         events = server.getEventList(trial.getID(), metricIndex);
 		return events;

@@ -22,7 +22,7 @@ import edu.uoregon.tau.perfexplorer.common.RMICubeData;
  * should never be directly created - use the static method in the
  * AnalysisFactory class.
  *
- * <P>CVS $Id: WekaAnalysisFactory.java,v 1.9 2009/02/24 00:53:36 khuck Exp $</P>
+ * <P>CVS $Id: WekaAnalysisFactory.java,v 1.10 2009/02/27 00:45:08 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -33,7 +33,7 @@ public class WekaAnalysisFactory extends AnalysisFactory {
 	/* (non-Javadoc)
 	 * @see clustering.AnalysisFactory#createRawData(java.lang.String, java.util.List, int, int)
 	 */
-	public RawDataInterface createRawData(String name, List attributes,
+	public RawDataInterface createRawData(String name, List<String> attributes,
 			int vectors, int dimensions, List<String> classAttributes) {
 		return new WekaRawData(name, attributes, vectors, dimensions, classAttributes);
 	}

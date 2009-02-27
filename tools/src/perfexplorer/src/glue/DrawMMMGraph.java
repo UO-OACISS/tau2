@@ -87,18 +87,26 @@ public class DrawMMMGraph extends DrawGraph {
 	        	events = this._events;
 	        }
 
+	        if (this._metrics == null) {
+	        	metrics = input.getMetrics();
+	        } else {
+	        	metrics = this._metrics;
+	        }
+
 			// sort the events alphanumerically?
 			if (sortXAxis) {
        			if (categoryType == TRIALNAME) {
 					// do nothing
        			} else if (categoryType == EVENTNAME) {
-   					Set<String> tmpSet = new TreeSet(new AlphanumComparator());
+       				@SuppressWarnings("unchecked")
+   					Set<String> tmpSet = new TreeSet<String>(new AlphanumComparator());
 					for (String event : events) {
 						tmpSet.add(event);
 					}
 					events = tmpSet;
        			} else if (categoryType == METRICNAME) {
-   					Set<String> tmpSet = new TreeSet(new AlphanumComparator());
+       				@SuppressWarnings("unchecked")
+   					Set<String> tmpSet = new TreeSet<String>(new AlphanumComparator());
 					for (String metric : metrics) {
 						tmpSet.add(metric);
 					}
@@ -123,7 +131,6 @@ public class DrawMMMGraph extends DrawGraph {
 	        String seriesName = "";
 	        String categoryName = "";
 	            
-	        int i = 0;
 	        for (String event : events) {
 	        	for (String metric : metrics) {
 	        		for (Integer thread : threads) {

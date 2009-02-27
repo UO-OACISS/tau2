@@ -15,7 +15,7 @@ import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
   * Implementation of the DataNormalizer interface for Weka data.
   * TODO - make this class immutable?
   *
-  * <P>CVS $Id: WekaDataNormalizer.java,v 1.4 2009/02/24 00:53:36 khuck Exp $</P>
+  * <P>CVS $Id: WekaDataNormalizer.java,v 1.5 2009/02/27 00:45:08 khuck Exp $</P>
   * @author khuck
   * @version 0.2
   * @since   0.2
@@ -34,7 +34,7 @@ public class WekaDataNormalizer implements DataNormalizer {
         // get the
         int dimensions = inputData.numDimensions();
         int vectors = inputData.numVectors();
-        List eventNames = inputData.getEventNames();
+        List<String> eventNames = inputData.getEventNames();
         String name = inputData.getName();
 
         // calcuate the ranges

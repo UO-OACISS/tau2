@@ -24,7 +24,7 @@ import weka.attributeSelection.PrincipalComponents;
  * TODO - make this class immutable?
  * 
  * @author khuck
- * <P>CVS $Id: WekaPrincipalComponents.java,v 1.9 2009/02/24 00:53:36 khuck Exp $</P>
+ * <P>CVS $Id: WekaPrincipalComponents.java,v 1.10 2009/02/27 00:45:08 khuck Exp $</P>
  * @version 0.1
  * @since   0.1
  */
@@ -95,7 +95,7 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 			}
 		} else {
 			// this code is for performing correlation analysis on two components.
-			ArrayList names = new ArrayList();
+			ArrayList<String> names = new ArrayList<String>();
 			for (int i = 0 ; i < maxComponents ; i++) {
 				names.add(cubeData.getNames()[i]);
 			}

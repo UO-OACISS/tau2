@@ -29,7 +29,7 @@
  * Original Author:  David Gilbert (for Object Refinery Limited);
  * Contributor(s):   Andreas Schroeder;
  *
- * $Id: PEKeyedValues2D.java,v 1.2 2009/02/24 00:53:32 khuck Exp $
+ * $Id: PEKeyedValues2D.java,v 1.3 2009/02/27 00:45:07 khuck Exp $
  *
  * Changes
  * -------
@@ -56,10 +56,11 @@ import java.util.List;
  * A data structure that stores zero, one or many values, where each value is associated with
  * two keys (a 'row' key and a 'column' key).
  */
+@SuppressWarnings("unchecked")  // because JFreeChart doesn't use generics!
 public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
 
     /** The row keys. */
-    private List rowKeys;
+	private List rowKeys;
 
     /** The column keys. */
     private List columnKeys;

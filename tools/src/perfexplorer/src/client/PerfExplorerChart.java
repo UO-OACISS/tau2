@@ -151,7 +151,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		double ideal, ratio = 0;
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
 			List<double[]> row = rawData.getRowData(y);
-        	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
+        	XYSeries s = new XYSeries(shortName(rowLabels.get(y)), true, false);
 				double[] baseline = (row.get(0));
 				for (int x = 0 ; x < row.size() ; x++) {
 					double[] values = (row.get(x));
@@ -187,6 +187,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 	 * the x-axis, and some measurement on the y-axis.
 	 *
 	 */
+	@SuppressWarnings("unchecked")  // because of calls to JFreeChart which doesn't use generics
 	public static PerfExplorerChart doGeneralChart () {
 		// get the server
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
@@ -230,7 +231,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 				// create an "ideal" line.
 				List<Integer> keys = dataset.getColumnKeys();
 				for (int i = 0 ; i < keys.size() ; i++) {
-					Integer key = (Integer)keys.get(i);
+					Integer key = keys.get(i);
         			dataset.addValue(key.doubleValue()/rawData.getMinimum(), "Ideal", key);
 				}
 
@@ -513,15 +514,15 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			ChartDataType.RELATIVE_EFFICIENCY_ONE_EVENT);
 
         XYSeriesCollection dataset = new XYSeriesCollection();
-		List rowLabels = rawData.getRowLabels();
+		List<String> rowLabels = rawData.getRowLabels();
 		double minx = 99999, maxx = 0;
 		double ideal = 0, ratio = 0, efficiency = 0;
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
-			List row = rawData.getRowData(y);
-        	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
-			double[] baseline = (double[])(row.get(0));
+			List<double[]> row = rawData.getRowData(y);
+        	XYSeries s = new XYSeries(shortName(rowLabels.get(y)), true, false);
+			double[] baseline = (row.get(0));
 			for (int x = 0 ; x < row.size() ; x++) {
-				double[] values = (double[])(row.get(x));
+				double[] values = (row.get(x));
 				ratio = baseline[0]/values[0];
 				if (PerfExplorerModel.getModel().getConstantProblem().booleanValue())
 					ideal = baseline[1] * ratio;
@@ -568,12 +569,12 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 
 		int timesteps = Integer.parseInt(PerfExplorerModel.getModel().getTotalTimesteps());
         XYSeriesCollection dataset = new XYSeriesCollection();
-		List rowLabels = rawData.getRowLabels();
+		List<String> rowLabels = rawData.getRowLabels();
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
-			List row = rawData.getRowData(y);
-        	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
+			List<double[]> row = rawData.getRowData(y);
+        	XYSeries s = new XYSeries(shortName(rowLabels.get(y)), true, false);
 			for (int x = 0 ; x < row.size() ; x++) {
-				double[] values = (double[])(row.get(x));
+				double[] values = (row.get(x));
         		s.add(values[0], timesteps/values[1]);
 			}
         	dataset.addSeries(s);
@@ -606,9 +607,9 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		int decreasing = 0, total = 0;
 		double lastValue = 0.0;
         XYSeriesCollection dataset = new XYSeriesCollection();
-		List rowLabels = rawData.getRowLabels();
+		List<String> rowLabels = rawData.getRowLabels();
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
-			List row = rawData.getRowData(y);
+			List<double[]> row = rawData.getRowData(y);
         	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
 			total = total + row.size();
 			for (int x = 0 ; x < row.size() ; x++) {
@@ -662,10 +663,10 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			ChartDataType.RELATIVE_EFFICIENCY);
 
         XYSeriesCollection dataset = new XYSeriesCollection();
-		List rowLabels = rawData1.getRowLabels();
+		List<String> rowLabels = rawData1.getRowLabels();
 		for (int y = 0 ; y < rawData1.getRows() ; y++) {
-			List row1 = rawData1.getRowData(y);
-			List row2 = rawData2.getRowData(y);
+			List<double[]> row1 = rawData1.getRowData(y);
+			List<double[]> row2 = rawData2.getRowData(y);
         	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
 			for (int x = 0 ; x < row1.size() ; x++) {
 				double[] values1 = (double[])(row1.get(x));
@@ -701,10 +702,10 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			ChartDataType.RELATIVE_EFFICIENCY_PHASES);
 
         XYSeriesCollection dataset = new XYSeriesCollection();
-		List rowLabels = rawData.getRowLabels();
+		List<String> rowLabels = rawData.getRowLabels();
 		double ideal, ratio = 0;
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
-			List row = rawData.getRowData(y);
+			List<double[]> row = rawData.getRowData(y);
         	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
 			double[] baseline = (double[])(row.get(0));
 			for (int x = 0 ; x < row.size() ; x++) {
@@ -741,11 +742,11 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			ChartDataType.RELATIVE_EFFICIENCY_PHASES);
 
         XYSeriesCollection dataset = new XYSeriesCollection();
-		List rowLabels = rawData.getRowLabels();
+		List<String> rowLabels = rawData.getRowLabels();
 		double minx = 99999, maxx = 0;
 		double ideal, ratio, efficiency = 0;
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
-			List row = rawData.getRowData(y);
+			List<double[]> row = rawData.getRowData(y);
         	XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
 			double[] baseline = (double[])(row.get(0));
 			for (int x = 0 ; x < row.size() ; x++) {
@@ -792,9 +793,9 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			ChartDataType.FRACTION_OF_TOTAL_PHASES);
 
         DefaultTableXYDataset dataset = new DefaultTableXYDataset();
-		List rowLabels = rawData.getRowLabels();
+		List<String> rowLabels = rawData.getRowLabels();
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
-			List row = rawData.getRowData(y);
+			List<double[]> row = rawData.getRowData(y);
 			XYSeries s = new XYSeries(shortName((String)rowLabels.get(y)), true, false);
 			for (int x = 0 ; x < row.size() ; x++) {
 				double[] values = (double[])(row.get(x));

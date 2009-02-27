@@ -9,7 +9,7 @@ import java.util.ArrayList;
  * results from either correlation or some other type of background
  * analysis.
  *
- * <P>CVS $Id: RMIVarianceData.java,v 1.3 2009/02/24 00:53:37 khuck Exp $</P>
+ * <P>CVS $Id: RMIVarianceData.java,v 1.4 2009/02/27 00:45:09 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -17,14 +17,14 @@ import java.util.ArrayList;
  */
 public class RMIVarianceData implements Serializable {
 	
-	private List /*Strings*/ eventNames = null;
-	private List /*Strings*/ valueNames = null;
-	private List /*double[]*/ values = null;
+	private List<String> eventNames = null;
+	private List<String> valueNames = null;
+	private List<double[]> values = null;
 	
 	public RMIVarianceData() {
-		this.eventNames = new ArrayList();
-		this.valueNames = new ArrayList();
-		this.values = new ArrayList();
+		this.eventNames = new ArrayList<String>();
+		this.valueNames = new ArrayList<String>();
+		this.values = new ArrayList<double[]>();
 	}
 	
 	public void addEventName(String name) {
@@ -40,15 +40,15 @@ public class RMIVarianceData implements Serializable {
 	}
 	
 	public String getEventName(int index) {
-		return (String)eventNames.get(index);
+		return eventNames.get(index);
 	}
 
 	public String getValueName(int index) {
-		return (String)valueNames.get(index);
+		return valueNames.get(index);
 	}
 
 	public double[] getValues(int index) {
-		return (double[])values.get(index);
+		return values.get(index);
 	}
 	
 	public int getEventCount() {
@@ -74,7 +74,7 @@ public class RMIVarianceData implements Serializable {
 		Object[][] matrix = new Object[eventNames.size()][valueNames.size() + 1];
 		for (int i = 0 ; i < eventNames.size() ; i++) {
 			matrix[i][0] = eventNames.get(i);
-			double[] tmpValues = (double[])this.values.get(i);
+			double[] tmpValues = this.values.get(i);
 			for (int j = 0 ; j < tmpValues.length ; j++) {
 				matrix[i][j+1] = new Double(tmpValues[j]);
 			}

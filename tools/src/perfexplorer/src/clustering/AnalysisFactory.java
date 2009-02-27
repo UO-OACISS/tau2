@@ -18,7 +18,7 @@ import edu.uoregon.tau.perfexplorer.common.RMICubeData;
   * method to construct the desired factory.  All other methods are implemented
   * by the specific factory classes.
   *
-  * <P>CVS $Id: AnalysisFactory.java,v 1.10 2009/02/24 00:53:34 khuck Exp $</P>
+  * <P>CVS $Id: AnalysisFactory.java,v 1.11 2009/02/27 00:45:08 khuck Exp $</P>
   * @author  Kevin Huck
   * @version 0.1
   * @since   0.1
@@ -75,7 +75,7 @@ public abstract class AnalysisFactory {
      * @return 
      */
     public abstract RawDataInterface createRawData(String name, 
-        List attributes, int vectors, int dimensions, List<String> classAttributes);
+        List<String> attributes, int vectors, int dimensions, List<String> classAttributes);
     
     /**
      * Method to create the KMeansClusterInterface.

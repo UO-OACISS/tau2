@@ -66,7 +66,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 	private JToggleButton horizontal = new JToggleButton ("Horizontal");
 	private JToggleButton showZero = new JToggleButton ("Show Y-Axis Zero");
 
-	private List<Object> tableColumns = null;
+	private List<String> tableColumns = null;
 	private JLabel titleLabel = new JLabel("Chart Title:");
 	private JTextField chartTitle = new MyJTextField(5);
 	private JLabel seriesLabel = new JLabel("Series Name/Value:");
@@ -167,7 +167,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		//this.xmlValue.setEnabled(false);
 
 		// series name 
-		for (Iterator<Object> itr = tableColumns.iterator() ; itr.hasNext() ; ) {
+		for (Iterator<String> itr = tableColumns.iterator() ; itr.hasNext() ; ) {
 			Object o = itr.next();
 			String tmp = (String)o;
 			if (tmp.equalsIgnoreCase("experiment.name")) {
@@ -240,7 +240,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 					this.eventLabel.setText("Group:");
 					this.event.setSelectedIndex(0);
 					for (Iterator<String> itr = events.iterator() ; itr.hasNext() ; ) {
-						String next = (String)itr.next();
+						String next = itr.next();
 						this.event.addItem(next);
 						if (oldEvent.equals(next))
 							this.event.setSelectedItem(next);
@@ -383,7 +383,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 
 		// series name
 		left.add(seriesLabel);
-		series = new MyJComboBox(tableColumns);
+		series = new MyJComboBox(tableColumns.toArray());
 		series.addItem(INTERVAL_EVENT_NAME);
 		series.addItem(INTERVAL_EVENT_GROUP_NAME);
 		series.addItem(ATOMIC_EVENT_NAME);
@@ -392,7 +392,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 
 		// x axis value
 		left.add(xaxisValueLabel);
-		xaxisValue = new MyJComboBox(tableColumns);
+		xaxisValue = new MyJComboBox(tableColumns.toArray());
 		xaxisValue.addActionListener(this);
 		this.xaxisValue.addActionListener(this);
 		left.add(xaxisValue);
@@ -814,9 +814,10 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 				}
 
 				// create an "ideal" line.
-				List keys = dataset.getColumnKeys();
+				@SuppressWarnings("unchecked")
+				List<Integer> keys = dataset.getColumnKeys();
 				for (int i = 0 ; i < keys.size() ; i++) {
-					Integer key = (Integer)keys.get(i);
+					Integer key = keys.get(i);
         			dataset.addValue(key.doubleValue()/rawData.getMinimum(), "Ideal", key);
 				}
 
@@ -853,6 +854,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 				}
 
 				// create an "ideal" line.
+				@SuppressWarnings("unchecked")
 				List keys = dataset.getColumnKeys();
 				for (int i = 0 ; i < keys.size() ; i++) {
 					Integer key = (Integer)keys.get(i);
@@ -1059,25 +1061,29 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 				 */
 				private static final long serialVersionUID = -992135884016287671L;
 
-				public void show() {
-        			Dimension popupSize = ((SteppedComboBox)comboBox).getPopupSize();
-        			popupSize.setSize( popupSize.width,
-          				getPopupHeightForRowCount( comboBox.getMaximumRowCount() ) );
-        			Rectangle popupBounds = computePopupBounds( 0,
-          				comboBox.getBounds().height, popupSize.width, popupSize.height);
-        			scroller.setMaximumSize( popupBounds.getSize() );
-        			scroller.setPreferredSize( popupBounds.getSize() );
-        			scroller.setMinimumSize( popupBounds.getSize() );
-        			list.invalidate();            
-        			int selectedIndex = comboBox.getSelectedIndex();
-        			if ( selectedIndex == -1 ) {
-          				list.clearSelection();
-        			} else {
-          				list.setSelectedIndex( selectedIndex );
-        			}            
-        			list.ensureIndexIsVisible( list.getSelectedIndex() );
-        			setLightWeightPopupEnabled( comboBox.isLightWeightPopupEnabled() );
-        			show( comboBox, popupBounds.x, popupBounds.y );
+				public void setVisible(boolean showIt) {
+					if (showIt) {
+	        			Dimension popupSize = ((SteppedComboBox)comboBox).getPopupSize();
+	        			popupSize.setSize( popupSize.width,
+	          				getPopupHeightForRowCount( comboBox.getMaximumRowCount() ) );
+	        			Rectangle popupBounds = computePopupBounds( 0,
+	          				comboBox.getBounds().height, popupSize.width, popupSize.height);
+	        			scroller.setMaximumSize( popupBounds.getSize() );
+	        			scroller.setPreferredSize( popupBounds.getSize() );
+	        			scroller.setMinimumSize( popupBounds.getSize() );
+	        			list.invalidate();            
+	        			int selectedIndex = comboBox.getSelectedIndex();
+	        			if ( selectedIndex == -1 ) {
+	          				list.clearSelection();
+	        			} else {
+	          				list.setSelectedIndex( selectedIndex );
+	        			}            
+	        			list.ensureIndexIsVisible( list.getSelectedIndex() );
+	        			setLightWeightPopupEnabled( comboBox.isLightWeightPopupEnabled() );
+	        			show( comboBox, popupBounds.x, popupBounds.y );
+					} else {
+						super.setVisible(false);
+					}
       			}
     		};
     		popup.getAccessibleContext().setAccessibleParent(comboBox);

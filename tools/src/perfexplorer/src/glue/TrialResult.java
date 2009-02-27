@@ -11,13 +11,14 @@ import java.util.List;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.database.DB;
+import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
 import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 /**
  * This class is an implementation of the AbstractResult class, and loads a trial
  * from the database into a result object.
  * 
- * <P>CVS $Id: TrialResult.java,v 1.9 2009/02/24 00:53:40 khuck Exp $</P>
+ * <P>CVS $Id: TrialResult.java,v 1.10 2009/02/27 00:45:09 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 
@@ -183,7 +184,7 @@ public class TrialResult extends AbstractResult {
 	public String getEventGroupName(String eventName) {
 		String group = null;
 		// find the event in the trial
-		List<IntervalEvent> events = Utilities.getEventsForTrial(trial, 0);
+		List<RMISortableIntervalEvent> events = Utilities.getEventsForTrial(trial, 0);
 		for (IntervalEvent event : events) {
 			if (event.getName().equals(eventName)) {
 				group = event.getGroup();

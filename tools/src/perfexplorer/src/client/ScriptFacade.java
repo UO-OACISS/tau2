@@ -13,6 +13,7 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 import edu.uoregon.tau.perfexplorer.common.AnalysisType;
 import edu.uoregon.tau.perfexplorer.common.EngineType;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
+import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
 import edu.uoregon.tau.perfexplorer.common.RMIVarianceData;
 import edu.uoregon.tau.perfexplorer.common.TransformationType;
 
@@ -148,7 +149,8 @@ public class ScriptFacade {
 	 * 
 	 * @param name
 	 */
-    public void setMetric(String name) {
+    @SuppressWarnings("unchecked") // for getMetrics() call
+	public void setMetric(String name) {
         // check the argument
         if (name == null)
             throw new IllegalArgumentException("Metric name cannot be null.");
@@ -512,7 +514,7 @@ public class ScriptFacade {
 		return connection.getTrialList(model.getExperiment().getID());
 	}
 
-	public ListIterator<IntervalEvent> getEventList(Trial trial, int metricIndex) {
+	public ListIterator<RMISortableIntervalEvent> getEventList(Trial trial, int metricIndex) {
 		return connection.getEventList(trial.getID(), metricIndex);
 	}
 	

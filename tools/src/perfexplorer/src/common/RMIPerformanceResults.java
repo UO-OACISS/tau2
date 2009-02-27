@@ -2,6 +2,7 @@ package edu.uoregon.tau.perfexplorer.common;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.io.File;
 import java.io.Serializable;
 
 /**
@@ -9,84 +10,84 @@ import java.io.Serializable;
  * results from either cluster or some other type of background
  * analysis.
  *
- * <P>CVS $Id: RMIPerformanceResults.java,v 1.2 2009/02/24 00:53:37 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerformanceResults.java,v 1.3 2009/02/27 00:45:09 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
  *
  */
 public class RMIPerformanceResults implements Serializable {
-	protected List images = null;  // of File objects
-	protected List thumbnails = null;  // of File objects
-	protected List ids = null; // of Strings
-	protected List ks = null; // of Strings
-	protected List descriptions = null;  // of String objects
-	protected List clusterCentroids = null; // of Lists of Centroids
-	protected List clusterDeviations = null; // of Lists of Deviations
+	protected List<byte[]> images = null;  // of File objects
+	protected List<byte[]> thumbnails = null;  // of File objects
+	protected List<String> ids = null; // of Strings
+	protected List<String> ks = null; // of Strings
+	protected List<String> descriptions = null;  // of String objects
+	protected List<String> clusterCentroids = null; // of Lists of Centroids
+	protected List<String> clusterDeviations = null; // of Lists of Deviations
 
 	public RMIPerformanceResults () {
-		images = new ArrayList();
-		thumbnails = new ArrayList();
-		ids = new ArrayList();
-		ks = new ArrayList();
-		descriptions = new ArrayList();
-		clusterCentroids = new ArrayList();
-		clusterDeviations = new ArrayList();
+		images = new ArrayList<byte[]>();
+		thumbnails = new ArrayList<byte[]>();
+		ids = new ArrayList<String>();
+		ks = new ArrayList<String>();
+		descriptions = new ArrayList<String>();
+		clusterCentroids = new ArrayList<String>();
+		clusterDeviations = new ArrayList<String>();
 	}
 
-	public List getImages() {
+	public List<byte[]> getImages() {
 		return images;
 	}
 
-	public List getThumbnails() {
+	public List<byte[]> getThumbnails() {
 		return thumbnails;
 	}
 
-	public List getDescriptions() {
+	public List<String> getDescriptions() {
 		return descriptions;
 	}
 
-	public List getIDs() {
+	public List<String> getIDs() {
 		return ids;
 	}
 
-	public List getKs() {
+	public List<String> getKs() {
 		return ks;
 	}
 
-	public List getClusterCentroids() {
+	public List<String> getClusterCentroids() {
 		return clusterCentroids;
 	}
 
-	public List getClusterDeviations() {
+	public List<String> getClusterDeviations() {
 		return clusterDeviations;
 	}
 
-	public void setImages(List images) {
+	public void setImages(List<byte[]> images) {
 		this.images = images;
 	}
 
-	public void setThumbnails(List thumbnails) {
+	public void setThumbnails(List<byte[]> thumbnails) {
 		this.thumbnails = thumbnails;
 	}
 
-	public void setClusterCentroids(List clusterCentroids) {
+	public void setClusterCentroids(List<String> clusterCentroids) {
 		this.clusterCentroids = clusterCentroids;
 	}
 
-	public void setClusterDeviations(List clusterDeviations) {
+	public void setClusterDeviations(List<String> clusterDeviations) {
 		this.clusterDeviations = clusterDeviations;
 	}
 
-	public void setDescriptions(List descriptions) {
+	public void setDescriptions(List<String> descriptions) {
 		this.descriptions = descriptions;
 	}
 
-	public void setIDs(List ids) {
+	public void setIDs(List<String> ids) {
 		this.ids = ids;
 	}
 
-	public void setKs(List ks) {
+	public void setKs(List<String> ks) {
 		this.ks = ks;
 	}
 

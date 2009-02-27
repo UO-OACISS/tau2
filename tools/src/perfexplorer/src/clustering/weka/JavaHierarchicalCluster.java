@@ -24,7 +24,7 @@ import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 public class JavaHierarchicalCluster implements HierarchicalCluster {
 	
 	private DistanceMatrix distances = null;
-	private LinkedHashSet remainingIndices = null;
+	private LinkedHashSet<Integer> remainingIndices = null;
 	private DendrogramTree[] trees = null;
 
 	/**
@@ -46,7 +46,7 @@ public class JavaHierarchicalCluster implements HierarchicalCluster {
 		int dimension = distances.getDimension();
 		
 		// create a set of the remaining indices
-		remainingIndices = new LinkedHashSet(dimension);
+		remainingIndices = new LinkedHashSet<Integer>(dimension);
 		// create an initial array of leaf trees
 		trees = new DendrogramTree[dimension];
 		
@@ -117,7 +117,7 @@ public class JavaHierarchicalCluster implements HierarchicalCluster {
 		int dimensions = 3;
 		
 		// generate some raw data
-		List attrs = new ArrayList(vectors);
+		List<String> attrs = new ArrayList<String>(vectors);
 		attrs.add("x");
 		attrs.add("y");
 		attrs.add("z");

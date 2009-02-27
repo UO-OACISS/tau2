@@ -20,7 +20,7 @@ public class PerformanceExplorerPane extends JScrollPane implements ActionListen
 	private static PerformanceExplorerPane thePane = null;
 
 	private JPanel imagePanel = null;
-	private Hashtable resultsHash = null;
+	private Hashtable<String, RMIPerformanceResults> resultsHash = null;
 	private RMIPerformanceResults results = null;
 	private static final int imagesPerRow = 6;
 
@@ -37,7 +37,7 @@ public class PerformanceExplorerPane extends JScrollPane implements ActionListen
 	private PerformanceExplorerPane (JPanel imagePanel) {
 		super(imagePanel);
 		this.imagePanel = imagePanel;
-		this.resultsHash = new Hashtable();
+		this.resultsHash = new Hashtable<String, RMIPerformanceResults>();
 		JScrollBar jScrollBar = this.getVerticalScrollBar();
 		jScrollBar.setUnitIncrement(35);
 	}

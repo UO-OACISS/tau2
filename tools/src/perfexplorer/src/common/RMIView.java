@@ -17,7 +17,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
  * This class is the RMI class which contains the tree of views to be 
  * constructed in the PerfExplorerClient.
  *
- * <P>CVS $Id: RMIView.java,v 1.10 2009/02/24 00:53:37 khuck Exp $</P>
+ * <P>CVS $Id: RMIView.java,v 1.11 2009/02/27 00:45:09 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -25,17 +25,17 @@ import javax.swing.tree.DefaultMutableTreeNode;
  */
 public class RMIView implements Serializable {
 
-	private static List fieldNames = null;
-	private List fields = null;
+	private static List<String> fieldNames = null;
+	private List<String> fields = null;
 	private DefaultMutableTreeNode node = null;
 
 	public RMIView () {
-		fields = new ArrayList();
+		fields = new ArrayList<String>();
 	}
 
-	public static Iterator getFieldNames(DB db) {
+	public static Iterator<String> getFieldNames(DB db) {
 		if (fieldNames == null) {
-			fieldNames = new ArrayList();
+			fieldNames = new ArrayList<String>();
 			try {
 				ResultSet resultSet = null;
 				DatabaseMetaData dbMeta = db.getMetaData();
@@ -66,7 +66,7 @@ public class RMIView implements Serializable {
 		return fieldNames.iterator();
 	}
 
-	public static Iterator getFieldNames() {
+	public static Iterator<String> getFieldNames() {
 		// assumes not null!
 		return fieldNames.iterator();
 	}
@@ -84,22 +84,24 @@ public class RMIView implements Serializable {
 		if (i == -1)
 			return new String("");
 		else
-			return (String) fields.get(i);
+			return fields.get(i);
 	}
 
 	public String getField(int i) {
-		return (String) fields.get(i);
+		return fields.get(i);
 	}
 
 	public static String getFieldName(int i) {
-		return (String) fieldNames.get(i);
+		return fieldNames.get(i);
 	}
 
+	// suppress warning about aInputStream.readObject() call.
+	@SuppressWarnings("unchecked")
 	private void readObject (ObjectInputStream aInputStream) throws ClassNotFoundException, IOException {
 		// perform the default serialization for this object
 		aInputStream.defaultReadObject();
 		if (fieldNames == null)
-			fieldNames = (List) aInputStream.readObject();
+			fieldNames = (List<String>) aInputStream.readObject();
 	}
 
 	private void writeObject (ObjectOutputStream aOutputStream) throws IOException {

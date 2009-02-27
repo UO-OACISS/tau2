@@ -10,7 +10,7 @@ import java.util.ArrayList;
  * contains 32 leaves, and the tree is cut into two sub-trees, the methods
  * will find representative centers for each of the two sub-trees.
  *
- * <P>CVS $Id: DendrogramTree.java,v 1.2 2009/02/24 00:53:45 khuck Exp $</P>
+ * <P>CVS $Id: DendrogramTree.java,v 1.3 2009/02/27 00:45:10 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -140,14 +140,14 @@ public class DendrogramTree {
 		}else {
 			// find "count" sub-trees which are the furthest away from
 			// each other
-			List clusters = new ArrayList(count);
+			List<DendrogramTree> clusters = new ArrayList<DendrogramTree>(count);
 			clusters.add(left);
 			clusters.add(right);
 			DendrogramTree current = null;
 			while (clusters.size() < count) {
-				DendrogramTree winner = (DendrogramTree)clusters.get(0);
+				DendrogramTree winner = clusters.get(0);
 				for (int i = 0 ; i < clusters.size() ; i++) {
-					current = (DendrogramTree)clusters.get(i);
+					current = clusters.get(i);
 					if (current.getHeight() > winner.getHeight())
 						winner = current;
 				}
@@ -157,7 +157,7 @@ public class DendrogramTree {
 			}
 			// for each sub-tree, select a representative
 			for (int i = 0 ; i < clusters.size() ; i++) {
-				current = (DendrogramTree)clusters.get(i);
+				current = clusters.get(i);
 				centers[i] = current.getRepresentative();
 			}
 		}

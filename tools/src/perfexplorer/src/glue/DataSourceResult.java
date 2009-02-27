@@ -33,6 +33,7 @@ public class DataSourceResult extends AbstractResult {
 		super(input);
 	}
 
+	@SuppressWarnings("unchecked")
 	public DataSourceResult(int fileType, String[] sourceFiles, boolean fixNames) {
         File[] files = new File[sourceFiles.length];
         for (int i = 0; i < sourceFiles.length; i++) {

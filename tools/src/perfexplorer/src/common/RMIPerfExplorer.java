@@ -15,7 +15,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * PerfExplorerServer object.  This interface defines the API for
  * passing requests to the server.
  * 
- * <P>CVS $Id: RMIPerfExplorer.java,v 1.17 2009/02/26 00:41:17 wspear Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorer.java,v 1.18 2009/02/27 00:45:09 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -156,7 +156,7 @@ public interface RMIPerfExplorer extends Remote {
      * @return
      * @throws RemoteException
      */
-    public List getPossibleValues(String tableName, String columnName)
+    public List<String> getPossibleValues(String tableName, String columnName)
         throws RemoteException;
 
     /**
@@ -235,7 +235,7 @@ public interface RMIPerfExplorer extends Remote {
      * @return The connection URLs
      * @throws RemoteException
      */
-    public List getConnectionStrings() throws RemoteException;
+    public List<String> getConnectionStrings() throws RemoteException;
 
     /**
      * Gets the configuration names for the JDBC connections.
@@ -243,7 +243,7 @@ public interface RMIPerfExplorer extends Remote {
      * @return The configuration names
      * @throws RemoteException
      */
-    public List getConfigNames() throws RemoteException;
+    public List<String> getConfigNames() throws RemoteException;
 
     /**
      * Gets the list of events for the specified trial, metric
@@ -253,7 +253,7 @@ public interface RMIPerfExplorer extends Remote {
      * @return a list of event names
      * @throws RemoteException
      */
-	public List<IntervalEvent> getEventList(int trialID, int metricIndex) throws RemoteException; 
+	public List<RMISortableIntervalEvent> getEventList(int trialID, int metricIndex) throws RemoteException; 
 
     /**
      * Returns the full list of trials in the database for the specified
@@ -263,7 +263,7 @@ public interface RMIPerfExplorer extends Remote {
      * @return
      * @throws RemoteException
      */
-    public List getTrialList(String criteria) throws RemoteException;
+    public List<Trial> getTrialList(String criteria) throws RemoteException;
 
     /**
      * Deletes a view from the view hierarchy.
@@ -280,7 +280,7 @@ public interface RMIPerfExplorer extends Remote {
      * @return a list of table.column names
      * @throws RemoteException
      */
-    public List<Object> getChartFieldNames() throws RemoteException;
+    public List<String> getChartFieldNames() throws RemoteException;
 
     /**
      * Requests data for generating comparison charts for the specified model.

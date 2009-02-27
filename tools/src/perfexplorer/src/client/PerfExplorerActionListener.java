@@ -388,6 +388,7 @@ public class PerfExplorerActionListener implements ActionListener {
 			PerfExplorerModel.getModel().setNumberOfClusters(reply);
 	}
 
+	@SuppressWarnings("unchecked") // for trial.getMetricS() call
 	public void createDoClusteringWindow(boolean inclusive) {
 		PerfExplorerModel theModel = PerfExplorerModel.getModel();
 		if(inclusive){
@@ -414,7 +415,7 @@ public class PerfExplorerActionListener implements ActionListener {
 					while (trials.hasNext() && !failed) {
 						trial = trials.next();
 						theModel.setCurrentSelection(trial);
-						List metrics = trial.getMetrics();
+						List<Metric> metrics = trial.getMetrics();
 						for (int i = 0; i < metrics.size(); i++) {
 							Object metric = metrics.get(i);
 							theModel.setCurrentSelection(metric);
@@ -450,7 +451,7 @@ public class PerfExplorerActionListener implements ActionListener {
 				while (trials.hasNext() && !failed) {
 					trial = trials.next();
 					theModel.setCurrentSelection(trial);
-					List metrics = trial.getMetrics();
+					List<Metric> metrics = trial.getMetrics();
 					for (int i = 0; i < metrics.size(); i++) {
 						Object metric = metrics.get(i);
 						theModel.setCurrentSelection(metric);
@@ -483,7 +484,7 @@ public class PerfExplorerActionListener implements ActionListener {
 				RMIPerfExplorerModel modelCopy = theModel.copy();
 				status = server.requestAnalysis(modelCopy, true);
 				Trial trial = (Trial)selection;
-				List metrics = trial.getMetrics();
+				List<Metric> metrics = trial.getMetrics();
 				for (int i = 0; i < metrics.size(); i++) {
 					modelCopy = theModel.copy();
 					Object metric = metrics.get(i);
@@ -647,7 +648,7 @@ public class PerfExplorerActionListener implements ActionListener {
 		String metric = theModel.getMetricName();
 		if (forceIt || (metric == null)) {
 			PerfExplorerConnection server = PerfExplorerConnection.getConnection();
-			List metrics = server.getPotentialMetrics(theModel);
+			List<String> metrics = server.getPotentialMetrics(theModel);
 			Object[] options = metrics.toArray();
 			if (options.length > 0) {
 				if (options.length == 1) {
@@ -670,7 +671,7 @@ public class PerfExplorerActionListener implements ActionListener {
 		String group = theModel.getGroupName();
 		if (forceIt || group == null) {
 			PerfExplorerConnection server = PerfExplorerConnection.getConnection();
-			List metrics = server.getPotentialGroups(theModel);
+			List<String> metrics = server.getPotentialGroups(theModel);
 			Object[] options = metrics.toArray();
 			if (options.length > 0) {
 				if (options.length == 1) {
@@ -693,7 +694,7 @@ public class PerfExplorerActionListener implements ActionListener {
 		String event = theModel.getEventName();
 		if (forceIt || event == null) {
 			PerfExplorerConnection server = PerfExplorerConnection.getConnection();
-			List metrics = server.getPotentialEvents(theModel);
+			List<String> metrics = server.getPotentialEvents(theModel);
 			Object[] options = metrics.toArray();
 			if (options.length > 0) {
 				if (options.length == 1) {

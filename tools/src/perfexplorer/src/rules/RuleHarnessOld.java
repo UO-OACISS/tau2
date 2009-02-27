@@ -24,6 +24,7 @@ import edu.uoregon.tau.perfdmf.IntervalLocationProfile;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.client.ScriptFacade;
+import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
 
 public class RuleHarnessOld {
 
@@ -88,12 +89,13 @@ public class RuleHarnessOld {
 		// member variables
 		private final int type;
 		private Trial trial;
-		private List metrics;
-		private HashMap events;
-		private HashMap eventNames;
+		private List<String> metrics;
+		private HashMap<IntervalEvent, IntervalLocationProfile> events;
+		private HashMap<String, IntervalEvent> eventNames;
 		private IntervalEvent main;
 		private int timeIndex;
 		
+		@SuppressWarnings("unchecked")
 		public RelativeTrial (Trial trial, int type) {
 			this.trial = trial;
 			this.type = type;
@@ -102,10 +104,10 @@ public class RuleHarnessOld {
 			this.events = buildEventMap();
 		}
 		
-		private HashMap buildEventMap () {
-			HashMap eventMap = new HashMap();
-			this.eventNames = new HashMap();
-			ListIterator events = facade.getEventList(this.trial, 0);
+		private HashMap<IntervalEvent, IntervalLocationProfile> buildEventMap () {
+			HashMap<IntervalEvent, IntervalLocationProfile> eventMap = new HashMap<IntervalEvent, IntervalLocationProfile>();
+			this.eventNames = new HashMap<String, IntervalEvent>();
+			ListIterator<RMISortableIntervalEvent> events = facade.getEventList(this.trial, 0);
 			// if we don't have a time metric, just use the first metric available
 			int timeIndex = this.timeIndex==-1?0:this.timeIndex;
 			double inclusive = 0.0;
@@ -179,12 +181,12 @@ public class RuleHarnessOld {
 			return this.timeIndex;
 		}
 		
-		public Iterator getEventIterator() {
+		public Iterator<IntervalEvent> getEventIterator() {
 			return events.keySet().iterator();
 		}
 		
 		public IntervalEvent getEvent(String name) {
-			return (IntervalEvent)this.eventNames.get(name);
+			return this.eventNames.get(name);
 		}
 	
 		public List getMetrics () {
@@ -266,7 +268,7 @@ public class RuleHarnessOld {
 	public static class Helper {
 		private final String name;
 		private final Object object;
-		private final Class objectClass;
+		private final Class<? extends Object> objectClass;
 		
 		public Helper (String name, Object object) {
 			this.name = name;
@@ -282,7 +284,7 @@ public class RuleHarnessOld {
 			return this.object;
 		}
 
-		public Class getObjectClass() {
+		public Class<? extends Object> getObjectClass() {
 			return this.objectClass;
 		}
 	}

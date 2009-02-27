@@ -136,10 +136,10 @@ public class MetadataClusterOperation implements SelfAsserting {
 	}
 	
 	public void assertFacts(RuleHarness ruleHarness) {
-		Set keys = differences.keySet();
-		for (Iterator iter = keys.iterator() ; iter.hasNext() ; ) {
-			String key = (String)iter.next();
-			String[] values = (String[])differences.get(key);
+		Set<String> keys = differences.keySet();
+		for (Iterator<String> iter = keys.iterator() ; iter.hasNext() ; ) {
+			String key = iter.next();
+			String[] values = differences.get(key);
 			FactHandle handle = RuleHarness.assertObject(new FactWrapper(key, NAME, values));
 			assertedFacts.put(key, handle);
 		}

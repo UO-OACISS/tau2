@@ -21,7 +21,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIView;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.49 2009/02/26 00:41:17 wspear Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.50 2009/02/27 00:45:09 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -33,7 +33,7 @@ public class ChartData extends RMIChartData {
 	private String groupName = null;
 	private String eventName = null;
 	private String groupByColumn = null;
-	private List columnValues = null;
+	private List<Double> columnValues = null;
 	private StringBuffer buf = null;
 	
 	/**
@@ -87,7 +87,7 @@ public class ChartData extends RMIChartData {
 			String currentExperiment = "";
 			int experimentIndex = -1;
 			if (dataType == ChartDataType.CORRELATION_DATA) {
-				columnValues = new ArrayList();
+				columnValues = new ArrayList<Double>();
 				// do a pre-query to get the event with inclusive value
 				// of 100.0.
 				statement = buildPreQueryStatement();
@@ -146,11 +146,11 @@ public class ChartData extends RMIChartData {
 				// base case - MPI methods, for example
 				// add 0 values for those processor counts.
 				if (dataType == ChartDataType.CORRELATION_DATA) {
-					Double mainThreads = (Double)columnValues.get(columnCounter);
+					Double mainThreads = columnValues.get(columnCounter);
 					while (mainThreads.doubleValue() < numThreads) {
 						addColumn(experimentIndex, mainThreads.doubleValue(), 0.0);
 						columnCounter++;
-						mainThreads = (Double)columnValues.get(columnCounter);
+						mainThreads = columnValues.get(columnCounter);
 					}
 					columnCounter++;
 				}

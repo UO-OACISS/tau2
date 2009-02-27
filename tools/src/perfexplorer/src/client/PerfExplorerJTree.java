@@ -9,12 +9,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
 import edu.uoregon.tau.perfexplorer.common.RMIView;
 
 public class PerfExplorerJTree extends JTree {
 
 	private static PerfExplorerJTree theTree = null;
-	private static List leafViews = null;
+	private static List<DefaultMutableTreeNode> leafViews = null;
 	private static DefaultMutableTreeNode root = null;
 	private static DefaultTreeModel theModel = null;
 
@@ -63,7 +64,7 @@ public class PerfExplorerJTree extends JTree {
         // reset the server to get all new configurations
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		server.resetServer();
-		List strings = server.getConnectionStrings();
+		List<String> strings = server.getConnectionStrings();
 
 		// add new nodes
 		for (int i = 0 ; i < strings.size() ; i++ ) {
@@ -90,7 +91,7 @@ public class PerfExplorerJTree extends JTree {
 	private static DefaultMutableTreeNode createNodes () {
 		DefaultMutableTreeNode root = new PerfExplorerTreeNode("Performance Data");
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
-		List strings = server.getConnectionStrings();
+		List<String> strings = server.getConnectionStrings();
 		for (int i = 0 ; i < strings.size() ; i++ ) {
 			String tmp = (String)strings.get(i);
 			DefaultMutableTreeNode top = new PerfExplorerTreeNode(new ConnectionNodeObject(tmp, i));
@@ -103,7 +104,7 @@ public class PerfExplorerJTree extends JTree {
 	public void addViewNode(DefaultMutableTreeNode node) {
 		DefaultMutableTreeNode viewTop = new PerfExplorerTreeNode("Views");
 		//addApplicationNodes(top, true);
-		leafViews = new ArrayList();
+		leafViews = new ArrayList<DefaultMutableTreeNode>();
 		//addViewNodes(viewTop, "0");
 		node.add(viewTop);	
 	}
@@ -112,8 +113,8 @@ public class PerfExplorerJTree extends JTree {
 		setConnectionIndex(parentNode);
 		// get the top level views
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
-		List viewVector = server.getViews(Integer.parseInt(parent));
-		Iterator views = viewVector.iterator();
+		List<RMIView> viewVector = server.getViews(Integer.parseInt(parent));
+		Iterator<RMIView> views = viewVector.iterator();
 		while (views.hasNext()) {
 			RMIView view = (RMIView) views.next();
 			DefaultMutableTreeNode node = new PerfExplorerTreeNode (view);
@@ -133,7 +134,7 @@ public class PerfExplorerJTree extends JTree {
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		if (server != null) {
 			// get the applications
-			ListIterator applications = server.getApplicationList();
+			ListIterator<Application> applications = server.getApplicationList();
 			if (applications != null) {
 				Application app = null;
 
@@ -155,7 +156,7 @@ public class PerfExplorerJTree extends JTree {
 		//System.out.println("experiment nodes...");
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the experiments
-		ListIterator experiments = server.getExperimentList(app.getID());
+		ListIterator<Experiment> experiments = server.getExperimentList(app.getID());
 		Experiment exp = null;
 		DefaultMutableTreeNode expNode = null;
 		// loop through all the experiments, and print out some info
@@ -173,7 +174,7 @@ public class PerfExplorerJTree extends JTree {
 		//System.out.println("trial nodes...");
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the trials
-		ListIterator trials = server.getTrialList(exp.getID());
+		ListIterator<Trial> trials = server.getTrialList(exp.getID());
 		Trial trial = null;
 		DefaultMutableTreeNode trialNode = null;
 		// loop through all the trials, and print out some info
@@ -187,7 +188,7 @@ public class PerfExplorerJTree extends JTree {
 	}
 
 	public static void addTrialsForViews () {
-		Iterator e = leafViews.iterator();
+		Iterator<DefaultMutableTreeNode> e = leafViews.iterator();
 		while (e.hasNext()) {
 			PerfExplorerTreeNode node = (PerfExplorerTreeNode) e.next();
 			addTrialsForView(node);
@@ -198,16 +199,16 @@ public class PerfExplorerJTree extends JTree {
 		setConnectionIndex(node);
 		//System.out.println("trial nodes...");
 		Object[] objects = node.getUserObjectPath();
-		List views = new ArrayList();
+		List<RMIView> views = new ArrayList<RMIView>();
 		for (int i = 0 ; i < objects.length ; i++) {
 			if (objects[i] instanceof RMIView) {
-				views.add(objects[i]);
+				views.add((RMIView)objects[i]);
 			}
 		}
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the trials
 		if (views.size() > 0) {
-			ListIterator trials = server.getTrialsForView(views);
+			ListIterator<Trial> trials = server.getTrialsForView(views);
 			Trial trial = null;
 			DefaultMutableTreeNode trialNode = null;
 			// loop through all the trials, and print out some info
@@ -222,20 +223,21 @@ public class PerfExplorerJTree extends JTree {
 	}
 
 
+	@SuppressWarnings("unchecked") // for trial.getMetrics() call
 	public static void addMetricNodes (DefaultMutableTreeNode node, Trial trial) {
 		setConnectionIndex(node);
 		//System.out.println("metric nodes...");
 		// get the metrics
-		List metricVector = trial.getMetrics();
+		List<Metric> metricVector = trial.getMetrics();
 		int metricIndex = 0;
 		if (metricVector != null) {
-			ListIterator metrics = metricVector.listIterator();
+			ListIterator<Metric> metrics = metricVector.listIterator();
 			Metric metric = null;
 			DefaultMutableTreeNode metricNode = null;
 			// loop through all the metrics, and print out some info
 			while(metrics.hasNext())
 			{
-				metric = (Metric) metrics.next();
+				metric = metrics.next();
 				metricNode = new PerfExplorerTreeNode (metric, true);
 				//addEventNodes(metricNode, trial, metricIndex++);
 				node.add(metricNode);
@@ -248,7 +250,7 @@ public class PerfExplorerJTree extends JTree {
 		//System.out.println("event nodes...");
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the events
-		ListIterator events = server.getEventList(trial.getID(), metricIndex);
+		ListIterator<RMISortableIntervalEvent> events = server.getEventList(trial.getID(), metricIndex);
 		IntervalEvent event = null;
 		DefaultMutableTreeNode eventNode = null;
 		// loop through all the events, and print out some info

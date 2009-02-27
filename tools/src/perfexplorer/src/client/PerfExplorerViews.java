@@ -61,7 +61,7 @@ public class PerfExplorerViews {
 			return;
 
 		// get the value they want to search on
-		List values = server.getPossibleValues(table, column);
+		List<String> values = server.getPossibleValues(table, column);
 		if (values.size() < 2) {
 			JOptionPane.showMessageDialog(mainFrame, "The column " + 
 				column.toUpperCase() + " in table " + table.toUpperCase() + 
@@ -97,7 +97,7 @@ public class PerfExplorerViews {
 		if (value.equals(all)) {
 			// create views for each value
 			for (int i = 0 ; i < values.size()-1 ; i++) {
-				value = (String) values.get(i);
+				value = values.get(i);
 				String name = table + ":" + column + " = " + value;
 				if (value != null)
 					server.createNewView(name, parent, table, column, oper, value);
@@ -127,8 +127,8 @@ public class PerfExplorerViews {
 		List views = server.getViews(parent);
 		
 		Iterator e = views.iterator();
-		List options = new ArrayList();
-		Hashtable myViews = new Hashtable();
+		List<String> options = new ArrayList<String>();
+		Hashtable<String, String> myViews = new Hashtable<String, String>();
 		while (e.hasNext()) {
 			RMIView view = (RMIView) e.next();
 			options.add(view.getField("NAME"));
@@ -142,7 +142,7 @@ public class PerfExplorerViews {
 			options.toArray(), null );
 
 		if (viewName != null) {
-			String viewID = (String) myViews.get(viewName);
+			String viewID = myViews.get(viewName);
 			createNewView(mainFrame, Integer.parseInt(viewID));
 		}
 	}

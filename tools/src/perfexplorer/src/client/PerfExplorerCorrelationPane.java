@@ -14,7 +14,7 @@ public class PerfExplorerCorrelationPane extends JScrollPane implements ActionLi
 	private static PerfExplorerCorrelationPane thePane = null;
 
 	private JPanel imagePanel = null;
-	private Hashtable resultsHash = null;
+	private Hashtable<String, RMIPerformanceResults> resultsHash = null;
 	private RMIPerformanceResults results = null;
 
 	public static PerfExplorerCorrelationPane getPane () {
@@ -30,7 +30,7 @@ public class PerfExplorerCorrelationPane extends JScrollPane implements ActionLi
 	private PerfExplorerCorrelationPane (JPanel imagePanel) {
 		super(imagePanel);
 		this.imagePanel = imagePanel;
-		this.resultsHash = new Hashtable();
+		this.resultsHash = new Hashtable<String, RMIPerformanceResults>();
 		JScrollBar jScrollBar = this.getVerticalScrollBar();
 		jScrollBar.setUnitIncrement(35);
 	}

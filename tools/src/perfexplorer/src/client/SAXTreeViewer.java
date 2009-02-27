@@ -243,7 +243,7 @@ class JTreeContentHandler implements ContentHandler {
     private Locator locator;
 
     /** Store URI to prefix mappings */
-    private Map namespaceMappings;
+    private Map<String, String> namespaceMappings;
 
     /** Current node to add sub-nodes to */
     private XMLNode current = null;
@@ -259,7 +259,7 @@ class JTreeContentHandler implements ContentHandler {
      * @param base node to start adding sub-nodes to.
      */
     public JTreeContentHandler() {
-        this.namespaceMappings = new HashMap();
+        this.namespaceMappings = new HashMap<String, String>();
         this.current = new XMLNode("XML Document");
         this.root = this.current;
     }
@@ -361,11 +361,11 @@ class JTreeContentHandler implements ContentHandler {
      */
     public void endPrefixMapping(String prefix) {
         // No visual events occur here.
-        for (Iterator i = namespaceMappings.keySet().iterator(); 
+        for (Iterator<String> i = namespaceMappings.keySet().iterator(); 
              i.hasNext(); ) {
 
-            String uri = (String)i.next();
-            String thisPrefix = (String)namespaceMappings.get(uri);
+            String uri = i.next();
+            String thisPrefix = namespaceMappings.get(uri);
             if (prefix.equals(thisPrefix)) {
                 namespaceMappings.remove(uri);
                 break;
@@ -398,7 +398,7 @@ class JTreeContentHandler implements ContentHandler {
     	String prefix = "";
         // Determine namespace
         if (namespaceURI.length() > 0) {
-            prefix = (String)namespaceMappings.get(namespaceURI);
+            prefix = namespaceMappings.get(namespaceURI);
         }
 
         XMLElementNode element = null;

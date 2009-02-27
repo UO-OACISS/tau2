@@ -37,7 +37,7 @@ public class DataUtils {
 	    int threads = 0;
 	    RawDataInterface rawData = null;
 	    double maximum = 0.0;
-	    List eventIDs = null;
+	    List<String> eventIDs = null;
 	    String clusterType=modelData.getClusterValueType();
 		String clusterPerType="inclusive_percentage";
 		
@@ -123,7 +123,7 @@ public class DataUtils {
 				//PerfExplorerOutput.println(statement.toString());
 				results = statement.executeQuery();
 				numEvents = 0;
-				eventIDs = new ArrayList();
+				eventIDs = new ArrayList<String>();
 				while (results.next() != false) {
 					numEvents++;
 					eventIDs.add(shortName(results.getString(2)));
@@ -142,7 +142,7 @@ public class DataUtils {
 				//PerfExplorerOutput.println(statement.toString());
 				results = statement.executeQuery();
 				numEvents = 0;
-				eventIDs = new ArrayList();
+				eventIDs = new ArrayList<String>();
 				while (results.next() != false) {
 					numEvents++;
 					eventIDs.add(results.getString(2));

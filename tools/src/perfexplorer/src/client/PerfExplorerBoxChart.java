@@ -75,7 +75,7 @@ public class PerfExplorerBoxChart extends PerfExplorerChartWindow {
             for (int c = 0; c < CATEGORY_COUNT; c++) {
                 List<Double> values = createValueList(data.getRowData(s));
                 //result.add(values, (String)names.get(s), "Category " + c);
-                result.add(values, (String)names.get(s), "");
+                result.add(values, names.get(s), "");
             }
         }
         return result;
@@ -94,7 +94,7 @@ public class PerfExplorerBoxChart extends PerfExplorerChartWindow {
     		double range = max - min;
     		//System.out.println("Min: " + min + ", Max: " + max + ", Range: " + range);
     		for (int i = 0; i < inData.size(); i++) {
-    			result.add(new Double((((double[])(inData.get(i)))[1]-min)/range));   
+    			result.add(new Double(((inData.get(i))[1]-min)/range));   
     		}
     		return result;
     }

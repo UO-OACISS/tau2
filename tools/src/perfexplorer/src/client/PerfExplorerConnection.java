@@ -233,8 +233,8 @@ public class PerfExplorerConnection {
 	return columns;
     }
 
-    public List getPossibleValues(String tableName, String columnName) {
-	List values = null;
+    public List<String> getPossibleValues(String tableName, String columnName) {
+	List<String> values = null;
 	try {
 	    values = server.getPossibleValues(tableName, columnName);
 	} catch (RemoteException e) {
@@ -311,8 +311,8 @@ public class PerfExplorerConnection {
 		return conn;
 	}
 
-	public List getConnectionStrings() {
-		List conns = null;
+	public List<String> getConnectionStrings() {
+		List<String> conns = null;
 		try {
 	    	conns = server.getConnectionStrings();
 		} catch (RemoteException e) {
@@ -321,8 +321,8 @@ public class PerfExplorerConnection {
 		return conns;
 	}
 
-	public List getConfigNames() {
-		List conns = null;
+	public List<String> getConfigNames() {
+		List<String> conns = null;
 		try {
 	    	conns = server.getConfigNames();
 		} catch (RemoteException e) {
@@ -331,8 +331,8 @@ public class PerfExplorerConnection {
 		return conns;
 	}
 
-    public ListIterator<IntervalEvent> getEventList(int trialID, int metricIndex) {
-	ListIterator<IntervalEvent> tmpIterator = null;
+    public ListIterator<RMISortableIntervalEvent> getEventList(int trialID, int metricIndex) {
+	ListIterator<RMISortableIntervalEvent> tmpIterator = null;
 	try {
 	    tmpIterator = server.getEventList(trialID, metricIndex).listIterator();
 	} catch (RemoteException e) {
@@ -341,8 +341,8 @@ public class PerfExplorerConnection {
 	return tmpIterator;
     }
 
-	public List getTrialList(String criteria) {
-		List list = null;
+	public List<Trial> getTrialList(String criteria) {
+		List<Trial> list = null;
 		try {
 			list = server.getTrialList(criteria);
 		} catch (RemoteException e) {
@@ -351,8 +351,8 @@ public class PerfExplorerConnection {
 		return list;
 	}
 
-	public List<Object> getChartFieldNames() {
-		List<Object> list = null;
+	public List<String> getChartFieldNames() {
+		List<String> list = null;
 		try {
 			list = server.getChartFieldNames();
 		} catch (RemoteException e) {

@@ -17,7 +17,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIChartData;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper class around the RawDataInterface class.
  *
- * <P>CVS $Id: ProbabilityPlotDataset.java,v 1.5 2009/02/26 00:41:16 wspear Exp $</P>
+ * <P>CVS $Id: ProbabilityPlotDataset.java,v 1.6 2009/02/27 00:45:08 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -39,6 +39,7 @@ public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDatas
 	 * @param data
 	 * @param seriesNames
 	 */
+	@SuppressWarnings("unchecked") // for Collections.sort() call
 	public ProbabilityPlotDataset(RMIChartData data) {
 		super();
 		this.seriesNames = data.getRowLabels();
@@ -139,7 +140,7 @@ public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDatas
 			for (int x = 0 ; x < points.size() ; x++) {
 				// calculate probability plot position, F_i
 				ppp = (x+0.5)/points.size();
-				Point p = (Point)points.get(x);
+				Point p = points.get(x);
 				p.p = ppp;
 				p.y = StatUtil.getInvCDF(ppp, false);
 			}
@@ -167,7 +168,7 @@ public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDatas
 		if (arg0 == dataset.size() -1)
 			return new String("Ideal normal");
 		else {
-			String tmp = (String)(seriesNames.get(arg0));
+			String tmp = (seriesNames.get(arg0));
 			return tmp;
 		}
 	}
@@ -235,7 +236,7 @@ public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDatas
 		format.format(p.rn, buf, f);
 		s.append(buf.toString()); 
 		if (arg0 < (dataset.size() - 1)) {
-			Metric m = (Metric)metrics.get(arg0);
+			Metric m = metrics.get(arg0);
 			buf = new StringBuffer();
    			s.append("<BR>min: ");
 			format.format(m.min, buf, f);

@@ -35,8 +35,8 @@ public class PerfExplorerTreeSelectionListener implements TreeSelectionListener 
 			updateRightPanel(currentSelection);
 		}
 		else {
-        	List multiSelection = new ArrayList();
-        	Set connections = new HashSet();
+        	List<Object> multiSelection = new ArrayList<Object>();
+        	Set<Integer> connections = new HashSet<Integer>();
         	DefaultMutableTreeNode node = null;
         	for (int i = 0 ; i < paths.length ; i++) {
             	node = (DefaultMutableTreeNode)(paths[i].getLastPathComponent());

@@ -184,7 +184,7 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 			if (this.metadataFields != null) {
 				for (String metaKey : this.metadataFields) {
 					tmpMap.put(metaKey, tmp.get(metaKey));
-					Set valid = validation.get(metaKey);
+					Set<String> valid = validation.get(metaKey);
 					if (valid == null) {
 						valid = new HashSet<String>();
 						validation.put(metaKey, valid);
