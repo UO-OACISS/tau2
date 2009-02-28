@@ -30,10 +30,6 @@ codebase='http://spaceghost.cs.uoregon.edu/PerfExplorer'>
     <jar href='drools-core-3.0.6.jar' main='false'/>
     <jar href='drools-decisiontables-3.0.6.jar' main='false'/>
     <jar href='drools-jsr94-3.0.6.jar' main='false'/>
-    <jar href='ejb3-persistence.jar' main='false'/>
-    <jar href='hibernate3.jar' main='false'/>
-    <jar href='hibernate-annotations.jar' main='false'/>
-    <jar href='hibernate-commons-annotations.jar' main='false'/>
     <jar href='jargs.jar' main='false'/>
     <jar href='jcommon-0.9.6.jar' main='false'/>
     <jar href='jfreechart-0.9.21.jar' main='false'/>
@@ -57,7 +53,7 @@ codebase='http://spaceghost.cs.uoregon.edu/PerfExplorer'>
 	<property name="derby.infolog.append" value="true" />
   </resources>
 
-  <application-desc main-class="client.PerfExplorerClient">
+  <application-desc main-class="edu.uoregon.tau.perfexplorer.client.PerfExplorerClient">
     <argument>-s</argument>
     <argument>-w</argument>
     <argument>-e</argument>

@@ -1,4 +1,4 @@
-# $Id: Makefile.skel,v 1.39 2009/02/27 23:48:55 khuck Exp $
+# $Id: Makefile.skel,v 1.40 2009/02/28 00:07:51 khuck Exp $
 # $Name:  $
 
 R_HOME = @RROOT@
@@ -29,7 +29,7 @@ JAVADOC = javadoc
 WEKA_JAR = ${JAR_HOME}/weka.jar
 PERFDMF_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/perfdmf.jar
 JARGS_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jargs.jar
-JDBC_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/postgresql.jar
+JDBC_JAR = ${JAR_HOME}/postgresql.jar
 JOGL_JAR =${TAUROOT}/${CONFIG_ARCH}/lib/jogl.jar
 JARGS_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jargs.jar
 JYTHON_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jython.jar
@@ -76,7 +76,7 @@ BATCH_SCRIPT = ${JAR_HOME}/perfexplorer
 
 # DISTRIBUTION JARS
 
-DERBY_JAR = ${JAR_HOME}/derby.jar
+DERBY_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/derby.jar
 MYSQL_JAR = ${JAR_HOME}/mysql.jar
 
 
