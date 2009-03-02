@@ -35,7 +35,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  *
- * <P>CVS $Id: AnalysisTask.java,v 1.14 2009/02/25 19:51:46 wspear Exp $</P>
+ * <P>CVS $Id: AnalysisTask.java,v 1.15 2009/03/02 19:23:51 khuck Exp $</P>
  * @author Kevin Huck
  * @version 0.1
  * @since 0.1
@@ -88,7 +88,7 @@ public class AnalysisTask extends TimerTask {
         try {
             DB db = session.db();
             PreparedStatement statement = null;
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
             buf.append("insert into analysis_result (analysis_settings, ");
             buf.append("description, thumbnail_size, image_size, thumbnail, ");
             buf.append("image, result_type) values ");
@@ -137,7 +137,7 @@ public class AnalysisTask extends TimerTask {
 			PreparedStatement statement = null;
 			// for each centroid, save the data
 			// TODO - MAKE THIS A GENERAL USE LATER!
-			StringBuffer buf = new StringBuffer();
+			StringBuilder buf = new StringBuilder();
 			buf.append("insert into analysis_result ");
 			buf.append(" (analysis_settings, description, thumbnail_size, thumbnail, image_size, image, result_type) values (?, ?, ?, ?, ?, ?, ?)");
 			statement = db.prepareStatement(buf.toString());
@@ -324,6 +324,9 @@ public class AnalysisTask extends TimerTask {
 			}catch (ClusterException ce) {
             	System.err.println(ce.getMessage());
 				ce.printStackTrace();
+			}catch (Exception e) {
+            	System.err.println(e.getMessage());
+				e.printStackTrace();
 			}
 			// let the server (main thread) know we are done
 			server.taskFinished(connectionIndex);

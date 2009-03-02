@@ -143,7 +143,7 @@ public class TrialMetadata {
 			if (this.performanceResult != null) {
 				// get the metadata from the CQoS tables!
 				DB db = PerfExplorerServer.getServer().getDB();
-				StringBuffer sql = new StringBuffer();
+				StringBuilder sql = new StringBuilder();
 				PreparedStatement statement = null;
 				
 				try {
@@ -221,7 +221,7 @@ public class TrialMetadata {
 	}
 	
 	public String toString() {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		Set<String> keys = this.commonAttributes.keySet();
 		for (String key : keys) {
 			buf.append(key + ": " + this.commonAttributes.get(key) + "\n");

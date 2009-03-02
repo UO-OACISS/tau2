@@ -196,7 +196,7 @@ public class MeanEventFact {
 	
 	public String toString () {
 		// TODO: MAKE THIS PRETTY!
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		if (betterWorse == BETTER) {
 			buf.append("Better ");
 		} else if (betterWorse == WORSE) {

@@ -117,7 +117,7 @@ public class DifferenceOperation extends AbstractPerformanceOperation {
 	}
 	
 	public String toString() {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		if (this.differenceType == PerformanceDifferenceType.SAME) {
 			buf.append("The comparison trial (");
 			buf.append(getComparison().toString());

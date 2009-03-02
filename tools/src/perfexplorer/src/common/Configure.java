@@ -20,7 +20,7 @@ import java.sql.SQLException;
 /**
  * This class is used as a main class for configuring PerfExplorer.
  *
- * <P>CVS $Id: Configure.java,v 1.12 2009/02/24 00:53:36 khuck Exp $</P>
+ * <P>CVS $Id: Configure.java,v 1.13 2009/03/02 19:23:50 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -114,7 +114,7 @@ public class Configure {
             PerfExplorerOutput.println();
             db = connector.getDB();
         } catch (Exception e) {
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
             buf.append("\nPlease make sure that your DBMS is configured ");
             buf.append("correctly, and the database ");
             buf.append(db_dbname + " has been created.");
@@ -123,7 +123,7 @@ public class Configure {
         }
 
         try {
-            StringBuffer query = new StringBuffer();
+            StringBuilder query = new StringBuilder();
             query.append("SELECT * FROM ");
             query.append(db.getSchemaPrefix() + "analysis_settings");
             ResultSet resultSet = db.executeQuery(query.toString());

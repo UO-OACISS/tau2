@@ -51,7 +51,7 @@ import java.util.Queue;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.75 2009/02/27 19:05:25 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.76 2009/03/02 19:23:51 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -184,7 +184,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				} else {
 					System.err.println("Error connecting to " + tmpFile + "!");
 					System.err.println(e.getMessage());
-            		StringBuffer buf = new StringBuffer();
+            		StringBuilder buf = new StringBuilder();
             		buf.append("\nPlease make sure that your DBMS is ");
             		buf.append("configured correctly, and the database ");
             		buf.append("has been created.");
@@ -299,7 +299,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return String 
 	 */
 	public String requestAnalysis(RMIPerfExplorerModel model, boolean force) {
-		StringBuffer status = new StringBuffer();
+		StringBuilder status = new StringBuilder();
 		//PerfExplorerOutput.println("requestAnalysis(" + model.toString() + ")...");
 		try {
 			if (!force && checkForRequest(model) != 0) {
@@ -310,7 +310,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			model.setAnalysisID(analysisID);
 			status.append("\nRequest accepted.");
 			Queue<RMIPerfExplorerModel> requestQueue = requestQueues.get(model.getConnectionIndex());
-			requestQueue.add(model);
+			requestQueue.offer(model);
 		} catch (PerfExplorerException e) {
 			String tmp = e.getMessage();
 			Throwable exec = e.getCause();
@@ -400,7 +400,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 /*			Enumeration e = analysisResults.getIDs().elements();
 			while (e.hasMoreElements()) {
 				String id = (String) e.nextElement();
-				StringBuffer buf = new StringBuffer();
+				StringBuilder buf = new StringBuilder();
 				buf.append("select ie.name, m.name, ard.value, ard.data_type, ard.cluster_index ");
 				buf.append("from analysis_result_data ard ");
 				buf.append("inner join interval_event ie on ard.interval_event = ie.id ");
@@ -516,7 +516,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			Iterator e = analysisResults.getIDs().iterator();
 			while (e.hasNext()) {
 				String id = (String) e.next();
-				StringBuffer buf = new StringBuffer();
+				StringBuilder buf = new StringBuilder();
 				buf.append("select ie.name, m.name, ard.value, ard.data_type, ard.cluster_index ");
 				buf.append("from analysis_result_data ard ");
 				buf.append("inner join interval_event ie on ard.interval_event = ie.id ");
@@ -568,7 +568,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 */
 	public void taskFinished (int connectionIndex) {
 		Queue<RMIPerfExplorerModel> requestQueue = requestQueues.get(connectionIndex);
-		RMIPerfExplorerModel model = requestQueue.remove();
+		RMIPerfExplorerModel model = requestQueue.poll();
 		//PerfExplorerOutput.println(model.toString() + " finished!");
 		// endRSession();
 	}
@@ -729,8 +729,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		List<String> groups = new ArrayList<String>();
 		try {
 			DB db = this.getDB();
-			StringBuffer buf;
-			buf = new StringBuffer("select distinct ie.group_name ");
+			StringBuilder buf;
+			buf = new StringBuilder("select distinct ie.group_name ");
 			buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
 			buf.append(" inner join experiment e on t.experiment = e.id ");
 			Object object = modelData.getCurrentSelection();
@@ -809,7 +809,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	public List<String> getPotentialMetrics(RMIPerfExplorerModel modelData) {
 		//PerfExplorerOutput.println("getPotentialMetrics()...");
 		List<String> metrics = new ArrayList<String>();
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		try {
 			DB db = this.getDB();
 			if (db.getDBType().compareTo("db2") == 0) {
@@ -914,7 +914,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		List<String> events = new ArrayList<String>();
 		try {
 			DB db = this.getDB();
-			StringBuffer buf = new StringBuffer();
+			StringBuilder buf = new StringBuilder();
 			if (db.getDBType().compareTo("db2") == 0) {
 				buf.append("select distinct cast (m.name as VARCHAR(256))");
 			} else {
@@ -1001,7 +1001,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		List<String> events = new ArrayList<String>();
 		try {
 			DB db = this.getDB();
-			StringBuffer buf = new StringBuffer();
+			StringBuilder buf = new StringBuilder();
 			if (db.getDBType().compareTo("db2") == 0) {
 				buf.append("select distinct cast (m.name as VARCHAR(256))");
 			} else {
@@ -1129,7 +1129,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		List<String> values = new ArrayList<String>();
 		try {
 			DB db = this.getDB();
-			StringBuffer buf = new StringBuffer("select distinct ");
+			StringBuilder buf = new StringBuilder("select distinct ");
 			if (db.getDBType().compareTo("db2") == 0) {
 				buf.append("cast (");
 				buf.append(columnName);
@@ -1247,7 +1247,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				// the database is not modified to support views
 				throw new Exception ("The Database is not modified to support views.");
 			}
-			StringBuffer buf = new StringBuffer("select ");
+			StringBuilder buf = new StringBuilder("select ");
 			// assumes at least one column...
 			buf.append((String) names.next());
 			while (names.hasNext()) {
@@ -1297,7 +1297,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		List<Trial> trials = new ArrayList<Trial>();
 		try {
 			DB db = this.getDB();
-			StringBuffer whereClause = new StringBuffer();
+			StringBuilder whereClause = new StringBuilder();
 			whereClause.append(" inner join application a on e.application = a.id WHERE ");
 			for (int i = 0 ; i < views.size() ; i++) {
 				if (i > 0) {
@@ -1342,7 +1342,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		try {
 			DB db = this.getDB();
 			PreparedStatement statement = null;
-			StringBuffer buf = new StringBuffer();
+			StringBuilder buf = new StringBuilder();
 
 			if (db.getDBType().compareTo("oracle") == 0) {
 				buf.append("select ie.name, ");
@@ -1460,7 +1460,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		try {
 			DB db = this.getDB();
 			PreparedStatement statement = null;
-			StringBuffer buf = new StringBuffer();
+			StringBuilder buf = new StringBuilder();
 			String clusterType=model.getClusterValueType();
 			String clusterPerType="inclusive_percentage";
 			if(clusterType.compareTo("inclusive")!=0){
@@ -1509,7 +1509,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			statement.setInt(2, metric.getID());
 			//PerfExplorerOutput.println(statement.toString());
 			ResultSet results = statement.executeQuery();
-			StringBuffer idString = new StringBuffer();
+			StringBuilder idString = new StringBuilder();
 			boolean gotOne = false;
 			List<String> goodMethods = new ArrayList<String>();
 			while (results.next() != false) {
@@ -1529,7 +1529,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			results.close();
 			statement.close();
 
-			buf = new StringBuffer();
+			buf = new StringBuilder();
 			if (db.getDBType().compareTo("db2") == 0) {
 				// create a temporary table
 				statement = db.prepareStatement("declare global temporary table working_table (id int) on commit preserve rows not logged ");
@@ -1607,7 +1607,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			data = new RMICubeData(count);
 			data.setNames(names);
 
-			buf = new StringBuffer();
+			buf = new StringBuilder();
 //			if (db.getDBType().compareTo("oracle") == 0) {
 //				buf.append("select node, context, thread, name, excl ");
 //			} else 

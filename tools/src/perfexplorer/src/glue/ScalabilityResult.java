@@ -100,7 +100,7 @@ public class ScalabilityResult extends AbstractResult {
 	}
 
 	public String findPositiveReasons() {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		for (String event : this.getEvents()) {
 			for (String metric : this.getMetrics()) {
 				double value = this.getExclusive(0, event, metric);
@@ -115,7 +115,7 @@ public class ScalabilityResult extends AbstractResult {
 	}
 
 	public String findNegativeReasons() {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		for (String event : this.getEvents()) {
 			for (String metric : this.getMetrics()) {
 				double value = this.getExclusive(0, event, metric);

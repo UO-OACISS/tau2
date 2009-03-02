@@ -8,7 +8,7 @@ import java.util.List;
  * This class specifies the nodes in a dendrogram representing the results
  * of a hierarchical clustering.  This dendrogram is a simple binary tree.
  *
- * <P>CVS $Id: DendrogramTree.java,v 1.4 2009/02/27 00:45:08 khuck Exp $</P>
+ * <P>CVS $Id: DendrogramTree.java,v 1.5 2009/03/02 19:23:49 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -187,7 +187,7 @@ public class DendrogramTree {
      * @return
      */
     public String toString() {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         if (!isLeaf()) {
             buf.append(left.toString());
             buf.append(right.toString());

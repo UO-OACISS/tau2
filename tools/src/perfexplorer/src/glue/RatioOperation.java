@@ -148,7 +148,7 @@ public class RatioOperation extends AbstractPerformanceOperation {
 	}
 	
 	public String toString() {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		// TODO
 		return buf.toString();
 	}

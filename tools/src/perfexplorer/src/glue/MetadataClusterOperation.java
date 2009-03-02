@@ -115,7 +115,7 @@ public class MetadataClusterOperation implements SelfAsserting {
 	}
 
 	public String differencesAsString() {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		Hashtable diff = getDifferences();
 		
 		Set keys = diff.keySet();

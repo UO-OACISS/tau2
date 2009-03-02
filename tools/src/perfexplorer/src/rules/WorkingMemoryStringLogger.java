@@ -32,7 +32,7 @@ public class WorkingMemoryStringLogger extends WorkingMemoryLogger {
 	 */
 	@Override
 	public void logEventCreated(LogEvent logEvent) {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		switch (logEvent.getType()) {
 		case LogEvent.ACTIVATION_CANCELLED:
 	        buf.append("ACTIVATION CANCELLED\t" );
@@ -62,7 +62,7 @@ public class WorkingMemoryStringLogger extends WorkingMemoryLogger {
      * The log is automatically cleared afterwards.
      */
     public String toString() {
-    	StringBuffer buf = new StringBuffer();
+    	StringBuilder buf = new StringBuilder();
     	for (String event : this.events) {
     		buf.append(event + "\n");
     	}

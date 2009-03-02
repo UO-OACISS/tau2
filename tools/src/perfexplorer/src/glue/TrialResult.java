@@ -18,7 +18,7 @@ import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
  * This class is an implementation of the AbstractResult class, and loads a trial
  * from the database into a result object.
  * 
- * <P>CVS $Id: TrialResult.java,v 1.10 2009/02/27 00:45:09 khuck Exp $</P>
+ * <P>CVS $Id: TrialResult.java,v 1.11 2009/03/02 19:23:50 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 
@@ -59,13 +59,13 @@ public class TrialResult extends AbstractResult {
 	private void buildTrialResult(Trial trial, String metric, String event, String thread) {
 		// hit the databsae, and get the data for this trial
 		DB db = PerfExplorerServer.getServer().getDB();
-		StringBuffer sql = null;
+		StringBuilder sql = null;
 		PreparedStatement statement = null;
 		
 		try {
 			int threadsPerContext = Integer.parseInt(trial.getField("threads_per_context"));
 			int threadsPerNode = Integer.parseInt(trial.getField("contexts_per_node")) * threadsPerContext;
-			sql = new StringBuffer();
+			sql = new StringBuilder();
 			sql.append("select e.name, ");
 			sql.append("m.name, ");
 			sql.append("(p.node * " + threadsPerNode + ") + ");
@@ -136,7 +136,7 @@ public class TrialResult extends AbstractResult {
 			statement.close();
 
 			// now, get the user events
-			sql = new StringBuffer();
+			sql = new StringBuilder();
 			sql.append("select a.name, ");
 			sql.append("(p.node * " + threadsPerNode + ") + ");
 			sql.append("(p.context * " + threadsPerContext + ") + ");

@@ -127,7 +127,7 @@ class XMLProfileNode extends XMLElementNode {
 					threadID = attributes.getValue(i);
 				} 
 			}
-			StringBuffer buf = new StringBuffer();
+			StringBuilder buf = new StringBuilder();
 			buf.append("NCT: ");
 			buf.append(nodeID);
 			buf.append(", ");

@@ -54,7 +54,7 @@ import org.jfree.data.xy.XYDataset;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  * 
- * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.17 2006/09/13 23:28:21 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.18 2009/03/02 19:23:51 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -172,7 +172,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 			PreparedStatement statement = null;
 			// for each centroid, save the data
 			// TODO - MAKE THIS A GENERAL USE LATER!
-			StringBuffer buf = new StringBuffer();
+			StringBuilder buf = new StringBuilder();
 			buf.append("insert into analysis_result ");
 			buf.append(" (analysis_settings, description, thumbnail_size, thumbnail, image_size, image, result_type) values (?, ?, ?, ?, ?, ?, ?)");
 			statement = db.prepareStatement(buf.toString());
@@ -201,7 +201,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 			}
 			int analysisResultID = Integer.parseInt(db.getDataItem(tmpStr));
 			
-			buf = new StringBuffer();
+			buf = new StringBuilder();
 			buf.append("insert into analysis_result_data ");
 			buf.append(" (interval_event, metric, value, data_type, analysis_result, cluster_index)");
 			buf.append(" values (?, ?, ?, ?, ?, ?)");
@@ -244,7 +244,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 			DB db = PerfExplorerServer.getServer().getDB();
 			PreparedStatement statement = null;
 			// First, get the total number of rows we are expecting
-			StringBuffer sql = new StringBuffer();
+			StringBuilder sql = new StringBuilder();
 
             if (db.getDBType().compareTo("oracle") == 0) {
                 sql.append("select count(p.excl) ");
@@ -287,7 +287,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 
 			if (modelData.getCurrentSelection() instanceof Metric) {
 				// Next, get the event names, and count them
-				sql = new StringBuffer();
+				sql = new StringBuilder();
 				sql.append("select e.id, e.name from interval_event e ");
 				if (modelData.getDimensionReduction().equals(TransformationType.OVER_X_PERCENT)) {
 					sql.append("inner join interval_mean_summary s on ");
@@ -326,7 +326,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 			} else {
 
 				// Next, get the metric names, and count them
-				sql = new StringBuffer();
+				sql = new StringBuilder();
 				sql.append("select m.id, m.name from metric m ");
 				sql.append("where m.trial = ?");
 				sql.append(" order by 1");
@@ -348,7 +348,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 			}
 
 			// get the number of threads
-			sql = new StringBuffer();
+			sql = new StringBuilder();
 			sql.append("select max(node), max(context), max(thread) ");
 			sql.append("from interval_location_profile ");
 			sql.append("inner join interval_event ");
@@ -411,7 +411,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 			PerfExplorerServer.getServer().getControl().WAIT("getRawData");
 			DB db = PerfExplorerServer.getServer().getDB();
 			PreparedStatement statement = null;
-			StringBuffer sql = new StringBuffer();
+			StringBuilder sql = new StringBuilder();
 			if (modelData.getDimensionReduction().equals(TransformationType.OVER_X_PERCENT)) {
 				sql.append("select e.id, (p.node*");
 				sql.append(contexts * threads);

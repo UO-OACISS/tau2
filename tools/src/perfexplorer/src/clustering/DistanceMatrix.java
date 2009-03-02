@@ -11,7 +11,7 @@ package edu.uoregon.tau.perfexplorer.clustering;
   * is a diagonal matrix, and only the lower-left quadrants below the
   * diagonal are used.
   *
-  * <P>CVS $Id: DistanceMatrix.java,v 1.4 2009/02/24 00:53:35 khuck Exp $</P>
+  * <P>CVS $Id: DistanceMatrix.java,v 1.5 2009/03/02 19:23:49 khuck Exp $</P>
   * @author khuck
   * @version 0.1
   * @since   0.1
@@ -106,7 +106,7 @@ public class DistanceMatrix {
      * @return
      */
     public String toString() {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         for (int i = 0; i < dimension ; i++) {
             for (int j = 0; j < dimension ; j++) {
                 buf.append(distances[i][j] + " ");

@@ -33,7 +33,7 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 	private int curThread = -1;
 	private DB db = null;
 	private Trial trial;
-	private StringBuffer buf = null;
+	private StringBuilder buf = null;
 	private PreparedStatement statement = null;
 	private double mainInclusive = 0.0;
 	private double[] accumulators = {0,0,0,0,0,0,0};
@@ -141,7 +141,7 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 	}
 
 	private void getNodeContextThreadInfo() throws SQLException {
-		buf = new StringBuffer();
+		buf = new StringBuilder();
 		//event = event + ".kevin";
 		buf.append("select node_count, contexts_per_node, threads_per_context from trial where id = ?");
 		statement = db.prepareStatement(buf.toString());
@@ -170,7 +170,7 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 			curContext = 0;
 			curNode++;
 		}
-		buf = new StringBuffer();
+		buf = new StringBuilder();
 		buf.append("insert into interval_location_profile (interval_event, node, ");
 		buf.append("context, thread, metric, inclusive_percentage, inclusive, ");
 		buf.append("exclusive_percentage, exclusive, call, subroutines, ");
@@ -219,7 +219,7 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 	}
 
 	private void insertTotalAndAverage(PerformanceResult input, int metricID, int eventID, String event, String metric) throws SQLException {
-		buf = new StringBuffer();
+		buf = new StringBuilder();
 		buf.append("insert into interval_total_summary (interval_event, metric, ");
 		buf.append("inclusive_percentage, inclusive, ");
 		buf.append("exclusive_percentage, exclusive, call, subroutines, ");
@@ -238,7 +238,7 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 		statement.execute();
 		statement.close();		
 
-		buf = new StringBuffer();
+		buf = new StringBuilder();
 		buf.append("insert into interval_mean_summary (interval_event, metric, ");
 		buf.append("inclusive_percentage, inclusive, ");
 		buf.append("exclusive_percentage, exclusive, call, subroutines, ");
@@ -261,7 +261,7 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 
 	private int insertEvent(String event) throws SQLException {
 		int eventID = 0;
-		buf = new StringBuffer();
+		buf = new StringBuilder();
 		//event = event + ".kevin";
 		buf.append("select id from interval_event where trial = ? and name = ?");
 		statement = db.prepareStatement(buf.toString());
@@ -276,7 +276,7 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 		statement.close();
 		// do we need to insert a new event?
 		if (eventID == 0) {
-			buf = new StringBuffer();
+			buf = new StringBuilder();
 			buf.append("insert into interval_event (trial, name) values (?, ?)");
 			statement = db.prepareStatement(buf.toString());
 			statement.setInt(1, trial.getID());
@@ -300,7 +300,7 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 	private int insertMetric(String metric) throws SQLException, NumberFormatException {
 		
 		int metricID;
-		buf = new StringBuffer();
+		buf = new StringBuilder();
 		buf.append("insert into metric (trial, name) values (?, ?) ");
 		statement = db.prepareStatement(buf.toString());
 		statement.setInt(1, trial.getID());

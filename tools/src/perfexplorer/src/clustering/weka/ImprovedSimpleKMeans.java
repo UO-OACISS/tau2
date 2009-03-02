@@ -44,7 +44,7 @@ import weka.classifiers.rules.DecisionTable.hashKey;
  *
  * @author Mark Hall (mhall@cs.waikato.ac.nz)
  * @author Eibe Frank (eibe@cs.waikato.ac.nz)
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  * @see Clusterer
  * @see OptionHandler
  */
@@ -601,7 +601,7 @@ public class ImprovedSimpleKMeans extends weka.clusterers.Clusterer
         }
       }
     }
-    StringBuffer temp = new StringBuffer();
+    StringBuilder temp = new StringBuilder();
     String naString = "N/A";
     for (int i = 0; i < maxWidth+2; i++) {
       naString += " ";

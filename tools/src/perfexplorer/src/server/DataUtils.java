@@ -57,7 +57,7 @@ public class DataUtils {
 			
 			PreparedStatement statement = null;
 			// First, get the total number of rows we are expecting
-			StringBuffer sql = new StringBuffer();
+			StringBuilder sql = new StringBuilder();
 			
             if (db.getDBType().compareTo("oracle") == 0) {
                 sql.append("select count(p.excl) ");
@@ -97,7 +97,7 @@ public class DataUtils {
 
 			if (modelData.getCurrentSelection() instanceof Metric) {
 				// Next, get the event names, and count them
-				sql = new StringBuffer();
+				sql = new StringBuilder();
 				sql.append("select e.id, e.name from interval_event e ");
 				if (modelData.getDimensionReduction().equals(TransformationType.OVER_X_PERCENT)) {
 					sql.append("inner join interval_mean_summary s on ");
@@ -133,7 +133,7 @@ public class DataUtils {
 			} else {
 
 				// Next, get the metric names, and count them
-				sql = new StringBuffer();
+				sql = new StringBuilder();
 				sql.append("select m.id, m.name from metric m ");
 				sql.append("where m.trial = ?");
 				sql.append(" order by 1");
@@ -152,7 +152,7 @@ public class DataUtils {
 			}
 
 			// get the number of threads
-			sql = new StringBuffer();
+			sql = new StringBuilder();
 			sql.append("select max(node), max(context), max(thread) ");
 			sql.append("from interval_location_profile ");
 			sql.append("inner join interval_event ");
@@ -202,7 +202,7 @@ public class DataUtils {
 		try {
 			DB db = session.db();
 			PreparedStatement statement = null;
-			StringBuffer sql = new StringBuffer();
+			StringBuilder sql = new StringBuilder();
 			if (modelData.getDimensionReduction().equals(TransformationType.OVER_X_PERCENT)) {
 				sql.append("select e.id, (p.node*");
 				sql.append(contexts * threads);

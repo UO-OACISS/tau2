@@ -29,6 +29,7 @@ import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 import edu.uoregon.tau.perfexplorer.common.ChartType;
 import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
 import edu.uoregon.tau.perfexplorer.constants.Constants;
+import edu.uoregon.tau.common.Utility;
 
 public class ImageUtils {
 	
@@ -58,6 +59,7 @@ public class ImageUtils {
             true,                            // tooltips
             false                            // urls
         );
+		Utility.applyDefaultChartTheme(chart);
         File outfile = new File(Constants.TMPDIR + "thumbnail." + modelData.toShortString() + ".png");
         try {
         		ChartUtilities.saveChartAsPNG(outfile, chart, 100, 100);
@@ -106,6 +108,7 @@ public class ImageUtils {
              true,                            // tooltips
              false                            // urls
          );
+		Utility.applyDefaultChartTheme(chart);
          File outfile = new File(Constants.TMPDIR + "image." + modelData.toShortString() + ".png");
          try {
          		ChartUtilities.saveChartAsPNG(outfile, chart, 500, 500);
@@ -138,6 +141,7 @@ public class ImageUtils {
             true,                            // tooltips
             false                            // urls
         );
+		Utility.applyDefaultChartTheme(chart);
         File outfile = new File(Constants.TMPDIR + "thumbnail." + modelData.toShortString() + ".png");
         try {
         		ChartUtilities.saveChartAsPNG(outfile, chart, 100, 100);
@@ -172,6 +176,7 @@ public class ImageUtils {
              true,                            // tooltips
              false                            // urls
          );
+		Utility.applyDefaultChartTheme(chart);
          File outfile = new File(Constants.TMPDIR + "image." + modelData.toShortString() + ".png");
          try {
          		ChartUtilities.saveChartAsPNG(outfile, chart, 500, 500);
@@ -238,6 +243,7 @@ public class ImageUtils {
 	            false,
 	            false
 	        );
+		Utility.applyDefaultChartTheme(chart);
 	        outfile = new File(Constants.TMPDIR + "image." + modelData.toShortString() + ".png");
 	        try {
 	        		ChartUtilities.saveChartAsPNG(outfile, chart, 500, 500);
@@ -336,6 +342,7 @@ public class ImageUtils {
 
              JFreeChart chart = new JFreeChart("Correlation Results: r = " + 
                  rCorrelation, JFreeChart.DEFAULT_TITLE_FONT, plot, true);
+		Utility.applyDefaultChartTheme(chart);
      
      
              outfile = new File(Constants.TMPDIR + "image." + modelData.toShortString() + ".png");

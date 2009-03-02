@@ -15,7 +15,7 @@ import java.util.ArrayList;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.36 2009/02/27 00:45:09 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.37 2009/03/02 19:23:50 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -772,7 +772,7 @@ public class RMIPerfExplorerModel implements Serializable {
      * @return
      */
 	public String getViewSelectionPath (boolean joinApp, boolean joinExp, String dbType) {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		if (joinExp)
 			buf.append(" inner join experiment e on t.experiment = e.id ");
 		if (joinApp)
@@ -815,7 +815,7 @@ public class RMIPerfExplorerModel implements Serializable {
      * @return
      */
 	public String getViewSelectionString (String dbType) {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		int i = fullPath.length - 1;
 		RMIView view = (RMIView) fullPath[i];
 		if (//(view.getField("operator").equalsIgnoreCase("like")) || //{

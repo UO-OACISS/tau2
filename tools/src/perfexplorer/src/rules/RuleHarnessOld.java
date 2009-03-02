@@ -237,7 +237,7 @@ public class RuleHarnessOld {
 		}
 		
 		public String toString() {
-			StringBuffer buf = new StringBuffer();
+			StringBuilder buf = new StringBuilder();
 			// need to format this better
 			if (metricName != null) {
 				buf.append(metricName + ", ");

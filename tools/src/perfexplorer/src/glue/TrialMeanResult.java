@@ -58,7 +58,7 @@ public class TrialMeanResult extends AbstractResult {
 			int threadsPerContext = Integer.parseInt(trial.getField("threads_per_context"));
 			int threadsPerNode = Integer.parseInt(trial.getField("contexts_per_node")) * threadsPerContext;
 			this.originalThreads = threadsPerNode * Integer.parseInt(trial.getField("node_count"));
-			StringBuffer sql = new StringBuffer();
+			StringBuilder sql = new StringBuilder();
 			sql.append("select e.name, ");
 			sql.append("m.name, ");
             

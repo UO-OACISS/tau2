@@ -289,7 +289,7 @@ public class PerfExplorerActionListener implements ActionListener {
 		long memUsage = (Runtime.getRuntime().totalMemory() -
 			Runtime.getRuntime().freeMemory()) / 1024;
 
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		//for (java.util.Enumeration e = System.getProperties().propertyNames(); e.hasMoreElements() ;) {
 		    //System.out.println(e.nextElement());
 		//}
@@ -547,7 +547,7 @@ public class PerfExplorerActionListener implements ActionListener {
 
 	private int getConfirmation(RMIPerfExplorerModel theModel) {
 		Object [] options = { "No, not yet" , "Yes, do analysis" };
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		buf.append("Analysis method: " + theModel.getClusterMethod());
 		buf.append("\nDimension Reduction: " + theModel.getDimensionReduction());
 		if (theModel.getDimensionReduction().equals(TransformationType.OVER_X_PERCENT)) 

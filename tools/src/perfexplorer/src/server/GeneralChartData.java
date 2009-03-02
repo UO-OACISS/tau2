@@ -42,7 +42,7 @@ import java.io.InputStream;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.32 2009/02/27 00:45:10 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.33 2009/03/02 19:23:51 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -55,7 +55,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 	private String eventName = null;
 	private String groupByColumn = null;
 	private List columnValues = null;
-	private StringBuffer buf = null;
+	private StringBuilder buf = null;
 	
 	/**
 	 * Constructor
@@ -301,7 +301,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 					     	model.getChartMetadataFieldName().equals(name.getNodeValue())) &&
 							(model.getChartMetadataFieldValue() == null ||
 					     	model.getChartMetadataFieldValue().equals(value.getNodeValue()))) {
-							buf = new StringBuffer();
+							buf = new StringBuilder();
 							buf.append("insert into temp_xml_metadata VALUES (?,?,?)");
 							PreparedStatement statement2 = db.prepareStatement(buf.toString());
 							statement2.setInt(1, xmlResults.getInt(1));
@@ -368,7 +368,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 			// if we only want the main event, handle that
 			// we need a sub query.  Bah.
 			if (model.getMainEventOnly()) {
-				buf = new StringBuffer();
+				buf = new StringBuilder();
 				buf.append("select ie.name from interval_event ie ");
    				buf.append("inner join interval_mean_summary ims ");
 				buf.append("on ie.id = ims.interval_event, ");
@@ -587,7 +587,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 			String seriesName = model.getChartSeriesName();
 			String xAxisName = model.getChartXAxisName();
 			String yAxisName = model.getChartYAxisName();
-			buf = new StringBuffer();
+			buf = new StringBuilder();
 			String tableName = "interval_mean_summary";
 
 			if (model.getChartSeriesName().equals("atomic_event.name")) {
@@ -717,13 +717,13 @@ public class GeneralChartData extends RMIGeneralChartData {
 		}
 	}
 
-	private static StringBuffer buildCreateTableStatement (String oldTableName, String tableName, DB db, boolean appendAs, boolean doAtomic) {
+	private static StringBuilder buildCreateTableStatement (String oldTableName, String tableName, DB db, boolean appendAs, boolean doAtomic) {
 		// just in case, drop the table in case it is still hanging around.
 		// This sometimes happens with Derby.
 		// Have I ever mentioned that Derby sucks?
 		dropTable(db, tableName);
 
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		if (db.getDBType().equalsIgnoreCase("oracle")) {
 			buf.append("create global temporary table ");
 		} else if ((db.getDBType().equalsIgnoreCase("derby")) ||
@@ -776,7 +776,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 					System.err.println(e.getMessage());
 					e.printStackTrace(System.err);
 				}
-				buf = new StringBuffer();
+				buf = new StringBuilder();
 				buf.append(" insert into " + tableName + " ");
 			} else {
 				buf.append("as ");
@@ -803,7 +803,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 	public static List<String> getXMLFields (RMIPerfExplorerModel model) {
 		// declare the statement here, so we can reference it in the catch
 		// region, if necessary
-		StringBuffer buf = null;
+		StringBuilder buf = null;
 		PreparedStatement statement = null;
 		HashSet<String> set = new HashSet<String>();
 		DB db = null;

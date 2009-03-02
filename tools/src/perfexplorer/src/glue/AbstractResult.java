@@ -19,7 +19,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * interface.  This class has all the member data fields for the plethora
  * of anticipated subclasses.
  * 
- * <P>CVS $Id: AbstractResult.java,v 1.13 2009/02/24 00:53:38 khuck Exp $</P>
+ * <P>CVS $Id: AbstractResult.java,v 1.14 2009/03/02 19:23:50 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0
@@ -666,7 +666,7 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 	}
 	
 	public String toString() {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		
 		for (Integer thread : this.getThreads()) {
 			for (String event : this.getEvents()) {

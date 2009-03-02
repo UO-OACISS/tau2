@@ -155,7 +155,7 @@ public class ScalabilityOperation extends AbstractPerformanceOperation {
 	}
 	
 	public String toString() {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		buf.append("ScalabilityOperation.toString() not yet supported.");
 		return buf.toString();
 	}

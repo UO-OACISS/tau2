@@ -21,7 +21,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIView;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.50 2009/02/27 00:45:09 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.51 2009/03/02 19:23:51 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -34,7 +34,7 @@ public class ChartData extends RMIChartData {
 	private String eventName = null;
 	private String groupByColumn = null;
 	private List<Double> columnValues = null;
-	private StringBuffer buf = null;
+	private StringBuilder buf = null;
 	
 	/**
 	 * Constructor
@@ -227,7 +227,7 @@ public class ChartData extends RMIChartData {
 			DB db = PerfExplorerServer.getServer().getDB();
 
 		PreparedStatement statement = null;
-		buf = new StringBuffer();
+		buf = new StringBuilder();
 		Object object = model.getCurrentSelection();
 		if (dataType == ChartDataType.FRACTION_OF_TOTAL) {
 			// The user wants to know the runtime breakdown by events of one 
@@ -271,7 +271,7 @@ public class ChartData extends RMIChartData {
 			// execution increases.
 			List selections = model.getMultiSelection();
 			buf.append("select ");
-			StringBuffer tmpBuf = new StringBuffer();
+			StringBuilder tmpBuf = new StringBuilder();
 			if (object instanceof RMIView) {
 				if (isLeafView()) {
 					tmpBuf.append(model.getViewSelectionString(db.getDBType()));
@@ -333,7 +333,7 @@ public class ChartData extends RMIChartData {
 			// one or more experiments, as the number of threads of 
 			// execution increases.
 			buf.append("select ");
-			StringBuffer tmpBuf = new StringBuffer();
+			StringBuilder tmpBuf = new StringBuilder();
 			if (object instanceof RMIView) {
 				if (isLeafView()) {
 					tmpBuf.append(" " + model.getViewSelectionString(db.getDBType()) + ", ");
@@ -431,7 +431,7 @@ public class ChartData extends RMIChartData {
 				e.printStackTrace();
 			}
 
-			buf = new StringBuffer();
+			buf = new StringBuilder();
 			buf.append("insert into ");
 			if ((db.getDBType().compareTo("derby") == 0) ||
 			    (db.getDBType().compareTo("db2") == 0))
@@ -482,7 +482,7 @@ public class ChartData extends RMIChartData {
 				e.printStackTrace();
 			}
 
-			buf = new StringBuffer();
+			buf = new StringBuilder();
 			buf.append("select distinct ");
 			if (db.getDBType().compareTo("db2") == 0) {
 				buf.append(" cast (ie.name as varchar(256)), ");
@@ -771,7 +771,7 @@ public class ChartData extends RMIChartData {
 			DB db = PerfExplorerServer.getServer().getDB();
 
 		PreparedStatement statement = null;
-		buf = new StringBuffer();
+		buf = new StringBuilder();
 		Object object = model.getCurrentSelection();
 		if (dataType == ChartDataType.FRACTION_OF_TOTAL) {
 			// The user wants to know the runtime breakdown by events of one 
@@ -878,7 +878,7 @@ public class ChartData extends RMIChartData {
 	private PreparedStatement buildPreQueryStatement () throws SQLException {
 		DB db = PerfExplorerServer.getServer().getDB();
 		PreparedStatement statement = null;
-		buf = new StringBuffer();
+		buf = new StringBuilder();
 		Object object = model.getCurrentSelection();
 		if (dataType == ChartDataType.CORRELATION_DATA) {
 			// The user wants to know the runtime breakdown by events of one 

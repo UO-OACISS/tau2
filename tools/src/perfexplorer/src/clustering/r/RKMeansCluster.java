@@ -21,7 +21,7 @@ import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
  * clustering class.  To access these methods, create an AnalysisFactory,
  * and the factory will be able to create a k-means cluster object.
  *
- * <P>CVS $Id: RKMeansCluster.java,v 1.7 2009/02/24 00:53:35 khuck Exp $</P>
+ * <P>CVS $Id: RKMeansCluster.java,v 1.8 2009/03/02 19:23:49 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -70,7 +70,7 @@ public class RKMeansCluster implements KMeansClusterInterface {
 		PerfExplorerOutput.print("Copying data...");
 		rEvaluator.voidEval("raw <- matrix(0, nrow=" +
 		inputData.numVectors() + ", ncol=" + inputData.numDimensions() + ")");
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		buf.append("alldata <- matrix(c(");
 		for (int i = 0 ; i < inputData.numVectors() ; i++) {
 			for (int j = 0 ; j < inputData.numDimensions() ; j++) {
