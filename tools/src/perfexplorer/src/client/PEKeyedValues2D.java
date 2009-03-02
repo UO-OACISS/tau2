@@ -29,7 +29,7 @@
  * Original Author:  David Gilbert (for Object Refinery Limited);
  * Contributor(s):   Andreas Schroeder;
  *
- * $Id: PEKeyedValues2D.java,v 1.3 2009/02/27 00:45:07 khuck Exp $
+ * $Id: PEKeyedValues2D.java,v 1.4 2009/03/02 21:08:21 wspear Exp $
  *
  * Changes
  * -------
@@ -122,7 +122,12 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
         if (rowData != null) {
             final Comparable columnKey = (Comparable) this.columnKeys.get(column);
             if (columnKey != null) {
+            	try{
                 result = rowData.getValue(columnKey);
+            	}
+            	catch(Exception e){
+            		return null;
+            	}
             }
         }
         return result;
