@@ -85,6 +85,11 @@ public class PerfExplorerTreeSelectionListener implements TreeSelectionListener 
 			PerformanceExplorerPane.getPane().updateImagePanel();
 			// update the results view
 		}
+		// update the chart control center, if it is open
+		ChartGUI chartGui = ChartGUI.getInstance(false);
+		if (chartGui != null) {
+			chartGui.refresh();
+		}
 		pane.update();
 	}
 

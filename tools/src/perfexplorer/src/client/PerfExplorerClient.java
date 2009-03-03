@@ -76,38 +76,9 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 			}
 		});
 
-		// window stuff
-		//this.setPreferredSize(new Dimension(1190, 700));    // only works in java 5+
 		int windowWidth = 1190;
 		int windowHeight = 620;
-
-        //Grab the screen size.
-        Toolkit tk = Toolkit.getDefaultToolkit();
-        Dimension screenDimension = tk.getScreenSize();
-        int screenHeight = screenDimension.height;
-        int screenWidth = screenDimension.width;
-
-        Point savedPosition = null; //ParaProf.preferences.getManagerWindowPosition();
-
-        if (savedPosition == null || (savedPosition.x + windowWidth) > screenWidth
-                || (savedPosition.y + windowHeight > screenHeight)) {
-
-            //Find the center position with respect to this window.
-            int xPosition = (screenWidth - windowWidth) / 2;
-            int yPosition = (screenHeight - windowHeight) / 2;
-
-            //Offset a little so that we do not interfere too much with
-            //the
-            //main window which comes up in the center of the screen.
-            if (xPosition > 50)
-                xPosition = xPosition - 50;
-            if (yPosition > 50)
-                yPosition = yPosition - 50;
-
-            this.setLocation(xPosition, yPosition);
-        } else {
-            this.setLocation(savedPosition);
-        }
+		PerfExplorerWindowUtility.centerWindow(this, windowWidth, windowHeight, 0,0, false);
     	URL url = Utility.getResource("tau32x32.gif");
     	if (url != null)
     		setIconImage(Toolkit.getDefaultToolkit().getImage(url));

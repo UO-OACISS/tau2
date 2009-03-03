@@ -9,9 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JTree;
@@ -85,6 +87,7 @@ public class PerfExplorerActionListener implements ActionListener {
 	public final static String DO_IQR_BOXCHART = "Create BoxChart";
 	public final static String DO_HISTOGRAM = "Create Histograms";
 	public final static String DO_PROBABILITY_PLOT = "Create Normal Probability Plot";
+	public static final String DO_CHARTS = "Open Scalability Chart Tool";
 
 	private PerfExplorerClient mainFrame;
 
@@ -180,6 +183,8 @@ public class PerfExplorerActionListener implements ActionListener {
 					if (validDistributionSelection())
 						PerfExplorerProbabilityPlot.doProbabilityPlot();
 			// chart items
+				} else if (arg.equals(DO_CHARTS)) {
+					createChartDialogBox();
 				} else if (arg.equals(SET_PROBLEM_SIZE)) {
 					checkAndSetProblemSize(true);
 				} else if (arg.equals(SET_GROUPNAME)) {
@@ -261,6 +266,11 @@ public class PerfExplorerActionListener implements ActionListener {
 			System.err.println("actionPerformed Exception: " + e.getMessage());
 			e.printStackTrace();
 		} 
+	}
+
+	private void createChartDialogBox() {
+		System.out.println("Opening Dialog Box to create charts");
+		JFrame dialogBox = ChartGUI.getInstance(true);
 	}
 
 	private void updateAll (Container container) {

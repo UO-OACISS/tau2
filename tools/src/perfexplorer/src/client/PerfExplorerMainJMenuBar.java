@@ -209,6 +209,12 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		chartMenu.setMnemonic(KeyEvent.VK_C);
 
 		//Add a menu item.
+		JMenuItem allInOneItem = new JMenuItem(
+			PerfExplorerActionListener.DO_CHARTS);
+		allInOneItem.addActionListener(listener);
+		chartMenu.add(allInOneItem);
+
+		//Add a menu item.
 		JMenuItem groupNameItem = new JMenuItem(
 			PerfExplorerActionListener.SET_GROUPNAME);
 		groupNameItem.addActionListener(listener);
