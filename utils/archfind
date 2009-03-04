@@ -55,12 +55,6 @@ if [ $ARCH = sun4 ]; then
     fi
 fi
 
-# Check for TMC cm5
-if [ $ARCH = sun4 -o $ARCH = solaris2 ]; then
-    if [ -e /usr/bin/cmmd-ld ]; then
-	XDEV="cm5 $XDEV"
-    fi
-fi
 
 # Check for SGI Symmetric Multiprocessing engine
 if [ $ARCH = sgi4k -o $ARCH = sgi8k ]; then
