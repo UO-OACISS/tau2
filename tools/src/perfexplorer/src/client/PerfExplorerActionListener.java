@@ -8,6 +8,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -19,6 +20,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JTree;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+
+import org.jfree.data.general.SeriesException;
 
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.common.VectorExport;
@@ -197,59 +200,87 @@ public class PerfExplorerActionListener implements ActionListener {
 					checkAndSetTimesteps(true);
 				} else if (arg.equals(TIMESTEPS_CHART)) {
 					if (checkAndSetMetricName(false))
-						if (checkAndSetTimesteps(false))
+						if (checkAndSetTimesteps(false)) {
+							ChartGUI.checkScaling();
 							PerfExplorerChart.doTimestepsChart();
+						}
 				} else if (arg.equals(TOTAL_TIME_CHART)) {
-					if (checkAndSetMetricName(false))
+					if (checkAndSetMetricName(false)) {
+						ChartGUI.checkScaling();
 						PerfExplorerChart.doTotalTimeChart();
+					}
 				} else if (arg.equals(EFFICIENCY_CHART)) {
 					if (checkAndSetMetricName(false))
-						if (checkAndSetProblemSize(false))
+						if (checkAndSetProblemSize(false)) {
+							ChartGUI.checkScaling();
 							PerfExplorerChart.doEfficiencyChart();
+						}
 				} else if (arg.equals(EFFICIENCY_EVENTS_CHART)) {
 					if (checkAndSetMetricName(false))
-						if (checkAndSetProblemSize(false))
-						PerfExplorerChart.doEfficiencyEventsChart();
+						if (checkAndSetProblemSize(false)) {
+							ChartGUI.checkScaling();
+							PerfExplorerChart.doEfficiencyEventsChart();
+						}
 				} else if (arg.equals(EFFICIENCY_ONE_EVENT_CHART)) {
 					if (checkAndSetMetricName(false))
 						if (checkAndSetEventName(false))
-						if (checkAndSetProblemSize(false))
+						if (checkAndSetProblemSize(false)) {
+							ChartGUI.checkScaling();
 							PerfExplorerChart.doEfficiencyOneEventChart();
+						}
 				} else if (arg.equals(SPEEDUP_CHART)) {
 					if (checkAndSetMetricName(false))
-						if (checkAndSetProblemSize(false))
-						PerfExplorerChart.doSpeedupChart();
+						if (checkAndSetProblemSize(false)) {
+							ChartGUI.checkScaling();
+							PerfExplorerChart.doSpeedupChart();
+						}
 				} else if (arg.equals(SPEEDUP_EVENTS_CHART)) {
 					if (checkAndSetMetricName(false))
-						if (checkAndSetProblemSize(false))
-						PerfExplorerChart.doSpeedupEventsChart();
+						if (checkAndSetProblemSize(false)) {
+							ChartGUI.checkScaling();
+							PerfExplorerChart.doSpeedupEventsChart();
+						}
 				} else if (arg.equals(SPEEDUP_ONE_EVENT_CHART)) {
 					if (checkAndSetMetricName(false))
 						if (checkAndSetEventName(false))
-						if (checkAndSetProblemSize(false))
+						if (checkAndSetProblemSize(false)) {
+							ChartGUI.checkScaling();
 							PerfExplorerChart.doSpeedupOneEventChart();
+						}
 				} else if (arg.equals(COMMUNICATION_CHART)) {
 					if (checkAndSetMetricName(false))
-						if (checkAndSetGroupName(false))
+						if (checkAndSetGroupName(false)) {
+							ChartGUI.checkScaling();
 							PerfExplorerChart.doCommunicationChart();
+						}
 				} else if (arg.equals(FRACTION_CHART)) {
-					if (checkAndSetMetricName(false))
+					if (checkAndSetMetricName(false)) {
+						ChartGUI.checkScaling();
 						PerfExplorerChart.doFractionChart();
+					}
 				} else if (arg.equals(CORRELATION_CHART)) {
 					if (checkAndSetMetricName(false))
-						if (checkAndSetProblemSize(false))
+						if (checkAndSetProblemSize(false)) {
+							ChartGUI.checkScaling();
 							PerfExplorerChart.doCorrelationChart();
+						}
 				} else if (arg.equals(EFFICIENCY_PHASE_CHART)) {
 					if (checkAndSetMetricName(false))
-						if (checkAndSetProblemSize(false))
-						PerfExplorerChart.doEfficiencyPhasesChart();
+						if (checkAndSetProblemSize(false)) {
+							ChartGUI.checkScaling();
+							PerfExplorerChart.doEfficiencyPhasesChart();
+						}
 				} else if (arg.equals(SPEEDUP_PHASE_CHART)) {
 					if (checkAndSetMetricName(false))
-						if (checkAndSetProblemSize(false))
-						PerfExplorerChart.doSpeedupPhasesChart();
+						if (checkAndSetProblemSize(false)) {
+							ChartGUI.checkScaling();
+							PerfExplorerChart.doSpeedupPhasesChart();
+						}
 				} else if (arg.equals(FRACTION_PHASE_CHART)) {
-					if (checkAndSetMetricName(false))
+					if (checkAndSetMetricName(false)) {
+						ChartGUI.checkScaling();
 						PerfExplorerChart.doFractionPhasesChart();
+					}
 			// view items
 				} else if (arg.equals(CREATE_NEW_VIEW)) {
 					int parent = 0; // no parent
@@ -262,6 +293,14 @@ public class PerfExplorerActionListener implements ActionListener {
 					System.out.println("unknown event! " + arg);
 				}
 			}
+		} catch (SeriesException e) {
+			// this shouldn't happen, but if it does, handle it gracefully.
+			StringBuilder sb = new StringBuilder();
+			sb.append("Two or more trials in this selection have the same total number of threads of execution, and an error occurred.\n");
+			sb.append("To create a scalability chart, please ensure the trials selected have different numbers of threads.\n");
+			sb.append("To create a different parametric chart, please use the custom chart interface.");			
+			JOptionPane.showMessageDialog(PerfExplorerClient.getMainFrame(), sb.toString(),
+					"Selection Warning", JOptionPane.ERROR_MESSAGE);
 		} catch (Exception e) {
 			System.err.println("actionPerformed Exception: " + e.getMessage());
 			e.printStackTrace();

@@ -40,6 +40,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Collections;
+import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.NoSuchElementException;
 import java.util.Queue;
@@ -51,7 +52,7 @@ import java.util.Queue;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.76 2009/03/02 19:23:51 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.77 2009/03/04 17:55:09 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -1876,6 +1877,89 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 
 	public int getSessionCount() {
 		return this.sessions.size();
+	}
+
+	public Map<Integer, Integer> checkScalabilityChartData(
+			RMIPerfExplorerModel modelData) throws RemoteException {
+		//PerfExplorerOutput.println("getPotentialMetrics()...");
+		Map<Integer, Integer> counts = new HashMap<Integer, Integer>();
+		StringBuilder buf = new StringBuilder();
+		try {
+			DB db = this.getDB();
+			buf.append("select t.id, node_count * contexts_per_node * threads_per_context");
+			buf.append(" from trial t ");
+			Object object = modelData.getCurrentSelection();
+			if (object instanceof RMIView) {
+				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
+			} else {
+				buf.append(" inner join experiment e on t.experiment = e.id ");
+				List selections = modelData.getMultiSelection();
+				if (selections == null) {
+					// just one selection
+					Object selection = modelData.getCurrentSelection();
+					if (selection instanceof Application) {
+						buf.append(" where e.application = ");
+						buf.append(modelData.getApplication().getID());
+					} else if (selection instanceof Experiment) {
+						buf.append(" where t.experiment = ");
+						buf.append(modelData.getExperiment().getID());
+					} else if (selection instanceof Trial) {
+						buf.append(" where t.id = ");
+						buf.append(modelData.getTrial().getID());
+					}
+				} else {
+					Object selection = modelData.getCurrentSelection();
+					if (selection instanceof Application) {
+						buf.append(" where e.application in (");
+						for (int i = 0 ; i < selections.size() ; i++) {
+							Application app = (Application)selections.get(i);
+							if (i > 0)
+								buf.append(",");
+							buf.append(app.getID());
+						}
+						buf.append(")");
+					} else if (selection instanceof Experiment) {
+						buf.append(" where t.experiment in (");
+						for (int i = 0 ; i < selections.size() ; i++) {
+							Experiment exp = (Experiment)selections.get(i);
+							if (i > 0)
+								buf.append(",");
+							buf.append(exp.getID());
+						}
+						buf.append(")");
+					} else if (selection instanceof Trial) {
+						buf.append(" where t.id in (");
+						for (int i = 0 ; i < selections.size() ; i++) {
+							Trial trial = (Trial)selections.get(i);
+							if (i > 0)
+								buf.append(",");
+							buf.append(trial.getID());
+						}
+						buf.append(")");
+					}
+				}
+			}
+			//PerfExplorerOutput.println(buf.toString());
+			PreparedStatement statement = db.prepareStatement(buf.toString());
+			ResultSet results = statement.executeQuery();
+			while (results.next() != false) {
+				Integer threads = new Integer(results.getInt(2));
+				Integer count = counts.get(threads);
+				if (count == null)
+					count = new Integer(1);
+				else
+					count = count+1;
+				counts.put(threads, count);
+			}
+			results.close();
+			statement.close();
+		} catch (Exception e) {
+			String error = "ERROR: Couldn't select the thread counts from the database!";
+			System.err.println(error);
+			System.err.println(buf.toString());
+			e.printStackTrace();
+		}
+		return counts;
 	}
 
 }

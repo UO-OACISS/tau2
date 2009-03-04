@@ -14,11 +14,14 @@ import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.GridBagLayout;
 
 import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -30,6 +33,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+
+import org.jfree.data.general.SeriesException;
 
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfdmf.Application;
@@ -70,6 +75,7 @@ public class ChartGUI extends JFrame implements ActionListener {
    	private PerfExplorerConnection server = null;
    	private PerfExplorerModel theModel = null;
    	private static ChartGUI theInstance = null;
+   	private static boolean averageWarning = false;
 
 	/**
 	 * @param title
@@ -89,6 +95,13 @@ public class ChartGUI extends JFrame implements ActionListener {
     	if (url != null)
     		setIconImage(Toolkit.getDefaultToolkit().getImage(url));
     	
+		// null the static reference if the user closes the window.
+		addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				ChartGUI.theInstance = null;
+			}
+		});
+
     	addComponents();
     	refreshStatic();
 		refreshDynamic();
@@ -363,6 +376,7 @@ public class ChartGUI extends JFrame implements ActionListener {
 					theModel.setXPercent(reductionThresholdValue);
 				}
 				
+				ChartGUI.checkScaling();
 				ChartType chartType = (ChartType)this.chart.getSelectedItem();
 				switch (chartType.index) {
 				case 0:
@@ -425,9 +439,35 @@ public class ChartGUI extends JFrame implements ActionListener {
 			} else {
 				// not handled yet
 			}
+		} catch (SeriesException e) {
+			// this shouldn't happen, but if it does, handle it gracefully.
+			StringBuilder sb = new StringBuilder();
+			sb.append("Two or more trials in this selection have the same total number of threads of execution, and an error occurred.\n");
+			sb.append("To create a scalability chart, please ensure the trials selected have different numbers of threads.\n");
+			sb.append("To create a different parametric chart, please use the custom chart interface.");			
+			JOptionPane.showMessageDialog(PerfExplorerClient.getMainFrame(), sb.toString(),
+					"Selection Warning", JOptionPane.ERROR_MESSAGE);
 		} catch (Exception e) {
 			System.err.println("actionPerformed Exception: " + e.getMessage());
 			e.printStackTrace();
 		} 
+	}
+
+	public static void checkScaling() {
+		// check to make sure that there is only one value for each processor count
+		PerfExplorerModel theModel = PerfExplorerModel.getModel();
+		Map<Integer, Integer> counts = PerfExplorerConnection.getConnection().checkScalabilityChartData(theModel);
+		for (Integer threads : counts.keySet()) {
+			Integer count = counts.get(threads);
+			if (count > 1 && !ChartGUI.averageWarning) {
+				StringBuilder sb = new StringBuilder();
+				sb.append("Two or more trials in this selection have the same total number of threads of execution.\n");
+				sb.append("Trials with the same numbers of threads will have their measurements averaged.\n");
+				sb.append("To create a different parametric chart, please use the custom chart interface.");			
+				JOptionPane.showMessageDialog(PerfExplorerClient.getMainFrame(), sb.toString(),
+						"Selection Warning", JOptionPane.WARNING_MESSAGE);
+				ChartGUI.averageWarning = true;
+			}
+		}
 	}
 }

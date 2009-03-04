@@ -15,7 +15,7 @@ import java.util.ArrayList;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.37 2009/03/02 19:23:50 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.38 2009/03/04 17:55:09 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -71,6 +71,8 @@ public class RMIPerfExplorerModel implements Serializable {
 	protected int connectionIndex = 0;
 
 	protected String clusterValueType = null;
+	
+   	private boolean averageWarning = false;
 	
     public String getClusterValueType() {
 		return clusterValueType;
@@ -1179,5 +1181,19 @@ public class RMIPerfExplorerModel implements Serializable {
 
 	public void addScriptParameter(String name, String value) {
 		this.scriptParameters.put(name, value);
+	}
+
+	/**
+	 * @return the averageWarning
+	 */
+	public boolean getAverageWarning() {
+		return averageWarning;
+	}
+
+	/**
+	 * @param averageWarning the averageWarning to set
+	 */
+	public void setAverageWarning(boolean averageWarning) {
+		this.averageWarning = averageWarning;
 	}
 }

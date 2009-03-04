@@ -3,19 +3,19 @@ package edu.uoregon.tau.perfexplorer.common;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
+import java.util.Map;
 
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Trial;
 
-
 /**
  * This is the main RMI object which is used to send requests to the 
  * PerfExplorerServer object.  This interface defines the API for
  * passing requests to the server.
  * 
- * <P>CVS $Id: RMIPerfExplorer.java,v 1.18 2009/02/27 00:45:09 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorer.java,v 1.19 2009/03/04 17:55:09 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -318,5 +318,15 @@ public interface RMIPerfExplorer extends Remote {
     */
    public List<String> getPotentialAtomicEvents(RMIPerfExplorerModel model)
        throws RemoteException;
+
+   /**
+   * Get the counts for each thread count value for all the selected trials
+   * 
+   * @param model
+   * @return
+   * @throws RemoteException
+   */
+   public Map<Integer, Integer> checkScalabilityChartData(RMIPerfExplorerModel model)
+   	throws RemoteException;
 }
 

@@ -71,7 +71,9 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
             true,                            // tooltips
             false                            // urls
         );
-        //XYPlot plot = chart.getXYPlot();
+		//customizeChart(chart, rawData.getRows(), true);
+
+		//XYPlot plot = chart.getXYPlot();
 		//NumberAxis axis = new NumberAxis("Percentage of Total " + PerfExplorerModel.getModel().getMetricName());
         //axis.setRange(new Range(0,100));
         //plot.setRangeAxis(0, axis);
@@ -816,6 +818,9 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
             true,                            // tooltips
             false                            // urls
         );
+		// set the chart to a common style
+		Utility.applyDefaultChartTheme(chart);
+
 		return new PerfExplorerChart(chart, "Total " + PerfExplorerModel.getModel().getMetricName() + " Breakdown");
 	}
 

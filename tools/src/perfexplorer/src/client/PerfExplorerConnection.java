@@ -410,4 +410,14 @@ public class PerfExplorerConnection {
 		return events;
     }
 
+	public Map<Integer, Integer> checkScalabilityChartData(RMIPerfExplorerModel model) {
+		Map<Integer, Integer> counts = null;
+		try {
+		    counts = server.checkScalabilityChartData(model);
+		} catch (RemoteException e) {
+		    handleError(e, "checkScalabilityChartData(" + model.toString() + ")");
+		}
+		return counts;
+	}
+
 }

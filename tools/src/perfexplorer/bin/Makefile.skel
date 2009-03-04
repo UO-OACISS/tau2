@@ -1,4 +1,4 @@
-# $Id: Makefile.skel,v 1.40 2009/02/28 00:07:51 khuck Exp $
+# $Id: Makefile.skel,v 1.41 2009/03/04 17:55:09 khuck Exp $
 # $Name:  $
 
 R_HOME = @RROOT@
@@ -127,6 +127,8 @@ RMIC_CLASSES = classes/edu/uoregon/tau/perfexplorer/server/PerfExplorerServer_St
 
 # remove this for normal make output
 #.SILENT:
+
+## check the JAVA version
 
 default: perfexplorer.jar
 
