@@ -19,7 +19,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * interface.  This class has all the member data fields for the plethora
  * of anticipated subclasses.
  * 
- * <P>CVS $Id: AbstractResult.java,v 1.14 2009/03/02 19:23:50 khuck Exp $</P>
+ * <P>CVS $Id: AbstractResult.java,v 1.15 2009/03/12 20:49:52 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0
@@ -63,6 +63,7 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 	protected Integer trialID = null;
 	protected Map<Integer, String> eventMap = new HashMap<Integer, String>();
 	protected String name = null;
+	private boolean ignoreWarnings = false;
 	
 	public static List<Integer> getTypes() {
 		if (types == null) {
@@ -342,6 +343,8 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 				return (value.doubleValue());
 			}
 		} catch (NullPointerException e) {
+			if (!ignoreWarnings)
+				System.err.println("*** Warning - null inclusive value for thread: " + thread + ", event: " + event + ", metric: " + metric + " ***");
 			return 0.0;
 		}
 		return 0.0;
@@ -355,6 +358,8 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 				return (value.doubleValue());
 			}
 		} catch (NullPointerException e) {
+			if (!ignoreWarnings)
+				System.err.println("*** Warning - null exclusive value for thread: " + thread + ", event: " + event + ", metric: " + metric + " ***");
 			return 0.0;
 		}
 		return 0.0;
@@ -368,6 +373,8 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 				return (value.doubleValue());
 			}
 		} catch (NullPointerException e) {
+			if (!ignoreWarnings)
+				System.err.println("*** Warning - null calls value for thread: " + thread + ", event: " + event + " ***");
 			return 0.0;
 		}
 		return 0.0;
@@ -381,6 +388,8 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 				return (value.doubleValue());
 			}
 		} catch (NullPointerException e) {
+			if (!ignoreWarnings)
+				System.err.println("*** Warning - null subroutine value for thread: " + thread + ", event: " + event + " ***");
 			return 0.0;
 		}
 		return 0.0;
@@ -394,6 +403,8 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 				return (value[USEREVENT_NUMEVENTS - USEREVENT_NUMEVENTS].doubleValue());
 			}
 		} catch (NullPointerException e) {
+			if (!ignoreWarnings)
+				System.err.println("*** Warning - null userevent value for thread: " + thread + ", event: " + event + " ***");
 			return 0.0;
 		}
 		return 0.0;
@@ -407,6 +418,8 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 				return (value[USEREVENT_MAX - USEREVENT_NUMEVENTS].doubleValue());
 			}
 		} catch (NullPointerException e) {
+			if (!ignoreWarnings)
+				System.err.println("*** Warning - null userevent max value for thread: " + thread + ", event: " + event + " ***");
 			return 0.0;
 		}
 		return 0.0;
@@ -420,6 +433,8 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 				return (value[USEREVENT_MIN - USEREVENT_NUMEVENTS].doubleValue());
 			}
 		} catch (NullPointerException e) {
+			if (!ignoreWarnings)
+				System.err.println("*** Warning - null userevent min value for thread: " + thread + ", event: " + event + " ***");
 			return 0.0;
 		}
 		return 0.0;
@@ -433,6 +448,8 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 				return (value[USEREVENT_MEAN - USEREVENT_NUMEVENTS].doubleValue());
 			}
 		} catch (NullPointerException e) {
+			if (!ignoreWarnings)
+				System.err.println("*** Warning - null userevent mean value for thread: " + thread + ", event: " + event + " ***");
 			return 0.0;
 		}
 		return 0.0;
@@ -446,6 +463,8 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 				return (value[USEREVENT_SUMSQR - USEREVENT_NUMEVENTS].doubleValue());
 			}
 		} catch (NullPointerException e) {
+			if (!ignoreWarnings)
+				System.err.println("*** Warning - null userevent sumsqr value for thread: " + thread + ", event: " + event + " ***");
 			return 0.0;
 		}
 		return 0.0;
@@ -544,6 +563,8 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
     		if (metric.toUpperCase().contains("TIME") && !metric.startsWith("("))
     			return metric;
     	}
+    	if (!ignoreWarnings)
+    		System.err.println("*** Warning - no time metric found in Trial ***");
 		// if time not found, use something similar
     	for (String metric : metrics) {
     		if (metric.toUpperCase().equals("PAPI_TOT_CYC"))
@@ -560,6 +581,8 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
     		if (metric.toUpperCase().contains("PAPI_FP_") && !metric.startsWith("("))
     			return metric;
     	}
+    	if (!ignoreWarnings)
+    		System.err.println("*** Warning - no floating point metric found in Trial ***");
     	return null;
 	}
 
@@ -567,7 +590,11 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
     	for (String metric : metrics) {
     		if (metric.toUpperCase().contains("PAPI_L1_TCA") && !metric.startsWith("("))
     			return metric;
+    		if (metric.toUpperCase().contains("PAPI_L1_DCA") && !metric.startsWith("("))
+    			return metric;
     	}
+    	if (!ignoreWarnings)
+    		System.err.println("*** Warning - no L1 access metric found in Trial ***");
     	return null;
 	}
 
@@ -577,7 +604,13 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
     			return metric;
     		if (metric.toUpperCase().contains("PAPI_L1_TCM") && !metric.startsWith("("))
     			return metric;
+    		if (metric.toUpperCase().contains("PAPI_L2_DCA") && !metric.startsWith("("))
+    			return metric;
+    		if (metric.toUpperCase().contains("PAPI_L1_DCM") && !metric.startsWith("("))
+    			return metric;
     	}
+    	if (!ignoreWarnings)
+    		System.err.println("*** Warning - no L2 access metric found in Trial ***");
     	return null;
 	}
 
@@ -587,7 +620,13 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
     			return metric;
     		if (metric.toUpperCase().contains("PAPI_L2_TCM") && !metric.startsWith("("))
     			return metric;
+    		if (metric.toUpperCase().contains("PAPI_L3_DCA") && !metric.startsWith("("))
+    			return metric;
+    		if (metric.toUpperCase().contains("PAPI_L2_DCM") && !metric.startsWith("("))
+    			return metric;
     	}
+    	if (!ignoreWarnings)
+    		System.err.println("*** Warning - no L3 access metric found in Trial ***");
     	return null;
 	}
 
@@ -595,7 +634,15 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
     	for (String metric : metrics) {
     		if (metric.toUpperCase().contains("PAPI_L1_TCM") && !metric.startsWith("("))
     			return metric;
+    		if (metric.toUpperCase().contains("PAPI_L1_DCM") && !metric.startsWith("("))
+    			return metric;
+    		if (metric.toUpperCase().contains("PAPI_L2_TCA") && !metric.startsWith("("))
+    			return metric;
+    		if (metric.toUpperCase().contains("PAPI_L2_DCA") && !metric.startsWith("("))
+    			return metric;
     	}
+    	if (!ignoreWarnings)
+    		System.err.println("*** Warning - no L1 miss metric found in Trial ***");
     	return null;
 	}
 
@@ -603,7 +650,15 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
     	for (String metric : metrics) {
     		if (metric.toUpperCase().contains("PAPI_L2_TCM") && !metric.startsWith("("))
     			return metric;
+    		if (metric.toUpperCase().contains("PAPI_L2_DCM") && !metric.startsWith("("))
+    			return metric;
+    		if (metric.toUpperCase().contains("PAPI_L3_TCA") && !metric.startsWith("("))
+    			return metric;
+    		if (metric.toUpperCase().contains("PAPI_L3_DCA") && !metric.startsWith("("))
+    			return metric;
     	}
+    	if (!ignoreWarnings)
+    		System.err.println("*** Warning - no L2 miss metric found in Trial ***");
     	return null;
 	}
 
@@ -611,7 +666,23 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
     	for (String metric : metrics) {
     		if (metric.toUpperCase().contains("PAPI_L3_TCM") && !metric.startsWith("("))
     			return metric;
+    		if (metric.toUpperCase().contains("PAPI_L3_DCM") && !metric.startsWith("("))
+    			return metric;
     	}
+    	if (!ignoreWarnings)
+    		System.err.println("*** Warning - no L3 miss metric found in Trial ***");
+    	return null;
+	}
+
+	public String getTLBMissMetric() {
+    	for (String metric : metrics) {
+    		if (metric.toUpperCase().contains("PAPI_TLB_CM") && !metric.startsWith("("))
+    			return metric;
+    		if (metric.toUpperCase().contains("PAPI_TLB_DM") && !metric.startsWith("("))
+    			return metric;
+    	}
+    	if (!ignoreWarnings)
+    		System.err.println("*** Warning - no TLB miss metric found in Trial ***");
     	return null;
 	}
 
@@ -620,6 +691,8 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
     		if (metric.toUpperCase().contains("PAPI_TOT_INS") && !metric.startsWith("("))
     			return metric;
     	}
+    	if (!ignoreWarnings)
+    		System.err.println("*** Warning - no total instruction metric found in Trial ***");
     	return null;
 	}
 
@@ -718,5 +791,8 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 		}
 		this.eventMap = newMap;
 	}
-	
+
+	public void setIgnoreWarnings(boolean ignore) {
+		this.ignoreWarnings = ignore;
+	}
 }

@@ -54,6 +54,8 @@ public class ScaleMetricOperation extends AbstractPerformanceOperation {
 		this.metric = metric;
 		this.value = value;
 		this.operation = operation;
+		if (!(input.getMetrics().contains(metric)))
+			System.err.println("\n\n *** ERROR: Trial does not have a metric named: " + metric + " ***\n\n");
 	}
 
 

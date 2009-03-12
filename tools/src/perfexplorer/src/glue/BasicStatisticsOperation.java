@@ -66,6 +66,10 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 		if (!combined) {
 			return processDataNotCombined();
 		}
+		// check for more than one input
+		if (this.inputs.size() == 1) {
+			System.err.println("*** Warning - only one trial in combined statistics process ***");
+		}
 		// create a new output result matrices
 		PerformanceResult total = new TotalResult();
 		PerformanceResult mean = new MeanResult();
@@ -73,6 +77,10 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 		PerformanceResult stdev = new StDevResult();
 		PerformanceResult min = new MinResult();
 		PerformanceResult max = new MaxResult();
+		total.setIgnoreWarnings(true);
+		min.setIgnoreWarnings(true);
+		max.setIgnoreWarnings(true);
+		variance.setIgnoreWarnings(true);
 
 		Set<Integer> totalThreads = new TreeSet<Integer>();
 		Set<String> totalMetrics = new TreeSet<String>();
@@ -238,6 +246,10 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 			PerformanceResult stdev = new StDevResult(input, false);
 			PerformanceResult min = new MinResult(input, false);
 			PerformanceResult max = new MaxResult(input, false);
+			total.setIgnoreWarnings(true);
+			min.setIgnoreWarnings(true);
+			max.setIgnoreWarnings(true);
+			variance.setIgnoreWarnings(true);
 	
 			Set<Integer> totalThreads = new TreeSet<Integer>();
 			Set<String> totalMetrics = new TreeSet<String>();

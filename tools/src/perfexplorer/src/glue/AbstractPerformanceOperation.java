@@ -15,7 +15,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * interface.  This class has all the member data fields for the plethora
  * of anticipated subclasses.
  * 
- * <P>CVS $Id: AbstractPerformanceOperation.java,v 1.4 2009/02/24 00:53:38 khuck Exp $</P>
+ * <P>CVS $Id: AbstractPerformanceOperation.java,v 1.5 2009/03/12 20:49:52 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 */
@@ -39,6 +39,9 @@ public abstract class AbstractPerformanceOperation implements PerformanceAnalysi
 	 * @param input
 	 */
 	protected AbstractPerformanceOperation(PerformanceResult input) {
+		if (input == null) {
+			System.err.println("\n\n *** ERROR: Input Trial is null. ***\n\n");
+		}
 		this.setInput(input);
 		this.outputs = new ArrayList<PerformanceResult>();
 		Provenance.addOperation(this);

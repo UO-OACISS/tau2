@@ -18,7 +18,7 @@ import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
  * This class is an implementation of the AbstractResult class, and loads a trial
  * from the database into a result object.
  * 
- * <P>CVS $Id: TrialResult.java,v 1.11 2009/03/02 19:23:50 khuck Exp $</P>
+ * <P>CVS $Id: TrialResult.java,v 1.12 2009/03/12 20:49:52 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 
@@ -157,6 +157,7 @@ public class TrialResult extends AbstractResult {
 			statement.setInt(1, trial.getID());
 			//System.out.println(statement.toString());
 			results = statement.executeQuery();
+			System.out.println("Done with query, looping over results.");
 			while (results.next() != false) {
 				this.putUsereventNumevents(results.getInt(2), results.getString(1), results.getDouble(3));
 				this.putUsereventMax(results.getInt(2), results.getString(1), results.getDouble(4));

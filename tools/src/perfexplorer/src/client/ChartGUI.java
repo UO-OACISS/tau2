@@ -173,8 +173,10 @@ public class ChartGUI extends JFrame implements ActionListener {
 			this.groupLabel.setEnabled(true);
 			this.group.setEnabled(true);
 			break;
-		case 11:
 		case 12:
+			this.scalingLabel.setEnabled(true);
+			this.scaling.setEnabled(true);
+		case 11:
 			this.reductionMethodLabel.setEnabled(true);
 			this.reductionMethod.setEnabled(true);
 			this.reductionThresholdLabel.setEnabled(true);

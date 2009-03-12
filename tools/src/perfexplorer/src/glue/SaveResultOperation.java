@@ -173,7 +173,16 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 		buf = new StringBuilder();
 		buf.append("insert into interval_location_profile (interval_event, node, ");
 		buf.append("context, thread, metric, inclusive_percentage, inclusive, ");
-		buf.append("exclusive_percentage, exclusive, call, subroutines, ");
+        if (db.getDBType().compareTo("oracle") == 0) {
+			buf.append("exclusive_percentage, excl, ");
+		} else {
+			buf.append("exclusive_percentage, exclusive, ");
+		}
+		if (db.getDBType().compareTo("derby") == 0) {
+			buf.append("num_calls, subroutines, ");
+		} else {
+			buf.append("call, subroutines, ");
+		}
 		buf.append("inclusive_per_call) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 		statement = db.prepareStatement(buf.toString());
 		statement.setInt(1, eventID);
@@ -222,7 +231,16 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 		buf = new StringBuilder();
 		buf.append("insert into interval_total_summary (interval_event, metric, ");
 		buf.append("inclusive_percentage, inclusive, ");
-		buf.append("exclusive_percentage, exclusive, call, subroutines, ");
+        if (db.getDBType().compareTo("oracle") == 0) {
+			buf.append("exclusive_percentage, excl, ");
+		} else {
+			buf.append("exclusive_percentage, exclusive, ");
+		}
+		if (db.getDBType().compareTo("derby") == 0) {
+			buf.append("num_calls, subroutines, ");
+		} else {
+			buf.append("call, subroutines, ");
+		}
 		buf.append("inclusive_per_call) values (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 		statement = db.prepareStatement(buf.toString());
 		statement.setInt(1, eventID);
@@ -241,7 +259,16 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 		buf = new StringBuilder();
 		buf.append("insert into interval_mean_summary (interval_event, metric, ");
 		buf.append("inclusive_percentage, inclusive, ");
-		buf.append("exclusive_percentage, exclusive, call, subroutines, ");
+        if (db.getDBType().compareTo("oracle") == 0) {
+			buf.append("exclusive_percentage, excl, ");
+		} else {
+			buf.append("exclusive_percentage, exclusive, ");
+		}
+		if (db.getDBType().compareTo("derby") == 0) {
+			buf.append("num_calls, subroutines, ");
+		} else {
+			buf.append("call, subroutines, ");
+		}
 		buf.append("inclusive_per_call) values (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 		statement = db.prepareStatement(buf.toString());
 		statement.setInt(1, eventID);

@@ -13,7 +13,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * should support.  All operations should be refered to through
  * this interface, whenever possible.
  * 
- * <P>CVS $Id: PerformanceResult.java,v 1.7 2009/02/24 00:53:39 khuck Exp $</P>
+ * <P>CVS $Id: PerformanceResult.java,v 1.8 2009/03/12 20:49:52 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0
@@ -297,6 +297,13 @@ public interface PerformanceResult {
 	public String getL3MissMetric();
 
 	/**
+	 * This method returns the metric name which represents the TLB misses.
+	 * 
+	 * @return the metric name
+	 */
+	public String getTLBMissMetric();
+
+	/**
 	 * This method returns the metric name which represents the total number of instructions.
 	 * 
 	 * @return the metric name
@@ -344,4 +351,11 @@ public interface PerformanceResult {
 	 *
 	 */
 	public void updateEventMap();
+	
+	/**
+	 * when values are requested from the trial, ignore warnings if the values are null
+	 * 
+	 * @param ignore
+	 */
+	public void setIgnoreWarnings(boolean ignore);
 }
