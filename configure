@@ -1398,35 +1398,22 @@ esac
 }
 
 make_directories () {
+    if [ $tauprefix = unknown ] ; then 
+	fixmakeargs="$fixmakeargs tauprefix=$tauroot"
+    fi
 
-if [ $tauprefix = unknown ] ; then 
-  fixmakeargs="$fixmakeargs tauprefix=$tauroot"
-  # make bin dir if it does not exist
-  if [ ! -d ./$architecture ] 
-    then
-      mkdir -p ./$architecture
-  fi
-  if [ ! -d ./$architecture/bin ] 
-    then
-      mkdir ./$architecture/bin
-  fi
-
-  # make lib dir if it does not exist
-  if [ ! -d ./$architecture/lib ] 
-    then
-      mkdir ./$architecture/lib
-  fi
-fi
-
-# make XtraP directories
-if [ -d XtraP ]
-then
-  if [ ! -d XtraP/lib/$architecture ] 
-    then
-      mkdir XtraP/lib/$architecture
-  fi
-fi
-
+    # make bin dir if it does not exist
+    if [ ! -d $tautoplevel/$architecture ] ; then
+	mkdir -p $tautoplevel/$architecture
+    fi
+    if [ ! -d $tautoplevel/$architecture/bin ] ; then
+	mkdir -p $tautoplevel/$architecture/bin
+    fi
+    
+    # make lib dir if it does not exist
+    if [ ! -d $tautoplevel/$architecture/lib ] ; then
+	mkdir -p $tautoplevel/$architecture/lib
+    fi
 }
 
 
@@ -1454,14 +1441,15 @@ echo "-------------------- TAU configure script ------------------"
 tauroot=`pwd | sed -e 's,^/tmp_mnt/nfs,,' -e 's,^/tmp_mnt,,'`
 
 if [ ${tauprefix} = unknown ] ; then
-  targetdir=${tauroot}
+    targetdir=${tauroot}
+    tautoplevel=$tauroot
 else
-  targetdir=${tauprefix}
+    targetdir=${tauprefix}
+    tautoplevel=$tauprefix
 fi
 
 echo \#define TAUROOT \"$tauroot\" > include/tauroot.h
-if [ $tauprefix != unknown ]
-then
+if [ $tauprefix != unknown ] ; then
   echo \#define TAUROOT \"$tauprefix\" > include/tauroot.h
 fi
 
@@ -2814,8 +2802,7 @@ then
         ;;
   *)    
         mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/lib
-        if [ -d $mpilib ]
-        then
+        if [ -d $mpilib ] ; then
           echo "Using MPI lib directory $mpilib"
         fi
 	;;
@@ -2841,103 +2828,71 @@ if [ "x$mpiinc" != "x" ] ; then
 fi
 
 
-
-
-  
-  
-  
-
-if [ $tauprefix != unknown ]
-  then
-    tautoplevel=$tauprefix
-  else
-    tautoplevel=$tauroot
-fi
-
-if [ $perf = yes ] 
-then
-  fixmakeargs="$fixmakeargs PERFLIB"
-  tauoptions="${tauoptions}-perf"
-  if [ "x$perfincdir" != "x" ] 
-  then
-    fixmakeargs="$fixmakeargs perfincdir=$perfincdir"
-  fi
-  if [ "x$perflibdir" != "x" ] 
-  then
-    fixmakeargs="$fixmakeargs perflibdir=$perflibdir"
-  fi
-  if [ "x$perflibrary" != "x" ] 
-  then
-    fixmakeargs="$fixmakeargs perflibrary=$perflibrary"
-  else
-    if [ -f $perflibdir/libpapi.a ]
-    then 
-      perflibrary="-lperfrt#-lpapi"  
+if [ $perf = yes ] ; then
+    fixmakeargs="$fixmakeargs PERFLIB"
+    tauoptions="${tauoptions}-perf"
+    if [ "x$perfincdir" != "x" ] ; then
+	fixmakeargs="$fixmakeargs perfincdir=$perfincdir"
+    fi
+    if [ "x$perflibdir" != "x" ] ; then
+	fixmakeargs="$fixmakeargs perflibdir=$perflibdir"
+    fi
+    if [ "x$perflibrary" != "x" ] ; then
+	fixmakeargs="$fixmakeargs perflibrary=$perflibrary"
     else
-      perflibrary="-lperfrt"
-    fi 
-    fixmakeargs="$fixmakeargs perflibrary=$perflibrary"
-  fi
+	if [ -f $perflibdir/libpapi.a ] ; then 
+	    perflibrary="-lperfrt#-lpapi"  
+	else
+	    perflibrary="-lperfrt"
+	fi 
+	fixmakeargs="$fixmakeargs perflibrary=$perflibrary"
+    fi
 fi
 
-if [ $epilog = yes -a $epiloginc = no -a $epilogdir != no ]
-then
-  if [ -f $epilogdir/include/elg_rw.h ]
-  then
-    epilogincdir=$epilogdir/include
-  else
-    epilogincdir=$epilogdir/src
-  fi
-fi
-
-if [ $epilog = yes -a $epilogbin = no -a $epilogdir != no ]
-then
-  if [ -f $epilogdir/bin/opari ]
-  then
-    epilogbindir=$epilogdir/bin
-  else
-    epilogbindir=$epilogdir/src
-  fi
-fi
-
-if [ $epilog = yes -a -f $epilogbindir/skin ]
-then
-  fixmakeargs="$fixmakeargs SCALASCA"
-  scalasca=yes
-fi
-
-if [ $epilog = yes -a $epiloglib = no -a $epilogdir != no ]
-then
-  if [ -f $epilogdir/lib/libelg.base.a ] 
-  then
-    epiloglibdir=$epilogdir/lib
-  elif [ -f $epilogdir/src/libelg.base.a ]
-  then 
-    epiloglibdir=$epilogdir/src
-  elif [ -f $epilogdir/lib/be/libelg.base.a ]
-  then 
-    epiloglibdir=$epilogdir/lib/be
-  elif [ -f $epilogdir/lib/fe/libelg.base.a ]
-  then 
-    epiloglibdir=$epilogdir/lib/fe
-  elif [ -f $epilogdir/lib64/libelg.base.a ]
-  then 
-    epiloglibdir=$epilogdir/lib64
-  elif [ -f $epilogdir/lib32/libelg.base.a ]
-  then 
-    epiloglibdir=$epilogdir/lib32
-  else 
-    echo "ERROR: PLEASE SPECIFY A VALID -epiloglib=<dir> option."
-  fi
-fi
-
-if [ $vampirtrace = yes ]
-then
-    if [ -f $vampirtracedir/lib/libvt.a ] 
-    then
-      vampirtracelibdir=lib
+if [ $epilog = yes -a $epiloginc = no -a $epilogdir != no ] ; then
+    if [ -f $epilogdir/include/elg_rw.h ] ; then
+	epilogincdir=$epilogdir/include
     else
-      vampirtracelibdir=vtlib
+	epilogincdir=$epilogdir/src
+    fi
+fi
+
+if [ $epilog = yes -a $epilogbin = no -a $epilogdir != no ] ; then
+    if [ -f $epilogdir/bin/opari ] ; then
+	epilogbindir=$epilogdir/bin
+    else
+	epilogbindir=$epilogdir/src
+    fi
+fi
+
+if [ $epilog = yes -a -f $epilogbindir/skin ] ; then
+    fixmakeargs="$fixmakeargs SCALASCA"
+    scalasca=yes
+fi
+
+if [ $epilog = yes -a $epiloglib = no -a $epilogdir != no ] ; then
+    if [ -f $epilogdir/lib/libelg.base.a ] ; then
+	epiloglibdir=$epilogdir/lib
+    elif [ -f $epilogdir/src/libelg.base.a ] ; then 
+	epiloglibdir=$epilogdir/src
+    elif [ -f $epilogdir/lib/be/libelg.base.a ] ; then 
+	epiloglibdir=$epilogdir/lib/be
+    elif [ -f $epilogdir/lib/fe/libelg.base.a ] ; then 
+	epiloglibdir=$epilogdir/lib/fe
+    elif [ -f $epilogdir/lib64/libelg.base.a ] ; then 
+	epiloglibdir=$epilogdir/lib64
+    elif [ -f $epilogdir/lib32/libelg.base.a ] ; then 
+	epiloglibdir=$epilogdir/lib32
+    else 
+	echo "ERROR: PLEASE SPECIFY A VALID -epiloglib=<dir> option."
+    fi
+fi
+
+if [ $vampirtrace = yes ] ; then
+    if [ -f $vampirtracedir/lib/libvt.a ] ; then
+	vampirtracelibdir=lib
+    else
+	vampirtracelibdir=vtlib
     fi
 fi
 
@@ -3541,7 +3496,7 @@ if [ $tauarch = none ] ; then
   architecture=
   fixmakeargs="$fixmakeargs arch= "
 else
-  if [ $execprefix = unknown ] ; then
+  if [ "x$execprefix" = "xunknown" ] ; then
     architecture=$machine
   else
     architecture=$execprefix
@@ -5034,8 +4989,7 @@ fi
 cp ${tauroot}/tools/src/jtau_tf/bin/TAU_tf.jar ${targetdir}/${architecture}/lib
 
 
-cat ${tauroot}/tools/src/contrib/slog2sdk/bin/jumpshot.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/jumpshot
+cat ${tauroot}/tools/src/contrib/slog2sdk/bin/jumpshot.skel | sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/jumpshot
 chmod a+rx ${targetdir}/${architecture}/bin/jumpshot
 
 cat ${tauroot}/tools/src/contrib/slog2sdk/bin/slog2print.skel | 
