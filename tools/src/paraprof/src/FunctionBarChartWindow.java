@@ -24,9 +24,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.19 2009/01/23 02:11:11 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.20 2009/03/12 00:35:39 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.19 $
+ * @version $Revision: 1.20 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -70,7 +70,6 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     // we keep these around to speed things up
     private JTextArea jTextArea;
     private Component headerView;
-
 
     private FunctionBarChartWindow() {
     // disable default constructor
@@ -451,21 +450,6 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     public void sortLocalData() {
         dataSorter.setDescendingOrder(descendingOrderCheckBox.isSelected());
 
-        //        if (function != null) { // function
-        //            if (sortByNCTCheckbox.isSelected()) {
-        //                dataSorter.setSortType(SortType.NCT);
-        //            } else {
-        //                dataSorter.setSortType(SortType.VALUE);
-        //            }
-        //
-        //        } else { // thread
-        //            if (sortByNameCheckBox.isSelected()) {
-        //                dataSorter.setSortType(SortType.NAME);
-        //            } else {
-        //                dataSorter.setSortType(SortType.VALUE);
-        //            }
-        //        }
-
         if (showValuesAsPercent.isSelected()) {
             if (dataSorter.getValueType() == ValueType.EXCLUSIVE) {
                 dataSorter.setValueType(ValueType.EXCLUSIVE_PERCENT);
@@ -513,7 +497,6 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     // This process is separated into two functions to provide the option of obtaining the current 
     // header string being used for the panel without resetting the actual header. 
     // Printing and image generation use this functionality.
-
 
     public void setHeader() {
         if (showMetaData.isSelected()) {
@@ -636,7 +619,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
             addCompItem(panel, gbc, 0, 0, 1, 1);
         }
 
-        //Now call validate so that these componant changes are displayed.
+        //Now call validate so that these component changes are displayed.
         validate();
     }
 
