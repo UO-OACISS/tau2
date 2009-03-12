@@ -15,9 +15,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  * functions that are in groups supposed to be shown. 
  *  
  * 
- * <P>CVS $Id: DataSorter.java,v 1.12 2009/01/23 02:11:11 amorris Exp $</P>
+ * <P>CVS $Id: DataSorter.java,v 1.13 2009/03/12 00:35:21 amorris Exp $</P>
  * @author	Alan Morris, Robert Bell
- * @version	$Revision: 1.12 $
+ * @version	$Revision: 1.13 $
  */
 public class DataSorter implements Comparator {
 
@@ -410,8 +410,8 @@ public class DataSorter implements Comparator {
                 newList.add(ppFunctionProfile);
             }
         }
-        //        Collections.sort(newList);
-        Collections.sort(newList, new AlphanumComparator());
+        Collections.sort(newList);
+        //Collections.sort(newList, new AlphanumComparator());
         return newList;
     }
 
