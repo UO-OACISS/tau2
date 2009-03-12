@@ -46,6 +46,7 @@ public class RegressionGraph {
     public boolean legend = true;
     public boolean angledXaxis = true;
     public boolean singleTrial = false;
+    public boolean useProcCountAsTrialName = false;
 
     public int stringLimit = 60;
     public boolean logScale = false;
@@ -155,6 +156,8 @@ public class RegressionGraph {
         if (speedupChart) {
             idealSeries.add(1.0, minProcCount);
             idealSeries.add(maxProcCount, maxProcCount);
+        } else {
+            dataSet.removeSeries(idealSeries);
         }
 
         return dataSet;
@@ -271,7 +274,11 @@ public class RegressionGraph {
         String trialnames[] = new String[trialcount];
         for (int idx = 0; idx < trials.size(); idx++) {
             ParaProfTrial ppTrial = (ParaProfTrial) trials.get(idx);
-            trialnames[idx] = ppTrial.getName();
+            if (useProcCountAsTrialName) {
+                trialnames[idx] = Integer.toString(ppTrial.getDataSource().getNumberOfNodes());
+            } else {
+                trialnames[idx] = ppTrial.getName();
+            }
         }
 
         String funcnames[] = new String[funcCount];
@@ -283,18 +290,6 @@ public class RegressionGraph {
             }
             funcnames[integer.intValue()] = string;
         }
-
-        ////                if (logScale) {
-        //                    for (int x=0;x<funcCount;x++) {
-        //                        for (int y=0;y<trialcount;y++) {
-        //                            if (data[x][y] <=0) {
-        //                                data[x][y] = -1000;
-        //                            }
-        //                        }
-        //                    }
-        //  //              }
-
-        //CategoryDataset dataSet = DatasetUtilities.createCategoryDataset(funcnames, trialnames, data);
 
         DefaultCategoryDataset dataSet = new DefaultCategoryDataset();
         for (int x = 0; x < funcCount; x++) {
@@ -394,8 +389,13 @@ public class RegressionGraph {
             ValueAxis xAxis = (ValueAxis) plot.getDomainAxis();
             TickUnitSource units = NumberAxis.createIntegerTickUnits();
             xAxis.setStandardTickUnits(units);
-            
-            renderer.setSeriesPaint(0, Color.gray);
+
+            if (speedupChart) {
+                // ideal
+                renderer.setSeriesPaint(0, Color.gray);
+            } else {
+                renderer.setSeriesPaint(0, Color.red);
+            }
             renderer.setSeriesPaint(1, Color.blue);
             renderer.setSeriesPaint(2, Color.green);
             renderer.setSeriesPaint(3, Color.magenta);
@@ -442,7 +442,7 @@ public class RegressionGraph {
             renderer.setSeriesPaint(7, Color.orange);
             renderer.setSeriesPaint(8, Color.lightGray);
 
-            renderer.setSeriesPaint(dataSet.getRowCount()-1, Color.black);
+            renderer.setSeriesPaint(dataSet.getRowCount() - 1, Color.black);
 
         }
 
@@ -472,9 +472,8 @@ public class RegressionGraph {
             xAxis.setTickLabelFont(tickFont);
             yAxis = (ValueAxis) plot.getRangeAxis();
 
-
         }
-        
+
         Utility.applyDefaultChartTheme(chart);
 
         if (logScale) {
@@ -686,6 +685,10 @@ public class RegressionGraph {
 
     public void setSingleTrial(boolean singleTrial) {
         this.singleTrial = singleTrial;
+    }
+
+    public void setUseProcCountAsName(boolean useProcCountAsName) {
+        this.useProcCountAsTrialName = useProcCountAsName;
     }
 
 }
