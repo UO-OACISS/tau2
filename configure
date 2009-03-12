@@ -4393,7 +4393,7 @@ fi
 
 if [ "x$bfd" = "xyes" ] ; then
     if [ "x$bfddir" = xdownload ] ; then
-	bfddir=${targetdir}/${architecture}
+	bfddir=${targetdir}/${architecture}/binutils-2.18
 	if [ -r "$bfddir/lib/libbfd.a" ] ; then
 	    echo "BFD download already found, skipping"
 	else
