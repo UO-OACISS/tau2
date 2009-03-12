@@ -52,7 +52,7 @@ import java.util.Queue;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.77 2009/03/04 17:55:09 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.78 2009/03/12 21:04:37 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -1879,14 +1879,14 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		return this.sessions.size();
 	}
 
-	public Map<Integer, Integer> checkScalabilityChartData(
+	public Map<String, Integer> checkScalabilityChartData(
 			RMIPerfExplorerModel modelData) throws RemoteException {
 		//PerfExplorerOutput.println("getPotentialMetrics()...");
-		Map<Integer, Integer> counts = new HashMap<Integer, Integer>();
+		Map<String, Integer> counts = new HashMap<String, Integer>();
 		StringBuilder buf = new StringBuilder();
 		try {
 			DB db = this.getDB();
-			buf.append("select t.id, node_count * contexts_per_node * threads_per_context");
+			buf.append("select t.id, node_count * contexts_per_node * threads_per_context, t.experiment ");
 			buf.append(" from trial t ");
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof RMIView) {
@@ -1943,7 +1943,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 			ResultSet results = statement.executeQuery();
 			while (results.next() != false) {
-				Integer threads = new Integer(results.getInt(2));
+				String threads = new String(results.getString(2) + ":" + results.getString(3));
 				Integer count = counts.get(threads);
 				if (count == null)
 					count = new Integer(1);

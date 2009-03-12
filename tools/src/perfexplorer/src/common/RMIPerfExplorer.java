@@ -15,7 +15,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * PerfExplorerServer object.  This interface defines the API for
  * passing requests to the server.
  * 
- * <P>CVS $Id: RMIPerfExplorer.java,v 1.19 2009/03/04 17:55:09 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorer.java,v 1.20 2009/03/12 21:04:37 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -326,7 +326,7 @@ public interface RMIPerfExplorer extends Remote {
    * @return
    * @throws RemoteException
    */
-   public Map<Integer, Integer> checkScalabilityChartData(RMIPerfExplorerModel model)
+   public Map<String, Integer> checkScalabilityChartData(RMIPerfExplorerModel model)
    	throws RemoteException;
 }
 

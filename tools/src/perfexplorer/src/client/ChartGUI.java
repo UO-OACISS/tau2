@@ -465,12 +465,12 @@ public class ChartGUI extends JFrame implements ActionListener {
 	public static void checkScaling() {
 		// check to make sure that there is only one value for each processor count
 		PerfExplorerModel theModel = PerfExplorerModel.getModel();
-		Map<Integer, Integer> counts = PerfExplorerConnection.getConnection().checkScalabilityChartData(theModel);
-		for (Integer threads : counts.keySet()) {
+		Map<String, Integer> counts = PerfExplorerConnection.getConnection().checkScalabilityChartData(theModel);
+		for (String threads : counts.keySet()) {
 			Integer count = counts.get(threads);
 			if (count > 1 && !ChartGUI.averageWarning) {
 				StringBuilder sb = new StringBuilder();
-				sb.append("Two or more trials in this selection have the same total number of threads of execution.\n");
+				sb.append("Two or more trials in this selection are in the same experiment and have the same total number of threads of execution.\n");
 				sb.append("Trials with the same numbers of threads will have their measurements averaged.\n");
 				sb.append("To create a different parametric chart, please use the custom chart interface.");			
 				JOptionPane.showMessageDialog(PerfExplorerClient.getMainFrame(), sb.toString(),
