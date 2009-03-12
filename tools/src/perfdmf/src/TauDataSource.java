@@ -191,146 +191,153 @@ public class TauDataSource extends DataSource {
                                 lock = null;
                             }
                         }
-                        InputStreamReader inReader = new InputStreamReader(fileIn);
-                        br = new LineCountBufferedReader(inReader);
 
-                        // First Line (e.g. "601 templated_functions")
-                        inputString = br.readLine();
-                        if (inputString == null) {
-                            throw new CorruptFileException("Unexpected end of file: Looking for 'templated_functions' line");
-                        }
-                        genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
-
-                        // the first token is the number of functions
-                        tokenString = genericTokenizer.nextToken();
-
-                        int numFunctions;
                         try {
-                            numFunctions = Integer.parseInt(tokenString);
-                        } catch (NumberFormatException nfe) {
-                            throw new CorruptFileException("Couldn't read number of functions");
-                        }
 
-                        // grab the (possible) metric name
-                        String metricName = getMetricName(inputString);
+                            InputStreamReader inReader = new InputStreamReader(fileIn);
+                            br = new LineCountBufferedReader(inReader);
 
-                        // Second Line (e.g. "# Name Calls Subrs Excl Incl ProfileCalls")
-                        inputString = br.readLine();
-                        if (inputString == null) {
-                            throw new CorruptFileException("Unexpected end of file: Looking for '# Name Calls ...' line");
-                        }
-
-                        if (inputString.indexOf("<metadata>") != -1) {
-                            int start = inputString.indexOf("<metadata>");
-                            int end = inputString.indexOf("</metadata>") + 11;
-                            String metadata = inputString.substring(start, end);
-                            try {
-                                MetaDataParser.parse(thread.getMetaData(), metadata);
-                            } catch (Exception exception) {
-                                //exception.printStackTrace();
-                                throw new CorruptFileException("Unable to parse metadata block");
-                            }
-                        }
-
-                        // there may or may not be a metric name in the metadata
-                        String metaDataMetricName = (String) thread.getMetaData().get("Metric Name");
-
-                        // remove it if it was there
-                        thread.getMetaData().remove("Metric Name");
-
-                        if (metricNameProcessed == false) {
-                            if (metaDataMetricName != null) {
-                                metricName = metaDataMetricName;
-                            }
-                            //Set the metric name.
-                            if (metricName == null) {
-                                metricName = "Time";
-                            }
-                            this.addMetric(metricName);
-                            metricNameProcessed = true;
-                        }
-
-                        if (i == 0) {
-                            //Determine if profile stats or profile calls data is present.
-                            if (inputString.indexOf("SumExclSqr") != -1)
-                                this.setProfileStatsPresent(true);
-                        }
-
-                        for (int j = 0; j < numFunctions; j++) {
-                            this.currFunction = j;
-
+                            // First Line (e.g. "601 templated_functions")
                             inputString = br.readLine();
                             if (inputString == null) {
-                                throw new CorruptFileException("Unexpected end of file: Only found " + (j - 2) + " of "
-                                        + numFunctions + " Function Lines");
+                                throw new CorruptFileException("Unexpected end of file: Looking for 'templated_functions' line");
+                            }
+                            genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
+
+                            // the first token is the number of functions
+                            tokenString = genericTokenizer.nextToken();
+
+                            int numFunctions;
+                            try {
+                                numFunctions = Integer.parseInt(tokenString);
+                            } catch (NumberFormatException nfe) {
+                                throw new CorruptFileException("Couldn't read number of functions");
                             }
 
-                            this.processFunctionLine(inputString, thread, metric);
+                            // grab the (possible) metric name
+                            String metricName = getMetricName(inputString);
 
-                            // unused profile calls
-
-                            //                        //Process the appropriate number of profile call lines.
-                            //                        for (int k = 0; k < functionDataLine.i2; k++) {
-                            //                            //this.setProfileCallsPresent(true);
-                            //                            inputString = br.readLine();
-                            //                            genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
-                            //                            //Arguments are evaluated left to right.
-                            //                            functionProfile.addCall(Double.parseDouble(genericTokenizer.nextToken()),
-                            //                                    Double.parseDouble(genericTokenizer.nextToken()));
-                            //                        }
-                        }
-
-                        //Process the appropriate number of aggregate lines.
-                        inputString = br.readLine();
-
-                        //A valid profile.*.*.* will always contain this line.
-                        if (inputString == null) {
-                            throw new CorruptFileException("Unexpected end of file: Looking for 'aggregates' line");
-                        }
-                        genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
-                        //It's first token will be the number of aggregates.
-                        tokenString = genericTokenizer.nextToken();
-
-                        numFunctions = Integer.parseInt(tokenString);
-                        for (int j = 0; j < numFunctions; j++) {
-                            //this.setAggregatesPresent(true);
+                            // Second Line (e.g. "# Name Calls Subrs Excl Incl ProfileCalls")
                             inputString = br.readLine();
-                        }
+                            if (inputString == null) {
+                                throw new CorruptFileException("Unexpected end of file: Looking for '# Name Calls ...' line");
+                            }
 
-                        if (metric == 0) {
-                            //Process the appropriate number of userevent lines.
-                            inputString = br.readLine();
-                            if (inputString != null) {
-                                genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
-                                //It's first token will be the number of userEvents
-                                tokenString = genericTokenizer.nextToken();
-                                int numUserEvents = Integer.parseInt(tokenString);
-
-                                //Skip the heading (e.g. "# eventname numevents max min mean sumsqr")
-                                br.readLine();
-                                for (int j = 0; j < numUserEvents; j++) {
-                                    if (j == 0) {
-                                        setUserEventsPresent(true);
-                                    }
-
-                                    inputString = br.readLine();
-                                    if (inputString == null) {
-                                        throw new CorruptFileException("Unexpected end of file: Only found " + (j - 2) + " of "
-                                                + numUserEvents + " User Event Lines");
-                                    }
-
-                                    this.processUserEventLine(inputString, thread);
-
+                            if (inputString.indexOf("<metadata>") != -1) {
+                                int start = inputString.indexOf("<metadata>");
+                                int end = inputString.indexOf("</metadata>") + 11;
+                                String metadata = inputString.substring(start, end);
+                                try {
+                                    MetaDataParser.parse(thread.getMetaData(), metadata);
+                                } catch (Exception exception) {
+                                    //exception.printStackTrace();
+                                    throw new CorruptFileException("Unable to parse metadata block");
                                 }
                             }
-                        }
 
-                        if (lock != null) {
-                            lock.release();
+                            // there may or may not be a metric name in the metadata
+                            String metaDataMetricName = (String) thread.getMetaData().get("Metric Name");
+
+                            // remove it if it was there
+                            thread.getMetaData().remove("Metric Name");
+
+                            if (metricNameProcessed == false) {
+                                if (metaDataMetricName != null) {
+                                    metricName = metaDataMetricName;
+                                }
+                                //Set the metric name.
+                                if (metricName == null) {
+                                    metricName = "Time";
+                                }
+                                this.addMetric(metricName);
+                                metricNameProcessed = true;
+                            }
+
+                            if (i == 0) {
+                                //Determine if profile stats or profile calls data is present.
+                                if (inputString.indexOf("SumExclSqr") != -1)
+                                    this.setProfileStatsPresent(true);
+                            }
+
+                            for (int j = 0; j < numFunctions; j++) {
+                                this.currFunction = j;
+
+                                inputString = br.readLine();
+                                if (inputString == null) {
+                                    throw new CorruptFileException("Unexpected end of file: Only found " + (j - 2) + " of "
+                                            + numFunctions + " Function Lines");
+                                }
+
+                                this.processFunctionLine(inputString, thread, metric);
+
+                                // unused profile calls
+
+                                //                        //Process the appropriate number of profile call lines.
+                                //                        for (int k = 0; k < functionDataLine.i2; k++) {
+                                //                            //this.setProfileCallsPresent(true);
+                                //                            inputString = br.readLine();
+                                //                            genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
+                                //                            //Arguments are evaluated left to right.
+                                //                            functionProfile.addCall(Double.parseDouble(genericTokenizer.nextToken()),
+                                //                                    Double.parseDouble(genericTokenizer.nextToken()));
+                                //                        }
+                            }
+
+                            //Process the appropriate number of aggregate lines.
+                            inputString = br.readLine();
+
+                            //A valid profile.*.*.* will always contain this line.
+                            if (inputString == null) {
+                                throw new CorruptFileException("Unexpected end of file: Looking for 'aggregates' line");
+                            }
+                            genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
+                            //It's first token will be the number of aggregates.
+                            tokenString = genericTokenizer.nextToken();
+
+                            numFunctions = Integer.parseInt(tokenString);
+                            for (int j = 0; j < numFunctions; j++) {
+                                //this.setAggregatesPresent(true);
+                                inputString = br.readLine();
+                            }
+
+                            if (metric == 0) {
+                                //Process the appropriate number of userevent lines.
+                                inputString = br.readLine();
+                                if (inputString != null) {
+                                    genericTokenizer = new StringTokenizer(inputString, " \t\n\r");
+                                    //It's first token will be the number of userEvents
+                                    tokenString = genericTokenizer.nextToken();
+                                    int numUserEvents = Integer.parseInt(tokenString);
+
+                                    //Skip the heading (e.g. "# eventname numevents max min mean sumsqr")
+                                    br.readLine();
+                                    for (int j = 0; j < numUserEvents; j++) {
+                                        if (j == 0) {
+                                            setUserEventsPresent(true);
+                                        }
+
+                                        inputString = br.readLine();
+                                        if (inputString == null) {
+                                            throw new CorruptFileException("Unexpected end of file: Only found " + (j - 2)
+                                                    + " of " + numUserEvents + " User Event Lines");
+                                        }
+
+                                        this.processUserEventLine(inputString, thread);
+
+                                    }
+                                }
+                            }
+
+                            if (lock != null) {
+                                lock.release();
+                            }
+                            br.close();
+                            inReader.close();
+                            fileIn.close();
+
+                        } catch (Exception e2) {
+                            throw new CorruptFileException("Error parsing file (" + e2.getMessage() + ")");
                         }
-                        br.close();
-                        inReader.close();
-                        fileIn.close();
 
                         finished = true;
                     } catch (CorruptFileException cfe) {
