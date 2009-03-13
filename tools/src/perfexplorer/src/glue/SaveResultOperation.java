@@ -320,7 +320,7 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 	 * @param metric
 	 * @param db
 	 * @param buf
-	 * @return
+	 * @return metric index
 	 * @throws SQLException
 	 * @throws NumberFormatException
 	 */

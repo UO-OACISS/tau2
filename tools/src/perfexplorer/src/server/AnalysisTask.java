@@ -35,7 +35,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  *
- * <P>CVS $Id: AnalysisTask.java,v 1.15 2009/03/02 19:23:51 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTask.java,v 1.16 2009/03/13 23:38:59 khuck Exp $</P>
  * @author Kevin Huck
  * @version 0.1
  * @since 0.1
@@ -236,27 +236,47 @@ public class AnalysisTask extends TimerTask {
 						PerfExplorerOutput.println("Doing " + i + " clusters:" + modelData.toString());
 						// create a cluster engine
 						KMeansClusterInterface clusterer = factory.createKMeansEngine();
+						System.out.print("Declaring... ");
+						long start = System.currentTimeMillis();
 						clusterer.setInputData(reducedData);
+						long end = System.currentTimeMillis();
+						System.out.println(end-start + " milliseconds");
 						clusterer.setK(i);
 						clusterer.doSmartInitialization(false); // this takes too long - disable by default
+						System.out.print("Clustering... ");
+						start = System.currentTimeMillis();
 						clusterer.findClusters();
+						end = System.currentTimeMillis();
+						System.out.println(end-start + " milliseconds");
 						// get the centroids
+						System.out.print("Centroids, stdevs, sizes... ");
+						start = System.currentTimeMillis();
 						RawDataInterface centroids = clusterer.getClusterCentroids();
 						RawDataInterface deviations = clusterer.getClusterStandardDeviations();
 						int[] clusterSizes = clusterer.getClusterSizes();
+						end = System.currentTimeMillis();
+						System.out.println(end-start + " milliseconds");
+						System.out.print("histograms... ");
+						start = System.currentTimeMillis();
 						// do histograms
 						File thumbnail = ImageUtils.generateClusterSizeThumbnail(modelData, clusterSizes);//, eventIDs //TODO: These aren't used.
 						File chart = ImageUtils.generateClusterSizeImage(modelData, clusterSizes);//, eventIDs
 						// TODO - fix this to save the cluster sizes, too!
 						chartType = ChartType.HISTOGRAM;
 						saveAnalysisResult(centroids, deviations, thumbnail, chart);
+						end = System.currentTimeMillis();
+						System.out.println(end-start + " milliseconds");
 						
 						if (modelData.getCurrentSelection() instanceof Metric) {
 						// do PCA breakdown
+						System.out.print("PCA breakdown... ");
+						start = System.currentTimeMillis();
 						PrincipalComponentsAnalysisInterface pca =
 						factory.createPCAEngine(server.getCubeData(modelData));
 						pca.setInputData(reducedData);
 						pca.doPCA();
+						end = System.currentTimeMillis();
+						System.out.println(end-start + " milliseconds");
 						// get the components
 						RawDataInterface components = pca.getResults();
 						pca.setClusterer(clusterer);

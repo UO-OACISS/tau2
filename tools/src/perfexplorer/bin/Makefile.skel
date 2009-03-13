@@ -1,4 +1,4 @@
-# $Id: Makefile.skel,v 1.41 2009/03/04 17:55:09 khuck Exp $
+# $Id: Makefile.skel,v 1.42 2009/03/13 23:38:59 khuck Exp $
 # $Name:  $
 
 R_HOME = @RROOT@
@@ -419,9 +419,9 @@ webstart: perfexplorer.jar
 	jarsigner -keystore ${TAUROOT}/tools/src/keystore -storepass keystore perfexplorer.jar tau
 	cp perfexplorer.jar ${WEBSTART_DIR}
 
-BOTTOM = '<font size="-1">****************************************************************************<br>Copyright 1997-2008<br> Department of Computer and Information Science, University of Oregon<br> Advanced Computing Laboratory, Los Alamos National Laboratory<br> Juelich Supercomputing Centre, Research Center Juelich, Germany<br><a href="http://tau.uoregon.edu" target="new">http://tau.uoregon.edu</a><br>****************************************************************************<br>Permission to use, copy, modify, and distribute this software and its documentation for any purpose and without fee is hereby granted, provided that the above copyright notice appear in all copies and that both that copyright notice and this permission notice appear in supporting documentation, and that the name of University of Oregon (UO) and Los Alamos National Laboratory (LANL) not be used in advertising or publicity pertaining to distribution of the software without specific, written prior permission.  The University of Oregon and LANL makes no representations about the suitability of this software for any purpose.  It is provided "as is" without express or implied warranty.<br><br>THE UNIVERSITY OF OREGON AND LANL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL THE UNIVERSITY OF OREGON OR LANL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.<font>'
+BOTTOM = '<font size="-1">****************************************************************************<br>Copyright 1997-2009<br> Department of Computer and Information Science, University of Oregon<br> Advanced Computing Laboratory, Los Alamos National Laboratory<br> Juelich Supercomputing Centre, Research Center Juelich, Germany<br><a href="http://tau.uoregon.edu" target="new">http://tau.uoregon.edu</a><br>****************************************************************************<br>Permission to use, copy, modify, and distribute this software and its documentation for any purpose and without fee is hereby granted, provided that the above copyright notice appear in all copies and that both that copyright notice and this permission notice appear in supporting documentation, and that the name of University of Oregon (UO) and Los Alamos National Laboratory (LANL) not be used in advertising or publicity pertaining to distribution of the software without specific, written prior permission.  The University of Oregon and LANL makes no representations about the suitability of this software for any purpose.  It is provided "as is" without express or implied warranty.<br><br>THE UNIVERSITY OF OREGON AND LANL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL THE UNIVERSITY OF OREGON OR LANL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.<font>'
 
-javadoc: Makefile ${GLUE_SOURCES}
+javadoc: Makefile perfexplorer.jar
 	rm -rf javadoc
 	mkdir javadoc
 	${JAVADOC} -sourcepath src \
@@ -440,7 +440,7 @@ javadoc: Makefile ${GLUE_SOURCES}
 	-author \
 	-noqualifier all \
 	-nodeprecated \
-	glue 
+	edu.uoregon.tau.perfexplorer.glue 
 
 install: perfexplorer.jar javadoc
 	#rsync -a perfexplorer2.jar spaceghost:/var/www/html/PerfExplorer/.

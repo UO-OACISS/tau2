@@ -23,7 +23,8 @@ public class RatioOperation extends AbstractPerformanceOperation {
 	private String metricSuffix = "";
 
 	/**
-	 * @param input
+	 * @param numerator
+	 * @param denominator
 	 */
 	public RatioOperation(PerformanceResult numerator, PerformanceResult denominator) {
 		super(numerator);
@@ -32,7 +33,9 @@ public class RatioOperation extends AbstractPerformanceOperation {
 	}
 
 	/**
-	 * @param input
+	 * @param numerator
+	 * @param denominator
+	 * @param metricSuffix
 	 */
 	public RatioOperation(PerformanceResult numerator, PerformanceResult denominator, String metricSuffix) {
 		super(numerator);
@@ -42,7 +45,8 @@ public class RatioOperation extends AbstractPerformanceOperation {
 	}
 
 	/**
-	 * @param trial
+	 * @param numerator
+	 * @param denominator
 	 */
 	public RatioOperation(Trial numerator, Trial denominator) {
 		super(numerator);

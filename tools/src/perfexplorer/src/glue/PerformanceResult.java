@@ -13,7 +13,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * should support.  All operations should be refered to through
  * this interface, whenever possible.
  * 
- * <P>CVS $Id: PerformanceResult.java,v 1.8 2009/03/12 20:49:52 khuck Exp $</P>
+ * <P>CVS $Id: PerformanceResult.java,v 1.9 2009/03/13 23:38:59 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0
@@ -326,7 +326,7 @@ public interface PerformanceResult {
 	
 	/**
 	 * Get the name for this input.
-	 * @return
+	 * @return the name of this performance result
 	 */
 	public String getName();
 	
