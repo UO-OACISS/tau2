@@ -23,6 +23,7 @@
 #include <Profile/TauJava.h>
 #if (!defined(TAU_WINDOWS))
 #include <unistd.h>
+#include <stdlib.h>
 #endif //TAU_WINDOWS
 
 
@@ -395,8 +396,8 @@ void TauJavaLayer::DataPurge(JVMPI_Event *event) {
 
 
 /***************************************************************************
- * $RCSfile: TauJava.cpp,v $   $Author: amorris $
- * $Revision: 1.32 $   $Date: 2009/02/24 19:43:42 $
- * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.32 2009/02/24 19:43:42 amorris Exp $
+ * $RCSfile: TauJava.cpp,v $   $Author: khuck $
+ * $Revision: 1.33 $   $Date: 2009/03/13 00:46:56 $
+ * TAU_VERSION_ID: $Id: TauJava.cpp,v 1.33 2009/03/13 00:46:56 khuck Exp $
  ***************************************************************************/
 

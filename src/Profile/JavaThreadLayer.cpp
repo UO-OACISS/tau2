@@ -29,6 +29,7 @@ using namespace std;
 #endif /* TAU_DOT_H_LESS_HEADERS */
 #include <Profile/Profiler.h>
 #include <Profile/TauJava.h>
+#include <stdlib.h>
 
 
 
@@ -265,9 +266,9 @@ jlong JavaThreadLayer::getCurrentThreadCpuTime(void) {
 
 
 /***************************************************************************
- * $RCSfile: JavaThreadLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.7 $   $Date: 2009/01/16 00:46:52 $
- * TAU_VERSION_ID: $Id: JavaThreadLayer.cpp,v 1.7 2009/01/16 00:46:52 amorris Exp $
+ * $RCSfile: JavaThreadLayer.cpp,v $   $Author: khuck $
+ * $Revision: 1.8 $   $Date: 2009/03/13 00:46:56 $
+ * TAU_VERSION_ID: $Id: JavaThreadLayer.cpp,v 1.8 2009/03/13 00:46:56 khuck Exp $
  ***************************************************************************/
 
 
