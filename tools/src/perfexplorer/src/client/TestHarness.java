@@ -212,7 +212,7 @@ public class TestHarness {
 	private Trial setTrial(Experiment exp, String name) {
 		Trial trial = null;
 		System.out.println("******** Trials *********");
-		for (ListIterator<Trial> trials = connection.getTrialList(exp.getID()); 
+		for (ListIterator<Trial> trials = connection.getTrialList(exp.getID(),false); 
 			trials.hasNext() ; ) {
 			trial = trials.next();
 			System.out.println("\t" + trial.getName());
@@ -341,7 +341,7 @@ public class TestHarness {
 			if (viewList == null && foundView) {
 				viewList = list.toArray();
 			}
-            ListIterator<Trial> trials = connection.getTrialsForView(list);
+            ListIterator<Trial> trials = connection.getTrialsForView(list,false);
             Trial trial = null;
             while(trials.hasNext())
             {

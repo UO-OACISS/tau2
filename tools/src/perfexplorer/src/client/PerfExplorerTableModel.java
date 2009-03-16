@@ -3,6 +3,7 @@ package edu.uoregon.tau.perfexplorer.client;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
 import edu.uoregon.tau.perfexplorer.common.RMIView;
+import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 import javax.swing.table.*;
 import javax.swing.*;
@@ -49,6 +50,13 @@ public class PerfExplorerTableModel extends AbstractTableModel {
             type = 1;
         } else if (object instanceof Trial) {
             this.trial = (Trial) object;
+            if(!trial.isXmlMetaDataLoaded()){
+            	try {
+					trial.loadXMLMetadata(PerfExplorerServer.getServer().getDB());
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+            }
             type = 2;
         } else if (object instanceof Metric) {
             this.metric = (Metric) object;

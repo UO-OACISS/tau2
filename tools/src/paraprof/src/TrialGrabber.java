@@ -117,10 +117,10 @@ public class TrialGrabber {
 
         dbApi.setApplication(app);
         dbApi.setExperiment(exp);
-        List list = dbApi.getTrialList();
+        List list = dbApi.getTrialList(true);
         for (Iterator it = list.iterator(); it.hasNext();) {
             Trial trial = (Trial) it.next();
-            dbApi.setTrial(trial.getID());
+            dbApi.setTrial(trial.getID(),true);//TODO: Do these really need xml metadata?
             DataSource dataSource = new DBDataSource(dbApi);
             try {
                 dataSource.load();

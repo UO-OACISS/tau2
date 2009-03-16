@@ -459,7 +459,7 @@ public class PerfExplorerActionListener implements ActionListener {
 				while (experiments.hasNext() && !failed) {
 					experiment = experiments.next();
 					theModel.setCurrentSelection(experiment);
-					ListIterator<Trial> trials = server.getTrialList(experiment.getID());
+					ListIterator<Trial> trials = server.getTrialList(experiment.getID(),false);
 					Trial trial = null;
 					while (trials.hasNext() && !failed) {
 						trial = trials.next();
@@ -494,7 +494,7 @@ public class PerfExplorerActionListener implements ActionListener {
 			if (reply == 1) {
 				Experiment experiment = (Experiment)selection;
 				PerfExplorerConnection server = PerfExplorerConnection.getConnection();
-				ListIterator<Trial> trials = server.getTrialList(experiment.getID());
+				ListIterator<Trial> trials = server.getTrialList(experiment.getID(),false);
 				Trial trial = null;
 				boolean failed = false;
 				while (trials.hasNext() && !failed) {

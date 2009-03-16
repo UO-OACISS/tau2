@@ -3,16 +3,6 @@
  */
 package edu.uoregon.tau.perfexplorer.glue;
 
-import edu.uoregon.tau.perfdmf.Application;
-import edu.uoregon.tau.perfdmf.Experiment;
-import edu.uoregon.tau.perfdmf.IntervalEvent;
-import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfexplorer.client.PerfExplorerClient;
-import edu.uoregon.tau.perfexplorer.client.PerfExplorerModel;
-import edu.uoregon.tau.perfexplorer.common.EngineType;
-import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
-import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -20,6 +10,15 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.JFrame;
+
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfexplorer.client.PerfExplorerClient;
+import edu.uoregon.tau.perfexplorer.client.PerfExplorerModel;
+import edu.uoregon.tau.perfexplorer.common.EngineType;
+import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
+import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 
 
@@ -40,7 +39,7 @@ public class Utilities {
             	for (Experiment exp : exps) {
             		if (exp.getName().trim().equals(eName.trim())) {
                     	//System.out.println("Found exp");
-            			List<Trial> trials = server.getTrialList(exp.getID());
+            			List<Trial> trials = server.getTrialList(exp.getID(), false);//TODO: Is this metadata ever needed?
             			for (Trial trial : trials) {
             				if (trial.getName().trim().equals(tName.trim())) {
             					return trial;
@@ -71,7 +70,7 @@ public class Utilities {
             	for (Experiment exp : exps) {
             		if (exp.getName().trim().equals(eName.trim())) {
                     	//System.out.println("Found exp");
-            			List<Trial> trials = server.getTrialList(exp.getID());
+            			List<Trial> trials = server.getTrialList(exp.getID(),false);//TODO: Is this metadata ever needed?
 						return trials;
             		}
             	}
@@ -135,7 +134,7 @@ public class Utilities {
 	public static int setSession (String name) {
 		try {
 			PerfExplorerServer server = getServer(name);
-			List configNames = server.getConfigNames();
+			List<String> configNames = server.getConfigNames();
 			for (int i = 0 ; i < server.getSessionCount() ; i++) {
 				server.setConnectionIndex(i);
 //				System.out.println(server.getConnectionString());

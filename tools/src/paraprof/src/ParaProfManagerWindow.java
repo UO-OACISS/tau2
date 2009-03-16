@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.37 2009/02/27 22:54:09 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.38 2009/03/16 23:26:18 wspear Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.37 $
+ * @version	$Revision: 1.38 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -811,10 +811,10 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                             success = (new File(expname).mkdir());
 
                             databaseAPI.setExperiment(dbExp);
-                            for (Iterator it2 = databaseAPI.getTrialList().iterator(); it2.hasNext();) {
+                            for (Iterator it2 = databaseAPI.getTrialList(true).iterator(); it2.hasNext();) {
                                 Trial trial = (Trial) it2.next();
 
-                                databaseAPI.setTrial(trial.getID());
+                                databaseAPI.setTrial(trial.getID(),true);//TODO: Do these really require xml metadata?
                                 DBDataSource dbDataSource = new DBDataSource(databaseAPI);
                                 dbDataSource.load();
 
@@ -1345,8 +1345,8 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     DatabaseAPI databaseAPI = this.getDatabaseAPI(experiment.getDatabase());
                     if (databaseAPI != null) {
                         databaseAPI.setExperiment(experiment.getID());
-                        if (databaseAPI.getTrialList() != null) {
-                            ListIterator l = databaseAPI.getTrialList().listIterator();
+                        if (databaseAPI.getTrialList(false) != null) {
+                            ListIterator l = databaseAPI.getTrialList(true).listIterator();//TODO: Is xml metadata required here?
                             while (l.hasNext()) {
                                 ParaProfTrial ppTrial = new ParaProfTrial((Trial) l.next());
                                 ppTrial.setDBTrial(true);
@@ -1417,7 +1417,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                 if (databaseAPI != null) {
                     databaseAPI.setApplication(ppTrial.getApplicationID());
                     databaseAPI.setExperiment(ppTrial.getExperimentID());
-                    databaseAPI.setTrial(ppTrial.getID());
+                    databaseAPI.setTrial(ppTrial.getID(),true);//TODO: Is XML metadata required here?
 
                     DBDataSource dbDataSource = new DBDataSource(databaseAPI);
                     dbDataSource.setGenerateIntermediateCallPathData(ParaProf.preferences.getGenerateIntermediateCallPathData());

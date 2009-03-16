@@ -6,7 +6,6 @@ import java.util.Vector;
 
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
-import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.UtilFncs;
@@ -131,7 +130,7 @@ public class ScriptFacade {
         if (exp == null)
             throw new NullPointerException("Experiment selection is null.  Please select an Experiment before setting the Trial.");
         boolean found = false;
-        for (ListIterator<Trial> trials = connection.getTrialList(exp.getID());
+        for (ListIterator<Trial> trials = connection.getTrialList(exp.getID(),false);
              trials.hasNext() && !found;) {
             trial = trials.next();
             if (trial.getName().equals(name)) {
@@ -311,8 +310,8 @@ public class ScriptFacade {
 		PerfExplorerOutput.print("\n");
 	}
 
-	public Object[] getTrialList(String criteria) {
-        return connection.getTrialList(criteria).toArray();
+	public Object[] getTrialList(String criteria, boolean getXMLMetadata) {
+        return connection.getTrialList(criteria,getXMLMetadata).toArray();
 	}
 
 	public void doGeneralChart() {
@@ -510,8 +509,8 @@ public class ScriptFacade {
 		return connection.getExperimentList(model.getApplication().getID());
 	}
 
-	public ListIterator<Trial> getTrialList() {
-		return connection.getTrialList(model.getExperiment().getID());
+	public ListIterator<Trial> getTrialList(boolean getXMLMetadata) {
+		return connection.getTrialList(model.getExperiment().getID(),false);
 	}
 
 	public ListIterator<RMISortableIntervalEvent> getEventList(Trial trial, int metricIndex) {

@@ -13,7 +13,7 @@ public class QueryManager {
 	 * @throws PerfExplorerException
 	 */
 	@SuppressWarnings("unchecked")  // for Trial.getTrialList() call
-	public static List<Trial> getTrialList (String criteria) {
+	public static List<Trial> getTrialList (String criteria, boolean getXMLMetadata) {
 		PerfExplorerServer server = PerfExplorerServer.getServer();
 		List<Trial> list = null;
 		try {
@@ -23,7 +23,7 @@ public class QueryManager {
 			// changes in our criteria
 			String whereClause = " where " + fixClause(criteria, db);
 			// ask the API for the trials
-			list = Trial.getTrialList(db, whereClause);
+			list = Trial.getTrialList(db, whereClause, getXMLMetadata);
 		} catch (Exception e) {
 			System.err.println("ERROR: Couldn't the list of trials!");
             System.err.println(e.getMessage());

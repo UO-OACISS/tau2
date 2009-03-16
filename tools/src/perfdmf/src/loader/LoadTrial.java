@@ -6,7 +6,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.DataSource;
+import edu.uoregon.tau.perfdmf.DataSourceException;
+import edu.uoregon.tau.perfdmf.DatabaseAPI;
+import edu.uoregon.tau.perfdmf.DatabaseException;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.UtilFncs;
 
 public class LoadTrial {
 
@@ -103,7 +109,7 @@ public class LoadTrial {
     }
 
     public boolean checkForTrialName(String trialName) {
-        Trial tmpTrial = databaseAPI.setTrial(trialName);
+        Trial tmpTrial = databaseAPI.setTrial(trialName,false);
         if (tmpTrial == null)
             return false;
         else
@@ -111,7 +117,7 @@ public class LoadTrial {
     }
 
     public boolean checkForTrial(String trialid) {
-        Trial tmpTrial = databaseAPI.setTrial(Integer.parseInt(trialid));
+        Trial tmpTrial = databaseAPI.setTrial(Integer.parseInt(trialid),false);
         if (tmpTrial == null)
             return false;
         else

@@ -14,6 +14,10 @@ import edu.uoregon.tau.perfexplorer.common.RMIView;
 
 public class PerfExplorerJTree extends JTree {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7184526063985636881L;
 	private static PerfExplorerJTree theTree = null;
 	private static List<DefaultMutableTreeNode> leafViews = null;
 	private static DefaultMutableTreeNode root = null;
@@ -174,7 +178,7 @@ public class PerfExplorerJTree extends JTree {
 		//System.out.println("trial nodes...");
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the trials
-		ListIterator<Trial> trials = server.getTrialList(exp.getID());
+		ListIterator<Trial> trials = server.getTrialList(exp.getID(),false);
 		Trial trial = null;
 		DefaultMutableTreeNode trialNode = null;
 		// loop through all the trials, and print out some info
@@ -208,7 +212,7 @@ public class PerfExplorerJTree extends JTree {
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the trials
 		if (views.size() > 0) {
-			ListIterator<Trial> trials = server.getTrialsForView(views);
+			ListIterator<Trial> trials = server.getTrialsForView(views,false);
 			Trial trial = null;
 			DefaultMutableTreeNode trialNode = null;
 			// loop through all the trials, and print out some info

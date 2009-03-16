@@ -7,7 +7,6 @@ import java.util.Map;
 
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
-import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Trial;
 
 /**
@@ -15,7 +14,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * PerfExplorerServer object.  This interface defines the API for
  * passing requests to the server.
  * 
- * <P>CVS $Id: RMIPerfExplorer.java,v 1.20 2009/03/12 21:04:37 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorer.java,v 1.21 2009/03/16 23:29:46 wspear Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -56,7 +55,7 @@ public interface RMIPerfExplorer extends Remote {
      * @return
      * @throws RemoteException
      */
-    public List<Trial> getTrialList(int experimentID) throws RemoteException;
+    public List<Trial> getTrialList(int experimentID, boolean getXMLMetadata) throws RemoteException;
 
     /**
      * Requests analysis using the settings specified in the model.
@@ -190,7 +189,7 @@ public interface RMIPerfExplorer extends Remote {
      * @return
      * @throws RemoteException
      */
-    public List<Trial> getTrialsForView(List<RMIView> views) throws RemoteException;
+    public List<Trial> getTrialsForView(List<RMIView> views, boolean getXMLMetadata) throws RemoteException;
 
     /**
      * Gets the correlation results for the specified model.
@@ -263,7 +262,7 @@ public interface RMIPerfExplorer extends Remote {
      * @return
      * @throws RemoteException
      */
-    public List<Trial> getTrialList(String criteria) throws RemoteException;
+    public List<Trial> getTrialList(String criteria, boolean getXMLMetadata) throws RemoteException;
 
     /**
      * Deletes a view from the view hierarchy.

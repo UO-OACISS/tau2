@@ -5,6 +5,9 @@ package edu.uoregon.tau.perfexplorer.glue;
 
 import java.io.Reader;
 import java.io.StringReader;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
@@ -18,17 +21,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
-
-import edu.uoregon.tau.perfdmf.Trial;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.List;
-
-import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.database.DB;
-import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 import edu.uoregon.tau.perfexplorer.server.TauNamespaceContext;
 
@@ -43,7 +37,7 @@ public class TrialMetadata {
 	private PerformanceResult performanceResult = null;
 
 	public TrialMetadata (int id) {
-		this.trial = PerfExplorerServer.getServer().getSession().setTrial(id);
+		this.trial = PerfExplorerServer.getServer().getSession().setTrial(id,false);
 		getMetadata();
 	}
 	
@@ -61,12 +55,12 @@ public class TrialMetadata {
 	private void getMetadata() {
 		try {
 			// get the common attributes
-			Map metaData = trial.getMetaData();
-			Iterator iter = metaData.keySet().iterator();
+			Map<String,String> metaData = trial.getMetaData();
+			Iterator<String> iter = metaData.keySet().iterator();
 			while (iter.hasNext()) {
 				// we can safely assume that the name is a string
-				String key = (String)iter.next();
-				String value = (String)metaData.get(key);
+				String key = iter.next();
+				String value = metaData.get(key);
 				commonAttributes.put(key, value);
 			}
 			

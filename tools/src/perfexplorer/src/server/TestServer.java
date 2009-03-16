@@ -1,6 +1,9 @@
 package edu.uoregon.tau.perfexplorer.server;
 
 
+import java.util.ListIterator;
+import java.util.Vector;
+
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Metric;
@@ -10,16 +13,10 @@ import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
 import edu.uoregon.tau.perfexplorer.common.TransformationType;
 
-import java.io.FileInputStream;
-import java.util.ListIterator;
-import java.util.Properties;
-import java.util.StringTokenizer;
-import java.util.Vector;
-
 /**
  * This class exists as a unit test of the PerfExplorerServer class.
  *
- * <P>CVS $Id: TestServer.java,v 1.11 2009/02/24 00:53:45 khuck Exp $</P>
+ * <P>CVS $Id: TestServer.java,v 1.12 2009/03/16 23:29:46 wspear Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -62,38 +59,38 @@ public class TestServer {
 
     public void testClustering() throws Exception {
         Object[] objects = new Object[4];
-        ListIterator apps = server.getApplicationList().listIterator();
+        ListIterator<Application> apps = server.getApplicationList().listIterator();
         Application app = null;
         while (apps.hasNext()) {
-            app = (Application)apps.next();
+            app = apps.next();
             if (app.getID() == 12) {
                 objects[0] = app;
                 break;
             }
         }
-        ListIterator exps =
+        ListIterator<Experiment> exps =
         server.getExperimentList(app.getID()).listIterator();
         Experiment exp = null;
         while (exps.hasNext()) {
-            exp = (Experiment)exps.next();
+            exp = exps.next();
             if (exp.getID() == 66) {
                 objects[1] = exp;
                 break;
             }
         }
-        ListIterator trials =
-        server.getTrialList(exp.getID()).listIterator();
+        ListIterator<Trial> trials =
+        server.getTrialList(exp.getID(),false).listIterator();
         Trial trial = null;
         while (trials.hasNext()) {
-            trial = (Trial)trials.next();
+            trial = trials.next();
             if (trial.getID() == 430) {
                 objects[2] = trial;
                 break;
             }
         }
-        Vector metrics = trial.getMetrics();
+        Vector<Metric> metrics = trial.getMetrics();
         for (int i = 0 ; i < metrics.size() ; i++) {
-            Metric metric = (Metric)metrics.elementAt(i);
+            Metric metric = metrics.elementAt(i);
             if (metric.getID() == 1272) {
                 objects[3] = metric;
                 break;

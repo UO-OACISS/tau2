@@ -3,21 +3,28 @@ package edu.uoregon.tau.perfdmf;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Vector;
 
 import edu.uoregon.tau.perfdmf.database.ConnectionManager;
 import edu.uoregon.tau.perfdmf.database.DB;
-import edu.uoregon.tau.perfdmf.database.ParseConfig;
 
 /**
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.22 2009/01/22 23:06:25 khuck Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.23 2009/03/16 23:25:44 wspear Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.22 $
+ * @version $Revision: 1.23 $
  */
 public class DatabaseAPI {
 
@@ -149,14 +156,14 @@ public class DatabaseAPI {
     }
 
     // returns Vector of Trial objects
-    public List getTrialList() {
+    public List getTrialList(boolean getMetadata) {
         StringBuffer whereClause = new StringBuffer();
         if (experiment != null) {
             whereClause.append("WHERE t.experiment = " + experiment.getID());
         } else if (application != null) {
             whereClause.append("WHERE e.application = " + application.getID());
         }
-        return Trial.getTrialList(db, whereClause.toString());
+        return Trial.getTrialList(db, whereClause.toString(),getMetadata);
     }
 
     // set the Application for this session
@@ -216,11 +223,11 @@ public class DatabaseAPI {
     }
 
     // set the Trial for this session
-    public Trial setTrial(int id) {
-        return setTrial(id, true);
+    public Trial setTrial(int id, boolean getXMLMetadata) {
+        return setTrial(id, true, getXMLMetadata);
     }
 
-    private Trial setTrial(int id, boolean clearHashes) {
+    private Trial setTrial(int id, boolean clearHashes, boolean getXMLMetadata) {
         this.trial = null;
         this.metrics = null;
         if (clearHashes) {
@@ -230,7 +237,7 @@ public class DatabaseAPI {
         // create a string to hit the database
         String whereClause;
         whereClause = " WHERE t.id = " + id;
-        Vector trials = Trial.getTrialList(db, whereClause);
+        Vector trials = Trial.getTrialList(db, whereClause, getXMLMetadata);
         if (trials.size() == 1) {
             this.trial = (Trial) trials.elementAt(0);
         } //else exception?
@@ -239,11 +246,11 @@ public class DatabaseAPI {
     }
 
     // set the Trial for this session
-    public Trial setTrial(String trialName) {
-        return setTrial(trialName, true);
+    public Trial setTrial(String trialName, boolean getXMLMetadata) {
+        return setTrial(trialName, true, getXMLMetadata);
     }
 
-    private Trial setTrial(String trialName, boolean clearHashes) {
+    private Trial setTrial(String trialName, boolean clearHashes, boolean getXMLMetadata) {
         this.trial = null;
         this.metrics = null;
         if (clearHashes) {
@@ -253,7 +260,7 @@ public class DatabaseAPI {
         // create a string to hit the database
         String whereClause;
         whereClause = " WHERE t.name = '" + trialName +"'";
-        Vector trials = Trial.getTrialList(db, whereClause);
+        Vector trials = Trial.getTrialList(db, whereClause, getXMLMetadata);
         if (trials.size() == 1) {
             this.trial = (Trial) trials.elementAt(0);
         } //else exception?
@@ -1424,7 +1431,7 @@ public class DatabaseAPI {
         tmpSession.setDB(this.db());
 
         tmpSession.setExperiment(experimentID);
-        ListIterator trials = tmpSession.getTrialList().listIterator();
+        ListIterator trials = tmpSession.getTrialList(false).listIterator();
         while (trials.hasNext()) {
             Trial trial = (Trial) trials.next();
             Trial.deleteTrial(db, trial.getID());
@@ -1447,7 +1454,7 @@ public class DatabaseAPI {
         while (experiments.hasNext()) {
             Experiment experiment = (Experiment) experiments.next();
             tmpSession.setExperiment(experiment.getID());
-            ListIterator trials = tmpSession.getTrialList().listIterator();
+            ListIterator trials = tmpSession.getTrialList(false).listIterator();
             while (trials.hasNext()) {
                 Trial trial = (Trial) trials.next();
                 Trial.deleteTrial(db, trial.getID());
@@ -1588,7 +1595,7 @@ public class DatabaseAPI {
             Experiment tmp = (Experiment) it.next();
             if (tmp.getName().equals(name)) {
 				setExperiment(tmp);
-        		List trials = getTrialList();
+        		List trials = getTrialList(false);
         		for (Iterator it2 = trials.iterator(); it2.hasNext();) {
             		Trial trial = (Trial) it2.next();
             		if (exp.getName().equals(name)) {

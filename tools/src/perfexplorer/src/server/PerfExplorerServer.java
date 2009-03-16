@@ -1,26 +1,11 @@
 package edu.uoregon.tau.perfexplorer.server;
 
 
-import edu.uoregon.tau.perfdmf.Application;
-import edu.uoregon.tau.perfdmf.DatabaseAPI;
-import edu.uoregon.tau.perfdmf.DatabaseException;
-import edu.uoregon.tau.perfdmf.Experiment;
-import edu.uoregon.tau.perfdmf.Metric;
-import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfdmf.IntervalEvent;
-import edu.uoregon.tau.perfdmf.database.DB;
-import edu.uoregon.tau.perfexplorer.clustering.AnalysisFactory;
-import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
-import edu.uoregon.tau.perfexplorer.common.*;
-import edu.uoregon.tau.perfexplorer.constants.*;
-
 import jargs.gnu.CmdLineParser;
 
-import java.io.InputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.File;
-
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.rmi.ConnectException;
 import java.rmi.Naming;
 import java.rmi.RMISecurityManager;
@@ -29,21 +14,47 @@ import java.rmi.ServerError;
 import java.rmi.ServerException;
 import java.rmi.StubNotFoundException;
 import java.rmi.server.UnicastRemoteObject;
-
-import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Collections;
 import java.util.Map;
-import java.util.StringTokenizer;
 import java.util.NoSuchElementException;
 import java.util.Queue;
+import java.util.StringTokenizer;
+
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.DatabaseAPI;
+import edu.uoregon.tau.perfdmf.DatabaseException;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.IntervalEvent;
+import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.database.DB;
+import edu.uoregon.tau.perfexplorer.clustering.AnalysisFactory;
+import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
+import edu.uoregon.tau.perfexplorer.common.AnalysisType;
+import edu.uoregon.tau.perfexplorer.common.ChartDataType;
+import edu.uoregon.tau.perfexplorer.common.ChartType;
+import edu.uoregon.tau.perfexplorer.common.ConfigureFiles;
+import edu.uoregon.tau.perfexplorer.common.EngineType;
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerException;
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
+import edu.uoregon.tau.perfexplorer.common.RMIChartData;
+import edu.uoregon.tau.perfexplorer.common.RMICubeData;
+import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData;
+import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorer;
+import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
+import edu.uoregon.tau.perfexplorer.common.RMIPerformanceResults;
+import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
+import edu.uoregon.tau.perfexplorer.common.RMIVarianceData;
+import edu.uoregon.tau.perfexplorer.common.RMIView;
+import edu.uoregon.tau.perfexplorer.constants.Constants;
 
 /**
  * The main PerfExplorer Server class.  This class is defined as a singleton,
@@ -52,12 +63,16 @@ import java.util.Queue;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.78 2009/03/12 21:04:37 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.79 2009/03/16 23:29:45 wspear Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
  */
 public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfExplorer {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6257362740066518307L;
 	private static String USAGE = "Usage: PerfExplorerClient [{-h,--help}] {-c,--configfile}=<config_file> [{-e,--engine}=<analysis_engine>] [{-p,--port}=<port_number>]\n  where analysis_engine = R or Weka";
 	private DatabaseAPI session = null;
 	private List<DatabaseAPI> sessions = new ArrayList<DatabaseAPI>();
@@ -266,12 +281,12 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return List of PerfDMF Trial objects.
 	 */
 	@SuppressWarnings("unchecked")  // for getTrialList() call
-	public List<Trial> getTrialList(int experimentID) {
+	public List<Trial> getTrialList(int experimentID, boolean getXMLMetadata) {
 		//PerfExplorerOutput.println("getTrialList(" + experimentID + ")...");
 		try {
 			this.session.setExperiment(experimentID);
 		} catch (DatabaseException e) {}
-		List<Trial> trials = this.session.getTrialList();
+		List<Trial> trials = this.session.getTrialList(getXMLMetadata);
 		return trials;
 	}
 
@@ -738,7 +753,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			if (object instanceof RMIView) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
-				List selections = modelData.getMultiSelection();
+				List<Object> selections = modelData.getMultiSelection();
 				if (selections == null) {
 					// just one selection
 					Object selection = modelData.getCurrentSelection();
@@ -824,7 +839,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
 				buf.append(" inner join experiment e on t.experiment = e.id ");
-				List selections = modelData.getMultiSelection();
+				List<Object> selections = modelData.getMultiSelection();
 				if (selections == null) {
 					// just one selection
 					Object selection = modelData.getCurrentSelection();
@@ -927,7 +942,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			if (object instanceof RMIView) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
-				List selections = modelData.getMultiSelection();
+				List<Object> selections = modelData.getMultiSelection();
 				if (selections == null) {
 					// just one selection
 					Object selection = modelData.getCurrentSelection();
@@ -1014,7 +1029,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			if (object instanceof RMIView) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
-				List selections = modelData.getMultiSelection();
+				List<Object> selections = modelData.getMultiSelection();
 				if (selections == null) {
 					// just one selection
 					Object selection = modelData.getCurrentSelection();
@@ -1250,10 +1265,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			}
 			StringBuilder buf = new StringBuilder("select ");
 			// assumes at least one column...
-			buf.append((String) names.next());
+			buf.append(names.next());
 			while (names.hasNext()) {
 				buf.append(", ");
-				buf.append((String) names.next());
+				buf.append(names.next());
 			}
 			buf.append(" from trial_view");
 			if (parent == -1) { // get all views!
@@ -1293,7 +1308,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @see common.RMIPerfExplorer#getTrialsForView(java.util.List)
 	 */
 	@SuppressWarnings("unchecked")  // for Trial.getTrialList() call
-	public List<Trial> getTrialsForView (List<RMIView> views) {
+	public List<Trial> getTrialsForView (List<RMIView> views, boolean getXMLMetadata) {
 		//PerfExplorerOutput.println("getTrialsForView()...");
 		List<Trial> trials = new ArrayList<Trial>();
 		try {
@@ -1326,7 +1341,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 
 			}
 			//PerfExplorerOutput.println(whereClause.toString());
-			trials = Trial.getTrialList(db, whereClause.toString());
+			trials = Trial.getTrialList(db, whereClause.toString(), getXMLMetadata);
 		} catch (Exception e) {
 			String error = "ERROR: Couldn't select views from the database!";
 			System.err.println(error);
@@ -1681,7 +1696,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	@SuppressWarnings("unchecked")
 	public List<RMISortableIntervalEvent> getEventList(int trialID, int metricIndex) {
 		try {
-			this.session.setTrial(trialID);
+			this.session.setTrial(trialID, false);
 		} catch (DatabaseException e) {}
 		List<IntervalEvent> events = this.session.getIntervalEvents();
 		List<RMISortableIntervalEvent> sortedEvents = new ArrayList<RMISortableIntervalEvent>();
@@ -1701,8 +1716,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 *		  criteria for selecting the trial
 	 * @return List of PerfDMF Trial objects.
 	 */
-	public List<Trial> getTrialList(String criteria) {
-		return QueryManager.getTrialList(criteria);
+	public List<Trial> getTrialList(String criteria, boolean getXMLMetadata) {
+		return QueryManager.getTrialList(criteria, getXMLMetadata);
 	}
 
 	/**
@@ -1893,7 +1908,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
 				buf.append(" inner join experiment e on t.experiment = e.id ");
-				List selections = modelData.getMultiSelection();
+				List<Object> selections = modelData.getMultiSelection();
 				if (selections == null) {
 					// just one selection
 					Object selection = modelData.getCurrentSelection();

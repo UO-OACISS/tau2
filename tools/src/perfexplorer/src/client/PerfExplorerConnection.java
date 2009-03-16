@@ -1,15 +1,28 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import java.rmi.*;
-import java.util.*;
+import java.rmi.Naming;
+import java.rmi.RMISecurityManager;
+import java.rmi.RemoteException;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
 
-import javax.swing.*;
+import javax.swing.JOptionPane;
 
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
-import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfexplorer.common.*;
+import edu.uoregon.tau.perfexplorer.common.ChartDataType;
+import edu.uoregon.tau.perfexplorer.common.EngineType;
+import edu.uoregon.tau.perfexplorer.common.RMIChartData;
+import edu.uoregon.tau.perfexplorer.common.RMICubeData;
+import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData;
+import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorer;
+import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
+import edu.uoregon.tau.perfexplorer.common.RMIPerformanceResults;
+import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
+import edu.uoregon.tau.perfexplorer.common.RMIVarianceData;
+import edu.uoregon.tau.perfexplorer.common.RMIView;
 import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 public class PerfExplorerConnection {
@@ -124,11 +137,11 @@ public class PerfExplorerConnection {
 	return tmpIterator;
     }
 
-    public ListIterator<Trial> getTrialList(int experimentID) {
+    public ListIterator<Trial> getTrialList(int experimentID, boolean getXMLMetadata) {
 	ListIterator<Trial> tmpIterator = null;
 	try {
 	    tmpIterator =
-		server.getTrialList(experimentID).listIterator();
+		server.getTrialList(experimentID,getXMLMetadata).listIterator();
 	} catch (RemoteException e) {
 	    handleError(e, "getTrialList(" + experimentID + ")");
 	}
@@ -271,10 +284,10 @@ public class PerfExplorerConnection {
 	return views;
     }
 
-    public ListIterator<Trial> getTrialsForView(List<RMIView> views) {
+    public ListIterator<Trial> getTrialsForView(List<RMIView> views, boolean getXMLMetadata) {
 	ListIterator<Trial> trials = null;
 	try {
-	    trials = server.getTrialsForView(views).listIterator();
+	    trials = server.getTrialsForView(views,getXMLMetadata).listIterator();
 	} catch (RemoteException e) {
 	    handleError(e, "getTrialsForView(" + views + ")");
 	}
@@ -341,10 +354,10 @@ public class PerfExplorerConnection {
 	return tmpIterator;
     }
 
-	public List<Trial> getTrialList(String criteria) {
+	public List<Trial> getTrialList(String criteria, boolean getXMLMetadata) {
 		List<Trial> list = null;
 		try {
-			list = server.getTrialList(criteria);
+			list = server.getTrialList(criteria,getXMLMetadata);
 		} catch (RemoteException e) {
 	    	handleError(e, "getTrialList(" + criteria + ")");
 		}
