@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.38 2009/03/16 23:26:18 wspear Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.39 2009/03/17 23:57:51 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.38 $
+ * @version	$Revision: 1.39 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -35,7 +35,9 @@ import edu.uoregon.tau.common.TauRuntimeException;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.tablemodel.*;
 import edu.uoregon.tau.perfdmf.*;
-import edu.uoregon.tau.perfdmf.database.*;
+import edu.uoregon.tau.perfdmf.database.DBConnector;
+import edu.uoregon.tau.perfdmf.database.ParseConfig;
+import edu.uoregon.tau.perfdmf.database.PasswordCallback;
 
 public class ParaProfManagerWindow extends JFrame implements ActionListener, TreeSelectionListener, TreeWillExpandListener {
 
@@ -44,7 +46,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     private DefaultTreeModel treeModel = null;
     private DefaultMutableTreeNode standard = null;
     private DefaultMutableTreeNode runtime = null;
-    //private DefaultMutableTreeNode dbApps = null;
     private JSplitPane jSplitInnerPane = null;
     private JSplitPane jSplitOuterPane = null;
 
@@ -955,11 +956,11 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     }
 
     private void compareAllTrials(ParaProfExperiment ppExp) {
-//        for (Iterator it = ppExp.getTrialList(); it.hasNext();) {
-//            ParaProfTrial ppTrial = (ParaProfTrial) it.next();
-//            System.out.println(ppTrial);
-//            //addMeanToComparisonWindow(ppTrial);
-//        }
+        //        for (Iterator it = ppExp.getTrialList(); it.hasNext();) {
+        //            ParaProfTrial ppTrial = (ParaProfTrial) it.next();
+        //            System.out.println(ppTrial);
+        //            //addMeanToComparisonWindow(ppTrial);
+        //        }
         RegressionGraph chart = RegressionGraph.createBasicChart(ppExp.getTrials());
         Frame frame = chart.createFrame();
         //chart.savePNG("/home/amorris/foo.png");
@@ -1621,7 +1622,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                 application.setName("New Application");
                 application.setID(databaseAPI.saveApplication(application));
                 application.setDatabase(((Database) treeNode.getUserObject()));
-
                 databaseAPI.terminate();
             }
 
@@ -1732,23 +1732,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         }
 
                         expandTrial(ppTrial);
-
-                        //                        if (ppTrial.dBTrial()) {
-                        //                            expandTrial(2, ppTrial.getApplicationID(), ppTrial.getExperimentID(), ppTrial.getID(), null, null,
-                        //                                    ppTrial);
-                        //                        } else {
-                        //
-                        //                            //recurseExpand(ppTrial.getDMTN());
-                        //                            //                            DefaultMutableTreeNode node = ppTrial.getDMTN();
-                        //                            //                            while (node != null && !node.isRoot()) {
-                        //                            //                                tree.expandPath(new TreePath(node));
-                        //                            //                                node = (DefaultMutableTreeNode) node.getParent();
-                        //                            //                            }
-                        //
-                        //                            expandTrial(0, ppTrial.getApplicationID(), ppTrial.getExperimentID(), ppTrial.getID(), null, null,
-                        //                                    ppTrial);
-                        //                        }
-
                     } catch (Exception e) {
                         ParaProfUtils.handleException(e);
                     }
@@ -1792,24 +1775,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             return null;
 
         case 2:
-            //            //Test to see if dbApps is expanded, if not, expand it.
-            //            if (!(tree.isExpanded(new TreePath(dbApps.getPath()))))
-            //                tree.expandPath(new TreePath(dbApps.getPath()));
-            //
-            //            //Try and find the required application node.
-            //            for (int i = dbApps.getChildCount(); i > 0; i--) {
-            //                DefaultMutableTreeNode defaultMutableTreeNode = (DefaultMutableTreeNode) dbApps.getChildAt(i - 1);
-            //                if (applicationID == ((ParaProfApplication) defaultMutableTreeNode.getUserObject()).getID())
-            //                    return defaultMutableTreeNode;
-            //            }
-            //            //Required application node was not found, try adding it.
-            //            if (application != null) {
-            //                DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
-            //                application.setDMTN(applicationNode);
-            //                treeModel.insertNodeInto(applicationNode, dbApps, dbApps.getChildCount());
-            //                return applicationNode;
-            //            }
-            //            return null;
 
             DefaultMutableTreeNode dbNode = null;
             Database db = null;
@@ -2033,39 +1998,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         }
     }
 
-    //    public ConnectionManager getConnectionManager() {
-    //        //Check to see if the user has set configuration information.
-    //        if (ParaProf.savedPreferences.getDatabaseConfigurationFile() == null) {
-    //            JOptionPane.showMessageDialog(this,
-    //                    "Please set the database configuration information (file menu).",
-    //                    "DB Configuration Error!", JOptionPane.ERROR_MESSAGE);
-    //            return null;
-    //        } else {//Test to see if configurataion file exists.
-    //            File file = new File(ParaProf.savedPreferences.getDatabaseConfigurationFile());
-    //            if (!file.exists()) {
-    //                JOptionPane.showMessageDialog(this, "Specified configuration file does not exist.",
-    //                        "DB Configuration Error!", JOptionPane.ERROR_MESSAGE);
-    //                return null;
-    //            }
-    //        }
-    //        //Basic checks done, try to access the db.
-    //        if (ParaProf.savedPreferences.getDatabasePassword() == null) {
-    //            try {
-    //                return new ConnectionManager(ParaProf.savedPreferences.getDatabaseConfigurationFile(), false);
-    //            } catch (Exception e) {
-    //            }
-    //        } else {
-    //            try {
-    //                return new ConnectionManager(ParaProf.savedPreferences.getDatabaseConfigurationFile(),
-    //                        ParaProf.savedPreferences.getDatabasePassword());
-    //            } catch (Exception e) {
-    //            }
-    //        }
-    //        return null;
-    //    }
-
-    // private DatabaseAPI dbAPI = null;
-
     public String getDatabaseName() {
         if (dbDisplayName == null) {
             try {
@@ -2186,9 +2118,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     ParaProf.getHelpWindow().getScrollPane().getVerticalScrollBar().setValue(0);
                 }
             });
-
-            //Collapse the dBApps node ... makes more sense to the user.
-            //tree.collapsePath(new TreePath(dbApps));
 
             return null;
         }
