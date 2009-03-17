@@ -36,7 +36,7 @@ while ($line = <SOURCE>) {
 	foreach $header (@headers) {
 	    chomp($header);
 	    $header =~ s/.*\///; # remove path
-	    if ($line =~ /\Q$header\E/) {
+	    if ($line =~ /\W\Q$header\E\W/) {
 		# replace with tau_hr_<header>
 		$line = "#include <tau_hr_$header>";
 	    }
