@@ -11,6 +11,7 @@ import edu.uoregon.tau.perfexplorer.rules.RuleHarness;
 
 /**
  * @author khuck
+ * @deprecated
  *
  */
 public class DeriveAllMetricsOperation extends AbstractPerformanceOperation {

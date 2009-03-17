@@ -1,3 +1,6 @@
+/**
+ * @deprecated
+ */
 package edu.uoregon.tau.perfexplorer.rules;
 
 import java.io.FileReader;
@@ -26,6 +29,9 @@ import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.client.ScriptFacade;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
 
+/**
+ * @deprecated
+ */
 public class RuleHarnessOld {
 
     private static ScriptFacade facade = new ScriptFacade();
@@ -79,6 +85,7 @@ public class RuleHarnessOld {
 	 * convenience methods for getting trial data.
 	 * 
 	 * @author khuck
+	 * @deprecated
 	 *
 	 */
 	public static class RelativeTrial {
@@ -194,6 +201,9 @@ public class RuleHarnessOld {
 		}
 	}
 	
+	/**
+	 * @deprecated
+	 */
 	public static class Difference {
 		public static final int SAME = 0;
 		public static final int SLOWER = 2;
@@ -265,6 +275,9 @@ public class RuleHarnessOld {
 		
 	}
 	
+    /**
+     * @deprecated
+     */
 	public static class Helper {
 		private final String name;
 		private final Object object;

@@ -15,6 +15,7 @@ import edu.uoregon.tau.perfexplorer.common.PerfExplorerException;
 
 /**
  * @author khuck
+ * @deprecated
  *
  */
 public class RatioOperation extends AbstractPerformanceOperation {

@@ -1,4 +1,4 @@
-# $Id: Makefile.skel,v 1.42 2009/03/13 23:38:59 khuck Exp $
+# $Id: Makefile.skel,v 1.43 2009/03/17 00:26:42 khuck Exp $
 # $Name:  $
 
 R_HOME = @RROOT@
@@ -117,7 +117,8 @@ CQOS_CLASSES = ${subst src/, classes/edu/uoregon/tau/perfexplorer/, ${patsubst %
 CLUSTERING_CLASSES = ${subst src/, classes/edu/uoregon/tau/perfexplorer/, ${patsubst %.java, %.class, ${CLUSTERING_SOURCES}}} 
 SERVER_CLASSES = ${subst src/, classes/edu/uoregon/tau/perfexplorer/, ${patsubst %.java, %.class, ${SERVER_SOURCES}}} 
 GLUE_CLASSES_TMP = ${subst src/, classes/edu/uoregon/tau/perfexplorer/, ${patsubst %.java, %.class, ${GLUE_SOURCES}}}
-GLUE_CLASSES = ${subst classes/edu/uoregon/tau/perfexplorer/glue/package-info.class, , ${GLUE_CLASSES_TMP}}
+GLUE_CLASSES_TMP2 = ${subst classes/edu/uoregon/tau/perfexplorer/glue/package-info.class, , ${GLUE_CLASSES_TMP}}
+GLUE_CLASSES = ${subst classes/edu/uoregon/tau/perfexplorer/rules/package-info.class, , ${GLUE_CLASSES_TMP2}}
 
 CLIENT_CLASSES = ${subst src/, classes/edu/uoregon/tau/perfexplorer/, ${patsubst %.java, %.class, ${CLIENT_SOURCES}}} 
 CLASSES = ${COMMON_CLASSES} ${CQOS_CLASSES} ${SERVER_CLASSES} ${CLIENT_CLASSES} ${CLUSTERING_CLASSES}
@@ -421,7 +422,17 @@ webstart: perfexplorer.jar
 
 BOTTOM = '<font size="-1">****************************************************************************<br>Copyright 1997-2009<br> Department of Computer and Information Science, University of Oregon<br> Advanced Computing Laboratory, Los Alamos National Laboratory<br> Juelich Supercomputing Centre, Research Center Juelich, Germany<br><a href="http://tau.uoregon.edu" target="new">http://tau.uoregon.edu</a><br>****************************************************************************<br>Permission to use, copy, modify, and distribute this software and its documentation for any purpose and without fee is hereby granted, provided that the above copyright notice appear in all copies and that both that copyright notice and this permission notice appear in supporting documentation, and that the name of University of Oregon (UO) and Los Alamos National Laboratory (LANL) not be used in advertising or publicity pertaining to distribution of the software without specific, written prior permission.  The University of Oregon and LANL makes no representations about the suitability of this software for any purpose.  It is provided "as is" without express or implied warranty.<br><br>THE UNIVERSITY OF OREGON AND LANL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL THE UNIVERSITY OF OREGON OR LANL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.<font>'
 
-javadoc: Makefile perfexplorer.jar
+doccheck: Makefile src/overview.html ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES} ${CLIENT_CLASSES} ${CQOS_CLASSES} ${GLUE_CLASSES}
+	rm -rf doccheckOut
+	mkdir doccheckOut
+	${JAVADOC} -sourcepath src \
+	-doclet com.sun.tools.doclets.doccheck.DocCheck -docletpath /home/khuck/Download/doccheck1.2b2/doccheck.jar -J-Xmx20M -d doccheckOut -classlist -docletID -title "DocCheck Sample Code" \
+	-overview src/overview.html \
+	-classpath ${GLUE_BUILD_CLASSPATH} \
+	-source 1.5 \
+	edu.uoregon.tau.perfexplorer.glue edu.uoregon.tau.perfexplorer.rules
+
+javadoc: Makefile src/overview.html ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES} ${CLIENT_CLASSES} ${CQOS_CLASSES} ${GLUE_CLASSES}
 	rm -rf javadoc
 	mkdir javadoc
 	${JAVADOC} -sourcepath src \
@@ -431,7 +442,7 @@ javadoc: Makefile perfexplorer.jar
 	-use \
 	-windowtitle "PerfExplorer 2.0" \
 	-doctitle "PerfExplorer 2.0" \
-	-header "<b>PerfExplorer</b> 2.0" \
+	-header "<b>PerfExplorer 2.0</b>" \
 	-bottom ${BOTTOM} \
 	-public \
 	-source 1.5 \
@@ -440,7 +451,8 @@ javadoc: Makefile perfexplorer.jar
 	-author \
 	-noqualifier all \
 	-nodeprecated \
-	edu.uoregon.tau.perfexplorer.glue 
+	-link ../../perfdmf/javadoc \
+	edu.uoregon.tau.perfexplorer.glue edu.uoregon.tau.perfexplorer.rules 
 
 install: perfexplorer.jar javadoc
 	#rsync -a perfexplorer2.jar spaceghost:/var/www/html/PerfExplorer/.

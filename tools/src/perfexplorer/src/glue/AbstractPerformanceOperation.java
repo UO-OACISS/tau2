@@ -1,5 +1,8 @@
 /**
- * 
+ * The glue package is used for controling the PerfExplorer application from scripts.
+ * Currently, the support is limited to Jython (Python) scripts, but that can be
+ * modified by swapping in any script interpreter which is written completely in Java.
+ *
  */
 package edu.uoregon.tau.perfexplorer.glue;
 
@@ -15,7 +18,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * interface.  This class has all the member data fields for the plethora
  * of anticipated subclasses.
  * 
- * <P>CVS $Id: AbstractPerformanceOperation.java,v 1.5 2009/03/12 20:49:52 khuck Exp $</P>
+ * <P>CVS $Id: AbstractPerformanceOperation.java,v 1.6 2009/03/17 00:26:42 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 */
