@@ -17,9 +17,9 @@ import edu.uoregon.tau.perfdmf.database.DB;
 /**
  * Reads a single trial from the database
  *  
- * <P>CVS $Id: DBDataSource.java,v 1.12 2008/11/12 01:18:08 khuck Exp $</P>
+ * <P>CVS $Id: DBDataSource.java,v 1.13 2009/03/17 23:56:07 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  */
 public class DBDataSource extends DataSource {
 
@@ -54,6 +54,7 @@ public class DBDataSource extends DataSource {
                     getMetaData().put(currentName, currentValue);
                 } else {
                     currentThread.getMetaData().put(currentName, currentValue);
+                    getUncommonMetaData().put(currentName, currentValue);
                 }
             }
         }
