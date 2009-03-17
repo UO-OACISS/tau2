@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
 import java.lang.Thread;
+import java.awt.EventQueue;
+import edu.uoregon.tau.perfdmf.Trial;
 
 public class PerfExplorerTreeSelectionListener implements TreeSelectionListener {
 
@@ -24,20 +26,29 @@ public class PerfExplorerTreeSelectionListener implements TreeSelectionListener 
 		if (paths == null)
 			return;
 		if (paths.length == 1) {
-			DefaultMutableTreeNode node = (DefaultMutableTreeNode)
+			final DefaultMutableTreeNode node = (DefaultMutableTreeNode)
 					   		tree.getLastSelectedPathComponent();
 			if (node == null) return;
 			PerfExplorerJTree.setConnectionIndex(node);
 	
-			Object currentSelection = node.getUserObject();
+			final Object currentSelection = node.getUserObject();
 			Object[] objectPath = node.getUserObjectPath();
 			PerfExplorerModel.getModel().setCurrentSelection(objectPath);
 			oldPaths = paths;
-			node.setUserObject(new String("Loading data, please wait..."));
-			PerfExplorerJTree.nodeChanged(node);
-			updateRightPanel(currentSelection);
-			node.setUserObject(currentSelection);
-			PerfExplorerJTree.nodeChanged(node);
+			// change to string
+			if (currentSelection instanceof Trial) {
+				node.setUserObject(new String("Loading data, please wait..."));
+				PerfExplorerJTree.nodeChanged(node);
+				// update the right side
+				Thread thread = new Thread() { 
+					public void run() {
+						threadWork(node, currentSelection);
+					}
+				};
+				thread.start();
+			} else {
+				updateRightPanel(currentSelection);
+			}
 		}
 		else {
         	List<Object> multiSelection = new ArrayList<Object>();
@@ -73,6 +84,17 @@ public class PerfExplorerTreeSelectionListener implements TreeSelectionListener 
 				oldPaths = paths;
 			}
 		}
+	}
+
+	private void threadWork(final DefaultMutableTreeNode node, final Object currentSelection) {
+		EventQueue.invokeLater( new Runnable() { 
+			public void run() {
+				updateRightPanel(currentSelection);
+				// change it back to Trial
+				node.setUserObject(currentSelection);
+				PerfExplorerJTree.nodeChanged(node);
+			}
+		});
 	}
 
 	public void updateRightPanel(Object object) {
