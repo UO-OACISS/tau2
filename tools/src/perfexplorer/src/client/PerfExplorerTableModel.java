@@ -51,7 +51,7 @@ public class PerfExplorerTableModel extends AbstractTableModel {
         } else if (object instanceof Trial) {
             this.trial = (Trial) object;
             if(!trial.isXmlMetaDataLoaded()){
-            	try {
+				try {
 					trial.loadXMLMetadata(PerfExplorerServer.getServer().getDB());
 				} catch (SQLException e) {
 					e.printStackTrace();

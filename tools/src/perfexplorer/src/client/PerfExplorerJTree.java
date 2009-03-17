@@ -51,6 +51,16 @@ public class PerfExplorerJTree extends JTree {
 		return theTree;
 	}
 
+	public static void nodeChanged(TreeNode node) {
+		if (theModel != null && theTree != null) {
+			theTree.setVisible(false);
+			theModel.nodeChanged(node);
+			theModel.reload(node);
+			theTree.repaint();
+			theTree.setVisible(true);
+		}
+	}
+
 	public static void refreshDatabases () {
 		DefaultMutableTreeNode root = PerfExplorerJTree.root;
         DefaultMutableTreeNode treeNode;

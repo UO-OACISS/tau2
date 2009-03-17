@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
+import java.lang.Thread;
 
 public class PerfExplorerTreeSelectionListener implements TreeSelectionListener {
 
@@ -32,7 +33,11 @@ public class PerfExplorerTreeSelectionListener implements TreeSelectionListener 
 			Object[] objectPath = node.getUserObjectPath();
 			PerfExplorerModel.getModel().setCurrentSelection(objectPath);
 			oldPaths = paths;
+			node.setUserObject(new String("Loading data, please wait..."));
+			PerfExplorerJTree.nodeChanged(node);
 			updateRightPanel(currentSelection);
+			node.setUserObject(currentSelection);
+			PerfExplorerJTree.nodeChanged(node);
 		}
 		else {
         	List<Object> multiSelection = new ArrayList<Object>();
