@@ -163,7 +163,8 @@ public class LoadTrial {
         }
 
         // set the meta data from the datasource
-        trial.setMetaData(dataSource.getMetaData());
+	trial.setMetaData(dataSource.getMetaData());
+	trial.setUncommonMetaData(dataSource.getUncommonMetaData());
 
         if (trialID == 0) {
             saveTrial();
