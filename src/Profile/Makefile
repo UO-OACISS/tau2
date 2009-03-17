@@ -219,7 +219,7 @@ TAU_SHLIB	= libTAUsh$(TAU_CONFIG)$(TAU_SHLIBX)
 #DYNINST# TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB) #ENDIF#
 #USE_DECCXX# EXTRAOBJS=cxx_repository/*.o #ENDIF#
 #PYTHON#TAUPYTHON = pytau$(TAU_SHLIBX) #ENDIF#
-#PYTHON#TAUPYTHON_INSTALL = $(TAU_BINDINGSDIR)/pytau$(TAU_SHLIBX) #ENDIF#
+#PYTHON#TAUPYTHON_INSTALL = $(TAU_SHAREDDIR)/pytau$(TAU_SHLIBX) #ENDIF#
 ##############################################
 TAU_DSO         = $(TAU_SHLIB)
 TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB)
@@ -231,10 +231,8 @@ BITS = 32
 #IBMMPI#POELIB = libmpi_r.a #ENDIF#
 #IBMMPI#POELIB_INSTALL = $(INSTALLDEST)/libmpi_r.a #ENDIF#
 
-TAU_BINDINGSDIR = $(INSTALLDEST)/bindings$(TAU_CONFIG)
 TAU_SHAREDDIR = $(INSTALLDEST)/shared$(TAU_CONFIG)
 TAU_DISABLE_SHAREDDIR = $(INSTALLDEST)/shared-disable
-
 
 # MPI Wrappers
 #MPI#TAU_FORCE_MPI_OBJECT=TauForceMPI.o #ENDIF#
@@ -333,7 +331,7 @@ $(TAU_JAVA_INSTALLDIR)/Profile.class: Profile.class
                    else mkdir -p $(TAU_JAVA_INSTALLDIR) ;fi
 		$(TAU_INSTALL) $? $(TAU_JAVA_INSTALLDIR)
 
-$(TAU_BINDINGSDIR)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
+$(TAU_SHAREDDIR)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 		@echo Installing $(TAUPYTHON), ltau.py, and tau.py in $(INSTALLDEST)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
 		   else mkdir $(INSTALLDEST) ;fi
@@ -342,12 +340,13 @@ $(TAU_BINDINGSDIR)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 		$(TAU_INSTALL) ltau.py $(INSTALLDEST)
 		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) $(TAUPYTHON)
 		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) ctau_impl$(TAU_SHLIBX)
-		@echo Installing $(TAUPYTHON), ltau.py, and tau.py in $(TAU_BINDINGSDIR)
-		@if [ -d $(TAU_BINDINGSDIR) ] ; then true; \
-		    else mkdir $(TAU_BINDINGSDIR); fi
-		$(RM) $(TAU_BINDINGSDIR)/*
-		cd $(TAU_BINDINGSDIR) && ln -s ../$(TAU_SHLIB) $(TAUPYTHON) && ln -s ../$(TAU_SHLIB) ctau_impl$(TAU_SHLIBX) && ln -s ../$(TAU_SHLIB) libTAU$(TAU_SHLIBX)
-		cd $(TAU_BINDINGSDIR) && ln -s ../tau.py . && ln -s ../ltau.py .
+		@echo Installing $(TAUPYTHON), ltau.py, and tau.py in $(TAU_SHAREDDIR)
+		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
+		    else mkdir $(TAU_SHAREDDIR); fi
+		$(RM) $(TAU_SHAREDDIR)/*
+		cd $(TAU_SHAREDDIR) && ln -s ../$(TAU_SHLIB) $(TAUPYTHON) && ln -s ../$(TAU_SHLIB) ctau_impl$(TAU_SHLIBX)
+		cd $(TAU_SHAREDDIR) && ln -s ../tau.py . && ln -s ../ltau.py .
+		cd $(INSTALLDEST) && ln -s shared$(TAU_CONFIG) bindings$(TAU_CONFIG)
 
 $(INSTALLDEST)/libpgnod_prof.a : 
 	ar rcs $(INSTALLDEST)/libpgnod_prof.a
@@ -386,17 +385,18 @@ libmpi_r.a: $(MPI_BREAKUP_PREREQ)
 	$(RM) $(BITS)
 
 $(INSTALLDEST)/libmpi_r.a: libmpi_r.a
-	echo Installing libmpi_r.a in $(TAU_BINDINGSDIR)
+	echo Installing libmpi_r.a in $(TAU_SHAREDDIR)
 	if [ -d $(INSTALLDEST) ] ; then true; \
 	   else mkdir $(INSTALLDEST) ;fi
-	if [ -d $(TAU_BINDINGSDIR) ] ; then true; \
-	    else mkdir $(TAU_BINDINGSDIR); fi
-	$(RM) $(TAU_BINDINGSDIR)/libmpi_r.a
-	$(RM) -f $(TAU_BINDINGSDIR)/libmpi_r.a
+	if [ -d $(TAU_SHAREDDIR) ] ; then true; \
+	    else mkdir $(TAU_SHAREDDIR); fi
+	$(RM) $(TAU_SHAREDDIR)/libmpi_r.a
+	$(RM) -f $(TAU_SHAREDDIR)/libmpi_r.a
 	$(RM) -f $(INSTALLDEST)/libmpi_r.a
-	cp libmpi_r.a $(TAU_BINDINGSDIR)
+	cp libmpi_r.a $(TAU_SHAREDDIR)
 	$(RM) -f $(INSTALLDEST)/bindings-default
-	ln -s $(TAU_BINDINGSDIR) $(INSTALLDEST)/bindings-default
+	cd $(INSTALLDEST) && ln -s shared$(TAU_CONFIG) bindings$(TAU_CONFIG)
+	cd $(INSTALLDEST) && ln -s bindings$(TAU_CONFIG) bindings-default
 
 install:	 $(INSTALLDEST)/$(TAU_TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1) $(TAUPYTHON_INSTALL) $(SHMEM_INSTALL) $(POELIB_INSTALL) $(CRAY_PGI_HACK)
 
