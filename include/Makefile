@@ -709,6 +709,8 @@ TAU_LINKER_OPT4 = $(LEXTRA1)
 #SUN386I#AR_SHFLAGS                = -G            #ENDIF#
 #SUNX86_64#AR_SHFLAGS                = -G            #ENDIF#
 #USE_IBMXLC#AR_SHFLAGS          = -G                #ENDIF#
+#USE_IBMXLC#TAU_BGP_XLC_AR_SHFLAGS          = -qmkshrobj                #ENDIF#
+#BGP#AR_SHFLAGS          = $(TAU_BGP_XLC_AR_SHFLAGS)                #ENDIF#
 #USE_DECCXX#AR_SHFLAGS          = -shared               #ENDIF#
 #USE_INTELCXX#AR_SHFLAGS        = -shared               #ENDIF#
 #ACC#AR_SHFLAGS                 = -b            #ENDIF#
@@ -788,6 +790,8 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 ##############################################
 # These flags will only be used for the TAU library, not the users's code
 
+#USE_IBMXLC#TAU_BGP_INTERNAL_FLAG1    = -qpic=large -DTAU_IBM_XLC_BGP #ENDIF#
+#BGP#TAU_INTERNAL_FLAG1    = $(TAU_BGP_INTERNAL_FLAG1) #ENDIF#
 #GNU#TAU_INTERNAL_FLAG1             = -fPIC #ENDIF#
 #USE_PATHCC#TAU_INTERNAL_FLAG1      = -fPIC #ENDIF#
 #USE_INTELCXX#TAU_INTERNAL_FLAG1    = -fPIC #ENDIF#
