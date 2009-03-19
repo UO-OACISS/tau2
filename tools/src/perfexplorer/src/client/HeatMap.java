@@ -26,9 +26,10 @@ public class HeatMap extends JPanel implements ImageObserver {
 	private static final int idealSize = 128;
 	private static final ColorScale scale = new ColorScale(ColorSet.RAINBOW);
 
-	public HeatMap (double[][] map, int size, double max, String description) {
+	public HeatMap (double[][] map, int size, double max, double min, String description) {
 		this.description = new StringBuilder();
 		this.description.append(description);
+		double range = max - min;
 	
 		// build the image data from the cluster results
 		pixels = new int[size*size];
@@ -43,7 +44,11 @@ public class HeatMap extends JPanel implements ImageObserver {
 			int i = 0;
 			for (int x = 0 ; x < width ; x++) {
 				for (int y = 0 ; y < height ; y++) {
-					img.setRGB(x, y, scale.getColor((float)(map[x][y]/max)).getRGB());
+					if (map[x][y] > 0.0 && range == 0) {
+						img.setRGB(x, y, scale.getColor(1f).getRGB());
+					} else if (map[x][y] > 0.0) {
+						img.setRGB(x, y, scale.getColor((float)((map[x][y]-min)/range)).getRGB());
+					}
 					i++;
 				}
 			}
@@ -59,7 +64,12 @@ public class HeatMap extends JPanel implements ImageObserver {
 				for (int y = 0 ; y < height ; y++) {
 					for (int cellX = x * cellWidth ; cellX < (x+1) * cellWidth ; cellX++) {
 						for (int cellY = y * cellHeight ; cellY < (y+1) * cellHeight ; cellY++) {
-							img.setRGB(cellX, cellY, scale.getColor((float)(map[x][y]/max)).getRGB());
+							
+							if (map[x][y] > 0.0 && range == 0) {
+								img.setRGB(cellX, cellY, scale.getColor(1f).getRGB());
+							} else if (map[x][y] > 0.0) {
+								img.setRGB(cellX, cellY, scale.getColor((float)((map[x][y]-min)/range)).getRGB());
+							}
 						}
 					}
 					i++;

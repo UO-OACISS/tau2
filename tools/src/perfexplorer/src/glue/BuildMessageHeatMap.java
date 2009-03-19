@@ -1,29 +1,28 @@
 package edu.uoregon.tau.perfexplorer.glue;
 
-import java.awt.Dimension;
-import java.awt.Point;
-import java.awt.Toolkit;
-import java.awt.event.ActionListener;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import javax.swing.JPanel;
+import java.awt.*;
+import javax.swing.*;
+import java.lang.Math;
 
 import java.net.URL;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-
 import org.jfree.chart.ChartPanel;
 
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfexplorer.client.HeatMap;
+import edu.uoregon.tau.perfexplorer.client.HeatLegend;
+import edu.uoregon.tau.perfexplorer.client.VerticalLabelUI;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerChartJMenuBar;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerClient;
 
 public class BuildMessageHeatMap extends AbstractPerformanceOperation {
+
+	private double[][][] map = null;
+	private double[] max = {0,0,0,0,0}; 
+	private double[] min = {Double.MAX_VALUE,Double.MAX_VALUE,Double.MAX_VALUE,Double.MAX_VALUE,Double.MAX_VALUE}; 
+	private int size = 0;
 
 	private JFrame window = null;
 	public BuildMessageHeatMap(PerformanceResult input) {
@@ -34,10 +33,9 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 		
 		// iterate over the atomic counters, and get the messages sent to each neighbor
 		for (PerformanceResult input : this.inputs) {
-			int size = input.getThreads().size();
-			double[][][] map = new double[5][size][size];
-			double[] max = {0,0,0,0,0}; 
-			double numEvents, eventMax, eventMin, eventMean, eventSumSqr = 0;
+			size = input.getThreads().size();
+			map = new double[5][size][size];
+			double numEvents, eventMax, eventMin, eventMean, eventSumSqr, stdev = 0;
 			outputs.add(new DefaultResult(input, false));
 			for (Integer thread : input.getThreads()) {
 				for (String event : input.getUserEvents()) {
@@ -49,18 +47,27 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 							numEvents = input.getUsereventNumevents(thread, event);
 							map[0][thread][Integer.parseInt(receiver)] = numEvents;
 							max[0] = max[0] < numEvents ? numEvents : max[0];
+							min[0] = numEvents > 0 && min[0] > numEvents ? numEvents : min[0];
 							eventMax = input.getUsereventMax(thread, event);
 							map[1][thread][Integer.parseInt(receiver)] = eventMax;
 							max[1] = max[1] < eventMax ? eventMax : max[1];
+							min[1] = eventMax > 0 && min[1] > eventMax ? eventMax : min[1];
 							eventMin = input.getUsereventMin(thread, event);
 							map[2][thread][Integer.parseInt(receiver)] = eventMin;
 							max[2] = max[2] < eventMin ? eventMin : max[2];
+							min[2] = eventMin > 0 && min[2] > eventMin ? eventMin : min[2];
 							eventMean = input.getUsereventMean(thread, event);
 							map[3][thread][Integer.parseInt(receiver)] = eventMean;
 							max[3] = max[3] < eventMean ? eventMean : max[3];
+							min[3] = eventMean > 0 && min[3] > eventMean ? eventMean : min[3];
 							eventSumSqr = input.getUsereventSumsqr(thread, event);
-							map[4][thread][Integer.parseInt(receiver)] = eventSumSqr;
-							max[4] = max[4] < eventSumSqr ? eventSumSqr : max[4];
+							if (numEvents > 0)
+								stdev = Math.sqrt(Math.abs((eventSumSqr/numEvents)-(eventMean*eventMean)));
+							else
+								stdev = 0;
+							map[4][thread][Integer.parseInt(receiver)] = stdev;
+							max[4] = max[4] < stdev ? stdev : max[4];
+							min[4] = stdev > 0 && min[4] > stdev ? stdev : min[4];
 						}
 					}
 				}
@@ -76,33 +83,20 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 
 			c.gridx = 0;
 			c.gridy = 0;
-			panel.add(new JLabel("Number of Calls", JLabel.CENTER),c);
+			panel.add(buildMapPanel(0, "NUMBER OF CALLS", "NumEvents"),c);
 			c.gridx = 1;
-			panel.add(new JLabel("Max Message Size", JLabel.CENTER),c);
+			panel.add(buildMapPanel(1, "Max Message Size", "MaxMessageSize"),c);
 			c.gridx = 2;
-			panel.add(new JLabel("Min Message Size", JLabel.CENTER),c);
+			panel.add(buildMapPanel(2, "Min Message Size", "MinMessageSize"),c);
 
 			c.gridx = 0;
 			c.gridy = 1;
-	        panel.add(new HeatMap(map[0], size, max[0], "NumEvents"), c);
+			panel.add(buildMapPanel(3, "Mean Message Size", "MeanMessageSize"),c);
 			c.gridx = 1;
-	        panel.add(new HeatMap(map[1], size, max[1], "MaxMessageSize"), c);
-			c.gridx = 2;
-	        panel.add(new HeatMap(map[2], size, max[2], "MinMessageSize"), c);
-
-			c.gridx = 0;
-			c.gridy = 2;
-			panel.add(new JLabel("Mean Message Size", JLabel.CENTER),c);
-			c.gridx = 1;
-			panel.add(new JLabel("Message Size Sum Squared", JLabel.CENTER),c);
+			panel.add(buildMapPanel(4, "Message Size Standard Deviation", "MessageSizeStdDev"),c);
 			c.gridx = 2;
 			panel.add(new JLabel("Display Options", JLabel.CENTER),c);
 
-			c.gridx = 0;
-			c.gridy = 3;
-	        panel.add(new HeatMap(map[3], size, max[3], "MeanMessageSize"), c);
-			c.gridx = 1;
-	        panel.add(new HeatMap(map[4], size, max[4], "MessageSizeSumSqr"), c);
 
 /*			ActionListener listener = this;
 			this.setJMenuBar(new PerfExplorerChartJMenuBar(listener));
@@ -119,6 +113,70 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 
 		}
 		return this.outputs;
+	}
+
+	private JPanel buildMapPanel(int index, String label, String filename) {
+		JPanel panel = new JPanel(new GridBagLayout());
+		panel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = GridBagConstraints.BOTH;
+		c.anchor = GridBagConstraints.CENTER;
+		c.weightx = 0.01;
+		c.insets = new Insets(2,2,2,2);
+
+		// title across the top
+		c.gridx = 0;
+		c.gridy = 0;
+		c.gridwidth = 5;
+		JLabel title = new JLabel(label, JLabel.CENTER);
+		title.setFont(new Font("PE", title.getFont().getStyle(), title.getFont().getSize()*2));
+		panel.add(title,c);
+
+		// the x axis and the top of the legend
+		c.gridwidth = 1;
+		c.gridy = 1;
+		c.gridx = 1;
+		panel.add(new JLabel("0", JLabel.CENTER),c);
+		c.gridx = 2;
+		c.weightx = 0.99;
+		panel.add(new JLabel("RECEIVER", JLabel.CENTER),c);
+		c.weightx = 0.01;
+		c.gridx = 3;
+		panel.add(new JLabel(Integer.toString(size-1), JLabel.CENTER),c);
+
+		// the y axis and the map and the legend
+		c.gridx = 0;
+		c.gridy = 2;
+		panel.add(new JLabel("0", JLabel.CENTER),c);
+		c.gridy = 3;
+		c.weighty = 0.99;
+		JLabel vertical = new JLabel("SENDER", JLabel.CENTER);
+		vertical.setUI(new VerticalLabelUI(false));
+		panel.add(vertical,c);
+		c.weighty = 0.01;
+		c.gridx = 1;
+		c.gridy = 2;
+		c.gridwidth = 3;
+		c.gridheight = 3;
+	    panel.add(new HeatMap(map[index], size, max[index], min[index], filename), c);
+		c.gridwidth = 1;
+		c.gridheight = 1;
+		c.gridy = 2;
+		c.gridx = 4;
+		panel.add(new JLabel(Integer.toString((int)max[index]), JLabel.CENTER),c);
+		c.gridy = 3;
+		c.weighty = 0.99;
+	    panel.add(new HeatLegend(), c);
+	    panel.add(new JPanel(), c);
+		c.weighty = 0.01;
+
+		// the bottom of the y axis and the bottom of the legend
+		c.gridx = 0;
+		c.gridy = 4;
+		panel.add(new JLabel(Integer.toString(size-1), JLabel.CENTER),c);
+		c.gridx = 4;
+		panel.add(new JLabel(Integer.toString((int)min[index]), JLabel.CENTER),c);
+		return panel;
 	}
 
 	public static void centerFrame(JFrame frame) {
