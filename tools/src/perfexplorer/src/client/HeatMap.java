@@ -24,7 +24,7 @@ public class HeatMap extends JPanel implements ImageObserver {
 	BufferedImage img = null;
 	StringBuilder description = null;
 	private static final int idealSize = 128;
-	private static final ColorScale scale = new ColorScale(ColorSet.INVERSE_GRAYSCALE);
+	private static final ColorScale scale = new ColorScale(ColorSet.RAINBOW);
 
 	public HeatMap (double[][] map, int size, double max, String description) {
 		this.description = new StringBuilder();
