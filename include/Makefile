@@ -759,6 +759,7 @@ BFDLINK=
 
 #COMPINST_PGI#TAU_COMPINST_CRAY_HACK=-Mprof=func $(EXTRADIR)/lib/libpgnod_prof.a#ENDIF#
 #CRAYCNL#TAU_COMPINST_LINKING=$(TAU_COMPINST_CRAY_HACK) #ENDIF#
+#COMPINST_XL#TAU_COMPINST_LINKING=-qdebug=function_trace #ENDIF#
 ##############################################
 
 
