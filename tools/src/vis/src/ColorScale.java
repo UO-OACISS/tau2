@@ -38,9 +38,9 @@ import com.sun.opengl.util.GLUT;
  * allowing them to query values (0..1) and get colors in the current
  * color set. 
  *    
- * <P>CVS $Id: ColorScale.java,v 1.8 2007/12/07 02:05:22 amorris Exp $</P>
+ * <P>CVS $Id: ColorScale.java,v 1.9 2009/03/19 00:49:58 khuck Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.8 $
+ * @version	$Revision: 1.9 $
  */
 
 /* TODO: Provide control over font size perhaps? */
@@ -75,6 +75,9 @@ public class ColorScale extends Observable implements Shape {
 
         public static final ColorSet GRAYSCALE = new ColorSet("Grayscale", new double[] { 0, 1, },
                 new double[] { 0, 1, }, new double[] { 0, 1, });
+
+        public static final ColorSet INVERSE_GRAYSCALE = new ColorSet("Inverse Grayscale", new double[] { 1, 0, },
+                new double[] { 1, 0, }, new double[] { 1, 0, });
 
         public static final ColorSet BLUE_RED = new ColorSet("Blue-Red", new double[] { 0, 1 }, new double[] {
                 0, 0 }, new double[] { 1, 0 });
@@ -115,6 +118,11 @@ public class ColorScale extends Observable implements Shape {
     private boolean oldAntiAlias;
     
     public ColorScale() {
+    }
+
+    public ColorScale(ColorSet colorSet) {
+		super();
+		this.colorSet = colorSet;
     }
 
     /**
