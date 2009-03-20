@@ -56,6 +56,14 @@
 # define TAU_PROFILING_DEFAULT 0
 #endif
 
+#ifdef TAU_EACH_SEND
+# define TAU_COMM_MATRIX_DEFAULT 1
+#else
+# define TAU_COMM_MATRIX_DEFAULT 0
+#endif
+
+
+
 #define TAU_THROTTLE_DEFAULT 1
 #ifdef TAU_MPI
   #define TAU_SYNCHRONIZE_CLOCKS_DEFAULT 1
@@ -72,6 +80,7 @@ extern "C" {
   static int env_profiling = 0;
   static int env_tracing = 0;
   static int env_callpath_depth = 0;
+  static int env_comm_matrix = 0;
   static int env_profile_format = TAU_FORMAT_PROFILE;
   static double env_throttle_numcalls = 0;
   static double env_throttle_percall = 0;
@@ -136,6 +145,10 @@ extern "C" {
 
   int TauEnv_get_callpath() {
     return env_callpath;
+  }
+
+  int TauEnv_get_comm_matrix() {
+    return env_comm_matrix;
   }
 
   int TauEnv_get_profiling() {
@@ -221,6 +234,16 @@ extern "C" {
       } else {
 	env_tracing = 0;
 	TAU_VERBOSE("TAU: Tracing Disabled\n");
+      }
+
+      // tracing
+      tmp = getenv("TAU_COMM_MATRIX");
+      if (parse_bool(tmp, TAU_COMM_MATRIX_DEFAULT)) {
+	env_comm_matrix = 1;
+	TAU_VERBOSE("TAU: Comm Matrix Enabled\n");
+      } else {
+	env_comm_matrix = 0;
+	TAU_VERBOSE("TAU: Comm Matrix Disabled\n");
       }
 
       // clock synchronization

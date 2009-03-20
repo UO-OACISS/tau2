@@ -500,19 +500,17 @@ TauUserEvent**& TheMsgVolEvent()
   return u;
 }
 
-int register_events(void)
-{
-#ifdef TAU_EACH_SEND
-  char str[256];
-  int i;
-
-  TheMsgVolEvent() = (TauUserEvent **) malloc(sizeof(TauUserEvent *)*tau_totalnodes(0,0));
-  for (i =0; i < tau_totalnodes(0,0); i++)
-  {
-    sprintf(str, "Message size sent to node %d", i);
-    TheMsgVolEvent()[i] = (TauUserEvent *) new TauUserEvent((const char *)str);
+int register_events(void) {
+  if (TauEnv_get_comm_matrix()) {
+    char str[256];
+    int i;
+    
+    TheMsgVolEvent() = (TauUserEvent **) malloc(sizeof(TauUserEvent *)*tau_totalnodes(0,0));
+    for (i =0; i < tau_totalnodes(0,0); i++) {
+	sprintf(str, "Message size sent to node %d", i);
+	TheMsgVolEvent()[i] = (TauUserEvent *) new TauUserEvent((const char *)str);
+      }
   }
-#endif /* TAU_EACH_SEND */
   return 0;
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -527,9 +525,9 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
 
   TAU_EVENT(TheSendEvent(), length);
 
-#ifdef TAU_EACH_SEND
-  TheMsgVolEvent()[destination]->TriggerEvent(length, RtsLayer::myThread());
-#endif /* TAU_EACH_SEND */
+  if (TauEnv_get_comm_matrix()) {
+    TheMsgVolEvent()[destination]->TriggerEvent(length, RtsLayer::myThread());
+  }
 
   if (TauEnv_get_tracing()) {
     if (destination >= 0) {
@@ -1179,7 +1177,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.114 $   $Date: 2009/02/25 23:45:54 $
- * VERSION: $Id: TauCAPI.cpp,v 1.114 2009/02/25 23:45:54 amorris Exp $
+ * $Revision: 1.115 $   $Date: 2009/03/20 21:21:36 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.115 2009/03/20 21:21:36 amorris Exp $
  ***************************************************************************/
 
