@@ -494,9 +494,9 @@ TAU_GEN_EVENT(TheScatterEvent,"Message size for scatter")
 TAU_GEN_EVENT(TheGatherEvent,"Message size for gather")
 TAU_GEN_EVENT(TheAllgatherEvent,"Message size for all-gather")
 
-TauUserEvent**& TheMsgVolEvent()
+TauContextUserEvent**& TheMsgVolEvent()
 {
-  static TauUserEvent **u = 0; 
+  static TauContextUserEvent **u = 0; 
   return u;
 }
 
@@ -505,10 +505,10 @@ int register_events(void) {
     char str[256];
     int i;
     
-    TheMsgVolEvent() = (TauUserEvent **) malloc(sizeof(TauUserEvent *)*tau_totalnodes(0,0));
+    TheMsgVolEvent() = (TauContextUserEvent **) malloc(sizeof(TauContextUserEvent *)*tau_totalnodes(0,0));
     for (i =0; i < tau_totalnodes(0,0); i++) {
 	sprintf(str, "Message size sent to node %d", i);
-	TheMsgVolEvent()[i] = (TauUserEvent *) new TauUserEvent((const char *)str);
+	TheMsgVolEvent()[i] = (TauContextUserEvent *) new TauContextUserEvent((const char *)str);
       }
   }
   return 0;
@@ -1177,7 +1177,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.115 $   $Date: 2009/03/20 21:21:36 $
- * VERSION: $Id: TauCAPI.cpp,v 1.115 2009/03/20 21:21:36 amorris Exp $
+ * $Revision: 1.116 $   $Date: 2009/03/20 21:36:16 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.116 2009/03/20 21:36:16 amorris Exp $
  ***************************************************************************/
 
