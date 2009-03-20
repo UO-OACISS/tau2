@@ -7,6 +7,7 @@ import java.lang.Math;
 import java.net.URL;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.text.DecimalFormat;
 
 import org.jfree.chart.ChartPanel;
 
@@ -85,15 +86,15 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 			c.gridy = 0;
 			panel.add(buildMapPanel(0, "NUMBER OF CALLS", "NumEvents"),c);
 			c.gridx = 1;
-			panel.add(buildMapPanel(1, "Max Message Size", "MaxMessageSize"),c);
+			panel.add(buildMapPanel(1, "MAX MESSAGE BYTES", "MaxMessageSize"),c);
 			c.gridx = 2;
-			panel.add(buildMapPanel(2, "Min Message Size", "MinMessageSize"),c);
+			panel.add(buildMapPanel(2, "MIN MESSAGE BYTES", "MinMessageSize"),c);
 
 			c.gridx = 0;
 			c.gridy = 1;
-			panel.add(buildMapPanel(3, "Mean Message Size", "MeanMessageSize"),c);
+			panel.add(buildMapPanel(3, "MEAN MESSAGE BYTES", "MeanMessageSize"),c);
 			c.gridx = 1;
-			panel.add(buildMapPanel(4, "Message Size Standard Deviation", "MessageSizeStdDev"),c);
+			panel.add(buildMapPanel(4, "MESSAGE BYTES STDDEV", "MessageSizeStdDev"),c);
 			c.gridx = 2;
 			panel.add(new JLabel("Display Options", JLabel.CENTER),c);
 
@@ -123,6 +124,7 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 		c.anchor = GridBagConstraints.CENTER;
 		c.weightx = 0.01;
 		c.insets = new Insets(2,2,2,2);
+		DecimalFormat f = new DecimalFormat("0.##E0");
 
 		// title across the top
 		c.gridx = 0;
@@ -163,7 +165,7 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 		c.gridheight = 1;
 		c.gridy = 2;
 		c.gridx = 4;
-		panel.add(new JLabel(Integer.toString((int)max[index]), JLabel.CENTER),c);
+		panel.add(new JLabel(f.format(max[index]), JLabel.CENTER),c);
 		c.gridy = 3;
 		c.weighty = 0.99;
 	    panel.add(new HeatLegend(), c);
@@ -175,7 +177,7 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 		c.gridy = 4;
 		panel.add(new JLabel(Integer.toString(size-1), JLabel.CENTER),c);
 		c.gridx = 4;
-		panel.add(new JLabel(Integer.toString((int)min[index]), JLabel.CENTER),c);
+		panel.add(new JLabel(f.format(min[index]), JLabel.CENTER),c);
 		return panel;
 	}
 

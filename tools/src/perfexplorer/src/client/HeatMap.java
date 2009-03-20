@@ -76,8 +76,8 @@ public class HeatMap extends JPanel implements ImageObserver {
 				}
 			}
 		}
-		this.setPreferredSize(new Dimension(200,200));
-        this.setSize(200,200);
+		this.setPreferredSize(new Dimension(300,300));
+        this.setSize(300,300);
 	}
 		
 	public String getImage() {
