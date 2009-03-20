@@ -5,6 +5,11 @@ package edu.uoregon.tau.perfexplorer.glue;
 
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.TreeSet;
+
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -23,6 +28,10 @@ import edu.uoregon.tau.perfexplorer.server.TauNamespaceContext;
  *
  */
 public class TrialThreadMetadata extends AbstractResult {
+
+    protected Map<Integer, Map<String, String>> stringData =
+	            new HashMap<Integer, Map<String, String>>();
+    protected Set<String> fields = new TreeSet<String>();
 
 	/**
 	 * 
@@ -103,7 +112,9 @@ public class TrialThreadMetadata extends AbstractResult {
 								if (tmpName.startsWith("processor neighbor") && tmpDouble > 0.0) {
 									neighbors++;
 								}
-							} catch (NumberFormatException e) { /* do nothing for now */ }
+							} catch (NumberFormatException e) { 
+								putNameValue(Integer.parseInt(node), tmpName, tmp);
+							}
 						}
 					}
 				}
@@ -132,4 +143,34 @@ public class TrialThreadMetadata extends AbstractResult {
 
 	}
 
+    public void putNameValue(Integer thread, String field, String value) {
+        if (!threads.contains(thread)) {
+            threads.add(thread);
+        }
+        if (!fields.contains(field)) {
+            fields.add(field);
+        }
+        if (!stringData.containsKey(thread)) {
+            stringData.put(thread, new HashMap<String, String>());
+        }
+        stringData.get(thread).put(field, value);
+    }
+
+	public String getNameValue(Integer thread, String field) {
+		String value = null;
+		try {
+			value = stringData.get(thread).get(field);
+		} catch (NullPointerException e) {
+			value = "";
+		}
+		return value;
+	}
+
+    public Set<String> getFields() {
+		return fields;
+	}
+
+    public int getThreadCount() {
+		return stringData.size();
+	}
 }

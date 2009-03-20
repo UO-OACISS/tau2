@@ -3,6 +3,7 @@
  */
 package edu.uoregon.tau.perfexplorer.glue;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -42,6 +43,14 @@ public class Utilities {
             			List<Trial> trials = server.getTrialList(exp.getID(), false);//TODO: Is this metadata ever needed?
             			for (Trial trial : trials) {
             				if (trial.getName().trim().equals(tName.trim())) {
+            					if (!trial.isXmlMetaDataLoaded()) {
+            						try {
+										trial.loadXMLMetadata(server.getDB());
+									} catch (SQLException e) {
+										System.err.println("Error getting metadata for trial");
+										e.printStackTrace();
+									}
+            					}
             					return trial;
             				}
             			}
