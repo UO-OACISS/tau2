@@ -38,8 +38,8 @@ do
 
 cp ../contrib/batik-combined.jar $JAR_DIR
 cp ../contrib/jargs.jar $JAR_DIR
-cp ../contrib/jcommon-0.9.6.jar $JAR_DIR
-cp ../contrib/jfreechart-0.9.21.jar $JAR_DIR
+cp ../contrib/jcommon-1.0.15.jar $JAR_DIR
+cp ../contrib/jfreechart-1.0.12.jar $JAR_DIR
 cp ../contrib/jgraph.jar $JAR_DIR
 cp ../contrib/jogl/jogl.jar $JAR_DIR
 cp ../contrib/jython.jar $JAR_DIR
