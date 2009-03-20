@@ -181,8 +181,8 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 
 	public static void centerFrame(JFrame frame) {
         //Window Stuff.
-        int windowWidth = 1200;
-        int windowHeight = 800;
+        int windowWidth = 700;
+        int windowHeight = 500;
         
         //Grab paraProfManager position and size.
         Point parentPosition = PerfExplorerClient.getMainFrame().getLocationOnScreen();
