@@ -20,6 +20,8 @@
 
 #ifdef TAU_ENABLED
 
+#include <unistd.h> // for exit() call
+
 // For Mapping, global variables used between layers
 void* &TheTauMapFI(TauGroup_t key=TAU_DEFAULT);
 
