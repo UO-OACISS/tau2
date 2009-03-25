@@ -25,4 +25,8 @@
 
 int TauMetrics_init();
 
+void TauMetrics_getMetrics(int tid, double values[]);
+
+const char *TauMetrics_getMetricName(int metric);
+int TauMetrics_getMetricUsed(int metric);
 
