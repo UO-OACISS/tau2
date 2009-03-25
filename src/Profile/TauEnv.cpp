@@ -119,6 +119,24 @@ extern "C" {
     }
   }
 
+
+
+  static void process_metrics() {
+    env_metrics = NULL;
+    char *taumetrics = getenv ("TAU_METRICS");
+    if (taumetrics && strlen(taumetrics) == 0) {
+      taumetrics = NULL;
+    }
+    if (taumetrics) {
+      env_metrics = taumetrics;
+
+    } else {
+      env_metrics = "GET_TIME_OF_DAY";
+    }
+    TAU_VERBOSE("TAU: Using Metrics: %s\n", env_metrics);
+  }
+
+
   const char *TauEnv_get_metrics() {
     return env_metrics;
   }
@@ -310,17 +328,7 @@ extern "C" {
 	TAU_VERBOSE("TAU: Throttle NumCalls = %g\n", env_throttle_numcalls);
       }
 
-      env_metrics = NULL;
-      char *taumetrics = getenv ("TAU_METRICS");
-      if (taumetrics && strlen(taumetrics) == 0) {
-	taumetrics = NULL;
-      }
-      if (taumetrics) {
-	env_metrics = taumetrics;
-      } else {
-	env_metrics = "GET_TIME_OF_DAY";
-      }
-      TAU_VERBOSE("TAU: Using Metrics: %s\n", env_metrics);
+      process_metrics();
 
       char *profileFormat = getenv("TAU_PROFILE_FORMAT");
       if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "snapshot")) {
