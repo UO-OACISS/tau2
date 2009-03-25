@@ -151,7 +151,7 @@ static void initialize_functionArray() {
   for (int i=0; i<nmetrics; i++) {
     if (compareMetricString(metricv[i],"LOGICAL_CLOCK")) {
       functionArray[i] = metric_read_logicalClock;
-    } else if (compareMetricString(metricv[i],"GET_TIME_OF_DAY")){
+    } else if (compareMetricString(metricv[i],"MET_TIME_OF_DAY")){
       functionArray[i] = metric_read_gettimeofday;
     }
   }
@@ -159,11 +159,28 @@ static void initialize_functionArray() {
 
 
 
-void TauMetrics_getCounters(int tid, double values[]) {
+const char *TauMetrics_getMetricName(int metric) {
+  printf ("returning %d: %s\n", metric, metricv[metric]);
+  return metricv[metric];
+}
+
+int TauMetrics_getMetricUsed(int metric) {
+  if (metric < nmetrics) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+
+void TauMetrics_getMetrics(int tid, double values[]) {
   for (int i=0; i<nfunctions; i++) {
     functionArray[i](tid, i, values);
   }
 }
+
+
+extern int Tau_Global_numCounters;
 
 
 int TauMetrics_init() {
@@ -176,10 +193,12 @@ int TauMetrics_init() {
 
   for (int i=0; i<nmetrics; i++) {
     printf ("got: %s\n", metricv[i]);
+    printf ("got: %s\n", TauMetrics_getMetricName(i));
   }
   printf ("trace metric is %d: %s\n", traceMetric, metricv[traceMetric]);
 
   nfunctions = nmetrics;
+  Tau_Global_numCounters = nmetrics;
 
   printf ("TM: Done Initializing Metrics\n");
   printf ("nmetrics=%d\n", nmetrics);
