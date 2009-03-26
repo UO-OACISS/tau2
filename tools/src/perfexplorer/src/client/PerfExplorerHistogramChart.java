@@ -79,6 +79,28 @@ public class PerfExplorerHistogramChart extends PerfExplorerChartWindow {
 		return window;
 	}
 
+	public static JFrame doHistogram(RMIChartData data, String title) {
+		// build the chart
+        IntervalXYDataset dataset = createDataset(data);
+        JFreeChart chart = createChart(dataset, title);
+        
+		ChartPanel panel = new ChartPanel(chart);
+		panel.setDisplayToolTips(true);
+		XYItemRenderer renderer = chart.getXYPlot().getRenderer();
+        renderer.setBaseToolTipGenerator(new XYToolTipGenerator() {
+            public String generateToolTip(XYDataset dataset, int arg1, int arg2) {
+                return "<html>Value: " + dataset.getSeriesKey(arg1) + 
+                "<BR>Count: " + dataset.getYValue(arg1, arg2) + "</html>";
+            }
+        });
+
+		JFrame window = new PerfExplorerHistogramChart (chart, "Distributions");
+        URL url = Utility.getResource("tau32x32.gif");
+		if (url != null) 
+			window.setIconImage(Toolkit.getDefaultToolkit().getImage(url));
+		return window;
+	}
+
     private static IntervalXYDataset createDataset(RMIChartData inData) {
         HistogramDataset dataset = new HistogramDataset();
         List names = inData.getRowLabels();
@@ -97,7 +119,8 @@ public class PerfExplorerHistogramChart extends PerfExplorerChartWindow {
     		double range = max - min;
     		//System.out.println("Min: " + min + ", Max: " + max + ", Range: " + range);
     		for (int j = 0; j < doubles.size(); j++) {
-    			values[j] = (((double[])(doubles.get(j)))[1]-min)/range;   
+    			//values[j] = (((double[])(doubles.get(j)))[1]-min)/range;   
+    			values[j] = ((double[])(doubles.get(j)))[1];   
     		}
 			int bins = 10;
 			if (doubles.size() >= 2098)
@@ -146,6 +169,27 @@ public class PerfExplorerHistogramChart extends PerfExplorerChartWindow {
 		axis.setRange(new Range(0,1.0));
         chart.getXYPlot().setDomainAxis(0, axis);
         chart.getXYPlot().setForegroundAlpha(0.75f);
+        return chart;
+    }
+
+     /**
+     * Creates a chart.
+     * 
+     * @param dataset  a dataset.
+     * 
+     * @return The chart.
+     */
+    private static JFreeChart createChart(IntervalXYDataset dataset, String title) {
+        JFreeChart chart = ChartFactory.createHistogram(
+            title,
+            "Size", 
+            "Count", 
+            dataset, 
+            PlotOrientation.VERTICAL, 
+            true, 
+            false, 
+            false
+        );
         return chart;
     }
         
