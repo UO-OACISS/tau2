@@ -107,7 +107,7 @@ int RtsLayer::setMyThread(int tid) {
 // RegisterThread is called before any other profiling function in a 
 // thread that is spawned off
 //////////////////////////////////////////////////////////////////////
-void RtsLayer::RegisterThread()
+int RtsLayer::RegisterThread()
 { /* Check the size of threads */
   LockEnv();
   static int numthreads = 1;
@@ -132,7 +132,7 @@ void RtsLayer::RegisterThread()
   PapiThreadLayer::RegisterThread();
 #endif // PTHREADS
 // Note: Java thread registration is done at the VM layer in TauJava.cpp
-  return;
+  return numthreads;
 }
 
 
@@ -385,9 +385,9 @@ void RtsLayer::UnLockEnv(void)
 
 
 /***************************************************************************
- * $RCSfile: RtsThread.cpp,v $   $Author: amorris $
- * $Revision: 1.35 $   $Date: 2009/02/24 21:30:23 $
- * VERSION: $Id: RtsThread.cpp,v 1.35 2009/02/24 21:30:23 amorris Exp $
+ * $RCSfile: RtsThread.cpp,v $   $Author: sameer $
+ * $Revision: 1.36 $   $Date: 2009/03/26 19:16:17 $
+ * VERSION: $Id: RtsThread.cpp,v 1.36 2009/03/26 19:16:17 sameer Exp $
  ***************************************************************************/
 
 
