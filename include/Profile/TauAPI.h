@@ -246,6 +246,10 @@ extern "C" {
 #define TAU_PROFILER_GET_CALLS_TASK(handle, number, taskid) Tau_get_calls(handle, number, taskid)
 #define TAU_PROFILER_GET_CHILD_CALLS_TASK(handle, number, taskid) Tau_get_child_calls(handle, number, taskid)
 #define TAU_PROFILER_GET_COUNTER_INFO_TASK(counters, numcounters, taskid) Tau_get_counter_info((const char ***)counters, numcounters);
+#define TAU_PROFILER_SET_INCLUSIVE_VALUES_TASK(handle, data, taskid) Tau_set_inclusive_values(handle, (double *) data, taskid)
+#define TAU_PROFILER_SET_EXCLUSIVE_VALUES_TASK(handle, data, taskid) Tau_set_exclusive_values(handle, (double *) data, taskid)
+#define TAU_PROFILER_SET_CALLS_TASK(handle, number, taskid) Tau_set_calls(handle, number, taskid)
+#define TAU_PROFILER_SET_CHILD_CALLS_TASK(handle, number, taskid) Tau_set_child_calls(handle, number, taskid)
 
 
 #define TAU_BCAST_DATA(data)  	                Tau_bcast_data(data)
@@ -292,9 +296,13 @@ void Tau_static_phase_start(char *name);
 void Tau_static_phase_stop(char *name);
 void* Tau_get_profiler(const char *name, const char *type, TauGroup_t group, const char *gr_name);
 void Tau_get_calls(void *handle, long* values, int tid);
+void Tau_set_calls(void *handle, long values, int tid);
 void Tau_get_child_calls(void *handle, long* values, int tid);
+void Tau_set_child_calls(void *handle, long values, int tid);
 void Tau_get_inclusive_values(void *handle, double* values, int tid);
+void Tau_set_inclusive_values(void *handle, double* values, int tid);
 void Tau_get_exclusive_values(void *handle, double* values, int tid);
+void Tau_set_exclusive_values(void *handle, double* values, int tid);
 void Tau_get_counter_info(const char ***counterlist, int *numcounters);
 int  Tau_get_tid(void);
 int  Tau_create_task(void);
@@ -473,6 +481,6 @@ void Tau_profile_param1l(long data, const char *dataname);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.94 $   $Date: 2009/03/26 19:12:39 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.94 2009/03/26 19:12:39 sameer Exp $ 
+ * $Revision: 1.95 $   $Date: 2009/03/26 20:45:33 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.95 2009/03/26 20:45:33 sameer Exp $ 
  ***************************************************************************/
