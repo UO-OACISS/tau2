@@ -1083,10 +1083,26 @@ extern "C" void Tau_get_calls(void *handle, long *values, int tid) {
 }
 
 //////////////////////////////////////////////////////////////////////
+extern "C" void Tau_set_calls(void *handle, long values, int tid) {
+  FunctionInfo *ptr = (FunctionInfo *)handle;
+
+  ptr->SetCalls(tid, values);
+  return;
+}
+
+//////////////////////////////////////////////////////////////////////
 void Tau_get_child_calls(void *handle, long* values, int tid) {
   FunctionInfo *ptr = (FunctionInfo *)handle;
 
   values[0] = (long) ptr->GetSubrs(tid);
+  return;
+}
+
+//////////////////////////////////////////////////////////////////////
+extern "C" void Tau_set_child_calls(void *handle, long values, int tid) {
+  FunctionInfo *ptr = (FunctionInfo *)handle;
+
+  ptr->SetSubrs(tid, values);
   return;
 }
 
@@ -1100,11 +1116,37 @@ extern "C" void Tau_get_inclusive_values(void *handle, double* values, int tid) 
 }
 
 //////////////////////////////////////////////////////////////////////
+extern "C" void Tau_set_inclusive_values(void *handle, double* values, int tid) {
+  FunctionInfo *ptr = (FunctionInfo *)handle;
+  
+  if (ptr)
+#ifdef TAU_MULTIPLE_COUNTERS
+    ptr->SetInclTime(tid, values);
+#else
+    ptr->SetInclTime(tid, values[0]);
+#endif
+  return;
+}
+
+//////////////////////////////////////////////////////////////////////
 extern "C" void Tau_get_exclusive_values(void *handle, double* values, int tid) {
   FunctionInfo *ptr = (FunctionInfo *)handle;
  
   if (ptr)
     ptr->getExclusiveValues(tid, values);
+  return;
+}
+
+//////////////////////////////////////////////////////////////////////
+extern "C" void Tau_set_exclusive_values(void *handle, double* values, int tid) {
+  FunctionInfo *ptr = (FunctionInfo *)handle;
+  
+  if (ptr)
+#ifdef TAU_MULTIPLE_COUNTERS
+    ptr->SetExclTime(tid, values);
+#else
+    ptr->SetExclTime(tid, values[0]);
+#endif
   return;
 }
 
@@ -1186,7 +1228,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.117 $   $Date: 2009/03/26 19:15:39 $
- * VERSION: $Id: TauCAPI.cpp,v 1.117 2009/03/26 19:15:39 sameer Exp $
+ * $Revision: 1.118 $   $Date: 2009/03/26 20:44:59 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.118 2009/03/26 20:44:59 sameer Exp $
  ***************************************************************************/
 
