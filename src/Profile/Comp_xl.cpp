@@ -118,7 +118,7 @@ extern "C" void __func_trace_enter(char* name, char* fname, int lno) {
 #   endif
   }
 
-  Tau_start_timer(hn->fi, 0);
+  Tau_start_timer(hn->fi, 0, Tau_get_tid());
   //TAU_START(name);
 }
 
@@ -129,7 +129,7 @@ extern "C" void __func_trace_exit(char* name, char *fname, int lno) {
   if ( strchr(name, '@') != NULL ) return;
 
   hn = hash_get((long) name);
-  Tau_stop_timer(hn->fi);
+  Tau_stop_timer(hn->fi, Tau_get_tid());
 
   //TAU_STOP(name);
 }

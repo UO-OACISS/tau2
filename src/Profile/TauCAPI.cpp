@@ -105,8 +105,8 @@ static int& TauGetDepthLimit(void) {
 
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_start_timer(void *functionInfo, int phase) {
-  int tid = RtsLayer::myThread();
+extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid ) {
+  //int tid = RtsLayer::myThread();
   FunctionInfo *fi = (FunctionInfo *) functionInfo; 
 
   if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask()) || !RtsLayer::TheEnableInstrumentation()) {
@@ -152,7 +152,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase) {
   }
 #endif /* TAU_DEPTH_LIMIT */
 
-  p->Start();
+  p->Start(tid);
 }
 
 
@@ -167,10 +167,10 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" int Tau_stop_timer(void *function_info) {
+extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 
   FunctionInfo *fi = (FunctionInfo *) function_info; 
-  int tid = RtsLayer::myThread();
+  //int tid = RtsLayer::myThread();
   Profiler *profiler;
 
   if (Tau_global_stackpos[tid] < 0) return 0;
@@ -195,7 +195,7 @@ extern "C" int Tau_stop_timer(void *function_info) {
   }
 #endif /* TAU_DEPTH_LIMIT */
 
-  profiler->Stop();
+  profiler->Stop(tid);
   return 0;
 }
 
@@ -212,7 +212,7 @@ extern "C" int Tau_stop_current_timer() {
 
   profiler = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
   functionInfo = profiler->ThisFunction;
-  return Tau_stop_timer(functionInfo);
+  return Tau_stop_timer(functionInfo, Tau_get_tid());
 }
 ///////////////////////////////////////////////////////////////////////////
 
@@ -741,7 +741,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary(void) {
     initthread[tid] = true;
     ptr = (FunctionInfo *) Tau_get_profiler(".TAU application", " ", TAU_DEFAULT, "TAU_DEFAULT");
     if (ptr) {
-      Tau_start_timer(ptr, 0);
+      Tau_start_timer(ptr, 0, Tau_get_tid());
     }
   }
 }
@@ -911,7 +911,7 @@ extern "C" void Tau_pure_start(const char *name) {
   } else {
     fi = (*it).second;
   }
-  Tau_start_timer(fi,0);
+  Tau_start_timer(fi,0, Tau_get_tid());
 }
 
 extern "C" void Tau_pure_stop(const char *name) {
@@ -922,7 +922,7 @@ extern "C" void Tau_pure_stop(const char *name) {
     fprintf (stderr, "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\nTAU Error: You will likely get an overlapping timer message next\n\n", name);
   } else {
     fi = (*it).second;
-    Tau_stop_timer(fi);
+    Tau_stop_timer(fi, Tau_get_tid());
   }
 }
 
@@ -937,7 +937,7 @@ extern "C" void Tau_static_phase_start(char *name) {
   } else {
     fi = (*it).second;
   }   
-  Tau_start_timer(fi,1);
+  Tau_start_timer(fi,1, Tau_get_tid());
 }
 
 extern "C" void Tau_static_phase_stop(char *name) {
@@ -948,7 +948,7 @@ extern "C" void Tau_static_phase_stop(char *name) {
     fprintf (stderr, "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\nTAU Error: You will likely get an overlapping timer message next\n\n", name);
   } else {
     fi = (*it).second;
-    Tau_stop_timer(fi);
+    Tau_stop_timer(fi, Tau_get_tid());
   }
 }
 
@@ -996,7 +996,7 @@ extern "C" void Tau_dynamic_start(char *name, int isPhase) {
     fi = (*it).second;
   }   
   RtsLayer::UnLockDB();
-  Tau_start_timer(fi,isPhase);
+  Tau_start_timer(fi,isPhase, Tau_get_tid());
 }
 
 
@@ -1026,7 +1026,7 @@ extern "C" void Tau_dynamic_stop(char *name, int isPhase) {
     fi = (*it).second;
   }
   RtsLayer::UnLockDB();
-  Tau_stop_timer(fi);
+  Tau_stop_timer(fi, Tau_get_tid());
 }
 
 
@@ -1139,6 +1139,15 @@ void Tau_destructor_trigger() {
 }
 
 //////////////////////////////////////////////////////////////////////
+extern "C" int Tau_create_task(void) {
+  if (TAU_MAX_THREADS == 1) {
+    printf("TAU: ERROR: Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=100  and rebuild it to use the new TASK API\n");
+  }
+  return RtsLayer::RegisterThread() - 1; /* it returns 1 .. N, we want 0 .. N-1 */
+    
+}
+
+//////////////////////////////////////////////////////////////////////
 // Sometimes we may link in a library that needs the POMP stuff
 // Even when we're not using opari
 //////////////////////////////////////////////////////////////////////
@@ -1176,8 +1185,8 @@ int *tau_pomp_rd_table = 0;
                     
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.116 $   $Date: 2009/03/20 21:36:16 $
- * VERSION: $Id: TauCAPI.cpp,v 1.116 2009/03/20 21:36:16 amorris Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
+ * $Revision: 1.117 $   $Date: 2009/03/26 19:15:39 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.117 2009/03/26 19:15:39 sameer Exp $
  ***************************************************************************/
 

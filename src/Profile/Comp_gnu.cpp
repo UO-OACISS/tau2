@@ -412,7 +412,7 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
       }
 #endif /* TAU_OPENMP */
     }
-    Tau_start_timer(hn->fi,0);
+    Tau_start_timer(hn->fi,0, Tau_get_tid());
   } else {
 
 #ifdef TAU_OPENMP
@@ -421,10 +421,10 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 #endif /* TAU_OPENMP */
       
       if ( (hn = hash_get((long)funcptr))) {
-	Tau_start_timer(hn->fi,0);
+	Tau_start_timer(hn->fi,0, Tau_get_tid());
       } else {
 	HashNode *node = createHashNode((long)funcptr);
-	Tau_start_timer(node->fi,0);
+	Tau_start_timer(node->fi,0, Tau_get_tid());
       }
 #ifdef TAU_OPENMP
     }
@@ -462,7 +462,7 @@ extern "C" void __cyg_profile_func_exit(void* func, void* callsite) {
 #endif
 
   if ( (hn = hash_get((long)funcptr)) ) {
-    Tau_stop_timer(hn->fi);
+    Tau_stop_timer(hn->fi, Tau_get_tid());
   } else {
     //printf ("NOT FOUND! : ");
   }

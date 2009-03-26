@@ -43,8 +43,8 @@ static char *getFortranName(char *name, int slen) {
 
 extern "C" {
 void * Tau_get_profiler(char *, char *, TauGroup_t, char *gr_name);
-void Tau_start_timer(void * timer, int phase);
-void Tau_stop_timer(void *);
+void Tau_start_timer(void * timer, int phase, int tid);
+void Tau_stop_timer(void *, int tid);
 void Tau_exit(char *);
 void Tau_init(int, char **);
 void Tau_enable_group(TauGroup_t group);
@@ -90,6 +90,7 @@ void Tau_static_phase_stop(char *name);
 void Tau_dynamic_start(char *name, int isPhase);
 void Tau_dynamic_stop(char *name, int isPhase);
 char * Tau_append_iteration_to_name(int iteration, char *name);
+int Tau_get_tid(void);
   
 
 
@@ -607,25 +608,25 @@ void tau_profile_start_(void **profiler)
   printf("start_timer gets %lx\n", *profiler);
 #endif /* DEBUG_PROF */
 
-  Tau_start_timer(*profiler, 0);
+  Tau_start_timer(*profiler, 0, Tau_get_tid());
   return;
 }
 
 void tau_profile_stop_(void **profiler)
 {
-  Tau_stop_timer(*profiler);
+  Tau_stop_timer(*profiler, Tau_get_tid());
   return;
 }
 
 void tau_phase_start_(void **profiler)
 {
-  Tau_start_timer(*profiler, 1); /* 1 indicates phase based profiling */
+  Tau_start_timer(*profiler, 1, Tau_get_tid()); /* 1 indicates phase based profiling */
   return;
 }
 
 void tau_phase_stop_(void **profiler)
 {
-  Tau_stop_timer(*profiler);
+  Tau_stop_timer(*profiler, Tau_get_tid());
   return;
 }
 
@@ -1341,12 +1342,12 @@ void TAU_SET_INTERRUPT_INTERVAL(int* value)
 
 void tau_profile_start(int **profiler)
 {
-  Tau_start_timer((void *)*profiler, 0);
+  Tau_start_timer((void *)*profiler, 0, Tau_get_tid());
 }
 
 void tau_profile_stop(int **profiler)
 {
-  Tau_stop_timer((void *)*profiler);
+  Tau_stop_timer((void *)*profiler, Tau_get_tid());
 }
 
 void tau_profile_init(void)
@@ -1974,7 +1975,7 @@ void TAU_DISABLE_TRACKING_MUSE_EVENTS(void) {}
 
 
 /***************************************************************************
- * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.77 $   $Date: 2009/02/24 20:14:29 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.77 2009/02/24 20:14:29 amorris Exp $ 
+ * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
+ * $Revision: 1.78 $   $Date: 2009/03/26 19:15:39 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.78 2009/03/26 19:15:39 sameer Exp $ 
  ***************************************************************************/

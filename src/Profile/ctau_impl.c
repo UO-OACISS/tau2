@@ -514,7 +514,7 @@ static void ptrace_enter_call(PyObject *self, void *key, PyObject *userObj, PyFr
   }
 
   if (profEntry->fi) {
-    Tau_start_timer(profEntry->fi,0);
+    Tau_start_timer(profEntry->fi,0,Tau_get_tid());
   }
 
 /*   /\* grab a ProfilerContext out of the free list *\/ */

@@ -12,6 +12,26 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyTimer.cpp,v $
+// Revision 1.11  2009/03/26 19:15:39  sameer
+// Updated the start/stop calls with the additional tid argument. Before:
+//
+// Tau_start_timer(void *timer, int phase)
+// {
+//   int tid = RtsLayer::myThread();
+//
+//   p->Start();  // Start internally calls tid = RtsLayer::myThread()
+// }
+//
+// After:
+//
+// Tau_start_timer(void *timer, int phase, int tid)
+// {
+//   // int tid  = RtsLayer::myThread();
+//   p->Start(tid);
+// }
+//
+// This is used extensively in the new TASK API. See examples/profilercreate/taskc++.
+//
 // Revision 1.10  2009/02/24 21:30:23  amorris
 // Getting rid of Profiler::CurrentProfiler, it doesn't make sense to maintain
 // this linked list if we have an explicit data structure for the callstack.  It's
@@ -21,7 +41,6 @@
 // Changes for C++ measurement API
 //
 // Revision 1.8  2008/10/16 22:58:24  amorris
-// The current Profiler object was not being deleted in stop, causing a big memory leak.  Try GPAW now Sameer!
 //
 // Revision 1.7  2007/03/02 02:36:24  amorris
 // Made explicit the phase calls, true and false.
@@ -174,7 +193,7 @@ PyObject * pytau_start(PyObject *self, PyObject *args)
       phase = 1;
     }
 
-    Tau_start_timer(f, phase);
+    Tau_start_timer(f, phase, Tau_get_tid());
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -203,7 +222,7 @@ PyObject * pytau_stop(PyObject *self, PyObject *args)
     Profiler *p = TauInternal_CurrentProfiler(tid);
 
     if (p != (Profiler *) NULL) {
-      Tau_stop_timer(p->ThisFunction);
+      Tau_stop_timer(p->ThisFunction, Tau_get_tid());
       Py_INCREF(Py_None);
       return Py_None;
     } else {
@@ -216,7 +235,7 @@ PyObject * pytau_stop(PyObject *self, PyObject *args)
 }
 
 // version
-// $Id: PyTimer.cpp,v 1.10 2009/02/24 21:30:23 amorris Exp $
+// $Id: PyTimer.cpp,v 1.11 2009/03/26 19:15:39 sameer Exp $
 
 // End of file
   

@@ -96,7 +96,7 @@ extern "C" void ___rouent2(struct s1 *p) {
 	  void *handle=NULL;
 	  TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
 	  FunctionInfo *fi = (FunctionInfo*)handle;
-	  Tau_start_timer(fi,0);
+	  Tau_start_timer(fi,0, Tau_get_tid());
 	  p->rid = TheFunctionDB().size()-1;
 	  p->isseen = 1;
 	}
@@ -105,7 +105,7 @@ extern "C" void ___rouent2(struct s1 *p) {
       void *handle=NULL;
       TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
       FunctionInfo *fi = (FunctionInfo*)handle;
-      Tau_start_timer(fi,0);
+      Tau_start_timer(fi,0, Tau_get_tid());
       p->rid = TheFunctionDB().size()-1;
       p->isseen = 1;
     }
@@ -113,12 +113,12 @@ extern "C" void ___rouent2(struct s1 *p) {
     void *handle=NULL;
     TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
     FunctionInfo *fi = (FunctionInfo*)handle;
-    Tau_start_timer(fi,0);
+    Tau_start_timer(fi,0, Tau_get_tid());
     p->rid = TheFunctionDB().size()-1;
     p->isseen = 1;
 #endif
   } else {
-    Tau_start_timer(TheFunctionDB()[p->rid],0);
+    Tau_start_timer(TheFunctionDB()[p->rid],0, Tau_get_tid());
   }
 }
 

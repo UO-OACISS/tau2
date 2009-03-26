@@ -268,12 +268,12 @@ void * tau_get_profiler(char *fname, char *type, TauGroup_t group)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-void tau_start_timer(void *profiler)
+void tau_start_timer(void *profiler, int tid)
 {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-void tau_stop_timer(void *profiler)
+void tau_stop_timer(void *profiler, int tid)
 {
 }
 
@@ -582,11 +582,11 @@ void TAU_SET_INTERRUPT_INTERVAL(int value)
 {
 } 
 
-void Tau_start_timer(void * timer, int phase) 
+void Tau_start_timer(void * timer, int phase, int tid) 
 {
 }
 
-void Tau_stop_timer(void *) 
+void Tau_stop_timer(void *, int tid) 
 {
 }
  
@@ -701,7 +701,7 @@ void Tau_exit(char *)
 } /* extern "C" */
 
 /***************************************************************************
- * $RCSfile: TauDisable.cpp,v $   $Author: amorris $
- * $Revision: 1.15 $   $Date: 2009/01/16 00:46:52 $
- * POOMA_VERSION_ID: $Id: TauDisable.cpp,v 1.15 2009/01/16 00:46:52 amorris Exp $ 
+ * $RCSfile: TauDisable.cpp,v $   $Author: sameer $
+ * $Revision: 1.16 $   $Date: 2009/03/26 19:15:39 $
+ * POOMA_VERSION_ID: $Id: TauDisable.cpp,v 1.16 2009/03/26 19:15:39 sameer Exp $ 
  ***************************************************************************/
