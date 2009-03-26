@@ -37,11 +37,8 @@ EXPORTS
   Tau_create_top_level_timer_if_necessary
   Tau_stop_top_level_timer_if_necessary
   Tau_track_memory
-  Tau_track_muse_events
   Tau_enable_tracking_memory
   Tau_disable_tracking_memory
-  Tau_enable_tracking_muse_events
-  Tau_disable_tracking_muse_events
   Tau_set_interrupt_interval
   Tau_enable_instrumentation
   Tau_disable_instrumentation

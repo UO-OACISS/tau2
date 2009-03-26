@@ -24,14 +24,12 @@ LDFLAGS=
 O=.obj
 
 
-TAU_PROFILE_SRCS= src\Profile\TauInit.cpp src\Profile\TauEnv.cpp src\profile\TauCallPath.cpp src\profile\FunctionInfo.cpp src\profile\Profiler.cpp src\profile\RtsLayer.cpp src\profile\RtsThread.cpp src\profile\TauCAPI.cpp src\profile\TauFAPI.cpp src\profile\TauHandler.cpp src\profile\TauHooks.cpp src\profile\TauMapping.cpp src\profile\TauMemory.cpp src\profile\UserEvent.cpp src\profile\WindowsThreadLayer.cpp src\profile\MetaData.cpp
-TAU_TRACE_SRCS= src\Profile\TauInit.cpp src\Profile\TauEnv.cpp src\profile\FunctionInfo.cpp src\profile\Profiler.cpp src\profile\RtsLayer.cpp src\profile\RtsThread.cpp src\profile\TauCAPI.cpp src\profile\TauFAPI.cpp src\profile\TauHandler.cpp src\profile\TauHooks.cpp src\profile\TauMapping.cpp src\profile\TauMemory.cpp src\profile\Tracer.cpp src\profile\UserEvent.cpp src\profile\WindowsThreadLayer.cpp src\profile\MetaData.cpp
+TAU_PROFILE_SRCS= src\Profile\TauInit.cpp src\Profile\TauEnv.cpp src\profile\TauCallPath.cpp src\profile\FunctionInfo.cpp src\profile\Profiler.cpp src\profile\RtsLayer.cpp src\profile\RtsThread.cpp src\profile\TauCAPI.cpp src\profile\TauFAPI.cpp src\profile\TauHandler.cpp src\profile\TauHooks.cpp src\profile\TauMapping.cpp src\profile\TauMemory.cpp src\profile\UserEvent.cpp src\profile\WindowsThreadLayer.cpp src\profile\MetaData.cpp src\profile\TauMetrics.cpp src\profile\TauReadMetrics.cpp src\profile\Tracer.cpp
 TAU_JAVA_SRC= src\profile\JavaThreadLayer.cpp src\profile\TauJava.cpp src\profile\TauJAPI.cpp src\profile\MetaData.cpp
 TAU_MPI_SRC= src\profile\TauMpi.c src\profile\ClockSync.c src\profile\ProfileMerge.c
 
 TAU_PROFILE_OBJS= $(TAU_PROFILE_SRCS:.cpp=.obj) 
 TAU_CALLPATH_OBJS= $(TAU_PROFILE_SRCS:.cpp=.obj) 
-TAU_TRACE_OBJS= $(TAU_TRACE_SRCS:.cpp=.obj)
 TAU_JAVA_OBJS= $(TAU_JAVA_SRC:.cpp=.obj)
 #TAU_MPI_OBJS= $(TAU_MPI_SRC:.c=.obj)
 
@@ -42,35 +40,17 @@ java :
 	-md win32\java
 	-del $(TAU_PROFILE_OBJS) $(TAU_JAVA_OBJS)
 	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON -DJAVA /MT -I$(JDK)/include -I$(JDK)/include/win32" tau-profile.dll
-	-del $(TAU_CALLPATH_OBJS) $(TAU_JAVA_OBJS)
-	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON -DTAU_CALLPATH -DJAVA /MT -I$(JDK)/include -I$(JDK)/include/win32" tau-callpath.dll
-	-del $(TAU_TRACE_OBJS) $(TAU_JAVA_OBJS)
-	nmake /f Makefile.win32 "FLAGS = -DTRACING_ON -DJAVA /MT -I$(JDK)/include -I$(JDK)/include/win32" tau-trace.dll
 	-del win32\java\*.lib win32\java\*.exp
 
 
 tau-profile.dll : $(TAU_PROFILE_OBJS) $(TAU_JAVA_OBJS)
 	link /dll /OUT:"win32\java\tau-profile.dll" $(TAU_PROFILE_OBJS) $(TAU_JAVA_OBJS) $(JDK)/lib/jvm.lib
 
-tau-callpath.dll : $(TAU_CALLPATH_OBJS) $(TAU_JAVA_OBJS)
-	link /dll /OUT:"win32\java\tau-callpath.dll" $(TAU_CALLPATH_OBJS) $(TAU_JAVA_OBJS) $(JDK)/lib/jvm.lib
-
-tau-trace.dll : $(TAU_TRACE_OBJS) $(TAU_JAVA_OBJS)
-	link /dll /OUT:"win32\java\tau-trace.dll" $(TAU_TRACE_OBJS) $(TAU_JAVA_OBJS) $(JDK)/lib/jvm.lib
-
 libs : win32
 	-del $(TAU_PROFILE_OBJS)
 	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON" tau-profile.lib
 	-del $(TAU_PROFILE_OBJS)
 	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON /MD" tau-profile-mt.lib
-	-del $(TAU_CALLPATH_OBJS)
-	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON -DTAU_CALLPATH" tau-callpath.lib
-	-del $(TAU_CALLPATH_OBJS)
-	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON -DTAU_CALLPATH /MD" tau-callpath-mt.lib
-	-del $(TAU_TRACE_OBJS)
-	nmake /f Makefile.win32 "FLAGS = -DTRACING_ON" tau-trace.lib
-	-del $(TAU_TRACE_OBJS)
-	nmake /f Makefile.win32 "FLAGS = -DTRACING_ON /MD" tau-trace-mt.lib
 
 
 tau2vtf :

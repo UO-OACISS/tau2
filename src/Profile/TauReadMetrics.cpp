@@ -20,24 +20,26 @@
 
 #include <TAU.h>
 
+#ifndef TAU_WINDOWS
 /* for getrusage */
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
+#endif /* TAU_WINDOWS */
 
 
 #ifdef TAU_MPI
-extern TauUserEvent& TheSendEvent(void);
-extern TauUserEvent& TheRecvEvent(void);
-extern TauUserEvent& TheBcastEvent(void);
-extern TauUserEvent& TheReduceEvent(void);
-extern TauUserEvent& TheReduceScatterEvent(void);
-extern TauUserEvent& TheScanEvent(void);
-extern TauUserEvent& TheAllReduceEvent(void);
-extern TauUserEvent& TheAlltoallEvent(void);
-extern TauUserEvent& TheScatterEvent(void);
-extern TauUserEvent& TheGatherEvent(void);
-extern TauUserEvent& TheAllgatherEvent(void);
+extern TauUserEvent* TheSendEvent(void);
+extern TauUserEvent* TheRecvEvent(void);
+extern TauUserEvent* TheBcastEvent(void);
+extern TauUserEvent* TheReduceEvent(void);
+extern TauUserEvent* TheReduceScatterEvent(void);
+extern TauUserEvent* TheScanEvent(void);
+extern TauUserEvent* TheAllReduceEvent(void);
+extern TauUserEvent* TheAlltoallEvent(void);
+extern TauUserEvent* TheScatterEvent(void);
+extern TauUserEvent* TheGatherEvent(void);
+extern TauUserEvent* TheAllgatherEvent(void);
 #endif /* TAU_MPI */
 
 
@@ -53,12 +55,17 @@ void metric_read_logicalClock(int tid, int idx, double values[]) {
   values[idx] = value++;
 }
 
+double TauWindowsUsecD(void);
 
 // clock that uses gettimeofday
 void metric_read_gettimeofday(int tid, int idx, double values[]) {
+#ifdef TAU_WINDOWS
+
+#else
   struct timeval tp;
   gettimeofday (&tp, 0);
   values[idx] = ((double)tp.tv_sec * 1e6 + tp.tv_usec);
+#endif
 }
 
 
@@ -103,27 +110,29 @@ void metric_read_craytimers(int tid, int idx, double values[]) {
 
 // cputime from getrusage
 void metric_read_cputime(int tid, int idx, double values[]) {
+#ifndef TAU_WINDOWS
   struct rusage current_usage;
   getrusage (RUSAGE_SELF, &current_usage);
   values[idx] = (current_usage.ru_utime.tv_sec + current_usage.ru_stime.tv_sec)* 1e6 
   + (current_usage.ru_utime.tv_usec + current_usage.ru_stime.tv_usec);
+#endif
 }
 
 
 // message size "timer"
 void metric_read_messagesize(int tid, int idx, double values[]) {
 #ifdef TAU_MPI
-  values[idx] = TheSendEvent().GetSumValue(tid) 
-	+ TheRecvEvent().GetSumValue(tid) 
-	+ TheBcastEvent().GetSumValue(tid)
-	+ TheReduceEvent().GetSumValue(tid)
-	+ TheReduceScatterEvent().GetSumValue(tid)
-	+ TheScanEvent().GetSumValue(tid)
-	+ TheAllReduceEvent().GetSumValue(tid)
-	+ TheAlltoallEvent().GetSumValue(tid)
-	+ TheScatterEvent().GetSumValue(tid)
-	+ TheGatherEvent().GetSumValue(tid)
-	+ TheAllgatherEvent().GetSumValue(tid);
+  values[idx] = TheSendEvent()->GetSumValue(tid) 
+	+ TheRecvEvent()->GetSumValue(tid) 
+	+ TheBcastEvent()->GetSumValue(tid)
+	+ TheReduceEvent()->GetSumValue(tid)
+	+ TheReduceScatterEvent()->GetSumValue(tid)
+	+ TheScanEvent()->GetSumValue(tid)
+	+ TheAllReduceEvent()->GetSumValue(tid)
+	+ TheAlltoallEvent()->GetSumValue(tid)
+	+ TheScatterEvent()->GetSumValue(tid)
+	+ TheGatherEvent()->GetSumValue(tid)
+	+ TheAllgatherEvent()->GetSumValue(tid);
   printf ("returned values %g\n", values[idx]);
  //Currently TAU_EVENT_DATATYPE is a double.
 #endif//TAU_MPI

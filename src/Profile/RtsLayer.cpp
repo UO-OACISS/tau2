@@ -410,8 +410,7 @@ double KTauGetMHz(void) {
 #endif /* TAUKTAU || TAUKTAU_MERGE */
 
 ///////////////////////////////////////////////////////////////////////////
-double TauWindowsUsecD(void)
-{
+double TauWindowsUsecD(void) {
 #ifdef TAU_WINDOWS
   
   //First need to find out whether we have performance
@@ -1023,6 +1022,6 @@ std::string RtsLayer::GetRTTI(const char *name) {
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.123 $   $Date: 2009/03/26 20:06:27 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.123 2009/03/26 20:06:27 amorris Exp $ 
+ * $Revision: 1.124 $   $Date: 2009/03/26 23:00:26 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.124 2009/03/26 23:00:26 amorris Exp $ 
  ***************************************************************************/

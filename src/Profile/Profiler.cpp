@@ -53,11 +53,11 @@ using namespace std;
 #include <stdlib.h>
 #include <limits.h>
 
-#ifdef TAU_WINDOWS
-#ifndef TAU_DISABLE_METADATA
-#include <sys/utsname.h> // for host identification (uname)
-#endif
-#endif //TAU_WINDOWS
+// #ifdef TAU_WINDOWS
+// #ifndef TAU_DISABLE_METADATA
+// #include <sys/utsname.h> // for host identification (uname)
+// #endif
+// #endif //TAU_WINDOWS
 
 #ifdef TAU_VAMPIRTRACE
 #include "Profile/TauVampirTrace.h"
@@ -1425,6 +1425,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.234 $   $Date: 2009/03/26 20:06:27 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.234 2009/03/26 20:06:27 amorris Exp $ 
+ * $Revision: 1.235 $   $Date: 2009/03/26 23:00:26 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.235 2009/03/26 23:00:26 amorris Exp $ 
  ***************************************************************************/
