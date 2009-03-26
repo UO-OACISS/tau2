@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <tau_internal.h>
+#include <Profile/Profiler.h>
 
 int TauMetrics_init();
 
@@ -32,33 +33,40 @@ static void initialize_functionArray();
 #define TAU_MAX_METRICS 25
 
 
+// Global Variable holding the number of counters
+int Tau_Global_numCounters = -1;
+
+
+
+
+
 typedef void (*function)(int, int, double[]);
 
 
 
 static const char* metricv[TAU_MAX_METRICS];
 static int nmetrics = 0;
-static int nfunctions = 0; // nfunctions can be different from nmetrics because only one call to PAPI can provide several metrics
+
+// nfunctions can be different from nmetrics because 
+// a single call to PAPI can provide several metrics
+static int nfunctions = 0; 
+
+// traceMetric in the index used for the trace metric (might not be zero)
 static int traceMetric = 0;
+
+// array of function pointers used to get metric data
 static function functionArray[TAU_MAX_METRICS];
 
-static void metric_read_logicalClock(int tid, int idx, double values[]);
-static void metric_read_gettimeofday(int tid, int idx, double values[]);
-
-
-
-
-
-static void metric_read_logicalClock(int tid, int idx, double values[]) {
-  static long long value = 0;
-  values[idx] = value++;
-}
-
-static void metric_read_gettimeofday(int tid, int idx, double values[]) {
-  struct timeval tp;
-  gettimeofday (&tp, 0);
-  values[idx] = ((double)tp.tv_sec * 1e6 + tp.tv_usec);
-}
+void metric_read_nullClock(int tid, int idx, double values[]);
+void metric_read_logicalClock(int tid, int idx, double values[]);
+void metric_read_gettimeofday(int tid, int idx, double values[]);
+void metric_read_bgtimers(int tid, int idx, double values[]);
+void metric_read_craytimers(int tid, int idx, double values[]);
+void metric_read_cputime(int tid, int idx, double values[]);
+void metric_read_messagesize(int tid, int idx, double values[]);
+void metric_read_papivirtual(int tid, int idx, double values[]);
+void metric_read_papiwallclock(int tid, int idx, double values[]);
+void metric_read_papi(int tid, int idx, double values[]);
 
 
 
@@ -72,25 +80,24 @@ static void metricv_add(const char* name) {
 }
 
 /* This routine will reorder the metrics so that the PAPI ones all come last */
-
 static void reorder_metrics() {
   const char* newmetricv[TAU_MAX_METRICS];
   int idx=0;
 
   for (int i=0; i<nmetrics; i++) {
-    if (strncmp("PAPI", metricv[i], 4)!=0) {
+    if (strncmp("PAPI", metricv[i], 4) != 0) {
       newmetricv[idx++] = metricv[i];
     }
   }
 
   for (int i=0; i<nmetrics; i++) {
-    if (strncmp("PAPI", metricv[i], 4)==0) {
+    if (strncmp("PAPI", metricv[i], 4) == 0) {
       newmetricv[idx++] = metricv[i];
     }
   }
 
   for (int i=0; i<nmetrics; i++) {
-    if (strcmp(newmetricv[i],metricv[0])==0) {
+    if (strcmp(newmetricv[i],metricv[0]) == 0) {
       traceMetric = i;
     }
   }
@@ -115,7 +122,6 @@ static void read_env_vars() {
     token = strtok(metrics, ":");
     while (token) {
       metricv_add(token);
-//       printf ("got token: %s\n", token);
       token = strtok(NULL, ":");
     }
   } else {
@@ -139,7 +145,7 @@ static void read_env_vars() {
 
 
 static int compareMetricString(const char *one, const char *two) {
-  if (strcmp(one, two)==0) {
+  if (strcmp(one, two) == 0) {
     return 1;
   } else {
     return 0;
@@ -148,19 +154,67 @@ static int compareMetricString(const char *one, const char *two) {
 
 
 static void initialize_functionArray() {
+  int pos = 0;
   for (int i=0; i<nmetrics; i++) {
     if (compareMetricString(metricv[i],"LOGICAL_CLOCK")) {
-      functionArray[i] = metric_read_logicalClock;
-    } else if (compareMetricString(metricv[i],"MET_TIME_OF_DAY")){
-      functionArray[i] = metric_read_gettimeofday;
+      functionArray[pos++] = metric_read_logicalClock;
+    } else if (compareMetricString(metricv[i],"GET_TIME_OF_DAY")){
+      functionArray[pos++] = metric_read_gettimeofday;
+    } else if (compareMetricString(metricv[i],"CPU_TIME")){
+      functionArray[pos++] = metric_read_cputime;
+    } else if (compareMetricString(metricv[i],"BGL_TIMERS")){
+      functionArray[pos++] = metric_read_bgtimers;
+    } else if (compareMetricString(metricv[i],"BGP_TIMERS")){
+      functionArray[pos++] = metric_read_bgtimers;
+    } else if (compareMetricString(metricv[i],"CRAY_TIMERS")){
+      functionArray[pos++] = metric_read_craytimers;
+    } else if (compareMetricString(metricv[i],"TAU_MPI_MESSAGE_SIZE")){
+      functionArray[pos++] = metric_read_messagesize;
+    } else if (compareMetricString(metricv[i],"P_WALL_CLOCK_TIME")){
+      functionArray[pos++] = metric_read_papiwallclock;
+    } else if (compareMetricString(metricv[i],"P_VIRTUAL_TIME")){
+      functionArray[pos++] = metric_read_papivirtual;
+    } else {
+      if (strncmp("PAPI", metricv[i], 4) != 0) { /* PAPI handled separately */
+	fprintf (stderr, "TAU: Error: Unknown metric: %s\n", metricv[i]);
+	functionArray[pos++] = metric_read_nullClock;
+      }
     }
   }
+
+  int usingPAPI=0;
+  for (int i=0; i<nmetrics; i++) {
+      if (strncmp("PAPI", metricv[i], 4) == 0) {
+	usingPAPI = 1;
+	if (strstr(metricv[i],"PAPI") != NULL) {
+	  char *metricString = strdup(metricv[i]);
+
+	  if (strstr(metricString,"NATIVE") != NULL) {
+	    /* Fix the name for a native event */
+	    int idx = 0;
+	    while (metricString[12+idx]!='\0') {
+	      metricString[idx] = metricString[12+idx];
+	      idx++;
+	    }
+	    metricString[idx]='\0';
+	  }
+	  
+	  int counterID = PapiLayer::addCounter(metricString);
+	  free (metricString);
+	}
+      }
+  }
+
+  if (usingPAPI) {
+    functionArray[pos++] = metric_read_papi;
+  }
+
+  nfunctions = pos;
 }
 
 
 
 const char *TauMetrics_getMetricName(int metric) {
-  printf ("returning %d: %s\n", metric, metricv[metric]);
   return metricv[metric];
 }
 
@@ -180,27 +234,14 @@ void TauMetrics_getMetrics(int tid, double values[]) {
 }
 
 
-extern int Tau_Global_numCounters;
-
-
 int TauMetrics_init() {
 
-  printf ("TM: Initializing Metrics\n");
 
   read_env_vars();
   reorder_metrics();
   initialize_functionArray();
 
-  for (int i=0; i<nmetrics; i++) {
-    printf ("got: %s\n", metricv[i]);
-    printf ("got: %s\n", TauMetrics_getMetricName(i));
-  }
-  printf ("trace metric is %d: %s\n", traceMetric, metricv[traceMetric]);
 
-  nfunctions = nmetrics;
   Tau_Global_numCounters = nmetrics;
-
-  printf ("TM: Done Initializing Metrics\n");
-  printf ("nmetrics=%d\n", nmetrics);
   return 0;
 }
