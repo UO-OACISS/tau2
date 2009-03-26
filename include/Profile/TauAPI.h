@@ -40,8 +40,8 @@ extern "C" {
 #define TAU_PROFILE_CREATE_TIMER(var,name,type,group) Tau_profile_c_timer(&var, name, type, group, #group);
 
 
-#define TAU_PROFILE_START(var) Tau_start_timer(var, 0);
-#define TAU_PROFILE_STOP(var) Tau_stop_timer(var);
+#define TAU_PROFILE_START(var) Tau_start_timer(var, 0, Tau_get_tid());
+#define TAU_PROFILE_STOP(var) Tau_stop_timer(var, Tau_get_tid());
 #define TAU_PROFILE_STMT(stmt) stmt;
 
 
@@ -80,7 +80,7 @@ extern "C" {
 
 
 #define TAU_PHASE_START(var) Tau_start_timer(var##finfo, 1)
-#define TAU_PHASE_STOP(var) Tau_stop_timer(var##finfo)
+#define TAU_PHASE_STOP(var) Tau_stop_timer(var##finfo, Tau_get_tid())
 
 
 
@@ -192,7 +192,7 @@ extern "C" {
 	Tau_start_timer(ptr, 1); } 
 
 #define TAU_GLOBAL_PHASE_STOP(timer)  { void *ptr = TauGlobalPhase##timer(); \
-	Tau_stop_timer(ptr); }
+	Tau_stop_timer(ptr, Tau_get_tid()); }
 
 #define TAU_GLOBAL_PHASE_EXTERNAL(timer)  extern void * TauGlobalPhase##timer(void)
 
@@ -229,8 +229,8 @@ extern "C" {
 
 
 #define TAU_PROFILER_CREATE(handle, name, type, group)  handle=Tau_get_profiler(name, type, group, #group);
-#define TAU_PROFILER_START(handle) Tau_start_timer(handle, 0);
-#define TAU_PROFILER_STOP(handle) Tau_stop_timer(handle);
+#define TAU_PROFILER_START(handle) Tau_start_timer(handle, 0, Tau_get_tid());
+#define TAU_PROFILER_STOP(handle) Tau_stop_timer(handle, Tau_get_tid());
 #define TAU_PROFILER_GET_INCLUSIVE_VALUES(handle, data) Tau_get_inclusive_values(handle, (double *) data, Tau_get_tid());
 #define TAU_PROFILER_GET_EXCLUSIVE_VALUES(handle, data) Tau_get_exclusive_values(handle, (double *) data, Tau_get_tid());
 #define TAU_PROFILER_GET_CALLS(handle, number) Tau_get_calls(handle, number, Tau_get_tid())
@@ -238,7 +238,14 @@ extern "C" {
 #define TAU_PROFILER_GET_COUNTER_INFO(counters, numcounters) Tau_get_counter_info((const char ***)counters, numcounters);
 
 
-
+#define TAU_CREATE_TASK(taskid) taskid = Tau_create_task()
+#define TAU_PROFILER_START_TASK(handle, taskid) Tau_start_timer(handle, 0, taskid);
+#define TAU_PROFILER_STOP_TASK(handle, taskid) Tau_stop_timer(handle, taskid);
+#define TAU_PROFILER_GET_INCLUSIVE_VALUES_TASK(handle, data, taskid) Tau_get_inclusive_values(handle, (double *) data, taskid)
+#define TAU_PROFILER_GET_EXCLUSIVE_VALUES_TASK(handle, data, taskid) Tau_get_exclusive_values(handle, (double *) data, taskid)
+#define TAU_PROFILER_GET_CALLS_TASK(handle, number, taskid) Tau_get_calls(handle, number, taskid)
+#define TAU_PROFILER_GET_CHILD_CALLS_TASK(handle, number, taskid) Tau_get_child_calls(handle, number, taskid)
+#define TAU_PROFILER_GET_COUNTER_INFO_TASK(counters, numcounters, taskid) Tau_get_counter_info((const char ***)counters, numcounters);
 
 
 #define TAU_BCAST_DATA(data)  	                Tau_bcast_data(data)
@@ -290,6 +297,7 @@ void Tau_get_inclusive_values(void *handle, double* values, int tid);
 void Tau_get_exclusive_values(void *handle, double* values, int tid);
 void Tau_get_counter_info(const char ***counterlist, int *numcounters);
 int  Tau_get_tid(void);
+int  Tau_create_task(void);
 void Tau_destructor_trigger();
 
 void Tau_profile_set_name(void *ptr, const char *name);
@@ -338,8 +346,8 @@ void TAUDECL Tau_allgather_data(int data);
 void TAUDECL Tau_reducescatter_data(int data);
 void TAUDECL Tau_scan_data(int data);
 void TAUDECL Tau_set_node(int node);
-void TAUDECL Tau_start_timer(void *profiler, int phase);
-int TAUDECL Tau_stop_timer(void *profiler);
+void TAUDECL Tau_start_timer(void *profiler, int phase, int tid);
+int TAUDECL Tau_stop_timer(void *profiler, int tid); 
 void TAUDECL Tau_trace_sendmsg(int type, int destination, int length);
 void TAUDECL Tau_trace_recvmsg(int type, int source, int length);
 void TAUDECL Tau_create_top_level_timer_if_necessary(void);
@@ -464,7 +472,7 @@ void Tau_profile_param1l(long data, const char *dataname);
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.93 $   $Date: 2009/02/25 23:45:37 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.93 2009/02/25 23:45:37 amorris Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: sameer $
+ * $Revision: 1.94 $   $Date: 2009/03/26 19:12:39 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.94 2009/03/26 19:12:39 sameer Exp $ 
  ***************************************************************************/

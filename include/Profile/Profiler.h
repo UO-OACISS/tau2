@@ -89,7 +89,9 @@ void tau_pthread_exit (void *arg);
 #endif /* TAU_MAX_THREADS */
 
 #else
+#ifndef TAU_MAX_THREADS
 #define TAU_MAX_THREADS 1
+#endif /* TAU_MAX_THREADS */
 #endif /* PTHREADS || TULIPTHREADS || JAVA || TAU_WINDOWS || OPENMP || SPROC */
 
 
@@ -282,7 +284,7 @@ void TauProfiler_EnableAllEventsOnCallStack(int tid, Profiler *current);
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.103 $   $Date: 2009/02/25 23:45:37 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.103 2009/02/25 23:45:37 amorris Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: sameer $
+ * $Revision: 1.104 $   $Date: 2009/03/26 19:12:39 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.104 2009/03/26 19:12:39 sameer Exp $ 
  ***************************************************************************/

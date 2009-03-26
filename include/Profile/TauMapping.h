@@ -30,9 +30,9 @@ void* &TheTauMapFI(TauGroup_t key=TAU_DEFAULT);
     static void *TauMapFI = NULL; \
     tauCreateFI(&TauMapFI, #stmt, " " , key, #key); \
     TheTauMapFI(key) = TauMapFI; \
-    Tau_start_timer(TauMapFI, 0); \
+    Tau_start_timer(TauMapFI, 0, Tau_get_tid()); \
     stmt; \
-    Tau_stop_timer(TauMapFI); \
+    Tau_stop_timer(TauMapFI, Tau_get_tid()); \
   } 
 
 #define TAU_MAPPING_REGISTER(stmt, key)  { \
@@ -81,7 +81,7 @@ void* &TheTauMapFI(TauGroup_t key=TAU_DEFAULT);
 #define TAU_MAPPING_PROFILE_TIMER(timer, FuncInfoVar, tid) void *timer = FuncInfoVar;
    
 /* TAU_MAPPING_PROFILE_START acts like TAU_PROFILE_START by starting the timer */
-#define TAU_MAPPING_PROFILE_START(timer, tid) Tau_start_timer(timer, 0);
+#define TAU_MAPPING_PROFILE_START(timer, tid) Tau_start_timer(timer, 0, Tau_get_tid());
 
 /* TAU_MAPPING_PROFILE_STOP acts like TAU_PROFILE_STOP by stopping the timer */
 #define TAU_MAPPING_PROFILE_STOP(tid) TAU_GLOBAL_TIMER_STOP();

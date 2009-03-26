@@ -100,7 +100,7 @@ public:
   static int getPid();
   static int getTid();
 
-  static void RegisterThread();
+  static int RegisterThread();
 	
   static void RegisterFork(int nodeid, enum TauFork_t opcode);
 
@@ -126,7 +126,7 @@ private:
 
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
- * $RCSfile: RtsLayer.h,v $   $Author: amorris $
- * $Revision: 1.30 $   $Date: 2009/02/23 23:51:09 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.30 2009/02/23 23:51:09 amorris Exp $ 
+ * $RCSfile: RtsLayer.h,v $   $Author: sameer $
+ * $Revision: 1.31 $   $Date: 2009/03/26 19:12:39 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.31 2009/03/26 19:12:39 sameer Exp $ 
  ***************************************************************************/
