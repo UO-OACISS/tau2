@@ -47,7 +47,6 @@ int main(int argc, char **argv)
       bar(1);
     TAU_PROFILER_STOP_TASK(ptr, taskid);
   }
-  TAU_PROFILER_STOP_TASK(top, taskid);
   TAU_PROFILER_GET_CALLS_TASK(ptr, &calls, taskid);
   TAU_PROFILER_GET_CHILD_CALLS_TASK(ptr, &childcalls, taskid);
   TAU_PROFILER_GET_INCLUSIVE_VALUES_TASK(ptr, &incl, taskid);
@@ -62,5 +61,17 @@ int main(int argc, char **argv)
     printf("counter [%d] = %s\n", j, counters[j]);
     printf(" excl [%d] = %g, incl [%d] = %g\n", j, excl[j], j, incl[j]);
   }
+
+  printf("Before setting calls: %d\n", calls);
+  TAU_PROFILER_SET_CALLS_TASK(ptr, 1024, taskid);
+  TAU_PROFILER_GET_CALLS_TASK(ptr, &calls, taskid);
+  printf("After setting child calls: %d\n", calls);
+
+  printf("Adding 200 s to exclusive time value of bar in the task \n");
+  excl[0] += 200000000.0;
+  TAU_PROFILER_SET_EXCLUSIVE_VALUES_TASK(ptr, excl, taskid);
+
+  TAU_PROFILER_STOP_TASK(top, taskid);
+
   return 0;
 }
