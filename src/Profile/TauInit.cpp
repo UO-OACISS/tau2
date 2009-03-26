@@ -95,7 +95,7 @@ extern "C" int InitializeTAU() {
   // other initialization code should go here
 
 #ifdef TAU_MULTIPLE_COUNTERS
-  MultipleCounterLayer::initializeMultiCounterLayer();
+  // MultipleCounterLayer::initializeMultiCounterLayer();
 #endif
 
   Tau_stack_initialization();
@@ -104,7 +104,7 @@ extern "C" int InitializeTAU() {
   Tau_compensate_initialization();
 #endif /* TAU_COMPENSATE */
 
-  // TauMetrics_init();
+   TauMetrics_init();
 
   if (TauEnv_get_tracing()) {
     TauInitialize_kill_handlers();

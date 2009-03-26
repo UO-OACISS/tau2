@@ -182,10 +182,17 @@ static void initialize_functionArray() {
     }
   }
 
-  int usingPAPI=0;
+  /* check if we are using PAPI */
   for (int i=0; i<nmetrics; i++) {
       if (strncmp("PAPI", metricv[i], 4) == 0) {
-	usingPAPI = 1;
+	functionArray[pos++] = metric_read_papi;
+	PapiLayer::initializePapiLayer();
+	break;
+      }
+  }
+
+  for (int i=0; i<nmetrics; i++) {
+      if (strncmp("PAPI", metricv[i], 4) == 0) {
 	if (strstr(metricv[i],"PAPI") != NULL) {
 	  char *metricString = strdup(metricv[i]);
 
@@ -203,10 +210,6 @@ static void initialize_functionArray() {
 	  free (metricString);
 	}
       }
-  }
-
-  if (usingPAPI) {
-    functionArray[pos++] = metric_read_papi;
   }
 
   nfunctions = pos;

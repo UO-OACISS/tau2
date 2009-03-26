@@ -63,7 +63,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/PthreadLayer.h $(INCDIR)/RtsLayer.h         \
 		$(INCDIR)/FunctionInfo.h $(INCDIR)/UserEvent.h        \
 		$(INCDIR)/TauCppAPI.h 	 $(INCDIR)/bstring.h	      \
-		$(INCDIR)/TauFAPI.h 	 \
+		$(INCDIR)/TauFAPI.h 	 $(INCDIR)/TauMetrics.h       \
 		$(INCDIR)/PapiLayer.h    $(INCDIR)/JavaThreadLayer.h  \
 		$(INCDIR)/OpenMPLayer.h  $(INCDIR)/TauJAPI.h	      \
 		$(INCDIR)/SprocLayer.h   $(INCDIR)/PyGroups.h         \
@@ -93,7 +93,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
 		TauHooks.o TauHandler.o TauMemory.o MetaData.o TauEnv.o \
 		TauInit.o Comp_intel9.o Comp_pgi.o Comp_xl.o TauCallPath.o \
-		$(PARAM_O) Tracer.o $(THR_O) \
+		$(PARAM_O) Tracer.o TauMetrics.o TauReadMetrics.o $(THR_O) \
 		$(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) \
 		$(COMPENSATE_O) $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
@@ -452,6 +452,12 @@ ProfileParam.o   : ProfileParam.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 Tracer.o   	: Tracer.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauMetrics.o   	: TauMetrics.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauReadMetrics.o : TauReadMetrics.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 PthreadLayer.o   : PthreadLayer.cpp $(HDRS)

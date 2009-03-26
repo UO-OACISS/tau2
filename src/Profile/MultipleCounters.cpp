@@ -80,8 +80,6 @@ extern TauUserEvent& TheAllgatherEvent(void);
 #endif /* TAU_MPI */
 
 
-// Global Variable holding the number of counters
-int Tau_Global_numCounters = -1;
 
 
 

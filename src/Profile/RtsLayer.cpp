@@ -19,6 +19,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include <tau_internal.h>
+#include <Profile/TauMetrics.h>
 
 //#define DEBUG_PROF
 #ifdef TAU_AIX
@@ -493,7 +494,7 @@ void RtsLayer::getUSecD (int tid, double *values) {
 #if ((defined(TAU_EPILOG) && !defined(PROFILING_ON)) || (defined(TAU_VAMPIRTRACE) && !defined(PROFILING_ON)))
   return;
 #endif /* TAU_EPILOG/VAMPIRTRACE, PROFILING_ON */
-  MultipleCounterLayer::getCounters(tid, values);
+  TauMetrics_getMetrics(tid, values);
 }
 #else //TAU_MULTIPLE_COUNTERS
 
@@ -653,7 +654,7 @@ int RtsLayer::getTid() {
 
 bool RtsLayer::getCounterUsed(int i) {
 #ifdef TAU_MULTIPLE_COUNTERS
-  return MultipleCounterLayer::getCounterUsed(i);
+  return TauMetrics_getMetricUsed(i)==0;
 #else
   return (i==0); // only 0 is active in single counter mode
 #endif	
@@ -661,7 +662,8 @@ bool RtsLayer::getCounterUsed(int i) {
 
 const char *RtsLayer::getCounterName(int i) {
 #ifdef TAU_MULTIPLE_COUNTERS
-  return MultipleCounterLayer::getCounterNameAt(i);
+  const char *foo = TauMetrics_getMetricName(i);
+  return TauMetrics_getMetricName(i);
 #else
   return getSingleCounterName();
 #endif	
@@ -1021,6 +1023,6 @@ std::string RtsLayer::GetRTTI(const char *name) {
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.122 $   $Date: 2009/02/25 18:03:34 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.122 2009/02/25 18:03:34 amorris Exp $ 
+ * $Revision: 1.123 $   $Date: 2009/03/26 20:06:27 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.123 2009/03/26 20:06:27 amorris Exp $ 
  ***************************************************************************/

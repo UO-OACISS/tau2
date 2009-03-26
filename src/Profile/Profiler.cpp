@@ -15,8 +15,8 @@
  ****************************************************************************/
 
 //#define DEBUG_PROF
-#include "Profile/Profiler.h"
-
+#include <Profile/Profiler.h>
+#include <Profile/TauMetrics.h>
 
 //#include <tau_internal.h>
 
@@ -1245,7 +1245,7 @@ static int getProfileLocation(int metric, char *str) {
   if (Tau_Global_numCounters <= 1) { 
     sprintf (str, "%s", profiledir);
   } else {
-    const char *metricName = MultipleCounterLayer::getCounterNameAt(metric);
+    const char *metricName = TauMetrics_getMetricName(metric);
     sprintf (str, "%s/MULTI__%s", profiledir, metricName);
   }
 #else
@@ -1280,7 +1280,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
   static bool createFlag = TauProfiler_createDirectories();
 
   for (int i=0;i<MAX_TAU_COUNTERS;i++) {
-    if (RtsLayer::getCounterUsed(i)) {
+    if (TauMetrics_getMetricUsed(i)) {
       
       char metricHeader[1024];
       char profileLocation[1024];
@@ -1394,10 +1394,10 @@ bool TauProfiler_createDirectories() {
 
 #ifdef TAU_MULTIPLE_COUNTERS
   static bool flag = true;
-  if (flag) {
+  if (flag && Tau_Global_numCounters > 1) {
     for (int i=0;i<MAX_TAU_COUNTERS;i++) {
-      if (MultipleCounterLayer::getCounterUsed(i)) {
-	const char * tmpChar = MultipleCounterLayer::getCounterNameAt(i);
+      if (TauMetrics_getMetricUsed(i)) {
+	const char * tmpChar = TauMetrics_getMetricName(i);
 	char *newdirname = new char[1024];
 	//char *rmdircommand = new char[1024];
 	char *mkdircommand = new char[1024];
@@ -1425,6 +1425,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.233 $   $Date: 2009/02/25 23:45:54 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.233 2009/02/25 23:45:54 amorris Exp $ 
+ * $Revision: 1.234 $   $Date: 2009/03/26 20:06:27 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.234 2009/03/26 20:06:27 amorris Exp $ 
  ***************************************************************************/
