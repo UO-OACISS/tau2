@@ -186,7 +186,9 @@ static void initialize_functionArray() {
   for (int i=0; i<nmetrics; i++) {
       if (strncmp("PAPI", metricv[i], 4) == 0) {
 	functionArray[pos++] = metric_read_papi;
+#ifdef PAPI
 	PapiLayer::initializePapiLayer();
+#endif
 	break;
       }
   }
@@ -206,7 +208,9 @@ static void initialize_functionArray() {
 	    metricString[idx]='\0';
 	  }
 	  
+#ifdef PAPI
 	  int counterID = PapiLayer::addCounter(metricString);
+#endif
 	  free (metricString);
 	}
       }
