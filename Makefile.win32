@@ -8,10 +8,6 @@
 # use "nmake /f makefile.win32 "VTF=<path\to\libvtf3.lib> tau2vtf
 # (e.g. nmake /f makefile.win32 "VTF=c:\" tau2vtf)
 
-# To build the slog2 trace input dll
-# use "nmake /f makefile.win32 "JDK=<path\to\jdk>" "SLOG2=<path\to\slog2>" tau2slog2
-# (e.g. nmake /f makefile.win32 "JDK=c:\\j2sdk1.4.2_05" "SLOG2=c:\slog2sdk-1.2.5beta" tau2slog2
-
 # To build dll's for use with java
 # use "nmake /f makefile.win32 "JDK=<path\to\jdk> java
 # (e.g. nmake /f makefile.win32 "JDK=c:\j2sdk1.4.2_05" java)
@@ -81,12 +77,6 @@ tau2vtf :
 	$(CC) $(CFLAGS) -DTRACING_ON -o win32\bin\tau2vtf utils\tau2vtf.cpp src\TraceInput\TAU_tf.cpp src\TraceInput\TAU_tf_writer.cpp src\TraceInput\TAU_Cwrapper.cpp -Isrc\TraceInput -I$(VTF)/include /link $(VTF)\win32\lib\libvtf3.lib
 
 
-tau2slog2 :
-	$(CC) -c /O2 /Gd /nologo /TC /EHsc -Iinclude -DTRACING_ON utils\slogconverter\src\trace_tau.c -Iutils\slogconverter\ -I$(SLOG2)\src\logformat\trace
-	$(CC) -c /O2 /Gd /nologo /TC /EHsc -DTRACING_ON $(SLOG2)\src\logformat\trace\logformat_trace_InputLog.c -Iutils\slogconverter\ -I$(JDK)\include -I$(JDK)\include\win32
-	$(CC) -c $(CFLAGS) -DTRACING_ON src\TraceInput\TAU_tf.cpp src\TraceInput\TAU_tf_writer.cpp -I../../include -Isrc\TraceInput
-	$(CC) -c $(CFLAGS) -DTRACING_ON src\TraceInput\TAU_Cwrapper.cpp -I../../include -Isrc\TraceInput
-	link /dll /OUT:"win32\bin\TraceInput.dll" trace_tau.obj logformat_trace_InputLog.obj TAU_tf.obj TAU_Cwrapper.obj TAU_tf_writer.obj
 
 tau_instrumentor :
 	$(CC) $(CFLAGS) -o win32\bin\tau_instrumentor utils\tau_instrumentor.cpp utils\tau_instrument.cpp utils\tau_selective.cpp -I$(PDT)\ductape\inc /link $(PDT)\windows\lib\ductape.lib	

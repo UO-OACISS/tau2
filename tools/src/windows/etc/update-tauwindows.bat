@@ -11,7 +11,6 @@ nmake /f Makefile.win32 /k
 nmake /f Makefile.win32 JDK=%ROOT%\j2sdk1.4.2_13 java
 nmake /f Makefile.win32 PDT=%ROOT%\pdtoolkit tau_instrumentor
 nmake /f Makefile.win32 VTF=%ROOT%\vtf3\binaries tau2vtf
-nmake /f Makefile.win32 JDK=%ROOT%\j2sdk1.4.2_13 SLOG2=%ROOT%\slog2sdk-1.2.5beta tau2slog2
 cd %ROOT%\tau2\utils\taupin
 nmake /f Makefile.win32 clean
 nmake /f Makefile.win32
