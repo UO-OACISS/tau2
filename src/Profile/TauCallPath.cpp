@@ -62,16 +62,13 @@ int& TauGetCallPathDepth(void) {
  * they're equal. If they two arrays have the same depth, then we iterate
  * through the array and compare each array element till the end */
 /////////////////////////////////////////////////////////////////////////
-struct TaultLong
-{
-  bool operator() (const long *l1, const long *l2) const
- {
+struct TaultLong {
+  bool operator() (const long *l1, const long *l2) const {
    int i;
    /* first check 0th index (size) */
    if (l1[0] != l2[0]) return (l1[0] < l2[0]);
    /* they're equal, see the size and iterate */
-   for (i = 0; i < l1[0] ; i++)
-   {
+   for (i = 1; i < l1[0] ; i++) {
      if (l1[i] != l2[i]) return l1[i] < l2[i];
    }
    return (l1[i] < l2[i]);
@@ -81,199 +78,156 @@ struct TaultLong
 /////////////////////////////////////////////////////////////////////////
 // We use one global map to store the callpath information
 /////////////////////////////////////////////////////////////////////////
-map<TAU_CALLPATH_MAP_TYPE >& TheCallPathMap(void)
-{ // to avoid initialization problems of non-local static variables
+map<TAU_CALLPATH_MAP_TYPE >& TheCallPathMap(void) {
+  // to avoid initialization problems of non-local static variables
   static map<TAU_CALLPATH_MAP_TYPE > callpathmap;
-
+  
   return callpathmap;
 }
 
 //////////////////////////////////////////////////////////////////////
-long* TauFormulateComparisonArray(Profiler *p)
-{
+long* TauFormulateComparisonArray(Profiler *p) {
   int depth = TauGetCallPathDepth();
   /* Create a long array with size depth+1. We need to put the depth
    * in it as the 0th index */
   long *ary = new long [depth+1];
-
-  int i = 0;
-  int j; 
   Profiler *current = p; /* argument */
 
   /* initialize the array */
-  for (j = 0; j < depth+1; j++)
-  {
+  for (int j = 0; j < depth+1; j++) {
     ary[j] = 0L;
   }
   /* use the clean array now */
    
-  if (ary)
-  {
-    ary[0] = depth; /* this tells us how deep it is */
+  if (ary) {
 #ifdef TAU_PROFILEPHASE
 /* if I'm in phase, go upto the profiler that has a phase. if you don't find
 one then it is the top level profiler */
+    ary[0] = 2; /* phase profiles are always 2 deep */
     ary[1] = (long) current->ThisFunction; 
     current = current->ParentProfiler;
-    while (current != NULL)
-    {
+    while (current != NULL) {
       ary[2] = (long) current->ThisFunction; 
-#ifdef DEBUG_PROF
-      cout <<"Name = "<< current->ThisFunction->GetName()<<" "<<
-	current->ThisFunction->GetType() <<" ";
-#endif /* DEBUG_PROF */
-      if (current->GetPhase()) /* Found the parent phase! */
-      {
+      if (current->GetPhase()) { /* Found the parent phase! */
 	break;
-      }
-      else
+      } else {
 	current = current->ParentProfiler;
+      }
     }
 #else /* TAU_PROFILEPHASE */
-    while (current != NULL && depth != 0)
-    {
-      i++; /* increment i */
-      ary[i] = (long) current->ThisFunction; 
-      depth --;
+    int index = 1;
+    while (current != NULL && depth != 0) {
+      ary[index++] = (long) current->ThisFunction; 
+      depth--;
       current = current->ParentProfiler;
     }
+    ary[0] = index-1; /* set the depth */
 #endif /* TAU_PROFILEPHASE */
   }
   return ary;
 } 
 
 //////////////////////////////////////////////////////////////////////
-string * TauFormulateNameString(Profiler *p)
-{
-  DEBUGPROFMSG("Inside TauFormulateNameString()"<<endl;);
+string *TauFormulateNameString(Profiler *p) {
   int depth = TauGetCallPathDepth();
   Profiler *current = p;
   string delimiter(" => ");
   string *name = new string("");
 
 #ifdef TAU_PROFILEPHASE
-  while (current != NULL)
-  {
-    if (current != p && (current->GetPhase() || (current->ParentProfiler == (Profiler *) NULL)))
-    { 
-      *name =  current->ThisFunction->GetName() + string(" ") +
-	       current->ThisFunction->GetType() + delimiter + *name;
+  while (current != NULL) {
+    if (current != p && (current->GetPhase() || (current->ParentProfiler == (Profiler *) NULL))) { 
+      *name = current->ThisFunction->GetName() + string(" ") +
+	current->ThisFunction->GetType() + delimiter + *name;
       break; /* come out of the loop, got phase name in */
-    }
-    else 
-    { /* keep going */
-      if (current == p) /* initial name */
-      {
-        *name =  current->ThisFunction->GetName() + string (" ") + 
-	       current->ThisFunction->GetType();
+    } else  {
+      if (current == p) {
+        *name = current->ThisFunction->GetName() + string (" ") + 
+	  current->ThisFunction->GetType();
       }
       current = current->ParentProfiler;
     }
   }
-
+  
 #else /* TAU_PROFILEPHASE */
-  while (current != NULL && depth != 0)
-  {
-    if (current != p)
+  while (current != NULL && depth != 0) {
+    if (current != p) {
       *name =  current->ThisFunction->GetName() + string(" ") +
-	       current->ThisFunction->GetType() + delimiter + *name;
-    else
+	current->ThisFunction->GetType() + delimiter + *name;
+    } else {
       *name =  current->ThisFunction->GetName() + string (" ") + 
-	       current->ThisFunction->GetType();
+	current->ThisFunction->GetType();
+    }
     current = current->ParentProfiler;
-    depth --; 
+    depth --;
   }
 #endif /* TAU_PROFILEPHASE */
-  DEBUGPROFMSG("TauFormulateNameString:Name: "<<*name <<endl;);
   return name;
 }
 
 
 
 //////////////////////////////////////////////////////////////////////
-inline bool TauCallPathShouldBeProfiled(long *s)
-{ 
-  return true; // for now profile all callpaths
-}
-
-
-//////////////////////////////////////////////////////////////////////
 // Member Function Definitions for class Profiler (contd).
 //////////////////////////////////////////////////////////////////////
 
-void Profiler::CallPathStart(int tid)
-{
-//  string *comparison = 0; 
+void Profiler::CallPathStart(int tid) {
   long *comparison = 0;
   // Start the callpath profiling
-  if (ParentProfiler != NULL)
-  { // There is a callpath 
+  if (ParentProfiler != NULL) { 
+    // There is a callpath 
     if (ParentProfiler->CallPathFunction != 0) {
       ParentProfiler->CallPathFunction->IncrNumSubrs(tid);
     }
     DEBUGPROFMSG("Inside CallPath Start "<<ThisFunction->GetName()<<endl;);
     comparison = TauFormulateComparisonArray(this);
-    DEBUGPROFMSG("Comparison string = "<<*comparison<<endl;);
-
-
-    // Should I profile this path? 
-    if (TauCallPathShouldBeProfiled(comparison))
-    {
-
-      map<TAU_CALLPATH_MAP_TYPE>::iterator it = TheCallPathMap().find(comparison);
-      if (it == TheCallPathMap().end())
-      {
-	RtsLayer::LockEnv();
-	it = TheCallPathMap().find(comparison);
-	if (it == TheCallPathMap().end())
-	  {
-
-	    string *callpathname = TauFormulateNameString(this);
-	    DEBUGPROFMSG("Couldn't find string in map: "<<*comparison<<endl; );
-	    
-	    string grname = string("TAU_CALLPATH | ") + RtsLayer::PrimaryGroup(ThisFunction->GetAllGroups());
-	    CallPathFunction = new FunctionInfo(*callpathname, " ", 
-						ThisFunction->GetProfileGroup(), (const char*) grname.c_str(), true );
-	    TheCallPathMap().insert(map<TAU_CALLPATH_MAP_TYPE>::value_type(comparison, CallPathFunction));
-	  } 
-	else
-	  {
-	    CallPathFunction = (*it).second; 
-	    DEBUGPROFMSG("ROUTINE "<<(*it).second->GetName()<<" first = "<<(*it).first<<endl;);
-	    delete[] comparison; // free up memory when name is found
-	  }
-	RtsLayer::UnLockEnv();
-      } 
-      else
-      {
- 	CallPathFunction = (*it).second; 
+    
+    map<TAU_CALLPATH_MAP_TYPE>::iterator it = TheCallPathMap().find(comparison);
+    if (it == TheCallPathMap().end()) {
+      RtsLayer::LockEnv();
+      it = TheCallPathMap().find(comparison);
+      if (it == TheCallPathMap().end()) {
+	
+	string *callpathname = TauFormulateNameString(this);
+	DEBUGPROFMSG("Couldn't find string in map: "<<*comparison<<endl; );
+	
+	string grname = string("TAU_CALLPATH | ") + RtsLayer::PrimaryGroup(ThisFunction->GetAllGroups());
+	CallPathFunction = new FunctionInfo(*callpathname, " ", 
+					    ThisFunction->GetProfileGroup(), (const char*) grname.c_str(), true );
+	TheCallPathMap().insert(map<TAU_CALLPATH_MAP_TYPE>::value_type(comparison, CallPathFunction));
+      } else {
+	CallPathFunction = (*it).second; 
 	DEBUGPROFMSG("ROUTINE "<<(*it).second->GetName()<<" first = "<<(*it).first<<endl;);
-        delete[] comparison; // free up memory when name is found
+	delete[] comparison; // free up memory when name is found
       }
-
-      DEBUGPROFMSG("FOUND Name = "<<CallPathFunction->GetName()<<endl;);
-
-      // Set up metrics. Increment number of calls and subrs
-      CallPathFunction->IncrNumCalls(tid);
-
-      // Next, if this function is not already on the call stack, put it
-      if (CallPathFunction->GetAlreadyOnStack(tid) == false)   {
-        AddInclCallPathFlag = true;
-        // We need to add Inclusive time when it gets over as
-        // it is not already on callstack.
-
-        CallPathFunction->SetAlreadyOnStack(true, tid); // it is on callstack now
-      }
-      else { // the function is already on callstack, no need to add
-             // inclusive time
-        AddInclCallPathFlag = false;
-      }
-
-    } // should this path be profiled ?
-  }
-  else
-    CallPathFunction = 0; 
+      RtsLayer::UnLockEnv();
+    } else {
+      CallPathFunction = (*it).second; 
+      DEBUGPROFMSG("ROUTINE "<<(*it).second->GetName()<<" first = "<<(*it).first<<endl;);
+      delete[] comparison; // free up memory when name is found
+    }
+    
+    DEBUGPROFMSG("FOUND Name = "<<CallPathFunction->GetName()<<endl;);
+    
+    // Set up metrics. Increment number of calls and subrs
+    CallPathFunction->IncrNumCalls(tid);
+    
+    // Next, if this function is not already on the call stack, put it
+    if (CallPathFunction->GetAlreadyOnStack(tid) == false) {
+      AddInclCallPathFlag = true;
+      // We need to add Inclusive time when it gets over as
+      // it is not already on callstack.
+      
+      CallPathFunction->SetAlreadyOnStack(true, tid); // it is on callstack now
+    } else { 
+      // the function is already on callstack, no need to add inclusive time
+      AddInclCallPathFlag = false;
+    }
+    
+  } else {
     // There's no callpath function when parentprofiler is null
+    CallPathFunction = 0; 
+  }
 }
 
 #ifdef TAU_MULTIPLE_COUNTERS
@@ -282,33 +236,23 @@ void Profiler::CallPathStop(double* TotalTime, int tid)
 void Profiler::CallPathStop(double TotalTime, int tid)
 #endif // TAU_MULTIPLE_COUNTERS
 {
-  if (ParentProfiler != NULL)
-  {
-    DEBUGPROFMSG("Inside CallPath Stop "<<ThisFunction->GetName()<<endl;);
+  if (ParentProfiler != NULL) {
     if (AddInclCallPathFlag == true) { // The first time it came on call stack
       CallPathFunction->SetAlreadyOnStack(false, tid); // while exiting
-
-      DEBUGPROFMSG("nct "<< RtsLayer::myNode()  << ","
-       << RtsLayer::myContext() << "," << tid  << " "
-       << "CallPathStop: After SetAlreadyOnStack Going for AddInclTime" <<endl; );
-
       // And its ok to add both excl and incl times
       CallPathFunction->AddInclTime(TotalTime, tid);
     }
-
+    
     CallPathFunction->AddExclTime(TotalTime, tid);  
-    DEBUGPROFMSG("Before IncrNumSubr"<<endl;);
-    if (ParentProfiler->CallPathFunction != 0)
-    { /* Increment the parent's NumSubrs and decrease its exclude time */
+    if (ParentProfiler->CallPathFunction != 0) {
+      /* Increment the parent's NumSubrs and decrease its exclude time */
       ParentProfiler->CallPathFunction->ExcludeTime(TotalTime, tid);
     }
-    DEBUGPROFMSG("After IncrNumSubr"<<endl;);
-
   }
 }
   
 /***************************************************************************
  * $RCSfile: TauCallPath.cpp,v $   $Author: amorris $
- * $Revision: 1.27 $   $Date: 2009/01/16 00:46:52 $
- * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.27 2009/01/16 00:46:52 amorris Exp $ 
+ * $Revision: 1.28 $   $Date: 2009/03/27 23:35:22 $
+ * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.28 2009/03/27 23:35:22 amorris Exp $ 
  ***************************************************************************/

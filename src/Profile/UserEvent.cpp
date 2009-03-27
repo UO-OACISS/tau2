@@ -497,16 +497,16 @@ long* TauFormulateContextComparisonArray(Profiler *p, TauUserEvent *uevent) {
   }
 
   Profiler *current = p; /* argument */
-  int index = 0;
+  int index = 1; /* start writing to index 1, we fill in the depth after */
 
-  ary[index++] = depth+1; /* this tells us the length of this array */
   while (current != NULL && depth != 0) {
     ary[index++] = (long) current->ThisFunction;
     depth--;
     current = current->ParentProfiler;
   }
   
-  ary[index++] = (long) uevent; 
+  ary[index++] = (long) uevent;
+  ary[0] = index-1; /* set the depth */
   return ary;
 }
 
@@ -514,7 +514,6 @@ long* TauFormulateContextComparisonArray(Profiler *p, TauUserEvent *uevent) {
 // Formulate Context Callpath name string
 ////////////////////////////////////////////////////////////////////////////
 string * TauFormulateContextNameString(Profiler *p) {
-  DEBUGPROFMSG("Inside TauFormulateContextNameString()"<<endl;);
   int depth = TauEnv_get_callpath_depth();
   Profiler *current = p;
   string delimiter(" => ");
@@ -531,7 +530,6 @@ string * TauFormulateContextNameString(Profiler *p) {
     current = current->ParentProfiler;
     depth --;
   }
-  DEBUGPROFMSG("TauFormulateContextNameString:Name: "<<*name <<endl;);
   return name;
 }
 
@@ -591,7 +589,6 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid) {
       if (it == TheContextMap().end()) {
 	string *ctxname = TauFormulateContextNameString(current);
 	string contextname(uevent->EventName  + " : " + *ctxname);
-	DEBUGPROFMSG("Couldn't find string in map: "<<*comparison<<endl; );
 	
 	ue = new TauUserEvent((const char *)(contextname.c_str()), MonotonicallyIncreasing);
 	TheContextMap().insert(map<TAU_CONTEXT_MAP_TYPE>::value_type(comparison, ue));
@@ -623,6 +620,6 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid) {
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
- * $Revision: 1.38 $   $Date: 2009/03/27 23:02:26 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.38 2009/03/27 23:02:26 amorris Exp $ 
+ * $Revision: 1.39 $   $Date: 2009/03/27 23:35:22 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.39 2009/03/27 23:35:22 amorris Exp $ 
  ***************************************************************************/
