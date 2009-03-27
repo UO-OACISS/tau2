@@ -154,6 +154,7 @@ static int compareMetricString(const char *one, const char *two) {
 
 
 static void initialize_functionArray() {
+  int usingPAPI = 0;
   int pos = 0;
   for (int i=0; i<nmetrics; i++) {
     if (compareMetricString(metricv[i],"LOGICAL_CLOCK")) {
@@ -171,8 +172,10 @@ static void initialize_functionArray() {
     } else if (compareMetricString(metricv[i],"TAU_MPI_MESSAGE_SIZE")){
       functionArray[pos++] = metric_read_messagesize;
     } else if (compareMetricString(metricv[i],"P_WALL_CLOCK_TIME")){
+      usingPAPI=1;
       functionArray[pos++] = metric_read_papiwallclock;
     } else if (compareMetricString(metricv[i],"P_VIRTUAL_TIME")){
+      usingPAPI=1;
       functionArray[pos++] = metric_read_papivirtual;
     } else {
       if (strncmp("PAPI", metricv[i], 4) != 0) { /* PAPI handled separately */
@@ -182,15 +185,20 @@ static void initialize_functionArray() {
     }
   }
 
+
   /* check if we are using PAPI */
   for (int i=0; i<nmetrics; i++) {
       if (strncmp("PAPI", metricv[i], 4) == 0) {
 	functionArray[pos++] = metric_read_papi;
-#ifdef PAPI
-	PapiLayer::initializePapiLayer();
-#endif
+	usingPAPI=1;
 	break;
       }
+  }
+
+  if (usingPAPI) {
+#ifdef TAU_PAPI
+    PapiLayer::initializePapiLayer();
+#endif
   }
 
   for (int i=0; i<nmetrics; i++) {
@@ -208,7 +216,7 @@ static void initialize_functionArray() {
 	    metricString[idx]='\0';
 	  }
 	  
-#ifdef PAPI
+#ifdef TAU_PAPI
 	  int counterID = PapiLayer::addCounter(metricString);
 #endif
 	  free (metricString);

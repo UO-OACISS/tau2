@@ -496,6 +496,10 @@ int PapiLayer::initializePapiLayer(bool lock) {
     return 0;
   }
 
+#ifdef TAU_PAPI_DEBUG
+  dmesg(1, "TAU: PAPI: Initializing PAPI Layer");
+#endif
+
   if (lock) RtsLayer::LockDB();
   int rc = initializePAPI();
   if (lock) RtsLayer::UnLockDB();
