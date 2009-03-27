@@ -79,7 +79,7 @@ extern "C" {
 #define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group) void *var##finfo = NULL; Tau_profile_c_timer(&var##finfo, name, type, group, Tau_phase_enable_once(#group, &var##finfo))
 
 
-#define TAU_PHASE_START(var) Tau_start_timer(var##finfo, 1)
+#define TAU_PHASE_START(var) Tau_start_timer(var##finfo, 1, Tau_get_tid())
 #define TAU_PHASE_STOP(var) Tau_stop_timer(var##finfo, Tau_get_tid())
 
 
@@ -177,8 +177,8 @@ extern "C" {
   return ptr; \
 } 
 #define TAU_GLOBAL_TIMER_START(timer) { void *ptr = TauGlobal##timer(); \
-	Tau_start_timer(ptr, 0); }
-#define TAU_GLOBAL_TIMER_STOP()  Tau_global_stop()
+    Tau_start_timer(ptr, 0, Tau_get_tid()); }
+#define TAU_GLOBAL_TIMER_STOP()  Tau_global_stop();
 #define TAU_GLOBAL_TIMER_EXTERNAL(timer)  extern void* TauGlobal##timer(void);
 
 
@@ -189,7 +189,7 @@ extern "C" {
 } 
 
 #define TAU_GLOBAL_PHASE_START(timer) { void *ptr = TauGlobalPhase##timer(); \
-	Tau_start_timer(ptr, 1); } 
+    Tau_start_timer(ptr, 1, Tau_get_tid()); } 
 
 #define TAU_GLOBAL_PHASE_STOP(timer)  { void *ptr = TauGlobalPhase##timer(); \
 	Tau_stop_timer(ptr, Tau_get_tid()); }
@@ -480,7 +480,7 @@ void Tau_profile_param1l(long data, const char *dataname);
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.95 $   $Date: 2009/03/26 20:45:33 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.95 2009/03/26 20:45:33 sameer Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: amorris $
+ * $Revision: 1.96 $   $Date: 2009/03/27 15:49:47 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.96 2009/03/27 15:49:47 amorris Exp $ 
  ***************************************************************************/
