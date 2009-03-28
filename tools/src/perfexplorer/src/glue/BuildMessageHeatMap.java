@@ -279,7 +279,6 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation implements
 				String newPath = (String)this.pathSelector.getSelectedItem();
 				if (!newPath.equals(currentPath)) {
 					currentPath = newPath;
-					System.out.println("changing to " + newPath);
 					window.remove(mainPanel);
 					mainPanel = null;
 					drawFigures();

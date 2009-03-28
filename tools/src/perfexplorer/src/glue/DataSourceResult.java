@@ -18,6 +18,25 @@ import edu.uoregon.tau.perfdmf.*;
  *
  */
 public class DataSourceResult extends AbstractResult {
+	
+    public static final int PPK = DataSource.PPK;
+    public static final int TAUPROFILE = DataSource.TAUPROFILE;
+    public static final int DYNAPROF = DataSource.DYNAPROF;
+    public static final int MPIP = DataSource.MPIP;
+    public static final int HPM = DataSource.HPM;
+    public static final int GPROF = DataSource.GPROF;
+    public static final int PSRUN = DataSource.PSRUN;
+    public static final int PPROF = DataSource.PPROF;
+    public static final int CUBE = DataSource.CUBE;
+    public static final int HPCTOOLKIT = DataSource.HPCTOOLKIT;
+    public static final int SNAP = DataSource.SNAP;
+    public static final int OMPP = DataSource.OMPP;
+    public static final int PERIXML = DataSource.PERIXML;
+    public static final int GPTL = DataSource.GPTL;
+    public static final int PARAVER = DataSource.PARAVER;
+    public static final int IPM = DataSource.IPM;
+    public static final int GYRO = DataSource.GYRO;
+    public static final int GAMESS = DataSource.GAMESS;
 
 	/**
 	 * 
@@ -65,11 +84,15 @@ public class DataSourceResult extends AbstractResult {
 			Iterator<UserEvent> userEvents = source.getUserEvents();
 			while (userEvents.hasNext()) {
 				UserEvent userEvent = userEvents.next();
-				this.putUsereventMax(threadID, userEvent.getName(), userEvent.getMaxUserEventMaxValue());
-				this.putUsereventMean(threadID, userEvent.getName(), userEvent.getMaxUserEventMeanValue());
-				this.putUsereventMin(threadID, userEvent.getName(), userEvent.getMaxUserEventMinValue());
-				this.putUsereventNumevents(threadID, userEvent.getName(), userEvent.getMaxUserEventNumberValue());
-				this.putUsereventSumsqr(threadID, userEvent.getName(), userEvent.getMaxUserEventStdDev());
+				String name = userEvent.getName();
+				UserEventProfile uep = thread.getUserEventProfile(userEvent);
+				if (uep != null) {
+					this.putUsereventMax(threadID, name, uep.getMaxValue());
+					this.putUsereventMean(threadID, name, uep.getMeanValue());
+					this.putUsereventMin(threadID, name, uep.getMinValue());
+					this.putUsereventNumevents(threadID, name, uep.getNumSamples());
+					this.putUsereventSumsqr(threadID, name, uep.getSumSquared());
+				}
 			}
 			threadID++;
 		}
