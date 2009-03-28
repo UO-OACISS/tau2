@@ -5,14 +5,18 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.*;
+import javax.swing.plaf.basic.BasicComboPopup;
+import javax.swing.plaf.basic.ComboPopup;
+import javax.swing.plaf.metal.MetalComboBoxUI;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.text.DecimalFormat;
 
 public class HeatMapWindow extends JFrame implements ActionListener {
 
-	private JComboBox pathSelector = new JComboBox();
+	private SteppedComboBox pathSelector = null;
 	private JPanel mainPanel = null;
 	private Map/*<String, double[][][]>*/ maps = null;
 	private Map/*<String, double[]>*/ maxs = null;
@@ -27,12 +31,17 @@ public class HeatMapWindow extends JFrame implements ActionListener {
 		this.maxs = maxs;
 		this.mins = mins;
 		this.size = size;
-		Iterator/*<String>*/ keys = maps.keySet().iterator();
+		pathSelector = new SteppedComboBox(maps.keySet().toArray());
+		Dimension d = pathSelector.getPreferredSize();
+	    pathSelector.setPreferredSize(new Dimension(50, d.height));
+	    pathSelector.setPopupWidth(d.width);
+		
+/*		Iterator<String> keys = maps.keySet().iterator();
 		while (keys.hasNext()) {
 			String key = (String)keys.next();
 			this.pathSelector.addItem(key);
 		}
-		drawFigures();
+*/		drawFigures();
 	}
 
 	private void drawFigures() {
@@ -59,6 +68,20 @@ public class HeatMapWindow extends JFrame implements ActionListener {
 		mainPanel.add(buildMapPanel(4, "MESSAGE BYTES STDDEV", "MessageSizeStdDev"),c);
 		c.gridx = 2;
 		mainPanel.add(buildOptionPanel("DISPLAY OPTIONS"),c);
+		
+        Toolkit tk = Toolkit.getDefaultToolkit();
+        Dimension screenDimension = tk.getScreenSize();
+        int screenHeight = screenDimension.height;
+        int screenWidth = screenDimension.width;
+
+        //Window Stuff.
+        int windowWidth = 1000;
+        int windowHeight = 800;
+        //Find the center position with respect to this window.
+        int xPosition = (screenWidth - windowWidth) / 2;
+        int yPosition = (screenHeight - windowHeight) / 2;
+        setLocation(xPosition, yPosition);
+
 		this.pack();
 		this.setVisible(true);
 	}
@@ -175,4 +198,5 @@ public class HeatMapWindow extends JFrame implements ActionListener {
 			e.printStackTrace();
 		} 
 	}
+	
 }
