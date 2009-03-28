@@ -67,18 +67,21 @@ public class DataSourceResult extends AbstractResult {
         	return;
         }
 		List<Thread> threads = source.getThreads();
-		int threadID = 0;
+		int tid = 0;  // thread ID
 		for (Thread thread : threads) {
 			for (int m = 0 ; m < source.getNumberOfMetrics() ; m++) {
 				String metric = source.getMetric(m).getName();
 				Iterator<Function> functions = source.getFunctions();
 				while (functions.hasNext()) {
 					Function function = functions.next();
+					String name = function.getName();
 					FunctionProfile fp = thread.getFunctionProfile(function);
-					this.putExclusive(threadID, function.getName(), metric, fp.getExclusive(m));
-					this.putInclusive(threadID, function.getName(), metric, fp.getInclusive(m));
-					this.putCalls(threadID, function.getName(), fp.getNumCalls());
-					this.putSubroutines(threadID, function.getName(), fp.getNumSubr());
+					if (fp != null) {
+						this.putExclusive(tid, name, metric, fp.getExclusive(m));
+						this.putInclusive(tid, name, metric, fp.getInclusive(m));
+						this.putCalls(tid, name, fp.getNumCalls());
+						this.putSubroutines(tid, name, fp.getNumSubr());
+					}
 				}
 			}
 			Iterator<UserEvent> userEvents = source.getUserEvents();
@@ -87,14 +90,14 @@ public class DataSourceResult extends AbstractResult {
 				String name = userEvent.getName();
 				UserEventProfile uep = thread.getUserEventProfile(userEvent);
 				if (uep != null) {
-					this.putUsereventMax(threadID, name, uep.getMaxValue());
-					this.putUsereventMean(threadID, name, uep.getMeanValue());
-					this.putUsereventMin(threadID, name, uep.getMinValue());
-					this.putUsereventNumevents(threadID, name, uep.getNumSamples());
-					this.putUsereventSumsqr(threadID, name, uep.getSumSquared());
+					this.putUsereventMax(tid, name, uep.getMaxValue());
+					this.putUsereventMean(tid, name, uep.getMeanValue());
+					this.putUsereventMin(tid, name, uep.getMinValue());
+					this.putUsereventNumevents(tid, name, uep.getNumSamples());
+					this.putUsereventSumsqr(tid, name, uep.getSumSquared());
 				}
 			}
-			threadID++;
+			tid++;
 		}
 	}
 }
