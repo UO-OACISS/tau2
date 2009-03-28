@@ -133,7 +133,6 @@ void metric_read_messagesize(int tid, int idx, double values[]) {
 	+ TheScatterEvent()->GetSumValue(tid)
 	+ TheGatherEvent()->GetSumValue(tid)
 	+ TheAllgatherEvent()->GetSumValue(tid);
-  printf ("returned values %g\n", values[idx]);
  //Currently TAU_EVENT_DATATYPE is a double.
 #endif//TAU_MPI
 }
