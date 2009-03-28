@@ -1,3 +1,4 @@
+from edu.uoregon.tau.perfexplorer.client import *
 from edu.uoregon.tau.perfexplorer.glue import *
 from edu.uoregon.tau.perfdmf import *
 from java.util import *
@@ -7,6 +8,25 @@ import time
 
 True = 1
 False = 0
+inApp = "FACETS"
+inExp = "FACETS Sigma Regression"
+inTrial = ""
+
+def load():
+	print "loading data..."
+	parameterMap = PerfExplorerModel.getModel().getScriptParameters()
+	keys = parameterMap.keySet()
+	for key in keys:
+		print key, parameterMap.get(key)
+	config = parameterMap.get("config")
+	inApp = parameterMap.get("app")
+	inExp = parameterMap.get("exp")
+	inTrial = parameterMap.get("trial")
+	Utilities.setSession(config)
+	#trial = Utilities.getTrial("s3d", "intrepid-c2h4-spacemap", "1728")
+	trial = Utilities.getTrial(inApp, inExp, inTrial)
+	print "...done."
+	return trial
 
 def computeDilation(networkSize, senderCoords, receiverCoords):
 	tokens = networkSize.replace('(','').replace(')','').split(',')
@@ -34,8 +54,7 @@ def computeDilation(networkSize, senderCoords, receiverCoords):
 	return distX+distY+distZ
 
 print "--------------- JPython test script start ------------"
-Utilities.setSession("peris3d")
-trial = Utilities.getTrial("s3d", "intrepid-c2h4-spacemap", "1728")
+trial = load()
 start = time.clock()
 print "getting thread metadata"
 metadata = TrialThreadMetadata(trial)
@@ -100,6 +119,8 @@ else:
 		maxY = 30
 		maxZ = 25
 	
+	data = ChartData();
+	data.addRow("Dilation");
 	for i in range(0,maxX):
 		for j in range(0,maxY):
 			for k in range(0,maxZ):
@@ -120,11 +141,13 @@ else:
 						worst = dil
 					dilation = dilation + dil
 					count = count + 1
+				data.addColumn(0, dilation/6.0, dilation/6.0)
 
 end = time.clock()
 print "computation time:", end-start, "seconds"
 				
 avgDilation = float(dilation) / float(count)
 print avgDilation, worst
+PerfExplorerHistogramChart.doHistogram(data);
 	
 print "---------------- JPython test script end -------------"

@@ -62,6 +62,15 @@ public class DataSourceResult extends AbstractResult {
 					this.putSubroutines(threadID, function.getName(), fp.getNumSubr());
 				}
 			}
+			Iterator<UserEvent> userEvents = source.getUserEvents();
+			while (userEvents.hasNext()) {
+				UserEvent userEvent = userEvents.next();
+				this.putUsereventMax(threadID, userEvent.getName(), userEvent.getMaxUserEventMaxValue());
+				this.putUsereventMean(threadID, userEvent.getName(), userEvent.getMaxUserEventMeanValue());
+				this.putUsereventMin(threadID, userEvent.getName(), userEvent.getMaxUserEventMinValue());
+				this.putUsereventNumevents(threadID, userEvent.getName(), userEvent.getMaxUserEventNumberValue());
+				this.putUsereventSumsqr(threadID, userEvent.getName(), userEvent.getMaxUserEventStdDev());
+			}
 			threadID++;
 		}
 	}
