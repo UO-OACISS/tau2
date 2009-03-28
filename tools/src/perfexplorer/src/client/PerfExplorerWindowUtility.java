@@ -7,11 +7,11 @@ import javax.swing.JFrame;
 
 public class PerfExplorerWindowUtility {
 
-	static final void centerWindow(JFrame frame, int windowWidth, int windowHeight,
+	public static final void centerWindow(JFrame frame, int windowWidth, int windowHeight,
 			int offsetX, int offsetY, boolean setSize) {
-		if (setSize)
+		if (setSize) {
 			frame.setPreferredSize(new Dimension(windowWidth, windowHeight));
-		
+		}		
 		//Grab the screen size.
         Toolkit tk = Toolkit.getDefaultToolkit();
         Dimension screenDimension = tk.getScreenSize();
