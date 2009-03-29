@@ -47,7 +47,17 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 						String first = st.nextToken().trim();
 						String path = st.nextToken().trim();
 						extractData(input, thread, event, first, path);
-					}
+						// now, split up the path, and handle each node 
+/*						StringTokenizer st2 = new StringTokenizer(path, "=>");
+						StringBuilder sb = new StringBuilder();
+						while (st2.hasMoreTokens()) {
+							if (sb.length() > 0) {
+								sb.append(" => ");
+							}
+							sb.append(st2.nextToken());
+							extractData(input, thread, event, first, sb.toString());
+						}
+*/					}
 				}
 			}
 
@@ -115,7 +125,7 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 			min[4] = stdev > 0 && min[4] > stdev ? stdev : min[4];
 			
 			volume = numEvents * eventMean;
-			map[5][thread][receiver] = volume;
+			map[5][thread][receiver] += volume;
 			max[5] = max[5] < volume ? volume : max[5];
 			min[5] = volume > 0 && min[5] > volume ? volume : min[5];
 		}

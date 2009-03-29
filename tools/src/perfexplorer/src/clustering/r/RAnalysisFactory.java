@@ -22,7 +22,7 @@ import edu.uoregon.tau.perfexplorer.common.RMICubeData;
  * should never be directly created - use the static method in the
  * AnalysisFactory class.
  *
- * <P>CVS $Id: RAnalysisFactory.java,v 1.11 2009/02/24 00:53:35 khuck Exp $</P>
+ * <P>CVS $Id: RAnalysisFactory.java,v 1.12 2009/03/29 21:47:28 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -40,7 +40,7 @@ public class RAnalysisFactory extends AnalysisFactory {
 	/* (non-Javadoc)
 	 * @see clustering.AnalysisFactory#createRawData(java.lang.String, java.util.List, int, int)
 	 */
-	public RawDataInterface createRawData(String name, List attributes,
+	public RawDataInterface createRawData(String name, List<String> attributes,
 			int vectors, int dimensions, List<String> classAttributes) {
 		Object[] objects = attributes.toArray();
 		//String[] eventNames = (String[])(objects);
