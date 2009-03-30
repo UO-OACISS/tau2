@@ -7,6 +7,7 @@ import javax.swing.*;
 import java.lang.Math;
 
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,13 +38,19 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 	}
 
 	public List<PerformanceResult> processData() {
-		
+		DecimalFormat f = new DecimalFormat("0.0");
+
 		// iterate over the atomic counters, and get the messages sent to each neighbor
 		for (PerformanceResult input : this.inputs) {
+		    long start = System.currentTimeMillis();
 			size = input.getThreads().size();
 			outputs.add(new DefaultResult(input, false));
 			for (Integer thread : input.getThreads()) {
 				for (String event : input.getUserEvents()) {
+					
+					// don't process if this thread doesn't have this event
+					if (input.getUsereventNumevents(thread, event) == 0) continue;
+					
 					if (event.startsWith("Message size sent to node ") && !event.contains("=>")) {
 						// split the string
 						extractData(input, thread, event, event, allPaths);
@@ -55,18 +62,32 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 						// now, split up the path, and handle each node 
 						StringTokenizer st2 = new StringTokenizer(path, "=>");
 						StringBuilder sb = new StringBuilder();
+						String tmp = null;
 						while (st2.hasMoreTokens()) {
 							if (sb.length() > 0) {
 								sb.append(" => ");
 							}
-							sb.append(st2.nextToken());
+							tmp = st2.nextToken();
+							sb.append(tmp);
 							extractData(input, thread, event, first, sb.toString());
 						}
+						// do this to get "* => MPI_Isend()" and all equivalents
+//						extractData(input, thread, event, first, "* => "+tmp);
 					}
 				}
+				// some progress indication
+//				System.out.print("\r" + f.format(thread.doubleValue()*100.0/input.getThreads().size()) + "% complete...");
 			}
-			
+//			System.out.println("\r100% complete.");
+		    long elapsedTimeMillis = System.currentTimeMillis()-start;
+		    float elapsedTimeSec = elapsedTimeMillis/1000F;
+		    System.out.println("Total time to extract data: " + elapsedTimeSec + " seconds");
+		    
+		    start = System.currentTimeMillis();
 			massageData();
+		    elapsedTimeMillis = System.currentTimeMillis()-start;
+		    elapsedTimeSec = elapsedTimeMillis/1000F;
+		    System.out.println("Total time to process data: " + elapsedTimeSec + " seconds");
 
 			window = new HeatMapWindow("Message Size Heat Maps", maps, maxs, mins, size);
 	        URL url = Utility.getResource("tau32x32.gif");
@@ -128,17 +149,11 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 	private void extractData(PerformanceResult input, Integer thread, String event, String first, String path) {
 		double numEvents, eventMax, eventMin, eventMean, eventSumSqr, stdev, volume = 0;
 		double[][][] map = new double[6][size][size];
-		double[] max = {0,0,0,0,0,0}; 
-		double[] min = {0,0,0,0,0,0}; 
-		
+
 		if (maps.keySet().contains(path)) {
 			map = maps.get(path);
-//			max = maxs.get(path);
-//			min = mins.get(path);
 		} else {
 			maps.put(path, map);
-//			maxs.put(path, max);
-//			mins.put(path, min);
 		}
 
 		StringTokenizer st = new StringTokenizer(first, "Message size sent to node ");
@@ -147,13 +162,9 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 
 			numEvents = input.getUsereventNumevents(thread, event);
 			map[COUNT][thread][receiver] += numEvents;
-//			max[0] = max[0] < numEvents ? numEvents : max[0];
-//			min[0] = numEvents > 0 && min[0] > numEvents ? numEvents : min[0];
 			
 			eventMax = input.getUsereventMax(thread, event);
 			map[MAX][thread][receiver] = Math.max(eventMax, map[1][thread][receiver]);
-//			max[1] = max[1] < eventMax ? eventMax : max[1];
-//			min[1] = eventMax > 0 && min[1] > eventMax ? eventMax : min[1];
 			
 			eventMin = input.getUsereventMin(thread, event);
 			if (map[MIN][thread][receiver] > 0) {
@@ -161,28 +172,16 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 			} else {
 				map[MIN][thread][receiver] = eventMin;
 			}
-//			max[2] = max[2] < eventMin ? eventMin : max[2];
-//			min[2] = eventMin > 0 && min[2] > eventMin ? eventMin : min[2];
 			
 			// we'll recompute this later.
 			eventMean = input.getUsereventMean(thread, event);
 			map[MIN][thread][receiver] += eventMean;
-//			max[3] = max[3] < eventMean ? eventMean : max[3];
-//			min[3] = eventMean > 0 && min[3] > eventMean ? eventMean : min[3];
 			
 			eventSumSqr = input.getUsereventSumsqr(thread, event);
-//			if (numEvents > 0)
-//				stdev = Math.sqrt(Math.abs((eventSumSqr/numEvents)-(eventMean*eventMean)));
-//			else
-//				stdev = 0;
 			map[STDDEV][thread][receiver] += eventSumSqr;
-//			max[4] = max[4] < stdev ? stdev : max[4];
-//			min[4] = stdev > 0 && min[4] > stdev ? stdev : min[4];
 			
 			volume = numEvents * eventMean;
 			map[VOLUME][thread][receiver] += volume;
-//			max[5] = max[5] < volume ? volume : max[5];
-//			min[5] = volume > 0 && min[5] > volume ? volume : min[5];
 		}
 	}
 
