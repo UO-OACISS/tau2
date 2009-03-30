@@ -27,6 +27,19 @@
 #include <unistd.h>
 #endif /* TAU_WINDOWS */
 
+#ifdef BGL_TIMERS
+/* header files for BlueGene/L */
+#include <bglpersonality.h>
+#include <rts.h>
+#endif // BGL_TIMERS
+
+#ifdef BGP_TIMERS
+/* header files for BlueGene/P */
+#include <bgp_personality.h>
+#include <bgp_personality_inlines.h>
+#include <kernel_interface.h>
+#endif // BGP_TIMERS
+
 
 #ifdef TAU_MPI
 extern TauUserEvent* TheSendEvent(void);
