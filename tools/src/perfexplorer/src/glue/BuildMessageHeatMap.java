@@ -52,7 +52,6 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 						StringTokenizer st = new StringTokenizer(event, ":");
 						String first = st.nextToken().trim();
 						String path = st.nextToken().trim();
-//						extractData(input, thread, event, first, path);
 						// now, split up the path, and handle each node 
 						StringTokenizer st2 = new StringTokenizer(path, "=>");
 						StringBuilder sb = new StringBuilder();
