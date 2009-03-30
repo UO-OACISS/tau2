@@ -32,7 +32,7 @@ public class HeatMap extends JPanel implements ImageObserver {
 		int height = size;
 		
 		// if this is a BIG topology (larger than 128x128), just do one pixel per thread
-		if (idealSize <= width || idealSize <= height) {
+//		if (idealSize <= width || idealSize <= height) {
 			img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 			int i = 0;
 			for (int x = 0 ; x < width ; x++) {
@@ -45,7 +45,7 @@ public class HeatMap extends JPanel implements ImageObserver {
 					i++;
 				}
 			}
-		} else {
+/*		} else {
 			img = new BufferedImage(idealSize, idealSize, BufferedImage.TYPE_INT_RGB);
 
 			// otherwise, make each thread "bigger" (multiple pixels) in the final image.
@@ -69,8 +69,8 @@ public class HeatMap extends JPanel implements ImageObserver {
 				}
 			}
 		}
-		this.setPreferredSize(new Dimension(300,300));
-        this.setSize(300,300);
+*/		this.setPreferredSize(new Dimension(600,600));
+        this.setSize(600,600);
 	}
 		
 	public String getImage() {
