@@ -1228,10 +1228,12 @@ int TauProfiler_StoreData(int tid) {
 
   finalizeTrace(tid);
 
-  TauProfiler_Snapshot("final", true, tid);
-
-  if (TauEnv_get_profile_format() == TAU_FORMAT_PROFILE) {
-    TauProfiler_DumpData(false, tid, "profile");
+  if (TauEnv_get_profiling()) {
+    TauProfiler_Snapshot("final", true, tid);
+    
+    if (TauEnv_get_profile_format() == TAU_FORMAT_PROFILE) {
+      TauProfiler_DumpData(false, tid, "profile");
+    }
   }
   return 1;
 } 
@@ -1425,6 +1427,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.235 $   $Date: 2009/03/26 23:00:26 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.235 2009/03/26 23:00:26 amorris Exp $ 
+ * $Revision: 1.236 $   $Date: 2009/03/30 21:51:20 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.236 2009/03/30 21:51:20 amorris Exp $ 
  ***************************************************************************/
