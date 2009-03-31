@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# for perl on SiCortex
+export LANG=C
+
 eval `tau-config`
 
 usage()
@@ -116,7 +119,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tauex,v 1.12 2008/12/13 01:10:41 amorris Exp $';
+	      echo '$Id: tauex,v 1.13 2009/03/31 00:24:29 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -m)
