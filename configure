@@ -4222,12 +4222,12 @@ fi
 
 
 
-if [ $mpi = yes -a "x$machine" = "xcraycnl" ] ; then
+if [ $mpi = yes ] ; then
+    if [ "x$machine" = "xxt3" -o "x$machine" = "xcraycnl" ] ; then
     mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)"
     mpiflibargs=$mpilibargs
     fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
 fi
-
 
 #####################################################################
 # Test for C++ string library
