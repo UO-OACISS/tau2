@@ -27,18 +27,18 @@
 #include <unistd.h>
 #endif /* TAU_WINDOWS */
 
-#ifdef BGL_TIMERS
+#ifdef TAU_BGL
 /* header files for BlueGene/L */
 #include <bglpersonality.h>
 #include <rts.h>
-#endif // BGL_TIMERS
+#endif /* TAU_BGL */
 
-#ifdef BGP_TIMERS
+#ifdef TAU_BGP
 /* header files for BlueGene/P */
 #include <bgp_personality.h>
 #include <bgp_personality_inlines.h>
 #include <kernel_interface.h>
-#endif // BGP_TIMERS
+#endif /* TAU_BGP */
 
 
 #ifdef TAU_MPI
