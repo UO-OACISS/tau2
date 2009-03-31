@@ -119,7 +119,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tauex,v 1.13 2009/03/31 00:24:29 amorris Exp $';
+	      echo '$Id: tauex,v 1.14 2009/03/31 17:19:43 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -m)
@@ -182,6 +182,44 @@ done
 if [ "x$TAU_PAPI_DOMAIN" = "x" ]; then
     TAU_PAPI_DOMAIN=$TAU_PAPI_DEFAULT_DOMAIN
 fi
+
+
+# runtime options (configurable via environment variables)
+export TAU_CALLPATH=0
+export TAU_TRACE=0
+unset TAU_PROFILE
+
+new_binding_options=""
+if [ "x$binding_options" != "x" ]; then
+    echo "here we go!"
+    for i in $binding_options ; do
+      case $i in 
+	  callpath)
+	      export TAU_CALLPATH=1
+	      ;;
+	  trace)
+	      export TAU_TRACE=1
+	      ;;
+	  profile)
+	      export TAU_PROFILE=1
+	      ;;
+	  *)
+	      new_binding_options="$new_binding_options $i"
+	      ;;
+      esac
+    done
+fi
+binding_options="$new_binding_options"
+
+# if PROFILING is not specified, turn it on unless tracing was specified.
+if [ "x$TAU_PROFILE" = "x" ] ; then
+    if [ "$TAU_TRACE" = "0" ]; then
+	export TAU_PROFILE=1
+    else
+	export TAU_PROFILE=0
+    fi
+fi
+
 
 if [ "x$binding_specified" = "x" ] ; then
     if [ "x$binding_options" = "x" ]; then
