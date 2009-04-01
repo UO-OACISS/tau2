@@ -9,6 +9,7 @@ import javax.swing.plaf.basic.BasicComboPopup;
 import javax.swing.plaf.basic.ComboPopup;
 import javax.swing.plaf.metal.MetalComboBoxUI;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +29,7 @@ public class HeatMapWindow extends JFrame implements ActionListener {
 	private final static String MIN = "MIN MESSAGE BYTES";
 	private final static String MEAN = "MEAN MESSAGE BYTES";
 	private final static String STDDEV = "MESSAGE BYTES STDDEV";
-	private final static String VOLUME = "TOTAL VOLUME";
+	private final static String VOLUME = "TOTAL VOLUME BYTES";
 	private final static String[] figures = {CALLS, MAX, MIN, MEAN, STDDEV, VOLUME};
 	private String currentPath = allPaths;
 	private String currentFigure = CALLS;
@@ -50,12 +51,7 @@ public class HeatMapWindow extends JFrame implements ActionListener {
 	    figureSelector.setPreferredSize(new Dimension(50, d.height));
 	    figureSelector.setPopupWidth(d.width);
 		
-/*		Iterator<String> keys = maps.keySet().iterator();
-		while (keys.hasNext()) {
-			String key = (String)keys.next();
-			this.pathSelector.addItem(key);
-		}
-*/		drawFigures();
+		drawFigures();
 	}
 
 	private void drawFigures() {
@@ -164,10 +160,13 @@ public class HeatMapWindow extends JFrame implements ActionListener {
 		JLabel title = new JLabel(label, JLabel.CENTER);
 		title.setFont(new Font("PE", title.getFont().getStyle(), title.getFont().getSize()*2));
 		panel.add(title,c);
+		JLabel path = new JLabel(currentPath, JLabel.CENTER);
+		c.gridy = 1;
+		panel.add(path,c);
 
 		// the x axis and the top of the legend
 		c.gridwidth = 1;
-		c.gridy = 1;
+		c.gridy = 2;
 		c.gridx = 1;
 		panel.add(new JLabel("0", JLabel.CENTER),c);
 		c.gridx = 2;
@@ -179,16 +178,16 @@ public class HeatMapWindow extends JFrame implements ActionListener {
 
 		// the y axis and the map and the legend
 		c.gridx = 0;
-		c.gridy = 2;
-		panel.add(new JLabel("0", JLabel.CENTER),c);
 		c.gridy = 3;
+		panel.add(new JLabel("0", JLabel.CENTER),c);
+		c.gridy = 4;
 		c.weighty = 0.99;
 		JLabel vertical = new JLabel("SENDER", JLabel.CENTER);
 		vertical.setUI(new VerticalLabelUI(false));
 		panel.add(vertical,c);
 		c.weighty = 0.01;
 		c.gridx = 1;
-		c.gridy = 2;
+		c.gridy = 3;
 		c.gridwidth = 3;
 		c.gridheight = 3;
 		double[][][] map = (double[][][])(maps.get(currentPath));
@@ -197,10 +196,10 @@ public class HeatMapWindow extends JFrame implements ActionListener {
 	    panel.add(new HeatMap(map[index], size, max[index], min[index], filenamePrefix), c);
 		c.gridwidth = 1;
 		c.gridheight = 1;
-		c.gridy = 2;
+		c.gridy = 3;
 		c.gridx = 4;
 		panel.add(new JLabel(f.format(max[index]), JLabel.CENTER),c);
-		c.gridy = 3;
+		c.gridy = 4;
 		c.weighty = 0.99;
 	    panel.add(new HeatLegend(), c);
 	    panel.add(new JPanel(), c);
@@ -208,7 +207,7 @@ public class HeatMapWindow extends JFrame implements ActionListener {
 
 		// the bottom of the y axis and the bottom of the legend
 		c.gridx = 0;
-		c.gridy = 4;
+		c.gridy = 5;
 		panel.add(new JLabel(Integer.toString(size-1), JLabel.CENTER),c);
 		c.gridx = 4;
 		panel.add(new JLabel(f.format(min[index]), JLabel.CENTER),c);

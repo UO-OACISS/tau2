@@ -38,9 +38,9 @@ public class HeatMap extends JPanel implements ImageObserver {
 			for (int x = 0 ; x < width ; x++) {
 				for (int y = 0 ; y < height ; y++) {
 					if (map[x][y] > 0.0 && range == 0) {
-						img.setRGB(x, y, scale.getColor(1f).getRGB());
+						img.setRGB(y, x, scale.getColor(1f).getRGB());
 					} else if (map[x][y] > 0.0) {
-						img.setRGB(x, y, scale.getColor((float)((map[x][y]-min)/range)).getRGB());
+						img.setRGB(y, x, scale.getColor((float)((map[x][y]-min)/range)).getRGB());
 					}
 					i++;
 				}
