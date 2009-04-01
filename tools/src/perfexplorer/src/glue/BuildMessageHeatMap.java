@@ -67,9 +67,9 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 							if (sb.length() > 0) {
 								sb.append(" => ");
 							}
-							tmp = st2.nextToken();
+							tmp = st2.nextToken().trim();
 							sb.append(tmp);
-							extractData(input, thread, event, first, sb.toString());
+							extractData(input, thread, event, first, tmp);
 						}
 						// do this to get "* => MPI_Isend()" and all equivalents
 //						extractData(input, thread, event, first, "* => "+tmp);
@@ -175,7 +175,7 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 			
 			// we'll recompute this later.
 			eventMean = input.getUsereventMean(thread, event);
-			map[MIN][thread][receiver] += eventMean;
+			map[MEAN][thread][receiver] += eventMean;
 			
 			eventSumSqr = input.getUsereventSumsqr(thread, event);
 			map[STDDEV][thread][receiver] += eventSumSqr;
