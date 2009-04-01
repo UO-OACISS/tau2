@@ -71,7 +71,10 @@ int main(int argc, char **argv)
   excl[0] += 200000000.0;
   TAU_PROFILER_SET_EXCLUSIVE_VALUES_TASK(ptr, excl, taskid);
 
-  TAU_PROFILER_STOP_TASK(top, taskid);
+  // Comment out one of these lines. It dumps the profile on a stop or an
+  // explicit DB_DUMP call. 
+  TAU_DB_DUMP_PREFIX_TASK("profile", taskid);
+  //TAU_PROFILER_STOP_TASK(top, taskid);
 
   return 0;
 }
