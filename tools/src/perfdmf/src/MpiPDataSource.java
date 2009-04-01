@@ -266,6 +266,8 @@ public class MpiPDataSource extends DataSource {
                 while (inputString != null && (inputString.length() == 0))
                     inputString = br.readLine();
                 if (inputString != null) {
+					if (inputString.startsWith("--------"))
+						break;
                     getCallsiteData(inputString);
 
                     function = this.addFunction(eventNames[callsiteData.i0], 1);
@@ -298,6 +300,63 @@ public class MpiPDataSource extends DataSource {
                     }
 
                 }
+				if (inputString.startsWith("--------"))
+					break;
+            }
+        }
+
+        // find the callsite data
+        while ((inputString = br.readLine()) != null) {
+            // 0.9
+            if (inputString.startsWith("@--- Callsite Message Sent statistics")) {
+                // ignore the next two lines
+                br.readLine();
+                inputString = br.readLine();
+                // exit this while loop
+                break;
+            }
+        }
+
+        if (inputString != null) {
+        	UserEvent userEvent = null;
+        	UserEventProfile userEventProfile = null;
+            // parse each of the event names
+            inputString = br.readLine();
+            while (inputString != null) {
+            	if (inputString != null && 
+					inputString.length() > 0 &&
+					!inputString.startsWith("--------")) {
+					System.out.println("WHILE: " + inputString);
+                	getUsereventData(inputString);
+                	userEvent = this.addUserEvent(eventNames[callsiteData.i0]);
+                	if (callsiteData.i1 >= 0) {
+                    	// get the node data
+                    	int nodeID = callsiteData.i1;
+                    	int contextID = 0;
+                    	int threadID = 0;
+                    	Node node = this.addNode(nodeID);
+                    	Context context = node.addContext(contextID);
+                    	Thread thread = context.getThread(threadID);
+                    	if (thread == null) {
+                        	thread = context.addThread(threadID);
+                    	}
+                    	userEventProfile = thread.getUserEventProfile(userEvent);
+                    	if (userEventProfile == null) {
+                        	userEventProfile = new UserEventProfile(userEvent);
+                        	thread.addUserEventProfile(userEventProfile);
+                    	}
+                    	userEventProfile.setNumSamples(callsiteData.i2);
+                    	userEventProfile.setMaxValue(callsiteData.d0);
+                    	userEventProfile.setMeanValue(callsiteData.d1);
+                    	userEventProfile.setMinValue(callsiteData.d2);
+						// not accurate, but no way to get it.
+                    	userEventProfile.setSumSquared(callsiteData.i2*(callsiteData.d1*callsiteData.d1));
+
+                	}
+           		}
+            	inputString = br.readLine();
+				if (inputString.startsWith("--------"))
+					break;
             }
         }
 
@@ -383,6 +442,25 @@ public class MpiPDataSource extends DataSource {
         callsiteData.d3 = Double.parseDouble(st1.nextToken()); // App%
         callsiteData.d4 = Double.parseDouble(st1.nextToken()); // MPI%
         callsiteData.d5 = callsiteData.d1 * callsiteData.i2; // Total time for this node
+    }
+
+    private void getUsereventData(String string) {
+        StringTokenizer st1 = new StringTokenizer(string, " ");
+        callsiteData.s0 = st1.nextToken(); // MPI function
+        callsiteData.i0 = Integer.parseInt(st1.nextToken()); // callsite
+        // index
+
+        String tmpString = st1.nextToken(); // rank
+        if (tmpString.equals("*")) {
+            callsiteData.i1 = -1;
+        } else {
+            callsiteData.i1 = Integer.parseInt(tmpString); // rank
+        }
+        callsiteData.i2 = Integer.parseInt(st1.nextToken()); // count
+        callsiteData.d0 = Double.parseDouble(st1.nextToken()); // Max
+        callsiteData.d1 = Double.parseDouble(st1.nextToken()); // Mean
+        callsiteData.d2 = Double.parseDouble(st1.nextToken()); // Min
+        callsiteData.d3 = Double.parseDouble(st1.nextToken()); // Sum
     }
 
 }
