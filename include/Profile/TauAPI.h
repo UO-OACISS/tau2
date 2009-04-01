@@ -117,6 +117,7 @@ extern "C" {
 /* DB Access */
 #define TAU_DB_DUMP()                           Tau_dump();
 #define TAU_DB_DUMP_PREFIX(prefix)              Tau_dump_prefix(prefix);
+#define TAU_DB_DUMP_PREFIX_TASK(prefix, task)   Tau_dump_prefix_task(prefix, task);
 #define TAU_DB_DUMP_INCR()                      Tau_dump_incr();
 #define TAU_DB_PURGE()                          Tau_purge();
 #define TAU_GET_FUNC_NAMES(functionList, num)   Tau_the_function_list(&functionList, &num);
@@ -325,6 +326,7 @@ void Tau_enable_context_event(void *event);
 
 void Tau_the_function_list(const char ***functionList, int *num);
 int Tau_dump_prefix(const char *prefix);
+int Tau_dump_prefix_task(const char *prefix, int taskid);
 
 void Tau_get_event_names(const char ***eventList, int *num);
 void Tau_get_event_vals(const char **inUserEvents, int numUserEvents,
@@ -480,7 +482,7 @@ void Tau_profile_param1l(long data, const char *dataname);
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.96 $   $Date: 2009/03/27 15:49:47 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.96 2009/03/27 15:49:47 amorris Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: sameer $
+ * $Revision: 1.97 $   $Date: 2009/04/01 00:18:58 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.97 2009/04/01 00:18:58 sameer Exp $ 
  ***************************************************************************/
