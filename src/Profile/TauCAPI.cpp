@@ -285,6 +285,12 @@ extern "C" int Tau_dump_prefix(const char *prefix) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" int Tau_dump_prefix_task(const char *prefix, int taskid) {
+  TauProfiler_DumpData(false, taskid, prefix);
+  return 0;
+}
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_incr(void) {
   TauProfiler_DumpData(true);
   return 0;
@@ -1228,7 +1234,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.118 $   $Date: 2009/03/26 20:44:59 $
- * VERSION: $Id: TauCAPI.cpp,v 1.118 2009/03/26 20:44:59 sameer Exp $
+ * $Revision: 1.119 $   $Date: 2009/04/01 00:19:24 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.119 2009/04/01 00:19:24 sameer Exp $
  ***************************************************************************/
 
