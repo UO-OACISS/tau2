@@ -1,6 +1,6 @@
 # settings set automatically by the configure script.
-CONFIG_ARCH=default
-TAUROOT=
+CONFIG_ARCH=i386_linux
+TAUROOT=/home/khuck/tau2
 
 # these are classpaths for the build.  The second classpath is for the 
 # loader directory.  The first is for everything else.

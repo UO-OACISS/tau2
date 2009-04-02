@@ -43,7 +43,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.32 2009/03/16 23:25:44 wspear Exp $
+ * CVS $Id: Trial.java,v 1.33 2009/04/02 19:10:09 khuck Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -955,14 +955,14 @@ public class Trial implements Serializable, Comparable {
 					+ "atomic_event WHERE trial = ?)");
 			statement.setInt(1, trialID);
 			statement.execute();
-			statement.close();
+			//statement.close();
 		}
 
 		// delete the from the atomic_events table
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix() + "atomic_event WHERE trial = ?");
 		statement.setInt(1, trialID);
 		statement.execute();
-		statement.close();
+		//statement.close();
 
 		// delete from the interval_location_profile table
 		if (db.getDBType().compareTo("mysql") == 0) {
@@ -981,7 +981,7 @@ public class Trial implements Serializable, Comparable {
 					+ "interval_event WHERE trial = ?)");
 			statement.setInt(1, trialID);
 			statement.execute();
-			statement.close();
+			//statement.close();
 		}
 
 		// delete from the interval_mean_summary table
@@ -994,7 +994,7 @@ public class Trial implements Serializable, Comparable {
 					+ "interval_event WHERE trial = ?)");
 			statement.setInt(1, trialID);
 			statement.execute();
-			statement.close();
+			//statement.close();
 		}
 
 		if (db.getDBType().compareTo("mysql") == 0) {
@@ -1006,23 +1006,23 @@ public class Trial implements Serializable, Comparable {
 					+ "interval_event WHERE trial = ?)");
 			statement.setInt(1, trialID);
 			statement.execute();
-			statement.close();
+			//statement.close();
 		}
 
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix() + "interval_event WHERE trial = ?");
 		statement.setInt(1, trialID);
 		statement.execute();
-		statement.close();
+		//statement.close();
 
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix() + "metric WHERE trial = ?");
 		statement.setInt(1, trialID);
 		statement.execute();
-		statement.close();
+		//statement.close();
 
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix() + "trial WHERE id = ?");
 		statement.setInt(1, trialID);
 		statement.execute();
-		statement.close();
+		//statement.close();
 	}
 
 	private boolean exists(DB db) {
