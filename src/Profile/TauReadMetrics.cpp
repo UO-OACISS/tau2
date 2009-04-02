@@ -40,6 +40,12 @@
 #include <kernel_interface.h>
 #endif /* TAU_BGP */
 
+#ifdef TAU_PAPI
+extern "C" {
+#include "papi.h"
+}
+#endif /* TAU_PAPI */
+
 
 #ifdef TAU_MPI
 extern TauUserEvent* TheSendEvent(void);
