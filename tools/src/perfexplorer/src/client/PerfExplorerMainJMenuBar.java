@@ -144,6 +144,12 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		probabilityPlotItem.addActionListener(listener);
 		visualizationMenu.add(probabilityPlotItem);
 		
+		//Add a menu item.
+		JMenuItem commMatrixItem = new JMenuItem(
+				PerfExplorerActionListener.DO_COMMUNICATION_MATRIX);
+		commMatrixItem.addActionListener(listener);
+		visualizationMenu.add(commMatrixItem);
+		
 		this.add(visualizationMenu);
 	}
 

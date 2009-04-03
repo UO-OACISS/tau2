@@ -21,7 +21,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIView;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.52 2009/03/04 17:55:09 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.53 2009/04/03 23:53:38 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -133,7 +133,11 @@ public class ChartData extends RMIChartData {
 					value = results.getDouble(5);
 				}
 				if ((metricName.toLowerCase().indexOf("time") != -1) 
-					&& (dataType != ChartDataType.FRACTION_OF_TOTAL))
+					&& (dataType != ChartDataType.FRACTION_OF_TOTAL) &&
+					!metricName.contains("+") &&
+					!metricName.contains("-") &&
+					!metricName.contains("*") &&
+					!metricName.contains("/"))
 					value = value/1000000;
 
 				if (!currentExperiment.equals(groupingName)) {
@@ -241,7 +245,7 @@ public class ChartData extends RMIChartData {
 			}
 			buf.append(tmpBuf.toString());
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
-			buf.append(" avg(ims.exclusive_percentage) ");
+			buf.append(" avg(ims.exclusive_percentage), max(ims.inclusive) ");  // this ensures we get the main routine?
 			buf.append("from interval_mean_summary ims ");
 			buf.append("inner join interval_event ie ");
 			buf.append("on ims.interval_event = ie.id ");
@@ -318,9 +322,9 @@ public class ChartData extends RMIChartData {
 
 			// this sucks - can't use 100.0, because of rounding errors. Bah.
 			if (db.getDBType().compareTo("db2") == 0) {
-				buf.append(" and m.name like ? and ims.inclusive_percentage >= 99.99999 ");
+				buf.append(" and m.name like ?");
 			} else {
-				buf.append(" and m.name = ? and ims.inclusive_percentage >= 99.99999 ");
+				buf.append(" and m.name = ?");
 			}
 			buf.append(" group by ");
 			if (!(object instanceof RMIView)) {

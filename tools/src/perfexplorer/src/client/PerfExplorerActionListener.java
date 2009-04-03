@@ -91,6 +91,7 @@ public class PerfExplorerActionListener implements ActionListener {
 	public final static String DO_HISTOGRAM = "Create Histograms";
 	public final static String DO_PROBABILITY_PLOT = "Create Normal Probability Plot";
 	public static final String DO_CHARTS = "Open Scalability Chart Tool";
+	public static final String DO_COMMUNICATION_MATRIX = "Show Communication Matrix";
 
 	private PerfExplorerClient mainFrame;
 
@@ -185,6 +186,9 @@ public class PerfExplorerActionListener implements ActionListener {
 				} else if (arg.equals(DO_PROBABILITY_PLOT)) {
 					if (validDistributionSelection())
 						PerfExplorerProbabilityPlot.doProbabilityPlot();
+				} else if (arg.equals(DO_COMMUNICATION_MATRIX)) {
+					if (validCommunicationMatrixSelection())
+						CommunicationMatrix.doCommunicationMatrix();
 			// chart items
 				} else if (arg.equals(DO_CHARTS)) {
 					createChartDialogBox();
@@ -683,6 +687,19 @@ public class PerfExplorerActionListener implements ActionListener {
 			 !(selection instanceof RMISortableIntervalEvent))) {
 			JOptionPane.showMessageDialog(mainFrame, 
 				"Please select an Metrics or one or more Events.",
+				"Selection Error", JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+		return true;
+	}
+
+	private boolean validCommunicationMatrixSelection () {
+		PerfExplorerModel theModel = PerfExplorerModel.getModel();
+		Object selection = theModel.getCurrentSelection();
+		// allow only Trials
+		if ((selection == null) || !(selection instanceof Trial)) {
+			JOptionPane.showMessageDialog(mainFrame, 
+				"Please select one Trial.",
 				"Selection Error", JOptionPane.ERROR_MESSAGE);
 			return false;
 		}

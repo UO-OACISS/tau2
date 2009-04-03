@@ -18,7 +18,7 @@ import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
  * This class is an implementation of the AbstractResult class, and loads a trial
  * from the database into a result object.
  * 
- * <P>CVS $Id: TrialResult.java,v 1.13 2009/03/19 18:16:29 khuck Exp $</P>
+ * <P>CVS $Id: TrialResult.java,v 1.14 2009/04/03 23:53:37 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 
@@ -121,7 +121,11 @@ public class TrialResult extends AbstractResult {
 				statement.setString(index++, thread);
 			}
 			//System.out.println(statement.toString());
+			long start = System.currentTimeMillis();
 			ResultSet results = statement.executeQuery();
+			long elapsedTimeMillis = System.currentTimeMillis()-start;
+			float elapsedTimeSec = elapsedTimeMillis/1000F;
+			System.out.println("Time to query interval data: " + elapsedTimeSec + " seconds");
 			while (results.next() != false) {
 				String eventName = results.getString(1);
 				Integer threadID = results.getInt(3);
@@ -156,8 +160,13 @@ public class TrialResult extends AbstractResult {
 			
 			statement.setInt(1, trial.getID());
 			//System.out.println(statement.toString());
+			start = System.currentTimeMillis();
 			results = statement.executeQuery();
+			elapsedTimeMillis = System.currentTimeMillis()-start;
+			elapsedTimeSec = elapsedTimeMillis/1000F;
+			System.out.println("Time to query counter data: " + elapsedTimeSec + " seconds");
 			while (results.next() != false) {
+				Integer threadID = results.getInt(2);
 				this.putUsereventNumevents(results.getInt(2), results.getString(1), results.getDouble(3));
 				this.putUsereventMax(results.getInt(2), results.getString(1), results.getDouble(4));
 				this.putUsereventMin(results.getInt(2), results.getString(1), results.getDouble(5));
