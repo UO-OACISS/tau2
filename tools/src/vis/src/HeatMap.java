@@ -31,48 +31,29 @@ public class HeatMap extends JPanel implements ImageObserver {
 		int width = size;
 		int height = size;
 		
-		// if this is a BIG topology (larger than 128x128), just do one pixel per thread
-//		if (idealSize <= width || idealSize <= height) {
-			img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-			int i = 0;
-			for (int x = 0 ; x < width ; x++) {
-				for (int y = 0 ; y < height ; y++) {
-					if (map[x][y] > 0.0 && range == 0) {
-						// this looks inverted, but it is so the sender is on the left, receiver on top
-						img.setRGB(y, x, scale.getColor(1f).getRGB());
-					} else if (map[x][y] > 0.0) {
-						// this looks inverted, but it is so the sender is on the left, receiver on top
-						img.setRGB(y, x, scale.getColor((float)((map[x][y]-min)/range)).getRGB());
-					}
-					i++;
+		img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		int i = 0;
+		for (int x = 0 ; x < width ; x++) {
+			for (int y = 0 ; y < height ; y++) {
+				if (map[x][y] > 0.0 && range == 0) {
+					// this looks inverted, but it is so the sender is on the left, receiver on top
+					img.setRGB(y, x, scale.getColor(1f).getRGB());
+				} else if (map[x][y] > 0.0) {
+					// this looks inverted, but it is so the sender is on the left, receiver on top
+					img.setRGB(y, x, scale.getColor((float)((map[x][y]-min)/range)).getRGB());
 				}
-			}
-/*		} else {
-			img = new BufferedImage(idealSize, idealSize, BufferedImage.TYPE_INT_RGB);
-
-			// otherwise, make each thread "bigger" (multiple pixels) in the final image.
-			int cellWidth = idealSize / width;
-			int cellHeight = idealSize / height;
-			
-			int i = 0;
-			for (int x = 0 ; x < width ; x++) {
-				for (int y = 0 ; y < height ; y++) {
-					for (int cellX = x * cellWidth ; cellX < (x+1) * cellWidth ; cellX++) {
-						for (int cellY = y * cellHeight ; cellY < (y+1) * cellHeight ; cellY++) {
-							
-							if (map[x][y] > 0.0 && range == 0) {
-								img.setRGB(cellX, cellY, scale.getColor(1f).getRGB());
-							} else if (map[x][y] > 0.0) {
-								img.setRGB(cellX, cellY, scale.getColor((float)((map[x][y]-min)/range)).getRGB());
-							}
-						}
-					}
-					i++;
-				}
+				i++;
 			}
 		}
-*/		this.setPreferredSize(new Dimension(600,600));
-        this.setSize(600,600);
+		if (HeatMapWindow.maxCells < size) {
+			int factor = (size / HeatMapWindow.maxCells) + 1;
+			int newSize = size * factor * HeatMapWindow.viewRatio;
+			this.setPreferredSize(new Dimension(newSize,newSize));
+			this.setSize(newSize,newSize);
+		} else {
+			this.setPreferredSize(new Dimension(size,size));
+			this.setSize(size,size);
+		}
 	}
 		
 	public String getImage() {

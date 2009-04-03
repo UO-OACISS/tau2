@@ -35,6 +35,10 @@ public class HeatMapWindow extends JFrame implements ActionListener {
 	private String currentFigure = CALLS;
 	private final static String filenamePrefix = "HeatMap";
 	private int size = 0;
+	public final static int viewSize = 512;  // the size of the heatmap in the interface
+	public final static int maxCells = 256;   // the number of heatmap cells, max, to show
+	public final static int viewRatio = 2;   // the ratio between those two
+	private HeatMap heatMap = null;
 
 	public HeatMapWindow(String title, Map maps, Map maxs, Map mins, int size) {
 		super(title);
@@ -63,22 +67,6 @@ public class HeatMapWindow extends JFrame implements ActionListener {
 		c.weightx = 0.99;
 		c.insets = new Insets(2,2,2,2);
 
-/*		c.gridx = 0;
-		c.gridy = 0;
-		mainPanel.add(buildMapPanel(0, "NUMBER OF CALLS", "NumEvents"),c);
-		c.gridx = 1;
-		mainPanel.add(buildMapPanel(1, "MAX MESSAGE BYTES", "MaxMessageSize"),c);
-		c.gridx = 2;
-		mainPanel.add(buildMapPanel(2, "MIN MESSAGE BYTES", "MinMessageSize"),c);
-
-		c.gridx = 0;
-		c.gridy = 1;
-		mainPanel.add(buildMapPanel(3, "MEAN MESSAGE BYTES", "MeanMessageSize"),c);
-		c.gridx = 1;
-		mainPanel.add(buildMapPanel(4, "MESSAGE BYTES STDDEV", "MessageSizeStdDev"),c);
-		c.gridx = 2;
-		mainPanel.add(buildOptionPanel("DISPLAY OPTIONS"),c);
-*/		
 		c.gridx = 0;
 		c.gridy = 0;
 		int dataIndex = 0;
@@ -193,7 +181,10 @@ public class HeatMapWindow extends JFrame implements ActionListener {
 		double[][][] map = (double[][][])(maps.get(currentPath));
 		double[] max = (double[])(maxs.get(currentPath));
 		double[] min = (double[])(mins.get(currentPath));
-	    panel.add(new HeatMap(map[index], size, max[index], min[index], filenamePrefix), c);
+		this.heatMap = new HeatMap(map[index], size, max[index], min[index], filenamePrefix);
+		JScrollPane scroller = new JScrollPane(heatMap);
+		scroller.setPreferredSize(new Dimension(viewSize,viewSize));
+	    panel.add(scroller, c);
 		c.gridwidth = 1;
 		c.gridheight = 1;
 		c.gridy = 3;
@@ -239,6 +230,13 @@ public class HeatMapWindow extends JFrame implements ActionListener {
 			System.err.println("actionPerformed Exception: " + e.getMessage());
 			e.printStackTrace();
 		} 
+	}
+
+	/**
+	 * @return the heatMap
+	 */
+	public HeatMap getHeatMap() {
+		return heatMap;
 	}
 	
 }
