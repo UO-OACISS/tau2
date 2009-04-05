@@ -433,4 +433,14 @@ public class PerfExplorerConnection {
 		return counts;
 	}
 
+	public Map<String, double[][]> getUserEventData(RMIPerfExplorerModel model) {
+		Map<String, double[][]> userEvents = null;
+		try {
+		    userEvents = server.getUserEventData(model);
+		} catch (RemoteException e) {
+		    handleError(e, "getUserEventData(" + model.toString() + ")");
+		}
+		return userEvents;
+	}
+
 }

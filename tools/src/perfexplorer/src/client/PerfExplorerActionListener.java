@@ -187,8 +187,10 @@ public class PerfExplorerActionListener implements ActionListener {
 					if (validDistributionSelection())
 						PerfExplorerProbabilityPlot.doProbabilityPlot();
 				} else if (arg.equals(DO_COMMUNICATION_MATRIX)) {
-					if (validCommunicationMatrixSelection())
-						CommunicationMatrix.doCommunicationMatrix();
+					if (validCommunicationMatrixSelection()) {
+						CommunicationMatrix mat = new CommunicationMatrix();
+						mat.doCommunicationMatrix();
+					}
 			// chart items
 				} else if (arg.equals(DO_CHARTS)) {
 					createChartDialogBox();

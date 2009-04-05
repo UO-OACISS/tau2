@@ -63,7 +63,7 @@ import edu.uoregon.tau.perfexplorer.constants.Constants;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.79 2009/03/16 23:29:45 wspear Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.80 2009/04/05 23:59:28 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -1975,6 +1975,68 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			e.printStackTrace();
 		}
 		return counts;
+	}
+
+	public Map<String, double[][]> getUserEventData(RMIPerfExplorerModel model)
+			throws RemoteException {
+		Map<String, double[][]> userEvents = new HashMap<String, double[][]>();
+		DB db = getDB();
+		PreparedStatement statement = null;
+		StringBuilder sql = null;
+		// this has been validated at the client
+		Trial trial = (Trial)model.getCurrentSelection();
+		int threadsPerContext = Integer.parseInt(trial.getField("threads_per_context"));
+		int threadsPerNode = Integer.parseInt(trial.getField("contexts_per_node")) * threadsPerContext;
+		int total = threadsPerNode * Integer.parseInt(trial.getField("node_count"));
+		try {
+			// now, get the user events
+			sql = new StringBuilder();
+			sql.append("select a.name, ");
+			sql.append("(p.node * " + threadsPerNode + ") + ");
+			sql.append("(p.context * " + threadsPerContext + ") + ");
+			sql.append("p.thread as thread, ");
+			sql.append("p.sample_count, ");
+			sql.append("p.maximum_value, ");
+			sql.append("p.minimum_value, ");
+			sql.append("p.mean_value, ");
+			sql.append("p.standard_deviation ");
+			sql.append("from atomic_event a ");
+			sql.append("left outer join atomic_location_profile p ");
+			sql.append("on a.id = p.atomic_event ");
+			sql.append("where a.trial = ? ");
+			sql.append(" order by 2,1 ");
+			
+			statement = db.prepareStatement(sql.toString());
+			
+			statement.setInt(1, trial.getID());
+			//System.out.println(statement.toString());
+			ResultSet results = statement.executeQuery();
+			while (results.next() != false) {
+				String event = results.getString(1);
+				double[][] data = userEvents.get(event);
+				if (data == null) {
+					data = new double[total][5];
+				}
+				Integer threadID = results.getInt(2);
+				data[threadID][0] = results.getDouble(3);
+				data[threadID][1] = results.getDouble(4);
+				data[threadID][2] = results.getDouble(5);
+				data[threadID][3] = results.getDouble(6);
+				data[threadID][4] =  results.getDouble(7);
+				userEvents.put(event, data);
+			}
+			results.close();
+			statement.close();
+			
+		} catch (SQLException exception) {
+			System.err.println(exception.getMessage());
+			exception.printStackTrace();
+			if (statement != null)
+				System.err.println(statement);
+			else
+				System.err.println(sql);
+		}
+		return userEvents;
 	}
 
 }
