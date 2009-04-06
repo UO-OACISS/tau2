@@ -1,14 +1,12 @@
 package edu.uoregon.tau.vis;
 
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Insets;
-import java.awt.image.BufferedImage;
-import java.awt.image.ImageObserver;
+import java.awt.*;
+import java.awt.image.*;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
-import javax.swing.JPanel;
+import javax.swing.*;
+import java.text.DecimalFormat;
 
 public class HeatMap extends JPanel implements ImageObserver {
 
@@ -18,8 +16,12 @@ public class HeatMap extends JPanel implements ImageObserver {
 	private static final int idealSize = 128;
 	private static final ColorScale scale = new ColorScale(ColorScale.ColorSet.RAINBOW);
 	public static final String TMPDIR = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "tmp" + File.separator;
+	private HeatMapScanner scanner = null; // for tool tips
+	private double[][] map = null;
+	private DecimalFormat f = new DecimalFormat("0");
 
 	public HeatMap (double[][] map, int size, double max, double min, String description) {
+		this.map = map;
 		this.description = new StringBuffer();
 		this.description.append(description);
 		double range = max - min;
@@ -54,6 +56,17 @@ public class HeatMap extends JPanel implements ImageObserver {
 			this.setPreferredSize(new Dimension(size,size));
 			this.setSize(size,size);
 		}
+		scanner = new HeatMapScanner(this);
+		this.addMouseListener(scanner);
+		this.addMouseMotionListener(scanner);
+	}
+
+	public String getToolTip(Point p) {
+		int x = (int)(p.getX()) / 8;
+		int y = (int)(p.getY()) / 8;
+		double value = map[x][y];
+		String s = "<html>sender = " + y + ",  receiver = " + x + ", value = " + f.format(value) + "</html>";
+		return s;
 	}
 		
 	public String getImage() {
