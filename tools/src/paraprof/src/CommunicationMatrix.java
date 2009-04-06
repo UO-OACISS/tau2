@@ -46,10 +46,10 @@ public class CommunicationMatrix {
 	public JFrame doCommunicationMatrix(DataSource dataSource, JFrame mainFrame) {
 	    long start = System.currentTimeMillis();
 	    boolean foundData = false;
-	    int threadID;
+	    int threadID = 0;
+	    size = dataSource.getAllThreads().size();
         for (Iterator it = dataSource.getAllThreads().iterator(); it.hasNext();) {
         	edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
-        	threadID = 0;
             for (Iterator it2 = thread.getUserEventProfiles().iterator(); it2.hasNext();) {
             	UserEventProfile uep = (UserEventProfile) it2.next();
                 if (uep != null && uep.getNumSamples() > 0) {
