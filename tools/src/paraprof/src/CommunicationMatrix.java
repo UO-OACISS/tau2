@@ -44,7 +44,6 @@ public class CommunicationMatrix {
 	}
 
 	public JFrame doCommunicationMatrix(DataSource dataSource, JFrame mainFrame) {
-	    long start = System.currentTimeMillis();
 	    boolean foundData = false;
 	    int threadID = 0;
 	    size = dataSource.getAllThreads().size();
@@ -87,12 +86,7 @@ public class CommunicationMatrix {
 					"No Communication Matrix Data", JOptionPane.ERROR_MESSAGE);
 			return null;
 		}
-	    start = System.currentTimeMillis();
 		massageData();
-	    float elapsedTimeMillis = System.currentTimeMillis()-start;
-	    float elapsedTimeSec = elapsedTimeMillis/1000F;
-	    System.out.println("Total time to process data: " + elapsedTimeSec + " seconds");
-
 		window = new HeatMapWindow("Message Size Heat Maps", maps, maxs, mins, size);
         URL url = Utility.getResource("tau32x32.gif");
 		if (url != null) 
