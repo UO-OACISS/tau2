@@ -17,8 +17,6 @@ import java.net.URL;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.common.*;
-import edu.uoregon.tau.perfexplorer.glue.DefaultResult;
-import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
 import edu.uoregon.tau.vis.HeatMapWindow;
 
 import java.awt.Toolkit;
