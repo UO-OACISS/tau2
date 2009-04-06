@@ -56,7 +56,7 @@ public class HeatMapWindow extends JFrame implements ActionListener{
 		d = figureSelector.getPreferredSize();
 	    figureSelector.setPreferredSize(new Dimension(50, d.height));
 	    figureSelector.setPopupWidth(d.width);
-		
+		this.setResizable(false);
 		drawFigures();
 	}
 
