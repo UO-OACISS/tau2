@@ -19,9 +19,11 @@ public class HeatMap extends JPanel implements ImageObserver {
 	private HeatMapScanner scanner = null; // for tool tips
 	private double[][] map = null;
 	private DecimalFormat f = new DecimalFormat("0");
+	private int size = 128;
 
 	public HeatMap (double[][] map, int size, double max, double min, String description) {
 		this.map = map;
+		this.size = size;
 		this.description = new StringBuffer();
 		this.description.append(description);
 		double range = max - min;
@@ -59,11 +61,12 @@ public class HeatMap extends JPanel implements ImageObserver {
 		scanner = new HeatMapScanner(this);
 		this.addMouseListener(scanner);
 		this.addMouseMotionListener(scanner);
+		this.addKeyListener(scanner);
 	}
 
 	public String getToolTip(Point p) {
-		int x = (int)(p.getX()) / 8;
-		int y = (int)(p.getY()) / 8;
+		int x = Math.min((int)(p.getX()) / (HeatMapWindow.viewSize/size),size-1);  // don't go past the end of the array
+		int y = Math.min((int)(p.getY()) / (HeatMapWindow.viewSize/size),size-1);  // don't go past the end of the array
 		double value = map[x][y];
 		String s = "<html>sender = " + y + ",  receiver = " + x + ", value = " + f.format(value) + "</html>";
 		return s;
