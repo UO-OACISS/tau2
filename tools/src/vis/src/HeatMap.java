@@ -61,14 +61,18 @@ public class HeatMap extends JPanel implements ImageObserver {
 		scanner = new HeatMapScanner(this);
 		this.addMouseListener(scanner);
 		this.addMouseMotionListener(scanner);
+		this.setFocusable(true);  // enables key listener events
 		this.addKeyListener(scanner);
 	}
 
 	public String getToolTip(Point p) {
-		int x = Math.min((int)(p.getX()) / (HeatMapWindow.viewSize/size),size-1);  // don't go past the end of the array
-		int y = Math.min((int)(p.getY()) / (HeatMapWindow.viewSize/size),size-1);  // don't go past the end of the array
+		// adjust to zoom
+    	int currentSize = this.getPreferredSize().height;
+    	double pixelsPerCell = (double)(Math.max(currentSize, HeatMapWindow.viewSize)) / (double)size;
+		int x = Math.min((int)((p.getX()) / pixelsPerCell),size-1);  // don't go past the end of the array
+		int y = Math.min((int)((p.getY()) / pixelsPerCell),size-1);  // don't go past the end of the array
 		double value = map[x][y];
-		String s = "<html>sender = " + y + ",  receiver = " + x + ", value = " + f.format(value) + "</html>";
+		String s = "<html>sender = " + y + "<BR>receiver = " + x + "<BR>value = " + f.format(value) + "</html>";
 		return s;
 	}
 		
@@ -100,6 +104,13 @@ public class HeatMap extends JPanel implements ImageObserver {
 		// draw to fill the entire component
 		g.drawImage(img, i.left, i.top, d.width - i.left - i.right, d.height - i.top - i.bottom, this );
 		//g.drawImage(img, i.left, i.top, 512, 512, this );
+	}
+
+	/**
+	 * @return the size
+	 */
+	public int getMapSize() {
+		return size;
 	}
 
 }

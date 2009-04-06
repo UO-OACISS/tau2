@@ -46,42 +46,42 @@ class HeatMapScanner extends MouseInputAdapter implements KeyListener  {
     
 	public void keyPressed(KeyEvent evt) {
 		// TODO Auto-generated method stub
-        char key = evt.getKeyChar();
-    	System.out.print("Key Pressed: " + key);		
 	}
 
 	public void keyReleased(KeyEvent evt) {
 		// TODO Auto-generated method stub
-        char key = evt.getKeyChar();
-    	System.out.print("Key Pressed: " + key);		
 	}
 
 	public void keyTyped(KeyEvent evt) {
         try {
             char key = evt.getKeyChar();
-        	System.out.print("Key Typed: " + key);
         	int currentSize = this.heatmap.getPreferredSize().height;
+        	int newSize = currentSize;
             // zoom in and out on +/-
             if (key == '+' || key == '=') {
-            	if (currentSize <= 64) {
-            		currentSize = Math.max(currentSize * 2, 64);
-            	} else if (currentSize >= 128) {
-            		currentSize += 64;
-            	} else { // size between 64 and 128
-            		currentSize = 128;
+            	if (currentSize <= 512) {
+            		newSize = Math.max(currentSize * 2, 512);
+            	} else if (currentSize >= 576) {
+            		newSize += 64;
+            	} else { // size between 512 and 576
+            		newSize = 512;
             	}
-    			heatmap.setPreferredSize(new Dimension(currentSize,currentSize));
-    			heatmap.setSize(currentSize,currentSize);
+            	if (newSize != currentSize) {
+	    			heatmap.setPreferredSize(new Dimension(newSize,newSize));
+	    			heatmap.setSize(newSize,newSize);
+            	}
             } else if (key == '-' || key == '_') {
-            	if (currentSize <= 64) {
-            		currentSize = currentSize / 2;
-            	} else if (currentSize > 128) {
-            		currentSize = Math.max(currentSize - 64, 128);
-            	} else { // size between 64 and 128
-            		currentSize = 64;
-            	}            	
-    			heatmap.setPreferredSize(new Dimension(currentSize,currentSize));
-    			heatmap.setSize(currentSize,currentSize);
+            	if (currentSize <= 512) {
+            		newSize = Math.min(currentSize / 2, heatmap.getMapSize());
+            	} else if (currentSize > 576) {
+            		newSize = Math.max(currentSize - 64, 512);
+            	} else { // size between 512 and 576
+            		newSize = 512;
+            	}
+            	if (newSize != currentSize && newSize >= heatmap.getMapSize()) {
+	    			heatmap.setPreferredSize(new Dimension(newSize,newSize));
+	    			heatmap.setSize(newSize,newSize);
+            	}
             }
         } catch (Exception e) {
         }
