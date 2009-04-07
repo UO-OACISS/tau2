@@ -74,6 +74,7 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Printable {
                 if (uep != null && uep.getNumSamples() > 0) {
                     String event = uep.getName();
                     if (event.startsWith("Message size sent to node ") && event.indexOf("=>") == -1) {
+                        foundData = true;
                         // split the string
                         extractData(uep, threadID, event, event, allPaths);
                     } else if (event.startsWith("Message size sent to node ") && event.indexOf("=>") >= 0) {
