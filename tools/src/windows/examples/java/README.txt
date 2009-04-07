@@ -5,11 +5,9 @@ To use:
 make sure you PATH contains $TAU_ROOT$\JavaDLL
 (e.g. PATH=%PATH%;c:\tau-2.14.2.1\JavaDLL)
 
-Then run one of the following:
+Then run the following:
 
 java -XrunTau-profile Pi
-java -XrunTau-callpath Pi
-java -XrunTau-trace Pi
 
 then run pprof to examine the output (in the case of profiles)
 or analyze the trace output.
