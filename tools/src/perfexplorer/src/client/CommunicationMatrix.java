@@ -10,6 +10,8 @@ import java.util.StringTokenizer;
 import java.util.TreeMap;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+
 import java.lang.Math;
 import java.text.DecimalFormat;
 import java.text.FieldPosition;
@@ -58,11 +60,10 @@ public class CommunicationMatrix {
 
 	    long start = System.currentTimeMillis();
 	    numEvents = userEvents.keySet().size();
+	    boolean foundData = false;
 		for (String event : userEvents.keySet()) {
+			double[][] data = userEvents.get(event);
 			for (int thread = 0 ; thread < size ; thread++) {
-
-				double[][] data = userEvents.get(event);
-
 				// don't process if this thread doesn't have this event
 				if (data[thread][0] == 0) continue;
 				
@@ -71,6 +72,7 @@ public class CommunicationMatrix {
 					extractData(data, thread, event, event, allPaths);
 				}
 				else if (event.startsWith("Message size sent to node ") && event.contains("=>")) {
+					foundData = true;
 					StringTokenizer st = new StringTokenizer(event, ":");
 					String first = st.nextToken().trim();
 					String path = st.nextToken().trim();
@@ -92,6 +94,11 @@ public class CommunicationMatrix {
 			}
 			// some progress indication
 //			System.out.print("\r" + f.format(thread.doubleValue()*100.0/input.getThreads().size()) + "% complete...");
+		}
+		if (!foundData) {
+			JOptionPane.showMessageDialog(PerfExplorerClient.getMainFrame(), "This trial does not have communication matrix data.\nTo collect communication matrix data, set the environment variable TAU_COMM_MATRIX=1 before executing your application.",
+					"No Communication Matrix Data", JOptionPane.ERROR_MESSAGE);
+			return null;
 		}
 	    start = System.currentTimeMillis();
 		massageData();

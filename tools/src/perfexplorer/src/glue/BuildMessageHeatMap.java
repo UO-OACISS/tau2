@@ -45,6 +45,7 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 		    long start = System.currentTimeMillis();
 			size = input.getThreads().size();
 			outputs.add(new DefaultResult(input, false));
+		    boolean foundData = false;
 			for (Integer thread : input.getThreads()) {
 				for (String event : input.getUserEvents()) {
 					
@@ -52,6 +53,7 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 					if (input.getUsereventNumevents(thread, event) == 0) continue;
 					
 					if (event.startsWith("Message size sent to node ") && !event.contains("=>")) {
+						foundData = true;
 						// split the string
 						extractData(input, thread, event, event, allPaths);
 					}
@@ -77,6 +79,11 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 				}
 				// some progress indication
 //				System.out.print("\r" + f.format(thread.doubleValue()*100.0/input.getThreads().size()) + "% complete...");
+			}
+			if (!foundData) {
+				JOptionPane.showMessageDialog(PerfExplorerClient.getMainFrame(), "This trial does not have communication matrix data.\nTo collect communication matrix data, set the environment variable TAU_COMM_MATRIX=1 before executing your application.",
+						"No Communication Matrix Data", JOptionPane.ERROR_MESSAGE);
+				return null;
 			}
 //			System.out.println("\r100% complete.");
 		    long elapsedTimeMillis = System.currentTimeMillis()-start;
