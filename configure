@@ -2696,18 +2696,13 @@ then
   ppc)
         if [ $zepto = yes ] 
         then
-	  mpiinc=$zeptodir/prebuilt/mpich2-working/include
+          mpiinc=$zeptodir/include
           if [ ! -e $mpiinc ]
           then
-            echo "ERROR: Cannot access Zepto MPI include directory [$zeptodir/prebuilt/mpich2-working/include]. Aborting."
+            echo "ERROR: Cannot access Zepto MPI include directory [$mpiinc]. Aborting."
             exit 1
           fi
-          if [ ! -e $zeptodir/prebuilt/DCMF/install/comm/include ]
-          then
-            echo "ERROR: Cannot access Zepto COMM include directory [$zeptodir/prebuilt/DCMF/install/comm/include]. Aborting."
-            exit 1
-          fi
-          additional_mpiincs="$additional_mpiincs -DUSE_MPI -D__ZCL__ -DZCL_AD_HOC -I$zeptodir/prebuilt/DCMF/install/comm/include/ -I$zeptodir/prebuilt"
+          additional_mpiincs="$additional_mpiincs -DUSE_MPI -D__ZCL__ -DZCL_AD_HOC -I$zeptodir/include/ "
         fi
         ;;
   *)
@@ -2785,18 +2780,13 @@ then
   ppc)
         if [ $zepto = yes ] 
         then
-	  mpilib=$zeptodir/prebuilt/mpich2-working/lib
+          mpilib=$zeptodir/lib
           if [ ! -e $mpilib ]
           then
-            echo "ERROR: Cannot access Zepto MPI lib directory [$zeptodir/prebuilt/mpich2-working/lib]. Aborting"
+            echo "ERROR: Cannot access Zepto MPI lib directory [$mpilib]. Aborting"
             exit 1
           fi
-          if [ ! -e $zeptodir/prebuilt/DCMF/install/comm/lib ]
-          then
-            echo "ERROR: Cannot access Zepto COMM include directory [$zeptodir/prebuilt/DCMF/install/comm/lib]. Aborting."
-            exit 1
-          fi
-          additional_mpilibs="-L$zeptodir/prebuilt/mpich2-working/lib -lmpich.zcl -L$zeptodir/prebuilt/DCMF/install/comm/lib/ -ldcmfcoll.zcl -ldcmf.zcl -lSPI.zcl -lzcl -lzoid_cn -lrt -lpthread -lm"
+          additional_mpilibs="-L$zeptodir/lib -lmpich.zcl -ldcmfcoll.zcl -ldcmf.zcl -lpthread -lSPI.zcl -lzcl -lzoid_cn -lpthread -lrt -lm"
 	  mpilibrary="$additional_mpilibs"
         fi
         ;;
