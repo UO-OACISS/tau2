@@ -61,6 +61,8 @@ public class HeatMap extends JPanel implements ImageObserver {
 		scanner = new HeatMapScanner(this);
 		this.addMouseListener(scanner);
 		this.addMouseMotionListener(scanner);
+		this.addMouseMotionListener(scanner);
+		this.addMouseWheelListener(scanner);
 		this.setFocusable(true);  // enables key listener events
 		this.addKeyListener(scanner);
 	}
@@ -112,6 +114,13 @@ public class HeatMap extends JPanel implements ImageObserver {
 	 */
 	public int getMapSize() {
 		return size;
+	}
+
+	/**
+	 * @return the scanner
+	 */
+	public HeatMapScanner getScanner() {
+		return scanner;
 	}
 
 }

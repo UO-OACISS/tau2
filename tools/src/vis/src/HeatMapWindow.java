@@ -118,6 +118,7 @@ public class HeatMapWindow extends JFrame implements ActionListener{
 
 		this.pathSelector.setSelectedItem(currentPath);
 		this.pathSelector.addActionListener(this);
+		this.pathSelector.addKeyListener(this.heatMap.getScanner());
 		c.gridy = 1;
 		panel.add(new JLabel("Callpath:"),c);
 		c.gridy = 2;
@@ -125,6 +126,7 @@ public class HeatMapWindow extends JFrame implements ActionListener{
 		
 		this.figureSelector.setSelectedItem(currentPath);
 		this.figureSelector.addActionListener(this);
+		this.figureSelector.addKeyListener(this.heatMap.getScanner());
 		c.gridy = 3;
 		panel.add(new JLabel("Dataset:"),c);
 		c.gridy = 4;
@@ -217,6 +219,10 @@ public class HeatMapWindow extends JFrame implements ActionListener{
 					this.remove(mainPanel);
 					mainPanel = null;
 					drawFigures();
+					// new heatmap, new scanner, so add listeners
+					this.figureSelector.addKeyListener(this.heatMap.getScanner());
+					this.figureSelector.addKeyListener(this.heatMap.getScanner());
+					this.heatMap.requestFocus();
 				}
 			}
 			if (eventSrc.equals(this.figureSelector)) {
@@ -226,6 +232,10 @@ public class HeatMapWindow extends JFrame implements ActionListener{
 					this.remove(mainPanel);
 					mainPanel = null;
 					drawFigures();
+					// new heatmap, new scanner, so add listeners
+					this.figureSelector.addKeyListener(this.heatMap.getScanner());
+					this.figureSelector.addKeyListener(this.heatMap.getScanner());
+					this.heatMap.requestFocus();
 				}
 			}
 		} catch (Exception e) {

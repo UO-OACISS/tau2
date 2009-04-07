@@ -8,7 +8,7 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
  
-class HeatMapScanner extends MouseInputAdapter implements KeyListener  {
+class HeatMapScanner extends MouseInputAdapter implements KeyListener, MouseWheelListener  {
     HeatMap heatmap;
     JWindow toolTip;
     JLabel label;
@@ -42,6 +42,39 @@ class HeatMapScanner extends MouseInputAdapter implements KeyListener  {
     
     public void mouseExited(MouseEvent e) {
         toolTip.setVisible(false);
+    }
+    
+    public void mouseWheelMoved(MouseWheelEvent e) {
+    	int notches = e.getWheelRotation();
+    	int currentSize = this.heatmap.getPreferredSize().height;
+    	int newSize = currentSize;
+    	if (notches < 0) {
+    		// wheel moved up, zoom in
+        	if (currentSize <= 512) {
+        		newSize = Math.max(currentSize * 2, 512);
+        	} else if (currentSize >= 576) {
+        		newSize += 64;
+        	} else { // size between 512 and 576
+        		newSize = 512;
+        	}
+        	if (newSize != currentSize) {
+    			heatmap.setPreferredSize(new Dimension(newSize,newSize));
+    			heatmap.setSize(newSize,newSize);
+        	}
+    	} else {
+    		// wheel moved down, zoom out
+        	if (currentSize <= 512) {
+        		newSize = Math.min(currentSize / 2, heatmap.getMapSize());
+        	} else if (currentSize > 576) {
+        		newSize = Math.max(currentSize - 64, 512);
+        	} else { // size between 512 and 576
+        		newSize = 512;
+        	}
+        	if (newSize != currentSize && newSize >= heatmap.getMapSize()) {
+    			heatmap.setPreferredSize(new Dimension(newSize,newSize));
+    			heatmap.setSize(newSize,newSize);
+        	}
+    	}
     }
     
 	public void keyPressed(KeyEvent evt) {
