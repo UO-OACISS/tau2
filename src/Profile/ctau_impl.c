@@ -551,7 +551,7 @@ static void ptrace_leave_call(PyObject *self, void *key) {
   profEntry = getEntry(pObj, key);
   if (profEntry) {
     if (profEntry->fi) {
-      Tau_stop_timer(profEntry->fi);
+      Tau_stop_timer(profEntry->fi, Tau_get_tid());
     }
   }
   else {
