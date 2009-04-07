@@ -97,7 +97,6 @@ public class HeatMapWindow extends JFrame implements ActionListener{
         }
 
 		this.pack();
-		this.setVisible(true);
 	}
 
 	private Component buildOptionPanel(String label) {
