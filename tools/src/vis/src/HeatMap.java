@@ -71,7 +71,8 @@ public class HeatMap extends JPanel implements ImageObserver {
     	double pixelsPerCell = (double)(Math.max(currentSize, HeatMapWindow.viewSize)) / (double)size;
 		int x = Math.min((int)((p.getX()) / pixelsPerCell),size-1);  // don't go past the end of the array
 		int y = Math.min((int)((p.getY()) / pixelsPerCell),size-1);  // don't go past the end of the array
-		double value = map[x][y];
+		// this is inverted - the sender is Y, the receiver is X
+		double value = map[y][x];
 		String s = "<html>sender = " + y + "<BR>receiver = " + x + "<BR>value = " + f.format(value) + "</html>";
 		return s;
 	}
