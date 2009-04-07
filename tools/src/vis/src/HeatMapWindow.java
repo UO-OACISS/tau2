@@ -3,25 +3,19 @@ package edu.uoregon.tau.vis;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.text.DecimalFormat;
+import java.util.Map;
 
 import javax.swing.*;
-import javax.swing.plaf.basic.BasicComboPopup;
-import javax.swing.plaf.basic.ComboPopup;
-import javax.swing.plaf.metal.MetalComboBoxUI;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.text.DecimalFormat;
+import edu.uoregon.tau.common.ImageExport;
 
-public class HeatMapWindow extends JFrame implements ActionListener{
+public class HeatMapWindow extends JFrame implements ActionListener, ImageExport{
 
 	private SteppedComboBox pathSelector = null;
 	private SteppedComboBox figureSelector = null;
 	private JPanel mainPanel = null;
+	private JPanel mapPanel;
 	private Map/*<String, double[][][]>*/ maps = null;
 	private Map/*<String, double[]>*/ maxs = null;
 	private Map/*<String, double[]>*/ mins = null;
@@ -77,7 +71,8 @@ public class HeatMapWindow extends JFrame implements ActionListener{
 				break;
 			}
 		}
-		mainPanel.add(buildMapPanel(dataIndex, currentFigure),c);
+		mapPanel = buildMapPanel(dataIndex, currentFigure);
+		mainPanel.add(mapPanel,c);
 		c.weightx = 0.01;
 		c.gridx = 1;
 		mainPanel.add(buildOptionPanel("DISPLAY OPTIONS"),c);
@@ -250,5 +245,18 @@ public class HeatMapWindow extends JFrame implements ActionListener{
 	public HeatMap getHeatMap() {
 		return heatMap;
 	}
+
+    public void export(Graphics2D g2d, boolean toScreen, boolean fullWindow, boolean drawHeader) {
+        //heatMap.paint(g2d);
+        mapPanel.setDoubleBuffered(false);
+        heatMap.setDoubleBuffered(false);
+        mapPanel.paintAll(g2d);
+        heatMap.setDoubleBuffered(true);
+        mapPanel.setDoubleBuffered(true);
+    }
+
+    public Dimension getImageSize(boolean fullScreen, boolean header) {
+        return mapPanel.getSize();
+    }
 
 }
