@@ -111,6 +111,7 @@ public class CommunicationMatrix {
 		if (url != null) 
 			window.setIconImage(Toolkit.getDefaultToolkit().getImage(url));
 
+		window.setVisible(true);
 		return matrix.getWindow();
     }
 

@@ -105,7 +105,9 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 			} catch (NullPointerException e) {
 				// we didn't have a client window open.
 			}
-*/		}
+*/		
+			window.setVisible(true);
+		}
 		return this.outputs;
 	}
 
