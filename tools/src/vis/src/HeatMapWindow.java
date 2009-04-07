@@ -57,10 +57,10 @@ public class HeatMapWindow extends JFrame implements ActionListener{
 	    figureSelector.setPreferredSize(new Dimension(50, d.height));
 	    figureSelector.setPopupWidth(d.width);
 		this.setResizable(false);
-		drawFigures();
+		drawFigures(true);
 	}
 
-	private void drawFigures() {
+	private void drawFigures(boolean centerWindow) {
 		mainPanel = new JPanel(new GridBagLayout());
 		this.getContentPane().add(mainPanel);
 		GridBagConstraints c = new GridBagConstraints();
@@ -82,18 +82,19 @@ public class HeatMapWindow extends JFrame implements ActionListener{
 		c.gridx = 1;
 		mainPanel.add(buildOptionPanel("DISPLAY OPTIONS"),c);
 		
-        Toolkit tk = Toolkit.getDefaultToolkit();
-        Dimension screenDimension = tk.getScreenSize();
-        int screenHeight = screenDimension.height;
-        int screenWidth = screenDimension.width;
-
-        //Window Stuff.
-        int windowWidth = 1000;
-        int windowHeight = 800;
-        //Find the center position with respect to this window.
-        int xPosition = (screenWidth - windowWidth) / 2;
-        int yPosition = (screenHeight - windowHeight) / 2;
-        setLocation(xPosition, yPosition);
+        if (centerWindow) {
+	        Toolkit tk = Toolkit.getDefaultToolkit();
+	        Dimension screenDimension = tk.getScreenSize();
+	        int screenHeight = screenDimension.height;
+	        int screenWidth = screenDimension.width;
+	        //Window Stuff.
+	        int windowWidth = 1000;
+	        int windowHeight = 800;
+	        //Find the center position with respect to this window.
+	        int xPosition = (screenWidth - windowWidth) / 2;
+	        int yPosition = (screenHeight - windowHeight) / 2;
+	        setLocation(xPosition, yPosition);
+        }
 
 		this.pack();
 		this.setVisible(true);
@@ -218,7 +219,7 @@ public class HeatMapWindow extends JFrame implements ActionListener{
 					currentPath = newPath;
 					this.remove(mainPanel);
 					mainPanel = null;
-					drawFigures();
+					drawFigures(false);
 					// new heatmap, new scanner, so add listeners
 					this.figureSelector.addKeyListener(this.heatMap.getScanner());
 					this.figureSelector.addKeyListener(this.heatMap.getScanner());
@@ -231,7 +232,7 @@ public class HeatMapWindow extends JFrame implements ActionListener{
 					currentFigure = newFigure;
 					this.remove(mainPanel);
 					mainPanel = null;
-					drawFigures();
+					drawFigures(false);
 					// new heatmap, new scanner, so add listeners
 					this.figureSelector.addKeyListener(this.heatMap.getScanner());
 					this.figureSelector.addKeyListener(this.heatMap.getScanner());
