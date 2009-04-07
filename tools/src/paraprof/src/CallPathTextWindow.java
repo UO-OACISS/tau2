@@ -18,9 +18,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.30 2007/03/02 20:09:10 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.31 2009/04/07 20:31:43 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.30 $
+ * @version	$Revision: 1.31 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
@@ -480,5 +480,8 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
 
     public JScrollPane getScrollPane() {
         return sp;
+    }
+    public JFrame getFrame() {
+        return this;
     }
 }

@@ -16,9 +16,9 @@ import edu.uoregon.tau.perfdmf.UserEvent;
  * LedgerWindow
  * This object represents the ledger window.
  *  
- * <P>CVS $Id: LedgerWindow.java,v 1.6 2007/05/02 19:45:05 amorris Exp $</P>
+ * <P>CVS $Id: LedgerWindow.java,v 1.7 2009/04/07 20:31:44 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.6 $
+ * @version	$Revision: 1.7 $
  * @see		LedgerDataElement
  * @see		LedgerWindowPanel
  */
@@ -34,8 +34,6 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
     private JScrollPane sp = null;
     private LedgerWindowPanel panel = null;
     private Vector list = new Vector();
-
- 
 
     public LedgerWindow(ParaProfTrial ppTrial, int windowType, Component parent) {
         this.ppTrial = ppTrial;
@@ -109,7 +107,7 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
 
         mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
         //mainMenu.add(ParaProfUtils.createTrialMenu(trial, this));
-    
+
         if (this.windowType == FUNCTION_LEGEND) {
             JMenu filter = new JMenu("Filter");
             JMenuItem advanced = new JMenuItem("Advanced Filtering...");
@@ -117,7 +115,8 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
 
                 public void actionPerformed(ActionEvent e) {
                     (new FunctionFilterDialog(LedgerWindow.this, ppTrial)).setVisible(true);
-                } });
+                }
+            });
             filter.add(advanced);
             mainMenu.add(filter);
         }
@@ -126,8 +125,7 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
 
         setJMenuBar(mainMenu);
     }
-    
-    
+
     public void update(Observable o, Object arg) {
         String tmpString = (String) arg;
         if (tmpString.equals("prefEvent")) {
@@ -227,6 +225,10 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
 
     public int getWindowType() {
         return windowType;
+    }
+
+    public JFrame getFrame() {
+        return this;
     }
 
 }

@@ -333,10 +333,10 @@ public class JUnitParaProf extends JFCTestCase {
                 for (Iterator exps = dbApi.getExperimentList().listIterator(); exps.hasNext();) {
                     Experiment exp = (Experiment) exps.next();
                     dbApi.setExperiment(exp);
-                    for (Iterator trls = dbApi.getTrialList().listIterator(); trls.hasNext();) {
+                    for (Iterator trls = dbApi.getTrialList(true).listIterator(); trls.hasNext();) {
                         Trial trial = (Trial) trls.next();
 
-                        dbApi.setTrial(trial.getID());
+                        dbApi.setTrial(trial.getID(), true);
                         DBDataSource dbDataSource = new DBDataSource(dbApi);
                         System.out.println("loading " + trial.getName());
                         dbDataSource.load();

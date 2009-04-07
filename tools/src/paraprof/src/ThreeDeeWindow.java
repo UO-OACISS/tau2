@@ -1221,5 +1221,9 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     public void resort() {
         sortLocalData();
     }
+    
+    public JFrame getFrame() {
+        return this;
+    }
 
 }

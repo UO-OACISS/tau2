@@ -258,5 +258,8 @@ public class ContextEventWindow extends JFrame implements Observer, ParaProfWind
         ParaProf.getHelpWindow().writeText("This is the Context Event Window.\n");
         ParaProf.getHelpWindow().writeText("This window shows context events in a tree-table.)\n");
     }
+    public JFrame getFrame() {
+        return this;
+    }
 
 }

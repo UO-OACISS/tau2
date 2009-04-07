@@ -426,4 +426,8 @@ public class SnapshotBreakdownWindow extends JFrame implements Observer, ParaPro
         recreateChart();
     }
 
+    public JFrame getFrame() {
+        return this;
+    }
+
 }

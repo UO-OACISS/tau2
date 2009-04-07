@@ -21,9 +21,9 @@ import edu.uoregon.tau.perfdmf.UserEvent;
 /**
  * The UserEventWindow shows one User Event over all threads.
  * 
- * <P>CVS $Id: UserEventWindow.java,v 1.30 2008/10/02 18:02:09 amorris Exp $</P>
+ * <P>CVS $Id: UserEventWindow.java,v 1.31 2009/04/07 20:31:45 amorris Exp $</P>
  * @author  Alan Morris, Robert Bell
- * @version $Revision: 1.30 $
+ * @version $Revision: 1.31 $
  * @see GlobalBarChartModel
  */
 public class UserEventWindow extends JFrame implements ActionListener, KeyListener, Observer, ChangeListener, ParaProfWindow,
@@ -543,4 +543,7 @@ public class UserEventWindow extends JFrame implements ActionListener, KeyListen
 
     }
 
+    public JFrame getFrame() {
+        return this;
+    }
 }

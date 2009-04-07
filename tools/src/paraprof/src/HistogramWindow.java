@@ -37,9 +37,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * HistogramWindow
  * This is the histogram window
  *  
- * <P>CVS $Id: HistogramWindow.java,v 1.7 2009/02/27 19:49:05 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindow.java,v 1.8 2009/04/07 20:31:44 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  * @see     HistogramWindowPanel
  */
 public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, ParaProfWindow,
@@ -272,11 +272,9 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         }
     }
 
-    public void menuDeselected(MenuEvent evt) {
-    }
+    public void menuDeselected(MenuEvent evt) {}
 
-    public void menuCanceled(MenuEvent evt) {
-    }
+    public void menuCanceled(MenuEvent evt) {}
 
     // listener for the numBinsSlider
     public void stateChanged(ChangeEvent event) {
@@ -423,7 +421,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         }
 
         dataset.addSeries(function.getName(), values, numBins, minValue, maxValue);
-        
+
         String xAxis = dataSorter.getValueType().toString();
 
         if ((dataSorter.getValueType() != ValueType.NUMCALLS && dataSorter.getValueType() != ValueType.NUMSUBR)) {
@@ -432,20 +430,18 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         }
 
         JFreeChart chart = ChartFactory.createHistogram(function.getName(), xAxis, "Threads", dataset, PlotOrientation.VERTICAL,
-                false,  // legend
-                true,   // tooltips
+                false, // legend
+                true, // tooltips
                 false); // urls
 
         chart.getXYPlot().getDomainAxis().setUpperBound(maxValue);
         chart.getXYPlot().getDomainAxis().setLowerBound(minValue);
 
         Utility.applyDefaultChartTheme(chart);
-       
 
         NumberAxis numberAxis = (NumberAxis) chart.getXYPlot().getDomainAxis();
         numberAxis.setNumberFormatOverride(ParaProfUtils.createNumberFormatter(units()));
         numberAxis.setTickLabelsVisible(true);
-
 
         numberAxis.setTickUnit(new NumberTickUnit((maxValue - minValue) / 10));
 
@@ -455,21 +451,20 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         XYItemRenderer renderer = chart.getXYPlot().getRenderer();
         renderer.setToolTipGenerator(new XYToolTipGenerator() {
             public String generateToolTip(XYDataset dataset, int arg1, int arg2) {
-                String minString = UtilFncs.getOutputString(units(),dataset.getXValue(arg1, arg2) - (binWidth / 2), 5);
-                String maxString = UtilFncs.getOutputString(units(),dataset.getXValue(arg1, arg2) + (binWidth / 2), 5);
+                String minString = UtilFncs.getOutputString(units(), dataset.getXValue(arg1, arg2) - (binWidth / 2), 5);
+                String maxString = UtilFncs.getOutputString(units(), dataset.getXValue(arg1, arg2) + (binWidth / 2), 5);
 
-                return "<html>Number of threads: " + (int)dataset.getYValue(arg1, arg2) + "<br>Range minimum: " + minString + "<br>Range maximum: "
-                + maxString + "</html>";
+                return "<html>Number of threads: " + (int) dataset.getYValue(arg1, arg2) + "<br>Range minimum: " + minString
+                        + "<br>Range maximum: " + maxString + "</html>";
             }
         });
 
-
-        if (numBins < 25) { 
+        if (numBins < 25) {
             // it looks nicer with a margin, but only when we're at a low number of bars
-            ((XYBarRenderer)chart.getXYPlot().getRenderer()).setMargin(0.10);
+            ((XYBarRenderer) chart.getXYPlot().getRenderer()).setMargin(0.10);
         }
 
-        ((XYBarRenderer)chart.getXYPlot().getRenderer()).setOutlinePaint(Color.black); 
+        ((XYBarRenderer) chart.getXYPlot().getRenderer()).setOutlinePaint(Color.black);
 
         return chart;
     }
@@ -500,5 +495,8 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         return chartPanel.getSize();
     }
 
+    public JFrame getFrame() {
+        return this;
+    }
 
 }

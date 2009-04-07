@@ -602,4 +602,8 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     public Function getPhase() {
         return phase;
     }
+    
+    public JFrame getFrame() {
+        return this;
+    }
 }

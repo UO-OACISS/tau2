@@ -23,9 +23,9 @@ import edu.uoregon.tau.perfdmf.Function;
 /**
  * The GlobalDataWindow shows the exclusive value for all functions/all threads for a trial.
  * 
- * <P>CVS $Id: GlobalDataWindow.java,v 1.22 2008/08/05 18:45:42 amorris Exp $</P>
+ * <P>CVS $Id: GlobalDataWindow.java,v 1.23 2009/04/07 20:31:44 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.22 $
+ * @version $Revision: 1.23 $
  * @see GlobalBarChartModel
  */
 public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow, SortListener {
@@ -55,11 +55,9 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
     private static int defaultWidth = 750;
     private static int defaultHeight = 410;
 
-    
     // we keep these around to speed things up
     private JTextArea jTextArea;
     private Component headerView;
-
 
     public BarChartPanel getPanel() {
         return panel;
@@ -129,8 +127,6 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
 
         panel.repaint();
 
-      
-        
         ParaProf.incrementNumWindows();
     }
 
@@ -293,7 +289,8 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
             return "Phase: " + phase + "\nMetric: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\nValue: "
                     + "Exclusive" + "\n";
         } else {
-            return "Metric: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\nValue: " + dataSorter.getValueType() + "\n";
+            return "Metric: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\nValue: "
+                    + dataSorter.getValueType() + "\n";
         }
     }
 
@@ -392,8 +389,8 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
             setVisible(false);
 
             //if (this != ppTrial.getFullDataWindow()) {
-                ppTrial.deleteObserver(this);
-                dispose();
+            ppTrial.deleteObserver(this);
+            dispose();
             //}
             ParaProf.decrementNumWindows();
         } catch (Exception e) {
@@ -500,5 +497,9 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         if (!dataSorter.isTimeMetric()) // we don't do units for non-time metrics
             return 0;
         return ParaProf.preferences.getUnits();
+    }
+
+    public JFrame getFrame() {
+        return this;
     }
 }

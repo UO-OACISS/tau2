@@ -33,9 +33,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableWindow.java,v 1.14 2007/05/30 19:50:34 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableWindow.java,v 1.15 2009/04/07 20:31:46 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  */
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
         ImageExport {
@@ -513,4 +513,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         return thread;
     }
 
+    public JFrame getFrame() {
+        return this;
+    }
 }

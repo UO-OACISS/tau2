@@ -31,16 +31,17 @@ import edu.uoregon.tau.paraprof.treetable.TreeTableWindow;
 import edu.uoregon.tau.paraprof.util.MapViewer;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.Thread;
+import edu.uoregon.tau.vis.HeatMapWindow;
 
 /**
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.41 2009/04/06 22:37:06 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.42 2009/04/07 20:31:44 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.41 $
+ * @version $Revision: 1.42 $
  */
 public class ParaProfUtils {
 
@@ -237,16 +238,12 @@ public class ParaProfUtils {
                         }
 
                     } else if (arg.equals("Save as Vector Graphics")) {
-                        if (panel instanceof ImageExport) {
-
-                            if (JVMDependent.version.equals("1.4")) {
-                                VectorExport.promptForVectorExport((ImageExport) panel, "ParaProf");
-                            } else {
-                                JOptionPane.showMessageDialog((Component) panel,
-                                        "Can't save Vector Graphics with Java 1.3.  Reconfigure TAU with Java 1.4 or higher in the path.");
-                            }
+                        if (panel instanceof HeatMapWindow) {
+                            JOptionPane.showMessageDialog(window.getFrame(), "Can't save heat map as vector graphics");
                         } else if (panel instanceof ThreeDeeWindow) {
-                            JOptionPane.showMessageDialog((JFrame) window, "Can't save 3D visualization as vector graphics");
+                            JOptionPane.showMessageDialog(window.getFrame(), "Can't save 3D visualization as vector graphics");
+                        } else if (panel instanceof ImageExport) {
+                            VectorExport.promptForVectorExport((ImageExport) panel, "ParaProf");
                         } else {
                             throw new ParaProfException("Don't know how to \"Save as Vector Graphics\" for " + panel.getClass());
                         }
@@ -379,14 +376,10 @@ public class ParaProfUtils {
     }
 
     public static void showCommMatrix(ParaProfTrial ppTrial, JFrame parentFrame) {
-        
-        
-        
-        //JFrame window = new edu.uoregon.tau.vis.HeatMapWindow("title", null, null, null, 0);
-        CommunicationMatrix mat = new CommunicationMatrix();
-        mat.doCommunicationMatrix(ppTrial.getDataSource(), parentFrame);
+        JFrame window = CommunicationMatrixWindow.createCommunicationMatrixWindow(ppTrial, parentFrame);
+        window.setVisible(true);
     }
-    
+
     public static JMenu createWindowsMenu(final ParaProfTrial ppTrial, final JFrame owner) {
 
         ActionListener actionListener = new ActionListener() {
@@ -1219,7 +1212,7 @@ public class ParaProfUtils {
     }
 
     // remove the source code location, if preferences are set for it
-   public static String removeSourceLocation(String str) {
+    public static String removeSourceLocation(String str) {
         if (str.startsWith("Loop:")) {
             return str;
         }

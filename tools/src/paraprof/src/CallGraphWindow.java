@@ -34,9 +34,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  *       be implemented.  Plenty of other things could be done as well, such
  *       as using box height as another metric.
  *       
- * <P>CVS $Id: CallGraphWindow.java,v 1.13 2007/05/21 22:18:54 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.14 2009/04/07 20:31:42 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.13 $
+ * @version	$Revision: 1.14 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, KeyListener, ChangeListener, Observer, ImageExport,
         Printable, ParaProfWindow {
@@ -1451,6 +1451,10 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
+    }
+
+    public JFrame getFrame() {
+        return this;
     }
 
 }

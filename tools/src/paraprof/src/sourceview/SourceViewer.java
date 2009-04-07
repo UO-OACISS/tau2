@@ -17,7 +17,6 @@ import edu.uoregon.tau.perfdmf.SourceRegion;
 
 public class SourceViewer extends JFrame implements ParaProfWindow {
 
-   
     LineNumberedTextPanel textPanel;
     JTextPane ed = null;
 
@@ -96,19 +95,19 @@ public class SourceViewer extends JFrame implements ParaProfWindow {
         mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
 
         setJMenuBar(mainMenu);
-   
+
     }
-    
+
     public SourceViewer(File file) {
         //        String file = "/home/amorris/apps/NPB3.1-MPI/LU/erhs.f";
         this.setTitle("TAU: ParaProf: Source Browser: " + file);
         ParaProfUtils.setFrameIcon(this);
 
         try {
-           
+
             URL url = new URL("file", null, file.getAbsolutePath());
             textPanel = new LineNumberedTextPanel();
-            
+
             ed = textPanel.getJTextPane();
             ed.setPage(url);
             ed.setFont(new Font("Monospaced", ParaProf.preferencesWindow.getFontStyle(), ParaProf.preferencesWindow.getFontSize()));
@@ -116,8 +115,7 @@ public class SourceViewer extends JFrame implements ParaProfWindow {
             getContentPane().add(textPanel, BorderLayout.WEST);
             getContentPane().add(textPanel.scrollPane, BorderLayout.CENTER);
             pack();
-            
-            
+
             setupMenus();
 
             this.setSize(700, 1000);
@@ -140,7 +138,12 @@ public class SourceViewer extends JFrame implements ParaProfWindow {
             ParaProf.getHelpWindow().setVisible(true);
         }
         ParaProf.getHelpWindow().writeText("This is the Source Viewer.\n");
-        ParaProf.getHelpWindow().writeText("When you right click on a timer with source location information, you can display it here.");
+        ParaProf.getHelpWindow().writeText(
+                "When you right click on a timer with source location information, you can display it here.");
+    }
+
+    public JFrame getFrame() {
+        return this;
     }
 
 }

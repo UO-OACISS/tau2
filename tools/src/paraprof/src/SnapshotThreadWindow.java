@@ -18,20 +18,18 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.util.ObjectFilter;
 import edu.uoregon.tau.perfdmf.Thread;
 
-
 public class SnapshotThreadWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
 
     private ParaProfTrial ppTrial;
     private Thread thread;
-    
+
     private BarChartPanel panel;
     private AbstractBarChartModel model;
     private DataSorter dataSorter;
-    
+
     private static int defaultWidth = 750;
     private static int defaultHeight = 410;
-    
-    
+
     private JMenu optionsMenu;
     private JCheckBoxMenuItem nameCheckBox = new JCheckBoxMenuItem("Sort By Name", false);
     private JCheckBoxMenuItem normalizeCheckBox = new JCheckBoxMenuItem("Normalize Bars", true);
@@ -40,16 +38,15 @@ public class SnapshotThreadWindow extends JFrame implements ActionListener, Obse
     private JCheckBoxMenuItem stackBarsCheckBox = new JCheckBoxMenuItem("Stack Bars Together", true);
     private JCheckBoxMenuItem metaDataCheckBox;
 
-    
-    public SnapshotThreadWindow (ParaProfTrial ppTrial, Thread thread, Component owner) {
+    public SnapshotThreadWindow(ParaProfTrial ppTrial, Thread thread, Component owner) {
         this.ppTrial = ppTrial;
         this.thread = thread;
-        
+
         PPThread ppThread = new PPThread(thread, ppTrial);
 
         this.setTitle("TAU: ParaProf: Snapshots for " + ppThread.getFullName() + " - "
                 + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
-             
+
         dataSorter = new DataSorter(ppTrial);
         model = new ThreadSnapshotBarChartModel(this, dataSorter, ppTrial, thread);
         panel = new BarChartPanel(model);
@@ -62,19 +59,16 @@ public class SnapshotThreadWindow extends JFrame implements ActionListener, Obse
         setLocation(WindowPlacer.getNewLocation(this, owner));
 
         getContentPane().add(panel);
-     
+
         setupMenus();
-        
+
         ParaProfUtils.setFrameIcon(this);
     }
-    
-    
+
     private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
 
-        
         optionsMenu = new JMenu("Options");
-
 
         metaDataCheckBox = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
         metaDataCheckBox.addActionListener(this);
@@ -88,7 +82,8 @@ public class SnapshotThreadWindow extends JFrame implements ActionListener, Obse
         normalizeCheckBox.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 setNormalized(normalizeCheckBox.isSelected());
-            } });
+            }
+        });
         optionsMenu.add(normalizeCheckBox);
 
         orderByMeanCheckBox.addActionListener(this);
@@ -100,7 +95,8 @@ public class SnapshotThreadWindow extends JFrame implements ActionListener, Obse
         stackBarsCheckBox.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 setStackBars(stackBarsCheckBox.isSelected());
-            } });
+            }
+        });
         optionsMenu.add(stackBarsCheckBox);
 
         mainMenu.add(ParaProfUtils.createFileMenu(this, panel, panel));
@@ -114,32 +110,32 @@ public class SnapshotThreadWindow extends JFrame implements ActionListener, Obse
         setJMenuBar(mainMenu);
 
     }
-    
+
     public void actionPerformed(ActionEvent e) {
-        // TODO Auto-generated method stub
-        
+    // TODO Auto-generated method stub
+
     }
 
     public void update(Observable o, Object arg) {
-        // TODO Auto-generated method stub
-        
+    // TODO Auto-generated method stub
+
     }
 
     public void stateChanged(ChangeEvent e) {
-        // TODO Auto-generated method stub
-        
+    // TODO Auto-generated method stub
+
     }
 
     public void closeThisWindow() {
-        // TODO Auto-generated method stub
-        
+    // TODO Auto-generated method stub
+
     }
 
     public void help(boolean display) {
-        // TODO Auto-generated method stub
-        
+    // TODO Auto-generated method stub
+
     }
-    
+
     public boolean getNormalized() {
         return normalizeCheckBox.isSelected();
     }
@@ -173,4 +169,7 @@ public class SnapshotThreadWindow extends JFrame implements ActionListener, Obse
         panel.repaint();
     }
 
+    public JFrame getFrame() {
+        return this;
+    }
 }
