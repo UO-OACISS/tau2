@@ -7,8 +7,13 @@ if [ $# -ne 1 ] ; then
     exit
 fi
 
+go()
+{
 ./1-get.sh
 ./2-build.sh
 ./3-install.sh
-./4-package.sh
+./4-package.sh $1
+}
+
+(time go $1 2>&1) 2>&1 | tee build.log
 
