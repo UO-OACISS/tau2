@@ -43,7 +43,6 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Printable {
         CommunicationMatrixWindow matrix = new CommunicationMatrixWindow(ppTrial);
         JFrame frame = matrix.doCommunicationMatrix(ppTrial.getDataSource(), parentFrame);
 
-        System.out.println("1");
         frame.setLocation(WindowPlacer.getNewLocation(frame, parentFrame));
 
         JMenuBar mainMenu = new JMenuBar();
@@ -65,7 +64,6 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Printable {
     }
 
     private JFrame doCommunicationMatrix(DataSource dataSource, JFrame mainFrame) {
-        System.out.println("2");
         boolean foundData = false;
         int threadID = 0;
         size = dataSource.getAllThreads().size();
