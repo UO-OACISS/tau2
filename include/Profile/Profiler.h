@@ -71,11 +71,7 @@ void tau_pthread_exit (void *arg);
 
 
 
-#ifdef TAU_MULTIPLE_COUNTERS
 #define MAX_TAU_COUNTERS 25
-#else
-#define MAX_TAU_COUNTERS 1
-#endif
 
 #if (defined(PTHREADS) || defined(TULIPTHREADS) || defined(JAVA) || defined(TAU_WINDOWS) || defined (TAU_OPENMP) || defined (TAU_SPROC) || defined(TAU_PAPI_THREADS))
 
@@ -114,7 +110,6 @@ void tau_pthread_exit (void *arg);
 #include <Profile/FunctionInfo.h>
 #include <Profile/UserEvent.h>
 #include <Profile/PapiLayer.h>
-#include <Profile/MultipleCounters.h>
 #include <Profile/WindowsThreadLayer.h>
 #include <Profile/TauMemory.h>
 #include <Profile/TauScalasca.h>
@@ -167,28 +162,16 @@ public:
   double *getStartValues();
 
   void CallPathStart(int tid);
-#ifdef TAU_MULTIPLE_COUNTERS
   void CallPathStop(double* totaltime, int tid);
-#else  /* TAU_MULTIPLE_COUNTERS  */
-  void CallPathStop(double totaltime, int tid);
-#endif /* TAU_MULTIPLE_COUNTERS  */
   
 #ifdef TAU_PROFILEPARAM
   FunctionInfo *ProfileParamFunction; 
   bool 	       AddInclProfileParamFlag; 
-#ifdef TAU_MULTIPLE_COUNTERS
   void ProfileParamStop(double* totaltime, int tid);
-#else  /* TAU_MULTIPLE_COUNTERS  */
-  void ProfileParamStop(double totaltime, int tid);
-#endif /* TAU_MULTIPLE_COUNTERS */
 #endif /* TAU_PROFILEPARAM */
   
   
-#ifndef TAU_MULTIPLE_COUNTERS
-  double StartTime;
-#else /* TAU_MULTIPLE_COUNTERS */
   double StartTime[MAX_TAU_COUNTERS];
-#endif /* TAU_MULTIPLE_COUNTERS */
 
 
 #ifdef TAU_COMPENSATE
@@ -284,7 +267,7 @@ void TauProfiler_EnableAllEventsOnCallStack(int tid, Profiler *current);
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.104 $   $Date: 2009/03/26 19:12:39 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.104 2009/03/26 19:12:39 sameer Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: amorris $
+ * $Revision: 1.105 $   $Date: 2009/04/08 20:29:14 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.105 2009/04/08 20:29:14 amorris Exp $ 
  ***************************************************************************/

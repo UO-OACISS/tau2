@@ -70,11 +70,7 @@ public:
   static int 	SetEventCounter(void);
   static double GetEventCounter(void);
 
-#ifndef TAU_MULTIPLE_COUNTERS
-  static double getUSecD(int tid); 
-#else  //TAU_MULTIPLE_COUNTERS
   static void   getUSecD(int tid, double *values);
-#endif //TAU_MULTIPLE_COUNTERS
 
   static void getCurrentValues(int tid, double *values);
 
@@ -126,7 +122,7 @@ private:
 
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
- * $RCSfile: RtsLayer.h,v $   $Author: sameer $
- * $Revision: 1.31 $   $Date: 2009/03/26 19:12:39 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.31 2009/03/26 19:12:39 sameer Exp $ 
+ * $RCSfile: RtsLayer.h,v $   $Author: amorris $
+ * $Revision: 1.32 $   $Date: 2009/04/08 20:29:15 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.32 2009/04/08 20:29:15 amorris Exp $ 
  ***************************************************************************/

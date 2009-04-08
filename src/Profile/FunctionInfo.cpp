@@ -176,15 +176,10 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
       NumCalls[i] = 0;
       SetAlreadyOnStack(false, i);
       NumSubrs[i] = 0;
-#ifndef TAU_MULTIPLE_COUNTERS
-      ExclTime[i] = 0;
-      InclTime[i] = 0;
-#else //TAU_MULTIPLE_COUNTERS
       for(int j=0;j<MAX_TAU_COUNTERS;j++){
 	ExclTime[i][j] = 0;
 	InclTime[i][j] = 0;
       } 
-#endif//TAU_MULTIPLE_COUNTERS
     }
   }
   
@@ -232,17 +227,11 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 #endif /* TAU_PROFILEHEADROOM */
   
 #ifdef RENCI_STFF
-#ifdef TAU_MULTIPLE_COUNTERS
   for (int t=0; t < TAU_MAX_THREADS; t++) {
     for (int i=0; i < MAX_TAU_COUNTERS; i++) {
       Signatures[t][i] = NULL;
     }
   }
-#else // TAU_MULTIPLE_COUNTERS
-  for (int t=0; t < TAU_MAX_THREADS; t++) {
-    Signatures[t] = NULL;
-  }
-#endif // TAU_MULTIPLE_COUNTERS
 #endif //RENCI_STFF
   
   return;
@@ -306,7 +295,6 @@ FunctionInfo::~FunctionInfo()
   TheSafeToDumpData() = 0;
 }
 
-#ifdef TAU_MULTIPLE_COUNTERS
 double * FunctionInfo::GetExclTime(int tid){
   double * tmpCharPtr = (double *) malloc( sizeof(double) * MAX_TAU_COUNTERS);
   for(int i=0;i<MAX_TAU_COUNTERS;i++){
@@ -322,45 +310,28 @@ double * FunctionInfo::GetInclTime(int tid){
   }
   return tmpCharPtr;
 }
-#endif //TAU_MULTIPLE_COUNTERS
 
 
 double *FunctionInfo::getInclusiveValues(int tid) {
-  printf ("potentially evil\n");
-#ifdef TAU_MULTIPLE_COUNTERS
+  printf ("TAU: Warning, potentially evil function called\n");
   return InclTime[tid];
-#else
-  return &(InclTime[tid]);
-#endif
 }
 
 double *FunctionInfo::getExclusiveValues(int tid) {
-  printf ("potentially evil\n");
-#ifdef TAU_MULTIPLE_COUNTERS
+  printf ("TAU: Warning, potentially evil function called\n");
   return ExclTime[tid];
-#else
-  return &(ExclTime[tid]);
-#endif
 }
 
 void FunctionInfo::getInclusiveValues(int tid, double *values) {
-#ifdef TAU_MULTIPLE_COUNTERS
   for(int i=0; i<MAX_TAU_COUNTERS; i++) {
     values[i] = InclTime[tid][i];
   }
-#else
-  values[0] = InclTime[tid];
-#endif
 }
 
 void FunctionInfo::getExclusiveValues(int tid, double *values) {
-#ifdef TAU_MULTIPLE_COUNTERS
   for(int i=0; i<MAX_TAU_COUNTERS; i++) {
     values[i] = ExclTime[tid][i];
   }
-#else
-  values[0] = ExclTime[tid];
-#endif
 }
 
 
@@ -381,26 +352,17 @@ long FunctionInfo::GetFunctionId(void) {
 	    
 
 //////////////////////////////////////////////////////////////////////
-void FunctionInfo::ResetExclTimeIfNegative(int tid) 
-{ /* if exclusive time is negative (at Stop) we set it to zero during
+void FunctionInfo::ResetExclTimeIfNegative(int tid) { 
+  /* if exclusive time is negative (at Stop) we set it to zero during
      compensation. This function is used to reset it to zero for single
      and multiple counters */
-#ifndef TAU_MULTIPLE_COUNTERS
-	if (ExclTime[tid] < 0)
-        {
-          ExclTime[tid] = 0.0;
-        }
-#else /* TAU_MULTIPLE_COUNTERS */
-	int i;
-	for (i=0; i < MAX_TAU_COUNTERS; i++)
-	{
-	  if (ExclTime[tid][i] < 0)
-          {
-            ExclTime[tid][i] = 0.0; /* set each negative counter to zero */
-          }
-        }
-#endif /* TAU_MULTIPLE_COUNTERS */
-        return; 
+  int i;
+  for (i=0; i < MAX_TAU_COUNTERS; i++) {
+    if (ExclTime[tid][i] < 0) {
+      ExclTime[tid][i] = 0.0; /* set each negative counter to zero */
+    }
+  }
+  return; 
 }
 
 
@@ -493,6 +455,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.75 $   $Date: 2009/02/24 22:30:59 $
- * VERSION_ID: $Id: FunctionInfo.cpp,v 1.75 2009/02/24 22:30:59 amorris Exp $ 
+ * $Revision: 1.76 $   $Date: 2009/04/08 20:30:12 $
+ * VERSION_ID: $Id: FunctionInfo.cpp,v 1.76 2009/04/08 20:30:12 amorris Exp $ 
  ***************************************************************************/

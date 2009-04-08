@@ -91,14 +91,12 @@ extern "C" int InitializeTAU() {
   
   // we need the timestamp of the "start"
   Tau_snapshot_initialization();
+
+  /* initialize the Profiler stack */
+  Tau_stack_initialization();
   
   // other initialization code should go here
 
-#ifdef TAU_MULTIPLE_COUNTERS
-  // MultipleCounterLayer::initializeMultiCounterLayer();
-#endif
-
-  Tau_stack_initialization();
 
 #ifdef TAU_COMPENSATE
   Tau_compensate_initialization();

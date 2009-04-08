@@ -240,7 +240,7 @@ extern "C" {
 	TAU_VERBOSE("TAU: Tracing Disabled\n");
       }
 
-      // tracing
+      // comm matrix
       tmp = getenv("TAU_COMM_MATRIX");
       if (parse_bool(tmp, TAU_COMM_MATRIX_DEFAULT)) {
 	env_comm_matrix = 1;

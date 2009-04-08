@@ -230,12 +230,7 @@ void Profiler::CallPathStart(int tid) {
   }
 }
 
-#ifdef TAU_MULTIPLE_COUNTERS
-void Profiler::CallPathStop(double* TotalTime, int tid)
-#else // single counter
-void Profiler::CallPathStop(double TotalTime, int tid)
-#endif // TAU_MULTIPLE_COUNTERS
-{
+void Profiler::CallPathStop(double* TotalTime, int tid) {
   if (ParentProfiler != NULL) {
     if (AddInclCallPathFlag == true) { // The first time it came on call stack
       CallPathFunction->SetAlreadyOnStack(false, tid); // while exiting
@@ -253,6 +248,6 @@ void Profiler::CallPathStop(double TotalTime, int tid)
   
 /***************************************************************************
  * $RCSfile: TauCallPath.cpp,v $   $Author: amorris $
- * $Revision: 1.28 $   $Date: 2009/03/27 23:35:22 $
- * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.28 2009/03/27 23:35:22 amorris Exp $ 
+ * $Revision: 1.29 $   $Date: 2009/04/08 20:30:12 $
+ * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.29 2009/04/08 20:30:12 amorris Exp $ 
  ***************************************************************************/

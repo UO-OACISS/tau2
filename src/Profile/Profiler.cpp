@@ -118,11 +118,7 @@ extern "C" int Tau_get_usesMPI();
 // For OpenMP
 //////////////////////////////////////////////////////////////////////
 #ifdef TAU_TRACK_IDLE_THREADS
-#ifndef TAU_MULTIPLE_COUNTERS
-double TheLastTimeStamp[TAU_MAX_THREADS]; 
-#else /* FOR MULTIPLE COUNTERS */
 double TheLastTimeStamp[TAU_MAX_THREADS][MAX_TAU_COUNTERS]; 
-#endif /* MULTIPLE_COUNTERS */
 #endif /* TAU_TRACK_IDLE_THREADS */
 //////////////////////////////////////////////////////////////////////
 // Explicit Instantiations for templated entities needed for ASCI Red
@@ -198,9 +194,7 @@ void TauProfiler_EnableAllEventsOnCallStack(int tid, Profiler *current) {
       /* process the current event */
       DEBUGPROFMSG(RtsLayer::myNode()<<" Processing EVENT "<<current->ThisFunction->GetName()<<endl;);
       TauTraceEvent(current->ThisFunction->GetFunctionId(), 1, tid, (x_uint64) current->StartTime, 1); 
-#ifdef TAU_MULTIPLE_COUNTERS 
       MultipleCounterLayer::triggerCounterEvents((x_uint64) current->StartTime[0], current->StartTime, tid);
-#endif /* TAU_MULTIPLE_COUNTERS */
     }
   }
 }
@@ -277,13 +271,8 @@ void Profiler::Start(int tid) {
 
   x_uint64 TimeStamp;
 
-#ifndef TAU_MULTIPLE_COUNTERS 
-  StartTime = RtsLayer::getUSecD(tid);
-  TimeStamp = (x_uint64) StartTime;
-#else //TAU_MULTIPLE_COUNTERS
   RtsLayer::getUSecD(tid, StartTime);	  
   TimeStamp = (x_uint64) StartTime[0]; // USE COUNTER1 for tracing
-#endif//TAU_MULTIPLE_COUNTERS
   
   if (TauEnv_get_callpath()) {
     CallPathStart(tid);
@@ -316,9 +305,7 @@ void Profiler::Start(int tid) {
 #else /* TAU_EPILOG */
   if (TauEnv_get_tracing()) {
     TauTraceEvent(ThisFunction->GetFunctionId(), 1 /* entry */, tid, TimeStamp, 1 /* use supplied timestamp */); 
-#ifdef TAU_MULTIPLE_COUNTERS 
-    MultipleCounterLayer::triggerCounterEvents(TimeStamp, StartTime, tid);
-#endif /* TAU_MULTIPLE_COUNTERS */
+    TauMetrics_triggerAtomicEvents(TimeStamp, StartTime, tid);
   }
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
@@ -418,47 +405,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   /********************************************************************************/
 
 
-#ifdef TAU_COMPENSATE
-#ifndef TAU_MULTIPLE_COUNTERS 
-  double tover = TauGetTimerOverhead(TauFullTimerOverhead);
-  double tnull = TauGetTimerOverhead(TauNullTimerOverhead);
-#endif /* TAU_MULTIPLE_COUNTERS */
-#endif /* TAU_COMPENSATE */
   
-#ifndef TAU_MULTIPLE_COUNTERS
-  double CurrentTime; 
-  
-#ifdef TAU_TRACK_IDLE_THREADS
-  if (useLastTimeStamp) {
-    /* for openmp parallel regions */
-    /* .TAU Application needs to be stopped */
-    CurrentTime = TheLastTimeStamp[tid]; 
-  } else { /* use the usual mechanism */
-    CurrentTime = RtsLayer::getUSecD(tid);
-  }
-  TheLastTimeStamp[tid] = CurrentTime;
-#else /* TAU_TRACK_IDLE_THREADS */
-  CurrentTime = RtsLayer::getUSecD(tid);
-#endif /* TAU_TRACK_IDLE_THREADS */
-  
-  
-#if defined(TAUKTAU)
-  ThisKtauProfiler->Stop(this, AddInclFlag);
-#endif /* TAUKTAU */
-  
-  double TotalTime = CurrentTime - StartTime;
-  
-  
-#if (defined(TAU_COMPENSATE) && defined(PROFILING_ON))
-  /* To compensate for timing overhead, shrink the totaltime! */
-  TotalTime = TotalTime - tnull - GetNumChildren() * tover; 
-  if (TotalTime < 0 ) {
-    TotalTime = 0;
-    DEBUGPROFMSG("TotalTime negative in "<<ThisFunction->GetName()<<endl;);
-  }
-#endif /* TAU_COMPENSATE && PROFILING_ON */
-
-#else //TAU_MULTIPLE_COUNTERS
   // first initialize the CurrentTime
   double CurrentTime[MAX_TAU_COUNTERS];
   double TotalTime[MAX_TAU_COUNTERS];
@@ -510,18 +457,13 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   }
 #endif // PROFILING_ON
     
-#endif//TAU_MULTIPLE_COUNTERS
 
   /********************************************************************************/
   /*** Tracing ***/
   /********************************************************************************/
   x_uint64 TimeStamp = 0L; 
 
-#ifdef TAU_MULTIPLE_COUNTERS 
   TimeStamp = (x_uint64) CurrentTime[0]; // USE COUNTER1
-#else
-  TimeStamp = (x_uint64) CurrentTime; 
-#endif /* TAU_MULTIPLE_COUNTERS */
 
 #ifdef TAU_VAMPIRTRACE
   TimeStamp = vt_pform_wtime();
@@ -537,9 +479,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #endif /* TAU_MPITRACE */
     if (TauEnv_get_tracing()) {
       TauTraceEvent(ThisFunction->GetFunctionId(), -1 /* exit */, tid, TimeStamp, 1 /* use supplied timestamp */); 
-#ifdef TAU_MULTIPLE_COUNTERS 
-      MultipleCounterLayer::triggerCounterEvents(TimeStamp, CurrentTime, tid);
-#endif /* TAU_MULTIPLE_COUNTERS */
+      TauMetrics_triggerAtomicEvents(TimeStamp, StartTime, tid);
     }
 #ifdef TAU_MPITRACE
   }
@@ -555,13 +495,8 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     ThisFunction->SetAlreadyOnStack(false, tid); // while exiting
       
     // Next, compute inclusive time for counter 0
-#ifdef TAU_MULTIPLE_COUNTERS
     double TimeTaken = CurrentTime[0] - StartTime[0];
     ThisFunction->AddInclTimeForCounter(TimeTaken, tid, 0);
-#else /* single counter */
-    double TimeTaken = CurrentTime - StartTime;
-    ThisFunction->AddInclTime(TimeTaken, tid);
-#endif /* TAU_MULTIPLE_COUNTERS */ /* we only maintain inclusive time for counter 0 */
   }
 #endif /* PROFILING is off */
 
@@ -643,14 +578,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   if (TauEnv_get_throttle()) {
     /* if the frequency of events is high, disable them */
     double inclusiveTime; 
-#ifdef TAU_MULTIPLE_COUNTERS
     inclusiveTime = ThisFunction->GetInclTimeForCounter(tid, 0); 
     /* here we get the array of double values representing the double 
        metrics. We choose the first counter */
-#else  /* TAU_MULTIPLE_COUNTERS */
-    inclusiveTime = ThisFunction->GetInclTime(tid); 
-    /* when multiple counters are not used, it is a single metric or double */
-#endif /* MULTIPLE_COUNTERS */
     
     if ((ThisFunction->GetCalls(tid) > TauEnv_get_throttle_numcalls()) 
 	&& (inclusiveTime/ThisFunction->GetCalls(tid) < TauEnv_get_throttle_percall()) 
@@ -827,11 +757,7 @@ void TauProfiler_getUserEventValues(const char **inUserEvents, int numUserEvents
 }
 
 double *Profiler::getStartValues() {
-#ifdef TAU_MULTIPLE_COUNTERS
   return StartTime;
-#else
-  return &StartTime;
-#endif
 }
 
 void TauProfiler_theCounterList(const char ***inPtr, int *numCounters) {
@@ -869,28 +795,16 @@ void TauProfiler_getFunctionValues(const char **inFuncs,
   vector<FunctionInfo*>::iterator it;
   
 
-  int tmpNumberOfCounters;
-  const char ** tmpCounterList;
 
-#ifndef TAU_MULTIPLE_COUNTERS
-  TauProfiler_theCounterList(&tmpCounterList,
-			   &tmpNumberOfCounters);
-#else
-  bool *tmpCounterUsedList; // not used
-  MultipleCounterLayer::theCounterListInternal(&tmpCounterList,
-					       &tmpNumberOfCounters,
-					       &tmpCounterUsedList);
-#endif
+  TauMetrics_getCounterList(counterNames, numCounters);
 
-  *numCounters = tmpNumberOfCounters;
-  *counterNames = tmpCounterList;
 
   // allocate memory for the lists
   *counterExclusiveValues = (double **) malloc(sizeof(double *) * numFuncs);
   *counterInclusiveValues = (double **) malloc(sizeof(double *) * numFuncs);
   for (int i=0; i<numFuncs; i++) {
-    (*counterExclusiveValues)[i] = (double *) malloc( sizeof(double) * tmpNumberOfCounters);
-    (*counterInclusiveValues)[i] = (double *) malloc( sizeof(double) * tmpNumberOfCounters);
+    (*counterExclusiveValues)[i] = (double *) malloc( sizeof(double) * Tau_Global_numCounters);
+    (*counterInclusiveValues)[i] = (double *) malloc( sizeof(double) * Tau_Global_numCounters);
   }
   *numCalls = (int *) malloc(sizeof(int) * numFuncs);
   *numSubr = (int *) malloc(sizeof(int) * numFuncs);
@@ -985,28 +899,20 @@ void TauProfiler_PurgeData(int tid) {
   curr = TauInternal_CurrentProfiler(tid);
   curr->ThisFunction->IncrNumCalls(tid);
 
-#ifdef TAU_MULTIPLE_COUNTERS 
     for (int i=0;i<MAX_TAU_COUNTERS;i++) {
       curr->StartTime[i]=0;
     }
     RtsLayer::getUSecD(tid, curr->StartTime);	  
-#else
-    curr->StartTime = RtsLayer::getUSecD(tid) ;
-#endif
 
   curr = curr->ParentProfiler;
 
   while (curr != 0) {
     curr->ThisFunction->IncrNumCalls(tid);
     curr->ThisFunction->IncrNumSubrs(tid);
-#ifdef TAU_MULTIPLE_COUNTERS 
     for (int i=0;i<MAX_TAU_COUNTERS;i++) {
       curr->StartTime[i]=0;
     }
     RtsLayer::getUSecD(tid, curr->StartTime);	  
-#else
-    curr->StartTime = RtsLayer::getUSecD(tid) ;
-#endif
     curr = curr->ParentProfiler;
   }
   
@@ -1242,7 +1148,6 @@ int TauProfiler_StoreData(int tid) {
 // Returns directory name for the location of a particular metric
 static int getProfileLocation(int metric, char *str) {
   const char *profiledir = TauEnv_get_profiledir();
-#ifdef TAU_MULTIPLE_COUNTERS
 
   if (Tau_Global_numCounters <= 1) { 
     sprintf (str, "%s", profiledir);
@@ -1250,9 +1155,7 @@ static int getProfileLocation(int metric, char *str) {
     const char *metricName = TauMetrics_getMetricName(metric);
     sprintf (str, "%s/MULTI__%s", profiledir, metricName);
   }
-#else
-  sprintf (str, "%s", profiledir);
-#endif
+
   return 0;
 }
 
@@ -1263,11 +1166,7 @@ int TauProfiler_DumpData(bool increment, int tid, const char *prefix) {
 
 
 void getMetricHeader(int i, char *header) {
-#ifdef TAU_MULTIPLE_COUNTERS
   sprintf(header, "templated_functions_MULTI_%s", RtsLayer::getCounterName(i));
-#else
-  sprintf(header, "%s", TauGetCounterString());
-#endif
 }
 
 
@@ -1394,7 +1293,6 @@ int TauProfiler_dumpFunctionValues(const char **inFuncs,
 
 bool TauProfiler_createDirectories() {
 
-#ifdef TAU_MULTIPLE_COUNTERS
   static bool flag = true;
   if (flag && Tau_Global_numCounters > 1) {
     for (int i=0;i<MAX_TAU_COUNTERS;i++) {
@@ -1421,12 +1319,11 @@ bool TauProfiler_createDirectories() {
     flag = false;
   }
 
-#endif
   return true;
 }
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.236 $   $Date: 2009/03/30 21:51:20 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.236 2009/03/30 21:51:20 amorris Exp $ 
+ * $Revision: 1.237 $   $Date: 2009/04/08 20:30:12 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.237 2009/04/08 20:30:12 amorris Exp $ 
  ***************************************************************************/

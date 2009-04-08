@@ -74,12 +74,26 @@ void metric_read_logicalClock(int tid, int idx, double values[]) {
   values[idx] = value++;
 }
 
+
+#ifdef TAU_LINUX_TIMERS
+extern "C" double TauGetMHzRatings(void);
+extern "C" unsigned long long getLinuxHighResolutionTscCounter(void);
+#endif
+
+void metric_read_linuxtimers(int tid, int idx, double values[]) {
+#ifdef TAU_LINUX_TIMERS
+  static double ratings = TauGetMHzRatings();
+  values[idx] = (double) getLinuxHighResolutionTscCounter()/ratings;
+#endif
+}
+
+
 double TauWindowsUsecD(void);
 
 // clock that uses gettimeofday
 void metric_read_gettimeofday(int tid, int idx, double values[]) {
 #ifdef TAU_WINDOWS
-
+  values[idx] = TauWindowsUsecD();
 #else
   struct timeval tp;
   gettimeofday (&tp, 0);

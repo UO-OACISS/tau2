@@ -44,71 +44,59 @@ class FunctionInfo;
  */
 class RenciSTFF {
 private:
-
-    /** 
-     * Whether stff lib has been inited. We make sure this happens
-     * after MPI_Init() if MPI is enable for the stff library.
-     */
-    static bool inited;
-
-	/** Names of counters retrieved from counter layer at init time. */
-	static const char **counterList;
-
-	/** Local copy of number of TAU counters, obtained at init time. */
-	static int numCounters;
-
-    /** Vector of all signatures instantiated, so we can stop them easily at the end. */
-    static std::vector<ApplicationSignature*> signatures;
-
-    /**
-     * Creates an application signature and inits it with proper metadata 
-     * for the provided metric.
-     */
-    static ApplicationSignature *createSignature(
-        const Point &point, const FunctionInfo *info, int tid, int metricId = 0
-    );
-
-    /** Custom handle to string function, for signature filenames. */
-    static string function_info_to_string(const void *id);
-
-    /** Custom id to string function, for signature filenames. */
-    static string handle_to_string(int handle);
-
-	/**
-	 * Initializes the signature layer by creating a signature for each metric monitored.
-     * Called by recordValues().
-	 */
-	static bool init(); 
-
+  
+  /** 
+   * Whether stff lib has been inited. We make sure this happens
+   * after MPI_Init() if MPI is enable for the stff library.
+   */
+  static bool inited;
+  
+  /** Names of counters retrieved from counter layer at init time. */
+  static const char **counterList;
+  
+  /** Local copy of number of TAU counters, obtained at init time. */
+  static int numCounters;
+  
+  /** Vector of all signatures instantiated, so we can stop them easily at the end. */
+  static std::vector<ApplicationSignature*> signatures;
+  
+  /**
+   * Creates an application signature and inits it with proper metadata 
+   * for the provided metric.
+   */
+  static ApplicationSignature *createSignature(const Point &point, 
+					       const FunctionInfo *info, 
+					       int tid, int metricId = 0);
+  
+  /** Custom handle to string function, for signature filenames. */
+  static string function_info_to_string(const void *id);
+  
+  /** Custom id to string function, for signature filenames. */
+  static string handle_to_string(int handle);
+  
+  /**
+   * Initializes the signature layer by creating a signature for each metric monitored.
+   * Called by recordValues().
+   */
+  static bool init(); 
+  
 public:
-#ifdef TAU_MULTIPLE_COUNTERS
-	/**
-     * Multiple counter version of routine.
-     * 
-	 * Adds measurements to all signatures, from the array of provided values.
-     * @param function FunctionInfo describing the function being profiled
-     * @param timestamp time the observation is taken
-     * @param metricValue double value of counter, taken from FunctionInfo
-	 */
-	static void recordValues(FunctionInfo *function, double timestamp, const double *metricValue, int tid);
-#else //TAU_MULTIPLE_COUNTERS
-	/**
-     * Multiple counter version of routine.
-     * 
-	 * Adds measurements to all signatures, from the array of provided values.
-     * @param FunctionInfo FunctionInfo describing the function being profiled
-     * @param timestamp time the observation is taken
-     * @param metricValue double value of counter, taken from FunctionInfo
-	 */
-    static void recordValues(FunctionInfo *function, double timestamp,  double metricValue, int tid);
-#endif //TAU_MULTIPLE_COUNTERS
-
-	/**
-	 * Shuts down the signature layer and writes all signatures out to specially 
-	 * named files.
-	 */
-	static void cleanup();		
-	
+  /**
+   * Multiple counter version of routine.
+   * 
+   * Adds measurements to all signatures, from the array of provided values.
+   * @param function FunctionInfo describing the function being profiled
+   * @param timestamp time the observation is taken
+   * @param metricValue double value of counter, taken from FunctionInfo
+   */
+  static void recordValues(FunctionInfo *function, double timestamp, const double *metricValue, int tid);
+  
+  /**
+   * Shuts down the signature layer and writes all signatures out to specially 
+   * named files.
+   */
+  static void cleanup();		
+  
 };
 
 

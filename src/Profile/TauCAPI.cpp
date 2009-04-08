@@ -24,6 +24,8 @@ using namespace std;
 #include <stdlib.h>
 #include <limits.h>
 
+#include <Profile/TauMetrics.h>
+
 #if (!defined(TAU_WINDOWS)) 
 /* Needed for fork */
 #include <sys/types.h>
@@ -1125,21 +1127,18 @@ extern "C" void Tau_get_inclusive_values(void *handle, double* values, int tid) 
 extern "C" void Tau_set_inclusive_values(void *handle, double* values, int tid) {
   FunctionInfo *ptr = (FunctionInfo *)handle;
   
-  if (ptr)
-#ifdef TAU_MULTIPLE_COUNTERS
+  if (ptr) {
     ptr->SetInclTime(tid, values);
-#else
-    ptr->SetInclTime(tid, values[0]);
-#endif
-  return;
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
 extern "C" void Tau_get_exclusive_values(void *handle, double* values, int tid) {
   FunctionInfo *ptr = (FunctionInfo *)handle;
  
-  if (ptr)
+  if (ptr) {
     ptr->getExclusiveValues(tid, values);
+  }
   return;
 }
 
@@ -1147,26 +1146,15 @@ extern "C" void Tau_get_exclusive_values(void *handle, double* values, int tid) 
 extern "C" void Tau_set_exclusive_values(void *handle, double* values, int tid) {
   FunctionInfo *ptr = (FunctionInfo *)handle;
   
-  if (ptr)
-#ifdef TAU_MULTIPLE_COUNTERS
+  if (ptr) {
     ptr->SetExclTime(tid, values);
-#else
-    ptr->SetExclTime(tid, values[0]);
-#endif
+  }
   return;
 }
 
 //////////////////////////////////////////////////////////////////////
-extern "C" void Tau_get_counter_info(const char ***counterlist, int *numcounters) {
-
-#ifndef TAU_MULTIPLE_COUNTERS
-  TauProfiler_theCounterList(counterlist, numcounters);
-#else
-  bool *tmpCounterUsedList; // not used
-  MultipleCounterLayer::theCounterListInternal(counterlist,
-                                               numcounters,
-                                               &tmpCounterUsedList);
-#endif
+extern "C" void Tau_get_counter_info(const char ***counterNames, int *numCounters) {
+  TauMetrics_getCounterList(counterNames, numCounters);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1233,8 +1221,8 @@ int *tau_pomp_rd_table = 0;
                     
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.119 $   $Date: 2009/04/01 00:19:24 $
- * VERSION: $Id: TauCAPI.cpp,v 1.119 2009/04/01 00:19:24 sameer Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.120 $   $Date: 2009/04/08 20:30:12 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.120 2009/04/08 20:30:12 amorris Exp $
  ***************************************************************************/
 

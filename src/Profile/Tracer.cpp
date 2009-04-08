@@ -29,6 +29,7 @@
 #include <Profile/Profiler.h>
 #include <Profile/TauEnv.h>
 #include <Profile/TauTrace.h>
+#include <Profile/TauMetrics.h>
 
 /* Magic number, parameter for certain events */
 #define INIT_PARAM 3
@@ -56,9 +57,7 @@ static int TauTraceFlushEvents = 0;
 static int TauTraceInitialized[TAU_MAX_THREADS] = {0};
 static int TraceFileInitialized[TAU_MAX_THREADS] = {0};
 
-#ifdef TAU_MULTIPLE_COUNTERS
 static double tracerValues[MAX_TAU_COUNTERS] = {0};
-#endif // TAU_MULTIPLE_COUNTERS
 
 
 double TauSyncAdjustTimeStamp(double timestamp) {
@@ -79,7 +78,7 @@ x_uint64 TauTraceGetTimeStamp(int tid) {
   // Profiler::Start and Stop, we obtain the timestamp for tracing explicitly. 
   // The same changes would have to be made there as well (e.g., using COUNTER1
   // for tracing in multiplecounters case) for consistency.
-#ifdef TAU_MULTIPLE_COUNTERS
+
   // In the presence of multiple counters, the system always
   // assumes that COUNTER1 contains the tracing metric.
   // Thus, if you want gettimeofday, make sure that you
@@ -91,11 +90,7 @@ x_uint64 TauTraceGetTimeStamp(int tid) {
   //   RtsLayer::getUSecD(tid, tracerValues);
   //   double value = tracerValues[0];
 
-  x_uint64 value = MultipleCounterLayer::getSingleCounter(tid, 0);
-
-#else //TAU_MULTIPLE_COUNTERS
-  x_uint64 value = (x_uint64) RtsLayer::getUSecD(tid);
-#endif // TAU_MULTIPLE_COUNTERS
+  x_uint64 value = (x_uint64) TauMetrics_getTraceMetricValue(tid);
 
   if (TauEnv_get_synchronize_clocks()) {
     return (x_uint64) TauSyncAdjustTimeStamp(value);
@@ -372,12 +367,8 @@ void TraceCallStack(int tid, Profiler *current) {
 
 
 double TauTraceGetTime(int tid) {
-#ifdef TAU_MULTIPLE_COUNTERS
   // counter 0 is the one we use
-  double value = MultipleCounterLayer::getSingleCounter(tid, 0);
-#else
-  double value = RtsLayer::getUSecD(tid);
-#endif
+  double value = TauMetrics_getTraceMetricValue(tid);
   return value;
 }
 

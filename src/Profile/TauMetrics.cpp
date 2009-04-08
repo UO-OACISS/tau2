@@ -22,6 +22,7 @@
 #include <string.h>
 #include <tau_internal.h>
 #include <Profile/Profiler.h>
+#include <Profile/TauTrace.h>
 
 int TauMetrics_init();
 
@@ -37,6 +38,7 @@ static void initialize_functionArray();
 int Tau_Global_numCounters = -1;
 
 
+static TauUserEvent **traceCounterEvents; 
 
 
 
@@ -60,6 +62,7 @@ static function functionArray[TAU_MAX_METRICS];
 void metric_read_nullClock(int tid, int idx, double values[]);
 void metric_read_logicalClock(int tid, int idx, double values[]);
 void metric_read_gettimeofday(int tid, int idx, double values[]);
+void metric_read_linuxtimers(int tid, int idx, double values[]);
 void metric_read_bgtimers(int tid, int idx, double values[]);
 void metric_read_craytimers(int tid, int idx, double values[]);
 void metric_read_cputime(int tid, int idx, double values[]);
@@ -157,12 +160,17 @@ static void initialize_functionArray() {
   int usingPAPI = 0;
   int pos = 0;
   for (int i=0; i<nmetrics; i++) {
+    TAU_VERBOSE("TAU: Using metric: %s\n", metricv[i]);
     if (compareMetricString(metricv[i],"LOGICAL_CLOCK")) {
       functionArray[pos++] = metric_read_logicalClock;
     } else if (compareMetricString(metricv[i],"GET_TIME_OF_DAY")){
       functionArray[pos++] = metric_read_gettimeofday;
     } else if (compareMetricString(metricv[i],"CPU_TIME")){
       functionArray[pos++] = metric_read_cputime;
+#ifdef TAU_LINUX_TIMERS
+    } else if (compareMetricString(metricv[i],"LINUX_TIMERS")){
+      functionArray[pos++] = metric_read_linuxtimers;
+#endif
     } else if (compareMetricString(metricv[i],"BGL_TIMERS")){
       functionArray[pos++] = metric_read_bgtimers;
     } else if (compareMetricString(metricv[i],"BGP_TIMERS")){
@@ -184,7 +192,6 @@ static void initialize_functionArray() {
       }
     }
   }
-
 
   /* check if we are using PAPI */
   for (int i=0; i<nmetrics; i++) {
@@ -258,5 +265,72 @@ int TauMetrics_init() {
 
 
   Tau_Global_numCounters = nmetrics;
+
+
+
+
+  /* Create atomic events for tracing */
+  if (TauEnv_get_tracing()) {
+
+    traceCounterEvents = new TauUserEvent * [nmetrics] ; 
+    /* We obtain the timestamp from COUNTER1, so we only need to trigger 
+       COUNTER2-N or i=1 through no. of active functions not through 0 */
+    RtsLayer::UnLockDB(); // mutual exclusion primitive AddEventToDB locks it
+    for (int i = 1; i < nmetrics; i++) {
+      traceCounterEvents[i] = new TauUserEvent(metricv[i], true);
+      /* the second arg is MonotonicallyIncreasing which is true (HW counters)*/ 
+    }
+    RtsLayer::LockDB(); // We do this to prevent a deadlock. Lock it again!
+  }
+  
+
+
   return 0;
 }
+
+
+
+/**
+ * Trigger atomic events for each counter
+ */
+void TauMetrics_triggerAtomicEvents(unsigned long long timestamp, double *values, int tid) {
+  int i;
+#ifndef TAU_EPILOG
+  for (i=1; i<nmetrics; i++) { 
+    TauTraceEvent(traceCounterEvents[i]->GetEventId(), (long long) values[i], tid, timestamp, 1);
+    // 1 in the last parameter is for use timestamp 
+  }
+#endif /* TAU_EPILOG */
+}
+
+
+
+
+
+/**
+ * Returns a duplicated list of counter names, and writes the number of counters in numCounters
+ */
+void TauMetrics_getCounterList(const char ***counterNames, int *numCounters) {
+  *numCounters = nmetrics;
+  *counterNames = (char const **) malloc (sizeof(char*) * nmetrics);
+  for (int i=0; i<nmetrics; i++) {
+    (*counterNames)[i] = strdup(TauMetrics_getMetricName(i));
+  }
+}
+
+/**
+ * Returns the index of the trace metric
+ */
+double TauMetrics_getTraceMetricIndex() {
+  return traceMetric;
+}
+
+/**
+ * Returns the index of the trace metric
+ */
+double TauMetrics_getTraceMetricValue(int tid) {
+  double values[MAX_TAU_COUNTERS];
+  TauMetrics_getMetrics(tid, values);
+  return values[traceMetric];
+}
+

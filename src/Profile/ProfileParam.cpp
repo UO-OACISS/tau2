@@ -148,12 +148,7 @@ void TauProfiler_AddProfileParamData(long key, const char *keyname) {
 }
 	
 
-#ifdef TAU_MULTIPLE_COUNTERS
-void Profiler::ProfileParamStop(double* TotalTime, int tid)
-#else // single counter
-void Profiler::ProfileParamStop(double TotalTime, int tid)
-#endif // TAU_MULTIPLE_COUNTERS
-{
+void Profiler::ProfileParamStop(double* TotalTime, int tid) {
   if (ProfileParamFunction) {
     DEBUGPROFMSG("Inside ProfileParamStop "<<ThisFunction->GetName()<<endl;);
     if (AddInclProfileParamFlag == true) { // The first time it came on call stack
@@ -174,6 +169,6 @@ void Profiler::ProfileParamStop(double TotalTime, int tid)
   
 /***************************************************************************
  * $RCSfile: ProfileParam.cpp,v $   $Author: amorris $
- * $Revision: 1.6 $   $Date: 2009/02/24 22:30:59 $
- * TAU_VERSION_ID: $Id: ProfileParam.cpp,v 1.6 2009/02/24 22:30:59 amorris Exp $ 
+ * $Revision: 1.7 $   $Date: 2009/04/08 20:30:12 $
+ * TAU_VERSION_ID: $Id: ProfileParam.cpp,v 1.7 2009/04/08 20:30:12 amorris Exp $ 
  ***************************************************************************/

@@ -28,15 +28,8 @@
 
 enum TauOverhead { TauNullTimerOverhead, TauFullTimerOverhead };
 void TauCalibrateOverhead(void);
-#ifndef TAU_MULTIPLE_COUNTERS
-double TauGetSingleTimerOverhead(void);
-double TauGetTimerOverhead(enum TauOverhead);
-#else /* TAU_MULTIPLE_COUNTERS */
 double* TauGetSingleTimerOverhead(void);
 double* TauGetTimerOverhead(enum TauOverhead);
-#endif /* TAU_MULTIPLE_COUNTERS */
-
-
 
 #endif /* TAU_COMPENSATE */
 

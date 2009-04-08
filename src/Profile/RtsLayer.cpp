@@ -488,143 +488,12 @@ double TauWindowsUsecD(void) {
 
 
 
-#ifdef TAU_MULTIPLE_COUNTERS
 void RtsLayer::getUSecD (int tid, double *values) {
 #if ((defined(TAU_EPILOG) && !defined(PROFILING_ON)) || (defined(TAU_VAMPIRTRACE) && !defined(PROFILING_ON)))
   return;
 #endif /* TAU_EPILOG/VAMPIRTRACE, PROFILING_ON */
   TauMetrics_getMetrics(tid, values);
 }
-#else //TAU_MULTIPLE_COUNTERS
-
-
-#ifdef TAU_LINUX_TIMERS
-extern "C" unsigned long long getLinuxHighResolutionTscCounter(void);
-extern "C" double TauGetMHz(void);
-#endif
-
-double RtsLayer::getUSecD (int tid) {
-
-#if ((defined(TAU_EPILOG) && !defined(PROFILING_ON)) || (defined(TAU_VAMPIRTRACE) && !defined(PROFILING_ON)))
-  return 0;
-#endif /* TAU_EPILOG/VAMPIRTRACE, PROFILING_ON */
-
-#ifdef TAU_PAPI
-  static const char *papi_env = getenv("PAPI_EVENT");
-  if (papi_env != NULL)
-    return PapiLayer::getSingleCounter(tid);
-#ifdef TAU_PAPI_WALLCLOCKTIME
-  return PapiLayer::getWallClockTime();
-#else /* TAU_PAPI_WALLCLOCKTIME */
-#ifdef TAU_PAPI_VIRTUAL
-  return PapiLayer::getVirtualTime();
-#else  /* TAU_PAPI_VIRTUAL */
-  return PapiLayer::getSingleCounter(tid);
-#endif /* TAU_PAPI_VIRTUAL */
-#endif /* TAU_PAPI_WALLCLOCKTIME */
-#endif  // TAU_PAPI
-
-#ifdef CPU_TIME
-  return getUserTimeInSec();
-#endif // CPU_TIME
-
-#ifdef JAVA_CPU_TIME
-  return JavaThreadLayer::getCurrentThreadCpuTime();
-#endif // JAVA_CPU_TIME
-
-#ifdef TAUKTAU_MERGE
-  struct timeval tp;
-  static double last_timestamp = 0.0;
-  double timestamp;
-  ktau_gettimeofday (&tp, 0);
-  timestamp = (double) tp.tv_sec * 1e6 + tp.tv_usec;
-  if (timestamp < last_timestamp) {
-     DEBUGPROFMSG("RtsLayer::getUSecD(): ktau_gettimeofday() goes back in time. Fixing ...."<<endl;);
-     timestamp = last_timestamp;
-  }
-  last_timestamp = timestamp;
-  return timestamp;
-#endif // TAUKTAU_MERGE
-
-#ifdef BGL_TIMERS
-  static double bgl_clockspeed = 0.0;
-
-  if (bgl_clockspeed == 0.0) {
-    BGLPersonality mybgl;
-    rts_get_personality(&mybgl, sizeof(BGLPersonality));
-    bgl_clockspeed = 1.0e6/(double)BGLPersonality_clockHz(&mybgl);
-  }
-  return (rts_get_timebase() * bgl_clockspeed);
-#endif // BGL_TIMERS
-
-#ifdef BGP_TIMERS
-  static double bgp_clockspeed = 0.0;
-
-  if (bgp_clockspeed == 0.0) {
-    _BGP_Personality_t mybgp;
-    Kernel_GetPersonality(&mybgp, sizeof(_BGP_Personality_t));
-    bgp_clockspeed = 1.0/(double)BGP_Personality_clockMHz(&mybgp);
-  }
-  return (_bgp_GetTimeBase() * bgp_clockspeed);
-#endif // BGP_TIMERS
-
-#ifdef SGI_HW_COUNTERS
-  return RtsLayer::GetEventCounter();
-#endif  //SGI_HW_COUNTERS
-
-#ifdef SGI_TIMERS
-  struct timespec tp;
-  clock_gettime(CLOCK_SGI_CYCLE,&tp);
-  return (tp.tv_sec * 1e6 + (tp.tv_nsec * 1e-3)) ;
-#endif  // SGI_TIMERS
-
-#ifdef CRAY_TIMERS
-#ifdef TAU_CATAMOUNT /* for Cray XT3 */
-  return dclock()*1.0e6; 
-#else /* for Cray X1 */
-  long long tick = _rtc();
-  return (double) tick/HZ;
-#endif /* TAU_CATAMOUNT */
-#endif // CRAY_TIMERS
-
-#ifdef TAU_ALPHA_TIMERS
-  struct timespec currenttime;
-  clock_gettime(CLOCK_REALTIME, &currenttime);
-  return (currenttime.tv_sec * 1e6 + (currenttime.tv_nsec * 1e-3));
-#endif /* TAU_ALPHA_TIMERS */
-
-#ifdef TAU_LINUX_TIMERS
-  static double mhz = TauGetMHz();
-  return (double) getLinuxHighResolutionTscCounter()/mhz;
-#endif /* TAU_LINUX_TIMERS */
-
-#ifdef TAU_LOGICAL_CLOCK
-  static long long value = 0;
-  return value++;
-#endif
-
-#ifdef TAU_WINDOWS
-  return TauWindowsUsecD();
-
-#else /* TAU_WINDOWS */
-  // if none of those were defined (the default), we use gettimeofday
-
-  struct timeval tp;
-  static double last_timestamp = 0.0;
-  double timestamp;
-  gettimeofday (&tp, 0);
-  timestamp = (double) tp.tv_sec * 1e6 + tp.tv_usec;
-  if (timestamp < last_timestamp) {
-    DEBUGPROFMSG("RtsLayer::getUSecD(): gettimeofday() goes back in time. Fixing ...."<<endl;);
-    timestamp = last_timestamp;
-  }
-  last_timestamp = timestamp;
-  return timestamp;
-
-#endif /* TAU_WINDOWS */
-
-}
-#endif //TAU_MULTIPLE_COUNTERS
 
 
 int RtsLayer::getPid() {
@@ -652,106 +521,20 @@ int RtsLayer::getTid() {
 }
 
 bool RtsLayer::getCounterUsed(int i) {
-#ifdef TAU_MULTIPLE_COUNTERS
   return TauMetrics_getMetricUsed(i)==0;
-#else
-  return (i==0); // only 0 is active in single counter mode
-#endif	
 }
 
 const char *RtsLayer::getCounterName(int i) {
-#ifdef TAU_MULTIPLE_COUNTERS
   const char *foo = TauMetrics_getMetricName(i);
   return TauMetrics_getMetricName(i);
-#else
-  return getSingleCounterName();
-#endif	
-}
-
-const char *RtsLayer::getSingleCounterName() {
-
-#if ((defined(TAU_EPILOG) && !defined(PROFILING_ON)) || (defined(TAU_VAMPIRTRACE) && !defined(PROFILING_ON)))
-  return "none";
-#endif /* TAU_EPILOG/VAMPIRTRACE, PROFILING_ON */
-
-#ifdef TAU_PAPI
-#ifdef TAU_PAPI_WALLCLOCKTIME
-  return "P_WALL_CLOCK_TIME";
-#else /* TAU_PAPI_WALLCLOCKTIME */
-#ifdef TAU_PAPI_VIRTUAL
-  return "P_VIRTUAL_TIME";
-#else  /* TAU_PAPI_VIRTUAL */
-  return getenv("PAPI_EVENT");
-#endif /* TAU_PAPI_VIRTUAL */
-#endif /* TAU_PAPI_WALLCLOCKTIME */
-#endif  // TAU_PAPI
-
-#ifdef CPU_TIME
-  return "CPU Time";
-#endif // CPU_TIME
-
-#ifdef JAVA_CPU_TIME
-  return "Java CPU Time";
-#endif // JAVA_CPU_TIME
-
-#ifdef TAUKTAU_MERGE
-  return "KTAU_TIME";
-#endif // TAUKTAU_MERGE
-
-#ifdef BGL_TIMERS
-  return "BGL Timers";
-#endif // BGL_TIMERS
-
-#ifdef BGP_TIMERS
-  return "BGP Timers";
-#endif // BGP_TIMERS
-
-#ifdef SGI_HW_COUNTERS
-  return "SGI_HW_COUNTERS";
-#endif  //SGI_HW_COUNTERS
-
-#ifdef SGI_TIMERS
-  return "SGI Timers";
-#endif  // SGI_TIMERS
-
-#ifdef CRAY_TIMERS
-  return "Cray Timers";
-#endif // CRAY_TIMERS
-
-#ifdef TAU_ALPHA_TIMERS
-  return "Alpha Timers";
-#endif /* TAU_ALPHA_TIMERS */
-
-#ifdef TAU_LINUX_TIMERS
-  return "Linux Timers";
-#endif /* TAU_LINUX_TIMERS */
-
-#ifdef TAU_WINDOWS
-  return "Time";
-#endif // TAU_WINDOWS 
-
-#ifdef TULIP_TIMERS
-  return "Tulip Timers";
-#endif
-
-#ifdef TAU_LOGICAL_CLOCK
-  return "Logical Clock";
-#endif
-  // if none of those were defined (the default), we use gettimeofday
-  return "Time";
 }
 
 
 void RtsLayer::getCurrentValues (int tid, double *values) {
-
-#ifdef TAU_MULTIPLE_COUNTERS
   for (int c=0; c<MAX_TAU_COUNTERS; c++) {
     values[c] = 0;
   }
   return getUSecD(tid, values);
-#else
-  values[0] = RtsLayer::getUSecD(tid);
-#endif
 }
 
 
@@ -896,17 +679,12 @@ void RtsLayer::ProfileInit(int& argc, char**& argv) {
   char **ret_argv;
 
 #ifdef TAU_COMPENSATE
-#ifndef TAU_MULTIPLE_COUNTERS
-  double tover = TauGetTimerOverhead(TauNullTimerOverhead);
-  if (tover < 0) tover = 0;
-#else /* TAU_MULTIPLE_COUNTERS */
   double* tover = TauGetTimerOverhead(TauNullTimerOverhead);
   for (i = 0; i < MAX_TAU_COUNTERS; i++) { 
     /* iterate through all counters and reset null overhead to zero 
        if necessary */
     if (tover[i] < 0) tover[i] = 0;
   }
-#endif /* TAU_MULTIPLE_COUNTERS */
 #endif /* TAU_COMPENSATE */
   
   ret_argc = 1;
@@ -1022,6 +800,6 @@ std::string RtsLayer::GetRTTI(const char *name) {
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.124 $   $Date: 2009/03/26 23:00:26 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.124 2009/03/26 23:00:26 amorris Exp $ 
+ * $Revision: 1.125 $   $Date: 2009/04/08 20:30:12 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.125 2009/04/08 20:30:12 amorris Exp $ 
  ***************************************************************************/

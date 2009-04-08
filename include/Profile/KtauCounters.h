@@ -16,8 +16,6 @@
 #ifndef _KTAU_COUNTERS_H_
 #define _KTAU_COUNTERS_H_
 
-#ifdef TAU_MULTIPLE_COUNTERS
-
 #ifdef TAUKTAU_SHCTR
 extern "C" {
 #include <linux/ktau/ktau_cont_data.h>
@@ -75,8 +73,6 @@ private:
   static unsigned long counterList[MAX_TAU_COUNTERS];
   static char counterSyms[MAX_TAU_COUNTERS][KTAU_CTRSYM_MAXSZ];
 };
-
-#endif /* TAU_MULTIPLE_COUNTERS */
 
 #endif /* TAUKTAU_SHCTR */
 #endif /* _KTAU_COUNTERS_H_ */

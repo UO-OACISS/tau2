@@ -30,3 +30,26 @@ void TauMetrics_getMetrics(int tid, double values[]);
 const char *TauMetrics_getMetricName(int metric);
 int TauMetrics_getMetricUsed(int metric);
 
+
+/**
+ * Trigger atomic events for each counter
+ */
+void TauMetrics_triggerAtomicEvents(unsigned long long timestamp, double *values, int tid);
+
+
+
+/**
+ * Returns a duplicated list of counter names, and writes the number of counters in numCounters
+ */
+void TauMetrics_getCounterList(const char ***counterNames, int *numCounters);
+
+
+/**
+ * Returns the index of the trace metric
+ */
+double TauMetrics_getTraceMetricIndex();
+
+/**
+ * Returns the index of the trace metric
+ */
+double TauMetrics_getTraceMetricValue(int tid);
