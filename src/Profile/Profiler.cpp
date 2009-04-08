@@ -339,6 +339,7 @@ void Profiler::Start(int tid) {
   /*** KTAU Code ***/
   /********************************************************************************/
 #if defined(TAUKTAU)
+  ThisKtauProfiler = KtauProfiler::GetKtauProfiler();
   ThisKtauProfiler->Start(this);
 #endif /* TAUKTAU */
 
@@ -643,6 +644,12 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
       }
     }
   }
+  /********************************************************************************/
+  /*** KTAU Code ***/
+  /********************************************************************************/
+#if defined(PROFILING_ON) && defined(TAUKTAU)
+  KtauProfiler::PutKtauProfiler();
+#endif /* TAUKTAU */
 }
 
 
@@ -1323,7 +1330,7 @@ bool TauProfiler_createDirectories() {
 }
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.237 $   $Date: 2009/04/08 20:30:12 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.237 2009/04/08 20:30:12 amorris Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: anataraj $
+ * $Revision: 1.238 $   $Date: 2009/04/08 21:39:53 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.238 2009/04/08 21:39:53 anataraj Exp $ 
  ***************************************************************************/

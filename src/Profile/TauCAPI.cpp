@@ -32,6 +32,10 @@ using namespace std;
 #include <unistd.h>
 #endif /* TAU_WINDOWS */
 
+#if defined(TAUKTAU)
+#include <Profile/KtauProfiler.h>
+#endif //TAUKTAU
+
 #include <Profile/TauTrace.h>
 
 extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup_t group, const char *gr_name) {
@@ -1221,8 +1225,8 @@ int *tau_pomp_rd_table = 0;
                     
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.120 $   $Date: 2009/04/08 20:30:12 $
- * VERSION: $Id: TauCAPI.cpp,v 1.120 2009/04/08 20:30:12 amorris Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: anataraj $
+ * $Revision: 1.121 $   $Date: 2009/04/08 21:39:53 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.121 2009/04/08 21:39:53 anataraj Exp $
  ***************************************************************************/
 
