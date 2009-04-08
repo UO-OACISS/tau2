@@ -38,6 +38,13 @@ using namespace std;
 
 #include <Profile/TauTrace.h>
 
+
+#if defined(TAUKTAU)
+#include <Profile/KtauProfiler.h>
+#endif /* TAUKTAU */
+
+
+
 extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup_t group, const char *gr_name) {
   FunctionInfo *f;
 
@@ -239,7 +246,7 @@ extern "C" int Tau_profile_exit() {
 extern "C" void Tau_exit(const char * msg) {
   Tau_profile_exit();
   
-#if defined(TAUKTAU)
+#ifdef TAUKTAU
   KtauProfiler::PutKtauProfiler();
 #endif /* TAUKTAU */
   
@@ -1225,8 +1232,8 @@ int *tau_pomp_rd_table = 0;
                     
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: anataraj $
- * $Revision: 1.121 $   $Date: 2009/04/08 21:39:53 $
- * VERSION: $Id: TauCAPI.cpp,v 1.121 2009/04/08 21:39:53 anataraj Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.122 $   $Date: 2009/04/08 22:03:30 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.122 2009/04/08 22:03:30 amorris Exp $
  ***************************************************************************/
 

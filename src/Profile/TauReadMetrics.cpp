@@ -47,6 +47,12 @@ extern "C" {
 #endif /* TAU_PAPI */
 
 
+#ifdef TAUKTAU_SHCTR
+#include "Profile/KtauCounters.h"
+#endif //TAUKTAU_SHCTR
+
+
+
 #ifdef TAU_MPI
 extern TauUserEvent* TheSendEvent(void);
 extern TauUserEvent* TheRecvEvent(void);
@@ -202,7 +208,6 @@ void metric_read_papi(int tid, int idx, double values[]) {
   int numPapiValues;
   long long *papiValues = PapiLayer::getAllCounters(tid, &numPapiValues);
 
-
   if (papiValues) {
     for(int i=0; i<numPapiValues; i++) {
       values[idx+i] = papiValues[i];
@@ -211,3 +216,28 @@ void metric_read_papi(int tid, int idx, double values[]) {
 #endif /* TAU_PAPI */
 }
 
+
+void metric_read_ktau(int tid, int idx, double values[]) {
+#ifdef TAUKTAU
+  extern double KTauGetMHz(void);
+
+  int numKtauValues;
+  long long *ktauValues = KtauCounters::getAllCounters(tid, &numKtauValues);
+
+  if (ktauValues) {
+    for(int i=0; i<numKtauValues; i++) {
+      //sometimes due to double-precision issues the below
+      //division can result in very small negative exclusive
+      //times. Currently there is no fix implemented for this.
+      //The thing to do maybe is to add a check in Profiler.cpp
+      //to make sure no negative values are set.
+      if(KtauCounters::counterType[i] != KTAU_SHCTR_TYPE_NUM) {
+        values[idx+i] = ktauValues[i]/KTauGetMHz();
+      } else {
+        values[idx+i] = ktauValues[i];
+      }
+    }
+  }
+
+#endif
+}

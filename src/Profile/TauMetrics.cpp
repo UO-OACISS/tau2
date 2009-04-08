@@ -24,6 +24,13 @@
 #include <Profile/Profiler.h>
 #include <Profile/TauTrace.h>
 
+
+
+#ifdef TAUKTAU_SHCTR
+#include "Profile/KtauCounters.h"
+#endif //TAUKTAU_SHCTR
+
+
 int TauMetrics_init();
 
 static void metricv_add(const char* name);
@@ -70,6 +77,7 @@ void metric_read_messagesize(int tid, int idx, double values[]);
 void metric_read_papivirtual(int tid, int idx, double values[]);
 void metric_read_papiwallclock(int tid, int idx, double values[]);
 void metric_read_papi(int tid, int idx, double values[]);
+void metric_read_ktau(int tid, int idx, double values[]);
 
 
 
@@ -82,32 +90,38 @@ static void metricv_add(const char* name) {
   }
 }
 
-/* This routine will reorder the metrics so that the PAPI ones all come last */
-static void reorder_metrics() {
-  const char* newmetricv[TAU_MAX_METRICS];
+/**
+ * This routine will reorder the metrics so that the PAPI ones all come last 
+ * Note: traceMetric must already be set
+ */
+static void reorder_metrics(const char *match) {
+  const char* newMetricV[TAU_MAX_METRICS];
   int idx=0;
+  int newTraceMetric;
 
   for (int i=0; i<nmetrics; i++) {
-    if (strncmp("PAPI", metricv[i], 4) != 0) {
-      newmetricv[idx++] = metricv[i];
+    if (strncmp(match, metricv[i], strlen(match)) != 0) {
+      newMetricV[idx++] = metricv[i];
     }
   }
 
   for (int i=0; i<nmetrics; i++) {
-    if (strncmp("PAPI", metricv[i], 4) == 0) {
-      newmetricv[idx++] = metricv[i];
+    if (strncmp(match, metricv[i], strlen(match)) == 0) {
+      newMetricV[idx++] = metricv[i];
     }
   }
 
   for (int i=0; i<nmetrics; i++) {
-    if (strcmp(newmetricv[i],metricv[0]) == 0) {
-      traceMetric = i;
+    if (strcmp(newMetricV[i],metricv[traceMetric]) == 0) {
+      newTraceMetric = i;
     }
   }
 
   for (int i=0; i<nmetrics; i++) {
-    metricv[i] = newmetricv[i];
+    metricv[i] = newMetricV[i];
   }
+
+  traceMetric = newTraceMetric;
 }
 
 
@@ -156,9 +170,42 @@ static int compareMetricString(const char *one, const char *two) {
 }
 
 
+
+static void TauMetrics_initializeKTAU() {
+#ifdef TAUKTAU_SHCTR
+  
+  for (int i=0; i<nmetrics; i++) {
+    int cType=0;
+
+    if (strncmp("KTAU", metricv[i], 4) == 0) {
+
+      if (strstr(metricv[i],"KTAU_INCL_") != NULL) {
+	cType = KTAU_SHCTR_TYPE_INCL;
+      } else if (strstr(metricv[i],"KTAU_NUM_") != NULL) {
+	cType = KTAU_SHCTR_TYPE_NUM;
+      } else {
+	cType = KTAU_SHCTR_TYPE_EXCL;
+      }
+      char *metric = strdup(metricv[i]);
+      metric = metric + 5; /* strip "KTAU_" */
+      KtauCounters::addCounter(metric, cType);
+    }
+  }
+
+#endif
+}
+
+
 static void initialize_functionArray() {
   int usingPAPI = 0;
   int pos = 0;
+
+  int ktau = 0;
+#ifdef TAUKTAU_SHCTR
+  ktau = 1;
+#endif
+
+
   for (int i=0; i<nmetrics; i++) {
     TAU_VERBOSE("TAU: Using metric: %s\n", metricv[i]);
     if (compareMetricString(metricv[i],"LOGICAL_CLOCK")) {
@@ -186,7 +233,11 @@ static void initialize_functionArray() {
       usingPAPI=1;
       functionArray[pos++] = metric_read_papivirtual;
     } else {
-      if (strncmp("PAPI", metricv[i], 4) != 0) { /* PAPI handled separately */
+      if (strncmp("PAPI", metricv[i], 4) == 0) { 	  
+	/* PAPI handled separately */
+      } else if (ktau && strncmp("KTAU", metricv[i], 4) == 0) {
+	/* KTAU handled separately */
+      } else {
 	fprintf (stderr, "TAU: Error: Unknown metric: %s\n", metricv[i]);
 	functionArray[pos++] = metric_read_nullClock;
       }
@@ -195,12 +246,24 @@ static void initialize_functionArray() {
 
   /* check if we are using PAPI */
   for (int i=0; i<nmetrics; i++) {
-      if (strncmp("PAPI", metricv[i], 4) == 0) {
-	functionArray[pos++] = metric_read_papi;
-	usingPAPI=1;
-	break;
-      }
+    if (strncmp("PAPI", metricv[i], 4) == 0) {
+      functionArray[pos++] = metric_read_papi;
+      usingPAPI=1;
+      break;
+    }
   }
+
+
+#ifdef TAUKTAU_SHCTR
+  for (int i=0; i<nmetrics; i++) {
+    if (strncmp("KTAU", metricv[i], 4) == 0) {
+      functionArray[pos++] = metric_read_ktau;
+      break;
+    }
+  }
+  TauMetrics_initializeKTAU();
+#endif
+
 
   if (usingPAPI) {
 #ifdef TAU_PAPI
@@ -260,7 +323,11 @@ int TauMetrics_init() {
 
 
   read_env_vars();
-  reorder_metrics();
+
+  traceMetric=0;
+  reorder_metrics("PAPI");
+  reorder_metrics("KTAU");
+
   initialize_functionArray();
 
 
