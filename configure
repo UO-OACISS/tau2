@@ -1014,7 +1014,7 @@ for arg in "$@"; do
     ;;
 
   -MULTIPLECOUNTERS)
-    echo "-MULTIPLECOUNTERS is no longer necessary, all builds support multuple counters"
+    echo "-MULTIPLECOUNTERS is no longer necessary, all builds support multiple counters"
     shift
     ;;
 
