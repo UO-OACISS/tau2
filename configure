@@ -116,7 +116,6 @@ for arg in "$@"; do
     echo "-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth."
     echo "-PROFILEMEMORY .. Track heap memory utilization at each function entry."
     echo "-PROFILEHEADROOM .. Track memory free (or headroom) at each func entry."
-    echo "-MULTIPLECOUNTERS ............ Use multiple hardware counters and time."
     echo "-COMPENSATE ........ Compensate for profiling measurement perturbation."
     echo "-BGLTIMERS .... Use fast low-overhead timers on IBM BlueGene/L systems."
     echo "-BGPTIMERS .... Use fast low-overhead timers on IBM BlueGene/P systems."
@@ -221,7 +220,6 @@ for arg in "$@"; do
     echo "-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth."
     echo "-PROFILEMEMORY .. Track heap memory utilization at each function entry."
     echo "-PROFILEHEADROOM .. Track memory free (or headroom) at each func entry."
-    echo "-MULTIPLECOUNTERS ............ Use multiple hardware counters and time."
     echo "-COMPENSATE ........ Compensate for profiling measurement perturbation."
     echo "-BGLTIMERS .... Use fast low-overhead timers on IBM BlueGene/L systems."
     echo "-BGPTIMERS .... Use fast low-overhead timers on IBM BlueGene/P systems."
@@ -327,9 +325,6 @@ papithread=no
 papipfm=no
 papisubdir=
 charm=no
-muse=no
-muse_event=no
-muse_multiple=no
 comm=yes
 sproc=no
 noex=no
@@ -358,7 +353,6 @@ intelifort=no
 intel=no
 gnu=no
 profile=no
-multiplecounters=no
 profilestats=no
 profilememory=no
 profileheadroom=no
@@ -1020,7 +1014,7 @@ for arg in "$@"; do
     ;;
 
   -MULTIPLECOUNTERS)
-    multiplecounters=yes
+    echo "-MULTIPLECOUNTERS is no longer necessary, all builds support multuple counters"
     shift
     ;;
 
@@ -2049,20 +2043,6 @@ if [ $papiwallclock = yes ]
   then
     fixmakeargs="$fixmakeargs PAPIWALLCLOCK"
     tauoptions="${tauoptions}-papiwallclock"
-fi
-
-if [ $multiplecounters = yes ]
-  then
-    fixmakeargs="$fixmakeargs MULTIPLECOUNTERS"
-    tauoptions="${tauoptions}-multiplecounters"
-    if [ $profilestats = yes ]
-    then
-      echo "******** ERROR : -MULTIPLECOUNTERS option is incompatible with "
-      echo "**************** -PROFILESTATS"
-      echo "**************** Please reconfigure TAU without these."
-      echo "******** EXITING .... "
-      exit 1
-    fi
 fi
 
 if [ $papivirtual = yes ]
