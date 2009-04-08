@@ -243,7 +243,15 @@ static void initialize_functionArray() {
 	/* KTAU handled separately */
       } else {
 	fprintf (stderr, "TAU: Error: Unknown metric: %s\n", metricv[i]);
+	/* Delete the metric */
+	for (int j=i;j<nmetrics-1;j++) {
+	  metricv[j] = metricv[j+1];
+	}
+	nmetrics--;
+
+	/* old: null clock
 	functionArray[pos++] = metric_read_nullClock;
+	*/
       }
     }
   }
