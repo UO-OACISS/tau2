@@ -205,6 +205,10 @@ static void initialize_functionArray() {
   ktau = 1;
 #endif
 
+  int papi_available = 0;
+#ifdef TAU_PAPI
+  papi_available = 1;
+#endif
 
   for (int i=0; i<nmetrics; i++) {
     TAU_VERBOSE("TAU: Using metric: %s\n", metricv[i]);
@@ -233,7 +237,7 @@ static void initialize_functionArray() {
       usingPAPI=1;
       functionArray[pos++] = metric_read_papivirtual;
     } else {
-      if (strncmp("PAPI", metricv[i], 4) == 0) { 	  
+      if (papi_available && strncmp("PAPI", metricv[i], 4) == 0) { 	  
 	/* PAPI handled separately */
       } else if (ktau && strncmp("KTAU", metricv[i], 4) == 0) {
 	/* KTAU handled separately */
