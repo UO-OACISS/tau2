@@ -9,11 +9,13 @@ import java.util.Set;
 import edu.uoregon.tau.perfdmf.Trial;
 
 /**
+ * <p>
  * This interface is defined as the methods all performance results
  * should support.  All operations should be refered to through
  * this interface, whenever possible.
+ * </p>
  * 
- * <P>CVS $Id: PerformanceResult.java,v 1.9 2009/03/13 23:38:59 khuck Exp $</P>
+ * <P>CVS $Id: PerformanceResult.java,v 1.10 2009/04/09 00:23:51 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0
@@ -64,9 +66,9 @@ public interface PerformanceResult {
 	 * This method will return the inclusive value stored in the trial for
 	 * the selected thread, event, metric combination.
 	 * 
-	 * @param thread
-	 * @param event
-	 * @param metric
+	 * @param thread The thread of interest
+	 * @param event The event of interest
+	 * @param metric The metric of interest
 	 * @return the inclusive value
 	 */
 	public double getInclusive(Integer thread, String event, String metric);
@@ -75,9 +77,9 @@ public interface PerformanceResult {
 	 * This method will return the exclusive value stored in the trial for
 	 * the selected thread, event, metric combination.
 	 * 
-	 * @param thread
-	 * @param event
-	 * @param metric
+	 * @param thread The thread of interest
+	 * @param event The event of interest
+	 * @param metric The metric of interest
 	 * @return the exclusive value
 	 */
 	public double getExclusive(Integer thread, String event, String metric);
@@ -86,8 +88,8 @@ public interface PerformanceResult {
 	 * This method will return the number of times that the specified event
 	 * was called on the specified thread of execution.
 	 * 
-	 * @param thread
-	 * @param event
+	 * @param thread The thread of interest
+	 * @param event The event of interest
 	 * @return the number of calls
 	 */
 	public double getCalls(Integer thread, String event);
@@ -96,26 +98,70 @@ public interface PerformanceResult {
 	 * This method will return the number of subroutines that the specified event
 	 * had on the specified thread of execution.
 	 * 
-	 * @param thread
-	 * @param event
+	 * @param thread The thread of interest
+	 * @param event The event of interest
 	 * @return the number of subroutines
 	 */
 	public double getSubroutines(Integer thread, String event);
 	
+	/**
+	 * This method will return the number of times that a specified user event
+	 * happened on the specified thread of execution.
+	 * 
+	 * @param thread The thread of interest
+	 * @param event The event of interest
+	 * @return the number of events
+	 */
 	public double getUsereventNumevents(Integer thread, String event);
+
+	/**
+	 * This method will return the maximum value for the specified user event
+	 * which was observed on the specified thread of execution.
+	 * 
+	 * @param thread The thread of interest
+	 * @param event The event of interest
+	 * @return the maximum value
+	 */
 	public double getUsereventMax(Integer thread, String event);
+
+	/**
+	 * This method will return the minimum value for the specified user event
+	 * which was observed on the specified thread of execution.
+	 * 
+	 * @param thread The thread of interest
+	 * @param event The event of interest
+	 * @return the minimum value
+	 */
 	public double getUsereventMin(Integer thread, String event);
+
+	/**
+	 * This method will return the mean value for the specified user event
+	 * which was observed on the specified thread of execution.
+	 * 
+	 * @param thread The thread of interest
+	 * @param event The event of interest
+	 * @return the mean value
+	 */
 	public double getUsereventMean(Integer thread, String event);
+
+	/**
+	 * This method will return the sum of squared values for the specified user
+	 * event which was observed on the specified thread of execution.
+	 * 
+	 * @param thread The thread of interest
+	 * @param event The event of interest
+	 * @return the sum of squared values
+	 */
 	public double getUsereventSumsqr(Integer thread, String event);
 
 	/**
 	 * This method will save the specified value as the inclusive value for the
 	 * specified thread, event, metric combination.
 	 * 
-	 * @param thread
-	 * @param event
-	 * @param metric
-	 * @param value
+	 * @param thread The thread of interest
+	 * @param event The event of interest
+	 * @param metric The metric of interest
+	 * @param value The value measured on that thread, event, metric combination
 	 */
 	public void putInclusive(Integer thread, String event, String metric, double value);
 	
@@ -123,10 +169,10 @@ public interface PerformanceResult {
 	 * This method will save the specified value as the exclusive value for the
 	 * specified thread, event, metric combination.
 	 * 
-	 * @param thread
-	 * @param event
-	 * @param metric
-	 * @param value
+	 * @param thread The thread of interest
+	 * @param event The event of interest
+	 * @param metric The metric of interest
+	 * @param value The value measured on that thread, event, metric combination
 	 */
 	public void putExclusive(Integer thread, String event, String metric, double value);
 	
@@ -134,9 +180,9 @@ public interface PerformanceResult {
 	 * This method will save the specified value as the number of calls for the
 	 * specified event on the specified thread of execution.
 	 * 
-	 * @param thread
-	 * @param event
-	 * @param value
+	 * @param thread The thread of interest
+	 * @param event The event of interest
+	 * @param value The value measured on that thread, event combination
 	 */
 	public void putCalls(Integer thread, String event, double value);
 	
@@ -144,16 +190,60 @@ public interface PerformanceResult {
 	 * This method will save the specified value as the number of subroutines for the
 	 * specified event on the specified thread of execution.
 	 * 
-	 * @param thread
-	 * @param event
-	 * @param value
+	 * @param thread The thread of interest
+	 * @param event The event of interest
+	 * @param value The value measured on that thread, event combination
 	 */
 	public void putSubroutines(Integer thread, String event, double value);
 	
+	/**
+	 * This method will save the number of times that a specified user event
+	 * happened on the specified thread of execution.
+	 * 
+	 * @param thread The thread of interest
+	 * @param event The event of interest
+	 * @param value The number of events
+	 */
 	public void putUsereventNumevents(Integer thread, String event, double value);
+	
+	/**
+	 * This method will save the maximum value for a specified user event which
+	 * was observed on the specified thread of execution.
+	 * 
+	 * @param thread The thread of interest
+	 * @param event The event of interest
+	 * @param value The maximum value
+	 */
 	public void putUsereventMax(Integer thread, String event, double value);
+
+	/**
+	 * This method will save the minimum value for a specified user event which
+	 * was observed on the specified thread of execution.
+	 * 
+	 * @param thread The thread of interest
+	 * @param event The event of interest
+	 * @param value The minimum value
+	 */
 	public void putUsereventMin(Integer thread, String event, double value);
+
+	/**
+	 * This method will save the mean value for a specified user event which
+	 * was observed on the specified thread of execution.
+	 * 
+	 * @param thread The thread of interest
+	 * @param event The event of interest
+	 * @param value The mean value
+	 */
 	public void putUsereventMean(Integer thread, String event, double value);
+
+	/**
+	 * This method will save the sum of squared values for the specified user
+	 * event which was observed on the specified thread of execution.
+	 * 
+	 * @param thread The thread of interest
+	 * @param event The event of interest
+	 * @param value The sum of squared values
+	 */
 	public void putUsereventSumsqr(Integer thread, String event, double value);
 	
 	/**
@@ -168,11 +258,12 @@ public interface PerformanceResult {
 	 * This method will return the value stored in the trial for the specified thread,
 	 * event, metric, type combination.
 	 * 
-	 * @param thread
-	 * @param event
-	 * @param metric
-	 * @param type
-	 * @return the value
+	 * @param thread The thread of interest
+	 * @param event The event of interest
+	 * @param metric The metric of interest
+	 * @param type The type of data to return
+	 * @return the value The value of that type measured on that thread, event,
+	 * metric combination
 	 * @see #getExclusive
 	 * @see #getInclusive
 	 * @see #getCalls
@@ -193,11 +284,12 @@ public interface PerformanceResult {
 	 * This method will store the specified value in the trial for the specified thread,
 	 * event, metric, type combination.
 	 * 
-	 * @param thread
-	 * @param event
-	 * @param metric
-	 * @param type
-	 * @param value
+	 * @param thread The thread of interest
+	 * @param event The event of interest
+	 * @param metric The metric of interest
+	 * @param type The type of data to return 
+	 * @param value The value The value of that type measured on that thread,
+	 * event, metric combination
 	 * @see #putExclusive
 	 * @see #putInclusive
 	 * @see #putCalls
@@ -222,7 +314,6 @@ public interface PerformanceResult {
 
 	/**
 	 * This method will return the metric which represents the time metric in the trial.
-	 * 
 	 * @return the metric name
 	 */
 	public String getTimeMetric();
@@ -231,9 +322,9 @@ public interface PerformanceResult {
 	 * This method will return a Map of values, sorted by the values.  The keys to the map
 	 * are the event strings in the trial.
 	 * 
-	 * @param metric
-	 * @param type
-	 * @param ascending
+	 * @param metric The metric of interest
+	 * @param type The type of data
+	 * @param ascending Either ascending (true) or descending (false) order
 	 * @return the Map of values
 	 * @see AbstractResult#INCLUSIVE
 	 * @see AbstractResult#EXCLUSIVE
@@ -332,17 +423,21 @@ public interface PerformanceResult {
 	
 	/**
 	 * Set the name for this input.
-	 *
+	 * @param name The new name for the input
 	 */
 	public void setName(String name);
 
 	/**
+	 * Get a Map of events in this result.
 	 * @return the eventMap
+	 * @see java.util.Map
 	 */
 	public Map<Integer, String> getEventMap();
 
 	/**
+	 * Set the Map of events in this result.
 	 * @param eventMap the eventMap to set
+	 * @see java.util.Map
 	 */
 	public void setEventMap(Map<Integer, String> eventMap);
 	
@@ -353,8 +448,7 @@ public interface PerformanceResult {
 	public void updateEventMap();
 	
 	/**
-	 * when values are requested from the trial, ignore warnings if the values are null
-	 * 
+	 * When values are requested from the trial, ignore warnings if the values are null
 	 * @param ignore
 	 */
 	public void setIgnoreWarnings(boolean ignore);

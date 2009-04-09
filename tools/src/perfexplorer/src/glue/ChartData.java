@@ -13,7 +13,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIChartData;
 public class ChartData extends RMIChartData {
 
 	/**
-	 * @param dataType
+	 * 
 	 */
 	public ChartData() {
 		super(ChartDataType.CUSTOM);

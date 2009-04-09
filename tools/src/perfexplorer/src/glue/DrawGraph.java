@@ -1,6 +1,3 @@
-/**
- * 
- */
 package edu.uoregon.tau.perfexplorer.glue;
 
 import java.awt.BasicStroke;
@@ -28,44 +25,199 @@ import edu.uoregon.tau.perfexplorer.client.MyCategoryAxis;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerChart;
 
 /**
+ * <p>
+ * The DrawGraph class is a PerfExplorer Operation class for drawing a line
+ * graph from an analysis script.  The creation of the graph is fairly
+ * straightforward.  One or more input {@link PerformanceResult} objects
+ * are used as the input for the constructor.  After the constructor,
+ * various options for the graph are set.  The fields which are commonly
+ * set are the series type ({@link #setSeriesType}), the category type
+ * ({@link #setCategoryType}), and the value type ({@link #setValueType}).
+ * Once the options are set, the {@link #processData} method is called
+ * to generate the graph.
+ * </p>
+ *
+ * <p>
+ * This class has undefined behavior when running PerfExplorer without
+ * the GUI.
+ * </p>
+ *
+ * <p>
+ * Example code from Python script:
+ * </p>
+ * <pre>
+
+from edu.uoregon.tau.perfexplorer.glue import *
+from edu.uoregon.tau.perfdmf import *
+from java.util import *
+from java.lang import *
+
+True = 1
+False = 0
+
+def loadFile(fileName):
+	# load the trial
+	files = []
+	files.append(fileName)
+	input = DataSourceResult(DataSourceResult.PPK, files, False)
+	return input
+
+def loadFromFiles():
+	inputs = ArrayList()
+	inputs.add(loadFile("2.ppk"))
+	inputs.add(loadFile("4.ppk"))
+	inputs.add(loadFile("6.ppk"))
+	inputs.add(loadFile("8.ppk"))
+	return inputs
+
+def drawGraph(results):
+	metric = "Time"
+	grapher = DrawGraph(results)
+	metrics = HashSet()
+	metrics.add(metric)
+	grapher.setMetrics(metrics)
+	grapher.setLogYAxis(False)
+	grapher.setShowZero(True)
+	grapher.setTitle("Graph of Multiple Trials: " + metric)
+	grapher.setSeriesType(DrawGraph.EVENTNAME)
+	grapher.setUnits(DrawGraph.SECONDS)
+	grapher.setCategoryType(DrawGraph.PROCESSORCOUNT)
+	grapher.setXAxisLabel("Processor Count")
+	grapher.setValueType(AbstractResult.EXCLUSIVE)
+	grapher.setYAxisLabel("Exclusive " + metric + " (seconds)")
+	grapher.processData()
+
+def main():
+	print "--------------- JPython test script start ------------"
+	inputs = loadFromFiles()
+
+	# extract the event of interest
+	events = ArrayList()
+	events.add("MPI_Send()")
+	extractor = ExtractEventOperation(inputs, events)
+	extracted = extractor.processData()
+
+	drawGraph(extracted)
+	print "---------------- JPython test script end -------------"
+
+if __name__ == "__main__":
+    main()
+
+ * </pre>
+ *
+ * <P>CVS $Id: DrawGraph.java,v 1.14 2009/04/09 00:23:51 khuck Exp $</P>
  * @author khuck
+ * @version 0.2
+ * @since   0.2
  *
  */
 public class DrawGraph extends AbstractPerformanceOperation {
 
-    /**
-	 * 
-	 */
 	private static final long serialVersionUID = -5587605162968129610L;
 	protected Set<String> _events = null;
     protected Set<String> _metrics = null;
     protected Set<Integer> _threads = null;
 	
+    /** 
+	 * Constant for specifying that the Trial Name should be used for the
+	 * series name or the category axis. 
+	 * @see #setSeriesType
+	 * @see #setCategoryType
+	 */
     public static final int TRIALNAME = 0;
+    /** 
+	 * Constant for specifying that the Event Name should be used for the
+	 * series name or the category axis.
+	 * @see #setSeriesType
+	 * @see #setCategoryType
+	 */
     public static final int EVENTNAME = 1;
+    /** 
+	 * Constant for specifying that the Metric Name should be used for the
+	 * series name or the category axis.  
+	 * @see #setSeriesType
+	 * @see #setCategoryType
+	 */
     public static final int METRICNAME = 2;
+    /** 
+	 * Constant for specifying that the Thread Name should be used for the
+	 * series name or the category axis.  
+	 * @see #setSeriesType
+	 * @see #setCategoryType
+	 */
     public static final int THREADNAME = 3;
+    /** 
+	 * Constant for specifying that the UserEvent Name should be used for the
+	 * series name or the category axis.  
+	 * @see #setSeriesType
+	 * @see #setCategoryType
+	 */
     public static final int USEREVENTNAME = 4;
+    /** 
+	 * Constant for specifying that the Processor Count should be used for the
+	 * series name or the category axis.  
+	 * @see #setSeriesType
+	 * @see #setCategoryType
+	 */
     public static final int PROCESSORCOUNT = 5;
+    /** 
+	 * Constant for specifying that a Metadata field should be used for the
+	 * series name or the category axis.  {@link #setMetadataField} should
+	 * be called to specify which metadata field to use.
+	 * @see #setSeriesType
+	 * @see #setCategoryType
+	 * @see #setMetadataField 
+	 */
     public static final int METADATA = 6;
 
+    /**
+	 * Constant for specifying the Y axis units for the graph should be
+	 * microseconds (10xe-6 seconds).  This is the default.
+	 * @see #setUnits
+     */
 	public static final int MICROSECONDS = 1;
+    /**
+	 * Constant for specifying the Y axis units for the graph should be
+	 * milliseconds (10xe-3 seconds).
+	 * @see #setUnits
+     */
 	public static final int MILLISECONDS = 1000;
+    /**
+	 * Constant for specifying the Y axis units for the graph should be
+	 * thousands (10xe3 units).
+	 * @see #setUnits
+     */
 	public static final int THOUSANDS = 1000;
+    /**
+	 * Constant for specifying the Y axis units for the graph should be seconds.
+	 * @see #setUnits
+     */
 	public static final int SECONDS = 1000000;
+    /**
+	 * Constant for specifying the Y axis units for the graph should be
+	 * millions (10xe6 units).
+	 * @see #setUnits
+     */
 	public static final int MILLIONS = 1000000;
+    /**
+	 * Constant for specifying the Y axis units for the graph should be minutes.
+	 * @see #setUnits
+     */
 	public static final int MINUTES = 60000000;
+    /**
+	 * Constant for specifying the Y axis units for the graph should be
+	 * thousands (10xe9 units).
+	 * @see #setUnits
+     */
 	public static final int BILLIONS = 1000000000;
 
 	protected int units = MICROSECONDS;
-
     protected int seriesType = METRICNAME;  // sets the series name
     protected int categoryType = THREADNAME;  // sets the X axis
     protected int valueType = AbstractResult.EXCLUSIVE;
     protected boolean logYAxis = false;
     protected boolean showZero = false;
 	protected int categoryNameLength = 0;
-    
     protected String title = "My Chart";
     protected String yAxisLabel = "value";
     protected String xAxisLabel = "category";
@@ -75,6 +227,8 @@ public class DrawGraph extends AbstractPerformanceOperation {
 	protected boolean shortenNames = false;
     
 	/**
+	 * Creates a graph drawing operator.
+	 *
 	 * @param input
 	 */
 	public DrawGraph(PerformanceResult input) {
@@ -83,6 +237,8 @@ public class DrawGraph extends AbstractPerformanceOperation {
 	}
 
 	/**
+	 * Creates a graph drawing operator.
+	 *
 	 * @param trial
 	 */
 	public DrawGraph(Trial trial) {
@@ -91,6 +247,8 @@ public class DrawGraph extends AbstractPerformanceOperation {
 	}
 
 	/**
+	 * Creates a graph drawing operator.
+	 *
 	 * @param inputs
 	 */
 	public DrawGraph(List<PerformanceResult> inputs) {
@@ -186,7 +344,8 @@ public class DrawGraph extends AbstractPerformanceOperation {
             			
             				// set the category name
             				if (categoryType == TRIALNAME) {
-            					categoryName = input.getTrial().getName();
+            					//categoryName = input.getTrial().getName();
+            					categoryName = input.getName();
             				} else if (categoryType == EVENTNAME) {
             					if (shortenNames) {
             						categoryName = this.shortName(event);
@@ -271,201 +430,159 @@ public class DrawGraph extends AbstractPerformanceOperation {
 	}
 
 	/**
-	 * @return the eVENTNAME
+	 * Set the events used for the graph.
+	 * @param events The Set of events used for the graph.
 	 */
-	public static int getEVENTNAME() {
-		return EVENTNAME;
+	public void setEvents(Set<String> events) {
+		this._events = events;
 	}
 
 	/**
-	 * @return the mETRICNAME
+	 * Set the metrics used for the graph.
+	 * @param metrics The Set of metrics used for the graph.
 	 */
-	public static int getMETRICNAME() {
-		return METRICNAME;
+	public void setMetrics(Set<String> metrics) {
+		this._metrics = metrics;
 	}
 
 	/**
-	 * @return the tHREADNAME
+	 * Set the threads used for the graph.
+	 * @param threads The Set of threads used for the graph.
 	 */
-	public static int getTHREADNAME() {
-		return THREADNAME;
+	public void setThreads(Set<Integer> threads) {
+		this._threads = threads;
 	}
 
 	/**
-	 * @return the tRIALNAME
-	 */
-	public static int getTRIALNAME() {
-		return TRIALNAME;
-	}
-
-	/**
-	 * @return the _events
-	 */
-	public Set<String> get_events() {
-		return _events;
-	}
-
-	/**
-	 * @param _events the _events to set
-	 */
-	public void set_events(Set<String> _events) {
-		this._events = _events;
-	}
-
-	/**
-	 * @return the _metrics
-	 */
-	public Set<String> get_metrics() {
-		return _metrics;
-	}
-
-	/**
-	 * @param _metrics the _metrics to set
-	 */
-	public void set_metrics(Set<String> _metrics) {
-		this._metrics = _metrics;
-	}
-
-	/**
-	 * @return the _threads
-	 */
-	public Set<Integer> get_threads() {
-		return _threads;
-	}
-
-	/**
-	 * @param _threads the _threads to set
-	 */
-	public void set_threads(Set<Integer> _threads) {
-		this._threads = _threads;
-	}
-
-	/**
-	 * @return the categoryType
-	 */
-	public int getCategoryType() {
-		return categoryType;
-	}
-
-	/**
-	 * @param categoryType the categoryType to set
+	 * Set the category type for the graph.
+	 * @param categoryType The category type
+	 * @see #TRIALNAME
+	 * @see #EVENTNAME
+	 * @see #METRICNAME
+	 * @see #THREADNAME
+	 * @see #USEREVENTNAME
+	 * @see #PROCESSORCOUNT
+	 * @see #METADATA
 	 */
 	public void setCategoryType(int categoryType) {
 		this.categoryType = categoryType;
 	}
 
 	/**
-	 * @return the logYAxis
-	 */
-	public boolean isLogYAxis() {
-		return logYAxis;
-	}
-
-	/**
-	 * @param logYAxis the logYAxis to set
+	 * Set whether or not the Y axis is a log scale.
+	 * @param logYAxis Whether or not the Y Axis is a Log scale
 	 */
 	public void setLogYAxis(boolean logYAxis) {
 		this.logYAxis = logYAxis;
 	}
 
 	/**
-	 * @return the seriesType
-	 */
-	public int getSeriesType() {
-		return seriesType;
-	}
-
-	/**
-	 * @param seriesType the seriesType to set
+	 * Set the series type for the graph.
+	 * @param seriesType The series type
+	 * @see #TRIALNAME
+	 * @see #EVENTNAME
+	 * @see #METRICNAME
+	 * @see #THREADNAME
+	 * @see #USEREVENTNAME
+	 * @see #PROCESSORCOUNT
+	 * @see #METADATA
 	 */
 	public void setSeriesType(int seriesType) {
 		this.seriesType = seriesType;
 	}
 
 	/**
-	 * @return the title
-	 */
-	public String getTitle() {
-		return title;
-	}
-
-	/**
-	 * @param title the title to set
+	 * Set the title for the graph.
+	 * @param title The title of the graph
 	 */
 	public void setTitle(String title) {
 		this.title = title;
 	}
 
 	/**
-	 * @return the valueType
-	 */
-	public int getValueType() {
-		return valueType;
-	}
-
-	/**
-	 * @param valueType the valueType to set
+	 * Set the value type for the graph.
+	 * @param valueType The value type
+	 * @see AbstractResult#CALLS
+	 * @see AbstractResult#EXCLUSIVE
+	 * @see AbstractResult#INCLUSIVE
+	 * @see AbstractResult#SUBROUTINES
+	 * @see AbstractResult#USEREVENT_MAX
+	 * @see AbstractResult#USEREVENT_MEAN
+	 * @see AbstractResult#USEREVENT_MIN
+	 * @see AbstractResult#USEREVENT_NUMEVENTS
+	 * @see AbstractResult#USEREVENT_SUMSQR
 	 */
 	public void setValueType(int valueType) {
 		this.valueType = valueType;
 	}
 
 	/**
-	 * @return the xaxisLabel
-	 */
-	public String getXAxisLabel() {
-		return xAxisLabel;
-	}
-
-	/**
-	 * @param xAxisLabel the xAxisLabel to set
+	 * Set the label used for the X Axis.
+	 * @param xAxisLabel The label used for the X Axis
 	 */
 	public void setXAxisLabel(String xAxisLabel) {
 		this.xAxisLabel = xAxisLabel;
 	}
 
 	/**
-	 * @return the yAxisLabel
-	 */
-	public String getYAxisLabel() {
-		return yAxisLabel;
-	}
-
-	/**
-	 * @param yAxisLabel the yAxisLabel to set
+	 * Set the label used for the Y Axis.
+	 * @param yAxisLabel The label used for the Y Axis
 	 */
 	public void setYAxisLabel(String yAxisLabel) {
 		this.yAxisLabel = yAxisLabel;
 	}
 
+	/**
+	 * Set whether or not to use user events from the trials.  If false,
+	 * interval events are used.
+	 * @param userEvents Whether or not to use user events from the trials.
+	 */
 	public void setUserEvents(boolean userEvents) {
 		this.userEvents = userEvents;
 	}
 
+	/**
+	 * Set whether or not to have the Y axis go all the way from 0 as
+	 * a minimum value.
+	 * @param showZero Whether or not to have the Y axis go all the way from 0.
+	 */
 	public void setShowZero(boolean showZero) {
 		this.showZero = showZero;
 	}
 
-	public boolean getShowZero() {
-		return this.showZero;
-	}
-
-	public String getMetadataField() {
-		return metadataField;
-	}
-
+	/**
+	 * The metadata field to use for either the series name or the category name.
+	 * This method only has meaning if the series type or category type have been
+	 * set to {@link #METADATA}.
+	 * @param metadataField The metadata field to use for either the series name or
+	 * the category name.
+	 * @see #setSeriesType
+	 * @see #setCategoryType
+	 * @see #METADATA
+	 */
 	public void setMetadataField(String metadataField) {
 		this.metadataField = metadataField;
 	}
 
+	/**
+	 * Set the units to use for the graph.
+	 * @param units The units to use for the graph.
+	 * @see #MICROSECONDS
+	 * @see #MILLISECONDS
+	 * @see #SECONDS
+	 * @see #MINUTES
+	 * @see #THOUSANDS
+	 * @see #MILLIONS
+	 * @see #BILLIONS
+	 */
 	public void setUnits(int units) {
 		this.units = units;
 	}
 
-	public int getUnits() {
-		return this.units;
-	}
-
+	/**
+	 * Draws the graph to the file name specified.
+	 * @param fileName The filename for the graph output.
+	 */
 	public void drawChartToFile(String fileName) {
 		try {
 			VectorExport.export(chartWindow, new File(fileName), true, "PerfExplorer", true, true);
@@ -499,14 +616,8 @@ public class DrawGraph extends AbstractPerformanceOperation {
 	}
 
 	/**
-	 * @return the shortenNames
-	 */
-	public boolean isShortenNames() {
-		return shortenNames;
-	}
-
-	/**
-	 * @param shortenNames the shortenNames to set
+	 * Sets whether to remove parameters and line numbers from function names.
+	 * @param shortenNames Whether to remove parameters and line numbers from function names
 	 */
 	public void setShortenNames(boolean shortenNames) {
 		this.shortenNames = shortenNames;

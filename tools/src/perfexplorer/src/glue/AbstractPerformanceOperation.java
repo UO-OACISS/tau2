@@ -14,11 +14,11 @@ import edu.uoregon.tau.perfdmf.Trial;
 
 
 /**
- * This class is used as an abstract implementation of the PerformanceAnalysisOperation
- * interface.  This class has all the member data fields for the plethora
- * of anticipated subclasses.
+ * The AbstractPerformanceOperation class is used as an abstract implementation
+ * of the {@link PerformanceAnalysisOperation} interface.  This class has all the
+ * member data fields for the plethora of anticipated subclasses.
  * 
- * <P>CVS $Id: AbstractPerformanceOperation.java,v 1.6 2009/03/17 00:26:42 khuck Exp $</P>
+ * <P>CVS $Id: AbstractPerformanceOperation.java,v 1.7 2009/04/09 00:23:51 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0 */

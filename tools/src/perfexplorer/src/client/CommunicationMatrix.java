@@ -68,6 +68,7 @@ public class CommunicationMatrix {
 				if (data[thread][0] == 0) continue;
 				
 				if (event.startsWith("Message size sent to node ") && !event.contains("=>")) {
+					foundData = true;
 					// split the string
 					extractData(data, thread, event, event, allPaths);
 				}

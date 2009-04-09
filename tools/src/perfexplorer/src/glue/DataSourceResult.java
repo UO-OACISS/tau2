@@ -57,6 +57,7 @@ public class DataSourceResult extends AbstractResult {
         File[] files = new File[sourceFiles.length];
         for (int i = 0; i < sourceFiles.length; i++) {
             files[i] = new File(sourceFiles[i]);
+    		this.name = files[i].getName();
         }
         DataSource source = UtilFncs.initializeDataSource(files, fileType, fixNames);
         try{

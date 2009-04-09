@@ -56,8 +56,8 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 						foundData = true;
 						// split the string
 						extractData(input, thread, event, event, allPaths);
-					}
-					else if (event.startsWith("Message size sent to node ") && event.contains("=>")) {
+					} else if (event.startsWith("Message size sent to node ") && event.contains("=>")) {
+						foundData = true;
 						StringTokenizer st = new StringTokenizer(event, ":");
 						String first = st.nextToken().trim();
 						String path = st.nextToken().trim();
