@@ -9,7 +9,7 @@
  * as the {@link edu.uoregon.tau.perfdmf.Application},
  * {@link edu.uoregon.tau.perfdmf.Experiment}, and 
  * {@link edu.uoregon.tau.perfdmf.Trial} classes.  
- * <p>  
+ * </p>  
  * <center><img width="50%" src="doc-files/PerfExplorerGlueObjects.png"/></center>
  * <p>  
  * The glue package provides a user-accessible programming interface,
@@ -33,6 +33,7 @@
  * one more more input data sets with two or more metrics each, and generate
  * a derived metric representing either the addition, subtraction, multiplication,
  * or division of one metric with the other.  
+ * </p>
  * <p>
  * Corresponding with the operation
  * hierarchy is the data hierarchy.  At the top of the hierarchy is the
@@ -45,7 +46,81 @@
  * an example of a class which is a concrete implementation of the
  * abstract class, and provides an object which holds the performance
  * profile data for a given trial, when loaded from PerfDMF.
+ * </p>
+ * <p>
+ * Here is an example script which demonstrates the use of the package:
+ * </p>
  *
+ * <pre>
+from edu.uoregon.tau.perfexplorer.glue import *
+from edu.uoregon.tau.perfdmf import *
+from java.util import *
+from java.lang import *
+
+True = 1
+False = 0
+
+def loadDB(app, exp, trial):
+	trial = Utilities.getTrial(app, exp, trial)
+	input = TrialMeanResult(trial)
+	return input
+
+def loadFromDB():
+	# set this to your database configuration
+	Utilities.setSession("your_database_configuration")
+	# change these to the application, experiment and trials of interest
+	inputs.add(loadDB("application", "experiment", "trial1"))
+	inputs.add(loadDB("application", "experiment", "trial2"))
+	inputs.add(loadDB("application", "experiment", "trial3"))
+	inputs.add(loadDB("application", "experiment", "trial4"))
+	return inputs
+
+def drawGraph(results):
+	# set this to the metric of interest
+	metric = "Time"
+	grapher = DrawGraph(results)
+	metrics = HashSet()
+	metrics.add(metric)
+	grapher.setMetrics(metrics)
+	grapher.setLogYAxis(False)
+	grapher.setShowZero(True)
+	grapher.setTitle("Graph of Multiple Trials: " + metric)
+	grapher.setSeriesType(DrawGraph.EVENTNAME)
+	grapher.setUnits(DrawGraph.SECONDS)
+
+	# for processor count X axis
+	grapher.setCategoryType(DrawGraph.PROCESSORCOUNT)
+
+	# for trial name X axis
+	#grapher.setCategoryType(DrawGraph.TRIALNAME)
+
+	# for metadata field on X axis
+	#grapher.setCategoryType(DrawGraph.METADATA)
+	#grapher.setMetadataField("pid")
+
+	grapher.setXAxisLabel("Processor Count")
+	grapher.setValueType(AbstractResult.EXCLUSIVE)
+	grapher.setYAxisLabel("Exclusive " + metric + " (seconds)")
+	grapher.processData()
+
+def main():
+	print "--------------- JPython test script start ------------"
+	# load the data
+	inputs = loadFromFiles()
+
+	# extract the event of interest
+	events = ArrayList()
+	# change this to zoneLimitedGradient(PileOfScalars) as necessary
+	events.add("MPI_Send()")
+	extractor = ExtractEventOperation(inputs, events)
+	extracted = extractor.processData()
+
+	drawGraph(extracted)
+	print "---------------- JPython test script end -------------"
+
+if __name__ == "__main__":
+    main()
+ * </pre>
  * 
  * @since 2.0 
  * @see edu.uoregon.tau.perfdmf
