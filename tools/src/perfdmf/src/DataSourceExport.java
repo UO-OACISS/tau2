@@ -64,7 +64,7 @@ public class DataSourceExport {
         for (Iterator it = dataSource.getAllThreads().iterator(); it.hasNext();) {
             Thread thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
 
-            for (Iterator it2 = thread.getUserEventProfiles().iterator(); it2.hasNext();) {
+            for (Iterator it2 = thread.getUserEventProfiles(); it2.hasNext();) {
                 UserEventProfile uep = (UserEventProfile) it2.next();
                 if (uep != null) {
 

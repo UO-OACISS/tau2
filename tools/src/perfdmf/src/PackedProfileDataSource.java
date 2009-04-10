@@ -13,9 +13,9 @@ import edu.uoregon.tau.common.TrackerInputStream;
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: PackedProfileDataSource.java,v 1.17 2008/03/06 01:25:56 amorris Exp $</P>
+ * <P>CVS $Id: PackedProfileDataSource.java,v 1.18 2009/04/10 21:10:26 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.17 $
+ * @version $Revision: 1.18 $
  */
 public class PackedProfileDataSource extends DataSource {
 
@@ -206,7 +206,6 @@ public class PackedProfileDataSource extends DataSource {
             for (int j = 0; j < numUserEventProfiles; j++) {
                 int userEventID = p.readInt();
                 UserEventProfile uep = new UserEventProfile(userEvents[userEventID]);
-
                 uep.setNumSamples(p.readInt());
                 uep.setMinValue(p.readDouble());
                 uep.setMaxValue(p.readDouble());

@@ -20,11 +20,11 @@ import edu.uoregon.tau.perfdmf.database.DB;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.23 2009/03/16 23:25:44 wspear Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.24 2009/04/10 21:10:25 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.23 $
+ * @version $Revision: 1.24 $
  */
 public class DatabaseAPI {
 
@@ -50,7 +50,7 @@ public class DatabaseAPI {
     private boolean cancelUpload = false;
 
     private Database database;
-    
+
     public void cancelUpload() {
         this.cancelUpload = true;
     }
@@ -77,8 +77,7 @@ public class DatabaseAPI {
         this.experiment = experiment;
     }
 
-    public DatabaseAPI() {
-    }
+    public DatabaseAPI() {}
 
     public DB db() {
         return db;
@@ -91,16 +90,13 @@ public class DatabaseAPI {
     // Initialization / termination routines
 
     public void initialize(String configFile, boolean prompt) throws SQLException {
-    	if (configFile.startsWith("http") || (new java.io.File(configFile).exists()))
-    	{
-    		initialize(new Database(configFile), prompt);
-    	}
-    	else
-    	{
-    		System.err.println("Could not find file: " + configFile);
-    	}
+        if (configFile.startsWith("http") || (new java.io.File(configFile).exists())) {
+            initialize(new Database(configFile), prompt);
+        } else {
+            System.err.println("Could not find file: " + configFile);
+        }
     }
-    
+
     public void initialize(Database database, boolean prompt) throws SQLException {
         this.database = database;
         connector = new ConnectionManager(database, prompt);
@@ -163,7 +159,7 @@ public class DatabaseAPI {
         } else if (application != null) {
             whereClause.append("WHERE e.application = " + application.getID());
         }
-        return Trial.getTrialList(db, whereClause.toString(),getMetadata);
+        return Trial.getTrialList(db, whereClause.toString(), getMetadata);
     }
 
     // set the Application for this session
@@ -259,7 +255,7 @@ public class DatabaseAPI {
         }
         // create a string to hit the database
         String whereClause;
-        whereClause = " WHERE t.name = '" + trialName +"'";
+        whereClause = " WHERE t.name = '" + trialName + "'";
         Vector trials = Trial.getTrialList(db, whereClause, getXMLMetadata);
         if (trials.size() == 1) {
             this.trial = (Trial) trials.elementAt(0);
@@ -345,9 +341,9 @@ public class DatabaseAPI {
         intervalEvent = getIntervalEvent(id);
         if (intervalEvent != null) {
             this.intervalEvents.addElement(intervalEvent);
-        	// we need this to get the metric data...
-        	setTrial(intervalEvent.getTrialID(), false);
-		}
+            // we need this to get the metric data...
+            setTrial(intervalEvent.getTrialID(), false);
+        }
         return intervalEvent;
     }
 
@@ -362,10 +358,10 @@ public class DatabaseAPI {
     }
 
     // clears the interval event selection
-	public void clearIntervalEvents() {
+    public void clearIntervalEvents() {
         this.intervalEvents = null;
-		return;
-	}
+        return;
+    }
 
     // sets the current node ID
     public void setNode(int id) {
@@ -400,7 +396,7 @@ public class DatabaseAPI {
 
         // get the hash of intervalEvent names first
         //if (intervalEvents == null) {
-            //getIntervalEvents();
+        //getIntervalEvents();
         //}
 
         // get the metric count
@@ -877,7 +873,6 @@ public class DatabaseAPI {
         for (Iterator it = trial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
             edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
             List intervalEvents = thread.getFunctionProfiles();
-            List userevents = thread.getUserEventProfiles();
 
             // create interval location profiles
             for (Iterator e4 = intervalEvents.iterator(); e4.hasNext();) {
@@ -902,23 +897,22 @@ public class DatabaseAPI {
             }
 
             // create atomic events
-            if (userevents != null) {
-                for (Iterator e4 = userevents.iterator(); e4.hasNext();) {
-                    UserEventProfile uep = (UserEventProfile) e4.next();
-                    if (uep != null) {
 
-                        AtomicLocationProfile udo = new AtomicLocationProfile();
-                        udo.setAtomicEventID(uep.getUserEvent().getID());
-                        udo.setNode(thread.getNodeID());
-                        udo.setContext(thread.getContextID());
-                        udo.setThread(thread.getThreadID());
-                        udo.setSampleCount((int) uep.getNumSamples());
-                        udo.setMaximumValue(uep.getMaxValue());
-                        udo.setMinimumValue(uep.getMinValue());
-                        udo.setMeanValue(uep.getMeanValue());
-                        udo.setSumSquared(uep.getSumSquared());
-                        atomicEventData.add(udo);
-                    }
+            for (Iterator e4 = thread.getUserEventProfiles(); e4.hasNext();) {
+                UserEventProfile uep = (UserEventProfile) e4.next();
+                if (uep != null) {
+
+                    AtomicLocationProfile udo = new AtomicLocationProfile();
+                    udo.setAtomicEventID(uep.getUserEvent().getID());
+                    udo.setNode(thread.getNodeID());
+                    udo.setContext(thread.getContextID());
+                    udo.setThread(thread.getThreadID());
+                    udo.setSampleCount((int) uep.getNumSamples());
+                    udo.setMaximumValue(uep.getMaxValue());
+                    udo.setMinimumValue(uep.getMinValue());
+                    udo.setMeanValue(uep.getMeanValue());
+                    udo.setSumSquared(uep.getSumSquared());
+                    atomicEventData.add(udo);
                 }
             }
         }
@@ -1162,7 +1156,8 @@ public class DatabaseAPI {
         //        }
     }
 
-    private void uploadFunctionProfiles(int trialID, DataSource dataSource, Map functionMap, Map metricMap, boolean summaryOnly) throws SQLException {
+    private void uploadFunctionProfiles(int trialID, DataSource dataSource, Map functionMap, Map metricMap, boolean summaryOnly)
+            throws SQLException {
 
         PreparedStatement totalInsertStatement = null;
         PreparedStatement meanInsertStatement = null;
@@ -1269,7 +1264,7 @@ public class DatabaseAPI {
                 for (Iterator it3 = context.getThreads(); it3.hasNext();) {
                     edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it3.next();
 
-                    for (Iterator it4 = thread.getUserEventProfiles().iterator(); it4.hasNext();) {
+                    for (Iterator it4 = thread.getUserEventProfiles(); it4.hasNext();) {
                         UserEventProfile uep = (UserEventProfile) it4.next();
 
                         if (this.cancelUpload)
@@ -1329,8 +1324,8 @@ public class DatabaseAPI {
     }
 
     public synchronized int uploadTrial(Trial trial) throws DatabaseException {
-		return uploadTrial(trial, false);
-	}
+        return uploadTrial(trial, false);
+    }
 
     public synchronized int uploadTrial(Trial trial, boolean summaryOnly) throws DatabaseException {
         long start = System.currentTimeMillis();
@@ -1594,14 +1589,14 @@ public class DatabaseAPI {
         for (Iterator it = exps.iterator(); it.hasNext();) {
             Experiment tmp = (Experiment) it.next();
             if (tmp.getName().equals(name)) {
-				setExperiment(tmp);
-        		List trials = getTrialList(false);
-        		for (Iterator it2 = trials.iterator(); it2.hasNext();) {
-            		Trial trial = (Trial) it2.next();
-            		if (exp.getName().equals(name)) {
-						return trial;
-            		}
-        		}
+                setExperiment(tmp);
+                List trials = getTrialList(false);
+                for (Iterator it2 = trials.iterator(); it2.hasNext();) {
+                    Trial trial = (Trial) it2.next();
+                    if (exp.getName().equals(name)) {
+                        return trial;
+                    }
+                }
             }
         }
 

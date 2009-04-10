@@ -20,9 +20,9 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.41 2009/02/19 20:53:43 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.42 2009/04/10 21:10:25 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.41 $
+ * @version $Revision: 1.42 $
  */
 public abstract class DataSource {
 
@@ -45,10 +45,10 @@ public abstract class DataSource {
     public static final int PARAVER = 14; // Statistical output from Paraver - Jesus LeBarta
     public static final int IPM = 15; // Data from IPM/NERSC
     public static final int GYRO = 100;
-    public static final int GAMESS = 101;  // application log data
+    public static final int GAMESS = 101; // application log data
 
-    public static String formatTypeStrings[] = { "ParaProf Packed Profile", "Tau profiles", "Dynaprof", "MpiP", "HPMToolkit", "Gprof",
-            "PSRun", "Tau pprof.dat", "Cube", "HPCToolkit", "TAU Snapshot", "ompP", "PERI-XML",
+    public static String formatTypeStrings[] = { "ParaProf Packed Profile", "Tau profiles", "Dynaprof", "MpiP", "HPMToolkit",
+            "Gprof", "PSRun", "Tau pprof.dat", "Cube", "HPCToolkit", "TAU Snapshot", "ompP", "PERI-XML",
             "General Purpose Timing Library (GPTL)", "Paraver", "IPM" };
 
     private static boolean meanIncludeNulls = true;
@@ -248,7 +248,7 @@ public abstract class DataSource {
             hasMPI = true;
         }
         Object obj = groups.get(name);
-        
+
         if (obj != null) {
             return (Group) obj;
         }
@@ -668,7 +668,11 @@ public abstract class DataSource {
 
     private void generateUserEventStatistics() {
 
+        // make sure that the allThreads list is initialized;
+        this.initAllThreadsList();
+        int numThreads = allThreads.size();
         int numSnapshots = meanData.getNumSnapshots();
+        
         for (int snapshot = 0; snapshot < numSnapshots; snapshot++) {
             for (Iterator it = this.getUserEvents(); it.hasNext();) {
                 UserEvent ue = (UserEvent) it.next();
@@ -708,10 +712,6 @@ public abstract class DataSource {
                 double meanSumSqr = 0;
                 double stdDevSum = 0;
                 double stdDevSumSqr = 0;
-
-                // make sure that the allThreads list is initialized;
-                this.initAllThreadsList();
-                int numThreads = allThreads.size();
 
                 for (int i = 0; i < numThreads; i++) { // for each thread
                     Thread thread = (Thread) allThreads.get(i);
@@ -1502,14 +1502,13 @@ public abstract class DataSource {
     public boolean getHasContexts() {
         return hasContexts;
     }
-    
+
     public final static int EXEC_TYPE_SINGLE = 0;
     public final static int EXEC_TYPE_MPI = 1;
     public final static int EXEC_TYPE_THREADED = 2;
     public final static int EXEC_TYPE_HYBRID = 3;
     public final static int EXEC_TYPE_OTHER = 4;
 
-    
     public int getExecutionType() {
         if (getAllThreads().size() == 1) {
             if (hasMPI) {
@@ -1518,7 +1517,7 @@ public abstract class DataSource {
                 return EXEC_TYPE_SINGLE;
             }
         }
-        
+
         if (getHasContexts() == false && getHasThreads() == false) {
             return EXEC_TYPE_MPI;
         }
@@ -1527,6 +1526,5 @@ public abstract class DataSource {
         }
         return EXEC_TYPE_OTHER;
     }
-    
 
 }

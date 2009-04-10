@@ -9,9 +9,9 @@ import edu.uoregon.tau.common.TauRuntimeException;
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.16 2008/10/31 00:45:01 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.17 2009/04/10 21:10:26 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.16 $
+ * @version	$Revision: 1.17 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -21,11 +21,13 @@ public class Thread implements Comparable {
 
     private int nodeID, contextID, threadID;
     private List functionProfiles = new ArrayList();
-    private List userEventProfiles = new ArrayList();
+    private Map userEventProfiles = new HashMap();
     private boolean trimmed;
     private boolean relationsBuilt;
     private int numMetrics;
 
+    private Hashtable foo = new Hashtable();
+    
     public static final int MEAN = -1;
     public static final int TOTAL = -2;
     public static final int STDDEV = -3;
@@ -134,7 +136,7 @@ public class Thread implements Comparable {
                     fp.addSnapshot();
                 }
             }
-            for (Iterator it = userEventProfiles.iterator(); it.hasNext();) {
+            for (Iterator it = userEventProfiles.values().iterator(); it.hasNext();) {
                 UserEventProfile uep = (UserEventProfile) it.next();
                 if (uep != null) {
                     uep.addSnapshot();
@@ -183,13 +185,10 @@ public class Thread implements Comparable {
 
     public void addUserEventProfile(UserEventProfile uep) {
         int id = uep.getUserEvent().getID();
-        // increase the userEventProfiles vector size if necessary
+        // increase the size of the userEventProfiles list if necessary
 
-        while (id >= userEventProfiles.size()) {
-            userEventProfiles.add(null);
-        }
+        userEventProfiles.put(new Integer(id), uep);
 
-        userEventProfiles.set(id, uep);
     }
 
     public FunctionProfile getFunctionProfile(Function function) {
@@ -218,13 +217,11 @@ public class Thread implements Comparable {
     }
 
     public UserEventProfile getUserEventProfile(UserEvent userEvent) {
-        if ((userEventProfiles != null) && (userEvent.getID() < userEventProfiles.size()))
-            return (UserEventProfile) userEventProfiles.get(userEvent.getID());
-        return null;
+        return (UserEventProfile) userEventProfiles.get(new Integer(userEvent.getID()));
     }
 
-    public List getUserEventProfiles() {
-        return userEventProfiles;
+    public Iterator getUserEventProfiles() {
+        return userEventProfiles.values().iterator();
     }
 
     // Since per thread callpath relations are built on demand, the following four functions tell whether this
