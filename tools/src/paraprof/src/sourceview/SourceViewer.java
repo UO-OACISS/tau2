@@ -1,8 +1,9 @@
 package edu.uoregon.tau.paraprof.sourceview;
 
-import java.awt.BorderLayout;
-import java.awt.Font;
-import java.awt.Rectangle;
+import java.awt.*;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.awt.print.PrinterException;
 import java.io.File;
 import java.net.URL;
 
@@ -10,12 +11,13 @@ import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Element;
 
+import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.paraprof.ParaProf;
 import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.perfdmf.SourceRegion;
 
-public class SourceViewer extends JFrame implements ParaProfWindow {
+public class SourceViewer extends JFrame implements ParaProfWindow, Printable, ImageExport {
 
     LineNumberedTextPanel textPanel;
     JTextPane ed = null;
@@ -90,7 +92,7 @@ public class SourceViewer extends JFrame implements ParaProfWindow {
 
     private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
-        mainMenu.add(ParaProfUtils.createFileMenu((ParaProfWindow) this, textPanel, textPanel));
+        mainMenu.add(ParaProfUtils.createFileMenu((ParaProfWindow) this, this, this));
         //mainMenu.add(ParaProfUtils.createWindowsMenu(ppTrial, this));
         mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
 
@@ -99,7 +101,7 @@ public class SourceViewer extends JFrame implements ParaProfWindow {
     }
 
     public SourceViewer(File file) {
-        //        String file = "/home/amorris/apps/NPB3.1-MPI/LU/erhs.f";
+//        file = new File("/home/amorris/apps/NPB3.1-MPI/LU/erhs.f");
         this.setTitle("TAU: ParaProf: Source Browser: " + file);
         ParaProfUtils.setFrameIcon(this);
 
@@ -144,6 +146,35 @@ public class SourceViewer extends JFrame implements ParaProfWindow {
 
     public JFrame getFrame() {
         return this;
+    }
+
+    public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
+        try {
+            if (pageIndex >= 1) {
+                return NO_SUCH_PAGE;
+            }
+
+            ParaProfUtils.scaleForPrint(graphics, pageFormat, getContentPane().getWidth(), getContentPane().getHeight());
+            export((Graphics2D) graphics, false, true, false);
+
+            return Printable.PAGE_EXISTS;
+        } catch (Exception e) {
+            ParaProfUtils.handleException(e);
+            return NO_SUCH_PAGE;
+        }
+    }
+
+    public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
+        textPanel.setDoubleBuffered(false);
+        ed.setDoubleBuffered(false);
+        getContentPane().paintAll(g2D);
+        ed.setDoubleBuffered(true);
+        textPanel.setDoubleBuffered(true);
+    }
+
+    public Dimension getImageSize(boolean fullScreen, boolean header) {
+        // TODO Auto-generated method stub
+        return getContentPane().getSize();
     }
 
 }

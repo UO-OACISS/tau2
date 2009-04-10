@@ -7,9 +7,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.net.URL;
-import java.text.FieldPosition;
-import java.text.NumberFormat;
-import java.text.ParsePosition;
+import java.text.*;
 import java.util.*;
 import java.util.List;
 
@@ -26,6 +24,7 @@ import edu.uoregon.tau.paraprof.interfaces.*;
 import edu.uoregon.tau.paraprof.script.ParaProfFunctionScript;
 import edu.uoregon.tau.paraprof.script.ParaProfScript;
 import edu.uoregon.tau.paraprof.script.ParaProfTrialScript;
+import edu.uoregon.tau.paraprof.sourceview.SourceViewer;
 import edu.uoregon.tau.paraprof.treetable.ContextEventWindow;
 import edu.uoregon.tau.paraprof.treetable.TreeTableWindow;
 import edu.uoregon.tau.paraprof.util.MapViewer;
@@ -37,11 +36,11 @@ import edu.uoregon.tau.vis.HeatMapWindow;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.42 2009/04/07 20:31:44 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.43 2009/04/10 17:34:29 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.42 $
+ * @version $Revision: 1.43 $
  */
 public class ParaProfUtils {
 
@@ -154,11 +153,14 @@ public class ParaProfUtils {
         PrinterJob job = PrinterJob.getPrinterJob();
         PageFormat defaultFormat = job.defaultPage();
         PageFormat selectedFormat = job.pageDialog(defaultFormat);
+
         if (defaultFormat != selectedFormat) { // only proceed if the user did not select cancel
+
             job.setPrintable(printable, selectedFormat);
             //if (job.getPrintService() != null) {
             if (job.printDialog()) { // only proceed if the user did not select cancel
                 try {
+
                     job.print();
                 } catch (PrinterException e) {
                     ParaProfUtils.handleException(e);
@@ -242,6 +244,8 @@ public class ParaProfUtils {
                             JOptionPane.showMessageDialog(window.getFrame(), "Can't save heat map as vector graphics");
                         } else if (panel instanceof ThreeDeeWindow) {
                             JOptionPane.showMessageDialog(window.getFrame(), "Can't save 3D visualization as vector graphics");
+                        } else if (panel instanceof SourceViewer) {
+                            JOptionPane.showMessageDialog(window.getFrame(), "Can't save Source Viewer as vector graphics");
                         } else if (panel instanceof ImageExport) {
                             VectorExport.promptForVectorExport((ImageExport) panel, "ParaProf");
                         } else {

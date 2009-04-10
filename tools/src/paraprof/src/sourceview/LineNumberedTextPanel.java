@@ -21,7 +21,7 @@ import edu.uoregon.tau.paraprof.ParaProfUtils;
  * Copyright (c) 2004<br>
  * @version 1.0<br>
  */
-public class LineNumberedTextPanel extends JPanel implements Printable, ImageExport {
+public class LineNumberedTextPanel extends JPanel  {
     // for this simple experiment, we keep the pane + scrollpane as members.
     JTextPane pane;
     JScrollPane scrollPane;
@@ -84,29 +84,5 @@ public class LineNumberedTextPanel extends JPanel implements Printable, ImageExp
         frame.setVisible(true);
     }
 
-    public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
-        try {
-            if (pageIndex >= 1) {
-                return NO_SUCH_PAGE;
-            }
-
-            ParaProfUtils.scaleForPrint(graphics, pageFormat, pane.getWidth(), pane.getHeight());
-            export((Graphics2D) graphics, false, true, false);
-
-            return Printable.PAGE_EXISTS;
-        } catch (Exception e) {
-            ParaProfUtils.handleException(e);
-            return NO_SUCH_PAGE;
-        }
-    }
-
-    public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
-        JOptionPane.showMessageDialog(this, "Exporting and Printing of the source viewer is not yet implemented.");
-
-    }
-
-    public Dimension getImageSize(boolean fullScreen, boolean header) {
-        // TODO Auto-generated method stub
-        return pane.getSize();
-    }
+  
 }
