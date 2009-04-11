@@ -57,7 +57,7 @@ static int TauTraceFlushEvents = 0;
 static int TauTraceInitialized[TAU_MAX_THREADS] = {0};
 static int TraceFileInitialized[TAU_MAX_THREADS] = {0};
 
-static double tracerValues[MAX_TAU_COUNTERS] = {0};
+static double tracerValues[TAU_MAX_COUNTERS] = {0};
 
 
 double TauSyncAdjustTimeStamp(double timestamp) {

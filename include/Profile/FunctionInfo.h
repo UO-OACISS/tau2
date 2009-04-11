@@ -33,7 +33,7 @@
 
 extern int Tau_Global_numCounters;
 #define TAU_STORAGE(type, variable) type variable[TAU_MAX_THREADS]
-#define TAU_MULTSTORAGE(type, variable) type variable[TAU_MAX_THREADS][MAX_TAU_COUNTERS]
+#define TAU_MULTSTORAGE(type, variable) type variable[TAU_MAX_THREADS][TAU_MAX_COUNTERS]
 
 #if defined(TAUKTAU) && defined(TAUKTAU_MERGE)
 #include <Profile/KtauFuncInfo.h>
@@ -123,8 +123,8 @@ private:
   TAU_MULTSTORAGE(double, InclTime);
   TAU_STORAGE(bool, AlreadyOnStack);
 
-  double dumpExclusiveValues[TAU_MAX_THREADS][MAX_TAU_COUNTERS];
-  double dumpInclusiveValues[TAU_MAX_THREADS][MAX_TAU_COUNTERS];
+  double dumpExclusiveValues[TAU_MAX_THREADS][TAU_MAX_COUNTERS];
+  double dumpInclusiveValues[TAU_MAX_THREADS][TAU_MAX_COUNTERS];
 
 public:
   char *Name;
@@ -270,6 +270,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: amorris $
- * $Revision: 1.54 $   $Date: 2009/04/08 20:29:14 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.54 2009/04/08 20:29:14 amorris Exp $ 
+ * $Revision: 1.55 $   $Date: 2009/04/11 00:17:56 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.55 2009/04/11 00:17:56 amorris Exp $ 
  ***************************************************************************/

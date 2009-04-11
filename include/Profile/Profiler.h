@@ -71,7 +71,9 @@ void tau_pthread_exit (void *arg);
 
 
 
-#define MAX_TAU_COUNTERS 25
+#ifndef TAU_MAX_COUNTERS
+#define TAU_MAX_COUNTERS 10
+#endif
 
 #if (defined(PTHREADS) || defined(TULIPTHREADS) || defined(JAVA) || defined(TAU_WINDOWS) || defined (TAU_OPENMP) || defined (TAU_SPROC) || defined(TAU_PAPI_THREADS))
 
@@ -171,7 +173,7 @@ public:
 #endif /* TAU_PROFILEPARAM */
   
   
-  double StartTime[MAX_TAU_COUNTERS];
+  double StartTime[TAU_MAX_COUNTERS];
 
 
 #ifdef TAU_COMPENSATE
@@ -268,6 +270,6 @@ void TauProfiler_EnableAllEventsOnCallStack(int tid, Profiler *current);
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.105 $   $Date: 2009/04/08 20:29:14 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.105 2009/04/08 20:29:14 amorris Exp $ 
+ * $Revision: 1.106 $   $Date: 2009/04/11 00:17:56 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.106 2009/04/11 00:17:56 amorris Exp $ 
  ***************************************************************************/

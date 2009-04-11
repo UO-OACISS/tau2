@@ -725,7 +725,7 @@ static int startNewSnapshotFile(char *threadid, int tid) {
   // definition block
   output (out, "\n<definitions thread=\"%s\">\n", threadid);
   
-  for (int i=0; i<MAX_TAU_COUNTERS; i++) {
+  for (int i=0; i<Tau_Global_numCounters; i++) {
     if (RtsLayer::getCounterUsed(i)) {
       const char *tmpChar = RtsLayer::getCounterName(i);
       output (out, "<metric id=\"%d\">", i);
@@ -816,7 +816,7 @@ int TauProfiler_Snapshot(const char *name, bool finalize, int tid) {
 
    char metricList[4096];
    char *loc = metricList;
-   for (c=0; c<MAX_TAU_COUNTERS; c++) {
+   for (c=0; c<Tau_Global_numCounters; c++) {
      if (RtsLayer::getCounterUsed(c)) {
        loc += sprintf (loc,"%d ", c);
      }
@@ -834,7 +834,7 @@ int TauProfiler_Snapshot(const char *name, bool finalize, int tid) {
   
      
      output (out, "%d %ld %ld ", i, fi->GetCalls(tid), fi->GetSubrs(tid));
-     for (c=0; c<MAX_TAU_COUNTERS; c++) {
+     for (c=0; c<Tau_Global_numCounters; c++) {
        if (RtsLayer::getCounterUsed(c)) {
 	 output (out, "%.16G %.16G ", excltime[c], incltime[c]);
        }

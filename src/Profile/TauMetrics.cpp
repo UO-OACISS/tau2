@@ -417,7 +417,7 @@ double TauMetrics_getTraceMetricIndex() {
  * Returns the index of the trace metric
  */
 double TauMetrics_getTraceMetricValue(int tid) {
-  double values[MAX_TAU_COUNTERS];
+  double values[TAU_MAX_COUNTERS];
   TauMetrics_getMetrics(tid, values);
   return values[traceMetric];
 }

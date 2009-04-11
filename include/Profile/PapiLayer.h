@@ -21,7 +21,7 @@
 
 #define TAU_PAPI_MAX_COMPONENTS 4
 
-#define MAX_PAPI_COUNTERS MAX_TAU_COUNTERS
+#define MAX_PAPI_COUNTERS TAU_MAX_COUNTERS
 
 struct ThreadValue {
   int ThreadID;
@@ -49,7 +49,7 @@ private:
   static bool papiInitialized;
   static ThreadValue *ThreadList[TAU_MAX_THREADS];
   static int numCounters;
-  static int counterList[MAX_TAU_COUNTERS];
+  static int counterList[TAU_MAX_COUNTERS];
 };
 
 #endif /* TAU_PAPI */

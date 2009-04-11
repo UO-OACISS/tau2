@@ -531,7 +531,7 @@ const char *RtsLayer::getCounterName(int i) {
 
 
 void RtsLayer::getCurrentValues (int tid, double *values) {
-  for (int c=0; c<MAX_TAU_COUNTERS; c++) {
+  for (int c=0; c<Tau_Global_numCounters; c++) {
     values[c] = 0;
   }
   return getUSecD(tid, values);
@@ -800,6 +800,6 @@ std::string RtsLayer::GetRTTI(const char *name) {
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.125 $   $Date: 2009/04/08 20:30:12 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.125 2009/04/08 20:30:12 amorris Exp $ 
+ * $Revision: 1.126 $   $Date: 2009/04/11 00:18:23 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.126 2009/04/11 00:18:23 amorris Exp $ 
  ***************************************************************************/

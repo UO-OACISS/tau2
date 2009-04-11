@@ -63,15 +63,15 @@ public:
   static int reinitializeKtauCtr(void);
   static int addCounter(char *name, int cType);
   static int RegisterFork(int type);
-  static int counterType[MAX_TAU_COUNTERS]; //hackaway - to let MultipleCounters.cpp have access place in public.
+  static int counterType[TAU_MAX_COUNTERS]; //hackaway - to let MultipleCounters.cpp have access place in public.
 private:
   static int initializeThread(int tid);
   static int initializeKtauCtr(void);
   static bool ktauInitialized;
   static KtauCtrThread ThreadList[TAU_MAX_THREADS];
   static int numCounters;
-  static unsigned long counterList[MAX_TAU_COUNTERS];
-  static char counterSyms[MAX_TAU_COUNTERS][KTAU_CTRSYM_MAXSZ];
+  static unsigned long counterList[TAU_MAX_COUNTERS];
+  static char counterSyms[TAU_MAX_COUNTERS][KTAU_CTRSYM_MAXSZ];
 };
 
 #endif /* TAUKTAU_SHCTR */

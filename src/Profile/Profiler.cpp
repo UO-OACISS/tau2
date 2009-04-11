@@ -118,7 +118,7 @@ extern "C" int Tau_get_usesMPI();
 // For OpenMP
 //////////////////////////////////////////////////////////////////////
 #ifdef TAU_TRACK_IDLE_THREADS
-double TheLastTimeStamp[TAU_MAX_THREADS][MAX_TAU_COUNTERS]; 
+double TheLastTimeStamp[TAU_MAX_THREADS][TAU_MAX_COUNTERS]; 
 #endif /* TAU_TRACK_IDLE_THREADS */
 //////////////////////////////////////////////////////////////////////
 // Explicit Instantiations for templated entities needed for ASCI Red
@@ -408,8 +408,8 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 
   
   // first initialize the CurrentTime
-  double CurrentTime[MAX_TAU_COUNTERS];
-  double TotalTime[MAX_TAU_COUNTERS];
+  double CurrentTime[TAU_MAX_COUNTERS];
+  double TotalTime[TAU_MAX_COUNTERS];
 
 #ifdef TAU_TRACK_IDLE_THREADS
   int i;
@@ -833,7 +833,7 @@ void TauProfiler_getFunctionValues(const char **inFuncs,
     (*numSubr)[funcPos] = fi->GetSubrs(tid);
     
     int posCounter = 0;
-    for (int m=0; m<MAX_TAU_COUNTERS; m++) {
+    for (int m=0; m<Tau_Global_numCounters; m++) {
       if (RtsLayer::getCounterUsed(m)) {
 	(*counterInclusiveValues)[funcPos][posCounter] = fi->getDumpInclusiveValues(tid)[m];
 	(*counterExclusiveValues)[funcPos][posCounter] = fi->getDumpExclusiveValues(tid)[m];
@@ -906,7 +906,7 @@ void TauProfiler_PurgeData(int tid) {
   curr = TauInternal_CurrentProfiler(tid);
   curr->ThisFunction->IncrNumCalls(tid);
 
-    for (int i=0;i<MAX_TAU_COUNTERS;i++) {
+    for (int i=0;i<Tau_Global_numCounters;i++) {
       curr->StartTime[i]=0;
     }
     RtsLayer::getUSecD(tid, curr->StartTime);	  
@@ -916,7 +916,7 @@ void TauProfiler_PurgeData(int tid) {
   while (curr != 0) {
     curr->ThisFunction->IncrNumCalls(tid);
     curr->ThisFunction->IncrNumSubrs(tid);
-    for (int i=0;i<MAX_TAU_COUNTERS;i++) {
+    for (int i=0;i<Tau_Global_numCounters;i++) {
       curr->StartTime[i]=0;
     }
     RtsLayer::getUSecD(tid, curr->StartTime);	  
@@ -1028,7 +1028,7 @@ static int writeHeader(FILE *fp, int numFunc, char *metricName) {
 int TauProfiler_updateIntermediateStatistics(int tid) {
   
   // get current values
-  double currentTime[MAX_TAU_COUNTERS];
+  double currentTime[TAU_MAX_COUNTERS];
 
   RtsLayer::getCurrentValues(tid, currentTime);
   int c;
@@ -1056,25 +1056,25 @@ int TauProfiler_updateIntermediateStatistics(int tid) {
       // 2) Add to the exclusive value by subtracting the start time of the current
       //    child (if there is one) from the duration of this function so far.
 
-      double inclusiveToAdd[MAX_TAU_COUNTERS];
-      double prevStartTime[MAX_TAU_COUNTERS];
-      for (c=0; c<MAX_TAU_COUNTERS; c++) {
+      double inclusiveToAdd[TAU_MAX_COUNTERS];
+      double prevStartTime[TAU_MAX_COUNTERS];
+      for (c=0; c<Tau_Global_numCounters; c++) {
 	inclusiveToAdd[c] = 0;
 	prevStartTime[c] = 0;
       }
       
       for (Profiler *current = TauInternal_CurrentProfiler(tid); current != 0; current = current->ParentProfiler) {
 	if (helperIsFunction(fi, current)) {
-	  for (c=0; c<MAX_TAU_COUNTERS; c++) {
+	  for (c=0; c<Tau_Global_numCounters; c++) {
 	    inclusiveToAdd[c] = currentTime[c] - current->getStartValues()[c]; 
 	    excltime[c] += inclusiveToAdd[c] - prevStartTime[c];
 	  }
 	}
-	for (c=0; c<MAX_TAU_COUNTERS; c++) {
+	for (c=0; c<Tau_Global_numCounters; c++) {
 	  prevStartTime[c] = currentTime[c] - current->getStartValues()[c];  
 	}
       }
-      for (c=0; c<MAX_TAU_COUNTERS; c++) {
+      for (c=0; c<Tau_Global_numCounters; c++) {
 	incltime[c] += inclusiveToAdd[c];
       }
     }
@@ -1187,7 +1187,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 
   static bool createFlag = TauProfiler_createDirectories();
 
-  for (int i=0;i<MAX_TAU_COUNTERS;i++) {
+  for (int i=0;i<Tau_Global_numCounters;i++) {
     if (TauMetrics_getMetricUsed(i)) {
       
       char metricHeader[1024];
@@ -1302,7 +1302,7 @@ bool TauProfiler_createDirectories() {
 
   static bool flag = true;
   if (flag && Tau_Global_numCounters > 1) {
-    for (int i=0;i<MAX_TAU_COUNTERS;i++) {
+    for (int i=0;i<Tau_Global_numCounters;i++) {
       if (TauMetrics_getMetricUsed(i)) {
 	const char * tmpChar = TauMetrics_getMetricName(i);
 	char *newdirname = new char[1024];
@@ -1330,7 +1330,7 @@ bool TauProfiler_createDirectories() {
 }
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: anataraj $
- * $Revision: 1.238 $   $Date: 2009/04/08 21:39:53 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.238 2009/04/08 21:39:53 anataraj Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: amorris $
+ * $Revision: 1.239 $   $Date: 2009/04/11 00:18:22 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.239 2009/04/11 00:18:22 amorris Exp $ 
  ***************************************************************************/

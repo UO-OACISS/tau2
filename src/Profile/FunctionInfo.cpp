@@ -176,7 +176,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
       NumCalls[i] = 0;
       SetAlreadyOnStack(false, i);
       NumSubrs[i] = 0;
-      for(int j=0;j<MAX_TAU_COUNTERS;j++){
+      for(int j=0;j<Tau_Global_numCounters;j++){
 	ExclTime[i][j] = 0;
 	InclTime[i][j] = 0;
       } 
@@ -296,16 +296,16 @@ FunctionInfo::~FunctionInfo()
 }
 
 double * FunctionInfo::GetExclTime(int tid){
-  double * tmpCharPtr = (double *) malloc( sizeof(double) * MAX_TAU_COUNTERS);
-  for(int i=0;i<MAX_TAU_COUNTERS;i++){
+  double * tmpCharPtr = (double *) malloc( sizeof(double) * Tau_Global_numCounters);
+  for(int i=0;i<Tau_Global_numCounters;i++){
     tmpCharPtr[i] = ExclTime[tid][i];
   }
   return tmpCharPtr;
 }
 
 double * FunctionInfo::GetInclTime(int tid){
-  double * tmpCharPtr = (double *) malloc( sizeof(double) * MAX_TAU_COUNTERS);
-  for(int i=0;i<MAX_TAU_COUNTERS;i++){
+  double * tmpCharPtr = (double *) malloc( sizeof(double) * Tau_Global_numCounters);
+  for(int i=0;i<Tau_Global_numCounters;i++){
     tmpCharPtr[i] = InclTime[tid][i];
   }
   return tmpCharPtr;
@@ -323,13 +323,13 @@ double *FunctionInfo::getExclusiveValues(int tid) {
 }
 
 void FunctionInfo::getInclusiveValues(int tid, double *values) {
-  for(int i=0; i<MAX_TAU_COUNTERS; i++) {
+  for(int i=0; i<Tau_Global_numCounters; i++) {
     values[i] = InclTime[tid][i];
   }
 }
 
 void FunctionInfo::getExclusiveValues(int tid, double *values) {
-  for(int i=0; i<MAX_TAU_COUNTERS; i++) {
+  for(int i=0; i<Tau_Global_numCounters; i++) {
     values[i] = ExclTime[tid][i];
   }
 }
@@ -357,7 +357,7 @@ void FunctionInfo::ResetExclTimeIfNegative(int tid) {
      compensation. This function is used to reset it to zero for single
      and multiple counters */
   int i;
-  for (i=0; i < MAX_TAU_COUNTERS; i++) {
+  for (i=0; i < Tau_Global_numCounters; i++) {
     if (ExclTime[tid][i] < 0) {
       ExclTime[tid][i] = 0.0; /* set each negative counter to zero */
     }
@@ -455,6 +455,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.76 $   $Date: 2009/04/08 20:30:12 $
- * VERSION_ID: $Id: FunctionInfo.cpp,v 1.76 2009/04/08 20:30:12 amorris Exp $ 
+ * $Revision: 1.77 $   $Date: 2009/04/11 00:18:22 $
+ * VERSION_ID: $Id: FunctionInfo.cpp,v 1.77 2009/04/11 00:18:22 amorris Exp $ 
  ***************************************************************************/

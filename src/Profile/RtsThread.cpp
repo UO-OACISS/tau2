@@ -172,8 +172,8 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode) {
   // previous values in the TheFunctionDB()
 
   // Get the current time
-     double CurrentTimeOrCounts[MAX_TAU_COUNTERS];
-     for(int i=0;i<MAX_TAU_COUNTERS;i++){
+     double CurrentTimeOrCounts[TAU_MAX_COUNTERS];
+     for(int i=0;i<Tau_Global_numCounters;i++){
        CurrentTimeOrCounts[i]=0;
      }
      getUSecD(myThread(), CurrentTimeOrCounts);
@@ -212,7 +212,7 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode) {
 	   // Increment the number of called functions in its parent
 	   current->ParentProfiler->ThisFunction->IncrNumSubrs(tid);
 	 }
-	 for(int j=0;j<MAX_TAU_COUNTERS;j++){
+	 for(int j=0;j<Tau_Global_numCounters;j++){
 	   current->StartTime[j] = CurrentTimeOrCounts[j];
 	 }
 	 current = current->ParentProfiler;
@@ -373,8 +373,8 @@ void RtsLayer::UnLockEnv(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: amorris $
- * $Revision: 1.37 $   $Date: 2009/04/08 20:30:12 $
- * VERSION: $Id: RtsThread.cpp,v 1.37 2009/04/08 20:30:12 amorris Exp $
+ * $Revision: 1.38 $   $Date: 2009/04/11 00:18:23 $
+ * VERSION: $Id: RtsThread.cpp,v 1.38 2009/04/11 00:18:23 amorris Exp $
  ***************************************************************************/
 
 
