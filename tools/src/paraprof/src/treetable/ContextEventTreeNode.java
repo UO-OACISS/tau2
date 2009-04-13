@@ -55,9 +55,7 @@ public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comp
 
             Map internalMap = new HashMap();
 
-            List uepList = model.getThread().getUserEventProfiles();
-
-            for (Iterator it = uepList.iterator(); it.hasNext();) {
+            for (Iterator it = model.getThread().getUserEventProfiles(); it.hasNext();) {
                 UserEventProfile uep = (UserEventProfile) it.next();
                 if (uep == null) {
                     continue;

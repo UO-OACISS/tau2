@@ -15,9 +15,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  * functions that are in groups supposed to be shown. 
  *  
  * 
- * <P>CVS $Id: DataSorter.java,v 1.13 2009/03/12 00:35:21 amorris Exp $</P>
+ * <P>CVS $Id: DataSorter.java,v 1.14 2009/04/13 21:20:13 amorris Exp $</P>
  * @author	Alan Morris, Robert Bell
- * @version	$Revision: 1.13 $
+ * @version	$Revision: 1.14 $
  */
 public class DataSorter implements Comparator {
 
@@ -71,11 +71,10 @@ public class DataSorter implements Comparator {
     public List getUserEventProfiles(Thread thread) {
 
         UserEventProfile userEventProfile = null;
-        List list = thread.getUserEventProfiles();
 
         List newList = new ArrayList();
 
-        for (Iterator e1 = list.iterator(); e1.hasNext();) {
+        for (Iterator e1 = thread.getUserEventProfiles(); e1.hasNext();) {
             userEventProfile = (UserEventProfile) e1.next();
             if (userEventProfile != null) {
                 PPUserEventProfile ppUserEventProfile = new PPUserEventProfile(this, thread, userEventProfile);

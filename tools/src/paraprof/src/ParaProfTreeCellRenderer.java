@@ -33,7 +33,9 @@ public class ParaProfTreeCellRenderer extends DefaultTreeCellRenderer {
         
         if (node.isRoot()) {
             URL url = Utility.getResource("red-ball.gif");
-            this.setIcon(new ImageIcon(url));
+            if (url != null) {
+              this.setIcon(new ImageIcon(url));
+            }
         }
         //else if(parentNode.isRoot()){
         //URL url = ParaProfTreeCellRenderer.class.getResource("red-ball.gif");
@@ -41,7 +43,9 @@ public class ParaProfTreeCellRenderer extends DefaultTreeCellRenderer {
         //}
         else if (userObject instanceof ParaProfMetric) {
             URL url = Utility.getResource("green-ball.gif");
-            this.setIcon(new ImageIcon(url));
+            if (url != null) {
+              this.setIcon(new ImageIcon(url));
+            }
         }
         return this;
     }
