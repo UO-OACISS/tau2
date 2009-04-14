@@ -33,6 +33,7 @@ public class PSRunDataSource extends DataSource {
     private int threadID = -1;
     private int threadCounter = 0;
     PSRunLoadHandler handler;
+    private Hashtable nodeHash = new Hashtable();
 
     public PSRunDataSource(Object initializeObject) {
         super();
@@ -70,7 +71,11 @@ public class PSRunDataSource extends DataSource {
 
                     StringTokenizer st = new StringTokenizer(files[i].getName(), ".");
 
-                    if (st.countTokens() == 3) {
+                    if (st.countTokens() == 2) {
+                    	// this is a multireport.  
+                        nodeID++;
+                        threadID = threadCounter++;
+                    } else if (st.countTokens() == 3) {
                         // increment the node counter - there's a file for each node
                         nodeID++;
                     } else {
@@ -127,6 +132,9 @@ public class PSRunDataSource extends DataSource {
             }
             processSnapshots();
             this.generateDerivedData();
+            this.aggregateMetaData();
+            this.buildXMLMetaData();
+            this.setGroupNamesPresent(true);
         } catch (Exception e) {
             if (e instanceof DataSourceException) {
                 throw (DataSourceException) e;
@@ -167,6 +175,18 @@ public class PSRunDataSource extends DataSource {
         thread = context.addThread(threadID);
     }
 
+    public void incrementThread(String tid, String nid) {
+        threadID = Integer.parseInt(tid);
+        Integer tmpID = (Integer) nodeHash.get(nid);
+        if (tmpID == null) {
+            nodeID = nodeHash.size();
+            nodeHash.put(nid, new Integer(nodeID));
+        } else {
+            nodeID = tmpID.intValue();
+        }
+        thread = null;
+    }
+    
     public Thread getThread() {
         if (thread == null) {
             Map attribMap = handler.getAttributes();

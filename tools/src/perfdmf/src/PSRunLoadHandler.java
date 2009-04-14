@@ -1,7 +1,10 @@
 package edu.uoregon.tau.perfdmf;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.xml.sax.Attributes;
@@ -28,6 +31,13 @@ public class PSRunLoadHandler extends DefaultHandler {
 
     private double totalProfileValue;
     private Map attribMap = new HashMap();
+    
+    private String pid = "-1";
+    private String thread = "-1";
+    private Map metadata = null;
+    private List metaPrefix = new ArrayList();
+    private boolean inMetadata = false;
+    private int cacheIndex = 0;
 
     private int sequence;
 
@@ -69,6 +79,7 @@ public class PSRunLoadHandler extends DefaultHandler {
 
         if (name.equalsIgnoreCase("hwpcprofile")) {
             isProfile = true;
+            inMetadata = false;
         } else if (name.equalsIgnoreCase("hwpcprofiledata")) {
             throw new DataSourceException(
                     "<html><center>This PerfSuite XML file contains unprocessed profile data.<br>Please use `psprocess -x` (from PerfSuite) to generate a processed XML file.</center></html>");
@@ -81,6 +92,39 @@ public class PSRunLoadHandler extends DefaultHandler {
             functionName = getInsensitiveValue(attrList, "name");
         } else if (name.equalsIgnoreCase("line")) {
             lineno = getInsensitiveValue(attrList, "lineno");
+            
+            // these are for processing multi files
+        } else if (name.equalsIgnoreCase("multihwpcprofilereport")) {
+            isProfile = true;
+        } else if (name.equalsIgnoreCase("hwpcprofilereport")) {
+            isProfile = true;
+        } else if (name.equalsIgnoreCase("executioninfo")) {
+            metadata = new HashMap();
+            inMetadata = true;
+        	cacheIndex = 0;
+        } else if (name.equalsIgnoreCase("cache") && inMetadata) {
+        	cacheIndex++;
+        	metaPrefix.add(name + cacheIndex + ": ");
+        	StringBuffer buf = new StringBuffer();
+        	for (int j = 0 ; j < metaPrefix.size(); j++) {
+        		buf.append(metaPrefix.get(j));
+        	}
+        	for (int i = 0 ; i < attrList.getLength(); i++) {
+        		String tmp = attrList.getQName(i);
+        		metadata.put(buf.toString() + tmp, attrList.getValue(tmp).trim());
+        	}
+        } else if (name.equalsIgnoreCase("pid")) {
+        } else if (name.equalsIgnoreCase("thread")) {
+        } else if (inMetadata) {
+        	metaPrefix.add(name + ": ");    	
+        	StringBuffer buf = new StringBuffer();
+        	for (int j = 0 ; j < metaPrefix.size(); j++) {
+        		buf.append(metaPrefix.get(j));
+        	}
+        	for (int i = 0 ; i < attrList.getLength(); i++) {
+        		String tmp = attrList.getQName(i);
+        		metadata.put(buf.toString() + tmp, attrList.getValue(tmp).trim());
+        	}
         }
     }
 
@@ -145,6 +189,50 @@ public class PSRunLoadHandler extends DefaultHandler {
             dataSource.getThread().addFunctionProfile(fp);
             fp.setExclusive(sequence, 0, value);
             fp.setInclusive(sequence, 0, value);
+        } else if (name.equalsIgnoreCase("pid")) {
+            pid = accumulator.toString();
+        	metadata.put(name, pid);
+        } else if (name.equalsIgnoreCase("thread")) {
+            thread = accumulator.toString();
+        	dataSource.incrementThread(thread, pid);
+        	metadata.put(name, thread);
+        } else if (name.equalsIgnoreCase("hwpcprofilereport")) {
+            Function function = dataSource.getFunction("Entire application");
+            if (function == null) {
+                function = dataSource.addFunction("Entire application", 1);
+            }
+
+            FunctionProfile fp = new FunctionProfile(function, dataSource.getNumberOfMetrics(),
+                    dataSource.getThread().getNumSnapshots());
+            dataSource.getThread().addFunctionProfile(fp);
+            fp.setExclusive(0, 0);
+            fp.setInclusive(0, totalProfileValue);
+        	// end of the report
+            Iterator iter = metadata.keySet().iterator();
+            String mName;
+            String value;
+            // get the explicit values in the file
+            while (iter.hasNext()) {
+                mName = (String)iter.next();
+                value = (String)metadata.get(mName);
+                dataSource.getThread().getMetaData().put(mName, value.trim());
+            }
+        } else if (name.equalsIgnoreCase("multihwpcprofilereport")) {
+        } else if (name.equalsIgnoreCase("executioninfo")) {
+        	// end of the metadata
+        	inMetadata = false;
+        	metaPrefix.clear();
+        } else if (name.equalsIgnoreCase("machineinfo")) {
+        	// end of the metadata
+        	inMetadata = false;
+        	metaPrefix.clear();
+        } else if (inMetadata) {
+        	metaPrefix.remove(metaPrefix.size()-1);
+        	StringBuffer tmp = new StringBuffer();
+        	for (int i = 0 ; i < metaPrefix.size(); i++) {
+        		tmp.append(metaPrefix.get(i));
+        	}
+        	metadata.put(tmp + name, accumulator.toString().trim());
         }
 
     }
