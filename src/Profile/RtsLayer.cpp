@@ -680,7 +680,7 @@ void RtsLayer::ProfileInit(int& argc, char**& argv) {
 
 #ifdef TAU_COMPENSATE
   double* tover = TauGetTimerOverhead(TauNullTimerOverhead);
-  for (i = 0; i < MAX_TAU_COUNTERS; i++) { 
+  for (i = 0; i < TAU_MAX_COUNTERS; i++) { 
     /* iterate through all counters and reset null overhead to zero 
        if necessary */
     if (tover[i] < 0) tover[i] = 0;
@@ -800,6 +800,6 @@ std::string RtsLayer::GetRTTI(const char *name) {
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.126 $   $Date: 2009/04/11 00:18:23 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.126 2009/04/11 00:18:23 amorris Exp $ 
+ * $Revision: 1.127 $   $Date: 2009/04/14 15:09:19 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.127 2009/04/14 15:09:19 amorris Exp $ 
  ***************************************************************************/

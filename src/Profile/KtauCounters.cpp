@@ -40,13 +40,13 @@ using namespace std;
 
 #define KTAU_SHCONT_SIZE 2000 //this is the size of the shared-container that is created to share mem between user/OS.
 
-#define MAX_KTAU_COUNTERS MAX_TAU_COUNTERS
+#define MAX_KTAU_COUNTERS TAU_MAX_COUNTERS
 
 bool KtauCounters::ktauInitialized = false;
 KtauCtrThread KtauCounters::ThreadList[TAU_MAX_THREADS];
 int KtauCounters::numCounters = 0;
 unsigned long KtauCounters::counterList[MAX_KTAU_COUNTERS];
-char KtauCounters::counterSyms[MAX_TAU_COUNTERS][KTAU_CTRSYM_MAXSZ];
+char KtauCounters::counterSyms[TAU_MAX_COUNTERS][KTAU_CTRSYM_MAXSZ];
 int KtauCounters::counterType[MAX_KTAU_COUNTERS];
 
 #ifdef TAU_KTAUCTR_DEBUG

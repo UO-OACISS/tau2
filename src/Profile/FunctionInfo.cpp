@@ -228,7 +228,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   
 #ifdef RENCI_STFF
   for (int t=0; t < TAU_MAX_THREADS; t++) {
-    for (int i=0; i < MAX_TAU_COUNTERS; i++) {
+    for (int i=0; i < TAU_MAX_COUNTERS; i++) {
       Signatures[t][i] = NULL;
     }
   }
@@ -455,6 +455,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.77 $   $Date: 2009/04/11 00:18:22 $
- * VERSION_ID: $Id: FunctionInfo.cpp,v 1.77 2009/04/11 00:18:22 amorris Exp $ 
+ * $Revision: 1.78 $   $Date: 2009/04/14 15:09:19 $
+ * VERSION_ID: $Id: FunctionInfo.cpp,v 1.78 2009/04/14 15:09:19 amorris Exp $ 
  ***************************************************************************/

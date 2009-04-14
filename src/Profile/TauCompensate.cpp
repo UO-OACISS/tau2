@@ -40,12 +40,12 @@ extern "C" int Tau_compensate_initialization() {
 
 
 double*& TheTauNullTimerOverhead() {
-  static double *over = new double[MAX_TAU_COUNTERS];
+  static double *over = new double[TAU_MAX_COUNTERS];
   static int flag = 0;
   
   if (flag == 0) {
     flag = 1;
-    for (int i = 0; i < MAX_TAU_COUNTERS; i++) {
+    for (int i = 0; i < TAU_MAX_COUNTERS; i++) {
       over[i] = 0.0;
     }
   }
@@ -54,12 +54,12 @@ double*& TheTauNullTimerOverhead() {
 }
 
 double*& TheTauFullTimerOverhead() {
-  static double *full = new double[MAX_TAU_COUNTERS];
+  static double *full = new double[TAU_MAX_COUNTERS];
   static int flag = 0;
 
   if (flag == 0) {
     flag = 1;
-    for (int i = 0; i < MAX_TAU_COUNTERS; i++) {
+    for (int i = 0; i < TAU_MAX_COUNTERS; i++) {
       full[i] = 0.0;
     }
   }
@@ -114,7 +114,7 @@ int TauCalibrateNullTimer(void) {
 
   double *nullincltime = ((FunctionInfo*)tnull)->GetInclTime(tid);
   double *oneincltime  = ((FunctionInfo*)tone)->GetInclTime(tid);
-  for (i=0; i < MAX_TAU_COUNTERS; i++) {
+  for (i=0; i < TAU_MAX_COUNTERS; i++) {
     /* n*(a+b+c+d) + b+c = tone */
     TheTauNullTimerOverhead()[i] = nullincltime[i]/n;
     

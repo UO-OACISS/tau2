@@ -416,14 +416,14 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   if (useLastTimeStamp) {
     /* for openmp parallel regions */
     /* .TAU Application needs to be stopped */
-    for (i=0; i < MAX_TAU_COUNTERS; i++) {
+    for (i=0; i < TAU_MAX_COUNTERS; i++) {
       CurrentTime[i] = TheLastTimeStamp[tid][i]; 
     }
   } else { 
     /* use the usual mechanism */
     RtsLayer::getUSecD(tid, CurrentTime);
   }
-  for (i=0; i < MAX_TAU_COUNTERS; i++) {
+  for (i=0; i < TAU_MAX_COUNTERS; i++) {
     TheLastTimeStamp[tid][i] = CurrentTime[i]; 
   }
 #else
@@ -1331,6 +1331,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.239 $   $Date: 2009/04/11 00:18:22 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.239 2009/04/11 00:18:22 amorris Exp $ 
+ * $Revision: 1.240 $   $Date: 2009/04/14 15:09:19 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.240 2009/04/14 15:09:19 amorris Exp $ 
  ***************************************************************************/
