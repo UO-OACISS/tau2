@@ -61,7 +61,11 @@ public class DataSourceResult extends AbstractResult {
         }
         DataSource source = UtilFncs.initializeDataSource(files, fileType, fixNames);
         try{
-        	source.load();
+		    long start = System.currentTimeMillis();
+		    source.load();
+		    long elapsedTimeMillis = System.currentTimeMillis()-start;
+		    float elapsedTimeSec = elapsedTimeMillis/1000F;
+		    System.out.println("Total time to read data from disk: " + elapsedTimeSec + " seconds");
         } catch (Exception e) {
         	System.err.println(e.getMessage());
         	e.printStackTrace(System.err);
@@ -69,6 +73,8 @@ public class DataSourceResult extends AbstractResult {
         }
 		List<Thread> threads = source.getThreads();
 		int tid = 0;  // thread ID
+		System.out.println("Iterating over threads...");
+		long start = System.currentTimeMillis();
 		for (Thread thread : threads) {
 			for (int m = 0 ; m < source.getNumberOfMetrics() ; m++) {
 				String metric = source.getMetric(m).getName();
@@ -99,6 +105,14 @@ public class DataSourceResult extends AbstractResult {
 				}
 			}
 			tid++;
+			if (threads.size() >= 512 && 
+			    ((tid%100 == 0) || tid == threads.size())) {
+				System.out.print("\rProcessed " + tid + " of " + threads.size()
+					+ " threads...");
+			}
 		}
+	    long elapsedTimeMillis = System.currentTimeMillis()-start;
+	    float elapsedTimeSec = elapsedTimeMillis/1000F;
+		System.out.println("\nTime to process: " + elapsedTimeSec + " seconds");
 	}
 }

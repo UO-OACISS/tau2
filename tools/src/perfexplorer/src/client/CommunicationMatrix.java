@@ -1,33 +1,25 @@
 
 package edu.uoregon.tau.perfexplorer.client;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.text.DecimalFormat;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.TreeMap;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import java.lang.Math;
-import java.text.DecimalFormat;
-import java.text.FieldPosition;
 import java.net.URL;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfexplorer.common.*;
+import edu.uoregon.tau.vis.HeatMapData;
 import edu.uoregon.tau.vis.HeatMapWindow;
 
 import java.awt.Toolkit;
 
 public class CommunicationMatrix {
 
-	private Map<String, double[][][]> maps = new TreeMap<String, double[][][]>();
-	private Map<String, double[]> maxs = new TreeMap<String, double[]>(); 
-	private Map<String, double[]> mins = new TreeMap<String, double[]>(); 
+	private HeatMapData mapData = null;
 	private int size = 0;
 	private final static String allPaths = "All Paths";
 	private static final int COUNT = 0;
@@ -54,60 +46,74 @@ public class CommunicationMatrix {
 		
 		// this has been validated at the client
 		Trial trial = (Trial)model.getCurrentSelection();
+		// compute the total number of threads
 		int threadsPerContext = Integer.parseInt(trial.getField("threads_per_context"));
 		int threadsPerNode = Integer.parseInt(trial.getField("contexts_per_node")) * threadsPerContext;
 		size = threadsPerNode * Integer.parseInt(trial.getField("node_count"));
 
+		// start a timer
 	    long start = System.currentTimeMillis();
+	    
+	    // get the list of user events
 	    numEvents = userEvents.keySet().size();
+	    
+	    // if data is not found, terminate early and issue a warning
 	    boolean foundData = false;
+	    
+	    // declare the heatmap data object
+	    mapData = new HeatMapData(size);
+
+	    // iterate over the user events and threads
 		for (String event : userEvents.keySet()) {
 			double[][] data = userEvents.get(event);
 			for (int thread = 0 ; thread < size ; thread++) {
 				// don't process if this thread doesn't have this event
 				if (data[thread][0] == 0) continue;
 				
+				// find events with communication matrix data - handle flat profile events
 				if (event.startsWith("Message size sent to node ") && !event.contains("=>")) {
 					foundData = true;
 					// split the string
 					extractData(data, thread, event, event, allPaths);
 				}
+				// find events with communication matrix data - handle context profile events
 				else if (event.startsWith("Message size sent to node ") && event.contains("=>")) {
 					foundData = true;
+					// split the string of callpath function names from the user event name
 					StringTokenizer st = new StringTokenizer(event, ":");
+					// first is the name of the user event
 					String first = st.nextToken().trim();
+					// path is the callpath
 					String path = st.nextToken().trim();
 					// now, split up the path, and handle each node 
 					StringTokenizer st2 = new StringTokenizer(path, "=>");
-					StringBuilder sb = new StringBuilder();
 					String tmp = null;
 					while (st2.hasMoreTokens()) {
-						if (sb.length() > 0) {
-							sb.append(" => ");
-						}
 						tmp = st2.nextToken().trim();
-						sb.append(tmp);
+						// get the user event data for this node in the callpath
 						extractData(data, thread, event, first, tmp);
 					}
-					// do this to get "* => MPI_Isend()" and all equivalents
-//					extractData(input, thread, event, first, "* => "+tmp);
 				}
 			}
-			// some progress indication
-//			System.out.print("\r" + f.format(thread.doubleValue()*100.0/input.getThreads().size()) + "% complete...");
 		}
+		
+		// if no communication data found, give the user an error message.
 		if (!foundData) {
 			JOptionPane.showMessageDialog(PerfExplorerClient.getMainFrame(), "This trial does not have communication matrix data.\nTo collect communication matrix data, set the environment variable TAU_COMM_MATRIX=1 before executing your application.",
 					"No Communication Matrix Data", JOptionPane.ERROR_MESSAGE);
 			return null;
 		}
-	    start = System.currentTimeMillis();
-		massageData();
+
+		// recompute the mean, standard deviation and min and max
+		mapData.massageData();
+		
+		// output some timing information
 	    float elapsedTimeMillis = System.currentTimeMillis()-start;
 	    float elapsedTimeSec = elapsedTimeMillis/1000F;
-	    System.out.println("Total time to process data: " + elapsedTimeSec + " seconds");
+		DecimalFormat f = new DecimalFormat("0.000");
+	    System.out.println("Total time to process data: " + f.format(elapsedTimeSec) + " seconds");
 
-		window = new HeatMapWindow("Message Size Heat Maps", maps, maxs, mins, size);
+		window = new HeatMapWindow("Message Size Heat Maps", mapData);
         URL url = Utility.getResource("tau32x32.gif");
 		if (url != null) 
 			window.setIconImage(Toolkit.getDefaultToolkit().getImage(url));
@@ -116,86 +122,43 @@ public class CommunicationMatrix {
 		return matrix.getWindow();
     }
 
-	private void massageData() {
-		for (String key : maps.keySet()) {
-			double[][][] map = maps.get(key);
-			double[] max = {0,0,0,0,0,0}; 
-			double[] min = {0,0,0,0,0,0};
-			for (int sender = 0 ; sender < size ; sender++) {
-				for (int receiver = 0 ; receiver < size ; receiver++) {
-					
-					// count and volume are fine... we need to re-compute the mean
-					if (map[COUNT][sender][receiver] > 0) {
-						map[MEAN][sender][receiver] = map[VOLUME][sender][receiver] / map[COUNT][sender][receiver];
-					} else {
-						map[MEAN][sender][receiver] = 0;
-					}
-
-					// compute stddev
-					if (map[COUNT][sender][receiver] > 0)
-						map[STDDEV][sender][receiver] = Math.sqrt(Math.abs((map[STDDEV][sender][receiver]/map[COUNT][sender][receiver])-(map[MEAN][sender][receiver]*map[MEAN][sender][receiver])));
-					else
-						map[STDDEV][sender][receiver] = 0;
-
-					max[COUNT] = Math.max(max[COUNT], map[COUNT][sender][receiver]);
-					max[MAX] = Math.max(max[MAX], map[MAX][sender][receiver]);
-					max[MIN] = Math.max(max[MIN], map[MIN][sender][receiver]);
-					max[MEAN] = Math.max(max[MEAN], map[MEAN][sender][receiver]);
-					max[STDDEV] = Math.max(max[STDDEV], map[STDDEV][sender][receiver]);
-					max[VOLUME] = Math.max(max[VOLUME], map[VOLUME][sender][receiver]);
-
-					if (map[COUNT][sender][receiver] > 0.0) {
-						min[COUNT] = (min[COUNT] == 0.0) ? map[COUNT][sender][receiver] : Math.min(min[COUNT], map[COUNT][sender][receiver]);
-						min[MAX] = (min[MAX] == 0.0) ? map[MAX][sender][receiver] : Math.min(min[MAX], map[MAX][sender][receiver]);
-						min[MIN] = (min[MIN] == 0.0) ? map[MIN][sender][receiver] : Math.min(min[MIN], map[MIN][sender][receiver]);
-						min[MEAN] = (min[MEAN] == 0.0) ? map[MEAN][sender][receiver] : Math.min(min[MEAN], map[MEAN][sender][receiver]);
-						min[STDDEV] = (min[STDDEV] == 0.0) ? map[STDDEV][sender][receiver] : Math.min(min[STDDEV], map[STDDEV][sender][receiver]);
-						min[VOLUME] = (min[VOLUME] == 0.0) ? map[VOLUME][sender][receiver] : Math.min(min[VOLUME], map[VOLUME][sender][receiver]);
-					}
-				}
-			}
-			maps.put(key, map);
-			maxs.put(key, max);
-			mins.put(key, min);
-		}
-	}
-
 	private void extractData(double[][] data, Integer thread, String event, String first, String path) {
-		double numEvents, eventMax, eventMin, eventMean, eventSumSqr, stdev, volume = 0;
-		double[][][] map = new double[6][size][size];
-
-		if (maps.keySet().contains(path)) {
-			map = maps.get(path);
-		} else {
-			maps.put(path, map);
-		}
+		double numEvents, eventMax, eventMin, eventMean, eventSumSqr, volume = 0;
+		double[] empty = {0,0,0,0,0,0};
 
 		StringTokenizer st = new StringTokenizer(first, "Message size sent to node ");
 		if (st.hasMoreTokens()) {
 			int receiver = Integer.parseInt(st.nextToken());
 
+			double[] pointData = mapData.get(thread, receiver, path);
+			if (pointData == null) {
+				pointData = empty;
+			}
+
 			numEvents = data[thread][COUNT];
-			map[COUNT][thread][receiver] += numEvents;
+			pointData[COUNT] += numEvents;
 			
 			eventMax = data[thread][MAX];
-			map[MAX][thread][receiver] = Math.max(eventMax, map[1][thread][receiver]);
+			pointData[MAX] = Math.max(eventMax, pointData[MAX]);
 			
 			eventMin = data[thread][MIN];
-			if (map[MIN][thread][receiver] > 0) {
-				map[MIN][thread][receiver] = Math.min(map[MIN][thread][receiver],eventMin);
+			if (pointData[MIN] > 0) {
+				pointData[MIN] = Math.min(pointData[MIN],eventMin);
 			} else {
-				map[MIN][thread][receiver] = eventMin;
+				pointData[MIN] = eventMin;
 			}
 			
 			// we'll recompute this later.
 			eventMean = data[thread][MEAN];
-			map[MEAN][thread][receiver] += eventMean;
+			pointData[MEAN] += eventMean;
 			
+			// we'll recompute this later.
 			eventSumSqr = data[thread][STDDEV];
-			map[STDDEV][thread][receiver] += eventSumSqr;
+			pointData[STDDEV] += eventSumSqr;
 			
 			volume = numEvents * eventMean;
-			map[VOLUME][thread][receiver] += volume;
+			pointData[VOLUME] += volume;
+			mapData.put(thread, receiver, path, pointData);
 		}
 	}
 	

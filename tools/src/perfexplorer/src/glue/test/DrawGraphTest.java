@@ -31,7 +31,7 @@ public class DrawGraphTest extends TestCase {
 		Set<String> events = new HashSet<String>();
 		events.add(event);
 		DrawGraph operation = new DrawGraph(result);
-		operation.set_events(events);
+		operation.setEvents(events);
 		operation.setTitle(event);
 		operation.setYAxisLabel("process ID");
 		operation.setXAxisLabel("value");
