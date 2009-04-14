@@ -18,8 +18,11 @@ public class HeatMap extends JPanel implements ImageObserver {
 	public static final String TMPDIR = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "tmp" + File.separator;
 	private HeatMapScanner scanner = null; // for tool tips
 	private double[][] map = null;
+	private HeatMapData mapData = null;
 	private DecimalFormat f = new DecimalFormat("0");
 	private int size = 128;
+	private int index = 0;
+	private String path = "";
 
 	public HeatMap (double[][] map, int size, double max, double min, String description) {
 		this.map = map;
@@ -67,6 +70,57 @@ public class HeatMap extends JPanel implements ImageObserver {
 		this.addKeyListener(scanner);
 	}
 
+	public HeatMap (HeatMapData mapData, int index, String path, String description) {
+		this.mapData = mapData;
+		this.size = mapData.getSize();
+		this.description = new StringBuffer();
+		this.description.append(description);
+		this.index = index;
+		this.path = path;
+		double max = mapData.getMax(path, index);
+		double min = mapData.getMin(path, index);
+		double range = max - min;
+	
+		// build the image data from the cluster results
+		pixels = new int[size*size];
+		
+		// get the size of the image...
+		int width = size;
+		int height = size;
+		
+		img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		mapData.reset();
+		while (mapData.hasNext()) {
+			HeatMapData.NextValue next = (HeatMapData.NextValue)mapData.next();
+			int x = next.receiver;
+			int y = next.sender;
+			double value = next.getValue(path, index);
+			if (value > 0.0 && range == 0) {
+				img.setRGB(x, y, scale.getColor(1f).getRGB());
+			} else if (value > 0.0) {
+				// this looks inverted, but it is so the sender is on the left, receiver on top
+				img.setRGB(x, y, scale.getColor((float)((value-min)/range)).getRGB());
+			}
+		}
+	
+		if (HeatMapWindow.maxCells < size) {
+			int factor = (size / HeatMapWindow.maxCells) + 1;
+			int newSize = size * factor * HeatMapWindow.viewRatio;
+			this.setPreferredSize(new Dimension(newSize,newSize));
+			this.setSize(newSize,newSize);
+		} else {
+			this.setPreferredSize(new Dimension(size,size));
+			this.setSize(size,size);
+		}
+		scanner = new HeatMapScanner(this);
+		this.addMouseListener(scanner);
+		this.addMouseMotionListener(scanner);
+		this.addMouseMotionListener(scanner);
+		this.addMouseWheelListener(scanner);
+		this.setFocusable(true);  // enables key listener events
+		this.addKeyListener(scanner);
+	}
+
 	public String getToolTip(Point p) {
 		// adjust to zoom
     	int currentSize = this.getPreferredSize().height;
@@ -74,7 +128,8 @@ public class HeatMap extends JPanel implements ImageObserver {
 		int x = Math.min((int)((p.getX()) / pixelsPerCell),size-1);  // don't go past the end of the array
 		int y = Math.min((int)((p.getY()) / pixelsPerCell),size-1);  // don't go past the end of the array
 		// this is inverted - the sender is Y, the receiver is X
-		double value = map[y][x];
+//		double value = map[y][x];
+		double value = mapData.get(y, x, path, index);
 		String s = "<html>sender = " + y + "<BR>receiver = " + x + "<BR>value = " + f.format(value) + "</html>";
 		return s;
 	}

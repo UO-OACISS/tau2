@@ -10,7 +10,7 @@ import javax.swing.*;
 
 import edu.uoregon.tau.common.ImageExport;
 
-public class HeatMapWindow extends JFrame implements ActionListener, ImageExport{
+public class HeatMapWindow extends JFrame implements ActionListener, ImageExport {
 
 	private SteppedComboBox pathSelector = null;
 	private SteppedComboBox figureSelector = null;
@@ -19,6 +19,7 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 	private Map/*<String, double[][][]>*/ maps = null;
 	private Map/*<String, double[]>*/ maxs = null;
 	private Map/*<String, double[]>*/ mins = null;
+	private HeatMapData mapData = null;
 	private final static String allPaths = "All Paths";
 	private final static String CALLS = "NUMBER OF CALLS";
 	private final static String MAX = "MAX MESSAGE BYTES";
@@ -43,6 +44,24 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 		this.mins = mins;
 		this.size = size;
 		pathSelector = new SteppedComboBox(maps.keySet().toArray());
+		Dimension d = pathSelector.getPreferredSize();
+	    pathSelector.setPreferredSize(new Dimension(50, d.height));
+	    pathSelector.setPopupWidth(d.width);
+		figureSelector = new SteppedComboBox(figures);
+		d = figureSelector.getPreferredSize();
+	    figureSelector.setPreferredSize(new Dimension(50, d.height));
+	    figureSelector.setPopupWidth(d.width);
+		this.setResizable(false);
+		drawFigures(true);
+	}
+
+	public HeatMapWindow(String title, HeatMapData mapData) {
+		super(title);
+		this.mapData = mapData;
+		this.maxs = mapData.getMaxs();
+		this.mins = mapData.getMins();
+		this.size = mapData.getSize();
+		pathSelector = new SteppedComboBox(mapData.getPaths().toArray());
 		Dimension d = pathSelector.getPreferredSize();
 	    pathSelector.setPreferredSize(new Dimension(50, d.height));
 	    pathSelector.setPopupWidth(d.width);
@@ -177,10 +196,11 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 		c.gridy = 3;
 		c.gridwidth = 3;
 		c.gridheight = 3;
-		double[][][] map = (double[][][])(maps.get(currentPath));
-		double[] max = (double[])(maxs.get(currentPath));
-		double[] min = (double[])(mins.get(currentPath));
-		this.heatMap = new HeatMap(map[index], size, max[index], min[index], filenamePrefix);
+//		double[][][] map = (double[][][])(maps.get(currentPath));
+//		double[] max = (double[])(maxs.get(currentPath));
+//		double[] min = (double[])(mins.get(currentPath));
+//		this.heatMap = new HeatMap(map[index], size, max[index], min[index], filenamePrefix);
+		this.heatMap = new HeatMap(mapData, index, currentPath, filenamePrefix);
 		JScrollPane scroller = new JScrollPane(heatMap);
 		scroller.setPreferredSize(new Dimension(viewSize,viewSize));
 	    panel.add(scroller, c);
@@ -188,7 +208,8 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 		c.gridheight = 1;
 		c.gridy = 3;
 		c.gridx = 4;
-		panel.add(new JLabel(f.format(max[index]), JLabel.CENTER),c);
+//		panel.add(new JLabel(f.format(max[index]), JLabel.CENTER),c);
+		panel.add(new JLabel(f.format(mapData.getMax(currentPath, index)), JLabel.CENTER),c);
 		c.gridy = 4;
 		c.weighty = 0.99;
 	    panel.add(new HeatLegend(), c);
@@ -200,7 +221,8 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 		c.gridy = 5;
 		panel.add(new JLabel(Integer.toString(size-1), JLabel.CENTER),c);
 		c.gridx = 4;
-		panel.add(new JLabel(f.format(min[index]), JLabel.CENTER),c);
+//		panel.add(new JLabel(f.format(min[index]), JLabel.CENTER),c);
+		panel.add(new JLabel(f.format(mapData.getMin(currentPath, index)), JLabel.CENTER),c);
 		return panel;
 	}
 
