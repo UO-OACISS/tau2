@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 
   void *ptr;
   long calls, childcalls;
-  double incl[MAX_TAU_COUNTERS], excl[MAX_TAU_COUNTERS];
+  double incl[TAU_MAX_COUNTERS], excl[TAU_MAX_COUNTERS];
   int i, j;
   const char **counters;
   int numcounters;
