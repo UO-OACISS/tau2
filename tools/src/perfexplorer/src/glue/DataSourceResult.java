@@ -4,21 +4,28 @@
 package edu.uoregon.tau.perfexplorer.glue;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
+import edu.uoregon.tau.perfdmf.DataSource;
+import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.FunctionProfile;
 import edu.uoregon.tau.perfdmf.Thread;
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.UserEvent;
+import edu.uoregon.tau.perfdmf.UserEventProfile;
+import edu.uoregon.tau.perfdmf.UtilFncs;
 
 /**
  * @author khuck
  *
  */
 public class DataSourceResult extends AbstractResult {
-	
+
     public static final int PPK = DataSource.PPK;
     public static final int TAUPROFILE = DataSource.TAUPROFILE;
     public static final int DYNAPROF = DataSource.DYNAPROF;
@@ -37,20 +44,12 @@ public class DataSourceResult extends AbstractResult {
     public static final int IPM = DataSource.IPM;
     public static final int GYRO = DataSource.GYRO;
     public static final int GAMESS = DataSource.GAMESS;
+    
+    private DataSource source = null;
+	private List<Thread> threadList = null;
+	private Map<String, Integer> metricMap = new HashMap<String, Integer>();
 
-	/**
-	 * 
-	 */
-	public DataSourceResult() {
-		super();
-	}
-
-	/**
-	 * @param input
-	 */
-	public DataSourceResult(PerformanceResult input) {
-		super(input);
-	}
+	protected Map<Integer, String> eventMap = new HashMap<Integer, String>();
 
 	@SuppressWarnings("unchecked")
 	public DataSourceResult(int fileType, String[] sourceFiles, boolean fixNames) {
@@ -59,7 +58,7 @@ public class DataSourceResult extends AbstractResult {
             files[i] = new File(sourceFiles[i]);
     		this.name = files[i].getName();
         }
-        DataSource source = UtilFncs.initializeDataSource(files, fileType, fixNames);
+        source = UtilFncs.initializeDataSource(files, fileType, fixNames);
         try{
 		    long start = System.currentTimeMillis();
 		    source.load();
@@ -71,48 +70,270 @@ public class DataSourceResult extends AbstractResult {
         	e.printStackTrace(System.err);
         	return;
         }
-		List<Thread> threads = source.getThreads();
-		int tid = 0;  // thread ID
-		System.out.println("Iterating over threads...");
-		long start = System.currentTimeMillis();
-		for (Thread thread : threads) {
-			for (int m = 0 ; m < source.getNumberOfMetrics() ; m++) {
-				String metric = source.getMetric(m).getName();
+        
+        // get the threads
+		threadList = source.getThreads();
+		for (int i = 0 ; i < threadList.size(); i++) {
+			threads.add(new Integer(i));
+		}
+		
+		// get the metrics
+		for (int m = 0 ; m < source.getNumberOfMetrics() ; m++) {
+			String metric = source.getMetric(m).getName();
+			metricMap.put(metric, m);
+			metrics.add(metric);
+		}
+		
+		// get the functions
+		Iterator<Function> functions = source.getFunctions();
+		while (functions.hasNext()) {
+			Function function = functions.next();
+			String name = function.getName();
+			events.add(name);
+		}
+
+		Iterator<UserEvent> userEvents = source.getUserEvents();
+		while (userEvents.hasNext()) {
+			UserEvent userEvent = userEvents.next();
+			String name = userEvent.getName();
+			this.userEvents.add(name);
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#getCalls(java.lang.Integer, java.lang.String)
+	 */
+	public double getCalls(Integer thread, String event) {
+		Thread t = threadList.get(thread);
+		Function f = source.getFunction(event);
+		FunctionProfile fp = t.getFunctionProfile(f);
+		return fp.getNumCalls();
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#getExclusive(java.lang.Integer, java.lang.String, java.lang.String)
+	 */
+	public double getExclusive(Integer thread, String event, String metric) {
+		Thread t = threadList.get(thread);
+		Function f = source.getFunction(event);
+		FunctionProfile fp = t.getFunctionProfile(f);
+		return fp.getExclusive(metricMap.get(metric));
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#getInclusive(java.lang.Integer, java.lang.String, java.lang.String)
+	 */
+	public double getInclusive(Integer thread, String event, String metric) {
+		Thread t = threadList.get(thread);
+		Function f = source.getFunction(event);
+		FunctionProfile fp = t.getFunctionProfile(f);
+		return fp.getInclusive(metricMap.get(metric));
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#getMainEvent()
+	 */
+	public String getMainEvent() {
+		if (mainEvent == null) {
+			for (Thread thread : threadList) {
+				int m = 0;
+				mainMetric = source.getMetric(m).getName();
 				Iterator<Function> functions = source.getFunctions();
 				while (functions.hasNext()) {
 					Function function = functions.next();
 					String name = function.getName();
 					FunctionProfile fp = thread.getFunctionProfile(function);
-					if (fp != null) {
-						this.putExclusive(tid, name, metric, fp.getExclusive(m));
-						this.putInclusive(tid, name, metric, fp.getInclusive(m));
-						this.putCalls(tid, name, fp.getNumCalls());
-						this.putSubroutines(tid, name, fp.getNumSubr());
+					if (fp != null && mainInclusive < fp.getInclusive(m)) {
+						mainInclusive = fp.getInclusive(m);
+						mainEvent = name;
 					}
 				}
 			}
-			Iterator<UserEvent> userEvents = source.getUserEvents();
-			while (userEvents.hasNext()) {
-				UserEvent userEvent = userEvents.next();
-				String name = userEvent.getName();
-				UserEventProfile uep = thread.getUserEventProfile(userEvent);
-				if (uep != null) {
-					this.putUsereventMax(tid, name, uep.getMaxValue());
-					this.putUsereventMean(tid, name, uep.getMeanValue());
-					this.putUsereventMin(tid, name, uep.getMinValue());
-					this.putUsereventNumevents(tid, name, uep.getNumSamples());
-					this.putUsereventSumsqr(tid, name, uep.getSumSquared());
-				}
-			}
-			tid++;
-			if (threads.size() >= 512 && 
-			    ((tid%100 == 0) || tid == threads.size())) {
-				System.out.print("\rProcessed " + tid + " of " + threads.size()
-					+ " threads...");
-			}
 		}
-	    long elapsedTimeMillis = System.currentTimeMillis()-start;
-	    float elapsedTimeSec = elapsedTimeMillis/1000F;
-		System.out.println("\nTime to process: " + elapsedTimeSec + " seconds");
+		return mainEvent;
 	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#getUserEvents(Integer)
+	 */
+	public Set<String> getUserEvents(Integer thread) {
+		Set<String> ues = new TreeSet<String>();
+		Thread t = threadList.get(thread.intValue());
+		Iterator iter = t.getUserEventProfiles();
+		while (iter.hasNext()) {
+			UserEventProfile uep = (UserEventProfile)iter.next();
+			ues.add(uep.getUserEvent().getName());
+		}
+		return ues;
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#getOriginalThreads()
+	 */
+	public Integer getOriginalThreads() {
+		return threadList.size();
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#getSubroutines(java.lang.Integer, java.lang.String)
+	 */
+	public double getSubroutines(Integer thread, String event) {
+		Thread t = threadList.get(thread);
+		Function f = source.getFunction(event);
+		FunctionProfile fp = t.getFunctionProfile(f);
+		return fp.getNumSubr();
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#getTrial()
+	 */
+	public Trial getTrial() {
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#getTrialID()
+	 */
+	public Integer getTrialID() {
+		return new Integer(0);
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#getUsereventMax(java.lang.Integer, java.lang.String)
+	 */
+	public double getUsereventMax(Integer thread, String event) {
+		Thread t = threadList.get(thread);
+		UserEvent ue = source.getUserEvent(event);
+		UserEventProfile uep = t.getUserEventProfile(ue);
+		if (uep != null) {
+			return uep.getMaxValue();
+		}
+		return 0;
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#getUsereventMean(java.lang.Integer, java.lang.String)
+	 */
+	public double getUsereventMean(Integer thread, String event) {
+		Thread t = threadList.get(thread);
+		UserEvent ue = source.getUserEvent(event);
+		UserEventProfile uep = t.getUserEventProfile(ue);
+		if (uep != null) {
+			return uep.getMeanValue();
+		}
+		return 0;
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#getUsereventMin(java.lang.Integer, java.lang.String)
+	 */
+	public double getUsereventMin(Integer thread, String event) {
+		Thread t = threadList.get(thread);
+		UserEvent ue = source.getUserEvent(event);
+		UserEventProfile uep = t.getUserEventProfile(ue);
+		if (uep != null) {
+			return uep.getMinValue();
+		}
+		return 0;
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#getUsereventNumevents(java.lang.Integer, java.lang.String)
+	 */
+	public double getUsereventNumevents(Integer thread, String event) {
+		Thread t = threadList.get(thread);
+		UserEvent ue = source.getUserEvent(event);
+		UserEventProfile uep = t.getUserEventProfile(ue);
+		if (uep != null) {
+			return uep.getNumSamples();
+		}
+		return 0;
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#getUsereventSumsqr(java.lang.Integer, java.lang.String)
+	 */
+	public double getUsereventSumsqr(Integer thread, String event) {
+		Thread t = threadList.get(thread);
+		UserEvent ue = source.getUserEvent(event);
+		UserEventProfile uep = t.getUserEventProfile(ue);
+		if (uep != null) {
+			return uep.getSumSquared();
+		}
+		return 0;
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#putCalls(java.lang.Integer, java.lang.String, double)
+	 */
+	public void putCalls(Integer thread, String event, double value) {
+		System.err.println("*** putCalls not implemented for DataSourceResult ***");
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#putDataPoint(java.lang.Integer, java.lang.String, java.lang.String, int, double)
+	 */
+	public void putDataPoint(Integer thread, String event, String metric,
+			int type, double value) {
+		System.err.println("*** putDataPoint not implemented for DataSourceResult ***");
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#putExclusive(java.lang.Integer, java.lang.String, java.lang.String, double)
+	 */
+	public void putExclusive(Integer thread, String event, String metric,
+			double value) {
+		System.err.println("*** putExclusive not implemented for DataSourceResult ***");
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#putInclusive(java.lang.Integer, java.lang.String, java.lang.String, double)
+	 */
+	public void putInclusive(Integer thread, String event, String metric,
+			double value) {
+		System.err.println("*** putInclusive not implemented for DataSourceResult ***");
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#putSubroutines(java.lang.Integer, java.lang.String, double)
+	 */
+	public void putSubroutines(Integer thread, String event, double value) {
+		System.err.println("*** putSubroutines not implemented for DataSourceResult ***");
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#putUsereventMax(java.lang.Integer, java.lang.String, double)
+	 */
+	public void putUsereventMax(Integer thread, String event, double value) {
+		System.err.println("*** putUsereventMax not implemented for DataSourceResult ***");
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#putUsereventMean(java.lang.Integer, java.lang.String, double)
+	 */
+	public void putUsereventMean(Integer thread, String event, double value) {
+		System.err.println("*** putUsereventMean not implemented for DataSourceResult ***");
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#putUsereventMin(java.lang.Integer, java.lang.String, double)
+	 */
+	public void putUsereventMin(Integer thread, String event, double value) {
+		System.err.println("*** putUsereventMin not implemented for DataSourceResult ***");
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#putUsereventNumevents(java.lang.Integer, java.lang.String, double)
+	 */
+	public void putUsereventNumevents(Integer thread, String event, double value) {
+		System.err.println("*** putUsereventNumevents not implemented for DataSourceResult ***");
+	}
+
+	/* (non-Javadoc)
+	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#putUsereventSumsqr(java.lang.Integer, java.lang.String, double)
+	 */
+	public void putUsereventSumsqr(Integer thread, String event, double value) {
+		System.err.println("*** putUsereventsSumsqr not implemented for DataSourceResult ***");
+	}
+
 }

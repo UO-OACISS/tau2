@@ -15,7 +15,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * this interface, whenever possible.
  * </p>
  * 
- * <P>CVS $Id: PerformanceResult.java,v 1.10 2009/04/09 00:23:51 khuck Exp $</P>
+ * <P>CVS $Id: PerformanceResult.java,v 1.11 2009/04/15 00:17:12 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0
@@ -61,6 +61,14 @@ public interface PerformanceResult {
 	 * @return the set of userevent names
 	 */
 	public Set<String> getUserEvents();
+
+	/**
+	 * This method will return a Set of Strings, which represent the
+	 * names of the userevents for the specified thread in the trial.
+	 * 
+	 * @return the set of userevent names
+	 */
+	public Set<String> getUserEvents(Integer thread);
 
 	/**
 	 * This method will return the inclusive value stored in the trial for

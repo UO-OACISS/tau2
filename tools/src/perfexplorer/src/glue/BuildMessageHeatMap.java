@@ -48,7 +48,7 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 		    boolean foundData = false;
 		    mapData = new HeatMapData(size);
 			for (Integer thread : input.getThreads()) {
-				for (String event : input.getUserEvents()) {
+				for (String event : input.getUserEvents(thread)) {
 					
 					// don't process if this thread doesn't have this event
 					if (input.getUsereventNumevents(thread, event) == 0) continue;

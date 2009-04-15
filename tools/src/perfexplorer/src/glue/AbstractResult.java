@@ -19,7 +19,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * interface.  This class has all the member data fields for the plethora
  * of anticipated subclasses.
  * 
- * <P>CVS $Id: AbstractResult.java,v 1.16 2009/03/26 18:09:57 khuck Exp $</P>
+ * <P>CVS $Id: AbstractResult.java,v 1.17 2009/04/15 00:17:11 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0
@@ -56,14 +56,14 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 	public static final int USEREVENT_SUMSQR = 8;
 	private static List<Integer> types = null;
 	
-	private String mainEvent = null;
+	protected String mainEvent = null;
 	protected double mainInclusive = 0.0;
 	protected String mainMetric = null;
 	protected Trial trial = null;
 	protected Integer trialID = null;
 	protected Map<Integer, String> eventMap = new HashMap<Integer, String>();
 	protected String name = null;
-	private boolean ignoreWarnings = false;
+	protected boolean ignoreWarnings = false;
 	
 	public static List<Integer> getTypes() {
 		if (types == null) {
@@ -490,7 +490,18 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 	public Set<String> getUserEvents() {
 		return userEvents;
 	}
-	
+
+	public Set<String> getUserEvents(Integer thread) {
+		Set<String> ues = null;
+		try {
+			ues = usereventData.get(thread).keySet();
+		} catch (NullPointerException e) {
+			if (!ignoreWarnings)
+				System.err.println("*** Warning - null userevent set for thread: " + thread + " ***");
+		}
+		return ues;
+	}
+		
 	/**
 	 * @return the originalThreads
 	 */
