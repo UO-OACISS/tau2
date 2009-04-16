@@ -4855,6 +4855,11 @@ if [ $disableshared = yes ] ; then
     fixmakeargs="$fixmakeargs NOSHARED"
 fi
 
+if [ $disableshared = yes -a $python = yes ] ; then
+    echo "ERROR: Shared libraries are disabled, but Python is specified"
+    exit 1
+fi
+
 if [ $noex = yes ] ; then
     tauoptions="${tauoptions}-noex"
     if [ $kai = yes ] ; then
