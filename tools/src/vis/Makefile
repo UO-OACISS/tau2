@@ -1,6 +1,6 @@
 
-CONFIG_ARCH=default
-TAUROOT=
+CONFIG_ARCH=i386_linux
+TAUROOT=/home/khuck/tau2
 TOOLS_SRC=$(TAUROOT)/tools/src
 
 

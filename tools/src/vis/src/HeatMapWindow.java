@@ -109,7 +109,6 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 	        int yPosition = (screenHeight - windowHeight) / 2;
 	        setLocation(xPosition, yPosition);
         }
-
 		this.pack();
 	}
 
@@ -158,6 +157,7 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 		c.weightx = 0.01;
 		c.insets = new Insets(2,2,2,2);
 		DecimalFormat f = new DecimalFormat("0.00E0");
+		DecimalFormat f2 = new DecimalFormat("0.##");
 
 		// title across the top
 		c.gridx = 0;
@@ -196,11 +196,11 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 		c.gridy = 3;
 		c.gridwidth = 3;
 		c.gridheight = 3;
-//		double[][][] map = (double[][][])(maps.get(currentPath));
-//		double[] max = (double[])(maxs.get(currentPath));
-//		double[] min = (double[])(mins.get(currentPath));
-//		this.heatMap = new HeatMap(map[index], size, max[index], min[index], filenamePrefix);
-		this.heatMap = new HeatMap(mapData, index, currentPath, filenamePrefix);
+		if (heatMap == null) {
+			this.heatMap = new HeatMap(mapData, index, currentPath, filenamePrefix);
+		} else {
+			this.heatMap.update(mapData, index, currentPath, filenamePrefix);
+		}
 		JScrollPane scroller = new JScrollPane(heatMap);
 		scroller.setPreferredSize(new Dimension(viewSize,viewSize));
 	    panel.add(scroller, c);
@@ -208,8 +208,12 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 		c.gridheight = 1;
 		c.gridy = 3;
 		c.gridx = 4;
-//		panel.add(new JLabel(f.format(max[index]), JLabel.CENTER),c);
-		panel.add(new JLabel(f.format(mapData.getMax(currentPath, index)), JLabel.CENTER),c);
+		double tmp = mapData.getMax(currentPath, index);
+		if (tmp > 999) {
+			panel.add(new JLabel(f.format(tmp), JLabel.CENTER),c);
+		} else {
+			panel.add(new JLabel(f2.format(tmp), JLabel.CENTER),c);
+		}
 		c.gridy = 4;
 		c.weighty = 0.99;
 	    panel.add(new HeatLegend(), c);
@@ -219,10 +223,14 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 		// the bottom of the y axis and the bottom of the legend
 		c.gridx = 0;
 		c.gridy = 5;
+		tmp = mapData.getMin(currentPath, index);
 		panel.add(new JLabel(Integer.toString(size-1), JLabel.CENTER),c);
 		c.gridx = 4;
-//		panel.add(new JLabel(f.format(min[index]), JLabel.CENTER),c);
-		panel.add(new JLabel(f.format(mapData.getMin(currentPath, index)), JLabel.CENTER),c);
+		if (tmp > 999) {
+			panel.add(new JLabel(f.format(tmp), JLabel.CENTER),c);
+		} else {
+			panel.add(new JLabel(f2.format(tmp), JLabel.CENTER),c);
+		}
 		return panel;
 	}
 
@@ -235,6 +243,7 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 					currentPath = newPath;
 					this.remove(mainPanel);
 					mainPanel = null;
+					System.gc();
 					drawFigures(false);
 					// new heatmap, new scanner, so add listeners
 					this.figureSelector.addKeyListener(this.heatMap.getScanner());
@@ -248,6 +257,7 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 					currentFigure = newFigure;
 					this.remove(mainPanel);
 					mainPanel = null;
+					System.gc();
 					drawFigures(false);
 					// new heatmap, new scanner, so add listeners
 					this.figureSelector.addKeyListener(this.heatMap.getScanner());
