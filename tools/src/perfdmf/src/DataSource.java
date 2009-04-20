@@ -20,9 +20,9 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.42 2009/04/10 21:10:25 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.43 2009/04/20 21:19:13 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.42 $
+ * @version $Revision: 1.43 $
  */
 public abstract class DataSource {
 
@@ -736,8 +736,9 @@ public abstract class DataSource {
                     }
                 }
 
+                int divider = numThreads;
                 if (!meanIncludeNulls) { // do we include null values as zeroes in the computation or not?
-                    numThreads = numProfiles;
+                    divider = numProfiles;
                 }
 
                 totalProfile.setNumSamples(numSampSum, snapshot);
@@ -746,18 +747,18 @@ public abstract class DataSource {
                 totalProfile.setMeanValue(maxSum, snapshot);
                 totalProfile.setStdDev(stdDevSum, snapshot);
 
-                meanProfile.setNumSamples((numSampSum / numThreads), snapshot);
-                meanProfile.setMaxValue(maxSum / numThreads, snapshot);
-                meanProfile.setMinValue(minSum / numThreads, snapshot);
-                meanProfile.setMeanValue(meanSum / numThreads, snapshot);
-                meanProfile.setStdDev(stdDevSum / numThreads, snapshot);
+                meanProfile.setNumSamples((numSampSum / divider), snapshot);
+                meanProfile.setMaxValue(maxSum / divider, snapshot);
+                meanProfile.setMinValue(minSum / divider, snapshot);
+                meanProfile.setMeanValue(meanSum / divider, snapshot);
+                meanProfile.setStdDev(stdDevSum / divider, snapshot);
 
-                stddevProfile.setNumSamples(computeStdDev(numSampSumSqr, meanProfile.getNumSamples(snapshot), numThreads),
+                stddevProfile.setNumSamples(computeStdDev(numSampSumSqr, meanProfile.getNumSamples(snapshot), divider),
                         snapshot);
-                stddevProfile.setMaxValue(computeStdDev(maxSumSqr, meanProfile.getMaxValue(snapshot), numThreads), snapshot);
-                stddevProfile.setMinValue(computeStdDev(minSumSqr, meanProfile.getMinValue(snapshot), numThreads), snapshot);
-                stddevProfile.setMeanValue(computeStdDev(meanSumSqr, meanProfile.getMeanValue(snapshot), numThreads), snapshot);
-                stddevProfile.setStdDev(computeStdDev(stdDevSumSqr, meanProfile.getStdDev(snapshot), numThreads), snapshot);
+                stddevProfile.setMaxValue(computeStdDev(maxSumSqr, meanProfile.getMaxValue(snapshot), divider), snapshot);
+                stddevProfile.setMinValue(computeStdDev(minSumSqr, meanProfile.getMinValue(snapshot), divider), snapshot);
+                stddevProfile.setMeanValue(computeStdDev(meanSumSqr, meanProfile.getMeanValue(snapshot), divider), snapshot);
+                stddevProfile.setStdDev(computeStdDev(stdDevSumSqr, meanProfile.getStdDev(snapshot), divider), snapshot);
             }
         }
 
@@ -909,8 +910,9 @@ public abstract class DataSource {
                     }
                 }
 
+                int divider = numThreads;
                 if (!meanIncludeNulls) { // do we include null values as zeroes in the computation or not?
-                    numThreads = numEvents;
+                    divider = numEvents;
                 }
 
                 // we don't want to set the calls and subroutines if we're just computing mean data for a derived metric!
@@ -919,20 +921,20 @@ public abstract class DataSource {
                     totalProfile.setNumCalls(snapshot, callSum);
                     totalProfile.setNumSubr(snapshot, subrSum);
 
-                    // mean is just the total / numThreads
-                    meanProfile.setNumCalls(snapshot, (double) callSum / numThreads);
-                    meanProfile.setNumSubr(snapshot, (double) subrSum / numThreads);
+                    // mean is just the total / divider
+                    meanProfile.setNumCalls(snapshot, (double) callSum / divider);
+                    meanProfile.setNumSubr(snapshot, (double) subrSum / divider);
 
                     double stdDev = 0;
-                    if (numThreads > 1) {
-                        stdDev = java.lang.Math.sqrt(java.lang.Math.abs((callSumSqr / (numThreads))
+                    if (divider > 1) {
+                        stdDev = java.lang.Math.sqrt(java.lang.Math.abs((callSumSqr / (divider))
                                 - (meanProfile.getNumCalls(snapshot) * meanProfile.getNumCalls(snapshot))));
                     }
                     stddevProfile.setNumCalls(snapshot, stdDev);
 
                     stdDev = 0;
-                    if (numThreads > 1) {
-                        stdDev = java.lang.Math.sqrt(java.lang.Math.abs((subrSumSqr / (numThreads))
+                    if (divider > 1) {
+                        stdDev = java.lang.Math.sqrt(java.lang.Math.abs((subrSumSqr / (divider))
                                 - (meanProfile.getNumSubr(snapshot) * meanProfile.getNumSubr(snapshot))));
                     }
                     stddevProfile.setNumSubr(snapshot, stdDev);
@@ -945,25 +947,25 @@ public abstract class DataSource {
                     totalProfile.setInclusive(snapshot, m, inclSum[m]);
 
                     // mean data computed as above in comments
-                    meanProfile.setExclusive(snapshot, m, exclSum[m] / numThreads);
-                    meanProfile.setInclusive(snapshot, m, inclSum[m] / numThreads);
+                    meanProfile.setExclusive(snapshot, m, exclSum[m] / divider);
+                    meanProfile.setInclusive(snapshot, m, inclSum[m] / divider);
 
                     double stdDev = 0;
-                    if (numThreads > 1) {
+                    if (divider > 1) {
 
                         // see http://cuwu.editthispage.com/stories/storyReader$13 for why I don't multiply by n/(n-1)
 
-                        //stdDev = java.lang.Math.sqrt(((double) numThreads / (numThreads - 1))
-                        //        * java.lang.Math.abs((exclSumSqr[i] / (numThreads))
+                        //stdDev = java.lang.Math.sqrt(((double) divider / (divider - 1))
+                        //        * java.lang.Math.abs((exclSumSqr[i] / (divider))
                         //                - (meanProfile.getExclusive(i) * meanProfile.getExclusive(i))));
-                        stdDev = java.lang.Math.sqrt(java.lang.Math.abs((exclSumSqr[m] / (numThreads))
+                        stdDev = java.lang.Math.sqrt(java.lang.Math.abs((exclSumSqr[m] / (divider))
                                 - (meanProfile.getExclusive(snapshot, m) * meanProfile.getExclusive(snapshot, m))));
                     }
                     stddevProfile.setExclusive(snapshot, m, stdDev);
 
                     stdDev = 0;
-                    if (numThreads > 1) {
-                        stdDev = java.lang.Math.sqrt(java.lang.Math.abs((inclSumSqr[m] / (numThreads))
+                    if (divider > 1) {
+                        stdDev = java.lang.Math.sqrt(java.lang.Math.abs((inclSumSqr[m] / (divider))
                                 - (meanProfile.getInclusive(snapshot, m) * meanProfile.getInclusive(snapshot, m))));
                     }
                     stddevProfile.setInclusive(snapshot, m, stdDev);
