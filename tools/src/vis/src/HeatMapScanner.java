@@ -9,13 +9,18 @@ import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
  
 class HeatMapScanner extends MouseInputAdapter implements KeyListener, MouseWheelListener  {
-    HeatMap heatmap;
-    JWindow toolTip;
-    JLabel label;
+    private HeatMap heatmap;
+    private JWindow toolTip;
+    private JLabel label;
+    private int maxSize = 0;
+    private int viewportSize = 512;
+    private int zoomMax = 0;
  
-    public HeatMapScanner(HeatMap heatmap) {
+    public HeatMapScanner(HeatMap heatmap, int maxSize) {
         this.heatmap = heatmap;
         initToolTip();
+        this.maxSize = maxSize;
+        this.zoomMax = this.viewportSize * this.maxSize;
     }
  
     private void initToolTip() {
@@ -46,34 +51,10 @@ class HeatMapScanner extends MouseInputAdapter implements KeyListener, MouseWhee
     
     public void mouseWheelMoved(MouseWheelEvent e) {
     	int notches = e.getWheelRotation();
-    	int currentSize = this.heatmap.getPreferredSize().height;
-    	int newSize = currentSize;
     	if (notches < 0) {
-    		// wheel moved up, zoom in
-        	if (currentSize <= 512) {
-        		newSize = Math.max(currentSize * 2, 512);
-        	} else if (currentSize >= 576) {
-        		newSize += 64;
-        	} else { // size between 512 and 576
-        		newSize = 512;
-        	}
-        	if (newSize != currentSize) {
-    			heatmap.setPreferredSize(new Dimension(newSize,newSize));
-    			heatmap.setSize(newSize,newSize);
-        	}
+        	zoomIn();
     	} else {
-    		// wheel moved down, zoom out
-        	if (currentSize <= 512) {
-        		newSize = Math.min(currentSize / 2, heatmap.getMapSize());
-        	} else if (currentSize > 576) {
-        		newSize = Math.max(currentSize - 64, 512);
-        	} else { // size between 512 and 576
-        		newSize = 512;
-        	}
-        	if (newSize != currentSize && newSize >= heatmap.getMapSize()) {
-    			heatmap.setPreferredSize(new Dimension(newSize,newSize));
-    			heatmap.setSize(newSize,newSize);
-        	}
+    		zoomOut();
     	}
     }
     
@@ -88,36 +69,49 @@ class HeatMapScanner extends MouseInputAdapter implements KeyListener, MouseWhee
 	public void keyTyped(KeyEvent evt) {
         try {
             char key = evt.getKeyChar();
-        	int currentSize = this.heatmap.getPreferredSize().height;
-        	int newSize = currentSize;
             // zoom in and out on +/-
             if (key == '+' || key == '=') {
-            	if (currentSize <= 512) {
-            		newSize = Math.max(currentSize * 2, 512);
-            	} else if (currentSize >= 576) {
-            		newSize += 64;
-            	} else { // size between 512 and 576
-            		newSize = 512;
-            	}
-            	if (newSize != currentSize) {
-	    			heatmap.setPreferredSize(new Dimension(newSize,newSize));
-	    			heatmap.setSize(newSize,newSize);
-            	}
+            	zoomIn();
             } else if (key == '-' || key == '_') {
-            	if (currentSize <= 512) {
-            		newSize = Math.min(currentSize / 2, heatmap.getMapSize());
-            	} else if (currentSize > 576) {
-            		newSize = Math.max(currentSize - 64, 512);
-            	} else { // size between 512 and 576
-            		newSize = 512;
-            	}
-            	if (newSize != currentSize && newSize >= heatmap.getMapSize()) {
-	    			heatmap.setPreferredSize(new Dimension(newSize,newSize));
-	    			heatmap.setSize(newSize,newSize);
-            	}
+            	zoomOut();
             }
         } catch (Exception e) {
         }
+	}
+
+	private int zoomOut() {
+    	int currentSize = this.heatmap.getPreferredSize().height;
+    	int newSize = currentSize;
+		if (currentSize <= this.viewportSize) {
+			newSize = Math.min(currentSize / 2, heatmap.getMapSize());
+		} else if (currentSize > 576) {
+			newSize = Math.max(currentSize / 2, this.viewportSize);
+		} else { // size between this.viewportSize and 576
+			newSize = this.viewportSize;
+		}
+		if (newSize != currentSize && newSize >= this.viewportSize) {
+//                	if (newSize != currentSize && newSize >= heatmap.getMapSize()) {
+			heatmap.setPreferredSize(new Dimension(newSize,newSize));
+			heatmap.setSize(newSize,newSize);
+		}
+		return newSize;
+	}
+
+	private int zoomIn() {
+    	int currentSize = this.heatmap.getPreferredSize().height;
+    	int newSize = currentSize;
+		if (currentSize <= this.viewportSize) {
+			newSize = Math.max(currentSize * 2, this.viewportSize);
+		} else if (currentSize >= 576) {
+			newSize *= 2;
+		} else { // size between this.viewportSize and 576
+			newSize = this.viewportSize;
+		}
+		if (newSize != currentSize && newSize <= this.zoomMax && newSize > 0) {
+			heatmap.setPreferredSize(new Dimension(newSize,newSize));
+			heatmap.setSize(newSize,newSize);
+		}
+		return newSize;
 	}
 	
 

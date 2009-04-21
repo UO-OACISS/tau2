@@ -65,7 +65,7 @@ public class HeatMap extends JPanel implements ImageObserver {
 			this.setPreferredSize(new Dimension(size,size));
 			this.setSize(size,size);
 		}
-		scanner = new HeatMapScanner(this);
+		scanner = new HeatMapScanner(this, size);
 		this.addMouseListener(scanner);
 		this.addMouseMotionListener(scanner);
 		this.addMouseMotionListener(scanner);
@@ -166,6 +166,10 @@ public class HeatMap extends JPanel implements ImageObserver {
 				img.setRGB(x, y, scale.getColor((float)((value-min)/range)).getRGB());
 			}
 		}
+	}
+	
+	public void goAway() {
+		this.img.flush();
 	}
 
 }

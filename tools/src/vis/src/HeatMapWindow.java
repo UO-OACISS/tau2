@@ -3,6 +3,8 @@ package edu.uoregon.tau.vis;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.text.DecimalFormat;
 import java.util.Map;
 
@@ -37,24 +39,6 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 	public final static int viewRatio = 2;   // the ratio between those two
 	private HeatMap heatMap = null;
 
-	public HeatMapWindow(String title, Map maps, Map maxs, Map mins, int size) {
-		super(title);
-		this.maps = maps;
-		this.maxs = maxs;
-		this.mins = mins;
-		this.size = size;
-		pathSelector = new SteppedComboBox(maps.keySet().toArray());
-		Dimension d = pathSelector.getPreferredSize();
-	    pathSelector.setPreferredSize(new Dimension(50, d.height));
-	    pathSelector.setPopupWidth(d.width);
-		figureSelector = new SteppedComboBox(figures);
-		d = figureSelector.getPreferredSize();
-	    figureSelector.setPreferredSize(new Dimension(50, d.height));
-	    figureSelector.setPopupWidth(d.width);
-		this.setResizable(false);
-		drawFigures(true);
-	}
-
 	public HeatMapWindow(String title, HeatMapData mapData) {
 		super(title);
 		this.mapData = mapData;
@@ -71,6 +55,24 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 	    figureSelector.setPopupWidth(d.width);
 		this.setResizable(false);
 		drawFigures(true);
+		// exit when the user closes the main window.
+		addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				heatMap.goAway();
+				dispose();
+				System.gc();
+				DecimalFormat f = new DecimalFormat("#.## MB");
+				System.out.print("WINDOW CLOSED - ");
+				System.out.print("Memory - Free: " + f.format(java.lang.Runtime.getRuntime().freeMemory()/1000000.0));
+				System.out.print("\tTotal: " + f.format(java.lang.Runtime.getRuntime().totalMemory()/1000000.0));
+				System.out.println("\tMax: " + f.format(java.lang.Runtime.getRuntime().maxMemory()/1000000.0));
+			}
+		});
+		DecimalFormat f = new DecimalFormat("#.## MB");
+		System.out.print("WINDOW OPEN -   ");
+		System.out.print("Memory - Free: " + f.format(java.lang.Runtime.getRuntime().freeMemory()/1000000.0));
+		System.out.print("\tTotal: " + f.format(java.lang.Runtime.getRuntime().totalMemory()/1000000.0));
+		System.out.println("\tMax: " + f.format(java.lang.Runtime.getRuntime().maxMemory()/1000000.0));
 	}
 
 	private void drawFigures(boolean centerWindow) {
