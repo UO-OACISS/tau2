@@ -4982,7 +4982,8 @@ sed -e 's,@TAUROOTDIR@,'$tauroot',' \
 cp ${tauroot}/tools/src/TauIL/bin/*.jar ${targetdir}/${architecture}/lib
 cp ${tauroot}/tools/src/tau_throttle.sh ${targetdir}/${architecture}/bin
 
-
+echo "... done"
+echo "***********************************************************************"
 
 
 # Save the FixMakefile args
@@ -5026,6 +5027,7 @@ fi
 #############################################################################
 
 echo " "
+echo "***********************************************************************"
 echo "Configuring TAU Build scripts..."
 
 
