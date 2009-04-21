@@ -1985,71 +1985,36 @@ EOF
     fixmakeargs="$fixmakeargs TRACE"
 fi
 
-if [ $mpitrace = yes ]
-  then
+if [ $mpitrace = yes ] ; then
     fixmakeargs="$fixmakeargs MPITRACE"
 fi
 
-if [ $linuxtimers = yes ]
-then
-  fixmakeargs="$fixmakeargs LINUXTIMERS"
-  tauoptions="${tauoptions}-linuxtimers"
-fi
 
-if [ $alphatimers = yes ]
-then
+if [ $alphatimers = yes ] ; then
   fixmakeargs="$fixmakeargs ALPHATIMERS"
   tauoptions="${tauoptions}-alphatimers"
 fi
 
-if [ $bgltimers = yes -a $machine = bgp ]
-then
-  echo "WARNING: You configured -BGLTIMERS on BGP. Changing it to -BGPTIMERS."
-  bgptimers=yes
-  bgltimers=no
-fi
 
-if [ $bgptimers = yes -a $machine = bgl ]
-then
-  echo "WARNING: You configured -BGPTIMERS on BGL. Changing it to -BGLTIMERS."
-  bgptimers=no
-  bgltimers=yes
-fi
-
-if [ $bgltimers = yes ]
-then
+if [ $bgltimers = yes ] ; then
   fixmakeargs="$fixmakeargs BGLTIMERS"
   tauoptions="${tauoptions}-bgltimers"
 fi
 
-if [ $bgptimers = yes ]
-then
+if [ $bgptimers = yes ] ; then
   fixmakeargs="$fixmakeargs BGPTIMERS"
   tauoptions="${tauoptions}-bgptimers"
 fi
 
-if [ $craytimers = yes ]
-then
+if [ $craytimers = yes ] ; then
   fixmakeargs="$fixmakeargs CRAYTIMERS"
   tauoptions="${tauoptions}-craytimers"
 fi
 
-if [ $cputime = yes ]
-  then
+if [ $cputime = yes ] ; then
     fixmakeargs="$fixmakeargs CPUTIME"
 fi
 
-if [ $papiwallclock = yes ]
-  then
-    fixmakeargs="$fixmakeargs PAPIWALLCLOCK"
-    tauoptions="${tauoptions}-papiwallclock"
-fi
-
-if [ $papivirtual = yes ]
-  then
-    fixmakeargs="$fixmakeargs PAPIVIRTUAL"
-    tauoptions="${tauoptions}-papivirtual"
-fi
 
 if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ] 
   then
@@ -3128,25 +3093,21 @@ case $machine in
 	fixmakeargs="arch=$machine NO_RANLIB HP $fixmakeargs"
 # HP-ALLOCA HP_CFLAGS
 
-	if [ `/bin/uname -r | cut -d. -f2` = 10 ]
-	then
+	if [ `/bin/uname -r | cut -d. -f2` = 10 ] ; then
           echo This machine uses HPUX Version 10
           fixmakeargs="HPUX10 $fixmakeargs"
         fi
 
-	if [ $c_compiler = cc ]
-  	then
-		fixmakeargs="HP_CFLAGS HP-ALLOCA $fixmakeargs"
+	if [ $c_compiler = cc ] ; then
+	  fixmakeargs="HP_CFLAGS HP-ALLOCA $fixmakeargs"
 	fi
 
-	if [ $cxx_compiler = g++ ]
-  	then
-		fixmakeargs="HPGNU $fixmakeargs"
+	if [ $cxx_compiler = g++ ] ; then
+	  fixmakeargs="HPGNU $fixmakeargs"
 	fi
 
-	if [ $pdt_cxx_compiler = aCC ]
-  	then
-		fixmakeargs="PDTHPACC $fixmakeargs"
+	if [ $pdt_cxx_compiler = aCC ] ; then
+	  fixmakeargs="PDTHPACC $fixmakeargs"
 	fi
 
 	;;
@@ -3193,18 +3154,22 @@ case $machine in
      ia64)
 	echo "Found an IA-64 configuration definition"
 	fixmakeargs="arch=$machine $fixmakeargs"
-	
-	if [ $papi = yes ]
- 	  then
+	linuxtimers=yes
+	if [ $papi = yes ] ; then
 	    fixmakeargs="$fixmakeargs IA64PAPI"
 	fi
 	;;
+
+     i386_linux)
+	linuxtimers=yes
+	;;
+
      x86_64|xt3|craycnl)
 	echo "Found an x86_64 configuration definition"
 	fixmakeargs="arch=$machine $fixmakeargs"
+	linuxtimers=yes
 	
-	if [ $papi = yes ]
- 	  then
+	if [ $papi = yes ] ; then
 	    fixmakeargs="$fixmakeargs X86_64PAPI"
 	fi
 	;;
@@ -3230,8 +3195,8 @@ case $machine in
      ibm64linux)
 	echo Found a \"$machine\" configuration definition
 	fixmakeargs="arch=$machine $fixmakeargs PPC64 IBM64LINUX"
-	if [ $papi = yes ]
- 	  then
+	linuxtimers=yes
+	if [ $papi = yes ] ; then
 	    fixmakeargs="$fixmakeargs IBM64PAPILINUX"
 	fi
 	;;
@@ -3483,7 +3448,19 @@ echo \#define TAU_ARCH \"$machine\" >> ./include/tauarch.h
 make_directories
 
 
+
+#####################################################################
+# Is LINUXTIMERS available?
+#####################################################################
+
+if [ $linuxtimers = yes ] ; then
+  echo "LINUX_TIMERS enabled"
+  fixmakeargs="$fixmakeargs LINUXTIMERS"
+fi
+
+
 echo "***********************************************************************"
+
 #####################################################################
 # Compile/Link/Run checks
 #####################################################################
