@@ -20,9 +20,9 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.43 2009/04/20 21:19:13 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.44 2009/04/21 01:32:43 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.43 $
+ * @version $Revision: 1.44 $
  */
 public abstract class DataSource {
 
@@ -667,98 +667,92 @@ public abstract class DataSource {
     }
 
     private void generateUserEventStatistics() {
-
         // make sure that the allThreads list is initialized;
         this.initAllThreadsList();
         int numThreads = allThreads.size();
         int numSnapshots = meanData.getNumSnapshots();
-        
+
+        int numProfiles[] = new int[getNumUserEvents() + 1];
+
         for (int snapshot = 0; snapshot < numSnapshots; snapshot++) {
+
+            for (int i = 0; i < numThreads; i++) { // for each thread
+                Thread thread = (Thread) allThreads.get(i);
+                for (Iterator it = thread.getUserEventProfiles(); it.hasNext();) {
+                    UserEventProfile uep = (UserEventProfile) it.next();
+                    UserEvent ue = uep.getUserEvent();
+
+                    // get/create the userEventProfile for mean
+                    UserEventProfile meanProfile = meanData.getUserEventProfile(ue);
+                    if (meanProfile == null) {
+                        meanProfile = new UserEventProfile(ue, numSnapshots);
+                        meanData.addUserEventProfile(meanProfile);
+                    }
+
+                    // get/create the userEventProfile for total
+                    UserEventProfile totalProfile = totalData.getUserEventProfile(ue);
+                    if (totalProfile == null) {
+                        totalProfile = new UserEventProfile(ue, numSnapshots);
+                        totalData.addUserEventProfile(totalProfile);
+                    }
+
+                    // get/create the userEventProfile for stddev
+                    UserEventProfile stddevProfile = stddevData.getUserEventProfile(ue);
+                    if (stddevProfile == null) {
+                        stddevProfile = new UserEventProfile(ue, numSnapshots);
+                        stddevData.addUserEventProfile(stddevProfile);
+                    }
+
+                    numProfiles[ue.getID()]++;
+
+                    totalProfile.setNumSamples(totalProfile.getNumSamples() + uep.getNumSamples(snapshot), snapshot);
+                    totalProfile.setMaxValue(totalProfile.getMaxValue() + uep.getMaxValue(snapshot), snapshot);
+                    totalProfile.setMinValue(totalProfile.getMinValue() + uep.getMinValue(snapshot), snapshot);
+                    totalProfile.setMeanValue(totalProfile.getMeanValue() + uep.getMeanValue(snapshot), snapshot);
+                    totalProfile.setStdDev(totalProfile.getStdDev() + uep.getStdDev(snapshot), snapshot);
+
+                    stddevProfile.setNumSamples(stddevProfile.getNumSamples()
+                            + (uep.getNumSamples(snapshot) * uep.getNumSamples(snapshot)), snapshot);
+                    stddevProfile.setMaxValue(stddevProfile.getMaxValue()
+                            + (uep.getMaxValue(snapshot) * uep.getMaxValue(snapshot)), snapshot);
+                    stddevProfile.setMinValue(stddevProfile.getMinValue()
+                            + (uep.getMinValue(snapshot) * uep.getMinValue(snapshot)), snapshot);
+                    stddevProfile.setMeanValue(stddevProfile.getMeanValue()
+                            + (uep.getMeanValue(snapshot) * uep.getMeanValue(snapshot)), snapshot);
+                    stddevProfile.setStdDev(stddevProfile.getStdDev() + (uep.getStdDev(snapshot) * uep.getStdDev(snapshot)),
+                            snapshot);
+
+                }
+            }
+
             for (Iterator it = this.getUserEvents(); it.hasNext();) {
                 UserEvent ue = (UserEvent) it.next();
 
-                // get/create the userEventProfile for mean
                 UserEventProfile meanProfile = meanData.getUserEventProfile(ue);
-                if (meanProfile == null) {
-                    meanProfile = new UserEventProfile(ue, numSnapshots);
-                    meanData.addUserEventProfile(meanProfile);
-                }
-                //ue.setMeanProfile(meanProfile);
-
-                // get/create the userEventProfile for total
                 UserEventProfile totalProfile = totalData.getUserEventProfile(ue);
-                if (totalProfile == null) {
-                    totalProfile = new UserEventProfile(ue, numSnapshots);
-                    totalData.addUserEventProfile(totalProfile);
-                }
-                //ue.setTotalProfile(totalProfile);
-
-                // get/create the userEventProfile for stddev
                 UserEventProfile stddevProfile = stddevData.getUserEventProfile(ue);
-                if (stddevProfile == null) {
-                    stddevProfile = new UserEventProfile(ue, numSnapshots);
-                    stddevData.addUserEventProfile(stddevProfile);
-                }
-                //ue.setStddevProfile(stddevProfile);
-
-                int numProfiles = 0;
-                double numSampSum = 0;
-                double numSampSumSqr = 0;
-                double maxSum = 0;
-                double maxSumSqr = 0;
-                double minSum = 0;
-                double minSumSqr = 0;
-                double meanSum = 0;
-                double meanSumSqr = 0;
-                double stdDevSum = 0;
-                double stdDevSumSqr = 0;
-
-                for (int i = 0; i < numThreads; i++) { // for each thread
-                    Thread thread = (Thread) allThreads.get(i);
-                    UserEventProfile uep = thread.getUserEventProfile(ue);
-                    if (uep != null) {
-                        numProfiles++;
-
-                        numSampSum += uep.getNumSamples(snapshot);
-                        numSampSumSqr += uep.getNumSamples(snapshot) * uep.getNumSamples(snapshot);
-
-                        maxSum += uep.getMaxValue(snapshot);
-                        maxSumSqr += uep.getMaxValue(snapshot) * uep.getMaxValue(snapshot);
-
-                        minSum += uep.getMinValue(snapshot);
-                        minSumSqr += uep.getMinValue(snapshot) * uep.getMinValue(snapshot);
-
-                        meanSum += uep.getMeanValue(snapshot);
-                        meanSumSqr += uep.getMeanValue(snapshot) * uep.getMeanValue(snapshot);
-
-                        stdDevSum += uep.getStdDev(snapshot);
-                        stdDevSumSqr += uep.getStdDev(snapshot) * uep.getStdDev(snapshot);
-                    }
-                }
 
                 int divider = numThreads;
                 if (!meanIncludeNulls) { // do we include null values as zeroes in the computation or not?
-                    divider = numProfiles;
+                    divider = numProfiles[ue.getID()];
                 }
 
-                totalProfile.setNumSamples(numSampSum, snapshot);
-                totalProfile.setMaxValue(maxSum, snapshot);
-                totalProfile.setMinValue(minSum, snapshot);
-                totalProfile.setMeanValue(maxSum, snapshot);
-                totalProfile.setStdDev(stdDevSum, snapshot);
+                meanProfile.setNumSamples((totalProfile.getNumSamples() / divider), snapshot);
+                meanProfile.setMaxValue(totalProfile.getMaxValue(snapshot) / divider, snapshot);
+                meanProfile.setMinValue(totalProfile.getMinValue(snapshot) / divider, snapshot);
+                meanProfile.setMeanValue(totalProfile.getMeanValue(snapshot) / divider, snapshot);
+                meanProfile.setStdDev(totalProfile.getStdDev(snapshot) / divider, snapshot);
 
-                meanProfile.setNumSamples((numSampSum / divider), snapshot);
-                meanProfile.setMaxValue(maxSum / divider, snapshot);
-                meanProfile.setMinValue(minSum / divider, snapshot);
-                meanProfile.setMeanValue(meanSum / divider, snapshot);
-                meanProfile.setStdDev(stdDevSum / divider, snapshot);
-
-                stddevProfile.setNumSamples(computeStdDev(numSampSumSqr, meanProfile.getNumSamples(snapshot), divider),
-                        snapshot);
-                stddevProfile.setMaxValue(computeStdDev(maxSumSqr, meanProfile.getMaxValue(snapshot), divider), snapshot);
-                stddevProfile.setMinValue(computeStdDev(minSumSqr, meanProfile.getMinValue(snapshot), divider), snapshot);
-                stddevProfile.setMeanValue(computeStdDev(meanSumSqr, meanProfile.getMeanValue(snapshot), divider), snapshot);
-                stddevProfile.setStdDev(computeStdDev(stdDevSumSqr, meanProfile.getStdDev(snapshot), divider), snapshot);
+                stddevProfile.setNumSamples(computeStdDev(stddevProfile.getNumSamples(snapshot),
+                        meanProfile.getNumSamples(snapshot), divider), snapshot);
+                stddevProfile.setMaxValue(computeStdDev(stddevProfile.getMaxValue(snapshot), meanProfile.getMaxValue(snapshot),
+                        divider), snapshot);
+                stddevProfile.setMinValue(computeStdDev(stddevProfile.getMinValue(snapshot), meanProfile.getMinValue(snapshot),
+                        divider), snapshot);
+                stddevProfile.setMeanValue(computeStdDev(stddevProfile.getMeanValue(snapshot),
+                        meanProfile.getMeanValue(snapshot), divider), snapshot);
+                stddevProfile.setStdDev(
+                        computeStdDev(stddevProfile.getStdDev(snapshot), meanProfile.getStdDev(snapshot), divider), snapshot);
             }
         }
 
