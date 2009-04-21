@@ -3122,8 +3122,8 @@ case $machine in
      ppc64)
 	echo "Found an IBM PPC-64 Linux configuration definition"
 	fixmakeargs="arch=$machine PPC64 $fixmakeargs"
-	if [ $papi = yes ]
- 	  then
+	linuxtimers=yes
+	if [ $papi = yes ] ; then
 	    fixmakeargs="$fixmakeargs PPC64PAPI"
 	fi
         ;; 
