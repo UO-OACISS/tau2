@@ -76,14 +76,17 @@ public class HeatMap extends JPanel implements ImageObserver {
 
 	public String getToolTip(Point p) {
 		// adjust to zoom
-    	int currentSize = this.getPreferredSize().height;
-    	double pixelsPerCell = (double)(Math.max(currentSize, HeatMapWindow.viewSize)) / (double)size;
-		int x = Math.min((int)((p.getX()) / pixelsPerCell),size-1);  // don't go past the end of the array
-		int y = Math.min((int)((p.getY()) / pixelsPerCell),size-1);  // don't go past the end of the array
+    	int currentHeight = this.getSize().height;
+    	int currentWidth = this.getSize().width;
+    	double pixelsPerCell = (double)(Math.max(currentWidth, HeatMapWindow.viewSize)) / (double)size;
+		// don't go past the end of the array
+		int receiver = Math.min((int)((p.getX()) / pixelsPerCell),size-1);  
+    	pixelsPerCell = (double)(Math.max(currentHeight, HeatMapWindow.viewSize)) / (double)size;
+		// don't go past the end of the array
+		int sender = Math.min((int)((p.getY()) / pixelsPerCell),size-1);  
 		// this is inverted - the sender is Y, the receiver is X
-//		double value = map[y][x];
-		double value = mapData.get(y, x, path, index);
-		String s = "<html>sender = " + y + "<BR>receiver = " + x + "<BR>value = " + f.format(value) + "</html>";
+		double value = mapData.get(sender, receiver, path, index);
+		String s = "<html>sender = " + sender + "<BR>receiver = " + receiver + "<BR>value = " + f.format(value) + "</html>";
 		return s;
 	}
 		
@@ -114,7 +117,6 @@ public class HeatMap extends JPanel implements ImageObserver {
 		Insets i = getInsets();
 		// draw to fill the entire component
 		g.drawImage(img, i.left, i.top, d.width - i.left - i.right, d.height - i.top - i.bottom, this );
-		//g.drawImage(img, i.left, i.top, 512, 512, this );
 	}
 
 	/**

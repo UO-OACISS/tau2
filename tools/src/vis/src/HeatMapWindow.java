@@ -53,7 +53,6 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 		d = figureSelector.getPreferredSize();
 	    figureSelector.setPreferredSize(new Dimension(50, d.height));
 	    figureSelector.setPopupWidth(d.width);
-		this.setResizable(false);
 		drawFigures(true);
 		// exit when the user closes the main window.
 		addWindowListener(new WindowAdapter() {
@@ -82,6 +81,7 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 		c.fill = GridBagConstraints.BOTH;
 		c.anchor = GridBagConstraints.CENTER;
 		c.weightx = 0.99;
+		c.weighty = 0.99;
 		c.insets = new Insets(2,2,2,2);
 
 		c.gridx = 0;
@@ -95,6 +95,7 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 		mapPanel = buildMapPanel(dataIndex, currentFigure);
 		mainPanel.add(mapPanel,c);
 		c.weightx = 0.01;
+		c.weighty = 0.01;
 		c.gridx = 1;
 		mainPanel.add(buildOptionPanel("DISPLAY OPTIONS"),c);
 		
@@ -218,7 +219,9 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 		}
 		c.gridy = 4;
 		c.weighty = 0.99;
+		c.fill = GridBagConstraints.VERTICAL;
 	    panel.add(new HeatLegend(), c);
+		c.fill = GridBagConstraints.BOTH;
 	    panel.add(new JPanel(), c);
 		c.weighty = 0.01;
 

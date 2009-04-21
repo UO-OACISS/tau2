@@ -23,7 +23,7 @@ public class HeatLegend extends JPanel implements ImageObserver {
 		pixels = new int[1000];
 		
 		// get the size of the image...
-		int width = 10;
+		int width = 1;
 		int height = 100;
 		
 		img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -34,8 +34,8 @@ public class HeatLegend extends JPanel implements ImageObserver {
 				i++;
 			}
 		}
-		this.setPreferredSize(new Dimension(10,100));
-        this.setSize(10,100);
+		this.setPreferredSize(new Dimension(15,100));
+        this.setSize(15,100);
 	}
 		
 	public void paint(Graphics g) {
