@@ -62,17 +62,17 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 				dispose();
 				System.gc();
 				DecimalFormat f = new DecimalFormat("#.## MB");
-				System.out.print("WINDOW CLOSED - ");
-				System.out.print("Memory - Free: " + f.format(java.lang.Runtime.getRuntime().freeMemory()/1000000.0));
-				System.out.print("\tTotal: " + f.format(java.lang.Runtime.getRuntime().totalMemory()/1000000.0));
-				System.out.println("\tMax: " + f.format(java.lang.Runtime.getRuntime().maxMemory()/1000000.0));
+				//System.out.print("WINDOW CLOSED - ");
+				//System.out.print("Memory - Free: " + f.format(java.lang.Runtime.getRuntime().freeMemory()/1000000.0));
+				//System.out.print("\tTotal: " + f.format(java.lang.Runtime.getRuntime().totalMemory()/1000000.0));
+				//System.out.println("\tMax: " + f.format(java.lang.Runtime.getRuntime().maxMemory()/1000000.0));
 			}
 		});
 		DecimalFormat f = new DecimalFormat("#.## MB");
-		System.out.print("WINDOW OPEN -   ");
-		System.out.print("Memory - Free: " + f.format(java.lang.Runtime.getRuntime().freeMemory()/1000000.0));
-		System.out.print("\tTotal: " + f.format(java.lang.Runtime.getRuntime().totalMemory()/1000000.0));
-		System.out.println("\tMax: " + f.format(java.lang.Runtime.getRuntime().maxMemory()/1000000.0));
+		//System.out.print("WINDOW OPEN -   ");
+		//System.out.print("Memory - Free: " + f.format(java.lang.Runtime.getRuntime().freeMemory()/1000000.0));
+		//System.out.print("\tTotal: " + f.format(java.lang.Runtime.getRuntime().totalMemory()/1000000.0));
+		//System.out.println("\tMax: " + f.format(java.lang.Runtime.getRuntime().maxMemory()/1000000.0));
 	}
 
 	private void drawFigures(boolean centerWindow) {
