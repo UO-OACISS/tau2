@@ -53,7 +53,7 @@ typedef void (*function)(int, int, double[]);
 
 
 
-static const char* metricv[TAU_MAX_METRICS];
+static char* metricv[TAU_MAX_METRICS];
 static int nmetrics = 0;
 
 // nfunctions can be different from nmetrics because 
@@ -118,7 +118,7 @@ static void reorder_metrics(const char *match) {
   }
 
   for (int i=0; i<nmetrics; i++) {
-    metricv[i] = newMetricV[i];
+    metricv[i] = strdup(newMetricV[i]);
   }
 
   traceMetric = newTraceMetric;
@@ -155,14 +155,38 @@ static void read_env_vars() {
     }
 
     if (nmetrics == 0) {
-      metricv_add("GET_TIME_OF_DAY");
+      metricv_add("TIME");
     }
   }
 }
 
+/**
+ * Remove _'s, convert case, and compare
+ * This function also changes 'one' to match 'two' if they fuzzy match correctly
+ */
+static int compareMetricString(char *one, const char *two) {
+  char m1[512], m2[512];
+  char *p;
+  int i;
 
-static int compareMetricString(const char *one, const char *two) {
-  if (strcmp(one, two) == 0) {
+  strcpy(m1, one);
+  strcpy(m2, two);
+  while ((p = strchr(m1,'_')) != NULL) {
+    strcpy(p, p+1);
+  }
+  while ((p = strchr(m2,'_')) != NULL) {
+    strcpy(p, p+1);
+  }
+  for (i = 0; m1[i]; i++) {
+    m1[i] = toupper(m1[i]);
+  }
+  for (i = 0; m2[i]; i++) {
+    m2[i] = toupper(m2[i]);
+  }
+
+  if (strcmp(m1, m2) == 0) {
+    /* overwrite the matching name */
+    strcpy (one, two);
     return 1;
   } else {
     return 0;
@@ -196,6 +220,18 @@ static void TauMetrics_initializeKTAU() {
 }
 
 
+static int is_papi_metric (char *str) {
+
+  if (strncmp("PAPI", str, 4) == 0) {
+    if (compareMetricString(str,"PAPI_TIME") == 0 
+	&& compareMetricString(str,"PAPI_VIRTUAL_TIME") == 0) {
+      return 1;
+    }  
+  }
+
+  return 0;
+}
+
 static void initialize_functionArray() {
   int usingPAPI = 0;
   int pos = 0;
@@ -211,10 +247,11 @@ static void initialize_functionArray() {
 #endif
 
   for (int i=0; i<nmetrics; i++) {
-    TAU_VERBOSE("TAU: Using metric: %s\n", metricv[i]);
     if (compareMetricString(metricv[i],"LOGICAL_CLOCK")) {
       functionArray[pos++] = metric_read_logicalClock;
     } else if (compareMetricString(metricv[i],"GET_TIME_OF_DAY")){
+      functionArray[pos++] = metric_read_gettimeofday;
+    } else if (compareMetricString(metricv[i],"TIME")){
       functionArray[pos++] = metric_read_gettimeofday;
     } else if (compareMetricString(metricv[i],"CPU_TIME")){
       functionArray[pos++] = metric_read_cputime;
@@ -224,20 +261,26 @@ static void initialize_functionArray() {
 #endif
     } else if (compareMetricString(metricv[i],"BGL_TIMERS")){
       functionArray[pos++] = metric_read_bgtimers;
-    } else if (compareMetricString(metricv[i],"BGP_TIMERS")){
-      functionArray[pos++] = metric_read_bgtimers;
     } else if (compareMetricString(metricv[i],"CRAY_TIMERS")){
       functionArray[pos++] = metric_read_craytimers;
     } else if (compareMetricString(metricv[i],"TAU_MPI_MESSAGE_SIZE")){
       functionArray[pos++] = metric_read_messagesize;
+#ifdef TAU_PAPI
     } else if (compareMetricString(metricv[i],"P_WALL_CLOCK_TIME")){
+      usingPAPI=1;
+      functionArray[pos++] = metric_read_papiwallclock;
+    } else if (compareMetricString(metricv[i],"PAPI_TIME")){
       usingPAPI=1;
       functionArray[pos++] = metric_read_papiwallclock;
     } else if (compareMetricString(metricv[i],"P_VIRTUAL_TIME")){
       usingPAPI=1;
       functionArray[pos++] = metric_read_papivirtual;
+    } else if (compareMetricString(metricv[i],"PAPI_VIRTUAL_TIME")){
+      usingPAPI=1;
+      functionArray[pos++] = metric_read_papivirtual;
+#endif /* TAU_PAPI */
     } else {
-      if (papi_available && strncmp("PAPI", metricv[i], 4) == 0) { 	  
+      if (papi_available && is_papi_metric(metricv[i])) { 	  
 	/* PAPI handled separately */
       } else if (ktau && strncmp("KTAU", metricv[i], 4) == 0) {
 	/* KTAU handled separately */
@@ -255,11 +298,12 @@ static void initialize_functionArray() {
 	*/
       }
     }
+    TAU_VERBOSE("TAU: Using metric: %s\n", metricv[i]);
   }
 
   /* check if we are using PAPI */
   for (int i=0; i<nmetrics; i++) {
-    if (strncmp("PAPI", metricv[i], 4) == 0) {
+    if (is_papi_metric(metricv[i])) {
       functionArray[pos++] = metric_read_papi;
       usingPAPI=1;
       break;
@@ -285,36 +329,36 @@ static void initialize_functionArray() {
   }
 
   for (int i=0; i<nmetrics; i++) {
-      if (strncmp("PAPI", metricv[i], 4) == 0) {
-	if (strstr(metricv[i],"PAPI") != NULL) {
-	  char *metricString = strdup(metricv[i]);
-
-	  if (strstr(metricString,"NATIVE") != NULL) {
-	    /* Fix the name for a native event */
-	    int idx = 0;
-	    while (metricString[12+idx]!='\0') {
-	      metricString[idx] = metricString[12+idx];
-	      idx++;
-	    }
-	    metricString[idx]='\0';
+    if (is_papi_metric(metricv[i])) {
+      if (strstr(metricv[i],"PAPI") != NULL) {
+	char *metricString = strdup(metricv[i]);
+	
+	if (strstr(metricString,"NATIVE") != NULL) {
+	  /* Fix the name for a native event */
+	  int idx = 0;
+	  while (metricString[12+idx]!='\0') {
+	    metricString[idx] = metricString[12+idx];
+	    idx++;
 	  }
-	  
-#ifdef TAU_PAPI
-	  int counterID = PapiLayer::addCounter(metricString);
-	  if (counterID == -1) {
-	    /* Delete the metric */
-	    for (int j=i;j<nmetrics-1;j++) {
-	      metricv[j] = metricv[j+1];
-	    }
-	    nmetrics--;
-	  }
-#endif
-	  free (metricString);
-
+	  metricString[idx]='\0';
 	}
+	
+#ifdef TAU_PAPI
+	int counterID = PapiLayer::addCounter(metricString);
+	if (counterID == -1) {
+	  /* Delete the metric */
+	  for (int j=i;j<nmetrics-1;j++) {
+	    metricv[j] = metricv[j+1];
+	  }
+	  nmetrics--;
+	}
+#endif
+	free (metricString);
+	
       }
+    }
   }
-
+  
   nfunctions = pos;
 }
 
