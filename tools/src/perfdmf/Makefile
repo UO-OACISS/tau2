@@ -51,8 +51,25 @@ bin/perfdmf.jar: $(SOURCES) classes
 $(EXAMPLE_CLASSES): perfdmf.jar $(EXAMPLE_SOURCES)
 	javac -d $(CLASSPATH) -classpath perfdmf.jar $(EXAMPLE_SOURCES)
 
+BOTTOM = '<font size="-1">****************************************************************************<br>Copyright 1997-2009<br> Department of Computer and Information Science, University of Oregon<br> Advanced Computing Laboratory, Los Alamos National Laboratory<br> Juelich Supercomputing Centre, Research Center Juelich, Germany<br><a href="http://tau.uoregon.edu" target="new">http://tau.uoregon.edu</a><br>****************************************************************************<br>Permission to use, copy, modify, and distribute this software and its documentation for any purpose and without fee is hereby granted, provided that the above copyright notice appear in all copies and that both that copyright notice and this permission notice appear in supporting documentation, and that the name of University of Oregon (UO) and Los Alamos National Laboratory (LANL) not be used in advertising or publicity pertaining to distribution of the software without specific, written prior permission.  The University of Oregon and LANL makes no representations about the suitability of this software for any purpose.  It is provided "as is" with out express or implied warranty.<br><br>THE UNIVERSITY OF OREGON AND LANL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL THE UNIVERSITY OF OREGON OR LANL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.<font>'
+
 javadoc: bin/perfdmf.jar $(SRC_PATH)/package.html
-	javadoc -d ./javadoc -classpath $(CLASSPATH) $(DSS_SOURCES) $(ANALYSIS_SOURCES)
+	javadoc -d ./javadoc \
+	-classpath $(CLASSPATH) $(DSS_SOURCES) $(ANALYSIS_SOURCES) \
+	-sourcepath src \
+    -use \
+    -windowtitle "PerfDMF" \
+    -doctitle "PerfDMF" \
+    -header "<b>PerfDMF</b>" \
+    -bottom ${BOTTOM} \
+    -public \
+    -source 1.4 \
+    -quiet \
+    -version \
+    -author \
+    -noqualifier all \
+    -nodeprecated \
+	edu.uoregon.tau.perfdmf
 
 # these are maintenance targets.
 
