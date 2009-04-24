@@ -52,18 +52,31 @@ public class PerfExplorerChartWindow extends JFrame implements ActionListener, I
         int windowWidth = 700;
         int windowHeight = 450;
         
+        int xPosition = 0;
+        int yPosition = 0;
         //Grab paraProfManager position and size.
-        Point parentPosition = PerfExplorerClient.getMainFrame().getLocationOnScreen();
-        Dimension parentSize = PerfExplorerClient.getMainFrame().getSize();
-        int parentWidth = parentSize.width;
-        int parentHeight = parentSize.height;
+		try {
+        	Point parentPosition = PerfExplorerClient.getMainFrame().getLocationOnScreen();
+        	Dimension parentSize = PerfExplorerClient.getMainFrame().getSize();
+        	int parentWidth = parentSize.width;
+        	int parentHeight = parentSize.height;
         
-        //Set the window to come up in the center of the screen.
-        int xPosition = (parentWidth - windowWidth) / 2;
-        int yPosition = (parentHeight - windowHeight) / 2;
+        	//Set the window to come up in the center of the screen.
+        	xPosition = (parentWidth - windowWidth) / 2;
+        	yPosition = (parentHeight - windowHeight) / 2;
 
-        xPosition = (int) parentPosition.getX() + xPosition;
-        yPosition = (int) parentPosition.getY() + yPosition;
+        	xPosition = (int) parentPosition.getX() + xPosition;
+        	yPosition = (int) parentPosition.getY() + yPosition;
+		} catch (NullPointerException e) {
+			// no main window.  Might be in non-GUI mode.
+            Toolkit tk = Toolkit.getDefaultToolkit();
+            Dimension screenDimension = tk.getScreenSize();
+            int screenHeight = screenDimension.height;
+            int screenWidth = screenDimension.width;
+            //Find the center position with respect to this window.
+            xPosition = (screenWidth - windowWidth) / 2;
+            yPosition = (screenHeight - windowHeight) / 2;
+		}
 
         frame.setLocation(xPosition, yPosition);
         frame.setSize(new java.awt.Dimension(windowWidth, windowHeight));

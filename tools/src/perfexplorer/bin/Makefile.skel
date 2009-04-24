@@ -1,4 +1,4 @@
-# $Id: Makefile.skel,v 1.43 2009/03/17 00:26:42 khuck Exp $
+# $Id: Makefile.skel,v 1.44 2009/04/24 15:51:49 khuck Exp $
 # $Name:  $
 
 R_HOME = @RROOT@
@@ -457,7 +457,10 @@ javadoc: Makefile src/overview.html ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUS
 install: perfexplorer.jar javadoc
 	#rsync -a perfexplorer2.jar spaceghost:/var/www/html/PerfExplorer/.
 	rsync -a doc/* spaceghost:/var/www/html/PerfExplorer/.
-	rsync -a javadoc spaceghost:/var/www/html/PerfExplorer/.
+	#rsync -a javadoc spaceghost:/var/www/html/PerfExplorer/.
+	rsync -a javadoc ix:/nfs/research/paraducks/tauwww/docs/perfexplorer/.
+	rsync -a ../perfdmf/javadoc ix:/nfs/research/paraducks/tauwww/docs/perfdmf/.
+
 
 ###
 ### END
