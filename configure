@@ -3161,7 +3161,9 @@ case $machine in
 	;;
 
      i386_linux)
+	echo "Found a 32-bit x86 linux machine"
 	linuxtimers=yes
+	fixmakeargs="arch=$machine $fixmakeargs"
 	;;
 
      x86_64|xt3|craycnl)
@@ -3425,7 +3427,6 @@ if [ $machine = x86_64 -o $machine = i386_linux -o $machine = ia64 ] ; then
         fi
     fi
 fi
-
 
 if [ $tauarch = none ] ; then
   architecture=
