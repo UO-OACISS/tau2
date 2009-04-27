@@ -2868,7 +2868,6 @@ if [ $papi = yes ] ; then
     
 
       if [ -f $papidir/lib/libpfm.a ] ; then 
-
 	      cat <<EOF > tau_papi_test.c
 #include <papi.h>
 int main (int argc, char **argv) {
@@ -2876,15 +2875,18 @@ int main (int argc, char **argv) {
   papi_ver = PAPI_library_init(PAPI_VER_CURRENT);
 }
 EOF
-	      if $c_compiler $orig_useropt tau_papi_test.c -I$papidir/include -L$papidir/$papisubdir -lpfm -lpapi -lpfm -o tau_papi_test 1> /dev/null 2>&1 ; then
-		  fixmakeargs="$fixmakeargs PAPIPFM"
-		  papipfm=yes
-	      fi
-	      /bin/rm -f tau_papi_test.c tau_papi_test
+	      
+          if $c_compiler $orig_useropt tau_papi_test.c -I$papidir/include -L$papidir/$papisubdir -lpfm -lpapi -lpfm -o tau_papi_test 1> /dev/null 2>&1 ; then
+	      fixmakeargs="$fixmakeargs PAPIPFM"
+	      papipfm=yes
+	  fi
+
+          if $c_compiler $orig_useropt tau_papi_test.c -I$papidir/include -L$papidir/$papisubdir -lpfm -lpapi -lpfm -lperfctr -o tau_papi_test 1> /dev/null 2>&1 ; then
+	      fixmakeargs="$fixmakeargs PAPIPFMPERFCTR"
+	      papipfm=yes
+	  fi
+	  /bin/rm -f tau_papi_test.c tau_papi_test
       fi		
-
-
-
 fi
 
 
