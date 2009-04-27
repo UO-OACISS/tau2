@@ -90,5 +90,11 @@ if [ $test = "failed" ] ; then
     exit
 fi
 
+MEMORY=-Xmx800m
+
+if [ `uname -m` = x86_64 ] ; then
+    MEMORY=-Xmx8000m
+fi
+
 # Launch!
-java -Xmx800m -Dderby.system.home=${HOME}/.ParaProf -Dpython.verbose=error -Djava.library.path=${LIBDIR} -cp ${JARS} ${APPLE_OPTIONS} edu/uoregon/tau/paraprof/ParaProf ${PPROFOPT} $*	
+java $MEMORY -Dderby.system.home=${HOME}/.ParaProf -Dpython.verbose=error -Djava.library.path=${LIBDIR} -cp ${JARS} ${APPLE_OPTIONS} edu/uoregon/tau/paraprof/ParaProf ${PPROFOPT} $*	
