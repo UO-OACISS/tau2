@@ -40,33 +40,16 @@ extern "C" void __pgi_cu_init(char* file, char* func, long lineno) {
 }
 
 
-extern "C" void __pgi_cu_init_x_p(int foo);
-extern "C" void __pgi_cu_init_x(int foo) {
-  TAU_GLOBAL_TIMER_START(pgi_acc_region_timer);
-  TauPgiFile = file;
-  TauPgiFunc = func;
-  char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_cu_init_x %s [{%s}{%ld}]", TauPgiFunc, TauPgiFile, lineno);
+// extern "C" void __pgi_cu_close_p(void);
+// extern "C" void __pgi_cu_close(void) {
+//   TAU_GLOBAL_TIMER_START(pgi_acc_region_timer);
+//   char sourceinfo[TAU_PGI_ACC_NAME_LEN];
+//   sprintf(sourceinfo, "__pgi_cu_close %s [{%s}]", TauPgiFunc, TauPgiFile);
   
-  TAU_START(sourceinfo);
-  __pgi_cu_init_x_p(foo);
-  TAU_STOP(sourceinfo);
-}
-
-
-
-extern "C" void __pgi_cu_close_p(void);
-extern "C" void __pgi_cu_close(void) {
-  TAU_GLOBAL_TIMER_START(pgi_acc_region_timer);
-  TauPgiFile = file;
-  TauPgiFunc = func;
-  char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_cu_close %s [{%s}{%ld}]", TauPgiFunc, TauPgiFile, lineno);
-  
-  TAU_START(sourceinfo);
-  __pgi_cu_close_p();
-  TAU_STOP(sourceinfo);
-}
+//   TAU_START(sourceinfo);
+//   __pgi_cu_close_p();
+//   TAU_STOP(sourceinfo);
+// }
 
 
 
@@ -112,8 +95,8 @@ extern "C" cuda_function __pgi_cu_module_file(char *imagefile, cuda_module* modu
   char sourceinfo[TAU_PGI_ACC_NAME_LEN];
   sprintf(sourceinfo, "__pgi_cu_module_file %s [{%s}{%ld}]", TauPgiFunc, TauPgiFile, lineno);
   TAU_START(sourceinfo);
-  cuda_function func = __pgi_cu_module_file_p(name, module, lineno);
-  functionMap[func] = name;
+  cuda_function func = __pgi_cu_module_file_p(imagefile, module, lineno);
+  functionMap[func] = imagefile;
   TAU_STOP(sourceinfo);
   return func;
 }
@@ -143,14 +126,6 @@ extern "C" cuda_deviceptr __pgi_cu_alloc(size_t size, long lineno, char *name) {
 }
 
 
-extern "C" void __pgi_cu_uploadc_p(char *name, void* hostptr, size_t size, long lineno);
-extern "C" void __pgi_cu_uploadc(char *name, void* hostptr, size_t size, long lineno) {
-  char sourceinfo[TAU_PGI_ACC_NAME_LEN];
-  sprintf(sourceinfo, "__pgi_cu_uploadc %s [{%s}{%ld}]", TauPgiFunc, TauPgiFile, lineno);
-  TAU_START(sourceinfo);
-  __pgi_cu_uploadc_p(name, hostptr, size, lineno);
-  TAU_STOP(sourceinfo);
-}
 
 
 extern "C" void __pgi_cu_upload_p(cuda_deviceptr devptr, void* hostptr, size_t size, long lineno, char *name );
@@ -344,6 +319,18 @@ extern "C" void __pgi_cu_free(cuda_deviceptr ptr, long lineno, char* name) {
 
 
 
+/*  These routines are supposed to be part of 8.0-6, but they're not there! */
+
+/*
+extern "C" void __pgi_cu_uploadc_p(char *name, void* hostptr, size_t size, long lineno);
+extern "C" void __pgi_cu_uploadc(char *name, void* hostptr, size_t size, long lineno) {
+  char sourceinfo[TAU_PGI_ACC_NAME_LEN];
+  sprintf(sourceinfo, "__pgi_cu_uploadc %s [{%s}{%ld}]", TauPgiFunc, TauPgiFile, lineno);
+  TAU_START(sourceinfo);
+  __pgi_cu_uploadc_p(name, hostptr, size, lineno);
+  TAU_STOP(sourceinfo);
+}
+
 
 typedef struct __pgi_nv_data {
   size_t devx, devstride, hostx, hoststride, size;
@@ -398,4 +385,4 @@ extern "C" void __pgi_cu_downloadp(cuda_deviceptr devptr, void* hostptr, int dim
   TAU_STOP(sourceinfo);
 }
 
-
+*/
