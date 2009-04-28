@@ -60,44 +60,43 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 				heatMap.goAway();
 				dispose();
 				System.gc();
-				DecimalFormat f = new DecimalFormat("#.## MB");
-				//System.out.print("WINDOW CLOSED - ");
-				//System.out.print("Memory - Free: " + f.format(java.lang.Runtime.getRuntime().freeMemory()/1000000.0));
-				//System.out.print("\tTotal: " + f.format(java.lang.Runtime.getRuntime().totalMemory()/1000000.0));
-				//System.out.println("\tMax: " + f.format(java.lang.Runtime.getRuntime().maxMemory()/1000000.0));
+				// printMemoryStats("WINDOW CLOSED");
 			}
 		});
-		DecimalFormat f = new DecimalFormat("#.## MB");
-		//System.out.print("WINDOW OPEN -   ");
-		//System.out.print("Memory - Free: " + f.format(java.lang.Runtime.getRuntime().freeMemory()/1000000.0));
-		//System.out.print("\tTotal: " + f.format(java.lang.Runtime.getRuntime().totalMemory()/1000000.0));
-		//System.out.println("\tMax: " + f.format(java.lang.Runtime.getRuntime().maxMemory()/1000000.0));
+		// printMemoryStats("WINDOW OPEN");
 	}
 
 	private void drawFigures(boolean centerWindow) {
-		mainPanel = new JPanel(new GridBagLayout());
-		this.getContentPane().add(mainPanel);
-		GridBagConstraints c = new GridBagConstraints();
-		c.fill = GridBagConstraints.BOTH;
-		c.anchor = GridBagConstraints.CENTER;
-		c.weightx = 0.99;
-		c.weighty = 0.99;
-		c.insets = new Insets(2,2,2,2);
-
-		c.gridx = 0;
-		c.gridy = 0;
+		// which figure type is requested?
 		int dataIndex = 0;
 		for (dataIndex = 0 ; dataIndex < figures.length ; dataIndex++) {
 			if (figures[dataIndex].equals(currentFigure)) {
 				break;
 			}
 		}
+
+		// build the split pane
+		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+		splitPane.setResizeWeight(1);
+		splitPane.setOneTouchExpandable(true);
 		mapPanel = buildMapPanel(dataIndex, currentFigure);
-		mainPanel.add(mapPanel,c);
-		c.weightx = 0.01;
-		c.weighty = 0.01;
-		c.gridx = 1;
-		mainPanel.add(buildOptionPanel("DISPLAY OPTIONS"),c);
+		splitPane.setLeftComponent(mapPanel);
+		splitPane.setRightComponent(buildOptionPanel("DISPLAY OPTIONS"));
+		
+		// set up the constraints for the main panel
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = GridBagConstraints.BOTH;
+		c.anchor = GridBagConstraints.CENTER;
+		c.weightx = 0.99;
+		c.weighty = 0.99;
+		c.insets = new Insets(2,2,2,2);
+		c.gridx = 0;
+		c.gridy = 0;
+
+		// add the split pane to the main panel, and add the main panel to the window
+		mainPanel = new JPanel(new GridBagLayout());
+		mainPanel.add(splitPane,c);
+		this.getContentPane().add(mainPanel);
 		
         if (centerWindow) {
 	        Toolkit tk = Toolkit.getDefaultToolkit();
@@ -206,6 +205,7 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 		}
 		JScrollPane scroller = new JScrollPane(heatMap);
 		scroller.setPreferredSize(new Dimension(viewSize,viewSize));
+		scroller.setSize(new Dimension(viewSize,viewSize));
 	    panel.add(scroller, c);
 		c.gridwidth = 1;
 		c.gridheight = 1;
@@ -242,32 +242,40 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 	public void actionPerformed(ActionEvent actionEvent) {
 		try {
 			Object eventSrc = actionEvent.getSource();
+			Dimension oldSize = this.getSize();
+			System.out.println("oldSize: " + oldSize.width + " X " + oldSize.height);
 			if (eventSrc.equals(this.pathSelector)) {
 				String newPath = (String)this.pathSelector.getSelectedItem();
 				if (!newPath.equals(currentPath)) {
+					this.setVisible(false);
 					currentPath = newPath;
 					this.remove(mainPanel);
 					mainPanel = null;
 					System.gc();
 					drawFigures(false);
+					this.setSize(oldSize);
 					// new heatmap, new scanner, so add listeners
 					this.figureSelector.addKeyListener(this.heatMap.getScanner());
 					this.figureSelector.addKeyListener(this.heatMap.getScanner());
 					this.heatMap.requestFocus();
+					this.setVisible(true);
 				}
 			}
 			if (eventSrc.equals(this.figureSelector)) {
 				String newFigure = (String)this.figureSelector.getSelectedItem();
 				if (!newFigure.equals(currentFigure)) {
+					this.setVisible(false);
 					currentFigure = newFigure;
 					this.remove(mainPanel);
 					mainPanel = null;
 					System.gc();
 					drawFigures(false);
+					this.setSize(oldSize);
 					// new heatmap, new scanner, so add listeners
 					this.figureSelector.addKeyListener(this.heatMap.getScanner());
 					this.figureSelector.addKeyListener(this.heatMap.getScanner());
 					this.heatMap.requestFocus();
+					this.setVisible(true);
 				}
 			}
 		} catch (Exception e) {
@@ -296,4 +304,12 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
         return mapPanel.getSize();
     }
 
+	private static void printMemoryStats(String header) {
+		DecimalFormat f = new DecimalFormat("#.## MB");
+		System.out.print(header + " - ");
+		System.out.print("Memory - Free: " + f.format(java.lang.Runtime.getRuntime().freeMemory()/1000000.0));
+		System.out.print("\tTotal: " + f.format(java.lang.Runtime.getRuntime().totalMemory()/1000000.0));
+		System.out.println("\tMax: " + f.format(java.lang.Runtime.getRuntime().maxMemory()/1000000.0));
+	}
+	
 }
