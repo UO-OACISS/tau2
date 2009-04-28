@@ -90,9 +90,12 @@ if [ $test = "failed" ] ; then
     exit
 fi
 
+
+# Check machine type for a heap space boost
 MEMORY=-Xmx800m
 
-if [ `uname -m` = x86_64 ] ; then
+machine=`uname -m`
+if [ "x$machine" = "xx86_64" ] ; then
     MEMORY=-Xmx8000m
 fi
 
