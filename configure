@@ -1730,7 +1730,7 @@ case $machine in
 	elif [ "x$PE_ENV" = xGNU ] ; then
 	    gnu=yes
 	    tauoptions="${tauoptions}-gnu"
-	    default_fortran=gfortran
+	    default_fortran=gnu
 	    fixmakeargs="$fixmakeargs COMPINST_GNU"
 	elif [ "x$PE_ENV" = xPATHSCALE ] ; then
 	    tauoptions="${tauoptions}-pathscale"
@@ -2413,7 +2413,7 @@ esac
 # Set default F90 compiler in all Makefiles
 case $fortran_compiler in
    gnu)
-      echo "Default Fortran compiler will be GNU g77"
+      echo "Default Fortran compiler will be GNU"
       fixmakeargs="$fixmakeargs GNU_FORTRAN"
       ;;
 
