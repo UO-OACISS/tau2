@@ -8,6 +8,8 @@ import org.xml.sax.*;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
+import edu.uoregon.tau.common.XMLCleanWrapInputStream;
+
 public class MetaDataParser {
 
     private static class XMLParser extends DefaultHandler {
@@ -47,21 +49,7 @@ public class MetaDataParser {
         }
     }
 
-    /* From: http://cse-mjmcl.cse.bris.ac.uk/blog/2007/02/14/1171465494443.html */
-    public static String stripNonValidXMLCharacters(String in) {
-        StringBuffer out = new StringBuffer(); // Used to hold the output.
-        char current; // Used to reference the current character.
-
-        if (in == null || ("".equals(in)))
-            return ""; // vacancy test.
-        for (int i = 0; i < in.length(); i++) {
-            current = in.charAt(i); // NOTE: No IndexOutOfBoundsException caught here; it should not happen.
-            if ((current == 0x9) || (current == 0xA) || (current == 0xD) || ((current >= 0x20) && (current <= 0xD7FF))
-                    || ((current >= 0xE000) && (current <= 0xFFFD)) || ((current >= 0x10000) && (current <= 0x10FFFF)))
-                out.append(current);
-        }
-        return out.toString();
-    }
+  
 
     public static void parse(Map metadataMap, String string) {
         //        System.out.println("parse: " + string);
@@ -74,9 +62,9 @@ public class MetaDataParser {
             xmlreader.setContentHandler(parser);
             xmlreader.setErrorHandler(parser);
 
-            ByteArrayInputStream input = new ByteArrayInputStream(stripNonValidXMLCharacters(string).getBytes());
+            ByteArrayInputStream input = new ByteArrayInputStream(string.getBytes());
 
-            xmlreader.parse(new InputSource(input));
+            xmlreader.parse(new InputSource(new XMLCleanWrapInputStream(input)));
 
         } catch (SAXException saxe) {
             throw new RuntimeException(saxe);

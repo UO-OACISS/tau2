@@ -10,14 +10,15 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
 import edu.uoregon.tau.common.TrackerInputStream;
+import edu.uoregon.tau.common.XMLCleanWrapInputStream;
 import edu.uoregon.tau.common.XMLRootWrapInputStream;
 
 /**
  * Snapshot data reader, the real work is done in the XML Handler
  *
- * <P>CVS $Id: SnapshotDataSource.java,v 1.11 2008/10/16 18:10:17 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotDataSource.java,v 1.12 2009/04/29 02:00:57 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  */
 public class SnapshotDataSource extends DataSource {
 
@@ -69,7 +70,7 @@ public class SnapshotDataSource extends DataSource {
                 SnapshotXMLHandler handler = new SnapshotXMLHandler(this);
                 xmlreader.setContentHandler(handler);
                 xmlreader.setErrorHandler(handler);
-                xmlreader.parse(new InputSource(new XMLRootWrapInputStream(new BufferedInputStream(input))));
+                xmlreader.parse(new InputSource(new XMLRootWrapInputStream(new XMLCleanWrapInputStream(new BufferedInputStream(input)))));
                 bytesRead += files[i].length();
             }
 
