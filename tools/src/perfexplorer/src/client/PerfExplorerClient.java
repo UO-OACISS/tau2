@@ -237,13 +237,16 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		// this is necessary when running from JNLP.
 
 		List<String> packages = new ArrayList<String>();
-		packages.add("client");
-		packages.add("glue");
-		packages.add("rules");
+		packages.add("edu.uoregon.tau.perfexplorer.client");
+		packages.add("edu.uoregon.tau.perfexplorer.glue");
+		packages.add("edu.uoregon.tau.perfexplorer.rules");
 		packages.add("edu.uoregon.tau.perfdmf");
 		packages.add("edu.uoregon.tau.perfdmf.database");
 		edu.uoregon.tau.common.PythonInterpreterFactory.defaultfactory.addPackagesFromList(packages);
 
+		/*
+		 * No UI, used for scripting only
+		 */
 		if (noGUI.booleanValue()) {
 			//System.out.println("no gui");
 			PerfExplorerNoGUI test = new PerfExplorerNoGUI(
