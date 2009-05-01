@@ -8,13 +8,16 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -30,11 +33,19 @@ import javax.swing.plaf.metal.MetalComboBoxUI;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.axis.LogarithmicAxis;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.xy.DefaultTableXYDataset;
+import org.jfree.data.xy.XYSeries;
 
 import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.common.Utility;
@@ -44,12 +55,16 @@ import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.common.ChartDataType;
 import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData;
 import edu.uoregon.tau.perfexplorer.common.TransformationType;
+import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow;
 
 public class ChartPane extends JScrollPane implements ActionListener, ImageExport {
 
 	/**
 	 * 
 	 */
+
+	private static final String IDEAL="Ideal";
+
 	private static final long serialVersionUID = -8971827392560223964L;
 	private static ChartPane thePane = null;
 	private PerfExplorerConnection server = null;
@@ -78,38 +93,45 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 	private JLabel yaxisNameLabel = new JLabel("Y Axis Name:");
 	private JTextField yaxisName = new MyJTextField(5);
 	private JLabel xaxisValueLabel = new JLabel("X Axis Value:");
-   	private JComboBox xaxisValue = null;
+	private JComboBox xaxisValue = null;
 	private JLabel yaxisValueLabel = new JLabel("Y Axis Value:");
-   	private JComboBox yaxisValue = null;
+	private JComboBox yaxisValue = null;
 	private JLabel dimensionLabel = new JLabel("Dimension reduction:");
-   	private JComboBox dimension = new MyJComboBox();
+	private JComboBox dimension = new MyJComboBox();
 	private JLabel dimensionXLabel = new JLabel("Cutoff (0<x<100):");
 	private JTextField dimensionXValue = new MyJTextField(5);
 	private JLabel eventLabel = new JLabel("Interval Event:");
-   	private JComboBox event = new MyJComboBox();
+	private JComboBox event = new MyJComboBox();
 	private JLabel metricLabel = new JLabel("Metric:");
-   	private JComboBox metric = new MyJComboBox();
+	private JComboBox metric = new MyJComboBox();
 	private JLabel unitsLabel = new JLabel("Units:");
-   	private JComboBox units = new MyJComboBox();
+	private JComboBox units = new MyJComboBox();
 	//private JLabel valueLabel = new JLabel("Value:");
-   	//private JComboBox value = new MyJComboBox();
-	private JLabel xmlNameLabel = new JLabel("XML Field:");
-   	private JComboBox xmlName = new MyJComboBox();
+	//private JComboBox value = new MyJComboBox();
+
+	private JLabel seriesXmlNameLabel = new JLabel("Series XML Field:");
+	private JComboBox seriesXmlName = new MyJComboBox();
+
+	private JLabel xmlNameLabel = new JLabel("X Axis XML Field:");
+	private JComboBox xmlName = new MyJComboBox();
+
+	private JCheckBox angleXLabels= new JCheckBox("Angle X Axis Labels");
+	private JCheckBox alwaysCategory= new JCheckBox("Categorical X Axis");
 	//private JLabel xmlValueLabel = new JLabel("XML Value:");
-   	//private JComboBox xmlValue = new MyJComboBox();
+	//private JComboBox xmlValue = new MyJComboBox();
 	private String[] unitOptions = {
-				"microseconds", 
-				"milliseconds", 
-				"seconds",
-				"minutes",
-				"hours",
-				"units",
-				"thousands (x 1.0E3)",
-				"millions (x 1.0E6)",
-				"billions (x 1.0E9)",
-				"trillions (x 1.0E12)"
-				};
-	
+			"microseconds", 
+			"milliseconds", 
+			"seconds",
+			"minutes",
+			"hours",
+			"units",
+			"thousands (x 1.0E3)",
+			"millions (x 1.0E6)",
+			"billions (x 1.0E9)",
+			"trillions (x 1.0E12)"
+	};
+
 
 	private JButton apply = null;
 	private JButton reset = null;
@@ -163,8 +185,15 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		this.dimensionXValue.setEnabled(false);
 		this.eventLabel.setEnabled(false);
 		this.event.setEnabled(false);
+
+		this.seriesXmlNameLabel.setEnabled(false);
+		this.seriesXmlName.setEnabled(false);
+
 		this.xmlNameLabel.setEnabled(false);
 		this.xmlName.setEnabled(false);
+
+		this.seriesXmlNameLabel.setEnabled(false);
+		this.seriesXmlName.setEnabled(false);
 		//this.xmlValueLabel.setEnabled(false);
 		//this.xmlValue.setEnabled(false);
 
@@ -174,7 +203,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 			String tmp = (String)o;
 			if (tmp.equalsIgnoreCase("experiment.name")) {
 				this.series.setSelectedItem(o);
-			//} else if (tmp.equalsIgnoreCase("trial.threads_of_execution")) {
+				//} else if (tmp.equalsIgnoreCase("trial.threads_of_execution")) {
 				//this.xaxisValue.setSelectedItem(o);
 			} else if (tmp.equalsIgnoreCase("trial.xml_metadata")) {
 				this.xaxisValue.setSelectedItem(o);
@@ -190,6 +219,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		String oldMetric = "";
 		String oldEvent = "";
 		String oldXML = "";
+		String oldSXML="";
 		Object obj = null;
 		if (getMetrics) {
 			obj = this.metric.getSelectedItem();
@@ -208,10 +238,15 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 			if (obj != null)
 				oldXML = (String)obj;
 			this.xmlName.removeAllItems();
+
+			obj = this.seriesXmlName.getSelectedItem();
+			if(obj != null)
+				oldSXML = (String)obj;
+			this.seriesXmlName.removeAllItems();
 		}
 		if ((selection instanceof Application) ||
-		    (selection instanceof Experiment) ||
-		    (selection instanceof Trial)) {
+				(selection instanceof Experiment) ||
+				(selection instanceof Trial)) {
 			if (getMetrics) {
 				List<String> metrics = server.getPotentialMetrics(theModel);
 				//this.metric.setSelectedIndex(0);
@@ -276,13 +311,14 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 				}
 			} 
 			if (getXML) {
-				Object obj2 = series.getSelectedItem();
-				String tmp = (String)obj2;
-				Object obj3 = xaxisValue.getSelectedItem();
-				String tmp2 = (String)obj3;
-				if (tmp.equalsIgnoreCase("trial.xml_metadata") ||
-					tmp2.equalsIgnoreCase("trial.xml_metadata")) {
-					List<String> xmlEvents = server.getXMLFields(theModel);
+				//Object objSer = series.getSelectedItem();
+				String tmpSer = (String)series.getSelectedItem();
+				//Object objX = xaxisValue.getSelectedItem();
+				String tmpX = (String)xaxisValue.getSelectedItem();
+				List<String> xmlEvents = null;
+
+				if (tmpX.equalsIgnoreCase("trial.xml_metadata")) {
+					xmlEvents = server.getXMLFields(theModel);
 					for (Iterator<String> itr = xmlEvents.iterator(); itr.hasNext();) {
 						String next = itr.next();
 						this.xmlName.addItem(next);
@@ -293,6 +329,22 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 					}
 					//this.xmlName.setSelectedIndex(0);
 				}
+
+
+				if (tmpSer.equalsIgnoreCase("trial.xml_metadata")) {
+					if(xmlEvents==null)
+						xmlEvents = server.getXMLFields(theModel);
+					for (Iterator<String> itr = xmlEvents.iterator(); itr.hasNext();) {
+						String next = itr.next();
+						this.seriesXmlName.addItem(next);
+						if (oldSXML.equals("") && next.equalsIgnoreCase("UTC Time"))
+							this.seriesXmlName.setSelectedItem(next);
+						else if (oldSXML.equals(next))
+							this.seriesXmlName.setSelectedItem(next);
+					}
+					//this.xmlName.setSelectedIndex(0);
+				}
+
 			} 
 		}
 	}
@@ -444,10 +496,18 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		left.add(event);
 
 		// XML metadata
+		left.add(seriesXmlNameLabel);
+		seriesXmlName = new MyJComboBox();
+		this.seriesXmlName.addActionListener(this);
+		left.add(seriesXmlName);
+
 		left.add(xmlNameLabel);
 		xmlName = new MyJComboBox();
 		this.xmlName.addActionListener(this);
 		left.add(xmlName);
+
+		left.add(this.angleXLabels);
+		left.add(this.alwaysCategory);
 		//left.add(xmlValueLabel);
 		//xmlValue = new MyJComboBox();
 		//left.add(xmlValue);
@@ -486,7 +546,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		// title
 		String title = chartTitle.getText();
 		if (title.length() == 0) { 
-            Object obj = this.series.getSelectedItem();
+			Object obj = this.series.getSelectedItem();
 			String tmp = (String)obj;
 			if (tmp.equalsIgnoreCase(ATOMIC_EVENT_NAME)) {
 				title = (String)event.getSelectedItem();
@@ -495,7 +555,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 				title = (String)metric.getSelectedItem();
 			}
 		}
-    	facade.setChartTitle(title);
+		facade.setChartTitle(title);
 
 		// series name
 		Object obj = series.getSelectedItem();
@@ -504,24 +564,24 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 			tmp = "trial.node_count * trial.contexts_per_node * trial.threads_per_context";
 		} else if (tmp.equalsIgnoreCase("trial.XML_METADATA")) {
 			tmp = "temp_xml_metadata.metadata_value";
-   			Object obj2 = xaxisValue.getSelectedItem();
+			Object obj2 = seriesXmlName.getSelectedItem();
 			String tmp2 = (String)obj2;
-		    facade.setChartMetadataFieldName(tmp2);
+			facade.setChartMetadataFieldName(tmp2);
 		}
-    	facade.setChartSeriesName(tmp);
+		facade.setChartSeriesName(tmp);//TODO: Should this be tmp1?
 
 		// x axis
-   		obj = xaxisValue.getSelectedItem();
+		obj = xaxisValue.getSelectedItem();
 		tmp = (String)obj;
 		String tmp2 = null;
 		if (tmp.equalsIgnoreCase("trial.threads_of_execution")) {
 			tmp = "trial.node_count * trial.contexts_per_node * trial.threads_per_context";
 		} else if (tmp.equalsIgnoreCase("trial.XML_METADATA")) {
 			tmp = "temp_xml_metadata.metadata_value";
-   			Object obj2 = xmlName.getSelectedItem();
+			Object obj2 = xmlName.getSelectedItem();
 			tmp2 = (String)obj2;
-		    facade.setChartMetadataFieldName(tmp2);
-		    facade.setChartMetadataFieldValue(null);
+			facade.setChartMetadataFieldName(tmp2);
+			facade.setChartMetadataFieldValue(null);
 		}
 		String label = xaxisName.getText();
 		if (label == null || label.length() == 0) {
@@ -531,10 +591,10 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 				label = tmp;
 			}
 		}
- 		facade.setChartXAxisName(tmp, label);
+		facade.setChartXAxisName(tmp, label);
 
 		// y axis
-    	obj = yaxisValue.getSelectedItem();
+		obj = yaxisValue.getSelectedItem();
 		tmp = (String)obj;
 		if (tmp.startsWith("atomic")) {
 			tmp = tmp.replaceAll("atomic", "atomic_location_profile");
@@ -543,7 +603,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 			tmp = tmp.replaceAll("total", "interval_total_summary");
 		}
 		String operation = "avg";
-    	if (!this.mainOnly.isSelected()) {
+		if (!this.mainOnly.isSelected()) {
 			obj = this.series.getSelectedItem();
 			tmp2 = (String)obj;
 			if (tmp2.equalsIgnoreCase(INTERVAL_EVENT_GROUP_NAME)) {
@@ -553,7 +613,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		tmp = operation + "(" + tmp + ")";
 		label = yaxisName.getText();
 		if (label == null || label.length() == 0) {
-            obj = this.series.getSelectedItem();
+			obj = this.series.getSelectedItem();
 			String tmp3 = (String)obj;
 			if (tmp3.equalsIgnoreCase(ATOMIC_EVENT_NAME)) {
 				label = (String)yaxisValue.getSelectedItem();
@@ -576,14 +636,14 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		obj = metric.getSelectedItem();
 		tmp = (String)obj;
 		if (tmp.equals("TIME"))
-    		facade.setMetricName("%TIME%");
+			facade.setMetricName("%TIME%");
 		else
-    		facade.setMetricName(tmp);
+			facade.setMetricName(tmp);
 
 		// units name
 		obj = units.getSelectedItem();
 		tmp = (String)obj;
-    	facade.setChartUnits(tmp);
+		facade.setChartUnits(tmp);
 
 		// dimension reduction
 		obj = dimension.getSelectedItem();
@@ -591,17 +651,17 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		if (type == TransformationType.OVER_X_PERCENT) {
 			label = dimensionXValue.getText();
 			if (label == null || label.length() == 0) {
-    			facade.setDimensionReduction(TransformationType.NONE, null);
+				facade.setDimensionReduction(TransformationType.NONE, null);
 			} else {
-    			facade.setDimensionReduction(TransformationType.OVER_X_PERCENT, label);
+				facade.setDimensionReduction(TransformationType.OVER_X_PERCENT, label);
 			}
 		} else {
-    		facade.setDimensionReduction(TransformationType.NONE, null);
+			facade.setDimensionReduction(TransformationType.NONE, null);
 		}
 
 		// other options
-    	facade.setChartMainEventOnly(this.mainOnly.isSelected()?1:0);
-    	if (!this.mainOnly.isSelected()) {
+		facade.setChartMainEventOnly(this.mainOnly.isSelected()?1:0);
+		if (!this.mainOnly.isSelected()) {
 			obj = this.series.getSelectedItem();
 			tmp = (String)obj;
 			facade.setEventName(null);
@@ -633,13 +693,13 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 			}
 		}
 
-    	facade.setChartEventNoCallPath(this.callPath.isSelected()?0:1); //reversed logic
-    	facade.setChartLogYAxis(this.logY.isSelected()?1:0);
-    	facade.setChartScalability(this.scalability.isSelected()?1:0);
-    	facade.setChartEfficiency(this.efficiency.isSelected()?1:0);
-    	facade.setChartConstantProblem(this.constantProblem.isSelected()?1:0);
-    	facade.setChartHorizontal(this.horizontal.isSelected()?1:0);
-    	facade.setShowZero(this.showZero.isSelected()?1:0);
+		facade.setChartEventNoCallPath(this.callPath.isSelected()?0:1); //reversed logic
+		facade.setChartLogYAxis(this.logY.isSelected()?1:0);
+		facade.setChartScalability(this.scalability.isSelected()?1:0);
+		facade.setChartEfficiency(this.efficiency.isSelected()?1:0);
+		facade.setChartConstantProblem(this.constantProblem.isSelected()?1:0);
+		facade.setChartHorizontal(this.horizontal.isSelected()?1:0);
+		facade.setShowZero(this.showZero.isSelected()?1:0);
 
 		// create the Chart
 		this.chartPanel.setVisible(false);
@@ -656,15 +716,15 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 			PerfExplorerModel theModel = PerfExplorerModel.getModel();
 			Object selection = theModel.getCurrentSelection();
 			if ((selection instanceof Application) ||
-		    	(selection instanceof Experiment) ||
-		    	(selection instanceof Trial)) {
+					(selection instanceof Experiment) ||
+					(selection instanceof Trial)) {
 				updateChart();
 			} else {
 				// tell the user they need to select something
-				 JOptionPane.showMessageDialog(
-				 	PerfExplorerClient.getMainFrame(), 
-				 	"Please select one or more Applications, Experiments or Trials.",
-					"Selection Error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(
+						PerfExplorerClient.getMainFrame(), 
+						"Please select one or more Applications, Experiments or Trials.",
+						"Selection Error", JOptionPane.ERROR_MESSAGE);
 			}
 		} else if (source == reset) {
 			resetChartSettings();
@@ -700,20 +760,58 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 				this.dimensionXValue.setEnabled(true);
 			}
 		} else if ((source == series) || 
-				   (source == xaxisValue)) {
+				(source == xaxisValue)) {
 			Object obj = series.getSelectedItem();
 			String tmp = (String)obj;
 			Object obj2 = xaxisValue.getSelectedItem();
 			String tmp2 = (String)obj2;
-			if (tmp.equalsIgnoreCase("trial.xml_metadata") ||
-				tmp2.equalsIgnoreCase("trial.xml_metadata")) {
-				this.xmlNameLabel.setEnabled(true);
-				this.xmlName.setEnabled(true);
-				refreshDynamicControls(false, false, true);
-			} else {
-				this.xmlNameLabel.setEnabled(false);
-				this.xmlName.setEnabled(false);
+
+			/*
+			 * There are two places to select xml metadata, one for the series and
+			 * one for the x-axis.  Only enable/disable the correct one.
+			 */
+			if(source==series){
+				if(tmp.equalsIgnoreCase("trial.xml_metadata")){
+					this.seriesXmlNameLabel.setEnabled(true);
+					this.seriesXmlName.setEnabled(true);
+					refreshDynamicControls(false, false, true);
+				}else{
+					this.seriesXmlNameLabel.setEnabled(false);
+					this.seriesXmlName.setEnabled(false);
+				}
 			}
+			else if(source==xaxisValue){
+				if(tmp2.equalsIgnoreCase("trial.xml_metadata")){
+					this.xmlNameLabel.setEnabled(true);
+					this.xmlName.setEnabled(true);
+					refreshDynamicControls(false, false, true);
+				}else{
+					this.xmlNameLabel.setEnabled(false);
+					this.xmlName.setEnabled(false);
+				}
+			}
+
+
+			//			if (tmp.equalsIgnoreCase("trial.xml_metadata") ||
+			//				tmp2.equalsIgnoreCase("trial.xml_metadata")) {
+			//				if(source==xaxisValue){
+			//					this.xmlNameLabel.setEnabled(true);
+			//					this.xmlName.setEnabled(true);
+			//				}else{
+			//					this.seriesXmlNameLabel.setEnabled(true);
+			//					this.seriesXmlName.setEnabled(true);
+			//				}
+			//				
+			//				refreshDynamicControls(false, false, true);
+			//			} else {
+			//				if(source==xaxisValue){
+			//					this.xmlNameLabel.setEnabled(false);
+			//					this.xmlName.setEnabled(false);
+			//				}else{
+			//					this.seriesXmlNameLabel.setEnabled(false);
+			//					this.seriesXmlName.setEnabled(false);
+			//				}
+			//			}
 			if (tmp.equalsIgnoreCase(INTERVAL_EVENT_NAME) ||
 					tmp.equalsIgnoreCase(INTERVAL_EVENT_GROUP_NAME)) {
 				refreshDynamicControls(false, true, false);
@@ -745,7 +843,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 	    	(selection instanceof Trial)) {
 			updateChart();
 		}
-		*/
+		 */
 	}
 
 	/**
@@ -755,12 +853,15 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 	 *
 	 */
 	private JFreeChart doGeneralChart () {
+
 		// get the data
 		PerfExplorerModel model = PerfExplorerModel.getModel();
 		RMIGeneralChartData rawData = server.requestGeneralChartData(
-			model, ChartDataType.PARAMETRIC_STUDY_DATA);
+				model, ChartDataType.PARAMETRIC_STUDY_DATA);
 
-        PECategoryDataset dataset = new PECategoryDataset();
+		PECategoryDataset dataset = new PECategoryDataset();
+
+		DefaultTableXYDataset xydataset = new DefaultTableXYDataset();
 
 		String units = model.getChartUnits();
 		if (units == null) 
@@ -787,13 +888,23 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 			conversion = 1000000000000.0;
 		} 
 
-		if (rawData.getCategoryType() == Integer.class) {
+		PlotOrientation orientation = PlotOrientation.VERTICAL;
+		if (model.getChartHorizontal()) {
+			orientation = PlotOrientation.HORIZONTAL;
+		}
+
+		JFreeChart chart = null;
+		XYSeries ideal=null;
+		Map<String,XYSeries> labelMap=new HashMap<String,XYSeries>();
+		if (rawData.getCategoryType() == Integer.class) 
+		{
+
 			if (model.getChartScalability()) {
 
 				// create an "ideal" line.
-        		dataset.addValue(1.0, "Ideal", new Integer(rawData.getMinimum()));
-        		dataset.addValue(rawData.getMaximum()/rawData.getMinimum(), "Ideal", 
-					new Integer(rawData.getMaximum()));
+				//dataset.addValue(1.0, IDEAL, new Integer(rawData.getMinimum()));
+				//				dataset.addValue(rawData.getMaximum()/rawData.getMinimum(),IDEAL, 
+				//						new Integer(rawData.getMaximum()));
 
 				// get the baseline values
 				edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow baseline = rawData.getRowData(0);
@@ -804,34 +915,40 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 					if (!shortName(row.series).equals(shortName(baseline.series))) {
 						baseline = row;
 					}
+
+
+					XYSeries s = labelMap.get(row.series);
+					if(s==null){
+						s=new XYSeries(shortName(row.series), true, false);
+						labelMap.put(row.series, s);
+
+					}
+
 					if (model.getConstantProblem().booleanValue()) {
-						
+
 						double ratio = baseline.categoryInteger.doubleValue() / 
-							row.categoryInteger.doubleValue();
+						row.categoryInteger.doubleValue();
 						double efficiency = baseline.value/row.value;
-        				dataset.addValue(efficiency / ratio, shortName(row.series), row.categoryInteger);
+						dataset.addValue(efficiency / ratio, shortName(row.series), row.categoryInteger);
+						s.add(row.categoryInteger.doubleValue(),efficiency / ratio);
 					} else {
-        				dataset.addValue(baseline.value / row.value, shortName(row.series), row.categoryInteger);
+						dataset.addValue(baseline.value / row.value, shortName(row.series), row.categoryInteger);
+						s.add(row.categoryInteger.doubleValue(),baseline.value / row.value);
 					}
 				}
+
+				ideal=new XYSeries(IDEAL, true, false);
 
 				// create an "ideal" line.
 				@SuppressWarnings("unchecked")
 				List<Integer> keys = dataset.getColumnKeys();
 				for (int i = 0 ; i < keys.size() ; i++) {
 					Integer key = keys.get(i);
-        			dataset.addValue(key.doubleValue()/rawData.getMinimum(), "Ideal", key);
+					dataset.addValue(key.doubleValue()/rawData.getMinimum(), IDEAL, key);
+					ideal.add(key.doubleValue(),key.doubleValue()/rawData.getMinimum());
 				}
 
 			} else if (model.getChartEfficiency()) {
-
-				// create an "ideal" line.
-				// If we have categorical data, this method won't work...
-				/*
-        		dataset.addValue(1.0, "Ideal", new Integer(rawData.getMinimum()));
-        		dataset.addValue(rawData.getMaximum()/rawData.getMinimum(), "Ideal", 
-					new Integer(rawData.getMaximum()));
-				*/
 
 				// get the baseline values
 				edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow baseline = rawData.getRowData(0);
@@ -842,69 +959,138 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 					if (!shortName(row.series).equals(shortName(baseline.series))) {
 						baseline = row;
 					}
+
+					XYSeries s = labelMap.get(row.series);
+					if(s==null){
+						s=new XYSeries(shortName(row.series), true, false);
+						labelMap.put(row.series, s);
+
+					}
+
 					if (model.getConstantProblem().booleanValue()) {
-						/*
-						double ratio = baseline.categoryInteger.doubleValue() / 
-							row.categoryInteger.doubleValue();
-						double efficiency = baseline.value/row.value;
-        				dataset.addValue(efficiency / ratio, row.series, row.categoryInteger);
-						*/
-        				dataset.addValue(baseline.value / row.value, shortName(row.series), row.categoryInteger);
+						dataset.addValue(baseline.value / row.value, shortName(row.series), row.categoryInteger);
+						s.add(row.categoryInteger.doubleValue(), baseline.value / row.value);
 					} else {
-        				dataset.addValue((baseline.value * baseline.categoryInteger.doubleValue())/ (row.value * row.categoryInteger.doubleValue()), shortName(row.series), row.categoryInteger);
+						dataset.addValue((baseline.value * baseline.categoryInteger.doubleValue())/ (row.value * row.categoryInteger.doubleValue()), shortName(row.series), row.categoryInteger);
+						s.add(row.categoryInteger.doubleValue(), (baseline.value * baseline.categoryInteger.doubleValue())/ (row.value * row.categoryInteger.doubleValue()));
 					}
 				}
+				ideal=new XYSeries(IDEAL, true, false);
+				//labelMap.put(IDEAL,s);
 
 				// create an "ideal" line.
 				@SuppressWarnings("unchecked")
 				List keys = dataset.getColumnKeys();
 				for (int i = 0 ; i < keys.size() ; i++) {
 					Integer key = (Integer)keys.get(i);
-        			dataset.addValue(1.0, "Ideal", key);
+					dataset.addValue(1.0, IDEAL, key);
+					ideal.add(key.doubleValue(),1.0);
 				}
 
 			} else {
-				// iterate through the values
-				for (int i = 0 ; i < rawData.getRows() ; i++) {
-					edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
-        			dataset.addValue(row.value / conversion, shortName(row.series), row.categoryInteger);
+
+				for (int y = 0 ; y < rawData.getRows() ; y++) {
+					CategoryDataRow row = rawData.getRowData(y);
+					XYSeries s = labelMap.get(row.series);
+					if(s==null){
+						s=new XYSeries(shortName(row.series), true, false);
+						labelMap.put(row.series, s);
+
+					}
+					dataset.addValue(row.value / conversion, shortName(row.series), row.categoryInteger);
+
+					s.add(row.categoryInteger.doubleValue(), row.value/conversion);
+
 				}
+
 			}
-		} else {
+
+			for(String key : labelMap.keySet()){
+				XYSeries s = labelMap.get(key);
+				xydataset.addSeries(s);
+			}
+
+			if(ideal!=null){
+				xydataset.addSeries(ideal);
+			}
+
+
+
+			if(!this.alwaysCategory.isSelected())
+			{	
+
+				chart = ChartFactory.createXYLineChart(
+						model.getChartTitle(),  // chart title
+						model.getChartXAxisLabel(),  // domain axis label
+						model.getChartYAxisLabel(),  // range axis label
+						xydataset,                         // data
+						PlotOrientation.VERTICAL,        // the plot orientation
+						true,                            // legend
+						true,                            // tooltips
+						false                            // urls
+				);
+				// set the chart to a common style
+				Utility.applyDefaultChartTheme(chart);
+				customizeLineChart(model,rawData, chart);
+				PerfExplorerChart.customizeChart(chart,labelMap.keySet().size(),(ideal!=null));
+
+			} else{
+				chart = ChartFactory.createLineChart(
+						model.getChartTitle(),  // chart title
+						model.getChartXAxisLabel(),  // domain axis label
+						model.getChartYAxisLabel(),  // range axis label
+						dataset,                         // data
+						orientation,        // the plot orientation
+						true,                            // legend
+						true,                            // tooltips
+						false                            // urls
+				);
+
+				// set the chart to a common style
+				Utility.applyDefaultChartTheme(chart);
+
+				customizeCategoryChart(model, rawData, chart);
+			}
+		}
+		else {
 			// iterate through the values
 			for (int i = 0 ; i < rawData.getRows() ; i++) {
 				edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
-        		dataset.addValue(row.value / conversion, shortName(row.series), row.categoryString);
+				dataset.addValue(row.value / conversion, shortName(row.series), row.categoryString);
 			}
+
+			chart = ChartFactory.createLineChart(
+					model.getChartTitle(),  // chart title
+					model.getChartXAxisLabel(),  // domain axis label
+					model.getChartYAxisLabel(),  // range axis label
+					dataset,                         // data
+					orientation,        // the plot orientation
+					true,                            // legend
+					true,                            // tooltips
+					false                            // urls
+			);
+
+			// set the chart to a common style
+			Utility.applyDefaultChartTheme(chart);
+
+			customizeCategoryChart(model, rawData, chart);
 		}
 
-		PlotOrientation orientation = PlotOrientation.VERTICAL;
-		if (model.getChartHorizontal()) {
-            orientation = PlotOrientation.HORIZONTAL;
-		}
+		//PerfExplorerChart pec = new PerfExplorerChart(chart, model.getChartTitle());
+		
+		return chart;
+	}
 
-        JFreeChart chart = ChartFactory.createLineChart(
-            model.getChartTitle(),  // chart title
-            model.getChartXAxisLabel(),  // domain axis label
-            model.getChartYAxisLabel(),  // range axis label
-            dataset,                         // data
-            orientation,        // the plot orientation
-            true,                            // legend
-            true,                            // tooltips
-            false                            // urls
-        );
-		// set the chart to a common style
-		Utility.applyDefaultChartTheme(chart);
-        
-        // get a reference to the plot for further customisation...
-        CategoryPlot plot = (CategoryPlot)chart.getPlot();
+	private void customizeLineChart(PerfExplorerModel model,RMIGeneralChartData rawData, JFreeChart chart) {
+		// get a reference to the plot for further customisation...
+		XYPlot plot = (XYPlot)chart.getPlot();
 
-        //StandardXYItemRenderer renderer = (StandardXYItemRenderer) plot.getRenderer();
-		LineAndShapeRenderer renderer = (LineAndShapeRenderer)plot.getRenderer();
-        renderer.setBaseShapesFilled(true);
-        renderer.setBaseShapesVisible(true);//Was drawshapes
-        renderer.setDrawOutlines(true);//Was drawlines
-        renderer.setBaseItemLabelsVisible(true);
+		//StandardXYItemRenderer renderer = (StandardXYItemRenderer) plot.getRenderer();
+		XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer)plot.getRenderer();
+		renderer.setBaseShapesFilled(true);
+		renderer.setBaseShapesVisible(true);//Was drawshapes
+		renderer.setDrawOutlines(true);//Was drawlines
+		renderer.setBaseItemLabelsVisible(true);
 		if (model.getChartScalability()) {
 			//renderer.setDrawShapes(false);
 		}
@@ -913,50 +1099,86 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 			renderer.setSeriesStroke(i, new BasicStroke(2.0f));
 		}
 
-        // change the auto tick unit selection to integer units only...
-        NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
-        //rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-    	if (model.getShowZero()) {
+		// change the auto tick unit selection to integer units only...
+		NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
+		//rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+		if (model.getShowZero()) {
 			rangeAxis.setAutoRangeIncludesZero(true);
-    	} else {
-			rangeAxis.setAutoRangeIncludesZero(false);
-    	}
-
-/*
-		if (rawData.getCategoryType() == Integer.class) {
-			// don't mess with the domain axis
 		} else {
-        	CategoryAxis domainAxis = plot.getDomainAxis();
-			domainAxis.setSkipCategoryLabelsToFit(true);
-			domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_90);
+			rangeAxis.setAutoRangeIncludesZero(false);
 		}
-*/
 
 		if (model.getChartLogYAxis()) {
-        	LogarithmicAxis axis = new LogarithmicAxis(
-				PerfExplorerModel.getModel().getChartYAxisLabel());
-    		if (model.getShowZero()) {
-    			axis.setAutoRangeIncludesZero(true);
-    		} else {
-    			axis.setAutoRangeIncludesZero(false);
-    		}
-        	axis.setAllowNegativesFlag(true);
-        	axis.setLog10TickLabelsFlag(true);
-        	plot.setRangeAxis(0, axis);
- 		}
-
-		return chart;
+			LogarithmicAxis axis = new LogarithmicAxis(
+					PerfExplorerModel.getModel().getChartYAxisLabel());
+			if (model.getShowZero()) {
+				axis.setAutoRangeIncludesZero(true);
+			} else {
+				axis.setAutoRangeIncludesZero(false);
+			}
+			axis.setAllowNegativesFlag(true);
+			axis.setLog10TickLabelsFlag(true);
+			plot.setRangeAxis(0, axis);
+		}
 	}
 
-    public Dimension getImageSize(boolean fullScreen, boolean header) {
-        return this.getChartPanel().getSize();
-    }
+	private void customizeCategoryChart(PerfExplorerModel model,
+			RMIGeneralChartData rawData, JFreeChart chart) {
+		// get a reference to the plot for further customisation...
+		CategoryPlot plot = (CategoryPlot)chart.getPlot();
 
-    public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
-        this.getChartPanel().setDoubleBuffered(false);
-        this.getChartPanel().paintAll(g2D);
-        this.getChartPanel().setDoubleBuffered(true);
-    }
+		//StandardXYItemRenderer renderer = (StandardXYItemRenderer) plot.getRenderer();
+		LineAndShapeRenderer renderer = (LineAndShapeRenderer)plot.getRenderer();
+		renderer.setBaseShapesFilled(true);
+		renderer.setBaseShapesVisible(true);//Was drawshapes
+		renderer.setDrawOutlines(true);//Was drawlines
+		renderer.setBaseItemLabelsVisible(true);
+		if (model.getChartScalability()) {
+			//renderer.setDrawShapes(false);
+		}
+
+		for (int i = 0 ; i < rawData.getRows() ; i++) {
+			renderer.setSeriesStroke(i, new BasicStroke(2.0f));
+		}
+
+		// change the auto tick unit selection to integer units only...
+		NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
+		//rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+		if (model.getShowZero()) {
+			rangeAxis.setAutoRangeIncludesZero(true);
+		} else {
+			rangeAxis.setAutoRangeIncludesZero(false);
+		}
+
+		if (model.getChartLogYAxis()) {
+			LogarithmicAxis axis = new LogarithmicAxis(
+					PerfExplorerModel.getModel().getChartYAxisLabel());
+			if (model.getShowZero()) {
+				axis.setAutoRangeIncludesZero(true);
+			} else {
+				axis.setAutoRangeIncludesZero(false);
+			}
+			axis.setAllowNegativesFlag(true);
+			axis.setLog10TickLabelsFlag(true);
+			plot.setRangeAxis(0, axis);
+		}
+
+		if (angleXLabels.isSelected()){//angledXaxis && !scalingChart) {
+			//CategoryPlot plot = chart.getCategoryPlot();
+			CategoryAxis xAxis = (CategoryAxis) plot.getDomainAxis();
+			xAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_45);
+		}
+	}
+
+	public Dimension getImageSize(boolean fullScreen, boolean header) {
+		return this.getChartPanel().getSize();
+	}
+
+	public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
+		this.getChartPanel().setDoubleBuffered(false);
+		this.getChartPanel().paintAll(g2D);
+		this.getChartPanel().setDoubleBuffered(true);
+	}
 
 	private String shortName(String longName) {
 		StringTokenizer st = new StringTokenizer(longName, "(");
@@ -974,80 +1196,80 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 
 	private class MyJTextField extends javax.swing.JTextField
 	{   
-    	/**
+		/**
 		 * 
 		 */
 		private static final long serialVersionUID = -7156539927712296439L;
 
 		public MyJTextField() {
-        	super();
-    	}
-    	public MyJTextField(String value, int columns) {
-        	super(value, columns);
-    	}
-    	public MyJTextField(int columns) {
-        	super(columns);
-    	}
-    	public MyJTextField(String value) {
-        	super(value);
-    	}
+			super();
+		}
+		public MyJTextField(String value, int columns) {
+			super(value, columns);
+		}
+		public MyJTextField(int columns) {
+			super(columns);
+		}
+		public MyJTextField(String value) {
+			super(value);
+		}
 
-    	public Dimension getPreferredSize() {
-        	Dimension size = super.getPreferredSize();
-        	if (isMinimumSizeSet()) {
-            	Dimension minSize = getMinimumSize();
-            	if (minSize.width>size.width)
-                	size.width = minSize.width;
-        	}
-        	return size;
-    	}
+		public Dimension getPreferredSize() {
+			Dimension size = super.getPreferredSize();
+			if (isMinimumSizeSet()) {
+				Dimension minSize = getMinimumSize();
+				if (minSize.width>size.width)
+					size.width = minSize.width;
+			}
+			return size;
+		}
 
-    	public Dimension getMaximumSize() {
-        	Dimension maxSize = super.getMaximumSize();
-        	Dimension prefSize = getPreferredSize();
-        	maxSize.height = prefSize.height;
-        	return maxSize;
-    	}
+		public Dimension getMaximumSize() {
+			Dimension maxSize = super.getMaximumSize();
+			Dimension prefSize = getPreferredSize();
+			maxSize.height = prefSize.height;
+			return maxSize;
+		}
 	}
 
 	private class MyJComboBox extends javax.swing.JComboBox
 	{   
-    	/**
+		/**
 		 * 
 		 */
 		private static final long serialVersionUID = -7805756500468380965L;
 
 		public MyJComboBox(Object[] items) {
-        	super(items);
+			super(items);
 			setPrototypeDisplayValue("WWWWW");
-    	}
+		}
 
-    	public MyJComboBox() {
-        	super();
+		public MyJComboBox() {
+			super();
 			setPrototypeDisplayValue("WWWWW");
-    	}
+		}
 
-    	public MyJComboBox(List<Object> items) {
-        	super(items.toArray());
+		public MyJComboBox(List<Object> items) {
+			super(items.toArray());
 			setPrototypeDisplayValue("WWWWW");
-    	}
+		}
 
-    	public Dimension getPreferredSize() {
-        	Dimension size = super.getPreferredSize();
-        	if (isMinimumSizeSet()) {
-            	Dimension minSize = getMinimumSize();
-            	if (minSize.width>size.width)
-                	size.width = minSize.width;
-        	}
-        	return size;
-    	}
+		public Dimension getPreferredSize() {
+			Dimension size = super.getPreferredSize();
+			if (isMinimumSizeSet()) {
+				Dimension minSize = getMinimumSize();
+				if (minSize.width>size.width)
+					size.width = minSize.width;
+			}
+			return size;
+		}
 
-    	public Dimension getMaximumSize() {
-        	Dimension maxSize = super.getMaximumSize();
-        	Dimension prefSize = getPreferredSize();
-        	maxSize.height = prefSize.height;
-        	return maxSize;
-    	}
+		public Dimension getMaximumSize() {
+			Dimension maxSize = super.getMaximumSize();
+			Dimension prefSize = getPreferredSize();
+			maxSize.height = prefSize.height;
+			return maxSize;
+		}
 
 	}
 
@@ -1055,101 +1277,101 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 	 * from http://www.codeguru.com/java/articles/163.shtml
 	 */
 	private class SteppedComboBoxUI extends MetalComboBoxUI {
-  		protected ComboPopup createPopup() {
-    		BasicComboPopup popup = new BasicComboPopup( comboBox ) {
-      			/**
+		protected ComboPopup createPopup() {
+			BasicComboPopup popup = new BasicComboPopup( comboBox ) {
+				/**
 				 * 
 				 */
 				private static final long serialVersionUID = -992135884016287671L;
 
 				public void setVisible(boolean showIt) {
 					if (showIt) {
-	        			Dimension popupSize = ((SteppedComboBox)comboBox).getPopupSize();
-	        			popupSize.setSize( popupSize.width,
-	          				getPopupHeightForRowCount( comboBox.getMaximumRowCount() ) );
-	        			Rectangle popupBounds = computePopupBounds( 0,
-	          				comboBox.getBounds().height, popupSize.width, popupSize.height);
-	        			scroller.setMaximumSize( popupBounds.getSize() );
-	        			scroller.setPreferredSize( popupBounds.getSize() );
-	        			scroller.setMinimumSize( popupBounds.getSize() );
-	        			list.invalidate();            
-	        			int selectedIndex = comboBox.getSelectedIndex();
-	        			if ( selectedIndex == -1 ) {
-	          				list.clearSelection();
-	        			} else {
-	          				list.setSelectedIndex( selectedIndex );
-	        			}            
-	        			list.ensureIndexIsVisible( list.getSelectedIndex() );
-	        			setLightWeightPopupEnabled( comboBox.isLightWeightPopupEnabled() );
-	        			show( comboBox, popupBounds.x, popupBounds.y );
+						Dimension popupSize = ((SteppedComboBox)comboBox).getPopupSize();
+						popupSize.setSize( popupSize.width,
+								getPopupHeightForRowCount( comboBox.getMaximumRowCount() ) );
+						Rectangle popupBounds = computePopupBounds( 0,
+								comboBox.getBounds().height, popupSize.width, popupSize.height);
+						scroller.setMaximumSize( popupBounds.getSize() );
+						scroller.setPreferredSize( popupBounds.getSize() );
+						scroller.setMinimumSize( popupBounds.getSize() );
+						list.invalidate();            
+						int selectedIndex = comboBox.getSelectedIndex();
+						if ( selectedIndex == -1 ) {
+							list.clearSelection();
+						} else {
+							list.setSelectedIndex( selectedIndex );
+						}            
+						list.ensureIndexIsVisible( list.getSelectedIndex() );
+						setLightWeightPopupEnabled( comboBox.isLightWeightPopupEnabled() );
+						show( comboBox, popupBounds.x, popupBounds.y );
 					} else {
 						super.setVisible(false);
 					}
-      			}
-    		};
-    		popup.getAccessibleContext().setAccessibleParent(comboBox);
-    		return popup;
-  		}
+				}
+			};
+			popup.getAccessibleContext().setAccessibleParent(comboBox);
+			return popup;
+		}
 	}
- 
+
 	/**
 	 * from http://www.codeguru.com/java/articles/163.shtml
 	 */
 	private class SteppedComboBox extends JComboBox {
-  		/**
+		/**
 		 * 
 		 */
 		private static final long serialVersionUID = -6511789381891153830L;
 		protected int popupWidth;
-  	
-  		public SteppedComboBox() {
-    		super();
-    		setUI(new SteppedComboBoxUI());
-    		popupWidth = 0;
-    		Dimension d = getPreferredSize();
-    		setPreferredSize(new Dimension(50, d.height));
-    		setPopupWidth(d.width);
-  		}
 
-  		public SteppedComboBox(final Object[] items) {
-    		super(items);
-    		setUI(new SteppedComboBoxUI());
-    		popupWidth = 0;
-    		Dimension d = getPreferredSize();
-    		setPreferredSize(new Dimension(50, d.height));
-    		setPopupWidth(d.width);
-  		}
-  
-  		public SteppedComboBox(List<Object> items) {
-    		super(items.toArray());
-    		setUI(new SteppedComboBoxUI());
-    		popupWidth = 0;
-    		Dimension d = getPreferredSize();
-    		setPreferredSize(new Dimension(50, d.height));
-    		setPopupWidth(d.width);
-  		}
-  
-  		public void setPopupWidth(int width) {
-    		popupWidth = width;
-  		}
-  
-  		public Dimension getPopupSize() {
-    		Dimension size = getSize();
-    		if (popupWidth < 1) popupWidth = size.width;
-    		return new Dimension(popupWidth, size.height);
-  		}
+		public SteppedComboBox() {
+			super();
+			setUI(new SteppedComboBoxUI());
+			popupWidth = 0;
+			Dimension d = getPreferredSize();
+			setPreferredSize(new Dimension(50, d.height));
+			setPopupWidth(d.width);
+		}
 
-    	public Dimension getMaximumSize() {
-        	Dimension maxSize = super.getMaximumSize();
-        	Dimension prefSize = getPreferredSize();
-        	maxSize.height = prefSize.height;
-        	return maxSize;
-    	}
+		public SteppedComboBox(final Object[] items) {
+			super(items);
+			setUI(new SteppedComboBoxUI());
+			popupWidth = 0;
+			Dimension d = getPreferredSize();
+			setPreferredSize(new Dimension(50, d.height));
+			setPopupWidth(d.width);
+		}
+
+		public SteppedComboBox(List<Object> items) {
+			super(items.toArray());
+			setUI(new SteppedComboBoxUI());
+			popupWidth = 0;
+			Dimension d = getPreferredSize();
+			setPreferredSize(new Dimension(50, d.height));
+			setPopupWidth(d.width);
+		}
+
+		public void setPopupWidth(int width) {
+			popupWidth = width;
+		}
+
+		public Dimension getPopupSize() {
+			Dimension size = getSize();
+			if (popupWidth < 1) popupWidth = size.width;
+			return new Dimension(popupWidth, size.height);
+		}
+
+		public Dimension getMaximumSize() {
+			Dimension maxSize = super.getMaximumSize();
+			Dimension prefSize = getPreferredSize();
+			maxSize.height = prefSize.height;
+			return maxSize;
+		}
 	}
 
-//	private class ChartPanelException extends Exception {
-//		ChartPanelException (String message) {
-//			super(message);
-//		}
-//	}
+	//	private class ChartPanelException extends Exception {
+	//		ChartPanelException (String message) {
+	//			super(message);
+	//		}
+	//	}
 }

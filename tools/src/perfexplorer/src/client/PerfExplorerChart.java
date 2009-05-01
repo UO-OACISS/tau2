@@ -825,7 +825,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 	}
 
 
-	private static void customizeChart (JFreeChart chart, int rows, boolean lastLineIdeal) {
+	static void customizeChart (JFreeChart chart, int rows, boolean lastLineIdeal) {
 		// set the chart to a common style
 		Utility.applyDefaultChartTheme(chart);
      
