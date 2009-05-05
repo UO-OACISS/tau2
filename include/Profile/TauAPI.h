@@ -209,15 +209,11 @@ extern "C" {
 
 
 
-
 #ifdef TAU_PROFILEPARAM
-#define TAU_PROFILE_PARAM1L(b,c)  	Tau_profile_param1l(b,c)
+#define TAU_PROFILE_PARAM1L(data,name)  	Tau_profile_param1l(data,name)
 #else  /* TAU_PROFILEPARAM */
-#define TAU_PROFILE_PARAM1L(b,c)  	
+#define TAU_PROFILE_PARAM1L(data,name)  	
 #endif /* TAU_PROFILEPARAM */
-
-
-
 
 
 #define TAU_TRACE_SENDMSG(type, destination, length) \
@@ -482,7 +478,7 @@ void Tau_profile_param1l(long data, const char *dataname);
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.97 $   $Date: 2009/04/01 00:18:58 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.97 2009/04/01 00:18:58 sameer Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: amorris $
+ * $Revision: 1.98 $   $Date: 2009/05/05 22:21:41 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.98 2009/05/05 22:21:41 amorris Exp $ 
  ***************************************************************************/
