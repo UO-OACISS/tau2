@@ -91,6 +91,7 @@ void Tau_dynamic_start(char *name, int isPhase);
 void Tau_dynamic_stop(char *name, int isPhase);
 char * Tau_append_iteration_to_name(int iteration, char *name);
 int Tau_get_tid(void);
+void Tau_profile_param1l(long data, const char *dataname);
   
 
 
@@ -1815,6 +1816,29 @@ void TAU_PROFILE_SNAPSHOT(char *name, int slen) {
   tau_profile_snapshot_(name, slen);
 }
 
+//////////////////////////////////////////////////////////////////////
+// Parameter Profiling
+//////////////////////////////////////////////////////////////////////
+void tau_profile_param_1l_(char *name, int *number, int slen) {
+  char *fname = getFortranName(name, slen);
+  Tau_profile_param1l(*number, fname);
+  free (fname);
+}
+
+void tau_profile_param_1l(char *name, int *number, int slen) {
+  tau_profile_param_1l_(name, number, slen);
+}
+
+void tau_profile_param_1l__(char *name, int *number, int slen) {
+  tau_profile_param_1l_(name, number, slen);
+}
+
+void TAU_PROFILE_PARAM_1L(char *name, int *number, int slen) {
+  tau_profile_param_1l_(name, number, slen);
+}
+
+void Tau_profile_param1l(long data, const char *dataname);
+
 
 //////////////////////////////////////////////////////////////////////
 // Metadata routines
@@ -1975,7 +1999,7 @@ void TAU_DISABLE_TRACKING_MUSE_EVENTS(void) {}
 
 
 /***************************************************************************
- * $RCSfile: TauFAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.78 $   $Date: 2009/03/26 19:15:39 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.78 2009/03/26 19:15:39 sameer Exp $ 
+ * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.79 $   $Date: 2009/05/05 22:21:21 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.79 2009/05/05 22:21:21 amorris Exp $ 
  ***************************************************************************/
