@@ -114,7 +114,7 @@ int TauCalibrateNullTimer(void) {
 
   double *nullincltime = ((FunctionInfo*)tnull)->GetInclTime(tid);
   double *oneincltime  = ((FunctionInfo*)tone)->GetInclTime(tid);
-  for (i=0; i < TAU_MAX_COUNTERS; i++) {
+  for (i=0; i < Tau_Global_numCounters; i++) {
     /* n*(a+b+c+d) + b+c = tone */
     TheTauNullTimerOverhead()[i] = nullincltime[i]/n;
     
