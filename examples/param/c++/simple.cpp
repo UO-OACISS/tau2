@@ -5,8 +5,7 @@
 int f2(int y)
 {
   TAU_PROFILE("f2()", "", TAU_USER);
-  static string s("y");
-  TAU_PROFILE_PARAM1L((long) y, s);
+  TAU_PROFILE_PARAM1L((long) y, "y");
   printf("Inside f2: sleeping for %d seconds\n", y/2);
   sleep(y/2);
 }
@@ -14,8 +13,7 @@ int f2(int y)
 int f1(int x)
 {
   TAU_PROFILE("f1()", "", TAU_USER);
-  static string s("x");
-  TAU_PROFILE_PARAM1L((long) x, s);
+  TAU_PROFILE_PARAM1L((long) x, "x");
   printf("Inside f1: sleeping for %d seconds, calling f2\n", x);
   sleep(x);
   f2(x);

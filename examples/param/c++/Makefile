@@ -11,7 +11,7 @@
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
  
-TAUROOTDIR	= ../..
+TAUROOTDIR	= ../../..
 
 include $(TAUROOTDIR)/include/Makefile
 
