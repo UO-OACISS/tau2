@@ -81,6 +81,9 @@ public class GprofDataSource extends DataSource {
 
 				linenumber = 1;
                 while ((inputString = br.readLine()) != null) {
+                    if (inputString.startsWith("gmon") && linenumber == 1) {
+                        throw new DataSourceException("Error: this appears to be a gmon.out file, please run gprof > gprof.out and load gprof.out instead");
+                    }
                     int length = inputString.length();
                     if (length != 0) {
                         // The first time we see g, set the call path section to be true,
