@@ -16,6 +16,8 @@ public class GprofDataSource extends DataSource {
     private int linenumber = 0;
     private boolean fixLengths = true;
 
+    private String currentFile;
+
     public GprofDataSource(File[] files, boolean fixNames) {
         super();
         this.fixNames = fixNames;
@@ -57,6 +59,7 @@ public class GprofDataSource extends DataSource {
 
         for (int fIndex = 0; fIndex < files.length; fIndex++) {
             File file = files[fIndex];
+            currentFile = files[fIndex].toString();
 
             //System.out.println("Processing " + file + ", please wait ......");
             FileInputStream fileIn = new FileInputStream(file);
@@ -77,6 +80,7 @@ public class GprofDataSource extends DataSource {
             LineData self = null;
             Vector children = new Vector();
 
+            fixLengths = true;
             linenumber = 1;
             while ((inputString = br.readLine()) != null) {
                 if (inputString.startsWith("gmon") && linenumber == 1) {
@@ -204,13 +208,14 @@ public class GprofDataSource extends DataSource {
 
     private void getFieldLengths(String string) {
 
+        System.out.println("FIELD LENGTHS@!!!!");
+
         /*
          * parse a line that looks like: index %time self childen
          * called+self name index ...or... index % time self children called
          * name index [xxxx] 100.0 xxxx.xx xxxxxxxx.xx xxxxxxx+xxxxxxx ssssss...
          */
         StringTokenizer st = new StringTokenizer(string, " \t\n\r");
-        System.out.println(string);
         String index = st.nextToken();
         String percent = st.nextToken();
         if (percent.compareTo("%") == 0)
@@ -333,8 +338,10 @@ public class GprofDataSource extends DataSource {
     }
 
     private LineData getParentChildLineData(String string) {
+        //System.out.println("string = " + string);
+
         LineData lineData = new LineData();
-        StringTokenizer st1 = new StringTokenizer(string, " \t\n\r");
+        StringTokenizer st = new StringTokenizer(string, " \t\n\r");
 
         // unlike the other line parsers, this function assumed a fixed
         // location for values.  That may be erroneous, but I think that
@@ -373,34 +380,43 @@ public class GprofDataSource extends DataSource {
         */
 
         String tmpStr = string.substring(selfStart, descendantsStart).trim();
-        if (tmpStr.length() > 0)
+        //String tmpStr = st.nextToken();
+        if (tmpStr.length() > 0) {
             lineData.d0 = 1000000.0 * Double.parseDouble(tmpStr);
-        else
+        } else {
             lineData.d0 = 0.0;
+        }
+        
+        System.err.println("Error parsing file: " + currentFile + ", line: " + linenumber);
+        System.err.println("selfStart: " + selfStart);
+        System.err.println("descendantsStart: " + descendantsStart);
+        System.err.println("calledStart: " + calledStart);
 
         try {
             tmpStr = string.substring(descendantsStart, calledStart).trim();
-            if (tmpStr.length() > 0)
+            //tmpStr = st.nextToken();
+            if (tmpStr.length() > 0) {
                 lineData.d1 = 1000000.0 * Double.parseDouble(tmpStr);
-            else
+            } else {
                 lineData.d1 = 0.0;
+            }
         } catch (Exception e) {
-            System.err.println("Error parsing file, line: " + linenumber);
+            System.err.println("Error parsing file: " + currentFile + ", line: " + linenumber);
             System.err.println("selfStart: " + selfStart);
             System.err.println("descendantsStart: " + descendantsStart);
             System.err.println("calledStart: " + calledStart);
             System.err.println(e.getMessage());
-            e.printStackTrace();
-            System.exit(0);
+            throw new DataSourceException(e, currentFile);
         }
 
         // check if the counts 'spill' into the name field.
         String spillTest = string.substring(calledStart, string.length()).trim();
         int space = spillTest.indexOf(" ");
-        if (space > (nameStart - calledStart))
+        if (space > (nameStart - calledStart)) {
             tmpStr = spillTest.substring(0, space).trim();
-        else
+        } else {
             tmpStr = string.substring(calledStart, nameStart).trim();
+        }
         // check for a ratio
         if (tmpStr.indexOf("/") >= 0) {
             StringTokenizer st2 = new StringTokenizer(tmpStr, "/");
