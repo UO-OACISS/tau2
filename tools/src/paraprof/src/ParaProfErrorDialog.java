@@ -8,23 +8,24 @@ import java.io.StringWriter;
 
 import javax.swing.*;
 
+import org.xml.sax.SAXParseException;
+
 import edu.uoregon.tau.common.TauRuntimeException;
 import edu.uoregon.tau.perfdmf.DataSourceException;
 import edu.uoregon.tau.perfdmf.DatabaseException;
 
 public class ParaProfErrorDialog extends JFrame implements ActionListener {
 
-
     public ParaProfErrorDialog(String message) {
-        this(message,null);
+        this(message, null);
     }
-    
+
     public ParaProfErrorDialog(String message, Exception e) {
 
         String errorString = null;
 
         if (e instanceof TauRuntimeException) {
-            e = ((TauRuntimeException)e).getActualException();
+            e = ((TauRuntimeException) e).getActualException();
         }
         if (e instanceof DataSourceException) {
             DataSourceException dse = (DataSourceException) e;
@@ -34,6 +35,17 @@ public class ParaProfErrorDialog extends JFrame implements ActionListener {
                 ex.printStackTrace();
                 StringWriter sw = new StringWriter();
                 PrintWriter pw = new PrintWriter(sw);
+                
+                
+                if (dse.getFilename() != null) {
+                    pw.println ("\nFilename: " + dse.getFilename());
+                }
+                if (ex instanceof SAXParseException) {
+                    SAXParseException saxpe = (SAXParseException) ex;
+                    pw.println("Line Number: " + saxpe.getLineNumber());
+                    pw.println("Column Number: " + saxpe.getColumnNumber() + "\n");
+                }
+                
                 ex.printStackTrace(pw);
                 pw.close();
                 errorString = sw.toString();
@@ -52,6 +64,7 @@ public class ParaProfErrorDialog extends JFrame implements ActionListener {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             ex.printStackTrace(pw);
+
             pw.close();
             errorString = dbe.getMessage() + "\n\n" + sw.toString();
 
@@ -103,8 +116,7 @@ public class ParaProfErrorDialog extends JFrame implements ActionListener {
             headerTextArea = new JTextArea(
                     "\nAn error occurred during a database transaction.\nBelow is the full error message.\n");
         } else if (e == null) {
-            headerTextArea = new JTextArea(
-            "\nThe following error occurred.\n");
+            headerTextArea = new JTextArea("\nThe following error occurred.\n");
         } else if (message != null && e != null) {
             headerTextArea = new JTextArea("\n" + message + "\n");
         } else {
