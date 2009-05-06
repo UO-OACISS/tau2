@@ -13,9 +13,9 @@ public class GprofDataSource extends DataSource {
     private int calledStart = 0;
     private int nameStart = 0;
     private boolean fixNames = false;
-	private int linenumber = 0;
-	private boolean fixLengths = true;
-    
+    private int linenumber = 0;
+    private boolean fixLengths = true;
+
     public GprofDataSource(File[] files, boolean fixNames) {
         super();
         this.fixNames = fixNames;
@@ -48,8 +48,6 @@ public class GprofDataSource extends DataSource {
         int nodeID = -1;
 
         String inputString = null;
-      
-      
 
         Function callPathFunction = null;
 
@@ -60,137 +58,133 @@ public class GprofDataSource extends DataSource {
         for (int fIndex = 0; fIndex < files.length; fIndex++) {
             File file = files[fIndex];
 
-                //System.out.println("Processing " + file + ", please wait ......");
-                FileInputStream fileIn = new FileInputStream(file);
-                InputStreamReader inReader = new InputStreamReader(fileIn);
-                BufferedReader br = new BufferedReader(inReader);
+            //System.out.println("Processing " + file + ", please wait ......");
+            FileInputStream fileIn = new FileInputStream(file);
+            InputStreamReader inReader = new InputStreamReader(fileIn);
+            BufferedReader br = new BufferedReader(inReader);
 
-                // Since this is gprof output, there will only be one node, context, and thread per file
-                node = this.addNode(++nodeID);
-                context = node.addContext(0);
-                thread = context.addThread(0);
+            // Since this is gprof output, there will only be one node, context, and thread per file
+            node = this.addNode(++nodeID);
+            context = node.addContext(0);
+            thread = context.addThread(0);
 
-                // Time is the only metric tracked with gprof.
-                this.addMetric("Time");
+            // Time is the only metric tracked with gprof.
+            this.addMetric("Time");
 
-                boolean callPathSection = false;
-                boolean parent = true;
-                Vector parents = new Vector();
-                LineData self = null;
-                Vector children = new Vector();
+            boolean callPathSection = false;
+            boolean parent = true;
+            Vector parents = new Vector();
+            LineData self = null;
+            Vector children = new Vector();
 
-				linenumber = 1;
-                while ((inputString = br.readLine()) != null) {
-                    if (inputString.startsWith("gmon") && linenumber == 1) {
-                        throw new DataSourceException("Error: this appears to be a gmon.out file, please run gprof > gprof.out and load gprof.out instead");
-                    }
-                    int length = inputString.length();
-                    if (length != 0) {
-                        // The first time we see g, set the call path section to be true,
-                        // and the second time, set it to be false.
-                        // check for "granularity: " or "ngranularity: "
-                        int idx = inputString.indexOf("granularity: ");
-                        if (idx == 0 || idx == 1) {
-                            if (!callPathSection) {
-                                // System.out.println("###### Call path section ######");
-                                callPathSection = true;
-                            } else {
-                                // System.out.println("###### Summary section ######");
-                                callPathSection = false;
-                            }
+            linenumber = 1;
+            while ((inputString = br.readLine()) != null) {
+                if (inputString.startsWith("gmon") && linenumber == 1) {
+                    throw new DataSourceException(
+                            "Error: this appears to be a gmon.out file, please run gprof > gprof.out and load gprof.out instead");
+                }
+                int length = inputString.length();
+                if (length != 0) {
+                    // The first time we see g, set the call path section to be true,
+                    // and the second time, set it to be false.
+                    // check for "granularity: " or "ngranularity: "
+                    int idx = inputString.indexOf("granularity: ");
+                    if (idx == 0 || idx == 1) {
+                        if (!callPathSection) {
+                            // System.out.println("###### Call path section ######");
+                            callPathSection = true;
+                        } else {
+                            // System.out.println("###### Summary section ######");
+                            callPathSection = false;
                         }
+                    }
 
-                        if (callPathSection) {
-                            if ((inputString.indexOf("index") == 0) && (inputString.indexOf("time") >= 0)
-                                    && (inputString.indexOf("self") >= 0)
-                                    && (inputString.indexOf("called") >= 0)
-                                    && (inputString.indexOf("name") >= 0)) {
-                                // this line has the lengths of the fields.
-                                // we need this.
-                                getFieldLengths(inputString);
-                            } else if (inputString.charAt(0) == '[') {
-                                self = getSelfLineData(inputString);
-                                parent = false;
-                            } else if (inputString.charAt(0) == '-') {
+                    if (callPathSection) {
+                        if ((inputString.indexOf("index") == 0) && (inputString.indexOf("time") >= 0)
+                                && (inputString.indexOf("self") >= 0) && (inputString.indexOf("called") >= 0)
+                                && (inputString.indexOf("name") >= 0)) {
+                            // this line has the lengths of the fields.
+                            // we need this.
+                            getFieldLengths(inputString);
+                        } else if (inputString.charAt(0) == '[') {
+                            self = getSelfLineData(inputString);
+                            parent = false;
+                        } else if (inputString.charAt(0) == '-') {
 
-                                function = this.addFunction(self.s0, 1);
+                            function = this.addFunction(self.s0, 1);
 
-                                functionProfile = new FunctionProfile(function);
+                            functionProfile = new FunctionProfile(function);
+                            thread.addFunctionProfile(functionProfile);
+
+                            functionProfile.setInclusive(0, self.d1 + self.d2);
+                            functionProfile.setExclusive(0, self.d1);
+                            functionProfile.setNumCalls(self.i0);
+
+                            int numSubr = 0;
+                            for (int i = 0; i < children.size(); i++) {
+                                LineData lineDataChild = (LineData) children.get(i);
+                                numSubr += lineDataChild.i0;
+                            }
+
+                            functionProfile.setNumSubr(numSubr);
+                            //functionProfile.setInclusivePerCall(0, (self.d1 + self.d2) / self.i0);
+
+                            for (int i = 0; i < parents.size(); i++) {
+                                LineData lineDataParent = (LineData) parents.elementAt(i);
+                                function = this.addFunction(lineDataParent.s0, 1);
+                                String s = lineDataParent.s0 + " => " + self.s0 + "  ";
+                                callPathFunction = this.addFunction(lineDataParent.s0 + " => " + self.s0 + "  ", 1);
+
+                                functionProfile = new FunctionProfile(callPathFunction);
                                 thread.addFunctionProfile(functionProfile);
+                                functionProfile.setInclusive(0, lineDataParent.d0 + lineDataParent.d1);
+                                functionProfile.setExclusive(0, lineDataParent.d0);
+                                functionProfile.setNumCalls(lineDataParent.i0);
 
-                                functionProfile.setInclusive(0, self.d1 + self.d2);
-                                functionProfile.setExclusive(0, self.d1);
-                                functionProfile.setNumCalls(self.i0);
+                                //  functionProfile.setInclusivePerCall(0,
+                                //         (lineDataParent.d0 + lineDataParent.d1) / lineDataParent.i0);
 
-                                int numSubr = 0;
-                                for (int i = 0; i < children.size(); i++) {
-                                    LineData lineDataChild = (LineData) children.get(i);
-                                    numSubr += lineDataChild.i0;
-                                }
-
-                                functionProfile.setNumSubr(numSubr);
-                                //functionProfile.setInclusivePerCall(0, (self.d1 + self.d2) / self.i0);
-
-                                for (int i = 0; i < parents.size(); i++) {
-                                    LineData lineDataParent = (LineData) parents.elementAt(i);
-                                    function = this.addFunction(lineDataParent.s0, 1);
-                                    String s = lineDataParent.s0 + " => " + self.s0 + "  ";
-                                    callPathFunction = this.addFunction(lineDataParent.s0 + " => " + self.s0
-                                            + "  ", 1);
-
-
-                                    functionProfile = new FunctionProfile(callPathFunction);
-                                    thread.addFunctionProfile(functionProfile);
-                                    functionProfile.setInclusive(0, lineDataParent.d0 + lineDataParent.d1);
-                                    functionProfile.setExclusive(0, lineDataParent.d0);
-                                    functionProfile.setNumCalls(lineDataParent.i0);
-
-                                  //  functionProfile.setInclusivePerCall(0,
-                                   //         (lineDataParent.d0 + lineDataParent.d1) / lineDataParent.i0);
-
-                                }
-                                parents.clear();
-
-                                for (int i = 0; i < children.size(); i++) {
-                                    LineData lineDataChild = (LineData) children.elementAt(i);
-                                    function = this.addFunction(lineDataChild.s0, 1);
-                                    String s = self.s0 + " => " + lineDataChild.s0 + "  ";
-                                    callPathFunction = this.addFunction(self.s0 + " => " + lineDataChild.s0
-                                            + "  ", 1);
-
-
-                                    functionProfile = new FunctionProfile(callPathFunction);
-                                    thread.addFunctionProfile(functionProfile);
-                                    functionProfile.setInclusive(0, lineDataChild.d0 + lineDataChild.d1);
-                                    functionProfile.setExclusive(0, lineDataChild.d0);
-                                    functionProfile.setNumCalls(lineDataChild.i0);
-                                    //functionProfile.setInclusivePerCall(0,
-                                    //        (lineDataChild.d0 + lineDataChild.d1) / lineDataChild.i0);
-                                }
-                                children.clear();
-                                parent = true;
-                            } else if (inputString.charAt(length - 1) == ']') {
-                                // check for cycle line
-                                if (inputString.indexOf("<cycle") >= 0) {
-                                    if (parent)
-                                        parents.add(getParentChildLineData(inputString));
-                                    else
-                                        children.add(getParentChildLineData(inputString));
-                                } else {
-                                    if (parent)
-                                        parents.add(getParentChildLineData(inputString));
-                                    //parents.add(getParentLineData(inputString));
-                                    else
-                                        children.add(getParentChildLineData(inputString));
-                                    //children.add(getChildLineData(inputString));
-                                }
                             }
+                            parents.clear();
+
+                            for (int i = 0; i < children.size(); i++) {
+                                LineData lineDataChild = (LineData) children.elementAt(i);
+                                function = this.addFunction(lineDataChild.s0, 1);
+                                String s = self.s0 + " => " + lineDataChild.s0 + "  ";
+                                callPathFunction = this.addFunction(self.s0 + " => " + lineDataChild.s0 + "  ", 1);
+
+                                functionProfile = new FunctionProfile(callPathFunction);
+                                thread.addFunctionProfile(functionProfile);
+                                functionProfile.setInclusive(0, lineDataChild.d0 + lineDataChild.d1);
+                                functionProfile.setExclusive(0, lineDataChild.d0);
+                                functionProfile.setNumCalls(lineDataChild.i0);
+                                //functionProfile.setInclusivePerCall(0,
+                                //        (lineDataChild.d0 + lineDataChild.d1) / lineDataChild.i0);
+                            }
+                            children.clear();
+                            parent = true;
                         } else if (inputString.charAt(length - 1) == ']') {
-                            // System.out.println(getSummaryLineData(inputString).s0);
+                            // check for cycle line
+                            if (inputString.indexOf("<cycle") >= 0) {
+                                if (parent)
+                                    parents.add(getParentChildLineData(inputString));
+                                else
+                                    children.add(getParentChildLineData(inputString));
+                            } else {
+                                if (parent)
+                                    parents.add(getParentChildLineData(inputString));
+                                //parents.add(getParentLineData(inputString));
+                                else
+                                    children.add(getParentChildLineData(inputString));
+                                //children.add(getChildLineData(inputString));
+                            }
                         }
+                    } else if (inputString.charAt(length - 1) == ']') {
+                        // System.out.println(getSummaryLineData(inputString).s0);
                     }
-					linenumber++;
-                } // while lines in file
+                }
+                linenumber++;
+            } // while lines in file
         } // for elements in vector v
 
         this.generateDerivedData();
@@ -216,7 +210,7 @@ public class GprofDataSource extends DataSource {
          * name index [xxxx] 100.0 xxxx.xx xxxxxxxx.xx xxxxxxx+xxxxxxx ssssss...
          */
         StringTokenizer st = new StringTokenizer(string, " \t\n\r");
-		System.out.println(string);
+        System.out.println(string);
         String index = st.nextToken();
         String percent = st.nextToken();
         if (percent.compareTo("%") == 0)
@@ -279,47 +273,56 @@ public class GprofDataSource extends DataSource {
         // be equal to the sum of all the self and children
         // entries of the children listed directly below this
         // function.
-		String fixer = st.nextToken();
+        String fixer = st.nextToken();
         lineData.d2 = 1000000.0 * Double.parseDouble(fixer);
-		if (fixLengths) {
-			/* sometimes, the data doesn't get aligned just right.
-			   We need to adjust the "called" column so that it starts
-			   just after the end of the children value.  Otherwise, the
-			   called column will start two columns too late, as in
-			   this example:
-index % time    self  children    called     name
+        if (fixLengths) {
+            /* sometimes, the data doesn't get aligned just right.
+               We need to adjust the "called" column so that it starts
+               just after the end of the children value.  Otherwise, the
+               called column will start two columns too late, as in
+               this example:
+            index % time    self  children    called     name
                 0.33  264.75      32/32          _start_blrts [2]
-[1]     58.4    0.33  264.75      32         main [1]
-OK:             0.00  131.96      32/32          HYPRE_StructSMGSetup [5]
-...
-BAD:          103.71    4.01  151328/151328      hypre_CyclicReduction [8]
-ALSO BAD:       0.27    0.00 1135396/4373228     hypre_BoxGetStrideSize [56]
+            [1]     58.4    0.33  264.75      32         main [1]
+            OK:             0.00  131.96      32/32          HYPRE_StructSMGSetup [5]
+            ...
+            BAD:          103.71    4.01  151328/151328      hypre_CyclicReduction [8]
+            ALSO BAD:       0.27    0.00 1135396/4373228     hypre_BoxGetStrideSize [56]
 
-			*/
-        	calledStart = string.indexOf(fixer) + fixer.length() + 1;
-			fixLengths = false;
-		}
+            */
+            calledStart = string.indexOf(fixer) + fixer.length() + 1;
+            fixLengths = false;
+        }
 
         // This is the number of times the function was called.
         // If the function called itself recursively, there are
         // two numbers, separated by a `+'. The first number
         // counts non-recursive calls, and the second counts
         // recursive calls.
-        if (numberOfTokens < 7)
+
+        boolean hasCalls;
+        String str = st.nextToken();
+        try {
+            int foo = Integer.parseInt(str);
+            hasCalls = true;
+        } catch (NumberFormatException nfe) {
+            hasCalls = false;
+        }
+
+        if (!hasCalls) {
             // if the number of calls is absent, assume 1.
             lineData.i0 = 1;
-        else {
-            String tmpStr = st.nextToken();
-            if (tmpStr.indexOf("+") >= 0) {
-            } else {
-                StringTokenizer st2 = new StringTokenizer(tmpStr, "+");
+            lineData.s0 = str;
+        } else {
+            if (str.indexOf("+") < 0) {
+                StringTokenizer st2 = new StringTokenizer(str, "+");
                 lineData.i0 = Integer.parseInt(st2.nextToken());
                 // do this?
                 // lineData.i0 += Integer.parseInt(st2.nextToken());
             }
+            lineData.s0 = st.nextToken(); //Name
         }
 
-        lineData.s0 = st.nextToken(); //Name
         while (st.hasMoreTokens()) {
             String tmp = st.nextToken();
             if ((tmp.indexOf("[") != 0) && (!tmp.endsWith("]")))
@@ -333,64 +336,63 @@ ALSO BAD:       0.27    0.00 1135396/4373228     hypre_BoxGetStrideSize [56]
         LineData lineData = new LineData();
         StringTokenizer st1 = new StringTokenizer(string, " \t\n\r");
 
-
-		// unlike the other line parsers, this function assumed a fixed
-		// location for values.  That may be erroneous, but I think that
-		// is the format for gprof output. Sample lines:
-		/*
-index  % time    self  children called     name
+        // unlike the other line parsers, this function assumed a fixed
+        // location for values.  That may be erroneous, but I think that
+        // is the format for gprof output. Sample lines:
+        /*
+        index  % time    self  children called     name
                                              <spontaneous>
                  0.16     1.77    1/1        start [1]
-[2]    100.00    0.16     1.77    1      main [2]
+        [2]    100.00    0.16     1.77    1      main [2]
                  1.77        0    1/1        a <cycle 1> [5]
-----------------------------------------
+        ----------------------------------------
                  1.77        0    1/1        main [2]
-[3]     91.71    1.77        0    1+5    <cycle 1 as a whole> [3]
+        [3]     91.71    1.77        0    1+5    <cycle 1 as a whole> [3]
                  1.02        0    3          b <cycle 1> [4]
                  0.75        0    2          a <cycle 1> [5]
                     0        0    6/6        c [6]
-----------------------------------------
+        ----------------------------------------
                                   3          a <cycle 1> [5]
-[4]     52.85    1.02        0    0      b <cycle 1> [4]
+        [4]     52.85    1.02        0    0      b <cycle 1> [4]
                                   2          a <cycle 1> [5]
                     0        0    3/6        c [6]
-----------------------------------------
+        ----------------------------------------
                  1.77        0    1/1        main [2]
                                   2          b <cycle 1> [4]
-[5]     38.86    0.75        0    1      a <cycle 1> [5]
+        [5]     38.86    0.75        0    1      a <cycle 1> [5]
                                   3          b <cycle 1> [4]
                     0        0    3/6        c [6]
-----------------------------------------
+        ----------------------------------------
                     0        0    3/6        b <cycle 1> [4]
                     0        0    3/6        a <cycle 1> [5]
-[6]      0.00       0        0    6      c [6]
-----------------------------------------
+        [6]      0.00       0        0    6      c [6]
+        ----------------------------------------
                                   called/total       parents
                 0.02        0.09    2379             hypre_SMGRelax <cycle 2> [11]
------------------------------------------------
-		*/
-        
+        -----------------------------------------------
+        */
+
         String tmpStr = string.substring(selfStart, descendantsStart).trim();
         if (tmpStr.length() > 0)
             lineData.d0 = 1000000.0 * Double.parseDouble(tmpStr);
         else
             lineData.d0 = 0.0;
 
-		try{
-        tmpStr = string.substring(descendantsStart, calledStart).trim();
-        if (tmpStr.length() > 0)
-            lineData.d1 = 1000000.0 * Double.parseDouble(tmpStr);
-        else
-            lineData.d1 = 0.0;
-		} catch (Exception e) {
-			System.err.println("Error parsing file, line: " + linenumber);
-			System.err.println("selfStart: " + selfStart);
-			System.err.println("descendantsStart: " + descendantsStart);
-			System.err.println("calledStart: " + calledStart);
-			System.err.println(e.getMessage());
-			e.printStackTrace();
-			System.exit(0);
-		}
+        try {
+            tmpStr = string.substring(descendantsStart, calledStart).trim();
+            if (tmpStr.length() > 0)
+                lineData.d1 = 1000000.0 * Double.parseDouble(tmpStr);
+            else
+                lineData.d1 = 0.0;
+        } catch (Exception e) {
+            System.err.println("Error parsing file, line: " + linenumber);
+            System.err.println("selfStart: " + selfStart);
+            System.err.println("descendantsStart: " + descendantsStart);
+            System.err.println("calledStart: " + calledStart);
+            System.err.println(e.getMessage());
+            e.printStackTrace();
+            System.exit(0);
+        }
 
         // check if the counts 'spill' into the name field.
         String spillTest = string.substring(calledStart, string.length()).trim();
