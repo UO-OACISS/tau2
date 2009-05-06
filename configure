@@ -1700,7 +1700,7 @@ case $machine in
 	elif [ "x$PE_ENV" = xGNU ] ; then
 	    gnu=yes
 	    tauoptions="${tauoptions}-gnu"
-	    default_fortran=gnu
+	    default_fortran=gfortran
 	    fixmakeargs="$fixmakeargs COMPINST_GNU"
 	elif [ "x$PE_ENV" = xPATHSCALE ] ; then
 	    tauoptions="${tauoptions}-pathscale"
@@ -1730,7 +1730,7 @@ case $machine in
 	elif [ "x$PE_ENV" = xGNU ] ; then
 	    gnu=yes
 	    tauoptions="${tauoptions}-gnu"
-	    default_fortran=gnu
+	    default_fortran=gfortran
 	    fixmakeargs="$fixmakeargs COMPINST_GNU"
 	elif [ "x$PE_ENV" = xPATHSCALE ] ; then
 	    tauoptions="${tauoptions}-pathscale"
@@ -2630,9 +2630,12 @@ then
 	;;
   craycnl)
 	mpiinc=/opt/xt-mpt/default/mpich2-64/P/include
-	if [ ! -r $mpiinc ] 
-        then
-	  mpiinc=/opt/mpt/default/xt/mpich2-$default_fortran/include
+        if [ ! -r $mpiinc ] ; then
+            if [ $default_fortran = gfortran ] ; then
+                mpiinc=/opt/mpt/default/xt/mpich2-gnu/include
+            else
+                mpiinc=/opt/mpt/default/xt/mpich2-$default_fortran/include
+            fi
         fi
 	;;
   solaris2*)
