@@ -16,9 +16,9 @@ import edu.uoregon.tau.common.XMLRootWrapInputStream;
 /**
  * Snapshot data reader, the real work is done in the XML Handler
  *
- * <P>CVS $Id: SnapshotDataSource.java,v 1.12 2009/04/29 02:00:57 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotDataSource.java,v 1.13 2009/05/06 19:50:59 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  */
 public class SnapshotDataSource extends DataSource {
 
@@ -41,6 +41,7 @@ public class SnapshotDataSource extends DataSource {
     }
 
     public void load() throws FileNotFoundException, IOException, DataSourceException, SQLException {
+        String currentFile = null;
         try {
             long time = System.currentTimeMillis();
             XMLReader xmlreader = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
@@ -52,6 +53,7 @@ public class SnapshotDataSource extends DataSource {
 
             for (int i = 0; i < files.length; i++) {
                 FileInputStream fis = new FileInputStream(files[i]);
+                currentFile = files[i].toString();
                 tracker = new TrackerInputStream(fis);
 
                 InputStream input;
@@ -82,7 +84,7 @@ public class SnapshotDataSource extends DataSource {
 
         } catch (SAXException e) {
             e.printStackTrace();
-            throw new DataSourceException(e);
+            throw new DataSourceException(e, currentFile);
         }
     }
 

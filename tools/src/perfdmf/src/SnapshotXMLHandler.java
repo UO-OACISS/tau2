@@ -4,14 +4,15 @@ import java.util.*;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * XML Handler for snapshot profiles, this is where all the work is done
  *
- * <P>CVS $Id: SnapshotXMLHandler.java,v 1.12 2007/05/16 23:34:00 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotXMLHandler.java,v 1.13 2009/05/06 19:50:59 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  */
 public class SnapshotXMLHandler extends DefaultHandler {
 
@@ -42,6 +43,14 @@ public class SnapshotXMLHandler extends DefaultHandler {
 
     public SnapshotXMLHandler(SnapshotDataSource source) {
         this.dataSource = source;
+    }
+
+    public void warning(SAXParseException e) throws SAXException {}
+
+    public void error(SAXParseException e) throws SAXException {}
+
+    public void fatalError(SAXParseException e) throws SAXException {
+        throw e;
     }
 
     public void startDocument() throws SAXException {}
