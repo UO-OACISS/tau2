@@ -51,6 +51,10 @@ foreach $config (@allConfigs) {
 
     foreach $opt (@oldopts) {
 
+	# remove leading and trailing whitespace
+	$opt =~ s/^\s+//;
+	$opt =~ s/\s+$//;
+
 	# get the base option (e.g. -mpiinc for -mpiinc=/usr/local/...)
 	$base = $opt;
 	$base =~ s/=.*//g;
@@ -70,9 +74,13 @@ foreach $config (@allConfigs) {
 	} else { 
             # no match, add to $newopt
 	    $newopt = $newopt . " " . $opt;
+
+	    # remove leading and trailing whitespace
+	    $newopt =~ s/^\s+//;
+	    $newopt =~ s/\s+$//;
 	}
     }
-    
+
     # flush the last option
     if (!($newopt eq "")) {
 	if ($newopt =~ / /) {
