@@ -1,30 +1,29 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.awt.Toolkit;
+import java.net.URL;
+
 import javax.swing.JFrame;
-import java.lang.Math;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.labels.StandardXYToolTipGenerator;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.XYDataset;
-import org.jfree.chart.labels.StandardXYToolTipGenerator;
-import java.text.DecimalFormat;
-import java.text.FieldPosition;
-import java.net.URL;
-import edu.uoregon.tau.common.Utility;
-import edu.uoregon.tau.perfexplorer.common.*;
 
-import java.awt.Toolkit;
+import edu.uoregon.tau.common.Utility;
+import edu.uoregon.tau.perfexplorer.common.ChartDataType;
+import edu.uoregon.tau.perfexplorer.common.RMIChartData;
+import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
 
 public class PerfExplorerProbabilityPlot extends PerfExplorerChartWindow {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3673272562377355045L;
 
 	public PerfExplorerProbabilityPlot(JFreeChart chart, String name) {
 		super(chart, name);
@@ -66,8 +65,13 @@ public class PerfExplorerProbabilityPlot extends PerfExplorerChartWindow {
 			else
         		renderer.setSeriesLinesVisible(y, false);
 		}
-        renderer.setToolTipGenerator(new StandardXYToolTipGenerator() {
-            public String generateToolTip(XYDataset inDataset, int arg1, int arg2) {
+        renderer.setBaseToolTipGenerator(new StandardXYToolTipGenerator() {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = 5374367919012452021L;
+
+			public String generateToolTip(XYDataset inDataset, int arg1, int arg2) {
 				ProbabilityPlotDataset dataset = (ProbabilityPlotDataset) inDataset;
 				return dataset.getTooltip(arg1, arg2);
             }

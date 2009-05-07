@@ -8,9 +8,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Map;
 
-import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
@@ -45,7 +43,6 @@ public class PerfExplorerActionListener implements ActionListener {
 	public final static String LOADSCRIPT = "Load Analysis Script";
 	public final static String RERUNSCRIPT = "Re-run Analysis Script";
 	public final static String SAVE_MAIN = "Save Main Window As Vector Image";
-	public final static String SAVE = "Save As Vector Image";
 	public final static String CONSOLE = "Open New Console Window";
 	public final static String QUIT = "Quit PerfExplorer";
 	public final static String QUIT_SERVER = "Quit PerfExplorer (Shutdown Server)";
@@ -145,10 +142,8 @@ public class PerfExplorerActionListener implements ActionListener {
 					saveMain();
 				} else if (arg.equals(CONSOLE)) {
 					new Console();
-				} else if (arg.equals(SAVE)) {
-					saveThyself();
-			// help menu items
-				} else if (arg.equals(ABOUT)) {
+				} 
+				else if (arg.equals(ABOUT)) {
 					createAboutWindow();
 				} else if (arg.equals(SEARCH)) {
 					createHelpWindow();
@@ -844,16 +839,6 @@ public class PerfExplorerActionListener implements ActionListener {
 			return true;
 		}
 	}
-    public void saveThyself() {
-        //System.out.println("Daemon come out!");
-        try {
-            VectorExport.promptForVectorExport (ChartPane.getPane(), "PerfExplorer");
-        } catch (Exception e) {
-            System.out.println("File Export Failed!");
-        }
-        return;
-    }
-
 
     public void saveMain() {
         //System.out.println("Daemon come out!");

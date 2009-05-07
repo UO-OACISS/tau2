@@ -2,9 +2,8 @@ package edu.uoregon.tau.perfexplorer.client;
 
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Graphics2D;
+import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -15,39 +14,39 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
+import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.JToggleButton;
+import javax.swing.border.TitledBorder;
 import javax.swing.plaf.basic.BasicComboPopup;
 import javax.swing.plaf.basic.ComboPopup;
 import javax.swing.plaf.metal.MetalComboBoxUI;
 
 import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.axis.LogarithmicAxis;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.DefaultTableXYDataset;
 import org.jfree.data.xy.XYSeries;
 
-import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
@@ -57,13 +56,17 @@ import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData;
 import edu.uoregon.tau.perfexplorer.common.TransformationType;
 import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow;
 
-public class ChartPane extends JScrollPane implements ActionListener, ImageExport {
+public class ChartPane extends JScrollPane implements ActionListener {
 
 	/**
 	 * 
 	 */
 
 	private static final String IDEAL="Ideal";
+	
+//	private static int VALUE_DEX=0;
+//	private static int SCALA_DEX=1;
+//	private static int EFFIC_DEX=2;
 
 	private static final long serialVersionUID = -8971827392560223964L;
 	private static ChartPane thePane = null;
@@ -72,16 +75,32 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 	private JPanel mainPanel = null;
 	private ScriptFacade facade = null;
 	//private static String UPDATE_COMMAND = "UPDATE_COMMAND";
-	private JPanel chartPanel = null;
+	//private JPanel chartPanel = null;
 
-	private JToggleButton mainOnly = new JToggleButton ("Main Only");
-	private JToggleButton callPath = new JToggleButton ("Call Paths");
-	private JToggleButton logY = new JToggleButton ("Log Y");
-	private JToggleButton scalability = new JToggleButton ("Scalability");
-	private JToggleButton efficiency = new JToggleButton ("Efficiency");
-	private JToggleButton constantProblem = new JToggleButton ("Strong Scaling");
-	private JToggleButton horizontal = new JToggleButton ("Horizontal");
-	private JToggleButton showZero = new JToggleButton ("Show Y-Axis Zero");
+	private JCheckBox mainOnly = new JCheckBox  ("Main Only");
+	private JCheckBox  callPath = new JCheckBox  ("Call Paths");
+	private JCheckBox  logY = new JCheckBox ("Log Y");
+	
+	
+	//private JLabel chartTypeLabel = new JLabel("Chart Type:");
+	//private JComboBox chartType = new MyJComboBox();
+	
+	JRadioButton valueRB = new JRadioButton("Value Chart");
+	JRadioButton scalaRB = new JRadioButton("Scalability Chart");
+	JRadioButton efficRB = new JRadioButton("Efficency Chart");
+	ButtonGroup chartType = new ButtonGroup();
+	
+	JRadioButton strongScaling = new JRadioButton("Strong Scaling");
+	JRadioButton weakScaling = new JRadioButton("Weak Scaling");
+	ButtonGroup scalingType = new ButtonGroup();
+	
+//	private JRadioButton default = new JRadioButton ("Scalability");
+//	private JRadioButton scalability = new JRadioButton ("Scalability");
+//	private JRadioButton efficiency = new JRadioButton ("Efficiency");
+	
+	//private JCheckBox  constantProblem = new JCheckBox  ("Strong Scaling");
+	private JCheckBox  horizontal = new JCheckBox  ("Horizontal");
+	private JCheckBox  showZero = new JCheckBox  ("Show Y-Axis Zero");
 
 	private List<String> tableColumns = null;
 	private JLabel titleLabel = new JLabel("Chart Title:");
@@ -96,7 +115,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 	private JComboBox xaxisValue = null;
 	private JLabel yaxisValueLabel = new JLabel("Y Axis Value:");
 	private JComboBox yaxisValue = null;
-	private JLabel dimensionLabel = new JLabel("Dimension reduction:");
+	private JLabel dimensionLabel = new JLabel("Dimension Reduction Type:");
 	private JComboBox dimension = new MyJComboBox();
 	private JLabel dimensionXLabel = new JLabel("Cutoff (0<x<100):");
 	private JTextField dimensionXValue = new MyJTextField(5);
@@ -144,7 +163,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 
 	public static ChartPane getPane () {
 		if (thePane == null) {
-			JPanel mainPanel = new JPanel(new BorderLayout());
+			JPanel mainPanel = new JPanel(new GridLayout(1,3,10,5));
 			//mainPanel.setPreferredScrollableViewportSize(new Dimension(400, 400));
 			thePane = new ChartPane(mainPanel);
 		}
@@ -159,23 +178,303 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		this.facade = new ScriptFacade();
 		JScrollBar jScrollBar = this.getVerticalScrollBar();
 		jScrollBar.setUnitIncrement(35);
-		// create the top options
-		this.mainPanel.add(createTopMenu(), BorderLayout.NORTH);
+		this.tableColumns = server.getChartFieldNames();
 		// create the left options
-		this.mainPanel.add(createLeftMenu(), BorderLayout.WEST);
+		JPanel panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+		panel.add(createChartTypeMenu());
+		
+		panel.add(Box.createVerticalStrut(10));
+		panel.add(createDataMenu());
+		
+		panel.add(Box.createVerticalStrut(10));
+		panel.add(createButtonMenu());
+		
+		this.mainPanel.add(panel, BorderLayout.WEST);
+		
+		// create the top options
+		panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+		panel.add(createXAxisMenu());
+		
+		panel.add(Box.createVerticalStrut(10));
+		panel.add(createYAxisMenu());
+		this.mainPanel.add(panel, BorderLayout.CENTER);
+		
+		// create the right options
+		panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+		panel.add(createSeriesMenu());
+		
+		panel.add(Box.createVerticalStrut(10));
+		panel.add(createDimensionReductionMenu());
+
+		this.mainPanel.add(panel, BorderLayout.SOUTH);
+
 		// create the dummy chart panel
-		this.mainPanel.add(createChartPanel(), BorderLayout.CENTER);
+		//this.mainPanel.add(createChartPanel(), BorderLayout.CENTER);
 		resetChartSettings();
 	}
 
+	private JPanel createDimensionReductionMenu() {
+		// create a new panel, with a vertical box layout
+		JPanel panel = new JPanel();
+		TitledBorder tb = BorderFactory.createTitledBorder("Dimension Reduction");
+		panel.setBorder(tb);
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+		//left.setLayout(new FlowLayout(FlowLayout.LEFT));
+		//left.setLayout(new GridLayout(0,1,0,0));
+
+		panel.add(Box.createVerticalStrut(10));
+		// dimension reduction
+		panel.add(dimensionLabel);
+		Object[] dimensionOptions = TransformationType.getDimensionReductions();
+		dimension = new MyJComboBox(dimensionOptions);
+		dimension.addActionListener(this);
+		this.dimension.addActionListener(this);
+		panel.add(dimension);
+		
+		panel.add(Box.createVerticalStrut(10));
+		panel.add(dimensionXLabel);
+		this.dimensionXValue.addActionListener(this);
+		panel.add(dimensionXValue);
+
+		return (panel);
+	}
+	
+	
+	private JPanel createDataMenu() {
+		// create a new panel, with a vertical box layout
+		JPanel panel = new JPanel();
+		TitledBorder tb = BorderFactory.createTitledBorder("Chart Data");
+		panel.setBorder(tb);
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+		//left.setLayout(new FlowLayout(FlowLayout.LEFT));
+		//left.setLayout(new GridLayout(0,1,0,0));
+
+		panel.add(Box.createVerticalStrut(10));
+		// chart title
+		panel.add(titleLabel);
+		this.chartTitle.addActionListener(this);
+		panel.add(chartTitle);
+		
+		panel.add(Box.createVerticalStrut(10));
+		// metric of interest
+		panel.add(metricLabel);
+		metric = new MyJComboBox();
+		this.metric.addActionListener(this);
+		panel.add(metric);
+
+		panel.add(Box.createVerticalStrut(10));
+		// units of interest
+		panel.add(unitsLabel);
+		units = new MyJComboBox(unitOptions);
+		this.units.addActionListener(this);
+		this.units.setSelectedIndex(2);  // default to seconds
+		panel.add(this.units);
+
+		panel.add(Box.createVerticalStrut(10));
+		// event of interest
+		panel.add(eventLabel);
+		event = new MyJComboBox();
+		this.event.addActionListener(this);
+		panel.add(event);
+		
+		panel.add(Box.createVerticalStrut(10));
+		this.mainOnly.setToolTipText("Only select the \"main\" event (i.e. maximum inclusive)");
+		this.mainOnly.addActionListener(this);
+		panel.add(this.mainOnly);
+
+		panel.add(Box.createVerticalStrut(10));
+		this.callPath.setToolTipText("Include \"call path\" events (i.e. main() => foo())");
+		this.callPath.addActionListener(this);
+		panel.add(this.callPath);
+
+		return (panel);
+	}
+	
+	private JPanel createXAxisMenu() {
+		// create a new panel, with a vertical box layout
+		JPanel panel = new JPanel();
+		TitledBorder tb = BorderFactory.createTitledBorder("X Axis");
+		panel.setBorder(tb);
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+		//left.setLayout(new FlowLayout(FlowLayout.LEFT));
+		//left.setLayout(new GridLayout(0,1,0,0));
+
+		panel.add(Box.createVerticalStrut(10));
+		// x axis name
+		panel.add(xaxisNameLabel);
+		this.xaxisName.addActionListener(this);
+		panel.add(xaxisName);
+		
+		panel.add(Box.createVerticalStrut(10));
+		// x axis value
+		panel.add(xaxisValueLabel);
+		xaxisValue = new MyJComboBox(tableColumns.toArray());
+		xaxisValue.addActionListener(this);
+		this.xaxisValue.addActionListener(this);
+		panel.add(xaxisValue);
+		
+		panel.add(Box.createVerticalStrut(10));
+		// XML metadata
+		panel.add(xmlNameLabel);
+		xmlName = new MyJComboBox();
+		this.xmlName.addActionListener(this);
+		panel.add(xmlName);
+
+		panel.add(Box.createVerticalStrut(10));
+		panel.add(this.angleXLabels);
+		
+		panel.add(Box.createVerticalStrut(10));
+		panel.add(this.alwaysCategory);
+
+		return (panel);
+	}
+	
+	private JPanel createYAxisMenu() {
+		JPanel panel = new JPanel();
+		TitledBorder tb = BorderFactory.createTitledBorder("Y Axis");
+		panel.setBorder(tb);
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+		
+		panel.add(Box.createVerticalStrut(10));
+		// y axis name
+		panel.add(yaxisNameLabel);
+		this.yaxisName.addActionListener(this);
+		panel.add(yaxisName);
+		
+		panel.add(Box.createVerticalStrut(10));
+		// y axis value
+		panel.add(yaxisValueLabel);
+		String[] valueOptions = {"tmp"};// this will get reset in a few lines...
+		yaxisValue = new MyJComboBox(valueOptions);
+		this.yaxisValue.addActionListener(this);
+		resetYAxisValues(true);  // ...right here!
+		panel.add(yaxisValue);
+
+		panel.add(Box.createVerticalStrut(10));
+		// log y
+		this.logY.setToolTipText("Use a Logarithmic Y axis");
+		this.logY.addActionListener(this);
+		panel.add(this.logY);
+
+		panel.add(Box.createVerticalStrut(10));
+		// show 0
+		this.showZero.setToolTipText("Include zero value in y-axis range");
+		this.showZero.addActionListener(this);
+		panel.add(this.showZero);
+
+		return (panel);
+	}
+	
+	private JPanel createSeriesMenu() {
+		JPanel panel = new JPanel();
+		TitledBorder tb = BorderFactory.createTitledBorder("Series");
+		panel.setBorder(tb);
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+		panel.add(Box.createVerticalStrut(10));
+		// series name
+		panel.add(seriesLabel);
+		series = new MyJComboBox(tableColumns.toArray());
+		series.addItem(INTERVAL_EVENT_NAME);
+		series.addItem(INTERVAL_EVENT_GROUP_NAME);
+		series.addItem(ATOMIC_EVENT_NAME);
+		series.addActionListener(this);
+		panel.add(series);
+		
+		panel.add(Box.createVerticalStrut(10));
+		// series xml
+		panel.add(seriesXmlNameLabel);
+		seriesXmlName = new MyJComboBox();
+		this.seriesXmlName.addActionListener(this);
+		panel.add(seriesXmlName);
+
+
+		return (panel);
+	}
+	
+	
+	private JPanel createChartTypeMenu() {
+		JPanel panel = new JPanel();
+		
+		TitledBorder tb = BorderFactory.createTitledBorder("Chart Type");
+		panel.setBorder(tb);
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+		//This is necessary to make this panel fill the column, but I'm not sure why...
+		panel.setAlignmentX(CENTER_ALIGNMENT);
+		
+		
+		panel.add(Box.createVerticalStrut(10));
+//		panel.add(this.chartTypeLabel);
+//		this.chartType.addItem("Value");
+//		this.chartType.addItem("Scalability");
+//		this.chartType.addItem("Efficency");
+//		this.chartType.setSelectedIndex(VALUE_DEX);
+//		panel.add(this.chartType);
+		panel.add(valueRB);
+		panel.add(scalaRB);
+		panel.add(efficRB);
+		chartType.add(valueRB);
+		chartType.add(scalaRB);
+		chartType.add(efficRB);
+//		JLabel l = new JLabel("---");
+//		panel.add(l);
+//		l.setVisible(false);
+		panel.add(Box.createVerticalStrut(10));
+		panel.add(weakScaling);
+		panel.add(strongScaling);
+		scalingType.add(strongScaling);
+		scalingType.add(weakScaling);
+		panel.add(Box.createVerticalStrut(10));
+//		this.constantProblem.setToolTipText("Scaling type (Strong Scaling or Weak Scaling)");
+//		this.constantProblem.addActionListener(this);
+//		panel.add(this.constantProblem);
+
+		this.horizontal.setToolTipText("Create a horizontal chart");
+		this.horizontal.addActionListener(this);
+		panel.add(this.horizontal);
+		
+		// excl100.setToolTipText("");
+		// top.add(excl100);
+		
+		return (panel);
+	}
+	
+	
+	private JPanel createButtonMenu() {
+		JPanel panel = new JPanel();
+		//TitledBorder tb = BorderFactory.createTitledBorder("Chart");
+		//panel.setBorder(tb);
+		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+		
+		// apply button
+		apply = new JButton ("Apply");
+		apply.setToolTipText("Apply changes and redraw chart");
+		apply.addActionListener(this);
+		panel.add(apply);
+
+		// reset button
+		reset = new JButton ("Reset");
+		reset.setToolTipText("Change back to default settings");
+		reset.addActionListener(this);
+		panel.add(reset);
+		
+		return (panel);
+	}
+	
 	private void resetChartSettings() {
 		// top toggle buttons
 		this.mainOnly.setSelected(true);
 		this.callPath.setSelected(false);
 		this.logY.setSelected(false);
-		this.scalability.setSelected(false);
-		this.efficiency.setSelected(false);
-		this.constantProblem.setSelected(false);
+		//chartType.setSelectedIndex(0);
+		valueRB.setSelected(true);
+		//this.scalability.setSelected(false);
+		//this.efficiency.setSelected(false);
+		//this.constantProblem.setSelected(false);
+		weakScaling.setSelected(true);
 		this.horizontal.setSelected(false);
 		this.showZero.setSelected(true);
 		// left text fields
@@ -379,163 +678,6 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		return;
 	}
 
-	private JPanel createTopMenu() {
-		JPanel top = new JPanel();
-		top.setLayout(new BoxLayout(top, BoxLayout.X_AXIS));
-
-		this.mainOnly.setToolTipText("Only select the \"main\" event (i.e. maximum inclusive)");
-		this.mainOnly.addActionListener(this);
-		top.add(this.mainOnly);
-
-		this.callPath.setToolTipText("Include \"call path\" events (i.e. main() => foo())");
-		this.callPath.addActionListener(this);
-		top.add(this.callPath);
-
-		// excl100.setToolTipText("");
-		// top.add(excl100);
-
-		this.logY.setToolTipText("Use a Logarithmic Y axis");
-		this.logY.addActionListener(this);
-		top.add(this.logY);
-
-		this.scalability.setToolTipText("Create a Scalability Chart");
-		this.scalability.addActionListener(this);
-		top.add(this.scalability);
-
-		this.efficiency.setToolTipText("Create a Relative Efficiency Chart");
-		this.efficiency.addActionListener(this);
-		top.add(this.efficiency);
-
-		this.constantProblem.setToolTipText("Scaling type (Strong Scaling or Weak Scaling)");
-		this.constantProblem.addActionListener(this);
-		top.add(this.constantProblem);
-
-		this.horizontal.setToolTipText("Create a horizontal chart");
-		this.horizontal.addActionListener(this);
-		top.add(this.horizontal);
-
-		this.showZero.setToolTipText("Include zero value in y-axis range");
-		this.showZero.addActionListener(this);
-		top.add(this.showZero);
-
-		return (top);
-	}
-
-	private JPanel createLeftMenu() {
-		// create a new panel, with a vertical box layout
-		JPanel left = new JPanel();
-		left.setLayout(new BoxLayout(left, BoxLayout.Y_AXIS));
-		//left.setLayout(new FlowLayout(FlowLayout.LEFT));
-		//left.setLayout(new GridLayout(0,1,0,0));
-
-		// chart title
-		left.add(titleLabel);
-		this.chartTitle.addActionListener(this);
-		left.add(chartTitle);
-
-		this.tableColumns = server.getChartFieldNames();
-
-		// series name
-		left.add(seriesLabel);
-		series = new MyJComboBox(tableColumns.toArray());
-		series.addItem(INTERVAL_EVENT_NAME);
-		series.addItem(INTERVAL_EVENT_GROUP_NAME);
-		series.addItem(ATOMIC_EVENT_NAME);
-		series.addActionListener(this);
-		left.add(series);
-
-		// x axis value
-		left.add(xaxisValueLabel);
-		xaxisValue = new MyJComboBox(tableColumns.toArray());
-		xaxisValue.addActionListener(this);
-		this.xaxisValue.addActionListener(this);
-		left.add(xaxisValue);
-		left.add(xaxisNameLabel);
-		this.xaxisName.addActionListener(this);
-		left.add(xaxisName);
-
-		// y axis value
-		left.add(yaxisValueLabel);
-		String[] valueOptions = {"tmp"};// this will get reset in a few lines...
-		yaxisValue = new MyJComboBox(valueOptions);
-		this.yaxisValue.addActionListener(this);
-		resetYAxisValues(true);  // ...right here!
-		left.add(yaxisValue);
-		left.add(yaxisNameLabel);
-		this.yaxisName.addActionListener(this);
-		left.add(yaxisName);
-
-		// dimension reduction
-		left.add(dimensionLabel);
-		Object[] dimensionOptions = TransformationType.getDimensionReductions();
-		dimension = new MyJComboBox(dimensionOptions);
-		dimension.addActionListener(this);
-		this.dimension.addActionListener(this);
-		left.add(dimension);
-		left.add(dimensionXLabel);
-		this.dimensionXValue.addActionListener(this);
-		left.add(dimensionXValue);
-
-		// metric of interest
-		left.add(metricLabel);
-		metric = new MyJComboBox();
-		this.metric.addActionListener(this);
-		left.add(metric);
-
-		// units of interest
-		left.add(unitsLabel);
-		units = new MyJComboBox(unitOptions);
-		this.units.addActionListener(this);
-		this.units.setSelectedIndex(2);  // default to seconds
-		left.add(this.units);
-
-		// event of interest
-		left.add(eventLabel);
-		event = new MyJComboBox();
-		this.event.addActionListener(this);
-		left.add(event);
-
-		// XML metadata
-		left.add(seriesXmlNameLabel);
-		seriesXmlName = new MyJComboBox();
-		this.seriesXmlName.addActionListener(this);
-		left.add(seriesXmlName);
-
-		left.add(xmlNameLabel);
-		xmlName = new MyJComboBox();
-		this.xmlName.addActionListener(this);
-		left.add(xmlName);
-
-		left.add(this.angleXLabels);
-		left.add(this.alwaysCategory);
-		//left.add(xmlValueLabel);
-		//xmlValue = new MyJComboBox();
-		//left.add(xmlValue);
-
-		// apply button
-		apply = new JButton ("Apply");
-		apply.setToolTipText("Apply changes and redraw chart");
-		apply.addActionListener(this);
-		left.add(apply);
-
-		// reset button
-		reset = new JButton ("Reset");
-		reset.setToolTipText("Change back to default settings");
-		reset.addActionListener(this);
-		left.add(reset);
-
-		return (left);
-	}
-
-	private JPanel createChartPanel() {
-		this.chartPanel = new JPanel(new BorderLayout());
-		return (this.chartPanel);
-	}
-
-	public JPanel getChartPanel() {
-		return (this.chartPanel);
-	}
-
 	private void updateChart () {
 		// the user has selected the application, experiment, trial 
 		// from the navigation tree.  Now set the other parameters.
@@ -695,18 +837,14 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 
 		facade.setChartEventNoCallPath(this.callPath.isSelected()?0:1); //reversed logic
 		facade.setChartLogYAxis(this.logY.isSelected()?1:0);
-		facade.setChartScalability(this.scalability.isSelected()?1:0);
-		facade.setChartEfficiency(this.efficiency.isSelected()?1:0);
-		facade.setChartConstantProblem(this.constantProblem.isSelected()?1:0);
+		facade.setChartScalability(this.scalaRB.isSelected()?1:0);
+		facade.setChartEfficiency(this.efficRB.isSelected()?1:0);
+		facade.setChartConstantProblem(this.strongScaling.isSelected()?1:0);
 		facade.setChartHorizontal(this.horizontal.isSelected()?1:0);
 		facade.setShowZero(this.showZero.isSelected()?1:0);
 
 		// create the Chart
-		this.chartPanel.setVisible(false);
-		this.chartPanel.removeAll();
-		this.chartPanel.add(new ChartPanel(doGeneralChart()), BorderLayout.CENTER);
-		this.repaint();
-		this.chartPanel.setVisible(true);
+		doGeneralChart();
 	}
 
 	public void actionPerformed(ActionEvent e) {
@@ -728,20 +866,6 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 			}
 		} else if (source == reset) {
 			resetChartSettings();
-		} else if (source == scalability) {
-			if (scalability.isSelected()) {
-				efficiency.setSelected(false);
-			}
-		} else if (source == efficiency) {
-			if (efficiency.isSelected()) {
-				scalability.setSelected(false);
-			}
-		} else if (source == constantProblem) {
-			if (constantProblem.isSelected()) {
-				constantProblem.setText("Weak Scaling");
-			} else {
-				constantProblem.setText("Strong Scaling");
-			}
 		} else if (source == mainOnly) {
 			if (mainOnly.isSelected()) {
 				this.eventLabel.setEnabled(false);
@@ -852,7 +976,7 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 	 * the x-axis, and some measurement on the y-axis.
 	 *
 	 */
-	private JFreeChart doGeneralChart () {
+	private PerfExplorerChart doGeneralChart () {
 
 		// get the data
 		PerfExplorerModel model = PerfExplorerModel.getModel();
@@ -1076,9 +1200,9 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 			customizeCategoryChart(model, rawData, chart);
 		}
 
-		//PerfExplorerChart pec = new PerfExplorerChart(chart, model.getChartTitle());
+		PerfExplorerChart pec = new PerfExplorerChart(chart, model.getChartTitle());
 		
-		return chart;
+		return pec;
 	}
 
 	private void customizeLineChart(PerfExplorerModel model,RMIGeneralChartData rawData, JFreeChart chart) {
@@ -1170,15 +1294,6 @@ public class ChartPane extends JScrollPane implements ActionListener, ImageExpor
 		}
 	}
 
-	public Dimension getImageSize(boolean fullScreen, boolean header) {
-		return this.getChartPanel().getSize();
-	}
-
-	public void export(Graphics2D g2D, boolean toScreen, boolean fullWindow, boolean drawHeader) {
-		this.getChartPanel().setDoubleBuffered(false);
-		this.getChartPanel().paintAll(g2D);
-		this.getChartPanel().setDoubleBuffered(true);
-	}
 
 	private String shortName(String longName) {
 		StringTokenizer st = new StringTokenizer(longName, "(");
