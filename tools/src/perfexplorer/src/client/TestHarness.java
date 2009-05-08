@@ -22,7 +22,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIView;
 import edu.uoregon.tau.perfexplorer.common.TransformationType;
 
 public class TestHarness {
-	private static String USAGE = "Usage: TestHarness [{-h,--help}] {-c,--configfile}=<config_file> [{-s,--standalone}] [{-e,--engine}=<analysis_engine>] [{-t,--test}=<test_type>]\n  where analysis_engine = R or Weka and test_type = charts, cluster, correlation, viz, script or all ";
+	private static String USAGE = "Usage: TestHarness [{-h,--help}] {-c,--configfile}=<config_file> [{-s,--standalone}] [{-t,--test}=<test_type>]\n  where test_type = charts, cluster, correlation, viz, script or all ";
 	private PerfExplorerConnection connection = null;
 	private RMIPerfExplorerModel model = null;
 	private Object[] viewList = null;
@@ -432,7 +432,6 @@ public RMICubeData getCubeData(RMIPerfExplorerModel model) throws RemoteExceptio
 		CmdLineParser.Option helpOpt = parser.addBooleanOption('h',"help");
 		CmdLineParser.Option standaloneOpt = parser.addBooleanOption('s',"standalone");
 		CmdLineParser.Option configfileOpt = parser.addStringOption('c',"configfile");
-		CmdLineParser.Option engineOpt = parser.addStringOption('e',"engine");
 		CmdLineParser.Option quietOpt = parser.addBooleanOption('q',"quiet");
 		CmdLineParser.Option testOpt = parser.addStringOption('t',"test");
 
@@ -447,7 +446,6 @@ public RMICubeData getCubeData(RMIPerfExplorerModel model) throws RemoteExceptio
 		Boolean help = (Boolean) parser.getOptionValue(helpOpt);
 		Boolean standalone = (Boolean) parser.getOptionValue(standaloneOpt);
 		String configFile = (String) parser.getOptionValue(configfileOpt);
-		String engine = (String) parser.getOptionValue(engineOpt);
 		Boolean quiet = (Boolean) parser.getOptionValue(quietOpt);
 		String test = (String) parser.getOptionValue(testOpt);
 

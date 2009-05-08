@@ -35,7 +35,7 @@ import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 import edu.uoregon.tau.perfexplorer.common.ScriptThread;
 
 public class PerfExplorerClient extends JFrame implements ImageExport {
-	private static String USAGE = "\nPerfExplorer\n****************************************************************************\nUsage: perfexplorer [OPTIONS]\nwhere [OPTIONS] are:\n[{-h,--help}]  ............................................ print this help.\n[{-g,--configfile}=<config_file>] .. specify one PerfDMF configuration file.\n[{-c,--config}=<config_name>] ........... specify one PerfDMF configuration.\n[{-e,--engine}=<analysis_engine>] ......  where analysis_engine = R or Weka.\n[{-n,--nogui}] ..................................................... no GUI.\n[{-i,--script}=<script_name>] ................ execute script <script_name>.\n";
+	private static String USAGE = "\nPerfExplorer\n****************************************************************************\nUsage: perfexplorer [OPTIONS]\nwhere [OPTIONS] are:\n[{-h,--help}]  ............................................ print this help.\n[{-g,--configfile}=<config_file>] .. specify one PerfDMF configuration file.\n[{-c,--config}=<config_name>] ........... specify one PerfDMF configuration.\n[{-n,--nogui}] ..................................................... no GUI.\n[{-i,--script}=<script_name>] ................ execute script <script_name>.\n";
 
 	private ActionListener listener = null;
 	private static PerfExplorerClient mainFrame = null;
@@ -150,7 +150,6 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		CmdLineParser.Option configfileOpt = parser.addStringOption('g',"configfile");
 		CmdLineParser.Option configOpt = parser.addStringOption('c',"config");
 		// assume weka if not specified.
-		CmdLineParser.Option engineOpt = parser.addStringOption('e',"engine");
 		CmdLineParser.Option quietOpt = parser.addBooleanOption('v',"verbose");
         CmdLineParser.Option tauHomeOpt = parser.addStringOption('t', "tauhome");
         CmdLineParser.Option tauArchOpt = parser.addStringOption('a', "tauarch");
@@ -172,7 +171,6 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		Boolean clientOnly = (Boolean) parser.getOptionValue(clientOnlyOpt);
 		String configFile = (String) parser.getOptionValue(configfileOpt);
 		String config = (String) parser.getOptionValue(configOpt);
-		String engine = (String) parser.getOptionValue(engineOpt);
 		Boolean quiet = (Boolean) parser.getOptionValue(quietOpt);
         PerfExplorerClient.tauHome = (String) parser.getOptionValue(tauHomeOpt);
         PerfExplorerClient.tauArch = (String) parser.getOptionValue(tauArchOpt);

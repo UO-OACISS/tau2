@@ -1,18 +1,10 @@
 /**
- * 
+ *
  */
 package server;
 
 import clustering.*;
-#ifdef USE_WEKA_ENGINE
-import clustering.weka.WekaAnalysisFactory;
-#endif
-#ifdef USE_R_ENGINE
-import clustering.r.RAnalysisFactory;
-#endif
-#ifdef USE_OCTAVE_ENGINE
-import clustering.octave.RAnalysisFactory;
-#endif
+import clustering.weka.AnalysisFactory;
 import common.*;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.database.*;
@@ -53,8 +45,8 @@ import org.jfree.data.xy.XYDataset;
  * This class is intended to be a wrapper around data mining operations
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
- * 
- * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.18 2009/03/02 19:23:51 khuck Exp $</P>
+ *
+ * <P>CVS $Id: AnalysisTaskWrapper.cpp,v 1.19 2009/05/08 23:36:38 wspear Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -62,8 +54,7 @@ import org.jfree.data.xy.XYDataset;
 public class AnalysisTaskWrapper extends TimerTask {
 
 	private ChartType chartType = ChartType.DENDROGRAM;
-	private AnalysisFactory factory = null;
-	
+
 	private RMIPerfExplorerModel modelData = null;
 	private PerfExplorerServer server = null;
 	private int analysisID = 0;
@@ -82,35 +73,19 @@ public class AnalysisTaskWrapper extends TimerTask {
 
 	/**
 	 * Constructor.  The engine parameter passed in specifies which analysis
-	 * engine to use. 
-	 * 
+	 * engine to use.
+	 *
 	 * @param server
 	 * @param engine
 	 */
-	public AnalysisTaskWrapper (PerfExplorerServer server, EngineType engine) {
+	public AnalysisTaskWrapper (PerfExplorerServer server) {
 		super();
 		this.server = server;
-#ifdef USE_WEKA_ENGINE
-		if (engine == EngineType.WEKA)
-			factory = WekaAnalysisFactory.getFactory();
-#endif
-#ifdef USE_R_ENGINE
-		if (engine == EngineType.RPROJECT)
-			factory = RAnalysisFactory.getFactory();
-#endif
-#ifdef USE_OCTAVE_ENGINE
-		if (engine == EngineType.OCTAVE)
-			factory = OctaveAnalysisFactory.getFactory();
-#endif
-		if (factory == null) {
-			System.out.println("Undefined analysis engine type.");
-			System.exit(1);
-		}
 	}
 
 	/**
 	 * This method saves the analysis results in the database.
-	 * 
+	 *
 	 * @param description
 	 * @param fileName
 	 * @param thumbnail
@@ -156,7 +131,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 
 	/**
 	 * This method saves the analysis results in the database.
-	 * 
+	 *
 	 * @param centroids
 	 * @param deviations
 	 * @param thumbnail
@@ -196,11 +171,11 @@ public class AnalysisTaskWrapper extends TimerTask {
 		   	tmpStr = "select IDENTITY_VAL_LOCAL() FROM analysis_result";
 			} else if (db.getDBType().compareTo("oracle") == 0) {
 		   	tmpStr = "SELECT ar_id_seq.currval FROM DUAL";
-			} else { // postgresql 
+			} else { // postgresql
 		   	tmpStr = "select currval('analysis_result_id_seq');";
 			}
 			int analysisResultID = Integer.parseInt(db.getDataItem(tmpStr));
-			
+
 			buf = new StringBuilder();
 			buf.append("insert into analysis_result_data ");
 			buf.append(" (interval_event, metric, value, data_type, analysis_result, cluster_index)");
@@ -233,9 +208,9 @@ public class AnalysisTaskWrapper extends TimerTask {
 
 	/**
 	 * This method gets the constant values for the data.  In order to retrieve
-	 * the data correctly, it is necessary to get the number of events, metrics, 
+	 * the data correctly, it is necessary to get the number of events, metrics,
 	 * threads, and the total number of rows of data we are expecting.
-	 * 
+	 *
 	 * @throws PerfExplorerException
 	 */
 	private void getConstants () throws PerfExplorerException {
@@ -259,7 +234,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 				sql.append("inner join interval_mean_summary s ");
 				sql.append("on e.id = s.interval_event and s.metric = p.metric ");
 				sql.append("and s.exclusive_percentage > ");
-				sql.append("" + modelData.getXPercent() + "");	
+				sql.append("" + modelData.getXPercent() + "");
 			//} else if (modelData.getCurrentSelection() instanceof Metric) {
 				//sql.append("inner join interval_mean_summary s ");
 				//sql.append("on e.id = s.interval_event and s.metric = p.metric ");
@@ -395,12 +370,12 @@ public class AnalysisTaskWrapper extends TimerTask {
 
 	/**
 	 * This method gets the raw performance data from the database.
-	 * 
+	 *
 	 * @throws PerfExplorerException
 	 */
 	private void getRawData () throws PerfExplorerException {
 		System.out.print("Getting raw data...");
-		rawData = factory.createRawData("Cluster Test", eventIDs, numTotalThreads, numEvents);
+		rawData = AnalysisFactory.createRawData("Cluster Test", eventIDs, numTotalThreads, numEvents);
 		ResultSet results = null;
 		int currentFunction = 0;
 		int functionIndex = -1;
@@ -417,7 +392,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 				sql.append(contexts * threads);
 				sql.append(") + (p.context*");
 				sql.append(threads);
-                
+
                 if (db.getDBType().compareTo("oracle") == 0) {
                     sql.append(") + p.thread as thread, p.metric as metric, p.excl/1000000, ");
                 } else {
@@ -435,7 +410,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 			} else {
 				sql.append("select e.id, (p.node*" + (contexts * threads) + "");
 				sql.append(") + (p.context*" + threads + "");
-                
+
                 if (db.getDBType().compareTo("oracle") == 0) {
                     sql.append(") + p.thread as thread, p.metric as metric, p.excl, ");
                 } else {
@@ -467,7 +442,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 			// get the rows
 			while (results.next() != false) {
 				if (!(modelData.getDimensionReduction().equals(
-					TransformationType.OVER_X_PERCENT)) || 
+					TransformationType.OVER_X_PERCENT)) ||
 					(results.getDouble(7) > modelData.getXPercent())) {
 					if (currentFunction != results.getInt(importantIndex)) {
 						functionIndex++;
@@ -477,7 +452,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 					rawData.addValue(threadIndex, functionIndex, results.getDouble(4));
 					if (maximum < results.getDouble(4))
 						maximum = results.getDouble(4);
-				} 
+				}
 				// if this is the main method, save its values
 				if (results.getDouble(6) == 100.0) {
 					rawData.addMainValue(threadIndex, functionIndex, results.getDouble(5));
@@ -508,7 +483,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 	/**
 	 * This method creates the dendrogram tree which represents the results
 	 * of the hierarchical clustering, if it was done.
-	 * 
+	 *
 	 * @param merge
 	 * @param height
 	 * @return
@@ -547,7 +522,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 		// for now, just return the original data.
 		return rawData;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see java.lang.Runnable#run()
 	 */
@@ -571,7 +546,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 					for (int i = 2 ; i <= maxClusters ; i++) {
 						System.out.println("Doing " + i + " clusters:" + modelData.toString());
 						// create a cluster engine
-						KMeansClusterInterface clusterer = factory.createKMeansEngine();
+						KMeansClusterInterface clusterer = AnalysisFactory.createKMeansEngine();
 						clusterer.setInputData(reducedData);
 						clusterer.setK(i);
 						clusterer.findClusters();
@@ -585,11 +560,11 @@ public class AnalysisTaskWrapper extends TimerTask {
 						// TODO - fix this to save the cluster sizes, too!
 						chartType = ChartType.HISTOGRAM;
 						saveAnalysisResult(centroids, deviations, thumbnail, chart);
-						
+
 						if (modelData.getCurrentSelection() instanceof Metric) {
 						// do PCA breakdown
 						PrincipalComponentsAnalysisInterface pca =
-						factory.createPCAEngine(server.getCubeData(modelData));
+						AnalysisFactory.createPCAEngine(server.getCubeData(modelData));
 						pca.setInputData(reducedData);
 						pca.doPCA();
 						// get the components
@@ -606,13 +581,13 @@ public class AnalysisTaskWrapper extends TimerTask {
 						chart = generateImage(components, clusters);
 						saveAnalysisResult(components, components, thumbnail, chart);
 						}
-						
+
 						// do virtual topology
 						VirtualTopology vt = new VirtualTopology(modelData, clusterer);
 						String filename = vt.getImage();
 						String nail = vt.getThumbnail();
 						saveAnalysisResult("Virtual Topology", filename, nail, false);
-						
+
 						// do mins
 						chartType = ChartType.CLUSTER_MINIMUMS;
 						thumbnail = generateThumbnail(clusterer.getClusterMinimums(), deviations, eventIDs);
@@ -640,7 +615,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 						rCorrelation = reducedData.getCorrelation(i,i);
 						File thumbnail = generateThumbnail(reducedData, i, i);
 						File chart = generateImage(reducedData, i, i);
-						saveAnalysisResult(reducedData, reducedData, thumbnail, chart);	
+						saveAnalysisResult(reducedData, reducedData, thumbnail, chart);
 						correlateToMain = false;
 					}
 					*/
@@ -649,7 +624,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 							rCorrelation = reducedData.getCorrelation(i,j);
 							File thumbnail = generateThumbnail(reducedData, i, j);
 							File chart = generateImage(reducedData, i, j);
-							saveAnalysisResult(reducedData, reducedData, thumbnail, chart);	
+							saveAnalysisResult(reducedData, reducedData, thumbnail, chart);
 						}
 						//System.out.println("Finished: " + (i+1) + " of " + reducedData.numDimensions());
 					}
@@ -660,13 +635,13 @@ public class AnalysisTaskWrapper extends TimerTask {
 			// let the server (main thread) know we are done
 			server.taskFinished();
 			modelData = null;
-		} // else 
+		} // else
 			//System.out.println("nothing to do... ");
-			
+
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param centroids
 	 * @param deviations
 	 * @param rowLabels
@@ -834,7 +809,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 			Function2D curve = new LineFunction2D(coefficients[0], coefficients[1]);
 			Range range = DatasetUtilities.findDomainExtent(data);
 			XYDataset regressionData = DatasetUtilities.sampleFunction2D(
-				curve, range.getLowerBound(), range.getUpperBound(), 
+				curve, range.getLowerBound(), range.getUpperBound(),
 				100, "Fitted Linear Regression Line");
 			plot.setDataset(1, regressionData);
 			XYItemRenderer lineRenderer = new DefaultXYItemRenderer();
@@ -845,7 +820,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 			double[] powerCoefficients = Regression.getPowerRegression(data, 0);
 			Function2D powerCurve = new PowerFunction2D(powerCoefficients[0], powerCoefficients[1]);
 			XYDataset powerRegressionData = DatasetUtilities.sampleFunction2D(
-				powerCurve, range.getLowerBound(), range.getUpperBound(), 
+				powerCurve, range.getLowerBound(), range.getUpperBound(),
 				100, "Fitted Power Regression Line");
 			plot.setDataset(2, powerRegressionData);
 			XYItemRenderer powerLineRenderer = new DefaultXYItemRenderer();
@@ -855,7 +830,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 			plot.getDomainAxis().setRange(range);
 			plot.getRangeAxis().setRange(range);
 
-			JFreeChart chart = new JFreeChart("Correlation Results: r = " + 
+			JFreeChart chart = new JFreeChart("Correlation Results: r = " +
 				rCorrelation, JFreeChart.DEFAULT_TITLE_FONT, plot, true);
 
 
