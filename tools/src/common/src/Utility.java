@@ -45,7 +45,9 @@ public class Utility {
         
         //Set legend label font size to 16
         LegendTitle l = chart.getLegend();
-        l.setItemFont(new Font(null, Font.PLAIN,16));
+        if(l!=null){
+        	l.setItemFont(new Font(null, Font.PLAIN,16));
+        }
         
         Plot plot = chart.getPlot();
         
@@ -77,8 +79,17 @@ public class Utility {
      * @param axis
      */
     private static void setAxisFont(Axis axis){
+    	if(axis==null){
+    		return;
+    	}
     	Font f = axis.getLabelFont();
-    	f=f.deriveFont((float) 16.0);
+    	if(f==null){
+    		f=new Font(null, Font.PLAIN,16);
+    	}
+    	else
+    	{
+    		f=f.deriveFont((float) 16.0);
+    	}
     	axis.setLabelFont(f);
     }
 }
