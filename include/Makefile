@@ -791,8 +791,9 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 ##############################################
 # These flags will only be used for the TAU library, not the users's code
 
-#USE_IBMXLC#TAU_BGP_INTERNAL_FLAG1    = -qpic=large -DTAU_IBM_XLC_BGP #ENDIF#
-#BGP#TAU_INTERNAL_FLAG1    = $(TAU_BGP_INTERNAL_FLAG1) #ENDIF#
+# Removed -qpic=large from below, it causes the static XLC to fail with undefined CONSTANT_AREA
+#USE_IBMXLC#TAU_BGP_INTERNAL_FLAG1 =  -DTAU_IBM_XLC_BGP #ENDIF#
+#BGP#TAU_INTERNAL_FLAG1 = $(TAU_BGP_INTERNAL_FLAG1) #ENDIF#
 #GNU#TAU_INTERNAL_FLAG1             = -fPIC #ENDIF#
 #USE_PATHCC#TAU_INTERNAL_FLAG1      = -fPIC #ENDIF#
 #USE_INTELCXX#TAU_INTERNAL_FLAG1    = -fPIC #ENDIF#
