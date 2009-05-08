@@ -136,10 +136,10 @@ static void read_env_vars() {
 
   if (taumetrics) {
     char *metrics = strdup(taumetrics);
-    token = strtok(metrics, ":");
+    token = strtok(metrics, ":,");
     while (token) {
       metricv_add(token);
-      token = strtok(NULL, ":");
+      token = strtok(NULL, ":,");
     }
   } else {
     char counterName[256];
