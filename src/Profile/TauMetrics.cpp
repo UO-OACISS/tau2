@@ -261,6 +261,8 @@ static void initialize_functionArray() {
 #endif
     } else if (compareMetricString(metricv[i],"BGL_TIMERS")){
       functionArray[pos++] = metric_read_bgtimers;
+    } else if (compareMetricString(metricv[i],"BGP_TIMERS")){
+      functionArray[pos++] = metric_read_bgtimers;
     } else if (compareMetricString(metricv[i],"CRAY_TIMERS")){
       functionArray[pos++] = metric_read_craytimers;
     } else if (compareMetricString(metricv[i],"TAU_MPI_MESSAGE_SIZE")){
