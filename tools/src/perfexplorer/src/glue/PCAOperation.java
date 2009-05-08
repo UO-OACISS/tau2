@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfexplorer.clustering.AnalysisFactory;
 import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
 import edu.uoregon.tau.perfexplorer.clustering.PrincipalComponentsAnalysisInterface;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
 import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 /**
@@ -53,14 +53,12 @@ public class PCAOperation extends AbstractPerformanceOperation {
 	 * @see glue.PerformanceAnalysisOperation#processData()
 	 */
 	public List<PerformanceResult> processData() {
-	    AnalysisFactory factory = null;
 	    PerfExplorerServer server = null;
         server = PerfExplorerServer.getServer();
-        factory = server.getAnalysisFactory();
 
         for (PerformanceResult input : inputs) {
         	List<String> eventList = new ArrayList<String>(input.getEvents());
-        	RawDataInterface data = factory.createRawData("Cluster Test", eventList, input.getThreads().size(), eventList.size(), null);
+        	RawDataInterface data = AnalysisFactory.createRawData("Cluster Test", eventList, input.getThreads().size(), eventList.size(), null);
     		for(Integer thread : input.getThreads()) {
             	int eventIndex = 0;
             	for (String event : eventList) {
@@ -70,7 +68,7 @@ public class PCAOperation extends AbstractPerformanceOperation {
         			}
         		}
         	}
-    		PrincipalComponentsAnalysisInterface clusterer = factory.createPCAEngine(data);
+    		PrincipalComponentsAnalysisInterface clusterer = AnalysisFactory.createPCAEngine(data);
 			clusterer.setMaxComponents(this.maxComponents);
 			try {
 				clusterer.doPCA();

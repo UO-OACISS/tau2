@@ -154,7 +154,7 @@ public class DifferenceMetadataOperation implements SelfAsserting {
 		if (handle == null) {
 			System.err.println("HANDLE NOT FOUND for " + factName + ", " + NAME);
 		} else {
-			ruleHarness.retractObject(handle);
+			RuleHarness.retractObject(handle);
 		}
 	}
 	

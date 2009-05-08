@@ -13,7 +13,6 @@ import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.common.ChartDataType;
-import edu.uoregon.tau.perfexplorer.common.EngineType;
 import edu.uoregon.tau.perfexplorer.common.RMIChartData;
 import edu.uoregon.tau.perfexplorer.common.RMICubeData;
 import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData;
@@ -32,7 +31,6 @@ public class PerfExplorerConnection {
     private RMIPerfExplorer server = null;
     private static boolean standalone = true;
     private static String configFile = null;
-    private static EngineType analysisEngine = EngineType.WEKA;
     private int connectionIndex = 0;
 
     private PerfExplorerConnection () {
@@ -41,7 +39,7 @@ public class PerfExplorerConnection {
 
 	private void makeConnection() {
 		if (standalone) {
-	    	server = PerfExplorerServer.getServer(configFile, analysisEngine);
+	    	server = PerfExplorerServer.getServer(configFile);
 		} else {
 	    	if (System.getSecurityManager() == null) {
 				System.setSecurityManager(new RMISecurityManager());
@@ -69,10 +67,6 @@ public class PerfExplorerConnection {
 	PerfExplorerConnection.configFile = configFile;
     }
 	
-    public static void setAnalysisEngine(EngineType analysisEngine) {
-	PerfExplorerConnection.analysisEngine = analysisEngine;
-    }
-
     public static PerfExplorerConnection getConnection() {
 	if (theConnection == null) {
 	    theConnection = new PerfExplorerConnection();

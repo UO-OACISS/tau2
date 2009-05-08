@@ -36,13 +36,10 @@ import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.database.DB;
-import edu.uoregon.tau.perfexplorer.clustering.AnalysisFactory;
-import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
 import edu.uoregon.tau.perfexplorer.common.AnalysisType;
 import edu.uoregon.tau.perfexplorer.common.ChartDataType;
 import edu.uoregon.tau.perfexplorer.common.ChartType;
 import edu.uoregon.tau.perfexplorer.common.ConfigureFiles;
-import edu.uoregon.tau.perfexplorer.common.EngineType;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerException;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 import edu.uoregon.tau.perfexplorer.common.RMIChartData;
@@ -63,7 +60,7 @@ import edu.uoregon.tau.perfexplorer.constants.Constants;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.80 2009/04/05 23:59:28 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.81 2009/05/08 22:45:22 wspear Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -73,7 +70,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * 
 	 */
 	private static final long serialVersionUID = 6257362740066518307L;
-	private static String USAGE = "Usage: PerfExplorerClient [{-h,--help}] {-c,--configfile}=<config_file> [{-e,--engine}=<analysis_engine>] [{-p,--port}=<port_number>]\n  where analysis_engine = R or Weka";
+	private static String USAGE = "Usage: PerfExplorerClient [{-h,--help}] {-c,--configfile}=<config_file> [{-p,--port}=<port_number>]\n ";
 	private DatabaseAPI session = null;
 	private List<DatabaseAPI> sessions = new ArrayList<DatabaseAPI>();
 	private List<String> configNames = new ArrayList<String>();
@@ -82,10 +79,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	private List<Thread> timerThreads = new ArrayList<Thread>();
 	private List<TimerThread> timers = new ArrayList<TimerThread>();
 	private static PerfExplorerServer theServer = null;
-	private AnalysisFactory factory = null;
-	private EngineType engineType;
 	private String configFile;
-	private EngineType analysisEngine;
 
 	/**
 	 * Static method to get the server instance reference.
@@ -110,10 +104,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param configFile
 	 * @return
 	 */
-	public static PerfExplorerServer getServer (String configFile, EngineType analysisEngine) {
+	public static PerfExplorerServer getServer (String configFile) {
 		try {
 			if (theServer == null)
-				theServer = new PerfExplorerServer (configFile, analysisEngine, 0, false);
+				theServer = new PerfExplorerServer (configFile, 0, false);
         	//System.out.println("Checking for " + Constants.TMPDIR);
 
         	File dir = new File(Constants.TMPDIR);
@@ -136,9 +130,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 
 	public void resetServer () {
 		String configFile = theServer.configFile;
-		EngineType analysisEngine = theServer.analysisEngine;
 		PerfExplorerServer.theServer = null;
-		getServer(configFile, analysisEngine);
+		getServer(configFile);
 	}
 	
 	/**
@@ -149,15 +142,13 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param configFile
 	 * @throws RemoteException
 	 */
-	private PerfExplorerServer(String configFile, EngineType analysisEngine,
+	private PerfExplorerServer(String configFile,
 	int port, boolean quiet) throws RemoteException {
 		super(port);
 		this.configFile = configFile;
-		this.analysisEngine = analysisEngine;
 		PerfExplorerOutput.setQuiet(quiet);
 		theServer = this;
 		DatabaseAPI workerSession = null;
-		this.engineType = analysisEngine;
 		int i = 0;
 		List<String> configFiles = ConfigureFiles.getConfigurationNames();
 		if (configFile != null && configFile.length() > 0) {
@@ -214,23 +205,17 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		}
 	}
 
-	/**
-	 * Return the constructed analysisfactory.
-	 * @return
-	 */
-	public AnalysisFactory getAnalysisFactory() {
-		//System.out.println("getting factory");
-		if (factory == null) {
-			try {
-        		factory = edu.uoregon.tau.perfexplorer.clustering.AnalysisFactory.buildFactory(this.engineType);
-        	} catch (ClusterException e) {
-            	System.err.println(e.getMessage());
-				System.err.println(this.engineType);
-            	System.exit(1);
-			}
-		}
-		return factory;
-	}
+//	/**
+//	 * Return the constructed analysisfactory.
+//	 * @return
+//	 */
+//	public AnalysisFactory getAnalysisFactory() {
+//		//System.out.println("getting factory");
+//		if (factory == null) {
+//        	factory = new AnalysisFactory();
+//		}
+//		return factory;
+//	}
 	
 	/**
 	 * Test method.
@@ -397,7 +382,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				InputStream imageStream = results.getBinaryStream(6);
 				byte[] imageData = new byte[imageSize];
 				bytesRead = imageStream.read(imageData);
-				String engine = results.getString(7);
 				//String k = results.getString(8);
 				analysisResults.getDescriptions().add(description);
 				analysisResults.getIDs().add(id);
@@ -518,7 +502,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				InputStream imageStream = results.getBinaryStream(6);
 				byte[] imageData = new byte[imageSize];
 				bytesRead = imageStream.read(imageData);
-				String engine = results.getString(7);
 				//String k = results.getString(8);
 				analysisResults.getDescriptions().add(description);
 				analysisResults.getIDs().add(id);
@@ -1778,7 +1761,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		CmdLineParser parser = new CmdLineParser();
 		CmdLineParser.Option helpOpt = parser.addBooleanOption('h',"help");
 		CmdLineParser.Option configfileOpt = parser.addStringOption('c',"configfile");
-		CmdLineParser.Option engineOpt = parser.addStringOption('e',"engine");
 		CmdLineParser.Option portOpt = parser.addIntegerOption('p',"port");
 		CmdLineParser.Option quietOpt = parser.addBooleanOption('q',"quiet");
 			
@@ -1792,11 +1774,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 
 		Boolean help = (Boolean) parser.getOptionValue(helpOpt);
 		String configFile = (String) parser.getOptionValue(configfileOpt);
-		String engine = (String) parser.getOptionValue(engineOpt);
 		Integer port = (Integer) parser.getOptionValue(portOpt);
 		Boolean quiet = (Boolean) parser.getOptionValue(quietOpt);
 
-		EngineType analysisEngine = EngineType.WEKA;
 
 		if (help != null && help.booleanValue()) {
 			System.err.println(USAGE);
@@ -1812,26 +1792,12 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			System.exit(-1);
 		}
 
-		if (engine == null) {
-			System.err.println("Please enter a valid engine type.");
-			System.err.println(USAGE);
-			System.exit(-1);
-		} else if (engine.equalsIgnoreCase("R")) {
-			analysisEngine = EngineType.RPROJECT;
-		} else if (engine.equalsIgnoreCase("weka")) {
-			analysisEngine = EngineType.WEKA;
-		} else {
-			System.err.println(USAGE);
-			System.exit(-1);
-		}
-
 		if (System.getSecurityManager() == null) {
 			System.setSecurityManager(new RMISecurityManager());
 		}
 
 		try {
-			RMIPerfExplorer server = new PerfExplorerServer(configFile,
-			analysisEngine, port.intValue(), quiet.booleanValue());
+			RMIPerfExplorer server = new PerfExplorerServer(configFile, port.intValue(), quiet.booleanValue());
 			Naming.rebind("PerfExplorerServer", server);
 			PerfExplorerOutput.println("PerfExplorerServer bound.");
 			Runtime.getRuntime().addShutdownHook(

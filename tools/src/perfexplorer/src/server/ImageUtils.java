@@ -26,6 +26,7 @@ import org.jfree.data.xy.XYDataset;
 
 import edu.uoregon.tau.perfexplorer.clustering.DataNormalizer;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
 import edu.uoregon.tau.perfexplorer.common.ChartType;
 import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
 import edu.uoregon.tau.perfexplorer.constants.Constants;
@@ -266,7 +267,7 @@ public class ImageUtils {
     public static File generateCorrelationScatterplotThumbnail(ChartType chartType, RMIPerfExplorerModel modelData, RawDataInterface pcaData, int i, int j, boolean correlateToMain) {
         File outfile = null;
         if (chartType == ChartType.CORRELATION_SCATTERPLOT) {
-            DataNormalizer normalizer = PerfExplorerServer.getServer().getAnalysisFactory().createDataNormalizer(pcaData);
+            DataNormalizer normalizer = AnalysisFactory.createDataNormalizer(pcaData);
             RawDataInterface normalData = normalizer.getNormalizedData();
             XYDataset data = new ScatterPlotDataset(normalData,
             modelData.toString(), i, j, correlateToMain);
@@ -295,7 +296,7 @@ public class ImageUtils {
     		 RawDataInterface pcaData, int i, int j, boolean correlateToMain, double rCorrelation) {
          File outfile = null;
          if (chartType == ChartType.CORRELATION_SCATTERPLOT) {
-             DataNormalizer normalizer = PerfExplorerServer.getServer().getAnalysisFactory().createDataNormalizer(pcaData);
+             DataNormalizer normalizer = AnalysisFactory.createDataNormalizer(pcaData);
              RawDataInterface normalData = normalizer.getNormalizedData();
              XYDataset data = new ScatterPlotDataset(normalData,
              modelData.toString(), i, j, correlateToMain);

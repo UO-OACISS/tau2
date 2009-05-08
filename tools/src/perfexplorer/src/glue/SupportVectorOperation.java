@@ -8,6 +8,7 @@ import java.util.List;
 
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
 
 /**
  * @author khuck
@@ -49,7 +50,7 @@ public class SupportVectorOperation extends NaiveBayesOperation {
 	 * @param data
 	 */
 	protected void getClassifierFromFactory(RawDataInterface data) {
-		this.classifier = factory.createSupportVectorClassifier(data);
+		this.classifier = AnalysisFactory.createSupportVectorClassifier(data);
 	}
 
 

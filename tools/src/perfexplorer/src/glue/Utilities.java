@@ -17,7 +17,6 @@ import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerClient;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerModel;
-import edu.uoregon.tau.perfexplorer.common.EngineType;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
 import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
@@ -119,22 +118,21 @@ public class Utilities {
 	}
 
 	private static PerfExplorerServer getServer() {
-		return PerfExplorerServer.getServer(null, EngineType.WEKA);
+		return PerfExplorerServer.getServer(null);
 	}
 
 	private static PerfExplorerServer getServer(String configName) {
 		String home = System.getProperty("user.home");
 		String slash = System.getProperty("file.separator");
 		String configFile = home + slash + ".ParaProf" + slash + "perfdmf.cfg." + configName;
-		return PerfExplorerServer.getServer(configFile, EngineType.WEKA);
+		return PerfExplorerServer.getServer(configFile);
 	}
 
 	public static JFrame getClient() {
 		String home = System.getProperty("user.home");
 		String slash = System.getProperty("file.separator");
 		String configFile = home + slash + ".ParaProf" + slash + "perfdmf.cfg";
-		JFrame frame = new PerfExplorerClient(true, configFile, 
-				EngineType.WEKA, true);
+		JFrame frame = new PerfExplorerClient(true, configFile, true);
 		frame.pack();
 		frame.setVisible(true);
 		return frame;

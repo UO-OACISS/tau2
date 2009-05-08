@@ -16,7 +16,6 @@ import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.common.AnalysisType;
-import edu.uoregon.tau.perfexplorer.common.EngineType;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
 import edu.uoregon.tau.perfexplorer.common.RMIView;
@@ -29,11 +28,9 @@ public class TestHarness {
 	private Object[] viewList = null;
 	private boolean foundView = false;
 
-	private TestHarness (boolean standalone, String configFile,
-		EngineType analysisEngine, boolean quiet, TestType test) {
+	private TestHarness (boolean standalone, String configFile, boolean quiet, TestType test) {
 
-		JFrame frame = new PerfExplorerClient(standalone, configFile, 
-			analysisEngine, quiet);
+		JFrame frame = new PerfExplorerClient(standalone, configFile, quiet);
 		frame.pack();
 		frame.setVisible(true);
 
@@ -454,8 +451,6 @@ public RMICubeData getCubeData(RMIPerfExplorerModel model) throws RemoteExceptio
 		Boolean quiet = (Boolean) parser.getOptionValue(quietOpt);
 		String test = (String) parser.getOptionValue(testOpt);
 
-		EngineType analysisEngine = EngineType.WEKA;
-
 		if (help != null && help.booleanValue()) {
 			System.err.println(USAGE);
 			System.exit(-1);
@@ -475,13 +470,6 @@ public RMICubeData getCubeData(RMIPerfExplorerModel model) throws RemoteExceptio
 		if (standalone.booleanValue()) {
 			if (configFile == null) {
 				System.err.println("Please enter a valid config file.");
-				System.err.println(USAGE);
-				System.exit(-1);
-			}
-			try {
-				analysisEngine = EngineType.getType(engine);
-			} catch (Exception e) {
-				System.err.println("Please enter a valid engine type.");
 				System.err.println(USAGE);
 				System.exit(-1);
 			}
@@ -505,7 +493,7 @@ public RMICubeData getCubeData(RMIPerfExplorerModel model) throws RemoteExceptio
 	*/
 
 		TestHarness harness = new TestHarness(standalone.booleanValue(),
-			configFile, analysisEngine, quiet.booleanValue(), testType);
+			configFile, quiet.booleanValue(), testType);
 	}
 
 }

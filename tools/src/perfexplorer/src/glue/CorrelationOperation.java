@@ -6,10 +6,9 @@ package edu.uoregon.tau.perfexplorer.glue;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uoregon.tau.perfexplorer.clustering.AnalysisFactory;
 import edu.uoregon.tau.perfexplorer.clustering.LinearRegressionInterface;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
-import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
+import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
 
 /**
  * @author khuck
@@ -35,10 +34,6 @@ public class CorrelationOperation extends DefaultOperation {
 	 * Dummy implementation which is a no-op on the input data
 	 */
 	public List<PerformanceResult> processData() {
-	    AnalysisFactory factory = null;
-	    PerfExplorerServer server = null;
-        server = PerfExplorerServer.getServer();
-        factory = server.getAnalysisFactory();
 
         for (PerformanceResult input : inputs) {
 			// first, since we need the average and stddev foreach event/metric,
@@ -61,7 +56,7 @@ public class CorrelationOperation extends DefaultOperation {
 									List<String> eventList = new ArrayList<String>();
 									eventList.add(event);
 									eventList.add(event2);
-									RawDataInterface data = factory.createRawData("Correlation Test", eventList, input.getThreads().size(), eventList.size(), null);
+									RawDataInterface data = AnalysisFactory.createRawData("Correlation Test", eventList, input.getThreads().size(), eventList.size(), null);
 									for (Integer thread : input.getThreads()) {
 										y1[thread.intValue()] = input.getDataPoint(thread, event, metric, type);
 										y2[thread.intValue()] = input.getDataPoint(thread, event2, metric2, type2);
@@ -69,10 +64,10 @@ public class CorrelationOperation extends DefaultOperation {
 					        			data.addValue(thread, 1, input.getDataPoint(thread, event2, metric2, type2));
 									}
 									// solve with Clustering Utilities
-									r = PerfExplorerServer.getServer().getAnalysisFactory().getUtilities().doCorrelation(y1, y2, input.getThreads().size());
+									r = AnalysisFactory.getUtilities().doCorrelation(y1, y2, input.getThreads().size());
 									correlation.putDataPoint(CorrelationResult.CORRELATION, event + ":" + metric + ":" + AbstractResult.typeToString(type), event2 + ":" + metric2, type2, r);
 
-									LinearRegressionInterface regression = factory.createLinearRegressionEngine();
+									LinearRegressionInterface regression = AnalysisFactory.createLinearRegressionEngine();
 									regression.setInputData(data);
 									try {
 										regression.findCoefficients();

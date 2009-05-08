@@ -10,7 +10,6 @@ import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.UtilFncs;
 import edu.uoregon.tau.perfexplorer.common.AnalysisType;
-import edu.uoregon.tau.perfexplorer.common.EngineType;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
 import edu.uoregon.tau.perfexplorer.common.RMIVarianceData;
@@ -31,11 +30,10 @@ public class ScriptFacade {
 		model = PerfExplorerModel.getModel();
     }
 
-	public ScriptFacade(String configFile, EngineType analysisEngine) {
+	public ScriptFacade(String configFile) {
 		PerfExplorerOutput.setQuiet(false);
 		PerfExplorerConnection.setStandalone(true);
 		PerfExplorerConnection.setConfigFile(configFile);
-		PerfExplorerConnection.setAnalysisEngine(analysisEngine);
 		connection = PerfExplorerConnection.getConnection();
 		model = PerfExplorerModel.getModel();
 	}

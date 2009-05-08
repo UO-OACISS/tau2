@@ -17,11 +17,11 @@ import java.util.TimerTask;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.database.DB;
-import edu.uoregon.tau.perfexplorer.clustering.AnalysisFactory;
 import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
 import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
 import edu.uoregon.tau.perfexplorer.clustering.PrincipalComponentsAnalysisInterface;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
 import edu.uoregon.tau.perfexplorer.common.AnalysisType;
 import edu.uoregon.tau.perfexplorer.common.ChartType;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerException;
@@ -35,7 +35,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  *
- * <P>CVS $Id: AnalysisTask.java,v 1.16 2009/03/13 23:38:59 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTask.java,v 1.17 2009/05/08 22:45:22 wspear Exp $</P>
  * @author Kevin Huck
  * @version 0.1
  * @since 0.1
@@ -43,7 +43,6 @@ import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
 public class AnalysisTask extends TimerTask {
     
     private ChartType chartType = ChartType.DENDROGRAM;
-    private AnalysisFactory factory = null;
     
     private RMIPerfExplorerModel modelData = null;
     private PerfExplorerServer server = null;
@@ -68,7 +67,6 @@ public class AnalysisTask extends TimerTask {
         this.server = server;
         this.session = session;
         this.connectionIndex = connectionIndex;
-        this.factory = server.getAnalysisFactory();
     }
 
     /**
@@ -235,7 +233,7 @@ public class AnalysisTask extends TimerTask {
 					for (int i = 2 ; i <= maxClusters ; i++) {
 						PerfExplorerOutput.println("Doing " + i + " clusters:" + modelData.toString());
 						// create a cluster engine
-						KMeansClusterInterface clusterer = factory.createKMeansEngine();
+						KMeansClusterInterface clusterer = AnalysisFactory.createKMeansEngine();
 						System.out.print("Declaring... ");
 						long start = System.currentTimeMillis();
 						clusterer.setInputData(reducedData);
@@ -272,7 +270,7 @@ public class AnalysisTask extends TimerTask {
 						System.out.print("PCA breakdown... ");
 						start = System.currentTimeMillis();
 						PrincipalComponentsAnalysisInterface pca =
-						factory.createPCAEngine(server.getCubeData(modelData));
+						AnalysisFactory.createPCAEngine(server.getCubeData(modelData));
 						pca.setInputData(reducedData);
 						pca.doPCA();
 						end = System.currentTimeMillis();

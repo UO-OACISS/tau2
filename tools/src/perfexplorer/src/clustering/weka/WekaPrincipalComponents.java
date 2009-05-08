@@ -10,7 +10,6 @@ import weka.core.Instances;
 import weka.core.Instance;
 import java.util.ArrayList;
 
-import edu.uoregon.tau.perfexplorer.clustering.AnalysisFactory;
 import edu.uoregon.tau.perfexplorer.clustering.ClusterDescription;
 import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
 import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
@@ -24,7 +23,7 @@ import weka.attributeSelection.PrincipalComponents;
  * TODO - make this class immutable?
  * 
  * @author khuck
- * <P>CVS $Id: WekaPrincipalComponents.java,v 1.10 2009/02/27 00:45:08 khuck Exp $</P>
+ * <P>CVS $Id: WekaPrincipalComponents.java,v 1.11 2009/05/08 22:45:22 wspear Exp $</P>
  * @version 0.1
  * @since   0.1
  */
@@ -42,7 +41,6 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 	private KMeansClusterInterface clusterer = null;
 	private RawDataInterface[] clusters = null;
 	private RawDataInterface transformed = null;
-	private AnalysisFactory factory = null;
 	private int maxComponents = 2;
 	
 	/**
@@ -51,10 +49,8 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 	 * @param cubeData
 	 * @param factory
 	 */
-	WekaPrincipalComponents (RMICubeData cubeData,
-	AnalysisFactory factory) {
+	WekaPrincipalComponents (RMICubeData cubeData) {
 		this.cubeData = cubeData;
-		this.factory = factory;
 	}
 
 	/**
@@ -63,10 +59,8 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 	 * @param cubeData
 	 * @param factory
 	 */
-	WekaPrincipalComponents (RawDataInterface rawData,
-	AnalysisFactory factory) {
+	WekaPrincipalComponents (RawDataInterface rawData) {
 		this.rawData = rawData;
-		this.factory = factory;
 	}
 
 	/* (non-Javadoc)
@@ -100,7 +94,7 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 				names.add(cubeData.getNames()[i]);
 			}
 	
-			transformed = factory.createRawData("Scatterplot Data",
+			transformed = AnalysisFactory.createRawData("Scatterplot Data",
 				names, 2,inputData.numVectors(), null);
 			for (int i = 0 ; i < inputData.numVectors() ; i++) {
 				float[] values = cubeData.getValues(i);

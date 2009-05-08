@@ -3,14 +3,12 @@
  */
 package edu.uoregon.tau.perfexplorer.glue.test;
 
+import junit.framework.TestCase;
 import edu.uoregon.tau.perfdmf.DataSource;
-import edu.uoregon.tau.perfexplorer.client.PerfExplorerClient;
-import edu.uoregon.tau.perfexplorer.common.EngineType;
 import edu.uoregon.tau.perfexplorer.glue.BuildMessageHeatMap;
 import edu.uoregon.tau.perfexplorer.glue.DataSourceResult;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
-import junit.framework.TestCase;
 
 /**
  * @author khuck

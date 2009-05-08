@@ -212,7 +212,7 @@ public class WekaClassifierWrapper implements Serializable {
 			if (this.classifierType == LINEAR_REGRESSION) {
 				LinearRegression tmp = new LinearRegression();
 				tmp.turnChecksOff();
-				tmp.setAttributeSelectionMethod(new SelectedTag(tmp.SELECTION_NONE, tmp.TAGS_SELECTION));
+				tmp.setAttributeSelectionMethod(new SelectedTag(LinearRegression.SELECTION_NONE, LinearRegression.TAGS_SELECTION));
 				tmp.setEliminateColinearAttributes(false);
 				this.cls = tmp;
 			} else {

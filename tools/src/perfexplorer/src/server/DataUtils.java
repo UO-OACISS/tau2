@@ -12,8 +12,8 @@ import java.util.NoSuchElementException;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.database.DB;
-import edu.uoregon.tau.perfexplorer.clustering.AnalysisFactory;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerException;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
@@ -27,7 +27,6 @@ public class DataUtils {
 	 */
 	public static RawDataInterface getRawData (DatabaseAPI session, RMIPerfExplorerModel modelData) throws PerfExplorerException {
 		PerfExplorerServer server = PerfExplorerServer.getServer();
-		AnalysisFactory factory = server.getAnalysisFactory();
 		PerfExplorerOutput.print("Getting raw data...");
 	    int numRows = 0;
 	    int numTotalThreads = 0;
@@ -192,7 +191,7 @@ public class DataUtils {
 		PerfExplorerOutput.println("numEvents: " + numEvents);
 		PerfExplorerOutput.println(" Done!");
 		*/
-		rawData = factory.createRawData("Cluster Test", eventIDs, numTotalThreads, numEvents, null);
+		rawData = AnalysisFactory.createRawData("Cluster Test", eventIDs, numTotalThreads, numEvents, null);
 		ResultSet results = null;
 		int currentFunction = 0;
 		int functionIndex = -1;

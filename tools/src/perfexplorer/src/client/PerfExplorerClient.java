@@ -1,25 +1,38 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import edu.uoregon.tau.common.Utility;
-import edu.uoregon.tau.common.ImageExport;
-import edu.uoregon.tau.common.PythonInterpreterFactory;
 import jargs.gnu.CmdLineParser;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.net.URL;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
+
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JMenuItem;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.ToolTipManager;
+
+import edu.uoregon.tau.common.ImageExport;
+import edu.uoregon.tau.common.PythonInterpreterFactory;
+import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfdmf.database.DBConnector;
 import edu.uoregon.tau.perfdmf.database.PasswordCallback;
 import edu.uoregon.tau.perfexplorer.common.Console;
-import edu.uoregon.tau.perfexplorer.common.EngineType;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 import edu.uoregon.tau.perfexplorer.common.ScriptThread;
-
-import java.util.List;
-import java.util.ArrayList;
-import java.util.StringTokenizer;
 
 public class PerfExplorerClient extends JFrame implements ImageExport {
 	private static String USAGE = "\nPerfExplorer\n****************************************************************************\nUsage: perfexplorer [OPTIONS]\nwhere [OPTIONS] are:\n[{-h,--help}]  ............................................ print this help.\n[{-g,--configfile}=<config_file>] .. specify one PerfDMF configuration file.\n[{-c,--config}=<config_name>] ........... specify one PerfDMF configuration.\n[{-e,--engine}=<analysis_engine>] ......  where analysis_engine = R or Weka.\n[{-n,--nogui}] ..................................................... no GUI.\n[{-i,--script}=<script_name>] ................ execute script <script_name>.\n";
@@ -39,8 +52,7 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		return listener;
 	}
 
-	public PerfExplorerClient (boolean standalone, String configFile,
-	EngineType analysisEngine, boolean quiet) {
+	public PerfExplorerClient (boolean standalone, String configFile,boolean quiet) {
 		super("TAU: PerfExplorer Client");
 		
 		DBConnector.setPasswordCallback(PasswordCallback.guiPasswordCallback);
@@ -48,7 +60,6 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		PerfExplorerOutput.setQuiet(quiet);
 		PerfExplorerConnection.setStandalone(standalone);
 		PerfExplorerConnection.setConfigFile(configFile);
-		PerfExplorerConnection.setAnalysisEngine(analysisEngine);
 		listener = new PerfExplorerActionListener(this);
 		// create a tree
 		PerfExplorerJTree tree = PerfExplorerJTree.getTree();
@@ -171,8 +182,6 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
         Boolean console = (Boolean) parser.getOptionValue(consoleOpt);
         //Boolean console = new Boolean(true);
 
-		EngineType analysisEngine = EngineType.WEKA;
-
 		if (help != null && help.booleanValue()) {
 			System.err.println(USAGE);
 			System.exit(-1);
@@ -203,11 +212,6 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 					String slash = System.getProperty("file.separator");
 					configFile = home + slash + ".ParaProf" + slash + "perfdmf.cfg." + config;
 				}
-			}
-			try {
-				analysisEngine = EngineType.getType(engine);
-			} catch (Exception e) {
-				analysisEngine = EngineType.WEKA;
 			}
 		}
 
@@ -250,7 +254,7 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		if (noGUI.booleanValue()) {
 			//System.out.println("no gui");
 			PerfExplorerNoGUI test = new PerfExplorerNoGUI(
-				configFile, analysisEngine, quiet.booleanValue());
+				configFile, quiet.booleanValue());
 			if (scriptName != null) {
 				//System.out.println("running script, no gui");
 				PythonInterpreterFactory.defaultfactory.getPythonInterpreter().execfile(scriptName);
@@ -270,7 +274,7 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 			} 
 			//System.out.println("gui");
 			PerfExplorerClient frame = new PerfExplorerClient(standalone.booleanValue(),
-				configFile, analysisEngine, quiet.booleanValue());
+				configFile, quiet.booleanValue());
 			frame.pack();
 			frame.setVisible(true);
 			frame.toFront();

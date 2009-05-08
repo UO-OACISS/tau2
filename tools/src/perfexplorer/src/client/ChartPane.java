@@ -63,10 +63,6 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	 */
 
 	private static final String IDEAL="Ideal";
-	
-//	private static int VALUE_DEX=0;
-//	private static int SCALA_DEX=1;
-//	private static int EFFIC_DEX=2;
 
 	private static final long serialVersionUID = -8971827392560223964L;
 	private static ChartPane thePane = null;
@@ -74,16 +70,10 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 	private JPanel mainPanel = null;
 	private ScriptFacade facade = null;
-	//private static String UPDATE_COMMAND = "UPDATE_COMMAND";
-	//private JPanel chartPanel = null;
 
 	private JCheckBox mainOnly = new JCheckBox  ("Main Only");
 	private JCheckBox  callPath = new JCheckBox  ("Call Paths");
 	private JCheckBox  logY = new JCheckBox ("Log Y");
-	
-	
-	//private JLabel chartTypeLabel = new JLabel("Chart Type:");
-	//private JComboBox chartType = new MyJComboBox();
 	
 	JRadioButton valueRB = new JRadioButton("Value Chart");
 	JRadioButton scalaRB = new JRadioButton("Scalability Chart");
@@ -94,11 +84,6 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	JRadioButton weakScaling = new JRadioButton("Weak Scaling");
 	ButtonGroup scalingType = new ButtonGroup();
 	
-//	private JRadioButton default = new JRadioButton ("Scalability");
-//	private JRadioButton scalability = new JRadioButton ("Scalability");
-//	private JRadioButton efficiency = new JRadioButton ("Efficiency");
-	
-	//private JCheckBox  constantProblem = new JCheckBox  ("Strong Scaling");
 	private JCheckBox  horizontal = new JCheckBox  ("Horizontal");
 	private JCheckBox  showZero = new JCheckBox  ("Show Y-Axis Zero");
 
@@ -125,9 +110,6 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	private JComboBox metric = new MyJComboBox();
 	private JLabel unitsLabel = new JLabel("Units:");
 	private JComboBox units = new MyJComboBox();
-	//private JLabel valueLabel = new JLabel("Value:");
-	//private JComboBox value = new MyJComboBox();
-
 	private JLabel seriesXmlNameLabel = new JLabel("Series XML Field:");
 	private JComboBox seriesXmlName = new MyJComboBox();
 
@@ -136,8 +118,6 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 	private JCheckBox angleXLabels= new JCheckBox("Angle X Axis Labels");
 	private JCheckBox alwaysCategory= new JCheckBox("Categorical X Axis");
-	//private JLabel xmlValueLabel = new JLabel("XML Value:");
-	//private JComboBox xmlValue = new MyJComboBox();
 	private String[] unitOptions = {
 			"microseconds", 
 			"milliseconds", 
@@ -192,7 +172,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		
 		this.mainPanel.add(panel, BorderLayout.WEST);
 		
-		// create the top options
+		// create the middle options
 		panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 		panel.add(createXAxisMenu());
@@ -211,8 +191,6 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 		this.mainPanel.add(panel, BorderLayout.SOUTH);
 
-		// create the dummy chart panel
-		//this.mainPanel.add(createChartPanel(), BorderLayout.CENTER);
 		resetChartSettings();
 	}
 
@@ -222,8 +200,6 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		TitledBorder tb = BorderFactory.createTitledBorder("Dimension Reduction");
 		panel.setBorder(tb);
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-		//left.setLayout(new FlowLayout(FlowLayout.LEFT));
-		//left.setLayout(new GridLayout(0,1,0,0));
 
 		panel.add(Box.createVerticalStrut(10));
 		// dimension reduction
@@ -249,8 +225,6 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		TitledBorder tb = BorderFactory.createTitledBorder("Chart Data");
 		panel.setBorder(tb);
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-		//left.setLayout(new FlowLayout(FlowLayout.LEFT));
-		//left.setLayout(new GridLayout(0,1,0,0));
 
 		panel.add(Box.createVerticalStrut(10));
 		// chart title
@@ -299,8 +273,6 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		TitledBorder tb = BorderFactory.createTitledBorder("X Axis");
 		panel.setBorder(tb);
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-		//left.setLayout(new FlowLayout(FlowLayout.LEFT));
-		//left.setLayout(new GridLayout(0,1,0,0));
 
 		panel.add(Box.createVerticalStrut(10));
 		// x axis name
@@ -407,37 +379,22 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		
 		
 		panel.add(Box.createVerticalStrut(10));
-//		panel.add(this.chartTypeLabel);
-//		this.chartType.addItem("Value");
-//		this.chartType.addItem("Scalability");
-//		this.chartType.addItem("Efficency");
-//		this.chartType.setSelectedIndex(VALUE_DEX);
-//		panel.add(this.chartType);
 		panel.add(valueRB);
 		panel.add(scalaRB);
 		panel.add(efficRB);
 		chartType.add(valueRB);
 		chartType.add(scalaRB);
 		chartType.add(efficRB);
-//		JLabel l = new JLabel("---");
-//		panel.add(l);
-//		l.setVisible(false);
 		panel.add(Box.createVerticalStrut(10));
 		panel.add(weakScaling);
 		panel.add(strongScaling);
 		scalingType.add(strongScaling);
 		scalingType.add(weakScaling);
 		panel.add(Box.createVerticalStrut(10));
-//		this.constantProblem.setToolTipText("Scaling type (Strong Scaling or Weak Scaling)");
-//		this.constantProblem.addActionListener(this);
-//		panel.add(this.constantProblem);
 
 		this.horizontal.setToolTipText("Create a horizontal chart");
 		this.horizontal.addActionListener(this);
 		panel.add(this.horizontal);
-		
-		// excl100.setToolTipText("");
-		// top.add(excl100);
 		
 		return (panel);
 	}
@@ -445,8 +402,6 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	
 	private JPanel createButtonMenu() {
 		JPanel panel = new JPanel();
-		//TitledBorder tb = BorderFactory.createTitledBorder("Chart");
-		//panel.setBorder(tb);
 		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 		
 		// apply button
@@ -469,11 +424,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		this.mainOnly.setSelected(true);
 		this.callPath.setSelected(false);
 		this.logY.setSelected(false);
-		//chartType.setSelectedIndex(0);
 		valueRB.setSelected(true);
-		//this.scalability.setSelected(false);
-		//this.efficiency.setSelected(false);
-		//this.constantProblem.setSelected(false);
 		weakScaling.setSelected(true);
 		this.horizontal.setSelected(false);
 		this.showZero.setSelected(true);
@@ -493,9 +444,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 		this.seriesXmlNameLabel.setEnabled(false);
 		this.seriesXmlName.setEnabled(false);
-		//this.xmlValueLabel.setEnabled(false);
-		//this.xmlValue.setEnabled(false);
-
+		
 		// series name 
 		for (Iterator<String> itr = tableColumns.iterator() ; itr.hasNext() ; ) {
 			Object o = itr.next();

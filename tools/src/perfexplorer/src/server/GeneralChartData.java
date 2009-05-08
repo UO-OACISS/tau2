@@ -1,48 +1,44 @@
 package edu.uoregon.tau.perfexplorer.server;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-
-import edu.uoregon.tau.perfdmf.database.DB;
-import edu.uoregon.tau.perfdmf.Experiment;
-import edu.uoregon.tau.perfdmf.Application;
-import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfdmf.Metric;
-import edu.uoregon.tau.perfdmf.IntervalEvent;
-import edu.uoregon.tau.perfdmf.AtomicEvent;
-import edu.uoregon.tau.perfexplorer.common.*;
-import edu.uoregon.tau.common.Gzip;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.HashSet;
-import java.util.Collections;
-
-import javax.xml.parsers.ParserConfigurationException;
-import java.util.regex.*;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.*;
-import javax.xml.transform.dom.*;
-import javax.xml.transform.stream.*;
-import javax.xml.parsers.DocumentBuilder;
-import org.w3c.dom.*;
-import org.xml.sax.*;
-import java.io.StringReader;
-import java.io.Reader;
 import java.io.InputStream;
+import java.io.Reader;
+import java.io.StringReader;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+
+import edu.uoregon.tau.common.Gzip;
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.AtomicEvent;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.IntervalEvent;
+import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.database.DB;
+import edu.uoregon.tau.perfexplorer.common.ChartDataType;
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
+import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData;
+import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
+import edu.uoregon.tau.perfexplorer.common.TransformationType;
 
 /**
  * The GeneralChartData class is used to select data from the database which 
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.33 2009/03/02 19:23:51 khuck Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.34 2009/05/08 22:45:22 wspear Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2

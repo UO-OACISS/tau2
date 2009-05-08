@@ -8,7 +8,6 @@ import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfexplorer.common.EngineType;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
 import edu.uoregon.tau.perfexplorer.common.TransformationType;
@@ -16,7 +15,7 @@ import edu.uoregon.tau.perfexplorer.common.TransformationType;
 /**
  * This class exists as a unit test of the PerfExplorerServer class.
  *
- * <P>CVS $Id: TestServer.java,v 1.12 2009/03/16 23:29:46 wspear Exp $</P>
+ * <P>CVS $Id: TestServer.java,v 1.13 2009/05/08 22:45:22 wspear Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -24,8 +23,8 @@ import edu.uoregon.tau.perfexplorer.common.TransformationType;
 public class TestServer {
 	PerfExplorerServer server = null;
 	
-    public TestServer(String configFile, EngineType engine) {
-        server = PerfExplorerServer.getServer(configFile, engine);
+    public TestServer(String configFile) {
+        server = PerfExplorerServer.getServer(configFile);
         PerfExplorerOutput.println(server.sayHello());
     }
 
@@ -111,10 +110,7 @@ public class TestServer {
     public static void main (String[] args) {
 		PerfExplorerOutput.println ("LIBRARY PATH: " + System.getProperty ("java.library.path"));
 		try {
-			//int engine = AnalysisTaskWrapper.RPROJECT_ENGINE;
-			EngineType engine = EngineType.WEKA;
-			//int engine = AnalysisTaskWrapper.OCTAVE_ENGINE;
-			TestServer tester = new TestServer(args[0], engine);
+			TestServer tester = new TestServer(args[0]);
 			tester.testScripting();
 			
 		} catch (Exception e) {

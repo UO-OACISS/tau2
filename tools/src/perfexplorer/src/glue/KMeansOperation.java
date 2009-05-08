@@ -5,19 +5,12 @@ package edu.uoregon.tau.perfexplorer.glue;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.lang.Math;
 
-
-
-import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfexplorer.clustering.AnalysisFactory;
 import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
-import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
-import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
+import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
 
 /**
  * @author khuck
@@ -66,15 +59,11 @@ public class KMeansOperation extends AbstractPerformanceOperation {
 	 * @see glue.PerformanceAnalysisOperation#processData()
 	 */
 	public List<PerformanceResult> processData() {
-	    AnalysisFactory factory = null;
-	    PerfExplorerServer server = null;
-        server = PerfExplorerServer.getServer();
-        factory = server.getAnalysisFactory();
 
         for (PerformanceResult input : inputs) {
 //        	System.out.println("instances: " + input.getThreads().size());
 //        	System.out.println("dimensions: " + input.getEvents().size());
-        	this.clusterer = doClustering(factory, input);
+        	this.clusterer = doClustering(input);
 			PerformanceResult centroids = new ClusterOutputResult(clusterer.getClusterCentroids(), metric, type);
 			outputs.add(centroids);
 			outputs.add(new ClusterOutputResult(clusterer.getClusterStandardDeviations(), metric, type));
@@ -107,7 +96,7 @@ public class KMeansOperation extends AbstractPerformanceOperation {
 	    		// generate uniform distribution reference dataset
 	    		for (int b = 0 ; b < B ; b++) {
 	    			PerformanceResult reference = generateReferenceDataset(input, mins, maxs);
-	    			KMeansClusterInterface tmpClusterer = doClustering(factory, reference);
+	    			KMeansClusterInterface tmpClusterer = doClustering(reference);
 	        		ref_w_k[b] = computeErrorMeasure(reference, tmpClusterer, true);
 	        		// we are computing a sum, so sum
 	        		l_bar += ref_w_k[b];
@@ -137,9 +126,9 @@ public class KMeansOperation extends AbstractPerformanceOperation {
 	 * @param input
 	 * @param eventList
 	 */
-	private KMeansClusterInterface doClustering(AnalysisFactory factory, PerformanceResult input) {
+	private KMeansClusterInterface doClustering(PerformanceResult input) {
     	List<String> eventList = new ArrayList<String>(input.getEvents());
-		RawDataInterface data = factory.createRawData("Cluster Test", eventList, input.getThreads().size(), eventList.size(), null);
+		RawDataInterface data = AnalysisFactory.createRawData("Cluster Test", eventList, input.getThreads().size(), eventList.size(), null);
 		for(Integer thread : input.getThreads()) {
 			int eventIndex = 0;
 			for (String event : eventList) {
@@ -149,7 +138,7 @@ public class KMeansOperation extends AbstractPerformanceOperation {
 				}
 			}
 		}
-		KMeansClusterInterface clusterer = factory.createKMeansEngine();
+		KMeansClusterInterface clusterer = AnalysisFactory.createKMeansEngine();
 		clusterer.setInputData(data);
 		clusterer.doSmartInitialization(true);
 		clusterer.setK(this.maxClusters);

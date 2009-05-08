@@ -10,10 +10,10 @@ import java.util.Set;
 
 
 import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfexplorer.clustering.AnalysisFactory;
 import edu.uoregon.tau.perfexplorer.clustering.ClassifierInterface;
 import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
 import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 /**
@@ -24,8 +24,6 @@ public class NaiveBayesOperation extends AbstractPerformanceOperation {
 
 	protected String metric = null;
 	protected int type = AbstractResult.EXCLUSIVE;
-    protected AnalysisFactory factory = null;
-    protected PerfExplorerServer server = null;
     protected ClassifierInterface classifier = null;
     protected List<String> classNames = null;
     protected final String trainString = "Naive Bayes Training";
@@ -40,7 +38,6 @@ public class NaiveBayesOperation extends AbstractPerformanceOperation {
 		super(input);
 		this.metric = metric;
 		this.type = type;
-		getFactory();
 	}
 
 	/**
@@ -48,7 +45,6 @@ public class NaiveBayesOperation extends AbstractPerformanceOperation {
 	 */
 	public NaiveBayesOperation(Trial trial) {
 		super(trial);
-		getFactory();
 	}
 
 	/**
@@ -56,20 +52,8 @@ public class NaiveBayesOperation extends AbstractPerformanceOperation {
 	 */
 	public NaiveBayesOperation(List<PerformanceResult> inputs) {
 		super(inputs);
-		getFactory();
 	}
 
-	/**
-	 * Builds the analysis factory so we can get a classifier.
-	 */
-	private void getFactory() {
-		if (this.factory == null) {
-			if (this.server == null) {
-				this.server = PerfExplorerServer.getServer();
-			}
-			this.factory = server.getAnalysisFactory();
-		}
-	}
 
 	/* (non-Javadoc)
 	 * @see glue.PerformanceAnalysisOperation#processData()
@@ -97,7 +81,7 @@ public class NaiveBayesOperation extends AbstractPerformanceOperation {
         List<String> eventList = new ArrayList<String>(eventSet);
 
         // create our data storage object
-    	data = factory.createRawData(this.trainString, eventList, instances, eventList.size(), this.classNames);
+    	data = AnalysisFactory.createRawData(this.trainString, eventList, instances, eventList.size(), this.classNames);
 
     	int masterIndex = 0;
         // now, iterate over the inputs, and add them to the raw data interface object.
@@ -126,7 +110,7 @@ public class NaiveBayesOperation extends AbstractPerformanceOperation {
 	 * @param data
 	 */
 	protected void getClassifierFromFactory(RawDataInterface data) {
-		this.classifier = factory.createNaiveBayesClassifier(data);
+		this.classifier = AnalysisFactory.createNaiveBayesClassifier(data);
 	}
 
 	public String getMetric() {
@@ -141,7 +125,7 @@ public class NaiveBayesOperation extends AbstractPerformanceOperation {
 		List<String> categories = null;
 		
     	List<String> eventList = new ArrayList<String>(input.getEvents());
-    	RawDataInterface data = factory.createRawData(this.testString, eventList, input.getThreads().size(), eventList.size(), this.classNames);
+    	RawDataInterface data = AnalysisFactory.createRawData(this.testString, eventList, input.getThreads().size(), eventList.size(), this.classNames);
 		for(Integer thread : input.getThreads()) {
         	int eventIndex = 0;
         	for (String event : eventList) {

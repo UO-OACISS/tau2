@@ -9,9 +9,9 @@ import java.util.List;
 
 
 import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfexplorer.clustering.AnalysisFactory;
 import edu.uoregon.tau.perfexplorer.clustering.LinearRegressionInterface;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
 import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 /**
@@ -74,10 +74,6 @@ public class CorrelateEventsWithMetadata extends AbstractPerformanceOperation {
 	}
 
 	private void processOneTrial() {
-	    AnalysisFactory factory = null;
-	    PerfExplorerServer server = null;
-        server = PerfExplorerServer.getServer();
-        factory = server.getAnalysisFactory();
 
         
 		CorrelationResult correlation = new CorrelationResult(trialData, false);
@@ -100,7 +96,7 @@ public class CorrelateEventsWithMetadata extends AbstractPerformanceOperation {
 						List<String> eventList = new ArrayList<String>();
 						eventList.add(event);
 						eventList.add(event2);
-						RawDataInterface data = factory.createRawData("Correlation Test", eventList, trialData.getThreads().size(), eventList.size(), null);
+						RawDataInterface data = AnalysisFactory.createRawData("Correlation Test", eventList, trialData.getThreads().size(), eventList.size(), null);
 						for (Integer thread : trialData.getThreads()) {
 							// BE CAREFUL!  The first value is the predictor, and the second is the response.
 							// When working with metadata, be sure to correlate the PERFORMANCE with the METADATA!
@@ -119,7 +115,7 @@ public class CorrelateEventsWithMetadata extends AbstractPerformanceOperation {
 						}
 						if (!same) {
 							// solve with Clustering Utilities
-							r = PerfExplorerServer.getServer().getAnalysisFactory().getUtilities().doCorrelation(y1, y2, trialData.getThreads().size());
+							r = AnalysisFactory.getUtilities().doCorrelation(y1, y2, trialData.getThreads().size());
 							if (Double.isNaN(r) || Double.isInfinite(r)) {
 								r = 0.0;
 							}
@@ -127,7 +123,7 @@ public class CorrelateEventsWithMetadata extends AbstractPerformanceOperation {
 //							correlation.putDataPoint(CorrelationResult.CORRELATION, event + ":" + metric, event2 + ":" + metric2, type, r);
 							correlation.assertFact(event, metric, type, event2, metric2, CorrelationResult.CORRELATION, r);
 							
-							LinearRegressionInterface regression = factory.createLinearRegressionEngine();
+							LinearRegressionInterface regression = AnalysisFactory.createLinearRegressionEngine();
 							regression.setInputData(data);
 							try {
 								regression.findCoefficients();
