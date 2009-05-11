@@ -1,12 +1,10 @@
 #!/bin/sh
 
-# $Id: perfexplorer.skel,v 1.38 2009/02/27 23:22:16 khuck Exp $
+# $Id: perfexplorer.skel,v 1.39 2009/05/11 17:02:09 wspear Exp $
 # $Name:  $
 
 TAUROOT=@TAUROOT@
 CONFIG_ARCH=@TAUARCH@
-R_ROOT=@RROOT@
-ANALYSIS_ENGINE=@ANALYSIS_ENGINE@
 SERVER_HOSTNAME=@SERVER_HOSTNAME@
 SERVER_OBJECT_PORT=@SERVER_OBJECT_PORT@
 SERVER_RMIREGISTRY_PORT=@SERVER_RMIREGISTRY_PORT@
@@ -25,10 +23,7 @@ RMIOptions=""
 gui=""
 script=""
 
-OMEGAHAT_HOME=$R_ROOT/library/SJava
-OMEGAHAT_JARPATH=$OMEGAHAT_HOME/org/omegahat/Jars
 CLIENT_DYLD_LIBRARY_PATH=$TAUROOT/$CONFIG_ARCH/lib
-SERVER_DYLD_LIBRARY_PATH=$OMEGAHAT_HOME/libs:$R_ROOT/lib:$R_ROOT/bin:$R_ROOT/library/SJava/libs
 
 PERFEXPLORER_JAR=$TAUROOT/$CONFIG_ARCH/lib/perfexplorer.jar
 PERFDMF_JAR=$TAUROOT/$CONFIG_ARCH/lib/perfdmf.jar
@@ -44,8 +39,6 @@ TAUCOMMON_JAR=$TAUROOT/$CONFIG_ARCH/lib/tau-common.jar
 BATIK_JAR=$TAUROOT/$CONFIG_ARCH/lib/batik-combined.jar
 XERCES_JAR=$TAUROOT/$CONFIG_ARCH/lib/xerces.jar
 JUNIT_JAR=$TAUROOT/$CONFIG_ARCH/junit-3.8.1.jar
-
-OMEGAHAT_JARS=$OMEGAHAT_HOME/inst:$OMEGAHAT_JARPATH/Environment.jar:$OMEGAHAT_JARPATH/antlr.jar:$OMEGAHAT_JARPATH/jas.jar:$OMEGAHAT_JARPATH/jhall.jar
 
 # JBoss Rules jars
 
@@ -141,27 +134,27 @@ if [ $test == "failed" ] ; then
 fi
 
 if [ $mode == "standalone" ] ; then
-	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$OMEGAHAT_JARS:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JOGL_JAR:$VIS_JAR:$JARGS_JAR:$JYTHON_JAR:$TAUCOMMON_JAR:$BATIK_JAR:$XERCES_JAR:$JUNIT_JAR:$JBOSS_RULES_JARS
+	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JOGL_JAR:$VIS_JAR:$JARGS_JAR:$JYTHON_JAR:$TAUCOMMON_JAR:$BATIK_JAR:$XERCES_JAR:$JUNIT_JAR:$JBOSS_RULES_JARS
 	java -Xmx500m $EXTRA_OPTIONS \
 	-classpath $CLASSPATH \
 	-Dderby.system.home=${JAR_HOME} \
 	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
-	edu.uoregon.tau.perfexplorer.client.PerfExplorerClient -s $PERFEXPLORER_OPTS -e $ANALYSIS_ENGINE $@
+	edu.uoregon.tau.perfexplorer.client.PerfExplorerClient -s $PERFEXPLORER_OPTS $@
 fi
 
 if [ $mode == "test" ] ; then
-	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$OMEGAHAT_JARS:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JOGL_JAR:$VIS_JAR:$JARGS_JAR:$JYTHON_JAR:$TAUCOMMON_JAR:$BATIK_JAR:$XERCES_JAR:$JUNIT_JAR:$JBOSS_RULES_JARS
+	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JOGL_JAR:$VIS_JAR:$JARGS_JAR:$JYTHON_JAR:$TAUCOMMON_JAR:$BATIK_JAR:$XERCES_JAR:$JUNIT_JAR:$JBOSS_RULES_JARS
 
 	java -Xmx500m \
 	-classpath $CLASSPATH \
 	-Dderby.system.home=${JAR_HOME} \
 	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
-	edu.uoregon.tau.perfexplorer.client.TestHarness -s -e $ANALYSIS_ENGINE -t $testName $arguments
+	edu.uoregon.tau.perfexplorer.client.TestHarness -s -t $testName $arguments
 fi
 
 if [ $mode == "server" ] ; then
 
-	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$OMEGAHAT_JARS:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JYTHON_JAR:$JARGS_JAR:$TAUCOMMON_JAR:$XERCES_JAR:$JUNIT_JAR:$JBOSS_RULES_JARS
+	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JYTHON_JAR:$JARGS_JAR:$TAUCOMMON_JAR:$XERCES_JAR:$JUNIT_JAR:$JBOSS_RULES_JARS
 
 	echo "Starting rmiregistry..."
 	rmiregistry $SERVER_RMIREGISTRY_PORT & 
@@ -174,7 +167,7 @@ if [ $mode == "server" ] ; then
 	-Djava.library.path=$SERVER_DYLD_LIBRARY_PATH \
 	${RMIOptions} \
 	-Dsun.rmi.server.exceptionTrace=true \
-	edu.uoregon.tau.perfexplorer.server.PerfExplorerServer -e $ANALYSIS_ENGINE -p $SERVER_OBJECT_PORT $arguments
+	edu.uoregon.tau.perfexplorer.server.PerfExplorerServer -p $SERVER_OBJECT_PORT $arguments
 
 	echo "Killing rmiregistry..."
 	killall rmiregistry

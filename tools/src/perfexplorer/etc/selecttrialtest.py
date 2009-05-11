@@ -1,11 +1,10 @@
 from edu.uoregon.tau.perfexplorer.client import ScriptFacade
 from edu.uoregon.tau.perfexplorer.common import TransformationType
 from edu.uoregon.tau.perfexplorer.common import AnalysisType
-from edu.uoregon.tau.perfexplorer.common import EngineType
 
 print "--------------- JPython test script start ------------"
 
-pe = ScriptFacade("/home/khuck/.ParaProf/perfdmf.cfg", EngineType.WEKA)
+pe = ScriptFacade("/home/khuck/.ParaProf/perfdmf.cfg")
 pe.doSomething()
 
 # create a dictionary

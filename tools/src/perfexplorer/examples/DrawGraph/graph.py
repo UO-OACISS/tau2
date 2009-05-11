@@ -71,6 +71,7 @@ def main():
 	events = ArrayList()
 	# change this to zoneLimitedGradient(PileOfScalars) as necessary
 	events.add("MPI_Send()")
+	events.add("MPI_Init()")
 	extractor = ExtractEventOperation(inputs, events)
 	extracted = extractor.processData()
 

@@ -1,11 +1,8 @@
-# $Id: Makefile.skel,v 1.44 2009/04/24 15:51:49 khuck Exp $
+# $Id: Makefile.skel,v 1.45 2009/05/11 17:02:09 wspear Exp $
 # $Name:  $
 
-R_HOME = @RROOT@
 TAUROOT = @TAUROOT@
 CONFIG_ARCH = @TAUARCH@
-ENGINE_PACKAGE = @ANALYSIS_ENGINE@
-ENGINE_DEFINE = @ANALYSIS_ENGINE_DEF@
 JAR_HOME = ${HOME}/.ParaProf
 
 ##########################
@@ -13,12 +10,10 @@ JAR_HOME = ${HOME}/.ParaProf
 JAVA_JVM_VERSION=1.5
 NOW = $(shell date)
 
-OMEGAHAT_HOME = $(R_HOME)/library/SJava
 CONFIGFILE = ${JAR_HOME}/perfdmf.cfg
-OMEGAHAT_JARPATH = ${OMEGAHAT_HOME}/org/omegahat/Jars
 WEBSTART_DIR = /var/www/html/PerfExplorer/.
 
-CPP = cpp -P -CC -D=USE_${ENGINE_DEFINE}_ENGINE
+CPP = cpp -P -CC
 JAVAC = javac
 RMIC = rmic
 SED = sed
@@ -34,7 +29,6 @@ JOGL_JAR =${TAUROOT}/${CONFIG_ARCH}/lib/jogl.jar
 JARGS_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jargs.jar
 JYTHON_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jython.jar
 VIS_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/vis.jar
-OMEGAHAT_JARS = ${OMEGAHAT_HOME}:${OMEGAHAT_JARPATH}/Environment.jar:${OMEGAHAT_JARPATH}/antlr.jar:${OMEGAHAT_JARPATH}/jas.jar:${OMEGAHAT_JARPATH}/jhall.jar
 JFREECHART_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jfreechart-1.0.12.jar
 JCOMMON_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/jcommon-1.0.15.jar
 TAUCOMMON_JAR = ${TAUROOT}/${CONFIG_ARCH}/lib/tau-common.jar
@@ -83,7 +77,6 @@ MYSQL_JAR = ${JAR_HOME}/mysql.jar
 ##########################
 
 CLIENT_DYLD_LIBRARY_PATH=${TAUROOT}/${CONFIG_ARCH}/lib
-SERVER_DYLD_LIBRARY_PATH=${OMEGAHAT_HOME}/libs:${R_HOME}/lib:${R_HOME}/bin:${R_HOME}/library/SJava/libs
 
 ##########################
 
@@ -92,8 +85,8 @@ CQOS_BUILD_CLASSPATH = classes:${WEKA_JAR}
 GLUE_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JOGL_JAR}:${VIS_JAR}:${JARGS_JAR}:${JYTHON_JAR}:${JUNIT_JAR}:${JBOSS_RULES_JARS}:${TAUCOMMON_JAR}:${WEKA_JAR}
 CLIENT_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JOGL_JAR}:${VIS_JAR}:${JARGS_JAR}:${TAUCOMMON_JAR}:${BATIK_JAR}:${JYTHON_JAR}:${ANTLR2_JAR}:${ANTLR3_JAR}:${COMMONS_JCI_CORE_JAR}:${COMMONS_LANG_JAR}:${COMMONS_LOGGING_JAR}:${DROOLS_COMIPLER_JAR}:${DROOLS_CORE_JAR}:${DROOLS_DECISIONTABLES_JAR}:${DROOLS_JSR94_JAR}:${JSR_JAR}:${JXL_JAR}:${STRINGTEMPLATE_JAR}:${JUNIT_JAR}
 
-CLUSTERING_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${WEKA_JAR}:${OMEGAHAT_JARS}
-SERVER_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${OMEGAHAT_JARS}:${WEKA_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JARGS_JAR}:${JYTHON_JAR}:${TAUCOMMON_JAR}:${XERCES_JAR}
+CLUSTERING_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${WEKA_JAR}
+SERVER_BUILD_CLASSPATH = classes:${PERFDMF_JAR}:${WEKA_JAR}:${JFREECHART_JAR}:${JCOMMON_JAR}:${JARGS_JAR}:${JYTHON_JAR}:${TAUCOMMON_JAR}:${XERCES_JAR}
 
 ##########################
 
@@ -102,7 +95,7 @@ CONSTANT_CPP_OUTPUT = ${patsubst %.cpp, %.java, ${CONSTANT_CPP_INPUT}}
 
 CONSTANT_SOURCES = ${CONSTANT_CPP_OUTPUT}
 COMMON_SOURCES = ${wildcard src/common/*.java}
-CLUSTERING_SOURCES = ${wildcard src/clustering/*.java} ${wildcard src/clustering/${ENGINE_PACKAGE}/*.java} 
+CLUSTERING_SOURCES = ${wildcard src/clustering/*.java} ${wildcard src/clustering/weka/*.java} 
 CQOS_SOURCES = ${wildcard src/cqos/*.java}
 CLIENT_SOURCES = ${wildcard src/client/*.java}
 SERVER_SOURCES = ${wildcard src/server/*.java}
@@ -278,10 +271,6 @@ install_old: perfexplorer.jar
 	cp ${JFREECHART_JAR} PerfExplorer-0.1/.
 	cp ${JCOMMON_JAR} PerfExplorer-0.1/.
 	cp ${WEKA_JAR} PerfExplorer-0.1/.
-	cp ${OMEGAHAT_JARPATH}/Environment.jar PerfExplorer-0.1/.
-	cp ${OMEGAHAT_JARPATH}/antlr.jar PerfExplorer-0.1/.
-	cp ${OMEGAHAT_JARPATH}/jas.jar PerfExplorer-0.1/.
-	cp ${OMEGAHAT_JARPATH}/jhall.jar PerfExplorer-0.1/.
 	cp ${JFREECHART_JAR} PerfExplorer-0.1/.
 	cp ${JCOMMON_JAR} PerfExplorer-0.1/.
 	cp ${TAUCOMMON_JAR} PerfExplorer-0.1/.

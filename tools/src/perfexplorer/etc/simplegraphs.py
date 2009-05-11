@@ -1,7 +1,6 @@
 from edu.uoregon.tau.perfexplorer.client import ScriptFacade
 from edu.uoregon.tau.perfexplorer.common import TransformationType
 from edu.uoregon.tau.perfexplorer.common import AnalysisType
-from edu.uoregon.tau.perfexplorer.common import EngineType
 
 def TotalExecutionTime1(pe, metric):
 	pe.resetChartDefaults();

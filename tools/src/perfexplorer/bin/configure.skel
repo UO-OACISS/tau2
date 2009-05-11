@@ -1,6 +1,6 @@
 #!/bin/@SHELL@
 
-# $Id: configure.skel,v 1.17 2006/12/28 18:51:22 khuck Exp $
+# $Id: configure.skel,v 1.18 2009/05/11 17:02:09 wspear Exp $
 # $Name:  $
 
 rm -f .last_config
@@ -15,9 +15,6 @@ tauroot=@TAUROOTDIR@
 architecture=@ARCH@
 taushell=@SHELL@
 targetdir=@TARGETDIR@
-engine=weka
-engine_upper=WEKA
-rroot=/usr/lib/R
 serverhostname=localhost
 objectport=9999
 registryport=1099
@@ -27,25 +24,6 @@ registryport=1099
 for arg in "$@";
 do
   case $arg in
-
-  -engine=*)
-    myarg=`echo $arg | sed 's/-engine=//'`
-    myarg=`echo $myarg | tr "[:upper:]" "[:lower:]"`
-    if [ $myarg = weka -o $myarg = r ]
-      then
-        engine=$myarg
-        engine_upper=`echo $engine | tr "[:lower:]" "[:upper:]"`
-      else
-        echo "WARNING: valid options for engine are 'weka' and 'R' "
-    fi
-    shift
-    ;;
-
-  -rroot=*)
-    myarg=`echo $arg | sed 's/-rroot=//'`
-    rroot=$myarg
-    shift
-    ;;
 
   -objectport=*)
     myarg=`echo $arg | sed 's/-objectport=//'`
@@ -70,9 +48,6 @@ do
     echo "***********************************************************************"
     echo "Usage: configure [OPTIONS]"
     echo "  where [OPTIONS] are:"
-    echo "-engine=<analysis_engine>  ............... specify the analysis engine."
-    echo "                                                      options [weka|R]."
-    echo "-rroot=<dir> ....................... specify location of the R project."
     echo "-server=<hostname> ...... specify hostname for the perfexplorer server."
     echo "-registryport=<number> ............. specify port for the rmi registry."
     echo "-objectport=<number> ................ specify port for the rmi objects."
@@ -106,8 +81,6 @@ echo "tauroot = $tauroot"
 echo "architecture = $architecture"
 echo "taushell = $taushell"
 echo "targetdir = $targetdir"
-echo "engine = $engine"
-echo "rroot = $rroot"
 echo "server = $serverhostname"
 echo
 
@@ -117,9 +90,6 @@ cat ${tauroot}/tools/src/perfexplorer/bin/Makefile.skel |
 sed -e 's,@TAUROOT@,'$targetdir',' \
 -e 's,@TAUSHELL@,'$taushell',' \
 -e 's,@TAUARCH@,'$architecture',' \
--e 's,@RROOT@,'$rroot',' \
--e 's,@ANALYSIS_ENGINE@,'$engine',' \
--e 's,@ANALYSIS_ENGINE_DEF@,'$engine_upper',' \
  > ${tauroot}/tools/src/perfexplorer/Makefile
 
 

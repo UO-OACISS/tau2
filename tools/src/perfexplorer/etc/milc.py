@@ -1,7 +1,6 @@
 from edu.uoregon.tau.perfexplorer.client import ScriptFacade
 from edu.uoregon.tau.perfexplorer.common import TransformationType
 from edu.uoregon.tau.perfexplorer.common import AnalysisType
-from edu.uoregon.tau.perfexplorer.common import EngineType
 
 def Chart1(pe):
 	pe.resetChartDefaults()
