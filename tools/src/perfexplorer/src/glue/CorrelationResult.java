@@ -36,9 +36,10 @@ public class CorrelationResult extends DefaultResult implements SelfAsserting {
 	public final static String NAME = edu.uoregon.tau.perfexplorer.glue.CorrelationResult.class.getName();
 	private RuleHarness ruleHarness = null;
 	
-	public static final int CORRELATION = 0;
-	public static final int SLOPE = 1;
-	public static final int INTERCEPT = 2;
+	public static final int CORRELATION = AbstractResult.USEREVENT_SUMSQR + 1;
+	public static final int SLOPE = CORRELATION + 1;
+	public static final int INTERCEPT = CORRELATION + 2;
+	public static final int METADATA = CORRELATION + 3;
 
 	private static List<Integer> types = null;
 	
@@ -169,30 +170,13 @@ public class CorrelationResult extends DefaultResult implements SelfAsserting {
 	}
 	
 	public void assertFacts(RuleHarness ruleHarness) {
-/*		this.ruleHarness = ruleHarness;
-		for (String event : this.getEvents()) {
-			for (String metric : this.getMetrics()) {
-//				for (Integer type : CorrelationResult.getTypes()) {
-				Integer type = CorrelationResult.CORRELATION;
-					for (Integer thread : this.getThreads()) {
-						double value = this.getDataPoint(thread, event, metric, type.intValue());
-						String key = event + ":" + CorrelationResult.typeToString(thread) + ":" + metric + ":" + AbstractResult.typeToString(type);
-						FactData data = new FactData(event, metric, type.intValue(), thread, value);
-//						FactHandle handle = ruleHarness.assertObject(new FactWrapper(key, NAME, data));
-						RuleHarness.assertObject(data);
-//						assertedFacts.put(key, handle);
-					}
-//				}
-			}
-		}
-*/	}
+		// do nothing
+	}
 	
-	public void assertFact(String event, String metric, int type, String event2, String metric2, int type2, double value) {
+	public void assertFact(String event, String metric, int type, String event2, String metric2, int type2, double correlation, double slope, double intercept) {
 		String key = event + ":" + metric + ":" + event2 + ":" + metric2;
-		FactData data = new FactData(event, metric, type, event2, metric2, type2, value);
-//		FactHandle handle = ruleHarness.assertObject(new FactWrapper(key, NAME, data));
+		FactData data = new FactData(event, metric, type, event2, metric2, type2, correlation, slope, intercept);
 		RuleHarness.assertObject(data);
-//		assertedFacts.put(key, handle);
 	}
 
 	public void removeFact(String factName) {
@@ -212,24 +196,20 @@ public class CorrelationResult extends DefaultResult implements SelfAsserting {
 		private Integer thread;
 		private int type;
 		private int type2;
-		private double value;
+		private double correlation;
+		private double slope;
+		private double intercept;
 
-		public FactData(String event, String metric, int type, Integer thread, double value) {
-			this.event = event;
-			this.metric = metric;
-			this.thread = thread;
-			this.type = type;
-			this.value = value;
-		}
-		
-		public FactData(String event, String metric, int type, String event2, String metric2, int type2, double value) {
+		public FactData(String event, String metric, int type, String event2, String metric2, int type2, double correlation, double slope, double intercept) {
 			this.event = event;
 			this.metric = metric;
 			this.type = type;
 			this.event2 = event2;
 			this.metric2 = metric2;
 			this.type2 = type2;
-			this.value = value;
+			this.correlation = correlation;
+			this.slope = slope;
+			this.intercept = intercept;
 		}
 
 		/**
@@ -283,16 +263,21 @@ public class CorrelationResult extends DefaultResult implements SelfAsserting {
 		/**
 		 * @return the value
 		 */
-		public double getValue() {
-			return value;
+		public double getCorrelation() {
+			return correlation;
 		}
 		/**
-		 * @param value the value to set
+		 * @return the value
 		 */
-		public void setValue(double value) {
-			this.value = value;
+		public double getSlope() {
+			return slope;
 		}
-
+		/**
+		 * @return the value
+		 */
+		public double getIntercept() {
+			return intercept;
+		}
 		/**
 		 * @return the event2
 		 */

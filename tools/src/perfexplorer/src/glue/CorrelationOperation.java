@@ -38,16 +38,19 @@ public class CorrelationOperation extends DefaultOperation {
         for (PerformanceResult input : inputs) {
 			// first, since we need the average and stddev foreach event/metric,
 			// get the basic stats for this input
-			PerformanceResult correlation = new CorrelationResult(input, false);
+			CorrelationResult correlation = new CorrelationResult(input, false);
 			// now, loop over all event / metric / type
-			for (String event : input.getEvents()) {
+			Object[] events = input.getEvents().toArray();
+			for (int outerIndex = 0; outerIndex < input.getEvents().size() ; outerIndex++) {
+				String event = (String)events[outerIndex];
 				for (String metric : input.getMetrics()) {
-					for (Integer type : AbstractResult.getTypes()) {
+					for (Integer type : AbstractResult.getTypes(false)) {
 //					Integer type = AbstractResult.EXCLUSIVE;
 						// now, loop over all event / metric / type AGAIN
-						for (String event2 : input.getEvents()) {
+						for (int innerIndex = outerIndex+1; innerIndex < input.getEvents().size() ; innerIndex++) {
+							String event2 = (String)events[innerIndex];
 							for (String metric2 : input.getMetrics()) {
-								for (Integer type2 : AbstractResult.getTypes()) {
+								for (Integer type2 : AbstractResult.getTypes(false)) {
 //								Integer type2 = AbstractResult.EXCLUSIVE;
 									// solve for r
 									double r = 0.0;
@@ -82,6 +85,7 @@ public class CorrelationOperation extends DefaultOperation {
 									double intercept = coefficients.get(2);
 									correlation.putDataPoint(CorrelationResult.SLOPE, event + ":" + metric + ":" + AbstractResult.typeToString(type), event2 + ":" + metric2, type2, slope);
 									correlation.putDataPoint(CorrelationResult.INTERCEPT, event + ":" + metric + ":" + AbstractResult.typeToString(type), event2 + ":" + metric2, type2, intercept);
+									correlation.assertFact(event, metric, type, event2, metric2, type2, r, slope, intercept);
 								}
 							}
 						}

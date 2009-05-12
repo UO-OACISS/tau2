@@ -19,7 +19,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * interface.  This class has all the member data fields for the plethora
  * of anticipated subclasses.
  * 
- * <P>CVS $Id: AbstractResult.java,v 1.17 2009/04/15 00:17:11 khuck Exp $</P>
+ * <P>CVS $Id: AbstractResult.java,v 1.18 2009/05/12 20:32:48 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0
@@ -66,17 +66,23 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 	protected boolean ignoreWarnings = false;
 	
 	public static List<Integer> getTypes() {
+		return getTypes(true);
+	}
+
+	public static List<Integer> getTypes(boolean includeUserEventTypes) {
 		if (types == null) {
 			types = new ArrayList<Integer>();
 			types.add(AbstractResult.INCLUSIVE);
 			types.add(AbstractResult.EXCLUSIVE);
 			types.add(AbstractResult.CALLS);
 			types.add(AbstractResult.SUBROUTINES);
-			types.add(AbstractResult.USEREVENT_NUMEVENTS);
-			types.add(AbstractResult.USEREVENT_MAX);
-			types.add(AbstractResult.USEREVENT_MIN);
-			types.add(AbstractResult.USEREVENT_MEAN);
-			types.add(AbstractResult.USEREVENT_SUMSQR);
+			if (includeUserEventTypes) {
+				types.add(AbstractResult.USEREVENT_NUMEVENTS);
+				types.add(AbstractResult.USEREVENT_MAX);
+				types.add(AbstractResult.USEREVENT_MIN);
+				types.add(AbstractResult.USEREVENT_MEAN);
+				types.add(AbstractResult.USEREVENT_SUMSQR);
+			}
 		}
 		return types;
 	}

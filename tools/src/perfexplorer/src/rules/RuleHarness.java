@@ -135,7 +135,14 @@ public class RuleHarness {
 			//add the package to a rulebase (deploy the rule package).
 			this.ruleBase = RuleBaseFactory.newRuleBase();
 		}
-		this.ruleBase.addPackage( pkg );
+		try {
+			this.ruleBase.addPackage( pkg );
+		} catch (Exception e) {
+			System.err.println("\n\n\t!!! ERROR PARSING RULES !!!\n\n");
+			System.err.println(e.toString());
+			Thread t = Thread.currentThread();
+			t.interrupt();
+		}
 	}
 
 	public String getLog() {

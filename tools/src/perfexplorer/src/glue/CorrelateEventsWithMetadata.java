@@ -121,7 +121,6 @@ public class CorrelateEventsWithMetadata extends AbstractPerformanceOperation {
 							}
 							correlation.putDataPoint(CorrelationResult.CORRELATION, event + ":" + metric + ":" + AbstractResult.typeToString(type), event2 + ":" + metric2, type2, r);
 //							correlation.putDataPoint(CorrelationResult.CORRELATION, event + ":" + metric, event2 + ":" + metric2, type, r);
-							correlation.assertFact(event, metric, type, event2, metric2, CorrelationResult.CORRELATION, r);
 							
 							LinearRegressionInterface regression = AnalysisFactory.createLinearRegressionEngine();
 							regression.setInputData(data);
@@ -144,6 +143,7 @@ public class CorrelateEventsWithMetadata extends AbstractPerformanceOperation {
 							}
 							correlation.putDataPoint(CorrelationResult.SLOPE, event + ":" + metric + ":" + AbstractResult.typeToString(type), event2 + ":" + metric2, type2, slope);
 							correlation.putDataPoint(CorrelationResult.INTERCEPT, event + ":" + metric + ":" + AbstractResult.typeToString(type), event2 + ":" + metric2, type2, intercept);
+							correlation.assertFact(event, metric, type, event2, metric2, CorrelationResult.METADATA, r, slope, intercept);
 						}
 					} // for events2
 				} // for types

@@ -87,7 +87,7 @@ public class TrialThreadMetadata extends AbstractResult {
 				// TODO - calcluate the thread id properly from the node, context, thread values
 				NodeList children = profileAttributes.item(i).getChildNodes();
 				// TODO : this is a hack for sweep3d support - REMOVE IT!
-				int neighbors = 0;
+				// int neighbors = 0;
 				for (int j = 0 ; j < children.getLength(); j++) {
 					Node attributeElement = children.item(j);
 					Node name = attributeElement.getFirstChild();
@@ -109,9 +109,9 @@ public class TrialThreadMetadata extends AbstractResult {
 								this.putExclusive(Integer.parseInt(node), tmpName, "METADATA", tmpDouble.doubleValue());
 //								System.out.println(tmpName + node + " " + tmp);
 								// TODO : this is a hack for sweep3d support - REMOVE IT!
-								if (tmpName.startsWith("processor neighbor") && tmpDouble > 0.0) {
-									neighbors++;
-								}
+								// if (tmpName.startsWith("processor neighbor") && tmpDouble > 0.0) {
+									// neighbors++;
+								// }
 							} catch (NumberFormatException e) { 
 								putNameValue(Integer.parseInt(node), tmpName, tmp);
 							}
@@ -119,7 +119,7 @@ public class TrialThreadMetadata extends AbstractResult {
 					}
 				}
 				// TODO : this is a hack for sweep3d support - REMOVE IT!
-				this.putExclusive(Integer.parseInt(node), "total Neighbors", "METADATA", neighbors);
+				// this.putExclusive(Integer.parseInt(node), "total Neighbors", "METADATA", neighbors);
 			}
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
