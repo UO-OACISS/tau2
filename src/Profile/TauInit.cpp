@@ -97,10 +97,9 @@ extern "C" int InitializeTAU() {
   
   // other initialization code should go here
 
-
-#ifdef TAU_COMPENSATE
-  Tau_compensate_initialization();
-#endif /* TAU_COMPENSATE */
+  if (TauEnv_get_compensate()) {
+    Tau_compensate_initialization();
+  }
   
   TauMetrics_init();
 

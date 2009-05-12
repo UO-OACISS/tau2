@@ -293,7 +293,6 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #KTAU_MERGE#KTAU_MERGE_O      	= KtauFuncInfo.o KtauMergeInfo.o ktau_syscall.o  #ENDIF#
 #KTAU_SHCTR#KTAU_SHCTR_O      	= KtauCounters.o  #ENDIF#
 #MPITRACE#TRACEOPT	 = -DTAU_MPITRACE -DTRACING_ON #ENDIF#
-#COMPENSATE#COMPENSATE_O      = TauCompensate.o #ENDIF#
 #PTHREAD_AVAILABLE#THR_O       = PthreadLayer.o        #ENDIF#
 #TAU_PAPI_THREADS#THR_O       = PapiThreadLayer.o        #ENDIF#
 #TAU_SPROC#THR_O       	       = SprocLayer.o        #ENDIF#

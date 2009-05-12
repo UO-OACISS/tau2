@@ -264,10 +264,9 @@ void Profiler::Start(int tid) {
   ThisFunction->GetHeadroomEvent()->TriggerEvent((double)TauGetFreeMemory());
 #endif /* TAU_PROFILEHEADROOM */
 
-#ifdef TAU_COMPENSATE
-  SetNumChildren(0); /* for instrumentation perturbation compensation */
-#endif /* TAU_COMPENSATE */
-
+  if (TauEnv_get_compensate()) {
+    SetNumChildren(0); /* for instrumentation perturbation compensation */
+  }
 
   x_uint64 TimeStamp;
 
@@ -439,22 +438,23 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     
 
 #ifdef PROFILING_ON
-#ifdef TAU_COMPENSATE
-  double *tover = TauGetTimerOverhead(TauFullTimerOverhead);
-  double *tnull = TauGetTimerOverhead(TauNullTimerOverhead);
-#endif /* TAU_COMPENSATE */
+  double *tover, *tnull;
+  if (TauEnv_get_compensate()) {
+    tover = TauGetTimerOverhead(TauFullTimerOverhead);
+    tnull = TauGetTimerOverhead(TauNullTimerOverhead);
+  }
 
 
   for (int k=0; k<Tau_Global_numCounters; k++) {
     TotalTime[k] = CurrentTime[k] - StartTime[k];
-#ifdef TAU_COMPENSATE 
-    /* To compensate for timing overhead, shrink the totaltime! */
-    TotalTime[k] = TotalTime[k] - tnull[k] - GetNumChildren() * tover[k]; 
-    if (TotalTime[k] < 0 ) {
-      TotalTime[k] = 0;
-      DEBUGPROFMSG("TotalTime[" <<k<<"] negative in "<<ThisFunction->GetName()<<endl;);
+    if (TauEnv_get_compensate()) {
+      /* To compensate for timing overhead, shrink the totaltime! */
+      TotalTime[k] = TotalTime[k] - tnull[k] - GetNumChildren() * tover[k]; 
+      if (TotalTime[k] < 0 ) {
+	TotalTime[k] = 0;
+	DEBUGPROFMSG("TotalTime[" <<k<<"] negative in "<<ThisFunction->GetName()<<endl;);
+      }
     }
-#endif /* TAU_COMPENSATE */
   }
 #endif // PROFILING_ON
     
@@ -545,30 +545,30 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #endif /*KTAU_DEBUGPROF*/
 #endif /*TAUKTAU && TAUKTAU_MERGE*/
     
-#ifdef TAU_COMPENSATE
-  ThisFunction->ResetExclTimeIfNegative(tid); 
-
-  if (TauEnv_get_callpath()) {
-    if (ParentProfiler != NULL) {
-      CallPathFunction->ResetExclTimeIfNegative(tid); 
+  if (TauEnv_get_compensate()) {
+    ThisFunction->ResetExclTimeIfNegative(tid); 
+    
+    if (TauEnv_get_callpath()) {
+      if (ParentProfiler != NULL) {
+	CallPathFunction->ResetExclTimeIfNegative(tid); 
+      }
     }
-  }
 #ifdef TAU_PROFILEPARAM
-  if (ParentProfiler != NULL) {
-    ProfileParamFunction->ResetExclTimeIfNegative(tid);
-  }
+    if (ParentProfiler != NULL) {
+      ProfileParamFunction->ResetExclTimeIfNegative(tid);
+    }
 #endif /* TAU_PROFILEPARAM */
-#endif /* TAU_COMPENSATE */
+  }
 
     
   
   if (ParentProfiler != NULL) {
       ParentProfiler->ThisFunction->ExcludeTime(TotalTime, tid);
     
-#ifdef TAU_COMPENSATE
-      ParentProfiler->AddNumChildren(GetNumChildren()+1);
-      /* Add 1 and my children to my parents total number of children */
-#endif /* TAU_COMPENSATE */
+      if (TauEnv_get_compensate()) {
+	ParentProfiler->AddNumChildren(GetNumChildren()+1);
+	/* Add 1 and my children to my parents total number of children */
+      }
   }
 
 #endif //PROFILING_ON
@@ -930,7 +930,6 @@ void TauProfiler_PurgeData(int tid) {
 /////////////////////////////////////////////////////////////////////////
 
 
-#ifdef TAU_COMPENSATE
 //////////////////////////////////////////////////////////////////////
 //  Profiler::GetNumChildren()
 //  Description: Returns the total number of child timers (including 
@@ -955,7 +954,6 @@ void Profiler::SetNumChildren(long value) {
 void Profiler::AddNumChildren(long value) {
   NumChildren += value;
 }
-#endif /* TAU_COMPENSATE */
 
 //////////////////////////////////////////////////////////////////////
 //  Profiler::GetPhase(void)
@@ -1331,6 +1329,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.240 $   $Date: 2009/04/14 15:09:19 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.240 2009/04/14 15:09:19 amorris Exp $ 
+ * $Revision: 1.241 $   $Date: 2009/05/12 23:24:31 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.241 2009/05/12 23:24:31 amorris Exp $ 
  ***************************************************************************/

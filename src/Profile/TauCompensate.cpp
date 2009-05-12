@@ -11,10 +11,6 @@
 **	Description 	: TAU Profiling Package				  **
 **	Author		: Sameer Shende					  **
 **	Contact		: sameer@cs.uoregon.edu 			  **
-**	Flags		: Compile with				          **
-**			  -DTAU_COMPENSATE for instrumentation overhead   **
-**			   compensation to correct profiles               **
-**			  -DPROFILING_ON to enable profiling (ESSENTIAL)  **
 **	Documentation	: http://www.cs.uoregon.edu/research/paracomp/tau **
 ***************************************************************************/
 

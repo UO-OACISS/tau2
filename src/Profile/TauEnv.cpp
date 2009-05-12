@@ -45,6 +45,12 @@
 # define TAU_CALLPATH_DEFAULT 0
 #endif
 
+#ifdef TAU_COMPENSATE
+# define TAU_COMPENSATE_DEFAULT 1
+#else
+# define TAU_COMPENSATE_DEFAULT 0
+#endif
+
 #if (defined(MPI_TRACE) || defined(TRACING_ON))
 # define TAU_TRACING_DEFAULT 1
 #else
@@ -80,6 +86,7 @@ extern "C" {
   static int env_verbose = 0;
   static int env_throttle = 0;
   static int env_callpath = 0;
+  static int env_compensate = 0;
   static int env_profiling = 0;
   static int env_tracing = 0;
   static int env_callpath_depth = 0;
@@ -153,6 +160,10 @@ extern "C" {
 
   int TauEnv_get_callpath() {
     return env_callpath;
+  }
+
+  int TauEnv_get_compensate() {
+    return env_compensate;
   }
 
   int TauEnv_get_comm_matrix() {
@@ -253,6 +264,18 @@ extern "C" {
 	env_tracing = 0;
 	TAU_VERBOSE("TAU: Tracing Disabled\n");
 	TAU_METADATA("TAU_TRACE","off");
+      }
+
+      // compensate
+      tmp = getenv("TAU_COMPENSATE");
+      if (parse_bool(tmp, TAU_COMPENSATE_DEFAULT)) {
+	env_compensate = 1;
+	TAU_VERBOSE("TAU: Overhead Compensation Enabled\n");
+	TAU_METADATA("TAU_COMPENSATE","on");
+      } else {
+	env_compensate = 0;
+	TAU_VERBOSE("TAU: Overhead Compensation Disabled\n");
+	TAU_METADATA("TAU_COMPENSATE","off");
       }
 
       // comm matrix

@@ -176,14 +176,12 @@ public:
   double StartTime[TAU_MAX_COUNTERS];
 
 
-#ifdef TAU_COMPENSATE
   /* Compensate for instrumentation overhead based on total number of 
      child calls executed under the given timer */
   long NumChildren;
   void SetNumChildren(long n);
   long GetNumChildren(void);
   void AddNumChildren(long value);
-#endif /* TAU_COMPENSATE */
   
   
 #ifdef TAU_PROFILEPHASE
@@ -270,6 +268,6 @@ void TauProfiler_EnableAllEventsOnCallStack(int tid, Profiler *current);
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.106 $   $Date: 2009/04/11 00:17:56 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.106 2009/04/11 00:17:56 amorris Exp $ 
+ * $Revision: 1.107 $   $Date: 2009/05/12 23:23:46 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.107 2009/05/12 23:23:46 amorris Exp $ 
  ***************************************************************************/

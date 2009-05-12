@@ -96,7 +96,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o \
 		$(PARAM_O) Tracer.o TauMetrics.o TauReadMetrics.o $(THR_O) \
 		$(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) \
-		$(COMPENSATE_O) $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
+		TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O)
 
 STATIC_OBJS   = Comp_gnu.o $(PGIACC_STATIC_O)
