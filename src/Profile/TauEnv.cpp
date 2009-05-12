@@ -51,6 +51,7 @@
 # define TAU_TRACING_DEFAULT 0
 #endif
 
+
 #ifdef PROFILING_ON
 # define TAU_PROFILING_DEFAULT 1
 #else
@@ -63,6 +64,7 @@
 # define TAU_COMM_MATRIX_DEFAULT 0
 #endif
 
+#define TAU_TRACK_MESSAGE_DEFAULT 0
 
 
 #define TAU_THROTTLE_DEFAULT 1
@@ -81,6 +83,7 @@ extern "C" {
   static int env_profiling = 0;
   static int env_tracing = 0;
   static int env_callpath_depth = 0;
+  static int env_track_message = 0;
   static int env_comm_matrix = 0;
   static int env_profile_format = TAU_FORMAT_PROFILE;
   static double env_throttle_numcalls = 0;
@@ -154,6 +157,10 @@ extern "C" {
 
   int TauEnv_get_comm_matrix() {
     return env_comm_matrix;
+  }
+
+  int TauEnv_get_track_message() {
+    return env_track_message;
   }
 
   int TauEnv_get_profiling() {
@@ -253,12 +260,26 @@ extern "C" {
       if (parse_bool(tmp, TAU_COMM_MATRIX_DEFAULT)) {
 	env_comm_matrix = 1;
 	TAU_VERBOSE("TAU: Comm Matrix Enabled\n");
-	TAU_METADATA("TAU_COMM_MATRIX","off");
+	TAU_METADATA("TAU_COMM_MATRIX","on");
       } else {
 	env_comm_matrix = 0;
 	TAU_VERBOSE("TAU: Comm Matrix Disabled\n");
-	TAU_METADATA("TAU_COMM_MATRIX","on");
+	TAU_METADATA("TAU_COMM_MATRIX","off");
       }
+
+#ifdef TAU_MPI
+      // track comm (oppossite of old -nocomm option)
+      tmp = getenv("TAU_TRACK_MESSAGE");
+      if (parse_bool(tmp, TAU_TRACK_MESSAGE_DEFAULT)) {
+	env_track_message = 1;
+	TAU_VERBOSE("TAU: Message Tracking Enabled\n");
+	TAU_METADATA("TAU_TRACK_MESSAGE","on");
+      } else {
+	env_track_message = 0;
+	TAU_VERBOSE("TAU: Message Tracking Disabled\n");
+	TAU_METADATA("TAU_TRACK_MESSAGE","off");
+      }
+#endif
 
       // clock synchronization
       if (env_tracing == 0) {
