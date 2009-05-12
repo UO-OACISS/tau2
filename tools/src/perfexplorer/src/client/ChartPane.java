@@ -1249,17 +1249,15 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 
 	private String shortName(String longName) {
-		longName=longName.trim();
-		StringTokenizer st = new StringTokenizer(longName, "[{");
-		String shorter = null;
-		try {
-			shorter = st.nextToken();
-//			if (shorter.length() < longName.length()) {
-//				shorter = shorter + "()";
-//			}
-		} catch (NoSuchElementException e) {
-			shorter = longName;
+		
+		int codeDex = longName.indexOf("[{");
+		//If this is somehow the first string, we don't want to make an empty string...
+		if(codeDex<1){
+			longName=longName.trim();
+			return longName;
 		}
+		
+		String shorter = longName.substring(0, codeDex).trim();
 		return shorter;
 	}
 

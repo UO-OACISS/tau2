@@ -38,7 +38,7 @@ import edu.uoregon.tau.perfexplorer.common.TransformationType;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.35 2009/05/12 00:28:38 wspear Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.36 2009/05/12 16:51:34 wspear Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -116,7 +116,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 			buf.append("on experiment.application = application.id ");
 			buf.append("where ");
 			// add the where clause
-			List selections = model.getMultiSelection();
+			List<Object> selections = model.getMultiSelection();
 			if (selections == null) {
 				// just one selection
 				Object obj = model.getCurrentSelection();
@@ -330,7 +330,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 				buf.append("inner join temp_trial ");
 				buf.append("on metric.trial = temp_trial.id ");
 				// add the where clause
-				List metricNames = model.getMetricNames();
+				List<String> metricNames = model.getMetricNames();
 				if (metricNames != null) {
 					//if (db.getDBType().compareTo("db2") == 0) {
 						buf.append("where upper(metric.name) like ? ");
@@ -402,8 +402,8 @@ public class GeneralChartData extends RMIGeneralChartData {
 ////////////////////////////////
 
 			// forward declare some variables...
-			List groupNames = model.getGroupNames();
-			List eventNames = model.getEventNames();
+			List<String> groupNames = model.getGroupNames();
+			List<String> eventNames = model.getEventNames();
 
 			if (model.getChartSeriesName().equals("atomic_event.name")) {
 				// create and populate the temporary event table
@@ -688,7 +688,10 @@ public class GeneralChartData extends RMIGeneralChartData {
 			//buf.append("group by " + fixClause(seriesName, db));
 			//buf.append(", " + fixClause(xAxisName, db) + " " );
 			if (db.getDBType().compareTo("derby") == 0) {
-				buf.append("group by " + fixClause(seriesName, db) + ", " + fixClause(xAxisName, db));
+				buf.append("group by " + fixClause(seriesName, db));
+				if(!seriesName.equals(xAxisName)){
+					 buf.append(", " + fixClause(xAxisName, db));
+				}
 				// add the order by clause
 				if (seriesName.startsWith("trial.node_count") || xAxisName.startsWith("trial.node_count")) {
 					buf.append(" order by 1, 2, 3, 4 ");
@@ -700,8 +703,11 @@ public class GeneralChartData extends RMIGeneralChartData {
 				// add the order by clause
 				buf.append("order by 1, 2 ");
 			}
-			statement = db.prepareStatement(buf.toString());
+			
 			//System.out.println(buf.toString());
+			
+			statement = db.prepareStatement(buf.toString());
+
 			//System.out.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 
@@ -866,7 +872,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 			buf.append("on experiment.application = application.id ");
 			buf.append("where ");
 			// add the where clause
-			List selections = model.getMultiSelection();
+			List<Object> selections = model.getMultiSelection();
 			if (selections == null) {
 				// just one selection
 				Object obj = model.getCurrentSelection();
