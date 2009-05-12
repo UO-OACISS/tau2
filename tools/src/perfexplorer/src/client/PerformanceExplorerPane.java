@@ -61,12 +61,12 @@ public class PerformanceExplorerPane extends JScrollPane implements ActionListen
 				return;
 			}
 			int iStart = 0;
-			List descriptions = results.getDescriptions();
-			List thumbnails = results.getThumbnails();
+			List<String> descriptions = results.getDescriptions();
+			List<byte[]> thumbnails = results.getThumbnails();
 			int imageCount = descriptions.size();
 			resultsHash.put(model.toString(), results);
 			JPanel imagePanel2 = null;
-			// if we have 4n+1 images, then we have a dendrogram.  Put it at the top.
+			/*// if we have 4n+1 images, then we have a dendrogram.  Put it at the top.
 			if (results.getResultCount() % imagesPerRow == 1) {
 				iStart = 1;
 				ImageIcon icon = new ImageIcon((byte[])(thumbnails.get(0)));
@@ -76,11 +76,11 @@ public class PerformanceExplorerPane extends JScrollPane implements ActionListen
 				imagePanel.add(button, BorderLayout.CENTER);
 				imagePanel2 = new JPanel(new GridLayout((results.getResultCount()-1)/imagesPerRow,imagesPerRow));
 			// if we have 5n images, then we have clustering of a trial.
-			} else if (results.getResultCount() % (imagesPerRow-1) == 0) {
-				imagePanel2 = new JPanel(new GridLayout(results.getResultCount()/(imagesPerRow-1),(imagesPerRow-1)));
+			} else*/ if (results.getResultCount() % (imagesPerRow) == 0) {
+				imagePanel2 = new JPanel(new GridLayout(results.getResultCount()/imagesPerRow,imagesPerRow));
 			// we have clustering of a metric.
 			} else {
-				imagePanel2 = new JPanel(new GridLayout(results.getResultCount()/imagesPerRow,imagesPerRow));
+				imagePanel2 = new JPanel(new GridLayout(results.getResultCount()/(imagesPerRow-1),(imagesPerRow-1)));
 			}
 
 			for (int i = iStart ; i < imageCount ; i++) {
@@ -90,7 +90,7 @@ public class PerformanceExplorerPane extends JScrollPane implements ActionListen
 				button.addActionListener(this);
 				imagePanel2.add(button);
 			}
-			imagePanel.add(imagePanel2, BorderLayout.SOUTH);
+			imagePanel.add(imagePanel2, BorderLayout.NORTH);
 		}
 		// this.repaint();
 	}

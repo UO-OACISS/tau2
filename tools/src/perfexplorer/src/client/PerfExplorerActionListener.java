@@ -408,11 +408,11 @@ public class PerfExplorerActionListener implements ActionListener {
 			TransformationType.NONE);
         TransformationType reply = (TransformationType)obj;
 		PerfExplorerModel.getModel().setDimensionReduction(reply);
-		if (PerfExplorerModel.getModel().getDimensionReduction().equals(reply)) {
+		if (reply!=TransformationType.NONE&&reply!=null&&PerfExplorerModel.getModel().getDimensionReduction().equals(reply)) {
 			String reply2 = (String)JOptionPane.showInputDialog (mainFrame,
 				"Only select events with exclusive time % greater than X:\n(where 0 <= X < 100)",
 				"Minimum Percentage", JOptionPane.PLAIN_MESSAGE);
-			if (reply != null && !reply.equals(""))
+			if (reply2 != null && !reply2.equals(""))
 				PerfExplorerModel.getModel().setXPercent(reply2);
 		}
 	}

@@ -651,6 +651,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		// series name
 		Object obj = series.getSelectedItem();
 		String tmp = (String)obj;
+		facade.setChartSeriesXML(false);
 		if (tmp.equalsIgnoreCase("trial.threads_of_execution")) {
 			tmp = "trial.node_count * trial.contexts_per_node * trial.threads_per_context";
 		} else if (tmp.equalsIgnoreCase("trial.XML_METADATA")) {
@@ -658,6 +659,9 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			Object obj2 = seriesXmlName.getSelectedItem();
 			String tmp2 = (String)obj2;
 			facade.setChartMetadataFieldName(tmp2);
+			tmp=tmp2;
+			facade.setChartSeriesXML(true);
+			
 		}
 		facade.setChartSeriesName(tmp);//TODO: Should this be tmp1?
 
@@ -1245,13 +1249,14 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 
 	private String shortName(String longName) {
-		StringTokenizer st = new StringTokenizer(longName, "(");
+		longName=longName.trim();
+		StringTokenizer st = new StringTokenizer(longName, "[{");
 		String shorter = null;
 		try {
 			shorter = st.nextToken();
-			if (shorter.length() < longName.length()) {
-				shorter = shorter + "()";
-			}
+//			if (shorter.length() < longName.length()) {
+//				shorter = shorter + "()";
+//			}
 		} catch (NoSuchElementException e) {
 			shorter = longName;
 		}

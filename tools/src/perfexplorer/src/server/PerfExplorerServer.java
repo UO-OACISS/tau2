@@ -60,7 +60,7 @@ import edu.uoregon.tau.perfexplorer.constants.Constants;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.81 2009/05/08 22:45:22 wspear Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.82 2009/05/12 00:28:38 wspear Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -670,7 +670,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			}
 			analysisID = Integer.parseInt(db.getDataItem(tmpStr));
 		} catch (SQLException e) {
-			String error = "ERROR: Couldn't insert the analysis settings into the database!\nPlease make sure that the analysis_settings and analysis_results tables\nhave been created in the database, and that\nR and the Omegahat interface have been installed on this machine.";
+			String error = "ERROR: Couldn't insert the analysis settings into the database!\nPlease make sure that the analysis_settings and analysis_results tables\nhave been created in the database.";
 			System.err.println(error);
 			e.printStackTrace();
 			throw new PerfExplorerException(error, e);

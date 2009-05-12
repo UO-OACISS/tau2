@@ -38,7 +38,7 @@ import edu.uoregon.tau.perfexplorer.common.TransformationType;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.34 2009/05/08 22:45:22 wspear Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.35 2009/05/12 00:28:38 wspear Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -591,14 +591,29 @@ public class GeneralChartData extends RMIGeneralChartData {
 				buf.append("select ");
 				if (db.getDBType().compareTo("derby") == 0) {
 					// first item - the series name
-					buf.append(fixClause(seriesName, db) + ", ");
+					if(model.isChartSeriesXML()){
+						buf.append("'");
+					}
+					buf.append(fixClause(seriesName, db));
+					if(model.isChartSeriesXML()){
+						buf.append("'");
+					}
+					buf.append(", ");
 					// second item - the x axis
 					buf.append(fixClause(xAxisName, db) + ", ");
 					// second item - the y axis
 					buf.append(fixClause(yAxisName, db) + " ");
 				} else {
+					if(model.isChartSeriesXML()){
+						buf.append("'");
+					}
+					
 					// first item - the series name
-					buf.append(fixClause(seriesName, db) + " as series_name, ");
+					buf.append(fixClause(seriesName, db));
+					if(model.isChartSeriesXML()){
+						buf.append("'");
+					}
+					buf.append(" as series_name, ");
 					// second item - the x axis
 					buf.append(fixClause(xAxisName, db) + " as xaxis_value, ");
 					// second item - the y axis
@@ -620,16 +635,32 @@ public class GeneralChartData extends RMIGeneralChartData {
 					tableName = "interval_total_summary";
 				}
 				buf.append("select ");
+
 				if (db.getDBType().compareTo("derby") == 0) {
 					// first item - the series name
-					buf.append(fixClause(seriesName, db) + ", ");
+					if(model.isChartSeriesXML()){
+						buf.append("'");
+					}
+					buf.append(fixClause(seriesName, db));
+					if(model.isChartSeriesXML()){
+						buf.append("'");
+					}
+					buf.append(", ");
 					// second item - the x axis
 					buf.append(fixClause(xAxisName, db) + ", ");
 					// second item - the y axis
 					buf.append(fixClause(yAxisName, db) + " ");
 				} else {
+					if(model.isChartSeriesXML()){
+						buf.append("'");
+					}
+					
 					// first item - the series name
-					buf.append(fixClause(seriesName, db) + " as series_name, ");
+					buf.append(fixClause(seriesName, db));
+					if(model.isChartSeriesXML()){
+						buf.append("'");
+					}
+					buf.append(" as series_name, ");
 					// second item - the x axis
 					buf.append(fixClause(xAxisName, db) + " as xaxis_value, ");
 					// second item - the y axis

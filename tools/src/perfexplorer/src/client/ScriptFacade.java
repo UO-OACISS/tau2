@@ -261,6 +261,12 @@ public class ScriptFacade {
 		
 	}
 
+
+	public void setChartSeriesXML(boolean chartSeriesXML) {
+		model.setChartSeriesXML(chartSeriesXML);
+	}
+	
+	
 	/**
 	 * Show the summary of the profile data
 	 *

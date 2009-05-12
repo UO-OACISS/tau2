@@ -15,7 +15,7 @@ import java.util.ArrayList;
  * This RMI object defines the state of the client model when an analysis
  * request is made.
  *
- * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.38 2009/03/04 17:55:09 khuck Exp $</P>
+ * <P>CVS $Id: RMIPerfExplorerModel.java,v 1.39 2009/05/12 00:28:38 wspear Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -38,6 +38,7 @@ public class RMIPerfExplorerModel implements Serializable {
 	protected boolean mainEventOnly = true;
 	protected boolean eventExclusive100 = false;
 	protected String chartSeriesName = null;
+	protected boolean chartSeriesXML = false;
 	protected String chartMetadataFieldName = null;
 	protected String chartMetadataFieldValue = null;
 	protected String chartXAxisName = null;
@@ -51,6 +52,7 @@ public class RMIPerfExplorerModel implements Serializable {
 	protected boolean chartHorizontal = false;
 	protected boolean showZero = true;
 	protected String chartUnits = null;
+
 
 	// more cluster settings
 	protected AnalysisType clusterMethod = null;
@@ -1195,5 +1197,13 @@ public class RMIPerfExplorerModel implements Serializable {
 	 */
 	public void setAverageWarning(boolean averageWarning) {
 		this.averageWarning = averageWarning;
+	}
+	
+	public boolean isChartSeriesXML() {
+		return chartSeriesXML;
+	}
+
+	public void setChartSeriesXML(boolean chartSeriesXML) {
+		this.chartSeriesXML = chartSeriesXML;
 	}
 }

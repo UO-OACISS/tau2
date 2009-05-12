@@ -18,6 +18,7 @@ import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
+import edu.uoregon.tau.perfexplorer.clustering.DataNormalizer;
 import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
 import edu.uoregon.tau.perfexplorer.clustering.PrincipalComponentsAnalysisInterface;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
@@ -35,7 +36,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  *
- * <P>CVS $Id: AnalysisTask.java,v 1.17 2009/05/08 22:45:22 wspear Exp $</P>
+ * <P>CVS $Id: AnalysisTask.java,v 1.18 2009/05/12 00:28:38 wspear Exp $</P>
  * @author Kevin Huck
  * @version 0.1
  * @since 0.1
@@ -225,6 +226,10 @@ public class AnalysisTask extends TimerTask {
 				numTotalThreads = rawData.numVectors();
 				// do dimension reduction, if requested
 				RawDataInterface reducedData = doDimensionReduction();
+				
+				//DataNormalizer normalizer = AnalysisFactory.createDataNormalizer(reducedData);
+				//reducedData=normalizer.getNormalizedData();
+				
 				// find good initial centers
 				//makeDendrogram(reducedData);
 				// do it!
