@@ -31,6 +31,7 @@
 #include <stdarg.h>
 
 #include <Profile/TauEnv.h>
+#include <TAU.h>
 
 /* We should throttle if number n > a && percall < b .a and b are given below */
 #define TAU_THROTTLE_NUMCALLS_DEFAULT 100000
@@ -181,6 +182,7 @@ extern "C" {
   }
 
   void TauEnv_initialize() {
+    char tmpstr[512];
 
     // unset LD_PRELOAD so that vt_unify and elg_unify work
     unsetenv("LD_PRELOAD");
@@ -215,9 +217,11 @@ extern "C" {
       if (parse_bool(tmp, TAU_CALLPATH_DEFAULT)) {
 	env_callpath = 1;
 	TAU_VERBOSE("TAU: Callpath Profiling Enabled\n");
+	TAU_METADATA("TAU_CALLPATH","on");
       } else {
 	env_callpath = 0;
 	TAU_VERBOSE("TAU: Callpath Profiling Disabled\n");
+	TAU_METADATA("TAU_CALLPATH","off");
       }
 
       // profiling
@@ -225,9 +229,11 @@ extern "C" {
       if (parse_bool(tmp, TAU_PROFILING_DEFAULT)) {
 	env_profiling = 1;
 	TAU_VERBOSE("TAU: Profiling Enabled\n");
+	TAU_METADATA("TAU_PROFILE","on");
       } else {
 	env_profiling = 0;
 	TAU_VERBOSE("TAU: Profiling Disabled\n");
+	TAU_METADATA("TAU_PROFILE","off");
       }
 
       // tracing
@@ -235,9 +241,11 @@ extern "C" {
       if (parse_bool(tmp, TAU_TRACING_DEFAULT)) {
 	env_tracing = 1;
 	TAU_VERBOSE("TAU: Tracing Enabled\n");
+	TAU_METADATA("TAU_TRACE","on");
       } else {
 	env_tracing = 0;
 	TAU_VERBOSE("TAU: Tracing Disabled\n");
+	TAU_METADATA("TAU_TRACE","off");
       }
 
       // comm matrix
@@ -245,9 +253,11 @@ extern "C" {
       if (parse_bool(tmp, TAU_COMM_MATRIX_DEFAULT)) {
 	env_comm_matrix = 1;
 	TAU_VERBOSE("TAU: Comm Matrix Enabled\n");
+	TAU_METADATA("TAU_COMM_MATRIX","off");
       } else {
 	env_comm_matrix = 0;
 	TAU_VERBOSE("TAU: Comm Matrix Disabled\n");
+	TAU_METADATA("TAU_COMM_MATRIX","on");
       }
 
       // clock synchronization
@@ -267,8 +277,10 @@ extern "C" {
 #else
 	if (env_synchronize_clocks) {
 	  TAU_VERBOSE("TAU: Clock Synchronization Enabled\n");
+	  TAU_METADATA("TAU_SYNCHRONIZE_CLOCKS","on");
 	} else {
 	  TAU_VERBOSE("TAU: Clock Synchronization Disabled\n");
+	  TAU_METADATA("TAU_SYNCHRONIZE_CLOCKS","off");
 	}
 #endif
       }
@@ -284,6 +296,8 @@ extern "C" {
       }
       if (env_callpath) {
 	TAU_VERBOSE("TAU: Callpath Depth = %d\n", env_callpath_depth);
+	sprintf (tmpstr,"%d",env_callpath_depth);
+	TAU_METADATA("TAU_CALLPATH_DEPTH",tmp);
       }
 
 
@@ -292,9 +306,11 @@ extern "C" {
       if (parse_bool(tmp, TAU_THROTTLE_DEFAULT)) {
 	env_throttle = 1;
 	TAU_VERBOSE("TAU: Throttling Enabled\n");
+	TAU_METADATA("TAU_THROTTLE","on");
       } else {
 	env_throttle = 0;
 	TAU_VERBOSE("TAU: Throttling Disabled\n");
+	TAU_METADATA("TAU_THROTTLE","off");
       }
 
       char *percall = getenv("TAU_THROTTLE_PERCALL"); 
@@ -312,6 +328,11 @@ extern "C" {
       if (env_throttle) {
 	TAU_VERBOSE("TAU: Throttle PerCall = %g\n", env_throttle_percall);
 	TAU_VERBOSE("TAU: Throttle NumCalls = %g\n", env_throttle_numcalls);
+
+	sprintf (tmpstr,"%g",env_throttle_percall);
+	TAU_METADATA("TAU_THROTTLE_PERCALL",tmpstr);
+	sprintf (tmpstr,"%g",env_throttle_numcalls);
+	TAU_METADATA("TAU_THROTTLE_NUMCALLS",tmpstr);
       }
 
       char *profileFormat = getenv("TAU_PROFILE_FORMAT");
