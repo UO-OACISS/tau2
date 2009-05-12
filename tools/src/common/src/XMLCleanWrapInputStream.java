@@ -12,7 +12,6 @@ public class XMLCleanWrapInputStream extends InputStream {
                 || ((current >= 0xE000) && (current <= 0xFFFD)) || ((current >= 0x10000) && (current <= 0x10FFFF))) {
             return current;
         } else {
-            System.out.println("warning: bad char found " + current);
             return ' ';
         }
     }
