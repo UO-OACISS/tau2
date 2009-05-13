@@ -35,7 +35,7 @@
 
 #ifdef TAU_BGP
 
-#ifdef TAU_BGPTIMERS
+#ifdef BGP_TIMERS
 /* header files for BlueGene/P */
 #include <bgp_personality.h>
 #include <bgp_personality_inlines.h>
@@ -127,7 +127,7 @@ void metric_read_bgtimers(int tid, int idx, double values[]) {
 #endif /* TAU_BGL */
 
 #ifdef TAU_BGP
-#ifdef TAU_BGPTIMERS
+#ifdef BGP_TIMERS
   static double bgp_clockspeed = 0.0;
 
   if (bgp_clockspeed == 0.0) {
@@ -136,6 +136,9 @@ void metric_read_bgtimers(int tid, int idx, double values[]) {
     bgp_clockspeed = 1.0/(double)BGP_Personality_clockMHz(&mybgp);
   }
   values[idx] =  (_bgp_GetTimeBase() * bgp_clockspeed);
+#else /* TAU_BGPTIMERS */
+  printf ("TAU: Error: You must specify -BGPTIMERS at configure time\n");
+  values[idx] = 0;
 #endif /* TAU_BGPTIMERS */
 #endif /* TAU_BGP */
 }
