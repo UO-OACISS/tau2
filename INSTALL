@@ -1,5 +1,5 @@
 *****************************************************************************
-**			TAU Portable Profiling Package			   **
+**			TAU Performance System(R)                          **
 **			http://tau.uoregon.edu                             **
 *****************************************************************************
 **    Copyright 1997-2008				   	   	   **
@@ -20,7 +20,7 @@
  *    For a tutorial on using TAU, open html/index.html in your    *
  *        web browser.                                             *
  *    For more information, including updates and new releases,    *
- *        see http://www.cs.uoregon.edu/research/tau               *
+ *        see http://tau.uoregon.edu                               *
  *    For help, reporting bugs, and making suggestions, please     *
  *        send e-mail to tau-bugs@cs.uoregon.edu                   *
  *******************************************************************/

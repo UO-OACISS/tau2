@@ -2,7 +2,7 @@
 **			TAU Portable Profiling Package			   **
 **			http://www.cs.uoregon.edu/research/paracomp/tau    **
 *****************************************************************************
-**    Copyright 1997-2007 				   	           **
+**    Copyright 1997-2009 				   	           **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 **    Research Center Juelich, ZAM Germany			           **	
@@ -63,5 +63,5 @@ traces that can be displayed with the Vampir trace visualization tool.
 TAU is being developed jointly by the University of Oregon, Los Alamos National
 Laboratory, and Research Centre Jülich, ZAM, Germany.  It can be found at:
 
-        http://www.cs.uoregon.edu/research/tau
+        http://tau.uoregon.edu
 
