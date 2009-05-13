@@ -31,6 +31,7 @@ using namespace std;
 extern "C" int Tau_compensate_initialization() {
   double *tover = TauGetTimerOverhead(TauFullTimerOverhead);
   double *tnull = TauGetTimerOverhead(TauNullTimerOverhead);
+  return 0;
 }
 
 
@@ -64,9 +65,6 @@ double*& TheTauFullTimerOverhead() {
 }
 
 
-#ifdef TAU_DEPTH_LIMIT
-int& TauGetDepthLimit(void);
-#endif /* TAU_DEPTH_LIMIT */
 
 int TauCalibrateNullTimer(void) {
   TAU_PROFILE_TIMER(tnull, ".TAU null timer overhead", " ", TAU_DEFAULT);
@@ -83,8 +81,8 @@ int TauCalibrateNullTimer(void) {
     
 
 #ifdef TAU_DEPTH_LIMIT
-  int original = TauGetDepthLimit();
-  TauGetDepthLimit() = INT_MAX;
+  int original = TauEnv_get_depth_limit();
+  TauEnv_set_depth_limit(INT_MAX);
 #endif /* TAU_DEPTH_LIMIT */
 
   bool oldSafeValue = TheSafeToDumpData();
@@ -101,7 +99,7 @@ int TauCalibrateNullTimer(void) {
   TheSafeToDumpData() = oldSafeValue;
 
 #ifdef TAU_DEPTH_LIMIT
-  TauGetDepthLimit() = original; /* reset! */
+  TauEnv_set_depth_limit(original); /* reset! */
 #endif /* TAU_DEPTH_LIMIT */
 
   /* Get thread id */

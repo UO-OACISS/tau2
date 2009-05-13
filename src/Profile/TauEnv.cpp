@@ -38,6 +38,9 @@
 #define TAU_THROTTLE_PERCALL_DEFAULT  10
 #define TAU_CALLPATH_DEPTH_DEFAULT  2
 
+
+#define TAU_DEPTH_LIMIT_DEFAULT INT_MAX
+
 /* If TAU is built with -PROFILECALLPATH, we turn callpath profiling on by default */
 #ifdef TAU_CALLPATH
 # define TAU_CALLPATH_DEFAULT 1
@@ -90,6 +93,7 @@ extern "C" {
   static int env_profiling = 0;
   static int env_tracing = 0;
   static int env_callpath_depth = 0;
+  static int env_depth_limit = 0;
   static int env_track_message = 0;
   static int env_comm_matrix = 0;
   static int env_profile_format = TAU_FORMAT_PROFILE;
@@ -186,6 +190,17 @@ extern "C" {
     return env_callpath_depth;
   }
 
+  int TauEnv_get_depth_limit() {
+    return env_depth_limit;
+  }
+
+  void TauEnv_set_depth_limit(int value) {
+    env_depth_limit = value;
+  }
+
+  void TAUDECL TauEnv_set_depth_limit(int value);
+
+
   double TauEnv_get_throttle_numcalls() {
     return env_throttle_numcalls;
   }
@@ -278,10 +293,21 @@ extern "C" {
 	TAU_METADATA("TAU_COMPENSATE","off");
       }
 
+
+#ifdef TAU_MPI
+      // track comm (oppossite of old -nocomm option)
+      tmp = getenv("TAU_TRACK_MESSAGE");
+      if (parse_bool(tmp, TAU_TRACK_MESSAGE_DEFAULT)) {
+	env_track_message = 1;
+      } else {
+	env_track_message = 0;
+      }
+
       // comm matrix
       tmp = getenv("TAU_COMM_MATRIX");
       if (parse_bool(tmp, TAU_COMM_MATRIX_DEFAULT)) {
 	env_comm_matrix = 1;
+	env_track_message = 1;
 	TAU_VERBOSE("TAU: Comm Matrix Enabled\n");
 	TAU_METADATA("TAU_COMM_MATRIX","on");
       } else {
@@ -289,16 +315,11 @@ extern "C" {
 	TAU_VERBOSE("TAU: Comm Matrix Disabled\n");
 	TAU_METADATA("TAU_COMM_MATRIX","off");
       }
-
-#ifdef TAU_MPI
-      // track comm (oppossite of old -nocomm option)
-      tmp = getenv("TAU_TRACK_MESSAGE");
-      if (parse_bool(tmp, TAU_TRACK_MESSAGE_DEFAULT)) {
-	env_track_message = 1;
+      
+      if (env_track_message) {
 	TAU_VERBOSE("TAU: Message Tracking Enabled\n");
 	TAU_METADATA("TAU_TRACK_MESSAGE","on");
       } else {
-	env_track_message = 0;
 	TAU_VERBOSE("TAU: Message Tracking Disabled\n");
 	TAU_METADATA("TAU_TRACK_MESSAGE","off");
       }
@@ -341,8 +362,22 @@ extern "C" {
       if (env_callpath) {
 	TAU_VERBOSE("TAU: Callpath Depth = %d\n", env_callpath_depth);
 	sprintf (tmpstr,"%d",env_callpath_depth);
-	TAU_METADATA("TAU_CALLPATH_DEPTH",tmp);
+	TAU_METADATA("TAU_CALLPATH_DEPTH",tmpstr);
       }
+
+
+
+#ifdef TAU_DEPTH_LIMIT
+      // depthlimit depth
+      tmp = getenv("TAU_DEPTH_LIMIT"); 
+      env_depth_limit = TAU_DEPTH_LIMIT_DEFAULT;
+      if (tmp) {
+	env_depth_limit = atoi(tmp);
+      }
+      TAU_VERBOSE("TAU: Depth Limit = %d\n", env_depth_limit);
+      sprintf (tmpstr,"%d",env_depth_limit);
+      TAU_METADATA("TAU_DEPTH_LIMIT",tmpstr);
+#endif /* TAU_DEPTH_LIMIT */
 
 
       // Throttle

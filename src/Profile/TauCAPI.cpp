@@ -99,22 +99,6 @@ extern "C" Profiler *TauInternal_ParentProfiler(int tid) {
 }
 
 
-//////////////////////////////////////////////////////////////////////
-// TAU_DEPTH_LIMIT 
-//////////////////////////////////////////////////////////////////////
-static int& TauGetDepthLimit(void) {
-  static int depth = 0;
-  char *depthvar; 
-  if (depth == 0) {
-    depthvar = getenv("TAU_DEPTH_LIMIT"); 
-    if (depthvar == (char *) NULL) {
-      depth = INT_MAX; 
-    } else {
-      depth = atoi(depthvar);
-    }
-  } 
-  return depth; 
-}
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -158,7 +142,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid ) {
 #endif /* TAU_PROFILEPHASE */
 
 #ifdef TAU_DEPTH_LIMIT
-  static int userspecifieddepth = TauGetDepthLimit();
+  static int userspecifieddepth = TauEnv_get_depth_limit();
   int mydepth = Tau_global_stackpos[tid];
   if (mydepth >= userspecifieddepth) { 
     return; 
@@ -201,7 +185,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 
 
 #ifdef TAU_DEPTH_LIMIT
-  static int userspecifieddepth = TauGetDepthLimit();
+  static int userspecifieddepth = TauEnv_get_depth_limit();
   int mydepth = Tau_global_stackpos[tid]+1;
   if (mydepth >= userspecifieddepth) { 
     return 0; 
@@ -1233,7 +1217,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.122 $   $Date: 2009/04/08 22:03:30 $
- * VERSION: $Id: TauCAPI.cpp,v 1.122 2009/04/08 22:03:30 amorris Exp $
+ * $Revision: 1.123 $   $Date: 2009/05/13 22:40:29 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.123 2009/05/13 22:40:29 amorris Exp $
  ***************************************************************************/
 
