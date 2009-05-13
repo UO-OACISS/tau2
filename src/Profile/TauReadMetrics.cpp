@@ -34,10 +34,14 @@
 #endif /* TAU_BGL */
 
 #ifdef TAU_BGP
+
+#ifdef TAU_BGPTIMERS
 /* header files for BlueGene/P */
 #include <bgp_personality.h>
 #include <bgp_personality_inlines.h>
 #include <kernel_interface.h>
+#endif /* TAU_BGPTIMERS */
+
 #endif /* TAU_BGP */
 
 #ifdef TAU_PAPI
@@ -123,6 +127,7 @@ void metric_read_bgtimers(int tid, int idx, double values[]) {
 #endif /* TAU_BGL */
 
 #ifdef TAU_BGP
+#ifdef TAU_BGPTIMERS
   static double bgp_clockspeed = 0.0;
 
   if (bgp_clockspeed == 0.0) {
@@ -131,6 +136,7 @@ void metric_read_bgtimers(int tid, int idx, double values[]) {
     bgp_clockspeed = 1.0/(double)BGP_Personality_clockMHz(&mybgp);
   }
   values[idx] =  (_bgp_GetTimeBase() * bgp_clockspeed);
+#endif /* TAU_BGPTIMERS */
 #endif /* TAU_BGP */
 }
 
