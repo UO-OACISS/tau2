@@ -35,6 +35,8 @@ extern "C" {
   int TAUDECL TauEnv_get_tracing();
   int TAUDECL TauEnv_get_callpath();
   int TAUDECL TauEnv_get_callpath_depth();
+  int TAUDECL TauEnv_get_depth_limit();
+  void TAUDECL TauEnv_set_depth_limit(int value);
   int TAUDECL TauEnv_get_comm_matrix();
   int TAUDECL TauEnv_get_track_message();
   int TAUDECL TauEnv_get_compensate();
