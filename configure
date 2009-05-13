@@ -4174,12 +4174,18 @@ fi
 
 
 
-
+# Special magic for xt3 and craycnl
 if [ $mpi = yes ] ; then
     if [ "x$machine" = "xxt3" -o "x$machine" = "xcraycnl" ] ; then
-	mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)"
-	mpiflibargs=$mpilibargs
-	fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
+	if [ $epilog = no -a $vampirtrace = no ] ; then
+	    mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)"
+	    mpiflibargs=$mpilibargs
+	    fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
+	else
+	    mpilibargs=""
+	    mpiflibargs=$mpilibargs
+	    fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
+	fi
     fi
 fi
 
