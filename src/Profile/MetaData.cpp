@@ -755,7 +755,11 @@ int TauProfiler_Snapshot(const char *name, bool finalize, int tid) {
      // finalize is true at the end of execution (regular profile output), 
      // if we haven't written a snapshot, don't bother, unless snapshot is the
      // requested output format
-     return 0;
+
+                                                                                                                        
+     if (!(TauEnv_get_profile_format() == TAU_FORMAT_MERGED)) {
+       return 0;
+     }
    }
 
    TAU_PROFILE_TIMER(timer, "TAU_PROFILE_SNAPSHOT()", " ", TAU_IO);
