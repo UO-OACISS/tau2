@@ -82,7 +82,6 @@ public:
 
   static const char* getSingleCounterName(); 
   static const char* getCounterName(int i); 
-  static bool getCounterUsed(int i); 
 
   // Return the number of the 'current' node.
   static int myNode(void);
@@ -123,6 +122,6 @@ private:
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: amorris $
- * $Revision: 1.32 $   $Date: 2009/04/08 20:29:15 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.32 2009/04/08 20:29:15 amorris Exp $ 
+ * $Revision: 1.33 $   $Date: 2009/05/14 20:49:26 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.33 2009/05/14 20:49:26 amorris Exp $ 
  ***************************************************************************/
