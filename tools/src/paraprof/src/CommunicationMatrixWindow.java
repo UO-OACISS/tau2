@@ -42,6 +42,9 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Printable {
         CommunicationMatrixWindow matrix = new CommunicationMatrixWindow(ppTrial);
         JFrame frame = matrix.doCommunicationMatrix(ppTrial.getDataSource(), parentFrame);
 
+        if (frame == null) {
+            return frame;
+        }
         frame.setLocation(WindowPlacer.getNewLocation(frame, parentFrame));
 
         JMenuBar mainMenu = new JMenuBar();

@@ -43,9 +43,11 @@ public class ParaProfErrorDialog extends JFrame implements ActionListener {
                 if (ex instanceof SAXParseException) {
                     SAXParseException saxpe = (SAXParseException) ex;
                     pw.println("Line Number: " + saxpe.getLineNumber());
-                    pw.println("Column Number: " + saxpe.getColumnNumber() + "\n");
+                    pw.println("Column Number: " + saxpe.getColumnNumber());
                 }
-                
+
+                pw.println ("\n");
+
                 ex.printStackTrace(pw);
                 pw.close();
                 errorString = sw.toString();

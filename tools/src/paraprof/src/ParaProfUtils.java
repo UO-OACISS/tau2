@@ -36,11 +36,11 @@ import edu.uoregon.tau.vis.HeatMapWindow;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.43 2009/04/10 17:34:29 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.44 2009/05/14 18:04:13 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.43 $
+ * @version $Revision: 1.44 $
  */
 public class ParaProfUtils {
 
@@ -381,7 +381,9 @@ public class ParaProfUtils {
 
     public static void showCommMatrix(ParaProfTrial ppTrial, JFrame parentFrame) {
         JFrame window = CommunicationMatrixWindow.createCommunicationMatrixWindow(ppTrial, parentFrame);
-        window.setVisible(true);
+        if (window != null) {
+            window.setVisible(true);
+        }
     }
 
     public static JMenu createWindowsMenu(final ParaProfTrial ppTrial, final JFrame owner) {
