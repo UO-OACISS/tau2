@@ -127,6 +127,7 @@ extern "C" {
     }
     if (strcmp(strbuf, "yes") == 0  || 
 	strcmp(strbuf, "true") == 0 || 
+	strcmp(strbuf, "on") == 0 || 
 	strcmp(strbuf, "1") == 0) {
       return 1;
     } else {
