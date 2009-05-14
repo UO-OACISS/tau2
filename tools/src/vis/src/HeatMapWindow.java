@@ -243,45 +243,39 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 		try {
 			Object eventSrc = actionEvent.getSource();
 			Dimension oldSize = this.getSize();
-			System.out.println("oldSize: " + oldSize.width + " X " + oldSize.height);
+			//System.out.println("oldSize: " + oldSize.width + " X " + oldSize.height);
 			if (eventSrc.equals(this.pathSelector)) {
 				String newPath = (String)this.pathSelector.getSelectedItem();
 				if (!newPath.equals(currentPath)) {
-					this.setVisible(false);
 					currentPath = newPath;
-					this.remove(mainPanel);
-					mainPanel = null;
-					System.gc();
-					drawFigures(false);
-					this.setSize(oldSize);
-					// new heatmap, new scanner, so add listeners
-					this.figureSelector.addKeyListener(this.heatMap.getScanner());
-					this.figureSelector.addKeyListener(this.heatMap.getScanner());
-					this.heatMap.requestFocus();
-					this.setVisible(true);
+					redrawHeatMap(oldSize);
 				}
 			}
 			if (eventSrc.equals(this.figureSelector)) {
 				String newFigure = (String)this.figureSelector.getSelectedItem();
 				if (!newFigure.equals(currentFigure)) {
-					this.setVisible(false);
 					currentFigure = newFigure;
-					this.remove(mainPanel);
-					mainPanel = null;
-					System.gc();
-					drawFigures(false);
-					this.setSize(oldSize);
-					// new heatmap, new scanner, so add listeners
-					this.figureSelector.addKeyListener(this.heatMap.getScanner());
-					this.figureSelector.addKeyListener(this.heatMap.getScanner());
-					this.heatMap.requestFocus();
-					this.setVisible(true);
+					redrawHeatMap(oldSize);
 				}
 			}
 		} catch (Exception e) {
 			System.err.println("actionPerformed Exception: " + e.getMessage());
 			e.printStackTrace();
 		} 
+	}
+
+	private void redrawHeatMap(Dimension oldSize) {
+		this.setVisible(false);
+		this.remove(mainPanel);
+		mainPanel = null;
+		System.gc();
+		drawFigures(false);
+		this.setSize(oldSize);
+		// new heatmap, new scanner, so add listeners
+		this.figureSelector.addKeyListener(this.heatMap.getScanner());
+		this.figureSelector.addKeyListener(this.heatMap.getScanner());
+		this.heatMap.requestFocus();
+		this.setVisible(true);
 	}
 
 	/**
