@@ -54,10 +54,10 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 
 		List<String> rowLabels = rawData.getRowLabels();
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
-            List<double[]> row = rawData.getRowData(y);
+			List<double[]> row = rawData.getRowData(y);
 			for (int x = 0 ; x < row.size() ; x++) {
 				double[] values = (row.get(x));
-				dataset.addValue(new Double(values[1]), rowLabels.get(y), new Integer((int)values[0]));
+				dataset.addValue(new Double(values[1]), shortName(rowLabels.get(y)), new Integer((int)values[0]));
 			}
 		}
 
@@ -919,6 +919,14 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 
 
 	public static String shortName(String longName) {
+		if (longName.startsWith("Loop:")) {
+			return longName;
+		}
+		while (longName.indexOf("[{") != -1) {
+			int a = longName.indexOf("[{");
+			int b = longName.indexOf("}]");
+			longName = longName.substring(0, a) + longName.substring(b + 2);
+		}
 		StringTokenizer st = new StringTokenizer(longName, "(");
 		String shorter = null;
 		try {
