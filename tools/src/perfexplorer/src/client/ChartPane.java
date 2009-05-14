@@ -515,12 +515,13 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				}
 			} 
 			if (getEvents && !this.mainOnly.isSelected()) {
-				Object obj2 = series.getSelectedItem();
-				String tmp = (String)obj2;
-				if (tmp.equalsIgnoreCase(INTERVAL_EVENT_GROUP_NAME)) {
+				String seriesSelection = (String)series.getSelectedItem();
+				//String tmp = (String)obj2;
+				if (seriesSelection.equalsIgnoreCase(INTERVAL_EVENT_GROUP_NAME)) {
 					List<String> events = server.getPotentialGroups(theModel);
 					resetYAxisValues(true);
 					yaxisValue.setSelectedItem(MEAN_EXCLUSIVE);
+					this.event.removeAllItems();
 					this.event.addItem("All Groups");
 					this.eventLabel.setText("Group:");
 					this.event.setSelectedIndex(0);
@@ -530,9 +531,10 @@ public class ChartPane extends JScrollPane implements ActionListener {
 						if (oldEvent.equals(next))
 							this.event.setSelectedItem(next);
 					}
-				} else if (tmp.equalsIgnoreCase(ATOMIC_EVENT_NAME)) {
+				} else if (seriesSelection.equalsIgnoreCase(ATOMIC_EVENT_NAME)) {
 					resetYAxisValues(false);
 					List<String> events = server.getPotentialAtomicEvents(theModel);
+					this.event.removeAllItems();
 					this.event.addItem("All Atomic Events");
 					this.eventLabel.setText("Atomic Event:");
 					this.event.setSelectedIndex(0);
@@ -543,10 +545,9 @@ public class ChartPane extends JScrollPane implements ActionListener {
 							this.event.setSelectedItem(next);
 					}
 				} else {
-					series.setSelectedItem(INTERVAL_EVENT_NAME);
-					resetYAxisValues(true);
-					yaxisValue.setSelectedItem(MEAN_EXCLUSIVE);
+
 					List<String> events = server.getPotentialEvents(theModel);
+					this.event.removeAllItems();
 					this.event.addItem("All Events");
 					this.eventLabel.setText("Event:");
 					this.event.setSelectedIndex(0);
@@ -598,6 +599,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	}
 
 	private void resetYAxisValues(boolean intervalEvent) {
+		Object oldY = this.yaxisValue.getSelectedItem();
 		this.yaxisValue.removeAllItems();
 		if (intervalEvent) {
 			this.yaxisValue.addItem(MEAN_INCLUSIVE);
@@ -624,6 +626,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			this.yaxisValue.addItem("atomic.standard_deviation");
 			yaxisValue.setSelectedItem(ATOMIC_MEAN_VALUE);
 		}
+		yaxisValue.setSelectedItem(oldY);
 		return;
 	}
 
@@ -826,6 +829,11 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			} else {
 				this.eventLabel.setEnabled(true);
 				this.event.setEnabled(true);
+				
+				series.setSelectedItem(INTERVAL_EVENT_NAME);
+				resetYAxisValues(true);
+				yaxisValue.setSelectedItem(MEAN_EXCLUSIVE);
+				
 				refreshDynamicControls(false, true, false);
 			}
 		} else if (source == dimension) {
