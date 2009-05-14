@@ -60,7 +60,7 @@ import edu.uoregon.tau.perfexplorer.constants.Constants;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.82 2009/05/12 00:28:38 wspear Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.83 2009/05/14 18:40:36 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -731,11 +731,11 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			StringBuilder buf;
 			buf = new StringBuilder("select distinct ie.group_name ");
 			buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
-			buf.append(" inner join experiment e on t.experiment = e.id ");
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof RMIView) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
+				buf.append(" inner join experiment e on t.experiment = e.id ");
 				List<Object> selections = modelData.getMultiSelection();
 				if (selections == null) {
 					// just one selection
@@ -920,11 +920,11 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				buf.append("select distinct ie.name ");
 			}
 			buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
-			buf.append(" inner join experiment e on t.experiment = e.id ");
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof RMIView) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
+				buf.append(" inner join experiment e on t.experiment = e.id ");
 				List<Object> selections = modelData.getMultiSelection();
 				if (selections == null) {
 					// just one selection
@@ -1007,11 +1007,11 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				buf.append("select distinct ae.name ");
 			}
 			buf.append(" from atomic_event ae inner join trial t on ae.trial = t.id ");
-			buf.append(" inner join experiment e on t.experiment = e.id ");
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof RMIView) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
+				buf.append(" inner join experiment e on t.experiment = e.id ");
 				List<Object> selections = modelData.getMultiSelection();
 				if (selections == null) {
 					// just one selection

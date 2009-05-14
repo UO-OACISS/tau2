@@ -21,7 +21,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIView;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.53 2009/04/03 23:53:38 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.54 2009/05/14 18:40:36 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -327,10 +327,8 @@ public class ChartData extends RMIChartData {
 				buf.append(" and m.name = ?");
 			}
 			buf.append(" group by ");
-			if (!(object instanceof RMIView)) {
-				buf.append(tmpBuf.toString());
-				buf.append(", ");
-			}
+			buf.append(tmpBuf.toString());
+			buf.append(", ");
 			buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
 			buf.append("order by 1, 2, 3, 4");
 			//PerfExplorerOutput.println(buf.toString());
@@ -351,11 +349,11 @@ public class ChartData extends RMIChartData {
 					tmpBuf.append(" " + groupByColumn + ", ");
 				}
 			} else {
-			if (db.getDBType().compareTo("db2") == 0) {
-				tmpBuf.append(" cast (e.name as varchar(256)), ");
-			} else {
-				tmpBuf.append(" e.name, ");
-			}
+				if (db.getDBType().compareTo("db2") == 0) {
+					tmpBuf.append(" cast (e.name as varchar(256)), ");
+				} else {
+					tmpBuf.append(" e.name, ");
+				}
 			}
 			buf.append(tmpBuf.toString());
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
