@@ -56,10 +56,10 @@ int Tau_mergeProfiles() {
   } else {
 
     /* send length */
-    MPI_Send(&buflen, 1, MPI_INT, 0, 42, MPI_COMM_WORLD);
+    PMPI_Send(&buflen, 1, MPI_INT, 0, 42, MPI_COMM_WORLD);
 
     /* send data */
-    MPI_Send(buf, buflen, MPI_CHAR, 0, 42, MPI_COMM_WORLD);
+    PMPI_Send(buf, buflen, MPI_CHAR, 0, 42, MPI_COMM_WORLD);
 
   }
 
