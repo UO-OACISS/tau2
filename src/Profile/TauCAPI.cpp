@@ -582,7 +582,7 @@ extern "C" void Tau_allgather_data(int data) {
 }
 
 extern "C" void Tau_allreduce_data(int data) {
-  TAU_EVENT(TheGatherEvent(), data);
+  TAU_EVENT(TheAllReduceEvent(), data);
 }
 
 extern "C" void Tau_scan_data(int data) {
@@ -1216,8 +1216,8 @@ int *tau_pomp_rd_table = 0;
                     
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.123 $   $Date: 2009/05/13 22:40:29 $
- * VERSION: $Id: TauCAPI.cpp,v 1.123 2009/05/13 22:40:29 amorris Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
+ * $Revision: 1.124 $   $Date: 2009/05/14 22:24:47 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.124 2009/05/14 22:24:47 sameer Exp $
  ***************************************************************************/
 
