@@ -76,6 +76,7 @@ public class PerfExplorerActionListener implements ActionListener {
 	public final static String COMMUNICATION_CHART = "Group % of Total Runtime";
 	public final static String FRACTION_CHART = "Runtime Breakdown";
 	public final static String CORRELATION_CHART = "Correlate Events with Total Runtime";
+	public final static String STACKED_BAR_CHART = "Stacked Bar Chart";
 	// phase chart menu items
 	public final static String EFFICIENCY_PHASE_CHART = "Relative Efficiency per Phase";
 	public final static String SPEEDUP_PHASE_CHART = "Relative Speedup per Phase";
@@ -241,6 +242,9 @@ public class PerfExplorerActionListener implements ActionListener {
 							ChartGUI.checkScaling();
 							PerfExplorerChart.doSpeedupEventsChart();
 						}
+				} else if (arg.equals(STACKED_BAR_CHART)) {
+					if (checkAndSetMetricName(false))
+						PerfExplorerChart.doStackedBarChart();
 				} else if (arg.equals(SPEEDUP_ONE_EVENT_CHART)) {
 					if (checkAndSetMetricName(false))
 						if (checkAndSetEventName(false))

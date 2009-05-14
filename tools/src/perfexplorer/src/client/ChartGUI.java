@@ -182,6 +182,12 @@ public class ChartGUI extends JFrame implements ActionListener {
 			this.reductionThresholdLabel.setEnabled(true);
 			this.reductionThreshold.setEnabled(true);
 			break;
+		case 14:
+			this.reductionMethodLabel.setEnabled(true);
+			this.reductionMethod.setEnabled(true);
+			this.reductionThresholdLabel.setEnabled(true);
+			this.reductionThreshold.setEnabled(true);
+			break;
 		}
 	}
 
@@ -233,6 +239,7 @@ public class ChartGUI extends JFrame implements ActionListener {
 	
 	private void refreshStatic() {
 		this.chart.removeAllItems();
+		this.chart.addItem(new ChartType(PerfExplorerActionListener.STACKED_BAR_CHART,14));
 		this.chart.addItem(new ChartType(PerfExplorerActionListener.TOTAL_TIME_CHART,1));
 		this.chart.addItem(new ChartType(PerfExplorerActionListener.TIMESTEPS_CHART,0));		
 		this.chart.addItem(new ChartType(PerfExplorerActionListener.EFFICIENCY_CHART,2));
@@ -443,6 +450,9 @@ public class ChartGUI extends JFrame implements ActionListener {
 				case 13:
 //					this.chart.addItem(new ChartType(PerfExplorerActionListener.FRACTION_PHASE_CHART,13));
 					PerfExplorerChart.doFractionPhasesChart();
+					break;
+				case 14:
+					PerfExplorerChart.doStackedBarChart();
 					break;
 				}
 			} else {
