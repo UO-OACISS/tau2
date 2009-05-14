@@ -834,11 +834,9 @@ void TauProfiler_getFunctionValues(const char **inFuncs,
     
     int posCounter = 0;
     for (int m=0; m<Tau_Global_numCounters; m++) {
-      if (RtsLayer::getCounterUsed(m)) {
-	(*counterInclusiveValues)[funcPos][posCounter] = fi->getDumpInclusiveValues(tid)[m];
-	(*counterExclusiveValues)[funcPos][posCounter] = fi->getDumpExclusiveValues(tid)[m];
-	posCounter++;
-      }
+      (*counterInclusiveValues)[funcPos][posCounter] = fi->getDumpInclusiveValues(tid)[m];
+      (*counterExclusiveValues)[funcPos][posCounter] = fi->getDumpExclusiveValues(tid)[m];
+      posCounter++;
     }
   }
   RtsLayer::UnLockDB();
@@ -1329,6 +1327,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.241 $   $Date: 2009/05/12 23:24:31 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.241 2009/05/12 23:24:31 amorris Exp $ 
+ * $Revision: 1.242 $   $Date: 2009/05/14 20:49:58 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.242 2009/05/14 20:49:58 amorris Exp $ 
  ***************************************************************************/

@@ -726,13 +726,11 @@ static int startNewSnapshotFile(char *threadid, int tid) {
   output (out, "\n<definitions thread=\"%s\">\n", threadid);
   
   for (int i=0; i<Tau_Global_numCounters; i++) {
-    if (RtsLayer::getCounterUsed(i)) {
       const char *tmpChar = RtsLayer::getCounterName(i);
       output (out, "<metric id=\"%d\">", i);
       writeTagXML(out, "name", tmpChar, true);
       writeTagXML(out, "units", "unknown", true);
       output (out, "</metric>\n");
-    }
   }
 
   TauGetSnapshotEventCounts()[tid] = 0;
@@ -756,7 +754,6 @@ int TauProfiler_Snapshot(const char *name, bool finalize, int tid) {
      // if we haven't written a snapshot, don't bother, unless snapshot is the
      // requested output format
 
-                                                                                                                        
      if (!(TauEnv_get_profile_format() == TAU_FORMAT_MERGED)) {
        return 0;
      }
@@ -821,9 +818,7 @@ int TauProfiler_Snapshot(const char *name, bool finalize, int tid) {
    char metricList[4096];
    char *loc = metricList;
    for (c=0; c<Tau_Global_numCounters; c++) {
-     if (RtsLayer::getCounterUsed(c)) {
        loc += sprintf (loc,"%d ", c);
-     }
    }
    output (out, "<interval_data metrics=\"%s\">\n", metricList);
 
@@ -839,9 +834,7 @@ int TauProfiler_Snapshot(const char *name, bool finalize, int tid) {
      
      output (out, "%d %ld %ld ", i, fi->GetCalls(tid), fi->GetSubrs(tid));
      for (c=0; c<Tau_Global_numCounters; c++) {
-       if (RtsLayer::getCounterUsed(c)) {
-	 output (out, "%.16G %.16G ", excltime[c], incltime[c]);
-       }
+       output (out, "%.16G %.16G ", excltime[c], incltime[c]);
      }
      output (out, "\n");
    }

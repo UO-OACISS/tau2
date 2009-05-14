@@ -388,7 +388,6 @@ void TauMetrics_getMetrics(int tid, double values[]) {
 
 int TauMetrics_init() {
 
-
   read_env_vars();
 
   traceMetric=0;
@@ -416,8 +415,6 @@ int TauMetrics_init() {
     }
     RtsLayer::LockDB(); // We do this to prevent a deadlock. Lock it again!
   }
-  
-
 
   return 0;
 }

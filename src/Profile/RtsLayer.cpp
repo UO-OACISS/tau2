@@ -520,10 +520,6 @@ int RtsLayer::getTid() {
 #endif
 }
 
-bool RtsLayer::getCounterUsed(int i) {
-  return TauMetrics_getMetricUsed(i)==0;
-}
-
 const char *RtsLayer::getCounterName(int i) {
   const char *foo = TauMetrics_getMetricName(i);
   return TauMetrics_getMetricName(i);
@@ -800,6 +796,6 @@ std::string RtsLayer::GetRTTI(const char *name) {
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.127 $   $Date: 2009/04/14 15:09:19 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.127 2009/04/14 15:09:19 amorris Exp $ 
+ * $Revision: 1.128 $   $Date: 2009/05/14 20:49:58 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.128 2009/05/14 20:49:58 amorris Exp $ 
  ***************************************************************************/
