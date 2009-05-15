@@ -133,9 +133,9 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 
 	public static void main (String[] args) {
 		// DO THIS FIRST!
-		// -Dderby.stream.error.field=client.PerfExplorerClient.DEV_NULL
+		// -Dderby.stream.error.field=edu.uoregon.tau.perfexplorer.client.PerfExplorerClient.DEV_NULL
 		// doesn't work with JNLP, so do it here!
-		System.setProperty("derby.stream.error.field", "client.PerfExplorerClient.DEV_NULL");
+		System.setProperty("derby.stream.error.field", "edu.uoregon.tau.perfexplorer.client.PerfExplorerClient.DEV_NULL");
 		
 		// set the tooltip delay to 20 seconds
 		ToolTipManager.sharedInstance().setDismissDelay(20000);
