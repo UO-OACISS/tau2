@@ -795,7 +795,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		facade.setChartLogYAxis(this.logY.isSelected()?1:0);
 		facade.setChartScalability(this.scalaRB.isSelected()?1:0);
 		facade.setChartEfficiency(this.efficRB.isSelected()?1:0);
-		facade.setChartConstantProblem(this.strongScaling.isSelected()?1:0);
+		facade.setChartConstantProblem(this.strongScaling.isSelected()?0:1);
 		facade.setChartHorizontal(this.horizontal.isSelected()?1:0);
 		facade.setShowZero(this.showZero.isSelected()?1:0);
 
