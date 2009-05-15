@@ -3458,7 +3458,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		    ostr << "call TAU_PURE_START('" << instrumentedName << "')"<<endl;
 		  }
 		} else {
-		  ostr <<"call "<<getStartMeasurementEntity((*it))<<"(profiler)"<<endl;
+		  ostr <<"\n\tcall "<<getStartMeasurementEntity((*it))<<"(profiler)"<<endl;
 		}
                 writeAdditionalFortranInvocations(ostr, (pdbRoutine *)((*it)->item));
                 if (!(*it)->snippet.empty())
@@ -4412,9 +4412,9 @@ int main(int argc, char **argv)
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: geimer $
- * $Revision: 1.207 $   $Date: 2009/02/25 08:37:47 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.207 2009/02/25 08:37:47 geimer Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
+ * $Revision: 1.208 $   $Date: 2009/05/15 21:14:35 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.208 2009/05/15 21:14:35 amorris Exp $
  ***************************************************************************/
 
 
