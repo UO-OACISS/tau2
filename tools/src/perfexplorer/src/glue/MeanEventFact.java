@@ -119,10 +119,14 @@ public class MeanEventFact {
 	}
 	
 	public static void evaluateLoadBalance(PerformanceResult means, PerformanceResult ratios, String event) {
-		evaluateLoadBalance(means, ratios, event, null);
+		evaluateLoadBalance(means, ratios, event, null, AbstractResult.EXCLUSIVE);
 	}
 
 	public static void evaluateLoadBalance(PerformanceResult means, PerformanceResult ratios, String event, String testMetric) {
+		evaluateLoadBalance(means, ratios, event, testMetric, AbstractResult.EXCLUSIVE);
+	}
+
+	public static void evaluateLoadBalance(PerformanceResult means, PerformanceResult ratios, String event, String testMetric, int type) {
 		String mainEvent = means.getMainEvent();
 		
 		// don't compare main to self
@@ -136,8 +140,6 @@ public class MeanEventFact {
 		}
 		double mainTime = means.getInclusive(0, mainEvent, timeMetric);
 		double eventTime = means.getExclusive(0, event, timeMetric);
-		//System.out.println("Event Time: " + eventTime);
-		//System.out.println("Main Time: " + mainTime);
 		double severity = eventTime / mainTime;
 		
 		Set<String> metrics = new HashSet<String>();
@@ -148,9 +150,9 @@ public class MeanEventFact {
 		}
 
 		for (String metric : metrics) {
-			double eventRatio = ratios.getExclusive(0, event, metric);
-			double eventValue = means.getExclusive(0, event, metric);
-			double mainRatio = ratios.getExclusive(0, mainEvent, metric);
+			double eventRatio = ratios.getDataPoint(0, event, metric, type);
+			double eventValue = means.getDataPoint(0, event, metric, type);
+			double mainRatio = ratios.getDataPoint(0, mainEvent, metric, type);
 			// any other metric combination
 			//System.out.println("Main Ratio: " + mainRatio);
 			if (mainRatio < eventRatio) {
