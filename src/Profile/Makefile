@@ -321,6 +321,7 @@ $(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB)
 		    else mkdir $(TAU_SHAREDDIR); fi
 		cd $(TAU_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX)
 		cd $(TAU_SHAREDDIR) ; ln -s ../$(TAU_SHLIB) libTAU$(TAU_SHLIBX)
+		ls $(TAU_SHAREDDIR)
 
 $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX): libTauMpi$(TAU_CONFIG)$(LSX)
 		$(MAKE) -f Makefile.wrapper install 
@@ -349,6 +350,8 @@ $(TAU_SHAREDDIR)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 		$(RM) $(TAU_SHAREDDIR)/*
 		cd $(TAU_SHAREDDIR) && ln -s ../$(TAU_SHLIB) $(TAUPYTHON) && ln -s ../$(TAU_SHLIB) ctau_impl$(TAU_SHLIBX)
 		cd $(TAU_SHAREDDIR) && ln -s ../tau.py . && ln -s ../ltau.py .
+		cd $(TAU_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX)
+		cd $(TAU_SHAREDDIR) && ln -s ../$(TAU_SHLIB) libTAU$(TAU_SHLIBX)
 		cd $(INSTALLDEST) && ln -s shared$(TAU_CONFIG) bindings$(TAU_CONFIG)
 
 $(INSTALLDEST)/libpgnod_prof.a : 
