@@ -57,6 +57,7 @@ public class PerfExplorerActionListener implements ActionListener {
 	public final static String DO_CLUSTERING = "Do Clustering";
 	public final static String DO_INC_CLUSTERING = "Do Inclusive Clustering";
 	public final static String DO_CORRELATION_ANALYSIS = "Do Correlation Analysis";
+	public final static String DO_INC_CORRELATION_ANALYSIS = "Do Inclusive Correlation Analysis";
 	public final static String DO_CORRELATION_CUBE = "Do 3D Correlation Cube";
 	public final static String DO_VARIATION_ANALYSIS = "Show Data Summary";
 	// chart menu items
@@ -158,14 +159,25 @@ public class PerfExplorerActionListener implements ActionListener {
 				} else if (arg.equals(NUM_CLUSTERS)) {
 					createClusterSizeWindow();
 				} else if (arg.equals(DO_CLUSTERING)) {
-					if (validAnalysisSelection())
-						createDoClusteringWindow(false);
+					if (validAnalysisSelection()) {
+						PerfExplorerModel.getModel().setClusterValueType("exclusive");
+						createDoClusteringWindow();
+					}
 				} else if (arg.equals(DO_INC_CLUSTERING)) {
-					if (validAnalysisSelection())
-						createDoClusteringWindow(true);
+					if (validAnalysisSelection()) {
+						createDoClusteringWindow();
+						PerfExplorerModel.getModel().setClusterValueType("inclusive");
+					}
 				} else if (arg.equals(DO_CORRELATION_ANALYSIS)) {
-					if (validCorrelationSelection())
+					if (validCorrelationSelection()) {
+						PerfExplorerModel.getModel().setClusterValueType("exclusive");
 						createDoCorrelationWindow();
+					}
+				} else if (arg.equals(DO_INC_CORRELATION_ANALYSIS)) {
+					if (validCorrelationSelection()) {
+						PerfExplorerModel.getModel().setClusterValueType("inclusive");
+						createDoCorrelationWindow();
+					}
 			// data display items
 				} else if (arg.equals(DO_CORRELATION_CUBE)) {
 					if (valid3DSelection())
@@ -443,14 +455,8 @@ public class PerfExplorerActionListener implements ActionListener {
 	}
 
 	@SuppressWarnings("unchecked") // for trial.getMetricS() call
-	public void createDoClusteringWindow(boolean inclusive) {
+	public void createDoClusteringWindow() {
 		PerfExplorerModel theModel = PerfExplorerModel.getModel();
-		if(inclusive){
-			theModel.setClusterValueType("inclusive");
-		}
-		else{
-			theModel.setClusterValueType("exclusive");
-		}
 		Object selection = theModel.getCurrentSelection();
 		String status = null;
 		if (selection instanceof Application) {

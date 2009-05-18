@@ -323,10 +323,12 @@ public class ImageUtils {
                      curve, range.getLowerBound(), range.getUpperBound(), 
                      100, "Fitted Linear Regression Line");
              plot.setDataset(1, regressionData);
-             XYItemRenderer lineRenderer = new DefaultXYItemRenderer();
+             StandardXYItemRenderer lineRenderer = new StandardXYItemRenderer();
              lineRenderer.setSeriesPaint(0,Color.blue);
+             lineRenderer.setBaseShapesVisible(false);
              plot.setRenderer(1, lineRenderer);
 
+/* This is never visible, anyway - might as well remove it.
              // power regression
              double[] powerCoefficients = Regression.getPowerRegression(data, 0);
              Function2D powerCurve = new PowerFunction2D(powerCoefficients[0], powerCoefficients[1]);
@@ -334,17 +336,18 @@ public class ImageUtils {
                  powerCurve, range.getLowerBound(), range.getUpperBound(), 
                  100, "Fitted Power Regression Line");
              plot.setDataset(2, powerRegressionData);
-             XYItemRenderer powerLineRenderer = new DefaultXYItemRenderer();
+             StandardXYItemRenderer powerLineRenderer = new StandardXYItemRenderer();
              powerLineRenderer.setSeriesPaint(0,Color.black);
+             powerLineRenderer.setBaseShapesVisible(true);
              plot.setRenderer(2, powerLineRenderer);
-
+*/
              plot.getDomainAxis().setRange(range);
              plot.getRangeAxis().setRange(range);
 
              JFreeChart chart = new JFreeChart("Correlation Results: r = " + 
                  rCorrelation, JFreeChart.DEFAULT_TITLE_FONT, plot, true);
-		Utility.applyDefaultChartTheme(chart);
-     
+             
+             Utility.applyDefaultChartTheme(chart);
      
              outfile = new File(Constants.TMPDIR + "image." + modelData.toShortString() + ".png");
              try {

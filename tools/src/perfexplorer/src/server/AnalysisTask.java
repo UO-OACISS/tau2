@@ -36,7 +36,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  *
- * <P>CVS $Id: AnalysisTask.java,v 1.19 2009/05/13 21:44:39 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTask.java,v 1.20 2009/05/18 21:47:09 khuck Exp $</P>
  * @author Kevin Huck
  * @version 0.1
  * @since 0.1
@@ -339,8 +339,9 @@ public class AnalysisTask extends TimerTask {
 							File chart = ImageUtils.generateCorrelationScatterplotImage(chartType, modelData, reducedData, i, j, correlateToMain, rCorrelation);
 							saveAnalysisResult(reducedData, reducedData, thumbnail, chart);	
 						}
-						//PerfExplorerOutput.println("Finished: " + (i+1) + " of " + reducedData.numDimensions());
+						PerfExplorerOutput.println("Finished: " + (i+1) + " of " + reducedData.numDimensions());
 					}
+					System.out.println("...done with correlation.");
 				}
 			}catch (PerfExplorerException pee) {
             	System.err.println(pee.getMessage());
