@@ -13,12 +13,14 @@ int TAUDECL Tau_RtsLayer_myThread();
 char* TAUDECL getSnapshotBuffer();
 int TAUDECL getSnapshotBufferLength();
 
+x_uint64 Tau_getTimeStamp();
 
 int Tau_mergeProfiles() {
-  int rank, size, tid, i, buflen;
+  int rank, size, tid, i, buflen, trash = 0;
   FILE *f;
   char *buf;
   MPI_Status status;
+  x_uint64 start, end;
 
   tid = Tau_RtsLayer_myThread();
 
@@ -34,9 +36,11 @@ int Tau_mergeProfiles() {
   buf = getSnapshotBuffer();
   buflen = getSnapshotBufferLength();
 
-  TAU_VERBOSE("TAU: Merging Profiles\n");
 
   if (rank == 0) {
+    TAU_VERBOSE("TAU: Merging Profiles\n");
+    start = Tau_getTimeStamp();
+    
     if ((f = fopen ("tauprofile.xml", "w+")) == NULL) {
       char errormsg[4096];
       sprintf(errormsg,"Error: Could not create tauprofile.xml");
@@ -46,14 +50,26 @@ int Tau_mergeProfiles() {
     fwrite (buf, buflen, 1, f);
 
     for (i=1; i<size; i++) {
-      PMPI_Recv(&buflen, 1, MPI_INT, MPI_ANY_SOURCE, 42, MPI_COMM_WORLD, &status);
+      /* send ok-to-go */
+      PMPI_Send(&trash, 1, MPI_INT, i, 42, MPI_COMM_WORLD);
+      
+      /* receive buffer length */
+      PMPI_Recv(&buflen, 1, MPI_INT, i, 42, MPI_COMM_WORLD, &status);
       buf = (char*) malloc (buflen);
-      PMPI_Recv(buf, buflen, MPI_CHAR, status.MPI_SOURCE, 42, MPI_COMM_WORLD, &status);
+
+      /* receive buffer */
+      PMPI_Recv(buf, buflen, MPI_CHAR, i, 42, MPI_COMM_WORLD, &status);
       fwrite (buf, buflen, 1, f);
       free (buf);
     }
 
+    end = Tau_getTimeStamp();
+    TAU_VERBOSE("TAU: Merging Profiles Complete, duration = %.4G seconds\n", ((double)(end-start))/1000000.0f);
+  
   } else {
+
+    /* recieve ok to go */
+    PMPI_Recv(&trash, 1, MPI_INT, 0, 42, MPI_COMM_WORLD, &status);
 
     /* send length */
     PMPI_Send(&buflen, 1, MPI_INT, 0, 42, MPI_COMM_WORLD);

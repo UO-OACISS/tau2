@@ -79,7 +79,7 @@ void tauToggleInstrumentationHandler(int sig) {
   }
 }
 
-static x_uint64 getTimeStamp() {
+extern "C" x_uint64 Tau_getTimeStamp() {
   x_uint64 timestamp;
 #ifdef TAU_WINDOWS
   timestamp = TauWindowsUsecD();
@@ -111,7 +111,7 @@ bool Tau_snapshot_initialization() {
   }
 #endif
 
-  firstTimeStamp = getTimeStamp();
+  firstTimeStamp = Tau_getTimeStamp();
   return true;
 }
 
@@ -352,9 +352,9 @@ static int writeXMLTime(outputDevice *out, bool newline) {
 
    // write out the timestamp (number of microseconds since epoch (unsigned long long)
 #ifdef TAU_WINDOWS
-   output (out, "<attribute><name>Timestamp</name><value>%I64d</value></attribute>%s", getTimeStamp(), endl);
+   output (out, "<attribute><name>Timestamp</name><value>%I64d</value></attribute>%s", Tau_getTimeStamp(), endl);
 #else
-   output (out, "<attribute><name>Timestamp</name><value>%lld</value></attribute>%s", getTimeStamp(), endl);
+   output (out, "<attribute><name>Timestamp</name><value>%lld</value></attribute>%s", Tau_getTimeStamp(), endl);
 #endif
 
    return 0;
@@ -815,9 +815,9 @@ int TauProfiler_Snapshot(const char *name, bool finalize, int tid) {
    output (out, "</name>\n");
 
 #ifdef TAU_WINDOWS
-   output (out, "<timestamp>%I64d</timestamp>\n", getTimeStamp());
+   output (out, "<timestamp>%I64d</timestamp>\n", Tau_getTimeStamp());
 #else
-   output (out, "<timestamp>%lld</timestamp>\n", getTimeStamp());
+   output (out, "<timestamp>%lld</timestamp>\n", Tau_getTimeStamp());
 #endif
 
    char metricList[4096];
