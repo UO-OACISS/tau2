@@ -62,6 +62,7 @@ int Tau_mergeProfiles() {
     PMPI_Send(buf, buflen, MPI_CHAR, 0, 42, MPI_COMM_WORLD);
 
   }
+  TAU_VERBOSE("TAU: Profile Merging Complete\n");
 
   return 0;
 }

@@ -699,6 +699,11 @@ static int startNewSnapshotFile(char *threadid, int tid) {
     sprintf (filename,"%s/snapshot.%d.%d.%d", profiledir, 
 	     RtsLayer::myNode(), RtsLayer::myContext(), tid);
     FILE *fp;
+
+    char cwd[1024];
+    char *tst = getcwd(cwd, 1024);
+    TAU_VERBOSE("TAU: Opening Snapshot File %s, cwd = %s\n", filename, cwd);
+
     if ((fp = fopen (filename, "w+")) == NULL) {
       char errormsg[4096];
       sprintf(errormsg,"Error: Could not create %s",filename);
