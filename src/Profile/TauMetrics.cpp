@@ -172,10 +172,16 @@ static int compareMetricString(char *one, const char *two) {
   strcpy(m1, one);
   strcpy(m2, two);
   while ((p = strchr(m1,'_')) != NULL) {
-    strcpy(p, p+1);
+    while (*p) {
+      *p = *(p+1);
+      p++;
+    }
   }
   while ((p = strchr(m2,'_')) != NULL) {
-    strcpy(p, p+1);
+    while (*p) {
+      *p = *(p+1);
+      p++;
+    }
   }
   for (i = 0; m1[i]; i++) {
     m1[i] = toupper(m1[i]);
