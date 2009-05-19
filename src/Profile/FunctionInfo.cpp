@@ -159,6 +159,14 @@ static char *strip_tau_group(const char *ProfileGroupName) {
 //////////////////////////////////////////////////////////////////////
 void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, 
 	const char *ProfileGroupName, bool InitData, int tid) {
+
+  /* Make sure TAU is initialized */
+  static int flag = 1;
+  if (flag) {
+    flag = 0;
+    InitializeTAU();
+  }
+
   //Need to keep track of all the groups this function is a member of.
   AllGroups = strip_tau_group(ProfileGroupName);
   GroupName = strdup(RtsLayer::PrimaryGroup(AllGroups).c_str());
@@ -455,6 +463,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.78 $   $Date: 2009/04/14 15:09:19 $
- * VERSION_ID: $Id: FunctionInfo.cpp,v 1.78 2009/04/14 15:09:19 amorris Exp $ 
+ * $Revision: 1.79 $   $Date: 2009/05/19 19:24:52 $
+ * VERSION_ID: $Id: FunctionInfo.cpp,v 1.79 2009/05/19 19:24:52 amorris Exp $ 
  ***************************************************************************/
