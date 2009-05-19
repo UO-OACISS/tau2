@@ -62,6 +62,7 @@ int Tau_mergeProfiles() {
       fwrite (buf, buflen, 1, f);
       free (buf);
     }
+    fclose(f);
 
     end = Tau_getTimeStamp();
     TAU_VERBOSE("TAU: Merging Profiles Complete, duration = %.4G seconds\n", ((double)(end-start))/1000000.0f);
