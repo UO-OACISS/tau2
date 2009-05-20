@@ -23,6 +23,8 @@ declare -i optDetectMemoryLeaks=$FALSE
 
 declare -i isVerbose=$FALSE
 declare -i isCXXUsedForC=$FALSE
+
+defaultParser=""
 declare -i isCurrentFileC=$FALSE
 declare -i isDebug=$FALSE
 #declare -i isDebug=$TRUE
@@ -334,6 +336,21 @@ for arg in "$@" ; do
 			echoIfDebug "\tTau now uses a C++ compiler to compile C code isCXXUsedForC: $isCXXUsedForC"
 			;;
 
+		    -optDefaultParser=*)
+		        defaultParser="${arg#"-optDefaultParser="}"
+			pdtParserType=$defaultParser
+			if [ $pdtParserType = cxxparse ] ; then
+			    groupType=$group_C
+			    isCXXUsedForC=$TRUE
+			    isCurrentFileC=$TRUE
+			else
+			    groupType=$group_c
+			fi
+
+			echoIfDebug "\tDefault parser is $defaultParser"
+			echo "Default parser is $defaultParser"
+			;;
+
 		    -optPdtCOpts*)
 				#Assumption: This reads ${CFLAGS} 
 			optPdtCFlags="${arg#"-optPdtCOpts="} $optPdtCFlags"
@@ -566,8 +583,6 @@ for arg in "$@" ; do
 		arrFileName[$numFiles]=$arg
 		arrFileNameDirectory[$numFiles]=`dirname $arg`
 		numFiles=numFiles+1
-		pdtParserType=cxxparse
-		groupType=$group_C
 		;;
 
 	    *.c)
@@ -575,14 +590,14 @@ for arg in "$@" ; do
 		arrFileName[$numFiles]=$arg
 		arrFileNameDirectory[$numFiles]=`dirname $arg`
 		numFiles=numFiles+1
-		if [ $isCXXUsedForC == $TRUE ]; then
-		    pdtParserType=cxxparse
-		    isCurrentFileC=$TRUE
-		    groupType=$group_c
-                else
-		    pdtParserType=cparse
-		    groupType=$group_c
-		fi
+# 		if [ $isCXXUsedForC == $TRUE ]; then
+# #		    pdtParserType=cxxparse
+# #		    isCurrentFileC=$TRUE
+# 		    groupType=$group_c
+#                 else
+# #		    pdtParserType=cparse
+# 		    groupType=$group_c
+# 		fi
 		;;
 
 	    *.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95)

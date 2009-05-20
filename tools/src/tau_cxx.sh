@@ -133,6 +133,8 @@ if [ $options_specified = no ] ; then
     fi
 fi
 
+TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optDefaultParser=cxxparse"
+
 if [ $invoke_without_tau = yes ] ; then
 cat <<EOF > /tmp/makefile.tau.$USER.$$
 include $MAKEFILE
