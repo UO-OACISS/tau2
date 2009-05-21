@@ -24,7 +24,6 @@ declare -i optDetectMemoryLeaks=$FALSE
 declare -i isVerbose=$FALSE
 declare -i isCXXUsedForC=$FALSE
 
-defaultParser=""
 declare -i isCurrentFileC=$FALSE
 declare -i isDebug=$FALSE
 #declare -i isDebug=$TRUE
@@ -54,6 +53,7 @@ declare -i optHeaderInst=$FALSE
 headerInstDir=".tau_tmp_$$"
 headerInstFlag=""
 preprocessorOpts="-P  -traditional-cpp"
+defaultParser="noparser"
 
 printUsage () {
     echo -e "Usage: tau_compiler.sh"
@@ -346,9 +346,7 @@ for arg in "$@" ; do
 			else
 			    groupType=$group_c
 			fi
-
 			echoIfDebug "\tDefault parser is $defaultParser"
-			echo "Default parser is $defaultParser"
 			;;
 
 		    -optPdtCOpts*)
@@ -583,6 +581,10 @@ for arg in "$@" ; do
 		arrFileName[$numFiles]=$arg
 		arrFileNameDirectory[$numFiles]=`dirname $arg`
 		numFiles=numFiles+1
+		if [ $defaultParser = "noparser" ] ; then
+		    pdtParserType=cxxparse
+                    groupType=$group_C
+		fi
 		;;
 
 	    *.c)
@@ -590,16 +592,18 @@ for arg in "$@" ; do
 		arrFileName[$numFiles]=$arg
 		arrFileNameDirectory[$numFiles]=`dirname $arg`
 		numFiles=numFiles+1
-# 		if [ $isCXXUsedForC == $TRUE ]; then
-# #		    pdtParserType=cxxparse
-# #		    isCurrentFileC=$TRUE
-# 		    groupType=$group_c
-#                 else
-# #		    pdtParserType=cparse
-# 		    groupType=$group_c
-# 		fi
+		if [ $defaultParser = "noparser" ] ; then
+		    if [ $isCXXUsedForC == $TRUE ]; then
+			pdtParserType=cxxparse
+			isCurrentFileC=$TRUE
+			groupType=$group_c
+                    else
+			pdtParserType=cparse
+			groupType=$group_c
+                    fi
+		fi
 		;;
-
+	    
 	    *.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95)
 		fileName=$arg
 		arrFileName[$numFiles]=$arg
