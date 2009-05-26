@@ -120,9 +120,11 @@ void TauTraceSetFlushEvents(int value) {
 
 /* Get the flag for flushing the EDF file, 1 means flush edf file. */
 int TauTraceGetFlushEvents() {
+  int val;
   RtsLayer::LockDB();
-  return TauTraceFlushEvents;
+  val = TauTraceFlushEvents;
   RtsLayer::UnLockDB();
+  return val;
 }
 
 /* Check that the trace file is initialized */
