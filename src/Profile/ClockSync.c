@@ -68,7 +68,13 @@ static long gethostid() {
 #endif /* TAU_WINDOWS */
 
 static long getUniqueMachineIdentifier() {
+#ifdef TAU_CATAMOUNT
+  int rank;
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  return rank;
+#else
   return gethostid();
+#endif
 }
 
 static double getPreSyncTime() { 
@@ -242,6 +248,7 @@ void TauSyncClocks() {
   if (userevent == 0) { /* register the user event */
     userevent = Tau_get_userevent("TauTraceClockOffsetStart");
   }
+/*   TAU_VERBOSE ("TAU: Clock Synchonization offset for node %d : %.16G\n", rank, offset); */
   TauTraceEventSimple(TauUserEvent_GetEventId(userevent), (x_int64) offset, 0);
 
   PMPI_Barrier(MPI_COMM_WORLD);
