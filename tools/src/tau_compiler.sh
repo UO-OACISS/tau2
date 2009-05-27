@@ -882,12 +882,11 @@ while [ $tempCounter -lt $numFiles ]; do
     arrPdbForTau[$tempCounter]="${PDBARGSFORTAU}${newFile}"
     if [ $pdbFileSpecified == $FALSE ]; then
 	newFile=${base}.pdb
-	if [ $isCXXUsedForC == $TRUE -a $isCurrentFileC == $TRUE ]; then
-            #newFile=${base}.c.pdb
-            newFile=${arrFileName[$tempCounter]}.pdb
-	    isCurrentFileC=$FALSE
-        fi
 
+	# if we are using cxxparse for a .c file, cxxparse spits out a .c.pdb file
+	if [ "x$defaultParser" = "xcxxparse" -a "x$suf" = "x.c" ] ; then
+            newFile=${arrFileName[$tempCounter]}.pdb
+	fi
     else
 	newFile=$optPDBFile; 
     fi
