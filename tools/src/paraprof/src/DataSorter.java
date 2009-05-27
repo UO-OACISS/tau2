@@ -15,9 +15,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  * functions that are in groups supposed to be shown. 
  *  
  * 
- * <P>CVS $Id: DataSorter.java,v 1.14 2009/04/13 21:20:13 amorris Exp $</P>
+ * <P>CVS $Id: DataSorter.java,v 1.15 2009/05/27 23:05:20 amorris Exp $</P>
  * @author	Alan Morris, Robert Bell
- * @version	$Revision: 1.14 $
+ * @version	$Revision: 1.15 $
  */
 public class DataSorter implements Comparator {
 
@@ -38,6 +38,9 @@ public class DataSorter implements Comparator {
     private static SortType defaultSortType = SortType.MEAN_VALUE;
     private static ValueType defaultValueType = ValueType.EXCLUSIVE;
     private static boolean defaultSortOrder = true;
+    
+    private boolean selectedSnapshotOverride = false;
+    private int selectedSnapshot = -1;
 
     public DataSorter(ParaProfTrial ppTrial) {
         this.ppTrial = ppTrial;
@@ -129,7 +132,7 @@ public class DataSorter implements Comparator {
 
         for (int i = 0; i < functionList.size(); i++) {
             FunctionProfile functionProfile = (FunctionProfile) functionList.get(i);
-            if (functionProfile != null) {
+            if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())) {
                 newList.add(functionProfile);
             }
         }
@@ -676,6 +679,22 @@ public class DataSorter implements Comparator {
     }
 
     public int getSelectedSnapshot() {
-        return ppTrial.getSelectedSnapshot();
+        if (selectedSnapshotOverride) {
+            return selectedSnapshot;
+        } else {
+            return ppTrial.getSelectedSnapshot();
+        }
+    }
+
+    public boolean getSelectedSnapshotOverride() {
+        return selectedSnapshotOverride;
+    }
+
+    public void setSelectedSnapshotOverride(boolean selectedSnapshotOverride) {
+        this.selectedSnapshotOverride = selectedSnapshotOverride;
+    }
+
+    public void setSelectedSnapshot(int selectedSnapshot) {
+        this.selectedSnapshot = selectedSnapshot;
     }
 }

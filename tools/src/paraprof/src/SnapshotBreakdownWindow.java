@@ -76,6 +76,8 @@ public class SnapshotBreakdownWindow extends JFrame implements Observer, ParaPro
 
         filter = new ObjectFilter(thread.getSnapshots());
         filter.addObserver(this);
+        
+        ppTrial.addObserver(this);
 
         this.setTitle("TAU: ParaProf: Snapshots for " + ppThread.getFullName() + " - "
                 + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
@@ -180,6 +182,13 @@ public class SnapshotBreakdownWindow extends JFrame implements Observer, ParaPro
         dataSet.removeAllSeries();
         dataSorter.setDescendingOrder(true);
         List snapshots = thread.getSnapshots();
+        
+        // override the trial's selected snapshot with the final one (-1)
+        // so that the sort order and list of functions does not vary based on the
+        // slider in the snapshot controller
+        dataSorter.setSelectedSnapshotOverride(true);
+        dataSorter.setSelectedSnapshot(-1);
+        
         List functions = dataSorter.getBasicFunctionProfiles(thread);
 
         //long firstTime = ((Snapshot) snapshots.get(0)).getTimestamp();
@@ -208,20 +217,13 @@ public class SnapshotBreakdownWindow extends JFrame implements Observer, ParaPro
                 s = new XYSeries(str, true, false);
             }
 
-            //            int start = 1;
             int start = 0;
-
-            //            if (timeline) {
-            //                start = 1;
-            //            }
             int stop = snapshots.size();
-            //int stop = 51;
 
             List filteredSnapshots = filter.getFilteredObjects();
             for (int i = 0; i < filteredSnapshots.size(); i++) {
                 int x = ((Snapshot) filteredSnapshots.get(i)).getID();
 
-                //for (int x = start; x < stop; x++) {
                 int snapshotID = x;
                 double value;
 
@@ -357,8 +359,6 @@ public class SnapshotBreakdownWindow extends JFrame implements Observer, ParaPro
         }
 
         return chart;
-        //ChartFactory.createStackedAreaXYChart()
-
     }
 
     private void setupMenus() {
@@ -386,7 +386,6 @@ public class SnapshotBreakdownWindow extends JFrame implements Observer, ParaPro
         mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
 
         setJMenuBar(mainMenu);
-
     }
 
     public void update(Observable o, Object arg) {
