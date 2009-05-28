@@ -165,7 +165,7 @@ static void get_symtab_bfd(const char *module, unsigned long offset) {
   syms = (asymbol **)malloc(size);
   nr_all_syms = bfd_canonicalize_symtab(BfdImage, syms);
   if ( nr_all_syms < 1 ) {
-    fprintf(stderr,"TAU: BFD: bfd_canonicalize_symtab(): < 1\n");
+    fprintf(stderr,"TAU: BFD: No symbols found (did you compile with -g?) : bfd_canonicalize_symtab(): < 1\n");
     return;
   }
    
