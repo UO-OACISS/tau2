@@ -8,7 +8,7 @@ import time
 
 True = 1
 False = 0
-config = "local"
+config = "cqos"
 inApp = "./ex27_2"
 inExp = "0x0"
 inTrial = ""

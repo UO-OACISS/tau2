@@ -6,7 +6,7 @@ from java.util import *
 
 True = 1
 False = 0
-config = "local"
+config = "cqos"
 inApp = "GAMESS"
 inExp = "Bassi.Hiro"
 inTrial = ""

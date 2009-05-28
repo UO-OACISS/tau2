@@ -79,6 +79,16 @@ public class Utilities {
             		if (exp.getName().trim().equals(eName.trim())) {
                     	//System.out.println("Found exp");
             			List<Trial> trials = server.getTrialList(exp.getID(),false);//TODO: Is this metadata ever needed?
+            			for (Trial trial : trials) {
+            				if (!trial.isXmlMetaDataLoaded()) {
+            					try {
+									trial.loadXMLMetadata(server.getDB());
+								} catch (SQLException e) {
+									System.err.println("Error getting metadata for trial");
+									e.printStackTrace();
+								}
+            				}
+            			}
 						return trials;
             		}
             	}
