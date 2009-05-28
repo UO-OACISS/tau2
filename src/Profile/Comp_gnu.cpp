@@ -165,7 +165,7 @@ static void get_symtab_bfd(const char *module, unsigned long offset) {
   syms = (asymbol **)malloc(size);
   nr_all_syms = bfd_canonicalize_symtab(BfdImage, syms);
   if ( nr_all_syms < 1 ) {
-    fprintf(stderr,"TAU: BFD: No symbols found (did you compile with -g?) : bfd_canonicalize_symtab(): < 1\n");
+    fprintf(stderr,"TAU: BFD: No symbols found in '%s' (did you compile with -g?) : bfd_canonicalize_symtab(): < 1\n", module);
     return;
   }
    
@@ -221,14 +221,13 @@ static void get_symtab_bfd(const char *module, unsigned long offset) {
  */
 static void get_symtab(void) {
 #ifdef TAU_BFD
-#  ifdef TAU_AIX
+#ifdef TAU_AIX
   char path[2048];
-
   sprintf (path, "/proc/%d/object/a.out", getpid());
   get_symtab_bfd(path, 0);
-#  else
+#else
   get_symtab_bfd("/proc/self/exe", 0);
-#  endif
+#endif
 #else
   fprintf(stderr, "TAU: Warning! BFD not found, symbols will not be resolved\n");
 #endif
