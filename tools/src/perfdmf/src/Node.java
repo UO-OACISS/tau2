@@ -1,15 +1,13 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * This class represents a Node.  It contains a set of Contexts and an ID.
  *  
- * <P>CVS $Id: Node.java,v 1.3 2008/05/14 23:14:01 amorris Exp $</P>
+ * <P>CVS $Id: Node.java,v 1.4 2009/06/01 18:38:26 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  * @see		DataSource
  * @see		Context
  */
@@ -18,7 +16,7 @@ public class Node implements Comparable {
     private int nodeID = -1;
     private Map contexts = new TreeMap();
     private DataSource dataSource;
-    
+
     /**
      * Creates a Node with the given ID.  This constructor is not public because Nodes should 
      * only be created by DataSource.addNode(...)
@@ -87,4 +85,17 @@ public class Node implements Comparable {
     public int compareTo(Object obj) {
         return nodeID - ((Node) obj).getNodeID();
     }
+
+    public List getThreads() {
+        List list = new ArrayList();
+        for (Iterator it = getContexts(); it.hasNext();) {
+            Context context = (Context) it.next();
+            for (Iterator it2 = context.getThreads(); it2.hasNext();) {
+                Thread thread = (Thread) it2.next();
+                list.add(thread);
+            }
+        }
+        return list;
+    }
+
 }

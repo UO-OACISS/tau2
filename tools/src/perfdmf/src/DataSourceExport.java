@@ -302,13 +302,13 @@ public class DataSourceExport {
         }
     }
     private static void writeMetric(File root, DataSource dataSource, int metricID, Function[] functions, String[] groupStrings,
-            UserEvent[] userEvents) throws IOException {
+            UserEvent[] userEvents, List threads) throws IOException {
 
         int numMetrics = dataSource.getNumberOfMetrics();
         int numUserEvents = dataSource.getNumUserEvents();
         int numGroups = dataSource.getNumGroups();
 
-        for (Iterator it = dataSource.getAllThreads().iterator(); it.hasNext();) {
+        for (Iterator it = threads.iterator(); it.hasNext();) {
             Thread thread = (Thread) it.next();
 
             File file = new File(root + "/profile." + thread.getNodeID() + "." + thread.getContextID() + "."
@@ -398,7 +398,12 @@ public class DataSourceExport {
         return ret;
     }
 
+
     public static void writeProfiles(DataSource dataSource, File directory) throws IOException {
+        writeProfiles(dataSource, directory, dataSource.getAllThreads());
+    }
+
+    public static void writeProfiles(DataSource dataSource, File directory, List threads) throws IOException {
 
         int numMetrics = dataSource.getNumberOfMetrics();
         int numUserEvents = dataSource.getNumUserEvents();
@@ -467,7 +472,7 @@ public class DataSourceExport {
         }
 
         if (numMetrics == 1) {
-            writeMetric(directory, dataSource, 0, functions, groupStrings, userEvents);
+            writeMetric(directory, dataSource, 0, functions, groupStrings, userEvents, threads);
         } else {
             for (int i = 0; i < numMetrics; i++) {
                 String name = "MULTI__" + createSafeMetricName(dataSource.getMetricName(i));
@@ -475,7 +480,7 @@ public class DataSourceExport {
                 if (!success) {
                     System.err.println("Failed to create directory: " + name);
                 } else {
-                    writeMetric(new File(directory + "/" + name), dataSource, i, functions, groupStrings, userEvents);
+                    writeMetric(new File(directory + "/" + name), dataSource, i, functions, groupStrings, userEvents, threads);
                 }
             }
         }
