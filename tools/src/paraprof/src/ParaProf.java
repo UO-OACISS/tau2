@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.86 2009/02/19 20:54:16 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.87 2009/06/01 18:39:55 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.86 $
+ * @version $Revision: 1.87 $
  */
 public class ParaProf implements ActionListener {
 
@@ -106,7 +106,7 @@ public class ParaProf implements ActionListener {
     public ParaProf() {}
 
     private static void usage() {
-        System.err.println("Usage: paraprof [--pack <file>] [--dump] [-p] [-m] [-i] [-f <filetype>] <files/directory>\n\n"
+        System.err.println("Usage: paraprof [--pack <file>] [--dump] [--dumprank <rank>] [-p] [-m] [-i] [-f <filetype>] <files/directory>\n\n"
                 + "try `paraprof --help` for more information");
     }
 
@@ -116,12 +116,13 @@ public class ParaProf implements ActionListener {
                 + "                                    profiles (default), pprof, dynaprof, mpip,\n"
                 + "                                    gprof, psrun, hpm, packed, cube, hpc, ompp\n"
                 + "                                    snap, perixml, gptl, ipm\n"
-                + "  -h, --help                      Display this help message\n"
-                + "\n"
+                + "  -h, --help                      Display this help message\n" + "\n"
                 + "The following options will run only from the console (no GUI will launch):\n" + "\n"
                 + "  --merge <file.gz>               Merges snapshot profiles\n"
                 + "  --pack <file>                   Pack the data into packed (.ppk) format\n"
                 + "  --dump                          Dump profile data to TAU profile format\n"
+                + "  --dumprank <rank>               Dump profile data for <rank> to TAU profile format\n"
+                + "  --overwrite                     Allow overwriting of profiles\n"
                 + "  -o, --oss                       Print profile data in OSS style text output\n"
                 + "  -s, --summary                   Print only summary statistics\n"
                 + "                                    (only applies to OSS output)\n" + "\n" + "Notes:\n"
@@ -358,7 +359,9 @@ public class ParaProf implements ActionListener {
         CmdLineParser.Option mergeOpt = parser.addStringOption('a', "merge");
         CmdLineParser.Option packOpt = parser.addStringOption('a', "pack");
         CmdLineParser.Option unpackOpt = parser.addBooleanOption('u', "dump");
+        CmdLineParser.Option unpackRankOpt = parser.addStringOption('r', "dumprank");
         CmdLineParser.Option ossOpt = parser.addBooleanOption('o', "oss");
+        CmdLineParser.Option overwriteOpt = parser.addBooleanOption('w', "overwrite");
         CmdLineParser.Option summaryOpt = parser.addBooleanOption('s', "summary");
         CmdLineParser.Option monitorOpt = parser.addBooleanOption('m', "monitor");
         CmdLineParser.Option demoOpt = parser.addBooleanOption('z', "demo");
@@ -380,6 +383,11 @@ public class ParaProf implements ActionListener {
         String merge = (String) parser.getOptionValue(mergeOpt);
         String pack = (String) parser.getOptionValue(packOpt);
         Boolean unpack = (Boolean) parser.getOptionValue(unpackOpt);
+        Boolean overwrite = (Boolean) parser.getOptionValue(overwriteOpt);
+        String unpackrank = (String) parser.getOptionValue(unpackRankOpt);
+        if (unpackrank != null) {
+            unpack = Boolean.TRUE;
+        }
         Boolean oss = (Boolean) parser.getOptionValue(ossOpt);
         Boolean summary = (Boolean) parser.getOptionValue(summaryOpt);
         Boolean monitor = (Boolean) parser.getOptionValue(monitorOpt);
@@ -468,29 +476,28 @@ public class ParaProf implements ActionListener {
                     FileList fl = new FileList();
                     sourceFiles = fl.helperFindSnapshots(System.getProperty("user.dir"));
                 }
-                
+
                 if (sourceFiles.length == 0) {
                     System.err.println("No snapshots found\n");
                     System.exit(-1);
                 }
-                
-                for (int i=0; i<sourceFiles.length; i++) {
+
+                for (int i = 0; i < sourceFiles.length; i++) {
                     if (DataSource.SNAP != UtilFncs.identifyData(sourceFiles[i])) {
-                        System.err.println("Error: File '"+sourceFiles[i]+"' is not a snapshot profile\n");
+                        System.err.println("Error: File '" + sourceFiles[i] + "' is not a snapshot profile\n");
                         System.exit(-1);
                     }
                 }
-                
+
                 // merge and write
                 UtilFncs.mergeSnapshots(sourceFiles, merge);
-                
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
             System.exit(0);
         }
-        
-        
+
         if (oss != null) {
             try {
 
@@ -529,16 +536,25 @@ public class ParaProf implements ActionListener {
 
                 FileList fl = new FileList();
                 List v = fl.helperFindProfiles(".");
-                if (v.size() != 0) {
-                    System.err.println("Error: profiles found in current directory, please remove first");
-                    return;
+
+                if (overwrite == null) {
+                    if (v.size() != 0) {
+                        System.err.println("Error: profiles found in current directory, please remove first");
+                        return;
+                    }
                 }
 
                 DataSource dataSource = UtilFncs.initializeDataSource(sourceFiles, fileType, ParaProf.fixNames);
                 System.out.println("Loading data...");
                 dataSource.load();
                 System.out.println("Creating TAU Profile data...");
-                DataSourceExport.writeProfiles(dataSource, new File("."));
+                if (unpackrank != null) {
+                    int rank = Integer.parseInt(unpackrank);
+                    Node node = dataSource.getNode(rank);
+                    DataSourceExport.writeProfiles(dataSource, new File("."), node.getThreads());
+                } else {
+                    DataSourceExport.writeProfiles(dataSource, new File("."));
+                }
 
             } catch (Exception e) {
                 e.printStackTrace();
