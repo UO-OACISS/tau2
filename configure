@@ -3852,23 +3852,36 @@ if [ $mpi = yes ] ; then
 
   # VampirTrace
   if [ $vampirtrace = yes -a $mpi = yes ] ; then
-    if [ $vampirtrace = yes -a -f $vampirtracedir/$vampirtracelibdir/libvt.fmpi.a -o -f $vampirtracedir/$vampirtracelibdir/libvt.fmpi.a ] ; then
-      vtfortranwrapper="-lvt.fmpi"
-    else 
-      vtfortranwrapper=""
-    fi
 
-    wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir $vtfortranwrapper -lvt.mpi -lotf -lz"
-    if [ $openmp = yes ] ; then
+      vtfortranwrapper=""
+      if [ -f $vampirtracedir/$vampirtracelibdir/libvt.fmpi.a ] ; then
+	  vtfortranwrapper="-lvt.fmpi"
+      fi
+
+      if [ -f $vampirtracedir/$vampirtracelibdir/libvt-fmpi.a ] ; then
+	  vtfortranwrapper="-lvt-fmpi"
+      fi
+      
+      vtmpilib="-lvt.mpi"
+      if [ -f "$vampirtracedir/$vampirtracelibdir/libvt-mpi.a" ] ; then
+	  vtmpilib="-lvt-mpi"
+      fi
+      
+      vtompilib="-lvt.ompi"
+      if [ -f "$vampirtracedir/$vampirtracelibdir/libvt-ompi.a" ] ; then
+	  vtompilib="-lvt-ompi"
+      fi
+      
+      wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir $vtfortranwrapper $vtmpilib -lotf -lz"
+      if [ $openmp = yes ] ; then
 # should we have a -lvt.fmpi here? 
-	fixmakeargs="useropt=$useropt extrashlibopts=$extrashlibopts $fixmakeargs"
-	if [ $sicortex = yes ] ; then
-	    wrapperlib="$sicortexlink"
-#-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir -Wl,-whole-archive $vtfortranwrapper -lvt.ompi -lotf -lbfd -Wl,-no-whole-archive -lz"
-	else
-	    wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir -Wl,-whole-archive $vtfortranwrapper -lvt.ompi -lotf -Wl,-no-whole-archive -lz"
-	fi
-    fi
+	  fixmakeargs="useropt=$useropt extrashlibopts=$extrashlibopts $fixmakeargs"
+	  if [ $sicortex = yes ] ; then
+	      wrapperlib="$sicortexlink"
+	  else
+	    wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir -Wl,-whole-archive $vtfortranwrapper $vtompilib -lotf -Wl,-no-whole-archive -lz"
+	  fi
+      fi
   fi 
   
   if [ $perf = yes ] ; then
