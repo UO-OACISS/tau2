@@ -96,7 +96,7 @@ MEMORY=-Xmx800m
 
 machine=`uname -m`
 if [ "x$machine" = "xx86_64" ] ; then
-    MEMORY=-Xmx8000m
+    MEMORY=-Xmx2000m
 fi
 
 # Launch!
