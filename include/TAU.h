@@ -17,6 +17,8 @@
 #define _TAU_H_
 
 #define TAU_VERSION "2.18.2-cvs"
+#define TAU_MAKEFILE "unspecified"
+
 
 #ifndef TAU_DISABLE_API
 #ifdef __cplusplus
