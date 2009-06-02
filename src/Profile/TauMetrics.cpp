@@ -241,7 +241,7 @@ static int is_papi_metric (char *str) {
 static void initialize_functionArray() {
   int usingPAPI = 0;
   int pos = 0;
-
+  int found = 0;
   int ktau = 0;
 #ifdef TAUKTAU_SHCTR
   ktau = 1;
@@ -253,6 +253,7 @@ static void initialize_functionArray() {
 #endif
 
   for (int i=0; i<nmetrics; i++) {
+    found = 1;
     if (compareMetricString(metricv[i],"LOGICAL_CLOCK")) {
       functionArray[pos++] = metric_read_logicalClock;
     } else if (compareMetricString(metricv[i],"GET_TIME_OF_DAY")){
@@ -300,13 +301,17 @@ static void initialize_functionArray() {
 	  metricv[j] = metricv[j+1];
 	}
 	nmetrics--;
+	i--;
+	found = 0;
 
 	/* old: null clock
 	functionArray[pos++] = metric_read_nullClock;
 	*/
       }
     }
-    TAU_VERBOSE("TAU: Using metric: %s\n", metricv[i]);
+    if (found) {
+      TAU_VERBOSE("TAU: Using metric: %s\n", metricv[i]);
+    }
   }
 
   /* check if we are using PAPI */
