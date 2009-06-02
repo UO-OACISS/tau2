@@ -1,5 +1,5 @@
-CONFIG_ARCH=default
-TAUROOT=
+CONFIG_ARCH=i386_linux
+TAUROOT=/home/wspear/bin/tau2
 TOOLS_SRC=$(TAUROOT)/tools/src
 
 
