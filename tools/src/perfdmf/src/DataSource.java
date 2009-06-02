@@ -20,9 +20,9 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.44 2009/04/21 01:32:43 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.45 2009/06/02 19:59:26 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.44 $
+ * @version $Revision: 1.45 $
  */
 public abstract class DataSource {
 
@@ -812,7 +812,6 @@ public abstract class DataSource {
         double[] exclSumSqr = new double[numMetrics];
         double[] inclSumSqr = new double[numMetrics];
 
-        double topLevelInclSum[] = new double[numMetrics];
 
         // make sure that the allThreads list is initialized;
         this.initAllThreadsList();
@@ -821,6 +820,7 @@ public abstract class DataSource {
 
             // must always iterate through all metrics regardless to find the top level timers, I think???
             for (int i = startMetric; i <= endMetric; i++) { // for each metric
+                double topLevelInclSum[] = new double[numMetrics];
                 for (Iterator it = allThreads.iterator(); it.hasNext();) { // for each thread
                     Thread thread = (Thread) it.next();
                     if (wellBehavedSnapshots) {
@@ -829,7 +829,7 @@ public abstract class DataSource {
                         topLevelInclSum[i] += thread.getMaxInclusive(i, thread.getNumSnapshots() - 1);
                     }
                 }
-                // for now, the derived 'threads' only have one snapshot
+
                 totalData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
                 meanData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
                 stddevData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);

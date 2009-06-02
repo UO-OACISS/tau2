@@ -5,9 +5,9 @@ import java.util.*;
 /**
  * This class represents a single function profile on a single thread.
  *
- * <P>CVS $Id: FunctionProfile.java,v 1.12 2008/10/31 00:45:01 amorris Exp $</P>
+ * <P>CVS $Id: FunctionProfile.java,v 1.13 2009/06/02 19:59:26 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.12 $
+ * @version	$Revision: 1.13 $
  * @see		Function
  */
 public class FunctionProfile {
@@ -94,7 +94,7 @@ public class FunctionProfile {
         double value = this.getDouble(metric, EXCLUSIVE);
 
         ///System.out.println(this + ".getExclusive(" + metric + ") = " + value);
-        
+
         return value;
     }
 
@@ -114,7 +114,7 @@ public class FunctionProfile {
             if (dividend == 0) {
                 return 0;
             }
-            return function.getTotalInclusive(metric) / dividend;
+            return function.getTotalProfile().getInclusive(snapshot, metric) / dividend;
         } else if (thread.getNodeID() == Thread.STDDEV) {
             return getInclusive(snapshot, metric) / function.getMeanInclusive(metric) * 100.0;
         }
@@ -142,7 +142,7 @@ public class FunctionProfile {
             if (dividend == 0) {
                 return 0;
             }
-            return function.getTotalExclusive(metric) / dividend;
+            return function.getTotalProfile().getExclusive(snapshot,metric) / dividend;
         } else if (thread.getNodeID() == Thread.STDDEV) {
             return getExclusive(metric) / function.getMeanExclusive(metric) * 100.0;
         }
