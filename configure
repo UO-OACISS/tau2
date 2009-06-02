@@ -3451,6 +3451,7 @@ fi
 echo \#define TAU_$machine > ./include/tauarch.h
 echo \#define TAU_ARCH \"$machine\" >> ./include/tauarch.h
 
+
 make_directories
 
 
@@ -5173,7 +5174,17 @@ if [ "y$1"  = "ydefault" ] ; then
     sed -f $sedex < ${i} > ${i}~~0
     mv ${i}~~0 ${i}
   done
+
+  STUB="default"
+else
+  STUB="$tautoplevel/$architecture/lib/Makefile.tau$tauoptions"
 fi
+
+# replace TAU_MAKEFILE in TAU.h
+cat ./include/TAU.h | sed -e "s@^#define TAU_MAKEFILE.*\$@#define TAU_MAKEFILE \"$STUB\"@" > TAU.h
+rm ./include/TAU.h
+mv TAU.h ./include/TAU.h
+
     
 if [ $perf = yes ] ; then
     cp include/Makefile $tautoplevel/$architecture/lib/Makefile.tau$tauoptions
