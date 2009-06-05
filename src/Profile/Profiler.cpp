@@ -194,7 +194,7 @@ void TauProfiler_EnableAllEventsOnCallStack(int tid, Profiler *current) {
       /* process the current event */
       DEBUGPROFMSG(RtsLayer::myNode()<<" Processing EVENT "<<current->ThisFunction->GetName()<<endl;);
       TauTraceEvent(current->ThisFunction->GetFunctionId(), 1, tid, (x_uint64) current->StartTime, 1); 
-      MultipleCounterLayer::triggerCounterEvents((x_uint64) current->StartTime[0], current->StartTime, tid);
+      TauMetrics_triggerAtomicEvents((x_uint64) current->StartTime[0], current->StartTime, tid);
     }
   }
 }
@@ -1327,6 +1327,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.242 $   $Date: 2009/05/14 20:49:58 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.242 2009/05/14 20:49:58 amorris Exp $ 
+ * $Revision: 1.243 $   $Date: 2009/06/05 21:46:37 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.243 2009/06/05 21:46:37 amorris Exp $ 
  ***************************************************************************/
