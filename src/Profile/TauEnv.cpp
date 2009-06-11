@@ -270,14 +270,17 @@ extern "C" {
 	TAU_METADATA("TAU_PROFILE","off");
       }
 
+
       // tracing
       tmp = getenv("TAU_TRACE");
       if (parse_bool(tmp, TAU_TRACING_DEFAULT)) {
 	env_tracing = 1;
+	env_track_message = 1;
 	TAU_VERBOSE("TAU: Tracing Enabled\n");
 	TAU_METADATA("TAU_TRACE","on");
       } else {
 	env_tracing = 0;
+	env_track_message = TAU_TRACK_MESSAGE_DEFAULT;
 	TAU_VERBOSE("TAU: Tracing Disabled\n");
 	TAU_METADATA("TAU_TRACE","off");
       }
@@ -296,9 +299,9 @@ extern "C" {
 
 
 #ifdef TAU_MPI
-      // track comm (oppossite of old -nocomm option)
+      // track comm (opposite of old -nocomm option)
       tmp = getenv("TAU_TRACK_MESSAGE");
-      if (parse_bool(tmp, TAU_TRACK_MESSAGE_DEFAULT)) {
+      if (parse_bool(tmp, env_track_message)) {
 	env_track_message = 1;
       } else {
 	env_track_message = 0;
