@@ -368,7 +368,7 @@ void TraceCallStack(int tid, Profiler *current) {
 
 
 
-double TauTraceGetTime(int tid) {
+extern "C" double TauTraceGetTime(int tid) {
   // counter 0 is the one we use
   double value = TauMetrics_getTraceMetricValue(tid);
   return value;

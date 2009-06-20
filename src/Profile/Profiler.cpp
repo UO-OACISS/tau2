@@ -1316,7 +1316,11 @@ bool TauProfiler_createDirectories() {
 	/* On IBM BGL, system command doesn't execute. So, we need to create
 	   these directories using our mkdir syscall instead. */
 	/* OLD: mkdir(newdirname, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); */
+#ifdef TAU_WINDOWS
+	mkdir(newdirname);
+#else
 	mkdir(newdirname, S_IRWXU | S_IRGRP | S_IXGRP);
+#endif
       }
     }
     flag = false;
@@ -1327,6 +1331,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.243 $   $Date: 2009/06/05 21:46:37 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.243 2009/06/05 21:46:37 amorris Exp $ 
+ * $Revision: 1.244 $   $Date: 2009/06/20 00:38:08 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.244 2009/06/20 00:38:08 amorris Exp $ 
  ***************************************************************************/

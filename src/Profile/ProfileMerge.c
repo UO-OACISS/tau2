@@ -13,7 +13,7 @@ int TAUDECL Tau_RtsLayer_myThread();
 char* TAUDECL getSnapshotBuffer();
 int TAUDECL getSnapshotBufferLength();
 
-x_uint64 Tau_getTimeStamp();
+x_uint64 TAUDECL Tau_getTimeStamp();
 
 int Tau_mergeProfiles() {
   int rank, size, tid, i, buflen, trash = 0;

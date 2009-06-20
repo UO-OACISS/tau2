@@ -12,7 +12,7 @@
 # use "nmake /f makefile.win32 "JDK=<path\to\jdk> java
 # (e.g. nmake /f makefile.win32 "JDK=c:\j2sdk1.4.2_05" java)
 
-MPICFLAGS= /O2 /Gz /nologo /EHsc -I . -DPROFILING_ON
+MPICFLAGS= /O2 /Gz /nologo /EHsc -I . -DPROFILING_ON -DTAU_WINDOWS
 CFLAGS= $(CFLAGS) /O2 /Gd /nologo /TP /EHsc -I .
 CC=cl
 INCLUDES=-Iinclude -I../include -I"C:\Program Files\Microsoft Compute Cluster Pack\Include"
@@ -24,7 +24,7 @@ LDFLAGS=
 O=.obj
 
 
-TAU_PROFILE_SRCS= src\Profile\TauInit.cpp src\Profile\TauEnv.cpp src\profile\TauCallPath.cpp src\profile\FunctionInfo.cpp src\profile\Profiler.cpp src\profile\RtsLayer.cpp src\profile\RtsThread.cpp src\profile\TauCAPI.cpp src\profile\TauFAPI.cpp src\profile\TauHandler.cpp src\profile\TauHooks.cpp src\profile\TauMapping.cpp src\profile\TauMemory.cpp src\profile\UserEvent.cpp src\profile\WindowsThreadLayer.cpp src\profile\MetaData.cpp src\profile\TauMetrics.cpp src\profile\TauReadMetrics.cpp src\profile\Tracer.cpp
+TAU_PROFILE_SRCS= src\Profile\TauInit.cpp src\Profile\TauEnv.cpp src\profile\TauCallPath.cpp src\profile\FunctionInfo.cpp src\profile\Profiler.cpp src\profile\RtsLayer.cpp src\profile\RtsThread.cpp src\profile\TauCAPI.cpp src\profile\TauFAPI.cpp src\profile\TauHandler.cpp src\profile\TauHooks.cpp src\profile\TauMapping.cpp src\profile\TauMemory.cpp src\profile\UserEvent.cpp src\profile\WindowsThreadLayer.cpp src\profile\MetaData.cpp src\profile\TauMetrics.cpp src\profile\TauReadMetrics.cpp src\profile\Tracer.cpp src\profile\TauCompensate.cpp
 TAU_JAVA_SRC= src\profile\JavaThreadLayer.cpp src\profile\TauJava.cpp src\profile\TauJAPI.cpp src\profile\MetaData.cpp
 TAU_MPI_SRC= src\profile\TauMpi.c src\profile\ClockSync.c src\profile\ProfileMerge.c
 
@@ -54,12 +54,12 @@ libs : win32
 
 
 tau2vtf :
-	$(CC) $(CFLAGS) -DTRACING_ON -o win32\bin\tau2vtf utils\tau2vtf.cpp src\TraceInput\TAU_tf.cpp src\TraceInput\TAU_tf_writer.cpp src\TraceInput\TAU_Cwrapper.cpp -Isrc\TraceInput -I$(VTF)/include /link $(VTF)\win32\lib\libvtf3.lib
+	$(CC) $(CFLAGS) -DTRACING_ON /o win32\bin\tau2vtf utils\tau2vtf.cpp src\TraceInput\TAU_tf.cpp src\TraceInput\TAU_tf_writer.cpp src\TraceInput\TAU_Cwrapper.cpp -Isrc\TraceInput -I$(VTF)/include /link $(VTF)\win32\lib\libvtf3.lib
 
 
 
 tau_instrumentor :
-	$(CC) $(CFLAGS) -o win32\bin\tau_instrumentor utils\tau_instrumentor.cpp utils\tau_instrument.cpp utils\tau_selective.cpp -I$(PDT)\ductape\inc /link $(PDT)\windows\lib\ductape.lib	
+	$(CC) $(CFLAGS) /o win32\bin\tau_instrumentor utils\tau_instrumentor.cpp utils\tau_instrument.cpp utils\tau_selective.cpp -I$(PDT)\ductape\inc /link $(PDT)\windows\lib\ductape.lib	
 
 win32 :
 	md win32
@@ -72,17 +72,17 @@ win32 :
 
 
 pprof : utils\function_data.cpp utils\pprof.cpp utils\user_event_data.cpp
-	$(CC) $(CFLAGS) -o win32\bin\pprof utils\function_data.cpp utils\pprof.cpp utils\user_event_data.cpp
+	$(CC) $(CFLAGS) /o win32\bin\pprof utils\function_data.cpp utils\pprof.cpp utils\user_event_data.cpp
 
 
 tau_convert : utils\tau_convert.c
-	$(CC) $(CFLAGS) -o win32\bin\tau_convert utils\tau_convert.c	
+	$(CC) $(CFLAGS) /o win32\bin\tau_convert utils\tau_convert.c	
 
 tau_merge : utils\tau_events.cpp utils\tau_merge.c utils\getopt.cpp
-	$(CC) $(CFLAGS) -o win32\bin\tau_merge utils\tau_events.cpp utils\tau_merge.c utils\getopt.cpp	
+	$(CC) $(CFLAGS) /o win32\bin\tau_merge utils\tau_events.cpp utils\tau_merge.c utils\getopt.cpp	
 
 tau_reduce : utils\tau_reduce.cpp utils\pprof_elem.cpp
-	$(CC) $(CFLAGS) -o win32\bin\tau_reduce utils\tau_reduce.cpp utils\pprof_elem.cpp
+	$(CC) $(CFLAGS) /o win32\bin\tau_reduce utils\tau_reduce.cpp utils\pprof_elem.cpp
 
 
 tau-profile.lib : $(TAU_PROFILE_OBJS)

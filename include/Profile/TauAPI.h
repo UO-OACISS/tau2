@@ -18,6 +18,13 @@
 
 #ifdef TAU_ENABLED
 
+#if (defined(TAU_WINDOWS))
+#pragma warning( disable : 4786 )
+#define TAUDECL __cdecl
+#else
+#define TAUDECL
+#endif /* TAU_WINDOWS */
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -301,7 +308,7 @@ void Tau_set_inclusive_values(void *handle, double* values, int tid);
 void Tau_get_exclusive_values(void *handle, double* values, int tid);
 void Tau_set_exclusive_values(void *handle, double* values, int tid);
 void Tau_get_counter_info(const char ***counterlist, int *numcounters);
-int  Tau_get_tid(void);
+int TAUDECL Tau_get_tid(void);
 int  Tau_create_task(void);
 void Tau_destructor_trigger();
 
@@ -382,7 +389,7 @@ void Tau_dump_function_values(const char **functionList, int num);
 void Tau_dump_function_values_incr(const char **functionList, int num);
 void Tau_register_thread();
 void Tau_register_fork(int nodeid, enum TauFork_t opcode);
-void * Tau_get_userevent(char *name);
+void* TAUDECL Tau_get_userevent(char *name);
 void Tau_get_context_userevent(void **ptr, char *name);
 void Tau_userevent(void *event, double data);
 void Tau_context_userevent(void *event, double data);
@@ -419,7 +426,6 @@ void Tau_get_child_calls(void *handle, long* values, int tid);
 void Tau_get_inclusive_values(void *handle, double* values, int tid);
 void Tau_get_exclusive_values(void *handle, double* values, int tid);
 void Tau_get_counter_info(const char ***counterlist, int *numcounters);
-int Tau_get_tid(void);
 
 
 void Tau_enable_tracking_memory_headroom();
@@ -479,6 +485,6 @@ void Tau_profile_param1l(long data, const char *dataname);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.98 $   $Date: 2009/05/05 22:21:41 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.98 2009/05/05 22:21:41 amorris Exp $ 
+ * $Revision: 1.99 $   $Date: 2009/06/20 00:38:07 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.99 2009/06/20 00:38:07 amorris Exp $ 
  ***************************************************************************/

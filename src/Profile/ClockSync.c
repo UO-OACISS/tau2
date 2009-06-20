@@ -36,32 +36,15 @@
 #define SYNC_LOOP_COUNT 10
 
 
-long TauUserEvent_GetEventId(void *evt);
+long TAUDECL TauUserEvent_GetEventId(void *evt);
 
 /* We're probably going to have to change this for some platforms */
 #ifdef TAU_WINDOWS
 #include <winsock.h>
 static long gethostid() {
-  int id;
-  char hostname[256];/* 255 is max legal DNS name */
-  size_t hostname_size = 256;
-  struct hostent *hostp;
-  struct in_addr addru;/* union for conversion */
-  
-  (void) gethostname(hostname, hostname_size);
-  hostname[hostname_size] = '\0'; /* make sure it is null-terminated */
-  
-  hostp = gethostbyname(hostname);
-  if(hostp == NULL) {
-    /* our own name was not found!  punt. */
-    id = 0;
-  } else {
-    /* return first address of host */
-    memcpy(&(addru.s_addr), hostp->h_addr_list[0], 4);
-    id = addru.s_addr;
-  }
-  
-  return id;
+  int rank;
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  return rank;
 }
 #else
 #include <unistd.h>

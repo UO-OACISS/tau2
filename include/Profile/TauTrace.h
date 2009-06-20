@@ -56,26 +56,26 @@ extern "C" {
 #endif /* __cplusplus */
   
   
-  int  TauTraceInit(int tid);
-  void TauTraceUnInitialize(int tid);
-  void TauTraceReinitialize(int oldid, int newid, int tid);
-  void TauTraceEventOnly(long int ev, x_int64 par, int tid);
-  void TauTraceFlushBuffer(int tid);
-  void TauTraceEventSimple(long int ev, x_int64 par, int tid);
-  void TauTraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts);
-  void TauTraceClose(int tid);
-  void TauTraceSetFlushEvents(int value);
-  int  TauTraceGetFlushEvents();
-  double TauTraceGetTime(int tid);
-  int TauTraceDumpEDF(int tid);
-  int TauTraceMergeAndConvertTracesIfNecessary(void);
+  int  TAUDECL TauTraceInit(int tid);
+  void TAUDECL TauTraceUnInitialize(int tid);
+  void TAUDECL TauTraceReinitialize(int oldid, int newid, int tid);
+  void TAUDECL TauTraceEventOnly(long int ev, x_int64 par, int tid);
+  void TAUDECL TauTraceFlushBuffer(int tid);
+  void TAUDECL TauTraceEventSimple(long int ev, x_int64 par, int tid);
+  void TAUDECL TauTraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts);
+  void TAUDECL TauTraceClose(int tid);
+  void TAUDECL TauTraceSetFlushEvents(int value);
+  int  TAUDECL TauTraceGetFlushEvents();
+  double TAUDECL TauTraceGetTime(int tid);
+  int TAUDECL TauTraceDumpEDF(int tid);
+  int TAUDECL TauTraceMergeAndConvertTracesIfNecessary(void);
 
-  void TauTraceSendMsg(int type, int destination, int length);
-  void TauTraceRecvMsg(int type, int source, int length);
+  void TAUDECL TauTraceSendMsg(int type, int destination, int length);
+  void TAUDECL TauTraceRecvMsg(int type, int source, int length);
 
 
   /* Returns a pointer to the (singleton) offset info struct */
-  TauTraceOffsetInfo *TheTauTraceOffsetInfo();
+  TauTraceOffsetInfo* TAUDECL TheTauTraceOffsetInfo();
 
 #ifdef __cplusplus
 }
