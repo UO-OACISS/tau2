@@ -50,7 +50,7 @@ libs : win32
 	-del $(TAU_PROFILE_OBJS)
 	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON" tau-profile.lib
 	-del $(TAU_PROFILE_OBJS)
-	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON /MD" tau-profile-mt.lib
+	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON /MT" tau-profile-mt.lib
 
 
 tau2vtf :
