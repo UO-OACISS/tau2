@@ -20,7 +20,7 @@ tar -xzvf tau2.tar.gz
 gunzip $ROOT/tau2/tools/src/contrib/jogl/windows/jogl.dll.gz
 gunzip $ROOT/tau2/tools/src/contrib/jogl/windows/jogl_awt.dll.gz
 gunzip $ROOT/tau2/tools/src/contrib/jogl/windows/jogl_cg.dll.gz
-cp $ROOT\tau2\tools\src\windows\trace_impl.h $ROOT\tau2\utils\slogconverter
-cp $ROOT\tau2\tools\src\windows\etc\tau_config.h $ROOT\tau2\include
-cp $ROOT\tau2\tools\src\windows\etc\tauarch.h $ROOT\tau2\include
+cp $ROOT/tau2/tools/src/windows/trace_impl.h $ROOT/tau2/utils/slogconverter
+cp $ROOT/tau2/tools/src/windows/etc/tau_config.h $ROOT/tau2/include
+cp $ROOT/tau2/tools/src/windows/etc/tauarch.h $ROOT/tau2/include
 
