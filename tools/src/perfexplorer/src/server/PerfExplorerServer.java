@@ -60,7 +60,7 @@ import edu.uoregon.tau.perfexplorer.constants.Constants;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.83 2009/05/14 18:40:36 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.84 2009/06/23 23:23:57 wspear Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -1462,7 +1462,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			StringBuilder buf = new StringBuilder();
 			String clusterType=model.getClusterValueType();
 			String clusterPerType="inclusive_percentage";
-			if(clusterType.compareTo("inclusive")!=0){
+			if(clusterType==null||clusterType.compareTo("inclusive")!=0){
 				if (db.getDBType().compareTo("oracle") == 0) {
 					clusterType="excl";
 				}
