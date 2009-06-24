@@ -119,7 +119,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tauex,v 1.14 2009/03/31 17:19:43 amorris Exp $';
+	      echo '$Id: tauex,v 1.15 2009/06/24 21:15:09 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -m)
@@ -242,14 +242,14 @@ else
 fi
 
 if [ "$TraceSpecified" = "true" ] ; then
-    # if tracing, the first counter should be GET_TIME_OF_DAY
-    Counters="GET_TIME_OF_DAY $Counters"
+    # if tracing, the first counter should be TIME
+    Counters="TIME $Counters"
     NumCounters=$(( $NumCounters + 1 ))
 fi
 
 if [ "$NumCounters" = "0" ] ; then
-    # if no counters were specified use P_WALL_CLOCK_TIME
-    Counters="P_WALL_CLOCK_TIME $Counters"
+    # if no counters were specified use TIME
+    Counters="TIME $Counters"
     NumCounters=$(( $NumCounters + 1 ))
 fi
 
