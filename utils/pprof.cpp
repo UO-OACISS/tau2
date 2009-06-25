@@ -575,7 +575,7 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
       else{ // Hey! What data did we read?
 #ifdef DEBUG 
         printf("Unable to process data read: %s\n", line);
-        printf("You're probably using an older version of this tool. \Please upgrade\n");
+        printf("You're probably using an older version of this tool. Please upgrade\n");
         fclose(fp);
 #endif /* DEBUG */
         return 0;
@@ -2774,7 +2774,7 @@ int main (int argc, char *argv[]){
   exit (0);
 }//main()
 /***************************************************************************
- * $RCSfile: pprof.cpp,v $   $Author: amorris $
- * $Revision: 1.51 $   $Date: 2007/10/16 22:01:47 $
- * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.51 2007/10/16 22:01:47 amorris Exp $                                
+ * $RCSfile: pprof.cpp,v $   $Author: wspear $
+ * $Revision: 1.52 $   $Date: 2009/06/25 17:49:52 $
+ * POOMA_VERSION_ID: $Id: pprof.cpp,v 1.52 2009/06/25 17:49:52 wspear Exp $                                
  ***************************************************************************/
