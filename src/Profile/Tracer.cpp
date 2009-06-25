@@ -31,6 +31,10 @@
 #include <Profile/TauTrace.h>
 #include <Profile/TauMetrics.h>
 
+#include <iostream>
+
+using namespace std;
+
 /* Magic number, parameter for certain events */
 #define INIT_PARAM 3
 
