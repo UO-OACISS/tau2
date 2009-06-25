@@ -1231,7 +1231,7 @@ if [ $gotoNextStep == $TRUE ]; then
 		    selectfile=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@'` 
 		    useCompInst=`$selectfile $tauSelectFile $tempTauFileName`
 		fi
-		if [ $useCompInst = yes ]; then
+		if [ "$useCompInst" = yes ]; then
 		    extraopt=$optCompInstOption
 		fi
 	    fi
