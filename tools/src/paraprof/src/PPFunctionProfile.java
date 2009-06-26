@@ -239,19 +239,21 @@ public class PPFunctionProfile implements Comparable {
     public String getStatString(int type) {
         int metric = dataSorter.getSelectedMetricID();
         String tmpString;
+        
+        boolean timeDenominator = dataSorter.getSelectedMetric().isTimeDenominator();
 
         DecimalFormat dF = new DecimalFormat("##0.0");
         tmpString = UtilFncs.lpad(dF.format(functionProfile.getInclusivePercent(dataSorter.getSelectedSnapshot(), metric)), 13);
 
         if (functionProfile.getFunction().isPhase() && functionProfile.getFunction().isCallPathFunction()) {
             tmpString = tmpString + "  "
-                    + UtilFncs.getOutputString(type, functionProfile.getInclusive(dataSorter.getSelectedSnapshot(), metric), 14);
+                    + UtilFncs.getOutputString(type, functionProfile.getInclusive(dataSorter.getSelectedSnapshot(), metric), 14, timeDenominator);
         } else {
             tmpString = tmpString + "  "
-                    + UtilFncs.getOutputString(type, functionProfile.getExclusive(dataSorter.getSelectedSnapshot(), metric), 14);
+                    + UtilFncs.getOutputString(type, functionProfile.getExclusive(dataSorter.getSelectedSnapshot(), metric), 14, timeDenominator);
         }
         tmpString = tmpString + "  "
-                + UtilFncs.getOutputString(type, functionProfile.getInclusive(dataSorter.getSelectedSnapshot(), metric), 16);
+                + UtilFncs.getOutputString(type, functionProfile.getInclusive(dataSorter.getSelectedSnapshot(), metric), 16, timeDenominator);
         tmpString = tmpString + "  "
                 + UtilFncs.formatDouble(functionProfile.getNumCalls(dataSorter.getSelectedSnapshot()), 12, true);
         tmpString = tmpString + "  "
@@ -259,7 +261,7 @@ public class PPFunctionProfile implements Comparable {
         tmpString = tmpString
                 + "  "
                 + UtilFncs.getOutputString(type, functionProfile.getInclusivePerCall(dataSorter.getSelectedSnapshot(), metric),
-                        19);
+                        19, timeDenominator);
 
         //Everything should be added now except the function name.
         return tmpString;

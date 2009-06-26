@@ -1038,7 +1038,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             units = 0;
         }
 
-        return UtilFncs.getOutputString(units, settings.getHeightValue().getValue(fp, settings.getHeightMetricID()), 6).trim()
+        return UtilFncs.getOutputString(units, settings.getHeightValue().getValue(fp, settings.getHeightMetricID()), 6,
+                ppMetric.isTimeDenominator()).trim()
                 + getUnitsString(units, settings.getHeightValue(), ppMetric);
 
         //Double.toString(settings.getHeightValue().getValue(fp, settings.getHeightMetricID()));
@@ -1067,7 +1068,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             units = 0;
         }
 
-        return UtilFncs.getOutputString(units, settings.getColorValue().getValue(fp, settings.getColorMetricID()), 6).trim()
+        return UtilFncs.getOutputString(units, settings.getColorValue().getValue(fp, settings.getColorMetricID()), 6,
+                ppMetric.isTimeDenominator()).trim()
                 + getUnitsString(units, settings.getColorValue(), ppMetric);
 
         //return Double.toString(settings.getColorValue().getValue(fp, settings.getColorMetricID()));
@@ -1117,22 +1119,23 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
                 int units = scatterValueTypes[i].getUnits(this.units, ppMetric);
 
                 axisStrings[i] = new ArrayList();
-                axisStrings[i].add(UtilFncs.getOutputString(units, minScatterValues[i], 6).trim());
+                axisStrings[i].add(UtilFncs.getOutputString(units, minScatterValues[i], 6, ppMetric.isTimeDenominator()).trim());
                 axisStrings[i].add(UtilFncs.getOutputString(units,
-                        minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) * .25, 6).trim());
+                        minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) * .25, 6, ppMetric.isTimeDenominator()).trim());
                 axisStrings[i].add(UtilFncs.getOutputString(units,
-                        minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) * .50, 6).trim());
+                        minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) * .50, 6, ppMetric.isTimeDenominator()).trim());
                 axisStrings[i].add(UtilFncs.getOutputString(units,
-                        minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) * .75, 6).trim());
+                        minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) * .75, 6, ppMetric.isTimeDenominator()).trim());
                 axisStrings[i].add(UtilFncs.getOutputString(units,
-                        minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]), 6).trim());
+                        minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]), 6, ppMetric.isTimeDenominator()).trim());
             }
 
             ParaProfMetric ppMetric = ppTrial.getMetric(scatterMetricIDs[3]);
             int units = scatterValueTypes[3].getUnits(this.units, ppMetric);
 
-            colorScale.setStrings(UtilFncs.getOutputString(units, minScatterValues[3], 6).trim(), UtilFncs.getOutputString(units,
-                    maxScatterValues[3], 6).trim(), (String) axisNames.get(3));
+            colorScale.setStrings(UtilFncs.getOutputString(units, minScatterValues[3], 6, ppMetric.isTimeDenominator()).trim(),
+                    UtilFncs.getOutputString(units, maxScatterValues[3], 6, ppMetric.isTimeDenominator()).trim(),
+                    (String) axisNames.get(3));
 
             scatterPlotAxes.setStrings((String) axisNames.get(0), (String) axisNames.get(1), (String) axisNames.get(2),
                     axisStrings[0], axisStrings[1], axisStrings[2]);
@@ -1147,10 +1150,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             ParaProfMetric ppMetric = ppTrial.getMetric(settings.getHeightMetricID());
             units = settings.getHeightValue().getUnits(this.units, ppMetric);
 
-            zStrings.add(UtilFncs.getOutputString(units, maxHeightValue * 0.25, 6).trim());
-            zStrings.add(UtilFncs.getOutputString(units, maxHeightValue * 0.50, 6).trim());
-            zStrings.add(UtilFncs.getOutputString(units, maxHeightValue * 0.75, 6).trim());
-            zStrings.add(UtilFncs.getOutputString(units, maxHeightValue, 6).trim());
+            zStrings.add(UtilFncs.getOutputString(units, maxHeightValue * 0.25, 6, ppMetric.isTimeDenominator()).trim());
+            zStrings.add(UtilFncs.getOutputString(units, maxHeightValue * 0.50, 6, ppMetric.isTimeDenominator()).trim());
+            zStrings.add(UtilFncs.getOutputString(units, maxHeightValue * 0.75, 6, ppMetric.isTimeDenominator()).trim());
+            zStrings.add(UtilFncs.getOutputString(units, maxHeightValue, 6, ppMetric.isTimeDenominator()).trim());
 
             String zAxisLabel = settings.getHeightValue().getSuffix(units, ppMetric);
 
@@ -1159,7 +1162,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
             String colorAxisLabel = settings.getColorValue().getSuffix(units, ppMetric);
 
-            colorScale.setStrings("0", UtilFncs.getOutputString(units, maxColorValue, 6).trim(), colorAxisLabel);
+            colorScale.setStrings("0", UtilFncs.getOutputString(units, maxColorValue, 6, ppMetric.isTimeDenominator()).trim(),
+                    colorAxisLabel);
 
             //String zAxisLabel = settings.getHeightValue().toString() + ", " + ppTrial.getMetricName(settings.getHeightMetricID());
             //String zAxisLabel = "";
@@ -1221,7 +1225,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     public void resort() {
         sortLocalData();
     }
-    
+
     public JFrame getFrame() {
         return this;
     }

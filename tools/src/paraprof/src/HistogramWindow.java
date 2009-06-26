@@ -37,9 +37,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * HistogramWindow
  * This is the histogram window
  *  
- * <P>CVS $Id: HistogramWindow.java,v 1.8 2009/04/07 20:31:44 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindow.java,v 1.9 2009/06/26 00:43:48 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  * @see     HistogramWindowPanel
  */
 public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, ParaProfWindow,
@@ -440,7 +440,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         Utility.applyDefaultChartTheme(chart);
 
         NumberAxis numberAxis = (NumberAxis) chart.getXYPlot().getDomainAxis();
-        numberAxis.setNumberFormatOverride(ParaProfUtils.createNumberFormatter(units()));
+        numberAxis.setNumberFormatOverride(ParaProfUtils.createNumberFormatter(units(), dataSorter.getSelectedMetric().isTimeDenominator()));
         numberAxis.setTickLabelsVisible(true);
 
         numberAxis.setTickUnit(new NumberTickUnit((maxValue - minValue) / 10));
@@ -451,8 +451,8 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         XYItemRenderer renderer = chart.getXYPlot().getRenderer();
         renderer.setToolTipGenerator(new XYToolTipGenerator() {
             public String generateToolTip(XYDataset dataset, int arg1, int arg2) {
-                String minString = UtilFncs.getOutputString(units(), dataset.getXValue(arg1, arg2) - (binWidth / 2), 5);
-                String maxString = UtilFncs.getOutputString(units(), dataset.getXValue(arg1, arg2) + (binWidth / 2), 5);
+                String minString = UtilFncs.getOutputString(units(), dataset.getXValue(arg1, arg2) - (binWidth / 2), 5, ppTrial.getDefaultMetric().isTimeDenominator());
+                String maxString = UtilFncs.getOutputString(units(), dataset.getXValue(arg1, arg2) + (binWidth / 2), 5, ppTrial.getDefaultMetric().isTimeDenominator());
 
                 return "<html>Number of threads: " + (int) dataset.getYValue(arg1, arg2) + "<br>Range minimum: " + minString
                         + "<br>Range maximum: " + maxString + "</html>";

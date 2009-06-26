@@ -17,9 +17,9 @@ import edu.uoregon.tau.perfdmf.Thread;
 /**
  * CallPathTextWindowPanel: This is the panel for the CallPathTextWindow
  *   
- * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.43 2007/03/02 20:08:14 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.44 2009/06/26 00:43:47 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.43 $
+ * @version	$Revision: 1.44 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindow
  * 
@@ -269,8 +269,8 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
 
                     Function function = callPathDrawObject.getFunction();
 
-                    line = "--> " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 11)
-                            + "      " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 11)
+                    line = "--> " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 11, ppTrial.getDefaultMetric().isTimeDenominator())
+                            + "      " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 11, ppTrial.getDefaultMetric().isTimeDenominator())
                             + "      " + UtilFncs.formatDouble(callPathDrawObject.getNumberOfCalls(), 7, false);
 
                     line = UtilFncs.pad(line, 58) + callPathDrawObject.getName();// + "[" + function.getID() + "]";
@@ -281,8 +281,8 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
 
                     Function function = callPathDrawObject.getFunction();
 
-                    line = "    " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 11)
-                            + "      " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 11)
+                    line = "    " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 11, ppTrial.getDefaultMetric().isTimeDenominator())
+                            + "      " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 11, ppTrial.getDefaultMetric().isTimeDenominator())
                             + "      "
                             + UtilFncs.formatDouble(callPathDrawObject.getNumberOfCallsFromCallPathObjects(), 7, false) + "/"
                             + UtilFncs.formatDouble(callPathDrawObject.getNumberOfCalls(), 7, false);
@@ -414,8 +414,8 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
                 g2D.drawString(dashString, base, yCoord);
             } else if (!callPathDrawObject.isParentChild() && !callPathDrawObject.isSpacer()) {
 
-                String stats = "--> " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 11)
-                        + "      " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 11)
+                String stats = "--> " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 11, ppTrial.getDefaultMetric().isTimeDenominator())
+                        + "      " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 11, ppTrial.getDefaultMetric().isTimeDenominator())
                         + "      " + UtilFncs.formatDouble(callPathDrawObject.getNumberOfCalls(), 7, false);
                 g2D.drawString(stats, base, yCoord);
 
@@ -428,8 +428,8 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
 
             } else if (callPathDrawObject.isSpacer()) {} else {
 
-                String stats = "    " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 11)
-                        + "      " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 11)
+                String stats = "    " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 11, ppTrial.getDefaultMetric().isTimeDenominator())
+                        + "      " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 11, ppTrial.getDefaultMetric().isTimeDenominator())
                         + "      " + UtilFncs.formatDouble(callPathDrawObject.getNumberOfCallsFromCallPathObjects(), 7, false)
                         + "/" + UtilFncs.formatDouble(callPathDrawObject.getNumberOfCalls(), 7, false);
 

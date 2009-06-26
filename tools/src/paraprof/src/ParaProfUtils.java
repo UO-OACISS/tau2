@@ -36,11 +36,11 @@ import edu.uoregon.tau.vis.HeatMapWindow;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.44 2009/05/14 18:04:13 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.45 2009/06/26 00:43:48 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.44 $
+ * @version $Revision: 1.45 $
  */
 public class ParaProfUtils {
 
@@ -1314,7 +1314,7 @@ public class ParaProfUtils {
         return new Dimension(width, height);
     }
 
-    public static NumberFormat createNumberFormatter(final int units) {
+    public static NumberFormat createNumberFormatter(final int units, final boolean timeDenominator) {
         return new NumberFormat() {
 
             public Number parse(String source, ParsePosition parsePosition) {
@@ -1323,11 +1323,11 @@ public class ParaProfUtils {
             }
 
             public StringBuffer format(double number, StringBuffer toAppendTo, FieldPosition pos) {
-                return toAppendTo.append(UtilFncs.getOutputString(units, number, 5));
+                return toAppendTo.append(UtilFncs.getOutputString(units, number, 5, timeDenominator));
             }
 
             public StringBuffer format(long number, StringBuffer toAppendTo, FieldPosition pos) {
-                return toAppendTo.append(UtilFncs.getOutputString(units, number, 5));
+                return toAppendTo.append(UtilFncs.getOutputString(units, number, 5, timeDenominator));
             }
         };
     }

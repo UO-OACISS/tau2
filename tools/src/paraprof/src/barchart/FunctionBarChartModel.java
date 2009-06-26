@@ -12,15 +12,14 @@ import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.perfdmf.Function;
 import edu.uoregon.tau.perfdmf.UtilFncs;
 
-
 /**
  * A BarChartModel for doing...
  *  1) One function across threads, or 
  *  2) One function across all phases (for one thread).
  * 
- * <P>CVS $Id: FunctionBarChartModel.java,v 1.6 2009/01/23 02:11:11 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartModel.java,v 1.7 2009/06/26 00:43:49 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 
 public class FunctionBarChartModel extends AbstractBarChartModel {
@@ -82,10 +81,13 @@ public class FunctionBarChartModel extends AbstractBarChartModel {
                 || window.getDataSorter().getValueType() == ValueType.INCLUSIVE_PERCENT) {
 
             //s = (UtilFncs.adjustDoublePresision(value, 4)) + "%";
-            return UtilFncs.getOutputString(0, value, 6) + "%";
+            return UtilFncs.getOutputString(0, value, 6,
+                    ppFunctionProfile.getDataSorter().getSelectedMetric().isTimeDenominator())
+                    + "%";
 
         } else {
-            return UtilFncs.getOutputString(window.units(), value, ParaProf.defaultNumberPrecision);
+            return UtilFncs.getOutputString(window.units(), value, ParaProf.defaultNumberPrecision,
+                    ppFunctionProfile.getDataSorter().getSelectedMetric().isTimeDenominator());
         }
     }
 

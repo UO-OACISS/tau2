@@ -38,7 +38,7 @@ public class UserEventThreadBarChartModel extends AbstractBarChartModel {
     public String getValueLabel(int row, int subIndex) {
         PPUserEventProfile ppUserEventProfile = (PPUserEventProfile) list.get(row);
         double value = window.getValueType().getValue(ppUserEventProfile.getUserEventProfile(),dataSorter.getSelectedSnapshot());
-        return UtilFncs.getOutputString(0, value, ParaProf.defaultNumberPrecision);
+        return UtilFncs.getOutputString(0, value, ParaProf.defaultNumberPrecision, false);
     }
 
     public double getValue(int row, int subIndex) {

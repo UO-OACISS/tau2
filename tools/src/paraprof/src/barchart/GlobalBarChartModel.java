@@ -15,9 +15,9 @@ import edu.uoregon.tau.perfdmf.Thread;
 /**
  * A BarChartModel for doing the GlobalDataWindow
  * 
- * <P>CVS $Id: GlobalBarChartModel.java,v 1.14 2008/12/04 20:10:56 amorris Exp $</P>
+ * <P>CVS $Id: GlobalBarChartModel.java,v 1.15 2009/06/26 00:43:49 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  */
 
 public class GlobalBarChartModel extends AbstractBarChartModel {
@@ -224,9 +224,9 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
         String unitsString = UtilFncs.getUnitsString(window.units(), dataSorter.isTimeMetric(), false);
 
         String exclusiveValue = UtilFncs.getOutputString(window.units(), fp.getExclusive(metricID),
-                ParaProf.defaultNumberPrecision);
+                ParaProf.defaultNumberPrecision, ppTrial.getMetric(metricID).isTimeDenominator());
         String inclusiveValue = UtilFncs.getOutputString(window.units(), fp.getInclusive(metricID),
-                ParaProf.defaultNumberPrecision);
+                ParaProf.defaultNumberPrecision, ppTrial.getMetric(metricID).isTimeDenominator());
 
         String exclusive = "<br>Exclusive " + metricName + ": " + exclusiveValue + " " + unitsString;
         String inclusive = "<br>Inclusive " + metricName + ": " + inclusiveValue + " " + unitsString;

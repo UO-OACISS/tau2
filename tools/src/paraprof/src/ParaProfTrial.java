@@ -253,6 +253,10 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     public int getDefaultMetricID() {
         return defaultMetricID;
     }
+    
+    public Metric getDefaultMetric() {
+        return this.getMetric(this.getDefaultMetricID());
+    }
 
     public boolean isTimeMetric() {
         String metricName = this.getMetricName(this.getDefaultMetricID());

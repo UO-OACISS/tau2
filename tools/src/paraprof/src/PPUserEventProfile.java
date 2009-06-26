@@ -107,7 +107,7 @@ public class PPUserEventProfile implements Comparable {
 
         PPUserEventProfile.insertSpaces(statStringArray, 0, 90);
 
-        tmpString = UtilFncs.getOutputString(0, this.getNumSamples(), precision);
+        tmpString = UtilFncs.getOutputString(0, this.getNumSamples(), precision, false);
         tmpArray = tmpString.toCharArray();
         for (int i = 0; i < tmpArray.length; i++) {
             statStringArray[position] = tmpArray[i];
@@ -115,7 +115,7 @@ public class PPUserEventProfile implements Comparable {
         }
 
         position = 18;
-        tmpString = UtilFncs.getOutputString(0, this.getMaxValue(), precision);
+        tmpString = UtilFncs.getOutputString(0, this.getMaxValue(), precision, false);
         tmpArray = tmpString.toCharArray();
         for (int i = 0; i < tmpArray.length; i++) {
             statStringArray[position] = tmpArray[i];
@@ -123,7 +123,7 @@ public class PPUserEventProfile implements Comparable {
         }
 
         position = 36;
-        tmpString = UtilFncs.getOutputString(0, this.getMinValue(), precision);
+        tmpString = UtilFncs.getOutputString(0, this.getMinValue(), precision, false);
         tmpArray = tmpString.toCharArray();
         for (int i = 0; i < tmpArray.length; i++) {
             statStringArray[position] = tmpArray[i];
@@ -131,7 +131,7 @@ public class PPUserEventProfile implements Comparable {
         }
 
         position = 54;
-        tmpString = UtilFncs.getOutputString(0, this.getMeanValue(), precision);
+        tmpString = UtilFncs.getOutputString(0, this.getMeanValue(), precision, false);
         tmpArray = tmpString.toCharArray();
         for (int i = 0; i < tmpArray.length; i++) {
             statStringArray[position] = tmpArray[i];
@@ -139,7 +139,7 @@ public class PPUserEventProfile implements Comparable {
         }
 
         position = 72;
-        tmpString = UtilFncs.getOutputString(0, this.getStdDev(), precision);
+        tmpString = UtilFncs.getOutputString(0, this.getStdDev(), precision, false);
         tmpArray = tmpString.toCharArray();
         for (int i = 0; i < tmpArray.length; i++) {
             statStringArray[position] = tmpArray[i];

@@ -18,9 +18,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * 
  * This is starting to get messy and should be rethought
  *
- * <P>CVS $Id: TreeTableColumn.java,v 1.4 2008/08/05 01:15:14 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableColumn.java,v 1.5 2009/06/26 00:43:50 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 abstract public class TreeTableColumn {
     protected TreeTableWindow window;
@@ -41,11 +41,23 @@ abstract public class TreeTableColumn {
 
         if (window.getPPTrial().getMetric(metricID).isTimeMetric()) {
 
-            if (window.getUnits() >= 3) {
-                return UtilFncs.getOutputString(3, value, ParaProf.defaultNumberPrecision);
+            if (window.getPPTrial().getMetric(metricID).isTimeDenominator()) {
+                if (window.getUnits() >= 3) {
+                    return UtilFncs.getOutputString(3, value, ParaProf.defaultNumberPrecision,
+                            window.getPPTrial().getMetric(metricID).isTimeDenominator()).trim();
+                } else {
+                    for (int i = 0; i < window.getUnits(); i++) {
+                        value *= 1000;
+                    }
+                }
             } else {
-                for (int i = 0; i < window.getUnits(); i++) {
-                    value /= 1000;
+                if (window.getUnits() >= 3) {
+                    return UtilFncs.getOutputString(3, value, ParaProf.defaultNumberPrecision,
+                            window.getPPTrial().getMetric(metricID).isTimeDenominator()).trim();
+                } else {
+                    for (int i = 0; i < window.getUnits(); i++) {
+                        value /= 1000;
+                    }
                 }
             }
         }

@@ -17,9 +17,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * Compares threads from (potentially) any trial
  * 
- * <P>CVS $Id: ComparisonBarChartModel.java,v 1.12 2009/01/23 00:37:03 amorris Exp $</P>
+ * <P>CVS $Id: ComparisonBarChartModel.java,v 1.13 2009/06/26 00:43:49 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  */
 public class ComparisonBarChartModel extends AbstractBarChartModel {
 
@@ -197,7 +197,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
             return -1;
         } else {
             return ppFp.getValue();
-//            return dataSorter.getValue(ppFp.getFunctionProfile());
+            //            return dataSorter.getValue(ppFp.getFunctionProfile());
         }
     }
 
@@ -207,7 +207,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
                 || window.getDataSorter().getValueType() == ValueType.INCLUSIVE_PERCENT) {
 
             //s = (UtilFncs.adjustDoublePresision(value, 4)) + "%";
-            return UtilFncs.getOutputString(0, value, 6) + "%";
+            return UtilFncs.getOutputString(0, value, 6, dataSorter.getSelectedMetric().isTimeDenominator()) + "%";
 
         } else {
             String percentString = "";
@@ -215,9 +215,12 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
                 //if (getValue(row, 0) != 0) {
                 // compute the ratio of this value to the first one
                 double ratio = value / getValue(row, 0) * 100.0f;
-                percentString = " (" + UtilFncs.getOutputString(0, ratio, 2) + "%)";
+                percentString = " (" + UtilFncs.getOutputString(0, ratio, 2, dataSorter.getSelectedMetric().isTimeDenominator())
+                        + "%)";
             }
-            return UtilFncs.getOutputString(window.units(), value, ParaProf.defaultNumberPrecision) + percentString;
+            return UtilFncs.getOutputString(window.units(), value, ParaProf.defaultNumberPrecision,
+                    dataSorter.getSelectedMetric().isTimeDenominator())
+                    + percentString;
         }
     }
 
