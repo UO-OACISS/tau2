@@ -193,14 +193,22 @@ public class UtilFncs {
     //2 - seconds
     //3 - hr:min:sec
     //At present, the passed in double value is assumed to be in microseconds.
-    public static String getOutputString(int type, double d, int width) {
+    public static String getOutputString(int type, double d, int width, boolean timeDenominator) {
         switch (type) {
         case 0:
             return (UtilFncs.formatDouble(d, width, true));
         case 1:
-            return (UtilFncs.formatDouble((d / 1000), width, true));
+            if (timeDenominator) {
+                return (UtilFncs.formatDouble((d * 1000), width, true));
+            } else {
+                return (UtilFncs.formatDouble((d / 1000), width, true));
+            }
         case 2:
-            return (UtilFncs.formatDouble((d / 1000000), width, true));
+            if (timeDenominator) {
+                return (UtilFncs.formatDouble((d * 1000000), width, true));
+            } else {
+                return (UtilFncs.formatDouble((d / 1000000), width, true));
+            }
         case 3:
             int hr = 0;
             int min = 0;
