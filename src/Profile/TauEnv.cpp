@@ -33,6 +33,8 @@
 #include <Profile/TauEnv.h>
 #include <TAU.h>
 
+#define MAX_LN_LEN 2048
+
 /* We should throttle if number n > a && percall < b .a and b are given below */
 #define TAU_THROTTLE_NUMCALLS_DEFAULT 100000
 #define TAU_THROTTLE_PERCALL_DEFAULT  10
@@ -83,6 +85,143 @@
   #define TAU_SYNCHRONIZE_CLOCKS_DEFAULT 0
 #endif /* TAU_MPI */
 
+/************************** tau.conf stuff, adapted from Scalasca ***********/
+
+  static void TauConf_check_syntax (char *val, char *epos, const char *fname) {
+    char *tmp=val;
+    while(isspace(*val)) {
+      val++;
+    }
+    if (val!=epos) {
+      TAU_VERBOSE("TAU: Warning, Syntax error in %s::%s", fname, tmp);
+    }
+  }
+
+  static char *TauConf_format(char *val) {
+    char *it;
+    
+    while(isspace(*val)) {
+      val++;
+    }
+    
+    if (*val==0) {
+      return NULL;
+    }
+    
+    it=val+strlen(val)-1;
+    while(isspace(*it)) {
+      it--;
+    }
+    *(++it)=0;
+    return val;
+  }
+
+  typedef struct {
+    char *key;
+    char *val;
+  } tauConf_data;
+
+  static tauConf_data* tauConf_vals = 0;
+  static int tauConf_numVals = 0;
+  static int tauConf_maxVals = 0;
+  
+
+  static void TauConf_setval(const char *key, const char *val) {
+    int newIdx = tauConf_numVals;
+
+    if (newIdx+1 > tauConf_maxVals) {
+      tauConf_maxVals += 100;
+//       TAU_VERBOSE(" setting %s to %s\n", key, val);
+      tauConf_vals = (tauConf_data*) realloc (tauConf_vals, tauConf_maxVals * sizeof(tauConf_data));
+    }
+
+    tauConf_vals[newIdx].key = strdup(key);
+    tauConf_vals[newIdx].val = strdup(val);
+    
+    tauConf_numVals = tauConf_numVals + 1;
+
+  }
+
+  static const char* TauConf_getval(const char *key) {
+    int i;
+    for (i = 0; i < tauConf_numVals; i++) {
+      if (!strcmp(key, tauConf_vals[i].key)) {
+	return tauConf_vals[i].val;
+      }
+    }
+    return NULL;
+  }
+
+
+  static int TauConf_parse(FILE *cfgFile, const char *fname) {
+    char buf[MAX_LN_LEN], *it, *val;
+
+    TAU_VERBOSE("TAU: Reading configuration file: %s\n", fname);
+
+    while (fgets(buf, MAX_LN_LEN, cfgFile)) {
+      if ((strlen(buf)==MAX_LN_LEN-1) && (buf[MAX_LN_LEN-1] != '\n')) {
+ 	TAU_VERBOSE("TAU: Warning, syntax error in %s::%s (Skipped parsing at overlong line)\n", fname, buf);
+	break;
+      } else {
+	it = buf;
+	while (*it && isspace(*it)) { /* Skip until either end of string or char  */
+	  it++;
+	}
+	if (*it=='#') {
+	  continue;         /* If it is a comment, skip the line */
+	}
+	while (*it && *it!='=') { /* Skip until end of string or = or # */
+	  it++;
+	}
+	if (*it!='=') {
+	  *--it=0;
+	  TauConf_check_syntax(buf,it, fname);
+	  continue;
+	}
+	*it++ = 0;
+	val = it;
+	while (*it  && *it!='#') { /* Skip until either end of string or # */
+	  it++;
+	}
+	*it = 0;
+	TauConf_setval(TauConf_format(buf), TauConf_format(val));
+      }
+    }
+  }
+
+
+  static int TauConf_read() {
+    const char *tmp;
+
+    tmp = getenv("TAU_CONF");
+    if (tmp == NULL) {
+      tmp = "tau.conf";
+    }
+    FILE *cfgFile = fopen(tmp,"r");
+    if (cfgFile) {
+      TauConf_parse(cfgFile, tmp);
+      fclose(cfgFile);
+    }
+    return 0;
+  }
+
+
+  static const char *getconf(const char *key) {
+    printf ("key = %s\n", key);
+    const char *val = TauConf_getval(key);
+    if (val) {
+      return val;
+    }
+    return getenv(key);
+  }
+
+
+/****************************************************************************/
+
+
+
+
+
 extern "C" {
 
   static int env_synchronize_clocks = 0;
@@ -114,7 +253,7 @@ extern "C" {
     va_end(args);
   }
  
-  static int parse_bool(char *str, int default_value = 0) {
+  static int parse_bool(const char *str, int default_value = 0) {
     if (str == NULL) {
       return default_value;
     }
@@ -215,6 +354,12 @@ extern "C" {
     return env_profile_format;
   }
 
+
+
+
+
+
+
   void TauEnv_initialize() {
     char tmpstr[512];
 
@@ -224,7 +369,7 @@ extern "C" {
     static int initialized = 0;
 
     if (!initialized) {
-      char *tmp;
+      const char *tmp;
 
       tmp = getenv("TAU_VERBOSE");
       if (parse_bool(tmp)) {
@@ -233,21 +378,23 @@ extern "C" {
 	env_verbose = 0;
       }
 
-      TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");
-      
+      TauConf_read();
 
-      if ((env_profiledir = getenv("PROFILEDIR")) == NULL) {
+      TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");
+
+      
+      if ((env_profiledir = getconf("PROFILEDIR")) == NULL) {
 	env_profiledir = "."; // current directory
       }
       TAU_VERBOSE("TAU: PROFILEDIR is \"%s\"\n", env_profiledir);
 
-      if ((env_tracedir = getenv("TRACEDIR")) == NULL) {
+      if ((env_tracedir = getconf("TRACEDIR")) == NULL) {
 	env_tracedir = "."; // current directory
       }
       TAU_VERBOSE("TAU: TRACEDIR is \"%s\"\n", env_tracedir);
 
       // callpath
-      tmp = getenv("TAU_CALLPATH");
+      tmp = getconf("TAU_CALLPATH");
       if (parse_bool(tmp, TAU_CALLPATH_DEFAULT)) {
 	env_callpath = 1;
 	TAU_VERBOSE("TAU: Callpath Profiling Enabled\n");
@@ -259,7 +406,7 @@ extern "C" {
       }
 
       // profiling
-      tmp = getenv("TAU_PROFILE");
+      tmp = getconf("TAU_PROFILE");
       if (parse_bool(tmp, TAU_PROFILING_DEFAULT)) {
 	env_profiling = 1;
 	TAU_VERBOSE("TAU: Profiling Enabled\n");
@@ -272,7 +419,7 @@ extern "C" {
 
 
       // tracing
-      tmp = getenv("TAU_TRACE");
+      tmp = getconf("TAU_TRACE");
       if (parse_bool(tmp, TAU_TRACING_DEFAULT)) {
 	env_tracing = 1;
 	env_track_message = 1;
@@ -286,7 +433,7 @@ extern "C" {
       }
 
       // compensate
-      tmp = getenv("TAU_COMPENSATE");
+      tmp = getconf("TAU_COMPENSATE");
       if (parse_bool(tmp, TAU_COMPENSATE_DEFAULT)) {
 	env_compensate = 1;
 	TAU_VERBOSE("TAU: Overhead Compensation Enabled\n");
@@ -300,7 +447,7 @@ extern "C" {
 
 #ifdef TAU_MPI
       // track comm (opposite of old -nocomm option)
-      tmp = getenv("TAU_TRACK_MESSAGE");
+      tmp = getconf("TAU_TRACK_MESSAGE");
       if (parse_bool(tmp, env_track_message)) {
 	env_track_message = 1;
       } else {
@@ -308,7 +455,7 @@ extern "C" {
       }
 
       // comm matrix
-      tmp = getenv("TAU_COMM_MATRIX");
+      tmp = getconf("TAU_COMM_MATRIX");
       if (parse_bool(tmp, TAU_COMM_MATRIX_DEFAULT)) {
 	env_comm_matrix = 1;
 	env_track_message = 1;
@@ -333,7 +480,7 @@ extern "C" {
       if (env_tracing == 0) {
 	env_synchronize_clocks = 0;
       } else {
-	tmp = getenv("TAU_SYNCHRONIZE_CLOCKS");
+	tmp = getconf("TAU_SYNCHRONIZE_CLOCKS");
 	if (parse_bool(tmp, TAU_SYNCHRONIZE_CLOCKS_DEFAULT)) {
 	  env_synchronize_clocks = 1;
 	} else {
@@ -355,7 +502,7 @@ extern "C" {
       }
 
       // callpath depth
-      char *depth = getenv("TAU_CALLPATH_DEPTH"); 
+      const char *depth = getconf("TAU_CALLPATH_DEPTH"); 
       env_callpath_depth = TAU_CALLPATH_DEPTH_DEFAULT;
       if (depth) {
 	env_callpath_depth = atoi(depth);
@@ -373,7 +520,7 @@ extern "C" {
 
 #ifdef TAU_DEPTH_LIMIT
       // depthlimit depth
-      tmp = getenv("TAU_DEPTH_LIMIT"); 
+      tmp = getconf("TAU_DEPTH_LIMIT"); 
       env_depth_limit = TAU_DEPTH_LIMIT_DEFAULT;
       if (tmp) {
 	env_depth_limit = atoi(tmp);
@@ -385,7 +532,7 @@ extern "C" {
 
 
       // Throttle
-      tmp = getenv("TAU_THROTTLE");
+      tmp = getconf("TAU_THROTTLE");
       if (parse_bool(tmp, TAU_THROTTLE_DEFAULT)) {
 	env_throttle = 1;
 	TAU_VERBOSE("TAU: Throttling Enabled\n");
@@ -396,13 +543,13 @@ extern "C" {
 	TAU_METADATA("TAU_THROTTLE","off");
       }
 
-      char *percall = getenv("TAU_THROTTLE_PERCALL"); 
+      const char *percall = getconf("TAU_THROTTLE_PERCALL"); 
       env_throttle_percall = TAU_THROTTLE_PERCALL_DEFAULT;
       if (percall) {
 	env_throttle_percall = strtod(percall,0); 
       }
 
-      char *numcalls = getenv("TAU_THROTTLE_NUMCALLS"); 
+      const char *numcalls = getconf("TAU_THROTTLE_NUMCALLS"); 
       env_throttle_numcalls = TAU_THROTTLE_NUMCALLS_DEFAULT;
       if (numcalls) {
 	env_throttle_numcalls = strtod(numcalls,0); 
@@ -418,7 +565,7 @@ extern "C" {
 	TAU_METADATA("TAU_THROTTLE_NUMCALLS",tmpstr);
       }
 
-      char *profileFormat = getenv("TAU_PROFILE_FORMAT");
+      const char *profileFormat = getconf("TAU_PROFILE_FORMAT");
       if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "snapshot")) {
 	env_profile_format = TAU_FORMAT_SNAPSHOT;
       } else if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "merged")) {
