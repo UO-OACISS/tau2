@@ -207,7 +207,7 @@
 
 
   static const char *getconf(const char *key) {
-    printf ("key = %s\n", key);
+//     printf ("key = %s\n", key);
     const char *val = TauConf_getval(key);
     if (val) {
       return val;
