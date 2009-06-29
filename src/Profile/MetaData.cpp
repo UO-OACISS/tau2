@@ -445,6 +445,7 @@ static int writeMetaData(outputDevice *out, bool newline, int counter) {
 
   writeXMLAttribute(out, "TAU Architecture", TAU_ARCH, newline);
   writeXMLAttribute(out, "TAU Config", TAU_CONFIG, newline);
+  writeXMLAttribute(out, "TAU Makefile", TAU_MAKEFILE, newline);
   writeXMLAttribute(out, "TAU Version", TAU_VERSION, newline);
 
   writeXMLAttribute(out, "pid", getpid(), newline);
