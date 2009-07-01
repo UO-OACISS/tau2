@@ -29,6 +29,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <limits.h>
 
 #include <Profile/TauEnv.h>
 #include <TAU.h>

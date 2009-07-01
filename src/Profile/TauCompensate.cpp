@@ -24,8 +24,7 @@
 using namespace std;
 #endif /* DEBUG_PROF */
 #include <stdlib.h>
-
-
+#include <limits.h>
 
 
 extern "C" int Tau_compensate_initialization() {
