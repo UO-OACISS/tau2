@@ -227,11 +227,11 @@ public class ConfigureTest {
                 connector = new ConnectionManager(database);
             }
             connector.connect();
-            System.out.println();
             db = connector.getDB();
         } catch (Exception e) {
             System.out.println("\nPlease make sure that your DBMS is configured correctly, and");
             System.out.println("the database " + db_dbname + " has been created.");
+            e.printStackTrace();
             throw new DatabaseConfigurationException("Error Connecting to Database.");
         }
 
