@@ -31,7 +31,7 @@ public class PSRunLoadHandler extends DefaultHandler {
 
     private double totalProfileValue;
     private Map attribMap = new HashMap();
-    
+
     private String pid = "-1";
     private String thread = "-1";
     private Map metadata = null;
@@ -40,6 +40,13 @@ public class PSRunLoadHandler extends DefaultHandler {
     private int cacheIndex = 0;
 
     private int sequence;
+
+    private double wallticks = 1;
+    private double clockspeed = 1;
+    private double wallclock = 1;
+    private double totalsamples = 1;
+    
+    private boolean itimer;
 
     public PSRunLoadHandler(PSRunDataSource dataSource) {
         super();
@@ -92,7 +99,7 @@ public class PSRunLoadHandler extends DefaultHandler {
             functionName = getInsensitiveValue(attrList, "name");
         } else if (name.equalsIgnoreCase("line")) {
             lineno = getInsensitiveValue(attrList, "lineno");
-            
+
             // these are for processing multi files
         } else if (name.equalsIgnoreCase("multihwpcprofilereport")) {
             isProfile = true;
@@ -101,30 +108,28 @@ public class PSRunLoadHandler extends DefaultHandler {
         } else if (name.equalsIgnoreCase("executioninfo")) {
             metadata = new HashMap();
             inMetadata = true;
-        	cacheIndex = 0;
+            cacheIndex = 0;
         } else if (name.equalsIgnoreCase("cache") && inMetadata) {
-        	cacheIndex++;
-        	metaPrefix.add(name + cacheIndex + ": ");
-        	StringBuffer buf = new StringBuffer();
-        	for (int j = 0 ; j < metaPrefix.size(); j++) {
-        		buf.append(metaPrefix.get(j));
-        	}
-        	for (int i = 0 ; i < attrList.getLength(); i++) {
-        		String tmp = attrList.getQName(i);
-        		metadata.put(buf.toString() + tmp, attrList.getValue(tmp).trim());
-        	}
-        } else if (name.equalsIgnoreCase("pid")) {
-        } else if (name.equalsIgnoreCase("thread")) {
-        } else if (inMetadata) {
-        	metaPrefix.add(name + ": ");    	
-        	StringBuffer buf = new StringBuffer();
-        	for (int j = 0 ; j < metaPrefix.size(); j++) {
-        		buf.append(metaPrefix.get(j));
-        	}
-        	for (int i = 0 ; i < attrList.getLength(); i++) {
-        		String tmp = attrList.getQName(i);
-        		metadata.put(buf.toString() + tmp, attrList.getValue(tmp).trim());
-        	}
+            cacheIndex++;
+            metaPrefix.add(name + cacheIndex + ": ");
+            StringBuffer buf = new StringBuffer();
+            for (int j = 0; j < metaPrefix.size(); j++) {
+                buf.append(metaPrefix.get(j));
+            }
+            for (int i = 0; i < attrList.getLength(); i++) {
+                String tmp = attrList.getQName(i);
+                metadata.put(buf.toString() + tmp, attrList.getValue(tmp).trim());
+            }
+        } else if (name.equalsIgnoreCase("pid")) {} else if (name.equalsIgnoreCase("thread")) {} else if (inMetadata) {
+            metaPrefix.add(name + ": ");
+            StringBuffer buf = new StringBuffer();
+            for (int j = 0; j < metaPrefix.size(); j++) {
+                buf.append(metaPrefix.get(j));
+            }
+            for (int i = 0; i < attrList.getLength(); i++) {
+                String tmp = attrList.getQName(i);
+                metadata.put(buf.toString() + tmp, attrList.getValue(tmp).trim());
+            }
         }
     }
 
@@ -133,7 +138,7 @@ public class PSRunLoadHandler extends DefaultHandler {
     }
 
     private void processAnnotation(String annotation) {
-//        System.out.println("process annotation: " + annotation);
+        //        System.out.println("process annotation: " + annotation);
         String magic = "TAU^";
         if (annotation.indexOf(magic) == -1) {
             return;
@@ -165,12 +170,36 @@ public class PSRunLoadHandler extends DefaultHandler {
     }
 
     public void endElement(String url, String name, String qname) {
+
+        if (name.equalsIgnoreCase("wallclock")) {
+            String foo = accumulator.toString();
+            wallticks = Double.parseDouble(foo);
+//            System.out.println("wallticks is " + wallticks);
+        }
+
+        if (name.equalsIgnoreCase("totalsamples")) {
+            String foo = accumulator.toString();
+            totalsamples = Double.parseDouble(foo);
+//            System.out.println("totalsamples is " + totalsamples);
+        }
+
+        if (name.equalsIgnoreCase("clockspeed")) {
+            String foo = accumulator.toString();
+            clockspeed = Double.parseDouble(foo);
+//            System.out.println("clockspeed is " + clockspeed);
+            wallclock = wallticks / clockspeed;
+//            System.out.println("wallclock is " + wallclock);
+        }
+
         if (name.equalsIgnoreCase("annotation")) {
             String annotation = accumulator.toString();
             //System.out.println("Got annotation: " + annotation);
             processAnnotation(annotation);
 
         } else if (name.equalsIgnoreCase("hwpcevent")) {
+            if (metricName.compareTo("ITIMER_PROF") == 0) { 
+                itimer = true;
+            }
             if (!isProfile) {
                 metricValue = accumulator.toString();
                 metricHash.put(metricName, new String(metricValue));
@@ -179,23 +208,26 @@ public class PSRunLoadHandler extends DefaultHandler {
             }
         } else if (name.equalsIgnoreCase("line")) {
             double value = Double.parseDouble(accumulator.toString());
+            if (itimer) {
+                value = (value / totalsamples) * wallclock;
+            }
+
             totalProfileValue += value;
             Function function = dataSource.addFunction(functionName + ":" + fileName + ":" + lineno);
             FunctionProfile fp = dataSource.getThread().getFunctionProfile(function);
             if (fp == null) {
-                fp = new FunctionProfile(function, dataSource.getNumberOfMetrics(),
-                        dataSource.getThread().getNumSnapshots());
+                fp = new FunctionProfile(function, dataSource.getNumberOfMetrics(), dataSource.getThread().getNumSnapshots());
             }
             dataSource.getThread().addFunctionProfile(fp);
             fp.setExclusive(sequence, 0, value);
             fp.setInclusive(sequence, 0, value);
         } else if (name.equalsIgnoreCase("pid")) {
             pid = accumulator.toString();
-        	metadata.put(name, pid);
+            metadata.put(name, pid);
         } else if (name.equalsIgnoreCase("thread")) {
             thread = accumulator.toString();
-        	dataSource.incrementThread(thread, pid);
-        	metadata.put(name, thread);
+            dataSource.incrementThread(thread, pid);
+            metadata.put(name, thread);
         } else if (name.equalsIgnoreCase("hwpcprofilereport")) {
             Function function = dataSource.getFunction("Entire application");
             if (function == null) {
@@ -207,32 +239,31 @@ public class PSRunLoadHandler extends DefaultHandler {
             dataSource.getThread().addFunctionProfile(fp);
             fp.setExclusive(0, 0);
             fp.setInclusive(0, totalProfileValue);
-        	// end of the report
+            // end of the report
             Iterator iter = metadata.keySet().iterator();
             String mName;
             String value;
             // get the explicit values in the file
             while (iter.hasNext()) {
-                mName = (String)iter.next();
-                value = (String)metadata.get(mName);
+                mName = (String) iter.next();
+                value = (String) metadata.get(mName);
                 dataSource.getThread().getMetaData().put(mName, value.trim());
             }
-        } else if (name.equalsIgnoreCase("multihwpcprofilereport")) {
-        } else if (name.equalsIgnoreCase("executioninfo")) {
-        	// end of the metadata
-        	inMetadata = false;
-        	metaPrefix.clear();
+        } else if (name.equalsIgnoreCase("multihwpcprofilereport")) {} else if (name.equalsIgnoreCase("executioninfo")) {
+            // end of the metadata
+            inMetadata = false;
+            metaPrefix.clear();
         } else if (name.equalsIgnoreCase("machineinfo")) {
-        	// end of the metadata
-        	inMetadata = false;
-        	metaPrefix.clear();
+            // end of the metadata
+            inMetadata = false;
+            metaPrefix.clear();
         } else if (inMetadata) {
-        	metaPrefix.remove(metaPrefix.size()-1);
-        	StringBuffer tmp = new StringBuffer();
-        	for (int i = 0 ; i < metaPrefix.size(); i++) {
-        		tmp.append(metaPrefix.get(i));
-        	}
-        	metadata.put(tmp + name, accumulator.toString().trim());
+            metaPrefix.remove(metaPrefix.size() - 1);
+            StringBuffer tmp = new StringBuffer();
+            for (int i = 0; i < metaPrefix.size(); i++) {
+                tmp.append(metaPrefix.get(i));
+            }
+            metadata.put(tmp + name, accumulator.toString().trim());
         }
 
     }
