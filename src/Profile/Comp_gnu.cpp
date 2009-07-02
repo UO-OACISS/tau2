@@ -69,6 +69,7 @@ typedef struct HN {
   const char* fname;  /*            file name           */
   int lno;            /*            line number         */
   FunctionInfo *fi;
+  int excluded;
   struct HN* next;
 } HashNode;
 
@@ -88,6 +89,7 @@ static void hash_put(unsigned long h, const char* n, const char* fn, int lno) {
   add->fname = fn ? (const char*)strdup(fn) : fn;
   add->lno   = lno;
   add->fi = NULL;
+  add->excluded = 0;
   add->next = htab[id];
   htab[id] = add;
 }
@@ -181,6 +183,7 @@ static void get_symtab_bfd(const char *module, unsigned long offset) {
     // 	   strncmp(syms[i]->name, "bfd_", 4) == 0 ||
     // 	   strstr(syms[i]->name, "@@") != NULL ) continue;
 
+
     /* get filename and linenumber from debug info */
     /* needs -g */
     filename = NULL;
@@ -208,6 +211,14 @@ static void get_symtab_bfd(const char *module, unsigned long offset) {
       char *n = strdup(syms[i]->name);
       hash_put(offset+addr, n, filename, lno);
     }
+
+//     printf ("%s\n", syms[i]->name);
+
+    if (strstr(syms[i]->name, "Tau_Profile_Wrapper")) {
+      HashNode *hn = hash_get(addr);
+      hn->excluded = 1;
+    }
+
   }
 
   free(syms);
@@ -345,6 +356,7 @@ static HashNode *createHashNode(long addr) {
   add->fname = "UNKNOWN";
   add->lno   = -1;
   add->fi = (FunctionInfo*) handle;
+  add->excluded = 0;
   hash_put(addr, add);
   return add;
 }
@@ -382,6 +394,9 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 
 
   if ((hn = hash_get((long)funcptr))) {
+    if (hn->excluded) {
+      return;
+    }
     if (hn->fi == NULL) {
 
 #ifdef TAU_OPENMP
@@ -461,6 +476,10 @@ extern "C" void __cyg_profile_func_exit(void* func, void* callsite) {
 #endif
 
   if ( (hn = hash_get((long)funcptr)) ) {
+    if (hn->excluded) {
+      return;
+    }
+
     Tau_stop_timer(hn->fi, Tau_get_tid());
   } else {
     //printf ("NOT FOUND! : ");
