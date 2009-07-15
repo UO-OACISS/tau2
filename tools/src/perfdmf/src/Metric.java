@@ -15,7 +15,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
 /**
  * Holds all the data for a metric in the database.
  *
- * <P>CVS $Id: Metric.java,v 1.6 2009/06/26 00:43:10 amorris Exp $</P>
+ * <P>CVS $Id: Metric.java,v 1.7 2009/07/15 20:38:51 wspear Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -35,11 +35,26 @@ public class Metric implements Serializable {
         return derivedMetric;
     }
 
+    
+    
+    
+    
     public boolean equals(Metric inMetric) {
+    	
+    	if(inMetric==null){
+    		return false;
+    	}
+    	
         return (this.name.equals(inMetric.getName())) ? true : false;
     }
 
     public boolean equals(Object inObject) {
+    	
+    	if(inObject==null){
+    		return false;
+    	}
+    	
+    	
         Metric inMetric = (Metric) inObject;
         return equals(inMetric);
     }
