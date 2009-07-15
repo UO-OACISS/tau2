@@ -57,10 +57,12 @@ public class DeriveMetricOperation extends AbstractPerformanceOperation {
 		this.operation = operation;
 		this.newName = "(" + firstMetric + operation + secondMetric + ")";
 		// validate the input?
+		if(!(firstMetric.equals("CALLS")||firstMetric.equals("SUBROUTINES")||secondMetric.equals("CALLS")||secondMetric.equals("SUBROUTINES"))){
 		if (!(input.getMetrics().contains(firstMetric)))
 			System.err.println("\n\n *** ERROR: Trial does not have a metric named: " + firstMetric + " ***\n\n");
 		if (!(input.getMetrics().contains(secondMetric)))
 			System.err.println("\n\n *** ERROR: Trial does not have a metric named: " + secondMetric + " ***\n\n");
+		}
 	}
 
 
@@ -75,25 +77,47 @@ public class DeriveMetricOperation extends AbstractPerformanceOperation {
 				for (Integer thread : input.getThreads()) {
 					double value1 = 0.0;
 					double value2 = 0.0;
+					double leftInclusive,rightInclusive,leftExclusive,rightExclusive;
+					if(firstMetric.equals("CALLS")){
+						leftInclusive = input.getCalls(thread, event);		 
+						leftExclusive = input.getCalls(thread, event);
+					}else if(firstMetric.equals("SUBROUTINES")){
+						leftInclusive = input.getSubroutines(thread, event);		 
+						leftExclusive = input.getSubroutines(thread, event);	
+					}else{
+					   leftInclusive = input.getInclusive(thread, event, firstMetric);			 
+					   leftExclusive = input.getExclusive(thread, event, firstMetric);
+					}
+					if(secondMetric.equals("CALLS")){
+						rightInclusive = input.getCalls(thread, event);
+						rightExclusive = input.getCalls(thread, event);
+					}else if(secondMetric.equals("SUBROUTINES")){
+						rightInclusive = input.getSubroutines(thread, event);	
+						rightExclusive = input.getSubroutines(thread, event);
+					}else{
+						rightInclusive = input.getInclusive(thread, event, secondMetric);	
+						rightExclusive = input.getExclusive(thread, event, secondMetric);
+					}
+					 
 					if (operation.equals(ADD)) {
-						value1 = input.getInclusive(thread, event, firstMetric) + input.getInclusive(thread, event, secondMetric);
-						value2 = input.getExclusive(thread, event, firstMetric) + input.getExclusive(thread, event, secondMetric);
+						value1 = leftInclusive + rightInclusive;
+						value2 = leftExclusive + rightExclusive;
 					} else if (operation.equals(SUBTRACT)) {
-						value1 = input.getInclusive(thread, event, firstMetric) - input.getInclusive(thread, event, secondMetric);
-						value2 = input.getExclusive(thread, event, firstMetric) - input.getExclusive(thread, event, secondMetric);
+						value1 = leftInclusive - rightInclusive;
+						value2 = leftExclusive - rightExclusive;
 					} else if (operation.equals(MULTIPLY)) {
-						value1 = input.getInclusive(thread, event, firstMetric) * input.getInclusive(thread, event, secondMetric);
-						value2 = input.getExclusive(thread, event, firstMetric) * input.getExclusive(thread, event, secondMetric);
+						value1 = leftInclusive * rightInclusive;
+						value2 = leftExclusive * rightExclusive;
 					} else if (operation.equals(DIVIDE)) {
-						if (input.getInclusive(thread, event, secondMetric) == 0.0) {
+						if (rightInclusive == 0.0) {
 							value1 = 0.0;
 						} else {
-							value1 = input.getInclusive(thread, event, firstMetric) / input.getInclusive(thread, event, secondMetric);
+							value1 = leftInclusive / rightInclusive;
 						}
-						if (input.getExclusive(thread, event, secondMetric) == 0.0) {
+						if (rightExclusive == 0.0) {
 							value2 = 0.0;
 						} else {
-							value2 = input.getExclusive(thread, event, firstMetric) / input.getExclusive(thread, event, secondMetric);
+							value2 = leftExclusive / rightExclusive;;
 						}
 					}
 					output.putInclusive(thread, event, newName, value1);

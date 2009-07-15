@@ -21,6 +21,9 @@ public class ScaleMetricOperation extends AbstractPerformanceOperation {
 	private String metric = null;
 	private Double value = 0.0;
 	private String operation = ADD;
+	private String newName = null;
+	private boolean rightValue = false;
+
 	
 	/**
 	 * @param input
@@ -54,38 +57,65 @@ public class ScaleMetricOperation extends AbstractPerformanceOperation {
 		this.metric = metric;
 		this.value = value;
 		this.operation = operation;
+		this.rightValue = true;
+		newName = "(" + metric + operation + value.toString() + ")";
 		if (!(input.getMetrics().contains(metric)))
 			System.err.println("\n\n *** ERROR: Trial does not have a metric named: " + metric + " ***\n\n");
 	}
-
+	/**
+	 * @param input
+	 */
+	public ScaleMetricOperation(PerformanceResult input, Double value,String metric,  String operation) {
+		super(input);
+		this.metric = metric;
+		this.value = value;
+		this.operation = operation;
+		this.rightValue = false;
+		newName = "(" + value.toString() + operation +metric+  ")";
+		if (!(input.getMetrics().contains(metric)))
+			System.err.println("\n\n *** ERROR: Trial does not have a metric named: " + metric + " ***\n\n");
+	}
 
 	/* (non-Javadoc)
 	 * @see glue.PerformanceAnalysisOperation#processData()
 	 */
 	public List<PerformanceResult> processData() {
-		String newName = "(" + metric + operation + value.toString() + ")";
 		for (PerformanceResult input : inputs) {
 			PerformanceResult output = new DefaultResult(input, false);
-			
+			double leftInclusive,rightInclusive,leftExclusive,rightExclusive;
+
 			for (String event : input.getEvents()) {
 				for (Integer thread : input.getThreads()) {
+					if(rightValue){
+						 leftInclusive = input.getInclusive(thread, event, metric);			 
+						 leftExclusive = input.getExclusive(thread, event, metric);
+						 rightInclusive = value;
+						 rightExclusive = value;
+					}else{
+						 leftInclusive = value;		 
+						 leftExclusive = value;
+						 rightInclusive = input.getInclusive(thread, event, metric);	
+						 rightExclusive = input.getExclusive(thread, event, metric);
+					}
+					
 					double value1 = 0.0;
 					double value2 = 0.0;
 					if (operation.equals(ADD)) {
-						value1 = input.getInclusive(thread, event, metric) + value;
-						value2 = input.getExclusive(thread, event, metric) + value;
+						value1 = leftInclusive + rightInclusive;
+						value2 = leftExclusive + rightExclusive;
 					} else if (operation.equals(SUBTRACT)) {
-						value1 = input.getInclusive(thread, event, metric) - value;
-						value2 = input.getExclusive(thread, event, metric) - value;
+						value1 = leftInclusive - rightInclusive;
+						value2 = leftExclusive - rightExclusive;
 					} else if (operation.equals(MULTIPLY)) {
-						value1 = input.getInclusive(thread, event, metric) * value;
-						value2 = input.getExclusive(thread, event, metric) * value;
+						value1 = leftInclusive * rightInclusive;
+						value2 = leftExclusive * rightExclusive;
 					} else if (operation.equals(DIVIDE)) {
-						if (value == 0.0) {
+						if (rightInclusive==0|| rightExclusive==0) {
 							value1 = 0.0;
+							value2 = 0.0;
 						} else {
-							value1 = input.getInclusive(thread, event, metric) / value;
-							value2 = input.getExclusive(thread, event, metric) / value;
+							value1 = leftInclusive / rightInclusive;
+							value2 = leftExclusive / rightExclusive;
 						}
 					}
 					output.putInclusive(thread, event, newName, value1);
@@ -97,6 +127,14 @@ public class ScaleMetricOperation extends AbstractPerformanceOperation {
 			outputs.add(output);
 		}
 		return outputs;
+	}
+
+	public String getNewName() {
+		return newName;
+	}
+
+	public void setNewName(String newName) {
+		this.newName = newName;
 	}
 
 }
