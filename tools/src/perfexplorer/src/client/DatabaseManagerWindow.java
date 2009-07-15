@@ -26,6 +26,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
      * 
      */
 
+	private static final String fileLoc = ""; //Was http://spaceghost.cs.uoregon.edu/PerfExplorer/
     private static final long serialVersionUID = 1L;
     private String lastDirectory = "";
     private JList configList = new JList((Vector) ConfigureFiles.getConfigurationNames());
@@ -558,8 +559,8 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     	+ File.separator + "src" + File.separator + "perfdmf"
     	+ File.separator + "etc" + File.separator;
     	if (home == null || arch == null) {
-    		this.schema.setText("http://spaceghost.cs.uoregon.edu/PerfExplorer/dbschema." + newAdapter + ".txt");
-    		this.schema2.setText("http://spaceghost.cs.uoregon.edu/PerfExplorer/dbschema." + newAdapter);
+    		this.schema.setText(fileLoc+"dbschema." + newAdapter + ".txt");
+    		this.schema2.setText(fileLoc+"dbschema." + newAdapter);
     	} else {
         	this.schema.setText(etc + "dbschema." + newAdapter + ".txt");
     		this.schema2.setText(etc.replaceAll("perfdmf", "perfexplorer") + "dbschema." + newAdapter);
@@ -593,7 +594,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             }
             else
             {
-            	this.jarfile.setText("http://spaceghost.cs.uoregon.edu/PerfExplorer/mysql.jar");
+            	this.jarfile.setText(fileLoc+"mysql.jar");
             }
         } else if (newAdapter.compareTo("postgresql") == 0 ) {
             download.setEnabled(true);
@@ -623,7 +624,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             }
             else
             {
-            	this.jarfile.setText("http://spaceghost.cs.uoregon.edu/PerfExplorer/postgresql.jar");
+            	this.jarfile.setText(fileLoc+"postgresql.jar");
             }
             this.schema.setText(etc + "dbschema.txt");
         } else if (newAdapter.compareTo("oracle") == 0) {
@@ -667,7 +668,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             }
             else
             {
-            	this.jarfile.setText("http://spaceghost.cs.uoregon.edu/PerfExplorer/derby.jar");
+            	this.jarfile.setText(fileLoc+"derby.jar");
             }
         } else if (newAdapter.compareTo("db2") == 0) {
             download.setEnabled(false);
@@ -723,7 +724,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     	String adapter = (String) this.adapter.getSelectedItem();
     	this.schema.setText(etc + "dbschema." + adapter + ".txt");
     	if (home == null || arch == null) {
-    		return("http://spaceghost.cs.uoregon.edu/PerfExplorer/dbschema." + adapter);
+    		return(fileLoc+"dbschema." + adapter);
     	} else {
     		return(etc.replaceAll("perfdmf", "perfexplorer") + "dbschema." + adapter);
     	}

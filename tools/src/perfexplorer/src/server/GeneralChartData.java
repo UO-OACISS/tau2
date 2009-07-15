@@ -38,7 +38,7 @@ import edu.uoregon.tau.perfexplorer.common.TransformationType;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.36 2009/05/12 16:51:34 wspear Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.37 2009/07/15 22:57:03 wspear Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -633,6 +633,8 @@ public class GeneralChartData extends RMIGeneralChartData {
 					tableName = "interval_mean_summary";
 				} else if (yAxisName.indexOf("interval_total_summary") >= 0) {
 					tableName = "interval_total_summary";
+				}else if(yAxisName.indexOf("interval_location_profile") >=0){
+					tableName="interval_location_profile";
 				}
 				buf.append("select ");
 

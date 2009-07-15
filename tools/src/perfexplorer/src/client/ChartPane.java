@@ -11,8 +11,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.StringTokenizer;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -98,6 +96,8 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	private JTextField yaxisName = new MyJTextField(5);
 	private JLabel xaxisValueLabel = new JLabel("X Axis Value:");
 	private JComboBox xaxisValue = null;
+	private JLabel yaxisStatLabel = new JLabel("Y Axis Statistic:");
+	private JComboBox yaxisStat = null;
 	private JLabel yaxisValueLabel = new JLabel("Y Axis Value:");
 	private JComboBox yaxisValue = null;
 	private JLabel dimensionLabel = new JLabel("Dimension Reduction Type:");
@@ -141,6 +141,15 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	private static final String MEAN_EXCLUSIVE = "mean.exclusive";
 	private static final String ATOMIC_MEAN_VALUE = "atomic.mean_value";
 
+	private static final String TOTAL="total";
+	private static final String MEAN="mean";
+	private static final String MAX="max";
+	private static final String MIN="min";
+	private static final String AVG="avg";
+	private static final String ATOMIC="atomic";
+	private static final String INCLUSIVE="inclusive";
+	private static final String EXCLUSIVE="exclusive";
+	
 	public static ChartPane getPane () {
 		if (thePane == null) {
 			JPanel mainPanel = new JPanel(new GridLayout(1,3,10,5));
@@ -317,12 +326,24 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		panel.add(yaxisName);
 		
 		panel.add(Box.createVerticalStrut(10));
-		// y axis value
-		panel.add(yaxisValueLabel);
+		
+		//y axis stat
+		panel.add(yaxisStatLabel);
 		String[] valueOptions = {"tmp"};// this will get reset in a few lines...
+		yaxisStat = new MyJComboBox(valueOptions);
+		this.yaxisStat.addActionListener(this);
+		//resetYAxisValues(true);  // ...right here!
+		
+		
+		
+		// y axis value
+
 		yaxisValue = new MyJComboBox(valueOptions);
 		this.yaxisValue.addActionListener(this);
 		resetYAxisValues(true);  // ...right here!
+		
+		panel.add(yaxisStat);
+		panel.add(yaxisValueLabel);
 		panel.add(yaxisValue);
 
 		panel.add(Box.createVerticalStrut(10));
@@ -458,6 +479,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			}
 		}
 		this.yaxisValue.setSelectedIndex(0);
+		this.yaxisStat.setSelectedIndex(0);
 		refreshDynamicControls(true, true, false);
 	}
 
@@ -520,7 +542,8 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				if (seriesSelection.equalsIgnoreCase(INTERVAL_EVENT_GROUP_NAME)) {
 					List<String> events = server.getPotentialGroups(theModel);
 					resetYAxisValues(true);
-					yaxisValue.setSelectedItem(MEAN_EXCLUSIVE);
+					yaxisStat.setSelectedItem(MEAN);
+					yaxisValue.setSelectedItem(EXCLUSIVE);
 					this.event.removeAllItems();
 					this.event.addItem("All Groups");
 					this.eventLabel.setText("Group:");
@@ -599,37 +622,103 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	}
 
 	private void resetYAxisValues(boolean intervalEvent) {
+		
 		Object oldY = this.yaxisValue.getSelectedItem();
+		Object oldYStat = this.yaxisStat.getSelectedItem();
 		this.yaxisValue.removeAllItems();
+		this.yaxisStat.removeAllItems();
 		if (intervalEvent) {
-			this.yaxisValue.addItem(MEAN_INCLUSIVE);
-			this.yaxisValue.addItem(MEAN_EXCLUSIVE);
-			this.yaxisValue.addItem("mean.inclusive_percentage");
-			this.yaxisValue.addItem("mean.exclusive_percentage");
-			this.yaxisValue.addItem("mean.call");
-			this.yaxisValue.addItem("mean.subroutines");
-			this.yaxisValue.addItem("mean.inclusive_per_call");
-			this.yaxisValue.addItem("mean.sum_exclusive_squared");
-			this.yaxisValue.addItem("total.inclusive");
-			this.yaxisValue.addItem("total.exclusive");
-			this.yaxisValue.addItem("total.inclusive_percentage");
-			this.yaxisValue.addItem("total.exclusive_percentage");
-			this.yaxisValue.addItem("total.call");
-			this.yaxisValue.addItem("total.subroutines");
-			this.yaxisValue.addItem("total.inclusive_per_call");
-			this.yaxisValue.addItem("total.sum_exclusive_squared");
+			
+			this.yaxisStat.addItem(MEAN);
+			this.yaxisStat.addItem(TOTAL);
+			this.yaxisStat.addItem(MAX);
+			this.yaxisStat.addItem(MIN);
+			this.yaxisStat.addItem(AVG);
+			
+			this.yaxisValue.addItem(INCLUSIVE);
+			this.yaxisValue.addItem(EXCLUSIVE);
+			this.yaxisValue.addItem("inclusive_percentage");
+			this.yaxisValue.addItem("exclusive_percentage");
+			this.yaxisValue.addItem("call");
+			this.yaxisValue.addItem("subroutines");
+			this.yaxisValue.addItem("inclusive_per_call");
+			this.yaxisValue.addItem("sum_exclusive_squared");
 		} else {
-			this.yaxisValue.addItem("atomic.sample_count");
-			this.yaxisValue.addItem("atomic.maximum_value");
-			this.yaxisValue.addItem("atomic.minimum_value");
-			this.yaxisValue.addItem(ATOMIC_MEAN_VALUE);
-			this.yaxisValue.addItem("atomic.standard_deviation");
-			yaxisValue.setSelectedItem(ATOMIC_MEAN_VALUE);
+			
+			this.yaxisStat.addItem(ATOMIC);
+			
+			this.yaxisValue.addItem("sample_count");
+			this.yaxisValue.addItem("maximum_value");
+			this.yaxisValue.addItem("minimum_value");
+			this.yaxisValue.addItem("mean_value");
+			this.yaxisValue.addItem("standard_deviation");
+			yaxisValue.setSelectedItem("mean_value");
 		}
-		yaxisValue.setSelectedItem(oldY);
+		yaxisValue.setSelectedItem(oldY);  //TODO: this doesn't jive with the 'else' statement here
+		yaxisStat.setSelectedItem(oldYStat);
 		return;
 	}
 
+	
+	private void updateYAxis(){
+		// y axis
+		String label;
+		String series;
+		
+		String stat =  (String)yaxisStat.getSelectedItem();
+		String value = (String)yaxisValue.getSelectedItem();
+		
+		String tmp;// = stat+"."+value;
+		String operation = "avg";
+		if (stat.equals(ATOMIC)) {
+			tmp = "atomic_location_profile"+"."+value;//tmp.replaceAll(ATOMIC, "atomic_location_profile");
+		} else if(stat.equals(MEAN)) {	
+			tmp = "interval_mean_summary"+"."+value;
+		}
+		else if(stat.equals(TOTAL)){
+			tmp = "interval_total_summary"+"."+value;
+		}
+		else{
+			operation=stat;
+			tmp="interval_location_profile"+"."+value;
+		}
+
+		if (!this.mainOnly.isSelected()) {
+			series = (String)this.series.getSelectedItem();
+			if (series.equalsIgnoreCase(INTERVAL_EVENT_GROUP_NAME)) {
+				operation = "sum";
+			}
+		}
+		
+		tmp = operation + "(" + tmp + ")";
+	
+		label = yaxisName.getText();
+		if (label == null || label.length() == 0) {
+			series = (String)this.series.getSelectedItem();;
+			if (series.equalsIgnoreCase(ATOMIC_EVENT_NAME)) {
+				label = (String)yaxisStat.getSelectedItem()+"."+(String)yaxisValue.getSelectedItem();
+			} else {
+				// build something intelligible
+				
+				String labStat=operation;
+				if(stat.equals(MEAN)){
+					labStat="Mean";
+				}else if(stat.equals(TOTAL)){
+					labStat="Total";
+				}
+				
+				label = labStat+" "+(String)this.metric.getSelectedItem();
+//				if (tmp.indexOf("mean") >= 0) {
+//					label = "Mean " + (String)this.metric.getSelectedItem();
+//				} else if (tmp.indexOf("total") >= 0) {
+//					label = "Total " + (String)this.metric.getSelectedItem();
+//				}
+			}
+		}
+		label += " - "  + (String)this.units.getSelectedItem();
+		facade.setChartYAxisName(tmp, label);
+	}
+	
 	private void updateChart () {
 		// the user has selected the application, experiment, trial 
 		// from the navigation tree.  Now set the other parameters.
@@ -644,7 +733,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			String tmp = (String)obj;
 			if (tmp.equalsIgnoreCase(ATOMIC_EVENT_NAME)) {
 				title = (String)event.getSelectedItem();
-				title = title + " : " + (String)yaxisValue.getSelectedItem();
+				title = title + " : " + (String)yaxisStat.getSelectedItem()+"."+(String)yaxisValue.getSelectedItem();
 			} else {
 				title = (String)metric.getSelectedItem();
 			}
@@ -691,44 +780,8 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		}
 		facade.setChartXAxisName(tmp, label);
 
-		// y axis
-		obj = yaxisValue.getSelectedItem();
-		tmp = (String)obj;
-		if (tmp.startsWith("atomic")) {
-			tmp = tmp.replaceAll("atomic", "atomic_location_profile");
-		} else {
-			tmp = tmp.replaceAll("mean", "interval_mean_summary");
-			tmp = tmp.replaceAll("total", "interval_total_summary");
-		}
-		String operation = "avg";
-		if (!this.mainOnly.isSelected()) {
-			obj = this.series.getSelectedItem();
-			tmp2 = (String)obj;
-			if (tmp2.equalsIgnoreCase(INTERVAL_EVENT_GROUP_NAME)) {
-				operation = "sum";
-			}
-		}
-		tmp = operation + "(" + tmp + ")";
-		label = yaxisName.getText();
-		if (label == null || label.length() == 0) {
-			obj = this.series.getSelectedItem();
-			String tmp3 = (String)obj;
-			if (tmp3.equalsIgnoreCase(ATOMIC_EVENT_NAME)) {
-				label = (String)yaxisValue.getSelectedItem();
-			} else {
-				// build something intelligible
-				//label = tmp;
-				if (tmp.indexOf("mean") >= 0) {
-					label = "Mean " + (String)this.metric.getSelectedItem();
-				} else if (tmp.indexOf("total") >= 0) {
-					label = "Total " + (String)this.metric.getSelectedItem();
-				} else {
-					label = (String)this.metric.getSelectedItem();
-				}
-			}
-		}
-		label += " - "  + (String)this.units.getSelectedItem();
-		facade.setChartYAxisName(tmp, label);
+		//y axis
+		updateYAxis();
 
 		// metric name
 		obj = metric.getSelectedItem();
@@ -832,7 +885,8 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				
 				series.setSelectedItem(INTERVAL_EVENT_NAME);
 				resetYAxisValues(true);
-				yaxisValue.setSelectedItem(MEAN_EXCLUSIVE);
+				yaxisStat.setSelectedItem(MEAN);
+				yaxisValue.setSelectedItem(EXCLUSIVE);
 				
 				refreshDynamicControls(false, true, false);
 			}
