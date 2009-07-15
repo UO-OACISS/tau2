@@ -267,7 +267,9 @@ void tau_static_phase_stop(char *fname, int flen) {
     }
   }
 
+#ifdef DEBUG_PROF 
   printf("tau_static_phase_stop: %s\n", localname);
+#endif
   Tau_static_phase_stop(localname);
   free(localname);
 }
@@ -1999,7 +2001,7 @@ void TAU_DISABLE_TRACKING_MUSE_EVENTS(void) {}
 
 
 /***************************************************************************
- * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.79 $   $Date: 2009/05/05 22:21:21 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.79 2009/05/05 22:21:21 amorris Exp $ 
+ * $RCSfile: TauFAPI.cpp,v $   $Author: scottb $
+ * $Revision: 1.80 $   $Date: 2009/07/15 20:46:14 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.80 2009/07/15 20:46:14 scottb Exp $ 
  ***************************************************************************/
