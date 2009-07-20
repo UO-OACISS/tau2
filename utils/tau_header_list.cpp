@@ -27,6 +27,7 @@ static void printIncludes(const pdbFile *f, bool first) {
     if (!(*it)->isSystemFile()) { // exclude system files
       // skip over "./"
       const char *ptr = (*it)->name().c_str();
+
       if (*ptr == '.') {
 	if (*(ptr+1) == '/') {
 	  ptr+=2;
@@ -34,7 +35,13 @@ static void printIncludes(const pdbFile *f, bool first) {
       }
       if (!first) {
 	// output the name
-	cout << ptr << endl;
+	if (strstr(ptr, "Profiler.h")) {
+	  // Do not list/instrument Profiler.h
+	} else if (strstr(ptr, "TAU.h")) {
+	  // Do not list/instrument TAU.h
+	} else {
+	  cout << ptr << endl;
+	}
       }
     }
     printIncludes(*it, false);
