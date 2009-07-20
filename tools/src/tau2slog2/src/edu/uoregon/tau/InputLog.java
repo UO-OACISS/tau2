@@ -139,6 +139,10 @@ public class InputLog implements base.drawable.InputAPI
 	
 	private static int maxEvtId;
 	
+	private long arch_read;
+	private long count_read=0;
+	private long stepsize=0;
+	
 	private static int GlobalID(int tid, int nid){
 		//System.out.println("n: "+nid+ " t: "+tid);
 		return (nid << 16)+tid;
@@ -224,14 +228,16 @@ public class InputLog implements base.drawable.InputAPI
 		tFileDefRead.setSubtractFirstTimestamp(true);
 		tFileDefRead.setDefsOnly(true);
 		int recs_read=0;
-		int arch_read=0;
 		do{
 			recs_read=tFileDefRead.readNumEvents(def_cb, 1024,null);
-			arch_read+=recs_read;
 			//if(recs_read>0)
 			//System.out.println("Read "+recs_read+" records");
 		}while(recs_read!=0);//&&((Integer)tb.UserData).intValue()!=0
 		tFileDefRead.closeTrace();
+		arch_read=TraceFactory.getNumRecords(tautrc);
+		System.out.println(arch_read+" records initialized.  Processing.");
+		
+		stepsize=arch_read/50;
 		
 		/*if(maxthread>0)
 		{
@@ -269,6 +275,7 @@ public class InputLog implements base.drawable.InputAPI
 			//maxcats++;
 			return Kind.CATEGORY_ID;
 		}
+
 		if(!doneReading)
 		{
 			while(!eventReady)
@@ -283,6 +290,12 @@ public class InputLog implements base.drawable.InputAPI
 					}
 					else
 						return Kind.EOF_ID;
+				}
+				else{
+					count_read++;
+					if(count_read%stepsize==0){
+						System.out.println(count_read+" Records read. "+(int)(100*((double)count_read/(double)arch_read))+"% converted");
+					}
 				}
 			}
 			eventReady=false;
