@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -25,6 +26,11 @@ public class TraceFactory {
 	
 	//private static final int TAU_MAX_RECORDS = 64*1024;
 	
+	
+	public static long getNumRecords(String name){
+		File f = new File(name);
+		return f.length()/24;
+	}
 	
 	/* open a trace file for reading */
 	public static TraceReader OpenFileForInput( String name, String edf){
