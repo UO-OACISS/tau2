@@ -201,7 +201,7 @@ public:
 #endif /* TAU_MPITRACE */
 
 };
-};
+}
 #ifdef TAU_LIBRARY_SOURCE
 using tau::Profiler;
 #endif /* TAU_LIBRARY_SOURCE */
@@ -268,6 +268,6 @@ void TauProfiler_EnableAllEventsOnCallStack(int tid, Profiler *current);
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.107 $   $Date: 2009/05/12 23:23:46 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.107 2009/05/12 23:23:46 amorris Exp $ 
+ * $Revision: 1.108 $   $Date: 2009/07/21 21:38:48 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.108 2009/07/21 21:38:48 amorris Exp $ 
  ***************************************************************************/
