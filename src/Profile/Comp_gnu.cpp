@@ -431,10 +431,12 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 	  filename = "(unknown)";
 	}
 	
-	char routine[2048];
+	char *routine;
+	routine = (char*) malloc (strlen(hn->name)+strlen(filename)+1024);
 	sprintf (routine, "%s [{%s} {%d,0}]", hn->name, filename, hn->lno);
 	void *handle=NULL;
 	TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
+	free(routine);
 	hn->fi = (FunctionInfo*) handle;
       } 
       RtsLayer::UnLockDB();
@@ -465,6 +467,7 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
     atexit(runOnExit);
   }
 
+  // finished in this routine, allow entry
   compInstDisabled[tid] = 0;
 }
 
