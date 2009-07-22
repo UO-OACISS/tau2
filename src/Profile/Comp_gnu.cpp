@@ -416,50 +416,41 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
     }
     if (hn->fi == NULL) {
 
-#ifdef TAU_OPENMP
-#     pragma omp critical (tau_comp_gnu_b)
-      {
-#endif /* TAU_OPENMP */
-
-	if ( hn->fi == NULL) {
-	  // remove the path
-	  const char *filename = hn->fname;
-          if (filename) {
-	    while (strchr(filename,'/') != NULL) {
-	      filename = strchr(filename,'/')+1;
-	    }
-          } else {
-            filename = "(unknown)";
-          }
-
-	  char routine[2048];
-	  sprintf (routine, "%s [{%s} {%d,0}]", hn->name, filename, hn->lno);
-	  void *handle=NULL;
-	  TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
-	  hn->fi = (FunctionInfo*) handle;
-	} 
-
-#ifdef TAU_OPENMP
-      }
-#endif /* TAU_OPENMP */
+      RtsLayer::LockDB(); // lock, then check again
+      
+      if ( hn->fi == NULL) {
+	// remove the path
+	const char *filename = hn->fname;
+	if (filename) {
+	  while (strchr(filename,'/') != NULL) {
+	    filename = strchr(filename,'/')+1;
+	  }
+	} else {
+	  filename = "(unknown)";
+	}
+	
+	char routine[2048];
+	sprintf (routine, "%s [{%s} {%d,0}]", hn->name, filename, hn->lno);
+	void *handle=NULL;
+	TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
+	hn->fi = (FunctionInfo*) handle;
+      } 
+      RtsLayer::UnLockDB();
     }
     Tau_start_timer(hn->fi,0, tid);
   } else {
 
-#ifdef TAU_OPENMP
-#     pragma omp critical (tau_comp_gnu_b)
-    {
-#endif /* TAU_OPENMP */
-      
-      if ( (hn = hash_get((long)funcptr))) {
-	Tau_start_timer(hn->fi, 0, tid);
-      } else {
-	HashNode *node = createHashNode((long)funcptr);
-	Tau_start_timer(node->fi, 0, tid);
-      }
-#ifdef TAU_OPENMP
+    RtsLayer::LockDB(); // lock, then check again
+    
+    if ( (hn = hash_get((long)funcptr))) {
+      Tau_start_timer(hn->fi, 0, tid);
+    } else {
+      HashNode *node = createHashNode((long)funcptr);
+      Tau_start_timer(node->fi, 0, tid);
     }
-#endif /* TAU_OPENMP */
+    
+    RtsLayer::UnLockDB();
+
   }
 
   if ( gnu_init ) {
