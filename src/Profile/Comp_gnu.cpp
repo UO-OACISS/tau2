@@ -57,6 +57,8 @@ using namespace std;
 
 static int gnu_init = 1;       /* is initialization needed? */
 
+static int compInstDisabled[TAU_MAX_THREADS];
+
 /*
  *-----------------------------------------------------------------------------
  * Simple hash table to map function addresses to region names/identifier
@@ -373,6 +375,8 @@ void runOnExit() {
 #pragma weak __cyg_profile_func_enter
 #endif
 extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
+  int i;
+  int tid;
 
   if (executionFinished) {
     return;
@@ -384,7 +388,14 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
   funcptr = *( void ** )func;
 #endif
 
-  if ( gnu_init ) {
+  if (gnu_init) {
+    gnu_init = 0;
+
+    // initialize array of flags that prevent re-entry
+    for (i=0; i<TAU_MAX_THREADS; i++) {
+      compInstDisabled[TAU_MAX_THREADS] = 0;
+    }
+
     get_symtab();
     InitializeTAU();
     TheUsingCompInst() = 1;
@@ -392,6 +403,12 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
     updateMaps();
   }
 
+  // prevent re-entry of this routine on a per thread basis
+  tid = Tau_get_tid();
+  if (compInstDisabled[tid]) {
+    return;
+  }
+  compInstDisabled[tid] = 1;
 
   if ((hn = hash_get((long)funcptr))) {
     if (hn->excluded) {
@@ -426,7 +443,7 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
       }
 #endif /* TAU_OPENMP */
     }
-    Tau_start_timer(hn->fi,0, Tau_get_tid());
+    Tau_start_timer(hn->fi,0, tid);
   } else {
 
 #ifdef TAU_OPENMP
@@ -435,10 +452,10 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 #endif /* TAU_OPENMP */
       
       if ( (hn = hash_get((long)funcptr))) {
-	Tau_start_timer(hn->fi,0, Tau_get_tid());
+	Tau_start_timer(hn->fi, 0, tid);
       } else {
 	HashNode *node = createHashNode((long)funcptr);
-	Tau_start_timer(node->fi,0, Tau_get_tid());
+	Tau_start_timer(node->fi, 0, tid);
       }
 #ifdef TAU_OPENMP
     }
@@ -446,7 +463,6 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
   }
 
   if ( gnu_init ) {
-    gnu_init = 0;
     // we register this here at the end so that it is called 
     // before the VT objects are destroyed.  Objects are destroyed and atexit targets are 
     // called in the opposite order in which they are created and registered.
@@ -455,6 +471,8 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
     //       During MPI_Init.
     atexit(runOnExit);
   }
+
+  compInstDisabled[tid] = 0;
 }
 
 extern "C" void _cyg_profile_func_enter(void* func, void* callsite) {
@@ -466,6 +484,16 @@ extern "C" void _cyg_profile_func_enter(void* func, void* callsite) {
 #pragma weak __cyg_profile_func_exit
 #endif
 extern "C" void __cyg_profile_func_exit(void* func, void* callsite) {
+  int tid;
+
+  tid = Tau_get_tid();
+
+  // prevent entry into cyg_profile functions while inside entry
+  tid = Tau_get_tid();
+  if (compInstDisabled[tid]) {
+    return;
+  }
+
   if (executionFinished) {
     return;
   }
@@ -480,7 +508,7 @@ extern "C" void __cyg_profile_func_exit(void* func, void* callsite) {
       return;
     }
 
-    Tau_stop_timer(hn->fi, Tau_get_tid());
+    Tau_stop_timer(hn->fi, tid);
   } else {
     //printf ("NOT FOUND! : ");
   }
