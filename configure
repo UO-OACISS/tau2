@@ -4335,6 +4335,7 @@ if [ "x$bfd" = "xyes" ] ; then
 	    ./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir
 	    make && make install
 	    cp include/demangle.h $bfddir/include
+	    cp include/libiberty.h $bfddir/include
 	    cd ..
 	    cd ..
 	    rm -rf $tempdir
