@@ -218,7 +218,9 @@ static void get_symtab_bfd(const char *module, unsigned long offset) {
 
     if (strstr(syms[i]->name, "Tau_Profile_Wrapper")) {
       HashNode *hn = hash_get(offset+addr);
-      hn->excluded = 1;
+      if (hn) {
+	hn->excluded = 1;
+      }
     }
 
   }
