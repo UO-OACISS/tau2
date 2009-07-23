@@ -28,7 +28,26 @@ $file = $ARGV[2];
 
 my (@headers);
 @headers = `$header_list --show $origfile $pdbfile`;
-#warn "$header_list --show $origfile $pdbfile\n";
+my ($header);
+foreach $header (@headers) {
+    chomp($header);
+}
+
+my (@ids);
+@ids = `$header_list --showids $origfile $pdbfile`;
+my ($id);
+foreach $id (@ids) {
+    chomp($id);
+}
+
+my ($i);
+
+my (%idhash);
+
+for ($i=0; $i<=$#headers; $i++) {
+    $idhash{$headers[$i]} = $ids[$i];
+}
+
 
 my ($newlocation);
 $newlocation = $ARGV[3];
@@ -39,16 +58,12 @@ while ($line = <SOURCE>) {
     if ($line =~ /^\s*\#\s*include/) { # match <spaces>#<spaces>include
         chomp($line);
 
-	my ($header);
 
         # first, attempt without removing path
 	my ($matched);
 	$matched = "false";
 	foreach $header (@headers) {
-	    chomp($header);
-	    my ($id);
-	    $id = `$header_list --id $header $pdbfile`;
-	    chomp($id);
+	    $id = $idhash{$header};
 
 	    my ($checkheader);
 	    $checkheader = $header;
@@ -63,10 +78,7 @@ while ($line = <SOURCE>) {
         # next, loop through again, this time removing the path
 	if ($matched eq "false") {
 	    foreach $header (@headers) {
-		chomp($header);
-		my ($id);
-		$id = `$header_list --id $header $pdbfile`;
-		chomp($id);
+		$id = $idhash{$header};
 		
 		my ($checkheader);
 		$checkheader = $header;
