@@ -4103,16 +4103,14 @@ bool fuzzyMatch(const string& a, const string& b)
 /* -------------------------------------------------------------------------- */
 /* -- Instrument the program using C, C++ or F90 instrumentation routines --- */
 /* -------------------------------------------------------------------------- */
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
   string outFileName("out.ins.C");
   string group_name("TAU_USER"); /* Default: if nothing else is defined */
   string header_file("Profile/Profiler.h"); 
   bool retval;
 	/* Default: if nothing else is defined */
 
-  if (argc < 3) 
-  { 
+  if (argc < 3) { 
     cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-noinit] [-memory] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [-rn <return_keyword>] [-rv <return_void_keyword>] [-e <exit_keyword>] [-p] [-check <filename>]"<<endl;
     cout<<"----------------------------------------------------------------------------------------------------------"<<endl;
     cout <<"-noinline: disables the instrumentation of inline functions in C++"<<endl;
@@ -4140,245 +4138,322 @@ int main(int argc, char **argv)
   int i; 
 
   const char *filename; 
-  for(i=0; i < argc; i++)
-  {
+  for(i=0; i < argc; i++) {
     switch(i) {
-      case 0:
+    case 0:
 #ifdef DEBUG
-        printf("Name of pdb file = %s\n", argv[1]);
+      printf("Name of pdb file = %s\n", argv[1]);
 #endif /* DEBUG */
-        break;
-      case 1:
+      break;
+    case 1:
 #ifdef DEBUG
-        printf("Name of source file = %s\n", argv[2]);
+      printf("Name of source file = %s\n", argv[2]);
 #endif /* DEBUG */
-        filename = argv[2];  
-        break;
-      default:
-        if (strcmp(argv[i], "-o")== 0)
- 	{
-	  ++i;
+      filename = argv[2];  
+      break;
+    default:
+      if (strcmp(argv[i], "-o")== 0) {
+	++i;
 #ifdef DEBUG
-          printf("output file = %s\n", argv[i]);
+	printf("output file = %s\n", argv[i]);
 #endif /* DEBUG */
-          outFileName = string(argv[i]);
-	  outFileNameSpecified = true;
-	}
-        if (strcmp(argv[i], "-noinline")==0)
- 	{
-#ifdef DEBUG
-          printf("Noinline flag\n");
-#endif /* DEBUG */
-          noinline_flag = true;
-        }
-        if (strcmp(argv[i], "-noinit")==0)
- 	{
-#ifdef DEBUG
-          printf("Noinit flag\n");
-#endif /* DEBUG */
-          noinit_flag = true;
-        }
-        if (strcmp(argv[i], "-memory")==0)
- 	{
-#ifdef DEBUG
-          printf("Memory profiling flag\n");
-#endif /* DEBUG */
-          memory_flag = true;
-        }
-        if (strcmp(argv[i], "-c")==0)
- 	{
-#ifdef DEBUG
-          printf("Language explicitly specified as C\n");
-#endif /* DEBUG */
-          lang_specified = true;
-	  tau_language = tau_c;
-        }
-        if (strcmp(argv[i], "-c++")==0)
- 	{
-#ifdef DEBUG
-          printf("Language explicitly specified as C++\n");
-#endif /* DEBUG */
-          lang_specified = true;
-	  tau_language = tau_cplusplus;
-        }
-        if (strcmp(argv[i], "-fortran")==0)
- 	{
-#ifdef DEBUG
-          printf("Language explicitly specified as Fortran\n");
-#endif /* DEBUG */
-          lang_specified = true;
-	  tau_language = tau_fortran;
-        }
-        if (strcmp(argv[i], "-g") == 0)
-	{
-	  ++i;
-	  group_name = string("TAU_GROUP_")+string(argv[i]);
-#ifdef DEBUG
-          printf("Group %s\n", group_name.c_str());
-#endif /* DEBUG */
-  	}
-        if (strcmp(argv[i], "-i") == 0)
-	{
-	  ++i;
-	  header_file = string(argv[i]);
-#ifdef DEBUG
-          printf("Header file %s\n", header_file.c_str());
-#endif /* DEBUG */
-  	}
-        if (strcmp(argv[i], "-f") == 0)
-	{
-	  ++i;
-	  processInstrumentationRequests(argv[i]);
-#ifdef DEBUG
-          printf("Using instrumentation requests file: %s\n", argv[i]); 
-#endif /* DEBUG */
-  	}
-        if (strcmp(argv[i], "-p") == 0)
-        {
-          use_perflib=true;
-        }
-        if (strcmp(argv[i], "-rn") == 0)
-	{
-	  ++i;
-	  strcpy(return_nonvoid_string,argv[i]);
-#ifdef DEBUG
-          printf("Using non void return keyword: %s\n", return_nonvoid_string);
-#endif /* DEBUG */
-  	}
-        if (strcmp(argv[i], "-rv") == 0)
-	{
-	  ++i;
-	  strcpy(return_void_string,argv[i]);
-#ifdef DEBUG
-          printf("Using void return keyword: %s\n", return_void_string);
-#endif /* DEBUG */
-  	}
-        if (strcmp(argv[i], "-e") == 0)
-	{
-	  ++i;
-	  strcpy(exit_keyword,argv[i]);
-	  using_exit_keyword = true;
-#ifdef DEBUG
-          printf("Using exit_keyword keyword: %s\n", exit_keyword);
-#endif /* DEBUG */
-  	}
-        if (strcmp(argv[i], "-spec") == 0)
-        {
-          ++i;
-          processInstrumentationRequests(argv[i]);
-          use_spec = true;
-#ifdef DEBUG
-          printf("Using instrumentation code from spec file: %s\n", argv[i]);
-#endif /* DEBUG */
-        }
-        if (strcmp(argv[i], "-check") == 0) {
-          ++i;
-	  if (processFileForInstrumentation(argv[i])) {
-	    printf ("yes\n");
-	  } else {
-	    printf ("no\n");
-	  }
-	  return 0;
-        }
-        break;
+	outFileName = string(argv[i]);
+	outFileNameSpecified = true;
       }
-
-   }
-  if (!outFileNameSpecified)
-  { /* if name is not specified on the command line */
+      if (strcmp(argv[i], "-noinline")==0) {
+#ifdef DEBUG
+	printf("Noinline flag\n");
+#endif /* DEBUG */
+	noinline_flag = true;
+      }
+      if (strcmp(argv[i], "-noinit")==0) {
+#ifdef DEBUG
+	printf("Noinit flag\n");
+#endif /* DEBUG */
+	noinit_flag = true;
+      }
+      if (strcmp(argv[i], "-memory")==0) {
+#ifdef DEBUG
+	printf("Memory profiling flag\n");
+#endif /* DEBUG */
+	memory_flag = true;
+      }
+      if (strcmp(argv[i], "-c")==0) {
+#ifdef DEBUG
+	printf("Language explicitly specified as C\n");
+#endif /* DEBUG */
+	lang_specified = true;
+	tau_language = tau_c;
+      }
+      if (strcmp(argv[i], "-c++")==0) {
+#ifdef DEBUG
+	printf("Language explicitly specified as C++\n");
+#endif /* DEBUG */
+	lang_specified = true;
+	tau_language = tau_cplusplus;
+      }
+      if (strcmp(argv[i], "-fortran")==0) {
+#ifdef DEBUG
+	printf("Language explicitly specified as Fortran\n");
+#endif /* DEBUG */
+	lang_specified = true;
+	tau_language = tau_fortran;
+      }
+      if (strcmp(argv[i], "-g") == 0) {
+	++i;
+	group_name = string("TAU_GROUP_")+string(argv[i]);
+#ifdef DEBUG
+	printf("Group %s\n", group_name.c_str());
+#endif /* DEBUG */
+      }
+      if (strcmp(argv[i], "-i") == 0) {
+	++i;
+	header_file = string(argv[i]);
+#ifdef DEBUG
+	printf("Header file %s\n", header_file.c_str());
+#endif /* DEBUG */
+      }
+      if (strcmp(argv[i], "-f") == 0) {
+	++i;
+	processInstrumentationRequests(argv[i]);
+#ifdef DEBUG
+	printf("Using instrumentation requests file: %s\n", argv[i]); 
+#endif /* DEBUG */
+      }
+      if (strcmp(argv[i], "-p") == 0) {
+	use_perflib=true;
+      }
+      if (strcmp(argv[i], "-rn") == 0) {
+	++i;
+	strcpy(return_nonvoid_string,argv[i]);
+#ifdef DEBUG
+	printf("Using non void return keyword: %s\n", return_nonvoid_string);
+#endif /* DEBUG */
+      }
+      if (strcmp(argv[i], "-rv") == 0) {
+	++i;
+	strcpy(return_void_string,argv[i]);
+#ifdef DEBUG
+	printf("Using void return keyword: %s\n", return_void_string);
+#endif /* DEBUG */
+      }
+      if (strcmp(argv[i], "-e") == 0) {
+	++i;
+	strcpy(exit_keyword,argv[i]);
+	using_exit_keyword = true;
+#ifdef DEBUG
+	printf("Using exit_keyword keyword: %s\n", exit_keyword);
+#endif /* DEBUG */
+      }
+      if (strcmp(argv[i], "-spec") == 0) {
+	++i;
+	processInstrumentationRequests(argv[i]);
+	use_spec = true;
+#ifdef DEBUG
+	printf("Using instrumentation code from spec file: %s\n", argv[i]);
+#endif /* DEBUG */
+      }
+      if (strcmp(argv[i], "-check") == 0) {
+	++i;
+	if (processFileForInstrumentation(argv[i])) {
+	  printf ("yes\n");
+	} else {
+	  printf ("no\n");
+	}
+	return 0;
+      }
+      break;
+    }
+  }
+  
+  if (!outFileNameSpecified) { 
+    /* if name is not specified on the command line */
     outFileName = string(filename + string(".ins"));
   }
-
-
+  
+  
   PDB p(argv[1]); if ( !p ) return 1;
   setGroupName(p, group_name);
-
-  bool instrumentThisFile;
-  bool fuzzyMatchResult;
+  
   bool fileInstrumented = false;
-  for (PDB::filevec::const_iterator it=p.getFileVec().begin();
-       it!=p.getFileVec().end(); ++it) 
-  {
-     /* reset this variable at the beginning of the loop */
-     instrumentThisFile = false;
 
-     if ((fuzzyMatchResult = fuzzyMatch((*it)->name(), string(filename))) && 
-         (instrumentThisFile = processFileForInstrumentation(string(filename))))
-     { /* should we instrument this file? Yes */
-       PDB::lang_t l = p.language();
-       fileInstrumented = true; /* We will instrument this file */
+  bool exactMatch = false;
 
+  /* AKM 07/22/2009 - I've duplicated the loop below to fix a bug.  The first
+     loop matches exactly with strcmp, the second loop uses the fuzzyMatch as
+     before.  It would be nice to excise the innards of the loop into a
+     function to eliminate the duplicate code, but I couldn't follow the dozens
+     of variables used from above, this code needs to be rewritten.
+
+     Anyway, the reason it needed to be done was that if, for example, there
+     were two bar.h files, a/bar.h and b/bar.h and we wanted to instrument them
+     both, the old method would always fuzzy match against only one of them, so running:
+
+     tau_instrumentor foo.pdb a/bar.h -o out
+     tau_instrumentor foo.pdb b/bar.h -o out
+
+     would result in the exact same output, clearly a bug.  This is now fixed
+     by first attempting the exact match, and if not found, try the fuzzy
+     match.  It's certainly possible that the issue is not completely resolves
+     since the need for the fuzzy match is not clear to me right now.  If the
+     fuzzy match was needed to find both of the bar.h files, it will fail like
+     it used to.  I'm not sure how to resolve that.
+  */
+     
+
+  for (PDB::filevec::const_iterator it=p.getFileVec().begin(); it!=p.getFileVec().end(); ++it) {
+    /* reset this variable at the beginning of the loop */
+    bool instrumentThisFile = false;
+    bool exactMatchResult;
+    
+    exactMatchResult = (strcmp((*it)->name().c_str(), filename) == 0);
+    if (exactMatchResult) {
+      exactMatch = true;
+    }
+
+    if ((exactMatchResult && 
+	 (instrumentThisFile = processFileForInstrumentation(string(filename))))) { 
+      /* should we instrument this file? Yes */
+      PDB::lang_t l = p.language();
+      fileInstrumented = true; /* We will instrument this file */
+      
+      if (lang_specified) { 
+	/* language explicitly specified on command line*/
+	switch (tau_language) { 
+	case tau_cplusplus :
+	  if (use_spec) {
+	    instrumentCFile(p, *it, outFileName, group_name, header_file);
+	  } else {
+	    retval = instrumentCXXFile(p, *it, outFileName, group_name, header_file);
+	    if (!retval) {
+	      cout <<"Uh Oh! There was an error in instrumenting with the C++ API, trying C next... Please do not force a C++ instrumentation API on this file: "<<(*it)->name()<<endl;
+	      instrumentCFile(p, *it, outFileName, group_name, header_file);
+	    }
+	  }
+	  break;
+	case tau_c :
+	  instrumentCFile(p, *it, outFileName, group_name, header_file);
+	  break;
+	case tau_fortran : 
+	  instrumentFFile(p, *it, outFileName, group_name);
+	  break;
+	default:
+	  printf("Language unknown\n ");
+	  break;
+	}
+      } else { /* implicit detection of language */
+	if (l == PDB::LA_CXX) {
+	  if (use_spec) {
+	    instrumentCFile(p, *it, outFileName, group_name, header_file);
+	  } else {
+	    retval = instrumentCXXFile(p, *it, outFileName, group_name, header_file);
+	    if (!retval) {
 #ifdef DEBUG
-       cout <<" *** FILE *** "<< (*it)->name()<<endl;
-       cout <<"Language "<<l <<endl;
-#endif
-       if (lang_specified)
-       { /* language explicitly specified on command line*/
-	 switch (tau_language) { 
-	   case tau_cplusplus :
-                if (use_spec)
-                  instrumentCFile(p, *it, outFileName, group_name, header_file);
-                else
-                {
-         	  retval = instrumentCXXFile(p, *it, outFileName, group_name, header_file);
-	          if (!retval) {
-		    cout <<"Uh Oh! There was an error in instrumenting with the C++ API, trying C next... Please do not force a C++ instrumentation API on this file: "<<(*it)->name()<<endl;
-         	    instrumentCFile(p, *it, outFileName, group_name, header_file);
-	 	  }
-		}
-		break;
-	   case tau_c :
-         	instrumentCFile(p, *it, outFileName, group_name, header_file);
-		break;
-	   case tau_fortran : 
-         	instrumentFFile(p, *it, outFileName, group_name);
-		break;
-	   default:
-		printf("Language unknown\n ");
-		break;
-	 }
-       }
-       else 
-       { /* implicit detection of language */
-         if (l == PDB::LA_CXX)
-	 {
-           if (use_spec)
-             instrumentCFile(p, *it, outFileName, group_name, header_file);
-           else
-           {
-             retval = instrumentCXXFile(p, *it, outFileName, group_name, header_file);
-             if (!retval)
-	     {
-#ifdef DEBUG
-	       cout <<"Uh Oh! There was an error in instrumenting with the C++ API, trying C next... "<<endl;
+	      cout <<"Uh Oh! There was an error in instrumenting with the C++ API, trying C next... "<<endl;
 #endif /* DEBUG */
-               instrumentCFile(p, *it, outFileName, group_name, header_file);
-	     }
-           }
-	 }
-         if (l == PDB::LA_C)
-           instrumentCFile(p, *it, outFileName, group_name, header_file);
-         if (l == PDB::LA_FORTRAN)
-           instrumentFFile(p, *it, outFileName, group_name);
-       }
-     } /* don't instrument this file. Should we copy in to out? */
-     else
-     { 
-       if ((fuzzyMatchResult == true) && (instrumentThisFile == false))
-       { /* we should copy the file to outFile */
-         ifstream ifs(filename);
-         ofstream ofs(outFileName.c_str());
-         /* copy ifs to ofs */
-         if (ifs.is_open() && ofs.is_open())
-           ofs << ifs.rdbuf(); /* COPY */ 
-	 instrumentThisFile = true; /* sort of like instrumentation,
-		more like processed this file. Later we need to know
-		if no files were processed */
-       }
-     }
+	      instrumentCFile(p, *it, outFileName, group_name, header_file);
+	    }
+	  }
+	}
+	if (l == PDB::LA_C) {
+	  instrumentCFile(p, *it, outFileName, group_name, header_file);
+	}
+	if (l == PDB::LA_FORTRAN) {
+	  instrumentFFile(p, *it, outFileName, group_name);
+	}
+      }
+    } else {/* don't instrument this file. Should we copy in to out? */
+      if ((exactMatchResult == true) && (instrumentThisFile == false)) { 
+	/* we should copy the file to outFile */
+	ifstream ifs(filename);
+	ofstream ofs(outFileName.c_str());
+	/* copy ifs to ofs */
+	if (ifs.is_open() && ofs.is_open()) {
+	  ofs << ifs.rdbuf(); /* COPY */ 
+	}
+	instrumentThisFile = true; /* sort of like instrumentation,
+				      more like processed this file. Later we need to know
+				      if no files were processed */
+      }
+    }
   }
-  if (fileInstrumented == false)
-  { /* no files were processed */
+
+    if (!exactMatch) {
+  for (PDB::filevec::const_iterator it=p.getFileVec().begin(); it!=p.getFileVec().end(); ++it) {
+    /* reset this variable at the beginning of the loop */
+    bool instrumentThisFile = false;
+    bool fuzzyMatchResult;
+    
+    if ((fuzzyMatchResult = fuzzyMatch((*it)->name(), string(filename))) && 
+	(instrumentThisFile = processFileForInstrumentation(string(filename)))) { 
+      /* should we instrument this file? Yes */
+      PDB::lang_t l = p.language();
+      fileInstrumented = true; /* We will instrument this file */
+      
+      if (lang_specified) { 
+	/* language explicitly specified on command line*/
+	switch (tau_language) { 
+	case tau_cplusplus :
+	  if (use_spec) {
+	    instrumentCFile(p, *it, outFileName, group_name, header_file);
+	  } else {
+	    retval = instrumentCXXFile(p, *it, outFileName, group_name, header_file);
+	    if (!retval) {
+	      cout <<"Uh Oh! There was an error in instrumenting with the C++ API, trying C next... Please do not force a C++ instrumentation API on this file: "<<(*it)->name()<<endl;
+	      instrumentCFile(p, *it, outFileName, group_name, header_file);
+	    }
+	  }
+	  break;
+	case tau_c :
+	  instrumentCFile(p, *it, outFileName, group_name, header_file);
+	  break;
+	case tau_fortran : 
+	  instrumentFFile(p, *it, outFileName, group_name);
+	  break;
+	default:
+	  printf("Language unknown\n ");
+	  break;
+	}
+      } else { /* implicit detection of language */
+	if (l == PDB::LA_CXX) {
+	  if (use_spec) {
+	    instrumentCFile(p, *it, outFileName, group_name, header_file);
+	  } else {
+	    retval = instrumentCXXFile(p, *it, outFileName, group_name, header_file);
+	    if (!retval) {
+#ifdef DEBUG
+	      cout <<"Uh Oh! There was an error in instrumenting with the C++ API, trying C next... "<<endl;
+#endif /* DEBUG */
+	      instrumentCFile(p, *it, outFileName, group_name, header_file);
+	    }
+	  }
+	}
+	if (l == PDB::LA_C) {
+	  instrumentCFile(p, *it, outFileName, group_name, header_file);
+	}
+	if (l == PDB::LA_FORTRAN) {
+	  instrumentFFile(p, *it, outFileName, group_name);
+	}
+      }
+    } else {/* don't instrument this file. Should we copy in to out? */
+      if ((fuzzyMatchResult == true) && (instrumentThisFile == false)) { 
+	/* we should copy the file to outFile */
+	ifstream ifs(filename);
+	ofstream ofs(outFileName.c_str());
+	/* copy ifs to ofs */
+	if (ifs.is_open() && ofs.is_open()) {
+	  ofs << ifs.rdbuf(); /* COPY */ 
+	}
+	instrumentThisFile = true; /* sort of like instrumentation,
+				      more like processed this file. Later we need to know
+				      if no files were processed */
+      }
+    }
+  }
+    }
+  
+  if (fileInstrumented == false) {
+    /* no files were processed */
 #ifdef DEBUG
     cout <<"No files were processed"<<endl;
 #endif /* DEBUG */
@@ -4386,8 +4461,9 @@ int main(int argc, char **argv)
     ifstream ifsc(filename);
     ofstream ofsc(outFileName.c_str());
     /* copy ifsc to ofsc */
-    if (ifsc.is_open() && ofsc.is_open())
-       ofsc << ifsc.rdbuf(); /* COPY */ 
+    if (ifsc.is_open() && ofsc.is_open()) {
+      ofsc << ifsc.rdbuf(); /* COPY */ 
+    }
   }
 
   /* start with routines */
@@ -4413,8 +4489,8 @@ int main(int argc, char **argv)
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.208 $   $Date: 2009/05/15 21:14:35 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.208 2009/05/15 21:14:35 amorris Exp $
+ * $Revision: 1.209 $   $Date: 2009/07/23 00:14:59 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.209 2009/07/23 00:14:59 amorris Exp $
  ***************************************************************************/
 
 
