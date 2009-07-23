@@ -97,6 +97,11 @@ int main(int argc, char *argv[]) {
     idx++;
   }
 
+  if (strcmp(argv[idx],"--showallids") == 0) {
+    mode_show_ids = 1;
+    idx++;
+  }
+
   if (strcmp(argv[idx],"--showids") == 0) {
     mode_show_ids = 1;
     mode_show = 1;
