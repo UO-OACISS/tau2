@@ -23,6 +23,8 @@
 
 int mode_print_id = 0;
 int mode_show = 0;
+int mode_show_ids = 0;
+
 char *target_file = NULL;
 
 static void printIncludes(const pdbFile *f, bool first) {
@@ -60,7 +62,11 @@ static void printIncludes(const pdbFile *f, bool first) {
 	  }
 	} else {
 	  if (show) {
-	    cout << ptr << endl;
+	    if (mode_show_ids) {
+	      cout << (*it)->id() << endl;
+	    } else {
+	      cout << ptr << endl;
+	    }
 	  }
 	}
       }
@@ -72,7 +78,7 @@ static void printIncludes(const pdbFile *f, bool first) {
 int main(int argc, char *argv[]) {
   bool errflag = argc < 2;
   if ( errflag ) {
-    cerr << "Usage: " << argv[0] << " [--id <file>] [--show <file>] pdbfile" << endl;
+    cerr << "Usage: " << argv[0] << " [--id <file>] [--show <file>] [--showids <file>] pdbfile" << endl;
     return 1;
   }
 
@@ -85,6 +91,14 @@ int main(int argc, char *argv[]) {
   }
 
   if (strcmp(argv[idx],"--show") == 0) {
+    mode_show = 1;
+    idx++;
+    target_file = argv[idx];
+    idx++;
+  }
+
+  if (strcmp(argv[idx],"--showids") == 0) {
+    mode_show_ids = 1;
     mode_show = 1;
     idx++;
     target_file = argv[idx];
