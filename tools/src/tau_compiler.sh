@@ -41,6 +41,7 @@ declare -i tempCounter=0
 declare -i counterForOutput=-10
 declare -i counterForOptions=0
 declare -i temp=0
+declare -i idcounter=0
 
 declare -i preprocess=$FALSE
 declare -i revertOnError=$TRUE
@@ -1140,13 +1141,21 @@ if [ $optHeaderInst == $TRUE ]; then
 	headerlister=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_header_list@'` 
 	headerreplacer=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_header_replace.pl@'` 
 
+	idcounter=0
+	for id in `$headerlister --showallids $pdbFile` ; do
+	    idarray[$idcounter]=$id
+	    idcounter=idcounter+1
+	done
+
+	idcounter=0
 	for header in `$headerlister $pdbFile` ; do
 	    filebase=`echo ${header} | sed -e's/.*\///'`
-	    id=`$headerlister --id $header $pdbFile`
+	    id=${idarray[$idcounter]};
 	    tauCmd="$optTauInstr $pdbFile $header -o $headerInstDir/${id}_tau_${filebase} "
 	    tauCmd="$tauCmd $optTau $optTauSelectFile"
 	    evalWithDebugMessage "$tauCmd" "Instrumenting header with TAU"
 	    $headerreplacer $pdbFile $header $headerInstDir/${id}_tau_${filebase} > $headerInstDir/${id}_tau_hr_${filebase}
+	    idcounter=idcounter+1
 	done
 
 	base=`echo ${instFileName} | sed -e 's/\.[^\.]*$//' -e's/.*\///'`
