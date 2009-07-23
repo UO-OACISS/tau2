@@ -591,7 +591,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
       ThisFunction->SetProfileGroup(TAU_DISABLE, tid);
       ThisFunction->SetPrimaryGroupName("TAU_DISABLE");
       //cout <<"TAU<"<<RtsLayer::myNode()<<">: Throttle: Disabling "<<ThisFunction->GetName()<<endl;
-      TAU_VERBOSE("TAU<%d>: Throttle: Disabling %s\n", RtsLayer::myNode(), ThisFunction->GetName());
+      TAU_VERBOSE("TAU<%d,%d>: Throttle: Disabling %s\n", RtsLayer::myNode(), RtsLayer::myThread(), ThisFunction->GetName());
       RtsLayer::UnLockDB();
     }
   }
@@ -1331,6 +1331,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.244 $   $Date: 2009/06/20 00:38:08 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.244 2009/06/20 00:38:08 amorris Exp $ 
+ * $Revision: 1.245 $   $Date: 2009/07/23 04:58:26 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.245 2009/07/23 04:58:26 amorris Exp $ 
  ***************************************************************************/
