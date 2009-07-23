@@ -21,26 +21,47 @@
 #include "pdb.h"
 #include "pdbRoutine.h"
 
+int mode_print_id = 0;
+int mode_show = 0;
+char *target_file = NULL;
+
 static void printIncludes(const pdbFile *f, bool first) {
+  bool show = true;
+  if (mode_show) {
+    show = false;
+    if (strcmp(f->name().c_str(), target_file) == 0) {
+      show = true;
+    }
+  }
+
   pdbFile::incvec i = f->includes();
   for (pdbFile::incvec::iterator it=i.begin(); it!=i.end(); ++it) {
-    if (!(*it)->isSystemFile()) { // exclude system files
+    if (!first && !(*it)->isSystemFile()) { // exclude system files
       // skip over "./"
       const char *ptr = (*it)->name().c_str();
-
+      
       if (*ptr == '.') {
 	if (*(ptr+1) == '/') {
 	  ptr+=2;
 	}
       }
-      if (!first) {
-	// output the name
-	if (strstr(ptr, "Profiler.h")) {
-	  // Do not list/instrument Profiler.h
-	} else if (strstr(ptr, "TAU.h")) {
-	  // Do not list/instrument TAU.h
+	
+      // output the name
+      if (strstr(ptr, "Profiler.h")) {
+	// Do not list/instrument Profiler.h
+      } else if (strstr(ptr, "TAU.h")) {
+	// Do not list/instrument TAU.h
+      } else {
+	if (mode_print_id) {
+	  if (strcmp(ptr, target_file) == 0) {
+	    //	    cout << ptr << " " << (*it)->id() << endl;
+	    cout << (*it)->id() << endl;
+	    exit (0);
+	  }
 	} else {
-	  cout << ptr << endl;
+	  if (show) {
+	    cout << ptr << endl;
+	  }
 	}
       }
     }
@@ -51,11 +72,26 @@ static void printIncludes(const pdbFile *f, bool first) {
 int main(int argc, char *argv[]) {
   bool errflag = argc < 2;
   if ( errflag ) {
-    cerr << "Usage: " << argv[0] << " pdbfile" << endl;
+    cerr << "Usage: " << argv[0] << " [--id <file>] [--show <file>] pdbfile" << endl;
     return 1;
   }
 
-  PDB pdb(argv[1]);
+  int idx = 1;
+  if (strcmp(argv[idx],"--id") == 0) {
+    mode_print_id = 1;
+    idx++;
+    target_file = argv[idx];
+    idx++;
+  }
+
+  if (strcmp(argv[idx],"--show") == 0) {
+    mode_show = 1;
+    idx++;
+    target_file = argv[idx];
+    idx++;
+  }
+  
+  PDB pdb(argv[idx]);
 
   if (!pdb) {
     cerr << "Unable to read PDB file: %s\n", argv[1];
