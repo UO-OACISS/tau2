@@ -569,10 +569,16 @@ extern "C" {
       const char *profileFormat = getconf("TAU_PROFILE_FORMAT");
       if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "snapshot")) {
 	env_profile_format = TAU_FORMAT_SNAPSHOT;
+	TAU_VERBOSE("TAU: Output Format: snapshot\n");
+	TAU_METADATA("TAU_PROFILE_FORMAT","snapshot");
       } else if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "merged")) {
 	env_profile_format = TAU_FORMAT_MERGED;
+	TAU_VERBOSE("TAU: Output Format: merged\n");
+	TAU_METADATA("TAU_PROFILE_FORMAT","merged");
       } else {
 	env_profile_format = TAU_FORMAT_PROFILE;
+	TAU_VERBOSE("TAU: Output Format: profile\n");
+	TAU_METADATA("TAU_PROFILE_FORMAT","profile");
       }
     }
   }
