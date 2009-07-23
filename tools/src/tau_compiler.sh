@@ -1141,18 +1141,20 @@ if [ $optHeaderInst == $TRUE ]; then
 	headerreplacer=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_header_replace.pl@'` 
 
 	for header in `$headerlister $pdbFile` ; do
-	    filename=`echo ${header} | sed -e's/.*\///'`
-	    tauCmd="$optTauInstr $pdbFile $header -o $headerInstDir/tau_$filename "
+	    filebase=`echo ${header} | sed -e's/.*\///'`
+	    id=`$headerlister --id $header $pdbFile`
+	    tauCmd="$optTauInstr $pdbFile $header -o $headerInstDir/${id}_tau_${filebase} "
 	    tauCmd="$tauCmd $optTau $optTauSelectFile"
 	    evalWithDebugMessage "$tauCmd" "Instrumenting header with TAU"
-	    $headerreplacer $pdbFile $headerInstDir/tau_$filename > $headerInstDir/tau_hr_$filename
+	    $headerreplacer $pdbFile $header $headerInstDir/${id}_tau_${filebase} > $headerInstDir/${id}_tau_hr_${filebase}
 	done
 
 	base=`echo ${instFileName} | sed -e 's/\.[^\.]*$//' -e's/.*\///'`
 	suf=`echo ${instFileName} | sed -e 's/.*\./\./' `
 	newfile=${base}.hr${suf}
 	
-	$headerreplacer $pdbFile $instFileName > $newfile
+	origfile=${arrFileName[$tempCounter]}
+	$headerreplacer $pdbFile $origfile $instFileName > $newfile
 	arrTau[$tempCounter]=$newfile
 	tempCounter=tempCounter+1
     done
