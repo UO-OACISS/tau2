@@ -283,31 +283,49 @@ const char * getStopMeasurementEntity(itemRef *i)
 /* -------------------------------------------------------------------------- */
 void mergeInstrumentationRequests(vector<itemRef *>& itemvec) {
   /* Now merge objects of the same kind at the same location */
-  if (itemvec.size() > 1)
-  {
+  if (itemvec.size() > 1) {
     vector<itemRef *>::iterator iter = itemvec.begin()+1;
-    while (iter != itemvec.end())
-    {
+    while (iter != itemvec.end()) {
       itemRef* item1 = *(iter - 1);
       itemRef* item2 = *iter;
 
       if (item1->kind == item2->kind &&
           item1->line == item2->line &&
-          item1->col  == item2->col)
-      {
+          item1->col  == item2->col) {
         if (item1->snippet.empty())
           item1->snippet = item2->snippet;
         else if (!item2->snippet.empty())
           item1->snippet += "\n\t" + item2->snippet;
         iter = itemvec.erase(iter);
-      }
-      else
-      {
+      } else {
         ++iter;
       }
     }
   }
 }
+
+
+/* -------------------------------------------------------------------------- */
+/* -- Remove any matching requests ------------------------------------------ */
+/* -------------------------------------------------------------------------- */
+void removeMatchingInstrumentationRequests(vector<itemRef *>& itemvec, const char *name, int line) {
+  /* Iterate through at remove any instrumentation request with the same 'name' and line number */
+  if (itemvec.size() > 1) {
+    vector<itemRef *>::iterator iter = itemvec.begin();
+    while (iter != itemvec.end()) {
+      itemRef* item = *iter;
+      if (item->item) {
+	if (item->line == line && !strcmp(name, item->item->name().c_str())) {
+	  iter = itemvec.erase(iter);
+	} else {
+	  ++iter;
+	}
+      }
+    }
+  }
+}
+
+
 
 /* -------------------------------------------------------------------------- */
 /* -- Merge instrumentation requests of same kind for same location --------- */
@@ -321,9 +339,7 @@ void postprocessInstrumentationRequests(vector<itemRef *>& itemvec)
   itemvec.erase(unique(itemvec.begin(), itemvec.end(),itemEqual),itemvec.end());
   mergeInstrumentationRequests(itemvec);
 #ifdef DEBUG
-  for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end();
-   iter++)
-  {
+  for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end(); iter++) {
     cout <<"Items ("<<(*iter)->line<<", "<<(*iter)->col<<")"<<endl;
   }
 #endif /* DEBUG */
@@ -343,42 +359,42 @@ bool retval;
   
 
   PDB::croutinevec routines = pdb.getCRoutineVec();
-  for (PDB::croutinevec::const_iterator rit=routines.begin();
-       rit!=routines.end(); ++rit) 
-  {
+  for (PDB::croutinevec::const_iterator rit=routines.begin(); rit!=routines.end(); ++rit) {
+
     if ( (*rit)->location().file() == file && !(*rit)->isCompilerGenerated() && 
 	 (((*rit)->bodyBegin().line() != 0) && (*rit)->kind() != pdbItem::RO_EXT) && 
-	 (instrumentEntity((*rit)->fullName())) && !identicalBeginEnd(*rit) ) 
-    {
-	/* See if the current routine calls exit() */
-	pdbRoutine::callvec c = (*rit)->callees(); 
+	 (instrumentEntity((*rit)->fullName())) && !identicalBeginEnd(*rit) ) {
 
-	processExitOrAbort(itemvec, *rit, c); 
 #ifdef DEBUG
-        cout <<"Routine "<<(*rit)->fullName() <<" body Begin line "
-             << (*rit)->bodyBegin().line() << " col "
-             << (*rit)->bodyBegin().col() <<endl;
-#endif /* DEBUG */
-	if ((*rit)->isInline())
-  	{ 
-	  if (noinline_flag)
-	  {
+	cout <<"* Checking Routine: "<<(*rit)->fullName()<<endl;
+#endif // DEBUG
+
+      /* See if the current routine calls exit() */
+      pdbRoutine::callvec c = (*rit)->callees(); 
+      
+      processExitOrAbort(itemvec, *rit, c); 
 #ifdef DEBUG
-	    cout <<"Dont instrument "<<(*rit)->fullName()<<endl;
+      cout <<"Routine "<<(*rit)->fullName() <<" body Begin line "
+	   << (*rit)->bodyBegin().line() << " col "
+	   << (*rit)->bodyBegin().col() <<endl;
 #endif /* DEBUG */
-	    continue; /* Don't instrument it*/
-	  }
+      if ((*rit)->isInline()) {
+	if (noinline_flag) {
+#ifdef DEBUG
+	  cout <<"Dont instrument "<<(*rit)->fullName()<<endl;
+#endif /* DEBUG */
+	  continue; /* Don't instrument it*/
 	}
-	
-	if ((*rit)->isStatic()) 
-	{
+      }
+
+      if ((*rit)->isStatic()) {
 #ifdef DEBUG
-	  cout <<" STATIC "<< (*rit)->fullName() <<endl;
+	cout <<" STATIC "<< (*rit)->fullName() <<endl;
 #endif /* DEBUG */
-	}
-        itemvec.push_back(new itemRef(*rit, true, 
-	    (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()));
-        /* parameter is always true: no need to add CT(*this) for non templates */
+      }
+      itemvec.push_back(new itemRef(*rit, true, 
+				    (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()));
+      /* parameter is always true: no need to add CT(*this) for non templates */
 #ifdef DEBUG
       cout << (*rit)->fullName() <<endl;
 #endif
@@ -387,16 +403,21 @@ bool retval;
 
   /* templates are not included in this. Get them */
   PDB::templatevec u = pdb.getTemplateVec();
-  for(PDB::templatevec::iterator te = u.begin(); te != u.end(); ++te)
-  { 
-    if ( (*te)->location().file() == file)
-    {
+  for(PDB::templatevec::iterator te = u.begin(); te != u.end(); ++te) { 
+    if ( (*te)->location().file() == file) {
       pdbItem::templ_t tekind = (*te)->kind();
+
+
+#ifdef DEBUG
+	cout <<"* Checking Template: "<<(*te)->fullName()<<endl;
+#endif // DEBUG
+
       if (((tekind == pdbItem::TE_MEMFUNC) || 
-	  (tekind == pdbItem::TE_STATMEM) ||
-	  (tekind == pdbItem::TE_FUNC)) && ((*te)->bodyBegin().line() != 0) &&
-	  (instrumentEntity((*te)->fullName())) )
-      { 
+	   (tekind == pdbItem::TE_STATMEM) ||
+	   (tekind == pdbItem::TE_FUNC)) && ((*te)->bodyBegin().line() != 0) &&
+	  (instrumentEntity((*te)->fullName())) ) { 
+
+
 	/* Sometimes a compiler generated routine shows up in a template.
 	   These routines (such as operator=) do not have a body position. 
  	   Instrument only if it has a valid body position.  */
@@ -412,42 +433,104 @@ bool retval;
 	processExitOrAbort(itemvec, *te, c); 
 	      */
 
-        if ((tekind == pdbItem::TE_FUNC) || (tekind == pdbItem::TE_STATMEM))
-	{ 
+        if ((tekind == pdbItem::TE_FUNC) || (tekind == pdbItem::TE_STATMEM)) { 
 	  // There's no parent class. No need to add CT(*this)
           itemvec.push_back(new itemRef(*te, true, 
             (*te)->bodyBegin().line(), (*te)->bodyBegin().col())); 
 	  // False puts CT(*this)
-	}
-	else 
-	{ 
+	} else { 
 #ifdef DEBUG
 	  cout <<"Before adding false to the member function, we must verify that it is not static"<<endl;
 #endif /* DEBUG */
 	  const pdbCRoutine *tr = (*te)->funcProtoInst();
 	  if (!tr || (((tekind == pdbItem::TE_FUNC) || (tekind == pdbItem::TE_MEMFUNC))
-	      && ((tr) && (tr->isStatic()))))
-
-	  { /* check to see if there's a prototype instantiation entry */
+	      && ((tr) && (tr->isStatic())))) { 
+	    /* check to see if there's a prototype instantiation entry */
 	    /* it is indeed a static member function of a class template */
 	    /* DO NOT add CT(*this) to the static member function */
 	    
             itemvec.push_back(new itemRef(*te, true, 
 	      (*te)->bodyBegin().line(), (*te)->bodyBegin().col()));
-	  }
-	  else
-	  {
+	  } else {
 	    // it is a member function add the CT macro
             itemvec.push_back(new itemRef(*te, false, 
 	      (*te)->bodyBegin().line(), (*te)->bodyBegin().col()));
 	  }
 	}
-      }
-      else 
-      {
+      } else {
 #ifdef DEBUG
 	cout <<"T: "<<(*te)->fullName()<<endl;
 #endif // DEBUG
+      }
+    }
+  }
+
+
+  /* Now we have the problem that if a template is excluded, the instantiations 
+     won't be and the user will have to specify exclusion multiple times. E.g.
+
+template <int NDIM>
+class Key {
+public:
+  void foobar() {
+    int x;
+    x = 5;
+  }
+};
+
+int main(int argc, char **argv) {
+  Key<3> key3;
+  key3.foobar();
+
+  Key<4> key4;
+  key4.foobar();
+}
+
+     The user may specify:
+
+BEGIN_EXCLUDE_LIST
+Key<NDIM>::foobar
+END_EXCLUDE_LIST
+
+     And that will prevent the instrumentation of the template:
+
+TAU_PROFILE("Key<NDIM>::foobar [{key.cc} {6,8}]", " ", TAU_USER);
+
+     But then the routines implementing it, (Key<3> and Key<4>) will still be there,
+     and after merging them, one of them will remain.  Now the user could specify them all:
+
+BEGIN_EXCLUDE_LIST
+Key<NDIM>::foobar
+Key<3>::foobar
+Key<4>::foobar
+END_EXCLUDE_LIST
+
+
+     Or use wildcards, but really, that's just stupid.  What if there were hundreds of them?  
+
+     So now, below, if a template is excluded, go through the list
+     and remove all matching entries.  There definitely a better way to do this, but this is
+     all I could come up with quickly.
+  */
+
+  u = pdb.getTemplateVec();
+  for(PDB::templatevec::iterator te = u.begin(); te != u.end(); ++te) { 
+    if ( (*te)->location().file() == file) {
+      pdbItem::templ_t tekind = (*te)->kind();
+
+      if (((tekind == pdbItem::TE_MEMFUNC) || 
+	   (tekind == pdbItem::TE_STATMEM) ||
+	   (tekind == pdbItem::TE_FUNC)) && ((*te)->bodyBegin().line() != 0)) {
+
+	if (!instrumentEntity((*te)->fullName())) { 
+	  // go back and remove any routines that may have matched
+
+#ifdef DEBUG
+	  cout <<"* Removing itemRef's for: "<<(*te)->fullName()<<endl;
+#endif // DEBUG
+	  removeMatchingInstrumentationRequests(itemvec, (*te)->name().c_str(), (*te)->bodyBegin().line());
+
+	}
       }
     }
   }
@@ -3334,8 +3417,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	  string instrumentedName = getInstrumentedName((*it)->item);
 
 	  /* set instrumented = true after inserting instrumentation */
-	  switch((*it)->kind)
-	  {
+	  switch((*it)->kind) {
 	    case BODY_BEGIN:
 
 	      // write out the line up to the desired column
@@ -3346,8 +3428,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	      // break the line
 	      ostr << endl;
 
-              if (use_spec)
-              {
+              if (use_spec) {
                 writeAdditionalDeclarations(ostr, (pdbRoutine *)((*it)->item));
                 ostr << "\t" << (*it)->snippet << endl;
 		ostr << "      ";
@@ -3361,9 +3442,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		}
                 instrumented = true;
                 break;
-              }
-              else if (use_perflib)
-              {
+              } else if (use_perflib) {
 		if (pure && instrumentPure) {
 		  ostr << "      interface\n";
 		  ostr << "      pure subroutine f_perf_update(name, flag)\n";
@@ -4489,8 +4568,8 @@ int main(int argc, char **argv) {
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.209 $   $Date: 2009/07/23 00:14:59 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.209 2009/07/23 00:14:59 amorris Exp $
+ * $Revision: 1.210 $   $Date: 2009/07/24 22:19:27 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.210 2009/07/24 22:19:27 amorris Exp $
  ***************************************************************************/
 
 

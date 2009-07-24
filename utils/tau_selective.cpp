@@ -25,6 +25,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+
 using namespace std;
 
 #define BEGIN_EXCLUDE_TOKEN      "BEGIN_EXCLUDE_LIST"
@@ -290,18 +291,16 @@ bool matchName(const string& str1, const string& str2)
 /* -------------------------------------------------------------------------- */
 /* -- should the routine be instrumented? Returns true or false ------------- */
 /* -------------------------------------------------------------------------- */
-bool instrumentEntity(const string& function_name)
-{
+bool instrumentEntity(const string& function_name) {
   list<string>::iterator it;
 #ifdef DEBUG
   cout <<"instrument "<<function_name<<" ?"<<endl;
 #endif /* DEBUG */
-  if (!excludelist.empty())
-  { /* if exclude list has entries */
-    for (it = excludelist.begin(); it != excludelist.end(); it++)
-    { /* iterate through the entries and see if the names match */
-      if (matchName(*it, function_name)) 
-      {
+  if (!excludelist.empty()) { 
+    /* if exclude list has entries */
+    for (it = excludelist.begin(); it != excludelist.end(); it++) { 
+      /* iterate through the entries and see if the names match */
+      if (matchName(*it, function_name)) {
         /* names match! This routine should not be instrumented */
 #ifdef DEBUG
 	cout <<"Don't instrument: "<<function_name<<" it is in exclude list"<<endl;
@@ -310,34 +309,27 @@ bool instrumentEntity(const string& function_name)
       }
     }
   }  
-
+  
   /* There is no entry in the exclude list that matches function_name. */ 
-  if (includelist.empty())
-  {
+  if (includelist.empty()) {
 #ifdef DEBUG
-    cout <<"Instrumenting ... "<< function_name
-	 << " INCLUDE list is empty" <<endl;
+    cout <<"Instrumenting ... "<< function_name << " INCLUDE list is empty" <<endl;
 #endif /* DEBUG */
     /* There are no entries in the include list */
     return true; /* instrument the given routine */
-  }
-  else
-  {
+  } else {
     /* wait! The include list is not empty. We must see if the given name
        appears in the list of routines that should be instrumented 
        For this, we need to iterate through the include list.  */
-    for (it = includelist.begin(); it != includelist.end(); it++)
-    { /* iterate through the entries and see if the names match */
-      if (matchName(*it, function_name)) 
-      {
+    for (it = includelist.begin(); it != includelist.end(); it++) { 
+      /* iterate through the entries and see if the names match */
+      if (matchName(*it, function_name)) {
         /* names match! This routine should be instrumented */
 #ifdef DEBUG
 	cout <<"Instrument "<< function_name<<" matchName is true "<<endl;
 #endif /* DEBUG */
         return true;
-      }
-      else 
-      {
+      } else {
 #ifdef DEBUG
 	cout <<"Iterate over include_list: "
 	     << function_name<<" matchName is false "<<endl;
@@ -471,6 +463,6 @@ bool processFileForInstrumentation(const string& file_name)
 
 /***************************************************************************
  * $RCSfile: tau_selective.cpp,v $   $Author: amorris $
- * $Revision: 1.18 $   $Date: 2008/10/23 21:56:24 $
- * VERSION_ID: $Id: tau_selective.cpp,v 1.18 2008/10/23 21:56:24 amorris Exp $
+ * $Revision: 1.19 $   $Date: 2009/07/24 22:19:27 $
+ * VERSION_ID: $Id: tau_selective.cpp,v 1.19 2009/07/24 22:19:27 amorris Exp $
  ***************************************************************************/
