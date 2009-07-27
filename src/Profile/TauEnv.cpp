@@ -507,16 +507,18 @@ extern "C" {
       env_callpath_depth = TAU_CALLPATH_DEPTH_DEFAULT;
       if (depth) {
 	env_callpath_depth = atoi(depth);
-	if (env_callpath_depth <= 1) {
+// 	if (env_callpath_depth <= 1) {
+// 	  env_callpath_depth = TAU_CALLPATH_DEPTH_DEFAULT;
+// 	}
+	if (env_callpath_depth < 0) {
 	  env_callpath_depth = TAU_CALLPATH_DEPTH_DEFAULT;
 	}
       }
       if (env_callpath) {
 	TAU_VERBOSE("TAU: Callpath Depth = %d\n", env_callpath_depth);
-	sprintf (tmpstr,"%d",env_callpath_depth);
-	TAU_METADATA("TAU_CALLPATH_DEPTH",tmpstr);
       }
-
+      sprintf (tmpstr,"%d",env_callpath_depth);
+      TAU_METADATA("TAU_CALLPATH_DEPTH",tmpstr);
 
 
 #ifdef TAU_DEPTH_LIMIT

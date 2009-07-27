@@ -45,6 +45,10 @@ int& TauGetCallPathDepth(void) {
 
   if (value == 0) {
     value = TauEnv_get_callpath_depth();
+    if (value <= 1) {
+      /* minimum of 2 */
+      value = 2;
+    }
   }
   return value;
 }
@@ -248,6 +252,6 @@ void Profiler::CallPathStop(double* TotalTime, int tid) {
   
 /***************************************************************************
  * $RCSfile: TauCallPath.cpp,v $   $Author: amorris $
- * $Revision: 1.29 $   $Date: 2009/04/08 20:30:12 $
- * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.29 2009/04/08 20:30:12 amorris Exp $ 
+ * $Revision: 1.30 $   $Date: 2009/07/27 23:37:03 $
+ * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.30 2009/07/27 23:37:03 amorris Exp $ 
  ***************************************************************************/

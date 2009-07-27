@@ -542,6 +542,12 @@ TauContextUserEvent::TauContextUserEvent(const char *EName, bool MonoIncr) {
   /* create the event */
   uevent = new TauUserEvent(EName, MonoIncr);
   DisableContext = false; /* context tracking is enabled by default */
+
+  int depth = TauEnv_get_callpath_depth();
+  if (depth == 0) {
+    DisableContext = true;
+  }
+
   MonotonicallyIncreasing = MonoIncr;
 }
 
@@ -620,6 +626,6 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid) {
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
- * $Revision: 1.39 $   $Date: 2009/03/27 23:35:22 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.39 2009/03/27 23:35:22 amorris Exp $ 
+ * $Revision: 1.40 $   $Date: 2009/07/27 23:37:04 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.40 2009/07/27 23:37:04 amorris Exp $ 
  ***************************************************************************/

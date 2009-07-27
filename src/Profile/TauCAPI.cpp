@@ -497,8 +497,8 @@ TAU_GEN_EVENT(TheScatterEvent,"Message size for scatter")
 TAU_GEN_EVENT(TheGatherEvent,"Message size for gather")
 TAU_GEN_EVENT(TheAllgatherEvent,"Message size for all-gather")
 
-TauContextUserEvent**& TheMsgVolEvent()
-{
+
+TauContextUserEvent**& TheMsgVolContextEvent() {
   static TauContextUserEvent **u = 0; 
   return u;
 }
@@ -508,11 +508,11 @@ int register_events(void) {
     char str[256];
     int i;
     
-    TheMsgVolEvent() = (TauContextUserEvent **) malloc(sizeof(TauContextUserEvent *)*tau_totalnodes(0,0));
+    TheMsgVolContextEvent() = (TauContextUserEvent **) malloc(sizeof(TauContextUserEvent *)*tau_totalnodes(0,0));
     for (i =0; i < tau_totalnodes(0,0); i++) {
-	sprintf(str, "Message size sent to node %d", i);
-	TheMsgVolEvent()[i] = (TauContextUserEvent *) new TauContextUserEvent((const char *)str);
-      }
+      sprintf(str, "Message size sent to node %d", i);
+      TheMsgVolContextEvent()[i] = (TauContextUserEvent *) new TauContextUserEvent((const char *)str);
+    }
   }
   return 0;
 }
@@ -529,7 +529,7 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
   TAU_EVENT(TheSendEvent(), length);
 
   if (TauEnv_get_comm_matrix()) {
-    TheMsgVolEvent()[destination]->TriggerEvent(length, RtsLayer::myThread());
+    TheMsgVolContextEvent()[destination]->TriggerEvent(length, RtsLayer::myThread());
   }
 
   if (TauEnv_get_tracing()) {
@@ -1216,8 +1216,8 @@ int *tau_pomp_rd_table = 0;
                     
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.124 $   $Date: 2009/05/14 22:24:47 $
- * VERSION: $Id: TauCAPI.cpp,v 1.124 2009/05/14 22:24:47 sameer Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.125 $   $Date: 2009/07/27 23:37:03 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.125 2009/07/27 23:37:03 amorris Exp $
  ***************************************************************************/
 
