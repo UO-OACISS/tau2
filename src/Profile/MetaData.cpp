@@ -860,10 +860,9 @@ int TauProfiler_Snapshot(const char *name, bool finalize, int tid) {
    output (out, "</profile>\n");
    output (out, "\n</profile_xml>\n");
 
-//    if (finalize) {
-//      output (out, "\n</profile_xml>\n");
-//      //     fclose(fp);
-//    }
+   if (finalize) {
+     fclose(fp);
+   }
 
    RtsLayer::UnLockDB();
    
