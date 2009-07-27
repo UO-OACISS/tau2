@@ -313,9 +313,10 @@ void removeMatchingInstrumentationRequests(vector<itemRef *>& itemvec, const cha
   if (itemvec.size() > 1) {
     vector<itemRef *>::iterator iter = itemvec.begin();
     while (iter != itemvec.end()) {
-      itemRef* item = *iter;
-      if (item->item) {
-	if (item->line == line && !strcmp(name, item->item->name().c_str())) {
+      itemRef* ref = *iter;
+      if (ref->item) {
+	pdbFatItem *fatItem = (pdbFatItem*)ref->item;
+	if (line == ref->line || line == fatItem->headBegin().line()) {
 	  iter = itemvec.erase(iter);
 	} else {
 	  ++iter;
@@ -324,7 +325,6 @@ void removeMatchingInstrumentationRequests(vector<itemRef *>& itemvec, const cha
     }
   }
 }
-
 
 
 /* -------------------------------------------------------------------------- */
@@ -4568,8 +4568,8 @@ int main(int argc, char **argv) {
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.210 $   $Date: 2009/07/24 22:19:27 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.210 2009/07/24 22:19:27 amorris Exp $
+ * $Revision: 1.211 $   $Date: 2009/07/27 22:25:47 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.211 2009/07/27 22:25:47 amorris Exp $
  ***************************************************************************/
 
 
