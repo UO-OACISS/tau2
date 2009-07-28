@@ -128,7 +128,7 @@ static void reorder_metrics(const char *match) {
 
 static void read_env_vars() {
   const char *token;
-  const char *taumetrics = getenv ("TAU_METRICS");
+  const char *taumetrics = TauEnv_get_metrics();
   char *ptr, *ptr2;
 
   if (taumetrics && strlen(taumetrics)==0) {

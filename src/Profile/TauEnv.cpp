@@ -582,6 +582,12 @@ extern "C" {
 	TAU_VERBOSE("TAU: Output Format: profile\n");
 	TAU_METADATA("TAU_PROFILE_FORMAT","profile");
       }
+
+
+      if ((env_metrics = getconf("TAU_METRICS")) == NULL) {
+	env_metrics = "time"; /* default to 'time' */
+      }
+      TAU_VERBOSE("TAU: METRICS is \"%s\"\n", env_metrics);
     }
   }
 }
