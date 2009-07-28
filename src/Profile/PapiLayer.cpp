@@ -199,61 +199,6 @@ int PapiLayer::initializeThread(int tid) {
 
 
 
-////////////////////////////////////////////////////
-long long PapiLayer::getSingleCounter(int tid) {
-
-  int rc;
-  if (!papiInitialized) {
-    rc = initializePAPI();
-    if (rc != 0) {
-      return rc;
-    }
-
-    rc = initializeSingleCounter();
-    if (rc != PAPI_OK) {
-      return rc;
-    }
-  }
-
-  if (numCounters == 0) {
-    // adding must have failed, just return
-    return 0;
-  }
-
-  if (ThreadList[tid] == NULL) {
-    rc = initializeThread(tid);
-    if (rc != 0) {
-      return rc;
-    }
-  }
-
-
-#ifdef TAU_PAPI_DEBUG
-  long long oldValue = ThreadList[tid]->CounterValues[0];
-#endif  
-  
-  int comp = PAPI_COMPONENT_INDEX (counterList[0]);
-
-  rc = PAPI_read(ThreadList[tid]->EventSet[comp], ThreadList[tid]->CounterValues);
-
-#ifdef TAU_PAPI_DEBUG
-  dmesg(10, "TAU: PAPI: getSingleCounter<%d> = %lld\n", tid, ThreadList[tid]->CounterValues[0]);
-
-  long long difference = ThreadList[tid]->CounterValues[0] - oldValue;
-  dmesg(10, "TAU: PAPI: Difference = %lld\n", difference);
-  if (difference < 0) dmesg (0, "TAU: PAPI: Counter running backwards?\n");
-  dmesg(difference < 0 ? 0 : 10, "TAU: PAPI: Previous value = %lld\n", oldValue);
-  dmesg(difference < 0 ? 0 : 10, "TAU: PAPI: Current  value = %lld\n", ThreadList[tid]->CounterValues[0]);
-  dmesg(difference < 0 ? 0 : 10, "TAU: PAPI: Difference     = %lld\n", difference);
-#endif  
-
-  if (rc != PAPI_OK) {
-    fprintf (stderr, "TAU: Error reading PAPI counters: %s\n", PAPI_strerror(rc));
-    return -1;
-  }
-
-  return ThreadList[tid]->CounterValues[0];  
-}
 
 /////////////////////////////////////////////////
 long long *PapiLayer::getAllCounters(int tid, int *numValues) {
@@ -344,28 +289,6 @@ int PapiLayer::reinitializePAPI() {
 }
 
 
-/////////////////////////////////////////////////
-int PapiLayer::initializeSingleCounter() {
-  
-  // This function may get called more than once if there is a fork
-  if (numCounters != 0) { 
-    return 0;
-  }
-
-  // Add the counter named by PAPI_EVENT
-  char *papi_event = getenv("PAPI_EVENT");
-  if (papi_event == NULL) {
-    fprintf (stderr, "TAU: Error: You must define the PAPI_EVENT environment variable.\n");
-    return -1;
-  }
-
-  int counterID = addCounter(papi_event);
-  if (counterID < 0) {
-    return -1;
-  }
-
-  return 0;
-}
 
 #ifdef TAU_PAPI_THREADS
 // note, this only works on linux
