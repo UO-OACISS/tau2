@@ -129,6 +129,7 @@ static void reorder_metrics(const char *match) {
 static void read_env_vars() {
   const char *token;
   const char *taumetrics = getenv ("TAU_METRICS");
+  char *ptr, *ptr2;
 
   if (taumetrics && strlen(taumetrics)==0) {
     taumetrics = NULL;
@@ -136,10 +137,24 @@ static void read_env_vars() {
 
   if (taumetrics) {
     char *metrics = strdup(taumetrics);
-    token = strtok(metrics, ":,");
+    for (ptr=metrics; *ptr; ptr++) {
+      if (*ptr == '\\') {
+	/* escaped, skip over */
+	for (ptr2=ptr; *(ptr2); ptr2++) {
+	  *ptr2 = *(ptr2+1);
+	}
+	ptr++;
+      } else {
+	if (*ptr == ':') {
+	  *ptr = ',';
+	}
+      }
+    }
+
+    token = strtok(metrics, ",");
     while (token) {
       metricv_add(token);
-      token = strtok(NULL, ":,");
+      token = strtok(NULL, ",");
     }
   } else {
     char counterName[256];
