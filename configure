@@ -99,6 +99,7 @@ for arg in "$@"; do
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
     echo "-nocomm  ........ Disable tracking communication events in MPI library."
+    echo "-scalasca=<dir>  ................ Specify location of SCALASCA package."
     echo "-epilog=<dir>  ............ Specify location of EPILOG Tracing package."
     echo "-epiloglib=<dir> ........... Specify full path to EPILOG lib directory."
     echo "-epilogbin=<dir> ........... Specify full path to EPILOG bin directory."
@@ -190,6 +191,7 @@ for arg in "$@"; do
     echo "-shmemlibrary=<library> ............ Specify a different SHMEM library."
     echo "            e.g., -shmemlibrary=-lsmac                                 "
     echo "-nocomm  ........ Disable tracking communication events in MPI library."
+    echo "-scalasca=<dir>  ................ Specify location of SCALASCA package."
     echo "-epilog=<dir>  ............ Specify location of EPILOG Tracing package."
     echo "-epiloglib=<dir> ........... Specify full path to EPILOG lib directory."
     echo "-epilogbin=<dir> ........... Specify full path to EPILOG bin directory."
@@ -754,6 +756,17 @@ for arg in "$@"; do
       epilogdir=`echo $arg | sed -e 's/-epilog=//'`
       if [ ! -d $epilogdir ] ; then
           echo "Error: Cannot access EPILOG directory $epilogdir"
+          exit 1
+      fi
+      shift
+      ;;
+
+  -scalasca=*)
+      epilog=yes
+      trace=yes
+      epilogdir=`echo $arg | sed -e 's/-scalasca=//'`
+      if [ ! -d $epilogdir ] ; then
+          echo "Error: Cannot access SCALASCA directory $epilogdir"
           exit 1
       fi
       shift
@@ -1849,82 +1862,67 @@ fi
 
 ######################################################################
 # Set default Profiling Options in Makefiles
-if [ $profile = no -a $trace = no -a $mpitrace = no  -a $machine != default ]
-  then
-    echo "-PROFILE and/or -TRACE should be specified. Choosing -PROFILE as the default"
+if [ $profile = no -a $trace = no -a $mpitrace = no  -a $machine != default ] ; then
     profile=yes 
 fi
  
-if [ $profile = yes ]
-  then
+if [ $profile = yes ] ; then
     fixmakeargs="$fixmakeargs PROFILE"
 fi
 
-if [ $java = yes ]
-  then
+if [ $java = yes ] ; then
     tauoptions="${tauoptions}-jdk"
 fi
 
-if [ $profilestats = yes ]
-  then
+if [ $profilestats = yes ] ; then
     fixmakeargs="$fixmakeargs PROFILESTATS"
 fi
 
-if [ $profilememory = yes ]
-  then
+if [ $profilememory = yes ] ; then
     fixmakeargs="$fixmakeargs PROFILEMEMORY"
     tauoptions="${tauoptions}-memory"
 fi
 
-if [ $profileheadroom = yes ]
-  then
+if [ $profileheadroom = yes ] ; then
     fixmakeargs="$fixmakeargs PROFILEHEADROOM"
     tauoptions="${tauoptions}-headroom"
 fi
 
-if [ $tag = yes ]
-then
+if [ $tag = yes ] ; then
   tauoptions="${tauoptions}-${tautag}"
 fi
   
-if [ $callpath = yes ]
-  then
+if [ $callpath = yes ] ; then
     fixmakeargs="$fixmakeargs PROFILECALLPATH"
     tauoptions="${tauoptions}-callpath"
 fi
 
-if [ $profileparam = yes ]
-  then
+if [ $profileparam = yes ] ; then
     fixmakeargs="$fixmakeargs PROFILEPARAM"
     tauoptions="${tauoptions}-param"
 fi
 
-if [ $depthlimit = yes ]
-  then
+if [ $depthlimit = yes ] ; then
     fixmakeargs="$fixmakeargs DEPTHLIMIT"
     tauoptions="${tauoptions}-depthlimit"
 fi
 
-if [ $phase = yes ]
-  then
+if [ $phase = yes ] ; then
     fixmakeargs="$fixmakeargs PROFILECALLPATH PROFILEPHASE"
     tauoptions="${tauoptions}-phase"
-   if [ $callpath = yes ]
-   then
+   if [ $callpath = yes ] ; then
      echo "ERROR: Incompatible options specified."
      echo "You must choose between -PROFILECALLPATH and -PROFILEPHASE. You cannot choose both!!"
      exit 1
    fi
 fi
 
-if [ $setnode0 = yes -a $trace = no ]
-  then
+if [ $setnode0 = yes -a $trace = no ] ; then
     fixmakeargs="$fixmakeargs SETNODE0"
     tauoptions="${tauoptions}-setnode"
 fi
 
-if [ $comm = no ]
-  then
+if [ $comm = no ] ; then
     fixmakeargs="$fixmakeargs NOCOMM"
     tauoptions="${tauoptions}-nocomm"
 fi
@@ -1933,8 +1931,7 @@ if [ $iowrapper = yes ] ; then
     fixmakeargs="$fixmakeargs IOWRAPPER"
 fi    
 
-if [ $stff = yes ]
-  then
+if [ $stff = yes ] ; then
       fixmakeargs="$fixmakeargs RENCI_STFF stffdir=${stffdir} sddfdir=${sddfdir}"
       tauoptions="${tauoptions}-stff"
       if [ $sddf = no -o "x$sddfdir" = "x" ]; then
@@ -1944,8 +1941,7 @@ fi
 
 
 
-if [ $trace = yes ]
-  then
+if [ $trace = yes ] ; then
     cat <<EOF > tau_type_test.c
   #include <include/Profile/tau_types.h>
 
@@ -2016,93 +2012,73 @@ if [ $cputime = yes ] ; then
 fi
 
 
-if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ] 
-  then
-  if [ $cxx_compiler = g++ ]
-    then
+if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ] ; then
+  if [ $cxx_compiler = g++ ] ; then
       fixmakeargs="$fixmakeargs SGIGNU"
   fi
 fi
 
-if [ $machine = freebsd ]
-then
+if [ $machine = freebsd ] ; then
     fixmakeargs="$fixmakeargs FREEBSD"
 fi
     
-if [ $machine = apple ]
-  then
-  if [ $cxx_compiler = g++ -o $cxx_compiler = c++  -o $cxx_compiler = icpc ]
-    then
+if [ $machine = apple ] ; then
+  if [ $cxx_compiler = g++ -o $cxx_compiler = c++  -o $cxx_compiler = icpc ] ; then
       fixmakeargs="$fixmakeargs APPLECXX"
   fi
-  if [ $cxx_compiler = pgCC -o $cxx_compiler = pgcpp ] 
-    then
+  if [ $cxx_compiler = pgCC -o $cxx_compiler = pgcpp ] ; then
       fixmakeargs="$fixmakeargs APPLEPGI"
   fi
-  if [ $fortran_compiler = ibm -o $fortran_compiler = ibm64 ]
-    then
+  if [ $fortran_compiler = ibm -o $fortran_compiler = ibm64 ] ; then
       fixmakeargs="$fixmakeargs IBMXLFAPPLE"
       extradir=`which xlf90 | sed s/xlf90/../`
       fortran_compiler=yes
   fi
   # xlc++ doesn't like include/Memory. Move this directory
-  if [ -d include/Memory -a ! -d include/MemoryWrapper ] 
-  then
+  if [ -d include/Memory -a ! -d include/MemoryWrapper ] ; then
     mv include/Memory include/MemoryWrapper	
   else
-    if [ -d include/Memory -a -d include/MemoryWrapper ]
-    then 
+    if [ -d include/Memory -a -d include/MemoryWrapper ] ; then 
       /bin/rm -rf include/Memory
     fi 
   fi
 fi
 
-if [ $machine = ppc64 -o $machine = bgl -o $machine = bgp ]
-then
-  if [ $cxx_compiler = g++ ]
-  then
-    if [ $fortran_compiler = no ] 
-    then
+if [ $machine = ppc64 -o $machine = bgl -o $machine = bgp ] ; then
+  if [ $cxx_compiler = g++ ] ; then
+    if [ $fortran_compiler = no ] ; then
       extradir=`which xlf90 | sed s/xlf90/../`
       fixmakeargs="$fixmakeargs IBM_FORTRAN"
     fi
   fi
 fi
 
-if [ $machine = ibm64 -o $machine = ibm64linux ]
-then
-  if [ $cxx_compiler = g++ -o $cxx_compiler = powerpc64-linux-g++ ]
-  then
-    if [ $fortran_compiler = no ] 
-    then
+if [ $machine = ibm64 -o $machine = ibm64linux ] ; then
+  if [ $cxx_compiler = g++ -o $cxx_compiler = powerpc64-linux-g++ ] ; then
+    if [ $fortran_compiler = no ] ; then
       extradir=`which xlf90 | sed s/xlf90/../`
       fixmakeargs="$fixmakeargs IBM64_FORTRAN"
     fi
   fi
 fi
 
-if [ $machine = t3e -a $cxx_compiler = KCC ]
-  then
+if [ $machine = t3e -a $cxx_compiler = KCC ] ; then
     fixmakeargs="$fixmakeargs CRAYKAI"
-    if [ $fortran_compiler = no ] 
-    then 
+    if [ $fortran_compiler = no ] ; then 
       fixmakeargs="$fixmakeargs CRAY_FORTRAN"
       fortran_compiler=yes
     fi
 fi
 
-if [ $machine = crayx1 -o $machine = craysv1 ]
-  then 
-    if [ $fortran_compiler = no ]
-    then
+if [ $machine = crayx1 -o $machine = craysv1 ] ; then 
+    if [ $fortran_compiler = no ] ; then
       fixmakeargs="$fixmakeargs CRAY_X1_FORTRAN"
       fortran_compiler=yes
     fi
 fi
 
 
-if [ $debugprof = yes ]
-  then
+if [ $debugprof = yes ] ; then
     fixmakeargs="$fixmakeargs DEBUGPROF"
 fi
 
