@@ -100,19 +100,26 @@ extern "C" int InitializeTAU() {
   /* initialize the Profiler stack */
   Tau_stack_initialization();
   
+  /********************************************/
   /* other initialization code should go here */
+  /********************************************/
+
+  /* initialize the metrics we will be counting */
+  TauMetrics_init();
+
+  /* TAU must me marked as initialized BEFORE Tau_compensate_initialize is called
+     Otherwise re-entry to this function will take place and bad things will happen */
+  initialized = true;
 
   /* initialize compensation */
   if (TauEnv_get_compensate()) {
     Tau_compensate_initialization();
   }
-  
-  TauMetrics_init();
 
+  /* initialize signal handlers to flush the trace buffer */
   if (TauEnv_get_tracing()) {
     TauInitialize_kill_handlers();
   }
 
-  initialized = true;
   return 0;
 }
