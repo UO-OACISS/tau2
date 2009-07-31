@@ -379,10 +379,14 @@ extern "C" {
 	env_verbose = 0;
       }
 
+// #ifdef TAU_EPILOG
+//       TAU_VERBOSE("TAU: Epilog/Scalasca active! (TAU measurement disabled)\n");
+//       return;
+// #endif
+
       TauConf_read();
 
       TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");
-
       
       if ((env_profiledir = getconf("PROFILEDIR")) == NULL) {
 	env_profiledir = "."; // current directory
@@ -417,7 +421,6 @@ extern "C" {
 	TAU_VERBOSE("TAU: Profiling Disabled\n");
 	TAU_METADATA("TAU_PROFILE","off");
       }
-
 
       // tracing
       tmp = getconf("TAU_TRACE");
@@ -585,7 +588,7 @@ extern "C" {
 
 
       if ((env_metrics = getconf("TAU_METRICS")) == NULL) {
-	env_metrics = "time"; /* default to 'time' */
+	env_metrics = ""; /* default to 'time' */
       }
       TAU_VERBOSE("TAU: METRICS is \"%s\"\n", env_metrics);
     }
