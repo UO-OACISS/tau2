@@ -86,8 +86,13 @@ extern "C" int InitializeTAU() {
     return 0;
   }
   
-  // initialize environment variables
+  /* initialize environment variables */
   TauEnv_initialize();
+
+#ifdef TAU_EPILOG
+  /* no more initialization necessary if using epilog/scalasca */
+  return 0;
+#endif
   
   // we need the timestamp of the "start"
   Tau_snapshot_initialization();
@@ -95,8 +100,9 @@ extern "C" int InitializeTAU() {
   /* initialize the Profiler stack */
   Tau_stack_initialization();
   
-  // other initialization code should go here
+  /* other initialization code should go here */
 
+  /* initialize compensation */
   if (TauEnv_get_compensate()) {
     Tau_compensate_initialization();
   }

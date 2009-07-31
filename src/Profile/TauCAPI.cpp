@@ -43,6 +43,16 @@ using namespace std;
 #include <Profile/KtauProfiler.h>
 #endif /* TAUKTAU */
 
+#ifdef TAU_EPILOG
+#include "elg_trc.h"
+
+#ifdef TAU_SCALASCA
+extern "C" {
+void esd_enter (elg_ui4 rid);
+void esd_exit (elg_ui4 rid);
+}
+#endif /* SCALASCA */
+#endif /* TAU_EPILOG */
 
 
 extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup_t group, const char *gr_name) {
@@ -110,6 +120,11 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid ) {
     return; /* disabled */
   }
 
+#ifdef TAU_EPILOG
+  esd_enter(fi->GetFunctionId());
+  return;
+#endif
+
   // move the stack pointer
   Tau_global_stackpos[tid]++; /* push */
 
@@ -167,14 +182,22 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
 extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 
   FunctionInfo *fi = (FunctionInfo *) function_info; 
+
   //int tid = RtsLayer::myThread();
   Profiler *profiler;
-
-  if (Tau_global_stackpos[tid] < 0) return 0;
 
   if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask()) || !RtsLayer::TheEnableInstrumentation()) {
     return 0; /* disabled */
   }
+
+#ifdef TAU_EPILOG
+  esd_exit(fi->GetFunctionId());
+  return 0;
+#endif
+
+  if (Tau_global_stackpos[tid] < 0) { return 0; }
+
+
   
   profiler = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
   Tau_global_stackpos[tid]--; /* pop */
@@ -1217,7 +1240,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.125 $   $Date: 2009/07/27 23:37:03 $
- * VERSION: $Id: TauCAPI.cpp,v 1.125 2009/07/27 23:37:03 amorris Exp $
+ * $Revision: 1.126 $   $Date: 2009/07/31 16:52:31 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.126 2009/07/31 16:52:31 amorris Exp $
  ***************************************************************************/
 

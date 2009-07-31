@@ -127,8 +127,7 @@ int TauInitVampirTrace(void)
 //////////////////////////////////////////////////////////////////////
 // Initialize EPILOG Tracing package
 //////////////////////////////////////////////////////////////////////
-int TauInitEpilog(void)
-{
+int TauInitEpilog(void) {
   DEBUGPROFMSG("Calling esd_open"<<endl;);
   esd_open();
   return 1;
@@ -463,6 +462,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.79 $   $Date: 2009/05/19 19:24:52 $
- * VERSION_ID: $Id: FunctionInfo.cpp,v 1.79 2009/05/19 19:24:52 amorris Exp $ 
+ * $Revision: 1.80 $   $Date: 2009/07/31 16:52:31 $
+ * VERSION_ID: $Id: FunctionInfo.cpp,v 1.80 2009/07/31 16:52:31 amorris Exp $ 
  ***************************************************************************/

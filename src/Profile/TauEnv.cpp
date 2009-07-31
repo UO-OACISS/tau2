@@ -379,10 +379,10 @@ extern "C" {
 	env_verbose = 0;
       }
 
-// #ifdef TAU_EPILOG
-//       TAU_VERBOSE("TAU: Epilog/Scalasca active! (TAU measurement disabled)\n");
-//       return;
-// #endif
+#ifdef TAU_EPILOG
+      TAU_VERBOSE("TAU: Epilog/Scalasca active! (TAU measurement disabled)\n");
+      return;
+#endif
 
       TauConf_read();
 
