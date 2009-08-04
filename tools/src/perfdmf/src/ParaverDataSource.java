@@ -121,7 +121,6 @@ public class ParaverDataSource extends DataSource {
            		thread = this.addThread(node, 0, Integer.parseInt(tmp)-1);
 				this.addMetric(metricName);
 				int j = 0;
-				System.out.println(nfScientific.format(1000));
 				while (st.hasMoreTokens()) {
         			tmp = st.nextToken(); // function value
 					double value = 0.0;
@@ -138,7 +137,6 @@ public class ParaverDataSource extends DataSource {
 							// this is a regular number
 							value = nfDLocal.parse(tmp).doubleValue();
 						}
-						System.out.println("Found value: " + tmp + ", parsed: " + value);
 					} catch (ParseException pe2) {/*System.err.println("Error parsing: " + tmp);*/ continue;}
 					if (haveUnits) {
         				String units = st.nextToken(); // units value
