@@ -21,7 +21,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIView;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.54 2009/05/14 18:40:36 khuck Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.55 2009/08/04 18:22:24 wspear Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -653,7 +653,7 @@ public class ChartData extends RMIChartData {
 			}
 
 //			buf.append("and ims.inclusive_percentage < 100.0 ");
-			buf.append(" and ie.group_name like '%Iteration%' ");
+			buf.append(" and ie.group_name like '%TAU_PHASE%' ");
 			buf.append(" and ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append(" and ie.group_name not like '%TAU_PARAM%' ");
 
@@ -716,7 +716,7 @@ public class ChartData extends RMIChartData {
 			}
 
 			buf.append("and ims.inclusive_percentage < 100.0 ");
-			buf.append("and ie.group_name like '%Iteration%' ");
+			buf.append("and ie.group_name like '%TAU_PHASE%' ");
 			buf.append("and ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and ie.group_name not like '%TAU_PARAM%' ");
 			buf.append(" group by ");
