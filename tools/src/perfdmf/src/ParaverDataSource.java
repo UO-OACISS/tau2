@@ -1,4 +1,4 @@
- package edu.uoregon.tau.perfdmf;
+package edu.uoregon.tau.perfdmf;
 
 import java.io.*;
 import java.util.*;
@@ -22,6 +22,13 @@ public class ParaverDataSource extends DataSource {
 	private String fileIndex = "";
 	private String metricName = "";
 	private NumberFormat nfDLocal = NumberFormat.getNumberInstance();
+	private NumberFormat nfScientific = new DecimalFormat("0.0E0");
+	private static final double NANOSECONDS = 0.001; // to convert to microseconds
+	private static final double MICROSECONDS = 1.000; // to convert to microseconds
+	private static final double MILLISECONDS = 1000.0; // to convert to microseconds
+	private static final double SECONDS = 1000000.0; // to convert to microseconds
+	private static final double HOURS = 3600000000.0; // to convert to microseconds
+	private static final double PERCENT = 1.0; // to convert to percent
 
 	private List functionNames = null;
 	private TreeMap functions = new TreeMap();
@@ -94,7 +101,16 @@ public class ParaverDataSource extends DataSource {
         		FunctionProfile fp = null;
 
 				// process thread data
-        		StringTokenizer st = new StringTokenizer(inputString, " \t\n\r%");
+        		StringTokenizer st = new StringTokenizer(inputString, " \t\n\r");
+
+				// do we have units or not?
+				int numFunctions = functionNames.size();
+				int numTokens = st.countTokens();
+				boolean haveUnits = false;
+				if (numTokens == (numFunctions * 2) + 2)
+					haveUnits = true;
+				double unitConversion = NANOSECONDS; // default unit for Paraver
+
         		tmp = st.nextToken(); // THREAD
         		tmp = st.nextToken(); // 1.1.1, 1.2.1, etc
         		StringTokenizer st2 = new StringTokenizer(tmp, ".");
@@ -105,12 +121,41 @@ public class ParaverDataSource extends DataSource {
            		thread = this.addThread(node, 0, Integer.parseInt(tmp)-1);
 				this.addMetric(metricName);
 				int j = 0;
+				System.out.println(nfScientific.format(1000));
 				while (st.hasMoreTokens()) {
         			tmp = st.nextToken(); // function value
 					double value = 0.0;
 					try {
-						value = nfDLocal.parse(tmp).doubleValue();
-					} catch (ParseException pe) {/*System.err.println("Error parsing: " + tmp);*/ continue;}
+						// Because Java doesn't have an explicit method for parsing
+						// scientific notation...
+						StringTokenizer st3 = new StringTokenizer(tmp.toUpperCase(), "E+");
+   						if (st3.countTokens() == 2) {
+							// this is scientific notation - parse each part and combine
+							double parsed = nfScientific.parse(st3.nextToken()).doubleValue();
+							double power = nfScientific.parse(st3.nextToken()).doubleValue();
+							value = parsed * (Math.pow(10.0, power));
+						} else {
+							// this is a regular number
+							value = nfDLocal.parse(tmp).doubleValue();
+						}
+						System.out.println("Found value: " + tmp + ", parsed: " + value);
+					} catch (ParseException pe2) {/*System.err.println("Error parsing: " + tmp);*/ continue;}
+					if (haveUnits) {
+        				String units = st.nextToken(); // units value
+						if (units.equalsIgnoreCase("ns"))
+							unitConversion = NANOSECONDS;
+						if (units.equalsIgnoreCase("us"))
+							unitConversion = MICROSECONDS;
+						if (units.equalsIgnoreCase("ms"))
+							unitConversion = MILLISECONDS;
+						if (units.equalsIgnoreCase("s"))
+							unitConversion = SECONDS;
+						if (units.equalsIgnoreCase("h"))
+							unitConversion = HOURS;
+						if (units.equalsIgnoreCase("%"))
+							unitConversion = PERCENT;
+					} // assume nanoseconds, the Paraver default
+					value = value * unitConversion;
 
 					// for this function, create a function
 					function = this.addFunction((String)functionNames.get(j), this.files.length); // ,1?
