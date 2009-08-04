@@ -38,7 +38,7 @@ import edu.uoregon.tau.perfexplorer.common.TransformationType;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: GeneralChartData.java,v 1.37 2009/07/15 22:57:03 wspear Exp $</P>
+ * <P>CVS $Id: GeneralChartData.java,v 1.38 2009/08/04 22:19:01 wspear Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -474,8 +474,8 @@ public class GeneralChartData extends RMIGeneralChartData {
 						didWhere = true;
 					}
 					buf.append("(interval_event.group_name is null ");
-        			buf.append("or (interval_event.group_name not like '%TAU_CALLPATH%' ");
-            		buf.append("and interval_event.group_name not like '%TAU_PHASE%')) ");
+        			buf.append("or (interval_event.group_name not like '%TAU_CALLPATH%')) ");
+            		//buf.append("and interval_event.group_name not like '%TAU_PHASE%')) ");
 				}
 
 				// if we only want to see events with > X percent of total runtime
