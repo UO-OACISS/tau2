@@ -5,9 +5,13 @@ import os
 import popen2
 import string
 import glob
-
+import signal
+import os
 
 uniqID = 1
+
+class TimeoutError(Exception):
+   """Raised if the external process takes too much"""
 
 # python 2.2 check
 if string.atof( ( string.split( sys.version )[0] ) [0:3]) < 2.3:
@@ -34,7 +38,7 @@ def output(message):
 
 def begin():
     if html == True:
-        print "<HTML><PRE>\n"
+        print "<html><body><pre>\n"
     else:
         print "------------------------------------------------------"
         print "build/run : %-20s : %s" % ("test name", "stub makefile")
@@ -52,7 +56,7 @@ def end():
         print "Encountered %d errors" % errorsFound
         code = errorsFound
     if (html):
-        print "</PRE></HTML>\n"
+        print "</pre><body></html>\n"
     sys.exit(code)
 
 
@@ -67,25 +71,39 @@ def usesOption(makefile, option):
 def shortMakefile(makefile):
     return makefile[makefile.find("/lib/")+5:]
 
+def raise_timeout(signum, frame):
+    raise TimeoutError
 
-def system(command):
+def system(command, timeout_sec=None):
     if verbose == True:
         if html == True:
             print "<b>" + os.getcwd() + "> " + command + "</b>"
         else:
             print os.getcwd() + "> " + command
         sys.stdout.flush()
-        child = popen2.Popen4(command)
-        data = child.fromchild.readlines()
-        for line in data:
-            print line
-        retval = child.wait()
-        return retval
-    else:
-        child = popen2.Popen4(command)
-        data = child.fromchild.readlines()
-        retval = child.wait()
-        return retval
+
+    if timeout_sec is not None:
+        command = command.split()
+        # otherwise and additional shell is spawn and
+        # it is difficult to kill the runaway process
+        
+    child = popen2.Popen4(command)
+    retval = -1
+    data = ""
+    while (retval == -1):
+        if verbose == True:
+            for line in data:
+                print line
+        try:
+            if timeout_sec is not None:
+                signal.alarm(timeout_sec)
+            data = child.fromchild.readlines()
+            signal.alarm(0)
+        except TimeoutError:
+            os.kill(child.pid, 15)
+            break
+        retval = child.poll()
+    return retval
 
 def chdir(directory):
     if verbose == True:
@@ -107,54 +125,67 @@ def setEnviron(variable,value):
 def unsetEnviron(variable):
     print "<b>" + os.getcwd() + "> unset " + variable + "</b>"
     del os.environ[variable]
+    
+def openTable(tests):
+    if html == True:
+        print "<table border=1>"
+        print "<tr><td rowspan=2>Stub Makefile</td>"
+        for test in tests:
+            print "<td colspan=2>"+test.name+"</td>"
+        print "</tr>"
+    
+        print "<tr>"
+        for test in tests:
+            print "<td colspan>build</td>"
+            print "<td colspan>run</td>"
+        print "</tr>"
+    
+def closeTable():
+    if html == True:
+        print "</tr>"
+        print "</table>"
 
 
-def outputSummary(testgrid):
+def outputSingle(tests):
     if verbose == True and html == False:
-        for makefile in testgrid.keys():
-            tests = testgrid[makefile]
-            for test in tests:
-                print "%4s : %40s : %s %s" % (test.buildresult, test.name, makefile, test.message)
+        for test in tests:
+            print "%4s : %40s : %s %s" % (test.buildresult, test.name, makefile, test.message)
         return
 
     if html == True:
-        print "<table border=1>"
-        first = 1
-        for makefile in testgrid.keys():
-            tests = testgrid[makefile]
-            if first == 1:
-                first = 0
-                print "<tr><td rowspan=2>Stub Makefile</td>"
-                for test in tests:
-                    print "<td colspan=2>"+test.name+"</td>"
-                print "</tr>"
+        print "<tr><td>"+makefile+"</td>"
+        for test in tests:
+            if test.buildresult == "pass":
+                print "<td bgcolor=#64FF64>pass</td>"
+            elif test.buildresult == "fail":
+                print "<td bgcolor=#FF6464><a href=#%d>fail</a></td>" % (test.errorID)
+            elif test.buildresult == "timeout":
+                print "<td bgcolor=#FF6464><a href=#%d>timeout</a></td>" % (test.errorID)
+            else:
+                print "<td bgcolor=#CCCCCC>N/A</td>"
 
-                print "<tr>"
-                for test in tests:
-                    print "<td colspan>build</td>"
-                    print "<td colspan>run</td>"
-                print "</tr>"
+            if test.runresult == "pass":
+                print "<td bgcolor=#64FF64>pass</td>"
+            elif test.runresult == "fail":
+                print "<td bgcolor=#FF6464><a href=#%d>fail</a></td>" % (test.errorID)
+            elif test.runresult == "timeout":
+                print "<td bgcolor=#FF6464><a href=#%d>timeout</a></td>" % (test.errorID)
+            else:
+                print "<td bgcolor=#CCCCCC>N/A</td>"
+                
 
-                    
-            print "<tr><td>"+makefile+"</td>"
-            for test in tests:
-                if test.buildresult == "pass":
-                    print "<td bgcolor=#64FF64>pass</td>"
-                elif test.buildresult == "fail":
-                    print "<td bgcolor=#FF6464><a href=#%d>fail</a></td>" % (test.errorID)
-                else:
-                    print "<td bgcolor=#CCCCCC>N/A</td>"
+def outputSummary(testgrid):
+    first = 1
+    for makefile in testgrid.keys():
+        tests = testgrid[makefile]
 
-                if test.runresult == "pass":
-                    print "<td bgcolor=#64FF64>pass</td>"
-                elif test.runresult == "fail":
-                    print "<td bgcolor=#FF6464><a href=#%d>fail</a></td>" % (test.errorID)
-                else:
-                    print "<td bgcolor=#CCCCCC>N/A</td>"
-                    
-            print "</tr>"
-        print "</table>"
-
+        if first == 1:
+            first = 0
+            openTable(tests)
+                
+        outputSingle(tests)
+        
+    closeTable()        
 
 class Test:
     def __init__(self, name, makefile):
@@ -170,7 +201,7 @@ class Test:
     def checkApplicable(self):
         return True
 
-    def runTest(self):
+    def runTest(self, timeout):
         self.error ("Base class runTest called")
 
     def buildTest(self):
@@ -211,7 +242,7 @@ class SimpleTest(Test):
         system("mkdir " + self.buildpath)
         system("cp simple " + self.buildpath)
 
-    def runTest(self):
+    def runTest(self, timeout):
         outputHeader("SimpleTest("+self.getActualTest()+", run (" + self.fullmakefile + ")")
         if self.checkApplicable() == False:
             return
@@ -226,10 +257,13 @@ class SimpleTest(Test):
         os.environ['COUNTER3'] = ''
         os.environ['COUNTER4'] = ''
         os.environ['COUNTER5'] = ''
-        retval = system("./simple")
-        if retval != 0:
+        retval = system("./simple", timeout)
+        if retval > 0:
             self.error("Error: failed to run")
             self.runresult = "fail"
+        elif retval < 0:
+            self.error("Error: timeout in run")
+            self.runresult = "timeout"
         else:
             if os.path.exists("profile.0.0.0") == True:
                 retval = system("pprof")
@@ -354,7 +388,7 @@ class MpiCTest(SimpleTest):
             return False
         return True
 
-    def runTest(self):
+    def runTest(self, timeout):
         output ("Skipping Test (we won't run MPI tests yet)")
 
 class MpiFTest(SimpleTest):
@@ -371,7 +405,7 @@ class MpiFTest(SimpleTest):
             return False
         return True
 
-    def runTest(self):
+    def runTest(self, timeout):
         output ("Skipping Test (we won't run MPI tests yet)")
         
 
@@ -414,7 +448,7 @@ class PdtTest(Test):
         system("cp simple " + self.buildpath)
         
 
-    def runTest(self):
+    def runTest(self, timeout):
         outputHeader("PdtTest (" + self.fullmakefile + ")")
 
         if usesOption(self.makefile, "pdt") == False:
@@ -429,10 +463,13 @@ class PdtTest(Test):
             output("Nothing to run")
             return
         chdir(self.buildpath)
-        retval = system("./simple")
-        if retval != 0:
+        retval = system("./simple", timeout)
+        if retval > 0:
             self.error("Error: failed to run")
             self.runresult = "fail"
+        elif retval < 0:
+            self.error("Error: timeout in run")
+            self.runresult = "timeout"
         else:
             self.runresult = "pass"
 
@@ -494,7 +531,7 @@ class PdtMPITestC(PdtTest):
             output("Skipping, not configured with MPI")
             return False
         return True
-    def runTest(self):
+    def runTest(self, timeout):
         output ("Skipping Test (we won't run MPI tests yet)")
 
 
@@ -511,7 +548,7 @@ class PdtMPITestCPP(PdtTest):
             output("Skipping, not configured with MPI")
             return False
         return True
-    def runTest(self):
+    def runTest(self, timeout):
         output ("Skipping Test (we won't run MPI tests yet)")
 
 class PdtMPITestF(PdtTest):
@@ -528,7 +565,7 @@ class PdtMPITestF(PdtTest):
         if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
             return False
         return True
-    def runTest(self):
+    def runTest(self, timeout):
         output ("Skipping Test (we won't run MPI tests yet)")
 
 class PdtMPITestGF(PdtTest):
@@ -545,24 +582,26 @@ class PdtMPITestGF(PdtTest):
         if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
             return False
         return True
-    def runTest(self):
+    def runTest(self, timeout):
         output ("Skipping Test (we won't run MPI tests yet)")
 
 
 def usage():
     print ""
-    print "Usage: tau_validate [-v] [--html] [--tag <tag>] [--build] [--run] <target>"
+    print "Usage: tau_validate [-v] [--html] [--tag <tag>] [--timeout <timeout>] [--table <file>] [--build] [--run] <target>"
     print ""
     print "Options:"
     print ""
-    print "-v           Verbose output"
-    print "--html       Output results in HTML"
-    print "--tag <tag>  Validate only the subset of TAU stub makefiles matching <tag>"
-    print "--build      Only build"
-    print "--run        Only run"
-    print "<target>     Specify an arch directory (e.g. rs6000), or the lib"
-    print "             directory (rs6000/lib), or a specific makefile."
-    print "             Relative or absolute paths are ok."
+    print "-v                   Verbose output"
+    print "--html               Output results in HTML"
+    print "--tag <tag>          Validate only the subset of TAU stub makefiles matching <tag>"
+    print "--timeout <timeout>  Give up if a test does not succeed after timeout seconds of runtime"
+    print "--table <file>       Real-time creation of an addition <file> containing the summary table of the tests"
+    print "--build              Only build"
+    print "--run                Only run"
+    print "<target>             Specify an arch directory (e.g. rs6000), or the lib"
+    print "                     directory (rs6000/lib), or a specific makefile."
+    print "                     Relative or absolute paths are ok."
     print ""
     print "Notes:"
     print "tau_validate will attempt to validate a TAU installation by performing"
@@ -572,8 +611,8 @@ def usage():
     print ""
     print "Example:"
     print ""
-    print "bash : ./tau_validate --html x86_64 &> results.html"
-    print "tcsh : ./tau_validate --html x86_64 >& results.html"
+    print "bash : ./tau_validate --html --table table.html --timeout 180 x86_64 &> results.html"
+    print "tcsh : ./tau_validate --html --table table.html --timeout 180 x86_64 >& results.html"
     print ""
     
     
@@ -612,11 +651,28 @@ optBuild = False
 optClean = False
 optTag = False
 nextArgTag = False
+nextArgTimeout = False
+separateTable = True
+separateTable = False
+nextArgTable = False
+table_filename = None
 tag = ""
+timeout_sec = None
 for arg in args:
     if nextArgTag == True:
         tag = arg
         nextArgTag = False
+    elif nextArgTimeout == True:
+        try:
+            timeout_sec = int(arg)
+        except ValueError:
+            print "timeout must be an integer number of seconds"
+            print "you provided: ", arg
+            usage()
+        nextArgTimeout = False
+    elif nextArgTable == True:
+        table_filename = arg
+        nextArgTable = False
     elif arg == "-v":
         verbose = True
     elif arg == "--html":
@@ -631,12 +687,17 @@ for arg in args:
     elif arg == "--tag":
         optTag = True
         nextArgTag = True
+    elif arg == "--timeout":
+        nextArgTimeout = True
+    elif arg == "--table":
+        separateTable = True
+        nextArgTable = True
     else:
         if target != "":
             usage()
         target = arg
 
-
+signal.signal(signal.SIGALRM, raise_timeout)
 
 if optClean:
     print "Cleaning..."
@@ -663,7 +724,7 @@ def runTest(test,tests):
     if optBuild:
         test.buildTest()
     if optRun:
-        test.runTest()
+        test.runTest(timeout_sec)
     tests.append(test)
     print "%4s/%-4s : %-20s : %s %s" % (test.buildresult, test.runresult, test.name, makefile, test.message)
     
@@ -692,6 +753,8 @@ else:
 
 testgrid = {}
 found = 0
+first = 1
+
 for makefile in makefiles:
     found = 1
 #    print makefile
@@ -729,9 +792,36 @@ for makefile in makefiles:
 
 
     testgrid[makefile] = tests
+    
+    if verbose == True:
+        if html == True:
+            print "<hr>"
+        else:
+            print "----------------"
+    
+    if separateTable == True:
+        if first == 1:
+            first = 0
+            saveout = sys.stdout
+            fsock = open(PWD + "/" + table_filename, 'w')
+            sys.stdout = fsock
+            print "<html><body>"
+            openTable(tests)
+            
+        sys.stdout = fsock    
+        outputSingle(tests)
+        fsock.flush()
+        sys.stdout = saveout
 
 if found == 0:
     print "Couldn't find any makefiles in " + target
+
+if separateTable == True:
+    sys.stdout = fsock
+    closeTable()
+    print "</body><html>"
+    sys.stdout = saveout
+    fsock.close()
 
 outputSummary(testgrid)
 
