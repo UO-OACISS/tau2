@@ -19,6 +19,7 @@ public class ParaverDataSource extends DataSource {
 	private double beginTime = 0.0;
 	private double endTime = 0.0;
 	private double duration = 0.0;
+	private double durationMicrosecondsPercent = 0.0;
 	private String fileIndex = "";
 	private String metricName = "";
 	private NumberFormat nfDLocal = NumberFormat.getNumberInstance();
@@ -28,7 +29,6 @@ public class ParaverDataSource extends DataSource {
 	private static final double MILLISECONDS = 1000.0; // to convert to microseconds
 	private static final double SECONDS = 1000000.0; // to convert to microseconds
 	private static final double HOURS = 3600000000.0; // to convert to microseconds
-	private static final double PERCENT = 1.0; // to convert to percent
 
 	private List functionNames = null;
 	private TreeMap functions = new TreeMap();
@@ -151,7 +151,9 @@ public class ParaverDataSource extends DataSource {
 						if (units.equalsIgnoreCase("h"))
 							unitConversion = HOURS;
 						if (units.equalsIgnoreCase("%"))
-							unitConversion = PERCENT;
+							// the unit is percent, so convert from the total duration,
+							// which is in nanoseconds, to microseconds
+							unitConversion = durationMicrosecondsPercent;
 					} // assume nanoseconds, the Paraver default
 					value = value * unitConversion;
 
@@ -246,6 +248,8 @@ public class ParaverDataSource extends DataSource {
 					getMetaData().put("Duration" + fileIndex, tmp);
 					try {
 						duration = nfDLocal.parse(tmp).doubleValue();
+						// convert from nanoseconds to microseconds, and to percent
+						durationMicrosecondsPercent = duration * 0.001 * 0.01;
 					} catch (ParseException pe) {System.err.println("Error parsing: " + tmp);}
 				} else if (inputString.startsWith("Control Window")) {
         			StringTokenizer st = new StringTokenizer(inputString, " \t\n\r:");
