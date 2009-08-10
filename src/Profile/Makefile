@@ -154,6 +154,13 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 
 
 ##############################################
+# For building TauLinuxTimers with gcc
+##############################################
+#IBM64LINUX#GCC_ABI	     = -m64 		  #ENDIF#
+
+
+
+##############################################
 # For making libTAU.so Dynamic Shared Object
 ##############################################
 TAU_SHLIBX		= .so 		  
@@ -516,7 +523,7 @@ TauKojakOpariDisable.o : TauKojakOpariDisable.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauLinuxTimers.o : TauLinuxTimers.c $(HDRS)
-	gcc -c -fPIC $(USER_OPT) $(@:.o=.c)
+	gcc -c -fPIC $(GCC_ABI) $(USER_OPT) $(@:.o=.c)
 
 TauCallPath.o 	: TauCallPath.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
