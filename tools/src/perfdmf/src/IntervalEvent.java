@@ -29,7 +29,7 @@ import edu.uoregon.tau.perfdmf.database.DB;
  * index of the metric in the Trial object should be used to indicate which total/mean
  * summary object to return.
  *
- * <P>CVS $Id: IntervalEvent.java,v 1.6 2009/02/19 20:53:44 amorris Exp $</P>
+ * <P>CVS $Id: IntervalEvent.java,v 1.7 2009/08/10 23:47:04 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -212,7 +212,7 @@ public class IntervalEvent {
         if (db.getDBType().compareTo("oracle") == 0) {
             buf.append(" order by dbms_lob.substr(name) asc");
         } else if (db.getDBType().compareTo("derby") == 0) {
-            buf.append(" order by cast (name as varchar(256)) asc");
+            buf.append(" order by cast (name as varchar(4000)) asc");
         } else if (db.getDBType().compareTo("db2") == 0) {
             buf.append(" order by cast (name as varchar(256)) asc");
         } else {
@@ -245,7 +245,7 @@ public class IntervalEvent {
 
     public int saveIntervalEvent(DB db, int newTrialID, Hashtable newMetHash, int saveMetricIndex)
             throws SQLException {
-        int newIntervalEventID = 0;
+        int newIntervalEventID = -1;
 
         PreparedStatement statement = null;
         if (saveMetricIndex < 0) {
@@ -277,7 +277,7 @@ public class IntervalEvent {
                         + "interval_event where dbms_lob.instr(name, ?) > 0");
             else if (db.getDBType().compareTo("derby") == 0)
                 statement = db.prepareStatement("SELECT id FROM " + db.getSchemaPrefix()
-                        + "interval_event where cast(name as varchar(256)) = ?");
+                        + "interval_event where cast(name as varchar(4000)) = ?");
             else
                 statement = db.prepareStatement("SELECT id FROM " + db.getSchemaPrefix()
                         + "interval_event where name = ?");
@@ -289,6 +289,10 @@ public class IntervalEvent {
             }
             resultSet.close();
             statement.close();
+        }
+        
+        if (newIntervalEventID == -1) {
+            throw new RuntimeException("Unable to find event in database, event: " + name, null);
         }
 
         // save the intervalEvent mean summary
