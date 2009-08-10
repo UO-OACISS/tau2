@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: perfexplorer_configure.skel,v 1.19 2009/05/11 17:02:09 wspear Exp $
+# $Id: perfexplorer_configure.skel,v 1.20 2009/08/10 09:50:18 khuck Exp $
 # $Name:  $
 
 rm -f .last_config
@@ -24,7 +24,7 @@ tmpdir=/tmp
 LIBDIR=${tauroot}/${architecture}/lib
 PERFEXPLORER_JAR=${LIBDIR}/perfexplorer.jar
 mytest=`which unzip`
-if [ "x$mytest" == "x" ] ; then
+if [ "x$mytest" = "x" ] ; then
 	echo "unzip not found!"
 	UNZIP=
 else
@@ -34,7 +34,7 @@ fi
 # check for right java version
 
 test=`java -cp $LIBDIR/tau-common.jar edu.uoregon.tau.common.VersionTester 1.5`
-if [ $test == "failed" ] ; then
+if [ $test = "failed" ] ; then
 	echo ""
 	echo "Java 1.5 or newer is required to run PerfExplorer."
 	echo "Please update your Java SDK to a newer version to use PerfExplorer."
@@ -202,7 +202,7 @@ if [ ! -r ${WEKA_JAR} ]; then
 	done
 	
 	
-	if [ "${RESPONSE}" == "y" ]; then 
+	if [ "${RESPONSE}" = "y" ]; then 
 	    #WGET=`which wget 2>/dev/null`
 	    #if [ ! -r "$WGET" ]; then
 		#echo ""
@@ -223,7 +223,7 @@ if [ ! -r ${WEKA_JAR} ]; then
 		java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget "$URL" "$FILE" true
 		mv "$FILE" ${WEKA_ZIP_DIR}/.
 		cd ${WEKA_ZIP_DIR}/.
-		if [ "x$UNZIP" == "x" ] ; then
+		if [ "x$UNZIP" = "x" ] ; then
 			echo "The Weka file ${FILE} is in ${WEKA_ZIP_DIR} - you will have to unzip it and install it manually in ${WEKA_ZIP_DIR}"
 		else
 			${UNZIP} ${FILE}
@@ -266,7 +266,7 @@ if [ ! -r ${JBOSS_JAR} ]; then
 	done
 	
 	
-	if [ "${RESPONSE}" == "y" ]; then 
+	if [ "${RESPONSE}" = "y" ]; then 
 		FILE=PE2_jars.tgz
 		URL=http://www.cs.uoregon.edu/research/paracomp/tau/$FILE
 		/bin/rm -f $FILE
