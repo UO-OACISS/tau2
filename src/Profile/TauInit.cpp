@@ -21,6 +21,7 @@
 #include <TAU.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <signal.h>
 
 #include <Profile/TauEnv.h>
 #include <Profile/TauMetrics.h>
