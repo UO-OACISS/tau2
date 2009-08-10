@@ -10,50 +10,50 @@
  * See the file COPYRIGHT in the package base directory for details
  **/
 
-/****************************************************************************
- **			TAU Portable Profiling Package			   **
- **			http://www.cs.uoregon.edu/research/tau	           **
+/*****************************************************************************
+ **			TAU Portable Profiling Package			    **
+ **			http://www.cs.uoregon.edu/research/tau	            **
  *****************************************************************************
- **    Copyright 2008  						   	   **
+ **    Copyright 2008  						   	    **
  **    Department of Computer and Information Science, University of Oregon **
  **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
  ****************************************************************************/
-/****************************************************************************
- **	File 		: Comp_gnu.cpp  				   **
- **	Description 	: TAU Profiling Package				   **
- **	Contact		: tau-bugs@cs.uoregon.edu               	   **
- **	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
+/*****************************************************************************
+ **	File 		: Comp_gnu.cpp  				    **
+ **	Description 	: TAU Profiling Package				    **
+ **	Contact		: tau-bugs@cs.uoregon.edu               	    **
+ **	Documentation	: See http://www.cs.uoregon.edu/research/tau        **
  **                                                                         **
  **      Description     : This file contains the hooks for GNU based       **
  **                        compiler instrumentation                         **
  **                                                                         **
- ****************************************************************************/
+ *****************************************************************************/
  
+#ifndef TAU_XLC
 
 #include <TAU.h>
 #include <Profile/TauInit.h>
 #include <vector>
 using namespace std;
 
-#if HAVE_CONFIG_H
-#  include <config.h>
-#endif
 
-
+// //#include <stdio.h>
 #ifdef TAU_BFD
 #  include "bfd.h"
 #  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
 #    include "demangle.h"
 #  endif /* HAVE_GNU_DEMANGLE */
 #endif /* TAU_BFD */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <unistd.h>
-#ifdef TAU_OPENMP
-#  include <omp.h>
-#endif
+
+
+// #include <stdlib.h>
+// //#include <string.h>
+// #include <sys/types.h>
+// #include <unistd.h>
+// #ifdef TAU_OPENMP
+// #  include <omp.h>
+// #endif
+
 
 static int gnu_init = 1;       /* is initialization needed? */
 
@@ -395,7 +395,7 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 
     // initialize array of flags that prevent re-entry
     for (i=0; i<TAU_MAX_THREADS; i++) {
-      compInstDisabled[TAU_MAX_THREADS] = 0;
+      compInstDisabled[i] = 0;
     }
 
     get_symtab();
@@ -513,3 +513,5 @@ extern "C" void __cyg_profile_func_exit(void* func, void* callsite) {
 extern "C" void _cyg_profile_func_exit(void* func, void* callsite) {
   __cyg_profile_func_exit(func, callsite);
 }
+
+#endif /* TAU_XLC */
