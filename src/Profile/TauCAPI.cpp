@@ -1198,8 +1198,39 @@ extern "C" int Tau_create_task(void) {
     printf("TAU: ERROR: Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=100  and rebuild it to use the new TASK API\n");
   }
   return RtsLayer::RegisterThread() - 1; /* it returns 1 .. N, we want 0 .. N-1 */
-    
 }
+
+
+
+/**************************************************************************
+ Query API allowing a program/library to query the TAU callstack
+***************************************************************************/
+void *Tau_query_current_event() {
+  Profiler *profiler = TauInternal_CurrentProfiler(RtsLayer::myThread());
+  return (void*)profiler;
+}
+
+const char *Tau_query_event_name(void *event) {
+  if (event == NULL) {
+    return NULL;
+  }
+  Profiler *profiler = (Profiler*) event;
+  return profiler->ThisFunction->Name;
+}
+
+void *Tau_query_parent_event(void *event) {
+  Profiler *profiler = (Profiler*) event;
+  int tid = RtsLayer::myThread();
+  void *topOfStack = &(Tau_global_stack[tid][0]);
+  if (event == topOfStack) {
+    return NULL;
+  } else {
+    long loc = (long)event;
+    return (void*)(loc - (sizeof(Profiler)));
+  }
+}
+
+
 
 //////////////////////////////////////////////////////////////////////
 // Sometimes we may link in a library that needs the POMP stuff
@@ -1240,7 +1271,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.126 $   $Date: 2009/07/31 16:52:31 $
- * VERSION: $Id: TauCAPI.cpp,v 1.126 2009/07/31 16:52:31 amorris Exp $
+ * $Revision: 1.127 $   $Date: 2009/08/11 22:48:18 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.127 2009/08/11 22:48:18 amorris Exp $
  ***************************************************************************/
 

@@ -136,7 +136,11 @@ extern "C" {
 #define TAU_GET_EVENT_NAMES(eventList, num)     Tau_get_event_names(&eventList, &num);
 #define TAU_GET_EVENT_VALS(v1,v2,v3,v4,v5,v6,v7)   Tau_get_event_vals(v1,v2,&v3,&v4,&v5,&v6,&v7);
 
-
+/* Runtime "context" access */
+#define TAU_QUERY_DECLARE_EVENT(event)            void *event;
+#define TAU_QUERY_GET_CURRENT_EVENT(event)        event = Tau_query_current_event();
+#define TAU_QUERY_GET_EVENT_NAME(event, str)      str = Tau_query_event_name(event);
+#define TAU_QUERY_GET_PARENT_EVENT(event)         event = Tau_query_parent_event(event);
 
 
 
@@ -146,7 +150,7 @@ extern "C" {
 				
 #define TAU_REGISTER_CONTEXT_EVENT(event, name)	static void *event = 0; \
                                  if (event == 0) Tau_get_context_userevent(&event, name);  
-                                   #define TAU_EVENT(event, data)			Tau_userevent(event, data);
+#define TAU_EVENT(event, data)			Tau_userevent(event, data);
 #define TAU_CONTEXT_EVENT(event, data)		Tau_context_userevent(event, data);
 #define TAU_EVENT_SET_NAME(event, name)	Tau_set_event_name(event, name); 	
 #define TAU_REPORT_STATISTICS()		Tau_report_statistics();
@@ -324,6 +328,12 @@ TauGroup_t Tau_profile_get_group(void *ptr);
 
 
 
+/* Runtime "context" access */
+void *Tau_query_current_event();
+const char *Tau_query_event_name(void *event);
+void *Tau_query_parent_event(void *event);
+
+
 void Tau_disable_context_event(void *event);
 void Tau_enable_context_event(void *event);
 
@@ -485,6 +495,6 @@ void Tau_profile_param1l(long data, const char *dataname);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.99 $   $Date: 2009/06/20 00:38:07 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.99 2009/06/20 00:38:07 amorris Exp $ 
+ * $Revision: 1.100 $   $Date: 2009/08/11 22:48:17 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.100 2009/08/11 22:48:17 amorris Exp $ 
  ***************************************************************************/

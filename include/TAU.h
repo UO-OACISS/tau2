@@ -211,6 +211,12 @@ extern void Tau_stop(const char *name);
 #define TAU_DISABLE_TRACKING_MEMORY_HEADROOM()
 
 
+#define TAU_QUERY_DECLARE_EVENT(event)
+#define TAU_QUERY_GET_CURRENT_EVENT(event)
+#define TAU_QUERY_GET_EVENT_NAME(event, str)
+#define TAU_QUERY_GET_PARENT_EVENT(event)
+
+
 #endif /* TAU_ENABLED */
 
 
