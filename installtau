@@ -35,6 +35,7 @@ mpilibrary=no
 tauprefix=unknown
 tauexecprefix=unknown
 extraopts=
+parallel=
 
 ###############################################################
 # This method will escape spaces so that you can use ./configure `cat .last_config` when you've used them
@@ -224,6 +225,17 @@ do
     shift
     ;;
 
+  -j=*)
+    processors=`echo $arg | sed -e 's/-j=//'`
+    parallel=-j$processors
+    shift
+    ;;
+
+  -j)
+    parallel=$arg
+    shift
+    ;;
+
   -help)
     echo "TAU Configuration Utility "
     echo "***********************************************************************"
@@ -256,6 +268,7 @@ do
     echo "-epiloglib=<absolute path to epilog lib dir> (<epilog>/lib default)  "
     echo "-prefix=<dir>  "
     echo "-exec-prefix=<dir>  "
+    echo "-j=<num processes for parallel make>  (just -j for full parallel) "
     shift
     exit
     ;;
@@ -336,59 +349,59 @@ if [ "x$mpiopts" != "x" ] ; then
     # PDT
     echo "Configuring with ./configure $common $pdtopt $mpiopts"
     ./configure $common $pdtopt $mpiopts <wishver
-    make clean; make install $TAU_MAKE_OPT
+    make clean; make $parallel install $TAU_MAKE_OPT
 
     # configure with perflib using perfopts
     if [ $perf = yes ] ; then
 	echo "Configuring with ./configure $common $pdtopt $mpiopts $perfopts"
 	./configure $common $pdtopt $mpiopts $perfopts <wishver
-	make clean; make install $TAU_MAKE_OPT
+	make clean; make $parallel install $TAU_MAKE_OPT
     fi
 
     # -DEPTHLIMIT
     echo "Configuring with ./configure $common $pdtopt $mpiopts -DEPTHLIMIT"
     ./configure $common $pdtopt $mpiopts -DEPTHLIMIT <wishver
-    make clean; make install $TAU_MAKE_OPT
+    make clean; make $parallel install $TAU_MAKE_OPT
 
     # -PROFILEPARAM
     echo "Configuring with ./configure $common $pdtopt $mpiopts -PROFILEPARAM"
     ./configure $common $pdtopt $mpiopts -PROFILEPARAM <wishver
-    make clean; make install $TAU_MAKE_OPT
+    make clean; make $parallel install $TAU_MAKE_OPT
 
     # Epilog
     if [ $epilog = yes ] ; then
 	echo "Configuring with ./configure $common $pdtopt $mpiopts -TRACE $vtfopt $otfopt $epilogopt $papiopt"
 	./configure $common $pdtopt $mpiopts -TRACE $vtfopt $otfopt $epilogopt $papiopt <wishver
-	make clean; make install $TAU_MAKE_OPT
+	make clean; make $parallel install $TAU_MAKE_OPT
     fi
 
     # VampirTrace
     if [ $vampirtrace = yes ] ; then
 	echo "Configuring with ./configure $common $pdtopt $mpiopts -TRACE $vtfopt $otfopt $vptopt $papiopt"
 	./configure $common $pdtopt $mpiopts -TRACE $vtfopt $otfopt $vptopt $papiopt <wishver
-	make clean; make install $TAU_MAKE_OPT
+	make clean; make $parallel install $TAU_MAKE_OPT
     fi
     
     if [ $papi = yes ] ; then
       # PAPI
       echo "Configuring with ./configure $common $pdtopt $mpiopts $papiopt "
       ./configure $common $pdtopt $mpiopts $papiopt <wishver
-      make clean; make install $TAU_MAKE_OPT
+      make clean; make $parallel install $TAU_MAKE_OPT
       echo "Configuring with ./configure $common $pdtopt $mpiopts $papiopt -PROFILEPHASE"
       ./configure $common $pdtopt $mpiopts $papiopt -PROFILEPHASE <wishver
-      make clean; make install $TAU_MAKE_OPT
+      make clean; make $parallel install $TAU_MAKE_OPT
     fi
 
     if [ $opari = yes ] ; then
 	echo "Configuring with ./configure $common $pdtopt $mpiopts -opari"
 	./configure $common $pdtopt $mpiopts -opari -openmp <wishver
-	make clean; make install $TAU_MAKE_OPT
+	make clean; make $parallel install $TAU_MAKE_OPT
     fi 
 
     if [ $opari = yes -a $papi = yes ] ; then
 	echo "Configuring with ./configure $common $pdtopt $mpiopts -opari $papiopt "
 	./configure $common $pdtopt $mpiopts -opari -openmp $papiopt <wishver
-	make clean; make install $TAU_MAKE_OPT
+	make clean; make $parallel install $TAU_MAKE_OPT
     fi 
 
 fi
@@ -398,12 +411,12 @@ fi
 if [ $opari = yes ] ; then
     echo "Configuring with $common $pdtopt -opari -openmp "
     ./configure $common $pdtopt -opari -openmp <wishver
-    make clean; make install $TAU_MAKE_OPT
+    make clean; make $parallel install $TAU_MAKE_OPT
     
     if [ $papi = yes ] ; then 
 	echo "Configuring with $common $pdtopt -opari -openmp $papiopt  "
 	./configure $common $pdtopt -opari -openmp $papiopt <wishver
-	make clean; make install $TAU_MAKE_OPT
+	make clean; make $parallel install $TAU_MAKE_OPT
     fi
 fi 
 
@@ -411,7 +424,7 @@ if [ $arch = no -o $archdir != bgl -a $archdir != xt3 ] ; then
       # Just Pthread
     echo "Configuring with $common $pdtopt -pthread "
     ./configure $common $pdtopt -pthread <wishver
-    make clean; make install $TAU_MAKE_OPT
+    make clean; make $parallel install $TAU_MAKE_OPT
 fi
 
 if [ $papi = yes ] ; then 
@@ -419,27 +432,27 @@ if [ $papi = yes ] ; then
     if [ $arch = no -o $archdir != bgl -a $archdir != xt3 ] ; then
 	echo "Configuring with -pthread $papiopt  "
 	./configure $common $pdtopt -pthread $papiopt  <wishver
-	make clean; make install $TAU_MAKE_OPT
+	make clean; make $parallel install $TAU_MAKE_OPT
     fi
     
     # PAPI with -pdt 
     if [ $pdt = yes ] ; then
 	echo "Configuring with $common $pdtopt $papiopt "
 	./configure $common $pdtopt $papiopt -iowrapper <wishver
-	make clean; make install $TAU_MAKE_OPT
+	make clean; make $parallel install $TAU_MAKE_OPT
     fi
 fi
 
 if [ $dyninst = yes ] ; then
     echo "Configuring with $common -dyninst=$dyninstdir "
     ./configure $common -dyninst=$dyninstdir < wishver
-    make clean; make install $TAU_MAKE_OPT
+    make clean; make $parallel install $TAU_MAKE_OPT
 fi
 
 # Serial library
 echo "Configuring with $common $pdtopt "
 ./configure $common $pdtopt $vtfopt $otfopt <wishver
-make clean; make install $TAU_MAKE_OPT
+make clean; make $parallel install $TAU_MAKE_OPT
 
 # Set file permissions
 chmod -R go+rX *
