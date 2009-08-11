@@ -1698,6 +1698,14 @@ case $machine in
       gnu=yes
       fixmakeargs="$fixmakeargs GNU BGP_GFORTRAN COMPINST_GNU"
     fi
+
+
+    # default to this BFD installation
+    if [ bfd=no ] ; then
+	bfd=yes
+	bfddir=/bgsys/drivers/ppcfloor/gnu-linux
+    fi
+
     ;;
 
     xt3)
@@ -4347,7 +4355,6 @@ if $c_compiler $orig_useropt -c conftest_bfd.c $bfdinclude 1> /dev/null 2>&1 ; t
 else
     echo "no"
 fi
-
 /bin/rm -f conftest_bfd.o conftest_bfd.c
 ######################################################################
 
