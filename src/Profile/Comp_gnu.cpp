@@ -46,13 +46,13 @@ using namespace std;
 #endif /* TAU_BFD */
 
 
-// #include <stdlib.h>
-// //#include <string.h>
-// #include <sys/types.h>
-// #include <unistd.h>
-// #ifdef TAU_OPENMP
-// #  include <omp.h>
-// #endif
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
+#ifdef TAU_OPENMP
+#  include <omp.h>
+#endif
 
 
 static int gnu_init = 1;       /* is initialization needed? */
