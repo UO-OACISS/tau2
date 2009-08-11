@@ -535,6 +535,12 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Alltoall()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+#ifdef TAU_EXP_TRACK_COMM
+  void *commhandle;
+  commhandle = (void*)comm;
+  TAU_PROFILE_PARAM1L((long)commhandle, "comm");
+#endif /* TAU_EXP_TRACK_COMM */
+
   returnVal = PMPI_Alltoall( sendbuf, sendcount, sendtype, recvbuf, recvcnt, recvtype, comm );
   PMPI_Type_size( sendtype, &typesize );
   TAU_ALLTOALL_DATA(typesize*sendcount);
@@ -1023,6 +1029,44 @@ int * size;
   return returnVal;
 }
 
+/**************************************************************************
+ Experimental routine to track communicator splits in metadata 
+ This will create a metadata item such as:
+   Name : MPI_Comm 102140608
+   Value : 0 2 4 6
+***************************************************************************/
+#ifdef TAU_EXP_TRACK_COMM
+void tau_exp_track_comm_split (MPI_Comm oldcomm, MPI_Comm newcomm) {
+  int worldrank;
+  int newCommSize;
+  void *oldcommhandle, *newcommhandle;
+  int i;
+  char buffer[16384];
+  char catbuffer[2048];
+  char namebuffer[512];
+
+  oldcommhandle = (void*)oldcomm;
+  newcommhandle = (void*)newcomm;
+
+/*   printf ("comm %p split into %p for %d\n", oldcommhandle, newcommhandle, procid_0); */
+  MPI_Comm_size(newcomm, &newCommSize);
+/*   printf ("comm %p split into %p for %d, new size = %d\n", oldcommhandle, newcommhandle, procid_0, newCommSize); */
+
+  /* initialize to empty */
+  buffer[0] = 0;
+  for (i=0; i<newCommSize; i++) {
+    worldrank = translateRankToWorld(newcomm, i);
+/*     printf ("comm %p has world member %d\n", newcommhandle, worldrank); */
+    sprintf (catbuffer, "%d ", worldrank);
+    strcat(buffer, catbuffer);
+  }
+
+/*   printf ("buffer is %s\n", buffer); */
+  sprintf (namebuffer, "MPI_Comm %ld", newcommhandle);
+  TAU_METADATA(namebuffer, buffer);
+}
+#endif /* TAU_EXP_TRACK_COMM */
+
 int   MPI_Comm_split( comm, color, key, comm_out )
 MPI_Comm comm;
 int color;
@@ -1035,6 +1079,10 @@ MPI_Comm * comm_out;
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Comm_split( comm, color, key, comm_out );
+
+#ifdef TAU_EXP_TRACK_COMM
+  tau_exp_track_comm_split(comm, *comm_out);
+#endif /* TAU_EXP_TRACK_COMM */
 
   TAU_PROFILE_STOP(tautimer);
 
