@@ -1062,7 +1062,7 @@ void tau_exp_track_comm_split (MPI_Comm oldcomm, MPI_Comm newcomm) {
   }
 
 /*   printf ("buffer is %s\n", buffer); */
-  sprintf (namebuffer, "MPI_Comm %ld", newcommhandle);
+  sprintf (namebuffer, "MPI_Comm %lu", newcommhandle);
   TAU_METADATA(namebuffer, buffer);
 }
 #endif /* TAU_EXP_TRACK_COMM */
