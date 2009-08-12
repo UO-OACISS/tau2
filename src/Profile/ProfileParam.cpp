@@ -59,11 +59,14 @@ struct TaultProfileParamLong {
   bool operator() (const long *l1, const long *l2) const {
    int i;
    /* first check 0th index (size) */
-   if (l1[0] != l2[0]) return (l1[0] < l2[0]);
+   if (l1[0] != l2[0]) {
+     return (l1[0] < l2[0]);
+   }
    /* they're equal, see the size and iterate */
-   for (i = 0; i < l1[0] ; i++)
-   {
-     if (l1[i] != l2[i]) return l1[i] < l2[i];
+   for (i = 1; i < l1[0] ; i++) {
+     if (l1[i] != l2[i]) {
+       return l1[i] < l2[i];
+     }
    }
    return (l1[i] < l2[i]);
  }
@@ -81,7 +84,7 @@ map<TAU_PROFILE_PARAM_TYPE >& TheTimerProfileParamMap(void) {
 }
 
 long * TauCreateProfileParamArray(long FuncId, long key) {
-  int depth = 3; 
+  int depth = 2; 
   long *retary = new long[depth+1]; 
   retary[0] = depth; /* encode the depth first */
   retary[1] = FuncId; /* the id of the current timer */
@@ -169,6 +172,6 @@ void Profiler::ProfileParamStop(double* TotalTime, int tid) {
   
 /***************************************************************************
  * $RCSfile: ProfileParam.cpp,v $   $Author: amorris $
- * $Revision: 1.7 $   $Date: 2009/04/08 20:30:12 $
- * TAU_VERSION_ID: $Id: ProfileParam.cpp,v 1.7 2009/04/08 20:30:12 amorris Exp $ 
+ * $Revision: 1.8 $   $Date: 2009/08/12 17:35:22 $
+ * TAU_VERSION_ID: $Id: ProfileParam.cpp,v 1.8 2009/08/12 17:35:22 amorris Exp $ 
  ***************************************************************************/
