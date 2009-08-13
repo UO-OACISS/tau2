@@ -20,6 +20,8 @@ OBJECTS=opari.o process_c.o process_f.o process_omp.o ompragma.o ompragma_c.o om
 all: opari
 install: opari
 
+.SUFFIXES: .cc .o
+
 opari: $(OBJECTS)
 	$(COMP) $(OBJECTS) -o opari
 
@@ -28,3 +30,4 @@ opari: $(OBJECTS)
 
 clean:
 	$(RM) opari $(OBJECTS)
+
