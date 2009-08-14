@@ -16,9 +16,9 @@ import java.util.List;
  *    
  * TODO: Implement other factory methods.
  *
- * <P>CVS $Id: PlotFactory.java,v 1.5 2006/10/31 03:16:28 amorris Exp $</P>
+ * <P>CVS $Id: PlotFactory.java,v 1.6 2009/08/14 22:58:02 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  */
 public class PlotFactory {
 
@@ -96,7 +96,7 @@ public class PlotFactory {
     }
 
     
-    private static String getSaneDoubleString(double d) {
+    public static String getSaneDoubleString(double d) {
         return formatDouble(d, 4, false);
     }
     
