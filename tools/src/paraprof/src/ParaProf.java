@@ -5,8 +5,7 @@ import jargs.gnu.CmdLineParser;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
-import java.net.URL;
-import java.net.URLDecoder;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -23,11 +22,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.87 2009/06/01 18:39:55 amorris Exp $
+ * CVS $Id: ParaProf.java,v 1.88 2009/08/14 22:33:18 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.87 $
+ * @version $Revision: 1.88 $
  */
 public class ParaProf implements ActionListener {
 
@@ -280,10 +279,18 @@ public class ParaProf implements ActionListener {
     }
 
     public static String getInfoString() {
-        long memUsage = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024;
+        //long memUsage = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024;
 
-        return new String("ParaProf\n" + getVersionString() + "\nJVM Heap Size: " + memUsage + "kb\n"
-                + "http://www.cs.uoregon.edu/research/tau\n");
+        DecimalFormat f = new DecimalFormat("#.## MB");
+
+        String memUsage = "Free: " + f.format(java.lang.Runtime.getRuntime().freeMemory() / 1000000.0) + "\nTotal: "
+                + f.format(java.lang.Runtime.getRuntime().totalMemory() / 1000000.0) + "\nMax: "
+                + f.format(java.lang.Runtime.getRuntime().maxMemory() / 1000000.0);
+
+        String message = "ParaProf\n" + getVersionString() + "\nJVM Memory stats:\n" + memUsage + "\n"
+                + "http://www.cs.uoregon.edu/research/tau\n";
+
+        return message;
     }
 
     public static String getVersionString() {
