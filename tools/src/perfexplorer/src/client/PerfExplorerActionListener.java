@@ -5,6 +5,7 @@ import java.awt.Container;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
@@ -24,6 +25,7 @@ import org.jfree.data.general.SeriesException;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.common.VectorExport;
 import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
@@ -36,6 +38,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIView;
 import edu.uoregon.tau.perfexplorer.common.ScriptThread;
 import edu.uoregon.tau.perfexplorer.common.TransformationType;
 import edu.uoregon.tau.perfexplorer.constants.Constants;
+import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 public class PerfExplorerActionListener implements ActionListener {
 
@@ -137,6 +140,8 @@ public class PerfExplorerActionListener implements ActionListener {
 					}
 				} else if (arg.equals(DATABASE_CONFIGURATION)) {
 					databaseConfiguration();
+				} else if (arg.equals(LOAD_PROFILE)) {
+					loadProfile();
 				} else if (arg.equals(LOADSCRIPT)) {
 					loadScript();
 				} else if (arg.equals(RERUNSCRIPT)) {
@@ -817,6 +822,43 @@ public class PerfExplorerActionListener implements ActionListener {
 		return (!forceIt && constantProblem == null) ? false : true;
 	}
 
+	public static int setSession (String name) {
+		try {
+			PerfExplorerConnection server = PerfExplorerConnection.getConnection();
+			List<String> configNames = server.getConfigNames();
+			int i = 0;
+			for (String configName : configNames) {
+//				System.out.println(server.getConnectionString());
+				if (configName.equals(name)) {
+					server.setConnectionIndex(i);
+					return i;
+				}
+				i++;
+			}
+		} catch (Exception e) {}
+		return 0;
+	}
+	
+	private boolean loadProfile () {
+		setSession(Constants.PERFEXPLORER_WORKING_CONFIG);
+		Application app = new Application();
+		Experiment exp = new Experiment();
+		// create new application, experiment
+		try {
+			app.setName("New Application");
+			app.setID(app.saveApplication(PerfExplorerServer.getServer().getDB()));
+			exp.setApplicationID(app.getID());
+			exp.setName("New Experiment");
+			exp.setID(exp.saveExperiment(PerfExplorerServer.getServer().getDB()));
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		LoadTrialWindow ltw = new LoadTrialWindow(mainFrame, this, app, exp, true, true);
+		ltw.setVisible(true);
+		return true;
+	}
+
 	private boolean loadScript () {
 		JFileChooser fc = null;
 		// open a file chooser dialog
@@ -875,4 +917,31 @@ public class PerfExplorerActionListener implements ActionListener {
 		this.scriptName = scriptName;
 	}
 
+    public void handleDelete(Object clickedOnObject) {
+    	try {
+            DatabaseAPI databaseAPI = PerfExplorerServer.getServer().getSession();
+            if (clickedOnObject instanceof Application) {
+	            Application application = (Application) clickedOnObject;
+	            if (databaseAPI != null) {
+	                databaseAPI.deleteApplication(application.getID());
+	                //treeModel.removeNodeFromParent(application.getDMTN());
+	            }
+	        } else if (clickedOnObject instanceof Experiment) {
+	            Experiment experiment = (Experiment) clickedOnObject;
+	            if (databaseAPI != null) {
+	                databaseAPI.deleteExperiment(experiment.getID());
+                    //treeModel.removeNodeFromParent(experiment.getDMTN());
+	            }	
+	        } else if (clickedOnObject instanceof Trial) {
+	        	Trial ppTrial = (Trial) clickedOnObject;
+                if (databaseAPI != null) {
+                    databaseAPI.deleteTrial(ppTrial.getID());
+                    //treeModel.removeNodeFromParent(ppTrial.getDMTN());
+                }
+	        }
+        } catch (Exception e) {
+        	System.out.print(e.getMessage());
+        	e.printStackTrace();
+        }
+    }
 }

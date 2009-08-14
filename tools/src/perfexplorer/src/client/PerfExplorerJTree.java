@@ -300,4 +300,34 @@ public class PerfExplorerJTree extends JTree {
 		PerfExplorerModel.getModel().setConnectionIndex(index);
 		PerfExplorerConnection.getConnection().setConnectionIndex(index);
 	}
+	
+	// If expand is true, expands all nodes in the tree.
+    // Otherwise, collapses all nodes in the tree.
+    public void expandAll(boolean expand) {
+        TreeNode root = (TreeNode)getTree().getModel().getRoot();
+        
+        //root = root.getChildAt(root.getChildCount()-1);        
+    
+        // Traverse tree from root
+        expandAll(new TreePath(root), expand);
+    }
+    
+	public void expandAll(TreePath parent, boolean expand) {
+        // Traverse children
+        TreeNode node = (TreeNode)parent.getLastPathComponent();
+        if (node.getChildCount() >= 0) {
+            for (Enumeration e=node.children(); e.hasMoreElements(); ) {
+                TreeNode n = (TreeNode)e.nextElement();
+                TreePath path = parent.pathByAddingChild(n);
+                expandAll(path, expand);
+            }
+        }
+    
+        // Expansion or collapse must be done bottom-up
+        if (expand) {
+            expandPath(parent);
+        } else {
+            collapsePath(parent);
+        }
+    }
 }
