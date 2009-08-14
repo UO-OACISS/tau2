@@ -581,11 +581,15 @@ public class Configure {
             // Check to see if the configuration file exists
 
             File configFile;
-            if (configuration_name.length() == 0) {
-                configFile = new File(System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator
+            if (configFileName == null || configFileName.length() == 0) {
+            	if (configuration_name.length() == 0) {
+            		configFile = new File(System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator
                         + "perfdmf.cfg");
-            } else {
-                configFile = new File(configFileName + "." + configuration_name);
+            	} else {
+            		configFile = new File(configFileName + "." + configuration_name);
+            	}
+            } else { 
+            	configFile = new File(configFileName);
             }
 
             System.out.println("\nWriting configuration file: " + configFile);
@@ -786,6 +790,26 @@ public class Configure {
             System.out.println("You may begin loading applications.");
         }
         System.out.println("Configuration complete.");
+    }
+
+    public static void createDefault(String configFile, String tauroot, String arch, String dbName) {
+        // Create a new Configure object, which will walk the user through
+        // the process of creating/editing a configuration file.
+        Configure config = new Configure(tauroot, arch);
+        config.initialize(configFile);
+        config.useDefaults();
+		config.setDBName(dbName);
+
+        // Write the configuration file to ${PerfDMF_Home}/bin/perfdmf.cfg
+        String configFilename = config.writeConfigFile();
+
+        ConfigureTest configTest = new ConfigureTest(tauroot);
+        configTest.initialize(configFilename);
+        try {
+            configTest.createDB(false);
+        } catch (DatabaseConfigurationException e) {
+            e.printStackTrace();
+        }
     }
 
     /*** Beginning of main program. ***/
