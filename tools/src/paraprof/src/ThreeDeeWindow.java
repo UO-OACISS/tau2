@@ -783,7 +783,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     private void setupMenus() {
 
         JMenuBar mainMenu = new JMenuBar();
-
+                
         optionsMenu = new JMenu("Options");
         optionsMenu.getPopupMenu().setLightWeightPopupEnabled(false);
 
@@ -1004,23 +1004,27 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     }
 
     public String getFunctionName(int index) {
-        if (functionNames == null)
+        if (functionNames == null) {
             return null;
+        }
         return (String) functionNames.get(index);
     }
 
     public String getThreadName(int index) {
-        if (threadNames == null)
+        if (threadNames == null) {
             return null;
+        }
         return (String) threadNames.get(index);
     }
 
     public String getSelectedHeightValue() {
-        if (threads == null || functionNames == null)
+        if (threads == null || functionNames == null) {
             return "";
+        }
 
-        if (settings.getSelections()[1] < 0 || settings.getSelections()[0] < 0)
+        if (settings.getSelections()[1] < 0 || settings.getSelections()[0] < 0) {
             return "";
+        }
 
         Thread thread = (Thread) threads.get(settings.getSelections()[1]);
 

@@ -36,11 +36,11 @@ import edu.uoregon.tau.vis.HeatMapWindow;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.45 2009/06/26 00:43:48 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.46 2009/08/14 23:09:47 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.45 $
+ * @version $Revision: 1.46 $
  */
 public class ParaProfUtils {
 
@@ -386,6 +386,13 @@ public class ParaProfUtils {
         }
     }
 
+    public static void show3dCommMatrix(ParaProfTrial ppTrial, JFrame parentFrame) {
+        JFrame window = ThreeDeeCommMatrixWindow.createCommunicationMatrixWindow(ppTrial, parentFrame);
+        if (window != null) {
+            window.setVisible(true);
+        }
+    }
+
     public static JMenu createWindowsMenu(final ParaProfTrial ppTrial, final JFrame owner) {
 
         ActionListener actionListener = new ActionListener() {
@@ -409,6 +416,8 @@ public class ParaProfUtils {
                         ppTrial.showSnapshotController();
                     } else if (arg.equals("Communication Matrix")) {
                         ParaProfUtils.showCommMatrix(ppTrial, owner);
+                    } else if (arg.equals("3D Communication Matrix")) {
+                        ParaProfUtils.show3dCommMatrix(ppTrial, owner);
                     } else if (arg.equals("3D Visualization")) {
 
                         if (JVMDependent.version.equals("1.3")) {
@@ -460,6 +469,11 @@ public class ParaProfUtils {
         menuItem = new JMenuItem("3D Visualization");
         menuItem.addActionListener(actionListener);
         windowsMenu.add(menuItem);
+
+        // still in development
+//        menuItem = new JMenuItem("3D Communication Matrix");
+//        menuItem.addActionListener(actionListener);
+//        windowsMenu.add(menuItem);
 
         menuItem = new JMenuItem("Communication Matrix");
         menuItem.addActionListener(actionListener);
