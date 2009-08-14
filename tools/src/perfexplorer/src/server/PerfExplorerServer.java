@@ -36,6 +36,7 @@ import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.database.DB;
+import edu.uoregon.tau.perfdmf.loader.*;
 import edu.uoregon.tau.perfexplorer.common.AnalysisType;
 import edu.uoregon.tau.perfexplorer.common.ChartDataType;
 import edu.uoregon.tau.perfexplorer.common.ChartType;
@@ -51,6 +52,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIPerformanceResults;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
 import edu.uoregon.tau.perfexplorer.common.RMIVarianceData;
 import edu.uoregon.tau.perfexplorer.common.RMIView;
+import edu.uoregon.tau.perfexplorer.common.Configure;
 import edu.uoregon.tau.perfexplorer.constants.Constants;
 
 /**
@@ -60,7 +62,7 @@ import edu.uoregon.tau.perfexplorer.constants.Constants;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.84 2009/06/23 23:23:57 wspear Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.85 2009/08/14 16:59:05 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -80,6 +82,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	private List<TimerThread> timers = new ArrayList<TimerThread>();
 	private static PerfExplorerServer theServer = null;
 	private String configFile;
+	private String tauHome = "";
+	private String tauArch = "";
 
 	/**
 	 * Static method to get the server instance reference.
@@ -104,10 +108,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param configFile
 	 * @return
 	 */
-	public static PerfExplorerServer getServer (String configFile) {
+	public static PerfExplorerServer getServer (String configFile, String tauRoot, String tauArch) {
 		try {
 			if (theServer == null)
-				theServer = new PerfExplorerServer (configFile, 0, false);
+				theServer = new PerfExplorerServer (configFile, 0, false, tauRoot, tauArch);
         	//System.out.println("Checking for " + Constants.TMPDIR);
 
         	File dir = new File(Constants.TMPDIR);
@@ -130,8 +134,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 
 	public void resetServer () {
 		String configFile = theServer.configFile;
+		String tauHome = theServer.tauHome;
+		String tauArch = theServer.tauArch;
 		PerfExplorerServer.theServer = null;
-		getServer(configFile);
+		getServer(configFile, tauHome, tauArch);
 	}
 	
 	/**
@@ -143,9 +149,11 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @throws RemoteException
 	 */
 	private PerfExplorerServer(String configFile,
-	int port, boolean quiet) throws RemoteException {
+	int port, boolean quiet, String tauHome, String tauArch) throws RemoteException {
 		super(port);
 		this.configFile = configFile;
+		this.tauHome = tauHome;
+		this.tauArch = tauArch;
 		PerfExplorerOutput.setQuiet(quiet);
 		theServer = this;
 		DatabaseAPI workerSession = null;
@@ -156,6 +164,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			configFiles = new ArrayList<String>();
 			configFiles.add(configFile);
 		}
+		addWorkingDatabase(configFiles);
         String home = System.getProperty("user.home");
         String slash = System.getProperty("file.separator");
         String prefix = home + slash + ".ParaProf" + slash + "perfdmf.cfg.";
@@ -217,6 +226,32 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 //		return factory;
 //	}
 	
+	/**
+	 * Locate / Add working database.  If there is no working database, create
+	 * one, and add its location to the list of databases.
+	 * 
+	 */
+	private void addWorkingDatabase(List<String> configFiles) {
+		String newConfig = System.getProperty("user.home") + 
+		  File.separator + ".ParaProf" + 
+		  File.separator + "perfdmf.cfg." + Constants.PERFEXPLORER_WORKING_CONFIG;
+		File defaultConfig = new File(newConfig);
+		if (!defaultConfig.exists() && tauHome.length() > 0 && tauArch.length() > 0) {
+			try {
+				System.out.println("Default working database does not exist, creating...");
+				String dbName = System.getProperty("user.home") + 
+				  File.separator + ".ParaProf" + 
+				  File.separator + Constants.PERFEXPLORER_WORKING_CONFIG;
+				edu.uoregon.tau.perfdmf.loader.Configure.createDefault(newConfig, tauHome, tauArch, dbName);
+				System.out.println("Configuration file " + newConfig + " created.");
+				edu.uoregon.tau.perfexplorer.common.Configure.loadDefaultSchema(newConfig, tauHome, tauArch);
+			} catch (Exception perfDMFException) {
+				System.err.println(perfDMFException.getMessage());
+			}
+		}
+		configFiles.add(newConfig);
+	}
+
 	/**
 	 * Test method.
 	 * 
@@ -1763,6 +1798,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		CmdLineParser.Option configfileOpt = parser.addStringOption('c',"configfile");
 		CmdLineParser.Option portOpt = parser.addIntegerOption('p',"port");
 		CmdLineParser.Option quietOpt = parser.addBooleanOption('q',"quiet");
+		CmdLineParser.Option tauHomeOpt = parser.addBooleanOption('t',"tauHome");
+		CmdLineParser.Option tauArchOpt = parser.addBooleanOption('a',"tauArch");
 			
 		try {   
 			parser.parse(args);
@@ -1776,6 +1813,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		String configFile = (String) parser.getOptionValue(configfileOpt);
 		Integer port = (Integer) parser.getOptionValue(portOpt);
 		Boolean quiet = (Boolean) parser.getOptionValue(quietOpt);
+		String tauHome = (String) parser.getOptionValue(tauHomeOpt);
+		String tauArch = (String) parser.getOptionValue(tauArchOpt);
 
 
 		if (help != null && help.booleanValue()) {
@@ -1797,7 +1836,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		}
 
 		try {
-			RMIPerfExplorer server = new PerfExplorerServer(configFile, port.intValue(), quiet.booleanValue());
+			RMIPerfExplorer server = new PerfExplorerServer(configFile, port.intValue(), quiet.booleanValue(), tauHome, tauArch);
 			Naming.rebind("PerfExplorerServer", server);
 			PerfExplorerOutput.println("PerfExplorerServer bound.");
 			Runtime.getRuntime().addShutdownHook(

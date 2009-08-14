@@ -362,7 +362,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                 // also upload the perfexplorer schema
                 config2.initialize(filename);
                 config2.setPerfExplorerSchema(schema2.getText());
-                config2.createDB();
+                config2.createDB(false);
                 mainWindow.refreshDatabases();
             } else if (arg.equals("Remove Configuration")) {
                 String path = selectedConfig.getPath();

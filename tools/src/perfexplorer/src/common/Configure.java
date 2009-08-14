@@ -20,7 +20,7 @@ import java.sql.SQLException;
 /**
  * This class is used as a main class for configuring PerfExplorer.
  *
- * <P>CVS $Id: Configure.java,v 1.13 2009/03/02 19:23:50 khuck Exp $</P>
+ * <P>CVS $Id: Configure.java,v 1.14 2009/08/14 16:59:02 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -101,7 +101,7 @@ public class Configure {
      * If the tables don't exist, create them in the database.
      *
      */
-    public void createDB() {
+    public void createDB(boolean interactive) {
         ConnectionManager connector = null;
         DB db = null;
         try {
@@ -134,7 +134,7 @@ public class Configure {
             PerfExplorerOutput.print("Perfexplorer tables not found.");
             String input = "";
 
-            if (perfExplorerSchema == null) {
+            if (perfExplorerSchema == null && interactive) {
 	            PerfExplorerOutput.print("Would you like to upload the schema? [y/n]: ");
 	            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 	
@@ -203,6 +203,15 @@ public class Configure {
         PerfExplorerOutput.println("Configuration complete.");
     }
 
+    public static void loadDefaultSchema(String configFile, String tauroot, String arch) {
+        // Create a new Configure object
+        Configure config = new Configure(tauroot, arch);
+        config.tau_root = tauroot;
+        config.initialize(configFile);
+        config.createDB(false);
+
+    }
+
     public static void main(String[] args) {
 
         CmdLineParser parser = new CmdLineParser();
@@ -242,7 +251,7 @@ public class Configure {
         config.tau_root = tauroot;
 
         config.initialize(configFile);
-        config.createDB();
+        config.createDB(true);
 
     }
 

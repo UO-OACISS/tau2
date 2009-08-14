@@ -128,14 +128,14 @@ public class Utilities {
 	}
 
 	private static PerfExplorerServer getServer() {
-		return PerfExplorerServer.getServer(null);
+		return PerfExplorerServer.getServer(null, "", "");
 	}
 
-	private static PerfExplorerServer getServer(String configName) {
+	private static PerfExplorerServer getServer(String configName, String tauHome) {
 		String home = System.getProperty("user.home");
 		String slash = System.getProperty("file.separator");
 		String configFile = home + slash + ".ParaProf" + slash + "perfdmf.cfg." + configName;
-		return PerfExplorerServer.getServer(configFile);
+		return PerfExplorerServer.getServer(configFile, tauHome, "");
 	}
 
 	public static JFrame getClient() {
@@ -150,7 +150,7 @@ public class Utilities {
 
 	public static int setSession (String name) {
 		try {
-			PerfExplorerServer server = getServer(name);
+			PerfExplorerServer server = getServer(name, "");
 			List<String> configNames = server.getConfigNames();
 			for (int i = 0 ; i < server.getSessionCount() ; i++) {
 				server.setConnectionIndex(i);

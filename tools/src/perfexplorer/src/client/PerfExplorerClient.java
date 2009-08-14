@@ -52,7 +52,7 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		return listener;
 	}
 
-	public PerfExplorerClient (boolean standalone, String configFile,boolean quiet) {
+	public PerfExplorerClient (boolean standalone, String configFile, boolean quiet) {
 		super("TAU: PerfExplorer Client");
 		
 		DBConnector.setPasswordCallback(PasswordCallback.guiPasswordCallback);
@@ -60,6 +60,8 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		PerfExplorerOutput.setQuiet(quiet);
 		PerfExplorerConnection.setStandalone(standalone);
 		PerfExplorerConnection.setConfigFile(configFile);
+		PerfExplorerConnection.setTauHome(tauHome);
+		PerfExplorerConnection.setTauArch(tauArch);
 		listener = new PerfExplorerActionListener(this);
 		// create a tree
 		PerfExplorerJTree tree = PerfExplorerJTree.getTree();

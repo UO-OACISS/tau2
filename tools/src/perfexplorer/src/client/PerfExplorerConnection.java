@@ -31,6 +31,8 @@ public class PerfExplorerConnection {
     private RMIPerfExplorer server = null;
     private static boolean standalone = true;
     private static String configFile = null;
+    private static String tauHome = null;
+    private static String tauArch = null;
     private int connectionIndex = 0;
 
     private PerfExplorerConnection () {
@@ -39,7 +41,7 @@ public class PerfExplorerConnection {
 
 	private void makeConnection() {
 		if (standalone) {
-	    	server = PerfExplorerServer.getServer(configFile);
+	    	server = PerfExplorerServer.getServer(configFile, tauHome, tauArch);
 		} else {
 	    	if (System.getSecurityManager() == null) {
 				System.setSecurityManager(new RMISecurityManager());
@@ -66,7 +68,15 @@ public class PerfExplorerConnection {
     public static void setConfigFile (String configFile) {
 	PerfExplorerConnection.configFile = configFile;
     }
+
+    public static void setTauHome (String tauHome) {
+	PerfExplorerConnection.tauHome = tauHome;
+    }
 	
+    public static void setTauArch (String tauArch) {
+    	PerfExplorerConnection.tauArch = tauArch;
+    }
+    	
     public static PerfExplorerConnection getConnection() {
 	if (theConnection == null) {
 	    theConnection = new PerfExplorerConnection();

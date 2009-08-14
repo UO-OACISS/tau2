@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: perfexplorer.skel,v 1.40 2009/06/17 19:08:13 amorris Exp $
+# $Id: perfexplorer.skel,v 1.41 2009/08/14 16:58:49 khuck Exp $
 # $Name:  $
 
 TAUROOT=@TAUROOT@
@@ -139,7 +139,7 @@ if [ $mode = "standalone" ] ; then
 	-classpath $CLASSPATH \
 	-Dderby.system.home=${JAR_HOME} \
 	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
-	edu.uoregon.tau.perfexplorer.client.PerfExplorerClient -s $PERFEXPLORER_OPTS $@
+	edu.uoregon.tau.perfexplorer.client.PerfExplorerClient -s $PERFEXPLORER_OPTS -t $TAUROOT -a $CONFIG_ARCH $@
 fi
 
 if [ $mode = "test" ] ; then
@@ -167,7 +167,7 @@ if [ $mode = "server" ] ; then
 	-Djava.library.path=$SERVER_DYLD_LIBRARY_PATH \
 	${RMIOptions} \
 	-Dsun.rmi.server.exceptionTrace=true \
-	edu.uoregon.tau.perfexplorer.server.PerfExplorerServer -p $SERVER_OBJECT_PORT $arguments
+	edu.uoregon.tau.perfexplorer.server.PerfExplorerServer -p $SERVER_OBJECT_PORT -t $TAUROOT -a $CONFIG_ARCH  $arguments
 
 	echo "Killing rmiregistry..."
 	killall rmiregistry
@@ -182,6 +182,6 @@ if [ $mode = "client" ] ; then
 	-Djava.security.policy=${TAUROOT}/${CONFIG_ARCH}/lib/java.policy \
 	-Djava.library.path=${CLIENT_DYLD_LIBRARY_PATH} \
 	-Djava.rmi.server.hostname=$SERVER_HOSTNAME \
-	edu.uoregon.tau.perfexplorer.client.PerfExplorerClient $arguments
+	edu.uoregon.tau.perfexplorer.client.PerfExplorerClient -t $TAUROOT -a $CONFIG_ARCH  $arguments
 fi
 

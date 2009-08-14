@@ -15,7 +15,7 @@ import edu.uoregon.tau.perfexplorer.common.TransformationType;
 /**
  * This class exists as a unit test of the PerfExplorerServer class.
  *
- * <P>CVS $Id: TestServer.java,v 1.13 2009/05/08 22:45:22 wspear Exp $</P>
+ * <P>CVS $Id: TestServer.java,v 1.14 2009/08/14 16:59:06 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -24,7 +24,7 @@ public class TestServer {
 	PerfExplorerServer server = null;
 	
     public TestServer(String configFile) {
-        server = PerfExplorerServer.getServer(configFile);
+        server = PerfExplorerServer.getServer(configFile, "", "");
         PerfExplorerOutput.println(server.sayHello());
     }
 

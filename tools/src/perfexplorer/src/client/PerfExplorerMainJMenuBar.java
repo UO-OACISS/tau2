@@ -28,6 +28,12 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		fileMenu.add(databaseItem);
 
 		//Add a menu item.
+		JMenuItem profileItem = new JMenuItem(
+				PerfExplorerActionListener.LOAD_PROFILE);
+		profileItem.addActionListener(listener);
+		fileMenu.add(profileItem);
+
+		//Add a menu item.
 		JMenuItem scriptItem = new JMenuItem(
 				PerfExplorerActionListener.LOADSCRIPT);
 		scriptItem.addActionListener(listener);

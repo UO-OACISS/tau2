@@ -48,6 +48,7 @@ public class PerfExplorerActionListener implements ActionListener {
 	public final static String QUIT_SERVER = "Quit PerfExplorer (Shutdown Server)";
 	public final static String LOOK_AND_FEEL = "Set Look and Feel: ";
 	public final static String ABOUT = "About PerfExplorer";
+	public final static String LOAD_PROFILE = "Load Profile Data";
 	public final static String SEARCH = "Search for help on...";
 	// clustering menu items
 	public final static String CLUSTERING_METHOD = "Select Clustering Method";
