@@ -21,7 +21,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIView;
  * represents the performance profile of the selected trials, and return them
  * in a format for JFreeChart to display them.
  *
- * <P>CVS $Id: ChartData.java,v 1.55 2009/08/04 18:22:24 wspear Exp $</P>
+ * <P>CVS $Id: ChartData.java,v 1.56 2009/08/17 14:43:26 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -297,7 +297,7 @@ public class ChartData extends RMIChartData {
 			}
 			buf.append(" " + tmpBuf.toString() + ", ");
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
-			buf.append("avg(ims.inclusive) from interval_mean_summary ims ");
+			buf.append("max(ims.inclusive) from interval_mean_summary ims ");
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
@@ -805,6 +805,7 @@ public class ChartData extends RMIChartData {
 			statement = db.prepareStatement(buf.toString());
 			statement.setInt(1, model.getTrial().getID());
 			statement.setInt(2, model.getMetric().getID());
+			System.out.println(statement.toString());
 		}
 		return statement;
 	}
