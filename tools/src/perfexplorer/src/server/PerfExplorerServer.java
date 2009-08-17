@@ -62,7 +62,7 @@ import edu.uoregon.tau.perfexplorer.constants.Constants;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.86 2009/08/17 14:50:22 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.87 2009/08/17 22:29:10 wspear Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -243,7 +243,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		  File.separator + ".ParaProf" + 
 		  File.separator + "perfdmf.cfg." + Constants.PERFEXPLORER_WORKING_CONFIG;
 		File defaultConfig = new File(newConfig);
-		if (!defaultConfig.exists() && tauHome.length() > 0 && tauArch.length() > 0) {
+		if (!defaultConfig.exists() && tauHome!=null && tauArch!=null && tauHome.length() > 0 && tauArch.length() > 0) {
 			try {
 				System.out.println("Default working database does not exist, creating...");
 				String dbName = System.getProperty("user.home") + 
