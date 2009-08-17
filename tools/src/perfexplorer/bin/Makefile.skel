@@ -1,4 +1,4 @@
-# $Id: Makefile.skel,v 1.45 2009/05/11 17:02:09 wspear Exp $
+# $Id: Makefile.skel,v 1.46 2009/08/17 11:05:51 khuck Exp $
 # $Name:  $
 
 TAUROOT = @TAUROOT@
@@ -14,7 +14,7 @@ CONFIGFILE = ${JAR_HOME}/perfdmf.cfg
 WEBSTART_DIR = /var/www/html/PerfExplorer/.
 
 CPP = cpp -P -CC
-JAVAC = javac
+JAVAC = javac -source 1.5 -target 1.5
 RMIC = rmic
 SED = sed
 JAVADOC = javadoc

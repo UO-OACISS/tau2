@@ -409,7 +409,7 @@ public class PerfExplorerActionListener implements ActionListener {
 
 	public void createMethodWindow() {
 		Object[] options = AnalysisType.getClusterMethods();
-		String reply = (String)JOptionPane.showInputDialog (mainFrame,
+		AnalysisType reply = (AnalysisType)JOptionPane.showInputDialog (mainFrame,
 			"Select a cluster method:",
 			"Cluster Method",
 			JOptionPane.PLAIN_MESSAGE,
@@ -841,6 +841,7 @@ public class PerfExplorerActionListener implements ActionListener {
 	
 	private boolean loadProfile () {
 		setSession(Constants.PERFEXPLORER_WORKING_CONFIG);
+		/*
 		Application app = new Application();
 		Experiment exp = new Experiment();
 		// create new application, experiment
@@ -856,6 +857,7 @@ public class PerfExplorerActionListener implements ActionListener {
 		}
 		LoadTrialWindow ltw = new LoadTrialWindow(mainFrame, this, app, exp, true, true);
 		ltw.setVisible(true);
+		*/
 		return true;
 	}
 
