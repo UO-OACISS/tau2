@@ -840,7 +840,8 @@ public class PerfExplorerActionListener implements ActionListener {
 	}
 	
 	private boolean loadProfile () {
-		setSession(Constants.PERFEXPLORER_WORKING_CONFIG);
+		// the default session is the last session, which is the perfexplorer working database.
+//		setSession(Constants.PERFEXPLORER_WORKING_CONFIG);
 
 		Application app = new Application();
 		Experiment exp = new Experiment();
