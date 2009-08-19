@@ -920,7 +920,8 @@ class CompleteDirectives
 			addDirectives.splice(addDirectives.end(), findOMPStmt(state, s->downStmt(), s, loop + 1, pdb));
 			
 			//process the else in an if stmt.
-			if (s->extraStmt() != NULL)
+			if (s->extraStmt() != NULL && s->extraStmt()->stmtBegin().line() >=
+					s->stmtBegin().line())
 			{
 				if (verbosity == Debug)
 					printf("recurising (extra) \n");
@@ -957,7 +958,8 @@ class CompleteDirectives
 					printf("recurising (next) \n");
 				addDirectives.splice(addDirectives.end(), findOMPStmt(state, s->nextStmt(), block, loop, pdb));  
 			}
-			if (s->extraStmt() != NULL)
+			if (s->extraStmt() != NULL && s->extraStmt()->stmtBegin().line() >=
+			          s->stmtBegin().line())
 			{
 				if (verbosity == Debug)
 					printf("recurising (extra) \n");
@@ -1327,6 +1329,6 @@ int main(int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
- * $Revision: 1.29 $   $Date: 2008/12/22 21:55:52 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.29 2008/12/22 21:55:52 scottb Exp $
+ * $Revision: 1.30 $   $Date: 2009/08/19 18:38:44 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.30 2009/08/19 18:38:44 scottb Exp $
  ***************************************************************************/
