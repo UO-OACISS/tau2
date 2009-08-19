@@ -14,7 +14,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * an application from which the TAU performance data has been generated.
  * An application has zero or more experiments associated with it.
  *
- * <P>CVS $Id: Application.java,v 1.14 2007/06/25 23:03:17 khuck Exp $</P>
+ * <P>CVS $Id: Application.java,v 1.15 2009/08/19 11:14:50 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version 0.1
  * @since   0.1
@@ -256,13 +256,13 @@ public class Application implements Serializable {
             buf.append(whereClause);
 
             if (db.getDBType().compareTo("oracle") == 0) {
-                buf.append(" order by dbms_lob.substr(name) asc");
+                buf.append(" order by dbms_lob.substr(name), id asc");
             } else if (db.getDBType().compareTo("derby") == 0) {
-                buf.append(" order by cast (name as varchar(256)) asc");
+                buf.append(" order by cast (name as varchar(256)), id asc");
             } else if (db.getDBType().compareTo("db2") == 0) {
-                buf.append(" order by cast (name as varchar(256)) asc");
+                buf.append(" order by cast (name as varchar(256)), id asc");
             } else {
-                buf.append(" order by name asc ");
+                buf.append(" order by name, id asc ");
             }
 
             resultSet = db.executeQuery(buf.toString());

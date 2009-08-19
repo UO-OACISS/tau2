@@ -17,7 +17,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * An experiment is associated with an application, and has one or more
  * trials associated with it.
  *
- * <P>CVS $Id: Experiment.java,v 1.9 2008/12/17 19:19:55 amorris Exp $</P>
+ * <P>CVS $Id: Experiment.java,v 1.10 2009/08/19 11:14:50 khuck Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -261,13 +261,13 @@ public class Experiment implements Serializable, Comparable {
             buf.append(whereClause);
 
             if (db.getDBType().compareTo("oracle") == 0) {
-                buf.append(" order by dbms_lob.substr(name) asc");
+                buf.append(" order by dbms_lob.substr(name), id asc");
             } else if (db.getDBType().compareTo("derby") == 0) {
-                buf.append(" order by cast(name as varchar(256)) asc");
+                buf.append(" order by cast(name as varchar(256)), id asc");
             } else if (db.getDBType().compareTo("db2") == 0) {
-                buf.append(" order by cast(name as varchar(256)) asc");
+                buf.append(" order by cast(name as varchar(256)), id asc");
             } else {
-                buf.append(" order by name asc ");
+                buf.append(" order by name, id asc ");
             }
 
             // get the results
