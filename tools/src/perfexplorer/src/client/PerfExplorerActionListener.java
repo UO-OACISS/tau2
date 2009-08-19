@@ -841,23 +841,25 @@ public class PerfExplorerActionListener implements ActionListener {
 	
 	private boolean loadProfile () {
 		setSession(Constants.PERFEXPLORER_WORKING_CONFIG);
-		/*
+
 		Application app = new Application();
 		Experiment exp = new Experiment();
 		// create new application, experiment
 		try {
 			app.setName("New Application");
 			app.setID(app.saveApplication(PerfExplorerServer.getServer().getDB()));
+			PerfExplorerModel.getModel().setCurrentSelection(app);
 			exp.setApplicationID(app.getID());
 			exp.setName("New Experiment");
 			exp.setID(exp.saveExperiment(PerfExplorerServer.getServer().getDB()));
+			PerfExplorerModel.getModel().setCurrentSelection(exp);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		LoadTrialWindow ltw = new LoadTrialWindow(mainFrame, this, app, exp, true, true);
 		ltw.setVisible(true);
-		*/
+
 		return true;
 	}
 

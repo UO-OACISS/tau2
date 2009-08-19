@@ -305,14 +305,18 @@ public class PerfExplorerJTree extends JTree {
     // Otherwise, collapses all nodes in the tree.
     public void expandAll(boolean expand) {
         TreeNode root = (TreeNode)getTree().getModel().getRoot();
-        
-        //root = root.getChildAt(root.getChildCount()-1);        
-    
+
         // Traverse tree from root
         expandAll(new TreePath(root), expand);
     }
     
 	public void expandAll(TreePath parent, boolean expand) {
+		
+        // Expand current node (or else there won't be children)
+        if (expand) {
+            expandPath(parent);
+        } 
+        
         // Traverse children
         TreeNode node = (TreeNode)parent.getLastPathComponent();
         if (node.getChildCount() >= 0) {
@@ -323,11 +327,74 @@ public class PerfExplorerJTree extends JTree {
             }
         }
     
-        // Expansion or collapse must be done bottom-up
-        if (expand) {
-            expandPath(parent);
-        } else {
+        // collapse must be done bottom-up
+        if (!expand) {
             collapsePath(parent);
         }
     }
+
+	// If expand is true, expands the most recently
+	// added trial in the database.
+    // Otherwise, collapses all nodes in the tree.
+    public void expandLast(boolean expand) {
+        TreeNode root = (TreeNode)getTree().getModel().getRoot();
+
+        // Traverse tree from root
+        expandLastAdded(new TreePath(root), expand);
+    }
+
+	public void expandLastAdded(TreePath parent, boolean expand) {
+		
+        PerfExplorerTreeNode node = (PerfExplorerTreeNode)parent.getLastPathComponent();
+		Object obj = node.getUserObject();
+		// don't expand the "view" node, but the last application before it.
+    	if (obj instanceof ConnectionNodeObject) {
+    		String connString = PerfExplorerConnection.getConnection().getConnectionString();
+    		if (connString == null || !connString.equals(obj.toString())) {
+    			return;
+    		}
+    	} else if (obj instanceof Application) {
+    		Application app = PerfExplorerModel.getModel().getApplication();
+    		Application current = (Application)obj;
+    		if (app == null || app.getID() != current.getID()) {
+    			return;  // this isn't our current path, so don't expand
+    		}
+    	} else if (obj instanceof Experiment) {
+    		Experiment exp = PerfExplorerModel.getModel().getExperiment();
+    		Experiment current = (Experiment)obj;
+    		if (exp == null || exp.getID() != current.getID()) {
+    			return;  // this isn't our current path, so don't expand
+    		}
+    	} else if (obj instanceof Trial) {
+    		Trial trial = PerfExplorerModel.getModel().getTrial();
+    		Trial current = (Trial)obj;
+    		if (trial == null || trial.getID() != current.getID()) {
+    			return;  // this isn't our current path, so don't expand
+    		}
+    	} else if (obj instanceof RMIView) {
+   			return;  // this isn't our current path, so don't expand
+    	} else if (obj instanceof Metric) {
+   			return;  // don't expand that deep
+    	} 
+
+        // Expand current node (or else there won't be children)
+        if (expand) {
+            expandPath(parent);
+        } 
+
+        // Traverse children
+        if (node.getChildCount() >= 0) {
+            for (Enumeration e=node.children(); e.hasMoreElements(); ) {
+                TreeNode n = (TreeNode)e.nextElement();
+                TreePath path = parent.pathByAddingChild(n);
+                expandLastAdded(path, expand);
+            }
+        }
+    
+        // collapse must be done bottom-up
+        if (!expand) {
+            collapsePath(parent);
+        }
+    }
+
 }

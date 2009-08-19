@@ -126,7 +126,7 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener {
             // this call will block until the entire thing is uploaded (could be a while)
             ppTrial.setID(dbAPI.uploadTrial(ppTrial));
             // get the root of the tree
-            PerfExplorerJTree.getTree().expandAll(true);
+            PerfExplorerJTree.getTree().expandLast(true);
         }
     }
 

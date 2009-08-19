@@ -14,9 +14,9 @@ import edu.uoregon.tau.perfdmf.*;
 /**
  * A window that lets the user select a profile format and launch a JFileChooser
  * 
- * <P>CVS $Id: LoadTrialWindow.java,v 1.1 2009/08/18 21:05:47 khuck Exp $</P>
+ * <P>CVS $Id: LoadTrialWindow.java,v 1.2 2009/08/19 13:59:42 khuck Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class LoadTrialWindow extends JFrame implements ActionListener {
 
@@ -293,9 +293,8 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
 //        }
         if (files.length == 1) {
             ppTrial.setName(files[0].toString());
-//            ppTrial.setPaths(files[0].toString());
-//        } else {
-//            ppTrial.setName(ppTrial.getPathReverse());
+        } else {
+            ppTrial.setName(FileList.getPathReverse(files[0].getPath()));
         }
 //        if (experiment.dBExperiment()) {
 //            loadedDBTrials.add(ppTrial);
@@ -305,6 +304,7 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
 //        }
 
         LoadTrialProgressWindow lpw = new LoadTrialProgressWindow(PerfExplorerClient.getMainFrame(), dataSource, ppTrial, false);
+		PerfExplorerModel.getModel().setCurrentSelection(ppTrial);
         lpw.show();		
 	}
 
