@@ -319,14 +319,18 @@ public class ImageUtils {
              double[] coefficients = Regression.getOLSRegression(data, 0);
              Function2D curve = new LineFunction2D(coefficients[0], coefficients[1]);
              Range range = DatasetUtilities.findDomainBounds(data);
-             XYDataset regressionData = DatasetUtilities.sampleFunction2D(
-                     curve, range.getLowerBound(), range.getUpperBound(), 
-                     100, "Fitted Linear Regression Line");
-             plot.setDataset(1, regressionData);
-             StandardXYItemRenderer lineRenderer = new StandardXYItemRenderer();
-             lineRenderer.setSeriesPaint(0,Color.blue);
-             lineRenderer.setBaseShapesVisible(false);
-             plot.setRenderer(1, lineRenderer);
+             // if someone does something silly, you may get a null range back.
+             // if so, don't try to draw the regression line.
+             if (range != null) {
+	             XYDataset regressionData = DatasetUtilities.sampleFunction2D(
+	                     curve, range.getLowerBound(), range.getUpperBound(), 
+	                     100, "Fitted Linear Regression Line");
+	             plot.setDataset(1, regressionData);
+	             StandardXYItemRenderer lineRenderer = new StandardXYItemRenderer();
+	             lineRenderer.setSeriesPaint(0,Color.blue);
+	             lineRenderer.setBaseShapesVisible(false);
+	             plot.setRenderer(1, lineRenderer);
+             }
 
 /* This is never visible, anyway - might as well remove it.
              // power regression
@@ -341,8 +345,10 @@ public class ImageUtils {
              powerLineRenderer.setBaseShapesVisible(true);
              plot.setRenderer(2, powerLineRenderer);
 */
-             plot.getDomainAxis().setRange(range);
-             plot.getRangeAxis().setRange(range);
+             if (range != null) {
+	             plot.getDomainAxis().setRange(range);
+	             plot.getRangeAxis().setRange(range);
+             }
 
              JFreeChart chart = new JFreeChart("Correlation Results: r = " + 
                  rCorrelation, JFreeChart.DEFAULT_TITLE_FONT, plot, true);
