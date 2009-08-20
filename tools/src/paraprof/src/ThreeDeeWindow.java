@@ -26,7 +26,7 @@ import edu.uoregon.tau.vis.*;
 import edu.uoregon.tau.vis.XmasTree.Ornament;
 
 public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListener, Observer, Printable, ParaProfWindow,
-        UnitListener, SortListener {
+        UnitListener, SortListener, VisCanvasListener {
 
     private final int defaultToScatter = 4000;
 
@@ -69,6 +69,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     float maxScatterValues[];
 
     public ThreeDeeWindow(ParaProfTrial ppTrial, Component invoker) {
+
         // set the VisTools exception handler
         VisTools.setSwingExceptionHandler(new ExceptionHandler() {
             public void handleException(Exception e) {
@@ -138,7 +139,9 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
         visRenderer.addShape(plot);
         visRenderer.addShape(colorScale);
+        visRenderer.setVisCanvasListener(this);
         visCanvas = new VisCanvas(visRenderer);
+
 
         visCanvas.addKeyListener(this);
 
@@ -1232,6 +1235,36 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
     public JFrame getFrame() {
         return this;
+    }
+
+    public void createNewCanvas() {
+        // TODO Auto-generated method stub
+        visCanvas = new VisCanvas(visRenderer);
+
+        visCanvas.addKeyListener(this);
+
+        JPanel panel = new JPanel() {
+            public Dimension getMinimumSize() {
+                return new Dimension(10, 10);
+            }
+        };
+
+        panel.addKeyListener(this);
+        panel.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 1;
+        gbc.gridheight = 1;
+        panel.add(visCanvas.getActualCanvas(), gbc);
+        panel.setPreferredSize(new Dimension(5, 5));
+        
+        jSplitPane.setLeftComponent(panel);
     }
 
 }
