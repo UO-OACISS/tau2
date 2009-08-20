@@ -26,9 +26,9 @@ import com.sun.opengl.util.BufferUtil;
 /**
  * This object manages the JOGL interface.
  *    
- * <P>CVS $Id: VisRenderer.java,v 1.10 2009/08/20 22:09:36 amorris Exp $</P>
+ * <P>CVS $Id: VisRenderer.java,v 1.11 2009/08/20 23:11:24 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.10 $
+ * @version	$Revision: 1.11 $
  */
 public class VisRenderer implements GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener {
 
@@ -81,9 +81,6 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     private float camera_far = 500.0f;
     private float camera_focallength = 50.0f;
 
-    private Color backColor = Color.white;
-    private Color foreColor = Color.black;
-
     private List shapes = new ArrayList(); // The list of shapes to draw
 
     private float fps; // Frames per Second
@@ -125,6 +122,12 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
 
     public VisRenderer() {}
 
+    /**
+     * Set the handler for VisCanvas events.  When a canvas change is needed, 
+     * for example when FSAA is set/unset, the parent needs to place the new canvas
+     * into their JFrame.
+     * @param visCanvasListener
+     */
     public void setVisCanvasListener(VisCanvasListener visCanvasListener) {
         this.visCanvasListener = visCanvasListener;
     }
@@ -383,7 +386,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     /**
      * Check if we are ready to draw
      */
-    public boolean getReadyToDraw() {
+    public boolean isReadyToDraw() {
         if (glDrawable != null) {
             return true;
         }
