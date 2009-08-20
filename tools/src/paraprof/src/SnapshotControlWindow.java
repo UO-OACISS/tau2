@@ -50,7 +50,7 @@ public class SnapshotControlWindow extends JFrame {
                                     long time = System.currentTimeMillis();
                                     double duration = ((double)time - lastTime) / 1000;
                                     lastTime = time;
-                                    System.out.println("Duration: " + duration);
+//                                    System.out.println("Duration: " + duration);
                                 } else {
                                     slider.setValue(slider.getValue() + 2);
                                 }
