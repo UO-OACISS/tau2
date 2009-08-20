@@ -38,9 +38,9 @@ import com.sun.opengl.util.GLUT;
  * allowing them to query values (0..1) and get colors in the current
  * color set. 
  *    
- * <P>CVS $Id: ColorScale.java,v 1.10 2009/03/28 21:26:48 khuck Exp $</P>
+ * <P>CVS $Id: ColorScale.java,v 1.11 2009/08/20 22:09:34 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.10 $
+ * @version	$Revision: 1.11 $
  */
 
 /* TODO: Provide control over font size perhaps? */
@@ -531,6 +531,11 @@ public class ColorScale extends Observable implements Shape {
     public void setFontScale(double fontScale) {
         this.fontScale = fontScale;
         this.dirty = true;
+    }
+
+    public void resetCanvas() {
+        dirty = true;
+        displayList = 0;
     }
 
 }

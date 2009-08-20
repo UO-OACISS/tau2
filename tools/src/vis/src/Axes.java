@@ -24,9 +24,9 @@ import com.sun.opengl.util.GLUT;
 /**
  * Draws axes with labels.
  *
- * <P>CVS $Id: Axes.java,v 1.8 2007/07/16 17:12:50 amorris Exp $</P>
+ * <P>CVS $Id: Axes.java,v 1.9 2009/08/20 22:09:33 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 public class Axes implements Shape {
 
@@ -385,8 +385,10 @@ public class Axes implements Shape {
         }
         oldAntiAlias = visRenderer.getAntiAliasedLines();
 
-        if (!enabled)
+        
+        if (!enabled) {
             return;
+        }
 
         GL gl = glDrawable.getGL();
 
@@ -540,6 +542,7 @@ public class Axes implements Shape {
 
         gl.glLineWidth(1.0f);
 
+
         // grid for x-y plane
         drawGrid(visRenderer, numx, numy, xSize, ySize, this.xLabelSkip, this.yLabelSkip);
 
@@ -655,7 +658,6 @@ public class Axes implements Shape {
         gl.glPopMatrix();
 
         gl.glEnable(GL.GL_LIGHTING);
-
     }
 
     private void drawLabels(VisRenderer visRenderer, String label, List strings, float increment, int labelSkip, int tickSkip,
@@ -880,5 +882,10 @@ public class Axes implements Shape {
     public void setFontScale(float fontScale) {
         this.fontScale = fontScale;
         this.dirty = true;
+    }
+
+    public void resetCanvas() {
+        dirty = true;
+        displayList = 0;
     }
 }

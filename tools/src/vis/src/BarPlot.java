@@ -30,16 +30,12 @@ import javax.swing.event.ChangeListener;
 
 import com.sun.opengl.util.GLUT;
 
-
-
-
-
 /**
  * Draws a 3d bar plot.
  *
- * <P>CVS $Id: BarPlot.java,v 1.5 2007/02/01 03:43:10 amorris Exp $</P>
+ * <P>CVS $Id: BarPlot.java,v 1.6 2009/08/20 22:09:33 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.5 $
+ * @version	$Revision: 1.6 $
  */
 public class BarPlot implements Plot {
 
@@ -73,6 +69,8 @@ public class BarPlot implements Plot {
     private int translucentDisplayListsXsize;
     private int translucentDisplayListsYsize;
 
+    private float scaleZ;
+
     private GL gl;
 
     /**
@@ -94,8 +92,8 @@ public class BarPlot implements Plot {
      * @param colorValues the color values to use.
      * @param colorScale ColorScale to use for this plot.
      */
-    public void initialize(Axes axes, float xSize, float ySize, float zSize, float heightValues[][],
-            float colorValues[][], ColorScale colorScale) {
+    public void initialize(Axes axes, float xSize, float ySize, float zSize, float heightValues[][], float colorValues[][],
+            ColorScale colorScale) {
 
         setColorScale(colorScale);
         this.nrows = heightValues.length;
@@ -251,12 +249,10 @@ public class BarPlot implements Plot {
 
                 Color color = colorScale.getColor(colorValues[y][x]);
 
-                gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f,
-                        translucency);
+                gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, translucency);
 
                 Vec min = new Vec(xPosition, yPosition, 0);
-                Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize,
-                        heightValues[y][x]);
+                Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize, heightValues[y][x]);
 
                 doBox(min, max, heightValues[y][x]);
             }
@@ -272,12 +268,10 @@ public class BarPlot implements Plot {
 
                 Color color = colorScale.getColor(colorValues[y][x]);
 
-                gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f,
-                        translucency);
+                gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, translucency);
 
                 Vec min = new Vec(xPosition, yPosition, 0);
-                Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize,
-                        heightValues[y][x]);
+                Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize, heightValues[y][x]);
 
                 doBox(min, max, heightValues[y][x]);
             }
@@ -296,12 +290,10 @@ public class BarPlot implements Plot {
 
                 Color color = colorScale.getColor(colorValues[y][x]);
 
-                gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f,
-                        translucency);
+                gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, translucency);
 
                 Vec min = new Vec(xPosition, yPosition, 0);
-                Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize,
-                        heightValues[y][x]);
+                Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize, heightValues[y][x]);
 
                 doBox(min, max, heightValues[y][x]);
             }
@@ -317,12 +309,10 @@ public class BarPlot implements Plot {
 
                 Color color = colorScale.getColor(colorValues[y][x]);
 
-                gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f,
-                        translucency);
+                gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, translucency);
 
                 Vec min = new Vec(xPosition, yPosition, 0);
-                Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize,
-                        heightValues[y][x]);
+                Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize, heightValues[y][x]);
 
                 doBox(min, max, heightValues[y][x]);
             }
@@ -385,8 +375,6 @@ public class BarPlot implements Plot {
 
     }
 
-   
-
     public void cleanUp() {
         VisTools.vout(this, "Cleaning up!");
         // delete displaylists
@@ -394,11 +382,13 @@ public class BarPlot implements Plot {
             for (int i = 0; i < displayLists.size(); i++) {
                 gl.glDeleteLists(((Integer) displayLists.get(i)).intValue(), 1);
             }
-            displayLists = new ArrayList();
+            displayLists.clear();
+            displayLists = null;
         }
     }
 
     private void renderOpaque(GLAutoDrawable glDrawable) {
+
         GL gl = glDrawable.getGL();
 
         if (dirty || displayLists == null) {
@@ -421,17 +411,23 @@ public class BarPlot implements Plot {
             gl.glEnable(GL.GL_LIGHTING);
             gl.glFrontFace(GL.GL_CCW);
             gl.glEnable(GL.GL_CULL_FACE);
-            gl.glShadeModel(GL.GL_FLAT);
+            //gl.glShadeModel(GL.GL_FLAT);
+            gl.glShadeModel(GL.GL_SMOOTH);
             gl.glEnable(GL.GL_DEPTH_TEST);
             gl.glDisable(GL.GL_BLEND);
             gl.glBlendFunc(GL.GL_ONE, GL.GL_ZERO);
+
+            // Experimental
+            //gl.glDisable(GL.GL_FOG);
+
+            //gl.glEnable(GL.GL_FOG);
 
             float xIncrement = xSize / (ncols + 1);
             float yIncrement = ySize / (nrows + 1);
 
             gl.glPushMatrix();
-            gl.glTranslatef(xIncrement - (xIncrement * barSize / 2), yIncrement - (yIncrement * barSize / 2),
-                    0.05f);
+            gl.glTranslatef(xIncrement - (xIncrement * barSize / 2), yIncrement - (yIncrement * barSize / 2), 0.05f);
+            gl.glDepthFunc(GL.GL_LESS);
 
             gl.glBegin(GL.GL_QUADS);
 
@@ -461,8 +457,7 @@ public class BarPlot implements Plot {
                             && VisTools.isSufficientlyEqual(b, lastBlue)) {
                         colorsSaved++;
                     } else {
-                        gl.glColor3f(color.getRed() / 255.0f, color.getGreen() / 255.0f,
-                                color.getBlue() / 255.0f);
+                        gl.glColor3f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f);
                         lastRed = r;
                         lastBlue = b;
                         lastGreen = g;
@@ -589,11 +584,17 @@ public class BarPlot implements Plot {
 
         this.gl = gl;
 
+        gl.glPushMatrix();
+
+        gl.glScalef(1.0f, 1.0f, scaleZ);
+
         if (translucent) {
             renderTranslucent(glDrawable, direction);
         } else {
             renderOpaque(glDrawable);
         }
+
+        gl.glPopMatrix();
 
         dirty = false;
 
@@ -629,12 +630,11 @@ public class BarPlot implements Plot {
 
             Color color = colorScale.getColor(colorValues[y][x]);
 
-            gl.glColor4f(color.getRed() / 255.0f + 0.25f, color.getGreen() / 255.0f + 0.25f,
-                    color.getBlue() / 255.0f + 0.25f, 1.0f);
+            gl.glColor4f(color.getRed() / 255.0f + 0.25f, color.getGreen() / 255.0f + 0.25f, color.getBlue() / 255.0f + 0.25f,
+                    1.0f);
 
             Vec min = new Vec(xPosition, yPosition, 0);
-            Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize,
-                    heightValues[y][x]);
+            Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize, heightValues[y][x]);
 
             // top
             gl.glNormal3f(0, 0, 1);
@@ -689,12 +689,11 @@ public class BarPlot implements Plot {
             Color color = colorScale.getColor(colorValues[y][x]);
 
             //            gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, 1.0f);
-            gl.glColor4f(color.getRed() / 255.0f + 0.25f, color.getGreen() / 255.0f + 0.25f,
-                    color.getBlue() / 255.0f + 0.25f, 1.0f);
+            gl.glColor4f(color.getRed() / 255.0f + 0.25f, color.getGreen() / 255.0f + 0.25f, color.getBlue() / 255.0f + 0.25f,
+                    1.0f);
 
             Vec min = new Vec(xPosition, yPosition, 0);
-            Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize,
-                    heightValues[y][x]);
+            Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize, heightValues[y][x]);
 
             // front
             gl.glNormal3f(0, 0, 1);
@@ -839,8 +838,7 @@ public class BarPlot implements Plot {
         ChangeListener chageListener = new ChangeListener() {
             public void stateChanged(ChangeEvent event) {
                 try {
-                    BarPlot.this.setSize(plotWidthSlider.getValue(), plotDepthSlider.getValue(),
-                            plotHeightSlider.getValue());
+                    BarPlot.this.setSize(plotWidthSlider.getValue(), plotDepthSlider.getValue(), plotHeightSlider.getValue());
                     visRenderer.redraw();
                 } catch (Exception e) {
                     VisTools.handleException(e);
@@ -986,5 +984,22 @@ public class BarPlot implements Plot {
     public void setTranslucencyRatio(float translucency) {
         this.translucency = translucency;
         this.dirty = true;
+    }
+
+    public float getScaleZ() {
+        return scaleZ;
+    }
+
+    public void setScaleZ(float scaleZ) {
+        this.scaleZ = scaleZ;
+    }
+
+    public void resetCanvas() {
+        dirty = true;
+        displayLists.clear();
+        displayLists = null;
+        if (axes != null ) {
+            axes.resetCanvas();
+        }
     }
 }

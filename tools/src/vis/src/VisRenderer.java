@@ -26,9 +26,9 @@ import com.sun.opengl.util.BufferUtil;
 /**
  * This object manages the JOGL interface.
  *    
- * <P>CVS $Id: VisRenderer.java,v 1.9 2007/12/07 02:05:22 amorris Exp $</P>
+ * <P>CVS $Id: VisRenderer.java,v 1.10 2009/08/20 22:09:36 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.9 $
+ * @version	$Revision: 1.10 $
  */
 public class VisRenderer implements GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener {
 
@@ -110,6 +110,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     private boolean stereo;
     private JCheckBox stereoCheckBox;
     private boolean antiAliasedLines;
+    private boolean fsaa;
     private boolean reverseVideo;
 
     private int prevMouseX, prevMouseY;
@@ -120,7 +121,13 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
 
     private int cameraMode = CAMERA_PLOT;
 
+    private VisCanvasListener visCanvasListener;
+
     public VisRenderer() {}
+
+    public void setVisCanvasListener(VisCanvasListener visCanvasListener) {
+        this.visCanvasListener = visCanvasListener;
+    }
 
     /**
      * Add a shape to the list of shapes to be drawn
@@ -139,10 +146,11 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     }
 
     private void setLighting() {
+        float lightPosition[] = { 0.0f, 0.0f, 1.0f, 0.0f };
 
         //float lightPosition[] = { 0.7f, 1.0f, 0.6f, 0.0f };
-        float lightPosition[] = { 0.0f, 0.0f, 1.0f, 0.0f };
         //float lightPosition[] = { 5.7f, 5.0f, 5.6f, 1.0f };
+        //float lightPosition[] = { -1.0f, 0.0f, 1.0f, 0.0f };
 
         //float lightPosition[] = { 0f, 10.0f, 10.0f, 1.0f };
 
@@ -151,16 +159,15 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         //float ambientLight[] = { 0.15f, 0.15f, 0.15f, 1.0f };
         float ambientLight[] = { 0.15f, 0.15f, 0.15f, 1.0f };
 
-        //float mat_shininess[] = { 50.0f };
-        //float mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-
         gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, lightPosition, 0);
         gl.glLightfv(GL.GL_LIGHT0, GL.GL_DIFFUSE, whiteLight, 0);
-        //gl.glLightfv(GL.GL_LIGHT0, GL.GL_SPECULAR, whiteLight);
+        //gl.glLightfv(GL.GL_LIGHT0, GL.GL_SPECULAR, whiteLight, 0);
         gl.glLightfv(GL.GL_LIGHT0, GL.GL_AMBIENT, ambientLight, 0);
 
-        //gl.glMaterialfv(GL.GL_FRONT, GL.GL_SHININESS, mat_shininess);
-        //gl.glMaterialfv(GL.GL_FRONT, GL.GL_SPECULAR, mat_specular);
+        //        float mat_shininess[] = { 50.0f };
+        //        float mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        //        gl.glMaterialfv(GL.GL_FRONT, GL.GL_SHININESS, mat_shininess, 0);
+        //        gl.glMaterialfv(GL.GL_FRONT, GL.GL_SPECULAR, mat_specular, 0);
 
         //gl.glLightfv(GL.GL_LIGHT1, GL.GL_POSITION, lightPosition2);
         //gl.glLightfv(GL.GL_LIGHT1, GL.GL_DIFFUSE, whiteLight);
@@ -172,6 +179,15 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         gl.glShadeModel(GL.GL_FLAT);
         gl.glEnable(GL.GL_LIGHTING);
         gl.glEnable(GL.GL_LIGHT0);
+
+        //        float fogColor[] = {0.5f, 0.5f, 0.5f, 1.0f}; //set the for color to grey
+        //        float density = 0.015f;
+        //        gl.glEnable(GL.GL_FOG);
+        //        gl.glFogi (GL.GL_FOG_MODE, GL.GL_EXP2); //set the fog mode to GL_EXP2
+        //        gl.glFogfv (GL.GL_FOG_COLOR, fogColor, 0); //set the fog color to our color chosen above
+        //        gl.glFogf (GL.GL_FOG_DENSITY, density); //set the density to the value above
+        //        gl.glHint (GL.GL_FOG_HINT, GL.GL_DONT_CARE); // set the fog to look the nicest, may slow down on older cards
+
         //gl.glEnable(GL.GL_LIGHT1);
         //gl.glEnable(GL.GL_BLEND);
 
@@ -362,6 +378,16 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         if (glDrawable != null) {
             glDrawable.display();
         }
+    }
+
+    /**
+     * Check if we are ready to draw
+     */
+    public boolean getReadyToDraw() {
+        if (glDrawable != null) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -760,11 +786,22 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
             }
         });
 
-        final JCheckBox antialiasCheckBox = new JCheckBox("Anti-Aliased Lines", antiAliasedLines);
+        final JCheckBox antialiasCheckBox = new JCheckBox("AA Lines", antiAliasedLines);
         antialiasCheckBox.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 try {
                     setAntiAliasedLines(antialiasCheckBox.isSelected());
+                } catch (Exception e) {
+                    VisTools.handleException(e);
+                }
+            }
+        });
+
+        final JCheckBox fsaaCheckBox = new JCheckBox("Full Screen AA", fsaa);
+        fsaaCheckBox.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                try {
+                    setFSAA(fsaaCheckBox.isSelected());
                 } catch (Exception e) {
                     VisTools.handleException(e);
                 }
@@ -837,22 +874,23 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
         gbc.fill = GridBagConstraints.HORIZONTAL;
         VisTools.addCompItem(panel, speedSlider, gbc, 2, 1, 1, 1);
 
-        VisTools.addCompItem(panel, reverseCheckBox, gbc, 0, 2, 3, 1);
-        VisTools.addCompItem(panel, antialiasCheckBox, gbc, 0, 3, 3, 1);
-        VisTools.addCompItem(panel, stereoCheckBox, gbc, 0, 4, 3, 1);
+        VisTools.addCompItem(panel, reverseCheckBox, gbc, 0, 2, 2, 1);
+        VisTools.addCompItem(panel, stereoCheckBox, gbc, 1, 2, 2, 1);
+        VisTools.addCompItem(panel, antialiasCheckBox, gbc, 0, 3, 2, 1);
+        VisTools.addCompItem(panel, fsaaCheckBox, gbc, 1, 3, 3, 1);
         gbc.weightx = 0.1;
-        VisTools.addCompItem(panel, new JLabel("Separation"), gbc, 0, 5, 1, 1);
-        VisTools.addCompItem(panel, new JLabel("Aperture"), gbc, 0, 6, 1, 1);
+        VisTools.addCompItem(panel, new JLabel("Separation"), gbc, 0, 4, 1, 1);
+        VisTools.addCompItem(panel, new JLabel("Aperture"), gbc, 0, 5, 1, 1);
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 0.9;
 
         gbc.anchor = GridBagConstraints.CENTER;
-        VisTools.addCompItem(panel, focalLengthSlider, gbc, 1, 5, 2, 1);
-        VisTools.addCompItem(panel, apertureSlider, gbc, 1, 6, 2, 1);
+        VisTools.addCompItem(panel, focalLengthSlider, gbc, 1, 4, 2, 1);
+        VisTools.addCompItem(panel, apertureSlider, gbc, 1, 5, 2, 1);
 
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
-        VisTools.addCompItem(panel, glInfoButton, gbc, 0, 7, 3, 1);
+        VisTools.addCompItem(panel, glInfoButton, gbc, 0, 6, 3, 1);
 
         return panel;
     }
@@ -934,6 +972,27 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     public void setCameraMode(int cameraMode) {
         this.cameraMode = cameraMode;
         computeEye();
+    }
+
+    public boolean getFSAA() {
+        return fsaa;
+    }
+
+    public void setFSAA(boolean fsaa) {
+        if (fsaa != this.fsaa) {
+            this.fsaa = fsaa;
+            
+            
+            if (visCanvasListener != null) {
+                visCanvasListener.createNewCanvas();
+            }
+            
+            for (int i = 0; i < shapes.size(); i++) {
+                Shape shape = (Shape) shapes.get(i);
+                shape.resetCanvas();
+            }
+            redraw();
+        }
     }
 
 }

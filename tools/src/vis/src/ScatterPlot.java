@@ -29,9 +29,9 @@ import javax.swing.event.ChangeListener;
  *
  * @author Alan Morris
  *
- * <P>CVS $Id: ScatterPlot.java,v 1.6 2007/12/07 02:05:22 amorris Exp $</P>
+ * <P>CVS $Id: ScatterPlot.java,v 1.7 2009/08/20 22:09:34 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public class ScatterPlot implements Plot {
 
@@ -373,5 +373,13 @@ public class ScatterPlot implements Plot {
      */
     public void setVisible(boolean visible) {
         this.visible = visible;
+    }
+
+    public void resetCanvas() {
+        dirty = true;
+        displayList = 0;
+        if (axes != null ) {
+            axes.resetCanvas();
+        }
     }
 }

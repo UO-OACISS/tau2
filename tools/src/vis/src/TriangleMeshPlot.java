@@ -34,9 +34,9 @@ import com.sun.opengl.util.GLUT;
  * 
  * TODO: Back to front drawing (utilize 'direction') for correct blending.
  *
- * <P>CVS $Id: TriangleMeshPlot.java,v 1.6 2008/04/15 21:48:37 amorris Exp $</P>
+ * <P>CVS $Id: TriangleMeshPlot.java,v 1.7 2009/08/20 22:09:35 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.6 $
+ * @version	$Revision: 1.7 $
  */
 public class TriangleMeshPlot implements Plot {
 
@@ -1038,6 +1038,15 @@ public class TriangleMeshPlot implements Plot {
     public void setTranslucencyRatio(float translucency) {
         this.translucency = translucency;
         this.dirty = true;
+    }
+
+    public void resetCanvas() {
+        dirty = true;
+        displayLists.clear();
+        displayLists = null;
+        if (axes != null ) {
+            axes.resetCanvas();
+        }
     }
 
 }

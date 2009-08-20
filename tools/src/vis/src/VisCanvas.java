@@ -17,9 +17,9 @@ import javax.media.opengl.GLException;
  * This class is merely a wrapper over GLCanvas which allows users of the Vis
  * package to build against vis alone (not jogl). 
  *
- * <P>CVS $Id: VisCanvas.java,v 1.11 2007/02/01 03:43:10 amorris Exp $</P>
+ * <P>CVS $Id: VisCanvas.java,v 1.12 2009/08/20 22:09:35 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  */
 public class VisCanvas {
 
@@ -35,12 +35,12 @@ public class VisCanvas {
         GLCapabilities caps = new GLCapabilities();
 
         //FSAA (Full Screen Anti-Aliasing)
-        //caps.setSampleBuffers(true);
-        //caps.setNumSamples(4);
+        if (visRenderer.getFSAA()) {
+            caps.setSampleBuffers(true);
+            caps.setNumSamples(4);
+            caps.setHardwareAccelerated(true);
+        }
 
-        //caps.setHardwareAccelerated(true);
-
-        
         boolean tryStereo = true;
         // Fisher Price machines segfault if you try to use stereo 
         String os = System.getProperty("os.name").toLowerCase();
@@ -62,6 +62,8 @@ public class VisCanvas {
 
         // for testing
         //canvas.addGLEventListener(new Gears.GearRenderer());
+
+        //visRenderer.set
 
     }
 

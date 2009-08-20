@@ -548,4 +548,9 @@ public class XmasTree implements Plot {
         this.dirty = true;
     }
 
+    public void resetCanvas() {
+        dirty = true;
+        displayList = 0;
+    }
+
 }
