@@ -16,9 +16,9 @@ import java.util.List;
  *    
  * TODO: Implement other factory methods.
  *
- * <P>CVS $Id: PlotFactory.java,v 1.6 2009/08/14 22:58:02 amorris Exp $</P>
+ * <P>CVS $Id: PlotFactory.java,v 1.7 2009/08/21 19:00:18 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.6 $
+ * @version	$Revision: 1.7 $
  */
 public class PlotFactory {
 
@@ -55,7 +55,7 @@ public class PlotFactory {
         }
 
         List[] axisStrings = new ArrayList[4];
-        
+
         for (int i = 0; i < 4; i++) {
             if (minScatterValues[i] == Float.MAX_VALUE) {
                 minScatterValues[i] = 0;
@@ -64,9 +64,8 @@ public class PlotFactory {
                 maxScatterValues[i] = 0;
             }
 
-
             axisStrings[i] = new ArrayList();
-            
+
             if (scatterPlot.getNormalized()) {
                 axisStrings[i].add(getSaneDoubleString(minScatterValues[i]));
                 axisStrings[i].add(getSaneDoubleString(minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) * .25));
@@ -81,25 +80,24 @@ public class PlotFactory {
                 axisStrings[i].add(Float.toString(maxScatterValues[i]));
             }
         }
-        
+
         axes.setStrings(xLabel, yLabel, zLabel, axisStrings[0], axisStrings[1], axisStrings[2]);
-        colorScale.setStrings((String)axisStrings[3].get(0), (String)axisStrings[3].get(4), colorLabel);
+        colorScale.setStrings((String) axisStrings[3].get(0), (String) axisStrings[3].get(4), colorLabel);
         //colorScale.setStrings("Ggs\ngGo\nBob","asasdfasdfasdfasdfasdf\nbgr","ABCTGasdf\nted");
-        
+
         // Initialize the scatterPlot
         scatterPlot.setSize(15, 15, 15);
         scatterPlot.setAxes(axes);
         scatterPlot.setColorScale(colorScale);
         scatterPlot.setValues(values);
-        
+
         return scatterPlot;
     }
 
-    
     public static String getSaneDoubleString(double d) {
         return formatDouble(d, 4, false);
     }
-    
+
     // this has been temporarily transplanted here
     // left pad : pad string 's' up to length plen, but put the whitespace on
     // the left
@@ -113,7 +111,7 @@ public class PlotFactory {
         String str = new String(padchars, 0, len);
         return str.concat(s);
     }
-    
+
     public static String formatDouble(double d, int width, boolean pad) {
 
         // first check if the regular toString is in exponential form
@@ -196,6 +194,4 @@ public class PlotFactory {
             return str;
         }
     }
-
-    
 }

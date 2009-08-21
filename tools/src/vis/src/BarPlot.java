@@ -33,9 +33,9 @@ import com.sun.opengl.util.GLUT;
 /**
  * Draws a 3d bar plot.
  *
- * <P>CVS $Id: BarPlot.java,v 1.7 2009/08/21 00:21:23 amorris Exp $</P>
+ * <P>CVS $Id: BarPlot.java,v 1.8 2009/08/21 19:00:17 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.7 $
+ * @version	$Revision: 1.8 $
  */
 public class BarPlot implements Plot {
 
@@ -69,17 +69,20 @@ public class BarPlot implements Plot {
     private int translucentDisplayListsXsize;
     private int translucentDisplayListsYsize;
 
-    private float scaleZ;
+    private float scaleZ = 1.0f;
 
     private GL gl;
 
     /**
-     * The BarPlot constructor is empty.  Use initialize to set initial values.  
-     * This is done so that the object may be easily reused with reseting everthing.
-     * @see #initialize(Axes, float, float, float, float[][], float[][], ColorScale)
+     * Create a BarPlot with a given Axes and ColorScale
      */
-    public BarPlot() {
+    public BarPlot(Axes axes, ColorScale colorScale) {
+        this.axes = axes;
+        setColorScale(colorScale);
+    }
 
+    public String getName() {
+        return "Bar Plot";
     }
 
     /**
@@ -92,29 +95,6 @@ public class BarPlot implements Plot {
      * @param colorValues the color values to use.
      * @param colorScale ColorScale to use for this plot.
      */
-    public void initialize(Axes axes, float xSize, float ySize, float zSize, float heightValues[][], float colorValues[][],
-            ColorScale colorScale) {
-
-        setColorScale(colorScale);
-        this.nrows = heightValues.length;
-        this.ncols = heightValues[0].length;
-        this.heightValues = heightValues;
-        this.colorValues = colorValues;
-
-        this.xSize = xSize;
-        this.ySize = ySize;
-        this.zSize = zSize;
-
-        this.axes = axes;
-        axes.setSize(xSize, ySize, zSize);
-
-        processValues();
-    }
-
-    public String getName() {
-        return "Bar Plot";
-    }
-
     public void setValues(float xSize, float ySize, float zSize, float heightValues[][], float colorValues[][]) {
         this.nrows = heightValues.length;
         if (heightValues.length > 0) {
@@ -158,7 +138,6 @@ public class BarPlot implements Plot {
     private void processValues() {
         float maxHeightValue = -Float.MAX_VALUE;
         float maxColorValue = -Float.MAX_VALUE;
-        System.out.println(maxColorValue);
         for (int y = 0; y < nrows; y++) {
             for (int x = 0; x < ncols; x++) {
                 float heightValue = heightValues[y][x];
@@ -1002,7 +981,7 @@ public class BarPlot implements Plot {
         dirty = true;
         displayLists.clear();
         displayLists = null;
-        if (axes != null ) {
+        if (axes != null) {
             axes.resetCanvas();
         }
     }
