@@ -48,6 +48,7 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 		pathSelector = new SteppedComboBox(mapData.getPaths().toArray());
 		Dimension d = pathSelector.getPreferredSize();
 	    pathSelector.setPreferredSize(new Dimension(50, d.height));
+        pathSelector.setMinimumSize(new Dimension(50, d.height));
 	    pathSelector.setPopupWidth(d.width);
 		figureSelector = new SteppedComboBox(figures);
 		d = figureSelector.getPreferredSize();
