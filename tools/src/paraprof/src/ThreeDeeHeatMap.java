@@ -20,9 +20,6 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
     private SteppedComboBox colorComboBox = null;
     private JPanel mainPanel = null;
     private JPanel mapPanel;
-    private Map/*<String, double[][][]>*/maps = null;
-    private Map/*<String, double[]>*/maxs = null;
-    private Map/*<String, double[]>*/mins = null;
     private HeatMapData mapData = null;
     private final static String allPaths = "All Paths";
 
@@ -38,10 +35,8 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
 
     private String currentPath = allPaths;
     private int heightMetric = VOLUME;
-    private int colorMetric = CALLS;
+    private int colorMetric = MAX;
 
-    private int size = 0;
-    private HeatMap heatMap = null;
 
     private BarPlot barPlot;
     private Axes axes;
@@ -75,9 +70,6 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
         }
 
         this.mapData = mapData;
-        this.maxs = mapData.getMaxs();
-        this.mins = mapData.getMins();
-        this.size = mapData.getSize();
 
         pathSelector = new SteppedComboBox(mapData.getPaths().toArray());
         Dimension d = pathSelector.getPreferredSize();
@@ -220,7 +212,7 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
         heightAxisStrings.add(PlotFactory.getSaneDoubleString(maxHeightValue * .25));
         heightAxisStrings.add(PlotFactory.getSaneDoubleString(maxHeightValue * .50));
         heightAxisStrings.add(PlotFactory.getSaneDoubleString(maxHeightValue * .75));
-        heightAxisStrings.add(Float.toString(maxHeightValue));
+        heightAxisStrings.add(PlotFactory.getSaneDoubleString(maxHeightValue));
 
         axes.setStrings("receiver", "sender", metricStrings[heightMetric], threadNames, threadNames, heightAxisStrings);
         axes.setOnEdge(true);
@@ -247,11 +239,9 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
         }
 
         if (barPlot == null) {
-            barPlot = new BarPlot();
-            barPlot.initialize(axes, 18, 18, 8, heightValues, colorValues, colorScale);
-        } else {
-            barPlot.setValues(18f, 18f, 18f, heightValues, colorValues);
+            barPlot = new BarPlot(axes, colorScale);
         }
+        barPlot.setValues(18, 18, 8, heightValues, colorValues);
 
     }
 
@@ -382,19 +372,12 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
         //        this.setVisible(true);
     }
 
-    /**
-     * @return the heatMap
-     */
-    public HeatMap getHeatMap() {
-        return heatMap;
-    }
+
 
     public void export(Graphics2D g2d, boolean toScreen, boolean fullWindow, boolean drawHeader) {
         //heatMap.paint(g2d);
         mapPanel.setDoubleBuffered(false);
-        heatMap.setDoubleBuffered(false);
         mapPanel.paintAll(g2d);
-        heatMap.setDoubleBuffered(true);
         mapPanel.setDoubleBuffered(true);
     }
 

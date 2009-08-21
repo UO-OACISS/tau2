@@ -142,7 +142,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         visRenderer.setVisCanvasListener(this);
         visCanvas = new VisCanvas(visRenderer);
 
-
         visCanvas.addKeyListener(this);
 
         JPanel panel = new JPanel() {
@@ -683,16 +682,12 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             axes.setOnEdge(true);
 
             if (barPlot == null) {
-
-                barPlot = new BarPlot();
-                barPlot.initialize(axes, settings.getPlotWidth(), settings.getPlotDepth(), settings.getPlotHeight(),
-                        heightValues, colorValues, colorScale);
-                plot = barPlot;
-            } else {
-                barPlot.setValues(settings.getPlotWidth(), settings.getPlotDepth(), settings.getPlotHeight(), heightValues,
-                        colorValues);
-                plot = barPlot;
+                barPlot = new BarPlot(axes, colorScale);
             }
+            barPlot.setValues(settings.getPlotWidth(), settings.getPlotDepth(), settings.getPlotHeight(), heightValues,
+                    colorValues);
+            plot = barPlot;
+
         }
     }
 
@@ -786,7 +781,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     private void setupMenus() {
 
         JMenuBar mainMenu = new JMenuBar();
-                
+
         optionsMenu = new JMenu("Options");
         optionsMenu.getPopupMenu().setLightWeightPopupEnabled(false);
 
@@ -1263,7 +1258,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         gbc.gridheight = 1;
         panel.add(visCanvas.getActualCanvas(), gbc);
         panel.setPreferredSize(new Dimension(5, 5));
-        
+
         jSplitPane.setLeftComponent(panel);
     }
 
