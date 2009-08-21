@@ -33,9 +33,9 @@ import com.sun.opengl.util.GLUT;
 /**
  * Draws a 3d bar plot.
  *
- * <P>CVS $Id: BarPlot.java,v 1.8 2009/08/21 19:00:17 amorris Exp $</P>
+ * <P>CVS $Id: BarPlot.java,v 1.9 2009/08/21 23:58:00 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.8 $
+ * @version	$Revision: 1.9 $
  */
 public class BarPlot implements Plot {
 
@@ -72,6 +72,9 @@ public class BarPlot implements Plot {
     private float scaleZ = 1.0f;
 
     private GL gl;
+    
+    float maxHeightValue;
+    float maxColorValue;
 
     /**
      * Create a BarPlot with a given Axes and ColorScale
@@ -114,6 +117,29 @@ public class BarPlot implements Plot {
     }
 
     /**
+     * Initializes this BarPlot with the given values.
+     * @param axes Axes to use for this plot.
+     * @param xSize size in x direction.
+     * @param ySize size in y direction.
+     * @param zSize size in z direction.
+     * @param heightValues the height values to use.
+     * @param colorValues the color values to use.
+     * @param colorScale ColorScale to use for this plot.
+     */
+    public void setValues(float heightValues[][], float colorValues[][]) {
+        this.nrows = heightValues.length;
+        if (heightValues.length > 0) {
+            this.ncols = heightValues[0].length;
+        } else {
+            this.ncols = 0;
+        }
+        this.heightValues = heightValues;
+        this.colorValues = colorValues;
+        processValues();
+        this.dirty = true;
+    }
+
+    /**
      * Returns the current barSize.
      * @return the current barSize (0..1).
      */
@@ -136,8 +162,8 @@ public class BarPlot implements Plot {
     }
 
     private void processValues() {
-        float maxHeightValue = -Float.MAX_VALUE;
-        float maxColorValue = -Float.MAX_VALUE;
+        maxHeightValue = -Float.MAX_VALUE;
+        maxColorValue = -Float.MAX_VALUE;
         for (int y = 0; y < nrows; y++) {
             for (int x = 0; x < ncols; x++) {
                 float heightValue = heightValues[y][x];
@@ -147,18 +173,38 @@ public class BarPlot implements Plot {
             }
         }
 
-        for (int y = 0; y < nrows; y++) {
-            for (int x = 0; x < ncols; x++) {
-                float heightValue = heightValues[y][x];
-                float colorValue = colorValues[y][x];
-                heightValues[y][x] = heightValue / maxHeightValue * zSize;
-                colorValues[y][x] = colorValue / maxColorValue;
-                if (maxColorValue == 0) {
-                    colorValues[y][x] = 1.0f;
-                }
-            }
-        }
+//        for (int y = 0; y < nrows; y++) {
+//            for (int x = 0; x < ncols; x++) {
+//                float heightValue = heightValues[y][x];
+//                float colorValue = colorValues[y][x];
+//                heightValues[y][x] = heightValue / maxHeightValue * zSize;
+//                if (maxHeightValue == 0 ) {
+//                    heightValues[y][x] = 0.0f;
+//                }
+//                colorValues[y][x] = colorValue / maxColorValue;
+//                if (maxColorValue == 0) {
+//                    colorValues[y][x] = 1.0f;
+//                }
+//            }
+//        }
     }
+    
+    
+    private float getHeight(int x, int y) {
+        if (maxHeightValue == 0) {
+            return 0;
+        }
+        return heightValues[y][x] / maxHeightValue * zSize; 
+    }
+
+    private float getColor(int x, int y) {
+        if (maxColorValue == 0) {
+            return 0;
+        }
+        return colorValues[y][x] / maxColorValue; 
+    }
+
+    
 
     public void setSize(float xSize, float ySize, float zSize) {
         this.xSize = xSize;
@@ -230,14 +276,14 @@ public class BarPlot implements Plot {
                 float xPosition = x * xIncrement;
                 float yPosition = y * yIncrement;
 
-                Color color = colorScale.getColor(colorValues[y][x]);
+                Color color = colorScale.getColor(getColor(x,y));
 
                 gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, translucency);
 
                 Vec min = new Vec(xPosition, yPosition, 0);
-                Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize, heightValues[y][x]);
+                Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize, getHeight(x,y));
 
-                doBox(min, max, heightValues[y][x]);
+                doBox(min, max, getHeight(x,y));
             }
             gl.glEnd();
             gl.glEndList();
@@ -249,14 +295,14 @@ public class BarPlot implements Plot {
                 float xPosition = x * xIncrement;
                 float yPosition = y * yIncrement;
 
-                Color color = colorScale.getColor(colorValues[y][x]);
+                Color color = colorScale.getColor(getColor(x,y));
 
                 gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, translucency);
 
                 Vec min = new Vec(xPosition, yPosition, 0);
-                Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize, heightValues[y][x]);
+                Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize, getHeight(x,y));
 
-                doBox(min, max, heightValues[y][x]);
+                doBox(min, max, getHeight(x,y));
             }
             gl.glEnd();
             gl.glEndList();
@@ -271,14 +317,14 @@ public class BarPlot implements Plot {
                 float xPosition = x * xIncrement;
                 float yPosition = y * yIncrement;
 
-                Color color = colorScale.getColor(colorValues[y][x]);
+                Color color = colorScale.getColor(getColor(x,y));
 
                 gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, translucency);
 
                 Vec min = new Vec(xPosition, yPosition, 0);
-                Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize, heightValues[y][x]);
+                Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize, getHeight(x,y));
 
-                doBox(min, max, heightValues[y][x]);
+                doBox(min, max, getHeight(x,y));
             }
             gl.glEnd();
             gl.glEndList();
@@ -290,14 +336,14 @@ public class BarPlot implements Plot {
                 float xPosition = x * xIncrement;
                 float yPosition = y * yIncrement;
 
-                Color color = colorScale.getColor(colorValues[y][x]);
+                Color color = colorScale.getColor(getColor(x,y));
 
                 gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, translucency);
 
                 Vec min = new Vec(xPosition, yPosition, 0);
-                Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize, heightValues[y][x]);
+                Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize, getHeight(x,y));
 
-                doBox(min, max, heightValues[y][x]);
+                doBox(min, max, getHeight(x,y));
             }
             gl.glEnd();
             gl.glEndList();
@@ -430,7 +476,7 @@ public class BarPlot implements Plot {
                     float xPosition = xValue * xIncrement;
                     float yPosition = yValue * yIncrement;
 
-                    Color color = colorScale.getColor(colorValues[yValue][xValue]);
+                    Color color = colorScale.getColor(getColor(xValue,yValue));
 
                     float r = color.getRed() / 255.0f;
                     float g = color.getGreen() / 255.0f;
@@ -448,9 +494,9 @@ public class BarPlot implements Plot {
                     }
                     Vec min = new Vec(xPosition, yPosition, 0);
                     Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize,
-                            heightValues[yValue][xValue]);
+                            getHeight(xValue,yValue));
 
-                    if (heightValues[yValue][xValue] >= threshold) {
+                    if (getHeight(xValue,yValue) >= threshold) {
 
                         // top
                         gl.glNormal3f(0, 0, 1);
@@ -611,13 +657,13 @@ public class BarPlot implements Plot {
             float xPosition = x * xIncrement;
             float yPosition = y * yIncrement;
 
-            Color color = colorScale.getColor(colorValues[y][x]);
+            Color color = colorScale.getColor(getColor(x,y));
 
             gl.glColor4f(color.getRed() / 255.0f + 0.25f, color.getGreen() / 255.0f + 0.25f, color.getBlue() / 255.0f + 0.25f,
                     1.0f);
 
             Vec min = new Vec(xPosition, yPosition, 0);
-            Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize, heightValues[y][x]);
+            Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize, getHeight(x,y));
 
             // top
             gl.glNormal3f(0, 0, 1);
@@ -669,14 +715,14 @@ public class BarPlot implements Plot {
             float xPosition = x * xIncrement;
             float yPosition = y * yIncrement;
 
-            Color color = colorScale.getColor(colorValues[y][x]);
+            Color color = colorScale.getColor(getColor(x,y));
 
             //            gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, 1.0f);
             gl.glColor4f(color.getRed() / 255.0f + 0.25f, color.getGreen() / 255.0f + 0.25f, color.getBlue() / 255.0f + 0.25f,
                     1.0f);
 
             Vec min = new Vec(xPosition, yPosition, 0);
-            Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize, heightValues[y][x]);
+            Vec max = new Vec(xPosition + xIncrement * barSize, yPosition + yIncrement * barSize, getHeight(x,y));
 
             // front
             gl.glNormal3f(0, 0, 1);
@@ -748,7 +794,7 @@ public class BarPlot implements Plot {
         gl.glDepthFunc(GL.GL_LEQUAL);
 
         gl.glDisable(GL.GL_CULL_FACE);
-        float height = heightValues[selectedRow][selectedCol];
+        float height = getHeight(selectedCol,selectedRow);
 
         gl.glTranslatef(0, 0, 0.055f);
 

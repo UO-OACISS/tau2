@@ -24,9 +24,9 @@ import com.sun.opengl.util.GLUT;
 /**
  * Draws axes with labels.
  *
- * <P>CVS $Id: Axes.java,v 1.9 2009/08/20 22:09:33 amorris Exp $</P>
+ * <P>CVS $Id: Axes.java,v 1.10 2009/08/21 23:57:59 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  */
 public class Axes implements Shape {
 
@@ -184,8 +184,9 @@ public class Axes implements Shape {
         this.xSize = xSize;
         this.ySize = ySize;
         this.zSize = zSize;
-        if (this.autoSkip)
+        if (this.autoSkip) {
             setAutoTickSkip();
+        }
         this.dirty = true;
     }
 
@@ -416,6 +417,9 @@ public class Axes implements Shape {
     }
 
     private void setAutoTickSkip() {
+        if (xStrings == null) {
+            return;
+        }
         this.xLabelSkip = (int) (xStrings.size() / (xSize * 2));
         this.yLabelSkip = (int) (yStrings.size() / (ySize * 2));
         this.zLabelSkip = (int) (zStrings.size() / (zSize * 2));
