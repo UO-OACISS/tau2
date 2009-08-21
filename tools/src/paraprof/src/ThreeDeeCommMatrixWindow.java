@@ -61,8 +61,6 @@ public class ThreeDeeCommMatrixWindow implements ParaProfWindow, Printable {
 
         frame.setJMenuBar(mainMenu);
 
-        frame.pack();
-
         //Set the help window text if required.
         if (ParaProf.getHelpWindow().isVisible()) {
             matrix.help(false);
@@ -114,7 +112,7 @@ public class ThreeDeeCommMatrixWindow implements ParaProfWindow, Printable {
             return null;
         }
         mapData.massageData();
-        window = new ThreeDeeHeatMap("3D Communication Matrix", mapData, ppTrial);
+        window = new ThreeDeeHeatMap("3D Communication Matrix", mapData, ppTrial, mainFrame);
         URL url = Utility.getResource("tau32x32.gif");
         if (url != null) {
             window.setIconImage(Toolkit.getDefaultToolkit().getImage(url));
