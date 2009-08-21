@@ -9,6 +9,7 @@ import java.util.List;
 import javax.swing.*;
 
 import edu.uoregon.tau.common.ImageExport;
+import edu.uoregon.tau.common.StoppableThread;
 import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.UtilFncs;
 import edu.uoregon.tau.vis.*;
@@ -37,7 +38,6 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
     private int heightMetric = VOLUME;
     private int colorMetric = MAX;
 
-
     private BarPlot barPlot;
     private Axes axes;
     private VisRenderer visRenderer;
@@ -45,6 +45,17 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
     private JSplitPane splitPane;
 
     private List threadNames;
+
+    float oldHeightValues[][];
+    float oldColorValues[][];
+
+    float newHeightValues[][];
+    float newColorValues[][];
+
+    float curHeightValues[][];
+    float curColorValues[][];
+
+    StoppableThread animator;
 
     public ThreeDeeHeatMap(String title, HeatMapData mapData, ParaProfTrial ppTrial, Component invoker) {
         super(title);
@@ -74,6 +85,7 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
         pathSelector = new SteppedComboBox(mapData.getPaths().toArray());
         Dimension d = pathSelector.getPreferredSize();
         pathSelector.setPreferredSize(new Dimension(50, d.height));
+        pathSelector.setMinimumSize(new Dimension(50, d.height));
         pathSelector.setPopupWidth(d.width);
 
         heightComboBox = new SteppedComboBox(metricStrings);
@@ -92,17 +104,14 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
         // exit when the user closes the main window.
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
-                //               heatMap.goAway();
                 dispose();
                 System.gc();
-                // printMemoryStats("WINDOW CLOSED");
             }
         });
 
         setSize(ParaProfUtils.checkSize(new Dimension(1000, 750)));
         setSize(new Dimension(1000, 750));
         this.setLocation(WindowPlacer.getNewLocation(this, invoker));
-        // printMemoryStats("WINDOW OPEN");
     }
 
     private void buildPanels() {
@@ -159,6 +168,22 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
 
     }
 
+    private void copyMatrix(float[][] dest, float[][] src, int size) {
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                dest[x][y] = src[x][y];
+            }
+        }
+    }
+
+    private void zeroMatrix(float[][] matrix, int size) {
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                matrix[x][y] = 0;
+            }
+        }
+    }
+
     private Component buildOptionPanel(String label) {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -205,9 +230,20 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
 
     private void processData() {
 
-        List heightAxisStrings = new ArrayList();
+        // First, check if an animator is still running, if so, tell it to stop and then wait for it
+        if (animator != null) {
+            animator.requestStop();
+            try {
+                animator.join();
+            } catch (InterruptedException ex) {}
+        }
 
+        float minColorValue = (float) mapData.getMin(currentPath, colorMetric);
+        float maxColorValue = (float) mapData.getMax(currentPath, colorMetric);
+        float minHeightValue = (float) mapData.getMin(currentPath, heightMetric);
         float maxHeightValue = (float) mapData.getMax(currentPath, heightMetric);
+
+        List heightAxisStrings = new ArrayList();
         heightAxisStrings.add("0");
         heightAxisStrings.add(PlotFactory.getSaneDoubleString(maxHeightValue * .25));
         heightAxisStrings.add(PlotFactory.getSaneDoubleString(maxHeightValue * .50));
@@ -217,32 +253,113 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
         axes.setStrings("receiver", "sender", metricStrings[heightMetric], threadNames, threadNames, heightAxisStrings);
         axes.setOnEdge(true);
 
-        float minColorValue = (float) mapData.getMin(currentPath, colorMetric);
-        float maxColorValue = (float) mapData.getMax(currentPath, colorMetric);
-
         //colorScale.setStrings(Float.toString(minColorValue), Float.toString(maxColorValue), metricStrings[colorMetric]);
         colorScale.setStrings(UtilFncs.formatDouble(minColorValue, 6, true), UtilFncs.formatDouble(maxColorValue, 6, true),
                 metricStrings[colorMetric]);
 
         int size = mapData.getSize();
 
-        float heightValues[][] = new float[size][size];
-        float colorValues[][] = new float[size][size];
+        zeroMatrix(newHeightValues, size);
+        zeroMatrix(newColorValues, size);
 
         mapData.reset();
         while (mapData.hasNext()) {
             HeatMapData.NextValue next = (HeatMapData.NextValue) mapData.next();
             int x = next.receiver;
             int y = next.sender;
-            heightValues[x][y] = (float) next.getValue(currentPath, heightMetric);
-            colorValues[x][y] = (float) next.getValue(currentPath, colorMetric) - minColorValue;
+            newHeightValues[x][y] = (float) next.getValue(currentPath, heightMetric) / maxHeightValue;
+            newColorValues[x][y] = (float) next.getValue(currentPath, colorMetric) - minColorValue;
         }
 
-        if (barPlot == null) {
-            barPlot = new BarPlot(axes, colorScale);
-        }
-        barPlot.setValues(18, 18, 8, heightValues, colorValues);
+        boolean animate = true;
+        if (!animate) {
+            barPlot.setValues(newHeightValues, newColorValues);
+            visRenderer.redraw();
+        } else {
 
+            boolean first = false;
+            if (animator != null) {
+                for (int x = 0; x < size; x++) {
+                    for (int y = 0; y < size; y++) {
+                        oldHeightValues[x][y] = curHeightValues[x][y];
+                        oldColorValues[x][y] = curColorValues[x][y];
+                    }
+                }
+            } else {
+                first = true;
+            }
+
+            final boolean fromZero = first;
+            animator = new StoppableThread() {
+                private float ratio = 0.0f;
+                private float scaleZTarget = 1.0f;
+                private long duration = 350;
+                private float sleepAmount = 0;
+
+                public void run() {
+                    try {
+                        if (fromZero) {
+                            barPlot.setScaleZ(0.0f);
+                        }
+                        while (!visRenderer.isReadyToDraw()) {
+                            sleep(100);
+                        }
+
+                        int size = mapData.getSize();
+
+                        long init = System.currentTimeMillis();
+                        while (!stopRequested()) {
+                            sleep(10);
+                            //sleep((long) sleepAmount);
+                            long start = System.currentTimeMillis();
+                            visRenderer.redraw();
+                            long stop = System.currentTimeMillis();
+
+                            long renderCost = stop - start;
+                            if (renderCost <= 0) {
+                                renderCost = 1;
+                            }
+                            long timeProgress = stop - init;
+                            long numSteps = (duration - timeProgress) / renderCost;
+                            //System.out.println("numSteps = " + numSteps);
+
+                            float ratioStep;
+                            if (numSteps != 0) {
+                                ratioStep = (scaleZTarget - ratio) / (float) numSteps;
+                                ratio += ratioStep;
+                            } else {
+                                ratio = 1.0f;
+                            }
+
+                            float val = (float) Math.log(((ratio * 9) + 1)) / (float) Math.log(10.0f);
+
+                            for (int x = 0; x < size; x++) {
+                                for (int y = 0; y < size; y++) {
+                                    float diffHeight = (newHeightValues[x][y] - oldHeightValues[x][y]);
+                                    float diffColor = (newColorValues[x][y] - oldColorValues[x][y]);
+                                    curHeightValues[x][y] = oldHeightValues[x][y] + (val * diffHeight);
+                                    curColorValues[x][y] = oldColorValues[x][y] + (val * diffColor);
+                                }
+                            }
+                            barPlot.setValues(curHeightValues, curColorValues);
+
+                            if (fromZero) {
+                                barPlot.setScaleZ(val);
+                            }
+                            if (ratio >= 1.0f) {
+                                copyMatrix(curHeightValues, newHeightValues, size);
+                                copyMatrix(curColorValues, newColorValues, size);
+                                barPlot.setValues(newHeightValues, newColorValues);
+                                barPlot.setScaleZ(1.0f);
+                                visRenderer.redraw();
+                                return;
+                            }
+                        }
+                    } catch (InterruptedException ex) {}
+                }
+            };
+            animator.start();
+        }
     }
 
     private JPanel buildMapPanel() {
@@ -252,11 +369,27 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
 
         // Create the canvas
         VisCanvas visCanvas = new VisCanvas(visRenderer);
-        visCanvas.getActualCanvas().setSize(900, 900);
+        visCanvas.getActualCanvas().setSize(9900, 9900);
         visRenderer.setVisCanvasListener(this);
         colorScale = new ColorScale();
 
         axes = new Axes();
+
+        int size = mapData.getSize();
+
+        newHeightValues = new float[size][size];
+        newColorValues = new float[size][size];
+
+        oldHeightValues = new float[size][size];
+        oldColorValues = new float[size][size];
+
+        curHeightValues = new float[size][size];
+        curColorValues = new float[size][size];
+
+        barPlot = new BarPlot(axes, colorScale);
+        
+        // We make the 3d comm matrix a little bit more squished than normal
+        barPlot.setValues(18, 18, 8, oldHeightValues, oldColorValues);
 
         processData();
 
@@ -267,52 +400,6 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
         //visRenderer.addShape(scatterPlot);
         visRenderer.addShape(barPlot);
         visRenderer.addShape(colorScale);
-
-        barPlot.setScaleZ(0.0f);
-
-        (new java.lang.Thread() {
-            private float scaleZ = 0.0f;
-            private float scaleZTarget = 1.0f;
-            private long duration = 350;
-            private float sleepAmount = 0;
-
-            public void run() {
-                try {
-
-                    while (!visRenderer.isReadyToDraw()) {
-                        sleep(100);
-                    }
-
-                    long init = System.currentTimeMillis();
-                    while (true) {
-                        sleep((long) sleepAmount);
-                        long start = System.currentTimeMillis();
-                        visRenderer.redraw();
-                        long stop = System.currentTimeMillis();
-
-                        long renderCost = stop - start;
-                        if (renderCost <= 0) {
-                            renderCost = 1;
-                        }
-                        long timeProgress = stop - init;
-                        long numSteps = (duration - timeProgress) / renderCost;
-                        //System.out.println("numSteps = " + numSteps);
-
-                        float scaleStep = (scaleZTarget - scaleZ) / (float) numSteps;
-
-                        scaleZ += scaleStep;
-                        float val = (float) Math.log(((scaleZ * 9) + 1)) / (float) Math.log(10.0f);
-                        //System.out.println(val);
-                        barPlot.setScaleZ(val);
-                        if (scaleZ >= 1.0f) {
-                            barPlot.setScaleZ(1.0f);
-                            visRenderer.redraw();
-                            return;
-                        }
-                    }
-                } catch (InterruptedException ex) {}
-            }
-        }).start();
 
         JPanel panel = new JPanel() {
             public Dimension getMinimumSize() {
@@ -335,25 +422,23 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
     public void actionPerformed(ActionEvent actionEvent) {
         try {
             Object eventSrc = actionEvent.getSource();
-            Dimension oldSize = this.getSize();
-            //System.out.println("oldSize: " + oldSize.width + " X " + oldSize.height);
             if (eventSrc.equals(this.pathSelector)) {
                 String newPath = (String) this.pathSelector.getSelectedItem();
                 if (!newPath.equals(currentPath)) {
                     currentPath = newPath;
-                    redrawHeatMap(oldSize);
+                    redrawHeatMap();
                 }
             }
             if (eventSrc.equals(this.heightComboBox)) {
                 if (heightComboBox.getSelectedIndex() != heightMetric) {
                     heightMetric = heightComboBox.getSelectedIndex();
-                    redrawHeatMap(oldSize);
+                    redrawHeatMap();
                 }
             }
             if (eventSrc.equals(this.colorComboBox)) {
                 if (colorComboBox.getSelectedIndex() != colorMetric) {
                     colorMetric = colorComboBox.getSelectedIndex();
-                    redrawHeatMap(oldSize);
+                    redrawHeatMap();
                 }
             }
         } catch (Exception e) {
@@ -361,21 +446,19 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
         }
     }
 
-    private void redrawHeatMap(Dimension oldSize) {
-        processData();
-        visRenderer.redraw();
+    private void redrawHeatMap() {
+        // processData can't be run on the AWT thread, it will wait for a possible
+        // animator thread, which uses JOGL, which always runs on th AWT thread
+        java.lang.Thread thread = new java.lang.Thread(new Runnable() {
+            public void run() {
+                processData();
+            }
+        });
+        thread.start();
 
-        //        this.setVisible(false);
-        //        this.remove(mainPanel);
-        //        mainPanel = null;
-        //        drawFigures(false);
-        //        this.setVisible(true);
     }
 
-
-
     public void export(Graphics2D g2d, boolean toScreen, boolean fullWindow, boolean drawHeader) {
-        //heatMap.paint(g2d);
         mapPanel.setDoubleBuffered(false);
         mapPanel.paintAll(g2d);
         mapPanel.setDoubleBuffered(true);
@@ -388,7 +471,7 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
     public void createNewCanvas() {
 
         VisCanvas visCanvas = new VisCanvas(visRenderer);
-
+        visCanvas.getActualCanvas().setSize(9900, 9900);
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
 
