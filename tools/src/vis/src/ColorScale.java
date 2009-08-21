@@ -38,9 +38,9 @@ import com.sun.opengl.util.GLUT;
  * allowing them to query values (0..1) and get colors in the current
  * color set. 
  *    
- * <P>CVS $Id: ColorScale.java,v 1.11 2009/08/20 22:09:34 amorris Exp $</P>
+ * <P>CVS $Id: ColorScale.java,v 1.12 2009/08/21 00:21:23 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.11 $
+ * @version	$Revision: 1.12 $
  */
 
 /* TODO: Provide control over font size perhaps? */
@@ -58,7 +58,7 @@ public class ColorScale extends Observable implements Shape {
         public final double colorsR[];
         public final double colorsG[];
         public final double colorsB[];
-        
+
         private ColorSet(String name, double[] colorsR, double[] colorsG, double[] colorsB) {
             this.name = name;
             this.colorsR = colorsR;
@@ -70,20 +70,20 @@ public class ColorScale extends Observable implements Shape {
             return name;
         }
 
-        public static final ColorSet RAINBOW = new ColorSet("Rainbow", new double[] { 0, 0, 0, 1, 1 },
-                new double[] { 0, 1, 1, 1, 0 }, new double[] { 1, 1, 0, 0, 0 });
+        public static final ColorSet RAINBOW = new ColorSet("Rainbow", new double[] { 0, 0, 0, 1, 1 }, new double[] { 0, 1, 1, 1,
+                0 }, new double[] { 1, 1, 0, 0, 0 });
 
-        public static final ColorSet GRAYSCALE = new ColorSet("Grayscale", new double[] { 0, 1, },
-                new double[] { 0, 1, }, new double[] { 0, 1, });
+        public static final ColorSet GRAYSCALE = new ColorSet("Grayscale", new double[] { 0, 1, }, new double[] { 0, 1, },
+                new double[] { 0, 1, });
 
-        public static final ColorSet INVERSE_GRAYSCALE = new ColorSet("Inverse Grayscale", new double[] { 1, 0, },
-                new double[] { 1, 0, }, new double[] { 1, 0, });
+        public static final ColorSet INVERSE_GRAYSCALE = new ColorSet("Inverse Grayscale", new double[] { 1, 0, }, new double[] {
+                1, 0, }, new double[] { 1, 0, });
 
-        public static final ColorSet BLUE_RED = new ColorSet("Blue-Red", new double[] { 0, 1 }, new double[] {
-                0, 0 }, new double[] { 1, 0 });
+        public static final ColorSet BLUE_RED = new ColorSet("Blue-Red", new double[] { 0, 1 }, new double[] { 0, 0 },
+                new double[] { 1, 0 });
 
-        public static final ColorSet BLUE_WHITE_RED = new ColorSet("Blue-White-Red", new double[] { 0, 1, 1, },
-                new double[] { 0, 1, 0, }, new double[] { 1, 1, 0, });
+        public static final ColorSet BLUE_WHITE_RED = new ColorSet("Blue-White-Red", new double[] { 0, 1, 1, }, new double[] { 0,
+                1, 0, }, new double[] { 1, 1, 0, });
 
         public static ColorSet[] VALUES = { RAINBOW, GRAYSCALE, INVERSE_GRAYSCALE, BLUE_RED, BLUE_WHITE_RED };
 
@@ -99,14 +99,13 @@ public class ColorScale extends Observable implements Shape {
     private double fontScale = 0.12;
     private float leftMargin = 25; // distance between left side and colorscale
     private float leftTextMargin = 5; // minimum distance between the left side and text labels (high and low)
-    
+
     private int displayList;
-    
-    
+
     private int width = 25;
     private int height = 300;
     private int topBottomMargin = 60;
-    
+
     // this is to keep track of the old reverseVideo value
     // I need to come up with a better way of tracking the settings
     // we have to know whether to recreate the display list or not
@@ -116,13 +115,12 @@ public class ColorScale extends Observable implements Shape {
     private int oldHeight;
 
     private boolean oldAntiAlias;
-    
-    public ColorScale() {
-    }
+
+    public ColorScale() {}
 
     public ColorScale(ColorSet colorSet) {
-		super();
-		this.colorSet = colorSet;
+        super();
+        this.colorSet = colorSet;
     }
 
     /**
@@ -214,25 +212,24 @@ public class ColorScale extends Observable implements Shape {
                 visRenderer.redraw();
             }
         });
-        
-        final JSlider fontScaleSlider = new JSlider(0,100,(int)(getFontScale()*100));
+
+        final JSlider fontScaleSlider = new JSlider(0, 100, (int) (getFontScale() * 100));
         fontScaleSlider.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent event) {
                 try {
-                    ColorScale.this.setFontScale(fontScaleSlider.getValue()/(double)100);
+                    ColorScale.this.setFontScale(fontScaleSlider.getValue() / (double) 100);
                     visRenderer.redraw();
                 } catch (Exception e) {
                     VisTools.handleException(e);
                 }
             }
-        });    
+        });
 
-        VisTools.addCompItem(controlPanel, new JLabel("Font Size"),gbc,0,1,1,1);
+        VisTools.addCompItem(controlPanel, new JLabel("Font Size"), gbc, 0, 1, 1, 1);
         gbc.fill = GridBagConstraints.BOTH;
-        VisTools.addCompItem(controlPanel, fontScaleSlider,gbc,1,1,1,1);
+        VisTools.addCompItem(controlPanel, fontScaleSlider, gbc, 1, 1, 1, 1);
         gbc.fill = GridBagConstraints.NONE;
-        
-        
+
         //        VisTools.addCompItem(controlPanel, new JLabel("ColorScale Selection"), gbc, 0, 1, 1, 1);
         ButtonGroup group = new ButtonGroup();
 
@@ -271,7 +268,6 @@ public class ColorScale extends Observable implements Shape {
         return controlPanel;
     }
 
-    
     private float getTextWidth(GL gl, String text) {
         if (text == null) {
             return 0;
@@ -283,9 +279,9 @@ public class ColorScale extends Observable implements Shape {
             float width = glut.glutStrokeLength(font, line);
             maxWidth = Math.max(maxWidth, width);
         }
-        return (float)(maxWidth * fontScale);
+        return (float) (maxWidth * fontScale);
     }
-    
+
     private void drawText(GL gl, double x, double y, String text, boolean growDown) {
         if (text == null)
             return;
@@ -295,59 +291,50 @@ public class ColorScale extends Observable implements Shape {
         int numlines = 0;
         StringTokenizer st = new StringTokenizer(text, "\n");
         numlines = st.countTokens();
-        
-        
+
         double ascent = VisTools.fontAscent * fontScale;
         double descent = VisTools.fontDescent * fontScale;
-        
-                
-        float rowHeight = (float)(VisTools.fontHeight * fontScale);
-        
+
+        float rowHeight = (float) (VisTools.fontHeight * fontScale);
+
         // 10% extra spacing between rows
-        rowHeight = (float)((ascent+descent)*1.10);
-        
+        rowHeight = (float) ((ascent + descent) * 1.10);
+
         if (growDown) {
             y = y - ascent - 5;
         } else {
-            y = y + (rowHeight*(numlines-1)) + descent + 3;
+            y = y + (rowHeight * (numlines - 1)) + descent + 3;
         }
-        
+
         while (st.hasMoreTokens()) {
             String line = st.nextToken();
             double startX = x;
             gl.glPushMatrix();
 
-            
             float width = glut.glutStrokeLength(font, line);
-            
-     
-            
-            startX -= (width * fontScale / 2);
-//            thisX = Math.max(thisX, -20);
 
-//            gl.glBegin(GL.GL_LINES);
-//            gl.glVertex2f(0,0);
-//            gl.glVertex2f((float)x,(float)y);
-//            gl.glVertex2f((float)x,(float)y);
-//            gl.glVertex2f((float)startX,(float)y);
-//            gl.glEnd();
-//            
+            startX -= (width * fontScale / 2);
+            //            thisX = Math.max(thisX, -20);
+
+            //            gl.glBegin(GL.GL_LINES);
+            //            gl.glVertex2f(0,0);
+            //            gl.glVertex2f((float)x,(float)y);
+            //            gl.glVertex2f((float)x,(float)y);
+            //            gl.glVertex2f((float)startX,(float)y);
+            //            gl.glEnd();
+            //            
             gl.glTranslated(startX, y, 0);
 
-//            // 112 seems to be the actual height
-//            float value = (float)(VisTools.fontHeight * fontScale);
-//            gl.glBegin(GL.GL_QUADS);
-//            gl.glVertex3f(0.0f,0.0f,0.0f);
-//            gl.glVertex3f(0.0f,value,0.0f);
-//            gl.glVertex3f(value,value,0.0f);
-//            gl.glVertex3f(value,0.0f,0.0f);
-//            gl.glEnd();
-
+            //            // 112 seems to be the actual height
+            //            float value = (float)(VisTools.fontHeight * fontScale);
+            //            gl.glBegin(GL.GL_QUADS);
+            //            gl.glVertex3f(0.0f,0.0f,0.0f);
+            //            gl.glVertex3f(0.0f,value,0.0f);
+            //            gl.glVertex3f(value,value,0.0f);
+            //            gl.glVertex3f(value,0.0f,0.0f);
+            //            gl.glEnd();
 
             gl.glScaled(fontScale, fontScale, fontScale);
-
-
-            
 
             // Render The Text
             for (int c = 0; c < line.length(); c++) {
@@ -364,7 +351,6 @@ public class ColorScale extends Observable implements Shape {
         gl.glPopMatrix();
     }
 
-    
     /**
      * Renders to the given VisRenderer
      * @param visRenderer the associated control panel
@@ -382,13 +368,11 @@ public class ColorScale extends Observable implements Shape {
             dirty = true;
         }
         oldAntiAlias = visRenderer.getAntiAliasedLines();
-        
-        
+
         if (!enabled) {
             return;
         }
 
-        
         int width = (int) glDrawable.getWidth();
         int height = (int) glDrawable.getHeight();
         if (width != oldWidth || height != oldHeight) {
@@ -396,7 +380,7 @@ public class ColorScale extends Observable implements Shape {
             oldWidth = width;
             oldHeight = height;
         }
-        
+
         GL gl = glDrawable.getGL();
 
         if (dirty || displayList == 0) {
@@ -434,22 +418,21 @@ public class ColorScale extends Observable implements Shape {
         gl.glDisable(GL.GL_LIGHTING);
         gl.glDisable(GL.GL_DEPTH_TEST);
         gl.glLineWidth(1.0f);
-        
+
         if (visRenderer.getAntiAliasedLines()) {
             gl.glEnable(GL.GL_LINE_SMOOTH);
-            gl.glEnable(GL.GL_BLEND);   
+            gl.glEnable(GL.GL_BLEND);
             gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
             gl.glHint(GL.GL_LINE_SMOOTH_HINT, GL.GL_NICEST);
         } else {
             gl.glDisable(GL.GL_LINE_SMOOTH);
-            gl.glDisable(GL.GL_BLEND);   
+            gl.glDisable(GL.GL_BLEND);
         }
 
         int pixelHeight = Math.min(height, height - topBottomMargin);
         int pixelWidth = width;
-        
-        gl.glTranslated(leftMargin, (glHeight / 2) - (pixelHeight / 2), 0);
 
+        gl.glTranslated(leftMargin, (glHeight / 2) - (pixelHeight / 2), 0);
 
         // draw the actual scale as a set of 10 blended quads
         gl.glShadeModel(GL.GL_SMOOTH);
@@ -482,28 +465,25 @@ public class ColorScale extends Observable implements Shape {
             VisTools.glSetColor(gl, textColor);
         }
 
-        
         // draw the upper string
         float stringwidth;
         float startx;
         float bump;
-        
+
         bump = 0;
         stringwidth = getTextWidth(gl, highString);
         startx = (pixelWidth / 2) - (stringwidth / 2);
         if (startx < -leftMargin + leftTextMargin) {
-            bump = - startx - leftMargin + leftTextMargin;
+            bump = -startx - leftMargin + leftTextMargin;
         }
         drawText(gl, bump + pixelWidth / 2, pixelHeight, highString, false);
-        
-
 
         // draw the lower string
         bump = 0;
         stringwidth = getTextWidth(gl, lowString);
         startx = (pixelWidth / 2) - (stringwidth / 2);
         if (startx < -leftMargin + leftTextMargin) {
-            bump = - startx - leftMargin + leftTextMargin;
+            bump = -startx - leftMargin + leftTextMargin;
         }
 
         drawText(gl, bump + pixelWidth / 2, 0, lowString, true);
@@ -511,8 +491,7 @@ public class ColorScale extends Observable implements Shape {
         // rotate and draw the label
         gl.glRotatef(90, 0, 0, 1);
         drawText(gl, pixelHeight / 2, -pixelWidth, label, true);
-        
-        
+
         gl.glPopMatrix();
 
         gl.glMatrixMode(GL.GL_PROJECTION);

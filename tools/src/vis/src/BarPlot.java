@@ -33,9 +33,9 @@ import com.sun.opengl.util.GLUT;
 /**
  * Draws a 3d bar plot.
  *
- * <P>CVS $Id: BarPlot.java,v 1.6 2009/08/20 22:09:33 amorris Exp $</P>
+ * <P>CVS $Id: BarPlot.java,v 1.7 2009/08/21 00:21:23 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.6 $
+ * @version	$Revision: 1.7 $
  */
 public class BarPlot implements Plot {
 
@@ -156,8 +156,9 @@ public class BarPlot implements Plot {
     }
 
     private void processValues() {
-        float maxHeightValue = Float.MIN_VALUE;
-        float maxColorValue = Float.MIN_VALUE;
+        float maxHeightValue = -Float.MAX_VALUE;
+        float maxColorValue = -Float.MAX_VALUE;
+        System.out.println(maxColorValue);
         for (int y = 0; y < nrows; y++) {
             for (int x = 0; x < ncols; x++) {
                 float heightValue = heightValues[y][x];
@@ -173,6 +174,9 @@ public class BarPlot implements Plot {
                 float colorValue = colorValues[y][x];
                 heightValues[y][x] = heightValue / maxHeightValue * zSize;
                 colorValues[y][x] = colorValue / maxColorValue;
+                if (maxColorValue == 0) {
+                    colorValues[y][x] = 1.0f;
+                }
             }
         }
     }
