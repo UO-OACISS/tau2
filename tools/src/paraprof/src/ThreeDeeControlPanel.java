@@ -4,7 +4,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicComboPopup;
@@ -14,18 +13,19 @@ import javax.swing.plaf.metal.MetalComboBoxUI;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.enums.VisType;
 import edu.uoregon.tau.perfdmf.Function;
-import edu.uoregon.tau.vis.Plot;
-import edu.uoregon.tau.vis.VisRenderer;
 import edu.uoregon.tau.perfdmf.Thread;
+import edu.uoregon.tau.vis.Plot;
+import edu.uoregon.tau.vis.SteppedComboBox;
+import edu.uoregon.tau.vis.VisRenderer;
 
 /**
  * This is the control panel for the ThreeDeeWindow.
  *    
  * TODO : ...
  *
- * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.11 2008/07/09 01:15:46 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.12 2009/08/24 22:15:12 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.11 $
+ * @version	$Revision: 1.12 $
  */
 public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
@@ -70,69 +70,6 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         }
     }
 
-    // From: http://forum.java.sun.com/thread.jspa?forumID=257&threadID=300107
-    class SteppedComboBoxUI extends MetalComboBoxUI {
-        protected ComboPopup createPopup() {
-            BasicComboPopup popup = new BasicComboPopup(comboBox) {
-
-                public void show() {
-                    Dimension popupSize = ((SteppedComboBox) comboBox).getPopupSize();
-                    popupSize.setSize(popupSize.width, getPopupHeightForRowCount(comboBox.getMaximumRowCount()));
-                    Rectangle popupBounds = computePopupBounds(0, comboBox.getBounds().height, popupSize.width, popupSize.height);
-                    scroller.setMaximumSize(popupBounds.getSize());
-                    scroller.setPreferredSize(popupBounds.getSize());
-                    scroller.setMinimumSize(popupBounds.getSize());
-                    list.invalidate();
-                    int selectedIndex = comboBox.getSelectedIndex();
-                    if (selectedIndex == -1) {
-                        list.clearSelection();
-                    } else {
-                        list.setSelectedIndex(selectedIndex);
-                    }
-                    list.ensureIndexIsVisible(list.getSelectedIndex());
-                    setLightWeightPopupEnabled(comboBox.isLightWeightPopupEnabled());
-
-                    show(comboBox, popupBounds.x, popupBounds.y);
-                }
-            };
-            popup.getAccessibleContext().setAccessibleParent(comboBox);
-            return popup;
-        }
-    }
-
-    public class SteppedComboBox extends JComboBox {
-        protected int popupWidth;
-
-        public SteppedComboBox(ComboBoxModel aModel) {
-            super(aModel);
-            setUI(new SteppedComboBoxUI());
-            popupWidth = 0;
-        }
-
-        public SteppedComboBox(final Object[] items) {
-            super(items);
-            setUI(new SteppedComboBoxUI());
-            popupWidth = 0;
-        }
-
-        public SteppedComboBox(Vector items) {
-            super(items);
-            setUI(new SteppedComboBoxUI());
-            popupWidth = 0;
-        }
-
-        public void setPopupWidth(int width) {
-            popupWidth = width;
-        }
-
-        public Dimension getPopupSize() {
-            Dimension size = getSize();
-            if (popupWidth < 1)
-                popupWidth = size.width;
-            return new Dimension(popupWidth, size.height);
-        }
-    }
-
     public ThreeDeeControlPanel(ThreeDeeWindow window, ThreeDeeSettings settings, ParaProfTrial ppTrial, VisRenderer visRenderer) {
         this.settings = settings;
         this.window = window;
@@ -165,10 +102,10 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         group.add(jrb);
         addCompItem(this, jrb, gbc, 0, 3, 1, 1);
 
-//        jrb = new JRadioButton(VisType.CALLGRAPH.toString(), settings.getVisType() == VisType.CALLGRAPH);
-//        jrb.addActionListener(this);
-//        group.add(jrb);
-//        addCompItem(this, jrb, gbc, 0, 4, 1, 1);
+        //        jrb = new JRadioButton(VisType.CALLGRAPH.toString(), settings.getVisType() == VisType.CALLGRAPH);
+        //        jrb.addActionListener(this);
+        //        group.add(jrb);
+        //        addCompItem(this, jrb, gbc, 0, 4, 1, 1);
 
         createSubPanel();
 
@@ -319,30 +256,29 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        
         addCompItem(panel, new JLabel("Thread"), gbc, 0, 0, 1, 1);
-        
+
         List threadList = new ArrayList();
-        
+
         threadList.add(ppTrial.getDataSource().getMeanData());
         threadList.add(ppTrial.getDataSource().getStdDevData());
-        
+
         threadList.addAll(ppTrial.getDataSource().getAllThreads());
-        
+
         final SliderComboBox threadComboBox = new SliderComboBox(threadList.toArray());
-        
+
         threadComboBox.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
                 // TODO Auto-generated method stub
-                settings.setSelectedThread((Thread)threadComboBox.getSelectedItem());
+                settings.setSelectedThread((Thread) threadComboBox.getSelectedItem());
                 System.out.println("bargle");
                 window.redraw();
-            }});
-        
+            }
+        });
+
         addCompItem(panel, threadComboBox, gbc, 1, 0, 1, 1);
-        
-        
+
         tabbedPane = new JTabbedPane();
         Plot plot = window.getPlot();
         tabbedPane.addTab(plot.getName(), plot.getControlPanel(visRenderer));
@@ -420,8 +356,8 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        settings.getSelections()[index] = Math.min(settings.getSelections()[index], max);   
-        settings.getSelections()[index] = Math.max(settings.getSelections()[index], min);   
+        settings.getSelections()[index] = Math.min(settings.getSelections()[index], max);
+        settings.getSelections()[index] = Math.max(settings.getSelections()[index], min);
 
         final JScrollBar scrollBar = new JScrollBar(JScrollBar.HORIZONTAL, settings.getSelections()[index], 1, min, max);
         scrollBar.setBlockIncrement((max - min) / 10);

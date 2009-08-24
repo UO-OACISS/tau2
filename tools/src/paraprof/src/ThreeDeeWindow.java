@@ -567,23 +567,9 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             addFunctionNames = true;
         }
 
+        
         if (threadNames == null) {
-            threadNames = new ArrayList();
-            threads = new ArrayList();
-
-            for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
-                Thread thread = (Thread) it.next();
-
-                if (ppTrial.getDataSource().getExecutionType() == DataSource.EXEC_TYPE_MPI) {
-                    threadNames.add(Integer.toString(thread.getNodeID()));
-                } else if (ppTrial.getDataSource().getExecutionType() == DataSource.EXEC_TYPE_HYBRID) {
-                    threadNames.add(thread.getNodeID() + ":" + thread.getThreadID());
-                } else {
-                    threadNames.add(thread.getNodeID() + ":" + thread.getContextID() + ":" + thread.getThreadID());
-                }
-
-                threads.add(thread);
-            }
+            threadNames = ppTrial.getThreadNames();
         }
 
         maxHeightValue = 0;

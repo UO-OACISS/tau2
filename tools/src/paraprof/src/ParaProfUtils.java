@@ -36,11 +36,11 @@ import edu.uoregon.tau.vis.HeatMapWindow;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.47 2009/08/24 21:28:22 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.48 2009/08/24 22:15:09 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.47 $
+ * @version $Revision: 1.48 $
  */
 public class ParaProfUtils {
 
@@ -466,9 +466,9 @@ public class ParaProfUtils {
         windowsMenu.add(menuItem);
 
         // still in development
-//        menuItem = new JMenuItem("3D Communication Matrix");
-//        menuItem.addActionListener(actionListener);
-//        windowsMenu.add(menuItem);
+        menuItem = new JMenuItem("3D Communication Matrix");
+        menuItem.addActionListener(actionListener);
+        windowsMenu.add(menuItem);
 
         menuItem = new JMenuItem("Communication Matrix");
         menuItem.addActionListener(actionListener);

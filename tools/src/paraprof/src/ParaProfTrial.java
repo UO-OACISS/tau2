@@ -253,7 +253,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     public int getDefaultMetricID() {
         return defaultMetricID;
     }
-    
+
     public Metric getDefaultMetric() {
         return this.getMetric(this.getDefaultMetricID());
     }
@@ -311,7 +311,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     public Metric getRegularMetric(int metricID) {
         return trial.getDataSource().getMetric(metricID);
     }
-    
+
     public String getMetricName(int metricID) {
         return trial.getDataSource().getMetricName(metricID);
     }
@@ -717,7 +717,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         this.selectedSnapshot = selectedSnapshot;
         updateRegisteredObjects("dataEvent");
     }
-    
+
     public Database getDatabase() {
         if (experiment == null) {
             return null;
@@ -725,5 +725,20 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         return experiment.getDatabase();
     }
 
+    public List getThreadNames() {
+        List threadNames = new ArrayList();
+
+        for (Iterator it = getDataSource().getAllThreads().iterator(); it.hasNext();) {
+            Thread thread = (Thread) it.next();
+            if (getDataSource().getExecutionType() == DataSource.EXEC_TYPE_MPI) {
+                threadNames.add(Integer.toString(thread.getNodeID()));
+            } else if (getDataSource().getExecutionType() == DataSource.EXEC_TYPE_HYBRID) {
+                threadNames.add(thread.getNodeID() + ":" + thread.getThreadID());
+            } else {
+                threadNames.add(thread.getNodeID() + ":" + thread.getContextID() + ":" + thread.getThreadID());
+            }
+        }
+        return threadNames;
+    }
 
 }
