@@ -26,7 +26,7 @@ import edu.uoregon.tau.vis.*;
 import edu.uoregon.tau.vis.XmasTree.Ornament;
 
 public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListener, Observer, Printable, ParaProfWindow,
-        UnitListener, SortListener, VisCanvasListener {
+        UnitListener, SortListener, VisCanvasListener, ThreeDeeImageProvider {
 
     private final int defaultToScatter = 4000;
 
@@ -1260,6 +1260,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         panel.setPreferredSize(new Dimension(5, 5));
 
         jSplitPane.setLeftComponent(panel);
+    }
+
+    public Component getComponent() {
+        return this;
     }
 
 }

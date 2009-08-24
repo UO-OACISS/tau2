@@ -28,7 +28,7 @@ public class ThreeDeeCommMatrixWindow implements ParaProfWindow, Printable {
     private static final int MEAN = 3;
     private static final int STDDEV = 4;
     private static final int VOLUME = 5;
-    private JFrame window = null;
+    private ThreeDeeHeatMap window = null;
     private int numEvents = 0;
     private ParaProfTrial ppTrial;
 
@@ -188,8 +188,7 @@ public class ThreeDeeCommMatrixWindow implements ParaProfWindow, Printable {
     }
 
     public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
-        // TODO Auto-generated method stub
-        return 0;
+      return window.print(graphics, pageFormat, pageIndex);
     }
 
     public JFrame getFrame() {

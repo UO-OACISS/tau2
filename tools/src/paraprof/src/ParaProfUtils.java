@@ -36,11 +36,11 @@ import edu.uoregon.tau.vis.HeatMapWindow;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.46 2009/08/14 23:09:47 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.47 2009/08/24 21:28:22 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.46 $
+ * @version $Revision: 1.47 $
  */
 public class ParaProfUtils {
 
@@ -157,18 +157,14 @@ public class ParaProfUtils {
         if (defaultFormat != selectedFormat) { // only proceed if the user did not select cancel
 
             job.setPrintable(printable, selectedFormat);
-            //if (job.getPrintService() != null) {
             if (job.printDialog()) { // only proceed if the user did not select cancel
                 try {
-
                     job.print();
                 } catch (PrinterException e) {
                     ParaProfUtils.handleException(e);
                 }
             }
-            //}
         }
-
     }
 
     public static JMenu createHelpMenu(final JFrame owner, final ParaProfWindow ppWindow) {
@@ -232,9 +228,8 @@ public class ParaProfUtils {
 
                         if (panel instanceof ImageExport) {
                             ParaProfImageOutput.saveImage((ImageExport) panel);
-                        } else if (panel instanceof ThreeDeeWindow) {
-                            ThreeDeeWindow threeDeeWindow = (ThreeDeeWindow) panel;
-                            ParaProfImageOutput.save3dImage(threeDeeWindow);
+                        } else if (panel instanceof ThreeDeeImageProvider) {
+                            ParaProfImageOutput.save3dImage((ThreeDeeImageProvider) panel);
                         } else {
                             throw new ParaProfException("Don't know how to \"Save Image\" for " + panel.getClass());
                         }
@@ -242,7 +237,7 @@ public class ParaProfUtils {
                     } else if (arg.equals("Save as Vector Graphics")) {
                         if (panel instanceof HeatMapWindow) {
                             JOptionPane.showMessageDialog(window.getFrame(), "Can't save heat map as vector graphics");
-                        } else if (panel instanceof ThreeDeeWindow) {
+                        } else if (panel instanceof ThreeDeeImageProvider) {
                             JOptionPane.showMessageDialog(window.getFrame(), "Can't save 3D visualization as vector graphics");
                         } else if (panel instanceof SourceViewer) {
                             JOptionPane.showMessageDialog(window.getFrame(), "Can't save Source Viewer as vector graphics");
@@ -1146,9 +1141,7 @@ public class ParaProfUtils {
                     ppTrial.showMainWindow();
                 }
             });
-
         }
-
     }
 
     public static void exportTrial(ParaProfTrial ppTrial, Component owner) {

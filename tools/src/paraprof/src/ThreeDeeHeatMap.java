@@ -2,20 +2,24 @@ package edu.uoregon.tau.paraprof;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.text.DecimalFormat;
-import java.util.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.ImageObserver;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.awt.print.PrinterException;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.*;
 
-import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.common.StoppableThread;
 import edu.uoregon.tau.perfdmf.DataSource;
+import edu.uoregon.tau.perfdmf.Thread;
 import edu.uoregon.tau.perfdmf.UtilFncs;
 import edu.uoregon.tau.vis.*;
-import edu.uoregon.tau.perfdmf.Thread;
 
-public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExport, VisCanvasListener {
+public class ThreeDeeHeatMap extends JFrame implements ActionListener, ThreeDeeImageProvider, VisCanvasListener, Printable {
     private SteppedComboBox pathSelector = null;
     private SteppedComboBox heightComboBox = null;
     private SteppedComboBox colorComboBox = null;
@@ -41,6 +45,7 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
     private BarPlot barPlot;
     private Axes axes;
     private VisRenderer visRenderer;
+    private VisCanvas visCanvas;
     private ColorScale colorScale;
     private JSplitPane splitPane;
 
@@ -271,7 +276,7 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
             newColorValues[x][y] = (float) next.getValue(currentPath, colorMetric) - minColorValue;
         }
 
-        boolean animate = true;
+        boolean animate = false;
         if (!animate) {
             barPlot.setValues(newHeightValues, newColorValues);
             visRenderer.redraw();
@@ -368,8 +373,8 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
         visRenderer = new VisRenderer();
 
         // Create the canvas
-        VisCanvas visCanvas = new VisCanvas(visRenderer);
-        visCanvas.getActualCanvas().setSize(9900, 9900);
+        visCanvas = new VisCanvas(visRenderer);
+        visCanvas.getActualCanvas().setSize(9100, 9100);
         visRenderer.setVisCanvasListener(this);
         colorScale = new ColorScale();
 
@@ -387,7 +392,7 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
         curColorValues = new float[size][size];
 
         barPlot = new BarPlot(axes, colorScale);
-        
+
         // We make the 3d comm matrix a little bit more squished than normal
         barPlot.setValues(18, 18, 8, oldHeightValues, oldColorValues);
 
@@ -458,19 +463,11 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
 
     }
 
-    public void export(Graphics2D g2d, boolean toScreen, boolean fullWindow, boolean drawHeader) {
-        mapPanel.setDoubleBuffered(false);
-        mapPanel.paintAll(g2d);
-        mapPanel.setDoubleBuffered(true);
-    }
-
-    public Dimension getImageSize(boolean fullScreen, boolean header) {
-        return mapPanel.getSize();
-    }
+   
 
     public void createNewCanvas() {
 
-        VisCanvas visCanvas = new VisCanvas(visRenderer);
+        visCanvas = new VisCanvas(visRenderer);
         visCanvas.getActualCanvas().setSize(9900, 9900);
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
@@ -486,6 +483,39 @@ public class ThreeDeeHeatMap extends JFrame implements ActionListener, ImageExpo
 
         splitPane.setLeftComponent(panel);
 
+    }
+
+    public Component getComponent() {
+        return this;
+    }
+
+    public BufferedImage getImage() {
+        return visRenderer.createScreenShot();
+    }
+
+    public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
+        try {
+            if (pageIndex >= 1) {
+                return NO_SUCH_PAGE;
+            }
+
+            ParaProfUtils.scaleForPrint(graphics, pageFormat, visCanvas.getWidth(), visCanvas.getHeight());
+
+            BufferedImage screenShot = visRenderer.createScreenShot();
+
+            ImageObserver imageObserver = new ImageObserver() {
+                public boolean imageUpdate(Image image, int a, int b, int c, int d, int e) {
+                    return false;
+                }
+            };
+
+            graphics.drawImage(screenShot, 0, 0, Color.black, imageObserver);
+
+            return Printable.PAGE_EXISTS;
+        } catch (Exception e) {
+            ParaProfUtils.handleException(e);
+            return NO_SUCH_PAGE;
+        }
     }
 
 }

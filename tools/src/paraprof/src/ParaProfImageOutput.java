@@ -38,8 +38,9 @@ public class ParaProfImageOutput {
         fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
         //Get the current file filters.
         javax.swing.filechooser.FileFilter fileFilters[] = fileChooser.getChoosableFileFilters();
-        for (int i = 0; i < fileFilters.length; i++)
+        for (int i = 0; i < fileFilters.length; i++) {
             fileChooser.removeChoosableFileFilter(fileFilters[i]);
+        }
         fileChooser.addChoosableFileFilter(new ImageFormatFileFilter(ImageFormatFileFilter.JPG));
         fileChooser.addChoosableFileFilter(new ImageFormatFileFilter(ImageFormatFileFilter.PNG));
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -52,7 +53,7 @@ public class ParaProfImageOutput {
             return;
         }
         File file = fileChooser.getSelectedFile();
-        //Get both the file and FileFilter.
+
         String path = file.getCanonicalPath();
 
         ImageFormatFileFilter paraProfImageFormatFileFilter = null;
@@ -61,7 +62,6 @@ public class ParaProfImageOutput {
             paraProfImageFormatFileFilter = (ImageFormatFileFilter) fileFilter;
         } else {
             throw new ParaProfException("Unknown format : " + fileFilter);
-            //???
         }
         String extension = ImageFormatFileFilter.getExtension(file);
         if (extension == null
@@ -92,7 +92,7 @@ public class ParaProfImageOutput {
     public static void saveImage(ImageExport ref, File file, boolean fullScreen, boolean prependHeader, float imageQuality)
             throws IOException {
         String extension = ImageFormatFileFilter.getExtension(file);
-        
+
         // I'm doing this twice right now because the getImageSize won't be correct until 
         // renderIt has been called with the appropriate settings.  Stupid, I know.
         Dimension d = ref.getImageSize(fullScreen, prependHeader);
@@ -146,7 +146,7 @@ public class ParaProfImageOutput {
         }
     }
 
-    public static void save3dImage(final ThreeDeeWindow ref) throws IOException {
+    public static void save3dImage(final ThreeDeeImageProvider ref) throws IOException {
 
         //Ask the user for a filename and location.
         JFileChooser fileChooser = new JFileChooser();
@@ -155,45 +155,66 @@ public class ParaProfImageOutput {
         fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
         //Get the current file filters.
         javax.swing.filechooser.FileFilter fileFilters[] = fileChooser.getChoosableFileFilters();
-        for (int i = 0; i < fileFilters.length; i++)
+        for (int i = 0; i < fileFilters.length; i++) {
             fileChooser.removeChoosableFileFilter(fileFilters[i]);
-        fileChooser.addChoosableFileFilter(new ImageFormatFileFilter(ImageFormatFileFilter.PNG));
+        }
         fileChooser.addChoosableFileFilter(new ImageFormatFileFilter(ImageFormatFileFilter.JPG));
+        fileChooser.addChoosableFileFilter(new ImageFormatFileFilter(ImageFormatFileFilter.PNG));
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
-        final ImageOptionsPanel paraProfImageOptionsPanel = new ImageOptionsPanel((Component) ref, false, false);
+        final ImageOptionsPanel paraProfImageOptionsPanel = new ImageOptionsPanel(ref.getComponent(), false, false);
         fileChooser.setAccessory(paraProfImageOptionsPanel);
         fileChooser.addPropertyChangeListener(paraProfImageOptionsPanel);
-        int resultValue = fileChooser.showSaveDialog((Component) ref);
+        int resultValue = fileChooser.showSaveDialog(ref.getComponent());
         if (resultValue != JFileChooser.APPROVE_OPTION) {
             return;
         }
 
-        //Get both the file and FileFilter.
-        File f = fileChooser.getSelectedFile();
-        javax.swing.filechooser.FileFilter fileFilter = fileChooser.getFileFilter();
-        String path = f.getCanonicalPath();
-        //Append extension if required.
+        File file = fileChooser.getSelectedFile();
+        String path = file.getCanonicalPath();
 
+        ImageFormatFileFilter paraProfImageFormatFileFilter = null;
+        javax.swing.filechooser.FileFilter fileFilter = fileChooser.getFileFilter();
+        if (fileFilter instanceof ImageFormatFileFilter) {
+            paraProfImageFormatFileFilter = (ImageFormatFileFilter) fileFilter;
+        } else {
+            throw new ParaProfException("Unknown format : " + fileFilter);
+        }
+        
+        String extension = ImageFormatFileFilter.getExtension(file);
+        if (extension == null
+                || ((extension.toUpperCase().compareTo("JPG") != 0) && (extension.toUpperCase().compareTo("PNG") != 0))) {
+            extension = paraProfImageFormatFileFilter.getExtension();
+            path = path + "." + extension;
+            file = new File(path);
+        }
+        
+        if (file.exists()) {
+            int response = JOptionPane.showConfirmDialog((Component) ref, file + " already exists\nOverwrite existing file?",
+                    "Confirm Overwrite", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (response == JOptionPane.CANCEL_OPTION)
+                return;
+        }
+        
         //Only create if we recognize the format.
         ImageFormatFileFilter imageFormatFileFilter = null;
         if (fileFilter instanceof ImageFormatFileFilter) {
             imageFormatFileFilter = (ImageFormatFileFilter) fileFilter;
-            String extension = ImageFormatFileFilter.getExtension(f);
+
             //Could probably collapse this if/else based on the order of evaluation of arguments (ie, to make sure
             //the extension is not null before trying to call equals on it).  However, it is easier to understand
             //what is going on this way.
             if (extension == null) {
                 path = path + "." + imageFormatFileFilter.getExtension();
-                f = new File(path);
+                file = new File(path);
             } else if (!(extension.equals("png") || extension.equals("jpg"))) {
                 path = path + "." + imageFormatFileFilter.getExtension();
-                f = new File(path);
+                file = new File(path);
             }
 
             final String extensionString = imageFormatFileFilter.getExtension().toUpperCase();
 
-            final File filename = f;
+            final File filename = file;
 
             fileChooser.setVisible(false);
 
@@ -210,7 +231,7 @@ public class ParaProfImageOutput {
             IIOImage iioImage = new IIOImage(bi, null, null);
 
             //Try setting quality.
-            if (paraProfImageOptionsPanel.imageQualityEnabled()) {
+            if (extension.toUpperCase().compareTo("JPG") == 0) {
                 ImageWriteParam iwp = writer.getDefaultWriteParam();
                 iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
                 iwp.setCompressionQuality(paraProfImageOptionsPanel.getImageQuality());
