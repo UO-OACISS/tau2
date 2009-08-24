@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.39 2009/03/17 23:57:51 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.40 2009/08/24 19:33:07 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.39 $
+ * @version	$Revision: 1.40 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -2036,6 +2036,8 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             DatabaseAPI databaseAPI = new DatabaseAPI();
             databaseAPI.initialize(database);
 
+            // Some strangeness here, we retrieve the metadata columns for the non-db trials
+            // from the "first" database in the list.  Very screwy in my opinion.
             if (!metaDataRetrieved) {
                 DatabaseAPI defaultDatabaseAPI = new DatabaseAPI();
                 defaultDatabaseAPI.initialize(getDefaultDatabase());
@@ -2054,6 +2056,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         }
                     }
                 }
+                defaultDatabaseAPI.terminate();
             }
 
             //   dbAPI = databaseAPI;
