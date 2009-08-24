@@ -17,9 +17,9 @@ import edu.uoregon.tau.perfdmf.database.DB;
 /**
  * Reads a single trial from the database
  *  
- * <P>CVS $Id: DBDataSource.java,v 1.13 2009/03/17 23:56:07 amorris Exp $</P>
+ * <P>CVS $Id: DBDataSource.java,v 1.14 2009/08/24 19:32:23 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  */
 public class DBDataSource extends DataSource {
 
@@ -291,6 +291,7 @@ public class DBDataSource extends DataSource {
 
         downloadMetaData();
 
+        databaseAPI.terminate();
         time = (System.currentTimeMillis()) - time;
         //System.out.println("Time to download file (in milliseconds): " + time);
         //System.out.println(time);
