@@ -25,6 +25,7 @@
 
 #include <Profile/TauEnv.h>
 #include <Profile/TauMetrics.h>
+#include <Profile/TauSampling.h>
 
 bool Tau_snapshot_initialization();
 extern "C" void Tau_stack_initialization();
@@ -95,7 +96,7 @@ extern "C" int InitializeTAU() {
   return 0;
 #endif
   
-  // we need the timestamp of the "start"
+  /* we need the timestamp of the "start" */
   Tau_snapshot_initialization();
 
   /* initialize the Profiler stack */
@@ -121,6 +122,11 @@ extern "C" int InitializeTAU() {
   if (TauEnv_get_tracing()) {
     TauInitialize_kill_handlers();
   }
+
+
+#ifdef TAU_EXP_SAMPLING
+  Tau_sampling_init();
+#endif /* TAU_EXP_SAMPLING */
 
   return 0;
 }

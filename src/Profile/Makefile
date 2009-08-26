@@ -95,7 +95,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o \
 		TauInit.o Comp_intel9.o Comp_pgi.o Comp_xl.o TauCallPath.o \
 		$(PARAM_O) Tracer.o TauMetrics.o TauReadMetrics.o $(THR_O) \
 		$(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
-		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) \
+		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) TauSampling.o \
 		TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O)
 
@@ -424,6 +424,9 @@ Profiler.o 	: Profiler.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 MetaData.o 	: MetaData.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauSampling.o 	: TauSampling.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauEnv.o 	: TauEnv.cpp $(HDRS)
