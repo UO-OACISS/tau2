@@ -184,7 +184,7 @@ extern "C" {
 
 
 #define TAU_GLOBAL_TIMER(timer, name, type, group) void *TauGlobal##timer(void) \
-{ void *ptr = NULL; \
+{ static void *ptr = NULL; \
   Tau_profile_c_timer(&ptr, name, type, group, #group); \
   return ptr; \
 } 
@@ -495,6 +495,6 @@ void Tau_profile_param1l(long data, const char *dataname);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.100 $   $Date: 2009/08/11 22:48:17 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.100 2009/08/11 22:48:17 amorris Exp $ 
+ * $Revision: 1.101 $   $Date: 2009/08/26 00:55:56 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.101 2009/08/26 00:55:56 amorris Exp $ 
  ***************************************************************************/
