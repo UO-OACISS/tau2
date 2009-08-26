@@ -188,6 +188,7 @@
 	TauConf_setval(TauConf_format(buf), TauConf_format(val));
       }
     }
+    return 0;
   }
 
 
