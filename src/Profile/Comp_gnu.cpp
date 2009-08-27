@@ -37,7 +37,7 @@
 using namespace std;
 
 
-// //#include <stdio.h>
+#include <stdio.h>
 #ifdef TAU_BFD
 #  include "bfd.h"
 #  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
