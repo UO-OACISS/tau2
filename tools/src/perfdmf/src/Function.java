@@ -10,9 +10,9 @@ import java.util.List;
  * This class represents a "function".  A function is defined over all threads
  * in the profile, so per-thread data is not stored here.
  *  
- * <P>CVS $Id: Function.java,v 1.17 2008/07/21 18:03:44 amorris Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.18 2009/08/27 00:55:17 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.17 $
+ * @version	$Revision: 1.18 $
  * @see		FunctionProfile
  */
 /**
@@ -112,10 +112,24 @@ public class Function implements Serializable, Comparable {
             }
         }
         return sourceLink;
-	}
+    }
 
     public static SourceRegion getSourceLink(String name) {
         SourceRegion sourceLink = new SourceRegion();
+
+        if (name.indexOf("OpenMP location:") != -1) { // opari instrumentation points
+            // parse source location with format:
+            // parallel [OpenMP location: file:omp_hello.chk.c <31, 48>]
+
+            int fileIndex = name.indexOf("file:");
+            int left = name.indexOf("<");
+            int comma = name.indexOf(",");
+            int right = name.indexOf(">");
+
+            sourceLink.setFilename(name.substring(fileIndex + 5, left).trim());
+            sourceLink.setStartLine(Integer.parseInt(name.substring(left + 1, comma).trim()));
+            sourceLink.setEndLine(Integer.parseInt(name.substring(comma + 1, right).trim()));
+        }
         if (name.indexOf("file:") != -1 && name.indexOf("line:") != -1) {
             // MpiP source information
 
@@ -213,9 +227,9 @@ public class Function implements Serializable, Comparable {
             return true;
         }
         return false;
-	}
+    }
 
-	// Group section
+    // Group section
     public void addGroup(Group group) {
         //Don't add group if already a member.
         if (this.isGroupMember(group))
@@ -277,7 +291,7 @@ public class Function implements Serializable, Comparable {
         }
         return false;
     }
-    
+
     public boolean isCallPathFunction() {
         if (!callpathFunctionSet) {
             callpathFunction = isCallPathFunction(this.name);
