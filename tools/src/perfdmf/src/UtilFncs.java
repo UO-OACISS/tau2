@@ -616,6 +616,7 @@ public class UtilFncs {
             throw new RuntimeException("Programming error: unknown format id = " + fileType);
         }
 
+        dataSource.setFileType(fileType);
         return dataSource;
     }
 

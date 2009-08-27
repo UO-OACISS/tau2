@@ -20,9 +20,9 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.45 2009/06/02 19:59:26 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.46 2009/08/27 14:33:43 khuck Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.45 $
+ * @version $Revision: 1.46 $
  */
 public abstract class DataSource {
 
@@ -98,8 +98,17 @@ public abstract class DataSource {
     protected boolean hasThreads = true;
     protected boolean hasContexts = true;
     protected boolean hasMPI = false;
+    private int fileType = DataSource.TAUPROFILE;
 
-    public DataSource() {
+    public int getFileType() {
+		return fileType;
+	}
+
+	public void setFileType(int fileType) {
+		this.fileType = fileType;
+	}
+
+	public DataSource() {
     // nothing
     }
 
@@ -651,6 +660,10 @@ public abstract class DataSource {
         this.generateUserEventStatistics();
 
         finishPhaseAnalysis();
+        
+        this.getMetaData().put("File Type Index", Integer.toString(this.fileType));
+        this.getMetaData().put("File Type Name", DataSource.formatTypeStrings[this.fileType]);
+
 
         //time = (System.currentTimeMillis()) - time;
         //System.out.println("Time to process (in milliseconds): " + time);
