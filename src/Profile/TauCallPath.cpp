@@ -69,11 +69,17 @@ int& TauGetCallPathDepth(void) {
 struct TaultLong {
   bool operator() (const long *l1, const long *l2) const {
    int i;
+
    /* first check 0th index (size) */
-   if (l1[0] != l2[0]) return (l1[0] < l2[0]);
+   if (l1[0] != l2[0]) {
+     return (l1[0] < l2[0]);
+   }
+
    /* they're equal, see the size and iterate */
    for (i = 1; i < l1[0] ; i++) {
-     if (l1[i] != l2[i]) return l1[i] < l2[i];
+     if (l1[i] != l2[i]) {
+       return l1[i] < l2[i];
+     }
    }
    return (l1[i] < l2[i]);
  }
@@ -252,6 +258,6 @@ void Profiler::CallPathStop(double* TotalTime, int tid) {
   
 /***************************************************************************
  * $RCSfile: TauCallPath.cpp,v $   $Author: amorris $
- * $Revision: 1.30 $   $Date: 2009/07/27 23:37:03 $
- * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.30 2009/07/27 23:37:03 amorris Exp $ 
+ * $Revision: 1.31 $   $Date: 2009/08/27 22:56:35 $
+ * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.31 2009/08/27 22:56:35 amorris Exp $ 
  ***************************************************************************/

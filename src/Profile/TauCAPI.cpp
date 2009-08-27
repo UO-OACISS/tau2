@@ -197,10 +197,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 
   if (Tau_global_stackpos[tid] < 0) { return 0; }
 
-
-  
   profiler = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
-  Tau_global_stackpos[tid]--; /* pop */
   
   if (profiler->ThisFunction != fi) { /* Check for overlapping timers */
     reportOverlap (profiler->ThisFunction, fi);
@@ -209,13 +206,20 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 
 #ifdef TAU_DEPTH_LIMIT
   static int userspecifieddepth = TauEnv_get_depth_limit();
-  int mydepth = Tau_global_stackpos[tid]+1;
+  int mydepth = Tau_global_stackpos[tid];
   if (mydepth >= userspecifieddepth) { 
+    Tau_global_stackpos[tid]--; /* pop */
     return 0; 
   }
 #endif /* TAU_DEPTH_LIMIT */
 
+
+
+
   profiler->Stop(tid);
+
+  Tau_global_stackpos[tid]--; /* pop */
+
   return 0;
 }
 
@@ -1271,7 +1275,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.127 $   $Date: 2009/08/11 22:48:18 $
- * VERSION: $Id: TauCAPI.cpp,v 1.127 2009/08/11 22:48:18 amorris Exp $
+ * $Revision: 1.128 $   $Date: 2009/08/27 22:56:35 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.128 2009/08/27 22:56:35 amorris Exp $
  ***************************************************************************/
 

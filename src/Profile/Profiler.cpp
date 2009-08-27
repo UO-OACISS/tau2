@@ -253,18 +253,39 @@ void Profiler::Start(int tid) {
   /*** Phase Profiling ***/
   /********************************************************************************/
 
-  
-#ifdef TAU_PROFILEMEMORY
-  ThisFunction->GetMemoryEvent()->TriggerEvent(TauGetMaxRSS());
-#endif /* TAU_PROFILEMEMORY */
 
+  
+  /********************************************************************************/
+  /*** Extras ***/
+  /********************************************************************************/
+  if (TauEnv_get_extras()) {
+    /*** Memory Profiling ***/
+    if (TauEnv_get_track_memory_heap()) {
+      TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) : Entry");
+      TAU_CONTEXT_EVENT(memHeapEvent, TauGetMaxRSS());
+    }
+    
+    if (TauEnv_get_track_memory_headroom()) {
+      TAU_REGISTER_CONTEXT_EVENT(memEvent, "Memory Headroom Available (MB) : Entry");
+      TAU_CONTEXT_EVENT(memEvent, (double)TauGetFreeMemory());
+    }
+    
+#ifdef TAU_PROFILEMEMORY
+    ThisFunction->GetMemoryEvent()->TriggerEvent(TauGetMaxRSS());
+#endif /* TAU_PROFILEMEMORY */
+    
 #ifdef TAU_PROFILEHEADROOM
-  ThisFunction->GetHeadroomEvent()->TriggerEvent((double)TauGetFreeMemory());
+    ThisFunction->GetHeadroomEvent()->TriggerEvent((double)TauGetFreeMemory());
 #endif /* TAU_PROFILEHEADROOM */
 
-  if (TauEnv_get_compensate()) {
-    SetNumChildren(0); /* for instrumentation perturbation compensation */
+    /*** Profile Compensation ***/
+    if (TauEnv_get_compensate()) {
+      SetNumChildren(0); /* for instrumentation perturbation compensation */
+    }
   }
+  /********************************************************************************/
+  /*** Extras ***/
+  /********************************************************************************/
 
   x_uint64 TimeStamp;
 
@@ -436,26 +457,49 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #endif /* TAUKTAU */
     
 
-#ifdef PROFILING_ON
-  double *tover, *tnull;
-  if (TauEnv_get_compensate()) {
-    tover = TauGetTimerOverhead(TauFullTimerOverhead);
-    tnull = TauGetTimerOverhead(TauNullTimerOverhead);
-  }
 
 
   for (int k=0; k<Tau_Global_numCounters; k++) {
     TotalTime[k] = CurrentTime[k] - StartTime[k];
+  }
+
+
+
+  /********************************************************************************/
+  /*** Extras ***/
+  /********************************************************************************/
+  if (TauEnv_get_extras()) {
+    /*** Profile Compensation ***/
     if (TauEnv_get_compensate()) {
-      /* To compensate for timing overhead, shrink the totaltime! */
-      TotalTime[k] = TotalTime[k] - tnull[k] - GetNumChildren() * tover[k]; 
-      if (TotalTime[k] < 0 ) {
-	TotalTime[k] = 0;
-	DEBUGPROFMSG("TotalTime[" <<k<<"] negative in "<<ThisFunction->GetName()<<endl;);
+      double *tover, *tnull;
+      tover = TauGetTimerOverhead(TauFullTimerOverhead);
+      tnull = TauGetTimerOverhead(TauNullTimerOverhead);
+      
+      for (int k=0; k<Tau_Global_numCounters; k++) {
+	/* To compensate for timing overhead, shrink the totaltime! */
+	TotalTime[k] = TotalTime[k] - tnull[k] - GetNumChildren() * tover[k]; 
+	if (TotalTime[k] < 0 ) {
+	  TotalTime[k] = 0;
+	  DEBUGPROFMSG("TotalTime[" <<k<<"] negative in "<<ThisFunction->GetName()<<endl;);
+	}
       }
     }
+    
+    /*** Memory Profiling ***/
+    if (TauEnv_get_track_memory_heap()) {
+      TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) : Exit");
+      TAU_CONTEXT_EVENT(memHeapEvent, TauGetMaxRSS());
+    }
+    
+    if (TauEnv_get_track_memory_headroom()) {
+      TAU_REGISTER_CONTEXT_EVENT(memEvent, "Memory Headroom Available (MB) : Exit");
+      TAU_CONTEXT_EVENT(memEvent, (double)TauGetFreeMemory());
+    }
   }
-#endif // PROFILING_ON
+  /********************************************************************************/
+  /*** Extras ***/
+  /********************************************************************************/
+
     
 
   /********************************************************************************/
@@ -1330,6 +1374,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.246 $   $Date: 2009/07/31 16:52:31 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.246 2009/07/31 16:52:31 amorris Exp $ 
+ * $Revision: 1.247 $   $Date: 2009/08/27 22:56:34 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.247 2009/08/27 22:56:34 amorris Exp $ 
  ***************************************************************************/

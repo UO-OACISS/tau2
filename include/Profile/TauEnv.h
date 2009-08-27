@@ -40,6 +40,10 @@ extern "C" {
   int TAUDECL TauEnv_get_comm_matrix();
   int TAUDECL TauEnv_get_track_message();
   int TAUDECL TauEnv_get_compensate();
+  int TAUDECL TauEnv_get_track_memory_heap();
+  int TAUDECL TauEnv_get_track_memory_headroom();
+  int TAUDECL TauEnv_get_extras();
+
   double TAUDECL TauEnv_get_throttle_numcalls();
   double TAUDECL TauEnv_get_throttle_percall();
   const char* TAUDECL TauEnv_get_profiledir();

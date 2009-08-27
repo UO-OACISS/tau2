@@ -237,6 +237,10 @@ extern "C" {
   static int env_depth_limit = 0;
   static int env_track_message = 0;
   static int env_comm_matrix = 0;
+  static int env_track_memory_heap = 0;
+  static int env_track_memory_headroom = 0;
+  static int env_extras = 0;
+
   static int env_profile_format = TAU_FORMAT_PROFILE;
   static double env_throttle_numcalls = 0;
   static double env_throttle_percall = 0;
@@ -320,6 +324,18 @@ extern "C" {
     return env_track_message;
   }
 
+  int TauEnv_get_track_memory_heap() {
+    return env_track_memory_heap;
+  }
+
+  int TauEnv_get_track_memory_headroom() {
+    return env_track_memory_headroom;
+  }
+
+  int TauEnv_get_extras() {
+    return env_extras;
+  }
+
   int TauEnv_get_profiling() {
     return env_profiling;
   }
@@ -339,8 +355,6 @@ extern "C" {
   void TauEnv_set_depth_limit(int value) {
     env_depth_limit = value;
   }
-
-  void TAUDECL TauEnv_set_depth_limit(int value);
 
 
   double TauEnv_get_throttle_numcalls() {
@@ -441,6 +455,7 @@ extern "C" {
       tmp = getconf("TAU_COMPENSATE");
       if (parse_bool(tmp, TAU_COMPENSATE_DEFAULT)) {
 	env_compensate = 1;
+	env_extras = 1;
 	TAU_VERBOSE("TAU: Overhead Compensation Enabled\n");
 	TAU_METADATA("TAU_COMPENSATE","on");
       } else {
@@ -448,6 +463,7 @@ extern "C" {
 	TAU_VERBOSE("TAU: Overhead Compensation Disabled\n");
 	TAU_METADATA("TAU_COMPENSATE","off");
       }
+
 
 
 #ifdef TAU_MPI
@@ -588,10 +604,34 @@ extern "C" {
       }
 
 
+      tmp = getconf("TAU_TRACK_HEAP");
+      if (parse_bool(tmp, env_track_memory_heap)) {
+	TAU_VERBOSE("TAU: Entry/Exit Memory tracking Enabled\n");
+	TAU_METADATA("TAU_TRACK_HEAP","on");
+	env_track_memory_heap = 1;
+	env_extras = 1;
+      } else {
+	TAU_METADATA("TAU_TRACK_HEAP","off");
+	env_track_memory_heap = 0;
+      }
+
+      tmp = getconf("TAU_TRACK_HEADROOM");
+      if (parse_bool(tmp, env_track_memory_headroom)) {
+	TAU_VERBOSE("TAU: Entry/Exit Headroom tracking Enabled\n");
+	TAU_METADATA("TAU_TRACK_HEADROOM","on");
+	env_track_memory_headroom = 1;
+	env_extras = 1;
+      } else {
+	TAU_METADATA("TAU_TRACK_HEADROOM","off");
+	env_track_memory_headroom = 0;
+      }
+
       if ((env_metrics = getconf("TAU_METRICS")) == NULL) {
 	env_metrics = ""; /* default to 'time' */
+	TAU_VERBOSE("TAU: METRICS is not set\n", env_metrics);
+      } else {
+	TAU_VERBOSE("TAU: METRICS is \"%s\"\n", env_metrics);
       }
-      TAU_VERBOSE("TAU: METRICS is \"%s\"\n", env_metrics);
     }
   }
 }
