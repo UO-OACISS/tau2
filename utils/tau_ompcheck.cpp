@@ -435,7 +435,7 @@ class CompleteDirectives
     state.downStmt(s);*/
     static list<Directive> emptyDirectives;
     if (directives.size() == 0 and openDirectives.size() == 0) {
-		  cerr << "no directives to find.\n" << endl;
+		  //cerr << "no directives to find.\n" << endl;
       return emptyDirectives;
     }
 		else {
@@ -513,11 +513,13 @@ class CompleteDirectives
 					if (depth == 0 && openDirectives.front().getLine() <
 					(s->stmtBegin().line() - 1))
 					{
-					  printf("we should see a directive.\n");
+						if (verbosity == Debug)
+					  	printf("we should see a directive.\n");
 					  //parallel do open
 						if (openDirectives.front().getType() != 1)
 						{
-							printf("closing do loop.\n");
+							if (verbosity == Debug)
+								printf("closing do loop.\n");
 							addDirectives.splice(addDirectives.end(),findOMPStmt(STATE_EXPECTING, s, block, loop, pdb));
 							return addDirectives;
 						}
@@ -525,7 +527,8 @@ class CompleteDirectives
 						else if (followingStmt(s)->kind() == pdbStmt::ST_FRETURN ||
 						followingStmt(s)->kind() == pdbStmt::ST_FEXIT)
 						{
-							printf("closing parallel\n");
+							if (verbosity == Debug)
+								printf("closing parallel\n");
 							addDirectives.splice(addDirectives.end(),findOMPStmt(STATE_EXPECTING, s, block, loop, pdb));
 							//printf("back in open...\n");
 							return addDirectives;
@@ -1329,6 +1332,6 @@ int main(int argc, char *argv[])
 }
 /***************************************************************************
  * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
- * $Revision: 1.30 $   $Date: 2009/08/19 18:38:44 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.30 2009/08/19 18:38:44 scottb Exp $
+ * $Revision: 1.31 $   $Date: 2009/08/28 00:40:37 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.31 2009/08/28 00:40:37 scottb Exp $
  ***************************************************************************/
