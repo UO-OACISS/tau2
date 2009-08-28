@@ -1,0 +1,22 @@
+*****************************************************************************
+**			TAU Portable Profiling Package			   **
+**			http://www.cs.uoregon.edu/research/paracomp/tau    **
+*****************************************************************************
+**    Copyright 1997-2009 				   	           **
+**    Department of Computer and Information Science, University of Oregon **
+**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+**    Research Center Juelich, ZAM Germany			           **	
+*****************************************************************************
+
+
+This file lists known limitation of TAU.
+
+--------------------------------------------------------------------------------
+* Memory tracking with mallinfo
+
+TAU uses the mallinfo call when available on a system.  mallinfo is not 64-bit 
+clean and is only accurate up to 4GB.  The getrusage call is used on some other
+systems, but does not work at all for Linux systems.
+
+
+--------------------------------------------------------------------------------
