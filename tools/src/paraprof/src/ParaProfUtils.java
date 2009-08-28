@@ -15,6 +15,7 @@ import javax.swing.*;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
+import edu.uoregon.tau.common.ExternalTool;
 import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.common.VectorExport;
@@ -36,11 +37,11 @@ import edu.uoregon.tau.vis.HeatMapWindow;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.48 2009/08/24 22:15:09 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.49 2009/08/28 15:06:18 khuck Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.48 $
+ * @version $Revision: 1.49 $
  */
 public class ParaProfUtils {
 
@@ -675,6 +676,9 @@ public class ParaProfUtils {
                             // use internal viewer
                             ParaProf.getDirectoryManager().showSourceCode(function.getSourceLink());
                         }
+                    } else if (arg.equals("Launch External Tool for this Function & Metric")) {
+                    	ExternalTool tool = ExternalTool.findMatchingTool((String)ppTrial.getTrial().getMetaData().get(DataSource.FILE_TYPE_NAME));
+                    	tool.launch(function.getName(), ppTrial.getMetricName(0), thread.getNodeID(), thread.getThreadID());
                     }
 
                 } catch (Exception e) {
@@ -712,7 +716,7 @@ public class ParaProfUtils {
             jMenuItem.addActionListener(actionListener);
             functionPopup.add(jMenuItem);
         }
-
+        
         JMenuItem jMenuItem = new JMenuItem("Assign Function Color");
         jMenuItem.addActionListener(actionListener);
         functionPopup.add(jMenuItem);
@@ -720,6 +724,12 @@ public class ParaProfUtils {
         jMenuItem = new JMenuItem("Reset to Default Color");
         jMenuItem.addActionListener(actionListener);
         functionPopup.add(jMenuItem);
+
+        if (ExternalTool.matchingToolExists((String)ppTrial.getTrial().getMetaData().get(DataSource.FILE_TYPE_NAME))) {
+            JMenuItem toolMenuItem = new JMenuItem("Launch External Tool for this Function & Metric");
+            toolMenuItem.addActionListener(actionListener);
+            functionPopup.add(toolMenuItem);
+        }        
 
         // count function scripts
         int functionScripts = 0;
