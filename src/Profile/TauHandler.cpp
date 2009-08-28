@@ -120,29 +120,6 @@ int TauDisableTrackingMemoryHeadroom(void) {
 //////////////////////////////////////////////////////////////////////
 double TauGetMaxRSS(void) {
 #ifdef TAU_HASMALLINFO
-  /* compute the memory used */
-//#define __linux__
-#ifdef __linux__
-  FILE          *file;
-	char           buf[256];
-	unsigned int   pages;
-					
-	snprintf( buf, sizeof(buf), "/proc/%d/statm", (unsigned int) getpid() );
-	if ((file = fopen( buf, "r" )) == NULL)
-	{
-			perror( "open" );
-			return 0;
-	}
-	fgets( buf, sizeof(buf), file );
-					
-	sscanf( buf, "%u", & pages );
-  double used = ((unsigned long) pages) * ((unsigned long) getpagesize());
-#ifdef DEBUG_PROF
-  cout <<"proc statm pages= " << (unsigned long) pages<<endl;
-  cout <<"proc statm pages size= " << (unsigned long) getpagesize()<<endl;
-  cout <<"used memory in bytes = "<<used<<endl;
-#endif /* DEBUG_PROF */
-#else  /* _LINUX */
   struct mallinfo minfo = mallinfo();
   double used = (double) ((unsigned int) minfo.hblkhd + 0.0 + (unsigned int) minfo.usmblks + (unsigned int) minfo.uordblks);
 #ifdef DEBUG_PROF
@@ -151,7 +128,6 @@ double TauGetMaxRSS(void) {
   cout <<"minfo.hblkhd= "<<(unsigned int) minfo.uordblks<<endl;
   cout <<"used memory in bytes = "<<used<<endl;
 #endif /* DEBUG_PROF */
-#endif /* _LINUX */
   /* This is in bytes, we need KB */
   return used/1024.0;
 #else 
@@ -292,9 +268,9 @@ void TauTrackMemoryHeadroomHere(void) {
 
   
 /***************************************************************************
- * $RCSfile: TauHandler.cpp,v $   $Author: scottb $
- * $Revision: 1.19 $   $Date: 2009/06/02 01:52:13 $
- * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.19 2009/06/02 01:52:13 scottb Exp $ 
+ * $RCSfile: TauHandler.cpp,v $   $Author: amorris $
+ * $Revision: 1.20 $   $Date: 2009/08/28 22:29:20 $
+ * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.20 2009/08/28 22:29:20 amorris Exp $ 
  ***************************************************************************/
 
 	
