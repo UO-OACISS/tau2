@@ -20,9 +20,9 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.46 2009/08/27 14:33:43 khuck Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.47 2009/08/28 15:02:21 khuck Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.46 $
+ * @version $Revision: 1.47 $
  */
 public abstract class DataSource {
 
@@ -46,7 +46,9 @@ public abstract class DataSource {
     public static final int IPM = 15; // Data from IPM/NERSC
     public static final int GYRO = 100;
     public static final int GAMESS = 101; // application log data
-
+    public static final String FILE_TYPE_INDEX = "File Type Index";
+    public static final String FILE_TYPE_NAME = "File Type Name";
+    
     public static String formatTypeStrings[] = { "ParaProf Packed Profile", "Tau profiles", "Dynaprof", "MpiP", "HPMToolkit",
             "Gprof", "PSRun", "Tau pprof.dat", "Cube", "HPCToolkit", "TAU Snapshot", "ompP", "PERI-XML",
             "General Purpose Timing Library (GPTL)", "Paraver", "IPM" };
@@ -661,8 +663,8 @@ public abstract class DataSource {
 
         finishPhaseAnalysis();
         
-        this.getMetaData().put("File Type Index", Integer.toString(this.fileType));
-        this.getMetaData().put("File Type Name", DataSource.formatTypeStrings[this.fileType]);
+        this.getMetaData().put(FILE_TYPE_INDEX, Integer.toString(this.fileType));
+        this.getMetaData().put(FILE_TYPE_NAME, DataSource.formatTypeStrings[this.fileType]);
 
 
         //time = (System.currentTimeMillis()) - time;
