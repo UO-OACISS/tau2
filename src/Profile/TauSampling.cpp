@@ -121,7 +121,7 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
   x_uint64 timestamp = ((double)tp.tv_sec * 1e6 + tp.tv_usec);
 
   fprintf (ebsTrace, "%lld", timestamp);
-  fprintf (ebsTrace, " PC=0x%x", pc);
+  fprintf (ebsTrace, " %x", pc);
 
   TauMetrics_getMetrics(tid, values);
   for (int i=0; i<Tau_Global_numCounters; i++) {
@@ -179,7 +179,7 @@ int Tau_sampling_init() {
   ebsTrace = fopen(filename, "w");
   
   fprintf (ebsTrace, "# Format:\n");
-  fprintf (ebsTrace, "# <timestamp> PC=<pc> <metric 1> ... <metric N> <tau callpath>\n");
+  fprintf (ebsTrace, "# <timestamp> <pc> <metric 1> ... <metric N> <tau callpath>\n");
   fprintf (ebsTrace, "# Metrics:");
   for (int i=0; i<Tau_Global_numCounters; i++) {
     const char *name = TauMetrics_getMetricName(i);
