@@ -111,7 +111,7 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
   int tid = RtsLayer::myThread();
   caddr_t pc;
   pc = get_pc(p);
-  printf ("at 0x%x\n", pc);
+//   printf ("at 0x%x\n", pc);
 
   double values[TAU_MAX_COUNTERS];
 
@@ -165,7 +165,18 @@ int Tau_sampling_init() {
   itval.it_interval.tv_sec =  itval.it_value.tv_sec = 1000 / 1000000;
 
 
-  ebsTrace = fopen("ebstrace", "w");
+  const char *profiledir = TauEnv_get_profiledir();
+
+  char filename[4096];
+
+  int tid = RtsLayer::myThread();
+  int node = RtsLayer::myNode();
+
+  node = 0;
+  sprintf(filename,"%s/ebstrace.%d.%d.%d", profiledir, node, RtsLayer::myContext(), tid);
+
+
+  ebsTrace = fopen(filename, "w");
   
   fprintf (ebsTrace, "# Format:\n");
   fprintf (ebsTrace, "# <timestamp> PC=<pc> <metric 1> ... <metric N> <tau callpath>\n");
