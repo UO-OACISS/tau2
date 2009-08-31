@@ -17,6 +17,7 @@
 //#define DEBUG_PROF
 #include <Profile/Profiler.h>
 #include <Profile/TauMetrics.h>
+#include <Profile/TauSampling.h>
 
 //#include <tau_internal.h>
 
@@ -1180,6 +1181,11 @@ int TauProfiler_StoreData(int tid) {
 
   finalizeTrace(tid);
 
+
+#ifdef TAU_EXP_SAMPLING
+  Tau_sampling_finalize();
+#endif /* TAU_EXP_SAMPLING */
+
   if (TauEnv_get_profiling()) {
     TauProfiler_Snapshot("final", true, tid);
     
@@ -1374,6 +1380,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.247 $   $Date: 2009/08/27 22:56:34 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.247 2009/08/27 22:56:34 amorris Exp $ 
+ * $Revision: 1.248 $   $Date: 2009/08/31 20:16:20 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.248 2009/08/31 20:16:20 amorris Exp $ 
  ***************************************************************************/
