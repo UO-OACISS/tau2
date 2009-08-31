@@ -123,8 +123,8 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
   gettimeofday (&tp, 0);
   x_uint64 timestamp = ((double)tp.tv_sec * 1e6 + tp.tv_usec);
 
-  fprintf (ebsTrace, "%lld : ", timestamp);
-  fprintf (ebsTrace, "%x : ", pc);
+  fprintf (ebsTrace, "%lld | ", timestamp);
+  fprintf (ebsTrace, "%x | ", pc);
 
   TauMetrics_getMetrics(tid, values);
   for (int i=0; i<Tau_Global_numCounters; i++) {
@@ -137,7 +137,7 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
   TAU_QUERY_GET_CURRENT_EVENT(event);
   TAU_QUERY_GET_EVENT_NAME(event, str);
 
-  fprintf (ebsTrace, ": ");
+  fprintf (ebsTrace, "| ");
 
   int depth = TauEnv_get_callpath_depth();
 
@@ -204,7 +204,12 @@ int Tau_sampling_init() {
   }
   fprintf (ebsTrace, "\n");
 
-  
+
+  char buffer[4096];
+  bzero(buffer, 4096);
+  int rc = readlink("/proc/self/exe", buffer, 4096);
+  fprintf (ebsTrace, "# exe: %s\n", buffer);
+
 
   struct sigaction act;
   memset(&act, 0, sizeof(struct sigaction));
@@ -251,13 +256,13 @@ int Tau_sampling_finalize() {
   FILE *def = fopen(filename, "w");
 
   fprintf (def, "# Format:\n");
-  fprintf (def, "# <id> : <name>\n");
+  fprintf (def, "# <id> | <name>\n");
 
 
   for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
     FunctionInfo *fi = *it;
     
-    fprintf (def,"%d : %s %s\n", fi->GetFunctionId(), fi->GetName(), fi->GetType());
+    fprintf (def,"%d | %s %s\n", fi->GetFunctionId(), fi->GetName(), fi->GetType());
 
   }
   fclose(def);
