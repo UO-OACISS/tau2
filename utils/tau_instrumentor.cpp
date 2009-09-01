@@ -1345,7 +1345,6 @@ void processCloseLoopTimer(ostream& ostr) {
 /* -- Writes the return expression to the instrumented file  ---------------- */
 /* -------------------------------------------------------------------------- */
 void processReturnExpression(ostream& ostr, string& ret_expression, itemRef *it, char *use_string) {
-
   if (isBlankString(ret_expression) ||
       (use_spec && isBlankString(it->snippet))) {
     ostr <<"{ ";
@@ -1579,16 +1578,11 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 		  }
 		}
 		if (inbuf[k] == ';') { /* Got the semicolon. Return expression is in one line. */
-#ifdef DEBUG
-		  cout <<"No need to read in another line"<<endl;
-#endif /* DEBUG */
 		  write_from = k+1;
-		} else {
+		} else { /* return expression spans multiple lines */
 		  int l;   
 		  do {
-#ifdef DEBUG
-		    cout <<"Need to read in another line to get ';' "<<endl;
-#endif /* DEBUG */
+		    ret_expression.append("\n", 1);
 		    if (istr.getline(inbuf, INBUF_SIZE)==NULL) {
 		      perror("ERROR in reading file: looking for ;"); 
 		      exit(1); 
@@ -1598,7 +1592,9 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 		    /* Now search for ; in the string */
 		    for(l=0; (inbuf[l] != ';') && (l < inbufLength); l++) {
 		      ret_expression.append(&inbuf[l], 1);
-		      if (inbuf[l] == '\\') ret_expression.append(&newline, 1);
+		      if (inbuf[l] == '\\') {
+			ret_expression.append(&newline, 1);
+		      }
 		    }
 		  } while(inbuf[l] != ';');
 		  /* copy the buffer into inbuf */
@@ -4379,8 +4375,8 @@ int main(int argc, char **argv) {
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.213 $   $Date: 2009/09/01 17:14:47 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.213 2009/09/01 17:14:47 amorris Exp $
+ * $Revision: 1.214 $   $Date: 2009/09/01 17:31:59 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.214 2009/09/01 17:31:59 amorris Exp $
  ***************************************************************************/
 
 
