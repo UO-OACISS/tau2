@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-
+# Trim leading and trailing whitespace from a string
 sub trim($) {
     my $string = shift;
     $string =~ s/^\s+//;
@@ -9,10 +9,8 @@ sub trim($) {
 }
 
 
-
-my %eventmap;
-
 # Read event definitions
+my %eventmap;
 open (DEF, "<ebstracedef.0.0.0");
 while ($line = <DEF>) {
     if ($line =~ /\#.*/) {
@@ -24,13 +22,13 @@ while ($line = <DEF>) {
     $eventmap{$id} = $name;
 }
 
-open (TRACE, "<ebstrace.0.0.0");
 
+# Read the trace
 my ($exe);
-
+open (TRACE, "<ebstrace.0.0.0");
 while ($line = <TRACE>) {
     if ($line =~ /\#.*/) {
-	#print "$line";
+	print "$line";
 	if ($line =~ /\# exe:.*/) {
 	    ($junk, $exe) = split("exe:",$line);
 	    $exe = trim($exe);
@@ -42,7 +40,7 @@ while ($line = <TRACE>) {
     $pc = trim($pc);
     $metrics = trim($metrics);
     $callpath = trim($callpath);
-
+    
     # Process the callpath
     $callpath = reverse($callpath);
     @events = split(" ",$callpath);
@@ -54,11 +52,11 @@ while ($line = <TRACE>) {
     }
     $newCallpath = join(" => ", @processedEvents);
 
-#    print "pc = $pc";
-
     # Process the PC
     $out = `echo $pc | addr2line -e $exe`;
     chomp($out);
     $newpc = $out;
+
+    # Output the processed data
     print "$timestamp | $newpc | $metrics | $newCallpath\n";
 }
