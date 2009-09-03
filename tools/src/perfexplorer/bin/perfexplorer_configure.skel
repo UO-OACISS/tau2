@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: perfexplorer_configure.skel,v 1.20 2009/08/10 09:50:18 khuck Exp $
+# $Id: perfexplorer_configure.skel,v 1.21 2009/09/03 08:57:20 khuck Exp $
 # $Name:  $
 
 rm -f .last_config
@@ -23,6 +23,7 @@ configdir=$HOME/.ParaProf
 tmpdir=/tmp
 LIBDIR=${tauroot}/${architecture}/lib
 PERFEXPLORER_JAR=${LIBDIR}/perfexplorer.jar
+redirect=http://www.cs.uoregon.edu/research/paracomp/tau/weka-redirect.html
 mytest=`which unzip`
 if [ "x$mytest" = "x" ] ; then
 	echo "unzip not found!"
@@ -213,7 +214,7 @@ if [ ! -r ${WEKA_JAR} ]; then
 	    
 		/bin/rm -f weka-redirect.html
 		#wget http://www.cs.uoregon.edu/research/paracomp/tau/weka-redirect.html
-		java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget http://www.cs.uoregon.edu/research/paracomp/tau/weka-redirect.html weka-redirect.html false
+		java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget $redirect weka-redirect.html false
 		URL=`grep URL weka-redirect.html | sed s/URL=//`
 		FILE=`grep FILE weka-redirect.html | sed s/FILE=//`
 		DIR=`grep DIR weka-redirect.html | sed s/DIR=//`
@@ -242,8 +243,12 @@ if [ ! -r ${WEKA_JAR} ]; then
 	    fi
 	else
 		echo ""
-		echo "Please acquire your Weka jar file manually from http://www.cs.waikato.ac.nz/ml/weka/"
-		echo ""
+		echo "Please acquire your Weka jar file manually from:"
+		echo "	http://www.cs.waikato.ac.nz/ml/weka/"
+		echo "or use the following redirection link (recommended):"
+		echo "--->	$redirect"
+		echo "Download and unzip the specified URL in the redirect file, and place the weka.jar file in $configdir"
+        echo ""
 	fi
 fi
 
@@ -265,10 +270,10 @@ if [ ! -r ${JBOSS_JAR} ]; then
 	    esac
 	done
 	
+	FILE=PE2_jars.tgz
+	URL=http://www.cs.uoregon.edu/research/paracomp/tau/$FILE
 	
 	if [ "${RESPONSE}" = "y" ]; then 
-		FILE=PE2_jars.tgz
-		URL=http://www.cs.uoregon.edu/research/paracomp/tau/$FILE
 		/bin/rm -f $FILE
 		echo "Getting $FILE... please be patient..."
 		#wget "$URL"
@@ -289,13 +294,20 @@ if [ ! -r ${JBOSS_JAR} ]; then
 		exit
 	    fi
 	else
+		echo ""
+		echo "Please manually download the required jar files using the following link:"
+		echo "--->	$URL"
+		echo "and expand the compressed tar file in $configdir"
+		echo ""
+		echo "Please re-run perfexplorer_configure when these files have been installed."
+		echo ""
 	    exit
 	fi
 fi
 
 # now to test the DB and upload schema (if necessary)
 
-java -Dderby.system.home=${configdir} -cp ${PERFEXPLORER_JAR}:${LIBDIR}/perfdmf.jar:${LIBDIR}/jargs.jar:${JDBC_JAR}:${LIBDIR}/tau-common.jar edu.uoregon.tau.perfexplorer.common.Configure -t ${tauroot} -a ${architecture} -g ${configfile}
+echo java -Dderby.system.home=${configdir} -cp ${PERFEXPLORER_JAR}:${LIBDIR}/perfdmf.jar:${LIBDIR}/jargs.jar:${JDBC_JAR}:${LIBDIR}/tau-common.jar edu.uoregon.tau.perfexplorer.common.Configure -t ${tauroot} -a ${architecture} -g ${configfile}
 
 
 
