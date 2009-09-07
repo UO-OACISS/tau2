@@ -37,11 +37,11 @@ import edu.uoregon.tau.vis.HeatMapWindow;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.49 2009/08/28 15:06:18 khuck Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.50 2009/09/07 09:56:06 khuck Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.49 $
+ * @version $Revision: 1.50 $
  */
 public class ParaProfUtils {
 
@@ -677,8 +677,8 @@ public class ParaProfUtils {
                             ParaProf.getDirectoryManager().showSourceCode(function.getSourceLink());
                         }
                     } else if (arg.equals("Launch External Tool for this Function & Metric")) {
-                    	ExternalTool tool = ExternalTool.findMatchingTool((String)ppTrial.getTrial().getMetaData().get(DataSource.FILE_TYPE_NAME));
-                    	tool.launch(function.getName(), ppTrial.getMetricName(0), thread.getNodeID(), thread.getThreadID());
+                    	List tools = ExternalTool.findMatchingTools((String)ppTrial.getTrial().getMetaData().get(DataSource.FILE_TYPE_NAME));
+                    	ExternalTool.launch(tools, function.getName(), ppTrial.getMetricName(0), thread.getNodeID(), thread.getThreadID(), owner);
                     }
 
                 } catch (Exception e) {
