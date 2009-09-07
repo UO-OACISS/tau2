@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.lang.Thread;
+import java.awt.Component;
 
 import javax.swing.JOptionPane;
 
@@ -30,31 +32,31 @@ Example properties file:
 Tool_Name = Paraver
 
 # Program Name
-Program_Name = echo pk2prv
+Program_Name = pk2prv
 
 # File type supported
 File_Type = Paraver
 
 # each command has an index (one for each request)
-Command.0 = timeline.cfg
+Command.0 = timeline.cfg function_name metric_name
 Command_Label.0 = View Timeline
 
-# each command has 0 or more parameter names and types
-Parameter_Name.0.0 = function name
-Parameter_Name.0.1 = metric name
+# each command has 0 or more parameter names
+Parameter_Name.0.0 = function_name
+Parameter_Name.0.1 = metric_name
 
-# Another command
+# Another command, no parameters
 Command.1 = Do_Something
 Command_Label.1 = Something Else
 
 ----------------------------------------------------------------
 
  * 
- * <P>CVS $Id: ExternalTool.java,v 1.1 2009/08/28 15:00:33 khuck Exp $</P>
+ * <P>CVS $Id: ExternalTool.java,v 1.2 2009/09/07 09:51:26 khuck Exp $</P>
  * $RCSfile: ExternalTool.java,v $
- * $Date: 2009/08/28 15:00:33 $
+ * $Date: 2009/09/07 09:51:26 $
  * @author  $Author: khuck $
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class ExternalTool {
 	
@@ -74,10 +76,10 @@ public class ExternalTool {
 	public static final String COMMAND_LABEL = "Command_Label";
 	public static final String PARAMETER_NAME = "Parameter_Name";
 	public static final String DELIM = ".";
-	public static final String FUNCTION_NAME = "function name";
-	public static final String METRIC_NAME = "metric name";
-	public static final String PROCESS_ID = "process ID";
-	public static final String THREAD_ID = "thread ID";
+	public static final String FUNCTION_NAME = "function_name";
+	public static final String METRIC_NAME = "metric_name";
+	public static final String PROCESS_ID = "process_ID";
+	public static final String THREAD_ID = "thread_ID";
 	private static final String HEADER = "Default Properties file for an external tool.";
 	
 	
@@ -124,7 +126,7 @@ public class ExternalTool {
 			if (commandString == null) {
 				break;
 			}
-			Command command = new Command(commandString);
+			Command command = new Command(this, commandString);
 			command.label = properties.getProperty(COMMAND_LABEL + DELIM + c, commandString);
 			this.commands.add(command);
 			// iterate over the parameters, and for each one get name and type
@@ -180,18 +182,19 @@ public class ExternalTool {
 	 * @param fileType
 	 * @return
 	 */
-	public static ExternalTool findMatchingTool(String fileType) {
+	public static List/*<ExternalTool>*/ findMatchingTools(String fileType) {
+		List/*<ExternalTool>*/ tools = new ArrayList/*<ExternalTool>*/();
 		ExternalTool.loadAllTools();
 		if (ExternalTool.loadedTools == null)
-			return null;
+			return tools;
 		for (Iterator iter = ExternalTool.loadedTools.iterator() ; iter.hasNext() ;) {
 			ExternalTool tool = (ExternalTool)iter.next();
 			String configuredType = tool.properties.getProperty(ExternalTool.FILE_TYPE, "None"); 
 			if (configuredType.equalsIgnoreCase(fileType)) {
-				return tool;
+				tools.add(tool);
 			}
 		}
-		return null;
+		return tools;
 	}
 	
 	/**
@@ -202,9 +205,9 @@ public class ExternalTool {
 	 * @return
 	 */
 	public static boolean matchingToolExists(String fileType) {
-		if (findMatchingTool(fileType) != null) 
-			return true;
-		return false;
+		if (findMatchingTools(fileType).isEmpty()) 
+			return false;
+		return true;
 	}
 	
 	public String getProperty(String key) {
@@ -231,20 +234,20 @@ public class ExternalTool {
 		this.propertiesFile = propertiesFile;
 	}
 
-	public void launch(String function, String metric, int nodeID, int threadID) {
-/*    	System.out.println("Launching External Tool: " + getProperty(ExternalTool.TOOL_NAME));
-    	System.out.println("\tFunction: " + function);
-    	System.out.println("\tMetric: " + metric);
-    	System.out.println("\tNode: " + nodeID);
-    	System.out.println("\tThread: " + threadID);
-*/    	
-    	// the mean and standard deviation IDs from ParaProf will be less than zero.  Fix that.
+	public static void launch(List/*<ExternalTool>*/ tools, String function, String metric, int nodeID, int threadID, Component parentWindow) {
+    	// the mean and standard deviation IDs from ParaProf will be less than zero.  Fix that, if necessary.
     	nodeID = (nodeID < 0) ? 0 : nodeID;
     	threadID = (threadID < 0) ? 0 : threadID;
+
+		List/*<Command>*/ commands = new ArrayList/*<Command>*/();
+		for (Iterator iter = tools.iterator() ; iter.hasNext() ; ) {
+			ExternalTool tool = (ExternalTool)iter.next();
+			commands.addAll(tool.commands);
+		}
     	
     	// show a list of commands to run in the external tool
     	Object[] options = commands.toArray();
-		Object obj = JOptionPane.showInputDialog (null,
+		Object obj = JOptionPane.showInputDialog (parentWindow,
 				"Select a command for the external tool:",
 				"External Tool Commands",
 				JOptionPane.PLAIN_MESSAGE,
@@ -258,78 +261,21 @@ public class ExternalTool {
 		
 		// build the external command
 		Command command = (Command) obj;
-		String commandString = programName + " " + command.name;
+		String commandString = command.tool.programName + " " + command.name;
 		for (Iterator iter = command.parameterNames.iterator() ; iter.hasNext() ; ) {
 			String pName = (String)iter.next();
 			if (pName.equals(FUNCTION_NAME)) {
-				commandString += " \"" + function + "\"";
+				commandString = commandString.replaceAll(FUNCTION_NAME, function);
 			} else if (pName.equals(METRIC_NAME)) {
-				commandString += " \"" + metric + "\"";
+				commandString = commandString.replaceAll(METRIC_NAME, metric);
 			} else if (pName.equals(PROCESS_ID)) {
-				commandString += " \"" + nodeID + "\"";
+				commandString = commandString.replaceAll(PROCESS_ID, Integer.toString(nodeID));
 			} else if (pName.equals(THREAD_ID)) {
-				commandString += " \"" + threadID + "\"";
+				commandString = commandString.replaceAll(THREAD_ID, Integer.toString(threadID));
 			}
 		}
 		
-		// run the command
-		Runtime r = Runtime.getRuntime();
-		try {
-			//System.out.println(commandString);
-			Process p = r.exec(commandString);
-			
-			// get the output stream (for some reason named "input" stream
-			InputStream in = p.getInputStream();
-			BufferedInputStream buf = new BufferedInputStream(in);
-			InputStreamReader inread = new InputStreamReader(buf);
-			BufferedReader bufferedreader = new BufferedReader(inread);
-
-			// get the error stream
-			InputStream err = p.getErrorStream();
-			BufferedInputStream eBuf = new BufferedInputStream(err);
-			InputStreamReader eInread = new InputStreamReader(eBuf);
-			BufferedReader eBufferedreader = new BufferedReader(eInread);
-
-			// Read the output
-			String line;
-			while ((line = bufferedreader.readLine()) != null) {
-				System.out.println(line);
-			}
-			// Read the errors
-			while ((line = eBufferedreader.readLine()) != null) {
-				System.err.println(line);
-			}
-			
-			// this will block the TAU tool until the external tool finishes.
-			// If we retain this behavior, we should spawn a Java thread to make this call.
-			try {
-				if (p.waitFor() != 0) {
-				    System.err.println("exit value = " + p.exitValue());
-				}
-			} catch (InterruptedException e) {
-			    System.err.println(e.getMessage());
-			} finally {
-				// Close the InputStream
-				eBufferedreader.close();
-				eInread.close();
-				eBuf.close();
-				err.close();
-				// Close the InputStream
-				bufferedreader.close();
-				inread.close();
-				buf.close();
-				in.close();
-			}
-			
-			if (p.exitValue() == 0) {
-				System.out.println("Program exited normally.");
-			} else {
-				// what should we do?
-			}
-		} catch (IOException e) {
-			System.err.println(e.getMessage());
-			e.printStackTrace();
-		}
+		ToolRunner tool = new ToolRunner(commandString);
 	}
 	
 	public static void createDefaultTool(boolean overwrite) {
@@ -365,20 +311,94 @@ public class ExternalTool {
 			ExternalTool tool = (ExternalTool)iter.next();
 			System.out.println("Properties: ");
 			System.out.println(tool.dump());
-			tool.launch("function", "metric", 0, 0);
 		}
-	}
+		Component mainWindow = null;
+		ExternalTool.launch(tools, "function", "metric", 0, 0, mainWindow);
+	} 
 	
 	class Command {
 		public String name = null;
 		public String label = null;
 		public List/*<String>*/ parameterNames = new ArrayList/*<String>*/();
-		Command(String name) {
+		public ExternalTool tool = null;
+		Command(ExternalTool tool, String name) {
+			this.tool = tool;
 			this.name = name;
 		}
 		public String toString() {
-			return label;
+			return tool.programName + ": " + label;
 		}
 	}
+	
 }
+
+	class ToolRunner extends Thread {
+		private String commandString = null;
+		
+		ToolRunner(String commandString) {
+			this.commandString = commandString;
+			this.start();
+		}
+		
+		public void run() {
+			// run the command
+			Runtime r = Runtime.getRuntime();
+			try {
+				//System.out.println(commandString);
+				Process p = r.exec(commandString);
+				
+				// get the output stream (for some reason named "input" stream
+				InputStream in = p.getInputStream();
+				BufferedInputStream buf = new BufferedInputStream(in);
+				InputStreamReader inread = new InputStreamReader(buf);
+				BufferedReader bufferedreader = new BufferedReader(inread);
+
+				// get the error stream
+				InputStream err = p.getErrorStream();
+				BufferedInputStream eBuf = new BufferedInputStream(err);
+				InputStreamReader eInread = new InputStreamReader(eBuf);
+				BufferedReader eBufferedreader = new BufferedReader(eInread);
+
+				// Read the output
+				String line;
+				while ((line = bufferedreader.readLine()) != null) {
+					System.out.println(line);
+				}
+				// Read the errors
+				while ((line = eBufferedreader.readLine()) != null) {
+					System.err.println(line);
+				}
+				
+				// this will block the TAU tool until the external tool finishes.
+				// If we retain this behavior, we should spawn a Java thread to make this call.
+				try {
+					if (p.waitFor() != 0) {
+					    System.err.println("exit value = " + p.exitValue());
+					}
+				} catch (InterruptedException e) {
+				    System.err.println(e.getMessage());
+				} finally {
+					// Close the InputStream
+					eBufferedreader.close();
+					eInread.close();
+					eBuf.close();
+					err.close();
+					// Close the InputStream
+					bufferedreader.close();
+					inread.close();
+					buf.close();
+					in.close();
+				}
+				
+				if (p.exitValue() == 0) {
+					System.out.println("Program exited normally.");
+				} else {
+					// what should we do?
+				}
+			} catch (IOException e) {
+				System.err.println(e.getMessage());
+				e.printStackTrace();
+			}
+		}
+	}
 
