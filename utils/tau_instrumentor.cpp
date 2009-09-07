@@ -3229,6 +3229,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
               if (use_spec) {
                 writeAdditionalDeclarations(ostr, (pdbRoutine *)((*it)->item));
                 ostr << "\t" << (*it)->snippet << endl;
+                writeAdditionalFortranInvocations(ostr, (pdbRoutine *)((*it)->item));
 		ostr << "      ";
 		
 		// write the rest of the original statement
@@ -4369,8 +4370,8 @@ int main(int argc, char **argv) {
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: geimer $
- * $Revision: 1.216 $   $Date: 2009/09/07 09:32:43 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.216 2009/09/07 09:32:43 geimer Exp $
+ * $Revision: 1.217 $   $Date: 2009/09/07 09:36:16 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.217 2009/09/07 09:36:16 geimer Exp $
  ***************************************************************************/
 
 
