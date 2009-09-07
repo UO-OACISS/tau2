@@ -22,6 +22,7 @@ public class ParaverDataSource extends DataSource {
 	private double durationMicrosecondsPercent = 0.0;
 	private String fileIndex = "";
 	private String metricName = "";
+	private String shortMetric = null;
 	private NumberFormat nfDLocal = NumberFormat.getNumberInstance();
 	private NumberFormat nfScientific = new DecimalFormat("0.0E0");
 	private static final double NANOSECONDS = 0.001; // to convert to microseconds
@@ -109,7 +110,7 @@ public class ParaverDataSource extends DataSource {
 				boolean haveUnits = false;
 				if (numTokens == (numFunctions * 2) + 2)
 					haveUnits = true;
-				double unitConversion = NANOSECONDS; // default unit for Paraver
+				double unitConversion = MICROSECONDS; // default unit for Paraver
 
         		tmp = st.nextToken(); // THREAD
         		tmp = st.nextToken(); // 1.1.1, 1.2.1, etc
@@ -119,7 +120,11 @@ public class ParaverDataSource extends DataSource {
           		int node = Integer.parseInt(tmp)-1;
         		tmp = st2.nextToken(); // thread
            		thread = this.addThread(node, 0, Integer.parseInt(tmp)-1);
-				this.addMetric(metricName);
+           		if (shortMetric != null) {
+           			this.addMetric(shortMetric);
+           		} else {
+           			this.addMetric(metricName);
+           		}
 				int j = 0;
 				while (st.hasMoreTokens()) {
         			tmp = st.nextToken(); // function value
@@ -291,6 +296,48 @@ public class ParaverDataSource extends DataSource {
 					}
 					getMetaData().put("Data Window" + fileIndex, value);
 					metricName = metricName + value + " ";
+				} else if (inputString.startsWith("Window name")) {
+        			StringTokenizer st = new StringTokenizer(inputString, " \t\n\r:");
+        			tmp = st.nextToken(); // Data
+        			tmp = st.nextToken(); // Window
+        			tmp = st.nextToken(); // "value"
+					boolean endString = false;
+					if (tmp.endsWith("\"")) {
+						endString = true;
+					}
+					String value = tmp.replaceAll("\"","");
+					String newMetric = null;
+					while (st.hasMoreTokens() && !endString) {
+        				tmp = st.nextToken(); // "value"
+						if (tmp.endsWith("\"")) {
+							endString = true;
+							tmp = tmp.replaceAll("\"","");
+						}
+						value = value + " " + tmp;
+						if (tmp.startsWith("(") && tmp.endsWith(")")) {
+							shortMetric = new String(tmp.substring(1, tmp.length()-1));
+						}
+					}
+					getMetaData().put("Window name" + fileIndex, value);
+				} else if (inputString.startsWith("Config File")) {
+        			StringTokenizer st = new StringTokenizer(inputString, " \t\n\r:");
+        			tmp = st.nextToken(); // Data
+        			tmp = st.nextToken(); // Window
+        			tmp = st.nextToken(); // "value"
+					boolean endString = false;
+					if (tmp.endsWith("\"")) {
+						endString = true;
+					}
+					String value = tmp.replaceAll("\"","");
+					while (st.hasMoreTokens() && !endString) {
+        				tmp = st.nextToken(); // "value"
+						if (tmp.endsWith("\"")) {
+							endString = true;
+							tmp = tmp.replaceAll("\"","");
+						}
+						value = value + " " + tmp;
+					}
+					getMetaData().put("Config File" + fileIndex, value);
 				} else if (inputString.startsWith("Extra Control Window")) {
         			StringTokenizer st = new StringTokenizer(inputString, " \t\n\r:");
         			tmp = st.nextToken(); // Extra
