@@ -1573,9 +1573,6 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 		for (k = (*it)->col+strlen(use_return_nonvoid)-1; (inbuf[k] != ';') && (k<inbufLength) ; k++) {
 		  char current_char = inbuf[k];
 		  ret_expression.append(&current_char, 1);
-		  if ((inbuf[k] == '\\' ) && (inbuf[k+1] == '\0')) {
-		    ret_expression.append(&newline, 1);
-		  }
 		}
 		if (inbuf[k] == ';') { /* Got the semicolon. Return expression is in one line. */
 		  write_from = k+1;
@@ -1592,9 +1589,6 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 		    /* Now search for ; in the string */
 		    for(l=0; (inbuf[l] != ';') && (l < inbufLength); l++) {
 		      ret_expression.append(&inbuf[l], 1);
-		      if (inbuf[l] == '\\') {
-			ret_expression.append(&newline, 1);
-		      }
 		    }
 		  } while(inbuf[l] != ';');
 		  /* copy the buffer into inbuf */
@@ -4375,8 +4369,8 @@ int main(int argc, char **argv) {
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: geimer $
- * $Revision: 1.215 $   $Date: 2009/09/07 09:20:39 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.215 2009/09/07 09:20:39 geimer Exp $
+ * $Revision: 1.216 $   $Date: 2009/09/07 09:32:43 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.216 2009/09/07 09:32:43 geimer Exp $
  ***************************************************************************/
 
 
