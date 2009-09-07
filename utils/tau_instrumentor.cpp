@@ -1281,7 +1281,7 @@ void processBodyBegin(ostream& ostr, itemRef *i, string& group_name) {
     ostr<<"Perf_Update(\"" <<((pdbRoutine *)(i->item))->name() << "\", 1);"<<endl;
   } else {
     ostr <<getCreateMeasurementEntity(i)<<"(tautimer, \""<<
-      getInstrumentedName(i->item) << "\", \" " << "\",";
+      getInstrumentedName(i->item) << "\", \" " << "\", ";
       // ((pdbRoutine *)(i->item))->signature()->name() << "\", ";
 
     if (strcmp(i->item->name().c_str(), "main")==0) { 
@@ -1302,7 +1302,7 @@ void processBodyBegin(ostream& ostr, itemRef *i, string& group_name) {
       ostr <<group_name<<");" <<endl; // give an additional line
     }
 
-    ostr <<"\t"<<getStartMeasurementEntity(i)<<"(tautimer); "<<endl;
+    ostr <<"\t"<<getStartMeasurementEntity(i)<<"(tautimer);"<<endl;
     ostr << i->snippet << endl;
   }
 }
@@ -4374,9 +4374,9 @@ int main(int argc, char **argv) {
   
   
 /***************************************************************************
- * $RCSfile: tau_instrumentor.cpp,v $   $Author: amorris $
- * $Revision: 1.214 $   $Date: 2009/09/01 17:31:59 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.214 2009/09/01 17:31:59 amorris Exp $
+ * $RCSfile: tau_instrumentor.cpp,v $   $Author: geimer $
+ * $Revision: 1.215 $   $Date: 2009/09/07 09:20:39 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.215 2009/09/07 09:20:39 geimer Exp $
  ***************************************************************************/
 
 
