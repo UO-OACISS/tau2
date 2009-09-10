@@ -182,8 +182,9 @@ public class Configure {
                 if (tmpString.compareTo("oracle") == 0 || tmpString.compareTo("postgresql") == 0
                         || tmpString.compareTo("mysql") == 0 || tmpString.compareTo("derby") == 0
                         || tmpString.compareTo("db2") == 0 || tmpString.length() == 0) {
-                    if (tmpString.length() > 0)
+                    if (tmpString.length() > 0) {
                         jdbc_db_type = tmpString;
+                    }
                     valid = true;
                 }
             }
@@ -536,15 +537,17 @@ public class Configure {
              */
 
             // Prompt for database schema file
-            if (configFileFound)
+            if (configFileFound) {
                 System.out.print("Please enter the PerfDMF schema file.\n(" + db_schemafile + "):");
-            else
+            } else {
                 System.out.print("Please enter the PerfDMF schema file.\n(" + perfdmf_home + etc + db_schemafile + "):");
+            }
             tmpString = reader.readLine();
-            if (tmpString.length() > 0)
+            if (tmpString.length() > 0) {
                 db_schemafile = tmpString.replaceAll("~", System.getProperty("user.home"));
-            else if (!configFileFound)
+            } else if (!configFileFound) {
                 db_schemafile = perfdmf_home + etc + db_schemafile;
+            }
 
         } catch (IOException e) {
             // todo - get info from the exception
@@ -581,15 +584,23 @@ public class Configure {
             // Check to see if the configuration file exists
 
             File configFile;
-            if (configFileName == null || configFileName.length() == 0) {
-            	if (configuration_name.length() == 0) {
-            		configFile = new File(System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator
-                        + "perfdmf.cfg");
-            	} else {
-            		configFile = new File(configFileName + "." + configuration_name);
-            	}
-            } else { 
-            	configFile = new File(configFileName);
+
+            if (configuration_name.length() != 0) {
+                // configuration name was specified
+                configFile = new File(System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator
+                        + "perfdmf.cfg." + configuration_name);
+            } else {
+                // I don't understand the logic below here
+                if (configFileName == null || configFileName.length() == 0) {
+                    if (configuration_name.length() == 0) {
+                        configFile = new File(System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator
+                                + "perfdmf.cfg");
+                    } else {
+                        configFile = new File(configFileName + "." + configuration_name);
+                    }
+                } else {
+                    configFile = new File(configFileName);
+                }
             }
 
             System.out.println("\nWriting configuration file: " + configFile);
@@ -798,7 +809,7 @@ public class Configure {
         Configure config = new Configure(tauroot, arch);
         config.initialize(configFile);
         config.useDefaults();
-		config.setDBName(dbName);
+        config.setDBName(dbName);
 
         // Write the configuration file to ${PerfDMF_Home}/bin/perfdmf.cfg
         String configFilename = config.writeConfigFile();
@@ -843,11 +854,12 @@ public class Configure {
         }
 
         if (configFile == null) {
-            if (configName == null)
+            if (configName == null) {
                 configFile = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf.cfg";
-            else
+            } else {
                 configFile = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf.cfg."
                         + configName;
+            }
 
         }
         if (tauroot == null) {
