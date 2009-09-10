@@ -20,11 +20,11 @@ import edu.uoregon.tau.perfdmf.database.DB;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.24 2009/04/10 21:10:25 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.25 2009/09/10 00:13:18 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.24 $
+ * @version $Revision: 1.25 $
  */
 public class DatabaseAPI {
 
@@ -650,16 +650,15 @@ public class DatabaseAPI {
 
     private Hashtable saveMetrics(int newTrialID, Trial trial, int saveMetricIndex) throws SQLException {
         Hashtable metricHash = new Hashtable();
-        Iterator en = trial.getDataSource().getMetrics().iterator();
-        int i = 0;
-        while (en.hasNext()) {
-            Metric metric = (Metric) en.next();
-            int newMetricID = 0;
-            if (saveMetricIndex < 0 || saveMetricIndex == i) {
+        int idx = 0;
+        for (Iterator it = trial.getDataSource().getMetrics().iterator(); it.hasNext();) {
+            Metric metric = (Metric) it.next();
+            int newMetricID = -1;
+            if (saveMetricIndex < 0 || saveMetricIndex == idx) {
                 newMetricID = saveMetric(newTrialID, metric);
             }
-            metricHash.put(new Integer(i), new Integer(newMetricID));
-            i++;
+            metricHash.put(new Integer(idx), new Integer(newMetricID));
+            idx++;
         }
         return metricHash;
     }
@@ -775,7 +774,7 @@ public class DatabaseAPI {
      * @return the database index ID of the saved trial record
      */
 
-    public synchronized int saveTrial(Trial trial, int saveMetricIndex) throws DatabaseException {
+    public synchronized int saveTrial(Trial trial, Metric saveMetric) throws DatabaseException {
         long start = System.currentTimeMillis();
 
         DataSource dataSource = trial.getDataSource();
@@ -929,17 +928,23 @@ public class DatabaseAPI {
 
         int newTrialID = 0;
 
+        int saveMetricIndex = -1;
+        if (saveMetric != null) {
+            saveMetricIndex = saveMetric.getID();
+        }
+
         try {
             // output the trial data, which also saves the intervalEvents,
             // intervalEvent data, user events and user event data
-            if (saveMetricIndex < 0) { // this means save the whole thing???
+
+            Hashtable metricHash = null;
+            if (saveMetric == null) { // this means save the whole thing???
                 newTrialID = trial.saveTrial(db);
                 trial.setID(newTrialID);
-                Hashtable metricHash = saveMetrics(newTrialID, trial, saveMetricIndex);
+                metricHash = saveMetrics(newTrialID, trial, saveMetricIndex);
 
                 if (intervalEvents != null && intervalEvents.size() > 0) {
                     Hashtable functionHash = saveIntervalEvents(newTrialID, metricHash, saveMetricIndex);
-
                     saveIntervalLocationProfiles(db, functionHash, intervalEventData.elements(), metricHash, saveMetricIndex);
                 }
                 if (atomicEvents != null && atomicEvents.size() > 0) {
@@ -949,19 +954,30 @@ public class DatabaseAPI {
                     }
                 }
 
-                //  System.out.println("New Trial ID: " + newTrialID);
             } else {
                 newTrialID = trial.getID();
-                //   System.out.println("\nSaving the metric...");
-                Hashtable newMetHash = saveMetrics(newTrialID, trial, saveMetricIndex);
+                metricHash = saveMetrics(newTrialID, trial, saveMetricIndex);
 
                 if (intervalEvents != null && intervalEvents.size() > 0) {
-                    Hashtable newFunHash = saveIntervalEvents(newTrialID, newMetHash, saveMetricIndex);
-                    saveIntervalLocationProfiles(db, newFunHash, intervalEventData.elements(), newMetHash, saveMetricIndex);
+                    Hashtable newFunHash = saveIntervalEvents(newTrialID, metricHash, saveMetricIndex);
+                    saveIntervalLocationProfiles(db, newFunHash, intervalEventData.elements(), metricHash, saveMetricIndex);
 
                 }
+            }
 
-                //   System.out.println("Modified Trial ID: " + newTrialID);
+            for (Iterator it = metricHash.keySet().iterator(); it.hasNext();) {
+                Integer key = (Integer) it.next();
+                int value = ((Integer) metricHash.get(key)).intValue();
+
+                for (Iterator it2 = trial.getMetrics().iterator(); it2.hasNext();) {
+                    Metric metric = (Metric) it2.next();
+                    if (metric.getID() == key.intValue()) {
+                        if (value != -1) {
+                            System.out.println("Setting db metric " + metric.getName() + " to " + value);
+                            metric.setDbMetricID(value);
+                        }
+                    }
+                }
             }
 
         } catch (SQLException e) {
@@ -1346,8 +1362,15 @@ public class DatabaseAPI {
             trial.setID(newTrialID);
 
             computeUploadSize(dataSource);
-            // upload the metrics and get a map that maps the metrics 0 -> n-1 to their unique DB IDs
+            // upload the metrics and get a map that maps the metrics 0 -> n-1 to their unique DB IDs (e.g. 83, 84)
             Map metricMap = uploadMetrics(newTrialID, dataSource);
+
+            for (Iterator it = metricMap.keySet().iterator(); it.hasNext();) {
+                Metric key = (Metric) it.next();
+                int value = ((Integer) metricMap.get(key)).intValue();
+                key.setDbMetricID(value);
+            }
+
             Map functionMap = uploadFunctions(newTrialID, dataSource);
 
             uploadFunctionProfiles(newTrialID, dataSource, functionMap, metricMap, summaryOnly);
@@ -1496,7 +1519,7 @@ public class DatabaseAPI {
             statement = db.prepareStatement("INSERT INTO "
                     + db.getSchemaPrefix()
                     + "interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, num_calls, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        } else if (db.getDBType().compareTo("derby") == 0) {
+        } else if (db.getDBType().compareTo("mysql") == 0) {
             statement = db.prepareStatement("INSERT INTO "
                     + db.getSchemaPrefix()
                     + "interval_location_profile (interval_event, node, context, thread, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, `call`, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");

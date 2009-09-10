@@ -308,7 +308,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         //The path to data might have changed, therefore, reset the title.
         this.setTitle("ParaProf Preferences");
         this.setLocation(WindowPlacer.getNewLocation(this, invoker));
-        this.show();
+        this.setVisible(true);
     }
 
     public void loadSavedPreferences() {

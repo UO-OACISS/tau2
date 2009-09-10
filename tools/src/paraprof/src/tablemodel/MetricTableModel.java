@@ -34,7 +34,7 @@ public class MetricTableModel extends AbstractTableModel {
         fieldValues.add(new Integer(metric.getApplicationID()));
         fieldValues.add(new Integer(metric.getExperimentID()));
         fieldValues.add(new Integer(metric.getTrialID()));
-        fieldValues.add(new Integer(metric.getID()));
+        fieldValues.add(new Integer(metric.getDbMetricID()));
     }
 
  

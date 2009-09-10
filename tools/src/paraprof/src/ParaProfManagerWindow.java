@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.40 2009/08/24 19:33:07 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.41 2009/09/10 00:13:47 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.40 $
+ * @version	$Revision: 1.41 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -460,6 +460,9 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         jMenuItem = new JMenuItem("Show metric in all sub-windows");
         jMenuItem.addActionListener(this);
         metricPopup.add(jMenuItem);
+        jMenuItem = new JMenuItem("Delete metric");
+        jMenuItem.addActionListener(this);
+        metricPopup.add(jMenuItem);
 
         // DB trial popup
         jMenuItem = new JMenuItem("Export Profile");
@@ -569,9 +572,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             } else {
                 ppTrial.getExperiment().removeTrial(ppTrial);
                 treeModel.removeNodeFromParent(ppTrial.getDMTN());
-                //                ppTrial.getFullDataWindow().dispose();
-                //                loadedTrials.remove(ppTrial);
-                //                System.gc();
             }
         }
     }
@@ -815,7 +815,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                             for (Iterator it2 = databaseAPI.getTrialList(true).iterator(); it2.hasNext();) {
                                 Trial trial = (Trial) it2.next();
 
-                                databaseAPI.setTrial(trial.getID(),true);//TODO: Do these really require xml metadata?
+                                databaseAPI.setTrial(trial.getID(), true);//TODO: Do these really require xml metadata?
                                 DBDataSource dbDataSource = new DBDataSource(databaseAPI);
                                 dbDataSource.load();
 
@@ -912,10 +912,12 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                 } else if (arg.equals("Show metric in new window")) {
                     ParaProfMetric ppMetric = (ParaProfMetric) clickedOnObject;
                     showMetric(ppMetric);
-
                 } else if (arg.equals("Show metric in all sub-windows")) {
                     ParaProfMetric ppMetric = (ParaProfMetric) clickedOnObject;
                     switchToMetric(ppMetric);
+                } else if (arg.equals("Delete metric")) {
+                    ParaProfMetric ppMetric = (ParaProfMetric) clickedOnObject;
+                    deleteMetric(ppMetric);
                 }
             }
         } catch (Exception e) {
@@ -1248,25 +1250,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     }
                 } else if (selectedNode == runtime) {
                     jSplitInnerPane.setRightComponent(getPanelHelpMessage(2));
-                    //                } else if (selectedNode == dbApps) {
-                    //                    jSplitInnerPane.setRightComponent(getPanelHelpMessage(3));
-                    //
-                    //                    // refresh the application list
-                    //                    for (int i = dbApps.getChildCount(); i > 0; i--) {
-                    //                        treeModel.removeNodeFromParent(((DefaultMutableTreeNode) dbApps.getChildAt(i - 1)));
-                    //                    }
-                    //                    DatabaseAPI databaseAPI = getDatabaseAPI();
-                    //                    if (databaseAPI != null) {
-                    //                        ListIterator l = databaseAPI.getApplicationList().listIterator();
-                    //                        while (l.hasNext()) {
-                    //                            ParaProfApplication application = new ParaProfApplication((Application) l.next());
-                    //                            application.setDBApplication(true);
-                    //                            DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
-                    //                            application.setDMTN(applicationNode);
-                    //                            treeModel.insertNodeInto(applicationNode, dbApps, dbApps.getChildCount());
-                    //                        }
-                    //                        databaseAPI.terminate();
-                    //                    }
                 } else {
                     jSplitInnerPane.setRightComponent(getPanelHelpMessage(3));
 
@@ -1418,7 +1401,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                 if (databaseAPI != null) {
                     databaseAPI.setApplication(ppTrial.getApplicationID());
                     databaseAPI.setExperiment(ppTrial.getExperimentID());
-                    databaseAPI.setTrial(ppTrial.getID(),true);//TODO: Is XML metadata required here?
+                    databaseAPI.setTrial(ppTrial.getID(), true);//TODO: Is XML metadata required here?
 
                     DBDataSource dbDataSource = new DBDataSource(databaseAPI);
                     dbDataSource.setGenerateIntermediateCallPathData(ParaProf.preferences.getGenerateIntermediateCallPathData());
@@ -1472,14 +1455,31 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
     private void showMetric(ParaProfMetric ppMetric) {
         ParaProfTrial ppTrial = ppMetric.getParaProfTrial();
-        ppTrial.setDefaultMetricID(ppMetric.getID());
+        ppTrial.setDefaultMetric(ppMetric);
         ppTrial.showMainWindow();
+    }
+
+    private void deleteMetric(ParaProfMetric ppMetric) {
+        try {
+            ParaProfTrial ppTrial = ppMetric.getParaProfTrial();
+
+            if (ppTrial.dBTrial()) {
+                DatabaseAPI databaseAPI = this.getDatabaseAPI(ppTrial.getDatabase());
+                Trial.deleteMetric(databaseAPI.getDb(), ppTrial.getID(), ppMetric.getDbMetricID());
+            }
+
+            treeModel.removeNodeFromParent(ppMetric.getDMTN());
+
+            ppTrial.deleteMetric(ppMetric);
+        } catch (Exception e) {
+            ParaProfUtils.handleException(e);
+        }
     }
 
     private void switchToMetric(ParaProfMetric metric) {
         try {
             ParaProfTrial ppTrial = metric.getParaProfTrial();
-            ppTrial.setDefaultMetricID(metric.getID());
+            ppTrial.setDefaultMetric(metric);
             ppTrial.updateRegisteredObjects("dataEvent");
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
@@ -1513,7 +1513,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             DatabaseAPI databaseAPI = this.getDatabaseAPI(metric.getParaProfTrial().getDatabase());
             if (databaseAPI != null) {
                 try {
-                    databaseAPI.saveTrial(metric.getParaProfTrial().getTrial(), metric.getID());
+                    databaseAPI.saveTrial(metric.getParaProfTrial().getTrial(), metric);
                 } catch (DatabaseException e) {
                     ParaProfUtils.handleException(e);
                 }
@@ -1715,7 +1715,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         //  
         //        
         LoadTrialProgressWindow lpw = new LoadTrialProgressWindow(this, dataSource, ppTrial, false);
-        lpw.show();
+        lpw.setVisible(true);
 
     }
 

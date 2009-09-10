@@ -10,15 +10,14 @@ import edu.uoregon.tau.paraprof.ParaProfTrial;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.Thread;
 
-
 /**
  * Data model for treetable using callpaths
  *    
  * TODO : ...
  *
- * <P>CVS $Id: CallPathModel.java,v 1.10 2007/07/14 23:34:09 amorris Exp $</P>
+ * <P>CVS $Id: CallPathModel.java,v 1.11 2009/09/10 00:13:52 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  */
 public class CallPathModel extends AbstractTreeTableModel {
 
@@ -36,8 +35,7 @@ public class CallPathModel extends AbstractTreeTableModel {
 
     private TreeTableWindow window;
 
-    public CallPathModel(TreeTableWindow window, ParaProfTrial ppTrial, Thread thread,
-            boolean reversedCallPaths) {
+    public CallPathModel(TreeTableWindow window, ParaProfTrial ppTrial, Thread thread, boolean reversedCallPaths) {
         super(null);
         this.window = window;
         root = new TreeTableNode(null, this, "root");
@@ -124,33 +122,14 @@ public class CallPathModel extends AbstractTreeTableModel {
     public void computeMaximum() {
         int numMetrics = window.getPPTrial().getNumberOfMetrics();
         maxValues = new double[numMetrics];
-//        for (Iterator it = roots.iterator(); it.hasNext();) {
-//            TreeTableNode treeTableNode = (TreeTableNode) it.next();
-//
-//            if (treeTableNode.getFunctionProfile() != null) {
-//
-//                for (int i = 0; i < numMetrics; i++) {
-//                    // there are two ways to do this (cube brings up a window to ask you which way you 
-//                    // want to compute the max value for the color)
-//
-//                    //maxValue[i] = Math.max(maxValue[i], fp.getInclusive(i));
-//                    maxValues[i] += treeTableNode.getFunctionProfile().getInclusive(i);
-//
-//                }
-//            }
-//        }
 
-        
         for (int i = 0; i < numMetrics; i++) {
             // there are two ways to do this (cube brings up a window to ask you which way you 
             // want to compute the max value for the color)
 
             //maxValue[i] = Math.max(maxValue[i], fp.getInclusive(i));
-            maxValues[i] += thread.getMaxInclusive(i,ppTrial.getSelectedSnapshot());
-
+            maxValues[i] += thread.getMaxInclusive(i, ppTrial.getSelectedSnapshot());
         }
-
-        
     }
 
     public int getColumnCount() {

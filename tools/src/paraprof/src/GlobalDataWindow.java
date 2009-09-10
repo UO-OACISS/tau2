@@ -23,9 +23,9 @@ import edu.uoregon.tau.perfdmf.Function;
 /**
  * The GlobalDataWindow shows the exclusive value for all functions/all threads for a trial.
  * 
- * <P>CVS $Id: GlobalDataWindow.java,v 1.23 2009/04/07 20:31:44 amorris Exp $</P>
+ * <P>CVS $Id: GlobalDataWindow.java,v 1.24 2009/09/10 00:13:46 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.23 $
+ * @version $Revision: 1.24 $
  * @see GlobalBarChartModel
  */
 public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow, SortListener {
@@ -241,7 +241,7 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         } else if (tmpString.equals("colorEvent")) {
             panel.repaint();
         } else if (tmpString.equals("dataEvent")) {
-            dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
+            dataSorter.setSelectedMetric(ppTrial.getDefaultMetric());
             setupMenus();
             validate(); // must call validate or the new JMenuBar won't work
             sortLocalData();
@@ -286,10 +286,10 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
 
     public String getHeaderString() {
         if (phase != null) {
-            return "Phase: " + phase + "\nMetric: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\nValue: "
+            return "Phase: " + phase + "\nMetric: " + ppTrial.getDefaultMetric().getName() + "\nValue: "
                     + "Exclusive" + "\n";
         } else {
-            return "Metric: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\nValue: "
+            return "Metric: " + dataSorter.getSelectedMetric().getName() + "\nValue: "
                     + dataSorter.getValueType() + "\n";
         }
     }

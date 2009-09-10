@@ -13,9 +13,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * A BarChartModel for displaying one User Event over all threads.
  * 
- * <P>CVS $Id: UserEventBarChartModel.java,v 1.5 2009/06/26 00:43:49 amorris Exp $</P>
+ * <P>CVS $Id: UserEventBarChartModel.java,v 1.6 2009/09/10 00:13:51 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class UserEventBarChartModel extends AbstractBarChartModel {
 
@@ -80,7 +80,7 @@ public class UserEventBarChartModel extends AbstractBarChartModel {
         } else {
             FunctionBarChartWindow threadDataWindow = new FunctionBarChartWindow(window.getPpTrial(),
                     ppUserEventProfile.getThread(), null, owner);
-            threadDataWindow.show();
+            threadDataWindow.setVisible(true);
         }
 
     }

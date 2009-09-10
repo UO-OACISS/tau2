@@ -25,7 +25,6 @@ import edu.uoregon.tau.perfdmf.Function;
 import edu.uoregon.tau.perfdmf.Thread;
 import edu.uoregon.tau.perfdmf.UtilFncs;
 
-
 public class StatWindow extends JFrame implements ActionListener, MenuListener, Observer, SearchableOwner, ScrollBarController,
         KeyListener, ParaProfWindow, UnitListener {
 
@@ -69,16 +68,13 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         this.userEventWindow = userEventWindow;
         this.thread = thread;
 
-        
         setSize(ParaProfUtils.checkSize(new Dimension(1000, 600)));
 
         setLocation(WindowPlacer.getNewLocation(this, invoker));
 
-        
         nodeID = thread.getNodeID();
         contextID = thread.getContextID();
         threadID = thread.getThreadID();
-
 
         String title;
         //Now set the title.
@@ -388,11 +384,9 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         }
     }
 
-    public void menuDeselected(MenuEvent evt) {
-    }
+    public void menuDeselected(MenuEvent evt) {}
 
-    public void menuCanceled(MenuEvent evt) {
-    }
+    public void menuCanceled(MenuEvent evt) {}
 
     public void update(Observable o, Object arg) {
         String tmpString = (String) arg;
@@ -404,9 +398,10 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             //Just need to call a repaint on the ThreadDataWindowPanel.
             panel.repaint();
         } else if (tmpString.equals("dataEvent")) {
-            if (!(ppTrial.isTimeMetric()))
+            if (!(ppTrial.isTimeMetric())) {
                 units = 0;
-            dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
+            }
+            dataSorter.setSelectedMetric(ppTrial.getDefaultMetric());
             sortLocalData();
             this.setHeader();
             panel.repaint();
@@ -418,8 +413,9 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     public void help(boolean display) {
         //Show the ParaProf help window.
         ParaProf.getHelpWindow().clearText();
-        if (display)
-            ParaProf.getHelpWindow().show();
+        if (display) {
+            ParaProf.getHelpWindow().setVisible(true);
+        }
         ParaProf.getHelpWindow().writeText("This is the statistics window");
         ParaProf.getHelpWindow().writeText("");
         ParaProf.getHelpWindow().writeText("This window shows you textual statistics.");
@@ -494,7 +490,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             JTextArea jTextArea = new JTextArea();
             jTextArea.setLineWrap(true);
             jTextArea.setWrapStyleWord(true);
-            jTextArea.setMargin(new Insets(3,3,3,3));
+            jTextArea.setMargin(new Insets(3, 3, 3, 3));
             jTextArea.setEditable(false);
             jTextArea.addKeyListener(this);
             PreferencesWindow p = ppTrial.getPreferencesWindow();
@@ -511,20 +507,16 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         } else {
 
             if (phase != null) {
-                return "Phase: " + phase.getName() + "\nMetric: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Sorted By: "
-                + dataSorter.getValueType() + "\n" + "Units: "
-                + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric()) + "\n";
-            } else {
-                return "Metric: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Sorted By: "
+                return "Phase: " + phase.getName() + "\nMetric: " + ppTrial.getDefaultMetric().getName() + "\n" + "Sorted By: "
                         + dataSorter.getValueType() + "\n" + "Units: "
                         + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric()) + "\n";
+            } else {
+                return "Metric: " + ppTrial.getDefaultMetric().getName() + "\n" + "Sorted By: " + dataSorter.getValueType()
+                        + "\n" + "Units: " + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric())
+                        + "\n";
             }
         }
     }
-
-    //######
-    //End - Panel header.
-    //######
 
     //Respond correctly when this window is closed.
     void thisWindowClosing(java.awt.event.WindowEvent e) {
@@ -584,12 +576,12 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     }
 
     public void keyReleased(KeyEvent e) {
-        // TODO Auto-generated method stub
+    // TODO Auto-generated method stub
 
     }
 
     public void keyTyped(KeyEvent e) {
-        // TODO Auto-generated method stub
+    // TODO Auto-generated method stub
 
     }
 
@@ -602,7 +594,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     public Function getPhase() {
         return phase;
     }
-    
+
     public JFrame getFrame() {
         return this;
     }

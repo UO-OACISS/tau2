@@ -23,9 +23,9 @@ import edu.uoregon.tau.vis.*;
 /**
  * 3D Communication Matrix Window 
  * 
- * <P>CVS $Id: ThreeDeeCommMatrixWindow.java,v 1.4 2009/08/24 22:15:11 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeCommMatrixWindow.java,v 1.5 2009/09/10 00:13:49 amorris Exp $</P>
  * @author Alan Morris, Kevin Huck
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, ActionListener, ThreeDeeImageProvider,
         VisCanvasListener, Printable {
@@ -117,6 +117,9 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
     public static ThreeDeeCommMatrixWindow createCommunicationMatrixWindow(ParaProfTrial ppTrial, JFrame parentFrame) {
 
         HeatMapData mapData = generateData(ppTrial.getDataSource(), parentFrame);
+        if (mapData == null) {
+            return null;
+        }
 
         ThreeDeeCommMatrixWindow window = new ThreeDeeCommMatrixWindow("3D Communication Matrix", mapData, ppTrial, parentFrame);
 

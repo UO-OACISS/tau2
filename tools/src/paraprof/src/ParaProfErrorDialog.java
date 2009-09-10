@@ -201,7 +201,7 @@ public class ParaProfErrorDialog extends JFrame implements ActionListener {
         //this.getContentPane().add(new JButton("asdf"), BorderLayout.SOUTH);
         //this.pack();
 
-        this.show();
+        this.setVisible(true);
 
     }
 

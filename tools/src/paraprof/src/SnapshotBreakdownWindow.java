@@ -303,7 +303,7 @@ public class SnapshotBreakdownWindow extends JFrame implements Observer, ParaPro
             dataSet.addSeries(s);
         }
 
-        ParaProfMetric ppMetric = ppTrial.getMetric(dataSorter.getSelectedMetricID());
+        ParaProfMetric ppMetric = (ParaProfMetric)dataSorter.getSelectedMetric();
         int units = dataSorter.getValueType().getUnits(0, ppMetric);
         String suffix = dataSorter.getValueType().getSuffix(units, ppMetric).trim();
 

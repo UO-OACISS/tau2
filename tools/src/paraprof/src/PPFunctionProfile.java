@@ -94,23 +94,23 @@ public class PPFunctionProfile implements Comparable {
     }
 
     public double getInclusiveValue() {
-        return functionProfile.getInclusive(dataSorter.getSelectedMetricID());
+        return functionProfile.getInclusive(dataSorter.getSelectedMetric().getID());
     }
 
     public double getExclusiveValue() {
         if (functionProfile.getFunction().isPhase() && functionProfile.getFunction().isCallPathFunction()) {
-            return functionProfile.getInclusive(dataSorter.getSelectedMetricID());
+            return functionProfile.getInclusive(dataSorter.getSelectedMetric().getID());
         } else {
-            return functionProfile.getExclusive(dataSorter.getSelectedMetricID());
+            return functionProfile.getExclusive(dataSorter.getSelectedMetric().getID());
         }
     }
 
     public double getInclusivePercentValue() {
-        return functionProfile.getInclusivePercent(dataSorter.getSelectedMetricID());
+        return functionProfile.getInclusivePercent(dataSorter.getSelectedMetric().getID());
     }
 
     public double getExclusivePercentValue() {
-        return functionProfile.getExclusivePercent(dataSorter.getSelectedMetricID());
+        return functionProfile.getExclusivePercent(dataSorter.getSelectedMetric().getID());
     }
 
     public double getNumberOfCalls() {
@@ -122,7 +122,7 @@ public class PPFunctionProfile implements Comparable {
     }
 
     public double getInclusivePerCall() {
-        return functionProfile.getInclusivePerCall(dataSorter.getSelectedSnapshot(), dataSorter.getSelectedMetricID());
+        return functionProfile.getInclusivePerCall(dataSorter.getSelectedSnapshot(), dataSorter.getSelectedMetric().getID());
     }
 
     public Iterator getChildProfiles() {
@@ -141,12 +141,12 @@ public class PPFunctionProfile implements Comparable {
         int differential = 0;
         int snap = dataSorter.getSelectedSnapshot();
         if (differential == 1 && snap > 0) {
-            double value1 = dataSorter.getValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID(),
+            double value1 = dataSorter.getValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetric().getID(),
                     snap - 1);
-            double value2 = dataSorter.getValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID(), snap);
+            double value2 = dataSorter.getValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetric().getID(), snap);
             return value2 - value1;
         } else {
-            return dataSorter.getValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID(),
+            return dataSorter.getValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetric().getID(),
                     dataSorter.getSelectedSnapshot());
         }
 
@@ -156,9 +156,9 @@ public class PPFunctionProfile implements Comparable {
         int differential = 0;
         int snap = dataSorter.getSelectedSnapshot();
         if (differential == 1 && snap > 0) {
-            double value1 = dataSorter.getSortValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID(),
+            double value1 = dataSorter.getSortValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetric().getID(),
                     snap - 1);
-            double value2 = dataSorter.getSortValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetricID(),
+            double value2 = dataSorter.getSortValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetric().getID(),
                     snap);
             return value2 - value1;
         } else {
@@ -237,7 +237,7 @@ public class PPFunctionProfile implements Comparable {
     }
 
     public String getStatString(int type) {
-        int metric = dataSorter.getSelectedMetricID();
+        int metric = dataSorter.getSelectedMetric().getID();
         String tmpString;
         
         boolean timeDenominator = dataSorter.getSelectedMetric().isTimeDenominator();

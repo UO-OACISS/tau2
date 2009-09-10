@@ -197,7 +197,7 @@ public class LoadTrial {
         // set some things in the trial
         trial.setID(this.trialID);
         try {
-            databaseAPI.saveTrial(trial, 0);
+            databaseAPI.saveTrial(trial, null);
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(-1);

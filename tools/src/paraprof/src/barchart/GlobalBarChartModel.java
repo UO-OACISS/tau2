@@ -15,9 +15,9 @@ import edu.uoregon.tau.perfdmf.Thread;
 /**
  * A BarChartModel for doing the GlobalDataWindow
  * 
- * <P>CVS $Id: GlobalBarChartModel.java,v 1.15 2009/06/26 00:43:49 amorris Exp $</P>
+ * <P>CVS $Id: GlobalBarChartModel.java,v 1.16 2009/09/10 00:13:50 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.15 $
+ * @version $Revision: 1.16 $
  */
 
 public class GlobalBarChartModel extends AbstractBarChartModel {
@@ -102,7 +102,7 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
         if (fp == null) {
             return -1;
         } else {
-            return dataSorter.getValueType().getValue(fp, dataSorter.getSelectedMetricID(), dataSorter.getSelectedSnapshot());
+            return dataSorter.getValueType().getValue(fp, dataSorter.getSelectedMetric(), dataSorter.getSelectedSnapshot());
         }
     }
 
@@ -217,16 +217,16 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
             name = getDisplayName(fp);
         }
 
-        String metricName = ppTrial.getMetricName(dataSorter.getSelectedMetricID());
+        String metricName = dataSorter.getSelectedMetric().getName();
 
-        int metricID = dataSorter.getSelectedMetricID();
+        Metric metric = dataSorter.getSelectedMetric();
 
         String unitsString = UtilFncs.getUnitsString(window.units(), dataSorter.isTimeMetric(), false);
 
-        String exclusiveValue = UtilFncs.getOutputString(window.units(), fp.getExclusive(metricID),
-                ParaProf.defaultNumberPrecision, ppTrial.getMetric(metricID).isTimeDenominator());
-        String inclusiveValue = UtilFncs.getOutputString(window.units(), fp.getInclusive(metricID),
-                ParaProf.defaultNumberPrecision, ppTrial.getMetric(metricID).isTimeDenominator());
+        String exclusiveValue = UtilFncs.getOutputString(window.units(), fp.getExclusive(metric.getID()),
+                ParaProf.defaultNumberPrecision, metric.isTimeDenominator());
+        String inclusiveValue = UtilFncs.getOutputString(window.units(), fp.getInclusive(metric.getID()),
+                ParaProf.defaultNumberPrecision, metric.isTimeDenominator());
 
         String exclusive = "<br>Exclusive " + metricName + ": " + exclusiveValue + " " + unitsString;
         String inclusive = "<br>Inclusive " + metricName + ": " + inclusiveValue + " " + unitsString;

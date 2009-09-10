@@ -5,9 +5,9 @@ import java.util.*;
 /**
  * This class represents a single function profile on a single thread.
  *
- * <P>CVS $Id: FunctionProfile.java,v 1.13 2009/06/02 19:59:26 amorris Exp $</P>
+ * <P>CVS $Id: FunctionProfile.java,v 1.14 2009/09/10 00:13:18 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.13 $
+ * @version	$Revision: 1.14 $
  * @see		Function
  */
 public class FunctionProfile {
@@ -85,16 +85,7 @@ public class FunctionProfile {
     }
 
     public double getExclusive(int metric) {
-
-        //        if (function.isPhase()) {
-        //            return this.getDouble(metric, 0);
-        //        } else {
-        //            return this.getDouble(metric, 1);
-        //        }
         double value = this.getDouble(metric, EXCLUSIVE);
-
-        ///System.out.println(this + ".getExclusive(" + metric + ") = " + value);
-
         return value;
     }
 

@@ -15,22 +15,22 @@ import edu.uoregon.tau.perfdmf.Thread;
  * functions that are in groups supposed to be shown. 
  *  
  * 
- * <P>CVS $Id: DataSorter.java,v 1.16 2009/06/26 00:43:48 amorris Exp $</P>
+ * <P>CVS $Id: DataSorter.java,v 1.17 2009/09/10 00:13:45 amorris Exp $</P>
  * @author	Alan Morris, Robert Bell
- * @version	$Revision: 1.16 $
+ * @version	$Revision: 1.17 $
  */
 public class DataSorter implements Comparator {
 
     private ParaProfTrial ppTrial = null;
 
-    private int selectedMetricID;
+    private Metric selectedMetric;
+    private Metric sortMetric;
     private ValueType valueType;
+    private SortType sortType;
+    private ValueType sortValueType;
     private UserEventValueType userEventValueType = UserEventValueType.NUMSAMPLES;
 
     private boolean descendingOrder;
-    private SortType sortType;
-    private ValueType sortValueType;
-    private int sortMetric;
     private boolean sortByVisible = true;
 
     private Function phase;
@@ -44,7 +44,8 @@ public class DataSorter implements Comparator {
 
     public DataSorter(ParaProfTrial ppTrial) {
         this.ppTrial = ppTrial;
-        this.selectedMetricID = ppTrial.getDefaultMetricID();
+        this.selectedMetric = ppTrial.getDefaultMetric();
+        this.sortMetric = ppTrial.getDefaultMetric();
 
         this.sortType = DataSorter.defaultSortType;
         this.valueType = DataSorter.defaultValueType;
@@ -53,7 +54,7 @@ public class DataSorter implements Comparator {
     }
 
     public boolean isTimeMetric() {
-        String metricName = ppTrial.getMetricName(this.getSelectedMetricID());
+        String metricName = selectedMetric.getName();
         metricName = metricName.toUpperCase();
         if (metricName.indexOf("TIME") == -1) {
             return false;
@@ -68,7 +69,7 @@ public class DataSorter implements Comparator {
         //String metricName = this.getMetricName(this.getSelectedMetricID());
         //if (metricName.indexOf("*") != -1 || metricName.indexOf("/") != -1)
         //    return true;
-        return ppTrial.getRegularMetric(this.getSelectedMetricID()).getDerivedMetric();
+        return selectedMetric.getDerivedMetric();
     }
 
     public List getUserEventProfiles(Thread thread) {
@@ -578,15 +579,15 @@ public class DataSorter implements Comparator {
         this.ppTrial = ppTrial;
     }
 
-    public int getSortMetric() {
+    public Metric getSortMetric() {
         if (getSortByVisible()) {
-            return selectedMetricID;
+            return selectedMetric;
         } else {
             return sortMetric;
         }
     }
 
-    public void setSortMetric(int sortMetric) {
+    public void setSortMetric(Metric sortMetric) {
         this.sortMetric = sortMetric;
     }
 
@@ -610,24 +611,21 @@ public class DataSorter implements Comparator {
         this.sortByVisible = sortByVisible;
     }
 
-    public void setSelectedMetricID(int metric) {
-        this.selectedMetricID = metric;
+    public void setSelectedMetric(Metric metric) {
+        this.selectedMetric = metric;
     }
 
     public double getValue(FunctionProfile fp) {
-        return getValueType().getValue(fp, selectedMetricID, getSelectedSnapshot());
+        return getValueType().getValue(fp, selectedMetric, getSelectedSnapshot());
     }
 
     public double getValue(FunctionProfile fp, int snapshot) {
-        return getValueType().getValue(fp, selectedMetricID, snapshot);
+        return getValueType().getValue(fp, selectedMetric, snapshot);
     }
 
-    public int getSelectedMetricID() {
-        return selectedMetricID;
-    }
     
     public Metric getSelectedMetric() {
-        return ppTrial.getMetric(selectedMetricID);
+        return selectedMetric;
     }
 
     public void setDescendingOrder(boolean descendingOrder) {

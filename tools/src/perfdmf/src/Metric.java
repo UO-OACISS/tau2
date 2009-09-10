@@ -15,7 +15,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
 /**
  * Holds all the data for a metric in the database.
  *
- * <P>CVS $Id: Metric.java,v 1.7 2009/07/15 20:38:51 wspear Exp $</P>
+ * <P>CVS $Id: Metric.java,v 1.8 2009/09/10 00:13:18 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -24,8 +24,17 @@ public class Metric implements Serializable {
     private int metricID;
     private int trialID;
     private String name;
-    
+    private int dbMetricID;
     private boolean derivedMetric = false;
+
+    public int getDbMetricID() {
+        return dbMetricID;
+    }
+
+    public void setDbMetricID(int dbMetricID) {
+        this.dbMetricID = dbMetricID;
+    }
+
 
     public void setDerivedMetric(boolean derivedMetric) {
         this.derivedMetric = derivedMetric;
@@ -35,26 +44,21 @@ public class Metric implements Serializable {
         return derivedMetric;
     }
 
-    
-    
-    
-    
     public boolean equals(Metric inMetric) {
-    	
-    	if(inMetric==null){
-    		return false;
-    	}
-    	
+
+        if (inMetric == null) {
+            return false;
+        }
+
         return (this.name.equals(inMetric.getName())) ? true : false;
     }
 
     public boolean equals(Object inObject) {
-    	
-    	if(inObject==null){
-    		return false;
-    	}
-    	
-    	
+
+        if (inObject == null) {
+            return false;
+        }
+
         Metric inMetric = (Metric) inObject;
         return equals(inMetric);
     }
@@ -131,7 +135,7 @@ public class Metric implements Serializable {
             return true;
         }
     }
-    
+
     public boolean isTimeDenominator() {
         String metricName = name.toUpperCase();
         int divIndex = metricName.indexOf("/");
@@ -172,8 +176,8 @@ public class Metric implements Serializable {
             boolean seenID = false;
 
             ResultSetMetaData md = resultSet.getMetaData();
-            for (int i = 0 ; i < md.getColumnCount() ; i++) {
-            	//System.out.println(md.getColumnName(i));
+            for (int i = 0; i < md.getColumnCount(); i++) {
+                //System.out.println(md.getColumnName(i));
             }
 
             while (resultSet.next() != false) {
@@ -204,7 +208,7 @@ public class Metric implements Serializable {
             for (int i = 0; i < typeList.size(); i++) {
                 fieldNames[i] = (String) nameList.get(i);
                 fieldTypes[i] = ((Integer) typeList.get(i)).intValue();
-                if (((Integer)columnSizes.get(i)).intValue() > 255) {
+                if (((Integer) columnSizes.get(i)).intValue() > 255) {
                     fieldTypeNames[i] = (String) typeNames.get(i) + "(" + columnSizes.get(i).toString() + ")";
                 } else {
                     fieldTypeNames[i] = (String) typeNames.get(i);
@@ -218,5 +222,4 @@ public class Metric implements Serializable {
         }
     }
 
-    
 }

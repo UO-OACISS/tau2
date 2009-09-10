@@ -17,11 +17,10 @@ public class ParaProfMetric extends Metric implements ParaProfTreeNodeUserObject
     private ParaProfTrial ppTrial = null;
     private DefaultMutableTreeNode defaultMutableTreeNode = null;
     private TreePath treePath = null;
-    
-    public ParaProfMetric() {
-    }
 
-	public void setPpTrial(ParaProfTrial ppTrial) {
+    public ParaProfMetric() {}
+
+    public void setPpTrial(ParaProfTrial ppTrial) {
         this.ppTrial = ppTrial;
     }
 
@@ -72,9 +71,9 @@ public class ParaProfMetric extends Metric implements ParaProfTreeNodeUserObject
     public void clearDefaultMutableTreeNode() {
         this.setDMTN(null);
     }
-    public boolean dbMetric()
-    {
-    	return ppTrial.dBTrial();
+
+    public boolean dbMetric() {
+        return ppTrial.dBTrial();
     }
 
 }

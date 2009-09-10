@@ -4,9 +4,9 @@
  * It allows the user to change the meta data associated with a trial.
  *  
  * 
- * <P>CVS $Id: ParaProfManagerTableModel.java,v 1.13 2007/05/16 20:07:54 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerTableModel.java,v 1.14 2009/09/10 00:13:47 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.13 $
+ * @version	$Revision: 1.14 $
  * @see		ParaProfManagerWindow
  */
 
@@ -180,7 +180,7 @@ public class ParaProfManagerTableModel extends AbstractTableModel {
                     case (3):
                         return new Integer(metric.getTrialID());
                     case (4):
-                        return new Integer(metric.getID());
+                        return new Integer(metric.getDbMetricID());
                     default:
                         return "";
                     }

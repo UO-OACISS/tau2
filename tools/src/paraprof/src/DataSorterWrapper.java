@@ -1,11 +1,13 @@
 package edu.uoregon.tau.paraprof;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.Metric;
 
 /*
  * This class is a total kludge to allow for trials in a comparison window to map metric ids to each other.
@@ -21,22 +23,25 @@ public class DataSorterWrapper extends DataSorter {
 
     private DataSorter parentDataSorter;
     private Map metricMap;
+    private ParaProfTrial ppTrial;
 
     public DataSorterWrapper(DataSorter dataSorter, ParaProfTrial ppTrial) {
         super(ppTrial);
         this.parentDataSorter = dataSorter;
+        this.ppTrial = ppTrial;
 
         ParaProfTrial parentTrial = dataSorter.getPpTrial();
 
         metricMap = new HashMap();
-        for (int i = 0; i < parentTrial.getNumberOfMetrics(); i++) {
-            for (int j = 0; j < ppTrial.getNumberOfMetrics(); j++) {
-                if (parentTrial.getMetricName(i).compareTo(ppTrial.getMetricName(j)) == 0) {
-                    // Where's java 1.5 for autoboxing?!
-                    metricMap.put(new Integer(i), new Integer(j));
+
+        for (Iterator it = parentTrial.getMetrics().iterator(); it.hasNext();) {
+            Metric parentMetric = (Metric)it.next();
+            for (Iterator it2 = ppTrial.getMetrics().iterator(); it2.hasNext();) {
+                Metric childMetric = (Metric) it2.next();
+                if (parentMetric.getName().compareTo(childMetric.getName()) == 0) {
+                    metricMap.put(parentMetric, childMetric);
                 }
             }
-
         }
     }
 
@@ -68,14 +73,13 @@ public class DataSorterWrapper extends DataSorter {
         return parentDataSorter.getValueType();
     }
 
-    public int getSelectedMetricID() {
+    public Metric getSelectedMetric() {
         // map to parent
-        int parentMetricID = parentDataSorter.getSelectedMetricID();
-        Integer metricID = (Integer) metricMap.get(new Integer(parentMetricID));
-        if (metricID == null) {
-            return 0;
+        Metric parentMetric = parentDataSorter.getSelectedMetric();
+        Metric metric = (Metric) metricMap.get(parentMetric);
+        if (metric == null) {
+            return (Metric)ppTrial.getMetrics().get(0);
         }
-        return metricID.intValue();
+        return metric;
     }
-
 }

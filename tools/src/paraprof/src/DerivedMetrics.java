@@ -17,9 +17,7 @@ import edu.uoregon.tau.perfdmf.Function;
 import edu.uoregon.tau.perfdmf.FunctionProfile;
 import edu.uoregon.tau.perfdmf.Thread;
 
-
 public class DerivedMetrics {
-
 
     public static ParaProfMetric applyOperation(ParaProfMetric operand1, Object operand2, String inOperation) {
 
@@ -72,11 +70,12 @@ public class DerivedMetrics {
                 //System.out.println("Wrong operation type");
             }
 
-            if (constant)
+            if (constant) {
                 newMetricName = ((ParaProfMetric) trialOpA.getMetrics().get(opA)).getName() + newMetricName + constantValue;
-            else
+            } else {
                 newMetricName = ((ParaProfMetric) trialOpA.getMetrics().get(opA)).getName() + newMetricName
                         + ((ParaProfMetric) trialOpA.getMetrics().get(opB)).getName();
+            }
 
             ParaProfMetric newMetric = trialOpA.addMetric();
             newMetric.setPpTrial(trialOpA);
@@ -86,8 +85,6 @@ public class DerivedMetrics {
             //            trialOpA.setSelectedMetricID(metric);
 
             Iterator l = trialOpA.getDataSource().getFunctions();
-
-            
 
             //######
             //Calculate the raw values.

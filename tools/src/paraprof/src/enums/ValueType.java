@@ -9,9 +9,9 @@ import edu.uoregon.tau.perfdmf.Metric;
  *    
  * TODO : nothing, this class is complete
  *
- * <P>CVS $Id: ValueType.java,v 1.9 2007/05/04 01:44:34 amorris Exp $</P>
+ * <P>CVS $Id: ValueType.java,v 1.10 2009/09/10 00:13:51 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  */
 
 public abstract class ValueType {
@@ -20,7 +20,10 @@ public abstract class ValueType {
     private final String classname;
     
     public abstract double getValue(FunctionProfile functionProfile, int metric, int snapshot);
-    //public abstract double getValue(FunctionProfile functionProfile, int metric, int snapshot);
+
+    public double getValue(FunctionProfile functionProfile, Metric metric, int snapshot) {
+        return getValue (functionProfile, metric.getID(), snapshot);
+    }
 
     public double getValue(FunctionProfile functionProfile, int metric) {
         return getValue(functionProfile, metric, -1);

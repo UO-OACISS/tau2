@@ -10,12 +10,13 @@ import javax.swing.*;
 import edu.uoregon.tau.paraprof.ParaProfMetric;
 import edu.uoregon.tau.paraprof.ParaProfTrial;
 import edu.uoregon.tau.paraprof.ParaProfUtils;
+import edu.uoregon.tau.perfdmf.Metric;
 
 public class ColumnChooser extends JFrame {
 
     private ParaProfTrial ppTrial;
 
-    private List metrics = new ArrayList();
+ 
     private List statistics = new ArrayList();
 
     private ParaProfMetric numCalls;
@@ -32,11 +33,10 @@ public class ColumnChooser extends JFrame {
     private DefaultListModel statsModel;
 
     private TreeTableWindow ttWindow;
-    
+
     public ColumnChooser(TreeTableWindow owner, ParaProfTrial ppTrial) {
         this.ttWindow = owner;
-        
-        
+
         this.setTitle("Choose Columns");
         this.setSize(500, 400);
 
@@ -47,14 +47,9 @@ public class ColumnChooser extends JFrame {
         numSubr = new ParaProfMetric();
         numSubr.setName("Child Calls");
 
-        for (int i = 0; i < ppTrial.getNumberOfMetrics(); i++) {
-            ParaProfMetric ppMetric = (ParaProfMetric) ppTrial.getMetric(i);
-            metrics.add(ppMetric);
-        }
         //metrics.add(numCalls);
         //metrics.add(numSubr);
 
-        
         // create the value JList
         valueModel = new DefaultListModel();
         valueModel.addElement(new CheckBoxListItem("Exclusive Value", true));
@@ -64,29 +59,29 @@ public class ColumnChooser extends JFrame {
         valueModel.addElement(new CheckBoxListItem("Exclusive Value Per Call", false));
         valueModel.addElement(new CheckBoxListItem("Inclusive Value Per Call", false));
 
-
         statistics.add("Standard Deviation");
         statistics.add("Mini Histogram");
 
-        
-        int selectedMetric = -1;
+        Metric selectedMetric = null;
         // if greater than 5, don't start with all of them on, instead do the ppTrial's "default metrics"
-        if (metrics.size() > 3) {
-            selectedMetric = ppTrial.getDefaultMetricID();
+        if (ppTrial.getMetrics().size() > 3) {
+            selectedMetric = ppTrial.getDefaultMetric();
         }
 
+        List metrics = ppTrial.getMetrics();
+        
         // create the metric JList
         metricModel = new DefaultListModel();
         for (int i = 0; i < metrics.size(); i++) {
             boolean selected = true;
-            if (selectedMetric != -1) {
-                if (i != selectedMetric) {
+            if (selectedMetric != null) {
+                if (metrics.get(i) != selectedMetric) {
                     selected = false;
                 }
             }
             metricModel.addElement(new CheckBoxListItem(((ParaProfMetric) metrics.get(i)), selected));
         }
-        
+
         metricModel.addElement(new CheckBoxListItem("Calls", true));
         metricModel.addElement(new CheckBoxListItem("Child Calls", true));
         metricJList = new JList(metricModel);
@@ -139,21 +134,21 @@ public class ColumnChooser extends JFrame {
                 }
             }
         });
-//        JButton cancelButton = new JButton("cancel");
-//
-//        cancelButton.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent evt) {
-//                try {
-//                    dispose();
-//                } catch (Exception e) {
-//                    ParaProfUtils.handleException(e);
-//                }
-//            }
-//        });
+        //        JButton cancelButton = new JButton("cancel");
+        //
+        //        cancelButton.addActionListener(new ActionListener() {
+        //            public void actionPerformed(ActionEvent evt) {
+        //                try {
+        //                    dispose();
+        //                } catch (Exception e) {
+        //                    ParaProfUtils.handleException(e);
+        //                }
+        //            }
+        //        });
 
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(okButton);
-//        buttonPanel.add(cancelButton);
+        //        buttonPanel.add(cancelButton);
 
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.EAST;
@@ -184,7 +179,7 @@ public class ColumnChooser extends JFrame {
 
     public void showDialog(JFrame owner, boolean modal) {
         this.center(owner);
-        this.show();
+        this.setVisible(true);
     }
 
     static class CheckBoxListItem {
@@ -218,7 +213,6 @@ public class ColumnChooser extends JFrame {
         public MouseController(JList list, ListModel model) {
             this.list = list;
             this.model = model;
-
         }
 
         public void mouseClicked(MouseEvent e) {
@@ -234,17 +228,13 @@ public class ColumnChooser extends JFrame {
             list.repaint();
         }
 
-        public void mouseEntered(MouseEvent e) {
-        }
+        public void mouseEntered(MouseEvent e) {}
 
-        public void mouseExited(MouseEvent e) {
-        }
+        public void mouseExited(MouseEvent e) {}
 
-        public void mousePressed(MouseEvent e) {
-        }
+        public void mousePressed(MouseEvent e) {}
 
-        public void mouseReleased(MouseEvent e) {
-        }
+        public void mouseReleased(MouseEvent e) {}
     }
 
     static class CheckBoxCellRenderer extends JCheckBox implements ListCellRenderer {

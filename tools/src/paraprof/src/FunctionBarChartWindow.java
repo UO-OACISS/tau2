@@ -12,9 +12,8 @@ import edu.uoregon.tau.paraprof.barchart.*;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.interfaces.*;
-import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.Thread;
-import edu.uoregon.tau.perfdmf.UtilFncs;
 
 /**
  * The FunctionBarChartWindow displays performance data in many ways.  
@@ -24,9 +23,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.21 2009/04/07 20:31:44 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.22 2009/09/10 00:13:46 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.21 $
+ * @version $Revision: 1.22 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -166,8 +165,8 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         });
 
         // Set up the data sorter
-        dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
-        dataSorter.setSortMetric(ppTrial.getDefaultMetricID());
+        dataSorter.setSelectedMetric(ppTrial.getDefaultMetric());
+        dataSorter.setSortMetric(ppTrial.getDefaultMetric());
         dataSorter.setSortByVisible(true);
         dataSorter.setSortType(SortType.VALUE);
         //dataSorter.setValueType(ValueType.EXCLUSIVE_PERCENT);
@@ -237,14 +236,14 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         sortLocalData();
     }
 
-    public void setMetricID(int id) {
-        dataSorter.setSelectedMetricID(id);
+    public void setMetric(Metric metric) {
+        dataSorter.setSelectedMetric(metric);
         sortLocalData();
         panel.repaint();
     }
 
-    public int getMetricID() {
-        return dataSorter.getSelectedMetricID();
+    public Metric getMetric() {
+        return dataSorter.getSelectedMetric();
     }
 
     public void setValueType(ValueType type) {
@@ -363,8 +362,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
                 if (showValuesAsPercent.isSelected()) {
                     unitsSubMenu.setEnabled(false);
                 } else {
-
-                    String metricName = ppTrial.getMetricName(dataSorter.getSelectedMetricID());
+                    String metricName = dataSorter.getSelectedMetric().getName();
                     metricName = metricName.toUpperCase();
                     if (dataSorter.isTimeMetric()) {
                         unitsSubMenu.setEnabled(true);
@@ -401,7 +399,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         } else if (tmpString.equals("colorEvent")) {
             panel.repaint();
         } else if (tmpString.equals("dataEvent")) {
-            dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
+            dataSorter.setSelectedMetric(ppTrial.getDefaultMetric());
             setupMenus();
             validate(); // must call validate or the new JMenuBar won't work
             sortLocalData();
@@ -552,8 +550,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
                 header += "Name: " + function.getName();
             }
 
-            header += "\nMetric Name: " + ppTrial.getMetricName(dataSorter.getSelectedMetricID()) + "\nValue: "
-                    + dataSorter.getValueType();
+            header += "\nMetric Name: " + dataSorter.getSelectedMetric().getName() + "\nValue: " + dataSorter.getValueType();
 
             if ((dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR)
                     || showValuesAsPercent.isSelected()) {
@@ -566,10 +563,10 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
             String starter;
 
             if (phase != null) {
-                starter = "Phase: " + phase + "\nMetric: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\n"
+                starter = "Phase: " + phase + "\nMetric: " + dataSorter.getSelectedMetric().getName() + "\n"
                         + "Value: " + dataSorter.getValueType();
             } else {
-                starter = "Metric: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\n" + "Value: "
+                starter = "Metric: " + dataSorter.getSelectedMetric().getName() + "\n" + "Value: "
                         + dataSorter.getValueType();
             }
 
@@ -739,6 +736,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     public BarChartPanel getPanel() {
         return panel;
     }
+
     public JFrame getFrame() {
         return this;
     }

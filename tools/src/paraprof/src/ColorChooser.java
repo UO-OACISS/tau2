@@ -71,11 +71,11 @@ public class ColorChooser implements WindowListener {
             //Bring up the color chooser frame.
             clrChooserFrame = new ColorDefaultsWindow(this, invoker);
             clrChooserFrame.addWindowListener(this);
-            clrChooserFrame.show();
+            clrChooserFrame.setVisible(true);
             clrChooserFrameShowing = true;
         } else {
             //Just bring it to the foreground.
-            clrChooserFrame.show();
+            clrChooserFrame.setVisible(true);
         }
     }
 

@@ -34,9 +34,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  *       be implemented.  Plenty of other things could be done as well, such
  *       as using box height as another metric.
  *       
- * <P>CVS $Id: CallGraphWindow.java,v 1.14 2009/04/07 20:31:42 amorris Exp $</P>
+ * <P>CVS $Id: CallGraphWindow.java,v 1.15 2009/09/10 00:13:44 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.14 $
+ * @version	$Revision: 1.15 $
  */
 public class CallGraphWindow extends JFrame implements ActionListener, KeyListener, ChangeListener, Observer, ImageExport,
         Printable, ParaProfWindow {
@@ -71,8 +71,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
     private List backEdges;
     private Map vertexMap;
 
-    private int widthMetricID;
-    private int colorMetricID;
+    private Metric widthMetric;
+    private Metric colorMetric;
     private Font font;
     private int boxHeight;
     private double scale = 1.0;
@@ -132,19 +132,19 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
             String result = "<html>" + function;
 
             if (widthOption != CallGraphOption.STATIC && widthOption != CallGraphOption.NAME_LENGTH) {
-                float widthValue = (float) getValue(functionProfile, widthOption, 1.0, widthMetricID);
+                float widthValue = (float) getValue(functionProfile, widthOption, 1.0, widthMetric);
                 result = result + "<br>Width Value (" + widthOption;
                 if (widthOption != CallGraphOption.NUMCALLS && widthOption != CallGraphOption.NUMSUBR) {
-                    result = result + ", " + ppTrial.getMetricName(widthMetricID);
+                    result = result + ", " + widthMetric.getName();
                 }
                 result = result + ") : " + widthValue;
             }
 
             if (colorOption != CallGraphOption.STATIC) {
-                float colorValue = (float) getValue(functionProfile, colorOption, 1.0, colorMetricID);
+                float colorValue = (float) getValue(functionProfile, colorOption, 1.0, colorMetric);
                 result = result + "<br>Color Value (" + colorOption;
                 if (colorOption != CallGraphOption.NUMCALLS && colorOption != CallGraphOption.NUMSUBR) {
-                    result = result + ", " + ppTrial.getMetricName(colorMetricID);
+                    result = result + ", " + colorMetric.getName();
                 }
                 result = result + ") : " + colorValue;
             }
@@ -229,8 +229,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
     public CallGraphWindow(ParaProfTrial ppTrial, Thread thread, Component invoker) {
         this.ppTrial = ppTrial;
         ppTrial.addObserver(this);
-        this.colorMetricID = ppTrial.getDefaultMetricID();
-        this.widthMetricID = ppTrial.getDefaultMetricID();
+        this.colorMetric = ppTrial.getDefaultMetric();
+        this.widthMetric = ppTrial.getDefaultMetric();
 
         this.thread = thread;
 
@@ -333,21 +333,23 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
             return button;
         } else {
             JMenu subSubMenu = new JMenu(option.toString() + "...");
-            for (int i = 0; i < ppTrial.getNumberOfMetrics(); i++) {
 
-                if (i == this.widthMetricID && enabled) {
-                    button = new JRadioButtonMenuItem(ppTrial.getMetric(i).getName(), true);
+            for (Iterator it = ppTrial.getMetrics().iterator(); it.hasNext();) {
+                Metric metric = (Metric) it.next();
+
+                if (metric == this.widthMetric && enabled) {
+                    button = new JRadioButtonMenuItem(metric.getName(), true);
                 } else {
-                    button = new JRadioButtonMenuItem(ppTrial.getMetric(i).getName());
+                    button = new JRadioButtonMenuItem(metric.getName());
                 }
-                final int m = i;
+                final Metric m = metric;
 
                 button.addActionListener(new ActionListener() {
-                    final int metric = m;
+                    final Metric metric = m;
 
                     public void actionPerformed(ActionEvent evt) {
                         widthOption = option;
-                        widthMetricID = metric;
+                        widthMetric = metric;
                         recreateGraph();
                     }
                 });
@@ -374,21 +376,23 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
             return button;
         } else {
             JMenu subSubMenu = new JMenu(option.toString() + "...");
-            for (int i = 0; i < ppTrial.getNumberOfMetrics(); i++) {
 
-                if (i == this.widthMetricID && enabled) {
-                    button = new JRadioButtonMenuItem(ppTrial.getMetric(i).getName(), true);
+            for (Iterator it = ppTrial.getMetrics().iterator(); it.hasNext();) {
+                Metric metric = (Metric) it.next();
+
+                if (metric == this.widthMetric && enabled) {
+                    button = new JRadioButtonMenuItem(metric.getName(), true);
                 } else {
-                    button = new JRadioButtonMenuItem(ppTrial.getMetric(i).getName());
+                    button = new JRadioButtonMenuItem(metric.getName());
                 }
-                final int m = i;
+                final Metric m = metric;
 
                 button.addActionListener(new ActionListener() {
-                    final int metric = m;
+                    final Metric metric = m;
 
                     public void actionPerformed(ActionEvent evt) {
                         colorOption = option;
-                        colorMetricID = metric;
+                        colorMetric = metric;
                         recreateGraph();
                     }
                 });
@@ -520,6 +524,10 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         setJMenuBar(mainMenu);
     }
 
+    private double getMaxValue(CallGraphOption option, Metric metric) {
+        return getMaxValue(option, metric.getID());
+    }
+
     private double getMaxValue(CallGraphOption option, int metric) {
         double maxValue = 1;
         int snapshot = ppTrial.getSelectedSnapshot();
@@ -546,6 +554,10 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
             throw new ParaProfException("Unexpected CallGraphOption : " + option);
         }
         return maxValue;
+    }
+
+    private double getValue(FunctionProfile fp, CallGraphOption option, double maxValue, Metric metric) {
+        return getValue(fp, option, maxValue, metric.getID());
     }
 
     private double getValue(FunctionProfile fp, CallGraphOption option, double maxValue, int metric) {
@@ -580,20 +592,18 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
             FontMetrics fm = getFontMetrics(this.font);
             width = fm.stringWidth(fp.getName()) + 5;
         } else {
-            width = (int) (boxWidth * getValue(fp, this.widthOption, maxValue, widthMetricID));
+            width = (int) (boxWidth * getValue(fp, this.widthOption, maxValue, widthMetric));
         }
         return width;
     }
 
-    
-    
     private List constructGraph() {
 
         vertexMap = new HashMap();
         backEdges = new ArrayList();
 
-        double maxWidthValue = getMaxValue(this.widthOption, widthMetricID);
-        double maxColorValue = getMaxValue(this.colorOption, colorMetricID);
+        double maxWidthValue = getMaxValue(this.widthOption, widthMetric);
+        double maxColorValue = getMaxValue(this.colorOption, colorMetric);
 
         for (int i = 0; i < functionProfileList.size(); i++) {
             FunctionProfile fp = (FunctionProfile) functionProfileList.get(i);
@@ -603,7 +613,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
             if (!fp.isCallPathFunction()) { // skip callpath functions (we only want the actual functions)
 
                 Vertex v = new Vertex(fp, getWidth(fp, maxWidthValue), boxHeight);
-                v.setColorRatio((float) getValue(fp, this.colorOption, maxColorValue, colorMetricID));
+                v.setColorRatio((float) getValue(fp, this.colorOption, maxColorValue, colorMetric));
                 vertexMap.put(fp, v);
             }
         }
@@ -742,7 +752,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
             }
 
         }
-        
+
         List levels = new ArrayList();
 
         // Fill Levels
@@ -756,11 +766,10 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         Layout.assignPositions(levels);
         return levels;
     }
-    
-    private void createGraph() {
-        
-        levels = constructGraph();
 
+    private void createGraph() {
+
+        levels = constructGraph();
 
         // Construct Model and Graph
         model = new DefaultGraphModel();
@@ -801,8 +810,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
     void reassignWidths(List levels) {
 
-        double maxWidthValue = getMaxValue(this.widthOption, widthMetricID);
-        double maxColorValue = getMaxValue(this.colorOption, colorMetricID);
+        double maxWidthValue = getMaxValue(this.widthOption, widthMetric);
+        double maxColorValue = getMaxValue(this.colorOption, colorMetric);
 
         for (int i = 0; i < levels.size(); i++) {
             List level = (List) levels.get(i);
@@ -819,7 +828,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
                     if (v.getWidth() < 5)
                         v.setWidth(5);
 
-                    v.setColorRatio((float) getValue(fp, this.colorOption, maxColorValue, colorMetricID));
+                    v.setColorRatio((float) getValue(fp, this.colorOption, maxColorValue, colorMetric));
 
                     v.setHeight(boxHeight);
                 }

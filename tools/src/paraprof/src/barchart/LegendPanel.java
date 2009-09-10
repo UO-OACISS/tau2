@@ -52,7 +52,7 @@ public class LegendPanel extends JPanel {
             
             g2D.setColor(color);
             g2D.fillRect(leftMargin, y, barHeight, barHeight);
-            g2D.setColor(color.black);
+            g2D.setColor(Color.black);
             g2D.drawRect(leftMargin, y, barHeight, barHeight);
             g2D.drawString(label, leftMargin + barHeight+5,y+barHeight);
             

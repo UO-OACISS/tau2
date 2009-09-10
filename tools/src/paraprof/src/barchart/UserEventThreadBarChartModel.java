@@ -74,7 +74,7 @@ public class UserEventThreadBarChartModel extends AbstractBarChartModel {
         } else {
             FunctionBarChartWindow threadDataWindow = new FunctionBarChartWindow(window.getPpTrial(),
                     ppUserEventProfile.getThread(), null, owner);
-            threadDataWindow.show();
+            threadDataWindow.setVisible(true);
         }
 
     }

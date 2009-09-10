@@ -48,7 +48,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
     private String path = null;
     private String pathReverse = null;
-    private int defaultMetricID = 0;
+    private Metric defaultMetric = null;
     private int selectedSnapshot = -1; // -1 = final snapshot
 
     private Group selectedGroup;
@@ -246,20 +246,16 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         }
     }
 
-    public void setDefaultMetricID(int selectedMetricID) {
-        this.defaultMetricID = selectedMetricID;
-    }
-
-    public int getDefaultMetricID() {
-        return defaultMetricID;
+    public void setDefaultMetric(Metric metric) {
+        this.defaultMetric = metric;
     }
 
     public Metric getDefaultMetric() {
-        return this.getMetric(this.getDefaultMetricID());
+        return defaultMetric;
     }
 
     public boolean isTimeMetric() {
-        String metricName = this.getMetricName(this.getDefaultMetricID());
+        String metricName = defaultMetric.getName();
         metricName = metricName.toUpperCase();
         if (metricName.indexOf("TIME") == -1) {
             return false;
@@ -268,22 +264,13 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         }
     }
 
-    //    public boolean isTimeMetric(int metricID) {
-    //        String metricName = this.getMetricName(metricID);
-    //        metricName = metricName.toUpperCase();
-    //        if (metricName.indexOf("TIME") == -1)
-    //            return false;
-    //        else
-    //            return true;
-    //    }
-
     public boolean isDerivedMetric() {
 
         // We can't do this, HPMToolkit stuff has /'s and -'s all over the place
         //String metricName = this.getMetricName(this.getSelectedMetricID());
         //if (metricName.indexOf("*") != -1 || metricName.indexOf("/") != -1)
         //    return true;
-        return this.getMetric(this.getDefaultMetricID()).getDerivedMetric();
+        return defaultMetric.getDerivedMetric();
     }
 
     //Override this function.
@@ -479,6 +466,29 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         return selectedGroup;
     }
 
+    private void assignDefaultMetric() {
+        // set the default metric to be the first one
+        setDefaultMetric((Metric) getMetrics().get(0));
+
+        // set the default metric to the first time based metric (if it exists)
+        for (Iterator it = getMetrics().iterator(); it.hasNext();) {
+            Metric metric = (Metric) it.next();
+            if (metric.isTimeMetric()) {
+                setDefaultMetric(metric);
+                break;
+            }
+        }
+
+        // set the default metric to the first metric named "Time" (if it exists), higher priority than above
+        for (Iterator it = getMetrics().iterator(); it.hasNext();) {
+            Metric metric = (Metric) it.next();
+            if (metric.getName().equalsIgnoreCase(("time"))) {
+                setDefaultMetric(metric);
+                break;
+            }
+        }
+    }
+
     public void finishLoad() {
 
         // assign the metadata from the datasource to the trial
@@ -494,30 +504,15 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
             ParaProfMetric ppMetric = new ParaProfMetric();
             ppMetric.setName(trial.getDataSource().getMetricName(i));
             ppMetric.setID(i);
+            ppMetric.setDbMetricID(trial.getDataSource().getMetric(i).getDbMetricID());
             ppMetric.setPpTrial(this);
             ppMetrics.add(ppMetric);
         }
 
-        // Now set the dataSource's metrics.
+        // mow set the dataSource's metrics.
         trial.getDataSource().setMetrics(ppMetrics);
 
-        // Set the default metric to the first time based metric (if it exists)
-        for (int i = 0; i < numberOfMetrics; i++) {
-            ParaProfMetric ppMetric = (ParaProfMetric) trial.getDataSource().getMetric(i);
-            if (ppMetric.isTimeMetric()) {
-                setDefaultMetricID(i);
-                break;
-            }
-        }
-
-        // Set the default metric to the first metric named "Time" (if it exists), higher priority than above
-        for (int i = 0; i < numberOfMetrics; i++) {
-            ParaProfMetric ppMetric = (ParaProfMetric) trial.getDataSource().getMetric(i);
-            if (ppMetric.getName().equalsIgnoreCase("Time")) {
-                setDefaultMetricID(i);
-                break;
-            }
-        }
+        assignDefaultMetric();
 
         // set the mask
         functionMask = new boolean[getDataSource().getNumFunctions()];
@@ -739,6 +734,42 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
             }
         }
         return threadNames;
+    }
+
+    public void deleteMetric(Metric metric) {
+
+        trial.getDataSource().getMetrics().remove(metric);
+
+        if (metric == defaultMetric) {
+            assignDefaultMetric();
+        }
+    }
+
+    public Metric[] getMetricArray() {
+
+        int count = 0;
+
+        for (Iterator it = getMetrics().iterator(); it.hasNext();) {
+            Metric metric = (Metric) it.next();
+            if (metric == null) {
+                continue;
+            }
+            count++;
+        }
+
+        Metric[] items = new Metric[count];
+
+        int idx = 0;
+
+        for (Iterator it = getMetrics().iterator(); it.hasNext();) {
+            Metric metric = (Metric) it.next();
+            if (metric == null) {
+                continue;
+            }
+            items[idx++] = metric;
+        }
+
+        return items;
     }
 
 }

@@ -37,9 +37,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * HistogramWindow
  * This is the histogram window
  *  
- * <P>CVS $Id: HistogramWindow.java,v 1.9 2009/06/26 00:43:48 amorris Exp $</P>
+ * <P>CVS $Id: HistogramWindow.java,v 1.10 2009/09/10 00:13:46 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  * @see     HistogramWindowPanel
  */
 public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, ParaProfWindow,
@@ -293,7 +293,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         } else if (tmpString.equals("colorEvent")) {
             redraw();
         } else if (tmpString.equals("dataEvent")) {
-            dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
+            dataSorter.setSelectedMetric(ppTrial.getDefaultMetric());
             sortLocalData();
             redraw();
         } else if (tmpString.equals("subWindowCloseEvent")) {
@@ -303,8 +303,9 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
     public void help(boolean display) {
         ParaProf.getHelpWindow().clearText();
-        if (display)
-            ParaProf.getHelpWindow().show();
+        if (display) {
+            ParaProf.getHelpWindow().setVisible(true);
+        }
         ParaProf.getHelpWindow().writeText("This is the histogram window");
         ParaProf.getHelpWindow().writeText("");
         ParaProf.getHelpWindow().writeText("This window shows you a histogram of all of the values for this function.");
@@ -328,7 +329,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
                 starter = "Name: " + function.getName();
             }
 
-            starter = starter + "\nMetric: " + ppTrial.getMetricName(dataSorter.getSelectedMetricID()) + "\nValue: "
+            starter = starter + "\nMetric: " + dataSorter.getSelectedMetric().getName() + "\nValue: "
                     + dataSorter.getValueType();
 
             if ((dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR)) {
@@ -339,10 +340,10 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
             }
         } else {
             if (dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR) {
-                return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Name: "
+                return "Metric Name: " + ppTrial.getDefaultMetric().getName() + "\n" + "Name: "
                         + ParaProfUtils.getDisplayName(function) + "\n" + "Value Type: " + dataSorter.getValueType() + "\n";
             } else {
-                return "Metric Name: " + (ppTrial.getMetricName(ppTrial.getDefaultMetricID())) + "\n" + "Name: "
+                return "Metric Name: " +ppTrial.getDefaultMetric().getName() + "\n" + "Name: "
                         + ParaProfUtils.getDisplayName(function) + "\n" + "Value Type: " + dataSorter.getValueType() + "\n"
                         + "Units: " + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric()) + "\n";
             }
@@ -425,7 +426,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         String xAxis = dataSorter.getValueType().toString();
 
         if ((dataSorter.getValueType() != ValueType.NUMCALLS && dataSorter.getValueType() != ValueType.NUMSUBR)) {
-            xAxis = xAxis + " " + ppTrial.getMetricName(dataSorter.getSelectedMetricID()) + " ("
+            xAxis = xAxis + " " + dataSorter.getSelectedMetric().getName() + " ("
                     + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric()) + ")";
         }
 

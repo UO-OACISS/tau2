@@ -33,9 +33,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableWindow.java,v 1.15 2009/04/07 20:31:46 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableWindow.java,v 1.16 2009/09/10 00:13:52 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.15 $
+ * @version $Revision: 1.16 $
  */
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
         ImageExport {
@@ -213,8 +213,8 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
             gbc.weighty = 0.0;
 
             if (ppTrial.getNumberOfMetrics() > 1) {
-                final JComboBox metricBox = new JComboBox(ppTrial.getMetrics().toArray());
-                metricBox.setSelectedIndex(ppTrial.getDefaultMetricID());
+                final JComboBox metricBox = new JComboBox(ppTrial.getMetricArray());
+                metricBox.setSelectedItem(ppTrial.getDefaultMetric());
 
                 metricBox.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {

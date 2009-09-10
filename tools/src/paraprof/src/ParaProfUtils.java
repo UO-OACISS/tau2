@@ -37,11 +37,11 @@ import edu.uoregon.tau.vis.HeatMapWindow;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.50 2009/09/07 09:56:06 khuck Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.51 2009/09/10 00:13:48 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.50 $
+ * @version $Revision: 1.51 $
  */
 public class ParaProfUtils {
 
@@ -716,7 +716,7 @@ public class ParaProfUtils {
             jMenuItem.addActionListener(actionListener);
             functionPopup.add(jMenuItem);
         }
-        
+
         JMenuItem jMenuItem = new JMenuItem("Assign Function Color");
         jMenuItem.addActionListener(actionListener);
         functionPopup.add(jMenuItem);
@@ -725,11 +725,11 @@ public class ParaProfUtils {
         jMenuItem.addActionListener(actionListener);
         functionPopup.add(jMenuItem);
 
-        if (ExternalTool.matchingToolExists((String)ppTrial.getTrial().getMetaData().get(DataSource.FILE_TYPE_NAME))) {
+        if (ExternalTool.matchingToolExists((String) ppTrial.getTrial().getMetaData().get(DataSource.FILE_TYPE_NAME))) {
             JMenuItem toolMenuItem = new JMenuItem("Launch External Tool for this Function & Metric");
             toolMenuItem.addActionListener(actionListener);
             functionPopup.add(toolMenuItem);
-        }        
+        }
 
         // count function scripts
         int functionScripts = 0;
@@ -1359,20 +1359,14 @@ public class ParaProfUtils {
     public static void createMetricToolbarItems(JToolBar bar, ParaProfTrial ppTrial, final DataSorter dataSorter,
             final ToolBarListener listener) {
 
-        Vector metricList = new Vector();
-
-        for (int i = 0; i < ppTrial.getNumberOfMetrics(); i++) {
-            metricList.add(ppTrial.getMetricName(i));
-        }
-
-        final JComboBox metricBox = new JComboBox(metricList);
+        final JComboBox metricBox = new JComboBox(ppTrial.getMetricArray());
         final JComboBox valueBox = new JComboBox(ValueType.VALUES);
         metricBox.setMaximumSize(metricBox.getPreferredSize());
         valueBox.setMaximumSize(valueBox.getPreferredSize());
 
         ActionListener actionListener = new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                dataSorter.setSelectedMetricID(metricBox.getSelectedIndex());
+                dataSorter.setSelectedMetric((Metric) metricBox.getSelectedItem());
                 dataSorter.setValueType((ValueType) valueBox.getSelectedItem());
                 listener.toolBarUsed();
             }
@@ -1410,14 +1404,21 @@ public class ParaProfUtils {
         } else {
             JMenu subSubMenu = new JMenu(valueType.toString() + "...");
             subSubMenu.getPopupMenu().setLightWeightPopupEnabled(false);
-            for (int i = 0; i < ppTrial.getNumberOfMetrics(); i++) {
-
-                if (i == dataSorter.getSelectedMetricID() && enabled) {
-                    button = new JRadioButtonMenuItem(ppTrial.getMetric(i).getName(), true);
-                } else {
-                    button = new JRadioButtonMenuItem(ppTrial.getMetric(i).getName());
+            for (Iterator it = ppTrial.getMetrics().iterator(); it.hasNext();) {
+                Metric metric = (Metric) it.next();
+                if (metric == null) {
+                    continue;
                 }
-                final int metricID = i;
+
+                int id = metric.getID();
+
+                if (id == dataSorter.getSelectedMetric().getID() && enabled) {
+                    button = new JRadioButtonMenuItem(metric.getName(), true);
+                } else {
+                    button = new JRadioButtonMenuItem(metric.getName());
+                }
+
+                final Metric useMetric = metric;
 
                 button.addActionListener(new ActionListener() {
 
@@ -1425,10 +1426,10 @@ public class ParaProfUtils {
                         if (sort) {
                             dataSorter.setSortByVisible(false);
                             dataSorter.setSortType(SortType.VALUE);
-                            dataSorter.setSortMetric(metricID);
+                            dataSorter.setSortMetric(useMetric);
                             dataSorter.setSortValueType(valueType);
                         } else {
-                            dataSorter.setSelectedMetricID(metricID);
+                            dataSorter.setSelectedMetric(useMetric);
                             dataSorter.setValueType(valueType);
                         }
                         sortListener.resort();

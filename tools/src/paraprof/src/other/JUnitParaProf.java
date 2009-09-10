@@ -32,16 +32,15 @@ public class JUnitParaProf extends JFCTestCase {
                 ppTrial.getMetric(ppTrial.getNumberOfMetrics() - 1), "Divide");
 
         Assert.assertNotNull(ppMetric);
-        ppMetric = DerivedMetrics.applyOperation(ppTrial.getMetric(1),
-                ppTrial.getMetric(ppTrial.getNumberOfMetrics() - 1), "Add");
+        ppMetric = DerivedMetrics.applyOperation(ppTrial.getMetric(1), ppTrial.getMetric(ppTrial.getNumberOfMetrics() - 1), "Add");
         Assert.assertNotNull(ppMetric);
 
-        ppMetric = DerivedMetrics.applyOperation(ppTrial.getMetric(2),
-                ppTrial.getMetric(ppTrial.getNumberOfMetrics() - 1), "Subtract");
+        ppMetric = DerivedMetrics.applyOperation(ppTrial.getMetric(2), ppTrial.getMetric(ppTrial.getNumberOfMetrics() - 1),
+                "Subtract");
         Assert.assertNotNull(ppMetric);
 
-        ppMetric = DerivedMetrics.applyOperation(ppTrial.getMetric(3),
-                ppTrial.getMetric(ppTrial.getNumberOfMetrics() - 1), "Multiply");
+        ppMetric = DerivedMetrics.applyOperation(ppTrial.getMetric(3), ppTrial.getMetric(ppTrial.getNumberOfMetrics() - 1),
+                "Multiply");
         Assert.assertNotNull(ppMetric);
 
         ppMetric = DerivedMetrics.applyOperation(ppTrial.getMetric(4), "val 10", "Divide");
@@ -96,7 +95,7 @@ public class JUnitParaProf extends JFCTestCase {
 
                 Function f = (Function) it.next();
                 HistogramWindow hw = new HistogramWindow(ppTrial, f, null);
-                hw.show();
+                hw.setVisible(true);
 
                 for (int n = 1; n <= 100; n += 5) {
                     hw.setNumBins(n);
@@ -112,7 +111,7 @@ public class JUnitParaProf extends JFCTestCase {
     public void checkHistogram(ParaProfTrial ppTrial, Function f) {
 
         HistogramWindow hw = new HistogramWindow(ppTrial, f, null);
-        hw.show();
+        hw.setVisible(true);
 
         for (int n = 1; n <= 100; n += 5) {
             hw.setNumBins(n);
@@ -125,7 +124,7 @@ public class JUnitParaProf extends JFCTestCase {
     public void checkThreadWindow(ParaProfTrial ppTrial, edu.uoregon.tau.perfdmf.Thread thread) {
 
         FunctionBarChartWindow tw = new FunctionBarChartWindow(ppTrial, thread, null, null);
-        tw.show();
+        tw.setVisible(true);
 
         sleep(500);
         tw.closeThisWindow();
@@ -134,7 +133,7 @@ public class JUnitParaProf extends JFCTestCase {
     public void checkTreeTable(ParaProfTrial ppTrial, edu.uoregon.tau.perfdmf.Thread thread) {
 
         TreeTableWindow tw = new TreeTableWindow(ppTrial, thread, null);
-        tw.show();
+        tw.setVisible(true);
 
         sleep(500);
         tw.closeThisWindow();
@@ -143,17 +142,16 @@ public class JUnitParaProf extends JFCTestCase {
     public void checkStatWindow(ParaProfTrial ppTrial, edu.uoregon.tau.perfdmf.Thread thread, boolean userEvent) {
 
         StatWindow w = new StatWindow(ppTrial, thread, userEvent, null, null);
-        w.show();
+        w.setVisible(true);
 
         sleep(500);
         w.closeThisWindow();
     }
 
-    
     public void checkCallGraphWindow(ParaProfTrial ppTrial, edu.uoregon.tau.perfdmf.Thread thread) {
 
         CallGraphWindow cgw = new CallGraphWindow(ppTrial, thread, null);
-        cgw.show();
+        cgw.setVisible(true);
 
         sleep(500);
         cgw.closeThisWindow();
@@ -176,7 +174,7 @@ public class JUnitParaProf extends JFCTestCase {
     public void checkFunctionWindow(ParaProfTrial ppTrial, Function f) throws Exception {
 
         FunctionBarChartWindow fw = new FunctionBarChartWindow(ppTrial, f, null);
-        fw.show();
+        fw.setVisible(true);
         //sleep(200000);
 
         ComponentFinder crapFinder = new ComponentFinder(JMenuBar.class);
@@ -206,40 +204,40 @@ public class JUnitParaProf extends JFCTestCase {
         sleep(amount);
         percent.doClick();
         sleep(amount);
-//
-//        fw.actionPerformed(createMenuAction("Inclusive"));
-//        sleep(amount);
-//        fw.actionPerformed(createMenuAction("Show Values as Percent"));
-//        sleep(amount);
-//        sortByNCT.setSelected(true);
-//        fw.actionPerformed(createMenuAction("Sort By N,C,T"));
-//        sleep(amount);
-//        fw.actionPerformed(createMenuAction("Descending Order"));
-//        sleep(amount);
-//
-//        fw.actionPerformed(createMenuAction("Number of Calls"));
-//        sleep(amount);
-//        sortByNCT.setSelected(false);
-//        fw.actionPerformed(createMenuAction("Sort By N,C,T"));
-//        sleep(amount);
-//        fw.actionPerformed(createMenuAction("Descending Order"));
-//        sleep(amount);
-//
-//        fw.actionPerformed(createMenuAction("Number of Subroutines"));
-//        sleep(amount);
-//        sortByNCT.setSelected(true);
-//        fw.actionPerformed(createMenuAction("Sort By N,C,T"));
-//        sleep(amount);
-//        fw.actionPerformed(createMenuAction("Descending Order"));
-//        sleep(amount);
-//
-//        fw.actionPerformed(createMenuAction("Inclusive Per Call"));
-//        sleep(amount);
-//        sortByNCT.setSelected(false);
-//        fw.actionPerformed(createMenuAction("Sort By N,C,T"));
-//        sleep(amount);
-//        fw.actionPerformed(createMenuAction("Descending Order"));
-//        sleep(amount);
+        //
+        //        fw.actionPerformed(createMenuAction("Inclusive"));
+        //        sleep(amount);
+        //        fw.actionPerformed(createMenuAction("Show Values as Percent"));
+        //        sleep(amount);
+        //        sortByNCT.setSelected(true);
+        //        fw.actionPerformed(createMenuAction("Sort By N,C,T"));
+        //        sleep(amount);
+        //        fw.actionPerformed(createMenuAction("Descending Order"));
+        //        sleep(amount);
+        //
+        //        fw.actionPerformed(createMenuAction("Number of Calls"));
+        //        sleep(amount);
+        //        sortByNCT.setSelected(false);
+        //        fw.actionPerformed(createMenuAction("Sort By N,C,T"));
+        //        sleep(amount);
+        //        fw.actionPerformed(createMenuAction("Descending Order"));
+        //        sleep(amount);
+        //
+        //        fw.actionPerformed(createMenuAction("Number of Subroutines"));
+        //        sleep(amount);
+        //        sortByNCT.setSelected(true);
+        //        fw.actionPerformed(createMenuAction("Sort By N,C,T"));
+        //        sleep(amount);
+        //        fw.actionPerformed(createMenuAction("Descending Order"));
+        //        sleep(amount);
+        //
+        //        fw.actionPerformed(createMenuAction("Inclusive Per Call"));
+        //        sleep(amount);
+        //        sortByNCT.setSelected(false);
+        //        fw.actionPerformed(createMenuAction("Sort By N,C,T"));
+        //        sleep(amount);
+        //        fw.actionPerformed(createMenuAction("Descending Order"));
+        //        sleep(amount);
 
         //sleep(200000);
 
@@ -267,10 +265,10 @@ public class JUnitParaProf extends JFCTestCase {
         boolean doDatabase = false;
 
         System.out.println("---Setting up ParaProf---");
-        
+
         final ParaProf paraProf = new ParaProf();
-        paraProf.initialize();
-        
+        ParaProf.initialize();
+
         //String args[] = new String[0];
         //ParaProf.main(args);
 
@@ -297,7 +295,7 @@ public class JUnitParaProf extends JFCTestCase {
 
         files[0] = new File("/home/amorris/data/gprof/mpilieb.out");
         trials.add(loadTrial(files, 5));
-        
+
         files = new File[4];
         files[0] = new File("/home/amorris/data/hpm/mpilieb/eventset1/perfhpm0000.7495902");
         files[1] = new File("/home/amorris/data/hpm/mpilieb/eventset1/perfhpm0001.1466514");
@@ -305,18 +303,13 @@ public class JUnitParaProf extends JFCTestCase {
         files[3] = new File("/home/amorris/data/hpm/mpilieb/eventset1/perfhpm0003.5062700");
         trials.add(loadTrial(files, 4));
 
-        
         files[0] = new File("/home/amorris/data/psrun/91060-tuna184.31362.xml");
         files[1] = new File("/home/amorris/data/psrun/91060-tuna184.31363.xml");
         files[2] = new File("/home/amorris/data/psrun/91060-tuna184.31530.xml");
         files[3] = new File("/home/amorris/data/psrun/91060-tuna184.31558.xml");
         trials.add(loadTrial(files, 6));
 
-        
-        
-        
         checkDerivedMetrics();
-
 
         if (doDatabase) {
             System.out.println("---Checking the database---");
@@ -354,29 +347,29 @@ public class JUnitParaProf extends JFCTestCase {
         int limit = 2;
 
         try {
-        for (int i = 0; i < trials.size(); i++) {
-            int count = limit;
-            ParaProfTrial ppTrial = (ParaProfTrial) trials.get(i);
-            System.out.println("Trial:" + ppTrial.getName());
+            for (int i = 0; i < trials.size(); i++) {
+                int count = limit;
+                ParaProfTrial ppTrial = (ParaProfTrial) trials.get(i);
+                System.out.println("Trial:" + ppTrial.getName());
 
-            for (Iterator it = ppTrial.getDataSource().getFunctions(); it.hasNext() && count-- != 0;) {
-                Function f = (Function) it.next();
+                for (Iterator it = ppTrial.getDataSource().getFunctions(); it.hasNext() && count-- != 0;) {
+                    Function f = (Function) it.next();
 
-                checkHistogram(ppTrial, f);
-                checkFunctionWindow(ppTrial, f);
+                    checkHistogram(ppTrial, f);
+                    checkFunctionWindow(ppTrial, f);
+                }
+
+                count = limit;
+                for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext() && count-- != 0;) {
+                    edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
+
+                    checkStatWindow(ppTrial, thread, false);
+                    checkThreadWindow(ppTrial, thread);
+                    checkTreeTable(ppTrial, thread);
+                    checkStatWindow(ppTrial, thread, true);
+                    checkCallGraphWindow(ppTrial, thread);
+                }
             }
-
-            count = limit;
-            for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext() && count-- != 0;) {
-                edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
-
-                checkStatWindow(ppTrial, thread, false);
-                checkThreadWindow(ppTrial, thread);
-                checkTreeTable(ppTrial, thread);
-                checkStatWindow(ppTrial, thread, true);
-                checkCallGraphWindow(ppTrial, thread);
-            }
-        }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -385,8 +378,7 @@ public class JUnitParaProf extends JFCTestCase {
 
     }
 
-    public static void main(String[] args) {
-    }
+    public static void main(String[] args) {}
 
     /*
      * @see TestCase#setUp()

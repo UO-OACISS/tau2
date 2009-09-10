@@ -3,9 +3,10 @@ package edu.uoregon.tau.paraprof;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.enums.VisType;
 import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.Thread;
 import edu.uoregon.tau.vis.Vec;
 import edu.uoregon.tau.vis.Axes.Orientation;
-import edu.uoregon.tau.perfdmf.Thread;
 
 /**
  * Represents the settings of the 3d window/control panels
@@ -18,15 +19,15 @@ import edu.uoregon.tau.perfdmf.Thread;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: ThreeDeeSettings.java,v 1.2 2007/12/07 02:05:21 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeSettings.java,v 1.3 2009/09/10 00:13:49 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.2 $
+ * @version	$Revision: 1.3 $
  */
 public class ThreeDeeSettings implements Cloneable {
 
     private float plotWidth, plotHeight, plotDepth;
 
-    private int heightMetricID, colorMetricID;
+    private Metric heightMetric, colorMetric;
     private ValueType colorValue = ValueType.EXCLUSIVE, heightValue = ValueType.EXCLUSIVE;
     private VisType visType = VisType.TRIANGLE_MESH_PLOT;
     //private VisType visType = VisType.BAR_PLOT;
@@ -34,7 +35,7 @@ public class ThreeDeeSettings implements Cloneable {
     private Orientation axisOrientation = Orientation.NW;
     private boolean axesEnabled = true;
 
-    private int[] scatterMetricIDs = { 0, 0, 0, 0 };
+    private Metric[] scatterMetrics = { null, null, null, null };
     private ValueType[] scatterValueTypes = { ValueType.EXCLUSIVE, ValueType.EXCLUSIVE, ValueType.EXCLUSIVE, ValueType.EXCLUSIVE };
     private Function[] scatterFunctions = new Function[4];
 
@@ -107,20 +108,20 @@ public class ThreeDeeSettings implements Cloneable {
         return plotWidth;
     }
 
-    public void setHeightMetricID(int metricID) {
-        this.heightMetricID = metricID;
+    public void setHeightMetric(Metric metric) {
+        this.heightMetric = metric;
     }
 
-    public void setColorMetricID(int metricID) {
-        this.colorMetricID = metricID;
+    public void setColorMetric(Metric metric) {
+        this.colorMetric = metric;
     }
 
-    public int getHeightMetricID() {
-        return this.heightMetricID;
+    public Metric getHeightMetric() {
+        return this.heightMetric;
     }
 
-    public int getColorMetricID() {
-        return this.colorMetricID;
+    public Metric getColorMetric() {
+        return this.colorMetric;
     }
 
     public Object clone() {
@@ -129,8 +130,8 @@ public class ThreeDeeSettings implements Cloneable {
         newSettings.plotDepth = this.plotDepth;
         newSettings.plotHeight = this.plotHeight;
         newSettings.plotWidth = this.plotWidth;
-        newSettings.heightMetricID = this.heightMetricID;
-        newSettings.colorMetricID = this.colorMetricID;
+        newSettings.heightMetric = this.heightMetric;
+        newSettings.colorMetric = this.colorMetric;
         newSettings.colorValue = this.colorValue;
         newSettings.heightValue = this.heightValue;
 
@@ -138,7 +139,7 @@ public class ThreeDeeSettings implements Cloneable {
         newSettings.axisOrientation = this.axisOrientation;
         newSettings.axesEnabled = this.axesEnabled;
 
-        newSettings.scatterMetricIDs = (int[]) this.scatterMetricIDs.clone();
+        newSettings.scatterMetrics = (Metric[]) this.scatterMetrics.clone();
         newSettings.scatterValueTypes = (ValueType[]) this.scatterValueTypes.clone();
         newSettings.scatterFunctions = (Function[]) this.scatterFunctions.clone();
 
@@ -190,12 +191,12 @@ public class ThreeDeeSettings implements Cloneable {
         this.scatterFunctions[index] = function;
     }
 
-    public int[] getScatterMetricIDs() {
-        return scatterMetricIDs;
+    public Metric[] getScatterMetrics() {
+        return scatterMetrics;
     }
 
-    public void setScatterMetricID(int scatterMetricID, int index) {
-        this.scatterMetricIDs[index] = scatterMetricID;
+    public void setScatterMetric(Metric scatterMetric, int index) {
+        this.scatterMetrics[index] = scatterMetric;
     }
 
     public ValueType[] getScatterValueTypes() {

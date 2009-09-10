@@ -17,9 +17,9 @@ import edu.uoregon.tau.perfdmf.Thread;
 /**
  * CallPathTextWindowPanel: This is the panel for the CallPathTextWindow
  *   
- * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.44 2009/06/26 00:43:47 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindowPanel.java,v 1.45 2009/09/10 00:13:44 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.44 $
+ * @version	$Revision: 1.45 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindow
  * 
@@ -130,8 +130,8 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
 
                     while (l3.hasNext()) {
                         FunctionProfile callPath = (FunctionProfile) l3.next();
-                        d1 = d1 + callPath.getExclusive(ppTrial.getDefaultMetricID());
-                        d2 = d2 + callPath.getInclusive(ppTrial.getDefaultMetricID());
+                        d1 = d1 + callPath.getExclusive(ppTrial.getDefaultMetric().getID());
+                        d2 = d2 + callPath.getInclusive(ppTrial.getDefaultMetric().getID());
                         d3 = d3 + callPath.getNumCalls();
                     }
                     CallPathDrawObject callPathDrawObject = new CallPathDrawObject(parent.getFunction(), true, false, false);
@@ -156,8 +156,8 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
                     double d3 = 0.0;
                     for (Iterator it3 = ppFunctionProfile.getFunctionProfile().getChildProfileCallPathIterator(child); it3.hasNext();) {
                         FunctionProfile callPath = (FunctionProfile) it3.next();
-                        d1 = d1 + callPath.getExclusive(ppTrial.getDefaultMetricID());
-                        d2 = d2 + callPath.getInclusive(ppTrial.getDefaultMetricID());
+                        d1 = d1 + callPath.getExclusive(ppTrial.getDefaultMetric().getID());
+                        d2 = d2 + callPath.getInclusive(ppTrial.getDefaultMetric().getID());
                         d3 = d3 + callPath.getNumCalls();
                     }
                     callPathDrawObject = new CallPathDrawObject(child.getFunction(), false, true, false);

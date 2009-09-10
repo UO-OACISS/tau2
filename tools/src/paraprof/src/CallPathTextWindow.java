@@ -18,9 +18,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * CallPathTextWindow: This window displays callpath data in a text format
  *   
- * <P>CVS $Id: CallPathTextWindow.java,v 1.31 2009/04/07 20:31:43 amorris Exp $</P>
+ * <P>CVS $Id: CallPathTextWindow.java,v 1.32 2009/09/10 00:13:44 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.31 $
+ * @version	$Revision: 1.32 $
  * @see		CallPathDrawObject
  * @see		CallPathTextWindowPanel
  */
@@ -314,8 +314,9 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     public void help(boolean display) {
         //Show the ParaProf help window.
         ParaProf.getHelpWindow().clearText();
-        if (display)
-            ParaProf.getHelpWindow().show();
+        if (display) {
+            ParaProf.getHelpWindow().setVisible(true);
+        }
         ParaProf.getHelpWindow().writeText("Call path text window.");
         ParaProf.getHelpWindow().writeText("");
         ParaProf.getHelpWindow().writeText("This window displays call path relationships in two ways:");
@@ -347,7 +348,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
             dataSorter.setSortType(SortType.VALUE);
 
         dataSorter.setDescendingOrder(descendingOrder.isSelected());
-        dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
+        dataSorter.setSelectedMetric(ppTrial.getDefaultMetric());
 
         this.setHeader();
 
@@ -419,7 +420,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     }
 
     public String getHeaderString() {
-        return "Metric Name: " + (ppTrial.getMetricName(dataSorter.getSelectedMetricID())) + "\n" + "Sorted By: "
+        return "Metric Name: " + (dataSorter.getSelectedMetric().getName()) + "\n" + "Sorted By: "
                 + dataSorter.getValueType() + "\n" + "Units: "
                 + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric()) + "\n";
     }

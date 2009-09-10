@@ -3,6 +3,7 @@ package edu.uoregon.tau.paraprof;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.*;
@@ -13,6 +14,7 @@ import javax.swing.plaf.metal.MetalComboBoxUI;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.enums.VisType;
 import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Thread;
 import edu.uoregon.tau.vis.Plot;
 import edu.uoregon.tau.vis.SteppedComboBox;
@@ -23,9 +25,9 @@ import edu.uoregon.tau.vis.VisRenderer;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.12 2009/08/24 22:15:12 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.13 2009/09/10 00:13:49 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.12 $
+ * @version	$Revision: 1.13 $
  */
 public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
@@ -160,30 +162,25 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         functionField.setBorder(BorderFactory.createLoweredBevelBorder());
         functionField.setCaretPosition(0);
 
-        String[] items = new String[ppTrial.getNumberOfMetrics()];
-        for (int i = 0; i < ppTrial.getNumberOfMetrics(); i++) {
-            items[i] = ppTrial.getMetric(i).getName();
-        }
-
         Dimension d;
         final SteppedComboBox valueBox = new SteppedComboBox(ValueType.VALUES);
         d = valueBox.getPreferredSize();
         valueBox.setMinimumSize(new Dimension(50, valueBox.getMinimumSize().height));
         valueBox.setPopupWidth(d.width);
 
-        final SteppedComboBox metricBox = new SteppedComboBox(items);
+        final SteppedComboBox metricBox = new SteppedComboBox(ppTrial.getMetricArray());
         d = metricBox.getPreferredSize();
         metricBox.setMinimumSize(new Dimension(50, metricBox.getMinimumSize().height));
         metricBox.setPopupWidth(d.width);
 
         valueBox.setSelectedItem(settings.getScatterValueTypes()[index]);
-        metricBox.setSelectedIndex(settings.getScatterMetricIDs()[index]);
+        metricBox.setSelectedItem(settings.getScatterMetrics()[index]);
 
         ActionListener metricSelector = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 try {
                     settings.setScatterValueType((ValueType) valueBox.getSelectedItem(), index);
-                    settings.setScatterMetricID(metricBox.getSelectedIndex(), index);
+                    settings.setScatterMetric((Metric) metricBox.getSelectedItem(), index);
                     window.redraw();
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
@@ -419,8 +416,8 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
                     Plot plot = window.getPlot();
 
-                    settings.setHeightMetricID(heightMetricBox.getSelectedIndex());
-                    settings.setColorMetricID(colorMetricBox.getSelectedIndex());
+                    settings.setHeightMetric((Metric) heightMetricBox.getSelectedItem());
+                    settings.setColorMetric((Metric) colorMetricBox.getSelectedItem());
                     settings.setHeightValue((ValueType) heightValueBox.getSelectedItem());
                     settings.setColorValue((ValueType) colorValueBox.getSelectedItem());
 
@@ -456,27 +453,18 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         colorValueBox.setSelectedItem(settings.getColorValue());
         colorValueBox.addActionListener(metricChanger);
 
-        String[] items = new String[ppTrial.getNumberOfMetrics()];
-        for (int i = 0; i < ppTrial.getNumberOfMetrics(); i++) {
-            items[i] = ppTrial.getMetric(i).getName();
-        }
-
-        heightMetricBox = new SteppedComboBox(items);
+        heightMetricBox = new SteppedComboBox(ppTrial.getMetricArray());
         d = heightMetricBox.getPreferredSize();
         heightMetricBox.setMinimumSize(new Dimension(50, heightMetricBox.getMinimumSize().height));
         heightMetricBox.setPopupWidth(d.width);
-        heightMetricBox.setSelectedIndex(settings.getHeightMetricID());
+        heightMetricBox.setSelectedItem(settings.getHeightMetric());
         heightMetricBox.addActionListener(metricChanger);
 
-        items = new String[ppTrial.getNumberOfMetrics()];
-        for (int i = 0; i < ppTrial.getNumberOfMetrics(); i++) {
-            items[i] = ppTrial.getMetric(i).getName();
-        }
-        colorMetricBox = new SteppedComboBox(items);
+        colorMetricBox = new SteppedComboBox(ppTrial.getMetricArray());
         d = colorMetricBox.getPreferredSize();
         colorMetricBox.setMinimumSize(new Dimension(50, colorMetricBox.getMinimumSize().height));
         colorMetricBox.setPopupWidth(d.width);
-        colorMetricBox.setSelectedIndex(settings.getColorMetricID());
+        colorMetricBox.setSelectedItem(settings.getColorMetric());
         colorMetricBox.addActionListener(metricChanger);
 
         tabbedPane = new JTabbedPane();

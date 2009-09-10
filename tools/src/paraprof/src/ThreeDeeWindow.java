@@ -78,12 +78,12 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         });
         this.ppTrial = ppTrial;
 
-        settings.setColorMetricID(ppTrial.getDefaultMetricID());
-        settings.setHeightMetricID(ppTrial.getDefaultMetricID());
-        settings.setScatterMetricID(ppTrial.getDefaultMetricID(), 0);
-        settings.setScatterMetricID(ppTrial.getDefaultMetricID(), 1);
-        settings.setScatterMetricID(ppTrial.getDefaultMetricID(), 2);
-        settings.setScatterMetricID(ppTrial.getDefaultMetricID(), 3);
+        settings.setColorMetric(ppTrial.getDefaultMetric());
+        settings.setHeightMetric(ppTrial.getDefaultMetric());
+        settings.setScatterMetric(ppTrial.getDefaultMetric(), 0);
+        settings.setScatterMetric(ppTrial.getDefaultMetric(), 1);
+        settings.setScatterMetric(ppTrial.getDefaultMetric(), 2);
+        settings.setScatterMetric(ppTrial.getDefaultMetric(), 3);
 
         dataSorter = new DataSorter(ppTrial);
         dataSorter.setSortType(SortType.NAME);
@@ -116,7 +116,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         // initialize the scatterplot functions to the 4 most varying functions
         // we just get the first four stddev functions
         DataSorter dataSorter = new DataSorter(ppTrial);
-        dataSorter.setSelectedMetricID(ppTrial.getDefaultMetricID());
+        dataSorter.setSelectedMetric(ppTrial.getDefaultMetric());
         dataSorter.setDescendingOrder(true);
         List stdDevList = dataSorter.getFunctionProfiles(dataSource.getStdDevData());
         int count = 0;
@@ -203,7 +203,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         Function[] scatterFunctions = settings.getScatterFunctions();
 
         ValueType[] scatterValueTypes = settings.getScatterValueTypes();
-        int[] scatterMetricIDs = settings.getScatterMetricIDs();
+        Metric[] scatterMetricIDs = settings.getScatterMetrics();
 
         DataSource dataSource = ppTrial.getDataSource();
         int numThreads = dataSource.getNumThreads();
@@ -598,9 +598,9 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
                 if (functionProfile != null) {
                     heightValues[funcIndex][threadIndex] = (float) settings.getHeightValue().getValue(functionProfile,
-                            settings.getHeightMetricID(), ppTrial.getSelectedSnapshot());
+                            settings.getHeightMetric().getID(), ppTrial.getSelectedSnapshot());
                     colorValues[funcIndex][threadIndex] = (float) settings.getColorValue().getValue(functionProfile,
-                            settings.getColorMetricID(), ppTrial.getSelectedSnapshot());
+                            settings.getColorMetric().getID(), ppTrial.getSelectedSnapshot());
 
                     maxHeightValue = Math.max(maxHeightValue, heightValues[funcIndex][threadIndex]);
                     maxColorValue = Math.max(maxColorValue, colorValues[funcIndex][threadIndex]);
@@ -712,10 +712,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
                 settings.setSize((int) plot.getWidth(), (int) plot.getDepth(), (int) plot.getHeight());
 
-                if (oldSettings.getHeightMetricID() != newSettings.getHeightMetricID()
+                if (oldSettings.getHeightMetric() != newSettings.getHeightMetric()
                         || oldSettings.getHeightValue() != newSettings.getHeightValue()
                         || oldSettings.getColorValue() != newSettings.getColorValue()
-                        || oldSettings.getColorMetricID() != newSettings.getColorMetricID()) {
+                        || oldSettings.getColorMetric() != newSettings.getColorMetric()) {
                     generate3dModel(false, newSettings);
                 } else {
 
@@ -1021,12 +1021,12 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         }
 
         int units = this.units;
-        ParaProfMetric ppMetric = ppTrial.getMetric(settings.getHeightMetricID());
+        ParaProfMetric ppMetric = (ParaProfMetric)settings.getHeightMetric();
         if (!ppMetric.isTimeMetric() || !ValueType.isTimeUnits(settings.getHeightValue())) {
             units = 0;
         }
 
-        return UtilFncs.getOutputString(units, settings.getHeightValue().getValue(fp, settings.getHeightMetricID()), 6,
+        return UtilFncs.getOutputString(units, settings.getHeightValue().getValue(fp, settings.getHeightMetric().getID()), 6,
                 ppMetric.isTimeDenominator()).trim()
                 + getUnitsString(units, settings.getHeightValue(), ppMetric);
 
@@ -1051,12 +1051,12 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         }
 
         int units = this.units;
-        ParaProfMetric ppMetric = ppTrial.getMetric(settings.getColorMetricID());
+        ParaProfMetric ppMetric = (ParaProfMetric) settings.getColorMetric();
         if (!ppMetric.isTimeMetric() || !ValueType.isTimeUnits(settings.getColorValue())) {
             units = 0;
         }
 
-        return UtilFncs.getOutputString(units, settings.getColorValue().getValue(fp, settings.getColorMetricID()), 6,
+        return UtilFncs.getOutputString(units, settings.getColorValue().getValue(fp, settings.getColorMetric().getID()), 6,
                 ppMetric.isTimeDenominator()).trim()
                 + getUnitsString(units, settings.getColorValue(), ppMetric);
 
@@ -1074,7 +1074,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
             Function[] scatterFunctions = settings.getScatterFunctions();
             ValueType[] scatterValueTypes = settings.getScatterValueTypes();
-            int[] scatterMetricIDs = settings.getScatterMetricIDs();
+            Metric[] scatterMetricIDs = settings.getScatterMetrics();
 
             List axisNames = new ArrayList();
             for (int f = 0; f < scatterFunctions.length; f++) {
@@ -1088,7 +1088,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
                         axisNames.add(toDisplay + "\n(" + scatterValueTypes[f].toString() + ")");
                     } else {
                         axisNames.add(toDisplay + "\n(" + scatterValueTypes[f].toString() + ", "
-                                + ppTrial.getMetricName(scatterMetricIDs[f]) + ")");
+                                + scatterMetricIDs[f].getName() + ")");
                     }
                 } else {
                     axisNames.add("none");
@@ -1102,7 +1102,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
                     minScatterValues[i] = 0;
                 }
 
-                ParaProfMetric ppMetric = ppTrial.getMetric(scatterMetricIDs[i]);
+                ParaProfMetric ppMetric = (ParaProfMetric) scatterMetricIDs[i];
 
                 int units = scatterValueTypes[i].getUnits(this.units, ppMetric);
 
@@ -1118,7 +1118,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
                         minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]), 6, ppMetric.isTimeDenominator()).trim());
             }
 
-            ParaProfMetric ppMetric = ppTrial.getMetric(scatterMetricIDs[3]);
+            ParaProfMetric ppMetric = (ParaProfMetric) scatterMetricIDs[3];
             int units = scatterValueTypes[3].getUnits(this.units, ppMetric);
 
             colorScale.setStrings(UtilFncs.getOutputString(units, minScatterValues[3], 6, ppMetric.isTimeDenominator()).trim(),
@@ -1135,7 +1135,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
             int units;
 
-            ParaProfMetric ppMetric = ppTrial.getMetric(settings.getHeightMetricID());
+            ParaProfMetric ppMetric = (ParaProfMetric) settings.getHeightMetric();
             units = settings.getHeightValue().getUnits(this.units, ppMetric);
 
             zStrings.add(UtilFncs.getOutputString(units, maxHeightValue * 0.25, 6, ppMetric.isTimeDenominator()).trim());
@@ -1145,7 +1145,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
             String zAxisLabel = settings.getHeightValue().getSuffix(units, ppMetric);
 
-            ppMetric = ppTrial.getMetric(settings.getColorMetricID());
+            ppMetric = (ParaProfMetric) settings.getColorMetric();
             units = settings.getColorValue().getUnits(this.units, ppMetric);
 
             String colorAxisLabel = settings.getColorValue().getSuffix(units, ppMetric);
