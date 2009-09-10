@@ -20,9 +20,9 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.47 2009/08/28 15:02:21 khuck Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.48 2009/09/10 00:25:03 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.47 $
+ * @version $Revision: 1.48 $
  */
 public abstract class DataSource {
 
@@ -385,6 +385,13 @@ public abstract class DataSource {
             }
         }
 
+        Metric metric = new Metric();
+        metric.setName(metricName);
+        addMetric(metric);
+        return metric;
+    }
+
+    public Metric addMetricNoCheck(String metricName) {
         Metric metric = new Metric();
         metric.setName(metricName);
         addMetric(metric);
