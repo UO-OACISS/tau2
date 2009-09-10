@@ -64,7 +64,7 @@ import java.util.zip.*;
  * This software has been placed into the public domain.
  * </pre>
  *
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * @author Timothy Gerard Endres, <time@gjt.org>
  * @see TarArchive
  */
@@ -295,9 +295,9 @@ public class Tar extends Object implements TarProgressDisplay {
             File destDir = new File(userDir);
             if (!destDir.exists()) {
                 if (!destDir.mkdirs()) {
-                    destDir = null;
                     Throwable ex = new Throwable("ERROR, mkdirs() on '" + destDir.getPath() + "' returned false.");
                     ex.printStackTrace(System.err);
+                    destDir = null;
                 }
             }
 
@@ -445,7 +445,7 @@ public class Tar extends Object implements TarProgressDisplay {
      */
 
     private void version() {
-        System.err.println("Release 2.4 - $Revision: 1.1 $ $Name:  $");
+        System.err.println("Release 2.4 - $Revision: 1.2 $ $Name:  $");
     }
 
     /**

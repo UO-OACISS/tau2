@@ -218,7 +218,7 @@ public class TreeTableExample {
 
         frame.getContentPane().add(new JScrollPane(treeTable));
         frame.pack();
-        frame.show();
+        frame.setVisible(true);
     }
 
 }
