@@ -265,7 +265,7 @@ TauGroup_t RtsLayer::resetProfileGroup(void) {
 
 /////////////////////////////////////////////////////////////////////////
 int RtsLayer::setMyNode(int NodeId, int tid) {
-#if (defined(TRACING_ON) && (TAU_MAX_THREADS != 1))
+#if (TAU_MAX_THREADS != 1)
   int oldid = TheNode();
   int newid = NodeId;
   if ((oldid != -1) && (oldid != newid)) {
@@ -275,9 +275,12 @@ int RtsLayer::setMyNode(int NodeId, int tid) {
        and invokes the SET_NODE with the correct rank. Handshaking between multiple
        levels of instrumentation. */
     
-    TauTraceReinitialize(oldid, newid, tid); 
+    if (TauEnv_get_tracing()) {
+      TauTraceReinitialize(oldid, newid, tid); 
+    }
   } 
 #endif // TRACING WITH THREADS
+
   TheNode() = NodeId;
 
   // At this stage, we should create the trace file because we know the node id
@@ -796,6 +799,6 @@ std::string RtsLayer::GetRTTI(const char *name) {
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.128 $   $Date: 2009/05/14 20:49:58 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.128 2009/05/14 20:49:58 amorris Exp $ 
+ * $Revision: 1.129 $   $Date: 2009/09/11 17:38:54 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.129 2009/09/11 17:38:54 amorris Exp $ 
  ***************************************************************************/
