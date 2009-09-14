@@ -123,7 +123,12 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
   gettimeofday (&tp, 0);
   x_uint64 timestamp = ((double)tp.tv_sec * 1e6 + tp.tv_usec);
 
+
+  Profiler *profiler = TauInternal_CurrentProfiler(tid);
+  double startTime = profiler->StartTime[0]; // gtod must be counter 0
+  x_uint64 timeSinceEvent = (x_uint64)timestamp - startTime;
   fprintf (ebsTrace, "%lld | ", timestamp);
+  fprintf (ebsTrace, "%lld | ", timeSinceEvent);
   fprintf (ebsTrace, "%x | ", pc);
 
   TauMetrics_getMetrics(tid, values);
@@ -159,11 +164,8 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
      depth--;
   }
   // fprintf (ebsTrace, "");
-
-
-
- fprintf (ebsTrace, "\n");
-
+  
+  fprintf (ebsTrace, "\n");
 }
 
 
@@ -192,11 +194,10 @@ int Tau_sampling_init() {
   node = 0;
   sprintf(filename,"%s/ebstrace.%d.%d.%d", profiledir, node, RtsLayer::myContext(), tid);
 
-
   ebsTrace = fopen(filename, "w");
   
   fprintf (ebsTrace, "# Format:\n");
-  fprintf (ebsTrace, "# <timestamp> : <pc> : <metric 1> ... <metric N> : <tau callpath>\n");
+  fprintf (ebsTrace, "# <timestamp> | <delta> | <pc> | <metric 1> ... <metric N> | <tau callpath>\n");
   fprintf (ebsTrace, "# Metrics:");
   for (int i=0; i<Tau_Global_numCounters; i++) {
     const char *name = TauMetrics_getMetricName(i);
@@ -215,8 +216,6 @@ int Tau_sampling_init() {
   memset(&act, 0, sizeof(struct sigaction));
   act.sa_sigaction = Tau_sampling_handler;
   act.sa_flags     = SA_SIGINFO;
-
-
 
   ret = sigaction(SIGALRM, &act, NULL);
 
@@ -258,15 +257,11 @@ int Tau_sampling_finalize() {
   fprintf (def, "# Format:\n");
   fprintf (def, "# <id> | <name>\n");
 
-
   for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
     FunctionInfo *fi = *it;
-    
     fprintf (def,"%d | %s %s\n", fi->GetFunctionId(), fi->GetName(), fi->GetType());
-
   }
   fclose(def);
-
 }
 
 
