@@ -81,10 +81,57 @@ void metric_read_ktau(int tid, int idx, double values[]);
 
 
 
+/**
+ * Remove _'s, convert case, and compare
+ * This function also changes 'one' to match 'two' if they fuzzy match correctly
+ * Returns 1 if they match, 0 otherwise
+ */
+static int compareMetricString(char *one, const char *two) {
+  char m1[512], m2[512];
+  char *p;
+  int i;
+
+  strcpy(m1, one);
+  strcpy(m2, two);
+  while ((p = strchr(m1,'_')) != NULL) {
+    while (*p) {
+      *p = *(p+1);
+      p++;
+    }
+  }
+  while ((p = strchr(m2,'_')) != NULL) {
+    while (*p) {
+      *p = *(p+1);
+      p++;
+    }
+  }
+  for (i = 0; m1[i]; i++) {
+    m1[i] = toupper(m1[i]);
+  }
+  for (i = 0; m2[i]; i++) {
+    m2[i] = toupper(m2[i]);
+  }
+
+  if (strcmp(m1, m2) == 0) {
+    /* overwrite the matching name */
+    strcpy (one, two);
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+
 static void metricv_add(const char* name) {
+  int i;
   if (nmetrics >= TAU_MAX_METRICS) {
     fprintf (stderr, "Number of counters exceeds TAU_MAX_METRICS\n");
   } else {
+    for (i=0;i<nmetrics;i++) {
+      if (compareMetricString(metricv[i],name)) {
+	return;
+      }
+    }
     metricv[nmetrics] = strdup(name);
     nmetrics++;
   }
@@ -175,44 +222,6 @@ static void read_env_vars() {
   }
 }
 
-/**
- * Remove _'s, convert case, and compare
- * This function also changes 'one' to match 'two' if they fuzzy match correctly
- */
-static int compareMetricString(char *one, const char *two) {
-  char m1[512], m2[512];
-  char *p;
-  int i;
-
-  strcpy(m1, one);
-  strcpy(m2, two);
-  while ((p = strchr(m1,'_')) != NULL) {
-    while (*p) {
-      *p = *(p+1);
-      p++;
-    }
-  }
-  while ((p = strchr(m2,'_')) != NULL) {
-    while (*p) {
-      *p = *(p+1);
-      p++;
-    }
-  }
-  for (i = 0; m1[i]; i++) {
-    m1[i] = toupper(m1[i]);
-  }
-  for (i = 0; m2[i]; i++) {
-    m2[i] = toupper(m2[i]);
-  }
-
-  if (strcmp(m1, m2) == 0) {
-    /* overwrite the matching name */
-    strcpy (one, two);
-    return 1;
-  } else {
-    return 0;
-  }
-}
 
 
 
@@ -414,6 +423,11 @@ void TauMetrics_getMetrics(int tid, double values[]) {
 
 int TauMetrics_init() {
 
+
+#ifdef TAU_EXP_SAMPLING
+  metricv_add("TIME");
+#endif
+
   read_env_vars();
 
   traceMetric=0;
@@ -422,15 +436,10 @@ int TauMetrics_init() {
 
   initialize_functionArray();
 
-
   Tau_Global_numCounters = nmetrics;
-
-
-
 
   /* Create atomic events for tracing */
   if (TauEnv_get_tracing()) {
-
     traceCounterEvents = new TauUserEvent * [nmetrics] ; 
     /* We obtain the timestamp from COUNTER1, so we only need to trigger 
        COUNTER2-N or i=1 through no. of active functions not through 0 */
