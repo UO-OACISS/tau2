@@ -1,5 +1,9 @@
 #!/usr/bin/env perl
 
+########################################################################
+# This script reads an EBS trace and converts the PC's and TAU callpaths
+########################################################################
+
 # Trim leading and trailing whitespace from a string
 sub trim($) {
     my $string = shift;
@@ -35,7 +39,8 @@ while ($line = <TRACE>) {
 	}
 	next;
     }
-    ($timestamp,$pc,$metrics,$callpath) = split('\|',$line);
+    # parse a line
+    ($timestamp,$delta,$pc,$metrics,$callpath) = split('\|',$line);
     $timestamp = trim($timestamp);
     $pc = trim($pc);
     $metrics = trim($metrics);
@@ -58,5 +63,5 @@ while ($line = <TRACE>) {
     $newpc = $out;
 
     # Output the processed data
-    print "$timestamp | $newpc | $metrics | $newCallpath\n";
+    print "$timestamp | $delta | $newpc | $metrics | $newCallpath\n";
 }
