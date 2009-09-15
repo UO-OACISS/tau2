@@ -3,23 +3,13 @@ package edu.uoregon.tau.perfexplorer.client;
 
 import jargs.gnu.CmdLineParser;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.ListIterator;
-import java.util.Vector;
+import java.util.*;
 
 import javax.swing.JFrame;
 import javax.swing.ToolTipManager;
 
-import edu.uoregon.tau.perfdmf.Application;
-import edu.uoregon.tau.perfdmf.Experiment;
-import edu.uoregon.tau.perfdmf.Metric;
-import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfexplorer.common.AnalysisType;
-import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
-import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
-import edu.uoregon.tau.perfexplorer.common.RMIView;
-import edu.uoregon.tau.perfexplorer.common.TransformationType;
+import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfexplorer.common.*;
 
 public class TestHarness {
 	private static String USAGE = "Usage: TestHarness [{-h,--help}] {-c,--configfile}=<config_file> [{-s,--standalone}] [{-t,--test}=<test_type>]\n  where test_type = charts, cluster, correlation, viz, script or all ";
@@ -224,9 +214,9 @@ public class TestHarness {
 		Metric metric = null;
 		System.out.println("******** Metrics *********");
 		@SuppressWarnings("unchecked")
-		Vector<Metric> metrics = trial.getMetrics();
+		List<Metric> metrics = trial.getMetrics();
 		for (int i = 0 ; i < metrics.size() ; i++) {
-			metric = metrics.elementAt(i);
+			metric = metrics.get(i);
 			System.out.println("\t" + metric.getName());
 			if (metric.getName().equalsIgnoreCase(name)) {
 				break;

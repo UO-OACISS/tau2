@@ -1,19 +1,11 @@
 package edu.uoregon.tau.perfexplorer.client;
 
+import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 
-import edu.uoregon.tau.perfdmf.Application;
-import edu.uoregon.tau.perfdmf.Experiment;
-import edu.uoregon.tau.perfdmf.Metric;
-import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfdmf.UtilFncs;
-import edu.uoregon.tau.perfexplorer.common.AnalysisType;
-import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
-import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
-import edu.uoregon.tau.perfexplorer.common.RMIVarianceData;
-import edu.uoregon.tau.perfexplorer.common.TransformationType;
+import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfexplorer.common.*;
 
 /**
  * The facade interface to the application for scripting purpose. This facade
@@ -158,9 +150,9 @@ public class ScriptFacade {
         if (trial == null)
             throw new NullPointerException("Trial selection is null.  Please select a Trial before setting the Metric.");
         boolean found = false;
-        Vector<Metric> metrics = trial.getMetrics();
+        List<Metric> metrics = trial.getMetrics();
         for (int i = 0, size = metrics.size(); i < size && !found ; i++) {
-            Metric metric = metrics.elementAt(i);
+            Metric metric = metrics.get(i);
             if (metric.getName().equals(name)) {
                 model.setCurrentSelection(metric);
                 found = true;

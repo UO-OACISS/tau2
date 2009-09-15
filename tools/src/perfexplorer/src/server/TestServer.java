@@ -1,13 +1,10 @@
 package edu.uoregon.tau.perfexplorer.server;
 
 
+import java.util.List;
 import java.util.ListIterator;
-import java.util.Vector;
 
-import edu.uoregon.tau.perfdmf.Application;
-import edu.uoregon.tau.perfdmf.Experiment;
-import edu.uoregon.tau.perfdmf.Metric;
-import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
 import edu.uoregon.tau.perfexplorer.common.TransformationType;
@@ -15,7 +12,7 @@ import edu.uoregon.tau.perfexplorer.common.TransformationType;
 /**
  * This class exists as a unit test of the PerfExplorerServer class.
  *
- * <P>CVS $Id: TestServer.java,v 1.14 2009/08/14 16:59:06 khuck Exp $</P>
+ * <P>CVS $Id: TestServer.java,v 1.15 2009/09/15 16:49:35 amorris Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -87,9 +84,9 @@ public class TestServer {
                 break;
             }
         }
-        Vector<Metric> metrics = trial.getMetrics();
+        List<Metric> metrics = trial.getMetrics();
         for (int i = 0 ; i < metrics.size() ; i++) {
-            Metric metric = metrics.elementAt(i);
+            Metric metric = metrics.get(i);
             if (metric.getID() == 1272) {
                 objects[3] = metric;
                 break;

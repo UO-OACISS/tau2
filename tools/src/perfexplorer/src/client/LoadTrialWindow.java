@@ -8,15 +8,16 @@ import java.net.URL;
 
 import javax.swing.*;
 
+import edu.uoregon.tau.common.FileFilter;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfdmf.*;
 
 /**
  * A window that lets the user select a profile format and launch a JFileChooser
  * 
- * <P>CVS $Id: LoadTrialWindow.java,v 1.2 2009/08/19 13:59:42 khuck Exp $</P>
+ * <P>CVS $Id: LoadTrialWindow.java,v 1.3 2009/09/15 16:49:35 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class LoadTrialWindow extends JFrame implements ActionListener {
 
