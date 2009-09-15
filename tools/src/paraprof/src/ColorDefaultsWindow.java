@@ -39,9 +39,6 @@ public class ColorDefaultsWindow extends JFrame implements ActionListener, Mouse
         setupMenus();
         
 
-        //####################################
-        //Create and add the components.
-        //####################################
         //Setting up the layout system for the main window.
         Container contentPane = getContentPane();
         contentPane.setLayout(new GridBagLayout());

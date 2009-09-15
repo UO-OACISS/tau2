@@ -173,10 +173,11 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     public String getIDString() {
-        if (experiment != null)
+        if (experiment != null) {
             return (experiment.getIDString()) + ":" + (trial.getID());
-        else
+        } else {
             return ":" + (trial.getID());
+        }
     }
 
     public ColorChooser getColorChooser() {
@@ -468,7 +469,9 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
     private void assignDefaultMetric() {
         // set the default metric to be the first one
-        setDefaultMetric((Metric) getMetrics().get(0));
+        if (getMetrics() != null && getMetrics().size() > 0) {
+            setDefaultMetric((Metric) getMetrics().get(0));
+        }
 
         // set the default metric to the first time based metric (if it exists)
         for (Iterator it = getMetrics().iterator(); it.hasNext();) {

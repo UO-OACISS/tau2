@@ -34,9 +34,6 @@ public class DBConfiguration extends JFrame implements ActionListener {
         } else
             configFileField = new JTextField(configFile, 30);
 
-        //####################################
-        //Window Stuff.
-        //####################################
         int windowWidth = 400;
         int windowHeight = 200;
 
@@ -58,10 +55,7 @@ public class DBConfiguration extends JFrame implements ActionListener {
         setTitle("TAU: ParaProf: Database Configuration");
         ParaProfUtils.setFrameIcon(this);
 
-        //####################################
-        //End -Window Stuff.
-        //####################################
-
+        
         //Add some window listener code
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
@@ -69,9 +63,6 @@ public class DBConfiguration extends JFrame implements ActionListener {
             }
         });
 
-        //####################################
-        //Create and add the components.
-        //####################################
         //Setting up the layout system for the main window.
         Container contentPane = getContentPane();
         GridBagLayout gbl = new GridBagLayout();
