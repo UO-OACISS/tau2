@@ -399,6 +399,7 @@ epiloglibdir=no
 epilogbindir=bin
 epilogincdir=
 vampirtrace=no
+vampirtraceshow=no
 forceshared=no
 opari_region=no
 opari_construct=no
@@ -2810,7 +2811,60 @@ if [ $epilog = yes -a $epiloglib = no -a $epilogdir != no ] ; then
     fi
 fi
 
+
 if [ $vampirtrace = yes ] ; then
+    # use vtcc/vtf90 -vt:show to get -I's and -L/-l's
+
+    # prefer vtf90 over vtcc
+    vtshow="no"
+    if [ -f "$vampirtracedir/bin/vtcc" ] ; then
+	vtshow="$vampirtracedir/bin/vtcc"
+    fi
+    if [ -f "$vampirtracedir/bin/vtf90" ] ; then
+	vtshow="$vampirtracedir/bin/vtf90"
+    fi
+
+    if [ $vtshow != "no" ] ; then
+
+	# test VampirTrace version
+	$echo "Checking version of VampirTrace... ${nnl}"
+	version=`$vampirtracedir/bin/vtcc -vt:version 2>&1`
+	echo "$version"
+	eval major=${version/./;minor=}
+	minor=`echo $minor | sed 's/\([0-9]*\).*/\1/g'`
+        #echo Major: $major, minor: $minor
+
+	if [ $major -ge 5 -a $minor -ge 7 ] ; then
+	    fixmakeargs="$fixmakeargs VAMPIRTRACE_5_7_API" 
+	fi
+
+	elements=`$vampirtracedir/bin/vtf90 -vt:mpi -vt:show`
+
+	vampirtraceincs=""
+	vampirtracelibs=""
+	
+	for arg in $elements ; do 
+	    case $arg in
+		-I*)
+		    vampirtraceincs="$vampirtraceincs#$arg"
+		    ;;
+		-L*)
+		    vampirtracelibs="$vampirtracelibs#$arg"
+		    ;;
+		-l*)
+		    vampirtracelibs="$vampirtracelibs#$arg"
+		    ;;
+	    esac
+	done
+
+# 	echo "inc=$vampirtraceinc"
+# 	echo "lib=$vampirtracelib"
+
+	fixmakeargs="$fixmakeargs vampirtraceincs=$vampirtraceincs"
+	fixmakeargs="$fixmakeargs vampirtracelibs=$vampirtracelibs"
+	vampirtraceshow=yes
+    fi
+
     if [ -f $vampirtracedir/lib/libvt.a ] ; then
 	vampirtracelibdir=lib
     else
@@ -3836,35 +3890,38 @@ if [ $mpi = yes ] ; then
   fi 
 
   # VampirTrace
-  if [ $vampirtrace = yes -a $mpi = yes ] ; then
-
-      vtfortranwrapper=""
-      if [ -f $vampirtracedir/$vampirtracelibdir/libvt.fmpi.a ] ; then
-	  vtfortranwrapper="-lvt.fmpi"
-      fi
-
-      if [ -f $vampirtracedir/$vampirtracelibdir/libvt-fmpi.a ] ; then
-	  vtfortranwrapper="-lvt-fmpi"
-      fi
-      
-      vtmpilib="-lvt.mpi"
-      if [ -f "$vampirtracedir/$vampirtracelibdir/libvt-mpi.a" ] ; then
-	  vtmpilib="-lvt-mpi"
-      fi
-      
-      vtompilib="-lvt.ompi"
-      if [ -f "$vampirtracedir/$vampirtracelibdir/libvt-ompi.a" ] ; then
-	  vtompilib="-lvt-ompi"
-      fi
-      
-      wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir $vtfortranwrapper $vtmpilib -lotf -lz"
-      if [ $openmp = yes ] ; then
-# should we have a -lvt.fmpi here? 
-	  fixmakeargs="useropt=$useropt extrashlibopts=$extrashlibopts $fixmakeargs"
-	  if [ $sicortex = yes ] ; then
-	      wrapperlib="$sicortexlink"
-	  else
-	    wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir -Wl,-whole-archive $vtfortranwrapper $vtompilib -lotf -Wl,-no-whole-archive -lz"
+  if [ $vampirtrace = yes ] ; then
+      if [ $vampirtraceshow = yes ] ; then
+	  wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) \$(VAMPIRTRACELIBS)"
+      else
+	  vtfortranwrapper=""
+	  if [ -f $vampirtracedir/$vampirtracelibdir/libvt.fmpi.a ] ; then
+	      vtfortranwrapper="-lvt.fmpi"
+	  fi
+	  
+	  if [ -f $vampirtracedir/$vampirtracelibdir/libvt-fmpi.a ] ; then
+	      vtfortranwrapper="-lvt-fmpi"
+	  fi
+	  
+	  vtmpilib="-lvt.mpi"
+	  if [ -f "$vampirtracedir/$vampirtracelibdir/libvt-mpi.a" ] ; then
+	      vtmpilib="-lvt-mpi"
+	  fi
+	  
+	  vtompilib="-lvt.ompi"
+	  if [ -f "$vampirtracedir/$vampirtracelibdir/libvt-ompi.a" ] ; then
+	      vtompilib="-lvt-ompi"
+	  fi
+	  
+	  wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir $vtfortranwrapper $vtmpilib -lotf -lz"
+	  if [ $openmp = yes ] ; then
+              # should we have a -lvt.fmpi here? 
+	      fixmakeargs="useropt=$useropt extrashlibopts=$extrashlibopts $fixmakeargs"
+	      if [ $sicortex = yes ] ; then
+		  wrapperlib="$sicortexlink"
+	      else
+		  wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) -L$vampirtracedir/$vampirtracelibdir -Wl,-whole-archive $vtfortranwrapper $vtompilib -lotf -Wl,-no-whole-archive -lz"
+	      fi
 	  fi
       fi
   fi 
@@ -4085,7 +4142,7 @@ if [ $mpi = yes ] ; then
       mpiflibargs="$mpiflibargs -llam"
       if [ -f /usr/lib/libutil.a ] 
       then
-# This is a Linux box, add -lutil to the mpi libraries
+        # This is a Linux box, add -lutil to the mpi libraries
         echo "Adding -lutil to link command line for LAM MPI"
         mpilibargs="$mpilibargs -lutil -ldl -lpthread"
         mpiflibargs="$mpiflibargs -lutil -ldl -lpthread"
@@ -4147,8 +4204,7 @@ if [ $mpi = yes ] ; then
   fi # If -d mpilib
   fi 
 else # if mpilib is specified
-    if [ $openmp = yes ] 
-    then
+    if [ $openmp = yes ] ; then
 	if [ $epilog = yes ] ; then
 	    wrapperlib="-L$epiloglibdir#-lelg.omp#-ldl"
 	    if [ -f $epiloglibdir/libcubew3.a ] ; then
@@ -4160,15 +4216,13 @@ else # if mpilib is specified
 	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
 	fi
     else
-	if [ $epilog = yes ]
-	then
+	if [ $epilog = yes ] ; then
 	    wrapperlib="-L$epiloglibdir#-lelg.ser#-ldl"
 	    if [ -f $epiloglibdir/libcubew3.a ] ; then
 		wrapperlib="$wrapperlib#-lcubew3"
 	    fi
 	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
-	elif [ $vampirtrace = yes ]
-	then
+	elif [ $vampirtrace = yes ] ; then
 	    wrapperlib="-L$vampirtracedir/$vampirtracelibdir#-lvt#-lotf#-lz#-Wl,-Bstatic#-lbfd#-liberty#-Wl,-Bdynamic#-ldl"
 	    fixmakeargs="extrashlibopts=$wrapperlib $fixmakeargs"
 	fi

@@ -127,6 +127,16 @@ case $1 in
 	echo "s,^VAMPIRTRACEDIR=.*$,VAMPIRTRACEDIR=$vampirtracedir,g" >> $sedout
 	;;
 
+     vampirtraceincs=*)
+	vampirtraceincs=`echo $1 | sed -e 's/^vampirtraceincs=//' -e 's/#/ /g'`
+	echo "s,^VAMPIRTRACEINCS=.*$,VAMPIRTRACEINCS=$vampirtraceincs,g" >> $sedout
+	;;
+
+     vampirtracelibs=*)
+	vampirtracelibs=`echo $1 | sed -e 's/^vampirtracelibs=//' -e 's/#/ /g'`
+	echo "s,^VAMPIRTRACELIBS=.*$,VAMPIRTRACELIBS=$vampirtracelibs,g" >> $sedout
+	;;
+
      sicortexlink=*)
         sicortexlink=`echo $1 | sed -e 's/^sicortexlink=//' -e 's/#/ /g'`
 	echo "s@^SICORTEXLINK=.*\$@SICORTEXLINK=$sicortexlink@g" >> $sedout
@@ -979,6 +989,10 @@ case $1 in
 	;;
      VAMPIRTRACE)
 	echo "NOTE: Using VAMPIRTRACE Tracing Package ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     VAMPIRTRACE_5_7_API)
+	echo "NOTE: Using VAMPIRTRACE 5.7 API ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      VAMPIRTRACEINTS)
