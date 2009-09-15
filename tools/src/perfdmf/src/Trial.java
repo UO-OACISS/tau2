@@ -43,7 +43,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * number of threads per context and the metrics collected during the run.
  * 
  * <P>
- * CVS $Id: Trial.java,v 1.35 2009/09/10 00:13:18 amorris Exp $
+ * CVS $Id: Trial.java,v 1.36 2009/09/15 16:48:11 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
@@ -68,10 +68,10 @@ public class Trial implements Serializable, Comparable {
     private int experimentID;
     private int applicationID;
     private String name;
-    private Vector metrics;
+    private List metrics;
     private String fields[];
 
-    protected DataSource dataSource = null;
+    protected DataSource dataSource;
 
     private Database database;
     private Map metaData = new TreeMap();
@@ -358,34 +358,29 @@ public class Trial implements Serializable, Comparable {
     }
 
     /**
+     * Adds a metric to this trial. <i>NOTE: This method is used by the
+     * DataSession object to initialize the object. Not currently intended for
+     * use by any other code. </i>
+     * 
+     * @param metric
+     *            Adds a metric to this trial
+     */
+    public void addMetric(Metric metric) {
+        if (metrics == null) {
+            metrics = new ArrayList();
+        }
+        metrics.add(metric);
+    }
+
+    /**
      * Gets the metrics collected in this trial.
      * 
      * @return metric vector
      */
     public List getMetrics() {
-        return dataSource.getMetrics();
-        //return this.metrics;
+        return this.metrics;
     }
 
-    /**
-     * Get the metric name corresponding to the given id. The DataSession object
-     * will maintain a reference to the Vector of metric values. To clear this
-     * reference, call setMetric(String) with null.
-     * 
-     * @param metricID
-     *            metric id.
-     * 
-     * @return The metric name as a String.
-     */
-    public String getMetricName(int metricID) {
-
-        //Try getting the metric name.
-        if ((this.metrics != null) && (metricID < this.metrics.size())) {
-            return ((Metric) getMetrics().get(metricID)).getName();
-        } else {
-            return null;
-        }
-    }
 
     /**
      * Sets the unique ID associated with this trial. <i>NOTE: This method is
@@ -445,19 +440,6 @@ public class Trial implements Serializable, Comparable {
         this.dataSource = dataSource;
     }
 
-    /**
-     * Adds a metric to this trial. <i>NOTE: This method is used by the
-     * DataSession object to initialize the object. Not currently intended for
-     * use by any other code. </i>
-     * 
-     * @param metric
-     *            Adds a metric to this trial
-     */
-    public void addMetric(Metric metric) {
-        if (this.metrics == null)
-            this.metrics = new Vector();
-        this.metrics.addElement(metric);
-    }
 
     // gets the metric data for the trial
     private void getTrialMetrics(DB db) {
