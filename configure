@@ -2838,8 +2838,10 @@ if [ $vampirtrace = yes ] ; then
 	    fixmakeargs="$fixmakeargs VAMPIRTRACE_5_7_API" 
 	fi
 
-	elements=`$vampirtracedir/bin/vtf90 -vt:mpi -vt:show`
-
+	elements=`$vampirtracedir/bin/vtf90 -vt:mpi -vt:show 2>&1`
+	if [[ "$elements" == vtf90:\ unknown\ option* ]] ; then
+	    elements=`$vampirtracedir/bin/vtf90 -vt:mpi -vt:showme`
+	fi
 	vampirtraceincs=""
 	vampirtracelibs=""
 	
