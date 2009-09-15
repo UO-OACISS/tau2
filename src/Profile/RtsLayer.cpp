@@ -302,10 +302,11 @@ int RtsLayer::setMyContext(int ContextId) {
 bool RtsLayer::isEnabled(TauGroup_t ProfileGroup) {
 TauGroup_t res =  ProfileGroup & TheProfileMask() ;
 
-  if (res > 0)
-    return true;
-  else
-    return false;
+ if (res > 0) {
+   return true;
+ } else {
+   return false;
+ }
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -799,6 +800,6 @@ std::string RtsLayer::GetRTTI(const char *name) {
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.129 $   $Date: 2009/09/11 17:38:54 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.129 2009/09/11 17:38:54 amorris Exp $ 
+ * $Revision: 1.130 $   $Date: 2009/09/15 01:14:43 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.130 2009/09/15 01:14:43 amorris Exp $ 
  ***************************************************************************/

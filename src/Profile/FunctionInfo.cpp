@@ -204,7 +204,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 #ifdef TAU_VAMPIRTRACE
   static int tau_vt_init=TauInitVampirTrace();
   string tau_vt_name(string(Name)+" "+string(Type));
-  FunctionId = vt_def_region(tau_vt_name.c_str(), VT_NO_ID, VT_NO_LNO,
+  FunctionId = TAU_VT_DEF_REGION(tau_vt_name.c_str(), VT_NO_ID, VT_NO_LNO,
 			     VT_NO_LNO, GroupName, VT_FUNCTION);
   DEBUGPROFMSG("vt_def_region: "<<tau_vt_name<<": returns "<<FunctionId<<endl;);
 #else /* TAU_VAMPIRTRACE */
@@ -462,6 +462,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.80 $   $Date: 2009/07/31 16:52:31 $
- * VERSION_ID: $Id: FunctionInfo.cpp,v 1.80 2009/07/31 16:52:31 amorris Exp $ 
+ * $Revision: 1.81 $   $Date: 2009/09/15 01:14:43 $
+ * VERSION_ID: $Id: FunctionInfo.cpp,v 1.81 2009/09/15 01:14:43 amorris Exp $ 
  ***************************************************************************/

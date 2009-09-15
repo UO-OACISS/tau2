@@ -399,6 +399,11 @@ extern "C" {
       return;
 #endif
 
+#ifdef TAU_VAMPIRTRACE
+      TAU_VERBOSE("[%d] TAU: VampirTrace active! (TAU measurement disabled)\n", getpid());
+      return;
+#endif
+
       TauConf_read();
 
       TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");

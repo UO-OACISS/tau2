@@ -93,6 +93,13 @@ extern "C" int InitializeTAU() {
 
 #ifdef TAU_EPILOG
   /* no more initialization necessary if using epilog/scalasca */
+  initialized = true;
+  return 0;
+#endif
+
+#ifdef TAU_VAMPIRTRACE
+  /* no more initialization necessary if using vampirtrace */
+  initialized = true;
   return 0;
 #endif
   

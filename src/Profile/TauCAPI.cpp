@@ -55,6 +55,11 @@ void esd_exit (elg_ui4 rid);
 #endif /* TAU_EPILOG */
 
 
+#ifdef TAU_VAMPIRTRACE
+#include "Profile/TauVampirTrace.h"
+#endif /* TAU_VAMPIRTRACE */
+
+
 extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup_t group, const char *gr_name) {
   FunctionInfo *f;
 
@@ -122,6 +127,12 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid ) {
 
 #ifdef TAU_EPILOG
   esd_enter(fi->GetFunctionId());
+  return;
+#endif
+
+#ifdef TAU_VAMPIRTRACE 
+  x_uint64 TimeStamp = vt_pform_wtime();
+  vt_enter((uint64_t *) &TimeStamp, fi->GetFunctionId());
   return;
 #endif
 
@@ -195,6 +206,13 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   return 0;
 #endif
 
+#ifdef TAU_VAMPIRTRACE 
+  x_uint64 TimeStamp = vt_pform_wtime();
+  vt_exit((uint64_t *)&TimeStamp);
+  return 0;
+#endif
+
+
   if (Tau_global_stackpos[tid] < 0) { return 0; }
 
   profiler = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
@@ -212,8 +230,6 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
     return 0; 
   }
 #endif /* TAU_DEPTH_LIMIT */
-
-
 
 
   profiler->Stop(tid);
@@ -1275,7 +1291,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.128 $   $Date: 2009/08/27 22:56:35 $
- * VERSION: $Id: TauCAPI.cpp,v 1.128 2009/08/27 22:56:35 amorris Exp $
+ * $Revision: 1.129 $   $Date: 2009/09/15 01:14:43 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.129 2009/09/15 01:14:43 amorris Exp $
  ***************************************************************************/
 

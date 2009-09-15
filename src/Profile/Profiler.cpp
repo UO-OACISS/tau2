@@ -1180,8 +1180,7 @@ static int writeProfile(FILE *fp, char *metricName, int tid, int metric,
 int TauProfiler_StoreData(int tid) {
 
   finalizeTrace(tid);
-
-
+  
 #ifdef TAU_EXP_SAMPLING
   Tau_sampling_finalize();
 #endif /* TAU_EXP_SAMPLING */
@@ -1380,6 +1379,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.248 $   $Date: 2009/08/31 20:16:20 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.248 2009/08/31 20:16:20 amorris Exp $ 
+ * $Revision: 1.249 $   $Date: 2009/09/15 01:14:43 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.249 2009/09/15 01:14:43 amorris Exp $ 
  ***************************************************************************/
