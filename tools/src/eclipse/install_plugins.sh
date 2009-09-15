@@ -2,7 +2,7 @@
 if [ $# != 1 ] ; then
   echo "Usage: $0 <path/to/eclipse/root>"
   echo ""
-  echo "Please enter the location of your eclipse installation."
+  echo "Please enter the location of your Eclipse 3.5.0+ installation."
   echo "Note that you must have the CDT and PTP plugins installed"
   echo "for the TAU plugins to function properly."
   exit 1
@@ -29,8 +29,8 @@ echo "Installing to $1/plugins"
 echo "..."
 
 tar -zxf ./plugins.tgz
-cp -r ./tmpplugins/* $PLUG_DIR
-rm -r ./tmpplugins
+cp -r ./plugins/* $PLUG_DIR
+rm -r ./plugins
 #cp -r ./plugins/org.eclipse.ptp.perf.tau.jars_1.0.0/ $PLUG_DIR
 
 for JAR_DIR in $PLUG_DIR/org.eclipse.ptp.perf.tau.jars_*
