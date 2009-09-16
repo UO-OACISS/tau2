@@ -21,6 +21,11 @@
 #include <map>
 #include <vector>
 #include <stack>
+
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+
 using namespace std;
 int debugPrint = 0;
 bool multiThreaded = false;
@@ -700,9 +705,9 @@ int main(int argc, char **argv)
 
 
 /***************************************************************************
- * $RCSfile: tau2vtf.cpp,v $   $Author: wspear $
- * $Revision: 1.17 $   $Date: 2006/07/11 21:44:29 $
- * VERSION_ID: $Id: tau2vtf.cpp,v 1.17 2006/07/11 21:44:29 wspear Exp $
+ * $RCSfile: tau2vtf.cpp,v $   $Author: amorris $
+ * $Revision: 1.18 $   $Date: 2009/09/16 23:48:50 $
+ * VERSION_ID: $Id: tau2vtf.cpp,v 1.18 2009/09/16 23:48:50 amorris Exp $
  ***************************************************************************/
 
 
