@@ -15,7 +15,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIChartData;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper class around the RawDataInterface class.
  *
- * <P>CVS $Id: CorrelationPlotDataset.java,v 1.15 2009/02/25 19:51:45 wspear Exp $</P>
+ * <P>CVS $Id: CorrelationPlotDataset.java,v 1.16 2009/09/16 09:28:10 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -31,6 +31,7 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 	private int x = 0;
 	private int y = 1;
 	private boolean main = false;
+	private int maxLabels = 0;
 	
 	/**
 	 * Constructor.
@@ -102,9 +103,17 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 		// get the row
 		List<double[]> row = data.getRowData(arg0);
 		// get the mth column from that row
-		double[] values = row.get(arg1);
-		//return new Double(java.lang.Math.log(values[x])/java.lang.Math.log(2));
-		return new Double(values[x]);
+		System.out.println(arg0);
+		try {
+			double[] values = row.get(arg1);
+			this.maxLabels = values.length;
+			//return new Double(java.lang.Math.log(values[x])/java.lang.Math.log(2));
+			return new Double(values[x]);
+		} catch (Exception e) {
+			// we went past the end of the array.  Bummer.  Something is bogus about
+			// the data.  Therefore, create some dummy data so we don't crap out.
+			return new Double(0.0);			
+		}
 	}
 
 	/* (non-Javadoc)
@@ -117,14 +126,20 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 		// get the row
 		List<double[]> row = data.getRowData(arg0);
 		// get the mth column from that row
-		double[] values = row.get(arg1);
-		//if (constantProblem) {
-			//double[] values2 = (double[])row.get(0);
-			//return new Double(values[y]*(values[x]/values2[x]));
-		//}else {
-			//return new Double(java.lang.Math.log(values[y])/java.lang.Math.log(2));
-			return new Double(values[y]);
-		//}
+		try {
+			double[] values = row.get(arg1);
+			//if (constantProblem) {
+				//double[] values2 = (double[])row.get(0);
+				//return new Double(values[y]*(values[x]/values2[x]));
+			//}else {
+				//return new Double(java.lang.Math.log(values[y])/java.lang.Math.log(2));
+				return new Double(values[y]);
+			//}
+		} catch (Exception e) {
+			// we went past the end of the array.  Bummer.  Something is bogus about
+			// the data.  Therefore, create some dummy data so we don't crap out.
+			return new Double(0.0);			
+		}
 	}
 
 	public String getCorrelation (int x, int y) {

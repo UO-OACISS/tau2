@@ -10,14 +10,15 @@ import javax.swing.*;
 
 import edu.uoregon.tau.common.FileFilter;
 import edu.uoregon.tau.common.Utility;
+import edu.uoregon.tau.common.FileFilter;
 import edu.uoregon.tau.perfdmf.*;
 
 /**
  * A window that lets the user select a profile format and launch a JFileChooser
  * 
- * <P>CVS $Id: LoadTrialWindow.java,v 1.3 2009/09/15 16:49:35 amorris Exp $</P>
+ * <P>CVS $Id: LoadTrialWindow.java,v 1.4 2009/09/16 09:28:10 khuck Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class LoadTrialWindow extends JFrame implements ActionListener {
 
@@ -187,6 +188,8 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
                 }
                 if (trialTypes.getSelectedIndex() == DataSource.PPK) {
                     jFileChooser.setFileFilter(new FileFilter(FileFilter.PPK));
+                } else if (trialTypes.getSelectedIndex() == DataSource.PARAVER) {
+                    jFileChooser.setFileFilter(new FileFilter(FileFilter.MCR));
                 }
                 jFileChooser.setDialogTitle("Select File(s)");
                 jFileChooser.setApproveButtonText("Select");
