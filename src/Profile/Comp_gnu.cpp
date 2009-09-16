@@ -84,6 +84,7 @@ static HashNode* htab[HASH_MAX];
  */
 
 static void hash_put(unsigned long h, const char* n, const char* fn, int lno) {
+//   printf ("put with %s\n", n);
   long id = h % HASH_MAX;
   HashNode *add = (HashNode*)malloc(sizeof(HashNode));
   add->id = h;
@@ -207,22 +208,25 @@ static void get_symtab_bfd(const char *module, unsigned long offset) {
     }
 #endif /* HAVE_GNU_DEMANGLE */
 
-    if( dem_name ) {
-      hash_put(offset+addr, dem_name, filename, lno);
-    } else {
-      char *n = strdup(syms[i]->name);
-      hash_put(offset+addr, n, filename, lno);
+
+    const char *name = syms[i]->name;
+    if (dem_name) {
+      name = dem_name;
     }
+    hash_put(offset+addr, name, filename, lno);
 
-//     printf ("%s\n", syms[i]->name);
-
-    if (strstr(syms[i]->name, "Tau_Profile_Wrapper")) {
+    if (strstr(name, "Tau_Profile_Wrapper")) {
+      HashNode *hn = hash_get(offset+addr);
+      if (hn) {
+	hn->excluded = 1;
+      }
+    } else if (strcmp(name, "__sti__$E") == 0) {
+      /* exclude intel compiler static initializer */
       HashNode *hn = hash_get(offset+addr);
       if (hn) {
 	hn->excluded = 1;
       }
     }
-
   }
 
   free(syms);
@@ -414,6 +418,8 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 
   if ((hn = hash_get((long)funcptr))) {
     if (hn->excluded) {
+      // finished in this routine, allow entry
+      compInstDisabled[tid] = 0;
       return;
     }
     if (hn->fi == NULL) {
