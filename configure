@@ -2815,6 +2815,7 @@ fi
 if [ $vampirtrace = yes ] ; then
     # use vtcc/vtf90 -vt:show to get -I's and -L/-l's
 
+
     # prefer vtf90 over vtcc
     vtshow="no"
     if [ -f "$vampirtracedir/bin/vtcc" ] ; then
@@ -2838,18 +2839,51 @@ if [ $vampirtrace = yes ] ; then
 	    fixmakeargs="$fixmakeargs VAMPIRTRACE_5_7_API" 
 	fi
 
-	elements=`$vampirtracedir/bin/vtf90 -vt:mpi -vt:show 2>&1`
+
+	vtserchk="seq"
+	vtparchk="mpi"
+	
+	if [ $openmp = yes ] ; then
+	    vtserchk="mt"
+	    vtparchk="hyb"
+	fi
+
+	tmp=`$vtshow -vt:mpi -vt:show 2>&1`
 	if [[ "$elements" == vtf90:\ unknown\ option* ]] ; then
-	    elements=`$vampirtracedir/bin/vtf90 -vt:mpi -vt:showme`
+	    if [ $openmp = yes ] ; then
+		vtserchk="omp"
+	    fi
+	fi
+
+	# first, find MPI libs
+	elements=`$vtshow -vt:$vtparchk -vt:show 2>&1`
+	if [[ "$elements" == vtf90:\ unknown\ option* ]] ; then
+	    elements=`$vtshow -vt:$vtparchk -vt:showme 2>&1`
 	fi
 	vampirtraceincs=""
-	vampirtracelibs=""
-	
+	vampirtracempilibs=""
 	for arg in $elements ; do 
 	    case $arg in
 		-I*)
 		    vampirtraceincs="$vampirtraceincs#$arg"
 		    ;;
+		-L*)
+		    vampirtracempilibs="$vampirtracempilibs#$arg"
+		    ;;
+		-l*)
+		    vampirtracempilibs="$vampirtracempilibs#$arg"
+		    ;;
+	    esac
+	done
+
+	# now, find serial libs
+	elements=`$vtshow -vt:show -vt:$vtserchk 2>&1`
+	if [[ "$elements" == vtf90:\ unknown\ option* ]] ; then
+	    elements=`$vtshow -vt:showme -vt:$vtserchk 2>&1`
+	fi
+	vampirtracelibs=""
+	for arg in $elements ; do 
+	    case $arg in
 		-L*)
 		    vampirtracelibs="$vampirtracelibs#$arg"
 		    ;;
@@ -2859,11 +2893,11 @@ if [ $vampirtrace = yes ] ; then
 	    esac
 	done
 
-# 	echo "inc=$vampirtraceinc"
-# 	echo "lib=$vampirtracelib"
 
 	fixmakeargs="$fixmakeargs vampirtraceincs=$vampirtraceincs"
 	fixmakeargs="$fixmakeargs vampirtracelibs=$vampirtracelibs"
+	fixmakeargs="$fixmakeargs vampirtracempilibs=$vampirtracempilibs"
+
 	vampirtraceshow=yes
     fi
 
@@ -3894,7 +3928,7 @@ if [ $mpi = yes ] ; then
   # VampirTrace
   if [ $vampirtrace = yes ] ; then
       if [ $vampirtraceshow = yes ] ; then
-	  wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) \$(VAMPIRTRACELIBS)"
+	  wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) \$(VAMPIRTRACEMPILIBS)"
       else
 	  vtfortranwrapper=""
 	  if [ -f $vampirtracedir/$vampirtracelibdir/libvt.fmpi.a ] ; then

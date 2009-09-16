@@ -137,6 +137,11 @@ case $1 in
 	echo "s,^VAMPIRTRACELIBS=.*$,VAMPIRTRACELIBS=$vampirtracelibs,g" >> $sedout
 	;;
 
+     vampirtracempilibs=*)
+	vampirtracempilibs=`echo $1 | sed -e 's/^vampirtracempilibs=//' -e 's/#/ /g'`
+	echo "s,^VAMPIRTRACEMPILIBS=.*$,VAMPIRTRACEMPILIBS=$vampirtracempilibs,g" >> $sedout
+	;;
+
      sicortexlink=*)
         sicortexlink=`echo $1 | sed -e 's/^sicortexlink=//' -e 's/#/ /g'`
 	echo "s@^SICORTEXLINK=.*\$@SICORTEXLINK=$sicortexlink@g" >> $sedout
