@@ -201,7 +201,7 @@ tau2otf: 	tau2otf.o
 		$(CXX) $(CFLAGS) tau2otf.o -o tau2otf -lm $(LEXTRA) $(OTFLIBS)
 
 tau2otf.o:	tau2otf.cpp
-		$(CXX) $(CFLAGS)  tau2otf.cpp -c -I$(OTFDIR)/include 
+		$(CXX) $(CFLAGS)  tau2otf.cpp -c -I$(OTFDIR)/include -I$(OTFDIR)/include/vampirtrace
 
 trace2profile/trace2profile:
 		cd trace2profile; $(MAKE) "MAKE=$(MAKE)" "CFLAGS=$(CFLAGS)"
