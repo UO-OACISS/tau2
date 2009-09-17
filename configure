@@ -1276,8 +1276,7 @@ sed -e 's,@TAUROOTDIR@,'$targetdir',' \
  > ${targetdir}/${architecture}/bin/perfexplorer_configure
 chmod a+rx ${targetdir}/${architecture}/bin/perfexplorer_configure
 
-if [ ! -d ${targetdir}/etc ] 
-  then
+if [ ! -d ${targetdir}/etc ] ; then
     mkdir -p ${targetdir}/etc
 fi
 cp ${tauroot}/tools/src/perfexplorer/bin/perfexplorer.skel ${targetdir}/etc/.
@@ -1287,6 +1286,12 @@ cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.oracle ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.postgresql ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.db2 ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/java.policy ${targetdir}/etc/.
+
+if [ ! -d ${targetdir}/tools/src/perfdmf/etc ] ; then
+    mkdir -p ${targetdir}/tools/src/perfdmf/etc
+fi
+cp ${tauroot}/tools/src/perfdmf/etc/dbschema*.txt ${targetdir}/tools/src/perfdmf/etc/. 2>/dev/null
+
   
 BINTARGET=${targetdir}/${architecture}/bin
 JARTARGET=${targetdir}/${architecture}/lib
