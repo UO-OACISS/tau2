@@ -315,21 +315,13 @@ void Profiler::Start(int tid) {
     DEBUGPROFMSG(RtsLayer::myNode()<< " Function is enabled: "<<ThisFunction->GetName()<<endl;);
     TauProfiler_EnableAllEventsOnCallStack(tid, this);
   }
-#else /* TAU_MPITRACE */
-#ifdef TAU_VAMPIRTRACE 
-  TimeStamp = vt_pform_wtime();
-  vt_enter((uint64_t *) &TimeStamp, ThisFunction->GetFunctionId());
-#else /* TAU_VAMPITRACE */
-#ifdef TAU_EPILOG
-  esd_enter(ThisFunction->GetFunctionId());
-#else /* TAU_EPILOG */
+#endif /* TAU_MPITRACE */
+
   if (TauEnv_get_tracing()) {
-    TauTraceEvent(ThisFunction->GetFunctionId(), 1 /* entry */, tid, TimeStamp, 1 /* use supplied timestamp */); 
+    TauTraceEvent(ThisFunction->GetFunctionId(), 1 /* entry */, tid, TimeStamp, 1 /* use supplied timestamp */);
     TauMetrics_triggerAtomicEvents(TimeStamp, StartTime, tid);
   }
-#endif /* TAU_EPILOG */
-#endif /* TAU_VAMPIRTRACE */
-#endif /* TAU_MPITRACE */
+
   /********************************************************************************/
   /*** Tracing ***/
   /********************************************************************************/
@@ -510,27 +502,16 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 
   TimeStamp = (x_uint64) CurrentTime[0]; // USE COUNTER1
 
-#ifdef TAU_VAMPIRTRACE
-  TimeStamp = vt_pform_wtime();
-  DEBUGPROFMSG("Calling vt_exit(): "<< ThisFunction->GetName() << "With Timestamp = " << TimeStamp<<endl;);
-  vt_exit((uint64_t *)&TimeStamp);
-#else /* TAU_VAMPIRTRACE */
-#ifdef TAU_EPILOG
-  DEBUGPROFMSG("Calling elg_exit(): "<< ThisFunction->GetName()<<endl;);
-  esd_exit(ThisFunction->GetFunctionId());
-#else /* TAU_EPILOG */
 #ifdef TAU_MPITRACE
   if (RecordEvent) {
 #endif /* TAU_MPITRACE */
     if (TauEnv_get_tracing()) {
       TauTraceEvent(ThisFunction->GetFunctionId(), -1 /* exit */, tid, TimeStamp, 1 /* use supplied timestamp */); 
-      TauMetrics_triggerAtomicEvents(TimeStamp, StartTime, tid);
+      TauMetrics_triggerAtomicEvents(TimeStamp, CurrentTime, tid);
     }
 #ifdef TAU_MPITRACE
   }
 #endif /* TAU_MPITRACE */
-#endif /* TAU_EPILOG */
-#endif /* TAU_VAMPIRTRACE */
 
 
   /* What should we do while exiting when profiling is off, tracing is on and 
@@ -1379,6 +1360,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.249 $   $Date: 2009/09/15 01:14:43 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.249 2009/09/15 01:14:43 amorris Exp $ 
+ * $Revision: 1.250 $   $Date: 2009/09/17 00:14:49 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.250 2009/09/17 00:14:49 amorris Exp $ 
  ***************************************************************************/
