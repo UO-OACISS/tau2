@@ -32,6 +32,13 @@ Version 2.18 changes (from 2.17):
 20. TAU_PROFILE_FORMAT "merged" generates merged profiles. 
 21. perfdmf_configure --create-default creates a Derby DB without any questions.
 22. Eclipse plugin uses a new XML workflow for uploading performance data on disk to db. 
+23. 3D Communication Matrix in ParaProf.
+24. TAU_CALLPATH_DEPTH of 0 and 1 for context events.
+25. TAU_TRACK_HEAP and TAU_TRACK_HEADROOM environment variables - samples at function entry and exit, context events.
+26. PerfExplorer has a working Derby database that can be used to load ppk files. 
+27. Default mode: TAU_TRACE=1 disables TAU_PROFILE. You may set it to get both.
+
+
 
 Version 2.17 changes (from 2.16):
 1. Added support for IBM BG/P (-arch=bgp).
