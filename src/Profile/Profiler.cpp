@@ -506,32 +506,18 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   if (RecordEvent) {
 #endif /* TAU_MPITRACE */
     if (TauEnv_get_tracing()) {
-      TauTraceEvent(ThisFunction->GetFunctionId(), -1 /* exit */, tid, TimeStamp, 1 /* use supplied timestamp */); 
       TauMetrics_triggerAtomicEvents(TimeStamp, CurrentTime, tid);
+      TauTraceEvent(ThisFunction->GetFunctionId(), -1 /* exit */, tid, TimeStamp, 1 /* use supplied timestamp */); 
     }
 #ifdef TAU_MPITRACE
   }
 #endif /* TAU_MPITRACE */
 
 
-  /* What should we do while exiting when profiling is off, tracing is on and 
-     throttling is on? */
-#ifndef PROFILING_ON
-  if (TauEnv_get_throttle() && AddInclFlag) {
-    ThisFunction->SetAlreadyOnStack(false, tid); // while exiting
-      
-    // Next, compute inclusive time for counter 0
-    double TimeTaken = CurrentTime[0] - StartTime[0];
-    ThisFunction->AddInclTimeForCounter(TimeTaken, tid, 0);
-  }
-#endif /* PROFILING is off */
-
   /********************************************************************************/
   /*** Tracing ***/
   /********************************************************************************/
     
-    
-#ifdef PROFILING_ON  // Calculations relevent to profiling only 
     
   if (TauEnv_get_callpath()) {
     CallPathStop(TotalTime, tid);
@@ -585,8 +571,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #endif /* TAU_PROFILEPARAM */
   }
 
-    
-  
   if (ParentProfiler != NULL) {
       ParentProfiler->ThisFunction->ExcludeTime(TotalTime, tid);
     
@@ -595,8 +579,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 	/* Add 1 and my children to my parents total number of children */
       }
   }
-
-#endif //PROFILING_ON
 
   /********************************************************************************/
   /*** Throttling Code ***/
@@ -756,7 +738,6 @@ void TauProfiler_getUserEventValues(const char **inUserEvents, int numUserEvents
 
   TAU_PROFILE("TAU_GET_EVENT_VALUES()", " ", TAU_IO);
 
-#ifdef PROFILING_ON
 
   *numEvents = (int*) malloc (sizeof(int) * numUserEvents);
   *max = (double *) malloc (sizeof(double) * numUserEvents);
@@ -784,7 +765,6 @@ void TauProfiler_getUserEventValues(const char **inUserEvents, int numUserEvents
   }
 
   RtsLayer::UnLockDB();
-#endif //PROFILING_ON
   
 }
 
@@ -823,7 +803,6 @@ void TauProfiler_getFunctionValues(const char **inFuncs,
 				 int tid) {
   TAU_PROFILE("TAU_GET_FUNC_VALS()", " ", TAU_IO);
 
-#ifdef PROFILING_ON
   vector<FunctionInfo*>::iterator it;
   
 
@@ -865,7 +844,6 @@ void TauProfiler_getFunctionValues(const char **inFuncs,
     }
   }
   RtsLayer::UnLockDB();
-#endif //PROFILING_ON
 }
 
 
@@ -1207,7 +1185,6 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
   
   TauProfiler_updateIntermediateStatistics(tid);
 
-#ifdef PROFILING_ON 
   RtsLayer::LockDB();
 
   static bool createFlag = TauProfiler_createDirectories();
@@ -1304,7 +1281,6 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
   }
   
   RtsLayer::UnLockDB();
-#endif //PROFILING_ON
   
   return 0;
 }
@@ -1360,6 +1336,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.250 $   $Date: 2009/09/17 00:14:49 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.250 2009/09/17 00:14:49 amorris Exp $ 
+ * $Revision: 1.251 $   $Date: 2009/09/17 00:32:00 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.251 2009/09/17 00:32:00 amorris Exp $ 
  ***************************************************************************/
