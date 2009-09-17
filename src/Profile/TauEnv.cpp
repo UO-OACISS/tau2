@@ -418,35 +418,14 @@ extern "C" {
       }
       TAU_VERBOSE("TAU: TRACEDIR is \"%s\"\n", env_tracedir);
 
-      // callpath
-      tmp = getconf("TAU_CALLPATH");
-      if (parse_bool(tmp, TAU_CALLPATH_DEFAULT)) {
-	env_callpath = 1;
-	TAU_VERBOSE("TAU: Callpath Profiling Enabled\n");
-	TAU_METADATA("TAU_CALLPATH","on");
-      } else {
-	env_callpath = 0;
-	TAU_VERBOSE("TAU: Callpath Profiling Disabled\n");
-	TAU_METADATA("TAU_CALLPATH","off");
-      }
 
-      // profiling
-      tmp = getconf("TAU_PROFILE");
-      if (parse_bool(tmp, TAU_PROFILING_DEFAULT)) {
-	env_profiling = 1;
-	TAU_VERBOSE("TAU: Profiling Enabled\n");
-	TAU_METADATA("TAU_PROFILE","on");
-      } else {
-	env_profiling = 0;
-	TAU_VERBOSE("TAU: Profiling Disabled\n");
-	TAU_METADATA("TAU_PROFILE","off");
-      }
-
+      int profiling_default = TAU_PROFILING_DEFAULT;
       // tracing
       tmp = getconf("TAU_TRACE");
       if (parse_bool(tmp, TAU_TRACING_DEFAULT)) {
 	env_tracing = 1;
 	env_track_message = 1;
+	profiling_default = 0;
 	TAU_VERBOSE("TAU: Tracing Enabled\n");
 	TAU_METADATA("TAU_TRACE","on");
       } else {
@@ -456,17 +435,44 @@ extern "C" {
 	TAU_METADATA("TAU_TRACE","off");
       }
 
-      // compensate
-      tmp = getconf("TAU_COMPENSATE");
-      if (parse_bool(tmp, TAU_COMPENSATE_DEFAULT)) {
-	env_compensate = 1;
-	env_extras = 1;
-	TAU_VERBOSE("TAU: Overhead Compensation Enabled\n");
-	TAU_METADATA("TAU_COMPENSATE","on");
+
+      // profiling
+      tmp = getconf("TAU_PROFILE");
+      if (parse_bool(tmp, profiling_default)) {
+	env_profiling = 1;
+	TAU_VERBOSE("TAU: Profiling Enabled\n");
+	TAU_METADATA("TAU_PROFILE","on");
       } else {
-	env_compensate = 0;
-	TAU_VERBOSE("TAU: Overhead Compensation Disabled\n");
-	TAU_METADATA("TAU_COMPENSATE","off");
+	env_profiling = 0;
+	TAU_VERBOSE("TAU: Profiling Disabled\n");
+	TAU_METADATA("TAU_PROFILE","off");
+      }
+
+      if (env_profiling) {
+	// callpath
+	tmp = getconf("TAU_CALLPATH");
+	if (parse_bool(tmp, TAU_CALLPATH_DEFAULT)) {
+	  env_callpath = 1;
+	  TAU_VERBOSE("TAU: Callpath Profiling Enabled\n");
+	  TAU_METADATA("TAU_CALLPATH","on");
+	} else {
+	  env_callpath = 0;
+	  TAU_VERBOSE("TAU: Callpath Profiling Disabled\n");
+	  TAU_METADATA("TAU_CALLPATH","off");
+	}
+
+	// compensate
+	tmp = getconf("TAU_COMPENSATE");
+	if (parse_bool(tmp, TAU_COMPENSATE_DEFAULT)) {
+	  env_compensate = 1;
+	  env_extras = 1;
+	  TAU_VERBOSE("TAU: Overhead Compensation Enabled\n");
+	  TAU_METADATA("TAU_COMPENSATE","on");
+	} else {
+	  env_compensate = 0;
+	  TAU_VERBOSE("TAU: Overhead Compensation Disabled\n");
+	  TAU_METADATA("TAU_COMPENSATE","off");
+	}
       }
 
 
