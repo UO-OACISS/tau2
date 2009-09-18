@@ -61,5 +61,21 @@
 
 
 
+#ifndef _TAU_SAMPLING_H_
+#define _TAU_SAMPLING_H_
+
+#include <tau_internal.h>
+
+typedef struct {
+  x_uint64 timestamp;
+  x_uint64 counters[TAU_MAX_COUNTERS];
+} TauSampleRecord;
+
+
+
 int Tau_sampling_init();
 int Tau_sampling_finalize();
+
+
+
+#endif /* _TAU_SAMPLING_H_ */
