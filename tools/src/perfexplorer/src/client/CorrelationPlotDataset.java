@@ -15,7 +15,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIChartData;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper class around the RawDataInterface class.
  *
- * <P>CVS $Id: CorrelationPlotDataset.java,v 1.16 2009/09/16 09:28:10 khuck Exp $</P>
+ * <P>CVS $Id: CorrelationPlotDataset.java,v 1.17 2009/09/18 15:20:29 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -103,7 +103,6 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 		// get the row
 		List<double[]> row = data.getRowData(arg0);
 		// get the mth column from that row
-		System.out.println(arg0);
 		try {
 			double[] values = row.get(arg1);
 			this.maxLabels = values.length;
