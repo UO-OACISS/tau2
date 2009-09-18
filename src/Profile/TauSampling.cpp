@@ -197,7 +197,7 @@ int Tau_sampling_init() {
   ebsTrace = fopen(filename, "w");
   
   fprintf (ebsTrace, "# Format:\n");
-  fprintf (ebsTrace, "# <timestamp> | <delta> | <pc> | <metric 1> ... <metric N> | <tau callpath>\n");
+  fprintf (ebsTrace, "# <timestamp> | <delta-begin> | <delta-end> | <pc> | <metric 1> ... <metric N> | <tau callpath>\n");
   fprintf (ebsTrace, "# Metrics:");
   for (int i=0; i<Tau_Global_numCounters; i++) {
     const char *name = TauMetrics_getMetricName(i);
