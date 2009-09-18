@@ -73,8 +73,20 @@
 #include <Profile/TauMetrics.h>
 
 
+typedef struct {
+  int valid;
+  caddr_t pc;
+  x_uint64 timestamp;
+  double counters[TAU_MAX_COUNTERS];
+  x_uint64 deltaStart;
+  x_uint64 deltaStop;
+  int outputCallpath;
+} TauSamplingRecord;
+
+
 
 FILE *ebsTrace;
+TauSamplingRecord theRecord;
 
 
 #define USE_SIGCONTEXT 1
@@ -82,7 +94,6 @@ FILE *ebsTrace;
 static inline caddr_t get_pc(void *p) {
   struct ucontext *uc = (struct ucontext *) p;
   caddr_t pc;
-#if USE_SIGCONTEXT
   struct sigcontext *sc;
   sc = (struct sigcontext *) &uc->uc_mcontext;
 # ifdef __x86_64__
@@ -94,81 +105,133 @@ static inline caddr_t get_pc(void *p) {
 # else
 #  error "profile handler not defined for this architecture"
 # endif
-#elif USE_MCONTEXT
-  mcontext_t *mc;
-  mc = &uc->uc_mcontext;
-  pc = (caddr_t) mc->gregs[REG_EIP];
-#else
-# error "No context usage defined"
-#endif /* USE_SIGCONTEXT */
 
   return pc;
 }
 
 
+
+
+/*********************************************************************
+ * Write out a single event record
+ ********************************************************************/
+void Tau_sampling_flush_record(TauSamplingRecord *record) {
+
+  fprintf (ebsTrace, "%lld | ", record->timestamp);
+  fprintf (ebsTrace, "%lld | ", record->deltaStart);
+  fprintf (ebsTrace, "%lld | ", record->deltaStop);
+  fprintf (ebsTrace, "%x | ", record->pc);
+
+  for (int i=0; i<Tau_Global_numCounters; i++) {
+    fprintf (ebsTrace, "%.16G ", record->counters[i]);
+  }
+
+  if (record->outputCallpath) {
+    fprintf (ebsTrace, "| ");
+    TAU_QUERY_DECLARE_EVENT(event);
+    const char *str;
+    TAU_QUERY_GET_CURRENT_EVENT(event);
+    TAU_QUERY_GET_EVENT_NAME(event, str);
+    
+    
+    int depth = TauEnv_get_callpath_depth();
+    if (depth < 1) {
+      depth = 1;
+    }
+    
+    while (str && depth > 0) {
+      //    printf ("inside %s\n", str);
+      
+      Profiler *p = (Profiler*)event;
+      fprintf (ebsTrace, "%d", p->ThisFunction->GetFunctionId());
+      TAU_QUERY_GET_PARENT_EVENT(event);
+      TAU_QUERY_GET_EVENT_NAME(event, str);
+      if (str) {
+       //fprintf (ebsTrace, " : ", str);
+	fprintf (ebsTrace, " ", str);
+      }
+      depth--;
+    }
+    // fprintf (ebsTrace, "");
+    
+    fprintf (ebsTrace, "\n");
+  } else {
+    fprintf (ebsTrace, "| -1\n");
+  }
+}
+
+/*********************************************************************
+ * Handler for event exit (stop)
+ ********************************************************************/
+int Tau_sampling_event_stop(double stopTime) {
+  if (theRecord.valid == 0) {
+    return 0;
+  }
+  int tid = RtsLayer::myThread();
+
+  Profiler *profiler = TauInternal_CurrentProfiler(tid);
+  double startTime = profiler->StartTime[0]; // gtod must be counter 0
+  
+  theRecord.deltaStart = (x_uint64) startTime;
+  theRecord.deltaStop = (x_uint64) stopTime;
+  theRecord.outputCallpath = 1;
+  
+  Tau_sampling_flush_record(&theRecord);
+  theRecord.valid = 0;
+
+  return 0;
+}
+
 /*********************************************************************
  * Handler for itimer interrupt
  ********************************************************************/
 void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
-
   int tid = RtsLayer::myThread();
+
+  if (theRecord.valid) {
+    Tau_sampling_flush_record(&theRecord);
+  }
+
   caddr_t pc;
   pc = get_pc(p);
-//   printf ("at 0x%x\n", pc);
-
-  double values[TAU_MAX_COUNTERS];
-
+//   printf ("sample on %x\n", pc);
 
   struct timeval tp;
   gettimeofday (&tp, 0);
-  x_uint64 timestamp = ((double)tp.tv_sec * 1e6 + tp.tv_usec);
+  x_uint64 timestamp = ((x_uint64)tp.tv_sec * (x_uint64)1e6 + (x_uint64)tp.tv_usec);
 
 
-  Profiler *profiler = TauInternal_CurrentProfiler(tid);
-  double startTime = profiler->StartTime[0]; // gtod must be counter 0
-  x_uint64 timeSinceEvent = (x_uint64)timestamp - startTime;
-  fprintf (ebsTrace, "%lld | ", timestamp);
-  fprintf (ebsTrace, "%lld | ", timeSinceEvent);
-  fprintf (ebsTrace, "%x | ", pc);
+  theRecord.timestamp = timestamp;
+  theRecord.pc = pc;
+  theRecord.deltaStart = 0;
+  theRecord.deltaStop = 0;
+  theRecord.outputCallpath = 0;
+  theRecord.valid = 1;
 
+  double values[TAU_MAX_COUNTERS];
   TauMetrics_getMetrics(tid, values);
   for (int i=0; i<Tau_Global_numCounters; i++) {
-    //    printf ("value[%d] = %.16G\n", i, values[i]);
-    fprintf (ebsTrace, "%.16G ", values[i]);
+    theRecord.counters[i] = values[i];
   }
 
-  TAU_QUERY_DECLARE_EVENT(event);
-  const char *str;
-  TAU_QUERY_GET_CURRENT_EVENT(event);
-  TAU_QUERY_GET_EVENT_NAME(event, str);
-
-  fprintf (ebsTrace, "| ");
-
-  int depth = TauEnv_get_callpath_depth();
-
-  if (depth < 1) {
-    depth = 1;
-  }
-
-  while (str && depth > 0) {
-    //    printf ("inside %s\n", str);
-
-    Profiler *p = (Profiler*)event;
-    fprintf (ebsTrace, "%d", p->ThisFunction->GetFunctionId());
-    TAU_QUERY_GET_PARENT_EVENT(event);
-    TAU_QUERY_GET_EVENT_NAME(event, str);
-     if (str) {
-       //fprintf (ebsTrace, " : ", str);
-       fprintf (ebsTrace, " ", str);
-     }
-     depth--;
-  }
-  // fprintf (ebsTrace, "");
-  
-  fprintf (ebsTrace, "\n");
 }
 
 
+
+int Tau_sampling_outputHeader() {
+  fprintf (ebsTrace, "# Format:\n");
+  fprintf (ebsTrace, "# <timestamp> | <delta-begin> | <delta-end> | <pc> | <metric 1> ... <metric N> | <tau callpath>\n");
+  fprintf (ebsTrace, "# Metrics:");
+  for (int i=0; i<Tau_Global_numCounters; i++) {
+    const char *name = TauMetrics_getMetricName(i);
+    fprintf (ebsTrace, " %s", name);
+  }
+  fprintf (ebsTrace, "\n");
+  char buffer[4096];
+  bzero(buffer, 4096);
+  int rc = readlink("/proc/self/exe", buffer, 4096);
+  fprintf (ebsTrace, "# exe: %s\n", buffer);
+}
 
 /*********************************************************************
  * Initialize the sampling trace system
@@ -183,6 +246,8 @@ int Tau_sampling_init() {
   itval.it_interval.tv_usec = itval.it_value.tv_usec = 1000 % 1000000;
   itval.it_interval.tv_sec =  itval.it_value.tv_sec = 1000 / 1000000;
 
+  theRecord.valid = 0;
+  theRecord.outputCallpath = 0;
 
   const char *profiledir = TauEnv_get_profiledir();
 
@@ -196,20 +261,8 @@ int Tau_sampling_init() {
 
   ebsTrace = fopen(filename, "w");
   
-  fprintf (ebsTrace, "# Format:\n");
-  fprintf (ebsTrace, "# <timestamp> | <delta-begin> | <delta-end> | <pc> | <metric 1> ... <metric N> | <tau callpath>\n");
-  fprintf (ebsTrace, "# Metrics:");
-  for (int i=0; i<Tau_Global_numCounters; i++) {
-    const char *name = TauMetrics_getMetricName(i);
-    fprintf (ebsTrace, " %s", name);
-  }
-  fprintf (ebsTrace, "\n");
+  Tau_sampling_outputHeader();
 
-
-  char buffer[4096];
-  bzero(buffer, 4096);
-  int rc = readlink("/proc/self/exe", buffer, 4096);
-  fprintf (ebsTrace, "# exe: %s\n", buffer);
 
 
   struct sigaction act;
@@ -262,6 +315,9 @@ int Tau_sampling_finalize() {
     fprintf (def,"%d | %s %s\n", fi->GetFunctionId(), fi->GetName(), fi->GetType());
   }
   fclose(def);
+
+  Tau_sampling_outputHeader();
+
 }
 
 

@@ -27,12 +27,17 @@ while ($line = <DEF>) {
 }
 
 
+my ($lastCallpath);
+my ($useDeltaStart);
+my ($useDeltaStop);
+
 # Read the trace
 my ($exe);
-open (TRACE, "<ebstrace.0.0.0");
+open (TRACE, "tac ebstrace.0.0.0 |");
+open (OUTPUT, "| tac > ebstrace.processed.0.0.0");
 while ($line = <TRACE>) {
     if ($line =~ /\#.*/) {
-	print "$line";
+	print (OUTPUT "$line");
 	if ($line =~ /\# exe:.*/) {
 	    ($junk, $exe) = split("exe:",$line);
 	    $exe = trim($exe);
@@ -40,22 +45,33 @@ while ($line = <TRACE>) {
 	next;
     }
     # parse a line
-    ($timestamp,$delta,$pc,$metrics,$callpath) = split('\|',$line);
+    ($timestamp,$deltaStart,$deltaStop,$pc,$metrics,$callpath) = split('\|',$line);
     $timestamp = trim($timestamp);
     $pc = trim($pc);
     $metrics = trim($metrics);
     $callpath = trim($callpath);
     
     # Process the callpath
-    $callpath = reverse($callpath);
-    @events = split(" ",$callpath);
-    $newCallpath = "";
-    my (@processedEvents);
-    foreach my $e (@events) {
-	$newCallpath = "$newCallpath => $eventmap{$e}";
-	push (@processedEvents, $eventmap{$e});
+    if ($callpath eq "-1") {
+	$newCallpath = $lastCallpath;
+    } else {
+	$callpath = reverse($callpath);
+	@events = split(" ",$callpath);
+	$newCallpath = "";
+	my (@processedEvents);
+	foreach my $e (@events) {
+	    $newCallpath = "$newCallpath => $eventmap{$e}";
+	    push (@processedEvents, $eventmap{$e});
+	}
+	$newCallpath = join(" => ", @processedEvents);
+	$lastCallpath = $newCallpath;
+	$useDeltaStart = $deltaStart;
+	$useDeltaStop = $deltaStop;
     }
-    $newCallpath = join(" => ", @processedEvents);
+
+
+    $deltaStart = $timestamp - $useDeltaStart;
+    $deltaStop = $useDeltaStop - $timestamp;
 
     # Process the PC
     $out = `echo $pc | addr2line -e $exe`;
@@ -63,5 +79,10 @@ while ($line = <TRACE>) {
     $newpc = $out;
 
     # Output the processed data
-    print "$timestamp | $delta | $newpc | $metrics | $newCallpath\n";
+    print OUTPUT "$timestamp | $deltaStart | $deltaStop | $newpc | $metrics | $newCallpath\n";
 }
+
+
+
+
+

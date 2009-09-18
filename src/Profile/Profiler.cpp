@@ -442,6 +442,11 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   RtsLayer::getUSecD(tid, CurrentTime);
 #endif /* TAU_TRACK_IDLE_THREADS */
 
+
+#ifdef TAU_EXP_SAMPLING
+  Tau_sampling_event_stop(CurrentTime[0]);
+#endif
+
 #if defined(TAUKTAU)
 #ifdef KTAU_DEBUGPROF
   printf("Profiler::Stop: --EXIT-- %s \n", TauInternal_CurrentProfiler(tid)->ThisFunction->GetName());
@@ -1336,6 +1341,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.251 $   $Date: 2009/09/17 00:32:00 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.251 2009/09/17 00:32:00 amorris Exp $ 
+ * $Revision: 1.252 $   $Date: 2009/09/18 23:10:13 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.252 2009/09/18 23:10:13 amorris Exp $ 
  ***************************************************************************/
