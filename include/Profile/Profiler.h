@@ -200,6 +200,11 @@ public:
   bool RecordEvent; /* true when an MPI call is in the callpath */
 #endif /* TAU_MPITRACE */
 
+
+#ifdef TAU_EXP_SAMPLING
+  int needToRecordStop;
+#endif /* TAU_EXP_SAMPLING */
+
 };
 }
 #ifdef TAU_LIBRARY_SOURCE
@@ -268,6 +273,6 @@ void TauProfiler_EnableAllEventsOnCallStack(int tid, Profiler *current);
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.108 $   $Date: 2009/07/21 21:38:48 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.108 2009/07/21 21:38:48 amorris Exp $ 
+ * $Revision: 1.109 $   $Date: 2009/09/19 00:19:48 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.109 2009/09/19 00:19:48 amorris Exp $ 
  ***************************************************************************/

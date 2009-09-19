@@ -31,6 +31,9 @@ my ($lastCallpath);
 my ($useDeltaStart);
 my ($useDeltaStop);
 
+my %startmap;
+my %stopmap;
+
 # Read the trace
 my ($exe);
 open (TRACE, "tac ebstrace.0.0.0 |");
@@ -43,18 +46,26 @@ while ($line = <TRACE>) {
 	    $exe = trim($exe);
 	}
 	next;
-    }
-    # parse a line
-    ($timestamp,$deltaStart,$deltaStop,$pc,$metrics,$callpath) = split('\|',$line);
-    $timestamp = trim($timestamp);
-    $pc = trim($pc);
-    $metrics = trim($metrics);
-    $callpath = trim($callpath);
-    
-    # Process the callpath
-    if ($callpath eq "-1") {
-	$newCallpath = $lastCallpath;
-    } else {
+    } elsif ($line =~ /\%.*/) {
+	# process stop lines
+
+	($type,$start,$stop,$callpath) = split('\|',$line);
+	$start = trim($start);
+	$stop = trim($stop);
+	$callpath = trim($callpath);
+	$callpath = reverse($callpath);
+	$startmap{$callpath} = $start;
+	$stopmap{$callpath} = $stop;
+    } else  {
+	# process sample lines
+
+	($type,$timestamp,$deltaStart,$deltaStop,$pc,$metrics,$callpath) = split('\|',$line);
+	$timestamp = trim($timestamp);
+	$pc = trim($pc);
+	$metrics = trim($metrics);
+	$callpath = trim($callpath);
+	
+	# Process the callpath
 	$callpath = reverse($callpath);
 	@events = split(" ",$callpath);
 	$newCallpath = "";
@@ -65,21 +76,24 @@ while ($line = <TRACE>) {
 	}
 	$newCallpath = join(" => ", @processedEvents);
 	$lastCallpath = $newCallpath;
-	$useDeltaStart = $deltaStart;
-	$useDeltaStop = $deltaStop;
+
+
+	$check = $deltaStart;
+	$deltaStart = $timestamp - $startmap{$callpath};
+	$deltaStop = $stopmap{$callpath} - $timestamp;
+
+	if ($check != $startmap{$callpath}) {
+	    die "inconsistent file, $check != $startmap{$callpath}\n";
+	}
+
+	# Process the PC
+	$out = `echo $pc | addr2line -e $exe`;
+	chomp($out);
+	$newpc = $out;
+
+	# Output the processed data
+	print OUTPUT "$timestamp | $deltaStart | $deltaStop | $newpc | $metrics | $newCallpath\n";
     }
-
-
-    $deltaStart = $timestamp - $useDeltaStart;
-    $deltaStop = $useDeltaStop - $timestamp;
-
-    # Process the PC
-    $out = `echo $pc | addr2line -e $exe`;
-    chomp($out);
-    $newpc = $out;
-
-    # Output the processed data
-    print OUTPUT "$timestamp | $deltaStart | $deltaStop | $newpc | $metrics | $newCallpath\n";
 }
 
 

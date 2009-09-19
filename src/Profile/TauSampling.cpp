@@ -112,12 +112,39 @@ static inline caddr_t get_pc(void *p) {
 
 
 
+void Tau_sampling_output_callpath() {
+  TAU_QUERY_DECLARE_EVENT(event);
+  const char *str;
+  TAU_QUERY_GET_CURRENT_EVENT(event);
+  TAU_QUERY_GET_EVENT_NAME(event, str);
+  
+  
+  int depth = TauEnv_get_callpath_depth();
+  if (depth < 1) {
+    depth = 1;
+  }
+  
+  while (str && depth > 0) {
+    //    printf ("inside %s\n", str);
+    
+    Profiler *p = (Profiler*)event;
+    fprintf (ebsTrace, "%d", p->ThisFunction->GetFunctionId());
+    TAU_QUERY_GET_PARENT_EVENT(event);
+    TAU_QUERY_GET_EVENT_NAME(event, str);
+    if (str) {
+      //fprintf (ebsTrace, " : ", str);
+      fprintf (ebsTrace, " ", str);
+    }
+    depth--;
+  }
+}
+
 /*********************************************************************
  * Write out a single event record
  ********************************************************************/
 void Tau_sampling_flush_record(TauSamplingRecord *record) {
 
-  fprintf (ebsTrace, "%lld | ", record->timestamp);
+  fprintf (ebsTrace, "$ | %lld | ", record->timestamp);
   fprintf (ebsTrace, "%lld | ", record->deltaStart);
   fprintf (ebsTrace, "%lld | ", record->deltaStop);
   fprintf (ebsTrace, "%x | ", record->pc);
@@ -126,58 +153,33 @@ void Tau_sampling_flush_record(TauSamplingRecord *record) {
     fprintf (ebsTrace, "%.16G ", record->counters[i]);
   }
 
-  if (record->outputCallpath) {
-    fprintf (ebsTrace, "| ");
-    TAU_QUERY_DECLARE_EVENT(event);
-    const char *str;
-    TAU_QUERY_GET_CURRENT_EVENT(event);
-    TAU_QUERY_GET_EVENT_NAME(event, str);
-    
-    
-    int depth = TauEnv_get_callpath_depth();
-    if (depth < 1) {
-      depth = 1;
-    }
-    
-    while (str && depth > 0) {
-      //    printf ("inside %s\n", str);
-      
-      Profiler *p = (Profiler*)event;
-      fprintf (ebsTrace, "%d", p->ThisFunction->GetFunctionId());
-      TAU_QUERY_GET_PARENT_EVENT(event);
-      TAU_QUERY_GET_EVENT_NAME(event, str);
-      if (str) {
-       //fprintf (ebsTrace, " : ", str);
-	fprintf (ebsTrace, " ", str);
-      }
-      depth--;
-    }
-    // fprintf (ebsTrace, "");
-    
-    fprintf (ebsTrace, "\n");
-  } else {
-    fprintf (ebsTrace, "| -1\n");
-  }
+  fprintf (ebsTrace, "| ");
+  
+  Tau_sampling_output_callpath();
+  fprintf (ebsTrace, "\n");
 }
 
 /*********************************************************************
  * Handler for event exit (stop)
  ********************************************************************/
 int Tau_sampling_event_stop(double stopTime) {
-  if (theRecord.valid == 0) {
+  int tid = RtsLayer::myThread();
+  Profiler *profiler = TauInternal_CurrentProfiler(tid);
+
+  if (!profiler->needToRecordStop) {
     return 0;
   }
-  int tid = RtsLayer::myThread();
 
-  Profiler *profiler = TauInternal_CurrentProfiler(tid);
   double startTime = profiler->StartTime[0]; // gtod must be counter 0
-  
+
+  x_uint64 start = (x_uint64) startTime;
+  x_uint64 stop = (x_uint64) stopTime;
+
+  fprintf (ebsTrace, "%% | %lld | %lld | ", start, stop);
   theRecord.deltaStart = (x_uint64) startTime;
-  theRecord.deltaStop = (x_uint64) stopTime;
-  theRecord.outputCallpath = 1;
-  
-  Tau_sampling_flush_record(&theRecord);
-  theRecord.valid = 0;
+
+  Tau_sampling_output_callpath();
+  fprintf (ebsTrace, "\n");
 
   return 0;
 }
@@ -187,10 +189,7 @@ int Tau_sampling_event_stop(double stopTime) {
  ********************************************************************/
 void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
   int tid = RtsLayer::myThread();
-
-  if (theRecord.valid) {
-    Tau_sampling_flush_record(&theRecord);
-  }
+  Profiler *profiler = TauInternal_CurrentProfiler(tid);
 
   caddr_t pc;
   pc = get_pc(p);
@@ -208,12 +207,21 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
   theRecord.outputCallpath = 0;
   theRecord.valid = 1;
 
+  double startTime = profiler->StartTime[0]; // gtod must be counter 0
+  theRecord.deltaStart = (x_uint64) startTime;
+  theRecord.deltaStop = 0;
+
   double values[TAU_MAX_COUNTERS];
   TauMetrics_getMetrics(tid, values);
   for (int i=0; i<Tau_Global_numCounters; i++) {
     theRecord.counters[i] = values[i];
   }
 
+  Tau_sampling_flush_record(&theRecord);
+
+  /* set this to get the stop event */
+  profiler->needToRecordStop = 1;
+  
 }
 
 

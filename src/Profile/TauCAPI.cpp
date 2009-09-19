@@ -153,7 +153,10 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid ) {
   p->MyProfileGroup_ = fi->GetProfileGroup();
   p->ThisFunction = fi; 
 
-  
+#ifdef TAU_EXP_SAMPLING
+  p->needToRecordStop = 0;
+#endif /* TAU_EXP_SAMPLING */
+
 #ifdef TAU_MPITRACE
   p->RecordEvent = false; /* by default, we don't record this event */
 #endif /* TAU_MPITRACE */
@@ -1291,7 +1294,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.129 $   $Date: 2009/09/15 01:14:43 $
- * VERSION: $Id: TauCAPI.cpp,v 1.129 2009/09/15 01:14:43 amorris Exp $
+ * $Revision: 1.130 $   $Date: 2009/09/19 00:19:49 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.130 2009/09/19 00:19:49 amorris Exp $
  ***************************************************************************/
 
