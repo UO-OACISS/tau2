@@ -249,9 +249,8 @@ int Tau_sampling_init() {
 
   int tid = RtsLayer::myThread();
   int node = RtsLayer::myNode();
-
   node = 0;
-  sprintf(filename, "%s/ebstrace.%d.%d.%d", profiledir, node, RtsLayer::myContext(), tid);
+  sprintf(filename, "%s/ebstrace.%d.%d.%d.%d", profiledir, getpid(), node, RtsLayer::myContext(), tid);
 
   ebsTrace = fopen(filename, "w");
 
@@ -294,7 +293,7 @@ int Tau_sampling_finalize() {
   int tid = RtsLayer::myThread();
   int node = RtsLayer::myNode();
   node = 0;
-  sprintf(filename, "%s/ebstracedef.%d.%d.%d", profiledir, node, RtsLayer::myContext(), tid);
+  sprintf(filename, "%s/ebstracedef.%d.%d.%d.%d", profiledir, getpid(), node, RtsLayer::myContext(), tid);
 
   FILE *def = fopen(filename, "w");
 
@@ -308,11 +307,14 @@ int Tau_sampling_finalize() {
   fclose(def);
 
 
-  /* write out the executable name at the ent */
+  /* write out the executable name at the end */
   char buffer[4096];
   bzero(buffer, 4096);
   int rc = readlink("/proc/self/exe", buffer, 4096);
   fprintf(ebsTrace, "# exe: %s\n", buffer);
+
+  /* write out the node number */
+  fprintf(ebsTrace, "# node: %d\n", RtsLayer::myNode());
 
   fclose(ebsTrace);
 }
