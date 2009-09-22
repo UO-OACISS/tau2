@@ -40,10 +40,11 @@ open (TRACE, "tac ebstrace.0.0.0 |");
 open (OUTPUT, "| tac > ebstrace.processed.0.0.0");
 while ($line = <TRACE>) {
     if ($line =~ /\#.*/) {
-	print (OUTPUT "$line");
 	if ($line =~ /\# exe:.*/) {
 	    ($junk, $exe) = split("exe:",$line);
 	    $exe = trim($exe);
+	} else {
+	    print (OUTPUT "$line");
 	}
 	next;
     } elsif ($line =~ /\%.*/) {
