@@ -221,17 +221,13 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
  ********************************************************************/
 int Tau_sampling_outputHeader() {
   fprintf(ebsTrace, "# Format:\n");
-  fprintf(ebsTrace, "# <timestamp> | <delta-begin> | <delta-end> | <pc> | <metric 1> ... <metric N> | <tau callpath>\n");
+  fprintf(ebsTrace, "# <timestamp> | <delta-begin> | <delta-end> | <location> | <metric 1> ... <metric N> | <tau callpath>\n");
   fprintf(ebsTrace, "# Metrics:");
   for (int i = 0; i < Tau_Global_numCounters; i++) {
     const char *name = TauMetrics_getMetricName(i);
     fprintf(ebsTrace, " %s", name);
   }
   fprintf(ebsTrace, "\n");
-  char buffer[4096];
-  bzero(buffer, 4096);
-  int rc = readlink("/proc/self/exe", buffer, 4096);
-  fprintf(ebsTrace, "# exe: %s\n", buffer);
 }
 
 /*********************************************************************
@@ -311,7 +307,14 @@ int Tau_sampling_finalize() {
   }
   fclose(def);
 
-  Tau_sampling_outputHeader();
+
+  /* write out the executable name at the ent */
+  char buffer[4096];
+  bzero(buffer, 4096);
+  int rc = readlink("/proc/self/exe", buffer, 4096);
+  fprintf(ebsTrace, "# exe: %s\n", buffer);
+
+  fclose(ebsTrace);
 }
 
 #endif /* TAU_EXP_SAMPLING */
