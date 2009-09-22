@@ -87,6 +87,9 @@ typedef struct {
 /* The trace for this node, mulithreaded execution currently not supported */
 FILE *ebsTrace;
 
+/* Sample processing enabled/disabled */
+int samplingEnabled;
+
 /*********************************************************************
  * Get the architecture specific PC
  ********************************************************************/
@@ -159,10 +162,13 @@ void Tau_sampling_flush_record(TauSamplingRecord *record) {
  * Handler for event exit (stop)
  ********************************************************************/
 int Tau_sampling_event_stop(double stopTime) {
+  samplingEnabled = 0;
+
   int tid = RtsLayer::myThread();
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
 
   if (!profiler->needToRecordStop) {
+    samplingEnabled = 1;
     return 0;
   }
 
@@ -176,6 +182,7 @@ int Tau_sampling_event_stop(double stopTime) {
   Tau_sampling_output_callpath();
   fprintf(ebsTrace, "\n");
 
+  samplingEnabled = 1;
   return 0;
 }
 
@@ -183,6 +190,10 @@ int Tau_sampling_event_stop(double stopTime) {
  * Handler for itimer interrupt
  ********************************************************************/
 void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
+  if (!samplingEnabled) {
+    return;
+  }
+
   TauSamplingRecord theRecord;
   int tid = RtsLayer::myThread();
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
@@ -240,6 +251,8 @@ int Tau_sampling_init() {
 
   int threshold = 1000;
 
+  samplingEnabled = 0;
+
   itval.it_interval.tv_usec = itval.it_value.tv_usec = 1000 % 1000000;
   itval.it_interval.tv_sec =  itval.it_value.tv_sec = 1000 / 1000000;
 
@@ -250,7 +263,7 @@ int Tau_sampling_init() {
   int tid = RtsLayer::myThread();
   int node = RtsLayer::myNode();
   node = 0;
-  sprintf(filename, "%s/ebstrace.%d.%d.%d.%d", profiledir, getpid(), node, RtsLayer::myContext(), tid);
+  sprintf(filename, "%s/ebstrace.raw.%d.%d.%d.%d", profiledir, getpid(), node, RtsLayer::myContext(), tid);
 
   ebsTrace = fopen(filename, "w");
 
@@ -269,6 +282,7 @@ int Tau_sampling_init() {
     return 0;
   }
 
+  samplingEnabled = 1;
   return 0;
 }
 
@@ -276,7 +290,10 @@ int Tau_sampling_init() {
  * Finalize the sampling trace system
  ********************************************************************/
 int Tau_sampling_finalize() {
+
   /* Disable sampling first */
+  samplingEnabled = 0;
+
   struct itimerval itval;
   int ret;
 
@@ -293,7 +310,7 @@ int Tau_sampling_finalize() {
   int tid = RtsLayer::myThread();
   int node = RtsLayer::myNode();
   node = 0;
-  sprintf(filename, "%s/ebstracedef.%d.%d.%d.%d", profiledir, getpid(), node, RtsLayer::myContext(), tid);
+  sprintf(filename, "%s/ebstrace.def.%d.%d.%d.%d", profiledir, getpid(), node, RtsLayer::myContext(), tid);
 
   FILE *def = fopen(filename, "w");
 
