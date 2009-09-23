@@ -5,6 +5,7 @@ import java.awt.Container;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileNotFoundException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +43,9 @@ import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 public class PerfExplorerActionListener implements ActionListener {
 
+	public static final String DERIVE_METRIC = "Open Expression Window";
+	public static final String PARSE_EXPRESSION = "Parse Expression File";
+	public static final String REPARSE_EXPRESSION = "Re-Parse Expression File";
 	public final static String DATABASE_CONFIGURATION = "Database Configuration";
 	public final static String LOADSCRIPT = "Load Analysis Script";
 	public final static String RERUNSCRIPT = "Re-run Analysis Script";
@@ -100,6 +104,7 @@ public class PerfExplorerActionListener implements ActionListener {
 
 	private String scriptName = null;
 	private String scriptDir = null;
+	private String expressionFilename;
 
 	public PerfExplorerActionListener (PerfExplorerClient mainFrame) {
 		super();
@@ -140,6 +145,12 @@ public class PerfExplorerActionListener implements ActionListener {
 					}
 				} else if (arg.equals(DATABASE_CONFIGURATION)) {
 					databaseConfiguration();
+				} else if (arg.equals(DERIVE_METRIC)) {
+					deriveMetric();
+				} else if (arg.equals(PARSE_EXPRESSION)) {
+					parseExpression();
+				} else if (arg.equals(REPARSE_EXPRESSION)) {
+					reparseExpression();
 				} else if (arg.equals(LOAD_PROFILE)) {
 					loadProfile();
 				} else if (arg.equals(LOADSCRIPT)) {
@@ -389,16 +400,64 @@ public class PerfExplorerActionListener implements ActionListener {
 	public void databaseConfiguration() {
 		(new DatabaseManagerWindow(PerfExplorerClient.getMainFrame())).setVisible(true);
 	}
+	public void deriveMetric() {
+		PerfExplorerModel theModel = PerfExplorerModel.getModel();
+		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
+		
+		Application app = null;
+		Experiment exp = null;
+		Trial trial = null;
+		
+		Object selection = theModel.getCurrentSelection();
+		if(selection instanceof Application){
+			app = (Application) selection;
+		}else if(selection instanceof Experiment){
+			exp = (Experiment) selection;
+			ListIterator<Application> apps = server.getApplicationList();
+			while(apps.hasNext()){
+				app = apps.next();
+				if(app.getID()==exp.getApplicationID()){
+					break;
+				}
+			}
+		}else if(selection instanceof Trial){
+			trial = (Trial)selection;
+			ListIterator<Application> apps = server.getApplicationList();
+			while(apps.hasNext()){
+				app = apps.next();
+				if(app.getID()==trial.getApplicationID()){
+					break;
+				}
+			}
+			ListIterator<Experiment> experiments = server.getExperimentList(trial.getApplicationID());
+			while(experiments.hasNext()){
+				exp = experiments.next();
+				if(exp.getID()==trial.getExperimentID()){
+					break;
+				}
+			}
+		}
 
-    /** Returns an ImageIcon, or null if the path was invalid. */
-    protected static ImageIcon createImageIcon(java.net.URL imgURL) {
-        if (imgURL != null) {
-            return new ImageIcon(imgURL);
-        } else {
-            System.err.println("Couldn't find file: " + imgURL);
-            return null;
-        }
-    }
+		if(app != null){
+
+			DerivedMetricWindow window = new DerivedMetricWindow(PerfExplorerClient.getMainFrame(),
+					app,exp,trial);
+			window.setVisible(true);
+		}else{
+			JOptionPane.showMessageDialog(mainFrame, "Please select an Application, Experiment or Trial.",
+					"Selection Error", JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	/** Returns an ImageIcon, or null if the path was invalid. */
+	protected static ImageIcon createImageIcon(java.net.URL imgURL) {
+		if (imgURL != null) {
+			return new ImageIcon(imgURL);
+		} else {
+			System.err.println("Couldn't find file: " + imgURL);
+			return null;
+		}
+	}
 
 	public void createHelpWindow() {
 		ImageIcon icon = createImageIcon(Utility.getResource("tau-large.png"));
@@ -881,6 +940,75 @@ public class PerfExplorerActionListener implements ActionListener {
 			return true;
 		}
 		return false;
+	}
+
+
+
+	private boolean parseExpression() {
+		PerfExplorerModel theModel = PerfExplorerModel.getModel();
+		Object selection = theModel.getCurrentSelection();
+		if(selection==null){
+			JOptionPane.showMessageDialog(mainFrame, "Please select an Application, Experiment or Trial.",
+					"Selection Error", JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+		
+		JFileChooser fc = null;
+		// open a file chooser dialog
+		if (scriptDir == null) {
+			fc = new JFileChooser(System.getProperty("user.dir"));
+		} else {
+			fc = new JFileChooser(scriptDir);
+		}
+		int returnVal = fc.showOpenDialog(mainFrame);
+		if (returnVal == JFileChooser.APPROVE_OPTION) {
+			expressionFilename = fc.getSelectedFile().getAbsolutePath();
+			// save where we were
+			scriptDir = fc.getSelectedFile().getParent();
+			reparseExpression();
+			return true;
+		}
+		return false;
+
+	}
+	public boolean reparseExpression() {
+		
+		PerfExplorerModel theModel = PerfExplorerModel.getModel();
+		Application a = theModel.getApplication();
+		Experiment ex = theModel.getExperiment();
+		Trial t = theModel.getTrial();
+		String app =null,exp=null,trial=null;
+		if(a!=null)app = a.getName();
+		if(ex!=null)exp = ex.getName();
+		if(t!=null)trial = t.getName();
+		if (expressionFilename == null) {
+			// make sure a script file has been loaded first
+			JOptionPane.showMessageDialog(mainFrame, 
+					"Please load an expression file first.",
+					"Expression File Not Found", JOptionPane.ERROR_MESSAGE);
+			return false;
+		} else {
+			if(app != null){
+			String script;
+			try {
+				script = new PerfExplorerExpression().getScriptFromFile(app,exp,trial,expressionFilename);
+				ScriptThread runner = new ScriptThread(script,true);
+			} catch (FileNotFoundException e) {
+				JOptionPane.showMessageDialog(mainFrame, 
+						"",
+						"Script File Not Found", JOptionPane.ERROR_MESSAGE);
+			} catch (ParsingException e) {
+				JOptionPane.showMessageDialog(mainFrame, 
+						"",
+						"Unable to Parse Expression", JOptionPane.ERROR_MESSAGE);
+			}
+			return true;
+			}else{
+				JOptionPane.showMessageDialog(mainFrame, "Please select an Application, Experiment or Trial.",
+						"Selection Error", JOptionPane.ERROR_MESSAGE);
+				return false;
+			}
+		}
 	}
 
 	public boolean runScript() {
