@@ -22,16 +22,30 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		fileMenu.setMnemonic(KeyEvent.VK_F);
 
 		//Add a menu item.
-		JMenuItem databaseItem = new JMenuItem(
-				PerfExplorerActionListener.DATABASE_CONFIGURATION);
-		databaseItem.addActionListener(listener);
-		fileMenu.add(databaseItem);
-
-		//Add a menu item.
 		JMenuItem profileItem = new JMenuItem(
 				PerfExplorerActionListener.LOAD_PROFILE);
 		profileItem.addActionListener(listener);
 		fileMenu.add(profileItem);
+	
+		//Add a menu item.
+		JMenuItem deriveMetricItem = new JMenuItem(
+				PerfExplorerActionListener.DERIVE_METRIC);
+		deriveMetricItem.addActionListener(listener);
+		fileMenu.add(deriveMetricItem);
+		
+		//Add a menu item.
+		JMenuItem parseItem = new JMenuItem(
+				PerfExplorerActionListener.PARSE_EXPRESSION);
+		parseItem.addActionListener(listener);
+		fileMenu.add(parseItem);
+		
+		//Add a menu item.
+		JMenuItem reparseItem = new JMenuItem(
+				PerfExplorerActionListener.REPARSE_EXPRESSION);
+		reparseItem.addActionListener(listener);
+		fileMenu.add(reparseItem);
+
+		
 
 		//Add a menu item.
 		JMenuItem scriptItem = new JMenuItem(
@@ -44,6 +58,17 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 				PerfExplorerActionListener.RERUNSCRIPT);
 		rerunItem.addActionListener(listener);
 		fileMenu.add(rerunItem);
+		
+		fileMenu.add(new JSeparator());
+		
+		
+		
+		//Add a menu item.
+		JMenuItem databaseItem = new JMenuItem(
+				PerfExplorerActionListener.DATABASE_CONFIGURATION);
+		databaseItem.addActionListener(listener);
+		fileMenu.add(databaseItem);
+		
 
 		//Add a menu item.
 		JMenuItem consoleItem = new JMenuItem(
