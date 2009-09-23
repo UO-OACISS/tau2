@@ -73,10 +73,11 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     public DatabaseManagerWindow(ParaProfManagerWindow mw) {
         mainWindow = mw;
 
-        if (ConfigureFiles.getConfigurations().size() > 0)
+        if (ConfigureFiles.getConfigurations().size() > 0) {
             selectedConfig = (ParseConfig) (ConfigureFiles.getConfigurations().get(0));
-        else
+        } else {
             selectedConfig = null;
+        }
 
         jarfileChooser.setText("Browse...");
         jarfileChooser.addActionListener(this);
@@ -115,9 +116,9 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
         port.setEnabled(false);
         port.setText("");
         download.setEnabled(false);
-        
+
         name.setText("Default");
-        
+
         databaseName.setText("perfdmf");
 
         labelBar.setVisible(false);
@@ -149,7 +150,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.fill = GridBagConstraints.NONE;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.NORTHWEST;
         gbc.weightx = 0.5;
         gbc.weighty = 0.5;
