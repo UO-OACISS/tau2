@@ -223,7 +223,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
 
         this.getContentPane().setLayout(new GridBagLayout());
 
-        this.setSize(new Dimension(750, 450));
+        this.setSize(new Dimension(800, 450));
 
         //configurations.setLayout(new GridBagLayout());
         ParaProfUtils.addCompItem(this, configurations, gbc, 0, 0, 1, 1);
@@ -239,10 +239,11 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
         databaseName.setText(selectedConfig.getDBName());
         databaseUser.setText(selectedConfig.getDBUserName());
         databasePassword.setText(selectedConfig.getDBPasswd());
-        if (selectedConfig.getDBPasswd() == null)
+        if (selectedConfig.getDBPasswd() == null) {
             savePassword.setSelected(false);
-        else
+        } else {
             savePassword.setSelected(true);
+        }
         port.setText(selectedConfig.getDBPort());
         driver.setText(selectedConfig.getJDBCDriver());
         jarfile.setText(selectedConfig.getJDBCJarFile());
@@ -254,8 +255,9 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     }
 
     public String writeConfig(String name) {
-        if (name == "unnamed")
+        if (name == "unnamed") {
             name = "";
+        }
 
         Configure config = new Configure("", "");
 
@@ -265,10 +267,11 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
         }
 
         config.initialize(System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf.cfg");
-        if (name.compareTo("Default") == 0)
+        if (name.compareTo("Default") == 0) {
             config.setConfigFileName("");
-        else
+        } else {
             config.setConfigFileName(name);
+        }
         config.setJDBCType((String) (adapter.getSelectedItem()));
         config.setDBHostname(host.getText());
         config.setDBName(databaseName.getText());
@@ -624,9 +627,10 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     }
 
     public void stateChanged(ChangeEvent arg0) {
-        if (savePassword.isSelected())
+        if (savePassword.isSelected()) {
             databasePassword.setEditable(true);
-        else
+        } else {
             databasePassword.setEditable(false);
+        }
     }
 }
