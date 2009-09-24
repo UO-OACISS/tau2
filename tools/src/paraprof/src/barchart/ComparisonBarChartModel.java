@@ -17,9 +17,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * Compares threads from (potentially) any trial
  * 
- * <P>CVS $Id: ComparisonBarChartModel.java,v 1.13 2009/06/26 00:43:49 amorris Exp $</P>
+ * <P>CVS $Id: ComparisonBarChartModel.java,v 1.14 2009/09/24 21:09:41 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  */
 public class ComparisonBarChartModel extends AbstractBarChartModel {
 
@@ -63,7 +63,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
             }
         }
 
-        private double getMax() {
+        private double getSortMax() {
             double max = 0;
             for (int i = 0; i < ppTrials.size(); i++) {
                 PPFunctionProfile ppFp = (PPFunctionProfile) this.get(i);
@@ -78,7 +78,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
             if (dataSorter.getSortType() == SortType.NAME) {
                 return this.functionName.compareTo(other.getFunctionName());
             }
-            return (int) (other.getMax() - getMax());
+            return (int) (other.getSortMax() - getSortMax());
         }
 
         public int compareTo(Object arg0) {
@@ -108,9 +108,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
                 public String getLabel(int index) {
                     ParaProfTrial ppTrial = (ParaProfTrial) ppTrials.get(index);
                     Thread thread = (Thread) threads.get(index);
-
                     return ppTrial.getName() + " - " + ParaProfUtils.getThreadLabel(thread);
-
                 }
 
                 public Color getColor(int index) {

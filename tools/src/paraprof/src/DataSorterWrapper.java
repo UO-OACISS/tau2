@@ -82,4 +82,15 @@ public class DataSorterWrapper extends DataSorter {
         }
         return metric;
     }
+
+    public Metric getSortMetric() {
+        // map to parent
+        Metric parentMetric = parentDataSorter.getSortMetric();
+        Metric metric = (Metric) metricMap.get(parentMetric);
+        if (metric == null) {
+            return (Metric)ppTrial.getMetrics().get(0);
+        }
+        return metric;
+    }
+
 }

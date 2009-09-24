@@ -156,12 +156,12 @@ public class PPFunctionProfile implements Comparable {
         int differential = 0;
         int snap = dataSorter.getSelectedSnapshot();
         if (differential == 1 && snap > 0) {
-            double value1 = dataSorter.getSortValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetric().getID(),
+            double value1 = dataSorter.getSortValueType().getValue(this.getFunctionProfile(), dataSorter.getSortMetric().getID(),
                     snap - 1);
-            double value2 = dataSorter.getSortValueType().getValue(this.getFunctionProfile(), dataSorter.getSelectedMetric().getID(),
+            double value2 = dataSorter.getSortValueType().getValue(this.getFunctionProfile(), dataSorter.getSortMetric().getID(),
                     snap);
             return value2 - value1;
-        } else {
+        } else { 
             return dataSorter.getSortValueType().getValue(this.getFunctionProfile(), dataSorter.getSortMetric(),
                     dataSorter.getSelectedSnapshot());
         }

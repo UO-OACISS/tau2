@@ -37,11 +37,11 @@ import edu.uoregon.tau.vis.HeatMapWindow;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.51 2009/09/10 00:13:48 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.52 2009/09/24 21:09:40 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.51 $
+ * @version $Revision: 1.52 $
  */
 public class ParaProfUtils {
 
@@ -1484,7 +1484,6 @@ public class ParaProfUtils {
                 group.add(button);
                 subMenu.add(button);
             }
-
         }
 
         subMenu.add(createMetricMenu(ppTrial, ValueType.EXCLUSIVE, dataSorter.getValueType() == ValueType.EXCLUSIVE
