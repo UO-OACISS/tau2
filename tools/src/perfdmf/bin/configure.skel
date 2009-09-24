@@ -1,48 +1,18 @@
 #!/bin/@SHELL@
 TAUROOT=@TAUROOTDIR@
-CONFIG_ARCH=@ARCH@
+MACHINE=@ARCH@
 
-PERFDMF_HOME=${TAUROOT}/tools/src/perfdmf
-PERFDMF_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/perfdmf.jar
-XMLSAX_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/xerces.jar
-JARGS_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/jargs.jar
-COMMON_JAR=${TAUROOT}/${CONFIG_ARCH}/lib/tau-common.jar
-#CONFIG_FILE=${HOME}/.ParaProf/perfdmf.cfg
+LIBDIR=${TAUROOT}/${MACHINE}/lib
+JARDIR=${TAUROOT}/${MACHINE}/lib
 
-if [ "x$TAUROOT" = "x" ] 
-    then
-    echo "TAUROOT not set.  Please run 'configure' in the tau root directory."
-    exit
+JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis.jar:${JARDIR}/jogl.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar
+
+# Check machine type for a heap space boost
+MEMORY=-Xmx800m
+
+machine=`uname -m`
+if [ "x$machine" = "xx86_64" ] ; then
+    MEMORY=-Xmx2000m
 fi
 
-if [ ! -r ${PERFDMF_JAR} ]
-    then
-    echo ""
-    echo "$PERFDMF_JAR not found."
-    echo "Please run 'make' in the directory ${PERFDMF_HOME}."
-    echo ""
-    exit 
-fi
-
-if [ ! -r ${XMLSAX_JAR} ]
-    then
-    echo ""
-    echo "$XMLSAX_JAR not found."
-    echo ""
-    exit
-fi
-
-if [ ! -r ${JARGS_JAR} ]
-    then
-    echo ""
-    echo "$JARGS_JAR not found."
-    echo ""
-    exit
-fi
-
-if [ ! -r ${HOME}/.ParaProf ]
-    then
-    mkdir ${HOME}/.ParaProf
-fi
-
-java -cp ${PERFDMF_JAR}:${XMLSAX_JAR}:${JARGS_JAR}:${COMMON_JAR} edu.uoregon.tau.perfdmf.loader.Configure -t ${TAUROOT} -a ${CONFIG_ARCH} $@
+java $MEMORY -cp ${JARS} edu.uoregon.tau.perfdmf.loader.Configure -t ${TAUROOT} -a ${MACHINE} "$@"
