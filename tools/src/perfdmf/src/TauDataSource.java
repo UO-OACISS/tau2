@@ -23,6 +23,7 @@ import java.nio.channels.FileLock;
 import java.util.*;
 
 import edu.uoregon.tau.common.LineCountBufferedReader;
+import edu.uoregon.tau.common.Utility;
 
 public class TauDataSource extends DataSource {
 
@@ -401,6 +402,9 @@ public class TauDataSource extends DataSource {
         //System.out.println("Time to process (in milliseconds): " + thistime);
         //System.out.print(thistime + ", ");
 
+        
+        EBSTraceReader.processEBSTraces(this, new File(System.getProperty("user.dir")));
+        
         //Generate derived data.
         this.generateDerivedData();
         this.aggregateMetaData();
@@ -506,6 +510,8 @@ public class TauDataSource extends DataSource {
             name = string.substring(1, i - 1);
             st2 = new StringTokenizer(string.substring(i + 1), " \t\n\r");
         }
+        
+        name = Utility.removeRuns(name);
 
         numcalls = Double.parseDouble(st2.nextToken()); //Calls
         numsubr = Double.parseDouble(st2.nextToken()); //Subroutines
