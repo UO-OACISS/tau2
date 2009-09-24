@@ -25,9 +25,9 @@ import edu.uoregon.tau.vis.VisRenderer;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.13 2009/09/10 00:13:49 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.14 2009/09/24 01:14:16 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.13 $
+ * @version	$Revision: 1.14 $
  */
 public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
@@ -383,6 +383,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                 }
                 textField.setCaretPosition(0);
 
+                
                 heightValueField.setText(window.getSelectedHeightValue());
                 colorValueField.setText(window.getSelectedColorValue());
 

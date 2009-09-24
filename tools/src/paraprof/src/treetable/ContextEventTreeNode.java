@@ -4,6 +4,7 @@ import java.util.*;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
+import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfdmf.UserEventProfile;
 import edu.uoregon.tau.perfdmf.UtilFncs;
 
@@ -40,14 +41,7 @@ public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comp
         return children;
     }
 
-    private String removeRuns(String str) {
-        int loc = str.indexOf("  ");
-        while (loc > 0) {
-            str = str.substring(0, loc) + str.substring(loc + 1);
-            loc = str.indexOf("  ");
-        }
-        return str;
-    }
+
 
     private void checkInitChildren() {
         if (children == null) {
@@ -65,7 +59,7 @@ public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comp
                 }
 
                 String path = uep.getName().substring(uep.getName().indexOf(":") + 1).trim();
-                path = removeRuns(path);
+                path = Utility.removeRuns(path);
                 if (path.startsWith(name)) {
 
                     String remain = path.substring(name.length()).trim();

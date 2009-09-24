@@ -723,6 +723,10 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         return experiment.getDatabase();
     }
 
+    public List getThreads() {
+        return getDataSource().getAllThreads();
+    }
+    
     public List getThreadNames() {
         List threadNames = new ArrayList();
 

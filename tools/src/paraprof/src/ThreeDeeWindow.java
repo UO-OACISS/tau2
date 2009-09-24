@@ -567,9 +567,9 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             addFunctionNames = true;
         }
 
-        
         if (threadNames == null) {
             threadNames = ppTrial.getThreadNames();
+            threads = ppTrial.getThreads();
         }
 
         maxHeightValue = 0;
@@ -1021,17 +1021,15 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         }
 
         int units = this.units;
-        ParaProfMetric ppMetric = (ParaProfMetric)settings.getHeightMetric();
+        ParaProfMetric ppMetric = (ParaProfMetric) settings.getHeightMetric();
         if (!ppMetric.isTimeMetric() || !ValueType.isTimeUnits(settings.getHeightValue())) {
             units = 0;
         }
 
-        return UtilFncs.getOutputString(units, settings.getHeightValue().getValue(fp, settings.getHeightMetric().getID()), 6,
-                ppMetric.isTimeDenominator()).trim()
+        String retval = UtilFncs.getOutputString(units,
+                settings.getHeightValue().getValue(fp, settings.getHeightMetric().getID()), 6, ppMetric.isTimeDenominator()).trim()
                 + getUnitsString(units, settings.getHeightValue(), ppMetric);
-
-        //Double.toString(settings.getHeightValue().getValue(fp, settings.getHeightMetricID()));
-
+        return retval;
     }
 
     public String getSelectedColorValue() {
@@ -1087,8 +1085,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
                     if (scatterValueTypes[f] == ValueType.NUMCALLS || scatterValueTypes[f] == ValueType.NUMSUBR) {
                         axisNames.add(toDisplay + "\n(" + scatterValueTypes[f].toString() + ")");
                     } else {
-                        axisNames.add(toDisplay + "\n(" + scatterValueTypes[f].toString() + ", "
-                                + scatterMetricIDs[f].getName() + ")");
+                        axisNames.add(toDisplay + "\n(" + scatterValueTypes[f].toString() + ", " + scatterMetricIDs[f].getName()
+                                + ")");
                     }
                 } else {
                     axisNames.add("none");
