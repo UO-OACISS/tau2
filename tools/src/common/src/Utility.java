@@ -15,6 +15,15 @@ import org.jfree.chart.title.LegendTitle;
 
 public class Utility {
 
+    public static String removeRuns(String str) {
+        int loc = str.indexOf("  ");
+        while (loc > 0) {
+            str = str.substring(0, loc) + str.substring(loc + 1);
+            loc = str.indexOf("  ");
+        }
+        return str;
+    }
+    
     public static ImageIcon getImageIconResource(String name) {
         java.net.URL imgURL = getResource(name);
         if (imgURL != null) {
