@@ -5,6 +5,17 @@
 ########################################################################
 
 use strict;
+use IO::Handle;
+
+
+my ($forked);
+$forked = 0;
+
+##### create pipes to handle communication
+pipe (FROM_PERL, TO_PROGRAM);
+pipe (FROM_PROGRAM, TO_PERL);
+TO_PROGRAM->autoflush(1);
+TO_PERL->autoflush(1);
 
 # Trim leading and trailing whitespace from a string
 sub trim($) {
@@ -14,6 +25,59 @@ sub trim($) {
   return $string;
 }
 
+# Translate a PC value
+sub translate_pc {
+  my ($exe, $pc) = @_;
+
+  if ($forked == 0) {
+    $forked = 1;
+    my $pid = fork;
+
+    ##### child process becomes the program
+    if ($pid == 0) {
+      ##### attach standard input/output/error to the pipes
+      close  STDIN;
+      open  (STDIN,  '<&FROM_PERL') || die ("open: $!");
+
+      close  STDOUT;
+      open  (STDOUT, '>&TO_PERL')   || die ("open: $!");
+
+      close  STDERR;
+      open  (STDERR, '>&STDOUT')    || die;
+
+      ##### close unused parts of pipes
+      close FROM_PROGRAM;
+      close TO_PROGRAM;
+
+      ##### unbuffer the outputs
+      select STDERR; $| = 1;
+      select STDOUT; $| = 1;
+
+
+      ##### execute the program
+      exec "addr2line -C -f -e $exe";
+
+      ##### shouldn't get here!!!
+      die;
+    } else {
+      close FROM_PERL;
+      close TO_PERL;
+    }
+  }
+
+  # write the pc to addr2line
+  print TO_PROGRAM "$pc\n";
+
+  # read the result
+  my $func = <FROM_PROGRAM>;
+  my $fileline = <FROM_PROGRAM>;
+
+  chomp($func);
+  chomp($fileline);
+  return "$func:$fileline"
+}
+
+# process an EBS trace file
 sub process_trace {
   my($def_file, $trace_file, $out_file) = @_;
 
@@ -94,9 +158,8 @@ sub process_trace {
 #       }
 
       # Process the PC
-      my $out = `echo $pc | addr2line -e $exe`;
-      chomp($out);
-      my $newpc = $out;
+
+      my $newpc = translate_pc($exe, $pc);
 
       # Output the processed data
       print OUTPUT "$timestamp | $deltaStart | $deltaStop | $newpc | $metrics | $newCallpath\n";
@@ -108,6 +171,8 @@ sub process_trace {
 
 
 sub main {
+
+
 
   my $pattern = "ebstrace.raw.*.*.*.*";
   while (defined(my $filename = glob($pattern))) {
