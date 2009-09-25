@@ -90,7 +90,7 @@ public class EBSTraceReader {
 
                     String fields[] = inputString.split("\\|");
                     String location = fields[3].trim();
-                    if (!location.startsWith("??:0")) {
+                    if (!location.startsWith("??:")) {
                         long timestamp = Long.parseLong(fields[0].trim());
                         long deltaBegin = Long.parseLong(fields[1].trim());
                         long deltaEnd = Long.parseLong(fields[2].trim());
