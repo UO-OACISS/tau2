@@ -348,23 +348,6 @@ void traceExit(int id)
   if (f1 == (FunctionInfo *)fi) { 
     TAU_PROFILER_STOP(fi); 
   }
-  else {
-    FunctionInfo *a = ((Profiler *)curr)->ThisFunction;
-    FunctionInfo *b = (FunctionInfo *)fi; 
-    dprintf("Parent FI=%lx[%s], fi = %lx[%s]\n", a, a->GetName(), b, b->GetName());
-    while( a && a != b) {
-      dprintf("Closing a [%s]\n", a->GetName());
-      TAU_PROFILER_STOP(a);
-      curr = ((Profiler *)curr)->ParentProfiler;
-      if (!curr) break;
-      a =  ((Profiler *)curr)->ThisFunction;
-    }
-
-    if (a == b) {
-      dprintf("Closing the missing exit in %s\n", a->GetName());
-      TAU_PROFILER_STOP(fi);
-    }
-  }
 
 }
 
@@ -393,6 +376,6 @@ void my_otf_cleanup()
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
- * $Revision: 1.27 $   $Date: 2009/09/27 02:09:17 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.27 2009/09/27 02:09:17 sameer Exp $ 
+ * $Revision: 1.28 $   $Date: 2009/09/27 05:48:14 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.28 2009/09/27 05:48:14 sameer Exp $ 
  ***************************************************************************/
