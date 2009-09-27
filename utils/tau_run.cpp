@@ -57,6 +57,69 @@ extern bool processFileForInstrumentation(const string& file_name);
 extern void printExcludeList();
 extern bool instrumentEntity(const string& function_name);
 
+/* re-writer */
+BPatch *bpatch_global = NULL;
+BPatch_function *name_reg;
+BPatch_Vector<BPatch_snippet *> funcNames;
+int addName(char *name)
+{
+   static int funcID = 0;
+   BPatch_constExpr *name_param = new BPatch_constExpr(name);
+   BPatch_constExpr *id_param = new BPatch_constExpr(funcID);
+   BPatch_Vector<BPatch_snippet *> params;
+   params.push_back(name_param);
+   params.push_back(id_param);
+
+   BPatch_funcCallExpr *call = new BPatch_funcCallExpr(*name_reg, params);
+   funcNames.push_back(call);
+   return funcID++;
+}
+
+void insertTrace(BPatch_function* functionToInstrument,
+                 BPatch_addressSpace* mutatee,
+                 BPatch_function* traceEntryFunc,
+                 BPatch_function* traceExitFunc)
+{
+  char name[1024];
+  char modname[1024];
+
+  functionToInstrument->getModuleName(modname, 1024);
+  if (strstr(modname, "libdyninstAPI_RT"))
+     return;
+
+  functionToInstrument->getName(name, 1024);
+  int id = addName(name);
+  BPatch_Vector<BPatch_snippet *> traceArgs;
+  traceArgs.push_back(new BPatch_constExpr(id));
+
+  BPatch_Vector<BPatch_point*>* funcEntry = functionToInstrument->findPoint(BPatch_entry);
+  BPatch_Vector<BPatch_point*>* funcExit = functionToInstrument->findPoint(BPatch_exit);
+
+  BPatch_funcCallExpr entryTrace(*traceEntryFunc, traceArgs);
+  BPatch_funcCallExpr exitTrace(*traceExitFunc, traceArgs);
+
+  mutatee->insertSnippet(entryTrace, *funcEntry, BPatch_callBefore, BPatch_lastSnippet);
+  mutatee->insertSnippet(exitTrace, *funcExit, BPatch_callAfter, BPatch_lastSnippet);
+}
+
+struct boundFindFunc
+{
+  boundFindFunc(BPatch_image* img, BPatch_Vector<BPatch_function*>& funcPtrs) : m_image(img), m_outputStorage(funcPtrs)
+  {
+  }
+  void operator()(const char* name)
+  {
+    m_image->findFunction(name, m_outputStorage);
+  }
+
+  BPatch_image* m_image;
+  BPatch_Vector<BPatch_function*>& m_outputStorage;
+
+};
+
+
+
+
 //
 // Error callback routine. 
 //
@@ -293,26 +356,105 @@ int routineConstraint(char *fname){ // fname is the function name
 // check if the application has an MPI library routine MPI_Comm_rank
 // 
 int checkIfMPI(BPatch_image * appImage, BPatch_function * & mpiinit,
-		BPatch_function * & mpiinitstub){
+		BPatch_function * & mpiinitstub, bool binaryRewrite){
 
-  mpiinit 	= tauFindFunction(appImage, "PMPI_Comm_rank");
+  mpiinit 	= tauFindFunction(appImage, "MPI_Comm_rank");
   mpiinitstub 	= tauFindFunction(appImage, "TauMPIInitStub");
 
   if (mpiinitstub == (BPatch_function *) NULL)
     printf("*** TauMPIInitStub not found! \n");
   
   if (mpiinit == (BPatch_function *) NULL) {
-    dprintf("*** PMPI_Comm_rank not found looking for MPI_Comm_rank...\n");
-    mpiinit = tauFindFunction(appImage, "MPI_Comm_rank");
+    dprintf("*** MPI_Comm_rank not found looking for PMPI_Comm_rank...\n");
+    if (!binaryRewrite) {
+      mpiinit = tauFindFunction(appImage, "PMPI_Comm_rank");
+    }
   }//if
   
   if (mpiinit == (BPatch_function *) NULL) { 
-    dprintf("*** MPI_Comm_rank also not found. This is not an MPI Application! \n");
+    dprintf("*** This is not an MPI Application! \n");
     return 0;  // It is not an MPI application
   }//if
   else
     return 1;   // Yes, it is an MPI application.
 }//checkIfMPI()
+
+
+int tauRewriteBinary(BPatch *bpatch_global, const char *mutateeName, char *outfile, char* libname)
+{
+  using namespace std;
+  BPatch_function *mpiinit;
+  BPatch_function *mpiinitstub;
+
+  dprintf("Inside tauRewriteBinary, name=%s, out=%s\n", mutateeName, outfile);
+  BPatch_binaryEdit* mutateeAddressSpace = bpatch_global->openBinary(mutateeName, false);
+
+  bpatch_global->setLivenessAnalysis(false);
+  mutateeAddressSpace->allowTraps(false);
+  BPatch_image* mutateeImage = mutateeAddressSpace->getImage();
+  BPatch_Vector<BPatch_function*>* allFuncs = mutateeImage->getProcedures();
+
+  bool result = mutateeAddressSpace->loadLibrary(libname);
+  assert(result);
+  BPatch_function* entryTrace = tauFindFunction(mutateeImage, "traceEntry");
+  BPatch_function* exitTrace = tauFindFunction(mutateeImage, "traceExit");
+  BPatch_function* setupFunc = tauFindFunction(mutateeImage, "my_otf_init");
+  BPatch_function* cleanupFunc = tauFindFunction(mutateeImage, "my_otf_cleanup");
+  BPatch_function* mainFunc = tauFindFunction(mutateeImage, "main");
+  name_reg = tauFindFunction(mutateeImage, "trace_register_func");
+
+  if(!mainFunc)
+  {
+    fprintf(stderr, "Couldn't find main(), aborting\n");
+    return -1;
+  }
+  if(!entryTrace || !exitTrace || !setupFunc || !cleanupFunc)
+  {
+    fprintf(stderr, "Couldn't find OTF functions, aborting\n");
+    return -1;
+  }
+
+  BPatch_Vector<BPatch_point*>* mainEntry = mainFunc->findPoint(BPatch_entry);
+  assert(mainEntry);
+  assert(mainEntry->size());
+  assert((*mainEntry)[0]);
+
+  mutateeAddressSpace->beginInsertionSet();
+
+  BPatch_constExpr isMPI(checkIfMPI(mutateeImage, mpiinit, mpiinitstub, true));
+  BPatch_Vector<BPatch_snippet*> init_params;
+  init_params.push_back(&isMPI);
+  BPatch_funcCallExpr setup_call(*setupFunc, init_params);
+  funcNames.push_back(&setup_call);
+
+  for (BPatch_Vector<BPatch_function*>::iterator it=allFuncs->begin();
+  it != allFuncs->end(); it++)
+  {
+    char fname[FUNCNAMELEN];
+    (*it)->getName(fname, FUNCNAMELEN);
+    dprintf("Processing %s...\n", fname); 
+    if (!routineConstraint(fname)) { // ok to instrument
+      insertTrace(*it, mutateeAddressSpace, entryTrace, exitTrace);
+    }
+    else {
+     dprintf("Not instrumenting %s\n", fname);
+    }
+  }
+
+
+  BPatch_sequence sequence(funcNames);
+  mutateeAddressSpace->insertSnippet(sequence,
+                                     *mainEntry,
+                                     BPatch_callBefore,
+                                     BPatch_firstSnippet);
+
+  mutateeAddressSpace->finalizeInsertionSet(false, NULL);
+
+  std::string modifiedFileName(outfile);
+  chdir("result");
+  mutateeAddressSpace->writeFile(modifiedFileName.c_str());
+  return 0;
+}
 
 
 //
@@ -396,6 +538,11 @@ int main(int argc, char **argv){
   // getting an assertion failure under Linux otherwise 
   // bpatch->setDebugParsing(false); 
   // removed for DyninstAPI 4.0
+
+  if (binaryRewrite) {
+    tauRewriteBinary(bpatch, argv[1], outfile, (char *)libname);
+    return 0; // exit from the application 
+  }
 #ifdef TAU_DYNINST41PLUS
   appThread = bpatch->createProcess(argv[1], (const char **)&argv[1] , NULL);
 #else
@@ -494,7 +641,7 @@ int main(int argc, char **argv){
   // way, it works for both MPI and sequential tasks. 
   
   bpatch->registerErrorCallback(errorFuncNull); // turn off error reporting
-  BPatch_constExpr isMPI(checkIfMPI(appImage, mpiinit, mpiinitstub));
+  BPatch_constExpr isMPI(checkIfMPI(appImage, mpiinit, mpiinitstub,binaryRewrite));
   bpatch->registerErrorCallback(errorFunc1); // turn it back on
 
   initArgs.push_back(&funcName);

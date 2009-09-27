@@ -36,11 +36,13 @@ using namespace std;
 #ifdef DEBUG_PROF
 #define dprintf printf
 #else // DEBUG_PROF 
-#define dprintf if (0) printf
+#define dprintf TAU_VERBOSE
 #endif
 
 //#define ORIGINAL_HEAVY_IMPLEMENTATION_USING_MAP 1
 #define TAUDYNVEC 1
+//extern "C" void Tau_get_func_name(long addr, char * fname, char *filename);
+
 
 #ifndef __ia64
 int TheFlag[TAU_MAX_THREADS] ;
@@ -56,6 +58,12 @@ vector<string> TauFuncNameVec; /* holds just names */
 vector<FunctionInfo*>& TheTauDynFI(void)
 { // FunctionDB contains pointers to each FunctionInfo static object
   static vector<FunctionInfo*> FuncTauDynFI;
+
+  return FuncTauDynFI;
+}
+vector<void*>& TheTauBinDynFI(void)
+{ // FunctionDB contains pointers to each FunctionInfo static object
+  static vector<void*> FuncTauDynFI;
 
   return FuncTauDynFI;
 }
@@ -260,11 +268,131 @@ int TauRenameTimer(char *oldName, char *newName)
   dprintf("Didn't find the routine!\n");
   return 0; /* didn't find it! */
 }
-} // extern "C"
+
+
+static int tauDyninstEnabled[TAU_MAX_THREADS];
+void trace_register_func(char *func, int id)
+{
+  static int invocations = 0;
+  int tid = RtsLayer::myThread();
+  if (!tauDyninstEnabled[tid]) return;
+  dprintf("trace_register_func: func = %s, id = %d\n", func, id);
+
+  void *taufi;
+  TAU_PROFILER_CREATE(taufi, func, " ", TAU_DEFAULT);
+
+  if (func[0] == 't' && func[1] == 'a' && func[2] == 'r' && func[3] == 'g') {
+    if (isdigit(func[4])) {
+      long addr;
+      dprintf("trace_register_func: Routine name is targN...\n");
+      ((FunctionInfo *)taufi)->SetProfileGroup(TAU_GROUP_31);
+
+    // TAU_GROUP_31 is special. It indicates that the routine is called targ...
+    // This routine should be exited prior to the beginning of the next routine
+    // Extract the name from the address:
+/*
+      sscanf(func, "targ%lx", &addr);
+      dprintf("ADDR=%lx, name =%s\n", addr, func);
+      char name[256];
+      char filename[256];
+      Tau_get_func_name(addr, (char *)name, (char *)filename); 
+      printf("GOT: name = %s, filename = %s, addr = %lx\n", name, filename, addr);
+*/
+    }
+  }
+  dprintf("TAU FI = %lx\n", taufi);
+  dprintf("id = %d, invocations = %d\n", id , invocations);
+  if (id == invocations)
+    TheTauBinDynFI().push_back(taufi);
+  else {
+    printf("WARNING: trace_register_func: id does not match invocations\n");
+    TheTauBinDynFI()[id] = taufi;
+  } 
+  invocations ++;
+}
+
+void traceEntry(int id)
+{
+  int tid = RtsLayer::myThread();
+  if (!tauDyninstEnabled[tid]) return;
+  TAU_QUERY_DECLARE_EVENT(curr);
+  TAU_QUERY_GET_CURRENT_EVENT(curr);
+
+  if ( curr && ((Profiler *)curr)->ThisFunction->GetProfileGroup() == TAU_GROUP_31) {
+    dprintf("TARG on the stack \n");
+    TAU_PROFILER_STOP(((Profiler *)curr)->ThisFunction);
+  }
+
+  void *fi = TheTauBinDynFI()[id];
+  dprintf("Inside traceEntry: id = %d ", id);
+  dprintf("Name = %s\n", ((FunctionInfo *)fi)->GetName());
+  TAU_PROFILER_START(fi);
+  
+
+  const char *strbin;
+}
+
+void traceExit(int id)
+{
+  const char *strcurr;
+  const char *strbin;
+  int tid = RtsLayer::myThread();
+  if (!tauDyninstEnabled[tid]) return;
+  void *fi = TheTauBinDynFI()[id];
+  dprintf("traceExit: Name = %s, %lx\n", ((FunctionInfo *)fi)->GetName(), fi);
+  TAU_QUERY_DECLARE_EVENT(curr);
+  TAU_QUERY_GET_CURRENT_EVENT(curr);
+  if (!curr) return;
+  FunctionInfo *f1 = ((Profiler *)curr)->ThisFunction;
+  dprintf("Current = %s, %lx\n", f1->GetName(), f1);
+  if (f1 == (FunctionInfo *)fi) { 
+    TAU_PROFILER_STOP(fi); 
+  }
+  else {
+    FunctionInfo *a = ((Profiler *)curr)->ThisFunction;
+    FunctionInfo *b = (FunctionInfo *)fi; 
+    dprintf("Parent FI=%lx[%s], fi = %lx[%s]\n", a, a->GetName(), b, b->GetName());
+    while( a && a != b) {
+      dprintf("Closing a [%s]\n", a->GetName());
+      TAU_PROFILER_STOP(a);
+      curr = ((Profiler *)curr)->ParentProfiler;
+      if (!curr) break;
+      a =  ((Profiler *)curr)->ThisFunction;
+    }
+
+    if (a == b) {
+      dprintf("Closing the missing exit in %s\n", a->GetName());
+      TAU_PROFILER_STOP(fi);
+    }
+  }
+
+}
+
+void my_otf_init(int isMPI)
+{
+  dprintf("Inside my otf_init\n");
+  dprintf("isMPI = %d\n", isMPI);
+  if (!isMPI)
+  {
+    dprintf("Calling SET NODE 0\n");
+    TAU_PROFILE_SET_NODE(0);
+  }
+  int tid = RtsLayer::myThread();
+  if (!tauDyninstEnabled[tid]) {
+    tauDyninstEnabled[tid] = 1;
+  }
+}
+
+void my_otf_cleanup()
+{
+  dprintf("Inside my otf_cleanup\n");
+}
+}
+// extern "C"
 
 // EOF TauHooks.cpp
 /***************************************************************************
- * $RCSfile: TauHooks.cpp,v $   $Author: amorris $
- * $Revision: 1.26 $   $Date: 2009/01/16 00:46:53 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.26 2009/01/16 00:46:53 amorris Exp $ 
+ * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
+ * $Revision: 1.27 $   $Date: 2009/09/27 02:09:17 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.27 2009/09/27 02:09:17 sameer Exp $ 
  ***************************************************************************/
