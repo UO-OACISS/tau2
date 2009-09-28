@@ -20,8 +20,14 @@ public abstract class Expression {
 
 	public static void main(String args[]) throws ParsingException{
 		//System.out.println("\"a=b\"=a+\"b+c\"- 12 / c");
-		System.out.println("\"a++100\"+\"b+_110\"");
+		//System.out.println("\"a++100\"+\"b+_110\"");
 		System.out.println(Expression.validate("\"a++100\"+\"b+_110\""));
+		System.out.println(Expression.validate("(a+b)*c"));
+		System.out.println(Expression.validate("(a+b+b)*(a+b)/(34+\"b-a:\")"));
+		System.out.println(Expression.validate("(a-b+c.d*f)-ab*(ab*c)/2-(3-4)*(34+a"));
+		System.out.println(Expression.validate("(a+b+b)*(a+b)/(34+\"b-a:\")"));
+		System.out.println(Expression.validate("(a+b+b)*(a+b)/(34+\"b-a:\")"));
+
 	}
 /**
  * Parses a single expression.  
@@ -105,68 +111,51 @@ public abstract class Expression {
 				}
 				break;
 			case '+':
-				if (name.equals(""))
-				    throw new ParsingException ("No operand before "+current);	
-				out.add(name + "");
+				if (!name.equals(""))
+					out.add(name + "");	
 				name = "";
 				try {
 					while (stack.peek() != '(')
 						out.add(stack.pop() + "");
-				} catch (EmptyStackException ex) {
-
-				}
+				} catch (EmptyStackException ex) {}
 				stack.push('+');
 				break;
 			case '-':
-				if (name.equals(""))
-				    throw new ParsingException ("No operand before "+current);	
-				out.add(name + "");
+				if (!name.equals(""))
+					out.add(name + "");	
 				name = "";
-
 				try {
 					while (stack.peek() != '(')
 						out.add(stack.pop() + "");
-				} catch (EmptyStackException ex) {
-
-				}
+				} catch (EmptyStackException ex) {}
 				stack.push('-');
 				break;
 			case '/':
-				if (name.equals(""))
-				    throw new ParsingException ("No operand before "+current);	
-				out.add(name + "");
+				if (!name.equals(""))
+					out.add(name + "");	
 				name = "";
 				try {
-					while (stack.peek() != '(' && stack.peek() != '-'
-						&& stack.peek() != '+')
+					while (stack.peek() != '(' && stack.peek() != '-' && stack.peek() != '+')
 						out.add(stack.pop() + "");
-				} catch (EmptyStackException ex) {
-
-				}
+				} catch (EmptyStackException ex) {}
 				stack.push('/');
 				break;
 			case '*':
-				if (name.equals(""))
-				    throw new ParsingException ("No operand before "+current);	
-				out.add(name + "");
+				if (!name.equals(""))
+					out.add(name + "");
 				name = "";
 				try {
-					while (stack.peek() != '(' && stack.peek() != '-'
-						&& stack.peek() != '+')
+					while (stack.peek() != '(' && stack.peek() != '-' && stack.peek() != '+')
 						out.add(stack.pop() + "");
-				} catch (EmptyStackException ex) {
-
-				}
+				} catch (EmptyStackException ex) {}
 				stack.push('*');
 				break;
 			case '(':
-			
 				stack.push('(');
 				break;
 			case ')':
-				if (name.equals(""))
-				    throw new ParsingException ("No operand before "+current);	
-				out.add(name + "");
+				if (!name.equals(""))
+					out.add(name + "");
 				name = "";
 				try {
 					while (stack.peek() != '(')
