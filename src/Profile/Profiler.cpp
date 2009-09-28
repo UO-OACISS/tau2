@@ -254,6 +254,10 @@ void Profiler::Start(int tid) {
   /*** Phase Profiling ***/
   /********************************************************************************/
 
+  /* Get the current metric values */
+  x_uint64 TimeStamp;
+  RtsLayer::getUSecD(tid, StartTime);	  
+  TimeStamp = (x_uint64) StartTime[0]; // USE COUNTER1 for tracing
 
   
   /********************************************************************************/
@@ -263,12 +267,12 @@ void Profiler::Start(int tid) {
     /*** Memory Profiling ***/
     if (TauEnv_get_track_memory_heap()) {
       TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) : Entry");
-      TAU_CONTEXT_EVENT(memHeapEvent, TauGetMaxRSS());
+      ((TauContextUserEvent *)memHeapEvent)->TriggerEvent(TauGetMaxRSS(), tid, TimeStamp, 1);
     }
     
     if (TauEnv_get_track_memory_headroom()) {
       TAU_REGISTER_CONTEXT_EVENT(memEvent, "Memory Headroom Available (MB) : Entry");
-      TAU_CONTEXT_EVENT(memEvent, (double)TauGetFreeMemory());
+      ((TauContextUserEvent *)memEvent)->TriggerEvent((double)TauGetFreeMemory(), tid, TimeStamp, 1);
     }
     
 #ifdef TAU_PROFILEMEMORY
@@ -288,10 +292,6 @@ void Profiler::Start(int tid) {
   /*** Extras ***/
   /********************************************************************************/
 
-  x_uint64 TimeStamp;
-
-  RtsLayer::getUSecD(tid, StartTime);	  
-  TimeStamp = (x_uint64) StartTime[0]; // USE COUNTER1 for tracing
   
   if (TauEnv_get_callpath()) {
     CallPathStart(tid);
@@ -462,6 +462,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   }
 
 
+  x_uint64 TimeStamp = 0L; 
+  TimeStamp = (x_uint64) CurrentTime[0]; // USE COUNTER1
+
 
   /********************************************************************************/
   /*** Extras ***/
@@ -486,12 +489,12 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     /*** Memory Profiling ***/
     if (TauEnv_get_track_memory_heap()) {
       TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) : Exit");
-      TAU_CONTEXT_EVENT(memHeapEvent, TauGetMaxRSS());
+      ((TauContextUserEvent *)memHeapEvent)->TriggerEvent(TauGetMaxRSS(), tid, TimeStamp, 1);
     }
     
     if (TauEnv_get_track_memory_headroom()) {
       TAU_REGISTER_CONTEXT_EVENT(memEvent, "Memory Headroom Available (MB) : Exit");
-      TAU_CONTEXT_EVENT(memEvent, (double)TauGetFreeMemory());
+      ((TauContextUserEvent *)memEvent)->TriggerEvent((double)TauGetFreeMemory(), tid, TimeStamp, 1);
     }
   }
   /********************************************************************************/
@@ -503,16 +506,13 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   /********************************************************************************/
   /*** Tracing ***/
   /********************************************************************************/
-  x_uint64 TimeStamp = 0L; 
-
-  TimeStamp = (x_uint64) CurrentTime[0]; // USE COUNTER1
 
 #ifdef TAU_MPITRACE
   if (RecordEvent) {
 #endif /* TAU_MPITRACE */
     if (TauEnv_get_tracing()) {
-      TauMetrics_triggerAtomicEvents(TimeStamp, CurrentTime, tid);
       TauTraceEvent(ThisFunction->GetFunctionId(), -1 /* exit */, tid, TimeStamp, 1 /* use supplied timestamp */); 
+      TauMetrics_triggerAtomicEvents(TimeStamp, CurrentTime, tid);
     }
 #ifdef TAU_MPITRACE
   }
@@ -1341,6 +1341,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.252 $   $Date: 2009/09/18 23:10:13 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.252 2009/09/18 23:10:13 amorris Exp $ 
+ * $Revision: 1.253 $   $Date: 2009/09/28 18:28:49 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.253 2009/09/28 18:28:49 amorris Exp $ 
  ***************************************************************************/

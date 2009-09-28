@@ -41,6 +41,7 @@ class TauUserEvent {
     TauUserEvent(TauUserEvent& );
     TauUserEvent& operator= (const TauUserEvent& );
     void TriggerEvent(TAU_EVENT_DATATYPE data, int tid = RtsLayer::myThread());
+    void TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timestamp, int use_ts);
     ~TauUserEvent();
     TAU_EVENT_DATATYPE GetMin(int tid = RtsLayer::myThread());
     TAU_EVENT_DATATYPE GetMax(int tid = RtsLayer::myThread());
@@ -70,7 +71,8 @@ class TauContextUserEvent {
     TauContextUserEvent(const char * EName, bool MonoIncr=false);
     ~TauContextUserEvent(); 
     void SetDisableContext(bool value);
-    void TriggerEvent( TAU_EVENT_DATATYPE data, int tid = RtsLayer::myThread());
+    void TriggerEvent(TAU_EVENT_DATATYPE data, int tid = RtsLayer::myThread());
+    void TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timestamp, int use_ts);
     const char *GetEventName(void); 
     TauUserEvent *contextevent;
   private:
@@ -84,6 +86,6 @@ TAU_STD_NAMESPACE vector<TauUserEvent*>& TheEventDB(void);
 
 /***************************************************************************
  * $RCSfile: UserEvent.h,v $   $Author: amorris $
- * $Revision: 1.16 $   $Date: 2009/01/16 02:24:51 $
- * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.16 2009/01/16 02:24:51 amorris Exp $ 
+ * $Revision: 1.17 $   $Date: 2009/09/28 18:28:48 $
+ * POOMA_VERSION_ID: $Id: UserEvent.h,v 1.17 2009/09/28 18:28:48 amorris Exp $ 
  ***************************************************************************/

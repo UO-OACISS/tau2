@@ -201,6 +201,10 @@ void TauUserEvent::SetMonotonicallyIncreasing(bool value) {
 ///////////////////////////////////////////////////////////
 
 void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid) { 
+  TriggerEvent(data, tid, 0, 0);
+}
+
+void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timestamp, int use_ts) { 
 #ifdef TAU_VAMPIRTRACE
   uint64_t time;
   uint64_t cval;
@@ -215,9 +219,9 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid) {
 #else /* TAU_VAMPIRTRACE */
 #ifndef TAU_EPILOG
   if (TauEnv_get_tracing()) {
-    TauTraceEvent(GetEventId(), (x_uint64) 0, tid, 0, 0); 
-    TauTraceEvent(GetEventId(), (x_uint64) data, tid, 0, 0); 
-    TauTraceEvent(GetEventId(), (x_uint64) 0, tid, 0, 0); 
+      TauTraceEvent(GetEventId(), (x_uint64) 0, tid, (x_uint64) timestamp, use_ts); 
+      TauTraceEvent(GetEventId(), (x_uint64) data, tid, (x_uint64) timestamp, use_ts); 
+      TauTraceEvent(GetEventId(), (x_uint64) 0, tid, (x_uint64) timestamp, use_ts); 
   }
 #endif /* TAU_EPILOG */
   /* Timestamp is 0, and use_ts is 0, so tracing layer gets timestamp */
@@ -579,7 +583,12 @@ const char * TauContextUserEvent::GetEventName(void) {
 ////////////////////////////////////////////////////////////////////////////
 // Trigger the context event
 ////////////////////////////////////////////////////////////////////////////
+
 void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid) {
+  TriggerEvent(data, tid, 0, 0);
+}
+
+void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid, double timestamp, int use_ts) {
   if (!DisableContext) {
     long *comparison = 0;
     TauUserEvent *ue;
@@ -618,14 +627,14 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid) {
       /* it is not null, trigger it */
       contextevent = ue;
       /* store this context event, so we can get its name */
-      contextevent->TriggerEvent(data, tid);
+      contextevent->TriggerEvent(data, tid, timestamp, use_ts);
     }
   }
-  uevent->TriggerEvent(data, tid);
+  uevent->TriggerEvent(data, tid, timestamp, use_ts);
 }
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
- * $Revision: 1.40 $   $Date: 2009/07/27 23:37:04 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.40 2009/07/27 23:37:04 amorris Exp $ 
+ * $Revision: 1.41 $   $Date: 2009/09/28 18:28:50 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.41 2009/09/28 18:28:50 amorris Exp $ 
  ***************************************************************************/
