@@ -193,6 +193,7 @@ public abstract class Expression {
 	}
 
 	private  String evaluateExpression(String newName, ArrayList<String> equation) throws ParsingException {
+if(newName != null) newName = newName.trim();
 		int i = 0;
 		if(equation.size()==1){
 			return rename(newName, equation.get(0));
