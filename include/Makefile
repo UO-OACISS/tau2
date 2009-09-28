@@ -908,7 +908,7 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
 
 TAU_SHAREDLIBS=$(TAUHELPER) -L$(TAU_LIB_DIR) -lTAU $(TAU_LINKER_OPTS) $(TAU_LINKER_SHOPTS)
 SHAREDEXTRAS=
-#FORCESHARED#SHAREDEXTRAS=-optSharedLinkReset="$(TAU_SHAREDLIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS) $(TAU_MPI_NOWRAP_FLIB)" -optShared #ENDIF#
+#FORCESHARED#SHAREDEXTRAS=-optSharedLinkReset="$(TAU_LDFLAGS) $(TAU_CXXLIBS) $(TAU_MPI_FLIB) $(TAU_SHAREDLIBS)" -optShared #ENDIF#
 TAU_COMPILER=$(TAU_BIN_DIR)/tau_compiler.sh $(TAUCOMPILEROPTS) $(SHAREDEXTRAS)
 #############################################
 # These options could be included in the application Makefile as 
