@@ -270,6 +270,7 @@ int TauRenameTimer(char *oldName, char *newName)
 }
 
 
+static int tauFiniID; 
 static int tauDyninstEnabled[TAU_MAX_THREADS];
 void trace_register_func(char *func, int id)
 {
@@ -281,6 +282,11 @@ void trace_register_func(char *func, int id)
   void *taufi;
   TAU_PROFILER_CREATE(taufi, func, " ", TAU_DEFAULT);
 
+ 
+  if (strncmp(func, "_fini", 5) == 0) { 
+    dprintf("FOUND FINI id = %d\n", id);
+    tauFiniID = id;
+  } 
   if (func[0] == 't' && func[1] == 'a' && func[2] == 'r' && func[3] == 'g') {
     if (isdigit(func[4])) {
       long addr;
@@ -324,12 +330,17 @@ void traceEntry(int id)
   }
 
   void *fi = TheTauBinDynFI()[id];
-  dprintf("Inside traceEntry: id = %d ", id);
-  dprintf("Name = %s\n", ((FunctionInfo *)fi)->GetName());
-  TAU_PROFILER_START(fi);
+  dprintf("Inside traceEntry: id = %d fi = %lx\n", id, fi);
+  //dprintf("Name = %s\n", ((FunctionInfo *)fi)->GetName());
+  if (id == tauFiniID) { 
+    TAU_DISABLE_INSTRUMENTATION();
+    dprintf("Disabling instrumentation found id = %d\n", id);
+  } 
+  else {
+    TAU_PROFILER_START(fi);
+  }
   
 
-  const char *strbin;
 }
 
 void traceExit(int id)
@@ -339,15 +350,21 @@ void traceExit(int id)
   int tid = RtsLayer::myThread();
   if (!tauDyninstEnabled[tid]) return;
   void *fi = TheTauBinDynFI()[id];
-  dprintf("traceExit: Name = %s, %lx\n", ((FunctionInfo *)fi)->GetName(), fi);
-  TAU_QUERY_DECLARE_EVENT(curr);
+  //dprintf("traceExit: Name = %s, %lx\n", ((FunctionInfo *)fi)->GetName(), fi);
+  /* TAU_QUERY_DECLARE_EVENT(curr);
   TAU_QUERY_GET_CURRENT_EVENT(curr);
   if (!curr) return;
-  FunctionInfo *f1 = ((Profiler *)curr)->ThisFunction;
-  dprintf("Current = %s, %lx\n", f1->GetName(), f1);
+  FunctionInfo *f1 = ((Profiler *)curr)->ThisFunction; */
+  //dprintf("Current = %s, %lx\n", f1->GetName(), f1);
+  // If you remove this comment dprintf, it will call GetName which segfaults
+  // after _fini is called. Take care...
+
+  TAU_PROFILER_STOP(fi); 
+/* 
   if (f1 == (FunctionInfo *)fi) { 
     TAU_PROFILER_STOP(fi); 
   }
+*/
 
 }
 
@@ -376,6 +393,6 @@ void my_otf_cleanup()
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
- * $Revision: 1.28 $   $Date: 2009/09/27 05:48:14 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.28 2009/09/27 05:48:14 sameer Exp $ 
+ * $Revision: 1.29 $   $Date: 2009/09/29 20:21:10 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.29 2009/09/29 20:21:10 sameer Exp $ 
  ***************************************************************************/
