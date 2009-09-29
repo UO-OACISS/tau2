@@ -125,6 +125,35 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid ) {
     return; /* disabled */
   }
 
+  /********************************************************************************/
+  /*** Extras ***/
+  /********************************************************************************/
+  if (TauEnv_get_extras()) {
+    /*** Memory Profiling ***/
+    if (TauEnv_get_track_memory_heap()) {
+      TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) : Entry");
+      TAU_CONTEXT_EVENT(memHeapEvent, TauGetMaxRSS());
+    }
+    
+    if (TauEnv_get_track_memory_headroom()) {
+      TAU_REGISTER_CONTEXT_EVENT(memEvent, "Memory Headroom Available (MB) : Entry");
+      TAU_CONTEXT_EVENT(memEvent, TauGetFreeMemory());
+    }
+    
+#ifdef TAU_PROFILEMEMORY
+    ThisFunction->GetMemoryEvent()->TriggerEvent(TauGetMaxRSS());
+#endif /* TAU_PROFILEMEMORY */
+    
+#ifdef TAU_PROFILEHEADROOM
+    ThisFunction->GetHeadroomEvent()->TriggerEvent((double)TauGetFreeMemory());
+#endif /* TAU_PROFILEHEADROOM */
+
+  }
+  /********************************************************************************/
+  /*** Extras ***/
+  /********************************************************************************/
+
+
 #ifdef TAU_EPILOG
   esd_enter(fi->GetFunctionId());
   return;
@@ -203,6 +232,27 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask()) || !RtsLayer::TheEnableInstrumentation()) {
     return 0; /* disabled */
   }
+
+
+  /********************************************************************************/
+  /*** Extras ***/
+  /********************************************************************************/
+  if (TauEnv_get_extras()) {
+    /*** Memory Profiling ***/
+    if (TauEnv_get_track_memory_heap()) {
+      TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) : Exit");
+      TAU_CONTEXT_EVENT(memHeapEvent, TauGetMaxRSS());
+    }
+    
+    if (TauEnv_get_track_memory_headroom()) {
+      TAU_REGISTER_CONTEXT_EVENT(memEvent, "Memory Headroom Available (MB) : Exit");
+      TAU_CONTEXT_EVENT(memEvent, TauGetFreeMemory());
+    }
+  }
+  /********************************************************************************/
+  /*** Extras ***/
+  /********************************************************************************/
+
 
 #ifdef TAU_EPILOG
   esd_exit(fi->GetFunctionId());
@@ -1294,7 +1344,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.130 $   $Date: 2009/09/19 00:19:49 $
- * VERSION: $Id: TauCAPI.cpp,v 1.130 2009/09/19 00:19:49 amorris Exp $
+ * $Revision: 1.131 $   $Date: 2009/09/29 00:37:02 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.131 2009/09/29 00:37:02 amorris Exp $
  ***************************************************************************/
 

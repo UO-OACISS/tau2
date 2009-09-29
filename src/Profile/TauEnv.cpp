@@ -383,7 +383,7 @@ int TauEnv_get_profile_format() {
 void TauEnv_initialize() {
   char tmpstr[512];
 
-  // unset LD_PRELOAD so that vt_unify and elg_unify work
+  /* unset LD_PRELOAD so that vt_unify and elg_unify work */
   unsetenv("LD_PRELOAD");
 
   static int initialized = 0;
@@ -398,6 +398,35 @@ void TauEnv_initialize() {
       env_verbose = 0;
     }
 
+    /* Read the configuration file */
+    TauConf_read();
+
+    TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");
+
+    /*** Options that can be used with Scalasca and VampirTrace ***/
+    tmp = getconf("TAU_TRACK_HEAP");
+    if (parse_bool(tmp, env_track_memory_heap)) {
+      TAU_VERBOSE("TAU: Entry/Exit Memory tracking Enabled\n");
+      TAU_METADATA("TAU_TRACK_HEAP", "on");
+      env_track_memory_heap = 1;
+      env_extras = 1;
+    } else {
+      TAU_METADATA("TAU_TRACK_HEAP", "off");
+      env_track_memory_heap = 0;
+    }
+
+    tmp = getconf("TAU_TRACK_HEADROOM");
+    if (parse_bool(tmp, env_track_memory_headroom)) {
+      TAU_VERBOSE("TAU: Entry/Exit Headroom tracking Enabled\n");
+      TAU_METADATA("TAU_TRACK_HEADROOM", "on");
+      env_track_memory_headroom = 1;
+      env_extras = 1;
+    } else {
+      TAU_METADATA("TAU_TRACK_HEADROOM", "off");
+      env_track_memory_headroom = 0;
+    }
+
+    /*** Options that can be used with Scalasca and VampirTrace need to go above this line ***/
 #ifdef TAU_EPILOG
     TAU_VERBOSE("TAU: Epilog/Scalasca active! (TAU measurement disabled)\n");
     return;
@@ -408,22 +437,18 @@ void TauEnv_initialize() {
     return;
 #endif
 
-    TauConf_read();
-
-    TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");
-
     if ((env_profiledir = getconf("PROFILEDIR")) == NULL) {
-      env_profiledir = ".";   // current directory
+      env_profiledir = ".";   /* current directory */
     }
     TAU_VERBOSE("TAU: PROFILEDIR is \"%s\"\n", env_profiledir);
 
     if ((env_tracedir = getconf("TRACEDIR")) == NULL) {
-      env_tracedir = ".";   // current directory
+      env_tracedir = ".";   /* current directory */
     }
     TAU_VERBOSE("TAU: TRACEDIR is \"%s\"\n", env_tracedir);
 
     int profiling_default = TAU_PROFILING_DEFAULT;
-    // tracing
+    /* tracing */
     tmp = getconf("TAU_TRACE");
     if (parse_bool(tmp, TAU_TRACING_DEFAULT)) {
       env_tracing = 1;
@@ -438,7 +463,7 @@ void TauEnv_initialize() {
       TAU_METADATA("TAU_TRACE", "off");
     }
 
-    // profiling
+    /* profiling */
     tmp = getconf("TAU_PROFILE");
     if (parse_bool(tmp, profiling_default)) {
       env_profiling = 1;
@@ -451,7 +476,7 @@ void TauEnv_initialize() {
     }
 
     if (env_profiling) {
-      // callpath
+      /* callpath */
       tmp = getconf("TAU_CALLPATH");
       if (parse_bool(tmp, TAU_CALLPATH_DEFAULT)) {
         env_callpath = 1;
@@ -463,7 +488,7 @@ void TauEnv_initialize() {
         TAU_METADATA("TAU_CALLPATH", "off");
       }
 
-      // compensate
+      /* compensate */
       tmp = getconf("TAU_COMPENSATE");
       if (parse_bool(tmp, TAU_COMPENSATE_DEFAULT)) {
         env_compensate = 1;
@@ -478,7 +503,7 @@ void TauEnv_initialize() {
     }
 
 #ifdef TAU_MPI
-    // track comm (opposite of old -nocomm option)
+    /* track comm (opposite of old -nocomm option) */
     tmp = getconf("TAU_TRACK_MESSAGE");
     if (parse_bool(tmp, env_track_message)) {
       env_track_message = 1;
@@ -486,7 +511,7 @@ void TauEnv_initialize() {
       env_track_message = 0;
     }
 
-    // comm matrix
+    /* comm matrix */
     tmp = getconf("TAU_COMM_MATRIX");
     if (parse_bool(tmp, TAU_COMM_MATRIX_DEFAULT)) {
       env_comm_matrix = 1;
@@ -508,7 +533,7 @@ void TauEnv_initialize() {
     }
 #endif
 
-    // clock synchronization
+    /* clock synchronization */
     if (env_tracing == 0) {
       env_synchronize_clocks = 0;
     } else {
@@ -533,14 +558,14 @@ void TauEnv_initialize() {
 #endif
     }
 
-    // callpath depth
+    /* callpath depth */
     const char *depth = getconf("TAU_CALLPATH_DEPTH");
     env_callpath_depth = TAU_CALLPATH_DEPTH_DEFAULT;
     if (depth) {
       env_callpath_depth = atoi(depth);
-//      if (env_callpath_depth <= 1) {
-//        env_callpath_depth = TAU_CALLPATH_DEPTH_DEFAULT;
-//      }
+/*      if (env_callpath_depth <= 1) { */
+/*        env_callpath_depth = TAU_CALLPATH_DEPTH_DEFAULT; */
+/*      } */
       if (env_callpath_depth < 0) {
         env_callpath_depth = TAU_CALLPATH_DEPTH_DEFAULT;
       }
@@ -552,7 +577,7 @@ void TauEnv_initialize() {
     TAU_METADATA("TAU_CALLPATH_DEPTH", tmpstr);
 
 #ifdef TAU_DEPTH_LIMIT
-    // depthlimit depth
+    /* depthlimit depth */
     tmp = getconf("TAU_DEPTH_LIMIT");
     env_depth_limit = TAU_DEPTH_LIMIT_DEFAULT;
     if (tmp) {
@@ -563,7 +588,7 @@ void TauEnv_initialize() {
     TAU_METADATA("TAU_DEPTH_LIMIT", tmpstr);
 #endif /* TAU_DEPTH_LIMIT */
 
-    // Throttle
+    /* Throttle */
     tmp = getconf("TAU_THROTTLE");
     if (parse_bool(tmp, TAU_THROTTLE_DEFAULT)) {
       env_throttle = 1;
@@ -610,28 +635,6 @@ void TauEnv_initialize() {
       env_profile_format = TAU_FORMAT_PROFILE;
       TAU_VERBOSE("TAU: Output Format: profile\n");
       TAU_METADATA("TAU_PROFILE_FORMAT", "profile");
-    }
-
-    tmp = getconf("TAU_TRACK_HEAP");
-    if (parse_bool(tmp, env_track_memory_heap)) {
-      TAU_VERBOSE("TAU: Entry/Exit Memory tracking Enabled\n");
-      TAU_METADATA("TAU_TRACK_HEAP", "on");
-      env_track_memory_heap = 1;
-      env_extras = 1;
-    } else {
-      TAU_METADATA("TAU_TRACK_HEAP", "off");
-      env_track_memory_heap = 0;
-    }
-
-    tmp = getconf("TAU_TRACK_HEADROOM");
-    if (parse_bool(tmp, env_track_memory_headroom)) {
-      TAU_VERBOSE("TAU: Entry/Exit Headroom tracking Enabled\n");
-      TAU_METADATA("TAU_TRACK_HEADROOM", "on");
-      env_track_memory_headroom = 1;
-      env_extras = 1;
-    } else {
-      TAU_METADATA("TAU_TRACK_HEADROOM", "off");
-      env_track_memory_headroom = 0;
     }
 
     if ((env_metrics = getconf("TAU_METRICS")) == NULL) {

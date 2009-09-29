@@ -219,9 +219,9 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
 #else /* TAU_VAMPIRTRACE */
 #ifndef TAU_EPILOG
   if (TauEnv_get_tracing()) {
-      TauTraceEvent(GetEventId(), (x_uint64) 0, tid, (x_uint64) timestamp, use_ts); 
-      TauTraceEvent(GetEventId(), (x_uint64) data, tid, (x_uint64) timestamp, use_ts); 
-      TauTraceEvent(GetEventId(), (x_uint64) 0, tid, (x_uint64) timestamp, use_ts); 
+    TauTraceEvent(GetEventId(), (x_uint64) 0, tid, (x_uint64) timestamp, use_ts); 
+    TauTraceEvent(GetEventId(), (x_uint64) data, tid, (x_uint64) timestamp, use_ts); 
+    TauTraceEvent(GetEventId(), (x_uint64) 0, tid, (x_uint64) timestamp, use_ts); 
   }
 #endif /* TAU_EPILOG */
   /* Timestamp is 0, and use_ts is 0, so tracing layer gets timestamp */
@@ -635,6 +635,6 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid, double
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
- * $Revision: 1.41 $   $Date: 2009/09/28 18:28:50 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.41 2009/09/28 18:28:50 amorris Exp $ 
+ * $Revision: 1.42 $   $Date: 2009/09/29 00:37:03 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.42 2009/09/29 00:37:03 amorris Exp $ 
  ***************************************************************************/

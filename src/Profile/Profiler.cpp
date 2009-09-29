@@ -264,25 +264,6 @@ void Profiler::Start(int tid) {
   /*** Extras ***/
   /********************************************************************************/
   if (TauEnv_get_extras()) {
-    /*** Memory Profiling ***/
-    if (TauEnv_get_track_memory_heap()) {
-      TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) : Entry");
-      ((TauContextUserEvent *)memHeapEvent)->TriggerEvent(TauGetMaxRSS(), tid, TimeStamp, 1);
-    }
-    
-    if (TauEnv_get_track_memory_headroom()) {
-      TAU_REGISTER_CONTEXT_EVENT(memEvent, "Memory Headroom Available (MB) : Entry");
-      ((TauContextUserEvent *)memEvent)->TriggerEvent((double)TauGetFreeMemory(), tid, TimeStamp, 1);
-    }
-    
-#ifdef TAU_PROFILEMEMORY
-    ThisFunction->GetMemoryEvent()->TriggerEvent(TauGetMaxRSS());
-#endif /* TAU_PROFILEMEMORY */
-    
-#ifdef TAU_PROFILEHEADROOM
-    ThisFunction->GetHeadroomEvent()->TriggerEvent((double)TauGetFreeMemory());
-#endif /* TAU_PROFILEHEADROOM */
-
     /*** Profile Compensation ***/
     if (TauEnv_get_compensate()) {
       SetNumChildren(0); /* for instrumentation perturbation compensation */
@@ -325,7 +306,6 @@ void Profiler::Start(int tid) {
   /********************************************************************************/
   /*** Tracing ***/
   /********************************************************************************/
-
 
   // Inncrement the number of calls
   ThisFunction->IncrNumCalls(tid);
@@ -484,17 +464,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 	  DEBUGPROFMSG("TotalTime[" <<k<<"] negative in "<<ThisFunction->GetName()<<endl;);
 	}
       }
-    }
-    
-    /*** Memory Profiling ***/
-    if (TauEnv_get_track_memory_heap()) {
-      TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) : Exit");
-      ((TauContextUserEvent *)memHeapEvent)->TriggerEvent(TauGetMaxRSS(), tid, TimeStamp, 1);
-    }
-    
-    if (TauEnv_get_track_memory_headroom()) {
-      TAU_REGISTER_CONTEXT_EVENT(memEvent, "Memory Headroom Available (MB) : Exit");
-      ((TauContextUserEvent *)memEvent)->TriggerEvent((double)TauGetFreeMemory(), tid, TimeStamp, 1);
     }
   }
   /********************************************************************************/
@@ -1341,6 +1310,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.253 $   $Date: 2009/09/28 18:28:49 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.253 2009/09/28 18:28:49 amorris Exp $ 
+ * $Revision: 1.254 $   $Date: 2009/09/29 00:37:02 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.254 2009/09/29 00:37:02 amorris Exp $ 
  ***************************************************************************/
