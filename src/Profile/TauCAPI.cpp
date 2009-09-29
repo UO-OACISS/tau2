@@ -121,7 +121,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid ) {
   //int tid = RtsLayer::myThread();
   FunctionInfo *fi = (FunctionInfo *) functionInfo; 
 
-  if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask()) || !RtsLayer::TheEnableInstrumentation()) {
+  if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
     return; /* disabled */
   }
 
@@ -229,7 +229,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   //int tid = RtsLayer::myThread();
   Profiler *profiler;
 
-  if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask()) || !RtsLayer::TheEnableInstrumentation()) {
+  if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup()) & RtsLayer::TheProfileMask()) {
     return 0; /* disabled */
   }
 
@@ -1343,8 +1343,8 @@ int *tau_pomp_rd_table = 0;
                     
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.131 $   $Date: 2009/09/29 00:37:02 $
- * VERSION: $Id: TauCAPI.cpp,v 1.131 2009/09/29 00:37:02 amorris Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
+ * $Revision: 1.132 $   $Date: 2009/09/29 20:20:33 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.132 2009/09/29 20:20:33 sameer Exp $
  ***************************************************************************/
 
