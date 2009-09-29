@@ -2844,7 +2844,6 @@ if [ $vampirtrace = yes ] ; then
 	    fixmakeargs="$fixmakeargs VAMPIRTRACE_5_7_API" 
 	fi
 
-
 	vtserchk="seq"
 	vtparchk="mpi"
 	
@@ -3933,7 +3932,7 @@ if [ $mpi = yes ] ; then
   # VampirTrace
   if [ $vampirtrace = yes ] ; then
       if [ $vampirtraceshow = yes ] ; then
-	  wrapperlib="-L$tautoplevel/$machine/lib -ltau\$(TAU_CONFIG) \$(VAMPIRTRACEMPILIBS)"
+	  wrapperlib="\$(VAMPIRTRACEMPILIBS)"
       else
 	  vtfortranwrapper=""
 	  if [ -f $vampirtracedir/$vampirtracelibdir/libvt.fmpi.a ] ; then
