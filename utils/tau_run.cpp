@@ -367,7 +367,8 @@ int checkIfMPI(BPatch_image * appImage, BPatch_function * & mpiinit,
   if (mpiinit == (BPatch_function *) NULL) {
     dprintf("*** MPI_Comm_rank not found looking for PMPI_Comm_rank...\n");
     if (!binaryRewrite) {
-      mpiinit = tauFindFunction(appImage, "PMPI_Comm_rank");
+      //mpiinit = tauFindFunction(appImage, "PMPI_Comm_rank");
+      mpiinit = tauFindFunction(appImage, "mpi_comm_rank_");
     }
   }//if
   
@@ -473,6 +474,13 @@ int main(int argc, char **argv){
   BPatch_function *mpiinitstub;
   bpatch = new BPatch;                           //create a new version. 
   string functions;                              //string variable to hold function names 
+  // commandline option processing args
+  int vflag = 0;
+  char *xvalue = NULL;
+  char *fvalue = NULL;
+  char *ovalue = NULL;
+  int index;
+  int c;
 
   // parse the command line arguments--first, there need to be atleast two arguments,
   // the program name (tau_run) and the application it is running.  If there are not
@@ -484,33 +492,54 @@ int main(int argc, char **argv){
   //then set the errflag to report an error.  When we come to a non '-' charcter, then we must
   //be at the application name.
   else{
-    strncpy(mutname, argv[0],strlen(argv[0])+1);
-    while(argv[1][0]=='-'){
-      if( strncasecmp (argv[1], "-Xrun", 5) == 0 ){ // Load the library.
-	loadlib = true;
-	sprintf(libname,"lib%s.so", &argv[1][5]);
-	fprintf(stderr, "%s> Loading %s ...\n", mutname, libname);
-	argv++;
-      }//if
-      else if (strncasecmp (argv[1], "-f", 2) == 0){ // Load the selective instrumentation file
-	processInstrumentationRequests(argv[2]);
-	dprintf("Loading instrumentation requests file %s\n", argv[2]);
-	argv += 2;
-      }//if
-      else if (strncasecmp (argv[1], "-v", 2) == 0) { 
-        debugPrint = 1; /* Verbose option set */
-        argv++;
-      }
-      else if (strncasecmp (argv[1], "-o", 2) == 0) {
-        binaryRewrite = 1; /* binary rewrite is true */
-        strcpy(outfile, argv[2]);
-        argv += 2;
-      }
-      else{ //oops! we got an unrecognized argument!
-	errflag=1;
-      }//else
-    }//while
-  }//else
+    opterr = 0; 
+     
+    while ((c = getopt (argc, argv, "vX:o:f:")) != -1)
+      switch (c)
+      {
+        case 'v':
+          vflag = 1;
+          debugPrint = 1; /* Verbose option set */
+          break;
+        case 'X':
+          xvalue = optarg;
+	  loadlib = true; /* load an external measurement library */
+	  sprintf(libname,"lib%s.so", &xvalue[3]);
+	  fprintf(stderr, "%s> Loading %s ...\n", mutname, libname);
+          break;
+        case 'f':
+          fvalue = optarg; /* choose a selective instrumentation file */
+	  processInstrumentationRequests(fvalue);
+	  dprintf("Loading instrumentation requests file %s\n", fvalue);
+          break;
+        case 'o':
+          ovalue = optarg;
+          binaryRewrite = 1; /* binary rewrite is true */
+          strcpy(outfile, ovalue);
+          break;
+        case '?':
+          if (optopt == 'X' || optopt == 'f' || optopt == 'o' )
+            fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+          else if (isprint (optopt))
+            fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+          else
+            fprintf (stderr,
+                        "Unknown option character `\\x%x'.\n",
+                        optopt);
+	    errflag=1;
+          default:
+	    errflag=1;
+        }
+     
+      dprintf ("vflag = %d, xvalue = %s, ovalue = %s, fvalue = %s\n",
+               vflag, xvalue, ovalue, fvalue);
+     
+      strncpy(mutname, argv[optind],strlen(argv[optind])+1);
+      for (index = optind; index < argc; index++)
+        dprintf ("Non-option argument %s\n", argv[index]);
+    }
+
+  dprintf("mutatee name = %s\n", mutname);
   
   //did we load a library?  if not, load the default
   if(!loadlib){
@@ -540,13 +569,13 @@ int main(int argc, char **argv){
   // removed for DyninstAPI 4.0
 
   if (binaryRewrite) {
-    tauRewriteBinary(bpatch, argv[1], outfile, (char *)libname);
+    tauRewriteBinary(bpatch, mutname, outfile, (char *)libname);
     return 0; // exit from the application 
   }
 #ifdef TAU_DYNINST41PLUS
-  appThread = bpatch->createProcess(argv[1], (const char **)&argv[1] , NULL);
+  appThread = bpatch->createProcess(argv[optind], (const char **)&argv[optind] , NULL);
 #else
-  appThread = bpatch->createProcess(argv[1], &argv[1] , NULL);
+  appThread = bpatch->createProcess(argv[optind], &argv[optind] , NULL);
 #endif /* TAU_DYNINST41PLUS */
   dprintf("After createProcess\n");
 
