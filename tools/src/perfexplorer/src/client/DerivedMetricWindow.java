@@ -17,9 +17,14 @@ import java.util.ListIterator;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.*;
 import javax.swing.event.*;
+import javax.swing.plaf.ComponentUI;
+import javax.swing.plaf.basic.BasicComboBoxRenderer;
+import javax.swing.plaf.basic.BasicToolTipUI;
 
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
@@ -200,12 +205,22 @@ ChangeListener {
 			public String getToolTipText(MouseEvent e) {
 				int index = locationToIndex(e.getPoint());
 				if (-1 < index) {
-					return expressionList.get(index).toString();
+					String line = expressionList.get(index).toString();
+					String wrap = "<html>",end="<html>";
+					char[] array = line.toCharArray();
+					for(int i=0;i<array.length;i++){	
+						wrap +=array[i];
+						end =wrap;
+						if(i%80==0&&i!=0) wrap +="<br>";
+					}         
+					return end.trim();
 				} else {
 					return null;
 				}
 			}
 		};
+		
+
 		expression.addListSelectionListener(this);	
 
 		JScrollPane expressionScroll = new JScrollPane(expression);
@@ -274,8 +289,11 @@ ChangeListener {
 		newExpression.setLayout(new GridBagLayout());
 		addExpression.addActionListener(this);
 		addExpression.setSize(20, 1);
+		metrics = new JComboBox();
+		metrics.setRenderer(new MyComboBoxRenderer());
 		metrics.addActionListener(this);
 		metrics.setPreferredSize(new Dimension(10,22));
+
 
 		clear.addActionListener(this);
 		insert.addActionListener(this);
@@ -298,7 +316,6 @@ ChangeListener {
 	private String getFromClipboard(){
 		String result = "";
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-		//odd: the Object param of getContents is not currently used
 		Transferable contents = clipboard.getContents(null);
 		boolean hasTransferableText =
 			(contents != null) &&
@@ -409,15 +426,14 @@ ChangeListener {
 		}
 	}
 	private void loadMetrics(){
-		if(selectTrial !=null){
-			PerfExplorerConnection server = PerfExplorerConnection.getConnection();
+		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 
-			List<String> array = server.getPotentialMetrics(PerfExplorerModel.getModel());
-			if(array.size()>0){
-				for (Object item: array)
-					metrics.addItem(item);
-				metrics.setSelectedIndex(0);
-			}    
+		List<String> array = server.getPotentialMetrics(PerfExplorerModel.getModel());
+		if(array.size()>0){
+			for (Object item: array)
+				metrics.addItem(item);
+			metrics.setSelectedIndex(0);
+
 		}
 	}
 
@@ -455,7 +471,7 @@ ChangeListener {
 					"The expression you entered is not valid.",
 					"Invalid Expression",
 					JOptionPane.ERROR_MESSAGE);
-			
+
 		}
 		return result;
 	}
@@ -469,7 +485,7 @@ ChangeListener {
 	}
 	private void addExpression(String expression) {
 		String text = addExpression.getText();
-		
+
 		if(text == null){			JOptionPane.showMessageDialog(this,
 				"You cannot add a blank expression.",
 				"Warning",JOptionPane.WARNING_MESSAGE);
@@ -565,7 +581,7 @@ ChangeListener {
 		}
 	}
 	private void deriveMetric() {
-		
+
 		String message = "Are you sure you want to apply the selected expressions to \n";
 		if(selectTrial !=null){
 			message += "the \""+selectTrial.getName() +"\" trial from the \""+selectExp.getName()
@@ -576,7 +592,7 @@ ChangeListener {
 		}else if(selectApp !=null){
 			message += "all the trials in the all of the expriments in the \"" +selectApp.getName()+"\" application?";
 		}
-		
+
 		int result = 	JOptionPane.showOptionDialog(this, 
 				message, "Confirm Trials"
 				,JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE, null, null, null);
@@ -598,7 +614,7 @@ ChangeListener {
 			script = exp.getScriptFromExpressions(app,ex,trial,expressions);	
 			new ScriptThread(script,true);
 		}catch(ParsingException ex){
-			
+
 			JOptionPane.showMessageDialog(mainWindow, 
 					"The expression did not parse correctly.\n"+ex.getMessage(),
 					"Parse Error", JOptionPane.ERROR_MESSAGE);
@@ -652,3 +668,41 @@ ChangeListener {
 
 	}
 }
+class MyComboBoxRenderer extends BasicComboBoxRenderer {
+	public Component getListCellRendererComponent(JList list, Object value,
+			int index, boolean isSelected, boolean cellHasFocus) {
+
+		if (isSelected) {
+			setBackground(list.getSelectionBackground());
+			setForeground(list.getSelectionForeground());
+			if (-1 < index) {
+				String line = list.getSelectedValue().toString();
+				//  Pattern p = Pattern.compile( "(.{0,80}\\b\\s*)|(.{80}\\B)" ); 
+				//Matcher m = p.matcher(line);
+				String wrap = "<html>",end="<html>";
+				//while (m.find()) {
+				char[] array = line.toCharArray();
+				for(int i=0;i<array.length;i++){	
+					wrap +=array[i];
+					end =wrap;
+					if(i%80==0&&i!=0) wrap +="<br>";
+					//end = wrap +line.substring(m.start(), m.end());
+					//  wrap +=line.substring(m.start(), m.end())+"<br>";
+				}         
+				list.setToolTipText(end.trim());
+
+			}
+		} else {
+			setBackground(list.getBackground());
+			setForeground(list.getForeground());
+		}
+		setFont(list.getFont());
+		setText((value == null) ? "" : value.toString());
+
+		return this;
+	}
+}
+
+
+
+
