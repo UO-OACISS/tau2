@@ -505,7 +505,6 @@ int main(int argc, char **argv){
           xvalue = optarg;
 	  loadlib = true; /* load an external measurement library */
 	  sprintf(libname,"lib%s.so", &xvalue[3]);
-	  fprintf(stderr, "%s> Loading %s ...\n", mutname, libname);
           break;
         case 'f':
           fvalue = optarg; /* choose a selective instrumentation file */
@@ -546,6 +545,9 @@ int main(int argc, char **argv){
     sprintf(libname,"libTAU.so");
     loadlib=true;
   }//if
+  else {
+    fprintf(stderr, "%s> Loading %s ...\n", mutname, libname);
+  }
 
   //has an error occured in the command line arguments?
   if(errflag){
