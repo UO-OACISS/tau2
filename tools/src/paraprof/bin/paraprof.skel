@@ -54,10 +54,19 @@ if [ "x$1" = "x-p" ] ; then
 fi 
 
 
+APPLE_OPTIONS=""
 if [ "$MACHINE" = "apple" ]; then
-    APPLE_OPTIONS="-Xdock:name=ParaProf -Xdock:icon=${TAUROOT}/${MACHINE}/lib/tau-medium.png -Dapple.laf.useScreenMenuBar=true -Dcom.apple.mrj.application.growbox.intrudes=true"
-else
-    APPLE_OPTIONS=""
+    APPLE_OPTIONS="-d32 -Xdock:name=ParaProf -Xdock:icon=${TAUROOT}/${MACHINE}/lib/tau-medium.png -Dapple.laf.useScreenMenuBar=true -Dcom.apple.mrj.application.growbox.intrudes=true"
+    for arg in "$@"; do
+	case $arg in
+	    --pack)
+		APPLE_OPTIONS="$APPLE_OPTIONS -Djava.awt.headless=true"
+		;;
+	    --dump)
+		APPLE_OPTIONS="$APPLE_OPTIONS -Djava.awt.headless=true"
+		;;
+	esac
+    done
 fi
 
 # check for GNU GCJ, which ParaProf doesn't work with
