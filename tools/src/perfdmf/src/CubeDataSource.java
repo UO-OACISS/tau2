@@ -8,6 +8,9 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
+import edu.uoregon.tau.common.TrackerInputStream;
+import java.util.zip.GZIPInputStream;
+
 /**
  * Reader for cube data
  *
@@ -15,14 +18,15 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * @see <a href="http://www.fz-juelich.de/zam/kojak/">
  * http://www.fz-juelich.de/zam/kojak/</a> for more information about cube
  * 
- * <P>CVS $Id: CubeDataSource.java,v 1.3 2007/05/02 19:43:28 amorris Exp $</P>
+ * <P>CVS $Id: CubeDataSource.java,v 1.4 2009/10/06 07:17:55 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class CubeDataSource extends DataSource {
 
     private File file;
     private volatile CubeXMLHandler handler = new CubeXMLHandler(this);
+    private volatile TrackerInputStream tracker;
 
     /**
      * Constructor for CubeDataSource
@@ -42,7 +46,26 @@ public class CubeDataSource extends DataSource {
             
             xmlreader.setContentHandler(handler);
             xmlreader.setErrorHandler(handler);
-            xmlreader.parse(new InputSource(new FileInputStream(file)));
+
+
+	    FileInputStream fis = new FileInputStream(file);
+	    tracker = new TrackerInputStream(fis);
+	    
+	    InputStream input;
+	    
+	    // see if it is gzip'd, if not, read directly
+	    try {
+		GZIPInputStream gzip = new GZIPInputStream(tracker);
+		input = gzip;
+	    } catch (IOException ioe) {
+		fis.close();
+		fis = new FileInputStream(file);
+		tracker = new TrackerInputStream(fis);
+		input = tracker;
+	    }
+
+
+	    xmlreader.parse(new InputSource(new BufferedInputStream(input)));
 
             
             this.setGroupNamesPresent(true);

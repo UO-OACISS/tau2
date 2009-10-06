@@ -420,6 +420,9 @@ public class UtilFncs {
         if (filename.toLowerCase().endsWith(".cube")) {
             return DataSource.CUBE;
         }
+        if (filename.toLowerCase().endsWith(".cube.gz")) {
+            return DataSource.CUBE;
+        }
         if (filename.toLowerCase().endsWith(".mpip")) {
             return DataSource.MPIP;
         }
