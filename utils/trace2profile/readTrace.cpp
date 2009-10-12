@@ -4,6 +4,7 @@
 using namespace std;
 
 #include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 Ttf_FileHandleT fh;
