@@ -286,6 +286,12 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 			PerfExplorerActionListener.STACKED_BAR_CHART);
 		stackedBar.addActionListener(listener);
 		chartMenu.add(stackedBar);
+		
+		//Add a menu item.
+		JMenuItem aStackedBar = new JMenuItem(
+			PerfExplorerActionListener.ALIGNED_STACKED_BAR_CHART);
+		aStackedBar.addActionListener(listener);
+		chartMenu.add(aStackedBar);
 
 		//Add a menu item.
 		JMenuItem totalTime = new JMenuItem(

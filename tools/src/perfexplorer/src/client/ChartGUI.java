@@ -148,10 +148,7 @@ public class ChartGUI extends JFrame implements ActionListener {
 			break;
 		case 3:
 		case 7:
-			this.reductionMethodLabel.setEnabled(true);
-			this.reductionMethod.setEnabled(true);
-			this.reductionThresholdLabel.setEnabled(true);
-			this.reductionThreshold.setEnabled(true);
+			enableReduction();
 			// don't break - fall through
 		case 2:
 		case 5:
@@ -177,18 +174,22 @@ public class ChartGUI extends JFrame implements ActionListener {
 			this.scalingLabel.setEnabled(true);
 			this.scaling.setEnabled(true);
 		case 11:
-			this.reductionMethodLabel.setEnabled(true);
-			this.reductionMethod.setEnabled(true);
-			this.reductionThresholdLabel.setEnabled(true);
-			this.reductionThreshold.setEnabled(true);
+			enableReduction();
 			break;
 		case 14:
-			this.reductionMethodLabel.setEnabled(true);
-			this.reductionMethod.setEnabled(true);
-			this.reductionThresholdLabel.setEnabled(true);
-			this.reductionThreshold.setEnabled(true);
+			enableReduction();
+			break;
+		case 15:
+			enableReduction();
 			break;
 		}
+	}
+	
+	private void enableReduction(){
+		this.reductionMethodLabel.setEnabled(true);
+		this.reductionMethod.setEnabled(true);
+		this.reductionThresholdLabel.setEnabled(true);
+		this.reductionThreshold.setEnabled(true);
 	}
 
 	private void addComponents() {
@@ -239,6 +240,7 @@ public class ChartGUI extends JFrame implements ActionListener {
 	
 	private void refreshStatic() {
 		this.chart.removeAllItems();
+		this.chart.addItem(new ChartType(PerfExplorerActionListener.ALIGNED_STACKED_BAR_CHART,15));
 		this.chart.addItem(new ChartType(PerfExplorerActionListener.STACKED_BAR_CHART,14));
 		this.chart.addItem(new ChartType(PerfExplorerActionListener.TOTAL_TIME_CHART,1));
 		this.chart.addItem(new ChartType(PerfExplorerActionListener.TIMESTEPS_CHART,0));		
@@ -453,6 +455,9 @@ public class ChartGUI extends JFrame implements ActionListener {
 					break;
 				case 14:
 					PerfExplorerChart.doStackedBarChart();
+					break;
+				case 15:
+					PerfExplorerChart.doAlignedStackedBarChart();
 					break;
 				}
 			} else {

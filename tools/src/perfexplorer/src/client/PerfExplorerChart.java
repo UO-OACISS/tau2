@@ -27,6 +27,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 
 import edu.uoregon.tau.perfexplorer.common.ChartDataType;
 import edu.uoregon.tau.common.Utility;
+import edu.uoregon.tau.perfexplorer.common.CustomChartFactory;
 import edu.uoregon.tau.perfexplorer.common.RMIChartData;
 import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData;
 import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow;
@@ -62,6 +63,41 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		}
 
 		JFreeChart chart = ChartFactory.createStackedBarChart(
+			"Total " + PerfExplorerModel.getModel().getMetricName() + " Bar Chart for " +   // chart title
+			PerfExplorerModel.getModel().toString(),
+			"Number of Processors",		  // domain axis label
+			PerfExplorerModel.getModel().getMetricName(),	 // range axis label
+			dataset,						 // data
+			PlotOrientation.HORIZONTAL,		// the plot orientation
+			true,							// legend
+			true,							// tooltips
+			false							// urls
+		);
+		customizeCategoryChart(chart);
+
+		return new PerfExplorerChart(chart, "Total " + PerfExplorerModel.getModel().getMetricName());
+	}
+	
+	public static PerfExplorerChart doAlignedStackedBarChart () {
+		// get the server
+		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
+		// get the data
+		RMIChartData rawData = server.requestChartData(
+			PerfExplorerModel.getModel(), 
+			ChartDataType.RELATIVE_EFFICIENCY_EVENTS);
+
+		PECategoryDataset dataset = new PECategoryDataset();
+
+		List<String> rowLabels = rawData.getRowLabels();
+		for (int y = 0 ; y < rawData.getRows() ; y++) {
+			List<double[]> row = rawData.getRowData(y);
+			for (int x = 0 ; x < row.size() ; x++) {
+				double[] values = (row.get(x));
+				dataset.addValue(new Double(values[1]), shortName(rowLabels.get(y)), new Integer((int)values[0]));
+			}
+		}
+
+		JFreeChart chart = CustomChartFactory.createAlignedStackedBarChart(
 			"Total " + PerfExplorerModel.getModel().getMetricName() + " Bar Chart for " +   // chart title
 			PerfExplorerModel.getModel().toString(),
 			"Number of Processors",		  // domain axis label
