@@ -23,6 +23,7 @@ using namespace std;
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
 #include <stdlib.h>
+#include <stdio.h>
 
 extern "C" {
 #include "papi.h"
