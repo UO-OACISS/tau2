@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if [ $# -lt 2 ]
+then
+  echo ""
+  echo "Usage: "
+  echo ""
+  echo "  $0 <path-to-TAU-data> <parent-event> <threshold>"
+  echo ""
+  echo "Notes:"
+  echo ""
+  echo "  * Specify the file as either the path to the TAU profiles, or the"
+  echo "    filename of the packed TAU data."
+  echo "  * If using gprof data, name the file gprof.out"
+  echo ""
+  exit 1
+fi
+
+# redirect stderr to /dev/null so we don't see garbage from Jython
+
+eval perfexplorer -c local -n -i topXofParent.py -p "tauData=$1,parent=$2,threshold=$3" 2> /dev/null
