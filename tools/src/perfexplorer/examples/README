@@ -1,0 +1,24 @@
+
+Hey all!
+
+I am adding another PerfExplorer example (the second of many, I hope).  These
+are two scripts which I wrote at BSC for extracting events for a profile in
+order to then create a specification file for tau_instrumentor (which will then
+selectively instrument the application with mpitrace_userfunction() calls).
+The first script finds the top X events from a profile.  The second script
+finds the top X events in a callpath profile with a given parent event.  I am
+also including three PPK files and a gprof profile for testing purposes.
+
+Also, I am including two wrapper bash scripts.  These wrapper bash scripts will
+call perfexplorer with the appropriately formatted parameters, since the
+perfexplorer parameter specification is pretty clumsy.
+
+These scripts are to be used in the following case study:
+* user has slow app
+* user builds with TAU/PDT or -pg
+* user uses getTopX to get top X functions
+* user instruments application using generated list of functions
+* user analyzes profile/trace from selectively instrumented application
+* (some magic/expertise happens)
+* user now has fast app
+
