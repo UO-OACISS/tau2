@@ -68,7 +68,7 @@ public class ExtractChildrenOperation extends AbstractPerformanceOperation {
 							tmp.equalsIgnoreCase(this.parentEvent)) {
 						if (st.countTokens() == 1) {
 							found = true;
-							child = st.nextToken();
+							child = st.nextToken().trim();
 							break;
 						}
 					}

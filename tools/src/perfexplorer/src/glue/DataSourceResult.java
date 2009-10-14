@@ -106,8 +106,8 @@ public class DataSourceResult extends AbstractResult {
 	public double getCalls(Integer thread, String event) {
 		Thread t = threadList.get(thread);
 		Function f = source.getFunction(event);
-		FunctionProfile fp = t.getFunctionProfile(f);
 		try {
+			FunctionProfile fp = t.getFunctionProfile(f);
 			return fp.getNumCalls();
 		} catch (NullPointerException e) {
 			if (!ignoreWarnings)
@@ -122,8 +122,8 @@ public class DataSourceResult extends AbstractResult {
 	public double getExclusive(Integer thread, String event, String metric) {
 		Thread t = threadList.get(thread);
 		Function f = source.getFunction(event);
-		FunctionProfile fp = t.getFunctionProfile(f);
 		try {
+			FunctionProfile fp = t.getFunctionProfile(f);
 			return fp.getExclusive(metricMap.get(metric));
 		} catch (NullPointerException e) {
 			if (!ignoreWarnings)
@@ -138,8 +138,8 @@ public class DataSourceResult extends AbstractResult {
 	public double getInclusive(Integer thread, String event, String metric) {
 		Thread t = threadList.get(thread);
 		Function f = source.getFunction(event);
-		FunctionProfile fp = t.getFunctionProfile(f);
 		try {
+			FunctionProfile fp = t.getFunctionProfile(f);
 			return fp.getInclusive(metricMap.get(metric));
 		} catch (NullPointerException e) {
 			if (!ignoreWarnings)
@@ -198,8 +198,8 @@ public class DataSourceResult extends AbstractResult {
 	public double getSubroutines(Integer thread, String event) {
 		Thread t = threadList.get(thread);
 		Function f = source.getFunction(event);
-		FunctionProfile fp = t.getFunctionProfile(f);
 		try {
+			FunctionProfile fp = t.getFunctionProfile(f);
 			return fp.getNumSubr();
 		} catch (NullPointerException e) {
 			if (!ignoreWarnings)
