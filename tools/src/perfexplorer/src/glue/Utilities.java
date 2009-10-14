@@ -9,6 +9,8 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
 
 import javax.swing.JFrame;
 
@@ -195,5 +197,33 @@ public class Utilities {
         events = server.getEventList(trial.getID(), metricIndex);
 		return events;
 	}
+
+	/**
+	 * Shorten a function name
+	 * @param longName the long function name
+	 * @return the shortened function name
+	 */
+	public static String shortenEventName(String longName) {
+		StringTokenizer st = new StringTokenizer(longName, "(");
+		String shorter = null;
+		try {
+			shorter = st.nextToken();
+			if (shorter.length() < longName.length()) {
+				shorter = shorter + "()";
+			}
+		} catch (NoSuchElementException e) {
+			shorter = longName;
+		}
+		longName = shorter;
+		st = new StringTokenizer(longName, "[{");
+		shorter = null;
+		try {
+			shorter = st.nextToken();
+		} catch (NoSuchElementException e) {
+			shorter = longName;
+		}
+		return shorter.trim();
+	}
+
 
 }

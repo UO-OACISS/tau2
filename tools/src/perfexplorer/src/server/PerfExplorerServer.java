@@ -62,7 +62,7 @@ import edu.uoregon.tau.perfexplorer.constants.Constants;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.89 2009/09/18 15:20:30 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.90 2009/10/14 09:45:41 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -164,7 +164,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			configFiles = new ArrayList<String>();
 			configFiles.add(configFile);
 		}
-		//addWorkingDatabase(configFiles);
+		addWorkingDatabase(configFiles);
         String home = System.getProperty("user.home");
         String slash = System.getProperty("file.separator");
         String prefix = home + slash + ".ParaProf" + slash + "perfdmf.cfg.";

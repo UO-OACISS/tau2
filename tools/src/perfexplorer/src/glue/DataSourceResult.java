@@ -107,7 +107,13 @@ public class DataSourceResult extends AbstractResult {
 		Thread t = threadList.get(thread);
 		Function f = source.getFunction(event);
 		FunctionProfile fp = t.getFunctionProfile(f);
-		return fp.getNumCalls();
+		try {
+			return fp.getNumCalls();
+		} catch (NullPointerException e) {
+			if (!ignoreWarnings)
+				System.err.println("*** Warning - null numCalls value for thread: " + thread + ", event: " + event + " ***");
+			return 0.0;
+		}
 	}
 
 	/* (non-Javadoc)
@@ -117,7 +123,13 @@ public class DataSourceResult extends AbstractResult {
 		Thread t = threadList.get(thread);
 		Function f = source.getFunction(event);
 		FunctionProfile fp = t.getFunctionProfile(f);
-		return fp.getExclusive(metricMap.get(metric));
+		try {
+			return fp.getExclusive(metricMap.get(metric));
+		} catch (NullPointerException e) {
+			if (!ignoreWarnings)
+				System.err.println("*** Warning - null exclusive value for thread: " + thread + ", event: " + event + ", metric: " + metric + " ***");
+			return 0.0;
+		}
 	}
 
 	/* (non-Javadoc)
@@ -127,7 +139,13 @@ public class DataSourceResult extends AbstractResult {
 		Thread t = threadList.get(thread);
 		Function f = source.getFunction(event);
 		FunctionProfile fp = t.getFunctionProfile(f);
-		return fp.getInclusive(metricMap.get(metric));
+		try {
+			return fp.getInclusive(metricMap.get(metric));
+		} catch (NullPointerException e) {
+			if (!ignoreWarnings)
+				System.err.println("*** Warning - null inclusive value for thread: " + thread + ", event: " + event + ", metric: " + metric + " ***");
+			return 0.0;
+		}
 	}
 
 	/* (non-Javadoc)
@@ -181,7 +199,13 @@ public class DataSourceResult extends AbstractResult {
 		Thread t = threadList.get(thread);
 		Function f = source.getFunction(event);
 		FunctionProfile fp = t.getFunctionProfile(f);
-		return fp.getNumSubr();
+		try {
+			return fp.getNumSubr();
+		} catch (NullPointerException e) {
+			if (!ignoreWarnings)
+				System.err.println("*** Warning - null subroutines value for thread: " + thread + ", event: " + event + " ***");
+			return 0.0;
+		}
 	}
 
 	/* (non-Javadoc)
