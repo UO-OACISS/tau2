@@ -116,6 +116,7 @@ public class GprofDataSource extends DataSource {
                         } else if (inputString.charAt(0) == '-') {
 
                             function = this.addFunction(self.s0, 1);
+                            function.addGroup(addGroup("TAU_DEFAULT"));
 
                             functionProfile = new FunctionProfile(function);
                             thread.addFunctionProfile(functionProfile);
@@ -136,8 +137,11 @@ public class GprofDataSource extends DataSource {
                             for (int i = 0; i < parents.size(); i++) {
                                 LineData lineDataParent = (LineData) parents.elementAt(i);
                                 function = this.addFunction(lineDataParent.s0, 1);
+                                function.addGroup(addGroup("TAU_DEFAULT"));
                                 String s = lineDataParent.s0 + " => " + self.s0 + "  ";
                                 callPathFunction = this.addFunction(lineDataParent.s0 + " => " + self.s0 + "  ", 1);
+                                callPathFunction.addGroup(addGroup("TAU_DEFAULT"));
+                                callPathFunction.addGroup(addGroup("TAU_CALLPATH"));
 
                                 functionProfile = new FunctionProfile(callPathFunction);
                                 thread.addFunctionProfile(functionProfile);
@@ -154,8 +158,11 @@ public class GprofDataSource extends DataSource {
                             for (int i = 0; i < children.size(); i++) {
                                 LineData lineDataChild = (LineData) children.elementAt(i);
                                 function = this.addFunction(lineDataChild.s0, 1);
+                                function.addGroup(addGroup("TAU_DEFAULT"));
                                 String s = self.s0 + " => " + lineDataChild.s0 + "  ";
                                 callPathFunction = this.addFunction(self.s0 + " => " + lineDataChild.s0 + "  ", 1);
+                                callPathFunction.addGroup(addGroup("TAU_DEFAULT"));
+                                callPathFunction.addGroup(addGroup("TAU_CALLPATH"));
 
                                 functionProfile = new FunctionProfile(callPathFunction);
                                 thread.addFunctionProfile(functionProfile);
@@ -339,6 +346,12 @@ public class GprofDataSource extends DataSource {
 
     private LineData getParentChildLineData(String string) {
         //System.out.println("string = " + string);
+        
+        // first, check to see if we are missing the index, %time, and self values.
+        String tmp = string.trim();
+        boolean missing = false;
+        if (tmp.length() < string.length() - 20)
+        	missing = true;
 
         LineData lineData = new LineData();
         StringTokenizer st = new StringTokenizer(string, " \t\n\r");
@@ -379,34 +392,41 @@ public class GprofDataSource extends DataSource {
         -----------------------------------------------
         */
 
-        String tmpStr = st.nextToken().trim();// string.substring(selfStart, descendantsStart).trim();
-        //String tmpStr = st.nextToken();
-        if (tmpStr.length() > 0) {
-            lineData.d0 = 1000000.0 * Double.parseDouble(tmpStr);
-        } else {
-            lineData.d0 = 0.0;
-        }
-        
-//        System.err.println("Error parsing file: " + currentFile + ", line: " + linenumber);
-//        System.err.println("selfStart: " + selfStart);
-//        System.err.println("descendantsStart: " + descendantsStart);
-//        System.err.println("calledStart: " + calledStart);
+        String tmpStr = null;
 
-        try {
-            tmpStr = st.nextToken().trim();//string.substring(descendantsStart, calledStart).trim();
-            //tmpStr = st.nextToken();
-            if (tmpStr.length() > 0) {
-                lineData.d1 = 1000000.0 * Double.parseDouble(tmpStr);
-            } else {
-                lineData.d1 = 0.0;
-            }
-        } catch (Exception e) {
-            System.err.println("Error parsing file: " + currentFile + ", line: " + linenumber);
-//            System.err.println("selfStart: " + selfStart);
-//            System.err.println("descendantsStart: " + descendantsStart);
-//            System.err.println("calledStart: " + calledStart);
-            System.err.println(e.getMessage());
-            throw new DataSourceException(e, currentFile);
+        if (missing) {
+            lineData.d0 = 0.0;
+            lineData.d1 = 0.0;        	
+        } else {
+	        tmpStr = st.nextToken().trim();// string.substring(selfStart, descendantsStart).trim();
+	        //String tmpStr = st.nextToken();
+	        if (tmpStr.length() > 0) {
+	            lineData.d0 = 1000000.0 * Double.parseDouble(tmpStr);
+	        } else {
+	            lineData.d0 = 0.0;
+	        }
+	        
+	//        System.err.println("Error parsing file: " + currentFile + ", line: " + linenumber);
+	//        System.err.println("selfStart: " + selfStart);
+	//        System.err.println("descendantsStart: " + descendantsStart);
+	//        System.err.println("calledStart: " + calledStart);
+	
+	        try {
+	            tmpStr = st.nextToken().trim();//string.substring(descendantsStart, calledStart).trim();
+	            //tmpStr = st.nextToken();
+	            if (tmpStr.length() > 0) {
+	                lineData.d1 = 1000000.0 * Double.parseDouble(tmpStr);
+	            } else {
+	                lineData.d1 = 0.0;
+	            }
+	        } catch (Exception e) {
+	            System.err.println("Error parsing file: " + currentFile + ", line: " + linenumber);
+	//            System.err.println("selfStart: " + selfStart);
+	//            System.err.println("descendantsStart: " + descendantsStart);
+	//            System.err.println("calledStart: " + calledStart);
+	            System.err.println(e.getMessage());
+	            throw new DataSourceException(e, currentFile);
+	        }
         }
 
         // check if the counts 'spill' into the name field.
@@ -516,7 +536,9 @@ public class GprofDataSource extends DataSource {
     private String fix(String inString) {
         String outString = inString;
         if (fixNames) {
-            if (inString.indexOf(".") == 0)
+            if (inString.indexOf(".*") == 0)
+                outString = inString.substring(2, inString.length());
+            else if (inString.indexOf(".") == 0)
                 outString = inString.substring(1, inString.length());
             else if (inString.endsWith("_"))
                 outString = inString.substring(0, inString.length() - 1);

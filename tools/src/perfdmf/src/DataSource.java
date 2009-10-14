@@ -20,9 +20,9 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.48 2009/09/10 00:25:03 amorris Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.49 2009/10/14 13:38:46 khuck Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.48 $
+ * @version $Revision: 1.49 $
  */
 public abstract class DataSource {
 
@@ -62,7 +62,7 @@ public abstract class DataSource {
     private Function topLevelPhase;
 
     // data structures
-    private List metrics = null;
+    protected List metrics = null;
     protected Thread meanData = null;
     protected Thread totalData = null;
     protected Thread stddevData = null;

@@ -19,10 +19,16 @@ public class ParaverDataSource extends DataSource {
 	private double beginTime = 0.0;
 	private double endTime = 0.0;
 	private double duration = 0.0;
+	private double exclusiveDuration = 0.0;
 	private double durationMicrosecondsPercent = 0.0;
 	private String fileIndex = "";
 	private String metricName = "";
+	private String selectedFunction = "";
+	private String windowName = "";
 	private String shortMetric = null;
+	private int metricIndex = 0;
+	private boolean doingBursts = false;
+	private boolean doingInclusive = false;
 	private NumberFormat nfDLocal = NumberFormat.getNumberInstance();
 	private NumberFormat nfScientific = new DecimalFormat("0.0E0");
 	private static final double NANOSECONDS = 0.001; // to convert to microseconds
@@ -83,6 +89,8 @@ public class ParaverDataSource extends DataSource {
 
 		String inputString = null;
 		String tmp = null;
+		doingBursts = false;
+		doingInclusive = false;
 		while((inputString = br.readLine()) != null){
 			inputString = inputString.trim();
 			if (inputString.trim().length() == 0) {
@@ -97,6 +105,9 @@ public class ParaverDataSource extends DataSource {
 					functionNames.add(tmp);
 				}
 			} else if (inputString.startsWith("THREAD")) {
+				// reset the exclusive Duration timer for this thread
+				exclusiveDuration = duration;
+
 				// process the function data.
         		Function function = null;
         		FunctionProfile fp = null;
@@ -120,11 +131,7 @@ public class ParaverDataSource extends DataSource {
           		int node = Integer.parseInt(tmp)-1;
         		tmp = st2.nextToken(); // thread
            		thread = this.addThread(node, 0, Integer.parseInt(tmp)-1);
-           		if (shortMetric != null) {
-           			this.addMetric(shortMetric);
-           		} else {
-           			this.addMetric(metricName);
-           		}
+           		figureOutMetricName();
 				int j = 0;
 				while (st.hasMoreTokens()) {
         			tmp = st.nextToken(); // function value
@@ -147,43 +154,76 @@ public class ParaverDataSource extends DataSource {
         				String units = st.nextToken(); // units value
 						if (units.equalsIgnoreCase("ns"))
 							unitConversion = NANOSECONDS;
-						if (units.equalsIgnoreCase("us"))
+						else if (units.equalsIgnoreCase("us"))
 							unitConversion = MICROSECONDS;
-						if (units.equalsIgnoreCase("ms"))
+						else if (units.equalsIgnoreCase("ms"))
 							unitConversion = MILLISECONDS;
-						if (units.equalsIgnoreCase("s"))
+						else if (units.equalsIgnoreCase("s"))
 							unitConversion = SECONDS;
-						if (units.equalsIgnoreCase("h"))
+						else if (units.equalsIgnoreCase("h"))
 							unitConversion = HOURS;
-						if (units.equalsIgnoreCase("%"))
+						else if (units.equalsIgnoreCase("%"))
 							// the unit is percent, so convert from the total duration,
 							// which is in nanoseconds, to microseconds
 							unitConversion = durationMicrosecondsPercent;
 					} // assume nanoseconds, the Paraver default
-					value = value * unitConversion;
 
 					// for this function, create a function
-					function = this.addFunction((String)functionNames.get(j), this.files.length); // ,1?
-					fp = thread.getFunctionProfile(function);
-					if (fp == null) {
-						fp = new FunctionProfile(function, this.files.length);
-						thread.addFunctionProfile(fp);
+					String name = (String)functionNames.get(j);
+					if (!name.equalsIgnoreCase("End")) {
+						exclusiveDuration = exclusiveDuration - value;
+						value = value * unitConversion;
+						function = this.addFunction(name, this.metrics.size()); // ,1?
+						fp = thread.getFunctionProfile(function);
+						if (fp == null) {
+							fp = new FunctionProfile(function, this.metrics.size());
+							thread.addFunctionProfile(fp);
+						}
+	
+						// set the values for each metric
+						if (name.startsWith("MPI"))
+							function.addGroup(this.addGroup("MPI"));
+						else
+							function.addGroup(this.addGroup("TAU_DEFAULT"));
+						
+						if (doingInclusive) {
+							fp.setInclusive(metricIndex, value); // we do have this value!
+						} else if (doingBursts) {
+							fp.setNumCalls(value);  // we do have this value!
+						} else {
+							fp.setNumCalls(1);  // we don't have this value
+							fp.setNumSubr(0);  // we don't have this value
+							if (!(fp.getInclusive(metricIndex) > 0.0))
+								fp.setInclusive(metricIndex, value); // we don't have this value
+							fp.setExclusive(metricIndex, value);
+						}
 					}
-
-					// set the values for each metric
-					if (i == 0) {
-						function.addGroup(this.addGroup("TAU_DEFAULT"));
-						fp.setNumCalls(1);  // we don't have this value
-						fp.setNumSubr(0);  // we don't have this value
-					}
-					fp.setInclusive(i, value);
-					fp.setExclusive(i, value);
 					j++;
+				}
+				// create the "main" function
+				function = this.addFunction(".TAU application", this.metrics.size()); // ,1?
+				fp = thread.getFunctionProfile(function);
+				if (fp == null) {
+					fp = new FunctionProfile(function, this.metrics.size());
+					thread.addFunctionProfile(fp);
+				}
+				function.addGroup(this.addGroup("TAU_DEFAULT"));
+				fp.setNumCalls(1);  // we don't have this value
+				fp.setNumSubr(0);  // we don't have this value
+				// no need to convert these units, already in microseconds
+				if (!doingBursts) {
+					fp.setInclusive(metricIndex, duration);
+					double tmpExclusive = fp.getExclusive(metricIndex);
+					if (tmpExclusive > 0.0) {
+						fp.setExclusive(metricIndex, Math.max(duration - (tmpExclusive + exclusiveDuration),0.0));
+					} else {
+						fp.setExclusive(metricIndex, Math.max(exclusiveDuration,0.0));					
+					}
 				}
 			}
 		}
 
-        time = (System.currentTimeMillis()) - time;
+		time = (System.currentTimeMillis()) - time;
         //System.out.println("Done parsing data!");
         //System.out.println("Time to process (in milliseconds): " + time);
         fileIn.close();
@@ -193,6 +233,30 @@ public class ParaverDataSource extends DataSource {
 		this.buildXMLMetaData();
 		setGroupNamesPresent(true);
     }
+
+	private void figureOutMetricName() {
+		Metric metric = null;
+		if (selectedFunction.replaceAll("%", "").trim().equalsIgnoreCase("time")) {
+			this.metricName = "Time";
+			metric = this.addMetric(metricName);
+		} else if (selectedFunction.equalsIgnoreCase("# Bursts")) {
+			// this file has the number of calls value.
+			doingBursts = true;
+			if (this.metrics == null || this.metrics.size() == 0) {
+				this.metricName = "Time";
+				metric = this.addMetric(metricName);
+			}
+		} else {
+			if (shortMetric != null) {
+				metric = this.addMetric(shortMetric);
+			} else {
+				metric = this.addMetric(metricName);
+			}
+		}
+		if (metric != null) {
+			this.metricIndex = metric.getID();
+		}
+	}
 
 	private void processGlobalSection(BufferedReader br) {
 		String inputString = null;
@@ -231,6 +295,7 @@ public class ParaverDataSource extends DataSource {
 						value = value + " " + tmp;
 					}
 					getMetaData().put("Selected Function" + fileIndex, value);
+					this.selectedFunction = value;
 					metricName = metricName + value + " ";
 				} else if (inputString.startsWith("Begin Time")) {
         			StringTokenizer st = new StringTokenizer(inputString, " \t\n\r:");
@@ -252,9 +317,10 @@ public class ParaverDataSource extends DataSource {
         			tmp = st.nextToken(); // value, microseconds
 					getMetaData().put("Duration" + fileIndex, tmp);
 					try {
-						duration = nfDLocal.parse(tmp).doubleValue();
-						// convert from nanoseconds to microseconds, and to percent
-						durationMicrosecondsPercent = duration * 0.001 * 0.01;
+						// convert from nanoseconds to microseconds
+						duration = nfDLocal.parse(tmp).doubleValue() * 0.001;
+						// convert from microseconds to percent
+						durationMicrosecondsPercent = duration* 0.01;
 					} catch (ParseException pe) {System.err.println("Error parsing: " + tmp);}
 				} else if (inputString.startsWith("Control Window")) {
         			StringTokenizer st = new StringTokenizer(inputString, " \t\n\r:");
@@ -336,6 +402,9 @@ public class ParaverDataSource extends DataSource {
 							tmp = tmp.replaceAll("\"","");
 						}
 						value = value + " " + tmp;
+						if (tmp.equalsIgnoreCase("inclusive")) {
+							doingInclusive = true;
+						}
 					}
 					getMetaData().put("Config File" + fileIndex, value);
 				} else if (inputString.startsWith("Extra Control Window")) {
