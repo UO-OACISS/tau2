@@ -20,11 +20,11 @@ import edu.uoregon.tau.perfdmf.database.DB;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.25 2009/09/10 00:13:18 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.26 2009/10/19 17:31:13 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.25 $
+ * @version $Revision: 1.26 $
  */
 public class DatabaseAPI {
 
@@ -969,7 +969,7 @@ public class DatabaseAPI {
                 Integer key = (Integer) it.next();
                 int value = ((Integer) metricHash.get(key)).intValue();
 
-                for (Iterator it2 = trial.getMetrics().iterator(); it2.hasNext();) {
+                for (Iterator it2 = trial.getDataSource().getMetrics().iterator(); it2.hasNext();) {
                     Metric metric = (Metric) it2.next();
                     if (metric.getID() == key.intValue()) {
                         if (value != -1) {
