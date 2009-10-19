@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.42 2009/09/15 16:49:02 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.43 2009/10/19 20:40:16 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.42 $
+ * @version	$Revision: 1.43 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -2061,28 +2061,28 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             DatabaseAPI databaseAPI = new DatabaseAPI();
             databaseAPI.initialize(database);
 
-            // Some strangeness here, we retrieve the metadata columns for the non-db trials
-            // from the "first" database in the list.  Very screwy in my opinion.
-            if (!metaDataRetrieved) {
-                DatabaseAPI defaultDatabaseAPI = new DatabaseAPI();
-                defaultDatabaseAPI.initialize(getDefaultDatabase());
-                metaDataRetrieved = true;
-                for (Iterator it = ParaProf.applicationManager.getApplications().iterator(); it.hasNext();) {
-                    ParaProfApplication ppApp = (ParaProfApplication) it.next();
-                    if (!ppApp.dBApplication()) {
-                        ppApp.setDatabase(getDefaultDatabase());
-                        for (Iterator it2 = ppApp.getExperimentList(); it2.hasNext();) {
-                            ParaProfExperiment ppExp = (ParaProfExperiment) it2.next();
-                            ppExp.setDatabase(getDefaultDatabase());
-                            for (Iterator it3 = ppExp.getTrialList(); it3.hasNext();) {
-                                ParaProfTrial ppTrial = (ParaProfTrial) it3.next();
-                                ppTrial.getTrial().setDatabase(getDefaultDatabase());
-                            }
-                        }
-                    }
-                }
-                defaultDatabaseAPI.terminate();
-            }
+//            // Some strangeness here, we retrieve the metadata columns for the non-db trials
+//            // from the "first" database in the list.  Very screwy in my opinion.
+//            if (!metaDataRetrieved) {
+//                DatabaseAPI defaultDatabaseAPI = new DatabaseAPI();
+//                defaultDatabaseAPI.initialize(getDefaultDatabase());
+//                metaDataRetrieved = true;
+//                for (Iterator it = ParaProf.applicationManager.getApplications().iterator(); it.hasNext();) {
+//                    ParaProfApplication ppApp = (ParaProfApplication) it.next();
+//                    if (!ppApp.dBApplication()) {
+//                        ppApp.setDatabase(getDefaultDatabase());
+//                        for (Iterator it2 = ppApp.getExperimentList(); it2.hasNext();) {
+//                            ParaProfExperiment ppExp = (ParaProfExperiment) it2.next();
+//                            ppExp.setDatabase(getDefaultDatabase());
+//                            for (Iterator it3 = ppExp.getTrialList(); it3.hasNext();) {
+//                                ParaProfTrial ppTrial = (ParaProfTrial) it3.next();
+//                                ppTrial.getTrial().setDatabase(getDefaultDatabase());
+//                            }
+//                        }
+//                    }
+//                }
+//                defaultDatabaseAPI.terminate();
+//            }
 
             //   dbAPI = databaseAPI;
             return databaseAPI;
