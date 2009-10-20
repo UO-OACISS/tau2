@@ -1707,10 +1707,12 @@ case $machine in
 
 
     # default to this BFD installation
-    if [ $bfd = no ] ; then
-	bfd=yes
-	bfddir=/bgsys/drivers/ppcfloor/gnu-linux
-    fi
+    # disabling for now, the BFD on BGP causes problems for the
+    # shared library version of TAU (gpaw python)
+    # if [ $bfd = no ] ; then
+    # 	bfd=yes
+    # 	bfddir=/bgsys/drivers/ppcfloor/gnu-linux
+    # fi
 
     ;;
 
