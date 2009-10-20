@@ -88,7 +88,7 @@ static void hash_put(unsigned long h, const char* n, const char* fn, int lno) {
   long id = h % HASH_MAX;
   HashNode *add = (HashNode*)malloc(sizeof(HashNode));
   add->id = h;
-  add->name  = n;
+  add->name = n ? (const char*)strdup(n) : n;
   add->fname = fn ? (const char*)strdup(fn) : fn;
   add->lno   = lno;
   add->fi = NULL;
