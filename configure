@@ -1707,7 +1707,7 @@ case $machine in
 
 
     # default to this BFD installation
-    if [ bfd=no ] ; then
+    if [ $bfd = no ] ; then
 	bfd=yes
 	bfddir=/bgsys/drivers/ppcfloor/gnu-linux
     fi
