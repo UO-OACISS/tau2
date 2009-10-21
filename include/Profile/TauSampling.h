@@ -68,7 +68,7 @@
 
 int Tau_sampling_init();
 int Tau_sampling_finalize();
-int Tau_sampling_event_stop(double stopTime);
+int Tau_sampling_event_stop(double* stopTime);
 
 
 #endif /* _TAU_SAMPLING_H_ */

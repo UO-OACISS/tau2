@@ -43,6 +43,7 @@ extern "C" {
   int TAUDECL TauEnv_get_track_memory_heap();
   int TAUDECL TauEnv_get_track_memory_headroom();
   int TAUDECL TauEnv_get_extras();
+  int TAUDECL TauEnv_get_ebs_frequency();
 
   double TAUDECL TauEnv_get_throttle_numcalls();
   double TAUDECL TauEnv_get_throttle_percall();

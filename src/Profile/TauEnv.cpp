@@ -50,6 +50,9 @@
 # define TAU_CALLPATH_DEFAULT 0
 #endif
 
+/* if we are doing EBS sampling, set the default sampling frequency */
+# define TAU_EBS_FREQUENCY_DEFAULT 1000
+
 #ifdef TAU_COMPENSATE
 # define TAU_COMPENSATE_DEFAULT 1
 #else
@@ -248,6 +251,7 @@ static int env_comm_matrix = 0;
 static int env_track_memory_heap = 0;
 static int env_track_memory_headroom = 0;
 static int env_extras = 0;
+static int env_ebs_frequency = 0;
 
 static int env_profile_format = TAU_FORMAT_PROFILE;
 static double env_throttle_numcalls = 0;
@@ -375,6 +379,10 @@ double TauEnv_get_throttle_percall() {
 
 int TauEnv_get_profile_format() {
   return env_profile_format;
+}
+
+int TauEnv_get_ebs_frequency() {
+  return env_ebs_frequency;
 }
 
 /*********************************************************************
@@ -643,6 +651,22 @@ void TauEnv_initialize() {
     } else {
       TAU_VERBOSE("TAU: METRICS is \"%s\"\n", env_metrics);
     }
+
+#ifdef TAU_EXP_SAMPLING
+    /* TAU_EXP_SAMPLING frequency */
+    const char *ebs_frequency = getconf("TAU_EBS_FREQUENCY");
+    env_ebs_frequency = TAU_EBS_FREQUENCY_DEFAULT;
+    if (ebs_frequency) {
+      env_ebs_frequency = atoi(ebs_frequency);
+      if (env_ebs_frequency < 0) {
+        env_ebs_frequency = TAU_EBS_FREQUENCY_DEFAULT;
+      }
+    }
+    TAU_VERBOSE("TAU: EBS frequency = %d usec\n", env_ebs_frequency);
+    sprintf(tmpstr, "%d usec", env_ebs_frequency);
+    TAU_METADATA("TAU_EBS_FREQUENCY", tmpstr);
+#endif
+
   }
 }
 } /* C linkage */

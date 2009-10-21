@@ -101,32 +101,39 @@ sub process_trace {
 
   my %startmap;
   my %stopmap;
+  my @startTokens;
+  my @stopTokens;
 
   # Read the trace
   my ($junk, $exe, $node);
   open (TRACE, "tac $trace_file |");
   open (OUTPUT, "| tac > $out_file");
   while ($line = <TRACE>) {
+    #print "$line";
     if ($line =~ /\#.*/) {
       if ($line =~ /\# exe:.*/) {
-	($junk, $exe) = split("exe:",$line);
-	$exe = trim($exe);
+        ($junk, $exe) = split("exe:",$line);
+        $exe = trim($exe);
       } elsif ($line =~ /\# node:.*/) {
-	($junk, $node) = split("node:",$line);
-	$node = trim($node);
+        ($junk, $node) = split("node:",$line);
+        $node = trim($node);
+      } elsif ($line =~ /\# \$.*/) {
+	    ## ignore the format line
+      } elsif ($line =~ /\# \%.*/) {
+	    ## output the true format line
+		print (OUTPUT "# <timestamp> | <delta-begin> | <delta-end> | <location> | <delta-begin metric 1> <delta-end metric 1> ... <delta-begin metric N> <delta-end metric N> | <tau callpath>\n");
       } else {
-	print (OUTPUT "$line");
+        print (OUTPUT "$line");
       }
       next;
     } elsif ($line =~ /\%.*/) {
       # process stop lines
-
-      my ($type,$start,$stop,$callpath) = split('\|',$line);
-      $start = trim($start);
-      $stop = trim($stop);
+      my ($type,$metricsStart,$metricsStop,$callpath) = split('\|',$line);
       $callpath = trim($callpath);
-      $startmap{$callpath} = $start;
-      $stopmap{$callpath} = $stop;
+      # there is a start value for each metric
+      $startmap{$callpath} = $metricsStart;
+      # there is a stop value for each metric
+      $stopmap{$callpath} = $metricsStop;
     } else {
       # process sample lines
 
@@ -143,37 +150,52 @@ sub process_trace {
       my $newCallpath = "";
       my (@processedEvents);
       foreach my $e (@events) {
-	$newCallpath = "$newCallpath => $eventmap{$e}";
-	push (@processedEvents, $eventmap{$e});
+        $newCallpath = "$newCallpath => $eventmap{$e}";
+        push (@processedEvents, $eventmap{$e});
       }
       $newCallpath = join(" => ", @processedEvents);
       $lastCallpath = $newCallpath;
 
       my $check = $deltaStart;
-      $deltaStart = $timestamp - $startmap{$callpath};
-      $deltaStop = $stopmap{$callpath} - $timestamp;
 
-#       if ($check != $startmap{$callpath}) {
-# 	die "inconsistent file, $check != $startmap{$callpath}\n";
+      @startTokens = split(" ", $startmap{$callpath});
+      @stopTokens = split(" ", $stopmap{$callpath});
+      $deltaStart = $timestamp - @startTokens[0];
+      $deltaStop = @stopTokens[0] - $timestamp;
+#       if ($check != $deltaStart) {
+#         print "$line\n";
+#         die "inconsistent file $callpath, $check != $$deltaStart\n";
 #       }
 
       # Process the PC
 
       my $newpc = translate_pc($exe, $pc);
 
+      if (($deltaStop < 0) || ($deltaStart < 0)) {
+        print "ignoring negative sample, location: $newpc\n";
+        next;
+      }
+
       # Output the processed data
-      print OUTPUT "$timestamp | $deltaStart | $deltaStop | $newpc | $metrics | $newCallpath\n";
+      print OUTPUT "$timestamp | $deltaStart | $deltaStop | $newpc |";
+
+      # split the metrics, and their start/stops, and handle them all
+      my @metricTokens = split(" ", $metrics);
+      my $i = 0;
+      for (0..$#metricTokens) {
+        my $deltaMetS = $metricTokens[$_] - $startTokens[$_];
+        my $deltaMetE = $stopTokens[$_] - $metricTokens[$_];
+        print OUTPUT " $deltaMetS $deltaMetE";
+      }
+
+      print OUTPUT " | $newCallpath\n";
+      #exit()
     }
   }
   print OUTPUT "# node: $node\n";
 }
 
-
-
 sub main {
-
-
-
   my $pattern = "ebstrace.raw.*.*.*.*";
   while (defined(my $filename = glob($pattern))) {
     my ($trace_file, $def_file, $out_file);
@@ -186,6 +208,5 @@ sub main {
     process_trace($def_file, $trace_file, $out_file);
   }
 }
-
 
 main
