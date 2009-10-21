@@ -5040,13 +5040,11 @@ cp ${tauroot}/tools/src/tau_cc.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
 cp ${tauroot}/tools/src/contrib/tcollect10.ini $BINTARGET
 
-
 #copy over tau_header_inst.sh
 if [ $pdt = yes ] ; then
-  echo "copy tau_header_inst.sh"
-	cat ${tauroot}/tools/src/tau_header_inst.sh | sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@ARCH@,'$architecture',' \
+    cat ${tauroot}/tools/src/tau_header_inst.sh | sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@ARCH@,'$architecture',' \
 	-e 's,@PDTROOTDIR@,'$pdtdir',' -e 's,@PDTARCH@, '$pdtcompdir',' > ${targetdir}/${architecture}/bin/tau_header_inst.sh
-	chmod a+rx ${targetdir}/${architecture}/bin/tau_header_inst.sh
+    chmod a+rx ${targetdir}/${architecture}/bin/tau_header_inst.sh
 fi
 
 # Copy over tau_load.sh
