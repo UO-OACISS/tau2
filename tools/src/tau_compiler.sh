@@ -92,8 +92,8 @@ printUsage () {
     echo -e "  -optOpariDir=\"<path>\"\t\tSpecifies the location of the Opari directory"
     echo -e "  -optOpariOpts=\"\"\t\tSpecifies optional arguments to the Opari tool"
     echo -e "  -optOpariReset=\"\"\t\tResets options passed to the Opari tool"
-    echo -e "  -optNoMpi\t\t\tRemoves -l*mpi* libraries during linking (default)"
-    echo -e "  -optMpi\t\t\tDoes not remove -l*mpi* libraries during linking"
+    echo -e "  -optNoMpi\t\t\tRemoves -l*mpi* libraries during linking"
+    echo -e "  -optMpi\t\t\tDoes not remove -l*mpi* libraries during linking (default)"
     echo -e "  -optNoRevert\t\t\tExit on error. Does not revert to the original compilation rule on error."
     echo -e "  -optRevert\t\t\tRevert to the original compilation rule on error (default)."
     echo -e "  -optKeepFiles\t\t\tDoes not remove intermediate .pdb and .inst.* files" 
@@ -466,8 +466,6 @@ for arg in "$@" ; do
 			echoIfDebug "\tQuiet Option is being passed"
 			isVerbose=$FALSE
 			;;
-
-
 		    -optNoMpi*)
 				#By default this is true. When set to false, This option 
 				#removes -l*mpi* options at the linking stage.
@@ -923,6 +921,10 @@ if [ $numFiles == 0 ]; then
 	#avoided by assinging a status of $FALSE to the $gotoNextStep. 
 
     if [ $hasMpi == $FALSE ]; then
+	echoIfDebug "Before filtering libmpi*.so options command is: $regularCmd"
+	regularCmd=`echo "$regularCmd" | sed -e 's: \S*libmpi*\.so: :g'`
+	echoIfDebug "After filtering libmpi*.so options command is: $regularCmd"
+
 	echoIfDebug "Before filtering -l*mpi* options command is: $regularCmd"
 	regularCmd=`echo "$regularCmd" | sed -e 's/-l[a-zA-Z0-9]*mpi[a-zA-Z.0-9+_]*//g'`
 	echoIfDebug "After filtering -l*mpi* options command is: $regularCmd"
