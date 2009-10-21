@@ -15,7 +15,7 @@ declare -i gfparseUsed=$FALSE
 declare -i pdtUsed=$FALSE
 declare -i isForCompilation=$FALSE
 declare -i hasAnObjectOutputFile=$FALSE
-declare -i hasMpi=$TRUE
+declare -i removeMpi=$FALSE
 declare -i needToCleanPdbInstFiles=$TRUE
 declare -i pdbFileSpecified=$FALSE
 declare -i optResetUsed=$FALSE
@@ -470,12 +470,11 @@ for arg in "$@" ; do
 				#By default this is true. When set to false, This option 
 				#removes -l*mpi* options at the linking stage.
 			echoIfDebug "\tNo MPI Option is being passed"
-			hasMpi=$FALSE
+			removeMpi=$TRUE
 			;;
 		    -optMpi*)
-			hasMpi=$TRUE
+			removeMpi=$FALSE
 			;;
-
 		    -optNoRevert*)
 			revertOnError=$FALSE
 			;;
@@ -920,7 +919,7 @@ if [ $numFiles == 0 ]; then
 	#it simply carries out the current linking. Compilation steps are
 	#avoided by assinging a status of $FALSE to the $gotoNextStep. 
 
-    if [ $hasMpi == $FALSE ]; then
+    if [ $removeMpi == $TRUE ]; then
 	echoIfDebug "Before filtering libmpi*.so options command is: $regularCmd"
 	regularCmd=`echo "$regularCmd" | sed -e 's: \S*libmpi*\.so: :g'`
 	echoIfDebug "After filtering libmpi*.so options command is: $regularCmd"
