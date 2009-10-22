@@ -48,11 +48,13 @@ using namespace std;
 
 #include <stdlib.h>
 #include <string.h>
+#include <dirent.h>
 #include <sys/types.h>
 #include <unistd.h>
 #ifdef TAU_OPENMP
 #  include <omp.h>
 #endif
+
 
 
 static int gnu_init = 1;       /* is initialization needed? */
@@ -235,18 +237,64 @@ static void get_symtab_bfd(const char *module, unsigned long offset) {
   return;
 }
 
+
+int getBGPJobID(const char *path, char *name) {
+  DIR *pdir = NULL;
+  pdir = opendir(path);
+  if (pdir == NULL) {
+    return -1;
+  }
+
+  struct dirent *pent = NULL;
+  int i;
+  for (i=0; i < 3; i++) {
+    pent = readdir(pdir);
+    if (pent == NULL) {
+      return -1;
+    }
+  }
+
+  strcpy(name, pent->d_name);
+  closedir(pdir);
+  return 0;
+}
+
+int getBGPExePath(char *path) {
+  int rc;
+  char jobid[256];
+  rc = getBGPJobID("/jobs", jobid);
+  if (rc != 0) {
+    return -1;
+  }
+
+  sprintf (path, "/jobs/%s/exe", jobid);
+  return 0;
+}
+
+
 /*
  * Get symbol table either by using BFD or by parsing nm-file
  */
 static void get_symtab(void) {
 #ifdef TAU_BFD
-#ifdef TAU_AIX
+# ifdef TAU_AIX
   char path[2048];
   sprintf (path, "/proc/%d/object/a.out", getpid());
   get_symtab_bfd(path, 0);
-#else
+# else
+#   ifdef TAU_BGP
+  char path[2048];
+  int rc;
+  rc = getBGPExePath(path);
+  if (rc == 0) {
+    get_symtab_bfd(path, 0);
+  } else {
+    fprintf(stderr, "TAU: Warning! BFD not found, symbols will not be resolved\n");
+  }
+#   else
   get_symtab_bfd("/proc/self/exe", 0);
-#endif
+#   endif
+# endif
 #else
   fprintf(stderr, "TAU: Warning! BFD not found, symbols will not be resolved\n");
 #endif
