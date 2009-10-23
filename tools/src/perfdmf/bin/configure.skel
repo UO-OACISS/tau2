@@ -2,6 +2,7 @@
 TAUROOT=@TAUROOTDIR@
 MACHINE=@ARCH@
 
+SCHEMADIR=${TAUROOT}/etc
 LIBDIR=${TAUROOT}/${MACHINE}/lib
 JARDIR=${TAUROOT}/${MACHINE}/lib
 
@@ -15,4 +16,4 @@ if [ "x$machine" = "xx86_64" ] ; then
     MEMORY=-Xmx2000m
 fi
 
-java $MEMORY -cp ${JARS} edu.uoregon.tau.perfdmf.loader.Configure -t ${TAUROOT} -a ${MACHINE} "$@"
+java $MEMORY -cp ${JARS} edu.uoregon.tau.perfdmf.loader.Configure -j ${JARDIR} -a ${SCHEMADIR} "$@"

@@ -23,9 +23,8 @@ public class Configure {
     // todo - remove these defaults
     // todo - consider using a hash table!
     private String configuration_name = "";
-    private String perfdmf_home = "";
-    private String tau_root = "";
-    private String arch = "";
+    private String jardir;
+    private String schemadir;
     private String jdbc_db_jarfile = "derby.jar";
     private String jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
     private String jdbc_db_type = "derby";
@@ -44,11 +43,10 @@ public class Configure {
 
     private String configFileName;
 
-    public Configure(String tauroot, String arch) {
+    public Configure(String jardir, String schemadir) {
         super();
-        this.tau_root = tauroot;
-        this.arch = arch;
-        this.perfdmf_home = tauroot + File.separator + "tools" + File.separator + "src" + File.separator + "perfdmf";
+        this.jardir = jardir;
+        this.schemadir = schemadir;
     }
 
     public void errorPrint(String msg) {
@@ -92,7 +90,7 @@ public class Configure {
     public void parseConfigFile() throws IOException, FileNotFoundException {
         System.out.println("Parsing config file...");
         parser = new ParseConfig(configFileName);
-        perfdmf_home = parser.getPerfDMFHome();
+        //perfdmf_home = parser.getPerfDMFHome();
         jdbc_db_jarfile = parser.getJDBCJarFile();
         jdbc_db_driver = parser.getJDBCDriver();
         jdbc_db_type = parser.getDBType();
@@ -111,25 +109,24 @@ public class Configure {
      *  in the configuration file.
      **/
 
-    private String getSysDepRoot() {
+    private String getUserJarDir() {
         String os = System.getProperty("os.name").toLowerCase();
         if (os.trim().startsWith("windows")) {
-            return tau_root + File.separator + "bin" + File.separator;
+            return jardir;
         } else {
-            return System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator;
+            String dir = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator;
+            File file = new File(dir);
+            file.mkdirs();
+            return dir;
         }
     }
 
     public void useDefaults() {
         String os = System.getProperty("os.name").toLowerCase();
-        if (os.trim().startsWith("windows")) {
-            jdbc_db_jarfile = tau_root + File.separator + "bin" + File.separator + "derby.jar";
-        } else {
-            jdbc_db_jarfile = tau_root + File.separator + arch + File.separator + "lib" + File.separator + "derby.jar";
-        }
+        jdbc_db_jarfile = jardir + File.separator + "derby.jar";
         db_dbname = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf";
         jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
-        db_schemafile = perfdmf_home + etc + "dbschema.derby.txt";
+        db_schemafile = schemadir + File.separator + "dbschema.derby.txt";
         db_hostname = "";
         db_portnum = "";
         store_db_password = true;
@@ -164,12 +161,7 @@ public class Configure {
                 configuration_name = "";
             }
 
-            System.out.print("Please enter the TAU root directory.\n(" + tau_root + "):");
-            tmpString = reader.readLine();
-            if (tmpString.length() > 0) {
-                tau_root = tmpString;
-                perfdmf_home = tau_root + File.separator + "tools" + File.separator + "src" + File.separator + "perfdmf";
-            }
+         
 
             String old_jdbc_db_type = jdbc_db_type;
             boolean valid = false;
@@ -177,7 +169,7 @@ public class Configure {
             while (!valid) {
                 // Prompt for database type
                 System.out.println("Please enter the database vendor (oracle, postgresql, mysql, db2 or derby).");
-                System.out.println("(" + jdbc_db_type + "):");
+                System.out.print("(" + jdbc_db_type + "):");
                 tmpString = reader.readLine();
                 if (tmpString.compareTo("oracle") == 0 || tmpString.compareTo("postgresql") == 0
                         || tmpString.compareTo("mysql") == 0 || tmpString.compareTo("derby") == 0
@@ -192,40 +184,35 @@ public class Configure {
             if (configFileFound) {
                 if (jdbc_db_type.compareTo("postgresql") == 0 && old_jdbc_db_type.compareTo("postgresql") != 0) {
                     // if the user has chosen postgresql and the config file is not already set for it
-                    jdbc_db_jarfile = getSysDepRoot() + "postgresql.jar";
+                    jdbc_db_jarfile = getUserJarDir() + "postgresql.jar";
                     jdbc_db_driver = "org.postgresql.Driver";
-                    db_schemafile = perfdmf_home + etc + "dbschema.txt";
+                    db_schemafile = schemadir + File.separator + "dbschema.txt";
                     db_portnum = "5432";
                     db_hostname = "localhost";
                     db_dbname = "perfdmf";
                 } else if (jdbc_db_type.compareTo("mysql") == 0 && old_jdbc_db_type.compareTo("mysql") != 0) {
                     // if the user has chosen mysql and the config file is not already set for it
-                    jdbc_db_jarfile = getSysDepRoot() + "mysql.jar";
+                    jdbc_db_jarfile = getUserJarDir() + "mysql.jar";
                     jdbc_db_driver = "org.gjt.mm.mysql.Driver";
-                    db_schemafile = perfdmf_home + etc + "dbschema.mysql.txt";
+                    db_schemafile = schemadir + File.separator + "dbschema.mysql.txt";
                     db_portnum = "3306";
                     db_hostname = "localhost";
                     db_dbname = "perfdmf";
                 } else if (jdbc_db_type.compareTo("oracle") == 0 && old_jdbc_db_type.compareTo("oracle") != 0) {
                     // if the user has chosen oracle and the config file is not already set for it
-                    jdbc_db_jarfile = getSysDepRoot() + "ojdbc14.jar";
+                    jdbc_db_jarfile = getUserJarDir() + "ojdbc14.jar";
                     jdbc_db_driver = "oracle.jdbc.OracleDriver";
-                    db_schemafile = perfdmf_home + etc + "dbschema.oracle.txt";
+                    db_schemafile = schemadir + File.separator + "dbschema.oracle.txt";
                     db_portnum = "1521";
                     db_hostname = "localhost";
                     db_dbname = "perfdmf";
                 } else if (jdbc_db_type.compareTo("derby") == 0 && old_jdbc_db_type.compareTo("derby") != 0) {
                     // if the user has chosen derby and the config file is not already set for it
                     String os = System.getProperty("os.name").toLowerCase();
-                    if (os.trim().startsWith("windows")) {
-                        jdbc_db_jarfile = tau_root + File.separator + "bin" + File.separator + "derby.jar";
-                    } else {
-                        jdbc_db_jarfile = tau_root + File.separator + arch + File.separator + "lib" + File.separator
-                                + "derby.jar";
-                    }
+                    jdbc_db_jarfile = jardir + File.separator + "derby.jar";
                     jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
-                    db_schemafile = perfdmf_home + etc + "dbschema.derby.txt";
-                    db_dbname = tau_root + File.separator + arch + File.separator + "lib" + File.separator + "perfdmf";
+                    db_schemafile = schemadir + File.separator + "dbschema.derby.txt";
+                    db_dbname = jardir + File.separator + "perfdmf";
                     db_hostname = "";
                     db_portnum = "";
                 } else if (jdbc_db_type.compareTo("db2") == 0 && old_jdbc_db_type.compareTo("db2") != 0) {
@@ -233,7 +220,7 @@ public class Configure {
 
                     jdbc_db_jarfile = ""; // there are 3 jar files...
                     jdbc_db_driver = "com.ibm.db2.jcc.DB2Driver";
-                    db_schemafile = perfdmf_home + etc + "dbschema.db2.txt";
+                    db_schemafile = schemadir + File.separator + "dbschema.db2.txt";
                     db_dbname = "perfdmf";
                     db_schemaprefix = "perfdmf";
                     db_hostname = "localhost";
@@ -297,16 +284,9 @@ public class Configure {
 
             if (!configFileFound) {
                 if (jdbc_db_type.compareTo("derby") == 0) {
-                    String os = System.getProperty("os.name").toLowerCase();
-                    if (os.trim().startsWith("windows")) {
-                        jdbc_db_jarfile = tau_root + File.separator + "bin" + File.separator + "derby.jar";
-                    } else {
-                        jdbc_db_jarfile = tau_root + File.separator + arch + File.separator + "lib" + File.separator
-                                + "derby.jar";
-                    }
-
+                    jdbc_db_jarfile = jardir + File.separator + "derby.jar";
                 } else {
-                    jdbc_db_jarfile = getSysDepRoot() + jdbc_db_jarfile;
+                    jdbc_db_jarfile = getUserJarDir() + jdbc_db_jarfile;
                 }
             }
 
@@ -540,13 +520,13 @@ public class Configure {
             if (configFileFound) {
                 System.out.print("Please enter the PerfDMF schema file.\n(" + db_schemafile + "):");
             } else {
-                System.out.print("Please enter the PerfDMF schema file.\n(" + perfdmf_home + etc + db_schemafile + "):");
+                System.out.print("Please enter the PerfDMF schema file.\n(" + schemadir + File.separator + db_schemafile + "):");
             }
             tmpString = reader.readLine();
             if (tmpString.length() > 0) {
                 db_schemafile = tmpString.replaceAll("~", System.getProperty("user.home"));
             } else if (!configFileFound) {
-                db_schemafile = perfdmf_home + etc + db_schemafile;
+                db_schemafile = schemadir + File.separator + db_schemafile;
             }
 
         } catch (IOException e) {
@@ -585,6 +565,9 @@ public class Configure {
 
             File configFile;
 
+            File perfdmfpath = new File(System.getProperty("user.home") + File.separator + ".ParaProf");
+            perfdmfpath.mkdirs();
+            
             if (configuration_name.length() != 0) {
                 // configuration name was specified
                 configFile = new File(System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator
@@ -615,9 +598,9 @@ public class Configure {
             configWriter.write("# DO NOT EDIT THIS FILE!  It is modified by the configure utility.\n");
             configWriter.newLine();
 
-            configWriter.write("# PerfDMF home directory\n");
-            configWriter.write("perfdmf_home:" + perfdmf_home + "\n");
-            configWriter.newLine();
+//            configWriter.write("# PerfDMF home directory\n");
+//            configWriter.write("perfdmf_home:" + perfdmf_home + "\n");
+//            configWriter.newLine();
 
             configWriter.write("# Database JDBC jar file (with path to location)\n");
             configWriter.write("jdbc_db_jarfile:" + jdbc_db_jarfile + "\n");
@@ -668,19 +651,12 @@ public class Configure {
             configWriter.close();
             return configFile.toString();
         } catch (IOException e) {
+            e.printStackTrace();
             throw new TauRuntimeException(e);
         }
     }
 
-    //Standard access methods for some of the fields.
-    public void setPerfDMFHome(String inString) {
-        perfdmf_home = inString;
-    }
-
-    public String getPerfDMFHome() {
-        return perfdmf_home;
-    }
-
+  
     public void setJDBCJarfile(String inString) {
         jdbc_db_jarfile = inString;
     }
@@ -814,7 +790,7 @@ public class Configure {
         // Write the configuration file to ${PerfDMF_Home}/bin/perfdmf.cfg
         String configFilename = config.writeConfigFile();
 
-        ConfigureTest configTest = new ConfigureTest(tauroot);
+        ConfigureTest configTest = new ConfigureTest();
         configTest.initialize(configFilename);
         try {
             configTest.createDB(false);
@@ -830,8 +806,8 @@ public class Configure {
         CmdLineParser parser = new CmdLineParser();
         CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configfile");
         CmdLineParser.Option configOpt = parser.addStringOption('c', "config");
-        CmdLineParser.Option homeOpt = parser.addStringOption('t', "tauroot");
-        CmdLineParser.Option archOpt = parser.addStringOption('a', "arch");
+        CmdLineParser.Option jarLocationOpt = parser.addStringOption('j', "jardir");
+        CmdLineParser.Option schemaLocationOpt = parser.addStringOption('a', "schemadir");
         CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
         CmdLineParser.Option defaultOpt = parser.addBooleanOption('d', "create-default");
         try {
@@ -843,8 +819,8 @@ public class Configure {
         }
         String configFile = (String) parser.getOptionValue(configfileOpt);
         String configName = (String) parser.getOptionValue(configOpt);
-        String tauroot = (String) parser.getOptionValue(homeOpt);
-        String arch = (String) parser.getOptionValue(archOpt);
+        String jardir = (String) parser.getOptionValue(jarLocationOpt);
+        String schemadir = (String) parser.getOptionValue(schemaLocationOpt);
         Boolean help = (Boolean) parser.getOptionValue(helpOpt);
         Boolean useDefaults = (Boolean) parser.getOptionValue(defaultOpt);
 
@@ -862,19 +838,14 @@ public class Configure {
             }
 
         }
-        if (tauroot == null) {
-            tauroot = new String("");
-        }
-        if (arch == null) {
-            arch = new String("");
-        }
+
         if (useDefaults == null) {
             useDefaults = Boolean.FALSE;
         }
 
         // Create a new Configure object, which will walk the user through
         // the process of creating/editing a configuration file.
-        Configure config = new Configure(tauroot, arch);
+        Configure config = new Configure(jardir, schemadir);
         config.initialize(configFile);
 
         if (useDefaults == Boolean.TRUE) {
@@ -892,7 +863,7 @@ public class Configure {
         // Write the configuration file to ${PerfDMF_Home}/bin/perfdmf.cfg
         String configFilename = config.writeConfigFile();
 
-        ConfigureTest configTest = new ConfigureTest(tauroot);
+        ConfigureTest configTest = new ConfigureTest();
         configTest.initialize(configFilename);
         try {
             configTest.createDB(false);

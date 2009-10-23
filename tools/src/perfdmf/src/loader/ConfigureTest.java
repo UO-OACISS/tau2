@@ -27,7 +27,6 @@ public class ConfigureTest {
 
     // todo - remove these defaults
     // todo - consider using a hash table!
-    private String perfdmf_home = "";
     private String jdbc_db_jarfile = "postgresql.jar";
     private String jdbc_db_driver = "org.postgresql.Driver";
     private String jdbc_db_type = "postgresql";
@@ -42,9 +41,8 @@ public class ConfigureTest {
 
     private String configFileName;
 
-    public ConfigureTest(String tauroot) {
+    public ConfigureTest() {
         super();
-        this.perfdmf_home = tauroot + "/tools/src/dms";
     }
 
     public void errorPrint(String msg) {
@@ -92,7 +90,6 @@ public class ConfigureTest {
     public void parseConfigFile() throws IOException, FileNotFoundException {
         //System.out.println("Parsing config file...");
         parser = new ParseConfig(configFileName);
-        perfdmf_home = parser.getPerfDMFHome();
         jdbc_db_jarfile = parser.getJDBCJarFile();
         jdbc_db_driver = parser.getJDBCDriver();
         jdbc_db_type = parser.getDBType();
@@ -103,15 +100,6 @@ public class ConfigureTest {
         db_password = parser.getDBPasswd();
         db_schemafile = parser.getDBSchema();
         xml_parser = parser.getXMLSAXParser();
-    }
-
-    //Standard access methods for some of the fields.
-    public void setPerfDMFHome(String inString) {
-        perfdmf_home = inString;
-    }
-
-    public String getPerfDMFHome() {
-        return perfdmf_home;
     }
 
     public void setJDBCJarfile(String inString) {
@@ -381,7 +369,7 @@ public class ConfigureTest {
 
         // Create a new Configure object, which will walk the user through
         // the process of creating/editing a configuration file.
-        ConfigureTest config = new ConfigureTest(tauroot);
+        ConfigureTest config = new ConfigureTest();
         config.initialize(configFile);
         try {
             config.createDB(true);
