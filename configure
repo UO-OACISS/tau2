@@ -4407,18 +4407,26 @@ fi
 
 if [ "x$bfd" = "xyes" ] ; then
     if [ "x$bfddir" = xdownload ] ; then
-	bfddir=${targetdir}/${architecture}/binutils-2.18
+	bfddir=${targetdir}/${architecture}/binutils-2.20
 	if [ -r "$bfddir/lib/libbfd.a" ] ; then
 	    echo "BFD download already found, skipping"
 	else
 	    tempdir=".tmp_bfdbuild_$$"
 	    mkdir $tempdir
 	    cd $tempdir
-	    wget http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.18.tar.gz
-	    tar -xzf binutils-2.18.tar.gz
-	    cd binutils-2.18
-	    ./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir
-	    make && make install
+	    wget http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz
+	    tar -xzf binutils-2.20.tar.gz
+	    cd binutils-2.20
+	    if [ $machine = "bgp" ] ; then
+                ./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir CC=powerpc-bgp-linux-gcc CXX=powerpc-bgp-linux-g++
+		# have to run make twice, first one dies with illegal instruction
+		make
+		make
+		make install
+	    else
+                ./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir
+		make && make install
+            fi
 	    cp include/demangle.h $bfddir/include
 	    cp include/libiberty.h $bfddir/include
 	    cd ..
