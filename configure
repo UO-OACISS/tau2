@@ -1287,6 +1287,10 @@ cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.postgresql ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.db2 ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/java.policy ${targetdir}/etc/.
 
+# copy PerfDMF schema files
+cp ${tauroot}/tools/src/perfdmf/etc/* ${targetdir}/etc/.
+
+
 if [ ! -d ${targetdir}/tools/src/perfdmf/etc ] ; then
     mkdir -p ${targetdir}/tools/src/perfdmf/etc
 fi
