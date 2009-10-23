@@ -9,6 +9,7 @@ package edu.uoregon.tau.perfexplorer.clustering.weka;
 import java.util.List;
 
 import edu.uoregon.tau.perfexplorer.clustering.ClassifierInterface;
+import edu.uoregon.tau.perfexplorer.clustering.ClusterInterface;
 import edu.uoregon.tau.perfexplorer.clustering.DataNormalizer;
 import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
 import edu.uoregon.tau.perfexplorer.clustering.LinearRegressionInterface;
@@ -24,7 +25,7 @@ import edu.uoregon.tau.perfexplorer.common.RMICubeData;
   * method to construct the desired factory.  All other methods are implemented
   * by the specific factory classes.
   *
-  * <P>CVS $Id: AnalysisFactory.java,v 1.1 2009/05/08 22:45:22 wspear Exp $</P>
+  * <P>CVS $Id: AnalysisFactory.java,v 1.2 2009/10/23 16:26:17 khuck Exp $</P>
   * @author  Kevin Huck
   * @version 0.1
   * @since   0.1
@@ -146,5 +147,9 @@ public class AnalysisFactory {
 
 	public static Utilities getUtilities(){
 		return new WekaUtilities();
+	}
+
+	public static ClusterInterface createHierarchicalClusteringEngine() {
+		return new JavaHierarchicalCluster();
 	}
 }

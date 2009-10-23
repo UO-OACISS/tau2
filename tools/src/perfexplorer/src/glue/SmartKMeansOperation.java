@@ -59,10 +59,11 @@ public class SmartKMeansOperation extends AbstractPerformanceOperation {
 	public List<PerformanceResult> processData() {
 		List<PerformanceResult> tmpOutputs = null;
 		double previousGapStat = 0.0;
+		double previousGapIndex = 0;
         for (PerformanceResult input : inputs) {
         	for (int i = 1 ; i <= this.maxClusters ; i++) {
 //        		System.out.println("Clustering with k = " + i);
-				KMeansOperation kmeans = new KMeansOperation(input, metric, type, i);
+				ClusterOperation kmeans = new KMeansOperation(input, metric, type, i);
 				kmeans.setComputeGapStatistic(true);
 				tmpOutputs = kmeans.processData();
 				// 0 - cluster centroids
@@ -70,17 +71,31 @@ public class SmartKMeansOperation extends AbstractPerformanceOperation {
 				// 2 - culster minimums
 				// 3 - cluster maximums
 				System.out.println("Gap Statistic for " + i + " clusters: " + kmeans.getGapStatistic() + " +/- " + kmeans.getGapStatisticError());
+        		System.out.println("Previous Gap statistic: " + previousGapStat);
+				double newGapStat = kmeans.getGapStatistic();
+				double newGapError = kmeans.getGapStatisticError();
 				if (i == 1) {
 					outputs = tmpOutputs;
-					previousGapStat = kmeans.getGapStatistic();
+					previousGapStat = newGapStat;
+					previousGapIndex = i;
 				// make sure we are at least more accurate than noise!
-				} else if (previousGapStat < 0.0 || kmeans.getGapStatistic()-kmeans.getGapStatisticError()<0.0|| ((kmeans.getGapStatistic() - (1*kmeans.getGapStatisticError())) > previousGapStat)) {
+				} else if (previousGapStat < 0.0 || 
+					newGapStat-newGapError < 0.0 || 
+					((newGapStat - (1*newGapError)) > previousGapStat)) {
 					// we have a new winner!
 					outputs = tmpOutputs;
-					previousGapStat = kmeans.getGapStatistic();
-				} else {
+					previousGapStat = newGapStat;
+					previousGapIndex = i;
+				} else if (newGapStat < 0.0 && previousGapStat > 0.0){
+					// we have a new winner!  - we started going negative...
+					outputs = tmpOutputs;
+					previousGapStat = newGapStat;
+					previousGapIndex = i;
 					// early termination.
-					//break;
+					break;
+				} else if (previousGapIndex < i-1 || (newGapStat < 0.0 && previousGapStat > 0.0)){
+					// early termination.
+					break;
 				}
         	}
         }

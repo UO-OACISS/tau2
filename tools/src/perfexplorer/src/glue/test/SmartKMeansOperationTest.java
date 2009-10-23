@@ -5,7 +5,11 @@ package edu.uoregon.tau.perfexplorer.glue.test;
 
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
+import edu.uoregon.tau.perfexplorer.glue.BasicStatisticsOperation;
+import edu.uoregon.tau.perfexplorer.glue.DataSourceResult;
 import edu.uoregon.tau.perfexplorer.glue.DefaultResult;
+import edu.uoregon.tau.perfexplorer.glue.ExtractEventOperation;
+import edu.uoregon.tau.perfexplorer.glue.NormalizeOperation;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
 import edu.uoregon.tau.perfexplorer.glue.SmartKMeansOperation;
@@ -13,8 +17,11 @@ import edu.uoregon.tau.perfexplorer.glue.TopXEvents;
 import edu.uoregon.tau.perfexplorer.glue.TrialResult;
 import edu.uoregon.tau.perfexplorer.glue.Utilities;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 import junit.framework.TestCase;
 
@@ -105,22 +112,45 @@ public class SmartKMeansOperationTest extends TestCase {
 		System.out.println("Estimated value for k: " + clusterResult.get(0).getThreads().size());
 		assertEquals(2, clusterResult.get(0).getThreads().size());*/
 		
-		Utilities.setSession("spaceghost");
-		trial = Utilities.getTrial("sPPM", "Frost", "16.16");
+//		Utilities.setSession("spaceghost");
+//		trial = Utilities.getTrial("sPPM", "Frost", "16.16");
+//		System.out.println("Loading data...");
+//		result = new TrialResult(trial);
+		
+	    String[] files = new String[1];
+        files[0] = "/home/khuck/data/mn/gromacs/Nucleosome.MareNostrum.Scaling/32";
+        result = new DataSourceResult(DataSourceResult.TAUPROFILE, files, false);
+        result.setIgnoreWarnings(true);
+
 		type = AbstractResult.EXCLUSIVE;
-		metric = "PAPI_FP_INS";
-		System.out.println("Loading data...");
-		result = new TrialResult(trial);
+		metric = result.getTimeMetric();
 
 		System.out.println("\nReducinging data...");
-		PerformanceAnalysisOperation reducer = new TopXEvents(result, metric, type, 4);
+		// first, get the stats
+		BasicStatisticsOperation stats = new BasicStatisticsOperation(result);
+		PerformanceResult means = stats.processData().get(BasicStatisticsOperation.MEAN);
+		// then, using the stats, find the top X event names
+		PerformanceAnalysisOperation reducer = new TopXEvents(means, metric, type, 3);
 		PerformanceResult reduced = reducer.processData().get(0);
+		// then, extract those events from the actual data
+		List<String> tmpEvents = new ArrayList<String>(reduced.getEvents());
+		reducer = new ExtractEventOperation(result, tmpEvents);
+		reduced = reducer.processData().get(0);
+/*		for (String e : reduced.getEvents()) {
+			for (Integer t : reduced.getThreads()) {
+				System.out.println(e + " " + reduced.getExclusive(t, e, metric));
+			}
+		}*/
+		NormalizeOperation normalizer = new NormalizeOperation(reduced);
+	    PerformanceResult normalized = normalizer.processData().get(0);
+	    normalized.setIgnoreWarnings(true);
+
 		System.out.println("\nClustering data...");
-		kmeans = new SmartKMeansOperation(reduced, metric, type, 10);
+		kmeans = new SmartKMeansOperation(normalized, metric, type, 5);
 		clusterResult = kmeans.processData();
 		System.out.println("Estimated value for k: " + clusterResult.get(0).getThreads().size());
 		assertEquals(3, clusterResult.get(0).getThreads().size());
-		
+
 /*		Utilities.setSession("peris3d");
 		trial = Utilities.getTrial("S3D", "hybrid-study", "XT3/XT4");
 		type = AbstractResult.EXCLUSIVE;

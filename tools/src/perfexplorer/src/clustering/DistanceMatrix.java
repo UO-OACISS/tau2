@@ -11,7 +11,7 @@ package edu.uoregon.tau.perfexplorer.clustering;
   * is a diagonal matrix, and only the lower-left quadrants below the
   * diagonal are used.
   *
-  * <P>CVS $Id: DistanceMatrix.java,v 1.5 2009/03/02 19:23:49 khuck Exp $</P>
+  * <P>CVS $Id: DistanceMatrix.java,v 1.6 2009/10/23 16:26:15 khuck Exp $</P>
   * @author khuck
   * @version 0.1
   * @since   0.1
@@ -21,6 +21,7 @@ public class DistanceMatrix {
 
     protected int dimension = 0;
     protected double[][] distances = null;
+    protected double[] weights = null;
     
     /**
     * Default constructor - requires a dimension parameter.
@@ -30,10 +31,12 @@ public class DistanceMatrix {
     public DistanceMatrix(int dimension) {
         this.dimension = dimension;
         this.distances = new double[dimension][dimension];
+        this.weights = new double[dimension];
         for (int i = 0; i < dimension ; i++) {
             for (int j = i+1; j < dimension ; j++) {
-                this.distances[i][j] = 1.0;
+                this.distances[i][j] = 0.0;
             }
+            weights[i] = 1.0;
         }
     }
     
@@ -45,10 +48,12 @@ public class DistanceMatrix {
     public DistanceMatrix(DistanceMatrix distances) {
         this.dimension = distances.dimension;
         this.distances = new double[dimension][dimension];
+        this.weights = new double[dimension];
         for (int i = 0; i < dimension ; i++) {
             for (int j = 0; j < dimension ; j++) {
                 this.distances[i][j] = distances.distances[i][j];
             }
+            weights[i] = distances.weights[i];
         }
     }
     
@@ -81,7 +86,7 @@ public class DistanceMatrix {
     public void solveManhattanDistances(RawDataInterface data) {
         for (int i = 0; i < dimension ; i++) {
             for (int j = 0; j < i ; j++) {
-                distances[i][j] = data.getManhattanDistance(i,j);
+                distances[i][j] = distances[j][i] = data.getManhattanDistance(i,j);
             }
         }
     }
@@ -95,7 +100,7 @@ public class DistanceMatrix {
     public void solveCartesianDistances(RawDataInterface data) {
         for (int i = 0; i < dimension ; i++) {
             for (int j = 0; j < i ; j++) {
-                distances[i][j] = data.getCartesianDistance(i,j);
+                distances[i][j] = distances[j][i] = data.getCartesianDistance(i,j);
             }
         }
     }
@@ -126,19 +131,14 @@ public class DistanceMatrix {
     * @param y
     */
     public void mergeDistances (int x, int y) {
-        for (int i = 0 ; i < x ; i++) {
-            int z = dimension - (i+1);
-            distances[x][i] = ((distances[x][i] * distances[x][z]) + 
-                               (distances[y][i] * distances[y][z])) / 
-                              (distances[x][z] + distances[y][z]);
-            distances[x][z] = distances[x][z] + distances[y][z];
-        }
-        for (int i = y+1 ; i < dimension ; i++) {
-            int z = dimension - (i+1);
-            distances[i][x] = ((distances[i][x] * distances[z][x]) + 
-                               (distances[i][y] * distances[z][y])) / 
-                              (distances[z][x] + distances[z][y]);
-            distances[z][x] = distances[z][x] + distances[z][y];
+    	// merge the horizontal distances
+        for (int i = 0 ; i < dimension ; i++) {
+            double firstWeight = weights[x];
+            double secondWeight = weights[y];
+            double totalWeight = firstWeight + secondWeight;
+            distances[x][i] = ((distances[x][i] * firstWeight) + 
+                    (distances[y][i] * firstWeight)) / totalWeight;
+            weights[x] = totalWeight;
         }
     }
 }

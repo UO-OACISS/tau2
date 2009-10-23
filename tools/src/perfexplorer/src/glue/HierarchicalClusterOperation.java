@@ -8,7 +8,7 @@ import java.util.List;
 
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.clustering.ClusterInterface;
-import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
+import edu.uoregon.tau.perfexplorer.clustering.HierarchicalCluster;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
 
@@ -16,12 +16,12 @@ import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
  * @author khuck
  *
  */
-public class KMeansOperation extends ClusterOperation {
+public class HierarchicalClusterOperation extends ClusterOperation {
 
 	/**
 	 * @param input
 	 */
-	public KMeansOperation(PerformanceResult input, String metric, int type, int maxClusters) {
+	public HierarchicalClusterOperation(PerformanceResult input, String metric, int type, int maxClusters) {
 		super(input);
 		this.metric = metric;
 		this.type = type;
@@ -31,7 +31,7 @@ public class KMeansOperation extends ClusterOperation {
 	/**
 	 * @param trial
 	 */
-	public KMeansOperation(Trial trial) {
+	public HierarchicalClusterOperation(Trial trial) {
 		super(trial);
 		// TODO Auto-generated constructor stub
 	}
@@ -39,7 +39,7 @@ public class KMeansOperation extends ClusterOperation {
 	/**
 	 * @param inputs
 	 */
-	public KMeansOperation(List<PerformanceResult> inputs) {
+	public HierarchicalClusterOperation(List<PerformanceResult> inputs) {
 		super(inputs);
 		// TODO Auto-generated constructor stub
 	}
@@ -83,7 +83,33 @@ public class KMeansOperation extends ClusterOperation {
     		System.out.println(this.maxClusters + " clusters, Total adjusted squared distance from centroids: "+ adjustedEvaluation);
 
     		if (computeGapStatistic) {
-	    		computeGapStatistic(input, mins, maxs);
+	    		System.out.println("Computing Gap Statistic");
+	    		double w_k = computeErrorMeasure(input, this.clusterer, false);
+	    		//System.out.println("Error Measure: " + w_k);
+	    		double[] ref_w_k = new double[B];
+	    		double l_bar = 0.0;
+	    		// generate uniform distribution reference dataset
+	    		for (int b = 0 ; b < B ; b++) {
+	    			PerformanceResult reference = generateReferenceDataset(input, mins, maxs);
+	    			ClusterInterface tmpClusterer = doClustering(reference);
+	        		ref_w_k[b] = computeErrorMeasure(reference, tmpClusterer, false);
+	        		// we are computing a sum, so sum
+	        		l_bar += ref_w_k[b];
+	    		}
+	    		// the sum is divided by the number of reference data sets
+	    		l_bar = l_bar / B;
+	    		//System.out.println("Error Measure (reference): " + l_bar);
+	    		// COMPUTE THE GAP STATISTIC!
+	    		this.gapStatistic  = l_bar - w_k;
+	    		// now, compute the sd_k term
+	    		double sd_k = 0.0;
+	    		for (int b = 0 ; b < B ; b++) {
+	    			sd_k += Math.pow((ref_w_k[b] - l_bar), 2.0);
+	    		}
+	    		sd_k = sd_k / B;
+	    		sd_k = Math.pow(sd_k, 0.5);
+	    		// which is used to compute the gapStatisticError term, which is our error for this reference
+	    		this.gapStatisticError  = sd_k * (Math.sqrt(1+(1/B)));
     		}
         }
 
@@ -107,11 +133,9 @@ public class KMeansOperation extends ClusterOperation {
 				}
 			}
 		}
-		KMeansClusterInterface clusterer = AnalysisFactory.createKMeansEngine();
+		ClusterInterface clusterer = AnalysisFactory.createHierarchicalClusteringEngine();
 		clusterer.setInputData(data);
-		clusterer.doSmartInitialization(true);
 		clusterer.setK(this.maxClusters);
-		clusterer.doPCA(false);
 		try {
 			clusterer.findClusters();
 		} catch (Exception e) {

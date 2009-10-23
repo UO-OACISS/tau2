@@ -11,6 +11,7 @@ import edu.uoregon.tau.perfexplorer.clustering.DistanceMatrix;
 import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
+import weka.core.Instance;
 import weka.core.Instances;
 import weka.attributeSelection.PrincipalComponents;
 
@@ -18,7 +19,7 @@ import weka.attributeSelection.PrincipalComponents;
  * This class is used as a list of names and values to describe 
  * a cluster created during some type of clustering operation.
  * 
- * <P>CVS $Id: WekaKMeansCluster.java,v 1.8 2009/02/24 00:53:36 khuck Exp $</P>
+ * <P>CVS $Id: WekaKMeansCluster.java,v 1.9 2009/10/23 16:26:17 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since 0.1
@@ -100,6 +101,10 @@ public class WekaKMeansCluster implements KMeansClusterInterface {
 			this.clusterMinimums = kmeans.getClusterMinimums();
 			this.clusterStandardDeviations = kmeans.getClusterStandardDevs();
 			evaluateCluster();
+/*			for (int x = 0 ; x < instances.numInstances() ; x++) {
+				Instance inst = instances.instance(x);
+				System.out.println(x + ": " + kmeans.clusterInstance(inst));
+			}*/
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println(e.getMessage());
@@ -213,5 +218,12 @@ public class WekaKMeansCluster implements KMeansClusterInterface {
 
 	public void doSmartInitialization(boolean b) {
 		this.hierarchicalInitialize = b;
+	}
+
+	public int[] clusterInstances() {
+		int[] clusterIDs = new int[instances.numInstances()];
+		for (int i = 0 ; i < instances.numInstances(); i++)
+			clusterIDs[i] = clusterInstance(i);		
+		return clusterIDs;
 	}
 }
