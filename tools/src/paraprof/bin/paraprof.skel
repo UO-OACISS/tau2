@@ -2,57 +2,11 @@
 TAUROOT=@TAUROOTDIR@
 MACHINE=@ARCH@
 
+SCHEMADIR=${TAUROOT}/etc
 LIBDIR=${TAUROOT}/${MACHINE}/lib
 JARDIR=${TAUROOT}/${MACHINE}/lib
 
-
-# If paraprof is invoked with the -p option, read and/or generate pprof.dat
-PPROFOPT=""
-if [ "x$1" = "x-p" ] ; then
-    shift
-    echo "Using pprof to generate pprof.dat"
-    pprof_path=${TAUROOT}/${MACHINE}/bin/pprof
-    if [ "x$pprof_path" = "x" ] ; then
-	echo "pprof not found ... will start ParaProf anyway."
-	echo "Unless you have a pprof.dat file already present,"
-	echo "you will have to load one manually."
-    else
-	echo "Found pprof in ${pprof_path}"
-	if [ -r pprof.dat ] ; then
-	    echo "Found pprof.dat"
-	    if [ profile.0.0.0 -nt pprof.dat ] ; then
-		echo "Regenerating pprof.dat file ..." 
-		${pprof_path} -d > pprof.dat
-	    else 
-		echo "pprof.dat is current"
-	    fi
-	else
-	    if [ -r profile.0.0.0 ] ; then
-		echo "Please wait while I generate the pprof.dat file ..."
-		${pprof_path} -d > pprof.dat
-	    else
-		for i in MULTI__* ; do
-		    echo "Looking for pprof.dat file in $i directory ..."
-		    if [ -r $i/pprof.dat ] ; then
-			echo "Found $i/pprof.dat"
-			if [ $i/profile.0.0.0 -nt $i/pprof.dat ] ; then
-			    echo "Regenerating $i/pprof.dat file ..."
-			    ${pprof_path} -d -f $i/profile > $i/pprof.dat
-			else
-			    echo "$i/pprof.dat file is current"
-			fi
-		    else
-			echo "Please wait while I generate the $i/pprof.dat file ..."
-			${pprof_path} -d -f $i/profile > $i/pprof.dat
-		    fi
-		done   
-	    fi
-	fi
-      echo "Done ... now starting ParaProf ..."
-    fi
-    PPROFOPT="-f pprof pprof.dat"
-fi 
-
+JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis.jar:${JARDIR}/jogl.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar
 
 APPLE_OPTIONS=""
 if [ "$MACHINE" = "apple" ]; then
@@ -84,9 +38,6 @@ else
     echo ""
     echo ""
 fi
-PPROFOPT="${PPROFOPT} -t ${TAUROOT} -a ${MACHINE}"
-# Invoke ParaProf with the optional PPROFOPT argument. For large profiles, increase 1000m (1000MB). If you run out of memory, decrease this number.
-JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis.jar:${JARDIR}/jogl.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar
 
 # Test for java 1.4+
 test=`java -cp ${JARS} edu.uoregon.tau.common.VersionTester 1.4`
@@ -99,14 +50,14 @@ if [ $test = "failed" ] ; then
     exit
 fi
 
-
-# Check machine type for a heap space boost
+# Default to 800m heap space
 MEMORY=-Xmx800m
 
+# Check machine type for a heap space boost
 machine=`uname -m`
 if [ "x$machine" = "xx86_64" ] ; then
     MEMORY=-Xmx2000m
 fi
 
 # Launch!
-java $MEMORY -Dderby.system.home=${HOME}/.ParaProf -Dpython.verbose=error -Djava.library.path=${LIBDIR} -cp ${JARS} ${APPLE_OPTIONS} edu/uoregon/tau/paraprof/ParaProf ${PPROFOPT} $*	
+java $MEMORY -Dderby.system.home=${HOME}/.ParaProf -Dpython.verbose=error -Djava.library.path=${LIBDIR} -cp ${JARS} ${APPLE_OPTIONS} edu/uoregon/tau/paraprof/ParaProf -j $JARDIR -c $SCHEMADIR $*	
