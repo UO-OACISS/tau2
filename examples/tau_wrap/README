@@ -23,33 +23,33 @@ We will use the LD_PRELOAD option to load this library and then measure the perf
 
 The steps involved are:
 
-[sameer@zorak example]$ make clean
+[login]$ make clean
 /bin/rm -f app.o app libsecret.so secret.o
-[sameer@zorak example]$ make
+[login]$ make
 gcc -fPIC -I. -c app.c
 gcc -fPIC -I. -c secret.c
 gcc -shared -o libsecret.so secret.o
 gcc -o app app.o -L. -lsecret
-[sameer@zorak example]$ time ./app
+[login]$ time ./app
 Inside foo1: x = 2
 Inside foo2: b = 4, c = 1
 0.000u 0.000s 0:05.00 0.0%      0+0k 0+0io 0pf+0w
 
 
     Next we will just instrument the app and link it with the tau_cc.sh.
-[sameer@zorak example]$ make -f Makefile.tau1
+[login]$ make -f Makefile.tau1
 tau_cc.sh -fPIC -I. -c app.c
 
 gcc -fPIC -I. -c secret.c
 gcc -shared -o libsecret.so secret.o
 tau_cc.sh -o app app.o -L. -lsecret
 
-[sameer@zorak example]$ rm profile.*
-[sameer@zorak example]$ time ./app
+[login]$ rm profile.*
+[login]$ time ./app
 Inside foo1: x = 2
 Inside foo2: b = 4, c = 1
 0.000u 0.000s 0:05.00 0.0%      0+0k 0+0io 0pf+0w
-[sameer@zorak example]$ pprof
+[login]$ pprof
 Reading Profile files in profile.*
 
 NODE 0;CONTEXT 0;THREAD 0:
@@ -58,16 +58,16 @@ NODE 0;CONTEXT 0;THREAD 0:
               msec   total msec                          usec/call
 ---------------------------------------------------------------------------------------
 100.0        5,003        5,003           1           0    5003410 int main(int, char **) C
-[sameer@zorak example]$
+[login]$
 
 
 Next, we will use the tau_wrap tool. Before we compile the code, we need to make sure that this time the TAU shared library is used to link the application as opposed to the default static object.
 
 % setenv TAU_OPTIONS '-optShared -optQuiet'
 
-[sameer@zorak example]$ make -f Makefile.tau2 clean
+[login]$ make -f Makefile.tau2 clean
 /bin/rm -rf app.o app libsecret.so secret.o wrapper
-[sameer@zorak example]$ make -f Makefile.tau2
+[login]$ make -f Makefile.tau2
 tau_cc.sh -fPIC -I. -c app.c
 
 gcc -fPIC -I. -c secret.c
@@ -81,10 +81,10 @@ gcc    -shared        -o libsecret_wrap.so secret_wrap.o  -L/home/users/sameer/t
 make[1]: Leaving directory `/home/sameer/samples/dlopen/example/wrapper'
 tau_cc.sh -o app app.o -L. -lsecret
 
-[sameer@zorak example]$ ./app
+[login]$ ./app
 Inside foo1: x = 2
 Inside foo2: b = 4, c = 1
-[sameer@zorak example]$ pprof
+[login]$ pprof
 Reading Profile files in profile.*
 
 NODE 0;CONTEXT 0;THREAD 0:
@@ -96,11 +96,11 @@ NODE 0;CONTEXT 0;THREAD 0:
 
 Next, we put the wrapper library in the LD_PRELOAD and see:
 
-[sameer@zorak example]$ setenv LD_PRELOAD `pwd`/wrapper/libsecret_wrap.so
-[sameer@zorak example]$ ./app
+[login]$ setenv LD_PRELOAD `pwd`/wrapper/libsecret_wrap.so
+[login]$ ./app
 Inside foo1: x = 2
 Inside foo2: b = 4, c = 1
-[sameer@zorak example]$ pprof
+[login]$ pprof
 Reading Profile files in profile.*
 
 NODE 0;CONTEXT 0;THREAD 0:
@@ -111,7 +111,7 @@ NODE 0;CONTEXT 0;THREAD 0:
 100.0        0.054        5,004           1           2    5004525 int main(int, char **) C
  60.0        3,002        3,002           1           0    3002839 void foo2(int, int) C
  40.0        2,001        2,001           1           0    2001632 int foo1(int) C
-[sameer@zorak example]$
+[login]$
 
 
 Now, we can intercept the two routines without touching their source code!
