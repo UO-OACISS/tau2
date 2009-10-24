@@ -227,18 +227,25 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
   string funchandle("_h) (");
   string rcalledfunc("(*"+r->name()+"_h)");
   string dltext;
+  string returntypename;
   string retstring("    return;");
+  const pdbGroup *grp;
   func.append("(");
   rcalledfunc.append("(");
   proto.append("(");
+  if ((grp = r->signature()->returnType()->isGroup()) != 0) { 
+    returntypename = grp->name();
+  } else {
+    returntypename = r->signature()->returnType()->name();
+  }
   if (runtime)
-    impl<<r->signature()->returnType()->name()<<" "; /* put in return type */
+    impl<<returntypename<<" "; /* put in return type */
   else
-    impl<<r->signature()->returnType()->name()<<"  tau_"; /* put in return type */
+    impl<<returntypename<<"  tau_"; /* put in return type */
   impl<<func;
 #ifdef DEBUG
   cout <<"Examining "<<r->name()<<endl;
-  cout <<"Return type :"<<r->signature()->returnType()->name()<<endl;
+  cout <<"Return type :"<<returntypename<<endl;
 #endif /* DEBUG */
   pdbType::argvec av = r->signature()->arguments();
   int argcount = 1;
@@ -258,12 +265,19 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
       impl<<", ";
     }
     sprintf(number, "%d", argcount);
-    proto.append((*argsit).type()->name());
-    funchandle.append((*argsit).type()->name());
+    const pdbGroup *gr;
+    if ( (gr=(*argsit).type()->isGroup()) != 0) {
+      proto.append(gr->name());
+      funchandle.append(gr->name());
+      impl<<gr->name()<<" ";
+    } else {
+      proto.append((*argsit).type()->name());
+      funchandle.append((*argsit).type()->name());
+      impl<<(*argsit).type()->name()<<" ";
+    }
     proto.append(" " + string("a")+string(number));
     rcalledfunc.append(" " + string("a")+string(number));
     func.append(string("a")+string(number));
-    impl<<(*argsit).type()->name()<<" ";
     impl<<"a"<<number;
   }
   func.append(")");
@@ -273,7 +287,7 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
   impl<<") {" <<endl<<endl;
   if (runtime) {
     if (!isVoid) {
-      impl <<"  static "<<r->signature()->returnType()->name()<<" (*"<<r->name()<<funchandle<<endl;
+      impl <<"  static "<<returntypename<<" (*"<<r->name()<<funchandle<<endl;
       retstring = string("    return retval;");
     } else {
       impl <<"  static void (*"<<r->name()<<funchandle<<endl;
@@ -291,7 +305,7 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
   }
 
   if (!isVoid) {
-    impl<<"  "<<r->signature()->returnType()->name()<< " retval;"<<endl;
+    impl<<"  "<<returntypename<< " retval;"<<endl;
   }
   /* Now put in the body of the routine */
   
@@ -331,8 +345,7 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
 
   /* The macro goes in header file, the implementation goes in the other file */
   header <<macro<<endl;  
-  header <<"extern "<<r->signature()->returnType()->name()<<" tau_"<<proto<<";"<<endl<<endl;
-
+  header <<"extern "<<returntypename<<" tau_"<<proto<<";"<<endl<<endl;
 
 }
 
@@ -629,7 +642,7 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau_wrap.cpp,v $   $Author: sameer $
- * $Revision: 1.15 $   $Date: 2009/10/24 21:00:37 $
- * VERSION_ID: $Id: tau_wrap.cpp,v 1.15 2009/10/24 21:00:37 sameer Exp $
+ * $Revision: 1.16 $   $Date: 2009/10/24 21:32:49 $
+ * VERSION_ID: $Id: tau_wrap.cpp,v 1.16 2009/10/24 21:32:49 sameer Exp $
  ***************************************************************************/
 
