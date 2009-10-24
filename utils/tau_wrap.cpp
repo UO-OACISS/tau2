@@ -278,18 +278,15 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
     } else {
       impl <<"  static void (*"<<r->name()<<funchandle<<endl;
     }
-    dltext = string("  if (tau_handle == NULL) \n\
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); \n\n\
-    if (tau_handle == NULL) { \n\
-      perror(\"Error opening library in dlopen call\"); \n"+ retstring + 
-      string("\n\
-    } \n\
-    else { \n\
-      if (") + r->name() + string("_h == NULL)\n\t") + 
-      r->name() + string("_h = dlsym(tau_handle,\"")+r->name() + string("\"); \n\
-      if (") + r->name() + string ("_h == NULL) {\n\
-        perror(\"Error obtaining symbol info from dlopen'ed lib\"); \n\   ")+ 
-	retstring + string("\n    }\n"));
+    dltext = string("  if (tau_handle == NULL) \n") + 
+    string("    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); \n\n") + 
+    string("  if (tau_handle == NULL) { \n") + 
+    string("    perror(\"Error opening library in dlopen call\"); \n")+ retstring + string("\n") + 
+    string("  } \n") + 
+    string("  else { \n") + 
+    string("    if (") + r->name() + string("_h == NULL)\n\t") + r->name() + string("_h = dlsym(tau_handle,\"")+r->name() + string("\"); \n") + 
+    string("    if (") + r->name() + string ("_h == NULL) {\n") + 
+    string("      perror(\"Error obtaining symbol info from dlopen'ed lib\"); \n") + string("  ")+ retstring + string("\n    }\n");
 
   }
 
@@ -632,7 +629,7 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau_wrap.cpp,v $   $Author: sameer $
- * $Revision: 1.14 $   $Date: 2009/10/24 02:00:16 $
- * VERSION_ID: $Id: tau_wrap.cpp,v 1.14 2009/10/24 02:00:16 sameer Exp $
+ * $Revision: 1.15 $   $Date: 2009/10/24 21:00:37 $
+ * VERSION_ID: $Id: tau_wrap.cpp,v 1.15 2009/10/24 21:00:37 sameer Exp $
  ***************************************************************************/
 
