@@ -1,0 +1,118 @@
+To use tau_wrap to generate a wrapper for any arbitrary package, let us consider a simple application 'app.c' that calls two routines foo1 and foo2 from secret.c. Assume that the source code of libsecret.so is not available for instrumentation. Just the prototype of secret.h is available and it lists two functions:
+
+int foo1(int a);
+void foo2(int b, int c);
+
+Given these two prototypes, we shall generate a shared object that will intercept calls to foo1 and foo2 and call TAU timers internally.
+
+Our goal is to measure the time spent in these two routines without instrumenting the source code of secret.c. 
+
+We will create a PDB file from the header using:
+% cparse secret.h
+and then invoke tau_wrap:
+
+% tau_wrap secret.h.pdb secret.h -o secret_wrap.inst.c -r libsecret.so
+
+It is important to invoke it with the -r option that specifies runtime substitution of a shared library.
+
+This will create a wrapper/ directory with a Makefile that generates libsecret_wrap.so: 
+% cd wrapper; make
+
+We will use the LD_PRELOAD option to load this library and then measure the performance:
+% setenv LD_PRELOAD /home/sameer/samples/dlopen/example/wrapper/libsecret_wrap.so
+
+The steps involved are:
+
+[sameer@zorak example]$ make clean
+/bin/rm -f app.o app libsecret.so secret.o
+[sameer@zorak example]$ make
+gcc -fPIC -I. -c app.c
+gcc -fPIC -I. -c secret.c
+gcc -shared -o libsecret.so secret.o
+gcc -o app app.o -L. -lsecret
+[sameer@zorak example]$ time ./app
+Inside foo1: x = 2
+Inside foo2: b = 4, c = 1
+0.000u 0.000s 0:05.00 0.0%      0+0k 0+0io 0pf+0w
+
+
+    Next we will just instrument the app and link it with the tau_cc.sh.
+[sameer@zorak example]$ make -f Makefile.tau1
+tau_cc.sh -fPIC -I. -c app.c
+
+gcc -fPIC -I. -c secret.c
+gcc -shared -o libsecret.so secret.o
+tau_cc.sh -o app app.o -L. -lsecret
+
+[sameer@zorak example]$ rm profile.*
+[sameer@zorak example]$ time ./app
+Inside foo1: x = 2
+Inside foo2: b = 4, c = 1
+0.000u 0.000s 0:05.00 0.0%      0+0k 0+0io 0pf+0w
+[sameer@zorak example]$ pprof
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0        5,003        5,003           1           0    5003410 int main(int, char **) C
+[sameer@zorak example]$
+
+
+Next, we will use the tau_wrap tool. Before we compile the code, we need to make sure that this time the TAU shared library is used to link the application as opposed to the default static object.
+
+% setenv TAU_OPTIONS '-optShared -optQuiet'
+
+[sameer@zorak example]$ make -f Makefile.tau2 clean
+/bin/rm -rf app.o app libsecret.so secret.o wrapper
+[sameer@zorak example]$ make -f Makefile.tau2
+tau_cc.sh -fPIC -I. -c app.c
+
+gcc -fPIC -I. -c secret.c
+gcc -shared -o libsecret.so secret.o
+cparse secret.h
+tau_wrap secret.h.pdb secret.h -o secret_wrap.inst.c -r libsecret.so
+cd wrapper; make
+make[1]: Entering directory `/home/sameer/samples/dlopen/example/wrapper'
+gcc    -DPROFILING_ON                        -DTAU_GNU -DTAU_DOT_H_LESS_HEADERS                      -DTAU_LINUX_TIMERS                                 -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE                    -DTAU_BFD       -fPIC  -I/home/users/sameer/tau2/include  -I..  -c secret_wrap.inst.c -o secret_wrap.o
+gcc    -shared        -o libsecret_wrap.so secret_wrap.o  -L/home/users/sameer/tau2/x86_64/lib -lTAUsh-pdt              -lbfd -liberty       -ldl
+make[1]: Leaving directory `/home/sameer/samples/dlopen/example/wrapper'
+tau_cc.sh -o app app.o -L. -lsecret
+
+[sameer@zorak example]$ ./app
+Inside foo1: x = 2
+Inside foo2: b = 4, c = 1
+[sameer@zorak example]$ pprof
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0        5,003        5,003           1           0    5003808 int main(int, char **) C
+
+Next, we put the wrapper library in the LD_PRELOAD and see:
+
+[sameer@zorak example]$ setenv LD_PRELOAD `pwd`/wrapper/libsecret_wrap.so
+[sameer@zorak example]$ ./app
+Inside foo1: x = 2
+Inside foo2: b = 4, c = 1
+[sameer@zorak example]$ pprof
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0        0.054        5,004           1           2    5004525 int main(int, char **) C
+ 60.0        3,002        3,002           1           0    3002839 void foo2(int, int) C
+ 40.0        2,001        2,001           1           0    2001632 int foo1(int) C
+[sameer@zorak example]$
+
+
+Now, we can intercept the two routines without touching their source code!
+

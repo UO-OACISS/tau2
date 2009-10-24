@@ -1,0 +1,23 @@
+CC=gcc
+CFLAGS=-fPIC -I.
+LIBS = -L. -lsecret
+LDFLAGS = -shared
+
+app: app.o libsecret.so wrapper
+	tau_cc.sh -o app app.o $(LIBS)
+libsecret.so: secret.o
+	$(CC) $(LDFLAGS) -o $@ $<
+secret.o: secret.c
+	$(CC) $(CFLAGS) -c $<
+app.o: app.c
+	tau_cc.sh $(CFLAGS) -c $<
+
+wrapper:  
+# You will need PDT x86_64/bin directory in your path
+	cparse secret.h
+	tau_wrap secret.h.pdb secret.h -o secret_wrap.inst.c -r libsecret.so
+	cd wrapper; make
+	
+
+clean:
+	/bin/rm -rf app.o app libsecret.so secret.o wrapper

@@ -1,0 +1,16 @@
+CC=gcc
+CFLAGS=-fPIC -I.
+LIBS = -L. -lsecret
+LDFLAGS = -shared
+
+app: app.o libsecret.so
+	tau_cc.sh -o app app.o $(LIBS)
+libsecret.so: secret.o
+	$(CC) $(LDFLAGS) -o $@ $<
+secret.o: secret.c
+	$(CC) $(CFLAGS) -c $<
+app.o: app.c
+	tau_cc.sh $(CFLAGS) -c $<
+
+clean:
+	/bin/rm -f app.o app libsecret.so secret.o
