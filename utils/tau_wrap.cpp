@@ -219,14 +219,22 @@ bool isReturnTypeVoid(pdbRoutine *r)
      return false;
 }
 
-void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, string& group_name)
+void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, string& group_name, bool runtime, string& runtime_libname)
 {
   string macro("#define ");
   string func(r->name());
   string proto(r->name());
+  string funchandle("_h) (");
+  string rcalledfunc("(*"+r->name()+"_h)");
+  string dltext;
+  string retstring("    return;");
   func.append("(");
+  rcalledfunc.append("(");
   proto.append("(");
-  impl<<r->signature()->returnType()->name()<<"  tau_"; /* put in return type */
+  if (runtime)
+    impl<<r->signature()->returnType()->name()<<" "; /* put in return type */
+  else
+    impl<<r->signature()->returnType()->name()<<"  tau_"; /* put in return type */
   impl<<func;
 #ifdef DEBUG
   cout <<"Examining "<<r->name()<<endl;
@@ -245,33 +253,72 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
     if (argcount != 1) { /* not a startup */
       func.append(", ");
       proto.append(", ");
+      funchandle.append(", ");
+      rcalledfunc.append(", ");
       impl<<", ";
     }
     sprintf(number, "%d", argcount);
     proto.append((*argsit).type()->name());
-    proto.append(" ");
-    proto.append(string("a")+string(number));
+    funchandle.append((*argsit).type()->name());
+    proto.append(" " + string("a")+string(number));
+    rcalledfunc.append(" " + string("a")+string(number));
     func.append(string("a")+string(number));
     impl<<(*argsit).type()->name()<<" ";
     impl<<"a"<<number;
   }
   func.append(")");
   proto.append(")");
+  rcalledfunc.append(")");
+  funchandle.append(") = NULL;");
   impl<<") {" <<endl<<endl;
-  if (!isVoid)
-  {
+  if (runtime) {
+    if (!isVoid) {
+      impl <<"  static "<<r->signature()->returnType()->name()<<" (*"<<r->name()<<funchandle<<endl;
+      retstring = string("    return retval;");
+    } else {
+      impl <<"  static void (*"<<r->name()<<funchandle<<endl;
+    }
+    dltext = string("  if (tau_handle == NULL) \n\
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); \n\n\
+    if (tau_handle == NULL) { \n\
+      perror(\"Error opening library in dlopen call\"); \n"+ retstring + 
+      string("\n\
+    } \n\
+    else { \n\
+      if (") + r->name() + string("_h == NULL)\n\t") + 
+      r->name() + string("_h = dlsym(tau_handle,\"")+r->name() + string("\"); \n\
+      if (") + r->name() + string ("_h == NULL) {\n\
+        perror(\"Error obtaining symbol info from dlopen'ed lib\"); \n\   ")+ 
+	retstring + string("\n    }\n"));
+
+  }
+
+  if (!isVoid) {
     impl<<"  "<<r->signature()->returnType()->name()<< " retval;"<<endl;
   }
   /* Now put in the body of the routine */
+  
   impl<<"  TAU_PROFILE_TIMER(t,\""<<r->fullName()<<"\", \"\", "
       <<group_name<<");"<<endl;
-  impl<<"  TAU_PROFILE_START(t);"<<endl<<endl;
+  if (runtime)
+    impl <<dltext;
+  impl<<"  TAU_PROFILE_START(t);"<<endl;
   if (!isVoid)
   {
     impl<<"  retval  =";
   }
-  impl<<"  "<<func<<";"<<endl;
+  if (runtime) {
+    impl<<"  "<<rcalledfunc<<";"<<endl;
+  }
+  else {
+    impl<<"  "<<func<<";"<<endl;
+  }
   impl<<"  TAU_PROFILE_STOP(t);"<<endl;
+
+  if (runtime) {
+    impl<<"  }"<<endl;
+  }
+
   if (!isVoid)
   {
     impl<<"  return retval;"<<endl;
@@ -312,7 +359,7 @@ void extractLibName(const char *filename, string& libname)
 /* -------------------------------------------------------------------------- */
 /* -- Instrumentation routine for a C program ------------------------------- */
 /* -------------------------------------------------------------------------- */
-bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl, string& group_name, string& header_file)
+bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl, string& group_name, string& header_file, bool runtime, string& runtime_libname)
 {
   //static int firsttime=0;
   string file(f->name());
@@ -337,7 +384,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl, str
     if ( (*rit)->location().file() == f && !(*rit)->isCompilerGenerated()
          && (instrumentEntity((*rit)->fullName())) )
     {
-       printRoutineInOutputFile(*rit, header, impl, group_name);
+       printRoutineInOutputFile(*rit, header, impl, group_name, runtime, runtime_libname);
 
     }
   }
@@ -358,12 +405,13 @@ void defineTauGroup(ofstream& ostr, string& group_name)
   }
 }
 
-void generateMakefile(string& package, string &outFileName)
+void generateMakefile(string& package, string &outFileName, bool runtime, string& runtime_libname)
 {
   string makefileName("Makefile");
   ofstream makefile(string("wrapper/"+string(makefileName)).c_str());
   
-  string text("include ${TAU_MAKEFILE} \n\
+  if (!runtime) {
+    string text("include ${TAU_MAKEFILE} \n\
 CC=$(TAU_CC) \n\
 CFLAGS=$(TAU_DEFS) $(TAU_INCLUDE)  -I.. \n\
 \n\
@@ -378,8 +426,24 @@ lib"+package+"_wrap.a: "+package+"_wrap.o \n\
 clean:\n\
 	/bin/rm -f "+package+"_wrap.o lib"+package+"_wrap.a\n\
 ");
+    makefile <<text<<endl;
+  }
+  else {
+    string text("include ${TAU_MAKEFILE} \n\
+CC=$(TAU_CC) \n\
+CFLAGS=$(TAU_DEFS) $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE)  -I.. \n\
+\n\
+lib"+package+"_wrap.so: "+package+"_wrap.o \n\
+	$(CC) $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl\n\
+\n\
+"+package+"_wrap.o: "+outFileName+"\n\
+	$(CC) $(CFLAGS) -c $< -o $@\n\
+clean:\n\
+	/bin/rm -f "+package+"_wrap.o lib"+package+"_wrap.so\n\
+");
 
-  makefile <<text<<endl;
+    makefile <<text<<endl;
+  }
 }
 
 
@@ -392,13 +456,16 @@ int main(int argc, char **argv)
 {
   string outFileName("out.ins.C");
   string group_name("TAU_USER"); /* Default: if nothing else is defined */
+  string runtime_libname("libc.so"); /* Default: if nothing else is defined */
   string header_file("Profile/Profiler.h");
+  bool runtime = false; /* by default generate PDT based re-direction library*/
   bool retval;
         /* Default: if nothing else is defined */
 
   if (argc < 3)
   {
-    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ]"<<endl;
+    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-r runtimelibname] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ]"<<endl;
+    cout <<" To use runtime library interposition, -r <name> must be specified\n"<<endl;
     cout<<"----------------------------------------------------------------------------------------------------------"<<endl;
   }
   PDB p(argv[1]); if ( !p ) return 1;
@@ -430,6 +497,16 @@ int main(int argc, char **argv)
 #endif /* DEBUG */
           outFileName = string(argv[i]);
           outFileNameSpecified = true;
+        }
+
+        if (strcmp(argv[i], "-r") == 0)
+        {
+          ++i;
+          runtime_libname = string(argv[i]);
+          runtime = true;
+#ifdef DEBUG
+          printf("Runtime library name: %s\n", runtime_libname.c_str());
+#endif /* DEBUG */
         }
 
         if (strcmp(argv[i], "-g") == 0)
@@ -481,6 +558,14 @@ int main(int argc, char **argv)
   impl <<"#include <"<<filename<<">"<<endl;
   impl <<"#include <"<<header_file<<">"<<endl; /* Profile/Profiler.h */
 
+  if (runtime) {
+  /* add the runtime library calls */
+     impl <<"#include <dlfcn.h>"<<endl<<endl;
+     impl <<"const char * tau_orig_libname = "<<"\""<<
+	runtime_libname<<"\";"<<endl; 
+     impl <<"static void *tau_handle = NULL;"<<endl<<endl<<endl;
+  }
+
   defineTauGroup(impl, group_name); 
   string libname;
   extractLibName(filename, libname);
@@ -511,7 +596,7 @@ int main(int argc, char **argv)
 */
      if (instrumentThisFile = processFileForInstrumentation(string(filename)))
      { /* should we instrument this file? Yes */
-       instrumentCFile(p, *it, header, impl, group_name, header_file);
+       instrumentCFile(p, *it, header, impl, group_name, header_file, runtime, runtime_libname);
      }
   }
   header <<"#ifdef __cplusplus"<<endl;
@@ -519,7 +604,18 @@ int main(int argc, char **argv)
   header <<"#endif /* __cplusplus */"<<endl<<endl;
   header <<"#endif /*  _TAU_"<<libname<<"_H_ */"<<endl;
 
-  generateMakefile(libname, outFileName);
+  header.close();
+
+  if (runtime) {
+    string hfile = string("wrapper/"+string(filename));
+#ifdef DEBUG
+    cout <<"Deleting foo.h"<<endl;
+#endif /* DEBUG */
+    /* delete the header file, we do not need it */
+    unlink(hfile.c_str());
+  }
+
+  generateMakefile(libname, outFileName, runtime, runtime_libname);
 
 } /* end of main */
 
@@ -536,7 +632,7 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau_wrap.cpp,v $   $Author: sameer $
- * $Revision: 1.13 $   $Date: 2008/07/22 20:27:53 $
- * VERSION_ID: $Id: tau_wrap.cpp,v 1.13 2008/07/22 20:27:53 sameer Exp $
+ * $Revision: 1.14 $   $Date: 2009/10/24 02:00:16 $
+ * VERSION_ID: $Id: tau_wrap.cpp,v 1.14 2009/10/24 02:00:16 sameer Exp $
  ***************************************************************************/
 
