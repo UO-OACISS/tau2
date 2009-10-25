@@ -266,19 +266,48 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
     }
     sprintf(number, "%d", argcount);
     const pdbGroup *gr;
+    string argtypename;
     if ( (gr=(*argsit).type()->isGroup()) != 0) {
-      proto.append(gr->name());
-      funchandle.append(gr->name());
-      impl<<gr->name()<<" ";
+      argtypename=gr->name();
     } else {
-      proto.append((*argsit).type()->name());
-      funchandle.append((*argsit).type()->name());
-      impl<<(*argsit).type()->name()<<" ";
+      argtypename=(*argsit).type()->name();
     }
+    proto.append(argtypename);
+    funchandle.append(argtypename);
+
     proto.append(" " + string("a")+string(number));
     rcalledfunc.append(" " + string("a")+string(number));
     func.append(string("a")+string(number));
-    impl<<"a"<<number;
+
+    /* We need to handle the case int (*)[] separately generating 
+    int (*a1)[]  instead of int (*)[] a1 in the impl file */
+    char *found;
+    const char *examinedarg = argtypename.c_str();
+    if ((found = strstr(examinedarg, "(*)")) != 0) {
+      found += 2; /* Reach ) */
+      //printf("found = %s diff = found  - examinedarg = %d \n", found, found - examinedarg);
+      int i;
+      for (i=0; i < found - examinedarg; i++) {
+        //printf("Printing %c\n", examinedarg[i]);
+        impl << examinedarg[i];
+      }
+      impl<<"a"<<number;
+      for(i=found - examinedarg; i < strlen(examinedarg); i++) {
+        //printf("after number Printing %c\n", examinedarg[i]);
+        impl << examinedarg[i];
+      }
+
+    }
+    else {
+      /* print: for (int a, double b), this prints "int" */
+      impl<<argtypename<<" ";
+      /* print: for (int a, double b), this prints "a1" in int a1, */
+      impl<<"a"<<number;
+    }
+    if (r->signature()->hasEllipsis()) {
+      //printf("Has ellipsis...\n");
+      impl<<", ...";
+    }
   }
   func.append(")");
   proto.append(")");
@@ -642,7 +671,7 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau_wrap.cpp,v $   $Author: sameer $
- * $Revision: 1.16 $   $Date: 2009/10/24 21:32:49 $
- * VERSION_ID: $Id: tau_wrap.cpp,v 1.16 2009/10/24 21:32:49 sameer Exp $
+ * $Revision: 1.17 $   $Date: 2009/10/25 16:39:16 $
+ * VERSION_ID: $Id: tau_wrap.cpp,v 1.17 2009/10/25 16:39:16 sameer Exp $
  ***************************************************************************/
 
