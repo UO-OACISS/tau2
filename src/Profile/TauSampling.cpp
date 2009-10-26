@@ -69,6 +69,8 @@
 #include <TAU.h>
 #include <Profile/TauMetrics.h>
 
+#include <asm-ppc64/processor.h>
+
 /*********************************************************************
  * Tau Sampling Record Definition
  ********************************************************************/
@@ -107,9 +109,13 @@ static inline caddr_t get_pc(void *p) {
 # elif __ia64__
   pc = (caddr_t)sc->sc_ip;
 # elif __powerpc64__
-  pc = (caddr_t)sc->handler;
+  //pc = (caddr_t)sc->regs->ctr;
+  pc = (caddr_t)sc->regs->nip;
+  //pc = (caddr_t)current_text_addr();
 # elif __powerpc__
-  pc = (caddr_t)sc->handler;
+  //pc = (caddr_t)sc->regs->ctr;
+  pc = (caddr_t)sc->regs->nip;
+  //pc = (caddr_t)current_text_addr();
 # else
 #  error "profile handler not defined for this architecture"
 # endif
@@ -292,17 +298,55 @@ int Tau_sampling_init() {
 
   Tau_sampling_outputHeader();
 
+/* 
+  see:
+  http://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_node/libc_463.html#SEC473
+  for details.  When using SIGALRM and ITIMER_REAL on MareNostrum (Linux on 
+  PPC970MP) the network barfs.  When using ITIMER_PROF and SIGPROF, everything
+  was fine...
+  //int which = ITIMER_REAL;
+  //int alarmType = SIGALRM;
+*/
+
+  int which = ITIMER_PROF;
+  int alarmType = SIGPROF;
+
   struct sigaction act;
   memset(&act, 0, sizeof(struct sigaction));
+  ret = sigemptyset(&act.sa_mask);
+  if (ret != 0) {
+    printf("TAU: Sampling error: %s\n", strerror(ret));
+    return -1;
+  }
+  ret = sigaddset(&act.sa_mask, alarmType);
+  if (ret != 0) {
+    printf("TAU: Sampling error: %s\n", strerror(ret));
+    return -1;
+  }
   act.sa_sigaction = Tau_sampling_handler;
   act.sa_flags     = SA_SIGINFO;
 
-  ret = sigaction(SIGALRM, &act, NULL);
-
-  ret = setitimer(ITIMER_REAL, &itval, 0);
+  ret = sigaction(alarmType, &act, NULL);
   if (ret != 0) {
     printf("TAU: Sampling error: %s\n", strerror(ret));
-    return 0;
+    return -1;
+  }
+
+  struct itimerval ovalue, pvalue;
+  getitimer (which, &pvalue);
+
+  ret = setitimer(which, &itval, &ovalue);
+  if (ret != 0) {
+    printf("TAU: Sampling error: %s\n", strerror(ret));
+    return -1;
+  }
+
+  if( ovalue.it_interval.tv_sec != pvalue.it_interval.tv_sec  ||
+      ovalue.it_interval.tv_usec != pvalue.it_interval.tv_usec ||
+      ovalue.it_value.tv_sec != pvalue.it_value.tv_sec ||
+      ovalue.it_value.tv_usec != pvalue.it_value.tv_usec ) {
+    printf( "Real time interval timer mismatch\n" );
+    return -1;
   }
 
   samplingEnabled = 1;
