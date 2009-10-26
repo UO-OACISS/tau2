@@ -5,6 +5,7 @@ import java.util.*;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
+import edu.uoregon.tau.common.AlphanumComparator;
 import edu.uoregon.tau.paraprof.ColorBar;
 import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.perfdmf.FunctionProfile;
@@ -14,9 +15,9 @@ import edu.uoregon.tau.perfdmf.FunctionProfile;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableNode.java,v 1.9 2008/12/04 20:06:14 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableNode.java,v 1.10 2009/10/26 18:47:35 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  */
 public class TreeTableNode extends DefaultMutableTreeNode implements Comparable {
     private List children;
@@ -25,6 +26,7 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
     private boolean expanded;
     private CallPathModel model;
     private String alternateName;
+    private static AlphanumComparator cmp = new AlphanumComparator();
 
     /**
      * @param functionProfile   FunctionProfile for this node, null for nodes with no associated FunctionProfile
@@ -239,7 +241,8 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
 
         int result;
         if (model.getSortColumn() == 0) {
-            result = this.toString().compareTo(((TreeTableNode) o).toString());
+            // Compare with the alphanumeric comparator
+            result = cmp.compare(this.toString(), o.toString());
         } else {
             TreeTableColumn column = (TreeTableColumn) model.getWindow().getColumns().get(model.getSortColumn() - 1);
 
