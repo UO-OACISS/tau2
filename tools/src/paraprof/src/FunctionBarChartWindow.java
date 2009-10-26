@@ -23,9 +23,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.22 2009/09/10 00:13:46 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.23 2009/10/26 20:17:22 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.22 $
+ * @version $Revision: 1.23 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -76,18 +76,45 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
 
     // Initializes Chart as a single function across threads
     public FunctionBarChartWindow(ParaProfTrial ppTrial, Function function, Component parent) {
+        this(ppTrial, function, parent, false, null);
+    }
+
+    public FunctionBarChartWindow(ParaProfTrial ppTrial, Function function, Component parent, boolean isPhase, Thread thread) {
         this.ppTrial = ppTrial;
         this.function = function;
         dataSorter = new DataSorter(ppTrial);
+        this.phaseDisplay = isPhase;
+
+        if (phaseDisplay) {
+            this.ppThread = new PPThread(thread, ppTrial);
+            // in case we were opened on "main => foo", switch to foo
+            this.function = ppTrial.getDataSource().getFunction(UtilFncs.getLeftSide(function.getName()));
+
+            // we're no longer in a phase
+            this.phase = null;
+            //sortByNCTCheckbox.setSelected(false);
+            //optionsMenu.remove(sortByNCTCheckbox);
+            //descendingOrderCheckBox.setSelected(true);
+
+            //sortLocalData();
+            setTitle("TAU: ParaProf: " + ParaProfUtils.getThreadLabel(thread) + " - Function Data: "
+                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        } else {
+            setTitle("TAU: ParaProf: Function Data Window: "
+                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        }
+        ParaProfUtils.setFrameIcon(this);
 
         model = new FunctionBarChartModel(this, dataSorter, function);
         panel = new BarChartPanel(model, null);
         initialize(parent);
 
-        setTitle("TAU: ParaProf: Function Data Window: "
-                + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
-        ParaProfUtils.setFrameIcon(this);
+    }
 
+    public static FunctionBarChartWindow CreateFunctionsOverPhaseDisplay(ParaProfTrial ppTrial, Function function, Thread thread,
+            Component parent) {
+        FunctionBarChartWindow fbcw = new FunctionBarChartWindow(ppTrial, function, parent, true, thread);
+        return fbcw;
     }
 
     // Initializes Chart as a single thread across functions
@@ -214,28 +241,6 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         ParaProf.incrementNumWindows();
     }
 
-    public void changeToPhaseDisplay(Thread thread) {
-
-        this.ppThread = new PPThread(thread, ppTrial);
-        phaseDisplay = true;
-
-        this.setTitle("TAU: ParaProf: " + ParaProfUtils.getThreadLabel(thread) + " - Function Data: "
-                + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
-        ParaProfUtils.setFrameIcon(this);
-
-        // in case we were opened on "main => foo", switch to foo
-        this.function = ppTrial.getDataSource().getFunction(UtilFncs.getLeftSide(function.getName()));
-
-        // we're no longer in a phase
-        this.phase = null;
-        setHeader();
-        //sortByNCTCheckbox.setSelected(false);
-        //optionsMenu.remove(sortByNCTCheckbox);
-        descendingOrderCheckBox.setSelected(true);
-
-        sortLocalData();
-    }
-
     public void setMetric(Metric metric) {
         dataSorter.setSelectedMetric(metric);
         sortLocalData();
@@ -295,10 +300,18 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units, true);
         optionsMenu.add(unitsSubMenu);
 
-        optionsMenu.add(ParaProfUtils.createMetricSelectionMenu(ppTrial, "Select Metric...", false, function != null, dataSorter,
-                this, true));
-        optionsMenu.add(ParaProfUtils.createMetricSelectionMenu(ppTrial, "Sort by...", true, function != null, dataSorter, this,
-                true));
+        boolean nct = false;
+        // if this is a function display (one function across all threads), we want 'sort by nct'
+        if (function != null) {
+            nct = true;
+        }
+        // if this is a phase display (all functions across one phase), we want 'sort by name'
+        if (phaseDisplay) {
+            nct = false;
+        }
+
+        optionsMenu.add(ParaProfUtils.createMetricSelectionMenu(ppTrial, "Select Metric...", false, nct, dataSorter, this, true));
+        optionsMenu.add(ParaProfUtils.createMetricSelectionMenu(ppTrial, "Sort by...", true, nct, dataSorter, this, true));
 
         optionsMenu.addMenuListener(this);
 
@@ -467,15 +480,16 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     }
 
     public int units() {
-        if (showValuesAsPercent.isEnabled() && showValuesAsPercent.isSelected())
+        if (showValuesAsPercent.isEnabled() && showValuesAsPercent.isSelected()) {
             return 0;
-
-        if (!dataSorter.isTimeMetric()) // we don't do units for non-time metrics
+        }
+        if (!dataSorter.isTimeMetric()) {
+            // we don't do units for non-time metrics
             return 0;
-
-        if (dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR)
+        }
+        if (dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR) {
             return 0;
-
+        }
         return units;
     }
 
@@ -563,11 +577,10 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
             String starter;
 
             if (phase != null) {
-                starter = "Phase: " + phase + "\nMetric: " + dataSorter.getSelectedMetric().getName() + "\n"
-                        + "Value: " + dataSorter.getValueType();
-            } else {
-                starter = "Metric: " + dataSorter.getSelectedMetric().getName() + "\n" + "Value: "
+                starter = "Phase: " + phase + "\nMetric: " + dataSorter.getSelectedMetric().getName() + "\n" + "Value: "
                         + dataSorter.getValueType();
+            } else {
+                starter = "Metric: " + dataSorter.getSelectedMetric().getName() + "\n" + "Value: " + dataSorter.getValueType();
             }
 
             if ((dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR)

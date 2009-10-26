@@ -37,11 +37,11 @@ import edu.uoregon.tau.vis.HeatMapWindow;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.52 2009/09/24 21:09:40 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.53 2009/10/26 20:17:22 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.52 $
+ * @version $Revision: 1.53 $
  */
 public class ParaProfUtils {
 
@@ -634,12 +634,6 @@ public class ParaProfUtils {
         g2.scale(scale, scale);
     }
 
-    public FunctionBarChartWindow createFunctionAcrossPhasesWindow(ParaProfTrial ppTrial, Thread thread, Function function,
-            Component owner) {
-        FunctionBarChartWindow functionDataWindow = new FunctionBarChartWindow(ppTrial, function, owner);
-        functionDataWindow.changeToPhaseDisplay(thread);
-        return functionDataWindow;
-    }
 
     public static JPopupMenu createFunctionClickPopUp(final ParaProfTrial ppTrial, final Function function, final Thread thread,
             final Component owner) {
@@ -653,9 +647,8 @@ public class ParaProfUtils {
                         FunctionBarChartWindow functionDataWindow = new FunctionBarChartWindow(ppTrial, function, owner);
                         functionDataWindow.setVisible(true);
                     } else if (arg.equals("Show Function Data over Phases")) {
-                        FunctionBarChartWindow functionDataWindow = new FunctionBarChartWindow(ppTrial, function, owner);
-                        functionDataWindow.changeToPhaseDisplay(thread);
-                        functionDataWindow.setVisible(true);
+                        FunctionBarChartWindow functionBarChartWindow = FunctionBarChartWindow.CreateFunctionsOverPhaseDisplay(ppTrial, function, thread, owner);
+                        functionBarChartWindow.setVisible(true);
                     } else if (arg.equals("Show Function Histogram")) {
                         HistogramWindow hw = new HistogramWindow(ppTrial, function, owner);
                         hw.setVisible(true);

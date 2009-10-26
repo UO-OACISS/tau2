@@ -318,7 +318,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                 String filename = writeConfig(name.getText());
                 configList.clearSelection();
                 configList.setListData((Vector) ConfigureFiles.getConfigurationNames());
-                ConfigureTest config = new ConfigureTest("");
+                ConfigureTest config = new ConfigureTest();
                 config.initialize(filename);
                 //config.setDBSchemaFile("dbschema." + adapter.getSelectedItem().toString() + ".txt");
                 if (!config.checkSchema()) {

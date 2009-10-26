@@ -33,14 +33,13 @@ import edu.uoregon.tau.perfdmf.Thread;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableWindow.java,v 1.16 2009/09/10 00:13:52 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableWindow.java,v 1.17 2009/10/26 20:17:23 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  */
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
         ImageExport {
 
-    
     private ParaProfTrial ppTrial;
     private Thread thread;
 
@@ -56,7 +55,6 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
     private final JMenuItem reverseTreeMenuItem = new JCheckBoxMenuItem("Reverse Call Tree", false);
     private final JMenuItem showInclExclMenuItem = new JCheckBoxMenuItem("Show Inclusive/Exclusive", true);
     private JScrollPane scrollPane;
-
 
     public TreeTableWindow(ParaProfTrial ppTrial, Thread thread) {
         this(ppTrial, thread, null);
@@ -242,10 +240,10 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
             treeTable.setDefaultRenderer(columns.get(i).getClass(), ((TreeTableColumn) columns.get(i)).getCellRenderer());
         }
 
-            gbc.fill = GridBagConstraints.BOTH;
-            gbc.anchor = GridBagConstraints.SOUTH;
-            gbc.weightx = 1.0;
-            gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.anchor = GridBagConstraints.SOUTH;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
         addCompItem(scrollPane, gbc, 0, 1, GridBagConstraints.REMAINDER, GridBagConstraints.REMAINDER);
 
         validate();
