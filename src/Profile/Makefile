@@ -323,7 +323,6 @@ $(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB)
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
 		$(RM) $(INSTALLDEST)/libTAU$(TAU_SHLIBX)
-		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU$(TAU_SHLIBX)
 		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
 		    else mkdir $(TAU_SHAREDDIR); fi
 		cd $(TAU_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX)
