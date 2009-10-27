@@ -1702,6 +1702,28 @@ case $machine in
     if [ $cxx_compiler = default ] ; then
       cxx_compiler=mpixlcxx_r
       c_compiler=mpixlc_r
+
+      # test compiler version for 09.00.0000.0006 PMR bug fix
+      $echo "Checking version of IBM Compilers... ${nnl}"
+      version=`mpixlc -qversion | tail -n 1 | awk '{ print $2;}'`
+      echo "$version"
+      eval v1=${version/./;v2=}
+      eval v2=${v2/./;v3=}
+      eval v3=${v3/./;v4=}
+      
+      pmr0006=no
+      if [ $v1 -gt 9 ] ; then pmr0006=yes ; fi
+      if [ $v1 -ge 9 -a $v2 -gt 0 ] ; then pmr0006=yes ; fi
+      if [ $v1 -ge 9 -a $v2 -ge 0 -a $v3 -gt 0 ] ; then pmr0006=yes ; fi
+      if [ $v1 -ge 9 -a $v2 -ge 0 -a $v3 -ge 0 -a $v4 -ge 6 ] ; then pmr0006=yes ; fi
+      if [ $pmr0006 = yes ] ; then
+	  echo "new"
+      else
+	  echo "old"
+      fi
+
+
+
     elif [ $cxx_compiler = mpicxx ] ; then
       cxx_compiler=mpicxx
       c_compiler=mpicc
@@ -2844,9 +2866,12 @@ if [ $vampirtrace = yes ] ; then
 	echo "$version"
 	eval major=${version/./;minor=}
 	minor=`echo $minor | sed 's/\([0-9]*\).*/\1/g'`
-        #echo Major: $major, minor: $minor
 
-	if [ $major -ge 5 -a $minor -ge 7 ] ; then
+	# check if 5.7 or later
+	post5_7=no
+	if [ $major -gt 5 ] ; then post5_7=yes ; fi
+	if [ $major -ge 5 -a $minor -ge 7 ] ; then post5_7=yes ; fi
+	if [ $post5_7 = yes ] ; then
 	    fixmakeargs="$fixmakeargs VAMPIRTRACE_5_7_API" 
 	fi
 
