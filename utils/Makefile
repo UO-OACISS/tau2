@@ -131,7 +131,7 @@ PDT_CFLAGS = $(PDTCFLAGS) $(PDT_COMPILE_FLAGS)
 #PDTSGICC#PDT_CFLAGS = -LANG:std -D__SGIMP__ $(PDT_COMPILE_FLAGS) #ENDIF#
 #PDTALPHACXX#PDT_CFLAGS = -x c++ -D__USE_STD_IOSTREAM $(PDT_COMPILE_FLAGS) #ENDIF#
 #PDTHPACC#PDT_CFLAGS = -AA $(PDT_COMPILE_FLAGS) #ENDIF#
-#DYNINST41#PKGOPT = -DTAU_DYNINST -DTAU_DYNINST41PLUS #ENDIF#
+#DYNINST41##PKGOPT = -DTAU_DYNINST -DTAU_DYNINST41PLUS #ENDIF#
 
 #DEBUGPROF#DEBUGOPT = -DDEBUG #ENDIF#
 
@@ -240,13 +240,13 @@ tau_selective.o: tau_selective.cpp
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include -c tau_selective.cpp
 
 tau_selective_dyn.o: tau_selective.cpp 
-		$(PDT_CXX_COMP) $(PDT_CFLAGS) -DTAU_DYNINST -I$(PDTDIR)/include -c tau_selective.cpp -o tau_selective_dyn.o
+		$(PDT_CXX_COMP) $(PDT_CFLAGS) -DTAU_DYNINST -DTAU_DYNINST41PLUS  -I$(PDTDIR)/include -c tau_selective.cpp -o tau_selective_dyn.o
 
-tau_run: 	tau_run.o tau_selective.o  
-		$(CXX) $(CFLAGS) tau_run.o tau_selective.o -o $@ $(DYNLIBS) $(LEXTRA) 
+tau_run: 	tau_run.o tau_selective_dyn.o  
+		$(CXX) $(CFLAGS) tau_run.o tau_selective_dyn.o -o $@ $(DYNLIBS) $(LEXTRA) 
 
 tau_run.o: 	tau_run.cpp
-		$(CXX) $(CFLAGS) $(DYNINC) -c tau_run.cpp
+		$(CXX) $(CFLAGS) $(DYNINC) -DTAU_DYNINST -DTAU_DYNINST41PLUS -c tau_run.cpp
 
 tau_wrap: tau_wrap.o tau_selective.o tau_instrument.o $(PDTDIR)/$(PDTARCHDIR)/lib/libpdb.a 
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) tau_wrap.o tau_selective.o tau_instrument.o -o $@ $(PDTOPTS) -lm $(LEXTRA) 
