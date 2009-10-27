@@ -79,16 +79,6 @@ using namespace std;
 #include <fcntl.h>
 #include <time.h>
 #include <stdlib.h>
-#ifdef CPU_TIME
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#endif // CPU_TIME
-
-#ifdef JAVA_CPU_TIME
-#include "Profile/JavaThreadLayer.h"
-#endif // JAVA_CPU_TIME
-
 
 #ifdef TAU_WINDOWS
 //include the header for windows time functions.
@@ -311,88 +301,7 @@ TauGroup_t res =  ProfileGroup & TheProfileMask() ;
 
 //////////////////////////////////////////////////////////////////////
 
-#ifdef SGI_HW_COUNTERS 
-extern "C" {
-  int start_counters( int e0, int e1 );
-  int read_counters( int e0, long long *c0, int e1, long long *c1);
-};
-#endif // SGI_HW_COUNTERS
 
-//////////////////////////////////////////////////////////////////////
-#ifdef SGI_HW_COUNTERS 
-int RtsLayer::SetEventCounter() {
-  int e0, e1;
-  int start;
-
-
-  e0 = 0;
-  e1 = 0;
-
-
-  int x0, x1;
-  // 
-  // DO NOT remove the following two lines. Otherwise start_counters 
-  // crashes with "prioctl PIOCENEVCTRS returns error: Invalid argument"
-
-
-  x0 = e0; 
-  x1 = e1; 
-
-
-  if((start = start_counters(e0,e1)) < 0) {
-    perror("start_counters");
-    exit(0);
-  }
-  return start;
-}
-#endif // SGI_HW_COUNTERS
-
-/////////////////////////////////////////////////////////////////////////
-#ifdef SGI_HW_COUNTERS 
-double RtsLayer::GetEventCounter() {
-  static int gen_start = SetEventCounter();
-  int gen_read;
-  int e0 = 0, e1 = 0;
-  long long c0 , c1 ;
-  static double accum = 0;
-
-  if ((gen_read = read_counters(e0, &c0, e1, &c1)) < 0) {
-    perror("read_counters");
-  }
-
-  if (gen_read != gen_start) {
-    perror("lost counter! aborting...");
-    exit(1);
-  }
-
-  accum += c0;
-  DEBUGPROFMSG("Read counters e0 " << e0 <<" e1 "<< e1<<" gen_read " 
-    << gen_read << " gen_start = " << gen_start << " accum "<< accum 
-    << " c0 " << c0 << " c1 " << c1 << endl;);
-  gen_start = SetEventCounter(); // Reset the counter
-
-  return accum;
-}
-#endif //SGI_HW_COUNTERS
-
-///////////////////////////////////////////////////////////////////////////
-double getUserTimeInSec(void) {
-  double current_time = 0;
-#ifdef CPU_TIME
-  
-  struct rusage current_usage;
-
-  getrusage (RUSAGE_SELF, &current_usage);
-  
-/* user time
-  current_time = current_usage.ru_utime.tv_sec * 1e6 
-	       + current_usage.ru_utime.tv_usec;
-*/
-  current_time = (current_usage.ru_utime.tv_sec + current_usage.ru_stime.tv_sec)* 1e6 
-  + (current_usage.ru_utime.tv_usec + current_usage.ru_stime.tv_usec);
-#endif // CPU_TIME
-  return current_time; 
-}
 
 
 #if defined(TAUKTAU) || defined(TAUKTAU_MERGE) || defined(TAUKTAU_SHCTR)
@@ -800,6 +709,6 @@ std::string RtsLayer::GetRTTI(const char *name) {
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.130 $   $Date: 2009/09/15 01:14:43 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.130 2009/09/15 01:14:43 amorris Exp $ 
+ * $Revision: 1.131 $   $Date: 2009/10/27 19:20:00 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.131 2009/10/27 19:20:00 amorris Exp $ 
  ***************************************************************************/
