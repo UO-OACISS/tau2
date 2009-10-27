@@ -15,9 +15,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  * functions that are in groups supposed to be shown. 
  *  
  * 
- * <P>CVS $Id: DataSorter.java,v 1.17 2009/09/10 00:13:45 amorris Exp $</P>
+ * <P>CVS $Id: DataSorter.java,v 1.18 2009/10/27 00:13:48 amorris Exp $</P>
  * @author	Alan Morris, Robert Bell
- * @version	$Revision: 1.17 $
+ * @version	$Revision: 1.18 $
  */
 public class DataSorter implements Comparator {
 
@@ -54,13 +54,7 @@ public class DataSorter implements Comparator {
     }
 
     public boolean isTimeMetric() {
-        String metricName = selectedMetric.getName();
-        metricName = metricName.toUpperCase();
-        if (metricName.indexOf("TIME") == -1) {
-            return false;
-        } else {
-            return true;
-        }
+        return selectedMetric.isTimeMetric();
     }
 
     public boolean isDerivedMetric() {

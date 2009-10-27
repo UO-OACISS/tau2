@@ -256,13 +256,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     public boolean isTimeMetric() {
-        String metricName = defaultMetric.getName();
-        metricName = metricName.toUpperCase();
-        if (metricName.indexOf("TIME") == -1) {
-            return false;
-        } else {
-            return true;
-        }
+        return defaultMetric.isTimeMetric();
     }
 
     public boolean isDerivedMetric() {
