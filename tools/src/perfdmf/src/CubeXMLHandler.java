@@ -12,9 +12,9 @@ import org.xml.sax.helpers.DefaultHandler;
  * @see <a href="http://www.fz-juelich.de/zam/kojak/">
  * http://www.fz-juelich.de/zam/kojak/</a> for more information about cube
  * 
- * <P>CVS $Id: CubeXMLHandler.java,v 1.8 2008/07/22 21:31:47 amorris Exp $</P>
+ * <P>CVS $Id: CubeXMLHandler.java,v 1.9 2009/10/27 00:13:17 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 public class CubeXMLHandler extends DefaultHandler {
 
@@ -256,6 +256,11 @@ public class CubeXMLHandler extends DefaultHandler {
                     if (next != null) {
                         treeName = next + " => " + treeName;
                     }
+                }
+
+                String metricName = treeName.toUpperCase();
+                if (metricName.indexOf("TIME") != -1 && uom.toUpperCase().equals("OCC")) {
+                    treeName = treeName + "_count";
                 }
 
                 Metric metric = cubeDataSource.addMetric(treeName);

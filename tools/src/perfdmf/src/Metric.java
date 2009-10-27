@@ -15,7 +15,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
 /**
  * Holds all the data for a metric in the database.
  *
- * <P>CVS $Id: Metric.java,v 1.8 2009/09/10 00:13:18 amorris Exp $</P>
+ * <P>CVS $Id: Metric.java,v 1.9 2009/10/27 00:13:17 amorris Exp $</P>
  * @author	Kevin Huck, Robert Bell
  * @version	0.1
  * @since	0.1
@@ -129,6 +129,9 @@ public class Metric implements Serializable {
 
     public boolean isTimeMetric() {
         String metricName = name.toUpperCase();
+        if (metricName.indexOf("_COUNT") != -1) {
+            return false;
+        }
         if (metricName.indexOf("TIME") == -1) {
             return false;
         } else {
