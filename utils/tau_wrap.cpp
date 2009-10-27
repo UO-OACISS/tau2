@@ -281,7 +281,7 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
 
     /* We need to handle the case int (*)[] separately generating 
     int (*a1)[]  instead of int (*)[] a1 in the impl file */
-    char *found;
+    const char *found;
     const char *examinedarg = argtypename.c_str();
     if ((found = strstr(examinedarg, "(*)")) != 0) {
       found += 2; /* Reach ) */
@@ -671,7 +671,7 @@ int main(int argc, char **argv)
 
 /***************************************************************************
  * $RCSfile: tau_wrap.cpp,v $   $Author: sameer $
- * $Revision: 1.17 $   $Date: 2009/10/25 16:39:16 $
- * VERSION_ID: $Id: tau_wrap.cpp,v 1.17 2009/10/25 16:39:16 sameer Exp $
+ * $Revision: 1.18 $   $Date: 2009/10/27 22:47:54 $
+ * VERSION_ID: $Id: tau_wrap.cpp,v 1.18 2009/10/27 22:47:54 sameer Exp $
  ***************************************************************************/
 
