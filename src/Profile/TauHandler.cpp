@@ -122,32 +122,28 @@ double TauGetMaxRSS(void) {
 #ifdef TAU_HASMALLINFO
   struct mallinfo minfo = mallinfo();
   double used = (double) ((unsigned int) minfo.hblkhd + 0.0 + (unsigned int) minfo.usmblks + (unsigned int) minfo.uordblks);
-#ifdef DEBUG_PROF
-  cout <<"minfo.hblkhd= "<<(unsigned int) minfo.hblkhd<<endl;
-  cout <<"minfo.hblkhd= "<<(unsigned int) minfo.usmblks<<endl;
-  cout <<"minfo.hblkhd= "<<(unsigned int) minfo.uordblks<<endl;
-  cout <<"used memory in bytes = "<<used<<endl;
-#endif /* DEBUG_PROF */
   /* This is in bytes, we need KB */
   return used/1024.0;
 #else 
-#ifdef TAU_CATAMOUNT
+#  ifdef TAU_CATAMOUNT
   size_t fragments;
   unsigned long total_free, largest_free, total_used;
   if (heap_info(&fragments, &total_free, &largest_free, &total_used) == 0) {
     return  total_used/1024.0; 
   }
-#endif /* TAU_CATAMOUNT */
-#endif /* TAU_HASMALLINFO */
+#  endif /* TAU_CATAMOUNT */
 
-#if (! (defined (TAU_WINDOWS) || defined (CRAYCC)))
+#  if (! (defined (TAU_WINDOWS) || defined (CRAYCC)))
   /* if not, use getrusage */
   struct rusage res;
   getrusage(RUSAGE_SELF, &res);
   return (double) res.ru_maxrss; /* max resident set size */
-#else
+#  else
   return 0;
-#endif
+#  endif
+
+#endif /* TAU_HASMALLINFO */
+
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -269,8 +265,8 @@ void TauTrackMemoryHeadroomHere(void) {
   
 /***************************************************************************
  * $RCSfile: TauHandler.cpp,v $   $Author: amorris $
- * $Revision: 1.20 $   $Date: 2009/08/28 22:29:20 $
- * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.20 2009/08/28 22:29:20 amorris Exp $ 
+ * $Revision: 1.21 $   $Date: 2009/10/27 19:21:54 $
+ * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.21 2009/10/27 19:21:54 amorris Exp $ 
  ***************************************************************************/
 
 	
