@@ -49,19 +49,6 @@
 #endif /* TAU_CATAMOUNT */
 #endif // CRAY_TIMERS
 
-#ifdef BGL_TIMERS
-/* header files for BlueGene/L */
-#include <bglpersonality.h>
-#include <rts.h>
-#endif // BGL_TIMERS
-
-#ifdef BGP_TIMERS
-/* header files for BlueGene/P */
-#include <bgp_personality.h>
-#include <bgp_personality_inlines.h>
-#include <kernel_interface.h>
-#endif // BGP_TIMERS
-
 #ifdef TAU_XLC
 #define strcasecmp strcmp
 #define strncasecmp strncmp 
@@ -709,6 +696,6 @@ std::string RtsLayer::GetRTTI(const char *name) {
 
 /***************************************************************************
  * $RCSfile: RtsLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.131 $   $Date: 2009/10/27 19:20:00 $
- * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.131 2009/10/27 19:20:00 amorris Exp $ 
+ * $Revision: 1.132 $   $Date: 2009/10/27 21:20:11 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.cpp,v 1.132 2009/10/27 21:20:11 amorris Exp $ 
  ***************************************************************************/
