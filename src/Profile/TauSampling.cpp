@@ -69,8 +69,6 @@
 #include <TAU.h>
 #include <Profile/TauMetrics.h>
 
-#include <asm-ppc64/processor.h>
-
 /*********************************************************************
  * Tau Sampling Record Definition
  ********************************************************************/
