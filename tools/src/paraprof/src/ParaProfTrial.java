@@ -78,6 +78,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
     public ParaProfTrial(Trial trial) {
         this.trial = new Trial(trial);
+        assignDefaultMetric();
     }
 
     public Iterator getFunctions() {

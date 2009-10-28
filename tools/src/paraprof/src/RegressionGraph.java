@@ -509,10 +509,10 @@ public class RegressionGraph {
     }
 
     public void savePNG(String filename) {
-        JFreeChart chart = getChart();
         try {
+            JFreeChart chart = getChart();
             ChartUtilities.saveChartAsPNG(new File(filename), chart, 640, 480);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

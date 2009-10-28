@@ -79,8 +79,8 @@ public class TrialGrabber {
         File files[] = directory.listFiles(new PPKFileFilter());
         List sorted = new ArrayList();
         if (files == null) {
-            System.out.println("Could not file any .ppk files in directory '"+directory+"'\n");
-            System.exit(-1);
+            System.out.println("Could not find any .ppk files in directory '"+directory+"'\n");
+            return null;
         }
         for (int i = 0; i < files.length; i++) {
             sorted.add(files[i]);
