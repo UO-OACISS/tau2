@@ -56,7 +56,7 @@ public class EBSTraceReader {
                 
                 FunctionProfile functionProfile = thread.getFunctionProfile(newFunc);
                 if (functionProfile == null) {
-                    functionProfile = new FunctionProfile(newFunc);
+                    functionProfile = new FunctionProfile(newFunc, dataSource.getNumberOfMetrics());
                     thread.addFunctionProfile(functionProfile);   
                 }
                 
