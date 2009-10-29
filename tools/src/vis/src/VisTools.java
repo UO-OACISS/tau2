@@ -16,9 +16,9 @@ import javax.media.opengl.GL;
 /**
  * Various utility methods for the vis package.
  * 
- * <P>CVS $Id: VisTools.java,v 1.4 2006/11/16 17:50:36 amorris Exp $</P>
+ * <P>CVS $Id: VisTools.java,v 1.5 2009/10/29 00:25:01 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class VisTools {
     
@@ -120,7 +120,7 @@ public class VisTools {
     /**
      * Helper method to add Components to JPanels
      */
-    static void addCompItem(Container jPanel, Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
+    public static void addCompItem(Container jPanel, Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
         gbc.gridx = x;
         gbc.gridy = y;
         gbc.gridwidth = w;
