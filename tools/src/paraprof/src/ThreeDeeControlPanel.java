@@ -3,7 +3,6 @@ package edu.uoregon.tau.paraprof;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.*;
@@ -13,8 +12,7 @@ import javax.swing.plaf.metal.MetalComboBoxUI;
 
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.enums.VisType;
-import edu.uoregon.tau.perfdmf.Function;
-import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.Thread;
 import edu.uoregon.tau.vis.Plot;
 import edu.uoregon.tau.vis.SteppedComboBox;
@@ -25,9 +23,9 @@ import edu.uoregon.tau.vis.VisRenderer;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.15 2009/10/29 00:26:06 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.16 2009/10/29 23:58:22 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.15 $
+ * @version	$Revision: 1.16 $
  */
 public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
@@ -48,8 +46,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
     private int selectedTab;
     private JTabbedPane tabbedPane; // keep a handle to remember the selected tab
     private ThreeDeeScalePanel scalePanel;
-    
-    
+
     public class SliderComboBox extends JComboBox {
         public SliderComboBox() {
             super();
@@ -385,10 +382,12 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                 }
                 textField.setCaretPosition(0);
 
-                
                 heightValueField.setText(window.getSelectedHeightValue());
                 colorValueField.setText(window.getSelectedColorValue());
 
+                scalePanel.setPosition(0, window.getSelectedHeightRatio());
+                scalePanel.setPosition(1, window.getSelectedColorRatio());
+                
                 window.redraw();
             }
         });
@@ -403,9 +402,46 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
         return panel;
     }
-    
+
+    private String getScaleString(double value, Metric metric, ValueType valueType) {
+        int units = window.getUnits();
+        
+        if (!metric.isTimeMetric() || !ValueType.isTimeUnits(valueType)) {
+            units = 0;
+        }
+        return UtilFncs.getOutputString(units, value, 6, metric.isTimeDenominator()).trim();
+    }
+
+    private void updateScalePanel() {
+        String mins[] = new String[2];
+        String maxs[] = new String[2];
+
+//        mins[0] = getScaleString(window.getMinHeightValue(), settings.getHeightMetric(),settings.getHeightValue());
+//        mins[1] = getScaleString(window.getMinColorValue(), settings.getColorMetric(),settings.getColorValue());
+        mins[0] = "0";
+        mins[1] = "0";
+        maxs[0] = getScaleString(window.getMaxHeightValue(), settings.getHeightMetric(),settings.getHeightValue());
+        maxs[1] = getScaleString(window.getMaxColorValue(), settings.getColorMetric(),settings.getColorValue());
+
+        //        String labels[] = { "x", "y", "z", "color" };
+        String labels[] = { "height", "color" };
+        //System.out.println(window.getHeightUnitLabel());
+//        System.out.println("---");
+//        System.out.println(window.getMinColorValue());
+//        System.out.println(mins[1]);
+        String unitLabels[] = { window.getHeightUnitLabel(), window.getColorUnitLabel() };
+        scalePanel.setRanges(mins, maxs, labels, unitLabels);
+        
+        scalePanel.setPosition(0, window.getSelectedHeightRatio());
+        scalePanel.setPosition(1, window.getSelectedColorRatio());
+
+    }
+
     private JPanel createScalePanel() {
-        scalePanel = ThreeDeeScalePanel.CreateScalePanel();
+        if (scalePanel == null) {
+            scalePanel = ThreeDeeScalePanel.CreateScalePanel();
+            updateScalePanel();
+        }
         return scalePanel.getJPanel();
     }
 
@@ -437,6 +473,8 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                     colorValueField.setText(window.getSelectedColorValue());
 
                     window.redraw();
+
+                    updateScalePanel();
 
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
@@ -478,8 +516,8 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         tabbedPane = new JTabbedPane();
         Plot plot = window.getPlot();
         tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
-//        tabbedPane.addTab("Scales", createScalePanel());
-//        tabbedPane.addTab(plot.getName(), plot.getControlPanel(visRenderer));
+        tabbedPane.addTab("Scales", createScalePanel());
+        //        tabbedPane.addTab(plot.getName(), plot.getControlPanel(visRenderer));
         tabbedPane.addTab("Plot", plot.getControlPanel(visRenderer));
         tabbedPane.addTab("Axes", plot.getAxes().getControlPanel(visRenderer));
         tabbedPane.addTab("Color", window.getColorScale().getControlPanel(visRenderer));
@@ -577,6 +615,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
     public void dataChanged() {
         window.redraw();
+        updateScalePanel();
         createSubPanel();
         heightValueField.setText(window.getSelectedHeightValue());
         colorValueField.setText(window.getSelectedColorValue());

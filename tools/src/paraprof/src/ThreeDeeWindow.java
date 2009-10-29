@@ -62,6 +62,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
     private int units = ParaProf.preferences.getUnits();
 
+    float minHeightValue = 0;
+    float minColorValue = 0;
     float maxHeightValue = 0;
     float maxColorValue = 0;
 
@@ -69,7 +71,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     float maxScatterValues[];
 
     public ThreeDeeWindow(ParaProfTrial ppTrial, Component invoker) {
-
         // set the VisTools exception handler
         VisTools.setSwingExceptionHandler(new ExceptionHandler() {
             public void handleException(Exception e) {
@@ -574,6 +575,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
         maxHeightValue = 0;
         maxColorValue = 0;
+        minHeightValue = Float.MAX_VALUE;
+        minColorValue = Float.MAX_VALUE;
 
         int funcIndex = 0;
         for (int i = 0; i < list.size(); i++) {
@@ -604,6 +607,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
                     maxHeightValue = Math.max(maxHeightValue, heightValues[funcIndex][threadIndex]);
                     maxColorValue = Math.max(maxColorValue, colorValues[funcIndex][threadIndex]);
+                    minHeightValue = Math.min(minHeightValue, heightValues[funcIndex][threadIndex]);
+                    minColorValue = Math.min(minColorValue, colorValues[funcIndex][threadIndex]);
                 }
                 threadIndex++;
             }
@@ -1001,6 +1006,92 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         return (String) threadNames.get(index);
     }
 
+    public double getMaxHeightValue() {
+        return maxHeightValue;
+    }
+
+    public double getMaxColorValue() {
+        return maxColorValue;
+    }
+
+    public double getMinHeightValue() {
+        return minHeightValue;
+    }
+
+    public double getMinColorValue() {
+        return minColorValue;
+    }
+
+    public String getHeightUnitLabel() {
+        ParaProfMetric ppMetric = (ParaProfMetric) settings.getHeightMetric();
+        return getUnitsString(units, settings.getHeightValue(), ppMetric);
+    }
+    
+    public String getColorUnitLabel() {
+        ParaProfMetric ppMetric = (ParaProfMetric) settings.getColorMetric();
+        return getUnitsString(units, settings.getColorValue(), ppMetric);
+    }
+    
+    /**
+     * @return a value between 0 and 1 representing the selected height value in the range [min to max]
+     */
+    public float getSelectedHeightRatio() {
+        if (threads == null || functionNames == null) {
+            return -1;
+        }
+
+        if (settings.getSelections()[1] < 0 || settings.getSelections()[0] < 0) {
+            return -1;
+        }
+
+        Thread thread = (Thread) threads.get(settings.getSelections()[1]);
+        Function function = (Function) functions.get(settings.getSelections()[0]);
+        FunctionProfile fp = thread.getFunctionProfile(function);
+
+        if (fp == null) {
+            return -1;
+        }
+
+        int units = this.units;
+        ParaProfMetric ppMetric = (ParaProfMetric) settings.getHeightMetric();
+        if (!ppMetric.isTimeMetric() || !ValueType.isTimeUnits(settings.getHeightValue())) {
+            units = 0;
+        }
+
+        double value = settings.getHeightValue().getValue(fp, settings.getHeightMetric().getID());
+        return (float)(value / maxHeightValue);
+    }
+    
+    /**
+     * @return a value between 0 and 1 representing the selected color value in the range [min to max]
+     */
+    public float getSelectedColorRatio() {
+        if (threads == null || functionNames == null) {
+            return -1;
+        }
+
+        if (settings.getSelections()[1] < 0 || settings.getSelections()[0] < 0) {
+            return -1;
+        }
+
+        Thread thread = (Thread) threads.get(settings.getSelections()[1]);
+        Function function = (Function) functions.get(settings.getSelections()[0]);
+        FunctionProfile fp = thread.getFunctionProfile(function);
+
+        if (fp == null) {
+            return -1;
+        }
+
+        int units = this.units;
+        ParaProfMetric ppMetric = (ParaProfMetric) settings.getColorMetric();
+        if (!ppMetric.isTimeMetric() || !ValueType.isTimeUnits(settings.getColorValue())) {
+            units = 0;
+        }
+
+        double value = settings.getColorValue().getValue(fp, settings.getColorMetric().getID());
+        return (float)(value / maxColorValue);
+    }
+    
     public String getSelectedHeightValue() {
         if (threads == null || functionNames == null) {
             return "";
@@ -1011,9 +1102,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         }
 
         Thread thread = (Thread) threads.get(settings.getSelections()[1]);
-
         Function function = (Function) functions.get(settings.getSelections()[0]);
-
         FunctionProfile fp = thread.getFunctionProfile(function);
 
         if (fp == null) {
