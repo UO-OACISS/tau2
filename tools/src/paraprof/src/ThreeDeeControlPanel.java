@@ -25,9 +25,9 @@ import edu.uoregon.tau.vis.VisRenderer;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.14 2009/09/24 01:14:16 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.15 2009/10/29 00:26:06 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.14 $
+ * @version	$Revision: 1.15 $
  */
 public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
@@ -47,7 +47,9 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
     private int selectedTab;
     private JTabbedPane tabbedPane; // keep a handle to remember the selected tab
-
+    private ThreeDeeScalePanel scalePanel;
+    
+    
     public class SliderComboBox extends JComboBox {
         public SliderComboBox() {
             super();
@@ -401,6 +403,11 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
         return panel;
     }
+    
+    private JPanel createScalePanel() {
+        scalePanel = ThreeDeeScalePanel.CreateScalePanel();
+        return scalePanel.getJPanel();
+    }
 
     private JPanel createFullDataPanel() {
 
@@ -471,9 +478,11 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         tabbedPane = new JTabbedPane();
         Plot plot = window.getPlot();
         tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
-        tabbedPane.addTab(plot.getName(), plot.getControlPanel(visRenderer));
+//        tabbedPane.addTab("Scales", createScalePanel());
+//        tabbedPane.addTab(plot.getName(), plot.getControlPanel(visRenderer));
+        tabbedPane.addTab("Plot", plot.getControlPanel(visRenderer));
         tabbedPane.addTab("Axes", plot.getAxes().getControlPanel(visRenderer));
-        tabbedPane.addTab("ColorScale", window.getColorScale().getControlPanel(visRenderer));
+        tabbedPane.addTab("Color", window.getColorScale().getControlPanel(visRenderer));
         tabbedPane.addTab("Render", visRenderer.getControlPanel());
         tabbedPane.setMinimumSize(new Dimension(290, 160));
         tabbedPane.setSelectedIndex(selectedTab);
