@@ -20,15 +20,24 @@ from operator import itemgetter
 # need global dictionary of counters to types
 counterMap = dict([("TIME", 42000000), \
 ("P_WALL_CLOCK_TIME", 42000001), \
-("PAPI_TOT_INS", 42000050), \
-("PAPI_TOT_CYC", 42000059)])
-thread = 1
-task = 1
+("PAPI_TOT_CYC",      42000002), \
+("PAPI_TOT_INS",      42000003), \
+("PAPI_TOT_CYC",      42000004), \
+("PAPI_TOT_INS",      42000005), \
+("PAPI_L1_DCH",       42000006), \
+("PAPI_L1_DCM",       42000007), \
+("PAPI_L1_DCA",       42000008), \
+("PAPI_LD_INS",       42000009), \
+("PAPI_SR_INS",       42000010), \
+("PAPI_BR_INS",       42000011), \
+("PAPI_TOT_INS",      42000050), \
+("PAPI_TOT_CYC",      42000059)])
+thread = 0
+node = 0
 callpathMap = {}
 ignoreMPI = True
 ignoreCallpath = True
 negatives = 0
-outliers = 0
 total = 0
 
 def usage():
@@ -56,21 +65,29 @@ def parseArgs(argv):
 	
 	return
 
-def processFile(fname, outputFile):
+def processFile(infname, outputFile):
 	metrics = {}
 	numMetrics = 1
-	global task
 	global thread
 	global counterMap
 	global ignoreMPI
 	global ignoreCallpath
 	global negatives
-	global outliers
 	global total
-	input = open(fname, 'r')
+	global node
+	input = open(infname, 'r')
+	currentCallpath = ""
 	for line in input:
 		total = total + 1
 		line = line.strip()
+		# get the node number
+		if line.startswith('# node:') == True:
+			index = 0
+			for token in line.split(" "):
+				token = token.strip()
+				if token != "#" and token != "Metrics:":
+					node = token
+			numMetrics = index
 		# get the metric header
 		if line.startswith('# Metrics:') == True:
 			index = 0
@@ -90,8 +107,8 @@ def processFile(fname, outputFile):
 			delta_end = tokens[2].strip()
 			start = float(delta_begin)
 			end = float(delta_end)
-			myRange = start + end
-			normalizedTime = start / myRange
+			timeRange = start + end
+			normalizedTime = start / timeRange
 			location = tokens[3].strip()
 			metricDeltas = tokens[4].strip()
 			metricTokens = metricDeltas.split(" ")
@@ -112,27 +129,24 @@ def processFile(fname, outputFile):
 			for m in range(numMetrics):
 				start = float(metricTokens[m*2])
 				end = float(metricTokens[(m*2)+1])
-				myRange = start + end
-				normalizedMetric = start / myRange
+				metricRange = start + end
+				normalizedMetric = start / metricRange
 				if normalizedTime < 0.0 or normalizedMetric < 0.0:
 					#print "ignoring negative value: ", line
 					negatives = negatives + 1
 					goodData = False
-				if math.fabs(normalizedTime - normalizedMetric) > 0.5:
-					#print "ignoring outlier: ", normalizedTime, normalizedMetric, line
-					outliers = outliers + 1
-					goodData = False
 
-				# remove these two later
-				tmp = tmp + str(task) + " "
-				tmp = tmp + str(thread) + " "
-
-				tmp = tmp + str(callpathID) + " "
-				tmp = tmp + str(counterMap[metrics[m]]) + " "
+				#tmp = tmp + str(callpathID) + " "
+				#tmp = tmp + "S " + str(counterMap[metrics[m]]) + " "
+				tmp = tmp + "S " + metrics[m] + " "
 				tmp = tmp + str(normalizedTime) + " "
 				tmp = tmp + str(normalizedMetric) + "\n"
 
 			if goodData:
+				if callpathID != currentCallpath:
+					currentCallpath = callpathID
+					#outputFile.write("T " + str(callpathID) + " " + str(timeRange) + "\n")
+					outputFile.write("T " + callpath.replace(" ", ":") + " " + str(timeRange) + "\n")
 				outputFile.write(tmp)
 
 def sortedDictValues(adict):
@@ -141,26 +155,26 @@ def sortedDictValues(adict):
 	return [value for key, value in items]
 
 def main(argv):
-	global task
 	global callpathMap
 	global negatives
-	global outliers
 	global total
+	global node
+	global thread
 	parseArgs(argv)
 	dirList=os.listdir(".")
-	for fname in dirList:
-		if fname.startswith("ebstrace.processed."):
-			#ofname = "extracted.out." + str(task)
-			ofname = fname.replace("processed", "extracted")
-			print fname, " --> ", ofname
-			outputFile = open(ofname, 'w')
-			processFile(fname, outputFile)
-			task = task + 1
+	print "Processing..."
+	for infname in dirList:
+		if infname.startswith("ebstrace.processed."):
+			outfname = infname.replace("processed", "extracted")
+			outputFile = open(outfname, 'w')
+			processFile(infname, outputFile)
 			outputFile.close()
+			newOutfname = outfname.replace(".0.0.0", "." + node + "." + str(thread))
+			os.rename(outfname, newOutfname)
+			print infname, " --> ", newOutfname
 
-
-	ofname = "ebstrace.extracted.maps.txt"
-	outputFile = open(ofname, 'w')
+	outfname = "ebstrace.extracted.maps.txt"
+	outputFile = open(outfname, 'w')
 
 	sortedList = sorted(callpathMap.iteritems(), key=itemgetter(1))
 	outputFile.write("# function map \n")
@@ -173,9 +187,8 @@ def main(argv):
 		outputFile.write(str(i[1]) + " " + str(i[0]) + "\n")
 
 	outputFile.close()
-	print ofname, "mapping file created"
+	print outfname, "mapping file created"
 	print negatives, "of", total, "negative values ignored"
-	print outliers,  "of", total,"outlier values ignored"
 
 if __name__ == "__main__":
 	main(sys.argv[1:])

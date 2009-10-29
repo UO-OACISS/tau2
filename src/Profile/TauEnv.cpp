@@ -52,6 +52,9 @@
 
 /* if we are doing EBS sampling, set the default sampling frequency */
 # define TAU_EBS_FREQUENCY_DEFAULT 1000
+/* if we are doing EBS sampling, set whether we want inclusive samples */
+/* that is, main->foo->mpi_XXX is a sample for main, foo and mpi_xxx */
+# define TAU_EBS_INCLUSIVE_DEFAULT 0
 
 #ifdef TAU_COMPENSATE
 # define TAU_COMPENSATE_DEFAULT 1
@@ -252,6 +255,7 @@ static int env_track_memory_heap = 0;
 static int env_track_memory_headroom = 0;
 static int env_extras = 0;
 static int env_ebs_frequency = 0;
+static int env_ebs_inclusive = 0;
 
 static int env_profile_format = TAU_FORMAT_PROFILE;
 static double env_throttle_numcalls = 0;
@@ -383,6 +387,10 @@ int TauEnv_get_profile_format() {
 
 int TauEnv_get_ebs_frequency() {
   return env_ebs_frequency;
+}
+
+int TauEnv_get_ebs_inclusive() {
+  return env_ebs_inclusive;
 }
 
 /*********************************************************************
@@ -665,6 +673,18 @@ void TauEnv_initialize() {
     TAU_VERBOSE("TAU: EBS frequency = %d usec\n", env_ebs_frequency);
     sprintf(tmpstr, "%d usec", env_ebs_frequency);
     TAU_METADATA("TAU_EBS_FREQUENCY", tmpstr);
+
+    const char *ebs_inclusive = getconf("TAU_EBS_INCLUSIVE");
+    env_ebs_inclusive = TAU_EBS_INCLUSIVE_DEFAULT;
+    if (ebs_inclusive) {
+      env_ebs_inclusive = atoi(ebs_inclusive);
+      if (env_ebs_inclusive < 0) {
+        env_ebs_inclusive = TAU_EBS_INCLUSIVE_DEFAULT;
+      }
+    }
+    TAU_VERBOSE("TAU: EBS inclusive = %d usec\n", env_ebs_inclusive);
+    sprintf(tmpstr, "%d usec", env_ebs_inclusive);
+    TAU_METADATA("TAU_EBS_INCLUSIVE", tmpstr);
 #endif
 
   }

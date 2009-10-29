@@ -79,7 +79,7 @@ sub translate_pc {
 
 # process an EBS trace file
 sub process_trace {
-  my($def_file, $trace_file, $out_file) = @_;
+  my($def_file, $trace_file, $out_file, $inclusive) = @_;
 
   # Read event definitions
   my %eventmap;
@@ -145,57 +145,87 @@ sub process_trace {
 
       # Process the callpath
       my @events = split(" ",$callpath);
+      my @tmpCallpath = @events;
       @events = reverse (@events);
 
-      my $newCallpath = "";
-      my (@processedEvents);
-      foreach my $e (@events) {
-        $newCallpath = "$newCallpath => $eventmap{$e}";
-        push (@processedEvents, $eventmap{$e});
+      for (0..$#events) {
+
+	  	# build a key into the map
+		$callpath = "";
+        foreach my $t (@tmpCallpath) {
+          $callpath = "$callpath $t";
+        }
+		$callpath = trim($callpath);
+
+        my $newCallpath = "";
+        my (@processedEvents);
+        foreach my $e (@events) {
+          $newCallpath = "$newCallpath => $eventmap{$e}";
+          push (@processedEvents, $eventmap{$e});
+        }
+        $newCallpath = join(" => ", @processedEvents);
+        $lastCallpath = $newCallpath;
+
+        my $check = $deltaStart;
+
+        @startTokens = split(" ", $startmap{$callpath});
+        @stopTokens = split(" ", $stopmap{$callpath});
+        $deltaStart = $timestamp - @startTokens[0];
+        $deltaStop = @stopTokens[0] - $timestamp;
+  #       if ($check != $deltaStart) {
+  #         print "$line\n";
+  #         die "inconsistent file $callpath, $check != $$deltaStart\n";
+  #       }
+  
+        # Process the PC
+
+        my $newpc = translate_pc($exe, $pc);
+
+        if (($deltaStop < 0) || ($deltaStart < 0)) {
+          print "ignoring negative sample, location: $newpc, callpath: $newCallpath\n";
+		  if ($inclusive) {
+		    pop(@events);
+		    shift(@tmpCallpath);
+		  }
+		  else {
+		    last;
+		  }
+        }
+
+        # Output the processed data
+        print OUTPUT "$timestamp | $deltaStart | $deltaStop | $newpc |";
+
+        # split the metrics, and their start/stops, and handle them all
+        my @metricTokens = split(" ", $metrics);
+        my $i = 0;
+        for (0..$#metricTokens) {
+          my $deltaMetS = $metricTokens[$_] - $startTokens[$_];
+          my $deltaMetE = $stopTokens[$_] - $metricTokens[$_];
+          print OUTPUT " $deltaMetS $deltaMetE";
+        }
+
+        print OUTPUT " | $newCallpath\n";
+
+		if ($inclusive) {
+		  pop(@events);
+		  shift(@tmpCallpath);
+		}
+		else {
+		  last;
+		}
       }
-      $newCallpath = join(" => ", @processedEvents);
-      $lastCallpath = $newCallpath;
-
-      my $check = $deltaStart;
-
-      @startTokens = split(" ", $startmap{$callpath});
-      @stopTokens = split(" ", $stopmap{$callpath});
-      $deltaStart = $timestamp - @startTokens[0];
-      $deltaStop = @stopTokens[0] - $timestamp;
-#       if ($check != $deltaStart) {
-#         print "$line\n";
-#         die "inconsistent file $callpath, $check != $$deltaStart\n";
-#       }
-
-      # Process the PC
-
-      my $newpc = translate_pc($exe, $pc);
-
-      if (($deltaStop < 0) || ($deltaStart < 0)) {
-        print "ignoring negative sample, location: $newpc\n";
-        next;
-      }
-
-      # Output the processed data
-      print OUTPUT "$timestamp | $deltaStart | $deltaStop | $newpc |";
-
-      # split the metrics, and their start/stops, and handle them all
-      my @metricTokens = split(" ", $metrics);
-      my $i = 0;
-      for (0..$#metricTokens) {
-        my $deltaMetS = $metricTokens[$_] - $startTokens[$_];
-        my $deltaMetE = $stopTokens[$_] - $metricTokens[$_];
-        print OUTPUT " $deltaMetS $deltaMetE";
-      }
-
-      print OUTPUT " | $newCallpath\n";
-      #exit()
     }
   }
   print OUTPUT "# node: $node\n";
 }
 
 sub main {
+  my $inclusive = 0;
+  if ($#ARGV > 0) {
+    if ($ARGV[$0] == "--inclusive" || $ARGV[$0] == "-i") {
+	  $inclusive = 1;
+	}
+  }
   my $pattern = "ebstrace.raw.*.*.*.*";
   while (defined(my $filename = glob($pattern))) {
     my ($trace_file, $def_file, $out_file);
@@ -205,7 +235,7 @@ sub main {
     $def_file = "ebstrace.def.$pid.$nid.$cid.$tid";
     $out_file = "ebstrace.processed.$pid.$nid.$cid.$tid";
     print "processing $filename ...\n";
-    process_trace($def_file, $trace_file, $out_file);
+    process_trace($def_file, $trace_file, $out_file, $inclusive);
   }
 }
 

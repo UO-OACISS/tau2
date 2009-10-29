@@ -249,6 +249,16 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
 
   /* set this to get the stop event */
   profiler->needToRecordStop = 1;
+
+/* if we are doing EBS sampling, set whether we want inclusive samples */
+/* that is, main->foo->mpi_XXX is a sample for main, foo and mpi_xxx */
+  if (TauEnv_get_ebs_inclusive() > 0) {
+    profiler = (Profiler *)Tau_query_parent_event(profiler);
+    while (profiler != NULL) {
+      profiler->needToRecordStop = 1;
+      profiler = (Profiler *)Tau_query_parent_event(profiler);
+    }
+  }
 }
 
 /*********************************************************************
