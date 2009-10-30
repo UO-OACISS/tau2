@@ -482,6 +482,8 @@ int main(int argc, char **argv){
   int index;
   int c;
 
+
+  bpatch->setTrampRecursive(true); /* enable C++ support */
   // parse the command line arguments--first, there need to be atleast two arguments,
   // the program name (tau_run) and the application it is running.  If there are not
   // at least two arguments, set the error flag.
