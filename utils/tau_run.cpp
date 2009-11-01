@@ -64,7 +64,6 @@ int getFunctionFileLineInfo(BPatch_image* mutateeAddressSpace,
 
 
 /* re-writer */
-BPatch *bpatch_global = NULL;
 BPatch_function *name_reg;
 BPatch_Vector<BPatch_snippet *> funcNames;
 int addName(char *name)
@@ -313,9 +312,16 @@ int moduleConstraint(char *fname){ // fname is the name of module/file
        ((fname[len-4] == '.') && (fname[len-3] == 'F') && (fname[len-2] == '9') && (fname[len-1] == '0')) || 
        ((fname[len-2] == '.') && (fname[len-1] == 'F')) || 
        ((fname[len-2] == '.') && (fname[len-1] == 'f')) || 
+       //((fname[len-3] == '.') && (fname[len-2] == 's') && (fname[len-1] == 'o'))|| 
        (strcmp(fname, "LIBRARY_MODULE") == 0)){
       /* It is ok to instrument this module. Constraint doesn't exist. */
-      return false;
+      // Wait: first check if it has libTAU* in the name!
+      if (strncmp(fname, "libTAU", 6) == 0)  {
+        return true;  /* constraint applies - do not instrument! */
+      }
+      else {
+        return false; /* ok to instrument */
+      }
     }//if
     else
       return true;
@@ -373,10 +379,8 @@ int checkIfMPI(BPatch_image * appImage, BPatch_function * & mpiinit,
   
   if (mpiinit == (BPatch_function *) NULL) {
     dprintf("*** MPI_Comm_rank not found looking for PMPI_Comm_rank...\n");
-    if (!binaryRewrite) {
       //mpiinit = tauFindFunction(appImage, "PMPI_Comm_rank");
-      mpiinit = tauFindFunction(appImage, "mpi_comm_rank_");
-    }
+    mpiinit = tauFindFunction(appImage, "mpi_comm_rank_");
   }//if
   
   if (mpiinit == (BPatch_function *) NULL) { 
@@ -423,16 +427,16 @@ int getFunctionFileLineInfo(BPatch_image* mutateeAddressSpace,
 }
 
 
-int tauRewriteBinary(BPatch *bpatch_global, const char *mutateeName, char *outfile, char* libname)
+int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, char* libname)
 {
   using namespace std;
   BPatch_function *mpiinit;
   BPatch_function *mpiinitstub;
 
   dprintf("Inside tauRewriteBinary, name=%s, out=%s\n", mutateeName, outfile);
-  BPatch_binaryEdit* mutateeAddressSpace = bpatch_global->openBinary(mutateeName, false);
+  BPatch_binaryEdit* mutateeAddressSpace = bpatch->openBinary(mutateeName, false);
 
-  bpatch_global->setLivenessAnalysis(false);
+  bpatch->setLivenessAnalysis(false);
   mutateeAddressSpace->allowTraps(false);
   BPatch_image* mutateeImage = mutateeAddressSpace->getImage();
   BPatch_Vector<BPatch_function*>* allFuncs = mutateeImage->getProcedures();
@@ -441,8 +445,8 @@ int tauRewriteBinary(BPatch *bpatch_global, const char *mutateeName, char *outfi
   assert(result);
   BPatch_function* entryTrace = tauFindFunction(mutateeImage, "traceEntry");
   BPatch_function* exitTrace = tauFindFunction(mutateeImage, "traceExit");
-  BPatch_function* setupFunc = tauFindFunction(mutateeImage, "my_otf_init");
-  BPatch_function* cleanupFunc = tauFindFunction(mutateeImage, "my_otf_cleanup");
+  BPatch_function* setupFunc = tauFindFunction(mutateeImage, "tau_dyninst_init");
+  BPatch_function* cleanupFunc = tauFindFunction(mutateeImage, "tau_dyninst_cleanup");
   BPatch_function* mainFunc = tauFindFunction(mutateeImage, "main");
   name_reg = tauFindFunction(mutateeImage, "trace_register_func");
 
