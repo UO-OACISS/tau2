@@ -18,6 +18,7 @@
 #include "BPatch_function.h"
 #include "BPatch_thread.h"
 #include "BPatch_snippet.h" 
+#include "BPatch_statement.h" 
 
 //#include <iostream.h>
 //#include <stdio.h>
@@ -57,6 +58,11 @@ extern bool processFileForInstrumentation(const string& file_name);
 extern void printExcludeList();
 extern bool instrumentEntity(const string& function_name);
 
+/* prototypes for routines below */
+int getFunctionFileLineInfo(BPatch_image* mutateeAddressSpace, 
+      BPatch_function *f, char *newname);
+
+
 /* re-writer */
 BPatch *bpatch_global = NULL;
 BPatch_function *name_reg;
@@ -87,7 +93,8 @@ void insertTrace(BPatch_function* functionToInstrument,
   if (strstr(modname, "libdyninstAPI_RT"))
      return;
 
-  functionToInstrument->getName(name, 1024);
+  //functionToInstrument->getName(name, 1024);
+  getFunctionFileLineInfo(mutatee->getImage(), functionToInstrument, name);
   int id = addName(name);
   BPatch_Vector<BPatch_snippet *> traceArgs;
   traceArgs.push_back(new BPatch_constExpr(id));
@@ -380,6 +387,41 @@ int checkIfMPI(BPatch_image * appImage, BPatch_function * & mpiinit,
     return 1;   // Yes, it is an MPI application.
 }//checkIfMPI()
 
+/* We create a new name that embeds the file and line information in the name */
+int getFunctionFileLineInfo(BPatch_image* mutateeAddressSpace, 
+      BPatch_function *f, char *newname)
+{
+  bool info1, info2;
+  unsigned long baseAddr,lastAddr;
+  char fname[1024];
+  const char *filename;
+  int row1, col1, row2, col2;
+  baseAddr = (unsigned long)(f->getBaseAddr());
+  lastAddr = baseAddr + f->getSize();
+  BPatch_Vector< BPatch_statement > lines;
+  f->getName(fname, 1024);
+  info1 = mutateeAddressSpace->getSourceLines((unsigned long) baseAddr, lines);
+
+  if (info1) {
+    filename = lines[0].fileName();
+    row1 = lines[0].lineNumber();
+    col1 = lines[0].lineOffset();
+    if (col1 < 0) col1 = 0;
+    info2 = mutateeAddressSpace->getSourceLines((unsigned long) (lastAddr -1), lines);
+    if (info2) {
+      row2 = lines[1].lineNumber();
+      col2 = lines[1].lineOffset();
+      if (col2 < 0) col2 = 0;
+      sprintf(newname, "%s [{%s} {%d,%d}-{%d,%d}]", fname, filename, row1, col1, row2, col2);
+    } else {
+      sprintf(newname, "%s [{%s} {%d,%d}]", fname, filename, row1, col1);
+    }
+  }
+  else
+    strcpy(newname, fname);
+
+}
+
 
 int tauRewriteBinary(BPatch *bpatch_global, const char *mutateeName, char *outfile, char* libname)
 {
@@ -456,6 +498,8 @@ int tauRewriteBinary(BPatch *bpatch_global, const char *mutateeName, char *outfi
   mutateeAddressSpace->writeFile(modifiedFileName.c_str());
   return 0;
 }
+
+
 
 
 //
@@ -654,6 +698,8 @@ int main(int argc, char **argv){
            dprintf("don't instrument %s\n", fname);
         }//if
         else{ // routines that are ok to instrument
+          // get full source information
+          getFunctionFileLineInfo(appImage, (*p)[i], fname);
 	  functions.append("|");
 	  functions.append(fname);
 	}//else
