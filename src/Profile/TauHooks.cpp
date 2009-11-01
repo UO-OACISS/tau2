@@ -406,12 +406,34 @@ void my_otf_cleanup()
 {
   dprintf("Inside my otf_cleanup\n");
 }
+
+void tau_dyninst_init(int isMPI)
+{
+  dprintf("Inside tau_dyninst_init \n");
+  dprintf("isMPI = %d\n", isMPI);
+  if (!isMPI)
+  {
+    dprintf("Calling SET NODE 0\n");
+    TAU_PROFILE_SET_NODE(0);
+  }
+  int tid = RtsLayer::myThread();
+  if (!tauDyninstEnabled[tid]) {
+    tauDyninstEnabled[tid] = 1;
+  }
+}
+
+void tau_dyninst_cleanup()
+{
+  dprintf("Inside tau_dyninst_cleanup\n");
+}
+
+
 }
 // extern "C"
 
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
- * $Revision: 1.30 $   $Date: 2009/11/01 17:19:48 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.30 2009/11/01 17:19:48 sameer Exp $ 
+ * $Revision: 1.31 $   $Date: 2009/11/01 18:43:22 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.31 2009/11/01 18:43:22 sameer Exp $ 
  ***************************************************************************/
