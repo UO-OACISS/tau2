@@ -2654,9 +2654,9 @@ then
 	mpiinc=/opt/xt-mpt/default/mpich2-64/P/include
         if [ ! -r $mpiinc ] ; then
             if [ $default_fortran = gfortran ] ; then
-                mpiinc=/opt/mpt/default/xt/mpich2-gnu/include
+                mpiinc=/opt/mpt/$MPT_VERSION/xt/mpich2-gnu/include
             else
-                mpiinc=/opt/mpt/default/xt/mpich2-$default_fortran/include
+                mpiinc=/opt/mpt/$MPT_VERSION/xt/mpich2-$default_fortran/include
             fi
 	    if [ ! -r $mpiinc ] ; then
                 mpiinc=/opt/mpt/default/xt/mpich2-pgi/include
