@@ -1,4 +1,5 @@
 #include <stdio.h>
+#define MPICH_IGNORE_CXX_SEEK
 #include <mpi.h>
 
 static const int anz = 512;
