@@ -1791,6 +1791,10 @@ case $machine in
 	    tauoptions="${tauoptions}-pathscale"
 	    default_fortran=pathscale
 	    fixmakeargs="$fixmakeargs COMPINST_GNU"
+	elif [ "x$PE_ENV" = xINTEL ] ; then
+	    tauoptions="${tauoptions}-intel"
+	    default_fortran=intel
+	    fixmakeargs="$fixmakeargs COMPINST_GNU"
 	fi
 	if [ $fortran_compiler = no ] ; then
 	    fortran_compiler=$default_fortran
@@ -2654,6 +2658,9 @@ then
             else
                 mpiinc=/opt/mpt/default/xt/mpich2-$default_fortran/include
             fi
+	    if [ ! -r $mpiinc ] ; then
+                mpiinc=/opt/mpt/default/xt/mpich2-pgi/include
+	    fi
         fi
 	;;
   solaris2*)
