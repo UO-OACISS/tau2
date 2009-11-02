@@ -3,8 +3,13 @@
 # don't want the user to see glibc errors (on Franklin)
 export MALLOC_CHECK_=0
 
-# first, check that this is sun java
+# check that we're on linux
+if [ $(uname) != "Linux" ]; then
+    echo "failed"
+    exit
+fi
 
+# first, check that this is sun java
 ver=`java -version 2>&1 | tail -1 | awk '{print $1 $2}'`
 
 if [ "x$ver" != "xJavaHotSpot(TM)" ] ; then
