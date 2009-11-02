@@ -43,9 +43,12 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <bglpersonality.h>
 #endif
 
-#ifdef TAU_IBM_XLC_BGP
-#undef TAU_BGP
-#endif
+/* Re-enabled since we believe this is now working (2009-11-02) */
+/* 
+   #ifdef TAU_IBM_XLC_BGP
+   #undef TAU_BGP
+   #endif
+*/
 /* NOTE: IBM BG/P XLC does not work with metadata when it is compiled with -qpic=large */
 
 
