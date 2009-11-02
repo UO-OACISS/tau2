@@ -76,20 +76,37 @@ void TauInitCode(char *arg, int isMPI)
 {
   // Register that we are using dyninst so that the FIvector destructor will
   // perform cleanup for us
+  // dprintf("TauInitCode: arg=%s, isMPI=%d\n", arg, isMPI);
   TheUsingDyninst() = 1;
   char *name;
   int tid = 0;
   TAU_MONITOR_ENTER(0);
   int functionId = 0;
+  char funcname[1024];
+  char *saveptr;
 
+  int j;
+  char *str1;
   /* iterate for each routine name */
-  name = strtok(arg, "|");
-  while (name != (char *)NULL)
+/*
+  for (j=1, str1 = arg; ; j++, str1 = NULL) {
+    name = strtok_r(str1, "|", &saveptr);
+    if (name == NULL) 
+      break;
+    printf("Extracted token = %s\n", name);
+  }
+*/
+  for (j=1, str1 = arg; ; j++, str1 = NULL) 
   { 
+    name = strtok_r(str1, "|", &saveptr);
+    if (name == NULL) 
+      break;
+    dprintf("After loop: name = %s\n", name);
+
     functionId ++; 
 #ifdef ORIGINAL_HEAVY_IMPLEMENTATION_USING_MAP
     dprintf("Extracted : %s :id = %d\n", name, functionId);
-    TAU_MAPPING_CREATE(name, " ", functionId, "TAU_DEFAULT", tid);
+    TAU_MAPPING_CREATE(funcname, " ", functionId, "TAU_DEFAULT", tid);
 #else
     dprintf("Extracted : %s :id = %d\n", name, functionId-1);
     /* Create a new FunctionInfo object with the given name and add it to 
@@ -111,7 +128,6 @@ void TauInitCode(char *arg, int isMPI)
 #endif /* TAUDYNVEC */
 #endif /* ORIGINAL_HEAVY_IMPLEMENTATION_USING_MAP */
     
-    name = strtok(NULL, "|");
   }
   dprintf("Inside TauInitCode Initializations to be done here!\n");
   if (!isMPI)
@@ -434,6 +450,6 @@ void tau_dyninst_cleanup()
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
- * $Revision: 1.31 $   $Date: 2009/11/01 18:43:22 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.31 2009/11/01 18:43:22 sameer Exp $ 
+ * $Revision: 1.32 $   $Date: 2009/11/02 18:59:38 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.32 2009/11/02 18:59:38 sameer Exp $ 
  ***************************************************************************/
