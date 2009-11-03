@@ -539,7 +539,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
       }
     }
 #ifdef TAU_PROFILEPARAM
-    if (ParentProfiler != NULL) {
+    if (ProfileParamFunction != NULL) {
       ProfileParamFunction->ResetExclTimeIfNegative(tid);
     }
 #endif /* TAU_PROFILEPARAM */
@@ -1310,6 +1310,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.255 $   $Date: 2009/10/21 21:28:58 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.255 2009/10/21 21:28:58 amorris Exp $ 
+ * $Revision: 1.256 $   $Date: 2009/11/03 18:28:58 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.256 2009/11/03 18:28:58 amorris Exp $ 
  ***************************************************************************/
