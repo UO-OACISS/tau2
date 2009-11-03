@@ -33,7 +33,7 @@ using namespace std;
 //int debugPrint = 0;
 // control debug printf statements
 //#define dprintf if (debugPrint) printf
-#define dprintf printf
+//#define dprintf printf
 #ifdef DEBUG_PROF
 #define dprintf printf
 #else // DEBUG_PROF 
@@ -449,7 +449,7 @@ void tau_dyninst_cleanup()
 
 // EOF TauHooks.cpp
 /***************************************************************************
- * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
- * $Revision: 1.32 $   $Date: 2009/11/02 18:59:38 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.32 2009/11/02 18:59:38 sameer Exp $ 
+ * $RCSfile: TauHooks.cpp,v $   $Author: amorris $
+ * $Revision: 1.33 $   $Date: 2009/11/03 17:34:17 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.33 2009/11/03 17:34:17 amorris Exp $ 
  ***************************************************************************/
