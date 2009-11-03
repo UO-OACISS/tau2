@@ -260,11 +260,6 @@ void TauProfiler_getUserEventValues(const char **inUserEvents, int numUserEvents
 void TauProfiler_AddProfileParamData(long key, const char *keyname);
 
 
-#ifdef TAU_MPITRACE
-void TauProfiler_EnableAllEventsOnCallStack(int tid, Profiler *current);
-#endif /* TAU_MPITRACE */
-
-
 #endif /* TAU_ENABLED */
 /* included after class Profiler is defined. */
 #endif /* __cplusplus && ! TAU_USE_C_API */
@@ -273,6 +268,6 @@ void TauProfiler_EnableAllEventsOnCallStack(int tid, Profiler *current);
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.109 $   $Date: 2009/09/19 00:19:48 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.109 2009/09/19 00:19:48 amorris Exp $ 
+ * $Revision: 1.110 $   $Date: 2009/11/03 19:12:01 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.110 2009/11/03 19:12:01 amorris Exp $ 
  ***************************************************************************/
