@@ -271,6 +271,12 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
     //Override this function.
     public List getMetrics() {
+        if (trial == null) {
+            return null;
+        }
+        if (trial.getDataSource() == null) {
+            return null;
+        }
         return trial.getDataSource().getMetrics();
     }
 
@@ -466,6 +472,10 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         // set the default metric to be the first one
         if (getMetrics() != null && getMetrics().size() > 0) {
             setDefaultMetric((Metric) getMetrics().get(0));
+        }
+
+        if (getMetrics() == null) {
+            return;
         }
 
         // set the default metric to the first time based metric (if it exists)
@@ -721,7 +731,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     public List getThreads() {
         return getDataSource().getAllThreads();
     }
-    
+
     public List getThreadNames() {
         List threadNames = new ArrayList();
 
