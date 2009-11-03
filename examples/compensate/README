@@ -1,0 +1,61 @@
+For this example, we turn off throttling so that the tests
+consistency checking will work.
+
+Without compensation:
+
+% TAU_COMPENSATE=0 TAU_THROTTLE=0 ./simple
+
+loop timer 1, exclusive = 283045
+loop timer 1, inclusive = 1.05069E+06
+loop timer 2, exclusive = 584529
+loop timer 2, inclusive = 584529
+Difference = 466165 = 79.7505%
+Exclusive loop 1 = 26.9389% of inclusive
+
+% pprof
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0          554        2,189           1           3    2189588 main() int (int, char **)
+ 48.0          283        1,050           1       1E+06    1050694 loop timer 1
+ 35.1          767          767       1E+06           0          1 f f(double x)
+ 26.7          584          584           1           0     584529 loop timer 2
+  0.0        0.006        0.006           1           0          6 TAU_GET_FUNC_VALS()
+
+With compensation:
+
+% TAU_COMPENSATE=1 TAU_THROTTLE=0 ./simple
+
+loop timer 1, exclusive = 0
+loop timer 1, inclusive = 589878
+loop timer 2, exclusive = 588484
+loop timer 2, inclusive = 588484
+Difference = 1394 = 0.23688%
+Exclusive loop 1 = 0% of inclusive
+
+% pprof
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0          556        1,734           1           3    1734902 main() int (int, char **)
+ 35.3          612          612       1E+06           0          1 f f(double x)
+ 34.0            0          589           1       1E+06     589878 loop timer 1
+ 33.9          588          588           1           0     588484 loop timer 2
+  0.0         0.28        0.513           1        1000        513 .TAU 1000 null timers overhead
+  0.0        0.233        0.233        1000           0          0 .TAU null timer overhead
+  0.0      0.00677      0.00677           1           0          7 TAU_GET_FUNC_VALS()
+
+We can see from these two runs that TAU_COMPENSATE can attempt to remove the
+overhead introduced by the instrumentation.  The two loops have the same
+non-instrumented execution.  The difference is that the small function called
+by "loop timer 1" has been instrumented, and the small function called by "loop
+tmier 2" has not.  Without TAU_COMPENSATE, we see that "loop timer 1" has about
+80% more inclusive time associated with it, which is all profiling overhead.
+With TAU_COMPENSATE on, this has been reduced to 0.24%, so the times for "loop
+timer 1" are now un-perturbed by the instrumentation.
