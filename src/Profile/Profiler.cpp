@@ -194,7 +194,7 @@ void TauProfiler_EnableAllEventsOnCallStack(int tid, Profiler *current) {
       TauProfiler_EnableAllEventsOnCallStack(tid, current->ParentProfiler);
       /* process the current event */
       DEBUGPROFMSG(RtsLayer::myNode()<<" Processing EVENT "<<current->ThisFunction->GetName()<<endl;);
-      TauTraceEvent(current->ThisFunction->GetFunctionId(), 1, tid, (x_uint64) current->StartTime, 1); 
+      TauTraceEvent(current->ThisFunction->GetFunctionId(), 1, tid, (x_uint64) current->StartTime[0], 1); 
       TauMetrics_triggerAtomicEvents((x_uint64) current->StartTime[0], current->StartTime, tid);
     }
   }
@@ -289,6 +289,18 @@ void Profiler::Start(int tid) {
   /********************************************************************************/
   /*** Tracing ***/
   /********************************************************************************/
+
+#ifdef TAU_MPITRACE
+  if (RecordEvent) {
+#endif /* TAU_MPITRACE */
+  if (TauEnv_get_tracing()) {
+    TauTraceEvent(ThisFunction->GetFunctionId(), 1 /* entry */, tid, TimeStamp, 1 /* use supplied timestamp */);
+    TauMetrics_triggerAtomicEvents(TimeStamp, StartTime, tid);
+  }
+#ifdef TAU_MPITRACE
+  }
+#endif /* TAU_MPITRACE */
+
 #ifdef TAU_MPITRACE
   if (MyProfileGroup_ & TAU_MESSAGE) {
     /* if we're in the group, we must first enable all the other events
@@ -297,11 +309,6 @@ void Profiler::Start(int tid) {
     TauProfiler_EnableAllEventsOnCallStack(tid, this);
   }
 #endif /* TAU_MPITRACE */
-
-  if (TauEnv_get_tracing()) {
-    TauTraceEvent(ThisFunction->GetFunctionId(), 1 /* entry */, tid, TimeStamp, 1 /* use supplied timestamp */);
-    TauMetrics_triggerAtomicEvents(TimeStamp, StartTime, tid);
-  }
 
   /********************************************************************************/
   /*** Tracing ***/
@@ -1310,6 +1317,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.256 $   $Date: 2009/11/03 18:28:58 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.256 2009/11/03 18:28:58 amorris Exp $ 
+ * $Revision: 1.257 $   $Date: 2009/11/04 00:13:11 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.257 2009/11/04 00:13:11 amorris Exp $ 
  ***************************************************************************/
