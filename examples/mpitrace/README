@@ -1,0 +1,82 @@
+The -MPITRACE configuration option disables the tracing of events that do not
+lead to an MPI event.  In this example, the routine 'foo' does not lead to an
+MPI event, nor does "C &C::C(int, int) C".  If it is traced without -MPITRACE,
+the output looks like:
+
+TAU_DEFAULT group events will always be traced.
+
+#=NO= =======================EVENT== ==TIME [us]= =NODE= =THRD= ==PARAMETER=
+    1                      "EV_INIT"            0      0      0            3
+    2     "int main(int, char **)  "            0      0      0            1
+    3                 "MPI_Init()  "            0      0      0            1
+    4                 "MPI_Init()  "            0      0      0           -1
+    5                   "WALL_CLOCK"            0      0      0   1257293692
+    6     "TauTraceClockOffsetStart"         1099      0      0            0
+    7            "MPI_Comm_size()  "         1131      0      0            1
+    8            "MPI_Comm_size()  "         1132      0      0           -1
+    9            "MPI_Comm_rank()  "         1136      0      0            1
+   10            "MPI_Comm_rank()  "         1136      0      0           -1
+   11                         "foo "         1138      0      0            1
+   12                         "foo "         1157      0      0           -1
+   13          "C &C::C(int, int) C"         1177      0      0            1
+   14          "C &C::C(int, int) C"         1178      0      0           -1
+   15           "void C::method() C"         1180      0      0            1
+   16              "MPI_Barrier()  "         1184      0      0            1
+   17              "MPI_Barrier()  "         1217      0      0           -1
+   18                 "MPI_Send()  "         1222      0      0            1
+   19 "Message size sent to all node         1228      0      0            0
+   20 "Message size sent to all node         1229      0      0         2048
+   21 "Message size sent to all node         1229      0      0            0
+   22                 "MESSAGE_SEND"         1230      0      0     19073024
+   23                 "MPI_Send()  "         1235      0      0           -1
+   24                 "MPI_Recv()  "         1239      0      0            1
+   25 "Message size received from al         1262      0      0            0
+   26 "Message size received from al         1262      0      0         2048
+   27 "Message size received from al         1263      0      0            0
+   28                 "MESSAGE_RECV"         1263      0      0     19073024
+   29                 "MPI_Recv()  "         1263      0      0           -1
+   30           "void C::method() C"         1272      0      0           -1
+   31             "MPI_Finalize()  "         1275      0      0            1
+   32       "TauTraceClockOffsetEnd"         4683      0      0            0
+   33             "MPI_Finalize()  "         5889      0      0           -1
+   34     "int main(int, char **)  "         5893      0      0           -1
+   35                  "FLUSH_CLOSE"         5906      0      0            0
+   36                   "WALL_CLOCK"         5907      0      0   1257293692
+
+
+
+With -MPITRACE, it will look like:
+
+#=NO= =======================EVENT== ==TIME [us]= =NODE= =THRD= ==PARAMETER=
+    1                      "EV_INIT"            0      0      0            3
+    2     "int main(int, char **)  "            0      0      0            1
+    3                 "MPI_Init()  "            0      0      0            1
+    4                 "MPI_Init()  "            0      0      0           -1
+    5                   "WALL_CLOCK"            0      0      0   1257293547
+    6     "TauTraceClockOffsetStart"         1050      0      0            0
+    7            "MPI_Comm_size()  "         1090      0      0            1
+    8            "MPI_Comm_size()  "         1091      0      0           -1
+    9            "MPI_Comm_rank()  "         1095      0      0            1
+   10            "MPI_Comm_rank()  "         1095      0      0           -1
+   11           "void C::method() C"         1141      0      0            1
+   12              "MPI_Barrier()  "         1144      0      0            1
+   13              "MPI_Barrier()  "         1173      0      0           -1
+   14                 "MPI_Send()  "         1179      0      0            1
+   15 "Message size sent to all node         1185      0      0            0
+   16 "Message size sent to all node         1186      0      0         2048
+   17 "Message size sent to all node         1186      0      0            0
+   18                 "MESSAGE_SEND"         1187      0      0     19073024
+   19                 "MPI_Send()  "         1192      0      0           -1
+   20                 "MPI_Recv()  "         1196      0      0            1
+   21 "Message size received from al         1667      0      0            0
+   22 "Message size received from al         1668      0      0         2048
+   23 "Message size received from al         1668      0      0            0
+   24                 "MESSAGE_RECV"         1668      0      0     19073024
+   25                 "MPI_Recv()  "         1668      0      0           -1
+   26           "void C::method() C"         1678      0      0           -1
+   27             "MPI_Finalize()  "         1682      0      0            1
+   28       "TauTraceClockOffsetEnd"         2144      0      0            0
+   29             "MPI_Finalize()  "         3231      0      0           -1
+   30     "int main(int, char **)  "         3233      0      0           -1
+   31                  "FLUSH_CLOSE"         3245      0      0            0
+   32                   "WALL_CLOCK"         3246      0      0   1257293547

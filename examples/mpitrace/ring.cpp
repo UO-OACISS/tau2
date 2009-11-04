@@ -9,11 +9,11 @@ static const int anz = 512;
 class C {
 public:
   C(int m, int p) : me(m), proc(p) {
-  TAU_PROFILE("C &C::C(int, int)", CT(*this), TAU_GROUP_RING);
-}
+    TAU_PROFILE("C &C::C(int, int)", CT(*this), TAU_GROUP_RING);
+  }
   void method() {
-  TAU_PROFILE("void C::method()", CT(*this), TAU_GROUP_RING);
-
+    TAU_PROFILE("void C::method()", CT(*this), TAU_GROUP_RING);
+    
     int i;
     int field[anz];
     MPI_Status status;
@@ -41,6 +41,11 @@ private:
   int proc, me;
 };
 
+int foo() {
+  TAU_PROFILE("foo", "", TAU_USER);
+  printf ("foo: This function should not show up in the trace if -MPITRACE is configured\n");
+}
+
 int main(int argc, char **argv) 
 {
   TAU_PROFILE("int main(int, char **)", " ", TAU_DEFAULT);
@@ -55,6 +60,7 @@ int main(int argc, char **argv)
   MPI_Comm_size (MPI_COMM_WORLD, &proc);
   MPI_Comm_rank (MPI_COMM_WORLD, &me);
 
+  foo();
   C c(me, proc);
   c.method();
 
