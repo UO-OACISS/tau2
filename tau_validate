@@ -10,6 +10,9 @@ import os
 
 uniqID = 1
 
+serial_runner="./simple"
+parallel_runner=""
+
 class TimeoutError(Exception):
    """Raised if the external process takes too much"""
 
@@ -97,12 +100,14 @@ def system(command, timeout_sec=None):
         try:
             if timeout_sec is not None:
                 signal.alarm(timeout_sec)
-            data = child.fromchild.readlines()
             signal.alarm(0)
         except TimeoutError:
             os.kill(child.pid, 15)
             break
         retval = child.poll()
+    data = child.fromchild.readlines()
+    for line in data:
+       print line
     return retval
 
 def chdir(directory):
@@ -207,6 +212,26 @@ class Test:
     def buildTest(self):
         self.error ("Base class buildTest called")
 
+    def checkResults(self):
+       if os.path.exists("profile.0.0.0") == True:
+          retval = system("pprof")
+          self.runresult = "pass"
+       elif os.path.exists("tautrace.0.0.0.trc"):
+          self.runresult = "pass"
+       elif os.path.exists("MULTI__GET_TIME_OF_DAY/profile.0.0.0"):
+          self.runresult = "pass"
+       elif usesOption(self.makefile, "epilog") == True:
+          self.runresult = "pass"
+       elif usesOption(self.makefile, "vampirtrace") == True:
+          if os.path.exists("simple.otf") == True:
+             self.runresult = "pass"
+          else:
+             self.error("Error: run succeeded, but no trace found")
+             self.runresult = "fail"
+       else:
+          self.error("Error: run succeeded, but no profiles found")
+          self.runresult = "fail"
+
     def error(self,message):
         global errorsFound
         global uniqID
@@ -242,6 +267,9 @@ class SimpleTest(Test):
         system("mkdir " + self.buildpath)
         system("cp simple " + self.buildpath)
 
+
+
+
     def runTest(self, timeout):
         outputHeader("SimpleTest("+self.getActualTest()+", run (" + self.fullmakefile + ")")
         if self.checkApplicable() == False:
@@ -252,12 +280,8 @@ class SimpleTest(Test):
             output("Nothing to run")
             return
         chdir(self.buildpath)
-        os.environ['COUNTER1'] = 'GET_TIME_OF_DAY'
-        os.environ['COUNTER2'] = ''
-        os.environ['COUNTER3'] = ''
-        os.environ['COUNTER4'] = ''
-        os.environ['COUNTER5'] = ''
-        retval = system("./simple", timeout)
+        os.environ['TAU_METRICS'] = 'GET_TIME_OF_DAY'
+        retval = system(serial_runner, timeout)
         if retval > 0:
             self.error("Error: failed to run")
             self.runresult = "fail"
@@ -265,25 +289,31 @@ class SimpleTest(Test):
             self.error("Error: timeout in run")
             self.runresult = "timeout"
         else:
-            if os.path.exists("profile.0.0.0") == True:
-                retval = system("pprof")
-                self.runresult = "pass"
-            elif os.path.exists("tautrace.0.0.0.trc"):
-                self.runresult = "pass"
-            elif os.path.exists("MULTI__GET_TIME_OF_DAY/profile.0.0.0"):
-                self.runresult = "pass"
-            elif usesOption(self.makefile, "epilog") == True:
-                self.runresult = "pass"
-            elif usesOption(self.makefile, "vampirtrace") == True:
-                if os.path.exists("simple.otf") == True:
-                    self.runresult = "pass"
-                else:
-                    self.error("Error: run succeeded, but no trace found")
-                    self.runresult = "fail"
-            else:
-                self.error("Error: run succeeded, but no profiles found")
-                self.runresult = "fail"
+            self.checkResults()
 
+    def runMPITest(self, timeout):
+        outputHeader("MPITest("+self.getActualTest()+", run (" + self.fullmakefile + ")")
+        if parallel_runner == "":
+          output ("Skipping Test (TAU_VALIDATE_PARALLEL is not set, can't run MPI)")
+          return
+        if self.checkApplicable() == False:
+            return
+
+        chdir(TEST_ROOT + "/" + self.getActualTest())
+        if os.path.exists(self.buildpath) == False:
+            output("Nothing to run")
+            return
+        chdir(self.buildpath)
+        os.environ['TAU_METRICS'] = 'GET_TIME_OF_DAY'
+        retval = system(parallel_runner, timeout)
+        if retval > 0:
+            self.error("Error: failed to run")
+            self.runresult = "fail"
+        elif retval < 0:
+            self.error("Error: timeout in run")
+            self.runresult = "timeout"
+        else:
+            self.checkResults()
 
 class CTest(SimpleTest):
     def __init__(self, makefile):
@@ -389,7 +419,7 @@ class MpiCTest(SimpleTest):
         return True
 
     def runTest(self, timeout):
-        output ("Skipping Test (we won't run MPI tests yet)")
+        self.runMPITest(timeout)
 
 class MpiFTest(SimpleTest):
     def __init__(self, makefile):
@@ -406,7 +436,7 @@ class MpiFTest(SimpleTest):
         return True
 
     def runTest(self, timeout):
-        output ("Skipping Test (we won't run MPI tests yet)")
+        self.runMPITest(timeout)
         
 
 
@@ -418,7 +448,7 @@ class PdtTest(Test):
         return "pdt"
 
     def buildTest(self):
-        outputHeader("PdtTest (" + self.fullmakefile + ")")
+        outputHeader("Build: Test="+self.getActualTest()+", Makefile=" + self.fullmakefile + ")")
 
         if usesOption(self.makefile, "pdt") == False:
             output("Skipping, not configured with PDT")
@@ -449,7 +479,7 @@ class PdtTest(Test):
         
 
     def runTest(self, timeout):
-        outputHeader("PdtTest (" + self.fullmakefile + ")")
+        outputHeader("Run: Test="+self.getActualTest()+", Makefile=" + self.fullmakefile + ")")
 
         if usesOption(self.makefile, "pdt") == False:
             output("Skipping, not configured with PDT")
@@ -463,7 +493,8 @@ class PdtTest(Test):
             output("Nothing to run")
             return
         chdir(self.buildpath)
-        retval = system("./simple", timeout)
+        os.environ['TAU_METRICS'] = 'GET_TIME_OF_DAY'
+        retval = system(serial_runner, timeout)
         if retval > 0:
             self.error("Error: failed to run")
             self.runresult = "fail"
@@ -471,8 +502,37 @@ class PdtTest(Test):
             self.error("Error: timeout in run")
             self.runresult = "timeout"
         else:
-            self.runresult = "pass"
+            self.checkResults()
 
+    def runMPITest(self, timeout):
+        outputHeader("Run (MPI): Test="+self.getActualTest()+", Makefile=" + self.fullmakefile + ")")
+
+        if parallel_runner == "":
+          output ("Skipping Test (TAU_VALIDATE_PARALLEL is not set, can't run MPI)")
+          return
+
+        if usesOption(self.makefile, "pdt") == False:
+            output("Skipping, not configured with PDT")
+            return
+
+        if self.checkApplicable() == False:
+            return
+        
+        chdir(TEST_ROOT + "/" + self.getActualTest())
+        if os.path.exists(self.buildpath) == False:
+            output("Nothing to run")
+            return
+        chdir(self.buildpath)
+        os.environ['TAU_METRICS'] = 'GET_TIME_OF_DAY'
+        retval = system(parallel_runner, timeout)
+        if retval > 0:
+            self.error("Error: failed to run")
+            self.runresult = "fail"
+        elif retval < 0:
+            self.error("Error: timeout in run")
+            self.runresult = "timeout"
+        else:
+            self.checkResults()
 
 
 class PdtTestC(PdtTest):
@@ -532,7 +592,7 @@ class PdtMPITestC(PdtTest):
             return False
         return True
     def runTest(self, timeout):
-        output ("Skipping Test (we won't run MPI tests yet)")
+        self.runMPITest(timeout)
 
 
 
@@ -549,7 +609,7 @@ class PdtMPITestCPP(PdtTest):
             return False
         return True
     def runTest(self, timeout):
-        output ("Skipping Test (we won't run MPI tests yet)")
+        self.runMPITest(timeout)
 
 class PdtMPITestF(PdtTest):
     def __init__(self, makefile):
@@ -566,7 +626,7 @@ class PdtMPITestF(PdtTest):
             return False
         return True
     def runTest(self, timeout):
-        output ("Skipping Test (we won't run MPI tests yet)")
+        self.runMPITest(timeout)
 
 class PdtMPITestGF(PdtTest):
     def __init__(self, makefile):
@@ -583,20 +643,23 @@ class PdtMPITestGF(PdtTest):
             return False
         return True
     def runTest(self, timeout):
-        output ("Skipping Test (we won't run MPI tests yet)")
+        self.runMPITest(timeout)
 
 
 def usage():
     print ""
-    print "Usage: tau_validate [-v] [--html] [--tag <tag>] [--timeout <timeout>] [--table <file>] [--build] [--run] <target>"
+    print "Usage: tau_validate [-v] [--html] [--tag <tag>] [--timeout <timeout>]"
+    print "                    [--table <file>] [--build] [--run] <target>"
     print ""
     print "Options:"
     print ""
     print "-v                   Verbose output"
     print "--html               Output results in HTML"
     print "--tag <tag>          Validate only the subset of TAU stub makefiles matching <tag>"
-    print "--timeout <timeout>  Give up if a test does not succeed after timeout seconds of runtime"
-    print "--table <file>       Real-time creation of an addition <file> containing the summary table of the tests"
+    print "--timeout <timeout>  Give up if a test does not succeed after timeout "
+    print "                     seconds of runtime"
+    print "--table <file>       Real-time creation of an addition <file> containing "
+    print "                     the summary table of the tests"
     print "--build              Only build"
     print "--run                Only run"
     print "<target>             Specify an arch directory (e.g. rs6000), or the lib"
@@ -609,12 +672,23 @@ def usage():
     print "to determine if a given test applies to a given makefile, but it's not"
     print "perfect."
     print ""
+    print "Optional run scripts:"
+    print "Using the environment variables TAU_VALIDATE_SERIAL and TAU_VALIDATE_PARALLEL"
+    print "you can do custom execution of jobs.  A sample parallel runner (app will "
+    print "always be called 'simple'):"
+    print ""
+    print "#!/bin/bash"
+    print "mpirun -np 2 ./simple"
+    print ""
     print "Example:"
     print ""
     print "bash : ./tau_validate --html --table table.html --timeout 180 x86_64 &> results.html"
     print "tcsh : ./tau_validate --html --table table.html --timeout 180 x86_64 >& results.html"
     print ""
-    
+    print "With parallel runner:"
+    print ""
+    print "TAU_VALIDATE_PARALLEL=`pwd`/parallel.sh ./tau_validate -v --html x86_64 &> results.html"
+    print ""
     
     sys.exit(-1)
 
@@ -716,6 +790,14 @@ if target == "":
 
 
 target = os.path.realpath(target)
+
+
+
+if os.environ.has_key('TAU_VALIDATE_SERIAL'):
+   serial_runner=os.environ['TAU_VALIDATE_SERIAL']
+
+if os.environ.has_key('TAU_VALIDATE_PARALLEL'):
+   parallel_runner=os.environ['TAU_VALIDATE_PARALLEL']
 
 begin()
 
