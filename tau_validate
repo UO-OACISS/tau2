@@ -106,8 +106,9 @@ def system(command, timeout_sec=None):
             break
         retval = child.poll()
     data = child.fromchild.readlines()
-    for line in data:
-       print line
+    if verbose == True:
+       for line in data:
+          print line
     return retval
 
 def chdir(directory):
@@ -151,7 +152,7 @@ def closeTable():
         print "</table>"
 
 
-def outputSingle(tests):
+def outputSingle(tests, makefile):
     if verbose == True and html == False:
         for test in tests:
             print "%4s : %40s : %s %s" % (test.buildresult, test.name, makefile, test.message)
@@ -188,7 +189,7 @@ def outputSummary(testgrid):
             first = 0
             openTable(tests)
                 
-        outputSingle(tests)
+        outputSingle(tests, makefile)
         
     closeTable()        
 
