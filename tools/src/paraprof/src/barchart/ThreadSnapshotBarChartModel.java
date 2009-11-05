@@ -130,4 +130,8 @@ public class ThreadSnapshotBarChartModel extends AbstractBarChartModel {
 
     }
 
+	public DataSorter getDataSorter() {
+		return dataSorter;
+	}
+
 }

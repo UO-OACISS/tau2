@@ -19,6 +19,8 @@ import edu.uoregon.tau.common.ExternalTool;
 import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.common.VectorExport;
+import edu.uoregon.tau.paraprof.barchart.BarChart;
+import edu.uoregon.tau.paraprof.barchart.BarChartModel;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.interfaces.*;
@@ -37,11 +39,11 @@ import edu.uoregon.tau.vis.HeatMapWindow;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.53 2009/10/26 20:17:22 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.54 2009/11/05 09:43:31 khuck Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.53 $
+ * @version $Revision: 1.54 $
  */
 public class ParaProfUtils {
 
@@ -636,7 +638,7 @@ public class ParaProfUtils {
 
 
     public static JPopupMenu createFunctionClickPopUp(final ParaProfTrial ppTrial, final Function function, final Thread thread,
-            final Component owner) {
+    		final Component owner) {
         ActionListener actionListener = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 try {
@@ -670,8 +672,22 @@ public class ParaProfUtils {
                             ParaProf.getDirectoryManager().showSourceCode(function.getSourceLink());
                         }
                     } else if (arg.equals("Launch External Tool for this Function & Metric")) {
+                    	String metricName = "TIME";
+                    	if (owner instanceof BarChart) {
+                    		BarChart tmp = (BarChart)owner;
+                    		metricName = tmp.getBarChartModel().getDataSorter().getSelectedMetric().getName();
+                    	}
                     	List tools = ExternalTool.findMatchingTools((String)ppTrial.getTrial().getMetaData().get(DataSource.FILE_TYPE_NAME));
-                    	ExternalTool.launch(tools, function.getName(), ppTrial.getMetricName(0), thread.getNodeID(), thread.getThreadID(), owner);
+						ExternalTool.CommandParameters params = new ExternalTool.CommandParameters();
+						params.function = function.getName();
+						params.metric = metricName;
+						params.nodeID = thread.getNodeID();
+						params.threadID = thread.getThreadID();
+		                Map map = new TreeMap();
+		                map.putAll(thread.getMetaData());
+		                map.putAll(ppTrial.getDataSource().getMetaData());
+						params.metadata = map;
+                    	ExternalTool.launch(tools, params, owner);
                     }
 
                 } catch (Exception e) {
@@ -718,7 +734,7 @@ public class ParaProfUtils {
         jMenuItem.addActionListener(actionListener);
         functionPopup.add(jMenuItem);
 
-        if (ExternalTool.matchingToolExists((String) ppTrial.getTrial().getMetaData().get(DataSource.FILE_TYPE_NAME))) {
+        if ((thread.getNodeID() >= 0) && (ExternalTool.matchingToolExists((String) ppTrial.getTrial().getMetaData().get(DataSource.FILE_TYPE_NAME)))) {
             JMenuItem toolMenuItem = new JMenuItem("Launch External Tool for this Function & Metric");
             toolMenuItem.addActionListener(actionListener);
             functionPopup.add(toolMenuItem);

@@ -17,9 +17,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * Compares threads from (potentially) any trial
  * 
- * <P>CVS $Id: ComparisonBarChartModel.java,v 1.14 2009/09/24 21:09:41 amorris Exp $</P>
+ * <P>CVS $Id: ComparisonBarChartModel.java,v 1.15 2009/11/05 09:43:32 khuck Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  */
 public class ComparisonBarChartModel extends AbstractBarChartModel {
 
@@ -331,4 +331,8 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
     public void setThreads(List threads) {
         this.threads = threads;
     }
+
+	public DataSorter getDataSorter() {
+		return dataSorter;
+	}
 }

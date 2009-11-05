@@ -99,4 +99,8 @@ public class UserEventThreadBarChartModel extends AbstractBarChartModel {
         fireModelChanged();
     }
 
+
+	public DataSorter getDataSorter() {
+		return dataSorter;
+	}
 }

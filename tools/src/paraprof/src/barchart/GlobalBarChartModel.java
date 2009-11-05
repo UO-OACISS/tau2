@@ -15,9 +15,9 @@ import edu.uoregon.tau.perfdmf.Thread;
 /**
  * A BarChartModel for doing the GlobalDataWindow
  * 
- * <P>CVS $Id: GlobalBarChartModel.java,v 1.16 2009/09/10 00:13:50 amorris Exp $</P>
+ * <P>CVS $Id: GlobalBarChartModel.java,v 1.17 2009/11/05 09:43:32 khuck Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  */
 
 public class GlobalBarChartModel extends AbstractBarChartModel {
@@ -318,4 +318,8 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
         return theThreads;
     }
 
+
+	public DataSorter getDataSorter() {
+		return dataSorter;
+	}
 }

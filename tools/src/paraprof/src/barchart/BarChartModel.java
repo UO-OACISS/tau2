@@ -5,14 +5,16 @@ import java.awt.event.MouseEvent;
 
 import javax.swing.JComponent;
 
+import edu.uoregon.tau.paraprof.DataSorter;
+
 /**
  * Interface that BarChart will use to interrogate a model for data.
  * Rather than implementing this interface, clients should extend from
  * AbstractBarChartModel, which implements listening code.
  * 
- * <P>CVS $Id: BarChartModel.java,v 1.1 2005/09/26 21:12:12 amorris Exp $</P>
+ * <P>CVS $Id: BarChartModel.java,v 1.2 2009/11/05 09:43:32 khuck Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
  * @see AbstractBarChartModel
  */
@@ -84,4 +86,9 @@ public interface BarChartModel {
      * owners of the BarChartModels 
      */
     public void reloadData();
+    
+    /**
+     * Return the DataSorter object, so we can find out what metric this is
+     */
+    public DataSorter getDataSorter();
 }

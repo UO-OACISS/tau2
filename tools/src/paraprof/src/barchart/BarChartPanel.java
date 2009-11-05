@@ -11,6 +11,7 @@ import java.awt.print.PrinterException;
 import javax.swing.*;
 
 import edu.uoregon.tau.common.ImageExport;
+import edu.uoregon.tau.paraprof.DataSorter;
 import edu.uoregon.tau.paraprof.ParaProf;
 import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.paraprof.interfaces.ScrollBarController;
@@ -18,9 +19,9 @@ import edu.uoregon.tau.paraprof.interfaces.ScrollBarController;
 /**
  * Adds scroll ability, and handles image export/printing with header support.
  * 
- * <P>CVS $Id: BarChartPanel.java,v 1.8 2009/09/10 00:13:50 amorris Exp $</P>
+ * <P>CVS $Id: BarChartPanel.java,v 1.9 2009/11/05 09:43:32 khuck Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 public class BarChartPanel extends JScrollPane implements Printable, ImageExport, ScrollBarController {
 
@@ -202,6 +203,10 @@ public class BarChartPanel extends JScrollPane implements Printable, ImageExport
             public void reloadData() {
                 // TODO Auto-generated method stub
                 
+            }
+            
+            public DataSorter getDataSorter() {
+            	return null;
             }
         };
         

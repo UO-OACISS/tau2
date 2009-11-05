@@ -13,9 +13,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 /**
  * A BarChartModel for displaying one User Event over all threads.
  * 
- * <P>CVS $Id: UserEventBarChartModel.java,v 1.6 2009/09/10 00:13:51 amorris Exp $</P>
+ * <P>CVS $Id: UserEventBarChartModel.java,v 1.7 2009/11/05 09:43:33 khuck Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public class UserEventBarChartModel extends AbstractBarChartModel {
 
@@ -102,4 +102,8 @@ public class UserEventBarChartModel extends AbstractBarChartModel {
         fireModelChanged();
     }
 
+
+	public DataSorter getDataSorter() {
+		return dataSorter;
+	}
 }

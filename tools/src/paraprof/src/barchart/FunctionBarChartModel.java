@@ -17,9 +17,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  *  1) One function across threads, or 
  *  2) One function across all phases (for one thread).
  * 
- * <P>CVS $Id: FunctionBarChartModel.java,v 1.7 2009/06/26 00:43:49 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartModel.java,v 1.8 2009/11/05 09:43:32 khuck Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 
 public class FunctionBarChartModel extends AbstractBarChartModel {
@@ -173,4 +173,8 @@ public class FunctionBarChartModel extends AbstractBarChartModel {
         return null;
     }
 
+
+	public DataSorter getDataSorter() {
+		return dataSorter;
+	}
 }

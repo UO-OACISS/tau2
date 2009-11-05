@@ -17,9 +17,9 @@ import edu.uoregon.tau.paraprof.Searcher;
  * Clients should probably use BarChartPanel instead of BarChart
  * directly.
  * 
- * <P>CVS $Id: BarChart.java,v 1.10 2008/05/14 23:23:58 amorris Exp $</P>
+ * <P>CVS $Id: BarChart.java,v 1.11 2009/11/05 09:43:32 khuck Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  * @see BarChartPanel
  */
 public class BarChart extends JPanel implements MouseListener, MouseMotionListener, BarChartModelListener {
@@ -988,6 +988,10 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
 
     public void setAutoResize(boolean autoResize) {
         this.autoResize = autoResize;
+    }
+    
+    public BarChartModel getBarChartModel() {
+    	return this.model;
     }
 
 }
