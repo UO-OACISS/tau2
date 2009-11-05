@@ -600,7 +600,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     }
 
 #ifndef TAU_WINDOWS
-    atexit(TauAppShutdown);
+    if (tid == 0) {
+      atexit(TauAppShutdown);
+    }
 #endif //TAU_WINDOWS
 
     if (TheSafeToDumpData()) {
@@ -1317,6 +1319,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.257 $   $Date: 2009/11/04 00:13:11 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.257 2009/11/04 00:13:11 amorris Exp $ 
+ * $Revision: 1.258 $   $Date: 2009/11/05 18:57:01 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.258 2009/11/05 18:57:01 amorris Exp $ 
  ***************************************************************************/
