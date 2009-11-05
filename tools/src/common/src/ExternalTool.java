@@ -10,10 +10,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.StringTokenizer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.lang.Thread;
 import java.awt.Component;
 
@@ -52,11 +55,11 @@ Command_Label.1 = Something Else
 ----------------------------------------------------------------
 
  * 
- * <P>CVS $Id: ExternalTool.java,v 1.2 2009/09/07 09:51:26 khuck Exp $</P>
+ * <P>CVS $Id: ExternalTool.java,v 1.3 2009/11/05 08:55:58 khuck Exp $</P>
  * $RCSfile: ExternalTool.java,v $
- * $Date: 2009/09/07 09:51:26 $
+ * $Date: 2009/11/05 08:55:58 $
  * @author  $Author: khuck $
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  */
 public class ExternalTool {
 	
@@ -72,13 +75,17 @@ public class ExternalTool {
 	public static final String TOOL_NAME = "Tool_Name";
 	public static final String PROGRAM_NAME = "Program_Name";
 	public static final String FILE_TYPE = "File_Type";
+	public static final String WORKING_DIRECTORY = "Working_Directory";
+	public static final String ENVIRONMENT_VARIABLES = "Environment_Variables";
 	public static final String COMMAND = "Command";
 	public static final String COMMAND_LABEL = "Command_Label";
 	public static final String PARAMETER_NAME = "Parameter_Name";
 	public static final String DELIM = ".";
 	public static final String FUNCTION_NAME = "function_name";
+	public static final String SHORT_FUNCTION_NAME = "short_function_name";
 	public static final String METRIC_NAME = "metric_name";
-	public static final String PROCESS_ID = "process_ID";
+	public static final String METADATA = "metadata_";
+	public static final String NODE_ID = "node_ID";
 	public static final String THREAD_ID = "thread_ID";
 	private static final String HEADER = "Default Properties file for an external tool.";
 	
@@ -89,6 +96,8 @@ public class ExternalTool {
 	private Properties properties = null;
 	private String toolName = null;
 	private String programName = null;
+	private String workingDirectory = null;
+	private String[] environmentVariables = null;
 	private List/*<Command>*/ commands = new ArrayList/*<Command>*/();
 
 	/** 
@@ -110,8 +119,18 @@ public class ExternalTool {
 			} catch (IOException e) {
 				System.err.println(e.getMessage());
 			}
-			this.toolName = new String(this.properties.getProperty(TOOL_NAME, null));
-			this.programName = new String(this.properties.getProperty(PROGRAM_NAME, null));
+			this.toolName = this.properties.getProperty(TOOL_NAME, null);
+			this.programName = this.properties.getProperty(PROGRAM_NAME, null);
+			this.workingDirectory = this.properties.getProperty(WORKING_DIRECTORY, null);
+			String tmp = this.properties.getProperty(ENVIRONMENT_VARIABLES, null);
+			if (tmp != null) {
+				StringTokenizer st = new StringTokenizer(tmp, ":");
+				this.environmentVariables = new String[st.countTokens()];
+				int index = 0;
+				while (st.hasMoreTokens()) {
+					this.environmentVariables[index++] = st.nextToken();
+				}
+			}
 		}
 	}
 	
@@ -156,7 +175,7 @@ public class ExternalTool {
 					File file = files[i];
 					if (file.getName().startsWith(PREFIX) && file.getName().endsWith(SUFFIX)) {
 						ExternalTool tool = new ExternalTool(file.getPath());
-						System.out.println("Loaded properties file: " + tool.getPropertiesFile());
+						//System.out.println("Loaded properties file: " + tool.getPropertiesFile());
 						loadedTools.add(tool);
 					}
 				}
@@ -234,10 +253,12 @@ public class ExternalTool {
 		this.propertiesFile = propertiesFile;
 	}
 
-	public static void launch(List/*<ExternalTool>*/ tools, String function, String metric, int nodeID, int threadID, Component parentWindow) {
-    	// the mean and standard deviation IDs from ParaProf will be less than zero.  Fix that, if necessary.
-    	nodeID = (nodeID < 0) ? 0 : nodeID;
-    	threadID = (threadID < 0) ? 0 : threadID;
+	public static void launch(List/*<ExternalTool>*/ tools, CommandParameters params, Component parentWindow) {
+		// the mean and standard deviation IDs from ParaProf will be less than
+		// zero.  Fix that, if necessary.  This should not be called from mean
+		// or standard deviation thread, but just in case...
+    	params.nodeID = (params.nodeID < 0) ? 0 : params.nodeID;
+    	params.threadID = (params.threadID < 0) ? 0 : params.threadID;
 
 		List/*<Command>*/ commands = new ArrayList/*<Command>*/();
 		for (Iterator iter = tools.iterator() ; iter.hasNext() ; ) {
@@ -265,19 +286,44 @@ public class ExternalTool {
 		for (Iterator iter = command.parameterNames.iterator() ; iter.hasNext() ; ) {
 			String pName = (String)iter.next();
 			if (pName.equals(FUNCTION_NAME)) {
-				commandString = commandString.replaceAll(FUNCTION_NAME, function);
+				// remove callpath
+				String leaf = removeCallpath(params.function);
+				commandString = commandString.replaceAll(pName, leaf);
+			} else if (pName.equals(SHORT_FUNCTION_NAME)) {
+				String leaf = removeCallpath(params.function);
+				commandString = commandString.replaceAll(pName, Utility.shortenFunctionName(leaf));
 			} else if (pName.equals(METRIC_NAME)) {
-				commandString = commandString.replaceAll(METRIC_NAME, metric);
-			} else if (pName.equals(PROCESS_ID)) {
-				commandString = commandString.replaceAll(PROCESS_ID, Integer.toString(nodeID));
+				commandString = commandString.replaceAll(pName, params.metric);
+			} else if (pName.equals(NODE_ID)) {
+				commandString = commandString.replaceAll(pName, Integer.toString(params.nodeID));
 			} else if (pName.equals(THREAD_ID)) {
-				commandString = commandString.replaceAll(THREAD_ID, Integer.toString(threadID));
+				commandString = commandString.replaceAll(pName, Integer.toString(params.threadID));
+			} else if (pName.startsWith(METADATA)) {
+				String fieldName = pName.replaceFirst(METADATA, "");
+				String tmp = (String)params.metadata.get(fieldName);
+				if (tmp != null)
+					commandString = commandString.replaceAll(pName, tmp);
 			}
 		}
 		
-		ToolRunner tool = new ToolRunner(commandString);
+		ToolRunner tool = new ToolRunner(command.tool.workingDirectory, command.tool.environmentVariables, commandString);
 	}
 	
+	private static String removeCallpath(String function) {
+		StringTokenizer st = new StringTokenizer(function, "=>");
+		String leafNode = null;
+		String tmp = null;
+		// get the last one.
+		while(st.hasMoreTokens()) {
+			tmp = st.nextToken();
+			// we want to ignore samples at the end of the callpath
+			if (tmp.indexOf(':') < 0 && tmp.indexOf(File.separatorChar) < 0) {
+				leafNode = tmp;
+			}
+		}
+		return leafNode.trim();
+	}
+
 	public static void createDefaultTool(boolean overwrite) {
 		String fileName = PROPERTIES_LOCATION + PREFIX + "default" + SUFFIX;
 		
@@ -287,11 +333,13 @@ public class ExternalTool {
 			tool.properties.setProperty(TOOL_NAME, "Some Performance Tool");
 			tool.properties.setProperty(PROGRAM_NAME, "echo");  // command line application name
 			tool.properties.setProperty(FILE_TYPE, "PPK");  // Some file type which matches DataSource file types (String)
+			tool.properties.setProperty(WORKING_DIRECTORY, "");  // The working directory for the program
+			tool.properties.setProperty(ENVIRONMENT_VARIABLES, "");  // Environment variables which need to be set for the program
 			tool.properties.setProperty(COMMAND + DELIM + "0", "my_command");  //The first command available in the program
 			tool.properties.setProperty(COMMAND_LABEL + DELIM + "0", "Echo Parameters");  //A user-friendly label for the user to select for this command
 			tool.properties.setProperty(PARAMETER_NAME + DELIM + "0" + DELIM + "0", FUNCTION_NAME);
 			tool.properties.setProperty(PARAMETER_NAME + DELIM + "0" + DELIM + "1", METRIC_NAME);
-			tool.properties.setProperty(PARAMETER_NAME + DELIM + "0" + DELIM + "2", PROCESS_ID);
+			tool.properties.setProperty(PARAMETER_NAME + DELIM + "0" + DELIM + "2", NODE_ID);
 			tool.properties.setProperty(PARAMETER_NAME + DELIM + "0" + DELIM + "3", THREAD_ID);
 			OutputStream out;
 			try {
@@ -313,7 +361,12 @@ public class ExternalTool {
 			System.out.println(tool.dump());
 		}
 		Component mainWindow = null;
-		ExternalTool.launch(tools, "function", "metric", 0, 0, mainWindow);
+		ExternalTool.CommandParameters params = new ExternalTool.CommandParameters();
+		params.function = "function";
+		params.metric = "metric";
+		params.nodeID = 0;
+		params.threadID = 0;
+		ExternalTool.launch(tools, params, mainWindow);
 	} 
 	
 	class Command {
@@ -326,17 +379,33 @@ public class ExternalTool {
 			this.name = name;
 		}
 		public String toString() {
-			return tool.programName + ": " + label;
+			return tool.toolName + ": " + label;
 		}
 	}
 	
+	public static class CommandParameters {
+		public String function = null; 
+		public String metric = null;
+		public int nodeID = 0;
+		public int threadID = 0;
+		public Map metadata = null;
+	}
 }
 
 	class ToolRunner extends Thread {
 		private String commandString = null;
+		private String workingDirectory = null;
+		private String[] environmentVariables = null;
 		
 		ToolRunner(String commandString) {
 			this.commandString = commandString;
+			this.start();
+		}
+
+		ToolRunner(String workingDirectory, String[] environmentVariables, String commandString) {
+			this.commandString = commandString;
+			this.workingDirectory = workingDirectory;
+			this.environmentVariables = environmentVariables;
 			this.start();
 		}
 		
@@ -344,8 +413,14 @@ public class ExternalTool {
 			// run the command
 			Runtime r = Runtime.getRuntime();
 			try {
-				//System.out.println(commandString);
-				Process p = r.exec(commandString);
+				File dir = null;
+				if (workingDirectory != null) {
+					dir = new File(workingDirectory);
+					System.out.println("Working directory: " + workingDirectory);
+				}
+				String[] envp = null;
+				System.out.println(commandString);
+				Process p = r.exec(commandString, envp, dir);
 				
 				// get the output stream (for some reason named "input" stream
 				InputStream in = p.getInputStream();
@@ -362,18 +437,18 @@ public class ExternalTool {
 				// Read the output
 				String line;
 				while ((line = bufferedreader.readLine()) != null) {
-					System.out.println(line);
+					System.out.println("External Tool Output: " + line);
 				}
 				// Read the errors
 				while ((line = eBufferedreader.readLine()) != null) {
-					System.err.println(line);
+					System.err.println("External Tool Error: " + line);
 				}
 				
 				// this will block the TAU tool until the external tool finishes.
 				// If we retain this behavior, we should spawn a Java thread to make this call.
 				try {
 					if (p.waitFor() != 0) {
-					    System.err.println("exit value = " + p.exitValue());
+					    System.err.println("External Tool Exit Value = " + p.exitValue());
 					}
 				} catch (InterruptedException e) {
 				    System.err.println(e.getMessage());
@@ -391,7 +466,7 @@ public class ExternalTool {
 				}
 				
 				if (p.exitValue() == 0) {
-					System.out.println("Program exited normally.");
+					// System.out.println("Program exited normally.");
 				} else {
 					// what should we do?
 				}

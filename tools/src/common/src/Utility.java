@@ -3,6 +3,8 @@ package edu.uoregon.tau.common;
 import java.awt.Color;
 import java.awt.Font;
 import java.net.URL;
+import java.util.StringTokenizer;
+import java.util.NoSuchElementException;
 
 import javax.swing.ImageIcon;
 
@@ -101,4 +103,32 @@ public class Utility {
     	}
     	axis.setLabelFont(f);
     }
+
+    /**
+     * Shorten a function name
+     * @param longName the long function name
+     * @return the shortened function name
+     */
+    public static String shortenFunctionName(String longName) {
+        StringTokenizer st = new StringTokenizer(longName, "(");
+        String shorter = null;
+        try {
+            shorter = st.nextToken();
+            if (shorter.length() < longName.length()) {
+                shorter = shorter + "()";
+            }
+        } catch (NoSuchElementException e) {
+            shorter = longName;
+        }
+        longName = shorter;
+        st = new StringTokenizer(longName, "[{");
+        shorter = null;
+        try {
+            shorter = st.nextToken();
+        } catch (NoSuchElementException e) {
+            shorter = longName;
+        }
+        return shorter.trim();
+    }
+
 }
