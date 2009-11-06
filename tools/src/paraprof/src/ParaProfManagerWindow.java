@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.43 2009/10/19 20:40:16 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.44 2009/11/06 23:46:16 smillst Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.43 $
+ * @version	$Revision: 1.44 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -51,7 +51,8 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
     private JCheckBoxMenuItem showApplyOperationItem = null;
     private DerivedMetricPanel derivedMetricPanel = new DerivedMetricPanel(this);
-
+  //  private DerivedMetricWindow derivedMetricWindow = new DerivedMetricWindow(this);
+    
     private JScrollPane treeScrollPane;
 
     private Vector loadedDBTrials = new Vector();
@@ -73,6 +74,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     private JPopupMenu runtimePopup = new JPopupMenu();
 
     private Object clickedOnObject = null;
+    private DefaultMutableTreeNode selectedObject = null;
     private ParaProfMetric operand1 = null;
     private ParaProfMetric operand2 = null;
 
@@ -359,6 +361,10 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         showApplyOperationItem = new JCheckBoxMenuItem("Show Derived Metric Panel", false);
         showApplyOperationItem.addActionListener(this);
         optionsMenu.add(showApplyOperationItem);
+        
+        JMenuItem showDerivedWindow = new JMenuItem("Show Expression Window");
+        showDerivedWindow.addActionListener(this);
+        optionsMenu.add(showDerivedWindow);
 
         //Help menu.
         JMenu helpMenu = new JMenu("Help");
@@ -672,6 +678,27 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
                         jSplitOuterPane.setDividerLocation(1.00);
                     }
+                } else if (arg.equals("Show Expression Window")) {
+                	if(selectedObject != null){
+                		Object value = selectedObject.getUserObject();
+                  	  /*if(value instanceof ParaProfApplication){
+                			ParaProfApplication app = (ParaProfApplication) value;
+                			new DerivedMetricWindow(this,app,null,null).setVisible(true);
+                		}else if(value instanceof ParaProfExperiment){
+                			ParaProfExperiment e =(ParaProfExperiment) value;
+                			new DerivedMetricWindow(this,null,e,null).setVisible(true);
+                		}else */if(value instanceof ParaProfTrial){
+                		ParaProfTrial trial = (ParaProfTrial) value;
+                			new DerivedMetricWindow(this,null,null,trial).setVisible(true);
+                		}else{
+                		      JOptionPane.showMessageDialog(this, "Please select a trial");
+                		}
+                	}else{
+                		JOptionPane.showMessageDialog(this, "Please select a trial");
+                	}
+                	
+                	//derivedMetricWindow.setVisible(true);
+                	
                 } else if (arg.equals("About ParaProf")) {
                     ImageIcon icon = Utility.getImageIconResource("tau-medium.png");
                     JOptionPane.showMessageDialog(this, ParaProf.getInfoString(), "About ParaProf",
@@ -1169,6 +1196,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
             DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
             Object userObject = selectedNode.getUserObject();
+        	selectedObject = selectedNode;
 
             int location = jSplitInnerPane.getDividerLocation();
             if (selectedNode.isRoot()) {
@@ -1232,7 +1260,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     }
 
     public void treeWillExpandNEW(TreeExpansionEvent event) {
-        System.out.println("treeWillExpand: " + event);
         TreePath path = event.getPath();
         DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
 
