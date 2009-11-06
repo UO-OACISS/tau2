@@ -750,6 +750,7 @@ PDTARCHDIR=$(PDTARCHDIRFINAL)
 BFDLINK=
 
 #TAU_BFD#TAU_BFDLIB=$(BFDLINK) -lbfd -liberty -lz #ENDIF#
+#PTHREAD_AVAILABLE#TAU_COMPINST_PTHREAD_OPTIONS= -Dpthread_create=tau_pthread_create -Dpthread_exit=tau_pthread_exit#ENDIF#
 #COMPINST_INTEL9#TAU_COMPINST_OPTION=-tcollect #ENDIF#
 #COMPINST_INTEL9#TAU_COMPINST_LINKING= #ENDIF#
 #COMPINST_GNU#TAU_COMPINST_OPTION=-g -finstrument-functions #ENDIF#
@@ -903,7 +904,7 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
         -optSharedLinking="-L$(TAU_LIB_DIR)/shared$(TAU_CONFIG) $(TAU_MPI_FLIBS) $(TAU_EXLIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS)"\
 	$(TAU_COMPILER_EXTRA_OPTIONS) \
         -optIncludeMemory="$(TAU_INCLUDE_MEMORY)"\
-	-optCompInstOption="$(TAU_COMPINST_OPTION)"\
+	-optCompInstOption="$(TAU_COMPINST_OPTION) $(TAU_COMPINST_PTHREAD_OPTIONS)"\
 	-optCompInstLinking="$(TAU_COMPINST_LINKING)"
 #############################################
 
