@@ -2,13 +2,20 @@
 **                      TAU Portable Profiling Package                     **
 **                      http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 1997-2009						   **
+**    Copyright 1997-2010						   **
 **    Department of Computer and Information Science, University of Oregon **
+**    Research Centre Juelich, Germany                                     **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 *****************************************************************************
 
 Change log:
 ------------
+Version 2.19 changes (from 2.18):
+1. Added support for Chapel.
+2. Added support for UPC.
+3. Added support for automatically generating LD_PRELOADable .so files from a .h file using tau_wrap (-r libname.so).
+4. Derived metrics window in ParaProf and PerfExplorer.
+
 Version 2.18 changes (from 2.17):
 1. Added support for PIN based runtime instrumentation for Windows.
 2. Added support for compiler based instrumentation for PGI and IBM compilers.
