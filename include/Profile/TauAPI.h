@@ -112,8 +112,11 @@ extern "C" {
 #define TAU_PROFILE_EXIT(msg)  			Tau_exit(msg);
 
 #define TAU_PROFILE_SET_NODE(node) 		Tau_set_node(node);
+#define TAU_PROFILE_GET_NODE()                  Tau_get_node();
 #define TAU_PROFILE_SET_CONTEXT(context)	Tau_set_context(context);
+#define TAU_PROFILE_GET_CONTEXT()               Tau_get_context();
 #define TAU_PROFILE_SET_THREAD(thread)          Tau_set_thread(thread);
+#define TAU_PROFILE_GET_THREAD()                Tau_get_tid();
 
 
 #define TAU_REGISTER_THREAD()			Tau_register_thread();	
@@ -494,7 +497,7 @@ void Tau_profile_param1l(long data, const char *dataname);
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.101 $   $Date: 2009/08/26 00:55:56 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.101 2009/08/26 00:55:56 amorris Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: sameer $
+ * $Revision: 1.102 $   $Date: 2009/11/07 07:21:36 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.102 2009/11/07 07:21:36 sameer Exp $ 
  ***************************************************************************/
