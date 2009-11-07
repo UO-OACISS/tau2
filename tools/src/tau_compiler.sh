@@ -1314,6 +1314,10 @@ if [ $gotoNextStep == $TRUE ]; then
 
 	    tempTauFileName=${arrTau[$tempCounter]##*/}
 	    instrumentedFileForCompilation=" $tempTauFileName"
+            # We cannot parse UPC files. Leave them alone. Do not change filename
+            if [ $groupType == $group_upc ] ; then
+               instrumentedFileForCompilation=${arrFileName[$tempCounter]}
+            fi
 
 	    # Should we use compiler-based instrumentation on this file?
 	    extraopt=
