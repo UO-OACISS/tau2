@@ -1120,7 +1120,7 @@ static int writeProfile(FILE *fp, char *metricName, int tid, int metric,
 
 // Store profile data at the end of execution (when top level timer stops)
 int TauProfiler_StoreData(int tid) {
-
+  int i;
   finalizeTrace(tid);
   
 #ifdef TAU_EXP_SAMPLING
@@ -1134,6 +1134,16 @@ int TauProfiler_StoreData(int tid) {
       TauProfiler_DumpData(false, tid, "profile");
     }
   }
+#ifdef PTHREADS
+  if (RtsLayer::myThread() == 0 && tid == 0) {
+    /* clean up other threads? */
+    for (i =1; i < TAU_MAX_THREADS; i++) {
+      if (TauInternal_ParentProfiler(i) != (Profiler *) NULL) {
+        TauProfiler_StoreData(i);
+      }
+    }
+  }
+#endif /* PTHREADS */
   return 1;
 } 
 
@@ -1318,7 +1328,7 @@ bool TauProfiler_createDirectories() {
 }
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.258 $   $Date: 2009/11/05 18:57:01 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.258 2009/11/05 18:57:01 amorris Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.259 $   $Date: 2009/11/07 01:21:01 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.259 2009/11/07 01:21:01 sameer Exp $ 
  ***************************************************************************/
