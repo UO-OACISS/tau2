@@ -351,6 +351,16 @@ extern "C" void Tau_set_node(int node) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" int Tau_get_node(void) {
+  return RtsLayer::myNode();
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" int Tau_get_context(void) {
+  return RtsLayer::myContext();
+}
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_set_context(int context) {
   RtsLayer::setMyContext(context);
 }
@@ -1344,7 +1354,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.132 $   $Date: 2009/09/29 20:20:33 $
- * VERSION: $Id: TauCAPI.cpp,v 1.132 2009/09/29 20:20:33 sameer Exp $
+ * $Revision: 1.133 $   $Date: 2009/11/07 07:13:15 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.133 2009/11/07 07:13:15 sameer Exp $
  ***************************************************************************/
 
