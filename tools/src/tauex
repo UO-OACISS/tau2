@@ -30,7 +30,7 @@ usage()
     echo "        -T <$options> : specify TAU option"
 #    echo "        -T <MPI,PTHREAD,OPENMP,SERIAL,PROFILE,CALLPATH,TRACE,VAMPIRTRACE,EPILOG,DISABLE> : specify TAU option"
     echo "        -v: Debug/Verbose mode"
-    echo "        -XrunTAU-<options> : specify TAU library directly"
+    echo "        -XrunTAUsh-<options> : specify TAU library directly"
     echo ""
     echo "Notes:"
     echo "	Defaults if unspecified: -U -T MPI,PROFILE -e P_WALL_CLOCK_TIME"
@@ -40,6 +40,9 @@ usage()
     echo ""
     echo "Example:"
     echo "    mpirun -np 2 tauex -e P_WALL_CLOCK_TIME -e PAPI_TOT_INS -e PAPI_FP_INS -T MPI,PAPI,PROFILE -- ./ring"
+    echo "    OR: "
+    echo "    setenv TAU_METRICS P_WALL_CLOCK_TIME:PAPI_TOT_INS:PAPI_FP_INS
+    echo "    mpirun -np 2 tauex -XrunTAUsh-mpi-papi-pdt ./ring"
     echo ""
     exit
 }
@@ -119,7 +122,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tauex,v 1.16 2009/08/27 23:07:58 sameer Exp $';
+	      echo '$Id: tauex,v 1.17 2009/11/07 19:42:20 sameer Exp $';
 	      exit 0;
 	      ;;
 	  -m)
@@ -160,6 +163,11 @@ for arg in "$@" ; do
 	      ;;
 	  -XrunTAU-*)
 	      myarg=`echo $arg | sed 's/-XrunTAU-//'`
+	      binding_specified="shared-$myarg"
+	      shift
+	      ;;
+	  -XrunTAUsh-*)
+	      myarg=`echo $arg | sed 's/-XrunTAUsh-//'`
 	      binding_specified="shared-$myarg"
 	      shift
 	      ;;
