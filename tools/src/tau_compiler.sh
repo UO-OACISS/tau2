@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash   
 
 declare -i FALSE=-1
 declare -i TRUE=1
@@ -7,6 +7,7 @@ declare -i groupType=0
 declare -i group_f_F=1
 declare -i group_c=2
 declare -i group_C=3
+declare -i group_upc=4
 
 declare -i disablePdtStep=$FALSE
 declare -i hasAnOutputFile=$FALSE
@@ -602,6 +603,16 @@ for arg in "$@" ; do
 		fi
 		;;
 	    
+	    *.upc)
+		fileName=$arg
+		arrFileName[$numFiles]=$arg
+		arrFileNameDirectory[$numFiles]=`dirname $arg`
+		numFiles=numFiles+1
+		gotoNextStep=$TRUE
+		disablePdtStep=$TRUE
+		groupType=$group_upc
+                ;;
+
 	    *.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95)
 		fileName=$arg
 		arrFileName[$numFiles]=$arg
@@ -1036,13 +1047,17 @@ if [ $gotoNextStep == $TRUE ]; then
 		    evalWithDebugMessage "$pdtCmd" "Parsing with PDT Parser"
 		fi
 	    else
-		echo ""
-		echo "WARNING: Disabling instrumentation of source code."
-		echo "         Please either configure with -pdt=<dir> option"
-		echo "         or switch to compiler based instrumentation with -optCompInst"
-		echo ""
-		gotoNextStep=$FALSE
-		errorStatus=$TRUE
+                if [ $groupType == $group_upc ] ; then
+                  errorStatus=0
+                else
+		  echo ""
+		  echo "WARNING: Disabling instrumentation of source code."
+		  echo "         Please either configure with -pdt=<dir> option"
+		  echo "         or switch to compiler based instrumentation with -optCompInst"
+		  echo ""
+		  gotoNextStep=$FALSE
+		  errorStatus=$TRUE
+                fi
 	    fi
 	fi
 
@@ -1061,7 +1076,7 @@ fi
 ####################################################################
 # Instrumenting the Code
 ####################################################################
-if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE ]; then
+if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE -a $groupType != $group_upc ]; then
 
     tempCounter=0
     while [ $tempCounter -lt $numFiles ]; do
@@ -1247,9 +1262,14 @@ if [ $gotoNextStep == $TRUE ]; then
 		    extraopt=$optCompInstOption
 		fi
 	    fi
+
+            # We cannot parse UPC files. Leave them alone. Do not change filename
+            if [ $groupType == $group_upc ] ; then
+               instrumentedFileForCompilation=${arrFileName[$tempCounter]}
+            fi
 	    newCmd="$CMD $headerInstFlag -I${arrFileNameDirectory[$tempCounter]} $argsRemaining $instrumentedFileForCompilation $OUTPUTARGSFORTAU $optCompile $extraopt"
 
-	    #echoIfDebug "cmd before appending the .o file is $newCmd"
+	    echoIfDebug "cmd before appending the .o file is $newCmd"
 	    if [ $hasAnOutputFile == $TRUE ]; then
 		newCmd="$newCmd -o $passedOutputFile" 
 	    else
@@ -1258,7 +1278,11 @@ if [ $gotoNextStep == $TRUE ]; then
 	    echoIfDebug "PassedOutFile: $passedOutputFile outputFile: $outputFile"
 	    #echoIfDebug "cmd after appending the .o file is $newCmd"
 
-	    evalWithDebugMessage "$newCmd" "Compiling with Instrumented Code"
+            if [ $groupType == $group_upc ]; then 
+	      evalWithDebugMessage "$newCmd" "Compiling UPC Code"
+            else
+	      evalWithDebugMessage "$newCmd" "Compiling with Instrumented Code"
+            fi 
 	    echoIfVerbose "Looking for file: $outputFile "
 	    if [ $hasAnOutputFile == $TRUE ]; then
 		if [  ! -e $passedOutputFile ]; then
