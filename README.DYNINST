@@ -1,14 +1,14 @@
-Using TAU with Dyninst 4.x.
+Using TAU with Dyninst 6.x.
 ---------------------------
-Part I) Configuring and installing Dyninst 2.x 
+Part I) Configuring and installing Dyninst 6.x
 
-% tar xzvf  binDist4.x.tar.gz
+% tar xzvf  dyninst_linux_x86_6.X.tar.gz
 (Agree to Dyninst licensing terms)
-% cd <dir>/dyninstAPI-4.x
+% cd <dir>/dyninstAPI
 
 Add to .cshrc file: 
 
-setenv DYNINST_ROOT <dyninst-dir>/dyninstAPI-4.x/
+setenv DYNINST_ROOT <dyninst-dir>/dyninstAPI
 setenv PLATFORM    i386-unknown-linux2.4
 setenv DYNINSTAPI_RT_LIB $DYNINST_ROOT/$PLATFORM/lib/libdyninstAPI_RT.so.1
 setenv LD_LIBRARY_PATH <tau-root>/i386_linux/lib\:$DYNINST_ROOT/lib/$PLATFORM
@@ -32,7 +32,7 @@ Part 2: Configuring TAU with Dyninst
 
 % tar zxvf tau-2.x.tar.gz
 % cd <tau-root>
-% configure -dyninst=$DYNINST_ROOT
+% configure -dyninst=$DYNINST_ROOT -mpi
 % make install
 % set path=(<tau-root>/i386_linux/bin $path)
 % cd examples/dyninst
@@ -56,10 +56,10 @@ Note, by default taurun doesn't need the specification of the TAU library to
 use (in the second -XrunTAUsh[-options] argument) but you can specify it when
 more than one version of TAU is configured. For e.g.,
 
-% mpirun -np 4 tau.papiwallclock.sh <args>
-% cat tau.papiwallclock.sh 
+% mpirun -np 4 tau.papi.sh <args>
+% cat tau.papi.sh 
 #!/bin/tcsh
-/home/users/sameer/tau2/i386_linux/bin/tau_run -XrunTAUsh-papiwallclock-papi /home/users/sameer/tau2/examples/mpi-ek/ek $*
+/home/users/sameer/tau2/i386_linux/bin/tau_run -XrunTAUsh-papi-mpi-pdt /home/users/sameer/tau2/examples/mpi-ek/ek $*
 
 
 To use tau_run to re-write a binary file, use the -o <outputfile> option. 
@@ -70,9 +70,8 @@ creates a.out
 does runtime pre-execution instrumentation by spawning a.out.
 % tau_run -o a.out.rewritten a.out
 reads a.out, instruments it and rewrites the binary image as a.out.rewritten
-(typically in _dyninstsaved<n> directory where n = 0, 1, 2...)
-NOTE: The binary rewriting feature has been tested under Sparc Solaris 2.8+
-with the application binary files created with the Sun F90 compiler. 
+NOTE: The binary rewriting feature has been tested under Linux x86
+with the application binary files created with the gnu compilers. 
 
 SELECTIVE INSTRUMENTATION FEATURES:
 -----------------------------------
