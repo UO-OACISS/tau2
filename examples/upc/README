@@ -1,0 +1,31 @@
+To use TAU with UPC (Berkeley UPC with GASP), please:
+
+% ./configure -upcnetwork=mpi -mpi
+% make install
+% setenv TAU_MAKEFILE <taudir>/<arch>/lib/Makefile.tau-upc-mpi
+% tau_cc.sh gasp_test.upc -o gasp_test
+% mpirun -np 4 ./gasp_test
+% paraprof
+
+This shows the performance data for all the UPC GASP entities. 
+
+To use compiler based instrumentation for seeing the performance of individual
+user functions, please set:
+% setenv TAU_OPTIONS '-optCompInst -optVerbose'
+
+% tau_cc.sh gasp_test.upc -o gasp_test
+% mpirun -np 4 ./gasp_test
+% paraprof
+
+
+To use a different network, say udp, the same procedure applies but the launch command is different:
+
+% ./configure -upcnetwork=udp 
+% make install
+% setenv TAU_MAKEFILE <taudir>/<arch>/lib/Makefile.tau-upc-udp
+% setenv TAU_OPTIONS '-optCompInst -optVerbose'     [OPTIONAL]
+% tau_cc.sh gasp_test.upc -o gasp_test
+% upcrun -localhost -n 4 ./gasp_test
+% paraprof
+
+For any questions, please contact tau-bugs@cs.uoregon.edu.
