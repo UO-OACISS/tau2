@@ -19,6 +19,10 @@ cthreads	- Same as threads above, but for a C program. An
 		  instrumented C program may be compiled with a C compiler,
 		  but needs to be linked with a C++ linker.
 
+upc             - Shows how to use TAU with GASP and compiler based
+                  instrumentation for a UPC program with the Berkeley upcc 
+                  compiler and GASP profiling interface.
+
 sproc		- SGI sproc threads example. TAU should be configured with
 		  -sproc option to use this.
 
