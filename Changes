@@ -12,9 +12,15 @@ Change log:
 ------------
 Version 2.19 changes (from 2.18):
 1. Added support for Chapel.
-2. Added support for UPC.
+2. Added support for UPC (Berkeley upcc compiler, GASP, supports -optCompInst).
 3. Added support for automatically generating LD_PRELOADable .so files from a .h file using tau_wrap (-r libname.so).
 4. Derived metrics window in ParaProf and PerfExplorer.
+5. -bfd=download now downloads binutils-2.20 instead of 2.18.
+6. Added an aligned stacked bar chart in PerfExplorer that is similar to unchecking "Stack Bars Together" box in paraprof's options window.
+7. Paraprof now automatically adjusts the memory used (tau_javamax.sh)
+8. Added support for Intel compilers on Cray XT systems.
+9. tau_validate now uses TAU_VALIDATE_PARALLEL and TAU_VALIDATE_SERIAL env vars to run the tests (see --help). 
+
 
 Version 2.18 changes (from 2.17):
 1. Added support for PIN based runtime instrumentation for Windows.
