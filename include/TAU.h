@@ -70,6 +70,9 @@ extern void Tau_stop(const char *name);
 #define TAU_PROFILE_SET_NODE(node)
 #define TAU_PROFILE_SET_CONTEXT(context)
 #define TAU_PROFILE_SET_THREAD(thread)
+#define TAU_PROFILE_GET_NODE() -1
+#define TAU_PROFILE_GET_THREAD() -1
+#define TAU_PROFILE_GET_CONTEXT() -1
 #define TAU_PROFILE_SET_GROUP_NAME(newname)
 #define TAU_PROFILE_TIMER_SET_GROUP_NAME(t, newname)
 #define TAU_PROFILE_CALLSTACK()    
