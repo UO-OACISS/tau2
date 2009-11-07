@@ -142,6 +142,11 @@ case $1 in
 	echo "s,^VAMPIRTRACEMPILIBS=.*$,VAMPIRTRACEMPILIBS=$vampirtracempilibs,g" >> $sedout
 	;;
 
+     upcnetwork=*)
+	upcnetwork=`echo $1 | sed -e 's/^upcnetwork=//' -e 's/#/ /g'`
+	echo "s,^UPCNETWORK=.*$,UPCNETWORK=$upcnetwork,g" >> $sedout
+	;;
+
      sicortexlink=*)
         sicortexlink=`echo $1 | sed -e 's/^sicortexlink=//' -e 's/#/ /g'`
 	echo "s@^SICORTEXLINK=.*\$@SICORTEXLINK=$sicortexlink@g" >> $sedout
@@ -1071,6 +1076,10 @@ case $1 in
 # TRACING OPTIONS
      TRACE)
 	echo "NOTE: Enabled Tracing. Compiling with -DTRACING_ON"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     UPCC)
+	echo "NOTE: Enabled UPC GASP support in TAU."
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      KAI)

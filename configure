@@ -197,6 +197,7 @@ for arg in "$@"; do
     echo "-epilogbin=<dir> ........... Specify full path to EPILOG bin directory."
     echo "-epiloginc=<dir> ....... Specify full path to EPILOG include directory."
     echo "-vampirtrace=<dir>  .. Specify location of VampirTrace Tracing package."
+    echo "-upcnetwork=<value> .. Specify network (mpi, udp,...) for Berkeley UPC."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
     echo "-tag=<unique name> ........ Specify a tag to identify the installation."
@@ -400,6 +401,8 @@ epilogbindir=bin
 epilogincdir=
 vampirtrace=no
 vampirtraceshow=no
+upnetwork=unknown
+upc=no
 forceshared=no
 opari_region=no
 opari_construct=no
@@ -748,6 +751,12 @@ for arg in "$@"; do
           echo "Error: Cannot access VAMPIRTRACE directory $vampirtracedir"
           exit 1
       fi
+      shift
+      ;;
+
+  -upcnetwork=*)
+      upc=yes
+      upcnetwork=`echo $arg | sed -e 's/-upcnetwork=//'`
       shift
       ;;
 
@@ -4808,6 +4817,15 @@ if [ $opari = yes ] ; then
       fixmakeargs="$fixmakeargs OPARI_REGION"
     fi
 fi
+
+   if [ $upc = yes ]; then
+     tauoptions="${tauoptions}-upc"
+    # If MPI is used -mpi already appears in the name. If it is not, add it
+     if [ "x$upcnetwork" != "xmpi" ]; then
+       tauoptions="${tauoptions}-$upcnetwork"
+     fi
+     fixmakeargs="$fixmakeargs UPCC upcnetwork=$upcnetwork"
+   fi
 
 if [ $trace = yes ] ; then
     if [ $profile = yes ] ; then

@@ -54,6 +54,8 @@ TAUINC	      = -I$(TAUROOT)/include
 
 CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE)  
 
+UPCFLAGS        = $(TAUINC) $(PROFILEOPTS) 
+
 CFLAGS        = $(TAU_MPI_INCLUDE) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS)   
 
 INCDIR	      = $(TAUROOT)/include/Profile
@@ -72,7 +74,8 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/RenciSTFF.h    $(INCDIR)/PapiThreadLayer.h  \
 		$(INCDIR)/TauEnv.h	 $(INCDIR)/TauInit.h          \
 		$(INCDIR)/TauTrace.h                                  \
-		$(TAUROOT)/include/tau_internal.h $(INCDIR)/TauSampling.h
+		$(TAUROOT)/include/tau_internal.h $(INCDIR)/TauSampling.h \
+		$(INCDIR)/TauGASP.h
 
 LDFLAGS	      =
 
@@ -97,7 +100,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o \
 		$(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) TauSampling.o \
 		TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
-		$(RENCI_STFF_O)
+		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_GASPU_O)
 
 STATIC_OBJS   = Comp_gnu.o $(PGIACC_STATIC_O)
 SHARED_OBJS   = $(PGIACC_O)
@@ -560,6 +563,13 @@ TauHandler.o : TauHandler.cpp $(HDRS)
 
 TauMemory.o : TauMemory.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauGASP.o : TauGASP.c $(HDRS)
+	$(TAU_UPCC) $(UPCFLAGS) -c $(@:.o=.c)
+
+TauGASPU.o : TauGASPU.upc $(HDRS)
+	$(TAU_UPCC) $(UPCFLAGS) -c $(@:.o=.upc)
+
 
 ktau_syscall.o : ktau_syscall.c $(HDRS)
 	$(CC) $(CXXFLAGS) -c $(@:.o=.c)

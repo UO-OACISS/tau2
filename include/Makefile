@@ -49,6 +49,7 @@ TAU_CXX_FE=$(CONFIG_CXX)
 ##SC_PATHSCALE#TAU_CC_FE=gcc #ENDIF#
 ##SC_PATHSCALE#TAU_CXX_FE=g++ #ENDIF#
 
+
 USER_OPT=-g
 EXTRADIR=
 EXTRADIRCXX=
@@ -87,6 +88,7 @@ PYTHON_LIBDIR=
 PERFINCDIR=
 PERFLIBDIR=
 PERFLIBRARY=
+UPCNETWORK=
 TAU_SHMEM_INC=
 TAU_SHMEM_LIB=
 TAU_CONFIG=
@@ -145,10 +147,15 @@ F90_ABI	= $(ABI)
 #IBM64_FORTRAN#F90_ABI	     = -q64 		  #ENDIF#
 #######################################################################
 
+#UPCC#TAU_UPCC= upcc "-inst-toolname=gasp-tau" -inst -network=$(UPCNETWORK) #ENDIF#
+
+#UPCC#TAU_GASP_O=TauGASP.o #ENDIF#
+#UPCC#TAU_GASPU_O=TauGASPU.o #ENDIF#
 ############# Standard Defines ##############
 TAU_CC = $(CONFIG_CC) $(ABI) $(ISA)
 TAU_CXX = $(CONFIG_CXX) $(ABI) $(ISA) $(USER_OPT)
 TAU_RUN_CC = $(FULL_CC) $(ABI) $(ISA)
+#UPCC#TAU_RUN_CC = $(TAU_UPCC) #ENDIF#
 TAU_RUN_CXX = $(FULL_CXX) $(ABI) $(ISA)
 TAU_INSTALL = /bin/cp
 TAU_SHELL = /bin/sh
@@ -885,6 +892,10 @@ TAU_TRACE_INPUT_LIB = -L$(TAU_LIB_DIR) -lTAU_traceinput$(TAU_CONFIG)
 #SP1#TAU_SHMEM_OBJS		     = TauShmemTurbo.o	  #ENDIF#
 #GPSHMEM#TAU_SHMEM_OBJS		     = TauShmemGpshmem.o  #ENDIF#
 
+TAU_CCOMPILER     = $(TAU_CC)
+#UPCC#TAU_CCOMPILER     = $(TAU_UPCC)  #ENDIF#
+
+
 TAU_SHMEM_INCLUDE	= $(TAU_SHMEM_INC)
 
 TAU_SHMEM_LIBS	= -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/ -lTauShmem$(TAU_CONFIG) $(TAU_SHMEM_LIB)
@@ -896,7 +907,7 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
         -optTauInstr="$(TAU_BIN_DIR)/tau_instrumentor" \
         -optNoMpi \
 	-optOpariDir="$(OPARIDIR)" -optOpariTool="$(TAU_OPARI_TOOL)" \
-	-optTauCC="$(TAU_CC)" \
+	-optTauCC="$(TAU_CCOMPILER)" \
 	-optTauIncludes="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE)" \
 	-optTauDefs="$(TAU_DEFS)" \
         -optTauCompile="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(TAU_DEFS) "\
