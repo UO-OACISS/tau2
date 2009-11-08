@@ -2,7 +2,7 @@
 **			TAU Performance System(R)                          **
 **			http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 1997-2008				   	   	   **
+**    Copyright 1997-2010				   	   	   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 **    Research Center Juelich, ZAM Germany			           **
@@ -10,7 +10,7 @@
 /*******************************************************************
  *                                                                 *
  *        Tuning and Analysis Utilities Installation Procedure     *
- *                           Version 2.18                          *
+ *                           Version 2.19                          *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -36,7 +36,7 @@ Microsoft Windows users should refer to instructions in README.WINDOWS.txt.
 The following instructions are meant for Unix Users.
 
 1.  Configure the package for your system. We strongly urge you to see the section
-"1) INSTALLING TAU" below for examples (Linux clusters, AIX, BGL, XT3)
+"1) INSTALLING TAU" below for examples (Linux clusters, AIX, BGP, XT5)
 
 After uncompressing and untarring tau, the user needs to configure, compile and
 install the package. This is done by invoking:
