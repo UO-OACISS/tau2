@@ -20,7 +20,7 @@ Version 2.19 changes (from 2.18):
 7. Paraprof now automatically adjusts the memory used (tau_javamax.sh)
 8. Added support for Intel compilers on Cray XT systems.
 9. tau_validate now uses TAU_VALIDATE_PARALLEL and TAU_VALIDATE_SERIAL env vars to run the tests (see --help). 
-
+10. Added support for external tool configuration in PerfExplorer.
 
 Version 2.18 changes (from 2.17):
 1. Added support for PIN based runtime instrumentation for Windows.
