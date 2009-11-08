@@ -1,7 +1,7 @@
 /******************************************************************* 
  *                                                                 *
  *       	Tuning and Analysis Utilities Credits  		   *
- *                           Version 2.16                          *
+ *                           Version 2.19                          *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -11,7 +11,7 @@
  *        web browser.                                             *
  *    For more information, including updates and new releases,    *
  *        and documentation, see                                   *
- *        http://www.cs.uoregon.edu/research/tau                   *
+ *        http://tau.uoregon.edu                                   *
  *    For help, reporting bugs, and making suggestions, please     *
  *        send e-mail to tau-bugs@cs.uoregon.edu                   *
  *******************************************************************/
@@ -22,20 +22,13 @@ TAU Portable Profiling:
 Sameer Shende, University of Oregon
 Alan Morris, University of Oregon
 Wyatt Spear, University of Oregon
-Kevin Huck, University of Oregon
-Aroon Nataraj, University of Oregon
 Scott Biersdorff, University of Oregon
-Suravee Suthikulpani, University of Oregon
-Chris Hoge, University of Oregon
-Kai Li, University of Oregon
-Li Li, University of Oregon
-Robert Michael Ansell-Bell, University of Oregon
-Kathleen Lindlan, University of Oregon
-Ariya Lohavanichbutr, University of Oregon
-Nicholas Trebon, University of Chicago
+Aroon Nataraj, University of Oregon
+Kevin Huck, Barcelona Supercomputing Center
 Peter Beckman, Argonne National Laboratory
-Steve Karmesin, Los Alamos National Laboratory
 Bernd Mohr, Research Centre Jülich, ZAM, Germany
+Markus Geimer, Research Centre Jülich, ZAM, Germany
+
 
 Principal Investigators:
 ------------------------
