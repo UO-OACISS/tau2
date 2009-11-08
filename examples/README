@@ -1,6 +1,11 @@
 This directory contains example programs that illustrate the use of TAU
 instrumentation and measurement options.
 
+taucompiler     - This directory has examples on using the TAU compiler scripts
+                  tau_cxx.sh, tau_cc.sh and tau_f90.sh to replace your compilers.
+                  This requires TAU to be configured with -mpi -pdt=<dir> parameters.
+                  Please refer to the c, mpic++, and f90 subdirectories. 
+ 
 taututorial     - This MPI C++ example shows how to integerate TAU in your
                   build system. This requires TAU to be configured with 
                   -mpiinc=<dir> -mpilib=<dir> -pdt=<dir> options. Please 
@@ -213,12 +218,6 @@ memory          - TAU can sample memory utilization on some platforms using the
 malloc          - TAU's malloc and free wrappers can help pinpoint where the memory was
                   allocated/deallocated in a C/C++ program. It can show the size of memory
                   malloc'ed and free'd along with the source file name and line number. 
-
-taucompiler	- using $(TAU_COMPILER) in your Makefile before the compiler 
-                  name invokes tau_compiler.sh - a shell script that instruments
-                  and compiles the source file and links in the correct 
-                  libraries. A Fortran 90 example illustrates its use in the 
-                  f90 subdirectory.
 
 userevent       - TAU's user defined events can show context information 
                   highlighting the callpath that led to the event. This is 
