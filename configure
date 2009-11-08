@@ -4095,7 +4095,7 @@ if [ $mpi = yes ] ; then
     fi
   
     # Cases
-    if [ -r $mpilib/libmpi.a -o -r $mpilib/libmpi.so ] ; then
+    if [ -r $mpilib/libmpi.a -o -r $mpilib/libmpi.so -o -r $mpilib/libmpi.dylib ] ; then
       #echo "libmpi.* found!!"
 	if [ "x$mpilibrary" = "xno" ] ; then 
 	    mpilibrary=-lmpi
@@ -4105,7 +4105,7 @@ if [ $mpi = yes ] ; then
 	    fi
 
 	# OpenMPI
-	if [ -r $mpilib/libmpi_cxx.so ] ; then 
+	if [ -r $mpilib/libmpi_cxx.so -o -r $mpilib/libmpi_cxx.dylib ] ; then 
 	    mpilibrary='-lmpi -lmpi_cxx'
 	fi
 
