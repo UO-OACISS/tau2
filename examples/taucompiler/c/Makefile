@@ -11,11 +11,7 @@
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
  
-TAUROOTDIR	= ../../..
-
-include $(TAUROOTDIR)/include/Makefile
-
-CC		= $(TAUROOTDIR)/$(TAU_ARCH)/bin/tau_cc.sh
+CC		= tau_cc.sh
 
 MAKEFILE      	= Makefile
 
