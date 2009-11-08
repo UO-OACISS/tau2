@@ -15,7 +15,7 @@ TAUROOTDIR	= ../../..
 
 include $(TAUROOTDIR)/include/Makefile
 
-CC		= $(TAU_COMPILER) $(TAU_CC)
+CC		= $(TAUROOTDIR)/$(TAU_ARCH)/bin/tau_cc.sh
 
 MAKEFILE      	= Makefile
 
