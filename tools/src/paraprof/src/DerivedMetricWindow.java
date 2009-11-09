@@ -227,10 +227,10 @@ ChangeListener {
 				//Add to the list of loaded trials.
 				//  loadedDBTrials.add(ppTrial);
 				trials.add(ppTrial);
-			}else{
-				trials.add(ppTrial);
 			}
 
+		}else{
+			trials.add(ppTrial);
 		}
 
 
@@ -240,7 +240,6 @@ ChangeListener {
 		metrics.removeAllItems();
 
 		for(ParaProfTrial ppTrial:trials){
-			System.out.println(ppTrial);
 			// refresh the metrics list
 			if( ppTrial.getMetrics()!= null){
 				Iterator l = ppTrial.getMetrics().iterator();
