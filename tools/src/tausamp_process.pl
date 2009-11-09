@@ -104,6 +104,9 @@ sub process_trace {
   my @startTokens;
   my @stopTokens;
 
+  my $totalSamples = 0;
+  my $negativeSamples = 0;
+
   # Read the trace
   my ($junk, $exe, $node);
   open (TRACE, "tac $trace_file |");
@@ -182,14 +185,13 @@ sub process_trace {
         my $newpc = translate_pc($exe, $pc);
 
         if (($deltaStop < 0) || ($deltaStart < 0)) {
-          print "ignoring negative sample, location: $newpc, callpath: $newCallpath\n";
+          #print "ignoring negative sample, location: $newpc, callpath: $newCallpath\n";
+		  $negativeSamples = $negativeSamples + 1;
 		  if ($inclusive) {
-		    pop(@events);
-		    shift(@tmpCallpath);
-		  }
-		  else {
 		    last;
 		  }
+		  pop(@events);
+		  shift(@tmpCallpath);
         }
 
         # Output the processed data
@@ -206,25 +208,26 @@ sub process_trace {
 
         print OUTPUT " | $newCallpath\n";
 
-		if ($inclusive) {
-		  pop(@events);
-		  shift(@tmpCallpath);
-		}
-		else {
+		if (!$inclusive) {
 		  last;
 		}
+		pop(@events);
+		shift(@tmpCallpath);
       }
+	  $totalSamples = $totalSamples + 1;
     }
   }
   print OUTPUT "# node: $node\n";
+  if ($negativeSamples > 0) {
+    print "$negativeSamples negative runtime deltas ignored out of $totalSamples total samples\n"
+  }
 }
 
 sub main {
   my $inclusive = 0;
-  if ($#ARGV > 0) {
-    if ($ARGV[$0] == "--inclusive" || $ARGV[$0] == "-i") {
-	  $inclusive = 1;
-	}
+  if (defined $ARGV[0] && ($ARGV[0] == "--inclusive" || $ARGV[0] == "-i")) {
+    $inclusive = 1;
+    print "Processing inclusive samples...\n";
   }
   my $pattern = "ebstrace.raw.*.*.*.*";
   while (defined(my $filename = glob($pattern))) {
@@ -237,6 +240,7 @@ sub main {
     print "processing $filename ...\n";
     process_trace($def_file, $trace_file, $out_file, $inclusive);
   }
+  print "...done.\n";
 }
 
 main

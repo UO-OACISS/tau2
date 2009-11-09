@@ -146,7 +146,7 @@ def processFile(infname, outputFile):
 				if callpathID != currentCallpath:
 					currentCallpath = callpathID
 					#outputFile.write("T " + str(callpathID) + " " + str(timeRange) + "\n")
-					outputFile.write("T " + callpath.replace(" ", ":") + " " + str(timeRange) + "\n")
+					outputFile.write("T " + callpath.replace(" ", ":") + " " + str(int(timeRange)) + "\n")
 				outputFile.write(tmp)
 
 def sortedDictValues(adict):
@@ -162,16 +162,16 @@ def main(argv):
 	global thread
 	parseArgs(argv)
 	dirList=os.listdir(".")
-	print "Processing..."
 	for infname in dirList:
 		if infname.startswith("ebstrace.processed."):
 			outfname = infname.replace("processed", "extracted")
 			outputFile = open(outfname, 'w')
+			print infname, "-->",
 			processFile(infname, outputFile)
 			outputFile.close()
 			newOutfname = outfname.replace(".0.0.0", "." + node + "." + str(thread))
+			print newOutfname
 			os.rename(outfname, newOutfname)
-			print infname, " --> ", newOutfname
 
 	outfname = "ebstrace.extracted.maps.txt"
 	outputFile = open(outfname, 'w')
@@ -188,7 +188,7 @@ def main(argv):
 
 	outputFile.close()
 	print outfname, "mapping file created"
-	print negatives, "of", total, "negative values ignored"
+	print negatives, "negative values ignored out of", total, "total values"
 
 if __name__ == "__main__":
 	main(sys.argv[1:])
