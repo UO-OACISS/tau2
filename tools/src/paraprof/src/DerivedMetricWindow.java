@@ -46,7 +46,7 @@ ChangeListener {
 	private static ParaProfApplication selectApp = null;
 	private static ParaProfExperiment selectExp = null;
 	private static ParaProfTrial selectTrial = null;
-	private static ArrayList<ParaProfTrial> trials  = new ArrayList<ParaProfTrial>();
+	private static ArrayList trials  = new ArrayList();
 
 	private JButton derive = new JButton("Apply");
 
@@ -188,7 +188,7 @@ ChangeListener {
 		}
 	}
 	private void addTrial(ParaProfTrial ppTrial){
-		
+
 
 		//********************
 		//Object userObject = selectedNode.getUserObject();
@@ -236,10 +236,11 @@ ChangeListener {
 
 	}
 	private void loadMetrics(){
-		ArrayList<String> contents = new ArrayList<String>();
+		ArrayList contents = new ArrayList();
 		metrics.removeAllItems();
 
-		for(ParaProfTrial ppTrial:trials){
+		for(int i=0;i<trials.size();i++){
+			ParaProfTrial ppTrial = (ParaProfTrial)trials.get(i);
 			// refresh the metrics list
 			if( ppTrial.getMetrics()!= null){
 				Iterator l = ppTrial.getMetrics().iterator();
@@ -269,7 +270,7 @@ ChangeListener {
 
 
 	public DerivedMetricWindow(ParaProfManagerWindow mw) {
-		trials = new ArrayList<ParaProfTrial>();
+		trials = new ArrayList();
 		metrics = new JComboBox();
 		//collectTrials();
 
@@ -367,7 +368,6 @@ ChangeListener {
 
 		expression = new JList(expressionList)
 		{//This allows the tool tip to display the expression
-			//the mouse is over.
 			public String getToolTipText(MouseEvent e) {
 				int index = locationToIndex(e.getPoint());
 				if (-1 < index) {
@@ -570,7 +570,7 @@ ChangeListener {
 				addExpression.requestFocusInWindow();
 			}else if(arg.equals(metrics)){
 				if(metrics.getSelectedItem().toString().equals("Load Metrics") )
-				loadMetrics();
+					loadMetrics();
 
 			}else{
 			}			
@@ -664,8 +664,9 @@ ChangeListener {
 	private void copy(){
 		Object[] selectedExp = expression.getSelectedValues();
 		String expressions="";
-		for(Object express:selectedExp)	{
-			expressions+=express+"\n";
+		for(int i=0;i<selectedExp.length;i++){
+			String express = selectedExp[i].toString();
+			expressions+=express.toString()+"\n";
 		}
 		setClipboard(expressions);
 	}
@@ -684,8 +685,8 @@ ChangeListener {
 		while(scan.hasNextLine()){
 			String line = scan.nextLine().trim();
 			if(!line.equals("")){
-			//	if(Expression.validate(line))
-					expressionList.addElement(line);
+				//	if(Expression.validate(line))
+				expressionList.addElement(line);
 				//else
 				//	addExpression(line);
 			}
@@ -696,9 +697,10 @@ ChangeListener {
 			File savefile =  fc.getSelectedFile();
 			FileOutputStream write =new FileOutputStream(savefile);
 			String out = "";
-
-			for(Object i: expressionList.toArray()){
-				out += i.toString() + "\n";
+			Object[] array = expressionList.toArray();
+			for(int i = 0;i<array.length;i++){
+				//for(Object i: expressionList.toArray()){
+				out += array[i].toString() + "\n";
 			}
 			write.write(out.getBytes());
 		}
@@ -734,7 +736,8 @@ ChangeListener {
 			FileOutputStream write =new FileOutputStream(savefile);
 			String out = "";
 			int[] indexs = expression.getSelectedIndices();
-			for(int i: indexs){
+			for(int j=0;j<indexs.length;j++){
+				int i = indexs[j];
 				out += expressionList.get(i) + "\n";
 			}
 			write.write(out.getBytes());
@@ -758,11 +761,13 @@ ChangeListener {
 				,JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE, null, null, null);
 		if(result ==JOptionPane.NO_OPTION) 
 			return;
-			*/
+		 */
 
 		Object[] selectedExp = expression.getSelectedValues();
 		String expressions="";
-		for(Object express:selectedExp)	{
+		for(int i=0;i<selectedExp.length;i++){
+		//for(Object express:selectedExp)	{
+			Object express = selectedExp[i];
 			expressions+=express+"\n";
 		}
 		try{
@@ -834,22 +839,22 @@ class MyComboBoxRenderer extends BasicComboBoxRenderer {
 			setForeground(list.getSelectionForeground());
 			if (-1 < index) {
 				if(list.getSelectedValue()!=null){
-				String line = list.getSelectedValue().toString();
-				//  Pattern p = Pattern.compile( "(.{0,80}\\b\\s*)|(.{80}\\B)" ); 
-				//Matcher m = p.matcher(line);
-				String wrap = "<html>",end="<html>";
-				//while (m.find()) {
-				char[] array = line.toCharArray();
-				for(int i=0;i<array.length;i++){	
-					wrap +=array[i];
-					end =wrap;
-					if(i%80==0&&i!=0) wrap +="<br>";
-					//end = wrap +line.substring(m.start(), m.end());
-					//  wrap +=line.substring(m.start(), m.end())+"<br>";
-				}         
-				list.setToolTipText(end.trim());
+					String line = list.getSelectedValue().toString();
+					//  Pattern p = Pattern.compile( "(.{0,80}\\b\\s*)|(.{80}\\B)" ); 
+					//Matcher m = p.matcher(line);
+					String wrap = "<html>",end="<html>";
+					//while (m.find()) {
+					char[] array = line.toCharArray();
+					for(int i=0;i<array.length;i++){	
+						wrap +=array[i];
+						end =wrap;
+						if(i%80==0&&i!=0) wrap +="<br>";
+						//end = wrap +line.substring(m.start(), m.end());
+						//  wrap +=line.substring(m.start(), m.end())+"<br>";
+					}         
+					list.setToolTipText(end.trim());
 
-			}}
+				}}
 		} else {
 			setBackground(list.getBackground());
 			setForeground(list.getForeground());

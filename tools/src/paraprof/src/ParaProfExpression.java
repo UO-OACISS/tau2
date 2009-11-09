@@ -32,7 +32,7 @@ public class ParaProfExpression {
 	 * @return
 	 * @throws ParsingException
 	 */
-	public  void evaluateExpression(String expression, List<ParaProfTrial> trials) throws ParsingException{
+	public  void evaluateExpression(String expression, List trials) throws ParsingException{
 		char[] array = expression.toCharArray();
 		String newName = null;
 		//check for =
@@ -48,22 +48,22 @@ public class ParaProfExpression {
 				break;
 			}
 		}
-		
-		for(ParaProfTrial trial : trials){
-			ArrayList<Object> 	expressArray =  infixToPostfix(expression);
+		for(int i=0;i<trials.size();i++){
+		ParaProfTrial trial= (ParaProfTrial)trials.get(i);
+			ArrayList 	expressArray =  infixToPostfix(expression);
 			evaluateExpression(newName,expressArray,trial);
 		}
 
 	}
 
-	public  String evaluateExpressions(String expressions, List<ParaProfTrial> trials) throws ParsingException{
+	public  String evaluateExpressions(String expressions, List trials) throws ParsingException{
 		return evaluateMany(new Scanner(expressions),trials);
 	}
-	public  String evaluateFile(String file, List<ParaProfTrial> trials) throws ParsingException, FileNotFoundException{
+	public  String evaluateFile(String file, List trials) throws ParsingException, FileNotFoundException{
 		Scanner scan = new Scanner(new File(file));
 		return evaluateMany(scan,trials);
 	}
-	private  String evaluateMany(Scanner scan, List<ParaProfTrial> trials) throws ParsingException{
+	private  String evaluateMany(Scanner scan, List trials) throws ParsingException{
 		String last = "";
 		while(scan.hasNextLine()){
 			String line = scan.nextLine();
@@ -96,10 +96,10 @@ public class ParaProfExpression {
 	 * @return
 	 * @throws ParsingException 
 	 */
-	private static ArrayList<Object> infixToPostfix(String input) throws ParsingException {
-		ArrayList<Object> out = new ArrayList<Object>();
+	private static ArrayList infixToPostfix(String input) throws ParsingException {
+		ArrayList out = new ArrayList();
 		String name = "";
-		Stack<Character> stack = new Stack<Character>();
+		Stack stack = new Stack();
 		char[] in = input.toCharArray();
 		for (int i=0;i<in.length;i++) {
 			char current = in[i];
@@ -117,50 +117,50 @@ public class ParaProfExpression {
 					out.add(name + "");	
 				name = "";
 				try {
-					while (stack.peek() != '(')
+					while (((Character)stack.peek()).charValue() != '(')
 						out.add(stack.pop() + "");
 				} catch (EmptyStackException ex) {}
-				stack.push('+');
+				stack.push(Character.valueOf('+'));
 				break;
 			case '-':
 				if (!name.equals(""))
 					out.add(name + "");	
 				name = "";
 				try {
-					while (stack.peek() != '(')
+					while (((Character)stack.peek()).charValue()!= '(')
 						out.add(stack.pop() + "");
 				} catch (EmptyStackException ex) {}
-				stack.push('-');
+				stack.push(Character.valueOf('-'));
 				break;
 			case '/':
 				if (!name.equals(""))
 					out.add(name + "");	
 				name = "";
 				try {
-					while (stack.peek() != '(' && stack.peek() != '-' && stack.peek() != '+')
+					while (((Character)stack.peek()).charValue() != '(' && ((Character)stack.peek()).charValue() != '-' && ((Character)stack.peek()).charValue() != '+')
 						out.add(stack.pop() + "");
 				} catch (EmptyStackException ex) {}
-				stack.push('/');
+				stack.push(Character.valueOf('/'));
 				break;
 			case '*':
 				if (!name.equals(""))
 					out.add(name + "");
 				name = "";
 				try {
-					while (stack.peek() != '(' && stack.peek() != '-' && stack.peek() != '+')
+					while (((Character)stack.peek()).charValue() != '(' && ((Character)stack.peek()).charValue() != '-' && ((Character)stack.peek()).charValue() != '+')
 						out.add(stack.pop() + "");
 				} catch (EmptyStackException ex) {}
-				stack.push('*');
+				stack.push(Character.valueOf('*'));
 				break;
 			case '(':
-				stack.push('(');
+				stack.push(Character.valueOf('('));
 				break;
 			case ')':
 				if (!name.equals(""))
 					out.add(name + "");
 				name = "";
 				try {
-					while (stack.peek() != '(')
+					while (((Character)stack.peek()).charValue() != '(')
 						out.add(stack.pop() + "");
 					stack.pop();
 				} catch (EmptyStackException ex) {
@@ -194,7 +194,7 @@ public class ParaProfExpression {
 		}
 	}
 
-	private  ParaProfMetric evaluateExpression(String newName, ArrayList<Object> equation,ParaProfTrial trial) throws ParsingException {
+	private  ParaProfMetric evaluateExpression(String newName, ArrayList equation,ParaProfTrial trial) throws ParsingException {
 		if(newName != null) newName = newName.trim();
 		int i = 0;
 		if(equation.size()==1){
@@ -333,7 +333,7 @@ public class ParaProfExpression {
 
 	}
 	protected ParaProfMetric rename(String newName, ParaProfMetric metric) {
-		return applyOperation(metric,0,'+',newName);
+		return applyOperation(metric,new Double(0.0),'+',newName);
 	}
 	protected ParaProfMetric applyOperation(ParaProfMetric operand1, ParaProfMetric operand2, char operation, String newName) {
 
@@ -423,7 +423,7 @@ public class ParaProfExpression {
 
 		try {
 
-			double constantValue = operand2;
+			double constantValue = operand2.doubleValue();
 			ParaProfTrial trialOpA = operand1.getParaProfTrial();
 			int opA = operand1.getID();
 
@@ -494,7 +494,7 @@ public class ParaProfExpression {
 
 		try {
 
-			double constantValue = operand1;
+			double constantValue = operand1.doubleValue();
 			ParaProfTrial trialOpB = operand2.getParaProfTrial();
 			int opB = operand2.getID();
 
