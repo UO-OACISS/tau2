@@ -2,11 +2,14 @@ package edu.uoregon.tau.perfexplorer.client;
 
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -16,10 +19,12 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -105,7 +110,9 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	private JLabel dimensionXLabel = new JLabel("Cutoff (0<x<100):");
 	private JTextField dimensionXValue = new MyJTextField(5);
 	private JLabel eventLabel = new JLabel("Interval Event:");
-	private JComboBox event = new MyJComboBox();
+	//private DefaultListModel eventModel = new DefaultListModel();
+   	private JList event = null;//new JList();
+   	private JScrollPane eventScrollPane = null;
 	private JLabel metricLabel = new JLabel("Metric:");
 	private JComboBox metric = new MyJComboBox();
 	private JLabel unitsLabel = new JLabel("Units:");
@@ -134,6 +141,11 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 	private JButton apply = null;
 	private JButton reset = null;
+	
+	private static final String ATOMIC_EVENT_ALL = "All Atomic Events";
+	private static final String INTERVAL_EVENT_ALL = "All Events";
+	private static final String INTERVAL_EVENT_GROUP_ALL = "All Groups";
+	
 	private static final String ATOMIC_EVENT_NAME = "atomic_event.name";
 	private static final String INTERVAL_EVENT_NAME = "interval_event.name";
 	private static final String INTERVAL_EVENT_GROUP_NAME = "interval_event.group_name";
@@ -259,9 +271,17 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		panel.add(Box.createVerticalStrut(10));
 		// event of interest
 		panel.add(eventLabel);
-		event = new MyJComboBox();
-		this.event.addActionListener(this);
-		panel.add(event);
+		event = new JList();
+		
+		eventScrollPane = new JScrollPane(event);
+		JPanel eventPanel = new JPanel();
+		eventPanel.setLayout(new BorderLayout());
+		eventPanel.add(eventScrollPane);
+		//scrollPane.setMaximumSize(metric.getPreferredSize());
+		//event.setSize(400, 40);
+		//TODO: Does this need an action?
+		//this.event.addActionListener(this);
+		panel.add(eventPanel);
 		
 		panel.add(Box.createVerticalStrut(10));
 		this.mainOnly.setToolTipText("Only select the \"main\" event (i.e. maximum inclusive)");
@@ -294,7 +314,6 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		panel.add(xaxisValueLabel);
 		xaxisValue = new MyJComboBox(tableColumns.toArray());
 		xaxisValue.addActionListener(this);
-		this.xaxisValue.addActionListener(this);
 		panel.add(xaxisValue);
 		
 		panel.add(Box.createVerticalStrut(10));
@@ -472,9 +491,9 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			String tmp = (String)o;
 			if (tmp.equalsIgnoreCase("experiment.name")) {
 				this.series.setSelectedItem(o);
-				//} else if (tmp.equalsIgnoreCase("trial.threads_of_execution")) {
+			} else if (tmp.equalsIgnoreCase("trial.threads_of_execution")) {
 				//this.xaxisValue.setSelectedItem(o);
-			} else if (tmp.equalsIgnoreCase("trial.xml_metadata")) {
+			//} else if (tmp.equalsIgnoreCase("trial.xml_metadata")) {
 				this.xaxisValue.setSelectedItem(o);
 			}
 		}
@@ -483,11 +502,61 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		refreshDynamicControls(true, true, false);
 	}
 
+	
+	private void refreshEventList(PerfExplorerModel theModel, String label, String all){
+
+		Object[] evt = null;
+		Object[] oldEvent = null;
+		
+		evt = this.event.getSelectedValues();
+		if (evt != null)
+			oldEvent = evt;
+		else{
+			oldEvent= new Object[0];
+		}
+		
+		int oldWidth=eventScrollPane.getWidth();
+		
+		List<String> events = null;
+		
+		if(all.equals(INTERVAL_EVENT_GROUP_ALL))
+		{
+			events=server.getPotentialGroups(theModel);
+		}
+		else if(all.equals(ATOMIC_EVENT_ALL))
+		{
+			events=server.getPotentialAtomicEvents(theModel);
+		}
+		else if(all.equals(INTERVAL_EVENT_ALL))
+		{
+			events=server.getPotentialEvents(theModel);
+		}
+		else {
+			events = new ArrayList<String>();
+		}
+		
+		this.event.removeAll();
+		//this.eventModel.addElement(all);
+		events.add(0, all);
+		this.eventLabel.setText(label);
+		this.event.setSelectedIndex(0);
+		int dex=0;
+		event.setListData(events.toArray());
+		eventScrollPane.setPreferredSize(new Dimension(oldWidth,eventScrollPane.getHeight()));//TODO: Keep the standard minimum size in effect
+		for (Iterator<String> itr = events.iterator() ; itr.hasNext() ; ) {
+			String next = itr.next();
+			//this.eventModel.addElement(next);
+			List<Object> ol = Arrays.asList(oldEvent);
+			if (ol.contains(next))
+				this.event.addSelectionInterval(dex, dex);
+			dex++;
+		}
+	}
+	
 	public void refreshDynamicControls(boolean getMetrics, boolean getEvents, boolean getXML) {
 		PerfExplorerModel theModel = PerfExplorerModel.getModel();
 		Object selection = theModel.getCurrentSelection();
 		String oldMetric = "";
-		String oldEvent = "";
 		String oldXML = "";
 		String oldSXML="";
 		Object obj = null;
@@ -497,12 +566,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				oldMetric = (String)obj;
 			this.metric.removeAllItems();
 		}
-		if (getEvents) {
-			obj = this.event.getSelectedItem();
-			if (obj != null)
-				oldEvent = (String)obj;
-			this.event.removeAllItems();
-		}
+		
 		if (getXML) {
 			obj = this.xmlName.getSelectedItem();
 			if (obj != null)
@@ -540,46 +604,15 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				String seriesSelection = (String)series.getSelectedItem();
 				//String tmp = (String)obj2;
 				if (seriesSelection.equalsIgnoreCase(INTERVAL_EVENT_GROUP_NAME)) {
-					List<String> events = server.getPotentialGroups(theModel);
 					resetYAxisValues(true);
 					yaxisStat.setSelectedItem(MEAN);
 					yaxisValue.setSelectedItem(EXCLUSIVE);
-					this.event.removeAllItems();
-					this.event.addItem("All Groups");
-					this.eventLabel.setText("Group:");
-					this.event.setSelectedIndex(0);
-					for (Iterator<String> itr = events.iterator() ; itr.hasNext() ; ) {
-						String next = itr.next();
-						this.event.addItem(next);
-						if (oldEvent.equals(next))
-							this.event.setSelectedItem(next);
-					}
+					refreshEventList(theModel,"Groups:",INTERVAL_EVENT_GROUP_ALL);
 				} else if (seriesSelection.equalsIgnoreCase(ATOMIC_EVENT_NAME)) {
 					resetYAxisValues(false);
-					List<String> events = server.getPotentialAtomicEvents(theModel);
-					this.event.removeAllItems();
-					this.event.addItem("All Atomic Events");
-					this.eventLabel.setText("Atomic Event:");
-					this.event.setSelectedIndex(0);
-					for (Iterator<String> itr = events.iterator() ; itr.hasNext() ; ) {
-						String next = itr.next();
-						this.event.addItem(next);
-						if (oldEvent.equals(next))
-							this.event.setSelectedItem(next);
-					}
+					refreshEventList(theModel,"Atomic Events:",ATOMIC_EVENT_ALL);
 				} else {
-
-					List<String> events = server.getPotentialEvents(theModel);
-					this.event.removeAllItems();
-					this.event.addItem("All Events");
-					this.eventLabel.setText("Event:");
-					this.event.setSelectedIndex(0);
-					for (Iterator<String> itr = events.iterator() ; itr.hasNext() ; ) {
-						String next = itr.next();
-						this.event.addItem(next);
-						if (oldEvent.equals(next))
-							this.event.setSelectedItem(next);
-					}
+					refreshEventList(theModel,"Events:",INTERVAL_EVENT_ALL);
 				}
 			} 
 			if (getXML) {
@@ -601,7 +634,6 @@ public class ChartPane extends JScrollPane implements ActionListener {
 					}
 					//this.xmlName.setSelectedIndex(0);
 				}
-
 
 				if (tmpSer.equalsIgnoreCase("trial.xml_metadata")) {
 					if(xmlEvents==null)
@@ -732,7 +764,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			Object obj = this.series.getSelectedItem();
 			String tmp = (String)obj;
 			if (tmp.equalsIgnoreCase(ATOMIC_EVENT_NAME)) {
-				title = (String)event.getSelectedItem();
+				title = "Atomic Events";//(String)event.getSelectedItem();
 				title = title + " : " + (String)yaxisStat.getSelectedItem()+"."+(String)yaxisValue.getSelectedItem();
 			} else {
 				title = (String)metric.getSelectedItem();
@@ -818,29 +850,11 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			facade.setEventName(null);
 			facade.setGroupName(null);
 			if (tmp.equalsIgnoreCase(INTERVAL_EVENT_NAME)) {
-				obj = this.event.getSelectedItem();
-				tmp = (String)obj;
-				if (!tmp.equals("All Events")) {
-					facade.setEventName(tmp);
-				} else {
-					facade.setEventName(null);
-				}
+				setEvents(INTERVAL_EVENT_ALL);
 			} else if (tmp.equalsIgnoreCase(INTERVAL_EVENT_GROUP_NAME)) {
-				obj = this.event.getSelectedItem();
-				tmp = (String)obj;
-				if (!tmp.equals("All Groups")) {
-					facade.setGroupName(tmp);
-				} else {
-					facade.setGroupName(null);
-				}
+				setEvents(INTERVAL_EVENT_GROUP_ALL);
 			} else if (tmp.equalsIgnoreCase(ATOMIC_EVENT_NAME)) {
-				obj = this.event.getSelectedItem();
-				tmp = (String)obj;
-				if (!tmp.equals("All Atomic Events")) {
-					facade.setEventName(tmp);
-				} else {
-					facade.setEventName(null);
-				}
+				setEvents(ATOMIC_EVENT_ALL);
 			}
 		}
 
@@ -856,6 +870,16 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		doGeneralChart();
 	}
 
+	private void setEvents(String all){
+		Object[] tmp = this.event.getSelectedValues();
+		if (!tmp[0].equals(all)) {
+			for(int i=0;i<tmp.length;i++)
+				facade.addEventName((String)tmp[i]);
+		} else {
+			facade.setEventName(null);
+		}
+	}
+	
 	public void actionPerformed(ActionEvent e) {
 		// if action is "apply", update the chart
 		Object source = e.getSource();
@@ -1322,7 +1346,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		String shorter = longName.substring(0, codeDex).trim();
 		return shorter;
 	}
-
+	
 	private class MyJTextField extends javax.swing.JTextField
 	{   
 		/**
