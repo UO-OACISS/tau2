@@ -215,7 +215,7 @@ public class ParaverDataSource extends DataSource {
 					fp.setInclusive(metricIndex, duration);
 					double tmpExclusive = fp.getExclusive(metricIndex);
 					if (tmpExclusive > 0.0) {
-						fp.setExclusive(metricIndex, Math.max(duration - (tmpExclusive + exclusiveDuration),0.0));
+						fp.setExclusive(metricIndex, Math.max(duration - (tmpExclusive + exclusiveDuration),1.0));
 					} else {
 						fp.setExclusive(metricIndex, Math.max(exclusiveDuration,0.0));					
 					}
