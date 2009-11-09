@@ -276,7 +276,6 @@ public class ParaProfExpression {
 		if(first instanceof ParaProfMetric) return (ParaProfMetric) first;
 		int id =trial.getMetricID((String)first);
 		ParaProfTrial p =  trial.getMetric(id).getParaProfTrial();
-		System.out.println("Same trial: "+(p==trial));
 		return trial.getMetric(id);
 	}
 	private static boolean isOperation(Object op) {
