@@ -22,11 +22,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.34 2009/09/07 09:56:06 khuck Exp $
+ * CVS $Id: ParaProf.java,v 1.35 2009/11/09 21:34:30 wspear Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.34 $
+ * @version $Revision: 1.35 $
  */
 public class ParaProf implements ActionListener {
 
@@ -44,7 +44,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    private final static String VERSION = "Mon Sep  7 11:54:03 CEST 2009";
+    private final static String VERSION = "Mon Nov  9 13:33:15 PST 2009";
 
     public static int defaultNumberPrecision = 6;
 
@@ -76,8 +76,8 @@ public class ParaProf implements ActionListener {
     public static boolean insideEclipse;
     public static EclipseHandler eclipseHandler;
     public static SourceManager directoryManager;
-    public static String tauHome;
-    public static String tauArch;
+    public static String jarLocation;
+    public static String schemaLocation;
 
     // static initializer block
     static {
@@ -372,8 +372,8 @@ public class ParaProf implements ActionListener {
         CmdLineParser.Option summaryOpt = parser.addBooleanOption('s', "summary");
         CmdLineParser.Option monitorOpt = parser.addBooleanOption('m', "monitor");
         CmdLineParser.Option demoOpt = parser.addBooleanOption('z', "demo");
-        CmdLineParser.Option tauHomeOpt = parser.addStringOption('t', "tauhome");
-        CmdLineParser.Option tauArchOpt = parser.addStringOption('a', "tauarch");
+        CmdLineParser.Option jarLocationOpt = parser.addStringOption('j', "jardir");
+        CmdLineParser.Option schemaLocationOpt = parser.addStringOption('c', "schemadir");
 
         try {
             parser.parse(args);
@@ -399,8 +399,8 @@ public class ParaProf implements ActionListener {
         Boolean summary = (Boolean) parser.getOptionValue(summaryOpt);
         Boolean monitor = (Boolean) parser.getOptionValue(monitorOpt);
         Boolean demo = (Boolean) parser.getOptionValue(demoOpt);
-        ParaProf.tauHome = (String) parser.getOptionValue(tauHomeOpt);
-        ParaProf.tauArch = (String) parser.getOptionValue(tauArchOpt);
+        ParaProf.jarLocation = (String) parser.getOptionValue(jarLocationOpt);
+        ParaProf.schemaLocation = (String) parser.getOptionValue(schemaLocationOpt);
 
         demoMode = demo != null && demo.booleanValue();
         if (configFile != "") {
