@@ -17,10 +17,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.HashSet;
 import java.lang.Thread;
 import java.awt.Component;
 
 import javax.swing.JOptionPane;
+import javax.swing.JFileChooser;
 
 /**
  * An External Tool properties management class.  If you want to generate
@@ -55,11 +57,11 @@ Command_Label.1 = Something Else
 ----------------------------------------------------------------
 
  * 
- * <P>CVS $Id: ExternalTool.java,v 1.3 2009/11/05 08:55:58 khuck Exp $</P>
+ * <P>CVS $Id: ExternalTool.java,v 1.4 2009/11/09 18:55:00 khuck Exp $</P>
  * $RCSfile: ExternalTool.java,v $
- * $Date: 2009/11/05 08:55:58 $
+ * $Date: 2009/11/09 18:55:00 $
  * @author  $Author: khuck $
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  */
 public class ExternalTool {
 	
@@ -89,8 +91,8 @@ public class ExternalTool {
 	public static final String THREAD_ID = "thread_ID";
 	private static final String HEADER = "Default Properties file for an external tool.";
 	
-	
 	private static List/*<ExternalTool>*/ loadedTools = null;
+	private static String currentTrial = null;
 	
 	private String propertiesFile = null;  // properties file name
 	private Properties properties = null;
@@ -183,6 +185,20 @@ public class ExternalTool {
 		}
 		return loadedTools;
 	}
+
+	/**
+	 * Search for all the external tool properties files in the .ParaProf
+	 * directory, and create ExternalTool objects for each one.
+	 * 
+	 * @return List list of external tools
+	 */
+	public static List/*<ExternalTool>*/ loadAllTools(String trialName) {
+		if (ExternalTool.currentTrial != null && !ExternalTool.currentTrial.equals(trialName)) {
+			ExternalTool.loadedTools = null;
+		}
+		ExternalTool.currentTrial = trialName;
+		return loadAllTools();
+	}
 	
 	/**
 	 * Reload the external tools.
@@ -202,8 +218,21 @@ public class ExternalTool {
 	 * @return
 	 */
 	public static List/*<ExternalTool>*/ findMatchingTools(String fileType) {
+		return findMatchingTools(fileType, null);
+	}
+
+
+	/**
+	 * Check to see that there is a configured external tool which supports
+	 * this profile file type.
+	 * 
+	 * @param fileType
+	 * @param trialName
+	 * @return
+	 */
+	public static List/*<ExternalTool>*/ findMatchingTools(String fileType, String trialName) {
 		List/*<ExternalTool>*/ tools = new ArrayList/*<ExternalTool>*/();
-		ExternalTool.loadAllTools();
+		ExternalTool.loadAllTools(trialName);
 		if (ExternalTool.loadedTools == null)
 			return tools;
 		for (Iterator iter = ExternalTool.loadedTools.iterator() ; iter.hasNext() ;) {
@@ -216,6 +245,19 @@ public class ExternalTool {
 		return tools;
 	}
 	
+	/**
+	 * Check to see that there is a configured external tool which supports
+	 * this profile file type.
+	 * 
+	 * @param fileType
+	 * @return
+	 */
+	public static boolean matchingToolExists(String fileType, String trialName) {
+		if (findMatchingTools(fileType, trialName).isEmpty()) 
+			return false;
+		return true;
+	}
+
 	/**
 	 * Check to see that there is a configured external tool which supports
 	 * this profile file type.
@@ -305,7 +347,19 @@ public class ExternalTool {
 					commandString = commandString.replaceAll(pName, tmp);
 			}
 		}
-		
+
+		if (command.tool.workingDirectory.equalsIgnoreCase("%PROMPT%")) {
+			// prompt the user for the working directory
+            JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
+			fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			fc.setDialogTitle("Choose the gnuplot files directory");
+        	int returnVal = fc.showOpenDialog(parentWindow);
+        	if (returnVal == JFileChooser.APPROVE_OPTION) {
+            	command.tool.workingDirectory = fc.getSelectedFile().getAbsolutePath();
+			} else {
+				return;
+			}
+       	}
 		ToolRunner tool = new ToolRunner(command.tool.workingDirectory, command.tool.environmentVariables, commandString);
 	}
 	
