@@ -234,6 +234,13 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
   }
 #endif
 
+#ifdef PTHREADS
+  if (tid != RtsLayer::myThread() ) {
+    //printf("Returning values for %d instead of %d\n", tid, RtsLayer::myThread());
+    return ThreadList[tid]->CounterValues;
+  }
+#endif /* PTHREADS */
+
   for (int comp=0; comp<TAU_PAPI_MAX_COMPONENTS; comp++) {
     if (ThreadList[tid]->NumEvents[comp] >= 1) { // if there were active counters for this component
       // read eventset for this component
