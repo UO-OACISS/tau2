@@ -2,6 +2,7 @@ package edu.uoregon.tau.perfexplorer.common;
 
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.ValueAxis;
@@ -42,7 +43,7 @@ public class AlignedStackedBarRenderer extends StackedBarRenderer{
      */
     public AlignedStackedBarRenderer(boolean renderAsPercentages) {
         super();
-        this.renderAsPercentages = renderAsPercentages;
+        this.renderAsPercentages = false;//renderAsPercentages;
 
         // set the default item label positions, which will only be used if
         // the user requests visible item labels...
@@ -75,6 +76,52 @@ public class AlignedStackedBarRenderer extends StackedBarRenderer{
         return super.equals(obj);
     }
  
+    
+    private boolean didAlign = false;
+    
+    private double[] rowBases;
+    
+    private void initAlignment(CategoryDataset dataset){
+    	
+    	int cols=dataset.getColumnCount();
+    	int rows=dataset.getRowCount();
+    	
+    	double[] rowOffsets = new double[rows];
+    	double max;
+    	Number tmp;
+    	double comp;
+    	for(int i=0; i<rows;i++){
+    		max=0;
+    		for(int j=0;j<cols;j++){
+    			tmp=dataset.getValue(i, j);
+    			if(tmp==null)
+    			{
+    				comp=0;
+    			}
+    			else{
+    				comp=tmp.doubleValue();
+    			}
+    			max = Math.max(max, comp);
+    		}
+    		rowOffsets[i]=max*.7;
+    	}
+    	
+    	rowBases=new double[rows];
+    	double prev=0;
+    	for(int i=0;i<rows;i++){
+    		if(i==0){
+    			prev=0;
+    		}
+    		else{
+    			prev=rowBases[i-1];
+    		}
+    		rowBases[i]=rowOffsets[i]+prev;
+    	}
+    	
+    	didAlign=true;
+    }
+    
+    
     /**
      * Draws a stacked bar for a specific item.
      *
@@ -100,55 +147,62 @@ public class AlignedStackedBarRenderer extends StackedBarRenderer{
                          int column,
                          int pass) {
 
+    	if(!didAlign){
+    		initAlignment(dataset);
+    	}
+    	
         // nothing is drawn for null values...
         Number dataValue = dataset.getValue(row, column);
         if (dataValue == null) {
             return;
         }
 
-        double value = dataValue.doubleValue()*.8;
-        double total = 0.0;  // only needed if calculating percentages
-        if (this.renderAsPercentages) {
-            total = DataUtilities.calculateColumnTotal(dataset, column);
-            value = value / total;
-        }
+        double value = dataValue.doubleValue()*.7;
 
         PlotOrientation orientation = plot.getOrientation();
         double barW0 = domainAxis.getCategoryMiddle(column, getColumnCount(),
                 dataArea, plot.getDomainAxisEdge())
                 - state.getBarWidth() / 2.0;
 
-        double accPositiveBase = getBase();
-        double accNegativeBase = accPositiveBase;
+//        double accPositiveBase = getBase();
+//        double accNegativeBase = accPositiveBase;
         double positiveBase=getBase();
         double negativeBase=positiveBase;
-        double d =0;
-        for(int j=0;j<dataset.getColumnCount();j++){
-        	for (int i = 0; i < row; i++) {
-            Number v = dataset.getValue(i, j);
-            if (v != null) {
-                d = v.doubleValue()*.8;
-                if (this.renderAsPercentages) {
-                    d = d / total;
-                }
-                if (d > 0) {
-                    accPositiveBase = accPositiveBase + d+j*2;
-                }
-                else {
-                    accNegativeBase = accNegativeBase + d+j*2;
-                }
-            }
-        	}
-        	if(d>0){
-        		positiveBase=Math.max(positiveBase, accPositiveBase);
-        	}
-        	else{
-        		negativeBase=Math.min(negativeBase, accNegativeBase);
-        	}
-        	accPositiveBase=getBase();
-        	accNegativeBase=getBase();
-        }
+//        double d =0;
+//        
+//        for(int j=0;j<dataset.getColumnCount();j++){
+//        	for (int i = 0; i < row; i++) {
+//            Number v = dataset.getValue(i, j);
+//            if (v != null) {
+//                d = v.doubleValue()*.8;
+//               
+//                if (d > 0) {
+//                    accPositiveBase = accPositiveBase + d+j*2;
+//                }
+//                else {
+//                    accNegativeBase = accNegativeBase + d+j*2;
+//                }
+//            }
+//        	}
+//        	if(d>0){
+//        		positiveBase=Math.max(positiveBase, accPositiveBase);
+//        	}
+//        	else{
+//        		negativeBase=Math.min(negativeBase, accNegativeBase);
+//        	}
+//        	accPositiveBase=getBase();
+//        	accNegativeBase=getBase();
+//        }
 
+        double rowBase=0;
+        if(row>0)
+        {
+        	rowBase=rowBases[row-1];
+        }
+        
+        positiveBase=Math.max(getBase(),rowBase);
+        negativeBase=Math.min(getBase(),rowBase);
+        
         double translatedBase;
         double translatedValue;
         boolean positive = (value > 0.0);
