@@ -21,6 +21,10 @@ memtotal=`cat /proc/meminfo | head -1 | awk '{print $2}'`
 
 trymem=$(($memtotal/1000*7/8))
 
+echo "1000"
+exit
+# REMOVE this after it works on Linux i686 with 8GB RAM.
+
 while [ $trymem -gt 250 ] ; do
 
     check=`java -Xmx${trymem}m foobar 2>&1 | head -2 | tail -1`
