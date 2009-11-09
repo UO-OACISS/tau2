@@ -39,11 +39,11 @@ import edu.uoregon.tau.vis.HeatMapWindow;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.54 2009/11/05 09:43:31 khuck Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.55 2009/11/09 19:09:21 khuck Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.54 $
+ * @version $Revision: 1.55 $
  */
 public class ParaProfUtils {
 
@@ -677,7 +677,7 @@ public class ParaProfUtils {
                     		BarChart tmp = (BarChart)owner;
                     		metricName = tmp.getBarChartModel().getDataSorter().getSelectedMetric().getName();
                     	}
-                    	List tools = ExternalTool.findMatchingTools((String)ppTrial.getTrial().getMetaData().get(DataSource.FILE_TYPE_NAME));
+                    	List tools = ExternalTool.findMatchingTools((String)ppTrial.getTrial().getMetaData().get(DataSource.FILE_TYPE_NAME), (String)ppTrial.getTrial().getName());
 						ExternalTool.CommandParameters params = new ExternalTool.CommandParameters();
 						params.function = function.getName();
 						params.metric = metricName;
@@ -734,7 +734,7 @@ public class ParaProfUtils {
         jMenuItem.addActionListener(actionListener);
         functionPopup.add(jMenuItem);
 
-        if ((thread.getNodeID() >= 0) && (ExternalTool.matchingToolExists((String) ppTrial.getTrial().getMetaData().get(DataSource.FILE_TYPE_NAME)))) {
+        if ((thread.getNodeID() >= 0) && (ExternalTool.matchingToolExists((String) ppTrial.getTrial().getMetaData().get(DataSource.FILE_TYPE_NAME), (String)ppTrial.getTrial().getName()))) {
             JMenuItem toolMenuItem = new JMenuItem("Launch External Tool for this Function & Metric");
             toolMenuItem.addActionListener(actionListener);
             functionPopup.add(toolMenuItem);
