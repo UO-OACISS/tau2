@@ -4468,13 +4468,13 @@ if [ "x$bfd" = "xyes" ] ; then
 	    tar -xzf binutils-2.20.tar.gz
 	    cd binutils-2.20
 	    if [ $machine = "bgp" ] ; then
-                ./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir CC=powerpc-bgp-linux-gcc CXX=powerpc-bgp-linux-g++
+                ./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir CC=powerpc-bgp-linux-gcc CXX=powerpc-bgp-linux-g++ --disable-nls --disable-werror
 		# have to run make twice, first one dies with illegal instruction
 		make
 		make
 		make install
 	    else
-                ./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir
+                ./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror
 		make && make install
             fi
 	    cp include/demangle.h $bfddir/include
