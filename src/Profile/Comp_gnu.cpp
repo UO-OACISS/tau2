@@ -56,6 +56,10 @@ using namespace std;
 #endif
 
 
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
+
 
 static int gnu_init = 1;       /* is initialization needed? */
 
@@ -292,7 +296,14 @@ static void get_symtab(void) {
     fprintf(stderr, "TAU: Warning! BFD not found, symbols will not be resolved\n");
   }
 #   else
-  get_symtab_bfd("/proc/self/exe", 0);
+#     ifdef __APPLE__
+        char path[4096];
+        uint32_t size = sizeof(path);
+	_NSGetExecutablePath(path, &size);
+        get_symtab_bfd(path, 0);
+#     else
+        get_symtab_bfd("/proc/self/exe", 0);
+#     endif
 #   endif
 # endif
 #else
