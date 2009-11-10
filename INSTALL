@@ -51,14 +51,12 @@ various system-dependent variables used during compilation, and creates the
 Makefile(s) (one in each subdirectory of the source directory).
 
 NOTE: It is highly recommended that you select the *minimal* set of options 
-*****
 that satisfies the instrumentation and measurement parameters that you need. 
 Multiple configurations can be created by using configure several times 
 using a different set of options each time. Commonly used configurations are 
 typically installed using the 'installtau' tool described below. 
 
 NOTE: tau_setup is a Java based GUI tool for installing TAU on your system.
-*****
 
 % ./configure -help 
 
@@ -69,7 +67,7 @@ Usage: configure [OPTIONS]
 
 Compiler Options:
 -c++=<compiler>  ............................ specify the C++ compiler.
-          options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|
+    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|
                                       icpc|scgcc|scpathCC|pathCC|orCC].
 -cc=<compiler> ................................ specify the C compiler.
           options [cc|gcc|scgcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc|orcc].
@@ -78,7 +76,7 @@ Compiler Options:
        g95|open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale]
 -pdt=<dir> ........ Specify location of PDT (Program Database Toolkit).
 -pdt_c++=<compiler>  ............ specify a different PDT C++ compiler.
-          options [CC|KCC|g++|*xlC*|cxx|pgCC|FCC|guidec++|aCC|c++|ecpc|
+    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|
                                                icpc|scgcc|pathCC|orCC].
 -useropt='<parameters>' ... optional arguments to compilers (e.g. -O3).
 
@@ -100,7 +98,7 @@ MPI Options:
 
 OpenMP Options:
 -openmp ........................................... Use OpenMP threads.
--opari=<dir>... Specify location of Opari OpenMP tool (use with above).
+-opari ..................................................... Use Opari.
 -opari_region ......... Report performance data for all OpenMP regions.
 -opari_construct ... Report performance data for all OpenMP constructs.
 
@@ -114,14 +112,15 @@ SHMEM Options:
             e.g., -shmemlibrary=-lsmac                                 
 
 Other Options:
+-iowrapper .................................... Build POSIX IO Wrapper.
 -pthread .................................. Use pthread thread package.
 -papithread .................................. Use PAPI thread package.
 -papi=<dir> ............... Specify location of PAPI (Performance API).
 -jdk=<dir>  Build a library for profiling Java code with specified jdk.
 -vtf=<dir> ......... Specify location of VTF3 Trace Generation Package.
 -otf=<dir> ....... Specify location of Open Trace Format (OTF) Package.
--slog2 ........ Specify use of TAU internal SLOG2 SDK/Jumpshot Package.
 -nocomm  ........ Disable tracking communication events in MPI library.
+-scalasca=<dir>  ................ Specify location of SCALASCA package.
 -epilog=<dir>  ............ Specify location of EPILOG Tracing package.
 -epiloglib=<dir> ........... Specify full path to EPILOG lib directory.
 -epilogbin=<dir> ........... Specify full path to EPILOG bin directory.
@@ -136,13 +135,12 @@ Other Options:
 -PROFILECALLPATH ......................... Generate call path profiles.
 -PROFILEPARAM .... Generate profiles with parameter mapped event data .
 -PROFILEPHASE .......................... Generate phase based profiles.
--PROFILESTATS .................. Enable standard deviation calculation.
 -DEPTHLIMIT ........... Disable instrumentation beyond a certain depth.
 -PROFILEMEMORY .. Track heap memory utilization at each function entry.
 -PROFILEHEADROOM .. Track memory free (or headroom) at each func entry.
--MULTIPLECOUNTERS ............ Use multiple hardware counters and time.
 -COMPENSATE ........ Compensate for profiling measurement perturbation.
 -BGLTIMERS .... Use fast low-overhead timers on IBM BlueGene/L systems.
+-BGPTIMERS .... Use fast low-overhead timers on IBM BlueGene/P systems.
 -SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems.
 -CRAYTIMERS ............ Use fast nanosecond timers on Cray X1 systems.
 -LINUXTIMERS ......... Use low overhead TSC Counter for wallclock time.
@@ -151,6 +149,7 @@ Other Options:
 -PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation.
 -INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling.
 -noex .................. Use no exceptions while compiling the library.
+-DISABLESHARED .................. Do not build libTAU.so shared object.
 -help ...................................... display this help message.
 -fullhelp .............................. display the full help message.
 
@@ -174,31 +173,30 @@ The following  command-line options are available to configure:
    <architecture>/lib directories. 
 
 IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the 
-   AIX Power4 and Linux Power4 32 bit compilation modes respectively. These architectures 
+   AIX Power and Linux Power 32 bit compilation modes respectively. These architectures 
    are automatically detected by TAU and 32 bit compilation is the default compilation mode. 
    However, if you wish to specify a 64 bit compilation mode, please use 
-   -arch=ibm64 for AIX 64 bit, or -arch=ibm64linux for 64 bit Linux Power4 platform. 
-   For IBM Linux Power4, we use -c++=g++ for GNU g++ 32 bits and -c++=powerpc64-linux-g++ 
+   -arch=ibm64 for AIX 64 bit, or -arch=ibm64linux for 64 bit Linux Power platform. 
+   For IBM Linux Power, we use -c++=g++ for GNU g++ 32 bits and -c++=powerpc64-linux-g++ 
    and -cc=powerpc64-linux-gcc for GNU g++ 64 bits. The compilers are installed in 
    /usr/bin/g++ for 32 bits and /opt/cross/bin/powerpc64-linux-g++ for 64 bit g++ 
-   respectively. Under IBM Linux Power4, we use xlf90 as the default Fortran compiler with 
+   respectively. Under IBM Linux Power, we use xlf90 as the default Fortran compiler with 
    g++/gcc and xlC/xlc. For IBM BlueGene/L, we recommend using the -arch=bgl option. 
-   For IBM BG/P, we recommend using the -arch=bgp. 
-
+   For IBM BG/L and BG/P, we recommend using the -arch=bgp. 
 
    
 -c++=<C++ compiler>
    
-   Specifies the name of the C++ compiler. Supported  C++ compilers include  
+   Specifies the name of the C++ compiler. Supported C++ compilers include 
    KCC (from KAI/Intel), CC,  g++ and power64-linux-g++ (from GNU), FCC (from Fujitsu), 
-   xlC(from IBM), guidec++ (from KAI/Intel), aCC (from HP), c++ (from Apple), and pgCC 
-   (from PGI). 
-   
+   xlC(from IBM), guidec++ (from KAI/Intel), aCC (from HP), c++ (from Apple), pgCC 
+   (from PGI), and pathcc PathScale. 
+
 -cc=<C Compiler>
    
    Specifies the name of the C compiler. Supported C compilers include cc, 
    gcc and powerpc64-linux-gcc (from GNU), pgcc (from PGI), fcc (from Fujitsu), 
-   xlc (from IBM), and KCC (from KAI/Intel).
+   xlc (from IBM), KCC (from KAI/Intel), icc (Intel), pathcc (PathScale).
 
 -pdt_c++=<C++ Compiler> 
    Specifies a different C++ compiler for PDT (tau_instrumentor). This is 
@@ -230,31 +228,12 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    
    Specifies charm++ (converse) threads as the thread package to be used.
 
--tulipthread=<directory>
-   
-   Specifies Tulip threads (HPC++) as the threads package to be used as well 
-   as the location of the root directory where the package is installed. 
-   [ Ref: http://www.acl.lanl.gov/tulip ]
-   
--tulipthread=<directory> -smarts
-   
-   Specifies  SMARTS (Shared Memory Asynchronous Runtime System) as the 
-   threads package to be used. <directory> gives the location of the SMARTS 
-   root directory. [ Ref: http://www.acl.lanl.gov/smarts ]
-
 -openmp
    Specifies OpenMP as the threads package to be used. 
    [ Ref: http://www.openmp.org ]
 
--opari=<dir>
-   Specifies the location of the Opari OpenMP directive rewriting tool. 
-   The use of Opari source-to-source instrumentor in conjunction with
-   TAU exposes OpenMP events for instrumentation. See examples/opari directory.
-   [ Ref: http://www.fz-juelich.de/zam/kojak/opari/ ]
-   Note: There are two versions of Opari: standalone - (opari-pomp-1.1.tar.gz) and
-   the newer KOJAK - kojak-<ver>.tar.gz opari/ directory. Please upgrade to the 
-   KOJAK version (especially if you're using IBM xlf90) and specify 
-   -opari=<kojak-dir>/opari while configuring TAU.
+-opari
+   Uses Opari
    
 -opari_region 
    Report performance data for only OpenMP regions and not constructs. 
@@ -275,20 +254,6 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
 
    [ Ref: http://www.cs.uoregon.edu/research/pdtoolkit ]
    
--pcl=<directory>
-  
-   Specifies the location of the installed PCL (Performance Counter Library) 
-   root directory. PCL provides a common interface to access hardware 
-   performance counters on modern microprocessors. The library supports 
-   Sun UltraSparc I/II, PowerPC 604e under AIX, MIPS R10000/12000 under IRIX, 
-   HP/Compaq Alpha 21164, 21264 under Tru64 Unix and Cray Unicos (T3E) and the 
-   Intel Pentium family of microprocessors under Linux. This option specifies 
-   the use of hardware performance counters for profiling (instead of time).  
-   To measure floating point instructions, set the environment variable 
-   PCL_EVENT to PCL_FP_INSTR (for example). Refer to the TAU User's Guide or
-   PCL Documentation (pcl.h) for other event names.
-   [ Ref : http://www.fz-juelich.de/zam/PCL ]
-
 -papi=<directory>
 
    Specifies the location of the installed PAPI (Performance API) root 
@@ -607,15 +572,6 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    respectively, and visualized using Vampir, a commercial trace visualization 
    tool. [ Ref http://www.vampir-ng.de, www.paratools.com/otf ]
 
--muse
-  
-   Specifies the use of MAGNET/MUSE to extract low-level information from the
-   kernel. To use this configuration, Linux kernel has to be patched with MAGNET
-   and MUSE has to be install on the executing machine.  Also, magnetd has to be
-   running with the appropriate handlers and filters installed. User can specify 
-   package by setting the environment variable TAU_MUSE_PACKAGE.  By default, 
-   it uses the "count". Please refer to README.MUSE for more information.
-   
 -noex
    
    Specifies that no exceptions be used while compiling the library. This is 
