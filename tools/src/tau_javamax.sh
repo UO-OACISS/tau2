@@ -19,18 +19,22 @@ fi
 
 memtotal=`cat /proc/meminfo | head -1 | awk '{print $2}'`
 
+if [ $(uname -m) == "i686" ]; then
+    if [ $memtotal -gt 2300 ] ; then
+	memtotal=2300
+    fi
+fi
+
+
 trymem=$(($memtotal/1000*7/8))
-
-echo "1000"
-exit
-# REMOVE this after it works on Linux i686 with 8GB RAM.
-
 while [ $trymem -gt 250 ] ; do
 
     check=`java -Xmx${trymem}m foobar 2>&1 | head -2 | tail -1`
     if [ "x$check" != "xCould not reserve enough space for object heap" ] ; then
-	echo "$trymem"
-	exit
+	if [ "x$check" != "xThe specified size exceeds the maximum representable size." ] ; then
+	    echo "$trymem"
+	    exit
+	fi
     fi
 
     trymem=$(($trymem*3/4))
