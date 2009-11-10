@@ -8,28 +8,25 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.*;
+import java.io.CharArrayReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.LineNumberReader;
 import java.util.ArrayList;
 
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Scanner;
-
 
 import javax.swing.*;
 import javax.swing.event.*;
-import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
-import javax.swing.plaf.basic.BasicToolTipUI;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreePath;
 
-import edu.uoregon.tau.perfdmf.Application;
+
 import edu.uoregon.tau.perfdmf.DBDataSource;
 import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
@@ -670,26 +667,28 @@ ChangeListener {
 		}
 		setClipboard(expressions);
 	}
-	private void paste(){
+	private void paste() throws IOException{
 		String clip = getFromClipboard();
-		addExpressions(new Scanner(clip));
+		addExpressions(new LineNumberReader(new CharArrayReader(clip.toCharArray())));
 	}
-	private void openFile() throws FileNotFoundException {
+	private void openFile() throws IOException {
 		int returnVal = fc.showOpenDialog(this);
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
-			addExpressions (new Scanner(fc.getSelectedFile()));
+			addExpressions (new LineNumberReader(new FileReader(fc.getSelectedFile())));
 		}
 
 	}
-	private void addExpressions(Scanner scan){
-		while(scan.hasNextLine()){
-			String line = scan.nextLine().trim();
+	private void addExpressions(LineNumberReader scan) throws IOException{
+		String line = scan.readLine().trim();
+		while(line != null){
+			
 			if(!line.equals("")){
 				//	if(Expression.validate(line))
 				expressionList.addElement(line);
 				//else
 				//	addExpression(line);
 			}
+			 line = scan.readLine().trim();
 		}
 	}
 	private void saveFile() throws IOException {
@@ -773,12 +772,16 @@ ChangeListener {
 		try{
 			ParaProfExpression exp = new ParaProfExpression();
 			exp.evaluateExpressions(expressions, trials);
+			mainWindow.expandTrial((ParaProfTrial)trials.get(0));
 
 		}catch(ParsingException ex){
 
 			JOptionPane.showMessageDialog(mainWindow, 
 					"The expression did not parse correctly.\n"+ex.getMessage(),
 					"Parse Error", JOptionPane.ERROR_MESSAGE);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	public void addCompItem(JFrame frame, Component c, GridBagConstraints gbc, int x, int y, int w, int h) {

@@ -1,11 +1,13 @@
 package edu.uoregon.tau.paraprof;
+import java.io.CharArrayReader;
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.EmptyStackException;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Scanner;
 import java.util.Stack;
 
 import javax.swing.JOptionPane;
@@ -56,23 +58,26 @@ public class ParaProfExpression {
 
 	}
 
-	public  String evaluateExpressions(String expressions, List trials) throws ParsingException{
-		return evaluateMany(new Scanner(expressions),trials);
+	public  String evaluateExpressions(String expressions, List trials) throws ParsingException, IOException{
+		return evaluateMany(new LineNumberReader(new CharArrayReader(expressions.toCharArray())),trials);
 	}
-	public  String evaluateFile(String file, List trials) throws ParsingException, FileNotFoundException{
-		Scanner scan = new Scanner(new File(file));
+	public  String evaluateFile(String file, List trials) throws ParsingException, IOException{
+		LineNumberReader scan = new LineNumberReader(new FileReader(new File(file)));
 		return evaluateMany(scan,trials);
 	}
-	private  String evaluateMany(Scanner scan, List trials) throws ParsingException{
-		String last = "";
-		while(scan.hasNextLine()){
-			String line = scan.nextLine();
+	private  String evaluateMany(LineNumberReader scan, List trials) throws ParsingException, IOException{
+		String line = scan.readLine();
+
+		while(line !=null){
+			
+		   
 			line.trim();
 			if(!line.equals("")){	
 				evaluateExpression(line.trim(),trials);
 			}
+			 line = scan.readLine();
 		}
-		return last;
+		return "";
 
 	}
 	/*public static boolean validate(String expression){
