@@ -280,35 +280,38 @@ int getBGPExePath(char *path) {
  * Get symbol table either by using BFD or by parsing nm-file
  */
 static void get_symtab(void) {
-#ifdef TAU_BFD
-# ifdef TAU_AIX
-  char path[2048];
-  sprintf (path, "/proc/%d/object/a.out", getpid());
-  get_symtab_bfd(path, 0);
-# else
-#   ifdef TAU_BGP
-  char path[2048];
+  char path[4096];
+  uint32_t size = sizeof(path);
   int rc;
-  rc = getBGPExePath(path);
-  if (rc == 0) {
-    get_symtab_bfd(path, 0);
-  } else {
-    fprintf(stderr, "TAU: Warning! BFD not found, symbols will not be resolved\n");
-  }
-#   else
-#     ifdef __APPLE__
-        char path[4096];
-        uint32_t size = sizeof(path);
-	_NSGetExecutablePath(path, &size);
-        get_symtab_bfd(path, 0);
-#     else
-        get_symtab_bfd("/proc/self/exe", 0);
-#     endif
-#   endif
-# endif
-#else
+
+#ifndef TAU_BFD
   fprintf(stderr, "TAU: Warning! BFD not found, symbols will not be resolved\n");
+  return;
 #endif
+
+  /* System dependent methods to find the executable */
+
+  /* Default: Linux systems */
+  sprintf (path, "/proc/self/exe");
+  
+#ifdef TAU_AIX
+  sprintf (path, "/proc/%d/object/a.out", getpid());
+#endif
+  
+#ifdef TAU_BGP
+  rc = getBGPExePath(path);
+  if (rc != 0) {
+    fprintf(stderr, "TAU: Warning! BFD not found, symbols will not be resolved\n");
+    return;
+  }
+#endif
+  
+#ifdef __APPLE__
+  _NSGetExecutablePath(path, &size);
+#endif
+  
+  /* Open the executable path */
+  get_symtab_bfd(path, 0);
 }
 
 typedef struct addrmap_t {
