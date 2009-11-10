@@ -1873,16 +1873,17 @@ case $machine in
 esac
 
 if [ "$machine" = "apple" ] ; then
-	cp tools/src/common/resources/tau-medium.png apple/lib/
-  compiler_name=`which $cxx_compiler | awk '{print $1;}'`
-  if [ "$compiler_name" = "no" -o "$compiler_name" = "" ]; then
-    echo "NOTE: No compilers found, please use option '-c++=<compilername>' if you have a C++ compiler" 
-    architecture=$machine
-    make_directories
-    configure_java
-    configure_perfexplorer
-    exit 0
-  fi
+    mkdir -p apple/lib
+    cp tools/src/common/resources/tau-medium.png apple/lib/
+    compiler_name=`which $cxx_compiler | awk '{print $1;}'`
+    if [ "$compiler_name" = "no" -o "$compiler_name" = "" ]; then
+	echo "NOTE: No compilers found, please use option '-c++=<compilername>' if you have a C++ compiler" 
+	architecture=$machine
+	make_directories
+	configure_java
+	configure_perfexplorer
+	exit 0
+    fi
 fi
 
 
@@ -4459,7 +4460,11 @@ if [ "x$bfd" = "xyes" ] ; then
 	    tempdir=".tmp_bfdbuild_$$"
 	    mkdir $tempdir
 	    cd $tempdir
-	    wget http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz
+	    if [ $(uname) = "Darwin" ]; then
+		curl http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz > binutils-2.20.tar.gz
+	    else 
+		wget http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz
+	    fi
 	    tar -xzf binutils-2.20.tar.gz
 	    cd binutils-2.20
 	    if [ $machine = "bgp" ] ; then
