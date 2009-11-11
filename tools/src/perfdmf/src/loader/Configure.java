@@ -184,7 +184,7 @@ public class Configure {
             if (configFileFound) {
                 if (jdbc_db_type.compareTo("postgresql") == 0 && old_jdbc_db_type.compareTo("postgresql") != 0) {
                     // if the user has chosen postgresql and the config file is not already set for it
-                    jdbc_db_jarfile = getUserJarDir() + "postgresql.jar";
+                    jdbc_db_jarfile = jardir + File.separator + "postgresql.jar";
                     jdbc_db_driver = "org.postgresql.Driver";
                     db_schemafile = schemadir + File.separator + "dbschema.txt";
                     db_portnum = "5432";
@@ -192,7 +192,7 @@ public class Configure {
                     db_dbname = "perfdmf";
                 } else if (jdbc_db_type.compareTo("mysql") == 0 && old_jdbc_db_type.compareTo("mysql") != 0) {
                     // if the user has chosen mysql and the config file is not already set for it
-                    jdbc_db_jarfile = getUserJarDir() + "mysql.jar";
+                    jdbc_db_jarfile = jardir + File.separator + "mysql.jar";
                     jdbc_db_driver = "org.gjt.mm.mysql.Driver";
                     db_schemafile = schemadir + File.separator + "dbschema.mysql.txt";
                     db_portnum = "3306";
