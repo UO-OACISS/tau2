@@ -27,7 +27,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
      */
 
     private static final long serialVersionUID = 1L;
-    private String lastDirectory = "";
+    private String lastDirectory;
     private JList configList = new JList((Vector) ConfigureFiles.getConfigurationNames());
     private JButton saveConfig = new JButton("Save Configuration");
     private JButton removeConfig = new JButton("Remove Configuration");
@@ -45,7 +45,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     private JButton schemafileChooser = new JButton("Browse...");
     private JTextField jarfile = new JTextField(15);
     private JTextField port = new JTextField(4);
-    private JButton download = new JButton("Downloading");
+    private JButton download = new JButton("Download");
     private JProgressBar bar = new JProgressBar();
     private JTextField schema = new JTextField(15);
     private JButton newConfig = new JButton("New Configuration");
@@ -78,6 +78,8 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
         } else {
             selectedConfig = null;
         }
+
+        lastDirectory = getUserJarDir();
 
         jarfileChooser.setText("Browse...");
         jarfileChooser.addActionListener(this);
@@ -194,7 +196,8 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
         ParaProfUtils.addCompItem(editConfiguration, labelJarFile, gbc, 0, 8, 1, 1);
         ParaProfUtils.addCompItem(editConfiguration, jarfile, gbc, 1, 8, 1, 1);
         ParaProfUtils.addCompItem(editConfiguration, jarfileChooser, gbc, 2, 8, 1, 1);
-        ParaProfUtils.addCompItem(editConfiguration, download, gbc, 3, 8, 1, 1);
+        // Nothing to download anymore!
+        //ParaProfUtils.addCompItem(editConfiguration, download, gbc, 3, 8, 1, 1);
         ParaProfUtils.addCompItem(editConfiguration, labelSchema, gbc, 0, 9, 1, 1);
         ParaProfUtils.addCompItem(editConfiguration, schema, gbc, 1, 9, 1, 1);
         ParaProfUtils.addCompItem(editConfiguration, schemafileChooser, gbc, 2, 9, 1, 1);
@@ -333,7 +336,6 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                 mainWindow.refreshDatabases();
             } else if (arg.equals("Remove Configuration")) {
                 String path = selectedConfig.getPath();
-                System.out.println("deleating config, path: " + path);
                 File removeFile = new File(path);
                 //System.out.println(removeFile.exists() + "File path: " + removeFile.getAbsolutePath());
                 removeFile.delete();
@@ -517,6 +519,10 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
 
     }
 
+    private String getUserJarDir() {
+        return System.getProperty("user.home") + File.separator + ".ParaProf";
+    }
+
     private void switchAdapter(String newAdapter) {
         this.schema.setText(ParaProf.schemaLocation + File.separator + "dbschema." + newAdapter + ".txt");
 
@@ -533,12 +539,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             this.port.setText("3306");
             this.host.setText("localhost");
             String jarlocation = ParaProf.jarLocation + File.separator + "mysql.jar";
-            File jar = new File(jarlocation);
-            if (jar.exists()) {
-                this.jarfile.setText(jarlocation);
-            } else {
-                this.jarfile.setText("(Please Download >>)");
-            }
+            this.jarfile.setText(jarlocation);
         } else if (newAdapter.compareTo("postgresql") == 0) {
             download.setEnabled(true);
             host.setEnabled(true);
@@ -552,12 +553,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             this.port.setText("5432");
             this.host.setText("localhost");
             String jarlocation = ParaProf.jarLocation + File.separator + "postgresql.jar";
-            File jar = new File(jarlocation);
-            if (jar.exists()) {
-                this.jarfile.setText(jarlocation);
-            } else {
-                this.jarfile.setText("(Please Download >>)");
-            }
+            this.jarfile.setText(jarlocation);
             this.schema.setText(ParaProf.schemaLocation + File.separator + "dbschema.txt");
         } else if (newAdapter.compareTo("oracle") == 0) {
             download.setEnabled(false);
@@ -585,6 +581,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             labelDatabaseName.setText("Path to Database:");
             this.driver.setText("org.apache.derby.jdbc.EmbeddedDriver");
             String jarlocation = ParaProf.jarLocation + File.separator + "derby.jar";
+            this.jarfile.setText(jarlocation);
         } else if (newAdapter.compareTo("db2") == 0) {
             download.setEnabled(false);
             host.setEnabled(true);
