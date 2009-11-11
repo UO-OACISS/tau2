@@ -286,7 +286,8 @@ public class Configure {
                 if (jdbc_db_type.compareTo("derby") == 0) {
                     jdbc_db_jarfile = jardir + File.separator + "derby.jar";
                 } else {
-                    jdbc_db_jarfile = getUserJarDir() + jdbc_db_jarfile;
+                    //jdbc_db_jarfile = getUserJarDir() + jdbc_db_jarfile;
+                    jdbc_db_jarfile = jardir + File.separator + jdbc_db_jarfile;
                 }
             }
 
