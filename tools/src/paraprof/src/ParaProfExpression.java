@@ -125,7 +125,7 @@ public class ParaProfExpression {
 					while (((Character)stack.peek()).charValue() != '(')
 						out.add(stack.pop() + "");
 				} catch (EmptyStackException ex) {}
-				stack.push(Character.valueOf('+'));
+				stack.push(new Character('+'));
 				break;
 			case '-':
 				if (!name.equals(""))
@@ -135,7 +135,7 @@ public class ParaProfExpression {
 					while (((Character)stack.peek()).charValue()!= '(')
 						out.add(stack.pop() + "");
 				} catch (EmptyStackException ex) {}
-				stack.push(Character.valueOf('-'));
+				stack.push(new Character('-'));
 				break;
 			case '/':
 				if (!name.equals(""))
@@ -145,7 +145,7 @@ public class ParaProfExpression {
 					while (((Character)stack.peek()).charValue() != '(' && ((Character)stack.peek()).charValue() != '-' && ((Character)stack.peek()).charValue() != '+')
 						out.add(stack.pop() + "");
 				} catch (EmptyStackException ex) {}
-				stack.push(Character.valueOf('/'));
+				stack.push(new Character('/'));
 				break;
 			case '*':
 				if (!name.equals(""))
@@ -155,10 +155,10 @@ public class ParaProfExpression {
 					while (((Character)stack.peek()).charValue() != '(' && ((Character)stack.peek()).charValue() != '-' && ((Character)stack.peek()).charValue() != '+')
 						out.add(stack.pop() + "");
 				} catch (EmptyStackException ex) {}
-				stack.push(Character.valueOf('*'));
+				stack.push(new Character('*'));
 				break;
 			case '(':
-				stack.push(Character.valueOf('('));
+				stack.push(new Character('('));
 				break;
 			case ')':
 				if (!name.equals(""))
