@@ -4,8 +4,8 @@
 @echo off
 set TAU_ROOT=..
 
-set JAR_ROOT="%TAU_ROOT%\bin"
-set ETC="%TAU_ROOT%\etc"
+set JAR_ROOT=%TAU_ROOT%\bin
+set ETC=%TAU_ROOT%\etc
 set PERFDMF_JAR=%JAR_ROOT%/perfdmf.jar
 set JARGS_JAR=%JAR_ROOT%/jargs.jar
 set JDBC_JAR=%JAR_ROOT%/postgresql.jar;%JAR_ROOT%/mysql.jar;%JAR_ROOT%/oracle.jar;%JAR_ROOT%/derby.jar
