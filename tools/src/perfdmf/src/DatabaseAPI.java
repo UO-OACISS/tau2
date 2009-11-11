@@ -20,11 +20,11 @@ import edu.uoregon.tau.perfdmf.database.DB;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.26 2009/10/19 17:31:13 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.27 2009/11/11 01:03:34 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.26 $
+ * @version $Revision: 1.27 $
  */
 public class DatabaseAPI {
 
@@ -973,7 +973,6 @@ public class DatabaseAPI {
                     Metric metric = (Metric) it2.next();
                     if (metric.getID() == key.intValue()) {
                         if (value != -1) {
-                            System.out.println("Setting db metric " + metric.getName() + " to " + value);
                             metric.setDbMetricID(value);
                         }
                     }
