@@ -281,7 +281,6 @@ int getBGPExePath(char *path) {
  */
 static void get_symtab(void) {
   char path[4096];
-  uint32_t size = sizeof(path);
   int rc;
 
 #ifndef TAU_BFD
@@ -307,6 +306,7 @@ static void get_symtab(void) {
 #endif
   
 #ifdef __APPLE__
+  uint32_t size = sizeof(path);
   _NSGetExecutablePath(path, &size);
 #endif
   
