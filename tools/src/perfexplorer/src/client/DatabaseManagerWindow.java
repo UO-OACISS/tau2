@@ -358,7 +358,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                     }
                 }
                 config.createDB(false);
-                edu.uoregon.tau.perfexplorer.common.Configure config2 = new edu.uoregon.tau.perfexplorer.common.Configure(null, null);
+                edu.uoregon.tau.perfexplorer.common.Configure config2 = new edu.uoregon.tau.perfexplorer.common.Configure(null);
                 // also upload the perfexplorer schema
                 config2.initialize(filename);
                 config2.setPerfExplorerSchema(schema2.getText());

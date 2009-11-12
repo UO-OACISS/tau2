@@ -84,7 +84,7 @@ public class ExtractEventOperation extends AbstractPerformanceOperation {
 	 * @param event the event to set
 	 */
 	public void setEvent(List<String> event) {
-		this.events = events;
+		this.events = event;
 	}
 
 }

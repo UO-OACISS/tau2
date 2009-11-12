@@ -86,7 +86,7 @@ public class ExtractUserEventOperation extends AbstractPerformanceOperation {
 	 * @param event the event to set
 	 */
 	public void setUserEvent(List<String> event) {
-		this.events = events;
+		this.events = event;
 	}
 
 }
