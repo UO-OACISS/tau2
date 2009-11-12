@@ -17,6 +17,7 @@ import java.util.*;
 
 import javax.swing.*;
 
+import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfdmf.DataSource;
 
 public class PreferencesWindow extends JFrame implements ActionListener, Observer {
@@ -150,31 +151,31 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        ParaProfUtils.addCompItem(fontPanel, fontComboBox, gbc, 0, 0, 2, 1);
+        Utility.addCompItem(fontPanel, fontComboBox, gbc, 0, 0, 2, 1);
 
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        ParaProfUtils.addCompItem(fontPanel, bold, gbc, 0, 1, 1, 1);
+        Utility.addCompItem(fontPanel, bold, gbc, 0, 1, 1, 1);
 
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        ParaProfUtils.addCompItem(fontPanel, italic, gbc, 0, 2, 1, 1);
+        Utility.addCompItem(fontPanel, italic, gbc, 0, 2, 1, 1);
 
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        ParaProfUtils.addCompItem(fontPanel, barHeightLabel, gbc, 1, 1, 1, 1);
+        Utility.addCompItem(fontPanel, barHeightLabel, gbc, 1, 1, 1, 1);
 
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 0.25;
         gbc.weighty = 0.25;
-        ParaProfUtils.addCompItem(fontPanel, barHeightSlider, gbc, 1, 2, 1, 1);
+        Utility.addCompItem(fontPanel, barHeightSlider, gbc, 1, 2, 1, 1);
 
         JPanel defaultsPanel = new JPanel();
         defaultsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Window defaults"));
@@ -182,19 +183,19 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
 
         JLabel unitsLabel = new JLabel("Units");
 
-        ParaProfUtils.addCompItem(defaultsPanel, unitsLabel, gbc, 0, 0, 1, 1);
-        ParaProfUtils.addCompItem(defaultsPanel, unitsBox, gbc, 1, 0, 1, 1);
-        ParaProfUtils.addCompItem(defaultsPanel, showValuesAsPercentBox, gbc, 0, 1, 2, 1);
+        Utility.addCompItem(defaultsPanel, unitsLabel, gbc, 0, 0, 1, 1);
+        Utility.addCompItem(defaultsPanel, unitsBox, gbc, 1, 0, 1, 1);
+        Utility.addCompItem(defaultsPanel, showValuesAsPercentBox, gbc, 0, 1, 2, 1);
 
         JPanel settingsPanel = new JPanel();
         settingsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Settings"));
         settingsPanel.setLayout(new GridBagLayout());
-        ParaProfUtils.addCompItem(settingsPanel, showPathTitleInReverseBox, gbc, 0, 2, 2, 1);
-        ParaProfUtils.addCompItem(settingsPanel, reverseCallPathsBox, gbc, 0, 3, 2, 1);
-        ParaProfUtils.addCompItem(settingsPanel, meanIncludeNullBox, gbc, 0, 4, 2, 1);
-        ParaProfUtils.addCompItem(settingsPanel, generateIntermediateCallPathDataBox, gbc, 0, 5, 2, 1);
-        ParaProfUtils.addCompItem(settingsPanel, showSourceLocationsBox, gbc, 0, 6, 2, 1);
-        ParaProfUtils.addCompItem(settingsPanel, autoLabelsBox, gbc, 0, 7, 2, 1);
+        Utility.addCompItem(settingsPanel, showPathTitleInReverseBox, gbc, 0, 2, 2, 1);
+        Utility.addCompItem(settingsPanel, reverseCallPathsBox, gbc, 0, 3, 2, 1);
+        Utility.addCompItem(settingsPanel, meanIncludeNullBox, gbc, 0, 4, 2, 1);
+        Utility.addCompItem(settingsPanel, generateIntermediateCallPathDataBox, gbc, 0, 5, 2, 1);
+        Utility.addCompItem(settingsPanel, showSourceLocationsBox, gbc, 0, 6, 2, 1);
+        Utility.addCompItem(settingsPanel, autoLabelsBox, gbc, 0, 7, 2, 1);
 
         gbc.fill = GridBagConstraints.BOTH;
 

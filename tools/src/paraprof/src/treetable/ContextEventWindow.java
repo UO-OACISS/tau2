@@ -17,6 +17,7 @@ import javax.swing.table.TableColumn;
 import javax.swing.tree.DefaultTreeCellRenderer;
 
 import edu.uoregon.tau.common.ImageExport;
+import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.common.treetable.AbstractTreeTableModel;
 import edu.uoregon.tau.common.treetable.JTreeTable;
 import edu.uoregon.tau.paraprof.*;
@@ -182,7 +183,7 @@ public class ContextEventWindow extends JFrame implements Observer, ParaProfWind
         gbc.anchor = GridBagConstraints.SOUTH;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
-        ParaProfUtils.addCompItem(this, scrollPane, gbc, 0, 0, GridBagConstraints.REMAINDER, GridBagConstraints.REMAINDER);
+        Utility.addCompItem(this, scrollPane, gbc, 0, 0, GridBagConstraints.REMAINDER, GridBagConstraints.REMAINDER);
 
         validate();
     }

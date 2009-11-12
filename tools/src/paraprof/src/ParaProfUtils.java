@@ -39,11 +39,11 @@ import edu.uoregon.tau.vis.HeatMapWindow;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.55 2009/11/09 19:09:21 khuck Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.56 2009/11/12 22:50:28 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.55 $
+ * @version $Revision: 1.56 $
  */
 public class ParaProfUtils {
 
@@ -134,22 +134,6 @@ public class ParaProfUtils {
         item.setActionCommand(command);
         group.add(item);
         menu.add(item);
-    }
-
-    public static void addCompItem(JFrame frame, Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
-        gbc.gridx = x;
-        gbc.gridy = y;
-        gbc.gridwidth = w;
-        gbc.gridheight = h;
-        frame.getContentPane().add(c, gbc);
-    }
-
-    public static void addCompItem(Container container, Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
-        gbc.gridx = x;
-        gbc.gridy = y;
-        gbc.gridwidth = w;
-        gbc.gridheight = h;
-        container.add(c, gbc);
     }
 
     public static void print(Printable printable) {

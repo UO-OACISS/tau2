@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.44 2009/11/06 23:46:16 smillst Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.45 2009/11/12 22:50:28 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.44 $
+ * @version	$Revision: 1.45 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -35,11 +35,9 @@ import edu.uoregon.tau.common.TauRuntimeException;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.tablemodel.*;
 import edu.uoregon.tau.perfdmf.*;
-import edu.uoregon.tau.perfdmf.database.DBConnector;
-import edu.uoregon.tau.perfdmf.database.ParseConfig;
-import edu.uoregon.tau.perfdmf.database.PasswordCallback;
+import edu.uoregon.tau.perfdmf.database.*;
 
-public class ParaProfManagerWindow extends JFrame implements ActionListener, TreeSelectionListener, TreeWillExpandListener {
+public class ParaProfManagerWindow extends JFrame implements ActionListener, TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 
     private DefaultMutableTreeNode root;
     private JTree tree = null;
@@ -315,9 +313,9 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                 gbc.anchor = GridBagConstraints.CENTER;
                 gbc.weightx = 1;
                 gbc.weighty = 1;
-                ParaProfUtils.addCompItem(promptPanel, label, gbc, 0, 0, 1, 1);
+                Utility.addCompItem(promptPanel, label, gbc, 0, 0, 1, 1);
                 gbc.fill = GridBagConstraints.HORIZONTAL;
-                ParaProfUtils.addCompItem(promptPanel, password, gbc, 1, 0, 1, 1);
+                Utility.addCompItem(promptPanel, password, gbc, 1, 0, 1, 1);
 
                 if (JOptionPane.showConfirmDialog(null, promptPanel, "Enter Password", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {
                     return new String(password.getPassword());
@@ -650,7 +648,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     closeThisWindow();
 
                 } else if (arg.equals("Database Configuration")) {
-                    (new DatabaseManagerWindow(this)).setVisible(true);
+                    (new DatabaseManagerWindow(this, ParaProf.jarLocation, ParaProf.schemaLocation)).setVisible(true);
 
                 } else if (arg.equals("Show Derived Metric Panel")) {
                     if (showApplyOperationItem.isSelected()) {

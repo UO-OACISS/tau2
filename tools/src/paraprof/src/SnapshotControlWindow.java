@@ -10,6 +10,7 @@ import javax.swing.event.ChangeListener;
 
 import org.apache.batik.ext.swing.GridBagConstants;
 
+import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.Snapshot;
 
@@ -127,15 +128,15 @@ public class SnapshotControlWindow extends JFrame {
         panel.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstants.NONE;
-        ParaProfUtils.addCompItem(panel, indexLabel, gbc, 0, 0, 2, 1);
+        Utility.addCompItem(panel, indexLabel, gbc, 0, 0, 2, 1);
         gbc.fill = GridBagConstants.HORIZONTAL;
-        ParaProfUtils.addCompItem(panel, slider, gbc, 0, 1, 2, 1);
+        Utility.addCompItem(panel, slider, gbc, 0, 1, 2, 1);
         gbc.fill = GridBagConstants.NONE;
-        ParaProfUtils.addCompItem(panel, nameLabel, gbc, 0, 2, 2, 1);
-        ParaProfUtils.addCompItem(panel, timeLabel, gbc, 0, 3, 2, 1);
+        Utility.addCompItem(panel, nameLabel, gbc, 0, 2, 2, 1);
+        Utility.addCompItem(panel, timeLabel, gbc, 0, 3, 2, 1);
         gbc.anchor = GridBagConstants.SOUTH;
-        ParaProfUtils.addCompItem(panel, animateCheckbox, gbc, 0, 4, 1, 1);
-        ParaProfUtils.addCompItem(panel, animateSlider, gbc, 1, 4, 1, 1);
+        Utility.addCompItem(panel, animateCheckbox, gbc, 0, 4, 1, 1);
+        Utility.addCompItem(panel, animateSlider, gbc, 1, 4, 1, 1);
         getContentPane().add(panel);
 
         ParaProfUtils.setFrameIcon(this);

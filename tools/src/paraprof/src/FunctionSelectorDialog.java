@@ -9,6 +9,8 @@ import java.util.*;
 
 import javax.swing.*;
 
+import edu.uoregon.tau.common.Utility;
+
 /**
  * Function selector dialog.  Nothing in it is "function" specific except the title.
  * Other than that this could be used as a generic "object" selector.
@@ -17,9 +19,9 @@ import javax.swing.*;
  *   
  * TODO: nothing
  *
- * <P>CVS $Id: FunctionSelectorDialog.java,v 1.3 2007/01/04 01:55:31 amorris Exp $</P>
+ * <P>CVS $Id: FunctionSelectorDialog.java,v 1.4 2009/11/12 22:50:27 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.3 $
+ * @version	$Revision: 1.4 $
  */
 public class FunctionSelectorDialog extends JDialog {
 
@@ -142,13 +144,13 @@ public class FunctionSelectorDialog extends JDialog {
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(okButton);
         buttonPanel.add(cancelButton);
-        ParaProfUtils.addCompItem(panel, sp, gbc, 0, 0, 1, 1);
+        Utility.addCompItem(panel, sp, gbc, 0, 0, 1, 1);
 
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.EAST;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        ParaProfUtils.addCompItem(panel, buttonPanel, gbc, 0, 1, 1, 1);
+        Utility.addCompItem(panel, buttonPanel, gbc, 0, 1, 1, 1);
     }
 
     public Object getSelectedObject() {

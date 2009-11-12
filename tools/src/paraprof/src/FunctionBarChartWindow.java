@@ -8,6 +8,7 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.event.*;
 
+import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.barchart.*;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
@@ -23,9 +24,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.23 2009/10/26 20:17:22 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.24 2009/11/12 22:50:26 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.23 $
+ * @version $Revision: 1.24 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -534,11 +535,11 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
                 gbc.anchor = GridBagConstraints.WEST;
                 gbc.weightx = 0;
                 gbc.weighty = 1;
-                ParaProfUtils.addCompItem(holder, jTextArea, gbc, 0, 0, 1, 1);
+                Utility.addCompItem(holder, jTextArea, gbc, 0, 0, 1, 1);
                 gbc.weightx = 1;
                 gbc.weighty = 1;
                 gbc.anchor = GridBagConstraints.EAST;
-                ParaProfUtils.addCompItem(holder, legendPanel, gbc, 1, 0, 1, 1);
+                Utility.addCompItem(holder, legendPanel, gbc, 1, 0, 1, 1);
 
                 panel.setColumnHeaderView(holder);
                 headerView = holder;

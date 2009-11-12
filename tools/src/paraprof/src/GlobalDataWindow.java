@@ -11,6 +11,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MenuEvent;
 
+import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.barchart.AbstractBarChartModel;
 import edu.uoregon.tau.paraprof.barchart.BarChartPanel;
 import edu.uoregon.tau.paraprof.barchart.GlobalBarChartModel;
@@ -23,9 +24,9 @@ import edu.uoregon.tau.perfdmf.Function;
 /**
  * The GlobalDataWindow shows the exclusive value for all functions/all threads for a trial.
  * 
- * <P>CVS $Id: GlobalDataWindow.java,v 1.24 2009/09/10 00:13:46 amorris Exp $</P>
+ * <P>CVS $Id: GlobalDataWindow.java,v 1.25 2009/11/12 22:50:27 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.24 $
+ * @version $Revision: 1.25 $
  * @see GlobalBarChartModel
  */
 public class GlobalDataWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow, SortListener {
@@ -121,7 +122,7 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 1;
         gbc.weighty = 1;
-        ParaProfUtils.addCompItem(this, panel, gbc, 0, 0, 1, 1);
+        Utility.addCompItem(this, panel, gbc, 0, 0, 1, 1);
 
         sortLocalData();
 
@@ -306,20 +307,20 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
             gbc.anchor = GridBagConstraints.EAST;
             gbc.weightx = 0.10;
             gbc.weighty = 0.01;
-            ParaProfUtils.addCompItem(this, barLengthLabel, gbc, 0, 0, 1, 1);
+            Utility.addCompItem(this, barLengthLabel, gbc, 0, 0, 1, 1);
 
             gbc.fill = GridBagConstraints.HORIZONTAL;
             gbc.anchor = GridBagConstraints.WEST;
             gbc.weightx = 0.70;
             gbc.weighty = 0.01;
-            ParaProfUtils.addCompItem(this, barLengthSlider, gbc, 1, 0, 1, 1);
+            Utility.addCompItem(this, barLengthSlider, gbc, 1, 0, 1, 1);
 
             gbc.insets = new Insets(0, 0, 0, 0);
             gbc.fill = GridBagConstraints.BOTH;
             gbc.anchor = GridBagConstraints.CENTER;
             gbc.weightx = 1.0;
             gbc.weighty = 0.99;
-            ParaProfUtils.addCompItem(this, panel, gbc, 0, 1, 2, 1);
+            Utility.addCompItem(this, panel, gbc, 0, 1, 2, 1);
         } else {
             getContentPane().remove(barLengthLabel);
             getContentPane().remove(barLengthSlider);
@@ -329,7 +330,7 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
             gbc.anchor = GridBagConstraints.CENTER;
             gbc.weightx = 1;
             gbc.weighty = 1;
-            ParaProfUtils.addCompItem(this, panel, gbc, 0, 0, 1, 1);
+            Utility.addCompItem(this, panel, gbc, 0, 0, 1, 1);
         }
 
         //Now call validate so that these component changes are displayed.

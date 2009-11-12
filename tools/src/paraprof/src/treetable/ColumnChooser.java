@@ -7,6 +7,7 @@ import java.util.List;
 
 import javax.swing.*;
 
+import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.ParaProfMetric;
 import edu.uoregon.tau.paraprof.ParaProfTrial;
 import edu.uoregon.tau.paraprof.ParaProfUtils;
@@ -110,14 +111,14 @@ public class ColumnChooser extends JFrame {
         gbc.anchor = GridBagConstraints.WEST;
         gbc.weightx = 0.0;
         gbc.weighty = 0.0;
-        ParaProfUtils.addCompItem(this.getContentPane(), new JLabel("Metrics"), gbc, 0, 0, 1, 1);
-        ParaProfUtils.addCompItem(this.getContentPane(), new JLabel("Values"), gbc, 1, 0, 1, 1);
+        Utility.addCompItem(this.getContentPane(), new JLabel("Metrics"), gbc, 0, 0, 1, 1);
+        Utility.addCompItem(this.getContentPane(), new JLabel("Values"), gbc, 1, 0, 1, 1);
         //ParaProfUtils.addCompItem(this.getContentPane(), new JLabel("Statistics (over all threads)"), gbc, 0, 2, 2, 1);
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 0.5;
         gbc.weighty = 0.5;
-        ParaProfUtils.addCompItem(this.getContentPane(), new JScrollPane(metricJList), gbc, 0, 1, 1, 1);
-        ParaProfUtils.addCompItem(this.getContentPane(), new JScrollPane(valueJList), gbc, 1, 1, 1, 1);
+        Utility.addCompItem(this.getContentPane(), new JScrollPane(metricJList), gbc, 0, 1, 1, 1);
+        Utility.addCompItem(this.getContentPane(), new JScrollPane(valueJList), gbc, 1, 1, 1, 1);
         gbc.weighty = 0.1;
         //ParaProfUtils.addCompItem(this.getContentPane(), new JScrollPane(statsJList), gbc, 0, 3, 2, 1);
 
@@ -154,7 +155,7 @@ public class ColumnChooser extends JFrame {
         gbc.anchor = GridBagConstraints.EAST;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        ParaProfUtils.addCompItem(panel, buttonPanel, gbc, 1, 2, 1, 1);
+        Utility.addCompItem(panel, buttonPanel, gbc, 1, 2, 1, 1);
 
     }
 

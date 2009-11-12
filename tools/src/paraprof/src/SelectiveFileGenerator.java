@@ -9,6 +9,7 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 
 import edu.uoregon.tau.common.TauRuntimeException;
+import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfdmf.FunctionProfile;
 import edu.uoregon.tau.perfdmf.Group;
 import edu.uoregon.tau.perfdmf.UtilFncs;
@@ -102,16 +103,16 @@ public class SelectiveFileGenerator extends JFrame {
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weighty = 0.0;
         gbc.weightx = 0.0;
-        ParaProfUtils.addCompItem(getContentPane(), location, gbc, 0, 0, 1, 1);
+        Utility.addCompItem(getContentPane(), location, gbc, 0, 0, 1, 1);
         gbc.weightx = 1.0;
-        ParaProfUtils.addCompItem(getContentPane(), fileLocation, gbc, 1, 0, 1, 1);
+        Utility.addCompItem(getContentPane(), fileLocation, gbc, 1, 0, 1, 1);
         gbc.weightx = 0.0;
-        ParaProfUtils.addCompItem(getContentPane(), chooseFileButton, gbc, 2, 0, 1, 1);
+        Utility.addCompItem(getContentPane(), chooseFileButton, gbc, 2, 0, 1, 1);
 
         gbc.weightx = 1.0;
-        ParaProfUtils.addCompItem(getContentPane(), excludeThrottled, gbc, 0, 1, 3, 1);
+        Utility.addCompItem(getContentPane(), excludeThrottled, gbc, 0, 1, 3, 1);
 
-        ParaProfUtils.addCompItem(getContentPane(), excludeLightweight, gbc, 0, 2, 3, 1);
+        Utility.addCompItem(getContentPane(), excludeLightweight, gbc, 0, 2, 3, 1);
 
         final JPanel lightweightPanel = new JPanel();
         lightweightPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
@@ -142,12 +143,12 @@ public class SelectiveFileGenerator extends JFrame {
         });
 
         gbc.fill = GridBagConstraints.BOTH;
-        ParaProfUtils.addCompItem(lightweightPanel, percallLabel, gbc, 0, 0, 1, 1);
-        ParaProfUtils.addCompItem(lightweightPanel, percall, gbc, 1, 0, 1, 1);
-        ParaProfUtils.addCompItem(lightweightPanel, numcallsLabel, gbc, 0, 1, 1, 1);
-        ParaProfUtils.addCompItem(lightweightPanel, numcalls, gbc, 1, 1, 1, 1);
+        Utility.addCompItem(lightweightPanel, percallLabel, gbc, 0, 0, 1, 1);
+        Utility.addCompItem(lightweightPanel, percall, gbc, 1, 0, 1, 1);
+        Utility.addCompItem(lightweightPanel, numcallsLabel, gbc, 0, 1, 1, 1);
+        Utility.addCompItem(lightweightPanel, numcalls, gbc, 1, 1, 1, 1);
 
-        ParaProfUtils.addCompItem(getContentPane(), lightweightPanel, gbc, 0, 3, 3, 1);
+        Utility.addCompItem(getContentPane(), lightweightPanel, gbc, 0, 3, 3, 1);
 
         excludeLightweight.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -217,16 +218,16 @@ public class SelectiveFileGenerator extends JFrame {
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
 
-        ParaProfUtils.addCompItem(excludedPanel, new JScrollPane(excludedFunctions), gbc, 0, 0, 1, 1);
+        Utility.addCompItem(excludedPanel, new JScrollPane(excludedFunctions), gbc, 0, 0, 1, 1);
 
-        ParaProfUtils.addCompItem(getContentPane(), excludedPanel, gbc, 0, 4, 3, 1);
+        Utility.addCompItem(getContentPane(), excludedPanel, gbc, 0, 4, 3, 1);
 
         gbc.weightx = 0.0;
         gbc.weighty = 0.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        ParaProfUtils.addCompItem(getContentPane(), saveButton, gbc, 0, 5, 1, 1);
-        ParaProfUtils.addCompItem(getContentPane(), mergeFile, gbc, 1, 5, 1, 1);
-        ParaProfUtils.addCompItem(getContentPane(), closeButton, gbc, 2, 5, 1, 1);
+        Utility.addCompItem(getContentPane(), saveButton, gbc, 0, 5, 1, 1);
+        Utility.addCompItem(getContentPane(), mergeFile, gbc, 1, 5, 1, 1);
+        Utility.addCompItem(getContentPane(), closeButton, gbc, 2, 5, 1, 1);
 
         //setEnabledRecursively(lightweightPanel, false);
 

@@ -11,6 +11,7 @@ import java.util.Observable;
 
 import javax.swing.*;
 
+import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.ParaProfUtils;
 
 public class ObjectFilter extends Observable {
@@ -123,14 +124,14 @@ public class ObjectFilter extends Observable {
                     frame = null;
                 }
             });
-            ParaProfUtils.addCompItem(frame, scrollpane, gbc, 0, 0, 2, 1);
+            Utility.addCompItem(frame, scrollpane, gbc, 0, 0, 2, 1);
             gbc.fill = GridBagConstraints.NONE;
             gbc.anchor = GridBagConstraints.SOUTHEAST;
             gbc.weightx = 0.0;
             gbc.weighty = 0.0;
 
-            ParaProfUtils.addCompItem(frame, applyButton, gbc, 0, 1, 1, 1);
-            ParaProfUtils.addCompItem(frame, cancelButton, gbc, 1, 1, 1, 1);
+            Utility.addCompItem(frame, applyButton, gbc, 0, 1, 1, 1);
+            Utility.addCompItem(frame, cancelButton, gbc, 1, 1, 1, 1);
 
             frame.pack();
             frame.setSize(new Dimension(300, 800));

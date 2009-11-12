@@ -6,6 +6,8 @@ import java.awt.event.ActionListener;
 
 import javax.swing.*;
 
+import edu.uoregon.tau.common.Utility;
+
 
 public class FunctionFilterDialog extends JDialog {
 
@@ -42,18 +44,18 @@ public class FunctionFilterDialog extends JDialog {
         gbc.weighty = 0;
 
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        ParaProfUtils.addCompItem(panel, textField, gbc, 0, 0, 1, 1);
+        Utility.addCompItem(panel, textField, gbc, 0, 0, 1, 1);
         gbc.fill = GridBagConstraints.NONE;
-        ParaProfUtils.addCompItem(panel, caseSensitive, gbc, 1, 0, 1, 1);
+        Utility.addCompItem(panel, caseSensitive, gbc, 1, 0, 1, 1);
 
-        ParaProfUtils.addCompItem(panel, hideExcept, gbc, 0, 1, 1, 1);
-        ParaProfUtils.addCompItem(panel, showExcept, gbc, 0, 2, 1, 1);
-        ParaProfUtils.addCompItem(panel, hide, gbc, 1, 1, 1, 1);
-        ParaProfUtils.addCompItem(panel, show, gbc, 1, 2, 1, 1);
+        Utility.addCompItem(panel, hideExcept, gbc, 0, 1, 1, 1);
+        Utility.addCompItem(panel, showExcept, gbc, 0, 2, 1, 1);
+        Utility.addCompItem(panel, hide, gbc, 1, 1, 1, 1);
+        Utility.addCompItem(panel, show, gbc, 1, 2, 1, 1);
 
         gbc.anchor = GridBagConstraints.EAST;
-        ParaProfUtils.addCompItem(panel, apply, gbc, 0, 3, 1, 1);
-        ParaProfUtils.addCompItem(panel, cancel, gbc, 1, 3, 1, 1);
+        Utility.addCompItem(panel, apply, gbc, 0, 3, 1, 1);
+        Utility.addCompItem(panel, cancel, gbc, 1, 3, 1, 1);
 
         apply.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {

@@ -5,6 +5,7 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
+import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.interfaces.Searchable;
 import edu.uoregon.tau.paraprof.interfaces.SearchableOwner;
 
@@ -13,9 +14,9 @@ import edu.uoregon.tau.paraprof.interfaces.SearchableOwner;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: SearchPanel.java,v 1.1 2005/09/26 21:12:10 amorris Exp $</P>
+ * <P>CVS $Id: SearchPanel.java,v 1.2 2009/11/12 22:50:28 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class SearchPanel extends JPanel {
 
@@ -115,21 +116,21 @@ public class SearchPanel extends JPanel {
             }
         });
 
-        ParaProfUtils.addCompItem(this, closeButton, gbc, 0, 0, 1, 1);
-        ParaProfUtils.addCompItem(this, new JLabel("Find:"), gbc, 1, 0, 1, 1);
+        Utility.addCompItem(this, closeButton, gbc, 0, 0, 1, 1);
+        Utility.addCompItem(this, new JLabel("Find:"), gbc, 1, 0, 1, 1);
 
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.weightx = 1;
         gbc.weighty = 1;
-        ParaProfUtils.addCompItem(this, searchField, gbc, 2, 0, 1, 1);
+        Utility.addCompItem(this, searchField, gbc, 2, 0, 1, 1);
 
         gbc.weightx = 0;
         gbc.weighty = 0;
-        ParaProfUtils.addCompItem(this, nextButton, gbc, 3, 0, 1, 1);
-        ParaProfUtils.addCompItem(this, prevButton, gbc, 4, 0, 1, 1);
-        ParaProfUtils.addCompItem(this, highlightBox, gbc, 5, 0, 1, 1);
-        ParaProfUtils.addCompItem(this, matchCaseBox, gbc, 6, 0, 1, 1);
+        Utility.addCompItem(this, nextButton, gbc, 3, 0, 1, 1);
+        Utility.addCompItem(this, prevButton, gbc, 4, 0, 1, 1);
+        Utility.addCompItem(this, highlightBox, gbc, 5, 0, 1, 1);
+        Utility.addCompItem(this, matchCaseBox, gbc, 6, 0, 1, 1);
 
         searchField.requestFocus();
     }

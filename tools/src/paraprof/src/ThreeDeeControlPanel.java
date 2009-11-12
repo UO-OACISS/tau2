@@ -10,6 +10,7 @@ import javax.swing.plaf.basic.BasicComboPopup;
 import javax.swing.plaf.basic.ComboPopup;
 import javax.swing.plaf.metal.MetalComboBoxUI;
 
+import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.enums.VisType;
 import edu.uoregon.tau.perfdmf.*;
@@ -23,9 +24,9 @@ import edu.uoregon.tau.vis.VisRenderer;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.16 2009/10/29 23:58:22 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.17 2009/11/12 22:50:29 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.16 $
+ * @version	$Revision: 1.17 $
  */
 public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
@@ -397,8 +398,8 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         gbc.weightx = 0.5;
         gbc.weighty = 0.5;
 
-        ParaProfUtils.addCompItem(panel, textField, gbc, 1, 0, 1, 1);
-        ParaProfUtils.addCompItem(panel, scrollBar, gbc, 1, 1, 1, 1);
+        Utility.addCompItem(panel, textField, gbc, 1, 0, 1, 1);
+        Utility.addCompItem(panel, scrollBar, gbc, 1, 1, 1, 1);
 
         return panel;
     }
