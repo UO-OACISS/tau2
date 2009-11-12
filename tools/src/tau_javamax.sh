@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # don't want the user to see glibc errors (on Franklin)
 export MALLOC_CHECK_=0
@@ -19,25 +19,38 @@ fi
 
 memtotal=`cat /proc/meminfo | head -1 | awk '{print $2}'`
 
-if [ $(uname -m) == "i686" ]; then
-    if [ $memtotal -gt 2300 ] ; then
-	memtotal=2300
+if [ $(uname -m) = "i686" ]; then
+    if [ $memtotal -gt 2300000 ] ; then
+	memtotal="2300000"
     fi
 fi
 
-
 trymem=$(($memtotal/1000*7/8))
 while [ $trymem -gt 250 ] ; do
+    oldmem=$trymem
+    trymem=$(($trymem*3/4))
 
-    check=`java -Xmx${trymem}m foobar 2>&1 | head -2 | tail -1`
-    if [ "x$check" != "xCould not reserve enough space for object heap" ] ; then
-	if [ "x$check" != "xThe specified size exceeds the maximum representable size." ] ; then
-	    echo "$trymem"
-	    exit
-	fi
+    check=`java -Xmx${oldmem}m foobar 2>&1 | head -2`
+    check1=`echo "$check" | head -1`
+    check2=`echo "$check" | tail -1`
+    # echo "check1=$check1"
+    # echo "check2=$check2"
+
+    case $check1 in 
+	"Invalid maximum heap size"* ) 
+	continue;
+    esac
+
+    if [ "x$check2" = "xCould not reserve enough space for object heap" ] ; then
+	continue;
+    fi
+    if [ "x$check2" = "xThe specified size exceeds the maximum representable size." ] ; then
+	continue;
     fi
 
-    trymem=$(($trymem*3/4))
+    echo "$oldmem"
+    exit
+
 done
 
 echo "failed"
