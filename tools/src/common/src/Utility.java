@@ -1,12 +1,12 @@
 package edu.uoregon.tau.common;
 
-import java.awt.Color;
-import java.awt.Font;
+import java.awt.*;
 import java.net.URL;
 import java.util.StringTokenizer;
 import java.util.NoSuchElementException;
 
 import javax.swing.ImageIcon;
+import javax.swing.JFrame;
 
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.Axis;
@@ -129,6 +129,22 @@ public class Utility {
             shorter = longName;
         }
         return shorter.trim();
+    }
+
+    public static void addCompItem(Container container, Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
+        gbc.gridx = x;
+        gbc.gridy = y;
+        gbc.gridwidth = w;
+        gbc.gridheight = h;
+        container.add(c, gbc);
+    }
+
+    public static void addCompItem(JFrame frame, Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
+        gbc.gridx = x;
+        gbc.gridy = y;
+        gbc.gridwidth = w;
+        gbc.gridheight = h;
+        frame.getContentPane().add(c, gbc);
     }
 
 }
