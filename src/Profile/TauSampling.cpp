@@ -107,13 +107,11 @@ static inline caddr_t get_pc(void *p) {
 # elif __ia64__
   pc = (caddr_t)sc->sc_ip;
 # elif __powerpc64__
-  //pc = (caddr_t)sc->regs->ctr;
+  // it could possibly be "link" - but that is supposed to be the return address.
   pc = (caddr_t)sc->regs->nip;
-  //pc = (caddr_t)current_text_addr();
 # elif __powerpc__
-  //pc = (caddr_t)sc->regs->ctr;
+  // it could possibly be "link" - but that is supposed to be the return address.
   pc = (caddr_t)sc->regs->nip;
-  //pc = (caddr_t)current_text_addr();
 # else
 #  error "profile handler not defined for this architecture"
 # endif
