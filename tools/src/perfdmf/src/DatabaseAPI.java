@@ -20,11 +20,11 @@ import edu.uoregon.tau.perfdmf.database.DB;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.27 2009/11/11 01:03:34 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.28 2009/11/13 00:11:40 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.27 $
+ * @version $Revision: 1.28 $
  */
 public class DatabaseAPI {
 
@@ -820,8 +820,9 @@ public class DatabaseAPI {
                 StringBuffer buf = new StringBuffer();
                 if (groups != null) {
                     for (int i = 0; i < groups.size(); i++) {
-                        if (i > 0)
+                        if (i > 0) {
                             buf.append("|");
+                        }
                         buf.append(((Group) groups.get(i)).getName());
                     }
 
