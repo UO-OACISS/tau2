@@ -4495,6 +4495,12 @@ if [ "x$bfd" = "xyes" ] ; then
             fi
 	    cp include/demangle.h $bfddir/include
 	    cp include/libiberty.h $bfddir/include
+	    
+	    # snow leopard
+	    if [ -r "$bfddir/lib/x86_64/libiberty.a" ] ; then
+		mv $bfddir/lib/x86_64/libiberty.a $bfddir/lib/libiberty.a
+	    fi
+
 	    cd ..
 	    cd ..
 	    rm -rf $tempdir
