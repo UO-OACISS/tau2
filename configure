@@ -4136,7 +4136,7 @@ if [ $mpi = yes ] ; then
 
 	   # check for -libverbs, sometimes necessary with OpenMPI
 	   if [ -r /usr/lib64/libnuma.a -o -r /usr/lib64/libnuma.so ] ; then 
-	       mpilibrary="$mpilibrary -libnuma"
+	       mpilibrary="$mpilibrary -lnuma"
 	   fi
         fi
 	
