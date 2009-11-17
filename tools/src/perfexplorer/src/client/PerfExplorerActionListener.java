@@ -478,7 +478,7 @@ public class PerfExplorerActionListener implements ActionListener {
 			JOptionPane.PLAIN_MESSAGE,
 			null,
 			options,
-			AnalysisType.K_MEANS);
+			PerfExplorerModel.getModel().getClusterMethod());
 		PerfExplorerModel.getModel().setClusterMethod(reply);
 	}
 

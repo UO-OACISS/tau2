@@ -12,7 +12,7 @@ import java.util.ArrayList;
 
 import edu.uoregon.tau.perfexplorer.clustering.ClusterDescription;
 import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
-import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
+import edu.uoregon.tau.perfexplorer.clustering.ClusterInterface;
 import edu.uoregon.tau.perfexplorer.clustering.PrincipalComponentsAnalysisInterface;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 import edu.uoregon.tau.perfexplorer.common.RMICubeData;
@@ -23,7 +23,7 @@ import weka.attributeSelection.PrincipalComponents;
  * TODO - make this class immutable?
  * 
  * @author khuck
- * <P>CVS $Id: WekaPrincipalComponents.java,v 1.11 2009/05/08 22:45:22 wspear Exp $</P>
+ * <P>CVS $Id: WekaPrincipalComponents.java,v 1.12 2009/11/17 16:31:01 khuck Exp $</P>
  * @version 0.1
  * @since   0.1
  */
@@ -38,7 +38,7 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 	private double[][] correlationCoefficients = null;
 	private RMICubeData cubeData = null;
 	private RawDataInterface rawData = null;
-	private KMeansClusterInterface clusterer = null;
+	private ClusterInterface clusterer = null;
 	private RawDataInterface[] clusters = null;
 	private RawDataInterface transformed = null;
 	private int maxComponents = 2;
@@ -200,7 +200,7 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 	/* (non-Javadoc)
      * @see clustering.PrincipalComponentsAnalysisInterface#setClusterer()
      */
-	public void setClusterer (KMeansClusterInterface clusterer) {
+	public void setClusterer (ClusterInterface clusterer) {
 		this.clusterer = clusterer;
 	}
 

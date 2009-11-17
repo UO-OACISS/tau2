@@ -45,8 +45,6 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		reparseItem.addActionListener(listener);
 		fileMenu.add(reparseItem);
 
-		
-
 		//Add a menu item.
 		JMenuItem scriptItem = new JMenuItem(
 				PerfExplorerActionListener.LOADSCRIPT);
@@ -61,14 +59,11 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		
 		fileMenu.add(new JSeparator());
 		
-		
-		
 		//Add a menu item.
 		JMenuItem databaseItem = new JMenuItem(
 				PerfExplorerActionListener.DATABASE_CONFIGURATION);
 		databaseItem.addActionListener(listener);
 		fileMenu.add(databaseItem);
-		
 
 		//Add a menu item.
 		JMenuItem consoleItem = new JMenuItem(
@@ -187,7 +182,7 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		JMenuItem clusteringItem = new JMenuItem(
 				PerfExplorerActionListener.CLUSTERING_METHOD);
 		clusteringItem.addActionListener(listener);
-		clusteringItem.setEnabled(false);
+//		clusteringItem.setEnabled(false);
 		analysisMenu.add(clusteringItem);
 
 		//Add a menu item.

@@ -236,8 +236,8 @@ public class ImageUtils {
 	        XYDataset data = new PCAPlotDataset(clusters);
 	        JFreeChart chart = ChartFactory.createScatterPlot(
 	            "Correlation Results",
-	            (String)(pcaData.getEventNames().get(0)),
-	            (String)(pcaData.getEventNames().get(1)),
+	            (String)(Utility.shortenFunctionName(pcaData.getEventNames().get(0))),
+	            (String)(Utility.shortenFunctionName(pcaData.getEventNames().get(1))),
 	            data,
 	            PlotOrientation.VERTICAL,
 	            true,
@@ -301,13 +301,13 @@ public class ImageUtils {
              XYDataset data = new ScatterPlotDataset(normalData,
              modelData.toString(), i, j, correlateToMain);
              // Create the chart the hard way, to include a linear regression
-             NumberAxis xAxis = new NumberAxis((String)(normalData.getEventNames().get(i)));
+             NumberAxis xAxis = new NumberAxis(Utility.shortenFunctionName((String)(normalData.getEventNames().get(i))));
              xAxis.setAutoRangeIncludesZero(false);
              NumberAxis yAxis = null;
              if (correlateToMain)
                      yAxis = new NumberAxis(normalData.getMainEventName());
              else
-                     yAxis = new NumberAxis((String)(normalData.getEventNames().get(j)));
+                     yAxis = new NumberAxis(Utility.shortenFunctionName((String)(normalData.getEventNames().get(j))));
              yAxis.setAutoRangeIncludesZero(false);
              StandardXYItemRenderer dotRenderer = new StandardXYItemRenderer(StandardXYItemRenderer.SHAPES);
              dotRenderer.setBaseShapesFilled(true); //TODO: setSeriesShapesFilled? setBaseShapesVisible?

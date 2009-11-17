@@ -62,7 +62,7 @@ import edu.uoregon.tau.perfexplorer.constants.Constants;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.90 2009/10/14 09:45:41 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.91 2009/11/17 16:31:02 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -503,19 +503,30 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		try {
 			DB db = this.getDB();
 			PreparedStatement statement = null;
+			Object[] methods = AnalysisType.getClusterMethods();
+			StringBuilder qmarks = new StringBuilder();
+			for (int i = 0 ; i < methods.length ; i++) {
+				if (i > 0)
+					qmarks.append(",");
+				qmarks.append("?");
+			}
 			if (model.getCurrentSelection() instanceof Metric) {
-				statement = db.prepareStatement("select id from analysis_settings where application = ? and experiment = ? and trial = ? and metric = ? and method = ? order by id desc");
+				statement = db.prepareStatement("select id from analysis_settings where application = ? and experiment = ? and trial = ? and metric = ? and method in (" + qmarks.toString() + ") order by id desc");
 				statement.setInt(1, model.getApplication().getID());
 				statement.setInt(2, model.getExperiment().getID());
 				statement.setInt(3, model.getTrial().getID());
 				statement.setInt(4, ((Metric)(model.getCurrentSelection())).getID());
-				statement.setString(5, AnalysisType.K_MEANS.toString());
+				for (int i = 0 ; i < methods.length ; i++) {
+					statement.setString(5+i, methods[i].toString());
+				}
 			} else {
-				statement = db.prepareStatement("select id from analysis_settings where application = ? and experiment = ? and trial = ? and metric is null and method = ? order by id desc");
+				statement = db.prepareStatement("select id from analysis_settings where application = ? and experiment = ? and trial = ? and metric is null and method in (" + qmarks.toString() + ") order by id desc");
 				statement.setInt(1, model.getApplication().getID());
 				statement.setInt(2, model.getExperiment().getID());
 				statement.setInt(3, model.getTrial().getID());
-				statement.setString(4, AnalysisType.K_MEANS.toString());
+				for (int i = 0 ; i < methods.length ; i++) {
+					statement.setString(4+i, methods[i].toString());
+				}
 			}
 			//PerfExplorerOutput.println(statement.toString());
 			ResultSet results = statement.executeQuery();

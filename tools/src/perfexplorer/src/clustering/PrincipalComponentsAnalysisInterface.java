@@ -9,7 +9,7 @@ package edu.uoregon.tau.perfexplorer.clustering;
   * This interface is used to define the methods to implement a class
   * which performs PCA, or Principle Components Analysis.
   *
-  * <P>CVS $Id: PrincipalComponentsAnalysisInterface.java,v 1.7 2009/02/24 00:53:35 khuck Exp $</P>
+  * <P>CVS $Id: PrincipalComponentsAnalysisInterface.java,v 1.8 2009/11/17 16:31:00 khuck Exp $</P>
   * @author khuck
   * @version 0.1
   * @since   0.1
@@ -53,7 +53,7 @@ public interface PrincipalComponentsAnalysisInterface {
      * 
      * @param clusterer
      */
-    public void setClusterer(KMeansClusterInterface clusterer);
+    public void setClusterer(ClusterInterface clusterer);
 
     /**
      * Used to return the PCA reduced data.

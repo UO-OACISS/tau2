@@ -11,7 +11,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
-import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
+import edu.uoregon.tau.perfexplorer.clustering.ClusterInterface;
 import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
 import edu.uoregon.tau.perfexplorer.constants.Constants;
 
@@ -19,7 +19,7 @@ import edu.uoregon.tau.perfexplorer.constants.Constants;
  * This class takes the Weka or R cluster results, and creates a virtual
  * topology image showing which cluster each thread of execution belongs to.
  *
- * <P>CVS $Id: VirtualTopology.java,v 1.6 2009/03/02 19:23:51 khuck Exp $</P>
+ * <P>CVS $Id: VirtualTopology.java,v 1.7 2009/11/17 16:31:03 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -27,7 +27,7 @@ import edu.uoregon.tau.perfexplorer.constants.Constants;
  */
 public class VirtualTopology extends JPanel {
 	RMIPerfExplorerModel modelData = null;
-	KMeansClusterInterface clusterer = null;
+	ClusterInterface clusterer = null;
 	int[] pixels = null;
 	BufferedImage img = null;
 	StringBuilder description = null;
@@ -35,7 +35,7 @@ public class VirtualTopology extends JPanel {
 	private static final Color[] colors = PEChartColor.createDefaultColorArray();
 	
 	
-	public VirtualTopology(RMIPerfExplorerModel modelData, KMeansClusterInterface clusterer) {
+	public VirtualTopology(RMIPerfExplorerModel modelData, ClusterInterface clusterer) {
 		this.modelData = modelData;
 		this.clusterer = clusterer;
 		

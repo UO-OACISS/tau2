@@ -20,4 +20,4 @@ working_path=`echo $0 | sed 's/getTopXChildren//'`
 
 # redirect stderr to /dev/null so we don't see garbage from Jython
 
-eval perfexplorer -c perfexplorer_working -n -i ${working_path}topXofParent.py -p "tauData=$1,parent=$2,threshold=$3" #2> /dev/null
+eval perfexplorer -c perfexplorer_working -n -i ${working_path}topXofParent.py -p "tauData=$1,parent=$2,threshold=$3" 2> /dev/null
