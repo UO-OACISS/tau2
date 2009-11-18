@@ -19,7 +19,7 @@ import edu.uoregon.tau.perfexplorer.constants.Constants;
  * This class takes the Weka or R cluster results, and creates a virtual
  * topology image showing which cluster each thread of execution belongs to.
  *
- * <P>CVS $Id: VirtualTopology.java,v 1.7 2009/11/17 16:31:03 khuck Exp $</P>
+ * <P>CVS $Id: VirtualTopology.java,v 1.8 2009/11/18 17:45:48 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since   0.1
@@ -41,7 +41,7 @@ public class VirtualTopology extends JPanel {
 		
 		description = new StringBuilder();
 		description.append(modelData.toShortString() + ".");
-		description.append(clusterer.getK() + "_clusters");
+		description.append(clusterer.getClusterSizes().length + "_clusters");
 	
 		// build the image data from the cluster results
 		pixels = new int[clusterer.getNumInstances()];
@@ -74,9 +74,10 @@ public class VirtualTopology extends JPanel {
 			int i = 0;
 			for (int x = 0 ; x < width ; x++) {
 				for (int y = 0 ; y < height ; y++) {
+					int value = colors[clusterer.clusterInstance(i)].getRGB();
 					for (int cellX = x * cellWidth ; cellX < (x+1) * cellWidth ; cellX++) {
 						for (int cellY = y * cellHeight ; cellY < (y+1) * cellHeight ; cellY++) {
-							img.setRGB(cellX, cellY, colors[clusterer.clusterInstance(i)].getRGB());
+							img.setRGB(cellX, cellY, value);
 						}
 					}
 					i++;

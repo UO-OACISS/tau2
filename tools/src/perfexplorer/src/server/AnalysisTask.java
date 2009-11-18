@@ -19,7 +19,9 @@ import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
 import edu.uoregon.tau.perfexplorer.clustering.ClusterInterface;
+import edu.uoregon.tau.perfexplorer.clustering.DBScanClusterInterface;
 import edu.uoregon.tau.perfexplorer.clustering.DataNormalizer;
+import edu.uoregon.tau.perfexplorer.clustering.HierarchicalCluster;
 import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
 import edu.uoregon.tau.perfexplorer.clustering.PrincipalComponentsAnalysisInterface;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
@@ -37,7 +39,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  *
- * <P>CVS $Id: AnalysisTask.java,v 1.22 2009/11/18 10:17:38 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTask.java,v 1.23 2009/11/18 17:45:45 khuck Exp $</P>
  * @author Kevin Huck
  * @version 0.1
  * @since 0.1
@@ -219,204 +221,71 @@ public class AnalysisTask extends TimerTask {
 			analysisID = modelData.getAnalysisID();
 			try {
 				PerfExplorerOutput.println("Processing " + modelData.toString());
-				// get the number of events, threads, etc.
-				//getConstants();
 				// get the raw data
 				rawData = DataUtils.getRawData(session, modelData);
 				eventIDs = rawData.getEventNames();
 				numTotalThreads = rawData.numVectors();
 				// do dimension reduction, if requested
 				RawDataInterface reducedData = doDimensionReduction();
-				
+
+				// do data normalization, if requested
 				//DataNormalizer normalizer = AnalysisFactory.createDataNormalizer(reducedData);
 				//reducedData=normalizer.getNormalizedData();
 				
-				// find good initial centers
-				//makeDendrogram(reducedData);
-				// do it!
 				if (modelData.getClusterMethod().equals(AnalysisType.K_MEANS)) {
 					int maxClusters = (numTotalThreads <= modelData.getNumberOfClusters()) ? (numTotalThreads-1) : modelData.getNumberOfClusters();
 					for (int i = 2 ; i <= maxClusters ; i++) {
 						PerfExplorerOutput.println("Doing " + i + " clusters:" + modelData.toString());
 						// create a cluster engine
 						KMeansClusterInterface clusterer = AnalysisFactory.createKMeansEngine();
-						//System.out.print("Declaring... ");
-						long start = System.currentTimeMillis();
 						clusterer.setInputData(reducedData);
-						long end = System.currentTimeMillis();
-						//System.out.println(end-start + " milliseconds");
 						clusterer.setK(i);
-						clusterer.doSmartInitialization(false); // this takes too long - disable by default
-						//System.out.print("Clustering... ");
-						start = System.currentTimeMillis();
 						clusterer.findClusters();
-						end = System.currentTimeMillis();
-						//System.out.println(end-start + " milliseconds");
-						// get the centroids
-						//System.out.print("Centroids, stdevs, sizes... ");
-						start = System.currentTimeMillis();
-						RawDataInterface centroids = clusterer.getClusterCentroids();
-						RawDataInterface deviations = clusterer.getClusterStandardDeviations();
-						int[] clusterSizes = clusterer.getClusterSizes();
-						end = System.currentTimeMillis();
-						//System.out.println(end-start + " milliseconds");
-						//System.out.print("histograms... ");
-						start = System.currentTimeMillis();
-						// do histograms
-						File thumbnail = ImageUtils.generateClusterSizeThumbnail(modelData, clusterSizes);//, eventIDs //TODO: These aren't used.
-						File chart = ImageUtils.generateClusterSizeImage(modelData, clusterSizes);//, eventIDs
-						// TODO - fix this to save the cluster sizes, too!
-						chartType = ChartType.HISTOGRAM;
-						saveAnalysisResult(centroids, deviations, thumbnail, chart);
-						end = System.currentTimeMillis();
-						//System.out.println(end-start + " milliseconds");
-						
-						if (modelData.getCurrentSelection() instanceof Metric) {
-						// do PCA breakdown
-						//System.out.print("PCA breakdown... ");
-						start = System.currentTimeMillis();
-						PrincipalComponentsAnalysisInterface pca =
-						AnalysisFactory.createPCAEngine(server.getCubeData(modelData));
-						pca.setInputData(reducedData);
-						pca.doPCA();
-						end = System.currentTimeMillis();
-						//System.out.println(end-start + " milliseconds");
-						// get the components
-						RawDataInterface components = pca.getResults();
-						pca.setClusterer(clusterer);
-						RawDataInterface[] clusters = pca.getClusters();
-						// do a scatterplot
-						rCorrelation = 0.0;
-						//for (int m = 0 ; m < i ; m++)
-							//clusters[m].normalizeData(true);
-						//PerfExplorerOutput.println("PCA Dimensions: " + components.numDimensions());
-						thumbnail = ImageUtils.generateClusterScatterplotThumbnail(ChartType.PCA_SCATTERPLOT, modelData, clusters);
-						chart = ImageUtils.generateClusterScatterplotImage(ChartType.PCA_SCATTERPLOT, modelData, components, clusters);
-						saveAnalysisResult(components, components, thumbnail, chart);
-						}
-						
-						// do virtual topology
-						VirtualTopology vt = new VirtualTopology(modelData, clusterer);
-						String filename = vt.getImage();
-						String nail = vt.getThumbnail();
-						saveAnalysisResult("Virtual Topology", filename, nail, false);
-						
-						// do mins
-						chartType = ChartType.CLUSTER_MINIMUMS;
-						thumbnail = ImageUtils.generateBreakdownThumbnail(modelData, clusterer.getClusterMinimums(), deviations, eventIDs);
-						chart = ImageUtils.generateBreakdownImage(chartType, modelData, clusterer.getClusterMinimums(), deviations, eventIDs);
-						saveAnalysisResult(clusterer.getClusterMinimums(), deviations, thumbnail, chart);
-						// do averages
-						chartType = ChartType.CLUSTER_AVERAGES;
-						thumbnail = ImageUtils.generateBreakdownThumbnail(modelData, centroids, deviations, eventIDs);
-						chart = ImageUtils.generateBreakdownImage(chartType, modelData, centroids, deviations, eventIDs);
-						saveAnalysisResult(centroids, deviations, thumbnail, chart);
-						// do maxes
-						chartType = ChartType.CLUSTER_MAXIMUMS;
-						thumbnail = ImageUtils.generateBreakdownThumbnail(modelData, clusterer.getClusterMaximums(), deviations, eventIDs);
-						chart = ImageUtils.generateBreakdownImage(chartType, modelData, clusterer.getClusterMaximums(), deviations, eventIDs);
-						saveAnalysisResult(clusterer.getClusterMaximums(), deviations, thumbnail, chart);
+						saveClusterResults (clusterer, reducedData);
 					}
 					System.out.println("...done clustering.");
 				} else if (modelData.getClusterMethod().equals(AnalysisType.HIERARCHICAL)) {
 					int maxClusters = (numTotalThreads <= modelData.getNumberOfClusters()) ? (numTotalThreads-1) : modelData.getNumberOfClusters();
-					for (int i = 2 ; i <= maxClusters ; i++) {
-						PerfExplorerOutput.println("Doing " + i + " clusters:" + modelData.toString());
 					// create a cluster engine
-					ClusterInterface clusterer = AnalysisFactory.createHierarchicalClusteringEngine();
-					//System.out.print("Declaring... ");
+					HierarchicalCluster clusterer = AnalysisFactory.createHierarchicalClusteringEngine();
 					long start = System.currentTimeMillis();
 					clusterer.setInputData(reducedData);
 					long end = System.currentTimeMillis();
-					//System.out.println(end-start + " milliseconds");
-						//clusterer.reset();
+					for (int i = 2 ; i <= maxClusters ; i++) {
+						PerfExplorerOutput.println("Doing " + i + " clusters:" + modelData.toString());
+						// because all we are doing is changing the cut in the tree, we don't
+						// have to the clustering more than once.  but we do have to reset
+						// to cut with a new k.
+						clusterer.reset();
 						clusterer.setK(i);
-						//System.out.print("Clustering... ");
-						start = System.currentTimeMillis();
 						clusterer.findClusters();
-						end = System.currentTimeMillis();
-						//System.out.println(end-start + " milliseconds");
-						// get the centroids
-						//System.out.print("Centroids, stdevs, sizes... ");
-						start = System.currentTimeMillis();
-						RawDataInterface centroids = clusterer.getClusterCentroids();
-						RawDataInterface deviations = clusterer.getClusterStandardDeviations();
-						int[] clusterSizes = clusterer.getClusterSizes();
-						end = System.currentTimeMillis();
-						//System.out.println(end-start + " milliseconds");
-						//System.out.print("histograms... ");
-						start = System.currentTimeMillis();
-						// do histograms
-						File thumbnail = ImageUtils.generateClusterSizeThumbnail(modelData, clusterSizes);//, eventIDs //TODO: These aren't used.
-						File chart = ImageUtils.generateClusterSizeImage(modelData, clusterSizes);//, eventIDs
-						// TODO - fix this to save the cluster sizes, too!
-						chartType = ChartType.HISTOGRAM;
-						saveAnalysisResult(centroids, deviations, thumbnail, chart);
-						end = System.currentTimeMillis();
-						//System.out.println(end-start + " milliseconds");
-						
-						if (modelData.getCurrentSelection() instanceof Metric) {
-						// do PCA breakdown
-						//System.out.print("PCA breakdown... ");
-						start = System.currentTimeMillis();
-						PrincipalComponentsAnalysisInterface pca =
-						AnalysisFactory.createPCAEngine(server.getCubeData(modelData));
-						pca.setInputData(reducedData);
-						pca.doPCA();
-						end = System.currentTimeMillis();
-						//System.out.println(end-start + " milliseconds");
-						// get the components
-						RawDataInterface components = pca.getResults();
-						pca.setClusterer(clusterer);
-						RawDataInterface[] clusters = pca.getClusters();
-						// do a scatterplot
-						rCorrelation = 0.0;
-						//for (int m = 0 ; m < i ; m++)
-							//clusters[m].normalizeData(true);
-						//PerfExplorerOutput.println("PCA Dimensions: " + components.numDimensions());
-						thumbnail = ImageUtils.generateClusterScatterplotThumbnail(ChartType.PCA_SCATTERPLOT, modelData, clusters);
-						chart = ImageUtils.generateClusterScatterplotImage(ChartType.PCA_SCATTERPLOT, modelData, components, clusters);
-						saveAnalysisResult(components, components, thumbnail, chart);
-						}
-						
-						// do virtual topology
-						VirtualTopology vt = new VirtualTopology(modelData, clusterer);
-						String filename = vt.getImage();
-						String nail = vt.getThumbnail();
-						saveAnalysisResult("Virtual Topology", filename, nail, false);
-						
-						// do mins
-						chartType = ChartType.CLUSTER_MINIMUMS;
-						thumbnail = ImageUtils.generateBreakdownThumbnail(modelData, clusterer.getClusterMinimums(), deviations, eventIDs);
-						chart = ImageUtils.generateBreakdownImage(chartType, modelData, clusterer.getClusterMinimums(), deviations, eventIDs);
-						saveAnalysisResult(clusterer.getClusterMinimums(), deviations, thumbnail, chart);
-						// do averages
-						chartType = ChartType.CLUSTER_AVERAGES;
-						thumbnail = ImageUtils.generateBreakdownThumbnail(modelData, centroids, deviations, eventIDs);
-						chart = ImageUtils.generateBreakdownImage(chartType, modelData, centroids, deviations, eventIDs);
-						saveAnalysisResult(centroids, deviations, thumbnail, chart);
-						// do maxes
-						chartType = ChartType.CLUSTER_MAXIMUMS;
-						thumbnail = ImageUtils.generateBreakdownThumbnail(modelData, clusterer.getClusterMaximums(), deviations, eventIDs);
-						chart = ImageUtils.generateBreakdownImage(chartType, modelData, clusterer.getClusterMaximums(), deviations, eventIDs);
-						saveAnalysisResult(clusterer.getClusterMaximums(), deviations, thumbnail, chart);
+						saveClusterResults (clusterer, reducedData);
 					}
+					System.out.println("...done clustering.");
+				} else if (modelData.getClusterMethod().equals(AnalysisType.DBSCAN)) {
+					// create a cluster engine
+					DBScanClusterInterface clusterer = AnalysisFactory.createDBScanEngine();
+					long start = System.currentTimeMillis();
+					clusterer.setInputData(reducedData);
+					long end = System.currentTimeMillis();
+
+					double epsilon = 1.0;
+					int numClusters = 1;
+					int maxTries = 5;
+					while (numClusters <= 10 && maxTries > 0) {
+						PerfExplorerOutput.println("Clustering with Epsilon = " + epsilon + " : " + modelData.toString());
+						clusterer.setError(epsilon);
+						clusterer.findClusters();
+						saveClusterResults (clusterer, reducedData);
+						numClusters = clusterer.getClusterCentroids().numVectors();
+						epsilon = epsilon * 0.5;
+						maxTries--;
+					}
+
 					System.out.println("...done clustering.");
 				} else {
 					PerfExplorerOutput.println("Doing Correlation Analysis...");
-					// get the inclusive data
-					//reducedData;
 					chartType = ChartType.CORRELATION_SCATTERPLOT;
-					/*
-					for (int i = 0 ; i < reducedData.numDimensions() ; i++) {
-						correlateToMain = true;
-						rCorrelation = reducedData.getCorrelation(i,i);
-						File thumbnail = generateThumbnail(reducedData, i, i);
-						File chart = generateImage(reducedData, i, i);
-						saveAnalysisResult(reducedData, reducedData, thumbnail, chart);	
-						correlateToMain = false;
-					}
-					*/
 					for (int i = 0 ; i < reducedData.numDimensions() ; i++) {
 						for (int j = 0 ; j < reducedData.numDimensions() ; j++) {
 							rCorrelation = reducedData.getCorrelation(i,j);
@@ -442,8 +311,60 @@ public class AnalysisTask extends TimerTask {
 			server.taskFinished(connectionIndex);
 			modelData = null;
 		} // else 
-			//PerfExplorerOutput.println("nothing to do... ");
-			
+			//PerfExplorerOutput.println("nothing to do... ");			
+	}
+	
+	private void saveClusterResults (ClusterInterface clusterer, RawDataInterface reducedData) 
+			throws PerfExplorerException, ClusterException {
+		// get the centroids
+		RawDataInterface centroids = clusterer.getClusterCentroids();
+		RawDataInterface deviations = clusterer.getClusterStandardDeviations();
+		int[] clusterSizes = clusterer.getClusterSizes();
+
+		// do histograms
+		File thumbnail = ImageUtils.generateClusterSizeThumbnail(modelData, clusterSizes);//, eventIDs //TODO: These aren't used.
+		File chart = ImageUtils.generateClusterSizeImage(modelData, clusterSizes);//, eventIDs
+		chartType = ChartType.HISTOGRAM;
+		saveAnalysisResult(centroids, deviations, thumbnail, chart);
+		
+		if (modelData.getCurrentSelection() instanceof Metric) {
+			// do PCA breakdown
+			PrincipalComponentsAnalysisInterface pca =
+			AnalysisFactory.createPCAEngine(server.getCubeData(modelData));
+			pca.setInputData(reducedData);
+			pca.doPCA();
+			// get the components
+			RawDataInterface components = pca.getResults();
+			pca.setClusterer(clusterer);
+			RawDataInterface[] clusters = pca.getClusters();
+			// do a scatterplot
+			rCorrelation = 0.0;
+			thumbnail = ImageUtils.generateClusterScatterplotThumbnail(ChartType.PCA_SCATTERPLOT, modelData, clusters);
+			chart = ImageUtils.generateClusterScatterplotImage(ChartType.PCA_SCATTERPLOT, modelData, components, clusters);
+			saveAnalysisResult(components, components, thumbnail, chart);
+		}
+		
+		// do virtual topology
+		VirtualTopology vt = new VirtualTopology(modelData, clusterer);
+		String filename = vt.getImage();
+		String nail = vt.getThumbnail();
+		saveAnalysisResult("Virtual Topology", filename, nail, false);
+		
+		// do mins
+		chartType = ChartType.CLUSTER_MINIMUMS;
+		thumbnail = ImageUtils.generateBreakdownThumbnail(modelData, clusterer.getClusterMinimums(), deviations, eventIDs);
+		chart = ImageUtils.generateBreakdownImage(chartType, modelData, clusterer.getClusterMinimums(), deviations, eventIDs);
+		saveAnalysisResult(clusterer.getClusterMinimums(), deviations, thumbnail, chart);
+		// do averages
+		chartType = ChartType.CLUSTER_AVERAGES;
+		thumbnail = ImageUtils.generateBreakdownThumbnail(modelData, centroids, deviations, eventIDs);
+		chart = ImageUtils.generateBreakdownImage(chartType, modelData, centroids, deviations, eventIDs);
+		saveAnalysisResult(centroids, deviations, thumbnail, chart);
+		// do maxes
+		chartType = ChartType.CLUSTER_MAXIMUMS;
+		thumbnail = ImageUtils.generateBreakdownThumbnail(modelData, clusterer.getClusterMaximums(), deviations, eventIDs);
+		chart = ImageUtils.generateBreakdownImage(chartType, modelData, clusterer.getClusterMaximums(), deviations, eventIDs);
+		saveAnalysisResult(clusterer.getClusterMaximums(), deviations, thumbnail, chart);
 	}
 }
 

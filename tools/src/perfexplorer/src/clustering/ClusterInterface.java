@@ -9,7 +9,7 @@ package edu.uoregon.tau.perfexplorer.clustering;
   * This interface is used to define the methods to implement a hierarchical 
   * clustering class.
   *
-  * <P>CVS $Id: ClusterInterface.java,v 1.1 2009/10/23 16:26:15 khuck Exp $</P>
+  * <P>CVS $Id: ClusterInterface.java,v 1.2 2009/11/18 17:45:16 khuck Exp $</P>
   * @author khuck
   * @version 0.1
   * @since   0.1
@@ -22,8 +22,8 @@ public interface ClusterInterface {
      * 
      * @throws ClusterException
      */
-
     public void findClusters() throws ClusterException;
+
     /**
      * This method gets the ith ClusterDescription object
      * 
@@ -31,24 +31,9 @@ public interface ClusterInterface {
      * @return a ClusterDescription
      * @throws ClusterException
      */
-
     public ClusterDescription getClusterDescription(int i) 
         throws ClusterException;
-    /**
-     * Set the value of K (nuber of clusters)
-     * 
-     * @param k
-     */
-
-    public void setK(int k);
-    /**
-     * Get the value of K (number of clusters)
-     * 
-     * @return
-     */
-
-    public int getK();
-    
+   
     /**
      * Sets the input data for the clustering operation.
      * 

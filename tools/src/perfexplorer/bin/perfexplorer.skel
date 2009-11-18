@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: perfexplorer.skel,v 1.42 2009/11/12 01:26:39 amorris Exp $
+# $Id: perfexplorer.skel,v 1.43 2009/11/18 17:45:11 khuck Exp $
 # $Name:  $
 
 TAUROOT=@TAUROOT@
@@ -35,7 +35,7 @@ PERFEXPLORER_JAR=$TAUROOT/$CONFIG_ARCH/lib/perfexplorer.jar
 PERFDMF_JAR=$TAUROOT/$CONFIG_ARCH/lib/perfdmf.jar
 JARGS_JAR=$TAUROOT/$CONFIG_ARCH/lib/jargs.jar
 JYTHON_JAR=$TAUROOT/$CONFIG_ARCH/lib/jython.jar
-WEKA_JAR=$JAR_HOME/weka.jar
+WEKA_JAR=$JAR_HOME/weka-3-6-1.jar
 PERFEXPLORER_JAR=$TAUROOT/$CONFIG_ARCH/lib/perfexplorer.jar
 JFREECHART_JAR=$TAUROOT/$CONFIG_ARCH/lib/jfreechart-1.0.12.jar
 JCOMMON_JAR=$TAUROOT/$CONFIG_ARCH/lib/jcommon-1.0.15.jar
@@ -63,6 +63,18 @@ JSR_JAR=$JAR_HOME/jsr94-1.1.jar
 JXL_JAR=$JAR_HOME/jxl-2.4.2.jar
 STRINGTEMPLATE_JAR=$JAR_HOME/stringtemplate-2.3b6.jar
 JBOSS_RULES_JARS=$ANTLR3_JAR:$ANTLR2_JAR:$COMMONS_JCI_CORE_JAR:$COMMONS_JCI_ECLIPSE_JAR:$COMMONS_LANG_JAR:$COMMONS_LOGGING_JAR:$CORE_JAR:$DROOLS_COMIPLER_JAR:$DROOLS_CORE_JAR:$DROOLS_DECISIONTABLES_JAR:$DROOLS_JSR94_JAR:$JSR_JAR:$JXL_JAR:$STRINGTEMPLATE_JAR
+
+# check for the existence of weka
+if [ ! -f $WEKA_JAR ] ; then
+	echo "You are missing the correct Weka jar file.  Please re-run perfexplorer_configure."
+	exit 1
+fi
+
+# check for the existence of drools
+if [ ! -f $DROOLS_CORE_JAR ] ; then
+	echo "You are missing the correct JBoss Rules jar files.  Please re-run perfexplorer_configure."
+	exit 1
+fi
 
 # PARSE COMMAND LINE SWITCHES
 ###############################################################

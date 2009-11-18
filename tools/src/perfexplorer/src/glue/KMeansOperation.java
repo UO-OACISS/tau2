@@ -109,7 +109,6 @@ public class KMeansOperation extends ClusterOperation {
 		}
 		KMeansClusterInterface clusterer = AnalysisFactory.createKMeansEngine();
 		clusterer.setInputData(data);
-		clusterer.doSmartInitialization(true);
 		clusterer.setK(this.maxClusters);
 		clusterer.doPCA(false);
 		try {

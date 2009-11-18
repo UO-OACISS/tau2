@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfexplorer.clustering.ClusterInterface;
 import edu.uoregon.tau.perfexplorer.clustering.HierarchicalCluster;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
@@ -91,7 +90,7 @@ public class HierarchicalClusterOperation extends ClusterOperation {
 	    		// generate uniform distribution reference dataset
 	    		for (int b = 0 ; b < B ; b++) {
 	    			PerformanceResult reference = generateReferenceDataset(input, mins, maxs);
-	    			ClusterInterface tmpClusterer = doClustering(reference);
+	    			HierarchicalCluster tmpClusterer = doClustering(reference);
 	        		ref_w_k[b] = computeErrorMeasure(reference, tmpClusterer, false);
 	        		// we are computing a sum, so sum
 	        		l_bar += ref_w_k[b];
@@ -121,7 +120,7 @@ public class HierarchicalClusterOperation extends ClusterOperation {
 	 * @param input
 	 * @param eventList
 	 */
-	protected ClusterInterface doClustering(PerformanceResult input) {
+	protected HierarchicalCluster doClustering(PerformanceResult input) {
     	List<String> eventList = new ArrayList<String>(input.getEvents());
 		RawDataInterface data = AnalysisFactory.createRawData("Cluster Test", eventList, input.getThreads().size(), eventList.size(), null);
 		for(Integer thread : input.getThreads()) {
@@ -133,7 +132,7 @@ public class HierarchicalClusterOperation extends ClusterOperation {
 				}
 			}
 		}
-		ClusterInterface clusterer = AnalysisFactory.createHierarchicalClusteringEngine();
+		HierarchicalCluster clusterer = AnalysisFactory.createHierarchicalClusteringEngine();
 		clusterer.setInputData(data);
 		clusterer.setK(this.maxClusters);
 		try {

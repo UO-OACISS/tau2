@@ -23,7 +23,7 @@ import weka.attributeSelection.PrincipalComponents;
  * TODO - make this class immutable?
  * 
  * @author khuck
- * <P>CVS $Id: WekaPrincipalComponents.java,v 1.12 2009/11/17 16:31:01 khuck Exp $</P>
+ * <P>CVS $Id: WekaPrincipalComponents.java,v 1.13 2009/11/18 17:45:38 khuck Exp $</P>
  * @version 0.1
  * @since   0.1
  */
@@ -76,12 +76,13 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 					pca.setMaximumAttributeNames(this.maxComponents);
 				pca.setNormalize(false);
 				pca.setTransformBackToOriginal(false);
-				pca.buildEvaluator((Instances)rawData.getData());
+				Instances instances = (Instances)rawData.getData(); 
+				pca.buildEvaluator(instances);
 				System.out.println("variance covered: " + pca.getVarianceCovered());
 				for (int i = 0 ; i < ((Instances)rawData.getData()).numAttributes() ; i++) {
 					System.out.println("merit["+i+"]: " + pca.evaluateAttribute(i));
 				}
-				components = pca.transformedData();
+				components = pca.transformedData(instances);
 				transformed = new WekaRawData(components);
 			} catch (Exception e) {
 				System.err.println("Error performing PCA on dataset");
@@ -162,7 +163,7 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 	public RawDataInterface[] getClusters () {
 		if (this.clusterer != null) {
 			int[] clusterSizes = clusterer.getClusterSizes();
-			int k = clusterer.getK();
+			int k = clusterer.getClusterSizes().length;
 			clusters = new RawDataInterface[k];
 			Instances[] instances = new Instances[k];
 			int[] counters = new int[k];

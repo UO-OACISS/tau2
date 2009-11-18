@@ -10,7 +10,7 @@ import java.io.Serializable;
 /**
  * This class is used as a typesafe enumeration.
  *
- * <P>CVS $Id: AnalysisType.java,v 1.4 2009/11/17 16:31:02 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisType.java,v 1.5 2009/11/18 17:45:41 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.2
  * @since   0.2
@@ -35,7 +35,7 @@ public final class AnalysisType implements Serializable {
     public final static AnalysisType CORRELATION_ANALYSIS = 
         new AnalysisType("Correlation Analysis");
     public final static AnalysisType HIERARCHICAL = new AnalysisType("Hierarchical");
-    public final static AnalysisType DBASE = new AnalysisType("Density Based");
+    public final static AnalysisType DBSCAN = new AnalysisType("Density Based (DBSCAN)");
     
     /**
      * The constructor is private, so this class cannot be instantiated.
@@ -71,7 +71,7 @@ public final class AnalysisType implements Serializable {
     private static int nextOrdinal = 0;
     private final int ordinal = nextOrdinal++;
     private static final AnalysisType[] VALUES = 
-        {K_MEANS, K_HARMONIC_MEANS, GEM, FUZZY_K_MEANS, CORRELATION_ANALYSIS, HIERARCHICAL, DBASE};
+        {K_MEANS, K_HARMONIC_MEANS, GEM, FUZZY_K_MEANS, CORRELATION_ANALYSIS, HIERARCHICAL, DBSCAN};
     
     /**
      * This method is necessary, because we are serializing the object.
@@ -93,7 +93,7 @@ public final class AnalysisType implements Serializable {
      */
     public static Object[] getClusterMethods() {
         //Object[] options = {K_MEANS, K_HARMONIC_MEANS, GEM, FUZZY_K_MEANS, HIERARCHICAL, DBASE};
-        Object[] options = {K_MEANS, HIERARCHICAL, DBASE};
+        Object[] options = {K_MEANS, HIERARCHICAL, DBSCAN};
         return options;
     }
 }

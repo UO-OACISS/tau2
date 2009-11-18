@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: perfexplorer_configure.skel,v 1.21 2009/09/03 08:57:20 khuck Exp $
+# $Id: perfexplorer_configure.skel,v 1.22 2009/11/18 17:45:14 khuck Exp $
 # $Name:  $
 
 rm -f .last_config
@@ -23,7 +23,8 @@ configdir=$HOME/.ParaProf
 tmpdir=/tmp
 LIBDIR=${tauroot}/${architecture}/lib
 PERFEXPLORER_JAR=${LIBDIR}/perfexplorer.jar
-redirect=http://www.cs.uoregon.edu/research/paracomp/tau/weka-redirect.html
+redirectfile=weka-redirect-3-6-1.html
+redirect=http://www.cs.uoregon.edu/research/paracomp/tau/${redirectfile}
 mytest=`which unzip`
 if [ "x$mytest" = "x" ] ; then
 	echo "unzip not found!"
@@ -185,7 +186,7 @@ echo "TAU: installing tools in $targetdir"
 
 JAR_HOME=$HOME/.ParaProf
 
-WEKA_JAR=$JAR_HOME/weka.jar
+WEKA_JAR=$JAR_HOME/weka-3-6-1.jar
 WEKA_ZIP_DIR=$JAR_HOME
     
 if [ ! -r ${WEKA_JAR} ]; then
@@ -212,13 +213,13 @@ if [ ! -r ${WEKA_JAR} ]; then
 		#exit 1
 	    #fi
 	    
-		/bin/rm -f weka-redirect.html
-		#wget http://www.cs.uoregon.edu/research/paracomp/tau/weka-redirect.html
-		java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget $redirect weka-redirect.html false
-		URL=`grep URL weka-redirect.html | sed s/URL=//`
-		FILE=`grep FILE weka-redirect.html | sed s/FILE=//`
-		DIR=`grep DIR weka-redirect.html | sed s/DIR=//`
-		/bin/rm -f weka-redirect.html
+		/bin/rm -f ${redirectfile}
+		#wget http://www.cs.uoregon.edu/research/paracomp/tau/${redirectfile}
+		java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget $redirect ${redirectfile} false
+		URL=`grep URL ${redirectfile} | sed s/URL=//`
+		FILE=`grep FILE ${redirectfile} | sed s/FILE=//`
+		DIR=`grep DIR ${redirectfile} | sed s/DIR=//`
+		/bin/rm -f ${redirectfile}
 		echo "Getting $FILE... please be patient..."
 		#wget "$URL"
 		java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget "$URL" "$FILE" true
@@ -228,9 +229,9 @@ if [ ! -r ${WEKA_JAR} ]; then
 			echo "The Weka file ${FILE} is in ${WEKA_ZIP_DIR} - you will have to unzip it and install it manually in ${WEKA_ZIP_DIR}"
 		else
 			${UNZIP} ${FILE}
-			/bin/rm -f weka-redirect.html
+			/bin/rm -f ${redirectfile}
 			/bin/rm -f $FILE
-			cp $DIR/weka.jar .
+			cp $DIR/weka.jar ./weka-3-6-1.jar
 			/bin/rm -rf $DIR
 		fi
 	    
@@ -248,6 +249,7 @@ if [ ! -r ${WEKA_JAR} ]; then
 		echo "or use the following redirection link (recommended):"
 		echo "--->	$redirect"
 		echo "Download and unzip the specified URL in the redirect file, and place the weka.jar file in $configdir"
+		echo "and rename it to weka-3-6-1.jar"
         echo ""
 	fi
 fi
