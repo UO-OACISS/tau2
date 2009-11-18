@@ -37,7 +37,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  *
- * <P>CVS $Id: AnalysisTask.java,v 1.21 2009/11/17 16:31:02 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTask.java,v 1.22 2009/11/18 10:17:38 khuck Exp $</P>
  * @author Kevin Huck
  * @version 0.1
  * @since 0.1
@@ -322,13 +322,14 @@ public class AnalysisTask extends TimerTask {
 					int maxClusters = (numTotalThreads <= modelData.getNumberOfClusters()) ? (numTotalThreads-1) : modelData.getNumberOfClusters();
 					for (int i = 2 ; i <= maxClusters ; i++) {
 						PerfExplorerOutput.println("Doing " + i + " clusters:" + modelData.toString());
-						// create a cluster engine
-						ClusterInterface clusterer = AnalysisFactory.createHierarchicalClusteringEngine();
-						//System.out.print("Declaring... ");
-						long start = System.currentTimeMillis();
-						clusterer.setInputData(reducedData);
-						long end = System.currentTimeMillis();
-						//System.out.println(end-start + " milliseconds");
+					// create a cluster engine
+					ClusterInterface clusterer = AnalysisFactory.createHierarchicalClusteringEngine();
+					//System.out.print("Declaring... ");
+					long start = System.currentTimeMillis();
+					clusterer.setInputData(reducedData);
+					long end = System.currentTimeMillis();
+					//System.out.println(end-start + " milliseconds");
+						//clusterer.reset();
 						clusterer.setK(i);
 						//System.out.print("Clustering... ");
 						start = System.currentTimeMillis();

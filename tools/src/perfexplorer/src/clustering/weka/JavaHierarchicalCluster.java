@@ -66,7 +66,8 @@ public class JavaHierarchicalCluster implements HierarchicalCluster {
 	public DendrogramTree buildDendrogramTree() {
 		if (distances == null) {
 			distances = new DistanceMatrix(inputData.numVectors());
-			distances.solveManhattanDistances(inputData);
+			//distances.solveManhattanDistances(inputData);
+			distances.solveCartesianDistances(inputData);
 		}
 		
 		this.dimension = distances.getDimension();
@@ -203,7 +204,7 @@ public class JavaHierarchicalCluster implements HierarchicalCluster {
 		
 		// iterate over the array, until we have as many subtrees as we have desired clusters
 		for (int i = 1 ; i < this.k ; i++) {
-			// find the subtree from all the current subtrees with the largest height (distance between it's two subtrees)
+			// find the subtree from all the current subtrees with the largest height
 			double max = this.clusters[0].getHeight();
 			int maxIndex = 0;
 			for (int j = 0 ; j < i ; j++) {
@@ -342,14 +343,16 @@ public class JavaHierarchicalCluster implements HierarchicalCluster {
 	}
 
 	public void reset() {
-		this.remainingIndices = null;
-		this.trees = null;
-		this.root = null;
+//		this.remainingIndices = null;
+//		this.trees = null;
+//		this.root = null;
 		this.clusters = null;
 		this.clusterCentroids = null;
 		this.clusterMaximums = null;
 		this.clusterMinimums = null;
 		this.clusterStandardDeviations = null;
+		this.clusterSizes = null;
+		this.clusterIndexes = null;
 	}
 
 	public void setInputData(RawDataInterface inputData) {
@@ -365,20 +368,25 @@ public class JavaHierarchicalCluster implements HierarchicalCluster {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		int vectors = 10;
-		int dimensions = 3;
+		int dimensions = 2;
+		int k = 4;
+		int vectors = 3*k;
 		
 		// generate some raw data
 		List<String> attrs = new ArrayList<String>(vectors);
 		attrs.add("x");
 		attrs.add("y");
-		attrs.add("z");
+//		attrs.add("z");
 		RawDataInterface data = new WekaRawData("test", attrs, vectors, dimensions, null);
 		for (int i = 0 ; i < vectors ; i++) {
-			int modval = (i % 2) + 1;
+			int modval = (i % k);
+			System.out.print("modval: " + modval);
 			for (int j = 0 ; j < dimensions ; j++) {
-				data.addValue(i, j, (Math.random() + modval));
+				double val = (0.5 + (Math.random()/10.0) + modval);
+				System.out.print(" val[" + j + "]: " + val);
+				data.addValue(i, j, val);
 			}
+			System.out.println("");
 		}
 		
 		// get the distances
@@ -394,7 +402,7 @@ public class JavaHierarchicalCluster implements HierarchicalCluster {
 		// do it again, the other way
 		hclust = new JavaHierarchicalCluster();
 		hclust.setInputData(data);
-		hclust.setK(2);
+		hclust.setK(k);
 		int[] clusters = hclust.clusterInstances();
 		for (int i = 0 ; i < vectors ; i++) {
 			System.out.println("Instance " + i + " is in cluster: " + clusters[i]);
