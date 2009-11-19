@@ -57,11 +57,11 @@ Command_Label.1 = Something Else
 ----------------------------------------------------------------
 
  * 
- * <P>CVS $Id: ExternalTool.java,v 1.4 2009/11/09 18:55:00 khuck Exp $</P>
+ * <P>CVS $Id: ExternalTool.java,v 1.5 2009/11/19 15:22:05 khuck Exp $</P>
  * $RCSfile: ExternalTool.java,v $
- * $Date: 2009/11/09 18:55:00 $
+ * $Date: 2009/11/19 15:22:05 $
  * @author  $Author: khuck $
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  */
 public class ExternalTool {
 	
@@ -72,6 +72,9 @@ public class ExternalTool {
 	private static final String PREFIX = "externalTool.";
 	// file extention
 	private static final String SUFFIX = ".properties";
+
+	private static final String JAVA_LOCATION = System.getProperty("java.home") + File.separator + "bin" + File.separator;
+
 	
 	// Expected properties:
 	public static final String TOOL_NAME = "Tool_Name";
@@ -321,9 +324,33 @@ public class ExternalTool {
 		// If the user canceled, do nothing.
 		if (obj == null)
 			return;
-		
-		// build the external command
+
 		Command command = (Command) obj;
+
+		if (command.tool.workingDirectory.equalsIgnoreCase("%PROMPT%")) {
+			// prompt the user for the working directory
+            JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
+			fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			fc.setDialogTitle("Choose the gnuplot files directory");
+        	int returnVal = fc.showOpenDialog(parentWindow);
+        	if (returnVal == JFileChooser.APPROVE_OPTION) {
+            	command.tool.workingDirectory = fc.getSelectedFile().getAbsolutePath();
+			} else {
+				return;
+			}
+       	}
+
+		launchCommand(command, params);
+	}
+
+	public static void launch(ExternalTool tool) {
+		Command command = (Command)tool.commands.get(0);
+        ExternalTool.CommandParameters params = new ExternalTool.CommandParameters();
+		launchCommand(command, params);
+	}
+
+	public static void launchCommand(Command command, CommandParameters params) { 
+		// build the external command
 		String commandString = command.tool.programName + " " + command.name;
 		for (Iterator iter = command.parameterNames.iterator() ; iter.hasNext() ; ) {
 			String pName = (String)iter.next();
@@ -348,18 +375,6 @@ public class ExternalTool {
 			}
 		}
 
-		if (command.tool.workingDirectory.equalsIgnoreCase("%PROMPT%")) {
-			// prompt the user for the working directory
-            JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
-			fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-			fc.setDialogTitle("Choose the gnuplot files directory");
-        	int returnVal = fc.showOpenDialog(parentWindow);
-        	if (returnVal == JFileChooser.APPROVE_OPTION) {
-            	command.tool.workingDirectory = fc.getSelectedFile().getAbsolutePath();
-			} else {
-				return;
-			}
-       	}
 		ToolRunner tool = new ToolRunner(command.tool.workingDirectory, command.tool.environmentVariables, commandString);
 	}
 	
@@ -404,6 +419,32 @@ public class ExternalTool {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	public static ExternalTool createWekaConfiguration(boolean overwrite) {
+		ExternalTool tool = null;
+		String fileName = PROPERTIES_LOCATION + PREFIX + "weka" + SUFFIX;
+		
+		File dummy = new File(fileName);
+		if (!dummy.exists() || overwrite) {
+			tool = new ExternalTool(fileName);
+			tool.properties.setProperty(TOOL_NAME, "Weka");
+			tool.properties.setProperty(PROGRAM_NAME, JAVA_LOCATION + "java");  // command line application name
+			tool.properties.setProperty(FILE_TYPE, "Tau profiles");  // Some file type which matches DataSource file types (String)
+			tool.properties.setProperty(WORKING_DIRECTORY, PROPERTIES_LOCATION);  // The working directory for the program
+			tool.properties.setProperty(COMMAND + DELIM + "0", "-cp weka-3-6-1.jar weka.gui.explorer.Explorer wekadata.csv");  //The first command available in the program
+			tool.properties.setProperty(COMMAND_LABEL + DELIM + "0", "Launch Weka Explorer for this dataset");  //A user-friendly label for the user to select for this command
+			OutputStream out;
+			try {
+				out = new FileOutputStream(fileName);
+				tool.properties.store(out, HEADER);
+			} catch (IOException e) {
+				System.err.println(e.getMessage());
+				e.printStackTrace();
+			}
+		}
+		tool = new ExternalTool(fileName);
+		return tool;
 	}
 	
 	public static void main(String[] args) {
