@@ -19,7 +19,7 @@ public class PerfExplorerCube {
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the data
 		RMICubeData data = server.requestCubeData(
-			PerfExplorerModel.getModel()); 
+			PerfExplorerModel.getModel(), 4); 
 		createAndShowGUI(data);
 	}
 

@@ -170,6 +170,12 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		commMatrixItem.addActionListener(listener);
 		visualizationMenu.add(commMatrixItem);
 		
+		//Add a menu item.
+		JMenuItem wekaItem = new JMenuItem(
+				PerfExplorerActionListener.DO_LAUNCH_WEKA);
+		wekaItem.addActionListener(listener);
+		visualizationMenu.add(wekaItem);
+		
 		this.add(visualizationMenu);
 	}
 

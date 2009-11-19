@@ -68,6 +68,7 @@ public class PerfExplorerActionListener implements ActionListener {
 	public final static String DO_INC_CORRELATION_ANALYSIS = "Do Inclusive Correlation Analysis";
 	public final static String DO_CORRELATION_CUBE = "Do 3D Correlation Cube";
 	public final static String DO_VARIATION_ANALYSIS = "Show Data Summary";
+	public final static String DO_LAUNCH_WEKA = "Launch Weka With This Dataset";
 	// chart menu items
 	public final static String SET_GROUPNAME = "Set Group Name";
 	public final static String SET_PROBLEM_SIZE = "Set Problem Size (Scaling)";
@@ -200,6 +201,9 @@ public class PerfExplorerActionListener implements ActionListener {
 				} else if (arg.equals(DO_CORRELATION_CUBE)) {
 					if (valid3DSelection())
 						PerfExplorerCube.doCorrelationCube();
+				} else if (arg.equals(DO_LAUNCH_WEKA)) {
+					if (valid3DSelection())
+						PerfExplorerWekaLauncher.launch();
 				} else if (arg.equals(DO_IQR_BOXCHART)) {
 					if (valid3DSelection())
 						PerfExplorerBoxChart.doIQRBoxChart();

@@ -308,10 +308,10 @@ public class PerfExplorerConnection {
 	return results;
     }
 
-    public RMICubeData requestCubeData(PerfExplorerModel model) {
+    public RMICubeData requestCubeData(PerfExplorerModel model, int numFunctions) {
 	RMICubeData results = null;
 	try {
-	    results = server.getCubeData(model);
+	    results = server.getCubeData(model, numFunctions);
 	} catch (RemoteException e) {
 	    handleError(e, "getCubeData(" + model.toString() + ")");
 	}

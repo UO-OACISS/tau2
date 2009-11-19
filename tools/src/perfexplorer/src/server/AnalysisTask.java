@@ -12,6 +12,8 @@ import java.io.FileInputStream;
 import java.sql.PreparedStatement;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.TimerTask;
 
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
@@ -39,7 +41,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  *
- * <P>CVS $Id: AnalysisTask.java,v 1.23 2009/11/18 17:45:45 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTask.java,v 1.24 2009/11/19 15:53:33 khuck Exp $</P>
  * @author Kevin Huck
  * @version 0.1
  * @since 0.1
@@ -272,13 +274,21 @@ public class AnalysisTask extends TimerTask {
 					double epsilon = 1.0;
 					int numClusters = 1;
 					int maxTries = 5;
+					Set<Integer> clusterSizes = new HashSet<Integer>();
 					while (numClusters <= 10 && maxTries > 0) {
 						PerfExplorerOutput.println("Clustering with Epsilon = " + epsilon + " : " + modelData.toString());
 						clusterer.setError(epsilon);
 						clusterer.findClusters();
-						saveClusterResults (clusterer, reducedData);
-						numClusters = clusterer.getClusterCentroids().numVectors();
-						epsilon = epsilon * 0.5;
+						numClusters = clusterer.getClusterSizes().length;
+						if (numClusters == 0) {
+							System.out.println("No more clusters found.");
+							break;
+						}
+						if (!clusterSizes.contains(new Integer(numClusters))) {
+							saveClusterResults (clusterer, reducedData);
+							clusterSizes.add(new Integer(numClusters));
+						}
+						epsilon = epsilon * 0.9;
 						maxTries--;
 					}
 
@@ -330,7 +340,7 @@ public class AnalysisTask extends TimerTask {
 		if (modelData.getCurrentSelection() instanceof Metric) {
 			// do PCA breakdown
 			PrincipalComponentsAnalysisInterface pca =
-			AnalysisFactory.createPCAEngine(server.getCubeData(modelData));
+			AnalysisFactory.createPCAEngine(server.getCubeData(modelData, 4));
 			pca.setInputData(reducedData);
 			pca.doPCA();
 			// get the components

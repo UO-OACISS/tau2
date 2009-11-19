@@ -62,7 +62,7 @@ import edu.uoregon.tau.perfexplorer.constants.Constants;
  * This server is accessed through RMI, and objects are passed back and forth
  * over the RMI link to the client.
  *
- * <P>CVS $Id: PerfExplorerServer.java,v 1.91 2009/11/17 16:31:02 khuck Exp $</P>
+ * <P>CVS $Id: PerfExplorerServer.java,v 1.92 2009/11/19 15:53:33 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
@@ -1508,7 +1508,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	/* (non-Javadoc)
 	 * @see common.RMIPerfExplorer#getCubeData(common.RMIPerfExplorerModel)
 	 */
-	public RMICubeData getCubeData(RMIPerfExplorerModel model) {
+	public RMICubeData getCubeData(RMIPerfExplorerModel model, int numFunctions) {
 		RMICubeData data = null;
 		try {
 			DB db = this.getDB();
@@ -1525,27 +1525,12 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				}
 				clusterPerType="exclusive_percentage";
 			}
-//			if(clusterType.compareTo("inclusive")==0)
-//			{
-//				if (db.getDBType().compareTo("derby") == 0) {
-//					//sttdev is unsupported in derby!
-//					buf.append("select interval_event.id, avg(inclusive) ");
-//				} else {
-//					buf.append("select interval_event.id, stddev(inclusive) ");
-//				}
-//			}
-//			else{
-//				if (db.getDBType().compareTo("oracle") == 0) {
-//					buf.append("select interval_event.id, stddev(excl) ");
-//				} else 
-					
-				if (db.getDBType().compareTo("derby") == 0) {
-					//sttdev is unsupported in derby!
-					buf.append("select interval_event.id, avg("+clusterType+") ");
-				} else {
-					buf.append("select interval_event.id, stddev("+clusterType+") ");
-				}
-			//}
+			if (db.getDBType().compareTo("derby") == 0) {
+				//sttdev is unsupported in derby!
+				buf.append("select interval_event.id, avg("+clusterType+") ");
+			} else {
+				buf.append("select interval_event.id, stddev("+clusterType+") ");
+			}
 			buf.append("from interval_location_profile ");
 			buf.append("inner join interval_event ");
 			buf.append("on interval_event = interval_event.id ");
@@ -1609,11 +1594,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				buf.append("group by interval_event.id, cast (name as varchar(256))");
 
 			} else {
-//				if (db.getDBType().compareTo("oracle") == 0) {
-//					buf.append("select interval_event.id, name, (stddev(excl)/ ");
-//					buf.append("(max(excl)-min(excl))) * ");
-//					buf.append("avg(exclusive_percentage) ");
-//				} else 
 				if (db.getDBType().compareTo("derby") == 0) {
 					// stddev is unsupported!
 					buf.append("select interval_event.id, name, avg("+clusterType+") ");
@@ -1635,10 +1615,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			//PerfExplorerOutput.println(statement.toString());
 			results = statement.executeQuery();
 			int count = 0;
-			int ids[] = new int[4];
-			String names[] = new String[4];
+			int ids[] = new int[numFunctions];
+			String names[] = new String[numFunctions];
 			HashMap<String, Integer> nameIndex = new HashMap<String, Integer>();
-			while (results.next() != false && count < 4) {
+			while (results.next() != false && count < numFunctions) {
 				ids[count]= results.getInt(1);
 				names[count] = results.getString(2);
 				nameIndex.put(names[count], new Integer(count));
@@ -1661,9 +1641,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			data.setNames(names);
 
 			buf = new StringBuilder();
-//			if (db.getDBType().compareTo("oracle") == 0) {
-//				buf.append("select node, context, thread, name, excl ");
-//			} else 
 				
 			if (db.getDBType().compareTo("db2") == 0) {
 				buf.append("select node, context, thread, cast (name as varchar(256)), "+clusterType+" ");

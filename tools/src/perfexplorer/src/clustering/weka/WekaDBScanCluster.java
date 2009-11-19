@@ -19,7 +19,7 @@ import weka.clusterers.DBScan;
  * This class is used as a list of names and values to describe 
  * a cluster created during some type of clustering operation.
  * 
- * <P>CVS $Id: WekaDBScanCluster.java,v 1.1 2009/11/18 17:45:32 khuck Exp $</P>
+ * <P>CVS $Id: WekaDBScanCluster.java,v 1.2 2009/11/19 15:53:32 khuck Exp $</P>
  * @author khuck
  * @version 0.2
  * @since 0.2
@@ -68,7 +68,7 @@ public class WekaDBScanCluster extends WekaAbstractCluster implements DBScanClus
 		//assert instances != null : instances;
 		try {
 			this.dbscan = new DBScan();
-//			this.dbscan.setMinPoints(1); // minimum of 1 point per cluster
+			this.dbscan.setMinPoints(4); // minimum of 4 points per cluster
 			this.dbscan.setEpsilon(e); // the maximum distance between points in a cluster
 			Instances localInstances = null;
 			localInstances = this.instances;

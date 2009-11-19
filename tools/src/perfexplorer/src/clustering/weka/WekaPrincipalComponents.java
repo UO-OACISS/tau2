@@ -23,7 +23,7 @@ import weka.attributeSelection.PrincipalComponents;
  * TODO - make this class immutable?
  * 
  * @author khuck
- * <P>CVS $Id: WekaPrincipalComponents.java,v 1.13 2009/11/18 17:45:38 khuck Exp $</P>
+ * <P>CVS $Id: WekaPrincipalComponents.java,v 1.14 2009/11/19 15:53:32 khuck Exp $</P>
  * @version 0.1
  * @since   0.1
  */
@@ -164,6 +164,10 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 		if (this.clusterer != null) {
 			int[] clusterSizes = clusterer.getClusterSizes();
 			int k = clusterer.getClusterSizes().length;
+			if (k == 0) {
+				clusters = null;
+				return clusters;
+			}
 			clusters = new RawDataInterface[k];
 			Instances[] instances = new Instances[k];
 			int[] counters = new int[k];
