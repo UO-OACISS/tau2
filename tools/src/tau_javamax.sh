@@ -5,8 +5,10 @@ export MALLOC_CHECK_=0
 
 # check that we're on linux
 if [ $(uname) != "Linux" ]; then
-    echo "failed"
-    exit
+	if [ $(uname) != "Darwin" ]; then
+    	echo "failed"
+    	exit
+	fi
 fi
 
 # first, check that this is sun java
@@ -17,7 +19,11 @@ if [ "x$ver" != "xJavaHotSpot(TM)" ] ; then
     exit
 fi
 
-memtotal=`cat /proc/meminfo | head -1 | awk '{print $2}'`
+if [ $(uname) == "Darwin" ]; then
+	memtotal=`sysctl -a | grep "hw.memsize:" | awk '{print $2}'`
+else
+	memtotal=`cat /proc/meminfo | head -1 | awk '{print $2}'`
+fi
 
 if [ $(uname -m) = "i686" ]; then
     if [ $memtotal -gt 2300000 ] ; then
