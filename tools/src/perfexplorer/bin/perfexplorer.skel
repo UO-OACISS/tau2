@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: perfexplorer.skel,v 1.43 2009/11/18 17:45:11 khuck Exp $
+# $Id: perfexplorer.skel,v 1.44 2009/11/22 20:19:31 khuck Exp $
 # $Name:  $
 
 TAUROOT=@TAUROOT@
@@ -151,9 +151,23 @@ if [ $test = "failed" ] ; then
 	PERFEXPLORER_OPTS=""
 fi
 
+# Default to 800m heap space
+MEMORY=-Xmx800m
+
+# Check machine type for a heap space boost
+machine=`uname -m`
+if [ "x$machine" = "xx86_64" ] ; then
+    MEMORY=-Xmx2000m
+fi
+
+testmax=`$BINDIR/tau_javamax.sh`
+if [ "x$testmax" != "xfailed" ] ; then
+    MEMORY="-Xmx${testmax}m"
+fi
+
 if [ $mode = "standalone" ] ; then
 	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JOGL_JAR:$VIS_JAR:$JARGS_JAR:$JYTHON_JAR:$TAUCOMMON_JAR:$BATIK_JAR:$XERCES_JAR:$JUNIT_JAR:$JBOSS_RULES_JARS
-	java -Xmx500m $EXTRA_OPTIONS \
+	java $MEMORY $EXTRA_OPTIONS \
 	-classpath $CLASSPATH \
 	-Dderby.system.home=${JAR_HOME} \
 	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
@@ -163,7 +177,7 @@ fi
 if [ $mode = "test" ] ; then
 	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JOGL_JAR:$VIS_JAR:$JARGS_JAR:$JYTHON_JAR:$TAUCOMMON_JAR:$BATIK_JAR:$XERCES_JAR:$JUNIT_JAR:$JBOSS_RULES_JARS
 
-	java -Xmx500m \
+	java $MEMORY \
 	-classpath $CLASSPATH \
 	-Dderby.system.home=${JAR_HOME} \
 	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
@@ -178,7 +192,7 @@ if [ $mode = "server" ] ; then
 	rmiregistry $SERVER_RMIREGISTRY_PORT & 
 	echo "Starting server..."
 
-	java -Xmx1800m $EXTRA_OPTIONS \
+	java $MEMORY $EXTRA_OPTIONS \
 	-classpath $CLASSPATH \
 	-Dderby.system.home=${JAR_HOME} \
 	-Djava.security.policy=${TAUROOT}/${CONFIG_ARCH}/lib/java.policy \
@@ -195,7 +209,7 @@ if [ $mode = "client" ] ; then
 
 	CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JFREECHART_JAR:$JCOMMON_JAR:$JOGL_JAR:$VIS_JAR:$JYTHON_JAR:$JARGS_JAR:$TAUCOMMON_JAR:$BATIK_JAR:$XERCES_JAR:$JUNIT_JAR:$JBOSS_RULES_JARS
 
-	java -Xmx500m $EXTRA_OPTIONS \
+	java $MEMORY $EXTRA_OPTIONS \
 	-classpath $CLASSPATH \
 	-Djava.security.policy=${TAUROOT}/${CONFIG_ARCH}/lib/java.policy \
 	-Djava.library.path=${CLIENT_DYLD_LIBRARY_PATH} \
