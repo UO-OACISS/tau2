@@ -302,7 +302,63 @@ def writePcfFile(callpathMap):
 	pcfFile.write("NUM_OF_STATE_COLORS 1000\n")
 	pcfFile.write("YMAX_SCALE          37\n\n\n")
 	pcfFile.write("DEFAULT_SEMANTIC\n\n")
-	pcfFile.write("THREAD_FUNC          State As Is\n\n")
+	pcfFile.write("THREAD_FUNC          State As Is\n\n\n")
+
+	pcfFile.write("STATES\n")
+	pcfFile.write("0    Idle\n")
+	pcfFile.write("1    Running\n")
+	pcfFile.write("2    Not created\n")
+	pcfFile.write("3    Waiting a message\n")
+	pcfFile.write("4    Bloking Send\n")
+	pcfFile.write("5    Synchronization\n")
+	pcfFile.write("6    Test/Probe\n")
+	pcfFile.write("7    Scheduling and Fork/Join\n")
+	pcfFile.write("8    Wait/WaitAll\n")
+	pcfFile.write("9    Blocked\n")
+	pcfFile.write("10    Immediate Send\n")
+	pcfFile.write("11    Immediate Receive\n")
+	pcfFile.write("12    I/O\n")
+	pcfFile.write("13    Group Communication\n")
+	pcfFile.write("14    Tracing Disabled\n")
+	pcfFile.write("15    Others\n")
+	pcfFile.write("16    Send Receive\n\n\n")
+
+	pcfFile.write("STATES_COLOR\n")
+	pcfFile.write("0    {117,195,255}\n")
+	pcfFile.write("1    {0,0,255}\n")
+	pcfFile.write("2    {255,255,255}\n")
+	pcfFile.write("3    {255,0,0}\n")
+	pcfFile.write("4    {255,0,174}\n")
+	pcfFile.write("5    {179,0,0}\n")
+	pcfFile.write("6    {0,255,0}\n")
+	pcfFile.write("7    {255,255,0}\n")
+	pcfFile.write("8    {235,0,0}\n")
+	pcfFile.write("9    {0,162,0}\n")
+	pcfFile.write("10    {255,0,255}\n")
+	pcfFile.write("11    {100,100,177}\n")
+	pcfFile.write("12    {172,174,41}\n")
+	pcfFile.write("13    {255,144,26}\n")
+	pcfFile.write("14    {2,255,177}\n")
+	pcfFile.write("15    {192,224,0}\n")
+	pcfFile.write("16    {66,66,66}\n\n\n")
+
+	pcfFile.write("EVENT_TYPE\n")
+	pcfFile.write("6    40000001    Application\n")
+	pcfFile.write("6    40000003    Flushing Traces\n")
+	pcfFile.write("6    40000004    I/O Read\n")
+	pcfFile.write("6    40000005    I/O Write\n")
+	pcfFile.write("VALUES\n")
+	pcfFile.write("1      Begin\n")
+	pcfFile.write("0      End\n\n\n")
+
+	pcfFile.write("EVENT_TYPE\n")
+	pcfFile.write("6    40000012    Tracing\n")
+	pcfFile.write("VALUES\n")
+	pcfFile.write("0      Disabled\n")
+	pcfFile.write("1      Enabled\n\n\n")
+
+	pcfFile.write("EVENT_TYPE\n")
+	pcfFile.write("6    40000011    I/O Size\n\n\n")
 
 	pcfFile.write("EVENT_TYPE\n")
 	pcfFile.write("9    50000001    MPI Point-to-point\n")
@@ -310,7 +366,7 @@ def writePcfFile(callpathMap):
 	for (k,v) in mpiValues.items():
 		if mpiTypes[k] == 50000001:
 			pcfFile.write(str(v) + "   " + str(k) + "\n")
-	pcfFile.write(str(v) + "   End\n")
+	pcfFile.write("0   End\n")
 	pcfFile.write("\n\n")
 
 	pcfFile.write("EVENT_TYPE\n")
@@ -319,7 +375,7 @@ def writePcfFile(callpathMap):
 	for (k,v) in mpiValues.items():
 		if mpiTypes[k] == 50000002:
 			pcfFile.write(str(v) + "   " + str(k) + "\n")
-	pcfFile.write(str(v) + "   End\n")
+	pcfFile.write("0   End\n")
 	pcfFile.write("\n\n")
 
 	pcfFile.write("EVENT_TYPE\n")
@@ -328,7 +384,7 @@ def writePcfFile(callpathMap):
 	for (k,v) in mpiValues.items():
 		if mpiTypes[k] == 50000003:
 			pcfFile.write(str(v) + "   " + str(k) + "\n")
-	pcfFile.write(str(v) + "   End\n")
+	pcfFile.write("0   End\n")
 	pcfFile.write("\n\n")
 
 	sortedList = sorted(counterMap.iteritems(), key=itemgetter(1))
@@ -336,6 +392,40 @@ def writePcfFile(callpathMap):
 	for i in sortedList:
 		pcfFile.write("7  " + str(i[1]) + " " + str(i[0]) + "\n")
 	pcfFile.write("\n\n")
+
+	pcfFile.write("GRADIENT_COLOR\n")
+	pcfFile.write("0    {0,255,2}\n")
+	pcfFile.write("1    {0,244,13}\n")
+	pcfFile.write("2    {0,232,25}\n")
+	pcfFile.write("3    {0,220,37}\n")
+	pcfFile.write("4    {0,209,48}\n")
+	pcfFile.write("5    {0,197,60}\n")
+	pcfFile.write("6    {0,185,72}\n")
+	pcfFile.write("7    {0,173,84}\n")
+	pcfFile.write("8    {0,162,95}\n")
+	pcfFile.write("9    {0,150,107}\n")
+	pcfFile.write("10    {0,138,119}\n")
+	pcfFile.write("11    {0,127,130}\n")
+	pcfFile.write("12    {0,115,142}\n")
+	pcfFile.write("13    {0,103,154}\n")
+	pcfFile.write("14    {0,91,166}\n\n\n")
+
+	pcfFile.write("GRADIENT_NAMES\n")
+	pcfFile.write("0    Gradient 0\n")
+	pcfFile.write("1    Grad. 1/MPI Events\n")
+	pcfFile.write("2    Grad. 2/OMP Events\n")
+	pcfFile.write("3    Grad. 3/OMP locks\n")
+	pcfFile.write("4    Grad. 4/User func\n")
+	pcfFile.write("5    Grad. 5/User Events\n")
+	pcfFile.write("6    Grad. 6/General Events\n")
+	pcfFile.write("7    Grad. 7/Hardware Counters\n")
+	pcfFile.write("8    Gradient 8\n")
+	pcfFile.write("9    Gradient 9\n")
+	pcfFile.write("10    Gradient 10\n")
+	pcfFile.write("11    Gradient 11\n")
+	pcfFile.write("12    Gradient 12\n")
+	pcfFile.write("13    Gradient 13\n")
+	pcfFile.write("14    Gradient 14\n\n\n")
 
 	sortedList = sorted(callpathMap.iteritems(), key=itemgetter(1))
 	pcfFile.write("EVENT_TYPE\n")
@@ -353,6 +443,12 @@ def writePcfFile(callpathMap):
 	for i in sortedList:
 		pcfFile.write(str(i[1]) + "   " + str(i[0]) + "\n")
 	pcfFile.write("\n\n")
+
+	pcfFile.write("EVENT_TYPE\n")
+	pcfFile.write("9    40000018    Tracing mode:\n")
+	pcfFile.write("VALUES\n")
+	pcfFile.write("1      Detailed\n")
+	pcfFile.write("2      CPU Bursts\n\n")
 
 	pcfFile.close()
 	print pcfname, "mapping file created"
