@@ -36,6 +36,10 @@ public class TraceReader extends TraceFile{
 	
 	TraceReader(){}
 	
+	public String getTraceFile(){
+		return this.TrcFile;
+	}
+	
 	private static int CharPair(int nid, int tid){
 		//System.out.println("n: "+nid+ " t: "+tid);
 		return (nid << 16)+tid;
@@ -266,7 +270,8 @@ public class TraceReader extends TraceFile{
 		int i,j,k; 
 		String linebuf, eventname, traceflag; //[LINEMAX]=2||64*1024,[LINEMAX],[32]
 		String group, param;//[512]
-		int numevents, tag, groupid; 
+		long tag;
+		int numevents, groupid; 
 		int localEventId;
 		boolean dynamictrace = false;
 
@@ -299,19 +304,24 @@ public class TraceReader extends TraceFile{
 				asplit=linebuf.split(" ");
 				localEventId=Integer.parseInt(asplit[0]);
 				group=asplit[1];
-				tag=Integer.parseInt(asplit[2]);
+				tag=Long.parseLong(asplit[2]);
 				
 				j = linebuf.indexOf('"');
 				k= linebuf.indexOf('"', j+1);
 				eventname=linebuf.substring(j, k+1);
 				param=linebuf.substring(k+2);
 
+				
+				if(eventname.startsWith("\"")&&eventname.endsWith("\"")){
+					eventname=eventname.substring(1, eventname.length()-1);
+				}
+				
 				/* see if the event id exists in the map */
 				if (!EventIdMap.containsKey(new Integer(localEventId)))//isEventIDRegistered(localEventId))
 				{
 					/* couldn't locate the event id */
 					/* fill an event description object */
-					EventDescr eventDescr = new EventDescr(localEventId, new String(group), new String(eventname),tag,new String(param));
+					EventDescr eventDescr = new EventDescr(localEventId, new String(group), new String(eventname),(long)tag,new String(param));
 					/*eventDescr.Eid = localEventId;
 					eventDescr.EventName = new String(eventname);
 					eventDescr.Group = new String(group);
@@ -341,7 +351,7 @@ public class TraceReader extends TraceFile{
 					if (eventDescr.getParameter().equals("TriggerValue"))//||eventDescr.Param.equals("none")
 					{ /* it is a user defined event */
 						//if (cb.DefUserEvent!=null)
-							cb.defUserEvent(userData, localEventId, eventDescr.getEventName(), eventDescr.getTag());
+							cb.defUserEvent(userData, localEventId, eventDescr.getEventName(), (int)eventDescr.getTag());
 					}
 					else if(eventDescr.getParameter().equals("EntryExit"))//(!eventDescr.Param.equals("TriggerValue"))//
 					{ /* it is an entry/exit event */
@@ -360,6 +370,9 @@ public class TraceReader extends TraceFile{
 				group=asplit[1];
 				tag=Integer.parseInt(asplit[2]);
 				eventname=asplit[3];
+				if(eventname!=null && eventname.startsWith("\"")&&eventname.endsWith("\"")){
+					eventname=eventname.substring(1, eventname.length()-2);
+				}
 				param=asplit[4];
 			}
 
@@ -391,6 +404,14 @@ public class TraceReader extends TraceFile{
 	public int absSeek(int eventPosition ){
 		return 0;
 	}
+	
+	public void reset(){
+		try {
+			Fiid.reset();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 	/* seek to a event position relative to the current position (just for completeness!) 
 	 * Returns the position if successful or 0 if an error occured */
@@ -405,6 +426,19 @@ public class TraceReader extends TraceFile{
 
 	
 	long FirstTimestamp=0;
+	
+	public long peekTime(){
+		Fiid.mark(64);
+		long ts=-1;
+		try {
+			ts = readEvents(format, Fiid).getTime();
+		
+			Fiid.reset();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return ts;
+	}
 	
 	/* read n events and call appropriate handlers.
 	 * Returns the number of records read (can be 0).
@@ -547,7 +581,7 @@ public class TraceReader extends TraceFile{
 				}
 				
 				}catch(EOFException e){System.out.println("Reached end of trace file."); break;} catch (IOException e) {e.printStackTrace();}
-			
+
 			//currentEvent=traceBuffer[i].getEventID();
 			/*if (!isEventIDRegistered(currentEvent))
 			{
@@ -619,7 +653,7 @@ public class TraceReader extends TraceFile{
 						callbacks.eventTrigger(userData, time, nid, tid, currentEvent,parameter);
 					//}
 				}
-				if (eventDescr.getTag() == TAU_MESSAGE_SEND_EVENT) 
+				if (eventDescr.getTag() == TAU_MESSAGE_SEND_EVENT||eventDescr.getEventId()==60007) 
 				{/* send message */
 		        /* See RtsLayer::TraceSendMsg for documentation on the bit patterns of "parameter" */
 					long xpar = parameter;
@@ -630,17 +664,24 @@ public class TraceReader extends TraceFile{
 					long comm = xpar << 16 >> 58;
 
 					/* If the application is multithreaded, insert call for matching sends/recvs here */
-					otherTid = 0;
+					otherTid = parameter;
 					//if (callbacks.SendMessage!=null) 
+//					if(eventDescr.getTag()==TAU_MESSAGE_SEND_EVENT){
+//						callbacks.sendMessage(userData, time, nid, tid, (int)otherNid, 
+//								(int)otherTid, (int)msgLen, (int)msgTag, (int)comm);
+//					}
+//					else{
 						callbacks.sendMessage(userData, time, nid, tid, (int)otherNid, 
 								(int)otherTid, (int)msgLen, (int)msgTag, (int)comm);
+//					}
 			/* the args are user, time, source nid (my), source tid (my), dest nid (other), dest
 			 * tid (other), size, tag */
 				}
 				else
 				{ /* Check if it is a message receive operation */
-					if (eventDescr.getTag() == TAU_MESSAGE_RECV_EVENT)
-					{/* See RtsLayer::TraceSendMsg for documentation on the bit patterns of "parameter" */
+					if (eventDescr.getTag() == TAU_MESSAGE_RECV_EVENT||eventDescr.getEventId()==60008)
+					{
+						/* See RtsLayer::TraceSendMsg for documentation on the bit patterns of "parameter" */
 						long xpar = parameter;
 						/* extract the information from the parameter */
 						msgTag   = ((xpar>>16) & 0x000000FF) | (((xpar >> 48) & 0xFF) << 8);
@@ -649,12 +690,17 @@ public class TraceReader extends TraceFile{
 						long comm = xpar << 16 >> 58;
 
 						/* If the application is multithreaded, insert call for matching sends/recvs here */
-						otherTid = 0;
-						//if (callbacks.RecvMessage!=null) 
+						otherTid = parameter;//TODO: not 0 any more
+//						if(eventDescr.getTag()==TAU_MESSAGE_RECV_EVENT){
+//						//if (callbacks.RecvMessage!=null) 
+//							callbacks.recvMessage(userData, time, (int)otherNid, 
+//									(int)otherTid, nid, tid, (int)msgLen, (int)msgTag, (int)comm);
+//						/* the args are user, time, source nid (my), source tid (my), dest nid (other), dest
+//						 * tid (other), size, tag */
+//						}else{
 							callbacks.recvMessage(userData, time, (int)otherNid, 
 									(int)otherTid, nid, tid, (int)msgLen, (int)msgTag, (int)comm);
-						/* the args are user, time, source nid (my), source tid (my), dest nid (other), dest
-						 * tid (other), size, tag */
+						//}
 					}
 				}
 			}

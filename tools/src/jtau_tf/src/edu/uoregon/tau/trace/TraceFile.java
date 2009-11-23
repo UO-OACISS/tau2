@@ -85,10 +85,10 @@ class EventDescr {
 	private int  Eid; /* event id */
 	private String Group; /* state as in TAU_VIZ */
 	private String EventName; /* name as in "foo" */
-	private int  Tag; /* -7 for send etc. */
+	private long Tag; /* -7 for send etc. */
 	private String Param; /* param as in EntryExit */
 	EventDescr(){}
-	EventDescr(int eid, String group, String eventName, int tag, String param) {
+	EventDescr(int eid, String group, String eventName, long tag, String param) {
 		Eid = eid;
 		Group = group;
 		EventName = eventName;
@@ -119,7 +119,7 @@ class EventDescr {
 	public void setParameter(String param) {
 		Param = param;
 	}
-	public int getTag() {
+	public long getTag() {
 		return Tag;
 	}
 	public void setTag(int tag) {
@@ -176,6 +176,10 @@ class CharPair implements Comparable{
 
 /*This holds all of the structures and data relevant to input/output of a trace file*/
 public class TraceFile {
+	String TrcFile;
+	int node;
+	int context;
+	int thread;
 	String EdfFile;//Name of the edf file being read or written
 	//Map NidTidMap;//=new HashMap();
 	Map EventIdMap;//=new HashMap();;

@@ -55,6 +55,13 @@ public class TraceFactory {
 			in.close();
 			/* make a copy of the EDF file name */
 			tFile.EdfFile = edf;
+			tFile.TrcFile=name;
+			String[] cutname = name.split(".");
+			if(cutname.length==5){
+				tFile.node=Integer.parseInt(cutname[1]);
+				tFile.context=Integer.parseInt(cutname[2]);
+				tFile.thread=Integer.parseInt(cutname[3]);
+			}
 			/* Allocate space for nodeid, thread id map */
 			//tFile.NidTidMap=new HashMap();
 			/* Allocate space for event id map */
