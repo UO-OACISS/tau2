@@ -17,6 +17,44 @@ import os
 import math
 from operator import itemgetter
 
+# global dictionary of MPI Types
+mpiTypes = dict([("MPI_Send", 50000001), \
+("MPI_Recv", 50000001), \
+("MPI_Isend", 50000001), \
+("MPI_Irecv", 50000001), \
+("MPI_Wait", 50000001), \
+("MPI_Waitall", 50000001), \
+("MPI_Bcast", 50000002), \
+("MPI_Barrier", 50000002), \
+("MPI_Reduce", 50000002), \
+("MPI_Allreduce", 50000002), \
+("MPI_Comm_rank", 50000003), \
+("MPI_Comm_size", 50000003), \
+("MPI_Comm_create", 50000003), \
+("MPI_Comm_dup", 50000003), \
+("MPI_Comm_split", 50000003), \
+("MPI_Init", 50000003), \
+("MPI_Finalize", 50000003)]) \
+
+# global dictionary of MPI values
+mpiValues = dict([("MPI_Send", 1), \
+("MPI_Recv", 2), \
+("MPI_Isend", 3), \
+("MPI_Irecv", 4), \
+("MPI_Wait", 5), \
+("MPI_Waitall", 6), \
+("MPI_Bcast", 7), \
+("MPI_Barrier", 8), \
+("MPI_Reduce", 9), \
+("MPI_Allreduce", 10), \
+("MPI_Comm_rank", 19), \
+("MPI_Comm_size", 20), \
+("MPI_Comm_create", 21), \
+("MPI_Comm_dup", 22), \
+("MPI_Comm_split", 23), \
+("MPI_Init", 31), \
+("MPI_Finalize", 32)]) \
+
 # need global dictionary of counters to types
 counterMap = dict([("TIME", 42000000), \
 ("P_WALL_CLOCK_TIME", 42000001), \
@@ -33,16 +71,15 @@ counterMap = dict([("TIME", 42000000), \
 ("PAPI_TOT_INS",      42000050), \
 ("PAPI_TOT_CYC",      42000059)])
 ufType = "60000019"
-mpiType = "60000019"
 thread = 0
 node = 0
 callpathMap = {}
-ignoreMPI = True
-ignoreCallpath = True
+callDepthMap = {}
 negatives = 0
 total = 0
 startTimestamp = 0
 endTimestamp = 0
+mpiCallerType = 70000000
 
 def usage():
 	print "\nUsage: process.py [-m --mpi] [-c --callpath]\n"
@@ -50,24 +87,6 @@ def usage():
 	print "\t-m, --mpi      : keep MPI events"
 	print "\t-c, --callpath : keep callpath\n"
 	sys.exit(1)
-
-def parseArgs(argv):
-	global ignoreMPI
-	global ignoreCallpath
-	try:
-		opts, args = getopt.getopt(argv, "hmc", ["help", "mpi", "callpath"])
-	except getopt.GetoptError:
-		usage()
-	
-	for opt, arg in opts:
-		if opt in ("-h", "--help"):
-			usage()
-		elif opt in ("-m", "--mpi"):
-			ignoreMPI = False
-		elif opt in ("-c", "--callpath"):
-			ignoreCallpath = False
-	
-	return
 
 def getFileExtents(infname):
 	global startTimestamp
@@ -128,12 +147,14 @@ def processFile(infname, traceFile):
 	numMetrics = 1
 	global thread
 	global counterMap
-	global ignoreMPI
-	global ignoreCallpath
+	global mpiTypes
+	global mpiValues
 	global negatives
 	global total
 	global node
 	global startTimestamp
+	global mpiCallerType
+	global callDepthMap
 	cpu = 1
 	appl = 1
 	thread = 1
@@ -187,16 +208,20 @@ def processFile(infname, traceFile):
 			# get the callpath
 			callpath = tokens[5].strip()
 
-			if callpath.find("MPI") > 0 and ignoreMPI:
-				continue
-			elif callpath.find("MPI") > 0:
+			if callpath.find("MPI") > 0:
 				isMPI = True
-			if ignoreCallpath:
-				callpathTokens = callpath.split("=>")
-				callpath = callpathTokens[len(callpathTokens)-1].strip()
-			if not callpath in callpathMap:
-				callpathMap[callpath] = len(callpathMap)
-			callpathID = callpathMap[callpath]
+
+			callpathTokens = callpath.split("=>")
+			callpath = callpathTokens[len(callpathTokens)-1].strip()
+
+			if isMPI:
+				callpathType = mpiTypes[callpath.rstrip("()")]
+				callpathID = mpiValues[callpath.rstrip("()")]
+			else:
+				callpathType = ufType
+				if not callpath in callpathMap:
+					callpathMap[callpath] = len(callpathMap)
+				callpathID = callpathMap[callpath]
 
 			# have we seen this timestamp already?
 			if (str(timestamp) + ":" + str(callpathID)) not in eventSet:
@@ -217,16 +242,23 @@ def processFile(infname, traceFile):
 			event = event + str(thread) + ":"
 			state = state + str(thread) + ":"
 			endEvent = event
+			mpiCallerEvent = event
 			event = event + str(timestamp) + ":"
 			state = state + str(timestamp) + ":"
 			state = state + str(timestamp + timeRange) + ":1\n"
-			endEvent = endEvent + str(timestamp + timeRange) + ":" + str(ufType) + ":0\n"
-			if (isMPI):
-				event = event + str(mpiType) + ":"
-				event = event + str(callpathID) + ":"
-			else:
-				event = event + str(ufType) + ":"
-				event = event + str(callpathID) # don't put a colon here
+			endEvent = endEvent + str(timestamp + timeRange) + ":" + str(callpathType) + ":0\n"
+			event = event + str(callpathType) + ":"
+			event = event + str(callpathID)
+
+			if isMPI:
+				mpiCallerEvent = mpiCallerEvent + str(timestamp)
+				for t in range(1,len(callpathTokens),1):
+					typeIndex = (len(callpathTokens) - 1) - t
+					tmpCaller = callpathTokens[typeIndex].strip()
+					callpathID = callpathMap[tmpCaller]
+					mpiCallerEvent = mpiCallerEvent + ":" + str(mpiCallerType + t) + ":" + str(callpathID)
+					callDepthMap[mpiCallerType + t] = "MPI caller at level " + str(t)
+				mpiCallerEvent = mpiCallerEvent + "\n"
 
 			# split the metric values
 			for m in range(numMetrics):
@@ -244,6 +276,8 @@ def processFile(infname, traceFile):
 
 			if goodData:
 				traceFile.write(state)
+				if isMPI:
+					traceFile.write(mpiCallerEvent)
 				traceFile.write(event)
 				traceFile.write(endEvent)
 
@@ -253,6 +287,9 @@ def sortedDictValues(adict):
 	return [value for key, value in items]
 
 def writePcfFile(callpathMap):
+	global callDepthMap
+	global mpiTypes
+	global counterMap
 	pcfname = "tracefile.pcf"
 	pcfFile = open(pcfname, 'w')
 
@@ -267,18 +304,54 @@ def writePcfFile(callpathMap):
 	pcfFile.write("DEFAULT_SEMANTIC\n\n")
 	pcfFile.write("THREAD_FUNC          State As Is\n\n")
 
-	sortedList = sorted(callpathMap.iteritems(), key=itemgetter(1))
 	pcfFile.write("EVENT_TYPE\n")
-	pcfFile.write("0    60000019    User function\n")
+	pcfFile.write("9    50000001    MPI Point-to-point\n")
 	pcfFile.write("VALUES\n")
-	for i in sortedList:
-		pcfFile.write(str(i[1]) + "   " + str(i[0]) + "\n")
+	for (k,v) in mpiValues.items():
+		if mpiTypes[k] == 50000001:
+			pcfFile.write(str(v) + "   " + str(k) + "\n")
+	pcfFile.write(str(v) + "   End\n")
+	pcfFile.write("\n\n")
+
+	pcfFile.write("EVENT_TYPE\n")
+	pcfFile.write("9    50000002    MPI Collective Comm\n")
+	pcfFile.write("VALUES\n")
+	for (k,v) in mpiValues.items():
+		if mpiTypes[k] == 50000002:
+			pcfFile.write(str(v) + "   " + str(k) + "\n")
+	pcfFile.write(str(v) + "   End\n")
+	pcfFile.write("\n\n")
+
+	pcfFile.write("EVENT_TYPE\n")
+	pcfFile.write("9    50000003    MPI Other\n")
+	pcfFile.write("VALUES\n")
+	for (k,v) in mpiValues.items():
+		if mpiTypes[k] == 50000003:
+			pcfFile.write(str(v) + "   " + str(k) + "\n")
+	pcfFile.write(str(v) + "   End\n")
 	pcfFile.write("\n\n")
 
 	sortedList = sorted(counterMap.iteritems(), key=itemgetter(1))
 	pcfFile.write("EVENT_TYPE\n")
 	for i in sortedList:
 		pcfFile.write("7  " + str(i[1]) + " " + str(i[0]) + "\n")
+	pcfFile.write("\n\n")
+
+	sortedList = sorted(callpathMap.iteritems(), key=itemgetter(1))
+	pcfFile.write("EVENT_TYPE\n")
+	for (k,v) in callDepthMap.items():
+		pcfFile.write("0    " + str(k) + "    " + v + "\n")
+	pcfFile.write("VALUES\n")
+	for i in sortedList:
+		pcfFile.write(str(i[1]) + "   " + str(i[0]) + "\n")
+	pcfFile.write("\n\n")
+
+	sortedList = sorted(callpathMap.iteritems(), key=itemgetter(1))
+	pcfFile.write("EVENT_TYPE\n")
+	pcfFile.write("0    60000019    User function\n")
+	pcfFile.write("VALUES\n")
+	for i in sortedList:
+		pcfFile.write(str(i[1]) + "   " + str(i[0]) + "\n")
 	pcfFile.write("\n\n")
 
 	pcfFile.close()
@@ -329,7 +402,6 @@ def main(argv):
 	callpathMap["Unresolved"] = len(callpathMap)
 	callpathMap["_NOT_Found"] = len(callpathMap)
 
-	parseArgs(argv)
 	dirList=os.listdir(".")
 	files = set()
 	for infname in dirList:
