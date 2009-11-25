@@ -19,7 +19,7 @@ if [ "x$ver" != "xJavaHotSpot(TM)" ] ; then
     exit
 fi
 
-if [ $(uname) == "Darwin" ]; then
+if [ $(uname) = "Darwin" ]; then
 	memtotal=`sysctl -a | grep "hw.memsize:" | awk '{print $2}'`
 else
 	memtotal=`cat /proc/meminfo | head -1 | awk '{print $2}'`
