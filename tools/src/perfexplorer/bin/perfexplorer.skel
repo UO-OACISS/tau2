@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: perfexplorer.skel,v 1.44 2009/11/22 20:19:31 khuck Exp $
+# $Id: perfexplorer.skel,v 1.45 2009/11/25 17:09:59 khuck Exp $
 # $Name:  $
 
 TAUROOT=@TAUROOT@
@@ -171,6 +171,7 @@ if [ $mode = "standalone" ] ; then
 	-classpath $CLASSPATH \
 	-Dderby.system.home=${JAR_HOME} \
 	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
+	-Dpython.home=$JAR_HOME/jython \
 	edu.uoregon.tau.perfexplorer.client.PerfExplorerClient -s $PERFEXPLORER_OPTS -t $JARDIR -a $SCHEMADIR $@
 fi
 
@@ -181,6 +182,7 @@ if [ $mode = "test" ] ; then
 	-classpath $CLASSPATH \
 	-Dderby.system.home=${JAR_HOME} \
 	-Djava.library.path=$CLIENT_DYLD_LIBRARY_PATH:$SERVER_DYLD_LIBRARY_PATH \
+	-Dpython.home=$JAR_HOME/jython \
 	edu.uoregon.tau.perfexplorer.client.TestHarness -s -t $testName $arguments
 fi
 
@@ -199,6 +201,7 @@ if [ $mode = "server" ] ; then
 	-Djava.library.path=$SERVER_DYLD_LIBRARY_PATH \
 	${RMIOptions} \
 	-Dsun.rmi.server.exceptionTrace=true \
+	-Dpython.home=$JAR_HOME/jython \
 	edu.uoregon.tau.perfexplorer.server.PerfExplorerServer -p $SERVER_OBJECT_PORT -t $JARDIR -a $SCHEMADIR  $arguments
 
 	echo "Killing rmiregistry..."
@@ -214,6 +217,7 @@ if [ $mode = "client" ] ; then
 	-Djava.security.policy=${TAUROOT}/${CONFIG_ARCH}/lib/java.policy \
 	-Djava.library.path=${CLIENT_DYLD_LIBRARY_PATH} \
 	-Djava.rmi.server.hostname=$SERVER_HOSTNAME \
+	-Dpython.home=$JAR_HOME/jython \
 	edu.uoregon.tau.perfexplorer.client.PerfExplorerClient -t $JARDIR -a $SCHEMADIR $arguments
 fi
 

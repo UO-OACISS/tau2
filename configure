@@ -1266,8 +1266,16 @@ if [ ! -d ${home}/.ParaProf ]
   then
     mkdir -p ${home}/.ParaProf
 fi
+
+if [ ! -d ${home}/.ParaProf/jython ] 
+  then
+    mkdir -p ${home}/.ParaProf/jython
+fi
+
 cat ${tauroot}/tools/src/perfdmf/bin/derby.properties.skel | 
 sed -e 's,@HOME@,'${home}',' > ${home}/.ParaProf/derby.properties
+
+cp ${tauroot}/tools/src/contrib/jython.registry ${home}/.ParaProf/jython/registry
 
 cat ${tauroot}/tools/src/perfexplorer/bin/configure.skel | 
 sed -e 's,@TAUROOTDIR@,'$tauroot',' \
