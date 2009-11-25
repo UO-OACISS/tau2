@@ -110,6 +110,8 @@ def processFile(infname, outputFile):
 			timeRange = start + end
 			normalizedTime = start / timeRange
 			location = tokens[3].strip()
+			locationTokens = location.split(":")
+			locationLine = locationTokens[len(locationTokens)-1].strip()
 			metricDeltas = tokens[4].strip()
 			metricTokens = metricDeltas.split(" ")
 
@@ -124,7 +126,7 @@ def processFile(infname, outputFile):
 			callpathID = callpathMap[callpath]
 
 			goodData = True
-			tmp = ""
+			tmp = "S LINE " + str(normalizedTime) + " " + locationLine + "\n"
 
 			for m in range(numMetrics):
 				start = float(metricTokens[m*2])
