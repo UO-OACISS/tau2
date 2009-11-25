@@ -41,7 +41,7 @@ import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
  * available in Weka, R and Octave.  The orignal AnalysisTask class
  * only supported R directly.  This is intended to be an improvement...
  *
- * <P>CVS $Id: AnalysisTask.java,v 1.24 2009/11/19 15:53:33 khuck Exp $</P>
+ * <P>CVS $Id: AnalysisTask.java,v 1.25 2009/11/25 09:15:35 khuck Exp $</P>
  * @author Kevin Huck
  * @version 0.1
  * @since 0.1
@@ -268,27 +268,57 @@ public class AnalysisTask extends TimerTask {
 					// create a cluster engine
 					DBScanClusterInterface clusterer = AnalysisFactory.createDBScanEngine();
 					long start = System.currentTimeMillis();
+					// force normalization for DBSCAN, it seems to work better when guessing epsilon
+					DataNormalizer normalizer = AnalysisFactory.createDataNormalizer(reducedData);
+					reducedData=normalizer.getNormalizedData();
 					clusterer.setInputData(reducedData);
 					long end = System.currentTimeMillis();
 
-					double epsilon = 1.0;
+					double[] kDistances = clusterer.getKDistances();
+					int epsilonIndex = clusterer.guessEpsilonIndex();
+					//double epsilon = kDistances[epsilonIndex];
+					double epsilon = kDistances[kDistances.length-1];
+
 					int numClusters = 1;
-					int maxTries = 5;
-					Set<Integer> clusterSizes = new HashSet<Integer>();
-					while (numClusters <= 10 && maxTries > 0) {
+					int maxTries = Math.min(50, epsilonIndex);
+					int[] previousClusterSizes = null;
+					while (maxTries > 0 && epsilonIndex > 0) {
+						boolean newResult = false;
 						PerfExplorerOutput.println("Clustering with Epsilon = " + epsilon + " : " + modelData.toString());
 						clusterer.setError(epsilon);
 						clusterer.findClusters();
 						numClusters = clusterer.getClusterSizes().length;
-						if (numClusters == 0) {
-							System.out.println("No more clusters found.");
-							break;
+						if (numClusters < 2) {
+							System.out.println("No clusters found.");
+							epsilonIndex--;
+							epsilon = kDistances[epsilonIndex];
+							maxTries--;
+							continue;
 						}
-						if (!clusterSizes.contains(new Integer(numClusters))) {
+						int[] clusterSizes = clusterer.getClusterSizes();
+						if (previousClusterSizes == null) {
+							newResult = true;
+						} else {
+						    if (clusterSizes.length != previousClusterSizes.length && 
+							  clusterSizes.length > previousClusterSizes.length) {
+								newResult = true;
+							/*} else {
+								for (int i = 0 ; i < clusterSizes.length ; i++) {
+									if (clusterSizes[i] != previousClusterSizes[i])
+										newResult = true;
+								}*/
+							}
+						}
+						
+						if (newResult) {
+							System.out.println(Integer.toString(numClusters) + " clusters found - saving results.");
 							saveClusterResults (clusterer, reducedData);
-							clusterSizes.add(new Integer(numClusters));
+							previousClusterSizes = clusterSizes;
+						} else {
+							System.out.println("No change in cluster membership - ignoring results.");
 						}
-						epsilon = epsilon * 0.9;
+						epsilonIndex--;
+						epsilon = kDistances[epsilonIndex];
 						maxTries--;
 					}
 
@@ -350,7 +380,10 @@ public class AnalysisTask extends TimerTask {
 			// do a scatterplot
 			rCorrelation = 0.0;
 			thumbnail = ImageUtils.generateClusterScatterplotThumbnail(ChartType.PCA_SCATTERPLOT, modelData, clusters);
-			chart = ImageUtils.generateClusterScatterplotImage(ChartType.PCA_SCATTERPLOT, modelData, components, clusters);
+			boolean hasNoise = false;
+			if (clusterer instanceof DBScanClusterInterface) 
+				hasNoise = true;
+			chart = ImageUtils.generateClusterScatterplotImage(ChartType.PCA_SCATTERPLOT, modelData, components, clusters, hasNoise);
 			saveAnalysisResult(components, components, thumbnail, chart);
 		}
 		

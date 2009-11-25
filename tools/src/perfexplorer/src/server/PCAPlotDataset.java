@@ -11,12 +11,14 @@ import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
  * AbstractXYDataset class to implement the data to be plotted in a scatterplot.
  * This is essentially a wrapper around the RawDataInterface class.
  * 
- * <P>CVS $Id: PCAPlotDataset.java,v 1.8 2009/02/25 19:51:46 wspear Exp $</P>
+ * <P>CVS $Id: PCAPlotDataset.java,v 1.9 2009/11/25 09:15:35 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 0.1
  * @since   0.1
  */
 public class PCAPlotDataset extends AbstractXYDataset {
+
+	boolean lastIsNoise = false;
 
 	/**
 	 * 
@@ -28,8 +30,9 @@ public class PCAPlotDataset extends AbstractXYDataset {
 	 * Constructor.
 	 * 
 	 */ 
-	public PCAPlotDataset(RawDataInterface[] clusters) {
+	public PCAPlotDataset(RawDataInterface[] clusters, boolean lastIsNoise) {
 		this.clusters = clusters;
+		this.lastIsNoise = lastIsNoise;
 	}
 
 	/* (non-Javadoc)
@@ -45,6 +48,9 @@ public class PCAPlotDataset extends AbstractXYDataset {
 	 * @see org.jfree.data.general.SeriesDataset#getSeriesName(int)
 	 */
 	public String getSeriesKey(int arg0) {
+		if (lastIsNoise && arg0 == clusters.length - 1) {
+			return new String("Noise");
+		}
 		return new String("Cluster " + arg0);
 	}
 

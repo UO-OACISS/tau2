@@ -6,6 +6,7 @@ package edu.uoregon.tau.perfexplorer.clustering.weka;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Arrays;
 
 import edu.uoregon.tau.perfexplorer.clustering.*;
 import edu.uoregon.tau.perfexplorer.common.*;
@@ -19,7 +20,7 @@ import weka.clusterers.DBScan;
  * This class is used as a list of names and values to describe 
  * a cluster created during some type of clustering operation.
  * 
- * <P>CVS $Id: WekaDBScanCluster.java,v 1.2 2009/11/19 15:53:32 khuck Exp $</P>
+ * <P>CVS $Id: WekaDBScanCluster.java,v 1.3 2009/11/25 09:15:34 khuck Exp $</P>
  * @author khuck
  * @version 0.2
  * @since 0.2
@@ -32,6 +33,7 @@ public class WekaDBScanCluster extends WekaAbstractCluster implements DBScanClus
 	private DBScan dbscan = null;
 	private int[] clusterSizes = null;
 	private List<Integer>[] clusterIndexes = null;
+	private int minPoints = 4;
 	
 	/**
 	 * Default constructor - package protected
@@ -68,7 +70,7 @@ public class WekaDBScanCluster extends WekaAbstractCluster implements DBScanClus
 		//assert instances != null : instances;
 		try {
 			this.dbscan = new DBScan();
-			this.dbscan.setMinPoints(4); // minimum of 4 points per cluster
+			this.dbscan.setMinPoints(this.minPoints); // minimum of 4 points per cluster
 			this.dbscan.setEpsilon(e); // the maximum distance between points in a cluster
 			Instances localInstances = null;
 			localInstances = this.instances;
@@ -79,6 +81,48 @@ public class WekaDBScanCluster extends WekaAbstractCluster implements DBScanClus
 			e.printStackTrace();
 			System.err.println(e.getMessage());
 		}
+	}
+
+	public int guessEpsilonIndex() {
+		double[] kDistances = getKDistances();
+		// start at the next-to-last one
+		int index = kDistances.length - 2;
+		// find "inflection" point
+		for (int i = index ; i > 1 ; i--) {
+			// average the three values
+			double avg = (kDistances[i-1] + kDistances[i] + kDistances[i+1]) / 3.0;
+			if (avg < kDistances[i]) {
+				index = i+1; // take the worst one of the three, to be conservative
+				break;
+			}
+		}
+		return index;
+	}
+
+	public double guessEpsilon() {
+		double[] kDistances = getKDistances();
+		return kDistances[guessEpsilonIndex()];
+	}
+
+	public double[] getKDistances() {
+		RawDataInterface localData = inputData;
+		DistanceMatrix distances = new DistanceMatrix(localData.numVectors());
+		distances.solveCartesianDistances(localData);
+		// for each point:
+		double[] finalPoints = new double[localData.numVectors()];
+		for (int i = 0 ; i < localData.numVectors() ; i++) {
+			// sort distances
+			double[] tmpPoints = new double[localData.numVectors()];
+			for (int j = 0 ; j < localData.numVectors() ; j++) {
+				tmpPoints[j] = distances.elementAt(i, j);
+			}
+			Arrays.sort(tmpPoints);
+			// get k-th nearest distance - add one to ignore distance to self
+			finalPoints[i] = tmpPoints[this.minPoints];
+		}
+		// sort the n k-th nearest distances
+		Arrays.sort(finalPoints);
+		return finalPoints;
 	}
 
 	private void generateStats() throws Exception {
@@ -179,6 +223,20 @@ public class WekaDBScanCluster extends WekaAbstractCluster implements DBScanClus
 	}
 
 	/* (non-Javadoc)
+	 * @see clustering.DBScanCluster#setMinPoints(int)
+	 */
+	public void setMinPoints(int minPoints) {
+		this.minPoints = minPoints;
+	}
+
+	/* (non-Javadoc)
+	 * @see clustering.DBScanCluster#getMinPoints()
+	 */
+	public int getMinPoints() {
+		return this.minPoints;
+	}
+
+	/* (non-Javadoc)
 	 * @see clustering.DBScanCluster#setInitialCenters(int[])
 	 */
 	public void setInitialCenters(int[] indexes) {
@@ -224,6 +282,7 @@ public class WekaDBScanCluster extends WekaAbstractCluster implements DBScanClus
 		try {
 			retval = dbscan.clusterInstance(instances.instance(i));
 		} catch (Exception e) {
+			retval = -1;
 		}
 		return retval;
 	}
@@ -236,6 +295,7 @@ public class WekaDBScanCluster extends WekaAbstractCluster implements DBScanClus
 		try {
 			retval = dbscan.clusterInstance(instance);
 		} catch (Exception e) {
+			retval = -1;
 		}
 		return retval;
 	}
@@ -277,7 +337,7 @@ public class WekaDBScanCluster extends WekaAbstractCluster implements DBScanClus
 	 */
 	public static void main(String[] args) {
 		int dimensions = 2;
-		int k = 4;
+		int k = 2;
 		int vectors = 10*k;
 		
 		// generate some raw data
@@ -300,8 +360,9 @@ public class WekaDBScanCluster extends WekaAbstractCluster implements DBScanClus
 		DBScanClusterInterface clusterer = AnalysisFactory.createDBScanEngine();
 		clusterer.setInputData(data);
 
-		double epsilon = 0.25;
+		double epsilon = clusterer.guessEpsilon();
 		clusterer.setError(epsilon);
+		System.out.println("Using Epsilon: " + epsilon);
 		
 		try {
 			clusterer.findClusters();
@@ -314,6 +375,12 @@ public class WekaDBScanCluster extends WekaAbstractCluster implements DBScanClus
 		for (int i = 0 ; i < vectors ; i++) {
 			System.out.println("Instance " + i + " is in cluster: " + clusters[i]);
 		}
+		clusters = clusterer.getClusterSizes();
+		for (int i = 0 ; i < clusters.length ; i++) {
+			System.out.println("Cluster " + i + " has " + clusters[i] + " members.");
+		}
+
+		
 		System.out.println("Total clusters: " + clusterer.getClusterCentroids().numVectors());
 		
 	}

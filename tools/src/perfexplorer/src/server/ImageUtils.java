@@ -199,7 +199,7 @@ public class ImageUtils {
 	public static File generateClusterScatterplotThumbnail(ChartType chartType, RMIPerfExplorerModel modelData, RawDataInterface[] clusters) {
 		File outfile = null;
 		if (chartType == ChartType.PCA_SCATTERPLOT) {
-	        XYDataset data = new PCAPlotDataset(clusters);
+	        XYDataset data = new PCAPlotDataset(clusters, false);
 	        JFreeChart chart = ChartFactory.createScatterPlot(
 	            null, null, null, data, PlotOrientation.VERTICAL, false, false, false);
 	        outfile = new File(Constants.TMPDIR + "thumbnail." + modelData.toShortString() + ".png");
@@ -221,7 +221,7 @@ public class ImageUtils {
 	 * @param clusterer
 	 * @return
 	 */
-	public static File generateClusterScatterplotImage(ChartType chartType, RMIPerfExplorerModel modelData, RawDataInterface pcaData, RawDataInterface[] clusters) {
+	public static File generateClusterScatterplotImage(ChartType chartType, RMIPerfExplorerModel modelData, RawDataInterface pcaData, RawDataInterface[] clusters, boolean hasNoise) {
 		File outfile = null;
 		if (chartType == ChartType.PCA_SCATTERPLOT) {
 		/*
@@ -233,7 +233,7 @@ public class ImageUtils {
 				y = 0;
 			}
 			*/
-	        XYDataset data = new PCAPlotDataset(clusters);
+	        XYDataset data = new PCAPlotDataset(clusters, hasNoise);
 	        JFreeChart chart = ChartFactory.createScatterPlot(
 	            "Correlation Results",
 	            (String)(Utility.shortenFunctionName(pcaData.getEventNames().get(0))),
@@ -244,7 +244,12 @@ public class ImageUtils {
 	            false,
 	            false
 	        );
-		Utility.applyDefaultChartTheme(chart);
+			Utility.applyDefaultChartTheme(chart);
+			if (hasNoise) {
+        		XYPlot plot = (XYPlot)chart.getPlot();
+				XYItemRenderer renderer = plot.getRenderer();
+	    		renderer.setSeriesPaint(clusters.length - 1, Color.black);
+			}
 	        outfile = new File(Constants.TMPDIR + "image." + modelData.toShortString() + ".png");
 	        try {
 	        		ChartUtilities.saveChartAsPNG(outfile, chart, 500, 500);

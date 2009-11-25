@@ -15,6 +15,7 @@ import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
 import edu.uoregon.tau.perfexplorer.clustering.ClusterInterface;
 import edu.uoregon.tau.perfexplorer.clustering.PrincipalComponentsAnalysisInterface;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.clustering.DBScanClusterInterface;
 import edu.uoregon.tau.perfexplorer.common.RMICubeData;
 import weka.attributeSelection.PrincipalComponents;
 
@@ -23,7 +24,7 @@ import weka.attributeSelection.PrincipalComponents;
  * TODO - make this class immutable?
  * 
  * @author khuck
- * <P>CVS $Id: WekaPrincipalComponents.java,v 1.14 2009/11/19 15:53:32 khuck Exp $</P>
+ * <P>CVS $Id: WekaPrincipalComponents.java,v 1.15 2009/11/25 09:15:34 khuck Exp $</P>
  * @version 0.1
  * @since   0.1
  */
@@ -168,6 +169,9 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 				clusters = null;
 				return clusters;
 			}
+			if (clusterer instanceof DBScanClusterInterface) {
+				k++; // add one for noise
+			}
 			clusters = new RawDataInterface[k];
 			Instances[] instances = new Instances[k];
 			int[] counters = new int[k];
@@ -189,6 +193,9 @@ public class WekaPrincipalComponents implements PrincipalComponentsAnalysisInter
 			for (int i = 0 ; i < inputData.numVectors() ; i++) {
 				double values[] = new double[2];
 				int location = clusterer.clusterInstance(i);
+				if (location < 0) {
+					location = instances.length-1; // put the noise in the last cluster
+				}
 				values[0] = transformed.getValue(0, i);
 				values[1] = transformed.getValue(1, i);
 				instances[location].add(new Instance(1.0, values));

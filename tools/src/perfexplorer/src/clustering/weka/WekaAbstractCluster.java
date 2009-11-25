@@ -20,7 +20,7 @@ import weka.attributeSelection.PrincipalComponents;
  * This class is used as a list of names and values to describe 
  * a cluster created during some type of clustering operation.
  * 
- * <P>CVS $Id: WekaAbstractCluster.java,v 1.1 2009/11/18 17:45:28 khuck Exp $</P>
+ * <P>CVS $Id: WekaAbstractCluster.java,v 1.2 2009/11/25 09:15:34 khuck Exp $</P>
  * @author khuck
  * @version 0.1
  * @since 0.1
@@ -161,7 +161,10 @@ public abstract class WekaAbstractCluster implements ClusterInterface {
 					temp[i] = new Instances(instances, 0);
 				}
 				for (int i = 0; i < instances.numInstances(); i++) {
-					temp[clusterInstance(instances.instance(i))].add(new Instance(1.0, instances.instance(i).toDoubleArray()));
+					int cNum =clusterInstance(instances.instance(i));
+					if (cNum >= 0) {
+						temp[cNum].add(new Instance(1.0, instances.instance(i).toDoubleArray()));
+					}
 				}
 				// iterate over the clusters
 				for (int i = 0; i < nc; i++) {
@@ -198,7 +201,10 @@ public abstract class WekaAbstractCluster implements ClusterInterface {
 		        	temp[i] = new Instances(instances, 0);
 		        }
 		        for (int i = 0; i < instances.numInstances(); i++) {
-		        	temp[clusterInstance(instances.instance(i))].add(new Instance(1.0, instances.instance(i).toDoubleArray()));
+					int cNum =clusterInstance(instances.instance(i));
+					if (cNum >= 0) {
+						temp[clusterInstance(instances.instance(i))].add(new Instance(1.0, instances.instance(i).toDoubleArray()));
+					}
 		        }
 			    // iterate over the clusters
 		        for (int i = 0; i < nc; i++) {
