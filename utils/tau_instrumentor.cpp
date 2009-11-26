@@ -1708,7 +1708,6 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 	  case START_LOOP_TIMER: 
 	    if ((*it)->attribute == AFTER) ostr<<endl;
 	    if (use_spec) {
-	      timercode = "{ ";
 	      /* XXX Insert code here */
 	    } else if (use_perflib) {
 	      timercode = string(string("{ Perf_Update(\"" )+(*it)->snippet+", 1); ");
@@ -1731,13 +1730,13 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 	    /* insert spaces to make it look better */
 	    for(space = 0; space < (*it)->col-1; space++) ostr<<" ";
 	    if (use_spec) {
-	      timercode = " }";
 	      /* XXX Insert code here */
 	    } else if (use_perflib) {
 	      timercode = string(string(" Perf_Update(\"" )+(*it)->snippet+", 0); } ");
 	    } else {
-	      ostr << "TAU_PROFILE_STOP(lt); } "<<endl;
+	      timercode = "TAU_PROFILE_STOP(lt); } ";
 	    }
+            ostr << timercode << endl;
 	    instrumented = true;
 	    /* pop the current timer! */
 	    if (!current_timer.empty()) current_timer.pop_front();
@@ -4370,8 +4369,8 @@ int main(int argc, char **argv) {
   
 /***************************************************************************
  * $RCSfile: tau_instrumentor.cpp,v $   $Author: geimer $
- * $Revision: 1.217 $   $Date: 2009/09/07 09:36:16 $
- * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.217 2009/09/07 09:36:16 geimer Exp $
+ * $Revision: 1.218 $   $Date: 2009/11/26 05:02:42 $
+ * VERSION_ID: $Id: tau_instrumentor.cpp,v 1.218 2009/11/26 05:02:42 geimer Exp $
  ***************************************************************************/
 
 
