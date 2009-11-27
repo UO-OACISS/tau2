@@ -6,6 +6,7 @@ package edu.uoregon.tau.perfexplorer.glue;
 import java.util.Map;
 import java.util.Set;
 
+import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.Trial;
 
 /**
@@ -15,7 +16,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * this interface, whenever possible.
  * </p>
  * 
- * <P>CVS $Id: PerformanceResult.java,v 1.11 2009/04/15 00:17:12 khuck Exp $</P>
+ * <P>CVS $Id: PerformanceResult.java,v 1.12 2009/11/27 16:51:05 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0
@@ -415,6 +416,13 @@ public interface PerformanceResult {
 	 * @return the Trial
 	 */
 	public Trial getTrial();
+
+	/**
+	 * This method returns the DataSource to which the performance data is related.
+	 * 
+	 * @return the DataSource
+	 */
+	public DataSource getDataSource();
 
 	/**
 	 * This method returns the ID of the Trial to which the performance data is related.

@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.TreeSet;
 
+import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.Trial;
 
 
@@ -19,7 +20,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * interface.  This class has all the member data fields for the plethora
  * of anticipated subclasses.
  * 
- * <P>CVS $Id: AbstractResult.java,v 1.18 2009/05/12 20:32:48 khuck Exp $</P>
+ * <P>CVS $Id: AbstractResult.java,v 1.19 2009/11/27 16:51:05 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0
@@ -60,10 +61,12 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 	protected double mainInclusive = 0.0;
 	protected String mainMetric = null;
 	protected Trial trial = null;
+	protected DataSource dataSource = null;
 	protected Integer trialID = null;
 	protected Map<Integer, String> eventMap = new HashMap<Integer, String>();
 	protected String name = null;
 	protected boolean ignoreWarnings = false;
+	protected int originalThreads = 0;
 	
 	public static List<Integer> getTypes() {
 		return getTypes(true);
@@ -123,6 +126,22 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 	 *
 	 */
 	public AbstractResult(PerformanceResult input) {
+		this.copyData(input);
+		this.copyFields(input);
+	}
+
+	/**
+	 * sort-of copy constructor
+	 *
+	 */
+	public AbstractResult(PerformanceResult input, boolean fullCopy) {
+		if (fullCopy == true) {
+			this.copyData(input);
+		}
+		this.copyFields(input);
+	}
+
+	private void copyData(PerformanceResult input) {
 		for (Integer thread : input.getThreads()) {
 			for (String event : input.getEvents()) {
 				for (String metric : input.getMetrics()) {
@@ -146,22 +165,13 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 				putDataPoint(thread, event, null, USEREVENT_SUMSQR, 
 						getDataPoint(thread, event, null, USEREVENT_SUMSQR));
 			}
-		}
-		this.copyFields(input);
-	}
-
-	/**
-	 * sort-of copy constructor
-	 *
-	 */
-	public AbstractResult(PerformanceResult input, boolean notFullCopy) {
-		this.copyFields(input);
+		}	
 	}
 	
 	private void copyFields(PerformanceResult input) {
-		this.trial = input.getTrial();
 		this.eventMap = input.getEventMap();
 		this.mainEvent = input.getMainEvent();
+		this.dataSource = input.getDataSource();
 		this.trial = input.getTrial();
 		this.trialID = input.getTrialID();
 		this.eventMap = input.getEventMap();
@@ -512,14 +522,33 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 	 * @return the originalThreads
 	 */
 	public Integer getOriginalThreads() {
-		if (this.trial != null) {
-			// get the node, context, thread count for the trial
-            int nodes = Integer.parseInt(this.trial.getField("node_count"));
-            int contexts = Integer.parseInt(this.trial.getField("contexts_per_node"));
-            int threads = Integer.parseInt(this.trial.getField("threads_per_context"));
-			return (nodes*contexts*threads);
+		if (this.originalThreads == 0) {
+	        int nodes = 0;
+	        int contexts = 0;
+	        int threads = 0;
+			if (this.trial != null) {
+				// get the node, context, thread count for the trial
+	            nodes = Integer.parseInt(this.trial.getField("node_count"));
+	            contexts = Integer.parseInt(this.trial.getField("contexts_per_node"));
+	            threads = Integer.parseInt(this.trial.getField("threads_per_context"));
+			}
+	        if (nodes > 0) {
+	        	this.originalThreads = nodes*contexts*threads;
+			} else if (this.dataSource != null) {
+				threads = 0;
+				nodes = this.dataSource.getNumberOfNodes();
+				for (int n = 0 ; n < nodes ; n++) {
+					contexts = this.dataSource.getNumberOfContexts(n);
+					for (int c = 0 ; c < contexts ; c++) {
+						threads += this.dataSource.getNumberOfThreads(n, c);
+					}
+				}
+				this.originalThreads = threads;
+			} else {
+				this.originalThreads = this.threads.size();
+			}
 		}
-		return this.threads.size();
+		return this.originalThreads;
 	}
 
 	/**
@@ -736,6 +765,10 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 
 	public Trial getTrial() {
 		return trial;
+	}
+
+	public DataSource getDataSource() {
+		return dataSource;
 	}
 
 	public void setTrial(Trial trial) {
