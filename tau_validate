@@ -892,7 +892,7 @@ for makefile in makefiles:
             openTable(tests)
             
         sys.stdout = fsock    
-        outputSingle(tests)
+        outputSingle(tests, makefile)
         fsock.flush()
         sys.stdout = saveout
 
