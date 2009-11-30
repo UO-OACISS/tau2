@@ -291,7 +291,7 @@ public class InputLog implements base.drawable.InputAPI
 					else
 						return Kind.EOF_ID;
 				}
-				else{
+				else if(stepsize>0){
 					count_read++;
 					if(count_read%stepsize==0){
 						System.out.println(count_read+" Records read. "+(int)(100*((double)count_read/(double)arch_read))+"% converted");
