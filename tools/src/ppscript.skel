@@ -15,9 +15,11 @@ VIS_JAR=${LIBDIR}/vis.jar
 TAUCOMMON_JAR=${LIBDIR}/tau-common.jar
 BATIK_JAR=${LIBDIR}/batik-combined.jar
 
+JYTHON_HOME=${HOME}/.ParaProf/jython
+
 OMEGAHAT_JARS=$OMEGAHAT_HOME:$OMEGAHAT_JARPATH/Environment.jar:$OMEGAHAT_JARPATH/antlr.jar:$OMEGAHAT_JARPATH/jas.jar:$OMEGAHAT_JARPATH/jhall.jar
 
 CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$OMEGAHAT_JARS:$JFREECHART_JAR:$JCOMMON_JAR:$WEKA_JAR:$JOGL_JAR:$VIS_JAR:$JARGS_JAR:$JYTHON_JAR:$TAUCOMMON_JAR:$BATIK_JAR
 
-java -Xmx800m -Dderby.system.home=${LIBDIR} -Dpython.verbose=error -Djava.library.path=${LIBDIR} \
+java -Xmx800m -Dderby.system.home=${LIBDIR} -Dpython.home=${JYTHON_HOME} -Dpython.verbose=error -Djava.library.path=${LIBDIR} \
 -cp ${LIBDIR}/paraprof.jar:${LIBDIR}/perfdmf.jar:${LIBDIR}/tau-common.jar:${LIBDIR}/vis.jar:${LIBDIR}/jogl.jar:${LIBDIR}/jatha.jar:${LIBDIR}/jgraph.jar:${LIBDIR}/xerces.jar:${JDBC_JAR}:${LIBDIR}/jargs.jar:${LIBDIR}/batik-combined.jar:${LIBDIR}/jfreechart-1.0.12.jar:${LIBDIR}/jcommon-1.0.15.jar:${LIBDIR}/jython.jar:${CLASSPATH} org.python.util.jython "$@" 
