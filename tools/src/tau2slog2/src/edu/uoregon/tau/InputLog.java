@@ -237,6 +237,9 @@ public class InputLog implements base.drawable.InputAPI
 		System.out.println(arch_read+" records initialized.  Processing.");
 		
 		stepsize=arch_read/50;
+		if(stepsize==0){
+			stepsize=1;
+		}
 		
 		/*if(maxthread>0)
 		{
@@ -290,7 +293,7 @@ public class InputLog implements base.drawable.InputAPI
 					else
 						return Kind.EOF_ID;
 				}
-				else if(stepsize>0){
+				else {
 					count_read++;
 					if(count_read%stepsize==0){
 						System.out.println(count_read+" Records read. "+(int)(100*((double)count_read/(double)arch_read))+"% converted");
