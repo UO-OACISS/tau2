@@ -338,7 +338,7 @@ public class MultiMerge {
 	 * @param traces
 	 */
 	private static void initializeMerge(List<String> traces){
-
+		
 		TraceReader[] initReaders = new TraceReader[traces.size()];
 
 		TraceReaderCallbacks init_cb = new TAUReaderInit();
@@ -369,14 +369,23 @@ public class MultiMerge {
 		TraceReader[] readers = new TraceReader[traces.size()];
 		long[] sorter = new long[readers.length];
 		TraceReaderCallbacks read_cb = new TAUReaderWriteall();
+		long totalRecords=0;
 		for(int rs=0;rs<readers.length;rs++)
 		{
 			readers[rs]=new TraceReader(traces.get(rs),getEDFName(traces.get(rs)));
 			readers[rs].setDefsOnly(false);
 			readers[rs].setSubtractFirstTimestamp(false);//TODO: Why is this needed only for cuda output?
+			totalRecords+=readers[rs].getNumRecords();
 			sorter[rs]=readers[rs].peekTime();
 		}
 
+		System.out.println(totalRecords+" records to merge.");
+		long stepsize=totalRecords/50;
+		long countRecords=0;
+		if(stepsize==0){
+			stepsize=1;
+		}
+		
 		int minDex=minTime(sorter);
 		while(minDex>=0){
 			int read=readers[minDex].readNumEvents(read_cb, 1, readers[minDex].getTraceFile());
@@ -385,6 +394,12 @@ public class MultiMerge {
 				readers[minDex].closeTrace();
 				readers[minDex]=null;
 			}else{
+				
+				countRecords++;
+				if(countRecords%stepsize==0){
+					System.out.println(countRecords+" Records read. "+(int)(100*((double)countRecords/(double)totalRecords))+"% converted");
+				}
+				
 				sorter[minDex]=readers[minDex].peekTime();
 				if(sorter[minDex]==-1)
 				{
@@ -413,17 +428,25 @@ public class MultiMerge {
 		stateMap=new HashMap<String,Integer>();
 		ueMap=new HashMap<String,Integer>();
 		totMap=new HashMap<String,TotID>();
-		
 		tw = new TraceWriter("tau.trc", "tau.edf");
+		
 		List<String> traces = listTraces();
 
 		initializeMerge(traces);
-
+		System.out.println("Initilization complete");
 		dataMerge(traces);
 
 		tw.closeTrace();
+		System.out.println("The merging is complete.");
 	}
 
+	/**
+	 * Creates a string builder to identify a communication event at a given time and thread
+	 * @param mpi
+	 * @param stamp
+	 * @param fname
+	 * @return
+	 */
 	private static StringBuilder mpiID(StringBuilder mpi, long stamp, String fname){
 		mpi.setLength(0);
 		mpi.append(stamp);
@@ -432,6 +455,15 @@ public class MultiMerge {
 		return mpi;
 	}
 
+	/**
+	 * Creates a the first half of a two part unique id used to identify the sender/receiver of a communication
+	 * @param id
+	 * @param remNode
+	 * @param size
+	 * @param tag
+	 * @param commun
+	 * @return
+	 */
 	private static StringBuilder commID1(StringBuilder id, int remNode, int size, int tag, int commun){
 		id.setLength(0);
 		id.append(remNode);
@@ -444,6 +476,15 @@ public class MultiMerge {
 		return id;
 	}
 
+	/**
+	 * Creates a the second half of a two part unique id used to identify the sender/receiver of a communication
+	 * @param id
+	 * @param remNode
+	 * @param size
+	 * @param tag
+	 * @param commun
+	 * @return
+	 */
 	private static StringBuilder commID2(StringBuilder id, int remNode, int size, int tag, int commun){
 		id.append(".");
 		id.append(remNode);
@@ -462,8 +503,6 @@ public class MultiMerge {
 	 *
 	 */
 	private static class TAUReaderInit implements TraceReaderCallbacks{
-
-
 
 		public int defClkPeriod(Object userData, double clkPeriod) {
 			tw.defClkPeriod(clkPeriod);
