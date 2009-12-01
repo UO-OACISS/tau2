@@ -23,7 +23,6 @@ import base.drawable.Primitive;
 import base.drawable.Topology;
 import base.drawable.YCoordMap;
 import base.io.BufArrayOutputStream;
-import edu.uoregon.tau.trace.TraceFactory;
 import edu.uoregon.tau.trace.TraceReader;
 import edu.uoregon.tau.trace.TraceReaderCallbacks;
 
@@ -223,7 +222,7 @@ public class InputLog implements base.drawable.InputAPI
 		noMonEvents=new HashSet();
 		
 		TraceReaderCallbacks def_cb = new TAUReaderInit();
-		TraceReader tFileDefRead=TraceFactory.OpenFileForInput(tautrc,tauedf);
+		TraceReader tFileDefRead=new TraceReader(tautrc,tauedf);
 		//System.out.println()
 		tFileDefRead.setSubtractFirstTimestamp(true);
 		tFileDefRead.setDefsOnly(true);
@@ -234,7 +233,7 @@ public class InputLog implements base.drawable.InputAPI
 			//System.out.println("Read "+recs_read+" records");
 		}while(recs_read!=0);//&&((Integer)tb.UserData).intValue()!=0
 		tFileDefRead.closeTrace();
-		arch_read=TraceFactory.getNumRecords(tautrc);
+		arch_read=tFileDefRead.getNumRecords();
 		System.out.println(arch_read+" records initialized.  Processing.");
 		
 		stepsize=arch_read/50;
@@ -255,7 +254,7 @@ public class InputLog implements base.drawable.InputAPI
 		noMonEventCycle = new HashMap();//[maxnode+1][maxthread+1];
 		
 		ev_cb = new TAUReader();
-		tFileEvRead=TraceFactory.OpenFileForInput(tautrc,tauedf);
+		tFileEvRead=new TraceReader(tautrc,tauedf);
 		tFileEvRead.setSubtractFirstTimestamp(true);
 		//tFileDefRead.setSubtractFirstTimestamp(false);
 		return true;
