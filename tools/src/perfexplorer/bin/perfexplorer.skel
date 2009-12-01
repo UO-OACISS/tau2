@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: perfexplorer.skel,v 1.45 2009/11/25 17:09:59 khuck Exp $
+# $Id: perfexplorer.skel,v 1.46 2009/12/01 21:43:41 amorris Exp $
 # $Name:  $
 
 TAUROOT=@TAUROOT@
@@ -17,6 +17,8 @@ BINDIR=${TAUROOT}/${CONFIG_ARCH}/bin
 LIBDIR=${TAUROOT}/${CONFIG_ARCH}/lib
 JARDIR=${TAUROOT}/${CONFIG_ARCH}/lib
 
+# run the user setup script
+$BINDIR/tau_user_setup.sh
 
 # Record all the arguments
 arguments=""

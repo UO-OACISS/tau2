@@ -68,5 +68,8 @@ if [ "x$testmax" != "xfailed" ] ; then
     MEMORY="-Xmx${testmax}m"
 fi
 
+# run the user setup script
+$BINDIR/tau_user_setup.sh
+
 # Launch!
 java $MEMORY -Dderby.system.home=${HOME}/.ParaProf -Dpython.home=$JAR_HOME/jython -Dpython.verbose=error -Djava.library.path=${LIBDIR} -cp ${JARS} ${APPLE_OPTIONS} edu/uoregon/tau/paraprof/ParaProf -j $JARDIR -c $SCHEMADIR $*	
