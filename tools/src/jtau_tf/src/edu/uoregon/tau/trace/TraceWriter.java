@@ -8,8 +8,11 @@
 
 package edu.uoregon.tau.trace;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.DataOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 //import java.util.HashSet;
@@ -18,6 +21,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 //import java.util.Vector;
+import java.util.TreeMap;
 
 public class TraceWriter extends TraceFile {
 	
@@ -54,7 +58,96 @@ public class TraceWriter extends TraceFile {
 	//Event[] traceBuffer;
 	//int tracePosition;
 	
-	TraceWriter(){}
+	public TraceWriter( String name, String edf){
+		
+		FileOutputStream ostream;
+		try {
+			ostream = new FileOutputStream(name);
+
+		BufferedOutputStream bw = new BufferedOutputStream(ostream);
+		Foid = new DataOutputStream(bw);
+		//tFile.traceBuffer = new Event[TAU_MAX_RECORDS];
+		//tFile.traceBuffer[0]=new Event();
+		//tFile.tracePosition = 0; // 0 will be the EV_INIT record
+		//tFile.initialized = false;
+
+		
+
+
+		BufferedWriter out = new BufferedWriter(new FileWriter(edf));
+		out.close();
+
+		/* make a copy of the EDF file name */
+		EdfFile = edf;
+
+		//tFile.NidTidMap = new HashMap();
+
+		/* Allocate space for maps */
+		EventIdMap = new TreeMap();//Tree map for output ordered by id.
+
+		GroupIdMap = new HashMap();
+
+		//tFile.groupNameMap = new HashMap();
+
+		//tFile.needsEdfFlush = true;
+
+		/* initialize clock */
+		//tFile.ClkInitialized = false;
+		
+		/* initialize the first timestamp for the trace */
+		//tFile.FirstTimestamp = 0;
+
+		/* define some events */
+
+		EventDescr newEventDesc = new EventDescr(PCXX_EV_INIT,"TRACER","EV_INIT",0,"none");
+		/*newEventDesc.Eid = PCXX_EV_INIT;
+		newEventDesc.Group = "TRACER";
+		newEventDesc.EventName = "EV_INIT";
+		newEventDesc.Tag = 0;
+		newEventDesc.Param = "none";*/
+		EventIdMap.put(new Integer(PCXX_EV_INIT),newEventDesc);//[PCXX_EV_INIT] = newEventDesc;
+		
+		newEventDesc = new EventDescr(PCXX_EV_CLOSE,"TRACER","FLUSH_CLOSE",0,"none");
+		/*newEventDesc.Eid = PCXX_EV_CLOSE;
+		newEventDesc.Group = "TRACER";
+		newEventDesc.EventName = "FLUSH_CLOSE";
+		newEventDesc.Tag = 0;
+		newEventDesc.Param = "none";*/
+		EventIdMap.put(new Integer(PCXX_EV_CLOSE),newEventDesc);//[PCXX_EV_CLOSE] = newEventDesc;
+		
+		newEventDesc = new EventDescr(PCXX_EV_WALL_CLOCK,"TRACER","WALL_CLOCK",0,"none");
+		/*newEventDesc.Eid = PCXX_EV_WALL_CLOCK;
+		newEventDesc.Group = "TRACER";
+		newEventDesc.EventName = "WALL_CLOCK";
+		newEventDesc.Tag = 0;
+		newEventDesc.Param = "none";*/
+		EventIdMap.put(new Integer(PCXX_EV_WALL_CLOCK),newEventDesc);//[PCXX_EV_WALL_CLOCK] = newEventDesc;
+		
+		newEventDesc = new EventDescr(TAU_MESSAGE_SEND,"TAU_MESSAGE","MESSAGE_SEND",-7,"par");
+		/*newEventDesc.Eid = TAU_MESSAGE_SEND;
+		newEventDesc.Group = "TAU_MESSAGE";
+		newEventDesc.EventName = "MESSAGE_SEND";
+		newEventDesc.Tag = -7;
+		newEventDesc.Param = "par";*/
+		
+		EventIdMap.put(new Integer(TAU_MESSAGE_SEND),newEventDesc);//[TAU_MESSAGE_SEND] = newEventDesc;
+		newEventDesc = new EventDescr(TAU_MESSAGE_RECV,"TAU_MESSAGE","MESSAGE_RECV",-8,"par");
+		/*newEventDesc.Eid = TAU_MESSAGE_RECV;
+		newEventDesc.Group = "TAU_MESSAGE";
+		newEventDesc.EventName = "MESSAGE_RECV";
+		newEventDesc.Tag = -8;
+		newEventDesc.Param = "par";*/
+		EventIdMap.put(new Integer(TAU_MESSAGE_RECV),newEventDesc);//[TAU_MESSAGE_RECV] = newEventDesc;
+
+		} catch (SecurityException e1) {
+			e1.printStackTrace();
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+	    } catch (IOException e1) {
+	    	e1.printStackTrace();
+		}	
+		
+	}
 	
 	/*private String StringPair(int nod,int thd){
 		return nod+":"+thd;

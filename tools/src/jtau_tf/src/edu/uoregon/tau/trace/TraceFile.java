@@ -18,27 +18,27 @@ import java.util.Map;
  * Event stores the essential data of a TAU event, event 64 represents
 */
 class Event {
-	private int ev;    /* -- event id   int32     -- */
-	private char nid;   /* -- node id    uint16     -- */
-	private char tid;   /* -- thread id  uint16     -- */
-	private long par;   /* -- event parameter int64 -- */
-	private long ti;    /* -- time [us]?   uint64   -- */
+	int evid;    /* -- event id   int32     -- */
+	char nid;   /* -- node id    uint16     -- */
+	char tid;   /* -- thread id  uint16     -- */
+	long parameter;   /* -- event parameter int64 -- */
+	long time;    /* -- time [us]?   uint64   -- */
 	
 	Event(int ev, char nid, char tid, long par, long ti){
-		this.ev=ev;
+		this.evid=ev;
 		this.nid=nid;
 		this.tid=tid;
-		this.par=par;
-		this.ti=ti;
+		this.parameter=par;
+		this.time=ti;
 	}
 	
 	Event(){}
 	
 	public int getEventID() {
-		return ev;
+		return evid;
 	}
 	public void setEventID(int ev) {
-		this.ev = ev;
+		this.evid = ev;
 	}
 	public char getNodeID() {
 		return nid;
@@ -47,16 +47,16 @@ class Event {
 		this.nid = nid;
 	}
 	public long getParameter() {
-		return par;
+		return parameter;
 	}
 	public void setParameter(long par) {
-		this.par = par;
+		this.parameter = par;
 	}
 	public long getTime() {
-		return ti;
+		return time;
 	}
 	public void setTime(long ti) {
-		this.ti = ti;
+		this.time = ti;
 	}
 	public char getThreadID() {
 		return tid;
