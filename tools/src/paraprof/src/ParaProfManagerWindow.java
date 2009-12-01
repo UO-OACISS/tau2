@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.45 2009/11/12 22:50:28 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.46 2009/12/01 17:53:07 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.45 $
+ * @version	$Revision: 1.46 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -37,7 +37,8 @@ import edu.uoregon.tau.paraprof.tablemodel.*;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.database.*;
 
-public class ParaProfManagerWindow extends JFrame implements ActionListener, TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
+public class ParaProfManagerWindow extends JFrame implements ActionListener, TreeSelectionListener, TreeWillExpandListener,
+        DBManagerListener {
 
     private DefaultMutableTreeNode root;
     private JTree tree = null;
@@ -49,8 +50,8 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
 
     private JCheckBoxMenuItem showApplyOperationItem = null;
     private DerivedMetricPanel derivedMetricPanel = new DerivedMetricPanel(this);
-  //  private DerivedMetricWindow derivedMetricWindow = new DerivedMetricWindow(this);
-    
+    //  private DerivedMetricWindow derivedMetricWindow = new DerivedMetricWindow(this);
+
     private JScrollPane treeScrollPane;
 
     private Vector loadedDBTrials = new Vector();
@@ -211,10 +212,24 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         MouseListener ml = new MouseAdapter() {
             public void mousePressed(MouseEvent evt) {
                 try {
-
                     TreePath[] paths = tree.getSelectionPaths();
                     if (paths == null) {
                         return;
+                    }
+
+                    if (ParaProfUtils.rightClick(evt)) {
+                        int row = tree.getRowForLocation(evt.getX(), evt.getY());
+                        int rows[] = tree.getSelectionRows();
+                        boolean found = false;
+                        for (int i = 0; i < rows.length; i++) {
+                            if (row == rows[i]) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            tree.setSelectionRow(row);
+                        }
                     }
 
                     if (paths.length > 1) {
@@ -228,7 +243,6 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     if (paths.length == 1) { // only one item is selected
                         TreePath path = paths[0];
                         DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
-                        DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
                         Object userObject = selectedNode.getUserObject();
 
                         if (ParaProfUtils.rightClick(evt)) {
@@ -359,7 +373,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         showApplyOperationItem = new JCheckBoxMenuItem("Show Derived Metric Panel", false);
         showApplyOperationItem.addActionListener(this);
         optionsMenu.add(showApplyOperationItem);
-        
+
         JMenuItem showDerivedWindow = new JMenuItem("Show Expression Window");
         showDerivedWindow.addActionListener(this);
         optionsMenu.add(showDerivedWindow);
@@ -497,17 +511,17 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         jMenuItem.addActionListener(this);
         dbTrialPopup.add(jMenuItem);
 
-//        jMenuItem = new JMenuItem("Copy");
-//        jMenuItem.addActionListener(this);
-//        multiPopup.add(jMenuItem);
-//
-//        jMenuItem = new JMenuItem("Cut");
-//        jMenuItem.addActionListener(this);
-//        multiPopup.add(jMenuItem);
-//
-//        jMenuItem = new JMenuItem("Paste");
-//        jMenuItem.addActionListener(this);
-//        multiPopup.add(jMenuItem);
+        //        jMenuItem = new JMenuItem("Copy");
+        //        jMenuItem.addActionListener(this);
+        //        multiPopup.add(jMenuItem);
+        //
+        //        jMenuItem = new JMenuItem("Cut");
+        //        jMenuItem.addActionListener(this);
+        //        multiPopup.add(jMenuItem);
+        //
+        //        jMenuItem = new JMenuItem("Paste");
+        //        jMenuItem.addActionListener(this);
+        //        multiPopup.add(jMenuItem);
 
         jMenuItem = new JMenuItem("Delete");
         jMenuItem.addActionListener(this);
@@ -523,15 +537,15 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
     }
 
     public void handleDelete(Object object) throws SQLException, DatabaseException {
-        
+
         if (object instanceof TreePath[]) {
             TreePath[] paths = (TreePath[]) object;
-            for (int i=0;i<paths.length; i++) {
+            for (int i = 0; i < paths.length; i++) {
                 DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) paths[i].getLastPathComponent();
                 Object userObject = selectedNode.getUserObject();
                 handleDelete(userObject);
             }
-            
+
         } else if (object instanceof ParaProfApplication) {
             ParaProfApplication application = (ParaProfApplication) object;
             if (application.dBApplication()) {
@@ -677,26 +691,26 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                         jSplitOuterPane.setDividerLocation(1.00);
                     }
                 } else if (arg.equals("Show Expression Window")) {
-                	if(selectedObject != null){
-                		Object value = selectedObject.getUserObject();
-                  	  /*if(value instanceof ParaProfApplication){
-                			ParaProfApplication app = (ParaProfApplication) value;
-                			new DerivedMetricWindow(this,app,null,null).setVisible(true);
-                		}else if(value instanceof ParaProfExperiment){
-                			ParaProfExperiment e =(ParaProfExperiment) value;
-                			new DerivedMetricWindow(this,null,e,null).setVisible(true);
-                		}else */if(value instanceof ParaProfTrial){
-                		ParaProfTrial trial = (ParaProfTrial) value;
-                			new DerivedMetricWindow(this,null,null,trial).setVisible(true);
-                		}else{
-                		      JOptionPane.showMessageDialog(this, "Please select a trial");
-                		}
-                	}else{
-                		JOptionPane.showMessageDialog(this, "Please select a trial");
-                	}
-                	
-                	//derivedMetricWindow.setVisible(true);
-                	
+                    if (selectedObject != null) {
+                        Object value = selectedObject.getUserObject();
+                        /*if(value instanceof ParaProfApplication){
+                        	ParaProfApplication app = (ParaProfApplication) value;
+                        	new DerivedMetricWindow(this,app,null,null).setVisible(true);
+                        }else if(value instanceof ParaProfExperiment){
+                        	ParaProfExperiment e =(ParaProfExperiment) value;
+                        	new DerivedMetricWindow(this,null,e,null).setVisible(true);
+                        }else */if (value instanceof ParaProfTrial) {
+                            ParaProfTrial trial = (ParaProfTrial) value;
+                            new DerivedMetricWindow(this, null, null, trial).setVisible(true);
+                        } else {
+                            JOptionPane.showMessageDialog(this, "Please select a trial");
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Please select a trial");
+                    }
+
+                    //derivedMetricWindow.setVisible(true);
+
                 } else if (arg.equals("About ParaProf")) {
                     ImageIcon icon = Utility.getImageIconResource("tau-medium.png");
                     JOptionPane.showMessageDialog(this, ParaProf.getInfoString(), "About ParaProf",
@@ -1194,7 +1208,7 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
             DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) selectedNode.getParent();
             Object userObject = selectedNode.getUserObject();
-        	selectedObject = selectedNode;
+            selectedObject = selectedNode;
 
             int location = jSplitInnerPane.getDividerLocation();
             if (selectedNode.isRoot()) {
@@ -1594,10 +1608,12 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
                     array[0] = paraProfExperiment.getApplicationID();
                     array[1] = paraProfExperiment.getID();
                     return array;
-                } else
+                } else {
                     error = true;
-            } else
+                }
+            } else {
                 error = true;
+            }
         }
         if (error)
             JOptionPane.showMessageDialog(this, "Please select an db experiment first!", "DB Upload Error!",
@@ -2086,28 +2102,28 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
             DatabaseAPI databaseAPI = new DatabaseAPI();
             databaseAPI.initialize(database);
 
-//            // Some strangeness here, we retrieve the metadata columns for the non-db trials
-//            // from the "first" database in the list.  Very screwy in my opinion.
-//            if (!metaDataRetrieved) {
-//                DatabaseAPI defaultDatabaseAPI = new DatabaseAPI();
-//                defaultDatabaseAPI.initialize(getDefaultDatabase());
-//                metaDataRetrieved = true;
-//                for (Iterator it = ParaProf.applicationManager.getApplications().iterator(); it.hasNext();) {
-//                    ParaProfApplication ppApp = (ParaProfApplication) it.next();
-//                    if (!ppApp.dBApplication()) {
-//                        ppApp.setDatabase(getDefaultDatabase());
-//                        for (Iterator it2 = ppApp.getExperimentList(); it2.hasNext();) {
-//                            ParaProfExperiment ppExp = (ParaProfExperiment) it2.next();
-//                            ppExp.setDatabase(getDefaultDatabase());
-//                            for (Iterator it3 = ppExp.getTrialList(); it3.hasNext();) {
-//                                ParaProfTrial ppTrial = (ParaProfTrial) it3.next();
-//                                ppTrial.getTrial().setDatabase(getDefaultDatabase());
-//                            }
-//                        }
-//                    }
-//                }
-//                defaultDatabaseAPI.terminate();
-//            }
+            //            // Some strangeness here, we retrieve the metadata columns for the non-db trials
+            //            // from the "first" database in the list.  Very screwy in my opinion.
+            //            if (!metaDataRetrieved) {
+            //                DatabaseAPI defaultDatabaseAPI = new DatabaseAPI();
+            //                defaultDatabaseAPI.initialize(getDefaultDatabase());
+            //                metaDataRetrieved = true;
+            //                for (Iterator it = ParaProf.applicationManager.getApplications().iterator(); it.hasNext();) {
+            //                    ParaProfApplication ppApp = (ParaProfApplication) it.next();
+            //                    if (!ppApp.dBApplication()) {
+            //                        ppApp.setDatabase(getDefaultDatabase());
+            //                        for (Iterator it2 = ppApp.getExperimentList(); it2.hasNext();) {
+            //                            ParaProfExperiment ppExp = (ParaProfExperiment) it2.next();
+            //                            ppExp.setDatabase(getDefaultDatabase());
+            //                            for (Iterator it3 = ppExp.getTrialList(); it3.hasNext();) {
+            //                                ParaProfTrial ppTrial = (ParaProfTrial) it3.next();
+            //                                ppTrial.getTrial().setDatabase(getDefaultDatabase());
+            //                            }
+            //                        }
+            //                    }
+            //                }
+            //                defaultDatabaseAPI.terminate();
+            //            }
 
             //   dbAPI = databaseAPI;
             return databaseAPI;
