@@ -426,7 +426,6 @@ stffdir=
 sddf=no
 sddfdir=
 iowrapper=no
-home=$HOME
 zepto=no
 zeptodir=
 
@@ -1262,20 +1261,14 @@ sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,
  > ${targetdir}/${architecture}/bin/phaseconvert
 chmod a+rx ${targetdir}/${architecture}/bin/phaseconvert
 
-if [ ! -d ${home}/.ParaProf ] 
-  then
-    mkdir -p ${home}/.ParaProf
-fi
+cat ${tauroot}/tools/src/tau_user_setup.sh.skel | 
+sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
+ > ${targetdir}/${architecture}/bin/tau_user_setup.sh
+chmod a+rx ${targetdir}/${architecture}/bin/tau_user_setup.sh
 
-if [ ! -d ${home}/.ParaProf/jython ] 
-  then
-    mkdir -p ${home}/.ParaProf/jython
-fi
-
-cat ${tauroot}/tools/src/perfdmf/bin/derby.properties.skel | 
-sed -e 's,@HOME@,'${home}',' > ${home}/.ParaProf/derby.properties
-
-cp ${tauroot}/tools/src/contrib/jython.registry ${home}/.ParaProf/jython/registry
+# copy these files to the etc directory for tau_user_setup.sh to find and use
+cp ${tauroot}/tools/src/perfdmf/bin/derby.properties.skel ${targetdir}/etc
+cp ${tauroot}/tools/src/contrib/jython.registry ${targetdir}/etc
 
 cat ${tauroot}/tools/src/perfexplorer/bin/configure.skel | 
 sed -e 's,@TAUROOTDIR@,'$tauroot',' \
