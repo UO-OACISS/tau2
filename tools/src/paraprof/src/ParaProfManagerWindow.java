@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.46 2009/12/01 17:53:07 amorris Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.47 2009/12/01 18:03:47 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.46 $
+ * @version	$Revision: 1.47 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -212,24 +212,27 @@ public class ParaProfManagerWindow extends JFrame implements ActionListener, Tre
         MouseListener ml = new MouseAdapter() {
             public void mousePressed(MouseEvent evt) {
                 try {
-                    TreePath[] paths = tree.getSelectionPaths();
-                    if (paths == null) {
-                        return;
-                    }
 
                     if (ParaProfUtils.rightClick(evt)) {
                         int row = tree.getRowForLocation(evt.getX(), evt.getY());
                         int rows[] = tree.getSelectionRows();
                         boolean found = false;
-                        for (int i = 0; i < rows.length; i++) {
-                            if (row == rows[i]) {
-                                found = true;
-                                break;
+                        if (rows != null) {
+                            for (int i = 0; i < rows.length; i++) {
+                                if (row == rows[i]) {
+                                    found = true;
+                                    break;
+                                }
                             }
                         }
                         if (!found) {
                             tree.setSelectionRow(row);
                         }
+                    }
+
+                    TreePath[] paths = tree.getSelectionPaths();
+                    if (paths == null) {
+                        return;
                     }
 
                     if (paths.length > 1) {
