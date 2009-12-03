@@ -2208,7 +2208,7 @@ case $cxx_compiler in
       ibmxlc=yes
 
       if [ "$machine" = "bgp" ] ; then
-	  ibm_compiler=c99
+	  ibm_compiler=gxlc++
       else 
 	  ibm_compiler=$cxx_compiler
       fi
