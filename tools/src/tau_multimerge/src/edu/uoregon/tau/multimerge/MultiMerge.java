@@ -370,6 +370,10 @@ public class MultiMerge {
 		long[] sorter = new long[readers.length];
 		TraceReaderCallbacks read_cb = new TAUReaderWriteall();
 		long totalRecords=0;
+		
+		/*
+		 * Create one reader for each trace file
+		 */
 		for(int rs=0;rs<readers.length;rs++)
 		{
 			readers[rs]=new TraceReader(traces.get(rs),getEDFName(traces.get(rs)));
@@ -386,6 +390,9 @@ public class MultiMerge {
 			stepsize=1;
 		}
 		
+		/*
+		 * While there are records left in any trace write out the record with the lowest timestamp to the merged trace
+		 */
 		int minDex=minTime(sorter);
 		while(minDex>=0){
 			int read=readers[minDex].readNumEvents(read_cb, 1, readers[minDex].getTraceFile());
@@ -519,8 +526,15 @@ public class MultiMerge {
 		}
 
 		public int defState(Object userData, int stateToken, String stateName, int stateGroupToken){
+			/*
+			 * See if we've already initialized this event
+			 */
 			Integer globstate=stateMap.get(stateName);
 
+			/*
+			 * If not write a new state definition, using the number of states seen so far as an ID.  
+			 * Map this state name to a global state ID used in the merged trace
+			 */
 			if(globstate==null){
 				tw.defState(numStates, stateName, stateGroupToken);
 				globstate=new Integer(numStates);
@@ -528,16 +542,20 @@ public class MultiMerge {
 				numStates++;
 			}
 
+			/*
+			 * Map this local state ID for this thread to the global id used in the merged trace
+			 */
 			TotID tot = totMap.get((String)userData);
-
 			tot.locToGlobStates.put(new Integer(stateToken), globstate);
-
-			totMap.put((String)userData, tot);
+			totMap.put((String)userData, tot);//TODO: Is this necessary?
 
 			return 0;
 		}
 
 		public int defUserEvent(Object userData, int userEventToken, String userEventName, int monotonicallyIncreasing){
+			/*
+			 * As for defState above.  Note that states and user events use the same pool for unique global ids but different maps.  This may be unnecessary.
+			 */
 			Integer globevts=ueMap.get(userEventName);
 
 			if(globevts==null){
