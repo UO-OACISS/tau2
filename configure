@@ -1267,6 +1267,7 @@ sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,
 chmod a+rx ${targetdir}/${architecture}/bin/tau_user_setup.sh
 
 # copy these files to the etc directory for tau_user_setup.sh to find and use
+mkdir -p ${targetdir}/etc
 cp ${tauroot}/tools/src/perfdmf/bin/derby.properties.skel ${targetdir}/etc
 cp ${tauroot}/tools/src/contrib/jython.registry ${targetdir}/etc
 
