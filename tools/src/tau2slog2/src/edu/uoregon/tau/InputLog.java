@@ -514,6 +514,7 @@ public class InputLog implements base.drawable.InputAPI
 		public int sendMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, 
 				int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageComm){
 
+			destinationThreadToken=0;
 			/*
 			 * The 'tag space' and 'eventId space' may overlap and overwrite each other
 			 * So add the highest tag ID+1, to be sure all IDs sent to jumpshot are unique.
@@ -573,6 +574,7 @@ public class InputLog implements base.drawable.InputAPI
 				int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageComm){
 			
 			int messageTagShift=messageTag+maxEvtId+1;
+			sourceThreadToken=0;
 			int sourceGlob = GlobalID(sourceNodeToken,sourceThreadToken);
 			int destGlob = GlobalID(destinationNodeToken,destinationThreadToken);
 			Long srcDst=new Long(SourceDest(sourceGlob,destGlob));

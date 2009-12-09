@@ -63,8 +63,14 @@ public class Tau2Slog2
 
         out_filename = null;
         parseCmdLineArgs( args );
-        if ( out_filename == null )
-            out_filename  = TraceName.getDefaultSLOG2Name( tautrc );
+        if ( out_filename == null ){
+        	int lastP=tautrc.lastIndexOf('.');
+        	String outF =tautrc.substring(0, lastP);
+        	outF+=".slog2";
+        	out_filename=outF;
+        	 //out_filename  = TraceName.getDefaultSLOG2Name( tautrc );
+        }
+           
 
         objdefs       = new CategoryMap();
         shadefs       = new HashMap();
