@@ -7,10 +7,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import edu.uoregon.tau.trace.TraceReader;
 import edu.uoregon.tau.trace.TraceReaderCallbacks;
@@ -40,35 +38,42 @@ class TotID{
 	 */
 	public Map<Integer, Integer> locToGlobStates;
 
-	/**
-	 * The number of send events seen on this thread.  Used to detect communication triplets used by CUDA traces
-	 */
-	public int sSeen=0;
+	//	/**
+	//	 * The number of send events seen on this thread.  Used to detect communication triplets used by CUDA traces
+	//	 */
+	//	public int sSeen=0;
 
 	/**
-	 * The number of receive events seen on this thread.  Used to detect communication triplets used by CUDA traces
+	 * The number of CUDA communication use events seen on this thread.  Used to detect communication triplets used by CUDA traces
 	 */
-	public int rSeen=0;
+	public boolean cSeen=false;
+	public boolean send=true;
 
-	/**
-	 * Most recent valid CUDA mem-copy size, set in the second of 3 communication triplets.
-	 */
-	int truSize=0;
+	//	/**
+	//	 * Most recent valid CUDA mem-copy size, set in the second of 3 communication triplets.
+	//	 */
+	//	int truSize=0;
 
-	/**
-	 * The unique CUDA communication id composed of the first and last tags of the first and last triplets for communication between two threads, on the receiving side
-	 */
-	StringBuilder uniR=new StringBuilder();//null;
+	//	/**
+	//	 * The unique CUDA communication id composed of the first and last tags of the first and last triplets for communication between two threads
+	//	 */
+	//	StringBuilder uniC=new StringBuilder();//null;
 
-	/**
-	 * The unique CUDA communication id composed of the first and last tags of the first and last triplets for communication between two threads, on the sending side
-	 */
-	StringBuilder uniS=new StringBuilder();//null;
+	DoublePair dp=new DoublePair(-1,-1);
+
+	//	/**
+	//	 * The unique CUDA communication id composed of the first and last tags of the first and last triplets for communication between two threads, on the sending side
+	//	 */
+	//	StringBuilder uniS=new StringBuilder();//null;
 
 	/**
 	 * The combination of filename and timestamp for the current communication.  If is not CUDA communication it will be stored in a global list for quick differentiation
 	 */
 	StringBuilder mpi=new StringBuilder();//null;
+
+	public int cudaSendID=-1;
+	public int cudaRecvID=-1;
+	public int cudaSizeID=-1;
 
 	TotID(String fname){
 		filename=fname;
@@ -152,6 +157,32 @@ class TraceFilter implements FilenameFilter{
 
 }
 
+class DoublePair{
+	public double l1;
+	public double l2;
+	public DoublePair(double la, double lb){
+		l1=la;
+		l2=lb;
+	}
+	
+	public DoublePair(DoublePair orig){
+		l1=orig.l1;
+		l2=orig.l2;
+	}
+	
+	public boolean equals(Object o){
+		DoublePair dp=(DoublePair)o;
+		return(dp!=null&&this.l1==dp.l1&&this.l2==dp.l2);
+	}
+	public String toString(){
+		return l1+"."+l2;
+	}
+	public int hashCode(){
+		System.out.println(this.toString().hashCode());
+		return this.toString().hashCode();
+	}
+}
+
 public class MultiMerge {
 
 	/**
@@ -184,15 +215,15 @@ public class MultiMerge {
 	 */
 	static Map<String,Point> idNodes;
 
-	/**
-	 * This set contains all filename/timestamp combinations that are associated with mpi communication events.  If the string is not in here then it is cuda communication.
-	 */
-	static Set<String> mpiCom;
+	//	/**
+	//	 * This set contains all filename/timestamp combinations that are associated with mpi communication events.  If the string is not in here then it is cuda communication.
+	//	 */
+	//	static Set<String> mpiCom;
 
 	/**
-	 * The map from the tracefile name to the associated TotID object
+	 * The array of TotID objects, index-paired with the list of trace files
 	 */
-	static Map<String, TotID> totMap;
+	static TotID[] totIDs;
 
 	/**
 	 * The tau trace writer object which will write the merged trace
@@ -207,7 +238,7 @@ public class MultiMerge {
 	static int minTime(long[] times){
 		int least=-1;
 		long min=-1;
-		
+
 		for(int i=0;i<times.length;i++){
 			if(times[i]>=0){
 				min=times[i];
@@ -338,9 +369,9 @@ public class MultiMerge {
 	 * @param traces
 	 */
 	private static void initializeMerge(List<String> traces){
-		
-		TraceReader[] initReaders = new TraceReader[traces.size()];
 
+		TraceReader[] initReaders = new TraceReader[traces.size()];
+		totIDs=new TotID[traces.size()];
 		TraceReaderCallbacks init_cb = new TAUReaderInit();
 		int recs_read;
 		for(int rs=0;rs<initReaders.length;rs++)
@@ -351,16 +382,16 @@ public class MultiMerge {
 			initReaders[rs].setSubtractFirstTimestamp(false);
 			TotID t = new TotID(initReaders[rs].getTraceFile());
 			t=initTotLoc(t);
-			totMap.put(t.filename, t);
+			totIDs[rs]=t;
 			recs_read=0;
 			do{
-				recs_read=initReaders[rs].readNumEvents(init_cb, -1,initReaders[rs].getTraceFile());//1024
+				recs_read=initReaders[rs].readNumEvents(init_cb, -1,t);//1024
 			}while(recs_read!=0&&!initReaders[rs].isDone());
 			initReaders[rs].closeTrace();
 			initReaders[rs]=null;
 		}
 	}
-	
+
 	/**
 	 * Merges the data in the provided trace files into a single trace.
 	 * @param traces
@@ -370,7 +401,7 @@ public class MultiMerge {
 		long[] sorter = new long[readers.length];
 		TraceReaderCallbacks read_cb = new TAUReaderWriteall();
 		long totalRecords=0;
-		
+
 		/*
 		 * Create one reader for each trace file
 		 */
@@ -389,24 +420,24 @@ public class MultiMerge {
 		if(stepsize==0){
 			stepsize=1;
 		}
-		
+
 		/*
 		 * While there are records left in any trace write out the record with the lowest timestamp to the merged trace
 		 */
 		int minDex=minTime(sorter);
 		while(minDex>=0){
-			int read=readers[minDex].readNumEvents(read_cb, 1, readers[minDex].getTraceFile());
+			int read=readers[minDex].readNumEvents(read_cb, 1, totIDs[minDex]);
 			if(read==0){
 				sorter[minDex]=-1;
 				readers[minDex].closeTrace();
 				readers[minDex]=null;
 			}else{
-				
+
 				countRecords++;
 				if(countRecords%stepsize==0){
 					System.out.println(countRecords+" Records read. "+(int)(100*((double)countRecords/(double)totalRecords))+"% converted");
 				}
-				
+
 				sorter[minDex]=readers[minDex].peekTime();
 				if(sorter[minDex]==-1)
 				{
@@ -423,20 +454,19 @@ public class MultiMerge {
 				readers[rs].closeTrace();
 		}
 	}
-	
+
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
 
-		mpiCom=new HashSet<String>();
+		//mpiCom=new HashSet<String>();
 		oldNewDest=new HashMap<Integer,Integer>();
 		idNodes=new HashMap<String,Point>();
 		stateMap=new HashMap<String,Integer>();
 		ueMap=new HashMap<String,Integer>();
-		totMap=new HashMap<String,TotID>();
 		tw = new TraceWriter("tau.trc", "tau.edf");
-		
+
 		List<String> traces = listTraces();
 
 		initializeMerge(traces);
@@ -447,20 +477,20 @@ public class MultiMerge {
 		System.out.println("The merging is complete.");
 	}
 
-	/**
-	 * Creates a string builder to identify a communication event at a given time and thread
-	 * @param mpi
-	 * @param stamp
-	 * @param fname
-	 * @return
-	 */
-	private static StringBuilder mpiID(StringBuilder mpi, long stamp, String fname){
-		mpi.setLength(0);
-		mpi.append(stamp);
-		mpi.append(".");
-		mpi.append(fname);
-		return mpi;
-	}
+	//	/**
+	//	 * Creates a string builder to identify a communication event at a given time and thread
+	//	 * @param mpi
+	//	 * @param stamp
+	//	 * @param fname
+	//	 * @return
+	//	 */
+	//	private static StringBuilder mpiID(StringBuilder mpi, long stamp, String fname){
+	//		mpi.setLength(0);
+	//		mpi.append(stamp);
+	//		mpi.append(".");
+	//		mpi.append(fname);
+	//		return mpi;
+	//	}
 
 	/**
 	 * Creates a the first half of a two part unique id used to identify the sender/receiver of a communication
@@ -545,14 +575,30 @@ public class MultiMerge {
 			/*
 			 * Map this local state ID for this thread to the global id used in the merged trace
 			 */
-			TotID tot = totMap.get((String)userData);
+			TotID tot = (TotID)userData;
 			tot.locToGlobStates.put(new Integer(stateToken), globstate);
-			totMap.put((String)userData, tot);//TODO: Is this necessary?
 
 			return 0;
 		}
 
 		public int defUserEvent(Object userData, int userEventToken, String userEventName, int monotonicallyIncreasing){
+
+			TotID tot = (TotID)userData;
+
+			if(userEventName.equals("TAUCUDA_MEM_SEND")){
+				tot.cudaSendID=userEventToken;
+				return 0;
+			} 
+			if(userEventName.equals("TAUCUDA_MEM_RCV")){
+				tot.cudaRecvID=userEventToken;
+				return 0;
+			} 
+			if(userEventName.equals("TAUCUDA_COPY_MEM_SIZE")){
+				tot.cudaSizeID=userEventToken;
+				return 0;
+			} 
+
+
 			/*
 			 * As for defState above.  Note that states and user events use the same pool for unique global ids but different maps.  This may be unnecessary.
 			 */
@@ -566,124 +612,158 @@ public class MultiMerge {
 				numStates++;
 			}
 
-			totMap.get((String)userData).locToGlobStates.put(new Integer(userEventToken), globevts);
+			/*
+			 * Map this local state ID for this thread to the global id used in the merged trace
+			 */
+
+			tot.locToGlobStates.put(new Integer(userEventToken), globevts);
 
 			return 0;
 		}
 
 		public int enterState(Object userData, long time, int nodeToken, int threadToken, int stateToken){
-			TotID tot = totMap.get((String)userData);
-			tot.sSeen=0;
-			tot.rSeen=0;
 			return 0;
 		}
 		public int leaveState(Object userData, long time, int nodeToken, int threadToken, int stateToken){
-			TotID tot = totMap.get((String)userData);
-			tot.sSeen=0;
-			tot.rSeen=0;
 			return 0;
 		}
 
 		/*Message registration.  (Message sending is defined in TAUReader below)*/
 		public int sendMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, 
 				int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageComm){
-			TotID tot = totMap.get((String)userData);
-			tot.rSeen=0;
-
-			if(tot.sSeen==0){
-				tot.mpi=mpiID(tot.mpi,time,(String)userData);
-				mpiCom.add(tot.mpi.toString());
-				tot.sSeen++;
-				tot.uniS=commID1(tot.uniS,destinationNodeToken,messageSize,messageTag,messageComm);
-				return 0;
-			}
-			else if(tot.sSeen==1)
-			{
-				mpiCom.remove(tot.mpi.toString());
-
-				tot.sSeen++;
-
-				return 0;
-			}
-			else if(tot.sSeen==2){
-
-				tot.uniS=commID2(tot.uniS,destinationNodeToken,messageSize,messageTag,messageComm);
-				Point p =idNodes.get(tot.uniS.toString());
-				if(p==null){
-					p=new Point(tot.node,-1);
-				}else{
-					if(p.x==tot.node||p.y==tot.node){
-
-					}else{
-						if(p.y!=-1){
-							System.out.println("Warning, doubling up node identifiers!");
-						}
-						p.y=tot.node;
-					}
-				}
-				idNodes.put(tot.uniS.toString(), p);//Does Uni need to be duplicated?
-				tot.uniS.setLength(0);
-				tot.sSeen=0;
-			}
+			//			TotID tot = (TotID)userData;
+			//			tot.rSeen=0;
+			//
+			//			if(tot.sSeen==0){
+			//				tot.mpi=mpiID(tot.mpi,time,tot.filename);
+			//				mpiCom.add(tot.mpi.toString());
+			//				tot.sSeen++;
+			//				tot.uniS=commID1(tot.uniS,destinationNodeToken,messageSize,messageTag,messageComm);
+			//				return 0;
+			//			}
+			//			else if(tot.sSeen==1)
+			//			{
+			//				mpiCom.remove(tot.mpi.toString());
+			//
+			//				tot.sSeen++;
+			//
+			//				return 0;
+			//			}
+			//			else if(tot.sSeen==2){
+			//
+			//				tot.uniS=commID2(tot.uniS,destinationNodeToken,messageSize,messageTag,messageComm);
+			//				Point p =idNodes.get(tot.uniS.toString());
+			//				if(p==null){
+			//					p=new Point(tot.node,-1);
+			//				}else{
+			//					if(p.x==tot.node||p.y==tot.node){
+			//
+			//					}else{
+			//						if(p.y!=-1){
+			//							System.out.println("Warning, doubling up node identifiers!");
+			//						}
+			//						p.y=tot.node;
+			//					}
+			//				}
+			//				idNodes.put(tot.uniS.toString(), p);//Does Uni need to be duplicated?
+			//				tot.uniS.setLength(0);
+			//				tot.sSeen=0;
+			//			}
 
 			return 0;}
 
 		public int recvMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageCom) {
 
-			TotID tot = totMap.get((String)userData);
-			tot.sSeen=0;
-			if(tot.rSeen==0){
-				tot.mpi=mpiID(tot.mpi,time,(String)userData);
-				mpiCom.add(tot.mpi.toString());
-
-				tot.uniR=commID1(tot.uniR,sourceNodeToken,messageSize,messageTag,messageCom);
-				tot.rSeen++;
-				return 0;
-			}
-			else if(tot.rSeen==1)
-			{
-				mpiCom.remove(tot.mpi.toString());
-
-				tot.rSeen++;
-
-				return 0;
-			}
-			else if(tot.rSeen==2) {
-
-				tot.uniR=commID2(tot.uniR,sourceNodeToken,messageSize,messageTag,messageCom);
-				Point p =idNodes.get(tot.uniR.toString());
-				if(p==null){
-					p=new Point(tot.node,-1);
-				}else{
-					if(p.x==tot.node||p.y==tot.node){
-
-					}else{
-						if(p.y!=-1){
-							System.out.println("Warning, doubling up node identifiers!");
-						}
-						p.y=tot.node;
-
-					}
-				}
-				idNodes.put(tot.uniR.toString(), p);//Does Uni need to be duplicated?
-				tot.uniR.setLength(0);
-				tot.rSeen=0;
-			}
+			//			TotID tot = (TotID)userData;
+			//			tot.sSeen=0;
+			//			if(tot.rSeen==0){
+			//				tot.mpi=mpiID(tot.mpi,time,tot.filename);
+			//				mpiCom.add(tot.mpi.toString());
+			//
+			//				tot.uniR=commID1(tot.uniR,sourceNodeToken,messageSize,messageTag,messageCom);
+			//				tot.rSeen++;
+			//				return 0;
+			//			}
+			//			else if(tot.rSeen==1)
+			//			{
+			//				mpiCom.remove(tot.mpi.toString());
+			//
+			//				tot.rSeen++;
+			//
+			//				return 0;
+			//			}
+			//			else if(tot.rSeen==2) {
+			//
+			//				tot.uniR=commID2(tot.uniR,sourceNodeToken,messageSize,messageTag,messageCom);
+			//				Point p =idNodes.get(tot.uniR.toString());
+			//				if(p==null){
+			//					p=new Point(tot.node,-1);
+			//				}else{
+			//					if(p.x==tot.node||p.y==tot.node){
+			//
+			//					}else{
+			//						if(p.y!=-1){
+			//							System.out.println("Warning, doubling up node identifiers!");
+			//						}
+			//						p.y=tot.node;
+			//
+			//					}
+			//				}
+			//				idNodes.put(tot.uniR.toString(), p);//Does Uni need to be duplicated?
+			//				tot.uniR.setLength(0);
+			//				tot.rSeen=0;
+			//			}
 
 			return 0;
 		}
 
 		public int eventTrigger(Object userData, long time, int nodeToken, int threadToken, int userEventToken, double userEventValue) {
-			TotID tot = totMap.get((String)userData);
-			tot.sSeen=0;
-			tot.rSeen=0;
+			TotID tot = (TotID)userData;
 
-			return 0;}
+			if(userEventToken==tot.cudaRecvID||userEventToken==tot.cudaSendID)
+			{
+
+				if(!tot.cSeen){
+
+					//tot.uniC=commID1(tot.uniR,sourceNodeToken,messageSize,messageTag,messageCom);
+					tot.dp.l1=userEventValue;
+					tot.cSeen=true;
+					System.out.println(userEventToken);
+					return 0;
+				}
+				else{
+					tot.cSeen=false;
+					//tot.uniR=commID2(tot.uniR,sourceNodeToken,messageSize,messageTag,messageCom);
+					tot.dp.l2=userEventValue;
+					System.out.println(tot.dp);
+					Point p =idNodes.get(tot.dp.toString());
+					if(p==null){
+						p=new Point(tot.node,-1);
+						idNodes.put(tot.dp.toString(), p);
+					}else if(p.x!=tot.node){
+						p.y=tot.node;
+					}
+					
+					System.out.println(" tot "+p);
+					
+//					if(p.x==tot.node||p.y==tot.node){
+//
+//					}
+//
+//					if(p.y!=-1){
+//						System.out.println("Warning, doubling up node identifiers!");
+//
+//					}
+					//Does Uni need to be duplicated?
+					//tot.uniC.setLength(0);
+
+				}
+			}
+
+			return 0;
+		}
 
 		public int endTrace(Object userData, int nodeToken, int threadToken){
-			TotID tot = totMap.get((String)userData);
-			tot.sSeen=0;
-			tot.rSeen=0;
 			return 0;
 		}
 	}
@@ -695,8 +775,7 @@ public class MultiMerge {
 	 *
 	 */
 	private static class TAUReaderWriteall implements TraceReaderCallbacks{
-		StringBuilder tmpSB = new StringBuilder();
-		
+
 		public int defClkPeriod(Object userData, double clkPeriod) {
 			return 0;
 		}
@@ -718,7 +797,7 @@ public class MultiMerge {
 		}
 
 		public int enterState(Object userData, long time, int nodeToken, int threadToken, int stateToken){
-			TotID tot = totMap.get((String)userData);
+			TotID tot = (TotID)userData;
 
 			int actualID=tot.locToGlobStates.get(new Integer(stateToken)).intValue();
 
@@ -726,7 +805,7 @@ public class MultiMerge {
 			return 0;
 		}
 		public int leaveState(Object userData, long time, int nodeToken, int threadToken, int stateToken){
-			TotID tot = totMap.get((String)userData);
+			TotID tot = (TotID)userData;
 
 			tw.leaveState(time, tot.node, tot.thread, tot.locToGlobStates.get(new Integer(stateToken)).intValue());
 			return 0;
@@ -736,99 +815,150 @@ public class MultiMerge {
 		public int sendMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, 
 				int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageComm){
 
-			TotID tot = totMap.get((String)userData);
+			TotID tot = (TotID)userData;
 
-			if(mpiCom.contains(mpiID(tmpSB,time,(String)userData).toString())){
 
-				Integer transNode=oldNewDest.get(new Integer(destinationNodeToken));
-				if(transNode==null)
-				{
-					System.out.println("Bad Dest Node ID: "+destinationNodeToken);
-					return 0;
-				}
-
-				tw.sendMessage(time, tot.node, tot.thread, transNode.intValue(), destinationThreadToken, messageSize, messageTag, messageComm);
-
+			Integer transNode=oldNewDest.get(new Integer(destinationNodeToken));
+			if(transNode==null)
+			{
+				System.out.println("Bad Dest Node ID: "+destinationNodeToken);
 				return 0;
 			}
 
-			if(tot.sSeen==0){
-				tot.uniS=commID1(tot.uniS,destinationNodeToken,messageSize,messageTag,messageComm);
-				tot.sSeen++;
-			}
-			else if(tot.sSeen==1){
-				tot.truSize=destinationThreadToken;
-				tot.sSeen++;
-			}
-			else if(tot.sSeen==2){
-
-				tot.sSeen=0;
-				tot.uniS=commID2(tot.uniS,destinationNodeToken,messageSize,messageTag,messageComm);
-				Point p = idNodes.get(tot.uniS.toString());
-				if(p==null){
-					System.out.println("Bad Send: "+tot.uniS);
-					return 0;
-				}
-
-				if(p.x!=tot.node&&p.y!=tot.node){
-					System.out.println(tot.uniS+" send not for "+tot.node);
-				}
-
-				int remote;
-				if(p.x==tot.node)
-				{
-					remote=p.y;
-				}else{
-					remote=p.x;
-				}
-				tw.sendMessage(time, tot.node, tot.thread, remote, 0, tot.truSize, 0, 0);
-				tot.truSize=0;
-			}else{
-				System.out.println("How?");
-			}
+			tw.sendMessage(time, tot.node, tot.thread, transNode.intValue(), destinationThreadToken, messageSize, messageTag, messageComm);
 
 			return 0;
+
+			//			if(tot.sSeen==0){
+			//				tot.uniS=commID1(tot.uniS,destinationNodeToken,messageSize,messageTag,messageComm);
+			//				tot.sSeen++;
+			//			}
+			//			else if(tot.sSeen==1){
+			//				tot.truSize=destinationThreadToken;
+			//				tot.sSeen++;
+			//			}
+			//			else if(tot.sSeen==2){
+			//
+			//				tot.sSeen=0;
+			//				tot.uniS=commID2(tot.uniS,destinationNodeToken,messageSize,messageTag,messageComm);
+			//				Point p = idNodes.get(tot.uniS.toString());
+			//				if(p==null){
+			//					System.out.println("Bad Send: "+tot.uniS);
+			//					return 0;
+			//				}
+			//
+			//				if(p.x!=tot.node&&p.y!=tot.node){
+			//					System.out.println(tot.uniS+" send not for "+tot.node);
+			//				}
+			//
+			//				int remote;
+			//				if(p.x==tot.node)
+			//				{
+			//					remote=p.y;
+			//				}else{
+			//					remote=p.x;
+			//				}
+			//				tw.sendMessage(time, tot.node, tot.thread, remote, 0, tot.truSize, 0, 0);
+			//				tot.truSize=0;
+			//			}else{
+			//				System.out.println("How?");
+			//			}
+			//
+			//			return 0;
 		}
 
 
 
 		public int recvMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageCom) {
-			TotID tot = totMap.get((String)userData);
+			TotID tot = (TotID)userData;
 
-			if(mpiCom.contains(mpiID(tmpSB,time,(String)userData).toString())){
 
-				Integer transNode=oldNewDest.get(new Integer(sourceNodeToken));
-				if(transNode==null)
-				{
-					System.out.println("Bad Source Node ID: "+sourceNodeToken);
-					return 0;
-				}
-				tw.recvMessage(time, transNode.intValue(), sourceThreadToken, tot.node, tot.thread, messageSize, messageTag, messageCom);
 
+			Integer transNode=oldNewDest.get(new Integer(sourceNodeToken));
+			if(transNode==null)
+			{
+				System.out.println("Bad Source Node ID: "+sourceNodeToken);
 				return 0;
 			}
+			tw.recvMessage(time, transNode.intValue(), sourceThreadToken, tot.node, tot.thread, messageSize, messageTag, messageCom);
 
-			if(tot.rSeen==0){
-				tot.uniR=commID1(tot.uniR,sourceNodeToken,messageSize,messageTag,messageCom);
-				tot.rSeen++;
+			return 0;
+
+
+			//			if(tot.rSeen==0){
+			//				tot.uniR=commID1(tot.uniR,sourceNodeToken,messageSize,messageTag,messageCom);
+			//				tot.rSeen++;
+			//			}
+			//			else if(tot.rSeen==1){
+			//				tot.truSize=sourceThreadToken;
+			//				tot.rSeen++;
+			//			}
+			//			else if(tot.rSeen==2){
+			//				tot.rSeen=0;
+			//				tot.uniR=commID2(tot.uniR,sourceNodeToken,messageSize,messageTag,messageCom);
+			//				Point p = idNodes.get(tot.uniR.toString());
+			//				if(p==null){
+			//					System.out.println("Bad Recv: "+tot.uniR);
+			//					return 0;
+			//				}
+			//
+			//				if(p.x!=tot.node&&p.y!=tot.node){
+			//					System.out.println(tot.uniR+" not for "+tot.node);
+			//				}
+			//				tot.uniR.setLength(0);
+			//				int remote;
+			//				if(p.x==tot.node)
+			//				{
+			//					remote=p.y;
+			//				}else{
+			//					remote=p.x;
+			//				}
+			//				tw.recvMessage(time,  remote, 0, tot.node, tot.thread, tot.truSize, 0, 0);
+			//				tot.truSize=0;
+			//
+			//			}
+			//			else{
+			//				System.out.println("How?");
+			//			}
+			//
+			//			return 0;
+		}
+
+
+		public int eventTrigger(Object userData, long time, int nodeToken, int threadToken, int userEventToken, double userEventValue) {
+			TotID tot = (TotID)userData;
+
+			if(userEventToken==tot.cudaRecvID||userEventToken==tot.cudaSendID)
+			{
+				if(!tot.cSeen){
+					tot.cSeen=true;
+					tot.dp.l1=userEventValue;
+				}
+				else{
+					tot.cSeen=false;
+					tot.dp.l2=userEventValue;
+					if(userEventToken==tot.cudaSendID)
+					{
+						tot.send=true;
+					}
+					else{
+						tot.send=false;
+					}
+				}
+				return 0;
 			}
-			else if(tot.rSeen==1){
-				tot.truSize=sourceThreadToken;
-				tot.rSeen++;
-			}
-			else if(tot.rSeen==2){
-				tot.rSeen=0;
-				tot.uniR=commID2(tot.uniR,sourceNodeToken,messageSize,messageTag,messageCom);
-				Point p = idNodes.get(tot.uniR.toString());
+			else if(userEventToken==tot.cudaSizeID)
+			{
+				Point p = idNodes.get(tot.dp.toString());
 				if(p==null){
-					System.out.println("Bad Recv: "+tot.uniR);
+					System.out.println("Bad Recv: "+tot.dp);
 					return 0;
 				}
 
 				if(p.x!=tot.node&&p.y!=tot.node){
-					System.out.println(tot.uniR+" not for "+tot.node);
+					System.out.println(tot.dp+" not for "+tot.node);
 				}
-				tot.uniR.setLength(0);
+				//tot.uniR.setLength(0);
 				int remote;
 				if(p.x==tot.node)
 				{
@@ -836,20 +966,17 @@ public class MultiMerge {
 				}else{
 					remote=p.x;
 				}
-				tw.recvMessage(time,  remote, 0, tot.node, tot.thread, tot.truSize, 0, 0);
-				tot.truSize=0;
+				if(tot.send)
+				{
+					tw.sendMessage(time,  tot.node, tot.thread, remote, 0, (int)userEventValue, 0, 0);
+				}
+				else{
+					tw.recvMessage(time,  remote, 0, tot.node, tot.thread, (int)userEventValue, 0, 0);
+				}
 
+				return 0;
 			}
-			else{
-				System.out.println("How?");
-			}
 
-			return 0;
-		}
-
-
-		public int eventTrigger(Object userData, long time, int nodeToken, int threadToken, int userEventToken, double userEventValue) {
-			TotID tot = totMap.get((String)userData);
 
 			if(tot.thread>0)
 			{
