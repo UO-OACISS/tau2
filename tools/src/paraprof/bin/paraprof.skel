@@ -68,8 +68,23 @@ if [ "x$testmax" != "xfailed" ] ; then
     MEMORY="-Xmx${testmax}m"
 fi
 
+
+# locate the java bin directory so that we can add it to the java.library.path.
+# IBM JRE has libjawt.so in the bin directory and it needs to be hardcoded in
+# here.
+javaLocation=`which java`
+# check for readlink first
+readlink=`which readlink`
+if [ "x$readlink" != "x" ] ; then
+    if [ -x "$readlink" ] ; then
+	javaLocation=`readlink -f $javaLocation`
+    fi
+fi
+javaLocation=`dirname $javaLocation`
+
+
 # run the user setup script
 $BINDIR/tau_user_setup.sh
 
 # Launch!
-java $MEMORY -Dderby.system.home=${HOME}/.ParaProf -Dpython.home=$JAR_HOME/jython -Dpython.verbose=error -Djava.library.path=${LIBDIR} -cp ${JARS} ${APPLE_OPTIONS} edu/uoregon/tau/paraprof/ParaProf -j $JARDIR -c $SCHEMADIR $*	
+java $MEMORY -Dderby.system.home=${HOME}/.ParaProf -Dpython.home=$JAR_HOME/jython -Dpython.verbose=error -Djava.library.path=${LIBDIR}:${javaLocation} -cp ${JARS} ${APPLE_OPTIONS} edu/uoregon/tau/paraprof/ParaProf -j $JARDIR -c $SCHEMADIR $*	
