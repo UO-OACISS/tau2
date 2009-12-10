@@ -39,11 +39,11 @@ import edu.uoregon.tau.vis.HeatMapWindow;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.56 2009/11/12 22:50:28 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.57 2009/12/10 05:57:52 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.56 $
+ * @version $Revision: 1.57 $
  */
 public class ParaProfUtils {
 
@@ -570,6 +570,10 @@ public class ParaProfUtils {
             windowsMenu.add(phaseLedger);
         }
 
+        final JMenuItem groupRemapper = new JMenuItem("Group Remapper");
+        groupRemapper.addActionListener(actionListener);
+        windowsMenu.add(groupRemapper);
+
         windowsMenu.add(new JSeparator());
 
         menuItem = new JMenuItem("Close All Sub-Windows");
@@ -620,9 +624,8 @@ public class ParaProfUtils {
         g2.scale(scale, scale);
     }
 
-
     public static JPopupMenu createFunctionClickPopUp(final ParaProfTrial ppTrial, final Function function, final Thread thread,
-    		final Component owner) {
+            final Component owner) {
         ActionListener actionListener = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 try {
@@ -633,7 +636,8 @@ public class ParaProfUtils {
                         FunctionBarChartWindow functionDataWindow = new FunctionBarChartWindow(ppTrial, function, owner);
                         functionDataWindow.setVisible(true);
                     } else if (arg.equals("Show Function Data over Phases")) {
-                        FunctionBarChartWindow functionBarChartWindow = FunctionBarChartWindow.CreateFunctionsOverPhaseDisplay(ppTrial, function, thread, owner);
+                        FunctionBarChartWindow functionBarChartWindow = FunctionBarChartWindow.CreateFunctionsOverPhaseDisplay(
+                                ppTrial, function, thread, owner);
                         functionBarChartWindow.setVisible(true);
                     } else if (arg.equals("Show Function Histogram")) {
                         HistogramWindow hw = new HistogramWindow(ppTrial, function, owner);
@@ -656,22 +660,23 @@ public class ParaProfUtils {
                             ParaProf.getDirectoryManager().showSourceCode(function.getSourceLink());
                         }
                     } else if (arg.equals("Launch External Tool for this Function & Metric")) {
-                    	String metricName = "TIME";
-                    	if (owner instanceof BarChart) {
-                    		BarChart tmp = (BarChart)owner;
-                    		metricName = tmp.getBarChartModel().getDataSorter().getSelectedMetric().getName();
-                    	}
-                    	List tools = ExternalTool.findMatchingTools((String)ppTrial.getTrial().getMetaData().get(DataSource.FILE_TYPE_NAME), (String)ppTrial.getTrial().getName());
-						ExternalTool.CommandParameters params = new ExternalTool.CommandParameters();
-						params.function = function.getName();
-						params.metric = metricName;
-						params.nodeID = thread.getNodeID();
-						params.threadID = thread.getThreadID();
-		                Map map = new TreeMap();
-		                map.putAll(thread.getMetaData());
-		                map.putAll(ppTrial.getDataSource().getMetaData());
-						params.metadata = map;
-                    	ExternalTool.launch(tools, params, owner);
+                        String metricName = "TIME";
+                        if (owner instanceof BarChart) {
+                            BarChart tmp = (BarChart) owner;
+                            metricName = tmp.getBarChartModel().getDataSorter().getSelectedMetric().getName();
+                        }
+                        List tools = ExternalTool.findMatchingTools((String) ppTrial.getTrial().getMetaData().get(
+                                DataSource.FILE_TYPE_NAME), (String) ppTrial.getTrial().getName());
+                        ExternalTool.CommandParameters params = new ExternalTool.CommandParameters();
+                        params.function = function.getName();
+                        params.metric = metricName;
+                        params.nodeID = thread.getNodeID();
+                        params.threadID = thread.getThreadID();
+                        Map map = new TreeMap();
+                        map.putAll(thread.getMetaData());
+                        map.putAll(ppTrial.getDataSource().getMetaData());
+                        params.metadata = map;
+                        ExternalTool.launch(tools, params, owner);
                     }
 
                 } catch (Exception e) {
@@ -718,7 +723,9 @@ public class ParaProfUtils {
         jMenuItem.addActionListener(actionListener);
         functionPopup.add(jMenuItem);
 
-        if ((thread.getNodeID() >= 0) && (ExternalTool.matchingToolExists((String) ppTrial.getTrial().getMetaData().get(DataSource.FILE_TYPE_NAME), (String)ppTrial.getTrial().getName()))) {
+        if ((thread.getNodeID() >= 0)
+                && (ExternalTool.matchingToolExists((String) ppTrial.getTrial().getMetaData().get(DataSource.FILE_TYPE_NAME),
+                        (String) ppTrial.getTrial().getName()))) {
             JMenuItem toolMenuItem = new JMenuItem("Launch External Tool for this Function & Metric");
             toolMenuItem.addActionListener(actionListener);
             functionPopup.add(toolMenuItem);
