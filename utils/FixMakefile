@@ -122,9 +122,29 @@ case $1 in
 	echo "s,^OPARIDIR=.*$,OPARIDIR=$oparidir,g" >> $sedout
 	;;
 
-     vampirtracedir=*)
-        vampirtracedir=`echo $1 | sed -e 's/^vampirtracedir=//'`
-	echo "s,^VAMPIRTRACEDIR=.*$,VAMPIRTRACEDIR=$vampirtracedir,g" >> $sedout
+     silcdir=*)
+        silcdir=`echo $1 | sed -e 's/^silcdir=//'`
+	echo "s,^SILCDIR=.*$,SILCDIR=$silcdir,g" >> $sedout
+	;;
+
+     silcincs=*)
+	silcincs=`echo $1 | sed -e 's/^silcincs=//' -e 's/#/ /g'`
+	echo "s,^SILCINCS=.*$,SILCINCS=$silcincs,g" >> $sedout
+	;;
+
+     silclibs=*)
+	silclibs=`echo $1 | sed -e 's/^silclibs=//' -e 's/#/ /g'`
+	echo "s,^SILCLIBS=.*$,SILCLIBS=$silclibs,g" >> $sedout
+	;;
+
+     silcmpilibs=*)
+	silcmpilibs=`echo $1 | sed -e 's/^silcmpilibs=//' -e 's/#/ /g'`
+	echo "s,^SILCMPILIBS=.*$,SILCMPILIBS=$silcmpilibs,g" >> $sedout
+	;;
+
+     silcdir=*)
+        silcdir=`echo $1 | sed -e 's/^silcdir=//'`
+	echo "s,^SILCDIR=.*$,SILCDIR=$silcdir,g" >> $sedout
 	;;
 
      vampirtraceincs=*)
@@ -999,6 +1019,14 @@ case $1 in
 	;;
      VAMPIRTRACE)
 	echo "NOTE: Using VAMPIRTRACE Tracing Package ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SILC)
+	echo "NOTE: Using SILC Tracing Package ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SILCMPI)
+	echo "NOTE: Using SILCMPI Tracing Package ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      VAMPIRTRACE_5_7_API)

@@ -105,6 +105,7 @@ for arg in "$@"; do
     echo "-epilogbin=<dir> ........... Specify full path to EPILOG bin directory."
     echo "-epiloginc=<dir> ....... Specify full path to EPILOG include directory."
     echo "-vampirtrace=<dir>  .. Specify location of VampirTrace Tracing package."
+    echo "-silc=<dir>  ........................ Specify location of SILC package."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
     echo "-tag=<unique name> ........ Specify a tag to identify the installation."
@@ -197,6 +198,7 @@ for arg in "$@"; do
     echo "-epilogbin=<dir> ........... Specify full path to EPILOG bin directory."
     echo "-epiloginc=<dir> ....... Specify full path to EPILOG include directory."
     echo "-vampirtrace=<dir>  .. Specify location of VampirTrace Tracing package."
+    echo "-silc=<dir>  ........................ Specify location of SILC package."
     echo "-upcnetwork=<value> .. Specify network (mpi, udp,...) for Berkeley UPC."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
@@ -391,6 +393,8 @@ otf=no
 opari=no
 epilog=no
 scalasca=no
+silclibs=
+silc=no
 epilogextralinkcmd=
 epiloglib=no
 epilogbin=no
@@ -776,6 +780,16 @@ for arg in "$@"; do
       epilogdir=`echo $arg | sed -e 's/-scalasca=//'`
       if [ ! -d $epilogdir ] ; then
           echo "Error: Cannot access SCALASCA directory $epilogdir"
+          exit 1
+      fi
+      shift
+      ;;
+
+  -silc=*)
+      silc=yes
+      silcdir=`echo $arg | sed -e 's/-silc=//'`
+      if [ ! -d $silcdir ] ; then
+          echo "Error: Cannot access SILC directory $silcdir"
           exit 1
       fi
       shift
@@ -4045,6 +4059,10 @@ if [ $mpi = yes ] ; then
 	  fi
       fi
   fi 
+
+  if [ $silc = yes ] ; then
+      wrapperlib="\$(SILCMPILIBS)"
+  fi
   
   if [ $perf = yes ] ; then
     wrapperlib="-L$\(PERFLIBDIR) \$(PERFLIBRARY)"
@@ -4804,6 +4822,32 @@ if [ $vampirtrace = yes ] ; then
         fixmakeargs="$fixmakeargs VAMPIRTRACEOMP" 
       fi
     fi
+fi
+
+if [ $silc = yes ] ; then
+    fixmakeargs="$fixmakeargs SILC silcdir=$silcdir"
+    tauoptions="${tauoptions}-silc"
+    silcCommonLibs="-lbfd#-liberty#-lotf2"
+    if [ $mpi = yes ] ; then 
+      if [ $openmp = yes ] ; then
+        fixmakeargs="$fixmakeargs SILCOMPI" 
+	silcLibs="-L${silcdir}#-lsilc_mpi#$silcCommonLibs"
+      else
+        fixmakeargs="$fixmakeargs SILCMPI"
+	silcLibs="-L${silcdir}#-lsilc_mpi#$silcCommonLibs"
+      fi 
+    else
+      if [ $openmp = yes ] ; then
+        fixmakeargs="$fixmakeargs SILCOMP" 
+	silcLibs="-L${silcdir}#-lsilc_serial#$silcCommonLibs"
+      else
+	silcLibs="-L${silcdir}#-lsilc_serial#$silcCommonLibs"
+      fi
+    fi
+
+    fixmakeargs="$fixmakeargs silcmpilibs=$silcLibs"
+    fixmakeargs="$fixmakeargs silclibs=$silcLibs"
+    fixmakeargs="$fixmakeargs silcincs=-I$silcdir/include"
 fi
 
 if [ $epilog = yes ] ; then
