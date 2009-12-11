@@ -84,9 +84,10 @@ public class SplitTrialPhasesOperation extends AbstractPerformanceOperation {
 */				List<String> phaseEvents = new ArrayList<String>();				
 				// iterate through the events, and find the events in JUST THIS PHASE
 				for (String event : input.getEvents()) {
-					String tmpRelation = currentPhasePrefix + "  => " + currentPhase;
+					//String tmpRelation = currentPhasePrefix + "  => " + currentPhase;
 					// find the events which start with the phase prefix
-					if (event.equals(currentPhase) || event.startsWith(currentPhase + "  => ")) {
+					//if (event.equals(currentPhase) || event.startsWith(currentPhase + "  => ")) {
+					if (event.contains(currentPhase)) {
 						phaseEvents.add(event);
 /*					} else if (nestedPhases && (event.equals(currentPhasePrefix) || event.equals(tmpRelation))) {
 						phaseEvents.add(event);						  // changed by Kevin, Oct. 27, 3:18 PM - to fix accuracy of classifier

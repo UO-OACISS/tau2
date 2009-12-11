@@ -26,6 +26,7 @@ public abstract class ClusterOperation extends AbstractPerformanceOperation {
 	protected double gapStatistic = 0.0;
 	protected double gapStatisticError = 0.0;
 	protected boolean computeGapStatistic = false;
+	protected int[] clusterIDs = null;
 
 	/**
 	 * 

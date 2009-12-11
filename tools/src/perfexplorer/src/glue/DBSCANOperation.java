@@ -57,18 +57,13 @@ public class DBSCANOperation extends ClusterOperation {
         	System.out.println("dimensions: " + input.getEvents().size());
         	this.clusterer = doClustering(input);
 			PerformanceResult centroids = new ClusterOutputResult(clusterer.getClusterCentroids(), metric, type);
-			outputs.add(centroids);
-			outputs.add(new ClusterOutputResult(clusterer.getClusterStandardDeviations(), metric, type));
+			PerformanceResult stddevs = new ClusterOutputResult(clusterer.getClusterStandardDeviations(), metric, type);
 			PerformanceResult mins = new ClusterOutputResult(clusterer.getClusterMinimums(), metric, type);
 			PerformanceResult maxs = new ClusterOutputResult(clusterer.getClusterMaximums(), metric, type); 
+			outputs.add(stddevs);
+			outputs.add(centroids);
 			outputs.add(mins);
 			outputs.add(maxs);
-			PerformanceResult counts = new DefaultResult();
-			int i = 0;
-			for (int count : clusterer.getClusterSizes()) {
-				counts.putDataPoint(i++, "count", metric, type, count);
-			}
-			outputs.add(counts);
 			
         	List<String> eventList = new ArrayList<String>(input.getEvents());
     		for(Integer thread : input.getThreads()) {
@@ -90,6 +85,15 @@ public class DBSCANOperation extends ClusterOperation {
     		if (computeGapStatistic) {
 	    		computeGapStatistic(input, mins, maxs);
     		}
+
+			// create new trials for each cluster
+			PerformanceResult clusterIDs = new DefaultResult(input);
+			
+			for (Integer thread : input.getThreads()) {
+    			int clusterID = clusterer.clusterInstance(thread.intValue());
+				clusterIDs.putCalls(thread, "Cluster ID", clusterID);
+			}	
+			outputs.add(clusterIDs);
         }
 
 		return outputs;

@@ -4,8 +4,6 @@ from edu.uoregon.tau.perfdmf import *
 from java.util import *
 from java.lang import *
 
-True = 1
-False = 0
 parameterMap = None
 tauData = ""
 threshold = 10

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if [ $# -lt 1 ]
+then
+  echo ""
+  echo "Usage: "
+  echo ""
+  echo "  $0 <path-to-TAU-data>"
+  echo ""
+  echo "Notes:"
+  echo ""
+  echo "  * Specify the file as either the path to the TAU profiles, or the"
+  echo "    filename of the packed TAU data."
+  echo "  * If using gprof data, name the file gprof.out"
+  echo ""
+  exit 1
+fi
+
+working_path=`echo $0 | sed 's/mlb//'`
+
+eval perfexplorer -c perfexplorer_working -n -i ${working_path}microLoadImbalance.py -p "tauData=$1"
