@@ -5,9 +5,12 @@ public class SourceRegion {
     private String filename;
     private int startLine, endLine, startColumn, endColumn;
 
-    public SourceRegion() {
+    public SourceRegion() {}
+
+    public String toString() {
+        return filename + " " + startLine + " " + startColumn + " " + endLine + " " + endColumn;
     }
-    
+
     public int getEndColumn() {
         return endColumn;
     }

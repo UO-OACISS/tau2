@@ -28,6 +28,10 @@ public class Database implements Serializable {
     private String atomicEventFieldNames[];
     private String atomicEventFieldTypeNames[];
 
+    public String getName() {
+        return name;
+    }
+    
     public String[] getAppFieldNames() {
         return appFieldNames;
     }
