@@ -39,11 +39,11 @@ import edu.uoregon.tau.vis.HeatMapWindow;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.58 2009/12/11 07:26:58 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.59 2009/12/12 01:47:40 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.58 $
+ * @version $Revision: 1.59 $
  */
 public class ParaProfUtils {
 
@@ -656,7 +656,9 @@ public class ParaProfUtils {
                         ParaProf.incrementNumWindows();
                     } else if (arg.equals("Show Source Code")) {
 
-                        if (ParaProf.insideEclipse) {
+                        if (ParaProf.controlMode) {
+                            ExternalController.outputCommand("sourcecode " + function.getSourceLink());
+                        } else if (ParaProf.insideEclipse) {
                             ParaProf.eclipseHandler.openSourceLocation(ppTrial, function);
                         } else {
                             // use internal viewer
