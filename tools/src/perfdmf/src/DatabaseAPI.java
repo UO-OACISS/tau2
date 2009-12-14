@@ -20,11 +20,11 @@ import edu.uoregon.tau.perfdmf.database.DB;
  * This is the top level class for the Database API.
  * 
  * <P>
- * CVS $Id: DatabaseAPI.java,v 1.28 2009/11/13 00:11:40 amorris Exp $
+ * CVS $Id: DatabaseAPI.java,v 1.29 2009/12/14 23:07:49 amorris Exp $
  * </P>
  * 
  * @author Kevin Huck, Robert Bell
- * @version $Revision: 1.28 $
+ * @version $Revision: 1.29 $
  */
 public class DatabaseAPI {
 
@@ -277,8 +277,9 @@ public class DatabaseAPI {
 
         intervalEvents = IntervalEvent.getIntervalEvents(this, db, whereClause);
 
-        if (intervalEventHash == null)
+        if (intervalEventHash == null) {
             intervalEventHash = new Hashtable();
+        }
         IntervalEvent fun;
         for (Enumeration en = intervalEvents.elements(); en.hasMoreElements();) {
             fun = (IntervalEvent) en.nextElement();
@@ -297,10 +298,11 @@ public class DatabaseAPI {
             for (Iterator en = metrics.iterator(); en.hasNext();) {
                 metric = (Metric) en.next();
                 buf.append(metric.getID());
-                if (en.hasNext())
+                if (en.hasNext()) {
                     buf.append(", ");
-                else
+                } else {
                     buf.append(") ");
+                }
             }
         }
         IntervalLocationProfile.getIntervalEventDetail(db, intervalEvent, buf.toString());
