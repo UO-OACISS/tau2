@@ -24,31 +24,31 @@ public class GroupChangerWindow extends JFrame implements ParaProfWindow, Action
         return gcw;
     }
     
-    @Override
+    
     public void closeThisWindow() {
         // TODO Auto-generated method stub
         
     }
 
-    @Override
+    
     public JFrame getFrame() {
         // TODO Auto-generated method stub
         return null;
     }
 
-    @Override
+    
     public void help(boolean display) {
         // TODO Auto-generated method stub
         
     }
 
-    @Override
+    
     public void actionPerformed(ActionEvent arg0) {
         // TODO Auto-generated method stub
         
     }
 
-    @Override
+    
     public int print(Graphics arg0, PageFormat arg1, int arg2) throws PrinterException {
         // TODO Auto-generated method stub
         return 0;
