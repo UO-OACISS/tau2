@@ -1,0 +1,27 @@
+#!/bin/@SHELL@
+TAUROOT=@TAUROOTDIR@
+MACHINE=@ARCH@
+OLDJDK=@OLDJDK@
+TAU_LIBDIR=${TAUROOT}/${MACHINE}/lib
+
+
+if [ $OLDJDK = yes ]
+then
+  echo "Java 1.5 or better required."
+  exit 1
+fi
+
+
+# Set CLASSPATH to various jar's needed by the converter
+TAU_CLASSPATH=${TAU_LIBDIR}/TAU_tf.jar:${TAU_LIBDIR}/tau_multimerge.jar
+
+MAIN_CLASS=edu/uoregon/tau/multimerge/MultiMerge
+
+
+if [ -z "${TAU_LIBDIR}" -o "${TAU_LIBDIR}" = "/lib" ]; then
+    echo "TAU_LIBDIR is NOT set!"
+    exit 1
+fi
+
+java -Xmx500m -Xms32m -cp ${TAU_CLASSPATH} ${MAIN_CLASS} $@
+
