@@ -5227,6 +5227,7 @@ fi
 
 cp ${tauroot}/tools/src/jtau_tf/bin/TAU_tf.jar ${targetdir}/${architecture}/lib
 
+cp ${tauroot}/tools/src/tau_multimerge/bin/tau_multimerge.jar ${targetdir}/${architecture}/lib
 
 cat ${tauroot}/tools/src/contrib/slog2sdk/bin/jumpshot.skel | sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/jumpshot
 chmod a+rx ${targetdir}/${architecture}/bin/jumpshot
@@ -5235,9 +5236,9 @@ cat ${tauroot}/tools/src/contrib/slog2sdk/bin/slog2print.skel |
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/slog2print
 chmod a+rx ${targetdir}/${architecture}/bin/slog2print
 
-cat ${tauroot}/tools/src/tau2slog2/bin/tau2slog2.skel | 
-sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/tau2slog2
-chmod a+rx ${targetdir}/${architecture}/bin/tau2slog2
+cat ${tauroot}/tools/src/tau_multimerge/bin/tau_multimerge.skel | 
+sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/tau_multimerge
+chmod a+rx ${targetdir}/${architecture}/bin/tau_multimerge
 
 cp ${tauroot}/tools/src/contrib/slog2sdk/lib/jumpshot.jar ${targetdir}/${architecture}/lib
 cp ${tauroot}/tools/src/contrib/slog2sdk/lib/traceTOslog2.jar ${targetdir}/${architecture}/lib
