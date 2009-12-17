@@ -63,8 +63,8 @@ examples/cthreads examples/fortran examples/f90 $(MPIEXAMPLES) $(PDTEXAMPLE)
 #ANSIC#ANSIC=lang_support/ansic#ENDIF#
 
 # Trace Reader Library
-#TRACE#TRACEINPUT=src/TraceInput#ENDIF#
-#TRACE#TRACE2PROFILE=utils/trace2profile#ENDIF#
+TRACEINPUT=src/TraceInput
+TRACE2PROFILE=utils/trace2profile
 
 #PERFLIB#BASIC=utils #ENDIF#
 
