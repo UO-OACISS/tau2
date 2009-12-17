@@ -66,9 +66,9 @@
 
 #include <tau_internal.h>
 
-int Tau_sampling_init();
-int Tau_sampling_finalize();
-int Tau_sampling_event_stop(double* stopTime);
+int Tau_sampling_init(int tid);
+int Tau_sampling_finalize(int tid);
+int Tau_sampling_event_stop(int tid, double* stopTime);
 
 
 #endif /* _TAU_SAMPLING_H_ */
