@@ -23,11 +23,11 @@ using namespace std;
 #endif	//TAU_WINDOWS
 #include <Profile/Profiler.h>
 
-TAU_REGISTER_EVENT(iters, "Number of Iterates");
-TAU_REGISTER_EVENT(mem, "Memory allocated by arrays");
 
 int fourth(void)
 {
+  TAU_REGISTER_EVENT(iters, "Number of Iterates");
+  TAU_REGISTER_EVENT(mem, "Memory allocated by arrays");
   TAU_PROFILE("fourth()", "int ()", TAU_DEFAULT);
   TAU_EVENT(iters, 1);
   cout <<"Reached fourth " << endl;
@@ -36,6 +36,8 @@ int fourth(void)
 
 int third(void)
 {
+  TAU_REGISTER_EVENT(iters, "Number of Iterates");
+  TAU_REGISTER_EVENT(mem, "Memory allocated by arrays");
   TAU_PROFILE("third()", "int ()", TAU_DEFAULT);
   cout <<"third calling fourth " <<endl;
   TAU_EVENT(mem, 1024);
@@ -46,6 +48,8 @@ int third(void)
 
 int second(void)
 {
+  TAU_REGISTER_EVENT(iters, "Number of Iterates");
+  TAU_REGISTER_EVENT(mem, "Memory allocated by arrays");
   TAU_PROFILE("second()", "int ()", TAU_DEFAULT);
   cout <<"second calling third " <<endl;
   TAU_EVENT(mem, 16*1024);
@@ -56,6 +60,8 @@ int second(void)
 
 int first(void)
 { 
+  TAU_REGISTER_EVENT(iters, "Number of Iterates");
+  TAU_REGISTER_EVENT(mem, "Memory allocated by arrays");
   TAU_PROFILE("first()", "int ()", TAU_DEFAULT);
   cout << "first.. calling second. " << endl;
   TAU_EVENT(iters, 1);
@@ -65,6 +71,9 @@ int first(void)
 
 int work (void)
 {
+  TAU_REGISTER_EVENT(iters, "Number of Iterates");
+  TAU_REGISTER_EVENT(mem, "Memory allocated by arrays");
+
   TAU_PROFILE("work()", "int ()", TAU_DEFAULT);
   cout << " Hello this is thread "<< endl;
   TAU_EVENT(iters, 1);
@@ -81,6 +90,8 @@ int work (void)
 #ifdef TAU_WINDOWS
 DWORD WINAPI threaded_func(LPVOID lpvThreadParm)
 {
+  TAU_REGISTER_EVENT(iters, "Number of Iterates");
+  TAU_REGISTER_EVENT(mem, "Memory allocated by arrays");
   TAU_REGISTER_THREAD();
   TAU_PROFILE("threaded_func()", "int ()", TAU_DEFAULT);
   TAU_EVENT(iters, 1);
@@ -90,6 +101,8 @@ DWORD WINAPI threaded_func(LPVOID lpvThreadParm)
 
 int main (int argc, char **argv)
 {
+  TAU_REGISTER_EVENT(iters, "Number of Iterates");
+  TAU_REGISTER_EVENT(mem, "Memory allocated by arrays");
   TAU_PROFILE("main()", "int (int, char **)", TAU_DEFAULT);
   TAU_PROFILE_INIT(argc, argv);
   TAU_PROFILE_SET_NODE(0);
@@ -126,6 +139,9 @@ int main (int argc, char **argv)
 
 void * threaded_func(void *data)
 {
+  TAU_REGISTER_EVENT(iters, "Number of Iterates");
+  TAU_REGISTER_EVENT(mem, "Memory allocated by arrays");
+
   TAU_REGISTER_THREAD();
   TAU_PROFILE("threaded_func()", "int ()", TAU_DEFAULT);
   TAU_EVENT(iters, 1);
@@ -135,6 +151,9 @@ void * threaded_func(void *data)
 
 int main (int argc, char **argv)
 {
+  TAU_REGISTER_EVENT(iters, "Number of Iterates");
+  TAU_REGISTER_EVENT(mem, "Memory allocated by arrays");
+  
   TAU_PROFILE("main()", "int (int, char **)", TAU_DEFAULT);
   TAU_PROFILE_INIT(argc, argv);
   TAU_PROFILE_SET_NODE(0);
