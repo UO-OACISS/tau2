@@ -132,7 +132,7 @@ extern "C" int InitializeTAU() {
 
 
 #ifdef TAU_EXP_SAMPLING
-  Tau_sampling_init();
+  Tau_sampling_init(0);
 #endif /* TAU_EXP_SAMPLING */
 
   return 0;

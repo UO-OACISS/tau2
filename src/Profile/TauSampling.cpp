@@ -87,7 +87,7 @@ typedef struct {
  ********************************************************************/
 
 /* The trace for this node, mulithreaded execution currently not supported */
-FILE *ebsTrace;
+FILE *ebsTrace[TAU_MAX_THREADS];
 
 /* Sample processing enabled/disabled */
 int samplingEnabled;
@@ -121,7 +121,7 @@ static inline caddr_t get_pc(void *p) {
 /*********************************************************************
  * Write out the TAU callpath
  ********************************************************************/
-void Tau_sampling_output_callpath() {
+void Tau_sampling_output_callpath(int tid) {
   TAU_QUERY_DECLARE_EVENT(event);
   const char *str;
   TAU_QUERY_GET_CURRENT_EVENT(event);
@@ -136,13 +136,13 @@ void Tau_sampling_output_callpath() {
     //    printf ("inside %s\n", str);
 
     Profiler *p = (Profiler *)event;
-    fprintf(ebsTrace, "%ld", p->ThisFunction->GetFunctionId());
+    fprintf(ebsTrace[tid], "%ld", p->ThisFunction->GetFunctionId());
     TAU_QUERY_GET_PARENT_EVENT(event);
     TAU_QUERY_GET_EVENT_NAME(event, str);
     if (str) {
-      //fprintf (ebsTrace, " : ", str);
-      //fprintf(ebsTrace, "  ", str);
-      fprintf(ebsTrace, " ");
+      //fprintf (ebsTrace[tid], " : ", str);
+      //fprintf(ebsTrace[tid], "  ", str);
+      fprintf(ebsTrace[tid], " ");
     }
     depth--;
   }
@@ -151,31 +151,30 @@ void Tau_sampling_output_callpath() {
 /*********************************************************************
  * Write out a single event record
  ********************************************************************/
-void Tau_sampling_flush_record(TauSamplingRecord *record) {
-  fprintf(ebsTrace, "$ | %lld | ", record->timestamp);
-  fprintf(ebsTrace, "%lld | ", record->deltaStart);
-  fprintf(ebsTrace, "%lld | ", record->deltaStop);
-  fprintf(ebsTrace, "%p | ", record->pc);
+void Tau_sampling_flush_record(int tid, TauSamplingRecord *record) {
+  fprintf(ebsTrace[tid], "$ | %lld | ", record->timestamp);
+  fprintf(ebsTrace[tid], "%lld | ", record->deltaStart);
+  fprintf(ebsTrace[tid], "%lld | ", record->deltaStop);
+  fprintf(ebsTrace[tid], "%p | ", record->pc);
 
   for (int i = 0; i < Tau_Global_numCounters; i++) {
-    fprintf(ebsTrace, "%.16G ", record->counters[i]);
-    //fprintf(ebsTrace, "%lld | ", record->counterDeltaStart[i]);
-    //fprintf(ebsTrace, "%lld | ", record->counterDeltaStop[i]);
+    fprintf(ebsTrace[tid], "%.16G ", record->counters[i]);
+    //fprintf(ebsTrace[tid], "%lld | ", record->counterDeltaStart[i]);
+    //fprintf(ebsTrace[tid], "%lld | ", record->counterDeltaStop[i]);
   }
 
-  fprintf(ebsTrace, "| ");
+  fprintf(ebsTrace[tid], "| ");
 
-  Tau_sampling_output_callpath();
-  fprintf(ebsTrace, "\n");
+  Tau_sampling_output_callpath(tid);
+  fprintf(ebsTrace[tid], "\n");
 }
 
 /*********************************************************************
  * Handler for event exit (stop)
  ********************************************************************/
-int Tau_sampling_event_stop(double* stopTime) {
+int Tau_sampling_event_stop(int tid, double* stopTime) {
   samplingEnabled = 0;
 
-  int tid = RtsLayer::myThread();
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
 
   if (!profiler->needToRecordStop) {
@@ -183,23 +182,23 @@ int Tau_sampling_event_stop(double* stopTime) {
     return 0;
   }
 
-  fprintf(ebsTrace, "%% | ");
+  fprintf(ebsTrace[tid], "%% | ");
 
   for (int i = 0; i < Tau_Global_numCounters; i++) {
     double startTime = profiler->StartTime[i]; // gtod must be counter 0
     x_uint64 start = (x_uint64)startTime;
-    fprintf(ebsTrace, "%lld ", start);
+    fprintf(ebsTrace[tid], "%lld ", start);
   }
-  fprintf(ebsTrace, "| ");
+  fprintf(ebsTrace[tid], "| ");
 
   for (int i = 0; i < Tau_Global_numCounters; i++) {
     x_uint64 stop = (x_uint64)stopTime[i];
-    fprintf(ebsTrace, "%lld ", stop);
+    fprintf(ebsTrace[tid], "%lld ", stop);
   }
-  fprintf(ebsTrace, "| ");
+  fprintf(ebsTrace[tid], "| ");
 
-  Tau_sampling_output_callpath();
-  fprintf(ebsTrace, "\n");
+  Tau_sampling_output_callpath(tid);
+  fprintf(ebsTrace[tid], "\n");
 
   samplingEnabled = 1;
   return 0;
@@ -219,7 +218,8 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
 
   caddr_t pc;
   pc = get_pc(p);
-//   printf ("sample on %x\n", pc);
+
+  printf ("[tid=%d] sample on %x\n", tid, pc);
 
   struct timeval tp;
   gettimeofday(&tp, 0);
@@ -243,7 +243,7 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
     theRecord.counterDeltaStop[i] = 0;
   }
 
-  Tau_sampling_flush_record(&theRecord);
+  Tau_sampling_flush_record(tid, &theRecord);
 
   /* set this to get the stop event */
   profiler->needToRecordStop = 1;
@@ -262,26 +262,32 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
 /*********************************************************************
  * Output Format Header
  ********************************************************************/
-int Tau_sampling_outputHeader() {
-  fprintf(ebsTrace, "# Format:\n");
-  fprintf(ebsTrace, "# $ | <timestamp> | <delta-begin> | <delta-end> | <location> | <metric 1> ... <metric N> | <tau callpath>\n");
-  fprintf(ebsTrace, "# % | <delta-begin metric 1> ... <delta-begin metric N> | <delta-end metric 1> ... <delta-end metric N> | <tau callpath>\n");
-  fprintf(ebsTrace, "# Metrics:");
+int Tau_sampling_outputHeader(int tid) {
+  fprintf(ebsTrace[tid], "# Format:\n");
+  fprintf(ebsTrace[tid], "# $ | <timestamp> | <delta-begin> | <delta-end> | <location> | <metric 1> ... <metric N> | <tau callpath>\n");
+  fprintf(ebsTrace[tid], "# % | <delta-begin metric 1> ... <delta-begin metric N> | <delta-end metric 1> ... <delta-end metric N> | <tau callpath>\n");
+  fprintf(ebsTrace[tid], "# Metrics:");
   for (int i = 0; i < Tau_Global_numCounters; i++) {
     const char *name = TauMetrics_getMetricName(i);
-    fprintf(ebsTrace, " %s", name);
+    fprintf(ebsTrace[tid], " %s", name);
   }
-  fprintf(ebsTrace, "\n");
+  fprintf(ebsTrace[tid], "\n");
   return(0);
 }
 
 /*********************************************************************
  * Initialize the sampling trace system
  ********************************************************************/
-int Tau_sampling_init() {
+int Tau_sampling_init(int tid) {
   int ret;
+  int i;
 
   static struct itimerval itval;
+
+  for (i=0; i<TAU_MAX_THREADS; i++) {
+    ebsTrace[i] = 0;
+  }
+
 
   //int threshold = 1000;
   int threshold = TauEnv_get_ebs_frequency();
@@ -295,14 +301,13 @@ int Tau_sampling_init() {
 
   char filename[4096];
 
-  int tid = RtsLayer::myThread();
   int node = RtsLayer::myNode();
   node = 0;
   sprintf(filename, "%s/ebstrace.raw.%d.%d.%d.%d", profiledir, getpid(), node, RtsLayer::myContext(), tid);
 
-  ebsTrace = fopen(filename, "w");
+  ebsTrace[tid] = fopen(filename, "w");
 
-  Tau_sampling_outputHeader();
+  Tau_sampling_outputHeader(tid);
 
 /* 
   see:
@@ -314,8 +319,11 @@ int Tau_sampling_init() {
   //int alarmType = SIGALRM;
 */
 
-  int which = ITIMER_PROF;
-  int alarmType = SIGPROF;
+  // int which = ITIMER_PROF;
+  // int alarmType = SIGPROF;
+
+  int which = ITIMER_REAL;
+  int alarmType = SIGALRM;
 
   struct sigaction act;
   memset(&act, 0, sizeof(struct sigaction));
@@ -362,7 +370,10 @@ int Tau_sampling_init() {
 /*********************************************************************
  * Finalize the sampling trace system
  ********************************************************************/
-int Tau_sampling_finalize() {
+int Tau_sampling_finalize(int tid) {
+  if (ebsTrace[tid] == 0) {
+    return 0;
+  }
 
   /* Disable sampling first */
   samplingEnabled = 0;
@@ -380,7 +391,6 @@ int Tau_sampling_finalize() {
 
   const char *profiledir = TauEnv_get_profiledir();
   char filename[4096];
-  int tid = RtsLayer::myThread();
   int node = RtsLayer::myNode();
   node = 0;
   sprintf(filename, "%s/ebstrace.def.%d.%d.%d.%d", profiledir, getpid(), node, RtsLayer::myContext(), tid);
@@ -401,12 +411,12 @@ int Tau_sampling_finalize() {
   char buffer[4096];
   bzero(buffer, 4096);
   int rc = readlink("/proc/self/exe", buffer, 4096);
-  fprintf(ebsTrace, "# exe: %s\n", buffer);
+  fprintf(ebsTrace[tid], "# exe: %s\n", buffer);
 
   /* write out the node number */
-  fprintf(ebsTrace, "# node: %d\n", RtsLayer::myNode());
+  fprintf(ebsTrace[tid], "# node: %d\n", RtsLayer::myNode());
 
-  fclose(ebsTrace);
+  fclose(ebsTrace[tid]);
   return(0);
 }
 
