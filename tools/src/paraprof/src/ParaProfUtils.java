@@ -39,11 +39,11 @@ import edu.uoregon.tau.vis.HeatMapWindow;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.60 2009/12/15 23:36:40 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.61 2009/12/18 04:21:48 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.60 $
+ * @version $Revision: 1.61 $
  */
 public class ParaProfUtils {
 
@@ -389,7 +389,7 @@ public class ParaProfUtils {
                     } else if (arg.equals("Function Legend")) {
                         (new LedgerWindow(ppTrial, 0, owner)).setVisible(true);
                     } else if (arg.equals("Group Changer")) {
-                        GroupChangerWindow gcw = GroupChangerWindow.createGroupChangerWindow();
+                        GroupChangerWindow gcw = GroupChangerWindow.createGroupChangerWindow(ppTrial, owner);
                         gcw.setVisible(true);
                     } else if (arg.equals("Group Legend")) {
                         (new LedgerWindow(ppTrial, 1, owner)).setVisible(true);
