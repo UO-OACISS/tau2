@@ -10,9 +10,9 @@ import java.util.List;
  * This class represents a "function".  A function is defined over all threads
  * in the profile, so per-thread data is not stored here.
  *  
- * <P>CVS $Id: Function.java,v 1.18 2009/08/27 00:55:17 amorris Exp $</P>
+ * <P>CVS $Id: Function.java,v 1.19 2009/12/18 04:00:06 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.18 $
+ * @version	$Revision: 1.19 $
  * @see		FunctionProfile
  */
 /**
@@ -232,9 +232,16 @@ public class Function implements Serializable, Comparable {
     // Group section
     public void addGroup(Group group) {
         //Don't add group if already a member.
-        if (this.isGroupMember(group))
+        if (this.isGroupMember(group)) {
             return;
+        }
         groups.add(group);
+    }
+
+    public void removeGroup(Group group) {
+        if (isGroupMember(group)) {
+            groups.remove(group);
+        }
     }
 
     public boolean isGroupMember(Group group) {
