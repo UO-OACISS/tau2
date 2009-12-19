@@ -108,7 +108,7 @@ sub process_trace {
   my $negativeSamples = 0;
 
   # Read the trace
-  my ($junk, $exe, $node);
+  my ($junk, $exe, $node, $thread);
   open (TRACE, "tac $trace_file |");
   open (OUTPUT, "| tac > $out_file");
   while ($line = <TRACE>) {
@@ -120,6 +120,9 @@ sub process_trace {
       } elsif ($line =~ /\# node:.*/) {
         ($junk, $node) = split("node:",$line);
         $node = trim($node);
+      } elsif ($line =~ /\# thread:.*/) {
+        ($junk, $thread) = split("thread:",$line);
+        $thread = trim($thread);
       } elsif ($line =~ /\# \$.*/) {
 	    ## ignore the format line
       } elsif ($line =~ /\# \%.*/) {
@@ -218,6 +221,7 @@ sub process_trace {
     }
   }
   print OUTPUT "# node: $node\n";
+  print OUTPUT "# thread: $thread\n";
   if ($negativeSamples > 0) {
     print "$negativeSamples negative runtime deltas ignored out of $totalSamples total samples\n"
   }
