@@ -14,7 +14,9 @@
 ****************************************************************************/
 
 
-#include "Profile/Profiler.h"
+#include <Profile/Profiler.h>
+#include <Profile/TauSampling.h>
+
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
 using namespace std;
@@ -50,6 +52,8 @@ bool PapiLayer::papiInitialized = false;
 ThreadValue *PapiLayer::ThreadList[TAU_MAX_THREADS];
 int PapiLayer::numCounters = 0;
 int PapiLayer::counterList[MAX_PAPI_COUNTERS];
+
+int tauSampEvent = 0;
 
 // Some versions of PAPI don't have these defined
 // so we'll define them to 0 and if the user tries to use them
@@ -122,8 +126,15 @@ int PapiLayer::addCounter(char *name) {
 
   int counterID = numCounters++;
   counterList[counterID] = code;
-  return counterID;
 
+#ifdef TAU_EXP_SAMPLING
+  if (strcmp(name, TauEnv_get_ebs_source())==0) {
+    tauSampEvent = code;
+  }
+#endif
+
+
+  return counterID;
 }
 
 
@@ -175,10 +186,26 @@ int PapiLayer::initializeThread(int tid) {
       fprintf (stderr, "TAU: Error adding PAPI events: %s\n", PAPI_strerror(rc));
       return -1;
     }
+    
     // this creates a mapping from 'component', and index in that component back
     // to the original index, since we return just a single array of values
     ThreadList[tid]->Comp2Metric[comp][ThreadList[tid]->NumEvents[comp]++] = i;
   }
+
+
+#ifdef TAU_EXP_SAMPLING
+  int comp = PAPI_COMPONENT_INDEX (tauSampEvent);
+  int threshold = TauEnv_get_ebs_frequency();
+
+  rc = PAPI_overflow(ThreadList[tid]->EventSet[comp], tauSampEvent, threshold, 0, Tau_sampling_papi_overflow_handler);
+  if (rc != PAPI_OK) {
+    fprintf (stderr, "TAU: Error adding PAPI overflow handler: %s\n", PAPI_strerror(rc));
+    return -1;
+  }
+#endif
+
+
+
 #else
 /* PAPI future support goes here */
 #error "TAU does not support this version of PAPI, please contact tau-bugs@cs.uoregon.edu"
