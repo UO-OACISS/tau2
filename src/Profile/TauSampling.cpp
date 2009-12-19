@@ -90,7 +90,7 @@ typedef struct {
 FILE *ebsTrace[TAU_MAX_THREADS];
 
 /* Sample processing enabled/disabled */
-int samplingEnabled;
+int samplingEnabled[TAU_MAX_THREADS];
 
 /*********************************************************************
  * Get the architecture specific PC
@@ -173,12 +173,12 @@ void Tau_sampling_flush_record(int tid, TauSamplingRecord *record) {
  * Handler for event exit (stop)
  ********************************************************************/
 int Tau_sampling_event_stop(int tid, double* stopTime) {
-  samplingEnabled = 0;
+  samplingEnabled[tid] = 0;
 
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
 
   if (!profiler->needToRecordStop) {
-    samplingEnabled = 1;
+    samplingEnabled[tid] = 1;
     return 0;
   }
 
@@ -200,33 +200,37 @@ int Tau_sampling_event_stop(int tid, double* stopTime) {
   Tau_sampling_output_callpath(tid);
   fprintf(ebsTrace[tid], "\n");
 
-  samplingEnabled = 1;
+  samplingEnabled[tid] = 1;
   return 0;
 }
 
+
+
+
+
+
+
 /*********************************************************************
- * Handler for itimer interrupt
+ * Handler a sample
  ********************************************************************/
-void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
-  if (!samplingEnabled) {
+void Tau_sampling_handle_sample(void *pc) {
+  int tid = RtsLayer::myThread();
+  if (!samplingEnabled[tid]) {
     return;
   }
 
   TauSamplingRecord theRecord;
-  int tid = RtsLayer::myThread();
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
 
-  caddr_t pc;
-  pc = get_pc(p);
 
-  printf ("[tid=%d] sample on %x\n", tid, pc);
+  //  printf ("[tid=%d] sample on %x\n", tid, pc);
 
   struct timeval tp;
   gettimeofday(&tp, 0);
   x_uint64 timestamp = ((x_uint64)tp.tv_sec * (x_uint64)1e6 + (x_uint64)tp.tv_usec);
 
   theRecord.timestamp = timestamp;
-  theRecord.pc = pc;
+  theRecord.pc = (caddr_t) pc;
   theRecord.deltaStart = 0;
   theRecord.deltaStop = 0;
 
@@ -259,6 +263,27 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
   }
 }
 
+
+
+/*********************************************************************
+ * Handler for itimer interrupt
+ ********************************************************************/
+void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
+  caddr_t pc;
+  pc = get_pc(p);
+
+  Tau_sampling_handle_sample(pc);
+}
+
+/*********************************************************************
+ * PAPI Overflow handler
+ ********************************************************************/
+void Tau_sampling_papi_overflow_handler(int EventSet, void *address, x_int64 overflow_vector, void *context) {
+  //fprintf(stderr,"Overflow at %p! bit=0x%llx \n", address,overflow_vector);
+  Tau_sampling_handle_sample(address);
+}
+
+
 /*********************************************************************
  * Output Format Header
  ********************************************************************/
@@ -282,27 +307,28 @@ int Tau_sampling_init(int tid) {
   int ret;
   int i;
 
+  //  printf ("init called! tid = %d\n", tid);
   static struct itimerval itval;
 
-  for (i=0; i<TAU_MAX_THREADS; i++) {
-    ebsTrace[i] = 0;
-  }
+  // for (i=0; i<TAU_MAX_THREADS; i++) {
+  //   ebsTrace[i] = 0;
+  // }
 
 
   //int threshold = 1000;
   int threshold = TauEnv_get_ebs_frequency();
 
-  samplingEnabled = 0;
+  samplingEnabled[tid] = 0;
 
   itval.it_interval.tv_usec = itval.it_value.tv_usec = threshold % 1000000;
   itval.it_interval.tv_sec =  itval.it_value.tv_sec = threshold / 1000000;
 
   const char *profiledir = TauEnv_get_profiledir();
 
-  char filename[4096];
 
   int node = RtsLayer::myNode();
   node = 0;
+  char filename[4096];
   sprintf(filename, "%s/ebstrace.raw.%d.%d.%d.%d", profiledir, getpid(), node, RtsLayer::myContext(), tid);
 
   ebsTrace[tid] = fopen(filename, "w");
@@ -322,48 +348,52 @@ int Tau_sampling_init(int tid) {
   // int which = ITIMER_PROF;
   // int alarmType = SIGPROF;
 
-  int which = ITIMER_REAL;
-  int alarmType = SIGALRM;
+  if (strcmp(TauEnv_get_ebs_source(),"itimer")==0) {
 
-  struct sigaction act;
-  memset(&act, 0, sizeof(struct sigaction));
-  ret = sigemptyset(&act.sa_mask);
-  if (ret != 0) {
-    printf("TAU: Sampling error: %s\n", strerror(ret));
-    return -1;
+
+    int which = ITIMER_REAL;
+    int alarmType = SIGALRM;
+    
+    struct sigaction act;
+    memset(&act, 0, sizeof(struct sigaction));
+    ret = sigemptyset(&act.sa_mask);
+    if (ret != 0) {
+      printf("TAU: Sampling error: %s\n", strerror(ret));
+      return -1;
+    }
+    ret = sigaddset(&act.sa_mask, alarmType);
+    if (ret != 0) {
+      printf("TAU: Sampling error: %s\n", strerror(ret));
+      return -1;
+    }
+    act.sa_sigaction = Tau_sampling_handler;
+    act.sa_flags     = SA_SIGINFO;
+    
+    ret = sigaction(alarmType, &act, NULL);
+    if (ret != 0) {
+      printf("TAU: Sampling error: %s\n", strerror(ret));
+      return -1;
+    }
+    
+    struct itimerval ovalue, pvalue;
+    getitimer (which, &pvalue);
+    
+    ret = setitimer(which, &itval, &ovalue);
+    if (ret != 0) {
+      printf("TAU: Sampling error: %s\n", strerror(ret));
+      return -1;
+    }
+    
+    if( ovalue.it_interval.tv_sec != pvalue.it_interval.tv_sec  ||
+	ovalue.it_interval.tv_usec != pvalue.it_interval.tv_usec ||
+	ovalue.it_value.tv_sec != pvalue.it_value.tv_sec ||
+	ovalue.it_value.tv_usec != pvalue.it_value.tv_usec ) {
+      printf( "TAU: Sampling error: Real time interval timer mismatch\n" );
+      return -1;
+    }
   }
-  ret = sigaddset(&act.sa_mask, alarmType);
-  if (ret != 0) {
-    printf("TAU: Sampling error: %s\n", strerror(ret));
-    return -1;
-  }
-  act.sa_sigaction = Tau_sampling_handler;
-  act.sa_flags     = SA_SIGINFO;
-
-  ret = sigaction(alarmType, &act, NULL);
-  if (ret != 0) {
-    printf("TAU: Sampling error: %s\n", strerror(ret));
-    return -1;
-  }
-
-  struct itimerval ovalue, pvalue;
-  getitimer (which, &pvalue);
-
-  ret = setitimer(which, &itval, &ovalue);
-  if (ret != 0) {
-    printf("TAU: Sampling error: %s\n", strerror(ret));
-    return -1;
-  }
-
-  if( ovalue.it_interval.tv_sec != pvalue.it_interval.tv_sec  ||
-      ovalue.it_interval.tv_usec != pvalue.it_interval.tv_usec ||
-      ovalue.it_value.tv_sec != pvalue.it_value.tv_sec ||
-      ovalue.it_value.tv_usec != pvalue.it_value.tv_usec ) {
-    printf( "Real time interval timer mismatch\n" );
-    return -1;
-  }
-
-  samplingEnabled = 1;
+    
+  samplingEnabled[tid] = 1;
   return 0;
 }
 
@@ -375,8 +405,10 @@ int Tau_sampling_finalize(int tid) {
     return 0;
   }
 
+  //printf ("finalize called!\n");
+
   /* Disable sampling first */
-  samplingEnabled = 0;
+  samplingEnabled[tid] = 0;
 
   struct itimerval itval;
   int ret;
@@ -415,6 +447,7 @@ int Tau_sampling_finalize(int tid) {
 
   /* write out the node number */
   fprintf(ebsTrace[tid], "# node: %d\n", RtsLayer::myNode());
+  fprintf(ebsTrace[tid], "# thread: %d\n", tid);
 
   fclose(ebsTrace[tid]);
   return(0);
