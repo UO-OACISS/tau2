@@ -43,6 +43,9 @@ void TraceCallStack(int tid, Profiler *current);
 #endif //TAUKTAU_SHCTR
 #endif //TAUKTAU
 
+#include <Profile/TauSampling.h>
+
+
 int RtsLayer::lockDBcount[TAU_MAX_THREADS];
 
 
@@ -107,16 +110,19 @@ int RtsLayer::setMyThread(int tid) {
 // RegisterThread is called before any other profiling function in a 
 // thread that is spawned off
 //////////////////////////////////////////////////////////////////////
-int RtsLayer::RegisterThread()
-{ /* Check the size of threads */
+int RtsLayer::RegisterThread() {
+  /* Check the size of threads */
   LockEnv();
   static int numthreads = 1;
   numthreads ++;
-  if (numthreads >= TAU_MAX_THREADS)
-  {
+  if (numthreads >= TAU_MAX_THREADS) {
     fprintf(stderr, "TAU: RtsLayer: Max thread limit (%d) exceeded. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit>\n", numthreads);
   }
   UnLockEnv();
+  
+#ifdef TAU_EXP_SAMPLING
+  Tau_sampling_init(numthreads-1);
+#endif /* TAU_EXP_SAMPLING */
 
 #ifdef PTHREADS
   PthreadLayer::RegisterThread();
@@ -373,8 +379,8 @@ void RtsLayer::UnLockEnv(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: amorris $
- * $Revision: 1.38 $   $Date: 2009/04/11 00:18:23 $
- * VERSION: $Id: RtsThread.cpp,v 1.38 2009/04/11 00:18:23 amorris Exp $
+ * $Revision: 1.39 $   $Date: 2009/12/19 04:58:57 $
+ * VERSION: $Id: RtsThread.cpp,v 1.39 2009/12/19 04:58:57 amorris Exp $
  ***************************************************************************/
 
 
