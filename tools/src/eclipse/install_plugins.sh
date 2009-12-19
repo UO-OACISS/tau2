@@ -33,24 +33,25 @@ cp -r ./plugins/* $PLUG_DIR
 rm -r ./plugins
 #cp -r ./plugins/org.eclipse.ptp.perf.tau.jars_1.0.0/ $PLUG_DIR
 
-for JAR_DIR in $PLUG_DIR/org.eclipse.ptp.perf.tau.jars_*
-do
+#for JAR_DIR in $PLUG_DIR/org.eclipse.ptp.perf.tau.jars_*
+#do
 
-cp ../contrib/batik-combined.jar $JAR_DIR
-cp ../contrib/jargs.jar $JAR_DIR
-cp ../contrib/jcommon-1.0.15.jar $JAR_DIR
-cp ../contrib/jfreechart-1.0.12.jar $JAR_DIR
-cp ../contrib/jgraph.jar $JAR_DIR
-cp ../contrib/jogl/jogl.jar $JAR_DIR
-cp ../contrib/jython.jar $JAR_DIR
-cp ../contrib/xerces.jar $JAR_DIR
+#cp ../contrib/batik-combined.jar $JAR_DIR
+#cp ../contrib/jargs.jar $JAR_DIR
+#cp ../contrib/jcommon-1.0.15.jar $JAR_DIR
+#cp ../contrib/jfreechart-1.0.12.jar $JAR_DIR
+#cp ../contrib/jgraph.jar $JAR_DIR
+#cp ../contrib/jogl/jogl.jar $JAR_DIR
+#cp ../contrib/jython.jar $JAR_DIR
+#cp ../contrib/xerces.jar $JAR_DIR
 
-cp ../paraprof/bin/paraprof.jar $JAR_DIR
-cp ../perfdmf/bin/perfdmf.jar $JAR_DIR
-cp ../common/bin/tau-common.jar $JAR_DIR
-cp ../vis/bin/vis.jar $JAR_DIR
+#cp ../paraprof/bin/paraprof.jar $JAR_DIR
+#cp ../perfdmf/bin/perfdmf.jar $JAR_DIR
+#cp ../common/bin/tau-common.jar $JAR_DIR
+#cp ../vis/bin/vis.jar $JAR_DIR
 
-done
+
+#done
 
 
 cd $CURRENT_DIR
