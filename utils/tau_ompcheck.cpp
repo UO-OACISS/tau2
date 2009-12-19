@@ -913,7 +913,6 @@ class CompleteDirectives
 	{
 		if (verbosity == Debug)
 			printf("going to next stmt, at line: %d \n", s->stmtBegin().line());
-   
 	  //are we at the start of a loop
     if ((s->kind() == pdbStmt::ST_FOR || s->kind() == pdbStmt::ST_FDO ||
 		s->kind() == pdbStmt::ST_FIF) && s->downStmt() != NULL)
@@ -947,23 +946,26 @@ class CompleteDirectives
       //end of the loop
       addDirectives.splice(addDirectives.end(), findOMPStmt(state, &endBlock, block, loop, pdb));  
 
-		 
-
-		if(s->nextStmt() !=NULL){
-		const pdbStmt* last=s;
-
-		  while (last->nextStmt() != NULL ){
-			last=last->nextStmt();
+		  if (s->nextStmt() != NULL)
+			{
+			  if (state == STATE_OPEN)	
+				{
+					addDirectives.splice(addDirectives.end(), findOMPStmt(state, s->nextStmt(), block, loop, pdb));  
+				}
+				else
+				{
+					const pdbStmt *last = s;
+					while (last->nextStmt() != NULL)
+					{
+						last = last->nextStmt();
+					}
+				if (verbosity == Debug)
+					printf("recurising (next after loop) \n");
+				addDirectives.splice(addDirectives.end(), findOMPStmt(state, last, block, loop, pdb));  
+				}
+			}
 		}
-			      
-		if (verbosity == Debug){
-			printf("recurising (next after loop) \n");
-			 printLocation(s, block, loop);
-		}
-		addDirectives.splice(addDirectives.end(), findOMPStmt(state, last, block, loop, pdb));  
-			
-		}}
-		else
+		else 
 		{
 		  if (s->nextStmt() != NULL)
 			{
@@ -1341,7 +1343,7 @@ int main(int argc, char *argv[])
   }
 }
 /***************************************************************************
- * $RCSfile: tau_ompcheck.cpp,v $   $Author: wspear $
- * $Revision: 1.32 $   $Date: 2009/12/18 18:30:59 $
- * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.32 2009/12/18 18:30:59 wspear Exp $
+ * $RCSfile: tau_ompcheck.cpp,v $   $Author: scottb $
+ * $Revision: 1.33 $   $Date: 2009/12/19 00:40:42 $
+ * VERSION_ID: $Id: tau_ompcheck.cpp,v 1.33 2009/12/19 00:40:42 scottb Exp $
  ***************************************************************************/
