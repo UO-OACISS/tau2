@@ -8,7 +8,8 @@ public class EBSTraceReader {
     private DataSource dataSource;
     private Map sampleMap = new HashMap();
     private int node = -1;
-
+    private int tid= -1;
+    
     public EBSTraceReader(DataSource dataSource) {
         this.dataSource = dataSource;
     }
@@ -41,7 +42,7 @@ public class EBSTraceReader {
             
             int size = list.size();
             
-            Thread thread = dataSource.getThread(node, 0, 0);
+            Thread thread = dataSource.getThread(node, 0, tid);
             
             FunctionProfile fp = thread.getFunctionProfile(function);
             double exclusive = fp.getExclusive(0);
@@ -85,6 +86,10 @@ public class EBSTraceReader {
                     if (inputString.startsWith("# node:")) {
                         String node_text = inputString.substring(8);
                         node = Integer.parseInt(node_text);
+                    }
+                    if (inputString.startsWith("# thread:")) {
+                        String tid_text = inputString.substring(10);
+                        tid = Integer.parseInt(tid_text);
                     }
                 } else {
 
