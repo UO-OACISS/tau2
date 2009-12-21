@@ -4831,17 +4831,17 @@ if [ $silc = yes ] ; then
     if [ $mpi = yes ] ; then 
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SILCOMPI" 
-	silcLibs="-L${silcdir}#-lsilc_mpi#$silcCommonLibs"
+	silcLibs="-L${silcdir}/lib#-lsilc_mpi#$silcCommonLibs"
       else
         fixmakeargs="$fixmakeargs SILCMPI"
-	silcLibs="-L${silcdir}#-lsilc_mpi#$silcCommonLibs"
+	silcLibs="-L${silcdir}/lib#-lsilc_mpi#$silcCommonLibs"
       fi 
     else
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SILCOMP" 
-	silcLibs="-L${silcdir}#-lsilc_serial#$silcCommonLibs"
+	silcLibs="-L${silcdir}/lib#-lsilc_serial#$silcCommonLibs"
       else
-	silcLibs="-L${silcdir}#-lsilc_serial#$silcCommonLibs"
+	silcLibs="-L${silcdir}/lib#-lsilc_serial#$silcCommonLibs"
       fi
     fi
 
