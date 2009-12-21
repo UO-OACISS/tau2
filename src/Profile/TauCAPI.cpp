@@ -59,6 +59,10 @@ void esd_exit (elg_ui4 rid);
 #include "Profile/TauVampirTrace.h"
 #endif /* TAU_VAMPIRTRACE */
 
+#ifdef TAU_SILC
+#include <Profile/TauSilc.h>
+#endif
+
 
 extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup_t group, const char *gr_name) {
   FunctionInfo *f;
@@ -165,6 +169,11 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid ) {
   return;
 #endif
 
+#ifdef TAU_SILC
+  SILC_EnterRegion(fi->GetFunctionId());
+#endif
+
+
   // move the stack pointer
   Tau_global_stackpos[tid]++; /* push */
 
@@ -263,6 +272,10 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   x_uint64 TimeStamp = vt_pform_wtime();
   vt_exit((uint64_t *)&TimeStamp);
   return 0;
+#endif
+
+#ifdef TAU_SILC
+  SILC_ExitRegion(fi->GetFunctionId());
 #endif
 
 
@@ -1353,8 +1366,8 @@ int *tau_pomp_rd_table = 0;
                     
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.133 $   $Date: 2009/11/07 07:13:15 $
- * VERSION: $Id: TauCAPI.cpp,v 1.133 2009/11/07 07:13:15 sameer Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.134 $   $Date: 2009/12/21 17:58:01 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.134 2009/12/21 17:58:01 amorris Exp $
  ***************************************************************************/
 

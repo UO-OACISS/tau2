@@ -46,6 +46,10 @@ using namespace std;
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
 
+#ifdef TAU_SILC
+#include <Profile/TauSilc.h>
+#endif
+
 #include <Profile/TauTrace.h>
 #include <Profile/TauInit.h>
 
@@ -214,6 +218,23 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   FunctionId = esd_def_region(tau_elg_name.c_str(), ELG_NO_ID, ELG_NO_LNO,
 			      ELG_NO_LNO, GroupName, ELG_FUNCTION);
   DEBUGPROFMSG("elg_def_region: "<<tau_elg_name<<": returns "<<FunctionId<<endl;);
+#else
+#ifdef TAU_SILC
+  static int tau_silc_init=0;
+  if (tau_silc_init == 0) {
+    SILC_InitMeasurement();
+    tau_silc_init = 1;
+  }
+  string tau_silc_name(string(Name)+" "+string(Type));
+  FunctionId =  SILC_DefineRegion( tau_silc_name.c_str(),
+				   SILC_INVALID_SOURCE_FILE,
+				   SILC_INVALID_LINE_NO,
+				   SILC_INVALID_LINE_NO,
+				   SILC_ADAPTER_COMPILER,
+				   SILC_REGION_FUNCTION
+				   );
+
+#endif /* TAU_SILC */
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
   TauTraceSetFlushEvents(1);
@@ -462,6 +483,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.81 $   $Date: 2009/09/15 01:14:43 $
- * VERSION_ID: $Id: FunctionInfo.cpp,v 1.81 2009/09/15 01:14:43 amorris Exp $ 
+ * $Revision: 1.82 $   $Date: 2009/12/21 17:58:01 $
+ * VERSION_ID: $Id: FunctionInfo.cpp,v 1.82 2009/12/21 17:58:01 amorris Exp $ 
  ***************************************************************************/
