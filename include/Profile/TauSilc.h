@@ -6,6 +6,8 @@
 
 #define UINT32_MAX  (0xffffffff)
 
+extern "C" {
+
 void SILC_InitMeasurement();
 #define SILC_INVALID_SOURCE_FILE UINT32_MAX
 #define SILC_INVALID_LINE_NO 0
@@ -75,3 +77,4 @@ SILC_RegionHandle SILC_DefineRegion(const char*           regionName,
 void SILC_EnterRegion(SILC_RegionHandle regionHandle);
 void SILC_ExitRegion(SILC_RegionHandle regionHandle);
 
+}
