@@ -4827,7 +4827,7 @@ fi
 if [ $silc = yes ] ; then
     fixmakeargs="$fixmakeargs SILC silcdir=$silcdir"
     tauoptions="${tauoptions}-silc"
-    silcCommonLibs="-lbfd#-liberty#-lotf2"
+    silcCommonLibs="-lbfd#-liberty#-lotf2#-lsilc_utilities"
     if [ $mpi = yes ] ; then 
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SILCOMPI" 
