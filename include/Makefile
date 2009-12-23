@@ -760,8 +760,9 @@ PDTARCHDIR=$(PDTARCHDIRFINAL)
 ##############################################
 
 BFDLINK=
+BFDLIBS=
 
-#TAU_BFD#TAU_BFDLIB=$(BFDLINK) -lbfd -liberty -lz #ENDIF#
+#TAU_BFD#TAU_BFDLIB=$(BFDLINK) $(BFDLIBS) #ENDIF#
 #UPCC#UPCC_C_PREFIX=-Wc,#ENDIF#
 #UPCC#UPCC_LINK_PREFIX=-Wl,#ENDIF#
 #PTHREAD_AVAILABLE#TAU_COMPINST_PTHREAD_OPTIONS= -Dpthread_create=tau_pthread_create -Dpthread_exit=tau_pthread_exit#ENDIF#

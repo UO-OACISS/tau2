@@ -77,6 +77,11 @@ case $1 in
 	echo "s,^BFDLINK=.*$,BFDLINK=$bfdlink,g" >> $sedout
 	;;
 
+     bfdlibs=*)
+        bfdlibs=`echo $1 | sed -e 's/^bfdlibs=//' -e 's/#/ /g'`
+	echo "s,^BFDLIBS=.*$,BFDLIBS=$bfdlibs,g" >> $sedout
+	;;
+
      bfdinclude=*)
         bfdinclude=`echo $1 | sed -e 's/^bfdinclude=//'`
 	echo "s,^BFDINCLUDE=.*$,BFDINCLUDE=$bfdinclude,g" >> $sedout

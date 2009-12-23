@@ -4593,7 +4593,7 @@ fi
 ######################################################################
 # Check if BFD can be linked into a shared library
 ######################################################################
-  cat <<EOF > conftest_bfd.c
+cat <<EOF > conftest_bfd.c
 #include <bfd.h>
 void foo() {
    bfd_init();
@@ -4612,6 +4612,53 @@ else
 fi
 /bin/rm -f conftest_bfd.o conftest_bfd.c conftest_bfd.so
 ######################################################################
+
+
+######################################################################
+# Check what is needed for linking with BFD
+######################################################################
+cat <<EOF > conftest_bfd.c
+#include <bfd.h>
+int main(int argc, char **argv) {
+   bfd_init();
+   bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
+   return;
+}
+EOF
+$echo "Checking for linking dependencies for libbfd... ${nnl}"
+
+BFDLIBS="-lbfd"
+
+bfd_worked="no"
+if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c -fPIC $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
+    bfd_worked="yes"
+else
+    BFDLIBS="-lbfd -liberty"
+    if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c -fPIC $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
+	bfd_worked="yes"
+    else    
+	BFDLIBS="-lbfd -liberty -lz"
+	if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c -fPIC $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
+	    bfd_worked="yes"
+	fi
+    fi
+fi
+
+if [ $bfd_worked = "no" ] ; then
+    echo "failed"
+    BFDLIBS="-lbfd -liberty"
+else
+    echo $BFDLIBS
+fi
+
+BFDLIBS=`echo $BFDLIBS | sed -e 's/ /#/g'`
+
+fixmakeargs="$fixmakeargs bfdlibs=$BFDLIBS"
+
+/bin/rm -f conftest_bfd.o conftest_bfd.c conftest_bfd
+######################################################################
+
+
 
 ######################################################################
 # Check for demangle.h
