@@ -25,9 +25,15 @@ sub trim($) {
   return $string;
 }
 
+my %pcmap;
+
 # Translate a PC value
 sub translate_pc {
   my ($exe, $pc) = @_;
+
+  if (defined $pcmap{$pc}) {
+      return "$pcmap{$pc}";
+  }
 
   if ($forked == 0) {
     $forked = 1;
@@ -74,7 +80,8 @@ sub translate_pc {
 
   chomp($func);
   chomp($fileline);
-  return "$func:$fileline"
+  $pcmap{$pc} = "$func:$fileline";
+  return "$func:$fileline";
 }
 
 # process an EBS trace file
