@@ -265,9 +265,20 @@ void TauProfiler_AddProfileParamData(long key, const char *keyname);
 #endif /* __cplusplus && ! TAU_USE_C_API */
 
 
+#ifdef SEEK_SET
+/* If a user code includes TAU.h or Profiler.h, then the inclusion of many our
+   our header files will end up including stdio.h or other headers that set
+   SEEK_SET and friends, we need these undef'ed for the user code so that they
+   can include mpi.h in their C++ code */
+#undef SEEK_SET
+#undef SEEK_CUR
+#undef SEEK_END
+#endif
+
+
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.110 $   $Date: 2009/11/03 19:12:01 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.110 2009/11/03 19:12:01 amorris Exp $ 
+ * $Revision: 1.111 $   $Date: 2009/12/28 18:58:41 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.111 2009/12/28 18:58:41 amorris Exp $ 
  ***************************************************************************/
