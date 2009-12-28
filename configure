@@ -2259,6 +2259,9 @@ case $cxx_compiler in
 	      fi
 	  fi
       fi
+      if [ "x$compilerLocation" = "x/usr/local/tools/check_compile_line/bgxlc++" ] ; then
+        compilerLocation=`grep bgxlc++ /usr/local/tools/check_compile_line/bgxlc++ | awk '{ print $3;}'`
+      fi
 
       extradircxx=`echo $compilerLocation | sed s/$ibm_compiler/../`
 
