@@ -8,8 +8,8 @@ public class EBSTraceReader {
     private DataSource dataSource;
     private Map sampleMap = new HashMap();
     private int node = -1;
-    private int tid= -1;
-    
+    private int tid = -1;
+
     public EBSTraceReader(DataSource dataSource) {
         this.dataSource = dataSource;
     }
@@ -32,43 +32,54 @@ public class EBSTraceReader {
         for (Iterator it = sampleMap.keySet().iterator(); it.hasNext();) {
             String callpath = (String) it.next();
             List list = (List) sampleMap.get(callpath);
-            
+
             Function function = dataSource.getFunction(callpath);
-            
+
             if (function == null) {
                 System.err.println("Error: callpath not found in profile: " + callpath);
                 continue;
             }
-            
+
             int size = list.size();
-            
+
             Thread thread = dataSource.getThread(node, 0, tid);
-            
+
             FunctionProfile fp = thread.getFunctionProfile(function);
-            double exclusive = fp.getExclusive(0);
-            
-            double chunk = exclusive / size;
-            fp.setExclusive(0,0);
-            
-            for (Iterator it2 = list.iterator(); it2.hasNext();) {
-                String location = (String) it2.next();
-                Function newFunc = dataSource.addFunction(callpath + " => " + location);
-                newFunc.addGroup(callpathGroup);
-                
-                FunctionProfile functionProfile = thread.getFunctionProfile(newFunc);
-                if (functionProfile == null) {
-                    functionProfile = new FunctionProfile(newFunc, dataSource.getNumberOfMetrics());
-                    thread.addFunctionProfile(functionProfile);   
+            String flatName = callpath.substring(callpath.lastIndexOf("=>") + 2).trim();
+
+            Function flatFunction = dataSource.getFunction(flatName);
+            if (function == null) {
+                System.err.println("Error: function not found in profile: " + flatName);
+                continue;
+            }
+
+            FunctionProfile flatFP = thread.getFunctionProfile(flatFunction);
+
+            for (int m = 0; m < dataSource.getNumberOfMetrics(); m++) {
+                double exclusive = fp.getExclusive(m);
+                double chunk = exclusive / size;
+                fp.setExclusive(m, 0);
+                flatFP.setExclusive(m, 0);
+
+                for (Iterator it2 = list.iterator(); it2.hasNext();) {
+                    String location = (String) it2.next();
+                    Function newFunc = dataSource.addFunction(callpath + " => " + location);
+                    newFunc.addGroup(callpathGroup);
+
+                    FunctionProfile functionProfile = thread.getFunctionProfile(newFunc);
+                    if (functionProfile == null) {
+                        functionProfile = new FunctionProfile(newFunc, dataSource.getNumberOfMetrics());
+                        thread.addFunctionProfile(functionProfile);
+                    }
+
+                    functionProfile.setInclusive(m, functionProfile.getInclusive(m) + chunk);
+                    functionProfile.setExclusive(m, functionProfile.getExclusive(m) + chunk);
+                    functionProfile.setNumCalls(functionProfile.getNumCalls() + 1);
                 }
-                
-                functionProfile.setInclusive(0,functionProfile.getInclusive(0)+chunk);
-                functionProfile.setExclusive(0,functionProfile.getExclusive(0)+chunk);
-                functionProfile.setNumCalls(functionProfile.getNumCalls()+1);
             }
         }
-        
     }
-    
+
     private void processEBSTrace(DataSource dataSource, File file) {
         try {
             // reset data
@@ -108,7 +119,7 @@ public class EBSTraceReader {
 
                 inputString = br.readLine();
             }
-            
+
             processMap();
 
         } catch (Exception ex) {
