@@ -2254,7 +2254,7 @@ case $cxx_compiler in
 	  if [ "x$readlink" != "x" ] ; then
 	      if [ -x "$readlink" ] ; then
 		  if [ -h $compilerLocation ] ; then
-		      compilerLocation=`readlink -f $compilerLocation`
+		      compilerLocation=`readlink $compilerLocation`
 		  fi
 	      fi
 	  fi
