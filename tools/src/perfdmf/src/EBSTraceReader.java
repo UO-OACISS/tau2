@@ -69,18 +69,28 @@ public class EBSTraceReader {
 
                 for (Iterator it2 = list.iterator(); it2.hasNext();) {
                     String location = (String) it2.next();
-                    Function newFunc = dataSource.addFunction(callpath + " => " + location);
-                    newFunc.addGroup(callpathGroup);
+                    Function newFlatFunc = dataSource.addFunction(location);
+                    Function newCallpathFunc = dataSource.addFunction(callpath + " => " + location);
+                    newCallpathFunc.addGroup(callpathGroup);
 
-                    FunctionProfile functionProfile = thread.getFunctionProfile(newFunc);
-                    if (functionProfile == null) {
-                        functionProfile = new FunctionProfile(newFunc, dataSource.getNumberOfMetrics());
-                        thread.addFunctionProfile(functionProfile);
+                    FunctionProfile callpathProfile = thread.getFunctionProfile(newCallpathFunc);
+                    if (callpathProfile == null) {
+                        callpathProfile = new FunctionProfile(newCallpathFunc, dataSource.getNumberOfMetrics());
+                        thread.addFunctionProfile(callpathProfile);
+                    }
+                    FunctionProfile flatProfile = thread.getFunctionProfile(newFlatFunc);
+                    if (flatProfile == null) {
+                        flatProfile = new FunctionProfile(newFlatFunc, dataSource.getNumberOfMetrics());
+                        thread.addFunctionProfile(flatProfile);
                     }
 
-                    functionProfile.setInclusive(m, functionProfile.getInclusive(m) + chunk);
-                    functionProfile.setExclusive(m, functionProfile.getExclusive(m) + chunk);
-                    functionProfile.setNumCalls(functionProfile.getNumCalls() + 1);
+                    callpathProfile.setInclusive(m, callpathProfile.getInclusive(m) + chunk);
+                    callpathProfile.setExclusive(m, callpathProfile.getExclusive(m) + chunk);
+                    callpathProfile.setNumCalls(callpathProfile.getNumCalls() + 1);
+
+                    flatProfile.setInclusive(m, flatProfile.getInclusive(m) + chunk);
+                    flatProfile.setExclusive(m, flatProfile.getExclusive(m) + chunk);
+                    flatProfile.setNumCalls(flatProfile.getNumCalls() + 1);
                 }
             }
         }
