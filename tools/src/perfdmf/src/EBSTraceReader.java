@@ -45,21 +45,27 @@ public class EBSTraceReader {
             Thread thread = dataSource.getThread(node, 0, tid);
 
             FunctionProfile fp = thread.getFunctionProfile(function);
-            String flatName = callpath.substring(callpath.lastIndexOf("=>") + 2).trim();
 
-            Function flatFunction = dataSource.getFunction(flatName);
-            if (function == null) {
-                System.err.println("Error: function not found in profile: " + flatName);
-                continue;
+            FunctionProfile flatFP = null;
+            if (callpath.lastIndexOf("=>") != -1) {
+                String flatName = callpath.substring(callpath.lastIndexOf("=>") + 2).trim();
+                Function flatFunction = dataSource.getFunction(flatName);
+                if (flatFunction == null) {
+                    System.err.println("Error: function not found in profile: " + flatName);
+                    continue;
+                }
+
+                flatFP = thread.getFunctionProfile(flatFunction);
             }
 
-            FunctionProfile flatFP = thread.getFunctionProfile(flatFunction);
 
             for (int m = 0; m < dataSource.getNumberOfMetrics(); m++) {
                 double exclusive = fp.getExclusive(m);
                 double chunk = exclusive / size;
                 fp.setExclusive(m, 0);
-                flatFP.setExclusive(m, 0);
+                if (flatFP != null) {
+                    flatFP.setExclusive(m, 0);
+                }
 
                 for (Iterator it2 = list.iterator(); it2.hasNext();) {
                     String location = (String) it2.next();
