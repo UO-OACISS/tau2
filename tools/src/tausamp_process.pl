@@ -150,25 +150,28 @@ sub process_trace {
     } else {
       # process sample lines
 
-      my ($type,$timestamp,$deltaStart,$deltaStop,$pc,$metrics,$callpath) = split('\|',$line);
+      my ($type,$timestamp,$deltaStart,$deltaStop,$pc,$metrics,$callpath,$callstack) = split('\|',$line);
       $timestamp = trim($timestamp);
       $pc = trim($pc);
       $metrics = trim($metrics);
       $callpath = trim($callpath);
+      $callstack = trim($callstack);
 
       # Process the callpath
       my @events = split(" ",$callpath);
       my @tmpCallpath = @events;
       @events = reverse (@events);
 
+      my @callstackEntries = split(" ",$callstack);
+
       for (0..$#events) {
 
-	  	# build a key into the map
-		$callpath = "";
+	# build a key into the map
+	$callpath = "";
         foreach my $t (@tmpCallpath) {
           $callpath = "$callpath $t";
         }
-		$callpath = trim($callpath);
+	$callpath = trim($callpath);
 
         my $newCallpath = "";
         my (@processedEvents);
@@ -185,23 +188,29 @@ sub process_trace {
         @stopTokens = split(" ", $stopmap{$callpath});
         $deltaStart = $timestamp - @startTokens[0];
         $deltaStop = @stopTokens[0] - $timestamp;
-  #       if ($check != $deltaStart) {
-  #         print "$line\n";
-  #         die "inconsistent file $callpath, $check != $$deltaStart\n";
-  #       }
-  
-        # Process the PC
+	#       if ($check != $deltaStart) {
+	#         print "$line\n";
+	#         die "inconsistent file $callpath, $check != $$deltaStart\n";
+	#       }
 
+        # Process the PC
         my $newpc = translate_pc($exe, $pc);
+
+	# Process the callstack
+	my $newCallstack = "";
+        foreach my $cs (@callstackEntries) {
+	  my $loc = translate_pc($exe, $cs);
+          $newCallstack = "$newCallstack $loc";
+        }
 
         if (($deltaStop < 0) || ($deltaStart < 0)) {
           #print "ignoring negative sample, location: $newpc, callpath: $newCallpath\n";
-		  $negativeSamples = $negativeSamples + 1;
-		  if ($inclusive) {
-		    last;
-		  }
-		  pop(@events);
-		  shift(@tmpCallpath);
+	  $negativeSamples = $negativeSamples + 1;
+	  if ($inclusive) {
+	    last;
+	  }
+	  pop(@events);
+	  shift(@tmpCallpath);
         }
 
         # Output the processed data
@@ -216,15 +225,15 @@ sub process_trace {
           print OUTPUT " $deltaMetS $deltaMetE";
         }
 
-        print OUTPUT " | $newCallpath\n";
+        print OUTPUT " | $newCallpath |$newCallstack\n";
 
-		if (!$inclusive) {
-		  last;
-		}
-		pop(@events);
-		shift(@tmpCallpath);
+	if (!$inclusive) {
+	  last;
+	}
+	pop(@events);
+	shift(@tmpCallpath);
       }
-	  $totalSamples = $totalSamples + 1;
+      $totalSamples = $totalSamples + 1;
     }
   }
   print OUTPUT "# node: $node\n";
