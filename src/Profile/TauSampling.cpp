@@ -69,6 +69,12 @@
 #include <TAU.h>
 #include <Profile/TauMetrics.h>
 
+/* unwind */
+#ifdef TAU_USE_LIBUNWIND
+#define UNW_LOCAL_ONLY
+#include <libunwind.h>
+#endif
+
 /*********************************************************************
  * Tau Sampling Record Definition
  ********************************************************************/
@@ -118,6 +124,51 @@ static inline caddr_t get_pc(void *p) {
   return pc;
 }
 
+
+#ifdef TAU_USE_LIBUNWIND
+void show_backtrace (void* pc) {
+  unw_cursor_t cursor; unw_context_t uc;
+  unw_word_t ip, sp;
+  int found = 0;
+
+  unw_getcontext(&uc);
+  unw_init_local(&cursor, &uc);
+  while (unw_step(&cursor) > 0) {
+    unw_get_reg(&cursor, UNW_REG_IP, &ip);
+    // unw_get_reg(&cursor, UNW_REG_SP, &sp);
+    if (ip == (unw_word_t)pc) {
+      found = 1;
+    }
+    if (found) {
+      printf ("ip = %lx, sp = %lx\n", (long) ip, (long) sp);
+    }
+  }
+}
+
+void Tau_sampling_output_callstack (int tid, void* pc) {
+  unw_cursor_t cursor; unw_context_t uc;
+  unw_word_t ip, sp;
+  int found = 0;
+
+  fprintf(ebsTrace[tid], " |");
+
+  unw_getcontext(&uc);
+  unw_init_local(&cursor, &uc);
+  while (unw_step(&cursor) > 0) {
+    unw_get_reg(&cursor, UNW_REG_IP, &ip);
+    // unw_get_reg(&cursor, UNW_REG_SP, &sp);
+    if (ip == (unw_word_t)pc) {
+      found = 1;
+    }
+    if (found) {
+      fprintf(ebsTrace[tid], " %p", ip);
+    }
+  }
+}
+
+#endif /* TAU_USE_LIBUNWIND */
+
+
 /*********************************************************************
  * Write out the TAU callpath
  ********************************************************************/
@@ -151,7 +202,7 @@ void Tau_sampling_output_callpath(int tid) {
 /*********************************************************************
  * Write out a single event record
  ********************************************************************/
-void Tau_sampling_flush_record(int tid, TauSamplingRecord *record) {
+void Tau_sampling_flush_record(int tid, TauSamplingRecord *record, void *pc) {
   fprintf(ebsTrace[tid], "$ | %lld | ", record->timestamp);
   fprintf(ebsTrace[tid], "%lld | ", record->deltaStart);
   fprintf(ebsTrace[tid], "%lld | ", record->deltaStop);
@@ -166,6 +217,10 @@ void Tau_sampling_flush_record(int tid, TauSamplingRecord *record) {
   fprintf(ebsTrace[tid], "| ");
 
   Tau_sampling_output_callpath(tid);
+#ifdef TAU_USE_LIBUNWIND
+  Tau_sampling_output_callstack(tid, pc);
+#endif /* TAU_USE_LIBUNWIND */
+
   fprintf(ebsTrace[tid], "\n");
 }
 
@@ -219,11 +274,13 @@ void Tau_sampling_handle_sample(void *pc) {
     return;
   }
 
+
   TauSamplingRecord theRecord;
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
 
 
-  //  printf ("[tid=%d] sample on %x\n", tid, pc);
+  // printf ("[tid=%d] sample on %x\n", tid, pc);
+  // show_backtrace(pc);
 
   struct timeval tp;
   gettimeofday(&tp, 0);
@@ -247,7 +304,7 @@ void Tau_sampling_handle_sample(void *pc) {
     theRecord.counterDeltaStop[i] = 0;
   }
 
-  Tau_sampling_flush_record(tid, &theRecord);
+  Tau_sampling_flush_record(tid, &theRecord, pc);
 
   /* set this to get the stop event */
   profiler->needToRecordStop = 1;
