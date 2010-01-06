@@ -19,12 +19,33 @@ public class WindowPlacer {
 
     private static int lastXOffset;
 
-    
-    static void addToVisibleList(JFrame frame) {
-        visibleWindows.add(frame);
+    private static boolean initialized = false;
+
+    private static void checkInit() {
+	if (initialized == false) {
+	    Toolkit tk = Toolkit.getDefaultToolkit();
+	    Dimension screenDimension = tk.getScreenSize();
+	    screenHeight = screenDimension.height;
+	    screenWidth = screenDimension.width;
+	    initialized = true;
+	}
     }
 
-    static void removeFromVisibleList(JFrame frame) {
+    private static int getScreenWidth() {
+	checkInit();
+	return screenWidth;
+    }
+
+    private static int getScreenHeight() {
+	checkInit();
+	return screenHeight;
+    }
+
+    public static void addToVisibleList(JFrame frame) {
+        visibleWindows.add(frame);
+    }
+    
+    public static void removeFromVisibleList(JFrame frame) {
         visibleWindows.remove(frame);
     }
 
@@ -40,11 +61,11 @@ public class WindowPlacer {
         }
         lastGlobalDataWindowPosition = placement;
 
-        if (placement.x + frame.getWidth() > screenWidth) {
+        if (placement.x + frame.getWidth() > getScreenWidth()) {
             placement.setLocation(0, placement.y);
         }
 
-        if (placement.y + frame.getHeight() > screenHeight) {
+        if (placement.y + frame.getHeight() > getScreenHeight()) {
             placement.setLocation(placement.x, 0);
         }
 
@@ -64,8 +85,8 @@ public class WindowPlacer {
         //            System.err.println("\nfound frame!");
         //        }
 
-        if (parent instanceof JFrame && parent.getLocation().x >= screenWidth / 2) {
-            return screenWidth / 2;
+        if (parent instanceof JFrame && parent.getLocation().x >= getScreenWidth() / 2) {
+            return getScreenWidth() / 2;
         }
         return 0;
     }
@@ -93,10 +114,10 @@ public class WindowPlacer {
     public static void sanityCheck(JFrame frame, Point p) {
         int x = p.x;
         int y = p.y;
-        x = Math.min(x, screenWidth - frame.getWidth());
+        x = Math.min(x, getScreenWidth() - frame.getWidth());
         x = Math.max(x, 0);
 
-        y = Math.min(y, screenHeight - frame.getHeight());
+        y = Math.min(y, getScreenHeight() - frame.getHeight());
         y = Math.max(y, 0);
         p.setLocation(x, y);
         
@@ -117,15 +138,15 @@ public class WindowPlacer {
         int x = getProperXPosition(parent) + lastXOffset;
         int y = lastLocation.y + 25;
 
-        if (x + frame.getWidth() > screenWidth) {
+        if (x + frame.getWidth() > getScreenWidth()) {
             x = getProperXPosition(parent);
 
-            x = Math.min(x, screenWidth - frame.getWidth());
+            x = Math.min(x, getScreenWidth() - frame.getWidth());
             x = Math.max(x, 0);
             lastXOffset = 0;
         }
 
-        if (y + frame.getHeight() > screenHeight) {
+        if (y + frame.getHeight() > getScreenHeight()) {
             y = 0;
         }
 
@@ -148,11 +169,5 @@ public class WindowPlacer {
         return p;
     }
 
-    static {
-        Toolkit tk = Toolkit.getDefaultToolkit();
-        Dimension screenDimension = tk.getScreenSize();
-        screenHeight = screenDimension.height;
-        screenWidth = screenDimension.width;
-    }
 
 }

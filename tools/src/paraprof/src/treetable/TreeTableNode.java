@@ -15,9 +15,9 @@ import edu.uoregon.tau.perfdmf.FunctionProfile;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableNode.java,v 1.10 2009/10/26 18:47:35 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableNode.java,v 1.11 2010/01/06 20:52:29 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  */
 public class TreeTableNode extends DefaultMutableTreeNode implements Comparable {
     private List children;
@@ -152,7 +152,6 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
 
                     }
 
-                  
                 }
             }
 
@@ -160,6 +159,7 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
                 for (Iterator it = potentialChildren.keySet().iterator(); it.hasNext();) {
                     Object obj = it.next();
                     TreeTableNode node;
+
                     if (obj instanceof String) {
                         node = new TreeTableNode(null, model, (String) obj);
                     } else {
@@ -216,7 +216,6 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
         return 0;
     }
 
-    
     public Color getColor(int metricID) {
         double value = getColorValue(metricID, expanded);
         if (value == -1) {
