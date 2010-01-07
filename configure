@@ -1944,6 +1944,26 @@ if [ "$machine" = "apple" ] ; then
 fi
 
 
+if [ $machine = craycnl ] ; then
+
+cat <<EOF > conftest_shared.c
+void foo() {
+}
+EOF
+$echo "Checking for CrayCNL shared library compatibility... ${nnl}"
+shared_opt="-shared -fPIC"
+
+if $c_compiler $orig_useropt $shared_opt -o conftest_shared.so conftest_shared.c -fPIC 1> /dev/null 2>&1 ; then
+    echo "yes"
+    fixmakeargs="$fixmakeargs CRAYCNL_SHARED"
+else 
+    echo "no"
+    fixmakeargs="$fixmakeargs NOSHARED"
+fi
+
+/bin/rm -f conftest_shared.o conftest_shared.c conftest_shared.so
+fi
+
 ######################################################################
 # For template instantiations in the library -ptused for CC compilers
 if [ $machine = sgi8k -o $machine = sgin32 -o $machine = sgi64 ] 
