@@ -52,7 +52,7 @@ def main():
 	means = stats.processData().get(BasicStatisticsOperation.MEAN)
 
 	# then, using the stats, find the top X event names
-	reducer = TopXEvents(means, metric, type, 10)
+	reducer = TopXEvents(means, metric, type, 20)
 	reduced = reducer.processData().get(0)
 
 	# then, extract those events from the actual data
@@ -116,7 +116,14 @@ def main():
 			# fix TAU names
 			else:
 				shortEvent = Utilities.shortenEventName(event)
-			print "%00.2f%%\t %s" % (topped.getExclusive(0,event,topped.getTimeMetric()) / mean.getInclusive(0,mean.getMainEvent(),mean.getTimeMetric()) * 100.0, event)
+			percentage = topped.getExclusive(0,event,topped.getTimeMetric()) / mean.getInclusive(0,mean.getMainEvent(),mean.getTimeMetric()) * 100.0
+			calls = topped.getCalls(0,event)
+			if calls == 0.0:
+				print "%00.2f%%\t %d\t %0.5f%%\t %s" % (percentage, calls, 0.0, shortEvent)
+			else:
+				print "%00.2f%%\t %d\t %0.5f%%\t %s" % (percentage, calls, percentage / float(calls), shortEvent)
+
+			#print "%00.2f%%\t %s" % (topped.getExclusive(0,event,topped.getTimeMetric()) / mean.getInclusive(0,mean.getMainEvent(),mean.getTimeMetric()) * 100.0, event)
 			myFile.write(shortEvent + "\n")
 	myFile.close()
 

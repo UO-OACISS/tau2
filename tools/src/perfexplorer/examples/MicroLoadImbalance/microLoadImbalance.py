@@ -73,7 +73,8 @@ def computeLoadBalance(trial, callpath):
 	ratio = ratios.getExclusive(thread, event, metric)
 
 	if callpath:
-		print "%s\t %d\t %s\t %.2f%%\t %.2f%%\t %.2f%%\t %.2f%%\t %.2f%%\t" % (mainEvent, trial.getThreads().size(), event, mean*100, max*100, min*100, stddev*100, ratio*100)
+		#print "%s\t %d\t %ls\t %.2f%%\t %.2f%%\t %.2f%%\t %.2f%%\t %.2f%%\t" % (mainEvent, trial.getThreads().size(), event, mean*100, max*100, min*100, stddev*100, ratio*100)
+		print "%s\t %d\t %s\t %.2f%%\t %.2f%%\t %.2f%%\t %.2f%%\t %.2f%%\t" % (mainEvent, trial.getThreads().size(), event, mean*100, 100, 100, 100, 100)
 	else:
 		print "%d\t %s\t %.2f%%\t %.2f%%\t %.2f%%\t %.2f%%\t %.2f%%\t" % (trial.getThreads().size(), event, mean*100, max*100, min*100, stddev*100, ratio*100)
 
@@ -97,7 +98,8 @@ def main():
 
 	print
 
-	splitter = SplitTrialPhasesOperation(trial, "loop")
+	# splitter = SplitTrialPhasesOperation(trial, "loop")
+	splitter = SplitTrialPhasesOperation(trial, "Iteration")
 	phases = splitter.processData()
 
 	print "LoopID\t Procs\t Type\t\t\t AVG\t MAX\t MIN\t STDEV\t AVG/MAX"
