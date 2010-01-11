@@ -20,7 +20,7 @@ import edu.uoregon.tau.perfdmf.Trial;
  * interface.  This class has all the member data fields for the plethora
  * of anticipated subclasses.
  * 
- * <P>CVS $Id: AbstractResult.java,v 1.19 2009/11/27 16:51:05 khuck Exp $</P>
+ * <P>CVS $Id: AbstractResult.java,v 1.20 2010/01/11 17:25:35 khuck Exp $</P>
  * @author  Kevin Huck
  * @version 2.0
  * @since   2.0
@@ -197,14 +197,14 @@ public abstract class AbstractResult implements PerformanceResult, Serializable 
 		}
 		inclusiveData.get(thread).get(event).put(metric, value);
 
-		if (thread == 0) {
+		//if (thread == 0 || this.mainEvent == null) {
 			//if (value > mainInclusive && !event.contains(" => ") && !event.startsWith(".TAU ") && (mainMetric == null || mainMetric.equals(metric))) {
 			if (value > mainInclusive && !event.contains(" => ") && (mainMetric == null || mainMetric.equals(metric))) {
 				mainInclusive = value;
 				mainEvent = event;
 				mainMetric = metric;
 			}
-		}
+		//}
 			
 
 	}

@@ -10,6 +10,13 @@ kernMPI = "Kernel MPI"
 init = "MPI_Init"
 final = "MPI_Finalize"
 
+def sort_nicely( l ):
+	""" Sort the given list in the way that humans expect. """
+	convert = lambda text: int(text) if text.isdigit() else text
+	alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
+	l.sort( key=alphanum_key )
+	return l
+
 def getParameters():
 	global tauData
 	parameterMap = PerfExplorerModel.getModel().getScriptParameters()
@@ -170,6 +177,12 @@ def main():
 		#print str(clusterID), trial.getMainEvent()
 		clusterID = doLoadImbalance(trial, clusterID)
 
+	#loopPrefix = "Iteration "
+	#loopNames = set()
+	#for event in trial.getEvents():
+		#if event.find(loopPrefix) > -1:
+			#loopNames.add(event)
+			
 	clusterID = 0
 	for trial in clusters:
 		print "\n\nSplitting phases in cluster", clusterID

@@ -51,13 +51,11 @@ public class SplitTrialClusters extends	AbstractPerformanceOperation {
 			for (Integer thread : input.getThreads()) {
 				int clusterID = (int)clusterResults.get((resultIndex*5) + 4).getCalls(thread, "Cluster ID");
 				for (String event : input.getEvents()) {
-					for (String metric : input.getMetrics()) {
-						if (clusterID >= 0) {
+					if ((clusterID >= 0) && (input.getCalls(thread, event) > 0)) {
+						for (String metric : input.getMetrics()) {
 							clusters[clusterID].putExclusive(thread, event, metric, input.getExclusive(thread, event, metric));
 							clusters[clusterID].putInclusive(thread, event, metric, input.getInclusive(thread, event, metric));
 						}
-					}
-					if (clusterID >= 0) {
 						clusters[clusterID].putCalls(thread, event, input.getCalls(thread, event));
 						clusters[clusterID].putSubroutines(thread, event, input.getSubroutines(thread, event));
 					}
