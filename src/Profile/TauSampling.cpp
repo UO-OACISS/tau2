@@ -75,6 +75,18 @@
 #include <libunwind.h>
 #endif
 
+/* stackwalker */
+#ifdef TAU_USE_STACKWALKER
+#include <walker.h>
+#include <frame.h>
+#include <steppergroup.h>
+using namespace Dyninst;
+using namespace Stackwalker;
+#include <iostream>
+#include <set>
+using namespace std;
+#endif
+
 /*********************************************************************
  * Tau Sampling Record Definition
  ********************************************************************/
@@ -125,6 +137,29 @@ static inline caddr_t get_pc(void *p) {
 }
 
 
+
+#ifdef TAU_USE_STACKWALKER
+void show_backtrace (void *pc) {
+  std::vector<Frame> stackwalk;
+  string s;
+  Walker *walker = Walker::newWalker();
+  walker->walkStack(stackwalk);
+
+  StepperGroup *stepperGroup = walker->getStepperGroup();
+
+  std::set<FrameStepper *> steppers;
+  stepperGroup->getSteppers(steppers);
+  
+
+  for (unsigned i=0; i<stackwalk.size(); i++) {
+    stackwalk[i].getName(s);
+    cout << "Found function " << s << endl;
+  }
+  exit(0);
+}
+
+#endif /* TAU_USE_STACKWALKER */
+
 #ifdef TAU_USE_LIBUNWIND
 void show_backtrace (void* pc) {
   unw_cursor_t cursor; unw_context_t uc;
@@ -157,11 +192,11 @@ void Tau_sampling_output_callstack (int tid, void* pc) {
   while (unw_step(&cursor) > 0) {
     unw_get_reg(&cursor, UNW_REG_IP, &ip);
     // unw_get_reg(&cursor, UNW_REG_SP, &sp);
-    if (ip == (unw_word_t)pc) {
-      found = 1;
-    }
     if (found) {
       fprintf(ebsTrace[tid], " %p", ip);
+    }
+    if (ip == (unw_word_t)pc) {
+      found = 1;
     }
   }
 }
@@ -280,7 +315,7 @@ void Tau_sampling_handle_sample(void *pc) {
 
 
   // printf ("[tid=%d] sample on %x\n", tid, pc);
-  // show_backtrace(pc);
+  show_backtrace(pc);
 
   struct timeval tp;
   gettimeofday(&tp, 0);
