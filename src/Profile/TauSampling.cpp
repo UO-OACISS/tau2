@@ -120,7 +120,7 @@ static inline caddr_t get_pc(void *p) {
   sc = (struct sigcontext *)&uc->uc_mcontext;
 # ifdef __x86_64__
   pc = (caddr_t)sc->rip;
-# elif IA32
+# elif i386
   pc = (caddr_t)sc->eip;
 # elif __ia64__
   pc = (caddr_t)sc->sc_ip;
