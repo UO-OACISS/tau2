@@ -24,9 +24,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  * 1) Need to replace constructors with a factory, get rid of "changeToPhase..."
  * 2) Need to track all ppTrials (Observers) for comparisonChart 
  * 
- * <P>CVS $Id: FunctionBarChartWindow.java,v 1.24 2009/11/12 22:50:26 amorris Exp $</P>
+ * <P>CVS $Id: FunctionBarChartWindow.java,v 1.25 2010/01/14 01:31:39 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.24 $
+ * @version $Revision: 1.25 $
  * @see     FunctionBarChartModel
  * @see     ThreadBarChartModel
  */
@@ -294,7 +294,9 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         descendingOrderCheckBox.addActionListener(sortData);
         optionsMenu.add(descendingOrderCheckBox);
 
+        if (showValuesAsPercent == null) {
         showValuesAsPercent = new JCheckBoxMenuItem("Show Values as Percent", defaultPercentValue);
+        }
         showValuesAsPercent.addActionListener(sortData);
         optionsMenu.add(showValuesAsPercent);
 
