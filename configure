@@ -5317,6 +5317,10 @@ cat ${tauroot}/tools/src/contrib/slog2sdk/bin/slog2print.skel |
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/slog2print
 chmod a+rx ${targetdir}/${architecture}/bin/slog2print
 
+cat ${tauroot}/tools/src/tau2slog2/bin/tau2slog2.skel | 
+sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/tau2slog2
+chmod a+rx ${targetdir}/${architecture}/bin/tau2slog2
+
 cat ${tauroot}/tools/src/tau_multimerge/bin/tau_multimerge.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/tau_multimerge
 chmod a+rx ${targetdir}/${architecture}/bin/tau_multimerge
