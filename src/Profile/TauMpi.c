@@ -3307,34 +3307,41 @@ int * top_type;
 //For a given process, process is the unique MPI rank
 //Node n is the nth node in the allocation
 //Core m is the mth core on node n
-
-int TauGetCpuSite(unsigned int * node, unsigned int * core, unsigned int * process){
+int TauGetCpuSite(unsigned int *node, unsigned int *core, unsigned int *rank){
 	char host_name[MPI_MAX_PROCESSOR_NAME];
 	char (*host_names)[MPI_MAX_PROCESSOR_NAME];
 	MPI_Comm internode;
 	MPI_Comm intranode;
 
-	int nprocs, namelen,n,bytes,rank;
+	int nprocs, namelen,n,bytes;
 
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_rank(MPI_COMM_WORLD, rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 	MPI_Get_processor_name(host_name,&namelen);
 	bytes = nprocs * sizeof(char[MPI_MAX_PROCESSOR_NAME]);
 
 	host_names = (char (*)[MPI_MAX_PROCESSOR_NAME]) malloc(bytes);
-	*process=rank;
-	strcpy(host_names[rank], host_name);
+	
+	strcpy(host_names[*rank], host_name);
 	for (n=0; n<nprocs; n++)
 	{
 		MPI_Bcast(&(host_names[n]),MPI_MAX_PROCESSOR_NAME, MPI_CHAR, n, MPI_COMM_WORLD); 
 	}
 	
-	unsigned long color;
-	color=hash(host_name);
+	unsigned int color;
+  color = 0;
 
-	MPI_Comm_split(MPI_COMM_WORLD, color, process, &internode);
+  for (n=1; n<nprocs; n++)
+  {
+	  if(strcmp(host_names[n-1], host_names[n])) color++;
+	  if(strcmp(host_name, host_names[n]) == 0) break;
+  }
+	
+	MPI_Comm_split(MPI_COMM_WORLD, color, *rank, &internode);
 	MPI_Comm_rank(internode,core);
-	MPI_Comm_split(MPI_COMM_WORLD, core, process, &intranode);
+	
+	MPI_Comm_split(MPI_COMM_WORLD, *core, *rank, &intranode);
+	
 	MPI_Comm_rank(intranode,node);
 	return 0;
 }
