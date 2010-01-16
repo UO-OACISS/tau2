@@ -169,6 +169,10 @@ static inline caddr_t get_pc(void *p) {
 
 int insideSignalHandler = 0;
 
+
+
+#ifdef TAU_USE_STACKWALKER
+
 extern "C" void *dlmalloc(size_t size);
 
 extern "C" void *__libc_malloc(size_t size);
@@ -182,9 +186,6 @@ void *malloc(size_t size) {
     return __libc_malloc(size);
   }
 } 
-
-
-#ifdef TAU_USE_STACKWALKER
 
 Walker *walker = Walker::newWalker();
 
