@@ -206,6 +206,10 @@ void Tau_sampling_output_callstack (int tid, void* pc) {
   int found = 0;
   std::vector<Frame> stackwalk;
   string s;
+
+  // StackWalkerAPI is not thread-safe
+  RtsLayer::LockDB();
+
   walker->walkStack(stackwalk);
 
   fprintf(ebsTrace[tid], " |");
@@ -220,6 +224,9 @@ void Tau_sampling_output_callstack (int tid, void* pc) {
       found = 1;
     }
   }
+
+  // StackWalkerAPI is not thread-safe
+  RtsLayer::UnLockDB();
 }
 
 #endif /* TAU_USE_STACKWALKER */
