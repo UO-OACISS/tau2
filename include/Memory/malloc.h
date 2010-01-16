@@ -35,6 +35,7 @@ void *Tau_realloc_C(const char *file, int line, void *p, size_t size);
 void free(void *p);
 
 void *calloc(size_t nmemb, size_t size);
+void *Tau_calloc_C(const char *file, int line, size_t nmemb, size_t size);
 void *realloc(void *ptr, size_t size);
 
 
@@ -69,6 +70,8 @@ void *realloc(void *ptr, size_t size);
 
 #define realloc(p, s) Tau_realloc_C(__FILE__, __LINE__, p, s)
 
+#define calloc(n, s) Tau_calloc_C(__FILE__, __LINE__, n, s)
+
 #else /* TAU_USE_CXX_MALLOC_API */
 /* For C++ */
 
@@ -83,6 +86,7 @@ TauVoidPointer Tau_malloc(const char *file, int line, size_t size);
 void Tau_free(const char *file, int line, TauVoidPointer p);
 
 #define malloc(size) Tau_malloc(__FILE__, __LINE__, size)
+#define calloc(nmemb, size) Tau_calloc(__FILE__, __LINE__, nmemb, size)
 #define free(p) Tau_free(__FILE__, __LINE__, p)
 
 #endif /* TAU_USE_CXX_MALLOC_API */

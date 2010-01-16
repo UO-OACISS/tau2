@@ -276,6 +276,30 @@ TauVoidPointer Tau_malloc(const char *file, int line, size_t size)
 }
 
 //////////////////////////////////////////////////////////////////////
+// Tau_calloc calls the before and after routines and allocates memory
+//////////////////////////////////////////////////////////////////////
+TauVoidPointer Tau_calloc(const char *file, int line, size_t nmemb, size_t size)
+{
+  TAU_USER_EVENT_TYPE *e; 
+
+  /* We get the event that is created */
+  e = Tau_malloc_before(file, line, nmemb * size);
+
+  TauVoidPointer ptr = calloc(nmemb, size);
+
+#ifdef DEBUGPROF
+  printf("TAU_CALLOC<%d>: %s:%d ptr = %p size = %d\n", RtsLayer::myNode(), file, line, ptr, size);
+#endif /* DEBUGPROF */
+
+  /* associate the event generated and its size with the address of memory
+   * allocated by calloc. This is used later for memory leak detection and
+   * to evaluate the size of the memory freed in the Tau_free(ptr) routine. */
+
+  Tau_malloc_after(ptr, nmemb * size, e);
+  return ptr;  /* what was allocated */
+}
+
+//////////////////////////////////////////////////////////////////////
 // Tau_track_memory_allocation does everything that Tau_malloc does except
 // allocate memory
 //////////////////////////////////////////////////////////////////////
@@ -508,6 +532,19 @@ extern "C" void * Tau_realloc_C(const char *file, int line, void *p, size_t size
 
 }
 //////////////////////////////////////////////////////////////////////
+// Tau_calloc for C++ has file and line information
+//////////////////////////////////////////////////////////////////////
+extern "C" void * Tau_calloc_C(const char *file, int line, size_t nmemb, size_t size)
+{
+#ifdef DEBUGPROF
+  printf("C: Tau_calloc: %s:%d\n", file, line);
+#endif /* DEBUGPROF */
+  /* realloc acts like a free and malloc */ 
+  return (void *) Tau_calloc(file, line, nmemb, size);
+
+}
+
+//////////////////////////////////////////////////////////////////////
 // The amount of memory available for use (in MB) 
 //////////////////////////////////////////////////////////////////////
 
@@ -560,7 +597,7 @@ int TauGetFreeMemory(void)
 #endif /* TAU_CATAMOUNT */
 
 /***************************************************************************
- * $RCSfile: TauMemory.cpp,v $   $Author: sameer $
- * $Revision: 1.31 $   $Date: 2009/01/15 19:24:09 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.31 2009/01/15 19:24:09 sameer Exp $ 
+ * $RCSfile: TauMemory.cpp,v $   $Author: amorris $
+ * $Revision: 1.32 $   $Date: 2010/01/16 04:57:33 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.32 2010/01/16 04:57:33 amorris Exp $ 
  ***************************************************************************/
