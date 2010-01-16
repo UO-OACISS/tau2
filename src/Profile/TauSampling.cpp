@@ -87,6 +87,36 @@ using namespace Stackwalker;
 using namespace std;
 #endif
 
+
+#ifdef TAU_USE_HPCSTACK
+
+
+
+
+
+
+#include "hpcstack.cpp"
+
+
+
+
+
+
+
+
+
+
+#endif /* TAU_USE_HPCSTACK */
+
+
+
+
+
+
+
+
+
+
 /*********************************************************************
  * Tau Sampling Record Definition
  ********************************************************************/
@@ -137,31 +167,64 @@ static inline caddr_t get_pc(void *p) {
 }
 
 
+int insideSignalHandler = 0;
+
+extern "C" void *dlmalloc(size_t size);
+
+extern "C" void *__libc_malloc(size_t size);
+
+
+void *malloc(size_t size) {
+    return __libc_malloc(size);
+  if (insideSignalHandler) {
+    return dlmalloc(size);
+  } else {
+    return __libc_malloc(size);
+  }
+} 
+
 
 #ifdef TAU_USE_STACKWALKER
-void show_backtrace (void *pc) {
+
+Walker *walker = Walker::newWalker();
+
+void show_backtrace_stackwalker (void *pc) {
+  printf ("====\n");
   std::vector<Frame> stackwalk;
   string s;
-  Walker *walker = Walker::newWalker();
   walker->walkStack(stackwalk);
-
-  StepperGroup *stepperGroup = walker->getStepperGroup();
-
-  std::set<FrameStepper *> steppers;
-  stepperGroup->getSteppers(steppers);
-  
 
   for (unsigned i=0; i<stackwalk.size(); i++) {
     stackwalk[i].getName(s);
     cout << "Found function " << s << endl;
   }
-  exit(0);
+  //    exit(0);
+}
+
+void Tau_sampling_output_callstack (int tid, void* pc) {
+  int found = 0;
+  std::vector<Frame> stackwalk;
+  string s;
+  walker->walkStack(stackwalk);
+
+  fprintf(ebsTrace[tid], " |");
+
+  for (unsigned i=0; i<stackwalk.size(); i++) {
+    void *ip = (void*)stackwalk[i].getRA();
+
+    if (found) {
+      fprintf(ebsTrace[tid], " %p", ip);
+    }
+    if (ip == pc) {
+      found = 1;
+    }
+  }
 }
 
 #endif /* TAU_USE_STACKWALKER */
 
 #ifdef TAU_USE_LIBUNWIND
-void show_backtrace (void* pc) {
+void show_backtrace_unwind (void* pc) {
   unw_cursor_t cursor; unw_context_t uc;
   unw_word_t ip, sp;
   int found = 0;
@@ -174,9 +237,9 @@ void show_backtrace (void* pc) {
     if (ip == (unw_word_t)pc) {
       found = 1;
     }
-    if (found) {
+    //    if (found) {
       printf ("ip = %lx, sp = %lx\n", (long) ip, (long) sp);
-    }
+      //    }
   }
 }
 
@@ -256,6 +319,10 @@ void Tau_sampling_flush_record(int tid, TauSamplingRecord *record, void *pc) {
   Tau_sampling_output_callstack(tid, pc);
 #endif /* TAU_USE_LIBUNWIND */
 
+#ifdef TAU_USE_STACKWALKER
+  Tau_sampling_output_callstack(tid, pc);
+#endif /* TAU_USE_LIBUNWIND */
+
   fprintf(ebsTrace[tid], "\n");
 }
 
@@ -304,8 +371,11 @@ int Tau_sampling_event_stop(int tid, double* stopTime) {
  * Handler a sample
  ********************************************************************/
 void Tau_sampling_handle_sample(void *pc) {
+
+  insideSignalHandler = 1;
   int tid = RtsLayer::myThread();
   if (!samplingEnabled[tid]) {
+    insideSignalHandler = 0;
     return;
   }
 
@@ -315,7 +385,8 @@ void Tau_sampling_handle_sample(void *pc) {
 
 
   // printf ("[tid=%d] sample on %x\n", tid, pc);
-  show_backtrace(pc);
+  //  show_backtrace_unwind(pc);
+  //show_backtrace_stackwalker(pc);
 
   struct timeval tp;
   gettimeofday(&tp, 0);
@@ -353,6 +424,8 @@ void Tau_sampling_handle_sample(void *pc) {
       profiler = (Profiler *)Tau_query_parent_event(profiler);
     }
   }
+
+  insideSignalHandler = 0;
 }
 
 
