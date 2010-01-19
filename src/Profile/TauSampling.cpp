@@ -174,18 +174,42 @@ int insideSignalHandler = 0;
 #ifdef TAU_USE_STACKWALKER
 
 extern "C" void *dlmalloc(size_t size);
+extern "C" void *dlcalloc(size_t nmemb, size_t size);
+extern "C" void dlfree(void *ptr);
 
 extern "C" void *__libc_malloc(size_t size);
+extern "C" void *__libc_calloc(size_t nmemb, size_t size);
+extern "C" void __libc_free(void *ptr);
 
 
 void *malloc(size_t size) {
-    return __libc_malloc(size);
+  // return __libc_malloc(size);
   if (insideSignalHandler) {
     return dlmalloc(size);
   } else {
     return __libc_malloc(size);
   }
 } 
+
+void *calloc(size_t nmemb, size_t size) {
+  // return __libc_malloc(size);
+  if (insideSignalHandler) {
+    return dlcalloc(nmemb, size);
+  } else {
+    return __libc_calloc(nmemb, size);
+  }
+} 
+
+
+void free(void *ptr) {
+  // return __libc_malloc(size);
+  if (insideSignalHandler) {
+    dlfree(ptr);
+  } else {
+    __libc_free(ptr);
+  }
+} 
+
 
 Walker *walker = Walker::newWalker();
 
