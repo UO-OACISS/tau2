@@ -243,15 +243,11 @@ void *realloc(void *ptr, size_t size) {
 // }
 
 
-Walker *walker = NULL;
+Walker *walker = Walker::newWalker();
 // Frame crapFrame(walker);
 // std::vector<Frame> stackwalk(2000, crapFrame);
 
 void show_backtrace_stackwalker (void *pc) {
-  if (walker == NULL) {
-    walker = Walker::newWalker();
-  }
-
   std::vector<Frame> stackwalk;
 
   RtsLayer::LockDB();
@@ -264,12 +260,10 @@ void show_backtrace_stackwalker (void *pc) {
     cout << "Found function " << s << endl;
   }
   RtsLayer::UnLockDB();
+  exit(0);
 }
 
 void Tau_sampling_output_callstack (int tid, void* pc) {
-  if (walker == NULL) {
-    walker = Walker::newWalker();
-  }
 
   int found = 0;
   std::vector<Frame> stackwalk;
