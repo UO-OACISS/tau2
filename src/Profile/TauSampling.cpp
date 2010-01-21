@@ -167,8 +167,19 @@ static inline caddr_t get_pc(void *p) {
 }
 
 
-int insideSignalHandler = 0;
+int insideSignalHandler[TAU_MAX_THREADS];
 
+class initflags {
+public:
+  initflags(int x) {
+    printf ("TAU: initializing flags %d\n", x);
+    for (int i=0; i<TAU_MAX_THREADS; i++) {
+      insideSignalHandler[i] = 0;
+    }
+  }
+};
+
+initflags foobar(5);
 
 
 #ifdef TAU_USE_STACKWALKER
@@ -176,15 +187,17 @@ int insideSignalHandler = 0;
 extern "C" void *dlmalloc(size_t size);
 extern "C" void *dlcalloc(size_t nmemb, size_t size);
 extern "C" void dlfree(void *ptr);
+extern "C" void *dlrealloc(void *ptr, size_t size);
 
 extern "C" void *__libc_malloc(size_t size);
 extern "C" void *__libc_calloc(size_t nmemb, size_t size);
 extern "C" void __libc_free(void *ptr);
-
+extern "C" void *__libc_realloc(void *ptr, size_t size);
 
 void *malloc(size_t size) {
+  int tid = RtsLayer::myThread();
   // return __libc_malloc(size);
-  if (insideSignalHandler) {
+  if (insideSignalHandler[tid]) {
     return dlmalloc(size);
   } else {
     return __libc_malloc(size);
@@ -192,8 +205,10 @@ void *malloc(size_t size) {
 } 
 
 void *calloc(size_t nmemb, size_t size) {
+  int tid = RtsLayer::myThread();
+//   printf ("Our calloc called!\n");
   // return __libc_malloc(size);
-  if (insideSignalHandler) {
+  if (insideSignalHandler[tid]) {
     return dlcalloc(nmemb, size);
   } else {
     return __libc_calloc(nmemb, size);
@@ -202,20 +217,45 @@ void *calloc(size_t nmemb, size_t size) {
 
 
 void free(void *ptr) {
+  int tid = RtsLayer::myThread();
   // return __libc_malloc(size);
-  if (insideSignalHandler) {
+  if (insideSignalHandler[tid]) {
     dlfree(ptr);
   } else {
     __libc_free(ptr);
   }
 } 
 
+void *realloc(void *ptr, size_t size) {
+  int tid = RtsLayer::myThread();
+  // return __libc_malloc(size);
+  if (insideSignalHandler[tid]) {
+    return dlrealloc(ptr, size);
+  } else {
+    return __libc_realloc(ptr, size);
+  }
+} 
 
-Walker *walker = Walker::newWalker();
+
+// void* operator new(size_t size) {
+  
+
+// }
+
+
+Walker *walker = NULL;
+// Frame crapFrame(walker);
+// std::vector<Frame> stackwalk(2000, crapFrame);
 
 void show_backtrace_stackwalker (void *pc) {
-  printf ("====\n");
+  if (walker == NULL) {
+    walker = Walker::newWalker();
+  }
+
   std::vector<Frame> stackwalk;
+
+  RtsLayer::LockDB();
+  printf ("====\n");
   string s;
   walker->walkStack(stackwalk);
 
@@ -223,10 +263,14 @@ void show_backtrace_stackwalker (void *pc) {
     stackwalk[i].getName(s);
     cout << "Found function " << s << endl;
   }
-  //    exit(0);
+  RtsLayer::UnLockDB();
 }
 
 void Tau_sampling_output_callstack (int tid, void* pc) {
+  if (walker == NULL) {
+    walker = Walker::newWalker();
+  }
+
   int found = 0;
   std::vector<Frame> stackwalk;
   string s;
@@ -404,10 +448,10 @@ int Tau_sampling_event_stop(int tid, double* stopTime) {
  ********************************************************************/
 void Tau_sampling_handle_sample(void *pc) {
 
-  insideSignalHandler = 1;
   int tid = RtsLayer::myThread();
+  insideSignalHandler[tid] = 1;
   if (!samplingEnabled[tid]) {
-    insideSignalHandler = 0;
+    insideSignalHandler[tid] = 0;
     return;
   }
 
@@ -417,8 +461,8 @@ void Tau_sampling_handle_sample(void *pc) {
 
 
   // printf ("[tid=%d] sample on %x\n", tid, pc);
-  //  show_backtrace_unwind(pc);
-  //show_backtrace_stackwalker(pc);
+  //show_backtrace_unwind(pc);
+  show_backtrace_stackwalker(pc);
 
   struct timeval tp;
   gettimeofday(&tp, 0);
@@ -457,7 +501,7 @@ void Tau_sampling_handle_sample(void *pc) {
     }
   }
 
-  insideSignalHandler = 0;
+  insideSignalHandler[tid] = 0;
 }
 
 
