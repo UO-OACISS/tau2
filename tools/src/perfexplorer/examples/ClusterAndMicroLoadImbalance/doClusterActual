@@ -15,6 +15,6 @@ then
   exit 1
 fi
 
-working_path=`echo $0 | sed 's/doCluster//'`
+working_path=`echo $0 | sed 's/doClusterActual//'`
 
-eval perfexplorer -c perfexplorer_working -n -i ${working_path}clusterTest.py -p "tauData=$1,prefix=$2"
+eval perfexplorer -c perfexplorer_working -n -i ${working_path}clusterTestActual.py -p "tauData=$1,prefix=$2"

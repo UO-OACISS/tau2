@@ -1,11 +1,11 @@
 #!/bin/bash
 
-if [ $# -lt 2 ]
+if [ $# -lt 1 ]
 then
   echo ""
   echo "Usage: "
   echo ""
-  echo "  $0 <path-to-TAU-data> <iteration prefix>"
+  echo "  $0 <path-to-TAU-data>"
   echo ""
   echo "Notes:"
   echo ""
@@ -15,6 +15,6 @@ then
   exit 1
 fi
 
-working_path=`echo $0 | sed 's/doCluster//'`
+working_path=`echo $0 | sed 's/doCauses//'`
 
-eval perfexplorer -c perfexplorer_working -n -i ${working_path}clusterTest.py -p "tauData=$1,prefix=$2"
+eval perfexplorer -c perfexplorer_working -n -i ${working_path}loadImbalanceCauses.py -p "tauData=$1,rules=${working_path}Causes.drl"

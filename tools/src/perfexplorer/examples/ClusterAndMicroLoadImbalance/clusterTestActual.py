@@ -4,6 +4,7 @@ from java.util import *
 import math
 
 tauData = ""
+masterMeans = None
 iterationPrefix = "Iteration"
 nonMPI = "Computation"
 MPI = "MPI"
@@ -45,20 +46,25 @@ def loadFile(fileName):
 def doLoadImbalance(trial, clusterID):
 	# extract the non-callpath events from the trial
 	#print "extracting non-callpath events",
+	global masterMeans
 	trial.setIgnoreWarnings(True)
 	extractor = ExtractNonCallpathEventOperation(trial)
 	extracted = extractor.processData().get(0)
-	mainEvent = extracted.getMainEvent()
+	mainEventLong = extracted.getMainEvent()
+	mainEvent = Utilities.shortenEventName(mainEventLong)
 	#print "Main Event: ", mainEvent
 
 	# compute the load imbalance
 	#print "computing load imbalance",
 	splitter = LoadImbalanceOperation(extracted)
+	splitter.setPercentage(False)
 	loadBalance = splitter.processData()
+	conversion = 1.0 / 1000000.0
 
 	thread = 0
 	metric = trial.getTimeMetric()
-	event = LoadImbalanceOperation.KERNEL_COMPUTATION
+	#event = LoadImbalanceOperation.KERNEL_COMPUTATION
+	event = LoadImbalanceOperation.COMPUTATION
 
 	means = loadBalance.get(LoadImbalanceOperation.MEAN)
 	maxs = loadBalance.get(LoadImbalanceOperation.MAX)
@@ -66,33 +72,39 @@ def doLoadImbalance(trial, clusterID):
 	stddevs = loadBalance.get(LoadImbalanceOperation.STDDEV)
 	ratios = loadBalance.get(LoadImbalanceOperation.LOAD_BALANCE)
 
-	mean = means.getExclusive(thread, event, metric)
-	max = maxs.getExclusive(thread, event, metric)
-	min = mins.getExclusive(thread, event, metric)
-	stddev = stddevs.getExclusive(thread, event, metric)
+	mean = means.getExclusive(thread, event, metric) * conversion
+	max = maxs.getExclusive(thread, event, metric) * conversion
+	min = mins.getExclusive(thread, event, metric) * conversion
+	stddev = stddevs.getExclusive(thread, event, metric) * conversion
 	ratio = ratios.getExclusive(thread, event, metric)
 
-	print "%d\t %d\t %s\t %.2f%%\t %.2f%%\t %.2f%%\t %.2f%%\t %.2f%%\t" % (clusterID, trial.getThreads().size(), event, mean*100, max*100, min*100, stddev*100, ratio*100)
+	inclusive = masterMeans.getInclusive(0, mainEventLong, metric) * conversion
+	print "%d\t %d\t %.2f\t %s\t %.2f\t %.2f\t %.2f\t %.2f\t %.2f\t" % (clusterID, trial.getThreads().size(), inclusive, event, mean, max, min, stddev, ratio)
 	clusterID = clusterID + 1
 	return clusterID
 
-def computeLoadBalance(trial, callpath):
+def computeLoadBalance(trial, callpath, numphases):
 	# extract the non-callpath events from the trial
+	global masterMeans
 	trial.setIgnoreWarnings(True)
 	extracted = trial
 	if callpath != True:
 		extractor = ExtractNonCallpathEventOperation(trial)
 		extracted = extractor.processData().get(0)
-	mainEvent = Utilities.shortenEventName(extracted.getMainEvent())
+	mainEventLong = extracted.getMainEvent()
+	mainEvent = extracted.getMainEvent()
 	#print "Main Event: ", mainEvent
 
 	# compute the load imbalance
 	splitter = LoadImbalanceOperation(extracted)
+	splitter.setPercentage(False)
 	loadBalance = splitter.processData()
+	conversion = 1.0 / 1000000.0
 				
 	thread = 0
 	metric = trial.getTimeMetric()
-	event = LoadImbalanceOperation.KERNEL_COMPUTATION
+	#event = LoadImbalanceOperation.KERNEL_COMPUTATION
+	event = LoadImbalanceOperation.COMPUTATION
 
 	means = loadBalance.get(LoadImbalanceOperation.MEAN)
 	maxs = loadBalance.get(LoadImbalanceOperation.MAX)
@@ -100,19 +112,19 @@ def computeLoadBalance(trial, callpath):
 	stddevs = loadBalance.get(LoadImbalanceOperation.STDDEV)
 	ratios = loadBalance.get(LoadImbalanceOperation.LOAD_BALANCE)
 
-	mean = means.getExclusive(thread, event, metric)
-	max = maxs.getExclusive(thread, event, metric)
-	min = mins.getExclusive(thread, event, metric)
-	stddev = stddevs.getExclusive(thread, event, metric)
+	mean = means.getExclusive(thread, event, metric) * conversion
+	max = maxs.getExclusive(thread, event, metric) * conversion
+	min = mins.getExclusive(thread, event, metric) * conversion
+	stddev = stddevs.getExclusive(thread, event, metric) * conversion
 	ratio = ratios.getExclusive(thread, event, metric)
 	#print mean, max, min, stddev, ratio
 
-	if callpath:
-		print "%s\t %d\t %ls\t %.2f%%\t %.2f%%\t %.2f%%\t %.2f%%\t %.2f%%\t" % (mainEvent, trial.getThreads().size(), event, mean*100, max*100, min*100, stddev*100, ratio*100)
-	else:
-		print "%d\t %s\t %.2f%%\t %.2f%%\t %.2f%%\t %.2f%%\t %.2f%%\t" % (trial.getThreads().size(), event, mean*100, max*100, min*100, stddev*100, ratio*100)
+	inclusive = masterMeans.getInclusive(0, mainEventLong, metric) * conversion
 
-	return mean, max, min, stddev
+	if numphases < 100:
+		print "%s\t %d\t %.2f\t %ls\t %.2f\t %.2f\t %.2f\t %.2f\t %.2f\t" % (mainEvent, trial.getThreads().size(), inclusive, event, mean, max, min, stddev, ratio)
+
+	return mean, max, min, stddev, inclusive
 
 def myMax(a, b):
 	if a > b:
@@ -127,6 +139,7 @@ def myMin(a, b):
 def main():
 	global filename
 	global iterationPrefix
+	global masterMeans
 	print "--------------- JPython test script start ------------"
 	print "doing cluster test"
 	# get the parameters
@@ -143,6 +156,12 @@ def main():
 	result.setIgnoreWarnings(True)
 	extractor = ExtractNonCallpathEventOperation(result)
 	extracted = extractor.processData().get(0)
+
+	extracted.setIgnoreWarnings(True)
+	print "Getting basic statistics..."
+	statter = BasicStatisticsOperation(extracted)
+	masterStats = statter.processData()
+	masterMeans = masterStats.get(BasicStatisticsOperation.MEAN)
 	
 	# split communication and computation
 	print "splitting communication and computation"
@@ -187,7 +206,7 @@ def main():
 		clusters.put(result)
 
 	clusterID = -1
-	print "\nCluster\t Procs\t Type\t\t\t AVG\t MAX\t MIN\t STDEV\t AVG/MAX"
+	print "\nCluster\t Procs\t Incl.\t Type\t\t AVG\t MAX\t MIN\t STDEV\t AVG/MAX"
 	clusterID = doLoadImbalance(result, clusterID)
 
 	for trial in clusters:
@@ -202,33 +221,48 @@ def main():
 			
 	clusterID = 0
 	for trial in clusters:
+		#print "Getting basic statistics..."
+		#statter = BasicStatisticsOperation(trial)
+		#masterStats = statter.processData()
+		#masterMeans = masterStats.get(BasicStatisticsOperation.MEAN)
+
 		print "\n\nSplitting phases in cluster", clusterID
 		splitter = SplitTrialPhasesOperation(trial, iterationPrefix)
 		phases = splitter.processData()
 		#print phases.size()
 		totalMean = 0.0
+		totalInclusive = 0.0
 		avgMax = 0.0
 		avgMin = 1.0
+		totalMax = 0.0
+		totalMin = 0.0
 		totalStddev = 0.0
 		totalRatio = 0.0
 
-		print "LoopID\t\t Procs\t Type\t\t\t AVG\t MAX\t MIN\t STDEV\t AVG/MAX"
+		print "LoopID\t\t Procs\t Incl.\t Type\t\t AVG\t MAX\t MIN\t STDEV\t AVG/MAX"
 		for phase in phases:
 			#print "main event:", phase.getMainEvent()
 			#for event in phase.getEvents():
 			#print event
-			mean, max, min, stddev = computeLoadBalance(phase, True)
+			mean, max, min, stddev, inclusive = computeLoadBalance(phase, True, phases.size())
 			totalMean = totalMean + mean
+			totalMax = totalMax + max
+			totalMin = totalMin + min
 			avgMax = myMax(avgMax, max)
 			avgMin = myMin(avgMin, min)
 			totalStddev = totalStddev + (stddev * stddev)
+			totalInclusive = totalInclusive + inclusive
 
 		avgMean = totalMean / phases.size()
+		avgMax = totalMax / phases.size()
+		avgMin = totalMin / phases.size()
 		avgStddev = math.sqrt(totalStddev / phases.size())
 		avgRatio = avgMean / avgMax
+		avgInclusive = totalInclusive / phases.size()
 
-		event = LoadImbalanceOperation.KERNEL_COMPUTATION
-		print "%s\t\t %d\t %ls\t %.2f%%\t %.2f%%\t %.2f%%\t %.2f%%\t %.2f%%\t" % ("Average", trial.getThreads().size(), event, avgMean*100, avgMax*100, avgMin*100, avgStddev*100, avgRatio*100)
+		#event = LoadImbalanceOperation.KERNEL_COMPUTATION
+		event = LoadImbalanceOperation.COMPUTATION
+		print "%s\t\t %d\t %.2f\t %s\t %.2f\t %.2f\t %.2f\t %.2f\t %.2f\t" % ("Average", trial.getThreads().size(), avgInclusive, event, avgMean, avgMax, avgMin, avgStddev, avgRatio)
 		clusterID = clusterID + 1
 	
 	print "---------------- JPython test script end -------------"
