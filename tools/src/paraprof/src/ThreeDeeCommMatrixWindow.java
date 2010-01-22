@@ -23,9 +23,9 @@ import edu.uoregon.tau.vis.*;
 /**
  * 3D Communication Matrix Window 
  * 
- * <P>CVS $Id: ThreeDeeCommMatrixWindow.java,v 1.5 2009/09/10 00:13:49 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeCommMatrixWindow.java,v 1.6 2010/01/22 04:19:00 amorris Exp $</P>
  * @author Alan Morris, Kevin Huck
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, ActionListener, ThreeDeeImageProvider,
         VisCanvasListener, Printable {
@@ -178,8 +178,6 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
 
     public void closeThisWindow() {
         setVisible(false);
-
-        ParaProf.decrementNumWindows();
 
         if (barPlot != null) {
             barPlot.cleanUp();
