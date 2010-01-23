@@ -24,9 +24,9 @@ import edu.uoregon.tau.vis.VisRenderer;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.17 2009/11/12 22:50:29 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.18 2010/01/23 04:43:34 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.17 $
+ * @version	$Revision: 1.18 $
  */
 public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
@@ -388,7 +388,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
                 scalePanel.setPosition(0, window.getSelectedHeightRatio());
                 scalePanel.setPosition(1, window.getSelectedColorRatio());
-                
+
                 window.redraw();
             }
         });
@@ -406,7 +406,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
     private String getScaleString(double value, Metric metric, ValueType valueType) {
         int units = window.getUnits();
-        
+
         if (!metric.isTimeMetric() || !ValueType.isTimeUnits(valueType)) {
             units = 0;
         }
@@ -417,22 +417,15 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         String mins[] = new String[2];
         String maxs[] = new String[2];
 
-//        mins[0] = getScaleString(window.getMinHeightValue(), settings.getHeightMetric(),settings.getHeightValue());
-//        mins[1] = getScaleString(window.getMinColorValue(), settings.getColorMetric(),settings.getColorValue());
         mins[0] = "0";
         mins[1] = "0";
-        maxs[0] = getScaleString(window.getMaxHeightValue(), settings.getHeightMetric(),settings.getHeightValue());
-        maxs[1] = getScaleString(window.getMaxColorValue(), settings.getColorMetric(),settings.getColorValue());
+        maxs[0] = getScaleString(window.getMaxHeightValue(), settings.getHeightMetric(), settings.getHeightValue());
+        maxs[1] = getScaleString(window.getMaxColorValue(), settings.getColorMetric(), settings.getColorValue());
 
-        //        String labels[] = { "x", "y", "z", "color" };
         String labels[] = { "height", "color" };
-        //System.out.println(window.getHeightUnitLabel());
-//        System.out.println("---");
-//        System.out.println(window.getMinColorValue());
-//        System.out.println(mins[1]);
         String unitLabels[] = { window.getHeightUnitLabel(), window.getColorUnitLabel() };
         scalePanel.setRanges(mins, maxs, labels, unitLabels);
-        
+
         scalePanel.setPosition(0, window.getSelectedHeightRatio());
         scalePanel.setPosition(1, window.getSelectedColorRatio());
 

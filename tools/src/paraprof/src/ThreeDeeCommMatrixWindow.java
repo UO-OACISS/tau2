@@ -23,9 +23,9 @@ import edu.uoregon.tau.vis.*;
 /**
  * 3D Communication Matrix Window 
  * 
- * <P>CVS $Id: ThreeDeeCommMatrixWindow.java,v 1.7 2010/01/23 02:17:45 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeCommMatrixWindow.java,v 1.8 2010/01/23 04:43:34 amorris Exp $</P>
  * @author Alan Morris, Kevin Huck
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  */
 public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, ActionListener, ThreeDeeImageProvider,
         VisCanvasListener, Printable {
@@ -73,6 +73,8 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
 
     private JTextField heightValueField = new JTextField("");
     private JTextField colorValueField = new JTextField("");
+
+    private ThreeDeeScalePanel scalePanel;
 
     public ThreeDeeCommMatrixWindow(String title, HeatMapData mapData, ParaProfTrial ppTrial, Component invoker) {
         this.ppTrial = ppTrial;
@@ -134,15 +136,37 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         return window;
     }
 
-    //    public String getSelectedHeightValue() {
-    //        return "not implemented";
-    //    }
-    //
-    //    public String getSelectedColorValue() {
-    //        return "not implemented";
-    //    }
+    public double getSelectedHeightValue() {
 
-    public String getSelectedHeightValue() {
+        if (selections[1] < 0 || selections[0] < 0) {
+            return 0;
+        }
+
+        int x = selections[0];
+        int y = selections[1];
+
+        double heightValue = mapData.get(x, y, currentPath, heightMetric);
+        double colorValue = mapData.get(x, y, currentPath, colorMetric);
+        return heightValue;
+
+    }
+
+    public double getSelectedColorValue() {
+
+        if (selections[1] < 0 || selections[0] < 0) {
+            return 0;
+        }
+
+        int x = selections[0];
+        int y = selections[1];
+
+        double heightValue = mapData.get(x, y, currentPath, heightMetric);
+        double colorValue = mapData.get(x, y, currentPath, colorMetric);
+        return colorValue;
+
+    }
+
+    public String getSelectedHeightValueString() {
 
         if (selections[1] < 0 || selections[0] < 0) {
             return "";
@@ -160,7 +184,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         return retval;
     }
 
-    public String getSelectedColorValue() {
+    public String getSelectedColorValueString() {
 
         if (selections[1] < 0 || selections[0] < 0) {
             return "";
@@ -215,11 +239,10 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
                 }
                 textField.setCaretPosition(0);
 
-                heightValueField.setText(getSelectedHeightValue());
-                colorValueField.setText(getSelectedColorValue());
+//                updateScalePanel();
 
-                //                scalePanel.setPosition(0, window.getSelectedHeightRatio());
-                //                scalePanel.setPosition(1, window.getSelectedColorRatio());
+                scalePanel.setPosition(0, getSelectedHeightRatio());
+                scalePanel.setPosition(1, getSelectedColorRatio());
 
                 redraw();
             }
@@ -236,12 +259,81 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         return panel;
     }
 
-    public void redraw() {
+    private void setSelections() {
 
+        heightValueField.setText(getSelectedHeightValueString());
+        colorValueField.setText(getSelectedColorValueString());
         barPlot.setSelectedCol(selections[1]);
         barPlot.setSelectedRow(selections[0]);
+    }
 
+    public void redraw() {
+        setSelections();
         visRenderer.redraw();
+    }
+
+    private String getScaleString(double value) {
+        return UtilFncs.getOutputString(0, value, 6, false).trim();
+    }
+
+    float getSelectedHeightRatio() {
+        float minColorValue = (float) mapData.getMin(currentPath, colorMetric);
+        float maxColorValue = (float) mapData.getMax(currentPath, colorMetric);
+        float minHeightValue = (float) mapData.getMin(currentPath, heightMetric);
+        float maxHeightValue = (float) mapData.getMax(currentPath, heightMetric);
+
+        float heightRatio = (float) getSelectedHeightValue() / maxHeightValue;
+        return heightRatio;
+    }
+
+    float getSelectedColorRatio() {
+        float minColorValue = (float) mapData.getMin(currentPath, colorMetric);
+        float maxColorValue = (float) mapData.getMax(currentPath, colorMetric);
+        float minHeightValue = (float) mapData.getMin(currentPath, heightMetric);
+        float maxHeightValue = (float) mapData.getMax(currentPath, heightMetric);
+        float colorRatio = (float) getSelectedHeightValue() / maxColorValue;
+        return colorRatio;
+    }
+
+    private void updateScalePanel() {
+        String mins[] = new String[2];
+        String maxs[] = new String[2];
+
+        float minColorValue = (float) mapData.getMin(currentPath, colorMetric);
+        float maxColorValue = (float) mapData.getMax(currentPath, colorMetric);
+        float minHeightValue = (float) mapData.getMin(currentPath, heightMetric);
+        float maxHeightValue = (float) mapData.getMax(currentPath, heightMetric);
+
+        mins[0] = "0";
+        mins[1] = "0";
+        maxs[0] = getScaleString(maxHeightValue);
+        maxs[1] = getScaleString(maxColorValue);
+
+        String labels[] = { "height", "color" };
+        String heightUnits = "bytes";
+        String colorUnits = "bytes";
+        if (heightMetric == CALLS) {
+            heightUnits = "calls";
+        }
+
+        if (colorMetric == CALLS) {
+            colorUnits = "calls";
+        }
+
+        String unitLabels[] = { heightUnits, colorUnits };
+        scalePanel.setRanges(mins, maxs, labels, unitLabels);
+
+        scalePanel.setPosition(0, getSelectedHeightRatio());
+        scalePanel.setPosition(1, getSelectedColorRatio());
+
+    }
+
+    private JPanel createScalePanel() {
+        if (scalePanel == null) {
+            scalePanel = ThreeDeeScalePanel.CreateScalePanel();
+            updateScalePanel();
+        }
+        return scalePanel.getJPanel();
     }
 
     private void buildPanels() {
@@ -250,6 +342,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         // Create the 3d control panel
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+        tabbedPane.addTab("Scales", createScalePanel());
         tabbedPane.addTab("Plot", barPlot.getControlPanel(visRenderer));
         tabbedPane.addTab("Axes", barPlot.getAxes().getControlPanel(visRenderer));
         tabbedPane.addTab("ColorScale", colorScale.getControlPanel(visRenderer));
@@ -426,7 +519,9 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
 
         pathSelector = new SteppedComboBox(mapData.getPaths().toArray());
         heightComboBox = new SteppedComboBox(metricStrings);
+        heightComboBox.setSelectedIndex(heightMetric);
         colorComboBox = new SteppedComboBox(metricStrings);
+        colorComboBox.setSelectedIndex(colorMetric);
         colorComboBox.setWidth(50);
         pathSelector.setWidth(50);
         heightComboBox.setWidth(50);
@@ -547,6 +642,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         if (!animate) {
             barPlot.setValues(newHeightValues, newColorValues);
             visRenderer.redraw();
+
         } else {
 
             boolean first = false;
@@ -720,6 +816,10 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
     }
 
     private void redrawHeatMap() {
+        setSelections();
+        updateScalePanel();
+
+
         // processData can't be run on the AWT thread, it will wait for a possible
         // animator thread, which uses JOGL, which always runs on the AWT thread
         java.lang.Thread thread = new java.lang.Thread(new Runnable() {

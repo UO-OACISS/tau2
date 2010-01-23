@@ -28,6 +28,7 @@ public class ThreeDeeScalePanel {
         this.scaleBars = new ScaleBar[labels.length];
         if (panel != null) {
             createPanel();
+            panel.updateUI(); 
             panel.repaint();
         }
     }
