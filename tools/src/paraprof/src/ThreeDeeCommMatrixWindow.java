@@ -7,7 +7,6 @@ import java.awt.image.ImageObserver;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
-import java.net.URL;
 import java.util.*;
 import java.util.List;
 
@@ -15,6 +14,7 @@ import javax.swing.*;
 
 import edu.uoregon.tau.common.StoppableThread;
 import edu.uoregon.tau.common.Utility;
+import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.Thread;
@@ -23,9 +23,9 @@ import edu.uoregon.tau.vis.*;
 /**
  * 3D Communication Matrix Window 
  * 
- * <P>CVS $Id: ThreeDeeCommMatrixWindow.java,v 1.6 2010/01/22 04:19:00 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeCommMatrixWindow.java,v 1.7 2010/01/23 02:17:45 amorris Exp $</P>
  * @author Alan Morris, Kevin Huck
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  */
 public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, ActionListener, ThreeDeeImageProvider,
         VisCanvasListener, Printable {
@@ -69,9 +69,17 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
 
     private StoppableThread animator;
 
+    private int selections[] = new int[2];
+
+    private JTextField heightValueField = new JTextField("");
+    private JTextField colorValueField = new JTextField("");
+
     public ThreeDeeCommMatrixWindow(String title, HeatMapData mapData, ParaProfTrial ppTrial, Component invoker) {
         this.ppTrial = ppTrial;
         this.mapData = mapData;
+
+        // set to "none"
+        selections[0] = -1;
 
         buildPanels();
 
@@ -124,6 +132,116 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         ThreeDeeCommMatrixWindow window = new ThreeDeeCommMatrixWindow("3D Communication Matrix", mapData, ppTrial, parentFrame);
 
         return window;
+    }
+
+    //    public String getSelectedHeightValue() {
+    //        return "not implemented";
+    //    }
+    //
+    //    public String getSelectedColorValue() {
+    //        return "not implemented";
+    //    }
+
+    public String getSelectedHeightValue() {
+
+        if (selections[1] < 0 || selections[0] < 0) {
+            return "";
+        }
+
+        int x = selections[0];
+        int y = selections[1];
+
+        double heightValue = mapData.get(x, y, currentPath, heightMetric);
+        double colorValue = mapData.get(x, y, currentPath, colorMetric);
+
+        int units = 0;
+
+        String retval = UtilFncs.getOutputString(units, heightValue, 6, false);
+        return retval;
+    }
+
+    public String getSelectedColorValue() {
+
+        if (selections[1] < 0 || selections[0] < 0) {
+            return "";
+        }
+
+        int x = selections[0];
+        int y = selections[1];
+
+        double colorValue = mapData.get(x, y, currentPath, colorMetric);
+
+        int units = 0;
+
+        String retval = UtilFncs.getOutputString(units, colorValue, 6, false);
+        return retval;
+    }
+
+    private JPanel createSelectorPanel(int min, int max, final List names, final int index) {
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridBagLayout());
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        selections[index] = Math.min(selections[index], max);
+        selections[index] = Math.max(selections[index], min);
+
+        final JScrollBar scrollBar = new JScrollBar(JScrollBar.HORIZONTAL, selections[index], 1, min, max);
+        scrollBar.setBlockIncrement((max - min) / 10);
+
+        final JTextField textField = new JTextField("<none>");
+
+        textField.setHorizontalAlignment(JTextField.CENTER);
+
+        if (selections[index] >= 0) {
+            if (names != null) {
+                textField.setText((String) names.get(selections[index]));
+            }
+        }
+
+        textField.setEditable(false);
+        textField.setCaretPosition(0);
+
+        scrollBar.addAdjustmentListener(new AdjustmentListener() {
+            public void adjustmentValueChanged(AdjustmentEvent e) {
+                int selection = scrollBar.getValue();
+                selections[index] = selection;
+                if (selection >= 0 && names != null) {
+                    textField.setText((String) names.get(selection));
+                } else {
+                    textField.setText("<none>");
+                }
+                textField.setCaretPosition(0);
+
+                heightValueField.setText(getSelectedHeightValue());
+                colorValueField.setText(getSelectedColorValue());
+
+                //                scalePanel.setPosition(0, window.getSelectedHeightRatio());
+                //                scalePanel.setPosition(1, window.getSelectedColorRatio());
+
+                redraw();
+            }
+        });
+
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 0.5;
+        gbc.weighty = 0.5;
+
+        Utility.addCompItem(panel, textField, gbc, 1, 0, 1, 1);
+        Utility.addCompItem(panel, scrollBar, gbc, 1, 1, 1, 1);
+
+        return panel;
+    }
+
+    public void redraw() {
+
+        barPlot.setSelectedCol(selections[1]);
+        barPlot.setSelectedRow(selections[0]);
+
+        visRenderer.redraw();
     }
 
     private void buildPanels() {
@@ -315,43 +433,69 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
 
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.BOTH;
-        c.anchor = GridBagConstraints.CENTER;
-        c.weightx = 0.01;
-        c.insets = new Insets(2, 2, 2, 2);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.weightx = 0.01;
+        gbc.insets = new Insets(2, 2, 2, 2);
 
         // title across the top
-        c.gridx = 0;
-        c.gridy = 0;
-        c.gridwidth = 5;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 5;
         JLabel title = new JLabel(label, JLabel.CENTER);
         title.setFont(new Font("PE", title.getFont().getStyle(), title.getFont().getSize() * 2));
-        panel.add(title, c);
+        panel.add(title, gbc);
 
         this.pathSelector.setSelectedItem(currentPath);
         this.pathSelector.addActionListener(this);
         //        this.pathSelector.addKeyListener(this.heatMap.getScanner());
-        c.gridy = 1;
-        panel.add(new JLabel("Callpath:"), c);
-        c.gridy = 2;
-        panel.add(this.pathSelector, c);
+        gbc.gridy = 1;
+        panel.add(new JLabel("Callpath:"), gbc);
+        gbc.gridy = 2;
+        panel.add(this.pathSelector, gbc);
 
         heightComboBox.setSelectedItem(currentPath);
         heightComboBox.addActionListener(this);
         //        this.figureSelector.addKeyListener(this.heatMap.getScanner());
-        c.gridy = 3;
-        panel.add(new JLabel("Height Value:"), c);
-        c.gridy = 4;
-        panel.add(this.heightComboBox, c);
+        gbc.gridy = 3;
+        panel.add(new JLabel("Height Value:"), gbc);
+        gbc.gridy = 4;
+        panel.add(this.heightComboBox, gbc);
 
         colorComboBox.setSelectedItem(currentPath);
         colorComboBox.addActionListener(this);
         //        this.figureSelector.addKeyListener(this.heatMap.getScanner());
-        c.gridy = 5;
-        panel.add(new JLabel("Color Value:"), c);
-        c.gridy = 6;
-        panel.add(this.colorComboBox, c);
+        gbc.gridy = 5;
+        panel.add(new JLabel("Color Value:"), gbc);
+        gbc.gridy = 6;
+        panel.add(this.colorComboBox, gbc);
+
+        JPanel selectionPanel = new JPanel();
+        selectionPanel.setLayout(new GridBagLayout());
+        //        selectionPanel.setBorder(BorderFactory.createLoweredBevelBorder());
+
+        heightValueField.setEditable(false);
+        colorValueField.setEditable(false);
+
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0.0;
+        VisTools.addCompItem(selectionPanel, new JLabel("Sender"), gbc, 0, 0, 1, 1);
+        VisTools.addCompItem(selectionPanel, new JLabel("Receiver"), gbc, 0, 1, 1, 1);
+        VisTools.addCompItem(selectionPanel, new JLabel("Height value"), gbc, 0, 2, 1, 1);
+        VisTools.addCompItem(selectionPanel, new JLabel("Color value"), gbc, 0, 3, 1, 1);
+
+        JPanel functionSelectorPanel = createSelectorPanel(-1, threadNames.size(), threadNames, 0);
+        JPanel nodeSelectorPanel = createSelectorPanel(0, threadNames.size(), threadNames, 1);
+
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 1.0;
+        VisTools.addCompItem(selectionPanel, functionSelectorPanel, gbc, 1, 0, 1, 1);
+        VisTools.addCompItem(selectionPanel, nodeSelectorPanel, gbc, 1, 1, 1, 1);
+        VisTools.addCompItem(selectionPanel, heightValueField, gbc, 1, 2, 1, 1);
+        VisTools.addCompItem(selectionPanel, colorValueField, gbc, 1, 3, 1, 1);
+
+        VisTools.addCompItem(panel, selectionPanel, gbc, 0, 7, 1, 1);
 
         return panel;
     }
@@ -577,7 +721,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
 
     private void redrawHeatMap() {
         // processData can't be run on the AWT thread, it will wait for a possible
-        // animator thread, which uses JOGL, which always runs on th AWT thread
+        // animator thread, which uses JOGL, which always runs on the AWT thread
         java.lang.Thread thread = new java.lang.Thread(new Runnable() {
             public void run() {
                 processData();
