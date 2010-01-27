@@ -34,6 +34,11 @@
 #include <catamount/catmalloc.h>
 #endif /* TAU_CATAMOUNT */
 
+
+#ifdef TAU_BGP
+#include <kernel_interface.h>
+#endif
+
 /* Which platforms support mallinfo? */
 #ifndef TAU_HASMALLINFO
 #if (defined (__linux__) || defined (_AIX) || defined(sgi) || \
@@ -119,6 +124,14 @@ int TauDisableTrackingMemoryHeadroom(void) {
 // Get memory size (max resident set size) in KB 
 //////////////////////////////////////////////////////////////////////
 double TauGetMaxRSS(void) {
+#ifdef TAU_BGP
+  uint32_t mem, stack_size, heap_size;
+  Kernel_GetMemorySize( KERNEL_MEMSIZE_STACK, &stack_size );
+  Kernel_GetMemorySize( KERNEL_MEMSIZE_HEAP, &heap_size );
+  mem = stack_size + heap_size; /* in bytes */
+  return heap_size / 1024;
+#endif
+
 #ifdef TAU_HASMALLINFO
   struct mallinfo minfo = mallinfo();
   double used = (double) ((unsigned int) minfo.hblkhd + 0.0 + (unsigned int) minfo.usmblks + (unsigned int) minfo.uordblks);
@@ -265,8 +278,8 @@ void TauTrackMemoryHeadroomHere(void) {
   
 /***************************************************************************
  * $RCSfile: TauHandler.cpp,v $   $Author: amorris $
- * $Revision: 1.21 $   $Date: 2009/10/27 19:21:54 $
- * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.21 2009/10/27 19:21:54 amorris Exp $ 
+ * $Revision: 1.22 $   $Date: 2010/01/27 00:47:51 $
+ * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.22 2010/01/27 00:47:51 amorris Exp $ 
  ***************************************************************************/
 
 	

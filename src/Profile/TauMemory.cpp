@@ -48,6 +48,10 @@ using namespace std;
 
 #include <stdlib.h>
 
+#ifdef TAU_BGP
+#include <kernel_interface.h>
+#endif
+
 
 //////////////////////////////////////////////////////////////////////
 // Class for building the map
@@ -565,6 +569,15 @@ int TauGetFreeMemory(void)
 #else /* TAU_CATAMOUNT */
 int TauGetFreeMemory(void)
 {
+
+#ifdef TAU_BGP
+  uint32_t available_heap;
+  Kernel_GetMemorySize( KERNEL_MEMSIZE_ESTHEAPAVAIL, &available_heap );
+  return available_heap / (1024 * 1024);
+#endif
+
+
+
   char* blocks[TAU_BLOCK_COUNT];
   char* ptr;
   int i,j;
@@ -598,6 +611,6 @@ int TauGetFreeMemory(void)
 
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: amorris $
- * $Revision: 1.32 $   $Date: 2010/01/16 04:57:33 $
- * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.32 2010/01/16 04:57:33 amorris Exp $ 
+ * $Revision: 1.33 $   $Date: 2010/01/27 00:47:51 $
+ * TAU_VERSION_ID: $Id: TauMemory.cpp,v 1.33 2010/01/27 00:47:51 amorris Exp $ 
  ***************************************************************************/
