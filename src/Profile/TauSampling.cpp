@@ -93,6 +93,7 @@ extern "C" {
 #include <unwind.h>
 }
 
+extern int hpctoolkit_process_started;
 #endif /* TAU_USE_HPCTOOLKIT */
 
 
@@ -558,8 +559,16 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
  * PAPI Overflow handler
  ********************************************************************/
 void Tau_sampling_papi_overflow_handler(int EventSet, void *address, x_int64 overflow_vector, void *context) {
-  //fprintf(stderr,"Overflow at %p! bit=0x%llx \n", address,overflow_vector);
+  // fprintf(stderr,"Overflow at %p! bit=0x%llx \n", address,overflow_vector);
   // Tau_sampling_handle_sample(address);
+
+#ifdef TAU_USE_HPCTOOLKIT
+  if (hpctoolkit_process_started == 0) {
+    printf ("nope, quitting\n");
+    return;
+  }
+#endif
+
   Tau_sampling_handle_sample(address, context);
 }
 
@@ -588,9 +597,6 @@ int Tau_sampling_init(int tid) {
   int i;
 
 
-#ifdef TAU_USE_HPCTOOLKIT
-  unw_init();
-#endif
 
   //  printf ("init called! tid = %d\n", tid);
   static struct itimerval itval;
