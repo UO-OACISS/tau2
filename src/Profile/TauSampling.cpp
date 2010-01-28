@@ -88,25 +88,12 @@ using namespace std;
 #endif
 
 
-#ifdef TAU_USE_HPCSTACK
+#ifdef TAU_USE_HPCTOOLKIT
+extern "C" {
+#include <unwind.h>
+}
 
-
-
-
-
-
-#include "hpcstack.cpp"
-
-
-
-
-
-
-
-
-
-
-#endif /* TAU_USE_HPCSTACK */
+#endif /* TAU_USE_HPCTOOLKIT */
 
 
 
@@ -337,6 +324,59 @@ void Tau_sampling_output_callstack (int tid, void* pc) {
 #endif /* TAU_USE_LIBUNWIND */
 
 
+
+#ifdef TAU_USE_HPCTOOLKIT
+
+
+void show_backtrace_unwind (void* pc) {
+  ucontext_t *context = (ucontext_t*) pc;
+  unw_cursor_t cursor;
+  unw_word_t ip, sp;
+  int found = 0;
+
+  printf ("calling init_cursor\n");
+  fflush(stdout);
+  unw_init_cursor(&cursor, context);
+  printf ("initialized\n");
+  fflush(stdout);
+
+
+  while (unw_step(&cursor) > 0) {
+    unw_get_reg(&cursor, UNW_REG_IP, &ip);
+    // unw_get_reg(&cursor, UNW_REG_SP, &sp);
+    if (ip == (unw_word_t)pc) {
+      found = 1;
+    }
+    //    if (found) {
+      printf ("ip = %lx, sp = %lx\n", (long) ip, (long) sp);
+      //    }
+  }
+}
+
+void Tau_sampling_output_callstack (int tid, void* pc) {
+  ucontext_t *context = (ucontext_t *) pc;
+  unw_cursor_t cursor;
+  unw_word_t ip, sp;
+  int found = 1;
+
+  fprintf(ebsTrace[tid], " |");
+
+  unw_init_cursor(&cursor, context);
+  while (unw_step(&cursor) > 0) {
+    unw_get_reg(&cursor, UNW_REG_IP, &ip);
+    // unw_get_reg(&cursor, UNW_REG_SP, &sp);
+    if (found) {
+      fprintf(ebsTrace[tid], " %p", ip);
+    }
+    if (ip == (unw_word_t)pc) {
+      found = 1;
+    }
+  }
+}
+
+
+#endif /* TAU_USE_HPCTOOLKIT */
+
 /*********************************************************************
  * Write out the TAU callpath
  ********************************************************************/
@@ -370,7 +410,7 @@ void Tau_sampling_output_callpath(int tid) {
 /*********************************************************************
  * Write out a single event record
  ********************************************************************/
-void Tau_sampling_flush_record(int tid, TauSamplingRecord *record, void *pc) {
+void Tau_sampling_flush_record(int tid, TauSamplingRecord *record, void *pc, void *context) {
   fprintf(ebsTrace[tid], "$ | %lld | ", record->timestamp);
   fprintf(ebsTrace[tid], "%lld | ", record->deltaStart);
   fprintf(ebsTrace[tid], "%lld | ", record->deltaStop);
@@ -391,7 +431,11 @@ void Tau_sampling_flush_record(int tid, TauSamplingRecord *record, void *pc) {
 
 #ifdef TAU_USE_STACKWALKER
   Tau_sampling_output_callstack(tid, pc);
-#endif /* TAU_USE_LIBUNWIND */
+#endif /* TAU_USE_STACKWALKER */
+
+#ifdef TAU_USE_HPCTOOLKIT
+  Tau_sampling_output_callstack(tid, context);
+#endif /* TAU_USE_HPCTOOLKIT */
 
   fprintf(ebsTrace[tid], "\n");
 }
@@ -440,7 +484,7 @@ int Tau_sampling_event_stop(int tid, double* stopTime) {
 /*********************************************************************
  * Handler a sample
  ********************************************************************/
-void Tau_sampling_handle_sample(void *pc) {
+void Tau_sampling_handle_sample(void *pc, void *context) {
 
   int tid = RtsLayer::myThread();
   insideSignalHandler[tid] = 1;
@@ -456,7 +500,7 @@ void Tau_sampling_handle_sample(void *pc) {
 
   // printf ("[tid=%d] sample on %x\n", tid, pc);
   //show_backtrace_unwind(pc);
-  show_backtrace_stackwalker(pc);
+  //show_backtrace_stackwalker(pc);
 
   struct timeval tp;
   gettimeofday(&tp, 0);
@@ -480,7 +524,7 @@ void Tau_sampling_handle_sample(void *pc) {
     theRecord.counterDeltaStop[i] = 0;
   }
 
-  Tau_sampling_flush_record(tid, &theRecord, pc);
+  Tau_sampling_flush_record(tid, &theRecord, pc, context);
 
   /* set this to get the stop event */
   profiler->needToRecordStop = 1;
@@ -507,7 +551,7 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
   caddr_t pc;
   pc = get_pc(p);
 
-  Tau_sampling_handle_sample(pc);
+  Tau_sampling_handle_sample(pc, NULL);
 }
 
 /*********************************************************************
@@ -515,7 +559,8 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
  ********************************************************************/
 void Tau_sampling_papi_overflow_handler(int EventSet, void *address, x_int64 overflow_vector, void *context) {
   //fprintf(stderr,"Overflow at %p! bit=0x%llx \n", address,overflow_vector);
-  Tau_sampling_handle_sample(address);
+  // Tau_sampling_handle_sample(address);
+  Tau_sampling_handle_sample(address, context);
 }
 
 
@@ -541,6 +586,11 @@ int Tau_sampling_outputHeader(int tid) {
 int Tau_sampling_init(int tid) {
   int ret;
   int i;
+
+
+#ifdef TAU_USE_HPCTOOLKIT
+  unw_init();
+#endif
 
   //  printf ("init called! tid = %d\n", tid);
   static struct itimerval itval;
