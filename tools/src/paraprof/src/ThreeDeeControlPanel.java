@@ -24,9 +24,9 @@ import edu.uoregon.tau.vis.VisRenderer;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.18 2010/01/23 04:43:34 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeControlPanel.java,v 1.19 2010/01/28 00:27:41 amorris Exp $</P>
  * @author	Alan Morris
- * @version	$Revision: 1.18 $
+ * @version	$Revision: 1.19 $
  */
 public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
@@ -333,6 +333,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         tabbedPane.addTab("ColorScale", window.getColorScale().getControlPanel(visRenderer));
         tabbedPane.addTab("Render", visRenderer.getControlPanel());
         tabbedPane.setMinimumSize(new Dimension(300, 160));
+        selectedTab = Math.min(selectedTab, tabbedPane.getTabCount()-1);
         tabbedPane.setSelectedIndex(selectedTab);
 
         gbc.fill = GridBagConstraints.BOTH;
@@ -575,6 +576,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
             if (EventSrc instanceof JRadioButton) {
 
                 selectedTab = tabbedPane.getSelectedIndex();
+                selectedTab = 0; // they don't match anymore, so always reset to 0
 
                 String arg = evt.getActionCommand();
                 Plot plot = window.getPlot();
