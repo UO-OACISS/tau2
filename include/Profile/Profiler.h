@@ -203,6 +203,7 @@ public:
 
 #ifdef TAU_EXP_SAMPLING
   int needToRecordStop;
+  void *address;
 #endif /* TAU_EXP_SAMPLING */
 
 };
@@ -268,6 +269,6 @@ void TauProfiler_AddProfileParamData(long key, const char *keyname);
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.112 $   $Date: 2009/12/28 23:33:25 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.112 2009/12/28 23:33:25 amorris Exp $ 
+ * $Revision: 1.113 $   $Date: 2010/01/29 07:17:45 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.113 2010/01/29 07:17:45 amorris Exp $ 
  ***************************************************************************/
