@@ -32,7 +32,7 @@ public class EBSTraceReader {
     }
 
     private boolean stackMatch(String cpNode, String csNode) {
-//        System.out.println("Checking '" + cpNode + "' vs '" + csNode + "'");
+        //        System.out.println("Checking '" + cpNode + "' vs '" + csNode + "'");
 
         String fields[] = csNode.split(":");
         String csRoutine = fields[0];
@@ -40,13 +40,13 @@ public class EBSTraceReader {
             csRoutine = csRoutine.substring(0, csRoutine.length() - 2);
         }
 
-//        System.out.println("csRoutine = '" + csRoutine + "'");
+        //        System.out.println("csRoutine = '" + csRoutine + "'");
         if (cpNode.equals(csRoutine)) {
-//            System.out.println("TRUE");
+            //            System.out.println("TRUE");
             return true;
         }
 
-//        System.out.println("FALSE");
+        //        System.out.println("FALSE");
         return false;
     }
 
@@ -105,10 +105,10 @@ public class EBSTraceReader {
             }
         }
         //
-        //        System.out.println("callpath = " + callpath);
-        //        System.out.println("callstack = " + callstack);
-        //        System.out.println("result = " + result);
-        //        System.out.println("--------------------");
+        //                System.out.println("callpath = " + callpath);
+        //                System.out.println("callstack = " + callstack);
+        //                System.out.println("result = " + result);
+        //                System.out.println("--------------------");
 
         return result;
     }
@@ -193,12 +193,19 @@ public class EBSTraceReader {
                     }
                     location = location.trim();
 
-                    //                    System.out.println("need to resolve:");
-                    //                    System.out.println("callpath: " + callpath);
-                    //                    System.out.println("location: " + location);
+//                    System.out.println("need to resolve:");
+//                    System.out.println("callpath: " + callpath);
+//                    System.out.println("location: " + location);
+
                     
-                    String resolvedCallpath = resolveCallpath(callpath, location);
-                    System.out.println("resolvedCallpath = " + resolvedCallpath);
+                    
+                    // we don't need this anymore
+                    //String resolvedCallpath = resolveCallpath(callpath, location);
+
+                    String resolvedCallpath = callpath + " => " + location;
+
+//                    System.out.println("resolvedCallpath = " + resolvedCallpath);
+
                     Function newCallpathFunc = dataSource.addFunction(resolvedCallpath);
                     newCallpathFunc.addGroup(callpathGroup);
 
@@ -268,21 +275,29 @@ public class EBSTraceReader {
                             long deltaEnd = Long.parseLong(fields[2].trim());
                             String metrics = fields[4].trim();
                             String callpath = fields[5].trim();
-                            String callstack = fields[6].trim();
 
-                            String callStackEntries[] = callstack.split(" ");
                             List csList = new ArrayList();
                             csList.add(location);
-                            for (int i = 0; i < callStackEntries.length; i++) {
-                                if (showCallSites) {
-                                    csList.add(callStackEntries[i]);
-                                } else {
-                                    csList.add(stripFileLine(callStackEntries[i]));
+
+                            String callstack = "";
+                            if (fields.length == 7) {
+                                callstack = fields[6].trim();
+
+                                String callStackEntries[] = callstack.split(" ");
+
+                                for (int i = 0; i < callStackEntries.length; i++) {
+                                    if (showCallSites) {
+                                        csList.add(callStackEntries[i]);
+                                    } else {
+                                        csList.add(stripFileLine(callStackEntries[i]));
+                                    }
                                 }
                             }
+
                             Collections.reverse(csList);
                             addSample(csList, callpath);
                         } catch (Exception e) {
+                            e.printStackTrace();
                             System.out.println(inputString);
                         }
                     }
