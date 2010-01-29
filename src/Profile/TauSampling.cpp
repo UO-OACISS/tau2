@@ -478,6 +478,10 @@ void *Tau_sampling_event_start(int tid) {
     return 0;
   }
 
+  if (hpctoolkit_process_started == 0) {
+    printf ("nope, quitting\n");
+    return 0;
+  }
 
   unw_cursor_t cursor;
   unw_word_t ip, sp;
