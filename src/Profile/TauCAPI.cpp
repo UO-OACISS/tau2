@@ -20,6 +20,7 @@ using namespace std;
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 #include "Profile/Profiler.h"
+#include <Profile/TauSampling.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -217,6 +218,11 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid ) {
 #endif /* TAU_DEPTH_LIMIT */
 
   p->Start(tid);
+
+#ifdef TAU_EXP_SAMPLING
+  p->address = Tau_sampling_event_start(tid);
+#endif
+
 }
 
 
@@ -1367,7 +1373,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.134 $   $Date: 2009/12/21 17:58:01 $
- * VERSION: $Id: TauCAPI.cpp,v 1.134 2009/12/21 17:58:01 amorris Exp $
+ * $Revision: 1.135 $   $Date: 2010/01/29 07:20:50 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.135 2010/01/29 07:20:50 amorris Exp $
  ***************************************************************************/
 

@@ -326,6 +326,8 @@ void Tau_sampling_output_callstack (int tid, void* pc) {
 
 
 
+void* tauStartAddress[TAU_MAX_THREADS];
+
 #ifdef TAU_USE_HPCTOOLKIT
 
 
@@ -337,6 +339,7 @@ public:
     printf ("TAU: initializing suspend flags %d\n", x);
     for (int i=0; i<TAU_MAX_THREADS; i++) {
       suspendSampling[i] = 0;
+      tauStartAddress[i] = 0;
     }
   }
 };
@@ -364,23 +367,13 @@ void show_backtrace_unwind (void* pc) {
   unw_word_t ip, sp;
   int found = 0;
 
-  printf ("calling init_cursor\n");
-  fflush(stdout);
   unw_init_cursor(&cursor, context);
-  printf ("initialized\n");
-  fflush(stdout);
-
 
   while (unw_step(&cursor) > 0) {
     unw_get_reg(&cursor, UNW_REG_IP, &ip);
-    // unw_get_reg(&cursor, UNW_REG_SP, &sp);
-    if (ip == (unw_word_t)pc) {
-      found = 1;
-    }
-    //    if (found) {
-      printf ("ip = %lx, sp = %lx\n", (long) ip, (long) sp);
-      //    }
+    fprintf (stderr,"ip = %p ", ip);
   }
+  fprintf(stderr, "\n");
 }
 
 void Tau_sampling_output_callstack (int tid, void* pc) {
@@ -389,18 +382,19 @@ void Tau_sampling_output_callstack (int tid, void* pc) {
   unw_word_t ip, sp;
   int found = 1;
 
+  Profiler *profiler = TauInternal_CurrentProfiler(tid);
+  
+
   fprintf(ebsTrace[tid], " |");
 
   unw_init_cursor(&cursor, context);
   while (unw_step(&cursor) > 0) {
     unw_get_reg(&cursor, UNW_REG_IP, &ip);
     // unw_get_reg(&cursor, UNW_REG_SP, &sp);
-    if (found) {
-      fprintf(ebsTrace[tid], " %p", ip);
+    if (ip == (unw_word_t) profiler->address) {
+      return;
     }
-    if (ip == (unw_word_t)pc) {
-      found = 1;
-    }
+    fprintf(ebsTrace[tid], " %p", ip);
   }
 }
 
@@ -470,6 +464,39 @@ void Tau_sampling_flush_record(int tid, TauSamplingRecord *record, void *pc, voi
   fprintf(ebsTrace[tid], "\n");
 }
 
+
+
+void *Tau_sampling_event_start(int tid) {
+  // fprintf (stderr, "[%d] SAMP: event start: ", tid);
+
+  ucontext_t context;
+
+  int ret = getcontext(&context);
+
+  if (ret != 0) {
+    fprintf (stderr, "TAU: Error getting context\n");
+    return 0;
+  }
+
+
+  unw_cursor_t cursor;
+  unw_word_t ip, sp;
+
+  unw_word_t address;
+  int count = 0;
+  unw_init_cursor(&cursor, &context);
+  while (unw_step(&cursor) > 0 && count < 3) {
+    unw_get_reg(&cursor, UNW_REG_IP, &ip);
+    address = ip;
+    // fprintf(stderr, " %p", ip);
+    count++;
+  }
+  // fprintf (stderr, "\n");
+
+  return address;
+}
+
+
 /*********************************************************************
  * Handler for event exit (stop)
  ********************************************************************/
@@ -529,7 +556,9 @@ void Tau_sampling_handle_sample(void *pc, void *context) {
 
 
   // printf ("[tid=%d] sample on %x\n", tid, pc);
-  //show_backtrace_unwind(pc);
+  
+  // fprintf  (stderr, "[%d] sample :");
+  // show_backtrace_unwind(context);
   //show_backtrace_stackwalker(pc);
 
   struct timeval tp;
