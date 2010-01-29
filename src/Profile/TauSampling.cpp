@@ -329,6 +329,35 @@ void Tau_sampling_output_callstack (int tid, void* pc) {
 #ifdef TAU_USE_HPCTOOLKIT
 
 
+int suspendSampling[TAU_MAX_THREADS];
+
+class initSuspendFlags {
+public:
+  initSuspendFlags(int x) {
+    printf ("TAU: initializing suspend flags %d\n", x);
+    for (int i=0; i<TAU_MAX_THREADS; i++) {
+      suspendSampling[i] = 0;
+    }
+  }
+};
+
+initSuspendFlags floobar(5);
+
+/*
+void Tau_suspend_sampling();
+void Tau_resume_sampling();
+*/
+
+extern "C" void Tau_suspend_sampling() {
+  int tid = RtsLayer::myThread();
+  suspendSampling[tid] = 1;
+}
+
+extern "C" void Tau_resume_sampling() {
+  int tid = RtsLayer::myThread();
+  suspendSampling[tid] = 0;
+}
+
 void show_backtrace_unwind (void* pc) {
   ucontext_t *context = (ucontext_t*) pc;
   unw_cursor_t cursor;
@@ -559,12 +588,30 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
  * PAPI Overflow handler
  ********************************************************************/
 void Tau_sampling_papi_overflow_handler(int EventSet, void *address, x_int64 overflow_vector, void *context) {
-  // fprintf(stderr,"Overflow at %p! bit=0x%llx \n", address,overflow_vector);
+  int tid = RtsLayer::myThread();
+//   fprintf(stderr,"[%d] Overflow at %p! bit=0x%llx \n", tid, address,overflow_vector);
+
+  x_int64 value = (x_int64) address;
+
+  if ((value & 0xffffffffff000000) == 0xffffffffff000000) {
+//     fprintf (stderr, "match\n");
+//     int *bob = 0;
+//     bob[0] = 45;
+    return;
+  } else {
+//     fprintf (stderr, "no match\n");
+  }
+
   // Tau_sampling_handle_sample(address);
 
 #ifdef TAU_USE_HPCTOOLKIT
   if (hpctoolkit_process_started == 0) {
     printf ("nope, quitting\n");
+    return;
+  }
+
+  //  int tid = RtsLayer::myThread();
+  if (suspendSampling[tid]) {
     return;
   }
 #endif
