@@ -1,0 +1,1519 @@
+<html xmlns:comem3="xalan://com.em3" xmlns:em3="http://www.em3.com/2002/widget">
+
+
+<head>
+	<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>NVIDIA CUDA SDK Code Samples</title>
+	<link type="image/x-icon" href="releaseNotesData/NVSphere.ico" rel="shortcut icon">
+	<script type="text/javascript">
+	<!--
+	function openScreenshot(url)
+	{
+	  var dlgWidth = 556;
+ 	  var dlgHeight = 634;
+	  var dlgLeft = (screen.width - dlgWidth) / 2;
+	  var dlgTop = (screen.height - dlgHeight) / 2;
+
+ 	  var specs = 'toolbar=no,scrollbars=no,location=no,status=no,menubar=no,resizable=no,width=550,height=610,left=' + dlgLeft + ',top=' + dlgTop;
+
+	  newwin = window.open(url, 'ScreenshotWindow', specs);
+	  newwin.focus();
+	}
+	function pageSelectorGoTo()
+	{
+	  window.location = document.forms[1].pageSelector.value
+	}
+	-->
+	</script>
+<style type="text/css">
+body {
+margin-left:0px;
+margin-top:0px;
+font-family:Verdana, Geneva, Arial, Helvetica, Sans Serif;
+font-size: 11px;
+}
+
+td, div { 
+font-family:Verdana, Geneva, Arial, Helvetica, Sans Serif;
+font-size: 11px;
+}
+
+#devTable {
+position:absolute;
+top:0px;
+}
+
+.devGradient {
+vertical-align:top;
+padding:10px;
+
+}
+
+A { 
+text-decoration:none;
+/* color: #008000; */
+/* green color: #76b900; */
+/*font-weight:bold; */
+color: #5B8C00;
+}
+
+A:hover { 
+text-decoration:underline;
+color: #000000;
+}
+
+A:visited { 
+color: #5B8C00;
+}
+
+.bucketText { 
+font-size: 10px;
+}
+A.bucketHeader { 
+font-weight:bold;
+color: #009900;
+text-decoration:none;
+}
+A.bucketHeader:hover { 
+text-decoration:underline;
+}
+A.bucketHeader:visited { 
+color: #005000;
+}
+H1 { 
+font-size:15px;
+color: #000000;
+font-weight:bold;
+}
+H2 { 
+font-size:14px;
+color: #000000;
+font-weight:bold;
+}
+H3 { 
+font-size:14px;
+color: #000080;
+font-weight:bold;
+}
+H4 { 
+font-size:12px;
+color: #000000;
+font-weight:bold;
+}
+H5 { 
+font-size:12px;
+color: #000080;
+font-weight:bold;
+}
+H6 { 
+font-size:10px;
+color: #000000;
+font-weight:bold;
+}
+H6 { 
+font-size:10px;
+color: #000080;
+font-weight:bold;
+}
+
+.search {
+font-size:7pt; 
+color: #FFFFFF;
+} 
+.searchResultsHeader { 
+font-size:10pt;
+font-weight:bold;
+color: #000080;
+}
+.smallText { 
+font-size: 11px;
+}
+.legal{
+font-size:7pt; 
+color: #000000;
+} 
+A.legal{
+text-decoration:none
+color: #000000;
+} 
+A.legal:hover{
+text-decoration:underline
+color: #000000;
+} 
+A.legal:visited{
+color: #000000;
+} 
+
+#mytable 
+{
+BORDER-COLLAPSE: collapse;
+borderColor: #dfdfe7;
+cellSpacing: 0;
+cellPadding: 6;
+borderColorLight: #e9eaed;
+border: 1;
+}
+
+#mytable td {
+FONT-SIZE: 10px; 
+FONT-FAMILY: Verdana, Geneva, Arial, Helvetica, 'Sans Serif';
+borderColor: #dfdfe7;
+background-color: #F4F4F7;
+border-right: 1px solid #dfdfe7;
+border-bottom: 1px solid #dfdfe7;
+padding: 6px 6px 6px 12px; 
+}
+
+#mytable th {
+padding: 6px 6px 6px 12px; 
+FONT-FAMILY: Verdana, Geneva, Arial, Helvetica, 'Sans Serif';
+FONT-WEIGHT: 400; 
+FONT-SIZE: 10px;
+borderColor: #c0c0c0;
+bgColor: #dfdfe7
+}
+.itemName
+{
+    float: left;
+    font-size: 12px;
+    font-weight: bold;
+}
+td.verticalBder
+{
+    padding-top: 0px;
+    padding-left: 0px;
+    padding-right: 0px;
+    padding-bottom: 0px;
+    border-right: 1px solid #aca899
+}
+.anchorImage
+{
+    border: none;
+}
+.itemMinspec
+{
+    border: none;   
+}
+td.itemMinspec
+{
+    padding-top: 0px;
+    padding-left: 5px;
+    padding-bottom: 1px;
+    vertical-align: middle;
+}
+td.screenshot
+{
+    width: 134px;
+    height: 134px;
+    padding-top: 0px;
+    padding-bottom: 3px;
+    padding-left: 0px;
+}
+td.colInfo
+{
+    padding-top: 1px;
+    padding-left: 5px;
+}
+.featuredMonth
+{
+    padding-bottom: 5px;
+    padding-top: 5px;    
+    padding-left: 5px;    
+    background-color: #dfdfe7;
+    color: black;
+    border: solid 1px #d3dae4;
+    font-weight: bold;
+    font-size: 14px;
+}
+.itemGroup
+{
+    font-weight: bold;
+}
+.itemImage
+{
+    border: 2px solid #008000;
+}
+.itemImageNoLink
+{
+    border: 2px solid white;
+}
+.description
+{
+    font-size: 10px;
+}
+.links
+{	
+    font-size: 10px;
+}
+.changeNotification
+{
+    font-size: 9px;
+}
+</style>
+</head>
+
+
+<body>
+<table style="background-color:#ffffff;border-color:#cccccc;border-style:solid;border-top-width:1px;border-left-width:1px;border-right-width:1px;border-bottom-width:1px;" cellspacing="0" cellpadding="0" border="0" width="591" align="center">
+<tr>
+<td valign="top">
+<div style="position:relative;left:13px;top:8px;padding-bottom:20px;width:565px;">
+
+		<!-- 
+		******************
+		      MAIN 
+		******************  
+		-->
+		
+		<h2>NVIDIA CUDA SDK Code Samples</h2>
+
+
+		<p>The CUDA Developer SDK provides examples with source code, utilities, and white papers to help you get started writing software with CUDA. The SDK includes dozens of code samples covering a wide range of applications including:<br/>
+		<ul>
+		<li>Simple techniques such as C++ code integration and efficient loading of custom datatypes</li>
+		<li>How-To examples covering CUDA BLAS and FFT libraries, texture fetching in CUDA, and CUDA interoperation with the OpenGL and Direct3D graphics APIS</li>
+		<li>Linear algebra primitives such as matrix transpose and matrix-matrix multiplication </li>
+		<li>Data-parallel algorithms such as parallel prefix sum of large arrays </li>
+		<li>Performance: profiling using timers and bandwidth tests</li>
+                <li>Advanced application examples such as image convolution, Black-Scholes options pricing and binomial options pricing</li>
+		</ul>
+		Refer to the following READMEs for more information (
+		<a href="doc/CUDA_SDK_release_notes_linux.txt">Linux</a> , 
+		<a href="doc/CUDA_SDK_release_notes_macosx.txt">Mac OS X</a> )
+
+		</p>
+		<p>This code is released free of charge for use in derivative works, whether academic, commercial, or personal. <a href="http://developer.download.nvidia.com/licenses/general_license.txt" name="path">(Full License)</a></p>
+		<p>The NVIDIA CUDA Toolkit is required to run and compile code samples. Please obtain the CUDA Toolkit <a href="http://developer.nvidia.com/cuda">here</a></p>
+
+		
+              
+		<table width="575" border="0">
+
+		<!-- generated html start -->
+			<tr>
+			  <td colspan="3" class="separator"><a id="quasirandomGenerator"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Niederreiter Quasirandom Sequence Generator&nbsp;<a href="#quasirandomGenerator"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample implements Niederreiter Quasirandom Sequence Generator and Inverse Cumulative Normal Distribution function for Standart Normal Distribution generation. </span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/quasirandomGenerator" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="threadMigration"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">CUDA Context Thread Management&nbsp;<a href="#threadMigration"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">Simple program illustrating how to the CUDA Context Management API.  CUDA contexts can be created separately and attached independently to different threads.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/threadMigration" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="dct8x8"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">DCT8x8&nbsp;<a href="#dct8x8"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description"> This sample demonstrates how Discrete Cosine Transform (DCT) for blocks of 8 by 8 pixels can be performed using CUDA: a naive implementation by definition and a more traditional approach used in many libraries. As opposed to implementing DCT in a fragment shader, CUDA allows for an easier and more efficient implementation. 
+ </span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <a href="projects/dct8x8/doc/dct8x8.pdf" name="path">Whitepaper</a><br />
+			  <a href="projects/dct8x8" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="simpleVoteIntrinsics"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Simple Vote Intrinsics&nbsp;<a href="#simpleVoteIntrinsics"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">Simple program which demonstrates how to use the Vote (any, all) intrinsic instruction in a CUDA kernel.  Requires Compute Capability 1.2 or higher.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/simpleVoteIntrinsics" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="simpleAtomicIntrinsics"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Simple Atomic Intrinsics&nbsp;<a href="#simpleAtomicIntrinsics"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">A simple demonstration of global memory atomic instructions. Requires Compute Capability 1.1 or higher.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/simpleAtomicIntrinsics" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="marchingCubes"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Marching Cubes Isosurfaces&nbsp;<a href="#marchingCubes"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample extracts a geometric isosurface from a volume dataset using the marching cubes algorithm. It uses the scan (prefix sum) function from the CUDPP library to perform stream compaction. </span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/marchingCubes" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="MonteCarloMultiGPU"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Monte Carlo Option Pricing with multi-GPU support&nbsp;<a href="#MonteCarloMultiGPU"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample evaluates fair call price for a given set of European options using the Monte Carlo approach, taking advantage of all CUDA-capable GPUs installed in the system. This sample use double precision hardware if a GTX 200 class GPU is present.  </span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <a href="projects/MonteCarloMultiGPU/../MonteCarlo/doc/MonteCarlo.pdf" name="path">Whitepaper</a><br />
+			  <a href="projects/MonteCarloMultiGPU" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="oceanFFT"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">FFT Ocean Simulation&nbsp;<a href="#oceanFFT"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample simulates an Ocean heightfield using CUFFT and renders the result using OpenGL.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/oceanFFT" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="histogram256"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">256-bin Histogram&nbsp;<a href="#histogram256"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample demonstrates three efficient implementations of 256-bin histogram with implementations that run with Compute 1.0, 1.1, and 1.2 class hardware.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <a href="projects/histogram256/doc/histogram.pdf" name="path">Whitepaper</a><br />
+			  <a href="projects/histogram256" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="histogram64"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">64-bin Histogram&nbsp;<a href="#histogram64"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample demonstrates efficient implementation of 64-bin histogram.
+</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/histogram64" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="convolutionSeparable"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Separable Convolution&nbsp;<a href="#convolutionSeparable"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample implements a separable convolution filter of a 2D signal with a gaussian kernel.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <a href="projects/convolutionSeparable/doc/convolutionSeparable.pdf" name="path">Whitepaper</a><br />
+			  <a href="projects/convolutionSeparable" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="convolutionTexture"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Texture-based Separable Convolution&nbsp;<a href="#convolutionTexture"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">Texture-based implementation of a separable 2D convolution with a gaussian kernel. Used for performance comparison against convolutionSeparable. </span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/convolutionTexture" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="convolutionFFT2D"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">FFT-Based 2D Convolution&nbsp;<a href="#convolutionFFT2D"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample demonstrates how 2D convolutions with very large kernel sizes can be efficiently implemented using FFT transformations.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <a href="projects/convolutionFFT2D/doc/convolutionFFT2D.pdf" name="path">Whitepaper</a><br />
+			  <a href="projects/convolutionFFT2D" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="MersenneTwister"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">MersenneTwister&nbsp;<a href="#MersenneTwister"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample implements Mersenne Twister random number generator and Cartesian Box-Muller transformation on the GPU.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <a href="projects/MersenneTwister/doc/MersenneTwister.pdf" name="path">Whitepaper</a><br />
+			  <a href="projects/MersenneTwister" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="MonteCarlo"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Monte Carlo Option Pricing&nbsp;<a href="#MonteCarlo"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample evaluates fair call price for a given set of European options using Monte Carlo approach.  This sample use double precision hardware if a GTX 200 class GPU is present.  </span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <a href="projects/MonteCarlo/doc/MonteCarlo.pdf" name="path">Whitepaper</a><br />
+			  <a href="projects/MonteCarlo" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="BlackScholes"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Black-Scholes Option Pricing&nbsp;<a href="#BlackScholes"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample evaluates fair call and put prices for a given set of European options by Black-Scholes formula.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <a href="projects/BlackScholes/doc/BlackScholes.pdf" name="path">Whitepaper</a><br />
+			  <a href="projects/BlackScholes" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="binomialOptions"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Binomial Option Pricing&nbsp;<a href="#binomialOptions"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample evaluates fair call price for a given set of European options under binomial model.  This sample will also take advantage of double precision if a GTX 200 class GPU is present.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <a href="projects/binomialOptions/doc/binomialOptions.pdf" name="path">Whitepaper</a><br />
+			  <a href="projects/binomialOptions" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="imageDenoising"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Image denoising&nbsp;<a href="#imageDenoising"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description"> This sample demonstrates two adaptive image denoising technqiues: KNN and NLM, based on computation of both geometric and color distance between texels. While both techniques are implemented in the DirectX SDK using shaders, massively speeded up variation of the latter techique, taking advantage of shared memory, is implemented in addition to DirectX counterparts. </span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <a href="projects/imageDenoising/doc/imageDenoising.pdf" name="path">Whitepaper</a><br />
+			  <a href="projects/imageDenoising" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="dxtc"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">DirectX Texture Compressor (DXTC)&nbsp;<a href="#dxtc"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">High Quality DXT Compression using CUDA.
+
+This example shows how to implement an existing computationally-intensive CPU compression algorithm in parallel on the GPU, and obtain an order of magnitude performance improvement.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <a href="projects/dxtc/doc/cuda_dxtc.pdf" name="path">Whitepaper</a><br />
+			  <a href="projects/dxtc" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="postProcessGL"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Post-Process in OpenGL&nbsp;<a href="#postProcessGL"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample shows how to post-process an image rendered in OpenGL using CUDA.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/postProcessGL" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="recursiveGaussian"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Recursive Gaussian Filter&nbsp;<a href="#recursiveGaussian"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample implements a Gaussian blur using Deriche's recursive method. The advantage of this method is that the execution time is independent of the filter width.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/recursiveGaussian" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="boxFilter"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Box Filter&nbsp;<a href="#boxFilter"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">Fast image box filter using CUDA with OpenGL rendering.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/boxFilter" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="bitonic"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Bitonic Sort&nbsp;<a href="#bitonic"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">Bitonic sort is a very simple parallel sorting algorithm that is very
+efficient when sorting a small number of elements:
+
+http://citeseer.ist.psu.edu/blelloch98experimental.html
+
+This implementation is based on:
+
+http://www.tools-of-computing.com/tc/CS/Sorts/bitonic_sort.htm
+</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/bitonic" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="transpose"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Matrix Transpose&nbsp;<a href="#transpose"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">Efficient matrix transpose.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/transpose" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="scalarProd"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Scalar Product&nbsp;<a href="#scalarProd"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample calculates scalar products of a given set of input vector pairs.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/scalarProd" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="clock"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Clock&nbsp;<a href="#clock"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This example shows how to use the clock function to measure the performance of kernel accurately.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/clock" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="simpleMultiGPU"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Simple multi-GPU&nbsp;<a href="#simpleMultiGPU"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This application demonstrates how to use the CUDA API to use multiple GPUs.
+</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/simpleMultiGPU" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="alignedTypes"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Aligned Types&nbsp;<a href="#alignedTypes"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">A simple test, showing huge access speed gap between aligned and misaligned structures.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/alignedTypes" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="bicubicTexture"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Bicubic Texture Filtering&nbsp;<a href="#bicubicTexture"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample demonstrates how to efficiently implement bicubic texture filtering in CUDA.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/bicubicTexture" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="volumeRender"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Volume rendering&nbsp;<a href="#volumeRender"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample demonstrates basic volume rendering using 3D textures.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/volumeRender" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="simpleTexture3D"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Simple Texture 3D&nbsp;<a href="#simpleTexture3D"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">Simple example that demonstrates use of 3D textures in CUDA.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/simpleTexture3D" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="lineOfSight"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Line of Sight&nbsp;<a href="#lineOfSight"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample is an implementation of a simple line-of-sight algorithm: Given a height map and a ray originating at some observation point, it computes all the points along the ray that are visible from the observation point. The implementation is based on the parallel scan primitive provided by the CUDPP library (http://www.gpgpu.org/developer/cudpp/).</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/lineOfSight" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="nbody"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">N-Body Simulation&nbsp;<a href="#nbody"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample demonstrates efficient all-pairs simulation of a gravitational n-body simulation in CUDA.  This sample accompanies the GPU Gems 3 chapter "Fast N-Body Simulation with CUDA".</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <a href="projects/nbody/doc/nbody_gems3_ch31.pdf" name="path">Whitepaper</a><br />
+			  <a href="projects/nbody" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="reduction"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Parallel Reduction&nbsp;<a href="#reduction"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">A parallel sum reduction that computes the sum of large arrays of values.  This sample demonstrates several important optimization stratezies for parallel algorithms like reduction.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <a href="projects/reduction/doc/reduction.pdf" name="path">Whitepaper</a><br />
+			  <a href="projects/reduction" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="asyncAPI"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">asyncAPI&nbsp;<a href="#asyncAPI"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample uses CUDA streams and events to overlap execution on CPU and GPU.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/asyncAPI" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="simpleStreams"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">simpleStreams&nbsp;<a href="#simpleStreams"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample uses CUDA streams to overlap kernel executions with memcopies between the device and the host. Requires Compute Capability 1.1 or higher.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/simpleStreams" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="Mandelbrot"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Mandelbrot&nbsp;<a href="#Mandelbrot"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample uses CUDA to compute and display the Mandelbrot set interactively. It also illustrates the use of "double single" arithmetic to improve precision when zooming a long way into the pattern. This sample use double precision hardware if a GTX 200 class GPU is present.  Thanks to Mark Granger of NewTek who submitted this sample to the SDK!</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/Mandelbrot" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="particles"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Particles&nbsp;<a href="#particles"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample uses CUDA to simulate and visualize a large set of particles and their physical interaction. It implements a uniform grid data structure using either a fast radix sort or atomic operations.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <a href="projects/particles/doc/particles.pdf" name="path">Whitepaper</a><br />
+			  <a href="projects/particles" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="fastWalshTransform"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Fast Walsh Transform&nbsp;<a href="#fastWalshTransform"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">Naturally(Hadamard)-ordered Fast Walsh Tranform for batched vectors of arbitrary eligible(power of two) lengths</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/fastWalshTransform" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="eigenvalues"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Eigenvalues&nbsp;<a href="#eigenvalues"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">The computation of all or a subset of all eigenvalues is an important problem in linear algebra, statistics, physics, and many other fields. This sample demonstrates a parallel implementation of a bisection algorithm for the computation of all eigenvalues of a
+tridiagonal symmetric matrix of arbitrary size with CUDA.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <a href="projects/eigenvalues/doc/eigenvalues.pdf" name="path">Whitepaper</a><br />
+			  <a href="projects/eigenvalues" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="SobelFilter"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Sobel Filter&nbsp;<a href="#SobelFilter"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample implements the Sobel edge detection filter for 8-bit monochrome images.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/SobelFilter" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="deviceQuery"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Device Query&nbsp;<a href="#deviceQuery"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample enumerates the properties of the CUDA devices present in the system.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/deviceQuery" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="simpleTemplates"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Simple Templates&nbsp;<a href="#simpleTemplates"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample is a templatized version of the template project. It also shows how to correctly templatize dynamically allocated shared memory arrays.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/simpleTemplates" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="bandwidthTest"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Bandwidth Test&nbsp;<a href="#bandwidthTest"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This is a simple test program to measure the memcopy bandwidth of the GPU. It currently is capable of measuring device to device copy bandwidth, host to device copy bandwidth for pageable and page-locked memory, and device to host copy bandwidth for pageable and page-locked memory.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/bandwidthTest" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="scan"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Scan&nbsp;<a href="#scan"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This example demonstrates an efficient CUDA implementation of parallel prefix sum, also known as "scan".  Given an array of numbers, scan computes a new array in which each element is the sum of all the elements before it in the input array.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <a href="projects/scan/doc/scan.pdf" name="path">Whitepaper</a><br />
+			  <a href="projects/scan" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="scanLargeArray"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Scan of Large Arrays&nbsp;<a href="#scanLargeArray"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This example demonstrates an efficient CUDA implementation of parallel prefix sum (also known as "scan") for arbitrary-sized arrays. Given an array of numbers, scan computes a new array in which each element is the sum of all the elements before it in the input array.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <a href="projects/scanLargeArray/../scan/doc/scan.pdf" name="path">Whitepaper</a><br />
+			  <a href="projects/scanLargeArray" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="simpleTextureDrv"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Simple Texture (Driver Version)&nbsp;<a href="#simpleTextureDrv"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">Simple example that demonstrates use of textures in CUDA using the driver API.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/simpleTextureDrv" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="fluidsGL"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Fluids (OpenGL Version)&nbsp;<a href="#fluidsGL"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">An example of fluid simulation using CUDA and CUFFT, with OpenGL rendering.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/fluidsGL" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="simpleTexture"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Simple Texture&nbsp;<a href="#simpleTexture"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">Simple example that demonstrates use of textures in CUDA.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/simpleTexture" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="matrixMulDrv"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Matrix Multiplication (Driver Version)&nbsp;<a href="#matrixMulDrv"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample implements matrix multiplication using the CUDA driver API.
+It has been written for clarity of exposition to illustrate various CUDA programming principles, not with the goal of providing the most performant generic kernel for matrix multiplication.
+CUBLAS provides high-performance matrix multiplication.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/matrixMulDrv" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="template"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Template&nbsp;<a href="#template"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">A trivial template project that can be used as a starting point to create new CUDA projects.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/template" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="simpleCUFFT"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Simple CUFFT&nbsp;<a href="#simpleCUFFT"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">Example of using CUFFT. In this example, CUFFT is used to compute the 1D-convolution of some signal with some filter by transforming both into frequency domain, multiplying them together, and transforming the signal back to time domain.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/simpleCUFFT" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="simpleGL"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Simple OpenGL&nbsp;<a href="#simpleGL"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">Simple program which demonstrates interoperability between CUDA and OpenGL. The program modifies vertex positions with CUDA and uses OpenGL to render the geometry.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/simpleGL" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="simpleCUBLAS"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Simple CUBLAS&nbsp;<a href="#simpleCUBLAS"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">Example of using CUBLAS.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/simpleCUBLAS" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="matrixMul"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">Matrix Multiplication&nbsp;<a href="#matrixMul"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This sample implements matrix multiplication and is exactly the same as Chapter 6 of the programming guide.
+It has been written for clarity of exposition to illustrate various CUDA programming principles, not with the goal of providing the most performant generic kernel for matrix multiplication.
+CUBLAS provides high-performance matrix multiplication.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/matrixMul" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="cppIntegration"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">C++ Integration&nbsp;<a href="#cppIntegration"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">This example demonstrates how to integrate CUDA into an existing C++ application, i.e. the CUDA entry point on host side is only a function which is called from C++ code and only the file containing this function is compiled with nvcc. It also demonstrates that vector types can be used from cpp.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/cppIntegration" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>			<tr>
+			  <td colspan="3" class="separator"><a id="dwtHaar1D"><hr /></a></td>
+			</tr>
+			<tr>
+			  <td width="74%" rowspan ="1" align="left" valign="top" class="title"><span class="itemName" name="path">1D Discrete Haar Wavelet Decomposition&nbsp;<a href="#dwtHaar1D"><img src="releaseNotesData/link.jpg" alt="For a direct link to this sample, right-click and copy the URL (shortcut) of this link icon." class="anchorImage" /></a></span><br/>
+			  <br/>
+			  <span class="description">Discrete Haar wavelet decomposition for 1D signals with a length which is a power of 2.</span></td>
+  			  <td rowspan ="1" width="5" align="left" valign="top" class="verticalBder">&nbsp;</td>
+			  <td rowspan ="1" align="right" valign="top" class="itemMinspec"><a href="http://www.nvidia.com/page/geforce8.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/GEF8_2D_wte.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><br /><a href="http://www.nvidia.com/page/quadronvs.html" name="MinimumGPU" target="_blank"><img src="releaseNotesData/QUA_FX_4600_White.gif" class="itemMinspec" alt="Minimum Required GPU" /></a><b>or later</b><br /><a href="http://www.nvidia.com/object/tesla_computing_solutions.html"" name="MinimumGPU" target="_blank"><img src="releaseNotesData/tesla.gif" class="itemMinspec" alt="Minimum Required GPU" /></a>
+			  <p><span class="links">
+			  <br />
+                          <br />
+			  <br />
+			  <a href="projects/dwtHaar1D" name="path">Browse Files </a>
+			  </span>
+			  </p>
+			  </td>
+			</tr>
+			<tr>
+			  <td align="right" valign="top" >
+			  </td>
+			</tr>
+		<!-- generated html end -->
+
+		</table>
+
+</div>
+<div align="right" style=" color:#999999;">Last Update: 8/7/2008</div>
+</td>
+</tr>
+</table>
+</body>
+</html>
