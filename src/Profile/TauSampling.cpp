@@ -349,16 +349,22 @@ initSuspendFlags floobar(5);
 /*
 void Tau_suspend_sampling();
 void Tau_resume_sampling();
+
+
+extern "C" void Tau_suspend_sampling();
+extern "C" void Tau_resume_sampling();
 */
 
 extern "C" void Tau_suspend_sampling() {
   int tid = RtsLayer::myThread();
   suspendSampling[tid] = 1;
+//   fprintf (stderr, "suspended sampling on thread %d\n", tid);
 }
 
 extern "C" void Tau_resume_sampling() {
   int tid = RtsLayer::myThread();
   suspendSampling[tid] = 0;
+//   fprintf (stderr, "resumed sampling on thread %d\n", tid);
 }
 
 void show_backtrace_unwind (void* pc) {
