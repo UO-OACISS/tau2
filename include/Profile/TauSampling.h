@@ -73,4 +73,8 @@ int Tau_sampling_event_stop(int tid, double* stopTime);
 
 void Tau_sampling_papi_overflow_handler(int EventSet, void *address, x_int64 overflow_vector, void *context);
 
+extern "C" void Tau_suspend_sampling();
+extern "C" void Tau_resume_sampling();
+
+
 #endif /* _TAU_SAMPLING_H_ */
