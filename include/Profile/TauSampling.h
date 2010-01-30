@@ -73,8 +73,9 @@ int Tau_sampling_event_stop(int tid, double* stopTime);
 
 void Tau_sampling_papi_overflow_handler(int EventSet, void *address, x_int64 overflow_vector, void *context);
 
-extern "C" void Tau_suspend_sampling();
-extern "C" void Tau_resume_sampling();
+/* These must be extern "C" so that HPCToolkit can call them */
+extern "C" void Tau_sampling_suspend();
+extern "C" void Tau_sampling_resume();
 
 
 #endif /* _TAU_SAMPLING_H_ */
