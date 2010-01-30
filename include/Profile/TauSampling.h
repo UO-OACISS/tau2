@@ -77,5 +77,6 @@ void Tau_sampling_papi_overflow_handler(int EventSet, void *address, x_int64 ove
 extern "C" void Tau_sampling_suspend();
 extern "C" void Tau_sampling_resume();
 
+#define TAU_SAMP_NUM_ADDRESSES 7
 
 #endif /* _TAU_SAMPLING_H_ */

@@ -119,6 +119,7 @@ void tau_pthread_exit (void *arg);
 #include <Profile/TauHandler.h>
 #include <Profile/TauEnv.h>
 #include <Profile/TauMapping.h>
+#include <Profile/TauSampling.h>
 
 #if defined(TAUKTAU)
 class KtauProfiler;
@@ -203,7 +204,7 @@ public:
 
 #ifdef TAU_EXP_SAMPLING
   int needToRecordStop;
-  void *address[3];
+  void *address[TAU_SAMP_NUM_ADDRESSES];
 #endif /* TAU_EXP_SAMPLING */
 
 };
@@ -269,6 +270,6 @@ void TauProfiler_AddProfileParamData(long key, const char *keyname);
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.114 $   $Date: 2010/01/30 06:29:42 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.114 2010/01/30 06:29:42 amorris Exp $ 
+ * $Revision: 1.115 $   $Date: 2010/01/30 09:31:50 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.115 2010/01/30 09:31:50 amorris Exp $ 
  ***************************************************************************/
