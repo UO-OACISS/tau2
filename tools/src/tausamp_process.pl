@@ -8,6 +8,9 @@ use strict;
 use IO::Handle;
 
 
+# Read only version 0.2
+my $reader_version = 0.2;
+
 my ($forked);
 $forked = 0;
 
@@ -115,7 +118,7 @@ sub process_trace {
   my $negativeSamples = 0;
 
   # Read the trace
-  my ($junk, $exe, $node, $thread);
+  my ($junk, $exe, $node, $thread, $version);
   open (TRACE, "tac $trace_file |");
   open (OUTPUT, "| tac > $out_file");
   while ($line = <TRACE>) {
@@ -127,14 +130,21 @@ sub process_trace {
       } elsif ($line =~ /\# node:.*/) {
         ($junk, $node) = split("node:",$line);
         $node = trim($node);
+      } elsif ($line =~ /\# Format.*/) {
+        ($junk, $version) = split("version:",$line);
+	$version = trim($version);
+	if ($version != $reader_version) {
+	  die "This reader is only for version $reader_version files, you have $version, sorry\n";
+	}
+        print (OUTPUT "$line");
       } elsif ($line =~ /\# thread:.*/) {
         ($junk, $thread) = split("thread:",$line);
         $thread = trim($thread);
       } elsif ($line =~ /\# \$.*/) {
-	    ## ignore the format line
+	## ignore the format line
       } elsif ($line =~ /\# \%.*/) {
-	    ## output the true format line
-		print (OUTPUT "# <timestamp> | <delta-begin> | <delta-end> | <location> | <delta-begin metric 1> <delta-end metric 1> ... <delta-begin metric N> <delta-end metric N> | <tau callpath>\n");
+	## output the true format line
+	print (OUTPUT "# <timestamp> | <delta-begin> | <delta-end> | <location> | <delta-begin metric 1> <delta-end metric 1> ... <delta-begin metric N> <delta-end metric N> | <tau callpath>\n");
       } else {
         print (OUTPUT "$line");
       }
@@ -150,9 +160,8 @@ sub process_trace {
     } else {
       # process sample lines
 
-      my ($type,$timestamp,$deltaStart,$deltaStop,$pc,$metrics,$callpath,$callstack) = split('\|',$line);
+      my ($type,$timestamp,$deltaStart,$deltaStop,$metrics,$callpath,$callstack) = split('\|',$line);
       $timestamp = trim($timestamp);
-      $pc = trim($pc);
       $metrics = trim($metrics);
       $callpath = trim($callpath);
       $callstack = trim($callstack);
@@ -193,15 +202,13 @@ sub process_trace {
 	#         die "inconsistent file $callpath, $check != $$deltaStart\n";
 	#       }
 
-        # Process the PC
-        my $newpc = translate_pc($exe, $pc);
-
 	# Process the callstack
 	my $newCallstack = "";
         foreach my $cs (@callstackEntries) {
 	  my $loc = translate_pc($exe, $cs);
-          $newCallstack = "$newCallstack $loc";
+          $newCallstack = "$newCallstack$loc\@";
         }
+	chop ($newCallstack); # remove the last @
 
         if (($deltaStop < 0) || ($deltaStart < 0)) {
           #print "ignoring negative sample, location: $newpc, callpath: $newCallpath\n";
@@ -214,7 +221,7 @@ sub process_trace {
         }
 
         # Output the processed data
-        print OUTPUT "$timestamp | $deltaStart | $deltaStop | $newpc |";
+        print OUTPUT "$timestamp | $deltaStart | $deltaStop |";
 
         # split the metrics, and their start/stops, and handle them all
         my @metricTokens = split(" ", $metrics);
@@ -225,7 +232,7 @@ sub process_trace {
           print OUTPUT " $deltaMetS $deltaMetE";
         }
 
-        print OUTPUT " | $newCallpath |$newCallstack\n";
+        print OUTPUT " | $newCallpath | $newCallstack\n";
 
 	if (!$inclusive) {
 	  last;
