@@ -5,6 +5,8 @@ import java.util.*;
 
 public class EBSTraceReader {
 
+    private static String reader_version = "0.2";
+
     private DataSource dataSource;
 
     // a map of TAU callpaths to sample callstacks
@@ -193,18 +195,16 @@ public class EBSTraceReader {
                     }
                     location = location.trim();
 
-//                    System.out.println("need to resolve:");
-//                    System.out.println("callpath: " + callpath);
-//                    System.out.println("location: " + location);
+                    //                    System.out.println("need to resolve:");
+                    //                    System.out.println("callpath: " + callpath);
+                    //                    System.out.println("location: " + location);
 
-                    
-                    
                     // we don't need this anymore
                     //String resolvedCallpath = resolveCallpath(callpath, location);
 
                     String resolvedCallpath = callpath + " => " + location;
 
-//                    System.out.println("resolvedCallpath = " + resolvedCallpath);
+                    //                    System.out.println("resolvedCallpath = " + resolvedCallpath);
 
                     Function newCallpathFunc = dataSource.addFunction(resolvedCallpath);
                     newCallpathFunc.addGroup(callpathGroup);
@@ -238,7 +238,16 @@ public class EBSTraceReader {
     }
 
     private String stripFileLine(String location) {
-        return location.substring(0, location.indexOf(':'));
+        try {
+            int lastColon = location.lastIndexOf(':');
+            int secondToLastColon = location.lastIndexOf(':', lastColon);
+            return location.substring(0, secondToLastColon);
+
+        } catch (Exception e) {
+            System.out.println("Location = " + location);
+            e.printStackTrace();
+            return location;
+        }
     }
 
     private void processEBSTrace(DataSource dataSource, File file) {
@@ -256,6 +265,15 @@ public class EBSTraceReader {
             while (inputString != null) {
 
                 if (inputString.startsWith("#")) {
+                    if (inputString.startsWith("# Format version:")) {
+                        String version_text = inputString.substring("# Format version:".length() + 1).trim();
+                        if (!version_text.equals(reader_version)) {
+                            String error = "Wrong EBS version, we are looking for " + reader_version + ", but found "
+                                    + version_text;
+                            System.err.println(error);
+                            throw new RuntimeException(error);
+                        }
+                    }
                     if (inputString.startsWith("# node:")) {
                         String node_text = inputString.substring(8);
                         node = Integer.parseInt(node_text);
@@ -267,30 +285,25 @@ public class EBSTraceReader {
                 } else {
 
                     String fields[] = inputString.split("\\|");
-                    String location = fields[3].trim();
-                    if (!location.startsWith("??:")) {
+                    long timestamp = Long.parseLong(fields[0].trim());
+                    long deltaBegin = Long.parseLong(fields[1].trim());
+                    long deltaEnd = Long.parseLong(fields[2].trim());
+                    String metrics = fields[3].trim();
+                    String callpath = fields[4].trim();
+                    String callstack = fields[5].trim();
+
+                    if (!callstack.startsWith("??:")) {
                         try {
-                            long timestamp = Long.parseLong(fields[0].trim());
-                            long deltaBegin = Long.parseLong(fields[1].trim());
-                            long deltaEnd = Long.parseLong(fields[2].trim());
-                            String metrics = fields[4].trim();
-                            String callpath = fields[5].trim();
 
                             List csList = new ArrayList();
-                            csList.add(location);
 
-                            String callstack = "";
-                            if (fields.length == 7) {
-                                callstack = fields[6].trim();
+                            String callStackEntries[] = callstack.split("@");
 
-                                String callStackEntries[] = callstack.split(" ");
-
-                                for (int i = 0; i < callStackEntries.length; i++) {
-                                    if (showCallSites) {
-                                        csList.add(callStackEntries[i]);
-                                    } else {
-                                        csList.add(stripFileLine(callStackEntries[i]));
-                                    }
+                            for (int i = 0; i < callStackEntries.length; i++) {
+                                if (showCallSites) {
+                                    csList.add(callStackEntries[i]);
+                                } else {
+                                    csList.add(stripFileLine(callStackEntries[i]));
                                 }
                             }
 
