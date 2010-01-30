@@ -347,21 +347,21 @@ public:
 initSuspendFlags floobar(5);
 
 /*
-void Tau_suspend_sampling();
-void Tau_resume_sampling();
+void Tau_sampling_suspend();
+void Tau_sampling_resume();
 
 
-extern "C" void Tau_suspend_sampling();
-extern "C" void Tau_resume_sampling();
+extern "C" void Tau_sampling_suspend();
+extern "C" void Tau_sampling_resume();
 */
 
-extern "C" void Tau_suspend_sampling() {
+extern "C" void Tau_sampling_suspend() {
   int tid = RtsLayer::myThread();
   suspendSampling[tid] = 1;
 //   fprintf (stderr, "suspended sampling on thread %d\n", tid);
 }
 
-extern "C" void Tau_resume_sampling() {
+extern "C" void Tau_sampling_resume() {
   int tid = RtsLayer::myThread();
   suspendSampling[tid] = 0;
 //   fprintf (stderr, "resumed sampling on thread %d\n", tid);
@@ -382,8 +382,8 @@ void show_backtrace_unwind (void* pc) {
   fprintf(stderr, "\n");
 }
 
-void Tau_sampling_output_callstack (int tid, void* pc) {
-  ucontext_t *context = (ucontext_t *) pc;
+void Tau_sampling_output_callstack (int tid, void* in_context) {
+  ucontext_t *context = (ucontext_t *) in_context;
   unw_cursor_t cursor;
   unw_word_t ip, sp;
   int found = 1;
@@ -391,8 +391,8 @@ void Tau_sampling_output_callstack (int tid, void* pc) {
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
   
 
-  fprintf(ebsTrace[tid], " |");
-
+  // fprintf(ebsTrace[tid], " |");
+  // fprintf(stderr,"==========\n");
   unw_init_cursor(&cursor, context);
   while (unw_step(&cursor) > 0) {
     unw_get_reg(&cursor, UNW_REG_IP, &ip);
@@ -401,7 +401,10 @@ void Tau_sampling_output_callstack (int tid, void* pc) {
       return;
     }
     fprintf(ebsTrace[tid], " %p", ip);
+    // fprintf(stderr,"step %p\n", ip);
+    
   }
+  fprintf (stderr,"*** very strange, didn't find profiler, profiler's address was %p\n", profiler->address);
 }
 
 
@@ -444,7 +447,6 @@ void Tau_sampling_flush_record(int tid, TauSamplingRecord *record, void *pc, voi
   fprintf(ebsTrace[tid], "$ | %lld | ", record->timestamp);
   fprintf(ebsTrace[tid], "%lld | ", record->deltaStart);
   fprintf(ebsTrace[tid], "%lld | ", record->deltaStop);
-  fprintf(ebsTrace[tid], "%p | ", record->pc);
 
   for (int i = 0; i < Tau_Global_numCounters; i++) {
     fprintf(ebsTrace[tid], "%.16G ", record->counters[i]);
@@ -455,6 +457,10 @@ void Tau_sampling_flush_record(int tid, TauSamplingRecord *record, void *pc, voi
   fprintf(ebsTrace[tid], "| ");
 
   Tau_sampling_output_callpath(tid);
+
+  fprintf(ebsTrace[tid], " | %p", record->pc);
+
+
 #ifdef TAU_USE_LIBUNWIND
   Tau_sampling_output_callstack(tid, pc);
 #endif /* TAU_USE_LIBUNWIND */
@@ -485,13 +491,13 @@ void *Tau_sampling_event_start(int tid) {
   }
 
   if (hpctoolkit_process_started == 0) {
-    printf ("nope, quitting\n");
+    fprintf (stderr, "nope, quitting\n");
     return 0;
   }
 
   unw_cursor_t cursor;
   unw_word_t ip, sp;
-
+  // fprintf (stderr,"$$$$$$$$$start$$$$$$$$$\n");
   unw_word_t address;
   int count = 0;
   unw_init_cursor(&cursor, &context);
@@ -502,6 +508,8 @@ void *Tau_sampling_event_start(int tid) {
     count++;
   }
   // fprintf (stderr, "\n");
+  // fprintf (stderr,"\nassigning address %p\n", address);
+  // fprintf (stderr,"$$$$$$$$$$$$$$$$$$\n");
 
   return address;
 }
@@ -663,8 +671,8 @@ void Tau_sampling_papi_overflow_handler(int EventSet, void *address, x_int64 ove
  * Output Format Header
  ********************************************************************/
 int Tau_sampling_outputHeader(int tid) {
-  fprintf(ebsTrace[tid], "# Format:\n");
-  fprintf(ebsTrace[tid], "# $ | <timestamp> | <delta-begin> | <delta-end> | <location> | <metric 1> ... <metric N> | <tau callpath>\n");
+  fprintf(ebsTrace[tid], "# Format version: 0.2\n");
+  fprintf(ebsTrace[tid], "# $ | <timestamp> | <delta-begin> | <delta-end> | <metric 1> ... <metric N> | <tau callpath> | <location> [ PC callstack ]\n");
   fprintf(ebsTrace[tid], "# % | <delta-begin metric 1> ... <delta-begin metric N> | <delta-end metric 1> ... <delta-end metric N> | <tau callpath>\n");
   fprintf(ebsTrace[tid], "# Metrics:");
   for (int i = 0; i < Tau_Global_numCounters; i++) {
