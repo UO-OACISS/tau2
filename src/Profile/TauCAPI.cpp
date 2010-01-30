@@ -228,7 +228,8 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid ) {
   p->Start(tid);
 
 #ifdef TAU_EXP_SAMPLING
-  p->address = Tau_sampling_event_start(tid);
+  // p->address = Tau_sampling_event_start(tid);
+  Tau_sampling_event_start(tid, p->address);
 #endif
 
 #ifdef TAU_EXP_SAMPLING
@@ -1394,7 +1395,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.137 $   $Date: 2010/01/30 05:11:06 $
- * VERSION: $Id: TauCAPI.cpp,v 1.137 2010/01/30 05:11:06 amorris Exp $
+ * $Revision: 1.138 $   $Date: 2010/01/30 06:28:22 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.138 2010/01/30 06:28:22 amorris Exp $
  ***************************************************************************/
 

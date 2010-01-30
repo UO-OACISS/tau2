@@ -391,20 +391,23 @@ void Tau_sampling_output_callstack (int tid, void* in_context) {
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
   
 
-  // fprintf(ebsTrace[tid], " |");
-  // fprintf(stderr,"==========\n");
+   // fprintf(stderr,"==========\n");
   unw_init_cursor(&cursor, context);
   while (unw_step(&cursor) > 0) {
     unw_get_reg(&cursor, UNW_REG_IP, &ip);
-    // unw_get_reg(&cursor, UNW_REG_SP, &sp);
-    if (ip == (unw_word_t) profiler->address) {
-      return;
+
+    for (int i=0; i<4; i++) {
+      if (ip == (unw_word_t) profiler->address[i]) {
+	return;
+      }
     }
     fprintf(ebsTrace[tid], " %p", ip);
     // fprintf(stderr,"step %p\n", ip);
     
   }
-  fprintf (stderr,"*** very strange, didn't find profiler, profiler's address was %p\n", profiler->address);
+  fprintf (stderr,"*** very strange, didn't find profiler\n");
+// , profiler's address was %p\n", 
+// 	   profiler->address);
 }
 
 
@@ -478,7 +481,7 @@ void Tau_sampling_flush_record(int tid, TauSamplingRecord *record, void *pc, voi
 
 
 
-void *Tau_sampling_event_start(int tid) {
+void Tau_sampling_event_start(int tid, void **addresses) {
   // fprintf (stderr, "[%d] SAMP: event start: ", tid);
 
   ucontext_t context;
@@ -487,31 +490,36 @@ void *Tau_sampling_event_start(int tid) {
 
   if (ret != 0) {
     fprintf (stderr, "TAU: Error getting context\n");
-    return 0;
+    return;
   }
 
   if (hpctoolkit_process_started == 0) {
     fprintf (stderr, "nope, quitting\n");
-    return 0;
+    return;
   }
 
   unw_cursor_t cursor;
   unw_word_t ip, sp;
   // fprintf (stderr,"$$$$$$$$$start$$$$$$$$$\n");
-  unw_word_t address;
-  int count = 0;
   unw_init_cursor(&cursor, &context);
-  while (unw_step(&cursor) > 0 && count < 3) {
-    unw_get_reg(&cursor, UNW_REG_IP, &ip);
-    address = ip;
-    // fprintf(stderr, " %p", ip);
-    count++;
-  }
-  // fprintf (stderr, "\n");
-  // fprintf (stderr,"\nassigning address %p\n", address);
-  // fprintf (stderr,"$$$$$$$$$$$$$$$$$$\n");
+  int idx=0;
 
-  return address;
+  int skip=1;
+  while (unw_step(&cursor) > 0 && idx<4) {
+    unw_get_reg(&cursor, UNW_REG_IP, &ip);
+
+    if (skip > 0) {
+      // fprintf (stderr,"skipping address %p\n", ip);
+      skip--;
+    } else {
+      addresses[idx++] = ip;
+      // fprintf (stderr,"assigning address %p to index %d\n", ip, idx-1);
+    }
+  }
+  
+   // fprintf (stderr, "\n");
+    // fprintf (stderr,"$$$$$$$$$$$$$$$$$$\n");
+
 }
 
 
