@@ -59,7 +59,8 @@ public class SplitTrialPhasesOperation extends AbstractPerformanceOperation {
 			// iterate through the events, and find the phase events
 			for (String event : input.getEvents()) {
 				// find the events which start with the phase prefix, but are not TAU_PHASE events.
-				if (event.startsWith(phasePrefix) && !event.contains(" => ")) {
+				//if (event.startsWith(phasePrefix) && !event.contains(" => ")) {
+				if (event.contains(phasePrefix) && !event.contains(" => ")) {
 					phases.add(event);
 					if (event.matches(regEx)) {
 						nestedPhases = true;
@@ -92,7 +93,8 @@ public class SplitTrialPhasesOperation extends AbstractPerformanceOperation {
 				for (String event : input.getEvents()) {
 					//String tmpRelation = currentPhasePrefix + "  => " + currentPhase;
 					// find the events which start with the phase prefix
-					if (event.equals(currentPhase) || event.startsWith(currentPhase + " => ")) {
+					//if (event.equals(currentPhase) || event.startsWith(currentPhase + " => ")) {
+					if (event.equals(currentPhase) || event.contains(currentPhase + " => ")) {
 					//if (event.equals(currentPhase) || 
 					    //(event.contains(currentPhase + " ") && event.contains(" => ") && !event.endsWith(currentPhase))) {
 						phaseEvents.add(event);

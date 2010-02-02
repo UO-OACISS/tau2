@@ -60,12 +60,10 @@ def computeLoadBalance(trial, callpath, numPhases):
 	global vectorT_i
 	# extract the non-callpath events from the trial
 	trial.setIgnoreWarnings(True)
-	extracted = None
-	if callpath:
-		extracted = trial
-	else:
-		extractor = ExtractNonCallpathEventOperation(trial)
-		extracted = extractor.processData().get(0)
+	extracted = trial
+	#if not callpath:
+		#extractor = ExtractNonCallpathEventOperation(trial)
+		#extracted = extractor.processData().get(0)
 	mainEventLong = extracted.getMainEvent()
 	mainEvent = mainEventLong
 	if not callpath:
