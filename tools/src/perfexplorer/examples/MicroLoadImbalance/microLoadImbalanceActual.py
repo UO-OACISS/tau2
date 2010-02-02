@@ -9,6 +9,7 @@ import math
 tauData = ""
 masterMeans = None
 iterationPrefix = "Iteration"
+vectorT_i = []
 
 ###################################################################
 
@@ -45,6 +46,8 @@ def loadFile(fileName):
 		gprof = True
 	elif fileName.endswith("ppk"):
 		input = DataSourceResult(DataSourceResult.PPK, files, False)
+	elif fileName.endswith("xml"):
+		input = DataSourceResult(DataSourceResult.SNAP, files, False)
 	else:
 		input = DataSourceResult(DataSourceResult.TAUPROFILE, files, False)
 	return input
@@ -54,6 +57,7 @@ def loadFile(fileName):
 def computeLoadBalance(trial, callpath, numPhases):
 	global masterMeans
 	global iterationPrefix
+	global vectorT_i
 	# extract the non-callpath events from the trial
 	trial.setIgnoreWarnings(True)
 	extracted = None
@@ -107,6 +111,10 @@ def computeLoadBalance(trial, callpath, numPhases):
 	else:
 		print "%d\t %.2f\t %s\t %.2f\t %.2f\t %.2f\t %.2f\t %.4f" % (threads, inclusive, event, mean, max, min, stddev, ratio)
 
+	splits = loadBalance.get(LoadImbalanceOperation.COMPUTATION_SPLITS)
+	for thread in splits.getThreads():
+		vectorT_i[thread] = splits.getExclusive(thread, event, metric) * conversion
+
 	return mean, max, min, stddev, inclusive
 
 
@@ -126,6 +134,7 @@ def main():
 	global tauData
 	global masterMeans
 	global iterationPrefix
+	global vectorT_i
 
 	print "--------------- JPython test script start ------------"
 	print "--- Looking for load imbalances --- "
@@ -140,6 +149,11 @@ def main():
 	statter = BasicStatisticsOperation(trial)
 	masterStats = statter.processData()
 	masterMeans = masterStats.get(BasicStatisticsOperation.MEAN)
+
+	totalVectorT_i = []
+	for thread in trial.getThreads():
+		totalVectorT_i.append(0)
+		vectorT_i.append(0)
 
 	print "Procs\t Incl.\t Type\t\t AVG\t MAX\t MIN\t STDEV\t AVG/MAX"
 	computeLoadBalance(trial, False, 1)
@@ -158,6 +172,7 @@ def main():
 	totalRatio = 0.0
 
 	print "LoopID\t\t Procs\t Incl.\t  Type\t\t AVG\t MAX\t MIN\t STDEV\t AVG/MAX"
+	print "----------------------------------------------------------------------------------------"
 	for phase in phases:
 		mean, max, min, stddev, inclusive = computeLoadBalance(phase, True, phases.size())
 		if mean == max == min == stddev == 0:
@@ -169,6 +184,8 @@ def main():
 		totalMin = totalMin + min
 		totalStddev = totalStddev + (stddev * stddev)
 		totalInclusive = totalInclusive + inclusive
+		for index, item in enumerate(vectorT_i):
+			totalVectorT_i[index] = totalVectorT_i[index] + item
 
 	avgMean = totalMean / phases.size()
 	avgMax = totalMax / phases.size()
@@ -179,7 +196,21 @@ def main():
 
 	event = LoadImbalanceOperation.COMPUTATION
 	#print "%s\t\t %d\t %ls\t %.2f%%\t %.2f%%\t %.2f%%\t %.2f%%\t %.2f%%\t" % ("Average", trial.getThreads().size(), event, avgMean*100, avgMax*100, avgMin*100, avgStddev*100, avgRatio*100)
+	print "----------------------------------------------------------------------------------------"
+	print "%s\t\t %d\t %.2f\t %s\t %.2f\t %.2f\t %.2f\t %.2f\t %.4f" % ("Totals", trial.getThreads().size(), totalInclusive, event, totalMean, totalMax, totalMin, math.sqrt(totalStddev), totalMean / totalMax)
 	print "%s\t\t %d\t %.2f\t %s\t %.2f\t %.2f\t %.2f\t %.2f\t %.4f" % ("Average", trial.getThreads().size(), avgInclusive, event, avgMean, avgMax, avgMin, avgStddev, avgRatio)
+
+	maxT_i = 0
+	for value in totalVectorT_i:
+		maxT_i = myMax(maxT_i, value)
+
+	print "\nT:\t\t", totalInclusive
+	print "T ideal:\t", totalMax
+	print "max(T_i):\t", maxT_i
+	print "LB:\t\t", avgRatio
+	print "microLB:\t", maxT_i / totalMax
+	print "Transfer:\t", totalMax / totalInclusive
+	print "n\t\t", avgRatio * (maxT_i / totalMax) * (totalMax / totalInclusive) * 1.0, "\n"
 	
 	print "---------------- JPython test script end -------------"
 
