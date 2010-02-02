@@ -30,6 +30,9 @@ public class LoadImbalanceOperation extends	AbstractPerformanceOperation {
 	public static int STDDEV = 3;
 	public static int COMMUNICATION_EFFICIENCY = 1; // same as max
 	public static int LOAD_BALANCE = 4; // ratio of avg / max
+	public static int COMPUTATION_SPLITS = 5; // for each thread, an aggregation 
+				//of computation and communication
+	private boolean percentage = true;
 
 	/**
 	 * @param input
@@ -105,18 +108,32 @@ public class LoadImbalanceOperation extends	AbstractPerformanceOperation {
 					// save the values which include all fuctions
 					double communication = split.getExclusive(thread, COMMUNICATION, metric);
 					double computation = total - communication;
-					split.putInclusive(thread, COMPUTATION, metric, computation / total);
-					split.putExclusive(thread, COMPUTATION, metric, computation / total);
-					split.putInclusive(thread, COMMUNICATION, metric, communication / total);
-					split.putExclusive(thread, COMMUNICATION, metric, communication / total);
+					if (this.percentage) {
+						split.putInclusive(thread, COMPUTATION, metric, computation / total);
+						split.putExclusive(thread, COMPUTATION, metric, computation / total);
+						split.putInclusive(thread, COMMUNICATION, metric, communication / total);
+						split.putExclusive(thread, COMMUNICATION, metric, communication / total);
+					} else {
+						split.putInclusive(thread, COMPUTATION, metric, computation);
+						split.putExclusive(thread, COMPUTATION, metric, computation);
+						split.putInclusive(thread, COMMUNICATION, metric, communication);
+						split.putExclusive(thread, COMMUNICATION, metric, communication);
+					}
 
 					// save the values which ignore init, finalize
 					communication = split.getExclusive(thread, KERNEL_COMMUNICATION, metric);
 					computation = totalKernel - communication;
-					split.putInclusive(thread, KERNEL_COMPUTATION, metric, computation / totalKernel);
-					split.putExclusive(thread, KERNEL_COMPUTATION, metric, computation / totalKernel );
-					split.putInclusive(thread, KERNEL_COMMUNICATION, metric, communication / totalKernel );
-					split.putExclusive(thread, KERNEL_COMMUNICATION, metric, communication / totalKernel );
+					if (this.percentage) {
+						split.putInclusive(thread, KERNEL_COMPUTATION, metric, computation / totalKernel);
+						split.putExclusive(thread, KERNEL_COMPUTATION, metric, computation / totalKernel );
+						split.putInclusive(thread, KERNEL_COMMUNICATION, metric, communication / totalKernel );
+						split.putExclusive(thread, KERNEL_COMMUNICATION, metric, communication / totalKernel );
+					} else {
+						split.putInclusive(thread, KERNEL_COMPUTATION, metric, computation);
+						split.putExclusive(thread, KERNEL_COMPUTATION, metric, computation);
+						split.putInclusive(thread, KERNEL_COMMUNICATION, metric, communication);
+						split.putExclusive(thread, KERNEL_COMMUNICATION, metric, communication);
+					}
 
 				}
 			}
@@ -131,8 +148,17 @@ public class LoadImbalanceOperation extends	AbstractPerformanceOperation {
 			// This computes the CommEff term, T_avg/T_max
 		    PerformanceAnalysisOperation ratioMaker = new RatioOperation(stats.get(BasicStatisticsOperation.MEAN), stats.get(BasicStatisticsOperation.MAX));
 		    outputs.add(ratioMaker.processData().get(0));
+		    outputs.add(split);
 		}
 		return outputs;
+	}
+
+	public void setPercentage(boolean percentage) {
+		this.percentage = percentage;
+	}
+
+	public boolean getPercentage() {
+		return this.percentage;
 	}
 
 }

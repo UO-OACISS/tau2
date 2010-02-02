@@ -90,27 +90,30 @@ def main():
 	doStats = BasicStatisticsOperation(extracted, False) 
 	mean = doStats.processData().get(BasicStatisticsOperation.MEAN)
 
-	# get the top X events
-	print "Extracting top events..."
-	mean.setIgnoreWarnings(True)
-	topper = TopXEvents(mean, mean.getTimeMetric(), AbstractResult.EXCLUSIVE, threshold) 
-	topped = topper.processData().get(0)
-
 	# put the top X events names in a file
 	myFile = open(functions, 'w')
-	for event in topped.getEvents():
-		shortEvent = event
-		# fix gprof names
-		if gprof:
-			shortEvent = shortEvent.upper()
-			if shortEvent.startswith("__MODULE"):
-				shortEvent = shortEvent.replace("__MODULE","MODULE")
-				shortEvent = shortEvent.replace("_NMOD_","::")
-		# fix TAU names
-		else:
-			shortEvent = Utilities.shortenEventName(event)
-		print "%00.2f%%\t %s" % (topped.getExclusive(0,event,topped.getTimeMetric()) / mean.getInclusive(0,mean.getMainEvent(),mean.getTimeMetric()) * 100.0, event)
-		myFile.write(shortEvent + "\n")
+
+	for type in [AbstractResult.EXCLUSIVE, AbstractResult.INCLUSIVE]:
+		# get the top X events
+		print "Extracting top events..."
+		mean.setIgnoreWarnings(True)
+		topper = TopXEvents(mean, mean.getTimeMetric(), type, threshold) 
+		topped = topper.processData().get(0)
+
+		for event in topped.getEvents():
+			shortEvent = event
+			# fix gprof names
+			if gprof:
+				shortEvent = shortEvent.upper()
+				if shortEvent.startswith("__MODULE"):
+					shortEvent = shortEvent.replace("__MODULE","MODULE")
+					shortEvent = shortEvent.replace("_NMOD_","::")
+			# fix TAU names
+			else:
+				shortEvent = Utilities.shortenEventName(event)
+			print "%00.2f%%\t %d\t %s" % (topped.getDataPoint(0,event,topped.getTimeMetric(), type) / mean.getInclusive(0,mean.getMainEvent(),mean.getTimeMetric()) * 100.0, mean.getCalls(0,event), shortEvent)
+			myFile.write(shortEvent + "\n")
+
 	myFile.close()
 
 	print "---------------- JPython test script end -------------"
