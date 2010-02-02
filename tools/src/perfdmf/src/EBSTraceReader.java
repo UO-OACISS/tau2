@@ -115,7 +115,7 @@ public class EBSTraceReader {
         return result;
     }
 
-    private void addIntermediateNodes(Thread thread, String callpath) {
+    private void addIntermediateNodes(Thread thread, String callpath, int metric, double chunk) {
 
         String cp[] = callpath.split("=>");
         for (int i = 0; i < cp.length; i++) {
@@ -132,6 +132,9 @@ public class EBSTraceReader {
             if (fp == null) {
                 fp = new FunctionProfile(function, dataSource.getNumberOfMetrics());
                 thread.addFunctionProfile(fp);
+            }
+            if (fp.getNumCalls() == 0) {
+                fp.setInclusive(metric, fp.getInclusive(metric) + chunk);
             }
         }
 
@@ -184,7 +187,6 @@ public class EBSTraceReader {
 
                 for (Iterator it2 = callstacks.iterator(); it2.hasNext();) {
                     List callstack = (List) it2.next();
-                    //Collections.reverse(callstack);
                     String location = null;
                     for (Iterator it3 = callstack.iterator(); it3.hasNext();) {
                         if (location == null) {
@@ -195,21 +197,21 @@ public class EBSTraceReader {
                     }
                     location = location.trim();
 
-                    //                    System.out.println("need to resolve:");
-                    //                    System.out.println("callpath: " + callpath);
-                    //                    System.out.println("location: " + location);
+                    //System.out.println("need to resolve:");
+                    //System.out.println("callpath: " + callpath);
+                    //System.out.println("location: " + location);
 
                     // we don't need this anymore
                     //String resolvedCallpath = resolveCallpath(callpath, location);
 
                     String resolvedCallpath = callpath + " => " + location;
 
-                    //                    System.out.println("resolvedCallpath = " + resolvedCallpath);
+                    //System.out.println("resolvedCallpath = " + resolvedCallpath);
 
                     Function newCallpathFunc = dataSource.addFunction(resolvedCallpath);
                     newCallpathFunc.addGroup(callpathGroup);
 
-                    addIntermediateNodes(thread, resolvedCallpath);
+                    addIntermediateNodes(thread, resolvedCallpath, m, chunk);
 
                     FunctionProfile callpathProfile = thread.getFunctionProfile(newCallpathFunc);
                     if (callpathProfile == null) {
@@ -220,34 +222,28 @@ public class EBSTraceReader {
                     callpathProfile.setInclusive(m, callpathProfile.getInclusive(m) + chunk);
                     callpathProfile.setExclusive(m, callpathProfile.getExclusive(m) + chunk);
                     callpathProfile.setNumCalls(callpathProfile.getNumCalls() + 1);
-
-                    //                    Function newFlatFunc = dataSource.addFunction(location);
-                    //                    FunctionProfile flatProfile = thread.getFunctionProfile(newFlatFunc);
-                    //                    if (flatProfile == null) {
-                    //                        flatProfile = new FunctionProfile(newFlatFunc, dataSource.getNumberOfMetrics());
-                    //                        thread.addFunctionProfile(flatProfile);
-                    //                    }
-
-                    //                  
-                    //                    flatProfile.setInclusive(m, flatProfile.getInclusive(m) + chunk);
-                    //                    flatProfile.setExclusive(m, flatProfile.getExclusive(m) + chunk);
-                    //                    flatProfile.setNumCalls(flatProfile.getNumCalls() + 1);
                 }
             }
         }
     }
 
-    private String stripFileLine(String location) {
+    private static String stripFileLine(String location) {
         try {
             int lastColon = location.lastIndexOf(':');
-            int secondToLastColon = location.lastIndexOf(':', lastColon);
-            return location.substring(0, secondToLastColon);
+            int secondToLastColon = location.lastIndexOf(':', lastColon - 1);
+            return "[INTERMEDIATE] " + location.substring(0, secondToLastColon);
 
         } catch (Exception e) {
             System.out.println("Location = " + location);
             e.printStackTrace();
             return location;
         }
+    }
+
+    static public void main(String[] args) {
+
+        System.out.println(stripFileLine("foo:bar.cc:2060"));
+
     }
 
     private void processEBSTrace(DataSource dataSource, File file) {
@@ -303,7 +299,11 @@ public class EBSTraceReader {
                                 if (showCallSites) {
                                     csList.add(callStackEntries[i]);
                                 } else {
-                                    csList.add(stripFileLine(callStackEntries[i]));
+                                    if (i == 0) {
+                                        csList.add(callStackEntries[i]);
+                                    } else {
+                                        csList.add(stripFileLine(callStackEntries[i]));
+                                    }
                                 }
                             }
 
