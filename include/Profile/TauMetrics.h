@@ -57,4 +57,4 @@ double TauMetrics_getTraceMetricValue(int tid);
 /**
  * Sets the user definable clock
  */ 
-void metric_write_userClock(double value);
+void metric_write_userClock(int tid, double value);
