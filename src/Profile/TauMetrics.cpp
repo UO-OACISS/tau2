@@ -58,6 +58,7 @@ static int traceMetric = 0;
 static function functionArray[TAU_MAX_METRICS];
 
 void metric_read_nullClock(int tid, int idx, double values[]);
+void metric_read_userClock(int tid, int idx, double values[]);
 void metric_read_logicalClock(int tid, int idx, double values[]);
 void metric_read_gettimeofday(int tid, int idx, double values[]);
 void metric_read_linuxtimers(int tid, int idx, double values[]);
@@ -273,6 +274,8 @@ static void initialize_functionArray() {
     found = 1;
     if (compareMetricString(metricv[i], "LOGICAL_CLOCK")) {
       functionArray[pos++] = metric_read_logicalClock;
+    } else if (compareMetricString(metricv[i], "USER_CLOCK")) {
+      functionArray[pos++] = metric_read_userClock;
     } else if (compareMetricString(metricv[i], "GET_TIME_OF_DAY")) {
       functionArray[pos++] = metric_read_gettimeofday;
     } else if (compareMetricString(metricv[i], "TIME")) {

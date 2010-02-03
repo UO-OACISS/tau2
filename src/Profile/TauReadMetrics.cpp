@@ -91,6 +91,20 @@ void metric_read_linuxtimers(int tid, int idx, double values[]) {
 
 double TauWindowsUsecD(void);
 
+
+/* user defined clock */
+
+static double userClock;
+
+void metric_write_userClock(double value) {
+  userClock = value;
+}
+
+void metric_read_userClock(int tid, int idx, double values[]) {
+  values[idx] = userClock;
+}
+
+
 /* clock that uses gettimeofday */
 void metric_read_gettimeofday(int tid, int idx, double values[]) {
 #ifdef TAU_WINDOWS

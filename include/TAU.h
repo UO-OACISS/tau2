@@ -220,6 +220,8 @@ extern void Tau_stop(const char *name);
 #define TAU_QUERY_GET_PARENT_EVENT(event)
 
 
+#define TAU_SET_USER_CLOCK(value)
+
 #endif /* TAU_ENABLED */
 
 

@@ -1,19 +1,19 @@
 /****************************************************************************
-**			TAU Portable Profiling Package			   **
-**			http://www.cs.uoregon.edu/research/tau	           **
+**                      TAU Portable Profiling Package                     **
+**                      http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 2006  						   	   **
+**    Copyright 2009                                                       **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+**    Forschungszentrum Juelich                                            **
 ****************************************************************************/
-/***************************************************************************
-**	File 		: TauMemory.h					  **
-**	Description 	: TAU Profiling Package				  **
-**	Author		: Sameer Shende					  **
-**	Contact		: sameer@cs.uoregon.edu sameer@paratools.com      **
-**	Flags		: Compile with				          **
-**	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
-***************************************************************************/
+/****************************************************************************
+**      File            : TauMemory.h                                      **
+**      Contact         : tau-bugs@cs.uoregon.edu                          **
+**      Documentation   : See http://tau.uoregon.edu                       **
+**      Description     : Support for memory tracking                      **
+**                                                                         **
+****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////
 // Include Files 
@@ -40,7 +40,7 @@ TauVoidPointer Tau_new(const char *file, int line, size_t size, TauVoidPointer p
 #endif /* _TAU_MEMORY_H_ */
 
 /***************************************************************************
- * $RCSfile: TauMemory.h,v $   $Author: sameer $
- * $Revision: 1.3 $   $Date: 2006/07/24 15:49:21 $
- * TAU_VERSION_ID: $Id: TauMemory.h,v 1.3 2006/07/24 15:49:21 sameer Exp $ 
+ * $RCSfile: TauMemory.h,v $   $Author: amorris $
+ * $Revision: 1.4 $   $Date: 2010/02/03 06:09:44 $
+ * TAU_VERSION_ID: $Id: TauMemory.h,v 1.4 2010/02/03 06:09:44 amorris Exp $ 
  ***************************************************************************/

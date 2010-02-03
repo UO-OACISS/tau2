@@ -53,3 +53,8 @@ double TauMetrics_getTraceMetricIndex();
  * Returns the index of the trace metric
  */
 double TauMetrics_getTraceMetricValue(int tid);
+
+/**
+ * Sets the user definable clock
+ */ 
+void metric_write_userClock(double value);

@@ -103,6 +103,7 @@ extern "C" {
 
 
 
+#define TAU_SET_USER_CLOCK(value)               Tau_set_user_clock(value);
 
 
 
@@ -382,6 +383,9 @@ void TAUDECL Tau_metadata(char *name, char *value);
 void TAUDECL Tau_phase_metadata(char *name, char *value);
 void TAUDECL Tau_context_metadata(char *name, char *value);
 
+
+void Tau_set_user_clock(double value);
+
 void Tau_init(int argc, char **argv);
 void Tau_init_ref(int* argc, char ***argv);
 void Tau_set_context(int context);
@@ -497,7 +501,7 @@ void Tau_profile_param1l(long data, const char *dataname);
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: sameer $
- * $Revision: 1.102 $   $Date: 2009/11/07 07:21:36 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.102 2009/11/07 07:21:36 sameer Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: amorris $
+ * $Revision: 1.103 $   $Date: 2010/02/03 06:09:44 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.103 2010/02/03 06:09:44 amorris Exp $ 
  ***************************************************************************/

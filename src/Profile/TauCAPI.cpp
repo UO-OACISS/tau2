@@ -1357,6 +1357,14 @@ void *Tau_query_parent_event(void *event) {
 
 
 //////////////////////////////////////////////////////////////////////
+// User definable clock
+//////////////////////////////////////////////////////////////////////
+extern "C" void Tau_set_user_clock(double value) {
+  metric_write_userClock(value);
+}
+
+
+//////////////////////////////////////////////////////////////////////
 // Sometimes we may link in a library that needs the POMP stuff
 // Even when we're not using opari
 //////////////////////////////////////////////////////////////////////
@@ -1395,7 +1403,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.138 $   $Date: 2010/01/30 06:28:22 $
- * VERSION: $Id: TauCAPI.cpp,v 1.138 2010/01/30 06:28:22 amorris Exp $
+ * $Revision: 1.139 $   $Date: 2010/02/03 06:10:22 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.139 2010/02/03 06:10:22 amorris Exp $
  ***************************************************************************/
 
