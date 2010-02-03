@@ -327,11 +327,6 @@ void Tau_sampling_output_callstack (int tid, void* pc) {
 
 
 
-void* tauStartAddress[TAU_MAX_THREADS];
-
-#ifdef TAU_USE_HPCTOOLKIT
-
-
 int suspendSampling[TAU_MAX_THREADS];
 
 class initSuspendFlags {
@@ -340,12 +335,11 @@ public:
     printf ("TAU: initializing suspend flags %d\n", x);
     for (int i=0; i<TAU_MAX_THREADS; i++) {
       suspendSampling[i] = 0;
-      tauStartAddress[i] = 0;
     }
   }
 };
 
-initSuspendFlags floobar(5);
+initSuspendFlags suspendFlagsInitializer(5);
 
 /*
 void Tau_sampling_suspend();
@@ -367,6 +361,11 @@ extern "C" void Tau_sampling_resume() {
   suspendSampling[tid] = 0;
 //   fprintf (stderr, "resumed sampling on thread %d\n", tid);
 }
+
+
+#ifdef TAU_USE_HPCTOOLKIT
+
+
 
 void show_backtrace_unwind (void* pc) {
   ucontext_t *context = (ucontext_t*) pc;
@@ -518,6 +517,7 @@ void Tau_sampling_event_start(int tid, void **addresses) {
 
   ucontext_t context;
 
+#ifdef TAU_USE_HPCTOOLKIT
   int ret = getcontext(&context);
 
   if (ret != 0) {
@@ -529,6 +529,7 @@ void Tau_sampling_event_start(int tid, void **addresses) {
     fprintf (stderr, "nope, quitting\n");
     return;
   }
+
 
   unw_cursor_t cursor;
   unw_word_t ip, sp;
@@ -551,6 +552,7 @@ void Tau_sampling_event_start(int tid, void **addresses) {
   
    // fprintf (stderr, "\n");
     // fprintf (stderr,"$$$$$$$$$$$$$$$$$$\n");
+#endif /* TAU_USE_HPCTOOLKIT */
 
 }
 
