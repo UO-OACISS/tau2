@@ -94,14 +94,14 @@ double TauWindowsUsecD(void);
 
 /* user defined clock */
 
-static double userClock;
+static double userClock[TAU_MAX_THREADS];
 
-void metric_write_userClock(double value) {
-  userClock = value;
+void metric_write_userClock(int tid, double value) {
+  userClock[tid] = value;
 }
 
 void metric_read_userClock(int tid, int idx, double values[]) {
-  values[idx] = userClock;
+  values[idx] = userClock[tid];
 }
 
 

@@ -58,6 +58,7 @@ static int traceMetric = 0;
 static function functionArray[TAU_MAX_METRICS];
 
 void metric_read_nullClock(int tid, int idx, double values[]);
+void metric_write_userClock(int tid, double value);
 void metric_read_userClock(int tid, int idx, double values[]);
 void metric_read_logicalClock(int tid, int idx, double values[]);
 void metric_read_gettimeofday(int tid, int idx, double values[]);
@@ -423,12 +424,19 @@ void TauMetrics_getMetrics(int tid, double values[]) {
  * Initialize the metrics module
  ********************************************************************/
 int TauMetrics_init() {
+  int i;
+
 #ifdef TAU_EXP_SAMPLING
   metricv_add("TIME");
   if (strcmp(TauEnv_get_ebs_source(),"itimer")!=0) {
     metricv_add(TauEnv_get_ebs_source());
   }
 #endif
+
+  /* Set the user clock values to 0 */
+  for (i = 0; i < TAU_MAX_THREADS; i++) {
+    metric_write_userClock(i, 0);
+  }
 
   read_env_vars();
 
@@ -446,7 +454,7 @@ int TauMetrics_init() {
     /* We obtain the timestamp from COUNTER1, so we only need to trigger
        COUNTER2-N or i=1 through no. of active functions not through 0 */
     RtsLayer::UnLockDB(); // mutual exclusion primitive AddEventToDB locks it
-    for (int i = 1; i < nmetrics; i++) {
+    for (i = 1; i < nmetrics; i++) {
       traceCounterEvents[i] = new TauUserEvent(metricv[i], true);
       /* the second arg is MonotonicallyIncreasing which is true (HW counters)*/
     }

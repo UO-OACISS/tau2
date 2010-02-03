@@ -1360,7 +1360,8 @@ void *Tau_query_parent_event(void *event) {
 // User definable clock
 //////////////////////////////////////////////////////////////////////
 extern "C" void Tau_set_user_clock(double value) {
-  metric_write_userClock(value);
+  int tid = RtsLayer::myThread();
+  metric_write_userClock(tid, value);
 }
 
 
@@ -1403,7 +1404,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.139 $   $Date: 2010/02/03 06:10:22 $
- * VERSION: $Id: TauCAPI.cpp,v 1.139 2010/02/03 06:10:22 amorris Exp $
+ * $Revision: 1.140 $   $Date: 2010/02/03 20:32:10 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.140 2010/02/03 20:32:10 amorris Exp $
  ***************************************************************************/
 
