@@ -34,7 +34,7 @@ public class PSRunLoadHandler extends DefaultHandler {
 
     private String pid = "-1";
     private String thread = "-1";
-    private Map metadata = null;
+    private Map metadata = new HashMap();
     private List metaPrefix = new ArrayList();
     private boolean inMetadata = false;
     private int cacheIndex = 0;
@@ -106,7 +106,6 @@ public class PSRunLoadHandler extends DefaultHandler {
         } else if (name.equalsIgnoreCase("hwpcprofilereport")) {
             isProfile = true;
         } else if (name.equalsIgnoreCase("executioninfo")) {
-            metadata = new HashMap();
             inMetadata = true;
             cacheIndex = 0;
         } else if (name.equalsIgnoreCase("cache") && inMetadata) {
