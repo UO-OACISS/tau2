@@ -405,6 +405,7 @@ int TauTraceDumpEDF(int tid) {
 
   if (tid != 0) { 
     if (TauTraceGetFlushEvents() == 0) {
+      RtsLayer::UnLockDB();
       return 1; 
     }
   }
@@ -415,6 +416,7 @@ int TauTraceDumpEDF(int tid) {
   if ((fp = fopen (filename, "w+")) == NULL) {
     sprintf(errormsg,"Error: Could not create %s",filename);
     perror(errormsg);
+    RtsLayer::UnLockDB();
     return -1;
   }
   
