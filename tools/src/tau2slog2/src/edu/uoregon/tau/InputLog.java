@@ -401,6 +401,22 @@ public class InputLog implements base.drawable.InputAPI
 		return bary_outs.getByteArrayBuf();
 	}	
 	
+	protected static byte[] getInfoVals(double[] vals)
+	{
+		BufArrayOutputStream bary_outs  = new BufArrayOutputStream( vals.length*8 );//8
+		DataOutputStream     data_outs  = new DataOutputStream( bary_outs);
+		try {
+			for(int i=0; i< vals.length;i++)
+			{
+				data_outs.writeDouble(vals[i]);
+			}
+		} catch ( java.io.IOException ioerr ) {
+			ioerr.printStackTrace();
+			System.exit( 1 );
+		}
+		return bary_outs.getByteArrayBuf();
+	}	
+	
 	private static class TAUReaderInit implements TraceReaderCallbacks{
 		
 		public int defClkPeriod(Object userData, double clkPeriod) {
@@ -444,7 +460,7 @@ public class InputLog implements base.drawable.InputAPI
 				name = name.substring(1,name.length()-1);
 			
 			logformat.trace.DobjDef newobj= new logformat.trace.DobjDef(userEventToken, name, Topology.EVENT_ID, 
-					getcolors.nextInt(256),getcolors.nextInt(256),getcolors.nextInt(256), 255, 20, "Count=%d", null);
+					getcolors.nextInt(256),getcolors.nextInt(256),getcolors.nextInt(256), 255, 20, "Count=%E", null);
 			categories.add(newobj);//put(new Integer(numcats), newobj);
 			//numcats++;
 			if(userEventToken>maxEvtId)
@@ -628,12 +644,13 @@ public class InputLog implements base.drawable.InputAPI
 					return 0;
 				}
 			}
+			//System.out.println("Test Evt Double: "+userEventValue+" vs: "+(long)userEventValue);
 			prime = new base.drawable.Primitive(userEventToken,time*clockP,time*clockP,
 					new double[]{time*clockP} ,new int[]{
 					GlobalID(nodeToken,threadToken)
 					//((Integer)global.get(new Point(nodeToken,threadToken))).intValue()
 					},
-					getInfoVals(new int[]{(int)userEventValue}));
+					getInfoVals(new double[]{userEventValue}));
 			eventReady=true;
 			return 0;
 		}
