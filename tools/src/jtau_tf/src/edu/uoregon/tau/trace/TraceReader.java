@@ -278,6 +278,7 @@ public class TraceReader extends TraceFile{
 		for (i=0; i<numevents; i++)
 		{
 			linebuf=edf.readLine();
+			
 			if ( (linebuf.charAt(0) == '\n') || (linebuf.charAt(0) == '#') )
 			{
 				/* -- skip empty, header and comment lines -- */
@@ -535,6 +536,10 @@ public class TraceReader extends TraceFile{
 			/* Get param entry from EventIdMap */
 			
 			EventDescr eventDescr = (EventDescr)EventIdMap.get(new Integer(evt.evid));
+			if(eventDescr==null){
+				System.out.println("Warning: no event definiton for event ID "+evt.evid);
+				continue;
+			}
 			if ((eventDescr.getParameter() != null) && ((eventDescr.getParameter().equals("EntryExit"))))
 			{ /* entry/exit event */
 				if (evt.parameter == 1)
@@ -650,7 +655,15 @@ public class TraceReader extends TraceFile{
 	{
 		
 		try {
-			Fiid.close();
+			if(Fiid!=null)
+			{
+				Fiid.close();
+			}else
+			{
+				System.out.println("Warning: tried to close null file handle");
+			}
+			
+				
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
