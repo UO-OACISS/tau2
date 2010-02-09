@@ -11,25 +11,51 @@ public class EBSTraceReader {
 
     // a map of TAU callpaths to sample callstacks
     private Map sampleMap = new HashMap();
+    private Map sampleCount = new HashMap();
+
+    private Map treeMap = new HashMap();
 
     private int node = -1;
     private int tid = -1;
 
     private static boolean showCallSites = false;
 
+    private Group callpathGroup;
+    private Group sampleGroup;
+
+    private Thread thread;
+
     public EBSTraceReader(DataSource dataSource) {
         this.dataSource = dataSource;
+        callpathGroup = dataSource.getGroup("TAU_CALLPATH");
+        sampleGroup = dataSource.addGroup("TAU_SAMPLE");
     }
 
-    private void addSample(List callstack, String callpath) {
-        Object obj = sampleMap.get(callpath);
+    private void addSample(String callstack, String callpath) {
+        Map map = (Map) sampleMap.get(callpath);
+        if (map != null) {
+            Integer count = (Integer) map.get(callstack);
+            if (count != null) {
+                map.put(callstack, new Integer(count.intValue() + 1));
+            } else {
+                map.put(callstack, new Integer(1));
+            }
+        } else {
+            map = new HashMap();
+            map.put(callstack, new Integer(1));
+            sampleMap.put(callpath, map);
+        }
+    }
+
+    private void addTreeNode(FunctionProfile sampleEvent, FunctionProfile tauEvent) {
+        Object obj = sampleMap.get(tauEvent);
         if (obj != null) {
             List list = (List) obj;
-            list.add(callstack);
+            list.add(sampleEvent);
         } else {
             List list = new ArrayList();
-            list.add(callstack);
-            sampleMap.put(callpath, list);
+            list.add(sampleEvent);
+            sampleMap.put(tauEvent, list);
         }
     }
 
@@ -129,16 +155,113 @@ public class EBSTraceReader {
             Function function = dataSource.addFunction(path);
             function.addGroup(callpathGroup);
 
-            FunctionProfile fp = thread.getFunctionProfile(function);
-            if (fp == null) {
-                fp = new FunctionProfile(function, dataSource.getNumberOfMetrics());
-                thread.addFunctionProfile(fp);
-            }
+            FunctionProfile fp = thread.getOrCreateFunctionProfile(function, dataSource.getNumberOfMetrics());
+
             if (fp.getNumCalls() == 0) {
                 fp.setInclusive(metric, fp.getInclusive(metric) + chunk);
             }
         }
 
+    }
+
+    private void createIntermediateNodes(Thread thread, String callpath, Group callpathGroup) {
+
+        String cp[] = callpath.split("=>");
+        for (int i = 0; i < cp.length; i++) {
+            cp[i] = cp[i].trim();
+        }
+
+        String path = cp[0];
+        for (int i = 1; i < cp.length; i++) {
+            path = path + " => " + cp[i];
+
+            Function function = dataSource.addFunction(path);
+            function.addGroup(callpathGroup);
+
+            FunctionProfile fp = thread.getFunctionProfile(function);
+            if (fp == null) {
+                fp = new FunctionProfile(function, dataSource.getNumberOfMetrics());
+                thread.addFunctionProfile(fp);
+            }
+
+        }
+
+    }
+
+    private void processSample(List csList, String callpath) {
+
+        Function tauCallpathEvent = dataSource.getFunction(callpath);
+
+        if (tauCallpathEvent == null) {
+            System.err.println("Error: callpath not found in profile: " + callpath);
+            return;
+        }
+
+        FunctionProfile tauCallpathFunctionProfile = thread.getFunctionProfile(tauCallpathEvent);
+
+        FunctionProfile tauFlatFP = null;
+        if (callpath.lastIndexOf("=>") != -1) {
+            String tauFlatName = UtilFncs.getRightMost(callpath);
+            Function tauFlatFunction = dataSource.getFunction(tauFlatName);
+            if (tauFlatFunction == null) {
+                System.err.println("Error: function not found in profile: " + tauFlatName);
+                return;
+            }
+            tauFlatFP = thread.getFunctionProfile(tauFlatFunction);
+        }
+
+        List callstack = csList;
+        String location = null;
+        for (Iterator it3 = callstack.iterator(); it3.hasNext();) {
+            if (location == null) {
+                location = (String) it3.next();
+            } else {
+                location = location + " => " + it3.next();
+            }
+        }
+        location = location.trim();
+
+        String resolvedCallpath = callpath + " => " + location;
+
+        Function newCallpathFunc = dataSource.addFunction(resolvedCallpath);
+        newCallpathFunc.addGroup(callpathGroup);
+        newCallpathFunc.addGroup(sampleGroup);
+
+        createIntermediateNodes(thread, resolvedCallpath, callpathGroup);
+
+        FunctionProfile callpathProfile = thread.getFunctionProfile(newCallpathFunc);
+        if (callpathProfile == null) {
+            callpathProfile = new FunctionProfile(newCallpathFunc, dataSource.getNumberOfMetrics());
+            thread.addFunctionProfile(callpathProfile);
+        }
+
+        addTreeNode(callpathProfile, tauCallpathFunctionProfile);
+
+        callpathProfile.setNumCalls(callpathProfile.getNumCalls() + 1);
+
+        if (resolvedCallpath.lastIndexOf("=>") != -1) {
+            String flatName = UtilFncs.getRightMost(resolvedCallpath);
+
+            Function flatFunction = dataSource.addFunction(flatName);
+            newCallpathFunc.addGroup(sampleGroup);
+
+            FunctionProfile flatProfile = thread.getOrCreateFunctionProfile(flatFunction, dataSource.getNumberOfMetrics());
+
+            flatProfile.setNumCalls(flatProfile.getNumCalls() + 1);
+        }
+
+    }
+
+    // Process the calltree
+    private void processTree() {
+        List functionList = thread.getFunctionProfiles();
+        for (Iterator it = functionList.iterator(); it.hasNext();) {
+            FunctionProfile fp = (FunctionProfile) it.next();
+            if (fp.getFunction().isGroupMember(sampleGroup)) {
+
+            }
+
+        }
     }
 
     // Process the map we've generated
@@ -156,8 +279,12 @@ public class EBSTraceReader {
             String callpath = (String) it.next();
 
             // get the set of callstacks for this callpath
-            List callstacks = (List) sampleMap.get(callpath);
-            int numSamples = callstacks.size();
+            Map callstacks = (Map) sampleMap.get(callpath);
+            int numSamples = 0;
+            for (Iterator it2 = callstacks.values().iterator(); it2.hasNext();) {
+                Integer count = (Integer) it2.next();
+                numSamples += count.intValue();
+            }
 
             Function function = dataSource.getFunction(callpath);
 
@@ -188,36 +315,29 @@ public class EBSTraceReader {
                     flatFP.setExclusive(m, 0);
                 }
 
-                for (Iterator it2 = callstacks.iterator(); it2.hasNext();) {
-                    List callstack = (List) it2.next();
-                    String location = null;
-                    for (Iterator it3 = callstack.iterator(); it3.hasNext();) {
-                        if (location == null) {
-                            location = (String) it3.next();
-                        } else {
-                            location = location + " => " + it3.next();
-                        }
-                    }
-                    location = location.trim();
+                for (Iterator it2 = callstacks.keySet().iterator(); it2.hasNext();) {
+                    String callstack = (String) it2.next();
+                    int count = ((Integer) callstacks.get(callstack)).intValue();
+                    double value = chunk * count;
 
-                    String resolvedCallpath = callpath + " => " + location;
+                    String resolvedCallpath = callpath + " => " + callstack;
 
                     Function newCallpathFunc = dataSource.addFunction(resolvedCallpath);
                     newCallpathFunc.addGroup(callpathGroup);
                     newCallpathFunc.addGroup(sampleGroup);
 
-                    addIntermediateNodes(thread, resolvedCallpath, m, chunk, callpathGroup);
+                  
 
-                    FunctionProfile callpathProfile = thread.getFunctionProfile(newCallpathFunc);
-                    if (callpathProfile == null) {
-                        callpathProfile = new FunctionProfile(newCallpathFunc, dataSource.getNumberOfMetrics());
-                        thread.addFunctionProfile(callpathProfile);
-                    }
+                    FunctionProfile callpathProfile = thread.getOrCreateFunctionProfile(newCallpathFunc,
+                            dataSource.getNumberOfMetrics());
 
-                    callpathProfile.setInclusive(m, callpathProfile.getInclusive(m) + chunk);
-                    callpathProfile.setExclusive(m, callpathProfile.getExclusive(m) + chunk);
-                    callpathProfile.setNumCalls(callpathProfile.getNumCalls() + 1);
+                    callpathProfile.setInclusive(m, callpathProfile.getInclusive(m) + value);
+                    callpathProfile.setExclusive(m, callpathProfile.getExclusive(m) + value);
+                    callpathProfile.setNumCalls(callpathProfile.getNumCalls() + count);
 
+                    addIntermediateNodes(thread, resolvedCallpath, m, value, callpathGroup);
+                    
+                    
                     if (resolvedCallpath.lastIndexOf("=>") != -1) {
                         String flatName = UtilFncs.getRightMost(resolvedCallpath);
 
@@ -227,9 +347,9 @@ public class EBSTraceReader {
                         FunctionProfile flatProfile = thread.getOrCreateFunctionProfile(flatFunction,
                                 dataSource.getNumberOfMetrics());
 
-                        flatProfile.setInclusive(m, flatProfile.getInclusive(m) + chunk);
-                        flatProfile.setExclusive(m, flatProfile.getExclusive(m) + chunk);
-                        flatProfile.setNumCalls(flatProfile.getNumCalls() + 1);
+                        flatProfile.setInclusive(m, flatProfile.getInclusive(m) + value);
+                        flatProfile.setExclusive(m, flatProfile.getExclusive(m) + value);
+                        flatProfile.setNumCalls(flatProfile.getNumCalls() + count);
                     }
                 }
             }
@@ -248,17 +368,16 @@ public class EBSTraceReader {
             return location;
         }
     }
-    
 
     private static String stripPath(String location) {
         try {
             int lastColon = location.lastIndexOf(':');
             int secondToLastColon = location.lastIndexOf(':', lastColon - 1);
             String routine = location.substring(0, secondToLastColon);
-            String path = location.substring(secondToLastColon+1,lastColon);
-            String lineno = location.substring(lastColon+1);
-            
-            String filename = path.substring(path.lastIndexOf("/")+1);
+            String path = location.substring(secondToLastColon + 1, lastColon);
+            String lineno = location.substring(lastColon + 1);
+
+            String filename = path.substring(path.lastIndexOf("/") + 1);
 
             return routine + ":" + filename + ":" + lineno;
         } catch (Exception e) {
@@ -301,10 +420,16 @@ public class EBSTraceReader {
                     if (inputString.startsWith("# node:")) {
                         String node_text = inputString.substring(8);
                         node = Integer.parseInt(node_text);
+                        if (tid != -1) {
+                            thread = dataSource.getThread(node, 0, tid);
+                        }
                     }
                     if (inputString.startsWith("# thread:")) {
                         String tid_text = inputString.substring(10);
                         tid = Integer.parseInt(tid_text);
+                        if (node != -1) {
+                            thread = dataSource.getThread(node, 0, tid);
+                        }
                     }
                 } else {
 
@@ -329,7 +454,7 @@ public class EBSTraceReader {
                             if (limit > 1) {
                                 limit--;
                             }
-                            
+
                             for (int i = 0; i < limit; i++) {
                                 if (showCallSites) {
                                     csList.add(callStackEntries[i]);
@@ -343,7 +468,19 @@ public class EBSTraceReader {
                             }
 
                             Collections.reverse(csList);
-                            addSample(csList, callpath);
+
+                            String location = null;
+                            for (Iterator it3 = csList.iterator(); it3.hasNext();) {
+                                if (location == null) {
+                                    location = (String) it3.next();
+                                } else {
+                                    location = location + " => " + it3.next();
+                                }
+                            }
+
+                            addSample(location, callpath);
+                            //addSample(csList, callpath);
+                            //processSample(location, callpath);
                         } catch (Exception e) {
                             e.printStackTrace();
                             System.out.println(inputString);
@@ -354,6 +491,7 @@ public class EBSTraceReader {
                 inputString = br.readLine();
             }
 
+            //processTree();
             processMap();
 
         } catch (Exception ex) {
@@ -365,7 +503,7 @@ public class EBSTraceReader {
     }
 
     public static void processEBSTraces(DataSource dataSource, File path) {
-
+        long time = System.currentTimeMillis();
         if (path.isDirectory() == false) {
             return;
         }
@@ -385,6 +523,9 @@ public class EBSTraceReader {
         for (int i = 0; i < files.length; i++) {
             ebsTraceReader.processEBSTrace(dataSource, files[i]);
         }
+
+        time = (System.currentTimeMillis()) - time;
+        //System.out.println("Time to process (in milliseconds): " + time);
     }
 
 }
