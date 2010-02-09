@@ -11,9 +11,6 @@ public class EBSTraceReader {
 
     // a map of TAU callpaths to sample callstacks
     private Map sampleMap = new HashMap();
-    private Map sampleCount = new HashMap();
-
-    private Map treeMap = new HashMap();
 
     private int node = -1;
     private int tid = -1;
@@ -44,18 +41,6 @@ public class EBSTraceReader {
             map = new HashMap();
             map.put(callstack, new Integer(1));
             sampleMap.put(callpath, map);
-        }
-    }
-
-    private void addTreeNode(FunctionProfile sampleEvent, FunctionProfile tauEvent) {
-        Object obj = sampleMap.get(tauEvent);
-        if (obj != null) {
-            List list = (List) obj;
-            list.add(sampleEvent);
-        } else {
-            List list = new ArrayList();
-            list.add(sampleEvent);
-            sampleMap.put(tauEvent, list);
         }
     }
 
@@ -164,106 +149,6 @@ public class EBSTraceReader {
 
     }
 
-    private void createIntermediateNodes(Thread thread, String callpath, Group callpathGroup) {
-
-        String cp[] = callpath.split("=>");
-        for (int i = 0; i < cp.length; i++) {
-            cp[i] = cp[i].trim();
-        }
-
-        String path = cp[0];
-        for (int i = 1; i < cp.length; i++) {
-            path = path + " => " + cp[i];
-
-            Function function = dataSource.addFunction(path);
-            function.addGroup(callpathGroup);
-
-            FunctionProfile fp = thread.getFunctionProfile(function);
-            if (fp == null) {
-                fp = new FunctionProfile(function, dataSource.getNumberOfMetrics());
-                thread.addFunctionProfile(fp);
-            }
-
-        }
-
-    }
-
-    private void processSample(List csList, String callpath) {
-
-        Function tauCallpathEvent = dataSource.getFunction(callpath);
-
-        if (tauCallpathEvent == null) {
-            System.err.println("Error: callpath not found in profile: " + callpath);
-            return;
-        }
-
-        FunctionProfile tauCallpathFunctionProfile = thread.getFunctionProfile(tauCallpathEvent);
-
-        FunctionProfile tauFlatFP = null;
-        if (callpath.lastIndexOf("=>") != -1) {
-            String tauFlatName = UtilFncs.getRightMost(callpath);
-            Function tauFlatFunction = dataSource.getFunction(tauFlatName);
-            if (tauFlatFunction == null) {
-                System.err.println("Error: function not found in profile: " + tauFlatName);
-                return;
-            }
-            tauFlatFP = thread.getFunctionProfile(tauFlatFunction);
-        }
-
-        List callstack = csList;
-        String location = null;
-        for (Iterator it3 = callstack.iterator(); it3.hasNext();) {
-            if (location == null) {
-                location = (String) it3.next();
-            } else {
-                location = location + " => " + it3.next();
-            }
-        }
-        location = location.trim();
-
-        String resolvedCallpath = callpath + " => " + location;
-
-        Function newCallpathFunc = dataSource.addFunction(resolvedCallpath);
-        newCallpathFunc.addGroup(callpathGroup);
-        newCallpathFunc.addGroup(sampleGroup);
-
-        createIntermediateNodes(thread, resolvedCallpath, callpathGroup);
-
-        FunctionProfile callpathProfile = thread.getFunctionProfile(newCallpathFunc);
-        if (callpathProfile == null) {
-            callpathProfile = new FunctionProfile(newCallpathFunc, dataSource.getNumberOfMetrics());
-            thread.addFunctionProfile(callpathProfile);
-        }
-
-        addTreeNode(callpathProfile, tauCallpathFunctionProfile);
-
-        callpathProfile.setNumCalls(callpathProfile.getNumCalls() + 1);
-
-        if (resolvedCallpath.lastIndexOf("=>") != -1) {
-            String flatName = UtilFncs.getRightMost(resolvedCallpath);
-
-            Function flatFunction = dataSource.addFunction(flatName);
-            newCallpathFunc.addGroup(sampleGroup);
-
-            FunctionProfile flatProfile = thread.getOrCreateFunctionProfile(flatFunction, dataSource.getNumberOfMetrics());
-
-            flatProfile.setNumCalls(flatProfile.getNumCalls() + 1);
-        }
-
-    }
-
-    // Process the calltree
-    private void processTree() {
-        List functionList = thread.getFunctionProfiles();
-        for (Iterator it = functionList.iterator(); it.hasNext();) {
-            FunctionProfile fp = (FunctionProfile) it.next();
-            if (fp.getFunction().isGroupMember(sampleGroup)) {
-
-            }
-
-        }
-    }
-
     // Process the map we've generated
     private void processMap() {
 
@@ -326,8 +211,6 @@ public class EBSTraceReader {
                     newCallpathFunc.addGroup(callpathGroup);
                     newCallpathFunc.addGroup(sampleGroup);
 
-                  
-
                     FunctionProfile callpathProfile = thread.getOrCreateFunctionProfile(newCallpathFunc,
                             dataSource.getNumberOfMetrics());
 
@@ -336,8 +219,7 @@ public class EBSTraceReader {
                     callpathProfile.setNumCalls(callpathProfile.getNumCalls() + count);
 
                     addIntermediateNodes(thread, resolvedCallpath, m, value, callpathGroup);
-                    
-                    
+
                     if (resolvedCallpath.lastIndexOf("=>") != -1) {
                         String flatName = UtilFncs.getRightMost(resolvedCallpath);
 
@@ -479,8 +361,6 @@ public class EBSTraceReader {
                             }
 
                             addSample(location, callpath);
-                            //addSample(csList, callpath);
-                            //processSample(location, callpath);
                         } catch (Exception e) {
                             e.printStackTrace();
                             System.out.println(inputString);
@@ -491,7 +371,6 @@ public class EBSTraceReader {
                 inputString = br.readLine();
             }
 
-            //processTree();
             processMap();
 
         } catch (Exception ex) {
