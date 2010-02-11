@@ -177,7 +177,7 @@ int PapiLayer::initializeThread(int tid) {
     fprintf (stderr, "TAU: Error adding PAPI events: %s\n", PAPI_strerror(rc));
     return -1;
   }
-#elif (PAPI_VERSION_MAJOR(PAPI_VERSION) == 3)
+#elif (PAPI_VERSION_MAJOR(PAPI_VERSION) == 3) || (PAPI_VERSION_MAJOR(PAPI_VERSION) == 4)
   /* PAPI 3 support goes here */
   for (i=0; i<numCounters; i++) {
     int comp = PAPI_COMPONENT_INDEX (counterList[i]);
@@ -387,7 +387,7 @@ int PapiLayer::initializePAPI() {
 #ifndef PAPI_VERSION
   /* PAPI 2 support goes here */
   rc = PAPI_thread_init((unsigned long (*)(void))(RtsLayer::myThread),0);
-#elif (PAPI_VERSION_MAJOR(PAPI_VERSION) == 3)
+#elif (PAPI_VERSION_MAJOR(PAPI_VERSION) == 3) || (PAPI_VERSION_MAJOR(PAPI_VERSION) == 4)
   /* PAPI 3 support goes here */
   rc = PAPI_thread_init((unsigned long (*)(void))(RtsLayer::myThread));
 #else
