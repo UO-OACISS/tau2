@@ -1364,6 +1364,10 @@ extern "C" void Tau_set_user_clock(double value) {
   metric_write_userClock(tid, value);
 }
 
+extern "C" void Tau_set_user_clock_threaad(double value, int tid) {
+  metric_write_userClock(tid, value);
+}
+
 
 //////////////////////////////////////////////////////////////////////
 // Sometimes we may link in a library that needs the POMP stuff
@@ -1404,7 +1408,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.140 $   $Date: 2010/02/03 20:32:10 $
- * VERSION: $Id: TauCAPI.cpp,v 1.140 2010/02/03 20:32:10 amorris Exp $
+ * $Revision: 1.141 $   $Date: 2010/02/11 01:52:56 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.141 2010/02/11 01:52:56 amorris Exp $
  ***************************************************************************/
 
