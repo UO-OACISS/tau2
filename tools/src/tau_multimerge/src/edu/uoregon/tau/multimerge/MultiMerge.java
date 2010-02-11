@@ -266,7 +266,26 @@ public class MultiMerge {
 		{
 			String[] a =name.split("\\.");
 			if(a.length==5){
+			//In some cases the 'node' id contains invalid characters so it must be parsed one character at a time
+				if(a[0].contains("cuda")){
+					//Pattern p = Pattern.compile("([^\\d]+)(\\d+)(.*)");
+					//Matcher m = p.matcher(a[1]);
+					String m = "";
+					//Char c=null;
+					for(int i=0;i<a[1].length();i++){
+						char c = a[1].charAt(i);
+						if(Character.isDigit(c)){
+							m+=c;
+						}
+					}
+					out[0]=Integer.parseInt(m);
+					//out[1]=Integer.parseInt(p.matcher(a[2]).group());
+					//out[2]=Integer.parseInt(p.matcher(a[3]).group());
+				}else{
 				out[0]=Integer.parseInt(a[1]);
+				//out[1]=Integer.parseInt(a[2]);
+				//out[2]=Integer.parseInt(a[3]);
+				}
 				out[1]=Integer.parseInt(a[2]);
 				out[2]=Integer.parseInt(a[3]);
 			}
@@ -387,7 +406,10 @@ public class MultiMerge {
 			do{
 				recs_read=initReaders[rs].readNumEvents(init_cb, -1,t);//1024
 			}while(recs_read!=0&&!initReaders[rs].isDone());
-			initReaders[rs].closeTrace();
+			if(initReaders[rs]!=null)
+			{
+				initReaders[rs].closeTrace();
+			}else System.out.println("Warning: Tried to close null trace");
 			initReaders[rs]=null;
 		}
 	}
@@ -475,63 +497,6 @@ public class MultiMerge {
 
 		tw.closeTrace();
 		System.out.println("The merging is complete.");
-	}
-
-	//	/**
-	//	 * Creates a string builder to identify a communication event at a given time and thread
-	//	 * @param mpi
-	//	 * @param stamp
-	//	 * @param fname
-	//	 * @return
-	//	 */
-	//	private static StringBuilder mpiID(StringBuilder mpi, long stamp, String fname){
-	//		mpi.setLength(0);
-	//		mpi.append(stamp);
-	//		mpi.append(".");
-	//		mpi.append(fname);
-	//		return mpi;
-	//	}
-
-	/**
-	 * Creates a the first half of a two part unique id used to identify the sender/receiver of a communication
-	 * @param id
-	 * @param remNode
-	 * @param size
-	 * @param tag
-	 * @param commun
-	 * @return
-	 */
-	private static StringBuilder commID1(StringBuilder id, int remNode, int size, int tag, int commun){
-		id.setLength(0);
-		id.append(remNode);
-		id.append(".");
-		id.append(size);
-		id.append(".");
-		id.append(tag);
-		id.append(".");
-		id.append(commun);
-		return id;
-	}
-
-	/**
-	 * Creates a the second half of a two part unique id used to identify the sender/receiver of a communication
-	 * @param id
-	 * @param remNode
-	 * @param size
-	 * @param tag
-	 * @param commun
-	 * @return
-	 */
-	private static StringBuilder commID2(StringBuilder id, int remNode, int size, int tag, int commun){
-		id.append(".");
-		id.append(remNode);
-		id.append(".");
-		id.append(size);
-		id.append(".");
-		id.append(tag);
-		id.append(".");
-		id.append(commun);
-		return id;
 	}
 
 	/**
@@ -631,89 +596,10 @@ public class MultiMerge {
 		/*Message registration.  (Message sending is defined in TAUReader below)*/
 		public int sendMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, 
 				int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageComm){
-			//			TotID tot = (TotID)userData;
-			//			tot.rSeen=0;
-			//
-			//			if(tot.sSeen==0){
-			//				tot.mpi=mpiID(tot.mpi,time,tot.filename);
-			//				mpiCom.add(tot.mpi.toString());
-			//				tot.sSeen++;
-			//				tot.uniS=commID1(tot.uniS,destinationNodeToken,messageSize,messageTag,messageComm);
-			//				return 0;
-			//			}
-			//			else if(tot.sSeen==1)
-			//			{
-			//				mpiCom.remove(tot.mpi.toString());
-			//
-			//				tot.sSeen++;
-			//
-			//				return 0;
-			//			}
-			//			else if(tot.sSeen==2){
-			//
-			//				tot.uniS=commID2(tot.uniS,destinationNodeToken,messageSize,messageTag,messageComm);
-			//				Point p =idNodes.get(tot.uniS.toString());
-			//				if(p==null){
-			//					p=new Point(tot.node,-1);
-			//				}else{
-			//					if(p.x==tot.node||p.y==tot.node){
-			//
-			//					}else{
-			//						if(p.y!=-1){
-			//							System.out.println("Warning, doubling up node identifiers!");
-			//						}
-			//						p.y=tot.node;
-			//					}
-			//				}
-			//				idNodes.put(tot.uniS.toString(), p);//Does Uni need to be duplicated?
-			//				tot.uniS.setLength(0);
-			//				tot.sSeen=0;
-			//			}
 
 			return 0;}
 
 		public int recvMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageCom) {
-
-			//			TotID tot = (TotID)userData;
-			//			tot.sSeen=0;
-			//			if(tot.rSeen==0){
-			//				tot.mpi=mpiID(tot.mpi,time,tot.filename);
-			//				mpiCom.add(tot.mpi.toString());
-			//
-			//				tot.uniR=commID1(tot.uniR,sourceNodeToken,messageSize,messageTag,messageCom);
-			//				tot.rSeen++;
-			//				return 0;
-			//			}
-			//			else if(tot.rSeen==1)
-			//			{
-			//				mpiCom.remove(tot.mpi.toString());
-			//
-			//				tot.rSeen++;
-			//
-			//				return 0;
-			//			}
-			//			else if(tot.rSeen==2) {
-			//
-			//				tot.uniR=commID2(tot.uniR,sourceNodeToken,messageSize,messageTag,messageCom);
-			//				Point p =idNodes.get(tot.uniR.toString());
-			//				if(p==null){
-			//					p=new Point(tot.node,-1);
-			//				}else{
-			//					if(p.x==tot.node||p.y==tot.node){
-			//
-			//					}else{
-			//						if(p.y!=-1){
-			//							System.out.println("Warning, doubling up node identifiers!");
-			//						}
-			//						p.y=tot.node;
-			//
-			//					}
-			//				}
-			//				idNodes.put(tot.uniR.toString(), p);//Does Uni need to be duplicated?
-			//				tot.uniR.setLength(0);
-			//				tot.rSeen=0;
-			//			}
-
 			return 0;
 		}
 
@@ -728,14 +614,14 @@ public class MultiMerge {
 					//tot.uniC=commID1(tot.uniR,sourceNodeToken,messageSize,messageTag,messageCom);
 					tot.dp.l1=userEventValue;
 					tot.cSeen=true;
-					System.out.println(userEventToken);
+					//System.out.println(userEventToken);
 					return 0;
 				}
 				else{
 					tot.cSeen=false;
 					//tot.uniR=commID2(tot.uniR,sourceNodeToken,messageSize,messageTag,messageCom);
 					tot.dp.l2=userEventValue;
-					System.out.println(tot.dp);
+					//System.out.println(tot.dp);
 					Point p =idNodes.get(tot.dp.toString());
 					if(p==null){
 						p=new Point(tot.node,-1);
@@ -744,7 +630,7 @@ public class MultiMerge {
 						p.y=tot.node;
 					}
 					
-					System.out.println(" tot "+p);
+					//System.out.println(" tot "+p);
 					
 //					if(p.x==tot.node||p.y==tot.node){
 //
@@ -828,43 +714,6 @@ public class MultiMerge {
 			tw.sendMessage(time, tot.node, tot.thread, transNode.intValue(), destinationThreadToken, messageSize, messageTag, messageComm);
 
 			return 0;
-
-			//			if(tot.sSeen==0){
-			//				tot.uniS=commID1(tot.uniS,destinationNodeToken,messageSize,messageTag,messageComm);
-			//				tot.sSeen++;
-			//			}
-			//			else if(tot.sSeen==1){
-			//				tot.truSize=destinationThreadToken;
-			//				tot.sSeen++;
-			//			}
-			//			else if(tot.sSeen==2){
-			//
-			//				tot.sSeen=0;
-			//				tot.uniS=commID2(tot.uniS,destinationNodeToken,messageSize,messageTag,messageComm);
-			//				Point p = idNodes.get(tot.uniS.toString());
-			//				if(p==null){
-			//					System.out.println("Bad Send: "+tot.uniS);
-			//					return 0;
-			//				}
-			//
-			//				if(p.x!=tot.node&&p.y!=tot.node){
-			//					System.out.println(tot.uniS+" send not for "+tot.node);
-			//				}
-			//
-			//				int remote;
-			//				if(p.x==tot.node)
-			//				{
-			//					remote=p.y;
-			//				}else{
-			//					remote=p.x;
-			//				}
-			//				tw.sendMessage(time, tot.node, tot.thread, remote, 0, tot.truSize, 0, 0);
-			//				tot.truSize=0;
-			//			}else{
-			//				System.out.println("How?");
-			//			}
-			//
-			//			return 0;
 		}
 
 
@@ -883,45 +732,6 @@ public class MultiMerge {
 			tw.recvMessage(time, transNode.intValue(), sourceThreadToken, tot.node, tot.thread, messageSize, messageTag, messageCom);
 
 			return 0;
-
-
-			//			if(tot.rSeen==0){
-			//				tot.uniR=commID1(tot.uniR,sourceNodeToken,messageSize,messageTag,messageCom);
-			//				tot.rSeen++;
-			//			}
-			//			else if(tot.rSeen==1){
-			//				tot.truSize=sourceThreadToken;
-			//				tot.rSeen++;
-			//			}
-			//			else if(tot.rSeen==2){
-			//				tot.rSeen=0;
-			//				tot.uniR=commID2(tot.uniR,sourceNodeToken,messageSize,messageTag,messageCom);
-			//				Point p = idNodes.get(tot.uniR.toString());
-			//				if(p==null){
-			//					System.out.println("Bad Recv: "+tot.uniR);
-			//					return 0;
-			//				}
-			//
-			//				if(p.x!=tot.node&&p.y!=tot.node){
-			//					System.out.println(tot.uniR+" not for "+tot.node);
-			//				}
-			//				tot.uniR.setLength(0);
-			//				int remote;
-			//				if(p.x==tot.node)
-			//				{
-			//					remote=p.y;
-			//				}else{
-			//					remote=p.x;
-			//				}
-			//				tw.recvMessage(time,  remote, 0, tot.node, tot.thread, tot.truSize, 0, 0);
-			//				tot.truSize=0;
-			//
-			//			}
-			//			else{
-			//				System.out.println("How?");
-			//			}
-			//
-			//			return 0;
 		}
 
 
