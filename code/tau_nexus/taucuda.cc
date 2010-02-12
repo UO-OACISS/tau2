@@ -25,12 +25,6 @@ int global_thread_id=0;
 pthread_mutex_t event_mutex;
 pthread_mutexattr_t event_mutex_attr;
 
-pthread_mutex_t ProfileLaunchParameters_mtx;
-pthread_cond_t ProfileLaunchParameters_CPU_cond;
-pthread_cond_t ProfileLaunchParameters_GPU_cond;
-
-cuToolsApi_ProfileLaunchInParams *ProfileLaunchParameters;
-
 int load_count=0;
 bool tau_nexus=false;
 bool clock_sync=false;
@@ -39,13 +33,40 @@ __thread EventManager *my_manager=NULL;
 __thread bool registered=false;
 bool user_events=false;
 
-pthread_t GPUThread;
-
+int gpuTask;
 
 #include <linux/unistd.h>
 #include<dlfcn.h>
 
 #define SYNCH_LATENCY 1
+
+#define CPU_THREAD 0
+#define GPU_THREAD 1
+
+/* create TAU callback routine to capture both CPU and GPU execution time 
+	takes the thread id as a argument. */
+
+// a seperate counter for each GPU.
+double gpu_timestamp[TAU_MAX_THREADS];
+
+double taucuda_time(int tid)
+{
+	if (tid == CPU_THREAD)
+	{	
+		printf("CPU time\n");
+		//get time from the CPU clock
+		struct timeval tp;
+	  gettimeofday(&tp, 0);
+		return ((double)tp.tv_sec * 1e6 + tp.tv_usec);
+	}
+	// get time from the callback API 
+	else
+	{
+		printf("GPU time\n");
+		return gpu_timestamp[tid];
+	}
+}
+
 
 extern x_uint64 TauTraceGetTimeStamp(int tid);
 
@@ -183,60 +204,27 @@ void ExitGenericEvent(cuToolsApi_EnterGenericInParams *clbkParameter)
 {
 	TAU_STOP((char *)clbkParameter->functionName);
 }
-void *ProfileLaunchEvent(void *)
+void ProfileLaunchEvent(cuToolsApi_ProfileLaunchInParams *clbkParameter)
 {
-	pthread_mutex_lock(&ProfileLaunchParameters_mtx);
-	//record these events on a new thread.
-	TAU_REGISTER_THREAD();
+	/*
+		For the first time when the Profiler callback is received we 
+		synchronize the clock. Note that clock synchronization is done here as 
+		synchronizing at the initialization stage created unexpected issues. It's a
+		better place in the call back handler routine as this case occurs only 
+		due to context synchronization or when the CUDA profile manager buffer is full.    
+	*/
+	if(!clock_sync)
 	{
-		while (true)
-		{
-			//printf("GPU: wait for signal.\n");
-			// when this thread wakes up wait until the Parameters are set.
-			pthread_cond_wait(&ProfileLaunchParameters_GPU_cond, &ProfileLaunchParameters_mtx);
-		
-			/* if we get NULL Parameters we have reached the application, exit this
-			 * thread */
-			if (ProfileLaunchParameters == NULL)	
-			{
-				//printf("NULL Pointer, exiting GPU Thread...\n");
-				pthread_mutex_unlock(&ProfileLaunchParameters_mtx);
-				//printf("unlocked Parameter.\n");
-				pthread_cond_signal(&ProfileLaunchParameters_CPU_cond);
-				break;
-			}
-
-			cuToolsApi_ProfileLaunchInParams *clbkParameter =
-			(cuToolsApi_ProfileLaunchInParams *) ProfileLaunchParameters;
-			
-
-			/*
-				For the first time when the Profiler callback is received we 
-				synchronize the clock. Note that clock synchronization is done here as 
-				synchronizing at the initialization stage created unexpected issues. It's a
-				better place in the call back handler routine as this case occurs only 
-				due to context synchronization or when the CUDA profile manager buffer is full.    
-			*/
-			if(!clock_sync)
-			{
-				ClockSynch();
-				clock_sync=true;
-			}
-			/*
-			printf("\nname 4: %s, start time: %lf stop time %lf.\n", (char*)
-			clbkParameter->methodName, ((double)clbkParameter->startTime/1000),
-			((double)clbkParameter->endTime/1000));
-			*/
-			TAU_SET_USER_CLOCK((double)clbkParameter->startTime/1000);
-			TAU_START((char*) clbkParameter->methodName);
-			TAU_SET_USER_CLOCK((double)clbkParameter->endTime/1000);
-			TAU_STOP((char*) clbkParameter->methodName);
-
-			pthread_mutex_unlock(&ProfileLaunchParameters_mtx);
-			//printf("unlocked Parameter.\n");
-			pthread_cond_signal(&ProfileLaunchParameters_CPU_cond);
-		}
+		ClockSynch();
+		clock_sync=true;
 	}
+	
+	gpu_timestamp[gpuTask] = ((double)clbkParameter->startTime/1000);
+	TAU_START_TASK(clbkParameter->methodName, gpuTask);
+	
+	gpu_timestamp[gpuTask] = ((double)clbkParameter->endTime/1000);
+	TAU_STOP_TASK(clbkParameter->methodName, gpuTask);
+
 }
 /**************************************************************************************
 	libcuda.so events are intercepted here as callback.
@@ -269,15 +257,7 @@ void CUDAAPI callback_handle(
 	}
 	else if (*callbackId == cuToolsApi_CBID_ProfileLaunch)
 	{
-		ProfileLaunchParameters = (cuToolsApi_ProfileLaunchInParams*) inParams;
-		
-		void *status;
-
-		//signal the GPU thread to start.	
-		pthread_cond_signal(&ProfileLaunchParameters_GPU_cond);
-		//printf("waiting.\n");
-		//wait until GPU thread is finished.
-		pthread_cond_wait(&ProfileLaunchParameters_CPU_cond, &ProfileLaunchParameters_mtx);
+		ProfileLaunchEvent((cuToolsApi_ProfileLaunchInParams*) inParams);
 	}
 }
 
@@ -301,20 +281,6 @@ void onload(void)
 
 void onunload(void)
 {
-}
-
-inline void initializeGPUThread()
-{
-	pthread_mutex_init (&ProfileLaunchParameters_mtx, NULL);
-	pthread_cond_init (&ProfileLaunchParameters_GPU_cond, NULL);
-	pthread_cond_init (&ProfileLaunchParameters_CPU_cond, NULL);
-	pthread_attr_t attr;
-	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-	
-	//printf("creating GPU thread.");
-	pthread_create(&GPUThread, &attr, ProfileLaunchEvent, NULL);
-	pthread_attr_destroy(&attr);
 }
 
 /*
@@ -384,10 +350,12 @@ inline int InitializeToolsApi(void)
 		This gurads updation in the global list of event managers. 
 	*/
 	
-	pthread_mutexattr_init(&event_mutex_attr);
-	pthread_mutex_init(&event_mutex,&event_mutex_attr);
 
-	initializeGPUThread();
+	/* Create a seperate GPU task */
+	TAU_CREATE_TASK(gpuTask);
+
+	/* Register our time callback */
+	TAU_SET_USER_CLOCK_CALLBACK(taucuda_time);
 
 	return 0;
 }
@@ -462,20 +430,6 @@ int tau_cuda_init(void)
 */
 void tau_cuda_exit(void)
 {
-	//printf("in tau_cuda_exit.\n");
-	ProfileLaunchParameters = NULL;
-	//printf("sending NULL Parameters.\n");
-	pthread_cond_signal(&ProfileLaunchParameters_GPU_cond);
-	pthread_cond_wait(&ProfileLaunchParameters_CPU_cond, &ProfileLaunchParameters_mtx);
-
-	void *status;
-	//printf("joining threads.\n");
-	pthread_join(GPUThread, &status);
-	//printf("cleaning up.\n");
-	
-	pthread_mutex_destroy(&ProfileLaunchParameters_mtx);
-	pthread_cond_destroy(&ProfileLaunchParameters_CPU_cond);
-	pthread_cond_destroy(&ProfileLaunchParameters_GPU_cond);
 	
 	if(!tau_nexus)
 	{
