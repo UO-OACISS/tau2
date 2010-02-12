@@ -26,6 +26,8 @@ extern "C" {
 #endif
 extern void Tau_start(const char *name);
 extern void Tau_stop(const char *name);
+extern void Tau_pure_start_task(const char *name, int tid);
+extern void Tau_pure_stop_task(const char *name, int tid);
 #ifdef __cplusplus
 }
 #endif
@@ -33,6 +35,11 @@ extern void Tau_stop(const char *name);
 /* define the easy to use API */
 #define TAU_START(name) Tau_start(name)
 #define TAU_STOP(name) Tau_stop(name)
+
+/* easy API with tasks */
+#define TAU_START_TASK(name, tid) Tau_pure_start_task(name, tid)
+#define TAU_STOP_TASK(name, tid) Tau_pure_stop_task(name, tid)
+
 /* for consistency, we provide the long form */
 #define TAU_STATIC_TIMER_START TAU_START
 #define TAU_STATIC_TIMER_STOP TAU_STOP

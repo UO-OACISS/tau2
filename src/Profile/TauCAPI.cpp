@@ -1050,8 +1050,8 @@ map<string, int *>& TheIterationMap() {
   return iterationMap;
 }
 
-
-extern "C" void Tau_pure_start(const char *name) {
+extern "C" void Tau_pure_start_task(const char *name, int tid)
+{
   FunctionInfo *fi = 0;
   string n = string(name);
   map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
@@ -1061,10 +1061,13 @@ extern "C" void Tau_pure_start(const char *name) {
   } else {
     fi = (*it).second;
   }
-  Tau_start_timer(fi,0, Tau_get_tid());
+  Tau_start_timer(fi,0, tid);
+}
+extern "C" void Tau_pure_start(const char *name) {
+	Tau_pure_start_task(name, Tau_get_tid());
 }
 
-extern "C" void Tau_pure_stop(const char *name) {
+extern "C" void Tau_pure_stop_task(const char *name, int tid) {
   FunctionInfo *fi;
   string n = string(name);
   map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
@@ -1072,8 +1075,12 @@ extern "C" void Tau_pure_stop(const char *name) {
     fprintf (stderr, "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\nTAU Error: You will likely get an overlapping timer message next\n\n", name);
   } else {
     fi = (*it).second;
-    Tau_stop_timer(fi, Tau_get_tid());
+    Tau_stop_timer(fi, tid);
   }
+}
+extern "C" void Tau_pure_stop(const char *name)
+{
+	Tau_pure_stop_task(name, Tau_get_tid());
 }
 
 extern "C" void Tau_static_phase_start(char *name) {
@@ -1359,12 +1366,13 @@ void *Tau_query_parent_event(void *event) {
 //////////////////////////////////////////////////////////////////////
 // User definable clock
 //////////////////////////////////////////////////////////////////////
+
 extern "C" void Tau_set_user_clock(double value) {
   int tid = RtsLayer::myThread();
   metric_write_userClock(tid, value);
 }
 
-extern "C" void Tau_set_user_clock_threaad(double value, int tid) {
+extern "C" void Tau_set_user_clock_thread(double value, int tid) {
   metric_write_userClock(tid, value);
 }
 
@@ -1407,8 +1415,8 @@ int *tau_pomp_rd_table = 0;
                     
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.141 $   $Date: 2010/02/11 01:52:56 $
- * VERSION: $Id: TauCAPI.cpp,v 1.141 2010/02/11 01:52:56 amorris Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: scottb $
+ * $Revision: 1.142 $   $Date: 2010/02/12 22:52:17 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.142 2010/02/12 22:52:17 scottb Exp $
  ***************************************************************************/
 
