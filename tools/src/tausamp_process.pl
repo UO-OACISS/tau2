@@ -144,7 +144,7 @@ sub process_trace {
 	## ignore the format line
       } elsif ($line =~ /\# \%.*/) {
 	## output the true format line
-	print (OUTPUT "# <timestamp> | <delta-begin> | <delta-end> | <location> | <delta-begin metric 1> <delta-end metric 1> ... <delta-begin metric N> <delta-end metric N> | <tau callpath>\n");
+	print (OUTPUT "# <timestamp> | <delta-begin> | <delta-end> | <delta-begin metric 1> <delta-end metric 1> ... <delta-begin metric N> <delta-end metric N> | <tau callpath> | <pc callstack>\n");
       } else {
         print (OUTPUT "$line");
       }
