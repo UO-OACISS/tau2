@@ -368,6 +368,9 @@ extern "C" void Tau_sampling_resume() {
 //   fprintf (stderr, "resumed sampling on thread %d\n", tid);
 }
 
+extern "C" void Tau_sampling_dlopen() {
+  fprintf (stderr, "TAU: got a dlopen\n");
+}
 
 #ifdef TAU_USE_HPCTOOLKIT
 
@@ -773,6 +776,10 @@ int Tau_sampling_init(int tid) {
   sprintf(filename, "%s/ebstrace.raw.%d.%d.%d.%d", profiledir, getpid(), node, RtsLayer::myContext(), tid);
 
   ebsTrace[tid] = fopen(filename, "w");
+  if (ebsTrace[tid] == NULL) {
+    fprintf (stderr, "Tau Sampling Error: Unable to open %s for writing\n", filename);
+    exit(-1);
+  }
 
   Tau_sampling_outputHeader(tid);
 
@@ -884,7 +891,12 @@ int Tau_sampling_finalize(int tid) {
   char buffer[4096];
   bzero(buffer, 4096);
   int rc = readlink("/proc/self/exe", buffer, 4096);
-  fprintf(ebsTrace[tid], "# exe: %s\n", buffer);
+  if (rc == -1) {
+    fprintf(stderr, "TAU Sampling: Error, unable to read /proc/self/exe\n");
+  } else {
+    buffer[rc] = 0;
+    fprintf(ebsTrace[tid], "# exe: %s\n", buffer);
+  }
 
   /* write out the node number */
   fprintf(ebsTrace[tid], "# node: %d\n", RtsLayer::myNode());
