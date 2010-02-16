@@ -18,6 +18,7 @@
 
 #include "taucuda.h"
 #include "TAU.h"
+#include <Profile/TauInit.h>
 
 ToolsAPI gs_toolsapi;
 
@@ -33,6 +34,7 @@ __thread EventManager *my_manager=NULL;
 __thread bool registered=false;
 bool user_events=false;
 
+void *main_ptr;
 int gpuTask;
 
 #include <linux/unistd.h>
@@ -48,21 +50,25 @@ int gpuTask;
 
 // a seperate counter for each GPU.
 double gpu_timestamp[TAU_MAX_THREADS];
+double cpu_start_time;
 
 double taucuda_time(int tid)
 {
 	if (tid == CPU_THREAD)
 	{	
-		printf("CPU time\n");
 		//get time from the CPU clock
 		struct timeval tp;
 	  gettimeofday(&tp, 0);
+		printf("CPU time: %f \n", ((double)tp.tv_sec * 1e6 + tp.tv_usec));
+		//printf("subtraction: %f \n", cpu_start_time);
+		//printf("CPU time (2): %f \n", ((double)tp.tv_sec * 1e6 + tp.tv_usec) - cpu_start_time);
 		return ((double)tp.tv_sec * 1e6 + tp.tv_usec);
 	}
 	// get time from the callback API 
 	else
 	{
-		printf("GPU time\n");
+		printf("GPU time: %f \n", gpu_timestamp[tid]);
+		//printf("GPU time (2): %f \n", gpu_timestamp[tid] - cpu_start_time);
 		return gpu_timestamp[tid];
 	}
 }
@@ -349,14 +355,21 @@ inline int InitializeToolsApi(void)
 		initialize the synchonization mechanism
 		This gurads updation in the global list of event managers. 
 	*/
-	
+	TAU_PROFILE_SET_NODE(0);
+	TAU_PROFILER_CREATE(main_ptr, "main", "", TAU_USER);
+	//InitializeTAU();
 
 	/* Create a seperate GPU task */
 	TAU_CREATE_TASK(gpuTask);
 
 	/* Register our time callback */
-	TAU_SET_USER_CLOCK_CALLBACK(taucuda_time);
+	TAU_CREATE_USER_CLOCK("TAUCUDA_TIME", taucuda_time);
 
+	printf("Created user clock.\n");
+    
+  TAU_PROFILER_START(main_ptr);	
+
+	printf("started main.\n");
 	return 0;
 }
 /*
@@ -376,8 +389,6 @@ int tau_cuda_init(void)
 	setting the node is helps in getting the correct profile file name.
 	Also top level timer is created here as the application event.  
     */ 
-    TAU_PROFILE_SET_NODE(0);
-    Tau_create_top_level_timer_if_necessary();	
     /*
 	Here is some environment variable setting for CUDA to enable profiler and callbacks. 
 	This is a default setting which will deliver only the default GPU counters. If we want 
@@ -439,6 +450,7 @@ void tau_cuda_exit(void)
 		stop the top level timer which is a dummy event 
 		useful for profile/trace analysis
 	*/
+		TAU_PROFILER_STOP(main_ptr);
 		TAU_PROFILE_EXIT("cuda");
 	//Tau_stop_top_level_timer_if_necessary();
 	//TAU_STATIC_PHASE_STOP(".TAUCudaApplication");					
