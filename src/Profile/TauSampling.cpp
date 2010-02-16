@@ -94,6 +94,12 @@ extern "C" {
 #include <unwind.h>
 }
 
+#include <setjmp.h>
+
+
+extern "C" sigjmp_buf *hpctoolkit_get_thread_jb();
+
+
 extern int hpctoolkit_process_started;
 #endif /* TAU_USE_HPCTOOLKIT */
 
@@ -415,22 +421,30 @@ void Tau_sampling_output_callstack (int tid, void* in_context) {
   int found = 1;
 
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
-  
 
-   // fprintf(stderr,"==========\n");
-  unw_init_cursor(&cursor, context);
-  while (unw_step(&cursor) > 0) {
-    unw_get_reg(&cursor, UNW_REG_IP, &ip);
+  sigjmp_buf *jmpbuf = hpctoolkit_get_thread_jb();
 
-    for (int i=0; i<TAU_SAMP_NUM_ADDRESSES; i++) {
-      if (ip == (unw_word_t) profiler->address[i]) {
-	return;
+  int ljmp = sigsetjmp(*jmpbuf, 1);
+  if (ljmp == 0) {
+    // fprintf(stderr,"==========\n");
+    unw_init_cursor(&cursor, context);
+    while (unw_step(&cursor) > 0) {
+      unw_get_reg(&cursor, UNW_REG_IP, &ip);
+      
+      for (int i=0; i<TAU_SAMP_NUM_ADDRESSES; i++) {
+	if (ip == (unw_word_t) profiler->address[i]) {
+	  return;
+	}
       }
+      // fprintf(stderr,"step %p\n", ip);
+      
+      fprintf(ebsTrace[tid], " %p", ip);
     }
-    fprintf(ebsTrace[tid], " %p", ip);
-    // fprintf(stderr,"step %p\n", ip);
-    
+  } else {
+    fprintf (stderr, "*** unhandled sample:\n");
+    return;
   }
+
   fprintf (stderr,"*** very strange, didn't find profiler\n");
 
   debug_this_try(tid, in_context);
