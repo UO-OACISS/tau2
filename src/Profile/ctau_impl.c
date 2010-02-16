@@ -413,7 +413,7 @@ static ProfilerEntry *newProfilerEntry(ProfilerObject *pObj, void *key, PyObject
 	TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
       }
   } else {
-    if (strcmp (cname, "start") && strcmp (cname, "stop") && strcmp (cname, "disable")) {
+    if (strcmp (cname, "profileTimer") && strcmp (cname, "start") && strcmp (cname, "stop") && strcmp (cname, "disable")) {
 /*       sprintf (routine,"C [%s]", cname); */
       sprintf (routine,"%s", cname);
       TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
