@@ -138,12 +138,27 @@ int samplingEnabled[TAU_MAX_THREADS];
 /*********************************************************************
  * Get the architecture specific PC
  ********************************************************************/
+
+
+
+#if __WORDSIZE == 32
+#  define UCONTEXT_REG(uc, reg) ((uc)->uc_mcontext.uc_regs->gregs[reg])
+#else
+#  define UCONTEXT_REG(uc, reg) ((uc)->uc_mcontext.gp_regs[reg])
+#endif
+
+#define PPC_REG_PC 32
+
 static inline caddr_t get_pc(void *p) {
   struct ucontext *uc = (struct ucontext *)p;
   caddr_t pc;
   struct sigcontext *sc;
   sc = (struct sigcontext *)&uc->uc_mcontext;
-# ifdef __x86_64__
+
+#ifdef TAU_BGP
+  //  pc = (caddr_t)sc->uc_regs->gregs[PPC_REG_PC];
+  pc = (caddr_t)UCONTEXT_REG(uc, PPC_REG_PC);
+# elif __x86_64__
   pc = (caddr_t)sc->rip;
 # elif i386
   pc = (caddr_t)sc->eip;
