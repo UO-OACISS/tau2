@@ -845,6 +845,48 @@ int Tau_sampling_init(int tid) {
   return 0;
 }
 
+
+/*********************************************************************
+ * Write maps file
+ ********************************************************************/
+int Tau_sampling_write_maps(int tid, int restart) {
+  const char *profiledir = TauEnv_get_profiledir();
+
+  int node = RtsLayer::myNode();
+  node = 0;
+  char filename[4096];
+  sprintf(filename, "%s/ebstrace.map.%d.%d.%d.%d", profiledir, getpid(), node, RtsLayer::myContext(), tid);
+
+  FILE *output = fopen (filename, "a");
+
+
+  FILE *mapsfile = fopen ("/proc/self/maps", "r");
+  if (mapsfile == NULL) {
+    return -1;
+  }
+  
+  char line[4096];
+  while (!feof(mapsfile)) {
+    fgets(line, 4096, mapsfile);
+    // printf ("=> %s", line);
+    unsigned long start, end, offset;
+    char module[4096];
+    char perms[5];
+    module[0] = 0;
+
+
+    sscanf(line, "%lx-%lx %s %lx %*s %*u %[^\n]", &start, &end, perms, &offset, module);
+
+    if (*module && ((strcmp(perms, "r-xp") == 0) || (strcmp(perms, "rwxp") == 0))) {
+      // printf ("got %s, %p-%p (%d)\n", module, start, end, offset);
+      fprintf (output, "%s %p %p %d\n", module, start, end, offset);
+    }
+  }
+  fclose(output);
+
+  return 0;
+}
+
 /*********************************************************************
  * Finalize the sampling trace system
  ********************************************************************/
@@ -903,6 +945,8 @@ int Tau_sampling_finalize(int tid) {
   fprintf(ebsTrace[tid], "# thread: %d\n", tid);
 
   fclose(ebsTrace[tid]);
+
+  Tau_sampling_write_maps(tid, 0);
   return(0);
 }
 
