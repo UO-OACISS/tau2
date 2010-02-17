@@ -30,8 +30,10 @@ sub trim($) {
 
 my %pcmap;
 
+my @address_maps;
+
 # Translate a PC value
-sub translate_pc {
+sub old_translate_pc {
   my ($exe, $pc) = @_;
 
   if (defined $pcmap{$pc}) {
@@ -87,9 +89,176 @@ sub translate_pc {
   return "$func:$fileline";
 }
 
+# Translate a PC value
+sub translate_pc {
+  my ($exe, $pc) = @_;
+  if (defined $pcmap{$pc}) {
+      return "$pcmap{$pc}";
+  }
+#  print "Looking to translate $pc\n";
+
+  if ($forked == 0) {
+    $forked = 1;
+    my $pid = fork;
+
+    ##### child process becomes the program
+    if ($pid == 0) {
+      ##### attach standard input/output/error to the pipes
+      close  STDIN;
+      open  (STDIN,  '<&FROM_PERL') || die ("open: $!");
+
+      close  STDOUT;
+      open  (STDOUT, '>&TO_PERL')   || die ("open: $!");
+
+      close  STDERR;
+      open  (STDERR, '>&STDOUT')    || die;
+
+      ##### close unused parts of pipes
+      close FROM_PROGRAM;
+      close TO_PROGRAM;
+
+      ##### unbuffer the outputs
+      select STDERR; $| = 1;
+      select STDOUT; $| = 1;
+
+
+      ##### execute the program
+      exec "addr2line -C -f -e $exe";
+
+      ##### shouldn't get here!!!
+      die;
+    } else {
+      close FROM_PERL;
+      close TO_PERL;
+    }
+  }
+
+  # write the pc to addr2line
+  print TO_PROGRAM "$pc\n";
+
+  # read the result
+  my $func = <FROM_PROGRAM>;
+  my $fileline = <FROM_PROGRAM>;
+
+  chomp($func);
+  chomp($fileline);
+
+  if ($func eq "??") {
+    foreach my $rec (@address_maps) {
+      #print "between $rec->{ADDR_START} and $rec->{ADDR_END} ???\n";
+      if (hex $pc > hex $rec->{ADDR_START} &&  hex $pc < hex $rec->{ADDR_END}) {
+	#print "yes!\n";
+	#print "$rec->{BINARY}\n";
+
+	my $newpc = (hex $pc) - (hex $rec->{ADDR_START});
+	#print "newpc = $newpc\n";
+
+
+	#print "Hexadecimal number: ", uc(sprintf("%x\n", $newpc)), "\n";
+
+	$newpc = uc(sprintf("%x", $newpc));
+
+
+	# write the pc to addr2line
+	my $outhandle = $rec->{TO_CONVERTER};
+
+	print $outhandle "$newpc\n";
+
+	# read the result
+	my $handle = $rec->{FROM_CONVERTER};
+
+
+	my $func = <$handle>;
+	my $fileline = <$handle>;
+
+	chomp($func);
+	chomp($fileline);
+
+	$pcmap{$pc} = "$func:$fileline";
+	#print "returning $pcmap{$pc}\n";
+	return "$func:$fileline";
+
+      } else {
+#	print "no!\n";
+      }
+    }
+  }
+
+  $pcmap{$pc} = "$func:$fileline";
+#  print "returning $pcmap{$pc}\n";
+  return "$func:$fileline";
+}
+
+
+sub read_maps {
+  my ($exe, $map_file) = @_;
+#  print "reading maps\n";
+  my @lines = `cat $map_file`;
+  foreach my $line (@lines) {
+    chomp($line);
+    my ($binary, $start, $end, $offset) = split (" ", $line);
+#    print "got line: $line\n";
+
+
+    pipe (SUB_FROM_PERL, SUB_TO_PROGRAM);
+    pipe (SUB_FROM_PROGRAM, SUB_TO_PERL);
+    SUB_TO_PROGRAM->autoflush(1);
+    SUB_TO_PERL->autoflush(1);
+
+#    print "addr2line -C -f -e $binary\n";
+    my $pid = fork;
+
+
+    if ($pid == 0) {
+      ##### attach standard input/output/error to the pipes
+      close  STDIN;
+      open  (STDIN,  '<&SUB_FROM_PERL') || die ("open: $!");
+
+      close  STDOUT;
+      open  (STDOUT, '>&SUB_TO_PERL')   || die ("open: $!");
+
+      close  STDERR;
+      open  (STDERR, '>&STDOUT')    || die;
+
+      ##### close unused parts of pipes
+      close SUB_FROM_PROGRAM;
+      close SUB_TO_PROGRAM;
+
+      ##### unbuffer the outputs
+      select STDERR; $| = 1;
+      select STDOUT; $| = 1;
+
+
+      ##### execute the program
+      exec "addr2line -C -f -e $binary";
+
+      ##### shouldn't get here!!!
+      die;
+    }
+
+    close SUB_FROM_PERL;
+    close SUB_TO_PERL;
+
+
+    my $rec = {
+	    BINARY => $binary,
+	    ADDR_START => $start,
+	    ADDR_END => $end,
+	    OFFSET => $offset,
+	    TO_CONVERTER => \*SUB_TO_PROGRAM,
+	    FROM_CONVERTER => \*SUB_FROM_PROGRAM,
+	   };
+    push (@address_maps,$rec);
+
+
+  }
+
+}
+
+
 # process an EBS trace file
 sub process_trace {
-  my($def_file, $trace_file, $out_file, $inclusive) = @_;
+  my($def_file, $trace_file, $map_file, $out_file, $inclusive) = @_;
 
   # Read event definitions
   my %eventmap;
@@ -127,6 +296,7 @@ sub process_trace {
       if ($line =~ /\# exe:.*/) {
         ($junk, $exe) = split("exe:",$line);
         $exe = trim($exe);
+	read_maps($exe, $map_file);
       } elsif ($line =~ /\# node:.*/) {
         ($junk, $node) = split("node:",$line);
         $node = trim($node);
@@ -258,14 +428,15 @@ sub main {
   }
   my $pattern = "ebstrace.raw.*.*.*.*";
   while (defined(my $filename = glob($pattern))) {
-    my ($trace_file, $def_file, $out_file);
+    my ($trace_file, $def_file, $map_file, $out_file);
     $trace_file = $filename;
     my ($junk1, $junk2);
     my ($junk1,$junk2,$pid,$nid,$cid,$tid) = split('\.',$filename);
     $def_file = "ebstrace.def.$pid.$nid.$cid.$tid";
+    $map_file = "ebstrace.map.$pid.$nid.$cid.$tid";
     $out_file = "ebstrace.processed.$pid.$nid.$cid.$tid";
     print "processing $filename ...\n";
-    process_trace($def_file, $trace_file, $out_file, $inclusive);
+    process_trace($def_file, $trace_file, $map_file, $out_file, $inclusive);
   }
   print "...done.\n";
 }
