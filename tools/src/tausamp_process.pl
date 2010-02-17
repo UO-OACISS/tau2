@@ -199,6 +199,10 @@ sub read_maps {
     my ($binary, $start, $end, $offset) = split (" ", $line);
 #    print "got line: $line\n";
 
+    if ($binary eq "[stack]") {
+      next;
+    }
+
 
     pipe (SUB_FROM_PERL, SUB_TO_PROGRAM);
     pipe (SUB_FROM_PROGRAM, SUB_TO_PERL);
