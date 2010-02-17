@@ -152,6 +152,10 @@ case $1 in
 	echo "s,^SILCDIR=.*$,SILCDIR=$silcdir,g" >> $sedout
 	;;
 
+     vampirtracedir=*)
+	vampirtracedir=`echo $1 | sed -e 's/^vampirtracedir=//' -e 's/#/ /g'`
+	echo "s,^VAMPIRTRACEDIR=.*$,VAMPIRTRACEDIR=$vampirtracedir,g" >> $sedout
+	;;
      vampirtraceincs=*)
 	vampirtraceincs=`echo $1 | sed -e 's/^vampirtraceincs=//' -e 's/#/ /g'`
 	echo "s,^VAMPIRTRACEINCS=.*$,VAMPIRTRACEINCS=$vampirtraceincs,g" >> $sedout
