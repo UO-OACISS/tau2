@@ -30,6 +30,7 @@
 bool Tau_snapshot_initialization();
 extern "C" void Tau_stack_initialization();
 extern "C" int Tau_compensate_initialization();
+extern "C" int Tau_profiler_initialization();
 
 
 /* -- signal catching to flush event buffers ----------------- */
@@ -108,7 +109,9 @@ extern "C" int InitializeTAU() {
 
   /* initialize the Profiler stack */
   Tau_stack_initialization();
-  
+
+  Tau_profiler_initialization();
+
   /********************************************/
   /* other initialization code should go here */
   /********************************************/

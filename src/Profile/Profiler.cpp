@@ -1118,9 +1118,32 @@ static int writeProfile(FILE *fp, char *metricName, int tid, int metric,
   return 0;
 }
 
+
+static int profileWriteCount[TAU_MAX_THREADS];
+static int profileWriteWarningPrinted = 0;
+
+extern "C" int Tau_profiler_initialization() {
+  int i;
+  for (i = 1; i < TAU_MAX_THREADS; i++) {
+    profileWriteCount[i] = 0;
+  }
+  profileWriteWarningPrinted = 0;
+}
+
+
 // Store profile data at the end of execution (when top level timer stops)
 int TauProfiler_StoreData(int tid) {
   int i;
+
+  profileWriteCount[tid]++;
+  if (profileWriteCount[tid] == 10) {
+    RtsLayer::LockDB();
+    if (profileWriteWarningPrinted == 0) {
+      profileWriteWarningPrinted = 1;
+      fprintf (stderr, "TAU: Warning: Profile data for at least one thread has been written out more than 10 times!\nTAU: This could cause extreme overhead and be due to an error\nTAU: in instrumentation (lack of top level timer).\nTAU: If using OpenMP, make sure -opari is enabled.\n");
+    }
+    RtsLayer::UnLockDB();
+  }
   finalizeTrace(tid);
   
 #ifdef TAU_EXP_SAMPLING
@@ -1329,6 +1352,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.260 $   $Date: 2009/12/17 23:33:27 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.260 2009/12/17 23:33:27 amorris Exp $ 
+ * $Revision: 1.261 $   $Date: 2010/02/18 05:37:35 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.261 2010/02/18 05:37:35 amorris Exp $ 
  ***************************************************************************/
