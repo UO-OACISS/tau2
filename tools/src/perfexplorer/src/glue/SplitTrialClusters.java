@@ -86,6 +86,7 @@ public class SplitTrialClusters extends	AbstractPerformanceOperation {
 			}
 			for (int i = 0 ; i < clusters.size() ; i++) {
 				outputs.add(clusters.get(i));
+				System.out.println(clusters.get(i).getThreads());
 			}
 			resultIndex++;
 		}

@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if [ $# -lt 2 ]
+then
+  echo ""
+  echo "Usage: "
+  echo ""
+  echo "  $0 <path-to-TAU-data> <iteration prefix>"
+  echo ""
+  echo "Notes:"
+  echo ""
+  echo "  * Specify the file as either the path to the TAU profiles, or the"
+  echo "    filename of the packed TAU data."
+  echo ""
+  exit 1
+fi
+
+working_path=`echo $0 | sed 's/newDoClusterActual//'`
+
+eval perfexplorer -c perfexplorer_working -n -i ${working_path}newClusterTestActual.py -p "tauData=$1,prefix=$2"

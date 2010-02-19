@@ -1,0 +1,35 @@
+#created on: Aug 5, 2007
+package edu.uoregon.tau.perfexplorer.rules
+
+#list any import classes here.
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;;
+import edu.uoregon.tau.perfexplorer.glue.Provenance;
+import edu.uoregon.tau.perfexplorer.glue.Script;
+import edu.uoregon.tau.perfexplorer.glue.MeanEventFact;
+import edu.uoregon.tau.perfexplorer.glue.DifferenceOperation;
+
+#declare any global variables here
+
+#function myFunction( ... ) 
+    #function content (can have multiple functions) 
+#end
+
+rule "Load Imbalance"
+	when 
+		// there is a load imbalance for one event which is a significant event
+		f : MeanEventFact ( 
+			m : metric, 
+			severity : severity > 0.10, 
+			e : eventName, 
+			a : mainValue,
+			v : eventValue > 0.15, 
+			factType == "Load Imbalance" )
+	then
+		//System.out.println ( f.toString() );
+		System.out.println("The event " + e + " has a high load imbalance for metric " + m);
+		System.out.println("\tMean/Stddev ratio: " + a + ", Stddev actual: " + v);
+		System.out.println("\tPercentage of total runtime: " + f.getPercentage() + "\n");
+		assert(new FactWrapper("Imbalanced Event", e, null));
+end
+
+

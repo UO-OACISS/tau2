@@ -1,0 +1,193 @@
+#created on: Aug 5, 2007
+package edu.uoregon.tau.perfexplorer.rules
+
+#list any import classes here.
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;;
+import edu.uoregon.tau.perfexplorer.glue.Provenance;
+import edu.uoregon.tau.perfexplorer.glue.Script;
+import edu.uoregon.tau.perfexplorer.glue.MeanEventFact;
+import edu.uoregon.tau.perfexplorer.glue.DifferenceOperation;
+
+#declare any global variables here
+
+#function myFunction( ... ) 
+    #function content (can have multiple functions) 
+#end
+
+
+rule "High FP Inefficiency"
+	when 
+		// there is a inefficiency rate higher than the average inefficiency rate
+		f : MeanEventFact ( 
+			m : metric == "(FP_OPS_RETIRED*(BACK_END_BUBBLE_ALL/CPU_CYCLES))", 
+			b : betterWorse == MeanEventFact.HIGHER, 
+			severity : severity > 0.02, 
+			e : eventName, 
+			a : mainValue, 
+			v : eventValue, 
+			factType == "Compared to Main" )
+	then
+		//System.out.println ( f.toString() );
+		System.out.println("The event " + e + " has a higher than average FP inefficiency");
+		System.out.println("\tAverage Inefficiency: " + a + ", Event Inefficiency: " + v);
+		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
+		// get the last operation from the provenance
+		/*PerformanceAnalysisOperation operation = Provenance.getLastOperation();
+		Script.getInstance().addParameter(operation.getOutputs().get(0));
+		Script.execute("openuh/totalStalls.py");*/
+end
+
+rule "High Instruction Inefficiency"
+	when 
+		// there is a inefficiency rate higher than the average inefficiency rate
+		f : MeanEventFact ( 
+			m : metric == "(IA64_INST_RETIRED_THIS*(BACK_END_BUBBLE_ALL/CPU_CYCLES))", 
+			b : betterWorse == MeanEventFact.HIGHER, 
+			severity : severity > 0.00, 
+			e : eventName, 
+			a : mainValue, 
+			v : eventValue,
+			factType == "Compared to Main" )
+	then
+		//System.out.println ( f.toString() );
+		System.out.println("The event " + e + " has a higher than average inefficiency");
+		System.out.println("\tAverage Inefficiency: " + f.getPercentage(a) + ", Event Inefficiency: " + f.getPercentage(v));
+		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
+		// get the last operation from the provenance
+		/*PerformanceAnalysisOperation operation = Provenance.getLastOperation();
+		Script.getInstance().addParameter(operation.getOutputs().get(0));
+		Script.execute("openuh/totalStalls.py");*/
+end
+
+rule "Stalls per Second"
+	when 
+		// there is a inefficiency rate higher than the average inefficiency rate
+		f : MeanEventFact ( 
+			m : metric == "(BACK_END_BUBBLE_ALL/LINUX_TIMERS)", 
+			b : betterWorse == MeanEventFact.HIGHER, severity : severity > 0.02, 
+			e : eventName, 
+			a : mainValue, 
+			v : eventValue, 
+			factType == "Compared to Main" )
+	then
+		//System.out.println ( f.toString() );
+		System.out.println("The event " + e + " has a higher than average stall / second rate");
+		System.out.println("\tAverage stalls per second (millions): " + a + ", Event stalls per second (millions): " + v);
+		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
+		// get the last operation from the provenance
+		/*PerformanceAnalysisOperation operation = Provenance.getLastOperation();
+		Script.getInstance().addParameter(operation.getOutputs().get(0));
+		Script.execute("openuh/totalStalls.py");*/
+end
+
+rule "Stalls per Cycle"
+	when 
+		// there is a inefficiency rate higher than the average inefficiency rate
+		f : MeanEventFact ( 
+			m : metric == "(BACK_END_BUBBLE_ALL/CPU_CYCLES)", 
+			b : betterWorse == MeanEventFact.HIGHER, severity : severity > 0.02, 
+			e : eventName, 
+			a : mainValue, 
+			v : eventValue, 
+			factType == "Compared to Main" )
+	then
+		//System.out.println ( f.toString() );
+		System.out.println("The event " + e + " has a higher than average stall / cycle rate");
+		System.out.println("\tAverage stalls per cycle: " + a + ", Event stalls per cycle: " + v);
+		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
+		// get the last operation from the provenance
+		/*PerformanceAnalysisOperation operation = Provenance.getLastOperation();
+		Script.getInstance().addParameter(operation.getOutputs().get(0));
+		Script.execute("openuh/totalStalls.py");*/
+end
+
+rule "Load Imbalance"
+	when 
+		// there is a load imbalance for one event which is a significant event
+		f : MeanEventFact ( 
+			m : metric, 
+			severity : severity > 0.10, 
+			e : eventName, 
+			a : mainValue,
+			v : eventValue > 0.15, 
+			factType == "Load Imbalance" )
+	then
+		//System.out.println ( f.toString() );
+		System.out.println("The event " + e + " has a high load imbalance for metric " + m);
+		System.out.println("\tMean/Stddev ratio: " + a + ", Stddev actual: " + v);
+		System.out.println("\tPercentage of total runtime: " + f.getPercentage() + "\n");
+		assert(new FactWrapper("Imbalanced Event", e, null));
+end
+
+rule "New Schedule Suggested"
+	when
+		f1 : FactWrapper ( factName == "Imbalanced Event", e1 : factType )
+		f2 : FactWrapper ( factName == "Imbalanced Event", e2 : factType != e1 )
+		f3 : FactWrapper ( factName == "Callpath name/value", e3 : factType )
+		eval ( e3.equals( e1 + " => " + e2) )
+	then
+		System.out.println(e1 + " calls " + e2 + ", and they are both showing signs of load imbalance.");
+		System.out.println("If these events are in an OpenMP parallel region, consider methods to balance the workload, including dynamic instead of static work assignment.\n");
+end
+
+rule "Examination of Stalls"
+	when 
+		// If most of the stalls from a region of code are L1 data cache misses and FP stalls,
+		// then issue a warning to that effect.  
+		// The metric name is hairy - see the totalstalls.py script for details.
+		f : MeanEventFact ( 
+			m : metric == "((((BE_L1D_FPU_BUBBLE_L1D+BE_EXE_BUBBLE_GRALL)-BE_EXE_BUBBLE_GRGR)/BACK_END_BUBBLE_ALL)+((BE_EXE_BUBBLE_FRALL+BE_L1D_FPU_BUBBLE_FPU)/BACK_END_BUBBLE_ALL))", 
+			severity : severity >= 0.02, 
+			e : eventName, 
+			v : eventValue >= 0.9 )
+	then
+		System.out.println("The event " + e + " has a high percentage of stalls due to L1 data cache misses and FP Stalls.");
+		System.out.println("\tPercent of Stalls due to these two reasons: " + f.getPercentage(v));
+		System.out.println("\tPercentage of total runtime: " + f.getPercentage(severity));
+end
+
+rule "High Remote Memory Accesses"
+	when 
+		// there is a low local/remote ratio
+		f : MeanEventFact ( 
+			m : metric == "((L3_MISSES-DATA_EAR_CACHE_LAT128)/L3_MISSES)",
+			b : betterWorse == MeanEventFact.LOWER, 
+			severity : severity > 0.02, 
+			e : eventName, 
+			a : mainValue, 
+			v : eventValue, 
+			factType == "Compared to Main" )
+	then
+		System.out.println("The event " + e + " has a lower than average local/remote memory reference ratio.");
+		System.out.println("\tAverage ratio: " + a + ", Event ratio: " + v);
+		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
+end
+
+rule "High Ratio of Cycles spent serving Memory Requests"
+	when 
+		// there is a low local/remote ratio
+		f : MeanEventFact ( 
+			m : metric == "((((((PAPI_L1_DCH+((L2_DATA_REFERENCES_L2_ALL-L2_MISSES)*2.0))+((L2_MISSES-L3_MISSES)*10.0))+(L2DTLB_MISSES*30.0))+((L3_MISSES-DATA_EAR_CACHE_LAT128)*127.0))+(DATA_EAR_CACHE_LAT128*232.0))/CPU_CYCLES)",
+			b : betterWorse == MeanEventFact.HIGHER, 
+			severity : severity > 0.02, 
+			e : eventName, 
+			a : mainValue, 
+			v : eventValue, 
+			factType == "Compared to Main" )
+	then
+		System.out.println("The event " + e + " has a higher than average number of cycles handling memory references.");
+		System.out.println("\tAverage memory cycles: " + f.getPercentage(a) + ", Event memory cycles: " + f.getPercentage(v));
+		System.out.println("\tPercentage of total runtime: " + f.getPercentage());
+end
+
+rule "Power Differences"
+	salience 0
+	when
+		// there exists a difference operation between performance data
+		d : DifferenceOperation ( t : differenceType, pr : performanceRatio > 1.0 )
+	then
+		System.out.println("The comparison trial is less than baseline");
+		System.out.println("Actual ratio: " + pr);
+end
+
+

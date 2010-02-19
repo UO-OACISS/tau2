@@ -1,11 +1,11 @@
 #!/bin/bash
 
-if [ $# -lt 3 ]
+if [ $# -lt 1 ]
 then
   echo ""
   echo "Usage: "
   echo ""
-  echo "  $0 <path-to-TAU-data> <max functions> <call cutoff>"
+  echo "  $0 <path-to-TAU-data>"
   echo ""
   echo "Notes:"
   echo ""
@@ -17,4 +17,4 @@ fi
 
 working_path=`echo $0 | sed 's/doCluster//'`
 
-eval perfexplorer -c perfexplorer_working -n -i ${working_path}clusterTest.py -p "tauData=$1,threshold=$2,callsCutoff=$3"
+eval perfexplorer -c perfexplorer_working -n -i ${working_path}clusterTest.py -p "tauData=$1"

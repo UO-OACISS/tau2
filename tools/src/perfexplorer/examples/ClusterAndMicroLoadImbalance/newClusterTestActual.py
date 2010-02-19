@@ -138,9 +138,11 @@ def computeLoadBalance(trial, callpath, numPhases):
 	#inclusive = masterMeans.getInclusive(0, mainEventLong, metric) * conversion
 	inclusive = masterMaxs.getInclusive(0, mainEventLong, metric) * conversion
 	threads = trial.getThreads().size()
+	if mean < 0 or max < 0 or min < 0 or stddev < 0 or inclusive < 0:
+		return 0, 0, 0, 0, 0, 0
 	if callpath:
 		if numPhases < 100:
-			print "%s\t %d\t %.2f\t %s\t %.2f\t %.2f\t %.2f\t %.2f\t %.4f\t %.4f" % (trunc(mainEvent, max_pos=10), threads, inclusive, event, mean, max, min, stddev, max/inclusive, ratio)
+			print "%s\t %d\t %.2f\t %s\t %.2f\t %.2f\t %.2f\t %.2f\t %.4f\t %.4f" % (trunc(mainEvent, max_pos=15), threads, inclusive, event, mean, max, min, stddev, max/inclusive, ratio)
 		#print "%s\t %d\t %s\t %.2f%%\t %.2f%%\t %.2f%%\t %.2f%%\t %.2f%%\t" % (mainEvent, trial.getThreads().size(), event, mean*100, 100, 100, 100, 100)
 	else:
 		print "%d\t %.2f\t %s\t %.2f\t %.2f\t %.2f\t %.2f\t %.4f\t %.4f" % (threads, inclusive, event, mean, max, min, stddev, max/inclusive, ratio)
@@ -165,7 +167,7 @@ def myMin(a, b):
 		return a
 	return b
 
-def main():
+def processCluster(trial, result):
 	global tauData
 	global masterMeans
 	global masterMaxs
@@ -173,16 +175,8 @@ def main():
 	global vectorT_i
 	global vectorT
 
-	print "--------------- JPython test script start ------------"
-	print "--- Looking for load imbalances --- "
-
-	# get the parameters
-	getParameters()
-
-	# load the data
-	trial = loadFile(tauData)
-	trial.setIgnoreWarnings(True)
 	print "Getting basic statistics..."
+	trial.setIgnoreWarnings(True)
 	statter = BasicStatisticsOperation(trial)
 	masterStats = statter.processData()
 	masterMeans = masterStats.get(BasicStatisticsOperation.MEAN)
@@ -190,7 +184,10 @@ def main():
 
 	totalVectorT_i = []
 	totalVectorT = []
-	for thread in trial.getThreads():
+	vectorT_i = []
+	vectorT = []
+
+	for thread in result.getThreads():
 		totalVectorT_i.append(0)
 		vectorT_i.append(0)
 		totalVectorT.append(0)
@@ -253,9 +250,9 @@ def main():
 		totalEff = totalEff + value/T
 		totalT_i = totalT_i + value
 	commEff = maxEff
-	avgEff = totalEff / len(totalVectorT_i)
+	avgEff = totalEff / len(trial.getThreads())
 	LB = avgEff / maxEff
-	avgT_i = totalT_i / len(totalVectorT_i)
+	avgT_i = totalT_i / len(trial.getThreads())
 
 	event = LoadImbalanceOperation.COMPUTATION
 	#print "%s\t\t %d\t %ls\t %.2f%%\t %.2f%%\t %.2f%%\t %.2f%%\t %.2f%%\t" % ("Average", trial.getThreads().size(), event, avgMean*100, avgMax*100, avgMin*100, avgStddev*100, avgRatio*100)
@@ -298,6 +295,84 @@ def main():
 	# finally, compute the efficiency.  == LB * microLB * Transfer * IPC
 	print "n:\t\t", LB * (maxT_i / totalMax) * (totalMax / T) * 1.0, "\n"
 	
+
+def main():
+	global tauData
+	global masterMeans
+	global masterMaxs
+	global iterationPrefix
+	global vectorT_i
+	global vectorT
+
+	print "--------------- JPython test script start ------------"
+	print "--- Looking for load imbalances --- "
+
+	# get the parameters
+	getParameters()
+
+	# load the data
+	result = loadFile(tauData)
+	result.setIgnoreWarnings(True)
+
+######################################################################
+# split into clusters
+######################################################################
+
+	# set the metric, type we are interested in
+	metric = result.getTimeMetric()
+	type = result.EXCLUSIVE
+
+	# extract non-callpath
+	extractor = ExtractNonCallpathEventOperation(result)
+	extracted = extractor.processData().get(0)
+	extracted.setIgnoreWarnings(True)
+
+	# split communication and computation
+	print "splitting communication and computation"
+	splitter = SplitCommunicationComputationOperation(extracted)
+	outputs = splitter.processData()
+	computation = outputs.get(SplitCommunicationComputationOperation.COMPUTATION)
+
+	# do some basic statistics first
+	print "doing stats"
+	simplestats = BasicStatisticsOperation(computation)
+	simplemeans = simplestats.processData().get(BasicStatisticsOperation.MEAN)
+
+	# get top 10 events
+	print "getting top X events"
+	reducer = TopXEvents(simplemeans, metric, type, 10)
+	reduced = reducer.processData().get(0)
+	print "extracting events"
+	tmpEvents = ArrayList(reduced.getEvents())
+	reducer = ExtractEventOperation(computation, tmpEvents)
+	reduced = reducer.processData().get(0)
+
+	# cluster
+	print "clustering data"
+	clusterer = DBSCANOperation(reduced, metric, type, 1.0)
+	clusterResult = clusterer.processData()
+	k = str(clusterResult.get(0).getThreads().size())
+	clusters = ArrayList()
+	print "Estimated value for k:", k
+	if k > 0:
+		clusterIDs = clusterResult.get(4)
+
+		# split the trial into the clusters
+		print "splitting clusters into", k, "trials"
+		splitter = SplitTrialClusters(result, clusterResult)
+		splitter.setIncludeNoisePoints(True)
+		clusters = splitter.processData()
+	else:
+		clusters.put(result)
+
+######################################################################
+# done with clustering
+######################################################################
+
+	clusterID = 0
+	for trial in clusters:
+		processCluster(trial, result)
+
 	print "---------------- JPython test script end -------------"
 
 if __name__ == "__main__":
