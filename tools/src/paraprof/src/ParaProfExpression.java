@@ -33,8 +33,9 @@ public class ParaProfExpression {
 	 * @param expression
 	 * @return
 	 * @throws ParsingException
+	 * @throws MetricNotFoundException 
 	 */
-	public  void evaluateExpression(String expression, List trials) throws ParsingException{
+	public  void evaluateExpression(String expression, List trials) throws ParsingException, MetricNotFoundException{
 		char[] array = expression.toCharArray();
 		String newName = null;
 		//check for =
@@ -50,22 +51,56 @@ public class ParaProfExpression {
 				break;
 			}
 		}
+		if(newName ==null){
+			newName =expression;
+		}
 		for(int i=0;i<trials.size();i++){
 		ParaProfTrial trial= (ParaProfTrial)trials.get(i);
 			ArrayList 	expressArray =  infixToPostfix(expression);
-			evaluateExpression(newName,expressArray,trial);
+			evaluate(newName,trial,expressArray);
 		}
 
 	}
+	
+	public ParaProfMetric evaluateExpression(ParaProfTrial trial, String text) throws ParsingException, MetricNotFoundException {
+		char[] array = text.toCharArray();
+		String newName = null;
+		//check for =
+		for(int i=0; i<array.length;i++){
+			//skip sections in quotes
+			if(array[i]=='\"'){
+				i++;
+				while(array[i]!='\"') i++;
+			}else if(array[i]=='='){
+				//This expression is of the form: newName = expression
+				newName =text.substring(0, i);
+				text = text.substring(i+1);
+				break;
+			}
+		}
 
-	public  String evaluateExpressions(String expressions, List trials) throws ParsingException, IOException{
+		ArrayList 	expressArray =  infixToPostfix(text);
+		if(newName ==null){
+			text.trim();
+			text = text.replace('\"', ' ');
+			newName =text;
+		}
+
+		return evaluate(newName,trial,expressArray);
+
+
+
+	}
+
+
+	public  String evaluateExpressions(String expressions, List trials) throws ParsingException, IOException, MetricNotFoundException{
 		return evaluateMany(new LineNumberReader(new CharArrayReader(expressions.toCharArray())),trials);
 	}
-	public  String evaluateFile(String file, List trials) throws ParsingException, IOException{
+	public  String evaluateFile(String file, List trials) throws ParsingException, IOException, MetricNotFoundException{
 		LineNumberReader scan = new LineNumberReader(new FileReader(new File(file)));
 		return evaluateMany(scan,trials);
 	}
-	private  String evaluateMany(LineNumberReader scan, List trials) throws ParsingException, IOException{
+	private  String evaluateMany(LineNumberReader scan, List trials) throws ParsingException, IOException, MetricNotFoundException{
 		String line = scan.readLine();
 
 		while(line !=null){
@@ -90,7 +125,39 @@ public class ParaProfExpression {
 			return false;
 		}
 	}*/
+public static boolean validate(String expression){
+	try {
+		ArrayList equation = infixToPostfix(expression);
+		if (equation.size()<2){
+			return false;
+			
+		}
+		 
+		 int i = 0;
+			
+			while (equation.size() > 1 && equation.size() > i) {
 
+				if (isOperation(equation.get(i))) {
+					try{
+						Object oper = equation.remove(i);
+						 Object second = equation.remove(i - 1);
+						 Object first = equation.remove(i - 2);
+						i = i - 2;
+						
+						equation.add(i, "Intermedate");
+					}catch(java.lang.ArrayIndexOutOfBoundsException ex){
+						throw new ParsingException();
+					}
+				}
+				i++;
+			}
+		return true;
+	}catch(java.lang.ArrayIndexOutOfBoundsException ex){
+		return false;
+	}catch (ParsingException e) {
+		return false;
+	}
+}
 
 	/**
 	 * Convert the infix equation to postfix, using Dijkstra`s Shunting
@@ -199,60 +266,8 @@ public class ParaProfExpression {
 		}
 	}
 
-	private  ParaProfMetric evaluateExpression(String newName, ArrayList equation,ParaProfTrial trial) throws ParsingException {
-		if(newName != null) newName = newName.trim();
-		int i = 0;
-		if(equation.size()==1){
-			return rename(newName, findMetric(equation.get(0),trial));
-		}
-
-		while (equation.size() > 1 && equation.size() > i) {
-
-			if (isOperation(equation.get(i))) {
-				try{
-					char oper = ((String)equation.remove(i)).trim().charAt(0);
-					Object second = equation.remove(i - 1);
-					Object first = equation.remove(i - 2);
-					i = i - 2;
-
-					ParaProfMetric current;
-					if(first instanceof String){
-						String firstS = (String) first;
-						if (isValue(firstS)) {
-							first = Double.valueOf(firstS);
-						} else {
-							first = findMetric(first,trial);
-						}
-					}
-					if(second instanceof String){
-						String secondS = (String) second;
-						if (isValue(secondS)) {
-							second = Double.valueOf(secondS);
-						} else {
-							second = findMetric(second,trial);
-						}
-
-					}
-
-
-					if(!(equation.size()<2 && newName != null)){
-						current = applyOperation(first,second,oper);
-					}else{		
-						current = applyOperation(first, second, oper,newName);
-					}
-					equation.add(i, current);
-				}catch(java.lang.ArrayIndexOutOfBoundsException ex){
-					throw new ParsingException();
-
-				}
-
-			}
-			i++;
-		}
-		return (ParaProfMetric)equation.get(0);
-	}
-
-	public static double apply(char op, double arg1, double arg2) {
+	
+	private static double apply(char op, double arg1, double arg2) {
 		double d = 0.0;
 		switch (op) {
 		case ('+'):
@@ -277,10 +292,12 @@ public class ParaProfExpression {
 		return d;
 	}
 
-	private ParaProfMetric findMetric(Object first, ParaProfTrial trial) {
+	private ParaProfMetric findMetric(Object first, ParaProfTrial trial) throws  MetricNotFoundException {
 		if(first instanceof ParaProfMetric) return (ParaProfMetric) first;
+		
+
 		int id =trial.getMetricID((String)first);
-		ParaProfTrial p =  trial.getMetric(id).getParaProfTrial();
+		if(id<0) throw new MetricNotFoundException("Metric \""+first+"\" was not found");
 		return trial.getMetric(id);
 	}
 	private static boolean isOperation(Object op) {
@@ -293,308 +310,119 @@ public class ParaProfExpression {
 		}
 
 	}
-	protected ParaProfMetric applyOperation(Object operand1, Object operand2, char operation) {
-		if(operand1 instanceof ParaProfMetric){
-			ParaProfMetric left = (ParaProfMetric)operand1;
-			if(operand2 instanceof ParaProfMetric){
-				ParaProfMetric right = (ParaProfMetric)operand2;
-				return	applyOperation(left,right,operation);
-			}else{
-				Double right = (Double)operand2;
-				return	applyOperation(left,right,operation);
-			}
-		}else{
-			Double left = (Double)operand1;
-			if(operand2 instanceof ParaProfMetric){
-				ParaProfMetric right = (ParaProfMetric)operand2;
-				return	applyOperation(left,right,operation);
-			}else{
-				Double right = (Double)operand2;
-				return	applyOperation(left,right,operation);
-			}
-		}
-
-	}
-	protected ParaProfMetric applyOperation(Object operand1, Object operand2, char operation, String newName) {
-		if(operand1 instanceof ParaProfMetric){
-			ParaProfMetric left = (ParaProfMetric)operand1;
-			if(operand2 instanceof ParaProfMetric){
-				ParaProfMetric right = (ParaProfMetric)operand2;
-				return	applyOperation(left,right,operation, newName);
-			}else{
-				Double right = (Double)operand2;
-				return	applyOperation(left,right,operation, newName);
-			}
-		}else{
-			Double left = (Double)operand1;
-			if(operand2 instanceof ParaProfMetric){
-				ParaProfMetric right = (ParaProfMetric)operand2;
-				return	applyOperation(left,right,operation, newName);
-			}else{
-				Double right = (Double)operand2;
-				return	applyOperation(left,right,operation, newName);
-			}
-		}
-
-	}
+	
 	protected ParaProfMetric rename(String newName, ParaProfMetric metric) {
-		return applyOperation(metric,new Double(0.0),'+',newName);
+		metric.setName(newName);
+		return metric;
 	}
-	protected ParaProfMetric applyOperation(ParaProfMetric operand1, ParaProfMetric operand2, char operation, String newName) {
 
-		try {
+	private ParaProfMetric evaluate(String newName,ParaProfTrial trial,ArrayList equation) throws ParsingException, MetricNotFoundException{
+		if(trial==null) throw new ParsingException("Null trial");
+		if(newName != null) newName = newName.trim();
+		if(equation.size()==1){
+			return rename(newName, findMetric(equation.get(0),trial));
+		}
+		
+  		for(int x=0;x<equation.size();x++){
+  			String current = (String)equation.get(x);
+  			if(isOperation(current)){
+  				//Do nothing
+  			}else if (isValue(current)){
+  				Double[] array = {Double.valueOf(current),Double.valueOf(current)};
+  				equation.remove(x);
+  				equation.add(x, array);
+  			}else{
+  				
+  					ParaProfMetric xMetric = findMetric(current,trial);
+  					equation.remove(x);
+  					equation.add(x,xMetric);
+  				
+  			}
+  		}
+        ParaProfMetric newMetric = trial.addMetric();
+        newMetric.setPpTrial(trial);
+        newMetric.setName(newName);
+        newMetric.setDerivedMetric(true);
+        int metric = newMetric.getID();
+        //            trialOpA.setSelectedMetricID(metric);
 
+        Iterator l = trial.getDataSource().getFunctions();
 
-			ParaProfTrial trialOpA = operand1.getParaProfTrial();
-			int opA = operand1.getID();
-			ParaProfTrial trialOpB = operand2.getParaProfTrial();
-			int  opB =  operand2.getID();
+        for (Iterator it = trial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+            Thread thread = (Thread) it.next();
+            thread.addMetric();
+            l = thread.getFunctionProfileIterator();
+            while (l.hasNext()) {
+                FunctionProfile functionProfile = (FunctionProfile) l.next();
+                
+                if (functionProfile != null) {
+                    ArrayList newEquation = new ArrayList();
+             		for(int x=0;x<equation.size();x++){
+             			Object current = equation.get(x);
+             			if(current instanceof ParaProfMetric){
+             					ParaProfMetric xMetric = (ParaProfMetric )current;
+             					double ex =functionProfile.getExclusive(xMetric.getID());
+             					double in =functionProfile.getInclusive(xMetric.getID());
+             					Double[] array = {new Double(in),new Double(ex)};
+             					newEquation.add(array);
+             			}else{
+             				newEquation.add(current);
+             			}
+             		}
+            		Double[] result = eval(newEquation);
+                    functionProfile.setInclusive(metric, result[0].doubleValue());
+                    functionProfile.setExclusive(metric, result[1].doubleValue());
+                }
+            }
+            thread.setThreadData(metric);
+        }
 
-			//We do not support metric from different trials yet. Check for this.
-			if  (trialOpA != trialOpB) {
-				JOptionPane.showMessageDialog(ParaProf.paraProfManagerWindow,
-						"Sorry, please select metrics from the same trial!", "ParaProf Error", JOptionPane.ERROR_MESSAGE);
-				return null;
-			}
-			if(newName ==null)
-				newName = ((ParaProfMetric) trialOpA.getMetrics().get(opA)).getName() + " "+operation+" "
-				+ ((ParaProfMetric) trialOpA.getMetrics().get(opB)).getName();
-			ParaProfMetric newMetric = trialOpA.addMetric();
-			newMetric.setPpTrial(trialOpA);
-			newMetric.setName(newName);
-			newMetric.setDerivedMetric(true);
+        //Done with this metric, compute the mean values.
+        trial.setMeanData(metric);
 
-			int metric = newMetric.getID();
-			//            trialOpA.setSelectedMetricID(metric);
+        trial.getDataSource().getMeanData().setThreadData(metric);
+        trial.getDataSource().getTotalData().setThreadData(metric);
+        trial.getDataSource().getStdDevData().setThreadData(metric);
+        
 
-			Iterator l = trialOpA.getDataSource().getFunctions();
+        return newMetric;
+	}
+	private Double[] eval(ArrayList equation) throws ParsingException{
+		int i = 0;
+		
+		while (equation.size() > 1 && equation.size() > i) {
 
-			//######
-			//Calculate the raw values.
-			//We only need establish exclusive and inclusive time.
-			//The rest of the data can either be computed from these,
-			//or is already in the system (number of calls as an example
-			//of the latter.
-			//######
-
-			for (Iterator it = trialOpA.getDataSource().getAllThreads().iterator(); it.hasNext();) {
-				Thread thread = (Thread) it.next();
-				thread.addMetric();
-				l = thread.getFunctionProfileIterator();
-				while (l.hasNext()) {
-					FunctionProfile functionProfile = (FunctionProfile) l.next();
-					if (functionProfile != null) {
-						Function function = functionProfile.getFunction();
-
-						double d1 = 0.0;
-						double d2 = 0.0;
-						double result = 0.0;
-
-						d1 = functionProfile.getExclusive(opA);
-
-						d2 = functionProfile.getExclusive(opB);
-						result = apply(operation, d1, d2);
-
-						functionProfile.setExclusive(metric, result);
-
-						d1 = functionProfile.getInclusive(opA);
-
-						d2 = functionProfile.getInclusive(opB);
-						result =  apply(operation, d1, d2);
-
-						functionProfile.setInclusive(metric, result);
-
-					}
+			if (isOperation(equation.get(i))) {
+				try{
+					char oper = ((String)equation.remove(i)).trim().charAt(0);
+					 Double[] second = (Double[])equation.remove(i - 1);
+					 Double[] first = (Double[]) equation.remove(i - 2);
+					i = i - 2;
+					
+					double x = apply(oper,first[0].doubleValue(),second[0].doubleValue());
+					double y = apply(oper,first[1].doubleValue(),second[1].doubleValue());
+					Double[] current = {new Double(x), new Double(y)};
+					equation.add(i, current);
+				}catch(java.lang.ArrayIndexOutOfBoundsException ex){
+					throw new ParsingException();
 				}
-				thread.setThreadData(metric);
 			}
-
-			//Done with this metric, compute the mean values.
-			trialOpA.setMeanData(metric);
-
-			trialOpA.getDataSource().getMeanData().setThreadData(metric);
-			trialOpA.getDataSource().getTotalData().setThreadData(metric);
-			trialOpA.getDataSource().getStdDevData().setThreadData(metric);
-
-			return newMetric;
-		} catch (NumberFormatException e) {
-			//Display an error
-			JOptionPane.showMessageDialog(ParaProf.paraProfManagerWindow, "Did not recognize arguments! ", "Argument Error!",
-					JOptionPane.ERROR_MESSAGE);
-			return null;
+			i++;
 		}
+		return (Double[])equation.get(0);
 	}
-	protected ParaProfMetric applyOperation(ParaProfMetric operand1, Double operand2, char operation, String newName) {
 
-		try {
 
-			double constantValue = operand2.doubleValue();
-			ParaProfTrial trialOpA = operand1.getParaProfTrial();
-			int opA = operand1.getID();
-
-			if(newName == null)
-				newName = ((ParaProfMetric) trialOpA.getMetrics().get(opA)).getName() + " "+operation+" " + constantValue;
-
-			ParaProfMetric newMetric = trialOpA.addMetric();
-			newMetric.setPpTrial(trialOpA);
-			newMetric.setName(newName);
-			newMetric.setDerivedMetric(true);
-
-			int metric = newMetric.getID();
-			//            trialOpA.setSelectedMetricID(metric);
-
-			Iterator l = trialOpA.getDataSource().getFunctions();
-
-			//######
-			//Calculate the raw values.
-			//We only need establish exclusive and inclusive time.
-			//The rest of the data can either be computed from these,
-			//or is already in the system (number of calls as an example
-			//of the latter.
-			//######
-
-			for (Iterator it = trialOpA.getDataSource().getAllThreads().iterator(); it.hasNext();) {
-				Thread thread = (Thread) it.next();
-				thread.addMetric();
-				l = thread.getFunctionProfileIterator();
-				while (l.hasNext()) {
-					FunctionProfile functionProfile = (FunctionProfile) l.next();
-					if (functionProfile != null) {
-						Function function = functionProfile.getFunction();
-
-						double d1 = 0.0;
-						double d2 = 0.0;
-						double result = 0.0;
-
-						d1 = functionProfile.getExclusive(opA);
-						result =  apply(operation, d1, constantValue);
-						functionProfile.setExclusive(metric, result);
-
-						d1 = functionProfile.getInclusive(opA);
-						result =  apply(operation, d1, constantValue);
-						functionProfile.setInclusive(metric, result);
-
-					}
-				}
-				thread.setThreadData(metric);
-			}
-
-			//Done with this metric, compute the mean values.
-			trialOpA.setMeanData(metric);
-
-			trialOpA.getDataSource().getMeanData().setThreadData(metric);
-			trialOpA.getDataSource().getTotalData().setThreadData(metric);
-			trialOpA.getDataSource().getStdDevData().setThreadData(metric);
-
-			return newMetric;
-
-		} catch (NumberFormatException e) {
-			//Display an error
-			JOptionPane.showMessageDialog(ParaProf.paraProfManagerWindow, "Did not recognize arguments! ", "Argument Error!",
-					JOptionPane.ERROR_MESSAGE);
-			return null;
-		}
-	}
-	protected ParaProfMetric applyOperation(Double operand1, ParaProfMetric operand2, char operation, String newName) {
-
-		try {
-
-			double constantValue = operand1.doubleValue();
-			ParaProfTrial trialOpB = operand2.getParaProfTrial();
-			int opB = operand2.getID();
-
-			if(newName == null)
-				newName = ((ParaProfMetric) trialOpB.getMetrics().get(opB)).getName() + " "+operation+" " + constantValue;
-
-			ParaProfMetric newMetric = trialOpB.addMetric();
-			newMetric.setPpTrial(trialOpB);
-			newMetric.setName(newName);
-			newMetric.setDerivedMetric(true);
-
-			int metric = newMetric.getID();
-			//            trialOpA.setSelectedMetricID(metric);
-
-			Iterator l = trialOpB.getDataSource().getFunctions();
-
-			//######
-			//Calculate the raw values.
-			//We only need establish exclusive and inclusive time.
-			//The rest of the data can either be computed from these,
-			//or is already in the system (number of calls as an example
-			//of the latter.
-			//######
-
-			for (Iterator it = trialOpB.getDataSource().getAllThreads().iterator(); it.hasNext();) {
-				Thread thread = (Thread) it.next();
-				thread.addMetric();
-				l = thread.getFunctionProfileIterator();
-				while (l.hasNext()) {
-					FunctionProfile functionProfile = (FunctionProfile) l.next();
-					if (functionProfile != null) {
-						Function function = functionProfile.getFunction();
-
-						double d1 = 0.0;
-						double result = 0.0;
-
-						d1 = functionProfile.getExclusive(opB);
-						result =  apply(operation, constantValue, d1);
-						functionProfile.setExclusive(metric, result);
-
-						d1 = functionProfile.getInclusive(opB);
-						result =  apply(operation,constantValue, d1);
-						functionProfile.setInclusive(metric, result);
-
-					}
-				}
-				thread.setThreadData(metric);
-			}
-
-			//Done with this metric, compute the mean values.
-			trialOpB.setMeanData(metric);
-
-			trialOpB.getDataSource().getMeanData().setThreadData(metric);
-			trialOpB.getDataSource().getTotalData().setThreadData(metric);
-			trialOpB.getDataSource().getStdDevData().setThreadData(metric);
-
-			return newMetric;
-
-		} catch (NumberFormatException e) {
-			//Display an error
-			JOptionPane.showMessageDialog(ParaProf.paraProfManagerWindow, "Did not recognize arguments! ", "Argument Error!",
-					JOptionPane.ERROR_MESSAGE);
-			return null;
-		}
-	}
-	protected ParaProfMetric applyOperation(ParaProfMetric operand1, ParaProfMetric operand2, char operation) {
-		String oper = "";
-		switch(operation){
-		case '+':
-			oper = "Add";
-			break;
-		case '-':
-			oper = "Subtract";
-			break;
-		case '*':
-			oper = "Multiply";
-			break;
-		case '/':
-			oper = "Divide";
-			break;
-		}
-		return DerivedMetrics.applyOperation(operand1, operand2, oper);
-	}
-	protected ParaProfMetric applyOperation(ParaProfMetric operand1, Double operand2, char operation) {
-		return applyOperation(operand1,operand2,operation,null);
-
-	}
-	protected ParaProfMetric applyOperation(Double operand1, ParaProfMetric operand2, char operation) {
-		return applyOperation(operand1,operand2,operation,null);
-
-	}
+	
 
 
 }
 class ParsingException extends Exception{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	public ParsingException() {
 		super();
@@ -616,51 +444,27 @@ class ParsingException extends Exception{
 		// TODO Auto-generated constructor stub
 	}
 }
+class MetricNotFoundException extends Exception{
 
-/*class TestExpression extends Expression{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
-	@Override
-	protected String applyOperation(String operand1, String operand2,
-			char operation, String newName) {
-		return newName + "="+operand1+operation+operand2;
+	/**
+	 * 
+	 */
+	public MetricNotFoundException(){
+		super();
 	}
 
-	@Override
-	protected String applyOperation(String operand1, double operand2,
-			char operation, String newName) {
-		return newName + "="+operand1+operation+operand2;
+	public MetricNotFoundException(String string) {
+		// TODO Auto-generated constructor stub
 	}
+	
+}
 
-	@Override
-	protected String applyOperation(double operand1, String operand2,
-			char operation, String newName) {
-		return newName + "="+operand1+operation+operand2;
-	}
 
-	@Override
-	protected String applyOperation(String operand1, String operand2,
-			char operation) {
-		return operand1+operation+operand2;
-	}
-
-	@Override
-	protected String applyOperation(String operand1, double operand2,
-			char operation) {
-		return operand1+operation+operand2;
-	}
-
-	@Override
-	protected String applyOperation(double operand1, String operand2,
-			char operation) {
-		return ""+operand1+operation+operand2;
-	}
-
-	@Override
-	protected String rename(String newName, String metric) {
-		return newName +"="+metric;
-	}
-
-}*/
 
 
 
