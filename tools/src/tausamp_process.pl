@@ -121,7 +121,9 @@ sub translate_pc {
       select STDERR; $| = 1;
       select STDOUT; $| = 1;
 
-
+      if (defined $ENV{"TAU_EBS_EXE"}) {
+	$exe = $ENV{"TAU_EBS_EXE"};
+      }
       ##### execute the program
       exec "addr2line -C -f -e $exe";
 
@@ -256,7 +258,6 @@ sub read_maps {
 
 
   }
-
 }
 
 
