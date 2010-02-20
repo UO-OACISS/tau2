@@ -139,8 +139,14 @@ sub translate_pc {
   print TO_PROGRAM "$pc\n";
 
   # read the result
+  my ($func, $fileline);
   my $func = <FROM_PROGRAM>;
-  my $fileline = <FROM_PROGRAM>;
+  if ($func =~ m/^BFD: Dwarf Error/) {
+    $func = "unknown";
+    $fileline = "unknown";
+  } else {
+    $fileline = <FROM_PROGRAM>;
+  }
 
   chomp($func);
   chomp($fileline);
@@ -188,6 +194,9 @@ sub translate_pc {
 
   $pcmap{$pc} = "$func:$fileline";
 #  print "returning $pcmap{$pc}\n";
+
+#  print "got func: $func\n";
+#  print "got fileline: $fileline\n";
   return "$func:$fileline";
 }
 
