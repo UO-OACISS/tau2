@@ -516,8 +516,12 @@ void Tau_sampling_output_callpath_old(int tid) {
  ********************************************************************/
 void Tau_sampling_flush_record(int tid, TauSamplingRecord *record, void *pc, void *context) {
   fprintf(ebsTrace[tid], "$ | %lld | ", record->timestamp);
-  fprintf(ebsTrace[tid], "%lld | ", record->deltaStart);
-  fprintf(ebsTrace[tid], "%lld | ", record->deltaStop);
+
+#ifdef TAU_EXP_DISABLE_DELTAS
+  fprintf(ebsTrace[tid], "0 | 0 | ");
+#else
+  fprintf(ebsTrace[tid], "%lld | %lld | ", record->deltaStart, record->deltaStop);
+#endif
 
   for (int i = 0; i < Tau_Global_numCounters; i++) {
     fprintf(ebsTrace[tid], "%.16G ", record->counters[i]);
@@ -598,6 +602,10 @@ void Tau_sampling_event_start(int tid, void **addresses) {
  * Handler for event exit (stop)
  ********************************************************************/
 int Tau_sampling_event_stop(int tid, double* stopTime) {
+#ifdef TAU_EXP_DISABLE_DELTAS
+  return 0;
+#endif
+
   samplingEnabled[tid] = 0;
 
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
@@ -641,6 +649,11 @@ int Tau_sampling_event_stop(int tid, double* stopTime) {
 void Tau_sampling_handle_sample(void *pc, void *context) {
 
   int tid = RtsLayer::myThread();
+
+  if (suspendSampling[tid]) {
+    return;
+  }
+
   insideSignalHandler[tid] = 1;
   if (!samplingEnabled[tid]) {
     insideSignalHandler[tid] = 0;
@@ -966,7 +979,10 @@ int Tau_sampling_finalize(int tid) {
 
   fclose(ebsTrace[tid]);
 
+#ifndef TAU_BGP
   Tau_sampling_write_maps(tid, 0);
+#endif
+
   return(0);
 }
 
