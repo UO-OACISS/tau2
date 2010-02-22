@@ -23,9 +23,9 @@ import edu.uoregon.tau.vis.*;
 /**
  * 3D Communication Matrix Window 
  * 
- * <P>CVS $Id: ThreeDeeCommMatrixWindow.java,v 1.8 2010/01/23 04:43:34 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeCommMatrixWindow.java,v 1.9 2010/02/22 20:01:17 amorris Exp $</P>
  * @author Alan Morris, Kevin Huck
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  */
 public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, ActionListener, ThreeDeeImageProvider,
         VisCanvasListener, Printable {
@@ -239,10 +239,10 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
                 }
                 textField.setCaretPosition(0);
 
-//                updateScalePanel();
-
                 scalePanel.setPosition(0, getSelectedHeightRatio());
                 scalePanel.setPosition(1, getSelectedColorRatio());
+
+                //updateScalePanel();
 
                 redraw();
             }
@@ -291,7 +291,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         float maxColorValue = (float) mapData.getMax(currentPath, colorMetric);
         float minHeightValue = (float) mapData.getMin(currentPath, heightMetric);
         float maxHeightValue = (float) mapData.getMax(currentPath, heightMetric);
-        float colorRatio = (float) getSelectedHeightValue() / maxColorValue;
+        float colorRatio = (float) getSelectedColorValue() / maxColorValue;
         return colorRatio;
     }
 
@@ -818,7 +818,6 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
     private void redrawHeatMap() {
         setSelections();
         updateScalePanel();
-
 
         // processData can't be run on the AWT thread, it will wait for a possible
         // animator thread, which uses JOGL, which always runs on the AWT thread

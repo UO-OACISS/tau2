@@ -15,9 +15,9 @@ import edu.uoregon.tau.perfdmf.FunctionProfile;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableNode.java,v 1.11 2010/01/06 20:52:29 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableNode.java,v 1.12 2010/02/22 20:01:17 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  */
 public class TreeTableNode extends DefaultMutableTreeNode implements Comparable {
     private List children;
@@ -170,7 +170,11 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
             }
         }
 
-        Collections.sort(children);
+        try {
+            Collections.sort(children);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public String toString() {
@@ -238,7 +242,7 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
 
     public int compareTo(Object o) {
 
-        int result;
+        int result = -99;
         if (model.getSortColumn() == 0) {
             // Compare with the alphanumeric comparator
             result = cmp.compare(this.toString(), o.toString());
@@ -247,8 +251,12 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
 
             Comparable a = (Comparable) column.getValueFor(this, true);
             Comparable b = (Comparable) column.getValueFor((TreeTableNode) o, true);
+            try {
+                result = a.compareTo(b);
 
-            result = a.compareTo(b);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         if (model.getSortAscending()) {
             return -result;
