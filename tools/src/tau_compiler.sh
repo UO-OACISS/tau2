@@ -51,6 +51,7 @@ declare -i revertForced=$FALSE
 declare -i optShared=$FALSE
 declare -i optCompInst=$FALSE
 declare -i optHeaderInst=$FALSE
+declare -i disableCompInst=$FALSE
 
 headerInstDir=".tau_tmp_$$"
 headerInstFlag=""
@@ -97,6 +98,7 @@ printUsage () {
     echo -e "  -optMpi\t\t\tDoes not remove -l*mpi* libraries during linking (default)"
     echo -e "  -optNoRevert\t\t\tExit on error. Does not revert to the original compilation rule on error."
     echo -e "  -optRevert\t\t\tRevert to the original compilation rule on error (default)."
+    echo -e "  -optNoCompInst\t\t\tDo not revert to compiler instrumentation of source instrumentaiton fails."
     echo -e "  -optKeepFiles\t\t\tDoes not remove intermediate .pdb and .inst.* files" 
     echo -e "  -optAppCC=\"<cc>\"\t\tSpecifies the fallback C compiler."
     echo -e "  -optAppCXX=\"<cxx>\"\t\tSpecifies the fallback C++ compiler."
@@ -485,6 +487,10 @@ for arg in "$@" ; do
 			revertForced=$TRUE
 			;;
 
+		    -optNoCompInst*)
+			disableCompInst=$TRUE
+			;;
+
 		    -optKeepFiles*)
 				#By default this is False. 
 				#removes *.inst.* and *.pdb
@@ -801,8 +807,22 @@ for arg in "$@" ; do
 done
 
 
-# Some sanity checks
+# on the first pass, we use PDT, on the 2nd, compiler instrumentation (if available and not disabled)
+declare -i passCount=0;
 
+while [ $passCount -lt 2 ] ; do
+
+if [ $passCount == 1 ] ; then
+    echoIfVerbose "\nDebug: PDT failed, switching to compiler-based instrumentation\n"
+    optCompInst=$TRUE
+    gotoNextStep=$TRUE
+    disablePdtStep=$TRUE
+    errorStatus=0
+fi
+passCount=passCount+1;
+
+
+# Some sanity checks
 if [ $optCompInst = $TRUE ] ; then
     optHeaderInst=$FALSE
 fi
@@ -1445,8 +1465,20 @@ if [ $errorStatus == $TRUE ] ; then
     else
 	regularCmd="$compilerSpecified $regularCmd"
     fi
+
+    # Try compiler-based instrumentation
+    if [ $disableCompInst == $FALSE ] ; then 
+	if [ "x$optCompInstOption" != x ] ; then
+	    continue;
+	fi
+    fi
     
     evalWithDebugMessage "$regularCmd" "Compiling with Non-Instrumented Regular Code"
+    break;
 fi
+
+break;
+done # passCount loop
+
 echo -e ""
 exit $errorStatus
