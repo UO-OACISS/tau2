@@ -1079,9 +1079,15 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
     double incltime = fi->getDumpInclusiveValues(tid)[metric];
     double excltime = fi->getDumpExclusiveValues(tid)[metric];
 
-    fprintf(fp,"\"%s %s\" %ld %ld %.16G %.16G ", fi->GetName(), 
-	    fi->GetType(), fi->GetCalls(tid), fi->GetSubrs(tid), 
-	    excltime, incltime);
+    if (strlen(fi->GetType()) > 0) {
+      fprintf(fp,"\"%s %s\" %ld %ld %.16G %.16G ", fi->GetName(), 
+	      fi->GetType(), fi->GetCalls(tid), fi->GetSubrs(tid), 
+	      excltime, incltime);
+    } else {
+      fprintf(fp,"\"%s\" %ld %ld %.16G %.16G ", fi->GetName(), 
+	      fi->GetCalls(tid), fi->GetSubrs(tid), 
+	      excltime, incltime);
+    }
     
     fprintf(fp,"0 "); // Indicating that profile calls is turned off
     fprintf(fp,"GROUP=\"%s\" \n", fi->GetAllGroups());
@@ -1338,6 +1344,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.262 $   $Date: 2010/02/22 17:50:57 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.262 2010/02/22 17:50:57 amorris Exp $ 
+ * $Revision: 1.263 $   $Date: 2010/02/22 18:38:38 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.263 2010/02/22 18:38:38 amorris Exp $ 
  ***************************************************************************/

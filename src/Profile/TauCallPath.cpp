@@ -137,6 +137,14 @@ one then it is the top level profiler */
   return ary;
 } 
 
+static string getNameAndType(FunctionInfo *fi) {
+  if (strlen(fi->GetType()) > 0) {
+    return string(fi->GetName() + string (" ") + fi->GetType());
+  } else {
+    return string(fi->GetName());
+  }
+}
+
 //////////////////////////////////////////////////////////////////////
 string *TauFormulateNameString(Profiler *p) {
   int depth = TauGetCallPathDepth();
@@ -147,13 +155,11 @@ string *TauFormulateNameString(Profiler *p) {
 #ifdef TAU_PROFILEPHASE
   while (current != NULL) {
     if (current != p && (current->GetPhase() || (current->ParentProfiler == (Profiler *) NULL))) { 
-      *name = current->ThisFunction->GetName() + string(" ") +
-	current->ThisFunction->GetType() + delimiter + *name;
+      *name = getNameAndType(current->ThisFunction) + delimiter + *name;
       break; /* come out of the loop, got phase name in */
     } else  {
       if (current == p) {
-        *name = current->ThisFunction->GetName() + string (" ") + 
-	  current->ThisFunction->GetType();
+        *name = getNameAndType(current->ThisFunction);
       }
       current = current->ParentProfiler;
     }
@@ -162,11 +168,9 @@ string *TauFormulateNameString(Profiler *p) {
 #else /* TAU_PROFILEPHASE */
   while (current != NULL && depth != 0) {
     if (current != p) {
-      *name =  current->ThisFunction->GetName() + string(" ") +
-	current->ThisFunction->GetType() + delimiter + *name;
+      *name = getNameAndType(current->ThisFunction) + delimiter + *name;
     } else {
-      *name =  current->ThisFunction->GetName() + string (" ") + 
-	current->ThisFunction->GetType();
+      *name = getNameAndType(current->ThisFunction);
     }
     current = current->ParentProfiler;
     depth --;
@@ -202,8 +206,9 @@ void Profiler::CallPathStart(int tid) {
 	DEBUGPROFMSG("Couldn't find string in map: "<<*comparison<<endl; );
 	
 	string grname = string("TAU_CALLPATH | ") + RtsLayer::PrimaryGroup(ThisFunction->GetAllGroups());
-	CallPathFunction = new FunctionInfo(*callpathname, " ", 
-					    ThisFunction->GetProfileGroup(), (const char*) grname.c_str(), true );
+	CallPathFunction = new FunctionInfo(*callpathname, "", 
+					    ThisFunction->GetProfileGroup(), 
+					    (const char*) grname.c_str(), true);
 	TheCallPathMap().insert(map<TAU_CALLPATH_MAP_TYPE>::value_type(comparison, CallPathFunction));
       } else {
 	CallPathFunction = (*it).second; 
@@ -258,6 +263,6 @@ void Profiler::CallPathStop(double* TotalTime, int tid) {
   
 /***************************************************************************
  * $RCSfile: TauCallPath.cpp,v $   $Author: amorris $
- * $Revision: 1.31 $   $Date: 2009/08/27 22:56:35 $
- * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.31 2009/08/27 22:56:35 amorris Exp $ 
+ * $Revision: 1.32 $   $Date: 2010/02/22 18:38:38 $
+ * TAU_VERSION_ID: $Id: TauCallPath.cpp,v 1.32 2010/02/22 18:38:38 amorris Exp $ 
  ***************************************************************************/
