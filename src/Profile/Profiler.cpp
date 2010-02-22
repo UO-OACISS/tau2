@@ -107,14 +107,6 @@ extern "C" int Tau_get_usesMPI();
 // Default value of Node.
 //int RtsLayer::Node = -1;
 
-#ifdef TAU_OPENMP 
-#define TAU_TRACK_IDLE_THREADS
-#endif
-
-#ifdef TAU_TRACK_PTHREAD_IDLE
-#define TAU_TRACK_IDLE_THREADS
-#endif
-
 //////////////////////////////////////////////////////////////////////
 // For OpenMP
 //////////////////////////////////////////////////////////////////////
@@ -209,12 +201,6 @@ void Profiler::Start(int tid) {
   fprintf (stderr, "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
 #endif
 
-#ifdef TAU_TRACK_IDLE_THREADS
-  /* If we are performing idle thread tracking, we start a top level timer */
-  if (tid != 0) {
-    Tau_create_top_level_timer_if_necessary();
-  }
-#endif
 
   ParentProfiler = TauInternal_ParentProfiler(tid);
 
@@ -1352,6 +1338,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.261 $   $Date: 2010/02/18 05:37:35 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.261 2010/02/18 05:37:35 amorris Exp $ 
+ * $Revision: 1.262 $   $Date: 2010/02/22 17:50:57 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.262 2010/02/22 17:50:57 amorris Exp $ 
  ***************************************************************************/

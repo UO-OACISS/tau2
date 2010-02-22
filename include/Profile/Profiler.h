@@ -93,6 +93,14 @@ void tau_pthread_exit (void *arg);
 #endif /* PTHREADS || TULIPTHREADS || JAVA || TAU_WINDOWS || OPENMP || SPROC */
 
 
+#ifdef TAU_OPENMP 
+#define TAU_TRACK_IDLE_THREADS
+#endif
+
+#ifdef TAU_TRACK_PTHREAD_IDLE
+#define TAU_TRACK_IDLE_THREADS
+#endif
+
 
 #include <Profile/ProfileGroups.h>
 #include <Profile/TauAPI.h>
@@ -270,6 +278,6 @@ void TauProfiler_AddProfileParamData(long key, const char *keyname);
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.115 $   $Date: 2010/01/30 09:31:50 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.115 2010/01/30 09:31:50 amorris Exp $ 
+ * $Revision: 1.116 $   $Date: 2010/02/22 17:50:57 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.116 2010/02/22 17:50:57 amorris Exp $ 
  ***************************************************************************/

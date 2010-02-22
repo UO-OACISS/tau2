@@ -122,7 +122,7 @@ extern "C" Profiler *TauInternal_ParentProfiler(int tid) {
 
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid ) {
+extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   
 #ifdef TAU_EXP_SAMPLING
   Tau_sampling_suspend();
@@ -162,6 +162,14 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid ) {
 #endif /* TAU_PROFILEHEADROOM */
 
   }
+
+#ifdef TAU_TRACK_IDLE_THREADS
+  /* If we are performing idle thread tracking, we start a top level timer */
+  if (tid != 0) {
+    Tau_create_top_level_timer_if_necessary();
+  }
+#endif
+
   /********************************************************************************/
   /*** Extras ***/
   /********************************************************************************/
@@ -1415,8 +1423,8 @@ int *tau_pomp_rd_table = 0;
                     
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: scottb $
- * $Revision: 1.142 $   $Date: 2010/02/12 22:52:17 $
- * VERSION: $Id: TauCAPI.cpp,v 1.142 2010/02/12 22:52:17 scottb Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.143 $   $Date: 2010/02/22 17:50:58 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.143 2010/02/22 17:50:58 amorris Exp $
  ***************************************************************************/
 
