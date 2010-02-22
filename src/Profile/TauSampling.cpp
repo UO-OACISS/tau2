@@ -154,7 +154,6 @@ static inline caddr_t get_pc(void *p) {
   caddr_t pc;
   struct sigcontext *sc;
   sc = (struct sigcontext *)&uc->uc_mcontext;
-
 #ifdef TAU_BGP
   //  pc = (caddr_t)sc->uc_regs->gregs[PPC_REG_PC];
   pc = (caddr_t)UCONTEXT_REG(uc, PPC_REG_PC);
@@ -479,7 +478,13 @@ void Tau_sampling_output_callstack (int tid, void* in_context) {
 /*********************************************************************
  * Write out the TAU callpath
  ********************************************************************/
+
 void Tau_sampling_output_callpath(int tid) {
+  Profiler *profiler = TauInternal_CurrentProfiler(tid);
+  fprintf(ebsTrace[tid], "%ld", profiler->CallPathFunction->GetFunctionId());
+}
+
+void Tau_sampling_output_callpath_old(int tid) {
   TAU_QUERY_DECLARE_EVENT(event);
   const char *str;
   TAU_QUERY_GET_CURRENT_EVENT(event);
