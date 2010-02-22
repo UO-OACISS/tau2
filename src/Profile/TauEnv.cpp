@@ -700,6 +700,10 @@ void TauEnv_initialize() {
     }
     TAU_VERBOSE("TAU: EBS Source: %s\n", env_ebs_source);
 
+    env_callpath = 1;
+    env_callpath_depth = 300;
+    TAU_VERBOSE("TAU: EBS Overriding callpath settings, callpath enabled, depth = 300\n");
+
 #endif
 
   }
