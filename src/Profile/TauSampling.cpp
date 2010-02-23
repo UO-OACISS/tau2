@@ -961,7 +961,11 @@ int Tau_sampling_finalize(int tid) {
 
   for (vector<FunctionInfo *>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
     FunctionInfo *fi = *it;
-    fprintf(def, "%ld | %s %s\n", fi->GetFunctionId(), fi->GetName(), fi->GetType());
+    if (strlen(fi->GetType()) > 0) {
+      fprintf(def, "%ld | %s %s\n", fi->GetFunctionId(), fi->GetName(), fi->GetType());
+    } else {
+      fprintf(def, "%ld | %s\n", fi->GetFunctionId(), fi->GetName());
+    }
   }
   fclose(def);
 
