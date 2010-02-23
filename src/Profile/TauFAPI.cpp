@@ -112,7 +112,7 @@ void tau_profile_timer_group_(void **ptr, char *infname, int *group, int slen)
     printf("Inside tau_profile_timer_group_ fname=%s\n", fname);
 #endif /* DEBUG_PROF */
     
-    *ptr = Tau_get_profiler(fname, (char *)" ", *group, fname);
+    *ptr = Tau_get_profiler(fname, "", *group, fname);
     free(fname);
   }
   
@@ -560,7 +560,7 @@ void tau_profile_timer_(void **ptr, char *fname, int flen)
 
     EXTRACT_GROUP(localname, flen, gr, gr_name);
 
-    *ptr = Tau_get_profiler(localname, (char *)" ", gr, gr_name);
+    *ptr = Tau_get_profiler(localname, "", gr, gr_name);
     free(tmp); 
     free(tmp2);
 #ifdef TAU_OPENMP
@@ -2001,7 +2001,7 @@ void TAU_DISABLE_TRACKING_MUSE_EVENTS(void) {}
 
 
 /***************************************************************************
- * $RCSfile: TauFAPI.cpp,v $   $Author: scottb $
- * $Revision: 1.80 $   $Date: 2009/07/15 20:46:14 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.80 2009/07/15 20:46:14 scottb Exp $ 
+ * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.81 $   $Date: 2010/02/23 07:42:19 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.81 2010/02/23 07:42:19 amorris Exp $ 
  ***************************************************************************/
