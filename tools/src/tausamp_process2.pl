@@ -53,8 +53,8 @@ sub old_translate_pc {
       close  STDOUT;
       open  (STDOUT, '>&TO_PERL')   || die ("open: $!");
 
-      close  STDERR;
-      open  (STDERR, '>&STDOUT')    || die;
+      # close  STDERR;
+      # open  (STDERR, '>&STDOUT')    || die;
 
       ##### close unused parts of pipes
       close FROM_PROGRAM;
