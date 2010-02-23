@@ -481,7 +481,11 @@ void Tau_sampling_output_callstack (int tid, void* in_context) {
 
 void Tau_sampling_output_callpath(int tid) {
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
-  fprintf(ebsTrace[tid], "%ld", profiler->CallPathFunction->GetFunctionId());
+  if (profiler->CallPathFunction == NULL) {
+    fprintf(ebsTrace[tid], "%ld", profiler->ThisFunction->GetFunctionId());
+  } else {
+    fprintf(ebsTrace[tid], "%ld", profiler->CallPathFunction->GetFunctionId());
+  }
 }
 
 void Tau_sampling_output_callpath_old(int tid) {
