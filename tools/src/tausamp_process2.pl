@@ -110,8 +110,8 @@ sub translate_pc {
       close  STDOUT;
       open  (STDOUT, '>&TO_PERL')   || die ("open: $!");
 
-      close  STDERR;
-      open  (STDERR, '>&STDOUT')    || die;
+#      close  STDERR;
+#      open  (STDERR, '>&STDOUT')    || die;
 
       ##### close unused parts of pipes
       close FROM_PROGRAM;
@@ -135,6 +135,7 @@ sub translate_pc {
     }
   }
 
+#  print "writing $pc to addr2line\n";
   # write the pc to addr2line
   print TO_PROGRAM "$pc\n";
 
@@ -150,6 +151,11 @@ sub translate_pc {
 
   chomp($func);
   chomp($fileline);
+#  print "got back: $func and $fileline\n";
+
+
+#   my @check = `echo $pc | addr2line -C -f -e flash3`;
+#   print "for comparison: @check\n";
 
   if ($func eq "??") {
     foreach my $rec (@address_maps) {
@@ -199,6 +205,8 @@ sub translate_pc {
     $file =~ s!^.*/([^/]*)$!\1!;
     $fileline = "$file:$line";
   }
+
+#  print "assigning $func:$fileline to $pc\n";
 
   $pcmap{$pc} = "$func:$fileline";
 #  print "returning $pcmap{$pc}\n";
@@ -445,7 +453,7 @@ sub process_trace {
 
 sub main {
   my $strip = 1;
-  if (defined $ARGV[0] && ($ARGV[0] == "--nostrip" || $ARGV[0] == "-nos")) {
+  if (defined $ARGV[0] && ($ARGV[0] eq "--nostrip" || $ARGV[0] eq "-n")) {
     $strip = 0;
     print "Processing samples... (path strip = $strip)\n";
   }
