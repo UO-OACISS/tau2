@@ -22,9 +22,21 @@
 #include <cuda_toolsapi_tau.h>
 #include<iostream>
 #include<list>
-#include<pthread.h>
-#include "gpuevents.h"
+//#include<pthread.h>
+#include<list>
+#include<map>
+#include<string>
+#include<fstream>
+#include <TAU_tf.h>
+#include "TAU_tf_headers.h"
+
 using namespace std;
+
+enum event_type{DATA,DATA2D,DATAFD,KERNEL,ALL,OTHERS};
+typedef unsigned long long TAU64;
+typedef unsigned int TAU32;
+typedef unsigned short TAU16;
+typedef unsigned char TAU8;
 
 #define TAUCUDA_SUCCESS 0
 #define TAUCUDA_INIT_FAILED -1
@@ -39,12 +51,12 @@ using namespace std;
 class EventManager;
 
 struct ClockTable{
-	TAU64 ref_gpu_start_time;
-	TAU64 ref_gpu_end_time;
-	TAU64 gpu_start_time;
-	TAU64 gpu_end_time;
-	TAU64 tau_start_time;
-	TAU64 tau_end_time;
+	double ref_gpu_start_time;
+	double ref_gpu_end_time;
+	double gpu_start_time;
+	double gpu_end_time;
+	double tau_start_time;
+	double tau_end_time;
 };
 
 struct MemCpy2D{
@@ -79,7 +91,8 @@ struct wrap_routine_arg{
 };
 
 extern "C" {
-	typedef int (* PTHREAD_CREATE_PTR)(pthread_t *restrict, const pthread_attr_t *restrict, void *(*start_routine)(void*), void *restrict1);
+	typedef int (* PTHREAD_CREATE_PTR)(pthread_t *restrict, const pthread_attr_t
+	*_restrict, void *(*start_routine)(void*), void *restrict1);
 	typedef int (*PTHREAD_JOIN_PTR)(pthread_t, void **); 
 };
  
