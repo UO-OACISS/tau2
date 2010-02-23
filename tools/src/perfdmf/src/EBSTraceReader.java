@@ -3,6 +3,8 @@ package edu.uoregon.tau.perfdmf;
 import java.io.*;
 import java.util.*;
 
+import edu.uoregon.tau.common.Utility;
+
 public class EBSTraceReader {
 
     private static String reader_version = "0.2";
@@ -170,11 +172,13 @@ public class EBSTraceReader {
                 Integer count = (Integer) it2.next();
                 numSamples += count.intValue();
             }
+            
+            callpath = Utility.removeRuns(callpath);
 
             Function function = dataSource.getFunction(callpath);
 
             if (function == null) {
-                System.err.println("Error: callpath not found in profile: " + callpath);
+                System.err.println("Error: callpath not found in profile: \"" + callpath+"\"");
                 continue;
             }
 
