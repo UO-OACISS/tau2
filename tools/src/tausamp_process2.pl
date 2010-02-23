@@ -143,7 +143,7 @@ sub translate_pc {
   my $func = <FROM_PROGRAM>;
   if ($func =~ m/^BFD: Dwarf Error/) {
     $func = "unknown";
-    $fileline = "unknown";
+    $fileline = "unknown:??";
   } else {
     $fileline = <FROM_PROGRAM>;
   }
