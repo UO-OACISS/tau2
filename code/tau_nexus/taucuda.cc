@@ -117,9 +117,9 @@ double AlignedTime(int device, double raw_time)
 {
 	double offset = gs_toolsapi.device_clocks[device].tau_end_time -
 		gs_toolsapi.device_clocks[device].ref_gpu_end_time;
-	printf("clock sync offset: \t%f.\n", offset);
+	/*printf("clock sync offset: \t%f.\n", offset);
 	printf("raw time: \t\t%f.\n", raw_time);
-	printf("adjusted time: \t\t%f.\n", raw_time + offset);
+	printf("adjusted time: \t\t%f.\n", raw_time + offset);*/
 	return (double) raw_time + offset;
 }
 
@@ -137,17 +137,17 @@ void ClockSynch()
 		GetDeviceTable()->DeviceGetTimestamp(0,&ref_t1);
 		//GetDeviceTable()->DeviceGetTimestamp(i,&(gs_toolsapi.device_clocks[i].gpu_end_time));
 		GetDeviceTable()->DeviceGetTimestamp(0,&ref_t2);
-		printf("GPU time [1]: %f.\n", (double) ref_t1);
-		printf("GPU time [2]: %f.\n", (double) ref_t2);
+		//printf("GPU time [1]: %f.\n", (double) ref_t1);
+		//printf("GPU time [2]: %f.\n", (double) ref_t2);
 		//gettimeofday(&cpu_time2,NULL);				
 		cpu_time2=taucuda_time(CPU_THREAD);
 		//gs_toolsapi.device_clocks[i].tau_end_time=GetCPUTime(cpu_time1, cpu_time2);
 		gs_toolsapi.device_clocks[i].tau_end_time=(cpu_time1+cpu_time2)/2;
 		gs_toolsapi.device_clocks[i].ref_gpu_end_time=((double)ref_t1+(double)ref_t2)/2e3;			
 
-		printf("for device %d, sync is \tCPU=%f \n\t\t\tGPU=%f", i,
+		/*printf("for device %d, sync is \tCPU=%f \n\t\t\tGPU=%f", i,
 				gs_toolsapi.device_clocks[i].tau_end_time,
-				gs_toolsapi.device_clocks[i].ref_gpu_end_time);
+				gs_toolsapi.device_clocks[i].ref_gpu_end_time);*/
 
 	}
 }
@@ -222,16 +222,20 @@ void EnterGenericEvent(cuToolsApi_EnterGenericInParams *clbkParameter)
 			type=DATA2D;
 			MemMapKey m(contextId, clbkParameter->apiCallId);
 			MemcpyEventMap.insert(make_pair(m, MemcpyHtoD));
-			printf("registering Memory copy Host to Device: %lld, %lld.\n", contextId,
-			clbkParameter->apiCallId);
+			TAU_EVENT(MemoryCopyEventHtoD, ((MemCpy2D *) clbkParameter->params)->count)
+			
+			/*printf("registering Memory copy Host to Device: %lld, %lld.\n", contextId,
+			clbkParameter->apiCallId);*/
 		}
 		else if(strncmp(clbkParameter->functionName,"cuMemcpyDtoH",sizeof("cuMemcpyDtoH")-1)==0)
 		{
 			type=DATAFD;
 			MemMapKey m(contextId, clbkParameter->apiCallId);
 			MemcpyEventMap.insert(make_pair(m, MemcpyDtoH));
-			printf("registering Memory copy Device to Host: %lld, %lld.\n", contextId,
-			clbkParameter->apiCallId);
+			TAU_EVENT(MemoryCopyEventDtoH, ((MemCpy2D *) clbkParameter->params)->count)
+			
+			/*printf("registering Memory copy Device to Host: %lld, %lld.\n", contextId,
+			clbkParameter->apiCallId);*/
 		}
 	}
 	else
@@ -289,7 +293,7 @@ void RecordGpuEvent(const char *name, double start_time, double stop_time, int d
 	
 	if (firstEvent)
 	{
-		printf("first gpu event.\n");
+		//printf("first gpu event.\n");
 		TAU_PROFILER_START_TASK(gpu_ptr, gpuTask);
 		firstEvent = false;
 	}
@@ -329,6 +333,9 @@ void ProfileMemcpyEvent(cuToolsApi_ProfileMemcpyInParams *clbkParameter)
 				(double)clbkParameter->endTime/1000, (int) device);
 			TAU_EVENT_THREAD(MemoryCopyEventHtoD, (double) clbkParameter->memTransferSize,
 			gpuTask); 
+			/* future TAU trace API call to insert messaging into the trace, should
+			 * look something like this: TauTraceCUDAMemcpyEvent(contextId, apiCallId, memTrasferSize);
+			 * */
 		} else
 		{
 			printf("Device to Host: %lld, %lld [%lf].\n",
@@ -338,6 +345,9 @@ void ProfileMemcpyEvent(cuToolsApi_ProfileMemcpyInParams *clbkParameter)
 				(double)clbkParameter->endTime/1000, (int) device);
 			TAU_EVENT_THREAD(MemoryCopyEventDtoH, (double) clbkParameter->memTransferSize,
 			gpuTask); 
+			/* future TAU trace API call to insert messaging into the trace, should
+			 * look something like this: TauTraceCUDAMemcpyEvent(contextId, apiCallId, memTrasferSize);
+			 * */
 		}
 	}
 	else 
