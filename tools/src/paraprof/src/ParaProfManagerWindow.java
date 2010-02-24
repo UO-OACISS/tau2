@@ -10,9 +10,9 @@
  * taken to ensure that DefaultMutableTreeNode references are cleaned when a node is collapsed.
 
  * 
- * <P>CVS $Id: ParaProfManagerWindow.java,v 1.48 2010/02/19 22:01:03 smillst Exp $</P>
+ * <P>CVS $Id: ParaProfManagerWindow.java,v 1.49 2010/02/24 17:27:38 smillst Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.48 $
+ * @version	$Revision: 1.49 $
  * @see		ParaProfManagerTableModel
  */
 
@@ -258,50 +258,50 @@ DBManagerListener {
 
 					if (paths.length == 1) { // only one item is selected
 						TreePath path = paths[0];
-					DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
-					Object userObject = selectedNode.getUserObject();
+						DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
+						Object userObject = selectedNode.getUserObject();
 
-					if (ParaProfUtils.rightClick(evt)) {
-						if (userObject instanceof ParaProfApplication) {
-							clickedOnObject = userObject;
-							if (((ParaProfApplication) userObject).dBApplication()) {
-								dbAppPopup.show(tree, evt.getX(), evt.getY());
-							} else {
-								stdAppPopup.show(tree, evt.getX(), evt.getY());
-							}
-						} else if (userObject instanceof ParaProfExperiment) {
-							clickedOnObject = userObject;
-							if (((ParaProfExperiment) userObject).dBExperiment()) {
-								dbExpPopup.show(tree, evt.getX(), evt.getY());
-							} else {
-								stdExpPopup.show(tree, evt.getX(), evt.getY());
-							}
+						if (ParaProfUtils.rightClick(evt)) {
+							if (userObject instanceof ParaProfApplication) {
+								clickedOnObject = userObject;
+								if (((ParaProfApplication) userObject).dBApplication()) {
+									dbAppPopup.show(tree, evt.getX(), evt.getY());
+								} else {
+									stdAppPopup.show(tree, evt.getX(), evt.getY());
+								}
+							} else if (userObject instanceof ParaProfExperiment) {
+								clickedOnObject = userObject;
+								if (((ParaProfExperiment) userObject).dBExperiment()) {
+									dbExpPopup.show(tree, evt.getX(), evt.getY());
+								} else {
+									stdExpPopup.show(tree, evt.getX(), evt.getY());
+								}
 
-						} else if (userObject instanceof ParaProfTrial) {
-							clickedOnObject = userObject;
-							if (((ParaProfTrial) userObject).dBTrial()) {
-								dbTrialPopup.show(tree, evt.getX(), evt.getY());
+							} else if (userObject instanceof ParaProfTrial) {
+								clickedOnObject = userObject;
+								if (((ParaProfTrial) userObject).dBTrial()) {
+									dbTrialPopup.show(tree, evt.getX(), evt.getY());
+								} else {
+									stdTrialPopup.show(tree, evt.getX(), evt.getY());
+								}
+							} else if (userObject instanceof ParaProfMetric) {
+								clickedOnObject = userObject;
+								metricPopup.show(tree, evt.getX(), evt.getY());
 							} else {
-								stdTrialPopup.show(tree, evt.getX(), evt.getY());
+								// standard or database
+								clickedOnObject = selectedNode;
+								popup1.show(tree, evt.getX(), evt.getY());
+
 							}
-						} else if (userObject instanceof ParaProfMetric) {
-							clickedOnObject = userObject;
-							metricPopup.show(tree, evt.getX(), evt.getY());
 						} else {
-							// standard or database
-							clickedOnObject = selectedNode;
-							popup1.show(tree, evt.getX(), evt.getY());
 
-						}
-					} else {
-
-						if (evt.getClickCount() == 2) {
-							if (userObject instanceof ParaProfMetric) {
-								ParaProfMetric ppMetric = (ParaProfMetric) userObject;
-								showMetric(ppMetric);
+							if (evt.getClickCount() == 2) {
+								if (userObject instanceof ParaProfMetric) {
+									ParaProfMetric ppMetric = (ParaProfMetric) userObject;
+									showMetric(ppMetric);
+								}
 							}
 						}
-					}
 					}
 				} catch (Exception e) {
 					ParaProfUtils.handleException(e);
@@ -712,11 +712,45 @@ DBManagerListener {
 						jSplitOuterPane.setDividerLocation(1.00);
 					}
 				} else if (arg.equals("Apply Expression File")) {
+					if (selectedObject == null) {
+						JOptionPane.showMessageDialog(
+								this,
+								"Please select a trial, experiment or application.",
+								"Warning", JOptionPane.WARNING_MESSAGE);
+						return;
+					} else if (!((selectedObject.getUserObject() instanceof ParaProfMetric)
+							|| (selectedObject.getUserObject() instanceof ParaProfTrial)
+							|| (selectedObject.getUserObject() instanceof ParaProfTrial) || (selectedObject
+									.getUserObject() instanceof ParaProfApplication))) {
+						JOptionPane.showMessageDialog(
+								this,
+								"Please select a trial, experiment or application.",
+								"Warning", JOptionPane.WARNING_MESSAGE);
+						return;
+
+					}
 					int returnVal = expressionFileC.showOpenDialog(this);
 					if (returnVal == JFileChooser.APPROVE_OPTION) {
 						derivedMetricPanel.applyExpressionFile(new LineNumberReader(new FileReader(expressionFileC.getSelectedFile())));
 					}
 				} else if (arg.equals("Re-Apply Expression File")) {
+					if (selectedObject == null) {
+						JOptionPane.showMessageDialog(
+								this,
+								"Please select a trial, experiment or application.",
+								"Warning", JOptionPane.WARNING_MESSAGE);
+						return;
+					} else if (!((selectedObject.getUserObject() instanceof ParaProfMetric)
+							|| (selectedObject.getUserObject() instanceof ParaProfTrial)
+							|| (selectedObject.getUserObject() instanceof ParaProfTrial) || (selectedObject
+									.getUserObject() instanceof ParaProfApplication))) {
+						JOptionPane.showMessageDialog(
+								this,
+								"Please select a trial, experiment or application.",
+								"Warning", JOptionPane.WARNING_MESSAGE);
+						return;
+
+					}
 					if(expressionFileC.getSelectedFile() != null){
 						derivedMetricPanel.applyExpressionFile(new LineNumberReader(new FileReader(expressionFileC.getSelectedFile())));
 					}else{
@@ -898,12 +932,12 @@ DBManagerListener {
 								Trial trial = (Trial) it2.next();
 
 								databaseAPI.setTrial(trial.getID(), true);//TODO: Do these really require xml metadata?
-										DBDataSource dbDataSource = new DBDataSource(databaseAPI);
-										dbDataSource.load();
+								DBDataSource dbDataSource = new DBDataSource(databaseAPI);
+								dbDataSource.load();
 
-										String filename = expname + File.separator + trial.getName().replace('/', '%') + ".ppk";
+								String filename = expname + File.separator + trial.getName().replace('/', '%') + ".ppk";
 
-										DataSourceExport.writePacked(dbDataSource, new File(filename));
+								DataSourceExport.writePacked(dbDataSource, new File(filename));
 
 							}
 
@@ -1504,14 +1538,14 @@ DBManagerListener {
 						databaseAPI.setExperiment(experiment.getID());
 						if (databaseAPI.getTrialList(false) != null) {
 							ListIterator l = databaseAPI.getTrialList(true).listIterator();//TODO: Is xml metadata required here?
-									while (l.hasNext()) {
-										ParaProfTrial ppTrial = new ParaProfTrial((Trial) l.next());
-										ppTrial.setDBTrial(true);
-										ppTrial.setExperiment(experiment);
-										DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(ppTrial);
-										ppTrial.setDMTN(trialNode);
-										getTreeModel().insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
-									}
+							while (l.hasNext()) {
+								ParaProfTrial ppTrial = new ParaProfTrial((Trial) l.next());
+								ppTrial.setDBTrial(true);
+								ppTrial.setExperiment(experiment);
+								DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(ppTrial);
+								ppTrial.setDMTN(trialNode);
+								getTreeModel().insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
+							}
 						}
 						databaseAPI.terminate();
 					}

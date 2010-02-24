@@ -83,7 +83,7 @@ public class ParaProfExpression {
 		if(newName ==null){
 			text.trim();
 			text = text.replace('\"', ' ');
-			newName =text;
+			newName ="("+text+")";
 		}
 
 		return evaluate(newName,trial,expressArray);
@@ -315,12 +315,21 @@ public static boolean validate(String expression){
 		metric.setName(newName);
 		return metric;
 	}
-
+	private static void sleep(int msec) {
+		try {
+			java.lang.Thread.sleep(msec);
+		} catch (Exception e) {
+			throw new RuntimeException("Exception while sleeping");
+		}
+	}
 	private ParaProfMetric evaluate(String newName,ParaProfTrial trial,ArrayList equation) throws ParsingException, MetricNotFoundException{
 		if(trial==null) throw new ParsingException("Null trial");
 		if(newName != null) newName = newName.trim();
 		if(equation.size()==1){
 			return rename(newName, findMetric(equation.get(0),trial));
+		}
+		while (trial.loading()) {
+			sleep(500);
 		}
 		
   		for(int x=0;x<equation.size();x++){

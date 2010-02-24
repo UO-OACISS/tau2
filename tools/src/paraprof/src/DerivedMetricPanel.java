@@ -73,6 +73,14 @@ public class DerivedMetricPanel extends JPanel implements ActionListener {
 		gbc.weightx = 100;
 		gbc.weighty = 0;
 		addCompItem(arg1Field, gbc, 1, 0, 7, 1);
+		
+		JButton jClear = new JButton("Clear");
+		jClear.addActionListener(this);
+		gbc.fill = GridBagConstraints.NONE;
+		gbc.anchor = GridBagConstraints.WEST;
+		gbc.weightx = 0;
+		gbc.weighty = 0;
+		addCompItem(jClear, gbc, 8,0, 1, 1);
 
 
 
@@ -221,6 +229,7 @@ public class DerivedMetricPanel extends JPanel implements ActionListener {
 			while (trial.loading()) {
 				sleep(500);
 			}
+		
 			try{
 				paraProfManager.expandTrial(trial);
 				ParaProfExpression exp1 = new ParaProfExpression();
@@ -242,7 +251,7 @@ public class DerivedMetricPanel extends JPanel implements ActionListener {
 	}
 
 	public void applyOperation()   {
-		
+
 		if(!ParaProfExpression.validate(arg1Field.getText())){
 			JOptionPane.showMessageDialog(paraProfManager, 
 					"The expression entered is not valid.",
@@ -327,6 +336,8 @@ public class DerivedMetricPanel extends JPanel implements ActionListener {
 			String arg = evt.getActionCommand();
 			if (arg.equals("Apply")) {
 				applyOperation();
+			}else if(arg.equals("Clear")){
+				arg1Field.setText("");
 			}else if(arg.equals("+")){
 				insertString("+");
 			}else if(arg.equals("+")){
@@ -384,44 +395,43 @@ public class DerivedMetricPanel extends JPanel implements ActionListener {
 		String expression = scan.readLine();
 		ArrayList errors = new ArrayList();
 
-				DefaultMutableTreeNode sel = paraProfManager.getSelectedObject();
+		DefaultMutableTreeNode sel = paraProfManager.getSelectedObject();
 
-				if(sel==null){
-					JOptionPane.showMessageDialog(paraProfManager, 
-							"Please select a trial, experiment or application.",
-							"Warning", JOptionPane.WARNING_MESSAGE);
-					return;
-				}else if(!(		(sel.getUserObject() instanceof ParaProfMetric)||(sel.getUserObject() instanceof ParaProfTrial)||(sel.getUserObject() instanceof ParaProfTrial)||(sel.getUserObject() instanceof ParaProfApplication))){
- JOptionPane.showMessageDialog(paraProfManager,
-                                                        "Please select a trial, experiment or application.",
-                                                        "Warning", JOptionPane.WARNING_MESSAGE);
-                                        return;
+		if(sel==null){
+			JOptionPane.showMessageDialog(paraProfManager, 
+					"Please select a trial, experiment or application.",
+					"Warning", JOptionPane.WARNING_MESSAGE);
+			return;
+		}else if(!(		(sel.getUserObject() instanceof ParaProfMetric)||(sel.getUserObject() instanceof ParaProfTrial)||(sel.getUserObject() instanceof ParaProfTrial)||(sel.getUserObject() instanceof ParaProfApplication))){
+			JOptionPane.showMessageDialog(paraProfManager,
+					"Please select a trial, experiment or application.",
+					"Warning", JOptionPane.WARNING_MESSAGE);
+			return;
 
-}
+		}
 		while(expression != null){
 			expression = expression.trim();
-			
+
 			if(!expression.equals("")){
 				if(!ParaProfExpression.validate(expression)){
 					JOptionPane.showMessageDialog(paraProfManager, 
 							"The expression entered is not valid.",
 							"Expression Error", JOptionPane.ERROR_MESSAGE);
-					;
 				}else{
 
-				ArrayList collectTrials = collectTrials(sel); 
+					ArrayList collectTrials = collectTrials(sel); 
 
-				for (int i=0;i<collectTrials.size();i++){
-					try {
-						applyToTrial((ParaProfTrial) collectTrials.get(i), expression);
-					} catch (MetricNotFoundException e) {
-						errors.add(collectTrials.get(i));
+					for (int i=0;i<collectTrials.size();i++){
+						try {
+							applyToTrial((ParaProfTrial) collectTrials.get(i), expression);
+						} catch (MetricNotFoundException e) {
+							errors.add(collectTrials.get(i));
+						}
 					}
-				}
 				}
 
 			}
-			 expression = scan.readLine();
+			expression = scan.readLine();
 		}
 		if(errors.size()>0){
 			errors.add(0,"The metric could not be derived for the follow trials because they did not contain all of the metrics required.\n");
