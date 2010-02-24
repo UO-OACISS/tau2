@@ -219,6 +219,9 @@ sub translate_pc {
 
 sub read_maps {
   my ($exe, $map_file) = @_;
+
+  @address_maps = ();
+
 #  print "reading maps\n";
   my @lines = `cat $map_file`;
   foreach my $line (@lines) {
@@ -227,9 +230,17 @@ sub read_maps {
 #    print "got line: $line\n";
 
     if ($binary eq "[stack]") {
-      next;
+	next;
     }
 
+    if ($binary eq "/dev/zero") {
+	next;
+    }
+    
+    # if it starts with "[", skip it (e.g. [heap], [stack])
+    if ($binary =~ /\[/) {
+	next;
+    }
 
     pipe (SUB_FROM_PERL, SUB_TO_PROGRAM);
     pipe (SUB_FROM_PROGRAM, SUB_TO_PERL);
@@ -248,8 +259,8 @@ sub read_maps {
       close  STDOUT;
       open  (STDOUT, '>&SUB_TO_PERL')   || die ("open: $!");
 
-      close  STDERR;
-      open  (STDERR, '>&STDOUT')    || die;
+#       close  STDERR;
+#       open  (STDERR, '>&STDOUT')    || die;
 
       ##### close unused parts of pipes
       close SUB_FROM_PROGRAM;
@@ -279,7 +290,7 @@ sub read_maps {
 	    TO_CONVERTER => \*SUB_TO_PROGRAM,
 	    FROM_CONVERTER => \*SUB_FROM_PROGRAM,
 	   };
-    push (@address_maps,$rec);
+    unshift (@address_maps,$rec);
 
 
   }
