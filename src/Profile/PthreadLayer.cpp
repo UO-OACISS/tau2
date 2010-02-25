@@ -259,6 +259,14 @@ extern "C" int tau_track_pthread_create (pthread_t * threadp,
   return pthread_create(threadp, (pthread_attr_t*) attr, tau_pthread_function, (void*)pack);
 }
 
+extern "C" int tau_track_pthread_barrier_wait(pthread_barrier_t *barrier) {
+  int retval;
+  TAU_PROFILE_TIMER(timer, "pthread_barrier_wait", "", TAU_DEFAULT);
+  TAU_PROFILE_START(timer);
+  retval = pthread_barrier_wait (barrier);
+  TAU_PROFILE_STOP(timer);
+  return retval;
+}
 
 #ifdef TAU_PTHREAD_PRELOAD
 #include <dlfcn.h>
@@ -266,6 +274,8 @@ extern "C" int tau_track_pthread_create (pthread_t * threadp,
 static int (*_pthread_create) (pthread_t* thread, const pthread_attr_t* attr, 
 			       void *(*start_routine)(void*), void* arg) = NULL;
 static void (*_pthread_exit) (void *value_ptr) = NULL;
+
+static int (*_pthread_barrier_wait) (pthread_barrier_t *barrier) = NULL;
 
 extern "C" int pthread_create (pthread_t* thread, const pthread_attr_t* attr, 
 		    void *(*start_routine)(void*), void* arg) {
@@ -288,10 +298,23 @@ extern "C" void pthread_exit (void *value_ptr) {
   TAU_PROFILE_EXIT("pthread_exit");
   _pthread_exit(value_ptr);
 }
+
+extern "C" int pthread_barrier_wait(pthread_barrier_t *barrier) {
+  int retval;
+  if (_pthread_barrier_wait == NULL) {
+    _pthread_barrier_wait = (int (*) (pthread_barrier_t *barrier)) dlsym(RTLD_NEXT, "pthread_barrier_wait");
+  }
+  TAU_PROFILE_TIMER(timer, "pthread_barrier_wait", "", TAU_DEFAULT);
+  TAU_PROFILE_START(timer);
+  retval = _pthread_barrier_wait (barrier);
+  TAU_PROFILE_STOP(timer);
+  return retval;
+}
+
 #endif
 
 /***************************************************************************
  * $RCSfile: PthreadLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.21 $   $Date: 2009/01/16 00:46:52 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.21 2009/01/16 00:46:52 amorris Exp $
+ * $Revision: 1.22 $   $Date: 2010/02/25 20:10:19 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.22 2010/02/25 20:10:19 amorris Exp $
  ***************************************************************************/
