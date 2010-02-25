@@ -52,6 +52,7 @@ declare -i optShared=$FALSE
 declare -i optCompInst=$FALSE
 declare -i optHeaderInst=$FALSE
 declare -i disableCompInst=$FALSE
+declare -i madeToLinkStep=$FALSE
 
 headerInstDir=".tau_tmp_$$"
 headerInstFlag=""
@@ -1386,6 +1387,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	fi
 
 	newCmd="$CMD $listOfObjectFiles $objectFilesForLinking $argsRemaining $OUTPUTARGSFORTAU $optLinking -o $passedOutputFile"
+	madeToLinkStep=$TRUE
 	evalWithDebugMessage "$newCmd" "Linking (Together) object files"
 
 	if [ ! -e $passedOutputFile ] ; then
@@ -1469,7 +1471,9 @@ if [ $errorStatus == $TRUE ] ; then
     # Try compiler-based instrumentation
     if [ $disableCompInst == $FALSE ] ; then 
 	if [ "x$optCompInstOption" != x ] ; then
-	    continue;
+	    if [ $madeToLinkStep == $FALSE ] ; then
+		continue;
+	    fi
 	fi
     fi
     
