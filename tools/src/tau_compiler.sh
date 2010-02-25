@@ -99,7 +99,7 @@ printUsage () {
     echo -e "  -optMpi\t\t\tDoes not remove -l*mpi* libraries during linking (default)"
     echo -e "  -optNoRevert\t\t\tExit on error. Does not revert to the original compilation rule on error."
     echo -e "  -optRevert\t\t\tRevert to the original compilation rule on error (default)."
-    echo -e "  -optNoCompInst\t\tDo not revert to compiler instrumentation if source instrumentaiton fails."
+    echo -e "  -optNoCompInst\t\tDo not revert to compiler instrumentation if source instrumentation fails."
     echo -e "  -optKeepFiles\t\t\tDoes not remove intermediate .pdb and .inst.* files" 
     echo -e "  -optAppCC=\"<cc>\"\t\tSpecifies the fallback C compiler."
     echo -e "  -optAppCXX=\"<cxx>\"\t\tSpecifies the fallback C++ compiler."
