@@ -23,9 +23,9 @@ import edu.uoregon.tau.vis.*;
 /**
  * 3D Communication Matrix Window 
  * 
- * <P>CVS $Id: ThreeDeeCommMatrixWindow.java,v 1.9 2010/02/22 20:01:17 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeCommMatrixWindow.java,v 1.10 2010/02/25 23:58:52 amorris Exp $</P>
  * @author Alan Morris, Kevin Huck
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  */
 public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, ActionListener, ThreeDeeImageProvider,
         VisCanvasListener, Printable {
@@ -142,8 +142,8 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
             return 0;
         }
 
-        int x = selections[0];
-        int y = selections[1];
+        int y = selections[0];
+        int x = selections[1];
 
         double heightValue = mapData.get(x, y, currentPath, heightMetric);
         double colorValue = mapData.get(x, y, currentPath, colorMetric);
@@ -157,8 +157,8 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
             return 0;
         }
 
-        int x = selections[0];
-        int y = selections[1];
+        int y = selections[0];
+        int x = selections[1];
 
         double heightValue = mapData.get(x, y, currentPath, heightMetric);
         double colorValue = mapData.get(x, y, currentPath, colorMetric);
@@ -172,8 +172,8 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
             return "";
         }
 
-        int x = selections[0];
-        int y = selections[1];
+        int y = selections[0];
+        int x = selections[1];
 
         double heightValue = mapData.get(x, y, currentPath, heightMetric);
         double colorValue = mapData.get(x, y, currentPath, colorMetric);
@@ -190,8 +190,8 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
             return "";
         }
 
-        int x = selections[0];
-        int y = selections[1];
+        int y = selections[0];
+        int x = selections[1];
 
         double colorValue = mapData.get(x, y, currentPath, colorMetric);
 
@@ -621,8 +621,10 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         axes.setOnEdge(true);
 
         //colorScale.setStrings(Float.toString(minColorValue), Float.toString(maxColorValue), metricStrings[colorMetric]);
-        colorScale.setStrings(UtilFncs.formatDouble(minColorValue, 6, true), UtilFncs.formatDouble(maxColorValue, 6, true),
-                metricStrings[colorMetric]);
+        String foobar = UtilFncs.formatDouble(minColorValue, 6, true);
+
+        colorScale.setStrings(UtilFncs.formatDouble(minColorValue, 6, true).trim(),
+                UtilFncs.formatDouble(maxColorValue, 6, true).trim(), metricStrings[colorMetric]);
 
         int size = mapData.getSize();
 
