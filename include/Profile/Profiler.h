@@ -65,7 +65,9 @@ int tau_track_pthread_create (pthread_t *threadp,
 			      void *arg, int id);
 void tau_pthread_exit (void *arg);
 
+#ifdef TAU_PTHREAD_BARRIER_AVAILABLE 
 int tau_track_pthread_barrier_wait(pthread_barrier_t *barrier);
+#endif /* TAU_PTHREAD_BARRIER_AVAILABLE */
 
 #ifdef __cplusplus
 }
@@ -286,7 +288,7 @@ void TauProfiler_AddProfileParamData(long key, const char *keyname);
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.117 $   $Date: 2010/02/25 20:10:19 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.117 2010/02/25 20:10:19 amorris Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: sameer $
+ * $Revision: 1.118 $   $Date: 2010/03/02 21:20:07 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.118 2010/03/02 21:20:07 sameer Exp $ 
  ***************************************************************************/

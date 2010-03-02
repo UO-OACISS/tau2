@@ -259,6 +259,7 @@ extern "C" int tau_track_pthread_create (pthread_t * threadp,
   return pthread_create(threadp, (pthread_attr_t*) attr, tau_pthread_function, (void*)pack);
 }
 
+#ifdef TAU_PTHREAD_BARRIER_AVAILABLE
 extern "C" int tau_track_pthread_barrier_wait(pthread_barrier_t *barrier) {
   int retval;
   TAU_PROFILE_TIMER(timer, "pthread_barrier_wait", "", TAU_DEFAULT);
@@ -267,6 +268,7 @@ extern "C" int tau_track_pthread_barrier_wait(pthread_barrier_t *barrier) {
   TAU_PROFILE_STOP(timer);
   return retval;
 }
+#endif /* TAU_PTHREAD_BARRIER_AVAILABLE */
 
 #ifdef TAU_PTHREAD_PRELOAD
 #include <dlfcn.h>
@@ -275,6 +277,7 @@ static int (*_pthread_create) (pthread_t* thread, const pthread_attr_t* attr,
 			       void *(*start_routine)(void*), void* arg) = NULL;
 static void (*_pthread_exit) (void *value_ptr) = NULL;
 
+#ifdef TAU_PTHREAD_BARRIER_AVAILABLE
 static int (*_pthread_barrier_wait) (pthread_barrier_t *barrier) = NULL;
 
 extern "C" int pthread_create (pthread_t* thread, const pthread_attr_t* attr, 
@@ -289,6 +292,7 @@ extern "C" int pthread_create (pthread_t* thread, const pthread_attr_t* attr,
   pack->id = -1;
   return _pthread_create(thread, (pthread_attr_t*) attr, tau_pthread_function, (void*)pack);
 }
+#endif /* TAU_PTHREAD_BARRIER_AVAILABLE */
 
 extern "C" void pthread_exit (void *value_ptr) {
 
@@ -314,7 +318,7 @@ extern "C" int pthread_barrier_wait(pthread_barrier_t *barrier) {
 #endif
 
 /***************************************************************************
- * $RCSfile: PthreadLayer.cpp,v $   $Author: amorris $
- * $Revision: 1.22 $   $Date: 2010/02/25 20:10:19 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.22 2010/02/25 20:10:19 amorris Exp $
+ * $RCSfile: PthreadLayer.cpp,v $   $Author: sameer $
+ * $Revision: 1.23 $   $Date: 2010/03/02 21:20:32 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.23 2010/03/02 21:20:32 sameer Exp $
  ***************************************************************************/
