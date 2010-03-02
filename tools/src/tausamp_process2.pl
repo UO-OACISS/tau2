@@ -343,6 +343,7 @@ sub process_trace {
   print "node = $node\n";
   print "thread = $thread\n";
 
+  read_maps($exe, $map_file);
 
   # Read the trace
   open (TRACE, "<$trace_file");
@@ -357,7 +358,6 @@ sub process_trace {
       if ($line =~ /\# exe:.*/) {
         ($junk, $exe) = split("exe:",$line);
         $exe = trim($exe);
-	read_maps($exe, $map_file);
       } elsif ($line =~ /\# node:.*/) {
         ($junk, $node) = split("node:",$line);
         $node = trim($node);
