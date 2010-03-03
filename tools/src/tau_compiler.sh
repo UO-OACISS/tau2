@@ -989,7 +989,7 @@ if [ $numFiles == 0 ]; then
     if [  ! -e $passedOutputFile ]; then
 	echoIfVerbose "Error: Tried looking for file: $passedOutputFile"
 	echoIfVerbose "Error: Failed to link with TAU options"
-	if [ $revertForced == $TRUE ] ; then
+	if [ $revertForced == $TRUE -o $passCount == 1 ] ; then
 	    printError "$CMD" "$linkCmd"
 	else 
 	    revertOnError=false
