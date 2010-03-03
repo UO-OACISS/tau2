@@ -1446,6 +1446,15 @@ if [ $errorStatus == $TRUE ] ; then
 	exit 1
     fi
     
+    # Try compiler-based instrumentation
+    if [ $disableCompInst == $FALSE ] ; then 
+	if [ "x$optCompInstOption" != x ] ; then
+	    if [ $madeToLinkStep == $FALSE ] ; then
+		continue;
+	    fi
+	fi
+    fi
+    
     if [ $groupType == $group_f_F ]; then
 	if [ "x$optAppF90" == "x" ]; then
 	    regularCmd="$compilerSpecified $regularCmd"
@@ -1468,15 +1477,6 @@ if [ $errorStatus == $TRUE ] ; then
 	regularCmd="$compilerSpecified $regularCmd"
     fi
 
-    # Try compiler-based instrumentation
-    if [ $disableCompInst == $FALSE ] ; then 
-	if [ "x$optCompInstOption" != x ] ; then
-	    if [ $madeToLinkStep == $FALSE ] ; then
-		continue;
-	    fi
-	fi
-    fi
-    
     evalWithDebugMessage "$regularCmd" "Compiling with Non-Instrumented Regular Code"
     break;
 fi
