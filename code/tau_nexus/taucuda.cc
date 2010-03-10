@@ -53,7 +53,7 @@ using namespace std;
 	takes the thread id as a argument. */
 
 // a seperate counter for each GPU.
-double gpu_timestamp[TAU_MAX_THREADS];
+//double gpu_timestamp[TAU_MAX_THREADS];
 double cpu_start_time;
 
 #define MemcpyHtoD false
@@ -84,6 +84,8 @@ doubleMap MemcpyEventMap;
 //alocate memory for 5000 GPU events.
 map<const char*, void*> events;
 
+extern void metric_set_gpu_timestamp(int tid, double value);
+
 void start_gpu_event(const char *name)
 {
 	map<const char*,void*>::iterator it = events.find(name);
@@ -112,25 +114,15 @@ void stop_gpu_event(const char *name)
 	}
 }
 
-double taucuda_time(int tid)
+double cpu_time()
 {
-	if (tid == CPU_THREAD)
-	{	
-		//get time from the CPU clock
-		struct timeval tp;
-	  gettimeofday(&tp, 0);
-		//printf("CPU time: %f \n", ((double)tp.tv_sec * 1e6 + tp.tv_usec));
-		//printf("subtraction: %f \n", cpu_start_time);
-		//printf("CPU time (2): %f \n", ((double)tp.tv_sec * 1e6 + tp.tv_usec) - cpu_start_time);
-		return ((double)tp.tv_sec * 1e6 + tp.tv_usec);
-	}
-	// get time from the callback API 
-	else
-	{
-		//printf("GPU time: %f \n", gpu_timestamp[tid]);
-		//printf("GPU time (2): %f \n", gpu_timestamp[tid] - cpu_start_time);
-		return gpu_timestamp[tid];
-	}
+	//get time from the CPU clock
+	struct timeval tp;
+	gettimeofday(&tp, 0);
+	//printf("CPU time: %f \n", ((double)tp.tv_sec * 1e6 + tp.tv_usec));
+	//printf("subtraction: %f \n", cpu_start_time);
+	//printf("CPU time (2): %f \n", ((double)tp.tv_sec * 1e6 + tp.tv_usec) - cpu_start_time);
+	return ((double)tp.tv_sec * 1e6 + tp.tv_usec);
 }
 
 
@@ -164,14 +156,14 @@ void ClockSynch()
 	for(int i=0;i<gs_toolsapi.device_count;i++)
 	{
 		//gettimeofday(&cpu_time1,NULL);
-		cpu_time1=taucuda_time(CPU_THREAD);
+		cpu_time1=cpu_time();
 		GetDeviceTable()->DeviceGetTimestamp(0,&ref_t1);
 		//GetDeviceTable()->DeviceGetTimestamp(i,&(gs_toolsapi.device_clocks[i].gpu_end_time));
 		GetDeviceTable()->DeviceGetTimestamp(0,&ref_t2);
 		//printf("GPU time [1]: %f.\n", (double) ref_t1);
 		//printf("GPU time [2]: %f.\n", (double) ref_t2);
 		//gettimeofday(&cpu_time2,NULL);				
-		cpu_time2=taucuda_time(CPU_THREAD);
+		cpu_time2=cpu_time();
 		//gs_toolsapi.device_clocks[i].tau_end_time=GetCPUTime(cpu_time1, cpu_time2);
 		gs_toolsapi.device_clocks[i].tau_end_time=(cpu_time1+cpu_time2)/2;
 		gs_toolsapi.device_clocks[i].ref_gpu_end_time=((double)ref_t1+(double)ref_t2)/2e3;			
@@ -321,7 +313,7 @@ void RecordGpuEvent(const char *name, double start_time, double stop_time, int d
 		clock_sync=true;
 	}
 
-	gpu_timestamp[gpuTask] = AlignedTime(device, start_time);
+	metric_set_gpu_timestamp(gpuTask, AlignedTime(device, start_time));
 	
 	if (firstEvent)
 	{
@@ -333,7 +325,7 @@ void RecordGpuEvent(const char *name, double start_time, double stop_time, int d
 	start_gpu_event(name);
 	//TAU_START_TASK(name, gpuTask);
 
-	gpu_timestamp[gpuTask] = AlignedTime(device, stop_time);
+	metric_set_gpu_timestamp(gpuTask, AlignedTime(device, stop_time));
 	stop_gpu_event(name);
 	//TAU_STOP_TASK(name, gpuTask);
 	RtsLayer::UnLockDB();
@@ -529,7 +521,7 @@ inline int InitializeToolsApi(void)
 	TAU_CREATE_TASK(gpuTask);
 
 	/* Register our time callback */
-	TAU_CREATE_USER_CLOCK("TAUCUDA_TIME", taucuda_time);
+	//TAU_CREATE_USER_CLOCK("TAUCUDA_TIME", taucuda_time);
 
 	printf("Created user clock.\n");
     
