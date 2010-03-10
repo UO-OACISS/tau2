@@ -206,7 +206,8 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   Profiler *p = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
 
   p->MyProfileGroup_ = fi->GetProfileGroup();
-  p->ThisFunction = fi; 
+  p->ThisFunction = fi;
+
 
 #ifdef TAU_EXP_SAMPLING
   p->needToRecordStop = 0;
@@ -574,7 +575,6 @@ extern "C" void Tau_profile_set_group(void *ptr, TauGroup_t group) {
 
 extern "C" const char *Tau_profile_get_group_name(void *ptr) {
   FunctionInfo *f = (FunctionInfo*)ptr;
-  printf ("returning %s\n", f->GroupName);
   return f->GroupName;
 }
 
@@ -772,6 +772,11 @@ extern "C" void Tau_userevent(void *ue, double data) {
   TauUserEvent *t = (TauUserEvent *) ue;
   t->TriggerEvent(data);
 } 
+
+extern "C" void Tau_userevent_thread(void *ue, double data, int tid) {
+  TauUserEvent *t = (TauUserEvent *) ue;
+  t->TriggerEvent(data, tid);
+}
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_get_context_userevent(void **ptr, char *name)
@@ -1374,7 +1379,6 @@ void *Tau_query_parent_event(void *event) {
 //////////////////////////////////////////////////////////////////////
 // User definable clock
 //////////////////////////////////////////////////////////////////////
-
 extern "C" void Tau_set_user_clock(double value) {
   int tid = RtsLayer::myThread();
   metric_write_userClock(tid, value);
@@ -1383,7 +1387,6 @@ extern "C" void Tau_set_user_clock(double value) {
 extern "C" void Tau_set_user_clock_thread(double value, int tid) {
   metric_write_userClock(tid, value);
 }
-
 
 //////////////////////////////////////////////////////////////////////
 // Sometimes we may link in a library that needs the POMP stuff
@@ -1423,8 +1426,8 @@ int *tau_pomp_rd_table = 0;
                     
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.143 $   $Date: 2010/02/22 17:50:58 $
- * VERSION: $Id: TauCAPI.cpp,v 1.143 2010/02/22 17:50:58 amorris Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: scottb $
+ * $Revision: 1.144 $   $Date: 2010/03/10 02:22:44 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.144 2010/03/10 02:22:44 scottb Exp $
  ***************************************************************************/
 

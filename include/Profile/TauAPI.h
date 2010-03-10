@@ -105,7 +105,6 @@ extern "C" {
 
 #define TAU_SET_USER_CLOCK_THREAD(value, tid)   Tau_set_user_clock_thread(value, tid);
 #define TAU_SET_USER_CLOCK(value)               Tau_set_user_clock(value);
-
 #define TAU_PROFILE_INIT(argc, argv)		Tau_init(argc, argv);
 #define TAU_INIT(argc, argv)			Tau_init_ref(argc, argv);
 #define TAU_PROFILE_STMT(stmt) stmt;
@@ -150,10 +149,11 @@ extern "C" {
 /* Atomic Events */
 #define TAU_REGISTER_EVENT(event, name)	static void *event = 0; \
                                  if (event == 0) event = Tau_get_userevent(name);
-				
+#define TAU_PROFILER_REGISTER_EVENT(event, name) event = Tau_get_userevent(name);
 #define TAU_REGISTER_CONTEXT_EVENT(event, name)	static void *event = 0; \
                                  if (event == 0) Tau_get_context_userevent(&event, name);  
 #define TAU_EVENT(event, data)			Tau_userevent(event, data);
+#define TAU_EVENT_THREAD(event, data, tid)				Tau_userevent_thread(event, data, tid)
 #define TAU_CONTEXT_EVENT(event, data)		Tau_context_userevent(event, data);
 #define TAU_EVENT_SET_NAME(event, name)	Tau_set_event_name(event, name); 	
 #define TAU_REPORT_STATISTICS()		Tau_report_statistics();
@@ -382,7 +382,6 @@ void TAUDECL Tau_metadata(char *name, char *value);
 void TAUDECL Tau_phase_metadata(char *name, char *value);
 void TAUDECL Tau_context_metadata(char *name, char *value);
 
-
 void Tau_set_user_clock(double value);
 void Tau_set_user_clock_thread(double value, int tid);
 
@@ -409,6 +408,7 @@ void Tau_register_fork(int nodeid, enum TauFork_t opcode);
 void* TAUDECL Tau_get_userevent(char *name);
 void Tau_get_context_userevent(void **ptr, char *name);
 void Tau_userevent(void *event, double data);
+void Tau_userevent_thread(void *event, double data, int tid);
 void Tau_context_userevent(void *event, double data);
 void Tau_set_event_name(void *event, char * name);
 void Tau_report_statistics(void);
@@ -502,6 +502,6 @@ void Tau_profile_param1l(long data, const char *dataname);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: scottb $
- * $Revision: 1.105 $   $Date: 2010/02/12 22:52:17 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.105 2010/02/12 22:52:17 scottb Exp $ 
+ * $Revision: 1.106 $   $Date: 2010/03/10 02:22:44 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.106 2010/03/10 02:22:44 scottb Exp $ 
  ***************************************************************************/
