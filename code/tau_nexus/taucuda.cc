@@ -34,7 +34,7 @@ __thread bool registered=false;
 bool user_events=false;
 
 void *main_ptr, *gpu_ptr;
-void *MemoryCopyEventHtoD, *MemoryCopyEventDtoH;
+static void *MemoryCopyEventHtoD, *MemoryCopyEventDtoH;
 int gpuTask;
 int firstEvent = true;
 
@@ -255,8 +255,8 @@ void EnterGenericEvent(cuToolsApi_EnterGenericInParams *clbkParameter)
 			MemcpyEventMap.insert(make_pair(m, MemcpyHtoD));
 			TAU_EVENT(MemoryCopyEventHtoD, ((MemCpy2D *) clbkParameter->params)->count)
 			
-			printf("registering Memory copy Host to Device: %lld, %lld.\n", contextId,
-			clbkParameter->apiCallId);
+			/*printf("registering Memory copy Host to Device: %lld, %lld.\n", contextId,
+			clbkParameter->apiCallId);*/
 		}
 		else if(strncmp(clbkParameter->functionName,"cuMemcpyDtoH",sizeof("cuMemcpyDtoH")-1)==0)
 		{
@@ -265,8 +265,8 @@ void EnterGenericEvent(cuToolsApi_EnterGenericInParams *clbkParameter)
 			MemcpyEventMap.insert(make_pair(m, MemcpyDtoH));
 			//TAU_EVENT(MemoryCopyEventDtoH, ((MemCpy2D *) clbkParameter->params)->count)
 			
-			printf("registering Memory copy Device to Host: %lld, %lld.\n", contextId,
-			clbkParameter->apiCallId);
+			/*printf("registering Memory copy Device to Host: %lld, %lld.\n", contextId,
+			clbkParameter->apiCallId);*/
 		}
 	}
 	else
@@ -355,15 +355,16 @@ void ProfileMemcpyEvent(cuToolsApi_ProfileMemcpyInParams *clbkParameter)
 	
 	MemMapKey m(clbkParameter->contextId, clbkParameter->apiCallId);
 	doubleMap::const_iterator it = MemcpyEventMap.find(m);
-	printf("tiggering Memory copy: %lld, %lld\t",
+	/*printf("tiggering Memory copy: %lld, %lld\t",
 			clbkParameter->contextId,
-			clbkParameter->apiCallId);
+			clbkParameter->apiCallId);*/
 	if (it != MemcpyEventMap.end())
 	{
 		if (it->second == MemcpyHtoD)
 		{
-			printf("Host to Device: %lld, %lld [%lf].\n",
-					it->first.contextId, it->first.callId, (double) clbkParameter->memTransferSize);
+			/*printf("Host to Device: %lld, %lld [%lf].\n",
+					it->first.contextId, it->first.callId, (double)
+					clbkParameter->memTransferSize);*/
 			RecordGpuEvent("cuda Memory copy Host to Device",
 				(double)clbkParameter->startTime/1000,
 				(double)clbkParameter->endTime/1000, (int) device);
@@ -374,8 +375,9 @@ void ProfileMemcpyEvent(cuToolsApi_ProfileMemcpyInParams *clbkParameter)
 			 * */
 		} else
 		{
-			printf("Device to Host: %lld, %lld [%lf].\n",
-					it->first.contextId, it->first.callId, (double)clbkParameter->memTransferSize);
+			/*printf("Device to Host: %lld, %lld [%lf].\n",
+					it->first.contextId, it->first.callId,
+					(double)clbkParameter->memTransferSize);*/
 			RecordGpuEvent("cuda Memory copy Device to Host",
 				(double)clbkParameter->startTime/1000,
 				(double)clbkParameter->endTime/1000, (int) device);
@@ -522,8 +524,6 @@ inline int InitializeToolsApi(void)
 	TAU_PROFILER_CREATE(main_ptr, "main", "", TAU_USER);
 	TAU_PROFILER_CREATE(gpu_ptr, "gpu elapsed time", "", TAU_USER);
 	//InitializeTAU();
-	TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventHtoD, "Memory copied from Host to Device");
-	TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
 
 	/* Create a seperate GPU task */
 	TAU_CREATE_TASK(gpuTask);
@@ -535,6 +535,9 @@ inline int InitializeToolsApi(void)
     
   TAU_PROFILER_START(main_ptr);	
 
+	TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventHtoD, "Memory copied from Host to Device");
+	TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
+	
 	printf("started main.\n");
 	return 0;
 }
@@ -607,10 +610,10 @@ int tau_cuda_init(void)
 */
 void tau_cuda_exit(void)
 {
-	const char **names;
+	/*const char **names;
 	int num;
 	TAU_GET_EVENT_NAMES(names, num);
-	printf("exit events are: %s.\n", names[0]);
+	printf("exit events are: %s.\n", names[0]);*/
 	
 	if(!tau_nexus)
 	{

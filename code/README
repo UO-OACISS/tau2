@@ -25,3 +25,9 @@ Then in the release directory:
 
 Make sure your tau2/x86_64/lib directory is in the $LD_LIBRARY_PATH
 
+
+NOTES:
+
+set TAU_METRICS=TAUCUDA_TIME adding any other timers will not work.
+
+set TAU_SYNCHRONZIE_CLOCKS=0 otherwise traces will have 0 timestamp.

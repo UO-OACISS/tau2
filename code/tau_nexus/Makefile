@@ -16,7 +16,7 @@ CC := g++ -g
 LINK := g++
 CFLAGS := -fPIC -g
 LDFLAGS := -shared -fPIC -g
-LIBS  := -L$(CUDA_BASE)/lib64 -L$(CUDA_SDK)/lib -L$(CUDA_SDK)/common/lib/linux \
+LIBS  := -L$(CUDA_BASE)/lib -L$(CUDA_BASE)/lib64 -L$(CUDA_SDK)/lib -L$(CUDA_SDK)/common/lib/linux \
 -L$(TAUROOT)/x86_64/lib  -lcudart -lcutil -lTAU_tf -lTAU
 TAU_FLAGS :=  -DUNIX  -DPROFILING_ON -DTAU_GNU -DTAU_DOT_H_LESS_HEADERS -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE -O3
 
