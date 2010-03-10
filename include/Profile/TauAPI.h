@@ -149,7 +149,9 @@ extern "C" {
 /* Atomic Events */
 #define TAU_REGISTER_EVENT(event, name)	static void *event = 0; \
                                  if (event == 0) event = Tau_get_userevent(name);
-#define TAU_PROFILER_REGISTER_EVENT(event, name) event = Tau_get_userevent(name);
+#define TAU_PROFILER_REGISTER_EVENT(e, msg) TauUserEvent* e () { \
+	static TauUserEvent u(msg); return &u; } 
+ 
 #define TAU_REGISTER_CONTEXT_EVENT(event, name)	static void *event = 0; \
                                  if (event == 0) Tau_get_context_userevent(&event, name);  
 #define TAU_EVENT(event, data)			Tau_userevent(event, data);
@@ -502,6 +504,6 @@ void Tau_profile_param1l(long data, const char *dataname);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: scottb $
- * $Revision: 1.106 $   $Date: 2010/03/10 02:22:44 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.106 2010/03/10 02:22:44 scottb Exp $ 
+ * $Revision: 1.107 $   $Date: 2010/03/10 21:25:47 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.107 2010/03/10 21:25:47 scottb Exp $ 
  ***************************************************************************/
