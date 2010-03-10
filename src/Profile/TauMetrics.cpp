@@ -71,6 +71,7 @@ void metric_read_papivirtual(int tid, int idx, double values[]);
 void metric_read_papiwallclock(int tid, int idx, double values[]);
 void metric_read_papi(int tid, int idx, double values[]);
 void metric_read_ktau(int tid, int idx, double values[]);
+void metric_read_cudatime(int tid, int idx, double values[]);
 
 /*********************************************************************
  * Remove _'s, convert case, and compare
@@ -309,6 +310,8 @@ static void initialize_functionArray() {
       usingPAPI = 1;
       functionArray[pos++] = metric_read_papivirtual;
 #endif /* TAU_PAPI */
+    } else if (compareMetricString(metricv[i], "TAUCUDA_TIME")) {
+      functionArray[pos++] = metric_read_cudatime;
     } else {
       if (papi_available && is_papi_metric(metricv[i])) {
         /* PAPI handled separately */

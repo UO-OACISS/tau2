@@ -252,3 +252,28 @@ void metric_read_ktau(int tid, int idx, double values[]) {
 
 #endif
 }
+
+#define CPU_THREAD 0
+
+double gpu_timestamp[TAU_MAX_THREADS];
+
+void metric_set_gpu_timestamp(int tid, double value)
+{
+	gpu_timestamp[tid] = value;
+}
+
+void metric_read_cudatime(int tid, int idx, double values[]) {
+
+  //get time from the CPU clock
+  if (tid == CPU_THREAD)
+  { 
+    struct timeval tp;
+    gettimeofday(&tp, 0);
+    values[idx] = ((double)tp.tv_sec * 1e6 + tp.tv_usec);
+  }
+  // get time from the callback API 
+  else
+  {
+    values[idx] = gpu_timestamp[tid];
+  }
+}
