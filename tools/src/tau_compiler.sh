@@ -755,7 +755,7 @@ for arg in "$@" ; do
 		;;
 
 	    -o*)
- 		if [ "x$arg" != "x-openmp" -a "x$arg" != "x-override_limits" -a "x$arg" != "x-openmp_stubs" ]; then
+ 		if [ "x$arg" != "x-openmp" -a "x$arg" != "x-override_limits" -a "x$arg" != "x-openmp-stubs" ]; then
 		    hasAnOutputFile=$TRUE
 		    passedOutputFile="${arg#"-o"}"
 		    echoIfDebug "\tHas an output file = $passedOutputFile"
@@ -992,7 +992,7 @@ if [ $numFiles == 0 ]; then
     if [  ! -e $passedOutputFile ]; then
 	echoIfVerbose "Error: Tried looking for file: $passedOutputFile"
 	echoIfVerbose "Error: Failed to link with TAU options"
-	if [ $revertForced == $TRUE -o $passCount == 1 ] ; then
+	if [ $revertForced == $TRUE -o $optCompInst = $FALSE ] ; then
 	    printError "$CMD" "$linkCmd"
 	else 
 	    revertOnError=false
