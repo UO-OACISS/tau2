@@ -5241,13 +5241,15 @@ fi
 
 if [ $hpctoolkit = yes ] ; then
     tauoptions="${tauoptions}-hpctoolkit"
-    # checks
 
+    # check to make sure it's the patched version
     if [ ! -r $hpctoolkit_src_dir/README.TAU ] ; then
 	echo "Didn't find patched HPCToolkit source in $hpctoolkit_src_dir"
 	exit 1
     fi
 
+    
+    fixmakeargs="$fixmakeargs HPCTOOLKIT hpctoolkit_src_dir=${hpctoolkit_src_dir} hpctoolkit_install_dir=${hpctoolkit_install_dir}"
 fi
 
 

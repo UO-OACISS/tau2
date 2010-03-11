@@ -181,6 +181,16 @@ case $1 in
 	echo "s@^SICORTEXLINK=.*\$@SICORTEXLINK=$sicortexlink@g" >> $sedout
 	;;
 
+     hpctoolkit_src_dir=*)
+        hpctoolkit_src_dir=`echo $1 | sed -e 's/^hpctoolkit_src_dir=//'`
+	echo "s,^HPCTOOLKIT_SRC_DIR=.*$,HPCTOOLKIT_SRC_DIR=$hpctoolkit_src_dir,g" >> $sedout
+	;;
+
+     hpctoolkit_install_dir=*)
+        hpctoolkit_install_dir=`echo $1 | sed -e 's/^hpctoolkit_install_dir=//'`
+	echo "s,^HPCTOOLKIT_INSTALL_DIR=.*$,HPCTOOLKIT_INSTALL_DIR=$hpctoolkit_install_dir,g" >> $sedout
+	;;
+
      epilogdir=*)
         epilogdir=`echo $1 | sed -e 's/^epilogdir=//'`
 	echo "s,^EPILOGDIR=.*$,EPILOGDIR=$epilogdir,g" >> $sedout
@@ -820,6 +830,10 @@ case $1 in
 	echo NOTE: Using the Gnu C Compiler, GCC
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     HPCTOOLKIT)
+        echo NOTE: Using HPCTOOLKIT stackwalking
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      SICORTEX)
         echo NOTE: Using SiCortex build options
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
