@@ -99,6 +99,8 @@ for arg in "$@"; do
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
     echo "-nocomm  ........ Disable tracking communication events in MPI library."
+    echo "-hpctoolkit-src-dir=<dir> .......... Specify patched HPCToolkit source."
+    echo "-hpctoolkit-install-dir=<dir> . Specify patched HPCToolkit Install dir."
     echo "-scalasca=<dir>  ................ Specify location of SCALASCA package."
     echo "-epilog=<dir>  ............ Specify location of EPILOG Tracing package."
     echo "-epiloglib=<dir> ........... Specify full path to EPILOG lib directory."
@@ -192,6 +194,8 @@ for arg in "$@"; do
     echo "-shmemlibrary=<library> ............ Specify a different SHMEM library."
     echo "            e.g., -shmemlibrary=-lsmac                                 "
     echo "-nocomm  ........ Disable tracking communication events in MPI library."
+    echo "-hpctoolkit-src-dir=<dir> .......... Specify patched HPCToolkit source."
+    echo "-hpctoolkit-install-dir=<dir> . Specify patched HPCToolkit Install dir."
     echo "-scalasca=<dir>  ................ Specify location of SCALASCA package."
     echo "-epilog=<dir>  ............ Specify location of EPILOG Tracing package."
     echo "-epiloglib=<dir> ........... Specify full path to EPILOG lib directory."
@@ -392,6 +396,9 @@ vtf=no
 otf=no
 opari=no
 epilog=no
+hpctoolkit=no
+hpctoolkit_src_dir=
+hpctoolkit_install_dir=
 scalasca=no
 silclibs=
 silc=no
@@ -780,6 +787,26 @@ for arg in "$@"; do
       epilogdir=`echo $arg | sed -e 's/-scalasca=//'`
       if [ ! -d $epilogdir ] ; then
           echo "Error: Cannot access SCALASCA directory $epilogdir"
+          exit 1
+      fi
+      shift
+      ;;
+
+  -hpctoolkit-src-dir=*)
+      hpctoolkit=yes
+      hpctoolkit_src_dir=`echo $arg | sed -e 's/-hpctoolkit-src-dir=//'`
+      if [ ! -d $hpctoolkit_src_dir ] ; then
+          echo "Error: Cannot access HPCTOOLKIT directory $hpctoolkit_src_dir"
+          exit 1
+      fi
+      shift
+      ;;
+
+  -hpctoolkit-install-dir=*)
+      hpctoolkit=yes
+      hpctoolkit_install_dir=`echo $arg | sed -e 's/-hpctoolkit-install-dir=//'`
+      if [ ! -d $hpctoolkit_install_dir ] ; then
+          echo "Error: Cannot access HPCTOOLKIT directory $hpctoolkit_install_dir"
           exit 1
       fi
       shift
@@ -5208,6 +5235,25 @@ if [ $noex = yes ] ; then
         fixmakeargs="$fixmakeargs SGICCNOEX"
     fi
 fi
+
+
+
+
+if [ $hpctoolkit = yes ] ; then
+    tauoptions="${tauoptions}-hpctoolkit"
+    # checks
+
+    if [ ! -r $hpctoolkit_src_dir/README.TAU ] ; then
+	echo "Didn't find patched HPCToolkit source in $hpctoolkit_src_dir"
+	exit 1
+    fi
+
+fi
+
+
+
+
+
     
 #### END OF TAU OPTIONS. Make changes above this line 
 fixmakeargs="$fixmakeargs tauoptions=$tauoptions"
