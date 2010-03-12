@@ -104,13 +104,6 @@ extern int hpctoolkit_process_started;
 
 
 
-
-
-
-
-
-
-
 /*********************************************************************
  * Tau Sampling Record Definition
  ********************************************************************/
@@ -134,11 +127,10 @@ FILE *ebsTrace[TAU_MAX_THREADS];
 /* Sample processing enabled/disabled */
 int samplingEnabled[TAU_MAX_THREADS];
 
+
 /*********************************************************************
  * Get the architecture specific PC
  ********************************************************************/
-
-
 
 #if __WORDSIZE == 32
 #  define UCONTEXT_REG(uc, reg) ((uc)->uc_mcontext.uc_regs->gregs[reg])
@@ -174,20 +166,19 @@ static inline caddr_t get_pc(void *p) {
   return pc;
 }
 
-
+/*********************************************************************
+ * Initialization
+ ********************************************************************/
 int insideSignalHandler[TAU_MAX_THREADS];
-
 class initflags {
 public:
-  initflags(int x) {
-    printf ("TAU: initializing flags %d\n", x);
+  initflags() {
     for (int i=0; i<TAU_MAX_THREADS; i++) {
       insideSignalHandler[i] = 0;
     }
   }
 };
-
-initflags foobar(5);
+initflags foobar = initflags();
 
 
 #ifdef TAU_USE_STACKWALKER
@@ -244,11 +235,6 @@ void *realloc(void *ptr, size_t size) {
   }
 } 
 
-
-// void* operator new(size_t size) {
-  
-
-// }
 
 
 Walker *walker = Walker::newWalker();
@@ -348,18 +334,16 @@ void Tau_sampling_output_callstack (int tid, void* pc) {
 
 
 int suspendSampling[TAU_MAX_THREADS];
-
 class initSuspendFlags {
 public:
-  initSuspendFlags(int x) {
-    printf ("TAU: initializing suspend flags %d\n", x);
+  initSuspendFlags() {
     for (int i=0; i<TAU_MAX_THREADS; i++) {
       suspendSampling[i] = 0;
     }
   }
 };
+initSuspendFlags suspendFlagsInitializer = initSuspendFlags();
 
-initSuspendFlags suspendFlagsInitializer(5);
 
 /*
 void Tau_sampling_suspend();
@@ -557,12 +541,15 @@ void Tau_sampling_flush_record(int tid, TauSamplingRecord *record, void *pc, uco
 
 
 
+/*********************************************************************
+ * Handler for event entry (start)
+ ********************************************************************/
 void Tau_sampling_event_start(int tid, void **addresses) {
   // fprintf (stderr, "[%d] SAMP: event start: ", tid);
 
-  ucontext_t context;
 
 #ifdef TAU_USE_HPCTOOLKIT
+  ucontext_t context;
   int ret = getcontext(&context);
 
   if (ret != 0) {
@@ -574,7 +561,6 @@ void Tau_sampling_event_start(int tid, void **addresses) {
     fprintf (stderr, "nope, quitting\n");
     return;
   }
-
 
   unw_cursor_t cursor;
   unw_word_t ip, sp;
@@ -595,8 +581,8 @@ void Tau_sampling_event_start(int tid, void **addresses) {
     }
   }
   
-   // fprintf (stderr, "\n");
-    // fprintf (stderr,"$$$$$$$$$$$$$$$$$$\n");
+  // fprintf (stderr, "\n");
+  // fprintf (stderr,"$$$$$$$$$$$$$$$$$$\n");
 #endif /* TAU_USE_HPCTOOLKIT */
 
 }
@@ -640,11 +626,6 @@ int Tau_sampling_event_stop(int tid, double* stopTime) {
   samplingEnabled[tid] = 1;
   return 0;
 }
-
-
-
-
-
 
 
 /*********************************************************************
