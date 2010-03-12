@@ -91,11 +91,10 @@ using namespace std;
 
 #ifdef TAU_USE_HPCTOOLKIT
 extern "C" {
-#include <unwind.h>
+  #include <unwind.h>
 }
 
 #include <setjmp.h>
-
 
 extern "C" sigjmp_buf *hpctoolkit_get_thread_jb();
 
@@ -304,7 +303,8 @@ void Tau_sampling_output_callstack (int tid, void* pc) {
 
 #ifdef TAU_USE_LIBUNWIND
 void show_backtrace_unwind (void* pc) {
-  unw_cursor_t cursor; unw_context_t uc;
+  unw_cursor_t cursor; 
+  unw_context_t uc;
   unw_word_t ip, sp;
   int found = 0;
 
@@ -518,7 +518,7 @@ void Tau_sampling_output_callpath_old(int tid) {
 /*********************************************************************
  * Write out a single event record
  ********************************************************************/
-void Tau_sampling_flush_record(int tid, TauSamplingRecord *record, void *pc, void *context) {
+void Tau_sampling_flush_record(int tid, TauSamplingRecord *record, void *pc, ucontext_t *context) {
   fprintf(ebsTrace[tid], "$ | %lld | ", record->timestamp);
 
 #ifdef TAU_EXP_DISABLE_DELTAS
@@ -650,9 +650,15 @@ int Tau_sampling_event_stop(int tid, double* stopTime) {
 /*********************************************************************
  * Handler a sample
  ********************************************************************/
-void Tau_sampling_handle_sample(void *pc, void *context) {
-
+void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   int tid = RtsLayer::myThread();
+
+#ifdef TAU_USE_HPCTOOLKIT
+  if (hpctoolkit_process_started == 0) {
+    printf ("nope, quitting\n");
+    return;
+  }
+#endif
 
   if (suspendSampling[tid]) {
     return;
@@ -720,11 +726,11 @@ void Tau_sampling_handle_sample(void *pc, void *context) {
 /*********************************************************************
  * Handler for itimer interrupt
  ********************************************************************/
-void Tau_sampling_handler(int signum, siginfo_t *si, void *p) {
+void Tau_sampling_handler(int signum, siginfo_t *si, void *context) {
   caddr_t pc;
-  pc = get_pc(p);
+  pc = get_pc(context);
 
-  Tau_sampling_handle_sample(pc, NULL);
+  Tau_sampling_handle_sample(pc, (ucontext_t*)context);
 }
 
 /*********************************************************************
@@ -737,29 +743,10 @@ void Tau_sampling_papi_overflow_handler(int EventSet, void *address, x_int64 ove
   x_int64 value = (x_int64) address;
 
   if ((value & 0xffffffffff000000) == 0xffffffffff000000) {
-//     fprintf (stderr, "match\n");
-//     int *bob = 0;
-//     bob[0] = 45;
-    return;
-  } else {
-//     fprintf (stderr, "no match\n");
-  }
-
-  // Tau_sampling_handle_sample(address);
-
-#ifdef TAU_USE_HPCTOOLKIT
-  if (hpctoolkit_process_started == 0) {
-    printf ("nope, quitting\n");
     return;
   }
 
-  //  int tid = RtsLayer::myThread();
-  if (suspendSampling[tid]) {
-    return;
-  }
-#endif
-
-  Tau_sampling_handle_sample(address, context);
+  Tau_sampling_handle_sample(address, (ucontext_t*)context);
 }
 
 
