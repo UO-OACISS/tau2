@@ -157,7 +157,7 @@ F90_ABI	= $(ABI)
 #UPCC#TAU_GASPU_O=TauGASPU.o #ENDIF#
 ############# Standard Defines ##############
 TAU_CC = $(CONFIG_CC) $(ABI) $(ISA)
-TAU_CXX = $(CONFIG_CXX) $(ABI) $(ISA) $(USER_OPT)
+TAU_CXX = $(CONFIG_CXX) $(ABI) $(ISA)
 TAU_RUN_CC = $(FULL_CC) $(ABI) $(ISA)
 #UPCC#TAU_RUN_CC = $(TAU_UPCC) #ENDIF#
 TAU_RUN_CXX = $(FULL_CXX) $(ABI) $(ISA)
