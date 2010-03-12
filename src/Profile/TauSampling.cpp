@@ -164,16 +164,16 @@ static inline caddr_t get_pc(void *p) {
 /*********************************************************************
  * Initialization
  ********************************************************************/
-int insideSignalHandler[TAU_MAX_THREADS];
-class initflags {
-public:
-initflags() {
-  for (int i = 0; i < TAU_MAX_THREADS; i++) {
-    insideSignalHandler[i] = 0;
-  }
-}
-};
-initflags foobar = initflags();
+// int insideSignalHandler[TAU_MAX_THREADS];
+// class initflags {
+// public:
+// initflags() {
+//   for (int i = 0; i < TAU_MAX_THREADS; i++) {
+//     insideSignalHandler[i] = 0;
+//   }
+// }
+// };
+// initflags foobar = initflags();
 
 #ifdef TAU_USE_STACKWALKER
 
@@ -540,7 +540,7 @@ void Tau_sampling_event_start(int tid, void **addresses) {
   }
 
   if (hpctoolkit_process_started == 0) {
-    fprintf(stderr, "nope, quitting\n");
+    // fprintf(stderr, "nope, quitting\n");
     return;
   }
 
@@ -624,12 +624,6 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
     return;
   }
 
-  insideSignalHandler[tid] = 1;
-  if (!samplingEnabled[tid]) {
-    insideSignalHandler[tid] = 0;
-    return;
-  }
-
   TauSamplingRecord theRecord;
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
 
@@ -676,7 +670,6 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
     }
   }
 
-  insideSignalHandler[tid] = 0;
 }
 
 /*********************************************************************
