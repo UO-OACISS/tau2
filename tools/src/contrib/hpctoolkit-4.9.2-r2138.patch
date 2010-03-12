@@ -1,0 +1,299 @@
+diff -rupN a/hpctoolkit-TRUNK-4.9.2-r2138/README.TAU b/hpctoolkit-TRUNK-4.9.2-r2138/README.TAU
+--- a/hpctoolkit-TRUNK-4.9.2-r2138/README.TAU	1969-12-31 16:00:00.000000000 -0800
++++ b/hpctoolkit-TRUNK-4.9.2-r2138/README.TAU	2010-03-11 17:07:35.000000000 -0800
+@@ -0,0 +1 @@
++This copy of HPCToolkit has been patched for use by TAU.
+diff -rupN a/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/csproflib.c b/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/csproflib.c
+--- a/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/csproflib.c	2010-03-11 17:08:17.000000000 -0800
++++ b/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/csproflib.c	2010-03-11 17:06:51.000000000 -0800
+@@ -198,6 +198,7 @@ csprof_init_thread_support(void)
+ void *
+ csprof_thread_pre_create(void)
+ {
++  return NULL;
+   // N.B.: Can be called before init-thread-support or even init-process.
+   // Therefore, we ignore any calls before process init time.
+ 
+@@ -228,8 +229,8 @@ csprof_thread_pre_create(void)
+   }
+ 
+   // insert into CCT as a placeholder
+-  csprof_cct_node_t* n;
+-  n = csprof_sample_event(&context, metric_id, 0 /* metric_units_consumed */, 1);
++  csprof_cct_node_t* n = NULL;
++  // n = csprof_sample_event(&context, metric_id, 0 /* metric_units_consumed */, 1);
+ 
+   // tallent: only drop one to account for inlining.
+   if (n) { n = n->parent; }
+diff -rupN a/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/libmonitor_upcalls.c b/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/libmonitor_upcalls.c
+--- a/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/libmonitor_upcalls.c	2010-03-11 17:08:18.000000000 -0800
++++ b/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/libmonitor_upcalls.c	2010-03-11 17:06:51.000000000 -0800
+@@ -61,16 +61,24 @@ static volatile int DEBUGGER_WAIT = 1;
+ // This block is only needed per-thread, so the "suspend_sampling"
+ // thread data is a convenient place to store this.
+ //
++
++void Tau_sampling_suspend();
++void Tau_sampling_resume();
++void Tau_sampling_dlopen();
++
++
+ static inline void
+ csprof_async_block(void)
+ {
+   TD_GET(suspend_sampling) = 1;
++  Tau_sampling_suspend();
+ }
+ 
+ static inline void
+ csprof_async_unblock(void)
+ {
+   TD_GET(suspend_sampling) = 0;
++  Tau_sampling_resume();
+ }
+ 
+ int
+@@ -80,6 +88,9 @@ csprof_async_is_blocked(void)
+ }
+ 
+ 
++
++int hpctoolkit_process_started = 0;
++
+ //
+ // In the monitor callbacks, block two things:
+ //
+@@ -131,6 +142,7 @@ monitor_init_process(int *argc, char **a
+   }
+   csprof_async_unblock();
+ 
++  hpctoolkit_process_started = 1;
+   return data;
+ }
+ 
+@@ -196,9 +208,10 @@ monitor_fini_process(int how, void *data
+ {
+   csprof_async_block();
+ 
+-  csprof_fini_internal();
+-  trace_close();
+-  fnbounds_fini();
++  /* AKM: 2010-02-16 : This are causing crashes */
++  // csprof_fini_internal();
++  // trace_close();
++  // fnbounds_fini();
+ 
+   csprof_async_unblock();
+ }
+@@ -397,6 +410,7 @@ monitor_dlopen(const char *path, int fla
+   csprof_async_block();
+ 
+   csprof_dlopen(path, flags, handle);
++  Tau_sampling_dlopen();
+   csprof_async_unblock();
+ }
+ 
+diff -rupN a/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/sample_event.c b/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/sample_event.c
+--- a/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/sample_event.c	2010-03-11 17:08:18.000000000 -0800
++++ b/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/sample_event.c	2010-03-11 17:06:51.000000000 -0800
+@@ -61,8 +61,10 @@ csprof_disable_sampling(void)
+ void
+ csprof_drop_sample(void)
+ {
++  fprintf (stderr, "TAU: csprof_drop_sample\n");
+   TMSG(DROP, "dropping sample");
+   sigjmp_buf_t *it = &(TD_GET(bad_unwind));
++  fprintf (stderr, "TAU: HPCToolkit calling siglongjmp\n");
+   siglongjmp(it->jb,9);
+ }
+ 
+diff -rupN a/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/sample_source_itimer.c b/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/sample_source_itimer.c
+--- a/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/sample_source_itimer.c	2010-03-11 17:08:18.000000000 -0800
++++ b/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/sample_source_itimer.c	2010-03-11 17:06:51.000000000 -0800
+@@ -305,6 +305,8 @@ extern int sampling_is_disabled(void);
+ static int
+ csprof_itimer_signal_handler(int sig, siginfo_t *siginfo, void *context)
+ {
++    fprintf (stderr, "TAU: Something is very wrong, HPCToolkit itimers is enabled, did you forget -e PAPI_TOT_CYC@100000\n");
++
+   // Must check for async block first and avoid any MSG if true.
+   if (csprof_async_is_blocked()) {
+     csprof_inc_samples_blocked_async();
+diff -rupN a/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/sample_source_papi.c b/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/sample_source_papi.c
+--- a/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/sample_source_papi.c	2010-03-11 17:08:18.000000000 -0800
++++ b/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/sample_source_papi.c	2010-03-11 17:06:51.000000000 -0800
+@@ -79,20 +79,23 @@ static bool event_name_to_code(char *evn
+ static void
+ METHOD_FN(init)
+ {
+-  PAPI_set_debug(0x3ff);
++  // fprintf (stderr, "HPCTOOLKIT: PAPI_library_init (hpctoolkit!)\n");
+ 
+-  int ret = PAPI_library_init(PAPI_VER_CURRENT);
+-  TMSG(PAPI,"PAPI_library_init = %d", ret);
+-  TMSG(PAPI,"PAPI_VER_CURRENT =  %d", PAPI_VER_CURRENT);
+-  if (ret != PAPI_VER_CURRENT){
+-    csprof_abort("Failed: PAPI_library_init. Looking for version %d, got version %d",PAPI_VER_CURRENT,ret);
+-  }
++  // PAPI_set_debug(0x3ff);
++
++  // int ret = PAPI_library_init(PAPI_VER_CURRENT);
++  // TMSG(PAPI,"PAPI_library_init = %d", ret);
++  // TMSG(PAPI,"PAPI_VER_CURRENT =  %d", PAPI_VER_CURRENT);
++  // if (ret != PAPI_VER_CURRENT){
++  //   csprof_abort("Failed: PAPI_library_init. Looking for version %d, got version %d",PAPI_VER_CURRENT,ret);
++  // }
+   self->state = INIT;
+ }
+ 
+ static void
+ METHOD_FN(_start)
+ {
++    return;
+   thread_data_t *td = csprof_get_thread_data();
+   int eventSet = td->eventSet[self->evset_idx];
+ 
+@@ -109,6 +112,7 @@ METHOD_FN(_start)
+ static void
+ METHOD_FN(stop)
+ {
++    return;
+   thread_data_t *td = csprof_get_thread_data();
+ 
+   int eventSet = td->eventSet[self->evset_idx];
+@@ -220,39 +224,40 @@ METHOD_FN(gen_event_set,int lush_metrics
+   int ret;
+   int eventSet;
+ 
+-  eventSet = PAPI_NULL;
+-  TMSG(PAPI,"create event set");
+-  ret = PAPI_create_eventset(&eventSet);
+-  PMSG(PAPI,"PAPI_create_eventset = %d, eventSet = %d", ret, eventSet);
+-  if (ret != PAPI_OK) {
+-    csprof_abort("Failure: PAPI_create_eventset.Return code = %d ==> %s", 
+-		 ret, PAPI_strerror(ret));
+-  }
+-
+-  int nevents = (self->evl).nevents;
+-  for (i = 0; i < nevents; i++) {
+-    int evcode = self->evl.events[i].event;
+-    ret = PAPI_add_event(eventSet, evcode);
+-    if (ret != PAPI_OK) {
+-      char nm[256];
+-      PAPI_event_code_to_name(evcode,nm);
+-
+-      csprof_abort("Failure: PAPI_add_event:, trying to add event %s, got ret code = %d ==> %s",
+-		   nm, ret, PAPI_strerror(ret));
+-    }
+-  }
+-  for (i = 0; i < nevents; i++) {
+-    int evcode = self->evl.events[i].event;
+-    long thresh = self->evl.events[i].thresh;
+-
+-    ret = PAPI_overflow(eventSet, evcode, thresh, OVERFLOW_MODE,
+-			papi_event_handler);
+-    TMSG(PAPI,"PAPI_overflow = %d", ret);
+-    if (ret != PAPI_OK) {
+-      csprof_abort("Failure: PAPI_overflow.Return code = %d ==> %s", 
+-		   ret, PAPI_strerror(ret));
+-    }
+-  }
++  // eventSet = PAPI_NULL;
++  // TMSG(PAPI,"create event set");
++  // ret = PAPI_create_eventset(&eventSet);
++  // PMSG(PAPI,"PAPI_create_eventset = %d, eventSet = %d", ret, eventSet);
++  // if (ret != PAPI_OK) {
++  //   csprof_abort("Failure: PAPI_create_eventset.Return code = %d ==> %s", 
++  // 		 ret, PAPI_strerror(ret));
++  // }
++
++  // int nevents = (self->evl).nevents;
++  // for (i = 0; i < nevents; i++) {
++  //   int evcode = self->evl.events[i].event;
++  //   ret = PAPI_add_event(eventSet, evcode);
++  //   if (ret != PAPI_OK) {
++  //     char nm[256];
++  //     PAPI_event_code_to_name(evcode,nm);
++
++  //     csprof_abort("Failure: PAPI_add_event:, trying to add event %s, got ret code = %d ==> %s",
++  // 		   nm, ret, PAPI_strerror(ret));
++  //   }
++  // }
++  // for (i = 0; i < nevents; i++) {
++  //   int evcode = self->evl.events[i].event;
++  //   long thresh = self->evl.events[i].thresh;
++
++  //   fprintf (stderr, "HPCTOOLKIT: calling PAPI_overflow\n");
++  //   // ret = PAPI_overflow(eventSet, evcode, thresh, OVERFLOW_MODE,
++  //   // 			papi_event_handler);
++  //   // TMSG(PAPI,"PAPI_overflow = %d", ret);
++  //   // if (ret != PAPI_OK) {
++  //   //   csprof_abort("Failure: PAPI_overflow.Return code = %d ==> %s", 
++  //   // 		   ret, PAPI_strerror(ret));
++  //   // }
++  // }
+   thread_data_t *td = csprof_get_thread_data();
+   td->eventSet[self->evset_idx] = eventSet;
+ }
+@@ -338,7 +343,7 @@ static bool
+ event_name_to_code(char *evname,int *ec)
+ {
+   PAPI_event_info_t info;
+-
++  return true;
+   int ret = PAPI_event_name_to_code(evname, ec);
+   if (ret != PAPI_OK) {
+     TMSG(PAPI_EVENT_NAME,"event name to code failed with name = %s",evname);
+@@ -376,6 +381,8 @@ static void
+ papi_event_handler(int event_set, void *pc, long long ovec,
+                    void *context)
+ {
++  fprintf (stderr, "TAU: Something is very wrong, HPCToolkit papi handler called, TAU's handler must not be in place\n");
++
+   int i;
+   int my_events[MAX_EVENTS];
+   int my_event_count = MAX_EVENTS;
+diff -rupN a/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/segv_handler.c b/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/segv_handler.c
+--- a/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/segv_handler.c	2010-03-11 17:08:18.000000000 -0800
++++ b/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/segv_handler.c	2010-03-11 17:06:51.000000000 -0800
+@@ -47,6 +47,7 @@ hpcrun_sigsegv_handler(int sig, siginfo_
+       return 0; // monitor_real_abort();
+     }
+     
++    fprintf (stderr, "TAU: HPCToolkit calling siglongjmp\n");
+     siglongjmp(it->jb,9);
+   }
+   else {
+diff -rupN a/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/thread_data.c b/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/thread_data.c
+--- a/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/thread_data.c	2010-03-11 17:08:18.000000000 -0800
++++ b/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/thread_data.c	2010-03-11 17:06:51.000000000 -0800
+@@ -29,6 +29,16 @@ csprof_unthreaded_data(void)
+   csprof_get_thread_data = &local_td;
+ }
+ 
++/* AKM: 2010-02-16
++ * We need a way to write to the jmp_buf to handle bad unwinds
++ * HPCToolkit uses siglongjmp to abort
++ */
++sigjmp_buf *hpctoolkit_get_thread_jb() {
++  thread_data_t *td = csprof_get_thread_data();
++  sigjmp_buf_t *it = &(td->bad_unwind);
++  return it;
++}
++
+ 
+ static offset_t emergency_sz = 4 * 1024 * 1024; // 1 Meg for emergency
+ 
+diff -rupN a/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/unwind/x86-family/x86-unwind.c b/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/unwind/x86-family/x86-unwind.c
+--- a/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/unwind/x86-family/x86-unwind.c	2010-03-11 17:08:18.000000000 -0800
++++ b/hpctoolkit-TRUNK-4.9.2-r2138/src/tool/hpcrun/unwind/x86-family/x86-unwind.c	2010-03-11 17:06:51.000000000 -0800
+@@ -173,6 +173,9 @@ unw_init_cursor(unw_cursor_t* cursor, vo
+   TMSG(UNW, "init: pc=%p, ra=%p, sp=%p, bp=%p", 
+        cursor->pc, cursor->ra, cursor->sp, cursor->bp);
+ 
++  /* fprintf (stderr, "init: pc=%p, ra=%p, sp=%p, bp=%p\n",  */
++  /*      cursor->pc, cursor->ra, cursor->sp, cursor->bp); */
++
+   cursor->flags = 0; // trolling_used
+   cursor->intvl = csprof_addr_to_interval(cursor->pc);
+ 
