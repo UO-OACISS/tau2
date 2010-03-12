@@ -19,11 +19,11 @@ CXX		= $(TAU_CXX)
 
 CC		= $(TAU_CC)
 
-CFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS)
+CFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS) -g
 
 LIBS 	      	= $(TAU_LIBS) 
 
-LDFLAGS	      	= $(USER_OPT)
+LDFLAGS	      	=
 
 MAKEFILE      	= Makefile
 
