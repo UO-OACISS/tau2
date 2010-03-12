@@ -132,11 +132,10 @@ int PapiLayer::addCounter(char *name) {
   int counterID = numCounters++;
   counterList[counterID] = code;
 
-#ifdef TAU_EXP_SAMPLING
+  /* If this metrics matches the EBS source name, take note of the code */
   if (strcmp(name, TauEnv_get_ebs_source())==0) {
     tauSampEvent = code;
   }
-#endif
 
 
   return counterID;
@@ -198,7 +197,6 @@ int PapiLayer::initializeThread(int tid) {
   }
 
 
-#ifdef TAU_EXP_SAMPLING
   if (TauEnv_get_ebs_enabled()) {
     if (tauSampEvent != 0) {
       int comp = PAPI_COMPONENT_INDEX (tauSampEvent);
@@ -211,7 +209,6 @@ int PapiLayer::initializeThread(int tid) {
       }
     }
   }
-#endif
 
 
 

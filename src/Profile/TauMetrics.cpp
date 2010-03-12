@@ -429,14 +429,11 @@ void TauMetrics_getMetrics(int tid, double values[]) {
 int TauMetrics_init() {
   int i;
 
-#ifdef TAU_EXP_SAMPLING
-  //metricv_add("TIME");
   if (TauEnv_get_ebs_enabled()) {
     if (strcmp(TauEnv_get_ebs_source(),"itimer")!=0) {
       metricv_add(TauEnv_get_ebs_source());
     }
   }
-#endif
 
   /* Set the user clock values to 0 */
   for (i = 0; i < TAU_MAX_THREADS; i++) {

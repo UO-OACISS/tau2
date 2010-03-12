@@ -674,7 +674,6 @@ void TauEnv_initialize() {
       TAU_VERBOSE("TAU: METRICS is \"%s\"\n", env_metrics);
     }
 
-#ifdef TAU_EXP_SAMPLING
 
     tmp = getconf("TAU_SAMPLING");
     if (parse_bool(tmp, TAU_EBS_DEFAULT)) {
@@ -690,7 +689,7 @@ void TauEnv_initialize() {
 
     if (TauEnv_get_ebs_enabled()) {
 
-      /* TAU_EXP_SAMPLING frequency */
+      /* TAU sampling frequency */
       const char *ebs_frequency = getconf("TAU_EBS_FREQUENCY");
       env_ebs_frequency = TAU_EBS_FREQUENCY_DEFAULT;
       if (ebs_frequency) {
@@ -725,7 +724,6 @@ void TauEnv_initialize() {
       env_callpath_depth = 300;
       TAU_VERBOSE("TAU: EBS Overriding callpath settings, callpath enabled, depth = 300\n");
     }
-#endif
 
   }
 }

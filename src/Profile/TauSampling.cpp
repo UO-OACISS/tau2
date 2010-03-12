@@ -58,8 +58,6 @@
 * DEALINGS WITH THE SOFTWARE.
 ****************************************************************************/
 
-#ifdef TAU_EXP_SAMPLING
-
 #include <sys/time.h>
 #include <stdio.h>
 #include <string.h>
@@ -922,5 +920,3 @@ int Tau_sampling_finalize(int tid) {
 
   return 0;
 }
-
-#endif /* TAU_EXP_SAMPLING */

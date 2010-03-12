@@ -221,10 +221,9 @@ public:
 #endif /* TAU_MPITRACE */
 
 
-#ifdef TAU_EXP_SAMPLING
+  /* For EBS sampling */
   int needToRecordStop;
   void *address[TAU_SAMP_NUM_ADDRESSES];
-#endif /* TAU_EXP_SAMPLING */
 
 };
 }
@@ -288,7 +287,7 @@ void TauProfiler_AddProfileParamData(long key, const char *keyname);
 
 #endif /* PROFILER_H */
 /***************************************************************************
- * $RCSfile: Profiler.h,v $   $Author: sameer $
- * $Revision: 1.118 $   $Date: 2010/03/02 21:20:07 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.118 2010/03/02 21:20:07 sameer Exp $ 
+ * $RCSfile: Profiler.h,v $   $Author: amorris $
+ * $Revision: 1.119 $   $Date: 2010/03/12 08:29:21 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.119 2010/03/12 08:29:21 amorris Exp $ 
  ***************************************************************************/

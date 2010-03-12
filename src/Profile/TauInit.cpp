@@ -133,12 +133,10 @@ extern "C" int InitializeTAU() {
     TauInitialize_kill_handlers();
   }
 
-
-#ifdef TAU_EXP_SAMPLING
+  /* initialize sampling if requested */
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init(0);
   }
-#endif /* TAU_EXP_SAMPLING */
 
   return 0;
 }
