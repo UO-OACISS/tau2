@@ -65,6 +65,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <strings.h>
+#include <ucontext.h>
 
 #include <TAU.h>
 #include <Profile/TauMetrics.h>
