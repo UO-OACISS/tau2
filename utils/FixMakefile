@@ -181,14 +181,14 @@ case $1 in
 	echo "s@^SICORTEXLINK=.*\$@SICORTEXLINK=$sicortexlink@g" >> $sedout
 	;;
 
-     hpctoolkit_src_dir=*)
-        hpctoolkit_src_dir=`echo $1 | sed -e 's/^hpctoolkit_src_dir=//'`
-	echo "s,^HPCTOOLKIT_SRC_DIR=.*$,HPCTOOLKIT_SRC_DIR=$hpctoolkit_src_dir,g" >> $sedout
+     hpctoolkit_include=*)
+        hpctoolkit_include=`echo $1 | sed -e 's/^hpctoolkit_include=//' -e 's/#/ /g'`
+	echo "s,^HPCTOOLKIT_INCLUDE=.*$,HPCTOOLKIT_INCLUDE=$hpctoolkit_include,g" >> $sedout
 	;;
 
-     hpctoolkit_install_dir=*)
-        hpctoolkit_install_dir=`echo $1 | sed -e 's/^hpctoolkit_install_dir=//'`
-	echo "s,^HPCTOOLKIT_INSTALL_DIR=.*$,HPCTOOLKIT_INSTALL_DIR=$hpctoolkit_install_dir,g" >> $sedout
+     hpctoolkit_link=*)
+        hpctoolkit_link=`echo $1 | sed -e 's/^hpctoolkit_link=//' -e 's/#/ /g'`
+	echo "s,^HPCTOOLKIT_LINK=.*$,HPCTOOLKIT_LINK=$hpctoolkit_link,g" >> $sedout
 	;;
 
      epilogdir=*)

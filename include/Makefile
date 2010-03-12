@@ -758,6 +758,9 @@ PDTARCHDIR=$(PDTARCHDIRFINAL)
 #PDTARCH#PDTARCHDIR=$(PDTARCHDIRFINAL)/$(PDTCOMPDIR)#ENDIF#
 
 
+HPCTOOLKIT_LINK=
+
+
 ##############################################
 # Compiler Instrumentation
 ##############################################
@@ -828,7 +831,7 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
                   $(TAU_LINKER_OPT4) $(TAU_LINKER_OPT5) $(TAU_LINKER_OPT6) \
                   $(TAU_LINKER_OPT7) $(TAU_LINKER_OPT8) $(TAU_LINKER_OPT9) \
                   $(TAU_LINKER_OPT10) $(TAU_LINKER_OPT11) $(TAU_LINKER_OPT12) \
-		  $(TAU_LINKER_OPT13) $(PERFSUITELINK) $(VAMPIRTRACELIBS) $(SILCLIBS)
+		  $(TAU_LINKER_OPT13) $(PERFSUITELINK) $(VAMPIRTRACELIBS) $(SILCLIBS) $(HPCTOOLKIT_LINK)
 
 ##############################################
 
@@ -862,7 +865,10 @@ TAU_INCLUDE_MEMORY = -I$(TAU_INC_DIR)/Memory
 #IBMXLCAPPLE#TAU_INCLUDE_MEMORY = -I$(TAU_INC_DIR)/MemoryWrapper #ENDIF#
 #APPLECXX#TAU_INCLUDE_MEMORY = -I$(TAU_INC_DIR)/MemoryWrapper #ENDIF#
 
-TAU_LIBS	= $(TAUHELPER) -L$(TAU_LIB_DIR) -ltau$(TAU_CONFIG) $(TAU_LINKER_OPTS) 
+#TAU_LIBS	= $(TAUHELPER) -L$(TAU_LIB_DIR) -ltau$(TAU_CONFIG) $(TAU_LINKER_OPTS) -L/usr/local/packages/sw1.2beta1/x86_64-unknown-linux2.4/lib -lstackwalk -lsymtabAPI -lcommon -L/usr/local/packages/libdwarf-20091230/lib -ldwarf -lelf -liberty -ldlmalloc
+
+TAU_LIBS	= $(TAUHELPER) -L$(TAU_LIB_DIR) -ltau$(TAU_CONFIG) $(TAU_LINKER_OPTS)
+
 #PERFLIB#TAU_LIBS = #ENDIF#
 
 TAU_SHLIBS	= $(TAUHELPER) -L$(TAU_LIB_DIR) -lTAUsh$(TAU_CONFIG) $(TAU_LINKER_OPTS) $(TAU_LINKER_SHOPTS) $(TAU_MPI_LIB)

@@ -5248,8 +5248,10 @@ if [ $hpctoolkit = yes ] ; then
 	exit 1
     fi
 
-    
-    fixmakeargs="$fixmakeargs HPCTOOLKIT hpctoolkit_src_dir=${hpctoolkit_src_dir} hpctoolkit_install_dir=${hpctoolkit_install_dir}"
+    hpctoolkit_include="-I${hpctoolkit_src_dir}/src/tool/hpcrun/unwind/common"
+    hpctoolkit_link="-L${hpctoolkit_install_dir}/lib/hpctoolkit#-lcsprof"
+
+    fixmakeargs="$fixmakeargs HPCTOOLKIT hpctoolkit_include=${hpctoolkit_include} hpctoolkit_link=${hpctoolkit_link}"
 fi
 
 
