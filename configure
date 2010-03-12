@@ -4588,7 +4588,7 @@ if [ "x$bfd" = "xyes" ] ; then
 	    tempdir=".tmp_bfdbuild_$$"
 	    mkdir $tempdir
 	    cd $tempdir
-	    if [ $(uname) = "Darwin" ]; then
+	    if [ "$machine" = "apple" ] ; then
 		curl http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz > binutils-2.20.tar.gz
 	    else 
 		wget http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz
