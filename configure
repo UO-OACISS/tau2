@@ -57,7 +57,7 @@ for arg in "$@"; do
     echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
     echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
     echo "                                               icpc|scgcc|pathCC|orCC]."
-    echo "-useropt='<parameters>' ... optional arguments to compilers (e.g. -O3)."
+    echo "-useropt='<param>' ....... arguments to compilers (defaults to -g -O2)."
     echo ""
     echo "Installation Options:"
     echo "-prefix=<dir> ................ Specify a target installation directory."
@@ -157,7 +157,7 @@ for arg in "$@"; do
     echo "-fortran=<compiler> ..................... specify the Fortran compiler."
     echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
     echo "       g95|open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale]"
-    echo "-useropt='<parameters>' ............... list of commandline parameters."
+    echo "-useropt='<param>' ....... arguments to compilers (defaults to -g -O2)."
     echo "-extrashlibopts='<parameters>' ...... arguments for building libTAU.so." 
     echo "-prefix=<dir> ................ Specify a target installation directory."
     echo "-exec-prefix=<arch> .......... Specify a target architecture directory."
@@ -305,10 +305,10 @@ c_compiler=default
 cxx_compiler=default
 pdt_cxx_compiler=default
 fixmakeargs=""
-useropt=
+useropt=-g#-O2
 tag=no
 tautag=
-orig_useropt=
+orig_useropt="-g -O2"
 mpi=no
 mpi2=no
 mpiio=no
