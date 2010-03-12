@@ -64,6 +64,7 @@
 #include <sys/types.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <strings.h>
 
 #include <TAU.h>
 #include <Profile/TauMetrics.h>
@@ -134,9 +135,17 @@ int samplingEnabled[TAU_MAX_THREADS];
 
 #define PPC_REG_PC 32
 
+
+
+
 static inline caddr_t get_pc(void *p) {
   struct ucontext *uc = (struct ucontext *)p;
   caddr_t pc;
+
+#ifdef sun
+  fprintf(stderr, "Warning, TAU Sampling does not work on solaris\n");
+  return 0;
+#else
   struct sigcontext *sc;
   sc = (struct sigcontext *)&uc->uc_mcontext;
 #ifdef TAU_BGP
@@ -158,6 +167,7 @@ static inline caddr_t get_pc(void *p) {
 #  error "profile handler not defined for this architecture"
 # endif
   return pc;
+#endif /* sun */
 }
 
 /*********************************************************************
@@ -690,7 +700,7 @@ void Tau_sampling_papi_overflow_handler(int EventSet, void *address, x_int64 ove
 
   x_int64 value = (x_int64)address;
 
-  if ((value & 0xffffffffff000000) == 0xffffffffff000000) {
+  if ((value & 0xffffffffff000000ll) == 0xffffffffff000000ll) {
     return;
   }
 
