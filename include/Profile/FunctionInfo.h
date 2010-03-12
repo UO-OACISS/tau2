@@ -147,6 +147,7 @@ public:
   const char* GetName() const { return Name; }
   void SetType(string& str) { Type = strdup(str.c_str()); }
   const char* GetType() const { return Type; }
+
   const char* GetPrimaryGroup() const { return GroupName; }
   const char* GetAllGroups() const { return AllGroups; }
   void SetPrimaryGroupName(const char *newname) { 
@@ -270,6 +271,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: amorris $
- * $Revision: 1.55 $   $Date: 2009/04/11 00:17:56 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.55 2009/04/11 00:17:56 amorris Exp $ 
+ * $Revision: 1.56 $   $Date: 2010/03/12 08:22:01 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.56 2010/03/12 08:22:01 amorris Exp $ 
  ***************************************************************************/

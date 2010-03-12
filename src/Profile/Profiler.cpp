@@ -417,7 +417,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 
 
 #ifdef TAU_EXP_SAMPLING
-  Tau_sampling_event_stop(tid, CurrentTime);
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_event_stop(tid, CurrentTime);
+  }
 #endif
 
 #if defined(TAUKTAU)
@@ -1139,7 +1141,9 @@ int TauProfiler_StoreData(int tid) {
   finalizeTrace(tid);
   
 #ifdef TAU_EXP_SAMPLING
-  Tau_sampling_finalize(tid);
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_finalize(tid);
+  }
 #endif /* TAU_EXP_SAMPLING */
 
   if (TauEnv_get_profiling()) {
@@ -1344,6 +1348,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.263 $   $Date: 2010/02/22 18:38:38 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.263 2010/02/22 18:38:38 amorris Exp $ 
+ * $Revision: 1.264 $   $Date: 2010/03/12 08:21:57 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.264 2010/03/12 08:21:57 amorris Exp $ 
  ***************************************************************************/

@@ -121,7 +121,9 @@ int RtsLayer::RegisterThread() {
   UnLockEnv();
   
 #ifdef TAU_EXP_SAMPLING
-  Tau_sampling_init(numthreads-1);
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_init(numthreads-1);
+  }
 #endif /* TAU_EXP_SAMPLING */
 
 #ifdef PTHREADS
@@ -379,8 +381,8 @@ void RtsLayer::UnLockEnv(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: amorris $
- * $Revision: 1.39 $   $Date: 2009/12/19 04:58:57 $
- * VERSION: $Id: RtsThread.cpp,v 1.39 2009/12/19 04:58:57 amorris Exp $
+ * $Revision: 1.40 $   $Date: 2010/03/12 08:22:00 $
+ * VERSION: $Id: RtsThread.cpp,v 1.40 2010/03/12 08:22:00 amorris Exp $
  ***************************************************************************/
 
 

@@ -125,7 +125,9 @@ extern "C" Profiler *TauInternal_ParentProfiler(int tid) {
 extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   
 #ifdef TAU_EXP_SAMPLING
-  Tau_sampling_suspend();
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_suspend();
+  }
 #endif /* TAU_EXP_SAMPLING */
 
   //int tid = RtsLayer::myThread();
@@ -133,7 +135,9 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
   if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
 #ifdef TAU_EXP_SAMPLING
+  if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_resume();
+  }
 #endif /* TAU_EXP_SAMPLING */
     return; /* disabled */
   }
@@ -210,7 +214,9 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
 
 #ifdef TAU_EXP_SAMPLING
-  p->needToRecordStop = 0;
+  if (TauEnv_get_ebs_enabled()) {
+    p->needToRecordStop = 0;
+  }
 #endif /* TAU_EXP_SAMPLING */
 
 #ifdef TAU_MPITRACE
@@ -237,12 +243,10 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   p->Start(tid);
 
 #ifdef TAU_EXP_SAMPLING
-  // p->address = Tau_sampling_event_start(tid);
-  Tau_sampling_event_start(tid, p->address);
-#endif
-
-#ifdef TAU_EXP_SAMPLING
-  Tau_sampling_resume();
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_event_start(tid, p->address);
+    Tau_sampling_resume();
+  }
 #endif /* TAU_EXP_SAMPLING */
 }
 
@@ -260,7 +264,9 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 #ifdef TAU_EXP_SAMPLING
+  if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_suspend();
+  }
 #endif /* TAU_EXP_SAMPLING */
 
   FunctionInfo *fi = (FunctionInfo *) function_info; 
@@ -270,7 +276,9 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 
   if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup()) & RtsLayer::TheProfileMask()) {
 #ifdef TAU_EXP_SAMPLING
-    Tau_sampling_resume();
+    if (TauEnv_get_ebs_enabled()) {
+      Tau_sampling_resume();
+    }
 #endif /* TAU_EXP_SAMPLING */
     return 0; /* disabled */
   }
@@ -336,7 +344,9 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   Tau_global_stackpos[tid]--; /* pop */
 
 #ifdef TAU_EXP_SAMPLING
+  if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_resume();
+  }
 #endif /* TAU_EXP_SAMPLING */
 
   return 0;
@@ -1426,8 +1436,8 @@ int *tau_pomp_rd_table = 0;
                     
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: scottb $
- * $Revision: 1.144 $   $Date: 2010/03/10 02:22:44 $
- * VERSION: $Id: TauCAPI.cpp,v 1.144 2010/03/10 02:22:44 scottb Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.145 $   $Date: 2010/03/12 08:22:00 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.145 2010/03/12 08:22:00 amorris Exp $
  ***************************************************************************/
 

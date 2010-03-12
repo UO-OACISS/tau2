@@ -51,6 +51,7 @@
 #endif
 
 /* if we are doing EBS sampling, set the default sampling frequency */
+#define TAU_EBS_DEFAULT 0
 #define TAU_EBS_FREQUENCY_DEFAULT 1000
 /* if we are doing EBS sampling, set whether we want inclusive samples */
 /* that is, main->foo->mpi_XXX is a sample for main, foo and mpi_xxx */
@@ -259,6 +260,7 @@ static int env_track_memory_headroom = 0;
 static int env_extras = 0;
 static int env_ebs_frequency = 0;
 static int env_ebs_inclusive = 0;
+static int env_ebs_enabled = 0;
 static const char *env_ebs_source = "itimer";
 
 static int env_profile_format = TAU_FORMAT_PROFILE;
@@ -395,6 +397,10 @@ int TauEnv_get_ebs_frequency() {
 
 int TauEnv_get_ebs_inclusive() {
   return env_ebs_inclusive;
+}
+
+int TauEnv_get_ebs_enabled() {
+  return env_ebs_enabled;
 }
 
 const char *TauEnv_get_ebs_source() {
@@ -669,41 +675,56 @@ void TauEnv_initialize() {
     }
 
 #ifdef TAU_EXP_SAMPLING
-    /* TAU_EXP_SAMPLING frequency */
-    const char *ebs_frequency = getconf("TAU_EBS_FREQUENCY");
-    env_ebs_frequency = TAU_EBS_FREQUENCY_DEFAULT;
-    if (ebs_frequency) {
-      env_ebs_frequency = atoi(ebs_frequency);
-      if (env_ebs_frequency < 0) {
-        env_ebs_frequency = TAU_EBS_FREQUENCY_DEFAULT;
+
+    tmp = getconf("TAU_SAMPLING");
+    if (parse_bool(tmp, TAU_EBS_DEFAULT)) {
+      env_ebs_enabled = 1;
+      TAU_VERBOSE("TAU: Sampling Enabled\n");
+      TAU_METADATA("TAU_SAMPLING", "on");
+    } else {
+      env_ebs_enabled = 0;
+      TAU_VERBOSE("TAU: Sampling Disabled\n");
+      TAU_METADATA("TAU_SAMPLING", "off");
+    }
+    
+
+    if (TauEnv_get_ebs_enabled()) {
+
+      /* TAU_EXP_SAMPLING frequency */
+      const char *ebs_frequency = getconf("TAU_EBS_FREQUENCY");
+      env_ebs_frequency = TAU_EBS_FREQUENCY_DEFAULT;
+      if (ebs_frequency) {
+	env_ebs_frequency = atoi(ebs_frequency);
+	if (env_ebs_frequency < 0) {
+	  env_ebs_frequency = TAU_EBS_FREQUENCY_DEFAULT;
+	}
       }
-    }
-    TAU_VERBOSE("TAU: EBS frequency = %d usec\n", env_ebs_frequency);
-    sprintf(tmpstr, "%d usec", env_ebs_frequency);
-    TAU_METADATA("TAU_EBS_FREQUENCY", tmpstr);
-
-    const char *ebs_inclusive = getconf("TAU_EBS_INCLUSIVE");
-    env_ebs_inclusive = TAU_EBS_INCLUSIVE_DEFAULT;
-    if (ebs_inclusive) {
-      env_ebs_inclusive = atoi(ebs_inclusive);
-      if (env_ebs_inclusive < 0) {
-        env_ebs_inclusive = TAU_EBS_INCLUSIVE_DEFAULT;
+      TAU_VERBOSE("TAU: EBS frequency = %d usec\n", env_ebs_frequency);
+      sprintf(tmpstr, "%d usec", env_ebs_frequency);
+      TAU_METADATA("TAU_EBS_FREQUENCY", tmpstr);
+      
+      const char *ebs_inclusive = getconf("TAU_EBS_INCLUSIVE");
+      env_ebs_inclusive = TAU_EBS_INCLUSIVE_DEFAULT;
+      if (ebs_inclusive) {
+	env_ebs_inclusive = atoi(ebs_inclusive);
+	if (env_ebs_inclusive < 0) {
+	  env_ebs_inclusive = TAU_EBS_INCLUSIVE_DEFAULT;
+	}
       }
+      TAU_VERBOSE("TAU: EBS inclusive = %d usec\n", env_ebs_inclusive);
+      sprintf(tmpstr, "%d usec", env_ebs_inclusive);
+      TAU_METADATA("TAU_EBS_INCLUSIVE", tmpstr);
+      
+      
+      if ((env_ebs_source = getconf("TAU_EBS_SOURCE")) == NULL) {
+	env_ebs_source = "itimer";
+      }
+      TAU_VERBOSE("TAU: EBS Source: %s\n", env_ebs_source);
+      
+      env_callpath = 1;
+      env_callpath_depth = 300;
+      TAU_VERBOSE("TAU: EBS Overriding callpath settings, callpath enabled, depth = 300\n");
     }
-    TAU_VERBOSE("TAU: EBS inclusive = %d usec\n", env_ebs_inclusive);
-    sprintf(tmpstr, "%d usec", env_ebs_inclusive);
-    TAU_METADATA("TAU_EBS_INCLUSIVE", tmpstr);
-
-
-    if ((env_ebs_source = getconf("TAU_EBS_SOURCE")) == NULL) {
-      env_ebs_source = "itimer";
-    }
-    TAU_VERBOSE("TAU: EBS Source: %s\n", env_ebs_source);
-
-    env_callpath = 1;
-    env_callpath_depth = 300;
-    TAU_VERBOSE("TAU: EBS Overriding callpath settings, callpath enabled, depth = 300\n");
-
 #endif
 
   }
