@@ -478,6 +478,32 @@ extern "C" {
     return 0;
   }
 
+  /*
+	This is a helper function to write out user defined events to the trace file. 
+	Trace writer APIs can not be directly used here as we need to use the entire 
+	bytes of the parameter. 
+*/
+
+int  Ttf_LongEventTrigger(Ttf_FileHandleT file,  unsigned long long time, 
+				unsigned int nodeToken, 
+				unsigned int threadToken,  
+				unsigned int userEventToken, 
+				 unsigned long long userEventValue)
+{
+	Ttf_fileT *tFile = (Ttf_fileT*)file;
+	checkFlush(tFile);
+    	int pos = tFile->tracePosition;		
+    	tFile->traceBuffer[pos].ev = userEventToken;
+    	tFile->traceBuffer[pos].nid = nodeToken;
+    	tFile->traceBuffer[pos].tid = threadToken;
+    	tFile->traceBuffer[pos].ti = (x_uint64)time;
+    	tFile->traceBuffer[pos].par = userEventValue;
+    	tFile->tracePosition++;
+    	tFile->lastTimestamp = time;
+    	return 0;
+}
+  
+  
 
 #ifdef __cplusplus
 }
