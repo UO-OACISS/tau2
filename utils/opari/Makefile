@@ -9,7 +9,7 @@
 
 include ../../include/Makefile
 
-COMP=$(TAU_CXX_FE) $(ABI) $(ISA)
+COMP=$(TAU_CXX_FE) $(ABI) $(ISA) $(USER_OPT)
 RM=/bin/rm -f
 
 SOURCES=opari.cc process_c.cc process_f.cc process_omp.cc ompragma.cc ompragma_c.cc ompragma_f.cc ompregion.cc handler.cc 

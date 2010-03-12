@@ -28,23 +28,24 @@ READTRACE=readTrace.o readTrace.*.~*
 TRACE2PROFILE=trace2profile.o trace2profile.*.~*
 MAKEFILE=Makefile.~*
 
+CXXFLAGS = $(USER_OPT)
+
 all:    trace2profile
 
 install:       trace2profile
-	
+
 trace2profile: handlers.o readTrace.o trace2profile.o
-	$(CXX) $(CFLAGS) $(INCLUDES) -o $@ handlers.o readTrace.o trace2profile.o $(LIBS)
-	
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ handlers.o readTrace.o trace2profile.o $(LIBS)
+
 handlers.o: handlers.h trace2profile.h handlers.cpp
-	$(CXX) $(CFLAGS) $(INCLUDES) -c handlers.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c handlers.cpp
 
 readTrace.o: handlers.h trace2profile.h readTrace.cpp
-	$(CXX) $(CFLAGS) $(INCLUDES) -c readTrace.cpp
-	
-trace2profile.o: trace2profile.h trace2profile.cpp
-	$(CXX) $(CFLAGS) $(INCLUDES) -c trace2profile.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c readTrace.cpp
 
- 	
+trace2profile.o: trace2profile.h trace2profile.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c trace2profile.cpp
+
 clean:
 	$(RM) $(TRACE2PROFILE) $(HANDLERS) $(READTRACE) $(MAKEFILE)
 
