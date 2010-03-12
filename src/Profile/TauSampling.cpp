@@ -88,7 +88,6 @@ using namespace Stackwalker;
 using namespace std;
 #endif
 
-
 #ifdef TAU_USE_HPCTOOLKIT
 extern "C" {
   #include <unwind.h>
@@ -98,11 +97,8 @@ extern "C" {
 
 extern "C" sigjmp_buf *hpctoolkit_get_thread_jb();
 
-
 extern int hpctoolkit_process_started;
 #endif /* TAU_USE_HPCTOOLKIT */
-
-
 
 /*********************************************************************
  * Tau Sampling Record Definition
@@ -126,7 +122,6 @@ FILE *ebsTrace[TAU_MAX_THREADS];
 
 /* Sample processing enabled/disabled */
 int samplingEnabled[TAU_MAX_THREADS];
-
 
 /*********************************************************************
  * Get the architecture specific PC
@@ -172,25 +167,30 @@ static inline caddr_t get_pc(void *p) {
 int insideSignalHandler[TAU_MAX_THREADS];
 class initflags {
 public:
-  initflags() {
-    for (int i=0; i<TAU_MAX_THREADS; i++) {
-      insideSignalHandler[i] = 0;
-    }
+initflags() {
+  for (int i = 0; i < TAU_MAX_THREADS; i++) {
+    insideSignalHandler[i] = 0;
   }
+}
 };
 initflags foobar = initflags();
-
 
 #ifdef TAU_USE_STACKWALKER
 
 extern "C" void *dlmalloc(size_t size);
+
 extern "C" void *dlcalloc(size_t nmemb, size_t size);
+
 extern "C" void dlfree(void *ptr);
+
 extern "C" void *dlrealloc(void *ptr, size_t size);
 
 extern "C" void *__libc_malloc(size_t size);
+
 extern "C" void *__libc_calloc(size_t nmemb, size_t size);
+
 extern "C" void __libc_free(void *ptr);
+
 extern "C" void *__libc_realloc(void *ptr, size_t size);
 
 void *malloc(size_t size) {
@@ -201,19 +201,18 @@ void *malloc(size_t size) {
   } else {
     return __libc_malloc(size);
   }
-} 
+}
 
 void *calloc(size_t nmemb, size_t size) {
   int tid = RtsLayer::myThread();
 //   printf ("Our calloc called!\n");
-  // return __libc_malloc(size);
+// return __libc_malloc(size);
   if (insideSignalHandler[tid]) {
     return dlcalloc(nmemb, size);
   } else {
     return __libc_calloc(nmemb, size);
   }
-} 
-
+}
 
 void free(void *ptr) {
   int tid = RtsLayer::myThread();
@@ -223,7 +222,7 @@ void free(void *ptr) {
   } else {
     __libc_free(ptr);
   }
-} 
+}
 
 void *realloc(void *ptr, size_t size) {
   int tid = RtsLayer::myThread();
@@ -233,23 +232,21 @@ void *realloc(void *ptr, size_t size) {
   } else {
     return __libc_realloc(ptr, size);
   }
-} 
-
-
+}
 
 Walker *walker = Walker::newWalker();
 // Frame crapFrame(walker);
 // std::vector<Frame> stackwalk(2000, crapFrame);
 
-void show_backtrace_stackwalker (void *pc) {
+void show_backtrace_stackwalker(void *pc) {
   std::vector<Frame> stackwalk;
 
   RtsLayer::LockDB();
-  printf ("====\n");
+  printf("====\n");
   string s;
   walker->walkStack(stackwalk);
 
-  for (unsigned i=0; i<stackwalk.size(); i++) {
+  for (unsigned i = 0; i < stackwalk.size(); i++) {
     stackwalk[i].getName(s);
     cout << "Found function " << s << endl;
   }
@@ -257,8 +254,7 @@ void show_backtrace_stackwalker (void *pc) {
   exit(0);
 }
 
-void Tau_sampling_output_callstack (int tid, void* pc) {
-
+void Tau_sampling_output_callstack(int tid, void *pc) {
   int found = 0;
   std::vector<Frame> stackwalk;
   string s;
@@ -270,8 +266,8 @@ void Tau_sampling_output_callstack (int tid, void* pc) {
 
   fprintf(ebsTrace[tid], " |");
 
-  for (unsigned i=0; i<stackwalk.size(); i++) {
-    void *ip = (void*)stackwalk[i].getRA();
+  for (unsigned i = 0; i < stackwalk.size(); i++) {
+    void *ip = (void *)stackwalk[i].getRA();
 
     if (found) {
       fprintf(ebsTrace[tid], " %p", ip);
@@ -288,8 +284,8 @@ void Tau_sampling_output_callstack (int tid, void* pc) {
 #endif /* TAU_USE_STACKWALKER */
 
 #ifdef TAU_USE_LIBUNWIND
-void show_backtrace_unwind (void* pc) {
-  unw_cursor_t cursor; 
+void show_backtrace_unwind(void *pc) {
+  unw_cursor_t cursor;
   unw_context_t uc;
   unw_word_t ip, sp;
   int found = 0;
@@ -303,13 +299,14 @@ void show_backtrace_unwind (void* pc) {
       found = 1;
     }
     //    if (found) {
-      printf ("ip = %lx, sp = %lx\n", (long) ip, (long) sp);
-      //    }
+    printf("ip = %lx, sp = %lx\n", (long)ip, (long)sp);
+    //    }
   }
 }
 
-void Tau_sampling_output_callstack (int tid, void* pc) {
-  unw_cursor_t cursor; unw_context_t uc;
+void Tau_sampling_output_callstack(int tid, void *pc) {
+  unw_cursor_t cursor;
+  unw_context_t uc;
   unw_word_t ip, sp;
   int found = 0;
 
@@ -331,28 +328,25 @@ void Tau_sampling_output_callstack (int tid, void* pc) {
 
 #endif /* TAU_USE_LIBUNWIND */
 
-
-
 int suspendSampling[TAU_MAX_THREADS];
 class initSuspendFlags {
 public:
-  initSuspendFlags() {
-    for (int i=0; i<TAU_MAX_THREADS; i++) {
-      suspendSampling[i] = 0;
-    }
+initSuspendFlags() {
+  for (int i = 0; i < TAU_MAX_THREADS; i++) {
+    suspendSampling[i] = 0;
   }
+}
 };
 initSuspendFlags suspendFlagsInitializer = initSuspendFlags();
 
-
 /*
-void Tau_sampling_suspend();
-void Tau_sampling_resume();
+   void Tau_sampling_suspend();
+   void Tau_sampling_resume();
 
 
-extern "C" void Tau_sampling_suspend();
-extern "C" void Tau_sampling_resume();
-*/
+   extern "C" void Tau_sampling_suspend();
+   extern "C" void Tau_sampling_resume();
+ */
 
 extern "C" void Tau_sampling_suspend() {
   int tid = RtsLayer::myThread();
@@ -367,15 +361,13 @@ extern "C" void Tau_sampling_resume() {
 }
 
 extern "C" void Tau_sampling_dlopen() {
-  fprintf (stderr, "TAU: got a dlopen\n");
+  fprintf(stderr, "TAU: got a dlopen\n");
 }
 
 #ifdef TAU_USE_HPCTOOLKIT
 
-
-
-void show_backtrace_unwind (void* pc) {
-  ucontext_t *context = (ucontext_t*) pc;
+void show_backtrace_unwind(void *pc) {
+  ucontext_t *context = (ucontext_t *)pc;
   unw_cursor_t cursor;
   unw_word_t ip, sp;
   int found = 0;
@@ -384,39 +376,36 @@ void show_backtrace_unwind (void* pc) {
 
   while (unw_step(&cursor) > 0) {
     unw_get_reg(&cursor, UNW_REG_IP, &ip);
-    fprintf (stderr,"ip = %p ", ip);
+    fprintf(stderr, "ip = %p ", ip);
   }
   fprintf(stderr, "\n");
 }
 
-
-void debug_this_try(int tid, void* in_context) {
-  ucontext_t *context = (ucontext_t *) in_context;
+void debug_this_try(int tid, void *in_context) {
+  ucontext_t *context = (ucontext_t *)in_context;
   unw_cursor_t cursor;
   unw_word_t ip, sp;
   int found = 1;
 
-  fprintf (stderr, "++++++++tid = %d+++++++++++\n", tid);
+  fprintf(stderr, "++++++++tid = %d+++++++++++\n", tid);
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
-  fprintf (stderr, "Function name is: %s\n", profiler->ThisFunction->GetName());
-  
-  for (int i=0; i<TAU_SAMP_NUM_ADDRESSES; i++) {
-    fprintf (stderr, "address[%d] = %p\n", i, profiler->address[i]);
-  }
-  
+  fprintf(stderr, "Function name is: %s\n", profiler->ThisFunction->GetName());
 
-   // fprintf(stderr,"==========\n");
+  for (int i = 0; i < TAU_SAMP_NUM_ADDRESSES; i++) {
+    fprintf(stderr, "address[%d] = %p\n", i, profiler->address[i]);
+  }
+
+  // fprintf(stderr,"==========\n");
   unw_init_cursor(&cursor, context);
   while (unw_step(&cursor) > 0) {
     unw_get_reg(&cursor, UNW_REG_IP, &ip);
-    fprintf(stderr,"step %p\n", ip);
+    fprintf(stderr, "step %p\n", ip);
   }
-  fprintf (stderr, "+++++++++++++++++++\n");
-
+  fprintf(stderr, "+++++++++++++++++++\n");
 }
 
-void Tau_sampling_output_callstack (int tid, void* in_context) {
-  ucontext_t *context = (ucontext_t *) in_context;
+void Tau_sampling_output_callstack(int tid, void *in_context) {
+  ucontext_t *context = (ucontext_t *)in_context;
   unw_cursor_t cursor;
   unw_word_t ip, sp;
   int found = 1;
@@ -431,31 +420,28 @@ void Tau_sampling_output_callstack (int tid, void* in_context) {
     unw_init_cursor(&cursor, context);
     while (unw_step(&cursor) > 0) {
       unw_get_reg(&cursor, UNW_REG_IP, &ip);
-      
-      for (int i=0; i<TAU_SAMP_NUM_ADDRESSES; i++) {
-	if (ip == (unw_word_t) profiler->address[i]) {
-	  return;
-	}
+
+      for (int i = 0; i < TAU_SAMP_NUM_ADDRESSES; i++) {
+        if (ip == (unw_word_t)profiler->address[i]) {
+          return;
+        }
       }
       // fprintf(stderr,"step %p\n", ip);
-      
+
       fprintf(ebsTrace[tid], " %p", ip);
     }
   } else {
-    fprintf (stderr, "*** unhandled sample:\n");
+    fprintf(stderr, "*** unhandled sample:\n");
     return;
   }
 
-  fprintf (stderr,"*** very strange, didn't find profiler\n");
+  fprintf(stderr, "*** very strange, didn't find profiler\n");
 
   debug_this_try(tid, in_context);
 
-
-
-// , profiler's address was %p\n", 
-// 	   profiler->address);
+// , profiler's address was %p\n",
+//         profiler->address);
 }
-
 
 #endif /* TAU_USE_HPCTOOLKIT */
 
@@ -523,7 +509,6 @@ void Tau_sampling_flush_record(int tid, TauSamplingRecord *record, void *pc, uco
 
   fprintf(ebsTrace[tid], " | %p", record->pc);
 
-
 #ifdef TAU_USE_LIBUNWIND
   Tau_sampling_output_callstack(tid, pc);
 #endif /* TAU_USE_LIBUNWIND */
@@ -539,26 +524,23 @@ void Tau_sampling_flush_record(int tid, TauSamplingRecord *record, void *pc, uco
   fprintf(ebsTrace[tid], "\n");
 }
 
-
-
 /*********************************************************************
  * Handler for event entry (start)
  ********************************************************************/
 void Tau_sampling_event_start(int tid, void **addresses) {
   // fprintf (stderr, "[%d] SAMP: event start: ", tid);
 
-
 #ifdef TAU_USE_HPCTOOLKIT
   ucontext_t context;
   int ret = getcontext(&context);
 
   if (ret != 0) {
-    fprintf (stderr, "TAU: Error getting context\n");
+    fprintf(stderr, "TAU: Error getting context\n");
     return;
   }
 
   if (hpctoolkit_process_started == 0) {
-    fprintf (stderr, "nope, quitting\n");
+    fprintf(stderr, "nope, quitting\n");
     return;
   }
 
@@ -566,10 +548,10 @@ void Tau_sampling_event_start(int tid, void **addresses) {
   unw_word_t ip, sp;
   // fprintf (stderr,"$$$$$$$$$start$$$$$$$$$\n");
   unw_init_cursor(&cursor, &context);
-  int idx=0;
+  int idx = 0;
 
-  int skip=1;
-  while (unw_step(&cursor) > 0 && idx<TAU_SAMP_NUM_ADDRESSES) {
+  int skip = 1;
+  while (unw_step(&cursor) > 0 && idx < TAU_SAMP_NUM_ADDRESSES) {
     unw_get_reg(&cursor, UNW_REG_IP, &ip);
 
     if (skip > 0) {
@@ -580,18 +562,16 @@ void Tau_sampling_event_start(int tid, void **addresses) {
       // fprintf (stderr,"assigning address %p to index %d\n", ip, idx-1);
     }
   }
-  
+
   // fprintf (stderr, "\n");
   // fprintf (stderr,"$$$$$$$$$$$$$$$$$$\n");
 #endif /* TAU_USE_HPCTOOLKIT */
-
 }
-
 
 /*********************************************************************
  * Handler for event exit (stop)
  ********************************************************************/
-int Tau_sampling_event_stop(int tid, double* stopTime) {
+int Tau_sampling_event_stop(int tid, double *stopTime) {
 #ifdef TAU_EXP_DISABLE_DELTAS
   return 0;
 #endif
@@ -627,7 +607,6 @@ int Tau_sampling_event_stop(int tid, double* stopTime) {
   return 0;
 }
 
-
 /*********************************************************************
  * Handler a sample
  ********************************************************************/
@@ -636,7 +615,7 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
 
 #ifdef TAU_USE_HPCTOOLKIT
   if (hpctoolkit_process_started == 0) {
-    printf ("nope, quitting\n");
+    printf("nope, quitting\n");
     return;
   }
 #endif
@@ -651,13 +630,11 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
     return;
   }
 
-
   TauSamplingRecord theRecord;
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
 
-
   // printf ("[tid=%d] sample on %x\n", tid, pc);
-  
+
   // fprintf  (stderr, "[%d] sample :");
   // show_backtrace_unwind(context);
   //show_backtrace_stackwalker(pc);
@@ -667,7 +644,7 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   x_uint64 timestamp = ((x_uint64)tp.tv_sec * (x_uint64)1e6 + (x_uint64)tp.tv_usec);
 
   theRecord.timestamp = timestamp;
-  theRecord.pc = (caddr_t) pc;
+  theRecord.pc = (caddr_t)pc;
   theRecord.deltaStart = 0;
   theRecord.deltaStop = 0;
 
@@ -679,7 +656,7 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   TauMetrics_getMetrics(tid, values);
   for (int i = 0; i < Tau_Global_numCounters; i++) {
     theRecord.counters[i] = values[i];
-    startTime = profiler->StartTime[i]; 
+    startTime = profiler->StartTime[i];
     theRecord.counterDeltaStart[i] = (x_uint64)startTime;
     theRecord.counterDeltaStop[i] = 0;
   }
@@ -702,8 +679,6 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   insideSignalHandler[tid] = 0;
 }
 
-
-
 /*********************************************************************
  * Handler for itimer interrupt
  ********************************************************************/
@@ -711,7 +686,7 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *context) {
   caddr_t pc;
   pc = get_pc(context);
 
-  Tau_sampling_handle_sample(pc, (ucontext_t*)context);
+  Tau_sampling_handle_sample(pc, (ucontext_t *)context);
 }
 
 /*********************************************************************
@@ -721,30 +696,33 @@ void Tau_sampling_papi_overflow_handler(int EventSet, void *address, x_int64 ove
   int tid = RtsLayer::myThread();
 //   fprintf(stderr,"[%d] Overflow at %p! bit=0x%llx \n", tid, address,overflow_vector);
 
-  x_int64 value = (x_int64) address;
+  x_int64 value = (x_int64)address;
 
   if ((value & 0xffffffffff000000) == 0xffffffffff000000) {
     return;
   }
 
-  Tau_sampling_handle_sample(address, (ucontext_t*)context);
+  Tau_sampling_handle_sample(address, (ucontext_t *)context);
 }
-
 
 /*********************************************************************
  * Output Format Header
  ********************************************************************/
 int Tau_sampling_outputHeader(int tid) {
   fprintf(ebsTrace[tid], "# Format version: 0.2\n");
-  fprintf(ebsTrace[tid], "# $ | <timestamp> | <delta-begin> | <delta-end> | <metric 1> ... <metric N> | <tau callpath> | <location> [ PC callstack ]\n");
-  fprintf(ebsTrace[tid], "# % | <delta-begin metric 1> ... <delta-begin metric N> | <delta-end metric 1> ... <delta-end metric N> | <tau callpath>\n");
+  fprintf(
+    ebsTrace[tid],
+    "# $ | <timestamp> | <delta-begin> | <delta-end> | <metric 1> ... <metric N> | <tau callpath> | <location> [ PC callstack ]\n");
+  fprintf(
+    ebsTrace[tid],
+    "# % | <delta-begin metric 1> ... <delta-begin metric N> | <delta-end metric 1> ... <delta-end metric N> | <tau callpath>\n");
   fprintf(ebsTrace[tid], "# Metrics:");
   for (int i = 0; i < Tau_Global_numCounters; i++) {
     const char *name = TauMetrics_getMetricName(i);
     fprintf(ebsTrace[tid], " %s", name);
   }
   fprintf(ebsTrace[tid], "\n");
-  return(0);
+  return 0;
 }
 
 /*********************************************************************
@@ -754,15 +732,12 @@ int Tau_sampling_init(int tid) {
   int ret;
   int i;
 
-
-
   //  printf ("init called! tid = %d\n", tid);
   static struct itimerval itval;
 
   // for (i=0; i<TAU_MAX_THREADS; i++) {
   //   ebsTrace[i] = 0;
   // }
-
 
   //int threshold = 1000;
   int threshold = TauEnv_get_ebs_frequency();
@@ -774,7 +749,6 @@ int Tau_sampling_init(int tid) {
 
   const char *profiledir = TauEnv_get_profiledir();
 
-
   int node = RtsLayer::myNode();
   node = 0;
   char filename[4096];
@@ -782,31 +756,29 @@ int Tau_sampling_init(int tid) {
 
   ebsTrace[tid] = fopen(filename, "w");
   if (ebsTrace[tid] == NULL) {
-    fprintf (stderr, "Tau Sampling Error: Unable to open %s for writing\n", filename);
+    fprintf(stderr, "Tau Sampling Error: Unable to open %s for writing\n", filename);
     exit(-1);
   }
 
   Tau_sampling_outputHeader(tid);
 
-/* 
-  see:
-  http://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_node/libc_463.html#SEC473
-  for details.  When using SIGALRM and ITIMER_REAL on MareNostrum (Linux on 
-  PPC970MP) the network barfs.  When using ITIMER_PROF and SIGPROF, everything
-  was fine...
-  //int which = ITIMER_REAL;
-  //int alarmType = SIGALRM;
-*/
+/*
+   see:
+   http://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_node/libc_463.html#SEC473
+   for details.  When using SIGALRM and ITIMER_REAL on MareNostrum (Linux on
+   PPC970MP) the network barfs.  When using ITIMER_PROF and SIGPROF, everything
+   was fine...
+   //int which = ITIMER_REAL;
+   //int alarmType = SIGALRM;
+ */
 
   // int which = ITIMER_PROF;
   // int alarmType = SIGPROF;
 
-  if (strcmp(TauEnv_get_ebs_source(),"itimer")==0) {
-
-
+  if (strcmp(TauEnv_get_ebs_source(), "itimer") == 0) {
     int which = ITIMER_REAL;
     int alarmType = SIGALRM;
-    
+
     struct sigaction act;
     memset(&act, 0, sizeof(struct sigaction));
     ret = sigemptyset(&act.sa_mask);
@@ -821,35 +793,34 @@ int Tau_sampling_init(int tid) {
     }
     act.sa_sigaction = Tau_sampling_handler;
     act.sa_flags     = SA_SIGINFO;
-    
+
     ret = sigaction(alarmType, &act, NULL);
     if (ret != 0) {
       printf("TAU: Sampling error: %s\n", strerror(ret));
       return -1;
     }
-    
+
     struct itimerval ovalue, pvalue;
-    getitimer (which, &pvalue);
-    
+    getitimer(which, &pvalue);
+
     ret = setitimer(which, &itval, &ovalue);
     if (ret != 0) {
       printf("TAU: Sampling error: %s\n", strerror(ret));
       return -1;
     }
-    
-    if( ovalue.it_interval.tv_sec != pvalue.it_interval.tv_sec  ||
-	ovalue.it_interval.tv_usec != pvalue.it_interval.tv_usec ||
-	ovalue.it_value.tv_sec != pvalue.it_value.tv_sec ||
-	ovalue.it_value.tv_usec != pvalue.it_value.tv_usec ) {
-      printf( "TAU: Sampling error: Real time interval timer mismatch\n" );
+
+    if (ovalue.it_interval.tv_sec != pvalue.it_interval.tv_sec  ||
+        ovalue.it_interval.tv_usec != pvalue.it_interval.tv_usec ||
+        ovalue.it_value.tv_sec != pvalue.it_value.tv_sec ||
+        ovalue.it_value.tv_usec != pvalue.it_value.tv_usec) {
+      printf("TAU: Sampling error: Real time interval timer mismatch\n");
       return -1;
     }
   }
-    
+
   samplingEnabled[tid] = 1;
   return 0;
 }
-
 
 /*********************************************************************
  * Write maps file
@@ -862,14 +833,13 @@ int Tau_sampling_write_maps(int tid, int restart) {
   char filename[4096];
   sprintf(filename, "%s/ebstrace.map.%d.%d.%d.%d", profiledir, getpid(), node, RtsLayer::myContext(), tid);
 
-  FILE *output = fopen (filename, "a");
+  FILE *output = fopen(filename, "a");
 
-
-  FILE *mapsfile = fopen ("/proc/self/maps", "r");
+  FILE *mapsfile = fopen("/proc/self/maps", "r");
   if (mapsfile == NULL) {
     return -1;
   }
-  
+
   char line[4096];
   while (!feof(mapsfile)) {
     fgets(line, 4096, mapsfile);
@@ -879,12 +849,11 @@ int Tau_sampling_write_maps(int tid, int restart) {
     char perms[5];
     module[0] = 0;
 
-
     sscanf(line, "%lx-%lx %s %lx %*s %*u %[^\n]", &start, &end, perms, &offset, module);
 
     if (*module && ((strcmp(perms, "r-xp") == 0) || (strcmp(perms, "rwxp") == 0))) {
       // printf ("got %s, %p-%p (%d)\n", module, start, end, offset);
-      fprintf (output, "%s %p %p %d\n", module, start, end, offset);
+      fprintf(output, "%s %p %p %d\n", module, start, end, offset);
     }
   }
   fclose(output);
@@ -937,7 +906,6 @@ int Tau_sampling_finalize(int tid) {
   }
   fclose(def);
 
-
   /* write out the executable name at the end */
   char buffer[4096];
   bzero(buffer, 4096);
@@ -959,7 +927,7 @@ int Tau_sampling_finalize(int tid) {
   Tau_sampling_write_maps(tid, 0);
 #endif
 
-  return(0);
+  return 0;
 }
 
 #endif /* TAU_EXP_SAMPLING */
