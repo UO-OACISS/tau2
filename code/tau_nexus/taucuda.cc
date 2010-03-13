@@ -34,20 +34,25 @@ __thread bool registered=false;
 bool user_events=false;
 
 void *main_ptr, *gpu_ptr;
-static void *MemoryCopyEventHtoD, *MemoryCopyEventDtoH;
+//static TauUserEvent* (*MemoryCopyEventHtoD)(void);
+//static TauUserEvent* (*MemoryCopyEventDtoH)(void);
+TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventHtoD, "Memory copied from Host to Device");
+TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
 int gpuTask;
 int firstEvent = true;
 
 #include <linux/unistd.h>
 #include<dlfcn.h>
 
+extern void metric_set_gpu_timestamp(int tid, double value);
+
 #include<map>
 using namespace std;
 
 #define SYNCH_LATENCY 1
 
-#define CPU_THREAD 0
-#define GPU_THREAD 1
+//#define CPU_THREAD 0
+//#define GPU_THREAD 1
 
 /* create TAU callback routine to capture both CPU and GPU execution time 
 	takes the thread id as a argument. */
@@ -85,34 +90,6 @@ doubleMap MemcpyEventMap;
 map<const char*, void*> events;
 
 extern void metric_set_gpu_timestamp(int tid, double value);
-
-void start_gpu_event(const char *name)
-{
-	map<const char*,void*>::iterator it = events.find(name);
-	if (it == events.end())
-	{
-		void *ptr;
-		TAU_PROFILER_CREATE(ptr, name, "", TAU_USER);
-		TAU_PROFILER_START_TASK(ptr, gpuTask);
-		events[name] = ptr;
-	} else
-	{
-		void *ptr = (*it).second;
-		TAU_PROFILER_START_TASK(ptr, gpuTask);
-	}
-}
-void stop_gpu_event(const char *name)
-{
-	map<const char*,void*>::iterator it = events.find(name);
-	if (it == events.end())
-	{
-		printf("FATAL ERROR in stopping GPU event.\n");
-	} else
-	{
-		void *ptr = (*it).second;
-		TAU_PROFILER_STOP_TASK(ptr, gpuTask);
-	}
-}
 
 double cpu_time()
 {
@@ -245,7 +222,7 @@ void EnterGenericEvent(cuToolsApi_EnterGenericInParams *clbkParameter)
 			type=DATA2D;
 			MemMapKey m(contextId, clbkParameter->apiCallId);
 			MemcpyEventMap.insert(make_pair(m, MemcpyHtoD));
-			TAU_EVENT(MemoryCopyEventHtoD, ((MemCpy2D *) clbkParameter->params)->count)
+			//TAU_EVENT(MemoryCopyEventHtoD(), ((MemCpy2D *) clbkParameter->params)->count)
 			
 			/*printf("registering Memory copy Host to Device: %lld, %lld.\n", contextId,
 			clbkParameter->apiCallId);*/
@@ -297,9 +274,23 @@ void ExitGenericEvent(cuToolsApi_EnterGenericInParams *clbkParameter)
 {
 	TAU_STOP((char *)clbkParameter->functionName);
 }
-void RecordGpuEvent(const char *name, double start_time, double stop_time, int device)
+void start_gpu_event(const char *name)
 {
-	printf(">>Begin profiling event: %s.\n", name);
+	map<const char*,void*>::iterator it = events.find(name);
+	if (it == events.end())
+	{
+		void *ptr;
+		TAU_PROFILER_CREATE(ptr, name, "", TAU_USER);
+		TAU_PROFILER_START_TASK(ptr, gpuTask);
+		events[name] = ptr;
+	} else
+	{
+		void *ptr = (*it).second;
+		TAU_PROFILER_START_TASK(ptr, gpuTask);
+	}
+}
+void stage_gpu_event(const char *name, double start_time, int device)
+{
 	/*
 		For the first time when the Profiler callback is received we 
 		synchronize the clock. Note that clock synchronization is done here as 
@@ -321,25 +312,39 @@ void RecordGpuEvent(const char *name, double start_time, double stop_time, int d
 		TAU_PROFILER_START_TASK(gpu_ptr, gpuTask);
 		firstEvent = false;
 	}
-	RtsLayer::LockDB();
+	//RtsLayer::LockDB();
 	start_gpu_event(name);
-	//TAU_START_TASK(name, gpuTask);
-
+}
+void stop_gpu_event(const char *name)
+{
+	map<const char*,void*>::iterator it = events.find(name);
+	if (it == events.end())
+	{
+		printf("FATAL ERROR in stopping GPU event.\n");
+	} else
+	{
+		void *ptr = (*it).second;
+		TAU_PROFILER_STOP_TASK(ptr, gpuTask);
+	}
+}
+void break_gpu_event(const char *name, double stop_time, int device)
+{
 	metric_set_gpu_timestamp(gpuTask, AlignedTime(device, stop_time));
 	stop_gpu_event(name);
-	//TAU_STOP_TASK(name, gpuTask);
-	RtsLayer::UnLockDB();
-	printf(">>Stop profiling event: %s.\n", name);
 }
+
 void ProfileLaunchEvent(cuToolsApi_ProfileLaunchInParams *clbkParameter)
 {
 	TAU32 device;
 	GetContextTable()->CtxGetDevice(clbkParameter->ctx,&device);
 	
-	RecordGpuEvent(clbkParameter->methodName,
-			(double)clbkParameter->startTime/1000,
+	stage_gpu_event(clbkParameter->methodName, 
+		(double)clbkParameter->startTime/1000, (int) device);
+
+	break_gpu_event(clbkParameter->methodName,
 			(double)clbkParameter->endTime/1000, (int) device);
 }
+
 void ProfileMemcpyEvent(cuToolsApi_ProfileMemcpyInParams *clbkParameter)
 {
 	TAU32 device;
@@ -350,40 +355,31 @@ void ProfileMemcpyEvent(cuToolsApi_ProfileMemcpyInParams *clbkParameter)
 	/*printf("tiggering Memory copy: %lld, %lld\t",
 			clbkParameter->contextId,
 			clbkParameter->apiCallId);*/
+
+
 	if (it != MemcpyEventMap.end())
 	{
-		if (it->second == MemcpyHtoD)
-		{
-			/*printf("Host to Device: %lld, %lld [%lf].\n",
-					it->first.contextId, it->first.callId, (double)
-					clbkParameter->memTransferSize);*/
-			RecordGpuEvent("cuda Memory copy Host to Device",
-				(double)clbkParameter->startTime/1000,
-				(double)clbkParameter->endTime/1000, (int) device);
-			TAU_EVENT_THREAD(MemoryCopyEventHtoD, (double) clbkParameter->memTransferSize,
-			gpuTask); 
-			/* future TAU trace API call to insert messaging into the trace, should
-			 * look something like this: TauTraceCUDAMemcpyEvent(contextId, apiCallId, memTrasferSize);
-			 * */
-		} else
-		{
-			/*printf("Device to Host: %lld, %lld [%lf].\n",
-					it->first.contextId, it->first.callId,
-					(double)clbkParameter->memTransferSize);*/
-			RecordGpuEvent("cuda Memory copy Device to Host",
-				(double)clbkParameter->startTime/1000,
-				(double)clbkParameter->endTime/1000, (int) device);
-			TAU_EVENT_THREAD(MemoryCopyEventDtoH, (double) clbkParameter->memTransferSize,
-			gpuTask); 
-			/* future TAU trace API call to insert messaging into the trace, should
-			 * look something like this: TauTraceCUDAMemcpyEvent(contextId, apiCallId, memTrasferSize);
-			 * */
+		if (it->second == MemcpyHtoD) {
+			stage_gpu_event("cuda Memory copy Host to Device", 
+					(double)clbkParameter->startTime/1000, (int) device);
+			TAU_EVENT_THREAD(MemoryCopyEventHtoD(), (double)
+					clbkParameter->memTransferSize, gpuTask);
+			break_gpu_event("cuda Memory copy Host to Device",
+					(double)clbkParameter->endTime/1000, (int) device);
 		}
-	}
-	else 
+		else {
+			stage_gpu_event("cuda Memory copy Device to Host", 
+					(double)clbkParameter->startTime/1000, (int) device);
+			TAU_EVENT_THREAD(MemoryCopyEventDtoH(), (double)
+					clbkParameter->memTransferSize, gpuTask);
+			break_gpu_event("cuda Memory copy Device to Host",
+					(double)clbkParameter->endTime/1000, (int) device);
+		}
+	} else 
 	{
 		printf("ERROR: cannot find matching memcopy event.\n");
 	}
+
 }
 /**************************************************************************************
 	libcuda.so events are intercepted here as callback.
@@ -508,6 +504,8 @@ inline int InitializeToolsApi(void)
 		return 1;
 	}
 
+//	TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventHtoD, "Memory copied from Host to Device");
+//	TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
 	/*
 		initialize the synchonization mechanism
 		This gurads updation in the global list of event managers. 
@@ -527,8 +525,6 @@ inline int InitializeToolsApi(void)
     
   TAU_PROFILER_START(main_ptr);	
 
-	TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventHtoD, "Memory copied from Host to Device");
-	TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
 	
 	printf("started main.\n");
 	return 0;
