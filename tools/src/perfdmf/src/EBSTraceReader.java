@@ -157,7 +157,7 @@ public class EBSTraceReader {
         Thread thread = dataSource.getThread(node, 0, tid);
 
         // we'll need to add these to the callpath group
-        Group callpathGroup = dataSource.getGroup("TAU_CALLPATH");
+        Group callpathGroup = dataSource.addGroup("TAU_CALLPATH");
 
         Group sampleGroup = dataSource.addGroup("TAU_SAMPLE");
 
