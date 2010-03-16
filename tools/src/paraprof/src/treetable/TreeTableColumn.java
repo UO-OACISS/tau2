@@ -18,9 +18,9 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  * 
  * This is starting to get messy and should be rethought
  *
- * <P>CVS $Id: TreeTableColumn.java,v 1.5 2009/06/26 00:43:50 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableColumn.java,v 1.6 2010/03/16 02:16:28 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  */
 abstract public class TreeTableColumn {
     protected TreeTableWindow window;
@@ -35,9 +35,35 @@ abstract public class TreeTableColumn {
         this.window = window;
     }
 
-    protected Object adjustForUnits(double value, int metricID, boolean forSorting) {
-        if (forSorting)
+    
+    protected Object getValueString(double value) {
+        if (window.getDecimals() == -2) {
+            return Double.toString(value); 
+        } else if (window.getDecimals() == -1) {
             return new Double(value);
+        } else {
+            DecimalFormat format = null;
+            if (window.getDecimals() == 0) {
+                format = new DecimalFormat("#,###");
+            } else if (window.getDecimals() == 1) {
+                format = new DecimalFormat("#,##0.0");
+            } else if (window.getDecimals() == 2) {
+                format = new DecimalFormat("#,##0.00");
+            } else if (window.getDecimals() == 3) {
+                format = new DecimalFormat("#,##0.000");
+            } else if (window.getDecimals() == 4) {
+                format = new DecimalFormat("#,##0.0000");
+            }
+            String retval = format.format(value);
+            return retval;
+        }
+        //System.out.println("String for " + value + " is " + retval);
+    }
+    
+    protected Object adjustForUnits(double value, int metricID, boolean forSorting) {
+        if (forSorting) {
+            return new Double(value);
+        }
 
         if (window.getPPTrial().getMetric(metricID).isTimeMetric()) {
 
@@ -61,7 +87,9 @@ abstract public class TreeTableColumn {
                 }
             }
         }
-        return new Double(value);
+        
+        //return new Double(value);
+        return getValueString(value);
     }
 
     public static class ColorIcon implements Icon {

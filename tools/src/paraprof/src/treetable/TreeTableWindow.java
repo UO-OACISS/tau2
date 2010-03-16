@@ -33,9 +33,9 @@ import edu.uoregon.tau.perfdmf.Thread;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableWindow.java,v 1.17 2009/10/26 20:17:23 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableWindow.java,v 1.18 2010/03/16 02:16:28 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.17 $
+ * @version $Revision: 1.18 $
  */
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
         ImageExport {
@@ -47,6 +47,8 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
     private JTreeTable treeTable;
     private int colorMetricID;
     private int units = ParaProf.preferences.getUnits();
+    private int decimals = -1; // -1 = auto, -2 = full
+
 
     private List columns;
     private ColumnChooser columnChooser;
@@ -268,6 +270,58 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         getContentPane().add(c, gbc);
     }
 
+    private void helperAddButton(JMenu menu, ActionListener actionListener, ButtonGroup group, String value, boolean selected) {
+        JRadioButtonMenuItem button = new JRadioButtonMenuItem(value, selected);
+        button.addActionListener(actionListener);
+        group.add(button);
+        menu.add(button);
+    }
+
+    private JMenu createDecimalMenu() {
+
+        ActionListener actionListener = new ActionListener() {
+
+            public void actionPerformed(ActionEvent evt) {
+                try {
+
+                    String arg = evt.getActionCommand();
+                    if (arg.equals("auto")) {
+                        decimals = -1;
+                    } else if (arg.equals("display full numbers")) {
+                        decimals = -2;
+                    } else if (arg.equals("0 decimal places")) {
+                        decimals = 0;
+                    } else if (arg.equals("1 decimal places")) {
+                        decimals = 1;
+                    } else if (arg.equals("2 decimal places")) {
+                        decimals = 2;
+                    } else if (arg.equals("3 decimal places")) {
+                        decimals = 3;
+                    } else if (arg.equals("4 decimal places")) {
+                        decimals = 4;
+                    }
+                    treeTable.forceRedraw();
+
+                } catch (Exception e) {
+                    ParaProfUtils.handleException(e);
+                }
+            }
+        };
+
+        JMenu decimalSubMenu = new JMenu("Select Precision...");
+        ButtonGroup group = new ButtonGroup();
+
+        helperAddButton(decimalSubMenu, actionListener, group, "auto", true);
+        helperAddButton(decimalSubMenu, actionListener, group, "0 decimal places", false);
+        helperAddButton(decimalSubMenu, actionListener, group, "1 decimal places", false);
+        helperAddButton(decimalSubMenu, actionListener, group, "2 decimal places", false);
+        helperAddButton(decimalSubMenu, actionListener, group, "3 decimal places", false);
+        helperAddButton(decimalSubMenu, actionListener, group, "4 decimal places", false);
+        helperAddButton(decimalSubMenu, actionListener, group, "display full numbers", false);
+
+        return decimalSubMenu;
+    }
+
     private void setupMenus() {
 
         JMenuBar mainMenu = new JMenuBar();
@@ -309,6 +363,8 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
         JMenu unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units, false);
         optionsMenu.add(unitsSubMenu);
+
+        optionsMenu.add(createDecimalMenu());
 
         JMenuItem menuItem = new JMenuItem("Choose Columns...");
         menuItem.addActionListener(new ActionListener() {
@@ -513,5 +569,14 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
     public JFrame getFrame() {
         return this;
+    }
+    
+
+    public int getDecimals() {
+        return decimals;
+    }
+
+    public void setDecimals(int decimals) {
+        this.decimals = decimals;
     }
 }
