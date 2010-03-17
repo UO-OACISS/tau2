@@ -39,7 +39,7 @@ void *main_ptr, *gpu_ptr;
 TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventHtoD, "Memory copied from Host to Device");
 TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
 int gpuTask;
-int firstEvent = true;
+bool firstEvent = true;
 
 #include <linux/unistd.h>
 #include<dlfcn.h>
@@ -86,7 +86,6 @@ struct MemMapKey
 typedef map<MemMapKey, bool> doubleMap;
 doubleMap MemcpyEventMap;
 
-//alocate memory for 5000 GPU events.
 map<const char*, void*> events;
 
 extern void metric_set_gpu_timestamp(int tid, double value);
@@ -613,9 +612,10 @@ void tau_cuda_exit(void)
 		stop the top level timer which is a dummy event 
 		useful for profile/trace analysis
 	*/
+		printf("Stopping first gpu event.\n");
+		TAU_PROFILE_EXIT("cuda");
 		TAU_PROFILER_STOP_TASK(gpu_ptr, gpuTask);
 		TAU_PROFILER_STOP(main_ptr);
-		TAU_PROFILE_EXIT("cuda");
 	//Tau_stop_top_level_timer_if_necessary();
 	//TAU_STATIC_PHASE_STOP(".TAUCudaApplication");					
 	list<EventManager*>::iterator it;
