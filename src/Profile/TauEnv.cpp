@@ -661,6 +661,10 @@ void TauEnv_initialize() {
       env_profile_format = TAU_FORMAT_MERGED;
       TAU_VERBOSE("TAU: Output Format: merged\n");
       TAU_METADATA("TAU_PROFILE_FORMAT", "merged");
+    } else if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "none")) {
+      env_profile_format = TAU_FORMAT_NONE;
+      TAU_VERBOSE("TAU: Output Format: none\n");
+      TAU_METADATA("TAU_PROFILE_FORMAT", "none");
     } else {
       env_profile_format = TAU_FORMAT_PROFILE;
       TAU_VERBOSE("TAU: Output Format: profile\n");
