@@ -276,6 +276,7 @@ void ExitGenericEvent(cuToolsApi_EnterGenericInParams *clbkParameter)
 }
 void start_gpu_event(const char *name)
 {
+	//printf("staring %s event.\n", name);
 	map<const char*,void*>::iterator it = events.find(name);
 	if (it == events.end())
 	{
@@ -317,6 +318,7 @@ void stage_gpu_event(const char *name, double start_time, int device)
 }
 void stop_gpu_event(const char *name)
 {
+	//printf("stopping %s event.\n", name);
 	map<const char*,void*>::iterator it = events.find(name);
 	if (it == events.end())
 	{
