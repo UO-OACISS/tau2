@@ -26,6 +26,8 @@ using namespace std;
 #include <limits.h>
 
 #include <Profile/TauMetrics.h>
+#include <Profile/TauSnapshot.h>
+#include <Profile/TauTrace.h>
 
 #if (!defined(TAU_WINDOWS)) 
 /* Needed for fork */
@@ -37,12 +39,6 @@ using namespace std;
 #include <Profile/KtauProfiler.h>
 #endif //TAUKTAU
 
-#include <Profile/TauTrace.h>
-
-
-#if defined(TAUKTAU)
-#include <Profile/KtauProfiler.h>
-#endif /* TAUKTAU */
 
 #ifdef TAU_EPILOG
 #include "elg_trc.h"
@@ -1217,14 +1213,14 @@ extern "C" pid_t tau_fork() {
 // Snapshot related routines
 //////////////////////////////////////////////////////////////////////
 
-extern "C" void Tau_profile_snapshot_1l(char *name, int number) {
+extern "C" void Tau_profile_snapshot_1l(const char *name, int number) {
   char buffer[4096];
   sprintf (buffer, "%s %d", name, number);
-  TauProfiler_Snapshot(buffer);
+  Tau_snapshot_write_intermediate(buffer);
 }
 
-extern "C" void Tau_profile_snapshot(char *name) {
-  TauProfiler_Snapshot(name);
+extern "C" void Tau_profile_snapshot(const char *name) {
+  Tau_snapshot_write_intermediate(name);
 }
 
 
@@ -1420,7 +1416,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.146 $   $Date: 2010/03/12 08:29:22 $
- * VERSION: $Id: TauCAPI.cpp,v 1.146 2010/03/12 08:29:22 amorris Exp $
+ * $Revision: 1.147 $   $Date: 2010/03/18 17:36:46 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.147 2010/03/18 17:36:46 amorris Exp $
  ***************************************************************************/
 

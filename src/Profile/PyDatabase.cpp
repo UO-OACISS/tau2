@@ -11,6 +11,10 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyDatabase.cpp,v $
+// Revision 1.9  2010/03/18 17:36:46  amorris
+// Refactoring to implement TAU_DB_MERGED_DUMP and python dbMergeDump call that
+// allow the user to control when the merged profile is written.
+//
 // Revision 1.8  2008/10/24 22:48:18  sameer
 // Added a pytau.exit("message") binding for TAU_PROFILE_EXIT(msg).
 //
@@ -84,6 +88,28 @@ PyObject * pytau_snapshot(PyObject *self, PyObject *args) {
       } else {
 	TAU_PROFILE_SNAPSHOT_1L(name,number);
       }
+    }
+
+    // return
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+char pytau_dbMergeDump__name__[] = "dbMergeDump";
+char pytau_dbMergeDump__doc__[] = "dump the Tau Profiler statistics using MPI to merge";
+PyObject * pytau_dbMergeDump(PyObject *self, PyObject *args)
+{ 
+    char *prefix = "dump";
+    int len = 4;
+
+    // Check to see if a prefix is specified
+    if (PyArg_ParseTuple(args, "|s", &prefix, &len))
+    {
+      // extracted the prefix, call dump routine
+#ifdef DEBUG
+      printf("dbMergeDump: extracted prefix = %s, len = %d\n", prefix, len);
+#endif /* DEBUG */
+      TAU_DB_MERGED_DUMP();
     }
 
     // return
@@ -381,7 +407,7 @@ PyObject * pytau_setNode(PyObject *self, PyObject *args)
 }
 
 // version
-// $Id: PyDatabase.cpp,v 1.8 2008/10/24 22:48:18 sameer Exp $
+// $Id: PyDatabase.cpp,v 1.9 2010/03/18 17:36:46 amorris Exp $
 
 // End of file
   

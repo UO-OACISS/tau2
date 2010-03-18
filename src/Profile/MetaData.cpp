@@ -149,14 +149,13 @@ static outputDevice **TauGetSnapshotFiles() {
   return snapshotFiles;
 }
 
-extern "C" char *getSnapshotBuffer() {
+extern "C" char *Tau_snapshot_getBuffer() {
   // only support thread 0 right now
-
   char *buf = TauGetSnapshotFiles()[0]->buffer;
   return buf;
 }
 
-extern "C" int getSnapshotBufferLength() {
+extern "C" int Tau_snapshot_getBufferLength() {
   return TauGetSnapshotFiles()[0]->bufidx;
 }
 
@@ -687,12 +686,12 @@ static int writeMetaData(outputDevice *out, bool newline, int counter) {
 
 
 
-static int startNewSnapshotFile(char *threadid, int tid) {
+static int startNewSnapshotFile(char *threadid, int tid, int to_buffer) {
   const char *profiledir = TauEnv_get_profiledir();
   
   outputDevice *out = (outputDevice*) malloc (sizeof(outputDevice));
 
-  if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
+  if (to_buffer == 1) {
     out->type = OUTPUT_BUFFER;
     out->bufidx = 0;
     out->buflen = INITIAL_BUFFER;
@@ -742,6 +741,7 @@ static int startNewSnapshotFile(char *threadid, int tid) {
       output (out, "</metric>\n");
   }
 
+  // set the counts to zero
   TauGetSnapshotEventCounts()[tid] = 0;
   TauGetSnapshotUserEventCounts()[tid] = 0;
 
@@ -750,31 +750,10 @@ static int startNewSnapshotFile(char *threadid, int tid) {
 }
 
 
-extern "C" int Tau_write_snapshot(const char *name, int finalize) {
-  return TauProfiler_Snapshot(name, finalize, RtsLayer::myThread());
-}
-
-int TauProfiler_Snapshot(const char *name, bool finalize, int tid) {
+int Tau_snapshot_internal(const char *name, int to_buffer) {
+  int tid = RtsLayer::myThread();
    int i, c;
    outputDevice *out = TauGetSnapshotFiles()[tid];
-
-   if (finalize && !out && !(TauEnv_get_profile_format() == TAU_FORMAT_SNAPSHOT)) { 
-     // finalize is true at the end of execution (regular profile output), 
-     // if we haven't written a snapshot, don't bother, unless snapshot is the
-     // requested output format
-
-     if (!(TauEnv_get_profile_format() == TAU_FORMAT_MERGED)) {
-       return 0;
-     }
-   }
-
-   TAU_PROFILE_TIMER(timer, "TAU_PROFILE_SNAPSHOT()", " ", TAU_IO);
-
-   if (!finalize) {
-     // don't start the timer here, otherwise we'll go into an infinite loop
-     // since our stop call will initiate another final snapshot
-     TAU_PROFILE_START(timer);
-   }
 
    char threadid[4096];
    sprintf(threadid, "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, RtsLayer::getPid());
@@ -784,7 +763,7 @@ int TauProfiler_Snapshot(const char *name, bool finalize, int tid) {
    int numEvents = TheEventDB().size();
 
    if (!out) {
-     startNewSnapshotFile(threadid, tid);
+     startNewSnapshotFile(threadid, tid, to_buffer);
      out = TauGetSnapshotFiles()[tid];
    } else {
      output (out, "<profile_xml>\n");
@@ -863,18 +842,47 @@ int TauProfiler_Snapshot(const char *name, bool finalize, int tid) {
    output (out, "</profile>\n");
    output (out, "\n</profile_xml>\n");
 
-   if (finalize) {
-     if (out->type == OUTPUT_FILE) {
-       fclose(out->fp);
-     }
-   }
 
    RtsLayer::UnLockDB();
    
-   if (!finalize) {
-     TAU_PROFILE_STOP(timer);
-   }
+   return 0;
+}
 
+
+extern "C" int Tau_snapshot_write_final(const char *name) {
+  int tid = RtsLayer::myThread();
+  outputDevice *out = TauGetSnapshotFiles()[tid];
+  int haveWrittenSnapshot = 0;
+ 
+  if (out != NULL) { 
+    // if the output device is not null, then we must have written at least one snapshot, 
+    // so we should write a "final" snapshot as well.
+    haveWrittenSnapshot = 1;
+  }
+  
+  if (haveWrittenSnapshot || (TauEnv_get_profile_format() == TAU_FORMAT_SNAPSHOT)) { 
+    Tau_snapshot_internal(name, 0);
+    out = TauGetSnapshotFiles()[tid];
+    if (out->type == OUTPUT_FILE) {
+      fclose(out->fp);
+    }
+  }
+}
+
+extern "C" int Tau_snapshot_merge(const char *name) {
+  Tau_snapshot_internal(name, 1);
+}
+
+
+extern "C" int Tau_snapshot_write_intermediate(const char *name) {
+  int tid = RtsLayer::myThread();
+
+   TAU_PROFILE_TIMER(timer, "TAU_PROFILE_SNAPSHOT()", " ", TAU_IO);
+   TAU_PROFILE_START(timer);
+  
+   Tau_snapshot_internal(name, 0);
+
+   TAU_PROFILE_STOP(timer);
    return 0;
 }
 

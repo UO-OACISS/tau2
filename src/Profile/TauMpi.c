@@ -11,7 +11,6 @@
 
 void TauSyncClocks();
 void TauSyncFinalClocks();
-int TAUDECL Tau_write_snapshot(const char *name, int finalize);
 int Tau_mergeProfiles();
 void TAUDECL Tau_set_usesMPI(int value);
 int TAUDECL tau_totalnodes(int set_or_get, int value);
@@ -1527,7 +1526,6 @@ int  MPI_Finalize(  )
 
   /* Create a merged profile if requested */
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
-    Tau_write_snapshot("merge", 1);
     Tau_mergeProfiles();
   }
 

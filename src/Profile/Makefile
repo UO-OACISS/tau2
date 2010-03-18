@@ -80,7 +80,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/TauEnv.h	 $(INCDIR)/TauInit.h          \
 		$(INCDIR)/TauTrace.h     $(INCDIR)/TauSilc.h          \
 		$(TAUROOT)/include/tau_internal.h $(INCDIR)/TauSampling.h \
-		$(INCDIR)/TauGASP.h
+		$(INCDIR)/TauSnapshot.h  $(INCDIR)/TauGASP.h
 
 LDFLAGS	      =
 

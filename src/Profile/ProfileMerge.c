@@ -1,3 +1,20 @@
+/****************************************************************************
+**			TAU Portable Profiling Package			   **
+**			http://www.cs.uoregon.edu/research/tau	           **
+*****************************************************************************
+**    Copyright 2010  						   	   **
+**    Department of Computer and Information Science, University of Oregon **
+**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+****************************************************************************/
+/****************************************************************************
+**	File 		: ProfileMerge.c  				   **
+**	Description 	: TAU Profiling Package				   **
+**	Contact		: tau-bugs@cs.uoregon.edu               	   **
+**	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
+**                                                                         **
+**      Description     : Profile merging code                             **
+**                                                                         **
+****************************************************************************/
 
 
 #ifdef TAU_MPI
@@ -8,10 +25,9 @@
 #include <stdlib.h>
 #include <Profile/tau_types.h>
 #include <Profile/TauEnv.h>
+#include <Profile/TauSnapshot.h>
 
 int TAUDECL Tau_RtsLayer_myThread();
-char* TAUDECL getSnapshotBuffer();
-int TAUDECL getSnapshotBufferLength();
 
 x_uint64 TAUDECL Tau_getTimeStamp();
 
@@ -21,6 +37,8 @@ int Tau_mergeProfiles() {
   char *buf;
   MPI_Status status;
   x_uint64 start, end;
+
+  Tau_snapshot_merge("merge");
 
   tid = Tau_RtsLayer_myThread();
 
@@ -33,8 +51,8 @@ int Tau_mergeProfiles() {
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  buf = getSnapshotBuffer();
-  buflen = getSnapshotBufferLength();
+  buf = Tau_snapshot_getBuffer();
+  buflen = Tau_snapshot_getBufferLength();
 
 
   if (rank == 0) {
@@ -77,17 +95,13 @@ int Tau_mergeProfiles() {
 
     /* send data */
     PMPI_Send(buf, buflen, MPI_CHAR, 0, 42, MPI_COMM_WORLD);
-
   }
-  TAU_VERBOSE("TAU: Profile Merging Complete\n");
-
   return 0;
 }
 
 
-#else
+#else /* TAU_MPI */
 int Tau_mergeProfiles() {
   return 0;
 }
-
-#endif
+#endif /* TAU_MPI */

@@ -18,6 +18,7 @@
 #include <Profile/Profiler.h>
 #include <Profile/TauMetrics.h>
 #include <Profile/TauSampling.h>
+#include <Profile/TauSnapshot.h>
 
 //#include <tau_internal.h>
 
@@ -201,7 +202,6 @@ void Profiler::Start(int tid) {
   fprintf (stderr, "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
 #endif
 
-
   ParentProfiler = TauInternal_ParentProfiler(tid);
 
   /********************************************************************************/
@@ -350,6 +350,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #ifdef DEBUG_PROF
   fprintf (stderr, "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
 #endif
+  //  fprintf (stderr, "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
 
   /********************************************************************************/
   /*** PerfSuite Integration Code ***/
@@ -1143,7 +1144,8 @@ int TauProfiler_StoreData(int tid) {
   }
 
   if (TauEnv_get_profiling()) {
-    TauProfiler_Snapshot("final", true, tid);
+
+    Tau_snapshot_write_final("final");
     
     if (TauEnv_get_profile_format() == TAU_FORMAT_PROFILE) {
       TauProfiler_DumpData(false, tid, "profile");
@@ -1344,6 +1346,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.265 $   $Date: 2010/03/12 08:29:22 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.265 2010/03/12 08:29:22 amorris Exp $ 
+ * $Revision: 1.266 $   $Date: 2010/03/18 17:36:46 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.266 2010/03/18 17:36:46 amorris Exp $ 
  ***************************************************************************/
