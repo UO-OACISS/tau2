@@ -243,11 +243,6 @@ int TauProfiler_writeData(int tid, const char *prefix = "profile", bool incremen
 		       const char **inFuncs = NULL, int numFuncs = 0);
 void TauProfiler_PurgeData(int tid = RtsLayer::myThread());
 
-int TauProfiler_Snapshot(const char *name, bool finalize = false,
-		      int tid = RtsLayer::myThread()); 
-
-
-
 void TauProfiler_theFunctionList(const char ***inPtr, int *numOfFunctions,
 				 bool addName = false, const char *inString = NULL);
 void TauProfiler_dumpFunctionNames();
@@ -288,6 +283,6 @@ void TauProfiler_AddProfileParamData(long key, const char *keyname);
 #endif /* PROFILER_H */
 /***************************************************************************
  * $RCSfile: Profiler.h,v $   $Author: amorris $
- * $Revision: 1.119 $   $Date: 2010/03/12 08:29:21 $
- * POOMA_VERSION_ID: $Id: Profiler.h,v 1.119 2010/03/12 08:29:21 amorris Exp $ 
+ * $Revision: 1.120 $   $Date: 2010/03/18 17:31:12 $
+ * POOMA_VERSION_ID: $Id: Profiler.h,v 1.120 2010/03/18 17:31:12 amorris Exp $ 
  ***************************************************************************/

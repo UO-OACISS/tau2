@@ -125,6 +125,7 @@ extern "C" {
 
 /* DB Access */
 #define TAU_DB_DUMP()                           Tau_dump();
+#define TAU_DB_MERGED_DUMP()                    Tau_mergeProfiles();
 #define TAU_DB_DUMP_PREFIX(prefix)              Tau_dump_prefix(prefix);
 #define TAU_DB_DUMP_PREFIX_TASK(prefix, task)   Tau_dump_prefix_task(prefix, task);
 #define TAU_DB_DUMP_INCR()                      Tau_dump_incr();
@@ -301,8 +302,6 @@ void Tau_stop(const char *name);
 int Tau_stop_current_timer();
 char * Tau_phase_enable(const char *group);
 
-void Tau_profile_snapshot(char *name);
-void Tau_profile_snapshot_1l(char *name, int number);
 void Tau_dynamic_start(char *name, int isPhase); 
 void Tau_dynamic_stop(char *name, int isPhase); 
 void Tau_static_phase_start(char *name);
@@ -393,6 +392,7 @@ void Tau_set_context(int context);
 void Tau_set_thread(int thread);
 void Tau_callstack(void);
 int Tau_dump(void);
+int Tau_mergeProfiles();
 int Tau_dump_incr(void);
 void Tau_purge(void);
 void Tau_theFunctionList(const char ***functionList, int *num);
@@ -431,8 +431,8 @@ void Tau_disable_instrumentation(void);
 void Tau_global_stop(void);
 char * Tau_phase_enable_once(const char *group, void **ptr);
 
-void Tau_profile_snapshot(char *name);
-void Tau_profile_snapshot_1l(char *name, int number);
+void Tau_profile_snapshot(const char *name);
+void Tau_profile_snapshot_1l(const char *name, int number);
 
 void Tau_dynamic_start(char *name, int isPhase); 
 void Tau_dynamic_stop(char *name, int isPhase); 
@@ -503,7 +503,7 @@ void Tau_profile_param1l(long data, const char *dataname);
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: scottb $
- * $Revision: 1.107 $   $Date: 2010/03/10 21:25:47 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.107 2010/03/10 21:25:47 scottb Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: amorris $
+ * $Revision: 1.108 $   $Date: 2010/03/18 17:31:13 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.108 2010/03/18 17:31:13 amorris Exp $ 
  ***************************************************************************/
