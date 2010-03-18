@@ -65,7 +65,6 @@ int Tau_mergeProfiles() {
       perror(errormsg);
     }
     
-    fwrite (buf, buflen, 1, f);
 
     for (i=1; i<size; i++) {
       /* send ok-to-go */
@@ -80,10 +79,19 @@ int Tau_mergeProfiles() {
       fwrite (buf, buflen, 1, f);
       free (buf);
     }
-    fclose(f);
 
     end = Tau_getTimeStamp();
     TAU_VERBOSE("TAU: Merging Profiles Complete, duration = %.4G seconds\n", ((double)(end-start))/1000000.0f);
+
+    char tmpstr[256];
+    sprintf(tmpstr, "%.4G seconds", ((double)(end-start))/1000000.0f);
+    TAU_METADATA("TAU Profile Merge Time", tmpstr);
+    Tau_snapshot_writeMetaDataBlock();
+
+    buf = Tau_snapshot_getBuffer();
+    buflen = Tau_snapshot_getBufferLength();
+    fwrite (buf, buflen, 1, f);
+    fclose(f);
   
   } else {
 

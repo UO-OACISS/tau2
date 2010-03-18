@@ -29,6 +29,7 @@ char* TAUDECL Tau_snapshot_getBuffer();
 int   TAUDECL Tau_snapshot_getBufferLength();
 int   TAUDECL Tau_snapshot_write_final(const char *name);
 int   TAUDECL Tau_snapshot_write_intermediate(const char *name);
+int   TAUDECL Tau_snapshot_writeMetaDataBlock();
 
 
 #ifdef __cplusplus

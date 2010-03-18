@@ -685,6 +685,24 @@ static int writeMetaData(outputDevice *out, bool newline, int counter) {
 }
 
 
+extern "C" int Tau_snapshot_writeMetaDataBlock() {
+  int tid = RtsLayer::myThread();
+  outputDevice *out = TauGetSnapshotFiles()[tid];
+  char threadid[4096];
+  sprintf(threadid, "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, RtsLayer::getPid());
+
+  // start of a profile block
+  output (out, "<profile_xml>\n");
+  
+  // thread identifier
+  output (out, "\n<thread id=\"%s\" node=\"%d\" context=\"%d\" thread=\"%d\">\n", 
+	   threadid, RtsLayer::myNode(), RtsLayer::myContext(), tid);
+  writeMetaData(out, true, -1);
+  output (out, "</thread>\n");
+
+  // end of profile block
+  output (out, "</profile_xml>\n");
+}
 
 static int startNewSnapshotFile(char *threadid, int tid, int to_buffer) {
   const char *profiledir = TauEnv_get_profiledir();
@@ -752,15 +770,15 @@ static int startNewSnapshotFile(char *threadid, int tid, int to_buffer) {
 
 int Tau_snapshot_internal(const char *name, int to_buffer) {
   int tid = RtsLayer::myThread();
-   int i, c;
-   outputDevice *out = TauGetSnapshotFiles()[tid];
-
-   char threadid[4096];
-   sprintf(threadid, "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, RtsLayer::getPid());
-
-   RtsLayer::LockDB();
-   int numFunc = TheFunctionDB().size();
-   int numEvents = TheEventDB().size();
+  int i, c;
+  outputDevice *out = TauGetSnapshotFiles()[tid];
+  
+  char threadid[4096];
+  sprintf(threadid, "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, RtsLayer::getPid());
+  
+  RtsLayer::LockDB();
+  int numFunc = TheFunctionDB().size();
+  int numEvents = TheEventDB().size();
 
    if (!out) {
      startNewSnapshotFile(threadid, tid, to_buffer);
