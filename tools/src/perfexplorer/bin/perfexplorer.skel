@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# $Id: perfexplorer.skel,v 1.46 2009/12/01 21:43:41 amorris Exp $
+# $Id: perfexplorer.skel,v 1.47 2010/03/19 20:49:25 scottb Exp $
 # $Name:  $
 
 TAUROOT=@TAUROOT@
@@ -158,12 +158,13 @@ MEMORY=-Xmx800m
 
 # Check machine type for a heap space boost
 machine=`uname -m`
+platform=`uname -s`
 if [ "x$machine" = "xx86_64" ] ; then
     MEMORY=-Xmx2000m
 fi
 
 testmax=`$BINDIR/tau_javamax.sh`
-if [ "x$testmax" != "xfailed" ] ; then
+if [ "x$testmax" != "xfailed" -a "x$platform" != "xDarwin" ] ; then
     MEMORY="-Xmx${testmax}m"
 fi
 
