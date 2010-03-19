@@ -755,7 +755,7 @@ for arg in "$@" ; do
 		;;
 
 	    -o*)
- 		if [ "x$arg" != "x-openmp" -a "x$arg" != "x-override_limits" -a "x$arg" != "x-openmp-stubs" ]; then
+ 		if [ "x$arg" != "x-openmp" -a "x$arg" != "x-override_limits" -a "x$arg" != "x-openmp-stubs"  -a "x$arg" != "x-openmp_stubs" ]; then
 		    hasAnOutputFile=$TRUE
 		    passedOutputFile="${arg#"-o"}"
 		    echoIfDebug "\tHas an output file = $passedOutputFile"
