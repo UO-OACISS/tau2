@@ -67,14 +67,6 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <signal.h>
 #include <stdarg.h>
 
-char *TauGetCounterString(void);
-
-
-
-extern "C" int Tau_snapshot_initialization() {
-  return 0;
-}
-
 
 typedef struct outputDevice_ {
   FILE *fp;
@@ -91,7 +83,7 @@ typedef struct outputDevice_ {
 
 
 // Static holder for snapshot file handles
-static outputDevice **TauGetSnapshotFiles() {
+static outputDevice **Tau_snapshot_getFiles() {
   static outputDevice **snapshotFiles = NULL;
   int i;
   if (!snapshotFiles) {
@@ -103,24 +95,29 @@ static outputDevice **TauGetSnapshotFiles() {
   return snapshotFiles;
 }
 
+
+extern "C" int Tau_snapshot_initialization() {
+  return 0;
+}
+
 extern "C" char *Tau_snapshot_getBuffer() {
   // only support thread 0 right now
-  char *buf = TauGetSnapshotFiles()[0]->buffer;
+  char *buf = Tau_snapshot_getFiles()[0]->buffer;
   return buf;
 }
 
 extern "C" int Tau_snapshot_getBufferLength() {
-  return TauGetSnapshotFiles()[0]->bufidx;
+  return Tau_snapshot_getFiles()[0]->bufidx;
 }
 
 // Static holder for snapshot event counts
-static int *TauGetSnapshotEventCounts() {
+static int *Tau_snapshot_getEventCounts() {
   static int eventCounts[TAU_MAX_THREADS];
   return eventCounts;
 }
 
 // Static holder for snapshot user event counts
-static int *TauGetSnapshotUserEventCounts() {
+static int *Tau_snapshot_getUserEventCounts() {
   static int userEventCounts[TAU_MAX_THREADS];
   return userEventCounts;
 }
@@ -148,7 +145,7 @@ static map<string,string> &TheMetaData() {
 // pid_t gettid(void);
 // #endif /* __linux__ */
 
-static int ReadFullLine(char *line, FILE *fp) {
+static int readFullLine(char *line, FILE *fp) {
   int ch;
   int i = 0; 
   while ( (ch = fgetc(fp)) && ch != EOF && ch != (int) '\n') {
@@ -539,7 +536,7 @@ static int writeMetaData(outputDevice *out, bool newline, int counter) {
   FILE *f = fopen("/proc/cpuinfo", "r");
   if (f) {
     char line[4096];
-    while (ReadFullLine(line, f)) {
+    while (readFullLine(line, f)) {
       char *value = strstr(line,":");
       if (!value) break;
       else value += 2;
@@ -580,7 +577,7 @@ static int writeMetaData(outputDevice *out, bool newline, int counter) {
   f = fopen("/proc/meminfo", "r");
   if (f) {
     char line[4096];
-    while (ReadFullLine(line, f)) {
+    while (readFullLine(line, f)) {
       char *value = strstr(line,":");
 
       if (!value) break;
@@ -643,7 +640,7 @@ static int writeMetaData(outputDevice *out, bool newline, int counter) {
 
 extern "C" int Tau_snapshot_writeMetaDataBlock() {
   int tid = RtsLayer::myThread();
-  outputDevice *out = TauGetSnapshotFiles()[tid];
+  outputDevice *out = Tau_snapshot_getFiles()[tid];
   char threadid[4096];
   sprintf(threadid, "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, RtsLayer::getPid());
 
@@ -693,7 +690,7 @@ static int startNewSnapshotFile(char *threadid, int tid, int to_buffer) {
   }
     
   // assign it back to the global structure for this thread
-  TauGetSnapshotFiles()[tid] = out;
+  Tau_snapshot_getFiles()[tid] = out;
 
   // start of a profile block
   output (out, "<profile_xml>\n");
@@ -716,8 +713,8 @@ static int startNewSnapshotFile(char *threadid, int tid, int to_buffer) {
   }
 
   // set the counts to zero
-  TauGetSnapshotEventCounts()[tid] = 0;
-  TauGetSnapshotUserEventCounts()[tid] = 0;
+  Tau_snapshot_getEventCounts()[tid] = 0;
+  Tau_snapshot_getUserEventCounts()[tid] = 0;
 
   output (out, "</definitions>\n");
   return 0;
@@ -727,7 +724,7 @@ static int startNewSnapshotFile(char *threadid, int tid, int to_buffer) {
 int writeSnapshot(const char *name, int to_buffer) {
   int tid = RtsLayer::myThread();
   int i, c;
-  outputDevice *out = TauGetSnapshotFiles()[tid];
+  outputDevice *out = Tau_snapshot_getFiles()[tid];
   
   char threadid[4096];
   sprintf(threadid, "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, RtsLayer::getPid());
@@ -738,31 +735,31 @@ int writeSnapshot(const char *name, int to_buffer) {
 
    if (!out) {
      startNewSnapshotFile(threadid, tid, to_buffer);
-     out = TauGetSnapshotFiles()[tid];
+     out = Tau_snapshot_getFiles()[tid];
    } else {
      output (out, "<profile_xml>\n");
    }
    
    // write out new events since the last snapshot
-   if (TauGetSnapshotEventCounts()[tid] != numFunc) {
+   if (Tau_snapshot_getEventCounts()[tid] != numFunc) {
      output (out, "\n<definitions thread=\"%s\">\n", threadid);
-     for (int i=TauGetSnapshotEventCounts()[tid]; i < numFunc; i++) {
+     for (int i=Tau_snapshot_getEventCounts()[tid]; i < numFunc; i++) {
        FunctionInfo *fi = TheFunctionDB()[i];
        writeEventXML(out, i, fi);
      }
      output (out, "</definitions>\n");
-     TauGetSnapshotEventCounts()[tid] = numFunc;
+     Tau_snapshot_getEventCounts()[tid] = numFunc;
    }
 
    // write out new user events since the last snapshot
-   if (TauGetSnapshotUserEventCounts()[tid] != numEvents) {
+   if (Tau_snapshot_getUserEventCounts()[tid] != numEvents) {
      output (out, "\n<definitions thread=\"%s\">\n", threadid);
-     for (int i=TauGetSnapshotUserEventCounts()[tid]; i < numEvents; i++) {
+     for (int i=Tau_snapshot_getUserEventCounts()[tid]; i < numEvents; i++) {
        TauUserEvent *ue = TheEventDB()[i];
        writeUserEventXML(out, i, ue);
      }
      output (out, "</definitions>\n");
-     TauGetSnapshotUserEventCounts()[tid] = numEvents;
+     Tau_snapshot_getUserEventCounts()[tid] = numEvents;
    }
 
    // now write the actual profile data for this snapshot
@@ -825,7 +822,7 @@ int writeSnapshot(const char *name, int to_buffer) {
 
 extern "C" int Tau_snapshot_writeFinal(const char *name) {
   int tid = RtsLayer::myThread();
-  outputDevice *out = TauGetSnapshotFiles()[tid];
+  outputDevice *out = Tau_snapshot_getFiles()[tid];
   int haveWrittenSnapshot = 0;
  
   if (out != NULL) { 
@@ -836,7 +833,7 @@ extern "C" int Tau_snapshot_writeFinal(const char *name) {
   
   if (haveWrittenSnapshot || (TauEnv_get_profile_format() == TAU_FORMAT_SNAPSHOT)) { 
     writeSnapshot(name, 0);
-    out = TauGetSnapshotFiles()[tid];
+    out = Tau_snapshot_getFiles()[tid];
     if (out->type == OUTPUT_FILE) {
       fclose(out->fp);
     }
