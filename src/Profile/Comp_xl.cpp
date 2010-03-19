@@ -91,7 +91,7 @@ extern "C" void __func_trace_enter(char* name, char* fname, int lno) {
 
   if (initialized == 0) {
     initialized = 1;
-    InitializeTAU();
+    Tau_init_initializeTAU();
     TheUsingCompInst() = 1;
     TAU_PROFILE_SET_NODE(0);
   }

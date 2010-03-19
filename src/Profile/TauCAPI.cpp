@@ -1216,11 +1216,11 @@ extern "C" pid_t tau_fork() {
 extern "C" void Tau_profile_snapshot_1l(const char *name, int number) {
   char buffer[4096];
   sprintf (buffer, "%s %d", name, number);
-  Tau_snapshot_write_intermediate(buffer);
+  Tau_snapshot_writeIntermediate(buffer);
 }
 
 extern "C" void Tau_profile_snapshot(const char *name) {
-  Tau_snapshot_write_intermediate(name);
+  Tau_snapshot_writeIntermediate(name);
 }
 
 
@@ -1416,7 +1416,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.147 $   $Date: 2010/03/18 17:36:46 $
- * VERSION: $Id: TauCAPI.cpp,v 1.147 2010/03/18 17:36:46 amorris Exp $
+ * $Revision: 1.148 $   $Date: 2010/03/19 00:21:12 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.148 2010/03/19 00:21:12 amorris Exp $
  ***************************************************************************/
 

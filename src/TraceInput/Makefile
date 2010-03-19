@@ -47,8 +47,8 @@ ARFLAGS         = rcv
 ##################################################################
 
 ##############################################
-PRELINK_PHASE = $(CXX) --prelink_objects $(OBJS) #ENDIF##PGICC#
-PRELINK_PHASE = #ENDIF##PGINOPRELINK#
+#PGICC#PRELINK_PHASE = $(CXX) --prelink_objects $(OBJS) #ENDIF#
+#PGINOPRELINK#PRELINK_PHASE = #ENDIF#
 #############################################
 
 
@@ -109,7 +109,7 @@ clean:
 	$(RM) $(OBJS) $(LIBTARGET) *.ii *.ti ti_files cxx_repository ii_files rii_files 
 ##############################################
 #/***************************************************************************
-# * $RCSfile: Makefile,v $   $Author: wspear $
-# * $Revision: 1.12 $   $Date: 2010/03/12 23:11:20 $
-# * TAU_VERSION_ID: $Id: Makefile,v 1.12 2010/03/12 23:11:20 wspear Exp $ 
+# * $RCSfile: Makefile,v $   $Author: amorris $
+# * $Revision: 1.13 $   $Date: 2010/03/19 00:21:13 $
+# * TAU_VERSION_ID: $Id: Makefile,v 1.13 2010/03/19 00:21:13 amorris Exp $ 
 # ***************************************************************************/

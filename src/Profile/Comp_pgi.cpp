@@ -67,7 +67,7 @@ extern "C" void __rouexit() {
 
 // called during program initialization
 extern "C" void __rouinit() {
-  InitializeTAU();
+  Tau_init_initializeTAU();
   TheUsingCompInst() = 1;
   TAU_PROFILE_SET_NODE(0);
   atexit(__rouexit);

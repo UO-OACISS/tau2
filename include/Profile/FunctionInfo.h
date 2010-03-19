@@ -31,7 +31,7 @@
 //////////////////////////////////////////////////////////////////////
 
 
-extern int Tau_Global_numCounters;
+extern "C" int Tau_Global_numCounters;
 #define TAU_STORAGE(type, variable) type variable[TAU_MAX_THREADS]
 #define TAU_MULTSTORAGE(type, variable) type variable[TAU_MAX_THREADS][TAU_MAX_COUNTERS]
 
@@ -271,6 +271,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************
  * $RCSfile: FunctionInfo.h,v $   $Author: amorris $
- * $Revision: 1.56 $   $Date: 2010/03/12 08:22:01 $
- * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.56 2010/03/12 08:22:01 amorris Exp $ 
+ * $Revision: 1.57 $   $Date: 2010/03/19 00:21:13 $
+ * POOMA_VERSION_ID: $Id: FunctionInfo.h,v 1.57 2010/03/19 00:21:13 amorris Exp $ 
  ***************************************************************************/

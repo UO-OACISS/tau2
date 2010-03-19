@@ -26,10 +26,9 @@
 #include <Profile/tau_types.h>
 #include <Profile/TauEnv.h>
 #include <Profile/TauSnapshot.h>
+#include <Profile/TauMetrics.h>
 
 int TAUDECL Tau_RtsLayer_myThread();
-
-x_uint64 TAUDECL Tau_getTimeStamp();
 
 int Tau_mergeProfiles() {
   int rank, size, tid, i, buflen, trash = 0;
@@ -57,7 +56,7 @@ int Tau_mergeProfiles() {
 
   if (rank == 0) {
     TAU_VERBOSE("TAU: Merging Profiles\n");
-    start = Tau_getTimeStamp();
+    start = TauMetrics_getInitialTimeStamp();
     
     if ((f = fopen ("tauprofile.xml", "w+")) == NULL) {
       char errormsg[4096];
@@ -80,7 +79,7 @@ int Tau_mergeProfiles() {
       free (buf);
     }
 
-    end = Tau_getTimeStamp();
+    end = TauMetrics_getInitialTimeStamp();
     TAU_VERBOSE("TAU: Merging Profiles Complete, duration = %.4G seconds\n", ((double)(end-start))/1000000.0f);
 
     char tmpstr[256];

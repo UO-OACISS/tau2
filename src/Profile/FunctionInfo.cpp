@@ -80,7 +80,7 @@ vector<FunctionInfo*>& TheFunctionDB(void)
   static int flag = 1;
   if (flag) {
     flag = 0;
-    InitializeTAU();
+    Tau_init_initializeTAU();
   }
 
   return FunctionDB;
@@ -167,7 +167,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   static int flag = 1;
   if (flag) {
     flag = 0;
-    InitializeTAU();
+    Tau_init_initializeTAU();
   }
 
   //Need to keep track of all the groups this function is a member of.
@@ -483,6 +483,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.82 $   $Date: 2009/12/21 17:58:01 $
- * VERSION_ID: $Id: FunctionInfo.cpp,v 1.82 2009/12/21 17:58:01 amorris Exp $ 
+ * $Revision: 1.83 $   $Date: 2010/03/19 00:21:12 $
+ * VERSION_ID: $Id: FunctionInfo.cpp,v 1.83 2010/03/19 00:21:12 amorris Exp $ 
  ***************************************************************************/

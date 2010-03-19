@@ -20,6 +20,19 @@
 
 
 
+#ifndef _TAU_METRICS_H_
+#define _TAU_METRICS_H_
+
+
+/**
+ * Sets the user definable clock
+ */ 
+void metric_write_userClock(int tid, double value);
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 
 
@@ -54,7 +67,15 @@ double TauMetrics_getTraceMetricIndex();
  */
 double TauMetrics_getTraceMetricValue(int tid);
 
-/**
- * Sets the user definable clock
- */ 
-void metric_write_userClock(int tid, double value);
+
+x_uint64 TauMetrics_getInitialTimeStamp();
+
+x_uint64 TauMetrics_getTimeOfDay();
+
+
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
+#endif /* _TAU_METRICS_H_ */

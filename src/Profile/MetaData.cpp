@@ -34,9 +34,10 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <string.h>
 #include <time.h>
 
-#include "Profile/Profiler.h"
 #include "tauarch.h"
-#include "Profile/tau_types.h"
+#include <Profile/Profiler.h>
+#include <Profile/tau_types.h>
+#include <Profile/TauMetrics.h>
 
 #ifdef TAU_BGL
 #include <rts.h>
@@ -68,59 +69,12 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 
 char *TauGetCounterString(void);
 
-void tauSignalHandler(int sig) {
-  fprintf (stderr, "Caught SIGUSR1, dumping TAU profile data\n");
-  TAU_DB_DUMP_PREFIX("profile");
+
+
+extern "C" int Tau_snapshot_initialization() {
+  return 0;
 }
 
-void tauToggleInstrumentationHandler(int sig) {
-  fprintf (stderr, "Caught SIGUSR2, toggling TAU instrumentation\n");
-  if (RtsLayer::TheEnableInstrumentation()) {
-    RtsLayer::TheEnableInstrumentation() = false;
-  } else {
-    RtsLayer::TheEnableInstrumentation() = true;
-  }
-}
-
-extern "C" x_uint64 Tau_getTimeStamp() {
-  x_uint64 timestamp;
-#ifdef TAU_WINDOWS
-  timestamp = TauWindowsUsecD();
-#else
-  struct timeval tp;
-  gettimeofday (&tp, 0);
-  timestamp = (x_uint64)tp.tv_sec * (x_uint64)1e6 + (x_uint64)tp.tv_usec;
-#endif
-  return timestamp;
-}
-
-// We keep track of the timestamp at the initialization of TheFunctionDB()
-// see FunctionInfo.cpp
-// I do this because otherwise it is impossible to determine the duration
-// of the first snapshot.  The user may not be using a time based metric
-// so I can't just look at the top-level timer.  Instead, I just grab this
-// at the earliest point.
-static x_uint64 firstTimeStamp;
-bool Tau_snapshot_initialization() {
-  
-#ifndef TAU_DISABLE_SIGUSR
-  /* register SIGUSR1 handler */
-  if (signal(SIGUSR1, tauSignalHandler) == SIG_ERR) {
-    perror("failed to register TAU profile dump signal handler");
-  }
-
-  if (signal(SIGUSR2, tauToggleInstrumentationHandler) == SIG_ERR) {
-    perror("failed to register TAU instrumentation toggle signal handler");
-  }
-#endif
-
-  firstTimeStamp = Tau_getTimeStamp();
-  return true;
-}
-
-x_uint64 Tau_get_firstTimeStamp() {
-  return firstTimeStamp;
-}
 
 typedef struct outputDevice_ {
   FILE *fp;
@@ -354,10 +308,12 @@ static int writeXMLTime(outputDevice *out, bool newline) {
 
    // write out the timestamp (number of microseconds since epoch (unsigned long long)
 #ifdef TAU_WINDOWS
-   output (out, "<attribute><name>Timestamp</name><value>%I64d</value></attribute>%s", Tau_getTimeStamp(), endl);
+   output (out, "<attribute><name>Timestamp</name><value>%I64d</value></attribute>%s", TauMetrics_getInitialTimeStamp(), endl);
 #else
-   output (out, "<attribute><name>Timestamp</name><value>%lld</value></attribute>%s", Tau_getTimeStamp(), endl);
+   output (out, "<attribute><name>Timestamp</name><value>%lld</value></attribute>%s", TauMetrics_getInitialTimeStamp(), endl);
 #endif
+
+
 
    return 0;
 }
@@ -422,9 +378,9 @@ static int writeMetaData(outputDevice *out, bool newline, int counter) {
 
   char tmpstr[1024];
 #ifdef TAU_WINDOWS
-  sprintf (tmpstr, "%I64d", firstTimeStamp);
+  sprintf (tmpstr, "%I64d", TauMetrics_getInitialTimeStamp());
 #else
-  sprintf (tmpstr, "%lld", firstTimeStamp);
+  sprintf (tmpstr, "%lld", TauMetrics_getInitialTimeStamp());
 #endif
   writeXMLAttribute(out, "Starting Timestamp", tmpstr, newline);
 
@@ -768,7 +724,7 @@ static int startNewSnapshotFile(char *threadid, int tid, int to_buffer) {
 }
 
 
-int Tau_snapshot_internal(const char *name, int to_buffer) {
+int writeSnapshot(const char *name, int to_buffer) {
   int tid = RtsLayer::myThread();
   int i, c;
   outputDevice *out = TauGetSnapshotFiles()[tid];
@@ -816,9 +772,9 @@ int Tau_snapshot_internal(const char *name, int to_buffer) {
    output (out, "</name>\n");
 
 #ifdef TAU_WINDOWS
-   output (out, "<timestamp>%I64d</timestamp>\n", Tau_getTimeStamp());
+   output (out, "<timestamp>%I64d</timestamp>\n", TauMetrics_getInitialTimeStamp());
 #else
-   output (out, "<timestamp>%lld</timestamp>\n", Tau_getTimeStamp());
+   output (out, "<timestamp>%lld</timestamp>\n", TauMetrics_getInitialTimeStamp());
 #endif
 
    char metricList[4096];
@@ -867,7 +823,7 @@ int Tau_snapshot_internal(const char *name, int to_buffer) {
 }
 
 
-extern "C" int Tau_snapshot_write_final(const char *name) {
+extern "C" int Tau_snapshot_writeFinal(const char *name) {
   int tid = RtsLayer::myThread();
   outputDevice *out = TauGetSnapshotFiles()[tid];
   int haveWrittenSnapshot = 0;
@@ -879,7 +835,7 @@ extern "C" int Tau_snapshot_write_final(const char *name) {
   }
   
   if (haveWrittenSnapshot || (TauEnv_get_profile_format() == TAU_FORMAT_SNAPSHOT)) { 
-    Tau_snapshot_internal(name, 0);
+    writeSnapshot(name, 0);
     out = TauGetSnapshotFiles()[tid];
     if (out->type == OUTPUT_FILE) {
       fclose(out->fp);
@@ -888,17 +844,17 @@ extern "C" int Tau_snapshot_write_final(const char *name) {
 }
 
 extern "C" int Tau_snapshot_merge(const char *name) {
-  Tau_snapshot_internal(name, 1);
+  writeSnapshot(name, 1);
 }
 
 
-extern "C" int Tau_snapshot_write_intermediate(const char *name) {
+extern "C" int Tau_snapshot_writeIntermediate(const char *name) {
   int tid = RtsLayer::myThread();
 
    TAU_PROFILE_TIMER(timer, "TAU_PROFILE_SNAPSHOT()", " ", TAU_IO);
    TAU_PROFILE_START(timer);
   
-   Tau_snapshot_internal(name, 0);
+   writeSnapshot(name, 0);
 
    TAU_PROFILE_STOP(timer);
    return 0;

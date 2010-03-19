@@ -65,6 +65,8 @@ extern TauUserEvent *TheGatherEvent(void);
 extern TauUserEvent *TheAllgatherEvent(void);
 #endif /* TAU_MPI */
 
+
+
 /* null clock that always returns 0 */
 void metric_read_nullClock(int tid, int idx, double values[]) {
   values[idx] = 0;

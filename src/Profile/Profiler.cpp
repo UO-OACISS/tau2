@@ -1145,7 +1145,7 @@ int TauProfiler_StoreData(int tid) {
 
   if (TauEnv_get_profiling()) {
 
-    Tau_snapshot_write_final("final");
+    Tau_snapshot_writeFinal("final");
     
     if (TauEnv_get_profile_format() == TAU_FORMAT_PROFILE) {
       TauProfiler_DumpData(false, tid, "profile");
@@ -1346,6 +1346,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.266 $   $Date: 2010/03/18 17:36:46 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.266 2010/03/18 17:36:46 amorris Exp $ 
+ * $Revision: 1.267 $   $Date: 2010/03/19 00:21:12 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.267 2010/03/19 00:21:12 amorris Exp $ 
  ***************************************************************************/

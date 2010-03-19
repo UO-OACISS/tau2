@@ -28,10 +28,32 @@
 #include "Profile/KtauCounters.h"
 #endif //TAUKTAU_SHCTR
 
+
+void metric_read_nullClock(int tid, int idx, double values[]);
+void metric_write_userClock(int tid, double value);
+void metric_read_userClock(int tid, int idx, double values[]);
+void metric_read_logicalClock(int tid, int idx, double values[]);
+void metric_read_gettimeofday(int tid, int idx, double values[]);
+void metric_read_linuxtimers(int tid, int idx, double values[]);
+void metric_read_bgtimers(int tid, int idx, double values[]);
+void metric_read_craytimers(int tid, int idx, double values[]);
+void metric_read_cputime(int tid, int idx, double values[]);
+void metric_read_messagesize(int tid, int idx, double values[]);
+void metric_read_papivirtual(int tid, int idx, double values[]);
+void metric_read_papiwallclock(int tid, int idx, double values[]);
+void metric_read_papi(int tid, int idx, double values[]);
+void metric_read_ktau(int tid, int idx, double values[]);
+void metric_read_cudatime(int tid, int idx, double values[]);
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+
 int TauMetrics_init();
 
 static void metricv_add(const char *name);
-static void reorder_metrics();
 static void read_env_vars();
 static void initialize_functionArray();
 
@@ -57,21 +79,10 @@ static int traceMetric = 0;
 /* array of function pointers used to get metric data */
 static function functionArray[TAU_MAX_METRICS];
 
-void metric_read_nullClock(int tid, int idx, double values[]);
-void metric_write_userClock(int tid, double value);
-void metric_read_userClock(int tid, int idx, double values[]);
-void metric_read_logicalClock(int tid, int idx, double values[]);
-void metric_read_gettimeofday(int tid, int idx, double values[]);
-void metric_read_linuxtimers(int tid, int idx, double values[]);
-void metric_read_bgtimers(int tid, int idx, double values[]);
-void metric_read_craytimers(int tid, int idx, double values[]);
-void metric_read_cputime(int tid, int idx, double values[]);
-void metric_read_messagesize(int tid, int idx, double values[]);
-void metric_read_papivirtual(int tid, int idx, double values[]);
-void metric_read_papiwallclock(int tid, int idx, double values[]);
-void metric_read_papi(int tid, int idx, double values[]);
-void metric_read_ktau(int tid, int idx, double values[]);
-void metric_read_cudatime(int tid, int idx, double values[]);
+/* gtod based initial timestamp, used for snapshots and other stuff */
+static x_uint64 initialTimeStamp;
+
+
 
 /*********************************************************************
  * Remove _'s, convert case, and compare
@@ -399,7 +410,7 @@ static void initialize_functionArray() {
 /*********************************************************************
  * Returns metric name for an index
  ********************************************************************/
-const char *TauMetrics_getMetricName(int metric) {
+extern "C" const char *TauMetrics_getMetricName(int metric) {
   return metricv[metric];
 }
 
@@ -423,11 +434,32 @@ void TauMetrics_getMetrics(int tid, double values[]) {
   }
 }
 
+
+extern "C" x_uint64 TauMetrics_getInitialTimeStamp() {
+  return initialTimeStamp;
+}
+
+
+extern "C" x_uint64 TauMetrics_getTimeOfDay() {
+  x_uint64 timestamp;
+#ifdef TAU_WINDOWS
+  timestamp = TauWindowsUsecD();
+#else
+  struct timeval tp;
+  gettimeofday (&tp, 0);
+  timestamp = (x_uint64)tp.tv_sec * (x_uint64)1e6 + (x_uint64)tp.tv_usec;
+#endif
+  return timestamp;
+}
+
+
 /*********************************************************************
  * Initialize the metrics module
  ********************************************************************/
 int TauMetrics_init() {
   int i;
+
+  initialTimeStamp = TauMetrics_getTimeOfDay();
 
   if (TauEnv_get_ebs_enabled()) {
     if (strcmp(TauEnv_get_ebs_source(),"itimer")!=0) {
@@ -506,3 +538,8 @@ double TauMetrics_getTraceMetricValue(int tid) {
   TauMetrics_getMetrics(tid, values);
   return values[traceMetric];
 }
+
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */

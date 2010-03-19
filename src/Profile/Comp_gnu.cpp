@@ -465,7 +465,7 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
     }
 
     get_symtab();
-    InitializeTAU();
+    Tau_init_initializeTAU();
     TheUsingCompInst() = 1;
     TAU_PROFILE_SET_NODE(0);
     updateMaps();

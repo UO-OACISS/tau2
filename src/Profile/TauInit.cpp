@@ -26,8 +26,8 @@
 #include <Profile/TauEnv.h>
 #include <Profile/TauMetrics.h>
 #include <Profile/TauSampling.h>
+#include <Profile/TauSnapshot.h>
 
-bool Tau_snapshot_initialization();
 extern "C" void Tau_stack_initialization();
 extern "C" int Tau_compensate_initialization();
 extern "C" int Tau_profiler_initialization();
@@ -82,8 +82,24 @@ static void TauInitialize_kill_handlers() {
 
 
 
+static void tauSignalHandler(int sig) {
+  fprintf (stderr, "Caught SIGUSR1, dumping TAU profile data\n");
+  TAU_DB_DUMP_PREFIX("profile");
+}
 
-extern "C" int InitializeTAU() {
+static void tauToggleInstrumentationHandler(int sig) {
+  fprintf (stderr, "Caught SIGUSR2, toggling TAU instrumentation\n");
+  if (RtsLayer::TheEnableInstrumentation()) {
+    RtsLayer::TheEnableInstrumentation() = false;
+  } else {
+    RtsLayer::TheEnableInstrumentation() = true;
+  }
+}
+
+
+
+
+extern "C" int Tau_init_initializeTAU() {
   static bool initialized = false;
   if (initialized) {
     return 0;
@@ -109,6 +125,19 @@ extern "C" int InitializeTAU() {
 
   /* initialize the Profiler stack */
   Tau_stack_initialization();
+
+
+#ifndef TAU_DISABLE_SIGUSR
+  /* register SIGUSR1 handler */
+  if (signal(SIGUSR1, tauSignalHandler) == SIG_ERR) {
+    perror("failed to register TAU profile dump signal handler");
+  }
+
+  if (signal(SIGUSR2, tauToggleInstrumentationHandler) == SIG_ERR) {
+    perror("failed to register TAU instrumentation toggle signal handler");
+  }
+#endif
+
 
   Tau_profiler_initialization();
 

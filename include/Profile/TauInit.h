@@ -21,6 +21,6 @@
 #ifndef _TAU_INIT_H_
 #define _TAU_INIT_H_
 
-extern "C" int InitializeTAU();
+extern "C" int Tau_init_initializeTAU();
 
 #endif /* _TAU_INIT_H_ */
