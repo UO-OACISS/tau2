@@ -59,12 +59,13 @@ MEMORY=-Xmx800m
 
 # Check machine type for a heap space boost
 machine=`uname -m`
+platform=`uname -s`
 if [ "x$machine" = "xx86_64" ] ; then
     MEMORY=-Xmx2000m
 fi
 
 testmax=`$BINDIR/tau_javamax.sh`
-if [ "x$testmax" != "xfailed" ] ; then
+if [ "x$testmax" != "xfailed" -a "x$platform" != "xDarwin" ] ; then
     MEMORY="-Xmx${testmax}m"
 fi
 
@@ -72,10 +73,11 @@ fi
 # locate the java bin directory so that we can add it to the java.library.path.
 # IBM JRE has libjawt.so in the bin directory and it needs to be hardcoded in
 # here.
+# Skip this step on Mac OS X, readlink fails in some cases.
 javaLocation=`which java`
 # check for readlink first
 readlink=`which readlink`
-if [ "x$readlink" != "x" ] ; then
+if [ "x$readlink" != "x" -a "x$platform" != "xDarwin" ] ; then
     if [ -x "$readlink" ] ; then
 	javaLocation=`readlink -f $javaLocation`
     fi
