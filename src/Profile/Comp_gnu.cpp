@@ -38,13 +38,6 @@ using namespace std;
 
 
 #include <stdio.h>
-#ifdef TAU_BFD
-#  include "bfd.h"
-#  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
-#    include "demangle.h"
-#  endif /* HAVE_GNU_DEMANGLE */
-#endif /* TAU_BFD */
-
 
 #include <stdlib.h>
 #include <string.h>
@@ -54,6 +47,14 @@ using namespace std;
 #ifdef TAU_OPENMP
 #  include <omp.h>
 #endif
+
+#ifdef TAU_BFD
+#define HAVE_DECL_BASENAME 1
+#  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+#    include <demangle.h>
+#  endif /* HAVE_GNU_DEMANGLE */
+#  include <bfd.h>
+#endif /* TAU_BFD */
 
 
 #ifdef __APPLE__
