@@ -83,10 +83,17 @@ struct MemMapKey
 	}
 };
 
+struct EventName {
+		const char *name;
+		EventName(const char* n) :
+			name(n) {}	
+		bool operator<(const EventName &c1) const { return strcmp(name,c1.name) < 0; }
+};
 typedef map<MemMapKey, bool> doubleMap;
 doubleMap MemcpyEventMap;
 
-map<const char*, void*> events;
+//map<const char*, void*, compare_chars> events;
+map<EventName, void*> events;
 
 extern void metric_set_gpu_timestamp(int tid, double value);
 
@@ -262,7 +269,7 @@ void EnterGenericEvent(cuToolsApi_EnterGenericInParams *clbkParameter)
 		
 	}
 	tau_nexus=true;
-	check_gpu_event();
+	//check_gpu_event();
 	TAU_START((char *)clbkParameter->functionName);
 	//TAU_REGISTER_EVENT(ev, "Thread accesses");
 	//TAU_EVENT(ev, 480.00000);
@@ -286,15 +293,20 @@ void ExitGenericEvent(cuToolsApi_EnterGenericInParams *clbkParameter)
 void start_gpu_event(const char *name)
 {
 	printf("staring %s event.\n", name);
-	map<const char*,void*>::iterator it = events.find(name);
+	//map<const char*,void*>::iterator it = events.find(name);
+	//sleep(0.5);
+	//printf(" --- Looking for event with name: %s", name);
+	map<EventName, void*>::iterator it = events.find(name);
 	if (it == events.end())
 	{
+		//printf("\t\t NOT FOUND, creating.\n");
 		void *ptr;
 		TAU_PROFILER_CREATE(ptr, name, "", TAU_USER);
 		TAU_PROFILER_START_TASK(ptr, gpuTask);
-		events[name] = ptr;
+		events[EventName(name)] = ptr;
 	} else
 	{
+		//printf("\t\t FOUND.\n");
 		void *ptr = (*it).second;
 		TAU_PROFILER_START_TASK(ptr, gpuTask);
 	}
@@ -313,7 +325,7 @@ void stage_gpu_event(const char *name, double start_time, int device)
 		ClockSynch();
 		clock_sync=true;
 	}
-
+	//printf("setting gpu timestamp to: %ld.\n", start_time);
 	metric_set_gpu_timestamp(gpuTask, AlignedTime(device, start_time));
 
 	check_gpu_event();
@@ -322,8 +334,9 @@ void stage_gpu_event(const char *name, double start_time, int device)
 }
 void stop_gpu_event(const char *name)
 {
-	printf("stopping %s event.\n", name);
-	map<const char*,void*>::iterator it = events.find(name);
+	//printf("stopping %s event.\n", name);
+	//map<const char*,void*>::iterator it = events.find(name);
+	map<EventName,void*>::iterator it = events.find(name);
 	if (it == events.end())
 	{
 		printf("FATAL ERROR in stopping GPU event.\n");
@@ -335,6 +348,7 @@ void stop_gpu_event(const char *name)
 }
 void break_gpu_event(const char *name, double stop_time, int device)
 {
+	//printf("setting gpu timestamp to: %ld.\n", stop_time);
 	metric_set_gpu_timestamp(gpuTask, AlignedTime(device, stop_time));
 	stop_gpu_event(name);
 }
