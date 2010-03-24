@@ -29,7 +29,7 @@ static void *tau_handle = NULL;
 /* } */
 
 void atexit_handler() {
-    Tau_create_top_level_timer_if_necessary();
+    //Tau_create_top_level_timer_if_necessary();
   //TAU_STOP("WRAPPER");
 }
 
@@ -37,7 +37,8 @@ void checkinit() {
   static int init = 1;
   if (init) {
     init = 0;
-    Tau_create_top_level_timer_if_necessary();
+    //Tau_create_top_level_timer_if_necessary();
+		TAU_PROFILE_SET_NODE(0);
     //TAU_START("WRAPPER");
     atexit(atexit_handler);
   }
