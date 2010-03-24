@@ -1,23 +1,44 @@
 /****************************************************************************
 **			TAU Portable Profiling Package			   **
-**			http://www.cs.uoregon.edu/research/paracomp/tau
+**			http://www.cs.uoregon.edu/research/tau	           **
 *****************************************************************************
-**    Copyright 2004  						   	   **
+**    Copyright 2010  						   	   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
-/***************************************************************************
-**	File 		: TauUtil.h					  **
-**	Description 	: TAU Utilities 
-**	Author		: Sameer Shende					  **
-**	Contact		: sameer@cs.uoregon.edu 
-**	Documentation	: See http://www.cs.uoregon.edu/research/paracomp/tau
-***************************************************************************/
+/****************************************************************************
+**	File 		: TauUtil.h      				   **
+**	Description 	: TAU Profiling Package				   **
+**	Contact		: tau-bugs@cs.uoregon.edu               	   **
+**	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
+**                                                                         **
+**      Description     : This file contains TAU utility routines          **
+**                                                                         **
+****************************************************************************/
 
 #ifndef _TAU_UTIL_H_
 #define _TAU_UTIL_H_
 
 #include <stdlib.h> 
+#include <stdio.h>
+
+typedef struct Tau_util_outputDevice_ {
+  FILE *fp;
+  int type; // 0 = file, 1 = buffer
+  char *buffer;
+  int bufidx;
+  int buflen;
+} Tau_util_outputDevice;
+
+#define TAU_UTIL_OUTPUT_FILE 0
+#define TAU_UTIL_OUTPUT_BUFFER 1
+#define TAU_UTIL_INITIAL_BUFFER 5000000
+#define TAU_UTIL_THRESHOLD 100000
+
+int Tau_util_output(Tau_util_outputDevice *out, const char *format, ...);
+int Tau_util_readFullLine(char *line, FILE *fp);
+char *Tau_util_removeRuns(char *str);
+
 
 /* The following macros help create a local array and assign to elements of 
    the local C array, values from Fortran array after conversion using f2c 

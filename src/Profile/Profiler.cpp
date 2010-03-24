@@ -76,15 +76,14 @@ void esd_exit (elg_ui4 rid);
 #endif /* SCALASCA */
 #endif /* TAU_EPILOG */
 
-#include <Profile/TauTrace.h>
-
+#include <TauTrace.h>
+#include <TauMetaData.h>
 
 #ifdef RENCI_STFF
 #include "Profile/RenciSTFF.h"
 #endif // RENCI_STFF
 
 
-int Tau_writeProfileMetaData(FILE *fp, int counter);
 
 static int writeUserEvents(FILE *fp, int tid);
 static int matchFunction(FunctionInfo *fi, const char **inFuncs, int numFuncs);
@@ -1102,7 +1101,7 @@ static int writeProfile(FILE *fp, char *metricName, int tid, int metric,
 			const char **inFuncs, int numFuncs) {
   writeHeader(fp, TheFunctionDB().size(), metricName);
   fprintf(fp, " # ");	
-  Tau_writeProfileMetaData(fp, metric);
+  Tau_metadata_writeMetaData(fp, metric);
   fprintf(fp, "\n");
   fflush(fp);
   writeFunctionData(fp, tid, metric, inFuncs, numFuncs);
@@ -1346,6 +1345,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.267 $   $Date: 2010/03/19 00:21:12 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.267 2010/03/19 00:21:12 amorris Exp $ 
+ * $Revision: 1.268 $   $Date: 2010/03/24 05:23:01 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.268 2010/03/24 05:23:01 amorris Exp $ 
  ***************************************************************************/

@@ -7,34 +7,25 @@
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
 /****************************************************************************
-**	File 		: TauSnapshot.h  				   **
+**	File 		: TauXML.h       				   **
 **	Description 	: TAU Profiling Package				   **
 **	Contact		: tau-bugs@cs.uoregon.edu               	   **
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
 **                                                                         **
-**      Description     : This file contains all the snapshot stuff        **
+**      Description     : This file contains xml related routines          **
 **                                                                         **
 ****************************************************************************/
 
 
-#ifndef _TAU_SNAPSHOT_H_
-#define _TAU_SNAPSHOT_H_
+#ifndef _TAU_XML_H_
+#define _TAU_XML_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#include <TauUtil.h>
 
-int   TAUDECL Tau_snapshot_initialization();
-int   TAUDECL Tau_snapshot_writeToBuffer(const char *name);
-char* TAUDECL Tau_snapshot_getBuffer();
-int   TAUDECL Tau_snapshot_getBufferLength();
-int   TAUDECL Tau_snapshot_writeFinal(const char *name);
-int   TAUDECL Tau_snapshot_writeIntermediate(const char *name);
-int   TAUDECL Tau_snapshot_writeMetaDataBlock();
+void Tau_XML_writeString(Tau_util_outputDevice *out, const char *s);
+void Tau_XML_writeTag(Tau_util_outputDevice *out, const char *tag, const char *s, bool newline);
+void Tau_XML_writeAttribute(Tau_util_outputDevice *out, const char *name, const char *value, bool newline);
+void Tau_XML_writeAttribute(Tau_util_outputDevice *out, const char *name, const int value, bool newline);
+int  Tau_XML_writeTime(Tau_util_outputDevice *out, bool newline);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-#endif /* _TAU_SNAPSHOT_H_ */
+#endif /* _TAU_XML_H_ */

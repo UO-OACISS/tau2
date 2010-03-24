@@ -55,7 +55,7 @@ LINKER	= $(TAU_CC)
 
 INSTALLDEST	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
-TAUINC	      = -I$(TAUROOT)/include 
+TAUINC	      = -I$(TAUROOT)/include -I$(TAUROOT)/include/Profile
 
 CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE)  $(HPCTOOLKIT_OPT) $(HPCTOOLKIT_INCLUDE)
 
@@ -80,7 +80,8 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/TauEnv.h	 $(INCDIR)/TauInit.h          \
 		$(INCDIR)/TauTrace.h     $(INCDIR)/TauSilc.h          \
 		$(TAUROOT)/include/tau_internal.h $(INCDIR)/TauSampling.h \
-		$(INCDIR)/TauSnapshot.h  $(INCDIR)/TauGASP.h
+		$(INCDIR)/TauSnapshot.h  $(INCDIR)/TauGASP.h          \
+	 	$(INCDIR)/TauUtil.h $(INCDIR)/TauXML.h
 
 LDFLAGS	      =
 
@@ -99,8 +100,9 @@ PGIACC_O=
 
 OBJS	      = Profiler.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
-		TauHooks.o TauHandler.o TauMemory.o MetaData.o TauEnv.o \
+		TauHooks.o TauHandler.o TauMemory.o TauMetaData.o TauEnv.o \
 		TauInit.o Comp_intel9.o Comp_pgi.o Comp_xl.o TauCallPath.o \
+                TauXML.o TauUtil.o TauSnapshot.o \
 		$(PARAM_O) Tracer.o TauMetrics.o TauReadMetrics.o $(THR_O) \
 		$(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) TauSampling.o \
@@ -428,7 +430,13 @@ Profile.class	: Profile.java
 Profiler.o 	: Profiler.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
-MetaData.o 	: MetaData.cpp $(HDRS)
+TauMetaData.o 	: TauMetaData.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauXML.o 	: TauXML.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauUtil.o 	: TauUtil.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauSampling.o 	: TauSampling.cpp $(HDRS)

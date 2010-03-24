@@ -23,6 +23,7 @@
 #ifndef _TAU_METRICS_H_
 #define _TAU_METRICS_H_
 
+#include <Profile/tau_types.h>
 
 /**
  * Sets the user definable clock

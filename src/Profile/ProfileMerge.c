@@ -37,7 +37,7 @@ int Tau_mergeProfiles() {
   MPI_Status status;
   x_uint64 start, end;
 
-  Tau_snapshot_merge("merge");
+  Tau_snapshot_writeToBuffer("merge");
 
   tid = Tau_RtsLayer_myThread();
 
