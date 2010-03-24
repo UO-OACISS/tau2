@@ -1,3 +1,21 @@
+/****************************************************************************
+**			TAU Portable Profiling Package			   **
+**			http://www.cs.uoregon.edu/research/tau	           **
+*****************************************************************************
+**    Copyright 2010                                                       **
+**    Department of Computer and Information Science, University of Oregon **
+**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+****************************************************************************/
+/****************************************************************************
+**	File            : TauSampling.cpp                                  **
+**	Contact		: tau-bugs@cs.uoregon.edu                          **
+**	Documentation	: See http://tau.uoregon.edu                       **
+**                                                                         **
+**      Description     : This file contains all the XML related code      **
+**                                                                         **
+****************************************************************************/
+
+
 #include <TauUtil.h>
 #include <TauMetrics.h>
 
@@ -5,6 +23,10 @@
 #include <stdio.h>
 #include <time.h>
 
+/*********************************************************************
+ * writes an XML string to an output device, converts certain 
+ * characters as necessary and uses CDATA when necessary
+ ********************************************************************/
 void Tau_XML_writeString(Tau_util_outputDevice *out, const char *s) {
   if (!s) return;
   
@@ -61,9 +83,12 @@ void Tau_XML_writeString(Tau_util_outputDevice *out, const char *s) {
   free (str);
 }
 
-void Tau_XML_writeTag(Tau_util_outputDevice *out, const char *tag, const char *s, bool newline) {
+/*********************************************************************
+ * writes an XML tag
+ ********************************************************************/
+void Tau_XML_writeTag(Tau_util_outputDevice *out, const char *tag, const char *str, bool newline) {
   Tau_util_output (out, "<%s>", tag);
-  Tau_XML_writeString(out, s);
+  Tau_XML_writeString(out, str);
   Tau_util_output (out, "</%s>",tag);
   if (newline) {
     Tau_util_output (out, "\n");
@@ -71,6 +96,9 @@ void Tau_XML_writeTag(Tau_util_outputDevice *out, const char *tag, const char *s
 }
 
 
+/*********************************************************************
+ * writes an attribute entity with a string value
+ ********************************************************************/
 void Tau_XML_writeAttribute(Tau_util_outputDevice *out, const char *name, const char *value, bool newline) {
   const char *endl = "";
   if (newline) {
@@ -85,12 +113,18 @@ void Tau_XML_writeAttribute(Tau_util_outputDevice *out, const char *name, const 
 }
 
 
+/*********************************************************************
+ * writes an attribute entity with an int value
+ ********************************************************************/
 void Tau_XML_writeAttribute(Tau_util_outputDevice *out, const char *name, const int value, bool newline) {
   char str[4096];
   sprintf (str, "%d", value);
   Tau_XML_writeAttribute(out, name, str, newline);
 }
 
+/*********************************************************************
+ * writes an XML time attribute
+ ********************************************************************/
 int Tau_XML_writeTime(Tau_util_outputDevice *out, bool newline) {
    time_t theTime = time(NULL);
 
@@ -106,7 +140,6 @@ int Tau_XML_writeTime(Tau_util_outputDevice *out, bool newline) {
 
    thisTime = localtime(&theTime);
    strftime (buf,4096,"%Y-%m-%dT%H:%M:%S", thisTime);
-
 
    char tzone[7];
    strftime (tzone, 7, "%z", thisTime);

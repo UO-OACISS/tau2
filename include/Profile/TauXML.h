@@ -22,8 +22,8 @@
 
 #include <TauUtil.h>
 
-void Tau_XML_writeString(Tau_util_outputDevice *out, const char *s);
-void Tau_XML_writeTag(Tau_util_outputDevice *out, const char *tag, const char *s, bool newline);
+void Tau_XML_writeString(Tau_util_outputDevice *out, const char *string);
+void Tau_XML_writeTag(Tau_util_outputDevice *out, const char *tag, const char *string, bool newline);
 void Tau_XML_writeAttribute(Tau_util_outputDevice *out, const char *name, const char *value, bool newline);
 void Tau_XML_writeAttribute(Tau_util_outputDevice *out, const char *name, const int value, bool newline);
 int  Tau_XML_writeTime(Tau_util_outputDevice *out, bool newline);

@@ -33,7 +33,7 @@ typedef struct Tau_util_outputDevice_ {
 #define TAU_UTIL_OUTPUT_FILE 0
 #define TAU_UTIL_OUTPUT_BUFFER 1
 #define TAU_UTIL_INITIAL_BUFFER 5000000
-#define TAU_UTIL_THRESHOLD 100000
+#define TAU_UTIL_OUTPUT_THRESHOLD 100000
 
 int Tau_util_output(Tau_util_outputDevice *out, const char *format, ...);
 int Tau_util_readFullLine(char *line, FILE *fp);

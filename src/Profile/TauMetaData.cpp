@@ -264,8 +264,12 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter) 
     char line[4096];
     while (Tau_util_readFullLine(line, f)) {
       char *value = strstr(line,":");
-      if (!value) break;
-      else value += 2;
+      if (!value) {
+	break;
+      } else {
+	/* skip over colon */
+	value += 2;
+      }
 
       value = Tau_util_removeRuns(value);
 
@@ -306,8 +310,11 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter) 
     while (Tau_util_readFullLine(line, f)) {
       char *value = strstr(line,":");
 
-      if (!value) break;
-      else value += 2;
+      if (!value) {
+	break;
+      } else {
+	value += 2;
+      }
 
       value = Tau_util_removeRuns(value);
 
