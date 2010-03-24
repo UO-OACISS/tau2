@@ -199,6 +199,15 @@ inline cuToolsApi_Context* GetContextTable(void)
 /*
 	Helper function to get Clock table
 */
+void check_gpu_event()
+{
+	if (firstEvent)
+	{
+		printf("first gpu event.\n");
+		TAU_PROFILER_START_TASK(gpu_ptr, gpuTask);
+		firstEvent = false;
+	}
+}
 
 
 void EnterGenericEvent(cuToolsApi_EnterGenericInParams *clbkParameter)
@@ -253,6 +262,7 @@ void EnterGenericEvent(cuToolsApi_EnterGenericInParams *clbkParameter)
 		
 	}
 	tau_nexus=true;
+	check_gpu_event();
 	TAU_START((char *)clbkParameter->functionName);
 	//TAU_REGISTER_EVENT(ev, "Thread accesses");
 	//TAU_EVENT(ev, 480.00000);
@@ -275,7 +285,7 @@ void ExitGenericEvent(cuToolsApi_EnterGenericInParams *clbkParameter)
 }
 void start_gpu_event(const char *name)
 {
-	//printf("staring %s event.\n", name);
+	printf("staring %s event.\n", name);
 	map<const char*,void*>::iterator it = events.find(name);
 	if (it == events.end())
 	{
@@ -305,19 +315,14 @@ void stage_gpu_event(const char *name, double start_time, int device)
 	}
 
 	metric_set_gpu_timestamp(gpuTask, AlignedTime(device, start_time));
-	
-	if (firstEvent)
-	{
-		//printf("first gpu event.\n");
-		TAU_PROFILER_START_TASK(gpu_ptr, gpuTask);
-		firstEvent = false;
-	}
+
+	check_gpu_event();
 	//RtsLayer::LockDB();
 	start_gpu_event(name);
 }
 void stop_gpu_event(const char *name)
 {
-	//printf("stopping %s event.\n", name);
+	printf("stopping %s event.\n", name);
 	map<const char*,void*>::iterator it = events.find(name);
 	if (it == events.end())
 	{
@@ -363,16 +368,16 @@ void ProfileMemcpyEvent(cuToolsApi_ProfileMemcpyInParams *clbkParameter)
 		if (it->second == MemcpyHtoD) {
 			stage_gpu_event("cuda Memory copy Host to Device", 
 					(double)clbkParameter->startTime/1000, (int) device);
-			TAU_EVENT_THREAD(MemoryCopyEventHtoD(), (double)
-					clbkParameter->memTransferSize, gpuTask);
+			/*TAU_EVENT(MemoryCopyEventHtoD(), (double)
+					clbkParameter->memTransferSize);*/
 			break_gpu_event("cuda Memory copy Host to Device",
 					(double)clbkParameter->endTime/1000, (int) device);
 		}
 		else {
 			stage_gpu_event("cuda Memory copy Device to Host", 
 					(double)clbkParameter->startTime/1000, (int) device);
-			TAU_EVENT_THREAD(MemoryCopyEventDtoH(), (double)
-					clbkParameter->memTransferSize, gpuTask);
+			/*TAU_EVENT(MemoryCopyEventDtoH(), (double)
+					clbkParameter->memTransferSize);*/
 			break_gpu_event("cuda Memory copy Device to Host",
 					(double)clbkParameter->endTime/1000, (int) device);
 		}
