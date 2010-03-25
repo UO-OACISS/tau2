@@ -111,6 +111,7 @@ extern "C" int Tau_unify_unifyDefinitions() {
 
   }
 
+  return 0;
 }
 
 

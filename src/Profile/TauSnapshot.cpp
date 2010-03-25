@@ -90,19 +90,20 @@ static int *Tau_snapshot_getUserEventCounts() {
 
 extern "C" int Tau_snapshot_writeToBuffer(const char *name) {
   Tau_snapshot_writeSnapshot(name, 1);
+  return 0;
 }
 
 
 extern "C" int Tau_snapshot_writeIntermediate(const char *name) {
   int tid = RtsLayer::myThread();
-
-   TAU_PROFILE_TIMER(timer, "TAU_PROFILE_SNAPSHOT()", " ", TAU_IO);
-   TAU_PROFILE_START(timer);
   
-   Tau_snapshot_writeSnapshot(name, 0);
-
-   TAU_PROFILE_STOP(timer);
-   return 0;
+  TAU_PROFILE_TIMER(timer, "TAU_PROFILE_SNAPSHOT()", " ", TAU_IO);
+  TAU_PROFILE_START(timer);
+  
+  Tau_snapshot_writeSnapshot(name, 0);
+  
+  TAU_PROFILE_STOP(timer);
+  return 0;
 }
 
 
@@ -123,6 +124,7 @@ extern "C" int Tau_snapshot_writeMetaDataBlock() {
 
   // end of profile block
   Tau_util_output (out, "</profile_xml>\n");
+  return 0;
 }
 
 

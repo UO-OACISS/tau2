@@ -1120,6 +1120,7 @@ extern "C" int Tau_profiler_initialization() {
     profileWriteCount[i] = 0;
   }
   profileWriteWarningPrinted = 0;
+  return 0;
 }
 
 
@@ -1345,6 +1346,6 @@ bool TauProfiler_createDirectories() {
 
 /***************************************************************************
  * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.268 $   $Date: 2010/03/24 05:23:01 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.268 2010/03/24 05:23:01 amorris Exp $ 
+ * $Revision: 1.269 $   $Date: 2010/03/25 23:21:20 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.269 2010/03/25 23:21:20 amorris Exp $ 
  ***************************************************************************/
