@@ -149,6 +149,9 @@ static inline caddr_t get_pc(void *p) {
 #elif __APPLE__
   fprintf(stderr, "Warning, TAU Sampling does not work on apple\n");
   return 0;
+#elif _AIX
+  fprintf(stderr, "Warning, TAU Sampling does not work on AIX\n");
+  return 0;
 #else
   struct sigcontext *sc;
   sc = (struct sigcontext *)&uc->uc_mcontext;
