@@ -19,6 +19,50 @@
 #include <stdarg.h>
 #include <string.h>
 
+
+
+/*********************************************************************
+ * Abort execution with a message
+ ********************************************************************/
+void TAU_ABORT(const char *format, ...) {
+  va_list args;
+  va_start(args, format);
+  vfprintf(stderr, format, args);
+  va_end(args);
+  exit(EXIT_FAILURE);
+}
+
+
+
+/*********************************************************************
+ * Create an buffer output device
+ ********************************************************************/
+Tau_util_outputDevice *Tau_util_createBufferOutputDevice() {
+  Tau_util_outputDevice *out = (Tau_util_outputDevice*) malloc (sizeof(Tau_util_outputDevice));
+  if (out == NULL) {
+    return NULL;
+  }
+  out->type = TAU_UTIL_OUTPUT_BUFFER;
+  out->bufidx = 0;
+  out->buflen = TAU_UTIL_INITIAL_BUFFER;
+  out->buffer = (char *) malloc (out->buflen);
+  return out;
+}
+
+/*********************************************************************
+ * Return output buffer
+ ********************************************************************/
+char *Tau_util_getOutputBuffer(Tau_util_outputDevice *out) {
+  return out->buffer;
+}
+
+/*********************************************************************
+ * Return output buffer length
+ ********************************************************************/
+int Tau_util_getOutputBufferLength(Tau_util_outputDevice *out) {
+  return out->bufidx;
+}
+
 /*********************************************************************
  * Write to output device
  ********************************************************************/

@@ -35,9 +35,14 @@ typedef struct Tau_util_outputDevice_ {
 #define TAU_UTIL_INITIAL_BUFFER 5000000
 #define TAU_UTIL_OUTPUT_THRESHOLD 100000
 
+Tau_util_outputDevice *Tau_util_createBufferOutputDevice();
+char *Tau_util_getOutputBuffer(Tau_util_outputDevice *out);
+int Tau_util_getOutputBufferLength(Tau_util_outputDevice *out);
 int Tau_util_output(Tau_util_outputDevice *out, const char *format, ...);
 int Tau_util_readFullLine(char *line, FILE *fp);
 char *Tau_util_removeRuns(char *str);
+
+void TAU_ABORT(const char *format, ...);
 
 
 /* The following macros help create a local array and assign to elements of 
