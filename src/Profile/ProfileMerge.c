@@ -27,11 +27,12 @@
 #include <Profile/TauEnv.h>
 #include <Profile/TauSnapshot.h>
 #include <Profile/TauMetrics.h>
+#include <Profile/TauUnify.h>
 
 int TAUDECL Tau_RtsLayer_myThread();
 
 int Tau_mergeProfiles() {
-  int rank, size, tid, i, buflen, trash = 0;
+  int rank, size, tid, i, buflen;
   FILE *f;
   char *buf;
   MPI_Status status;
@@ -46,6 +47,10 @@ int Tau_mergeProfiles() {
     return 0;
   }
 
+#ifdef TAU_EXP_UNIFY
+  Tau_unify_unifyDefinitions();
+#endif
+
   
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -53,8 +58,13 @@ int Tau_mergeProfiles() {
   buf = Tau_snapshot_getBuffer();
   buflen = Tau_snapshot_getBufferLength();
 
+  int maxBuflen;
+  MPI_Reduce(&buflen, &maxBuflen, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
+
 
   if (rank == 0) {
+    char *recv_buf = (char *) malloc (maxBuflen);
+
     TAU_VERBOSE("TAU: Merging Profiles\n");
     start = TauMetrics_getInitialTimeStamp();
     
@@ -67,17 +77,16 @@ int Tau_mergeProfiles() {
 
     for (i=1; i<size; i++) {
       /* send ok-to-go */
-      PMPI_Send(&trash, 1, MPI_INT, i, 42, MPI_COMM_WORLD);
+      PMPI_Send(NULL, 0, MPI_INT, i, 0, MPI_COMM_WORLD);
       
       /* receive buffer length */
-      PMPI_Recv(&buflen, 1, MPI_INT, i, 42, MPI_COMM_WORLD, &status);
-      buf = (char*) malloc (buflen);
+      PMPI_Recv(&buflen, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
 
       /* receive buffer */
-      PMPI_Recv(buf, buflen, MPI_CHAR, i, 42, MPI_COMM_WORLD, &status);
-      fwrite (buf, buflen, 1, f);
-      free (buf);
+      PMPI_Recv(recv_buf, buflen, MPI_CHAR, i, 0, MPI_COMM_WORLD, &status);
+      fwrite (recv_buf, buflen, 1, f);
     }
+    free (recv_buf);
 
     end = TauMetrics_getInitialTimeStamp();
     TAU_VERBOSE("TAU: Merging Profiles Complete, duration = %.4G seconds\n", ((double)(end-start))/1000000.0f);
@@ -95,13 +104,13 @@ int Tau_mergeProfiles() {
   } else {
 
     /* recieve ok to go */
-    PMPI_Recv(&trash, 1, MPI_INT, 0, 42, MPI_COMM_WORLD, &status);
+    PMPI_Recv(NULL, 0, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
 
     /* send length */
-    PMPI_Send(&buflen, 1, MPI_INT, 0, 42, MPI_COMM_WORLD);
+    PMPI_Send(&buflen, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
 
     /* send data */
-    PMPI_Send(buf, buflen, MPI_CHAR, 0, 42, MPI_COMM_WORLD);
+    PMPI_Send(buf, buflen, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
   }
   return 0;
 }
