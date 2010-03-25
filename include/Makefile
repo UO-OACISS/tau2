@@ -522,7 +522,7 @@ TAU_GCCLIB	= -lgcc_s
 #IBM_FORTRAN#TAU_FORLIBDIR=lib #ENDIF#
 #BGL#TAU_FORLIBDIR=blrts_dev_lib #ENDIF#
 #BGP#TAU_FORLIBDIR=bglib #ENDIF#
-#PPC64#TAU_FORTRANLIBS = -L$(EXTRADIR)/$(TAU_FORLIBDIR) -lxlf90 -lxlfmath -lxl #ENDIF#
+#PPC64XLF#TAU_FORTRANLIBS = -L$(EXTRADIR)/$(TAU_FORLIBDIR) -lxlf90 -lxlfmath -lxl #ENDIF#
 #BGL#TAU_FORTRANLIBS = -L$(EXTRADIR)/$(TAU_FORLIBDIR) -L$(EXTRADIR)/blrts_lib -lxlf90 -lxlfmath -lxl #ENDIF#
 
 #BGP#TAU_BGL_OMP_SERIAL= -lxlomp_ser #ENDIF#
@@ -614,7 +614,7 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #SUNCC#TAU_CXXLIBS   = $(TAU_CXXLIBS_SUNCC) #ENDIF#
 #SUNX86_64#TAU_CXXLIBS   = $(TAU_CXXLIBS_SUN_OPTERON) #ENDIF#
 #FUJITSU_SOLARIS#TAU_CXXLIBS               = -lstd -lstdm #ENDIF#
-#PPC64#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
+#PPC64XLC#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
 #IBMXLCAPPLE#TAU_FORLIBDIR =lib       #ENDIF#
 #IBMXLCAPPLE#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
 #BGL#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/blrts_dev_lib -L$(EXTRADIRCXX)/blrts_lib -libmc++ -L/bgl/BlueLight/ppcfloor/blrts-gnu/powerpc-bgl-blrts-gnu/lib -lstdc++      #ENDIF#

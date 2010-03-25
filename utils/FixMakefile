@@ -1369,6 +1369,14 @@ case $1 in
 	echo "NOTE: IBM 64 bit f90 compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     PPC64XLF)
+        echo "NOTE: IBM xlf90 compiler for Linux options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     PPC64XLC)
+        echo "NOTE: IBM xlc compiler for Linux options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      THREADSAFE_COMPILERS)
 	echo "NOTE: Using xlf90_r instead of xlf90 IBM compiler"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

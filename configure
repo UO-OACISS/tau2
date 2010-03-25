@@ -3364,6 +3364,12 @@ case $machine in
 	if [ $papi = yes ] ; then
 	    fixmakeargs="$fixmakeargs PPC64PAPI"
 	fi
+	if [ $c_compiler = xlc ] ; then
+	    fixmakeargs="$fixmakeargs PPC64XLC"
+	fi
+	if [ $fortran_compiler = ibm -o $fortran_compiler = ibm64 ] ; then
+	    fixmakeargs="$fixmakeargs PPC64XLF"
+	fi
         ;; 
 
      bgp)
