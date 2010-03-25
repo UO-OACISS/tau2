@@ -81,7 +81,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/TauTrace.h     $(INCDIR)/TauSilc.h          \
 		$(TAUROOT)/include/tau_internal.h $(INCDIR)/TauSampling.h \
 		$(INCDIR)/TauSnapshot.h  $(INCDIR)/TauGASP.h          \
-	 	$(INCDIR)/TauUtil.h $(INCDIR)/TauXML.h
+	 	$(INCDIR)/TauUtil.h $(INCDIR)/TauXML.h $(INCDIR)/TauUnify.h
 
 LDFLAGS	      =
 
@@ -102,7 +102,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
 		TauHooks.o TauHandler.o TauMemory.o TauMetaData.o TauEnv.o \
 		TauInit.o Comp_intel9.o Comp_pgi.o Comp_xl.o TauCallPath.o \
-                TauXML.o TauUtil.o TauSnapshot.o \
+                TauXML.o TauUtil.o TauSnapshot.o TauUnify.o \
 		$(PARAM_O) Tracer.o TauMetrics.o TauReadMetrics.o $(THR_O) \
 		$(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) TauSampling.o \
@@ -438,6 +438,12 @@ TauXML.o 	: TauXML.cpp $(HDRS)
 
 TauUtil.o 	: TauUtil.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauSnapshot.o 	: TauSnapshot.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauUnify.o 	: TauUnify.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
 
 TauSampling.o 	: TauSampling.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
