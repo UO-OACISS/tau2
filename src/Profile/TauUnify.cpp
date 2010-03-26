@@ -19,6 +19,7 @@
 // int *local_id_map;
 // int *
 
+#ifdef TAU_MPI
 
 #include <TauUtil.h>
 #include <TauMetrics.h>
@@ -134,4 +135,4 @@ extern "C" int Tau_unify_unifyDefinitions() {
 
 
 
-
+#endif /* TAU_MPI */
