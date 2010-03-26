@@ -11,7 +11,7 @@ Add to .cshrc file:
 setenv DYNINST_ROOT <dyninst-dir>/dyninstAPI
 setenv PLATFORM    i386-unknown-linux2.4
 setenv DYNINSTAPI_RT_LIB $DYNINST_ROOT/$PLATFORM/lib/libdyninstAPI_RT.so.1
-setenv LD_LIBRARY_PATH <tau-root>/i386_linux/lib\:$DYNINST_ROOT/lib/$PLATFORM
+setenv LD_LIBRARY_PATH <tau-root>/i386_linux/lib\:$DYNINST_ROOT/$PLATFORM/lib
 
 % source ~/.cshrc
 
