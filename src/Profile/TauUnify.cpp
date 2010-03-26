@@ -68,47 +68,65 @@ extern "C" int Tau_unify_unifyDefinitions() {
 
   TAU_VERBOSE("UNIFY: [%d] - My def buf size = %d\n", rank, defBufSize);
 
+  // determine maximum buffer size
   int maxDefBufSize;
-  PMPI_Reduce(&defBufSize, &maxDefBufSize, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
+  PMPI_Allreduce(&defBufSize, &maxDefBufSize, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+  
+  // allocate receive buffer
+  char *recv_buf = (char *) malloc (maxDefBufSize);
+  if (recv_buf == NULL) {
+    TAU_ABORT("TAU: Abort: Unable to allocate recieve buffer for unification\n");
+  }
 
+  // use binomial heap algorithm (like MPI_Reduce)
+  int mask = 0x1;
+
+  while (mask < numRanks) {
+    if ((mask & rank) == 0) {
+      int source = (rank | mask);
+      if (source < numRanks) {
+	
+	/* send ok-to-go */
+	PMPI_Send(NULL, 0, MPI_INT, source, 0, MPI_COMM_WORLD);
+	
+	/* receive buffer length */
+	int recv_buflen;
+	PMPI_Recv(&recv_buflen, 1, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
+	
+	/* receive buffer */
+	PMPI_Recv(recv_buf, recv_buflen, MPI_CHAR, source, 0, MPI_COMM_WORLD, &status);
+
+	printf ("[%d] received from %d\n", rank, source);
+
+	/* Do something with the data <HERE> */
+      }
+
+    } else {
+      /* I've received all that I'm going to.  Send my result to my parent */
+      int target = (rank & (~ mask));
+
+      /* recieve ok to go */
+      PMPI_Recv(NULL, 0, MPI_INT, target, 0, MPI_COMM_WORLD, &status);
+      
+      /* send length */
+      PMPI_Send(&defBufSize, 1, MPI_INT, target, 0, MPI_COMM_WORLD);
+      
+      /* send data */
+      PMPI_Send(defBuf, defBufSize, MPI_CHAR, target, 0, MPI_COMM_WORLD);
+
+      printf ("[%d] sent to %d\n", rank, target);
+      break;
+    }
+    mask <<= 1;
+  }
+
+
+
+  free (recv_buf);
 
   if (rank == 0) {
-    TAU_VERBOSE("UNIFY: Maximum def buf size = %d\n", maxDefBufSize);
-    char *recv_buf = (char *) malloc (maxDefBufSize);
-    if (recv_buf == NULL) {
-      TAU_ABORT("TAU: Abort: Unable to allocate recieve buffer for unification\n");
-    }
-    int recv_buflen;
-
-    for (i=1; i<numRanks; i++) {
-      /* send ok-to-go */
-      PMPI_Send(NULL, 0, MPI_INT, i, 0, MPI_COMM_WORLD);
-      
-      /* receive buffer length */
-      PMPI_Recv(&recv_buflen, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
-
-      /* receive buffer */
-      PMPI_Recv(recv_buf, recv_buflen, MPI_CHAR, i, 0, MPI_COMM_WORLD, &status);
-    }
-
-    /* Do something with the data */
-
-    free (recv_buf);
     end = TauMetrics_getInitialTimeStamp();
     TAU_VERBOSE("TAU: Unifying Complete, duration = %.4G seconds\n", ((double)(end-start))/1000000.0f);
-  } else {
-
-    /* recieve ok to go */
-    PMPI_Recv(NULL, 0, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
-
-    /* send length */
-    PMPI_Send(&defBufSize, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-
-    /* send data */
-    PMPI_Send(defBuf, defBufSize, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
-
-    /* Get back a mapping table... */
-
   }
 
   return 0;
