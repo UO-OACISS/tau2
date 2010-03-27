@@ -26,7 +26,29 @@
 #include <Profiler.h>
 #include <mpi.h>
 
+
+typedef struct {
+  char *strings;
+  int *mapping;
+} unify_object;
+
+
+int *sortMap;
+
+
+static int comparator(const void *p1, const void *p2) {
+  int arg0 = *(int*)p1;
+  int arg1 = *(int*)p2;
+  return strcmp(TheFunctionDB()[arg0]->GetName(),TheFunctionDB()[arg1]->GetName());
+}
+
+
 Tau_util_outputDevice *Tau_unify_generateLocalDefinitionBuffer() {
+  int rank, numRanks, i;
+  MPI_Status status;
+
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
 
   Tau_util_outputDevice *out = Tau_util_createBufferOutputDevice();
   if (out == NULL) {
@@ -34,11 +56,24 @@ Tau_util_outputDevice *Tau_unify_generateLocalDefinitionBuffer() {
   }
 
   int numFuncs = TheFunctionDB().size();
+  sortMap = (int*) malloc(numFuncs*sizeof(int));
+  if (sortMap == NULL) {
+    TAU_ABORT("TAU: Abort: Unable to allocate memory\n");
+  }
+  for (int i=0; i<numFuncs; i++) {
+    sortMap[i] = i;
+  }
+
+  qsort(sortMap, numFuncs, sizeof(int), comparator);
+
+  for (int i=0; i<numFuncs; i++) {
+    printf ("[%d] sortMap[%d] = %d (%s)\n", rank, i, sortMap[i], TheFunctionDB()[sortMap[i]]->GetName());
+  }
 
   Tau_util_output(out,"%d\n", numFuncs);
   for(int i=0;i<numFuncs;i++) {
-    FunctionInfo *fi = TheFunctionDB()[i];
-    Tau_util_output(out,"%d %s\n", i, fi->GetName());
+    FunctionInfo *fi = TheFunctionDB()[sortMap[i]];
+    Tau_util_output(out,"%s\n", fi->GetName());
   }
 
   return out;
@@ -120,6 +155,9 @@ extern "C" int Tau_unify_unifyDefinitions() {
     }
     mask <<= 1;
   }
+
+
+
 
 
 
