@@ -37,6 +37,8 @@ int Tau_mergeProfiles() {
   char *buf;
   MPI_Status status;
   x_uint64 start, end;
+  const char *profiledir = TauEnv_get_profiledir();
+
 
   Tau_snapshot_writeToBuffer("merge");
 
@@ -67,8 +69,12 @@ int Tau_mergeProfiles() {
 
     TAU_VERBOSE("TAU: Merging Profiles\n");
     start = TauMetrics_getInitialTimeStamp();
-    
-    if ((f = fopen ("tauprofile.xml", "w+")) == NULL) {
+
+
+    char filename[4096];
+    sprintf (filename,"%s/tauprofile.xml", profiledir);
+
+    if ((f = fopen (filename, "w+")) == NULL) {
       char errormsg[4096];
       sprintf(errormsg,"Error: Could not create tauprofile.xml");
       perror(errormsg);
