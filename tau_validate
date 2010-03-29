@@ -78,6 +78,27 @@ def raise_timeout(signum, frame):
     raise TimeoutError
 
 def system(command, timeout_sec=None):
+    if timeout_sec is None:
+        # use the old method, the new one below sometimes hangs forever
+        if verbose == True:
+            if html == True:
+                print "<b>" + os.getcwd() + "> " + command + "</b>"
+            else:
+                print os.getcwd() + "> " + command
+            sys.stdout.flush()
+            child = popen2.Popen4(command)
+            data = child.fromchild.readlines()
+            for line in data:
+                print line
+            retval = child.wait()
+            return retval
+        else:
+            child = popen2.Popen4(command)
+            data = child.fromchild.readlines()
+            retval = child.wait()
+            return retval
+        
+
     if verbose == True:
         if html == True:
             print "<b>" + os.getcwd() + "> " + command + "</b>"
@@ -110,6 +131,7 @@ def system(command, timeout_sec=None):
        for line in data:
           print line
     return retval
+
 
 def chdir(directory):
     if verbose == True:
