@@ -68,7 +68,7 @@ int Tau_mergeProfiles() {
     char *recv_buf = (char *) malloc (maxBuflen);
 
     TAU_VERBOSE("TAU: Merging Profiles\n");
-    start = TauMetrics_getInitialTimeStamp();
+    start = TauMetrics_getTimeOfDay();
 
 
     char filename[4096];
@@ -94,7 +94,7 @@ int Tau_mergeProfiles() {
     }
     free (recv_buf);
 
-    end = TauMetrics_getInitialTimeStamp();
+    end = TauMetrics_getTimeOfDay();
     TAU_VERBOSE("TAU: Merging Profiles Complete, duration = %.4G seconds\n", ((double)(end-start))/1000000.0f);
 
     char tmpstr[256];
