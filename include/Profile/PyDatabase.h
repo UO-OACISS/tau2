@@ -11,6 +11,9 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyDatabase.h,v $
+// Revision 1.5  2010/03/30 23:03:22  amorris
+// Missed one file in committing python dbMergeDump.
+//
 // Revision 1.4  2008/10/24 22:48:46  sameer
 // Added pytau.exit(msg) binding.
 //
@@ -62,6 +65,11 @@ extern char pytau_dbDump__doc__[];
 extern "C"
 PyObject * pytau_dbDump(PyObject *, PyObject *);
 
+extern char pytau_dbMergeDump__name__[];
+extern char pytau_dbMergeDump__doc__[];
+extern "C"
+PyObject * pytau_dbMergeDump(PyObject *, PyObject *);
+
 extern char pytau_dbDumpIncr__name__[];
 extern char pytau_dbDumpIncr__doc__[];
 extern "C"
@@ -110,6 +118,6 @@ PyObject * pytau_setNode(PyObject *, PyObject *);
 #endif // pytau_database_h
 
 // version
-// $Id: PyDatabase.h,v 1.4 2008/10/24 22:48:46 sameer Exp $
+// $Id: PyDatabase.h,v 1.5 2010/03/30 23:03:22 amorris Exp $
 
 // End of file

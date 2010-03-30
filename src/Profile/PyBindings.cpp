@@ -11,6 +11,9 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyBindings.cpp,v $
+// Revision 1.7  2010/03/30 23:02:10  amorris
+// Missed one file in committing python dbMergeDump.
+//
 // Revision 1.6  2008/10/24 22:48:18  sameer
 // Added a pytau.exit("message") binding for TAU_PROFILE_EXIT(msg).
 //
@@ -66,6 +69,7 @@ struct PyMethodDef pytau_methods[] = {
 
     {pytau_snapshot__name__, pytau_snapshot, METH_VARARGS, pytau_snapshot__doc__},
     {pytau_exit__name__, pytau_exit, METH_VARARGS, pytau_exit__doc__},
+    {pytau_dbMergeDump__name__, pytau_dbMergeDump, METH_VARARGS, pytau_dbMergeDump__doc__},
     {pytau_dbDump__name__, pytau_dbDump, METH_VARARGS, pytau_dbDump__doc__},
     {pytau_dbDumpIncr__name__, pytau_dbDumpIncr, METH_VARARGS, pytau_dbDumpIncr__doc__},
     {pytau_dbPurge__name__, pytau_dbPurge, METH_VARARGS, pytau_dbPurge__doc__},
@@ -111,6 +115,6 @@ struct PyMethodDef pytau_methods[] = {
 };
 
 // version
-// $Id: PyBindings.cpp,v 1.6 2008/10/24 22:48:18 sameer Exp $
+// $Id: PyBindings.cpp,v 1.7 2010/03/30 23:02:10 amorris Exp $
 
 // End of file
