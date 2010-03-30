@@ -2492,10 +2492,10 @@ case $cxx_compiler in
       intel=yes
       if [ $fortran_compiler = no ]
       then
-        fixmakeargs="$fixmakeargs INTEL32_FORTRAN"
-        fortran_compiler=intel
         intelifort=`which ifort 2>/dev/null`
         if [ "y$intelifort" != "y"  -a -x "$intelifort" ] ; then 
+          fixmakeargs="$fixmakeargs INTEL32_FORTRAN"
+          fortran_compiler=intel
           extradir=`which ifort | sed -e 's/\/bin\/ifort$//'`
         fi
       fi
