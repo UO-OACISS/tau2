@@ -21,10 +21,10 @@
 
 #ifdef TAU_MPI
 
+#include <mpi.h>
 #include <TauUtil.h>
 #include <TauMetrics.h>
 #include <Profiler.h>
-#include <mpi.h>
 
 
 typedef struct {
@@ -33,7 +33,6 @@ typedef struct {
 } unify_object;
 
 
-int *sortMap;
 
 
 static int comparator(const void *p1, const void *p2) {
@@ -43,20 +42,32 @@ static int comparator(const void *p1, const void *p2) {
 }
 
 
-Tau_util_outputDevice *Tau_unify_generateLocalDefinitionBuffer() {
-  int rank, numRanks, i;
-  MPI_Status status;
-
-  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
+Tau_util_outputDevice *Tau_unify_generateLocalDefinitionBuffer(int *sortMap) {
+  int numFuncs = TheFunctionDB().size();
 
   Tau_util_outputDevice *out = Tau_util_createBufferOutputDevice();
   if (out == NULL) {
     TAU_ABORT("TAU: Abort: Unable to generate create buffer for local definitions\n");
   }
 
+  Tau_util_output(out,"%d\n", numFuncs);
+  for(int i=0;i<numFuncs;i++) {
+    FunctionInfo *fi = TheFunctionDB()[sortMap[i]];
+    Tau_util_output(out,"%s\n", fi->GetName());
+  }
+
+  return out;
+}
+
+int *Tau_unify_generateSortMap() {
+  int rank, numRanks, i;
+  MPI_Status status;
+
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
+
   int numFuncs = TheFunctionDB().size();
-  sortMap = (int*) malloc(numFuncs*sizeof(int));
+  int *sortMap = (int*) malloc(numFuncs*sizeof(int));
   if (sortMap == NULL) {
     TAU_ABORT("TAU: Abort: Unable to allocate memory\n");
   }
@@ -69,14 +80,7 @@ Tau_util_outputDevice *Tau_unify_generateLocalDefinitionBuffer() {
   for (int i=0; i<numFuncs; i++) {
     printf ("[%d] sortMap[%d] = %d (%s)\n", rank, i, sortMap[i], TheFunctionDB()[sortMap[i]]->GetName());
   }
-
-  Tau_util_output(out,"%d\n", numFuncs);
-  for(int i=0;i<numFuncs;i++) {
-    FunctionInfo *fi = TheFunctionDB()[sortMap[i]];
-    Tau_util_output(out,"%s\n", fi->GetName());
-  }
-
-  return out;
+  return sortMap;
 }
 
 
@@ -90,11 +94,12 @@ extern "C" int Tau_unify_unifyDefinitions() {
 
   if (rank == 0) {
     TAU_VERBOSE("TAU: Unifying...\n");
-    start = TauMetrics_getInitialTimeStamp();
+    start = TauMetrics_getTimeOfDay();
   }
 
+  int *sortMap = Tau_unify_generateSortMap();
+  Tau_util_outputDevice *out = Tau_unify_generateLocalDefinitionBuffer(sortMap);
 
-  Tau_util_outputDevice *out = Tau_unify_generateLocalDefinitionBuffer();
   if (!out) {
     TAU_ABORT("TAU: Abort: Unable to generate local definitions\n");
   }
@@ -157,14 +162,10 @@ extern "C" int Tau_unify_unifyDefinitions() {
   }
 
 
-
-
-
-
   free (recv_buf);
 
   if (rank == 0) {
-    end = TauMetrics_getInitialTimeStamp();
+    end = TauMetrics_getTimeOfDay();
     TAU_VERBOSE("TAU: Unifying Complete, duration = %.4G seconds\n", ((double)(end-start))/1000000.0f);
   }
 
