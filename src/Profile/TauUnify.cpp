@@ -30,6 +30,7 @@ typedef struct {
   char **strings;
   int *mapping;
   int idx;
+  int rank;
 } unify_object_t;
 
 typedef struct {
@@ -51,9 +52,6 @@ Tau_util_outputDevice *Tau_unify_generateLocalDefinitionBuffer(int *sortMap) {
   int numFuncs = TheFunctionDB().size();
 
   Tau_util_outputDevice *out = Tau_util_createBufferOutputDevice();
-  if (out == NULL) {
-    TAU_ABORT("TAU: Abort: Unable to generate create buffer for local definitions\n");
-  }
 
   Tau_util_output(out,"%d%c", numFuncs, '\0');
   for(int i=0;i<numFuncs;i++) {
@@ -72,10 +70,8 @@ int *Tau_unify_generateSortMap() {
   PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
 
   int numFuncs = TheFunctionDB().size();
-  int *sortMap = (int*) malloc(numFuncs*sizeof(int));
-  if (sortMap == NULL) {
-    TAU_ABORT("TAU: Abort: Unable to allocate memory\n");
-  }
+  int *sortMap = (int*) TAU_UTIL_MALLOC(numFuncs*sizeof(int));
+
   for (int i=0; i<numFuncs; i++) {
     sortMap[i] = i;
   }
@@ -89,10 +85,11 @@ int *Tau_unify_generateSortMap() {
 }
 
 
-unify_object_t *Tau_unify_processBuffer(char *buffer) {
+unify_object_t *Tau_unify_processBuffer(char *buffer, int rank) {
   // create the unification object
   unify_object_t *unifyObject = (unify_object_t*) malloc (sizeof(unify_object_t));
   unifyObject->buffer = buffer;
+  unifyObject->rank = rank;
 
   int numFuncs;
   sscanf(buffer,"%d", &numFuncs);
@@ -108,6 +105,9 @@ unify_object_t *Tau_unify_processBuffer(char *buffer) {
   unifyObject->numFuncs = numFuncs;
   unifyObject->strings = strings;
   unifyObject->mapping = (int*) malloc (sizeof(int)*numFuncs);
+  for (int i=0; i<numFuncs; i++) {
+    unifyObject->mapping[i] = i;
+  }
   return unifyObject;
 }
 
@@ -115,9 +115,6 @@ Tau_util_outputDevice *Tau_unify_generateMergedDefinitionBuffer(unify_merge_obje
   int numFuncs = TheFunctionDB().size();
 
   Tau_util_outputDevice *out = Tau_util_createBufferOutputDevice();
-  if (out == NULL) {
-    TAU_ABORT("TAU: Abort: Unable to generate create buffer for local definitions\n");
-  }
 
   Tau_util_output(out,"%d%c", mergedObject.strings.size(), '\0');
   for(int i=0;i<mergedObject.strings.size();i++) {
@@ -129,8 +126,7 @@ Tau_util_outputDevice *Tau_unify_generateMergedDefinitionBuffer(unify_merge_obje
 
 
 unify_merge_object_t *Tau_unify_mergeObjects(vector<unify_object_t*> &objects) {
-  unify_merge_object_t *mergedObject = (unify_merge_object_t*) malloc (sizeof(unify_merge_object_t));
-
+  unify_merge_object_t *mergedObject = new unify_merge_object_t();
 
   for (int i=0; i<objects.size(); i++) {
     // reset index pointers to start
@@ -163,7 +159,6 @@ unify_merge_object_t *Tau_unify_mergeObjects(vector<unify_object_t*> &objects) {
  
     // the next string is given in nextString at this point
     mergedObject->strings.push_back(nextString);
-    count++;
 
     finished = true;
 
@@ -180,15 +175,23 @@ unify_merge_object_t *Tau_unify_mergeObjects(vector<unify_object_t*> &objects) {
 	}
       }
     }
+
+    count++;
+    
   }
 
+  mergedObject->numStrings = count;
 
-  for (int i=0; i<mergedObject->strings.size(); i++) {
-    printf ("mergedObject->strings[%d] = %s\n", i, mergedObject->strings[i]);
-  }
+  // for (int i=0; i<mergedObject->strings.size(); i++) {
+  //   printf ("mergedObject->strings[%d] = %s\n", i, mergedObject->strings[i]);
+  // }
 
   return mergedObject;
 }
+
+
+
+
 
 extern "C" int Tau_unify_unifyDefinitions() {
   int rank, numRanks, i;
@@ -204,36 +207,25 @@ extern "C" int Tau_unify_unifyDefinitions() {
   }
 
   int *sortMap = Tau_unify_generateSortMap();
-  Tau_util_outputDevice *out = Tau_unify_generateLocalDefinitionBuffer(sortMap);
-
-  if (!out) {
-    TAU_ABORT("TAU: Abort: Unable to generate local definitions\n");
-  }
-
-  char *defBuf = Tau_util_getOutputBuffer(out);
-  int defBufSize = Tau_util_getOutputBufferLength(out);
-
-  TAU_VERBOSE("UNIFY: [%d] - My def buf size = %d\n", rank, defBufSize);
-
-  // determine maximum buffer size
-  // int maxDefBufSize;
-  // PMPI_Allreduce(&defBufSize, &maxDefBufSize, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
-  
-  // allocate receive buffer
-  // char *recv_buf = (char *) malloc (maxDefBufSize);
-  // if (recv_buf == NULL) {
-  //   TAU_ABORT("TAU: Abort: Unable to allocate recieve buffer for unification\n");
-  // }
-
-  // use binomial heap algorithm (like MPI_Reduce)
-  int mask = 0x1;
 
 
   // array of unifcation objects
-  vector<unify_object_t*> unifyObjects;
+  vector<unify_object_t*> *unifyObjects = new vector<unify_object_t*>();
+
+
+  unify_merge_object_t *mergedObject = NULL;
+
+
+  Tau_util_outputDevice *out = Tau_unify_generateLocalDefinitionBuffer(sortMap);
 
   // add ourselves
-  unifyObjects.push_back(Tau_unify_processBuffer(defBuf));
+  char *defBuf = Tau_util_getOutputBuffer(out);
+  int defBufSize = Tau_util_getOutputBufferLength(out);
+  unifyObjects->push_back(Tau_unify_processBuffer(defBuf, -1));
+
+  // use binomial heap algorithm (like MPI_Reduce)
+  int mask = 0x1;
+  int parent = -1;
 
   while (mask < numRanks) {
     if ((mask & rank) == 0) {
@@ -248,63 +240,95 @@ extern "C" int Tau_unify_unifyDefinitions() {
 	PMPI_Recv(&recv_buflen, 1, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
 
 	// allocate buffer
-	char *recv_buf = (char *) malloc (recv_buflen);
-	if (recv_buf == NULL) {
-	  TAU_ABORT("TAU: Abort: Unable to allocate recieve buffer for unification\n");
-	}
+	char *recv_buf = (char *) TAU_UTIL_MALLOC(recv_buflen);
 
 	/* receive buffer */
 	PMPI_Recv(recv_buf, recv_buflen, MPI_CHAR, source, 0, MPI_COMM_WORLD, &status);
 
-	printf ("[%d] received from %d\n", rank, source);
+	// printf ("[%d] received from %d\n", rank, source);
 
 	/* add unification object to array */
-	unifyObjects.push_back(Tau_unify_processBuffer(recv_buf));
+	unifyObjects->push_back(Tau_unify_processBuffer(recv_buf, source));
       }
 
     } else {
       /* I've received from all my children, now process and send the results up. */
 
-      if (unifyObjects.size() > 1) {
+      if (unifyObjects->size() > 1) {
 	// merge children
-	unify_merge_object_t *mergedObject = Tau_unify_mergeObjects(unifyObjects);
+	mergedObject = Tau_unify_mergeObjects(*unifyObjects);
 	
 	// generate buffer to send to parent
-
 	Tau_util_outputDevice *out = Tau_unify_generateMergedDefinitionBuffer(*mergedObject);
-	
 	defBuf = Tau_util_getOutputBuffer(out);
 	defBufSize = Tau_util_getOutputBufferLength(out);
       }
 
-      int target = (rank & (~ mask));
+      parent = (rank & (~ mask));
 
       /* recieve ok to go */
-      PMPI_Recv(NULL, 0, MPI_INT, target, 0, MPI_COMM_WORLD, &status);
+      PMPI_Recv(NULL, 0, MPI_INT, parent, 0, MPI_COMM_WORLD, &status);
       
       /* send length */
-      PMPI_Send(&defBufSize, 1, MPI_INT, target, 0, MPI_COMM_WORLD);
+      PMPI_Send(&defBufSize, 1, MPI_INT, parent, 0, MPI_COMM_WORLD);
       
       /* send data */
-      PMPI_Send(defBuf, defBufSize, MPI_CHAR, target, 0, MPI_COMM_WORLD);
+      PMPI_Send(defBuf, defBufSize, MPI_CHAR, parent, 0, MPI_COMM_WORLD);
 
-      printf ("[%d] sent to %d\n", rank, target);
+      // printf ("[%d] sent to %d\n", rank, parent);
       break;
     }
     mask <<= 1;
   }
 
+
   if (rank == 0) {
     // rank 0 will now put together the final event id map
-    unify_merge_object_t *mergedObject = Tau_unify_mergeObjects(unifyObjects);
+    mergedObject = Tau_unify_mergeObjects(*unifyObjects);
   }
 
+  if (mergedObject == NULL) {
+    // leaf functions allocate a phony merged object to use below
+    int numFuncs = TheFunctionDB().size();
+    mergedObject = new unify_merge_object_t();
+    mergedObject->numStrings = numFuncs;
+  }
 
-  // free (recv_buf);
+  // receive back table from parent
+  if (parent != -1) {
+    // printf ("allocating %d items\n", mergedObject->numStrings);
+    mergedObject->mapping = (int *) TAU_UTIL_MALLOC(sizeof(int)* mergedObject->numStrings);
+    
+    // printf ("Receiving from %d\n", parent);
+    PMPI_Recv(mergedObject->mapping, mergedObject->numStrings, MPI_INT, parent, 0, MPI_COMM_WORLD, &status);
+
+    // apply mapping table to children
+    for (int i=0; i<unifyObjects->size(); i++) {
+      for (int j=0; j<(*unifyObjects)[i]->numFuncs; j++) {
+	(*unifyObjects)[i]->mapping[j] = mergedObject->mapping[(*unifyObjects)[i]->mapping[j]];
+      }
+    }
+  }
+
+  // send tables to children
+  for (int i=1; i<unifyObjects->size(); i++) {
+    // printf ("Sending to %d\n", (*unifyObjects)[i]->rank);
+    PMPI_Send((*unifyObjects)[i]->mapping, (*unifyObjects)[i]->numFuncs, MPI_INT, (*unifyObjects)[i]->rank, 0, MPI_COMM_WORLD);
+  }
+
+  if (rank == 0) {
+    unify_object_t *object = (*unifyObjects)[0];
+    for (int i=0; i<object->numFuncs; i++) {
+      printf ("[rank %d] = Entry %d maps to [%d] is %s\n", rank, i, object->mapping[i], object->strings[i]);
+    }
+  }
 
   if (rank == 0) {
     end = TauMetrics_getTimeOfDay();
     TAU_VERBOSE("TAU: Unifying Complete, duration = %.4G seconds\n", ((double)(end-start))/1000000.0f);
+    char tmpstr[256];
+    sprintf(tmpstr, "%.4G seconds", ((double)(end-start))/1000000.0f);
+    TAU_METADATA("TAU Unification Time", tmpstr);
   }
 
   return 0;
