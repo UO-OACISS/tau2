@@ -38,7 +38,7 @@ void TAU_ABORT(const char *format, ...) {
  * Create an buffer output device
  ********************************************************************/
 Tau_util_outputDevice *Tau_util_createBufferOutputDevice() {
-  Tau_util_outputDevice *out = (Tau_util_outputDevice*) malloc (sizeof(Tau_util_outputDevice));
+  Tau_util_outputDevice *out = (Tau_util_outputDevice*) TAU_UTIL_MALLOC (sizeof(Tau_util_outputDevice));
   if (out == NULL) {
     return NULL;
   }
@@ -132,3 +132,13 @@ char *Tau_util_removeRuns(char *str) {
   }
   return str;
 }
+
+
+void *Tau_util_malloc(size_t size, const char *file, int line) {
+  void *ptr = malloc (size);
+  if (!ptr) {
+    TAU_ABORT("TAU: Abort: Unable to allocation memory at %s:%d\n", file, line);
+  }
+  return ptr;
+}
+
