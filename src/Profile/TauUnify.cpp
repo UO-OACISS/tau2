@@ -28,9 +28,10 @@
 
 
 typedef struct {
-  char *strings;
+  int numFuncs;
+  char **strings;
   int *mapping;
-} unify_object;
+} unify_object_t;
 
 
 
@@ -50,10 +51,10 @@ Tau_util_outputDevice *Tau_unify_generateLocalDefinitionBuffer(int *sortMap) {
     TAU_ABORT("TAU: Abort: Unable to generate create buffer for local definitions\n");
   }
 
-  Tau_util_output(out,"%d\n", numFuncs);
+  Tau_util_output(out,"%d%c", numFuncs, '\0');
   for(int i=0;i<numFuncs;i++) {
     FunctionInfo *fi = TheFunctionDB()[sortMap[i]];
-    Tau_util_output(out,"%s\n", fi->GetName());
+    Tau_util_output(out,"%s%c", fi->GetName(), '\0');
   }
 
   return out;
@@ -83,6 +84,33 @@ int *Tau_unify_generateSortMap() {
   return sortMap;
 }
 
+
+unify_object_t *Tau_unify_processBuffer(char *buffer) {
+  int numFuncs;
+  sscanf(buffer,"%d", &numFuncs);
+  printf ("Got %d funcs\n", numFuncs);
+  char **strings = (char **) malloc(sizeof(char*) * numFuncs);
+  buffer = strchrnul(buffer, '\0')+1;
+  for (int i=0; i<numFuncs; i++) {
+    strings[i] = buffer;
+    printf ("strings[%d] = %s (%p)\n", i, strings[i], buffer);
+    buffer = strchrnul(buffer, '\0')+1;
+  }
+  
+  // create the unification object
+  unify_object_t *unifyObject = (unify_object_t*) malloc (sizeof(unify_object_t));
+  unifyObject->numFuncs = numFuncs;
+  unifyObject->strings = strings;
+  unifyObject->mapping = (int*) malloc (sizeof(int)*numFuncs);
+  return unifyObject;
+}
+
+
+unify_object_t *Tau_unify_mergeObjects(unify_object_t *unifyObject, unify_object_t *recvObject) {
+
+
+
+}
 
 extern "C" int Tau_unify_unifyDefinitions() {
   int rank, numRanks, i;
@@ -122,6 +150,9 @@ extern "C" int Tau_unify_unifyDefinitions() {
   // use binomial heap algorithm (like MPI_Reduce)
   int mask = 0x1;
 
+
+  unify_object_t *unifyObject = Tau_unify_processBuffer(defBuf);
+
   while (mask < numRanks) {
     if ((mask & rank) == 0) {
       int source = (rank | mask);
@@ -140,6 +171,9 @@ extern "C" int Tau_unify_unifyDefinitions() {
 	printf ("[%d] received from %d\n", rank, source);
 
 	/* Do something with the data <HERE> */
+	unify_object_t *recvObject = Tau_unify_processBuffer(recv_buf);
+	
+	unify_object_t *mergedObject = Tau_unify_mergeObjects(unifyObject, recvObject);
       }
 
     } else {
