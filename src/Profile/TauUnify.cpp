@@ -20,12 +20,12 @@
 // int *
 
 #ifdef TAU_MPI
+#include <mpi.h>
 
 #include <mpi.h>
 #include <TauUtil.h>
 #include <TauMetrics.h>
 #include <Profiler.h>
-
 
 typedef struct {
   int numFuncs;
@@ -90,11 +90,11 @@ unify_object_t *Tau_unify_processBuffer(char *buffer) {
   sscanf(buffer,"%d", &numFuncs);
   printf ("Got %d funcs\n", numFuncs);
   char **strings = (char **) malloc(sizeof(char*) * numFuncs);
-  buffer = strchrnul(buffer, '\0')+1;
+  buffer = strchr(buffer, '\0')+1;
   for (int i=0; i<numFuncs; i++) {
     strings[i] = buffer;
     printf ("strings[%d] = %s (%p)\n", i, strings[i], buffer);
-    buffer = strchrnul(buffer, '\0')+1;
+    buffer = strchr(buffer, '\0')+1;
   }
   
   // create the unification object
