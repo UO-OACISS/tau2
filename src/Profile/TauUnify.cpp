@@ -31,6 +31,7 @@ typedef struct {
   int numFuncs;
   char **strings;
   int *mapping;
+  int idx;
 } unify_object_t;
 
 
@@ -106,9 +107,36 @@ unify_object_t *Tau_unify_processBuffer(char *buffer) {
 }
 
 
-unify_object_t *Tau_unify_mergeObjects(unify_object_t *unifyObject, unify_object_t *recvObject) {
+void Tau_unify_mergeObjects(vector<unify_object_t*> objects) {
+  unify_object_t *mergedObject = (unify_object_t*) malloc (sizeof(unify_object_t));
+  
+  for (int i=0; i<objects.size(); i++) {
+    objects[i]->idx = 0;
+  }
+
+  bool finished = false;
+
+  vector<char*> newStrings;
+
+  while (!finished) {
+    // merge objects
+
+    char *nextString = objects[0]->strings[objects[0]->idx];
+    int objectIndex = 0;
+    for (int i=1; i<objects.size(); i++) {
+      char * compareString = objects[i]->strings[objects[i]->idx];
+      if (strcmp(nextString, compareString) < 0) {
+	nextString = compareString;
+	objectIndex = i;
+      }
+    }
+ 
+    // The next string is given in nextString at this point
 
 
+    finished = true;
+
+  }
 
 }
 
@@ -151,7 +179,11 @@ extern "C" int Tau_unify_unifyDefinitions() {
   int mask = 0x1;
 
 
-  unify_object_t *unifyObject = Tau_unify_processBuffer(defBuf);
+  // array of unifcation objects
+  vector<unify_object_t*> unifyObjects;
+
+  // add ourselves
+  unifyObjects.push_back(Tau_unify_processBuffer(defBuf));
 
   while (mask < numRanks) {
     if ((mask & rank) == 0) {
@@ -170,14 +202,16 @@ extern "C" int Tau_unify_unifyDefinitions() {
 
 	printf ("[%d] received from %d\n", rank, source);
 
-	/* Do something with the data <HERE> */
-	unify_object_t *recvObject = Tau_unify_processBuffer(recv_buf);
-	
-	unify_object_t *mergedObject = Tau_unify_mergeObjects(unifyObject, recvObject);
+	/* add unification object to array */
+	unifyObjects.push_back(Tau_unify_processBuffer(recv_buf));
       }
 
     } else {
-      /* I've received all that I'm going to.  Send my result to my parent */
+      /* I've received from all my children, now process and send the results up. */
+
+      Tau_unify_mergeObjects(unifyObjects);
+
+
       int target = (rank & (~ mask));
 
       /* recieve ok to go */
