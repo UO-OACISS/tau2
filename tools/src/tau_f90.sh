@@ -15,7 +15,9 @@ invoke_with_tau=yes
 
 DEFAULT_MAKEFILE=
 
-if [ $# = 0 ] ; then
+
+usage()
+{
     cmd=`basename $0`
     echo ""
     echo " $cmd - Fortran compiler wrapper for TAU"
@@ -33,6 +35,11 @@ if [ $# = 0 ] ; then
     echo " % setenv TAU_OPTIONS -optVerbose -optTauSelectFile=select.tau"
     echo " % $cmd -c foo.f90"
     echo ""
+    echo " Options:"
+    echo "   -tau:help            Show this help message"
+    echo "   -tau:show            Do not invoke, just show what would be done"
+    echo "   -tau:showcompiler    Show underlying compiler"
+    echo ""
     echo "TAU_OPTIONS:"
     echo ""
     echo -e "  -optVerbose\t\t\tTurn on verbose debugging message"
@@ -46,8 +53,11 @@ if [ $# = 0 ] ; then
     echo -e "  -optCompInst\t\t\tUse compiler-based instrumentation."
     echo -e "  -optPDTInst\t\t\tUse PDT-based instrumentation."
     echo ""
-
     exit 1
+}
+
+if [ $# = 0 ] ; then
+    usage
 fi
 
 TAUARGS=
@@ -71,6 +81,27 @@ for arg in "$@" ; do
 	      TAUCOMPILER_OPTIONS=`echo $arg | sed -e 's/-tau_options=//'`
 	      options_specified=yes
 	      ;;
+	  -show)
+	      invoke_without_tau=yes
+	      invoke_with_tau=no
+	      NON_TAUARGS="$NON_TAUARGS $modarg"
+              SHOW=show
+	      ;;
+	  -tau:show)
+	      invoke_without_tau=yes
+	      invoke_with_tau=no
+	      NON_TAUARGS="$NON_TAUARGS $modarg"
+              SHOW=show
+	      ;;
+	  -tau:showcompiler)
+	      invoke_without_tau=yes
+	      invoke_with_tau=no
+	      NON_TAUARGS="$NON_TAUARGS $modarg"
+              SHOW=showcompiler
+	      ;;
+	  -tau:help)
+              usage
+              ;;
 	  -E)
 	      invoke_without_tau=yes
 	      invoke_with_tau=no
@@ -137,8 +168,12 @@ all:
 	else \
 	\$(TAU_F90) $NON_TAUARGS ; \
 	fi
+show:
+	@echo \$(TAU_F90) \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_LDFLAGS) \$(TAU_CXXLIBS)
+showcompiler:
+	@echo \$(TAU_F90)
 EOF
-make -s -f /tmp/makefile.tau.$USER.$$
+make -s -f /tmp/makefile.tau.$USER.$$ $SHOW
 /bin/rm -f /tmp/makefile.tau.$USER.$$
 fi
 
