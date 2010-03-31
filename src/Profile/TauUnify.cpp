@@ -285,6 +285,11 @@ extern "C" int Tau_unify_unifyDefinitions() {
   if (rank == 0) {
     // rank 0 will now put together the final event id map
     mergedObject = Tau_unify_mergeObjects(*unifyObjects);
+
+     for (int i=0; i<mergedObject->strings.size(); i++) {
+       printf ("mergedObject->strings[%d] = %s\n", i, mergedObject->strings[i]);
+     }
+
   }
 
   if (mergedObject == NULL) {
