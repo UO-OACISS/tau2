@@ -108,6 +108,7 @@ for arg in "$@"; do
     echo "-epiloginc=<dir> ....... Specify full path to EPILOG include directory."
     echo "-vampirtrace=<dir>  .. Specify location of VampirTrace Tracing package."
     echo "-silc=<dir>  ........................ Specify location of SILC package."
+    echo "-python .. Automatically choose python options based on Python in path."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
     echo "-tag=<unique name> ........ Specify a tag to identify the installation."
@@ -204,6 +205,7 @@ for arg in "$@"; do
     echo "-vampirtrace=<dir>  .. Specify location of VampirTrace Tracing package."
     echo "-silc=<dir>  ........................ Specify location of SILC package."
     echo "-upcnetwork=<value> .. Specify network (mpi, udp,...) for Berkeley UPC."
+    echo "-python .. Automatically choose python options based on Python in path."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
     echo "-tag=<unique name> ........ Specify a tag to identify the installation."
@@ -1036,6 +1038,22 @@ for arg in "$@"; do
         exit 1
     fi
     sddf=yes
+    shift
+    ;;
+
+  -python)
+    pythonbin=`which python | sed 's,[^/]*$,,'`
+    pythoninc=`echo ${pythonbin}../include/python*`
+    pythonlib=`echo ${pythonbin}../lib/python*`
+    if [ ! -d $pythoninc ] ; then
+	echo "Error: Cannot access Python include directory $pythoninc"
+	exit 1
+    fi
+    if [ ! -d $pythonlib ] ; then
+	echo "Error: Cannot access Python lib directory $pythonlib"
+	exit 1
+    fi
+    python=yes
     shift
     ;;
 
