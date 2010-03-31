@@ -17,6 +17,7 @@
 
 
 #ifdef TAU_MPI
+#ifdef TAU_EXP_UNIFY
 #include <mpi.h>
 
 #include <mpi.h>
@@ -340,5 +341,6 @@ extern "C" int Tau_unify_unifyDefinitions() {
 }
 
 
+#endif /* TAU_EXP_UNIFY */
 
 #endif /* TAU_MPI */
