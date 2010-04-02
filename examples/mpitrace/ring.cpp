@@ -9,10 +9,10 @@ static const int anz = 512;
 class C {
 public:
   C(int m, int p) : me(m), proc(p) {
-    TAU_PROFILE("C &C::C(int, int)", CT(*this), TAU_GROUP_RING);
+    TAU_PROFILE("C &C::C(int, int)", TAU_CT(*this), TAU_GROUP_RING);
   }
   void method() {
-    TAU_PROFILE("void C::method()", CT(*this), TAU_GROUP_RING);
+    TAU_PROFILE("void C::method()", TAU_CT(*this), TAU_GROUP_RING);
     
     int i;
     int field[anz];
