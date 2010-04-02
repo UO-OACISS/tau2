@@ -8,7 +8,7 @@
 
 static const int anz = 512;
 void C::method() {
-  TAU_PROFILE("void C::method()", CT(*this), TAU_GROUP_RING);
+  TAU_PROFILE("void C::method()", TAU_CT(*this), TAU_GROUP_RING);
 
     int i;
     int field[anz];
