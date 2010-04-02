@@ -463,7 +463,7 @@ void Tau_profile_param1l(long data, const char *dataname);
 #define TAU_PROFILE(name, type, group) 
 #define TAU_DYNAMIC_PROFILE(name, type, group) 
 #define TYPE_STRING(profileString, str)
-#define CT(obj)
+#define TAU_CT(obj)
 #endif /* __cplusplus */ 
 
 
@@ -503,7 +503,7 @@ void Tau_profile_param1l(long data, const char *dataname);
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************
- * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.108 $   $Date: 2010/03/18 17:31:13 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.108 2010/03/18 17:31:13 amorris Exp $ 
+ * $RCSfile: TauAPI.h,v $   $Author: sameer $
+ * $Revision: 1.109 $   $Date: 2010/04/02 17:13:37 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.109 2010/04/02 17:13:37 sameer Exp $ 
  ***************************************************************************/

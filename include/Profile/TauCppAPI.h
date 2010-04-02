@@ -30,9 +30,9 @@
 #define TAU_TYPE_STRING(profileString, str) static string profileString(str);
 
 #ifdef NO_RTTI
-#define CT(obj) string(" ")
+#define TAU_CT(obj) string(" ")
 #else /* RTTI is present */
-#define CT(obj) RtsLayer::GetRTTI(typeid(obj).name())
+#define TAU_CT(obj) RtsLayer::GetRTTI(typeid(obj).name())
 #endif /* NO_RTTI */
 
 class Tau_Profile_Wrapper {
