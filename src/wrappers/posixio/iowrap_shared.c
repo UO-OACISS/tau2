@@ -27,6 +27,7 @@ ssize_t write (int fd, const void *buf, size_t count) {
 
   double currentWrite = 0.0;
   struct timeval t1, t2;
+  double bw = 0.0;
 
   TAU_PROFILE_TIMER(t, "write()", " ", TAU_WRITE);
   TAU_REGISTER_CONTEXT_EVENT(wb, "WRITE Bandwidth (MB/s)");
@@ -47,7 +48,8 @@ ssize_t write (int fd, const void *buf, size_t count) {
   currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
   if (currentWrite > 1e-12) {
-    TAU_CONTEXT_EVENT(wb, (double) count/currentWrite);
+    bw = (double) count/currentWrite; 
+    TAU_CONTEXT_EVENT(wb, bw);
   }
   else {
     printf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
@@ -57,7 +59,7 @@ ssize_t write (int fd, const void *buf, size_t count) {
   TAU_PROFILE_STOP(t);
 
   TAU_entered++;
-  printf ("* TAU: write : %d bytes\n", ret);
+  printf ("* TAU: write : %d bytes, bandwidth %g \n", ret, bw);
   fflush(stdout);
   fflush(stderr);
   TAU_entered--;
@@ -125,6 +127,8 @@ int open (const char *pathname, int flags, ...) {
     _open = ( int (*)(const char *pathname, int flags, ...)) dlsym(RTLD_NEXT, "open"); 
   } 
   
+  /* if the file is being created, get the third argument for specifying the 
+     mode (e.g., 0644) */
   if (flags & O_CREAT) { 
     va_list args ;
     va_start(args, flags);
@@ -172,6 +176,50 @@ int open64 (const char *pathname, int flags, ...) {
     
   return ret; 
 } 
+
+int creat(const char *pathname, mode_t mode) {
+  static int (*_creat)(const char *pathname, mode_t mode) = NULL;
+  int ret;
+
+  Tau_create_top_level_timer_if_necessary();
+  TAU_PROFILE_TIMER(t, "creat()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  if (_creat == NULL) {
+     _creat = ( int (*)(const char *pathname, mode_t mode)) dlsym(RTLD_NEXT, "creat");
+  }
+
+  ret = _creat(pathname, mode);
+  TAU_PROFILE_STOP(t);
+  printf ("* creat called on %s\n", pathname);
+  fflush(stdout);
+  fflush(stderr);
+
+  return ret;
+}
+
+int creat64(const char *pathname, mode_t mode) {
+  static int (*_creat64)(const char *pathname, mode_t mode) = NULL;
+  int ret;
+
+  Tau_create_top_level_timer_if_necessary();
+  TAU_PROFILE_TIMER(t, "creat64()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  if (_creat64 == NULL) {
+     _creat64 = ( int (*)(const char *pathname, mode_t mode)) dlsym(RTLD_NEXT, "creat64");
+  }
+
+  ret = _creat64(pathname, mode);
+  TAU_PROFILE_STOP(t);
+  printf ("* creat64 called on %s\n", pathname);
+  fflush(stdout);
+  fflush(stderr);
+
+  return ret;
+}
+
+
 
 
 
