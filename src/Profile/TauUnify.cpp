@@ -24,6 +24,7 @@
 #include <TauUtil.h>
 #include <TauMetrics.h>
 #include <Profiler.h>
+#include <TauUnify.h>
 
 typedef struct {
   char *buffer;
@@ -42,22 +43,25 @@ typedef struct {
 
 
 
+// not the best style, but I use a global here to store the current event lister so that qsort can work
+EventLister *theEventLister;
+
+
 static int comparator(const void *p1, const void *p2) {
   int arg0 = *(int*)p1;
   int arg1 = *(int*)p2;
-  return strcmp(TheFunctionDB()[arg0]->GetName(),TheFunctionDB()[arg1]->GetName());
+  return strcmp(theEventLister->getEvent(arg0),theEventLister->getEvent(arg1));
 }
 
 
 Tau_util_outputDevice *Tau_unify_generateLocalDefinitionBuffer(int *sortMap) {
-  int numFuncs = TheFunctionDB().size();
+  int numFuncs = theEventLister->getNumEvents();
 
   Tau_util_outputDevice *out = Tau_util_createBufferOutputDevice();
 
   Tau_util_output(out,"%d%c", numFuncs, '\0');
   for(int i=0;i<numFuncs;i++) {
-    FunctionInfo *fi = TheFunctionDB()[sortMap[i]];
-    Tau_util_output(out,"%s%c", fi->GetName(), '\0');
+    Tau_util_output(out,"%s%c", theEventLister->getEvent(i), '\0');
   }
 
   return out;
@@ -70,7 +74,7 @@ int *Tau_unify_generateSortMap() {
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
 
-  int numFuncs = TheFunctionDB().size();
+  int numFuncs = theEventLister->getNumEvents();
   int *sortMap = (int*) TAU_UTIL_MALLOC(numFuncs*sizeof(int));
 
   for (int i=0; i<numFuncs; i++) {
@@ -79,9 +83,6 @@ int *Tau_unify_generateSortMap() {
 
   qsort(sortMap, numFuncs, sizeof(int), comparator);
 
-  // for (int i=0; i<numFuncs; i++) {
-  //   printf ("[%d] sortMap[%d] = %d (%s)\n", rank, i, sortMap[i], TheFunctionDB()[sortMap[i]]->GetName());
-  // }
   return sortMap;
 }
 
@@ -113,7 +114,7 @@ unify_object_t *Tau_unify_processBuffer(char *buffer, int rank) {
 }
 
 Tau_util_outputDevice *Tau_unify_generateMergedDefinitionBuffer(unify_merge_object_t &mergedObject) {
-  int numFuncs = TheFunctionDB().size();
+  int numFuncs = theEventLister->getNumEvents();
 
   Tau_util_outputDevice *out = Tau_util_createBufferOutputDevice();
 
@@ -193,8 +194,19 @@ unify_merge_object_t *Tau_unify_mergeObjects(vector<unify_object_t*> &objects) {
 
 
 
-
 extern "C" int Tau_unify_unifyDefinitions() {
+  FunctionEventLister *functionEventLister = new FunctionEventLister();
+  Tau_unify_unifyEvents(functionEventLister);
+
+  AtomicEventLister *atomicEventLister = new AtomicEventLister();
+  Tau_unify_unifyEvents(atomicEventLister);
+
+}
+
+
+
+int Tau_unify_unifyEvents(EventLister *eventLister) {
+  theEventLister = eventLister;
   int rank, numRanks, i;
   MPI_Status status;
 
@@ -287,15 +299,15 @@ extern "C" int Tau_unify_unifyDefinitions() {
     // rank 0 will now put together the final event id map
     mergedObject = Tau_unify_mergeObjects(*unifyObjects);
 
-     for (int i=0; i<mergedObject->strings.size(); i++) {
-       printf ("mergedObject->strings[%d] = %s\n", i, mergedObject->strings[i]);
-     }
+    for (int i=0; i<mergedObject->strings.size(); i++) {
+      fprintf (stderr, "mergedObject->strings[%d] = %s\n", i, mergedObject->strings[i]);
+    }
 
   }
 
   if (mergedObject == NULL) {
     // leaf functions allocate a phony merged object to use below
-    int numFuncs = TheFunctionDB().size();
+    int numFuncs = theEventLister->getNumEvents();
     mergedObject = new unify_merge_object_t();
     mergedObject->numStrings = numFuncs;
   }
@@ -325,12 +337,13 @@ extern "C" int Tau_unify_unifyDefinitions() {
   if (rank == 0) {
     unify_object_t *object = (*unifyObjects)[0];
     for (int i=0; i<object->numFuncs; i++) {
-      printf ("[rank %d] = Entry %d maps to [%d] is %s\n", rank, i, object->mapping[i], object->strings[i]);
+      fprintf (stderr, "[rank %d] = Entry %d maps to [%d] is %s\n", rank, i, object->mapping[i], object->strings[i]);
     }
   }
 
   if (rank == 0) {
     end = TauMetrics_getTimeOfDay();
+    eventLister->setDuration(((double)(end-start))/1000000.0f);
     TAU_VERBOSE("TAU: Unifying Complete, duration = %.4G seconds\n", ((double)(end-start))/1000000.0f);
     char tmpstr[256];
     sprintf(tmpstr, "%.4G seconds", ((double)(end-start))/1000000.0f);
