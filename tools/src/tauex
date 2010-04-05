@@ -122,7 +122,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tauex,v 1.18 2010/02/17 07:26:21 amorris Exp $';
+	      echo '$Id: tauex,v 1.19 2010/04/05 18:19:32 sameer Exp $';
 	      exit 0;
 	      ;;
 	  -m)
@@ -199,7 +199,9 @@ unset TAU_PROFILE
 
 new_binding_options=""
 if [ "x$binding_options" != "x" ]; then
-    echo "here we go!"
+    if [ $verbose = "true" ] ; then
+      echo "here we go!"
+    fi
     for i in $binding_options ; do
       case $i in 
 	  callpath)
