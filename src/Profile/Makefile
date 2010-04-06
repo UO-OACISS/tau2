@@ -15,7 +15,7 @@
 #**      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
 #****************************************************************************
 
-TAUROOT=
+TAUROOT=/home/amorris/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -112,8 +112,8 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o \
 STATIC_OBJS   = Comp_gnu.o $(PGIACC_STATIC_O)
 SHARED_OBJS   = $(PGIACC_O)
 #SICORTEX#SHARED_OBJS = Comp_gnu.o #ENDIF#
-#TAU_BFDSHAREDLINK#SHARED_OBJS = Comp_gnu.o #ENDIF#
-#TAU_BFDSHAREDLINK#SHARED_LIBS = $(BFDLINK) -lbfd -liberty #ENDIF#
+SHARED_OBJS = Comp_gnu.o #ENDIF##TAU_BFDSHAREDLINK#
+SHARED_LIBS = $(BFDLINK) -lbfd -liberty #ENDIF##TAU_BFDSHAREDLINK#
 
 PRINT	      = pr
 
@@ -152,9 +152,9 @@ TAU_DISABLE   = libTauDisable$(LSX)
 TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 
 ##############################################
-#MPI#MPI_WRAPPER   = libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
-#MPI#TAU_MPI_OBJS = TauMpi.o ClockSync.o ProfileMerge.o $(FWRAPPER) $(MPI2EXTENSIONS)  #ENDIF#
-#MPI#MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
+MPI_WRAPPER   = libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF##MPI#
+TAU_MPI_OBJS = TauMpi.o ClockSync.o ProfileMerge.o $(FWRAPPER) $(MPI2EXTENSIONS)  #ENDIF##MPI#
+MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF##MPI#
 ##############################################
 
 ##############################################
@@ -178,7 +178,7 @@ TAU_SHLIBX		= .so
 #APPLECXX#TAU_APPLE_SHLIBX  = .dylib		#ENDIF#
 #PYTHON#TAU_APPLE_SHLIBX    = .so		#ENDIF#
 #APPLECXX#TAU_SHLIBX    = $(TAU_APPLE_SHLIBX)	#ENDIF#
-#GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
+AR_SHFLAGS 		= -shared  	#ENDIF##GNU#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
 #APPLEPGI#AR_SHFLAGS 		= -shared #ENDIF#
@@ -252,7 +252,7 @@ TAU_SHAREDDIR = $(INSTALLDEST)/shared$(TAU_CONFIG)
 TAU_DISABLE_SHAREDDIR = $(INSTALLDEST)/shared-disable
 
 # MPI Wrappers
-#MPI#TAU_FORCE_MPI_OBJECT=TauForceMPI.o #ENDIF#
+TAU_FORCE_MPI_OBJECT=TauForceMPI.o #ENDIF##MPI#
 
 # TAU MPI Wrapper
 TAU_MPI_WRAPPER=$(TAU_MPI_OBJS)
@@ -431,7 +431,7 @@ Profiler.o 	: Profiler.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauMetaData.o 	: TauMetaData.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
 
 TauXML.o 	: TauXML.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
