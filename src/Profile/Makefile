@@ -15,7 +15,7 @@
 #**      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
 #****************************************************************************
 
-TAUROOT=/home/amorris/tau2
+TAUROOT=
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -91,6 +91,8 @@ PGIACC_O=
 #PGIACC#PGIACC_O = PgiAcc.o #ENDIF#
 #PGI#PGIACC_STATIC_O = PgiAcc.o #ENDIF#
 
+TAU_SAMPLING_O = TauSampling.o
+#CRAYXMT#TAU_SAMPLING_O= #ENDIF#
 
 #############################################
 # Python Binding OBJECTS
@@ -105,15 +107,15 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o \
                 TauXML.o TauUtil.o TauSnapshot.o TauUnify.o \
 		$(PARAM_O) Tracer.o TauMetrics.o TauReadMetrics.o $(THR_O) \
 		$(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
-		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) TauSampling.o \
+		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) $(TAU_SAMPLING_O) \
 		TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_GASPU_O)
 
 STATIC_OBJS   = Comp_gnu.o $(PGIACC_STATIC_O)
 SHARED_OBJS   = $(PGIACC_O)
 #SICORTEX#SHARED_OBJS = Comp_gnu.o #ENDIF#
-SHARED_OBJS = Comp_gnu.o #ENDIF##TAU_BFDSHAREDLINK#
-SHARED_LIBS = $(BFDLINK) -lbfd -liberty #ENDIF##TAU_BFDSHAREDLINK#
+#TAU_BFDSHAREDLINK#SHARED_OBJS = Comp_gnu.o #ENDIF#
+#TAU_BFDSHAREDLINK#SHARED_LIBS = $(BFDLINK) -lbfd -liberty #ENDIF#
 
 PRINT	      = pr
 
@@ -152,9 +154,9 @@ TAU_DISABLE   = libTauDisable$(LSX)
 TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 
 ##############################################
-MPI_WRAPPER   = libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF##MPI#
-TAU_MPI_OBJS = TauMpi.o ClockSync.o ProfileMerge.o $(FWRAPPER) $(MPI2EXTENSIONS)  #ENDIF##MPI#
-MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF##MPI#
+#MPI#MPI_WRAPPER   = libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
+#MPI#TAU_MPI_OBJS = TauMpi.o ClockSync.o ProfileMerge.o $(FWRAPPER) $(MPI2EXTENSIONS)  #ENDIF#
+#MPI#MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
 ##############################################
 
 ##############################################
@@ -178,7 +180,7 @@ TAU_SHLIBX		= .so
 #APPLECXX#TAU_APPLE_SHLIBX  = .dylib		#ENDIF#
 #PYTHON#TAU_APPLE_SHLIBX    = .so		#ENDIF#
 #APPLECXX#TAU_SHLIBX    = $(TAU_APPLE_SHLIBX)	#ENDIF#
-AR_SHFLAGS 		= -shared  	#ENDIF##GNU#
+#GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
 #APPLEPGI#AR_SHFLAGS 		= -shared #ENDIF#
@@ -205,6 +207,8 @@ TAU_SHLIB	= libTAUsh$(TAU_CONFIG)$(TAU_SHLIBX)
 #HITACHI#TAU_SHLIB	= #ENDIF#
 #HITACHI#TAU_DISABLE_SHARED	= #ENDIF#
 #CRAYX1CC#TAU_SHLIB	= #ENDIF#
+#CRAYXMT#TAU_SHLIB	= #ENDIF#
+#CRAYXMT#TAU_DISABLE_SHARED = #ENDIF#
 #CRAYX1CC#TAU_DISABLE_SHARED	= #ENDIF#
 #CRAYCC#TAU_SHLIB = #ENDIF#
 #CRAYCC#TAU_DISABLE_SHARED	= #ENDIF#
@@ -252,7 +256,7 @@ TAU_SHAREDDIR = $(INSTALLDEST)/shared$(TAU_CONFIG)
 TAU_DISABLE_SHAREDDIR = $(INSTALLDEST)/shared-disable
 
 # MPI Wrappers
-TAU_FORCE_MPI_OBJECT=TauForceMPI.o #ENDIF##MPI#
+#MPI#TAU_FORCE_MPI_OBJECT=TauForceMPI.o #ENDIF#
 
 # TAU MPI Wrapper
 TAU_MPI_WRAPPER=$(TAU_MPI_OBJS)

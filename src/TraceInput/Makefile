@@ -22,7 +22,11 @@ CXX		= $(TAU_CXX)
 
 CC		= $(TAU_CC)
 
+#CRAYXMT#CC = $(TAU_CC_FE) $(ABI) $(ISA) #ENDIF#
+#CRAYXMT#CXX = $(TAU_CXX_FE) $(ABI) $(ISA) #ENDIF#
+
 AR		= $(TAU_AR)
+#CRAYXMT#AR		= /usr/bin/ar  #ENDIF#
 
 ARFLAGS         = rcv 
 
@@ -94,22 +98,22 @@ $(INSTALLDEST)/$(LIBTARGET): $(LIBTARGET)
 $(LIBTARGET):	$(OBJS)
 	$(PRELINK_PHASE)
 	$(AR) $(ARFLAGS) $(LIBTARGET) $(OBJS) $(EXTRAOBJS)
-	$(TAU_RANLIB) $(LIBTARGET)
+	$(TAU_RANLIB_FE) $(LIBTARGET)
 
 TAU_tf.o : TAU_tf.cpp $(HDRS)
-	$(TAU_CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TAU_tf_writer.o : TAU_tf_writer.cpp $(HDRS)
-	$(TAU_CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TAU_Cwrapper.o : TAU_Cwrapper.cpp $(HDRS)
-	$(TAU_CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 clean: 	
 	$(RM) $(OBJS) $(LIBTARGET) *.ii *.ti ti_files cxx_repository ii_files rii_files 
 ##############################################
 #/***************************************************************************
-# * $RCSfile: Makefile,v $   $Author: amorris $
-# * $Revision: 1.13 $   $Date: 2010/03/19 00:21:13 $
-# * TAU_VERSION_ID: $Id: Makefile,v 1.13 2010/03/19 00:21:13 amorris Exp $ 
+# * $RCSfile: Makefile,v $   $Author: sameer $
+# * $Revision: 1.14 $   $Date: 2010/04/07 22:33:51 $
+# * TAU_VERSION_ID: $Id: Makefile,v 1.14 2010/04/07 22:33:51 sameer Exp $ 
 # ***************************************************************************/
