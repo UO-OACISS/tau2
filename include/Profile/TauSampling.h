@@ -66,6 +66,17 @@
 
 #include <tau_internal.h>
 
+#ifdef TAU_CRAYXMT 
+
+#define Tau_sampling_init(tid) 
+#define Tau_sampling_finalize(tid)
+#define Tau_sampling_event_start(tid, address)
+#define Tau_sampling_event_stop(tid, stopTime)
+#define Tau_sampling_papi_overflow_handler(EventSet, address, overflow_vector, context)
+#define Tau_sampling_suspend()
+#define Tau_sampling_resume()
+
+#else
 int Tau_sampling_init(int tid);
 int Tau_sampling_finalize(int tid);
 void Tau_sampling_event_start(int tid, void** address);
@@ -76,6 +87,8 @@ void Tau_sampling_papi_overflow_handler(int EventSet, void *address,
 /* These must be extern "C" so that HPCToolkit can call them */
 extern "C" void Tau_sampling_suspend();
 extern "C" void Tau_sampling_resume();
+
+#endif /* TAU_CRAYXMT */
 
 #define TAU_SAMP_NUM_ADDRESSES 7
 

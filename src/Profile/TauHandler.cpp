@@ -44,7 +44,9 @@
 #if (defined (__linux__) || defined (_AIX) || defined(sgi) || \
     defined (__alpha) || defined (CRAYCC) || defined(__blrts__))
 #ifndef TAU_CATAMOUNT
+#ifndef TAU_CRAYXMT
 #define TAU_HASMALLINFO 1 
+#endif /* TAU_CRAYXMT does not have mallinfo */
 #endif /* TAU_CATAMOUNT does not have mallinfo */
 #endif /* platforms */
 #endif 
@@ -277,9 +279,9 @@ void TauTrackMemoryHeadroomHere(void) {
 
   
 /***************************************************************************
- * $RCSfile: TauHandler.cpp,v $   $Author: amorris $
- * $Revision: 1.22 $   $Date: 2010/01/27 00:47:51 $
- * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.22 2010/01/27 00:47:51 amorris Exp $ 
+ * $RCSfile: TauHandler.cpp,v $   $Author: sameer $
+ * $Revision: 1.23 $   $Date: 2010/04/07 22:38:26 $
+ * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.23 2010/04/07 22:38:26 sameer Exp $ 
  ***************************************************************************/
 
 	
