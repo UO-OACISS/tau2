@@ -24,6 +24,10 @@
 // Include Files 
 //////////////////////////////////////////////////////////////////////
 
+#ifdef TAU_CRAYXMT
+#pragma mta instantiate used
+#endif /* TAU_CRAYXMT */
+
 //#define DEBUG_PROF
 
 #include "Profile/Profiler.h"
@@ -634,7 +638,7 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid, double
 }
 
 /***************************************************************************
- * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
- * $Revision: 1.42 $   $Date: 2009/09/29 00:37:03 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.42 2009/09/29 00:37:03 amorris Exp $ 
+ * $RCSfile: UserEvent.cpp,v $   $Author: sameer $
+ * $Revision: 1.43 $   $Date: 2010/04/07 22:43:01 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.43 2010/04/07 22:43:01 sameer Exp $ 
  ***************************************************************************/
