@@ -27,4 +27,7 @@ int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int counter);
 int Tau_metadata_writeMetaData(FILE *fp, int counter);
 int Tau_metadata_writeMetaData(Tau_util_outputDevice *out);
 
+void Tau_metadata_register(char *name, int value);
+int Tau_metadata_mergeMetaData();
+
 #endif /* _TAU_METADATA_H_ */
