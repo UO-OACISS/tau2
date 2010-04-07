@@ -64,7 +64,7 @@ for arg in "$@"; do
     echo "-exec-prefix=<arch> .......... Specify a target architecture directory."
     echo "-arch=<architecture> ................... Specify a target architecture."
     echo "       options          [xt3|craycnl|bgp|bgl|ibm64|ibm64linux|sunx86_64"
-    echo "                               |solaris2-64|mips32|sgin32|sgi64|sgio32]"
+    echo "                        crayxmt|solaris2-64|mips32|sgin32|sgi64|sgio32]"
     echo ""
     echo "MPI Options:"
     echo "-mpi .......................... Specify use of TAU MPI wrapper library."
@@ -164,7 +164,7 @@ for arg in "$@"; do
     echo "-exec-prefix=<arch> .......... Specify a target architecture directory."
     echo "-arch=<architecture> ................... Specify a target architecture."
     echo "       options          [xt3|craycnl|bgp|bgl|ibm64|ibm64linux|sunx86_64"
-    echo "                               |solaris2-64|mips32|sgin32|sgi64|sgio32]"
+    echo "                        crayxmt|solaris2-64|mips32|sgin32|sgi64|sgio32]"
     echo "-iowrapper .................................... Build POSIX IO Wrapper."
     echo "-pthread .................................. Use pthread thread package."
     echo "-papithread .................................. Use PAPI thread package."
@@ -1440,6 +1440,13 @@ case $machine in
 	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
 	;;
     
+    crayxmt)
+	gunzip -c tools/src/contrib/jogl/x86_64/libjogl.so.gz > $JARTARGET/libjogl.so
+	gunzip -c tools/src/contrib/jogl/x86_64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
+	gunzip -c tools/src/contrib/jogl/x86_64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+	gunzip -c tools/src/contrib/jogl/x86_64/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
+	;;
+
     craycnl)
 	gunzip -c tools/src/contrib/jogl/x86_64/libjogl.so.gz > $JARTARGET/libjogl.so
 	gunzip -c tools/src/contrib/jogl/x86_64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
@@ -1840,6 +1847,16 @@ case $machine in
     # 	bfddir=/bgsys/drivers/ppcfloor/gnu-linux
     # fi
 
+    ;;
+
+    crayxmt)
+        cxx_compiler=c++
+        c_compiler=cc
+	fixmakeargs="$fixmakeargs CRAYXMT"
+        if [ $pdt_cxx_compiler = default ] ; then
+	    pdt_cxx_full_path=/usr/bin/g++
+	    pdt_cxx_compiler=/usr/bin/g++
+	fi
     ;;
 
     xt3)
@@ -2477,9 +2494,14 @@ case $cxx_compiler in
             fortran_compiler=yes
           fi
         else
-          echo "Default C++ compiler will be Apple c++ compiler"
-          fixmakeargs="$fixmakeargs APPLECXX"
-          tauoptions="${tauoptions}-cxx"
+          if [ $machine = crayxmt ]
+          then
+            echo "Default C++ compiler will be Cray c++ compiler"
+          else 
+            echo "Default C++ compiler will be Apple c++ compiler"
+            fixmakeargs="$fixmakeargs APPLECXX"
+            tauoptions="${tauoptions}-cxx"
+          fi
         fi 
 
       ;;
@@ -3332,7 +3354,10 @@ fi
 ######################################################################
 if [ $cxx_compiler = g++ -o $cxx_compiler = egcs -o $cxx_compiler = powerpc64-linux-g++ -o $cxx_compiler = c++ -o $cxx_compiler = scg++ -o $cxx_compiler = mips64el-gentoo-linux-gnu-g++  -o $cxx_compiler = powerpc-bgp-linux-g++ ]
   then
-    fixmakeargs="$fixmakeargs GNU COMPINST_GNU"
+    if [ $machine != crayxmt ] 
+    then
+      fixmakeargs="$fixmakeargs GNU COMPINST_GNU"
+    fi
     if [ $machine = ibm64 -o $machine = rs6000 -o $machine = ppc64 -o $machine = bgl -o $machine = bgp -o $machine = ibm64linux ]
     then
       tauoptions="${tauoptions}-gnu"
@@ -3428,6 +3453,11 @@ case $machine in
 	fixmakeargs="arch=$machine $fixmakeargs"
 	;;
 
+     crayxmt)
+        echo "Found a Cray XMT configuration"
+	fixmakeargs="arch=$machine $fixmakeargs"
+        ;;
+      
      x86_64|xt3|craycnl)
 	echo "Found an x86_64 configuration definition"
 	fixmakeargs="arch=$machine $fixmakeargs"
