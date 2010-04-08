@@ -738,6 +738,7 @@ TAU_SHFLAGS = $(AR_SHFLAGS) -o
 
 ############# RANLIB Options #############
 TAU_RANLIB = echo "Built" 
+TAU_RANLIB_FE = echo "Built" 
 #APPLECXX#TAU_RANLIB      = ranlib  #ENDIF#
 #IBMXLCAPPLE#TAU_RANLIB      = ranlib  #ENDIF#
 #APPLECXX#TAU_RANLIB_FE      = ranlib  #ENDIF#
