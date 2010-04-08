@@ -20,20 +20,11 @@
 #ifdef TAU_EXP_UNIFY
 #include <mpi.h>
 
-#include <mpi.h>
 #include <TauUtil.h>
 #include <TauMetrics.h>
 #include <Profiler.h>
 #include <TauUnify.h>
 
-typedef struct {
-  char *buffer;
-  int numFuncs;
-  char **strings;
-  int *mapping;
-  int idx;
-  int rank;
-} unify_object_t;
 
 typedef struct {
   vector<char*> strings;
@@ -205,7 +196,7 @@ extern "C" int Tau_unify_unifyDefinitions() {
 
 
 
-int Tau_unify_unifyEvents(EventLister *eventLister) {
+unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   theEventLister = eventLister;
   int rank, numRanks, i;
   MPI_Status status;
@@ -350,10 +341,11 @@ int Tau_unify_unifyEvents(EventLister *eventLister) {
     TAU_METADATA("TAU Unification Time", tmpstr);
   }
 
-  return 0;
+
+  unify_object_t *object = (*unifyObjects)[0];
+  return object;
 }
 
 
 #endif /* TAU_EXP_UNIFY */
-
 #endif /* TAU_MPI */
