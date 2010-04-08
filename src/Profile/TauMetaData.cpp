@@ -47,9 +47,6 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <bglpersonality.h>
 #endif
 
-#ifdef TAU_MPI
-#include <mpi.h>
-#endif
 
 /* Re-enabled since we believe this is now working (2009-11-02) */
 /* 
@@ -85,13 +82,13 @@ public :
 
 // Static holder for metadata name/value pairs
 // These come from TAU_METADATA calls
-static map<string,string> &TheMetaData() {
+map<string,string> &Tau_metadata_getMetaData() {
   static MetaDataRepo metadata;
   return metadata;
 }
 
 
-static int Tau_metadata_fillMetaData() {
+int Tau_metadata_fillMetaData() {
   static int filled = 0;
 
   if (filled) {
@@ -408,7 +405,7 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter) 
 
 
   // write out the user-specified (some from TAU) attributes
-  for (map<string,string>::iterator it = TheMetaData().begin(); it != TheMetaData().end(); ++it) {
+  for (map<string,string>::iterator it = Tau_metadata_getMetaData().begin(); it != Tau_metadata_getMetaData().end(); ++it) {
     const char *name = it->first.c_str();
     const char *value = it->second.c_str();
     Tau_XML_writeAttribute(out, name, value, newline);
@@ -426,7 +423,7 @@ extern "C" void Tau_metadata(char *name, char *value) {
   char *myName = strdup(name);
   char *myValue = strdup(value);
   RtsLayer::LockDB();
-  TheMetaData()[myName] = myValue;
+  Tau_metadata_getMetaData()[myName] = myValue;
   RtsLayer::UnLockDB();
 }
 
@@ -448,7 +445,7 @@ extern "C" void Tau_context_metadata(char *name, char *value) {
   sprintf (myName, "%s => %s", fname, name);
   char *myValue = strdup(value);
   RtsLayer::LockDB();
-  TheMetaData()[myName] = myValue;
+  Tau_metadata_getMetaData()[myName] = myValue;
   RtsLayer::UnLockDB();
 }
 
@@ -471,7 +468,7 @@ extern "C" void Tau_phase_metadata(char *name, char *value) {
   char *myValue = strdup(value);
  
   RtsLayer::LockDB();
-  TheMetaData()[myName] = myValue;
+  Tau_metadata_getMetaData()[myName] = myValue;
   RtsLayer::UnLockDB();
   #else
   Tau_context_metadata(name, value);
@@ -480,10 +477,7 @@ extern "C" void Tau_phase_metadata(char *name, char *value) {
 
 
 int Tau_metadata_writeMetaData(Tau_util_outputDevice *out) {
-  
   Tau_metadata_fillMetaData();
-  Tau_metadata_mergeMetaData();
-
   return writeMetaData(out, true, -1);
 }
 
@@ -493,8 +487,6 @@ int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int counter) {
 #endif
 
   Tau_metadata_fillMetaData();
-  Tau_metadata_mergeMetaData();
-
   int retval;
   retval = writeMetaData(out, false, counter);
   return retval;
@@ -511,15 +503,12 @@ int Tau_metadata_writeMetaData(FILE *fp, int counter) {
 
 
 
-#ifdef TAU_MPI
-
-
-static Tau_util_outputDevice *Tau_metadata_generateMergeBuffer() {
+Tau_util_outputDevice *Tau_metadata_generateMergeBuffer() {
   Tau_util_outputDevice *out = Tau_util_createBufferOutputDevice();
 
-  Tau_util_output(out,"%d%c", TheMetaData().size(), '\0');
+  Tau_util_output(out,"%d%c", Tau_metadata_getMetaData().size(), '\0');
 
-  for (map<string,string>::iterator it = TheMetaData().begin(); it != TheMetaData().end(); ++it) {
+  for (map<string,string>::iterator it = Tau_metadata_getMetaData().begin(); it != Tau_metadata_getMetaData().end(); ++it) {
     const char *name = it->first.c_str();
     const char *value = it->second.c_str();
     Tau_util_output(out,"%s%c", name, '\0');
@@ -529,8 +518,7 @@ static Tau_util_outputDevice *Tau_metadata_generateMergeBuffer() {
 }
 
 
-static void Tau_metadata_removeDuplicates(char *buffer, int buflen) {
-
+void Tau_metadata_removeDuplicates(char *buffer, int buflen) {
   // read the number of items and allocate arrays
   int numItems;
   sscanf(buffer,"%d", &numItems);
@@ -546,70 +534,14 @@ static void Tau_metadata_removeDuplicates(char *buffer, int buflen) {
     const char *value = buffer;
     buffer = strchr(buffer, '\0')+1;
 
-    map<string,string>::iterator iter = TheMetaData().find(attribute);
-    if (iter != TheMetaData().end()) {
+    map<string,string>::iterator iter = Tau_metadata_getMetaData().find(attribute);
+    if (iter != Tau_metadata_getMetaData().end()) {
       const char *my_value = iter->second.c_str();
       if (0 == strcmp(value, my_value)) {
-	TheMetaData().erase(attribute);
+	Tau_metadata_getMetaData().erase(attribute);
       }
     }
   }
 }
 
-int Tau_metadata_mergeMetaData() {
-  static int merged = 0;
-  if (merged == 1) {
-    return 0;
-  }
-  merged = 1;
-
-  int flag;
-  PMPI_Finalized(&flag);
-  if (flag) {
-    return 0;
-  }
-  int rank, numRanks;
-  MPI_Status status;
-
-  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
-
-  x_uint64 start, end;
-
-
-  if (rank == 0) {
-
-    TAU_VERBOSE("TAU: Merging MetaData...\n");
-    start = TauMetrics_getTimeOfDay();
-
-    Tau_util_outputDevice *out = Tau_metadata_generateMergeBuffer();
-    char *defBuf = Tau_util_getOutputBuffer(out);
-    int defBufSize = Tau_util_getOutputBufferLength(out);
-
-    PMPI_Bcast(&defBufSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    PMPI_Bcast(defBuf, defBufSize, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    end = TauMetrics_getTimeOfDay();
-    TAU_VERBOSE("TAU: MetaData Merging Complete, duration = %.4G seconds\n", ((double)(end-start))/1000000.0f);
-    char tmpstr[256];
-    sprintf(tmpstr, "%.4G seconds", ((double)(end-start))/1000000.0f);
-    TAU_METADATA("TAU MetaData Merge Time", tmpstr);
-
-  } else {
-    int BufferSize;
-    PMPI_Bcast(&BufferSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    char *Buffer = (char*) TAU_UTIL_MALLOC(BufferSize);
-    PMPI_Bcast(Buffer, BufferSize, MPI_CHAR, 0, MPI_COMM_WORLD);
-    Tau_metadata_removeDuplicates(Buffer, BufferSize);
-  }
-}
-
-#else
-
-// without MPI, we can't do anything
-int Tau_metadata_mergeMetaData() {
-
-}
-
-#endif
 

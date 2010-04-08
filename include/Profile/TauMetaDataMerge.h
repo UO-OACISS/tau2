@@ -7,32 +7,27 @@
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
 /****************************************************************************
-**	File 		: TauMetaData.h  				   **
+**	File 		: TauMetaDataMerge.h  				   **
 **	Description 	: TAU Profiling Package				   **
 **	Contact		: tau-bugs@cs.uoregon.edu               	   **
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
 **                                                                         **
-**      Description     : This file contains metadata related routines     **
+**      Description     : MetaData Merging                                 **
 **                                                                         **
 ****************************************************************************/
 
 
-#ifndef _TAU_METADATA_H_
-#define _TAU_METADATA_H_
+#ifndef _TAU_METADATAMERGE_H_
+#define _TAU_METADATAMERGE_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
-#include <TauUtil.h>
-#include <map>
-using namespace std;
-map<string,string> &Tau_metadata_getMetaData();
-int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int counter);
-int Tau_metadata_writeMetaData(FILE *fp, int counter);
-int Tau_metadata_writeMetaData(Tau_util_outputDevice *out);
-int Tau_metadata_fillMetaData();
-Tau_util_outputDevice *Tau_metadata_generateMergeBuffer();
-void Tau_metadata_removeDuplicates(char *buffer, int buflen);
+int Tau_metadataMerge_mergeMetaData();
 
-void Tau_metadata_register(char *name, int value);
-int Tau_metadata_mergeMetaData();
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
-#endif /* _TAU_METADATA_H_ */
+#endif /* _TAU_METADATAMERGE_H_ */

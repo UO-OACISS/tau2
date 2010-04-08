@@ -19,7 +19,9 @@ CXX		= $(TAU_CXX)
 
 CC		= $(TAU_CC)
 
-CFLAGS          = $(TAU_MPI_INCLUDE) $(TAU_INCLUDE) $(TAU_DEFS) $(USER_OPT) $(TAU_INTERNAL_FLAGS)
+TAUINC	        = -I$(TAUROOT)/include -I$(TAUROOT)/include/Profile
+
+CFLAGS          = $(TAU_MPI_INCLUDE) $(TAU_INCLUDE) $(TAUINC) $(TAU_DEFS) $(USER_OPT) $(TAU_INTERNAL_FLAGS)
 
 RM		= /bin/rm -f
 
@@ -30,14 +32,17 @@ ARFLAGS		= rcv
 INSTALLDEST	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
 TAU_TARGET		= libTauMpi$(TAU_CONFIG)$(LSX)
+
 ##############################################
+
+
 
 all : 		$(TAU_TARGET)
 
 install:	$(INSTALLDEST)/$(TAU_TARGET) 
 
-$(TAU_TARGET) : TauMpi.o ClockSync.o ProfileMerge.o $(FWRAPPER) $(MPI2EXTENSIONS)
-	$(AR) $(ARFLAGS) $(TAU_TARGET) TauMpi.o ClockSync.o ProfileMerge.o $(FWRAPPER) $(MPI2EXTENSIONS)
+$(TAU_TARGET) : TauMpi.o ClockSync.o ProfileMerge.o TauMetaDataMerge.o $(FWRAPPER) $(MPI2EXTENSIONS)
+	$(AR) $(ARFLAGS) $(TAU_TARGET) TauMpi.o ClockSync.o ProfileMerge.o TauMetaDataMerge.o $(FWRAPPER) $(MPI2EXTENSIONS)
 	$(TAU_RANLIB) $(TAU_TARGET)
 
 TauMpi.o : TauMpi.c
@@ -54,6 +59,9 @@ ClockSync.o : ClockSync.c
 
 ProfileMerge.o : ProfileMerge.c
 	$(CC) $(CFLAGS) -c ProfileMerge.c
+
+TauMetaDataMerge.o : TauMetaDataMerge.cpp
+	$(CXX) $(CFLAGS) -c TauMetaDataMerge.cpp
 
 $(INSTALLDEST)/$(TAU_TARGET): $(TAU_TARGET)
 		@echo Installing $? in $(INSTALLDEST)

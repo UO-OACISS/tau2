@@ -1,5 +1,25 @@
+/****************************************************************************
+**			TAU Portable Profiling Package			   **
+**			http://www.cs.uoregon.edu/research/tau	           **
+*****************************************************************************
+**    Copyright 2010  						   	   **
+**    Department of Computer and Information Science, University of Oregon **
+**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+****************************************************************************/
+/****************************************************************************
+**	File 		: TauMpi.c      				   **
+**	Description 	: TAU Profiling Package				   **
+**	Contact		: tau-bugs@cs.uoregon.edu               	   **
+**	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
+**                                                                         **
+**      Description     : MPI Wrapper                                      **
+**                                                                         **
+****************************************************************************/
+
+
 #include <Profile/Profiler.h>
 #include <Profile/TauEnv.h>
+#include <TauMetaDataMerge.h>
 
 #include <stdio.h>
 #include <mpi.h>
@@ -1533,6 +1553,9 @@ int  MPI_Finalize(  )
     Tau_mergeProfiles();
 #endif
   }
+
+  // merge TAU metadata
+  Tau_metadataMerge_mergeMetaData();
 
   returnVal = PMPI_Finalize();
 
