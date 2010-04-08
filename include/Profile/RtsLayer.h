@@ -92,6 +92,8 @@ public:
   // Return the number of the 'current' thread. 0..TAU_MAX_THREADS-1
   static int myThread(void);
 
+  static int getNumThreads();
+
   static int getPid();
   static int getTid();
 
@@ -116,12 +118,13 @@ private:
   static int lockDBcount[TAU_MAX_THREADS];
 
   static bool initLocks();
+  static int *numThreads();
 
 }; 
 
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
  * $RCSfile: RtsLayer.h,v $   $Author: amorris $
- * $Revision: 1.33 $   $Date: 2009/05/14 20:49:26 $
- * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.33 2009/05/14 20:49:26 amorris Exp $ 
+ * $Revision: 1.34 $   $Date: 2010/04/08 23:07:41 $
+ * POOMA_VERSION_ID: $Id: RtsLayer.h,v 1.34 2010/04/08 23:07:41 amorris Exp $ 
  ***************************************************************************/

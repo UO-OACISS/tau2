@@ -106,6 +106,16 @@ int RtsLayer::setMyThread(int tid) {
   return 0;
 }
 
+int RtsLayer::getNumThreads() {
+  return *(RtsLayer::numThreads());
+}
+
+int *RtsLayer::numThreads() {
+  static int numthreads = 1;
+  return &numthreads;
+}
+
+
 //////////////////////////////////////////////////////////////////////
 // RegisterThread is called before any other profiling function in a 
 // thread that is spawned off
@@ -113,7 +123,7 @@ int RtsLayer::setMyThread(int tid) {
 int RtsLayer::RegisterThread() {
   /* Check the size of threads */
   LockEnv();
-  static int numthreads = 1;
+  int numthreads = *(RtsLayer::numThreads());
   numthreads ++;
   if (numthreads >= TAU_MAX_THREADS) {
     fprintf(stderr, "TAU: RtsLayer: Max thread limit (%d) exceeded. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit>\n", numthreads);
@@ -138,6 +148,8 @@ int RtsLayer::RegisterThread() {
   PapiThreadLayer::RegisterThread();
 #endif // PTHREADS
 // Note: Java thread registration is done at the VM layer in TauJava.cpp
+
+  *(RtsLayer::numThreads()) = *(RtsLayer::numThreads()) + 1;
   return numthreads;
 }
 
@@ -379,8 +391,8 @@ void RtsLayer::UnLockEnv(void)
 
 /***************************************************************************
  * $RCSfile: RtsThread.cpp,v $   $Author: amorris $
- * $Revision: 1.41 $   $Date: 2010/03/12 08:29:22 $
- * VERSION: $Id: RtsThread.cpp,v 1.41 2010/03/12 08:29:22 amorris Exp $
+ * $Revision: 1.42 $   $Date: 2010/04/08 23:08:13 $
+ * VERSION: $Id: RtsThread.cpp,v 1.42 2010/04/08 23:08:13 amorris Exp $
  ***************************************************************************/
 
 
