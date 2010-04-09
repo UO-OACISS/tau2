@@ -59,7 +59,10 @@
 ****************************************************************************/
 
 
+#ifdef __APPLE__
 #define _XOPEN_SOURCE 600 /* Single UNIX Specification, Version 3 */
+#endif /* __APPLE__ */
+
 #include <sys/time.h>
 #include <stdio.h>
 #include <string.h>
