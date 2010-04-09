@@ -23,7 +23,7 @@
 #include <TauMetaData.h>
 #include <TauMetrics.h>
 
-int TAU_MPI_Finalized();
+extern "C" int TAU_MPI_Finalized();
 
 
 extern "C" int Tau_metadataMerge_mergeMetaData() {
