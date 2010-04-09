@@ -81,10 +81,32 @@ public :
 };
 
 // Static holder for metadata name/value pairs
-// These come from TAU_METADATA calls
+// These come from Tau_metadata_register calls
 map<string,string> &Tau_metadata_getMetaData() {
   static MetaDataRepo metadata;
   return metadata;
+}
+
+
+
+extern "C" void Tau_metadata(char *name, char *value) {
+  // make copies
+  char *myName = strdup(name);
+  char *myValue = strdup(value);
+  RtsLayer::LockDB();
+  Tau_metadata_getMetaData()[myName] = myValue;
+  RtsLayer::UnLockDB();
+}
+
+
+void Tau_metadata_register(char *name, int value) {
+  char buf[256];
+  sprintf (buf, "%d", value);
+  Tau_metadata(name, buf);
+}
+
+void Tau_metadata_register(char *name, char *value) {
+  Tau_metadata(name, value);
 }
 
 
@@ -105,14 +127,14 @@ int Tau_metadata_fillMetaData() {
 
   char tmpstr[4096];
   sprintf (tmpstr, timeFormat, TauMetrics_getInitialTimeStamp());
-  TAU_METADATA("Starting Timestamp", tmpstr);
+  Tau_metadata_register("Starting Timestamp", tmpstr);
 
 
 
   time_t theTime = time(NULL);
   struct tm *thisTime = gmtime(&theTime);
   strftime (tmpstr,4096,"%Y-%m-%dT%H:%M:%SZ", thisTime);
-  TAU_METADATA("UTC Time", tmpstr);
+  Tau_metadata_register("UTC Time", tmpstr);
 
 
   thisTime = localtime(&theTime);
@@ -129,32 +151,32 @@ int Tau_metadata_fillMetaData() {
   }
   sprintf (tmpstr, "%s%s", buf, tzone);
 
-  TAU_METADATA("Local Time", tmpstr);
+  Tau_metadata_register("Local Time", tmpstr);
 
    // write out the timestamp (number of microseconds since epoch (unsigned long long)
   sprintf (tmpstr, timeFormat, TauMetrics_getTimeOfDay());
-  TAU_METADATA("Timestamp", tmpstr);
+  Tau_metadata_register("Timestamp", tmpstr);
 
 
 #ifndef TAU_WINDOWS
   // try to grab meta-data
   char hostname[4096];
   gethostname(hostname,4096);
-  TAU_METADATA("Hostname", hostname);
+  Tau_metadata_register("Hostname", hostname);
 
   struct utsname archinfo;
 
   uname (&archinfo);
-  TAU_METADATA("OS Name", archinfo.sysname);
-  TAU_METADATA("OS Version", archinfo.version);
-  TAU_METADATA("OS Release", archinfo.release);
-  TAU_METADATA("OS Machine", archinfo.machine);
-  TAU_METADATA("Node Name", archinfo.nodename);
+  Tau_metadata_register("OS Name", archinfo.sysname);
+  Tau_metadata_register("OS Version", archinfo.version);
+  Tau_metadata_register("OS Release", archinfo.release);
+  Tau_metadata_register("OS Machine", archinfo.machine);
+  Tau_metadata_register("Node Name", archinfo.nodename);
 
-  TAU_METADATA("TAU Architecture", TAU_ARCH);
-  TAU_METADATA("TAU Config", TAU_CONFIG);
-  TAU_METADATA("TAU Makefile", TAU_MAKEFILE);
-  TAU_METADATA("TAU Version", TAU_VERSION);
+  Tau_metadata_register("TAU Architecture", TAU_ARCH);
+  Tau_metadata_register("TAU Config", TAU_CONFIG);
+  Tau_metadata_register("TAU Makefile", TAU_MAKEFILE);
+  Tau_metadata_register("TAU Version", TAU_VERSION);
 
   Tau_metadata_register("pid", (int)getpid());
 #endif
@@ -170,50 +192,50 @@ int Tau_metadata_fillMetaData() {
   sprintf (bglbuffer, "(%d,%d,%d)", BGLPersonality_xCoord(&personality),
 	   BGLPersonality_yCoord(&personality),
 	   BGLPersonality_zCoord(&personality));
-  TAU_METADATA("BGL Coords", bglbuffer);
+  Tau_metadata_register("BGL Coords", bglbuffer);
 
-  TAU_METADATA("BGL Processor ID", rts_get_processor_id());
+  Tau_metadata_register("BGL Processor ID", rts_get_processor_id());
 
   sprintf (bglbuffer, "(%d,%d,%d)", BGLPersonality_xSize(&personality),
 	   BGLPersonality_ySize(&personality),
 	   BGLPersonality_zSize(&personality));
-  TAU_METADATA("BGL Size", bglbuffer);
+  Tau_metadata_register("BGL Size", bglbuffer);
 
 
   if (BGLPersonality_virtualNodeMode(&personality)) {
-    TAU_METADATA("BGL Node Mode", "Virtual");
+    Tau_metadata_register("BGL Node Mode", "Virtual");
   } else {
-    TAU_METADATA("BGL Node Mode", "Coprocessor");
+    Tau_metadata_register("BGL Node Mode", "Coprocessor");
   }
 
   sprintf (bglbuffer, "(%d,%d,%d)", BGLPersonality_isTorusX(&personality),
 	   BGLPersonality_isTorusY(&personality),
 	   BGLPersonality_isTorusZ(&personality));
-  TAU_METADATA("BGL isTorus", bglbuffer);
+  Tau_metadata_register("BGL isTorus", bglbuffer);
 
-  TAU_METADATA("BGL DDRSize", BGLPersonality_DDRSize(&personality));
-  TAU_METADATA("BGL DDRModuleType", personality.DDRModuleType);
-  TAU_METADATA("BGL Location", location);
+  Tau_metadata_register("BGL DDRSize", BGLPersonality_DDRSize(&personality));
+  Tau_metadata_register("BGL DDRModuleType", personality.DDRModuleType);
+  Tau_metadata_register("BGL Location", location);
 
-  TAU_METADATA("BGL rankInPset", BGLPersonality_rankInPset(&personality));
-  TAU_METADATA("BGL numNodesInPset", BGLPersonality_numNodesInPset(&personality));
-  TAU_METADATA("BGL psetNum", BGLPersonality_psetNum(&personality));
-  TAU_METADATA("BGL numPsets", BGLPersonality_numPsets(&personality));
+  Tau_metadata_register("BGL rankInPset", BGLPersonality_rankInPset(&personality));
+  Tau_metadata_register("BGL numNodesInPset", BGLPersonality_numNodesInPset(&personality));
+  Tau_metadata_register("BGL psetNum", BGLPersonality_psetNum(&personality));
+  Tau_metadata_register("BGL numPsets", BGLPersonality_numPsets(&personality));
 
   sprintf (bglbuffer, "(%d,%d,%d)", BGLPersonality_xPsetSize(&personality),
 	   BGLPersonality_yPsetSize(&personality),
 	   BGLPersonality_zPsetSize(&personality));
-  TAU_METADATA("BGL PsetSize", bglbuffer);
+  Tau_metadata_register("BGL PsetSize", bglbuffer);
 
   sprintf (bglbuffer, "(%d,%d,%d)", BGLPersonality_xPsetOrigin(&personality),
 	   BGLPersonality_yPsetOrigin(&personality),
 	   BGLPersonality_zPsetOrigin(&personality));
-  TAU_METADATA("BGL PsetOrigin", bglbuffer);
+  Tau_metadata_register("BGL PsetOrigin", bglbuffer);
 
   sprintf (bglbuffer, "(%d,%d,%d)", BGLPersonality_xPsetCoord(&personality),
 	   BGLPersonality_yPsetCoord(&personality),
 	   BGLPersonality_zPsetCoord(&personality));
-  TAU_METADATA("BGL PsetCoord", bglbuffer);
+  Tau_metadata_register("BGL PsetCoord", bglbuffer);
 #endif /* TAU_BGL */
 
 #ifdef TAU_BGP
@@ -227,57 +249,57 @@ int Tau_metadata_fillMetaData() {
   sprintf (bgpbuffer, "(%d,%d,%d)", BGP_Personality_xCoord(&personality),
 	   BGP_Personality_yCoord(&personality),
 	   BGP_Personality_zCoord(&personality));
-  TAU_METADATA("BGP Coords", bgpbuffer);
+  Tau_metadata_register("BGP Coords", bgpbuffer);
 
-  TAU_METADATA("BGP Processor ID", Kernel_PhysicalProcessorID());
+  Tau_metadata_register("BGP Processor ID", Kernel_PhysicalProcessorID());
 
   sprintf (bgpbuffer, "(%d,%d,%d)", BGP_Personality_xSize(&personality),
 	   BGP_Personality_ySize(&personality),
 	   BGP_Personality_zSize(&personality));
-  TAU_METADATA("BGP Size", bgpbuffer);
+  Tau_metadata_register("BGP Size", bgpbuffer);
 
 
   if (Kernel_ProcessCount() > 1) {
-    TAU_METADATA("BGP Node Mode", "Virtual");
+    Tau_metadata_register("BGP Node Mode", "Virtual");
   } else {
     sprintf(bgpbuffer, "Coprocessor (%d)", Kernel_ProcessCount);
-    TAU_METADATA("BGP Node Mode", bgpbuffer);
+    Tau_metadata_register("BGP Node Mode", bgpbuffer);
   }
 
   sprintf (bgpbuffer, "(%d,%d,%d)", BGP_Personality_isTorusX(&personality),
 	   BGP_Personality_isTorusY(&personality),
 	   BGP_Personality_isTorusZ(&personality));
-  TAU_METADATA("BGP isTorus", bgpbuffer);
+  Tau_metadata_register("BGP isTorus", bgpbuffer);
 
-  TAU_METADATA("BGP DDRSize (MB)", BGP_Personality_DDRSizeMB(&personality));
+  Tau_metadata_register("BGP DDRSize (MB)", BGP_Personality_DDRSizeMB(&personality));
 /* CHECK: 
-  TAU_METADATA("BGP DDRModuleType", personality.DDRModuleType);
+  Tau_metadata_register("BGP DDRModuleType", personality.DDRModuleType);
 */
-  TAU_METADATA("BGP Location", location);
+  Tau_metadata_register("BGP Location", location);
 
-  TAU_METADATA("BGP rankInPset", BGP_Personality_rankInPset(&personality));
+  Tau_metadata_register("BGP rankInPset", BGP_Personality_rankInPset(&personality));
 /*
-  TAU_METADATA("BGP numNodesInPset", Kernel_ProcessCount());
+  Tau_metadata_register("BGP numNodesInPset", Kernel_ProcessCount());
 */
-  TAU_METADATA("BGP psetSize", BGP_Personality_psetSize(&personality));
-  TAU_METADATA("BGP psetNum", BGP_Personality_psetNum(&personality));
-  TAU_METADATA("BGP numPsets", BGP_Personality_numComputeNodes(&personality));
+  Tau_metadata_register("BGP psetSize", BGP_Personality_psetSize(&personality));
+  Tau_metadata_register("BGP psetNum", BGP_Personality_psetNum(&personality));
+  Tau_metadata_register("BGP numPsets", BGP_Personality_numComputeNodes(&personality));
 
 /* CHECK: 
   sprintf (bgpbuffer, "(%d,%d,%d)", BGP_Personality_xPsetSize(&personality),
 	   BGP_Personality_yPsetSize(&personality),
 	   BGP_Personality_zPsetSize(&personality));
-  TAU_METADATA("BGP PsetSize", bgpbuffer);
+  Tau_metadata_register("BGP PsetSize", bgpbuffer);
 
   sprintf (bgpbuffer, "(%d,%d,%d)", BGP_Personality_xPsetOrigin(&personality),
 	   BGP_Personality_yPsetOrigin(&personality),
 	   BGP_Personality_zPsetOrigin(&personality));
-  TAU_METADATA("BGP PsetOrigin", bgpbuffer);
+  Tau_metadata_register("BGP PsetOrigin", bgpbuffer);
 
   sprintf (bgpbuffer, "(%d,%d,%d)", BGP_Personality_xPsetCoord(&personality),
 	   BGP_Personality_yPsetCoord(&personality),
 	   BGP_Personality_zPsetCoord(&personality));
-  TAU_METADATA("BGP PsetCoord", bgpbuffer);
+  Tau_metadata_register("BGP PsetCoord", bgpbuffer);
 */
 #endif /* TAU_BGP */
 
@@ -301,31 +323,31 @@ int Tau_metadata_fillMetaData() {
       value = Tau_util_removeRuns(value);
 
       if (strncmp(line, "vendor_id", 9) == 0) {
-	TAU_METADATA("CPU Vendor", value);
+	Tau_metadata_register("CPU Vendor", value);
       }
       if (strncmp(line, "vendor", 6) == 0) {
-	TAU_METADATA("CPU Vendor", value);
+	Tau_metadata_register("CPU Vendor", value);
       }
       if (strncmp(line, "cpu MHz", 7) == 0) {
-	TAU_METADATA("CPU MHz", value);
+	Tau_metadata_register("CPU MHz", value);
       }
       if (strncmp(line, "clock", 5) == 0) {
-	TAU_METADATA("CPU MHz", value);
+	Tau_metadata_register("CPU MHz", value);
       }
       if (strncmp(line, "model name", 10) == 0) {
-	TAU_METADATA("CPU Type", value);
+	Tau_metadata_register("CPU Type", value);
       }
       if (strncmp(line, "family", 6) == 0) {
-	TAU_METADATA("CPU Type", value);
+	Tau_metadata_register("CPU Type", value);
       }
       if (strncmp(line, "cpu\t", 4) == 0) {
-	TAU_METADATA("CPU Type", value);
+	Tau_metadata_register("CPU Type", value);
       }
       if (strncmp(line, "cache size", 10) == 0) {
-	TAU_METADATA("Cache Size", value);
+	Tau_metadata_register("Cache Size", value);
       }
       if (strncmp(line, "cpu cores", 9) == 0) {
-	TAU_METADATA("CPU Cores", value);
+	Tau_metadata_register("CPU Cores", value);
       }
     }
     fclose(f);
@@ -346,7 +368,7 @@ int Tau_metadata_fillMetaData() {
       value = Tau_util_removeRuns(value);
 
       if (strncmp(line, "MemTotal", 8) == 0) {
-	TAU_METADATA("Memory Size", value);
+	Tau_metadata_register("Memory Size", value);
       }
     }
     fclose(f);
@@ -356,23 +378,23 @@ int Tau_metadata_fillMetaData() {
   bzero(buffer, 4096);
   int rc = readlink("/proc/self/exe", buffer, 4096);
   if (rc != -1) {
-    TAU_METADATA("Executable", buffer);
+    Tau_metadata_register("Executable", buffer);
   }
   bzero(buffer, 4096);
   rc = readlink("/proc/self/cwd", buffer, 4096);
   if (rc != -1) {
-    TAU_METADATA("CWD", buffer);
+    Tau_metadata_register("CWD", buffer);
   }
   bzero(buffer, 4096);
   rc = readlink("/proc/self/cmdline", buffer, 4096);
   if (rc != -1) {
-    TAU_METADATA("Command Line", buffer);
+    Tau_metadata_register("Command Line", buffer);
   }
 #endif /* __linux__ */
 
   char *user = getenv("USER");
   if (user != NULL) {
-    TAU_METADATA("username", user);
+    Tau_metadata_register("username", user);
   }
 
   return 0;
@@ -393,8 +415,8 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter) 
   }
 
 
-  // Write data from the TAU_METADATA environment variable
-  // char *tauMetaDataEnvVar = getenv("TAU_METADATA");
+  // Write data from the Tau_metadata_register environment variable
+  // char *tauMetaDataEnvVar = getenv("Tau_metadata_register");
   // if (tauMetaDataEnvVar != NULL) {
   //   if (strncmp(tauMetaDataEnvVar, "<attribute>", strlen("<attribute>")) != 0) {
   //     fprintf (stderr, "Error in formating TAU_METADATA environment variable\n");
@@ -418,21 +440,6 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter) 
 
 
 
-extern "C" void Tau_metadata(char *name, char *value) {
-  // make copies
-  char *myName = strdup(name);
-  char *myValue = strdup(value);
-  RtsLayer::LockDB();
-  Tau_metadata_getMetaData()[myName] = myValue;
-  RtsLayer::UnLockDB();
-}
-
-
-void Tau_metadata_register(char *name, int value) {
-  char buf[256];
-  sprintf (buf, "%d", value);
-  Tau_metadata(name, buf);
-}
 
 
 extern "C" void Tau_context_metadata(char *name, char *value) {
