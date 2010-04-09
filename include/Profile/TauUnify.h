@@ -25,6 +25,7 @@ typedef struct {
   int *mapping;
   int idx;
   int rank;
+  int globalNumItems;
 } unify_object_t;
 
 
