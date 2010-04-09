@@ -52,7 +52,7 @@ Tau_util_outputDevice *Tau_unify_generateLocalDefinitionBuffer(int *sortMap) {
 
   Tau_util_output(out,"%d%c", numFuncs, '\0');
   for(int i=0;i<numFuncs;i++) {
-    Tau_util_output(out,"%s%c", theEventLister->getEvent(i), '\0');
+    Tau_util_output(out,"%s%c", theEventLister->getEvent(sortMap[i]), '\0');
   }
 
   return out;
@@ -86,12 +86,12 @@ unify_object_t *Tau_unify_processBuffer(char *buffer, int rank) {
 
   int numFuncs;
   sscanf(buffer,"%d", &numFuncs);
-  // printf ("Got %d funcs\n", numFuncs);
+  //printf ("Got %d funcs\n", numFuncs);
   char **strings = (char **) malloc(sizeof(char*) * numFuncs);
   buffer = strchr(buffer, '\0')+1;
   for (int i=0; i<numFuncs; i++) {
     strings[i] = buffer;
-    // printf ("stringz[%d] = %s (%p)\n", i, strings[i], buffer);
+    //printf ("stringz[%d] = %s (%p)\n", i, strings[i], buffer);
     buffer = strchr(buffer, '\0')+1;
   }
   
@@ -178,7 +178,7 @@ unify_merge_object_t *Tau_unify_mergeObjects(vector<unify_object_t*> &objects) {
   // for (int i=0; i<mergedObject->strings.size(); i++) {
   //   printf ("mergedObject->strings[%d] = %s\n", i, mergedObject->strings[i]);
   // }
-
+  
   return mergedObject;
 }
 
@@ -213,7 +213,7 @@ unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   int *sortMap = Tau_unify_generateSortMap();
 
 
-  // array of unifcation objects
+  // array of unification objects
   vector<unify_object_t*> *unifyObjects = new vector<unify_object_t*>();
 
 
@@ -285,16 +285,19 @@ unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
     mask <<= 1;
   }
 
+  int globalNumItems;
 
   if (rank == 0) {
     // rank 0 will now put together the final event id map
     mergedObject = Tau_unify_mergeObjects(*unifyObjects);
 
+    globalNumItems = mergedObject->strings.size();
     for (int i=0; i<mergedObject->strings.size(); i++) {
       fprintf (stderr, "mergedObject->strings[%d] = %s\n", i, mergedObject->strings[i]);
     }
 
   }
+
 
   if (mergedObject == NULL) {
     // leaf functions allocate a phony merged object to use below
@@ -343,6 +346,10 @@ unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
 
 
   unify_object_t *object = (*unifyObjects)[0];
+
+  MPI_Bcast (&globalNumItems, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  object->globalNumItems = globalNumItems;
+
   return object;
 }
 
