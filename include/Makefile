@@ -262,6 +262,11 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 #CRAYCNL#TAU_F90         = ftn            $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #ZEPTO_GFORTRAN#TAU_F90         = /bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gfortran    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 
+TAU_F77 = $(TAU_F90)
+#IBM_FORTRAN#TAU_F77         = xlf$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#BGP#TAU_F77         = mpixlf77$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+
+
 
 ############# Portable F90 Options #############
 #IBM64_FORTRAN#TAU_F90_FIXED      = -qfixed  #ENDIF#
@@ -759,7 +764,7 @@ TAU_AR                 = ar             #ENDIF#
 # You can specify -pdtcompdir=intel -pdtarchdir=x86_64
 # If nothing is specified, PDTARCHDIR uses TAU_ARCH
 PDTARCHDIRORIG=$(TAU_ARCH)
-PDTARCHITECTURE=ppc64
+PDTARCHITECTURE=
 PDTARCHDIRFINAL=$(PDTARCHDIRORIG)
 #PDTARCHITECTURE#PDTARCHDIRFINAL=$(PDTARCHITECTURE)#ENDIF#
 PDTARCHDIR=$(PDTARCHDIRFINAL)
