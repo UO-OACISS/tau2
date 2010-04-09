@@ -58,6 +58,8 @@
 * DEALINGS WITH THE SOFTWARE.
 ****************************************************************************/
 
+
+#define _XOPEN_SOURCE 600 /* Single UNIX Specification, Version 3 */
 #include <sys/time.h>
 #include <stdio.h>
 #include <string.h>
