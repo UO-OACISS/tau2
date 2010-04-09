@@ -1521,6 +1521,12 @@ MPI_Errhandler errhandler;
   return returnVal;
 }
 
+
+int tau_mpi_finalized = 0;
+int TAU_MPI_Finalized() {
+  return tau_mpi_finalized;
+}
+
 int  MPI_Finalize(  )
 {
   int  returnVal;
@@ -1562,6 +1568,7 @@ int  MPI_Finalize(  )
   TAU_PROFILE_STOP(tautimer);
 
   Tau_stop_top_level_timer_if_necessary();
+  tau_mpi_finalized = 1;
   return returnVal;
 }
 

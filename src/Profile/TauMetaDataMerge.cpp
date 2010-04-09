@@ -23,6 +23,9 @@
 #include <TauMetaData.h>
 #include <TauMetrics.h>
 
+int TAU_MPI_Finalized();
+
+
 extern "C" int Tau_metadataMerge_mergeMetaData() {
 
   Tau_metadata_fillMetaData();
@@ -33,11 +36,10 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
   }
   merged = 1;
 
-  int flag;
-  PMPI_Finalized(&flag);
-  if (flag) {
+  if (TAU_MPI_Finalized()) {
     return 0;
   }
+
   int rank, numRanks;
   MPI_Status status;
 
