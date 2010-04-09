@@ -27,6 +27,17 @@
 
 
 typedef struct {
+  char *buffer;
+  int numFuncs;
+  char **strings;
+  int *mapping;
+  int idx;
+  int rank;
+  int globalNumItems;
+  int *sortMap;
+} unify_object_t;
+
+typedef struct {
   vector<char*> strings;
   int *mapping;
   int numStrings;
@@ -196,7 +207,7 @@ extern "C" int Tau_unify_unifyDefinitions() {
 
 
 
-unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
+Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   theEventLister = eventLister;
   int rank, numRanks, i;
   MPI_Status status;
@@ -344,13 +355,31 @@ unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
     TAU_METADATA("TAU Unification Time", tmpstr);
   }
 
-
+  // the local object
   unify_object_t *object = (*unifyObjects)[0];
 
   MPI_Bcast (&globalNumItems, 1, MPI_INT, 0, MPI_COMM_WORLD);
-  object->globalNumItems = globalNumItems;
 
-  return object;
+  Tau_unify_object_t *tau_unify_object = (Tau_unify_object_t*) TAU_UTIL_MALLOC(sizeof(Tau_unify_object_t));
+  tau_unify_object->globalNumItems = globalNumItems;
+  tau_unify_object->sortMap = sortMap;
+  tau_unify_object->mapping = object->mapping;
+  tau_unify_object->localNumItems = object->numFuncs;
+  tau_unify_object->globalStrings = NULL;
+
+
+  if (rank == 0) {
+    char **globalStrings = (char**)TAU_UTIL_MALLOC(sizeof(char*)*globalNumItems);
+
+    for (int i=0; i<mergedObject->strings.size(); i++) {
+      globalStrings[i] = strdup(mergedObject->strings[i]);
+    }
+    tau_unify_object->globalStrings = globalStrings;
+  }
+
+  
+
+  return tau_unify_object;
 }
 
 

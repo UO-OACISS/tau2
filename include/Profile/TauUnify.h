@@ -18,16 +18,15 @@
 #ifndef _TAU_UNIFY_H_
 #define _TAU_UNIFY_H_
 
-typedef struct {
-  char *buffer;
-  int numFuncs;
-  char **strings;
-  int *mapping;
-  int idx;
-  int rank;
-  int globalNumItems;
-} unify_object_t;
 
+
+typedef struct {
+  int localNumItems;
+  int globalNumItems;
+  char **globalStrings; /* valid only on rank 0 */
+  int *sortMap;
+  int *mapping;
+} Tau_unify_object_t;
 
 
 #ifdef __cplusplus
@@ -82,7 +81,7 @@ class AtomicEventLister : public EventLister {
 };
 
 
-unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister);
+Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister);
 
 #endif /* __cplusplus */
 
