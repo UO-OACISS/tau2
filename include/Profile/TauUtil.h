@@ -37,6 +37,7 @@ typedef struct Tau_util_outputDevice_ {
 
 Tau_util_outputDevice *Tau_util_createBufferOutputDevice();
 char *Tau_util_getOutputBuffer(Tau_util_outputDevice *out);
+void Tau_util_destroyOutputDevice(Tau_util_outputDevice *out);
 int Tau_util_getOutputBufferLength(Tau_util_outputDevice *out);
 int Tau_util_output(Tau_util_outputDevice *out, const char *format, ...);
 int Tau_util_readFullLine(char *line, FILE *fp);

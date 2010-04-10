@@ -64,6 +64,18 @@ int Tau_util_getOutputBufferLength(Tau_util_outputDevice *out) {
 }
 
 /*********************************************************************
+ * Free and close output device
+ ********************************************************************/
+void Tau_util_destroyOutputDevice(Tau_util_outputDevice *out) {
+  if (out->type == TAU_UTIL_OUTPUT_BUFFER) {
+    free (out->buffer);
+  } else {
+    fclose(out->fp);
+  }
+  free (out);
+}
+
+/*********************************************************************
  * Write to output device
  ********************************************************************/
 int Tau_util_output(Tau_util_outputDevice *out, const char *format, ...) {
