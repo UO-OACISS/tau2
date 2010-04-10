@@ -53,13 +53,13 @@ DEFINES = -DTAU_LIBRARY_SOURCE
 
 LINKER	= $(TAU_CC)
 
-INSTALLDEST	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
+INSTALLDEST   = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
 TAUINC	      = -I$(TAUROOT)/include -I$(TAUROOT)/include/Profile
 
-CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE)  $(HPCTOOLKIT_OPT) $(HPCTOOLKIT_INCLUDE)
+CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE) $(HPCTOOLKIT_OPT) $(HPCTOOLKIT_INCLUDE)
 
-UPCFLAGS        = $(TAUINC) $(PROFILEOPTS) 
+UPCFLAGS      = $(TAUINC) $(PROFILEOPTS) 
 
 CFLAGS        = $(TAU_MPI_INCLUDE) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS)   
 
@@ -79,7 +79,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/RenciSTFF.h    $(INCDIR)/PapiThreadLayer.h  \
 		$(INCDIR)/TauEnv.h	 $(INCDIR)/TauInit.h          \
 		$(INCDIR)/TauTrace.h     $(INCDIR)/TauSilc.h          \
-		$(TAUROOT)/include/tau_internal.h $(INCDIR)/TauSampling.h \
+		$(TAUROOT)/include/tau_internal.h $(INCDIR)/TauSampling.h $(INCDIR)/TauMetaData.h \
 		$(INCDIR)/TauSnapshot.h  $(INCDIR)/TauGASP.h          \
 	 	$(INCDIR)/TauUtil.h $(INCDIR)/TauXML.h $(INCDIR)/TauUnify.h $(INCDIR)/TauCollate.h
 
