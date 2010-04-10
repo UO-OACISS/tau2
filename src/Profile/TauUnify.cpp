@@ -91,23 +91,22 @@ int *Tau_unify_generateSortMap() {
 
 unify_object_t *Tau_unify_processBuffer(char *buffer, int rank) {
   // create the unification object
-  unify_object_t *unifyObject = (unify_object_t*) malloc (sizeof(unify_object_t));
+  unify_object_t *unifyObject = (unify_object_t*) TAU_UTIL_MALLOC(sizeof(unify_object_t));
   unifyObject->buffer = buffer;
   unifyObject->rank = rank;
 
   int numFuncs;
   sscanf(buffer,"%d", &numFuncs);
   //printf ("Got %d funcs\n", numFuncs);
-  char **strings = (char **) malloc(sizeof(char*) * numFuncs);
+  unifyObject->strings = (char **) malloc(sizeof(char*) * numFuncs);
   buffer = strchr(buffer, '\0')+1;
   for (int i=0; i<numFuncs; i++) {
-    strings[i] = buffer;
+    unifyObject->strings[i] = buffer;
     //printf ("stringz[%d] = %s (%p)\n", i, strings[i], buffer);
     buffer = strchr(buffer, '\0')+1;
   }
   
   unifyObject->numFuncs = numFuncs;
-  unifyObject->strings = strings;
   unifyObject->mapping = (int*) malloc (sizeof(int)*numFuncs);
   for (int i=0; i<numFuncs; i++) {
     unifyObject->mapping[i] = i;
@@ -231,12 +230,13 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   unify_merge_object_t *mergedObject = NULL;
 
 
-  Tau_util_outputDevice *out = Tau_unify_generateLocalDefinitionBuffer(sortMap);
 
   // add ourselves
+  Tau_util_outputDevice *out = Tau_unify_generateLocalDefinitionBuffer(sortMap);
   char *defBuf = Tau_util_getOutputBuffer(out);
   int defBufSize = Tau_util_getOutputBufferLength(out);
   unifyObjects->push_back(Tau_unify_processBuffer(defBuf, -1));
+
 
   // use binomial heap algorithm (like MPI_Reduce)
   int mask = 0x1;
@@ -377,7 +377,22 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
     tau_unify_object->globalStrings = globalStrings;
   }
 
-  
+  /* free up memory */
+  delete mergedObject;
+
+  Tau_util_destroyOutputDevice(out);
+
+
+  free ((*unifyObjects)[0]->strings);
+  free ((*unifyObjects)[0]);
+
+  for (int i=1; i<unifyObjects->size(); i++) {
+    free ((*unifyObjects)[i]->buffer);
+    free ((*unifyObjects)[i]->strings);
+    free ((*unifyObjects)[i]->mapping);
+    free ((*unifyObjects)[i]);
+  }
+  delete unifyObjects;
 
   return tau_unify_object;
 }
