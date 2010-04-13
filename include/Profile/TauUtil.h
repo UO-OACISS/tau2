@@ -47,6 +47,8 @@ void TAU_ABORT(const char *format, ...);
 
 void *Tau_util_malloc(size_t size, const char *file, int line);
 #define TAU_UTIL_MALLOC(size) Tau_util_malloc(size, __FILE__, __LINE__);
+void *Tau_util_calloc(size_t size, const char *file, int line);
+#define TAU_UTIL_CALLOC(size) Tau_util_calloc(size, __FILE__, __LINE__);
 
 
 /* The following macros help create a local array and assign to elements of 
