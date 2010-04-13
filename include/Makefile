@@ -264,7 +264,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 
 TAU_F77 = $(TAU_F90)
 #IBM_FORTRAN#TAU_F77         = xlf$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
-#BGP#TAU_F77         = mpixlf77$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#BGP#TAU_F77         = mpixlf77_r    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 
 
 
