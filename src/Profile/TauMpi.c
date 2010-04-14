@@ -1550,6 +1550,9 @@ int  MPI_Finalize(  )
   TAU_PROFILE_SET_NODE(procid_0 ); 
   Tau_set_usesMPI(1);
 
+  // merge TAU metadata
+  Tau_metadataMerge_mergeMetaData();
+
   /* Create a merged profile if requested */
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
 
@@ -1560,8 +1563,6 @@ int  MPI_Finalize(  )
 #endif
   }
 
-  // merge TAU metadata
-  Tau_metadataMerge_mergeMetaData();
 
   returnVal = PMPI_Finalize();
 
