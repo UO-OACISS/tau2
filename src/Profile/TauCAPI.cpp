@@ -896,6 +896,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary(void) {
       Tau_start_timer(ptr, 0, Tau_get_tid());
     }
   }
+  atexit(Tau_destructor_trigger);
 }
 
 
@@ -1316,6 +1317,7 @@ extern "C" int Tau_get_tid(void) {
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
+  Tau_stop_top_level_timer_if_necessary();
   if ((TheUsingDyninst() || TheUsingCompInst()) && TheSafeToDumpData()) {
     //printf ("FIvector destructor\n");
 #ifndef TAU_VAMPIRTRACE
@@ -1416,7 +1418,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.148 $   $Date: 2010/03/19 00:21:12 $
- * VERSION: $Id: TauCAPI.cpp,v 1.148 2010/03/19 00:21:12 amorris Exp $
+ * $Revision: 1.149 $   $Date: 2010/04/14 21:31:30 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.149 2010/04/14 21:31:30 amorris Exp $
  ***************************************************************************/
 

@@ -66,8 +66,16 @@ template TauUserEvent** uninitialized_copy(TauUserEvent**,TauUserEvent**,TauUser
 
 
 
+class AtomicEventDB : public vector<TauUserEvent*> {
+public :
+  ~AtomicEventDB() {
+    Tau_destructor_trigger();
+  }
+};
+
+
 vector<TauUserEvent*>& TheEventDB(void) {
-  static vector<TauUserEvent*> EventDB;
+  static AtomicEventDB EventDB;
   return EventDB;
 }
 
@@ -638,7 +646,7 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid, double
 }
 
 /***************************************************************************
- * $RCSfile: UserEvent.cpp,v $   $Author: sameer $
- * $Revision: 1.43 $   $Date: 2010/04/07 22:43:01 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.43 2010/04/07 22:43:01 sameer Exp $ 
+ * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
+ * $Revision: 1.44 $   $Date: 2010/04/14 21:31:30 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.44 2010/04/14 21:31:30 amorris Exp $ 
  ***************************************************************************/
