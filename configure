@@ -4680,6 +4680,8 @@ if [ "x$bfd" = "xyes" ] ; then
         echo "Error: Cannot access BFD directory $bfddir"
         exit 1
     fi
+else
+    fixmakeargs="$fixmakeargs bfdinclude= bfdlink= "
 fi
 
 
