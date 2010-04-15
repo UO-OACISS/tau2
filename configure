@@ -4799,6 +4799,55 @@ fi
 
 
 ######################################################################
+# Check for pthread wrappable routines
+######################################################################
+if [ $pthread = yes ] ; then
+  cat <<EOF > conftest_pthread.c
+#include <pthread.h>
+
+void foo() {
+  int rc;
+  pthread_mutexattr_t   mta;
+  pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+  pthread_spinlock_t spinlock;
+  pthread_barrier_t barrier;
+  pthread_cond_t cond;
+
+  rc = pthread_mutexattr_init(&mta);
+  rc = pthread_mutex_init(&mutex, NULL);
+  rc = pthread_mutex_lock(&mutex);
+  rc = pthread_mutex_unlock(&mutex);
+  rc = pthread_mutex_destroy(&mutex);
+  
+  rc = pthread_spin_init(&spinlock, PTHREAD_PROCESS_SHARED);
+  rc = pthread_spin_lock(&spinlock);
+  rc = pthread_spin_unlock(&spinlock);
+  rc = pthread_spin_destroy(&spinlock);
+
+  rc = pthread_cond_init(&cond, NULL);
+  rc = pthread_cond_broadcast(&cond);
+  rc = pthread_cond_wait(&cond, &mutex);
+  rc = pthread_cond_signal(&cond);
+  rc = pthread_cond_destroy(&cond);
+  
+
+  rc = pthread_barrier_init(&barrier, NULL, 0);
+  rc = pthread_barrier_wait(&barrier);
+}
+EOF
+  $echo "Checking for pthread wrappable routines... ${nnl}"
+  if $c_compiler $orig_useropt -c conftest_pthread.c $bfdinclude 1> /dev/null 2>&1 ; then
+      fixmakeargs="$fixmakeargs TAU_PTHREAD_WRAP"
+      echo "yes"
+  else
+      echo "no"
+  fi
+  
+  /bin/rm -f conftest_pthread.o conftest_pthread.c
+fi
+
+
+######################################################################
 
 if [ $pthread = yes ] ; then
     fixmakeargs="$fixmakeargs PTHREAD_AVAILABLE ptdir=$ptdir"
