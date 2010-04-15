@@ -3032,10 +3032,7 @@ if [ $vampirtrace = yes ] ; then
 	minor=`echo $minor | sed 's/\([0-9]*\).*/\1/g'`
 
 	# check if 5.7 or later
-	post5_7=no
-	if [ $major -gt 5 ] ; then post5_7=yes ; fi
-	if [ $major -ge 5 -a $minor -ge 7 ] ; then post5_7=yes ; fi
-	if [ $post5_7 = yes ] ; then
+	if [ $major -eq 5 -a $minor -eq 7 ] ; then
 	    fixmakeargs="$fixmakeargs VAMPIRTRACE_5_7_API" 
 	fi
 
