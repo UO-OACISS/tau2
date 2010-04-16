@@ -1,5 +1,0 @@
-#PBS -q cuda
-
-cd $PBS_O_WORKDIR
-
-./taucuda_profiler.sh ./simpleMultiGPU
