@@ -723,20 +723,26 @@ TAU_LINKER_OPT4 = $(LEXTRA1)
 
 ##############################################
 # Flags to build a shared object: TAU_SHFLAGS
-#GNU#AR_SHFLAGS                 = -shared       #ENDIF#
-#PGI#AR_SHFLAGS                 = -shared       #ENDIF#
-#SGICC#AR_SHFLAGS               = -shared       #ENDIF#
-#APPLECXX#AR_SHFLAGS = -dynamiclib -flat_namespace -undefined suppress #ENDIF#
-#SOL2#AR_SHFLAGS                = -G            #ENDIF#
-#SUN386I#AR_SHFLAGS                = -G            #ENDIF#
-#SUNX86_64#AR_SHFLAGS                = -G            #ENDIF#
+#GNU#AR_SHFLAGS 		= -shared  	        #ENDIF#
+#USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
+#PGI#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
+#APPLEPGI#AR_SHFLAGS 		= -shared               #ENDIF#
+#SGICC#AR_SHFLAGS 		= -shared  	        #ENDIF#
+#OPEN64ORC#AR_SHFLAGS 		= -shared -fpic 	#ENDIF#
+#APPLECXX#TAU_APPLE_SHFLAGS = -dynamiclib -flat_namespace -undefined suppress #ENDIF#
+#PYTHON#TAU_APPLE_SHFLAGS   = -bundle -flat_namespace -undefined suppress     #ENDIF#
+#USE_INTELCXX#AR_SHFLAGS  	= -shared 		#ENDIF#
+#APPLECXX#AR_SHFLAGS = $(TAU_APPLE_SHFLAGS)             #ENDIF#
+#SOL2#AR_SHFLAGS  		= -G 		        #ENDIF#
+#SUNCC#AR_SHFLAGS  		= -G 		        #ENDIF#
+#CRAYCNL#AR_SHFLAGS  		= -shared 		#ENDIF#
 TAU_BGP_AR_SHFLAGS = -shared
-#USE_IBMXLC#AR_SHFLAGS          = -G                #ENDIF#
-#USE_IBMXLC#TAU_BGP_AR_SHFLAGS          = -qmkshrobj                #ENDIF#
-#BGP#AR_SHFLAGS          = $(TAU_BGP_AR_SHFLAGS)                #ENDIF#
-#USE_DECCXX#AR_SHFLAGS          = -shared               #ENDIF#
-#USE_INTELCXX#AR_SHFLAGS        = -shared               #ENDIF#
-#ACC#AR_SHFLAGS                 = -b            #ENDIF#
+#USE_IBMXLC#AR_SHFLAGS          = -G 		        #ENDIF#
+#USE_IBMXLC#TAU_BGP_AR_SHFLAGS          = -qmkshrobj    #ENDIF#
+#BGP#AR_SHFLAGS          = $(TAU_BGP_AR_SHFLAGS)        #ENDIF#
+#USE_DECCXX#AR_SHFLAGS  	= -shared 		#ENDIF#
+#ACC#AR_SHFLAGS  		= -b 		        #ENDIF#
+TAU_ARFLAGS			= $(AR_SHFLAGS) -o 
 TAU_SHFLAGS = $(AR_SHFLAGS) -o
 
 ############# RANLIB Options #############
