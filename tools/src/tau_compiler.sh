@@ -640,9 +640,9 @@ for arg in "$@" ; do
 		groupType=$group_f_F
 		;;
 
-	    -WF,-D*)
+	    -WF,*)
 		theDefine=${arg#"-WF,"}
- 		theDefine=`echo "x$theDefine" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/'\\\'\''/g' -e 's/ /\\\ /g'`
+ 		theDefine=`echo "x$theDefine" | sed -e 's/^x//' -e 's/"/\\\"/g' -e 's/'\''/'\\\'\''/g' -e 's/ /\\\ /g' -e 's/\,/ /g' `
 		optPdtCFlags="$theDefine $optPdtCFlags"
 		optPdtCxxFlags="$theDefine $optPdtCxxFlags"
 		optPdtF95="$theDefine $optPdtF95"
@@ -651,6 +651,7 @@ for arg in "$@" ; do
 		optCompile="$mod_arg $optCompile"
 		optIncludeDefs="$theDefine $optIncludeDefs"
 		;;
+
 
 	    -I|-D|-U)
                 processingIncludeOrDefineArg=$arg
