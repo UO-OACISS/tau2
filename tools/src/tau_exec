@@ -96,7 +96,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tau_exec,v 1.4 2010/04/16 00:01:32 amorris Exp $';
+	      echo '$Id: tau_exec,v 1.5 2010/04/19 20:43:37 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -e)
@@ -244,8 +244,13 @@ fi
 
 ldd $1 | grep libTAU.so &> /dev/null
 if [ $? == 1 ] ; then
-    echoIfVerbose "Detected uninstrumented binary, adding TAU preload wrapper"
-    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-preload.so:$TAUEX_LD_PRELOAD
+    nm $1 | grep Tau_init &> /dev/null
+    if [ $? == 1 ] ; then
+	echoIfVerbose "Detected uninstrumented binary, adding TAU preload wrapper"
+	TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-preload.so:$TAUEX_LD_PRELOAD
+    else
+	echoIfVerbose "Detected instrumented binary, not using TAU preload wrapper"
+    fi
 else 
     echoIfVerbose "Detected instrumented binary, not using TAU preload wrapper"
 fi
