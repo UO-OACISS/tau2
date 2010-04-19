@@ -31,6 +31,7 @@
 #include <TauUtil.h>
 #include <float.h>
 
+#include <stdarg.h>
 #include <assert.h>
 
 #define DEBUG
@@ -195,6 +196,34 @@ static void stat_sum (void *i, void *o, int *len,  MPI_Datatype *type) {
   }
 }
 
+
+static void Tau_collate_allocateBuffers(double ***excl, double ***incl, int **numCalls, int **numSubr, int numItems) {
+  *excl = (double **) TAU_UTIL_MALLOC(sizeof(double *) * Tau_Global_numCounters);
+  *incl = (double **) TAU_UTIL_MALLOC(sizeof(double *) * Tau_Global_numCounters);
+  for (int m=0; m<Tau_Global_numCounters; m++) {
+    (*excl)[m] = (double *) TAU_UTIL_CALLOC(sizeof(double) * numItems);
+    (*incl)[m] = (double *) TAU_UTIL_CALLOC(sizeof(double) * numItems);
+  }
+  *numCalls = (int *) TAU_UTIL_CALLOC(sizeof(int) * numItems);
+  *numSubr = (int *) TAU_UTIL_CALLOC(sizeof(int) * numItems);
+}
+
+
+static void Tau_collate_incrementHistogram(int *histogram, double min, double max, double value, int numBins) {
+  double range = max-min;
+  double binWidth = range / (numBins-1);
+  int mybin = (int)((value - min) / binWidth);
+  if (binWidth == 0) {
+    mybin = 0;
+  }
+  
+  if (mybin < 0 || mybin >= numBins) {
+    TAU_ABORT("TAU: Error computing histogram, non-existent bin=%d\n", mybin);
+  }
+
+  histogram[mybin]++;
+}
+
 /*********************************************************************
  * Write a profile with data from all nodes/threads
  ********************************************************************/
@@ -245,17 +274,23 @@ extern "C" int Tau_collate_writeProfile() {
   int numItems = functionUnifier->globalNumItems;
 
   // allocate memory for values to compute/send
-  double **excl = (double **) TAU_UTIL_MALLOC(sizeof(double *) * Tau_Global_numCounters);
-  double **incl = (double **) TAU_UTIL_MALLOC(sizeof(double *) * Tau_Global_numCounters);
-  for (int m=0; m<Tau_Global_numCounters; m++) {
-    excl[m] = (double *) TAU_UTIL_MALLOC(sizeof(double) * numItems);
-    incl[m] = (double *) TAU_UTIL_MALLOC(sizeof(double) * numItems);
-  }
-  int *numCalls = (int *) TAU_UTIL_MALLOC(sizeof(int) * numItems);
-  int *numSubr = (int *) TAU_UTIL_MALLOC(sizeof(int) * numItems);
+  double **excl, **incl;
+  int *numCalls, *numSubr;
+  Tau_collate_allocateBuffers(&excl, &incl, &numCalls, &numSubr, numItems);
+
+
+  double ***gExcl, ***gIncl;
+  int **gNumCalls, **gNumSubr;
+  gExcl = (double ***) TAU_UTIL_MALLOC(sizeof(double **) * num_collate_steps);
+  gIncl = (double ***) TAU_UTIL_MALLOC(sizeof(double **) * num_collate_steps);
+  gNumCalls = (int **) TAU_UTIL_MALLOC(sizeof(int *) * num_collate_steps);
+  gNumSubr = (int **) TAU_UTIL_MALLOC(sizeof(int *) * num_collate_steps);
+
 
   // we generate statistics in 4 steps
   for (int s=0; s < num_collate_steps; s++) {
+
+    Tau_collate_allocateBuffers(&(gExcl[s]), &(gIncl[s]), &(gNumCalls[s]), &(gNumSubr[s]), numItems);
 
     // reset intermediate data
     for (int m=0; m<Tau_Global_numCounters; m++) {
@@ -268,7 +303,6 @@ extern "C" int Tau_collate_writeProfile() {
       numCalls[i] = -1;
       numSubr[i] = -1;
     }
-
 
     for (int tid = 0; tid<numThreads; tid++) { // for each thread
       for (int i=0; i<numItems; i++) { // for each event
@@ -285,37 +319,65 @@ extern "C" int Tau_collate_writeProfile() {
       }
     }
 
-    // create output buffers
-    double **outExcl, **outIncl;
-    int *outNumCalls, *outNumSubr;
-    outExcl = (double **) TAU_UTIL_MALLOC(sizeof(double *) * Tau_Global_numCounters);
-    outIncl = (double **) TAU_UTIL_MALLOC(sizeof(double *) * Tau_Global_numCounters);
-
-    if (rank == 0) {
-      for (int m=0; m<Tau_Global_numCounters; m++) {
-	outExcl[m] = (double *) TAU_UTIL_CALLOC(sizeof(double) * numItems);
-	outIncl[m] = (double *) TAU_UTIL_CALLOC(sizeof(double) * numItems);
-      }
-      outNumCalls = (int *) TAU_UTIL_CALLOC(sizeof(int) * numItems);
-      outNumSubr = (int *) TAU_UTIL_CALLOC(sizeof(int) * numItems);
-    }
-
     // reduce data to rank 0
     for (int m=0; m<Tau_Global_numCounters; m++) {
-      PMPI_Reduce (excl[m], outExcl[m], numItems, MPI_DOUBLE, collate_op[s], 0, MPI_COMM_WORLD);
-      PMPI_Reduce (incl[m], outIncl[m], numItems, MPI_DOUBLE, collate_op[s], 0, MPI_COMM_WORLD);
+      PMPI_Allreduce (excl[m], gExcl[s][m], numItems, MPI_DOUBLE, collate_op[s], MPI_COMM_WORLD);
+      PMPI_Allreduce (incl[m], gIncl[s][m], numItems, MPI_DOUBLE, collate_op[s], MPI_COMM_WORLD);
     }
-    PMPI_Reduce (numCalls, outNumCalls, numItems, MPI_INT, collate_op[s], 0, MPI_COMM_WORLD);
-    PMPI_Reduce (numSubr, outNumSubr, numItems, MPI_INT, collate_op[s], 0, MPI_COMM_WORLD);
-
+    PMPI_Allreduce (numCalls, gNumCalls[s], numItems, MPI_INT, collate_op[s], MPI_COMM_WORLD);
+    PMPI_Allreduce (numSubr, gNumSubr[s], numItems, MPI_INT, collate_op[s], MPI_COMM_WORLD);
 
     if (rank == 0) {
-      printf ("\n----- data for statistic: %s\n", collate_step_name[s]);
+      fprintf (stderr, "\n----- data for statistic: %s\n", collate_step_name[s]);
       for (int i=0; i<numItems; i++) {
-	printf ("[id=%2d] incl=%9.16G excl=%9.16G numcalls=%9d numsubr=%9d : %s\n", i, 
-		outIncl[0][i], outExcl[0][i], outNumCalls[i], outNumSubr[i], functionUnifier->globalStrings[i]);
+	fprintf (stderr, "[id=%2d] incl=%9.16G excl=%9.16G numcalls=%9d numsubr=%9d : %s\n", i, 
+		gIncl[s][0][i], gExcl[s][0][i], gNumCalls[s][i], gNumSubr[s][i], functionUnifier->globalStrings[i]);
 
-      }      
+      }
+    }
+  }
+
+  // now compute histograms
+
+  FILE *histoFile;
+  if (rank == 0) {
+    histoFile = fopen("tau.histograms", "w");
+  }
+
+  int numBins = 20;
+  int numHistoGrams = (Tau_Global_numCounters * 2) + 2; // two for each metric (excl, incl) and numCalls/numSubr;
+  int *histogram = (int *) TAU_UTIL_CALLOC(sizeof(int) * numBins * numHistoGrams);
+  int *outHistogram = (int *) TAU_UTIL_CALLOC(sizeof(int) * numBins * numHistoGrams);
+  for (int e=0; e<numItems; e++) { // for each event
+    if (globalmap[e] != -1) { // if it occurred in our rank
+
+      int local_index = functionUnifier->sortMap[globalmap[e]];
+      FunctionInfo *fi = TheFunctionDB()[local_index];
+      
+      double min, max;
+      for (int tid = 0; tid<numThreads; tid++) { // for each thread
+  	for (int m=0; m<Tau_Global_numCounters; m++) {
+	  Tau_collate_incrementHistogram(&(histogram[(m*2)*numBins]), 
+					 gExcl[step_min][m][e], gExcl[step_max][m][e], fi->getDumpExclusiveValues(tid)[m], numBins);
+	  Tau_collate_incrementHistogram(&(histogram[(m*2+1)*numBins]), 
+					 gIncl[step_min][m][e], gIncl[step_max][m][e], fi->getDumpInclusiveValues(tid)[m], numBins);
+  	}
+	Tau_collate_incrementHistogram(&(histogram[(Tau_Global_numCounters*2)*numBins]), 
+				       gNumCalls[step_min][e], gNumCalls[step_max][e], fi->GetCalls(tid), numBins);
+	Tau_collate_incrementHistogram(&(histogram[(Tau_Global_numCounters*2+1)*numBins]), 
+				       gNumSubr[step_min][e], gNumSubr[step_max][e], fi->GetSubrs(tid), numBins);
+      }
+    }
+
+    PMPI_Reduce (histogram, outHistogram, numBins * numHistoGrams, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    if (rank == 0) {
+      fprintf (histoFile, "%s\n", functionUnifier->globalStrings[e]);
+      for (int i=0;i<numHistoGrams;i++) {
+	for (int j=0;j<numBins;j++) {
+	  fprintf (histoFile, "%d ", histogram[i*numBins+j]);
+	}
+	fprintf (histoFile, "\n");
+      }
     }
   }
 
@@ -325,15 +387,12 @@ extern "C" int Tau_collate_writeProfile() {
     TAU_VERBOSE("TAU: Collating Complete, duration = %.4G seconds\n", ((double)((double)end-start))/1000000.0f);
   }
 
-
   MPI_Op_free(&min_op);
   MPI_Op_free(&sum_op);
 
-
   // temp: write regular profiles too, for comparison
-  int tid = 0;
-  TauProfiler_DumpData(false, tid, "profile");
-
+  // int tid = 0;
+  // TauProfiler_DumpData(false, tid, "profile");
 
   return 0;
 }
