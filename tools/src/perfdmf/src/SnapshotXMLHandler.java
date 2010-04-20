@@ -10,9 +10,9 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * XML Handler for snapshot profiles, this is where all the work is done
  *
- * <P>CVS $Id: SnapshotXMLHandler.java,v 1.13 2009/05/06 19:50:59 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotXMLHandler.java,v 1.14 2010/04/20 21:30:14 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  */
 public class SnapshotXMLHandler extends DefaultHandler {
 
@@ -33,6 +33,9 @@ public class SnapshotXMLHandler extends DefaultHandler {
     private String currentValue;
     private String currentGroup;
     private long currentTimestamp;
+    
+    private boolean unified;
+    private ThreadData unifiedDefinitions;
 
     private static class ThreadData {
         public Thread thread;
@@ -83,6 +86,10 @@ public class SnapshotXMLHandler extends DefaultHandler {
         int threadID = Integer.parseInt(attributes.getValue("thread"));
 
         ThreadData data = new ThreadData();
+        if (unified) {
+            data.eventMap = unifiedDefinitions.eventMap;
+            data.userEventMap = unifiedDefinitions.userEventMap;
+        }
         data.thread = dataSource.addThread(nodeID, contextID, threadID);
         threadMap.put(threadName, data);
         currentThread = data;
@@ -90,7 +97,14 @@ public class SnapshotXMLHandler extends DefaultHandler {
 
     private void handleDefinitions(Attributes attributes) {
         String threadID = attributes.getValue("thread");
-        currentThread = (ThreadData) threadMap.get(threadID);
+        if (threadID.equals("*")) {
+            System.out.println("unified!");
+            unified = true;
+            unifiedDefinitions = new ThreadData();
+            currentThread = unifiedDefinitions;
+        } else {
+            currentThread = (ThreadData) threadMap.get(threadID);
+        }
     }
 
     private void handleProfile(Attributes attributes) {
