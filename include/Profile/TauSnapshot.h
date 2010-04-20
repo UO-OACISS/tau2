@@ -25,6 +25,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 int   TAUDECL Tau_snapshot_initialization();
+int   TAUDECL Tau_snapshot_writeUnifiedBuffer();
 int   TAUDECL Tau_snapshot_writeToBuffer(const char *name);
 char* TAUDECL Tau_snapshot_getBuffer();
 int   TAUDECL Tau_snapshot_getBufferLength();

@@ -34,6 +34,8 @@ extern "C" {
 #endif /* __cplusplus */
 
 int Tau_unify_unifyDefinitions();
+Tau_unify_object_t *Tau_unify_getFunctionUnifier();
+Tau_unify_object_t *Tau_unify_getAtomicUnifier();
 
 #ifdef __cplusplus
 }

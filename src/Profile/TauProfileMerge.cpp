@@ -23,13 +23,54 @@
 #include <TAU.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <Profile/tau_types.h>
-#include <Profile/TauEnv.h>
-#include <Profile/TauSnapshot.h>
-#include <Profile/TauMetrics.h>
-#include <Profile/TauUnify.h>
+#include <tau_types.h>
+#include <TauEnv.h>
+#include <TauSnapshot.h>
+#include <TauMetrics.h>
+#include <TauUnify.h>
+#include <TauUtil.h>
+#include <TauXML.h>
 
-int TAUDECL Tau_RtsLayer_myThread();
+extern "C" int TAUDECL Tau_RtsLayer_myThread();
+
+
+#ifdef TAU_EXP_UNIFY
+void Tau_profileMerge_writeDefinitions(FILE *f) {
+
+  Tau_unify_object_t *functionUnifier, *atomicUnifier;
+  functionUnifier = Tau_unify_getFunctionUnifier();
+  atomicUnifier = Tau_unify_getAtomicUnifier();
+
+  Tau_util_outputDevice out;
+  out.type = TAU_UTIL_OUTPUT_FILE;
+  out.fp = f;
+
+  // start of a profile block
+  Tau_util_output (&out, "<profile_xml>\n");
+
+  Tau_util_output (&out, "\n<definitions thread=\"*\">\n");
+
+  for (int i=0; i<functionUnifier->globalNumItems; i++) {
+    Tau_util_output (&out, "<event id=\"%d\"><name>", i);
+    Tau_XML_writeString(&out, functionUnifier->globalStrings[i]);
+    Tau_util_output (&out, "</name><group>");
+    Tau_XML_writeString(&out, ":)");
+    Tau_util_output (&out, "</group></event>\n");
+  }
+
+  for (int i=0; i<atomicUnifier->globalNumItems; i++) {
+    Tau_util_output (&out, "<userevent id=\"%d\"><name>", i);
+    Tau_XML_writeString(&out, atomicUnifier->globalStrings[i]);
+    Tau_util_output (&out, "</name></userevent>\n");
+  }
+
+  Tau_util_output (&out, "\n</definitions>\n");
+
+  Tau_util_output (&out, "</profile_xml>\n");
+
+}
+#endif
+
 
 int Tau_mergeProfiles() {
   int rank, size, tid, i, buflen;
@@ -39,8 +80,13 @@ int Tau_mergeProfiles() {
   x_uint64 start, end;
   const char *profiledir = TauEnv_get_profiledir();
 
+#ifdef TAU_EXP_UNIFY
+  Tau_unify_unifyDefinitions();
+  Tau_snapshot_writeUnifiedBuffer();
+#else
 
   Tau_snapshot_writeToBuffer("merge");
+#endif
 
   tid = Tau_RtsLayer_myThread();
 
@@ -49,9 +95,9 @@ int Tau_mergeProfiles() {
     return 0;
   }
 
-#ifdef TAU_EXP_UNIFY
-  Tau_unify_unifyDefinitions();
-#endif
+
+  // temp: write regular profiles too, for comparison
+  TauProfiler_DumpData(false, 0, "profile");
 
   
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -81,7 +127,7 @@ int Tau_mergeProfiles() {
     }
 
 #ifdef TAU_EXP_UNIFY
-    Tau_unify_writeDefinitions(f);
+    Tau_profileMerge_writeDefinitions(f);
 #endif
 
     for (i=1; i<size; i++) {

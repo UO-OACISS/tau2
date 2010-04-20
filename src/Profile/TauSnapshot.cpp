@@ -23,6 +23,7 @@
 #include <TauMetaData.h>
 #include <TauMetrics.h>
 #include <TauXML.h>
+#include <TauUnify.h>
 
 static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer);
 static int startNewSnapshotFile(char *threadid, int tid, int to_buffer);
@@ -226,6 +227,123 @@ static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer) {
    
    return 0;
 }
+
+#ifdef TAU_EXP_UNIFY
+int Tau_snapshot_writeUnifiedBuffer() {
+  int tid = RtsLayer::myThread();
+  int i, c;
+  Tau_util_outputDevice *out = Tau_snapshot_getFiles()[tid];
+  
+  char threadid[4096];
+  sprintf(threadid, "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, RtsLayer::getPid());
+  
+  RtsLayer::LockDB();
+  int numFunc = TheFunctionDB().size();
+  int numEvents = TheEventDB().size();
+
+   if (!out) {
+     int to_buffer=1;
+     startNewSnapshotFile(threadid, tid, to_buffer);
+     out = Tau_snapshot_getFiles()[tid];
+   } else {
+     Tau_util_output (out, "<profile_xml>\n");
+   }
+   
+   Tau_unify_object_t *functionUnifier, *atomicUnifier;
+   functionUnifier = Tau_unify_getFunctionUnifier();
+   atomicUnifier = Tau_unify_getAtomicUnifier();
+
+   // create a reverse mapping, not strictly necessary, but it makes things easier
+   int *globalmap = (int*)TAU_UTIL_MALLOC(functionUnifier->globalNumItems * sizeof(int));
+   for (int i=0; i<functionUnifier->globalNumItems; i++) { // initialize all to -1
+     globalmap[i] = -1; // -1 indicates that the event did not occur for this rank
+   }
+   for (int i=0; i<functionUnifier->localNumItems; i++) {
+     globalmap[functionUnifier->mapping[i]] = i; // set reverse mapping
+   }
+
+
+   // now write the actual profile data for this snapshot
+   Tau_util_output (out, "\n<profile thread=\"%s\">\n", threadid);
+
+#ifdef TAU_WINDOWS
+   Tau_util_output (out, "<timestamp>%I64d</timestamp>\n", TauMetrics_getInitialTimeStamp());
+#else
+   Tau_util_output (out, "<timestamp>%lld</timestamp>\n", TauMetrics_getInitialTimeStamp());
+#endif
+
+   char metricList[4096];
+   char *loc = metricList;
+   for (c=0; c<Tau_Global_numCounters; c++) {
+       loc += sprintf (loc,"%d ", c);
+   }
+   Tau_util_output (out, "<interval_data metrics=\"%s\">\n", metricList);
+
+   TauProfiler_updateIntermediateStatistics(tid);
+
+
+  // the global number of events
+  int numItems = functionUnifier->globalNumItems;
+
+
+  for (int e=0; e<numItems; e++) { // for each event
+    if (globalmap[e] != -1) { // if it occurred in our rank
+      
+      int local_index = functionUnifier->sortMap[globalmap[e]];
+      FunctionInfo *fi = TheFunctionDB()[local_index];
+      
+      // get currently stored values
+      double *incltime = fi->getDumpInclusiveValues(tid);
+      double *excltime = fi->getDumpExclusiveValues(tid);
+      
+      //fprintf (stderr, "local=%d, global=%d, name=%s\n", i, functionUnifier->mapping[functionUnifier->sortMap[i]], fi->GetName());
+      Tau_util_output (out, "%d %ld %ld ", e, fi->GetCalls(tid), fi->GetSubrs(tid));
+      for (c=0; c<Tau_Global_numCounters; c++) {
+	Tau_util_output (out, "%.16G %.16G ", excltime[c], incltime[c]);
+      }
+      Tau_util_output (out, "\n");
+    }
+  }
+  
+  Tau_util_output (out, "</interval_data>\n");
+
+
+  free (globalmap);
+  // create a reverse mapping, not strictly necessary, but it makes things easier
+  globalmap = (int*)TAU_UTIL_MALLOC(atomicUnifier->globalNumItems * sizeof(int));
+  for (int i=0; i<atomicUnifier->globalNumItems; i++) { // initialize all to -1
+    globalmap[i] = -1; // -1 indicates that the event did not occur for this rank
+  }
+  for (int i=0; i<atomicUnifier->localNumItems; i++) {
+    globalmap[atomicUnifier->mapping[i]] = i; // set reverse mapping
+  }
+  numItems = atomicUnifier->globalNumItems;
+
+
+   // now write the user events
+   Tau_util_output (out, "<atomic_data>\n");
+   for (int e=0; e<numItems; e++) { // for each event
+     if (globalmap[e] != -1) { // if it occurred in our rank
+       int local_index = atomicUnifier->sortMap[globalmap[e]];
+       TauUserEvent *ue = TheEventDB()[local_index];
+           Tau_util_output (out, "%d %ld %.16G %.16G %.16G %.16G\n", 
+	     atomicUnifier->mapping[atomicUnifier->sortMap[i]], ue->GetNumEvents(tid), ue->GetMax(tid),
+	     ue->GetMin(tid), ue->GetMean(tid), ue->GetSumSqr(tid));
+     }
+   }
+   free(globalmap);
+   Tau_util_output (out, "</atomic_data>\n");
+
+   Tau_util_output (out, "</profile>\n");
+   Tau_util_output (out, "\n</profile_xml>\n");
+
+
+   RtsLayer::UnLockDB();
+   
+   return 0;
+}
+#endif /* TAU_EXP_UNIFY */
+
 
 static int startNewSnapshotFile(char *threadid, int tid, int to_buffer) {
   const char *profiledir = TauEnv_get_profiledir();

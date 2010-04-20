@@ -48,6 +48,14 @@ typedef struct {
 // not the best style, but I use a global here to store the current event lister so that qsort can work
 EventLister *theEventLister;
 
+Tau_unify_object_t *functionUnifier=0, *atomicUnifier=0;
+extern "C" Tau_unify_object_t *Tau_unify_getFunctionUnifier() {
+  return functionUnifier;
+}
+extern "C" Tau_unify_object_t *Tau_unify_getAtomicUnifier() {
+  return atomicUnifier;
+}
+
 
 static int comparator(const void *p1, const void *p2) {
   int arg0 = *(int*)p1;
@@ -195,13 +203,15 @@ unify_merge_object_t *Tau_unify_mergeObjects(vector<unify_object_t*> &objects) {
 
 
 
+
+
+
+
 extern "C" int Tau_unify_unifyDefinitions() {
   FunctionEventLister *functionEventLister = new FunctionEventLister();
-  Tau_unify_unifyEvents(functionEventLister);
-
+  functionUnifier = Tau_unify_unifyEvents(functionEventLister);
   AtomicEventLister *atomicEventLister = new AtomicEventLister();
-  Tau_unify_unifyEvents(atomicEventLister);
-
+  atomicUnifier = Tau_unify_unifyEvents(atomicEventLister);
 }
 
 
@@ -306,7 +316,6 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
     for (int i=0; i<mergedObject->strings.size(); i++) {
       fprintf (stderr, "mergedObject->strings[%d] = %s\n", i, mergedObject->strings[i]);
     }
-
   }
 
 

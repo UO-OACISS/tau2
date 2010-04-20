@@ -1556,7 +1556,7 @@ int  MPI_Finalize(  )
   /* Create a merged profile if requested */
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
 
-#ifdef TAU_EXP_UNIFY
+#ifdef TAU_EXP_COLLATE
     Tau_collate_writeProfile();
 #else
     Tau_mergeProfiles();
