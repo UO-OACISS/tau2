@@ -19,8 +19,8 @@
 
 #ifdef TAU_MPI
 
-#include <TAU.h>
 #include <mpi.h>
+#include <TAU.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <Profile/tau_types.h>

@@ -42,7 +42,7 @@ all : 		$(TAU_TARGET)
 install:	$(INSTALLDEST)/$(TAU_TARGET) 
 
 $(TAU_TARGET) : TauMpi.o ClockSync.o TauProfileMerge.o TauMetaDataMerge.o $(FWRAPPER) $(MPI2EXTENSIONS)
-	$(AR) $(ARFLAGS) $(TAU_TARGET) TauMpi.o ClockSync.o ProfileMerge.o TauMetaDataMerge.o $(FWRAPPER) $(MPI2EXTENSIONS)
+	$(AR) $(ARFLAGS) $(TAU_TARGET) TauMpi.o ClockSync.o TauProfileMerge.o TauMetaDataMerge.o $(FWRAPPER) $(MPI2EXTENSIONS)
 	$(TAU_RANLIB) $(TAU_TARGET)
 
 TauMpi.o : TauMpi.c
@@ -57,8 +57,8 @@ TauMpiExtensions.o : 	TauMpiExtensions.c
 ClockSync.o : ClockSync.c
 	$(CC) $(CFLAGS) -c ClockSync.c
 
-ProfileMerge.o : ProfileMerge.cpp
-	$(CXX) $(CFLAGS) -c ProfileMerge.cpp
+TauProfileMerge.o : TauProfileMerge.cpp
+	$(CXX) $(CFLAGS) -c TauProfileMerge.cpp
 
 TauMetaDataMerge.o : TauMetaDataMerge.cpp
 	$(CXX) $(CFLAGS) -c TauMetaDataMerge.cpp

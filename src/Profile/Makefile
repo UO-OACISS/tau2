@@ -304,7 +304,7 @@ $(TAU_DISABLE): TauDisable.o $(TAU_DISABLE_SHARED) TauKojakOpariDisable.o
 $(TAU_DISABLE_SHARED) : TauDisable.o TauKojakOpariDisable.o
 		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_DISABLE_SHARED) TauDisable.o TauKojakOpariDisable.o
 
-libTauMpi$(TAU_CONFIG)$(LSX): TauMpi.c TauFMpi.c ClockSync.c ProfileMerge.cpp TauMpiExtensions.c TauMetaDataMerge.cpp
+libTauMpi$(TAU_CONFIG)$(LSX): TauMpi.c TauFMpi.c ClockSync.c TauProfileMerge.cpp TauMpiExtensions.c TauMetaDataMerge.cpp
 		$(MAKE) -f Makefile.wrapper  
 
 libTauShmem$(TAU_CONFIG)$(LSX): 
