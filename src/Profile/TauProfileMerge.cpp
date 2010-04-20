@@ -97,7 +97,7 @@ int Tau_mergeProfiles() {
 
 
   // temp: write regular profiles too, for comparison
-  TauProfiler_DumpData(false, 0, "profile");
+  //TauProfiler_DumpData(false, 0, "profile");
 
   
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
