@@ -349,22 +349,40 @@ extern "C" int Tau_stop_current_timer() {
 ///////////////////////////////////////////////////////////////////////////
 
 
+extern "C" int Tau_profile_exit_all_threads() {
+	int tid = 0;
+	while (tid < TAU_MAX_THREADS)
+	{
+		while (Tau_global_stackpos[tid] >= 0) {
+			Profiler *p = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
+			p->Stop(tid, true);
+			Tau_global_stackpos[tid]--;
+		}
+	tid++;
+	}
+  return 0;
+}
+
 
 extern "C" int Tau_profile_exit() {
   int tid = RtsLayer::myThread();
-  while (Tau_global_stackpos[tid] >= 0) {
-    Profiler *p = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
-    p->Stop();
-    Tau_global_stackpos[tid]--;
-  }
+	while (Tau_global_stackpos[tid] >= 0) {
+		Profiler *p = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
+		p->Stop();
+		Tau_global_stackpos[tid]--;
+	}
   return 0;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_exit(const char * msg) {
+#ifdef TAU_CUDA
+	Tau_profile_exit_all_threads();
+#else
   Tau_profile_exit();
-  
+#endif
+
 #ifdef TAUKTAU
   KtauProfiler::PutKtauProfiler();
 #endif /* TAUKTAU */
@@ -1317,9 +1335,9 @@ extern "C" int Tau_get_tid(void) {
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
-  Tau_stop_top_level_timer_if_necessary();
+	Tau_stop_top_level_timer_if_necessary();
+  //printf ("FIvector destructor\n");
   if ((TheUsingDyninst() || TheUsingCompInst()) && TheSafeToDumpData()) {
-    //printf ("FIvector destructor\n");
 #ifndef TAU_VAMPIRTRACE
     TAU_PROFILE_EXIT("FunctionDB destructor");
     TheSafeToDumpData() = 0;
@@ -1417,8 +1435,8 @@ int *tau_pomp_rd_table = 0;
                     
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.149 $   $Date: 2010/04/14 21:31:30 $
- * VERSION: $Id: TauCAPI.cpp,v 1.149 2010/04/14 21:31:30 amorris Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: scottb $
+ * $Revision: 1.150 $   $Date: 2010/04/20 23:26:45 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.150 2010/04/20 23:26:45 scottb Exp $
  ***************************************************************************/
 
