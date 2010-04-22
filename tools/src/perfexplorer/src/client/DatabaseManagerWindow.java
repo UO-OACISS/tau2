@@ -366,7 +366,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                 mainWindow.refreshDatabases();
             } else if (arg.equals("Remove Configuration")) {
                 String path = selectedConfig.getPath();
-                System.out.println("deleating config, path: " + path);
+                System.out.println("deleting config, path: " + path);
                 File removeFile = new File(path); 
                 //System.out.println(removeFile.exists() + "File path: " + removeFile.getAbsolutePath());
                 removeFile.delete();
