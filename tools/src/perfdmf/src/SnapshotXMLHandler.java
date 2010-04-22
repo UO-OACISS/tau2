@@ -10,9 +10,9 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * XML Handler for snapshot profiles, this is where all the work is done
  *
- * <P>CVS $Id: SnapshotXMLHandler.java,v 1.14 2010/04/20 21:30:14 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotXMLHandler.java,v 1.15 2010/04/22 21:49:37 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  */
 public class SnapshotXMLHandler extends DefaultHandler {
 
@@ -39,9 +39,9 @@ public class SnapshotXMLHandler extends DefaultHandler {
 
     private static class ThreadData {
         public Thread thread;
-        public Map metricMap = new HashMap();
-        public Map eventMap = new HashMap();
-        public Map userEventMap = new HashMap();
+        public List metricMap = new ArrayList();
+        public List eventMap = new ArrayList();
+        public List userEventMap = new ArrayList();
     }
 
     public SnapshotXMLHandler(SnapshotDataSource source) {
@@ -62,7 +62,11 @@ public class SnapshotXMLHandler extends DefaultHandler {
 
     private void handleMetric(String name) {
         Metric metric = dataSource.addMetric(name);
-        currentThread.metricMap.put(new Integer(currentId), metric);
+        
+        while (currentId >= currentThread.metricMap.size()) {
+            currentThread.metricMap.add(null);
+        }
+        currentThread.metricMap.set(currentId, metric);
     }
 
     private void handleEvent(String name, String groups) {
@@ -70,13 +74,20 @@ public class SnapshotXMLHandler extends DefaultHandler {
 
         Function function = dataSource.addFunction(name);
         dataSource.addGroups(groups, function);
-        currentThread.eventMap.put(new Integer(id), function);
+        
+        while (id >= currentThread.eventMap.size()) {
+            currentThread.eventMap.add(null);
+        }
+        currentThread.eventMap.set(id, function);
     }
 
     private void handleUserEvent(String name) {
         int id = currentId;
         UserEvent userEvent = dataSource.addUserEvent(name);
-        currentThread.userEventMap.put(new Integer(id), userEvent);
+        while (id >= currentThread.userEventMap.size()) {
+            currentThread.userEventMap.add(null);
+        }
+        currentThread.userEventMap.set(id, userEvent);
     }
 
     private void handleThread(Attributes attributes) {
@@ -98,7 +109,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
     private void handleDefinitions(Attributes attributes) {
         String threadID = attributes.getValue("thread");
         if (threadID.equals("*")) {
-            System.out.println("unified!");
+            System.out.println("Unified format found!");
             unified = true;
             unifiedDefinitions = new ThreadData();
             currentThread = unifiedDefinitions;
@@ -133,7 +144,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
 
         while (tokenizer.hasMoreTokens()) {
             int eventID = Integer.parseInt(tokenizer.nextToken());
-            UserEvent userEvent = (UserEvent) currentThread.userEventMap.get(new Integer(eventID));
+            UserEvent userEvent = (UserEvent) currentThread.userEventMap.get(eventID);
 
             UserEventProfile uep = currentThread.thread.getUserEventProfile(userEvent);
             if (uep == null) {
@@ -162,7 +173,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
         while (tokenizer.hasMoreTokens()) {
             int eventID = Integer.parseInt(tokenizer.nextToken());
 
-            Function function = (Function) currentThread.eventMap.get(new Integer(eventID));
+            Function function = (Function) currentThread.eventMap.get(eventID);
 
             FunctionProfile fp = currentThread.thread.getFunctionProfile(function);
             if (fp == null) {
@@ -175,7 +186,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
 
             for (int i = 0; i < currentMetrics.length; i++) {
                 int metricID = currentMetrics[i];
-                Metric metric = (Metric) currentThread.metricMap.get(new Integer(metricID));
+                Metric metric = (Metric) currentThread.metricMap.get(metricID);
                 double exclusive = Double.parseDouble(tokenizer.nextToken());
                 double inclusive = Double.parseDouble(tokenizer.nextToken());
                 fp.setExclusive(metric.getID(), exclusive);
