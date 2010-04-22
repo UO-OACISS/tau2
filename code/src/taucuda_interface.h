@@ -16,7 +16,7 @@ struct cuEventId
 
 	cuEventId(const NvU64 a, const NvU64 b) :
 		contextId(a), callId(b) {}
-
+#ifdef __cplusplus
 	bool operator<(const cuEventId& A) const
 	{ 
 		if (contextId == A.contextId)
@@ -26,6 +26,7 @@ struct cuEventId
 		else
 			return contextId<A.contextId;
 	}
+#endif // __cplusplus
 };
 
 struct gpuId
@@ -36,6 +37,7 @@ struct gpuId
 	gpuId(const NvU64 a, const NvU32 b) :
 		contextId(a), deviceId(b) {}
 
+#ifdef __cplusplus
 	bool operator<(const gpuId& A) const
 	{ 
 		if (contextId == A.contextId)
@@ -45,6 +47,7 @@ struct gpuId
 		else
 			return contextId<A.contextId;
 	}
+#endif // __cplusplus
 };
 
 #endif // _TAU_CUDA_INTERFACE
