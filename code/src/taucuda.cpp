@@ -73,28 +73,32 @@ void check_gpu_event()
 /* create TAU callback routine to capture both CPU and GPU execution time 
 	takes the thread id as a argument. */
 
-void enter_cu_event(const char* name, cuEventId id, gpuId device)
+void enter_cu_event(const char* name, cuEventId id)
 {
 #ifdef DEBUG_PROF
 	printf("entering cu event: %s.\n", name);
 #endif
-	if(strncmp(name,"cuMemcpy", sizeof("cuMemcpy")-1)==0)
+	TAU_START(name);
+}
+void enter_cu_memcpy_event(const char* name, cuEventId id, gpuId device)
+{
+#ifdef DEBUG_PROF
+	printf("entering cuMemcpy event: %s.\n", name);
+#endif
+	if(strncmp(name,"cuMemcpyHtoD", sizeof("cuMemcpyHtoD")-1)==0)
 	{
-		if(strncmp(name,"cuMemcpyHtoD", sizeof("cuMemcpyHtoD")-1)==0)
-		{
-			MemcpyEventMap.insert(make_pair(id, MemcpyHtoD));
-			TauTraceOneSidedMsg(MESSAGE_SEND, device, -1, 0);
-		}
-		else if(strncmp(name,"cuMemcpyDtoH",sizeof("cuMemcpyDtoH")-1)==0)
-		{
-			MemcpyEventMap.insert(make_pair(id, MemcpyDtoH));
-			TauTraceOneSidedMsg(MESSAGE_SEND, device, -1, 0);
-		}
+		MemcpyEventMap.insert(make_pair(id, MemcpyHtoD));
+		TauTraceOneSidedMsg(MESSAGE_SEND, device, -1, 0);
+	}
+	else if(strncmp(name,"cuMemcpyDtoH",sizeof("cuMemcpyDtoH")-1)==0)
+	{
+		MemcpyEventMap.insert(make_pair(id, MemcpyDtoH));
+		TauTraceOneSidedMsg(MESSAGE_RECV, device, -1, 0);
 	}
 	TAU_START(name);
 }
 
-void exit_cu_event(const char *name, cuEventId id, gpuId device)
+void exit_cu_event(const char *name, cuEventId id)
 {
 #ifdef DEBUG_PROF
 	printf("exit cu event: %s.\n", name);

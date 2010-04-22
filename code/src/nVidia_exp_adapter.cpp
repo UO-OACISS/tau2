@@ -114,10 +114,18 @@ void CUDAAPI callback_handle(
 		//extract the device ID for the curent context
 		GetContextTable()->CtxGetId(cParams->ctx, &contextId);
 		cuEventId id(contextId, cParams->apiCallId);
-		NvU32 device;
-		GetContextTable()->CtxGetDevice(cParams->ctx,&device);
-		gpuId gId(contextId, device);
-		enter_cu_event(cParams->functionName, id, gId);
+
+		if(strncmp(cParams->functionName,"cuMemcpy", sizeof("cuMemcpy")-1)==0)
+		{
+			NvU32 device;
+			GetContextTable()->CtxGetDevice(cParams->ctx,&device);
+			gpuId gId(contextId, device);
+			enter_cu_memcpy_event(cParams->functionName, id, gId);
+		}
+		else
+		{
+			enter_cu_event(cParams->functionName, id);
+		}
 	}
 	else if (*callbackId == cuToolsApi_CBID_ExitGeneric)
 	{
@@ -125,10 +133,7 @@ void CUDAAPI callback_handle(
 		//extract the device ID for the curent context
 		GetContextTable()->CtxGetId(cParams->ctx, &contextId);
 		cuEventId id(contextId, cParams->apiCallId);
-		NvU32 device;
-		GetContextTable()->CtxGetDevice(cParams->ctx,&device);
-		gpuId gId(contextId, device);
-		exit_cu_event(cParams->functionName, id, gId);
+		exit_cu_event(cParams->functionName, id);
 	}
 	else if (*callbackId == cuToolsApi_CBID_ProfileLaunch)
 	{
