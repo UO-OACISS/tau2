@@ -16,9 +16,10 @@
 
 #include "taucuda_interface.h"
 #include "TAU.h"
+#include <Profile/TauTrace.h>
 #include <Profile/TauInit.h>
 #include <stdio.h>
-
+#include <iostream>
 
 void *main_ptr, *gpu_ptr;
 
@@ -72,7 +73,7 @@ void check_gpu_event()
 /* create TAU callback routine to capture both CPU and GPU execution time 
 	takes the thread id as a argument. */
 
-void enter_cu_event(const char* name, cuEventId id)
+void enter_cu_event(const char* name, cuEventId id, gpuId device)
 {
 #ifdef DEBUG_PROF
 	printf("entering cu event: %s.\n", name);
@@ -82,21 +83,32 @@ void enter_cu_event(const char* name, cuEventId id)
 		if(strncmp(name,"cuMemcpyHtoD", sizeof("cuMemcpyHtoD")-1)==0)
 		{
 			MemcpyEventMap.insert(make_pair(id, MemcpyHtoD));
+			TauTraceOneSidedMsg(MESSAGE_SEND, device, -1, 0);
 		}
 		else if(strncmp(name,"cuMemcpyDtoH",sizeof("cuMemcpyDtoH")-1)==0)
 		{
 			MemcpyEventMap.insert(make_pair(id, MemcpyDtoH));
+			TauTraceOneSidedMsg(MESSAGE_SEND, device, -1, 0);
 		}
 	}
 	TAU_START(name);
 }
 
-void exit_cu_event(const char *name, cuEventId id)
+void exit_cu_event(const char *name, cuEventId id, gpuId device)
 {
 #ifdef DEBUG_PROF
 	printf("exit cu event: %s.\n", name);
 #endif
 	TAU_STOP(name);
+	if (strcmp(name, "cuCtxDetach") == 0)
+	{
+		//We're done with the gpu, stop the top level timer.
+#ifdef DEBUG_PROF
+		printf("in cuCtxDetach.\n");
+#endif
+		//TAU_PROFILER_STOP_TASK(gpu_ptr, gpuTask);
+		//TAU_PROFILER_STOP(main_ptr);
+	}
 }
 void start_gpu_event(const char *name)
 {
@@ -159,24 +171,40 @@ void register_gpu_event(const char *name, cuEventId id, double startTime, double
 			endTime);
 }
 
-void register_memcpy_event(cuEventId id, double startTime, double
+void register_memcpy_event(cuEventId id, gpuId device, double startTime, double
 endTime, double transferSize)
 {
 	doubleMap::const_iterator it = MemcpyEventMap.find(id);
-
+#ifdef DEBUG_PROF		
+	printf("recording memcopy event.\n");
+#endif
 	if (it != MemcpyEventMap.end())
 	{
 		if (it->second == MemcpyHtoD) {
 			stage_gpu_event("cuda Memory copy Host to Device", 
 					startTime);
+			//TAU_REGISTER_EVENT(MemoryCopyEventHtoD, "Memory copied from Host to Device");
 			TAU_EVENT(MemoryCopyEventHtoD(), transferSize);
+    	//TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread()); 
+#ifdef DEBUG_PROF		
+			printf("onesided event mem: %lf, id_1: %lf, id_2: %d.\n", transferSize,
+			device.contextId, device.deviceId);
+#endif
+			TauTraceOneSidedMsg(MESSAGE_RECV, device, transferSize, gpuTask);
 			break_gpu_event("cuda Memory copy Host to Device",
 					endTime);
 		}
 		else {
 			stage_gpu_event("cuda Memory copy Device to Host", 
 					startTime);
+			//TAU_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
 			TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
+    	//TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread()); 
+#ifdef DEBUG_PROF		
+			printf("onesided event mem: %lf, id_1: %lf, id_2: %d.\n", transferSize,
+			device.contextId, device.deviceId);
+#endif
+			TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, gpuTask);
 			break_gpu_event("cuda Memory copy Device to Host",
 					endTime);
 		}
@@ -192,7 +220,8 @@ endTime, double transferSize)
 int tau_cuda_init(void)
 {
 		TAU_PROFILE_SET_NODE(0);
-		TAU_PROFILER_CREATE(main_ptr, "main", "", TAU_USER);
+		TAU_PROFILER_CREATE(main_ptr, ".TAU application", "", TAU_USER);
+		//TAU_PROFILER_CREATE(main_ptr, "main", "", TAU_USER);
 		TAU_PROFILER_CREATE(gpu_ptr, "gpu elapsed time", "", TAU_USER);
 
 		/* Create a seperate GPU task */
@@ -209,6 +238,7 @@ int tau_cuda_init(void)
 #ifdef DEBUG_PROF
 		printf("started main.\n");
 #endif
+
 }
 
 
@@ -217,16 +247,17 @@ int tau_cuda_init(void)
 */
 void tau_cuda_exit(void)
 {
-#ifdef debug_prof
-		printf("stopping first gpu event.\n");
+#ifdef DEBUG_PROF
+		cerr << "stopping first gpu event.\n" << endl;
 		printf("stopping level 0.\n");
 #endif
 		TAU_PROFILER_STOP_TASK(gpu_ptr, gpuTask);
-#ifdef debug_prof
+#ifdef DEBUG_PROF
 		printf("stopping level 1.\n");
 #endif
 		TAU_PROFILER_STOP(main_ptr);
-#ifdef debug_prof
+#ifdef DEBUG_PROF
 		printf("stopping level 2.\n");
 #endif
+	  TAU_PROFILE_EXIT("cuda");
 }

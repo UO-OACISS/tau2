@@ -23,10 +23,16 @@ WRAPPER_CC=$(CC) $(TAU_DEFS) $(TAU_INTERNAL_FLAGS1) $(TAU_INCLUDE)
 TAU_CXX=$(TAUROOT)/x86_64/bin/tau_cxx.sh -tau_makefile=${TAU_MAKEFILE}
 LINK=$(TAU_CXX) -tau_options='-optShared -optVerbose'
 CFLAGS := -fPIC -g
-DEFS := -DPTHREADS
+DEFS := -DPTHREADS -DDEBUG_PROF -DTAU_CUDA
 CUDA_LIBS  := -L$(CUDA_BASE)/lib -L$(CUDA_BASE)/lib64 -L$(CUDA_SDK)/lib -L$(CUDA_SDK)/common/lib/linux -lcudart -lcutil
 
-all: $(TARGET_LIB) libcuda_runtime_api_wrap.so
+all: $(TARGET_LIB) libcuda_runtime_api_wrap.so libso_wrapper.so
+
+libso_wrapper.so: so_wrapper.o 
+	$(CC) -shared -o ../$(LIBDIR)/$@ $< $(TAU_SHLIBS) -ldl
+
+so_wrapper.o: so_wrapper.c
+	$(CC) -I$(CUDA_BASE)/include $(CFLAGS) -c $< -o $@
 
 libcuda_runtime_api_wrap.so: cuda_runtime_api_wrap.o 
 	$(LINK) -shared -o ../$(LIBDIR)/$@ $< $(TAU_SHLIBS) -ldl

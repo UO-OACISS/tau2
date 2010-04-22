@@ -87,9 +87,6 @@ void CUDAAPI callback_handle(
     const cuToolsApi_UUID* callbackId,
     const void* inParams)
 {
-#ifdef DEBUG_PROF
-	printf("in callback.\n");	
-#endif
 	NvU64 contextId;
 	/*
 		For the first time when the Profiler callback is received we 
@@ -117,7 +114,10 @@ void CUDAAPI callback_handle(
 		//extract the device ID for the curent context
 		GetContextTable()->CtxGetId(cParams->ctx, &contextId);
 		cuEventId id(contextId, cParams->apiCallId);
-		enter_cu_event(cParams->functionName, id);
+		NvU32 device;
+		GetContextTable()->CtxGetDevice(cParams->ctx,&device);
+		gpuId gId(contextId, device);
+		enter_cu_event(cParams->functionName, id, gId);
 	}
 	else if (*callbackId == cuToolsApi_CBID_ExitGeneric)
 	{
@@ -125,14 +125,17 @@ void CUDAAPI callback_handle(
 		//extract the device ID for the curent context
 		GetContextTable()->CtxGetId(cParams->ctx, &contextId);
 		cuEventId id(contextId, cParams->apiCallId);
-		exit_cu_event(cParams->functionName, id);
+		NvU32 device;
+		GetContextTable()->CtxGetDevice(cParams->ctx,&device);
+		gpuId gId(contextId, device);
+		exit_cu_event(cParams->functionName, id, gId);
 	}
 	else if (*callbackId == cuToolsApi_CBID_ProfileLaunch)
 	{
 		cuToolsApi_ProfileLaunchInParams* cParams = (cuToolsApi_ProfileLaunchInParams*) inParams;	
 		GetContextTable()->CtxGetId(cParams->ctx, &contextId);
 		cuEventId id(contextId, cParams->apiCallId);
-		TAU32 device;
+		NvU32 device;
 		GetContextTable()->CtxGetDevice(cParams->ctx,&device);
 		double startTime = AlignedTime((int)device, (double)cParams->startTime/1000);
 		double endTime = AlignedTime((int)device, (double)cParams->endTime/1000);
@@ -143,11 +146,12 @@ void CUDAAPI callback_handle(
 		cuToolsApi_ProfileMemcpyInParams* cParams = (cuToolsApi_ProfileMemcpyInParams*) inParams;	
 		GetContextTable()->CtxGetId(cParams->ctx, &contextId);
 		cuEventId id(contextId, cParams->apiCallId);
-		TAU32 device;
+		NvU32 device;
 		GetContextTable()->CtxGetDevice(cParams->ctx,&device);
+		gpuId gId(contextId, device);
 		double startTime = AlignedTime((int)device, (double)cParams->startTime/1000);
 		double endTime = AlignedTime((int)device, (double)cParams->endTime/1000);
-		register_memcpy_event(id, startTime, endTime, cParams->memTransferSize);
+		register_memcpy_event(id, gId, startTime, endTime, cParams->memTransferSize);
 	}
 }
 /*
