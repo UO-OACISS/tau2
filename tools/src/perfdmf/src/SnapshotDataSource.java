@@ -16,9 +16,9 @@ import edu.uoregon.tau.common.XMLRootWrapInputStream;
 /**
  * Snapshot data reader, the real work is done in the XML Handler
  *
- * <P>CVS $Id: SnapshotDataSource.java,v 1.13 2009/05/06 19:50:59 amorris Exp $</P>
+ * <P>CVS $Id: SnapshotDataSource.java,v 1.14 2010/04/22 22:01:58 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  */
 public class SnapshotDataSource extends DataSource {
 
@@ -77,7 +77,7 @@ public class SnapshotDataSource extends DataSource {
             }
 
             time = System.currentTimeMillis() - time;
-            //System.out.println("Snapshot reading took " + time + " ms");
+            System.out.println("Snapshot reading took " + time + " ms");
             //System.out.println("found " + this.getThread(0,0,0).getNumSnapshots() + " snapshots");
             this.generateDerivedData();
             this.aggregateMetaData();
