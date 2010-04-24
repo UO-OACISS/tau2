@@ -46,8 +46,12 @@ class TotID{
 	/**
 	 * The number of CUDA communication use events seen on this thread.  Used to detect communication triplets used by CUDA traces
 	 */
-	public boolean cSeen=false;
-	public boolean send=true;
+	//public boolean cSeen=false;
+	//public boolean send=true;
+	public int oneSideType=-1;
+	//public static final int ONESIDE_SEND=0;
+	//public static final int ONESIDE_RECV=1;
+	public int size=0;
 
 	//	/**
 	//	 * Most recent valid CUDA mem-copy size, set in the second of 3 communication triplets.
@@ -71,9 +75,9 @@ class TotID{
 	 */
 	StringBuilder mpi=new StringBuilder();//null;
 
-	public int cudaSendID=-1;
-	public int cudaRecvID=-1;
-	public int cudaSizeID=-1;
+	//public int cudaSendID=-1;
+	//public int cudaRecvID=-1;
+	//public int cudaSizeID=-1;
 
 	TotID(String fname){
 		filename=fname;
@@ -185,6 +189,12 @@ class DoublePair{
 
 public class MultiMerge {
 
+	private static final int ONESIDED_MESSAGE_SEND=70000;
+	private static final int ONESIDED_MESSAGE_RECV=70001;
+	private static final int ONESIDED_MESSAGE_ID_TriggerValueT1=70002;
+	private static final int ONESIDED_MESSAGE_ID_TriggerValueT2=70003;
+	
+	
 	/**
 	 * The map between state ids provided by different threads, and the global id used in the merged trace
 	 */
@@ -321,41 +331,41 @@ public class MultiMerge {
 	 */
 	private static TotID initTotLoc(TotID tot){
 
-		boolean isCuda=tot.filename.contains("cuda");
+		//boolean isCuda=tot.filename.contains("cuda");
 
 		int[]fn=getNCT(tot.filename);
 		int threadToken=-1;
-		if(isCuda)
-		{
-			threadToken=0;
-		}else{
+//		if(isCuda)
+//		{
+//			threadToken=0;
+//		}else{
 			threadToken=fn[2];
-		}
+		//}
 
 		/*
 		 * If this is a threaded trace file we are on the same node as before, just update the thread
 		 */
-		if(threadToken>0){
+		/*if(threadToken>0){
 			tot.node=lastNode;
 			tot.thread=threadToken;
-		}
+		}*/
 		/*
 		 * If this is not a threaded entry we're on a new node so increment and set thread to 0.  If this is not a cuda tracefile we need to map the local node ID to the global nodeID.
 		 */
-		else{
+		//else{
 			lastNode++;
 			tot.node=lastNode;
 			tot.thread=0;
-			if(!isCuda){
+			if(threadToken==0){
 				oldNewDest.put(new Integer(fn[0]), new Integer(lastNode));
-			}	
+			//}	
 		}
 
 
 		/*
 		 * Identify the threads based on the n/c/t in the file names.
 		 */
-		if(!tot.filename.startsWith("tautrace")){
+		if(threadToken==1){//!tot.filename.startsWith("tautrace")){
 
 			String threadName="Node"+fn[0]+" CUDA Stream "+fn[1]+" Device "+fn[2];
 			tw.defThread(tot.node, tot.thread, threadName);
@@ -550,7 +560,7 @@ public class MultiMerge {
 
 			TotID tot = (TotID)userData;
 
-			if(userEventName.equals("TAUCUDA_MEM_SEND")){
+			/*if(userEventName.equals("TAUCUDA_MEM_SEND")){
 				tot.cudaSendID=userEventToken;
 				return 0;
 			} 
@@ -561,7 +571,10 @@ public class MultiMerge {
 			if(userEventName.equals("TAUCUDA_COPY_MEM_SIZE")){
 				tot.cudaSizeID=userEventToken;
 				return 0;
-			} 
+			} */
+			
+			if(userEventToken>=70000)
+				return 0;
 
 
 			/*
@@ -606,7 +619,24 @@ public class MultiMerge {
 		public int eventTrigger(Object userData, long time, int nodeToken, int threadToken, int userEventToken, double userEventValue) {
 			TotID tot = (TotID)userData;
 
-			if(userEventToken==tot.cudaRecvID||userEventToken==tot.cudaSendID)
+			if(userEventToken==ONESIDED_MESSAGE_ID_TriggerValueT1){
+				tot.dp.l1=userEventValue;
+			}
+			
+			if(userEventToken==ONESIDED_MESSAGE_ID_TriggerValueT2){
+				tot.dp.l2=userEventValue;
+				
+				Point p =idNodes.get(tot.dp.toString());
+				if(p==null){
+					p=new Point(tot.node,-1);
+					idNodes.put(tot.dp.toString(), p);
+				}else if(p.x!=tot.node){
+					p.y=tot.node;
+				}
+			}
+			
+			/*
+			if(userEventToken==ONESIDED_MESSAGE_SEND||userEventToken==ONESIDED_MESSAGE_RECV)
 			{
 
 				if(!tot.cSeen){
@@ -644,7 +674,7 @@ public class MultiMerge {
 					//tot.uniC.setLength(0);
 
 				}
-			}
+			}*/
 
 			return 0;
 		}
@@ -738,27 +768,19 @@ public class MultiMerge {
 		public int eventTrigger(Object userData, long time, int nodeToken, int threadToken, int userEventToken, double userEventValue) {
 			TotID tot = (TotID)userData;
 
-			if(userEventToken==tot.cudaRecvID||userEventToken==tot.cudaSendID)
-			{
-				if(!tot.cSeen){
-					tot.cSeen=true;
-					tot.dp.l1=userEventValue;
-				}
-				else{
-					tot.cSeen=false;
-					tot.dp.l2=userEventValue;
-					if(userEventToken==tot.cudaSendID)
-					{
-						tot.send=true;
-					}
-					else{
-						tot.send=false;
-					}
-				}
+			if(userEventToken==ONESIDED_MESSAGE_SEND||userEventToken==ONESIDED_MESSAGE_RECV){
+				tot.oneSideType=userEventToken;
+				tot.size=(int)userEventValue;
 				return 0;
 			}
-			else if(userEventToken==tot.cudaSizeID)
+			if(userEventToken==ONESIDED_MESSAGE_ID_TriggerValueT1)
 			{
+				tot.dp.l1=userEventValue;
+				return 0;
+			}
+			if(userEventToken==ONESIDED_MESSAGE_ID_TriggerValueT2)
+			{
+				tot.dp.l2=userEventValue;
 				Point p = idNodes.get(tot.dp.toString());
 				if(p==null){
 					System.out.println("Bad Recv: "+tot.dp);
@@ -776,7 +798,7 @@ public class MultiMerge {
 				}else{
 					remote=p.x;
 				}
-				if(tot.send)
+				if(tot.oneSideType==ONESIDED_MESSAGE_SEND)
 				{
 					tw.sendMessage(time,  tot.node, tot.thread, remote, 0, (int)userEventValue, 0, 0);
 				}
@@ -786,7 +808,6 @@ public class MultiMerge {
 
 				return 0;
 			}
-
 
 			if(tot.thread>0)
 			{
