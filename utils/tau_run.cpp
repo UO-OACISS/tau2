@@ -352,6 +352,7 @@ int routineConstraint(char *fname){ // fname is the function name
             (strncmp(fname, "PthreadLayer", 12) == 0) ||
 	    (strncmp(fname, "threaded_func", 13) == 0) ||
             (strncmp(fname, "targ8", 5) == 0) ||
+            (strncmp(fname, "__intel", 7) == 0) ||
             (strncmp(fname, "The", 3) == 0)){
     return true; // Don't instrument 
   }//if
