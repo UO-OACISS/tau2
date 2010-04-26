@@ -38,6 +38,8 @@ public class PerfExplorerJTree extends JTree {
 			new PerfExplorerTreeSelectionListener(this));
 		addTreeWillExpandListener (
 			new PerfExplorerTreeExpansionListener(this));
+		addMouseListener(
+			new PerfExplorerTreeMouseListener(this));
 	}
 
 	public static PerfExplorerJTree getTree() {

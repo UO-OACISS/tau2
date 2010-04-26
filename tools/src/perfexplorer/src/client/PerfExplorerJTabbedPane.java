@@ -15,6 +15,7 @@ public class PerfExplorerJTabbedPane extends JTabbedPane {
 	private JComponent panel2 = null;
 	private JComponent panel3 = null;
 	private JComponent panel4 = null;
+	private JComponent panel5 = null;
 
 	public static PerfExplorerJTabbedPane getPane () {
 		if (thePane == null) {
@@ -43,6 +44,12 @@ public class PerfExplorerJTabbedPane extends JTabbedPane {
 				comp = this.panel4;
 				break;
 			}
+				
+			case (4): {
+				comp = this.panel5;
+				break;
+			}
+				
 		}
 		return comp;
 	}
@@ -76,6 +83,10 @@ public class PerfExplorerJTabbedPane extends JTabbedPane {
 		this.panel4 = ChartPane.getPane();
 		panel4.setPreferredSize(new Dimension(600, 500));
 		this.addTab("Custom Charts", icon, panel4, "Custom Performance Charts");
+		
+		this.panel5 = DeriveMetricsPane.getPane();
+		panel5.setPreferredSize(new Dimension(600, 500));
+		this.addTab("Derive Metrics", icon, panel5, "Derive Metrics from Expressions");
 	}
 
     /** Returns an ImageIcon, or null if the path was invalid. */
