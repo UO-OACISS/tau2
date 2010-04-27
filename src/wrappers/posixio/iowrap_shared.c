@@ -15,6 +15,7 @@
     
 int TAU_entered = 0; 
 
+#define dprintf if(1) printf
 #define TAU_WRITE TAU_IO
 #define TAU_READ TAU_IO
 
@@ -49,14 +50,14 @@ ssize_t write (int fd, const void *buf, size_t count) {
     TAU_CONTEXT_EVENT(wb, bw);
   }
   else {
-    printf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
+    dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
   TAU_CONTEXT_EVENT(byteswritten, count);
 
   TAU_PROFILE_STOP(t);
 
   TAU_entered++;
-  printf ("* TAU: write : %d bytes, bandwidth %g \n", ret, bw);
+  dprintf ("* TAU: write : %d bytes, bandwidth %g \n", ret, bw);
   fflush(stdout);
   fflush(stderr);
   TAU_entered--;
@@ -94,14 +95,14 @@ ssize_t read (int fd, void *buf, size_t count) {
     TAU_CONTEXT_EVENT(re, (double) count/currentRead);
   }
   else {
-    printf("TauWrapperRead: currentRead = %g\n", currentRead);
+    dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
   TAU_CONTEXT_EVENT(bytesread, count);
 
   TAU_PROFILE_STOP(t);
 
   TAU_entered++;
-  printf ("* TAU: read : %d bytes\n", ret);
+  dprintf ("* TAU: read : %d bytes\n", ret);
   fflush(stdout);
   fflush(stderr);
   TAU_entered--;
@@ -144,14 +145,14 @@ ssize_t readv (int fd, const struct iovec *vec, int count) {
     TAU_CONTEXT_EVENT(re, (double) sumOfBytesRead/currentRead);
   }
   else {
-    printf("TauWrapperRead: currentRead = %g\n", currentRead);
+    dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
   TAU_CONTEXT_EVENT(bytesread, sumOfBytesRead);
 
   TAU_PROFILE_STOP(t);
 
   TAU_entered++;
-  printf ("* TAU: read : %d bytes\n", ret);
+  dprintf ("* TAU: read : %d bytes\n", ret);
   fflush(stdout);
   fflush(stderr);
   TAU_entered--;
@@ -197,14 +198,14 @@ ssize_t writev (int fd, const struct iovec *vec, int count) {
     TAU_CONTEXT_EVENT(wb, bw);
   }
   else {
-    printf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
+    dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
   TAU_CONTEXT_EVENT(byteswritten, sumOfBytesWritten);
 
   TAU_PROFILE_STOP(t);
 
   TAU_entered++;
-  printf ("* TAU: write : %d bytes, bandwidth %g \n", sumOfBytesWritten, bw);
+  dprintf ("* TAU: write : %d bytes, bandwidth %g \n", sumOfBytesWritten, bw);
   fflush(stdout);
   fflush(stderr);
   TAU_entered--;
@@ -218,7 +219,6 @@ int open (const char *pathname, int flags, ...) {
   va_list args;
   int ret;
 
-  Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_TIMER(t, "open()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -238,7 +238,7 @@ int open (const char *pathname, int flags, ...) {
   ret = _open(pathname, flags, mode); 
   TAU_PROFILE_STOP(t); 
 
-  printf ("* open called on %s\n", pathname); 
+  dprintf ("* open called on %s\n", pathname); 
   fflush(stdout); 
   fflush(stderr);
     
@@ -252,7 +252,6 @@ int open64 (const char *pathname, int flags, ...) {
   va_list args;
   int ret;
 
-  Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_TIMER(t, "open64()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -269,7 +268,7 @@ int open64 (const char *pathname, int flags, ...) {
 
   ret = _open64(pathname, flags, mode); 
   TAU_PROFILE_STOP(t); 
-  printf ("* open64 called on %s\n", pathname); 
+  dprintf ("* open64 called on %s\n", pathname); 
   fflush(stdout); 
   fflush(stderr);
     
@@ -280,7 +279,6 @@ int creat(const char *pathname, mode_t mode) {
   static int (*_creat)(const char *pathname, mode_t mode) = NULL;
   int ret;
 
-  Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_TIMER(t, "creat()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -290,7 +288,7 @@ int creat(const char *pathname, mode_t mode) {
 
   ret = _creat(pathname, mode);
   TAU_PROFILE_STOP(t);
-  printf ("* creat called on %s\n", pathname);
+  dprintf ("* creat called on %s\n", pathname);
   fflush(stdout);
   fflush(stderr);
 
@@ -301,7 +299,6 @@ int creat64(const char *pathname, mode_t mode) {
   static int (*_creat64)(const char *pathname, mode_t mode) = NULL;
   int ret;
 
-  Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_TIMER(t, "creat64()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -311,7 +308,7 @@ int creat64(const char *pathname, mode_t mode) {
 
   ret = _creat64(pathname, mode);
   TAU_PROFILE_STOP(t);
-  printf ("* creat64 called on %s\n", pathname);
+  dprintf ("* creat64 called on %s\n", pathname);
   fflush(stdout);
   fflush(stderr);
 
@@ -334,9 +331,8 @@ int close(int fd) {
   }
   ret = _close(fd);
   TAU_PROFILE_STOP(t); 
-  Tau_stop_top_level_timer_if_necessary();
 
-  printf ("* close called on %d\n", fd);
+  dprintf ("* close called on %d\n", fd);
   fflush(stdout);
   fflush(stderr);
   
