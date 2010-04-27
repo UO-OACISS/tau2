@@ -86,7 +86,7 @@ extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup
 static Profiler *Tau_global_stack[TAU_MAX_THREADS];
 static int Tau_global_stackdepth[TAU_MAX_THREADS];
 static int Tau_global_stackpos[TAU_MAX_THREADS];
-
+static int Tau_global_insideTAU[TAU_MAX_THREADS];
 
 extern "C" void Tau_stack_initialization() {
   int i;
@@ -94,9 +94,36 @@ extern "C" void Tau_stack_initialization() {
     Tau_global_stackdepth[i] = 0;
     Tau_global_stackpos[i] = -1;
     Tau_global_stack[i] = NULL;
+    Tau_global_insideTAU[i] = 0;
   }
 }
 
+extern "C" int Tau_global_get_insideTAU() {
+  int tid = RtsLayer::myThread();
+  return Tau_global_insideTAU[tid];
+}
+
+extern "C" int Tau_global_get_insideTAU_tid(int tid) {
+  return Tau_global_insideTAU[tid];
+}
+
+extern "C" int Tau_global_incr_insideTAU(int value) {
+  int tid = RtsLayer::myThread();
+  Tau_global_insideTAU[tid]++;
+}
+
+extern "C" int Tau_global_decr_insideTAU(int value) {
+  int tid = RtsLayer::myThread();
+  Tau_global_insideTAU[tid]--;
+}
+
+extern "C" int Tau_global_incr_insideTAU_tid(int value, int tid) {
+  Tau_global_insideTAU[tid]++;
+}
+
+extern "C" int Tau_global_decr_insideTAU_tid(int value, int tid) {
+  Tau_global_insideTAU[tid]--;
+}
 
 extern "C" Profiler *TauInternal_CurrentProfiler(int tid) {
   int pos = Tau_global_stackpos[tid];
@@ -115,11 +142,10 @@ extern "C" Profiler *TauInternal_ParentProfiler(int tid) {
 }
 
 
-
-
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
-  
+  Tau_global_insideTAU[tid]++;
+
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_suspend();
   }
@@ -131,6 +157,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
     if (TauEnv_get_ebs_enabled()) {
       Tau_sampling_resume();
     }
+    Tau_global_insideTAU[tid]--;
     return; /* disabled */
   }
 
@@ -173,12 +200,14 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
 #ifdef TAU_EPILOG
   esd_enter(fi->GetFunctionId());
+  Tau_global_insideTAU[tid]--;
   return;
 #endif
 
 #ifdef TAU_VAMPIRTRACE 
   x_uint64 TimeStamp = vt_pform_wtime();
   vt_enter((uint64_t *) &TimeStamp, fi->GetFunctionId());
+  Tau_global_insideTAU[tid]--;
   return;
 #endif
 
@@ -222,6 +251,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   static int userspecifieddepth = TauEnv_get_depth_limit();
   int mydepth = Tau_global_stackpos[tid];
   if (mydepth >= userspecifieddepth) { 
+    Tau_global_insideTAU[tid]--;
     return; 
   }
 #endif /* TAU_DEPTH_LIMIT */
@@ -232,6 +262,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
     Tau_sampling_event_start(tid, p->address);
     Tau_sampling_resume();
   }
+  Tau_global_insideTAU[tid]--;
 }
 
 
@@ -247,6 +278,7 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_stop_timer(void *function_info, int tid ) {
+  Tau_global_insideTAU[tid]++;
 
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_suspend();
@@ -261,6 +293,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
     if (TauEnv_get_ebs_enabled()) {
       Tau_sampling_resume();
     }
+    Tau_global_insideTAU[tid]--;
     return 0; /* disabled */
   }
 
@@ -287,12 +320,14 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 
 #ifdef TAU_EPILOG
   esd_exit(fi->GetFunctionId());
+  Tau_global_insideTAU[tid]--;
   return 0;
 #endif
 
 #ifdef TAU_VAMPIRTRACE 
   x_uint64 TimeStamp = vt_pform_wtime();
   vt_exit((uint64_t *)&TimeStamp);
+  Tau_global_insideTAU[tid]--;
   return 0;
 #endif
 
@@ -301,7 +336,10 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 #endif
 
 
-  if (Tau_global_stackpos[tid] < 0) { return 0; }
+  if (Tau_global_stackpos[tid] < 0) { 
+    Tau_global_insideTAU[tid]--;
+    return 0; 
+  }
 
   profiler = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
   
@@ -315,6 +353,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   int mydepth = Tau_global_stackpos[tid];
   if (mydepth >= userspecifieddepth) { 
     Tau_global_stackpos[tid]--; /* pop */
+    Tau_global_insideTAU[tid]--;
     return 0; 
   }
 #endif /* TAU_DEPTH_LIMIT */
@@ -328,6 +367,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
     Tau_sampling_resume();
   }
 
+  Tau_global_insideTAU[tid]--;
   return 0;
 }
 
@@ -788,7 +828,6 @@ extern "C" void Tau_userevent_thread(void *ue, double data, int tid) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_get_context_userevent(void **ptr, char *name)
 {
-  
   if (*ptr == 0) {
     RtsLayer::LockEnv();
 
@@ -1435,8 +1474,8 @@ int *tau_pomp_rd_table = 0;
                     
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: scottb $
- * $Revision: 1.150 $   $Date: 2010/04/20 23:26:45 $
- * VERSION: $Id: TauCAPI.cpp,v 1.150 2010/04/20 23:26:45 scottb Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
+ * $Revision: 1.151 $   $Date: 2010/04/27 20:27:17 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.151 2010/04/27 20:27:17 amorris Exp $
  ***************************************************************************/
 
