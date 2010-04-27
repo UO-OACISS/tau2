@@ -153,24 +153,20 @@ extern "C" ssize_t read (int fd, void *buf, size_t count) {
   TAU_GET_IOWRAP_EVENT(bytesread, READ_BYTES, fd);
   TAU_PROFILE_START(t);
 
-
   if (_read == NULL) {
     _read = ( ssize_t (*)(int fd, void *buf, size_t count)) dlsym(RTLD_NEXT, "read");
   }
 
-
   gettimeofday(&t1, 0);
   ret = _read(fd, buf, count);
   gettimeofday(&t2, 0);
-
 
   /* calculate the time spent in operation */
   currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
   if (currentRead > 1e-12) {
     TAU_CONTEXT_EVENT(re, (double) count/currentRead);
-  }
-  else {
+  } else {
     dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
   TAU_CONTEXT_EVENT(bytesread, count);
@@ -202,11 +198,9 @@ extern "C" ssize_t readv (int fd, const struct iovec *vec, int count) {
   TAU_GET_IOWRAP_EVENT(bytesread, READ_BYTES, fd);
   TAU_PROFILE_START(t);
 
-
   if (_readv == NULL) {
     _readv = ( ssize_t (*)(int fd, const struct iovec *vec, int count)) dlsym(RTLD_NEXT, "readv");
   }
-
 
   gettimeofday(&t1, 0);
   ret = _readv(fd, vec, count);
@@ -221,8 +215,7 @@ extern "C" ssize_t readv (int fd, const struct iovec *vec, int count) {
   /* now we trigger the events */
   if (currentRead > 1e-12) {
     TAU_CONTEXT_EVENT(re, (double) sumOfBytesRead/currentRead);
-  }
-  else {
+  } else {
     dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
   TAU_CONTEXT_EVENT(bytesread, sumOfBytesRead);
@@ -256,11 +249,9 @@ extern "C" ssize_t writev (int fd, const struct iovec *vec, int count) {
   TAU_GET_IOWRAP_EVENT(byteswritten, WRITE_BYTES, fd);
   TAU_PROFILE_START(t);
 
-
   if (_writev == NULL) {
     _writev = ( ssize_t (*)(int fd, const struct iovec *vec, int count)) dlsym(RTLD_NEXT, "writev");
   }
-
 
   gettimeofday(&t1, 0);
   ret = _writev(fd, vec, count);
@@ -276,8 +267,7 @@ extern "C" ssize_t writev (int fd, const struct iovec *vec, int count) {
   if (currentWrite > 1e-12) {
     bw = (double) sumOfBytesWritten/currentWrite; 
     TAU_CONTEXT_EVENT(wb, bw);
-  }
-  else {
+  } else {
     dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
   TAU_CONTEXT_EVENT(byteswritten, sumOfBytesWritten);
@@ -319,7 +309,7 @@ extern "C" int open (const char *pathname, int flags, ...) {
   Tau_iowrap_registerEvents(ret, pathname);
   TAU_PROFILE_STOP(t); 
 
-  dprintf ("* !open called on %s\n", pathname); 
+  dprintf ("* open called on %s\n", pathname); 
   fflush(stdout); 
   fflush(stderr);
     
@@ -398,7 +388,6 @@ extern "C" int creat64(const char *pathname, mode_t mode) {
 
   return ret;
 }
-
 
 
 extern "C" int close(int fd) {
