@@ -23,10 +23,8 @@ int TAU_entered = 0;
 
 #include <vector>
 using namespace std;
-static vector<TauUserEvent*> fid_map;
-static vector<string> fid_to_string_map;
 
-
+static vector<string> fid_to_string_map; // not used (yet)
 
 /*********************************************************************
  * register different kinds of events here
@@ -49,7 +47,7 @@ void __attribute__ ((destructor)) tau_iowrap_preload_fini(void);
  * register the different events (read/write/etc) for a file descriptor
  ********************************************************************/
 static void Tau_iowrap_registerEvents(int fid, const char *pathname) {
-  fid++; // skip the "unknown"
+  fid++; // skip the "unknown" descriptor
   while (fid_to_string_map.size() <= fid) {
     fid_to_string_map.push_back("unknown");
   }
@@ -82,14 +80,13 @@ void tau_iowrap_preload_init() {
 void tau_iowrap_preload_fini() {
 }
 
-
 /*********************************************************************
  * Get the user event for the given type of event and file descriptor
  ********************************************************************/
 static void *Tau_iowrap_getEvent(event_type type, int fid) {
-  fid++; // skip the "unknown"
+  fid++; // skip the "unknown" descriptor
   if (fid >= iowrap_events[(int)type].size()) {
-    fid = 0;
+    fid = 0; // use the "unknown" descriptor
   }
   return iowrap_events[(int)type][fid];
 }
