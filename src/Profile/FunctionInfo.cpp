@@ -170,6 +170,8 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
     Tau_init_initializeTAU();
   }
 
+  Tau_global_incr_insideTAU_tid(tid);
+
   //Need to keep track of all the groups this function is a member of.
   AllGroups = strip_tau_group(ProfileGroupName);
   GroupName = strdup(RtsLayer::PrimaryGroup(AllGroups).c_str());
@@ -262,6 +264,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   }
 #endif //RENCI_STFF
   
+  Tau_global_decr_insideTAU_tid(tid);
   return;
 }
 
@@ -483,6 +486,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
- * $Revision: 1.83 $   $Date: 2010/03/19 00:21:12 $
- * VERSION_ID: $Id: FunctionInfo.cpp,v 1.83 2010/03/19 00:21:12 amorris Exp $ 
+ * $Revision: 1.84 $   $Date: 2010/04/27 23:13:55 $
+ * VERSION_ID: $Id: FunctionInfo.cpp,v 1.84 2010/04/27 23:13:55 amorris Exp $ 
  ***************************************************************************/
