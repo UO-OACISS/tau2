@@ -594,3 +594,97 @@ extern "C" int accept(int socket, struct sockaddr *address, socklen_t* address_l
 }
 
 
+/*********************************************************************
+ * recv
+ ********************************************************************/
+
+extern "C" ssize_t recv (int fd, void *buf, size_t count, int flags) {
+  static ssize_t (*_recv)(int fd, void *buf, size_t count, int flags) = NULL;
+  ssize_t ret; 
+
+  if (_recv == NULL) {
+    _recv = ( ssize_t (*)(int fd, void *buf, size_t count, int flags)) dlsym(RTLD_NEXT, "recv");
+  }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _recv(fd, buf, count, flags);
+  }
+
+  double currentRead = 0.0;
+  struct timeval t1, t2;
+  TAU_PROFILE_TIMER(t, "recv()", " ", TAU_READ|TAU_IO);
+  TAU_GET_IOWRAP_EVENT(re, READ_BW, fd);
+  TAU_GET_IOWRAP_EVENT(bytesrecv, READ_BYTES, fd);
+  TAU_PROFILE_START(t);
+
+  gettimeofday(&t1, 0);
+  ret = _recv(fd, buf, count, flags);
+  gettimeofday(&t2, 0);
+
+  /* calculate the time spent in operation */
+  currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
+  /* now we trigger the events */
+  if (currentRead > 1e-12) {
+    TAU_CONTEXT_EVENT(re, (double) count/currentRead);
+    TAU_CONTEXT_EVENT(global_read_bandwidth, (double) count/currentRead);
+  } else {
+    dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
+  }
+  TAU_CONTEXT_EVENT(bytesrecv, count);
+  TAU_CONTEXT_EVENT(global_bytes_read, count);
+
+  TAU_PROFILE_STOP(t);
+
+  dprintf ("* TAU: recv : %d bytes\n", ret);
+  fflush(stdout);
+  fflush(stderr);
+
+  return ret;
+}
+
+
+extern "C" ssize_t send (int fd, const void *buf, size_t count, int flags) {
+  static ssize_t (*_send)(int fd, const void *buf, size_t count, int flags) = NULL;
+  ssize_t ret; 
+
+  if (_send == NULL) {
+    _send = ( ssize_t (*)(int fd, const void *buf, size_t count, int flags)) dlsym(RTLD_NEXT, "send");
+  }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _send(fd, buf, count, flags);
+  }
+
+  double currentWrite = 0.0;
+  struct timeval t1, t2;
+  TAU_PROFILE_TIMER(t, "send()", " ", TAU_WRITE|TAU_IO);
+  TAU_GET_IOWRAP_EVENT(re, WRITE_BW, fd);
+  TAU_GET_IOWRAP_EVENT(byteswritten, WRITE_BYTES, fd);
+  TAU_PROFILE_START(t);
+
+  gettimeofday(&t1, 0);
+  ret = _send(fd, buf, count, flags);
+  gettimeofday(&t2, 0);
+
+  /* calculate the time spent in operation */
+  currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
+  /* now we trigger the events */
+  if (currentWrite > 1e-12) {
+    TAU_CONTEXT_EVENT(re, (double) count/currentWrite);
+    TAU_CONTEXT_EVENT(global_write_bandwidth, (double) count/currentWrite);
+  } else {
+    dprintf("TauWrapperRead: currentWrite = %g\n", currentWrite);
+  }
+  TAU_CONTEXT_EVENT(byteswritten, count);
+  TAU_CONTEXT_EVENT(global_bytes_written, count);
+
+  TAU_PROFILE_STOP(t);
+
+  dprintf ("* TAU: send : %d bytes\n", ret);
+  fflush(stdout);
+  fflush(stderr);
+
+  return ret;
+}
+
+
