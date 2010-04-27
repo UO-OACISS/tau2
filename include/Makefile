@@ -970,6 +970,17 @@ TAU_COMPILER=$(TAU_BIN_DIR)/tau_compiler.sh $(TAUCOMPILEROPTS) $(SHAREDEXTRAS)
 # Also ignore TAULIBS when Profiling/Tracing is not used.
 #############################################
 
+##############################################
+# For making libTAU.so Dynamic Shared Object
+##############################################
+TAU_SHLIBX              = .so
+#HP#TAU_SHLIBX          = .sl                   #ENDIF#
+#APPLECXX#TAU_APPLE_SHLIBX  = .dylib            #ENDIF#
+#PYTHON#TAU_APPLE_SHLIBX    = .so               #ENDIF#
+#APPLECXX#TAU_SHLIBX    = $(TAU_APPLE_SHLIBX)   #ENDIF#
+
+#############################################
+
 # I had to comment the following out, with IBM make, this becomes the default
 # make target, so it will screw up any makefile that includes the TAU stub makefile
 #print-%:; @echo $($*)
