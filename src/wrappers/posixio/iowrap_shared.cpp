@@ -70,6 +70,22 @@ static void Tau_iowrap_registerEvents(int fid, const char *pathname) {
   }
 }
 
+static void Tau_iowrap_dupEvents(int oldfid, int newfid) {
+  oldfid++; // skip the "unknown" descriptor
+  newfid++;
+  while (fid_to_string_map.size() <= newfid) {
+    fid_to_string_map.push_back("unknown");
+  }
+  fid_to_string_map[newfid] = fid_to_string_map[oldfid];
+
+  for (int i=0; i<NUM_EVENTS; i++) {
+    while (iowrap_events[i].size() <= newfid) {
+      iowrap_events[i].push_back(0);
+    }
+    iowrap_events[i][newfid] = iowrap_events[i][oldfid];
+  }
+}
+
 /*********************************************************************
  * shared library constructor, register the unknown, stdin, stdout, and stderr
  ********************************************************************/
@@ -1117,18 +1133,17 @@ extern "C" ssize_t recvfrom (int fd, void *buf, size_t count, int flags, struct 
 /*********************************************************************
  * dup
  ********************************************************************/
-
 int dup(int oldfd) {
   static int (*_dup)(int oldfd) = NULL;
   int fd;
 
   if (_dup == NULL) {
-    _dup = ( int(*)(int fd)) dlsym(RTLD_NEXT, "dup");   }
-
+    _dup = ( int(*)(int fd)) dlsym(RTLD_NEXT, "dup");   
+  }
 
   fd = _dup(oldfd);
-  /* NOTE: Do we need to do some housekeeping operations here to associate 
-     the fd with the old fd? */
+
+  Tau_iowrap_dupEvents(oldfd, fd);
 
   return fd;
 }
@@ -1137,17 +1152,17 @@ int dup(int oldfd) {
 /*********************************************************************
  * dup2
  ********************************************************************/
-
 int dup2(int oldfd, int newfd) {
   static int (*_dup2)(int oldfd, int newfd) = NULL;
   int fd;
 
   if (_dup2 == NULL) {
-    _dup2 = ( int(*)(int fd, int newfd)) dlsym(RTLD_NEXT, "dup2");   }
-
+    _dup2 = ( int(*)(int fd, int newfd)) dlsym(RTLD_NEXT, "dup2");   
+  }
 
   newfd = _dup2(oldfd, newfd);
-  /* NOTE: Do we need to do some housekeeping operations here to associate      the fd with the old fd? */
+
+  Tau_iowrap_dupEvents(oldfd, newfd);
 
   return newfd;
 }
