@@ -50,11 +50,11 @@ static int trackend(iotracker_t *tracker, int count, MPI_Datatype datatype) {
   /* now we trigger the events */
   PMPI_Type_size(datatype, &typesize);
   if (currentWrite > 1e-12) {
-    TAU_EVENT(tracker->eventBandwidth, (double) count*typesize/currentWrite);
+    TAU_CONTEXT_EVENT(tracker->eventBandwidth, (double) count*typesize/currentWrite);
   } else {
     printf("Tau MPIO wrapper: currentRead/Write = %g\n", currentWrite);
   }
-  TAU_EVENT(tracker->eventBytes, count*typesize);
+  TAU_CONTEXT_EVENT(tracker->eventBytes, count*typesize);
   return 0;
 }
 
@@ -64,8 +64,10 @@ static int trackend(iotracker_t *tracker, int count, MPI_Datatype datatype) {
   static int init = 0; \
   if (init == 0 ) { \
     init = 1; \
-    tracker.eventBytes = Tau_get_userevent(name1); \
-    tracker.eventBandwidth = Tau_get_userevent(name2); \
+    tracker.eventBytes = 0; \
+    tracker.eventBandwidth = 0; \
+    Tau_get_context_userevent(&tracker.eventBytes, name1); \
+    Tau_get_context_userevent(&tracker.eventBandwidth, name2); \
   }
 
 #define MPIO_TRACK_BEGIN(tracker)	\
