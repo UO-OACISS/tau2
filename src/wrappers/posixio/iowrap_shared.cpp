@@ -97,6 +97,13 @@ static void *Tau_iowrap_getEvent(event_type type, int fid) {
 extern "C" ssize_t write (int fd, const void *buf, size_t count) {
   static ssize_t (*_write)(int fd, const void *buf, size_t count) = NULL;
   ssize_t ret;
+  if (_write == NULL) {
+    _write = ( ssize_t (*)(int fd, const void *buf, size_t count)) dlsym(RTLD_NEXT, "write");
+  }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _write(fd, buf, count);
+  }
 
   double currentWrite = 0.0;
   struct timeval t1, t2;
@@ -108,10 +115,6 @@ extern "C" ssize_t write (int fd, const void *buf, size_t count) {
   TAU_GET_IOWRAP_EVENT(wb, WRITE_BW, fd);
   TAU_GET_IOWRAP_EVENT(byteswritten, WRITE_BYTES, fd);
   TAU_PROFILE_START(t);
-
-  if (_write == NULL) {
-    _write = ( ssize_t (*)(int fd, const void *buf, size_t count)) dlsym(RTLD_NEXT, "write");
-  }
 
   gettimeofday(&t1, 0);
   ret = _write(fd, buf, count);
@@ -144,6 +147,14 @@ extern "C" ssize_t read (int fd, void *buf, size_t count) {
   static ssize_t (*_read)(int fd, void *buf, size_t count) = NULL;
   ssize_t ret; 
 
+  if (_read == NULL) {
+    _read = ( ssize_t (*)(int fd, void *buf, size_t count)) dlsym(RTLD_NEXT, "read");
+  }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _read(fd, buf, count);
+  }
+
   double currentRead = 0.0;
   struct timeval t1, t2;
   TAU_PROFILE_TIMER(t, "read()", " ", TAU_READ|TAU_IO);
@@ -153,9 +164,6 @@ extern "C" ssize_t read (int fd, void *buf, size_t count) {
   TAU_GET_IOWRAP_EVENT(bytesread, READ_BYTES, fd);
   TAU_PROFILE_START(t);
 
-  if (_read == NULL) {
-    _read = ( ssize_t (*)(int fd, void *buf, size_t count)) dlsym(RTLD_NEXT, "read");
-  }
 
   gettimeofday(&t1, 0);
   ret = _read(fd, buf, count);
@@ -189,6 +197,14 @@ extern "C" ssize_t readv (int fd, const struct iovec *vec, int count) {
   int i;
   size_t sumOfBytesRead = 0;
 
+  if (_readv == NULL) {
+    _readv = ( ssize_t (*)(int fd, const struct iovec *vec, int count)) dlsym(RTLD_NEXT, "readv");
+  }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _readv(fd, vec, count);
+  }
+
   double currentRead = 0.0;
   struct timeval t1, t2;
   TAU_PROFILE_TIMER(t, "readv()", " ", TAU_READ|TAU_IO);
@@ -198,9 +214,6 @@ extern "C" ssize_t readv (int fd, const struct iovec *vec, int count) {
   TAU_GET_IOWRAP_EVENT(bytesread, READ_BYTES, fd);
   TAU_PROFILE_START(t);
 
-  if (_readv == NULL) {
-    _readv = ( ssize_t (*)(int fd, const struct iovec *vec, int count)) dlsym(RTLD_NEXT, "readv");
-  }
 
   gettimeofday(&t1, 0);
   ret = _readv(fd, vec, count);
@@ -241,6 +254,13 @@ extern "C" ssize_t writev (int fd, const struct iovec *vec, int count) {
   int i;
   size_t sumOfBytesWritten = 0;
 
+  if (_writev == NULL) {
+    _writev = ( ssize_t (*)(int fd, const struct iovec *vec, int count)) dlsym(RTLD_NEXT, "writev");
+  }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _writev(fd, vec, count);
+  }
 
   TAU_PROFILE_TIMER(t, "writev()", " ", TAU_WRITE|TAU_IO);
   // TAU_REGISTER_CONTEXT_EVENT(wb, "WRITE Bandwidth (MB/s)");
@@ -249,9 +269,6 @@ extern "C" ssize_t writev (int fd, const struct iovec *vec, int count) {
   TAU_GET_IOWRAP_EVENT(byteswritten, WRITE_BYTES, fd);
   TAU_PROFILE_START(t);
 
-  if (_writev == NULL) {
-    _writev = ( ssize_t (*)(int fd, const struct iovec *vec, int count)) dlsym(RTLD_NEXT, "writev");
-  }
 
   gettimeofday(&t1, 0);
   ret = _writev(fd, vec, count);
@@ -289,13 +306,17 @@ extern "C" int open (const char *pathname, int flags, ...) {
   va_list args;
   int ret;
 
-  TAU_PROFILE_TIMER(t, "open()", " ", TAU_IO);
-  TAU_PROFILE_START(t);
-
   if (_open == NULL) { 
     _open = ( int (*)(const char *pathname, int flags, ...)) dlsym(RTLD_NEXT, "open"); 
   } 
-  
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _open(pathname, flags, mode); 
+  }
+
+  TAU_PROFILE_TIMER(t, "open()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
   /* if the file is being created, get the third argument for specifying the 
      mode (e.g., 0644) */
   if (flags & O_CREAT) { 
@@ -323,13 +344,17 @@ extern "C" int open64 (const char *pathname, int flags, ...) {
   va_list args;
   int ret;
 
-  TAU_PROFILE_TIMER(t, "open64()", " ", TAU_IO);
-  TAU_PROFILE_START(t);
-
   if (_open64 == NULL) { 
      _open64 = ( int (*)(const char *pathname, int flags, ...)) dlsym(RTLD_NEXT, "open64"); 
   } 
-  
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _open64(pathname, flags, mode); 
+  }
+
+  TAU_PROFILE_TIMER(t, "open64()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
   if (flags & O_CREAT) { 
     va_list args ;
     va_start(args, flags);
@@ -351,12 +376,16 @@ extern "C" int creat(const char *pathname, mode_t mode) {
   static int (*_creat)(const char *pathname, mode_t mode) = NULL;
   int ret;
 
-  TAU_PROFILE_TIMER(t, "creat()", " ", TAU_IO);
-  TAU_PROFILE_START(t);
-
   if (_creat == NULL) {
      _creat = ( int (*)(const char *pathname, mode_t mode)) dlsym(RTLD_NEXT, "creat");
   }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _creat(pathname, mode);
+  }
+
+  TAU_PROFILE_TIMER(t, "creat()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
 
   ret = _creat(pathname, mode);
   Tau_iowrap_registerEvents(ret, pathname);
@@ -372,12 +401,16 @@ extern "C" int creat64(const char *pathname, mode_t mode) {
   static int (*_creat64)(const char *pathname, mode_t mode) = NULL;
   int ret;
 
-  TAU_PROFILE_TIMER(t, "creat64()", " ", TAU_IO);
-  TAU_PROFILE_START(t);
-
   if (_creat64 == NULL) {
      _creat64 = ( int (*)(const char *pathname, mode_t mode)) dlsym(RTLD_NEXT, "creat64");
   }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _creat64(pathname, mode);
+  }
+
+  TAU_PROFILE_TIMER(t, "creat64()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
 
   ret = _creat64(pathname, mode);
   Tau_iowrap_registerEvents(ret, pathname);
@@ -394,12 +427,17 @@ extern "C" int close(int fd) {
   static int (*_close) (int fd) = NULL;
   int ret; 
 
-  TAU_PROFILE_TIMER(t, "close()", " ", TAU_IO);
-  TAU_PROFILE_START(t);
-
   if (_close == NULL) {
     _close = (int (*) (int fd) ) dlsym(RTLD_NEXT, "close");
   }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _close(fd);
+  }
+
+  TAU_PROFILE_TIMER(t, "close()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
   ret = _close(fd);
   TAU_PROFILE_STOP(t); 
 
@@ -409,6 +447,4 @@ extern "C" int close(int fd) {
   
   return ret;
 }
-  
-
 
