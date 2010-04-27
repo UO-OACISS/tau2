@@ -28,6 +28,9 @@ static vector<string> fid_to_string_map;
 
 
 
+/*********************************************************************
+ * register different kinds of events here
+ ********************************************************************/
 #define NUM_EVENTS 4
 typedef enum {
   WRITE_BW,
@@ -39,13 +42,12 @@ const char *iowrap_event_names[NUM_EVENTS] = {"WRITE Bandwidth (MB/s)", "Bytes W
 static vector<TauUserEvent*> iowrap_events[NUM_EVENTS];
 
 
-
 void __attribute__ ((constructor)) tau_iowrap_preload_init(void);
 void __attribute__ ((destructor)) tau_iowrap_preload_fini(void);
 
-
-
-
+/*********************************************************************
+ * register the different events (read/write/etc) for a file descriptor
+ ********************************************************************/
 static void Tau_iowrap_registerEvents(int fid, const char *pathname) {
   fid++; // skip the "unknown"
   while (fid_to_string_map.size() <= fid) {
@@ -64,7 +66,9 @@ static void Tau_iowrap_registerEvents(int fid, const char *pathname) {
   }
 }
 
-
+/*********************************************************************
+ * shared library constructor, register the unknown, stdin, stdout, and stderr
+ ********************************************************************/
 void tau_iowrap_preload_init() {
   Tau_iowrap_registerEvents(-1, "unknown");
   Tau_iowrap_registerEvents(0, "stdin");
@@ -72,10 +76,16 @@ void tau_iowrap_preload_init() {
   Tau_iowrap_registerEvents(2, "stderr");
 }
 
+/*********************************************************************
+ * shared library destructor
+ ********************************************************************/
 void tau_iowrap_preload_fini() {
 }
 
 
+/*********************************************************************
+ * Get the user event for the given type of event and file descriptor
+ ********************************************************************/
 static void *Tau_iowrap_getEvent(event_type type, int fid) {
   fid++; // skip the "unknown"
   if (fid >= iowrap_events[(int)type].size()) {
@@ -189,8 +199,10 @@ extern "C" ssize_t readv (int fd, const struct iovec *vec, int count) {
   double currentRead = 0.0;
   struct timeval t1, t2;
   TAU_PROFILE_TIMER(t, "readv()", " ", TAU_READ|TAU_IO);
-  TAU_REGISTER_CONTEXT_EVENT(re, "READ Bandwidth (MB/s)");
-  TAU_REGISTER_CONTEXT_EVENT(bytesread, "Bytes Read");
+  // TAU_REGISTER_CONTEXT_EVENT(re, "READ Bandwidth (MB/s)");
+  // TAU_REGISTER_CONTEXT_EVENT(bytesread, "Bytes Read");
+  TAU_GET_IOWRAP_EVENT(re, READ_BW, fd);
+  TAU_GET_IOWRAP_EVENT(bytesread, READ_BYTES, fd);
   TAU_PROFILE_START(t);
 
 
@@ -241,8 +253,10 @@ extern "C" ssize_t writev (int fd, const struct iovec *vec, int count) {
 
 
   TAU_PROFILE_TIMER(t, "writev()", " ", TAU_WRITE|TAU_IO);
-  TAU_REGISTER_CONTEXT_EVENT(wb, "WRITE Bandwidth (MB/s)");
-  TAU_REGISTER_CONTEXT_EVENT(byteswritten, "Bytes Written");
+  // TAU_REGISTER_CONTEXT_EVENT(wb, "WRITE Bandwidth (MB/s)");
+  // TAU_REGISTER_CONTEXT_EVENT(byteswritten, "Bytes Written");
+  TAU_GET_IOWRAP_EVENT(wb, WRITE_BW, fd);
+  TAU_GET_IOWRAP_EVENT(byteswritten, WRITE_BYTES, fd);
   TAU_PROFILE_START(t);
 
 
@@ -337,6 +351,7 @@ extern "C" int open64 (const char *pathname, int flags, ...) {
   }
 
   ret = _open64(pathname, flags, mode); 
+  Tau_iowrap_registerEvents(ret, pathname);
   TAU_PROFILE_STOP(t); 
   dprintf ("* open64 called on %s\n", pathname); 
   fflush(stdout); 
@@ -357,6 +372,7 @@ extern "C" int creat(const char *pathname, mode_t mode) {
   }
 
   ret = _creat(pathname, mode);
+  Tau_iowrap_registerEvents(ret, pathname);
   TAU_PROFILE_STOP(t);
   dprintf ("* creat called on %s\n", pathname);
   fflush(stdout);
@@ -377,6 +393,7 @@ extern "C" int creat64(const char *pathname, mode_t mode) {
   }
 
   ret = _creat64(pathname, mode);
+  Tau_iowrap_registerEvents(ret, pathname);
   TAU_PROFILE_STOP(t);
   dprintf ("* creat64 called on %s\n", pathname);
   fflush(stdout);
