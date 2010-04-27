@@ -105,6 +105,227 @@ static void *Tau_iowrap_getEvent(event_type type, int fid) {
 #define TAU_GET_IOWRAP_EVENT(e, event, fid) void *e = Tau_iowrap_getEvent(event, fid);
 
 
+
+/*********************************************************************
+ * fopen 
+ ********************************************************************/
+FILE *fopen(const char *path, const char *mode) {
+  static FILE* (*_fopen)(const char *path, const char *mode) = NULL;
+  FILE *ret;
+  if (_fopen == NULL) {
+    _fopen = ( FILE* (*)(const char *path, const char *mode)) dlsym(RTLD_NEXT, "fopen");
+  }
+  
+  if (Tau_global_get_insideTAU() > 0) {
+    return _fopen(path, mode);
+  }
+
+  TAU_PROFILE_TIMER(t, "fopen()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = _fopen(path, mode);
+  Tau_iowrap_registerEvents(fileno(ret), path);
+  TAU_PROFILE_STOP(t); 
+
+  dprintf ("* fopen called on %s\n", path); 
+  return ret; 
+}
+
+/*********************************************************************
+ * fopen64 
+ ********************************************************************/
+FILE *fopen64(const char *path, const char *mode) {
+  static FILE* (*_fopen64)(const char *path, const char *mode) = NULL;
+  FILE *ret;
+  if (_fopen64 == NULL) {
+    _fopen64 = ( FILE* (*)(const char *path, const char *mode)) dlsym(RTLD_NEXT, "fopen64");
+  }
+  
+  if (Tau_global_get_insideTAU() > 0) {
+    return _fopen64(path, mode);
+  }
+
+  TAU_PROFILE_TIMER(t, "fopen64()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = _fopen64(path, mode);
+  Tau_iowrap_registerEvents(fileno(ret), path);
+  TAU_PROFILE_STOP(t); 
+
+  dprintf ("* fopen64 called on %s\n", path); 
+  return ret; 
+}
+
+
+/*********************************************************************
+ * fdopen 
+ ********************************************************************/
+FILE *fdopen(int fd, const char *mode) {
+  static FILE* (*_fdopen)(int fd, const char *mode) = NULL;
+  FILE *ret;
+  if (_fdopen == NULL) {
+    _fdopen = ( FILE* (*)(int fd, const char *mode)) dlsym(RTLD_NEXT, "fdopen");
+  }
+  
+  if (Tau_global_get_insideTAU() > 0) {
+    return _fdopen(fd, mode);
+  }
+
+  TAU_PROFILE_TIMER(t, "fdopen()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = _fdopen(fd, mode);
+  TAU_PROFILE_STOP(t); 
+
+  dprintf ("* fdopen called on %d\n", fd); 
+  return ret; 
+}
+
+/*********************************************************************
+ * freopen 
+ ********************************************************************/
+FILE *freopen(const char *path, const char *mode, FILE *stream) {
+  static FILE* (*_freopen)(const char *path, const char *mode, FILE *stream) = NULL;
+  FILE *ret;
+  if (_freopen == NULL) {
+    _freopen = ( FILE* (*)(const char *path, const char *mode, FILE *stream)) dlsym(RTLD_NEXT, "freopen");
+  }
+  
+  if (Tau_global_get_insideTAU() > 0) {
+    return _freopen(path, mode, stream);
+  }
+
+  TAU_PROFILE_TIMER(t, "freopen()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = _freopen(path, mode, stream);
+  Tau_iowrap_registerEvents(fileno(ret), path);
+  TAU_PROFILE_STOP(t); 
+
+  dprintf ("* freopen called on %s\n", path); 
+  return ret; 
+}
+
+/*********************************************************************
+ * fclose 
+ ********************************************************************/
+int fclose(FILE *fp) {
+  static int (*_fclose)(FILE *fp) = NULL;
+  int ret;
+  if (_fclose == NULL) {
+    _fclose = ( int (*)(FILE *fp)) dlsym(RTLD_NEXT, "fclose");
+  }
+  
+  if (Tau_global_get_insideTAU() > 0) {
+    return _fclose(fp);
+  }
+
+  TAU_PROFILE_TIMER(t, "fclose()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = _fclose(fp);
+  TAU_PROFILE_STOP(t); 
+
+  dprintf ("* fclose called\n"); 
+  return ret; 
+}
+
+/*********************************************************************
+ * fwrite 
+ ********************************************************************/
+size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream) {
+  static size_t (*_fwrite)(const void *ptr, size_t size, size_t nmemb, FILE *stream) = NULL;
+  int ret;
+  if (_fwrite == NULL) {
+    _fwrite = ( size_t (*)(const void *ptr, size_t size, size_t nmemb, FILE *stream)) dlsym(RTLD_NEXT, "fwrite");
+  }
+  
+  if (Tau_global_get_insideTAU() > 0) {
+    return _fwrite(ptr, size, nmemb, stream);
+  }
+
+  double currentWrite = 0.0;
+  struct timeval t1, t2;
+  double bw = 0.0;
+
+  TAU_GET_IOWRAP_EVENT(wb, WRITE_BW, fileno(stream));
+  TAU_GET_IOWRAP_EVENT(byteswritten, WRITE_BYTES, fileno(stream));
+  TAU_PROFILE_TIMER(t, "fwrite()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+  gettimeofday(&t1, 0);
+  ret = _fwrite(ptr, size, nmemb, stream);
+  gettimeofday(&t2, 0);
+
+  int count = ret * size;
+
+  /* calculate the time spent in operation */
+  currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
+  /* now we trigger the events */
+  if (currentWrite > 1e-12) {
+    bw = (double) count/currentWrite; 
+    TAU_CONTEXT_EVENT(wb, bw);
+    TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
+  } else {
+    dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
+  }
+  TAU_CONTEXT_EVENT(byteswritten, count);
+  TAU_CONTEXT_EVENT(global_bytes_written, count);
+
+  TAU_PROFILE_STOP(t); 
+
+  dprintf ("* fwrite called\n"); 
+  return ret; 
+}
+
+/*********************************************************************
+ * fread 
+ ********************************************************************/
+size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+  static size_t (*_fread)(void *ptr, size_t size, size_t nmemb, FILE *stream) = NULL;
+  int ret;
+  if (_fread == NULL) {
+    _fread = ( size_t (*)(void *ptr, size_t size, size_t nmemb, FILE *stream)) dlsym(RTLD_NEXT, "fread");
+  }
+  
+  if (Tau_global_get_insideTAU() > 0) {
+    return _fread(ptr, size, nmemb, stream);
+  }
+
+  double currentRead = 0.0;
+  struct timeval t1, t2;
+  TAU_PROFILE_TIMER(t, "read()", " ", TAU_READ|TAU_IO);
+  TAU_GET_IOWRAP_EVENT(re, READ_BW, fileno(stream));
+  TAU_GET_IOWRAP_EVENT(bytesread, READ_BYTES, fileno(stream));
+  TAU_PROFILE_START(t);
+
+  gettimeofday(&t1, 0);
+  ret = _fread(ptr, size, nmemb, stream);
+  gettimeofday(&t2, 0);
+  int count = ret * size;
+
+  /* calculate the time spent in operation */
+  currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
+  /* now we trigger the events */
+  if (currentRead > 1e-12) {
+    TAU_CONTEXT_EVENT(re, (double) count/currentRead);
+    TAU_CONTEXT_EVENT(global_read_bandwidth, (double) count/currentRead);
+  } else {
+    dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
+  }
+  TAU_CONTEXT_EVENT(bytesread, count);
+  TAU_CONTEXT_EVENT(global_bytes_read, count);
+
+  TAU_PROFILE_STOP(t);
+
+  dprintf ("* TAU: read : %d bytes\n", ret);
+  fflush(stdout);
+  fflush(stderr);
+  return ret; 
+}
+
+
+
+
 /*********************************************************************
  * write 
  ********************************************************************/
