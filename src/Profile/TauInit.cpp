@@ -104,6 +104,12 @@ extern "C" int Tau_init_initializeTAU() {
   if (initialized) {
     return 0;
   }
+
+  /* initialize the Profiler stack */
+  Tau_stack_initialization();
+
+  Tau_global_incr_insideTAU();
+
   
   /* initialize environment variables */
   TauEnv_initialize();
@@ -123,8 +129,6 @@ extern "C" int Tau_init_initializeTAU() {
   /* we need the timestamp of the "start" */
   Tau_snapshot_initialization();
 
-  /* initialize the Profiler stack */
-  Tau_stack_initialization();
 
 
 #ifndef TAU_DISABLE_SIGUSR
@@ -167,5 +171,6 @@ extern "C" int Tau_init_initializeTAU() {
     Tau_sampling_init(0);
   }
 
+  Tau_global_decr_insideTAU();
   return 0;
 }
