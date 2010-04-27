@@ -107,21 +107,21 @@ extern "C" int Tau_global_get_insideTAU_tid(int tid) {
   return Tau_global_insideTAU[tid];
 }
 
-extern "C" int Tau_global_incr_insideTAU(int value) {
+extern "C" int Tau_global_incr_insideTAU() {
   int tid = RtsLayer::myThread();
   Tau_global_insideTAU[tid]++;
 }
 
-extern "C" int Tau_global_decr_insideTAU(int value) {
+extern "C" int Tau_global_decr_insideTAU() {
   int tid = RtsLayer::myThread();
   Tau_global_insideTAU[tid]--;
 }
 
-extern "C" int Tau_global_incr_insideTAU_tid(int value, int tid) {
+extern "C" int Tau_global_incr_insideTAU_tid(int tid) {
   Tau_global_insideTAU[tid]++;
 }
 
-extern "C" int Tau_global_decr_insideTAU_tid(int value, int tid) {
+extern "C" int Tau_global_decr_insideTAU_tid(int tid) {
   Tau_global_insideTAU[tid]--;
 }
 
@@ -474,25 +474,33 @@ extern "C" void Tau_profile_callstack(void) {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump(void) {
+  Tau_global_incr_insideTAU();
   TauProfiler_DumpData();
+  Tau_global_decr_insideTAU();
   return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_prefix(const char *prefix) {
+  Tau_global_incr_insideTAU();
   TauProfiler_DumpData(false, RtsLayer::myThread(), prefix);
+  Tau_global_decr_insideTAU();
   return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_prefix_task(const char *prefix, int taskid) {
+  Tau_global_incr_insideTAU();
   TauProfiler_DumpData(false, taskid, prefix);
+  Tau_global_decr_insideTAU();
   return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_incr(void) {
+  Tau_global_incr_insideTAU();
   TauProfiler_DumpData(true);
+  Tau_global_decr_insideTAU();
   return 0;
 }
 
@@ -1475,7 +1483,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.151 $   $Date: 2010/04/27 20:27:17 $
- * VERSION: $Id: TauCAPI.cpp,v 1.151 2010/04/27 20:27:17 amorris Exp $
+ * $Revision: 1.152 $   $Date: 2010/04/27 23:13:36 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.152 2010/04/27 23:13:36 amorris Exp $
  ***************************************************************************/
 
