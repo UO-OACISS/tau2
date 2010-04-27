@@ -4,6 +4,7 @@ include $(TAUROOT)/include/Makefile
 TAU_IOWRAP_SHARED   = libTAU-iowrap.so
 
 CC = $(TAU_CC)
+CXX = $(TAU_CXX)
 CFLAGS = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_INTERNAL_FLAGS)
 ARFLAGS = rcv
 
@@ -19,8 +20,8 @@ libTauIOWrapper.a: iowrapper.o
 iowrapper.o: iowrapper.c
 	$(CC) $(CFLAGS) -c iowrapper.c
 
-iowrap_shared.o: iowrap_shared.c
-	$(CC) $(CFLAGS) -c iowrap_shared.c
+iowrap_shared.o: iowrap_shared.cpp
+	$(CXX) $(CFLAGS) -c iowrap_shared.cpp
 
 libTAU-iowrap.so: iowrap_shared.o
 	$(CC) $(TAU_SHFLAGS) libTAU-iowrap.so iowrap_shared.o $(TAU_SHAREDLIBS) -ldl

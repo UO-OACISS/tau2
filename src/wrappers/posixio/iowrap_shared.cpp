@@ -20,7 +20,7 @@ int TAU_entered = 0;
 #define TAU_WRITE TAU_IO
 #define TAU_READ TAU_IO
 
-ssize_t write (int fd, const void *buf, size_t count) {
+extern "C" ssize_t write (int fd, const void *buf, size_t count) {
   static ssize_t (*_write)(int fd, const void *buf, size_t count) = NULL;
   ssize_t ret;
 
@@ -67,7 +67,7 @@ ssize_t write (int fd, const void *buf, size_t count) {
 }
 
 
-ssize_t read (int fd, void *buf, size_t count) {
+extern "C" ssize_t read (int fd, void *buf, size_t count) {
   static ssize_t (*_read)(int fd, void *buf, size_t count) = NULL;
   ssize_t ret; 
 
@@ -112,7 +112,7 @@ ssize_t read (int fd, void *buf, size_t count) {
 }
 
 
-ssize_t readv (int fd, const struct iovec *vec, int count) {
+extern "C" ssize_t readv (int fd, const struct iovec *vec, int count) {
   static ssize_t (*_readv)(int fd, const struct iovec *vec, int count) = NULL;
   ssize_t ret; 
   int i;
@@ -161,7 +161,7 @@ ssize_t readv (int fd, const struct iovec *vec, int count) {
   return ret;
 }
 
-ssize_t writev (int fd, const struct iovec *vec, int count) {
+extern "C" ssize_t writev (int fd, const struct iovec *vec, int count) {
   static ssize_t (*_writev)(int fd, const struct iovec *vec, int count) = NULL;
   ssize_t ret;
 
@@ -214,7 +214,7 @@ ssize_t writev (int fd, const struct iovec *vec, int count) {
   return ret;
 }
 
-int open (const char *pathname, int flags, ...) { 
+extern "C" int open (const char *pathname, int flags, ...) { 
   static int (*_open)(const char *pathname, int flags, ...)  = NULL;
   mode_t mode; 
   va_list args;
@@ -247,7 +247,7 @@ int open (const char *pathname, int flags, ...) {
 } 
 
 
-int open64 (const char *pathname, int flags, ...) { 
+extern "C" int open64 (const char *pathname, int flags, ...) { 
   static int (*_open64)(const char *pathname, int flags, ...)  = NULL;
   mode_t mode; 
   va_list args;
@@ -276,7 +276,7 @@ int open64 (const char *pathname, int flags, ...) {
   return ret; 
 } 
 
-int creat(const char *pathname, mode_t mode) {
+extern "C" int creat(const char *pathname, mode_t mode) {
   static int (*_creat)(const char *pathname, mode_t mode) = NULL;
   int ret;
 
@@ -296,7 +296,7 @@ int creat(const char *pathname, mode_t mode) {
   return ret;
 }
 
-int creat64(const char *pathname, mode_t mode) {
+extern "C" int creat64(const char *pathname, mode_t mode) {
   static int (*_creat64)(const char *pathname, mode_t mode) = NULL;
   int ret;
 
@@ -318,9 +318,7 @@ int creat64(const char *pathname, mode_t mode) {
 
 
 
-
-
-int close(int fd) {
+extern "C" int close(int fd) {
   static int (*_close) (int fd) = NULL;
   int ret; 
 
