@@ -325,6 +325,7 @@ shmemlibrary=no
 threadsafe=no
 additional_mpiincs=
 additional_mpilibs=
+extra_linker_args=
 pythoninc=
 pythonlib=
 python=no
@@ -5356,7 +5357,11 @@ if [ $hpctoolkit = yes ] ; then
     fixmakeargs="$fixmakeargs HPCTOOLKIT hpctoolkit_include=${hpctoolkit_include} hpctoolkit_link=${hpctoolkit_link}"
 fi
 
+if [ $machine = ia64 -o $machine = x86_64 -o $machine = i386_linux -o $machine = craycnl -o $machine = bgp ] ; then
+    extra_linker_args="${extralinker_args}#-Wl,-export-dynamic"
+fi
 
+fixmakeargs="$fixmakeargs extra_linker_args=$extra_linker_args"
 
 
 

@@ -779,6 +779,13 @@ HPCTOOLKIT_LINK=
 
 
 ##############################################
+# Extra linker args (e.g. -Wl,-export-dynamic)
+##############################################
+EXTRA_LINKER_ARGS= -Wl,-export-dynamic
+TAU_LINKER_OPT14=$(EXTRA_LINKER_ARGS)
+
+
+##############################################
 # Compiler Instrumentation
 ##############################################
 
@@ -849,7 +856,8 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
                   $(TAU_LINKER_OPT4) $(TAU_LINKER_OPT5) $(TAU_LINKER_OPT6) \
                   $(TAU_LINKER_OPT7) $(TAU_LINKER_OPT8) $(TAU_LINKER_OPT9) \
                   $(TAU_LINKER_OPT10) $(TAU_LINKER_OPT11) $(TAU_LINKER_OPT12) \
-		  $(TAU_LINKER_OPT13) $(PERFSUITELINK) $(VAMPIRTRACELIBS) $(SILCLIBS) $(HPCTOOLKIT_LINK)
+		  $(TAU_LINKER_OPT13) $(PERFSUITELINK) $(VAMPIRTRACELIBS) $(SILCLIBS) $(HPCTOOLKIT_LINK) \
+		  $(TAU_LINKER_OPT14)
 
 ##############################################
 

@@ -191,6 +191,11 @@ case $1 in
 	echo "s,^HPCTOOLKIT_LINK=.*$,HPCTOOLKIT_LINK=$hpctoolkit_link,g" >> $sedout
 	;;
 
+     extra_linker_args=*)
+        extra_linker_args=`echo $1 | sed -e 's/^extra_linker_args=//' -e 's/#/ /g'`
+	echo "s@^EXTRA_LINKER_ARGS=.*\$@EXTRA_LINKER_ARGS=$extra_linker_args@g" >> $sedout
+	;;
+
      epilogdir=*)
         epilogdir=`echo $1 | sed -e 's/^epilogdir=//'`
 	echo "s,^EPILOGDIR=.*$,EPILOGDIR=$epilogdir,g" >> $sedout
