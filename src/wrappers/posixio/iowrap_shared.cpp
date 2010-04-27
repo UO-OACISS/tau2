@@ -324,6 +324,54 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
 }
 
 
+/*********************************************************************
+ * fseek 
+ ********************************************************************/
+int fseek(FILE *stream, long offset, int whence) {
+  static int (*_fseek)(FILE *stream, long offset, int whence) = NULL;
+  int ret;
+  if (_fseek == NULL) {
+    _fseek = ( int (*)(FILE *stream, long offset, int whence)) dlsym(RTLD_NEXT, "fseek");
+  }
+  
+  if (Tau_global_get_insideTAU() > 0) {
+    return _fseek(stream, offset, whence);
+  }
+
+  TAU_PROFILE_TIMER(t, "fseek()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = _fseek(stream, offset, whence);
+  TAU_PROFILE_STOP(t); 
+
+  dprintf ("* fseek called\n"); 
+  return ret; 
+}
+
+/*********************************************************************
+ * rewind 
+ ********************************************************************/
+void rewind(FILE *stream) {
+  static void (*_rewind)(FILE *stream) = NULL;
+  int ret;
+  if (_rewind == NULL) {
+    _rewind = ( void (*)(FILE *stream)) dlsym(RTLD_NEXT, "rewind");
+  }
+  
+  if (Tau_global_get_insideTAU() > 0) {
+    _rewind(stream);
+  }
+
+  TAU_PROFILE_TIMER(t, "rewind()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+  _rewind(stream);
+  TAU_PROFILE_STOP(t); 
+
+  dprintf ("* rewind called\n"); 
+  return;
+}
+
+
 
 
 /*********************************************************************
