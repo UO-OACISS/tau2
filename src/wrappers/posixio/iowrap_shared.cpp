@@ -935,6 +935,33 @@ extern "C" int accept(int socket, struct sockaddr *address, socklen_t* address_l
 
 }
 
+/*********************************************************************
+ * connect
+ ********************************************************************/
+extern "C" int connect(int socket, const struct sockaddr *address, socklen_t address_len) {
+  static int (*_connect) (int socket, const struct sockaddr *address, socklen_t address_len) = NULL;
+  int current;
+
+  if (_connect == NULL) {
+    _connect = (int (*) (int socket, const struct sockaddr *address, socklen_t address_len) ) dlsym(RTLD_NEXT, "connect");
+  }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _connect(socket, address, address_len);
+  }
+
+  TAU_PROFILE_TIMER(t, "connect()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  current = _connect(socket, address, address_len);
+  TAU_PROFILE_STOP(t);
+
+  fflush(stdout);
+  fflush(stderr);
+
+  return current;
+
+}
 
 /*********************************************************************
  * recv
