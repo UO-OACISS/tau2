@@ -457,6 +457,8 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
   funcptr = *( void ** )func;
 #endif
 
+  tid = Tau_get_tid();
+
   if (gnu_init) {
     gnu_init = 0;
 
@@ -465,16 +467,20 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
       compInstDisabled[i] = 0;
     }
 
-    get_symtab();
     Tau_init_initializeTAU();
+    Tau_global_incr_insideTAU_tid(tid);
+    get_symtab();
     TheUsingCompInst() = 1;
     TAU_PROFILE_SET_NODE(0);
     updateMaps();
+    Tau_global_decr_insideTAU_tid(tid);
   }
 
+
   // prevent re-entry of this routine on a per thread basis
-  tid = Tau_get_tid();
+  Tau_global_incr_insideTAU_tid(tid);
   if (compInstDisabled[tid]) {
+    Tau_global_decr_insideTAU_tid(tid);
     return;
   }
   compInstDisabled[tid] = 1;
@@ -483,6 +489,7 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
     if (hn->excluded) {
       // finished in this routine, allow entry
       compInstDisabled[tid] = 0;
+      Tau_global_decr_insideTAU_tid(tid);
       return;
     }
     if (hn->fi == NULL) {
@@ -538,6 +545,7 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 
   // finished in this routine, allow entry
   compInstDisabled[tid] = 0;
+  Tau_global_decr_insideTAU_tid(tid);
 }
 
 extern "C" void _cyg_profile_func_enter(void* func, void* callsite) {
@@ -552,6 +560,7 @@ extern "C" void __cyg_profile_func_exit(void* func, void* callsite) {
   int tid;
 
   tid = Tau_get_tid();
+  Tau_global_incr_insideTAU_tid(tid);
 
   // prevent entry into cyg_profile functions while inside entry
   tid = Tau_get_tid();
@@ -570,6 +579,7 @@ extern "C" void __cyg_profile_func_exit(void* func, void* callsite) {
 
   if ( (hn = hash_get((long)funcptr)) ) {
     if (hn->excluded) {
+      Tau_global_decr_insideTAU_tid(tid);
       return;
     }
 
@@ -577,6 +587,7 @@ extern "C" void __cyg_profile_func_exit(void* func, void* callsite) {
   } else {
     //printf ("NOT FOUND! : ");
   }
+  Tau_global_decr_insideTAU_tid(tid);
 }
 
 extern "C" void _cyg_profile_func_exit(void* func, void* callsite) {
