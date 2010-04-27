@@ -625,13 +625,13 @@ extern "C" ssize_t recv (int fd, void *buf, size_t count, int flags) {
   currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
   if (currentRead > 1e-12) {
-    TAU_CONTEXT_EVENT(re, (double) count/currentRead);
-    TAU_CONTEXT_EVENT(global_read_bandwidth, (double) count/currentRead);
+    TAU_CONTEXT_EVENT(re, (double) ret/currentRead);
+    TAU_CONTEXT_EVENT(global_read_bandwidth, (double) ret/currentRead);
   } else {
     dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
-  TAU_CONTEXT_EVENT(bytesrecv, count);
-  TAU_CONTEXT_EVENT(global_bytes_read, count);
+  TAU_CONTEXT_EVENT(bytesrecv, ret);
+  TAU_CONTEXT_EVENT(global_bytes_read, ret);
 
   TAU_PROFILE_STOP(t);
 
@@ -642,6 +642,9 @@ extern "C" ssize_t recv (int fd, void *buf, size_t count, int flags) {
   return ret;
 }
 
+/*********************************************************************
+ * send
+ ********************************************************************/
 
 extern "C" ssize_t send (int fd, const void *buf, size_t count, int flags) {
   static ssize_t (*_send)(int fd, const void *buf, size_t count, int flags) = NULL;
@@ -670,13 +673,13 @@ extern "C" ssize_t send (int fd, const void *buf, size_t count, int flags) {
   currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
   if (currentWrite > 1e-12) {
-    TAU_CONTEXT_EVENT(re, (double) count/currentWrite);
-    TAU_CONTEXT_EVENT(global_write_bandwidth, (double) count/currentWrite);
+    TAU_CONTEXT_EVENT(re, (double) ret/currentWrite);
+    TAU_CONTEXT_EVENT(global_write_bandwidth, (double) ret/currentWrite);
   } else {
     dprintf("TauWrapperRead: currentWrite = %g\n", currentWrite);
   }
-  TAU_CONTEXT_EVENT(byteswritten, count);
-  TAU_CONTEXT_EVENT(global_bytes_written, count);
+  TAU_CONTEXT_EVENT(byteswritten, ret);
+  TAU_CONTEXT_EVENT(global_bytes_written, ret);
 
   TAU_PROFILE_STOP(t);
 
@@ -687,4 +690,199 @@ extern "C" ssize_t send (int fd, const void *buf, size_t count, int flags) {
   return ret;
 }
 
+
+/*********************************************************************
+ * sendto
+ ********************************************************************/
+
+extern "C" ssize_t sendto (int fd, const void *buf, size_t count, int flags, const struct sockaddr *to, socklen_t len) {
+  static ssize_t (*_sendto)(int fd, const void *buf, size_t count, int flags, const struct sockaddr *to, socklen_t len) = NULL;
+  ssize_t ret; 
+
+  if (_sendto == NULL) {
+    _sendto = ( ssize_t (*)(int fd, const void *buf, size_t count, int flags, const struct sockaddr *to, socklen_t len)) dlsym(RTLD_NEXT, "sendto");
+  }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _sendto(fd, buf, count, flags, to, len);
+  }
+
+  double currentWrite = 0.0;
+  struct timeval t1, t2;
+  TAU_PROFILE_TIMER(t, "sendto()", " ", TAU_WRITE|TAU_IO);
+  TAU_GET_IOWRAP_EVENT(re, WRITE_BW, fd);
+  TAU_GET_IOWRAP_EVENT(byteswritten, WRITE_BYTES, fd);
+  TAU_PROFILE_START(t);
+
+  gettimeofday(&t1, 0);
+  ret = _sendto(fd, buf, count, flags, to, len);
+  gettimeofday(&t2, 0);
+
+  /* calculate the time spent in operation */
+  currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
+  /* now we trigger the events */
+  if (currentWrite > 1e-12) {
+    TAU_CONTEXT_EVENT(re, (double) count/currentWrite);
+    TAU_CONTEXT_EVENT(global_write_bandwidth, (double) count/currentWrite);
+  } else {
+    dprintf("TauWrapperRead: currentWrite = %g\n", currentWrite);
+  }
+  TAU_CONTEXT_EVENT(byteswritten, ret);
+  TAU_CONTEXT_EVENT(global_bytes_written, ret);
+
+  TAU_PROFILE_STOP(t);
+
+  dprintf ("* TAU: sendto : %d bytes\n", ret);
+  fflush(stdout);
+  fflush(stderr);
+
+  return ret;
+}
+
+
+/*********************************************************************
+ * recvfrom
+ ********************************************************************/
+
+extern "C" ssize_t recvfrom (int fd, void *buf, size_t count, int flags, struct sockaddr *from, socklen_t *len) {
+  static ssize_t (*_recvfrom)(int fd, void *buf, size_t count, int flags, struct sockaddr *from, socklen_t * len) = NULL;
+  ssize_t ret; 
+
+  if (_recvfrom == NULL) {
+    _recvfrom = ( ssize_t (*)(int fd, void *buf, size_t count, int flags, struct sockaddr * from, socklen_t * len)) dlsym(RTLD_NEXT, "recvfrom");
+  }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _recvfrom(fd, buf, count, flags, from, len);
+  }
+
+  double currentRead = 0.0;
+  struct timeval t1, t2;
+  TAU_PROFILE_TIMER(t, "recvfrom()", " ", TAU_READ|TAU_IO);
+  TAU_GET_IOWRAP_EVENT(re, READ_BW, fd);
+  TAU_GET_IOWRAP_EVENT(bytesrecvfrom, READ_BYTES, fd);
+  TAU_PROFILE_START(t);
+
+  gettimeofday(&t1, 0);
+  ret = _recvfrom(fd, buf, count, flags, from, len);
+  gettimeofday(&t2, 0);
+
+  /* calculate the time spent in operation */
+  currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
+  /* now we trigger the events */
+  if (currentRead > 1e-12) {
+    TAU_CONTEXT_EVENT(re, (double) ret/currentRead);
+    TAU_CONTEXT_EVENT(global_read_bandwidth, (double) ret/currentRead);
+  } else {
+    dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
+  }
+  TAU_CONTEXT_EVENT(bytesrecvfrom, ret);
+  TAU_CONTEXT_EVENT(global_bytes_read, ret);
+
+  TAU_PROFILE_STOP(t);
+
+  dprintf ("* TAU: recvfrom : %d bytes\n", ret);
+  fflush(stdout);
+  fflush(stderr);
+
+  return ret;
+}
+
+/*********************************************************************
+ * dup
+ ********************************************************************/
+
+int dup(int oldfd) {
+  static int (*_dup)(int oldfd) = NULL;
+  int fd;
+
+  if (_dup == NULL) {
+    _dup = ( int(*)(int fd)) dlsym(RTLD_NEXT, "dup");   }
+
+
+  fd = _dup(oldfd);
+  /* NOTE: Do we need to do some housekeeping operations here to associate 
+     the fd with the old fd? */
+
+  return fd;
+}
+
+
+/*********************************************************************
+ * dup2
+ ********************************************************************/
+
+int dup2(int oldfd, int newfd) {
+  static int (*_dup2)(int oldfd, int newfd) = NULL;
+  int fd;
+
+  if (_dup2 == NULL) {
+    _dup2 = ( int(*)(int fd, int newfd)) dlsym(RTLD_NEXT, "dup2");   }
+
+
+  newfd = _dup2(oldfd, newfd);
+  /* NOTE: Do we need to do some housekeeping operations here to associate      the fd with the old fd? */
+
+  return newfd;
+}
+
+
+/*********************************************************************
+ * popen
+ ********************************************************************/
+extern "C" FILE * popen (const char *command, const char *type) {
+  static FILE * (*_popen)(const char *command, const char *type)  = NULL;
+  FILE* ret;
+
+  if (_popen == NULL) {
+    _popen = ( FILE * (*)(const char *command, const char *type)) dlsym(RTLD_NEXT, "popen");
+  }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _popen(command, type);   }
+
+  TAU_PROFILE_TIMER(t, "popen()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = _popen(command, type);
+  /* NOTE: We use int fileno(FILE *stream) to convert FILE * to int fd */
+  Tau_iowrap_registerEvents(fileno(ret), command);
+  TAU_PROFILE_STOP(t);
+
+  dprintf ("* popen called on %s\n", command);
+  fflush(stdout);
+  fflush(stderr);
+
+  return ret;
+}
+
+
+
+/*********************************************************************
+ * pclose
+ ********************************************************************/
+extern "C" int pclose(FILE * stream) {
+  static int (*_pclose) (FILE * stream) = NULL;
+  int ret;
+
+  if (_pclose == NULL) {
+    _pclose = (int (*) (FILE * stream) ) dlsym(RTLD_NEXT, "pclose");
+  }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _pclose(stream);
+  }
+
+  TAU_PROFILE_TIMER(t, "pclose()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = _pclose(stream);
+  TAU_PROFILE_STOP(t);
+
+  dprintf ("* pclose called on %d\n", stream);
+  fflush(stdout);
+  fflush(stderr);
+
+  return ret;
+}
 
