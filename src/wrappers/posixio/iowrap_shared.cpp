@@ -13,9 +13,8 @@
   
 #include <setjmp.h>
 #include <TAU.h>
+#include <Profile/TauInit.h>
     
-int TAU_entered = 0; 
-
 #define dprintf if(1) printf
 #define TAU_WRITE TAU_IO
 #define TAU_READ TAU_IO
@@ -39,6 +38,7 @@ typedef enum {
 const char *iowrap_event_names[NUM_EVENTS] = {"WRITE Bandwidth (MB/s)", "Bytes Written", "READ Bandwidth (MB/s)", "Bytes Read"};
 static vector<TauUserEvent*> iowrap_events[NUM_EVENTS];
 
+void *global_write_bandwidth=0, *global_read_bandwidth=0, *global_bytes_written=0, *global_bytes_read=0;
 
 void __attribute__ ((constructor)) tau_iowrap_preload_init(void);
 void __attribute__ ((destructor)) tau_iowrap_preload_fini(void);
@@ -68,10 +68,15 @@ static void Tau_iowrap_registerEvents(int fid, const char *pathname) {
  * shared library constructor, register the unknown, stdin, stdout, and stderr
  ********************************************************************/
 void tau_iowrap_preload_init() {
+  Tau_init_initializeTAU();
   Tau_iowrap_registerEvents(-1, "unknown");
   Tau_iowrap_registerEvents(0, "stdin");
   Tau_iowrap_registerEvents(1, "stdout");
   Tau_iowrap_registerEvents(2, "stderr");
+  Tau_get_context_userevent(&global_write_bandwidth, "WRITE Bandwidth (MB/s)");
+  Tau_get_context_userevent(&global_read_bandwidth, "READ Bandwidth (MB/s)");
+  Tau_get_context_userevent(&global_bytes_written, "Bytes Written");
+  Tau_get_context_userevent(&global_bytes_read, "Bytes Read");
 }
 
 /*********************************************************************
@@ -110,8 +115,6 @@ extern "C" ssize_t write (int fd, const void *buf, size_t count) {
   double bw = 0.0;
 
   TAU_PROFILE_TIMER(t, "write()", " ", TAU_WRITE|TAU_IO);
-  // TAU_REGISTER_CONTEXT_EVENT(wb, "WRITE Bandwidth (MB/s)");
-  // TAU_REGISTER_CONTEXT_EVENT(byteswritten, "Bytes Written");
   TAU_GET_IOWRAP_EVENT(wb, WRITE_BW, fd);
   TAU_GET_IOWRAP_EVENT(byteswritten, WRITE_BYTES, fd);
   TAU_PROFILE_START(t);
@@ -126,18 +129,18 @@ extern "C" ssize_t write (int fd, const void *buf, size_t count) {
   if (currentWrite > 1e-12) {
     bw = (double) count/currentWrite; 
     TAU_CONTEXT_EVENT(wb, bw);
+    TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
   } else {
     dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
   TAU_CONTEXT_EVENT(byteswritten, count);
-
+  TAU_CONTEXT_EVENT(global_bytes_written, count);
+ 
   TAU_PROFILE_STOP(t);
 
-  TAU_entered++;
   dprintf ("* TAU: write : %d bytes, bandwidth %g \n", ret, bw);
   fflush(stdout);
   fflush(stderr);
-  TAU_entered--;
 
   return ret;
 }
@@ -158,12 +161,9 @@ extern "C" ssize_t read (int fd, void *buf, size_t count) {
   double currentRead = 0.0;
   struct timeval t1, t2;
   TAU_PROFILE_TIMER(t, "read()", " ", TAU_READ|TAU_IO);
-  // TAU_REGISTER_CONTEXT_EVENT(re, "READ Bandwidth (MB/s)");
-  // TAU_REGISTER_CONTEXT_EVENT(bytesread, "Bytes Read");
   TAU_GET_IOWRAP_EVENT(re, READ_BW, fd);
   TAU_GET_IOWRAP_EVENT(bytesread, READ_BYTES, fd);
   TAU_PROFILE_START(t);
-
 
   gettimeofday(&t1, 0);
   ret = _read(fd, buf, count);
@@ -174,18 +174,18 @@ extern "C" ssize_t read (int fd, void *buf, size_t count) {
   /* now we trigger the events */
   if (currentRead > 1e-12) {
     TAU_CONTEXT_EVENT(re, (double) count/currentRead);
+    TAU_CONTEXT_EVENT(global_read_bandwidth, (double) count/currentRead);
   } else {
     dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
   TAU_CONTEXT_EVENT(bytesread, count);
+  TAU_CONTEXT_EVENT(global_bytes_read, count);
 
   TAU_PROFILE_STOP(t);
 
-  TAU_entered++;
   dprintf ("* TAU: read : %d bytes\n", ret);
   fflush(stdout);
   fflush(stderr);
-  TAU_entered--;
 
   return ret;
 }
@@ -208,8 +208,6 @@ extern "C" ssize_t readv (int fd, const struct iovec *vec, int count) {
   double currentRead = 0.0;
   struct timeval t1, t2;
   TAU_PROFILE_TIMER(t, "readv()", " ", TAU_READ|TAU_IO);
-  // TAU_REGISTER_CONTEXT_EVENT(re, "READ Bandwidth (MB/s)");
-  // TAU_REGISTER_CONTEXT_EVENT(bytesread, "Bytes Read");
   TAU_GET_IOWRAP_EVENT(re, READ_BW, fd);
   TAU_GET_IOWRAP_EVENT(bytesread, READ_BYTES, fd);
   TAU_PROFILE_START(t);
@@ -219,8 +217,9 @@ extern "C" ssize_t readv (int fd, const struct iovec *vec, int count) {
   ret = _readv(fd, vec, count);
   gettimeofday(&t2, 0);
   if (ret >= 0 ) {
-    for (i = 0; i < count; i++) 
+    for (i = 0; i < count; i++) {
       sumOfBytesRead += vec[i].iov_len; 
+    }
   }
 
   /* calculate the time spent in operation */
@@ -228,18 +227,18 @@ extern "C" ssize_t readv (int fd, const struct iovec *vec, int count) {
   /* now we trigger the events */
   if (currentRead > 1e-12) {
     TAU_CONTEXT_EVENT(re, (double) sumOfBytesRead/currentRead);
+    TAU_CONTEXT_EVENT(global_read_bandwidth, (double) sumOfBytesRead/currentRead);
   } else {
     dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
   TAU_CONTEXT_EVENT(bytesread, sumOfBytesRead);
+  TAU_CONTEXT_EVENT(global_bytes_read, sumOfBytesRead);
 
   TAU_PROFILE_STOP(t);
 
-  TAU_entered++;
   dprintf ("* TAU: read : %d bytes\n", ret);
   fflush(stdout);
   fflush(stderr);
-  TAU_entered--;
 
   return ret;
 }
@@ -263,8 +262,6 @@ extern "C" ssize_t writev (int fd, const struct iovec *vec, int count) {
   }
 
   TAU_PROFILE_TIMER(t, "writev()", " ", TAU_WRITE|TAU_IO);
-  // TAU_REGISTER_CONTEXT_EVENT(wb, "WRITE Bandwidth (MB/s)");
-  // TAU_REGISTER_CONTEXT_EVENT(byteswritten, "Bytes Written");
   TAU_GET_IOWRAP_EVENT(wb, WRITE_BW, fd);
   TAU_GET_IOWRAP_EVENT(byteswritten, WRITE_BYTES, fd);
   TAU_PROFILE_START(t);
@@ -275,8 +272,9 @@ extern "C" ssize_t writev (int fd, const struct iovec *vec, int count) {
   gettimeofday(&t2, 0);
 
   /* calculate the total bytes written */
-  for (i = 0; i < count; i++)
+  for (i = 0; i < count; i++) {
     sumOfBytesWritten += vec[i].iov_len; 
+  }
 
   /* calculate the time spent in operation */
   currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
@@ -284,18 +282,18 @@ extern "C" ssize_t writev (int fd, const struct iovec *vec, int count) {
   if (currentWrite > 1e-12) {
     bw = (double) sumOfBytesWritten/currentWrite; 
     TAU_CONTEXT_EVENT(wb, bw);
+    TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
   } else {
     dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
   TAU_CONTEXT_EVENT(byteswritten, sumOfBytesWritten);
-
+  TAU_CONTEXT_EVENT(global_bytes_written, sumOfBytesWritten);
+ 
   TAU_PROFILE_STOP(t);
 
-  TAU_entered++;
   dprintf ("* TAU: write : %d bytes, bandwidth %g \n", sumOfBytesWritten, bw);
   fflush(stdout);
   fflush(stderr);
-  TAU_entered--;
 
   return ret;
 }
