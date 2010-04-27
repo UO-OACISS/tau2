@@ -334,10 +334,10 @@ TauGroup_t Tau_profile_get_group(void *ptr);
 
 int Tau_global_get_insideTAU();
 int Tau_global_get_insideTAU_tid(int tid);
-int Tau_global_incr_insideTAU(int value);
-int Tau_global_decr_insideTAU(int value);
-int Tau_global_incr_insideTAU_tid(int value, int tid);
-int Tau_global_decr_insideTAU_tid(int value, int tid);
+int Tau_global_incr_insideTAU();
+int Tau_global_decr_insideTAU();
+int Tau_global_incr_insideTAU_tid(int tid);
+int Tau_global_decr_insideTAU_tid(int tid);
 
 
 /* Runtime "context" access */
@@ -512,6 +512,6 @@ void Tau_profile_param1l(long data, const char *dataname);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.110 $   $Date: 2010/04/27 20:27:18 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.110 2010/04/27 20:27:18 amorris Exp $ 
+ * $Revision: 1.111 $   $Date: 2010/04/27 23:11:45 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.111 2010/04/27 23:11:45 amorris Exp $ 
  ***************************************************************************/
