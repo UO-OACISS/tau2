@@ -175,11 +175,6 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 ##############################################
 # For making libTAU.so Dynamic Shared Object
 ##############################################
-TAU_SHLIBX		= .so 		  
-#HP#TAU_SHLIBX		= .sl			#ENDIF#
-#APPLECXX#TAU_APPLE_SHLIBX  = .dylib		#ENDIF#
-#PYTHON#TAU_APPLE_SHLIBX    = .so		#ENDIF#
-#APPLECXX#TAU_SHLIBX    = $(TAU_APPLE_SHLIBX)	#ENDIF#
 #GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
