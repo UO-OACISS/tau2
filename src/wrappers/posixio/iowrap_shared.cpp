@@ -13,6 +13,12 @@
   
 #include <setjmp.h>
 #include <TAU.h>
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <sys/un.h>
+#include <netinet/in.h>
 #include <Profile/TauInit.h>
     
 #define dprintf if(1) printf
@@ -99,6 +105,9 @@ static void *Tau_iowrap_getEvent(event_type type, int fid) {
 #define TAU_GET_IOWRAP_EVENT(e, event, fid) void *e = Tau_iowrap_getEvent(event, fid);
 
 
+/*********************************************************************
+ * write 
+ ********************************************************************/
 extern "C" ssize_t write (int fd, const void *buf, size_t count) {
   static ssize_t (*_write)(int fd, const void *buf, size_t count) = NULL;
   ssize_t ret;
@@ -146,6 +155,9 @@ extern "C" ssize_t write (int fd, const void *buf, size_t count) {
 }
 
 
+/*********************************************************************
+ * read 
+ ********************************************************************/
 extern "C" ssize_t read (int fd, void *buf, size_t count) {
   static ssize_t (*_read)(int fd, void *buf, size_t count) = NULL;
   ssize_t ret; 
@@ -191,6 +203,9 @@ extern "C" ssize_t read (int fd, void *buf, size_t count) {
 }
 
 
+/*********************************************************************
+ * readv 
+ ********************************************************************/
 extern "C" ssize_t readv (int fd, const struct iovec *vec, int count) {
   static ssize_t (*_readv)(int fd, const struct iovec *vec, int count) = NULL;
   ssize_t ret; 
@@ -243,6 +258,9 @@ extern "C" ssize_t readv (int fd, const struct iovec *vec, int count) {
   return ret;
 }
 
+/*********************************************************************
+ * writev 
+ ********************************************************************/
 extern "C" ssize_t writev (int fd, const struct iovec *vec, int count) {
   static ssize_t (*_writev)(int fd, const struct iovec *vec, int count) = NULL;
   ssize_t ret;
@@ -298,6 +316,9 @@ extern "C" ssize_t writev (int fd, const struct iovec *vec, int count) {
   return ret;
 }
 
+/*********************************************************************
+ * open 
+ ********************************************************************/
 extern "C" int open (const char *pathname, int flags, ...) { 
   static int (*_open)(const char *pathname, int flags, ...)  = NULL;
   mode_t mode; 
@@ -335,7 +356,9 @@ extern "C" int open (const char *pathname, int flags, ...) {
   return ret; 
 } 
 
-
+/*********************************************************************
+ * open64 
+ ********************************************************************/
 extern "C" int open64 (const char *pathname, int flags, ...) { 
   static int (*_open64)(const char *pathname, int flags, ...)  = NULL;
   mode_t mode; 
@@ -370,6 +393,9 @@ extern "C" int open64 (const char *pathname, int flags, ...) {
   return ret; 
 } 
 
+/*********************************************************************
+ * creat 
+ ********************************************************************/
 extern "C" int creat(const char *pathname, mode_t mode) {
   static int (*_creat)(const char *pathname, mode_t mode) = NULL;
   int ret;
@@ -395,6 +421,9 @@ extern "C" int creat(const char *pathname, mode_t mode) {
   return ret;
 }
 
+/*********************************************************************
+ * creat64 
+ ********************************************************************/
 extern "C" int creat64(const char *pathname, mode_t mode) {
   static int (*_creat64)(const char *pathname, mode_t mode) = NULL;
   int ret;
@@ -421,6 +450,9 @@ extern "C" int creat64(const char *pathname, mode_t mode) {
 }
 
 
+/*********************************************************************
+ * close 
+ ********************************************************************/
 extern "C" int close(int fd) {
   static int (*_close) (int fd) = NULL;
   int ret; 
@@ -445,4 +477,120 @@ extern "C" int close(int fd) {
   
   return ret;
 }
+
+/*********************************************************************
+ * Tau_get_socketname returns the name of the socket (AF_INET/AF_UNIX) 
+ ********************************************************************/
+extern "C" char * Tau_get_socket_name(const struct sockaddr *sa, char *s, size_t len) {
+   switch (sa->sa_family) {
+     case AF_INET: 
+       inet_ntop(AF_INET, &(((struct sockaddr_in *) sa)->sin_addr), s, len);
+       break;
+     case AF_INET6: 
+       inet_ntop(AF_INET6, &(((struct sockaddr_in6 *) sa)->sin6_addr), s, len);
+       break;
+     case AF_UNIX:
+       strncpy(s, ((char *)(((struct sockaddr_un *) sa)->sun_path)), len);
+       break;
+     default:
+       strncpy(s, "Unknown address family", len);
+       return NULL;
+   }
+   return s;
+}
+
+/*********************************************************************
+ * socket 
+ ********************************************************************/
+extern "C" int socket(int domain, int type, int protocol) {
+  static int (*_socket) (int domain, int type, int protocol) = NULL;
+  int ret;
+
+  if (_socket == NULL) {
+    _socket = (int (*) (int domain, int type, int protocol) ) dlsym(RTLD_NEXT, "socket");
+  }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _socket(domain, type, protocol);
+  }
+
+  TAU_PROFILE_TIMER(t, "socket()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = _socket(domain, type, protocol);
+  TAU_PROFILE_STOP(t);
+
+  dprintf ("* socket called on domain %d, type %d, protocol %d\n", domain, type, protocol);
+  fflush(stdout);
+  fflush(stderr);
+
+  return ret;
+}
+
+
+/*********************************************************************
+ * bind 
+ ********************************************************************/
+extern "C" int bind(int socket, const struct sockaddr *address, socklen_t address_len) {
+  static int (*_bind) (int socket, const struct sockaddr *address, socklen_t address_len) = NULL;
+  int ret;
+  char socketname[2048];
+
+  if (_bind == NULL) {
+    _bind = (int (*) (int socket, const struct sockaddr *address, socklen_t address_len) ) dlsym(RTLD_NEXT, "bind");
+  }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _bind(socket, address, address_len);
+  }
+
+  TAU_PROFILE_TIMER(t, "bind()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = _bind(socket, address, address_len);
+  TAU_PROFILE_STOP(t);
+
+  Tau_get_socket_name(address, (char *)socketname, address_len);
+  dprintf("socket name = %s\n", socketname);
+  Tau_iowrap_registerEvents(socket, (const char *)socketname);
+
+  fflush(stdout);
+  fflush(stderr);
+
+  return ret;
+
+}
+/*********************************************************************
+ * accept
+ ********************************************************************/
+extern "C" int accept(int socket, struct sockaddr *address, socklen_t* address_len) {
+  static int (*_accept) (int socket, struct sockaddr *address, socklen_t* address_len) = NULL;
+  int current;
+  char socketname[2048];
+
+  if (_accept == NULL) {
+    _accept = (int (*) (int socket, struct sockaddr *address, socklen_t* address_len) ) dlsym(RTLD_NEXT, "accept");
+  }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _accept(socket, address, address_len);
+  }
+
+  TAU_PROFILE_TIMER(t, "accept()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  current = _accept(socket, address, address_len);
+  TAU_PROFILE_STOP(t);
+
+  Tau_get_socket_name(address, (char *)socketname, *address_len);
+  dprintf("socket name = %s\n", socketname);
+  Tau_iowrap_registerEvents(current, (const char *)socketname);
+
+  fflush(stdout);
+  fflush(stderr);
+
+  return current;
+
+}
+
 
