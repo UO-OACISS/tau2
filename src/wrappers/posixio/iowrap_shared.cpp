@@ -321,6 +321,62 @@ extern "C" int fprintf(FILE *stream, const char *format, ...) {
 }
 
 /*********************************************************************
+ * fscanf 
+ ********************************************************************/
+extern "C" int fscanf(FILE *stream, const char *format, ...) {
+  va_list arg;
+
+  static int (*_fscanf)(FILE *stream, const char *format, ...) = NULL;
+  int ret;
+  if (_fscanf == NULL) {
+    _fscanf = ( int (*)(FILE *stream, const char *format, ...)) dlsym(RTLD_NEXT, "fscanf");
+  }
+  
+  if (Tau_global_get_insideTAU() > 0) {
+    va_start (arg, format);
+    ret = vfscanf(stream, format, arg);
+    va_end (arg);
+    return ret;
+  }
+
+  double currentRead = 0.0;
+  struct timeval t1, t2;
+  double bw = 0.0;
+
+  TAU_GET_IOWRAP_EVENT(rb, READ_BW, fileno(stream));
+  TAU_GET_IOWRAP_EVENT(bytesread, READ_BYTES, fileno(stream));
+  TAU_PROFILE_TIMER(t, "fscanf()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+  gettimeofday(&t1, 0);
+
+  va_start (arg, format);
+  ret = vfscanf(stream, format, arg);
+  va_end (arg);
+  
+  gettimeofday(&t2, 0);
+
+  int count = ret;
+
+  /* calculate the time spent in operation */
+  currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
+  /* now we trigger the events */
+  if (currentRead > 1e-12) {
+    bw = (double) count/currentRead; 
+    TAU_CONTEXT_EVENT(rb, bw);
+    TAU_CONTEXT_EVENT(global_read_bandwidth, bw);
+  } else {
+    dprintf("TauWrapperWrite: currentWrite = %g\n", currentRead);
+  }
+  TAU_CONTEXT_EVENT(bytesread, count);
+  TAU_CONTEXT_EVENT(global_bytes_read, count);
+
+  TAU_PROFILE_STOP(t); 
+
+  dprintf ("* fscanf called\n"); 
+  return ret; 
+}
+
+/*********************************************************************
  * fwrite 
  ********************************************************************/
 extern "C" size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream) {
