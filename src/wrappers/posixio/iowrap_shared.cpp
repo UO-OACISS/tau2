@@ -404,6 +404,52 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
   return ret; 
 }
 
+/*********************************************************************
+ * fcntl
+ ********************************************************************/
+int fcntl(int fd, int cmd, ...) {
+  va_list ap;
+  void *arg;
+
+  static int (*_fcntl)(int fd, int cmd, ...) = NULL;
+  int ret;
+  if (_fcntl == NULL) {
+    _fcntl = ( int (*)(int fd, int cmd, ...)) dlsym(RTLD_NEXT, "fcntl");   }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    switch (cmd) {
+      /* No arg */
+    case F_GETFD : /* From kernel source fs/fcntl.c:do_fcntl() */
+    case F_GETFL :
+#if defined(F_GETOWN)
+    case F_GETOWN :
+#endif
+#if defined(F_GETSIG)
+    case F_GETSIG :
+#endif
+#if defined(F_GETLEASE)
+    case F_GETLEASE :
+#endif
+      ret = _fcntl(fd, cmd, 0);
+      break;
+    default :
+      va_start (ap, cmd);
+      arg = va_arg (ap, void *);
+      va_end (ap);
+      ret = _fcntl(fd, cmd, arg);
+      break;
+    }
+    switch (cmd) {
+
+    case F_DUPFD :
+      Tau_iowrap_dupEvents(fd, ret);
+      break;
+    }
+  }
+
+  dprintf ("* fcntl called\n");
+  return ret;
+}
 
 
 /*********************************************************************
