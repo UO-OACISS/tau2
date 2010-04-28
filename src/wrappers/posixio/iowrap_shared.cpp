@@ -151,7 +151,9 @@ extern "C" FILE *fopen(const char *path, const char *mode) {
   TAU_PROFILE_START(t);
 
   ret = _fopen(path, mode);
-  Tau_iowrap_registerEvents(fileno(ret), path);
+  if (ret != NULL) {
+    Tau_iowrap_registerEvents(fileno(ret), path);
+  }
   TAU_PROFILE_STOP(t); 
 
   dprintf ("* fopen called on %s\n", path); 
