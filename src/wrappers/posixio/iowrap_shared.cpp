@@ -70,6 +70,10 @@ static void Tau_iowrap_registerEvents(int fid, const char *pathname) {
   }
 }
 
+/*********************************************************************
+ * Tau_iowrap_dupEvents takes care of the associating the events with the 
+ * new file descriptor obtained by using dup/dup2 calls.
+ ********************************************************************/
 static void Tau_iowrap_dupEvents(int oldfid, int newfid) {
   oldfid++; // skip the "unknown" descriptor
   newfid++;
@@ -396,6 +400,51 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
   return ret; 
 }
 
+
+
+/*********************************************************************
+ * lseek
+ ********************************************************************/
+off_t lseek(int fd, off_t offset, int whence) {
+  static off_t (*_lseek)(int fd, off_t offset, int whence) = NULL;
+  int ret;
+  if (_lseek == NULL) {
+    _lseek = ( off_t (*)(int fd, off_t offset, int whence)) dlsym(RTLD_NEXT, "lseek");   }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _lseek(fd, offset, whence);
+  }
+
+  TAU_PROFILE_TIMER(t, "lseek()", " ", TAU_IO);
+  TAU_PROFILE_START(t); 
+  ret = _lseek(fd, offset, whence);
+  TAU_PROFILE_STOP(t);
+
+  dprintf ("* lseek called\n");
+  return ret;
+}
+
+/*********************************************************************
+ * lseek64
+ ********************************************************************/
+off_t lseek64(int fd, off_t offset, int whence) {
+  static off_t (*_lseek64)(int fd, off_t offset, int whence) = NULL;
+  int ret;
+  if (_lseek64 == NULL) {
+    _lseek64 = ( off_t (*)(int fd, off_t offset, int whence)) dlsym(RTLD_NEXT, "lseek64");   }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _lseek64(fd, offset, whence);
+  }
+
+  TAU_PROFILE_TIMER(t, "lseek64()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+  ret = _lseek64(fd, offset, whence);
+  TAU_PROFILE_STOP(t);
+
+  dprintf ("* lseek64 called\n");
+  return ret;
+}
 
 /*********************************************************************
  * fseek 
