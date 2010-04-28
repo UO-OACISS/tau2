@@ -852,6 +852,38 @@ extern "C" int mkstemp (char *templat) {
   return ret;
 }
 
+/*********************************************************************
+ * tmpfile
+ ********************************************************************/
+extern "C" FILE* tmpfile () {
+  static FILE* (*_tmpfile)()  = NULL;
+  FILE* ret;
+
+  if (_tmpfile == NULL) {
+    _tmpfile = ( FILE* (*)()) dlsym(RTLD_NEXT, "tmpfile");
+  }
+
+  TAU_PROFILE_TIMER(t, "tmpfile()", " ", TAU_IO);
+
+  if (Tau_global_get_insideTAU() > 0) {
+    TAU_PROFILE_START(t);
+  }
+
+  ret = _tmpfile();
+
+  if (ret != NULL) {
+    Tau_iowrap_registerEvents(fileno(ret), "tmpfile");
+  }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    TAU_PROFILE_STOP(t);
+  }
+
+  dprintf ("* tmpfile called\n");
+
+  return ret;
+}
+
 
 /*********************************************************************
  * open 
