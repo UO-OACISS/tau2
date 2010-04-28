@@ -998,12 +998,15 @@ extern "C" int close(int fd) {
  * Tau_get_socketname returns the name of the socket (AF_INET/AF_UNIX) 
  ********************************************************************/
 extern "C" char * Tau_get_socket_name(const struct sockaddr *sa, char *s, size_t len) {
+   char addr[256];
    switch (sa->sa_family) {
      case AF_INET: 
-       inet_ntop(AF_INET, &(((struct sockaddr_in *) sa)->sin_addr), s, len);
+       inet_ntop(AF_INET, &(((struct sockaddr_in *) sa)->sin_addr), addr, len);
+       sprintf(s,"%s:%d",addr,ntohs((((struct sockaddr_in *)sa)->sin_port)));
        break;
      case AF_INET6: 
-       inet_ntop(AF_INET6, &(((struct sockaddr_in6 *) sa)->sin6_addr), s, len);
+       inet_ntop(AF_INET6, &(((struct sockaddr_in6 *) sa)->sin6_addr), addr, len);
+       sprintf(s,"%s:%d",addr,ntohs((((struct sockaddr_in6 *)sa)->sin6_port)));
        break;
      case AF_UNIX:
        strncpy(s, ((char *)(((struct sockaddr_un *) sa)->sun_path)), len);
