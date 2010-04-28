@@ -178,7 +178,9 @@ extern "C" FILE *fopen64(const char *path, const char *mode) {
   TAU_PROFILE_START(t);
 
   ret = _fopen64(path, mode);
-  Tau_iowrap_registerEvents(fileno(ret), path);
+  if (ret != NULL) {
+    Tau_iowrap_registerEvents(fileno(ret), path);
+  }
   TAU_PROFILE_STOP(t); 
 
   dprintf ("* fopen64 called on %s\n", path); 
@@ -228,7 +230,9 @@ extern "C" FILE *freopen(const char *path, const char *mode, FILE *stream) {
   TAU_PROFILE_START(t);
 
   ret = _freopen(path, mode, stream);
-  Tau_iowrap_registerEvents(fileno(ret), path);
+  if (ret != NULL) {
+    Tau_iowrap_registerEvents(fileno(ret), path);
+  }
   TAU_PROFILE_STOP(t); 
 
   dprintf ("* freopen called on %s\n", path); 
@@ -792,7 +796,9 @@ extern "C" int open (const char *pathname, int flags, ...) {
   }
 
   ret = _open(pathname, flags, mode); 
-  Tau_iowrap_registerEvents(ret, pathname);
+  if (ret != -1) {
+    Tau_iowrap_registerEvents(ret, pathname);
+  }
   TAU_PROFILE_STOP(t); 
 
   dprintf ("* open called on %s\n", pathname); 
@@ -832,7 +838,9 @@ extern "C" int open64 (const char *pathname, int flags, ...) {
   }
 
   ret = _open64(pathname, flags, mode); 
-  Tau_iowrap_registerEvents(ret, pathname);
+  if (ret != -1) {
+    Tau_iowrap_registerEvents(ret, pathname);
+  }
   TAU_PROFILE_STOP(t); 
   dprintf ("* open64 called on %s\n", pathname); 
   fflush(stdout); 
@@ -860,7 +868,9 @@ extern "C" int creat(const char *pathname, mode_t mode) {
   TAU_PROFILE_START(t);
 
   ret = _creat(pathname, mode);
-  Tau_iowrap_registerEvents(ret, pathname);
+  if (ret != -1) {
+    Tau_iowrap_registerEvents(ret, pathname);
+  }
   TAU_PROFILE_STOP(t);
   dprintf ("* creat called on %s\n", pathname);
   fflush(stdout);
@@ -888,7 +898,9 @@ extern "C" int creat64(const char *pathname, mode_t mode) {
   TAU_PROFILE_START(t);
 
   ret = _creat64(pathname, mode);
-  Tau_iowrap_registerEvents(ret, pathname);
+  if (ret != -1) {
+    Tau_iowrap_registerEvents(ret, pathname);
+  }
   TAU_PROFILE_STOP(t);
   dprintf ("* creat64 called on %s\n", pathname);
   fflush(stdout);
@@ -998,9 +1010,11 @@ extern "C" int bind(int socket, const struct sockaddr *address, socklen_t addres
   ret = _bind(socket, address, address_len);
   TAU_PROFILE_STOP(t);
 
-  Tau_get_socket_name(address, (char *)socketname, address_len);
-  dprintf("socket name = %s\n", socketname);
-  Tau_iowrap_registerEvents(socket, (const char *)socketname);
+  if (ret == 0) {
+    Tau_get_socket_name(address, (char *)socketname, address_len);
+    dprintf("socket name = %s\n", socketname);
+    Tau_iowrap_registerEvents(socket, (const char *)socketname);
+  }
 
   fflush(stdout);
   fflush(stderr);
@@ -1030,10 +1044,11 @@ extern "C" int accept(int socket, struct sockaddr *address, socklen_t* address_l
 
   current = _accept(socket, address, address_len);
   TAU_PROFILE_STOP(t);
-
-  Tau_get_socket_name(address, (char *)socketname, *address_len);
-  dprintf("socket name = %s\n", socketname);
-  Tau_iowrap_registerEvents(current, (const char *)socketname);
+  if (current != -1) {
+    Tau_get_socket_name(address, (char *)socketname, *address_len);
+    dprintf("socket name = %s\n", socketname);
+    Tau_iowrap_registerEvents(current, (const char *)socketname);
+  }
 
   fflush(stdout);
   fflush(stderr);
@@ -1064,10 +1079,11 @@ extern "C" int connect(int socket, const struct sockaddr *address, socklen_t add
 
   current = _connect(socket, address, address_len);
   TAU_PROFILE_STOP(t);
-
-  Tau_get_socket_name(address, (char *)socketname, address_len);
-  dprintf("socket name = %s\n", socketname);
-  Tau_iowrap_registerEvents(socket, (const char *)socketname);
+  if (current != -1) {
+    Tau_get_socket_name(address, (char *)socketname, address_len);
+    dprintf("socket name = %s\n", socketname);
+    Tau_iowrap_registerEvents(socket, (const char *)socketname);
+  }
 
   fflush(stdout);
   fflush(stderr);
