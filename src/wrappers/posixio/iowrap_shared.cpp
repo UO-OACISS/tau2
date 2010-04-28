@@ -1010,6 +1010,7 @@ extern "C" int bind(int socket, const struct sockaddr *address, socklen_t addres
 /*********************************************************************
  * accept
  ********************************************************************/
+#ifndef _AIX
 extern "C" int accept(int socket, struct sockaddr *address, socklen_t* address_len) {
   static int (*_accept) (int socket, struct sockaddr *address, socklen_t* address_len) = NULL;
   int current;
@@ -1039,6 +1040,7 @@ extern "C" int accept(int socket, struct sockaddr *address, socklen_t* address_l
   return current;
 
 }
+#endif /* _AIX */
 
 /*********************************************************************
  * connect
@@ -1219,6 +1221,7 @@ extern "C" ssize_t sendto (int fd, const void *buf, size_t count, int flags, con
 }
 
 
+#ifndef _AIX
 /*********************************************************************
  * recvfrom
  ********************************************************************/
@@ -1266,6 +1269,7 @@ extern "C" ssize_t recvfrom (int fd, void *buf, size_t count, int flags, struct 
 
   return ret;
 }
+#endif /* _AIX */
 
 /*********************************************************************
  * dup
