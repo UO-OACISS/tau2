@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh 
 
 export LANG=C
 
@@ -96,7 +96,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tau_exec,v 1.5 2010/04/19 20:43:37 amorris Exp $';
+	      echo '$Id: tau_exec,v 1.6 2010/04/28 21:39:39 sameer Exp $';
 	      exit 0;
 	      ;;
 	  -e)
@@ -136,15 +136,16 @@ for arg in "$@" ; do
   fi
 done
 
+
 if [ "x$TAU_PAPI_DOMAIN" = "x" ]; then
     TAU_PAPI_DOMAIN=$TAU_PAPI_DEFAULT_DOMAIN
 fi
 
 
 # runtime options (configurable via environment variables)
-export TAU_CALLPATH=0
-export TAU_TRACE=0
-unset TAU_PROFILE
+#export TAU_CALLPATH=0
+#export TAU_TRACE=0
+#unset TAU_PROFILE
 
 new_binding_options=""
 if [ "x$binding_options" != "x" ]; then
@@ -167,14 +168,14 @@ if [ "x$binding_options" != "x" ]; then
 fi
 binding_options="$new_binding_options"
 
+
 # if PROFILING is not specified, turn it on unless tracing was specified.
 if [ "x$TAU_PROFILE" = "x" ] ; then
     if [ "$TAU_TRACE" = "0" ]; then
 	export TAU_PROFILE=1
-    else
-	export TAU_PROFILE=0
     fi
 fi
+
 
 
 if [ "x$binding_specified" = "x" ] ; then
@@ -217,6 +218,7 @@ if [ $allnative = "true" ] ; then
     done
 fi
 
+
 if [ $verbose = "true" ] ; then
     echo ""
     echo "Program to run : $@"
@@ -228,34 +230,50 @@ for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 ; do
     unset COUNTER$i
 done
 
+if [ `uname -s ` = Darwin ]; then
+  apple=1
+  TAU_SHLIBX=.dylib
+else
+  apple=0
+  TAU_SHLIBX=.so
+fi
+
 TAUEX_LD_LIBRARY_PATH=$BASEDIR/lib/$theBinding:$LD_LIBRARY_PATH
-TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU.so:$LD_PRELOAD
+if [ $apple = 1 ]; then
+  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
+else
+  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX:$LD_PRELOAD
+fi
 
 if [ $track_io = "true" ] ; then
     # Add the io wrapper library to the LD_PRELOAD list
-    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-iowrap.so:$TAUEX_LD_PRELOAD
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-iowrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
 
 if [ $track_memory = "true" ] ; then
     # Add the memory wrapper library to the LD_PRELOAD list
-    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-memorywrap.so:$TAUEX_LD_PRELOAD
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-memorywrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
 
+if [ $apple = 1 ]; then
+  TAU_LDD='otool -L'
+else
+  TAU_LDD=ldd
+fi
 
-ldd $1 | grep libTAU.so &> /dev/null
+echo $TAU_LDD $1 | grep libTAU$TAU_SHLIBX 
+$TAU_LDD $1 | grep libTAU$TAU_SHLIBX &> /dev/null
 if [ $? == 1 ] ; then
     nm $1 | grep Tau_init &> /dev/null
     if [ $? == 1 ] ; then
 	echoIfVerbose "Detected uninstrumented binary, adding TAU preload wrapper"
-	TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-preload.so:$TAUEX_LD_PRELOAD
+	TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libTAU-preload$TAU_SHLIBX
     else
 	echoIfVerbose "Detected instrumented binary, not using TAU preload wrapper"
     fi
 else 
     echoIfVerbose "Detected instrumented binary, not using TAU preload wrapper"
 fi
-
-
 
 
 if [ $verbose = "true" ] ; then
@@ -308,8 +326,14 @@ if [ $dryrun = "true" ]; then
     echo "export ELG_PFORM_GDIR=$OUTPUTDIR"
     echo "export ELG_FILE_PREFIX=$OUTPUTDIR"
     echo "mkdir -p $OUTPUTDIR"
-    echo "export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
-    echo "export LD_PRELOAD=$TAUEX_LD_PRELOAD"
+    if [ $apple = 1 ]; then
+      echo "export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
+      echo "export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD"
+      echo "export DYLD_FORCE_FLAT_NAMESPACE="
+    else
+      echo "export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
+      echo "export LD_PRELOAD=$TAUEX_LD_PRELOAD"
+    fi
     echo "$@"
     exit 0;
 else
@@ -329,8 +353,14 @@ else
     export ELG_PFORM_GDIR=$OUTPUTDIR
     export ELG_FILE_PREFIX=$OUTPUTDIR
     mkdir -p $OUTPUTDIR
-    export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
-    export LD_PRELOAD=$TAUEX_LD_PRELOAD
+    if [ $apple = 1 ]; then
+      export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
+      export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD
+      export DYLD_FORCE_FLAT_NAMESPACE=""
+    else
+      export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
+      export LD_PRELOAD=$TAUEX_LD_PRELOAD
+    fi
     "$@"
     retval=$?
     unset LD_PRELOAD
