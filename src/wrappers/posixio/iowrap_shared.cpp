@@ -821,6 +821,39 @@ extern "C" ssize_t writev (int fd, const struct iovec *vec, int count) {
 }
 
 /*********************************************************************
+ * mkstemp
+ ********************************************************************/
+extern "C" int mkstemp (char *templat) {
+  static int (*_mkstemp)(char *templat)  = NULL;
+  int ret;
+
+  if (_mkstemp == NULL) {
+    _mkstemp = ( int (*)(char *templat)) dlsym(RTLD_NEXT, "mkstemp");
+  }
+
+  TAU_PROFILE_TIMER(t, "mkstemp()", " ", TAU_IO);
+
+  if (Tau_global_get_insideTAU() > 0) {
+    TAU_PROFILE_START(t);
+  }
+
+  ret = _mkstemp(templat);
+
+  if (ret != -1) {
+    Tau_iowrap_registerEvents(ret, templat);
+  }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    TAU_PROFILE_STOP(t);
+  }
+
+  dprintf ("* mkstemp called on %s\n", templat);
+
+  return ret;
+}
+
+
+/*********************************************************************
  * open 
  ********************************************************************/
 extern "C" int open (const char *pathname, int flags, ...) { 
