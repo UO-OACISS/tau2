@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <aio.h>
   
 #include <stdarg.h>
   
@@ -318,7 +319,7 @@ extern "C" int fprintf(FILE *stream, const char *format, ...) {
  ********************************************************************/
 extern "C" size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream) {
   static size_t (*_fwrite)(const void *ptr, size_t size, size_t nmemb, FILE *stream) = NULL;
-  int ret;
+  size_t ret;
   if (_fwrite == NULL) {
     _fwrite = ( size_t (*)(const void *ptr, size_t size, size_t nmemb, FILE *stream)) dlsym(RTLD_NEXT, "fwrite");
   }
@@ -1367,6 +1368,180 @@ extern "C" int pclose(FILE * stream) {
 
   return ret;
 }
+
+/*********************************************************************
+ * aio_read
+ ********************************************************************/
+extern "C" int aio_read(struct aiocb *aiocbp) {
+  static int (*_aio_read) (struct aiocb *aiocbp) = NULL;
+  int ret;
+
+  if (_aio_read == NULL) {
+    _aio_read = (int (*) (struct aiocb *aiocbp) ) dlsym(RTLD_NEXT, "aio_read");
+  }
+
+  TAU_PROFILE_TIMER(t, "aio_read()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = _aio_read(aiocbp);
+  TAU_PROFILE_STOP(t);
+
+  dprintf ("* aio_read called\n");
+
+  return ret;
+}
+
+/*********************************************************************
+ * aio_write
+ ********************************************************************/
+extern "C" int aio_write(struct aiocb *aiocbp) {
+  static int (*_aio_write) (struct aiocb *aiocbp) = NULL;
+  int ret;
+
+  if (_aio_write == NULL) {
+    _aio_write = (int (*) (struct aiocb *aiocbp) ) dlsym(RTLD_NEXT, "aio_write");
+  }
+
+  TAU_PROFILE_TIMER(t, "aio_write()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = _aio_write(aiocbp);
+  TAU_PROFILE_STOP(t);
+
+  dprintf ("* aio_write called\n");
+
+  return ret;
+}
+
+
+/*********************************************************************
+ * aio_error
+ ********************************************************************/
+extern "C" int aio_error(const struct aiocb *aiocbp) {
+  static int (*_aio_error) (const struct aiocb *aiocbp) = NULL;
+  int ret;
+
+  if (_aio_error == NULL) {
+    _aio_error = (int (*) (const struct aiocb *aiocbp) ) dlsym(RTLD_NEXT, "aio_error");
+  }
+
+  TAU_PROFILE_TIMER(t, "aio_error()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = _aio_error(aiocbp);
+
+
+  if (ret == 0) {
+    // the request was completed
+    if (aiocbp->aio_lio_opcode == LIO_READ) {
+      TAU_GET_IOWRAP_EVENT(bytesread, READ_BYTES, aiocbp->aio_fildes);
+      TAU_CONTEXT_EVENT(bytesread, aiocbp->aio_nbytes);
+      TAU_CONTEXT_EVENT(global_bytes_read, aiocbp->aio_nbytes);
+    } else if (aiocbp->aio_lio_opcode == LIO_WRITE) {
+      TAU_GET_IOWRAP_EVENT(byteswritten, WRITE_BYTES, aiocbp->aio_fildes);
+      TAU_CONTEXT_EVENT(byteswritten, aiocbp->aio_nbytes);
+      TAU_CONTEXT_EVENT(global_bytes_written, aiocbp->aio_nbytes);
+    }
+  }
+
+  TAU_PROFILE_STOP(t);
+
+  dprintf ("* aio_error called\n");
+
+  return ret;
+}
+
+/*********************************************************************
+ * aio_return
+ ********************************************************************/
+extern "C" ssize_t aio_return(struct aiocb *aiocbp) {
+  static ssize_t (*_aio_return) (struct aiocb *aiocbp) = NULL;
+  ssize_t ret;
+
+  if (_aio_return == NULL) {
+    _aio_return = (ssize_t (*) (struct aiocb *aiocbp) ) dlsym(RTLD_NEXT, "aio_return");
+  }
+
+  TAU_PROFILE_TIMER(t, "aio_return()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = _aio_return(aiocbp);
+  TAU_PROFILE_STOP(t);
+
+  dprintf ("* aio_return called\n");
+
+  return ret;
+}
+
+/*********************************************************************
+ * aio_suspend
+ ********************************************************************/
+extern "C" int aio_suspend(const struct aiocb * const cblist[], int n, const struct timespec *timeout) {
+  static int (*_aio_suspend) (const struct aiocb * const cblist[], int n, const struct timespec *timeout) = NULL;
+  int ret;
+
+  if (_aio_suspend == NULL) {
+    _aio_suspend = (int (*) (const struct aiocb * const cblist[], int n, const struct timespec *timeout) ) dlsym(RTLD_NEXT, "aio_suspend");
+  }
+
+  TAU_PROFILE_TIMER(t, "aio_suspend()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = _aio_suspend(cblist, n, timeout);
+  TAU_PROFILE_STOP(t);
+
+  dprintf ("* aio_suspend called\n");
+
+  return ret;
+}
+
+/*********************************************************************
+ * aio_cancel
+ ********************************************************************/
+extern "C" int aio_cancel(int fd, struct aiocb *aiocbp) {
+  static int (*_aio_cancel) (int fd, struct aiocb *aiocbp) = NULL;
+  int ret;
+
+  if (_aio_cancel == NULL) {
+    _aio_cancel = (int (*) (int fd, struct aiocb *aiocbp) ) dlsym(RTLD_NEXT, "aio_cancel");
+  }
+
+  TAU_PROFILE_TIMER(t, "aio_cancel()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = _aio_cancel(fd, aiocbp);
+  TAU_PROFILE_STOP(t);
+
+  dprintf ("* aio_cancel called\n");
+
+  return ret;
+}
+
+/*********************************************************************
+ * lio_listio
+ ********************************************************************/
+
+extern "C" int lio_listio(int mode, struct aiocb * const list[], int nent, struct sigevent *sig) {
+  static int (*_lio_listio) (int mode, struct aiocb * const list[], int nent, struct sigevent *sig) = NULL;
+  ssize_t ret;
+
+  if (_lio_listio == NULL) {
+    _lio_listio = (int (*) (int mode, struct aiocb * const list[], int nent, struct sigevent *sig)) dlsym(RTLD_NEXT, "lio_listio");
+  }
+
+  TAU_PROFILE_TIMER(t, "lio_listio()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = _lio_listio(mode, list, nent, sig);
+  TAU_PROFILE_STOP(t);
+
+  dprintf ("* lio_listio called\n");
+
+  return ret;
+}
+
+
+
 
 /*********************************************************************
  * EOF
