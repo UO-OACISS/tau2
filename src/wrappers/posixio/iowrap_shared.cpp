@@ -21,7 +21,7 @@
 #include <netinet/in.h>
 #include <Profile/TauInit.h>
     
-#define dprintf if(1) printf
+#define dprintf TAU_VERBOSE
 #define TAU_WRITE TAU_IO
 #define TAU_READ TAU_IO
 
@@ -135,7 +135,7 @@ static void *Tau_iowrap_getEvent(event_type type, int fid) {
 /*********************************************************************
  * fopen 
  ********************************************************************/
-FILE *fopen(const char *path, const char *mode) {
+extern "C" FILE *fopen(const char *path, const char *mode) {
   static FILE* (*_fopen)(const char *path, const char *mode) = NULL;
   FILE *ret;
   if (_fopen == NULL) {
@@ -160,7 +160,7 @@ FILE *fopen(const char *path, const char *mode) {
 /*********************************************************************
  * fopen64 
  ********************************************************************/
-FILE *fopen64(const char *path, const char *mode) {
+extern "C" FILE *fopen64(const char *path, const char *mode) {
   static FILE* (*_fopen64)(const char *path, const char *mode) = NULL;
   FILE *ret;
   if (_fopen64 == NULL) {
@@ -186,7 +186,7 @@ FILE *fopen64(const char *path, const char *mode) {
 /*********************************************************************
  * fdopen 
  ********************************************************************/
-FILE *fdopen(int fd, const char *mode) {
+extern "C" FILE *fdopen(int fd, const char *mode) {
   static FILE* (*_fdopen)(int fd, const char *mode) = NULL;
   FILE *ret;
   if (_fdopen == NULL) {
@@ -210,7 +210,7 @@ FILE *fdopen(int fd, const char *mode) {
 /*********************************************************************
  * freopen 
  ********************************************************************/
-FILE *freopen(const char *path, const char *mode, FILE *stream) {
+extern "C" FILE *freopen(const char *path, const char *mode, FILE *stream) {
   static FILE* (*_freopen)(const char *path, const char *mode, FILE *stream) = NULL;
   FILE *ret;
   if (_freopen == NULL) {
@@ -235,7 +235,7 @@ FILE *freopen(const char *path, const char *mode, FILE *stream) {
 /*********************************************************************
  * fclose 
  ********************************************************************/
-int fclose(FILE *fp) {
+extern "C" int fclose(FILE *fp) {
   static int (*_fclose)(FILE *fp) = NULL;
   int ret;
   if (_fclose == NULL) {
@@ -260,7 +260,7 @@ int fclose(FILE *fp) {
 /*********************************************************************
  * fprintf 
  ********************************************************************/
-int fprintf(FILE *stream, const char *format, ...) {
+extern "C" int fprintf(FILE *stream, const char *format, ...) {
   va_list arg;
 
   static int (*_fprintf)(FILE *stream, const char *format, ...) = NULL;
@@ -316,7 +316,7 @@ int fprintf(FILE *stream, const char *format, ...) {
 /*********************************************************************
  * fwrite 
  ********************************************************************/
-size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream) {
+extern "C" size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream) {
   static size_t (*_fwrite)(const void *ptr, size_t size, size_t nmemb, FILE *stream) = NULL;
   int ret;
   if (_fwrite == NULL) {
@@ -363,7 +363,7 @@ size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream) {
 /*********************************************************************
  * fread 
  ********************************************************************/
-size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+extern "C" size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
   static size_t (*_fread)(void *ptr, size_t size, size_t nmemb, FILE *stream) = NULL;
   int ret;
   if (_fread == NULL) {
@@ -409,7 +409,7 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
 /*********************************************************************
  * fcntl
  ********************************************************************/
-int fcntl(int fd, int cmd, ...) {
+extern "C" int fcntl(int fd, int cmd, ...) {
   va_list ap;
   void *arg;
 
@@ -457,7 +457,7 @@ int fcntl(int fd, int cmd, ...) {
 /*********************************************************************
  * lseek
  ********************************************************************/
-off_t lseek(int fd, off_t offset, int whence) {
+extern "C" off_t lseek(int fd, off_t offset, int whence) {
   static off_t (*_lseek)(int fd, off_t offset, int whence) = NULL;
   int ret;
   if (_lseek == NULL) {
@@ -479,7 +479,7 @@ off_t lseek(int fd, off_t offset, int whence) {
 /*********************************************************************
  * lseek64
  ********************************************************************/
-off_t lseek64(int fd, off_t offset, int whence) {
+extern "C" off_t lseek64(int fd, off_t offset, int whence) {
   static off_t (*_lseek64)(int fd, off_t offset, int whence) = NULL;
   int ret;
   if (_lseek64 == NULL) {
@@ -501,7 +501,7 @@ off_t lseek64(int fd, off_t offset, int whence) {
 /*********************************************************************
  * fseek 
  ********************************************************************/
-int fseek(FILE *stream, long offset, int whence) {
+extern "C" int fseek(FILE *stream, long offset, int whence) {
   static int (*_fseek)(FILE *stream, long offset, int whence) = NULL;
   int ret;
   if (_fseek == NULL) {
@@ -525,7 +525,7 @@ int fseek(FILE *stream, long offset, int whence) {
 /*********************************************************************
  * rewind 
  ********************************************************************/
-void rewind(FILE *stream) {
+extern "C" void rewind(FILE *stream) {
   static void (*_rewind)(FILE *stream) = NULL;
   int ret;
   if (_rewind == NULL) {
@@ -1274,7 +1274,7 @@ extern "C" ssize_t recvfrom (int fd, void *buf, size_t count, int flags, struct 
 /*********************************************************************
  * dup
  ********************************************************************/
-int dup(int oldfd) {
+extern "C" int dup(int oldfd) {
   static int (*_dup)(int oldfd) = NULL;
   int fd;
 
@@ -1293,7 +1293,7 @@ int dup(int oldfd) {
 /*********************************************************************
  * dup2
  ********************************************************************/
-int dup2(int oldfd, int newfd) {
+extern "C" int dup2(int oldfd, int newfd) {
   static int (*_dup2)(int oldfd, int newfd) = NULL;
   int fd;
 
@@ -1368,3 +1368,6 @@ extern "C" int pclose(FILE * stream) {
   return ret;
 }
 
+/*********************************************************************
+ * EOF
+ ********************************************************************/
