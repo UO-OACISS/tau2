@@ -52,7 +52,7 @@ static int trackend(iotracker_t *tracker, int count, MPI_Datatype datatype) {
   if (currentWrite > 1e-12) {
     TAU_CONTEXT_EVENT(tracker->eventBandwidth, (double) count*typesize/currentWrite);
   } else {
-    printf("Tau MPIO wrapper: currentRead/Write = %g\n", currentWrite);
+    TAU_VERBOSE("Tau MPIO wrapper: currentRead/Write = %g\n", currentWrite);
   }
   TAU_CONTEXT_EVENT(tracker->eventBytes, count*typesize);
   return 0;
