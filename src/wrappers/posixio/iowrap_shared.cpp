@@ -60,8 +60,12 @@ static void Tau_iowrap_registerEvents(int fid, const char *pathname) {
   fid_to_string_map[fid] = pathname;
 
   for (int i=0; i<NUM_EVENTS; i++) {
+    TauUserEvent *unknown_ptr = 0;
+    if (iowrap_events[i].size() >= 1) {
+      unknown_ptr = iowrap_events[i][0];
+    }
     while (iowrap_events[i].size() <= fid) {
-      iowrap_events[i].push_back(0);
+      iowrap_events[i].push_back(unknown_ptr);
     }
     void *event = 0;
     string name = string(iowrap_event_names[i]) + " <file=\"" + pathname + "\">";
