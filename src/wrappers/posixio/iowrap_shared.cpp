@@ -994,6 +994,7 @@ extern "C" int accept(int socket, struct sockaddr *address, socklen_t* address_l
 extern "C" int connect(int socket, const struct sockaddr *address, socklen_t address_len) {
   static int (*_connect) (int socket, const struct sockaddr *address, socklen_t address_len) = NULL;
   int current;
+  char socketname[2048];
 
   if (_connect == NULL) {
     _connect = (int (*) (int socket, const struct sockaddr *address, socklen_t address_len) ) dlsym(RTLD_NEXT, "connect");
@@ -1008,6 +1009,10 @@ extern "C" int connect(int socket, const struct sockaddr *address, socklen_t add
 
   current = _connect(socket, address, address_len);
   TAU_PROFILE_STOP(t);
+
+  Tau_get_socket_name(address, (char *)socketname, address_len);
+  dprintf("socket name = %s\n", socketname);
+  Tau_iowrap_registerEvents(socket, (const char *)socketname);
 
   fflush(stdout);
   fflush(stderr);
