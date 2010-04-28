@@ -56,6 +56,7 @@ void __attribute__ ((destructor)) tau_iowrap_preload_fini(void);
  * register the different events (read/write/etc) for a file descriptor
  ********************************************************************/
 static void Tau_iowrap_registerEvents(int fid, const char *pathname) {
+  dprintf ("Asked to registering %d with %s\n", fid, pathname);
   fid++; // skip the "unknown" descriptor
   while (fid_to_string_map.size() <= fid) {
     fid_to_string_map.push_back("unknown");
@@ -69,19 +70,44 @@ static void Tau_iowrap_registerEvents(int fid, const char *pathname) {
     }
     while (iowrap_events[i].size() <= fid) {
       iowrap_events[i].push_back(unknown_ptr);
+      if (iowrap_events[i].size()-1 != fid) {
+	dprintf ("Registering %d with unknown\n", iowrap_events[i].size()-2);
+      }
     }
     void *event = 0;
     string name = string(iowrap_event_names[i]) + " <file=\"" + pathname + "\">";
     Tau_get_context_userevent(&event, strdup((char*)name.c_str()));
     iowrap_events[i][fid] = (TauUserEvent*)event;
   }
+  dprintf ("Registering %d with %s\n", fid-1, pathname);
 }
+
+static void Tau_iowrap_unregisterEvents(int fid) {
+  dprintf ("Un-registering %d\n", fid);
+  fid++; // skip the "unknown" descriptor
+  while (fid_to_string_map.size() <= fid) {
+    fid_to_string_map.push_back("unknown");
+  }
+
+  for (int i=0; i<NUM_EVENTS; i++) {
+    TauUserEvent *unknown_ptr = 0;
+    if (iowrap_events[i].size() >= 1) {
+      unknown_ptr = iowrap_events[i][0];
+    }
+    while (iowrap_events[i].size() <= fid) {
+      iowrap_events[i].push_back(unknown_ptr);
+    }
+    iowrap_events[i][fid] = unknown_ptr;
+  }
+}
+
 
 /*********************************************************************
  * Tau_iowrap_dupEvents takes care of the associating the events with the 
  * new file descriptor obtained by using dup/dup2 calls.
  ********************************************************************/
 static void Tau_iowrap_dupEvents(int oldfid, int newfid) {
+  dprintf ("dup (old=%d, new=%d)\n", oldfid, newfid);
   oldfid++; // skip the "unknown" descriptor
   newfid++;
   while (fid_to_string_map.size() <= newfid) {
@@ -124,6 +150,7 @@ void tau_iowrap_preload_fini() {
 static void *Tau_iowrap_getEvent(event_type type, int fid) {
   fid++; // skip the "unknown" descriptor
   if (fid >= iowrap_events[(int)type].size()) {
+    dprintf ("************** unknown fid! %d\n", fid-1);
     fid = 0; // use the "unknown" descriptor
   }
   return iowrap_events[(int)type][fid];
@@ -249,6 +276,8 @@ extern "C" int fclose(FILE *fp) {
     _fclose = ( int (*)(FILE *fp)) dlsym(RTLD_NEXT, "fclose");
   }
   
+  int fd = fileno(fp);
+
   if (Tau_global_get_insideTAU() > 0) {
     return _fclose(fp);
   }
@@ -256,10 +285,11 @@ extern "C" int fclose(FILE *fp) {
   TAU_PROFILE_TIMER(t, "fclose()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
+  Tau_iowrap_unregisterEvents (fd);
   ret = _fclose(fp);
   TAU_PROFILE_STOP(t); 
 
-  dprintf ("* fclose called\n"); 
+  dprintf ("* fclose(%d) called\n", fd); 
   return ret; 
 }
 
@@ -510,7 +540,7 @@ extern "C" int fcntl(int fd, int cmd, ...) {
       Tau_iowrap_dupEvents(fd, ret);
       break;
   }
-  dprintf ("* fcntl called\n");
+  dprintf ("* fcntl(fid=%d,cmd=%d...) called\n", fd, cmd);
   return ret;
 }
 
@@ -699,7 +729,7 @@ extern "C" ssize_t read (int fd, void *buf, size_t count) {
 
   TAU_PROFILE_STOP(t);
 
-  dprintf ("* TAU: read : %d bytes\n", ret);
+  dprintf ("* TAU: read(%d) : %d bytes\n", fd, ret);
   fflush(stdout);
   fflush(stderr);
 
@@ -813,7 +843,7 @@ extern "C" ssize_t writev (int fd, const struct iovec *vec, int count) {
  
   TAU_PROFILE_STOP(t);
 
-  dprintf ("* TAU: write : %d bytes, bandwidth %g \n", sumOfBytesWritten, bw);
+  dprintf ("* TAU: writev(%d) : %d bytes, bandwidth %g \n", fd, sumOfBytesWritten, bw);
   fflush(stdout);
   fflush(stderr);
 
@@ -1049,15 +1079,48 @@ extern "C" int close(int fd) {
   TAU_PROFILE_TIMER(t, "close()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
+  Tau_iowrap_unregisterEvents(fd);
   ret = _close(fd);
+
   TAU_PROFILE_STOP(t); 
 
   dprintf ("* close called on %d\n", fd);
-  fflush(stdout);
-  fflush(stderr);
-  
   return ret;
 }
+
+
+/*********************************************************************
+ * pipe 
+ ********************************************************************/
+extern "C" int pipe(int filedes[2]) {
+  static int (*_pipe) (int filedes[2]) = NULL;
+  int ret;
+
+  if (_pipe == NULL) {
+    _pipe = (int (*) (int filedes[2]) ) dlsym(RTLD_NEXT, "pipe");
+  }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _pipe(filedes);
+  }
+
+  TAU_PROFILE_TIMER(t, "pipe()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = _pipe(filedes);
+
+  if (ret == 0) {
+    Tau_iowrap_registerEvents(filedes[0], "pipe");
+    Tau_iowrap_registerEvents(filedes[1], "pipe");
+  }
+
+  TAU_PROFILE_STOP(t);
+
+  dprintf ("* pipe called\n");
+
+  return ret;
+}
+
 
 /*********************************************************************
  * Tau_get_socketname returns the name of the socket (AF_INET/AF_UNIX) 
@@ -1102,11 +1165,46 @@ extern "C" int socket(int domain, int type, int protocol) {
   TAU_PROFILE_START(t);
 
   ret = _socket(domain, type, protocol);
+
+  if (ret != -1) {
+    Tau_iowrap_registerEvents(ret, "socket");
+  }
+
   TAU_PROFILE_STOP(t);
 
-  dprintf ("* socket called on domain %d, type %d, protocol %d\n", domain, type, protocol);
-  fflush(stdout);
-  fflush(stderr);
+  dprintf ("* socket called on domain %d, type %d, protocol %d, ret=%d\n", domain, type, protocol, ret);
+
+  return ret;
+}
+
+/*********************************************************************
+ * socketpair 
+ ********************************************************************/
+extern "C" int socketpair(int d, int type, int protocol, int sv[2]) {
+  static int (*_socketpair) (int d, int type, int protocol, int sv[2]) = NULL;
+  int ret;
+
+  if (_socketpair == NULL) {
+    _socketpair = (int (*) (int d, int type, int protocol, int sv[2]) ) dlsym(RTLD_NEXT, "socketpair");
+  }
+
+  if (Tau_global_get_insideTAU() > 0) {
+    return _socketpair(d, type, protocol, sv);
+  }
+
+  TAU_PROFILE_TIMER(t, "socketpair()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = _socketpair(d, type, protocol, sv);
+
+  if (ret == 0) {
+    Tau_iowrap_registerEvents(sv[0], "socketpair");
+    Tau_iowrap_registerEvents(sv[1], "socketpair");
+  }
+
+  TAU_PROFILE_STOP(t);
+
+  dprintf ("* socketpair called on domain %d, type %d, protocol %d, returned (%d,%d)\n", d, type, protocol, sv[0], sv[1]);
 
   return ret;
 }
