@@ -25,6 +25,8 @@
 #define TAU_WRITE TAU_IO
 #define TAU_READ TAU_IO
 
+#define TAU_MAX_FILENAME_LEN 2048
+
 
 #include <vector>
 using namespace std;
@@ -771,7 +773,10 @@ extern "C" int open (const char *pathname, int flags, ...) {
   } 
 
   if (Tau_global_get_insideTAU() > 0) {
-    return _open(pathname, flags, mode); 
+    va_start (args, flags);
+    ret = _open(pathname, flags, args);
+    va_end (args);
+    return ret;
   }
 
   TAU_PROFILE_TIMER(t, "open()", " ", TAU_IO);
@@ -780,7 +785,6 @@ extern "C" int open (const char *pathname, int flags, ...) {
   /* if the file is being created, get the third argument for specifying the 
      mode (e.g., 0644) */
   if (flags & O_CREAT) { 
-    va_list args ;
     va_start(args, flags);
     mode = va_arg(args, int);
     va_end(args); 
@@ -811,14 +815,16 @@ extern "C" int open64 (const char *pathname, int flags, ...) {
   } 
 
   if (Tau_global_get_insideTAU() > 0) {
-    return _open64(pathname, flags, mode); 
+    va_start (args, flags);
+    ret = _open64(pathname, flags, args); 
+    va_end(args);
+    return ret;
   }
 
   TAU_PROFILE_TIMER(t, "open64()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
   if (flags & O_CREAT) { 
-    va_list args ;
     va_start(args, flags);
     mode = va_arg(args, int);
     va_end(args); 
@@ -975,7 +981,7 @@ extern "C" int socket(int domain, int type, int protocol) {
 extern "C" int bind(int socket, const struct sockaddr *address, socklen_t address_len) {
   static int (*_bind) (int socket, const struct sockaddr *address, socklen_t address_len) = NULL;
   int ret;
-  char socketname[2048];
+  char socketname[TAU_MAX_FILENAME_LEN];
 
   if (_bind == NULL) {
     _bind = (int (*) (int socket, const struct sockaddr *address, socklen_t address_len) ) dlsym(RTLD_NEXT, "bind");
@@ -1007,7 +1013,7 @@ extern "C" int bind(int socket, const struct sockaddr *address, socklen_t addres
 extern "C" int accept(int socket, struct sockaddr *address, socklen_t* address_len) {
   static int (*_accept) (int socket, struct sockaddr *address, socklen_t* address_len) = NULL;
   int current;
-  char socketname[2048];
+  char socketname[TAU_MAX_FILENAME_LEN];
 
   if (_accept == NULL) {
     _accept = (int (*) (int socket, struct sockaddr *address, socklen_t* address_len) ) dlsym(RTLD_NEXT, "accept");
