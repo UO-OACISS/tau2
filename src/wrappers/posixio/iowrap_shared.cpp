@@ -56,6 +56,7 @@ void __attribute__ ((destructor)) tau_iowrap_preload_fini(void);
  * register the different events (read/write/etc) for a file descriptor
  ********************************************************************/
 static void Tau_iowrap_registerEvents(int fid, const char *pathname) {
+  RtsLayer::LockDB();
   dprintf ("Asked to registering %d with %s\n", fid, pathname);
   fid++; // skip the "unknown" descriptor
   while (fid_to_string_map.size() <= fid) {
@@ -80,9 +81,11 @@ static void Tau_iowrap_registerEvents(int fid, const char *pathname) {
     iowrap_events[i][fid] = (TauUserEvent*)event;
   }
   dprintf ("Registering %d with %s\n", fid-1, pathname);
+  RtsLayer::UnLockDB();
 }
 
 static void Tau_iowrap_unregisterEvents(int fid) {
+  RtsLayer::LockDB();
   dprintf ("Un-registering %d\n", fid);
   fid++; // skip the "unknown" descriptor
   while (fid_to_string_map.size() <= fid) {
@@ -99,6 +102,7 @@ static void Tau_iowrap_unregisterEvents(int fid) {
     }
     iowrap_events[i][fid] = unknown_ptr;
   }
+  RtsLayer::UnLockDB();
 }
 
 
@@ -107,6 +111,7 @@ static void Tau_iowrap_unregisterEvents(int fid) {
  * new file descriptor obtained by using dup/dup2 calls.
  ********************************************************************/
 static void Tau_iowrap_dupEvents(int oldfid, int newfid) {
+  RtsLayer::LockDB();
   dprintf ("dup (old=%d, new=%d)\n", oldfid, newfid);
   oldfid++; // skip the "unknown" descriptor
   newfid++;
@@ -121,6 +126,7 @@ static void Tau_iowrap_dupEvents(int oldfid, int newfid) {
     }
     iowrap_events[i][newfid] = iowrap_events[i][oldfid];
   }
+  RtsLayer::UnLockDB();
 }
 
 /*********************************************************************
