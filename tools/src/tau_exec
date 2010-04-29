@@ -7,7 +7,7 @@ eval `tau-config`
 
 echoIfVerbose () {
     if [ $verbose = "true" ] ; then
-	echo -e $1
+	echo -e "$1"
     fi
 }
 
@@ -43,15 +43,10 @@ fi
 
 dryrun="false"
 processT="false"
-processE="false"
 TauOptions=""
 TauOptionsExclude=""
-Counters=""
-NumCounters=0
 verbose=false
-allnative=false
 binding_specified=""
-OUTPUTDIR="."
 binding_options=""
 track_io=false
 track_memory=false
@@ -65,14 +60,6 @@ for arg in "$@" ; do
   if [ "$processT" = "true" ] ; then
       binding_options=`echo $binding_options $arg | sed -e 's/,/ /g' | tr [A-Z] [a-z]`
       processT="false"
-      shift
-  elif [ "$processE" = "true" ] ; then
-      options=`echo $arg | sed -e 's/,/ /g'`
-      for i in $options ; do
-	  Counters="$Counters $i"
-	  NumCounters=$(( $NumCounters + 1 ))
-      done
-      processE="false"
       shift
   else
       case $arg in 
@@ -96,12 +83,8 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tau_exec,v 1.6 2010/04/28 21:39:39 sameer Exp $';
+	      echo '$Id: tau_exec,v 1.7 2010/04/29 19:19:40 amorris Exp $';
 	      exit 0;
-	      ;;
-	  -e)
-	      processE=true
-	      shift
 	      ;;
 	  -T)
 	      processT=true
@@ -142,24 +125,11 @@ if [ "x$TAU_PAPI_DOMAIN" = "x" ]; then
 fi
 
 
-# runtime options (configurable via environment variables)
-#export TAU_CALLPATH=0
-#export TAU_TRACE=0
-#unset TAU_PROFILE
-
+# choose TAU library
 new_binding_options=""
 if [ "x$binding_options" != "x" ]; then
     for i in $binding_options ; do
       case $i in 
-	  callpath)
-	      export TAU_CALLPATH=1
-	      ;;
-	  trace)
-	      export TAU_TRACE=1
-	      ;;
-	  profile)
-	      export TAU_PROFILE=1
-	      ;;
 	  *)
 	      new_binding_options="$new_binding_options $i"
 	      ;;
@@ -169,22 +139,11 @@ fi
 binding_options="$new_binding_options"
 
 
-# if PROFILING is not specified, turn it on unless tracing was specified.
-if [ "x$TAU_PROFILE" = "x" ] ; then
-    if [ "$TAU_TRACE" = "0" ]; then
-	export TAU_PROFILE=1
-    fi
-fi
-
-
-
 if [ "x$binding_specified" = "x" ] ; then
     if [ "x$binding_options" = "x" ]; then
 	binding_options=$DEFAULT_BINDING
     else
-#
-# Add MPI by default
-#
+        # Add MPI by default
 	serial=`echo $binding_options | grep serial`
 	if [ $? != 0 ] ; then
 	    binding_options="$binding_options mpi"
@@ -198,25 +157,6 @@ else
     theBinding=$binding_specified
 fi
 
-if [ "$TraceSpecified" = "true" ] ; then
-    # if tracing, the first counter should be TIME
-    Counters="TIME $Counters"
-    NumCounters=$(( $NumCounters + 1 ))
-fi
-
-if [ "$NumCounters" = "0" ] ; then
-    # if no counters were specified use TIME
-    Counters="TIME $Counters"
-    NumCounters=$(( $NumCounters + 1 ))
-fi
-
-if [ $allnative = "true" ] ; then
-    native=`papi_native_avail | grep "0x" | awk '{ print $1 }' | grep CPU_`
-    for i in $native ; do
-	Counters="$Counters PAPI_NATIVE_$i"
-	NumCounters=$(( $NumCounters + 1 ))
-    done
-fi
 
 
 if [ $verbose = "true" ] ; then
@@ -225,10 +165,6 @@ if [ $verbose = "true" ] ; then
     echo ""
 fi
 
-# unset any counters that may be active
-for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 ; do
-    unset COUNTER$i
-done
 
 if [ `uname -s ` = Darwin ]; then
   apple=1
@@ -266,13 +202,13 @@ $TAU_LDD $1 | grep libTAU$TAU_SHLIBX &> /dev/null
 if [ $? == 1 ] ; then
     nm $1 | grep Tau_init &> /dev/null
     if [ $? == 1 ] ; then
-	echoIfVerbose "Detected uninstrumented binary, adding TAU preload wrapper"
+	echoIfVerbose "TAU: Detected uninstrumented binary, adding TAU preload wrapper"
 	TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libTAU-preload$TAU_SHLIBX
     else
-	echoIfVerbose "Detected instrumented binary, not using TAU preload wrapper"
+	echoIfVerbose "TAU: Detected instrumented binary, not using TAU preload wrapper"
     fi
 else 
-    echoIfVerbose "Detected instrumented binary, not using TAU preload wrapper"
+    echoIfVerbose "TAU: Detected instrumented binary, not using TAU preload wrapper"
 fi
 
 
@@ -284,48 +220,15 @@ if [ $verbose = "true" ] ; then
     echo "$theBinding"
     echo ""
     echo "Configuration:"
-    counterlist=""
-    counter=1
-    for c in $Counters ; do 
-	echo "Setting COUNTER$counter to $c"
-	counter=$(( $counter + 1 ))
-	counterlist="$counterlist $c"
-    done
-    echo "Setting TAU_PAPI_DOMAIN to $TAU_PAPI_DOMAIN"
     echo ""
-    echo "Runtime:"
     echo "Setting LD_LIBRARY_PATH to $TAUEX_LD_LIBRARY_PATH"
     echo "Setting LD_PRELOAD to $TAUEX_LD_PRELOAD"
     echo ""
 fi
 
 
-for c in $Counters ; do 
-    if [ "$c" != "GET_TIME_OF_DAY" -a "${c:0:2}" != "P_" ]; then
-	c=`echo $c | sed s/PAPI_NATIVE_//`
-	VT_METRICS=$VT_METRICS:$c
-	ELG_METRICS=$ELG_METRICS:$c
-    fi
-done
-
 # execute the program
 if [ $dryrun = "true" ]; then
-    counterlist=""
-    counter=1
-    for c in $Counters ; do 
-	echo export COUNTER$counter=$c
-	counter=$(( $counter + 1 ))
-	counterlist="$counterlist $c"
-    done
-    echo "export TAU_PAPI_DOMAIN=$TAU_PAPI_DOMAIN"
-    echo "export PROFILEDIR=$OUTPUTDIR"
-    echo "export TRACEDIR=$OUTPUTDIR"
-    echo "export VT_PFORM_GDIR=$OUTPUTDIR"
-    echo "export VT_METRICS=$VT_METRICS"
-    echo "export ELG_METRICS=$ELG_METRICS"
-    echo "export ELG_PFORM_GDIR=$OUTPUTDIR"
-    echo "export ELG_FILE_PREFIX=$OUTPUTDIR"
-    echo "mkdir -p $OUTPUTDIR"
     if [ $apple = 1 ]; then
       echo "export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
       echo "export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD"
@@ -337,22 +240,6 @@ if [ $dryrun = "true" ]; then
     echo "$@"
     exit 0;
 else
-    counterlist=""
-    counter=1
-    for c in $Counters ; do 
-	export COUNTER$counter=$c
-	counter=$(( $counter + 1 ))
-	counterlist="$counterlist $c"
-    done
-    export TAU_PAPI_DOMAIN=$TAU_PAPI_DOMAIN
-    export PROFILEDIR=$OUTPUTDIR
-    export TRACEDIR=$OUTPUTDIR
-    export VT_PFORM_GDIR=$OUTPUTDIR
-    export VT_METRICS=$VT_METRICS
-    export ELG_METRICS=$ELG_METRICS
-    export ELG_PFORM_GDIR=$OUTPUTDIR
-    export ELG_FILE_PREFIX=$OUTPUTDIR
-    mkdir -p $OUTPUTDIR
     if [ $apple = 1 ]; then
       export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
       export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD
@@ -364,13 +251,5 @@ else
     "$@"
     retval=$?
     unset LD_PRELOAD
-    case $theBinding in
-	*\-epilog*)
-	if [ "$SLURM_PROCID" = "0" -o "x$SLURM_PROCID" = "x" ]; then
-	    if [ -f $OUTPUTDIR.elg ]; then
-		mv $OUTPUTDIR.elg $OUTPUTDIR/$exe.elg
-	    fi
-	fi;;
-    esac
     exit $retval
 fi
