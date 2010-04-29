@@ -10,8 +10,8 @@ import edu.uoregon.tau.perfdmf.Thread;
 
 public class ContextEventModel extends AbstractTreeTableModel {
 
-    private static String[] cNames = { "Name", "NumSamples", "MaxValue", "MinValue", "MeanValue", "Std. Dev." };
-    private static Class[] cTypes = { TreeTableModel.class, Double.class, Double.class, Double.class, Double.class, Double.class };
+    private static String[] cNames = { "Name", "Total", "NumSamples", "MaxValue", "MinValue", "MeanValue", "Std. Dev." };
+    private static Class[] cTypes = { TreeTableModel.class, Double.class, Double.class, Double.class, Double.class, Double.class, Double.class };
 
     private List roots;
 
@@ -118,14 +118,16 @@ public class ContextEventModel extends AbstractTreeTableModel {
         } else {
             switch (column) {
             case 1:
-                return new Double(uep.getNumSamples(dataSorter.getSelectedSnapshot()));
+                return new Double(uep.getNumSamples(dataSorter.getSelectedSnapshot())*uep.getMeanValue(dataSorter.getSelectedSnapshot()));
             case 2:
-                return new Double(uep.getMaxValue(dataSorter.getSelectedSnapshot()));
+                return new Double(uep.getNumSamples(dataSorter.getSelectedSnapshot()));
             case 3:
-                return new Double(uep.getMinValue(dataSorter.getSelectedSnapshot()));
+                return new Double(uep.getMaxValue(dataSorter.getSelectedSnapshot()));
             case 4:
-                return new Double(uep.getMeanValue(dataSorter.getSelectedSnapshot()));
+                return new Double(uep.getMinValue(dataSorter.getSelectedSnapshot()));
             case 5:
+                return new Double(uep.getMeanValue(dataSorter.getSelectedSnapshot()));
+            case 6:
                 return new Double(uep.getStdDev(dataSorter.getSelectedSnapshot()));
             default:
                 return null;

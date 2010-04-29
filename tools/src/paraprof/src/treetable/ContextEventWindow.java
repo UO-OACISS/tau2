@@ -162,7 +162,7 @@ public class ContextEventWindow extends JFrame implements Observer, ParaProfWind
 
         TableColumn col = treeTable.getColumnModel().getColumn(0);
 
-        int nameWidth = 500;
+        int nameWidth = 450;
 
         col.setPreferredWidth(nameWidth);
 
