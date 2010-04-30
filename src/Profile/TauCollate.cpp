@@ -364,7 +364,7 @@ extern "C" int Tau_collate_writeProfile() {
     sprintf (profileName, "mean.%d.0.0", invocationIndex);
     FILE *profile = fopen(profileNameTmp, "w");
     fprintf (profile, "%d templated_functions_MULTI_TIME\n", numItems);
-    fprintf (profile, "# Name Calls Subrs Excl Incl ProfileCalls\n");
+    fprintf (profile, "# Name Calls Subrs Excl Incl ProfileCalls % <metadata><attribute><name>TAU Internal Profile Attribute</name><value>collate_dump_dagstuhl</value></attribute> </metadata>\n");
     for (int i=0; i<numItems; i++) {
       double exclusive = gExcl[step_sum][0][i] / globalNumThreads;
       double inclusive = gIncl[step_sum][0][i] / globalNumThreads;
@@ -399,6 +399,9 @@ extern "C" int Tau_collate_writeProfile() {
     start_hist = TauMetrics_getTimeOfDay();
   }
 
+
+  int numBins = 20;
+
   FILE *histoFile;
   char histFileNameTmp[512];
   char histFileName[512];
@@ -408,6 +411,7 @@ extern "C" int Tau_collate_writeProfile() {
     histoFile = fopen(histFileNameTmp, "w");
     fprintf (histoFile, "%d\n", numItems);
     fprintf (histoFile, "%d\n", (Tau_Global_numCounters*2)+2);
+    fprintf (histoFile, "%d\n", numBins);
     for (int m=0; m<Tau_Global_numCounters; m++) {
       fprintf (histoFile, "Exclusive %s\n", TauMetrics_getMetricName(m));
       fprintf (histoFile, "Inclusive %s\n", TauMetrics_getMetricName(m));
@@ -416,7 +420,6 @@ extern "C" int Tau_collate_writeProfile() {
     fprintf (histoFile, "Child calls\n");
   }
 
-  int numBins = 20;
   int numHistoGrams = (Tau_Global_numCounters * 2) + 2; // two for each metric (excl, incl) and numCalls/numSubr;
   int histogramBufSize = sizeof(int) * numBins * numHistoGrams;
   int *histogram = (int *) TAU_UTIL_MALLOC(histogramBufSize);
