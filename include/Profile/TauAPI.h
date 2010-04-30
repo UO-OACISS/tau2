@@ -214,7 +214,7 @@ extern "C" {
 
 #define TAU_GLOBAL_PHASE_EXTERNAL(timer)  extern void * TauGlobalPhase##timer(void)
 
-
+#define TAU_ONLINE_DUMP()                       Tau_collate_onlineDump();
 #define TAU_PROFILE_SNAPSHOT(name)              Tau_profile_snapshot(name);
 #define TAU_PROFILE_SNAPSHOT_1L(name, expr)     Tau_profile_snapshot_1l(name, expr);
 #define TAU_METADATA(name, value)               Tau_metadata(name, value);
@@ -441,6 +441,7 @@ char * Tau_phase_enable_once(const char *group, void **ptr);
 
 void Tau_profile_snapshot(const char *name);
 void Tau_profile_snapshot_1l(const char *name, int number);
+void Tau_collate_onlineDump();
 
 void Tau_dynamic_start(char *name, int isPhase); 
 void Tau_dynamic_stop(char *name, int isPhase); 
@@ -512,6 +513,6 @@ void Tau_profile_param1l(long data, const char *dataname);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.111 $   $Date: 2010/04/27 23:11:45 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.111 2010/04/27 23:11:45 amorris Exp $ 
+ * $Revision: 1.112 $   $Date: 2010/04/30 18:07:04 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.112 2010/04/30 18:07:04 amorris Exp $ 
  ***************************************************************************/
