@@ -347,8 +347,10 @@ extern "C" int fprintf(FILE *stream, const char *format, ...) {
   } else {
     dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
-  TAU_CONTEXT_EVENT(byteswritten, count);
-  TAU_CONTEXT_EVENT(global_bytes_written, count);
+  if (ret > 0) {
+    TAU_CONTEXT_EVENT(byteswritten, count);
+    TAU_CONTEXT_EVENT(global_bytes_written, count);
+  }
 
   TAU_PROFILE_STOP(t); 
 
@@ -403,8 +405,10 @@ extern "C" int fscanf(FILE *stream, const char *format, ...) {
   } else {
     dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
-  TAU_CONTEXT_EVENT(bytesread, count);
-  TAU_CONTEXT_EVENT(global_bytes_read, count);
+  if (ret > 0) {
+    TAU_CONTEXT_EVENT(bytesread, count);
+    TAU_CONTEXT_EVENT(global_bytes_read, count);
+  }
 
   TAU_PROFILE_STOP(t); 
 
@@ -450,8 +454,11 @@ extern "C" size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stre
   } else {
     dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
-  TAU_CONTEXT_EVENT(byteswritten, count);
-  TAU_CONTEXT_EVENT(global_bytes_written, count);
+
+  if (ret > 0) {
+    TAU_CONTEXT_EVENT(byteswritten, count);
+    TAU_CONTEXT_EVENT(global_bytes_written, count);
+  }
 
   TAU_PROFILE_STOP(t); 
 
@@ -494,8 +501,10 @@ extern "C" size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
   } else {
     dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
-  TAU_CONTEXT_EVENT(bytesread, count);
-  TAU_CONTEXT_EVENT(global_bytes_read, count);
+  if (ret > 0) {
+    TAU_CONTEXT_EVENT(bytesread, count);
+    TAU_CONTEXT_EVENT(global_bytes_read, count);
+  }
 
   TAU_PROFILE_STOP(t);
 
@@ -682,8 +691,10 @@ extern "C" ssize_t write (int fd, const void *buf, size_t count) {
   } else {
     dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
-  TAU_CONTEXT_EVENT(byteswritten, count);
-  TAU_CONTEXT_EVENT(global_bytes_written, count);
+  if (ret > 0) {
+    TAU_CONTEXT_EVENT(byteswritten, count);
+    TAU_CONTEXT_EVENT(global_bytes_written, count);
+  }
  
   TAU_PROFILE_STOP(t);
 
@@ -730,8 +741,10 @@ extern "C" ssize_t read (int fd, void *buf, size_t count) {
   } else {
     dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
-  TAU_CONTEXT_EVENT(bytesread, count);
-  TAU_CONTEXT_EVENT(global_bytes_read, count);
+  if (ret > 0) {
+    TAU_CONTEXT_EVENT(bytesread, count);
+    TAU_CONTEXT_EVENT(global_bytes_read, count);
+  }
 
   TAU_PROFILE_STOP(t);
 
@@ -786,8 +799,10 @@ extern "C" ssize_t readv (int fd, const struct iovec *vec, int count) {
   } else {
     dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
-  TAU_CONTEXT_EVENT(bytesread, sumOfBytesRead);
-  TAU_CONTEXT_EVENT(global_bytes_read, sumOfBytesRead);
+  if (ret > 0) {
+    TAU_CONTEXT_EVENT(bytesread, sumOfBytesRead);
+    TAU_CONTEXT_EVENT(global_bytes_read, sumOfBytesRead);
+  }
 
   TAU_PROFILE_STOP(t);
 
@@ -844,8 +859,10 @@ extern "C" ssize_t writev (int fd, const struct iovec *vec, int count) {
   } else {
     dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
-  TAU_CONTEXT_EVENT(byteswritten, sumOfBytesWritten);
-  TAU_CONTEXT_EVENT(global_bytes_written, sumOfBytesWritten);
+  if (ret > 0) {
+    TAU_CONTEXT_EVENT(byteswritten, sumOfBytesWritten);
+    TAU_CONTEXT_EVENT(global_bytes_written, sumOfBytesWritten);
+  }
  
   TAU_PROFILE_STOP(t);
 
@@ -1356,8 +1373,10 @@ extern "C" ssize_t recv (int fd, void *buf, size_t count, int flags) {
   } else {
     dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
-  TAU_CONTEXT_EVENT(bytesrecv, ret);
-  TAU_CONTEXT_EVENT(global_bytes_read, ret);
+  if (ret > 0) {
+    TAU_CONTEXT_EVENT(bytesrecv, ret);
+    TAU_CONTEXT_EVENT(global_bytes_read, ret);
+  }
 
   TAU_PROFILE_STOP(t);
 
@@ -1404,8 +1423,10 @@ extern "C" ssize_t send (int fd, const void *buf, size_t count, int flags) {
   } else {
     dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
-  TAU_CONTEXT_EVENT(byteswritten, ret);
-  TAU_CONTEXT_EVENT(global_bytes_written, ret);
+  if (ret > 0) {
+    TAU_CONTEXT_EVENT(byteswritten, ret);
+    TAU_CONTEXT_EVENT(global_bytes_written, ret);
+  }
 
   TAU_PROFILE_STOP(t);
 
@@ -1453,8 +1474,10 @@ extern "C" ssize_t sendto (int fd, const void *buf, size_t count, int flags, con
   } else {
     dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
-  TAU_CONTEXT_EVENT(byteswritten, ret);
-  TAU_CONTEXT_EVENT(global_bytes_written, ret);
+  if (ret > 0) {
+    TAU_CONTEXT_EVENT(byteswritten, ret);
+    TAU_CONTEXT_EVENT(global_bytes_written, ret);
+  }
 
   TAU_PROFILE_STOP(t);
 
@@ -1503,8 +1526,10 @@ extern "C" ssize_t recvfrom (int fd, void *buf, size_t count, int flags, struct 
   } else {
     dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
-  TAU_CONTEXT_EVENT(bytesrecvfrom, ret);
-  TAU_CONTEXT_EVENT(global_bytes_read, ret);
+  if (ret > 0) {
+    TAU_CONTEXT_EVENT(bytesrecvfrom, ret);
+    TAU_CONTEXT_EVENT(global_bytes_read, ret);
+  }
 
   TAU_PROFILE_STOP(t);
 
