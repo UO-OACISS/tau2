@@ -359,9 +359,10 @@ extern "C" int Tau_collate_writeProfile() {
   
 
   if (rank == 0) {
-    char profileName[512];
+    char profileName[512], profileNameTmp[512];
+    sprintf (profileNameTmp, ".temp.mean.%d.0.0", invocationIndex);
     sprintf (profileName, "mean.%d.0.0", invocationIndex);
-    FILE *profile = fopen(profileName, "w");
+    FILE *profile = fopen(profileNameTmp, "w");
     fprintf (profile, "%d templated_functions_MULTI_TIME\n", numItems);
     fprintf (profile, "# Name Calls Subrs Excl Incl ProfileCalls\n");
     for (int i=0; i<numItems; i++) {
@@ -375,6 +376,8 @@ extern "C" int Tau_collate_writeProfile() {
       
     }
     fprintf (profile, "0 aggregates\n");
+    fclose (profile);
+    rename (profileNameTmp, profileName);
   }
 
 
@@ -397,10 +400,12 @@ extern "C" int Tau_collate_writeProfile() {
   }
 
   FILE *histoFile;
+  char histFileNameTmp[512];
+  char histFileName[512];
   if (rank == 0) {
-    char histFileName[512];
     sprintf (histFileName, "tau.histograms.%d", invocationIndex);
-    histoFile = fopen(histFileName, "w");
+    sprintf (histFileNameTmp, ".temp.tau.histograms.%d", invocationIndex);
+    histoFile = fopen(histFileNameTmp, "w");
     fprintf (histoFile, "%d\n", numItems);
     fprintf (histoFile, "%d\n", (Tau_Global_numCounters*2)+2);
     for (int m=0; m<Tau_Global_numCounters; m++) {
@@ -485,6 +490,8 @@ extern "C" int Tau_collate_writeProfile() {
   }
 
   if (rank == 0) {
+    fclose (histoFile);
+    rename (histFileNameTmp, histFileName);
     end_hist = TauMetrics_getTimeOfDay();
     TAU_VERBOSE("TAU: Collate: Histogramming Complete, duration = %.4G seconds\n", ((double)((double)end_hist-start_hist))/1000000.0f);
   }
