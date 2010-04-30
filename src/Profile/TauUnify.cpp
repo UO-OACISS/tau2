@@ -313,9 +313,9 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
     mergedObject = Tau_unify_mergeObjects(*unifyObjects);
 
     globalNumItems = mergedObject->strings.size();
-    for (int i=0; i<mergedObject->strings.size(); i++) {
-      fprintf (stderr, "mergedObject->strings[%d] = %s\n", i, mergedObject->strings[i]);
-    }
+    // for (int i=0; i<mergedObject->strings.size(); i++) {
+    //   fprintf (stderr, "mergedObject->strings[%d] = %s\n", i, mergedObject->strings[i]);
+    // }
   }
 
 
@@ -348,12 +348,12 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
     PMPI_Send((*unifyObjects)[i]->mapping, (*unifyObjects)[i]->numFuncs, MPI_INT, (*unifyObjects)[i]->rank, 0, MPI_COMM_WORLD);
   }
 
-  if (rank == 0) {
-    unify_object_t *object = (*unifyObjects)[0];
-    for (int i=0; i<object->numFuncs; i++) {
-      fprintf (stderr, "[rank %d] = Entry %d maps to [%d] is %s\n", rank, i, object->mapping[i], object->strings[i]);
-    }
-  }
+  // if (rank == 0) {
+  //   unify_object_t *object = (*unifyObjects)[0];
+  //   for (int i=0; i<object->numFuncs; i++) {
+  //     fprintf (stderr, "[rank %d] = Entry %d maps to [%d] is %s\n", rank, i, object->mapping[i], object->strings[i]);
+  //   }
+  // }
 
   if (rank == 0) {
     end = TauMetrics_getTimeOfDay();
