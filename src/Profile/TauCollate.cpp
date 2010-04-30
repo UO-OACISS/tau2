@@ -36,7 +36,7 @@
 
 // #include <sstream>
 
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 
@@ -360,7 +360,7 @@ extern "C" int Tau_collate_writeProfile() {
 
   if (rank == 0) {
     char profileName[512];
-    sprintf (profileName, "profile.%d.0.0", invocationIndex);
+    sprintf (profileName, "mean.%d.0.0", invocationIndex);
     FILE *profile = fopen(profileName, "w");
     fprintf (profile, "%d templated_functions_MULTI_TIME\n", numItems);
     fprintf (profile, "# Name Calls Subrs Excl Incl ProfileCalls\n");
