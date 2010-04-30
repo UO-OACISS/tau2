@@ -279,6 +279,7 @@ static void (*_pthread_exit) (void *value_ptr) = NULL;
 
 #ifdef TAU_PTHREAD_BARRIER_AVAILABLE
 static int (*_pthread_barrier_wait) (pthread_barrier_t *barrier) = NULL;
+#endif /* TAU_PTHREAD_BARRIER_AVAILABLE */
 
 extern "C" int pthread_create (pthread_t* thread, const pthread_attr_t* attr, 
 		    void *(*start_routine)(void*), void* arg) {
@@ -292,7 +293,6 @@ extern "C" int pthread_create (pthread_t* thread, const pthread_attr_t* attr,
   pack->id = -1;
   return _pthread_create(thread, (pthread_attr_t*) attr, tau_pthread_function, (void*)pack);
 }
-#endif /* TAU_PTHREAD_BARRIER_AVAILABLE */
 
 extern "C" void pthread_exit (void *value_ptr) {
 
@@ -303,6 +303,7 @@ extern "C" void pthread_exit (void *value_ptr) {
   _pthread_exit(value_ptr);
 }
 
+#ifdef TAU_PTHREAD_BARRIER_AVAILABLE
 extern "C" int pthread_barrier_wait(pthread_barrier_t *barrier) {
   int retval;
   if (_pthread_barrier_wait == NULL) {
@@ -314,11 +315,12 @@ extern "C" int pthread_barrier_wait(pthread_barrier_t *barrier) {
   TAU_PROFILE_STOP(timer);
   return retval;
 }
+#endif /* TAU_PTHREAD_BARRIER_AVAILABLE */
 
 #endif
 
 /***************************************************************************
  * $RCSfile: PthreadLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.23 $   $Date: 2010/03/02 21:20:32 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.23 2010/03/02 21:20:32 sameer Exp $
+ * $Revision: 1.24 $   $Date: 2010/04/30 17:55:09 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.24 2010/04/30 17:55:09 sameer Exp $
  ***************************************************************************/
