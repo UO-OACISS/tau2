@@ -618,7 +618,7 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
   if( isStaticExecutable ) {
       bool result1 = mutateeAddressSpace->loadLibrary(staticlibname);
       bool result2 = mutateeAddressSpace->loadLibrary(staticmpilibname);
-      assert(result1 && result2);
+      assert(result1);
   }else{
       bool result = mutateeAddressSpace->loadLibrary(libname);
       assert(result);
