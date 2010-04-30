@@ -94,6 +94,7 @@ void insertTrace(BPatch_function* functionToInstrument,
 
   //functionToInstrument->getName(name, 1024);
   getFunctionFileLineInfo(mutatee->getImage(), functionToInstrument, name);
+
   int id = addName(name);
   BPatch_Vector<BPatch_snippet *> traceArgs;
   traceArgs.push_back(new BPatch_constExpr(id));
@@ -147,11 +148,11 @@ void errorFunc(BPatchErrorLevel level, int num, const char **params){
 // For compatibility purposes
 //
 
-BPatch_function * tauFindFunction (BPatch_image *appImage, char * functionName)
+BPatch_function * tauFindFunction (BPatch_image *appImage, const char * functionName)
 {
    // Extract the vector of functions 
    BPatch_Vector<BPatch_function *> found_funcs;
-   if ((NULL == appImage->findFunction(functionName, found_funcs)) || !found_funcs.size()) {
+   if ((NULL == appImage->findFunction(functionName, found_funcs, false, true, true)) || !found_funcs.size()) {
      dprintf("tau_run: Unable to find function %s\n", functionName); 
      return NULL;
    }
@@ -189,6 +190,29 @@ BPatchSnippetHandle *invokeRoutineInFunction(BPatch_thread *appThread,
       else{
 	appThread->insertSnippet(*snippet, *points);
       }//else
+    }//if
+    delete snippet; // free up space
+}//invokeRoutineInFunction()
+
+//
+// invokeRoutineInFunction calls routine "callee" with no arguments when 
+// Function "function" is invoked at the point given by location
+//
+BPatchSnippetHandle *invokeRoutineInFunction(BPatch_thread *appThread,
+        BPatch_image *appImage, BPatch_Vector<BPatch_point *> points,
+	BPatch_function *callee, 
+	BPatch_Vector<BPatch_snippet *> *callee_args){
+  
+    // First create the snippet using the callee and the args 
+    const BPatch_snippet *snippet = new BPatch_funcCallExpr(*callee, *callee_args);
+    if (snippet == NULL) {
+        fprintf(stderr, "Unable to create snippet to call callee\n");
+        exit(1);
+    }//if
+
+    if(points.size()) {
+      // Insert the given snippet at the given point 
+      appThread->insertSnippet(*snippet, points, BPatch_callAfter);
     }//if
     delete snippet; // free up space
 }//invokeRoutineInFunction()
@@ -352,8 +376,16 @@ int routineConstraint(char *fname){ // fname is the function name
             (strncmp(fname, "PthreadLayer", 12) == 0) ||
 	    (strncmp(fname, "threaded_func", 13) == 0) ||
             (strncmp(fname, "targ8", 5) == 0) ||
-            (strncmp(fname, "__intel", 7) == 0) ||
-            (strncmp(fname, "The", 3) == 0)){
+            (strncmp(fname, "__intel_", 8) == 0) ||
+            (strncmp(fname, "The", 3) == 0) ||
+// The following functions show up in static executables
+            (strncmp(fname, "__mmap", 6) == 0) ||
+            (strncmp(fname, "_IO_printf", 10) == 0) ||
+            (strncmp(fname, "__write", 7) == 0) ||
+            (strncmp(fname, "__munmap", 8) == 0) || 
+            (strstr(fname, "_L_lock") != 0) ||
+            (strstr(fname, "_L_unlock") != 0) ) {
+
     return true; // Don't instrument 
   }//if
   else{ // Should the routine fname be instrumented?
@@ -366,28 +398,85 @@ int routineConstraint(char *fname){ // fname is the function name
   }//else
 }//routineConstraint()
 
+bool findFuncOrCalls(std::vector<const char *> names, BPatch_Vector<BPatch_point *> &points,
+		     BPatch_image *appImage, BPatch_procedureLocation loc = BPatch_locEntry)
+{
+  BPatch_function *func = NULL;
+  for (std::vector<const char *>::iterator i = names.begin(); i != names.end(); i++)
+  {
+    BPatch_function *f = tauFindFunction(appImage, *i);
+    if (f && f->getModule()->isSharedLib()) {
+      func = f;
+      break;
+    }
+  }
+  if (func) {
+    BPatch_Vector<BPatch_point *> *fpoints = func->findPoint(loc);
+    BPatch_Vector<BPatch_point *>::iterator k;
+    if (fpoints && fpoints->size()) {
+      for (k = fpoints->begin(); k != fpoints->end(); k++) {
+	points.push_back(*k);
+      }
+      return true;
+    }
+  }
+
+  //Moderately expensive loop here.  Perhaps we should make a name->point map first
+  // and just do lookups through that.
+  BPatch_Vector<BPatch_function *> *all_funcs = appImage->getProcedures();
+  int initial_points_size = points.size();
+  for (std::vector<const char *>::iterator i = names.begin(); i != names.end(); i++) {
+    BPatch_Vector<BPatch_function *>::iterator j;
+    for (j = all_funcs->begin(); j != all_funcs->end(); j++)
+    {
+      BPatch_function *f = *j;
+      if (f->getModule()->isSharedLib())
+	continue;
+      BPatch_Vector<BPatch_point *> *fpoints = f->findPoint(BPatch_locSubroutine);
+      if (!fpoints || !fpoints->size())
+	continue;
+      BPatch_Vector<BPatch_point *>::iterator j;
+      for (j = fpoints->begin(); j != fpoints->end(); j++) {
+	std::string callee = (*j)->getCalledFunctionName();
+	if (callee == std::string(*i)) {
+	  points.push_back(*j);
+	}
+      }
+    }
+    if (points.size() != initial_points_size)
+      return true;
+  }
+
+  return false;
+}
+
+bool findFuncOrCalls(const char *name, BPatch_Vector<BPatch_point *> &points,
+		     BPatch_image *image, BPatch_procedureLocation loc = BPatch_locEntry)
+{
+  std::vector<const char *> v;
+  v.push_back(name);
+  return findFuncOrCalls(v, points, image, loc);
+}
+
 // 
 // check if the application has an MPI library routine MPI_Comm_rank
 // 
-int checkIfMPI(BPatch_image * appImage, BPatch_function * & mpiinit,
-		BPatch_function * & mpiinitstub, bool binaryRewrite){
+int checkIfMPI(BPatch_image * appImage, BPatch_Vector<BPatch_point *> &mpiinit,
+		BPatch_function * & mpiinitstub, bool binaryRewrite)
+{
+  std::vector<const char *> init_names;
+  init_names.push_back("MPI_Init");
+  init_names.push_back("PMPI_Init");
+  bool ismpi = findFuncOrCalls(init_names, mpiinit, appImage, BPatch_locExit);
 
-  mpiinit 	= tauFindFunction(appImage, "MPI_Comm_rank");
-  mpiinitstub 	= tauFindFunction(appImage, "TauMPIInitStub");
-
+  mpiinitstub 	= tauFindFunction(appImage, "TauMPIInitStubInt");
   if (mpiinitstub == (BPatch_function *) NULL)
-    printf("*** TauMPIInitStub not found! \n");
+    printf("*** TauMPIInitStubInt not found! \n");
   
-  if (mpiinit == (BPatch_function *) NULL) {
-    dprintf("*** MPI_Comm_rank not found looking for PMPI_Comm_rank...\n");
-      //mpiinit = tauFindFunction(appImage, "PMPI_Comm_rank");
-    mpiinit = tauFindFunction(appImage, "mpi_comm_rank_");
-  }//if
-  
-  if (mpiinit == (BPatch_function *) NULL) { 
+  if (!ismpi) {
     dprintf("*** This is not an MPI Application! \n");
     return 0;  // It is not an MPI application
-  }//if
+  }
   else
     return 1;   // Yes, it is an MPI application.
 }//checkIfMPI()
@@ -424,26 +513,109 @@ int getFunctionFileLineInfo(BPatch_image* mutateeAddressSpace,
   }
   else
     strcpy(newname, fname);
-
 }
 
 
-int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, char* libname)
+char * getGCCHOME(void) {
+   FILE *fp;
+   char command[512];
+   char home[512];
+   char * ret;
+   char *gcchome = getenv("TAU_GCC_HOME");
+   if (gcchome != (char *) NULL) {
+     return gcchome;
+   }
+
+   /* if TAU_GCC_HOME is not set use this */
+   strcpy(command, " tau_cc.sh -show | awk '{c=split($0, s); for(n=1; n<=c; ++n) print s[n] }' | grep gcc | grep '^.L' | sed -e 's/-L//'");
+
+   fp=popen(command, "r");
+
+   if (fp == NULL) {
+     perror("Error launching tau_cc.sh to get TAU_GCC_HOME");
+     return 0;
+   }
+
+   if ((ret = fgets(home, 512, fp)) != NULL) {
+     int len = strlen(home); 
+     if (home[len - 1] == '\n') { 
+       home[len - 1 ] = '\0';
+     }
+     return strdup(home);
+   } else {
+     perror("Error reading from pipe to get TAU_GCC_HOME:");
+     return 0;
+   }
+   pclose(fp);
+}
+
+bool loadDependentLibraries(BPatch_binaryEdit *bedit) {
+//old:    const string GCCHOME = "/usr/lib/gcc/i586-redhat-linux/4.4.1";
+    const string GCCHOME = string(getGCCHOME());
+
+    // Order of load matters, just like command line arguments to a standalone linker
+
+    // Load C++ Library
+    string cpplib = GCCHOME + "/libstdc++.a";
+    if( !bedit->loadLibrary(cpplib.c_str()) ) {
+        return false;
+    }
+
+    // Load pthreads to be safe
+    if( bedit->isMultiThreadCapable() ) {
+        if( !bedit->loadLibrary("libpthread.a") ) {
+            return false;
+        }
+    }
+
+    // Load C library
+    if( !bedit->loadLibrary("libc.a") ) {
+        return false;
+    }
+
+    // Load GCC support library
+    string suplib = GCCHOME + "/libgcc.a";
+    if( !bedit->loadLibrary(suplib.c_str()) ) {
+        return false;
+    }
+
+    // Load the GCC exception library
+    string ehlib = GCCHOME + "/libgcc_eh.a";
+    if( !bedit->loadLibrary(ehlib.c_str()) ) {
+        return false;
+    }
+
+    return true;
+}
+
+
+int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, char* libname, char *staticlibname)
 {
   using namespace std;
-  BPatch_function *mpiinit;
+  BPatch_Vector<BPatch_point *> mpiinit;
   BPatch_function *mpiinitstub;
+
 
   dprintf("Inside tauRewriteBinary, name=%s, out=%s\n", mutateeName, outfile);
   BPatch_binaryEdit* mutateeAddressSpace = bpatch->openBinary(mutateeName, false);
 
-  bpatch->setLivenessAnalysis(false);
-  mutateeAddressSpace->allowTraps(false);
+  if( mutateeAddressSpace == NULL ) {
+      fprintf(stderr, "Failed to open binary %s\n",
+              mutateeName);
+      return -1;
+  }
+
   BPatch_image* mutateeImage = mutateeAddressSpace->getImage();
   BPatch_Vector<BPatch_function*>* allFuncs = mutateeImage->getProcedures();
 
-  bool result = mutateeAddressSpace->loadLibrary(libname);
-  assert(result);
+  if( mutateeAddressSpace->isStaticExecutable() ) {
+      bool result = mutateeAddressSpace->loadLibrary(staticlibname);
+      assert(result);
+  }else{
+      bool result = mutateeAddressSpace->loadLibrary(libname);
+      assert(result);
+  }
+
   BPatch_function* entryTrace = tauFindFunction(mutateeImage, "traceEntry");
   BPatch_function* exitTrace = tauFindFunction(mutateeImage, "traceExit");
   BPatch_function* setupFunc = tauFindFunction(mutateeImage, "tau_dyninst_init");
@@ -451,12 +623,22 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
   BPatch_function* mainFunc = tauFindFunction(mutateeImage, "main");
   name_reg = tauFindFunction(mutateeImage, "trace_register_func");
 
+  // This heuristic guesses that debugging info. is available if main
+  // is not defined in the DEFAULT_MODULE
+  bool hasDebuggingInfo = false;
+  BPatch_module *mainModule = mainFunc->getModule();
+  if( NULL != mainModule ) {
+    char moduleName[MUTNAMELEN];
+    mainModule->getName(moduleName, MUTNAMELEN);
+    if( strcmp(moduleName, "DEFAULT_MODULE") != 0 ) hasDebuggingInfo = true;
+  }
+
   if(!mainFunc)
   {
     fprintf(stderr, "Couldn't find main(), aborting\n");
     return -1;
   }
-  if(!entryTrace || !exitTrace || !setupFunc || !cleanupFunc)
+  if(!entryTrace || !exitTrace || !setupFunc || !cleanupFunc )
   {
     fprintf(stderr, "Couldn't find OTF functions, aborting\n");
     return -1;
@@ -469,26 +651,64 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
 
   mutateeAddressSpace->beginInsertionSet();
 
-  BPatch_constExpr isMPI(checkIfMPI(mutateeImage, mpiinit, mpiinitstub, true));
+  int ismpi = checkIfMPI(mutateeImage, mpiinit, mpiinitstub, true);
+  BPatch_constExpr isMPI(ismpi);
   BPatch_Vector<BPatch_snippet*> init_params;
   init_params.push_back(&isMPI);
   BPatch_funcCallExpr setup_call(*setupFunc, init_params);
   funcNames.push_back(&setup_call);
+
+  if (ismpi) {
+      char *mpilib = "libtaumpihook.so";
+      if( mutateeAddressSpace->isStaticExecutable() ) {
+          mpilib = "libtaumpihook.a";
+      }
+      bool result = mutateeAddressSpace->loadLibrary(mpilib);
+      assert(result);
+    
+    //Create a snippet that calls TauMPIInitStub with the rank after MPI_Init
+    BPatch_function *mpi_rank = tauFindFunction(mutateeImage, "taumpi_getRank");
+    assert(mpi_rank);
+    BPatch_Vector<BPatch_snippet *> rank_args;
+    BPatch_funcCallExpr getrank(*mpi_rank, rank_args);
+    BPatch_Vector<BPatch_snippet *> mpiinitargs;
+    mpiinitargs.push_back(&getrank);
+    BPatch_funcCallExpr initmpi(*mpiinitstub, mpiinitargs);
+    
+    mutateeAddressSpace->insertSnippet(initmpi, mpiinit, BPatch_callAfter, BPatch_firstSnippet);
+  }
 
   for (BPatch_Vector<BPatch_function*>::iterator it=allFuncs->begin();
   it != allFuncs->end(); it++)
   {
     char fname[FUNCNAMELEN];
     (*it)->getName(fname, FUNCNAMELEN);
-    dprintf("Processing %s...\n", fname); 
-    if (!routineConstraint(fname)) { // ok to instrument
+    dprintf("Processing %s...\n", fname);
+
+    bool okayToInstr = true;
+    // STATIC EXECUTABLE FUNCTION EXCLUDE
+    // Temporarily avoid some functions -- this isn't a solution 
+    // -- it appears that something like moduleConstraint would work 
+    // well here
+    if( mutateeAddressSpace->isStaticExecutable() ) {
+	// Always instrument _fini to ensure instrumentation disabled correctly
+        if( hasDebuggingInfo && strcmp(fname, "_fini") != 0) {
+            BPatch_module *funcModule = (*it)->getModule();
+            if( funcModule != NULL ) {
+                char moduleName[MUTNAMELEN];
+                funcModule->getName(moduleName, MUTNAMELEN);
+                if( strcmp(moduleName, "DEFAULT_MODULE") == 0 ) okayToInstr = false;
+            }
+        }
+    }
+
+    if (okayToInstr && !routineConstraint(fname)) { // ok to instrument
       insertTrace(*it, mutateeAddressSpace, entryTrace, exitTrace);
     }
     else {
      dprintf("Not instrumenting %s\n", fname);
     }
   }
-
 
   BPatch_sequence sequence(funcNames);
   mutateeAddressSpace->insertSnippet(sequence,
@@ -497,6 +717,14 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
                                      BPatch_firstSnippet);
 
   mutateeAddressSpace->finalizeInsertionSet(false, NULL);
+
+  if( mutateeAddressSpace->isStaticExecutable() ) {
+      bool loadResult = loadDependentLibraries(mutateeAddressSpace);
+      if( !loadResult ) {
+          fprintf(stderr, "Failed to load dependent libraries need for binary rewrite\n");
+          return -1;
+      }
+  }
 
   std::string modifiedFileName(outfile);
   chdir("result");
@@ -518,8 +746,9 @@ int main(int argc, char **argv){
   char mutname[MUTNAMELEN];                      //variable to hold mutator name (ie tau_run)
   char outfile[MUTNAMELEN];                      // variable to hold output file
   char fname[FUNCNAMELEN], libname[FUNCNAMELEN]; //function name and library name variables
+  char staticlibname[FUNCNAMELEN];
   BPatch_thread *appThread;                      //application thread
-  BPatch_function *mpiinit;                      
+  BPatch_Vector<BPatch_point *> mpiinit;                      
   BPatch_function *mpiinitstub;
   bpatch = new BPatch;                           //create a new version. 
   string functions;                              //string variable to hold function names 
@@ -532,7 +761,9 @@ int main(int argc, char **argv){
   int c;
 
 
-  bpatch->setTrampRecursive(true); /* enable C++ support */
+  //bpatch->setTrampRecursive(true); /* enable C++ support */
+  bpatch->setSaveFPR(true);
+
   // parse the command line arguments--first, there need to be atleast two arguments,
   // the program name (tau_run) and the application it is running.  If there are not
   // at least two arguments, set the error flag.
@@ -545,7 +776,7 @@ int main(int argc, char **argv){
   else{
     opterr = 0; 
      
-    while ((c = getopt (argc, argv, "vX:o:f:")) != -1)
+    while ((c = getopt (argc, argv, "vX:o:f")) != -1)
       switch (c)
       {
         case 'v':
@@ -555,7 +786,6 @@ int main(int argc, char **argv){
         case 'X':
           xvalue = optarg;
 	  loadlib = true; /* load an external measurement library */
-	  sprintf(libname,"lib%s.so", &xvalue[3]);
           break;
         case 'f':
           fvalue = optarg; /* choose a selective instrumentation file */
@@ -593,10 +823,13 @@ int main(int argc, char **argv){
   
   //did we load a library?  if not, load the default
   if(!loadlib){
-    sprintf(libname,"libTAU.so");
+    sprintf(staticlibname,"libtau-static.a");
+    sprintf(libname, "libTAU.so");
     loadlib=true;
   }//if
   else {
+    sprintf(staticlibname,"lib%s.a", &xvalue[3]);
+    sprintf(libname, "lib%s.so", &xvalue[3]);
     fprintf(stderr, "%s> Loading %s ...\n", mutname, libname);
   }
 
@@ -622,7 +855,7 @@ int main(int argc, char **argv){
   // removed for DyninstAPI 4.0
 
   if (binaryRewrite) {
-    tauRewriteBinary(bpatch, mutname, outfile, (char *)libname);
+    tauRewriteBinary(bpatch, mutname, outfile, (char *)libname, (char *)staticlibname);
     return 0; // exit from the application 
   }
 #ifdef TAU_DYNINST41PLUS
@@ -793,8 +1026,8 @@ int main(int argc, char **argv){
     delete Name;
   }//else
 
-  if (mpiinit == NULL) { 
-    dprintf("*** MPI_Comm_rank not found. This is not an MPI Application! \n");
+  if (!mpiinit.size()) { 
+    dprintf("*** MPI_Init not found. This is not an MPI Application! \n");
   }
   else { // we've found either MPI_Comm_rank or PMPI_Comm_rank! 
    dprintf("FOUND MPI_Comm_rank or PMPI_Comm_rank! \n");
@@ -802,7 +1035,7 @@ int main(int argc, char **argv){
    BPatch_paramExpr paramRank(1);
    
    mpistubargs->push_back(&paramRank);
-   invokeRoutineInFunction(appThread, appImage, mpiinit, BPatch_exit, mpiinitstub, mpistubargs);
+   invokeRoutineInFunction(appThread, appImage, mpiinit, mpiinitstub, mpistubargs);
    delete mpistubargs;
   }
 
