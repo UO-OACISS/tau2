@@ -5108,6 +5108,10 @@ if [ $dyninst = yes ] ; then
     if [ ! -d $dyninstdir/$PLATFORM/lib/libcommon.so ] ; then
 	fixmakeargs="$fixmakeargs DYNINST6"
     fi
+    if [ `grep isStaticExecutable $dyninstdir/include/* | wc -l` = 0 ]; then
+	fixmakeargs="$fixmakeargs DYNINST_STATIC_REWRITING_UNSUPPORTED"
+	echo "Static rewriting unsupported"
+    fi
     if [ ! -d $dyninstdir/src/include -o ! -d $dyninstdir/include ] ; then
 	fixmakeargs="$fixmakeargs DYNINST5.2"
     fi

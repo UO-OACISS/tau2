@@ -1017,6 +1017,10 @@ case $1 in
 	echo "NOTE: Using newer version DYNINST 4.1+ "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     DYNINST_STATIC_REWRITING_UNSUPPORTED)
+	echo "NOTE: Rewriting static binaries is not supported in this version of DyninstAPI"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      DYNINST6)
 	echo "NOTE: Using newer version DYNINST 5+ "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
