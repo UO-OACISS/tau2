@@ -5358,7 +5358,7 @@ if [ $hpctoolkit = yes ] ; then
 fi
 
 if [ $machine = ia64 -o $machine = x86_64 -o $machine = i386_linux -o $machine = craycnl -o $machine = bgp ] ; then
-    extra_linker_args="${extralinker_args}#-Wl,-export-dynamic"
+    extra_linker_args="${extralinker_args}#-Wl,--export-dynamic"
 fi
 
 fixmakeargs="$fixmakeargs extra_linker_args=$extra_linker_args"
