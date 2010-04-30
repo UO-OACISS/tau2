@@ -226,10 +226,16 @@ static void Tau_collate_incrementHistogram(int *histogram, double min, double ma
   histogram[mybin]++;
 }
 
+
+
+
 /*********************************************************************
  * Write a profile with data from all nodes/threads
  ********************************************************************/
 extern "C" int Tau_collate_writeProfile() {
+  static int invocationIndex = -1;
+  invocationIndex++;
+
   int rank, size;
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -339,15 +345,39 @@ extern "C" int Tau_collate_writeProfile() {
     PMPI_Allreduce (numCalls, gNumCalls[s], numItems, MPI_INT, collate_op[s], MPI_COMM_WORLD);
     PMPI_Allreduce (numSubr, gNumSubr[s], numItems, MPI_INT, collate_op[s], MPI_COMM_WORLD);
 
-    if (rank == 0) {
-      fprintf (stderr, "\n----- data for statistic: %s\n", collate_step_name[s]);
-      for (int i=0; i<numItems; i++) {
-	fprintf (stderr, "[id=%2d] incl=%9.16G excl=%9.16G numcalls=%9d numsubr=%9d : %s\n", i, 
-		gIncl[s][0][i], gExcl[s][0][i], gNumCalls[s][i], gNumSubr[s][i], functionUnifier->globalStrings[i]);
+    // if (rank == 0) {
+    //   fprintf (stderr, "\n----- data for statistic: %s\n", collate_step_name[s]);
+    //   for (int i=0; i<numItems; i++) {
+    // 	fprintf (stderr, "[id=%2d] incl=%9.16G excl=%9.16G numcalls=%9d numsubr=%9d : %s\n", i, 
+    // 		gIncl[s][0][i], gExcl[s][0][i], gNumCalls[s][i], gNumSubr[s][i], functionUnifier->globalStrings[i]);
 
-      }
-    }
+    //   }
+    // }
   }
+
+
+  
+
+  if (rank == 0) {
+    char profileName[512];
+    sprintf (profileName, "profile.%d.0.0", invocationIndex);
+    FILE *profile = fopen(profileName, "w");
+    fprintf (profile, "%d templated_functions_MULTI_TIME\n", numItems);
+    fprintf (profile, "# Name Calls Subrs Excl Incl ProfileCalls\n");
+    for (int i=0; i<numItems; i++) {
+      double exclusive = gExcl[step_sum][0][i] / globalNumThreads;
+      double inclusive = gIncl[step_sum][0][i] / globalNumThreads;
+      double numCalls = (double)gNumCalls[step_sum][i] / globalNumThreads;
+      double numSubr = (double)gNumSubr[step_sum][i] / globalNumThreads;
+
+      fprintf (profile, "\"%s\" %.16G %.16G %.16G %.16G 0 GROUP=\"TAU_DEFAULT\"\n", functionUnifier->globalStrings[i], 
+	       numCalls, numSubr, exclusive, inclusive);
+      
+    }
+    fprintf (profile, "0 aggregates\n");
+  }
+
+
 
 
   if (rank == 0) {
@@ -368,7 +398,9 @@ extern "C" int Tau_collate_writeProfile() {
 
   FILE *histoFile;
   if (rank == 0) {
-    histoFile = fopen("tau.histograms", "w");
+    char histFileName[512];
+    sprintf (histFileName, "tau.histograms.%d", invocationIndex);
+    histoFile = fopen(histFileName, "w");
     fprintf (histoFile, "%d\n", numItems);
     fprintf (histoFile, "%d\n", (Tau_Global_numCounters*2)+2);
     for (int m=0; m<Tau_Global_numCounters; m++) {
@@ -463,18 +495,25 @@ extern "C" int Tau_collate_writeProfile() {
     TAU_VERBOSE("TAU: Collating Complete, duration = %.4G seconds\n", ((double)((double)end-start))/1000000.0f);
   }
 
-  MPI_Op_free(&min_op);
-  MPI_Op_free(&sum_op);
+  PMPI_Op_free(&min_op);
+  PMPI_Op_free(&sum_op);
 
 
   // fflush(stderr);
   // PMPI_Barrier(MPI_COMM_WORLD);
 
-  // temp: write regular profiles too, for comparison
+  //temp: write regular profiles too, for comparison
   // int tid = 0;
-  // TauProfiler_DumpData(false, tid, "profile");
+  // TauProfiler_DumpData(false, tid, "compare");
 
   return 0;
+}
+
+/*********************************************************************
+ * For Dagstuhl demo 2010
+ ********************************************************************/
+extern "C" void Tau_collate_onlineDump() {
+  Tau_collate_writeProfile();
 }
 
 #endif /* TAU_EXP_UNIFY */
