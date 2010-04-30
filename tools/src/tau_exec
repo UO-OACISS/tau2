@@ -31,7 +31,7 @@ usage()
     echo "	MPI is assumed unless SERIAL is specified"
     echo ""
     echo "Example:"
-    echo "    mpirun -np 2 tauex -io ./ring"
+    echo "    mpirun -np 2 tau_exec -io ./ring"
     echo ""
     exit
 }
@@ -83,7 +83,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tau_exec,v 1.7 2010/04/29 19:19:40 amorris Exp $';
+	      echo '$Id: tau_exec,v 1.8 2010/04/30 03:00:19 sameer Exp $';
 	      exit 0;
 	      ;;
 	  -T)
