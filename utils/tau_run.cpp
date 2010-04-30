@@ -589,7 +589,7 @@ bool loadDependentLibraries(BPatch_binaryEdit *bedit) {
 }
 
 
-int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, char* libname, char *staticlibname)
+int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, char* libname, char *staticlibname, char *staticmpilibname)
 {
   using namespace std;
   BPatch_Vector<BPatch_point *> mpiinit;
@@ -607,10 +607,18 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
 
   BPatch_image* mutateeImage = mutateeAddressSpace->getImage();
   BPatch_Vector<BPatch_function*>* allFuncs = mutateeImage->getProcedures();
+  bool isStaticExecutable; 
 
-  if( mutateeAddressSpace->isStaticExecutable() ) {
-      bool result = mutateeAddressSpace->loadLibrary(staticlibname);
-      assert(result);
+#ifdef TAU_DYNINST_STATIC_REWRITING_UNSUPPORTED
+  isStaticExecutable = false;
+#else /* TAU_DYNINST_STATIC_REWRITING_UNSUPPORTED */
+  isStaticExecutable = mutateeAddressSpace->isStaticExecutable();
+#endif  /* TAU_DYNINST_STATIC_REWRITING_UNSUPPORTED */
+
+  if( isStaticExecutable ) {
+      bool result1 = mutateeAddressSpace->loadLibrary(staticlibname);
+      bool result2 = mutateeAddressSpace->loadLibrary(staticmpilibname);
+      assert(result1 && result2);
   }else{
       bool result = mutateeAddressSpace->loadLibrary(libname);
       assert(result);
@@ -660,7 +668,7 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
 
   if (ismpi) {
       char *mpilib = "libtaumpihook.so";
-      if( mutateeAddressSpace->isStaticExecutable() ) {
+      if( isStaticExecutable ) {
           mpilib = "libtaumpihook.a";
       }
       bool result = mutateeAddressSpace->loadLibrary(mpilib);
@@ -690,7 +698,7 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
     // Temporarily avoid some functions -- this isn't a solution 
     // -- it appears that something like moduleConstraint would work 
     // well here
-    if( mutateeAddressSpace->isStaticExecutable() ) {
+    if( isStaticExecutable ) {
 	// Always instrument _fini to ensure instrumentation disabled correctly
         if( hasDebuggingInfo && strcmp(fname, "_fini") != 0) {
             BPatch_module *funcModule = (*it)->getModule();
@@ -718,7 +726,7 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
 
   mutateeAddressSpace->finalizeInsertionSet(false, NULL);
 
-  if( mutateeAddressSpace->isStaticExecutable() ) {
+  if( isStaticExecutable) {
       bool loadResult = loadDependentLibraries(mutateeAddressSpace);
       if( !loadResult ) {
           fprintf(stderr, "Failed to load dependent libraries need for binary rewrite\n");
@@ -747,6 +755,7 @@ int main(int argc, char **argv){
   char outfile[MUTNAMELEN];                      // variable to hold output file
   char fname[FUNCNAMELEN], libname[FUNCNAMELEN]; //function name and library name variables
   char staticlibname[FUNCNAMELEN];
+  char staticmpilibname[FUNCNAMELEN];
   BPatch_thread *appThread;                      //application thread
   BPatch_Vector<BPatch_point *> mpiinit;                      
   BPatch_function *mpiinitstub;
@@ -823,14 +832,22 @@ int main(int argc, char **argv){
   
   //did we load a library?  if not, load the default
   if(!loadlib){
-    sprintf(staticlibname,"libtau-static.a");
+    sprintf(staticlibname,"libtau-mpi-pdt.a");
+    sprintf(staticlibname,"libTauMpi-mpi-pdt.a");
     sprintf(libname, "libTAU.so");
     loadlib=true;
   }//if
   else {
     sprintf(staticlibname,"lib%s.a", &xvalue[3]);
+    sprintf(staticmpilibname,"libTauMpi%s.a", &xvalue[6]);
+    dprintf("staticmpilibname = %s\n", staticmpilibname);
     sprintf(libname, "lib%s.so", &xvalue[3]);
-    fprintf(stderr, "%s> Loading %s ...\n", mutname, libname);
+    if (xvalue[3] == 'T') {
+      fprintf(stderr, "%s> Loading %s ...\n", mutname, libname);
+    } else {
+      fprintf(stderr, "%s> Loading %s ...\n", mutname, staticlibname);
+      fprintf(stderr, "%s> Loading %s ...\n", mutname, staticmpilibname);
+    }
   }
 
   //has an error occured in the command line arguments?
@@ -855,7 +872,7 @@ int main(int argc, char **argv){
   // removed for DyninstAPI 4.0
 
   if (binaryRewrite) {
-    tauRewriteBinary(bpatch, mutname, outfile, (char *)libname, (char *)staticlibname);
+    tauRewriteBinary(bpatch, mutname, outfile, (char *)libname, (char *)staticlibname, (char *)staticmpilibname);
     return 0; // exit from the application 
   }
 #ifdef TAU_DYNINST41PLUS
