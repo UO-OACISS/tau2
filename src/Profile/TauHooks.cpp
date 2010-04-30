@@ -266,6 +266,11 @@ void TauMPIInitStub(int *rank)
   dprintf("Setting rank = %d\n", *rank);
 }
 
+void TauMPIInitStubInt (int rank)
+{
+  TauMPIInitStub(&rank);
+}
+
 int TauRenameTimer(char *oldName, char *newName)
 {
   vector<FunctionInfo *>::iterator it;
@@ -449,7 +454,7 @@ void tau_dyninst_cleanup()
 
 // EOF TauHooks.cpp
 /***************************************************************************
- * $RCSfile: TauHooks.cpp,v $   $Author: amorris $
- * $Revision: 1.33 $   $Date: 2009/11/03 17:34:17 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.33 2009/11/03 17:34:17 amorris Exp $ 
+ * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
+ * $Revision: 1.34 $   $Date: 2010/04/30 23:22:24 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.34 2010/04/30 23:22:24 sameer Exp $ 
  ***************************************************************************/

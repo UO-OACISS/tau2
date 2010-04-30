@@ -3380,6 +3380,13 @@ int TauGetCpuSite(unsigned int *node, unsigned int *core, unsigned int *rank) {
   return 0;
 }
 
+int TauGetMpiRank(void)
+{
+  int rank;
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  return rank;
+}
 
 
 /* EOF TauMpi.c */
