@@ -340,7 +340,7 @@ extern "C" int fprintf(FILE *stream, const char *format, ...) {
   /* calculate the time spent in operation */
   currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentWrite > 1e-12) {
+  if (currentWrite > 1e-12 && ret > 0) {
     bw = (double) count/currentWrite; 
     TAU_CONTEXT_EVENT(wb, bw);
     TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
@@ -396,12 +396,12 @@ extern "C" int fscanf(FILE *stream, const char *format, ...) {
   /* calculate the time spent in operation */
   currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentRead > 1e-12) {
+  if (currentRead > 1e-12 && ret > 0) {
     bw = (double) count/currentRead; 
     TAU_CONTEXT_EVENT(rb, bw);
     TAU_CONTEXT_EVENT(global_read_bandwidth, bw);
   } else {
-    dprintf("TauWrapperWrite: currentWrite = %g\n", currentRead);
+    dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
   TAU_CONTEXT_EVENT(bytesread, count);
   TAU_CONTEXT_EVENT(global_bytes_read, count);
@@ -443,7 +443,7 @@ extern "C" size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stre
   /* calculate the time spent in operation */
   currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentWrite > 1e-12) {
+  if (currentWrite > 1e-12 && ret > 0) {
     bw = (double) count/currentWrite; 
     TAU_CONTEXT_EVENT(wb, bw);
     TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
@@ -488,7 +488,7 @@ extern "C" size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
   /* calculate the time spent in operation */
   currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentRead > 1e-12) {
+  if (currentRead > 1e-12 && ret > 0) {
     TAU_CONTEXT_EVENT(re, (double) count/currentRead);
     TAU_CONTEXT_EVENT(global_read_bandwidth, (double) count/currentRead);
   } else {
@@ -675,7 +675,7 @@ extern "C" ssize_t write (int fd, const void *buf, size_t count) {
   /* calculate the time spent in operation */
   currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentWrite > 1e-12) {
+  if (currentWrite > 1e-12 && ret > 0) {
     bw = (double) count/currentWrite; 
     TAU_CONTEXT_EVENT(wb, bw);
     TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
@@ -724,7 +724,7 @@ extern "C" ssize_t read (int fd, void *buf, size_t count) {
   /* calculate the time spent in operation */
   currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentRead > 1e-12) {
+  if (currentRead > 1e-12 && ret > 0) {
     TAU_CONTEXT_EVENT(re, (double) count/currentRead);
     TAU_CONTEXT_EVENT(global_read_bandwidth, (double) count/currentRead);
   } else {
@@ -780,7 +780,7 @@ extern "C" ssize_t readv (int fd, const struct iovec *vec, int count) {
   /* calculate the time spent in operation */
   currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentRead > 1e-12) {
+  if (currentRead > 1e-12 && ret > 0) {
     TAU_CONTEXT_EVENT(re, (double) sumOfBytesRead/currentRead);
     TAU_CONTEXT_EVENT(global_read_bandwidth, (double) sumOfBytesRead/currentRead);
   } else {
@@ -837,7 +837,7 @@ extern "C" ssize_t writev (int fd, const struct iovec *vec, int count) {
   /* calculate the time spent in operation */
   currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentWrite > 1e-12) {
+  if (currentWrite > 1e-12 && ret > 0) {
     bw = (double) sumOfBytesWritten/currentWrite; 
     TAU_CONTEXT_EVENT(wb, bw);
     TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
@@ -1350,7 +1350,7 @@ extern "C" ssize_t recv (int fd, void *buf, size_t count, int flags) {
   /* calculate the time spent in operation */
   currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentRead > 1e-12) {
+  if (currentRead > 1e-12 && ret > 0) {
     TAU_CONTEXT_EVENT(re, (double) ret/currentRead);
     TAU_CONTEXT_EVENT(global_read_bandwidth, (double) ret/currentRead);
   } else {
@@ -1398,11 +1398,11 @@ extern "C" ssize_t send (int fd, const void *buf, size_t count, int flags) {
   /* calculate the time spent in operation */
   currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentWrite > 1e-12) {
+  if (currentWrite > 1e-12 && ret > 0) {
     TAU_CONTEXT_EVENT(re, (double) ret/currentWrite);
     TAU_CONTEXT_EVENT(global_write_bandwidth, (double) ret/currentWrite);
   } else {
-    dprintf("TauWrapperRead: currentWrite = %g\n", currentWrite);
+    dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
   TAU_CONTEXT_EVENT(byteswritten, ret);
   TAU_CONTEXT_EVENT(global_bytes_written, ret);
@@ -1447,11 +1447,11 @@ extern "C" ssize_t sendto (int fd, const void *buf, size_t count, int flags, con
   /* calculate the time spent in operation */
   currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentWrite > 1e-12) {
+  if (currentWrite > 1e-12 && ret > 0) {
     TAU_CONTEXT_EVENT(re, (double) count/currentWrite);
     TAU_CONTEXT_EVENT(global_write_bandwidth, (double) count/currentWrite);
   } else {
-    dprintf("TauWrapperRead: currentWrite = %g\n", currentWrite);
+    dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
   TAU_CONTEXT_EVENT(byteswritten, ret);
   TAU_CONTEXT_EVENT(global_bytes_written, ret);
@@ -1497,7 +1497,7 @@ extern "C" ssize_t recvfrom (int fd, void *buf, size_t count, int flags, struct 
   /* calculate the time spent in operation */
   currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentRead > 1e-12) {
+  if (currentRead > 1e-12 && ret > 0) {
     TAU_CONTEXT_EVENT(re, (double) ret/currentRead);
     TAU_CONTEXT_EVENT(global_read_bandwidth, (double) ret/currentRead);
   } else {
