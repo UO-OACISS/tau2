@@ -281,6 +281,11 @@ case $1 in
 	echo "s,^DYNINSTDIR=.*$,DYNINSTDIR=$dyninstdir,g" >> $sedout
 	;;
 
+     dwarfopts=*)
+        dwarfopts=`echo $1 | sed -e 's/^dwarfopts=//'`
+	echo "s,^DWARFOPTS=.*$,DWARFOPTS=$dwarfopts,g" >> $sedout
+	;;
+
      jdkdir=*)
         jdkdir=`echo $1 | sed -e 's/^jdkdir=//'`
 	echo "s,^JDKDIR=.*$,JDKDIR=$jdkdir,g" >> $sedout

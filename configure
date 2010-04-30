@@ -178,6 +178,7 @@ for arg in "$@"; do
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
     echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
     echo "-dyninst=<dir> ................... Specify location of DynInst Package."
+    echo "-dwarf=<dir> ................ Specify location of the libdwarf Package."
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
     echo "-mpi .......................... Specify use of TAU MPI wrapper library."
@@ -421,6 +422,7 @@ forceshared=no
 opari_region=no
 opari_construct=no
 dyninst=no
+dwarf=no
 java=no
 openmp=no
 ibmxlc=no
@@ -889,6 +891,17 @@ for arg in "$@"; do
       if [ ! -d $dyninstdir ]
       then
         echo "Error: Cannot access DyninstAPI directory $dyninstdir"
+        exit 1
+      fi
+    shift
+    ;;
+
+  -dwarf=*)
+      dwarf=yes
+      dwarfdir=`echo $arg | sed -e 's/-dwarf=//'`
+      if [ ! -d $dwarfdir ]
+      then
+        echo "Error: Cannot access libdwarf directory $dwarfdir"
         exit 1
       fi
     shift
@@ -5110,10 +5123,17 @@ if [ $dyninst = yes ] ; then
     fi
     if [ `grep isStaticExecutable $dyninstdir/include/* | wc -l` = 0 ]; then
 	fixmakeargs="$fixmakeargs DYNINST_STATIC_REWRITING_UNSUPPORTED"
-	echo "Static rewriting unsupported"
     fi
     if [ ! -d $dyninstdir/src/include -o ! -d $dyninstdir/include ] ; then
 	fixmakeargs="$fixmakeargs DYNINST5.2"
+    fi
+fi
+
+if [ $dwarf = yes ] ; then
+    if [ ! -r $dwarfdir/lib/libdwarf.a ] ; then
+	echo "ERROR: $dwarfdir/lib/libdwarf.a not found"
+    else
+	fixmakeargs="$fixmakeargs dwarfopts=-L$dwarfdir/lib"
     fi
 fi
 
