@@ -39,11 +39,11 @@ import edu.uoregon.tau.vis.HeatMapWindow;
  * Utility class for ParaProf
  * 
  * <P>
- * CVS $Id: ParaProfUtils.java,v 1.61 2009/12/18 04:21:48 amorris Exp $
+ * CVS $Id: ParaProfUtils.java,v 1.62 2010/05/01 00:26:33 amorris Exp $
  * </P>
  * 
  * @author Alan Morris
- * @version $Revision: 1.61 $
+ * @version $Revision: 1.62 $
  */
 public class ParaProfUtils {
 
@@ -385,7 +385,7 @@ public class ParaProfUtils {
                     String arg = evt.getActionCommand();
 
                     if (arg.equals("ParaProf Manager")) {
-			ParaProf.paraProfManagerWindow.setVisible(true);
+                        ParaProf.paraProfManagerWindow.setVisible(true);
                     } else if (arg.equals("Function Legend")) {
                         (new LedgerWindow(ppTrial, 0, owner)).setVisible(true);
                     } else if (arg.equals("Group Changer")) {
@@ -643,8 +643,15 @@ public class ParaProfUtils {
                                 ppTrial, function, thread, owner);
                         functionBarChartWindow.setVisible(true);
                     } else if (arg.equals("Show Function Histogram")) {
-                        HistogramWindow hw = new HistogramWindow(ppTrial, function, owner);
-                        hw.setVisible(true);
+                        String dagstuhl_demo = (String) ppTrial.getDataSource().getMetaData().get(
+                                "TAU Internal Profile Attribute");
+                        if (dagstuhl_demo != null && dagstuhl_demo.equals("collate_dump_dagstuhl")) {
+                            JFrame hw = PreCompHistogramWindow.createHistogramWindow(ppTrial, function, thread, owner);
+                            hw.setVisible(true);
+                        } else {
+                            HistogramWindow hw = new HistogramWindow(ppTrial, function, owner);
+                            hw.setVisible(true);
+                        }
                     } else if (arg.equals("Assign Function Color")) {
                         ParaProf.colorMap.assignColor(owner, function);
                     } else if (arg.equals("Reset to Default Color")) {
