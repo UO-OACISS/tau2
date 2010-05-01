@@ -15,8 +15,8 @@ CLASSPATH = $(TOOLS_SRC)/perfdmf/bin/perfdmf.jar:$(TOOLS_SRC)/contrib/jargs.jar:
 
 TARGET_JAR=$(TOOLS_SRC)/paraprof/bin/paraprof.jar
 
-# We only want to use Java 1.4
-JAVA_FOUR=$(shell java -version 2>&1 | grep version | /usr/bin/awk '{ print $$3; }'| sed -e s/\"//g | sed -e s/1\.4\..*// | wc -c)
+# We only want to use Java 1.5
+JAVA_FOUR=$(shell java -version 2>&1 | grep version | /usr/bin/awk '{ print $$3; }'| sed -e s/\"//g | sed -e s/1\.5\..*// | wc -c)
 ifeq ($(JAVA_FOUR),1)
   TARGET=build
 else
@@ -38,7 +38,7 @@ $(TARGET_JAR): $(SOURCES)
 	echo $(JAVAC_VERSION)
 
 badversion:
-	@echo "Error, ParaProf must be compiled with Java 1.4, use 'make override' to proceed anyway"
+	@echo "Error, ParaProf must be compiled with Java 1.5, use 'make override' to proceed anyway"
 
 override: build
 
