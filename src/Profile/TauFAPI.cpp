@@ -23,7 +23,6 @@
 
 
 
-
 extern "C" void Tau_pure_start(const char *name);
 extern "C" void Tau_pure_stop(const char *name);
 
@@ -92,6 +91,7 @@ void Tau_dynamic_stop(char *name, int isPhase);
 char * Tau_append_iteration_to_name(int iteration, char *name);
 int Tau_get_tid(void);
 void Tau_profile_param1l(long data, const char *dataname);
+void Tau_collate_onlineDump();
   
 
 
@@ -1818,6 +1818,24 @@ void TAU_PROFILE_SNAPSHOT(char *name, int slen) {
   tau_profile_snapshot_(name, slen);
 }
 
+
+void tau_online_dump_() {
+  Tau_collate_onlineDump();
+}
+
+void tau_online_dump() {
+  Tau_collate_onlineDump();
+}
+
+void tau_online_dump__() {
+  Tau_collate_onlineDump();
+}
+
+void TAU_ONLINE_DUMP() {
+  Tau_collate_onlineDump();
+}
+
+
 //////////////////////////////////////////////////////////////////////
 // Parameter Profiling
 //////////////////////////////////////////////////////////////////////
@@ -2002,6 +2020,6 @@ void TAU_DISABLE_TRACKING_MUSE_EVENTS(void) {}
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.81 $   $Date: 2010/02/23 07:42:19 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.81 2010/02/23 07:42:19 amorris Exp $ 
+ * $Revision: 1.82 $   $Date: 2010/05/03 19:30:51 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.82 2010/05/03 19:30:51 amorris Exp $ 
  ***************************************************************************/
