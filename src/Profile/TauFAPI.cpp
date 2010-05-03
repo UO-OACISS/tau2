@@ -1819,6 +1819,7 @@ void TAU_PROFILE_SNAPSHOT(char *name, int slen) {
 }
 
 
+#ifdef TAU_EXP_COLLATE
 void tau_online_dump_() {
   Tau_collate_onlineDump();
 }
@@ -1834,7 +1835,7 @@ void tau_online_dump__() {
 void TAU_ONLINE_DUMP() {
   Tau_collate_onlineDump();
 }
-
+#endif /* TAU_EXP_COLLATE */
 
 //////////////////////////////////////////////////////////////////////
 // Parameter Profiling
@@ -2020,6 +2021,6 @@ void TAU_DISABLE_TRACKING_MUSE_EVENTS(void) {}
 
 /***************************************************************************
  * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.82 $   $Date: 2010/05/03 19:30:51 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.82 2010/05/03 19:30:51 amorris Exp $ 
+ * $Revision: 1.83 $   $Date: 2010/05/03 23:30:21 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.83 2010/05/03 23:30:21 amorris Exp $ 
  ***************************************************************************/
