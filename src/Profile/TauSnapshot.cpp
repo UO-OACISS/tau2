@@ -327,8 +327,8 @@ int Tau_snapshot_writeUnifiedBuffer() {
        int local_index = atomicUnifier->sortMap[globalmap[e]];
        TauUserEvent *ue = TheEventDB()[local_index];
            Tau_util_output (out, "%d %ld %.16G %.16G %.16G %.16G\n", 
-	     atomicUnifier->mapping[atomicUnifier->sortMap[i]], ue->GetNumEvents(tid), ue->GetMax(tid),
-	     ue->GetMin(tid), ue->GetMean(tid), ue->GetSumSqr(tid));
+			    e, ue->GetNumEvents(tid), ue->GetMax(tid),
+			    ue->GetMin(tid), ue->GetMean(tid), ue->GetSumSqr(tid));
      }
    }
    free(globalmap);
