@@ -1,3 +1,21 @@
+/****************************************************************************
+**			TAU Portable Profiling Package			   **
+**			http://www.cs.uoregon.edu/research/tau	           **
+*****************************************************************************
+**    Copyright 2010  						   	   **
+**    Department of Computer and Information Science, University of Oregon **
+**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+****************************************************************************/
+/****************************************************************************
+**	File 		: iowrap_shared.cpp  				   **
+**	Description 	: TAU Profiling Package				   **
+**	Contact		: tau-bugs@cs.uoregon.edu               	   **
+**	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
+**                                                                         **
+**      Description     : LD_PRELOAD IO wrapper                            **
+**                                                                         **
+****************************************************************************/
+
 #define _GNU_SOURCE
 #include <dlfcn.h>
 
@@ -32,8 +50,6 @@
 #include <vector>
 using namespace std;
 
-static vector<string> fid_to_string_map; // not used (yet)
-
 /*********************************************************************
  * register different kinds of events here
  ********************************************************************/
@@ -44,25 +60,31 @@ typedef enum {
   READ_BW,
   READ_BYTES
 } event_type;
+
 const char *iowrap_event_names[NUM_EVENTS] = {"WRITE Bandwidth (MB/s)", "Bytes Written", "READ Bandwidth (MB/s)", "Bytes Read"};
 
 
-
+/*********************************************************************
+ * IOvector subclasses vector to provide custom constructor/destructor 
+ * to enable/disable wrapping
+ ********************************************************************/
 static int lightsOut = 0;
-
 class IOvector : public vector<vector<TauUserEvent*> > {
 public:
-
   IOvector(int farg) : vector<vector<TauUserEvent*> >(farg) {
+    lightsOut = 0;
   }
   ~IOvector() {
     lightsOut = 1;
   }
 };
 
-
-
-static IOvector & TheIoWrapEvents() {
+/*********************************************************************
+ * Return the set of events, must be done as a static returned because
+ * the wrapped routines may be called during the initializers of other
+ * shared libraries and may be before our global_ctors_aux() call
+ ********************************************************************/
+static IOvector &TheIoWrapEvents() {
   static IOvector iowrap_events(4);
   return iowrap_events;
 }
@@ -72,24 +94,9 @@ void *global_write_bandwidth=0, *global_read_bandwidth=0, *global_bytes_written=
 void __attribute__ ((constructor)) tau_iowrap_preload_init(void);
 void __attribute__ ((destructor)) tau_iowrap_preload_fini(void);
 
-
-
-class TauWrapLightsOut {
-public :
-  TauWrapLightsOut() {
-    Tau_global_incr_insideTAU();
-    fprintf (stderr, "**** Lights out!\n");
-    Tau_global_decr_insideTAU();
-  }
-  ~TauWrapLightsOut() {
-    lightsOut = 1;
-    fprintf (stderr, "**** Lights out!\n");
-  }
-};
-
-TauWrapLightsOut lightsOutChecker();
-
-
+/*********************************************************************
+ * return whether we should pass through and not track the IO
+ ********************************************************************/
 static int Tau_iowrap_checkPassThrough() {
   if (Tau_global_get_insideTAU() > 0 || lightsOut) {
     return 1;
@@ -105,10 +112,6 @@ static void Tau_iowrap_registerEvents(int fid, const char *pathname) {
   RtsLayer::LockDB();
   dprintf ("Asked to registering %d with %s (current size=%d)\n", fid, pathname, TheIoWrapEvents()[0].size());
   fid++; // skip the "unknown" descriptor
-  while (fid_to_string_map.size() <= fid) {
-    fid_to_string_map.push_back("unknown");
-  }
-  fid_to_string_map[fid] = pathname;
 
   for (int i=0; i<NUM_EVENTS; i++) {
     TauUserEvent *unknown_ptr = 0;
@@ -130,13 +133,13 @@ static void Tau_iowrap_registerEvents(int fid, const char *pathname) {
   RtsLayer::UnLockDB();
 }
 
+/*********************************************************************
+ * unregister events for a file descriptor
+ ********************************************************************/
 static void Tau_iowrap_unregisterEvents(int fid) {
   RtsLayer::LockDB();
   dprintf ("Un-registering %d\n", fid);
   fid++; // skip the "unknown" descriptor
-  while (fid_to_string_map.size() <= fid) {
-    fid_to_string_map.push_back("unknown");
-  }
 
   for (int i=0; i<NUM_EVENTS; i++) {
     TauUserEvent *unknown_ptr = 0;
@@ -161,10 +164,6 @@ static void Tau_iowrap_dupEvents(int oldfid, int newfid) {
   dprintf ("dup (old=%d, new=%d)\n", oldfid, newfid);
   oldfid++; // skip the "unknown" descriptor
   newfid++;
-  while (fid_to_string_map.size() <= newfid) {
-    fid_to_string_map.push_back("unknown");
-  }
-  fid_to_string_map[newfid] = fid_to_string_map[oldfid];
 
   for (int i=0; i<NUM_EVENTS; i++) {
     while (TheIoWrapEvents()[i].size() <= newfid) {
@@ -177,12 +176,20 @@ static void Tau_iowrap_dupEvents(int oldfid, int newfid) {
 
 
 
+/*********************************************************************
+ * initializer
+ ********************************************************************/
 void Tau_iowrap_checkInit() {
   static int init = 0;
   if (init == 1) {
     return;
   }
   init = 1;
+
+  global_write_bandwidth=0;
+  global_read_bandwidth=0;
+  global_bytes_written=0;
+  global_bytes_read=0;
 
   Tau_init_initializeTAU();
   Tau_iowrap_registerEvents(-1, "unknown");
@@ -198,7 +205,7 @@ void Tau_iowrap_checkInit() {
 
 
 /*********************************************************************
- * shared library constructor, register the unknown, stdin, stdout, and stderr
+ * shared library constructor
  ********************************************************************/
 void tau_iowrap_preload_init() {
   Tau_iowrap_checkInit();
@@ -363,6 +370,7 @@ extern "C" int fclose(FILE *fp) {
   dprintf ("* fclose(%d) called\n", fd); 
   return ret; 
 }
+
 
 
 /*********************************************************************
@@ -1846,8 +1854,6 @@ extern "C" int lio_listio(int mode, struct aiocb * const list[], int nent, struc
 
   return ret;
 }
-
-
 
 
 /*********************************************************************
