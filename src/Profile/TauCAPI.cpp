@@ -64,6 +64,8 @@ void esd_exit (elg_ui4 rid);
 extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup_t group, const char *gr_name) {
   FunctionInfo *f;
 
+  Tau_global_incr_insideTAU();
+
   DEBUGPROFMSG("Inside get_profiler group = " << group<<endl;);
 
   // since we're using new, we should set InitData to true in FunctionInfoInit
@@ -77,6 +79,8 @@ extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup
     f = new FunctionInfo(fname, type, group, gr_name, true);
   }
 
+  Tau_global_decr_insideTAU();
+
   return (void *) f;
 }
 
@@ -88,9 +92,16 @@ static int Tau_global_stackdepth[TAU_MAX_THREADS];
 static int Tau_global_stackpos[TAU_MAX_THREADS];
 static int Tau_global_insideTAU[TAU_MAX_THREADS];
 
-extern "C" void Tau_stack_initialization() {
-  int i;
-  for (i=0; i<TAU_MAX_THREADS; i++) {
+
+
+static void Tau_stack_checkInit() {
+  static int init = 0;
+  if (init != 0) {
+    return;
+  }
+  init = 1;
+
+  for (int i=0; i<TAU_MAX_THREADS; i++) {
     Tau_global_stackdepth[i] = 0;
     Tau_global_stackpos[i] = -1;
     Tau_global_stack[i] = NULL;
@@ -98,30 +109,40 @@ extern "C" void Tau_stack_initialization() {
   }
 }
 
+extern "C" void Tau_stack_initialization() {
+  Tau_stack_checkInit();
+}
+
 extern "C" int Tau_global_get_insideTAU() {
+  Tau_stack_checkInit();
   int tid = RtsLayer::myThread();
   return Tau_global_insideTAU[tid];
 }
 
 extern "C" int Tau_global_get_insideTAU_tid(int tid) {
+  Tau_stack_checkInit();
   return Tau_global_insideTAU[tid];
 }
 
 extern "C" int Tau_global_incr_insideTAU() {
+  Tau_stack_checkInit();
   int tid = RtsLayer::myThread();
   Tau_global_insideTAU[tid]++;
 }
 
 extern "C" int Tau_global_decr_insideTAU() {
+  Tau_stack_checkInit();
   int tid = RtsLayer::myThread();
   Tau_global_insideTAU[tid]--;
 }
 
 extern "C" int Tau_global_incr_insideTAU_tid(int tid) {
+  Tau_stack_checkInit();
   Tau_global_insideTAU[tid]++;
 }
 
 extern "C" int Tau_global_decr_insideTAU_tid(int tid) {
+  Tau_stack_checkInit();
   Tau_global_insideTAU[tid]--;
 }
 
@@ -903,6 +924,7 @@ extern "C" void Tau_profile_c_timer(void **ptr, const char *name, const char *ty
   if (*ptr == 0) {
     RtsLayer::LockEnv();
     if (*ptr == 0) {  
+      Tau_global_incr_insideTAU();
       // remove garbage characters from the end of name
       char *fixedname = strdup(name);
       for (unsigned int i=0; i<strlen(fixedname); i++) {
@@ -913,6 +935,7 @@ extern "C" void Tau_profile_c_timer(void **ptr, const char *name, const char *ty
       }
       *ptr = Tau_get_profiler(fixedname, type, group, group_name);
       free (fixedname);
+      Tau_global_decr_insideTAU();
     }
     RtsLayer::UnLockEnv();
   }
@@ -1483,7 +1506,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.152 $   $Date: 2010/04/27 23:13:36 $
- * VERSION: $Id: TauCAPI.cpp,v 1.152 2010/04/27 23:13:36 amorris Exp $
+ * $Revision: 1.153 $   $Date: 2010/05/05 20:59:02 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.153 2010/05/05 20:59:02 amorris Exp $
  ***************************************************************************/
 
