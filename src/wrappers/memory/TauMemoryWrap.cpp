@@ -224,8 +224,9 @@ int posix_memalign (void **memptr, size_t alignment, size_t size) {
   TAU_PROFILE_START(t);
 
   int ret = _posix_memalign(memptr, alignment, size);
-
-  Tau_memorywrap_add_ptr(*memptr, size);
+  if (ret == 0) {
+    Tau_memorywrap_add_ptr(*memptr, size);
+  }
 
   TAU_CONTEXT_EVENT(global().heapMemoryUserEvent, global().bytesAllocated);
   TAU_PROFILE_STOP(t); 
