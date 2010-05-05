@@ -191,9 +191,6 @@ void Tau_iowrap_checkInit() {
   global_bytes_written=0;
   global_bytes_read=0;
 
-  char *foo = (char*) malloc (1);
-  free (foo);
-
   Tau_init_initializeTAU();
   Tau_iowrap_registerEvents(-1, "unknown");
   Tau_iowrap_registerEvents(0, "stdin");
