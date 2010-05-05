@@ -45,7 +45,27 @@ typedef enum {
   READ_BYTES
 } event_type;
 const char *iowrap_event_names[NUM_EVENTS] = {"WRITE Bandwidth (MB/s)", "Bytes Written", "READ Bandwidth (MB/s)", "Bytes Read"};
-static vector<TauUserEvent*> iowrap_events[NUM_EVENTS];
+
+
+
+static int lightsOut = 0;
+
+class IOvector : public vector<vector<TauUserEvent*> > {
+public:
+
+  IOvector(int farg) : vector<vector<TauUserEvent*> >(farg) {
+  }
+  ~IOvector() {
+    lightsOut = 1;
+  }
+};
+
+
+
+static IOvector & TheIoWrapEvents() {
+  static IOvector iowrap_events(4);
+  return iowrap_events;
+}
 
 void *global_write_bandwidth=0, *global_read_bandwidth=0, *global_bytes_written=0, *global_bytes_read=0;
 
@@ -53,12 +73,37 @@ void __attribute__ ((constructor)) tau_iowrap_preload_init(void);
 void __attribute__ ((destructor)) tau_iowrap_preload_fini(void);
 
 
+
+class TauWrapLightsOut {
+public :
+  TauWrapLightsOut() {
+    Tau_global_incr_insideTAU();
+    fprintf (stderr, "**** Lights out!\n");
+    Tau_global_decr_insideTAU();
+  }
+  ~TauWrapLightsOut() {
+    lightsOut = 1;
+    fprintf (stderr, "**** Lights out!\n");
+  }
+};
+
+TauWrapLightsOut lightsOutChecker();
+
+
+static int Tau_iowrap_checkPassThrough() {
+  if (Tau_global_get_insideTAU() > 0 || lightsOut) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
 /*********************************************************************
  * register the different events (read/write/etc) for a file descriptor
  ********************************************************************/
 static void Tau_iowrap_registerEvents(int fid, const char *pathname) {
   RtsLayer::LockDB();
-  dprintf ("Asked to registering %d with %s\n", fid, pathname);
+  dprintf ("Asked to registering %d with %s (current size=%d)\n", fid, pathname, TheIoWrapEvents()[0].size());
   fid++; // skip the "unknown" descriptor
   while (fid_to_string_map.size() <= fid) {
     fid_to_string_map.push_back("unknown");
@@ -67,19 +112,19 @@ static void Tau_iowrap_registerEvents(int fid, const char *pathname) {
 
   for (int i=0; i<NUM_EVENTS; i++) {
     TauUserEvent *unknown_ptr = 0;
-    if (iowrap_events[i].size() >= 1) {
-      unknown_ptr = iowrap_events[i][0];
+    if (TheIoWrapEvents()[i].size() >= 1) {
+      unknown_ptr = TheIoWrapEvents()[i][0];
     }
-    while (iowrap_events[i].size() <= fid) {
-      iowrap_events[i].push_back(unknown_ptr);
-      if (iowrap_events[i].size()-1 != fid) {
-	dprintf ("Registering %d with unknown\n", iowrap_events[i].size()-2);
+    while (TheIoWrapEvents()[i].size() <= fid) {
+      TheIoWrapEvents()[i].push_back(unknown_ptr);
+      if (TheIoWrapEvents()[i].size()-1 != fid) {
+	dprintf ("Registering %d with unknown\n", TheIoWrapEvents()[i].size()-2);
       }
     }
     void *event = 0;
     string name = string(iowrap_event_names[i]) + " <file=\"" + pathname + "\">";
     Tau_get_context_userevent(&event, strdup((char*)name.c_str()));
-    iowrap_events[i][fid] = (TauUserEvent*)event;
+    TheIoWrapEvents()[i][fid] = (TauUserEvent*)event;
   }
   dprintf ("Registering %d with %s\n", fid-1, pathname);
   RtsLayer::UnLockDB();
@@ -95,13 +140,13 @@ static void Tau_iowrap_unregisterEvents(int fid) {
 
   for (int i=0; i<NUM_EVENTS; i++) {
     TauUserEvent *unknown_ptr = 0;
-    if (iowrap_events[i].size() >= 1) {
-      unknown_ptr = iowrap_events[i][0];
+    if (TheIoWrapEvents()[i].size() >= 1) {
+      unknown_ptr = TheIoWrapEvents()[i][0];
     }
-    while (iowrap_events[i].size() <= fid) {
-      iowrap_events[i].push_back(unknown_ptr);
+    while (TheIoWrapEvents()[i].size() <= fid) {
+      TheIoWrapEvents()[i].push_back(unknown_ptr);
     }
-    iowrap_events[i][fid] = unknown_ptr;
+    TheIoWrapEvents()[i][fid] = unknown_ptr;
   }
   RtsLayer::UnLockDB();
 }
@@ -122,10 +167,10 @@ static void Tau_iowrap_dupEvents(int oldfid, int newfid) {
   fid_to_string_map[newfid] = fid_to_string_map[oldfid];
 
   for (int i=0; i<NUM_EVENTS; i++) {
-    while (iowrap_events[i].size() <= newfid) {
-      iowrap_events[i].push_back(0);
+    while (TheIoWrapEvents()[i].size() <= newfid) {
+      TheIoWrapEvents()[i].push_back(0);
     }
-    iowrap_events[i][newfid] = iowrap_events[i][oldfid];
+    TheIoWrapEvents()[i][newfid] = TheIoWrapEvents()[i][oldfid];
   }
   RtsLayer::UnLockDB();
 }
@@ -170,11 +215,11 @@ void tau_iowrap_preload_fini() {
  ********************************************************************/
 static void *Tau_iowrap_getEvent(event_type type, int fid) {
   fid++; // skip the "unknown" descriptor
-  if (fid >= iowrap_events[(int)type].size()) {
+  if (fid >= TheIoWrapEvents()[(int)type].size()) {
     dprintf ("************** unknown fid! %d\n", fid-1);
     fid = 0; // use the "unknown" descriptor
   }
-  return iowrap_events[(int)type][fid];
+  return TheIoWrapEvents()[(int)type][fid];
 }
 
 #define TAU_GET_IOWRAP_EVENT(e, event, fid) void *e = Tau_iowrap_getEvent(event, fid);
@@ -192,7 +237,7 @@ extern "C" FILE *fopen(const char *path, const char *mode) {
     _fopen = ( FILE* (*)(const char *path, const char *mode)) dlsym(RTLD_NEXT, "fopen");
   }
   
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _fopen(path, mode);
   }
 
@@ -220,7 +265,7 @@ extern "C" FILE *fopen64(const char *path, const char *mode) {
     _fopen64 = ( FILE* (*)(const char *path, const char *mode)) dlsym(RTLD_NEXT, "fopen64");
   }
   
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _fopen64(path, mode);
   }
 
@@ -249,7 +294,7 @@ extern "C" FILE *fdopen(int fd, const char *mode) {
     _fdopen = ( FILE* (*)(int fd, const char *mode)) dlsym(RTLD_NEXT, "fdopen");
   }
   
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _fdopen(fd, mode);
   }
 
@@ -274,7 +319,7 @@ extern "C" FILE *freopen(const char *path, const char *mode, FILE *stream) {
     _freopen = ( FILE* (*)(const char *path, const char *mode, FILE *stream)) dlsym(RTLD_NEXT, "freopen");
   }
   
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _freopen(path, mode, stream);
   }
 
@@ -304,7 +349,7 @@ extern "C" int fclose(FILE *fp) {
   
   int fd = fileno(fp);
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _fclose(fp);
   }
 
@@ -333,12 +378,14 @@ extern "C" int fprintf(FILE *stream, const char *format, ...) {
     _fprintf = ( int (*)(FILE *stream, const char *format, ...)) dlsym(RTLD_NEXT, "fprintf");
   }
   
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     va_start (arg, format);
     ret = vfprintf(stream, format, arg);
     va_end (arg);
     return ret;
   }
+  Tau_global_incr_insideTAU();
+
 
   double currentWrite = 0.0;
   struct timeval t1, t2;
@@ -346,6 +393,7 @@ extern "C" int fprintf(FILE *stream, const char *format, ...) {
 
   TAU_GET_IOWRAP_EVENT(wb, WRITE_BW, fileno(stream));
   TAU_GET_IOWRAP_EVENT(byteswritten, WRITE_BYTES, fileno(stream));
+
   TAU_PROFILE_TIMER(t, "fprintf()", " ", TAU_IO);
   TAU_PROFILE_START(t);
   gettimeofday(&t1, 0);
@@ -361,21 +409,20 @@ extern "C" int fprintf(FILE *stream, const char *format, ...) {
   /* calculate the time spent in operation */
   currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentWrite > 1e-12 && ret > 0) {
+  if (currentWrite > 1e-12) {
     bw = (double) count/currentWrite; 
     TAU_CONTEXT_EVENT(wb, bw);
     TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
   } else {
     dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
-  if (ret > 0) {
-    TAU_CONTEXT_EVENT(byteswritten, count);
-    TAU_CONTEXT_EVENT(global_bytes_written, count);
-  }
+  TAU_CONTEXT_EVENT(byteswritten, count);
+  TAU_CONTEXT_EVENT(global_bytes_written, count);
 
   TAU_PROFILE_STOP(t); 
 
   dprintf ("* fprintf called\n"); 
+  Tau_global_decr_insideTAU();
   return ret; 
 }
 
@@ -392,7 +439,7 @@ extern "C" int fscanf(FILE *stream, const char *format, ...) {
     _fscanf = ( int (*)(FILE *stream, const char *format, ...)) dlsym(RTLD_NEXT, "fscanf");
   }
   
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     va_start (arg, format);
     ret = vfscanf(stream, format, arg);
     va_end (arg);
@@ -420,17 +467,15 @@ extern "C" int fscanf(FILE *stream, const char *format, ...) {
   /* calculate the time spent in operation */
   currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentRead > 1e-12 && ret > 0) {
+  if (currentRead > 1e-12) {
     bw = (double) count/currentRead; 
     TAU_CONTEXT_EVENT(rb, bw);
     TAU_CONTEXT_EVENT(global_read_bandwidth, bw);
   } else {
-    dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
+    dprintf("TauWrapperWrite: currentWrite = %g\n", currentRead);
   }
-  if (ret > 0) {
-    TAU_CONTEXT_EVENT(bytesread, count);
-    TAU_CONTEXT_EVENT(global_bytes_read, count);
-  }
+  TAU_CONTEXT_EVENT(bytesread, count);
+  TAU_CONTEXT_EVENT(global_bytes_read, count);
 
   TAU_PROFILE_STOP(t); 
 
@@ -449,7 +494,7 @@ extern "C" size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stre
     _fwrite = ( size_t (*)(const void *ptr, size_t size, size_t nmemb, FILE *stream)) dlsym(RTLD_NEXT, "fwrite");
   }
   
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _fwrite(ptr, size, nmemb, stream);
   }
 
@@ -470,18 +515,15 @@ extern "C" size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stre
   /* calculate the time spent in operation */
   currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentWrite > 1e-12 && ret > 0) {
+  if (currentWrite > 1e-12) {
     bw = (double) count/currentWrite; 
     TAU_CONTEXT_EVENT(wb, bw);
     TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
   } else {
     dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
-
-  if (ret > 0) {
-    TAU_CONTEXT_EVENT(byteswritten, count);
-    TAU_CONTEXT_EVENT(global_bytes_written, count);
-  }
+  TAU_CONTEXT_EVENT(byteswritten, count);
+  TAU_CONTEXT_EVENT(global_bytes_written, count);
 
   TAU_PROFILE_STOP(t); 
 
@@ -500,7 +542,7 @@ extern "C" size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     _fread = ( size_t (*)(void *ptr, size_t size, size_t nmemb, FILE *stream)) dlsym(RTLD_NEXT, "fread");
   }
   
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _fread(ptr, size, nmemb, stream);
   }
 
@@ -519,16 +561,14 @@ extern "C" size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
   /* calculate the time spent in operation */
   currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentRead > 1e-12 && ret > 0) {
+  if (currentRead > 1e-12) {
     TAU_CONTEXT_EVENT(re, (double) count/currentRead);
     TAU_CONTEXT_EVENT(global_read_bandwidth, (double) count/currentRead);
   } else {
     dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
-  if (ret > 0) {
-    TAU_CONTEXT_EVENT(bytesread, count);
-    TAU_CONTEXT_EVENT(global_bytes_read, count);
-  }
+  TAU_CONTEXT_EVENT(bytesread, count);
+  TAU_CONTEXT_EVENT(global_bytes_read, count);
 
   TAU_PROFILE_STOP(t);
 
@@ -593,7 +633,7 @@ extern "C" off_t lseek(int fd, off_t offset, int whence) {
   if (_lseek == NULL) {
     _lseek = ( off_t (*)(int fd, off_t offset, int whence)) dlsym(RTLD_NEXT, "lseek");   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _lseek(fd, offset, whence);
   }
 
@@ -616,7 +656,7 @@ extern "C" off_t lseek64(int fd, off_t offset, int whence) {
   if (_lseek64 == NULL) {
     _lseek64 = ( off_t (*)(int fd, off_t offset, int whence)) dlsym(RTLD_NEXT, "lseek64");   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _lseek64(fd, offset, whence);
   }
 
@@ -640,7 +680,7 @@ extern "C" int fseek(FILE *stream, long offset, int whence) {
     _fseek = ( int (*)(FILE *stream, long offset, int whence)) dlsym(RTLD_NEXT, "fseek");
   }
   
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _fseek(stream, offset, whence);
   }
 
@@ -665,7 +705,7 @@ extern "C" void rewind(FILE *stream) {
     _rewind = ( void (*)(FILE *stream)) dlsym(RTLD_NEXT, "rewind");
   }
   
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     _rewind(stream);
   }
 
@@ -690,7 +730,7 @@ extern "C" ssize_t write (int fd, const void *buf, size_t count) {
     _write = ( ssize_t (*)(int fd, const void *buf, size_t count)) dlsym(RTLD_NEXT, "write");
   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _write(fd, buf, count);
   }
 
@@ -710,17 +750,15 @@ extern "C" ssize_t write (int fd, const void *buf, size_t count) {
   /* calculate the time spent in operation */
   currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentWrite > 1e-12 && ret > 0) {
+  if (currentWrite > 1e-12) {
     bw = (double) count/currentWrite; 
     TAU_CONTEXT_EVENT(wb, bw);
     TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
   } else {
     dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
-  if (ret > 0) {
-    TAU_CONTEXT_EVENT(byteswritten, count);
-    TAU_CONTEXT_EVENT(global_bytes_written, count);
-  }
+  TAU_CONTEXT_EVENT(byteswritten, count);
+  TAU_CONTEXT_EVENT(global_bytes_written, count);
  
   TAU_PROFILE_STOP(t);
 
@@ -742,7 +780,7 @@ extern "C" ssize_t read (int fd, void *buf, size_t count) {
     _read = ( ssize_t (*)(int fd, void *buf, size_t count)) dlsym(RTLD_NEXT, "read");
   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _read(fd, buf, count);
   }
 
@@ -760,16 +798,14 @@ extern "C" ssize_t read (int fd, void *buf, size_t count) {
   /* calculate the time spent in operation */
   currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentRead > 1e-12 && ret > 0) {
+  if (currentRead > 1e-12) {
     TAU_CONTEXT_EVENT(re, (double) count/currentRead);
     TAU_CONTEXT_EVENT(global_read_bandwidth, (double) count/currentRead);
   } else {
     dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
-  if (ret > 0) {
-    TAU_CONTEXT_EVENT(bytesread, count);
-    TAU_CONTEXT_EVENT(global_bytes_read, count);
-  }
+  TAU_CONTEXT_EVENT(bytesread, count);
+  TAU_CONTEXT_EVENT(global_bytes_read, count);
 
   TAU_PROFILE_STOP(t);
 
@@ -793,7 +829,7 @@ extern "C" ssize_t readv (int fd, const struct iovec *vec, int count) {
     _readv = ( ssize_t (*)(int fd, const struct iovec *vec, int count)) dlsym(RTLD_NEXT, "readv");
   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _readv(fd, vec, count);
   }
 
@@ -817,16 +853,14 @@ extern "C" ssize_t readv (int fd, const struct iovec *vec, int count) {
   /* calculate the time spent in operation */
   currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentRead > 1e-12 && ret > 0) {
+  if (currentRead > 1e-12) {
     TAU_CONTEXT_EVENT(re, (double) sumOfBytesRead/currentRead);
     TAU_CONTEXT_EVENT(global_read_bandwidth, (double) sumOfBytesRead/currentRead);
   } else {
     dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
-  if (ret > 0) {
-    TAU_CONTEXT_EVENT(bytesread, sumOfBytesRead);
-    TAU_CONTEXT_EVENT(global_bytes_read, sumOfBytesRead);
-  }
+  TAU_CONTEXT_EVENT(bytesread, sumOfBytesRead);
+  TAU_CONTEXT_EVENT(global_bytes_read, sumOfBytesRead);
 
   TAU_PROFILE_STOP(t);
 
@@ -853,7 +887,7 @@ extern "C" ssize_t writev (int fd, const struct iovec *vec, int count) {
     _writev = ( ssize_t (*)(int fd, const struct iovec *vec, int count)) dlsym(RTLD_NEXT, "writev");
   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _writev(fd, vec, count);
   }
 
@@ -875,17 +909,15 @@ extern "C" ssize_t writev (int fd, const struct iovec *vec, int count) {
   /* calculate the time spent in operation */
   currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentWrite > 1e-12 && ret > 0) {
+  if (currentWrite > 1e-12) {
     bw = (double) sumOfBytesWritten/currentWrite; 
     TAU_CONTEXT_EVENT(wb, bw);
     TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
   } else {
     dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
-  if (ret > 0) {
-    TAU_CONTEXT_EVENT(byteswritten, sumOfBytesWritten);
-    TAU_CONTEXT_EVENT(global_bytes_written, sumOfBytesWritten);
-  }
+  TAU_CONTEXT_EVENT(byteswritten, sumOfBytesWritten);
+  TAU_CONTEXT_EVENT(global_bytes_written, sumOfBytesWritten);
  
   TAU_PROFILE_STOP(t);
 
@@ -908,7 +940,7 @@ extern "C" int mkstemp (char *templat) {
 
   TAU_PROFILE_TIMER(t, "mkstemp()", " ", TAU_IO);
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     TAU_PROFILE_START(t);
   }
 
@@ -918,7 +950,7 @@ extern "C" int mkstemp (char *templat) {
     Tau_iowrap_registerEvents(ret, templat);
   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     TAU_PROFILE_STOP(t);
   }
 
@@ -941,7 +973,7 @@ extern "C" FILE* tmpfile () {
 
   TAU_PROFILE_TIMER(t, "tmpfile()", " ", TAU_IO);
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     TAU_PROFILE_START(t);
   }
 
@@ -951,7 +983,7 @@ extern "C" FILE* tmpfile () {
     Tau_iowrap_registerEvents(fileno(ret), "tmpfile");
   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     TAU_PROFILE_STOP(t);
   }
 
@@ -975,7 +1007,7 @@ extern "C" int open (const char *pathname, int flags, ...) {
     _open = ( int (*)(const char *pathname, int flags, ...)) dlsym(RTLD_NEXT, "open"); 
   } 
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     va_start (args, flags);
     ret = _open(pathname, flags, args);
     va_end (args);
@@ -1018,7 +1050,7 @@ extern "C" int open64 (const char *pathname, int flags, ...) {
      _open64 = ( int (*)(const char *pathname, int flags, ...)) dlsym(RTLD_NEXT, "open64"); 
   } 
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     va_start (args, flags);
     ret = _open64(pathname, flags, args); 
     va_end(args);
@@ -1056,7 +1088,7 @@ extern "C" int creat(const char *pathname, mode_t mode) {
      _creat = ( int (*)(const char *pathname, mode_t mode)) dlsym(RTLD_NEXT, "creat");
   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _creat(pathname, mode);
   }
 
@@ -1085,7 +1117,7 @@ extern "C" int creat64(const char *pathname, mode_t mode) {
      _creat64 = ( int (*)(const char *pathname, mode_t mode)) dlsym(RTLD_NEXT, "creat64");
   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _creat64(pathname, mode);
   }
 
@@ -1115,7 +1147,7 @@ extern "C" int close(int fd) {
     _close = (int (*) (int fd) ) dlsym(RTLD_NEXT, "close");
   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _close(fd);
   }
 
@@ -1144,7 +1176,7 @@ extern "C" int pipe(int filedes[2]) {
     _pipe = (int (*) (int filedes[2]) ) dlsym(RTLD_NEXT, "pipe");
   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _pipe(filedes);
   }
 
@@ -1203,7 +1235,7 @@ extern "C" int socket(int domain, int type, int protocol) {
     _socket = (int (*) (int domain, int type, int protocol) ) dlsym(RTLD_NEXT, "socket");
   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _socket(domain, type, protocol);
   }
 
@@ -1235,7 +1267,7 @@ extern "C" int socketpair(int d, int type, int protocol, int sv[2]) {
     _socketpair = (int (*) (int d, int type, int protocol, int sv[2]) ) dlsym(RTLD_NEXT, "socketpair");
   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _socketpair(d, type, protocol, sv);
   }
 
@@ -1270,7 +1302,7 @@ extern "C" int bind(int socket, const struct sockaddr *address, socklen_t addres
     _bind = (int (*) (int socket, const struct sockaddr *address, socklen_t address_len) ) dlsym(RTLD_NEXT, "bind");
   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _bind(socket, address, address_len);
   }
 
@@ -1303,7 +1335,7 @@ extern "C" int accept(int socket, struct sockaddr *address, socklen_t* address_l
     _accept = (int (*) (int socket, struct sockaddr *address, socklen_t* address_len) ) dlsym(RTLD_NEXT, "accept");
   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _accept(socket, address, address_len);
   }
 
@@ -1334,7 +1366,7 @@ extern "C" int connect(int socket, const struct sockaddr *address, socklen_t add
     _connect = (int (*) (int socket, const struct sockaddr *address, socklen_t address_len) ) dlsym(RTLD_NEXT, "connect");
   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _connect(socket, address, address_len);
   }
 
@@ -1364,7 +1396,7 @@ extern "C" ssize_t recv (int fd, void *buf, size_t count, int flags) {
     _recv = ( ssize_t (*)(int fd, void *buf, size_t count, int flags)) dlsym(RTLD_NEXT, "recv");
   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _recv(fd, buf, count, flags);
   }
 
@@ -1382,16 +1414,14 @@ extern "C" ssize_t recv (int fd, void *buf, size_t count, int flags) {
   /* calculate the time spent in operation */
   currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentRead > 1e-12 && ret > 0) {
+  if (currentRead > 1e-12) {
     TAU_CONTEXT_EVENT(re, (double) ret/currentRead);
     TAU_CONTEXT_EVENT(global_read_bandwidth, (double) ret/currentRead);
   } else {
     dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
-  if (ret > 0) {
-    TAU_CONTEXT_EVENT(bytesrecv, ret);
-    TAU_CONTEXT_EVENT(global_bytes_read, ret);
-  }
+  TAU_CONTEXT_EVENT(bytesrecv, ret);
+  TAU_CONTEXT_EVENT(global_bytes_read, ret);
 
   TAU_PROFILE_STOP(t);
 
@@ -1413,7 +1443,7 @@ extern "C" ssize_t send (int fd, const void *buf, size_t count, int flags) {
     _send = ( ssize_t (*)(int fd, const void *buf, size_t count, int flags)) dlsym(RTLD_NEXT, "send");
   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _send(fd, buf, count, flags);
   }
 
@@ -1431,16 +1461,14 @@ extern "C" ssize_t send (int fd, const void *buf, size_t count, int flags) {
   /* calculate the time spent in operation */
   currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentWrite > 1e-12 && ret > 0) {
+  if (currentWrite > 1e-12) {
     TAU_CONTEXT_EVENT(re, (double) ret/currentWrite);
     TAU_CONTEXT_EVENT(global_write_bandwidth, (double) ret/currentWrite);
   } else {
-    dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
+    dprintf("TauWrapperRead: currentWrite = %g\n", currentWrite);
   }
-  if (ret > 0) {
-    TAU_CONTEXT_EVENT(byteswritten, ret);
-    TAU_CONTEXT_EVENT(global_bytes_written, ret);
-  }
+  TAU_CONTEXT_EVENT(byteswritten, ret);
+  TAU_CONTEXT_EVENT(global_bytes_written, ret);
 
   TAU_PROFILE_STOP(t);
 
@@ -1463,7 +1491,7 @@ extern "C" ssize_t sendto (int fd, const void *buf, size_t count, int flags, con
     _sendto = ( ssize_t (*)(int fd, const void *buf, size_t count, int flags, const struct sockaddr *to, socklen_t len)) dlsym(RTLD_NEXT, "sendto");
   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _sendto(fd, buf, count, flags, to, len);
   }
 
@@ -1481,16 +1509,14 @@ extern "C" ssize_t sendto (int fd, const void *buf, size_t count, int flags, con
   /* calculate the time spent in operation */
   currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentWrite > 1e-12 && ret > 0) {
+  if (currentWrite > 1e-12) {
     TAU_CONTEXT_EVENT(re, (double) count/currentWrite);
     TAU_CONTEXT_EVENT(global_write_bandwidth, (double) count/currentWrite);
   } else {
-    dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
+    dprintf("TauWrapperRead: currentWrite = %g\n", currentWrite);
   }
-  if (ret > 0) {
-    TAU_CONTEXT_EVENT(byteswritten, ret);
-    TAU_CONTEXT_EVENT(global_bytes_written, ret);
-  }
+  TAU_CONTEXT_EVENT(byteswritten, ret);
+  TAU_CONTEXT_EVENT(global_bytes_written, ret);
 
   TAU_PROFILE_STOP(t);
 
@@ -1514,7 +1540,7 @@ extern "C" ssize_t recvfrom (int fd, void *buf, size_t count, int flags, struct 
     _recvfrom = ( ssize_t (*)(int fd, void *buf, size_t count, int flags, struct sockaddr * from, socklen_t * len)) dlsym(RTLD_NEXT, "recvfrom");
   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _recvfrom(fd, buf, count, flags, from, len);
   }
 
@@ -1532,16 +1558,14 @@ extern "C" ssize_t recvfrom (int fd, void *buf, size_t count, int flags, struct 
   /* calculate the time spent in operation */
   currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
-  if (currentRead > 1e-12 && ret > 0) {
+  if (currentRead > 1e-12) {
     TAU_CONTEXT_EVENT(re, (double) ret/currentRead);
     TAU_CONTEXT_EVENT(global_read_bandwidth, (double) ret/currentRead);
   } else {
     dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
-  if (ret > 0) {
-    TAU_CONTEXT_EVENT(bytesrecvfrom, ret);
-    TAU_CONTEXT_EVENT(global_bytes_read, ret);
-  }
+  TAU_CONTEXT_EVENT(bytesrecvfrom, ret);
+  TAU_CONTEXT_EVENT(global_bytes_read, ret);
 
   TAU_PROFILE_STOP(t);
 
@@ -1603,7 +1627,7 @@ extern "C" FILE * popen (const char *command, const char *type) {
     _popen = ( FILE * (*)(const char *command, const char *type)) dlsym(RTLD_NEXT, "popen");
   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _popen(command, type);   }
 
   TAU_PROFILE_TIMER(t, "popen()", " ", TAU_IO);
@@ -1631,7 +1655,7 @@ extern "C" int pclose(FILE * stream) {
     _pclose = (int (*) (FILE * stream) ) dlsym(RTLD_NEXT, "pclose");
   }
 
-  if (Tau_global_get_insideTAU() > 0) {
+  if (Tau_iowrap_checkPassThrough()) {
     return _pclose(stream);
   }
 
