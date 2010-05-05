@@ -488,12 +488,22 @@ struct TaultUserEventLong {
 };
 
 
+
+class ContextEventMap : public map<TAU_CONTEXT_MAP_TYPE > {
+public :
+  ~ContextEventMap() {
+    Tau_destructor_trigger();
+  }
+};
+
+
+
 /////////////////////////////////////////////////////////////////////////
 // We use one global map to store the callpath information
 /////////////////////////////////////////////////////////////////////////
-map<TAU_CONTEXT_MAP_TYPE >& TheContextMap(void) { 
+ContextEventMap& TheContextMap(void) { 
   // to avoid initialization problems of non-local static variables
-  static map<TAU_CONTEXT_MAP_TYPE > contextmap;
+  static ContextEventMap contextmap;
   return contextmap;
 }
 
@@ -647,6 +657,6 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid, double
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
- * $Revision: 1.44 $   $Date: 2010/04/14 21:31:30 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.44 2010/04/14 21:31:30 amorris Exp $ 
+ * $Revision: 1.45 $   $Date: 2010/05/05 23:52:59 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.45 2010/05/05 23:52:59 amorris Exp $ 
  ***************************************************************************/
