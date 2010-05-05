@@ -338,6 +338,8 @@ int Tau_global_incr_insideTAU();
 int Tau_global_decr_insideTAU();
 int Tau_global_incr_insideTAU_tid(int tid);
 int Tau_global_decr_insideTAU_tid(int tid);
+int Tau_global_getLightsOut();
+void Tau_global_setLightsOut();
 
 
 /* Runtime "context" access */
@@ -513,6 +515,6 @@ void Tau_profile_param1l(long data, const char *dataname);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.112 $   $Date: 2010/04/30 18:07:04 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.112 2010/04/30 18:07:04 amorris Exp $ 
+ * $Revision: 1.113 $   $Date: 2010/05/05 23:53:49 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.113 2010/05/05 23:53:49 amorris Exp $ 
  ***************************************************************************/
