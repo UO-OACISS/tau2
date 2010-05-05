@@ -19,6 +19,7 @@
 #define _GNU_SOURCE
 #include <dlfcn.h>
 
+#define _XOPEN_SOURCE 600 /* see: man posix_memalign */
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -99,6 +100,24 @@ void Tau_memorywrap_checkInit() {
 }
 
 
+void Tau_memorywrap_add_ptr (void *ptr, size_t size) {
+  if (ptr != NULL) {
+    global().pointerMap[ptr] = size;
+    global().bytesAllocated += size;
+  }
+}
+
+void Tau_memorywrap_remove_ptr (void *ptr) {
+  if (ptr != NULL) {
+    map<void*,long>::iterator it = global().pointerMap.find(ptr);
+    if (it != global().pointerMap.end()) {
+      global().bytesAllocated -= global().pointerMap[ptr];
+      global().pointerMap.erase(ptr);
+    }
+  }
+}
+
+
 /*********************************************************************
  * malloc
  ********************************************************************/
@@ -110,31 +129,110 @@ void *malloc (size_t size) {
     _malloc = ( void* (*)(size_t size)) dlsym(RTLD_NEXT, "malloc");
   }
 
-
   if (Tau_iowrap_checkPassThrough()) {
     return _malloc(size);
   }
 
   Tau_global_incr_insideTAU();
-
-
   TAU_PROFILE_TIMER(t, "malloc()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
   void *ptr = _malloc(size);
-  if (ptr != NULL) {
-    global().pointerMap[ptr] = size;
-    global().bytesAllocated += size;
-  }
+  Tau_memorywrap_add_ptr(ptr, size);
   TAU_CONTEXT_EVENT(global().heapMemoryUserEvent, global().bytesAllocated);
-
   TAU_PROFILE_STOP(t); 
-
-
   Tau_global_decr_insideTAU();
-
   return ptr;
 }
+
+/*********************************************************************
+ * calloc
+ ********************************************************************/
+void *calloc (size_t nmemb, size_t size) {
+  Tau_memorywrap_checkInit();
+  static void* (*_calloc)(size_t nmemb, size_t size) = NULL;
+
+  if (_calloc == NULL) {
+    _calloc = ( void* (*)(size_t nmemb, size_t size)) dlsym(RTLD_NEXT, "calloc");
+  }
+
+  if (Tau_iowrap_checkPassThrough()) {
+    return _calloc(nmemb, size);
+  }
+
+  Tau_global_incr_insideTAU();
+  TAU_PROFILE_TIMER(t, "calloc()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  void *ptr = _calloc(nmemb, size);
+  Tau_memorywrap_add_ptr(ptr, nmemb * size);
+  TAU_CONTEXT_EVENT(global().heapMemoryUserEvent, global().bytesAllocated);
+  TAU_PROFILE_STOP(t); 
+  Tau_global_decr_insideTAU();
+  return ptr;
+}
+
+
+/*********************************************************************
+ * realloc
+ ********************************************************************/
+void *realloc (void *ptr, size_t size) {
+  Tau_memorywrap_checkInit();
+  static void* (*_realloc)(void *ptr, size_t size) = NULL;
+
+  if (_realloc == NULL) {
+    _realloc = ( void* (*)(void *ptr, size_t size)) dlsym(RTLD_NEXT, "realloc");
+  }
+
+  if (Tau_iowrap_checkPassThrough()) {
+    return _realloc(ptr, size);
+  }
+
+  Tau_global_incr_insideTAU();
+  TAU_PROFILE_TIMER(t, "realloc()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  void *ret_ptr = _realloc(ptr, size);
+
+  Tau_memorywrap_remove_ptr(ptr);
+  Tau_memorywrap_add_ptr(ret_ptr, size);
+
+  TAU_CONTEXT_EVENT(global().heapMemoryUserEvent, global().bytesAllocated);
+  TAU_PROFILE_STOP(t); 
+  Tau_global_decr_insideTAU();
+  return ret_ptr;
+}
+
+
+/*********************************************************************
+ * posix_memalign
+ ********************************************************************/
+int posix_memalign (void **memptr, size_t alignment, size_t size) {
+  Tau_memorywrap_checkInit();
+  static int (*_posix_memalign)(void **memptr, size_t alignment, size_t size) = NULL;
+
+  if (_posix_memalign == NULL) {
+    _posix_memalign = ( int (*)(void **memptr, size_t alignment, size_t size)) dlsym(RTLD_NEXT, "posix_memalign");
+  }
+
+  if (Tau_iowrap_checkPassThrough()) {
+    return _posix_memalign(memptr, alignment, size);
+  }
+
+  Tau_global_incr_insideTAU();
+  TAU_PROFILE_TIMER(t, "posix_memalign()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  int ret = _posix_memalign(memptr, alignment, size);
+
+  Tau_memorywrap_add_ptr(*memptr, size);
+
+  TAU_CONTEXT_EVENT(global().heapMemoryUserEvent, global().bytesAllocated);
+  TAU_PROFILE_STOP(t); 
+  Tau_global_decr_insideTAU();
+  return ret;
+}
+
 
 
 /*********************************************************************
@@ -153,27 +251,16 @@ void free (void *ptr) {
     return;
   }
 
-
   Tau_global_incr_insideTAU();
-
-
   TAU_PROFILE_TIMER(t, "free()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
   _free(ptr);
 
-  map<void*,long>::iterator it = global().pointerMap.find(ptr);
-  if (it != global().pointerMap.end()) {
-    global().bytesAllocated -= global().pointerMap[ptr];
-    global().pointerMap.erase(ptr);
-  }
+  Tau_memorywrap_remove_ptr(ptr);
 
   TAU_CONTEXT_EVENT(global().heapMemoryUserEvent, global().bytesAllocated);
-
-
   TAU_PROFILE_STOP(t); 
-
-
   Tau_global_decr_insideTAU();
 }
 
