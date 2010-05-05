@@ -42,7 +42,6 @@ using namespace std;
 /*********************************************************************
  * set of global data
  ********************************************************************/
-static int lightsOut = 0;
 class MemoryWrapGlobal {
 public:
   int bytesAllocated;
@@ -50,13 +49,12 @@ public:
   void *heapMemoryUserEvent;
 
   MemoryWrapGlobal() {
-    lightsOut = 0;
     bytesAllocated = 0;
     heapMemoryUserEvent = 0;
     Tau_get_context_userevent(&heapMemoryUserEvent, "Heap Memory Allocated");
   }
   ~MemoryWrapGlobal() {
-    lightsOut = 1;
+    Tau_destructor_trigger();
   }
 };
 
@@ -75,7 +73,7 @@ static MemoryWrapGlobal& global() {
  * return whether we should pass through and not track the IO
  ********************************************************************/
 static int Tau_iowrap_checkPassThrough() {
-  if (Tau_global_get_insideTAU() > 0 || lightsOut) {
+  if (Tau_global_get_insideTAU() > 0 || Tau_global_getLightsOut()) {
     return 1;
   } else {
     return 0;
@@ -145,26 +143,26 @@ void *malloc (size_t size) {
 /*********************************************************************
  * calloc
  ********************************************************************/
-void *calloc (size_t nmemb, size_t size) {
-  Tau_memorywrap_checkInit();
-  static void* (*_calloc)(size_t nmemb, size_t size) = NULL;
+// void *calloc (size_t nmemb, size_t size) {
+//   Tau_memorywrap_checkInit();
+//   static void* (*_calloc)(size_t nmemb, size_t size) = NULL;
 
-  if (_calloc == NULL) {
-    _calloc = ( void* (*)(size_t nmemb, size_t size)) dlsym(RTLD_NEXT, "calloc");
-  }
+//   if (_calloc == NULL) {
+//     _calloc = ( void* (*)(size_t nmemb, size_t size)) dlsym(RTLD_NEXT, "calloc");
+//   }
 
-  if (Tau_iowrap_checkPassThrough()) {
-    return _calloc(nmemb, size);
-  }
+//   if (Tau_iowrap_checkPassThrough()) {
+//     return _calloc(nmemb, size);
+//   }
 
-  Tau_global_incr_insideTAU();
+//   Tau_global_incr_insideTAU();
 
-  void *ptr = _calloc(nmemb, size);
-  Tau_memorywrap_add_ptr(ptr, nmemb * size);
-  TAU_CONTEXT_EVENT(global().heapMemoryUserEvent, global().bytesAllocated);
-  Tau_global_decr_insideTAU();
-  return ptr;
-}
+//   void *ptr = _calloc(nmemb, size);
+//   Tau_memorywrap_add_ptr(ptr, nmemb * size);
+//   TAU_CONTEXT_EVENT(global().heapMemoryUserEvent, global().bytesAllocated);
+//   Tau_global_decr_insideTAU();
+//   return ptr;
+// }
 
 
 /*********************************************************************
