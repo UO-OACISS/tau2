@@ -38,15 +38,21 @@ using namespace std;
 
 
 
+/*********************************************************************
+ * set of global data
+ ********************************************************************/
 static int lightsOut = 0;
 class MemoryWrapGlobal {
 public:
   int bytesAllocated;
   map<void*,long> pointerMap;
+  void *heapMemoryUserEvent;
 
   MemoryWrapGlobal() {
     lightsOut = 0;
     bytesAllocated = 0;
+    heapMemoryUserEvent = 0;
+    Tau_get_context_userevent(&heapMemoryUserEvent, "Heap Memory Allocated");
   }
   ~MemoryWrapGlobal() {
     lightsOut = 1;
@@ -54,6 +60,9 @@ public:
 };
 
 
+/*********************************************************************
+ * access to global data
+ ********************************************************************/
 static MemoryWrapGlobal& global() {
   static MemoryWrapGlobal memoryWrapGlobal;
   return memoryWrapGlobal;
@@ -117,6 +126,7 @@ void *malloc (size_t size) {
     global().pointerMap[ptr] = size;
     global().bytesAllocated += size;
   }
+  TAU_CONTEXT_EVENT(global().heapMemoryUserEvent, global().bytesAllocated);
 
   TAU_PROFILE_STOP(t); 
 
@@ -157,6 +167,8 @@ void free (void *ptr) {
     global().bytesAllocated -= global().pointerMap[ptr];
     global().pointerMap.erase(ptr);
   }
+
+  TAU_CONTEXT_EVENT(global().heapMemoryUserEvent, global().bytesAllocated);
 
 
   TAU_PROFILE_STOP(t); 
