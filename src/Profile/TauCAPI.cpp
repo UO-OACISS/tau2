@@ -91,7 +91,7 @@ static Profiler *Tau_global_stack[TAU_MAX_THREADS];
 static int Tau_global_stackdepth[TAU_MAX_THREADS];
 static int Tau_global_stackpos[TAU_MAX_THREADS];
 static int Tau_global_insideTAU[TAU_MAX_THREADS];
-
+int lightsOut = 0;
 
 
 static void Tau_stack_checkInit() {
@@ -101,6 +101,7 @@ static void Tau_stack_checkInit() {
   }
   init = 1;
 
+  lightsOut = 0;
   for (int i=0; i<TAU_MAX_THREADS; i++) {
     Tau_global_stackdepth[i] = 0;
     Tau_global_stackpos[i] = -1;
@@ -108,6 +109,17 @@ static void Tau_stack_checkInit() {
     Tau_global_insideTAU[i] = 0;
   }
 }
+
+extern "C" int Tau_global_getLightsOut() {
+  Tau_stack_checkInit();
+  return lightsOut;
+}
+
+extern "C" void Tau_global_setLightsOut() {
+  Tau_stack_checkInit();
+  lightsOut = 1;
+}
+
 
 extern "C" void Tau_stack_initialization() {
   Tau_stack_checkInit();
@@ -1405,8 +1417,9 @@ extern "C" int Tau_get_tid(void) {
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
-	Tau_stop_top_level_timer_if_necessary();
+  Tau_stop_top_level_timer_if_necessary();
   //printf ("FIvector destructor\n");
+  Tau_global_setLightsOut();
   if ((TheUsingDyninst() || TheUsingCompInst()) && TheSafeToDumpData()) {
 #ifndef TAU_VAMPIRTRACE
     TAU_PROFILE_EXIT("FunctionDB destructor");
@@ -1506,7 +1519,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.153 $   $Date: 2010/05/05 20:59:02 $
- * VERSION: $Id: TauCAPI.cpp,v 1.153 2010/05/05 20:59:02 amorris Exp $
+ * $Revision: 1.154 $   $Date: 2010/05/05 23:53:17 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.154 2010/05/05 23:53:17 amorris Exp $
  ***************************************************************************/
 
