@@ -191,6 +191,9 @@ void Tau_iowrap_checkInit() {
   global_bytes_written=0;
   global_bytes_read=0;
 
+  char *foo = (char*) malloc (1);
+  free (foo);
+
   Tau_init_initializeTAU();
   Tau_iowrap_registerEvents(-1, "unknown");
   Tau_iowrap_registerEvents(0, "stdin");
@@ -1215,11 +1218,11 @@ extern "C" char * Tau_get_socket_name(const struct sockaddr *sa, char *s, size_t
   switch (sa->sa_family) {
     case AF_INET: 
       inet_ntop(AF_INET, &(((struct sockaddr_in *) sa)->sin_addr), addr, len);
-      sprintf(s,"%s:%d",addr,ntohs((((struct sockaddr_in *)sa)->sin_port)));
+      sprintf(s,"%s,port=%d",addr,ntohs((((struct sockaddr_in *)sa)->sin_port)));
       break;
     case AF_INET6: 
       inet_ntop(AF_INET6, &(((struct sockaddr_in6 *) sa)->sin6_addr), addr, len);
-      sprintf(s,"%s:%d",addr,ntohs((((struct sockaddr_in6 *)sa)->sin6_port)));
+      sprintf(s,"%s,port=%d",addr,ntohs((((struct sockaddr_in6 *)sa)->sin6_port)));
       break;
     case AF_UNIX:
       strncpy(s, ((char *)(((struct sockaddr_un *) sa)->sun_path)), len);
