@@ -134,13 +134,10 @@ void *malloc (size_t size) {
   }
 
   Tau_global_incr_insideTAU();
-  TAU_PROFILE_TIMER(t, "malloc()", " ", TAU_IO);
-  TAU_PROFILE_START(t);
 
   void *ptr = _malloc(size);
   Tau_memorywrap_add_ptr(ptr, size);
   TAU_CONTEXT_EVENT(global().heapMemoryUserEvent, global().bytesAllocated);
-  TAU_PROFILE_STOP(t); 
   Tau_global_decr_insideTAU();
   return ptr;
 }
@@ -161,13 +158,10 @@ void *calloc (size_t nmemb, size_t size) {
   }
 
   Tau_global_incr_insideTAU();
-  TAU_PROFILE_TIMER(t, "calloc()", " ", TAU_IO);
-  TAU_PROFILE_START(t);
 
   void *ptr = _calloc(nmemb, size);
   Tau_memorywrap_add_ptr(ptr, nmemb * size);
   TAU_CONTEXT_EVENT(global().heapMemoryUserEvent, global().bytesAllocated);
-  TAU_PROFILE_STOP(t); 
   Tau_global_decr_insideTAU();
   return ptr;
 }
@@ -189,8 +183,6 @@ void *realloc (void *ptr, size_t size) {
   }
 
   Tau_global_incr_insideTAU();
-  TAU_PROFILE_TIMER(t, "realloc()", " ", TAU_IO);
-  TAU_PROFILE_START(t);
 
   void *ret_ptr = _realloc(ptr, size);
 
@@ -198,7 +190,6 @@ void *realloc (void *ptr, size_t size) {
   Tau_memorywrap_add_ptr(ret_ptr, size);
 
   TAU_CONTEXT_EVENT(global().heapMemoryUserEvent, global().bytesAllocated);
-  TAU_PROFILE_STOP(t); 
   Tau_global_decr_insideTAU();
   return ret_ptr;
 }
@@ -220,8 +211,6 @@ int posix_memalign (void **memptr, size_t alignment, size_t size) {
   }
 
   Tau_global_incr_insideTAU();
-  TAU_PROFILE_TIMER(t, "posix_memalign()", " ", TAU_IO);
-  TAU_PROFILE_START(t);
 
   int ret = _posix_memalign(memptr, alignment, size);
   if (ret == 0) {
@@ -229,7 +218,6 @@ int posix_memalign (void **memptr, size_t alignment, size_t size) {
   }
 
   TAU_CONTEXT_EVENT(global().heapMemoryUserEvent, global().bytesAllocated);
-  TAU_PROFILE_STOP(t); 
   Tau_global_decr_insideTAU();
   return ret;
 }
@@ -253,15 +241,12 @@ void free (void *ptr) {
   }
 
   Tau_global_incr_insideTAU();
-  TAU_PROFILE_TIMER(t, "free()", " ", TAU_IO);
-  TAU_PROFILE_START(t);
 
   _free(ptr);
 
   Tau_memorywrap_remove_ptr(ptr);
 
   TAU_CONTEXT_EVENT(global().heapMemoryUserEvent, global().bytesAllocated);
-  TAU_PROFILE_STOP(t); 
   Tau_global_decr_insideTAU();
 }
 
