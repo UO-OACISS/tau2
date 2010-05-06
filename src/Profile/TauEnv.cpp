@@ -256,6 +256,7 @@ static int env_depth_limit = 0;
 static int env_track_message = 0;
 static int env_comm_matrix = 0;
 static int env_track_memory_heap = 0;
+static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
 static int env_extras = 0;
 static int env_ebs_frequency = 0;
@@ -349,6 +350,10 @@ int TauEnv_get_track_message() {
 
 int TauEnv_get_track_memory_heap() {
   return env_track_memory_heap;
+}
+
+int TauEnv_get_track_memory_leaks() {
+  return env_track_memory_leaks;
 }
 
 int TauEnv_get_track_memory_headroom() {
@@ -466,6 +471,17 @@ void TauEnv_initialize() {
     TAU_VERBOSE("[%d] TAU: VampirTrace active! (TAU measurement disabled)\n", getpid());
     return;
 #endif
+
+    tmp = getconf("TAU_TRACK_MEMORY_LEAKS");
+    if (parse_bool(tmp, env_track_memory_leaks)) {
+      TAU_VERBOSE("TAU: Entry/Exit Memory tracking Enabled\n");
+      TAU_METADATA("TAU_TRACK_MEMORY_LEAKS", "on");
+      env_track_memory_leaks = 1;
+      env_extras = 1;
+    } else {
+      TAU_METADATA("TAU_TRACK_MEMPORY_LEAKS", "off");
+      env_track_memory_leaks = 0;
+    }
 
     if ((env_profiledir = getconf("PROFILEDIR")) == NULL) {
       env_profiledir = ".";   /* current directory */
