@@ -118,7 +118,11 @@ public class ContextEventModel extends AbstractTreeTableModel {
         } else {
             switch (column) {
             case 1:
-                return new Double(uep.getNumSamples(dataSorter.getSelectedSnapshot())*uep.getMeanValue(dataSorter.getSelectedSnapshot()));
+                if (uep.getName().contains("/s)")) { // rates are ignored for total
+                    return null;
+                } else {
+                    return new Double(uep.getNumSamples(dataSorter.getSelectedSnapshot())*uep.getMeanValue(dataSorter.getSelectedSnapshot()));
+                }
             case 2:
                 return new Double(uep.getNumSamples(dataSorter.getSelectedSnapshot()));
             case 3:
