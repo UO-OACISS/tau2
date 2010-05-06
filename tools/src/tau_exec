@@ -83,7 +83,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tau_exec,v 1.8 2010/04/30 03:00:19 sameer Exp $';
+	      echo '$Id: tau_exec,v 1.9 2010/05/06 16:41:02 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -T)
@@ -181,15 +181,16 @@ else
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX:$LD_PRELOAD
 fi
 
+if [ $track_memory = "true" ] ; then
+    # Add the memory wrapper library to the LD_PRELOAD list
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-memorywrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+fi
+
 if [ $track_io = "true" ] ; then
     # Add the io wrapper library to the LD_PRELOAD list
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-iowrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
 
-if [ $track_memory = "true" ] ; then
-    # Add the memory wrapper library to the LD_PRELOAD list
-    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-memorywrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-fi
 
 if [ $apple = 1 ]; then
   TAU_LDD='otool -L'
@@ -197,10 +198,20 @@ else
   TAU_LDD=ldd
 fi
 
-echo $TAU_LDD $1 | grep libTAU$TAU_SHLIBX 
-$TAU_LDD $1 | grep libTAU$TAU_SHLIBX &> /dev/null
+
+prog="$1"
+if [ ! -r "$prog" ] ; then
+    prog=`which $prog 2>/dev/null`
+fi
+
+if [ ! -r "$prog" ] ; then
+    echo "tau_exec: $1: command not found"
+    exit
+fi 
+
+$TAU_LDD "$prog" 2>/dev/null | grep libTAU$TAU_SHLIBX &> /dev/null
 if [ $? == 1 ] ; then
-    nm $1 | grep Tau_init &> /dev/null
+    nm "$prog" 2>/dev/null | grep Tau_init &> /dev/null
     if [ $? == 1 ] ; then
 	echoIfVerbose "TAU: Detected uninstrumented binary, adding TAU preload wrapper"
 	TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libTAU-preload$TAU_SHLIBX
