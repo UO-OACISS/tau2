@@ -479,7 +479,7 @@ void TauEnv_initialize() {
       env_track_memory_leaks = 1;
       env_extras = 1;
     } else {
-      TAU_METADATA("TAU_TRACK_MEMPORY_LEAKS", "off");
+      TAU_METADATA("TAU_TRACK_MEMORY_LEAKS", "off");
       env_track_memory_leaks = 0;
     }
 
