@@ -466,6 +466,10 @@ void Tau_track_memory_headroom_here(void);
 void Tau_profile_param1l(long data, const char *dataname);
 
 
+void Tau_global_addWriteHook(void (*hook)(void));
+void Tau_global_callWriteHooks();
+
+
 #ifdef __cplusplus
 /* Include the C++ API header */
 #include <Profile/TauCppAPI.h>
@@ -515,6 +519,6 @@ void Tau_profile_param1l(long data, const char *dataname);
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.113 $   $Date: 2010/05/05 23:53:49 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.113 2010/05/05 23:53:49 amorris Exp $ 
+ * $Revision: 1.114 $   $Date: 2010/05/06 18:12:54 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.114 2010/05/06 18:12:54 amorris Exp $ 
  ***************************************************************************/
