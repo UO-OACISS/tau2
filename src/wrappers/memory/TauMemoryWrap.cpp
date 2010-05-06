@@ -53,6 +53,8 @@ public:
   }
   MemoryAllocation(size_t nBytes, string loc) : numBytes(nBytes), location(loc) {
   }
+  MemoryAllocation(size_t nBytes) : numBytes(nBytes), location("") {
+  }
 };
 
 
@@ -100,6 +102,9 @@ static int Tau_iowrap_checkPassThrough() {
  * hook registered to be called at profile write time, we trigger the leaks here
  ********************************************************************/
 void Tau_memorywrap_writeHook() {
+  if (!TauEnv_get_track_memory_leaks()) {
+    return;
+  }
   RtsLayer::LockDB();
   
   map<string, TauUserEvent*> userEventMap; // map location to user event
@@ -171,7 +176,11 @@ string Tau_memorywrap_getContextString() {
 void Tau_memorywrap_add_ptr (void *ptr, size_t size) {
   if (ptr != NULL) {
     RtsLayer::LockDB();
-    global().pointerMap[ptr] = MemoryAllocation(size, Tau_memorywrap_getContextString());
+    if (TauEnv_get_track_memory_leaks()) {
+      global().pointerMap[ptr] = MemoryAllocation(size, Tau_memorywrap_getContextString());
+    } else {
+      global().pointerMap[ptr] = MemoryAllocation(size);
+    }
     global().bytesAllocated += size;
     RtsLayer::UnLockDB();
   }
