@@ -58,7 +58,7 @@ for arg in "$@" ; do
   modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
 
   if [ "$processT" = "true" ] ; then
-      binding_options=`echo $binding_options $arg | sed -e 's/,/ /g' | tr [A-Z] [a-z]`
+      binding_options=`echo $binding_options $arg | sed -e 's/,/ /g' | tr '[A-Z]' '[a-z]'`
       processT="false"
       shift
   else
@@ -83,7 +83,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tau_exec,v 1.10 2010/05/06 16:43:19 amorris Exp $';
+	      echo '$Id: tau_exec,v 1.11 2010/05/06 17:33:34 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -T)
