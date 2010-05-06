@@ -25,8 +25,11 @@
 #include <unistd.h>
   
 #include <stdarg.h>
+
+#define TAU_LIBRARY_SOURCE
   
 #include <TAU.h>
+#include <Profile/Profiler.h>
 
 #include <Profile/TauInit.h>
     
@@ -36,7 +39,21 @@
 using namespace std;
 
 
-
+/*********************************************************************
+ * This object represents a memory allocation, it consists of 
+ * a location (TAU context) and a number of bytes
+ ********************************************************************/
+class MemoryAllocation {
+public:
+  size_t numBytes;
+  string location;
+  MemoryAllocation() {
+    numBytes = 0;
+    location = "";
+  }
+  MemoryAllocation(size_t nBytes, string loc) : numBytes(nBytes), location(loc) {
+  }
+};
 
 
 /*********************************************************************
@@ -45,7 +62,7 @@ using namespace std;
 class MemoryWrapGlobal {
 public:
   int bytesAllocated;
-  map<void*,long> pointerMap;
+  map<void*,MemoryAllocation> pointerMap;
   void *heapMemoryUserEvent;
 
   MemoryWrapGlobal() {
@@ -67,8 +84,6 @@ static MemoryWrapGlobal& global() {
   return memoryWrapGlobal;
 }
 
-
-
 /*********************************************************************
  * return whether we should pass through and not track the IO
  ********************************************************************/
@@ -80,6 +95,30 @@ static int Tau_iowrap_checkPassThrough() {
   }
 }
 
+
+/*********************************************************************
+ * hook registered to be called at profile write time, we trigger the leaks here
+ ********************************************************************/
+void Tau_memorywrap_writeHook() {
+  
+  map<string, TauUserEvent*> userEventMap; // map location to user event
+
+  map<void*,MemoryAllocation>::const_iterator it;
+  for (it=global().pointerMap.begin(); it != global().pointerMap.end(); ++it) { // iterate over still-allocated objects
+    
+    map<string, TauUserEvent*>::const_iterator search = userEventMap.find(it->second.location);
+    if (search == userEventMap.end()) { // not found, create a user event for it
+      string s (string("MEMORY LEAK! : ")+it->second.location);
+      TauUserEvent *leakEvent = new TauUserEvent(s.c_str());
+      userEventMap[it->second.location] = leakEvent;
+    }
+
+    // trigger the event
+    userEventMap[it->second.location]->TriggerEvent(it->second.numBytes);
+
+    //fprintf (stderr, "[%p] leak of %d bytes, allocated at %s\n", it->first, it->second.numBytes, it->second.location.c_str());
+  }
+}
 
 /*********************************************************************
  * initializer
@@ -94,24 +133,60 @@ void Tau_memorywrap_checkInit() {
   Tau_global_incr_insideTAU();
   Tau_init_initializeTAU();
   Tau_create_top_level_timer_if_necessary();
+  // register write hook
+  Tau_global_addWriteHook(Tau_memorywrap_writeHook);
   Tau_global_decr_insideTAU();
 }
 
+/*********************************************************************
+ * generate context string
+ ********************************************************************/
+string Tau_memorywrap_getContextString() {
+  int tid = RtsLayer::myThread();
+  Profiler *current = TauInternal_CurrentProfiler(tid);
+  Profiler *p = current;
+  int depth = TauEnv_get_callpath_depth();
+  string delimiter(" => ");
+  string name("");
 
+  while (current != NULL && depth != 0) {
+    if (current != p) {
+      name = current->ThisFunction->GetName() + string(" ") +
+	current->ThisFunction->GetType() + delimiter + name;
+    } else {
+      name = current->ThisFunction->GetName() + string (" ") +
+	current->ThisFunction->GetType();
+    }
+    current = current->ParentProfiler;
+    depth--;
+  }
+  return name;
+}
+
+/*********************************************************************
+ * add a pointer to the collection
+ ********************************************************************/
 void Tau_memorywrap_add_ptr (void *ptr, size_t size) {
   if (ptr != NULL) {
-    global().pointerMap[ptr] = size;
+    RtsLayer::LockDB();
+    global().pointerMap[ptr] = MemoryAllocation(size, Tau_memorywrap_getContextString());
     global().bytesAllocated += size;
+    RtsLayer::UnLockDB();
   }
 }
 
+/*********************************************************************
+ * remove a pointer from the collection
+ ********************************************************************/
 void Tau_memorywrap_remove_ptr (void *ptr) {
   if (ptr != NULL) {
-    map<void*,long>::iterator it = global().pointerMap.find(ptr);
+    RtsLayer::LockDB();
+    map<void*,MemoryAllocation>::const_iterator it = global().pointerMap.find(ptr);
     if (it != global().pointerMap.end()) {
-      global().bytesAllocated -= global().pointerMap[ptr];
+      global().bytesAllocated -= global().pointerMap[ptr].numBytes;
       global().pointerMap.erase(ptr);
     }
+    RtsLayer::UnLockDB();
   }
 }
 
