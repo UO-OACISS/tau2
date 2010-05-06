@@ -93,6 +93,18 @@ static int Tau_global_stackpos[TAU_MAX_THREADS];
 static int Tau_global_insideTAU[TAU_MAX_THREADS];
 int lightsOut = 0;
 
+static void (*_profile_write_hook)(void) = NULL;
+
+extern "C" void Tau_global_addWriteHook(void (*hook)(void)) {
+  _profile_write_hook = hook;
+}
+
+extern "C" void Tau_global_callWriteHooks() {
+  if (_profile_write_hook != NULL) {
+    _profile_write_hook();
+  }
+}
+
 
 static void Tau_stack_checkInit() {
   static int init = 0;
@@ -102,6 +114,8 @@ static void Tau_stack_checkInit() {
   init = 1;
 
   lightsOut = 0;
+  _profile_write_hook = 0;
+
   for (int i=0; i<TAU_MAX_THREADS; i++) {
     Tau_global_stackdepth[i] = 0;
     Tau_global_stackpos[i] = -1;
@@ -1519,7 +1533,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.154 $   $Date: 2010/05/05 23:53:17 $
- * VERSION: $Id: TauCAPI.cpp,v 1.154 2010/05/05 23:53:17 amorris Exp $
+ * $Revision: 1.155 $   $Date: 2010/05/06 18:13:46 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.155 2010/05/06 18:13:46 amorris Exp $
  ***************************************************************************/
 
