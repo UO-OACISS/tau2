@@ -100,6 +100,7 @@ static int Tau_iowrap_checkPassThrough() {
  * hook registered to be called at profile write time, we trigger the leaks here
  ********************************************************************/
 void Tau_memorywrap_writeHook() {
+  RtsLayer::LockDB();
   
   map<string, TauUserEvent*> userEventMap; // map location to user event
 
@@ -118,6 +119,7 @@ void Tau_memorywrap_writeHook() {
 
     //fprintf (stderr, "[%p] leak of %d bytes, allocated at %s\n", it->first, it->second.numBytes, it->second.location.c_str());
   }
+  RtsLayer::UnLockDB();
 }
 
 /*********************************************************************
