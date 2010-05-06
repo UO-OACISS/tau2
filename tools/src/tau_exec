@@ -83,7 +83,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tau_exec,v 1.9 2010/05/06 16:41:02 amorris Exp $';
+	      echo '$Id: tau_exec,v 1.10 2010/05/06 16:43:19 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -T)
@@ -200,11 +200,11 @@ fi
 
 
 prog="$1"
-if [ ! -r "$prog" ] ; then
+if [ ! -x "$prog" ] ; then
     prog=`which $prog 2>/dev/null`
 fi
 
-if [ ! -r "$prog" ] ; then
+if [ ! -x "$prog" ] ; then
     echo "tau_exec: $1: command not found"
     exit
 fi 
