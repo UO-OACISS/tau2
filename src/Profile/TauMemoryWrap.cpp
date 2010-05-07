@@ -23,8 +23,6 @@
 #include <TAU.h>
 #include <Profile/Profiler.h>
 #include <Profile/TauInit.h>
-#include <map>
-using namespace std;
 
 
 /*********************************************************************
@@ -52,7 +50,7 @@ public:
 class MemoryWrapGlobal {
 public:
   int bytesAllocated;
-  map<void*,MemoryAllocation> pointerMap;
+  TAU_HASH_MAP<void*,MemoryAllocation> pointerMap;
   void *heapMemoryUserEvent;
   void *mallocUserEvent;
   void *freeUserEvent;
@@ -103,7 +101,7 @@ void Tau_memorywrap_writeHook() {
   
   map<string, TauUserEvent*> userEventMap; // map location to user event
 
-  map<void*,MemoryAllocation>::const_iterator it;
+  TAU_HASH_MAP<void*,MemoryAllocation>::const_iterator it;
   for (it=global().pointerMap.begin(); it != global().pointerMap.end(); ++it) { // iterate over still-allocated objects
     
     map<string, TauUserEvent*>::const_iterator search = userEventMap.find(it->second.location);
@@ -189,7 +187,7 @@ void Tau_memorywrap_add_ptr (void *ptr, size_t size) {
 void Tau_memorywrap_remove_ptr (void *ptr) {
   if (ptr != NULL) {
     RtsLayer::LockDB();
-    map<void*,MemoryAllocation>::const_iterator it = global().pointerMap.find(ptr);
+    TAU_HASH_MAP<void*,MemoryAllocation>::const_iterator it = global().pointerMap.find(ptr);
     if (it != global().pointerMap.end()) {
       int size = global().pointerMap[ptr].numBytes;
       global().bytesAllocated -= size;
