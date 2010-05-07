@@ -13,11 +13,11 @@ INSTALLDEST = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 install: libTAU-memorywrap$(TAU_SHLIBX)
 	cp libTAU-memorywrap$(TAU_SHLIBX) $(INSTALLDEST)/shared$(TAU_CONFIG)
 
-TauMemoryWrap.o: TauMemoryWrap.cpp
-	$(CXX) $(CFLAGS) -c TauMemoryWrap.cpp
+memory_wrapper.o: memory_wrapper.cpp
+	$(CXX) $(CFLAGS) -c memory_wrapper.cpp
 
-libTAU-memorywrap$(TAU_SHLIBX): TauMemoryWrap.o
-	$(CC) $(TAU_SHFLAGS) libTAU-memorywrap$(TAU_SHLIBX) TauMemoryWrap.o $(TAU_SHAREDLIBS) -ldl
+libTAU-memorywrap$(TAU_SHLIBX): memory_wrapper.o
+	$(CC) $(TAU_SHFLAGS) libTAU-memorywrap$(TAU_SHLIBX) memory_wrapper.o $(TAU_SHAREDLIBS) -ldl
 
 clean:
 	/bin/rm -f *.so *.o
