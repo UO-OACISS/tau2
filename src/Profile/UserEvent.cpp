@@ -547,11 +547,11 @@ string * TauFormulateContextNameString(Profiler *p) {
 
   while (current != NULL && depth != 0) {
     if (current != p) {
-      *name =  current->ThisFunction->GetName() + string(" ") +
-               current->ThisFunction->GetType() + delimiter + *name;
+      *name = current->ThisFunction->GetName() + string(" ") +
+	current->ThisFunction->GetType() + delimiter + *name;
     } else {
-      *name =  current->ThisFunction->GetName() + string (" ") +
-               current->ThisFunction->GetType();
+      *name = current->ThisFunction->GetName() + string (" ") +
+	current->ThisFunction->GetType();
     }
     current = current->ParentProfiler;
     depth --;
@@ -611,6 +611,8 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid) {
 }
 
 void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid, double timestamp, int use_ts) {
+  Tau_global_incr_insideTAU();
+
   if (!DisableContext) {
     long *comparison = 0;
     TauUserEvent *ue;
@@ -628,6 +630,7 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid, double
 	string contextname(uevent->EventName  + " : " + *ctxname);
 	
 	ue = new TauUserEvent((const char *)(contextname.c_str()), MonotonicallyIncreasing);
+
 	TheContextMap().insert(map<TAU_CONTEXT_MAP_TYPE>::value_type(comparison, ue));
 	
 	ue->ctxevt = this; /* store the current object in the user event */
@@ -653,10 +656,12 @@ void TauContextUserEvent::TriggerEvent( TAU_EVENT_DATATYPE data, int tid, double
     }
   }
   uevent->TriggerEvent(data, tid, timestamp, use_ts);
+
+  Tau_global_decr_insideTAU();
 }
 
 /***************************************************************************
  * $RCSfile: UserEvent.cpp,v $   $Author: amorris $
- * $Revision: 1.45 $   $Date: 2010/05/05 23:52:59 $
- * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.45 2010/05/05 23:52:59 amorris Exp $ 
+ * $Revision: 1.46 $   $Date: 2010/05/07 22:16:23 $
+ * POOMA_VERSION_ID: $Id: UserEvent.cpp,v 1.46 2010/05/07 22:16:23 amorris Exp $ 
  ***************************************************************************/
