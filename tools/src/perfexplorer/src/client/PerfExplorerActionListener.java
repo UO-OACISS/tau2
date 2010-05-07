@@ -43,7 +43,6 @@ import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 public class PerfExplorerActionListener implements ActionListener {
 
-	public static final String DERIVE_METRIC = "Open Expression Window";
 	public static final String PARSE_EXPRESSION = "Parse Expression File";
 	public static final String REPARSE_EXPRESSION = "Re-Parse Expression File";
 	public final static String DATABASE_CONFIGURATION = "Database Configuration";
@@ -147,8 +146,6 @@ public class PerfExplorerActionListener implements ActionListener {
 					}
 				} else if (arg.equals(DATABASE_CONFIGURATION)) {
 					databaseConfiguration();
-				} else if (arg.equals(DERIVE_METRIC)) {
-					deriveMetric();
 				} else if (arg.equals(PARSE_EXPRESSION)) {
 					parseExpression();
 				} else if (arg.equals(REPARSE_EXPRESSION)) {

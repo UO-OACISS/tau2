@@ -28,10 +28,10 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		fileMenu.add(profileItem);
 	
 		//Add a menu item.
-		JMenuItem deriveMetricItem = new JMenuItem(
+/*		JMenuItem deriveMetricItem = new JMenuItem(
 				PerfExplorerActionListener.DERIVE_METRIC);
 		deriveMetricItem.addActionListener(listener);
-		fileMenu.add(deriveMetricItem);
+		fileMenu.add(deriveMetricItem);*/
 		
 		//Add a menu item.
 		JMenuItem parseItem = new JMenuItem(

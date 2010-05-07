@@ -86,7 +86,7 @@ public class PerfExplorerJTabbedPane extends JTabbedPane {
 		
 		this.panel5 = DeriveMetricsPane.getPane();
 		panel5.setPreferredSize(new Dimension(600, 500));
-		this.addTab("Derive Metrics", icon, panel5, "Derive Metrics from Expressions");
+		this.addTab("Derived Metric Expressions", icon, panel5, "Derived Metrics from Expressions");
 	}
 
     /** Returns an ImageIcon, or null if the path was invalid. */
