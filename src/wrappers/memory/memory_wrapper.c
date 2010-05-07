@@ -29,7 +29,6 @@
   
 #include <TAU.h>
 #include <Profile/Profiler.h>
-#include <Profile/TauInit.h>
 #include <Profile/TauMemoryWrap.h>
 
 
