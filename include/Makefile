@@ -428,6 +428,8 @@ PROFILEOPT24 =
 
 #VAMPIRTRACE_5_7_API#PROFILEOPT78 = -DTAU_VAMPIRTRACE_5_7_API #ENDIF#
 
+#TAU_TR1_HASH_MAP#PROFILEOPT79 = -DHAVE_TR1_HASH_MAP #ENDIF#
+
 
 
 ############# RENCI Scalable Trace Lib Options #############
@@ -781,7 +783,7 @@ HPCTOOLKIT_LINK=
 ##############################################
 # Extra linker args (e.g. -Wl,-export-dynamic)
 ##############################################
-EXTRA_LINKER_ARGS= -Wl,-export-dynamic
+EXTRA_LINKER_ARGS= -Wl,--export-dynamic
 TAU_LINKER_OPT14=$(EXTRA_LINKER_ARGS)
 
 
@@ -832,7 +834,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 	      $(PROFILEOPT65) $(PROFILEOPT66) $(PROFILEOPT67) $(PROFILEOPT68) \
 	      $(PROFILEOPT69) $(PROFILEOPT70) $(PROFILEOPT71) $(PROFILEOPT72) \
 	      $(PROFILEOPT73) $(PROFILEOPT74) $(PROFILEOPT75) $(PROFILEOPT76) \
-	      $(PROFILEOPT77) $(PROFILEOPT78) $(TRACEOPT)
+	      $(PROFILEOPT77) $(PROFILEOPT78) $(PROFILEOPT79) $(TRACEOPT)
 
 
 ##############################################

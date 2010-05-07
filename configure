@@ -4810,6 +4810,27 @@ fi
 /bin/rm -f conftest_demangle.o conftest_demangle.c
 
 
+######################################################################
+# Check for tr1/unordered_map
+######################################################################
+  cat <<EOF > conftest_hash_map.cc
+#include <tr1/unordered_map>
+
+int main() {
+  std::tr1::unordered_map<int,int> theMap;
+  theMap[5] = 6;
+}
+EOF
+$echo "Checking for tr1/unordered_map... ${nnl}"
+if $cxx_compiler $orig_useropt -c conftest_hash_map.cc 1> /dev/null 2>&1 ; then
+    fixmakeargs="$fixmakeargs TAU_TR1_HASH_MAP"
+    echo "yes"
+else
+    echo "no"
+fi
+
+/bin/rm -f conftest_hash_map.o conftest_hash_map.cc
+
 
 ######################################################################
 # Check for pthread wrappable routines
