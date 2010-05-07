@@ -66,11 +66,17 @@ public:
   int bytesAllocated;
   map<void*,MemoryAllocation> pointerMap;
   void *heapMemoryUserEvent;
+  void *mallocUserEvent;
+  void *freeUserEvent;
 
   MemoryWrapGlobal() {
     bytesAllocated = 0;
     heapMemoryUserEvent = 0;
+    mallocUserEvent = 0;
+    freeUserEvent = 0;
     Tau_get_context_userevent(&heapMemoryUserEvent, "Heap Memory Allocated");
+    Tau_get_context_userevent(&mallocUserEvent, "malloc size");
+    Tau_get_context_userevent(&freeUserEvent, "free size");
   }
   ~MemoryWrapGlobal() {
     Tau_destructor_trigger();
@@ -182,6 +188,9 @@ void Tau_memorywrap_add_ptr (void *ptr, size_t size) {
       global().pointerMap[ptr] = MemoryAllocation(size);
     }
     global().bytesAllocated += size;
+
+    TAU_CONTEXT_EVENT(global().mallocUserEvent, size);
+
     RtsLayer::UnLockDB();
   }
 }
@@ -194,8 +203,10 @@ void Tau_memorywrap_remove_ptr (void *ptr) {
     RtsLayer::LockDB();
     map<void*,MemoryAllocation>::const_iterator it = global().pointerMap.find(ptr);
     if (it != global().pointerMap.end()) {
-      global().bytesAllocated -= global().pointerMap[ptr].numBytes;
+      int size = global().pointerMap[ptr].numBytes;
+      global().bytesAllocated -= size;
       global().pointerMap.erase(ptr);
+      TAU_CONTEXT_EVENT(global().freeUserEvent, size);
     }
     RtsLayer::UnLockDB();
   }
@@ -221,7 +232,6 @@ void *malloc (size_t size) {
 
   void *ptr = _malloc(size);
   Tau_memorywrap_add_ptr(ptr, size);
-  TAU_CONTEXT_EVENT(global().heapMemoryUserEvent, global().bytesAllocated);
   Tau_global_decr_insideTAU();
   return ptr;
 }
@@ -273,7 +283,6 @@ void *realloc (void *ptr, size_t size) {
   Tau_memorywrap_remove_ptr(ptr);
   Tau_memorywrap_add_ptr(ret_ptr, size);
 
-  TAU_CONTEXT_EVENT(global().heapMemoryUserEvent, global().bytesAllocated);
   Tau_global_decr_insideTAU();
   return ret_ptr;
 }
@@ -301,7 +310,6 @@ int posix_memalign (void **memptr, size_t alignment, size_t size) {
     Tau_memorywrap_add_ptr(*memptr, size);
   }
 
-  TAU_CONTEXT_EVENT(global().heapMemoryUserEvent, global().bytesAllocated);
   Tau_global_decr_insideTAU();
   return ret;
 }
@@ -325,12 +333,8 @@ void free (void *ptr) {
   }
 
   Tau_global_incr_insideTAU();
-
   _free(ptr);
-
   Tau_memorywrap_remove_ptr(ptr);
-
-  TAU_CONTEXT_EVENT(global().heapMemoryUserEvent, global().bytesAllocated);
   Tau_global_decr_insideTAU();
 }
 
