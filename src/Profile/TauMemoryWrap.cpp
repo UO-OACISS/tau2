@@ -81,7 +81,7 @@ static MemoryWrapGlobal& global() {
 /*********************************************************************
  * return whether we should pass through and not track the IO
  ********************************************************************/
-int Tau_memorywrap_checkPassThrough() {
+extern "C" int Tau_memorywrap_checkPassThrough() {
   if (Tau_global_get_insideTAU() > 0 || Tau_global_getLightsOut()) {
     return 1;
   } else {
@@ -122,7 +122,7 @@ void Tau_memorywrap_writeHook() {
 /*********************************************************************
  * initializer
  ********************************************************************/
-void Tau_memorywrap_checkInit() {
+extern "C" void Tau_memorywrap_checkInit() {
   static int init = 0;
   if (init == 1) {
     return;
@@ -165,7 +165,7 @@ static string Tau_memorywrap_getContextString() {
 /*********************************************************************
  * add a pointer to the collection
  ********************************************************************/
-void Tau_memorywrap_add_ptr (void *ptr, size_t size) {
+extern "C" void Tau_memorywrap_add_ptr (void *ptr, size_t size) {
   if (ptr != NULL) {
     RtsLayer::LockDB();
     if (TauEnv_get_track_memory_leaks()) {
@@ -184,7 +184,7 @@ void Tau_memorywrap_add_ptr (void *ptr, size_t size) {
 /*********************************************************************
  * remove a pointer from the collection
  ********************************************************************/
-void Tau_memorywrap_remove_ptr (void *ptr) {
+extern "C" void Tau_memorywrap_remove_ptr (void *ptr) {
   if (ptr != NULL) {
     RtsLayer::LockDB();
     TAU_HASH_MAP<void*,MemoryAllocation>::const_iterator it = global().pointerMap.find(ptr);
