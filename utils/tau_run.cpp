@@ -377,6 +377,7 @@ int routineConstraint(char *fname){ // fname is the function name
 	    (strncmp(fname, "threaded_func", 13) == 0) ||
             (strncmp(fname, "targ8", 5) == 0) ||
             (strncmp(fname, "__intel_", 8) == 0) ||
+            (strncmp(fname, "_intel_", 7) == 0) ||
             (strncmp(fname, "The", 3) == 0) ||
 // The following functions show up in static executables
             (strncmp(fname, "__mmap", 6) == 0) ||
@@ -667,15 +668,19 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
   funcNames.push_back(&setup_call);
 
   if (ismpi) {
-      char *mpilib = "libtaumpihook.so";
+/*
+      char *mpilib = "libTAUsh-icpc-mpi-pdt.so";
       if( isStaticExecutable ) {
           mpilib = "libtaumpihook.a";
       }
       bool result = mutateeAddressSpace->loadLibrary(mpilib);
       assert(result);
+*/
+
     
     //Create a snippet that calls TauMPIInitStub with the rank after MPI_Init
-    BPatch_function *mpi_rank = tauFindFunction(mutateeImage, "taumpi_getRank");
+ //   BPatch_function *mpi_rank = tauFindFunction(mutateeImage, "taumpi_getRank");
+    BPatch_function *mpi_rank = tauFindFunction(mutateeImage, "TauGetMpiRank");
     assert(mpi_rank);
     BPatch_Vector<BPatch_snippet *> rank_args;
     BPatch_funcCallExpr getrank(*mpi_rank, rank_args);
