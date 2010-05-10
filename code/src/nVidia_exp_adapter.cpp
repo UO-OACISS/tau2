@@ -119,7 +119,7 @@ void CUDAAPI callback_handle(
 		{
 			NvU32 device;
 			GetContextTable()->CtxGetDevice(cParams->ctx,&device);
-			gpuId gId(contextId, device);
+			cudaGpuId gId(contextId, device);
 			enter_cu_memcpy_event(cParams->functionName, id, gId);
 		}
 		else
@@ -153,7 +153,7 @@ void CUDAAPI callback_handle(
 		cuEventId id(contextId, cParams->apiCallId);
 		NvU32 device;
 		GetContextTable()->CtxGetDevice(cParams->ctx,&device);
-		gpuId gId(contextId, device);
+		cudaGpuId gId(contextId, device);
 		double startTime = AlignedTime((int)device, (double)cParams->startTime/1000);
 		double endTime = AlignedTime((int)device, (double)cParams->endTime/1000);
 		register_memcpy_event(id, gId, startTime, endTime, cParams->memTransferSize);
