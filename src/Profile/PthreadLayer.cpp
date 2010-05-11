@@ -15,6 +15,17 @@
 ***************************************************************************/
 
 
+// This needs to go at the top because the ordering of include files here
+// makes a difference on Cray systems and we get an error with RTLD_NEXT 
+// not being defined
+#ifdef TAU_PTHREAD_PRELOAD
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#include <dlfcn.h>
+#endif
+
+
 //////////////////////////////////////////////////////////////////////
 // Include Files 
 //////////////////////////////////////////////////////////////////////
@@ -271,7 +282,6 @@ extern "C" int tau_track_pthread_barrier_wait(pthread_barrier_t *barrier) {
 #endif /* TAU_PTHREAD_BARRIER_AVAILABLE */
 
 #ifdef TAU_PTHREAD_PRELOAD
-#include <dlfcn.h>
 
 static int (*_pthread_create) (pthread_t* thread, const pthread_attr_t* attr, 
 			       void *(*start_routine)(void*), void* arg) = NULL;
@@ -320,7 +330,7 @@ extern "C" int pthread_barrier_wait(pthread_barrier_t *barrier) {
 #endif
 
 /***************************************************************************
- * $RCSfile: PthreadLayer.cpp,v $   $Author: sameer $
- * $Revision: 1.24 $   $Date: 2010/04/30 17:55:09 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.24 2010/04/30 17:55:09 sameer Exp $
+ * $RCSfile: PthreadLayer.cpp,v $   $Author: amorris $
+ * $Revision: 1.25 $   $Date: 2010/05/11 22:57:50 $
+ * POOMA_VERSION_ID: $Id: PthreadLayer.cpp,v 1.25 2010/05/11 22:57:50 amorris Exp $
  ***************************************************************************/
