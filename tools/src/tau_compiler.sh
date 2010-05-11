@@ -939,6 +939,9 @@ if [ $optCompInst == $TRUE ]; then
     optLinking="$optLinking $optCompInstLinking"
 fi
 
+
+
+
 ####################################################################
 # Linking if there are no Source Files passed.
 ####################################################################
@@ -951,6 +954,15 @@ if [ $numFiles == 0 ]; then
 	#the script understands that there is nothing to compile so
 	#it simply carries out the current linking. Compilation steps are
 	#avoided by assinging a status of $FALSE to the $gotoNextStep. 
+
+
+    # check for -lc, if found, move it to the end
+    check_lc=`echo "$regularCmd" | sed -e 's/.*\(-lc\).*/\1/g'`
+    regularCmd=`echo "$regularCmd" | sed -e 's/-lc//g'`
+    if [ "x$check_lc" = "x-lc" ] ; then
+	optLinking="$optLinking -lc"
+    fi
+
 
     if [ $removeMpi == $TRUE ]; then
 	echoIfDebug "Before filtering libmpi*.so options command is: $regularCmd"
@@ -967,10 +979,11 @@ if [ $numFiles == 0 ]; then
 	# also check for IBM -lvtd_r, and if found, move it to the end
 	checkvtd=`echo "$regularCmd" | sed -e 's/.*\(-lvtd_r\).*/\1/g'`
 	regularCmd=`echo "$regularCmd" | sed -e 's/-lvtd_r//g'`
-	if [ "x$checkvtd" = "-lvtd_r" ] ; then
+	if [ "x$checkvtd" = "x-lvtd_r" ] ; then
 	    optLinking="$optLinking -lvtd_r"
 	fi
     fi
+
 
     if [ $hasAnOutputFile == $FALSE ]; then
 	passedOutputFile="a.out"
@@ -1390,7 +1403,16 @@ if [ $gotoNextStep == $TRUE ]; then
 	    objectFilesForLinking="$objectFilesForLinking opari.tab.o"
 	fi
 
+
 	newCmd="$CMD $listOfObjectFiles $objectFilesForLinking $argsRemaining $OUTPUTARGSFORTAU $optLinking -o $passedOutputFile"
+
+        # check for -lc, if found, move it to the end
+	check_lc=`echo "$newCmd" | sed -e 's/.*\(-lc\).*/\1/g'`
+	newCmd=`echo "$newCmd" | sed -e 's/-lc//g'`
+	if [ "x$check_lc" = "x-lc" ] ; then
+	    optLinking="newCmd -lc"
+	fi
+
 	madeToLinkStep=$TRUE
 	evalWithDebugMessage "$newCmd" "Linking (Together) object files"
 
