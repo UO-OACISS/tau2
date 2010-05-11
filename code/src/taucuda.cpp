@@ -70,14 +70,14 @@ void check_gpu_event()
 /* create TAU callback routine to capture both CPU and GPU execution time 
 	takes the thread id as a argument. */
 
-void enter_cu_event(const char* name, eventId id)
+void enter_cu_event(const char* name, eventId *id)
 {
 #ifdef DEBUG_PROF
 	printf("entering cu event: %s.\n", name);
 #endif
 	TAU_START(name);
 }
-void enter_cu_memcpy_event(const char* name, eventId id, gpuId device, bool
+void enter_cu_memcpy_event(const char* name, eventId *id, gpuId *device, bool
 memcpyType)
 {
 #ifdef DEBUG_PROF
@@ -92,7 +92,7 @@ memcpyType)
 	TAU_START(name);
 }
 
-void exit_cu_event(const char *name, eventId id)
+void exit_cu_event(const char *name, eventId *id)
 {
 #ifdef DEBUG_PROF
 	printf("exit cu event: %s.\n", name);
@@ -160,7 +160,7 @@ void break_gpu_event(const char *name, double stop_time)
 	stop_gpu_event(name);
 }
 
-void register_gpu_event(const char *name, eventId id, double startTime, double endTime)
+void register_gpu_event(const char *name, eventId *id, double startTime, double endTime)
 {
 	stage_gpu_event(name, 
 		startTime);
@@ -169,7 +169,7 @@ void register_gpu_event(const char *name, eventId id, double startTime, double e
 			endTime);
 }
 
-void register_memcpy_event(eventId id, gpuId device, double startTime, double
+void register_memcpy_event(eventId *id, gpuId *device, double startTime, double
 endTime, double transferSize, bool memcpyType)
 {
 #ifdef DEBUG_PROF		
@@ -183,7 +183,7 @@ endTime, double transferSize, bool memcpyType)
 		//TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread()); 
 #ifdef DEBUG_PROF		
 		printf("[%f] onesided event mem recv: %f, id: %s.\n", startTime, transferSize,
-		device.printId());
+		device->printId());
 #endif
 		TauTraceOneSidedMsg(MESSAGE_RECV, device, transferSize, gpuTask);
 		break_gpu_event("cuda Memory copy Host to Device",
@@ -197,7 +197,7 @@ endTime, double transferSize, bool memcpyType)
 		//TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread()); 
 #ifdef DEBUG_PROF		
 		printf("[%f] onesided event mem send: %f, id: %s\n", startTime, transferSize,
-		device.printId());
+		device->printId());
 #endif
 		TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, gpuTask);
 		break_gpu_event("cuda Memory copy Device to Host",

@@ -15,6 +15,53 @@ __thread EventManager *my_manager=NULL;
 __thread bool registered=false;
 bool user_events=false;
 
+class cudaGpuId : public gpuId {
+
+	NvU64 contextId;
+	NvU32 deviceId;
+
+public:
+/*	cudaGpuId(const NvU64 cId, const NvU32 dId) :
+		contextId(cId), deviceId(dId) {} */
+	
+	cudaGpuId(const NvU64 cId, const NvU32 dId) {
+		contextId = cId;
+		deviceId = dId;
+	}
+	
+  char* printId();
+	double id_p1() { return (double) contextId; }
+	double id_p2() { return (double) deviceId; }
+};
+
+char* cudaGpuId::printId() 
+{
+		char *r;
+		sprintf(r, "%f:%f", contextId, deviceId);
+		return r;
+}
+
+
+class cuEventId : public eventId
+{
+	NvU64 contextId;
+	NvU64 callId;
+
+	public:
+	cuEventId(const NvU64 a, const NvU64 b) :
+		contextId(a), callId(b) {}
+	
+	bool operator<(const cuEventId& A) const
+	{ 
+		if (contextId == A.contextId)
+		{
+			return callId<A.callId; 
+		}
+		else
+			return contextId<A.contextId;
+	}
+};
+
 typedef map<cuEventId, bool> doubleMap;
 doubleMap MemcpyEventMap;
 
@@ -134,11 +181,11 @@ void CUDAAPI callback_handle(
 				memcpyType = MemcpyDtoH;
 			}
 			MemcpyEventMap.insert(make_pair(id, memcpyType));
-			enter_cu_memcpy_event(cParams->functionName, id, gId, memcpyType);
+			enter_cu_memcpy_event(cParams->functionName, &id, &gId, memcpyType);
 		}
 		else
 		{
-			enter_cu_event(cParams->functionName, id);
+			enter_cu_event(cParams->functionName, &id);
 		}
 	}
 	else if (*callbackId == cuToolsApi_CBID_ExitGeneric)
@@ -147,7 +194,7 @@ void CUDAAPI callback_handle(
 		//extract the device ID for the curent context
 		GetContextTable()->CtxGetId(cParams->ctx, &contextId);
 		cuEventId id(contextId, cParams->apiCallId);
-		exit_cu_event(cParams->functionName, id);
+		exit_cu_event(cParams->functionName, &id);
 	}
 	else if (*callbackId == cuToolsApi_CBID_ProfileLaunch)
 	{
@@ -158,7 +205,7 @@ void CUDAAPI callback_handle(
 		GetContextTable()->CtxGetDevice(cParams->ctx,&device);
 		double startTime = AlignedTime((int)device, (double)cParams->startTime/1000);
 		double endTime = AlignedTime((int)device, (double)cParams->endTime/1000);
-		register_gpu_event(cParams->methodName, id, startTime, endTime);
+		register_gpu_event(cParams->methodName, &id, startTime, endTime);
 	}
 	else if (*callbackId == cuToolsApi_CBID_ProfileMemcpy)
 	{
@@ -176,7 +223,7 @@ void CUDAAPI callback_handle(
 	  if (it != MemcpyEventMap.end())
 		{
 			memcpyType = it->second;
-			register_memcpy_event(id, gId, startTime, endTime, cParams->memTransferSize,
+			register_memcpy_event(&id, &gId, startTime, endTime, cParams->memTransferSize,
 			memcpyType);
 		}
 		else

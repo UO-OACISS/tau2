@@ -110,42 +110,4 @@ extern "C" {
 	typedef int (*PTHREAD_JOIN_PTR)(pthread_t, void **); 
 };
  
-class cudaGpuId : public gpuId {
-
-	NvU64 contextId;
-	NvU32 deviceId;
-
-public:
-	cudaGpuId(const NvU64 cId, const NvU32 dId) :
-		contextId(cId), deviceId(dId) {}
-	
-	char* printId()
-	{
-		char *r;
-		sprintf(r, "%f:%f", contextId, deviceId);
-		return r;
-	}
-	double id_p1() { return (double) contextId; }
-	double id_p2() { return (double) deviceId; }
-};
-
-class cuEventId : public eventId
-{
-	NvU64 contextId;
-	NvU64 callId;
-
-	public:
-	cuEventId(const NvU64 a, const NvU64 b) :
-		contextId(a), callId(b) {}
-	
-	bool operator<(const cuEventId& A) const
-	{ 
-		if (contextId == A.contextId)
-		{
-			return callId<A.callId; 
-		}
-		else
-			return contextId<A.contextId;
-	}
-};
 

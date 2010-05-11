@@ -63,13 +63,12 @@ struct gpuId
 class gpuId {
 
 public:
-	char * printId();
-	double id_p1();
-	double id_p2();
+	virtual char * printId() = 0;
+	virtual double id_p1() = 0;
+	virtual double id_p2() = 0;
 };
 
 class eventId {
-
 
 };
 #endif // __cplusplus
@@ -86,23 +85,23 @@ extern "C" int tau_cuda_init(void);
 extern "C" void tau_cuda_exit(void);
 
 /* Entry point for cu* routines */
-extern "C" void enter_cu_event(const char *functionName, eventId id);
+extern "C" void enter_cu_event(const char *functionName, eventId *id);
 
 /* Entry point for cu* routines that initiate memory copies. */
-extern "C" void enter_cu_memcpy_event(const char *functionName, eventId id,
-gpuId device, bool memcpyType);
+extern "C" void enter_cu_memcpy_event(const char *functionName, eventId *id,
+gpuId *device, bool memcpyType);
 
 /* Exit point for cu* routines */
-extern "C" void exit_cu_event(const char *functionName, eventId id);
+extern "C" void exit_cu_event(const char *functionName, eventId *id);
 
 /* Callback for a GPU event that occurred earlier in the execution of the
  * program. Times are pre-aligned to the CPU clock. */
-extern "C" void register_gpu_event(const char *functionName, eventId id, double startTime, double
+extern "C" void register_gpu_event(const char *functionName, eventId *id, double startTime, double
 endTime);
 
 /* Callback for a Memcpy event that occurred earlier in the execution of the
  * program. Times are pre-aligned to the CPU clock. */
-extern "C" void register_memcpy_event(eventId id, gpuId device, double startTime, double
+extern "C" void register_memcpy_event(eventId *id, gpuId *device, double startTime, double
 endTime, double transferSize, bool memcpyType);
 
 #endif // _TAU_CUDA_INTERFACE
