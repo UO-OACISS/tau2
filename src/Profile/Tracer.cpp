@@ -551,15 +551,15 @@ int TauTraceMergeAndConvertTracesIfNecessary(void) {
 
 #ifdef TAU_CUDA
 
-void TauTraceOneSidedMsg(bool type, gpuId gpu, int length, int threadId)
+void TauTraceOneSidedMsg(bool type, gpuId *gpu, int length, int threadId)
 {
 		/* there are three user events that make up a one-sided msg */
 		if (type == MESSAGE_SEND)
     	TauTraceEventSimple(TAU_ONESIDED_MESSAGE_SEND, length, threadId); 
 		else
     	TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, length, threadId); 
-    TauTraceEventSimple(TAU_ONESIDED_MESSAGE_ID_1, gpu.contextId, threadId); 
-    TauTraceEventSimple(TAU_ONESIDED_MESSAGE_ID_2, gpu.deviceId, threadId); 
+    TauTraceEventSimple(TAU_ONESIDED_MESSAGE_ID_1, gpu->id_p1(), threadId); 
+    TauTraceEventSimple(TAU_ONESIDED_MESSAGE_ID_2, gpu->id_p2(), threadId); 
 }
 
 #endif

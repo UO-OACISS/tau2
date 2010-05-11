@@ -40,6 +40,10 @@
 #define TAU_ONESIDED_MESSAGE_ID_1 70002
 #define TAU_ONESIDED_MESSAGE_ID_2 70003
 
+#ifdef TAU_CUDA
+#include "taucuda_interface.h"
+#endif
+
 /* event record description */
 typedef struct {
   x_int32  ev;    /* event id                    */
@@ -79,8 +83,7 @@ extern "C" {
   void TAUDECL TauTraceRecvMsg(int type, int source, int length);
 
 #ifdef TAU_CUDA
-#include "taucuda_interface.h"
-  void TAUDECL TauTraceOneSidedMsg(bool type, gpuId gpu, int length, int thread);
+  void TAUDECL TauTraceOneSidedMsg(bool type, gpuId *gpu, int length, int thread);
 #endif
 
   /* Returns a pointer to the (singleton) offset info struct */
