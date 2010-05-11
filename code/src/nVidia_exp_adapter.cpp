@@ -15,6 +15,10 @@ __thread EventManager *my_manager=NULL;
 __thread bool registered=false;
 bool user_events=false;
 
+typedef map<cuEventId, bool> doubleMap;
+doubleMap MemcpyEventMap;
+
+
 #define SYNCH_LATENCY 1
 
 /*
@@ -120,7 +124,17 @@ void CUDAAPI callback_handle(
 			NvU32 device;
 			GetContextTable()->CtxGetDevice(cParams->ctx,&device);
 			cudaGpuId gId(contextId, device);
-			enter_cu_memcpy_event(cParams->functionName, id, gId);
+			bool memcpyType;
+			if(strncmp(cParams->functionName,"cuMemcpyHtoD", sizeof("cuMemcpyHtoD")-1)==0)
+			{
+				memcpyType = MemcpyHtoD;
+			}
+			else if(strncmp(cParams->functionName,"cuMemcpyDtoH",sizeof("cuMemcpyDtoH")-1)==0)
+			{
+				memcpyType = MemcpyDtoH;
+			}
+			MemcpyEventMap.insert(make_pair(id, memcpyType));
+			enter_cu_memcpy_event(cParams->functionName, id, gId, memcpyType);
 		}
 		else
 		{
@@ -156,7 +170,19 @@ void CUDAAPI callback_handle(
 		cudaGpuId gId(contextId, device);
 		double startTime = AlignedTime((int)device, (double)cParams->startTime/1000);
 		double endTime = AlignedTime((int)device, (double)cParams->endTime/1000);
-		register_memcpy_event(id, gId, startTime, endTime, cParams->memTransferSize);
+		doubleMap::const_iterator it = MemcpyEventMap.find(id);
+
+		bool memcpyType;
+	  if (it != MemcpyEventMap.end())
+		{
+			memcpyType = it->second;
+			register_memcpy_event(id, gId, startTime, endTime, cParams->memTransferSize,
+			memcpyType);
+		}
+		else
+		{
+    	printf("ERROR: cannot find matching memcopy event.\n");
+		}
 	}
 }
 /*

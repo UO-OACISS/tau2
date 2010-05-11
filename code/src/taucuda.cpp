@@ -38,9 +38,6 @@ using namespace std;
 
 double cpu_start_time;
 
-#define MemcpyHtoD false
-#define MemcpyDtoH true
-
 struct EventName {
 		const char *name;
 		EventName(const char* n) :
@@ -48,8 +45,8 @@ struct EventName {
 		bool operator<(const EventName &c1) const { return strcmp(name,c1.name) < 0; }
 };
 
-typedef map<eventId, bool> doubleMap;
-doubleMap MemcpyEventMap;
+//typedef map<eventId, bool> doubleMap;
+//doubleMap MemcpyEventMap;
 
 map<EventName, void*> events;
 
@@ -80,19 +77,16 @@ void enter_cu_event(const char* name, eventId id)
 #endif
 	TAU_START(name);
 }
-void enter_cu_memcpy_event(const char* name, eventId id, gpuId device)
+void enter_cu_memcpy_event(const char* name, eventId id, gpuId device, bool
+memcpyType)
 {
 #ifdef DEBUG_PROF
 	printf("entering cuMemcpy event: %s.\n", name);
 #endif
-	if(strncmp(name,"cuMemcpyHtoD", sizeof("cuMemcpyHtoD")-1)==0)
-	{
-		MemcpyEventMap.insert(make_pair(id, MemcpyHtoD));
+	if (memcpyType == MemcpyHtoD) {
 		TauTraceOneSidedMsg(MESSAGE_SEND, device, -1, 0);
 	}
-	else if(strncmp(name,"cuMemcpyDtoH",sizeof("cuMemcpyDtoH")-1)==0)
-	{
-		MemcpyEventMap.insert(make_pair(id, MemcpyDtoH));
+	else {
 		TauTraceOneSidedMsg(MESSAGE_RECV, device, -1, 0);
 	}
 	TAU_START(name);
@@ -176,45 +170,38 @@ void register_gpu_event(const char *name, eventId id, double startTime, double e
 }
 
 void register_memcpy_event(eventId id, gpuId device, double startTime, double
-endTime, double transferSize)
+endTime, double transferSize, bool memcpyType)
 {
-	doubleMap::const_iterator it = MemcpyEventMap.find(id);
 #ifdef DEBUG_PROF		
 	printf("recording memcopy event.\n");
 #endif
-	if (it != MemcpyEventMap.end())
-	{
-		if (it->second == MemcpyHtoD) {
-			stage_gpu_event("cuda Memory copy Host to Device", 
-					startTime);
-			//TAU_REGISTER_EVENT(MemoryCopyEventHtoD, "Memory copied from Host to Device");
-			TAU_EVENT(MemoryCopyEventHtoD(), transferSize);
-    	//TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread()); 
+	if (memcpyType == MemcpyHtoD) {
+		stage_gpu_event("cuda Memory copy Host to Device", 
+				startTime);
+		//TAU_REGISTER_EVENT(MemoryCopyEventHtoD, "Memory copied from Host to Device");
+		TAU_EVENT(MemoryCopyEventHtoD(), transferSize);
+		//TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread()); 
 #ifdef DEBUG_PROF		
-			printf("[%f] onesided event mem recv: %f, id: %s.\n", startTime, transferSize,
-			device.printId());
+		printf("[%f] onesided event mem recv: %f, id: %s.\n", startTime, transferSize,
+		device.printId());
 #endif
-			TauTraceOneSidedMsg(MESSAGE_RECV, device, transferSize, gpuTask);
-			break_gpu_event("cuda Memory copy Host to Device",
-					endTime);
-		}
-		else {
-			stage_gpu_event("cuda Memory copy Device to Host", 
-					startTime);
-			//TAU_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
-			TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
-    	//TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread()); 
+		TauTraceOneSidedMsg(MESSAGE_RECV, device, transferSize, gpuTask);
+		break_gpu_event("cuda Memory copy Host to Device",
+				endTime);
+	}
+	else {
+		stage_gpu_event("cuda Memory copy Device to Host", 
+				startTime);
+		//TAU_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
+		TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
+		//TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread()); 
 #ifdef DEBUG_PROF		
-			printf("[%f] onesided event mem send: %f, id: %s\n", startTime, transferSize,
-			device.printId());
+		printf("[%f] onesided event mem send: %f, id: %s\n", startTime, transferSize,
+		device.printId());
 #endif
-			TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, gpuTask);
-			break_gpu_event("cuda Memory copy Device to Host",
-					endTime);
-		}
-	} else 
-	{
-		printf("ERROR: cannot find matching memcopy event.\n");
+		TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, gpuTask);
+		break_gpu_event("cuda Memory copy Device to Host",
+				endTime);
 	}
 
 }
