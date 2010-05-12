@@ -52,6 +52,8 @@ class TotID{
 	//public static final int ONESIDE_SEND=0;
 	//public static final int ONESIDE_RECV=1;
 	public int size=0;
+	
+	public long offset=0;
 
 	//	/**
 	//	 * Most recent valid CUDA mem-copy size, set in the second of 3 communication triplets.
@@ -240,6 +242,8 @@ public class MultiMerge {
 	 */
 	static TraceWriter tw;
 
+	private static boolean synch = false;
+	
 	/**
 	 * Given an array of timestamps returns the index of the smallest timestamp greater than or equal to 0;
 	 * @param times an array of timestamps
@@ -422,6 +426,18 @@ public class MultiMerge {
 			}else System.out.println("Warning: Tried to close null trace");
 			initReaders[rs]=null;
 		}
+		if(synch){
+		long base=0;
+		for(int i=0;i<totIDs.length;i++){
+			if(i==0){
+				base=totIDs[i].offset;
+				totIDs[i].offset=0;
+			}
+			else{
+				totIDs[i].offset=base-totIDs[i].offset;
+			}
+		}
+		}
 	}
 
 	/**
@@ -444,6 +460,7 @@ public class MultiMerge {
 			readers[rs].setSubtractFirstTimestamp(false);//TODO: Why is this needed only for cuda output?
 			totalRecords+=readers[rs].getNumRecords();
 			sorter[rs]=readers[rs].peekTime();
+			if(synch){sorter[rs]+=totIDs[rs].offset;}
 		}
 
 		System.out.println(totalRecords+" records to merge.");
@@ -471,6 +488,7 @@ public class MultiMerge {
 				}
 
 				sorter[minDex]=readers[minDex].peekTime();
+				if(synch){sorter[minDex]+=totIDs[minDex].offset;}
 				if(sorter[minDex]==-1)
 				{
 					readers[minDex].closeTrace();
@@ -603,6 +621,8 @@ public class MultiMerge {
 			return 0;
 		}
 		public int leaveState(Object userData, long time, int nodeToken, int threadToken, int stateToken){
+			TotID tot = (TotID)userData;
+			tot.offset=time;
 			return 0;
 		}
 
@@ -714,7 +734,9 @@ public class MultiMerge {
 
 		public int enterState(Object userData, long time, int nodeToken, int threadToken, int stateToken){
 			TotID tot = (TotID)userData;
-
+			if(synch){
+				time+=tot.offset;
+			}
 			int actualID=tot.locToGlobStates.get(new Integer(stateToken)).intValue();
 
 			tw.enterState(time, tot.node, tot.thread, actualID);
@@ -722,7 +744,9 @@ public class MultiMerge {
 		}
 		public int leaveState(Object userData, long time, int nodeToken, int threadToken, int stateToken){
 			TotID tot = (TotID)userData;
-
+			if(synch){
+				time+=tot.offset;
+			}
 			tw.leaveState(time, tot.node, tot.thread, tot.locToGlobStates.get(new Integer(stateToken)).intValue());
 			return 0;
 		}
@@ -732,7 +756,9 @@ public class MultiMerge {
 				int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageComm){
 
 			TotID tot = (TotID)userData;
-
+			if(synch){
+				time+=tot.offset;
+			}
 
 			Integer transNode=oldNewDest.get(new Integer(destinationNodeToken));
 			if(transNode==null)
@@ -750,7 +776,9 @@ public class MultiMerge {
 
 		public int recvMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageCom) {
 			TotID tot = (TotID)userData;
-
+			if(synch){
+				time+=tot.offset;
+			}
 
 
 			Integer transNode=oldNewDest.get(new Integer(sourceNodeToken));
@@ -767,7 +795,9 @@ public class MultiMerge {
 
 		public int eventTrigger(Object userData, long time, int nodeToken, int threadToken, int userEventToken, double userEventValue) {
 			TotID tot = (TotID)userData;
-
+			if(synch){
+				time+=tot.offset;
+			}
 			if(userEventToken==ONESIDED_MESSAGE_SEND||userEventToken==ONESIDED_MESSAGE_RECV){
 				tot.oneSideType=userEventToken;
 				tot.size=(int)userEventValue;
