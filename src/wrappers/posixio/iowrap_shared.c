@@ -1137,7 +1137,7 @@ int socketpair(int d, int type, int protocol, int sv[2]) {
   return ret;
 }
 
-
+#ifndef TAU_BGP
 /*********************************************************************
  * bind 
  ********************************************************************/
@@ -1169,7 +1169,6 @@ int bind(int socket, const struct sockaddr *address, socklen_t address_len) {
 
   return ret;
 }
-
 /*********************************************************************
  * accept
  ********************************************************************/
@@ -1435,6 +1434,7 @@ ssize_t recvfrom (int fd, void *buf, size_t count, int flags, struct sockaddr *f
   return ret;
 }
 #endif /* _AIX */
+#endif /* TAU_BGP */
 
 /*********************************************************************
  * dup
