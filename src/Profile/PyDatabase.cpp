@@ -11,6 +11,9 @@
 //-----------------------------------------------------------------------------
 //
 // $Log: PyDatabase.cpp,v $
+// Revision 1.10  2010/05/12 19:42:17  amorris
+// Only call TAU_DB_MERGED_DUMP() if TAU_MPI is defined.
+//
 // Revision 1.9  2010/03/18 17:36:46  amorris
 // Refactoring to implement TAU_DB_MERGED_DUMP and python dbMergeDump call that
 // allow the user to control when the merged profile is written.
@@ -109,7 +112,9 @@ PyObject * pytau_dbMergeDump(PyObject *self, PyObject *args)
 #ifdef DEBUG
       printf("dbMergeDump: extracted prefix = %s, len = %d\n", prefix, len);
 #endif /* DEBUG */
+#ifdef TAU_MPI
       TAU_DB_MERGED_DUMP();
+#endif
     }
 
     // return
@@ -407,7 +412,7 @@ PyObject * pytau_setNode(PyObject *self, PyObject *args)
 }
 
 // version
-// $Id: PyDatabase.cpp,v 1.9 2010/03/18 17:36:46 amorris Exp $
+// $Id: PyDatabase.cpp,v 1.10 2010/05/12 19:42:17 amorris Exp $
 
 // End of file
   
