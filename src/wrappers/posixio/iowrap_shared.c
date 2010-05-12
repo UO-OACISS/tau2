@@ -487,12 +487,12 @@ off_t lseek(int fd, off_t offset, int whence) {
 /*********************************************************************
  * lseek64
  ********************************************************************/
-off_t lseek64(int fd, off_t offset, int whence) {
+off64_t lseek64(int fd, off64_t offset, int whence) {
   Tau_iowrap_checkInit();
-  static off_t (*_lseek64)(int fd, off_t offset, int whence) = NULL;
+  static off64_t (*_lseek64)(int fd, off64_t offset, int whence) = NULL;
   int ret;
   if (_lseek64 == NULL) {
-    _lseek64 = ( off_t (*)(int fd, off_t offset, int whence)) dlsym(RTLD_NEXT, "lseek64");   }
+    _lseek64 = ( off64_t (*)(int fd, off64_t offset, int whence)) dlsym(RTLD_NEXT, "lseek64");   }
 
   if (Tau_iowrap_checkPassThrough()) {
     return _lseek64(fd, offset, whence);
