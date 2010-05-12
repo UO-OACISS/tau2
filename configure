@@ -4718,29 +4718,6 @@ fi
 /bin/rm -f conftest_bfd.o conftest_bfd.c
 ######################################################################
 
-######################################################################
-# Check if BFD can be linked into a shared library
-######################################################################
-cat <<EOF > conftest_bfd.c
-#include <bfd.h>
-void foo() {
-   bfd_init();
-   bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
-   return;
-}
-EOF
-$echo "Checking for shared library compatible libbfd... ${nnl}"
-shared_opt="-shared -fPIC"
-
-if $c_compiler $orig_useropt $shared_opt -o conftest_bfd.so conftest_bfd.c -fPIC $bfdinclude $bfdlink -lbfd 1> /dev/null 2>&1 ; then
-    fixmakeargs="$fixmakeargs TAU_BFDSHAREDLINK"
-    echo "yes"
-else
-    echo "no"
-fi
-/bin/rm -f conftest_bfd.o conftest_bfd.c conftest_bfd.so
-######################################################################
-
 
 ######################################################################
 # Check what is needed for linking with BFD
@@ -4784,6 +4761,31 @@ BFDLIBS=`echo $BFDLIBS | sed -e 's/ /#/g'`
 fixmakeargs="$fixmakeargs bfdlibs=$BFDLIBS"
 
 /bin/rm -f conftest_bfd.o conftest_bfd.c conftest_bfd
+######################################################################
+
+
+######################################################################
+# Check if BFD can be linked into a shared library
+######################################################################
+cat <<EOF > conftest_bfd.c
+#include <bfd.h>
+void foo() {
+   bfd_init();
+   bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
+   return;
+}
+EOF
+$echo "Checking for shared library compatible libbfd... ${nnl}"
+shared_opt="-shared -fPIC"
+
+bfdlibs=`echo $BFDLIBS | sed -e 's/#/ /g'`
+if $c_compiler $orig_useropt $shared_opt -o conftest_bfd.so conftest_bfd.c -fPIC $bfdinclude $bfdlink $bfdlibs 1> /dev/null 2>&1 ; then
+    fixmakeargs="$fixmakeargs TAU_BFDSHAREDLINK"
+    echo "yes"
+else
+    echo "no"
+fi
+/bin/rm -f conftest_bfd.o conftest_bfd.c conftest_bfd.so
 ######################################################################
 
 
