@@ -82,7 +82,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(TAUROOT)/include/tau_internal.h $(INCDIR)/TauSampling.h $(INCDIR)/TauMetaData.h \
 		$(INCDIR)/TauSnapshot.h  $(INCDIR)/TauGASP.h          \
 	 	$(INCDIR)/TauUtil.h $(INCDIR)/TauXML.h $(INCDIR)/TauUnify.h $(INCDIR)/TauCollate.h \
-                $(INCDIR)/TauMemoryWrap.h
+                $(INCDIR)/TauMemoryWrap.h $(INCDIR)/TauIoWrap.h
 
 LDFLAGS	      =
 
@@ -109,7 +109,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
 		$(PARAM_O) Tracer.o TauMetrics.o TauReadMetrics.o $(THR_O) \
 		$(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) $(TAU_SAMPLING_O) \
-		TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
+		TauIoWrap.o TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_GASPU_O)
 
 STATIC_OBJS   = Comp_gnu.o $(PGIACC_STATIC_O)
@@ -446,6 +446,9 @@ TauMetaData.o 	: TauMetaData.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
 
 TauMemoryWrap.o	: TauMemoryWrap.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauIoWrap.o	: TauIoWrap.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauXML.o 	: TauXML.cpp $(HDRS)
