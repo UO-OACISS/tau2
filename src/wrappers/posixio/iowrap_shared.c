@@ -16,7 +16,10 @@
 **                                                                         **
 ****************************************************************************/
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
+
 #include <dlfcn.h>
 
 #include <stdlib.h>
@@ -38,7 +41,8 @@
 #include <arpa/inet.h>
 #include <sys/un.h>
 #include <netinet/in.h>
-#include <Profile/TauInit.h>
+
+#include <Profile/TauIoWrap.h>
     
 #define dprintf TAU_VERBOSE
 #define TAU_WRITE TAU_IO
@@ -47,196 +51,11 @@
 #define TAU_MAX_FILENAME_LEN 2048
 
 
-#include <vector>
-using namespace std;
-
-/*********************************************************************
- * register different kinds of events here
- ********************************************************************/
-#define NUM_EVENTS 4
-typedef enum {
-  WRITE_BW,
-  WRITE_BYTES,
-  READ_BW,
-  READ_BYTES
-} event_type;
-
-const char *iowrap_event_names[NUM_EVENTS] = {"WRITE Bandwidth (MB/s)", "Bytes Written", "READ Bandwidth (MB/s)", "Bytes Read"};
-
-
-/*********************************************************************
- * IOvector subclasses vector to provide custom constructor/destructor 
- * to enable/disable wrapping
- ********************************************************************/
-static int lightsOut = 0;
-class IOvector : public vector<vector<TauUserEvent*> > {
-public:
-  IOvector(int farg) : vector<vector<TauUserEvent*> >(farg) {
-    lightsOut = 0;
-  }
-  ~IOvector() {
-    lightsOut = 1;
-  }
-};
-
-/*********************************************************************
- * Return the set of events, must be done as a static returned because
- * the wrapped routines may be called during the initializers of other
- * shared libraries and may be before our global_ctors_aux() call
- ********************************************************************/
-static IOvector &TheIoWrapEvents() {
-  static IOvector iowrap_events(4);
-  return iowrap_events;
-}
-
-void *global_write_bandwidth=0, *global_read_bandwidth=0, *global_bytes_written=0, *global_bytes_read=0;
-
-void __attribute__ ((constructor)) tau_iowrap_preload_init(void);
-void __attribute__ ((destructor)) tau_iowrap_preload_fini(void);
-
-/*********************************************************************
- * return whether we should pass through and not track the IO
- ********************************************************************/
-static int Tau_iowrap_checkPassThrough() {
-  if (Tau_global_get_insideTAU() > 0 || lightsOut) {
-    return 1;
-  } else {
-    return 0;
-  }
-}
-
-/*********************************************************************
- * register the different events (read/write/etc) for a file descriptor
- ********************************************************************/
-static void Tau_iowrap_registerEvents(int fid, const char *pathname) {
-  RtsLayer::LockDB();
-  dprintf ("Asked to registering %d with %s (current size=%d)\n", fid, pathname, TheIoWrapEvents()[0].size());
-  fid++; // skip the "unknown" descriptor
-
-  for (int i=0; i<NUM_EVENTS; i++) {
-    TauUserEvent *unknown_ptr = 0;
-    if (TheIoWrapEvents()[i].size() >= 1) {
-      unknown_ptr = TheIoWrapEvents()[i][0];
-    }
-    while (TheIoWrapEvents()[i].size() <= fid) {
-      TheIoWrapEvents()[i].push_back(unknown_ptr);
-      if (TheIoWrapEvents()[i].size()-1 != fid) {
-	dprintf ("Registering %d with unknown\n", TheIoWrapEvents()[i].size()-2);
-      }
-    }
-    void *event = 0;
-    string name = string(iowrap_event_names[i]) + " <file=\"" + pathname + "\">";
-    Tau_get_context_userevent(&event, strdup((char*)name.c_str()));
-    TheIoWrapEvents()[i][fid] = (TauUserEvent*)event;
-  }
-  dprintf ("Registering %d with %s\n", fid-1, pathname);
-  RtsLayer::UnLockDB();
-}
-
-/*********************************************************************
- * unregister events for a file descriptor
- ********************************************************************/
-static void Tau_iowrap_unregisterEvents(int fid) {
-  RtsLayer::LockDB();
-  dprintf ("Un-registering %d\n", fid);
-  fid++; // skip the "unknown" descriptor
-
-  for (int i=0; i<NUM_EVENTS; i++) {
-    TauUserEvent *unknown_ptr = 0;
-    if (TheIoWrapEvents()[i].size() >= 1) {
-      unknown_ptr = TheIoWrapEvents()[i][0];
-    }
-    while (TheIoWrapEvents()[i].size() <= fid) {
-      TheIoWrapEvents()[i].push_back(unknown_ptr);
-    }
-    TheIoWrapEvents()[i][fid] = unknown_ptr;
-  }
-  RtsLayer::UnLockDB();
-}
-
-
-/*********************************************************************
- * Tau_iowrap_dupEvents takes care of the associating the events with the 
- * new file descriptor obtained by using dup/dup2 calls.
- ********************************************************************/
-static void Tau_iowrap_dupEvents(int oldfid, int newfid) {
-  RtsLayer::LockDB();
-  dprintf ("dup (old=%d, new=%d)\n", oldfid, newfid);
-  oldfid++; // skip the "unknown" descriptor
-  newfid++;
-
-  for (int i=0; i<NUM_EVENTS; i++) {
-    while (TheIoWrapEvents()[i].size() <= newfid) {
-      TheIoWrapEvents()[i].push_back(0);
-    }
-    TheIoWrapEvents()[i][newfid] = TheIoWrapEvents()[i][oldfid];
-  }
-  RtsLayer::UnLockDB();
-}
-
-
-
-/*********************************************************************
- * initializer
- ********************************************************************/
-void Tau_iowrap_checkInit() {
-  static int init = 0;
-  if (init == 1) {
-    return;
-  }
-  init = 1;
-
-  global_write_bandwidth=0;
-  global_read_bandwidth=0;
-  global_bytes_written=0;
-  global_bytes_read=0;
-
-  Tau_init_initializeTAU();
-  Tau_iowrap_registerEvents(-1, "unknown");
-  Tau_iowrap_registerEvents(0, "stdin");
-  Tau_iowrap_registerEvents(1, "stdout");
-  Tau_iowrap_registerEvents(2, "stderr");
-  Tau_get_context_userevent(&global_write_bandwidth, "WRITE Bandwidth (MB/s)");
-  Tau_get_context_userevent(&global_read_bandwidth, "READ Bandwidth (MB/s)");
-  Tau_get_context_userevent(&global_bytes_written, "Bytes Written");
-  Tau_get_context_userevent(&global_bytes_read, "Bytes Read");
-  Tau_create_top_level_timer_if_necessary();
-}
-
-
-/*********************************************************************
- * shared library constructor
- ********************************************************************/
-void tau_iowrap_preload_init() {
-  Tau_iowrap_checkInit();
-}
-
-/*********************************************************************
- * shared library destructor
- ********************************************************************/
-void tau_iowrap_preload_fini() {
-}
-
-/*********************************************************************
- * Get the user event for the given type of event and file descriptor
- ********************************************************************/
-static void *Tau_iowrap_getEvent(event_type type, int fid) {
-  fid++; // skip the "unknown" descriptor
-  if (fid >= TheIoWrapEvents()[(int)type].size()) {
-    dprintf ("************** unknown fid! %d\n", fid-1);
-    fid = 0; // use the "unknown" descriptor
-  }
-  return TheIoWrapEvents()[(int)type][fid];
-}
-
-#define TAU_GET_IOWRAP_EVENT(e, event, fid) void *e = Tau_iowrap_getEvent(event, fid);
-
-
 
 /*********************************************************************
  * fopen 
  ********************************************************************/
-extern "C" FILE *fopen(const char *path, const char *mode) {
+FILE *fopen(const char *path, const char *mode) {
   Tau_iowrap_checkInit();
   static FILE* (*_fopen)(const char *path, const char *mode) = NULL;
   FILE *ret;
@@ -264,7 +83,7 @@ extern "C" FILE *fopen(const char *path, const char *mode) {
 /*********************************************************************
  * fopen64 
  ********************************************************************/
-extern "C" FILE *fopen64(const char *path, const char *mode) {
+FILE *fopen64(const char *path, const char *mode) {
   Tau_iowrap_checkInit();
   static FILE* (*_fopen64)(const char *path, const char *mode) = NULL;
   FILE *ret;
@@ -293,7 +112,7 @@ extern "C" FILE *fopen64(const char *path, const char *mode) {
 /*********************************************************************
  * fdopen 
  ********************************************************************/
-extern "C" FILE *fdopen(int fd, const char *mode) {
+FILE *fdopen(int fd, const char *mode) {
   Tau_iowrap_checkInit();
   static FILE* (*_fdopen)(int fd, const char *mode) = NULL;
   FILE *ret;
@@ -318,7 +137,7 @@ extern "C" FILE *fdopen(int fd, const char *mode) {
 /*********************************************************************
  * freopen 
  ********************************************************************/
-extern "C" FILE *freopen(const char *path, const char *mode, FILE *stream) {
+FILE *freopen(const char *path, const char *mode, FILE *stream) {
   Tau_iowrap_checkInit();
   static FILE* (*_freopen)(const char *path, const char *mode, FILE *stream) = NULL;
   FILE *ret;
@@ -346,7 +165,7 @@ extern "C" FILE *freopen(const char *path, const char *mode, FILE *stream) {
 /*********************************************************************
  * fclose 
  ********************************************************************/
-extern "C" int fclose(FILE *fp) {
+int fclose(FILE *fp) {
   Tau_iowrap_checkInit();
   static int (*_fclose)(FILE *fp) = NULL;
   int ret;
@@ -376,7 +195,7 @@ extern "C" int fclose(FILE *fp) {
 /*********************************************************************
  * fprintf 
  ********************************************************************/
-extern "C" int fprintf(FILE *stream, const char *format, ...) {
+int fprintf(FILE *stream, const char *format, ...) {
   Tau_iowrap_checkInit();
   va_list arg;
 
@@ -439,7 +258,7 @@ extern "C" int fprintf(FILE *stream, const char *format, ...) {
 /*********************************************************************
  * fscanf 
  ********************************************************************/
-extern "C" int fscanf(FILE *stream, const char *format, ...) {
+int fscanf(FILE *stream, const char *format, ...) {
   Tau_iowrap_checkInit();
   va_list arg;
 
@@ -500,7 +319,7 @@ extern "C" int fscanf(FILE *stream, const char *format, ...) {
 /*********************************************************************
  * fwrite 
  ********************************************************************/
-extern "C" size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream) {
+size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream) {
   Tau_iowrap_checkInit();
   static size_t (*_fwrite)(const void *ptr, size_t size, size_t nmemb, FILE *stream) = NULL;
   size_t ret;
@@ -550,7 +369,7 @@ extern "C" size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stre
 /*********************************************************************
  * fread 
  ********************************************************************/
-extern "C" size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
   Tau_iowrap_checkInit();
   static size_t (*_fread)(void *ptr, size_t size, size_t nmemb, FILE *stream) = NULL;
   int ret;
@@ -598,7 +417,7 @@ extern "C" size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
 /*********************************************************************
  * fcntl
  ********************************************************************/
-extern "C" int fcntl(int fd, int cmd, ...) {
+int fcntl(int fd, int cmd, ...) {
   Tau_iowrap_checkInit();
   va_list ap;
   void *arg;
@@ -645,7 +464,7 @@ extern "C" int fcntl(int fd, int cmd, ...) {
 /*********************************************************************
  * lseek
  ********************************************************************/
-extern "C" off_t lseek(int fd, off_t offset, int whence) {
+off_t lseek(int fd, off_t offset, int whence) {
   Tau_iowrap_checkInit();
   static off_t (*_lseek)(int fd, off_t offset, int whence) = NULL;
   int ret;
@@ -668,7 +487,7 @@ extern "C" off_t lseek(int fd, off_t offset, int whence) {
 /*********************************************************************
  * lseek64
  ********************************************************************/
-extern "C" off_t lseek64(int fd, off_t offset, int whence) {
+off_t lseek64(int fd, off_t offset, int whence) {
   Tau_iowrap_checkInit();
   static off_t (*_lseek64)(int fd, off_t offset, int whence) = NULL;
   int ret;
@@ -691,7 +510,7 @@ extern "C" off_t lseek64(int fd, off_t offset, int whence) {
 /*********************************************************************
  * fseek 
  ********************************************************************/
-extern "C" int fseek(FILE *stream, long offset, int whence) {
+int fseek(FILE *stream, long offset, int whence) {
   Tau_iowrap_checkInit();
   static int (*_fseek)(FILE *stream, long offset, int whence) = NULL;
   int ret;
@@ -716,7 +535,7 @@ extern "C" int fseek(FILE *stream, long offset, int whence) {
 /*********************************************************************
  * rewind 
  ********************************************************************/
-extern "C" void rewind(FILE *stream) {
+void rewind(FILE *stream) {
   Tau_iowrap_checkInit();
   static void (*_rewind)(FILE *stream) = NULL;
   int ret;
@@ -741,7 +560,7 @@ extern "C" void rewind(FILE *stream) {
 /*********************************************************************
  * write 
  ********************************************************************/
-extern "C" ssize_t write (int fd, const void *buf, size_t count) {
+ssize_t write (int fd, const void *buf, size_t count) {
   Tau_iowrap_checkInit();
   static ssize_t (*_write)(int fd, const void *buf, size_t count) = NULL;
   ssize_t ret;
@@ -792,7 +611,7 @@ extern "C" ssize_t write (int fd, const void *buf, size_t count) {
 /*********************************************************************
  * read 
  ********************************************************************/
-extern "C" ssize_t read (int fd, void *buf, size_t count) {
+ssize_t read (int fd, void *buf, size_t count) {
   Tau_iowrap_checkInit();
   static ssize_t (*_read)(int fd, void *buf, size_t count) = NULL;
   ssize_t ret; 
@@ -842,7 +661,7 @@ extern "C" ssize_t read (int fd, void *buf, size_t count) {
 /*********************************************************************
  * readv 
  ********************************************************************/
-extern "C" ssize_t readv (int fd, const struct iovec *vec, int count) {
+ssize_t readv (int fd, const struct iovec *vec, int count) {
   Tau_iowrap_checkInit();
   static ssize_t (*_readv)(int fd, const struct iovec *vec, int count) = NULL;
   ssize_t ret; 
@@ -899,7 +718,7 @@ extern "C" ssize_t readv (int fd, const struct iovec *vec, int count) {
 /*********************************************************************
  * writev 
  ********************************************************************/
-extern "C" ssize_t writev (int fd, const struct iovec *vec, int count) {
+ssize_t writev (int fd, const struct iovec *vec, int count) {
   Tau_iowrap_checkInit();
   static ssize_t (*_writev)(int fd, const struct iovec *vec, int count) = NULL;
   ssize_t ret;
@@ -959,7 +778,7 @@ extern "C" ssize_t writev (int fd, const struct iovec *vec, int count) {
 /*********************************************************************
  * mkstemp
  ********************************************************************/
-extern "C" int mkstemp (char *templat) {
+int mkstemp (char *templat) {
   Tau_iowrap_checkInit();
   static int (*_mkstemp)(char *templat)  = NULL;
   int ret;
@@ -992,7 +811,7 @@ extern "C" int mkstemp (char *templat) {
 /*********************************************************************
  * tmpfile
  ********************************************************************/
-extern "C" FILE* tmpfile () {
+FILE* tmpfile () {
   Tau_iowrap_checkInit();
   static FILE* (*_tmpfile)()  = NULL;
   FILE* ret;
@@ -1026,7 +845,7 @@ extern "C" FILE* tmpfile () {
 /*********************************************************************
  * open 
  ********************************************************************/
-extern "C" int open (const char *pathname, int flags, ...) { 
+int open (const char *pathname, int flags, ...) { 
   Tau_iowrap_checkInit();
   static int (*_open)(const char *pathname, int flags, ...)  = NULL;
   mode_t mode; 
@@ -1069,7 +888,7 @@ extern "C" int open (const char *pathname, int flags, ...) {
 /*********************************************************************
  * open64 
  ********************************************************************/
-extern "C" int open64 (const char *pathname, int flags, ...) { 
+int open64 (const char *pathname, int flags, ...) { 
   Tau_iowrap_checkInit();
   static int (*_open64)(const char *pathname, int flags, ...)  = NULL;
   mode_t mode; 
@@ -1109,7 +928,7 @@ extern "C" int open64 (const char *pathname, int flags, ...) {
 /*********************************************************************
  * creat 
  ********************************************************************/
-extern "C" int creat(const char *pathname, mode_t mode) {
+int creat(const char *pathname, mode_t mode) {
   Tau_iowrap_checkInit();
   static int (*_creat)(const char *pathname, mode_t mode) = NULL;
   int ret;
@@ -1138,7 +957,7 @@ extern "C" int creat(const char *pathname, mode_t mode) {
 /*********************************************************************
  * creat64 
  ********************************************************************/
-extern "C" int creat64(const char *pathname, mode_t mode) {
+int creat64(const char *pathname, mode_t mode) {
   Tau_iowrap_checkInit();
   static int (*_creat64)(const char *pathname, mode_t mode) = NULL;
   int ret;
@@ -1168,7 +987,7 @@ extern "C" int creat64(const char *pathname, mode_t mode) {
 /*********************************************************************
  * close 
  ********************************************************************/
-extern "C" int close(int fd) {
+int close(int fd) {
   Tau_iowrap_checkInit();
   static int (*_close) (int fd) = NULL;
   int ret; 
@@ -1197,7 +1016,7 @@ extern "C" int close(int fd) {
 /*********************************************************************
  * pipe 
  ********************************************************************/
-extern "C" int pipe(int filedes[2]) {
+int pipe(int filedes[2]) {
   Tau_iowrap_checkInit();
   static int (*_pipe) (int filedes[2]) = NULL;
   int ret;
@@ -1231,7 +1050,7 @@ extern "C" int pipe(int filedes[2]) {
 /*********************************************************************
  * Tau_get_socketname returns the name of the socket (AF_INET/AF_UNIX) 
  ********************************************************************/
-extern "C" char * Tau_get_socket_name(const struct sockaddr *sa, char *s, size_t len) {
+char * Tau_get_socket_name(const struct sockaddr *sa, char *s, size_t len) {
   Tau_iowrap_checkInit();
   char addr[256];
   switch (sa->sa_family) {
@@ -1256,7 +1075,7 @@ extern "C" char * Tau_get_socket_name(const struct sockaddr *sa, char *s, size_t
 /*********************************************************************
  * socket 
  ********************************************************************/
-extern "C" int socket(int domain, int type, int protocol) {
+int socket(int domain, int type, int protocol) {
   Tau_iowrap_checkInit();
   static int (*_socket) (int domain, int type, int protocol) = NULL;
   int ret;
@@ -1288,7 +1107,7 @@ extern "C" int socket(int domain, int type, int protocol) {
 /*********************************************************************
  * socketpair 
  ********************************************************************/
-extern "C" int socketpair(int d, int type, int protocol, int sv[2]) {
+int socketpair(int d, int type, int protocol, int sv[2]) {
   Tau_iowrap_checkInit();
   static int (*_socketpair) (int d, int type, int protocol, int sv[2]) = NULL;
   int ret;
@@ -1322,7 +1141,7 @@ extern "C" int socketpair(int d, int type, int protocol, int sv[2]) {
 /*********************************************************************
  * bind 
  ********************************************************************/
-extern "C" int bind(int socket, const struct sockaddr *address, socklen_t address_len) {
+int bind(int socket, const struct sockaddr *address, socklen_t address_len) {
   Tau_iowrap_checkInit();
   static int (*_bind) (int socket, const struct sockaddr *address, socklen_t address_len) = NULL;
   int ret;
@@ -1355,7 +1174,7 @@ extern "C" int bind(int socket, const struct sockaddr *address, socklen_t addres
  * accept
  ********************************************************************/
 #ifndef _AIX
-extern "C" int accept(int socket, struct sockaddr *address, socklen_t* address_len) {
+int accept(int socket, struct sockaddr *address, socklen_t* address_len) {
   Tau_iowrap_checkInit();
   static int (*_accept) (int socket, struct sockaddr *address, socklen_t* address_len) = NULL;
   int current;
@@ -1386,7 +1205,7 @@ extern "C" int accept(int socket, struct sockaddr *address, socklen_t* address_l
 /*********************************************************************
  * connect
  ********************************************************************/
-extern "C" int connect(int socket, const struct sockaddr *address, socklen_t address_len) {
+int connect(int socket, const struct sockaddr *address, socklen_t address_len) {
   Tau_iowrap_checkInit();
   static int (*_connect) (int socket, const struct sockaddr *address, socklen_t address_len) = NULL;
   int current;
@@ -1417,7 +1236,7 @@ extern "C" int connect(int socket, const struct sockaddr *address, socklen_t add
 /*********************************************************************
  * recv
  ********************************************************************/
-extern "C" ssize_t recv (int fd, void *buf, size_t count, int flags) {
+ssize_t recv (int fd, void *buf, size_t count, int flags) {
   Tau_iowrap_checkInit();
   static ssize_t (*_recv)(int fd, void *buf, size_t count, int flags) = NULL;
   ssize_t ret; 
@@ -1467,7 +1286,7 @@ extern "C" ssize_t recv (int fd, void *buf, size_t count, int flags) {
  * send
  ********************************************************************/
 
-extern "C" ssize_t send (int fd, const void *buf, size_t count, int flags) {
+ssize_t send (int fd, const void *buf, size_t count, int flags) {
   Tau_iowrap_checkInit();
   static ssize_t (*_send)(int fd, const void *buf, size_t count, int flags) = NULL;
   ssize_t ret; 
@@ -1518,7 +1337,7 @@ extern "C" ssize_t send (int fd, const void *buf, size_t count, int flags) {
  * sendto
  ********************************************************************/
 
-extern "C" ssize_t sendto (int fd, const void *buf, size_t count, int flags, const struct sockaddr *to, socklen_t len) {
+ssize_t sendto (int fd, const void *buf, size_t count, int flags, const struct sockaddr *to, socklen_t len) {
   Tau_iowrap_checkInit();
   static ssize_t (*_sendto)(int fd, const void *buf, size_t count, int flags, const struct sockaddr *to, socklen_t len) = NULL;
   ssize_t ret; 
@@ -1570,7 +1389,7 @@ extern "C" ssize_t sendto (int fd, const void *buf, size_t count, int flags, con
  * recvfrom
  ********************************************************************/
 
-extern "C" ssize_t recvfrom (int fd, void *buf, size_t count, int flags, struct sockaddr *from, socklen_t *len) {
+ssize_t recvfrom (int fd, void *buf, size_t count, int flags, struct sockaddr *from, socklen_t *len) {
   Tau_iowrap_checkInit();
   static ssize_t (*_recvfrom)(int fd, void *buf, size_t count, int flags, struct sockaddr *from, socklen_t * len) = NULL;
   ssize_t ret; 
@@ -1620,7 +1439,7 @@ extern "C" ssize_t recvfrom (int fd, void *buf, size_t count, int flags, struct 
 /*********************************************************************
  * dup
  ********************************************************************/
-extern "C" int dup(int oldfd) {
+int dup(int oldfd) {
   Tau_iowrap_checkInit();
   static int (*_dup)(int oldfd) = NULL;
   int fd;
@@ -1640,7 +1459,7 @@ extern "C" int dup(int oldfd) {
 /*********************************************************************
  * dup2
  ********************************************************************/
-extern "C" int dup2(int oldfd, int newfd) {
+int dup2(int oldfd, int newfd) {
   Tau_iowrap_checkInit();
   static int (*_dup2)(int oldfd, int newfd) = NULL;
   int fd;
@@ -1660,7 +1479,7 @@ extern "C" int dup2(int oldfd, int newfd) {
 /*********************************************************************
  * popen
  ********************************************************************/
-extern "C" FILE * popen (const char *command, const char *type) {
+FILE * popen (const char *command, const char *type) {
   Tau_iowrap_checkInit();
   static FILE * (*_popen)(const char *command, const char *type)  = NULL;
   FILE* ret;
@@ -1688,7 +1507,7 @@ extern "C" FILE * popen (const char *command, const char *type) {
 /*********************************************************************
  * pclose
  ********************************************************************/
-extern "C" int pclose(FILE * stream) {
+int pclose(FILE * stream) {
   Tau_iowrap_checkInit();
   static int (*_pclose) (FILE * stream) = NULL;
   int ret;
@@ -1715,7 +1534,7 @@ extern "C" int pclose(FILE * stream) {
 /*********************************************************************
  * aio_read
  ********************************************************************/
-extern "C" int aio_read(struct aiocb *aiocbp) {
+int aio_read(struct aiocb *aiocbp) {
   Tau_iowrap_checkInit();
   static int (*_aio_read) (struct aiocb *aiocbp) = NULL;
   int ret;
@@ -1738,7 +1557,7 @@ extern "C" int aio_read(struct aiocb *aiocbp) {
 /*********************************************************************
  * aio_write
  ********************************************************************/
-extern "C" int aio_write(struct aiocb *aiocbp) {
+int aio_write(struct aiocb *aiocbp) {
   Tau_iowrap_checkInit();
   static int (*_aio_write) (struct aiocb *aiocbp) = NULL;
   int ret;
@@ -1761,7 +1580,7 @@ extern "C" int aio_write(struct aiocb *aiocbp) {
 /*********************************************************************
  * aio_error
  ********************************************************************/
-extern "C" int aio_error(const struct aiocb *aiocbp) {
+int aio_error(const struct aiocb *aiocbp) {
   Tau_iowrap_checkInit();
   static int (*_aio_error) (const struct aiocb *aiocbp) = NULL;
   int ret;
@@ -1799,7 +1618,7 @@ extern "C" int aio_error(const struct aiocb *aiocbp) {
 /*********************************************************************
  * aio_return
  ********************************************************************/
-extern "C" ssize_t aio_return(struct aiocb *aiocbp) {
+ssize_t aio_return(struct aiocb *aiocbp) {
   Tau_iowrap_checkInit();
   static ssize_t (*_aio_return) (struct aiocb *aiocbp) = NULL;
   ssize_t ret;
@@ -1822,7 +1641,7 @@ extern "C" ssize_t aio_return(struct aiocb *aiocbp) {
 /*********************************************************************
  * aio_suspend
  ********************************************************************/
-extern "C" int aio_suspend(const struct aiocb * const cblist[], int n, const struct timespec *timeout) {
+int aio_suspend(const struct aiocb * const cblist[], int n, const struct timespec *timeout) {
   Tau_iowrap_checkInit();
   static int (*_aio_suspend) (const struct aiocb * const cblist[], int n, const struct timespec *timeout) = NULL;
   int ret;
@@ -1845,7 +1664,7 @@ extern "C" int aio_suspend(const struct aiocb * const cblist[], int n, const str
 /*********************************************************************
  * aio_cancel
  ********************************************************************/
-extern "C" int aio_cancel(int fd, struct aiocb *aiocbp) {
+int aio_cancel(int fd, struct aiocb *aiocbp) {
   Tau_iowrap_checkInit();
   static int (*_aio_cancel) (int fd, struct aiocb *aiocbp) = NULL;
   int ret;
@@ -1869,7 +1688,7 @@ extern "C" int aio_cancel(int fd, struct aiocb *aiocbp) {
  * lio_listio
  ********************************************************************/
 
-extern "C" int lio_listio(int mode, struct aiocb * const list[], int nent, struct sigevent *sig) {
+int lio_listio(int mode, struct aiocb * const list[], int nent, struct sigevent *sig) {
   Tau_iowrap_checkInit();
   static int (*_lio_listio) (int mode, struct aiocb * const list[], int nent, struct sigevent *sig) = NULL;
   ssize_t ret;

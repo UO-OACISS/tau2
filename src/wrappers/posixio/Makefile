@@ -20,8 +20,8 @@ libTauIOWrapper.a: iowrapper.o
 iowrapper.o: iowrapper.c
 	$(CC) $(CFLAGS) -c iowrapper.c
 
-iowrap_shared.o: iowrap_shared.cpp
-	$(CXX) $(CFLAGS) -c iowrap_shared.cpp
+iowrap_shared.o: iowrap_shared.c
+	$(CC) $(CFLAGS) -c iowrap_shared.c
 
 libTAU-iowrap$(TAU_SHLIBX): iowrap_shared.o
 	$(CC) $(TAU_SHFLAGS) libTAU-iowrap$(TAU_SHLIBX) iowrap_shared.o $(TAU_SHAREDLIBS) -ldl
