@@ -4763,33 +4763,6 @@ fixmakeargs="$fixmakeargs bfdlibs=$BFDLIBS"
 /bin/rm -f conftest_bfd.o conftest_bfd.c conftest_bfd
 ######################################################################
 
-
-######################################################################
-# Check if BFD can be linked into a shared library
-######################################################################
-cat <<EOF > conftest_bfd.c
-#include <bfd.h>
-void foo() {
-   bfd_init();
-   bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
-   return;
-}
-EOF
-$echo "Checking for shared library compatible libbfd... ${nnl}"
-shared_opt="-shared -fPIC"
-
-bfdlibs=`echo $BFDLIBS | sed -e 's/#/ /g'`
-if $c_compiler $orig_useropt $shared_opt -o conftest_bfd.so conftest_bfd.c -fPIC $bfdinclude $bfdlink $bfdlibs 1> /dev/null 2>&1 ; then
-    fixmakeargs="$fixmakeargs TAU_BFDSHAREDLINK"
-    echo "yes"
-else
-    echo "no"
-fi
-/bin/rm -f conftest_bfd.o conftest_bfd.c conftest_bfd.so
-######################################################################
-
-
-
 ######################################################################
 # Check for demangle.h
 ######################################################################
@@ -4802,7 +4775,9 @@ void foo() {
 }
 EOF
 $echo "Checking for demangle.h... ${nnl}"
+demangle=""
 if $c_compiler $orig_useropt -c conftest_demangle.c $bfdinclude 1> /dev/null 2>&1 ; then
+    demangle="-DHAVE_GNU_DEMANGLE"
     fixmakeargs="$fixmakeargs TAU_DEMANGLE"
     echo "yes"
 else
@@ -4810,6 +4785,42 @@ else
 fi
 
 /bin/rm -f conftest_demangle.o conftest_demangle.c
+
+
+######################################################################
+# Check if BFD can be linked into a shared library
+######################################################################
+cat <<EOF > conftest_bfd.c
+#include <bfd.h>
+#  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+#    include <demangle.h>
+#  endif /* HAVE_GNU_DEMANGLE */
+
+void foo() {
+   bfd_init();
+   bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
+
+#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+      cplus_demangle(NULL, DMGL_PARAMS | DMGL_ANSI 
+			| DMGL_VERBOSE | DMGL_TYPES);
+#endif /* HAVE_GNU_DEMANGLE */
+
+   return;
+}
+EOF
+$echo "Checking for shared library compatible libbfd... ${nnl}"
+shared_opt="-shared -fPIC"
+
+bfdlibs=`echo $BFDLIBS | sed -e 's/#/ /g'`
+if $c_compiler $demangle $orig_useropt $shared_opt -o conftest_bfd.so conftest_bfd.c -fPIC $bfdinclude $bfdlink $bfdlibs 1> /dev/null 2>&1 ; then
+    fixmakeargs="$fixmakeargs TAU_BFDSHAREDLINK"
+    echo "yes"
+else
+    echo "no"
+fi
+/bin/rm -f conftest_bfd.o conftest_bfd.c conftest_bfd.so
+######################################################################
+
 
 
 ######################################################################
