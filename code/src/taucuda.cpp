@@ -83,13 +83,33 @@ memcpyType)
 #ifdef DEBUG_PROF
 	printf("entering cuMemcpy event: %s.\n", name);
 #endif
+
+	// Place the Message into the trace in when the memcpy in entered if this
+	// thread initiates the send otherwise wait until this event is exited.
+	// This is too make the message lines in the trace to always point forward in
+	// time.
+
 	if (memcpyType == MemcpyHtoD) {
 		TauTraceOneSidedMsg(MESSAGE_SEND, device, -1, 0);
 	}
-	else {
+	TAU_START(name);
+}
+void exit_cu_memcpy_event(const char* name, eventId *id, gpuId *device, bool
+memcpyType)
+{
+#ifdef DEBUG_PROF
+	printf("exiting cuMemcpy event: %s.\n", name);
+#endif
+
+	// Place the Message into the trace in when the memcpy in exited if this
+	// thread receives the message otherwise do it when this event is entered.
+	// This is too make the message lines in the trace to always point forward in
+	// time.
+
+	if (memcpyType == MemcpyDtoH) {
 		TauTraceOneSidedMsg(MESSAGE_RECV, device, -1, 0);
 	}
-	TAU_START(name);
+	TAU_STOP(name);
 }
 
 void exit_cu_event(const char *name, eventId *id)
@@ -164,7 +184,8 @@ void register_gpu_event(const char *name, eventId *id, double startTime, double 
 {
 	stage_gpu_event(name, 
 		startTime);
-
+	TAU_REGISTER_CONTEXT_EVENT(k1, "sample kernel data");
+	TAU_CONTEXT_EVENT(k1,1000);
 	break_gpu_event(name,
 			endTime);
 }
@@ -174,6 +195,7 @@ endTime, double transferSize, bool memcpyType)
 {
 #ifdef DEBUG_PROF		
 	printf("recording memcopy event.\n");
+	printf("time is: %f:%f.\n", startTime, endTime);
 #endif
 	if (memcpyType == MemcpyHtoD) {
 		stage_gpu_event("cuda Memory copy Host to Device", 
@@ -185,9 +207,9 @@ endTime, double transferSize, bool memcpyType)
 		printf("[%f] onesided event mem recv: %f, id: %s.\n", startTime, transferSize,
 		device->printId());
 #endif
-		TauTraceOneSidedMsg(MESSAGE_RECV, device, transferSize, gpuTask);
 		break_gpu_event("cuda Memory copy Host to Device",
 				endTime);
+		TauTraceOneSidedMsg(MESSAGE_RECV, device, transferSize, gpuTask);
 	}
 	else {
 		stage_gpu_event("cuda Memory copy Device to Host", 

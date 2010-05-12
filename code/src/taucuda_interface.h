@@ -1,57 +1,11 @@
 #ifndef _TAU_CUDA_INTERFACE
 #define _TAU_CUDA_INTERFACE
 
-typedef unsigned long long NvU64; /* 0 to 18446744073709551615               */
-typedef unsigned int NvU32;
-
 #define MESSAGE_SEND 0
 #define MESSAGE_RECV 1
 
 #define MemcpyHtoD false
 #define MemcpyDtoH true
-
-/* cu Event ids are complex, both a context and api call id
-struct eventId
-{
-	NvU64 contextId;
-	NvU64 callId;
-
-	eventId(const NvU64 a, const NvU64 b) :
-		contextId(a), callId(b) {}
-#ifdef __cplusplus
-	bool operator<(const eventId& A) const
-	{ 
-		if (contextId == A.contextId)
-		{
-			return callId<A.callId; 
-		}
-		else
-			return contextId<A.contextId;
-	}
-#endif // __cplusplus
-};
-
-struct gpuId
-{
-	NvU64 contextId;
-	NvU32 deviceId;
-
-	gpuId(const NvU64 a, const NvU32 b) :
-		contextId(a), deviceId(b) {}
-
-#ifdef __cplusplus
-	bool operator<(const gpuId& A) const
-	{ 
-		if (contextId == A.contextId)
-		{
-			return deviceId<A.deviceId; 
-		}
-		else
-			return contextId<A.contextId;
-	}
-#endif // __cplusplus
-};
-*/
 
 
 /**********************************************
@@ -93,6 +47,9 @@ gpuId *device, bool memcpyType);
 
 /* Exit point for cu* routines */
 extern "C" void exit_cu_event(const char *functionName, eventId *id);
+
+extern "C" void exit_cu_memcpy_event(const char *functionName, eventId *id,
+gpuId *device, bool memcpyType);
 
 /* Callback for a GPU event that occurred earlier in the execution of the
  * program. Times are pre-aligned to the CPU clock. */

@@ -98,10 +98,13 @@ inline cuToolsApi_Context* GetContextTable(void)
 double AlignedTime(int device, double raw_time)
 {
 #ifdef DEBUG_PROF
-	printf("getting synced time on device %d.\n", device);
+	printf("getting synced time on device %d, raw time: \t %f.\n", device, raw_time);
 #endif
 	double offset = gs_toolsapi.device_clocks[device].tau_end_time -
 		gs_toolsapi.device_clocks[device].ref_gpu_end_time;
+#ifdef DEBUG_PROF
+	printf("device %d, \t \t \t synced time: \t %f.\n", device, (double) raw_time + offset);
+#endif
 	return (double) raw_time + offset;
 }
 
@@ -123,6 +126,12 @@ void ClockSynch()
 		cpu_time2=cpu_time();
 		gs_toolsapi.device_clocks[i].tau_end_time=(cpu_time1+cpu_time2)/2;
 		gs_toolsapi.device_clocks[i].ref_gpu_end_time=((double)ref_t1+(double)ref_t2)/2e3;			
+
+#ifdef DEBUG_PROF
+	printf("Device [%d] CPU is running %f nanoseconds faster than the GPU.\n", i,
+	gs_toolsapi.device_clocks[i].tau_end_time -
+	gs_toolsapi.device_clocks[i].ref_gpu_end_time);
+#endif
 
 	}
 }
@@ -194,7 +203,27 @@ void CUDAAPI callback_handle(
 		//extract the device ID for the curent context
 		GetContextTable()->CtxGetId(cParams->ctx, &contextId);
 		cuEventId id(contextId, cParams->apiCallId);
+		if(strncmp(cParams->functionName,"cuMemcpy", sizeof("cuMemcpy")-1)==0)
+		{
+			NvU32 device;
+			GetContextTable()->CtxGetDevice(cParams->ctx,&device);
+			cudaGpuId gId(contextId, device);
+			bool memcpyType;
+			if(strncmp(cParams->functionName,"cuMemcpyHtoD", sizeof("cuMemcpyHtoD")-1)==0)
+			{
+				memcpyType = MemcpyHtoD;
+			}
+			else if(strncmp(cParams->functionName,"cuMemcpyDtoH",sizeof("cuMemcpyDtoH")-1)==0)
+			{
+				memcpyType = MemcpyDtoH;
+			}
+			MemcpyEventMap.insert(make_pair(id, memcpyType));
+			exit_cu_memcpy_event(cParams->functionName, &id, &gId, memcpyType);
+		}
+		else
+		{
 		exit_cu_event(cParams->functionName, &id);
+		}
 	}
 	else if (*callbackId == cuToolsApi_CBID_ProfileLaunch)
 	{

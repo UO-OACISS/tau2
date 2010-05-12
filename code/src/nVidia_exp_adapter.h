@@ -35,6 +35,8 @@ using namespace std;
 
 /* ============ Driver version specific stuff below here =============== */
 
+typedef unsigned long long NvU64; /* 0 to 18446744073709551615               */
+typedef unsigned int NvU32;
 
 enum eventType{DATA,DATA2D,DATAFD,KERNEL,ALL,OTHERS};
 typedef unsigned long long TAU64;
