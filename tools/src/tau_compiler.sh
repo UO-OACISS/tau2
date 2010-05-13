@@ -956,14 +956,6 @@ if [ $numFiles == 0 ]; then
 	#avoided by assinging a status of $FALSE to the $gotoNextStep. 
 
 
-    # check for -lc, if found, move it to the end
-    check_lc=`echo "$regularCmd" | sed -e 's/.*\(-lc\).*/\1/g'`
-    regularCmd=`echo "$regularCmd" | sed -e 's/-lc//g'`
-    if [ "x$check_lc" = "x-lc" ] ; then
-	optLinking="$optLinking -lc"
-    fi
-
-
     if [ $removeMpi == $TRUE ]; then
 	echoIfDebug "Before filtering libmpi*.so options command is: $regularCmd"
 	regularCmd=`echo "$regularCmd" | sed -e 's: \S*libmpi*\.so: :g'`
@@ -982,6 +974,13 @@ if [ $numFiles == 0 ]; then
 	if [ "x$checkvtd" = "x-lvtd_r" ] ; then
 	    optLinking="$optLinking -lvtd_r"
 	fi
+    fi
+
+    # check for -lc, if found, move it to the end
+    check_lc=`echo "$regularCmd" | sed -e 's/.*\(-lc\).*/\1/g'`
+    regularCmd=`echo "$regularCmd" | sed -e 's/-lc//g'`
+    if [ "x$check_lc" = "x-lc" ] ; then
+	optLinking="$optLinking -lc"
     fi
 
 
