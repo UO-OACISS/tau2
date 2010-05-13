@@ -970,8 +970,8 @@ if [ $numFiles == 0 ]; then
 	echoIfDebug "After filtering libmpi*.so options command is: $regularCmd"
 
 	echoIfDebug "Before filtering -l*mpi* options command is: $regularCmd"
-	matchingmpi=`echo -n "$regularCmd" | perl -ne '@strings = split(/ /); foreach $s (@strings) { if ($s =~ /-l[a-zA-Z0-9]*mpi[a-zA-Z.0-9+_]*/) {print " $s "} }'`
-	regularCmd=`echo "$regularCmd" | sed -e 's/-l[a-zA-Z0-9]*mpi[a-zA-Z.0-9+_]*//g'`
+	matchingmpi=`echo -n "$regularCmd" | perl -ne '@strings = split(/ /); foreach $s (@strings) { if ($s =~ /-l\S*mpi\S*/) {print " $s "} }'`
+	regularCmd=`echo "$regularCmd" | sed -e 's/-l\S*mpi\S*//g'`
 	echoIfDebug "After filtering -l*mpi* options command is: $regularCmd"
 
 	optLinking="$optLinking $matchingmpi"
