@@ -24,13 +24,13 @@ CLASSES = $(subst ./src/, ./classes/, $(patsubst %.java, %.class, $(SOURCES)))
 
 
 
-# We only want to use Java 1.4
-JAVA_FOUR=$(shell java -version 2>&1 | grep version | /usr/bin/awk '{ print $$3; }'| sed -e s/\"//g | sed -e s/1\.4\..*// | wc -c)
-ifeq ($(JAVA_FOUR),1)
+# We only want to use Java 1.5
+JAVA_FIVE=$(shell java -version 2>&1 | grep version | /usr/bin/awk '{ print $$3; }'| sed -e s/\"//g | sed -e s/1\.5\..*// | wc -c)
+ifeq ($(JAVA_FIVE),1)
   TARGET=build
 else
   ifeq ($(override),1)
-    JAVAC=javac -source 1.4 -target 1.4
+    JAVAC=javac -source 1.5 -target 1.5
     TARGET=build
   else 
     TARGET=badversion
@@ -68,7 +68,7 @@ javadoc: bin/perfdmf.jar $(SRC_PATH)/package.html
     -header "<b>PerfDMF</b>" \
     -bottom ${BOTTOM} \
     -public \
-    -source 1.4 \
+    -source 1.5 \
     -quiet \
     -version \
     -author \
@@ -127,6 +127,6 @@ classes:
 
 
 badversion:
-	@echo "Error, ParaProf must be compiled with Java 1.4, use 'make override=1' to proceed anyway"
+	@echo "Error, ParaProf must be compiled with Java 1.5, use 'make override=1' to proceed anyway"
 
 
