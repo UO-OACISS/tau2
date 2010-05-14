@@ -28,10 +28,10 @@ DYNINSTDIR=
 #MIPSR8K#ISA          = -mips4		   #ENDIF#
 
 ############# Standard Defines ##############
-#CC = $(TAU_CC_FE) $(ABI) $(ISA)
-#CXX = $(TAU_CXX_FE) $(ABI) $(ISA)
-CC = $(CONFIG_CC) $(ABI) $(ISA)
-CXX = $(CONFIG_CXX) $(ABI) $(ISA)
+CC = $(TAU_CC_FE) $(ABI) $(ISA)
+CXX = $(TAU_CXX_FE) $(ABI) $(ISA)
+#CC = $(CONFIG_CC) $(ABI) $(ISA)
+#CXX = $(CONFIG_CXX) $(ABI) $(ISA)
 #CRAYXMT#CC = $(TAU_CC_FE) $(ABI) $(ISA) #ENDIF#
 #CRAYXMT#CXX = $(TAU_CXX_FE) $(ABI) $(ISA) #ENDIF#
 TAU_INSTALL = /bin/cp
@@ -179,7 +179,7 @@ EXECUTABLES =	tau_reduce pprof tau_convert tau_merge $(RUNTIME1) $(RUNTIME2) $(R
 all:		$(EXECUTABLES)
 
 tau_convert: 	tau_convert.c 
-		$(CXX) $(CFLAGS)  tau_convert.c -o tau_convert -lm $(LEXTRA)
+		$(CC) $(CFLAGS)  tau_convert.c -o tau_convert -lm $(LEXTRA)
 
 #tau2profile:	tau2profile.o
 #		$(CXX) $(CFLAGS) tau2profile.o -o tau2profile -lm $(LEXTRA) $(TAU_TRACE_INPUT_LIB)
@@ -221,7 +221,7 @@ tau_merge: 	tau_merge.o tau_events.o
 		$(CXX) $(CFLAGS) tau_merge.o tau_events.o -o tau_merge -lm $(LEXTRA)
 
 tau_merge.o: 	tau_merge.c
-		$(CXX) $(CFLAGS)  -c $(MERGE_CXX_OPT) tau_merge.c
+		$(CC) $(CFLAGS)  -c $(MERGE_CXX_OPT) tau_merge.c
 
 tau_events.o: 	tau_events.cpp
 		$(CXX) $(CFLAGS)  -c tau_events.cpp
