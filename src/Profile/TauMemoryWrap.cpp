@@ -49,7 +49,7 @@ public:
  ********************************************************************/
 class MemoryWrapGlobal {
 public:
-  int bytesAllocated;
+  x_int64 bytesAllocated;
   TAU_HASH_MAP<void*,MemoryAllocation> pointerMap;
   void *heapMemoryUserEvent;
   void *mallocUserEvent;
@@ -61,8 +61,8 @@ public:
     mallocUserEvent = 0;
     freeUserEvent = 0;
     Tau_get_context_userevent(&heapMemoryUserEvent, "Heap Memory Allocated");
-    Tau_get_context_userevent(&mallocUserEvent, "malloc size");
-    Tau_get_context_userevent(&freeUserEvent, "free size");
+    Tau_get_context_userevent(&mallocUserEvent, "malloc size (bytes)");
+    Tau_get_context_userevent(&freeUserEvent, "free size (bytes)");
   }
   ~MemoryWrapGlobal() {
     Tau_destructor_trigger();
@@ -193,6 +193,7 @@ extern "C" void Tau_memorywrap_remove_ptr (void *ptr) {
       global().bytesAllocated -= size;
       global().pointerMap.erase(ptr);
       TAU_CONTEXT_EVENT(global().freeUserEvent, size);
+
     }
     RtsLayer::UnLockDB();
   }
