@@ -100,7 +100,9 @@ static void tauToggleInstrumentationHandler(int sig) {
 
 
 extern "C" int Tau_init_initializeTAU() {
-  static bool initialized = false;
+  Tau_global_incr_insideTAU();
+  static int initialized = 0;
+
   if (initialized) {
     return 0;
   }
@@ -108,21 +110,19 @@ extern "C" int Tau_init_initializeTAU() {
   /* initialize the Profiler stack */
   Tau_stack_initialization();
 
-  Tau_global_incr_insideTAU();
 
-  
   /* initialize environment variables */
   TauEnv_initialize();
 
 #ifdef TAU_EPILOG
   /* no more initialization necessary if using epilog/scalasca */
-  initialized = true;
+  initialized = 1;
   return 0;
 #endif
 
 #ifdef TAU_VAMPIRTRACE
   /* no more initialization necessary if using vampirtrace */
-  initialized = true;
+  initialized = 1;
   return 0;
 #endif
   
@@ -154,7 +154,7 @@ extern "C" int Tau_init_initializeTAU() {
 
   /* TAU must me marked as initialized BEFORE Tau_compensate_initialize is called
      Otherwise re-entry to this function will take place and bad things will happen */
-  initialized = true;
+  initialized = 1;
 
   /* initialize compensation */
   if (TauEnv_get_compensate()) {
