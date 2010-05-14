@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if [ $# -lt 2 ]
+then
+  echo ""
+  echo "Usage: "
+  echo ""
+  echo "  $0 <trainingData> <classifierFilename>"
+  echo ""
+  echo "Notes:"
+  echo ""
+  echo "  none."
+  echo ""
+  exit 1
+fi
+
+working_path=`echo $0 | sed 's/buildClassifier//'`
+mode="build"
+
+eval perfexplorer -c perfexplorer_working -n -i ${working_path}elMedico.py -p "inputData=$1,classifierFilename=$2,mode=$mode"

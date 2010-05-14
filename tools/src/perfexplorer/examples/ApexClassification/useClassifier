@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if [ $# -lt 2 ]
+then
+  echo ""
+  echo "Usage: "
+  echo ""
+  echo "  $0 <classifierFilename> <testingData.csv>"
+  echo ""
+  echo "Notes:"
+  echo ""
+  echo "  none."
+  echo ""
+  exit 1
+fi
+
+working_path=`echo $0 | sed 's/useClassifier//'`
+mode="classify"
+
+eval perfexplorer -c perfexplorer_working -n -i ${working_path}elMedico.py -p "classifierFilename=$1,inputData=$2,mode=$mode"
