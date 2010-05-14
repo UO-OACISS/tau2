@@ -208,30 +208,6 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
     return; /* disabled */
   }
 
-  /********************************************************************************/
-  /*** Extras ***/
-  /********************************************************************************/
-  if (TauEnv_get_extras()) {
-    /*** Memory Profiling ***/
-    if (TauEnv_get_track_memory_heap()) {
-      TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) : Entry");
-      TAU_CONTEXT_EVENT(memHeapEvent, TauGetMaxRSS());
-    }
-    
-    if (TauEnv_get_track_memory_headroom()) {
-      TAU_REGISTER_CONTEXT_EVENT(memEvent, "Memory Headroom Available (MB) : Entry");
-      TAU_CONTEXT_EVENT(memEvent, TauGetFreeMemory());
-    }
-    
-#ifdef TAU_PROFILEMEMORY
-    ThisFunction->GetMemoryEvent()->TriggerEvent(TauGetMaxRSS());
-#endif /* TAU_PROFILEMEMORY */
-    
-#ifdef TAU_PROFILEHEADROOM
-    ThisFunction->GetHeadroomEvent()->TriggerEvent((double)TauGetFreeMemory());
-#endif /* TAU_PROFILEHEADROOM */
-
-  }
 
 #ifdef TAU_TRACK_IDLE_THREADS
   /* If we are performing idle thread tracking, we start a top level timer */
@@ -239,10 +215,6 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
     Tau_create_top_level_timer_if_necessary();
   }
 #endif
-
-  /********************************************************************************/
-  /*** Extras ***/
-  /********************************************************************************/
 
 
 #ifdef TAU_EPILOG
@@ -265,6 +237,8 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
   // move the stack pointer
   Tau_global_stackpos[tid]++; /* push */
+
+
 
   if (Tau_global_stackpos[tid] >= Tau_global_stackdepth[tid]) {
     int oldDepth = Tau_global_stackdepth[tid];
@@ -304,6 +278,34 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #endif /* TAU_DEPTH_LIMIT */
 
   p->Start(tid);
+
+  /********************************************************************************/
+  /*** Extras ***/
+  /********************************************************************************/
+  if (TauEnv_get_extras()) {
+    /*** Memory Profiling ***/
+    if (TauEnv_get_track_memory_heap()) {
+      TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) at Entry");
+      TAU_CONTEXT_EVENT(memHeapEvent, TauGetMaxRSS());
+    }
+    
+    if (TauEnv_get_track_memory_headroom()) {
+      TAU_REGISTER_CONTEXT_EVENT(memEvent, "Memory Headroom Available (MB) at Entry");
+      TAU_CONTEXT_EVENT(memEvent, TauGetFreeMemory());
+    }
+    
+#ifdef TAU_PROFILEMEMORY
+    ThisFunction->GetMemoryEvent()->TriggerEvent(TauGetMaxRSS());
+#endif /* TAU_PROFILEMEMORY */
+    
+#ifdef TAU_PROFILEHEADROOM
+    ThisFunction->GetHeadroomEvent()->TriggerEvent((double)TauGetFreeMemory());
+#endif /* TAU_PROFILEHEADROOM */
+  }
+  /********************************************************************************/
+  /*** Extras ***/
+  /********************************************************************************/
+
 
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_event_start(tid, p->address);
@@ -351,12 +353,12 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   if (TauEnv_get_extras()) {
     /*** Memory Profiling ***/
     if (TauEnv_get_track_memory_heap()) {
-      TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) : Exit");
+      TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) at Exit");
       TAU_CONTEXT_EVENT(memHeapEvent, TauGetMaxRSS());
     }
     
     if (TauEnv_get_track_memory_headroom()) {
-      TAU_REGISTER_CONTEXT_EVENT(memEvent, "Memory Headroom Available (MB) : Exit");
+      TAU_REGISTER_CONTEXT_EVENT(memEvent, "Memory Headroom Available (MB) at Exit");
       TAU_CONTEXT_EVENT(memEvent, TauGetFreeMemory());
     }
   }
@@ -1533,7 +1535,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.155 $   $Date: 2010/05/06 18:13:46 $
- * VERSION: $Id: TauCAPI.cpp,v 1.155 2010/05/06 18:13:46 amorris Exp $
+ * $Revision: 1.156 $   $Date: 2010/05/14 22:39:11 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.156 2010/05/14 22:39:11 amorris Exp $
  ***************************************************************************/
 
