@@ -36,7 +36,6 @@
  * malloc
  ********************************************************************/
 void *malloc (size_t size) {
-  Tau_memorywrap_checkInit();
   static void* (*_malloc)(size_t size) = NULL;
 
   if (_malloc == NULL) {
@@ -47,8 +46,8 @@ void *malloc (size_t size) {
     return _malloc(size);
   }
 
+  Tau_memorywrap_checkInit();
   Tau_global_incr_insideTAU();
-
   void *ptr = _malloc(size);
   Tau_memorywrap_add_ptr(ptr, size);
   Tau_global_decr_insideTAU();
@@ -84,7 +83,6 @@ void *malloc (size_t size) {
  * realloc
  ********************************************************************/
 void *realloc (void *ptr, size_t size) {
-  Tau_memorywrap_checkInit();
   static void* (*_realloc)(void *ptr, size_t size) = NULL;
 
   if (_realloc == NULL) {
@@ -95,6 +93,7 @@ void *realloc (void *ptr, size_t size) {
     return _realloc(ptr, size);
   }
 
+  Tau_memorywrap_checkInit();
   Tau_global_incr_insideTAU();
 
   void *ret_ptr = _realloc(ptr, size);
@@ -111,7 +110,6 @@ void *realloc (void *ptr, size_t size) {
  * posix_memalign
  ********************************************************************/
 int posix_memalign (void **memptr, size_t alignment, size_t size) {
-  Tau_memorywrap_checkInit();
   static int (*_posix_memalign)(void **memptr, size_t alignment, size_t size) = NULL;
 
   if (_posix_memalign == NULL) {
@@ -122,6 +120,7 @@ int posix_memalign (void **memptr, size_t alignment, size_t size) {
     return _posix_memalign(memptr, alignment, size);
   }
 
+  Tau_memorywrap_checkInit();
   Tau_global_incr_insideTAU();
 
   int ret = _posix_memalign(memptr, alignment, size);
@@ -134,12 +133,10 @@ int posix_memalign (void **memptr, size_t alignment, size_t size) {
 }
 
 
-
 /*********************************************************************
  * free
  ********************************************************************/
 void free (void *ptr) {
-  Tau_memorywrap_checkInit();
   static void (*_free)(void *ptr) = NULL;
 
   if (_free == NULL) {
@@ -151,6 +148,7 @@ void free (void *ptr) {
     return;
   }
 
+  Tau_memorywrap_checkInit();
   Tau_global_incr_insideTAU();
   _free(ptr);
   Tau_memorywrap_remove_ptr(ptr);
