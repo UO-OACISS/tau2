@@ -26,6 +26,7 @@
 
 #include <signal.h>
 #include <Profile/Profiler.h>
+#include <TauMemoryWrap.h>
 
 #if (defined(__QK_USER__) || defined(__LIBCATAMOUNT__ ))
 #define TAU_CATAMOUNT 
@@ -126,11 +127,17 @@ int TauDisableTrackingMemoryHeadroom(void) {
 // Get memory size (max resident set size) in KB 
 //////////////////////////////////////////////////////////////////////
 double TauGetMaxRSS(void) {
+
+  // if the LD_PRELOAD wrapper is active, we will return the value that it tracks
+  if (Tau_memorywrap_getWrapperActive()) {
+    x_uint64 bytes = Tau_memorywrap_getBytesAllocated();
+    double kbytes = (double)bytes / 1024.0;
+    return kbytes;
+  }
+
 #ifdef TAU_BGP
-  uint32_t mem, stack_size, heap_size;
-  Kernel_GetMemorySize( KERNEL_MEMSIZE_STACK, &stack_size );
+  uint32_t heap_size;
   Kernel_GetMemorySize( KERNEL_MEMSIZE_HEAP, &heap_size );
-  mem = stack_size + heap_size; /* in bytes */
   return heap_size / 1024;
 #endif
 
@@ -279,9 +286,9 @@ void TauTrackMemoryHeadroomHere(void) {
 
   
 /***************************************************************************
- * $RCSfile: TauHandler.cpp,v $   $Author: sameer $
- * $Revision: 1.23 $   $Date: 2010/04/07 22:38:26 $
- * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.23 2010/04/07 22:38:26 sameer Exp $ 
+ * $RCSfile: TauHandler.cpp,v $   $Author: amorris $
+ * $Revision: 1.24 $   $Date: 2010/05/14 22:21:04 $
+ * POOMA_VERSION_ID: $Id: TauHandler.cpp,v 1.24 2010/05/14 22:21:04 amorris Exp $ 
  ***************************************************************************/
 
 	
