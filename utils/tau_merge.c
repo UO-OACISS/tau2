@@ -69,17 +69,12 @@ int getdtablesize(void);
 int dynamic = TRUE ; /* by default events.<node>.edf files exist */
 int dontblock = FALSE; /* by default, block waiting for records, online merge*/
 char *mergededffile = NULL; /* default merged EDF file name */
-#if !(defined(TAU_XLC) || defined (TAU_NEC))
-extern "C" {
-#endif /* TAU_XLC || TAU_NEC */
-  int open_edf_file(char *prefix, int nodeid, int prefix_is_filename);
-  int parse_edf_file(int node);
-  int store_merged_edffile(char *filename);
-  const char *get_event_name(int gid);
-  int GID(int node, long localEventId); 
-#if!(defined(TAU_XLC) || defined (TAU_NEC)) 
-} 
-#endif /* TAU_XLC || TAU_NEC */
+
+int open_edf_file(char *prefix, int nodeid, int prefix_is_filename);
+int parse_edf_file(int node);
+int store_merged_edffile(char *filename);
+const char *get_event_name(int gid);
+int GID(int node, long localEventId); 
 
 
 struct trcdescr
