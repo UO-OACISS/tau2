@@ -100,16 +100,16 @@ static void tauToggleInstrumentationHandler(int sig) {
 
 
 extern "C" int Tau_init_initializeTAU() {
-  Tau_global_incr_insideTAU();
   static int initialized = 0;
 
   if (initialized) {
     return 0;
   }
 
+  Tau_global_incr_insideTAU();
+
   /* initialize the Profiler stack */
   Tau_stack_initialization();
-
 
   /* initialize environment variables */
   TauEnv_initialize();
