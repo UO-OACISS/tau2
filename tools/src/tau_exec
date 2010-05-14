@@ -20,7 +20,7 @@ usage()
     echo "Options:"
 
     echo "        -v       verbose mode"
-    echo "        -qsub    Use qsub mode (see below)"
+    echo "        -qsub    Use qsub mode (BG/P only, see below)"
     echo "        -io      track I/O"
     echo "        -memory  track memory"
     options=`tau-config --list-options`
@@ -34,7 +34,7 @@ usage()
     echo "Example:"
     echo "    mpirun -np 2 tau_exec -io ./ring"
     echo ""
-    echo "qsub mode:"
+    echo "qsub mode (IBM BG/P only):"
     echo "    Original:"
     echo "      qsub -n 1 --mode smp -t 10 ./a.out"
     echo "    With TAU:"
@@ -95,7 +95,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tau_exec,v 1.13 2010/05/14 22:19:23 amorris Exp $';
+	      echo '$Id: tau_exec,v 1.14 2010/05/14 22:59:49 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -T)
@@ -130,11 +130,6 @@ for arg in "$@" ; do
       esac
   fi
 done
-
-
-if [ "x$TAU_PAPI_DOMAIN" = "x" ]; then
-    TAU_PAPI_DOMAIN=$TAU_PAPI_DEFAULT_DOMAIN
-fi
 
 
 # choose TAU library
@@ -256,11 +251,13 @@ fi
 
 
 if [ $qsub_mode = true ] ; then
+
+    tau_vars=`env | grep TAU_ | tr '\n' ':'`
     cmd="$@"
     # don't use the current LD_LIBRARY_PATH or it will screw things up for the backend
     TAUEX_LD_LIBRARY_PATH=$BASEDIR/lib/$theBinding
-    env_option="--env LD_PRELOAD=$TAUEX_LD_PRELOAD:LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
-    newCmd=`echo $cmd | sed -e 's/qsub//'`
+    env_option="--env LD_PRELOAD=$TAUEX_LD_PRELOAD:LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH:$tau_vars"
+    newCmd=`echo $cmd | sed -e 's/^qsub //'`
     if [ $dryrun = "true" ]; then
 	echo qsub $env_option $newCmd
     else
