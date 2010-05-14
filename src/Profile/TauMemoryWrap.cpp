@@ -49,17 +49,25 @@ public:
  ********************************************************************/
 class MemoryWrapGlobal {
 public:
-  x_int64 bytesAllocated;
+  x_uint64 bytesAllocated;
   TAU_HASH_MAP<void*,MemoryAllocation> pointerMap;
   void *heapMemoryUserEvent;
   void *mallocUserEvent;
   void *freeUserEvent;
+  int wrapperActive;
 
   MemoryWrapGlobal() {
     bytesAllocated = 0;
     heapMemoryUserEvent = 0;
     mallocUserEvent = 0;
     freeUserEvent = 0;
+
+    if (getenv("TAU_MEMORY_WRAPPER_ENABLED")) {
+      wrapperActive = 1;
+    } else {
+      wrapperActive = 0;
+    }
+
     Tau_get_context_userevent(&heapMemoryUserEvent, "Heap Memory Allocated");
     Tau_get_context_userevent(&mallocUserEvent, "malloc size (bytes)");
     Tau_get_context_userevent(&freeUserEvent, "free size (bytes)");
@@ -76,6 +84,21 @@ public:
 static MemoryWrapGlobal& global() {
   static MemoryWrapGlobal memoryWrapGlobal;
   return memoryWrapGlobal;
+}
+
+
+/*********************************************************************
+ * return the number of bytes currently tracked
+ ********************************************************************/
+extern "C" x_uint64 Tau_memorywrap_getBytesAllocated() {
+  return global().bytesAllocated;
+}
+
+/*********************************************************************
+ * return whether the wrapper has been activated or not
+ ********************************************************************/
+extern "C" int Tau_memorywrap_getWrapperActive() {
+  return global().wrapperActive;
 }
 
 /*********************************************************************
@@ -166,6 +189,7 @@ static string Tau_memorywrap_getContextString() {
  * add a pointer to the collection
  ********************************************************************/
 extern "C" void Tau_memorywrap_add_ptr (void *ptr, size_t size) {
+  global().wrapperActive = 1;
   if (ptr != NULL) {
     RtsLayer::LockDB();
     if (TauEnv_get_track_memory_leaks()) {
@@ -176,7 +200,7 @@ extern "C" void Tau_memorywrap_add_ptr (void *ptr, size_t size) {
     global().bytesAllocated += size;
 
     TAU_CONTEXT_EVENT(global().mallocUserEvent, size);
-
+    TAU_TRACK_MEMORY_HERE();
     RtsLayer::UnLockDB();
   }
 }
@@ -185,6 +209,7 @@ extern "C" void Tau_memorywrap_add_ptr (void *ptr, size_t size) {
  * remove a pointer from the collection
  ********************************************************************/
 extern "C" void Tau_memorywrap_remove_ptr (void *ptr) {
+  global().wrapperActive = 1;
   if (ptr != NULL) {
     RtsLayer::LockDB();
     TAU_HASH_MAP<void*,MemoryAllocation>::const_iterator it = global().pointerMap.find(ptr);
@@ -193,7 +218,7 @@ extern "C" void Tau_memorywrap_remove_ptr (void *ptr) {
       global().bytesAllocated -= size;
       global().pointerMap.erase(ptr);
       TAU_CONTEXT_EVENT(global().freeUserEvent, size);
-
+      TAU_TRACK_MEMORY_HERE();
     }
     RtsLayer::UnLockDB();
   }
