@@ -115,7 +115,7 @@ public class UserEvent implements Serializable, Comparable {
 
     public boolean isContextEvent() {
         if (!contextEventSet) {
-            if (name.indexOf("=>") > 0) {
+            if (name.indexOf(":") > 0) {
                 contextEvent = true;
             }
             contextEventSet = true;

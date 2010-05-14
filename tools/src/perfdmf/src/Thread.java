@@ -9,9 +9,9 @@ import edu.uoregon.tau.common.TauRuntimeException;
  * UserEventProfiles as well as maximum data (e.g. max exclusive value for all functions on 
  * this thread). 
  *  
- * <P>CVS $Id: Thread.java,v 1.18 2010/04/22 22:01:58 amorris Exp $</P>
+ * <P>CVS $Id: Thread.java,v 1.19 2010/05/14 19:42:18 amorris Exp $</P>
  * @author	Robert Bell, Alan Morris
- * @version	$Revision: 1.18 $
+ * @version	$Revision: 1.19 $
  * @see		Node
  * @see		Context
  * @see		FunctionProfile
@@ -221,7 +221,7 @@ public class Thread implements Comparable {
         return (UserEventProfile) userEventProfiles.get(new Integer(userEvent.getID()));
     }
 
-    public Iterator getUserEventProfiles() {
+    public Iterator<UserEventProfile> getUserEventProfiles() {
         return userEventProfiles.values().iterator();
     }
 

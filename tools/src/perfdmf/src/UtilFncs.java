@@ -398,8 +398,12 @@ public class UtilFncs {
     public static String getContextEventRoot(String str) {
         int colon = str.indexOf(":");
         int location = str.indexOf("=>");
-        if (colon < 0 || location < 0) {
-            return str;
+        if (location < 0) {
+            if (colon < 0) {
+                return str;
+            } else {
+                return str.substring(colon + 1);
+            }
         }
         return str.substring(colon + 1, location).trim();
     }
@@ -626,7 +630,7 @@ public class UtilFncs {
     public static void mergeSnapshots(File[] sourceFiles, String outfile) throws Exception {
         FileOutputStream fos = new FileOutputStream(outfile);
         GZIPOutputStream gzipout = new GZIPOutputStream(fos);
-        
+
         for (int i = 0; i < sourceFiles.length; i++) {
             FileInputStream fis = new FileInputStream(sourceFiles[i]);
 
@@ -641,7 +645,7 @@ public class UtilFncs {
                 input = new FileInputStream(sourceFiles[i]);
             }
 
-            int count=0;
+            int count = 0;
             byte[] buffer = new byte[4096];
             while ((count = input.read(buffer)) >= 0) {
                 gzipout.write(buffer, 0, count);

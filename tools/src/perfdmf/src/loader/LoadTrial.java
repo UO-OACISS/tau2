@@ -109,7 +109,7 @@ public class LoadTrial {
     }
 
     public boolean checkForTrialName(String trialName) {
-        Trial tmpTrial = databaseAPI.setTrial(trialName,false);
+        Trial tmpTrial = databaseAPI.setTrial(trialName, false);
         if (tmpTrial == null)
             return false;
         else
@@ -117,7 +117,7 @@ public class LoadTrial {
     }
 
     public boolean checkForTrial(String trialid) {
-        Trial tmpTrial = databaseAPI.setTrial(Integer.parseInt(trialid),false);
+        Trial tmpTrial = databaseAPI.setTrial(Integer.parseInt(trialid), false);
         if (tmpTrial == null)
             return false;
         else
@@ -163,8 +163,8 @@ public class LoadTrial {
         }
 
         // set the meta data from the datasource
-	trial.setMetaData(dataSource.getMetaData());
-	trial.setUncommonMetaData(dataSource.getUncommonMetaData());
+        trial.setMetaData(dataSource.getMetaData());
+        trial.setUncommonMetaData(dataSource.getUncommonMetaData());
 
         if (trialID == 0) {
             saveTrial();
@@ -364,7 +364,6 @@ public class LoadTrial {
                 fileType = UtilFncs.identifyData(new File(sourceFiles[0]));
             }
         }
-
 
         if (trialName == null) {
             trialName = "";
