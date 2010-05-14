@@ -8,9 +8,9 @@ import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfdmf.UserEventProfile;
 import edu.uoregon.tau.perfdmf.UtilFncs;
 
-public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comparable {
+public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comparable<ContextEventTreeNode> {
 
-    private List children;
+    private List<ContextEventTreeNode> children;
     private String displayName;
     private ContextEventModel model;
     private UserEventProfile userEventProfile;
@@ -24,11 +24,16 @@ public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comp
         userEventProfile = uep;
         this.model = model;
         if (uep == null) {
-            name = alternateName;
+            name = alternateName.trim();
             displayName = UtilFncs.getRightMost(alternateName);
         } else {
-            name = uep.getUserEvent().getName();
-            displayName = name.substring(0, name.indexOf(":")).trim();
+            name = uep.getUserEvent().getName().trim();
+            if (name.indexOf(":") != -1) {
+                // remove the path
+                displayName = name.substring(0, name.indexOf(":")).trim();
+            } else {
+                displayName = name;
+            }
         }
     }
 
@@ -36,21 +41,20 @@ public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comp
         return userEventProfile;
     }
 
-    public List getChildren() {
+    public List<ContextEventTreeNode> getChildren() {
         checkInitChildren();
         return children;
     }
 
-
-
     private void checkInitChildren() {
         if (children == null) {
-            children = new ArrayList();
+            children = new ArrayList<ContextEventTreeNode>();
 
-            Map internalMap = new HashMap();
+            Map<String, String> internalMap = new HashMap<String, String>();
 
-            for (Iterator it = model.getThread().getUserEventProfiles(); it.hasNext();) {
-                UserEventProfile uep = (UserEventProfile) it.next();
+            // search all the user events for this node and find our children 
+            for (Iterator<UserEventProfile> it = model.getThread().getUserEventProfiles(); it.hasNext();) {
+                UserEventProfile uep = it.next();
                 if (uep == null) {
                     continue;
                 }
@@ -75,12 +79,11 @@ public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comp
                 }
             }
 
-            for (Iterator it = internalMap.keySet().iterator(); it.hasNext();) {
+            for (Iterator<String> it = internalMap.keySet().iterator(); it.hasNext();) {
                 String child = (String) it.next();
                 ContextEventTreeNode node = new ContextEventTreeNode(child, model);
                 children.add(node);
             }
-
         }
     }
 
@@ -92,23 +95,27 @@ public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comp
     public void sortChildren() {
         if (children != null) {
             Collections.sort(children);
-            for (Iterator it = children.iterator(); it.hasNext();) {
+            for (Iterator<ContextEventTreeNode> it = children.iterator(); it.hasNext();) {
                 ContextEventTreeNode node = (ContextEventTreeNode) it.next();
                 node.sortChildren();
             }
         }
     }
 
-    public int compareTo(Object o) {
+    public String toString() {
+        return displayName;
+    }
+
+    public int compareTo(ContextEventTreeNode o) {
         int result = 0;
 
-        int column = model.getSortColumn(); 
-        
+        int column = model.getSortColumn();
+
         if (column == 0) {
             result = this.toString().compareTo(((ContextEventTreeNode) o).toString());
         } else {
-            Double val1 = (Double)model.getValueAt(o, column);
-            Double val2 = (Double)model.getValueAt(this, column);
+            Double val1 = (Double) model.getValueAt(o, column);
+            Double val2 = (Double) model.getValueAt(this, column);
 
             if (val1 == null && val2 != null) {
                 return 1;
@@ -117,16 +124,12 @@ public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comp
             } else if (val1 == null && val2 == null) {
                 result = 0;
             } else {
-                result = (int)(val2.doubleValue() - val1.doubleValue());
+                result = (int) (val2.doubleValue() - val1.doubleValue());
             }
         }
         if (model.getSortAscending()) {
             return -result;
         }
         return result;
-    }
-
-    public String toString() {
-        return displayName;
     }
 }

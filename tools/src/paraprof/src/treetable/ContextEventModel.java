@@ -11,9 +11,10 @@ import edu.uoregon.tau.perfdmf.Thread;
 public class ContextEventModel extends AbstractTreeTableModel {
 
     private static String[] cNames = { "Name", "Total", "NumSamples", "MaxValue", "MinValue", "MeanValue", "Std. Dev." };
-    private static Class[] cTypes = { TreeTableModel.class, Double.class, Double.class, Double.class, Double.class, Double.class, Double.class };
+    private static Class[] cTypes = { TreeTableModel.class, Double.class, Double.class, Double.class, Double.class, Double.class,
+            Double.class };
 
-    private List roots;
+    private List<ContextEventTreeNode> roots;
 
     private ParaProfTrial ppTrial;
     private Thread thread;
@@ -41,13 +42,13 @@ public class ContextEventModel extends AbstractTreeTableModel {
 
     private void setupData() {
 
-        roots = new ArrayList();
+        roots = new ArrayList<ContextEventTreeNode>();
         dataSorter = new DataSorter(ppTrial);
 
         // don't ask the thread for its functions directly, since we want group masking to work
         List uepList = dataSorter.getUserEventProfiles(thread);
 
-        Map rootNames = new HashMap();
+        Map<String,Integer> rootNames = new HashMap<String,Integer>();
 
         if (window.getTreeMode()) {
             for (Iterator it = uepList.iterator(); it.hasNext();) {
@@ -60,17 +61,20 @@ public class ContextEventModel extends AbstractTreeTableModel {
 
                     rootName = UtilFncs.getContextEventRoot(uep.getName());
 
-                    //System.out.println("root = " + rootName);
-                    if (rootNames.get(rootNames) == null) {
-                        rootNames.put(rootName, "1");
-                    }
+                    rootNames.put(rootName, 1);
+
+                } else {
+                    ContextEventTreeNode node = new ContextEventTreeNode(uep, this, null);
+                    roots.add(node);
                 }
             }
-            for (Iterator it = rootNames.keySet().iterator(); it.hasNext();) {
-                // no go through the strings and get the actual functions
-                String rootName = (String) it.next();
+         
+            for (Iterator<String> it = rootNames.keySet().iterator(); it.hasNext();) {
+                // now go through the strings and get the actual functions
 
-                ContextEventTreeNode node = new ContextEventTreeNode(rootName, this);
+                String possibleRoot = it.next();
+
+                ContextEventTreeNode node = new ContextEventTreeNode(possibleRoot, this);
                 roots.add(node);
             }
 
@@ -121,7 +125,8 @@ public class ContextEventModel extends AbstractTreeTableModel {
                 if (uep.getName().contains("/s)")) { // rates are ignored for total
                     return null;
                 } else {
-                    return new Double(uep.getNumSamples(dataSorter.getSelectedSnapshot())*uep.getMeanValue(dataSorter.getSelectedSnapshot()));
+                    return new Double(uep.getNumSamples(dataSorter.getSelectedSnapshot())
+                            * uep.getMeanValue(dataSorter.getSelectedSnapshot()));
                 }
             case 2:
                 return new Double(uep.getNumSamples(dataSorter.getSelectedSnapshot()));
