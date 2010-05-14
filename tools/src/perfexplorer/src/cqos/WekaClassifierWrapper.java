@@ -12,8 +12,10 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -30,6 +32,7 @@ import weka.core.Instances;
 import weka.core.SelectedTag;
 import weka.classifiers.functions.LinearRegression;
 import weka.classifiers.functions.PaceRegression;
+import weka.core.converters.CSVLoader;
 
 /**
  * This class is a wrapper around the Weka classifier.  The intention is that PerfExplorer
@@ -88,6 +91,8 @@ public class WekaClassifierWrapper implements Serializable {
 	private String className = null;          // the class prediction
 	private Set[]/*String*/ nominalAttributes = null;    // this helps us figure out what's a numeric variable and what isn't
 	private Instances train = null;
+	private String csvFile = null;
+
 	
 	/**
 	 * The one and only constructor.  The Constructor will use the trainingData passed in to build the
@@ -124,87 +129,112 @@ public class WekaClassifierWrapper implements Serializable {
 		}
 	}
 	
+	public WekaClassifierWrapper (String csvFile, String classLabel) throws Exception {
+		this.csvFile = csvFile;
+		this.classLabel = classLabel;
+	}
+
 	/**
 	 * This method will build the classifier, using the data passed in to the constructor.
 	 *
 	 */
 	public void buildClassifier () {
 
-		// inspect the attribute types.
-		checkForNominalAttributes();
+		if (csvFile != null) {
+			try {
+				CSVLoader loader = new CSVLoader();
+				loader.setSource(new File(csvFile));
+				train = loader.getDataSet();
+			} catch (Exception e) {
+				System.err.println(e.getMessage());
+				e.printStackTrace();
+				return;
+			}
+			int i = 0;
+			for (Enumeration e = train.enumerateAttributes() ; e.hasMoreElements() ; i++) {
+				Attribute attr = (Attribute)e.nextElement();
+				if (attr.name().equals(classLabel)) {
+					train.setClassIndex(i);
+					break;
+				}
+			}
+		} else {
+			// inspect the attribute types.
+			checkForNominalAttributes();
 		
-        // this array is for us locally, to iterate through the attributes when necessary
-        attArray = new Attribute[this.fieldCount];
+        	// this array is for us locally, to iterate through the attributes when necessary
+        	attArray = new Attribute[this.fieldCount];
 		
-		// create all the attributes
-		for (int index = 0 ; index < this.fieldCount ; index++) {
-			Attribute attr = null;
-			String key = this.metadataFields[index];
+			// create all the attributes
+			for (int index = 0 ; index < this.fieldCount ; index++) {
+				Attribute attr = null;
+				String key = this.metadataFields[index];
 			
-			// if this is a nominal attribute, we will have a set of possible values.
-			// if not, it's a numeric attribute.
-			if (this.nominalAttributes[index] != null) {
+				// if this is a nominal attribute, we will have a set of possible values.
+				// if not, it's a numeric attribute.
+				if (this.nominalAttributes[index] != null) {
 
-				// create a vector of classes for the possible values
-				FastVector classes = new FastVector();
+					// create a vector of classes for the possible values
+					FastVector classes = new FastVector();
 				
-				// iterate through them, and put them in the FastVector
-				Iterator classIter = this.nominalAttributes[index].iterator();
-				while(classIter.hasNext()) {
-					Object tmp = classIter.next();
-					if (tmp != null) {
-						classes.addElement(tmp);
-//						if (key.equals(this.classLabel))
-//							System.out.println(key+":"+tmp);
+					// iterate through them, and put them in the FastVector
+					Iterator classIter = this.nominalAttributes[index].iterator();
+					while(classIter.hasNext()) {
+						Object tmp = classIter.next();
+						if (tmp != null) {
+							classes.addElement(tmp);
+	//						if (key.equals(this.classLabel))
+	//							System.out.println(key+":"+tmp);
+						}
+					}
+					
+					// this is a nominal attribute.
+					attr = new Attribute(key, classes);
+				
+				} else {
+					// this is a numeric attribute.
+					attr = new Attribute(key);
+				}
+	//			if (key.equals(this.classLabel))
+	//				System.out.println("new attribute: " + key);
+
+				// if this is our class attribute, remember that.  It BETTER be the first one.
+				if (key.equals(this.classLabel))
+					classAttr = attr;
+
+				// add our attributes to our local array, and to the Weka FastVector
+				attArray[index] = attr;
+				this.attributes.addElement(attr);
+			}
+		
+			// create the set of training instances
+        	train = new Instances("train", this.attributes, this.trainingData.size());
+        
+        	// set the class for the instances to be the first attribute, the dependent variable
+        	train.setClass(classAttr);
+        
+        	// iterate over the training data
+        	Iterator dataIter = trainingData.iterator();
+        	while (dataIter.hasNext()) {
+        	
+        		// get the set of name/value pairs for this instance
+        		Map/*<String,String>*/ tmpMap = (Map)dataIter.next();
+        	
+        		// create the Weka Instance
+				Instance inst = new Instance(this.fieldCount);
+			
+				// set the attributes in the Instance
+				for (int i = 0 ; i < attArray.length ; i++) {
+					String value = (String)tmpMap.get(attArray[i].name());
+					try {
+						inst.setValue(attArray[i], Double.parseDouble(value));
+					} catch (Exception e) {
+						if (value != null)
+							inst.setValue(attArray[i], value);
 					}
 				}
-				
-				// this is a nominal attribute.
-				attr = new Attribute(key, classes);
-				
-			} else {
-				// this is a numeric attribute.
-				attr = new Attribute(key);
+				train.add(inst);
 			}
-//			if (key.equals(this.classLabel))
-//				System.out.println("new attribute: " + key);
-
-			// if this is our class attribute, remember that.  It BETTER be the first one.
-			if (key.equals(this.classLabel))
-				classAttr = attr;
-
-			// add our attributes to our local array, and to the Weka FastVector
-			attArray[index] = attr;
-			this.attributes.addElement(attr);
-		}
-		
-		// create the set of training instances
-        train = new Instances("train", this.attributes, this.trainingData.size());
-        
-        // set the class for the instances to be the first attribute, the dependent variable
-        train.setClass(classAttr);
-        
-        // iterate over the training data
-        Iterator dataIter = trainingData.iterator();
-        while (dataIter.hasNext()) {
-        	
-        	// get the set of name/value pairs for this instance
-        	Map/*<String,String>*/ tmpMap = (Map)dataIter.next();
-        	
-        	// create the Weka Instance
-			Instance inst = new Instance(this.fieldCount);
-			
-			// set the attributes in the Instance
-			for (int i = 0 ; i < attArray.length ; i++) {
-				String value = (String)tmpMap.get(attArray[i].name());
-				try {
-					inst.setValue(attArray[i], Double.parseDouble(value));
-				} catch (Exception e) {
-					if (value != null)
-						inst.setValue(attArray[i], value);
-				}
-			}
-			train.add(inst);
 		}
 
 		try {
@@ -489,6 +519,115 @@ public class WekaClassifierWrapper implements Serializable {
 		return output;
 	}
 	
+	/**
+	 * Given a file with test data, classify each instance.
+	 * 
+	 * @return
+	 */
+	public List<String> testClassifier(String testingData) {
+		List<String> classes = new ArrayList<String>();
+		// this sucks.  We have to tell the new instances object that
+		// it should have the same attributes as the training data.  I think.
+		Instances inTest = new Instances(train, 0);
+		Instances tmpTest = null;
+		try {
+			CSVLoader loader = new CSVLoader();
+			loader.setSource(new File(testingData));
+			tmpTest = loader.getDataSet();
+			int a = 0;
+			for (Enumeration e = tmpTest.enumerateAttributes() ; e.hasMoreElements() ; a++) {
+				Attribute attr = (Attribute)e.nextElement();
+				if (attr.name().equals(classLabel)) {
+					tmpTest.setClassIndex(a);
+					break;
+				}
+			}
+			// iterate over the temporary instances
+			for (Enumeration e = tmpTest.enumerateInstances() ; e.hasMoreElements() ; ) {
+				Instance inst = (Instance)e.nextElement();
+				Instance newInst = new Instance(train.numAttributes());
+				newInst.setDataset(inTest);
+				// iterate over the independent attributes
+				for (Enumeration e2 = inTest.enumerateAttributes() ; e2.hasMoreElements() ; ) {
+					Attribute attr = (Attribute)e2.nextElement();
+					//System.out.println(attr.name());
+					newInst.setValue(inTest.attribute(attr.name()).index(), inst.value(tmpTest.attribute(attr.name())));
+				}
+				// assign the dependent attribute
+				newInst.setValue(inTest.classAttribute().index(), inst.value(tmpTest.classAttribute()));
+				inTest.add(newInst);
+			}
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+			e.printStackTrace();
+			System.out.println("Expected attributes:");
+			for (Enumeration en = train.enumerateAttributes() ; en.hasMoreElements() ; ) {
+				Attribute attr = (Attribute)en.nextElement();
+				System.out.print(attr.name() + ", ");
+			}
+			System.out.println("\nFound attributes:");
+			for (Enumeration en = tmpTest.enumerateAttributes() ; en.hasMoreElements() ; ) {
+				Attribute attr = (Attribute)en.nextElement();
+				System.out.print(attr.name() + ", ");
+			}
+			System.out.println("\n");
+			return classes;
+		}
+        try {
+			/*for (int v = 0 ; v < train.classAttribute().numValues(); v++) {
+				System.out.print(train.classAttribute().value(v) + ",");
+			}
+			System.out.println();*/
+			int index = 0;
+			for (Enumeration e = inTest.enumerateInstances() ; e.hasMoreElements() ; index++) {
+				Instance inst = (Instance)e.nextElement();
+        		// get the classification, which comes back as probabilities for each class.
+	        	double[] dist = cls.distributionForInstance(inst);
+	        	
+	        	// choose the class with the highest probability.
+				int i = 0;
+				int top5[] = {0,0,0,0,0};
+				//System.out.print(String.format("%.3f, ", dist[i]));
+				for (int j = 1 ; j < dist.length; j++) {
+					//System.out.print(String.format("%.3f, ", dist[j]));
+					if (dist[j] > dist[i]) {
+						i = j;
+					}
+					int pivot = j;
+					// iterate over the top 5 values
+					for (int k = 0 ; k < 5 ; k++) {
+						// if the current pivot is bigger than the current top 5, swap them
+						if (dist[pivot] > dist[top5[k]]) {
+							int tmp = top5[k];
+							top5[k] = pivot;
+							pivot = tmp;
+						}
+					}
+				}
+			
+				// save our result 
+				this.confidence = dist[i];
+				this.className = train.classAttribute().value(i);
+				System.out.println(inst.stringValue(tmpTest.instance(index).classAttribute()) + "\t" + this.className + "\t" + this.confidence);
+				/*
+				for (int k = 0 ; k < 5 ; k++) {
+					this.confidence = dist[top5[k]];
+					this.className = train.classAttribute().value(top5[k]);
+					System.out.println(inst.stringValue(tmpTest.instance(index).classAttribute()) + "\t" + this.className + "\t" + this.confidence);
+				}
+				*/
+				//System.out.println(inst.stringValue(inst.classAttribute()).equals(this.className) ? " GOOD" : " BAD");
+				classes.add(this.className);
+			}
+       	} catch (Exception e) {
+       		// oopsie!
+       		System.err.println(e.getMessage());
+       		e.printStackTrace();
+       	}
+		
+		return classes;
+	}
+
 	/**
 	 * Main method for testing this wrapper.
 	 * 
