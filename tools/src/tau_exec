@@ -95,7 +95,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tau_exec,v 1.12 2010/05/12 21:45:26 amorris Exp $';
+	      echo '$Id: tau_exec,v 1.13 2010/05/14 22:19:23 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -T)
@@ -202,6 +202,7 @@ fi
 if [ $track_memory = "true" ] ; then
     # Add the memory wrapper library to the LD_PRELOAD list
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-memorywrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+    export TAU_MEMORY_WRAPPER_ENABLED=1
 fi
 
 
@@ -268,6 +269,9 @@ if [ $qsub_mode = true ] ; then
 else
 
     if [ $dryrun = "true" ]; then
+	if [ $track_memory = "true" ] ; then
+	    echo "export TAU_MEMORY_WRAPPER_ENABLED=1"
+	fi
 	if [ $apple = 1 ]; then
 	    echo "export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
 	    echo "export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD"
