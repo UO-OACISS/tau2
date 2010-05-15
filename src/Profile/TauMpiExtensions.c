@@ -70,12 +70,8 @@ static int trackend(iotracker_t *tracker, int count, MPI_Datatype datatype) {
     Tau_get_context_userevent(&tracker.eventBandwidth, name2); \
   }
 
-#define MPIO_TRACK_BEGIN(tracker)	\
-  trackbegin(&tracker);
-
-#define MPIO_TRACK_END(tracker, count, datatype) \
-  trackend(&tracker, count, datatype);
-
+#define MPIO_TRACK_BEGIN(tracker) trackbegin(&tracker);
+#define MPIO_TRACK_END(tracker, count, datatype) trackend(&tracker, count, datatype);
 
 
 /******************************************************
@@ -3494,7 +3490,7 @@ int MPI_File_read_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_read_at()", "", TAU_MESSAGE); 
-  MPIO_TRACK_INIT(t1, "Bytes Read", "Read Bandwidth (MB/s)");
+  MPIO_TRACK_INIT(t1, "MPI-IO Bytes Read", "MPI-IO Read Bandwidth (MB/s)");
 
   TAU_PROFILE_START(t); 
   MPIO_TRACK_BEGIN(t1);
@@ -3559,7 +3555,7 @@ int MPI_File_read_at_all( MPI_File fh, MPI_Offset offset, void * buf, int count,
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_read_at_all()", "", TAU_MESSAGE); 
-  MPIO_TRACK_INIT(t1, "Bytes Read", "Read Bandwidth (MB/s)");
+  MPIO_TRACK_INIT(t1, "MPI-IO Bytes Read", "MPI-IO Read Bandwidth (MB/s)");
 
   TAU_PROFILE_START(t); 
   MPIO_TRACK_BEGIN(t1);
@@ -3624,7 +3620,7 @@ int MPI_File_write_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MP
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_write_at()", "", TAU_MESSAGE); 
-  MPIO_TRACK_INIT(t1, "Bytes Written", "Write Bandwidth (MB/s)");
+  MPIO_TRACK_INIT(t1, "MPI-IO Bytes Written", "MPI-IO Write Bandwidth (MB/s)");
 
   TAU_PROFILE_START(t); 
   MPIO_TRACK_BEGIN(t1);
@@ -3688,7 +3684,7 @@ int MPI_File_write_at_all( MPI_File fh, MPI_Offset offset, void * buf, int count
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_write_at_all()", "", TAU_MESSAGE); 
-  MPIO_TRACK_INIT(t1, "Bytes Written", "Write Bandwidth (MB/s)");
+  MPIO_TRACK_INIT(t1, "MPI-IO Bytes Written", "MPI-IO Write Bandwidth (MB/s)");
   TAU_PROFILE_START(t); 
   MPIO_TRACK_BEGIN(t1);
   retvalue = PMPI_File_write_at_all( fh, offset, buf, count, datatype, status) ; 
@@ -5140,7 +5136,7 @@ int MPI_File_read( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MP
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_read()", "", TAU_MESSAGE); 
 
-  MPIO_TRACK_INIT(t1, "Bytes Read", "Read Bandwidth (MB/s)");
+  MPIO_TRACK_INIT(t1, "MPI-IO Bytes Read", "MPI-IO Read Bandwidth (MB/s)");
 
   TAU_PROFILE_START(t); 
   MPIO_TRACK_BEGIN(t1);
@@ -5203,7 +5199,7 @@ int MPI_File_read_all( MPI_File fh, void * buf, int count, MPI_Datatype datatype
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_read_all()", "", TAU_MESSAGE); 
-  MPIO_TRACK_INIT(t1, "Bytes Read", "Read Bandwidth (MB/s)");
+  MPIO_TRACK_INIT(t1, "MPI-IO Bytes Read", "MPI-IO Read Bandwidth (MB/s)");
   TAU_PROFILE_START(t); 
   MPIO_TRACK_BEGIN(t1);
   retvalue = PMPI_File_read_all( fh, buf, count, datatype, status) ; 
@@ -5485,7 +5481,7 @@ int MPI_File_read_ordered( MPI_File fh, void * buf, int count, MPI_Datatype data
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_read_ordered()", "", TAU_MESSAGE); 
-  MPIO_TRACK_INIT(t1, "Bytes Read", "Read Bandwidth (MB/s)");
+  MPIO_TRACK_INIT(t1, "MPI-IO Bytes Read", "MPI-IO Read Bandwidth (MB/s)");
   TAU_PROFILE_START(t); 
   MPIO_TRACK_BEGIN(t1);
   retvalue = PMPI_File_read_ordered( fh, buf, count, datatype, status) ; 
@@ -5657,7 +5653,7 @@ int MPI_File_read_shared( MPI_File fh, void * buf, int count, MPI_Datatype datat
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_read_shared()", "", TAU_MESSAGE); 
-  MPIO_TRACK_INIT(t1, "Bytes Read", "Read Bandwidth (MB/s)");
+  MPIO_TRACK_INIT(t1, "MPI-IO Bytes Read", "MPI-IO Read Bandwidth (MB/s)");
   TAU_PROFILE_START(t); 
   MPIO_TRACK_BEGIN(t1);
   retvalue = PMPI_File_read_shared( fh, buf, count, datatype, status) ; 
@@ -5879,7 +5875,7 @@ int MPI_File_write( MPI_File fh, void * buf, int count, MPI_Datatype datatype, M
 {
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_File_write()", "", TAU_MESSAGE); 
-  MPIO_TRACK_INIT(t1, "Bytes Written", "Write Bandwidth (MB/s)");
+  MPIO_TRACK_INIT(t1, "MPI-IO Bytes Written", "MPI-IO Write Bandwidth (MB/s)");
 
   TAU_PROFILE_START(t); 
 
@@ -5944,7 +5940,7 @@ int MPI_File_write_all( MPI_File fh, void * buf, int count, MPI_Datatype datatyp
   int retvalue;
 
   TAU_PROFILE_TIMER(t, "MPI_File_write_all()", "", TAU_MESSAGE); 
-  MPIO_TRACK_INIT(t1, "Bytes Written", "Write Bandwidth (MB/s)");
+  MPIO_TRACK_INIT(t1, "MPI-IO Bytes Written", "MPI-IO Write Bandwidth (MB/s)");
 
   TAU_PROFILE_START(t); 
   MPIO_TRACK_BEGIN(t1);
@@ -6230,7 +6226,7 @@ int MPI_File_write_ordered( MPI_File fh, void * buf, int count, MPI_Datatype dat
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_write_ordered()", "", TAU_MESSAGE); 
-  MPIO_TRACK_INIT(t1, "Bytes Written", "Write Bandwidth (MB/s)");
+  MPIO_TRACK_INIT(t1, "MPI-IO Bytes Written", "MPI-IO Write Bandwidth (MB/s)");
 
   TAU_PROFILE_START(t); 
   MPIO_TRACK_BEGIN(t1);
@@ -6403,7 +6399,7 @@ int MPI_File_write_shared( MPI_File fh, void * buf, int count, MPI_Datatype data
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_write_shared()", "", TAU_MESSAGE); 
-  MPIO_TRACK_INIT(t1, "Bytes Written", "Write Bandwidth (MB/s)");
+  MPIO_TRACK_INIT(t1, "MPI-IO Bytes Written", "MPI-IO Write Bandwidth (MB/s)");
   TAU_PROFILE_START(t); 
 
   MPIO_TRACK_BEGIN(t1);
