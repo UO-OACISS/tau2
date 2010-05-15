@@ -25,7 +25,7 @@ using namespace std;
 #define dprintf TAU_VERBOSE
 
 
-const char *iowrap_event_names[NUM_EVENTS] = {"WRITE Bandwidth (MB/s)", "Bytes Written", "READ Bandwidth (MB/s)", "Bytes Read"};
+const char *iowrap_event_names[NUM_EVENTS] = {"Write Bandwidth (MB/s)", "Bytes Written", "Read Bandwidth (MB/s)", "Bytes Read"};
 
 
 /*********************************************************************
@@ -158,8 +158,8 @@ extern "C" void Tau_iowrap_checkInit() {
   Tau_iowrap_registerEvents(0, "stdin");
   Tau_iowrap_registerEvents(1, "stdout");
   Tau_iowrap_registerEvents(2, "stderr");
-  Tau_get_context_userevent(&global_write_bandwidth, "WRITE Bandwidth (MB/s)");
-  Tau_get_context_userevent(&global_read_bandwidth, "READ Bandwidth (MB/s)");
+  Tau_get_context_userevent(&global_write_bandwidth, "Write Bandwidth (MB/s)");
+  Tau_get_context_userevent(&global_read_bandwidth, "Read Bandwidth (MB/s)");
   Tau_get_context_userevent(&global_bytes_written, "Bytes Written");
   Tau_get_context_userevent(&global_bytes_read, "Bytes Read");
   Tau_create_top_level_timer_if_necessary();
