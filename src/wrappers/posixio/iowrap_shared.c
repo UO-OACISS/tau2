@@ -561,7 +561,7 @@ void rewind(FILE *stream) {
 
 
 /*********************************************************************
- * write 
+ * write
  ********************************************************************/
 ssize_t write (int fd, const void *buf, size_t count) {
   static ssize_t (*_write)(int fd, const void *buf, size_t count) = NULL;
@@ -592,7 +592,7 @@ ssize_t write (int fd, const void *buf, size_t count) {
   currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
   if ((currentWrite > 1e-12) && (ret > 0)) {
-    bw = (double) count/currentWrite; 
+    bw = (double) count/currentWrite;
     TAU_CONTEXT_EVENT(wb, bw);
     TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
   } else {
@@ -857,9 +857,15 @@ int open (const char *pathname, int flags, ...) {
   } 
 
   if (Tau_iowrap_checkPassThrough()) {
-    va_start (args, flags);
-    ret = _open(pathname, flags, args);
-    va_end (args);
+    /* if the file is being created, get the third argument for specifying the 
+       mode (e.g., 0644) */
+    if (flags & O_CREAT) { 
+      va_start(args, flags);
+      mode = va_arg(args, int);
+      va_end(args); 
+    }
+    
+    ret = _open(pathname, flags, mode); 
     return ret;
   }
 
@@ -900,9 +906,14 @@ int open64 (const char *pathname, int flags, ...) {
   } 
 
   if (Tau_iowrap_checkPassThrough()) {
-    va_start (args, flags);
-    ret = _open64(pathname, flags, args); 
-    va_end(args);
+    /* if the file is being created, get the third argument for specifying the 
+       mode (e.g., 0644) */
+    if (flags & O_CREAT) { 
+      va_start(args, flags);
+      mode = va_arg(args, int);
+      va_end(args); 
+    }
+    ret = _open64(pathname, flags, mode); 
     return ret;
   }
 
