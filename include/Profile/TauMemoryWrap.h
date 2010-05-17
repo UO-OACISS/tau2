@@ -24,6 +24,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#include <Profile/tau_types.h>
 int Tau_memorywrap_checkPassThrough();
 void Tau_memorywrap_writeHook();
 void Tau_memorywrap_checkInit();
