@@ -59,7 +59,6 @@ DWARFOPTS=
 #USE_IBMXLC#CEXTRA = -DTAU_DOT_H_LESS_HEADERS -DTAU_XLC #ENDIF#
 #USE_DECCXX#CEXTRA = -DTAU_DOT_H_LESS_HEADERS -x c++ -D__USE_STD_IOSTREAM #ENDIF#
 #USE_INTELCXX#CEXTRA = -DTAU_DOT_H_LESS_HEADERS -DTAU_INTEL #ENDIF#
-#USE_INTELCXX#MERGE_CXX_OPT = -x c++ #ENDIF#
 #USE_NECCXX#CEXTRA = -DTAU_DOT_H_LESS_HEADERS -DTAU_NEC -Xp #ENDIF#
 #CM5#CEXTRA = -D__CM5__#ENDIF#
 #SGICC#CEXTRA = -LANG:std -D__SGIMP__#ENDIF#
@@ -221,7 +220,7 @@ tau_merge: 	tau_merge.o tau_events.o
 		$(CXX) $(CFLAGS) tau_merge.o tau_events.o -o tau_merge -lm $(LEXTRA)
 
 tau_merge.o: 	tau_merge.c
-		$(CC) $(CFLAGS)  -c $(MERGE_CXX_OPT) tau_merge.c
+		$(CC) $(CFLAGS)  -c tau_merge.c
 
 tau_events.o: 	tau_events.cpp
 		$(CXX) $(CFLAGS)  -c tau_events.cpp
