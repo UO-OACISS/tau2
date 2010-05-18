@@ -95,7 +95,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tau_exec,v 1.14 2010/05/14 22:59:49 amorris Exp $';
+	      echo '$Id: tau_exec,v 1.15 2010/05/18 18:02:51 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -T)
@@ -256,7 +256,9 @@ if [ $qsub_mode = true ] ; then
     cmd="$@"
     # don't use the current LD_LIBRARY_PATH or it will screw things up for the backend
     TAUEX_LD_LIBRARY_PATH=$BASEDIR/lib/$theBinding
-    env_option="--env LD_PRELOAD=$TAUEX_LD_PRELOAD:LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH:$tau_vars"
+    envs="LD_PRELOAD=$TAUEX_LD_PRELOAD:LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH:$tau_vars"
+    envs=`echo $envs | sed -e "s/::/:/g" -e "s/:$//"`
+    env_option="--env $envs"
     newCmd=`echo $cmd | sed -e 's/^qsub //'`
     if [ $dryrun = "true" ]; then
 	echo qsub $env_option $newCmd
