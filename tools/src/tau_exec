@@ -95,7 +95,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tau_exec,v 1.15 2010/05/18 18:02:51 amorris Exp $';
+	      echo '$Id: tau_exec,v 1.16 2010/05/18 18:13:36 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -T)
@@ -257,9 +257,33 @@ if [ $qsub_mode = true ] ; then
     # don't use the current LD_LIBRARY_PATH or it will screw things up for the backend
     TAUEX_LD_LIBRARY_PATH=$BASEDIR/lib/$theBinding
     envs="LD_PRELOAD=$TAUEX_LD_PRELOAD:LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH:$tau_vars"
+
+    prevEnv=""
+    processEnv=false
+    newCmd=""
+    for arg in $cmd ; do
+        # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
+	modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
+	if [ "$processEnv" = true ] ; then
+	    prevEnv="$arg"
+	    processEnv=false
+	else
+	    case $arg in 
+	  --env)
+	      processEnv=true
+	      ;;
+	  *)
+              newCmd="$newCmd $arg"
+	      ;;
+	    esac
+	fi
+    done
+
+    envs="$envs:$prevEnv"
     envs=`echo $envs | sed -e "s/::/:/g" -e "s/:$//"`
     env_option="--env $envs"
-    newCmd=`echo $cmd | sed -e 's/^qsub //'`
+
+    newCmd=`echo $newCmd | sed -e 's/^qsub //'`
     if [ $dryrun = "true" ]; then
 	echo qsub $env_option $newCmd
     else
