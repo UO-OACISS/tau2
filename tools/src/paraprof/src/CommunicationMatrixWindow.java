@@ -68,36 +68,38 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Printable {
     private JFrame doCommunicationMatrix(DataSource dataSource, JFrame mainFrame) {
         boolean foundData = false;
         int threadID = 0;
-        size = dataSource.getAllThreads().size();
-	    // declare the heatmap data object
-	    mapData = new HeatMapData(size);
+        size = dataSource.getNodeMap().size();
+        // declare the heatmap data object
+        mapData = new HeatMapData(size);
 
         for (Iterator it = dataSource.getAllThreads().iterator(); it.hasNext();) {
             edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
-            for (Iterator it2 = thread.getUserEventProfiles(); it2.hasNext();) {
-                UserEventProfile uep = (UserEventProfile) it2.next();
-                if (uep != null && uep.getNumSamples() > 0) {
-                    String event = uep.getName();
-                    if (event.startsWith("Message size sent to node ") && event.indexOf("=>") == -1) {
-                        foundData = true;
-                        // split the string
-                        extractData(uep, threadID, event, event, allPaths);
-                    } else if (event.startsWith("Message size sent to node ") && event.indexOf("=>") >= 0) {
-                        foundData = true;
-                        StringTokenizer st = new StringTokenizer(event, ":");
-                        String first = st.nextToken().trim();
-                        String path = st.nextToken().trim();
-                        // now, split up the path, and handle each node 
-                        StringTokenizer st2 = new StringTokenizer(path, "=>");
-                        String tmp = null;
-                        while (st2.hasMoreTokens()) {
-                            tmp = st2.nextToken().trim();
-                            extractData(uep, threadID, event, first, tmp);
+            if (thread.getThreadID() == 0 && thread.getContextID() == 0) {
+                for (Iterator it2 = thread.getUserEventProfiles(); it2.hasNext();) {
+                    UserEventProfile uep = (UserEventProfile) it2.next();
+                    if (uep != null && uep.getNumSamples() > 0) {
+                        String event = uep.getName();
+                        if (event.startsWith("Message size sent to node ") && event.indexOf("=>") == -1) {
+                            foundData = true;
+                            // split the string
+                            extractData(uep, threadID, event, event, allPaths);
+                        } else if (event.startsWith("Message size sent to node ") && event.indexOf("=>") >= 0) {
+                            foundData = true;
+                            StringTokenizer st = new StringTokenizer(event, ":");
+                            String first = st.nextToken().trim();
+                            String path = st.nextToken().trim();
+                            // now, split up the path, and handle each node 
+                            StringTokenizer st2 = new StringTokenizer(path, "=>");
+                            String tmp = null;
+                            while (st2.hasMoreTokens()) {
+                                tmp = st2.nextToken().trim();
+                                extractData(uep, threadID, event, first, tmp);
+                            }
                         }
                     }
                 }
+                threadID++;
             }
-            threadID++;
         }
         if (!foundData) {
             JOptionPane.showMessageDialog(
@@ -107,7 +109,7 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Printable {
             return null;
         }
         mapData.massageData();
-		window = new HeatMapWindow("Message Size Heat Maps", mapData);
+        window = new HeatMapWindow("Message Size Heat Maps", mapData);
         URL url = Utility.getResource("tau32x32.gif");
         if (url != null) {
             window.setIconImage(Toolkit.getDefaultToolkit().getImage(url));
@@ -116,44 +118,43 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Printable {
         return window;
     }
 
-    
     private void extractData(UserEventProfile uep, int thread, String event, String first, String path) {
         double numEvents, eventMax, eventMin, eventMean, eventSumSqr, stdev, volume = 0;
-		double[] empty = {0,0,0,0,0,0};
+        double[] empty = { 0, 0, 0, 0, 0, 0 };
 
-		StringTokenizer st = new StringTokenizer(first, "Message size sent to node ");
+        StringTokenizer st = new StringTokenizer(first, "Message size sent to node ");
         if (st.hasMoreTokens()) {
             int receiver = Integer.parseInt(st.nextToken());
 
-			double[] pointData = mapData.get(thread, receiver, path);
-			if (pointData == null) {
-				pointData = empty;
-			}
+            double[] pointData = mapData.get(thread, receiver, path);
+            if (pointData == null) {
+                pointData = empty;
+            }
 
             numEvents = uep.getNumSamples();
-			pointData[COUNT] += numEvents;
+            pointData[COUNT] += numEvents;
 
             eventMax = uep.getMaxValue();
-			pointData[MAX] = Math.max(eventMax, pointData[MAX]);
+            pointData[MAX] = Math.max(eventMax, pointData[MAX]);
 
             eventMin = uep.getMinValue();
-			if (pointData[MIN] > 0) {
-				pointData[MIN] = Math.min(pointData[MIN],eventMin);
-			} else {
-				pointData[MIN] = eventMin;
-			}
-            
+            if (pointData[MIN] > 0) {
+                pointData[MIN] = Math.min(pointData[MIN], eventMin);
+            } else {
+                pointData[MIN] = eventMin;
+            }
+
             // we'll recompute this later.
             eventMean = uep.getMeanValue();
-			pointData[MEAN] += eventMean;
+            pointData[MEAN] += eventMean;
 
             // we'll recompute this later.
             eventSumSqr = uep.getStdDev();
-			pointData[STDDEV] += eventSumSqr;
+            pointData[STDDEV] += eventSumSqr;
 
             volume = numEvents * eventMean;
-			pointData[VOLUME] += volume;
-			mapData.put(thread, receiver, path, pointData);
+            pointData[VOLUME] += volume;
+            mapData.put(thread, receiver, path, pointData);
         }
     }
 

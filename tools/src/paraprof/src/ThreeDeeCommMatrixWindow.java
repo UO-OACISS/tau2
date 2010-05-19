@@ -23,9 +23,9 @@ import edu.uoregon.tau.vis.*;
 /**
  * 3D Communication Matrix Window 
  * 
- * <P>CVS $Id: ThreeDeeCommMatrixWindow.java,v 1.10 2010/02/25 23:58:52 amorris Exp $</P>
+ * <P>CVS $Id: ThreeDeeCommMatrixWindow.java,v 1.11 2010/05/19 02:37:11 amorris Exp $</P>
  * @author Alan Morris, Kevin Huck
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  */
 public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, ActionListener, ThreeDeeImageProvider,
         VisCanvasListener, Printable {
@@ -417,36 +417,38 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
     private static HeatMapData generateData(DataSource dataSource, JFrame mainFrame) {
         boolean foundData = false;
         int threadID = 0;
-        int size = dataSource.getAllThreads().size();
+        int size = dataSource.getNodeMap().size();
         // declare the heatmap data object
         HeatMapData mapData = new HeatMapData(size);
 
         for (Iterator it = dataSource.getAllThreads().iterator(); it.hasNext();) {
             Thread thread = (Thread) it.next();
-            for (Iterator it2 = thread.getUserEventProfiles(); it2.hasNext();) {
-                UserEventProfile uep = (UserEventProfile) it2.next();
-                if (uep != null && uep.getNumSamples() > 0) {
-                    String event = uep.getName();
-                    if (event.startsWith("Message size sent to node ") && event.indexOf("=>") == -1) {
-                        foundData = true;
-                        // split the string
-                        extractData(mapData, uep, threadID, event, event, allPaths);
-                    } else if (event.startsWith("Message size sent to node ") && event.indexOf("=>") >= 0) {
-                        foundData = true;
-                        StringTokenizer st = new StringTokenizer(event, ":");
-                        String first = st.nextToken().trim();
-                        String path = st.nextToken().trim();
-                        // now, split up the path, and handle each node 
-                        StringTokenizer st2 = new StringTokenizer(path, "=>");
-                        String tmp = null;
-                        while (st2.hasMoreTokens()) {
-                            tmp = st2.nextToken().trim();
-                            extractData(mapData, uep, threadID, event, first, tmp);
+            if (thread.getThreadID() == 0 && thread.getContextID() == 0) {
+                for (Iterator it2 = thread.getUserEventProfiles(); it2.hasNext();) {
+                    UserEventProfile uep = (UserEventProfile) it2.next();
+                    if (uep != null && uep.getNumSamples() > 0) {
+                        String event = uep.getName();
+                        if (event.startsWith("Message size sent to node ") && event.indexOf("=>") == -1) {
+                            foundData = true;
+                            // split the string
+                            extractData(mapData, uep, threadID, event, event, allPaths);
+                        } else if (event.startsWith("Message size sent to node ") && event.indexOf("=>") >= 0) {
+                            foundData = true;
+                            StringTokenizer st = new StringTokenizer(event, ":");
+                            String first = st.nextToken().trim();
+                            String path = st.nextToken().trim();
+                            // now, split up the path, and handle each node 
+                            StringTokenizer st2 = new StringTokenizer(path, "=>");
+                            String tmp = null;
+                            while (st2.hasMoreTokens()) {
+                                tmp = st2.nextToken().trim();
+                                extractData(mapData, uep, threadID, event, first, tmp);
+                            }
                         }
                     }
                 }
+                threadID++;
             }
-            threadID++;
         }
         if (!foundData) {
             JOptionPane.showMessageDialog(
