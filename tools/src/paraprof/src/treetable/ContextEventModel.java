@@ -59,7 +59,7 @@ public class ContextEventModel extends AbstractTreeTableModel {
                 if (uep.getUserEvent().isContextEvent()) {
                     String rootName;
 
-                    rootName = UtilFncs.getContextEventRoot(uep.getName());
+                    rootName = UtilFncs.getContextEventRoot(uep.getName()).trim();
 
                     rootNames.put(rootName, 1);
 
