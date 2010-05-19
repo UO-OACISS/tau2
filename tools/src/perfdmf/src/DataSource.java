@@ -20,9 +20,9 @@ import org.w3c.dom.NodeList;
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
  *  
- * <P>CVS $Id: DataSource.java,v 1.49 2009/10/14 13:38:46 khuck Exp $</P>
+ * <P>CVS $Id: DataSource.java,v 1.50 2010/05/19 02:36:38 amorris Exp $</P>
  * @author  Robert Bell, Alan Morris
- * @version $Revision: 1.49 $
+ * @version $Revision: 1.50 $
  */
 public abstract class DataSource {
 
@@ -1056,6 +1056,10 @@ public abstract class DataSource {
      */
     public Iterator getNodes() {
         return nodes.values().iterator();
+    }
+  
+    public Map getNodeMap() {
+        return nodes;
     }
 
     //Returns the total number of contexts in this trial.
