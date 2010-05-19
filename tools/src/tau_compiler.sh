@@ -976,9 +976,10 @@ if [ $numFiles == 0 ]; then
 	fi
     fi
 
+    
     # check for -lc, if found, move it to the end
-    check_lc=`echo "$regularCmd" | sed -e 's/.*\(-lc\).*/\1/g'`
-    regularCmd=`echo "$regularCmd" | sed -e 's/-lc//g'`
+    check_lc=`echo "$regularCmd" | sed -e 's/.*\(-lc\)\W.*/\1/g'`
+    regularCmd=`echo "$regularCmd" | sed -e 's/-lc\W/ /'`
     if [ "x$check_lc" = "x-lc" ] ; then
 	optLinking="$optLinking -lc"
     fi
@@ -1406,8 +1407,8 @@ if [ $gotoNextStep == $TRUE ]; then
 	newCmd="$CMD $listOfObjectFiles $objectFilesForLinking $argsRemaining $OUTPUTARGSFORTAU $optLinking -o $passedOutputFile"
 
         # check for -lc, if found, move it to the end
-	check_lc=`echo "$newCmd" | sed -e 's/.*\(-lc\).*/\1/g'`
-	newCmd=`echo "$newCmd" | sed -e 's/-lc//g'`
+	check_lc=`echo "$regularCmd" | sed -e 's/.*\(-lc\)\W.*/\1/g'`
+	regularCmd=`echo "$regularCmd" | sed -e 's/-lc\W/ /'`
 	if [ "x$check_lc" = "x-lc" ] ; then
 	    optLinking="newCmd -lc"
 	fi
