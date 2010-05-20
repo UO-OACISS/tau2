@@ -95,7 +95,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tau_exec,v 1.16 2010/05/18 18:13:36 amorris Exp $';
+	      echo '$Id: tau_exec,v 1.17 2010/05/20 01:58:10 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -T)
@@ -252,7 +252,9 @@ fi
 
 if [ $qsub_mode = true ] ; then
 
-    tau_vars=`env | grep TAU_ | tr '\n' ':'`
+    # gather all TAU_* environment variabls, but skip TAU_OPTIONS since it often has spaces, 
+    # and the ACLF staff tells us that it's impossible to pass env vars with spaces through qsub
+    tau_vars=`env | grep TAU_ | grep -v TAU_OPTIONS | tr '\n' ':'`
     cmd="$@"
     # don't use the current LD_LIBRARY_PATH or it will screw things up for the backend
     TAUEX_LD_LIBRARY_PATH=$BASEDIR/lib/$theBinding
