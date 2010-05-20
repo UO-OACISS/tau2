@@ -742,6 +742,10 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
   std::string modifiedFileName(outfile);
   chdir("result");
   mutateeAddressSpace->writeFile(modifiedFileName.c_str());
+  if (!isStaticExecutable) {  
+    unlink(libname); 
+    /* remove libTAU.so in the current directory. It interferes */
+  }
   return 0;
 }
 
