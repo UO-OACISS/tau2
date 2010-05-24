@@ -422,10 +422,10 @@ sub main {
 
 
 
-    # all in "standard functions"
+    ## all in "standard functions"
     #otf::OTF_Writer_writeDefFunction( $writer, 0, $fid, $name, 16, 0);
 
-    # each in its own group
+    ## each in its own group
     # if ($name =~ m/\@\@\@/) {
     #   my ($func,$file) = split ("@@@", $name);
     #   $name = $func;
@@ -434,7 +434,7 @@ sub main {
     # otf::OTF_Writer_writeDefFunctionGroup( $writer, 0, $gid, $name);
     # otf::OTF_Writer_writeDefFunction( $writer, 0, $fid, $name, $gid, 0);
 
-    # per file
+    ## per file
     $gid = 16;
     if ($name =~ m/\@\@\@/) {
       my ($func,$file) = split ("@@@", $name);
