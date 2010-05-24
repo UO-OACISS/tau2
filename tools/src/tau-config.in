@@ -24,6 +24,16 @@ my $SerialSpecified="false";
 my $MPISpecified="false";
 my $listoptions="false";
 
+
+sub trim($)
+  {
+    my $string = shift;
+    $string =~ s/^\s+//;
+    $string =~ s/\s+$//;
+    return $string;
+  }
+
+
 if (@ARGV == 0) {
     print "TAUROOT=$TAUROOT\n";
     print "TAUARCH=$TAUARCH\n";
@@ -192,8 +202,15 @@ foreach my $opt (@opts) {
 my @sorted = sort { length $a <=> length $b } @bindings;
 
 if ($#sorted < 0) {
-    # no matches
-    die "Error: No matching binding for '$TauOptions' in directory $bindingsdir\n"
+  # no matches
+  $TauOptions = trim($TauOptions);
+  warn "Error: No matching binding for '$TauOptions' in directory $bindingsdir\n";
+  warn "Available bindings ($bindingsdir):\n";
+  @bindings=`ls $BASEDIR/lib | grep shared`;
+  foreach my $binding (@bindings) {
+    warn "  $bindingsdir/$binding";
+  }
+  exit -1;
 }
 
 if ("$listmatching" eq "true" ) {
