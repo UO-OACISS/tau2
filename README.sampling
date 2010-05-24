@@ -1,0 +1,96 @@
+************************************************************************
+** TAU EBS Sampling
+************************************************************************
+
+TAU has a prototype sampling infrastructure.  It can be used to generated
+sampling based traces from the TAU measurement library.  These traces can be
+processed and read into ParaProf to augment profile data collected via standard
+measurement probes.
+
+To use:
+
+1) Enabled sampling by setting the environment variable TAU_SAMPLING=1.
+
+2) Set a sample source and frequency (default: itimer, 1000 samples per second)
+with TAU_EBS_SOURCE.  When choosing a PAPI metric, the frequency variable is
+used as the overflow sample point.  E.g.
+
+   export TAU_EBS_SOURCE=PAPI_TOT_CYC
+   export TAU_EBS_FREQUENCY=3000000
+
+will sample about every 1000 ms on a 3.0Ghz CPU.
+
+3) Sampled traces are output in the current working directory, three for each thread:
+ 
+   ebstrace.raw.<pid>.<nid><cid><tid>
+   ebstrace.map.<pid>.<nid><cid><tid>
+   ebstrace.def.<pid>.<nid><cid><tid>
+
+4) Process the traces with tau2/tools/src/tausamp_process2.pl to generate processed traces for paraprof
+
+5) View in paraprof
+
+************************************************************************
+
+More advanced usage:
+
+************************************************************************
+*** Converting to OTF
+************************************************************************
+
+1) Build ebs2otf shared library
+
+   cd tau2/utils/ebs2otf
+   cp </path/to/otf>/include/*.h .
+   ./reswig.sh
+   
+2) Generate EBS traces as above
+
+3) Set PERL5LIB and LD_LIBRARY_PATH:
+   
+   export PERL5LIB=$HOME/tau2/utils/ebs2otf
+   export LD_LIBRARY_PATH=/usr/local/packages/otf-1.6.4/lib:$LD_LIBRARY_PATH
+
+4) Run converter:
+
+   $HOME/tau2/utils/ebs2otf/tausamp_process_otf.pl
+
+5) View in vampir: 
+ 
+   vampir ebstrace.otf
+
+************************************************************************
+*** Collecting EBS callstack traces
+************************************************************************
+
+To collect EBS callstack traces, you must download and build HPCToolkit
+(http://hpctoolkit.org) 4.9.2, r2138 for which we supply a patch to enable TAU
+integration.
+
+1) Download, patch and build HPCToolkit 4.9.2 r2138
+
+   wget https://outreach.scidac.gov/frs/download.php/162/hpctoolkit-TRUNK-4.9.2-r2138.tar.gz
+   wget https://outreach.scidac.gov/frs/download.php/163/hpctoolkit-externals-TRUNK-4.9.2-r2138.tar.gz
+   tar -xzf hpctoolkit-externals-TRUNK-4.9.2-r2138.tar.gz
+   tar -xzf hpctoolkit-TRUNK-4.9.2-r2138.tar.gz
+   cd hpctoolkit-externals-TRUNK-4.9.2-r2138
+   ./configure --prefix=/usr/local/packages/hpctoolkit-externals
+   make && make install
+   cd ../hpctoolkit-TRUNK-4.9.2-r2138
+   patch -p2 < $HOME/tau2/tools/src/contrib/hpctoolkit-4.9.2-r2138.patch
+   ./configure --with-papi=/usr/local/packages/papi --with-externals=/usr/local/packages/src/hpctoolkit-externals-TRUNK-4.9.2-r2138 --prefix=/usr/local/packages/hpctoolkit
+   make ** make install
+
+2) Configure TAU with HPCToolkit:
+  
+   ./configure -hpctoolkit-src-dir=/usr/local/packages/src/hpctoolkit-TRUNK-4.9.2-r2138 -hpctoolkit-install-dir=/usr/local/packages/hpctoolkit [other options]
+
+3) Generate and analyze traces as above.  Profiles will now have integrated callstacks.  OTF traces will have full callpaths.
+
+
+
+
+
+
+
+
