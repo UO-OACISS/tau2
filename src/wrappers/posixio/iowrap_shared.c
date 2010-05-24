@@ -599,8 +599,8 @@ ssize_t write (int fd, const void *buf, size_t count) {
     dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
   if (ret) {
-    TAU_CONTEXT_EVENT(byteswritten, count);
-    TAU_CONTEXT_EVENT(global_bytes_written, count);
+    TAU_CONTEXT_EVENT(byteswritten, ret);
+    TAU_CONTEXT_EVENT(global_bytes_written, ret);
   }
  
   TAU_PROFILE_STOP(t);
@@ -642,15 +642,15 @@ ssize_t read (int fd, void *buf, size_t count) {
   currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
   if ((currentRead > 1e-12) && (ret > 0)) {
-    TAU_CONTEXT_EVENT(re, (double) count/currentRead);
-    TAU_CONTEXT_EVENT(global_read_bandwidth, (double) count/currentRead);
+    TAU_CONTEXT_EVENT(re, (double) ret/currentRead);
+    TAU_CONTEXT_EVENT(global_read_bandwidth, (double) ret/currentRead);
   } else {
-    dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
+    dprintf("TauWrapperRead: currentRead = %g\n", ret);
   }
 
   if (ret) {
-    TAU_CONTEXT_EVENT(bytesread, count);
-    TAU_CONTEXT_EVENT(global_bytes_read, count);
+    TAU_CONTEXT_EVENT(bytesread, ret);
+    TAU_CONTEXT_EVENT(global_bytes_read, ret);
   }
 
   TAU_PROFILE_STOP(t);
