@@ -466,6 +466,8 @@ extern "C" int Tau_profile_exit() {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_exit(const char * msg) {
+  Tau_global_incr_insideTAU();
+
 #ifdef TAU_CUDA
 	Tau_profile_exit_all_threads();
 #else
@@ -479,6 +481,7 @@ extern "C" void Tau_exit(const char * msg) {
 #ifdef RENCI_STFF  
   RenciSTFF::cleanup();
 #endif // RENCI_STFF  
+  Tau_global_decr_insideTAU();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1534,8 +1537,8 @@ int *tau_pomp_rd_table = 0;
                     
 
 /***************************************************************************
- * $RCSfile: TauCAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.156 $   $Date: 2010/05/14 22:39:11 $
- * VERSION: $Id: TauCAPI.cpp,v 1.156 2010/05/14 22:39:11 amorris Exp $
+ * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
+ * $Revision: 1.157 $   $Date: 2010/05/25 23:07:58 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.157 2010/05/25 23:07:58 sameer Exp $
  ***************************************************************************/
 
