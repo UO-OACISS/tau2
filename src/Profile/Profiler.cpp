@@ -349,7 +349,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #ifdef DEBUG_PROF
   fprintf (stderr, "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
 #endif
-  //  fprintf (stderr, "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
 
   /********************************************************************************/
   /*** PerfSuite Integration Code ***/
@@ -1130,6 +1129,8 @@ int TauProfiler_StoreData(int tid) {
   int i;
 
   profileWriteCount[tid]++;
+  if ((tid !=0) && (profileWriteCount[tid] > 1)) return 0;
+ 
   if (profileWriteCount[tid] == 10) {
     RtsLayer::LockDB();
     if (profileWriteWarningPrinted == 0) {
@@ -1346,7 +1347,7 @@ bool TauProfiler_createDirectories() {
 }
 
 /***************************************************************************
- * $RCSfile: Profiler.cpp,v $   $Author: amorris $
- * $Revision: 1.270 $   $Date: 2010/05/06 18:13:46 $
- * VERSION_ID: $Id: Profiler.cpp,v 1.270 2010/05/06 18:13:46 amorris Exp $ 
+ * $RCSfile: Profiler.cpp,v $   $Author: sameer $
+ * $Revision: 1.271 $   $Date: 2010/05/25 23:06:19 $
+ * VERSION_ID: $Id: Profiler.cpp,v 1.271 2010/05/25 23:06:19 sameer Exp $ 
  ***************************************************************************/
