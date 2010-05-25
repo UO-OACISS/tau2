@@ -592,7 +592,7 @@ ssize_t write (int fd, const void *buf, size_t count) {
   currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
   if ((currentWrite > 1e-12) && (ret > 0)) {
-    bw = (double) count/currentWrite;
+    bw = (double) ret/currentWrite;
     TAU_CONTEXT_EVENT(wb, bw);
     TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
   } else {
@@ -690,11 +690,17 @@ ssize_t readv (int fd, const struct iovec *vec, int count) {
   gettimeofday(&t1, 0);
   ret = _readv(fd, vec, count);
   gettimeofday(&t2, 0);
+/*
   if (ret >= 0 ) {
     for (i = 0; i < count; i++) {
       sumOfBytesRead += vec[i].iov_len; 
     }
   }
+*/
+  sumOfBytesRead = ret; 
+/* On success, the readv() function returns the number of bytes read; the
+       writev() function returns the number of bytes written.  On error, -1 is
+       returned, and errno is set appropriately. */
 
   /* calculate the time spent in operation */
   currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
@@ -751,9 +757,17 @@ ssize_t writev (int fd, const struct iovec *vec, int count) {
   gettimeofday(&t2, 0);
 
   /* calculate the total bytes written */
+/*
   for (i = 0; i < count; i++) {
     sumOfBytesWritten += vec[i].iov_len; 
   }
+*/
+
+  sumOfBytesWritten = ret;
+/* On success, the readv() function returns the number of bytes read; the
+       writev() function returns the number of bytes written.  On error, -1 is
+       returned, and errno is set appropriately. */
+
 
   /* calculate the time spent in operation */
   currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
