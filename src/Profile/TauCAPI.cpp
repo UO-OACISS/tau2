@@ -295,11 +295,11 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
     }
     
 #ifdef TAU_PROFILEMEMORY
-    ThisFunction->GetMemoryEvent()->TriggerEvent(TauGetMaxRSS());
+    p->ThisFunction->GetMemoryEvent()->TriggerEvent(TauGetMaxRSS());
 #endif /* TAU_PROFILEMEMORY */
     
 #ifdef TAU_PROFILEHEADROOM
-    ThisFunction->GetHeadroomEvent()->TriggerEvent((double)TauGetFreeMemory());
+    p->ThisFunction->GetHeadroomEvent()->TriggerEvent((double)TauGetFreeMemory());
 #endif /* TAU_PROFILEHEADROOM */
   }
   /********************************************************************************/
@@ -1538,7 +1538,7 @@ int *tau_pomp_rd_table = 0;
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
- * $Revision: 1.157 $   $Date: 2010/05/25 23:07:58 $
- * VERSION: $Id: TauCAPI.cpp,v 1.157 2010/05/25 23:07:58 sameer Exp $
+ * $Revision: 1.158 $   $Date: 2010/05/28 17:45:49 $
+ * VERSION: $Id: TauCAPI.cpp,v 1.158 2010/05/28 17:45:49 sameer Exp $
  ***************************************************************************/
 
