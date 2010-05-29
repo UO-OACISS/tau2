@@ -25,6 +25,7 @@
 #include <unistd.h>
   
 #include <stdarg.h>
+#include <memory.h>
 
   
 #include <TAU.h>
@@ -54,29 +55,100 @@ void *malloc (size_t size) {
   return ptr;
 }
 
+#ifndef TAU_VALLOC_AVAILABLE 
+#define TAU_VALLOC_AVAILABLE 
+#endif /* TAU_VALLOC_AVAILABLE */
+
+#ifdef TAU_VALLOC_AVAILABLE
+#include <malloc.h>
+/*********************************************************************
+ * valloc
+ ********************************************************************/
+void *valloc (size_t size) {
+  static void* (*_valloc)(size_t size) = NULL;
+
+  if (_valloc == NULL) {
+    _valloc = ( void* (*)(size_t size)) dlsym(RTLD_NEXT, "valloc");
+  }
+
+  if (Tau_memorywrap_checkPassThrough()) {
+    return _valloc(size);
+  }
+
+  Tau_memorywrap_checkInit();
+  Tau_global_incr_insideTAU();
+  void *ptr = _valloc(size);
+  Tau_memorywrap_add_ptr(ptr, size);
+  Tau_global_decr_insideTAU();
+  return ptr;
+}
+
+/*********************************************************************
+ * memalign
+ ********************************************************************/
+void * memalign (size_t alignment, size_t size) {
+  static void * (*_memalign)(size_t alignment, size_t size) = NULL;
+  static void *ret; 
+
+  if (_memalign == NULL) {
+    _memalign = ( void * (*)(size_t alignment, size_t size)) dlsym(RTLD_NEXT, "memalign");
+  }
+
+  if (Tau_memorywrap_checkPassThrough()) {
+    return _memalign(alignment, size);
+  }
+
+  Tau_memorywrap_checkInit();
+  Tau_global_incr_insideTAU();
+
+  ret = _memalign(alignment, size);
+  if (ret != NULL) {
+    Tau_memorywrap_add_ptr(ret, size);
+  }
+
+  Tau_global_decr_insideTAU();
+  return ret;
+}
+
+#endif /* TAU_VALLOC_AVAILABLE */
+
+
 /*********************************************************************
  * calloc
  ********************************************************************/
-// void *calloc (size_t nmemb, size_t size) {
-//   Tau_memorywrap_checkInit();
-//   static void* (*_calloc)(size_t nmemb, size_t size) = NULL;
+#define TAU_EXTRA_MEM_SIZE 1024
+static char tau_extra_mem[TAU_EXTRA_MEM_SIZE]; 
+void *calloc (size_t nmemb, size_t size) {
+   static int tau_mem_used = 0;
+   static void* (*_calloc)(size_t nmemb, size_t size) = NULL;
+    
+   if (tau_mem_used == 0) {
+     if (size > TAU_EXTRA_MEM_SIZE) {
+       printf("TAU: Error: Static array exceeds initial allocation request in calloc: size = %d\n", size);
+       exit(1);
+     }
+     tau_mem_used = 1;
+     memset (tau_extra_mem, 0, size); 
+     return (void *) tau_extra_mem;  
+   }
+   
+   Tau_memorywrap_checkInit();
 
-//   if (_calloc == NULL) {
-//     _calloc = ( void* (*)(size_t nmemb, size_t size)) dlsym(RTLD_NEXT, "calloc");
-//   }
+   if (_calloc == NULL) {
+     _calloc = ( void* (*)(size_t nmemb, size_t size)) dlsym(RTLD_NEXT, "calloc");
+   }
 
-//   if (Tau_memorywrap_checkPassThrough()) {
-//     return _calloc(nmemb, size);
-//   }
+   if (Tau_memorywrap_checkPassThrough()) {
+     return _calloc(nmemb, size);
+   }
 
-//   Tau_global_incr_insideTAU();
+   Tau_global_incr_insideTAU();
 
-//   void *ptr = _calloc(nmemb, size);
-//   Tau_memorywrap_add_ptr(ptr, nmemb * size);
-//   TAU_CONTEXT_EVENT(global().heapMemoryUserEvent, global().bytesAllocated);
-//   Tau_global_decr_insideTAU();
-//   return ptr;
-// }
+   void *ptr = _calloc(nmemb, size);
+   Tau_memorywrap_add_ptr(ptr, nmemb * size);
+   Tau_global_decr_insideTAU();
+   return ptr;
+}
 
 
 /*********************************************************************
