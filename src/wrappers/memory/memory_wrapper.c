@@ -56,7 +56,9 @@ void *malloc (size_t size) {
 }
 
 #ifndef TAU_VALLOC_AVAILABLE 
+#ifndef __APPLE__
 #define TAU_VALLOC_AVAILABLE 
+#endif /* APPLE */
 #endif /* TAU_VALLOC_AVAILABLE */
 
 #ifdef TAU_VALLOC_AVAILABLE
@@ -124,7 +126,7 @@ void *calloc (size_t nmemb, size_t size) {
     
    if (tau_mem_used == 0) {
      if (size > TAU_EXTRA_MEM_SIZE) {
-       printf("TAU: Error: Static array exceeds initial allocation request in calloc: size = %d\n", size);
+       printf("TAU: Error: Static array exceeds initial allocation request in calloc: size = %d\n", (int) size);
        exit(1);
      }
      tau_mem_used = 1;
