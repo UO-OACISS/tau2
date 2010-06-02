@@ -216,6 +216,7 @@ void free (void *ptr) {
   static void (*_free)(void *ptr) = NULL;
 
   if (ptr == tau_extra_mem) {
+    Tau_memorywrap_remove_ptr(ptr);
     return;
   }
 
