@@ -4832,6 +4832,7 @@ fi
 int main() {
   std::tr1::unordered_map<int,int> theMap;
   theMap[5] = 6;
+  std::tr1::unordered_map<int,int>::const_iterator it;
 }
 EOF
 $echo "Checking for tr1/unordered_map... ${nnl}"
