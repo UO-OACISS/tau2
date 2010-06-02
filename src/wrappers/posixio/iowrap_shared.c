@@ -41,6 +41,7 @@
 #include <arpa/inet.h>
 #include <sys/un.h>
 #include <netinet/in.h>
+#include <string.h>
 
 #include <Profile/TauIoWrap.h>
     
@@ -489,6 +490,10 @@ off_t lseek(int fd, off_t offset, int whence) {
 /*********************************************************************
  * lseek64
  ********************************************************************/
+/* FIX for Apple: */
+#ifdef __APPLE__
+typedef int64_t               off64_t;
+#endif /* __APPLE__ */
 off64_t lseek64(int fd, off64_t offset, int whence) {
   static off64_t (*_lseek64)(int fd, off64_t offset, int whence) = NULL;
   int ret;
@@ -1734,7 +1739,6 @@ void exit(int status) {
 
   dprintf("TAU: calling _internal_exit \n");
   _internal_exit(status);
-  return;
 }
 
 /*********************************************************************
