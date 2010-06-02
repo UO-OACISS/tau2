@@ -131,6 +131,7 @@ void *calloc (size_t nmemb, size_t size) {
      }
      tau_mem_used = 1;
      memset (tau_extra_mem, 0, size); 
+
      return (void *) tau_extra_mem;  
    }
    
@@ -212,6 +213,10 @@ int posix_memalign (void **memptr, size_t alignment, size_t size) {
  ********************************************************************/
 void free (void *ptr) {
   static void (*_free)(void *ptr) = NULL;
+
+  if (ptr == tau_extra_mem) {
+    return;
+  }
 
   if (_free == NULL) {
     _free = ( void (*)(void *ptr)) dlsym(RTLD_NEXT, "free");
