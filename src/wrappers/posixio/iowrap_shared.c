@@ -668,7 +668,6 @@ ssize_t readv (int fd, const struct iovec *vec, int count) {
   static ssize_t (*_readv)(int fd, const struct iovec *vec, int count) = NULL;
   ssize_t ret; 
   int i;
-  size_t sumOfBytesRead = 0;
 
   if (_readv == NULL) {
     _readv = ( ssize_t (*)(int fd, const struct iovec *vec, int count)) dlsym(RTLD_NEXT, "readv");
@@ -690,31 +689,24 @@ ssize_t readv (int fd, const struct iovec *vec, int count) {
   gettimeofday(&t1, 0);
   ret = _readv(fd, vec, count);
   gettimeofday(&t2, 0);
-/*
-  if (ret >= 0 ) {
-    for (i = 0; i < count; i++) {
-      sumOfBytesRead += vec[i].iov_len; 
-    }
-  }
-*/
-  sumOfBytesRead = ret; 
+
 /* On success, the readv() function returns the number of bytes read; the
-       writev() function returns the number of bytes written.  On error, -1 is
-       returned, and errno is set appropriately. */
+   writev() function returns the number of bytes written.  On error, -1 is
+   returned, and errno is set appropriately. */
 
   /* calculate the time spent in operation */
   currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
   if ((currentRead > 1e-12) && (ret > 0)) {
-    TAU_CONTEXT_EVENT(re, (double) sumOfBytesRead/currentRead);
-    TAU_CONTEXT_EVENT(global_read_bandwidth, (double) sumOfBytesRead/currentRead);
+    TAU_CONTEXT_EVENT(re, (double) ret/currentRead);
+    TAU_CONTEXT_EVENT(global_read_bandwidth, (double) ret/currentRead);
   } else {
     dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
 
-  if (ret) {
-    TAU_CONTEXT_EVENT(bytesread, sumOfBytesRead);
-    TAU_CONTEXT_EVENT(global_bytes_read, sumOfBytesRead);
+  if (ret > 0) {
+    TAU_CONTEXT_EVENT(bytesread, ret);
+    TAU_CONTEXT_EVENT(global_bytes_read, ret);
   }
 
   TAU_PROFILE_STOP(t);
@@ -735,7 +727,6 @@ ssize_t writev (int fd, const struct iovec *vec, int count) {
   struct timeval t1, t2;
   double bw = 0.0;
   int i;
-  size_t sumOfBytesWritten = 0;
 
   if (_writev == NULL) {
     _writev = ( ssize_t (*)(int fd, const struct iovec *vec, int count)) dlsym(RTLD_NEXT, "writev");
@@ -751,43 +742,32 @@ ssize_t writev (int fd, const struct iovec *vec, int count) {
   TAU_GET_IOWRAP_EVENT(byteswritten, WRITE_BYTES, fd);
   TAU_PROFILE_START(t);
 
-
   gettimeofday(&t1, 0);
   ret = _writev(fd, vec, count);
+  /* On success, the readv() function returns the number of bytes read; the
+     writev() function returns the number of bytes written.  On error, -1 is
+     returned, and errno is set appropriately. */
   gettimeofday(&t2, 0);
-
-  /* calculate the total bytes written */
-/*
-  for (i = 0; i < count; i++) {
-    sumOfBytesWritten += vec[i].iov_len; 
-  }
-*/
-
-  sumOfBytesWritten = ret;
-/* On success, the readv() function returns the number of bytes read; the
-       writev() function returns the number of bytes written.  On error, -1 is
-       returned, and errno is set appropriately. */
-
 
   /* calculate the time spent in operation */
   currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
   /* now we trigger the events */
   if ((currentWrite > 1e-12) && (ret > 0)) {
-    bw = (double) sumOfBytesWritten/currentWrite; 
+    bw = (double) ret/currentWrite; 
     TAU_CONTEXT_EVENT(wb, bw);
     TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
   } else {
     dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
 
-  if (ret) {
-    TAU_CONTEXT_EVENT(byteswritten, sumOfBytesWritten);
-    TAU_CONTEXT_EVENT(global_bytes_written, sumOfBytesWritten);
+  if (ret > 0) {
+    TAU_CONTEXT_EVENT(byteswritten, ret);
+    TAU_CONTEXT_EVENT(global_bytes_written, ret);
   }
  
   TAU_PROFILE_STOP(t);
 
-  dprintf ("* TAU: writev(%d) : %d bytes, bandwidth %g \n", fd, sumOfBytesWritten, bw);
+  dprintf ("* TAU: writev(%d) : %d bytes, bandwidth %g \n", fd, ret, bw);
 
   return ret;
 }
