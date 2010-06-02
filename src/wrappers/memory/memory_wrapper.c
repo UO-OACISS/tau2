@@ -132,6 +132,7 @@ void *calloc (size_t nmemb, size_t size) {
      tau_mem_used = 1;
      memset (tau_extra_mem, 0, size); 
 
+     Tau_memorywrap_add_ptr(tau_extra_mem, nmemb * size);
      return (void *) tau_extra_mem;  
    }
    
