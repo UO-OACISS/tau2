@@ -3329,17 +3329,6 @@ int * top_type;
 }
 
 
-unsigned long hash(unsigned char *str) {
-  unsigned long hash = 5381;
-  int c;
-  
-  while (c = *str++) {
-    hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-  }
-  
-  return hash;
-}
-
 //For a given process, process is the unique MPI rank
 //Node n is the nth node in the allocation
 //Core m is the mth core on node n
