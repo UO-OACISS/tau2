@@ -119,24 +119,29 @@ void * memalign (size_t alignment, size_t size) {
  * calloc
  ********************************************************************/
 #define TAU_EXTRA_MEM_SIZE 1024
-static char tau_extra_mem[TAU_EXTRA_MEM_SIZE]; 
+static char tau_calloc_mem[TAU_EXTRA_MEM_SIZE]; 
+static int tau_calloc_mem_size = 0;
+static int tau_calloc_used = 0;
+static int tau_calloc_freed = 0;
+
 void *calloc (size_t nmemb, size_t size) {
-   static int tau_mem_used = 0;
    static void* (*_calloc)(size_t nmemb, size_t size) = NULL;
     
-   if (tau_mem_used == 0) {
-     if (size > TAU_EXTRA_MEM_SIZE) {
-       printf("TAU: Error: Static array exceeds initial allocation request in calloc: size = %d\n", (int) size);
-       exit(1);
-     }
-     tau_mem_used = 1;
-     memset (tau_extra_mem, 0, size); 
+   if (tau_calloc_used == 0  && size < TAU_EXTRA_MEM_SIZE) {
+     /* if (size > ) { */
+     /*   printf("TAU: Error: Static array exceeds initial allocation request in calloc: size = %d\n", (int) size); */
+     /*   exit(1); */
+     /* } */
+     Tau_global_incr_insideTAU();
+     tau_calloc_used = 1;
+     memset (tau_calloc_mem, 0, size); 
+     tau_calloc_mem_size = nmemb * size;
 
-     Tau_memorywrap_add_ptr(tau_extra_mem, nmemb * size);
-     return (void *) tau_extra_mem;  
+     Tau_memorywrap_add_ptr(tau_calloc_mem, nmemb * size);
+     Tau_global_decr_insideTAU();
+     return (void *) tau_calloc_mem;  
    }
    
-   Tau_memorywrap_checkInit();
 
    if (_calloc == NULL) {
      _calloc = ( void* (*)(size_t nmemb, size_t size)) dlsym(RTLD_NEXT, "calloc");
@@ -145,6 +150,8 @@ void *calloc (size_t nmemb, size_t size) {
    if (Tau_memorywrap_checkPassThrough()) {
      return _calloc(nmemb, size);
    }
+
+   Tau_memorywrap_checkInit();
 
    Tau_global_incr_insideTAU();
 
@@ -215,7 +222,7 @@ int posix_memalign (void **memptr, size_t alignment, size_t size) {
 void free (void *ptr) {
   static void (*_free)(void *ptr) = NULL;
 
-  if (ptr == tau_extra_mem) {
+  if (ptr == tau_calloc_mem) {
     Tau_memorywrap_remove_ptr(ptr);
     return;
   }
