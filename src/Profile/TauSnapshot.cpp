@@ -45,6 +45,8 @@ static Tau_util_outputDevice **Tau_snapshot_getFiles() {
 static void writeEventXML(Tau_util_outputDevice *out, int id, FunctionInfo *fi) {
   Tau_util_output (out, "<event id=\"%d\"><name>", id);
   Tau_XML_writeString(out, fi->GetName());
+  Tau_XML_writeString(out, " ");
+  Tau_XML_writeString(out, fi->GetType());
   Tau_util_output (out, "</name><group>");
   Tau_XML_writeString(out, fi->GetAllGroups());
   Tau_util_output (out, "</group></event>\n");
