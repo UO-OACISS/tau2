@@ -137,7 +137,7 @@ void *calloc (size_t nmemb, size_t size) {
      memset (tau_calloc_mem, 0, size); 
      tau_calloc_mem_size = nmemb * size;
 
-     Tau_memorywrap_add_ptr(tau_calloc_mem, nmemb * size);
+     /* Tau_memorywrap_add_ptr(tau_calloc_mem, nmemb * size); */
      Tau_global_decr_insideTAU();
      return (void *) tau_calloc_mem;  
    }
@@ -223,7 +223,7 @@ void free (void *ptr) {
   static void (*_free)(void *ptr) = NULL;
 
   if (ptr == tau_calloc_mem) {
-    Tau_memorywrap_remove_ptr(ptr);
+    /* Tau_memorywrap_remove_ptr(ptr); */
     return;
   }
 
