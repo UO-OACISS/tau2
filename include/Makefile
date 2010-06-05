@@ -957,8 +957,8 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
 	-optTauIncludes="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(TAU_SHMEM_INCLUDE)" \
 	-optTauDefs="$(TAU_DEFS)" $(TAU_IBM_NOCOMPINST) \
         -optTauCompile="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(TAU_DEFS) "\
-        -optLinking="$(TAU_MPI_FLIBS) $(TAU_LIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS)"\
-        -optSharedLinking="-L$(TAU_LIB_DIR)/shared$(TAU_CONFIG) $(TAU_MPI_FLIBS) $(TAU_EXLIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS)"\
+        -optLinking="$(TAU_MPI_FLIBS) $(TAU_SHMEM_LIBS) $(TAU_LIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS)"\
+        -optSharedLinking="-L$(TAU_LIB_DIR)/shared$(TAU_CONFIG) $(TAU_MPI_FLIBS)  $(TAU_SHMEM_LIBS) $(TAU_EXLIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS)"\
 	$(TAU_COMPILER_EXTRA_OPTIONS) \
         -optIncludeMemory="$(TAU_INCLUDE_MEMORY)"\
 	-optCompInstOption="$(TAU_COMPINST_OPTION) $(TAU_COMPINST_PTHREAD_OPTIONS)"\
