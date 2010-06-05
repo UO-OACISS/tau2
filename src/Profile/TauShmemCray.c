@@ -5009,6 +5009,7 @@ long shmem_long_swap__( long * addr, long value, int pe)
 
 
 #ifndef TAU_CATAMOUNT
+#ifndef TAU_CRAYCNL
 /******************************************************
 ***      shmem_float_swap wrapper function 
 ******************************************************/
@@ -5312,6 +5313,7 @@ long shmem_long_cswap__( long * addr, long match, long value, int pe)
 /******************************************************/
 /******************************************************/
 
+#endif /* TAU_CRAYCNL */
 #endif /* TAU_CATAMOUNT */
 
 /******************************************************
@@ -10034,6 +10036,7 @@ void shmem_fence__( )
 
 
 #ifndef TAU_CATAMOUNT
+#ifndef TAU_CRAYCNL
 /******************************************************
 ***      shmem_swap wrapper function 
 ******************************************************/
@@ -10910,5 +10913,6 @@ void shmem_wait_until__( long * var, int cond, long value)
   return ; 
 }
 
+#endif /* TAU_CRAYCNL */
 #endif /* TAU_CATAMOUNT: Cray has used #define for these symbols instead of 
           defining them independently */
