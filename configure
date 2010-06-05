@@ -3208,6 +3208,10 @@ then
     then
       shmemincargs="-I/opt/xt-mpt/default/include/mpp"
     fi
+    if [ $machine = craycnl ] 
+    then
+      shmemincargs="-I/opt/mpt/default/xt/sma64/include/mpp"
+    fi
   fi
   
   if [ $shmemlibrary = no ]
@@ -3229,6 +3233,10 @@ then
     if [ $catamount = yes ] 
     then
       shmemlibargs="$shmemlibargs -L/opt/xt-mpt/default/lib/cnos64"
+    fi
+    if [ $machine = craycnl ] 
+    then
+      shmemlibargs="$shmemlibargs -L/opt/mpt/default/xt/sma64/lib"
     fi
   fi
 
