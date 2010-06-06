@@ -112,10 +112,12 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
 		TauIoWrap.o TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_GASPU_O)
 
+# The WRAPPER_OBJS are built for TAU_DSO only
+WRAPPER_OBJS  = TauWrapSyscalls.o
 STATIC_OBJS   = Comp_gnu.o $(PGIACC_STATIC_O)
-SHARED_OBJS   = $(PGIACC_O)
-#SICORTEX#SHARED_OBJS = Comp_gnu.o #ENDIF#
-#TAU_BFDSHAREDLINK#SHARED_OBJS = Comp_gnu.o #ENDIF#
+SHARED_OBJS   = $(PGIACC_O) $(WRAPPER_OBJS)
+#SICORTEX#SHARED_OBJS = Comp_gnu.o  $(WRAPPER_OBJS) #ENDIF#
+#TAU_BFDSHAREDLINK#SHARED_OBJS = Comp_gnu.o $(WRAPPER_OBJS) #ENDIF#
 #TAU_BFDSHAREDLINK#SHARED_LIBS = $(BFDLINK) -lbfd -liberty #ENDIF#
 
 PRINT	      = pr
@@ -449,6 +451,9 @@ TauMemoryWrap.o	: TauMemoryWrap.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauIoWrap.o	: TauIoWrap.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauWrapSyscalls.o : TauWrapSyscalls.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauXML.o 	: TauXML.cpp $(HDRS)
