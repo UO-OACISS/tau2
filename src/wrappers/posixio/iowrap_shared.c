@@ -1723,6 +1723,8 @@ int lio_listio(int mode, struct aiocb * const list[], int nent, struct sigevent 
 /*********************************************************************
  * exit
  ********************************************************************/
+/* exit moved to TauWrapSyscalls.cpp */
+/*
 void exit(int status) {
 
   static void (*_internal_exit) (int status) = NULL;
@@ -1732,7 +1734,7 @@ void exit(int status) {
 
   TAU_PROFILE_EXIT("EXITING from TAU...");
 
-  /* Search for exit */
+  
   if (_internal_exit == NULL) {
     _internal_exit = (void (*) (int status)) dlsym(RTLD_NEXT, "exit");
   }
@@ -1740,6 +1742,7 @@ void exit(int status) {
   dprintf("TAU: calling _internal_exit \n");
   _internal_exit(status);
 }
+*/
 
 /*********************************************************************
  * EOF
