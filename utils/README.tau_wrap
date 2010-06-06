@@ -33,7 +33,7 @@ In this case, we say that all *H5* routines should be instrumented but the H5Sse
 excluded from instrumentation. In this case, the library was missing a symbol for H5Sset_space. 
 
 Invoking tau_wrap:
-Usage : tau_wrap <pdbfile> <sourcefile> [-o <outputfile>] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ]
+Usage : tau_wrap <pdbfile> <sourcefile> [-o <outputfile>] [-r runtimelibname] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ]
 [sameer@zorak hdf5]$ tau_wrap hdf5.h.pdb hdf5.h -o hdf5.inst.c -f select.tau -g hdf5
 
 This specifies the instrumented wrapper library source (hdf5.inst.c), the instrumentation specification
