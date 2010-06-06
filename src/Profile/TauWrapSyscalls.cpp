@@ -26,6 +26,7 @@
 
 #include <TAU.h>
 #include <stdlib.h>
+#include <sys/types.h>
 
 
 #define dprintf TAU_VERBOSE 
@@ -77,6 +78,6 @@ extern "C" pid_t fork(void) {
 
 /***************************************************************************
  * $RCSfile: TauWrapSyscalls.cpp,v $   $Author: sameer $
- * $Revision: 1.1 $   $Date: 2010/06/06 03:25:05 $
- * TAU_VERSION_ID: $Id: TauWrapSyscalls.cpp,v 1.1 2010/06/06 03:25:05 sameer Exp $
+ * $Revision: 1.2 $   $Date: 2010/06/06 03:32:08 $
+ * TAU_VERSION_ID: $Id: TauWrapSyscalls.cpp,v 1.2 2010/06/06 03:32:08 sameer Exp $
  ***************************************************************************/
