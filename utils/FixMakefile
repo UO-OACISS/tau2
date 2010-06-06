@@ -127,29 +127,29 @@ case $1 in
 	echo "s,^OPARIDIR=.*$,OPARIDIR=$oparidir,g" >> $sedout
 	;;
 
-     silcdir=*)
-        silcdir=`echo $1 | sed -e 's/^silcdir=//'`
-	echo "s,^SILCDIR=.*$,SILCDIR=$silcdir,g" >> $sedout
+     scorepdir=*)
+        scorepdir=`echo $1 | sed -e 's/^scorepdir=//'`
+	echo "s,^SCOREPDIR=.*$,SCOREPDIR=$scorepdir,g" >> $sedout
 	;;
 
-     silcincs=*)
-	silcincs=`echo $1 | sed -e 's/^silcincs=//' -e 's/#/ /g'`
-	echo "s,^SILCINCS=.*$,SILCINCS=$silcincs,g" >> $sedout
+     scorepincs=*)
+	scorepincs=`echo $1 | sed -e 's/^scorepincs=//' -e 's/#/ /g'`
+	echo "s,^SCOREPINCS=.*$,SCOREPINCS=$scorepincs,g" >> $sedout
 	;;
 
-     silclibs=*)
-	silclibs=`echo $1 | sed -e 's/^silclibs=//' -e 's/#/ /g'`
-	echo "s,^SILCLIBS=.*$,SILCLIBS=$silclibs,g" >> $sedout
+     scoreplibs=*)
+	scoreplibs=`echo $1 | sed -e 's/^scoreplibs=//' -e 's/#/ /g'`
+	echo "s,^SCOREPLIBS=.*$,SCOREPLIBS=$scoreplibs,g" >> $sedout
 	;;
 
-     silcmpilibs=*)
-	silcmpilibs=`echo $1 | sed -e 's/^silcmpilibs=//' -e 's/#/ /g'`
-	echo "s,^SILCMPILIBS=.*$,SILCMPILIBS=$silcmpilibs,g" >> $sedout
+     scorepmpilibs=*)
+	scorepmpilibs=`echo $1 | sed -e 's/^scorepmpilibs=//' -e 's/#/ /g'`
+	echo "s,^SCOREPMPILIBS=.*$,SCOREPMPILIBS=$scorepmpilibs,g" >> $sedout
 	;;
 
-     silcdir=*)
-        silcdir=`echo $1 | sed -e 's/^silcdir=//'`
-	echo "s,^SILCDIR=.*$,SILCDIR=$silcdir,g" >> $sedout
+     scorepdir=*)
+        scorepdir=`echo $1 | sed -e 's/^scorepdir=//'`
+	echo "s,^SCOREPDIR=.*$,SCOREPDIR=$scorepdir,g" >> $sedout
 	;;
 
      vampirtracedir=*)
@@ -1066,12 +1066,12 @@ case $1 in
 	echo "NOTE: Using VAMPIRTRACE Tracing Package ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     SILC)
-	echo "NOTE: Using SILC Tracing Package ***"
+     SCOREP)
+	echo "NOTE: Using SCOREP Tracing Package ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     SILCMPI)
-	echo "NOTE: Using SILCMPI Tracing Package ***"
+     SCOREPMPI)
+	echo "NOTE: Using SCOREPMPI Tracing Package ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      VAMPIRTRACE_5_7_API)

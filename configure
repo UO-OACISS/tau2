@@ -107,7 +107,7 @@ for arg in "$@"; do
     echo "-epilogbin=<dir> ........... Specify full path to EPILOG bin directory."
     echo "-epiloginc=<dir> ....... Specify full path to EPILOG include directory."
     echo "-vampirtrace=<dir>  .. Specify location of VampirTrace Tracing package."
-    echo "-silc=<dir>  ........................ Specify location of SILC package."
+    echo "-scorep=<dir>  ........................ Specify location of SCOREP package."
     echo "-python .. Automatically choose python options based on Python in path."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
@@ -204,7 +204,7 @@ for arg in "$@"; do
     echo "-epilogbin=<dir> ........... Specify full path to EPILOG bin directory."
     echo "-epiloginc=<dir> ....... Specify full path to EPILOG include directory."
     echo "-vampirtrace=<dir>  .. Specify location of VampirTrace Tracing package."
-    echo "-silc=<dir>  ........................ Specify location of SILC package."
+    echo "-scorep=<dir>  ........................ Specify location of SCOREP package."
     echo "-upcnetwork=<value> .. Specify network (mpi, udp,...) for Berkeley UPC."
     echo "-python .. Automatically choose python options based on Python in path."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
@@ -404,8 +404,8 @@ hpctoolkit=no
 hpctoolkit_src_dir=
 hpctoolkit_install_dir=
 scalasca=no
-silclibs=
-silc=no
+scoreplibs=
+scorep=no
 epilogextralinkcmd=
 epiloglib=no
 epilogbin=no
@@ -817,11 +817,11 @@ for arg in "$@"; do
       shift
       ;;
 
-  -silc=*)
-      silc=yes
-      silcdir=`echo $arg | sed -e 's/-silc=//'`
-      if [ ! -d $silcdir ] ; then
-          echo "Error: Cannot access SILC directory $silcdir"
+  -scorep=*)
+      scorep=yes
+      scorepdir=`echo $arg | sed -e 's/-scorep=//'`
+      if [ ! -d $scorepdir ] ; then
+          echo "Error: Cannot access SCOREP directory $scorepdir"
           exit 1
       fi
       shift
@@ -4194,8 +4194,8 @@ if [ $mpi = yes ] ; then
       fi
   fi 
 
-  if [ $silc = yes ] ; then
-      wrapperlib="\$(SILCMPILIBS)"
+  if [ $scorep = yes ] ; then
+      wrapperlib="\$(SCOREPMPILIBS)"
   fi
   
   if [ $perf = yes ] ; then
@@ -5091,30 +5091,30 @@ if [ $vampirtrace = yes ] ; then
     fi
 fi
 
-if [ $silc = yes ] ; then
-    fixmakeargs="$fixmakeargs SILC silcdir=$silcdir"
-    tauoptions="${tauoptions}-silc"
-    silcCommonLibs="-lbfd#-liberty#-lotf2#-lsilc_utilities"
+if [ $scorep = yes ] ; then
+    fixmakeargs="$fixmakeargs SCOREP scorepdir=$scorepdir"
+    tauoptions="${tauoptions}-scorep"
+    scorepCommonLibs="-lbfd#-liberty#-lotf2#-lsilc_utilities"
     if [ $mpi = yes ] ; then 
       if [ $openmp = yes ] ; then
-        fixmakeargs="$fixmakeargs SILCOMPI" 
-	silcLibs="-L${silcdir}/lib#-lsilc_mpi#$silcCommonLibs"
+        fixmakeargs="$fixmakeargs SCOREPOMPI" 
+	scorepLibs="-L${scorepdir}/lib#-lsilc_mpi#$scorepCommonLibs"
       else
-        fixmakeargs="$fixmakeargs SILCMPI"
-	silcLibs="-L${silcdir}/lib#-lsilc_mpi#$silcCommonLibs"
+        fixmakeargs="$fixmakeargs SCOREPMPI"
+	scorepLibs="-L${scorepdir}/lib#-lsilc_mpi#$scorepCommonLibs"
       fi 
     else
       if [ $openmp = yes ] ; then
-        fixmakeargs="$fixmakeargs SILCOMP" 
-	silcLibs="-L${silcdir}/lib#-lsilc_serial#$silcCommonLibs"
+        fixmakeargs="$fixmakeargs SCOREPOMP" 
+	scorepLibs="-L${scorepdir}/lib#-lsilc_serial#$scorepCommonLibs"
       else
-	silcLibs="-L${silcdir}/lib#-lsilc_serial#$silcCommonLibs"
+	scorepLibs="-L${scorepdir}/lib#-lsilc_serial#$scorepCommonLibs"
       fi
     fi
 
-    fixmakeargs="$fixmakeargs silcmpilibs=$silcLibs"
-    fixmakeargs="$fixmakeargs silclibs=$silcLibs"
-    fixmakeargs="$fixmakeargs silcincs=-I$silcdir/include"
+    fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
+    fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
+    fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include"
 fi
 
 if [ $epilog = yes ] ; then
