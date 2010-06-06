@@ -1,7 +1,11 @@
 TAUROOT=
 include $(TAUROOT)/include/Makefile
 
-TAU_IOWRAP_SHARED   = libTAU-iowrap$(TAU_SHLIBX)
+TAU_IOWRAP_SHARED=libTAU-iowrap$(TAU_SHLIBX)
+#NOSHARED#TAU_IOWRAP_SHARED= #ENDIF#
+
+TAU_IOWRAP_INSTALL_CMD=cp $(TAU_IOWRAP_SHARED) $(INSTALLDEST)/shared$(TAU_CONFIG)
+#NOSHARED#TAU_IOWRAP_INSTALL_CMD=@echo "NOTE: Not building TAU's iowrap DSO"  #ENDIF#
 
 CC = $(TAU_CC)
 CXX = $(TAU_CXX)
@@ -10,9 +14,9 @@ ARFLAGS = rcv
 
 INSTALLDEST = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
-install: libTauIOWrapper.a libTAU-iowrap$(TAU_SHLIBX)
+install: libTauIOWrapper.a $(TAU_IOWRAP_SHARED)
 	cp libTauIOWrapper.a $(INSTALLDEST)
-	cp libTAU-iowrap$(TAU_SHLIBX) $(INSTALLDEST)/shared$(TAU_CONFIG)
+	$(TAU_IOWRAP_INSTALL_CMD)
 
 libTauIOWrapper.a: iowrapper.o
 	$(TAU_AR) $(ARFLAGS) libTauIOWrapper.a iowrapper.o

@@ -2,6 +2,11 @@ TAUROOT=
 include $(TAUROOT)/include/Makefile
 
 TAU_MEMORYWRAP_SHARED   = libTAU-memorywrap$(TAU_SHLIBX)
+#NOSHARED#TAU_MEMORYWRAP_SHARED= #ENDIF#
+
+TAU_MEMORYWRAP_INSTALL_CMD=cp $(TAU_MEMORYWRAP_SHARED) $(INSTALLDEST)/shared$(TAU_CONFIG)
+#NOSHARED#TAU_MEMORYWRAP_INSTALL_CMD=@echo "NOTE: Not building TAU's memory wrapper DSO" #ENDIF#
+
 
 CC = $(TAU_CC)
 CXX = $(TAU_CXX)
@@ -10,8 +15,8 @@ ARFLAGS = rcv
 
 INSTALLDEST = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
-install: libTAU-memorywrap$(TAU_SHLIBX)
-	cp libTAU-memorywrap$(TAU_SHLIBX) $(INSTALLDEST)/shared$(TAU_CONFIG)
+install: $(TAU_MEMORYWRAP_SHARED)
+	$(TAU_MEMORYWRAP_INSTALL_CMD)
 
 memory_wrapper.o: memory_wrapper.c
 	$(CC) $(CFLAGS) -c memory_wrapper.c
