@@ -389,7 +389,7 @@ void TAUDECL Tau_trace_sendmsg(int type, int destination, int length);
 void TAUDECL Tau_trace_recvmsg(int type, int source, int length);
 void TAUDECL Tau_create_top_level_timer_if_necessary(void);
 void TAUDECL Tau_stop_top_level_timer_if_necessary(void);
-void TAUDECL Tau_metadata(char *name, char *value);
+void TAUDECL Tau_metadata(char *name, const char *value);
 void TAUDECL Tau_phase_metadata(char *name, char *value);
 void TAUDECL Tau_context_metadata(char *name, char *value);
 
@@ -519,6 +519,6 @@ void Tau_global_callWriteHooks();
 #endif /* _TAU_API_H_ */
 /***************************************************************************
  * $RCSfile: TauAPI.h,v $   $Author: amorris $
- * $Revision: 1.114 $   $Date: 2010/05/06 18:12:54 $
- * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.114 2010/05/06 18:12:54 amorris Exp $ 
+ * $Revision: 1.115 $   $Date: 2010/06/07 19:36:17 $
+ * POOMA_VERSION_ID: $Id: TauAPI.h,v 1.115 2010/06/07 19:36:17 amorris Exp $ 
  ***************************************************************************/
