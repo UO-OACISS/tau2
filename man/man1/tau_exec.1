@@ -1,0 +1,42 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_EXEC" "1" "06/07/2010" "" "Tools"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+tau_exec \- TAU execution wrapping script
+.SH "SYNOPSIS"
+.HP 9
+\fBtau_exec\fR [\fIoptions\fR] [\-\-] {\fIexe\fR} [\fIexe\ options\fR]
+.SH "DESCRIPTION"
+.PP
+Use this script to perform memory or IO on either an instrumented or uninstrumented executable.
+.SH "OPTIONS"
+.TP
+\-v
+vrbose mode
+.TP
+\-qsub
+BG/P qsub mode
+.TP
+\-io
+track io
+.TP
+\-memory
+track memory
+.TP
+\-T <option>
+Specify TAU option
+.TP
+\-XrunTAU\-<options>
+specify TAU library directly
+.SH "NOTES"
+.PP
+Defaults if unspecified: \-T MPI MPI is assumed unless SERIAL is specified
+.SH "EXAMPLE"
+.PP
+mpirun \-np 2 tau_exec \-io ./ring
