@@ -34,6 +34,8 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <string.h>
 #include <time.h>
 
+#include <sstream>
+
 #include "tauarch.h"
 #include <Profile/Profiler.h>
 #include <Profile/tau_types.h>
@@ -89,7 +91,7 @@ map<string,string> &Tau_metadata_getMetaData() {
 
 
 
-extern "C" void Tau_metadata(char *name, char *value) {
+extern "C" void Tau_metadata(char *name, const char *value) {
   // make copies
   char *myName = strdup(name);
   char *myValue = strdup(value);
@@ -105,7 +107,7 @@ void Tau_metadata_register(char *name, int value) {
   Tau_metadata(name, buf);
 }
 
-void Tau_metadata_register(char *name, char *value) {
+void Tau_metadata_register(char *name, const char *value) {
   Tau_metadata(name, value);
 }
 
@@ -385,10 +387,22 @@ int Tau_metadata_fillMetaData() {
   if (rc != -1) {
     Tau_metadata_register("CWD", buffer);
   }
-  bzero(buffer, 4096);
-  rc = readlink("/proc/self/cmdline", buffer, 4096);
-  if (rc != -1) {
-    Tau_metadata_register("Command Line", buffer);
+
+
+  f = fopen("/proc/self/cmdline", "r");
+  if (f) {
+    char line[4096];
+
+    std::ostringstream os;
+
+    while (Tau_util_readFullLine(line, f)) {
+      if (os.str().length() != 0) {
+	os << " ";
+      }
+      os << line;
+    }
+    Tau_metadata_register("Command Line", os.str().c_str());
+    fclose(f);
   }
 #endif /* __linux__ */
 
