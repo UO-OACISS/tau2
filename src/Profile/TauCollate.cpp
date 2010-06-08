@@ -523,6 +523,7 @@ extern "C" int Tau_collate_writeProfile() {
  * For Dagstuhl demo 2010
  ********************************************************************/
 extern "C" void Tau_collate_onlineDump() {
+  printf("collate online dump called\n");
   Tau_collate_writeProfile();
 }
 

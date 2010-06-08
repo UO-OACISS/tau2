@@ -92,7 +92,7 @@ char * Tau_append_iteration_to_name(int iteration, char *name);
 int Tau_get_tid(void);
 void Tau_profile_param1l(long data, const char *dataname);
 void Tau_collate_onlineDump();
-  
+void Tau_mon_onlineDump();
 
 
 #define EXTRACT_GROUP(n, l, gr, gr_name) TauGroup_t gr; char *gr_name = NULL; tau_extract_groupinfo(n, gr, gr_name); 
@@ -1821,19 +1821,35 @@ void TAU_PROFILE_SNAPSHOT(char *name, int slen) {
 
 #ifdef TAU_EXP_COLLATE
 void tau_online_dump_() {
+#ifdef TAU_MONITORING
+  Tau_mon_onlineDump();
+#else /* TAU_MONITORING */
   Tau_collate_onlineDump();
+#endif /* TAU_MONITORING */
 }
 
 void tau_online_dump() {
+#ifdef TAU_MONITORING
+  Tau_mon_onlineDump();
+#else /* TAU_MONITORING */
   Tau_collate_onlineDump();
+#endif /* TAU_MONITORING */
 }
 
 void tau_online_dump__() {
+#ifdef TAU_MONITORING
+  Tau_mon_onlineDump();
+#else /* TAU_MONITORING */
   Tau_collate_onlineDump();
+#endif /* TAU_MONITORING */
 }
 
 void TAU_ONLINE_DUMP() {
+#ifdef TAU_MONITORING
+  Tau_mon_onlineDump();
+#else /* TAU_MONITORING */
   Tau_collate_onlineDump();
+#endif /* TAU_MONITORING */
 }
 #endif /* TAU_EXP_COLLATE */
 
@@ -2020,7 +2036,7 @@ void TAU_DISABLE_TRACKING_MUSE_EVENTS(void) {}
 
 
 /***************************************************************************
- * $RCSfile: TauFAPI.cpp,v $   $Author: amorris $
- * $Revision: 1.83 $   $Date: 2010/05/03 23:30:21 $
- * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.83 2010/05/03 23:30:21 amorris Exp $ 
+ * $RCSfile: TauFAPI.cpp,v $   $Author: cheelee $
+ * $Revision: 1.84 $   $Date: 2010/06/08 01:09:53 $
+ * POOMA_VERSION_ID: $Id: TauFAPI.cpp,v 1.84 2010/06/08 01:09:53 cheelee Exp $ 
  ***************************************************************************/

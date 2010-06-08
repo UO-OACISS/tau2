@@ -318,6 +318,9 @@ mpiio=no
 mpiinc=
 mpilib=
 mpilibrary=no
+mrnet=no
+mrnet_root=
+mrnet_lib=
 ibmmpi=no
 shmem=no
 shmeminc=
@@ -669,7 +672,29 @@ for arg in "$@"; do
     fi
     shift
     ;;
- 
+
+  -mrnet=*)
+    mrnet=yes
+    mrnet_root=`echo $arg | sed -e 's/-mrnet=//' -e 's/ /#/g'`
+    if [ ! -e $mrnet_root ]
+    then
+      echo "Error: Cannot access MRNet root directory $mrnet_root"
+      exit 1
+    fi
+    shift
+    ;;
+
+  -mrnetlib=*)
+    mrnet=yes
+    mrnet_lib=`echo $arg | sed -e 's/-mrnetlib=//' -e 's/ /#/g'`
+    if [ ! -e $mrnet_lib ]
+    then
+      echo "Error: Cannot access MRNet library directory $mrnet_lib"
+      exit 1
+    fi
+    shift
+    ;;
+
   -nocomm)
       comm=no
     shift
@@ -5422,6 +5447,19 @@ if [ $hpctoolkit = yes ] ; then
     hpctoolkit_link="-L${hpctoolkit_install_dir}/lib/hpctoolkit#-lcsprof"
 
     fixmakeargs="$fixmakeargs HPCTOOLKIT hpctoolkit_include=${hpctoolkit_include} hpctoolkit_link=${hpctoolkit_link}"
+fi
+
+# TAUmon MRNet
+if [ $mrnet = yes ] ; then
+  if [ $mpi = yes ] ; then 
+       fixmakeargs="$fixmakeargs MRNET"
+       fixmakeargs="$fixmakeargs mrnet_root=${mrnet_root}"
+       fixmakeargs="$fixmakeargs mrnet_inc=-I${mrnet_root}/include#-I${mrnet_root}/xplat/include"
+       fixmakeargs="$fixmakeargs mrnet_lib=-L${mrnet_lib}#-lmrnet#-lxplat#-lfl#-ldl#-lm"
+  else
+       echo "ERROR: MRNet TAUmon transport requires MPI support"
+       exit 1
+  fi
 fi
 
 if [ $machine = ia64 -o $machine = x86_64 -o $machine = i386_linux -o $machine = craycnl -o $machine = bgp ] ; then

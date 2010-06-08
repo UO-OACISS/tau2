@@ -152,6 +152,21 @@ case $1 in
 	echo "s,^SCOREPDIR=.*$,SCOREPDIR=$scorepdir,g" >> $sedout
 	;;
 
+     mrnet_root=*)
+	mrnet_root=`echo $1 | sed -e 's/^mrnet_root=//'`
+	echo "s,^MRNET_ROOT=.*$,MRNET_ROOT=$mrnet_root,g" >> $sedout
+	;;
+
+     mrnet_inc=*)
+        mrnet_inc=`echo $1 | sed -e 's/^mrnet_inc=//' -e 's/#/ /g'`
+        echo "s@^MRNET_INCLUDE=.*\$@MRNET_INCLUDE=$mrnet_inc@g" >> $sedout
+        ;;
+
+     mrnet_lib=*)
+	mrnet_lib=`echo $1 | sed -e 's/^mrnet_lib=//' -e 's/#/ /g'`
+	echo "s@^MRNET_LIBS=.*\$@MRNET_LIBS=$mrnet_lib@g" >> $sedout
+	;;
+
      vampirtracedir=*)
 	vampirtracedir=`echo $1 | sed -e 's/^vampirtracedir=//' -e 's/#/ /g'`
 	echo "s,^VAMPIRTRACEDIR=.*$,VAMPIRTRACEDIR=$vampirtracedir,g" >> $sedout
@@ -430,7 +445,7 @@ case $1 in
 # Set up MPI stuff if possible
 ###############################################################
      MPI)
-        echo NOTE: Using the TAU MPI Profiling Interface 
+        echo "NOTE: Using the TAU MPI Profiling Interface" 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
@@ -1053,6 +1068,10 @@ case $1 in
      KOJAKOPARI)
 	echo "NOTE: Using KOJAK's Opari implementation ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     MRNET)
+	echo "NOTE: Using MRNet as TAUmon transport ***"
+	echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      OPARI_REGION)
 	echo "NOTE: Using Opari tool with OpenMP region information ***"

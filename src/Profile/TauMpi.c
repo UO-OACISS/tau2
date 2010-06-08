@@ -20,6 +20,7 @@
 #include <Profile/Profiler.h>
 #include <Profile/TauEnv.h>
 #include <TauMetaDataMerge.h>
+#include <Profile/TauMon.h>
 
 #include <stdio.h>
 #include <mpi.h>
@@ -1563,6 +1564,7 @@ int  MPI_Finalize(  )
 #endif
   }
 
+  Tau_mon_disconnect();
 
   returnVal = PMPI_Finalize();
 
@@ -1603,6 +1605,8 @@ char *** argv;
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Init( argc, argv );
+
+  Tau_mon_connect();
 
   TAU_PROFILE_STOP(tautimer); 
 
