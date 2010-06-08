@@ -3,7 +3,7 @@
 # TAUCUDA Build Makefile                               #
 ########################################################
 
-include ../common.mk
+include ../../common.mk
 include ${TAU_MAKEFILE} 
 
 TARGET_LIB_OLD := libtaucuda-old.so
@@ -29,19 +29,19 @@ CUDA_LIBS  := -L$(CUDA_BASE)/lib -L$(CUDA_BASE)/lib64 -L$(CUDA_SDK)/lib -L$(CUDA
 all: $(TARGET_LIB) libcuda_runtime_api_wrap.so libso_wrapper.so
 
 libso_wrapper.so: so_wrapper.o 
-	$(CC) -shared -o ../$(LIBDIR)/$@ $< $(TAU_SHLIBS) -ldl
+	$(CC) -shared -o ../../$(LIBDIR)/$@ $< $(TAU_SHLIBS) -ldl
 
 so_wrapper.o: so_wrapper.c
 	$(CC) -I$(CUDA_BASE)/include $(CFLAGS) -c $< -o $@
 
 libcuda_runtime_api_wrap.so: cuda_runtime_api_wrap.o 
-	$(LINK) -shared -o ../$(LIBDIR)/$@ $< $(TAU_SHLIBS) -ldl
+	$(LINK) -shared -o ../../$(LIBDIR)/$@ $< $(TAU_SHLIBS) -ldl
 
 cuda_runtime_api_wrap.o: cudart_wrapper.c
 	$(WRAPPER_CC) -I$(CUDA_BASE)/include $(CFLAGS) -c $< -o $@
 
 $(TARGET_LIB): $(NVIDIA_OBJ) $(TAUCUDA_OBJ)
-	$(LINK) -shared -o ../$(LIBDIR)/$(TARGET_LIB) $(NVIDIA_OBJ) $(TAUCUDA_OBJ) $(CUDA_LIBS)
+	$(LINK) -shared -o ../../$(LIBDIR)/$(TARGET_LIB) $(NVIDIA_OBJ) $(TAUCUDA_OBJ) $(CUDA_LIBS)
 
 $(TAUCUDA_OBJ): $(TAUCUDA_SRC)
 	$(CPP) $(CFLAGS) $(INCLUDES) $(DEFS) $(TAU_DEFS) -c $<
