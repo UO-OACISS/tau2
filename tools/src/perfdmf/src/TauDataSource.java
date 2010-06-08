@@ -337,7 +337,8 @@ public class TauDataSource extends DataSource {
                             fileIn.close();
 
                         } catch (Exception e2) {
-                            throw new CorruptFileException("Error parsing file (" + e2.getMessage() + ")");
+                            e2.printStackTrace();
+                            throw new CorruptFileException("Error parsing file (" + e2 + ")");
                         }
 
                         finished = true;
