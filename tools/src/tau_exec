@@ -25,6 +25,7 @@ usage()
     echo "        -memory  track memory"
     options=`tau-config --list-options`
     echo "        -T <$options> : specify TAU option"
+    echo "        -loadlib=<file.so>   : specify additional load library"
     echo "        -XrunTAUsh-<options> : specify TAU library directly"
     echo ""
     echo "Notes:"
@@ -59,7 +60,7 @@ track_io=false
 track_memory=false
 qsub_mode=false
 TAU_PAPI_DEFAULT_DOMAIN=PAPI_DOM_USER
-
+extraloadlibs=""
 
 for arg in "$@" ; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
@@ -95,7 +96,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tau_exec,v 1.17 2010/05/20 01:58:10 amorris Exp $';
+	      echo '$Id: tau_exec,v 1.18 2010/06/08 18:41:47 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -T)
@@ -104,6 +105,12 @@ for arg in "$@" ; do
 	      ;;
 	  -tau:*)
               binding_options="$binding_options `echo $arg | sed -e 's/-tau://' -e 's/,/ /g'`"
+	      shift
+              ;;
+	  -loadlib=*)
+	      myarg=`echo $arg | sed 's/-loadlib=//'`
+              extraloadlibs="$extraloadlibs:$myarg"
+	      shift
               ;;
 	  -XrunTAU-*)
 	      myarg=`echo $arg | sed 's/-XrunTAU-//'`
@@ -200,6 +207,11 @@ if [ $track_memory = "true" ] ; then
     export TAU_MEMORY_WRAPPER_ENABLED=1
 fi
 
+# add libraries specified by -loadlib=<foo.so>
+TAUEX_LD_PRELOAD=${TAUEX_LD_PRELOAD}${extraloadlibs}
+
+# remove double colons
+TAUEX_LD_PRELOAD=`echo $TAUEX_LD_PRELOAD | sed -e "s/::/:/g" -e "s/:$//"`
 
 if [ $apple = 1 ]; then
   TAU_LDD='otool -L'
