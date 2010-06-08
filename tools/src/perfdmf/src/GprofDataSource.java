@@ -6,12 +6,12 @@ import java.util.Vector;
 
 public class GprofDataSource extends DataSource {
 
-//    private int indexStart = 0;
-//    private int percentStart = 0;
-//    private int selfStart = 0;
-//    private int descendantsStart = 0;
-//    private int calledStart = 0;
-//    private int nameStart = 0;
+    //    private int indexStart = 0;
+    //    private int percentStart = 0;
+    //    private int selfStart = 0;
+    //    private int descendantsStart = 0;
+    //    private int calledStart = 0;
+    //    private int nameStart = 0;
     private boolean fixNames = false;
     private int linenumber = 0;
     private boolean fixLengths = true;
@@ -107,9 +107,6 @@ public class GprofDataSource extends DataSource {
                         if ((inputString.indexOf("index") == 0) && (inputString.indexOf("time") >= 0)
                                 && (inputString.indexOf("self") >= 0) && (inputString.indexOf("called") >= 0)
                                 && (inputString.indexOf("name") >= 0)) {
-                            // this line has the lengths of the fields.
-                            // we need this.
-//                            getFieldLengths(inputString);
                         } else if (inputString.charAt(0) == '[') {
                             self = getSelfLineData(inputString);
                             parent = false;
@@ -169,25 +166,23 @@ public class GprofDataSource extends DataSource {
                                 functionProfile.setInclusive(0, lineDataChild.d0 + lineDataChild.d1);
                                 functionProfile.setExclusive(0, lineDataChild.d0);
                                 functionProfile.setNumCalls(lineDataChild.i0);
-                                //functionProfile.setInclusivePerCall(0,
-                                //        (lineDataChild.d0 + lineDataChild.d1) / lineDataChild.i0);
                             }
                             children.clear();
                             parent = true;
                         } else if (inputString.charAt(length - 1) == ']') {
                             // check for cycle line
                             if (inputString.indexOf("<cycle") >= 0) {
-                                if (parent)
+                                if (parent) {
                                     parents.add(getParentChildLineData(inputString));
-                                else
+                                } else {
                                     children.add(getParentChildLineData(inputString));
+                                }
                             } else {
-                                if (parent)
+                                if (parent) {
                                     parents.add(getParentChildLineData(inputString));
-                                //parents.add(getParentLineData(inputString));
-                                else
+                                } else {
                                     children.add(getParentChildLineData(inputString));
-                                //children.add(getChildLineData(inputString));
+                                }
                             }
                         }
                     } else if (inputString.charAt(length - 1) == ']') {
@@ -213,38 +208,38 @@ public class GprofDataSource extends DataSource {
     //Gprof.dat string processing methods.
     //######
 
-//    private void getFieldLengths(String string) {
-//
-//        System.out.println("FIELD LENGTHS@!!!!");
-//
-//        /*
-//         * parse a line that looks like: index %time self childen
-//         * called+self name index ...or... index % time self children called
-//         * name index [xxxx] 100.0 xxxx.xx xxxxxxxx.xx xxxxxxx+xxxxxxx ssssss...
-//         */
-//        StringTokenizer st = new StringTokenizer(string, " \t\n\r");
-//        String index = st.nextToken();
-//        String percent = st.nextToken();
-//        if (percent.compareTo("%") == 0)
-//            percent += " " + st.nextToken();
-//        String self = st.nextToken();
-//        String descendants = st.nextToken();
-//        String called = st.nextToken();
-//        String name = st.nextToken();
-//        // this should be 0, left justified
-//        indexStart = string.indexOf(index);
-//        // this should be about 7, right justified
-//        percentStart = string.indexOf(percent);
-//        // this should be about 13, right justified
-//        selfStart = string.indexOf(percent) + percent.length() + 1;
-//        // this should be about 21, right justified
-//        descendantsStart = string.indexOf(self) + self.length() + 1;
-//        // this should be about 33, left justified
-//        calledStart = string.indexOf(descendants) + descendants.length() + 1;
-//        // this should be about 49, left justified
-//        nameStart = string.indexOf(name);
-//        return;
-//    }
+    //    private void getFieldLengths(String string) {
+    //
+    //        System.out.println("FIELD LENGTHS@!!!!");
+    //
+    //        /*
+    //         * parse a line that looks like: index %time self childen
+    //         * called+self name index ...or... index % time self children called
+    //         * name index [xxxx] 100.0 xxxx.xx xxxxxxxx.xx xxxxxxx+xxxxxxx ssssss...
+    //         */
+    //        StringTokenizer st = new StringTokenizer(string, " \t\n\r");
+    //        String index = st.nextToken();
+    //        String percent = st.nextToken();
+    //        if (percent.compareTo("%") == 0)
+    //            percent += " " + st.nextToken();
+    //        String self = st.nextToken();
+    //        String descendants = st.nextToken();
+    //        String called = st.nextToken();
+    //        String name = st.nextToken();
+    //        // this should be 0, left justified
+    //        indexStart = string.indexOf(index);
+    //        // this should be about 7, right justified
+    //        percentStart = string.indexOf(percent);
+    //        // this should be about 13, right justified
+    //        selfStart = string.indexOf(percent) + percent.length() + 1;
+    //        // this should be about 21, right justified
+    //        descendantsStart = string.indexOf(self) + self.length() + 1;
+    //        // this should be about 33, left justified
+    //        calledStart = string.indexOf(descendants) + descendants.length() + 1;
+    //        // this should be about 49, left justified
+    //        nameStart = string.indexOf(name);
+    //        return;
+    //    }
 
     private LineData getSelfLineData(String string) {
         LineData lineData = new LineData();
@@ -302,7 +297,7 @@ public class GprofDataSource extends DataSource {
             ALSO BAD:       0.27    0.00 1135396/4373228     hypre_BoxGetStrideSize [56]
 
             */
-//            calledStart = string.indexOf(fixer) + fixer.length() + 1;
+            //            calledStart = string.indexOf(fixer) + fixer.length() + 1;
             fixLengths = false;
         }
 
@@ -345,13 +340,13 @@ public class GprofDataSource extends DataSource {
     }
 
     private LineData getParentChildLineData(String string) {
-        //System.out.println("string = " + string);
-        
+
         // first, check to see if we are missing the index, %time, and self values.
         String tmp = string.trim();
         boolean missing = false;
-        if (tmp.length() < string.length() - 20)
-        	missing = true;
+        if (tmp.length() < string.length() - 20) {
+            missing = true;
+        }
 
         LineData lineData = new LineData();
         StringTokenizer st = new StringTokenizer(string, " \t\n\r");
@@ -396,50 +391,50 @@ public class GprofDataSource extends DataSource {
 
         if (missing) {
             lineData.d0 = 0.0;
-            lineData.d1 = 0.0;        	
+            lineData.d1 = 0.0;
         } else {
-	        tmpStr = st.nextToken().trim();// string.substring(selfStart, descendantsStart).trim();
-	        //String tmpStr = st.nextToken();
-	        if (tmpStr.length() > 0) {
-	            lineData.d0 = 1000000.0 * Double.parseDouble(tmpStr);
-	        } else {
-	            lineData.d0 = 0.0;
-	        }
-	        
-	//        System.err.println("Error parsing file: " + currentFile + ", line: " + linenumber);
-	//        System.err.println("selfStart: " + selfStart);
-	//        System.err.println("descendantsStart: " + descendantsStart);
-	//        System.err.println("calledStart: " + calledStart);
-	
-	        try {
-	            tmpStr = st.nextToken().trim();//string.substring(descendantsStart, calledStart).trim();
-	            //tmpStr = st.nextToken();
-	            if (tmpStr.length() > 0) {
-	                lineData.d1 = 1000000.0 * Double.parseDouble(tmpStr);
-	            } else {
-	                lineData.d1 = 0.0;
-	            }
-	        } catch (Exception e) {
-	            System.err.println("Error parsing file: " + currentFile + ", line: " + linenumber);
-	//            System.err.println("selfStart: " + selfStart);
-	//            System.err.println("descendantsStart: " + descendantsStart);
-	//            System.err.println("calledStart: " + calledStart);
-	            System.err.println(e.getMessage());
-	            throw new DataSourceException(e, currentFile);
-	        }
+            tmpStr = st.nextToken().trim();// string.substring(selfStart, descendantsStart).trim();
+            //String tmpStr = st.nextToken();
+            if (tmpStr.length() > 0) {
+                lineData.d0 = 1000000.0 * Double.parseDouble(tmpStr);
+            } else {
+                lineData.d0 = 0.0;
+            }
+
+            //        System.err.println("Error parsing file: " + currentFile + ", line: " + linenumber);
+            //        System.err.println("selfStart: " + selfStart);
+            //        System.err.println("descendantsStart: " + descendantsStart);
+            //        System.err.println("calledStart: " + calledStart);
+
+            try {
+                tmpStr = st.nextToken().trim();//string.substring(descendantsStart, calledStart).trim();
+                //tmpStr = st.nextToken();
+                if (tmpStr.length() > 0) {
+                    lineData.d1 = 1000000.0 * Double.parseDouble(tmpStr);
+                } else {
+                    lineData.d1 = 0.0;
+                }
+            } catch (Exception e) {
+                System.err.println("Error parsing file: " + currentFile + ", line: " + linenumber);
+                //            System.err.println("selfStart: " + selfStart);
+                //            System.err.println("descendantsStart: " + descendantsStart);
+                //            System.err.println("calledStart: " + calledStart);
+                System.err.println(e.getMessage());
+                throw new DataSourceException(e, currentFile);
+            }
         }
 
         // check if the counts 'spill' into the name field.
-//        String spillTest = string.substring(calledStart, string.length()).trim();
-//        int space = spillTest.indexOf(" ");
-//        if (space > (nameStart - calledStart)) {
-//            tmpStr = spillTest.substring(0, space).trim();
-//        } else {
-//            tmpStr = string.substring(calledStart, nameStart).trim();
-//        }
-        
-        tmpStr=st.nextToken().trim();
-        
+        //        String spillTest = string.substring(calledStart, string.length()).trim();
+        //        int space = spillTest.indexOf(" ");
+        //        if (space > (nameStart - calledStart)) {
+        //            tmpStr = spillTest.substring(0, space).trim();
+        //        } else {
+        //            tmpStr = string.substring(calledStart, nameStart).trim();
+        //        }
+
+        tmpStr = st.nextToken().trim();
+
         // check for a ratio
         if (tmpStr.indexOf("/") >= 0) {
             StringTokenizer st2 = new StringTokenizer(tmpStr, "/");
@@ -454,52 +449,26 @@ public class GprofDataSource extends DataSource {
         }
 
         // the rest is the name
-//        if (space > (nameStart - calledStart)) {
-//            int end = spillTest.lastIndexOf("[") - 1;
-//            lineData.s0 = spillTest.substring(space, end).trim();
-//        } else {
-//            int end = string.lastIndexOf("[") - 1;
-//            lineData.s0 = string.substring(nameStart, end).trim();
-//        }
-        
-        lineData.s0 = fix(st.nextToken());
+        //        if (space > (nameStart - calledStart)) {
+        //            int end = spillTest.lastIndexOf("[") - 1;
+        //            lineData.s0 = spillTest.substring(space, end).trim();
+        //        } else {
+        //            int end = string.lastIndexOf("[") - 1;
+        //            lineData.s0 = string.substring(nameStart, end).trim();
+        //        }
+
+        String eventName = "";
+        while (st.hasMoreTokens()) {
+            // skip last token
+            String token = st.nextToken();
+            if (st.hasMoreTokens()) {
+                eventName = eventName + " " + token;
+            }
+        }
+        eventName = eventName.trim();
+        lineData.s0 = eventName;
         return lineData;
     }
-
-    /*
-     * private LineData getParentChildLineData(String string){ LineData lineData =
-     * new LineData(); try{ StringTokenizer st1 = new StringTokenizer(string, "
-     * \t\n\r");
-     *  // get the estimate of the amount of time spent directly // in child
-     * when it was called from self // ...or... // get the estimate of the
-     * amount of time spent in self when // it was called from parent
-     * lineData.d0 = Double.parseDouble(st1.nextToken()); // get the estimate of
-     * the amount of time spent in // subroutines of child when child was called
-     * from self. // The sum of the self and children fields is an estimate //
-     * of the total time spent in calls to child from self // ...or... // get
-     * the estimate of the amount of time spent in subroutines // of self when
-     * self was called from parent. The sum of the // self and children fields
-     * is an estimate of the amount of // time spent within calls to self from
-     * parent. lineData.d1 = 1000.0 * Double.parseDouble(st1.nextToken());
-     *  // for cycles, there is no ratio. To check for cycles, check // to see
-     * if there is a ratio. String tmpStr = st1.nextToken(); if
-     * (tmpStr.indexOf("/") >= 0) { StringTokenizer st2 = new
-     * StringTokenizer(tmpStr, "/"); // This ratio is used to determine how much
-     * of self and // children time gets credited to parent. // ...or... // the
-     * number of times self was called from parent lineData.i0 =
-     * Integer.parseInt(st2.nextToken()); // get the number of calls to child
-     * from self // ...or... // get the total number of nonrecursive calls to
-     * report. lineData.i1 = Integer.parseInt(st2.nextToken()); } else {
-     * lineData.i0 = Integer.parseInt(tmpStr); lineData.i1 =
-     * Integer.parseInt(tmpStr); }
-     * 
-     * lineData.s0 = st1.nextToken(); //Name while (st1.hasMoreTokens()) {
-     * String tmp = st1.nextToken(); if ((tmp.indexOf("[") != 0) &&
-     * (!tmp.endsWith("]"))) lineData.s0 += " " + tmp; //Name } }
-     * catch(Exception e){ System.out.println("***\n" + string + "\n***");
-     * e.printStackTrace(); UtilFncs.systemError(e, null, "GOS03"); } return
-     * lineData; }
-     */
 
     private LineData getSummaryLineData(String string) {
         LineData lineData = new LineData();
