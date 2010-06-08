@@ -82,10 +82,12 @@ public class CallPathUtilFuncs {
                         continue;
                     }
 
-                    if (parent != null)
+                    if (parent != null) {
                         parent.addChildProfile(child, callPath);
-                    if (child != null)
+                    }
+                    if (child != null) {
                         child.addParentProfile(parent, callPath);
+                    }
                 }
             }
         }
