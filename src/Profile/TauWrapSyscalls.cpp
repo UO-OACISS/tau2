@@ -52,6 +52,50 @@ extern "C" void exit(int status) {
   _internal_exit(status);
 }
 
+#ifdef TAU_LINUX
+/////////////////////////////////////////////////////////////////////////
+// Define the exit_group wrapper
+/////////////////////////////////////////////////////////////////////////
+extern "C" void exit_group(int status) {
+
+  static void (*_internal_exit_group) (int status) = NULL;
+
+  int ret;
+  dprintf("TAU: Inside tau_wrap.c: exit_group(): status = %d\n", status);
+
+  TAU_PROFILE_EXIT("EXIT_GROUPING from TAU...");
+
+  /* Search for exit_group */  
+  if (_internal_exit_group == NULL) {
+    _internal_exit_group = (void (*) (int status)) dlsym(RTLD_NEXT, "exit_group");
+  }
+
+  dprintf("TAU: calling _internal_exit_group \n");
+  _internal_exit_group(status);
+}
+#endif
+
+/////////////////////////////////////////////////////////////////////////
+// Define the _exit wrapper
+/////////////////////////////////////////////////////////////////////////
+extern "C" void _exit(int status) {
+
+  static void (*_internal__exit) (int status) = NULL;
+
+  int ret;
+  dprintf("TAU: Inside tau_wrap.c: _exit(): status = %d\n", status);
+
+  TAU_PROFILE_EXIT("_EXITING from TAU...");
+
+  /* Search for _exit */  
+  if (_internal__exit == NULL) {
+    _internal__exit = (void (*) (int status)) dlsym(RTLD_NEXT, "_exit");
+  }
+
+  dprintf("TAU: calling _internal__exit \n");
+  _internal__exit(status);
+}
+
 /////////////////////////////////////////////////////////////////////////
 // Define the fork wrapper
 /////////////////////////////////////////////////////////////////////////
@@ -77,7 +121,7 @@ extern "C" pid_t fork(void) {
 }
 
 /***************************************************************************
- * $RCSfile: TauWrapSyscalls.cpp,v $   $Author: sameer $
- * $Revision: 1.2 $   $Date: 2010/06/06 03:32:08 $
- * TAU_VERSION_ID: $Id: TauWrapSyscalls.cpp,v 1.2 2010/06/06 03:32:08 sameer Exp $
+ * $RCSfile: TauWrapSyscalls.cpp,v $   $Author: amorris $
+ * $Revision: 1.3 $   $Date: 2010/06/08 18:31:33 $
+ * TAU_VERSION_ID: $Id: TauWrapSyscalls.cpp,v 1.3 2010/06/08 18:31:33 amorris Exp $
  ***************************************************************************/
