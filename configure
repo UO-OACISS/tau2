@@ -5455,7 +5455,7 @@ if [ $mrnet = yes ] ; then
        fixmakeargs="$fixmakeargs MRNET"
        fixmakeargs="$fixmakeargs mrnet_root=${mrnet_root}"
        fixmakeargs="$fixmakeargs mrnet_inc=-I${mrnet_root}/include#-I${mrnet_root}/xplat/include"
-       fixmakeargs="$fixmakeargs mrnet_lib=-L${mrnet_lib}#-lmrnet#-lxplat#-lfl#-ldl#-lm"
+       fixmakeargs="$fixmakeargs mrnet_lib=-L${mrnet_lib}#-lmrnet#-lxplat#-ldl#-lm"
   else
        echo "ERROR: MRNet TAUmon transport requires MPI support"
        exit 1
