@@ -1,0 +1,165 @@
+Here we demonstrate parameter based profiling with TAU using a --wrap link line option. Note: the dgemm.c file is not instrumented!
+
+TAU is configured with -PROFILEPARAM -mpi -pdt=<dir> -c++=icpc -cc=icc -fortran=intel ... options.
+
+[sameer@mist wrap]$ make clean
+/bin/rm -f app *.o libdgemm.a
+[sameer@mist wrap]$ make
+tau_cc.sh -c main.c
+
+
+Debug: Parsing with PDT Parser
+Executing> /usr/local/packages/pdtoolkit-3.15/x86_64/bin/cparse main.c -I/home/users/sameer/tau2/include -DPROFILING_ON -DTAU_DOT_H_LESS_HEADERS -DTAU_DOT_H_LESS_HEADERS -DTAU_MPI -DTAU_MPI_THREADED -DTAU_LINUX_TIMERS -DTAU_MPIGREQUEST -DTAU_MPIDATAREP -DTAU_MPIERRHANDLER -DTAU_MPIATTRFUNCTION -DTAU_MPITYPEEX -DTAU_MPIADDERROR -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE -DTAU_PROFILEPARAM -DTAU_BFD -DTAU_MPIFILE -DHAVE_TR1_HASH_MAP -I/usr/local/packages/openmpi-1.3.3/intel-11.1.046-tm/include -I/usr/local/packages/openmpi-1.3.3/intel-11.1.046-tm/include/openmpi -I/usr/local/packages/openmpi-1.3.3/intel-11.1.046-tm/include/openmpi/ompi
+
+
+Debug: Instrumenting with TAU
+Executing> /home/users/sameer/tau2/x86_64/bin/tau_instrumentor main.pdb main.c -o main.inst.c -c
+
+
+Debug: Compiling with Instrumented Code
+Executing> /usr/local/packages/intel/Compiler/11.1/046/bin/intel64/icc -I. -c main.inst.c -DPROFILING_ON -DTAU_DOT_H_LESS_HEADERS -DTAU_DOT_H_LESS_HEADERS -DTAU_MPI -DTAU_MPI_THREADED -DTAU_LINUX_TIMERS -DTAU_MPIGREQUEST -DTAU_MPIDATAREP -DTAU_MPIERRHANDLER -DTAU_MPIATTRFUNCTION -DTAU_MPITYPEEX -DTAU_MPIADDERROR -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE -DTAU_PROFILEPARAM -DTAU_BFD -DTAU_MPIFILE -DHAVE_TR1_HASH_MAP -I/home/users/sameer/tau2/include -I/usr/local/packages/openmpi-1.3.3/intel-11.1.046-tm/include -I/usr/local/packages/openmpi-1.3.3/intel-11.1.046-tm/include/openmpi -I/usr/local/packages/openmpi-1.3.3/intel-11.1.046-tm/include/openmpi/ompi -o main.o
+Looking for file: main.o
+
+
+Debug: cleaning inst file
+Executing> /bin/rm -f main.inst.c
+
+
+Debug: cleaning PDB file
+Executing> /bin/rm -f main.pdb
+
+tau_cc.sh -c foo.c
+
+
+Debug: Parsing with PDT Parser
+Executing> /usr/local/packages/pdtoolkit-3.15/x86_64/bin/cparse foo.c -I/home/users/sameer/tau2/include -DPROFILING_ON -DTAU_DOT_H_LESS_HEADERS -DTAU_DOT_H_LESS_HEADERS -DTAU_MPI -DTAU_MPI_THREADED -DTAU_LINUX_TIMERS -DTAU_MPIGREQUEST -DTAU_MPIDATAREP -DTAU_MPIERRHANDLER -DTAU_MPIATTRFUNCTION -DTAU_MPITYPEEX -DTAU_MPIADDERROR -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE -DTAU_PROFILEPARAM -DTAU_BFD -DTAU_MPIFILE -DHAVE_TR1_HASH_MAP -I/usr/local/packages/openmpi-1.3.3/intel-11.1.046-tm/include -I/usr/local/packages/openmpi-1.3.3/intel-11.1.046-tm/include/openmpi -I/usr/local/packages/openmpi-1.3.3/intel-11.1.046-tm/include/openmpi/ompi
+
+
+Debug: Instrumenting with TAU
+Executing> /home/users/sameer/tau2/x86_64/bin/tau_instrumentor foo.pdb foo.c -o foo.inst.c -c
+
+
+Debug: Compiling with Instrumented Code
+Executing> /usr/local/packages/intel/Compiler/11.1/046/bin/intel64/icc -I. -c foo.inst.c -DPROFILING_ON -DTAU_DOT_H_LESS_HEADERS -DTAU_DOT_H_LESS_HEADERS -DTAU_MPI -DTAU_MPI_THREADED -DTAU_LINUX_TIMERS -DTAU_MPIGREQUEST -DTAU_MPIDATAREP -DTAU_MPIERRHANDLER -DTAU_MPIATTRFUNCTION -DTAU_MPITYPEEX -DTAU_MPIADDERROR -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE -DTAU_PROFILEPARAM -DTAU_BFD -DTAU_MPIFILE -DHAVE_TR1_HASH_MAP -I/home/users/sameer/tau2/include -I/usr/local/packages/openmpi-1.3.3/intel-11.1.046-tm/include -I/usr/local/packages/openmpi-1.3.3/intel-11.1.046-tm/include/openmpi -I/usr/local/packages/openmpi-1.3.3/intel-11.1.046-tm/include/openmpi/ompi -o foo.o
+Looking for file: foo.o
+
+
+Debug: cleaning inst file
+Executing> /bin/rm -f foo.inst.c
+
+
+Debug: cleaning PDB file
+Executing> /bin/rm -f foo.pdb
+
+tau_cc.sh -c wb.c
+
+
+Debug: Parsing with PDT Parser
+Executing> /usr/local/packages/pdtoolkit-3.15/x86_64/bin/cparse wb.c -I/home/users/sameer/tau2/include -DPROFILING_ON -DTAU_DOT_H_LESS_HEADERS -DTAU_DOT_H_LESS_HEADERS -DTAU_MPI -DTAU_MPI_THREADED -DTAU_LINUX_TIMERS -DTAU_MPIGREQUEST -DTAU_MPIDATAREP -DTAU_MPIERRHANDLER -DTAU_MPIATTRFUNCTION -DTAU_MPITYPEEX -DTAU_MPIADDERROR -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE -DTAU_PROFILEPARAM -DTAU_BFD -DTAU_MPIFILE -DHAVE_TR1_HASH_MAP -I/usr/local/packages/openmpi-1.3.3/intel-11.1.046-tm/include -I/usr/local/packages/openmpi-1.3.3/intel-11.1.046-tm/include/openmpi -I/usr/local/packages/openmpi-1.3.3/intel-11.1.046-tm/include/openmpi/ompi
+
+
+Debug: Instrumenting with TAU
+Executing> /home/users/sameer/tau2/x86_64/bin/tau_instrumentor wb.pdb wb.c -o wb.inst.c -c
+
+
+Debug: Compiling with Instrumented Code
+Executing> /usr/local/packages/intel/Compiler/11.1/046/bin/intel64/icc -I. -c wb.inst.c -DPROFILING_ON -DTAU_DOT_H_LESS_HEADERS -DTAU_DOT_H_LESS_HEADERS -DTAU_MPI -DTAU_MPI_THREADED -DTAU_LINUX_TIMERS -DTAU_MPIGREQUEST -DTAU_MPIDATAREP -DTAU_MPIERRHANDLER -DTAU_MPIATTRFUNCTION -DTAU_MPITYPEEX -DTAU_MPIADDERROR -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE -DTAU_PROFILEPARAM -DTAU_BFD -DTAU_MPIFILE -DHAVE_TR1_HASH_MAP -I/home/users/sameer/tau2/include -I/usr/local/packages/openmpi-1.3.3/intel-11.1.046-tm/include -I/usr/local/packages/openmpi-1.3.3/intel-11.1.046-tm/include/openmpi -I/usr/local/packages/openmpi-1.3.3/intel-11.1.046-tm/include/openmpi/ompi -o wb.o
+Looking for file: wb.o
+
+
+Debug: cleaning inst file
+Executing> /bin/rm -f wb.inst.c
+
+
+Debug: cleaning PDB file
+Executing> /bin/rm -f wb.pdb
+
+gcc -c dgemm.c  -I. 
+ar rcv libdgemm.a dgemm.o 
+a - dgemm.o
+tau_cc.sh -o app main.o foo.o wb.o  -L. -ldgemm -Wl,--wrap,dgemm
+
+
+Debug: Linking with TAU Options
+Executing> /usr/local/packages/intel/Compiler/11.1/046/bin/intel64/icc -o app main.o foo.o wb.o -L. -ldgemm -Wl,--wrap,dgemm -L/usr/local/packages/openmpi-1.3.3/intel-11.1.046-tm/lib -lmpi_f77 -L/home/users/sameer/tau2/x86_64/lib -lTauMpi-param-icpc-mpi-pdt -lmpi -lmpi_cxx -lmpi_f90 -lmpi_f77 -L/home/users/sameer/tau2/x86_64/lib -ltau-param-icpc-mpi-pdt -lbfd -liberty -Wl,--export-dynamic -L/usr/lib/gcc/x86_64-redhat-linux/4.1.2/ -L/usr/bin/../lib64 -lstdc++ -lgcc_s
+/usr/local/packages/intel/Compiler/11.1/046/lib/intel64/libimf.so: warning: warning: feupdateenv is not implemented and will always fail
+
+[sameer@mist wrap]$ mpirun -np 2 ./app
+Inside foo: x=42
+Inside __wrap_dgemm: size = 100
+Inside dgemm: size=100
+Inside __wrap_dgemm: size = 10000
+Inside dgemm: size=10000
+Inside __wrap_dgemm: size = 100000
+Inside dgemm: size=100000
+Inside main, x = 99999
+Inside foo: x=42
+Inside __wrap_dgemm: size = 100
+Inside dgemm: size=100
+Inside __wrap_dgemm: size = 10000
+Inside dgemm: size=10000
+Inside __wrap_dgemm: size = 100000
+Inside dgemm: size=100000
+Inside main, x = 99999
+[sameer@mist wrap]$ pprof
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0        0.051        1,049           1           6    1049725 int main(int, char **) C 
+ 99.8        1,047        1,047           1           0    1047345 MPI_Init() 
+  0.2            2            2           1           0       2256 MPI_Finalize() 
+  0.0        0.058        0.058           3           0         19 int __wrap_dgemm(int) C 
+  0.0        0.028        0.028           1           0         28 int __wrap_dgemm(int) C [ <size> = <100> ] 
+  0.0        0.018        0.018           1           0         18 int __wrap_dgemm(int) C [ <size> = <10000> ] 
+  0.0        0.015        0.015           1           0         15 int foo(int) C 
+  0.0        0.012        0.012           1           0         12 int __wrap_dgemm(int) C [ <size> = <100000> ] 
+
+NODE 1;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0        0.081        1,048           1           6    1048975 int main(int, char **) C 
+ 99.7        1,046        1,046           1           0    1046279 MPI_Init() 
+  0.2            2            2           1           0       2530 MPI_Finalize() 
+  0.0        0.064        0.064           3           0         21 int __wrap_dgemm(int) C 
+  0.0         0.04         0.04           1           0         40 int __wrap_dgemm(int) C [ <size> = <100> ] 
+  0.0        0.021        0.021           1           0         21 int foo(int) C 
+  0.0        0.012        0.012           1           0         12 int __wrap_dgemm(int) C [ <size> = <100000> ] 
+  0.0        0.012        0.012           1           0         12 int __wrap_dgemm(int) C [ <size> = <10000> ] 
+
+FUNCTION SUMMARY (total):
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0        0.132        2,098           2          12    1049350 int main(int, char **) C 
+ 99.8        2,093        2,093           2           0    1046812 MPI_Init() 
+  0.2            4            4           2           0       2393 MPI_Finalize() 
+  0.0        0.122        0.122           6           0         20 int __wrap_dgemm(int) C 
+  0.0        0.068        0.068           2           0         34 int __wrap_dgemm(int) C [ <size> = <100> ] 
+  0.0        0.036        0.036           2           0         18 int foo(int) C 
+  0.0         0.03         0.03           2           0         15 int __wrap_dgemm(int) C [ <size> = <10000> ] 
+  0.0        0.024        0.024           2           0         12 int __wrap_dgemm(int) C [ <size> = <100000> ] 
+
+FUNCTION SUMMARY (mean):
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0        0.066        1,049           1           6    1049350 int main(int, char **) C 
+ 99.8        1,046        1,046           1           0    1046812 MPI_Init() 
+  0.2            2            2           1           0       2393 MPI_Finalize() 
+  0.0        0.061        0.061           3           0         20 int __wrap_dgemm(int) C 
+  0.0        0.034        0.034           1           0         34 int __wrap_dgemm(int) C [ <size> = <100> ] 
+  0.0        0.018        0.018           1           0         18 int foo(int) C 
+  0.0        0.015        0.015           1           0         15 int __wrap_dgemm(int) C [ <size> = <10000> ] 
+  0.0        0.012        0.012           1           0         12 int __wrap_dgemm(int) C [ <size> = <100000> ] 
+[sameer@mist wrap]$ exit
+exit
+
+Script done on Thu 03 Jun 2010 02:43:32 PM PDT
