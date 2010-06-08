@@ -27,6 +27,7 @@
 #include <TAU.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <signal.h>
 
 
 #define dprintf TAU_VERBOSE 
@@ -120,8 +121,39 @@ extern "C" pid_t fork(void) {
 
 }
 
+
+/////////////////////////////////////////////////////////////////////////
+// Define the kill wrapper
+/////////////////////////////////////////////////////////////////////////
+extern "C" int kill(pid_t pid, int sig) {
+
+  static int (*_kill) (pid_t pid, int sig) = NULL;
+
+  int ret;
+
+  /* Search for kill */  
+  if (_kill == NULL) {
+    _kill = (int (*) (pid_t pid, int sig)) dlsym(RTLD_NEXT, "kill");
+  }
+
+  if(sig==SIGKILL||sig==SIGTERM){
+  ret = _kill(pid, SIGUSR1);
+  }
+  else{
+    ret = 0;
+  }
+
+  if(ret == 0) {
+    dprintf("TAU: calling _kill \n");
+    ret = _kill(pid, sig);
+  }
+
+  return ret;
+}
+
+
 /***************************************************************************
- * $RCSfile: TauWrapSyscalls.cpp,v $   $Author: amorris $
- * $Revision: 1.3 $   $Date: 2010/06/08 18:31:33 $
- * TAU_VERSION_ID: $Id: TauWrapSyscalls.cpp,v 1.3 2010/06/08 18:31:33 amorris Exp $
+ * $RCSfile: TauWrapSyscalls.cpp,v $   $Author: wspear $
+ * $Revision: 1.4 $   $Date: 2010/06/08 23:11:15 $
+ * TAU_VERSION_ID: $Id: TauWrapSyscalls.cpp,v 1.4 2010/06/08 23:11:15 wspear Exp $
  ***************************************************************************/
