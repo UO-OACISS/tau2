@@ -76,11 +76,11 @@ for i in test_*.c ; do
     tau_exec -memory -T serial ./simple
     check_output
 
-    # echo -n "  built with TAU and linked with -lrt -lpthread...  "
-    # cleanup
-    # tau_cc.sh -o simple $i -lrt -lpthread  &> /dev/null
-    # tau_exec -memory -T serial ./simple
-    # check_output
+    echo -n "  built with TAU and linked with -lrt -lpthread...  "
+    cleanup
+    tau_cc.sh -o simple $i -lrt -lpthread  &> /dev/null
+    tau_exec -memory -T serial ./simple
+    check_output
 
 
 done
