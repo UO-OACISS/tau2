@@ -15,11 +15,11 @@ import edu.uoregon.tau.perfdmf.FunctionProfile;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: TreeTableNode.java,v 1.12 2010/02/22 20:01:17 amorris Exp $</P>
+ * <P>CVS $Id: TreeTableNode.java,v 1.13 2010/06/09 01:28:26 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  */
-public class TreeTableNode extends DefaultMutableTreeNode implements Comparable {
+public class TreeTableNode extends DefaultMutableTreeNode implements Comparable<TreeTableNode> {
     private List children;
     private FunctionProfile functionProfile;
     private String displayName;
@@ -240,7 +240,7 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable 
         }
     }
 
-    public int compareTo(Object o) {
+    public int compareTo(TreeTableNode o) {
 
         int result = -99;
         if (model.getSortColumn() == 0) {

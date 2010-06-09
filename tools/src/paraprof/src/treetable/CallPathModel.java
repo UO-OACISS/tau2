@@ -15,13 +15,13 @@ import edu.uoregon.tau.perfdmf.Thread;
  *    
  * TODO : ...
  *
- * <P>CVS $Id: CallPathModel.java,v 1.11 2009/09/10 00:13:52 amorris Exp $</P>
+ * <P>CVS $Id: CallPathModel.java,v 1.12 2010/06/09 01:28:25 amorris Exp $</P>
  * @author  Alan Morris
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  */
 public class CallPathModel extends AbstractTreeTableModel {
 
-    private List roots;
+    private List<TreeTableNode> roots;
     private Thread thread;
     private DataSource dataSource;
     private ParaProfTrial ppTrial;
@@ -51,13 +51,13 @@ public class CallPathModel extends AbstractTreeTableModel {
 
     private void setupData() {
 
-        roots = new ArrayList();
+        roots = new ArrayList<TreeTableNode>();
         DataSorter dataSorter = new DataSorter(ppTrial);
 
         // don't ask the thread for its functions directly, since we want group masking to work
         List functionProfileList = dataSorter.getCallPathFunctionProfiles(thread);
 
-        Map rootNames = new HashMap();
+        Map<String, String> rootNames = new HashMap<String, String>();
 
         Group derived = ppTrial.getGroup("TAU_CALLPATH_DERIVED");
 
@@ -83,9 +83,9 @@ public class CallPathModel extends AbstractTreeTableModel {
                     }
                 }
             }
-            for (Iterator it = rootNames.keySet().iterator(); it.hasNext();) {
-                // no go through the strings and get the actual functions
-                String rootName = (String) it.next();
+            for (Iterator<String> it = rootNames.keySet().iterator(); it.hasNext();) {
+                // now go through the strings and get the actual functions
+                String rootName = it.next();
                 Function function = dataSource.getFunction(rootName);
 
                 TreeTableNode node;
@@ -93,8 +93,13 @@ public class CallPathModel extends AbstractTreeTableModel {
                 if (function == null) {
                     node = new TreeTableNode(null, this, rootName);
                 } else {
+
                     FunctionProfile fp = thread.getFunctionProfile(function);
-                    node = new TreeTableNode(fp, this, null);
+                    if (fp == null) {
+                        node = new TreeTableNode(null, this, rootName);
+                    } else {
+                        node = new TreeTableNode(fp, this, null);
+                    }
                 }
 
                 roots.add(node);
