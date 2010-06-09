@@ -35,6 +35,17 @@ Version 2.19 changes (from 2.18):
 22. Added support for PAPI-C v4.0 in TAU. Retains backward compatibility with earlier PAPI versions. 
 23. Added support for Cray CCE compilers on XT systems (module PrgEnv-cray).
 24. Added support for tracking pthread barrier wait times. 
+25. Added support for TAU over MRNet.
+26. Added a new tool (tau_exec) to evaluate I/O, memory and communication
+27. PerfExplorer has a new derived metric pane and updates to configuration
+28. tau_exec can also load wrapper libraries created by tau_wrap using -loadlib
+29. Added support for sampling based profiling (README.sampling)
+30. Added support for SHMEM wrappers for Cray XT
+31. Added support for Cray XMT (-arch=crayxmt)
+32. Added support for ScoreP (aka silc).
+33. ParaProf 2D and 3D communication matrices show nodes and not threads. 
+
+
 
 
 Version 2.18 changes (from 2.17):
