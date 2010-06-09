@@ -378,6 +378,8 @@ class CompInstF90Test(SimpleTest):
     def getActualTest(self):
         return "compf"
     def checkApplicable(self):
+        if usesOption(self.makefile, "upc") == True:
+            return False
         if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
             return False
         if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
@@ -394,6 +396,8 @@ class FflinkTest(SimpleTest):
         return "fflink"
 
     def checkApplicable(self):
+        if usesOption(self.makefile, "upc") == True:
+            return False
         if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
             return False
         if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
@@ -408,6 +412,8 @@ class FcpplinkTest(SimpleTest):
         return "fcpplink"
 
     def checkApplicable(self):
+        if usesOption(self.makefile, "upc") == True:
+            return False
         if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
             return False
         if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
@@ -421,6 +427,8 @@ class FclinkTest(SimpleTest):
         return "fclink"
 
     def checkApplicable(self):
+        if usesOption(self.makefile, "upc") == True:
+            return False
         if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
             return False
         if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
@@ -451,6 +459,8 @@ class MpiFTest(SimpleTest):
         return "mpif"
 
     def checkApplicable(self):
+        if usesOption(self.makefile, "upc") == True:
+            return False
         if usesOption(self.makefile, "mpi") == False:
             output("Skipping, not configured with MPI")
             return False
@@ -584,6 +594,8 @@ class PdtTestF(PdtTest):
     def getActualTest(self):
         return "pdtf"
     def checkApplicable(self):
+        if usesOption(self.makefile, "upc") == True:
+            return False
         if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
             return False
         if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
@@ -596,6 +608,8 @@ class PdtTestGF(PdtTest):
     def getActualTest(self):
         return "pdtgf"
     def checkApplicable(self):
+        if usesOption(self.makefile, "upc") == True:
+            return False
         if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
             return False
         if system("grep \"^TAU_F90 \" "+self.fullmakefile) != 0:
@@ -640,6 +654,8 @@ class PdtMPITestF(PdtTest):
     def getActualTest(self):
         return "pdtmpif"
     def checkApplicable(self):
+        if usesOption(self.makefile, "upc") == True:
+            return False
         if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
             return False
         if usesOption(self.makefile, "mpi") == False:
@@ -657,6 +673,8 @@ class PdtMPITestGF(PdtTest):
     def getActualTest(self):
         return "pdtmpigf"
     def checkApplicable(self):
+        if usesOption(self.makefile, "upc") == True:
+            return False
         if usesOption(self.makefile, "mpi") == True and usesOption(self.makefile, "epilog") == True:
             return False
         if usesOption(self.makefile, "mpi") == False:
