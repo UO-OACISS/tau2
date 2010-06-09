@@ -340,7 +340,7 @@ if [ $useropt = yes ] ; then
 fi
 
 # options common to all builds
-common="$archopt $ccompiler $fortrancompiler $useropts $tagopt $extraopts"
+common="$archopt $ccompiler $fortrancompiler $useropts $tagopt $extraopts -iowrapper"
 
 # configure TAU
 if [ "x$mpiopts" != "x" ] ; then
@@ -438,7 +438,7 @@ if [ $papi = yes ] ; then
     # PAPI with -pdt 
     if [ $pdt = yes ] ; then
 	echo "Configuring with $common $pdtopt $papiopt "
-	./configure $common $pdtopt $papiopt -iowrapper <wishver
+	./configure $common $pdtopt $papiopt <wishver
 	make clean; make $parallel install $TAU_MAKE_OPT
     fi
 fi
