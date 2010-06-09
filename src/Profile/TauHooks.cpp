@@ -362,6 +362,8 @@ void traceEntry(int id)
   dprintf("Inside traceEntry: id = %d fi = %lx\n", id, fi);
   dprintf("Name = %s\n", ((FunctionInfo *)fi)->GetName());
   if (id == tauFiniID) { 
+    Tau_stop_top_level_timer_if_necessary(); 
+	/* if there is .TAU application from tau_exec, write the files out */
     TAU_DISABLE_INSTRUMENTATION();
     dprintf("Disabling instrumentation found id = %d\n", id);
   } 
@@ -455,6 +457,6 @@ void tau_dyninst_cleanup()
 // EOF TauHooks.cpp
 /***************************************************************************
  * $RCSfile: TauHooks.cpp,v $   $Author: sameer $
- * $Revision: 1.34 $   $Date: 2010/04/30 23:22:24 $
- * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.34 2010/04/30 23:22:24 sameer Exp $ 
+ * $Revision: 1.35 $   $Date: 2010/06/09 15:11:36 $
+ * TAU_VERSION_ID: $Id: TauHooks.cpp,v 1.35 2010/06/09 15:11:36 sameer Exp $ 
  ***************************************************************************/
