@@ -1,0 +1,17 @@
+Startup and Initialization scheme (Simple scheme, other topologically
+sensitive schemes can be explored later):
+
+1. Make a job submission of size K = P + M where:
+   P = the number of processes to be used for the MPI user application; and
+   M = the number of processes reserved for the mrnet tree
+
+2. Submit an MPI probe of size P to find all unique hostnames {P} to
+hold the user processes.
+
+3. Submit an MPI probe of size K to find all unique hostnames {K} to
+hold all processes. {K - P} = {M}, the number of nodes to be reserved
+for the mrnet tree. If |{M}| x PPN < M, the assume that the last node
+in {P} can be shared between MPI and mrnet processes (and assign the
+shared number of processes for topology tree generation instead of
+PPN for that node).
+
