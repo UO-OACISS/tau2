@@ -96,7 +96,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -V)
-	      echo '$Id: tau_exec,v 1.18 2010/06/08 18:41:47 amorris Exp $';
+	      echo '$Id: tau_exec,v 1.19 2010/06/09 18:11:25 amorris Exp $';
 	      exit 0;
 	      ;;
 	  -T)
@@ -231,18 +231,8 @@ if [ $qsub_mode = false ]; then
 	exit
     fi 
 
-    $TAU_LDD "$prog" 2>/dev/null | grep libTAU$TAU_SHLIBX &> /dev/null
-    if [ $? == 1 ] ; then
-	nm "$prog" 2>/dev/null | grep Tau_init &> /dev/null
-	if [ $? == 1 ] ; then
-	    echoIfVerbose "TAU: Detected uninstrumented binary, adding TAU preload wrapper"
-	    TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libTAU-preload$TAU_SHLIBX
-	else
-	    echoIfVerbose "TAU: Detected instrumented binary, not using TAU preload wrapper"
-	fi
-    else 
-	echoIfVerbose "TAU: Detected instrumented binary, not using TAU preload wrapper"
-    fi
+    # always use the basic preload library now
+    TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libTAU-preload$TAU_SHLIBX
 fi
 
 
