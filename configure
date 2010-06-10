@@ -5462,7 +5462,7 @@ if [ $mrnet = yes ] ; then
   fi
 fi
 
-if [ $machine = ia64 -o $machine = x86_64 -o $machine = i386_linux -o $machine = craycnl -o $machine = bgp ] ; then
+if [ $machine = ia64 -o $machine = x86_64 -o $machine = i386_linux -o $machine = craycnl -o $machine = bgp -o $machine = mips -o $machine = mips32 -o $machine = ibm64linux -o $machine = ppc64 -o $machine = apple ] ; then
     extra_linker_args="${extralinker_args}#-Wl,--export-dynamic"
 fi
 
