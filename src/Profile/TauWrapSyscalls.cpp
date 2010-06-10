@@ -35,6 +35,7 @@
 /////////////////////////////////////////////////////////////////////////
 // Define the exit wrapper
 /////////////////////////////////////////////////////////////////////////
+#ifndef TAU_BGP
 extern "C" void exit(int status) {
 
   static void (*_internal_exit) (int status) = NULL;
@@ -52,6 +53,7 @@ extern "C" void exit(int status) {
   dprintf("TAU: calling _internal_exit \n");
   _internal_exit(status);
 }
+#endif /* TAU_BGP */
 
 #ifdef TAU_LINUX
 /////////////////////////////////////////////////////////////////////////
@@ -100,6 +102,7 @@ extern "C" void _exit(int status) {
 /////////////////////////////////////////////////////////////////////////
 // Define the fork wrapper
 /////////////////////////////////////////////////////////////////////////
+#ifndef TAU_BGP
 extern "C" pid_t fork(void) {
   static pid_t (*_fork) (void) = NULL;
 
@@ -120,11 +123,13 @@ extern "C" pid_t fork(void) {
   return pid_ret;
 
 }
+#endif /* TAU_BGP */
 
 
 /////////////////////////////////////////////////////////////////////////
 // Define the kill wrapper
 /////////////////////////////////////////////////////////////////////////
+#ifndef TAU_BGP
 extern "C" int kill(pid_t pid, int sig) {
 
   static int (*_kill) (pid_t pid, int sig) = NULL;
@@ -150,10 +155,11 @@ extern "C" int kill(pid_t pid, int sig) {
 
   return ret;
 }
+#endif /* TAU_BGP */
 
 
 /***************************************************************************
- * $RCSfile: TauWrapSyscalls.cpp,v $   $Author: wspear $
- * $Revision: 1.4 $   $Date: 2010/06/08 23:11:15 $
- * TAU_VERSION_ID: $Id: TauWrapSyscalls.cpp,v 1.4 2010/06/08 23:11:15 wspear Exp $
+ * $RCSfile: TauWrapSyscalls.cpp,v $   $Author: amorris $
+ * $Revision: 1.5 $   $Date: 2010/06/10 01:09:15 $
+ * TAU_VERSION_ID: $Id: TauWrapSyscalls.cpp,v 1.5 2010/06/10 01:09:15 amorris Exp $
  ***************************************************************************/
