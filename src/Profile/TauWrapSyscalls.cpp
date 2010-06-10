@@ -32,10 +32,14 @@
 
 #define dprintf TAU_VERBOSE 
 
+#if (defined (TAU_BGP) || defined(TAU_XLC))
+#define TAU_DISABLE_SYSCALL_WRAPPER
+#endif /* TAU_BGP || TAU_XLC */
+
 /////////////////////////////////////////////////////////////////////////
 // Define the exit wrapper
 /////////////////////////////////////////////////////////////////////////
-#ifndef TAU_BGP
+#ifndef TAU_DISABLE_SYSCALL_WRAPPER
 extern "C" void exit(int status) {
 
   static void (*_internal_exit) (int status) = NULL;
@@ -53,7 +57,7 @@ extern "C" void exit(int status) {
   dprintf("TAU: calling _internal_exit \n");
   _internal_exit(status);
 }
-#endif /* TAU_BGP */
+#endif /* TAU_DISABLE_SYSCALL_WRAPPER */
 
 #ifdef TAU_LINUX
 /////////////////////////////////////////////////////////////////////////
@@ -102,7 +106,7 @@ extern "C" void _exit(int status) {
 /////////////////////////////////////////////////////////////////////////
 // Define the fork wrapper
 /////////////////////////////////////////////////////////////////////////
-#ifndef TAU_BGP
+#ifndef TAU_DISABLE_SYSCALL_WRAPPER
 extern "C" pid_t fork(void) {
   static pid_t (*_fork) (void) = NULL;
 
@@ -123,13 +127,13 @@ extern "C" pid_t fork(void) {
   return pid_ret;
 
 }
-#endif /* TAU_BGP */
+#endif /* TAU_DISABLE_SYSCALL_WRAPPER */
 
 
 /////////////////////////////////////////////////////////////////////////
 // Define the kill wrapper
 /////////////////////////////////////////////////////////////////////////
-#ifndef TAU_BGP
+#ifndef TAU_DISABLE_SYSCALL_WRAPPER
 extern "C" int kill(pid_t pid, int sig) {
 
   static int (*_kill) (pid_t pid, int sig) = NULL;
@@ -155,11 +159,11 @@ extern "C" int kill(pid_t pid, int sig) {
 
   return ret;
 }
-#endif /* TAU_BGP */
+#endif /* TAU_DISABLE_SYSCALL_WRAPPER */
 
 
 /***************************************************************************
- * $RCSfile: TauWrapSyscalls.cpp,v $   $Author: amorris $
- * $Revision: 1.5 $   $Date: 2010/06/10 01:09:15 $
- * TAU_VERSION_ID: $Id: TauWrapSyscalls.cpp,v 1.5 2010/06/10 01:09:15 amorris Exp $
+ * $RCSfile: TauWrapSyscalls.cpp,v $   $Author: sameer $
+ * $Revision: 1.6 $   $Date: 2010/06/10 12:46:53 $
+ * TAU_VERSION_ID: $Id: TauWrapSyscalls.cpp,v 1.6 2010/06/10 12:46:53 sameer Exp $
  ***************************************************************************/
