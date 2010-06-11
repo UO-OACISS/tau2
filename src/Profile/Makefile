@@ -455,8 +455,8 @@ TauMemoryWrap.o	: TauMemoryWrap.cpp $(HDRS)
 TauIoWrap.o	: TauIoWrap.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
-TauWrapSyscalls.o : TauWrapSyscalls.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+TauWrapSyscalls.o : TauWrapSyscalls.c $(HDRS)
+	$(CC) $(CFLAGS) -c $(@:.o=.c)
 
 TauXML.o 	: TauXML.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
