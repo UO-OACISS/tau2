@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <signal.h>
+#include <Profile/TauEnv.h>
 
 
 #define dprintf TAU_VERBOSE 
