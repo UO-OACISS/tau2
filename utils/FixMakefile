@@ -1302,6 +1302,10 @@ case $1 in
         echo "NOTE: Using PAPI with x86_64 options"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     X86_64PAPI_NEW)
+        echo "NOTE: Using PAPI with x86_64 options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      IBMPAPI)
 	echo "NOTE: Using PAPI with PM Toolkit options ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

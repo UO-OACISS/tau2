@@ -339,6 +339,7 @@ extrashlibopts=
 pthread=no
 papithread=no
 papipfm=no
+papiperfctr=no
 papisubdir=
 charm=no
 comm=yes
@@ -3191,11 +3192,13 @@ EOF
           if $c_compiler $orig_useropt tau_papi_test.c -I$papidir/include -L$papidir/$papisubdir -lpfm -lpapi -lpfm -o tau_papi_test 1> /dev/null 2>&1 ; then
 	      fixmakeargs="$fixmakeargs PAPIPFM"
 	      papipfm=yes
+	      papiperfctr=no
 	  fi
 
           if $c_compiler $orig_useropt tau_papi_test.c -I$papidir/include -L$papidir/$papisubdir -lpfm -lpapi -lpfm -lperfctr -o tau_papi_test 1> /dev/null 2>&1 ; then
 	      fixmakeargs="$fixmakeargs PAPIPFMPERFCTR"
 	      papipfm=yes
+	      papiperfctr=yes
 	  fi
 	  /bin/rm -f tau_papi_test.c tau_papi_test
       fi		
@@ -3508,7 +3511,11 @@ case $machine in
 	linuxtimers=yes
 	
 	if [ $papi = yes ] ; then
-	    fixmakeargs="$fixmakeargs X86_64PAPI"
+	    if [ $papiperfctr = yes ] ; then
+	      fixmakeargs="$fixmakeargs X86_64PAPI"
+	    else
+	      fixmakeargs="$fixmakeargs X86_64PAPI_NEW"
+	    fi
 	fi
 	;;
      ibm64)
