@@ -2,7 +2,7 @@
 **                      Tuning and Analysis Utilities                      **
 **			http://www.cs.uoregon.edu/research/paracomp/tau    **
 *****************************************************************************
-**    Copyright 1997-2004                                                  **
+**    Copyright 1997-2010                                                  **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 **    Research Center Juelich, ZAM Germany                                 **
