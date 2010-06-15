@@ -27,6 +27,9 @@
 using namespace MRN;
 using namespace std;
 
+// Back-end rank
+int rank;
+
 // Using a global for now. Could make it object-based like Aroon's old
 //   codes later.
 Network *net;
@@ -34,9 +37,14 @@ Stream *ctrl_stream;
 // Determine whether to extend protocol to receive results from the FE.
 bool broadcastResults;
 
+// Unification structures
+FunctionEventLister *mrnetFuncEventLister;
+Tau_unify_object_t *mrnetFuncUnifier;
+AtomicEventLister *mrnetAtomEventLister;
+Tau_unify_object_t *mrnetAtomUnifier;
+
 extern "C" void Tau_mon_connect() {
   
-  int rank;
   int size;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -56,7 +64,7 @@ extern "C" void Tau_mon_connect() {
   // Rank 0 reads in all connection information and sends appropriate
   //   chunks to the other ranks.
   if (rank == 0) {
-    fprintf(stderr, "Connecting to ToM\n");
+    TAU_VERBOSE("Connecting to ToM\n");
 
     FILE *connections = fopen("attachBE_connections","r");
     // assume there are exactly size entries in the connection file.
@@ -122,16 +130,19 @@ extern "C" void Tau_mon_connect() {
 	    data);
   }
 
+  /* DEBUG 
   printf("[%d] Got ToM control stream. Proceeding with application code\n",
 	 rank);
+  */
 }
 
 // more like a "last call" for protocol action than an
 //   actual disconnect call. This call should not exit unless
 //   the front-end says so.
 extern "C" void Tau_mon_disconnect() {
-  fprintf(stderr, "Disconnecting from ToM\n");
-
+  if (rank == 0) {
+    TAU_VERBOSE("Disconnecting from ToM\n");
+  }
   // Tell front-end to tear down network and exit
   STREAM_FLUSHSEND(ctrl_stream, TOM_CONTROL, "%d", TOM_EXIT);
 }
@@ -160,28 +171,58 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
     net->recv(&protocolTag, p, &stream);
     
     switch (protocolTag) {
+    case PROT_UNIFY: {
+      // Rank 0 additionally responds to the front-end with all global
+      //   function name strings.
+      if (rank == 0) {
+	int tag;
+	PacketPtr p;
+	
+	printf("Num Global = %d\n", numGlobal);
+	net->recv(&tag, p, &stream);
+	STREAM_FLUSHSEND(stream, PROT_UNIFY, "%as",
+			 mrnetFuncUnifier->globalStrings, numGlobal);
+      }
+      break;
+    }
     case PROT_BASESTATS: {
-      printf("BE: Instructed by FE to report events and counters\n");
-      // no need to unpack the data. Just send a response to the front-end
-      STREAM_FLUSHSEND(stream, protocolTag, "%d %d", numGlobal, numCounters);
+      // *DEBUG* 
+      if (rank == 0) {
+	printf("BE: Instructed by FE to report events and counters.\n");
+      }
 
-      // Remember, ToM always responds to the incoming stream.
+      double *out_sums;
+      double *out_sumsofsqr;
+      double *out_mins;
+      double *out_maxes;
+      out_sums = (double *)TAU_UTIL_MALLOC(numGlobal*numCounters*
+					   sizeof(double));
+      out_sumsofsqr = (double *)TAU_UTIL_MALLOC(numGlobal*numCounters*
+						sizeof(double));
+      out_mins = (double *)TAU_UTIL_MALLOC(numGlobal*numCounters*
+					   sizeof(double));
+      out_maxes = (double *)TAU_UTIL_MALLOC(numGlobal*numCounters*
+					    sizeof(double));
+      // For each event, how many threads contribute values 
+      //   from this node?
+      int *threads;
+      threads = (int *)TAU_UTIL_MALLOC(numGlobal*sizeof(int));
+
+      // Construct the data arrays to be sent.
       for (int evt=0; evt<numGlobal; evt++) {
-	// printf("handling global event %d\n", evt);
 	if (globalToLocal[evt] != -1) {
 	  FunctionInfo *fi = TheFunctionDB()[globalToLocal[evt]];
 	  for (int ctr=0; ctr<numCounters; ctr++) {
 	    double sum = 0.0;
 	    double sumofsqr = 0.0;
 	    double min, max;
-	    
-	    net->recv(&protocolTag, p, &stream);
+
+	    int aIdx = evt*numCounters+ctr;
+
 	    // accumulate for threads but contribute as a node
 	    for (int tid=0; tid<numThreads; tid++) {
 	      // going to work only with exclusive values for now.
 	      double val = fi->getDumpExclusiveValues(tid)[ctr];
-	      // printf("[%d,%d,%d] read exclusive value %f\n", 
-	      //        evt, tid, ctr, val);
 	      sum += val;
 	      sumofsqr += val*val;
 	      if (tid == 0) {
@@ -196,22 +237,51 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
 		}
 	      }
 	    }
-	    // printf("[%d,%d] Sending %f %f %f %f %d %d\n", evt, ctr,
-	    //        sum, sumofsqr, min, max, numThreads, numThreads);
-	    // %f %f %f %f %d %d = sum sumofsqr min max contrib present
-	    STREAM_FLUSHSEND(stream, protocolTag, "%lf %lf %lf %lf %d %d",
-			     sum, sumofsqr, min, max, numThreads, numThreads);
+
+	    // Write thread-accumulated values into the appropriate arrays
+	    out_sums[aIdx] = sum;
+	    out_sumsofsqr[aIdx] = sumofsqr;
+	    out_mins[aIdx] = min;
+	    out_maxes[aIdx] = max;
 	  }
+	  threads[evt] = numThreads;
 	} else { /* globalToLocal[evt] != -1 */
 	  // send a null contribution for each counter associated with
 	  //   the function for this node
 	  for (int ctr=0; ctr<numCounters; ctr++) {
-	    net->recv(&protocolTag, p, &stream);
-	    STREAM_FLUSHSEND(stream, protocolTag, "%lf %lf %lf %lf %d %d",
-			     0.0, 0.0, 0.0, 0.0, 0, numThreads);
+	    int aIdx = evt*numCounters+ctr;
+	    out_sums[aIdx] = 0.0;
+	    out_sumsofsqr[aIdx] = 0.0;
+	    out_mins[aIdx] = 0.0;
+	    out_maxes[aIdx] = 0.0;
 	  }
+	  threads[evt] = 0;
 	} /* globalToLocal[evt] != -1 */
       }
+
+      /* DEBUG 
+      printf("[%d] BE: Sending out %d events, %d counters:\n", rank,
+	     numGlobal, numCounters);
+      for (int evt=0; evt<numGlobal; evt++) {
+	for (int ctr=0; ctr<numCounters; ctr++) {
+	  int aIdx = evt*numCounters+ctr;
+	  printf("[%d] BE [%d,%d]: %f %f %f %f %d\n", rank, 
+		 evt, ctr,
+		 out_sums[aIdx], out_sumsofsqr[aIdx], 
+		 out_mins[aIdx], out_maxes[aIdx],
+		 threads[evt]);
+	}
+      }
+      */
+      STREAM_FLUSHSEND(stream, protocolTag, "%d %d %alf %alf %alf %alf %ad %d",
+		       numGlobal, numCounters,
+		       out_sums, numGlobal*numCounters,
+		       out_sumsofsqr, numGlobal*numCounters,
+		       out_mins, numGlobal*numCounters,
+		       out_maxes, numGlobal*numCounters,
+		       threads, numGlobal,
+		       numThreads);
+      
 
       // Get results of the protocol from the front-end.
       if (broadcastResults) {
@@ -220,7 +290,7 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
 	p->unpack("%alf %alf",
 		  &means, &numMeans, &std_devs, &numStdDevs,
 		  &mins, &numMins, &maxes, &numMaxes);
-	/*
+	/* DEBUG
 	printf("BE: Received %d values from FE\n", numMeans);
 	for (int val=0; val<numMeans; val++) {
 	  printf("BE: [%d] Mean:%f StdDev:%f\n", val, 
@@ -315,11 +385,13 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
     }
     }
   } /* while (processProtocol) */
-  printf("Protocol handled. Proceeding with application computation\n");
+  if (rank == 0) {
+    TAU_VERBOSE("BE: Protocol handled. Application computation follows.\n");
+  }
 }
 
 extern "C" void Tau_mon_onlineDump() {
-  printf("Tau Mon data ready for dump.\n");
+  // *DEBUG* printf("Tau Mon data ready for dump.\n");
 
   // Need to get data loaded and computed from the stacks
   int numThreads = RtsLayer::getNumThreads();
@@ -328,18 +400,17 @@ extern "C" void Tau_mon_onlineDump() {
   }
 
   // Unify events
-  FunctionEventLister *functionEventLister = new FunctionEventLister();
-  Tau_unify_object_t *functionUnifier = 
-    Tau_unify_unifyEvents(functionEventLister);
-  AtomicEventLister *atomicEventLister = new AtomicEventLister();
-  Tau_unify_object_t *atomicUnifier = Tau_unify_unifyEvents(atomicEventLister);
+  mrnetFuncEventLister = new FunctionEventLister();
+  mrnetFuncUnifier = Tau_unify_unifyEvents(mrnetFuncEventLister);
+  mrnetAtomEventLister = new AtomicEventLister();
+  mrnetAtomUnifier = Tau_unify_unifyEvents(mrnetAtomEventLister);
 
   // process events in global order, pretty much the same way Collate handles
   //   the unified data.
 
   // the global number of events
-  int numGlobal = functionUnifier->globalNumItems;
-  int numLocal = functionUnifier->localNumItems;
+  int numGlobal = mrnetFuncUnifier->globalNumItems;
+  int numLocal = mrnetFuncUnifier->localNumItems;
   assert(numLocal <= numGlobal);
   int *globalToLocal = 
     (int*)TAU_UTIL_MALLOC(numGlobal*sizeof(int));
@@ -350,7 +421,7 @@ extern "C" void Tau_mon_onlineDump() {
   }
   for (int i=0; i<numLocal; i++) {
     // set reverse unsorted mapping
-    globalToLocal[functionUnifier->mapping[i]] = functionUnifier->sortMap[i];
+    globalToLocal[mrnetFuncUnifier->mapping[i]] = mrnetFuncUnifier->sortMap[i];
   }
 
   /* DEBUG  
@@ -368,6 +439,8 @@ extern "C" void Tau_mon_onlineDump() {
   // Tell the MRNet front-end that the data is ready and wait for
   //   protocol instructions.
   STREAM_FLUSHSEND(ctrl_stream, TOM_CONTROL, "%d", PROT_DATA_READY);
+
+  // Start the protocol loop.
   protocolLoop(globalToLocal, numGlobal);
 }
 

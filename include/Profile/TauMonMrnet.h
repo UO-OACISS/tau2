@@ -16,15 +16,17 @@
 // Protocol definitions to be shared between any C++ ToM front-ends and the
 //   application back-ends.
 
+const int NUM_TOM_BASE_TAGS = 4;
+
 enum {
   TOM_CONTROL = FirstApplicationTag,
   TOM_EXIT,         // shutdown application
 
-  PROT_EXIT,        // exit protocol loop
   PROT_DATA_READY,  // data ready signal from application
+  PROT_EXIT,        // exit protocol loop
 
+  PROT_UNIFY,       // event unification protocol
   PROT_BASESTATS,   // basic statistics protocol
-
   PROT_HIST,        // histogramming protocol
 
   PROT_CLASSIFIER,  // classification protocol

@@ -1,4 +1,8 @@
 # To be set by TAU configure
+
+# If shared libraries are disabled (probably due to system restrictions)
+#NOSHARED#TOM_EXTRA_DEF=-DTOM_NO_SHARED #ENDIF#
+
 TAUROOT=
 MRNET_ROOT=
 MRNET_INCLUDE=
@@ -10,7 +14,7 @@ MRNET_LIBS=
 #   from TAU's, CXXFLAGS cannot also make use of TAU's defintions.
 INSTALL_ROOT = ${HOME}/software
 CXX = g++
-CXXFLAGS = -O2 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -Dcompiler_gnu -fno-default-inline $(INCLUDE)
+CXXFLAGS = -O2 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -Dcompiler_gnu -fno-default-inline $(TOM_EXTRA_DEF) $(INCLUDE)
 
 # NOT TO BE MODIFIED. These definitions depend strictly on the above
 #   TAU settings, no more, no less.
@@ -20,8 +24,8 @@ SOFLAGS = -fPIC -shared -rdynamic
 
 # Development definitions for ToM to build correctly
 BINARIES = ToM_FE
-TOM_FILTERS = ToM_Sync_Filter.so ToM_Histogram_Filter.so
-EXPR_FILTERS = ToM_Test_Filter.so ToM_StatsSingle_Filter.so
+TOM_FILTERS = ToM_Sync_Filter.so ToM_Stats_Filter.so ToM_Histogram_Filter.so
+EXPR_FILTERS = ToM_Test_Filter.so ToM_StatsSingle_Filter.so 
 FILTERS = ${TOM_FILTERS} ${EXPR_FILTERS}
 
 all: $(BINARIES) $(FILTERS)
