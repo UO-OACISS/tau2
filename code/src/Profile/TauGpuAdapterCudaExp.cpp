@@ -1,4 +1,4 @@
-#include "nVidia_exp_adapter.h"
+#include "TauGpuAdapterCudaExp.h"
 #include<dlfcn.h>
 
 ToolsAPI gs_toolsapi;
@@ -190,11 +190,11 @@ void CUDAAPI callback_handle(
 				memcpyType = MemcpyDtoH;
 			}
 			MemcpyEventMap.insert(make_pair(id, memcpyType));
-			enter_cu_memcpy_event(cParams->functionName, &id, &gId, memcpyType);
+			enter_memcpy_event(cParams->functionName, &id, &gId, memcpyType);
 		}
 		else
 		{
-			enter_cu_event(cParams->functionName, &id);
+			enter_event(cParams->functionName, &id);
 		}
 	}
 	else if (*callbackId == cuToolsApi_CBID_ExitGeneric)
@@ -218,11 +218,11 @@ void CUDAAPI callback_handle(
 				memcpyType = MemcpyDtoH;
 			}
 			MemcpyEventMap.insert(make_pair(id, memcpyType));
-			exit_cu_memcpy_event(cParams->functionName, &id, &gId, memcpyType);
+			exit_memcpy_event(cParams->functionName, &id, &gId, memcpyType);
 		}
 		else
 		{
-		exit_cu_event(cParams->functionName, &id);
+		exit_event(cParams->functionName, &id);
 		}
 	}
 	else if (*callbackId == cuToolsApi_CBID_ProfileLaunch)
@@ -379,7 +379,7 @@ inline int InitializeToolsApi(void)
 		}
 		
 		//tau specific initializations	
-		tau_cuda_init();
+		tau_gpu_init();
 		
 		
 		return TAUCUDA_SUCCESS;
@@ -406,7 +406,7 @@ void onunload(void)
 
 void shutdown_tool_api(void)
 {
-	tau_cuda_exit();	
+	tau_gpu_exit();	
 	//gs_toolsapi.managers.clear();
 	if (gs_toolsapi.coreTable)
 	{

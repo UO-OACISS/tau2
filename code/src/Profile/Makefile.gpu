@@ -3,19 +3,19 @@
 # TAUCUDA Build Makefile                               #
 ########################################################
 
-include ../../common.mk
+include ../../gpu.mk
 include ${TAU_MAKEFILE} 
 
 TARGET_LIB_OLD := libtaucuda-old.so
 TARGET_LIB := libtaucuda.so
-TAUCUDA_SRC := taucuda.cpp 
-TAUCUDA_OBJ := taucuda.o
-NVIDIA_SRC := nVidia_exp_adapter.cpp
-NVIDIA_OBJ := nVidia_exp_adapter.o
+TAUCUDA_SRC := TauGpu.cpp 
+TAUCUDA_OBJ := TauGpu.o
+NVIDIA_SRC := TauGpuAdapterCudaExp.cpp
+NVIDIA_OBJ := TauGpuAdapterCudaExp.o
 
 LIBDIR=lib
 
-INCLUDES = -I. -I$(CUDA_BASE)/include -I$(CUDA_SDK)/common/inc -I$(TAUROOT)/include 
+INCLUDES = -I../../include/Profile -I$(CUDA_BASE)/include -I$(CUDA_SDK)/common/inc -I$(TAUROOT)/include 
 
 CPP=g++ -g
 CC=gcc -g

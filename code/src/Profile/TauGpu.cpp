@@ -7,14 +7,14 @@
 **    Advanced Computing Laboratory                                        **
 ****************************************************************************/
 /***************************************************************************
-**      File            : taucuda.cpp                                     **
+**      File            : TauGpu.cpp                                      **
 **      Description     : TAU trace format reader library header files    **
 **      Author          : Shangkar Mayanglambam                           **
 **                      : Scott Biersdorff                                **
 **      Contact         : scottb@cs.uoregon.edu                           **
 ***************************************************************************/
 
-#include "taucuda_interface.h"
+#include "TauGpu.h"
 #include "TAU.h"
 #include <Profile/TauTrace.h>
 #include <Profile/TauInit.h>
@@ -70,14 +70,14 @@ void check_gpu_event()
 /* create TAU callback routine to capture both CPU and GPU execution time 
 	takes the thread id as a argument. */
 
-void enter_cu_event(const char* name, eventId *id)
+void enter_event(const char* name, eventId *id)
 {
 #ifdef DEBUG_PROF
 	printf("entering cu event: %s.\n", name);
 #endif
 	TAU_START(name);
 }
-void enter_cu_memcpy_event(const char* name, eventId *id, gpuId *device, bool
+void enter_memcpy_event(const char* name, eventId *id, gpuId *device, bool
 memcpyType)
 {
 #ifdef DEBUG_PROF
@@ -94,7 +94,7 @@ memcpyType)
 	}
 	TAU_START(name);
 }
-void exit_cu_memcpy_event(const char* name, eventId *id, gpuId *device, bool
+void exit_memcpy_event(const char* name, eventId *id, gpuId *device, bool
 memcpyType)
 {
 #ifdef DEBUG_PROF
@@ -112,7 +112,7 @@ memcpyType)
 	TAU_STOP(name);
 }
 
-void exit_cu_event(const char *name, eventId *id)
+void exit_event(const char *name, eventId *id)
 {
 #ifdef DEBUG_PROF
 	printf("exit cu event: %s.\n", name);
@@ -198,7 +198,7 @@ endTime, double transferSize, bool memcpyType)
 	printf("time is: %f:%f.\n", startTime, endTime);
 #endif
 	if (memcpyType == MemcpyHtoD) {
-		stage_gpu_event("cuda Memory copy Host to Device", 
+		stage_gpu_event("Memory copy Host to Device", 
 				startTime);
 		//TAU_REGISTER_EVENT(MemoryCopyEventHtoD, "Memory copied from Host to Device");
 		TAU_EVENT(MemoryCopyEventHtoD(), transferSize);
@@ -207,12 +207,12 @@ endTime, double transferSize, bool memcpyType)
 		printf("[%f] onesided event mem recv: %f, id: %s.\n", startTime, transferSize,
 		device->printId());
 #endif
-		break_gpu_event("cuda Memory copy Host to Device",
+		break_gpu_event("Memory copy Host to Device",
 				endTime);
 		TauTraceOneSidedMsg(MESSAGE_RECV, device, transferSize, gpuTask);
 	}
 	else {
-		stage_gpu_event("cuda Memory copy Device to Host", 
+		stage_gpu_event("Memory copy Device to Host", 
 				startTime);
 		//TAU_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
 		TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
@@ -222,15 +222,15 @@ endTime, double transferSize, bool memcpyType)
 		device->printId());
 #endif
 		TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, gpuTask);
-		break_gpu_event("cuda Memory copy Device to Host",
+		break_gpu_event("Memory copy Device to Host",
 				endTime);
 	}
 
 }
 /*
-	Initialization routine for taucuda
+	Initialization routine for TAU
 */
-int tau_cuda_init(void)
+int tau_gpu_init(void)
 {
 		TAU_PROFILE_SET_NODE(0);
 		TAU_PROFILER_CREATE(main_ptr, ".TAU application", "", TAU_USER);
@@ -256,9 +256,9 @@ int tau_cuda_init(void)
 
 
 /*
-	finalization routine for taucuda
+	finalization routine for TAU
 */
-void tau_cuda_exit(void)
+void tau_gpu_exit(void)
 {
 #ifdef DEBUG_PROF
 		cerr << "stopping first gpu event.\n" << endl;
@@ -272,5 +272,5 @@ void tau_cuda_exit(void)
 #ifdef DEBUG_PROF
 		printf("stopping level 2.\n");
 #endif
-	  TAU_PROFILE_EXIT("cuda");
+	  TAU_PROFILE_EXIT("tau_gpu");
 }

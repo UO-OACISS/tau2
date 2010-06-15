@@ -18,18 +18,16 @@
 #pragma once
 #define cuToolsApi_INITGUID
 
-#include <cuda_toolsapi.h>
-#include <cuda_toolsapi_tau.h>
+#include <CudaExp/cuda_toolsapi.h>
+#include <CudaExp/cuda_toolsapi_tau.h>
 
-#include "taucuda_interface.h"
+#include "TauGpu.h"
 
 #include<iostream>
 #include<list>
 #include<map>
 #include<string>
 #include<fstream>
-#include <TAU_tf.h>
-#include "TAU_tf_headers.h"
 using namespace std;
 
 

@@ -1,5 +1,5 @@
-#ifndef _TAU_CUDA_INTERFACE
-#define _TAU_CUDA_INTERFACE
+#ifndef _TAU_GPU_INTERFACE
+#define _TAU_GPU_INTERFACE
 
 #define MESSAGE_SEND 0
 #define MESSAGE_RECV 1
@@ -29,26 +29,27 @@ class eventId {
 
 /************************************************************************
  * Performance Hooks. The following routines are hooks into the executaion
- * of CUDA applications. 
+ * of GPU applications. 
  */
 
-/* Initialization to be executed at load time */
-extern "C" int tau_cuda_init(void);
+/* Initialization to be executed at the start of the application */
+extern "C" int tau_gpu_init(void);
 
-/* Stuff to be performed when the library is destroyed */
-extern "C" void tau_cuda_exit(void);
+/* Stuff to be performed at the end of the application */
+extern "C" void tau_gpu_exit(void);
 
-/* Entry point for cu* routines */
-extern "C" void enter_cu_event(const char *functionName, eventId *id);
+/* Entry point for CPU routines */
+extern "C" void enter_event(const char *functionName, eventId *id);
 
-/* Entry point for cu* routines that initiate memory copies. */
-extern "C" void enter_cu_memcpy_event(const char *functionName, eventId *id,
+/* Entry point for CPU routines that initiate a memory copy to the GPU */
+extern "C" void enter_memcpy_event(const char *functionName, eventId *id,
 gpuId *device, bool memcpyType);
 
-/* Exit point for cu* routines */
-extern "C" void exit_cu_event(const char *functionName, eventId *id);
+/* Exit point for CPU routines */
+extern "C" void exit_event(const char *functionName, eventId *id);
 
-extern "C" void exit_cu_memcpy_event(const char *functionName, eventId *id,
+/* Exit point for CPU routines that initiate a memory copy to the GPU */
+extern "C" void exit_memcpy_event(const char *functionName, eventId *id,
 gpuId *device, bool memcpyType);
 
 /* Callback for a GPU event that occurred earlier in the execution of the
@@ -61,5 +62,5 @@ endTime);
 extern "C" void register_memcpy_event(eventId *id, gpuId *device, double startTime, double
 endTime, double transferSize, bool memcpyType);
 
-#endif // _TAU_CUDA_INTERFACE
+#endif // _TAU_GPU_INTERFACE
 
