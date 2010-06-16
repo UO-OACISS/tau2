@@ -1,0 +1,33 @@
+Configure TAU with:
+
+./configure -setnode0 -mpi -pthread -useropt="-fPIC -g"
+
+Set your TAU_MAKEFILE to the resulting TAU stub Makefile, add your tau2/x86_64/lib directory to the $LD_LIBRARY_PATH and then type:
+
+make
+
+-----------
+
+To do this manually:
+
+cd wrapper
+make clean ; make
+cd ../tau_nexus
+make clean ; make
+
+Then you can run examples from the release directory.  To run on mist:
+
+qsub -I -q cuda
+
+Then in the release directory:
+
+./taucuda_profiler.sh ./simpleMultiGPU
+
+Make sure your tau2/x86_64/lib directory is in the $LD_LIBRARY_PATH
+
+
+NOTES:
+
+set TAU_METRICS=TAUCUDA_TIME adding any other timers will not work.
+
+set TAU_SYNCHRONZIE_CLOCKS=0 otherwise traces will have 0 timestamp.
