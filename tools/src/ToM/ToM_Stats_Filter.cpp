@@ -12,7 +12,8 @@ extern "C" {
   //      1. how many threads contribute to this function
   //      2. There are k counters.
   //   For each counter, we have 1 set of statistics.
-  const char *ToM_Stats_Filter_format_string = "%alf %alf %alf %alf %ad %ad";
+  const char *ToM_Stats_Filter_format_string = 
+    "%d %d %alf %alf %alf %alf %ad %d";
 
   // Get Sum, Sum of Squares, Count, Min and Max
   //    - Avg, Variance, Std Dev can be derived from these values.
@@ -25,66 +26,116 @@ extern "C" {
     // initial values are the same as that of a null-contribution
     //   in the event all of this treenode's children make 
     //   null-contributions.
-    double sum = 0.0;
-    double sumOfSquares = 0.0;
-    double min;
-    double max;
-    int num_contrib = 0;
-    int num_threads = 0;
+    double *sums;
+    double *sumsofsqr;
+    double *mins;
+    double *maxes;
+    int *activeThreads;
+    int totalThreads = 0;
 
-    int numEvt, numCtr;
-
-    bool firstNonNull = true;
+    int numEvents = 0;
+    int numCounters = 0; 
+    int numItems = 0; // sanity check
 
     for (int i=0; i<pin.size(); i++) {
       PacketPtr curr = pin[i];
 
-      double *in_sum;
-      int in_sum_len;
-      double *in_sos;
-      int in_sos_len;
-      double *in_min;
-      int in_min_len;
-      double *in_max;
-      int in_max_len;
-      int numData;
-      int in_numThreads;
+      int in_events = 0;
+      int in_counters = 0;
 
-      curr->unpack(ToM_Stats_Filter_format_string,
-		   &in_sum, &in_sum_len, &in_sos, &in_sos_len,
-		   &in_min, &in_min_len, &in_max, &in_max_len,
-		   &numData, &in_numThreads);
+      double *in_sums;
+      int in_sums_len = 0;
+      double *in_sumsofsqr;
+      int in_sumsofsqr_len = 0;
+      double *in_mins;
+      int in_mins_len = 0;
+      double *in_maxes;
+      int in_maxes_len= 0;
+      int *in_activethreads;
+      int in_active_len = 0;
+      int in_totalThreads = 0;
 
-      //      printf("Node: Received [p:%d] - %f %f %f %f %d %d\n", i,
-      //	     in_sum, in_sos, in_min, in_max, numData, in_numThreads);
+      curr->unpack(ToM_Stats_Filter_format_string, &in_events, &in_counters,
+		   &in_sums, &in_sums_len, &in_sumsofsqr, &in_sumsofsqr_len,
+		   &in_mins, &in_mins_len, &in_maxes, &in_maxes_len,
+		   &in_activethreads, &in_active_len, &in_totalThreads);
 
-      // handling cases where a child sends a null-contribution
-      if (numData > 0) {
-	if (firstNonNull) {
-	  min = in_min;
-	  max = in_max;
-	  firstNonNull = false;
-	} else {
-	  if (min > in_min) {
-	    min = in_min;
-	  }
-	  if (max < in_max) {
-	    max = in_max;
+      // local sanity check
+      int in_items = in_events*in_counters;
+      assert((in_items == in_sums_len) &&
+	     (in_items == in_sumsofsqr_len) &&
+	     (in_items == in_mins_len) &&
+	     (in_items == in_maxes_len) &&
+	     (in_items == in_active_len) &&
+	     (in_items > 0));
+      
+      if (i == 0) {
+	sums = in_sums;
+	sumsofsqr = in_sumsofsqr;
+	mins = in_mins;
+	maxes = in_maxes;
+	activeThreads = in_activethreads;
+
+	numEvents = in_events;
+	numCounters = in_counters;
+	numItems = in_items;
+
+	/* DEBUG 
+	printf("COMM: Incoming item:\n");
+	for (int evt=0; evt<numEvents; evt++) {
+	  for (int ctr=0; ctr<numCounters; ctr++) {
+	    int aIdx = evt*numCounters+ctr;
+	    printf("COMM [%d,%d] %f %f %f %f %d\n", evt, ctr,
+		   sums[aIdx], sumsofsqr[aIdx], mins[aIdx], maxes[aIdx],
+		   activeThreads[evt]);
 	  }
 	}
-	sum += in_sum;
-	sumOfSquares += in_sos;
-	num_contrib += numData;
+	*/
+      } else {
+	// global sanity check
+	assert((numEvents == in_events) &&
+	       (numCounters == in_counters));
+	for (int evt=0; evt<numEvents; evt++) {
+	  for (int ctr=0; ctr<numCounters; ctr++) {
+	    int aIdx = evt*numCounters+ctr;
+	    sums[aIdx] += in_sums[aIdx];
+	    sumsofsqr[aIdx] += in_sumsofsqr[aIdx];
+	    if (mins[aIdx] > in_mins[aIdx]) {
+	      mins[aIdx] = in_mins[aIdx];
+	    }
+	    if (maxes[aIdx] < in_maxes[aIdx]) {
+	      maxes[aIdx] = in_maxes[aIdx];
+	    }
+	  }
+	  activeThreads[evt] += in_activethreads[evt];
+	}
       }
-      // always take care of all threads present
-      num_threads += in_numThreads;
+      totalThreads += in_totalThreads;
     }
+
+    /* DEBUG 
+    printf("COMM: Outgoing item:\n");
+    for (int evt=0; evt<numEvents; evt++) {
+      for (int ctr=0; ctr<numCounters; ctr++) {
+	int aIdx = evt*numCounters+ctr;
+	printf("COMM [%d,%d] %f %f %f %f %d\n", evt, ctr,
+	       sums[aIdx], sumsofsqr[aIdx], mins[aIdx], maxes[aIdx],
+	       activeThreads[evt]);
+      }
+    }
+    */
 
     PacketPtr new_packet (new Packet(pin[0]->get_StreamId(),
 				     pin[0]->get_Tag(),
 				     ToM_Stats_Filter_format_string, 
-				     sum, sumOfSquares, min, max,
-				     num_contrib, num_threads));
+				     numEvents, numCounters,
+				     sums, numItems,
+				     sumsofsqr, numItems,
+				     mins, numItems,
+				     maxes, numItems,
+				     activeThreads, numEvents,
+				     totalThreads));
+
     pout.push_back(new_packet);
   }
 
