@@ -184,8 +184,8 @@ void register_gpu_event(const char *name, eventId *id, double startTime, double 
 {
 	stage_gpu_event(name, 
 		startTime);
-	TAU_REGISTER_CONTEXT_EVENT(k1, "sample kernel data");
-	TAU_CONTEXT_EVENT(k1,1000);
+	//TAU_REGISTER_CONTEXT_EVENT(k1, "sample kernel data");
+	//TAU_CONTEXT_EVENT(k1,1000);
 	break_gpu_event(name,
 			endTime);
 }
