@@ -1161,9 +1161,8 @@ extern "C" void Tau_profile_param1l(long data, const char *dataname) {
   The following is for supporting pure and elemental fortran subroutines
 */
 
-
-map<string, FunctionInfo *>& ThePureMap() {
-  static map<string, FunctionInfo *> pureMap;
+TAU_HASH_MAP<string, FunctionInfo *>& ThePureMap() {
+  static TAU_HASH_MAP<string, FunctionInfo *> pureMap;
   return pureMap;
 }
 
@@ -1176,7 +1175,7 @@ extern "C" void Tau_pure_start_task(const char *name, int tid)
 {
   FunctionInfo *fi = 0;
   string n = string(name);
-  map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
+  TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
   if (it == ThePureMap().end()) {
     tauCreateFI((void**)&fi,n,"",TAU_USER,"TAU_USER");
     ThePureMap()[n] = fi;
@@ -1186,13 +1185,13 @@ extern "C" void Tau_pure_start_task(const char *name, int tid)
   Tau_start_timer(fi,0, tid);
 }
 extern "C" void Tau_pure_start(const char *name) {
-	Tau_pure_start_task(name, Tau_get_tid());
+  Tau_pure_start_task(name, Tau_get_tid());
 }
 
 extern "C" void Tau_pure_stop_task(const char *name, int tid) {
   FunctionInfo *fi;
   string n = string(name);
-  map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
+  TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
   if (it == ThePureMap().end()) {
     fprintf (stderr, "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\nTAU Error: You will likely get an overlapping timer message next\n\n", name);
   } else {
@@ -1200,15 +1199,14 @@ extern "C" void Tau_pure_stop_task(const char *name, int tid) {
     Tau_stop_timer(fi, tid);
   }
 }
-extern "C" void Tau_pure_stop(const char *name)
-{
-	Tau_pure_stop_task(name, Tau_get_tid());
+extern "C" void Tau_pure_stop(const char *name) {
+  Tau_pure_stop_task(name, Tau_get_tid());
 }
 
 extern "C" void Tau_static_phase_start(char *name) {
   FunctionInfo *fi = 0;
   string n = string(name);
-  map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
+  TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
   if (it == ThePureMap().end()) {
     tauCreateFI((void**)&fi,n,"",TAU_USER,"TAU_USER");
     Tau_mark_group_as_phase(fi);
@@ -1222,7 +1220,7 @@ extern "C" void Tau_static_phase_start(char *name) {
 extern "C" void Tau_static_phase_stop(char *name) {
   FunctionInfo *fi;
   string n = string(name);
-  map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
+  TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
   if (it == ThePureMap().end()) {
     fprintf (stderr, "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\nTAU Error: You will likely get an overlapping timer message next\n\n", name);
   } else {
@@ -1264,7 +1262,7 @@ extern "C" void Tau_dynamic_start(char *name, int isPhase) {
   free(newName);
   
   RtsLayer::LockDB();
-  map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
+  TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
   if (it == ThePureMap().end()) {
     tauCreateFI((void**)&fi,n,"",TAU_USER,"TAU_USER");
     if (isPhase) {
@@ -1296,7 +1294,7 @@ extern "C" void Tau_dynamic_stop(char *name, int isPhase) {
   string n (newName);
   free(newName);
   RtsLayer::LockDB();
-  map<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
+  TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
   if (it == ThePureMap().end()) {
     fprintf (stderr, "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\nTAU Error: You will likely get an overlapping timer message next\n\n", name);
     RtsLayer::UnLockDB();
