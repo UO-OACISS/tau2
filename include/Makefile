@@ -227,6 +227,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 ############# Fortran Compiler #############
 #GNU_FORTRAN#TAU_F90         = g77              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #GNU_GFORTRAN#TAU_F90         = gfortran              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#GNU_GFORTRAN4#TAU_F90        = gfortran4             $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #G95_FORTRAN#TAU_F90         = g95              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #SC_GFORTRAN#TAU_F90         = scgfortran              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #SGI_FORTRAN#TAU_F90         = f90              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
