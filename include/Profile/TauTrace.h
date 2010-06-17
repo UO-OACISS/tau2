@@ -40,9 +40,7 @@
 #define TAU_ONESIDED_MESSAGE_ID_1 70002
 #define TAU_ONESIDED_MESSAGE_ID_2 70003
 
-#ifdef TAU_CUDA
-#include "taucuda_interface.h"
-#endif
+#include "TauGpu.h"
 
 /* event record description */
 typedef struct {
