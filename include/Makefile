@@ -952,6 +952,24 @@ TAU_CCOMPILER     = $(TAU_CC)
 #SHMEM#TAU_SHMEM_INCLUDE	= $(TAU_SHMEM_INC) #ENDIF#
 
 #SHMEM#TAU_SHMEM_LIBS	= -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/ -lTauShmem$(TAU_CONFIG) $(TAU_SHMEM_LIB) #ENDIF#
+
+#############################################
+# TAU GPU LIBRARIES
+#############################################
+#CUDA_GPU#TAU_CUDA_OBJ=TauGpuAdapterCudaExp.o   #ENDIF#
+#OPENCL_GPU#TAU_OPENCL_OBJ=TauGpuAdapterOpenCL.o#ENDIF#
+#CUDA_GPU#TAU_CUDA_LIB=libTAU_CUDA.so           #ENDIF#
+#OPENCL_GPU#TAU_OPENCL_LIB=libTAU_openCL.so     #ENDIF#
+#GPU#TAU_GPU_LIB=$(TAU_CUDA_LIB)$(TAU_OPENCL_LIB)   #ENDIF#
+#GPU#TAU_GPU_OBJS=$(TAU_CUDA_OBJ)$(TAU_OPENCL_OBJ)  #ENDIF#
+
+TAU_GPU_INC=
+#############################################
+
+
+
+
+
 #############################################
 # TAU COMPILER SHELL SCRIPT OPTIONS
 TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
