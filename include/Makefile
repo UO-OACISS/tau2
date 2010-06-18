@@ -956,12 +956,12 @@ TAU_CCOMPILER     = $(TAU_CC)
 #############################################
 # TAU GPU LIBRARIES
 #############################################
-#CUDA_GPU#TAU_CUDA_OBJ=TauGpuAdapterCudaExp.o   #ENDIF#
-#OPENCL_GPU#TAU_OPENCL_OBJ=TauGpuAdapterOpenCL.o#ENDIF#
-#CUDA_GPU#TAU_CUDA_LIB=libTAU_CUDA.so           #ENDIF#
-#OPENCL_GPU#TAU_OPENCL_LIB=libTAU_openCL.so     #ENDIF#
-#GPU#TAU_GPU_LIB=$(TAU_CUDA_LIB)$(TAU_OPENCL_LIB)   #ENDIF#
-#GPU#TAU_GPU_OBJS=$(TAU_CUDA_OBJ)$(TAU_OPENCL_OBJ)  #ENDIF#
+#CUDA_GPU#TAU_CUDA_OBJ=TauGpuAdapterCudaExp.o   					#ENDIF#
+#OPENCL_GPU##OPENCL_GPU#TAU_OPENCL_OBJ=TauGpuAdapterOpenCL.o#ENDIF#
+#CUDA_GPU# TAU_CUDA_LIB=libTAU_CUDA.so           					#ENDIF#
+#OPENCL_GPU##OPENCL_GPU#TAU_OPENCL_LIB=libTAU_openCL.so     #ENDIF#
+#GPU# TAU_GPU_LIB=$(TAU_CUDA_LIB)$(TAU_OPENCL_LIB)    #ENDIF#
+#GPU# TAU_GPU_OBJS=$(TAU_CUDA_OBJ)$(TAU_OPENCL_OBJ) TauGpu.o     #ENDIF#
 
 TAU_GPU_INC=
 #############################################
