@@ -1,9 +1,16 @@
+# Set by TAU configure
+TAU_MPI_INC=
+TAU_MPILIB_DIR=
+
 # To be set by user. These are standard MPI C/C++ codes.
-INSTALL_DIR = ${HOME}/software/bin
-CXX = mpiCC
-CC = mpicc
-INCLUDE = -I/usr/local/packages/openmpi-1.2.6/gnu-4.1.2-tm/include
-LIB = -L/usr/local/packages/openmpi-1.2.6/gnu-4.1.2-tm/lib
+INSTALL_DIR = ${LUSTRE_HOME}/software/bin
+CXX = CC
+CC = cc
+
+# MAY need to be set by user. We take whatever TAU defines for locating
+#   MPI, but if none is found, the user may have to set them.
+INCLUDE = ${TAU_MPI_INC}
+LIB = -L${TAU_MPILIB_DIR} -lmpich
 
 # Development definitions for ToM support software
 BINARIES = probe probeDiff
