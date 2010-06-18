@@ -308,6 +308,7 @@ $(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS) $(MPI_WRAPPER) $(TAU_FORCE_MPI) 
 $(TAU_NULL)$(TAU_GPU_LIB): $(TAU_GPU_OBJS)
 		$(PRELINK_PHASE)
 		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_SHLIB) $(TAU_GPU_OBJS) -o $(TAU_GPU_LIB)
+		$(TAU_RANLIB) $(TAU_GPU_LIB)
 
 $(TAU_DISABLE): TauDisable.o $(TAU_DISABLE_SHARED) TauKojakOpariDisable.o
 		$(AR) $(ARFLAGS) $(TAU_DISABLE) TauDisable.o TauKojakOpariDisable.o
@@ -358,6 +359,12 @@ $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX): libTauMpi$(TAU_CONFIG)$(LSX)
 
 $(INSTALLDEST)/libTauShmem$(TAU_CONFIG)$(LSX): libTauShmem$(TAU_CONFIG)$(LSX)
 		$(MAKE) -f Makefile.shmem install 
+
+$(INSTALLDEST)/$(TAU_GPU_LIB): $(TAU_GPU_LIB)
+		@echo Installing $? in $(INSTALLDEST)
+		@if [ -d $(INSTALLDEST) ] ; then true; \
+                   else mkdir $(INSTALLDEST) ;fi
+		$(TAU_INSTALL) $? $(INSTALLDEST)
 
 $(TAU_JAVA_INSTALLDIR)/Profile.class: Profile.class
 		@echo Installing $? in $(TAU_JAVA_INSTALLDIR)
@@ -434,7 +441,7 @@ $(INSTALLDEST)/libmpi_r.a: libmpi_r.a
 	cd $(INSTALLDEST) && ln -s shared$(TAU_CONFIG) bindings$(TAU_CONFIG)
 	cd $(INSTALLDEST) && ln -s bindings$(TAU_CONFIG) bindings-default
 
-install:	 $(INSTALLDEST)/$(TAU_TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1) $(TAUPYTHON_INSTALL) $(SHMEM_INSTALL) $(POELIB_INSTALL) $(CRAY_PGI_HACK)
+install:	 $(INSTALLDEST)/$(TAU_TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(INSTALLDEST)/$(TAU_GPU_LIB) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1) $(TAUPYTHON_INSTALL) $(SHMEM_INSTALL) $(POELIB_INSTALL) $(CRAY_PGI_HACK)
 
 TauForceMPI.o : TauForceMPI.c
 	$(CC) $(CFLAGS) -c $(@:.o=.c)
@@ -616,10 +623,10 @@ TauGpu.o : TauGpu.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauGpuAdapterCudaExp.o : TauGpuAdapterCudaExp.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -I$(TAU_GPU_INC) -c $(@:.o=.cpp)
 
 TauGpuAdapterOpenCL.o : TauGpuAdapterOpenCL.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -I$(TAU_GPU_INC) -c $(@:.o=.cpp)
 
 
 clean : 
