@@ -115,28 +115,7 @@ int& TheUsingCompInst()
   return UsingCompInst;
 }
 
-#ifdef TAU_VAMPIRTRACE
-//////////////////////////////////////////////////////////////////////
-// Initialize VampirTrace Tracing package
-//////////////////////////////////////////////////////////////////////
-int TauInitVampirTrace(void)
-{
-  DEBUGPROFMSG("Calling vt_open"<<endl;);
-  vt_open();
-  return 1;
-}
-#endif /* TAU_VAMPIRTRACE */
 
-#ifdef TAU_EPILOG 
-//////////////////////////////////////////////////////////////////////
-// Initialize EPILOG Tracing package
-//////////////////////////////////////////////////////////////////////
-int TauInitEpilog(void) {
-  DEBUGPROFMSG("Calling esd_open"<<endl;);
-  esd_open();
-  return 1;
-}
-#endif /* TAU_EPILOG */
 
 //////////////////////////////////////////////////////////////////////
 // Member Function Definitions For class FunctionInfo
@@ -208,14 +187,12 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   FunctionId = RtsLayer::GenerateUniqueId();
 
 #ifdef TAU_VAMPIRTRACE
-  static int tau_vt_init=TauInitVampirTrace();
   string tau_vt_name(string(Name)+" "+string(Type));
   FunctionId = TAU_VT_DEF_REGION(tau_vt_name.c_str(), VT_NO_ID, VT_NO_LNO,
 			     VT_NO_LNO, GroupName, VT_FUNCTION);
   DEBUGPROFMSG("vt_def_region: "<<tau_vt_name<<": returns "<<FunctionId<<endl;);
 #else /* TAU_VAMPIRTRACE */
 #ifdef TAU_EPILOG
-  static int tau_elg_init=TauInitEpilog();
   string tau_elg_name(string(Name)+" "+string(Type));
   FunctionId = esd_def_region(tau_elg_name.c_str(), ELG_NO_ID, ELG_NO_LNO,
 			      ELG_NO_LNO, GroupName, ELG_FUNCTION);

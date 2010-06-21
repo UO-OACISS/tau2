@@ -28,6 +28,16 @@
 #include <Profile/TauSampling.h>
 #include <Profile/TauSnapshot.h>
 
+
+#ifdef TAU_VAMPIRTRACE 
+#include <Profile/TauVampirTrace.h>
+#else /* TAU_VAMPIRTRACE */
+#ifdef TAU_EPILOG
+#include "elg_trc.h"
+#endif /* TAU_EPILOG */
+#endif /* TAU_VAMPIRTRACE */
+
+
 extern "C" void Tau_stack_initialization();
 extern "C" int Tau_compensate_initialization();
 extern "C" int Tau_profiler_initialization();
@@ -104,6 +114,30 @@ extern "C" int Tau_init_check_initialized() {
 }
 
 
+
+#ifdef TAU_VAMPIRTRACE
+//////////////////////////////////////////////////////////////////////
+// Initialize VampirTrace Tracing package
+//////////////////////////////////////////////////////////////////////
+int Tau_init_vampirTrace(void) {
+  vt_open();
+  return 0;
+}
+#endif /* TAU_VAMPIRTRACE */
+
+
+
+#ifdef TAU_EPILOG 
+//////////////////////////////////////////////////////////////////////
+// Initialize EPILOG Tracing package
+//////////////////////////////////////////////////////////////////////
+int Tau_init_epilog(void) {
+  esd_open();
+  return 0;
+}
+#endif /* TAU_EPILOG */
+
+
 extern "C" int Tau_init_initializeTAU() {
   static int initialized = 0;
 
@@ -124,18 +158,19 @@ extern "C" int Tau_init_initializeTAU() {
 #ifdef TAU_EPILOG
   /* no more initialization necessary if using epilog/scalasca */
   initialized = 1;
+  Tau_init_epilog();
   return 0;
 #endif
 
 #ifdef TAU_VAMPIRTRACE
   /* no more initialization necessary if using vampirtrace */
   initialized = 1;
+  Tau_init_vampirTrace();
   return 0;
 #endif
   
   /* we need the timestamp of the "start" */
   Tau_snapshot_initialization();
-
 
 
 #ifndef TAU_DISABLE_SIGUSR
@@ -172,6 +207,8 @@ extern "C" int Tau_init_initializeTAU() {
   if (TauEnv_get_tracing()) {
     TauInitialize_kill_handlers();
   }
+
+    TauInitialize_kill_handlers();
 
   /* initialize sampling if requested */
   if (TauEnv_get_ebs_enabled()) {
