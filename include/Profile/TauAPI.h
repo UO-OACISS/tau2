@@ -215,10 +215,13 @@ extern "C" {
 #define TAU_GLOBAL_PHASE_EXTERNAL(timer)  extern void * TauGlobalPhase##timer(void)
 
 #ifdef TAU_MONITORING
-#define TAU_ONLINE_DUMP()                       Tau_mon_onlineDump();
-#else /* TAU_MONITORING */
-#define TAU_ONLINE_DUMP()                       Tau_collate_onlineDump();
+#define TAU_ONLINE_DUMP()                       Tau_mon_onlineDump()
+#elif defined(TAU_EXP_COLLATE)
+#define TAU_ONLINE_DUMP()                       Tau_collate_onlineDump()
+#else
+#define TAU_ONLINE_DUMP()
 #endif /* TAU_MONITORING */
+
 #define TAU_PROFILE_SNAPSHOT(name)              Tau_profile_snapshot(name);
 #define TAU_PROFILE_SNAPSHOT_1L(name, expr)     Tau_profile_snapshot_1l(name, expr);
 #define TAU_METADATA(name, value)               Tau_metadata(name, value);

@@ -8,7 +8,6 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-  int node;
   char name[64];
   int rank;
   int size;
