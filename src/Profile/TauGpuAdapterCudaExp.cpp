@@ -220,6 +220,12 @@ void CUDAAPI callback_handle(
 			MemcpyEventMap.insert(make_pair(id, memcpyType));
 			exit_memcpy_event(cParams->functionName, &id, &gId, memcpyType);
 		}
+		else if (strncmp(cParams->functionName,"cuCtxDetach", sizeof("cuCtxDetach")-1)==0)
+		{
+			exit_event(cParams->functionName, &id);
+			tau_gpu_exit();
+		}
+
 		else
 		{
 		exit_event(cParams->functionName, &id);
@@ -406,7 +412,7 @@ void onunload(void)
 
 void shutdown_tool_api(void)
 {
-	tau_gpu_exit();	
+	//tau_gpu_exit();	
 	//gs_toolsapi.managers.clear();
 	if (gs_toolsapi.coreTable)
 	{
