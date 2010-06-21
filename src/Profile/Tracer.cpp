@@ -427,11 +427,7 @@ int TauTraceDumpEDF(int tid) {
   // id group tag "name type" parameters
   
   numEvents = TheFunctionDB().size() + TheEventDB().size();
-#ifdef TAU_CUDA 
   numExtra = 13; // Added four ONESIDED msg events
-#else
-  numExtra = 9; // Number of extra events
-#endif	
   numEvents += numExtra;
   
   fprintf(fp,"%d dynamic_trace_events\n", numEvents);
@@ -463,7 +459,6 @@ int TauTraceDumpEDF(int tid) {
   fprintf(fp,"%ld TAU_MESSAGE -7 \"MESSAGE_SEND\" par\n", (long) TAU_MESSAGE_SEND); 
   fprintf(fp,"%ld TAU_MESSAGE -8 \"MESSAGE_RECV\" par\n", (long) TAU_MESSAGE_RECV); 
 
-#ifdef TAU_CUDA
   fprintf(fp,"%ld TAUEVENT 0 \"ONESIDED_MESSAGE_SEND\" TriggerValue\n", (long)
 	TAU_ONESIDED_MESSAGE_SEND); 
   fprintf(fp,"%ld TAUEVENT 0 \"ONESIDED_MESSAGE_RECV\" TriggerValue\n", (long)
@@ -472,7 +467,6 @@ int TauTraceDumpEDF(int tid) {
 	TAU_ONESIDED_MESSAGE_ID_1); 
   fprintf(fp,"%ld TAUEVENT 0 \"ONESIDED_MESSAGE_ID_TriggerValueT2\" TriggerValue\n", (long)
 	TAU_ONESIDED_MESSAGE_ID_2); 
-#endif
   
   fclose(fp);
   RtsLayer::UnLockDB();
@@ -549,8 +543,6 @@ int TauTraceMergeAndConvertTracesIfNecessary(void) {
   return 0;
 }
 
-#ifdef TAU_CUDA
-
 void TauTraceOneSidedMsg(bool type, gpuId *gpu, int length, int threadId)
 {
 		/* there are three user events that make up a one-sided msg */
@@ -561,8 +553,6 @@ void TauTraceOneSidedMsg(bool type, gpuId *gpu, int length, int threadId)
     TauTraceEventSimple(TAU_ONESIDED_MESSAGE_ID_1, gpu->id_p1(), threadId); 
     TauTraceEventSimple(TAU_ONESIDED_MESSAGE_ID_2, gpu->id_p2(), threadId); 
 }
-
-#endif
 
 //////////////////////////////////////////////////////////////////////
 // TraceSendMsg traces the message send

@@ -16,8 +16,8 @@
 
 #include "TauGpu.h"
 #include "TAU.h"
-#include <Profile/TauTrace.h>
-#include <Profile/TauInit.h>
+#include "Profile/TauTrace.h"
+#include <TauInit.h>
 #include <stdio.h>
 #include <iostream>
 
