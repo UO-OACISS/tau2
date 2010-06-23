@@ -28,41 +28,35 @@
 #include <algorithm>
 using namespace std;
 
+/** local unification object, one is created for each child rank that we talk to */
 typedef struct {
-  char *buffer;
-  int numEvents;
-  char **strings;
-  int *mapping;
-  int idx;
-  int rank;
-  int globalNumItems;
-  int *sortMap;
+  int rank;       // MPI rank of child
+  char *buffer;   // buffer given to us by rank
+  int numEvents;  // number of events
+  char **strings; // pointers into buffer for strings
+  int *mapping;   // mapping table for this child
+  int idx;        // index used for merge operation
+  int *sortMap;   // sort map for this rank
+  int globalNumItems;  // global number of items
 } unify_object_t;
 
+/** unification merge object */
 typedef struct {
 
-  /** This is a vector of pointers into a contiguous buffer that's passed via MPI 
-   * from another process because they are null terminated inside the buffer, we 
-   * can assign out a pointer to each one and put it in this vector */
+  /** This is a vector of pointers to currently existing strings 
+   *  inside the contiguous buffers from child ranks */
   vector<char*> strings;
 
-  int *mapping;
+  /* the number of entries, we can't use strings.size() because the merged 
+     strings only exist on the parent */
   int numStrings;
+
+  /* mapping table */
+  int *mapping;
+
 } unify_merge_object_t;
 
 
-
-// not the best style, but I use a global here to store the current 
-// event lister so that qsort can work
-EventLister *theEventLister;
-
-Tau_unify_object_t *functionUnifier=0, *atomicUnifier=0;
-extern "C" Tau_unify_object_t *Tau_unify_getFunctionUnifier() {
-  return functionUnifier;
-}
-extern "C" Tau_unify_object_t *Tau_unify_getAtomicUnifier() {
-  return atomicUnifier;
-}
 
 /** Comparator class used to create a sort map for unification */
 class EventComparator : public binary_function<int, int, bool> {
@@ -85,29 +79,29 @@ public:
 
 
 /** Return a table represeting a sorted list of the events */
-int *Tau_unify_generateSortMap() {
+int *Tau_unify_generateSortMap(EventLister *eventLister) {
   int rank, numRanks, i;
   MPI_Status status;
 
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
 
-  int numEvents = theEventLister->getNumEvents();
+  int numEvents = eventLister->getNumEvents();
   int *sortMap = (int*) TAU_UTIL_MALLOC(numEvents*sizeof(int));
 
   for (int i=0; i<numEvents; i++) {
     sortMap[i] = i;
   }
 
-  sort(sortMap, sortMap + numEvents, EventComparator(theEventLister));
+  sort(sortMap, sortMap + numEvents, EventComparator(eventLister));
 
   return sortMap;
 }
 
 
 /** Return a Tau_util_outputDevice containing a buffer of the event definitions */
-Tau_util_outputDevice *Tau_unify_generateLocalDefinitionBuffer(int *sortMap) {
-  int numEvents = theEventLister->getNumEvents();
+Tau_util_outputDevice *Tau_unify_generateLocalDefinitionBuffer(int *sortMap, EventLister *eventLister) {
+  int numEvents = eventLister->getNumEvents();
 
   // create a buffer-based output device
   Tau_util_outputDevice *out = Tau_util_createBufferOutputDevice();
@@ -117,7 +111,7 @@ Tau_util_outputDevice *Tau_unify_generateLocalDefinitionBuffer(int *sortMap) {
 
   // write each event into the output device
   for(int i=0;i<numEvents;i++) {
-    Tau_util_output(out,"%s%c", theEventLister->getEvent(sortMap[i]), '\0');
+    Tau_util_output(out,"%s%c", eventLister->getEvent(sortMap[i]), '\0');
   }
 
   return out;
@@ -153,8 +147,9 @@ unify_object_t *Tau_unify_processBuffer(char *buffer, int rank) {
 }
 
 /** Generates a definition buffer from a unify_merge_object_t */
-Tau_util_outputDevice *Tau_unify_generateMergedDefinitionBuffer(unify_merge_object_t &mergedObject) {
-  int numEvents = theEventLister->getNumEvents();
+Tau_util_outputDevice *Tau_unify_generateMergedDefinitionBuffer(unify_merge_object_t &mergedObject, 
+								EventLister *eventLister) {
+  int numEvents = eventLister->getNumEvents();
 
   Tau_util_outputDevice *out = Tau_util_createBufferOutputDevice();
 
@@ -228,17 +223,9 @@ unify_merge_object_t *Tau_unify_mergeObjects(vector<unify_object_t*> &objects) {
 }
 
 
-/** Merge both function and atomic event definitions */
-extern "C" int Tau_unify_unifyDefinitions() {
-  FunctionEventLister *functionEventLister = new FunctionEventLister();
-  functionUnifier = Tau_unify_unifyEvents(functionEventLister);
-  AtomicEventLister *atomicEventLister = new AtomicEventLister();
-  atomicUnifier = Tau_unify_unifyEvents(atomicEventLister);
-}
 
 /** Using MPI, unify events for a given EventLister */
 Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
-  theEventLister = eventLister;
   int rank, numRanks, i;
   MPI_Status status;
 
@@ -254,18 +241,16 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   }
 
   // generate our own sort map
-  int *sortMap = Tau_unify_generateSortMap();
-
+  int *sortMap = Tau_unify_generateSortMap(eventLister);
 
   // array of unification objects
   vector<unify_object_t*> *unifyObjects = new vector<unify_object_t*>();
 
-
   // add ourselves
-  Tau_util_outputDevice *out = Tau_unify_generateLocalDefinitionBuffer(sortMap);
+  Tau_util_outputDevice *out = Tau_unify_generateLocalDefinitionBuffer(sortMap, eventLister);
   char *defBuf = Tau_util_getOutputBuffer(out);
   int defBufSize = Tau_util_getOutputBufferLength(out);
-  unifyObjects->push_back(Tau_unify_processBuffer(defBuf, -1));
+  unifyObjects->push_back(Tau_unify_processBuffer(defBuf, -1 /* no rank */));
 
 
   // define our merge object
@@ -305,7 +290,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
 	mergedObject = Tau_unify_mergeObjects(*unifyObjects);
 	
 	// generate buffer to send to parent
-	Tau_util_outputDevice *out = Tau_unify_generateMergedDefinitionBuffer(*mergedObject);
+	Tau_util_outputDevice *out = Tau_unify_generateMergedDefinitionBuffer(*mergedObject, eventLister);
 	defBuf = Tau_util_getOutputBuffer(out);
 	defBufSize = Tau_util_getOutputBufferLength(out);
       }
@@ -338,7 +323,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
 
   if (mergedObject == NULL) {
     // leaf functions allocate a phony merged object to use below
-    int numEvents = theEventLister->getNumEvents();
+    int numEvents = eventLister->getNumEvents();
     mergedObject = new unify_merge_object_t();
     mergedObject->numStrings = numEvents;
   }
@@ -422,6 +407,23 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
 
   // return the unification object that will be used to map local <-> global ids
   return tau_unify_object;
+}
+
+/** We store a unifier for the functions and atomic events for use externally */
+Tau_unify_object_t *functionUnifier=0, *atomicUnifier=0;
+extern "C" Tau_unify_object_t *Tau_unify_getFunctionUnifier() {
+  return functionUnifier;
+}
+extern "C" Tau_unify_object_t *Tau_unify_getAtomicUnifier() {
+  return atomicUnifier;
+}
+
+/** Merge both function and atomic event definitions */
+extern "C" int Tau_unify_unifyDefinitions() {
+  FunctionEventLister *functionEventLister = new FunctionEventLister();
+  functionUnifier = Tau_unify_unifyEvents(functionEventLister);
+  AtomicEventLister *atomicEventLister = new AtomicEventLister();
+  atomicUnifier = Tau_unify_unifyEvents(atomicEventLister);
 }
 
 
