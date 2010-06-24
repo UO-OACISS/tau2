@@ -70,9 +70,6 @@ double cpu_time()
 	//get time from the CPU clock
 	struct timeval tp;
 	gettimeofday(&tp, 0);
-	//printf("CPU time: %f \n", ((double)tp.tv_sec * 1e6 + tp.tv_usec));
-	//printf("subtraction: %f \n", cpu_start_time);
-	//printf("CPU time (2): %f \n", ((double)tp.tv_sec * 1e6 + tp.tv_usec) - cpu_start_time);
 	return ((double)tp.tv_sec * 1e6 + tp.tv_usec);
 }
 

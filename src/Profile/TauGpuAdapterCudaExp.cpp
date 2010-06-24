@@ -15,6 +15,8 @@ __thread EventManager *my_manager=NULL;
 __thread bool registered=false;
 bool user_events=false;
 
+/* CUDA GPU Id class. GPUs are uniquely identified as the pair of two ids:
+ * context and device. */
 class cudaGpuId : public gpuId {
 
 	NvU64 contextId;
@@ -41,7 +43,9 @@ char* cudaGpuId::printId()
 		return r;
 }
 
-
+/* CUDA Event are uniquely identified as the pair of two other ids:
+ * context and call (API).
+ */
 class cuEventId : public eventId
 {
 	NvU64 contextId;
@@ -51,6 +55,7 @@ class cuEventId : public eventId
 	cuEventId(const NvU64 a, const NvU64 b) :
 		contextId(a), callId(b) {}
 	
+	// for use in STL Maps	
 	bool operator<(const cuEventId& A) const
 	{ 
 		if (contextId == A.contextId)
@@ -62,6 +67,8 @@ class cuEventId : public eventId
 	}
 };
 
+/* Map: eventId <-> Memory Transfer Type (Host to Device / Device to Host)
+*/
 typedef map<cuEventId, bool> doubleMap;
 doubleMap MemcpyEventMap;
 
@@ -108,7 +115,7 @@ double AlignedTime(int device, double raw_time)
 	return (double) raw_time + offset;
 }
 
-
+/* Synchronize CPU and GPU clocks for each CUDA device. */
 void ClockSynch()
 {
 	double cpu_time1, cpu_time2;
@@ -190,11 +197,11 @@ void CUDAAPI callback_handle(
 				memcpyType = MemcpyDtoH;
 			}
 			MemcpyEventMap.insert(make_pair(id, memcpyType));
-			enter_memcpy_event(cParams->functionName, &id, &gId, memcpyType);
+			Tau_gpu_enter_memcpy_event(cParams->functionName, &id, &gId, memcpyType);
 		}
 		else
 		{
-			enter_event(cParams->functionName, &id);
+			Tau_gpu_enter_event(cParams->functionName, &id);
 		}
 	}
 	else if (*callbackId == cuToolsApi_CBID_ExitGeneric)
@@ -218,17 +225,19 @@ void CUDAAPI callback_handle(
 				memcpyType = MemcpyDtoH;
 			}
 			MemcpyEventMap.insert(make_pair(id, memcpyType));
-			exit_memcpy_event(cParams->functionName, &id, &gId, memcpyType);
+			Tau_gpu_exit_memcpy_event(cParams->functionName, &id, &gId, memcpyType);
 		}
 		else if (strncmp(cParams->functionName,"cuCtxDetach", sizeof("cuCtxDetach")-1)==0)
 		{
-			exit_event(cParams->functionName, &id);
-			tau_gpu_exit();
+			Tau_gpu_exit_event(cParams->functionName, &id);
+			// experimentally cuCtxDetach is often the last GPU event so go ahead and
+			// write out the profiles/traces when it exits.
+			Tau_gpu_exit();
 		}
 
 		else
 		{
-		exit_event(cParams->functionName, &id);
+		Tau_gpu_exit_event(cParams->functionName, &id);
 		}
 	}
 	else if (*callbackId == cuToolsApi_CBID_ProfileLaunch)
@@ -240,7 +249,7 @@ void CUDAAPI callback_handle(
 		GetContextTable()->CtxGetDevice(cParams->ctx,&device);
 		double startTime = AlignedTime((int)device, (double)cParams->startTime/1000);
 		double endTime = AlignedTime((int)device, (double)cParams->endTime/1000);
-		register_gpu_event(cParams->methodName, &id, startTime, endTime);
+		Tau_gpu_register_gpu_event(cParams->methodName, &id, startTime, endTime);
 	}
 	else if (*callbackId == cuToolsApi_CBID_ProfileMemcpy)
 	{
@@ -258,7 +267,7 @@ void CUDAAPI callback_handle(
 	  if (it != MemcpyEventMap.end())
 		{
 			memcpyType = it->second;
-			register_memcpy_event(&id, &gId, startTime, endTime, cParams->memTransferSize,
+			Tau_gpu_register_memcpy_event(&id, &gId, startTime, endTime, cParams->memTransferSize,
 			memcpyType);
 		}
 		else
@@ -385,7 +394,7 @@ inline int InitializeToolsApi(void)
 		}
 		
 		//tau specific initializations	
-		tau_gpu_init();
+		Tau_gpu_init();
 		
 		
 		return TAUCUDA_SUCCESS;

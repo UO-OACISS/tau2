@@ -70,14 +70,14 @@ void check_gpu_event()
 /* create TAU callback routine to capture both CPU and GPU execution time 
 	takes the thread id as a argument. */
 
-void enter_event(const char* name, eventId *id)
+void Tau_gpu_enter_event(const char* name, eventId *id)
 {
 #ifdef DEBUG_PROF
 	printf("entering cu event: %s.\n", name);
 #endif
 	TAU_START(name);
 }
-void enter_memcpy_event(const char* name, eventId *id, gpuId *device, bool
+void Tau_gpu_enter_memcpy_event(const char* name, eventId *id, gpuId *device, bool
 memcpyType)
 {
 #ifdef DEBUG_PROF
@@ -94,7 +94,7 @@ memcpyType)
 	}
 	TAU_START(name);
 }
-void exit_memcpy_event(const char* name, eventId *id, gpuId *device, bool
+void Tau_gpu_exit_memcpy_event(const char* name, eventId *id, gpuId *device, bool
 memcpyType)
 {
 #ifdef DEBUG_PROF
@@ -112,7 +112,7 @@ memcpyType)
 	TAU_STOP(name);
 }
 
-void exit_event(const char *name, eventId *id)
+void Tau_gpu_exit_event(const char *name, eventId *id)
 {
 #ifdef DEBUG_PROF
 	printf("exit cu event: %s.\n", name);
@@ -180,7 +180,7 @@ void break_gpu_event(const char *name, double stop_time)
 	stop_gpu_event(name);
 }
 
-void register_gpu_event(const char *name, eventId *id, double startTime, double endTime)
+void Tau_gpu_register_gpu_event(const char *name, eventId *id, double startTime, double endTime)
 {
 	stage_gpu_event(name, 
 		startTime);
@@ -190,7 +190,7 @@ void register_gpu_event(const char *name, eventId *id, double startTime, double 
 			endTime);
 }
 
-void register_memcpy_event(eventId *id, gpuId *device, double startTime, double
+void Tau_gpu_register_memcpy_event(eventId *id, gpuId *device, double startTime, double
 endTime, double transferSize, bool memcpyType)
 {
 #ifdef DEBUG_PROF		
@@ -230,7 +230,7 @@ endTime, double transferSize, bool memcpyType)
 /*
 	Initialization routine for TAU
 */
-int tau_gpu_init(void)
+int Tau_gpu_init(void)
 {
 		TAU_PROFILE_SET_NODE(0);
 		TAU_PROFILER_CREATE(main_ptr, ".TAU application", "", TAU_USER);
@@ -258,7 +258,7 @@ int tau_gpu_init(void)
 /*
 	finalization routine for TAU
 */
-void tau_gpu_exit(void)
+void Tau_gpu_exit(void)
 {
 #ifdef DEBUG_PROF
 		cerr << "stopping first gpu event.\n" << endl;
