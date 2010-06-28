@@ -174,6 +174,7 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 # For building TauLinuxTimers with gcc
 ##############################################
 #IBM64LINUX#GCC_ABI	     = -m64 		  #ENDIF#
+#PPC64XLC#GCC_ABI	     = -m32 		  #ENDIF#
 
 
 
