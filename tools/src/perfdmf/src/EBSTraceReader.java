@@ -12,7 +12,7 @@ public class EBSTraceReader {
     private DataSource dataSource;
 
     // a map of TAU callpaths to sample callstacks
-    private Map sampleMap = new HashMap();
+    private Map<String,Map<String,Integer>> sampleMap = new HashMap<String,Map<String,Integer>>();
 
     private int node = -1;
     private int tid = -1;
@@ -31,7 +31,7 @@ public class EBSTraceReader {
     }
 
     private void addSample(String callstack, String callpath) {
-        Map map = (Map) sampleMap.get(callpath);
+        Map<String,Integer> map = sampleMap.get(callpath);
         if (map != null) {
             Integer count = (Integer) map.get(callstack);
             if (count != null) {
@@ -40,7 +40,7 @@ public class EBSTraceReader {
                 map.put(callstack, new Integer(1));
             }
         } else {
-            map = new HashMap();
+            map = new HashMap<String,Integer>();
             map.put(callstack, new Integer(1));
             sampleMap.put(callpath, map);
         }
@@ -228,7 +228,7 @@ public class EBSTraceReader {
                         String flatName = UtilFncs.getRightMost(resolvedCallpath);
 
                         Function flatFunction = dataSource.addFunction(flatName);
-                        newCallpathFunc.addGroup(sampleGroup);
+                        flatFunction.addGroup(sampleGroup);
 
                         FunctionProfile flatProfile = thread.getOrCreateFunctionProfile(flatFunction,
                                 dataSource.getNumberOfMetrics());
