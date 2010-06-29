@@ -12,7 +12,7 @@ public class EBSTraceReader {
     private DataSource dataSource;
 
     // a map of TAU callpaths to sample callstacks
-    private Map<String,Map<String,Integer>> sampleMap = new HashMap<String,Map<String,Integer>>();
+    private Map<String, Map<String, Integer>> sampleMap = new HashMap<String, Map<String, Integer>>();
 
     private int node = -1;
     private int tid = -1;
@@ -31,7 +31,7 @@ public class EBSTraceReader {
     }
 
     private void addSample(String callstack, String callpath) {
-        Map<String,Integer> map = sampleMap.get(callpath);
+        Map<String, Integer> map = sampleMap.get(callpath);
         if (map != null) {
             Integer count = (Integer) map.get(callstack);
             if (count != null) {
@@ -40,7 +40,7 @@ public class EBSTraceReader {
                 map.put(callstack, new Integer(1));
             }
         } else {
-            map = new HashMap<String,Integer>();
+            map = new HashMap<String, Integer>();
             map.put(callstack, new Integer(1));
             sampleMap.put(callpath, map);
         }
@@ -162,23 +162,22 @@ public class EBSTraceReader {
         Group sampleGroup = dataSource.addGroup("TAU_SAMPLE");
 
         // for each TAU callpath
-        for (Iterator<String> it = sampleMap.keySet().iterator(); it.hasNext();) {
-            String callpath = (String) it.next();
+        for (String callpath : sampleMap.keySet()) {
 
             // get the set of callstacks for this callpath
-            Map<String,Integer> callstacks = sampleMap.get(callpath);
+            Map<String, Integer> callstacks = sampleMap.get(callpath);
 
             int numSamples = 0;
             for (int count : callstacks.values()) {
                 numSamples += count;
             }
-            
+
             callpath = Utility.removeRuns(callpath);
 
             Function function = dataSource.getFunction(callpath);
 
             if (function == null) {
-                System.err.println("Error: callpath not found in profile: \"" + callpath+"\"");
+                System.err.println("Error: callpath not found in profile: \"" + callpath + "\"");
                 continue;
             }
 
@@ -329,7 +328,7 @@ public class EBSTraceReader {
                     if (!callstack.startsWith("??:")) {
                         try {
 
-                            List csList = new ArrayList();
+                            List<String> csList = new ArrayList<String>();
 
                             String callStackEntries[] = callstack.split("@");
 
@@ -346,6 +345,7 @@ public class EBSTraceReader {
                                 } else {
                                     if (i == 0) {
                                         csList.add(stripPath(callStackEntries[i]));
+                                        csList.add(stripFileLine(callStackEntries[i]));
                                     } else {
                                         csList.add(stripFileLine(callStackEntries[i]));
                                     }
@@ -355,11 +355,11 @@ public class EBSTraceReader {
                             Collections.reverse(csList);
 
                             String location = null;
-                            for (Iterator it3 = csList.iterator(); it3.hasNext();) {
+                            for (String entry : csList) {
                                 if (location == null) {
-                                    location = (String) it3.next();
+                                    location = (String) entry;
                                 } else {
-                                    location = location + " => " + it3.next();
+                                    location = location + " => " + entry;
                                 }
                             }
 
