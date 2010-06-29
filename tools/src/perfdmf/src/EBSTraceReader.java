@@ -128,7 +128,7 @@ public class EBSTraceReader {
         return result;
     }
 
-    private void addIntermediateNodes(Thread thread, String callpath, int metric, double chunk, Group callpathGroup) {
+    private void addIntermediateNodes(Thread thread, String callpath, int metric, double chunk, Group callpathGroup, Group sampleGroup) {
 
         String cp[] = callpath.split("=>");
         for (int i = 0; i < cp.length; i++) {
@@ -141,6 +141,7 @@ public class EBSTraceReader {
 
             Function function = dataSource.addFunction(path);
             function.addGroup(callpathGroup);
+            function.addGroup(sampleGroup);
 
             FunctionProfile fp = thread.getOrCreateFunctionProfile(function, dataSource.getNumberOfMetrics());
 
@@ -158,7 +159,6 @@ public class EBSTraceReader {
 
         // we'll need to add these to the callpath group
         Group callpathGroup = dataSource.addGroup("TAU_CALLPATH");
-
         Group sampleGroup = dataSource.addGroup("TAU_SAMPLE");
 
         // for each TAU callpath
@@ -220,7 +220,7 @@ public class EBSTraceReader {
                     callpathProfile.setExclusive(m, callpathProfile.getExclusive(m) + value);
                     callpathProfile.setNumCalls(callpathProfile.getNumCalls() + count);
 
-                    addIntermediateNodes(thread, resolvedCallpath, m, value, callpathGroup);
+                    addIntermediateNodes(thread, resolvedCallpath, m, value, callpathGroup, sampleGroup);
 
                     if (resolvedCallpath.lastIndexOf("=>") != -1) {
                         String flatName = UtilFncs.getRightMost(resolvedCallpath);
