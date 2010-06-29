@@ -162,15 +162,15 @@ public class EBSTraceReader {
         Group sampleGroup = dataSource.addGroup("TAU_SAMPLE");
 
         // for each TAU callpath
-        for (Iterator it = sampleMap.keySet().iterator(); it.hasNext();) {
+        for (Iterator<String> it = sampleMap.keySet().iterator(); it.hasNext();) {
             String callpath = (String) it.next();
 
             // get the set of callstacks for this callpath
-            Map callstacks = (Map) sampleMap.get(callpath);
+            Map<String,Integer> callstacks = sampleMap.get(callpath);
+
             int numSamples = 0;
-            for (Iterator it2 = callstacks.values().iterator(); it2.hasNext();) {
-                Integer count = (Integer) it2.next();
-                numSamples += count.intValue();
+            for (int count : callstacks.values()) {
+                numSamples += count;
             }
             
             callpath = Utility.removeRuns(callpath);
@@ -204,8 +204,7 @@ public class EBSTraceReader {
                     flatFP.setExclusive(m, 0);
                 }
 
-                for (Iterator it2 = callstacks.keySet().iterator(); it2.hasNext();) {
-                    String callstack = (String) it2.next();
+                for (String callstack : callstacks.keySet()) {
                     int count = ((Integer) callstacks.get(callstack)).intValue();
                     double value = chunk * count;
 
