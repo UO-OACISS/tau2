@@ -87,8 +87,13 @@ integration.
 
 3) Generate and analyze traces as above.  Profiles will now have integrated callstacks.  OTF traces will have full callpaths.
 
+   When using HPCToolkit, you must run the program using hpcrun from the
+   install directory of hpctoolkit.  You must also give it parameters as if it
+   were being used as the measurement system, but those values will not be used
+   as the HPCToolkit measurement system is disabled by the patch.  An example
+   run is as follows:
 
-
+   hpcrun -e PAPI_TOT_CYC@100000 ./simple
 
 
 
