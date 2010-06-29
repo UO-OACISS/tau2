@@ -2849,6 +2849,18 @@ fi
 if [ $mpi = yes -a "x$mpiinc" = "x" ] 
 then
   case $machine in 
+  ppc64|ibm64linux)
+        if [ -r /opt/ibmhpc/ppe.poe/include/mpi.h ] 
+        then
+	  mpiinc=/opt/ibmhpc/ppe.poe/include
+	  mpiincf90dir='-I/opt/ibmhpc/ppe.poe/include/thread'
+          if [ $machine = ibm64linux ] 
+          then
+	    mpiincf90dir='-I/opt/ibmhpc/ppe.poe/include/thread64'
+          fi
+          additional_mpiincs="$additional_mpiincs $mpiincf90dir"
+        fi
+        ;;
   rs6000|ibm64)
 	mpiinc=/usr/lpp/ppe.poe/include
 	mpiincf90dir='-I/usr/lpp/ppe.poe/include/thread'
@@ -2948,6 +2960,23 @@ fi
 if [ $mpi = yes -a "x$mpilib" = "x" ]
 then
   case $machine in 
+  ppc64) 
+        if [ -r /opt/ibmhpc/ppe.poe/lib/libmpi/libmpi_ibm.so ] 
+        then
+          additional_mpilibs='-lpoe -llapi'
+          mpilib=/opt/ibmhpc/ppe.poe/lib/libmpi
+          mpilibrary="-lmpi_ibm $additional_mpilibs"
+        fi
+        ;;
+  ibm64linux) 
+        if [ -r /opt/ibmhpc/ppe.poe/lib/libmpi64/libmpi_ibm.so ] 
+        then
+          mpilib=/opt/ibmhpc/ppe.poe/lib/libmpi64
+          additional_mpilibs='-lpoe -llapi'
+          mpilibrary="-lmpi_ibm $additional_mpilibs"
+        fi
+        ;;
+       
   rs6000|ibm64) 
 	mpilib=/usr/lpp/ppe.poe/lib
         if [ $ibmxlc_r = yes ] 
@@ -3585,6 +3614,15 @@ case $machine in
 	if [ $papi = yes ] ; then
 	    fixmakeargs="$fixmakeargs IBM64PAPILINUX"
 	fi
+
+        if [ $c_compiler = xlc ] ; then
+            fixmakeargs="$fixmakeargs IBM64LINUX_XLC"
+        fi
+
+        if [ $fortran_compiler = ibm -o $fortran_compiler = ibm64 ] ; then
+            fixmakeargs="$fixmakeargs IBM64LINUX_XLF"
+        fi
+
 	;;
 
      mips32)

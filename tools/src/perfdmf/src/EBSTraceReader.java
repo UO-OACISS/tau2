@@ -12,7 +12,7 @@ public class EBSTraceReader {
     private DataSource dataSource;
 
     // a map of TAU callpaths to sample callstacks
-    private Map sampleMap = new HashMap();
+    private Map<String, Map<String, Integer>> sampleMap = new HashMap<String, Map<String, Integer>>();
 
     private int node = -1;
     private int tid = -1;
@@ -31,7 +31,7 @@ public class EBSTraceReader {
     }
 
     private void addSample(String callstack, String callpath) {
-        Map map = (Map) sampleMap.get(callpath);
+        Map<String, Integer> map = sampleMap.get(callpath);
         if (map != null) {
             Integer count = (Integer) map.get(callstack);
             if (count != null) {
@@ -40,7 +40,7 @@ public class EBSTraceReader {
                 map.put(callstack, new Integer(1));
             }
         } else {
-            map = new HashMap();
+            map = new HashMap<String, Integer>();
             map.put(callstack, new Integer(1));
             sampleMap.put(callpath, map);
         }
@@ -128,7 +128,7 @@ public class EBSTraceReader {
         return result;
     }
 
-    private void addIntermediateNodes(Thread thread, String callpath, int metric, double chunk, Group callpathGroup) {
+    private void addIntermediateNodes(Thread thread, String callpath, int metric, double chunk, Group callpathGroup, Group sampleGroup) {
 
         String cp[] = callpath.split("=>");
         for (int i = 0; i < cp.length; i++) {
@@ -141,6 +141,7 @@ public class EBSTraceReader {
 
             Function function = dataSource.addFunction(path);
             function.addGroup(callpathGroup);
+            function.addGroup(sampleGroup);
 
             FunctionProfile fp = thread.getOrCreateFunctionProfile(function, dataSource.getNumberOfMetrics());
 
@@ -158,27 +159,25 @@ public class EBSTraceReader {
 
         // we'll need to add these to the callpath group
         Group callpathGroup = dataSource.addGroup("TAU_CALLPATH");
-
         Group sampleGroup = dataSource.addGroup("TAU_SAMPLE");
 
         // for each TAU callpath
-        for (Iterator it = sampleMap.keySet().iterator(); it.hasNext();) {
-            String callpath = (String) it.next();
+        for (String callpath : sampleMap.keySet()) {
 
             // get the set of callstacks for this callpath
-            Map callstacks = (Map) sampleMap.get(callpath);
+            Map<String, Integer> callstacks = sampleMap.get(callpath);
+
             int numSamples = 0;
-            for (Iterator it2 = callstacks.values().iterator(); it2.hasNext();) {
-                Integer count = (Integer) it2.next();
-                numSamples += count.intValue();
+            for (int count : callstacks.values()) {
+                numSamples += count;
             }
-            
+
             callpath = Utility.removeRuns(callpath);
 
             Function function = dataSource.getFunction(callpath);
 
             if (function == null) {
-                System.err.println("Error: callpath not found in profile: \"" + callpath+"\"");
+                System.err.println("Error: callpath not found in profile: \"" + callpath + "\"");
                 continue;
             }
 
@@ -204,8 +203,7 @@ public class EBSTraceReader {
                     flatFP.setExclusive(m, 0);
                 }
 
-                for (Iterator it2 = callstacks.keySet().iterator(); it2.hasNext();) {
-                    String callstack = (String) it2.next();
+                for (String callstack : callstacks.keySet()) {
                     int count = ((Integer) callstacks.get(callstack)).intValue();
                     double value = chunk * count;
 
@@ -222,13 +220,13 @@ public class EBSTraceReader {
                     callpathProfile.setExclusive(m, callpathProfile.getExclusive(m) + value);
                     callpathProfile.setNumCalls(callpathProfile.getNumCalls() + count);
 
-                    addIntermediateNodes(thread, resolvedCallpath, m, value, callpathGroup);
+                    addIntermediateNodes(thread, resolvedCallpath, m, value, callpathGroup, sampleGroup);
 
                     if (resolvedCallpath.lastIndexOf("=>") != -1) {
                         String flatName = UtilFncs.getRightMost(resolvedCallpath);
 
                         Function flatFunction = dataSource.addFunction(flatName);
-                        newCallpathFunc.addGroup(sampleGroup);
+                        flatFunction.addGroup(sampleGroup);
 
                         FunctionProfile flatProfile = thread.getOrCreateFunctionProfile(flatFunction,
                                 dataSource.getNumberOfMetrics());
@@ -330,7 +328,7 @@ public class EBSTraceReader {
                     if (!callstack.startsWith("??:")) {
                         try {
 
-                            List csList = new ArrayList();
+                            List<String> csList = new ArrayList<String>();
 
                             String callStackEntries[] = callstack.split("@");
 
@@ -347,6 +345,7 @@ public class EBSTraceReader {
                                 } else {
                                     if (i == 0) {
                                         csList.add(stripPath(callStackEntries[i]));
+                                        csList.add(stripFileLine(callStackEntries[i]));
                                     } else {
                                         csList.add(stripFileLine(callStackEntries[i]));
                                     }
@@ -356,11 +355,11 @@ public class EBSTraceReader {
                             Collections.reverse(csList);
 
                             String location = null;
-                            for (Iterator it3 = csList.iterator(); it3.hasNext();) {
+                            for (String entry : csList) {
                                 if (location == null) {
-                                    location = (String) it3.next();
+                                    location = (String) entry;
                                 } else {
-                                    location = location + " => " + it3.next();
+                                    location = location + " => " + entry;
                                 }
                             }
 
