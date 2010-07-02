@@ -54,6 +54,9 @@ Tau_unify_object_t *Tau_unify_getAtomicUnifier();
 
 #ifdef __cplusplus
 
+#include <sstream>
+using namespace std;
+
 /** EventLister interface class */
 class EventLister {
 
@@ -86,7 +89,7 @@ class FunctionEventLister : public EventLister {
     return TheFunctionDB().size();
   }
   const char *getEvent(int id) {
-    return TheFunctionDB()[id]->GetName();
+    return TheFunctionDB()[id]->GetFullName()->c_str();
   }
 };
 
