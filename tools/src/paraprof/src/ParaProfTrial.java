@@ -62,7 +62,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     private boolean monitored;
     //private Timer monitorTimer;
 
-    private List obs = new ArrayList();
+    private List<Observer> obs = new ArrayList<Observer>();
 
     private FileMonitorListener fileMonitorListener;
 
@@ -696,7 +696,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         obs.remove(o);
     }
 
-    public List getObservers() {
+    public List<Observer> getObservers() {
         return obs;
     }
 
