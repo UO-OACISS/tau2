@@ -16,6 +16,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import edu.uoregon.tau.common.Utility;
+
 /**
  * This class represents a data source.  After loading, data is availiable through the
  * public methods.
@@ -48,7 +50,7 @@ public abstract class DataSource {
     public static final int GAMESS = 101; // application log data
     public static final String FILE_TYPE_INDEX = "File Type Index";
     public static final String FILE_TYPE_NAME = "File Type Name";
-    
+
     public static String formatTypeStrings[] = { "ParaProf Packed Profile", "Tau profiles", "Dynaprof", "MpiP", "HPMToolkit",
             "Gprof", "PSRun", "Tau pprof.dat", "Cube", "HPCToolkit", "TAU Snapshot", "ompP", "PERI-XML",
             "General Purpose Timing Library (GPTL)", "Paraver", "IPM" };
@@ -67,7 +69,7 @@ public abstract class DataSource {
     protected Thread totalData = null;
     protected Thread stddevData = null;
     private Map nodes = new TreeMap();
-    private Map functions = new TreeMap();
+    private Map<String, Function> functions = new TreeMap<String, Function>();
     private Map groups = new TreeMap();
     private Map userEvents = new TreeMap();
     private List allThreads;
@@ -103,14 +105,14 @@ public abstract class DataSource {
     private int fileType = DataSource.TAUPROFILE;
 
     public int getFileType() {
-		return fileType;
-	}
+        return fileType;
+    }
 
-	public void setFileType(int fileType) {
-		this.fileType = fileType;
-	}
+    public void setFileType(int fileType) {
+        this.fileType = fileType;
+    }
 
-	public DataSource() {
+    public DataSource() {
     // nothing
     }
 
@@ -669,10 +671,9 @@ public abstract class DataSource {
         this.generateUserEventStatistics();
 
         finishPhaseAnalysis();
-        
+
         this.getMetaData().put(FILE_TYPE_INDEX, Integer.toString(this.fileType));
         this.getMetaData().put(FILE_TYPE_NAME, DataSource.formatTypeStrings[this.fileType]);
-
 
         //time = (System.currentTimeMillis()) - time;
         //System.out.println("Time to process (in milliseconds): " + time);
@@ -833,7 +834,6 @@ public abstract class DataSource {
         double[] inclSum = new double[numMetrics];
         double[] exclSumSqr = new double[numMetrics];
         double[] inclSumSqr = new double[numMetrics];
-
 
         // make sure that the allThreads list is initialized;
         this.initAllThreadsList();
@@ -1057,7 +1057,7 @@ public abstract class DataSource {
     public Iterator getNodes() {
         return nodes.values().iterator();
     }
-  
+
     public Map getNodeMap() {
         return nodes;
     }
@@ -1549,4 +1549,36 @@ public abstract class DataSource {
         return EXEC_TYPE_OTHER;
     }
 
+    /**
+     * Renames an internal callpath element
+     */
+    private static void renameInternalFunction(Function function, String oldName, String newName) {
+        String eventName = function.getName();
+        String[] elements = eventName.split("=>");
+        for (int i = 0; i < elements.length; i++) {
+            elements[i] = elements[i].trim();
+            if (elements[i].equals(oldName)) {
+                elements[i] = newName;
+            } else {}
+        }
+        function.setName(Utility.join(" => ", elements));
+    }
+
+    /**
+     * Renames a function
+     * This method will also rename any callpaths that match this function internally
+     */
+    public void renameFunction(Function functionToRename, String newName) {
+        newName = newName.trim();
+        Group callpathGroup = getGroup("TAU_CALLPATH");
+
+        for (String eventName : functions.keySet()) {
+            Function f = functions.get(eventName);
+            if (f.isGroupMember(callpathGroup)) {
+                renameInternalFunction(f, functionToRename.getName(), newName);
+            }
+        }
+
+        functionToRename.setName(newName);
+    }
 }
