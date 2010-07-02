@@ -18,7 +18,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "Profile/Profiler.h"
-
+#include <sstream>
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
@@ -52,6 +52,7 @@ using namespace std;
 
 #include <Profile/TauTrace.h>
 #include <Profile/TauInit.h>
+#include <Profile/TauUtil.h>
 
 //////////////////////////////////////////////////////////////////////
 // The purpose of this subclass of vector is to give us a chance to execute
@@ -199,11 +200,6 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   DEBUGPROFMSG("elg_def_region: "<<tau_elg_name<<": returns "<<FunctionId<<endl;);
 #else
 #ifdef TAU_SILC
-  static int tau_silc_init=0;
-  if (tau_silc_init == 0) {
-    SILC_InitMeasurement();
-    tau_silc_init = 1;
-  }
   string tau_silc_name(string(Name)+" "+string(Type));
   FunctionId =  SILC_DefineRegion( tau_silc_name.c_str(),
 				   SILC_INVALID_SOURCE_FILE,
@@ -253,6 +249,7 @@ FunctionInfo::FunctionInfo(const char *name, const char *type,
 	       << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
   Name = strdup(name);
   Type = strdup(type);
+  FullName = NULL;
   
   FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
 }
@@ -264,6 +261,7 @@ FunctionInfo::FunctionInfo(const char *name, const string& type,
 			   int tid) {
   Name = strdup(name);
   Type = strdup(type.c_str());
+  FullName = NULL;
   
   FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
 }
@@ -275,6 +273,7 @@ FunctionInfo::FunctionInfo(const string& name, const char * type,
 	int tid) {
   Name = strdup(name.c_str());
   Type = strdup(type);
+  FullName = NULL;
   
   FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
 }
@@ -287,6 +286,7 @@ FunctionInfo::FunctionInfo(const string& name, const string& type,
   
   Name = strdup(name.c_str());
   Type = strdup(type.c_str());
+  FullName = NULL;
   
   FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
 }
@@ -461,6 +461,28 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 #endif
   }
 }
+
+
+string *FunctionInfo::GetFullName() {
+
+  if (FullName == NULL) {
+    ostringstream ostr;
+    if (strlen(GetType()) > 0 && strcmp(GetType()," ") != 0) {
+      ostr << GetName() << " " << GetType() << ":GROUP:" << GetAllGroups();
+    } else {
+      ostr << GetName() << ":GROUP:" << GetAllGroups();
+    }
+    FullName = new string;
+
+    string tmpstr = ostr.str();
+    char *tmp = strdup(tmpstr.c_str());
+    tmp = Tau_util_removeRuns(tmp);
+    *FullName = tmp;
+
+  }
+  return FullName;
+}
+
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
  * $Revision: 1.84 $   $Date: 2010/04/27 23:13:55 $
