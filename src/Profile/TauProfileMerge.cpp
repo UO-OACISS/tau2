@@ -52,9 +52,20 @@ void Tau_profileMerge_writeDefinitions(FILE *f) {
 
   for (int i=0; i<functionUnifier->globalNumItems; i++) {
     Tau_util_output (&out, "<event id=\"%d\"><name>", i);
-    Tau_XML_writeString(&out, functionUnifier->globalStrings[i]);
+
+    char *name = functionUnifier->globalStrings[i];
+    char *group = strstr(name,":GROUP:");
+    if (group == NULL) {
+      fprintf (stderr, "TAU: Error extracting groups for %s!\n",name);
+    } else {
+      char *target = group;
+      group+=strlen(":GROUP:");
+      *target=0;
+    }
+
+    Tau_XML_writeString(&out, name);
     Tau_util_output (&out, "</name><group>");
-    Tau_XML_writeString(&out, ":)");
+    Tau_XML_writeString(&out, group);
     Tau_util_output (&out, "</group></event>\n");
   }
 

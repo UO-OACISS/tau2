@@ -37,6 +37,10 @@
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
 
+#ifdef TAU_SILC
+#include <Profile/TauSilc.h>
+#endif
+
 
 extern "C" void Tau_stack_initialization();
 extern "C" int Tau_compensate_initialization();
@@ -57,7 +61,7 @@ extern "C" int Tau_profiler_initialization();
 static SIGNAL_TYPE (*sighdlr[NSIG])(SIGNAL_ARG_TYPE);
 
 static void wrap_up(int sig) {
-  fprintf (stderr, "TAU: signal %d on %d - flushing event buffer...\n", sig, RtsLayer::myNode());
+  fprintf (stderr, "TAU: signal %d on %d - calling TAU_PROFILE_EXIT()...\n", sig, RtsLayer::myNode());
   TAU_PROFILE_EXIT("signal");
   fprintf (stderr, "TAU: done.\n");
   exit (1);
@@ -162,6 +166,14 @@ extern "C" int Tau_init_initializeTAU() {
   return 0;
 #endif
 
+
+#ifdef TAU_SILC
+  /* no more initialization necessary if using SILC */
+  initialized = 1;
+  SILC_InitMeasurement();
+  return 0;
+#endif
+
 #ifdef TAU_VAMPIRTRACE
   /* no more initialization necessary if using vampirtrace */
   initialized = 1;
@@ -207,8 +219,8 @@ extern "C" int Tau_init_initializeTAU() {
   if (TauEnv_get_tracing()) {
     TauInitialize_kill_handlers();
   }
-
-    TauInitialize_kill_handlers();
+  
+  //TauInitialize_kill_handlers();
 
   /* initialize sampling if requested */
   if (TauEnv_get_ebs_enabled()) {

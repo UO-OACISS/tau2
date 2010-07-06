@@ -1569,10 +1569,34 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
 		write_from = k+1;
 	      } else {
 		string ret_expression; 
+		char current_char;
+		char match_char;
 
 		for (k = (*it)->col+strlen(use_return_nonvoid)-1; (inbuf[k] != ';') && (k<inbufLength) ; k++) {
-		  char current_char = inbuf[k];
+		  current_char = inbuf[k];
 		  ret_expression.append(&current_char, 1);
+		  /* what if there is a return ';' ; or return " foo;" ;  ?*/
+		  /* In that case we match till we find the matching " or ' */
+		  if ((inbuf[k] == '\'') || (inbuf[k] == '\"')) { 
+                    match_char = inbuf[k];
+		    //printf("Found match_char: inbuf[k] = %c\n", inbuf[k]);
+		    k++;
+                    do {
+		      current_char = inbuf[k];
+		      ret_expression.append(&current_char, 1);
+		      //printf("Pushing %c...\n", inbuf[k]);
+                      k++;
+                    } while ((inbuf[k] != match_char) && (k < inbufLength));
+		    //printf("Now: inbuf[k] = %c\n", inbuf[k]);
+		    if (inbuf[k] == match_char) {
+		      //printf("Match: inbuf[k] = %c\n", inbuf[k]);
+		      current_char = inbuf[k];
+		      ret_expression.append(&current_char, 1);
+		      k++;
+		    }
+                    k--; /* so k can be incremented at the end of the loop k++*/
+		    //printf("Leaving: k=%d, inbuf[k] = %c\n", k, inbuf[k]);
+                  }
 		}
 		if (inbuf[k] == ';') { /* Got the semicolon. Return expression is in one line. */
 		  write_from = k+1;

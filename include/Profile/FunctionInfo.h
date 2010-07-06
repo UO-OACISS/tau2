@@ -132,7 +132,7 @@ public:
   char *GroupName;
   char *AllGroups;
   long FunctionId;
-
+  string *FullName;
 
   inline double *getDumpExclusiveValues(int tid) {
     return dumpExclusiveValues[tid];
@@ -158,6 +158,9 @@ public:
     GroupName = strdup(newname.c_str()); 
     AllGroups = strdup(newname.c_str()); /* to make it to the profile */
   }
+
+  string *GetFullName(); /* created on demand, cached */
+
 
   long GetFunctionId() ;
   long GetCalls(int tid) { return NumCalls[tid]; }

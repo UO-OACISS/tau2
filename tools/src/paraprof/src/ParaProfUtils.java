@@ -654,6 +654,16 @@ public class ParaProfUtils {
                         }
                     } else if (arg.equals("Assign Function Color")) {
                         ParaProf.colorMap.assignColor(owner, function);
+                    } else if (arg.equals("Rename")) {
+
+                        String newName = (String) JOptionPane.showInputDialog(owner, "Rename event:", "Rename event",
+                                JOptionPane.PLAIN_MESSAGE, null, null, function.toString());
+
+                        if (newName != null) {
+                            ppTrial.getDataSource().renameFunction(function, newName);
+                            ppTrial.updateRegisteredObjects("dataEvent");
+                        }
+
                     } else if (arg.equals("Reset to Default Color")) {
                         ParaProf.colorMap.removeColor(function);
                         ParaProf.colorMap.reassignColors();
@@ -734,6 +744,12 @@ public class ParaProfUtils {
         jMenuItem = new JMenuItem("Reset to Default Color");
         jMenuItem.addActionListener(actionListener);
         functionPopup.add(jMenuItem);
+
+        if (!function.isGroupMember("TAU_CALLPATH")) {
+            jMenuItem = new JMenuItem("Rename");
+            jMenuItem.addActionListener(actionListener);
+            functionPopup.add(jMenuItem);
+        }
 
         if ((thread.getNodeID() >= 0)
                 && (ExternalTool.matchingToolExists((String) ppTrial.getTrial().getMetaData().get(DataSource.FILE_TYPE_NAME),
