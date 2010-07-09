@@ -281,6 +281,7 @@ extern "C" int tau_track_pthread_barrier_wait(pthread_barrier_t *barrier) {
 }
 #endif /* TAU_PTHREAD_BARRIER_AVAILABLE */
 
+#ifndef TAU_XLC
 #ifdef TAU_PTHREAD_PRELOAD
 
 static int (*_pthread_create) (pthread_t* thread, const pthread_attr_t* attr, 
@@ -326,8 +327,8 @@ extern "C" int pthread_barrier_wait(pthread_barrier_t *barrier) {
   return retval;
 }
 #endif /* TAU_PTHREAD_BARRIER_AVAILABLE */
-
-#endif
+#endif /* TAU_PTHREAD_PRELOAD */
+#endif /* TAU_XLC */
 
 /***************************************************************************
  * $RCSfile: PthreadLayer.cpp,v $   $Author: amorris $
