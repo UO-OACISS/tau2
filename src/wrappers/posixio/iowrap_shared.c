@@ -246,7 +246,7 @@ int fprintf(FILE *stream, const char *format, ...) {
   } else {
     dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
-  if (ret)  {
+  if (ret > 0)  {
     TAU_CONTEXT_EVENT(byteswritten, count);
     TAU_CONTEXT_EVENT(global_bytes_written, count);
   }
@@ -358,7 +358,7 @@ size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream) {
   } else {
     dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
-  if (ret) {
+  if (ret > 0) {
     TAU_CONTEXT_EVENT(byteswritten, count);
     TAU_CONTEXT_EVENT(global_bytes_written, count);
   }
@@ -406,7 +406,7 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
 
-  if (ret) {
+  if (ret > 0) {
     TAU_CONTEXT_EVENT(bytesread, count);
     TAU_CONTEXT_EVENT(global_bytes_read, count);
   }
@@ -1280,7 +1280,7 @@ ssize_t recv (int fd, void *buf, size_t count, int flags) {
     dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
 
-  if (ret) {
+  if (ret > 0) {
     TAU_CONTEXT_EVENT(bytesrecv, ret);
     TAU_CONTEXT_EVENT(global_bytes_read, ret);
   }
@@ -1330,7 +1330,7 @@ ssize_t send (int fd, const void *buf, size_t count, int flags) {
     dprintf("TauWrapperRead: currentWrite = %g\n", currentWrite);
   }
 
-  if (ret) {
+  if (ret > 0) {
     TAU_CONTEXT_EVENT(byteswritten, ret);
     TAU_CONTEXT_EVENT(global_bytes_written, ret);
   }
@@ -1381,7 +1381,7 @@ ssize_t sendto (int fd, const void *buf, size_t count, int flags, const struct s
     dprintf("TauWrapperRead: currentWrite = %g\n", currentWrite);
   }
 
-  if (ret) {
+  if (ret > 0) {
     TAU_CONTEXT_EVENT(byteswritten, ret);
     TAU_CONTEXT_EVENT(global_bytes_written, ret);
   }
@@ -1433,7 +1433,7 @@ ssize_t recvfrom (int fd, void *buf, size_t count, int flags, struct sockaddr *f
     dprintf("TauWrapperRead: currentRead = %g\n", currentRead);
   }
 
-  if (ret) {
+  if (ret > 0) {
     TAU_CONTEXT_EVENT(bytesrecvfrom, ret);
     TAU_CONTEXT_EVENT(global_bytes_read, ret);
   }
