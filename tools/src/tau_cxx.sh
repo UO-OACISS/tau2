@@ -160,6 +160,8 @@ fi
 
 TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optDefaultParser=cxxparse"
 
+retval=0
+
 if [ $invoke_without_tau = yes ] ; then
 cat <<EOF > /tmp/makefile.tau.$USER.$$
 include $MAKEFILE
@@ -171,6 +173,7 @@ showcompiler:
 	@echo \$(TAU_RUN_CXX)
 EOF
 make -s -f /tmp/makefile.tau.$USER.$$  $SHOW
+retval=$?
 /bin/rm -f /tmp/makefile.tau.$USER.$$
 fi
 
@@ -183,6 +186,10 @@ all:
 
 EOF
 make -s -f /tmp/makefile.tau.$USER.$$
+retval=$?
 /bin/rm -f /tmp/makefile.tau.$USER.$$
 fi
 
+if [ $retval != 0 ] ; then
+    exit 1
+fi
