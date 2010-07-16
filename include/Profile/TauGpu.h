@@ -7,6 +7,7 @@
 #define MemcpyHtoD false
 #define MemcpyDtoH true
 
+#include<Profile/tau_types.h>
 
 /**********************************************
 	* Callback into the driver adapter to retrive information about the device ids
@@ -63,7 +64,7 @@ endTime);
 /* Callback for a Memcpy event that occurred earlier in the execution of the
  * program. Times are pre-aligned to the CPU clock. */
  void Tau_gpu_register_memcpy_event(eventId *id, gpuId *device, double startTime, double
-endTime, double transferSize, bool memcpyType);
+endTime, int transferSize, bool memcpyType);
 
 #endif // _TAU_GPU_INTERFACE
 
