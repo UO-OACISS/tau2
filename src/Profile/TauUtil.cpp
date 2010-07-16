@@ -162,3 +162,22 @@ void *Tau_util_calloc(size_t size, const char *file, int line) {
   return ptr;
 }
 
+static void dmesg(int level, char* format, ...) {
+#ifndef TAU_PAPI_DEBUG && TAU_GPU_DEBUG
+  /* Empty body, so a good compiler will optimise calls
+     to dmesg away */
+#else
+  va_list args;
+
+  if (level > TAU_PAPI_DEBUG_LEVEL) {
+    return;
+  }
+
+  fprintf (stderr, "[%d] ", getpid());
+  va_start(args, format);
+  vfprintf(stderr, format, args);
+  va_end(args);
+#endif /* TAU_PAPI_DEBUG */
+}
+
+
