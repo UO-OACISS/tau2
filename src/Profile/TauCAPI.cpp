@@ -235,28 +235,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #endif
 
 #ifdef TAU_SILC
-	map<long int, SILC_RegionHandle>::iterator handle = regionMap.find(fi->GetFunctionId());
-	if (handle == regionMap.end())
-	{ 
-		/* Region not initialized, call RegionBegin which initializes the Region
-		 * before entering it. */
-		
-		SILC_RegionHandle handle = SILC_INVALID_REGION;
-		SILC_SourceFileHandle srcHandle = SILC_INVALID_SOURCE_FILE;
-
-		/* Normally used as a static handle for last source file encounter. */
-		const char *lastName;
-	
-		SILC_User_RegionBegin(&handle, &SILC_User_LastFileName,
-												 &SILC_User_LastFileHandle, fi->GetName(),
-												 SILC_USER_REGION_TYPE_FUNCTION, "", 0); 
-
-		regionMap[fi->GetFunctionId()] = handle;
-	}
-	else 
-	{
-		SILC_User_RegionEnter(handle->second);
-	}
+  SILC_EnterRegion((SILC_Region_Definition_Movable *)(fi->GetFunctionId()));
 #endif
 
 
@@ -406,6 +385,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 #endif
 
 #ifdef TAU_SILC
+<<<<<<< HEAD:src/Profile/TauCAPI.cpp
 	map<long int, SILC_RegionHandle>::iterator handle = regionMap.find(fi->GetFunctionId());
 	if (handle == regionMap.end())
 	{
@@ -416,6 +396,9 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 	{
   	SILC_User_RegionEnd(handle->second);
 	}
+=======
+  SILC_ExitRegion((SILC_Region_Definition_Movable *)(fi->GetFunctionId()));
+>>>>>>> bf51ce2a5cbc1beda88529267d9daf63e78bec7e:src/Profile/TauCAPI.cpp
 #endif
 
 
