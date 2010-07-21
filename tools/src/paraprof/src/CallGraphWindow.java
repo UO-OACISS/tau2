@@ -38,7 +38,7 @@ import edu.uoregon.tau.perfdmf.Thread;
  * @author	Alan Morris
  * @version	$Revision: 1.15 $
  */
-public class CallGraphWindow extends JFrame implements ActionListener, KeyListener, ChangeListener, Observer, ImageExport,
+public class CallGraphWindow extends JFrame implements ActionListener, KeyListener, MouseWheelListener, ChangeListener, Observer, ImageExport,
         Printable, ParaProfWindow {
 
     private static final int MARGIN = 20;
@@ -776,6 +776,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         graph = new Graph(model, this);
         graph.addMouseListener(graph);
         graph.addKeyListener(this);
+	graph.addMouseWheelListener(this);
 
         //graph.setAntiAliased(true);
         ToolTipManager.sharedInstance().registerComponent(graph);
@@ -1367,6 +1368,20 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
+    }
+
+    public void mouseWheelMoved(MouseWheelEvent event) {
+	// numClicks is negative if scrolling up
+	int numClicks = 0;
+	numClicks = event.getWheelRotation();
+	scale = scale + 0.10*numClicks;
+	if (scale > 5.0) {
+	    scale = 5.0;
+	}
+	if (scale < 0.10) {
+	    scale = 0.10;
+	}
+	graph.setScale(scale);
     }
 
     public void keyTyped(KeyEvent evt) {

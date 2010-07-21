@@ -322,6 +322,7 @@ mpiinc=
 mpilib=
 mpilibrary=no
 mrnet=no
+mrnet_use_lightweight=no
 mrnet_root=
 mrnet_lib=
 ibmmpi=no
@@ -696,6 +697,11 @@ for arg in "$@"; do
       echo "Error: Cannot access MRNet library directory $mrnet_lib"
       exit 1
     fi
+    shift
+    ;;
+
+  -mrnet_use_lightweight)
+    mrnet_use_lightweight=yes
     shift
     ;;
 
@@ -5533,9 +5539,12 @@ fi
 if [ $mrnet = yes ] ; then
   if [ $mpi = yes ] ; then 
        fixmakeargs="$fixmakeargs MRNET"
+       if [ $mrnet_use_lightweight = yes ] ; then
+            fixmakeargs="$fixmakeargs mrnet_lw=-DMRNET_LIGHTWEIGHT"
+       fi
        fixmakeargs="$fixmakeargs mrnet_root=${mrnet_root}"
-       fixmakeargs="$fixmakeargs mrnet_inc=-I${mrnet_root}/include#-I${mrnet_root}/xplat/include"
-       fixmakeargs="$fixmakeargs mrnet_lib=-L${mrnet_lib}#-lmrnet#-lxplat#-ldl#-lm"
+       fixmakeargs="$fixmakeargs mrnet_inc=-I${mrnet_root}/include#-I${mrnet_root}/xplat/include#-I${mrnet_root}/lightweight/include"
+       fixmakeargs="$fixmakeargs mrnet_lib=-L${mrnet_lib}#-lmrnet#-lxplat#-lmrnet_lightweight#-lxplat_lightweight#-ldl#-lm"
   else
        echo "ERROR: MRNet TAUmon transport requires MPI support"
        exit 1

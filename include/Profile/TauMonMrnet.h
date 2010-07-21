@@ -3,9 +3,23 @@
 
 #include <stdint.h>
 
+#include "mrnet_lightweight/Types.h"
 #include "mrnet/Types.h"
 
 // Convenience macros
+#ifdef MRNET_LIGHTWEIGHT
+#define STREAM_FLUSHSEND_BE STREAM_FLUSHSEND_LW
+#else /* MRNET_LIGHTWEIGHT */
+#define STREAM_FLUSHSEND_BE STREAM_FLUSHSEND
+#endif
+
+#define STREAM_FLUSHSEND_LW(stream, tag, format, ...)         \
+  if ((Stream_send(stream, tag, format, __VA_ARGS__) == -1) ||	\
+      (Stream_flush(stream) == -1)) {			   \
+    printf("Stream send failure [format: %s]\n", format);  \
+    exit(-1);						   \
+  }
+
 #define STREAM_FLUSHSEND(stream, tag, format, ...)         \
   if ((stream->send(tag, format, __VA_ARGS__) == -1) ||	   \
       (stream->flush() == -1)) {			   \
