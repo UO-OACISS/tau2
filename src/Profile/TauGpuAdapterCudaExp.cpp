@@ -32,8 +32,8 @@ public:
 	}
 	
   char* printId();
-	double id_p1() { return (double) contextId; }
-	double id_p2() { return (double) deviceId; }
+	x_uint64 id_p1() { return (double) contextId; }
+	x_uint64 id_p2() { return (double) deviceId; }
 };
 
 char* cudaGpuId::printId() 
@@ -182,17 +182,17 @@ void CUDAAPI callback_handle(
 		GetContextTable()->CtxGetId(cParams->ctx, &contextId);
 		cuEventId id(contextId, cParams->apiCallId);
 
-		if(strncmp(cParams->functionName,"cuMemcpy", sizeof("cuMemcpy")-1)==0)
+		if(strncmp(cParams->functionName,"cuMemcpy", strlen("cuMemcpy")-1)==0)
 		{
 			NvU32 device;
 			GetContextTable()->CtxGetDevice(cParams->ctx,&device);
 			cudaGpuId gId(contextId, device);
 			bool memcpyType;
-			if(strncmp(cParams->functionName,"cuMemcpyHtoD", sizeof("cuMemcpyHtoD")-1)==0)
+			if(strncmp(cParams->functionName,"cuMemcpyHtoD", strlen("cuMemcpyHtoD")-1)==0)
 			{
 				memcpyType = MemcpyHtoD;
 			}
-			else if(strncmp(cParams->functionName,"cuMemcpyDtoH",sizeof("cuMemcpyDtoH")-1)==0)
+			else if(strncmp(cParams->functionName,"cuMemcpyDtoH", strlen("cuMemcpyDtoH")-1)==0)
 			{
 				memcpyType = MemcpyDtoH;
 			}
@@ -210,24 +210,24 @@ void CUDAAPI callback_handle(
 		//extract the device ID for the curent context
 		GetContextTable()->CtxGetId(cParams->ctx, &contextId);
 		cuEventId id(contextId, cParams->apiCallId);
-		if(strncmp(cParams->functionName,"cuMemcpy", sizeof("cuMemcpy")-1)==0)
+		if(strncmp(cParams->functionName,"cuMemcpy", strlen("cuMemcpy")-1)==0)
 		{
 			NvU32 device;
 			GetContextTable()->CtxGetDevice(cParams->ctx,&device);
 			cudaGpuId gId(contextId, device);
 			bool memcpyType;
-			if(strncmp(cParams->functionName,"cuMemcpyHtoD", sizeof("cuMemcpyHtoD")-1)==0)
+			if(strncmp(cParams->functionName,"cuMemcpyHtoD", strlen("cuMemcpyHtoD")-1)==0)
 			{
 				memcpyType = MemcpyHtoD;
 			}
-			else if(strncmp(cParams->functionName,"cuMemcpyDtoH",sizeof("cuMemcpyDtoH")-1)==0)
+			else if(strncmp(cParams->functionName,"cuMemcpyDtoH",strlen("cuMemcpyDtoH")-1)==0)
 			{
 				memcpyType = MemcpyDtoH;
 			}
 			MemcpyEventMap.insert(make_pair(id, memcpyType));
 			Tau_gpu_exit_memcpy_event(cParams->functionName, &id, &gId, memcpyType);
 		}
-		else if (strncmp(cParams->functionName,"cuCtxDetach", sizeof("cuCtxDetach")-1)==0)
+		else if (strncmp(cParams->functionName,"cuCtxDetach", strlen("cuCtxDetach")-1)==0)
 		{
 			Tau_gpu_exit_event(cParams->functionName, &id);
 			// experimentally cuCtxDetach is often the last GPU event so go ahead and
