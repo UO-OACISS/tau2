@@ -201,7 +201,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 #else
 #ifdef TAU_SILC
   string tau_silc_name(string(Name)+" "+string(Type));
-  FunctionId =  SILC_DefineRegion( tau_silc_name.c_str(),
+  FunctionId =  (long) SILC_DefineRegion( tau_silc_name.c_str(),
 				   SILC_INVALID_SOURCE_FILE,
 				   SILC_INVALID_LINE_NO,
 				   SILC_INVALID_LINE_NO,
