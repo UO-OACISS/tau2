@@ -47,11 +47,14 @@ using namespace std;
 #endif /* TAU_VAMPIRTRACE */
 
 #ifdef TAU_SILC
-#include <Profile/TauSilc.h>
+//#include <Profile/TauSilc.h>
+#include "SILC_User_Types.h"
 #endif
 
 #include <Profile/TauTrace.h>
 #include <Profile/TauInit.h>
+
+map<long int, SILC_RegionHandle> regionMap;
 
 //////////////////////////////////////////////////////////////////////
 // The purpose of this subclass of vector is to give us a chance to execute
@@ -222,23 +225,27 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   DEBUGPROFMSG("elg_def_region: "<<tau_elg_name<<": returns "<<FunctionId<<endl;);
 #else
 #ifdef TAU_SILC
-  static int tau_silc_init=0;
-  if (tau_silc_init == 0) {
-    SILC_InitMeasurement();
-    tau_silc_init = 1;
-  }
-  string tau_silc_name(string(Name)+" "+string(Type));
-  FunctionId =  SILC_DefineRegion( tau_silc_name.c_str(),
-				   SILC_INVALID_SOURCE_FILE,
-				   SILC_INVALID_LINE_NO,
-				   SILC_INVALID_LINE_NO,
-				   SILC_ADAPTER_COMPILER,
-				   SILC_REGION_FUNCTION
-				   );
+	DEBUGPROFMSG("registering SILC region with id:" << GetFunctionId() << " name:" << GetName());
+	
+	/* Must initialize handle to SILC_INVALID_REGION to get the RegionInit call to
+	 * create a new region. */
+	SILC_RegionHandle handle = SILC_INVALID_REGION;
+	SILC_SourceFileHandle srcHandle = SILC_INVALID_SOURCE_FILE;
+
+	/* Normally used as a static handle for last source file encounter. */
+	const char *lastName;
+	
+	/* TODO: Parse the routine name to get the FileName and Line number. */
+	SILC_User_RegionInit(&handle, &SILC_User_LastFileName,
+                       &SILC_User_LastFileHandle, GetName(),
+                       SILC_USER_REGION_TYPE_FUNCTION, "", 0); 
+
+	regionMap[GetFunctionId()] = handle;
 
 #endif /* TAU_SILC */
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
+
   TauTraceSetFlushEvents(1);
   RtsLayer::UnLockDB();
   
