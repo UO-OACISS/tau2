@@ -9,6 +9,8 @@
  * tau_events.cpp
  */
 
+//#define DEBUG
+
 # include <stdio.h>
 # include <stdlib.h>
 # include <sys/types.h>
@@ -30,6 +32,9 @@
 # endif
 
 # define F_EXISTS    0
+
+#include <string>
+#include <iostream>
 
 #ifdef TAU_DOT_H_LESS_HEADERS 
 #include <vector>
@@ -212,25 +217,30 @@ int parse_edf_file(int node)
     eventname[0]  = '\0';
     inputev.param[0] = '\0';
     if (dynamictrace) /* get eventname in quotes */
-    { 
+      {
       memset(inputev.state,0,sizeof(inputev.state));
       sscanf (linebuf, "%ld %s %d", &localEventId, inputev.state, &inputev.tag);
 #ifdef DEBUG
       printf("Got localEventId %d state %s tag %d\n", localEventId, inputev.state, inputev.tag);
 #endif /* DEBUG */
-      for(j=0; linebuf[j] !='"'; j++)
-	;
-      eventname[0] = linebuf[j];
-      j++;
-      /* skip over till eventname begins */
-      for (k=j; linebuf[k] != '"'; k++)
-      {
-	eventname[k-j+1] = linebuf[k];
-      } 
-      eventname[k-j+1] = '"';
-      eventname[k-j+2] = '\0'; /* terminate eventname */
 
-      strcpy(inputev.param, &linebuf[k+2]);
+      // get the first and last quotes and call the area inbetween the event name.  This handles lines like:
+      // 408 TAUEVENT 0 "Bytes Read <file="socket"> : .TAU application   => MPI_Finalize()   => readv()  " TriggerValue
+
+      string line = linebuf;
+      size_t firstQuote = line.find_first_of('"');
+      size_t lastQuote = line.find_last_of('"');
+
+      if (firstQuote == string::npos || lastQuote == string::npos) {
+	cerr << "Corrupt event file, could not identify event name in line:\n" << line << endl;
+	exit(-1);
+      }
+
+      string eventnameString = line.substr(firstQuote, lastQuote - firstQuote + 1);
+      strcpy (eventname, eventnameString.c_str());
+
+      string paramString = line.substr(lastQuote+2);
+      strcpy (inputev.param, paramString.c_str());
 
 #ifdef DEBUG 
       printf(" Got eventname=%s param=%s\n", eventname, inputev.param);

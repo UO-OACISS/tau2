@@ -227,6 +227,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 ############# Fortran Compiler #############
 #GNU_FORTRAN#TAU_F90         = g77              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #GNU_GFORTRAN#TAU_F90         = gfortran              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#GNU_GFORTRAN4#TAU_F90        = gfortran4             $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #G95_FORTRAN#TAU_F90         = g95              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #SC_GFORTRAN#TAU_F90         = scgfortran              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #SGI_FORTRAN#TAU_F90         = f90              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
@@ -432,9 +433,10 @@ PROFILEOPT24 =
 #TAU_TR1_HASH_MAP#PROFILEOPT79 = -DHAVE_TR1_HASH_MAP #ENDIF#
 
 MRNET_ROOT=
+MRNET_LW_OPTS=
 MRNET_INCLUDE=
 MRNET_LIBS=
-#MRNET#PROFILEOPT80 = -DTAU_EXP_UNIFY -DTAU_MONITORING #ENDIF#
+#MRNET#PROFILEOPT80 = -DTAU_EXP_UNIFY -DTAU_MONITORING ${MRNET_LW_OPTS} #ENDIF#
 
 
 ############# RENCI Scalable Trace Lib Options #############
@@ -537,6 +539,7 @@ TAU_GCCLIB	= -lgcc_s
 #BGL#TAU_FORLIBDIR=blrts_dev_lib #ENDIF#
 #BGP#TAU_FORLIBDIR=bglib #ENDIF#
 #PPC64XLF#TAU_FORTRANLIBS = -L$(EXTRADIR)/$(TAU_FORLIBDIR) -lxlf90 -lxlfmath -lxl -lxlomp_ser #ENDIF#
+#IBM64LINUX_XLF#TAU_FORTRANLIBS = -L$(EXTRADIR)/$(TAU_FORLIBDIR) -lxlf90 -lxlfmath -lxl -lxlomp_ser #ENDIF#
 #BGL#TAU_FORTRANLIBS = -L$(EXTRADIR)/$(TAU_FORLIBDIR) -L$(EXTRADIR)/blrts_lib -lxlf90 -lxlfmath -lxl #ENDIF#
 
 #BGP#TAU_BGL_OMP_SERIAL= -lxlomp_ser #ENDIF#
@@ -628,7 +631,9 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #SUNCC#TAU_CXXLIBS   = $(TAU_CXXLIBS_SUNCC) #ENDIF#
 #SUNX86_64#TAU_CXXLIBS   = $(TAU_CXXLIBS_SUN_OPTERON) #ENDIF#
 #FUJITSU_SOLARIS#TAU_CXXLIBS               = -lstd -lstdm #ENDIF#
-#PPC64XLC#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
+#PPC64XLC#TAU_PPC64_LIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
+#IBM64LINUX_XLC#TAU_IBM64LINUX_LIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
+#USE_IBMXLC#TAU_XLCLIBS         = $(TAU_IBM64LINUX_LIBS) $(TAU_PPC64_LIBS)     #ENDIF#
 #IBMXLCAPPLE#TAU_FORLIBDIR =lib       #ENDIF#
 #IBMXLCAPPLE#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
 #BGL#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/blrts_dev_lib -L$(EXTRADIRCXX)/blrts_lib -libmc++ -L/bgl/BlueLight/ppcfloor/blrts-gnu/powerpc-bgl-blrts-gnu/lib -lstdc++      #ENDIF#
@@ -815,7 +820,7 @@ BFDLIBS=
 #COMPINST_PGI#TAU_COMPINST_CRAY_HACK=$(UPCC_LINK_PREFIX)-Mprof=func $(EXTRADIR)/lib/libpgnod_prof.a#ENDIF#
 #CRAYCNL#TAU_COMPINST_LINKING=$(TAU_COMPINST_CRAY_HACK) #ENDIF#
 #COMPINST_XL#TAU_COMPINST_LINKING=$(UPCC_C_PREFIX)-qdebug=function_trace #ENDIF#
-#MRNET#TAU_LINKER_OPT15=$(MRNET_LIBS)#ENDIF#
+#MRNET#TAU_LINKER_OPT15=$(MRNET_LIBS) #ENDIF#
 ##############################################
 
 

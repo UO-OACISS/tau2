@@ -215,10 +215,12 @@ extern "C" void Tau_memorywrap_remove_ptr (void *ptr) {
     TAU_HASH_MAP<void*,MemoryAllocation>::const_iterator it = global().pointerMap.find(ptr);
     if (it != global().pointerMap.end()) {
       int size = global().pointerMap[ptr].numBytes;
-      global().bytesAllocated -= size;
       global().pointerMap.erase(ptr);
-      TAU_CONTEXT_EVENT(global().freeUserEvent, size);
-      TAU_TRACK_MEMORY_HERE();
+      if (size > 0) {
+        global().bytesAllocated -= size;
+        TAU_CONTEXT_EVENT(global().freeUserEvent, size);
+        TAU_TRACK_MEMORY_HERE();
+      }
     }
     RtsLayer::UnLockDB();
   }

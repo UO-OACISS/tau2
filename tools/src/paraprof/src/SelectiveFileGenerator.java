@@ -55,15 +55,22 @@ public class SelectiveFileGenerator extends JFrame {
         StringBuffer buffer = new StringBuffer();
 
         Group throttledGroup = ppTrial.getGroup("TAU_DISABLE");
+        Group mpiGroup = ppTrial.getGroup("MPI");
+        Group callpathGroup = ppTrial.getGroup("TAU_CALLPATH");
+        Group sampleGroup = ppTrial.getGroup("TAU_SAMPLE");
 
-        for (Iterator it = ppTrial.getMeanThread().getFunctionProfiles().iterator(); it.hasNext();) {
-            FunctionProfile fp = (FunctionProfile) it.next();
+        for (Iterator<FunctionProfile> it = ppTrial.getMeanThread().getFunctionProfiles().iterator(); it.hasNext();) {
+            FunctionProfile fp = it.next();
             if (excludeThrottled.isSelected() && fp.getFunction().isGroupMember(throttledGroup)) {
                 buffer.append(ParaProfUtils.removeSourceLocation(fp.getName()) + "\n");
             } else if (excludeLightweight.isSelected() == true) {
-                if (fp.getNumCalls() >= numcalls_value) {
-                    if (fp.getInclusivePerCall(0) <= percall_value) {
-                        buffer.append(ParaProfUtils.removeSourceLocation(fp.getName()) + "\n");
+
+                if (!fp.getFunction().isGroupMember(mpiGroup) && !fp.getFunction().isGroupMember(callpathGroup)
+                        && !fp.getFunction().isGroupMember(sampleGroup)) {
+                    if (fp.getNumCalls() >= numcalls_value) {
+                        if (fp.getInclusivePerCall(0) <= percall_value) {
+                            buffer.append(ParaProfUtils.removeSourceLocation(fp.getName()) + "\n");
+                        }
                     }
                 }
             }
@@ -181,7 +188,7 @@ public class SelectiveFileGenerator extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 try {
                     File file = new File(fileLocation.getText());
-                    FileOutputStream out = new FileOutputStream(file,mergeFile.isSelected());
+                    FileOutputStream out = new FileOutputStream(file, mergeFile.isSelected());
                     OutputStreamWriter outWriter = new OutputStreamWriter(out);
                     BufferedWriter bw = new BufferedWriter(outWriter);
 

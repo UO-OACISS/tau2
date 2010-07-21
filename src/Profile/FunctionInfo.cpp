@@ -18,7 +18,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "Profile/Profiler.h"
-
+#include <sstream>
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
@@ -53,6 +53,9 @@ using namespace std;
 
 #include <Profile/TauTrace.h>
 #include <Profile/TauInit.h>
+#include <Profile/TauUtil.h>
+
+map<long int, SILC_RegionHandle> regionMap;
 
 map<long int, SILC_RegionHandle> regionMap;
 
@@ -118,28 +121,7 @@ int& TheUsingCompInst()
   return UsingCompInst;
 }
 
-#ifdef TAU_VAMPIRTRACE
-//////////////////////////////////////////////////////////////////////
-// Initialize VampirTrace Tracing package
-//////////////////////////////////////////////////////////////////////
-int TauInitVampirTrace(void)
-{
-  DEBUGPROFMSG("Calling vt_open"<<endl;);
-  vt_open();
-  return 1;
-}
-#endif /* TAU_VAMPIRTRACE */
 
-#ifdef TAU_EPILOG 
-//////////////////////////////////////////////////////////////////////
-// Initialize EPILOG Tracing package
-//////////////////////////////////////////////////////////////////////
-int TauInitEpilog(void) {
-  DEBUGPROFMSG("Calling esd_open"<<endl;);
-  esd_open();
-  return 1;
-}
-#endif /* TAU_EPILOG */
 
 //////////////////////////////////////////////////////////////////////
 // Member Function Definitions For class FunctionInfo
@@ -211,14 +193,12 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   FunctionId = RtsLayer::GenerateUniqueId();
 
 #ifdef TAU_VAMPIRTRACE
-  static int tau_vt_init=TauInitVampirTrace();
   string tau_vt_name(string(Name)+" "+string(Type));
   FunctionId = TAU_VT_DEF_REGION(tau_vt_name.c_str(), VT_NO_ID, VT_NO_LNO,
 			     VT_NO_LNO, GroupName, VT_FUNCTION);
   DEBUGPROFMSG("vt_def_region: "<<tau_vt_name<<": returns "<<FunctionId<<endl;);
 #else /* TAU_VAMPIRTRACE */
 #ifdef TAU_EPILOG
-  static int tau_elg_init=TauInitEpilog();
   string tau_elg_name(string(Name)+" "+string(Type));
   FunctionId = esd_def_region(tau_elg_name.c_str(), ELG_NO_ID, ELG_NO_LNO,
 			      ELG_NO_LNO, GroupName, ELG_FUNCTION);
@@ -283,6 +263,7 @@ FunctionInfo::FunctionInfo(const char *name, const char *type,
 	       << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
   Name = strdup(name);
   Type = strdup(type);
+  FullName = NULL;
   
   FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
 }
@@ -294,6 +275,7 @@ FunctionInfo::FunctionInfo(const char *name, const string& type,
 			   int tid) {
   Name = strdup(name);
   Type = strdup(type.c_str());
+  FullName = NULL;
   
   FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
 }
@@ -305,6 +287,7 @@ FunctionInfo::FunctionInfo(const string& name, const char * type,
 	int tid) {
   Name = strdup(name.c_str());
   Type = strdup(type);
+  FullName = NULL;
   
   FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
 }
@@ -317,6 +300,7 @@ FunctionInfo::FunctionInfo(const string& name, const string& type,
   
   Name = strdup(name.c_str());
   Type = strdup(type.c_str());
+  FullName = NULL;
   
   FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
 }
@@ -491,6 +475,28 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 #endif
   }
 }
+
+
+string *FunctionInfo::GetFullName() {
+
+  if (FullName == NULL) {
+    ostringstream ostr;
+    if (strlen(GetType()) > 0 && strcmp(GetType()," ") != 0) {
+      ostr << GetName() << " " << GetType() << ":GROUP:" << GetAllGroups();
+    } else {
+      ostr << GetName() << ":GROUP:" << GetAllGroups();
+    }
+    FullName = new string;
+
+    string tmpstr = ostr.str();
+    char *tmp = strdup(tmpstr.c_str());
+    tmp = Tau_util_removeRuns(tmp);
+    *FullName = tmp;
+
+  }
+  return FullName;
+}
+
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
  * $Revision: 1.84 $   $Date: 2010/04/27 23:13:55 $
