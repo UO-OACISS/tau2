@@ -54,8 +54,8 @@ using namespace std;
 #include "elg_trc.h"
 #endif /* TAU_EPILOG */
 
-#include <Profile/TauTrace.h>
-
+#include <TauTrace.h>
+#include <TauInit.h>
 
 
 #ifdef PGI
@@ -76,6 +76,13 @@ public :
 
 vector<TauUserEvent*>& TheEventDB(void) {
   static AtomicEventDB EventDB;
+
+  static int flag = 1;
+  if (flag) {
+    flag = 0;
+    Tau_init_initializeTAU();
+  }
+
   return EventDB;
 }
 

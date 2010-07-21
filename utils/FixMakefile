@@ -157,6 +157,12 @@ case $1 in
 	echo "s,^MRNET_ROOT=.*$,MRNET_ROOT=$mrnet_root,g" >> $sedout
 	;;
 
+     mrnet_lw=*)
+	echo "NOTE:  TauOverMRNet -- will use MRNet Lightweight Interface."
+	mrnet_lw=`echo $1 | sed -e 's/^mrnet_lw=//'`
+	echo "s,^MRNET_LW_OPTS=.*$,MRNET_LW_OPTS=$mrnet_lw,g" >> $sedout
+	;;
+
      mrnet_inc=*)
         mrnet_inc=`echo $1 | sed -e 's/^mrnet_inc=//' -e 's/#/ /g'`
         echo "s@^MRNET_INCLUDE=.*\$@MRNET_INCLUDE=$mrnet_inc@g" >> $sedout
@@ -1422,6 +1428,10 @@ case $1 in
 	echo "NOTE: GNU gfortran compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     GNU_GFORTRAN4)
+	echo "NOTE: GNU gfortran4 compiler specific options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      SGI_FORTRAN)
 	echo "NOTE: SGI f90 compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1448,6 +1458,14 @@ case $1 in
         ;;
      PPC64XLC)
         echo "NOTE: IBM xlc compiler for Linux options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     IBM64LINUX_XLF)
+        echo "NOTE: IBM 64 bit xlf90 compiler for Linux options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     IBM64LINUX_XLC)
+        echo "NOTE: IBM 64 bit xlc compiler for Linux options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      THREADSAFE_COMPILERS)

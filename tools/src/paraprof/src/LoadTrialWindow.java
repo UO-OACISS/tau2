@@ -70,7 +70,6 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
         setTitle("TAU: ParaProf: Load Trial");
         ParaProfUtils.setFrameIcon(this);
 
-
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 thisWindowClosing(evt);
@@ -216,9 +215,12 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
                 if (trialTypes.getSelectedIndex() == 0) {
                     File files[] = new File[1];
                     files[0] = new File(dirLocationField.getText().trim());
+
                     if (!files[0].exists()) {
-                        JOptionPane.showMessageDialog(this, dirLocationField.getText().trim() + " does not exist");
-                        return;
+                        if (!files[0].toString().toLowerCase().startsWith("http:")) {
+                            JOptionPane.showMessageDialog(this, dirLocationField.getText().trim() + " does not exist");
+                            return;
+                        }
                     }
                     paraProfManagerWindow.addTrial(application, experiment, files, trialTypes.getSelectedIndex(), false,
                             monitorTrialCheckBox.isSelected());

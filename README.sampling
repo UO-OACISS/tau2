@@ -79,7 +79,7 @@ integration.
    cd ../hpctoolkit-TRUNK-4.9.2-r2138
    patch -p2 < $HOME/tau2/tools/src/contrib/hpctoolkit-4.9.2-r2138.patch
    ./configure --with-papi=/usr/local/packages/papi --with-externals=/usr/local/packages/src/hpctoolkit-externals-TRUNK-4.9.2-r2138 --prefix=/usr/local/packages/hpctoolkit
-   make ** make install
+   make && make install
 
 2) Configure TAU with HPCToolkit:
   
@@ -87,8 +87,13 @@ integration.
 
 3) Generate and analyze traces as above.  Profiles will now have integrated callstacks.  OTF traces will have full callpaths.
 
+   When using HPCToolkit, you must run the program using hpcrun from the
+   install directory of hpctoolkit.  You must also give it parameters as if it
+   were being used as the measurement system, but those values will not be used
+   as the HPCToolkit measurement system is disabled by the patch.  An example
+   run is as follows:
 
-
+   hpcrun -e PAPI_TOT_CYC@100000 ./simple
 
 
 

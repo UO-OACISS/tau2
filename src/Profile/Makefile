@@ -61,7 +61,7 @@ CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_
 
 UPCFLAGS      = $(TAUINC) $(PROFILEOPTS) 
 
-CFLAGS        = $(TAU_MPI_INCLUDE) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS)   
+CFLAGS        = $(DEFINES) $(TAU_MPI_INCLUDE) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS)   
 
 INCDIR	      = $(TAUROOT)/include/Profile
 
@@ -93,6 +93,9 @@ PGIACC_O=
 #PGI#PGIACC_STATIC_O = PgiAcc.o #ENDIF#
 
 TAU_SAMPLING_O = TauSampling.o
+#BGL#TAU_SAMPLING_O= #ENDIF#
+#CATAMOUNT#TAU_SAMPLING_O= #ENDIF#
+#CRAYX1CC#TAU_SAMPLING_O= #ENDIF#
 #CRAYXMT#TAU_SAMPLING_O= #ENDIF#
 
 #############################################
@@ -170,6 +173,7 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 # For building TauLinuxTimers with gcc
 ##############################################
 #IBM64LINUX#GCC_ABI	     = -m64 		  #ENDIF#
+#PPC64XLC#GCC_ABI	     = -m32 		  #ENDIF#
 
 
 

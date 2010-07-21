@@ -1818,12 +1818,10 @@ void TAU_PROFILE_SNAPSHOT(char *name, int slen) {
   tau_profile_snapshot_(name, slen);
 }
 
-
-#ifdef TAU_EXP_COLLATE
 void tau_online_dump_() {
 #ifdef TAU_MONITORING
   Tau_mon_onlineDump();
-#else /* TAU_MONITORING */
+#elif defined(TAU_EXP_COLLATE)
   Tau_collate_onlineDump();
 #endif /* TAU_MONITORING */
 }
@@ -1831,7 +1829,7 @@ void tau_online_dump_() {
 void tau_online_dump() {
 #ifdef TAU_MONITORING
   Tau_mon_onlineDump();
-#else /* TAU_MONITORING */
+#elif defined(TAU_EXP_COLLATE)
   Tau_collate_onlineDump();
 #endif /* TAU_MONITORING */
 }
@@ -1839,7 +1837,7 @@ void tau_online_dump() {
 void tau_online_dump__() {
 #ifdef TAU_MONITORING
   Tau_mon_onlineDump();
-#else /* TAU_MONITORING */
+#elif defined(TAU_EXP_COLLATE)
   Tau_collate_onlineDump();
 #endif /* TAU_MONITORING */
 }
@@ -1847,11 +1845,10 @@ void tau_online_dump__() {
 void TAU_ONLINE_DUMP() {
 #ifdef TAU_MONITORING
   Tau_mon_onlineDump();
-#else /* TAU_MONITORING */
+#elif defined(TAU_EXP_COLLATE)
   Tau_collate_onlineDump();
 #endif /* TAU_MONITORING */
 }
-#endif /* TAU_EXP_COLLATE */
 
 //////////////////////////////////////////////////////////////////////
 // Parameter Profiling

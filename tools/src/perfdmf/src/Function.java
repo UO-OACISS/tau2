@@ -22,8 +22,8 @@ import java.util.List;
  */
 public class Function implements Serializable, Comparable {
 
-    private String name = null;
-    private String reversedName = null;
+    private String name;
+    private String reversedName;
     private int id = -1;
     private List groups = new ArrayList();
     private boolean phase = false;
@@ -62,6 +62,7 @@ public class Function implements Serializable, Comparable {
 
     public void setName(String name) {
         this.name = name;
+        this.reversedName = null;
     }
 
     /**
