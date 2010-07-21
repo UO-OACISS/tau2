@@ -191,7 +191,7 @@ void Tau_gpu_register_gpu_event(const char *name, eventId *id, double startTime,
 }
 
 void Tau_gpu_register_memcpy_event(eventId *id, gpuId *device, double startTime, double
-endTime, double transferSize, bool memcpyType)
+endTime, int transferSize, bool memcpyType)
 {
 #ifdef DEBUG_PROF		
 	printf("recording memcopy event.\n");
