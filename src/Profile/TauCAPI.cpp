@@ -231,7 +231,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #endif
 
 #ifdef TAU_SILC
-  SILC_EnterRegion(fi->GetFunctionId());
+  SILC_EnterRegion((SILC_Region_Definition_Movable *)(fi->GetFunctionId()));
 #endif
 
 
@@ -381,7 +381,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 #endif
 
 #ifdef TAU_SILC
-  SILC_ExitRegion(fi->GetFunctionId());
+  SILC_ExitRegion((SILC_Region_Definition_Movable *)(fi->GetFunctionId()));
 #endif
 
 
