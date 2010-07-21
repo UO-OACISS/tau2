@@ -57,7 +57,11 @@ void esd_exit (elg_ui4 rid);
 #endif /* TAU_VAMPIRTRACE */
 
 #ifdef TAU_SILC
-#include <Profile/TauSilc.h>
+//#include <Profile/TauSilc.h>
+#include "SILC_User_Types.h"
+#include "SILC_PublicTypes.h"
+#include "SILC_User.h"
+#include "SILC_User_Functions.h"
 #endif
 
 
@@ -231,7 +235,28 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #endif
 
 #ifdef TAU_SILC
-  SILC_EnterRegion(fi->GetFunctionId());
+	map<long int, SILC_RegionHandle>::iterator handle = regionMap.find(fi->GetFunctionId());
+	if (handle == regionMap.end())
+	{ 
+		/* Region not initialized, call RegionBegin which initializes the Region
+		 * before entering it. */
+		
+		SILC_RegionHandle handle = SILC_INVALID_REGION;
+		SILC_SourceFileHandle srcHandle = SILC_INVALID_SOURCE_FILE;
+
+		/* Normally used as a static handle for last source file encounter. */
+		const char *lastName;
+	
+		SILC_User_RegionBegin(&handle, &SILC_User_LastFileName,
+												 &SILC_User_LastFileHandle, fi->GetName(),
+												 SILC_USER_REGION_TYPE_FUNCTION, "", 0); 
+
+		regionMap[fi->GetFunctionId()] = handle;
+	}
+	else 
+	{
+		SILC_User_RegionEnter(handle->second);
+	}
 #endif
 
 
@@ -381,7 +406,16 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 #endif
 
 #ifdef TAU_SILC
-  SILC_ExitRegion(fi->GetFunctionId());
+	map<long int, SILC_RegionHandle>::iterator handle = regionMap.find(fi->GetFunctionId());
+	if (handle == regionMap.end())
+	{
+		printf("ERROR: Attempting to EXIT a SILC Region that has not been initialized, Region ENTER must be missing.");
+		exit(1);
+	}
+	else
+	{
+  	SILC_User_RegionEnd(handle->second);
+	}
 #endif
 
 
