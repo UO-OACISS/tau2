@@ -3544,7 +3544,7 @@ case $machine in
         ;; 
      bgl)
 	echo "Found an IBM PPC-64 BGL Linux configuration definition"
-	fixmakeargs="arch=$machine BGL $fixmakeargs"
+	fixmakeargs="arch=$machine BGL NOSHARED $fixmakeargs"
 	if [ $papi = yes ] ; then
 	    p=$papidir/lib
 	    if [ -f $p/libpapi.a ] ; then
