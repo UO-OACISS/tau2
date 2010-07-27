@@ -883,7 +883,11 @@ while [ $tempCounter -lt $numFiles ]; do
 	    ;;
 	esac
 	evalWithDebugMessage "$pdtParserCmd" "Parsing with PDT for OpenMP directives verification:" 
-	pdbcommentCmd="$optPdtDir/pdbcomment -o ${base}.comment.pdb ${base}.pdb"
+	if [ "x$defaultParser" = "xcxxparse" -a "x$suf" = "x.c" ] ; then
+	    pdbcommentCmd="$optPdtDir/pdbcomment -o ${base}.comment.pdb ${base}.c.pdb"
+        else
+	    pdbcommentCmd="$optPdtDir/pdbcomment -o ${base}.comment.pdb ${base}.pdb"
+	fi
 	
 	evalWithDebugMessage "$pdbcommentCmd" "Using pdbcomment:" 
 
