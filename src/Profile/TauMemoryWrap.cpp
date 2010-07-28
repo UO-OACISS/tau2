@@ -54,6 +54,7 @@ public:
   void *heapMemoryUserEvent;
   void *mallocUserEvent;
   void *freeUserEvent;
+  void *totalMemoryLeakEvent;
   int wrapperActive;
 
   MemoryWrapGlobal() {
@@ -61,6 +62,7 @@ public:
     heapMemoryUserEvent = 0;
     mallocUserEvent = 0;
     freeUserEvent = 0;
+    totalMemoryLeakEvent = 0;
 
     if (getenv("TAU_MEMORY_WRAPPER_ENABLED")) {
       wrapperActive = 1;
@@ -71,6 +73,7 @@ public:
     Tau_get_context_userevent(&heapMemoryUserEvent, "Heap Memory Allocated");
     Tau_get_context_userevent(&mallocUserEvent, "malloc size (bytes)");
     Tau_get_context_userevent(&freeUserEvent, "free size (bytes)");
+    totalMemoryLeakEvent = Tau_get_userevent("total memory leak size (bytes)");
   }
   ~MemoryWrapGlobal() {
     Tau_destructor_trigger();
@@ -136,6 +139,7 @@ void Tau_memorywrap_writeHook() {
 
     // trigger the event
     userEventMap[it->second.location]->TriggerEvent(it->second.numBytes);
+    TAU_EVENT(global().totalMemoryLeakEvent, it->second.numBytes);
 
     //fprintf (stderr, "[%p] leak of %d bytes, allocated at %s\n", it->first, it->second.numBytes, it->second.location.c_str());
   }
