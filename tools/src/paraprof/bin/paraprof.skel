@@ -60,7 +60,7 @@ MEMORY=-Xmx800m
 # Check machine type for a heap space boost
 machine=`uname -m`
 platform=`uname -s`
-if [ "x$machine" = "xx86_64" ] ; then
+if [ "x$MACHINE" = "xx86_64" ] ; then
     MEMORY=-Xmx2000m
 fi
 
