@@ -214,7 +214,7 @@ extern "C" void Tau_memorywrap_remove_ptr (void *ptr) {
     RtsLayer::LockDB();
     TAU_HASH_MAP<void*,MemoryAllocation>::const_iterator it = global().pointerMap.find(ptr);
     if (it != global().pointerMap.end()) {
-      int size = global().pointerMap[ptr].numBytes;
+      size_t size = global().pointerMap[ptr].numBytes;
       global().pointerMap.erase(ptr);
       if (size > 0) {
         global().bytesAllocated -= size;
