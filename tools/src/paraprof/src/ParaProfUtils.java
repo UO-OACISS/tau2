@@ -553,6 +553,46 @@ public class ParaProfUtils {
 
         windowsMenu.add(threadWindows);
 
+	ActionListener mActionListener = new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                String arg = evt.getActionCommand();
+		if (arg.equals("Summary")) {
+		    JFrame hw = 
+			MonSummaryWindow.createMonSummaryWindow(ppTrial, 
+								owner);
+		    hw.setVisible(true);
+		    
+		} else if (arg.equals("Clusters")) {
+		    System.out.println("Clusters");
+		}
+	    }
+	    };
+	final JMenu monWindows = new JMenu("Monitoring");
+	monWindows.getPopupMenu().setLightWeightPopupEnabled(false);
+	monWindows.add(createMenuItem("Summary", mActionListener, true));
+	monWindows.add(createMenuItem("Clusters", mActionListener, true));
+
+	ActionListener fmActionListener = new ActionListener() {
+	    public void actionPerformed(ActionEvent evt) {
+		String arg = evt.getActionCommand();
+		if (arg.equals("Base Statistics")) {
+		    System.out.println("Monitoring: Base Statistics");
+		} else if (arg.equals("Histograms")) {
+		    System.out.println("Monitoring: Histograms");
+		}
+	    }
+	    };
+
+	final JMenu monFunctionWindows = new JMenu("Function");
+	monFunctionWindows.getPopupMenu().setLightWeightPopupEnabled(false);
+	monFunctionWindows.add(createMenuItem("Base Statistics",
+					      fmActionListener, true));
+	monFunctionWindows.add(createMenuItem("Histograms",
+					      fmActionListener, true));
+	monWindows.add(monFunctionWindows);
+
+	windowsMenu.add(monWindows);
+
         windowsMenu.add(new JSeparator());
 
         menuItem = new JMenuItem("Function Legend");
