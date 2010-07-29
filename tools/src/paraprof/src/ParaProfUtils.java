@@ -369,10 +369,58 @@ public class ParaProfUtils {
     }
 
     public static void show3dCommMatrix(ParaProfTrial ppTrial, JFrame parentFrame) {
-        JFrame window = ThreeDeeCommMatrixWindow.createCommunicationMatrixWindow(ppTrial, parentFrame);
+    	
+        JFrame window = null; 
+        try {
+        	window = ThreeDeeCommMatrixWindow.createCommunicationMatrixWindow(ppTrial, parentFrame);
+        } catch (UnsatisfiedLinkError e) {
+            JOptionPane.showMessageDialog(parentFrame, "Unable to load jogl library.  Possible reasons:\n"
+                    + "libjogl.so is not in your LD_LIBRARY_PATH.\n"
+                    + "Jogl is not built for this platform.\nOpenGL is not installed\n\n"
+                    + "Jogl is available at jogl.dev.java.net\n\n" + "Message : " + e.getMessage());
+        } catch (UnsupportedClassVersionError e) {
+            JOptionPane.showMessageDialog(parentFrame,
+                    "Unsupported class version.  Are you sure you're using Java 1.4 or above?");
+        } catch (Exception gle) {
+            new ParaProfErrorDialog("Unable to initialize OpenGL: ", gle);
+        }
+        
+        
         if (window != null) {
             window.setVisible(true);
         }
+    }
+    
+    public static void show3dVisualization(ParaProfTrial ppTrial,JFrame parentFrame){
+        if (JVMDependent.version.equals("1.3")) {
+            JOptionPane.showMessageDialog(parentFrame, "3D Visualization requires Java 1.4 or above\n"
+                    + "Please make sure Java 1.4 is in your path, then reconfigure TAU and re-run ParaProf");
+            return;
+        }
+
+        //Gears.main(null);
+        //(new Gears()).show();
+
+        JFrame window = null;
+        
+        try {
+            window = ThreeDeeWindow.createThreeDeeWindow(ppTrial, parentFrame);//new ThreeDeeWindow(ppTrial, parentFrame);
+        } catch (UnsatisfiedLinkError e) {
+            JOptionPane.showMessageDialog(parentFrame, "Unable to load jogl library.  Possible reasons:\n"
+                    + "libjogl.so is not in your LD_LIBRARY_PATH.\n"
+                    + "Jogl is not built for this platform.\nOpenGL is not installed\n\n"
+                    + "Jogl is available at jogl.dev.java.net\n\n" + "Message : " + e.getMessage());
+        } catch (UnsupportedClassVersionError e) {
+            JOptionPane.showMessageDialog(parentFrame,
+                    "Unsupported class version.  Are you sure you're using Java 1.4 or above?");
+        } catch (Exception gle) {
+            new ParaProfErrorDialog("Unable to initialize OpenGL: ", gle);
+        }
+
+        if (window != null) {
+            window.setVisible(true);
+        }
+        
     }
 
     public static JMenu createWindowsMenu(final ParaProfTrial ppTrial, final JFrame owner) {
@@ -404,32 +452,7 @@ public class ParaProfUtils {
                     } else if (arg.equals("3D Communication Matrix")) {
                         ParaProfUtils.show3dCommMatrix(ppTrial, owner);
                     } else if (arg.equals("3D Visualization")) {
-
-                        if (JVMDependent.version.equals("1.3")) {
-                            JOptionPane.showMessageDialog(owner, "3D Visualization requires Java 1.4 or above\n"
-                                    + "Please make sure Java 1.4 is in your path, then reconfigure TAU and re-run ParaProf");
-                            return;
-                        }
-
-                        //Gears.main(null);
-                        //(new Gears()).show();
-
-                        try {
-
-                            (new ThreeDeeWindow(ppTrial, owner)).setVisible(true);
-                            //(new ThreeDeeWindow()).show();
-                        } catch (UnsatisfiedLinkError e) {
-                            JOptionPane.showMessageDialog(owner, "Unable to load jogl library.  Possible reasons:\n"
-                                    + "libjogl.so is not in your LD_LIBRARY_PATH.\n"
-                                    + "Jogl is not built for this platform.\nOpenGL is not installed\n\n"
-                                    + "Jogl is available at jogl.dev.java.net\n\n" + "Message : " + e.getMessage());
-                        } catch (UnsupportedClassVersionError e) {
-                            JOptionPane.showMessageDialog(owner,
-                                    "Unsupported class version.  Are you sure you're using Java 1.4 or above?");
-                        } catch (Exception gle) {
-                            new ParaProfErrorDialog("Unable to initialize OpenGL: ", gle);
-                        }
-
+                    	ParaProfUtils.show3dVisualization(ppTrial, owner);
                     } else if (arg.equals("Close All Sub-Windows")) {
                         ppTrial.updateRegisteredObjects("subWindowCloseEvent");
                     }

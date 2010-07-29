@@ -199,6 +199,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
     }
 
+    public static ThreeDeeWindow createThreeDeeWindow(ParaProfTrial ppTrial,JFrame parentFrame){
+    	return new ThreeDeeWindow(ppTrial,parentFrame);
+    }
+    
     private void generateScatterPlot(boolean autoSize, ThreeDeeSettings settings) {
 
         Function[] scatterFunctions = settings.getScatterFunctions();

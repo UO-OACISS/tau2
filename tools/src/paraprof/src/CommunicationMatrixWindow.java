@@ -19,7 +19,7 @@ import edu.uoregon.tau.perfdmf.UserEventProfile;
 import edu.uoregon.tau.vis.HeatMapData;
 import edu.uoregon.tau.vis.HeatMapWindow;
 
-public class CommunicationMatrixWindow implements ParaProfWindow, Printable {
+public class CommunicationMatrixWindow implements ParaProfWindow, Observer, Printable {
 
     private HeatMapData mapData = null;
     private int size = 0;
@@ -30,12 +30,13 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Printable {
     private static final int MEAN = 3;
     private static final int STDDEV = 4;
     private static final int VOLUME = 5;
-    private JFrame window = null;
+    private HeatMapWindow window = null;
     private int numEvents = 0;
     private ParaProfTrial ppTrial;
 
     private CommunicationMatrixWindow(ParaProfTrial ppTrial) {
         this.ppTrial = ppTrial;
+        
     }
 
     public static JFrame createCommunicationMatrixWindow(ParaProfTrial ppTrial, JFrame parentFrame) {
@@ -62,10 +63,11 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Printable {
         }
 
         ParaProf.incrementNumWindows();
+        ppTrial.addObserver(matrix);
         return frame;
     }
 
-    private JFrame doCommunicationMatrix(DataSource dataSource, JFrame mainFrame) {
+    private boolean updateMapData(DataSource dataSource){
         boolean foundData = false;
         int threadID = 0;
         size = dataSource.getNodeMap().size();
@@ -77,7 +79,7 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Printable {
             if (thread.getThreadID() == 0 && thread.getContextID() == 0) {
                 for (Iterator it2 = thread.getUserEventProfiles(); it2.hasNext();) {
                     UserEventProfile uep = (UserEventProfile) it2.next();
-                    if (uep != null && uep.getNumSamples() > 0) {
+                    if (uep != null && uep.getNumSamples(ppTrial.getSelectedSnapshot()) > 0) {
                         String event = uep.getName();
                         if (event.startsWith("Message size sent to node ") && event.indexOf("=>") == -1) {
                             foundData = true;
@@ -101,6 +103,16 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Printable {
                 threadID++;
             }
         }
+        
+        if(foundData){
+        	 mapData.massageData();
+        }
+        
+        return foundData;
+    }
+    
+    private JFrame doCommunicationMatrix(DataSource dataSource, JFrame mainFrame) {
+    	boolean foundData=updateMapData(dataSource);
         if (!foundData) {
             JOptionPane.showMessageDialog(
                     mainFrame,
@@ -108,7 +120,6 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Printable {
                     "No Communication Matrix Data", JOptionPane.ERROR_MESSAGE);
             return null;
         }
-        mapData.massageData();
         window = new HeatMapWindow("Message Size Heat Maps", mapData);
         URL url = Utility.getResource("tau32x32.gif");
         if (url != null) {
@@ -131,13 +142,13 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Printable {
                 pointData = empty;
             }
 
-            numEvents = uep.getNumSamples();
+            numEvents = uep.getNumSamples(ppTrial.getSelectedSnapshot());
             pointData[COUNT] += numEvents;
 
-            eventMax = uep.getMaxValue();
+            eventMax = uep.getMaxValue(ppTrial.getSelectedSnapshot());
             pointData[MAX] = Math.max(eventMax, pointData[MAX]);
 
-            eventMin = uep.getMinValue();
+            eventMin = uep.getMinValue(ppTrial.getSelectedSnapshot());
             if (pointData[MIN] > 0) {
                 pointData[MIN] = Math.min(pointData[MIN], eventMin);
             } else {
@@ -145,11 +156,11 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Printable {
             }
 
             // we'll recompute this later.
-            eventMean = uep.getMeanValue();
+            eventMean = uep.getMeanValue(ppTrial.getSelectedSnapshot());
             pointData[MEAN] += eventMean;
 
             // we'll recompute this later.
-            eventSumSqr = uep.getStdDev();
+            eventSumSqr = uep.getStdDev(ppTrial.getSelectedSnapshot());
             pointData[STDDEV] += eventSumSqr;
 
             volume = numEvents * eventMean;
@@ -191,4 +202,28 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Printable {
     public JFrame getFrame() {
         return window;
     }
+
+	public void update(Observable o, Object arg) {
+		String tmpString = (String) arg;
+
+        if (tmpString.equals("subWindowCloseEvent")) {
+            closeThisWindow();
+        } else if (tmpString.equals("prefEvent")) {
+
+        } else if (tmpString.equals("colorEvent")) {
+
+        } else if (tmpString.equals("dataEvent")) {
+        	
+//        	HeatMapData mapData = generateData(ppTrial.getDataSource(), ppTrial.getSelectedSnapshot());
+//            if (mapData == null) {
+//                return;
+//            }
+//        	
+//        	this.mapData = mapData;
+//        	processData();
+        	updateMapData(ppTrial.getDataSource());
+        	window.setMapData(mapData);
+        }
+		
+	}
 }

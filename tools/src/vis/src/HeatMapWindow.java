@@ -38,7 +38,15 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 	public final static int maxCells = 256;   // the number of heatmap cells, max, to show
 	public final static int viewRatio = 2;   // the ratio between those two
 	private HeatMap heatMap = null;
-
+	private JSplitPane splitPane;
+	private int dataIndex = 0;
+	
+	public void setMapData(HeatMapData mapData){
+		this.mapData = mapData;
+		mapPanel = buildMapPanel(dataIndex, currentFigure);
+		splitPane.setLeftComponent(mapPanel);
+	}
+	
 	public HeatMapWindow(String title, HeatMapData mapData) {
 		super(title);
 		this.mapData = mapData;
@@ -69,7 +77,7 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 
 	private void drawFigures(boolean centerWindow) {
 		// which figure type is requested?
-		int dataIndex = 0;
+		//int dataIndex = 0;
 		for (dataIndex = 0 ; dataIndex < figures.length ; dataIndex++) {
 			if (figures[dataIndex].equals(currentFigure)) {
 				break;
@@ -77,7 +85,8 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 		}
 
 		// build the split pane
-		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+		//JSplitPane 
+		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		splitPane.setResizeWeight(1);
 		splitPane.setOneTouchExpandable(true);
 		mapPanel = buildMapPanel(dataIndex, currentFigure);
