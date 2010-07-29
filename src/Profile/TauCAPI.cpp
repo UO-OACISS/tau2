@@ -57,7 +57,11 @@ void esd_exit (elg_ui4 rid);
 #endif /* TAU_VAMPIRTRACE */
 
 #ifdef TAU_SILC
-#include <Profile/TauSilc.h>
+//#include <Profile/TauSilc.h>
+#include "SILC_User_Types.h"
+#include "SILC_PublicTypes.h"
+#include "SILC_User.h"
+#include "SILC_User_Functions.h"
 #endif
 
 
@@ -381,7 +385,20 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 #endif
 
 #ifdef TAU_SILC
+<<<<<<< HEAD:src/Profile/TauCAPI.cpp
+	map<long int, SILC_RegionHandle>::iterator handle = regionMap.find(fi->GetFunctionId());
+	if (handle == regionMap.end())
+	{
+		printf("ERROR: Attempting to EXIT a SILC Region that has not been initialized, Region ENTER must be missing.");
+		exit(1);
+	}
+	else
+	{
+  	SILC_User_RegionEnd(handle->second);
+	}
+=======
   SILC_ExitRegion((SILC_Region_Definition_Movable *)(fi->GetFunctionId()));
+>>>>>>> bf51ce2a5cbc1beda88529267d9daf63e78bec7e:src/Profile/TauCAPI.cpp
 #endif
 
 
