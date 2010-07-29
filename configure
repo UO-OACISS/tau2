@@ -1308,6 +1308,25 @@ for arg in "$@"; do
     shift
     ;;
 
+  -gpuinc=*)
+    gpuinclude=`echo $arg | sed -e 's/-gpuinc=//' -e 's/ /#/g'`
+    if [ ! -d $gpuinclude ] ; then
+      echo "Error: Cannot access GPU include directory $gpuinclude"
+      exit 1
+    fi
+    if [ -f "$gpuinclude/cuda.h" ] ; then
+			gputype="cuda"
+      #echo "TAU GPU: Using CUDA for GPU analysis, source in $gpuinclude"
+    elif [ -f "$gpuinclude/OpenCL.h" ] ; then
+			gputype="opencl"
+      #echo "TAU GPU: Using OpenCL for GPU analysis, source in $gpuinclude"
+		else
+			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
+    fi
+    fixmakeargs="$fixmakeargs gputype=$gputype gpuinclude=$gpuinclude useropt=-DTAU_MAX_THREADS=3"
+    shift
+    ;;
+
   default)
     echo "Fixing Makefiles"
     ;;	
@@ -3823,6 +3842,7 @@ case $machine in
 	;;
 
      default)
+	echo "fix make args $fixmakeargs"
 	fixmakeargs="arch=$machine $fixmakeargs"
 	;;
 

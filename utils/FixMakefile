@@ -603,7 +603,31 @@ case $1 in
 	echo "s@^TAU_SHMEM_LIB=\(.*\)@TAU_SHMEM_LIB=$shmemlib@g" >> $sedout
         #echo "SHMEMLIB=$shmemlib" 
         ;;
-     
+
+###############################################################
+# Set the TAU_GPU variables.
+###############################################################
+     gputype=*)
+        gpu_type=`echo $1 | sed -e 's/^gputype=//' -e 's/#/ /g'`
+        if [ "x`echo $gpu_type | tr [:upper:] [:lower:]`" = "xcuda" ]; then
+          echo "NOTE: Using GPU type: CUDA."
+          echo "s/#CUDA_GPU#\(.*\)#ENDIF#/\1#ENDIF##CUDA_GPU#/" >> $sedout
+          echo "s/#GPU#//" >> $sedout
+          
+        elif [ "x`echo $gpu_type | tr [:upper:] [:lower:]`" = "xopencl" ]; then
+          echo "NOTE: Using GPU type: OpenCL."
+          echo "s/#OPENCL_GPU#\(.*)#ENDIF#/\1#ENDIF##OPENCL_GPU#//" >> $sedout
+          echo "s/#GPU#\(.*\)#ENDIF/\1#ENDIF##GPU#/" >> $sedout
+
+        else
+          echo "ERROR: UNKNOW GPU type, supported types: CUDA, OpenCL."
+        fi
+    ;;  
+		gpuinclude=*)
+        gpuinclude=`echo $1 | sed -e 's/^gpuinclude=//' -e 's/#/ /g'`
+			echo "NOTE: GPU headers found in $gpuinclude."
+			echo "s@^TAU_GPU_INC=\(.*\)@TAU_GPU_INC=$gpuinclude@g" >> $sedout
+		;;	
 
 ###############################################################
 # Set the CONFIG_ARCH=<machine-name> in the Makefiles.
@@ -972,7 +996,7 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      TAU_CHARM)
-	echo "NOTE: Using charm++ (converse) threads"
+				echo "NOTE: Using charm++ (converse) threads"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PTHREAD_AVAILABLE)

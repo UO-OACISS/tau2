@@ -81,9 +81,8 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/TauTrace.h     $(INCDIR)/TauSilc.h          \
 		$(TAUROOT)/include/tau_internal.h $(INCDIR)/TauSampling.h $(INCDIR)/TauMetaData.h \
 		$(INCDIR)/TauSnapshot.h  $(INCDIR)/TauGASP.h          \
-	 	$(INCDIR)/TauUtil.h $(INCDIR)/TauXML.h $(INCDIR)/TauUnify.h $(INCDIR)/TauCollate.h \
-		$(INCDIR)/TauMonMrnet.h $(INCDIR)/TauMon.h \
-		$(INCDIR)/TauMemoryWrap.h $(INCDIR)/TauIoWrap.h
+	 	$(INCDIR)/TauUtil.h $(INCDIR)/TauXML.h $(INCDIR)/TauUnify.h \
+		$(INCDIR)/TauCollate.h $(INCDIR)/TauGpu.h $(INCDIR)/TauGpuAdapterCudaExp.h \
 
 LDFLAGS	      =
 
@@ -110,19 +109,16 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
 		TauHooks.o TauHandler.o TauMemory.o TauMetaData.o TauEnv.o \
 		TauInit.o Comp_intel9.o Comp_pgi.o Comp_xl.o TauCallPath.o \
                 TauXML.o TauUtil.o TauSnapshot.o TauUnify.o TauCollate.o \
-		TauMonMrnet.o \
 		$(PARAM_O) Tracer.o TauMetrics.o TauReadMetrics.o $(THR_O) \
 		$(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) $(TAU_SAMPLING_O) \
-		TauIoWrap.o TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
+		TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_GASPU_O)
 
-# The WRAPPER_OBJS are built for TAU_DSO only
-WRAPPER_OBJS  = TauWrapSyscalls.o
 STATIC_OBJS   = Comp_gnu.o $(PGIACC_STATIC_O)
-SHARED_OBJS   = $(PGIACC_O) $(WRAPPER_OBJS)
-#SICORTEX#SHARED_OBJS = Comp_gnu.o  $(WRAPPER_OBJS) #ENDIF#
-#TAU_BFDSHAREDLINK#SHARED_OBJS = Comp_gnu.o $(WRAPPER_OBJS) #ENDIF#
+SHARED_OBJS   = $(PGIACC_O)
+#SICORTEX#SHARED_OBJS = Comp_gnu.o #ENDIF#
+#TAU_BFDSHAREDLINK#SHARED_OBJS = Comp_gnu.o #ENDIF#
 #TAU_BFDSHAREDLINK#SHARED_LIBS = $(BFDLINK) -lbfd -liberty #ENDIF#
 
 PRINT	      = pr
@@ -300,7 +296,7 @@ CRAY_PGI_HACK=
 #CRAYCNL#CRAY_PGI_HACK=$(INSTALLDEST)/libpgnod_prof.a #ENDIF#
 
 
-all:		$(TAU_TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) $(TAUPYTHON) $(SHMEM_WRAPPER) $(POELIB)
+all:		$(TAU_TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) $(TAUPYTHON) $(SHMEM_WRAPPER) $(POELIB) $(TAU_GPU_LIB)
 
 $(TAU_TARGET):	$(OBJS) $(STATIC_OBJS)
 		$(PRELINK_PHASE)
@@ -310,8 +306,14 @@ $(TAU_TARGET):	$(OBJS) $(STATIC_OBJS)
 
 $(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS) $(MPI_WRAPPER) $(TAU_FORCE_MPI) $(SHARED_OBJS)
 		$(PRELINK_PHASE)
-		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_SHLIB) $(OBJS) $(SHARED_OBJS) $(SHARED_LIBS) $(EXTRAOBJS) $(TAU_MPI_FOR_SHARED) $(EXTRA_LIBS) $(LEXTRA1) $(TAU_PAPI_EXTRA_FLAGS) $(TAU_EXTRA_LIBRARY_FLAGS) $(TAUEXTRASHLIBOPTS) $(TAU_MPI_NOWRAP_LIB)
+		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_SHLIB) $(OBJS) $(SHARED_OBJS) $(SHARED_LIBS) $(EXTRAOBJS) $(TAU_MPI_FOR_SHARED) $(EXTRA_LIBS) $(LEXTRA1) $(TAU_PAPI_EXTRA_FLAGS) $(TAU_EXTRA_LIBRARY_FLAGS) $(TAUEXTRASHLIBOPTS)
 		$(TAU_CREATE_SYMLINKS)
+
+$(TAU_NULL)$(TAU_GPU_LIB): $(TAU_GPU_OBJS)
+		$(PRELINK_PHASE)
+		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_SHLIB) $(TAU_GPU_OBJS) -o $(TAU_GPU_LIB) \
+		-L$(TAU_LIB_DIR) -lTAU 
+		$(TAU_RANLIB) $(TAU_GPU_LIB)
 
 $(TAU_DISABLE): TauDisable.o $(TAU_DISABLE_SHARED) TauKojakOpariDisable.o
 		$(AR) $(ARFLAGS) $(TAU_DISABLE) TauDisable.o TauKojakOpariDisable.o
@@ -362,6 +364,12 @@ $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX): libTauMpi$(TAU_CONFIG)$(LSX)
 
 $(INSTALLDEST)/libTauShmem$(TAU_CONFIG)$(LSX): libTauShmem$(TAU_CONFIG)$(LSX)
 		$(MAKE) -f Makefile.shmem install 
+
+$(INSTALLDEST)/$(TAU_GPU_LIB): $(TAU_GPU_LIB)
+		@echo Installing $? in $(INSTALLDEST)
+		@if [ -d $(INSTALLDEST) ] ; then true; \
+                   else mkdir $(INSTALLDEST) ;fi
+		$(TAU_INSTALL) $? $(INSTALLDEST)
 
 $(TAU_JAVA_INSTALLDIR)/Profile.class: Profile.class
 		@echo Installing $? in $(TAU_JAVA_INSTALLDIR)
@@ -438,7 +446,7 @@ $(INSTALLDEST)/libmpi_r.a: libmpi_r.a
 	cd $(INSTALLDEST) && ln -s shared$(TAU_CONFIG) bindings$(TAU_CONFIG)
 	cd $(INSTALLDEST) && ln -s bindings$(TAU_CONFIG) bindings-default
 
-install:	 $(INSTALLDEST)/$(TAU_TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1) $(TAUPYTHON_INSTALL) $(SHMEM_INSTALL) $(POELIB_INSTALL) $(CRAY_PGI_HACK)
+install:	 $(INSTALLDEST)/$(TAU_TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(INSTALLDEST)/$(TAU_GPU_LIB) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1) $(TAUPYTHON_INSTALL) $(SHMEM_INSTALL) $(POELIB_INSTALL) $(CRAY_PGI_HACK)
 
 TauForceMPI.o : TauForceMPI.c
 	$(CC) $(CFLAGS) -c $(@:.o=.c)
@@ -453,15 +461,6 @@ Profiler.o 	: Profiler.cpp $(HDRS)
 TauMetaData.o 	: TauMetaData.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
 
-TauMemoryWrap.o	: TauMemoryWrap.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
-
-TauIoWrap.o	: TauIoWrap.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
-
-TauWrapSyscalls.o : TauWrapSyscalls.c $(HDRS)
-	$(CC) $(CFLAGS) -c $(@:.o=.c)
-
 TauXML.o 	: TauXML.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
@@ -473,9 +472,6 @@ TauSnapshot.o 	: TauSnapshot.cpp $(HDRS)
 
 TauUnify.o 	: TauUnify.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
-
-TauMonMrnet.o	: TauMonMrnet.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) $(MRNET_INCLUDE) -c $(@:.o=.cpp)
 
 TauCollate.o 	: TauCollate.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
@@ -612,6 +608,9 @@ TauCompensate.o : TauCompensate.cpp $(HDRS)
 TauHandler.o : TauHandler.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
+TauMemoryWrap.o : TauMemoryWrap.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
 TauMemory.o : TauMemory.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
@@ -627,6 +626,15 @@ ktau_syscall.o : ktau_syscall.c $(HDRS)
 
 $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
+
+TauGpu.o : TauGpu.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauGpuAdapterCudaExp.o : TauGpuAdapterCudaExp.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -I$(TAU_GPU_INC) -c $(@:.o=.cpp)
+
+TauGpuAdapterOpenCL.o : TauGpuAdapterOpenCL.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -I$(TAU_GPU_INC) -c $(@:.o=.cpp)
 
 
 clean : 

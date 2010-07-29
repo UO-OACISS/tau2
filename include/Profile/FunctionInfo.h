@@ -43,6 +43,17 @@ extern "C" int Tau_Global_numCounters;
 #include "Profile/RenciSTFF.h"
 #endif //RENCI_STFF
 
+#ifdef TAU_SILC
+//#include <Profile/TauSilc.h>
+#include "SILC_PublicTypes.h"
+#include "SILC_User.h"
+#include "SILC_User_Types.h"
+#include "SILC_User_Functions.h"
+#endif
+
+#include <map>
+using namespace std;
+
 class TauUserEvent; 
 
 class FunctionInfo
@@ -270,6 +281,10 @@ void tauCreateFI(void **ptr, const string& name, const char *type,
 void tauCreateFI(void **ptr, const string& name, const string& type, 
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName);
 
+#ifdef TAU_SILC
+/* For maping TAU's FunctionInfo objs <=> ScoreP's Region handle. */
+extern map<long int, SILC_RegionHandle> regionMap;
+#endif /* TAU_SILC */
 
 #endif /* _FUNCTIONINFO_H_ */
 /***************************************************************************

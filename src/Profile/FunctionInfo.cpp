@@ -47,12 +47,20 @@ using namespace std;
 #endif /* TAU_VAMPIRTRACE */
 
 #ifdef TAU_SILC
-#include <Profile/TauSilc.h>
+//#include <Profile/TauSilc.h>
+#include "SILC_User_Types.h"
 #endif
 
 #include <Profile/TauTrace.h>
 #include <Profile/TauInit.h>
 #include <Profile/TauUtil.h>
+<<<<<<< HEAD:src/Profile/FunctionInfo.cpp
+
+map<long int, SILC_RegionHandle> regionMap;
+
+map<long int, SILC_RegionHandle> regionMap;
+=======
+>>>>>>> bf51ce2a5cbc1beda88529267d9daf63e78bec7e:src/Profile/FunctionInfo.cpp
 
 //////////////////////////////////////////////////////////////////////
 // The purpose of this subclass of vector is to give us a chance to execute
@@ -212,6 +220,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 #endif /* TAU_SILC */
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
+
   TauTraceSetFlushEvents(1);
   RtsLayer::UnLockDB();
   
