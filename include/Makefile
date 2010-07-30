@@ -127,7 +127,8 @@ TAU_LIB_DIR=$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 #IBM64LINUX#IBM_XLC_ABI	     = -q64 		  #ENDIF#
 #IBM64LINUX#IBM_GNU_ABI	     = -m64 		  #ENDIF#
 #SUNX86_64#SUN_GNU_ABI       = -m64		  #ENDIF#
-#SUNX86_64#SUN_CC_ABI        = -xarch=amd64       #ENDIF#
+#SUNX86_64#SUN_CC_ABI        = -m64 -xarch=amd64       #ENDIF#
+#SUNX86_64#SUN_CC_ABI        = -m64 #ENDIF#
 #MIPS32LINUX#SC_GNU_ABI	     = -mabi=n32 	  #ENDIF#
 #MIPS32LINUX#SC_PATH_ABI     = -mabi=n32          #ENDIF#
 #MIPS64LINUX#SC_GNU_ABI	     = -mabi=64 	  #ENDIF#
@@ -737,6 +738,8 @@ TAU_LINKER_OPT4 = $(LEXTRA1)
 ##############################################
 # Flags to build a shared object: TAU_SHFLAGS
 #GNU#AR_SHFLAGS 		= -shared  	        #ENDIF#
+#SUNX86_64#AR_SHFLAGS              = -shared       #ENDIF#
+#SOL2CC#AR_SHFLAGS              = -G    #ENDIF#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
 #APPLEPGI#AR_SHFLAGS 		= -shared               #ENDIF#
@@ -794,7 +797,7 @@ HPCTOOLKIT_LINK=
 ##############################################
 # Extra linker args (e.g. -Wl,-export-dynamic)
 ##############################################
-EXTRA_LINKER_ARGS= -Wl,--export-dynamic
+EXTRA_LINKER_ARGS=
 TAU_LINKER_OPT14=$(EXTRA_LINKER_ARGS)
 
 
