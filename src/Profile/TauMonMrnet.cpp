@@ -55,6 +55,8 @@ Stream *ctrl_stream;
 // Determine whether to extend protocol to receive results from the FE.
 bool broadcastResults;
 
+  const char *profiledir;
+
 // Unification structures
 FunctionEventLister *mrnetFuncEventLister;
 Tau_unify_object_t *mrnetFuncUnifier;
@@ -62,6 +64,8 @@ AtomicEventLister *mrnetAtomEventLister;
 Tau_unify_object_t *mrnetAtomUnifier;
 
 extern "C" void Tau_mon_connect() {
+
+  //  printf("Mon Connect called\n");
   
   int size;
 
@@ -71,6 +75,7 @@ extern "C" void Tau_mon_connect() {
   char myHostName[64];
 
   gethostname(myHostName, sizeof(myHostName));
+  profiledir = TauEnv_get_profiledir();
 
   int targetRank;
   int beRank, mrnetPort, mrnetRank;
@@ -84,7 +89,18 @@ extern "C" void Tau_mon_connect() {
   if (rank == 0) {
     TAU_VERBOSE("Connecting to ToM\n");
 
-    FILE *connections = fopen("attachBE_connections","r");
+    // Do not proceed until front-end has written the atomic probe file.
+    char atomicFileName[512];
+    sprintf(atomicFileName,"%s/ToM_FE_Atomic",profiledir);
+    FILE *atomicFile;
+    while ((atomicFile = fopen(atomicFileName,"r")) == NULL) {
+      sleep(1);
+    }
+    fclose(atomicFile);
+
+    char connectionName[512];
+    sprintf(connectionName,"%s/attachBE_connections",profiledir);
+    FILE *connections = fopen(connectionName,"r");
     // assume there are exactly size entries in the connection file.
     for (int i=0; i<size; i++) {
       fscanf(connections, "%d %d %d %d %s\n",
@@ -236,6 +252,39 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
       if (rank == 0) {
 	printf("BE: Instructed by FE to report events and counters.\n");
       }
+
+      // First message is a request for names
+
+      // Invoke Unification
+      FunctionEventLister *functionEventLister = new FunctionEventLister();
+      Tau_unify_object_t *functionUnifier = 
+	Tau_unify_unifyEvents(functionEventLister);
+      // Send Names of events.
+      char **funcNames;
+      if (rank == 0) {
+	// send the array of event name strings.
+	funcNames = (char **)malloc(numGlobal*sizeof(char*));
+	for (int i=0; i<numGlobal; i++) {
+	  funcNames[i] = 
+	    (char *)malloc((strlen(functionUnifier->globalStrings[i])+1)*
+			   sizeof(char));
+	  strcpy(funcNames[i],functionUnifier->globalStrings[i]);
+	}
+	STREAM_FLUSHSEND_BE(stream, PROT_BASESTATS, "%d %as",
+			    rank, funcNames, numGlobal);
+      } else {
+	// send a single null string over.
+	funcNames = (char **)malloc(sizeof(char*));
+	funcNames[0] = (char *)malloc(sizeof(char));
+	strcpy(funcNames[0],"");
+	STREAM_FLUSHSEND_BE(stream, PROT_BASESTATS, "%d %as",
+			    rank, funcNames, 1);
+      }
+
+      // Then receive request for stats. No need to unpack.
+      int tag;
+      Network_recv(net, &tag, p, &stream);
+      assert(tag == PROT_BASESTATS);
 
       double *out_sums;
       double *out_sumsofsqr;

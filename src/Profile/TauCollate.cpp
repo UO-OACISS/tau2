@@ -261,6 +261,11 @@ extern "C" int Tau_collate_writeProfile() {
     TauProfiler_updateIntermediateStatistics(tid);
   }
 
+  x_uint64 start_unify, end_unify;
+  if (rank == 0) {
+    start_unify = TauMetrics_getTimeOfDay();
+  }
+
   // Unify events
   FunctionEventLister *functionEventLister = new FunctionEventLister();
   Tau_unify_object_t *functionUnifier = Tau_unify_unifyEvents(functionEventLister);
@@ -268,7 +273,9 @@ extern "C" int Tau_collate_writeProfile() {
   Tau_unify_object_t *atomicUnifier = Tau_unify_unifyEvents(atomicEventLister);
 
   TAU_MPI_DEBUG0 ("Found %d total regions\n", functionUnifier->globalNumItems);
-
+  if (rank == 0) {
+    end_unify = TauMetrics_getTimeOfDay();
+  }
 
   x_uint64 start_aggregate, end_aggregate;
 
@@ -355,34 +362,6 @@ extern "C" int Tau_collate_writeProfile() {
     // }
   }
 
-
-  
-
-  if (rank == 0) {
-    char profileName[512], profileNameTmp[512];
-    sprintf (profileNameTmp, ".temp.mean.%d.0.0", invocationIndex);
-    sprintf (profileName, "mean.%d.0.0", invocationIndex);
-    FILE *profile = fopen(profileNameTmp, "w");
-    fprintf (profile, "%d templated_functions_MULTI_TIME\n", numItems);
-    fprintf (profile, "# Name Calls Subrs Excl Incl ProfileCalls % <metadata><attribute><name>TAU Internal Profile Attribute</name><value>collate_dump_dagstuhl</value></attribute> </metadata>\n");
-    for (int i=0; i<numItems; i++) {
-      double exclusive = gExcl[step_sum][0][i] / globalNumThreads;
-      double inclusive = gIncl[step_sum][0][i] / globalNumThreads;
-      double numCalls = (double)gNumCalls[step_sum][i] / globalNumThreads;
-      double numSubr = (double)gNumSubr[step_sum][i] / globalNumThreads;
-
-      fprintf (profile, "\"%s\" %.16G %.16G %.16G %.16G 0 GROUP=\"TAU_DEFAULT\"\n", functionUnifier->globalStrings[i], 
-	       numCalls, numSubr, exclusive, inclusive);
-      
-    }
-    fprintf (profile, "0 aggregates\n");
-    fclose (profile);
-    rename (profileNameTmp, profileName);
-  }
-
-
-
-
   if (rank == 0) {
     end_aggregate = TauMetrics_getTimeOfDay();
     TAU_VERBOSE("TAU: Collate: Aggregation Complete, duration = %.4G seconds\n", ((double)((double)end_aggregate-start_aggregate))/1000000.0f);
@@ -395,19 +374,18 @@ extern "C" int Tau_collate_writeProfile() {
   // now compute histograms
   x_uint64 start_hist, end_hist;
 
-  if (rank == 0) {
-    start_hist = TauMetrics_getTimeOfDay();
-  }
-
-
   int numBins = 20;
+
+  const char *profiledir = TauEnv_get_profiledir();
 
   FILE *histoFile;
   char histFileNameTmp[512];
   char histFileName[512];
   if (rank == 0) {
-    sprintf (histFileName, "tau.histograms.%d", invocationIndex);
-    sprintf (histFileNameTmp, ".temp.tau.histograms.%d", invocationIndex);
+    sprintf (histFileName, "%s/tau.histograms.%d", profiledir, 
+	     invocationIndex);
+    sprintf (histFileNameTmp, "%s/.temp.tau.histograms.%d", profiledir,
+	     invocationIndex);
     histoFile = fopen(histFileNameTmp, "w");
     fprintf (histoFile, "%d\n", numItems);
     fprintf (histoFile, "%d\n", (Tau_Global_numCounters*2)+2);
@@ -418,6 +396,11 @@ extern "C" int Tau_collate_writeProfile() {
     }
     fprintf (histoFile, "Number of calls\n");
     fprintf (histoFile, "Child calls\n");
+  }
+
+  if (rank == 0) {
+    // must not let file IO get in the way of a proper measure of this.
+    start_hist = TauMetrics_getTimeOfDay();
   }
 
   int numHistoGrams = (Tau_Global_numCounters * 2) + 2; // two for each metric (excl, incl) and numCalls/numSubr;
@@ -462,6 +445,11 @@ extern "C" int Tau_collate_writeProfile() {
     }
 
     PMPI_Reduce (histogram, outHistogram, numBins * numHistoGrams, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+      end_hist = TauMetrics_getTimeOfDay();
+    }
+
     if (rank == 0) {
       fprintf (histoFile, "%s\n", functionUnifier->globalStrings[e]);
 
@@ -495,10 +483,51 @@ extern "C" int Tau_collate_writeProfile() {
   if (rank == 0) {
     fclose (histoFile);
     rename (histFileNameTmp, histFileName);
-    end_hist = TauMetrics_getTimeOfDay();
     TAU_VERBOSE("TAU: Collate: Histogramming Complete, duration = %.4G seconds\n", ((double)((double)end_hist-start_hist))/1000000.0f);
   }
 
+  if (rank == 0) {
+    // using histogram output to approximate total output.
+    end = TauMetrics_getTimeOfDay();
+  }
+
+  // *CWL* Delaying writing of the fake profile until after histograms are
+  //   completed and written, so metadata can be tagged.
+  if (rank == 0) {
+    char profileName[512], profileNameTmp[512];
+    char unifyMeta[512];
+    char aggregateMeta[512];
+    char histogramMeta[512];
+    char monitoringMeta[512];
+    sprintf (profileNameTmp, "%s/.temp.mean.%d.0.0", profiledir,
+	     invocationIndex);
+    sprintf (profileName, "%s/mean.%d.0.0", profiledir, invocationIndex);
+    sprintf(unifyMeta,"<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
+	    "Unification Time", ((double)((double)end_unify-start_unify))/1000000.0f);
+    sprintf(aggregateMeta,"<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
+	    "Mean Aggregation Time", ((double)((double)end_aggregate-start_aggregate))/1000000.0f);
+    sprintf(histogramMeta,"<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
+	    "Histogramming Time", ((double)((double)end_hist-start_hist))/1000000.0f);
+    sprintf(monitoringMeta,"<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
+	    "Total Monitoring Time", ((double)((double)end-start))/1000000.0f);
+    FILE *profile = fopen(profileNameTmp, "w");
+    fprintf (profile, "%d templated_functions_MULTI_TIME\n", numItems);
+    fprintf (profile, "# Name Calls Subrs Excl Incl ProfileCalls % <metadata><attribute><name>TAU Monitoring Transport</name><value>MPI</value></attribute>%s%s%s%s</metadata>\n", 
+	     unifyMeta, aggregateMeta, histogramMeta, monitoringMeta);
+    for (int i=0; i<numItems; i++) {
+      double exclusive = gExcl[step_sum][0][i] / globalNumThreads;
+      double inclusive = gIncl[step_sum][0][i] / globalNumThreads;
+      double numCalls = (double)gNumCalls[step_sum][i] / globalNumThreads;
+      double numSubr = (double)gNumSubr[step_sum][i] / globalNumThreads;
+
+      fprintf (profile, "\"%s\" %.16G %.16G %.16G %.16G 0 GROUP=\"TAU_DEFAULT\"\n", functionUnifier->globalStrings[i], 
+	       numCalls, numSubr, exclusive, inclusive);
+      
+    }
+    fprintf (profile, "0 aggregates\n");
+    fclose (profile);
+    rename (profileNameTmp, profileName);
+  }
 
   if (rank == 0) {
     end = TauMetrics_getTimeOfDay();
@@ -523,7 +552,7 @@ extern "C" int Tau_collate_writeProfile() {
  * For Dagstuhl demo 2010
  ********************************************************************/
 extern "C" void Tau_collate_onlineDump() {
-  printf("collate online dump called\n");
+  TAU_VERBOSE("collate online dump called\n");
   Tau_collate_writeProfile();
 }
 
