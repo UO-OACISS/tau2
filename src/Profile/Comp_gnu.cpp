@@ -400,7 +400,7 @@ int tauPrintAddr(int i, char *token, unsigned long addr) {
   }
   sprintf(metadata, "BACKTRACE %3d", i-1);
   TAU_METADATA(metadata, field);
-
+  return 0;
 }
 
 
