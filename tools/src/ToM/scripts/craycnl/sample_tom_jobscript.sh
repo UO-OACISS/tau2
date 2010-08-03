@@ -18,4 +18,4 @@ mkdir -p $OUT_NAME/$RESULT_NAME
 export PROFILEDIR=$EXPR_HOME/$OUT_NAME/$RESULT_NAME
 echo $PROFILEDIR
 
-./startToM.sh $PROFILEDIR 4488 ToM_FE 4104 12 374 ./$BIN_NAME -file_output no -flow_mat_type aij -flow_ksp_type ibcgs -flow_ksp_lag_norm -tran_ksp_type ibcgs -log_summary
+./startToM_craycnl.sh $PROFILEDIR 4488 ToM_FE 4104 12 374 ./$BIN_NAME -file_output no -flow_mat_type aij -flow_ksp_type ibcgs -flow_ksp_lag_norm -tran_ksp_type ibcgs -log_summary
