@@ -12,7 +12,7 @@ MRNET_LIBS=
 #   because on some platforms like craycnl, the MRNet filters have to be
 #   built using g++ instead of CC. Consequently, because CXX is divorced
 #   from TAU's, CXXFLAGS cannot also make use of TAU's defintions.
-INSTALL_ROOT = ${HOME}/software
+INSTALL_ROOT = ${LUSTRE_HOME}/software
 CXX = g++
 CXXFLAGS = -O2 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -Dcompiler_gnu -fno-default-inline $(TOM_EXTRA_DEF) $(INCLUDE)
 
@@ -24,7 +24,8 @@ SOFLAGS = -fPIC -shared -rdynamic
 
 # Development definitions for ToM to build correctly
 BINARIES = ToM_FE
-TOM_FILTERS = ToM_Sync_Filter.so ToM_Stats_Filter.so ToM_Histogram_Filter.so
+TOM_FILTERS = ToM_Sync_Filter.so ToM_Stats_Filter.so ToM_Histogram_Filter.so \
+	ToM_Name_Filter.so
 EXPR_FILTERS = ToM_Test_Filter.so ToM_StatsSingle_Filter.so 
 FILTERS = ${TOM_FILTERS} ${EXPR_FILTERS}
 
@@ -47,6 +48,9 @@ ToM_Stats_Filter.so:	ToM_Stats_Filter.cpp
 
 ToM_Sync_Filter.so:	ToM_Sync_Filter.cpp
 	$(CXX) $(CXXFLAGS) $(SOFLAGS) -o $@ ToM_Sync_Filter.cpp ${INCLUDE}
+
+ToM_Name_Filter.so:	ToM_Name_Filter.cpp
+	$(CXX) $(CXXFLAGS) $(SOFLAGS) -o $@ ToM_Name_Filter.cpp ${INCLUDE}
 
 ToM_Histogram_Filter.so:	ToM_Histogram_Filter.cpp
 	$(CXX) $(CXXFLAGS) $(SOFLAGS) -o $@ ToM_Histogram_Filter.cpp ${INCLUDE}
