@@ -106,7 +106,17 @@ public class UtilFncs {
 
         // first check if the regular toString is in exponential form
         boolean exp = false;
-        String str = Double.toString(d);
+        String str;
+        
+        if(d<0){
+        	str="-";
+        	 if (pad) {
+                 return lpad(str, width);
+             } else {
+                 return str;
+             }
+        }
+        	str= Double.toString(d);
         for (int i = 0; i < str.length(); i++) {
             if (str.charAt(i) == 'E') {
                 exp = true;
@@ -336,7 +346,7 @@ public class UtilFncs {
     //        return -1;
     //    }
 
-    public static int exists(Vector ref, int i) {
+    public static int exists(Vector<Integer> ref, int i) {
         //Assuming a vector of Integers.
         if (ref == null)
             return -1;
@@ -472,8 +482,8 @@ public class UtilFncs {
             throws DataSourceException {
         DataSource dataSource = null;
 
-        List v = new ArrayList();
-        File filelist[];
+        List<File[]> v = new ArrayList<File[]>();
+        //File filelist[];
         switch (fileType) {
         case DataSource.TAUPROFILE: // TAU Profiles
             FileList fl = new FileList();

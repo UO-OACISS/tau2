@@ -40,7 +40,7 @@ public class IPMDataSource extends DataSource {
 
     public IPMDataSource(File file) {
         super();
-        this.setMetrics(new Vector());
+        this.setMetrics(new Vector<Metric>());
 		this.file = file;
     }
 

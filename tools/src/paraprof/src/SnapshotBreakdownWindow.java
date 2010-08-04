@@ -1,11 +1,25 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JToggleButton;
+import javax.swing.JToolBar;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -27,7 +41,11 @@ import edu.uoregon.tau.perfdmf.Thread;
 
 public class SnapshotBreakdownWindow extends JFrame implements Observer, ParaProfWindow, ImageExport, ToolBarListener {
 
-    private ParaProfTrial ppTrial;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -672895438624791671L;
+	private ParaProfTrial ppTrial;
     private Thread thread;
 
     private ChartPanel panel;
@@ -137,7 +155,7 @@ public class SnapshotBreakdownWindow extends JFrame implements Observer, ParaPro
             }
         };
 
-        Vector styleList = new Vector();
+        Vector<String> styleList = new Vector<String>();
         styleList.add(ST_STYLE_STACKED);
         styleList.add(ST_STYLE_TRANSPARENT_AREA);
         styleList.add(ST_STYLE_LINE);
@@ -181,7 +199,7 @@ public class SnapshotBreakdownWindow extends JFrame implements Observer, ParaPro
         dataSet = new DefaultTableXYDataset();
         dataSet.removeAllSeries();
         dataSorter.setDescendingOrder(true);
-        List snapshots = thread.getSnapshots();
+        List<Snapshot> snapshots = thread.getSnapshots();
         
         // override the trial's selected snapshot with the final one (-1)
         // so that the sort order and list of functions does not vary based on the
@@ -189,7 +207,7 @@ public class SnapshotBreakdownWindow extends JFrame implements Observer, ParaPro
         dataSorter.setSelectedSnapshotOverride(true);
         dataSorter.setSelectedSnapshot(-1);
         
-        List functions = dataSorter.getBasicFunctionProfiles(thread);
+        List<FunctionProfile> functions = dataSorter.getBasicFunctionProfiles(thread);
 
         //long firstTime = ((Snapshot) snapshots.get(0)).getTimestamp();
         long firstTime = thread.getStartTime();
@@ -201,7 +219,7 @@ public class SnapshotBreakdownWindow extends JFrame implements Observer, ParaPro
         }
 
         for (int y = 0; y < max; y++) {
-            FunctionProfile fp = (FunctionProfile) functions.get(y);
+            FunctionProfile fp = functions.get(y);
 
             XYSeries s;
 
@@ -217,10 +235,10 @@ public class SnapshotBreakdownWindow extends JFrame implements Observer, ParaPro
                 s = new XYSeries(str, true, false);
             }
 
-            int start = 0;
-            int stop = snapshots.size();
+            //int start = 0;
+            //int stop = snapshots.size();
 
-            List filteredSnapshots = filter.getFilteredObjects();
+            List<Object> filteredSnapshots = filter.getFilteredObjects();
             for (int i = 0; i < filteredSnapshots.size(); i++) {
                 int x = ((Snapshot) filteredSnapshots.get(i)).getID();
 
@@ -230,7 +248,7 @@ public class SnapshotBreakdownWindow extends JFrame implements Observer, ParaPro
                 if (topTen && y == topNum) {
                     value = 0;
                     for (int z = y; z < functions.size(); z++) {
-                        FunctionProfile f = (FunctionProfile) functions.get(z);
+                        FunctionProfile f = functions.get(z);
 
                         if (differential && snapshotID != 0) {
                             value += dataSorter.getValue(f, snapshotID) - dataSorter.getValue(f, snapshotID - 1);
@@ -262,7 +280,7 @@ public class SnapshotBreakdownWindow extends JFrame implements Observer, ParaPro
                     //                    }
                 }
 
-                Snapshot snapshot = (Snapshot) snapshots.get(x);
+                Snapshot snapshot = snapshots.get(x);
                 long time = snapshot.getTimestamp() - firstTime;
                 duration = time;
 
@@ -273,7 +291,7 @@ public class SnapshotBreakdownWindow extends JFrame implements Observer, ParaPro
                         lastTime = firstTime;
                         prevTime = 0;
                     } else {
-                        Snapshot last = (Snapshot) snapshots.get(x - 1);
+                        Snapshot last = snapshots.get(x - 1);
                         lastTime = last.getTimestamp();
                         prevTime = last.getTimestamp() - firstTime;
                     }

@@ -38,7 +38,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
     private JPopupMenu popup = new JPopupMenu();
     private Object clickedOnObject = null;
 
-    private Vector list = new Vector();
+    private Vector<LedgerDataElement> list = new Vector<LedgerDataElement>();
 
     private boolean widthSet = false;
     private int windowType = -1;
@@ -148,7 +148,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
 
         if (!widthSet) { // only do this once
             for (int i = 0; i < list.size(); i++) {
-                LedgerDataElement lde = (LedgerDataElement) list.get(i);
+                LedgerDataElement lde = list.get(i);
                 if (lde.getName() != null) {
                     int tmpWidth = 5 + barHeight + (fmFont.stringWidth(lde.getName()));
 
@@ -176,7 +176,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
         xCoord = 5;
 
         for (int i = startElement; i <= endElement; i++) {
-            LedgerDataElement lde = (LedgerDataElement) list.get(i);
+            LedgerDataElement lde = list.get(i);
 
             if (lde.getName() != null) {
 
@@ -312,8 +312,8 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
             //Get the number of times clicked.
             int clickCount = evt.getClickCount();
 
-            for (Enumeration e1 = list.elements(); e1.hasMoreElements();) {
-                LedgerDataElement lde = (LedgerDataElement) e1.nextElement();
+            for (Enumeration<LedgerDataElement> e1 = list.elements(); e1.hasMoreElements();) {
+                LedgerDataElement lde = e1.nextElement();
 
                 if (yCoord <= (lde.getYEnd())) {
                     if ((yCoord >= (lde.getYBeg())) && (xCoord >= (lde.getXBeg())) && (xCoord <= (lde.getXEnd()))) {

@@ -29,7 +29,7 @@ import edu.uoregon.tau.paraprof.interfaces.Searchable;
  */
 public class Searcher implements Searchable, MouseListener, MouseMotionListener, ClipboardOwner {
 
-    private List searchLines = new ArrayList();
+    private List<String> searchLines = new ArrayList<String>();
     private String searchString = "";
     private int searchLine;
     private int searchColumn;
@@ -90,11 +90,11 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
         return false;
     }
 
-    public void setSearchLines(List searchLines) {
+    public void setSearchLines(List<String> searchLines) {
         this.searchLines = searchLines;
     }
 
-    public List getSearchLines() {
+    public List<String> getSearchLines() {
         return searchLines;
     }
 
@@ -120,7 +120,7 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
         if (searchUp) {
 
             for (int i = searchLine; i >= 0; i--) {
-                String line = (String) searchLines.get(i);
+                String line = searchLines.get(i);
 
                 if (!searchMatchCase) {
                     line = line.toUpperCase();
@@ -141,7 +141,7 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
 
             if (!found) { // wrap
                 for (int i = searchLines.size() - 1; i >= 0; i--) {
-                    String line = (String) searchLines.get(i);
+                    String line = searchLines.get(i);
 
                     if (!searchMatchCase) {
                         line = line.toUpperCase();
@@ -163,7 +163,7 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
 
         } else {
             for (int i = searchLine; i < searchLines.size(); i++) {
-                String line = (String) searchLines.get(i);
+                String line = searchLines.get(i);
 
                 if (!searchMatchCase) {
                     line = line.toUpperCase();
@@ -182,7 +182,7 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
 
             if (!found) { // wrap
                 for (int i = 0; i < searchLines.size(); i++) {
-                    String line = (String) searchLines.get(i);
+                    String line = searchLines.get(i);
 
                     if (!searchMatchCase) {
                         line = line.toUpperCase();
@@ -229,7 +229,7 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
 
         // now check the horizontal scrollbar
 
-        String line = (String) searchLines.get(searchLine);
+        String line = searchLines.get(searchLine);
 
         if (!searchMatchCase) {
             localSearchString = searchString.toUpperCase();
@@ -254,8 +254,8 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
     }
 
     public void drawHighlights(Graphics2D g2D, int x, int y, int line) {
-        String text = (String) searchLines.get(line);
-        String originalText = (String) searchLines.get(line);
+        String text = searchLines.get(line);
+        String originalText = searchLines.get(line);
 
         if (text.length() < 1) {
             return;
@@ -441,7 +441,7 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
                 return;
             }
 
-            String text = (String) searchLines.get(line);
+            String text = searchLines.get(line);
 
             TextLayout textLayout = new TextLayout(text, g2d.getFont(), g2d.getFontRenderContext());
 

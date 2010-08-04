@@ -677,9 +677,9 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
 
             if (comparisonChart) {
                 ParaProf.theComparisonWindow = null;
-                List trialList = ((ComparisonBarChartModel) model).getPpTrials();
-                for (Iterator it = trialList.iterator(); it.hasNext();) {
-                    ParaProfTrial trial = (ParaProfTrial) it.next();
+                List<ParaProfTrial> trialList = ((ComparisonBarChartModel) model).getPpTrials();
+                for (Iterator<ParaProfTrial> it = trialList.iterator(); it.hasNext();) {
+                    ParaProfTrial trial = it.next();
                     trial.deleteObserver(this);
                 }
             } else {

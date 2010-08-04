@@ -22,8 +22,8 @@ public class Preferences implements Serializable {
     private int fontStyle = Font.PLAIN;
     private int fontSize = 12;
 
-    private Vector colors = null;
-    private Vector groupColors = null;
+    private Vector<Color> colors = null;
+    private Vector<Color> groupColors = null;
     private Color highlightColor = null;
     private Color groupHighlightColor = null;
     private Color userEventHighlightColor = null;
@@ -31,7 +31,7 @@ public class Preferences implements Serializable {
     private String databasePassword = null;
     private String databaseConfigurationFile = null;
     private Point managerWindowPosition;
-    private Map assignedColors;
+    private Map<String, Color> assignedColors;
 
     private boolean showValuesAsPercent = false;
     private boolean showPathTitleInReverse = false;
@@ -40,26 +40,26 @@ public class Preferences implements Serializable {
     private boolean computeMeanWithoutNulls = false;
     private boolean generateIntermediateCallPathData = false;
     
-    private ArrayList sourceLocations;
+    private ArrayList<Object> sourceLocations;
     private boolean showSourceLocation = true;
     private boolean autoLabels = true;
     
     static final long serialVersionUID = 183442743456314793L;
 
 
-    public void setColors(Vector vector) {
+    public void setColors(Vector<Color> vector) {
         colors = vector;
     }
 
-    public Vector getColors() {
+    public Vector<Color> getColors() {
         return colors;
     }
 
-    public void setGroupColors(Vector vector) {
+    public void setGroupColors(Vector<Color> vector) {
         groupColors = vector;
     }
 
-    public Vector getGroupColors() {
+    public Vector<Color> getGroupColors() {
         return groupColors;
     }
 
@@ -143,11 +143,11 @@ public class Preferences implements Serializable {
         return this.managerWindowPosition;
     }
 
-    public void setAssignedColors(Map assignedColors) {
+    public void setAssignedColors(Map<String, Color> assignedColors) {
         this.assignedColors = assignedColors;
     }
 
-    public Map getAssignedColors() {
+    public Map<String, Color> getAssignedColors() {
         return assignedColors;
     }
 
@@ -205,11 +205,11 @@ public class Preferences implements Serializable {
         this.generateIntermediateCallPathData = generateIntermediateCallPathData;
     }
 
-	public ArrayList getSourceLocations() {
+	public ArrayList<Object> getSourceLocations() {
 		return sourceLocations;
 	}
 
-	public void setSourceLocations(ArrayList sourceLocations) {
+	public void setSourceLocations(ArrayList<Object> sourceLocations) {
 		this.sourceLocations = sourceLocations;
 	}
 

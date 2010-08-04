@@ -17,7 +17,7 @@ public class ExperimentTableModel extends AbstractTableModel {
     private String[] columnNames = { "ExpField", "Value" };
     private ParaProfManagerWindow paraProfManager;
     private DefaultTreeModel defaultTreeModel;
-    private List fieldNames;
+    private List<String> fieldNames;
     
     public ExperimentTableModel(ParaProfManagerWindow paraProfManager, ParaProfExperiment exp, DefaultTreeModel defaultTreeModel) {
         this.experiment = exp;
@@ -25,7 +25,7 @@ public class ExperimentTableModel extends AbstractTableModel {
         this.paraProfManager = paraProfManager;
         this.defaultTreeModel = defaultTreeModel;
         
-        fieldNames = new ArrayList();
+        fieldNames = new ArrayList<String>();
         fieldNames.add("Name");
         fieldNames.add("Application ID");
         fieldNames.add("Experiment ID");
@@ -37,7 +37,7 @@ public class ExperimentTableModel extends AbstractTableModel {
     {
     	if (exp != null)
     	{
-    		fieldNames = new ArrayList();
+    		fieldNames = new ArrayList<String>();
     		
 	        fieldNames.add("Name");
 	        fieldNames.add("Application ID");

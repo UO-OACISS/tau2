@@ -79,8 +79,8 @@ public class Experiment implements Serializable, Comparable {
                 resultSet = dbMeta.getColumns(null, null, "experiment", "%");
             }
 
-            Vector nameList = new Vector();
-            Vector typeList = new Vector();
+            Vector<String> nameList = new Vector<String>();
+            Vector<Integer> typeList = new Vector<Integer>();
             boolean seenID = false;
 
             while (resultSet.next() != false) {
@@ -115,8 +115,8 @@ public class Experiment implements Serializable, Comparable {
             int[] fieldTypes = new int[typeList.size()];
 
             for (int i = 0; i < typeList.size(); i++) {
-                fieldNames[i] = (String) nameList.get(i);
-                fieldTypes[i] = ((Integer) typeList.get(i)).intValue();
+                fieldNames[i] = nameList.get(i);
+                fieldTypes[i] = typeList.get(i).intValue();
             }
 
             database.setExpFieldNames(fieldNames);
@@ -242,7 +242,7 @@ public class Experiment implements Serializable, Comparable {
         return db.getDatabase().getExpFieldNames();
     }
 
-    public static Vector getExperimentList(DB db, String whereClause) throws DatabaseException {
+    public static Vector<Experiment> getExperimentList(DB db, String whereClause) throws DatabaseException {
         try {
             Experiment.getMetaData(db);
             Database database = db.getDatabase();
@@ -271,7 +271,7 @@ public class Experiment implements Serializable, Comparable {
             }
 
             // get the results
-            Vector experiments = new Vector();
+            Vector<Experiment> experiments = new Vector<Experiment>();
 
             ResultSet resultSet = db.executeQuery(buf.toString());
             while (resultSet.next() != false) {

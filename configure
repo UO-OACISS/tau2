@@ -1901,7 +1901,7 @@ case $machine in
     crayxmt)
         cxx_compiler=c++
         c_compiler=cc
-	fixmakeargs="$fixmakeargs CRAYXMT"
+	fixmakeargs="$fixmakeargs CRAYXMT NOSHARED"
         if [ $pdt_cxx_compiler = default ] ; then
 	    pdt_cxx_full_path=/usr/bin/g++
 	    pdt_cxx_compiler=/usr/bin/g++
@@ -2091,7 +2091,7 @@ fi
 
 if [ $machine = hitachi ]
   then
-    fixmakeargs="$fixmakeargs HITACHI"
+    fixmakeargs="$fixmakeargs HITACHI NOSHARED"
 fi
    
 if [ $machine = t3e -a $cxx_compiler = CC ] 
@@ -2101,7 +2101,7 @@ fi
 
 if [ $machine = crayx1 -o $machine = craysv1 -a $cxx_compiler = CC ]
   then
-    fixmakeargs="$fixmakeargs CRAYX1CC"
+    fixmakeargs="$fixmakeargs CRAYX1CC NOSHARED"
 fi
 
 ######################################################################
@@ -2541,7 +2541,7 @@ case $cxx_compiler in
         if [ $machine = nec ]
 	then
           echo "Default C++ compiler will be NEC c++ compiler"
-          fixmakeargs="$fixmakeargs USE_NECCXX"
+          fixmakeargs="$fixmakeargs USE_NECCXX NOSHARED"
           tauoptions="${tauoptions}-cxx"
           if [ $fortran_compiler = no ]
           then 
@@ -2741,7 +2741,7 @@ case $fortran_compiler in
    nec)
       echo "Default Fortran compiler will be NEC f90"
       extradir=`which f90 | sed s/f90/../`
-      fixmakeargs="$fixmakeargs NEC_FORTRAN"
+      fixmakeargs="$fixmakeargs NEC_FORTRAN NOSHARED"
       ;;
 
    lahey)
@@ -3460,7 +3460,7 @@ fi
 if [ $catamount = yes ] 
 then
   #echo "This looks like a CATAMOUNT Cray RS system..."
-  fixmakeargs="$fixmakeargs CATAMOUNT"
+  fixmakeargs="$fixmakeargs CATAMOUNT NOSHARED"
 
   if [ $fortran_compiler = pgi ] 
   then

@@ -37,7 +37,7 @@ public class ParaverDataSource extends DataSource {
 	private static final double SECONDS = 1000000.0; // to convert to microseconds
 	private static final double HOURS = 3600000000.0; // to convert to microseconds
 
-	private List functionNames = null;
+	private List<String> functionNames = null;
 	private TreeMap functions = new TreeMap();
 
     public ParaverDataSource(File[] files) {
@@ -97,7 +97,7 @@ public class ParaverDataSource extends DataSource {
 				// ignore blank lines
 			} else if (inputString.startsWith("Objects/Intervals")) {
 				// process the function names
-				functionNames = new ArrayList();
+				functionNames = new ArrayList<String>();
         		StringTokenizer st = new StringTokenizer(inputString, " \t\n\r");
         		tmp = st.nextToken(); // Objects/Intervals
 				while (st.hasMoreTokens()) {
@@ -169,7 +169,7 @@ public class ParaverDataSource extends DataSource {
 					} // assume nanoseconds, the Paraver default
 
 					// for this function, create a function
-					String name = (String)functionNames.get(j);
+					String name = functionNames.get(j);
 					if (!name.equalsIgnoreCase("End")) {
 						exclusiveDuration = exclusiveDuration - value;
 						value = value * unitConversion;

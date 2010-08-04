@@ -27,7 +27,7 @@ public class HPMToolkitDataSource extends DataSource {
     private String inputString = null;
     private BufferedReader br = null;
     boolean initialized = false;
-    Hashtable eventNames = new Hashtable();
+    Hashtable<String, Integer> eventNames = new Hashtable<String, Integer>();
 
     //Instance data.
     private LineData header1 = new LineData();
@@ -66,7 +66,7 @@ public class HPMToolkitDataSource extends DataSource {
                 nodeID++;
 
                 // clear the event names
-                eventNames = new Hashtable();
+                eventNames = new Hashtable<String, Integer>();
 
                 //####################################
                 //First Line
@@ -231,7 +231,7 @@ public class HPMToolkitDataSource extends DataSource {
         // ID
         // otherwise, reset the thread ID to 0.
         if (eventNames.containsKey(header1.s0)) {
-            Integer tmpID = (Integer) eventNames.get(header1.s0);
+            Integer tmpID = eventNames.get(header1.s0);
             threadID = tmpID.intValue();
             threadID++;
             eventNames.put(header1.s0, new Integer(threadID));

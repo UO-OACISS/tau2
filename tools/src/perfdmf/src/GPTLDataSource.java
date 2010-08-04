@@ -69,7 +69,7 @@ public class GPTLDataSource extends DataSource {
 
 			// cycle through the events
 			for (int i = 0 ; i < data.eventData.size() ; i++ ) {
-				EventData eventData = (EventData)data.eventData.get(i);
+				EventData eventData = data.eventData.get(i);
 				createFunction(thread, eventData, false);
 				// for the first function, don't create callpath, just flat
 				if (i > 0) {
@@ -146,7 +146,7 @@ public class GPTLDataSource extends DataSource {
 */
 
 		for (int j = 0 ; j < globalData.metrics.size() ; j++ ){
-			String metric = (String)globalData.metrics.get(j);
+			String metric = globalData.metrics.get(j);
 			m = this.addMetric(metric, thread);
 			functionProfile.setInclusive(m.getID(), inclusive.papi[j]);
 			functionProfile.setExclusive(m.getID(), exclusive.papi[j]);
@@ -239,7 +239,7 @@ public class GPTLDataSource extends DataSource {
 		try {
 			boolean inData = false;
 			boolean previousLineBlank = false;
-			Stack eventStack = new Stack();
+			Stack<EventData> eventStack = new Stack<EventData>();
 			while((inputString = br.readLine()) != null){
 				// ************ PROCESS     0 (    0) ************
 				if (inputString.trim().startsWith("************ PROCESS")) {
@@ -329,7 +329,7 @@ public class GPTLDataSource extends DataSource {
 						eventStack.push(eventData);
 					} else {
 						// peek at the top, and get the depth for the event
-						EventData parent = (EventData)eventStack.peek();
+						EventData parent = eventStack.peek();
 						// if the just read event is deeper than the current parent,
 						// add it to the stack
 						if (eventData.depth > parent.depth) {
@@ -341,7 +341,7 @@ public class GPTLDataSource extends DataSource {
 						// current parent and replace it with the just read event
 						else if (eventData.depth == parent.depth) {
 							eventStack.pop();
-							parent = (EventData)eventStack.peek();
+							parent = eventStack.peek();
 							parent.children.add(eventData);
 							eventData.callpathName = parent.callpathName + " => " + eventData.callpathName;
 							eventStack.push(eventData);
@@ -351,7 +351,7 @@ public class GPTLDataSource extends DataSource {
 						else if (eventData.depth < parent.depth) {
 							while (eventData.depth <= parent.depth) {
 								eventStack.pop();
-								parent = (EventData)eventStack.peek();
+								parent = eventStack.peek();
 							}
 							parent.children.add(eventData);
 							eventData.callpathName = parent.callpathName + " => " + eventData.callpathName;
@@ -414,11 +414,11 @@ public class GPTLDataSource extends DataSource {
 
 	private class GlobalData {
 		public int numTasks = 0;
-		public List metrics = new ArrayList();
+		public List<String> metrics = new ArrayList<String>();
 	}
 
 	private class ThreadData {
-		public List eventData = new ArrayList();	
+		public List<EventData> eventData = new ArrayList<EventData>();	
 		public int processid = 0;
 		public int threadid = 0;
 	}
@@ -428,13 +428,13 @@ public class GPTLDataSource extends DataSource {
 		public String callpathName;
 		public int depth;
 		public int calls;
-		private List children = new ArrayList();
+		private List<EventData> children = new ArrayList<EventData>();
 		public Measurements inclusive = new Measurements();
 		public Measurements getExclusive() {
 			Measurements exclusive = (Measurements)inclusive.clone();
 			//System.out.println("Getting exclusive for " + callpathName);
 			for (int i = 0 ; i < children.size() ; i++) {
-				EventData child = (EventData)children.get(i);
+				EventData child = children.get(i);
 				//System.out.println("	Child:  " + child.name);
 				exclusive.wallclock -= child.inclusive.wallclock;
 				exclusive.wallclockMax -= child.inclusive.wallclockMax;

@@ -9,10 +9,19 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Insets;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.font.*;
+import java.awt.font.FontRenderContext;
+import java.awt.font.LineBreakMeasurer;
+import java.awt.font.TextAttribute;
+import java.awt.font.TextLayout;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.text.AttributedCharacterIterator;
@@ -30,10 +39,14 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 
 public class StatWindowPanel extends JPanel implements MouseListener, Printable, ImageExport {
 
-    //Instance data.
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -525538914597587767L;
+	//Instance data.
     private int xPanelSize = 800;
     private int yPanelSize = 600;
-    private int newXPanelSize = 0;
+    //private int newXPanelSize = 0;
     private int newYPanelSize = 0;
 
     //Some drawing details.
@@ -45,12 +58,12 @@ public class StatWindowPanel extends JPanel implements MouseListener, Printable,
     private ParaProfTrial ppTrial = null;
     private StatWindow window = null;
     private boolean userEventWindow;
-    private List list = new ArrayList();
+    private List<Comparable> list = new ArrayList<Comparable>();
 
     private Font monoFont = null;
     private FontMetrics fmMonoFont = null;
 
-    private Object clickedOnObject = null;
+    //private Object clickedOnObject = null;
 
     private int lastHeaderEndPosition = 0;
 
@@ -111,7 +124,7 @@ public class StatWindowPanel extends JPanel implements MouseListener, Printable,
     public static String getUserEventStatStringHeading() {
 
         int w = 18;
-        return UtilFncs.pad("NumSamples", w) + UtilFncs.pad("Max", w) + UtilFncs.pad("Min", w)
+        return UtilFncs.pad("Total", w) + UtilFncs.pad("NumSamples", w) + UtilFncs.pad("Max", w) + UtilFncs.pad("Min", w)
                 + UtilFncs.pad("Mean", w) + UtilFncs.pad("Std. Dev", w);
 
     }
@@ -119,7 +132,7 @@ public class StatWindowPanel extends JPanel implements MouseListener, Printable,
     public void setSearchLines(String headerString, String dashString) {
 
         if (searcher.getSearchLines() == null && list != null) {
-            List searchLines = new ArrayList();
+            List<String> searchLines = new ArrayList<String>();
             searchLines.add(dashString);
             searchLines.add(headerString);
             searchLines.add(dashString);
@@ -221,7 +234,7 @@ public class StatWindowPanel extends JPanel implements MouseListener, Printable,
                 LineBreakMeasurer lbm = new LineBreakMeasurer(aci, frc);
                 float wrappingWidth = this.getSize().width - insets.left - insets.right;
                 float x = insets.left;
-                float y = insets.right;
+                //float y = insets.right;
                 while (lbm.getPosition() < aci.getEndIndex()) {
                     TextLayout textLayout = lbm.nextLayout(wrappingWidth);
                     yCoord += spacing;

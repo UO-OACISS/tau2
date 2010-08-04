@@ -56,8 +56,8 @@ DBManagerListener {
 
    private JScrollPane treeScrollPane;
 
-   private Vector loadedDBTrials = new Vector();
-   private Vector loadedTrials = new Vector();
+   private Vector<ParaProfTrial> loadedDBTrials = new Vector<ParaProfTrial>();
+   private Vector<ParaProfTrial> loadedTrials = new Vector<ParaProfTrial>();
 
    private boolean metaDataRetrieved;
 
@@ -81,7 +81,7 @@ DBManagerListener {
 
    private String dbDisplayName;
 
-   private List databases;
+   private List<Database> databases;
    private JFileChooser expressionFileC =  new JFileChooser();
    private static String commandLineConfig;
 
@@ -102,7 +102,7 @@ DBManagerListener {
       if (commandLineConfig != null) {
          databases.add(new Database("Portal", commandLineConfig));
       }
-      Iterator dbs = databases.iterator();
+      Iterator<Database> dbs = databases.iterator();
 
       DefaultMutableTreeNode treeNode;
       Enumeration nodes = root.children();
@@ -114,7 +114,7 @@ DBManagerListener {
          }
       }
 
-      List toRemove = new ArrayList();
+      List<DefaultMutableTreeNode> toRemove = new ArrayList<DefaultMutableTreeNode>();
       while (nodes.hasMoreElements()) {
          treeNode = (DefaultMutableTreeNode) nodes.nextElement();
          toRemove.add(treeNode);
@@ -126,7 +126,7 @@ DBManagerListener {
       }
 
       for (int i = 0; i < toRemove.size(); i++) {
-         treeNode = (DefaultMutableTreeNode) toRemove.get(i);
+         treeNode = toRemove.get(i);
          treeNode.removeFromParent();
       }
       getTreeModel().reload();
@@ -204,8 +204,8 @@ DBManagerListener {
       if (commandLineConfig != null) {
          databases.add(new Database("Portal", commandLineConfig));
       }
-      for (Iterator it = databases.iterator(); it.hasNext();) {
-         Database database = (Database) it.next();
+      for (Iterator<Database> it = databases.iterator(); it.hasNext();) {
+         Database database = it.next();
          DefaultMutableTreeNode dbNode = new DefaultMutableTreeNode(database);
          root.add(dbNode);
       }
@@ -556,7 +556,7 @@ DBManagerListener {
 
    public void recomputeStats() {
       for (int i = 0; i < loadedTrials.size(); i++) {
-         ParaProfTrial ppTrial = (ParaProfTrial) loadedTrials.get(i);
+         ParaProfTrial ppTrial = loadedTrials.get(i);
          ppTrial.getDataSource().generateDerivedData();
       }
    }
@@ -580,8 +580,8 @@ DBManagerListener {
                databaseAPI.deleteApplication(application.getID());
                databaseAPI.terminate();
                //Remove any loaded trials associated with this application.
-               for (Enumeration e = loadedDBTrials.elements(); e.hasMoreElements();) {
-                  ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+               for (Enumeration<ParaProfTrial> e = loadedDBTrials.elements(); e.hasMoreElements();) {
+                  ParaProfTrial loadedTrial = e.nextElement();
                   if (loadedTrial.getApplicationID() == application.getID() && loadedTrial.loading() == false) {
                      loadedDBTrials.remove(loadedTrial);
                   }
@@ -602,8 +602,8 @@ DBManagerListener {
                databaseAPI.deleteExperiment(experiment.getID());
                databaseAPI.terminate();
                //Remove any loaded trials associated with this application.
-               for (Enumeration e = loadedDBTrials.elements(); e.hasMoreElements();) {
-                  ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+               for (Enumeration<ParaProfTrial> e = loadedDBTrials.elements(); e.hasMoreElements();) {
+                  ParaProfTrial loadedTrial = e.nextElement();
                   if (loadedTrial.getApplicationID() == experiment.getApplicationID()
                         && loadedTrial.getExperimentID() == experiment.getID() && loadedTrial.loading() == false) {
                      loadedDBTrials.remove(loadedTrial);
@@ -627,8 +627,8 @@ DBManagerListener {
                databaseAPI.deleteTrial(ppTrial.getID());
                databaseAPI.terminate();
                //Remove any loaded trials associated with this application.
-               for (Enumeration e = loadedDBTrials.elements(); e.hasMoreElements();) {
-                  ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+               for (Enumeration<ParaProfTrial> e = loadedDBTrials.elements(); e.hasMoreElements();) {
+                  ParaProfTrial loadedTrial = e.nextElement();
                   if (loadedTrial.getApplicationID() == ppTrial.getApplicationID()
                         && loadedTrial.getExperimentID() == ppTrial.getID() && loadedTrial.getID() == ppTrial.getID()
                         && loadedTrial.loading() == false) {
@@ -651,8 +651,8 @@ DBManagerListener {
       boolean loaded = true;
       if (ppTrial.dBTrial()) {
          loaded = false;
-         for (Enumeration e = loadedDBTrials.elements(); e.hasMoreElements();) {
-            ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+         for (Enumeration<ParaProfTrial> e = loadedDBTrials.elements(); e.hasMoreElements();) {
+            ParaProfTrial loadedTrial = e.nextElement();
             if ((ppTrial.getID() == loadedTrial.getID()) && (ppTrial.getExperimentID() == loadedTrial.getExperimentID())
                   && (ppTrial.getApplicationID() == loadedTrial.getApplicationID())) {
                loaded = true;
@@ -1050,8 +1050,8 @@ DBManagerListener {
 
          if (ppTrial.dBTrial()) {
             loaded = false;
-            for (Enumeration e = loadedDBTrials.elements(); e.hasMoreElements();) {
-               ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+            for (Enumeration<ParaProfTrial> e = loadedDBTrials.elements(); e.hasMoreElements();) {
+               ParaProfTrial loadedTrial = e.nextElement();
                if ((ppTrial.getID() == loadedTrial.getID()) && (ppTrial.getExperimentID() == loadedTrial.getExperimentID())
                      && (ppTrial.getApplicationID() == loadedTrial.getApplicationID())) {
                   ppTrial = loadedTrial;
@@ -1121,8 +1121,8 @@ DBManagerListener {
                      }
 
                      if (uploadChildren) {
-                        for (Iterator it2 = ppApp.getExperimentList(); it2.hasNext();) {
-                           ParaProfExperiment ppExp = (ParaProfExperiment) it2.next();
+                        for (Iterator<ParaProfExperiment> it2 = ppApp.getExperimentList(); it2.hasNext();) {
+                           ParaProfExperiment ppExp = it2.next();
                            uploadExperiment(dbApp, ppExp, true, true);
                         }
                      }
@@ -1141,8 +1141,8 @@ DBManagerListener {
             application.setID(databaseAPI.saveApplication(application));
 
             if (uploadChildren) {
-               for (Iterator it2 = ppApp.getExperimentList(); it2.hasNext();) {
-                  ParaProfExperiment ppExp = (ParaProfExperiment) it2.next();
+               for (Iterator<ParaProfExperiment> it2 = ppApp.getExperimentList(); it2.hasNext();) {
+                  ParaProfExperiment ppExp = it2.next();
                   uploadExperiment(application, ppExp, true, true);
                }
             }
@@ -1192,8 +1192,8 @@ DBManagerListener {
                   }
 
                   if (uploadChildren) {
-                     for (Iterator it2 = ppExp.getTrialList(); it2.hasNext();) {
-                        ParaProfTrial ppTrial = (ParaProfTrial) it2.next();
+                     for (Iterator<ParaProfTrial> it2 = ppExp.getTrialList(); it2.hasNext();) {
+                        ParaProfTrial ppTrial = it2.next();
                         uploadTrial(dbExp, ppTrial);
                      }
                   }
@@ -1214,8 +1214,8 @@ DBManagerListener {
          experiment.setID(databaseAPI.saveExperiment(experiment));
 
          if (uploadChildren) {
-            for (Iterator it2 = ppExp.getTrialList(); it2.hasNext();) {
-               ParaProfTrial ppTrial = (ParaProfTrial) it2.next();
+            for (Iterator<ParaProfTrial> it2 = ppExp.getTrialList(); it2.hasNext();) {
+               ParaProfTrial ppTrial = it2.next();
                uploadTrial(experiment, ppTrial);
             }
          }
@@ -1367,9 +1367,9 @@ DBManagerListener {
                for (int i = selectedNode.getChildCount(); i > 0; i--) {
                   getTreeModel().removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i - 1)));
                }
-               ListIterator l = application.getExperimentList();
+               ListIterator<ParaProfExperiment> l = application.getExperimentList();
                while (l.hasNext()) {
-                  ParaProfExperiment experiment = (ParaProfExperiment) l.next();
+                  ParaProfExperiment experiment = l.next();
                   DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
                   experiment.setDMTN(experimentNode);
                   getTreeModel().insertNodeInto(experimentNode, selectedNode, selectedNode.getChildCount());
@@ -1408,9 +1408,9 @@ DBManagerListener {
                for (int i = selectedNode.getChildCount(); i > 0; i--) {
                   getTreeModel().removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i - 1)));
                }
-               ListIterator l = experiment.getTrialList();
+               ListIterator<ParaProfTrial> l = experiment.getTrialList();
                while (l.hasNext()) {
-                  ParaProfTrial ppTrial = (ParaProfTrial) l.next();
+                  ParaProfTrial ppTrial = l.next();
                   DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(ppTrial);
                   ppTrial.setDMTN(trialNode);
                   getTreeModel().insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
@@ -1452,9 +1452,9 @@ DBManagerListener {
                for (int i = standard.getChildCount(); i > 0; i--) {
                   getTreeModel().removeNodeFromParent(((DefaultMutableTreeNode) standard.getChildAt(i - 1)));
                }
-               Iterator l = ParaProf.applicationManager.getApplications().iterator();
+               Iterator<ParaProfApplication> l = ParaProf.applicationManager.getApplications().iterator();
                while (l.hasNext()) {
-                  ParaProfApplication application = (ParaProfApplication) l.next();
+                  ParaProfApplication application = l.next();
                   DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
                   application.setDMTN(applicationNode);
                   getTreeModel().insertNodeInto(applicationNode, standard, standard.getChildCount());
@@ -1516,9 +1516,9 @@ DBManagerListener {
                for (int i = selectedNode.getChildCount(); i > 0; i--) {
                   getTreeModel().removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i - 1)));
                }
-               ListIterator l = application.getExperimentList();
+               ListIterator<ParaProfExperiment> l = application.getExperimentList();
                while (l.hasNext()) {
-                  ParaProfExperiment experiment = (ParaProfExperiment) l.next();
+                  ParaProfExperiment experiment = l.next();
                   DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
                   experiment.setDMTN(experimentNode);
                   getTreeModel().insertNodeInto(experimentNode, selectedNode, selectedNode.getChildCount());
@@ -1557,9 +1557,9 @@ DBManagerListener {
                for (int i = selectedNode.getChildCount(); i > 0; i--) {
                   getTreeModel().removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i - 1)));
                }
-               ListIterator l = experiment.getTrialList();
+               ListIterator<ParaProfTrial> l = experiment.getTrialList();
                while (l.hasNext()) {
-                  ParaProfTrial ppTrial = (ParaProfTrial) l.next();
+                  ParaProfTrial ppTrial = l.next();
                   DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(ppTrial);
                   ppTrial.setDMTN(trialNode);
                   getTreeModel().insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
@@ -1588,8 +1588,8 @@ DBManagerListener {
          // if so, we re-associate the ParaProfTrial with the DMTN since
          // the old one is gone
          boolean loaded = false;
-         for (Enumeration e = loadedDBTrials.elements(); e.hasMoreElements();) {
-            ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+         for (Enumeration<ParaProfTrial> e = loadedDBTrials.elements(); e.hasMoreElements();) {
+            ParaProfTrial loadedTrial = e.nextElement();
             if ((ppTrial.getID() == loadedTrial.getID()) && (ppTrial.getExperimentID() == loadedTrial.getExperimentID())
                   && (ppTrial.getApplicationID() == loadedTrial.getApplicationID())) {
                selectedNode.setUserObject(loadedTrial);
@@ -2234,7 +2234,7 @@ DBManagerListener {
    }
 
    public Database getDefaultDatabase() {
-      return (Database) databases.get(0);
+      return databases.get(0);
       //ParseConfig config = new ParseConfig(ParaProf.preferences.getDatabaseConfigurationFile());
       //return new Database("default", config);
    }
@@ -2360,7 +2360,7 @@ DBManagerListener {
     * Returns all the loaded trials
     * @return the loaded trials
     */
-   public Vector getLoadedTrials() {
+   public Vector<ParaProfTrial> getLoadedTrials() {
       return loadedTrials;
    }
 

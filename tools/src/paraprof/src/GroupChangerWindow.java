@@ -240,13 +240,13 @@ public class GroupChangerWindow extends JFrame implements ParaProfWindow, Action
 
     private void updateGroupLists() {
         // create a map of groups to ints, which is the count of the number of functions in each group
-        Map map = new HashMap();
+        Map<Group, Integer> map = new HashMap<Group, Integer>();
         Object[] selectedValues = regionList.getSelectedValues();
         for (int i = 0; i < selectedValues.length; i++) {
             Function function = (Function) selectedValues[i];
             for (Iterator grIt = function.getGroups().iterator(); grIt.hasNext();) {
                 Group group = (Group) grIt.next();
-                Integer count = (Integer) map.get(group);
+                Integer count = map.get(group);
                 if (count == null) {
                     map.put(group, new Integer(1));
                 } else {
@@ -262,9 +262,9 @@ public class GroupChangerWindow extends JFrame implements ParaProfWindow, Action
         // now add to each group list accordingly
         int idx = 0;
         int avail_idx = 0;
-        for (Iterator it = map.keySet().iterator(); it.hasNext();) {
-            Group group = (Group) it.next();
-            int numMembers = ((Integer) map.get(group)).intValue();
+        for (Iterator<Group> it = map.keySet().iterator(); it.hasNext();) {
+            Group group = it.next();
+            int numMembers = map.get(group).intValue();
             GroupListBlob blob = new GroupListBlob();
             blob.group = group;
             if (numMembers == selectedValues.length) {

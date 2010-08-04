@@ -23,8 +23,8 @@ import edu.uoregon.tau.perfdmf.UserEvent;
 
 public class ColorChooser implements WindowListener {
 
-    private Vector colors = new Vector();
-    private Vector groupColors = new Vector();
+    private Vector<Color> colors = new Vector<Color>();
+    private Vector<Color> groupColors = new Vector<Color>();
     private Color functionHighlightColor = Color.red;
     private Color groupHighlightColor = new Color(0, 255, 255);
     private Color userEventHighlightColor = new Color(255, 255, 0);
@@ -104,10 +104,10 @@ public class ColorChooser implements WindowListener {
     }
 
     public Color getColor(int location) {
-        return (Color) colors.get(location);
+        return colors.get(location);
     }
 
-    public Vector getColors() {
+    public Vector<Color> getColors() {
         return colors;
     }
 
@@ -120,10 +120,10 @@ public class ColorChooser implements WindowListener {
     }
 
     public Color getGroupColor(int location) {
-        return (Color) groupColors.elementAt(location);
+        return groupColors.elementAt(location);
     }
 
-    public Vector getGroupColors() {
+    public Vector<Color> getGroupColors() {
         return groupColors;
     }
 
@@ -253,7 +253,7 @@ public class ColorChooser implements WindowListener {
             DataSorter dataSorter = new DataSorter(ppTrial);
             dataSorter.setSortType(SortType.MEAN_VALUE);
             dataSorter.setDescendingOrder(true);
-            List list = dataSorter.getFunctionProfiles(ppTrial.getDataSource().getMeanData());
+            List<Comparable> list = dataSorter.getFunctionProfiles(ppTrial.getDataSource().getMeanData());
 
             for (int i = 0; i < list.size(); i++) {
                 Function func = ((PPFunctionProfile) list.get(i)).getFunction();

@@ -227,8 +227,8 @@ public class AtomicLocationProfile {
      * Documentation?
      */
 
-    public static Vector getAtomicEventData(DB db, String whereClause) {
-	Vector atomicEventData = new Vector();
+    public static Vector<AtomicLocationProfile> getAtomicEventData(DB db, String whereClause) {
+	Vector<AtomicLocationProfile> atomicEventData = new Vector<AtomicLocationProfile>();
 	// create a string to hit the database
 	StringBuffer buf = new StringBuffer();
 	buf.append("select p.atomic_event, p.node, ");

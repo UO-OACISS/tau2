@@ -162,7 +162,7 @@ public abstract class AbstractTreeTableModel implements TreeTableModel {
     // Default impelmentations for methods in the TreeTableModel interface. 
     //
 
-    public Class getColumnClass(int column) {
+    public Class<Object> getColumnClass(int column) {
         return Object.class;
     }
 
@@ -171,7 +171,7 @@ public abstract class AbstractTreeTableModel implements TreeTableModel {
      *  and keyboard events in the Tree column to the underlying JTree. 
      */
     public boolean isCellEditable(Object node, int column) {
-        return getColumnClass(column) == TreeTableModel.class;
+        return getColumnClass(column) == (Object)TreeTableModel.class;
     }
 
     public void setValueAt(Object aValue, Object node, int column) {

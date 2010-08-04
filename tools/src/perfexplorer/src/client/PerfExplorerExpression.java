@@ -106,7 +106,7 @@ public class PerfExplorerExpression /*extends Expression*/{
 		    out.add(name + "");	
 		name = "";
 		try {
-		    while (((Character)stack.peek()).charValue() != '(')
+		    while (stack.peek().charValue() != '(')
 			out.add(stack.pop() + "");
 		} catch (EmptyStackException ex) {}
 		stack.push(new Character('+'));
@@ -116,7 +116,7 @@ public class PerfExplorerExpression /*extends Expression*/{
 		    out.add(name + "");	
 		name = "";
 		try {
-		    while (((Character)stack.peek()).charValue()!= '(')
+		    while (stack.peek().charValue()!= '(')
 			out.add(stack.pop() + "");
 		} catch (EmptyStackException ex) {}
 		stack.push(new Character('-'));
@@ -126,7 +126,7 @@ public class PerfExplorerExpression /*extends Expression*/{
 		    out.add(name + "");	
 		name = "";
 		try {
-		    while (((Character)stack.peek()).charValue() != '(' && ((Character)stack.peek()).charValue() != '-' && ((Character)stack.peek()).charValue() != '+')
+		    while (stack.peek().charValue() != '(' && stack.peek().charValue() != '-' && stack.peek().charValue() != '+')
 			out.add(stack.pop() + "");
 		} catch (EmptyStackException ex) {}
 		stack.push(new Character('/'));
@@ -136,7 +136,7 @@ public class PerfExplorerExpression /*extends Expression*/{
 		    out.add(name + "");
 		name = "";
 		try {
-		    while (((Character)stack.peek()).charValue() != '(' && ((Character)stack.peek()).charValue() != '-' && ((Character)stack.peek()).charValue() != '+')
+		    while (stack.peek().charValue() != '(' && stack.peek().charValue() != '-' && stack.peek().charValue() != '+')
 			out.add(stack.pop() + "");
 		} catch (EmptyStackException ex) {}
 		stack.push(new Character('*'));
@@ -149,7 +149,7 @@ public class PerfExplorerExpression /*extends Expression*/{
 		    out.add(name + "");
 		name = "";
 		try {
-		    while (((Character)stack.peek()).charValue() != '(')
+		    while (stack.peek().charValue() != '(')
 			out.add(stack.pop() + "");
 		    stack.pop();
 		} catch (EmptyStackException ex) {

@@ -28,10 +28,13 @@ import java.util.Iterator;
 import edu.uoregon.tau.common.AlphanumComparator;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.FunctionProfile;
+import edu.uoregon.tau.perfdmf.Group;
 import edu.uoregon.tau.perfdmf.Thread;
+import edu.uoregon.tau.perfdmf.UtilFncs;
 
-public class PPFunctionProfile implements Comparable {
+public class PPFunctionProfile implements Comparable<PPFunctionProfile> {
 
     private DataSorter dataSorter;
     private Thread thread;
@@ -125,11 +128,11 @@ public class PPFunctionProfile implements Comparable {
         return functionProfile.getInclusivePerCall(dataSorter.getSelectedSnapshot(), dataSorter.getSelectedMetric().getID());
     }
 
-    public Iterator getChildProfiles() {
+    public Iterator<FunctionProfile> getChildProfiles() {
         return functionProfile.getChildProfiles();
     }
 
-    public Iterator getParentProfiles() {
+    public Iterator<FunctionProfile> getParentProfiles() {
         return functionProfile.getParentProfiles();
     }
 
@@ -184,7 +187,7 @@ public class PPFunctionProfile implements Comparable {
         }
     }
 
-    public int compareTo(Object inObject) {
+    public int compareTo(PPFunctionProfile inObject) {
         ValueType valueType = dataSorter.getSortValueType();
 
         PPFunctionProfile other = (PPFunctionProfile) inObject;

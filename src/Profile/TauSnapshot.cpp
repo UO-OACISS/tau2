@@ -430,4 +430,5 @@ extern "C" int Tau_snapshot_writeFinal(const char *name) {
       fclose(out->fp);
     }
   }
+  return 0;
 }

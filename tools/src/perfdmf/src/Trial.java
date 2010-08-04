@@ -56,7 +56,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * @see IntervalEvent
  * @see AtomicEvent
  */
-public class Trial implements Serializable, Comparable {
+public class Trial implements Serializable, Comparable<Trial> {
     /**
      * 
      */
@@ -68,14 +68,14 @@ public class Trial implements Serializable, Comparable {
     private int experimentID;
     private int applicationID;
     private String name;
-    private List metrics;
+    private List<Metric> metrics;
     private String fields[];
 
     protected DataSource dataSource;
 
     private Database database;
-    private Map metaData = new TreeMap();
-    private Map uncommonMetaData = new TreeMap();
+    private Map<String, String> metaData = new TreeMap<String, String>();
+    private Map<String, String> uncommonMetaData = new TreeMap<String, String>();
 
     private boolean xmlMetaDataLoaded = false;
 
@@ -93,9 +93,9 @@ public class Trial implements Serializable, Comparable {
         private StringBuffer accumulator = new StringBuffer();
         private String currentName = "";
 
-        private Map common, other, current;
+        private Map<String, String> common, other, current;
 
-        public XMLParser(Map common, Map other) {
+        public XMLParser(Map<String, String> common, Map<String, String> other) {
             this.common = common;
             this.other = other;
             current = common;
@@ -126,7 +126,7 @@ public class Trial implements Serializable, Comparable {
 
     private void parseMetaData(String string) {
         try {
-            metaData = new TreeMap();
+            metaData = new TreeMap<String, String>();
             XMLReader xmlreader = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
             XMLParser parser = new XMLParser(metaData, uncommonMetaData);
             xmlreader.setContentHandler(parser);
@@ -187,12 +187,12 @@ public class Trial implements Serializable, Comparable {
         buf.append("select ");
         boolean first = true;
         int xDex = -1;
-        int zxDex = -1;
+        //int zxDex = -1;
         for (int i = 0; i < database.getTrialFieldNames().length; i++) {
             if (database.getTrialFieldNames()[i].toUpperCase().equals(XML_METADATA_GZ)
                     || database.getTrialFieldNames()[i].toUpperCase().equals(XML_METADATA)) {
                 if (database.getTrialFieldNames()[i].toUpperCase().equals(XML_METADATA_GZ)) {
-                    zxDex = i;
+                    //zxDex = i;
                 }
                 if (database.getTrialFieldNames()[i].toUpperCase().equals(XML_METADATA)) {
                     xDex = i;
@@ -252,7 +252,7 @@ public class Trial implements Serializable, Comparable {
 
                 if (DBConnector.isIntegerType(database.getTrialFieldTypes()[i]) && value != null) {
                     try {
-                        int test = Integer.parseInt(value);
+                        //int test = Integer.parseInt(value);
                     } catch (java.lang.NumberFormatException e) {
                         return;
                     }
@@ -260,7 +260,7 @@ public class Trial implements Serializable, Comparable {
 
                 if (DBConnector.isFloatingPointType(database.getTrialFieldTypes()[i]) && value != null) {
                     try {
-                        double test = Double.parseDouble(value);
+                        //double test = Double.parseDouble(value);
                     } catch (java.lang.NumberFormatException e) {
                         return;
                     }
@@ -277,7 +277,7 @@ public class Trial implements Serializable, Comparable {
     public void setField(int idx, String value) {
         if (DBConnector.isIntegerType(database.getTrialFieldTypes()[idx]) && value != null) {
             try {
-                int test = Integer.parseInt(value);
+                //int test = Integer.parseInt(value);
             } catch (java.lang.NumberFormatException e) {
                 return;
             }
@@ -285,7 +285,7 @@ public class Trial implements Serializable, Comparable {
 
         if (DBConnector.isFloatingPointType(database.getTrialFieldTypes()[idx]) && value != null) {
             try {
-                double test = Double.parseDouble(value);
+                //double test = Double.parseDouble(value);
             } catch (java.lang.NumberFormatException e) {
                 return;
             }
@@ -367,7 +367,7 @@ public class Trial implements Serializable, Comparable {
      */
     public void addMetric(Metric metric) {
         if (metrics == null) {
-            metrics = new ArrayList();
+            metrics = new ArrayList<Metric>();
         }
         metrics.add(metric);
     }
@@ -377,7 +377,7 @@ public class Trial implements Serializable, Comparable {
      * 
      * @return metric vector
      */
-    public List getMetrics() {
+    public List<Metric> getMetrics() {
         return this.metrics;
     }
 
@@ -494,8 +494,8 @@ public class Trial implements Serializable, Comparable {
         try {
             ResultSet resultSet = null;
 
-            String trialFieldNames[] = null;
-            int trialFieldTypes[] = null;
+            //String trialFieldNames[] = null;
+            //int trialFieldTypes[] = null;
 
             DatabaseMetaData dbMeta = db.getMetaData();
 
@@ -506,10 +506,10 @@ public class Trial implements Serializable, Comparable {
                 resultSet = dbMeta.getColumns(null, null, "trial", "%");
             }
 
-            Vector nameList = new Vector();
-            Vector typeList = new Vector();
-            List typeNames = new ArrayList();
-            List columnSizes = new ArrayList();
+            Vector<String> nameList = new Vector<String>();
+            Vector<Integer> typeList = new Vector<Integer>();
+            List<String> typeNames = new ArrayList<String>();
+            List<Integer> columnSizes = new ArrayList<Integer>();
             boolean seenID = false;
 
             ResultSetMetaData md = resultSet.getMetaData();
@@ -553,12 +553,12 @@ public class Trial implements Serializable, Comparable {
             int[] fieldTypes = new int[typeList.size()];
             String[] fieldTypeNames = new String[typeList.size()];
             for (int i = 0; i < typeList.size(); i++) {
-                fieldNames[i] = (String) nameList.get(i);
-                fieldTypes[i] = ((Integer) typeList.get(i)).intValue();
-                if (((Integer) columnSizes.get(i)).intValue() > 255) {
-                    fieldTypeNames[i] = (String) typeNames.get(i) + "(" + columnSizes.get(i).toString() + ")";
+                fieldNames[i] = nameList.get(i);
+                fieldTypes[i] = typeList.get(i).intValue();
+                if (columnSizes.get(i).intValue() > 255) {
+                    fieldTypeNames[i] = typeNames.get(i) + "(" + columnSizes.get(i).toString() + ")";
                 } else {
-                    fieldTypeNames[i] = (String) typeNames.get(i);
+                    fieldTypeNames[i] = typeNames.get(i);
                 }
             }
 
@@ -570,15 +570,15 @@ public class Trial implements Serializable, Comparable {
         }
     }
 
-    private static Vector getTrialList(DB db, String whereClause) {
-        return getTrialList(db, whereClause, true);
-    }
+//    private static Vector<Trial> getTrialList(DB db, String whereClause) {
+//        return getTrialList(db, whereClause, true);
+//    }
 
-    public static Vector getTrialListWithoutMetadata(DB db, String whereClause) {
+    public static Vector<Trial> getTrialListWithoutMetadata(DB db, String whereClause) {
         return getTrialList(db, whereClause, false);
     }
 
-    public static Vector getTrialList(DB db, String whereClause, boolean getXMLMetadata) {
+    public static Vector<Trial> getTrialList(DB db, String whereClause, boolean getXMLMetadata) {
 
         try {
 
@@ -604,7 +604,7 @@ public class Trial implements Serializable, Comparable {
             buf.append(whereClause);
             buf.append(" order by t.name, t.id ");
 
-            Vector trials = new Vector();
+            Vector<Trial> trials = new Vector<Trial>();
 
             ResultSet resultSet = db.executeQuery(buf.toString());
             while (resultSet.next() != false) {
@@ -650,10 +650,10 @@ public class Trial implements Serializable, Comparable {
             resultSet.close();
 
             // get the function details
-            Enumeration en = trials.elements();
+            Enumeration<Trial> en = trials.elements();
             Trial trial;
             while (en.hasMoreElements()) {
-                trial = (Trial) en.nextElement();
+                trial = en.nextElement();
                 trial.getTrialMetrics(db);
             }
 
@@ -680,7 +680,7 @@ public class Trial implements Serializable, Comparable {
             String dateString = null;
 
             if (getMetaData() != null) {
-                dateString = (String) getMetaData().get("UTC Time");
+                dateString = getMetaData().get("UTC Time");
             }
             if (dateString == null) {
                 if (getDataSource() != null && getDataSource().getAllThreads() != null
@@ -849,7 +849,7 @@ public class Trial implements Serializable, Comparable {
     }
 
     private static void deleteAtomicLocationProfilesMySQL(DB db, int trialID) throws SQLException {
-        Vector atomicEvents = new Vector();
+        //Vector atomicEvents = new Vector();
         // create a string to hit the database
         StringBuffer buf = new StringBuffer();
         buf.append("select id ");
@@ -874,7 +874,7 @@ public class Trial implements Serializable, Comparable {
     }
 
     private static void deleteIntervalLocationProfilesMySQL(DB db, int trialID) throws SQLException {
-        Vector atomicEvents = new Vector();
+        //Vector atomicEvents = new Vector();
         // create a string to hit the database
         StringBuffer buf = new StringBuffer();
         buf.append("select id ");
@@ -909,9 +909,9 @@ public class Trial implements Serializable, Comparable {
 
     }
 
-    private static int getDBMetric(int trialID, int metric) {
-        return 0;
-    }
+//    private static int getDBMetric(int trialID, int metric) {
+//        return 0;
+//    }
 
     public static void deleteMetric(DB db, int trialID, int metricID) throws SQLException {
         PreparedStatement statement = null;
@@ -1128,11 +1128,11 @@ public class Trial implements Serializable, Comparable {
         }
     }
 
-    public Map getMetaData() {
+    public Map<String, String> getMetaData() {
         return metaData;
     }
 
-    public void setMetaData(Map metaDataMap) {
+    public void setMetaData(Map<String, String> metaDataMap) {
         this.metaData = metaDataMap;
     }
 
@@ -1146,16 +1146,16 @@ public class Trial implements Serializable, Comparable {
 
     }
 
-    public Map getUncommonMetaData() {
+    public Map<String, String> getUncommonMetaData() {
         return uncommonMetaData;
     }
 
-    public void setUncommonMetaData(Map uncommonMetaData) {
+    public void setUncommonMetaData(Map<String, String> uncommonMetaData) {
         this.uncommonMetaData = uncommonMetaData;
     }
 
-    public int compareTo(Object arg0) {
-        return alphanum.compare(this.getName(), ((Trial) arg0).getName());
+    public int compareTo(Trial arg0) {
+        return alphanum.compare(this.getName(),  arg0.getName());
     }
 
 }

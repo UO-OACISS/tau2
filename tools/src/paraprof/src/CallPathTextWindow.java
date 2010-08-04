@@ -4,7 +4,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 import java.util.List;
-
+import java.applet.*;
 import javax.swing.*;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
@@ -43,7 +43,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     private JScrollPane sp;
     private CallPathTextWindowPanel panel;
 
-    private List list;
+    private List<Comparable> list;
 
     private SearchPanel searchPanel;
 
@@ -355,11 +355,11 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         list = dataSorter.getFunctionProfiles(thread);
     }
 
-    public List getData() {
+    public List<Comparable> getData() {
         return list;
     }
 
-    public ListIterator getDataIterator() {
+    public ListIterator<Comparable> getDataIterator() {
         return list.listIterator();
     }
 

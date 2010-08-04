@@ -27,7 +27,7 @@ public class OSSWriter {
             }
         }
 
-        List threads = new ArrayList();
+        List<Thread> threads = new ArrayList<Thread>();
         if (!summary) {
             threads = dataSource.getAllThreads();
         }
@@ -39,7 +39,7 @@ public class OSSWriter {
         }
 
         for (int i = 0; i < threads.size(); i++) {
-            Thread thread = (Thread) threads.get(i);
+            Thread thread = threads.get(i);
             System.out.println("\n-------------------------------------------------------------------------------");
 
             if (thread.getNodeID() == -2) {
@@ -66,11 +66,11 @@ public class OSSWriter {
             header = header + "     calls  function";
             System.out.println(header);
 
-            List l = ds.getFunctionProfiles(thread);
+            List<Comparable> l = ds.getFunctionProfiles(thread);
 
             double cumulative = 0;
 
-            for (Iterator it = l.iterator(); it.hasNext();) {
+            for (Iterator<Comparable> it = l.iterator(); it.hasNext();) {
                 PPFunctionProfile p = (PPFunctionProfile) it.next();
                 FunctionProfile fp = p.getFunctionProfile();
 

@@ -18,7 +18,7 @@ public class ColumnChooser extends JFrame {
     private ParaProfTrial ppTrial;
 
  
-    private List statistics = new ArrayList();
+    private List<String> statistics = new ArrayList<String>();
 
     private ParaProfMetric numCalls;
     private ParaProfMetric numSubr;

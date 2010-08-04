@@ -22,7 +22,7 @@ public class MiniHistogram extends JComponent {
     private double minValue;
     private double binWidth;
     
-    private List list;
+    private List<PPFunctionProfile> list;
     
     public MiniHistogram(ParaProfTrial ppTrial, Function function) {
         this.ppTrial = ppTrial;
@@ -48,8 +48,8 @@ public class MiniHistogram extends JComponent {
         int numThreads = 0;
 
         boolean start = true;
-        for (Iterator it = list.iterator(); it.hasNext();) {
-            ppFunctionProfile = (PPFunctionProfile) it.next();
+        for (Iterator<PPFunctionProfile> it = list.iterator(); it.hasNext();) {
+            ppFunctionProfile = it.next();
 
                 numThreads++;
                 double tmpValue = ppFunctionProfile.getValue(); 
@@ -75,8 +75,8 @@ public class MiniHistogram extends JComponent {
         int count = 0;
 
         // fill the bins
-        for (Iterator it = list.iterator(); it.hasNext(); ) {
-            ppFunctionProfile = (PPFunctionProfile) it.next();
+        for (Iterator<PPFunctionProfile> it = list.iterator(); it.hasNext(); ) {
+            ppFunctionProfile = it.next();
                 double tmpDataValue = ppFunctionProfile.getValue();
                 for (int j = 0; j < numBins; j++) {
                     if (tmpDataValue <= (minValue + (binWidth * (j + 1)))) {
