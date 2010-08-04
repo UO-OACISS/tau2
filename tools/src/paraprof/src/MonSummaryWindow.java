@@ -343,6 +343,29 @@ public class MonSummaryWindow extends JFrame {
 
     }
 
+    private JFreeChart createChart() {
+        dataset = new XYSeriesCollection();
+        updateDataset();
+        JFreeChart chart = ChartFactory.createXYLineChart("TauMon: " + canonicalName, 
+        					"Dump ID", "Mean Exclusive Time", dataset,
+        					PlotOrientation.VERTICAL, 
+        					true, // legend
+        					true, // tooltips
+        					false); // urls
+
+//      ((XYLineAndShapeRenderer) chart.getXYPlot().getRenderer()).setMargin(0.10);
+        ((XYLineAndShapeRenderer) chart.getXYPlot().getRenderer()).setOutlinePaint(Color.black);
+
+        Utility.applyDefaultChartTheme(chart);        
+        return chart;    	
+    }
+    
+    private void redraw() {
+        if (chartPanel != null) {
+            chartPanel.setChart(createChart());
+        }
+    }
+    
     private MonSummaryWindow(ParaProfTrial ppTrial, 
 			     Component invoker) 
 	throws Exception {
@@ -423,7 +446,7 @@ public class MonSummaryWindow extends JFrame {
 			}
 
 		    } catch (Exception e) {
-			ParaProfUtils.handleException(e);
+		    	ParaProfUtils.handleException(e);
 		    }
 		}
 	    });
