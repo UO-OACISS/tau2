@@ -23,11 +23,11 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  */
 public class ComparisonBarChartModel extends AbstractBarChartModel {
 
-    private List ppTrials = new ArrayList();
-    private List threads = new ArrayList();
+    private List<ParaProfTrial> ppTrials = new ArrayList<ParaProfTrial>();
+    private List<Thread> threads = new ArrayList<Thread>();
 
-    private Map rowMap = new HashMap(); // maps function names (Strings) to RowBlobs
-    private List rows = new ArrayList();
+    private Map<String, RowBlob> rowMap = new HashMap<String, RowBlob>(); // maps function names (Strings) to RowBlobs
+    private List<RowBlob> rows = new ArrayList<RowBlob>();
 
     private DataSorter dataSorter;
     private FunctionBarChartWindow window;
@@ -106,8 +106,8 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
                 }
 
                 public String getLabel(int index) {
-                    ParaProfTrial ppTrial = (ParaProfTrial) ppTrials.get(index);
-                    Thread thread = (Thread) threads.get(index);
+                    ParaProfTrial ppTrial = ppTrials.get(index);
+                    Thread thread = threads.get(index);
                     return ppTrial.getName() + " - " + ParaProfUtils.getThreadLabel(thread);
                 }
 
@@ -129,13 +129,13 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
         rows.clear();
         rowMap.clear();
 
-        ParaProfTrial selectedTrial = (ParaProfTrial) ppTrials.get(0);
-        Thread selectedThread = (Thread) threads.get(0);
+        ParaProfTrial selectedTrial = ppTrials.get(0);
+        Thread selectedThread = threads.get(0);
 
         dataSorter.setPpTrial(selectedTrial);
         DataSorter newDataSorter = new DataSorterWrapper(dataSorter, selectedTrial);
-        List list = newDataSorter.getFunctionProfiles(selectedThread);
-        for (Iterator it = list.iterator(); it.hasNext();) {
+        List<Comparable> list = newDataSorter.getFunctionProfiles(selectedThread);
+        for (Iterator<Comparable> it = list.iterator(); it.hasNext();) {
             PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next();
             RowBlob blob = new RowBlob(ppFunctionProfile.getDisplayName());
             rows.add(blob);
@@ -145,18 +145,18 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
 
         // add all the others
         for (int i = 1; i < ppTrials.size(); i++) {
-            ParaProfTrial ppTrial = (ParaProfTrial) ppTrials.get(i);
-            Thread thread = (Thread) threads.get(i);
+            ParaProfTrial ppTrial = ppTrials.get(i);
+            Thread thread = threads.get(i);
 
             // We now use the kludge wrapper so that the metric ids between trials get mapped
             // dataSorter.setPpTrial(ppTrial);
             newDataSorter = new DataSorterWrapper(dataSorter, ppTrial);
             list = newDataSorter.getFunctionProfiles(thread);
 
-            for (Iterator it = list.iterator(); it.hasNext();) {
+            for (Iterator<Comparable> it = list.iterator(); it.hasNext();) {
                 PPFunctionProfile fp = (PPFunctionProfile) it.next();
                 if (ppTrial.displayFunction(fp.getFunction())) {
-                    RowBlob blob = (RowBlob) rowMap.get(fp.getDisplayName());
+                    RowBlob blob = rowMap.get(fp.getDisplayName());
                     if (blob != null) {
                         blob.add(i, fp);
                     } else {
@@ -189,7 +189,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
     }
 
     public double getValue(int row, int subIndex) {
-        RowBlob blob = (RowBlob) rows.get(row);
+        RowBlob blob = rows.get(row);
         PPFunctionProfile ppFp = (PPFunctionProfile) blob.get(subIndex);
         if (ppFp == null) {
             return -1;
@@ -223,14 +223,14 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
     }
 
     public String getRowLabel(int row) {
-        RowBlob blob = (RowBlob) rows.get(row);
+        RowBlob blob = rows.get(row);
         return blob.getFunctionName();
     }
 
     public Color getValueColor(int row, int subIndex) {
         // we use the "default" colors for our legend and bars
-        List colorList = ParaProf.colorChooser.getColors();
-        return (Color) colorList.get(subIndex % colorList.size());
+        List<Color> colorList = ParaProf.colorChooser.getColors();
+        return colorList.get(subIndex % colorList.size());
     }
 
     public Color getValueHighlightColor(int row, int subIndex) {
@@ -244,7 +244,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
 
     public void fireRowLabelClick(int row, MouseEvent e, JComponent owner) {
         if (ParaProfUtils.rightClick(e)) {
-            RowBlob blob = (RowBlob) rows.get(row);
+            RowBlob blob = rows.get(row);
             for (Iterator it = blob.iterator(); it.hasNext();) {
                 PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next();
                 if (ppFunctionProfile != null) {
@@ -301,9 +301,9 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
 
         ParaProf.paraProfManagerWindow.addTrial(application, experiment, files, type, false, false);
 
-        Vector trials = experiment.getTrials();
+        Vector<ParaProfTrial> trials = experiment.getTrials();
 
-        ParaProfTrial ppTrial = (ParaProfTrial) trials.get(0);
+        ParaProfTrial ppTrial = trials.get(0);
 
         while (ppTrial.loading()) {
             sleep(500);
@@ -320,15 +320,15 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
         }
     }
 
-    public List getThreads() {
+    public List<Thread> getThreads() {
         return threads;
     }
 
-    public List getPpTrials() {
+    public List<ParaProfTrial> getPpTrials() {
         return ppTrials;
     }
 
-    public void setThreads(List threads) {
+    public void setThreads(List<Thread> threads) {
         this.threads = threads;
     }
 

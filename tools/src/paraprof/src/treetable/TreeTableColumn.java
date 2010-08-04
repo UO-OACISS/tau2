@@ -143,7 +143,7 @@ abstract public class TreeTableColumn {
             }
 
             column = table.convertColumnIndexToModel(column) - 1;
-            TreeTableColumn ttColumn = (TreeTableColumn) window.getColumns().get(column);
+            TreeTableColumn ttColumn = window.getColumns().get(column);
             Object result = ttColumn.getValueFor((TreeTableNode) value, false);
 
             setHorizontalAlignment(JLabel.RIGHT);

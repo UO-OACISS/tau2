@@ -22,8 +22,8 @@ public class PeriXMLHandler extends DefaultHandler {
 
     private Thread thread;
     private FunctionProfile functionProfile;
-    private Map functionMap = new HashMap();
-    private Map metricMap = new HashMap();
+    private Map<Integer, Function> functionMap = new HashMap<Integer, Function>();
+    private Map<Integer, Metric> metricMap = new HashMap<Integer, Metric>();
 
     public PeriXMLHandler(PeriXMLDataSource source) {
         super();
@@ -54,7 +54,7 @@ public class PeriXMLHandler extends DefaultHandler {
             thread = periXMLDataSource.addThread(id, 0, 0);
         } else if (localName.equalsIgnoreCase("eventInstance")) {
             id = getId(attributes);
-            Function function = (Function) functionMap.get(new Integer(id));
+            Function function = functionMap.get(new Integer(id));
             functionProfile = new FunctionProfile(function);
             thread.addFunctionProfile(functionProfile);
         } else if (localName.equalsIgnoreCase("metricDef")) {
@@ -74,7 +74,7 @@ public class PeriXMLHandler extends DefaultHandler {
         } else if (localName.equalsIgnoreCase("metric")) {
             double value = Double.parseDouble(accumulator.toString());
             value = value * 1e6;
-            Metric metric = (Metric) metricMap.get(new Integer(id));
+            Metric metric = metricMap.get(new Integer(id));
             functionProfile.setExclusive(metric.getID(), value);
             functionProfile.setInclusive(metric.getID(), value);
         } else if (localName.equalsIgnoreCase("description")) {

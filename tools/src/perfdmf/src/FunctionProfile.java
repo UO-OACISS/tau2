@@ -15,10 +15,10 @@ public class FunctionProfile {
     // this is a private static class to save memory when callpath data is not needed
     // we need only one empty pointer instead of four
     private static class CallPathData {
-        public Set childProfiles;
-        public Set parentProfiles;
-        public Map childProfileCallPathSets;
-        public Map parentProfileCallPathSets;
+        public Set<FunctionProfile> childProfiles;
+        public Set<FunctionProfile> parentProfiles;
+        public Map<FunctionProfile, Set<FunctionProfile>> childProfileCallPathSets;
+        public Map<FunctionProfile, Set<FunctionProfile>> parentProfileCallPathSets;
     }
 
     private static final int METRIC_SIZE = 2;
@@ -262,17 +262,17 @@ public class FunctionProfile {
         CallPathData callPathData = getCallPathData();
 
         if (callPathData.childProfiles == null)
-            callPathData.childProfiles = new HashSet();
+            callPathData.childProfiles = new HashSet<FunctionProfile>();
         callPathData.childProfiles.add(child);
 
         if (callPathData.childProfileCallPathSets == null)
-            callPathData.childProfileCallPathSets = new HashMap();
+            callPathData.childProfileCallPathSets = new HashMap<FunctionProfile, Set<FunctionProfile>>();
 
         // we maintain a set of callpaths for each child, retrieve the set for this child
-        Set callPathSet = (Set) callPathData.childProfileCallPathSets.get(child);
+        Set<FunctionProfile> callPathSet = callPathData.childProfileCallPathSets.get(child);
 
         if (callPathSet == null) {
-            callPathSet = new HashSet();
+            callPathSet = new HashSet<FunctionProfile>();
             callPathData.childProfileCallPathSets.put(child, callPathSet);
         }
 
@@ -288,31 +288,31 @@ public class FunctionProfile {
         CallPathData callPathData = getCallPathData();
 
         if (callPathData.parentProfiles == null)
-            callPathData.parentProfiles = new HashSet();
+            callPathData.parentProfiles = new HashSet<FunctionProfile>();
         callPathData.parentProfiles.add(parent);
 
         if (callPathData.parentProfileCallPathSets == null)
-            callPathData.parentProfileCallPathSets = new HashMap();
+            callPathData.parentProfileCallPathSets = new HashMap<FunctionProfile, Set<FunctionProfile>>();
 
         // we maintain a set of callpaths for each child, retrieve the set for this child
-        Set callPathSet = (Set) callPathData.parentProfileCallPathSets.get(parent);
+        Set<FunctionProfile> callPathSet = callPathData.parentProfileCallPathSets.get(parent);
 
         if (callPathSet == null) {
-            callPathSet = new HashSet();
+            callPathSet = new HashSet<FunctionProfile>();
             callPathData.parentProfileCallPathSets.put(parent, callPathSet);
         }
 
         callPathSet.add(callpath);
     }
 
-    public Iterator getChildProfiles() {
+    public Iterator<FunctionProfile> getChildProfiles() {
         CallPathData callPathData = getCallPathData();
         if (callPathData.childProfiles != null)
             return callPathData.childProfiles.iterator();
         return new UtilFncs.EmptyIterator();
     }
 
-    public Iterator getParentProfiles() {
+    public Iterator<FunctionProfile> getParentProfiles() {
         CallPathData callPathData = getCallPathData();
         if (callPathData.parentProfiles != null)
             return callPathData.parentProfiles.iterator();
@@ -323,14 +323,14 @@ public class FunctionProfile {
         CallPathData callPathData = getCallPathData();
         if (callPathData.parentProfileCallPathSets == null)
             return new UtilFncs.EmptyIterator();
-        return ((Set) callPathData.parentProfileCallPathSets.get(parent)).iterator();
+        return callPathData.parentProfileCallPathSets.get(parent).iterator();
     }
 
     public Iterator getChildProfileCallPathIterator(FunctionProfile child) {
         CallPathData callPathData = getCallPathData();
         if (callPathData.childProfileCallPathSets == null)
             return new UtilFncs.EmptyIterator();
-        return ((Set) callPathData.childProfileCallPathSets.get(child)).iterator();
+        return callPathData.childProfileCallPathSets.get(child).iterator();
     }
 
     /**

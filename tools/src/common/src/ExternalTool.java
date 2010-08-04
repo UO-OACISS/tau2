@@ -1,5 +1,6 @@
 package edu.uoregon.tau.common;
 
+import java.awt.Component;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
@@ -10,19 +11,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.util.StringTokenizer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
-import java.util.HashSet;
-import java.lang.Thread;
-import java.awt.Component;
+import java.util.StringTokenizer;
 
-import javax.swing.JOptionPane;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 
 /**
  * An External Tool properties management class.  If you want to generate
@@ -94,7 +91,7 @@ public class ExternalTool {
 	public static final String THREAD_ID = "thread_ID";
 	private static final String HEADER = "Default Properties file for an external tool.";
 	
-	private static List/*<ExternalTool>*/ loadedTools = null;
+	private static List/*<ExternalTool>*/<ExternalTool> loadedTools = null;
 	private static String currentTrial = null;
 	
 	private String propertiesFile = null;  // properties file name
@@ -103,7 +100,7 @@ public class ExternalTool {
 	private String programName = null;
 	private String workingDirectory = null;
 	private String[] environmentVariables = null;
-	private List/*<Command>*/ commands = new ArrayList/*<Command>*/();
+	private List/*<Command>*/<Command> commands = new ArrayList/*<Command>*/<Command>();
 
 	/** 
 	 * Constructor.  This function will read the properties from the specified
@@ -170,9 +167,9 @@ public class ExternalTool {
 	 * 
 	 * @return List list of external tools
 	 */
-	public static List/*<ExternalTool>*/ loadAllTools() {
+	public static List/*<ExternalTool>*/<ExternalTool> loadAllTools() {
 		if (ExternalTool.loadedTools == null) {
-			loadedTools = new ArrayList/*<ExternalTool>*/();
+			loadedTools = new ArrayList/*<ExternalTool>*/<ExternalTool>();
 			File directory = new File(PROPERTIES_LOCATION);
 			if (directory.isDirectory()) {
 				File[] files = directory.listFiles();
@@ -195,7 +192,7 @@ public class ExternalTool {
 	 * 
 	 * @return List list of external tools
 	 */
-	public static List/*<ExternalTool>*/ loadAllTools(String trialName) {
+	public static List/*<ExternalTool>*/<ExternalTool> loadAllTools(String trialName) {
 		if (ExternalTool.currentTrial != null && !ExternalTool.currentTrial.equals(trialName)) {
 			ExternalTool.loadedTools = null;
 		}
@@ -208,7 +205,7 @@ public class ExternalTool {
 	 * 
 	 * @return List list of external tools
 	 */
-	public static List/*<ExternalTool>*/ reloadTools() {
+	public static List/*<ExternalTool>*/<ExternalTool> reloadTools() {
 		ExternalTool.loadedTools = null;
 		return ExternalTool.loadAllTools();
 	}
@@ -220,7 +217,7 @@ public class ExternalTool {
 	 * @param fileType
 	 * @return
 	 */
-	public static List/*<ExternalTool>*/ findMatchingTools(String fileType) {
+	public static List/*<ExternalTool>*/<ExternalTool> findMatchingTools(String fileType) {
 		return findMatchingTools(fileType, null);
 	}
 
@@ -233,13 +230,13 @@ public class ExternalTool {
 	 * @param trialName
 	 * @return
 	 */
-	public static List/*<ExternalTool>*/ findMatchingTools(String fileType, String trialName) {
-		List/*<ExternalTool>*/ tools = new ArrayList/*<ExternalTool>*/();
+	public static List/*<ExternalTool>*/<ExternalTool> findMatchingTools(String fileType, String trialName) {
+		List/*<ExternalTool>*/<ExternalTool> tools = new ArrayList/*<ExternalTool>*/<ExternalTool>();
 		ExternalTool.loadAllTools(trialName);
 		if (ExternalTool.loadedTools == null)
 			return tools;
-		for (Iterator iter = ExternalTool.loadedTools.iterator() ; iter.hasNext() ;) {
-			ExternalTool tool = (ExternalTool)iter.next();
+		for (Iterator<ExternalTool> iter = ExternalTool.loadedTools.iterator() ; iter.hasNext() ;) {
+			ExternalTool tool = iter.next();
 			String configuredType = tool.properties.getProperty(ExternalTool.FILE_TYPE, "None"); 
 			if (configuredType.equalsIgnoreCase(fileType)) {
 				tools.add(tool);
@@ -298,16 +295,16 @@ public class ExternalTool {
 		this.propertiesFile = propertiesFile;
 	}
 
-	public static void launch(List/*<ExternalTool>*/ tools, CommandParameters params, Component parentWindow) {
+	public static void launch(List/*<ExternalTool>*/<ExternalTool> tools, CommandParameters params, Component parentWindow) {
 		// the mean and standard deviation IDs from ParaProf will be less than
 		// zero.  Fix that, if necessary.  This should not be called from mean
 		// or standard deviation thread, but just in case...
     	params.nodeID = (params.nodeID < 0) ? 0 : params.nodeID;
     	params.threadID = (params.threadID < 0) ? 0 : params.threadID;
 
-		List/*<Command>*/ commands = new ArrayList/*<Command>*/();
-		for (Iterator iter = tools.iterator() ; iter.hasNext() ; ) {
-			ExternalTool tool = (ExternalTool)iter.next();
+		List/*<Command>*/<Command> commands = new ArrayList/*<Command>*/<Command>();
+		for (Iterator<ExternalTool> iter = tools.iterator() ; iter.hasNext() ; ) {
+			ExternalTool tool = iter.next();
 			commands.addAll(tool.commands);
 		}
     	
@@ -344,7 +341,7 @@ public class ExternalTool {
 	}
 
 	public static void launch(ExternalTool tool) {
-		Command command = (Command)tool.commands.get(0);
+		Command command = tool.commands.get(0);
         ExternalTool.CommandParameters params = new ExternalTool.CommandParameters();
 		launchCommand(command, params);
 	}
@@ -352,8 +349,8 @@ public class ExternalTool {
 	public static void launchCommand(Command command, CommandParameters params) { 
 		// build the external command
 		String commandString = command.tool.programName + " " + command.name;
-		for (Iterator iter = command.parameterNames.iterator() ; iter.hasNext() ; ) {
-			String pName = (String)iter.next();
+		for (Iterator<String> iter = command.parameterNames.iterator() ; iter.hasNext() ; ) {
+			String pName = iter.next();
 			if (pName.equals(FUNCTION_NAME)) {
 				// remove callpath
 				String leaf = removeCallpath(params.function);
@@ -449,9 +446,9 @@ public class ExternalTool {
 	
 	public static void main(String[] args) {
 		ExternalTool.createDefaultTool(false);
-		List tools = ExternalTool.loadAllTools();
-		for (Iterator iter = tools.iterator(); iter.hasNext(); ) {
-			ExternalTool tool = (ExternalTool)iter.next();
+		List<ExternalTool> tools = ExternalTool.loadAllTools();
+		for (Iterator<ExternalTool> iter = tools.iterator(); iter.hasNext(); ) {
+			ExternalTool tool = iter.next();
 			System.out.println("Properties: ");
 			System.out.println(tool.dump());
 		}
@@ -467,7 +464,7 @@ public class ExternalTool {
 	class Command {
 		public String name = null;
 		public String label = null;
-		public List/*<String>*/ parameterNames = new ArrayList/*<String>*/();
+		public List/*<String>*/<String> parameterNames = new ArrayList/*<String>*/<String>();
 		public ExternalTool tool = null;
 		Command(ExternalTool tool, String name) {
 			this.tool = tool;
@@ -483,7 +480,7 @@ public class ExternalTool {
 		public String metric = null;
 		public int nodeID = 0;
 		public int threadID = 0;
-		public Map metadata = null;
+		public Map<String,String> metadata = null;
 	}
 }
 

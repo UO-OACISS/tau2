@@ -13,9 +13,9 @@ public class TrialCellRenderer extends DefaultTableCellRenderer {
     private Color green = new Color(0, 185, 0);
     private Color red = new Color(215, 0, 0);
 
-    private Map common, other;
+    private Map<String, String> common, other;
 
-    public TrialCellRenderer(Map common, Map other) {
+    public TrialCellRenderer(Map<String, String> common, Map<String, String> other) {
         this.common = common;
         this.other = other;
     }

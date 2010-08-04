@@ -449,7 +449,7 @@ public class IntervalLocationProfile extends Object {
         resultSet.close();
     }
 
-    public static Vector getIntervalEventData(DB db, int metricCount, String whereClause) throws SQLException {
+    public static Vector<IntervalLocationProfile> getIntervalEventData(DB db, int metricCount, String whereClause) throws SQLException {
         StringBuffer buf = new StringBuffer();
         buf.append("select p.interval_event, p.metric, p.node, p.context, p.thread, ");
         buf.append("p.inclusive_percentage, ");
@@ -476,7 +476,7 @@ public class IntervalLocationProfile extends Object {
         buf.append(" order by p.interval_event, p.node, p.context, p.thread, p.metric ");
         // System.out.println(buf.toString());
 
-        Vector intervalLocationProfiles = new Vector();
+        Vector<IntervalLocationProfile> intervalLocationProfiles = new Vector<IntervalLocationProfile>();
         // get the results
         //long time = System.currentTimeMillis();
         ResultSet resultSet = db.executeQuery(buf.toString());
@@ -515,11 +515,11 @@ public class IntervalLocationProfile extends Object {
         return (intervalLocationProfiles);
     }
 
-    public void saveMeanSummary(DB db, int intervalEventID, Hashtable newMetHash, int saveMetricIndex)
+    public void saveMeanSummary(DB db, int intervalEventID, Hashtable<Integer, Integer> newMetHash, int saveMetricIndex)
             throws SQLException {
         // get the IntervalEvent details
         int i = 0;
-        Integer newMetricID = (Integer) newMetHash.get(new Integer(i));
+        Integer newMetricID = newMetHash.get(new Integer(i));
         while (newMetricID != null) {
             if (saveMetricIndex < 0 || i == saveMetricIndex) {
                 PreparedStatement statement = null;
@@ -553,15 +553,15 @@ public class IntervalLocationProfile extends Object {
                 statement.executeUpdate();
                 statement.close();
             }
-            newMetricID = (Integer) newMetHash.get(new Integer(++i));
+            newMetricID = newMetHash.get(new Integer(++i));
         }
     }
 
-    public void saveTotalSummary(DB db, int intervalEventID, Hashtable newMetHash, int saveMetricIndex)
+    public void saveTotalSummary(DB db, int intervalEventID, Hashtable<Integer, Integer> newMetHash, int saveMetricIndex)
             throws SQLException {
         // get the interval_event details
         int i = 0;
-        Integer newMetricID = (Integer) newMetHash.get(new Integer(i));
+        Integer newMetricID = newMetHash.get(new Integer(i));
         while (newMetricID != null) {
             if (saveMetricIndex < 0 || i == saveMetricIndex) {
                 PreparedStatement statement = null;
@@ -595,7 +595,7 @@ public class IntervalLocationProfile extends Object {
                 statement.executeUpdate();
                 statement.close();
             }
-            newMetricID = (Integer) newMetHash.get(new Integer(++i));
+            newMetricID = newMetHash.get(new Integer(++i));
         }
     }
 

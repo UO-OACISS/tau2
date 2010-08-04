@@ -17,8 +17,8 @@ public class Vertex implements Comparable {
         }
     }
 
-    private List children = new ArrayList();
-    private List parents = new ArrayList();
+    private List<Vertex> children = new ArrayList<Vertex>();
+    private List<Vertex> parents = new ArrayList<Vertex>();
     private Object userObject;
     private boolean visited;
 
@@ -79,19 +79,19 @@ public class Vertex implements Comparable {
         return pathHighlight;
     }
 
-    public void setChildren(List children) {
+    public void setChildren(List<Vertex> children) {
         this.children = children;
     }
 
-    public List getChildren() {
+    public List<Vertex> getChildren() {
         return children;
     }
 
-    public void setParents(List parents) {
+    public void setParents(List<Vertex> parents) {
         this.parents = parents;
     }
 
-    public List getParents() {
+    public List<Vertex> getParents() {
         return parents;
     }
 

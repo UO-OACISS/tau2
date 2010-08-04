@@ -46,6 +46,7 @@
 package edu.uoregon.tau.perfexplorer.client;
 
 import org.jfree.data.*;
+
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Iterator;
@@ -59,14 +60,19 @@ import java.util.List;
 @SuppressWarnings("unchecked")  // because JFreeChart doesn't use generics!
 public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
 
-    /** The row keys. */
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 4248823134357439655L;
+
+	/** The row keys. */
 	private List rowKeys;
 
     /** The column keys. */
     private List columnKeys;
 
     /** The row data. */
-    private List rows;
+    private List<DefaultKeyedValues> rows;
     
     /** If the row keys should be sorted by their comparable order. */
     private boolean sortRowKeys;
@@ -83,9 +89,9 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
      * @param sortRowKeys if the row keys should be sorted.
      */
     public PEKeyedValues2D(final boolean sortRowKeys) {
-        this.rowKeys = new java.util.ArrayList();
+        this.rowKeys = new java.util.ArrayList<String>();
         this.columnKeys = new java.util.ArrayList();
-        this.rows = new java.util.ArrayList();
+        this.rows = new java.util.ArrayList<DefaultKeyedValues>();
         this.sortRowKeys = sortRowKeys;
     }
 
@@ -118,7 +124,7 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
     public Number getValue(final int row, final int column) {
 
         Number result = null;
-        final DefaultKeyedValues rowData = (DefaultKeyedValues) this.rows.get(row);
+        final DefaultKeyedValues rowData = this.rows.get(row);
         if (rowData != null) {
             final Comparable columnKey = (Comparable) this.columnKeys.get(column);
             if (columnKey != null) {
@@ -166,7 +172,7 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
      *
      * @return the row keys.
      */
-    public List getRowKeys() {
+    public List<Comparable> getRowKeys() {
         return Collections.unmodifiableList(this.rowKeys);
     }
 
@@ -215,7 +221,7 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
         final int row = getRowIndex(rowKey);
         
         if (row >= 0) {
-            final DefaultKeyedValues rowData = (DefaultKeyedValues) this.rows.get(row);
+            final DefaultKeyedValues rowData = this.rows.get(row);
             result = rowData.getValue(columnKey);
         }
         return result;
@@ -246,7 +252,7 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
         int rowIndex = getRowIndex(rowKey);
         
         if (rowIndex >= 0) {
-            row = (DefaultKeyedValues) this.rows.get(rowIndex);
+            row = this.rows.get(rowIndex);
         }
         else {
             row = new DefaultKeyedValues();
@@ -281,7 +287,7 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
         // 1. check wether the row is now empty.
         boolean allNull = true;
         final int rowIndex = getRowIndex(rowKey);
-        DefaultKeyedValues row = (DefaultKeyedValues) this.rows.get(rowIndex);
+        DefaultKeyedValues row = this.rows.get(rowIndex);
 
         for (int item = 0, itemCount = row.getItemCount(); item < itemCount; item++) {
             if (row.getValue(item) != null) {
@@ -300,7 +306,7 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
         final int columnIndex = getColumnIndex(columnKey);
         
         for (int item = 0, itemCount = this.rows.size(); item < itemCount; item++) {
-            row = (DefaultKeyedValues) this.rows.get(item);
+            row = this.rows.get(item);
             if (row.getValue(columnIndex) != null) {
                 allNull = false;
                 break;
@@ -309,7 +315,7 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
         
         if (allNull) {
             for (int item = 0, itemCount = this.rows.size(); item < itemCount; item++) {
-                row = (DefaultKeyedValues) this.rows.get(item);
+                row = this.rows.get(item);
                 row.removeValue(columnIndex);
             }
             this.columnKeys.remove(columnIndex);
@@ -351,9 +357,9 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
      * @param columnKey  the column key.
      */
     public void removeColumn(final Comparable columnKey) {
-        final Iterator iterator = this.rows.iterator();
+        final Iterator<DefaultKeyedValues> iterator = this.rows.iterator();
         while (iterator.hasNext()) {
-            final DefaultKeyedValues rowData = (DefaultKeyedValues) iterator.next();
+            final DefaultKeyedValues rowData = iterator.next();
             rowData.removeValue(columnKey);
         }
         this.columnKeys.remove(columnKey);

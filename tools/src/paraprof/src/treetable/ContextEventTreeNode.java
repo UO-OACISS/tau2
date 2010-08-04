@@ -80,7 +80,7 @@ public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comp
             }
 
             for (Iterator<String> it = internalMap.keySet().iterator(); it.hasNext();) {
-                String child = (String) it.next();
+                String child = it.next();
                 ContextEventTreeNode node = new ContextEventTreeNode(child, model);
                 children.add(node);
             }
@@ -96,7 +96,7 @@ public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comp
         if (children != null) {
             Collections.sort(children);
             for (Iterator<ContextEventTreeNode> it = children.iterator(); it.hasNext();) {
-                ContextEventTreeNode node = (ContextEventTreeNode) it.next();
+                ContextEventTreeNode node = it.next();
                 node.sortChildren();
             }
         }

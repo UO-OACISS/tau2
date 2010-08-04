@@ -22,9 +22,9 @@ public class TrialTableModel extends AbstractTableModel {
     private String[] columnNames = { "TrialField", "Value" };
     private ParaProfManagerWindow paraProfManager;
     private DefaultTreeModel defaultTreeModel;
-    private List fieldNames;
+    private List<String> fieldNames;
 
-    private Map metaData = new TreeMap();
+    private Map<String, String> metaData = new TreeMap<String, String>();
 
     public TrialTableModel(ParaProfManagerWindow paraProfManager, ParaProfTrial ppTrial, DefaultTreeModel defaultTreeModel) {
         this.ppTrial = ppTrial;
@@ -32,7 +32,7 @@ public class TrialTableModel extends AbstractTableModel {
         this.paraProfManager = paraProfManager;
         this.defaultTreeModel = defaultTreeModel;
 
-        fieldNames = new ArrayList();
+        fieldNames = new ArrayList<String>();
         fieldNames.add("Name");
         fieldNames.add("Application ID");
         fieldNames.add("Experiment ID");
@@ -44,8 +44,8 @@ public class TrialTableModel extends AbstractTableModel {
         metaData.putAll(ppTrial.getTrial().getMetaData());
         metaData.putAll(ppTrial.getTrial().getUncommonMetaData());
 
-        for (Iterator it = metaData.keySet().iterator(); it.hasNext();) {
-            String string = (String) it.next();
+        for (Iterator<String> it = metaData.keySet().iterator(); it.hasNext();) {
+            String string = it.next();
             fieldNames.add(string);
         }
     }

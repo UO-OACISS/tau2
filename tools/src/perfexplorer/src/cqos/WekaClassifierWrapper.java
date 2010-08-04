@@ -80,7 +80,7 @@ public class WekaClassifierWrapper implements Serializable {
     // member variables.
 	private String classifierType = WekaClassifierWrapper.MULTILAYER_PERCEPTRON;
 	private String[] metadataFields = null; 	// array of independent variables
-	private List/*<Map<String,String>>*/ trainingData = null;  	// incoming map of training data
+	private List/*<Map<String,String>>*/<Map> trainingData = null;  	// incoming map of training data
 	private int fieldCount = 0;               // convenience variable <== metadataFields.length
 	private String classLabel = null;         // the label of the "dependent" variable
 	private Classifier cls = null;            // the Weka classifier.
@@ -101,7 +101,7 @@ public class WekaClassifierWrapper implements Serializable {
 	 * @param classLabel The key in the maps which identifies the class of each instance
 	 * @throws Exception If you don't pass in the right data...
 	 */
-	public WekaClassifierWrapper (List/*<Map<String,String>>*/ trainingData, String classLabel) throws Exception {
+	public WekaClassifierWrapper (List/*<Map<String,String>>*/<Map> trainingData, String classLabel) throws Exception {
 		this.trainingData = trainingData;
 		this.classLabel = classLabel;
 		
@@ -214,11 +214,11 @@ public class WekaClassifierWrapper implements Serializable {
         	train.setClass(classAttr);
         
         	// iterate over the training data
-        	Iterator dataIter = trainingData.iterator();
+        	Iterator<Map> dataIter = trainingData.iterator();
         	while (dataIter.hasNext()) {
         	
         		// get the set of name/value pairs for this instance
-        		Map/*<String,String>*/ tmpMap = (Map)dataIter.next();
+        		Map/*<String,String>*/ tmpMap = dataIter.next();
         	
         		// create the Weka Instance
 				Instance inst = new Instance(this.fieldCount);
@@ -268,9 +268,9 @@ public class WekaClassifierWrapper implements Serializable {
         this.nominalAttributes = new Set[this.fieldCount];
         
         // iterate over the training data, and test if the data can be parsed as a double
-        Iterator dataIter = trainingData.iterator();
+        Iterator<Map> dataIter = trainingData.iterator();
         while (dataIter.hasNext()) {
-        	Map/*<String,String>*/ tmpMap = (Map)dataIter.next();
+        	Map/*<String,String>*/ tmpMap = dataIter.next();
 			for (int i = 0 ; i < this.metadataFields.length ; i++) {
 				String value = (String)tmpMap.get(this.metadataFields[i]);
 				try {
@@ -284,7 +284,7 @@ public class WekaClassifierWrapper implements Serializable {
         // ok, we know which fields are nominal, so now get their potential values.
         dataIter = trainingData.iterator();
         while (dataIter.hasNext()) {
-        	Map/*<String,String>*/ tmpMap = (Map)dataIter.next();
+        	Map/*<String,String>*/ tmpMap = dataIter.next();
 			for (int i = 0 ; i < this.metadataFields.length ; i++) {
 				String value = (String)tmpMap.get(this.metadataFields[i]);
 				if (nominalAttributes[i] != null) {
@@ -671,7 +671,7 @@ public class WekaClassifierWrapper implements Serializable {
 			System.out.println("Writing...");
 			
 			// create a list for our training data
-			List trainingData = new ArrayList();
+			List<Map> trainingData = new ArrayList<Map>();
 			
 			// this is the attribute that we want as our dependent variable.  All the others
 			// will be used as independent variables for the classification.

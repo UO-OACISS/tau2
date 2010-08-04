@@ -267,9 +267,9 @@ public class DerivedMetricPanel extends JPanel implements ActionListener {
          return;
       }
 
-      ArrayList collectTrials = collectTrials(sel); 
+      ArrayList<Object> collectTrials = collectTrials(sel); 
 
-      ArrayList errors = new ArrayList();
+      ArrayList<Object> errors = new ArrayList<Object>();
       for (int i=0;i<collectTrials.size();i++){
          try {
             applyToTrial((ParaProfTrial) collectTrials.get(i), arg1Field.getText());
@@ -285,10 +285,10 @@ public class DerivedMetricPanel extends JPanel implements ActionListener {
       }
 
    }
-   private ArrayList collectTrials(DefaultMutableTreeNode sel) {
+   private ArrayList<Object> collectTrials(DefaultMutableTreeNode sel) {
 
       Object selected = paraProfManager.getSelectedObject().getUserObject();
-      ArrayList collectTrials = new ArrayList();
+      ArrayList<Object> collectTrials = new ArrayList<Object>();
       if(selected instanceof ParaProfMetric){
          ParaProfMetric met = (ParaProfMetric) selected;
          collectTrials .add(met.getParaProfTrial());
@@ -408,7 +408,7 @@ public class DerivedMetricPanel extends JPanel implements ActionListener {
 
    public void applyExpressionFile(LineNumberReader scan) throws IOException {
       String expression = scan.readLine();
-      ArrayList errors = new ArrayList();
+      ArrayList<Object> errors = new ArrayList<Object>();
 
       DefaultMutableTreeNode sel = paraProfManager.getSelectedObject();
 
@@ -434,7 +434,7 @@ public class DerivedMetricPanel extends JPanel implements ActionListener {
                      "Expression Error", JOptionPane.ERROR_MESSAGE);
             }else{
 
-               ArrayList collectTrials = collectTrials(sel); 
+               ArrayList<Object> collectTrials = collectTrials(sel); 
 
                for (int i=0;i<collectTrials.size();i++){
                   try {

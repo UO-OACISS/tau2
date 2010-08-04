@@ -15,35 +15,35 @@ import java.util.Vector;
 abstract public class ConfigureFiles {
 
     /* Returns a List of ParseConfigs. */
-    public static List getConfigurations() {
-        List files = getConfigurationFiles();
-        List configs = new Vector();
+    public static List<ParseConfig> getConfigurations() {
+        List<File> files = getConfigurationFiles();
+        List<ParseConfig> configs = new Vector<ParseConfig>();
         for (int i = 0; i < files.size(); i++) {
-            configs.add(new ParseConfig(((File) files.get(i)).getAbsolutePath()));
+            configs.add(new ParseConfig(files.get(i).getAbsolutePath()));
         }
         return configs;
     }
 
     /* Returns a List of Files. */
-    public static List getConfigurationFiles() {
-        List names = getConfigurationNames();
-        List files = new Vector();
+    public static List<File> getConfigurationFiles() {
+        List<String> names = getConfigurationNames();
+        List<File> files = new Vector<File>();
         for (int i = 0; i < names.size(); i++) {
-            if (((String) names.get(i)).compareTo("Default") == 0)
+            if (names.get(i).compareTo("Default") == 0)
                 files.add(new File(System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator
                         + "perfdmf.cfg"));
             else
                 files.add(new File(System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator
-                        + "perfdmf.cfg." + (String) names.get(i)));
+                        + "perfdmf.cfg." + names.get(i)));
         }
         return files;
     }
 
     /* Returns a List of Strings. */
-    public static List getConfigurationNames() {
+    public static List<String> getConfigurationNames() {
         File paraprofDirectory = new File(System.getProperty("user.home") + File.separator + ".ParaProf");
         String[] fileNames = paraprofDirectory.list();
-        List perfdmfConfigs = new Vector();
+        List<String> perfdmfConfigs = new Vector<String>();
         if (fileNames == null) {
             return perfdmfConfigs;
         }

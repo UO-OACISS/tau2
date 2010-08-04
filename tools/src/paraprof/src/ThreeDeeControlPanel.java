@@ -30,7 +30,12 @@ import edu.uoregon.tau.vis.VisRenderer;
  */
 public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
-    private ThreeDeeSettings settings;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -8413853906212906751L;
+
+	private ThreeDeeSettings settings;
 
     private ThreeDeeWindow window;
     private ParaProfTrial ppTrial;
@@ -49,7 +54,16 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
     private ThreeDeeScalePanel scalePanel;
 
     public class SliderComboBox extends JComboBox {
-        public SliderComboBox() {
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = -7178282357180311147L;
+		/**
+		 * 
+		 */
+
+
+		public SliderComboBox() {
             super();
             setUI(new SliderComboUI());
         }
@@ -62,7 +76,12 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         public class SliderComboUI extends MetalComboBoxUI {
             protected ComboPopup createPopup() {
                 BasicComboPopup popup = new BasicComboPopup(comboBox) {
-                    protected JScrollPane createScroller() {
+                    /**
+					 * 
+					 */
+					private static final long serialVersionUID = -2126557896237148500L;
+
+					protected JScrollPane createScroller() {
                         return new JScrollPane(list, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
                                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
                     }
@@ -255,7 +274,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
         addCompItem(panel, new JLabel("Thread"), gbc, 0, 0, 1, 1);
 
-        List threadList = new ArrayList();
+        List<Thread> threadList = new ArrayList<Thread>();
 
         threadList.add(ppTrial.getDataSource().getMeanData());
         threadList.add(ppTrial.getDataSource().getStdDevData());
@@ -346,7 +365,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
     }
 
-    private JPanel createSelectorPanel(int min, int max, final List names, final int index) {
+    private JPanel createSelectorPanel(int min, int max, final List<String> names, final int index) {
 
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
@@ -366,7 +385,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
         if (settings.getSelections()[index] >= 0) {
             if (names != null) {
-                textField.setText((String) names.get(settings.getSelections()[index]));
+                textField.setText(names.get(settings.getSelections()[index]));
             }
         }
 
@@ -378,7 +397,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                 int selection = scrollBar.getValue();
                 settings.setSelection(index, selection);
                 if (selection >= 0 && names != null) {
-                    textField.setText((String) names.get(selection));
+                    textField.setText(names.get(selection));
                 } else {
                     textField.setText("<none>");
                 }

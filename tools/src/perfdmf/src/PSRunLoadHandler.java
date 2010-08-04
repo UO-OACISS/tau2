@@ -19,7 +19,7 @@ public class PSRunLoadHandler extends DefaultHandler {
     protected String currentElement;
     protected String metricName;
     protected String metricValue;
-    protected Hashtable metricHash = new Hashtable();
+    protected Hashtable<String, String> metricHash = new Hashtable<String, String>();
 
     private String fileName;
     private String functionName;
@@ -30,12 +30,12 @@ public class PSRunLoadHandler extends DefaultHandler {
     private PSRunDataSource dataSource;
 
     private double totalProfileValue;
-    private Map attribMap = new HashMap();
+    private Map<String,String> attribMap = new HashMap<String,String>();
 
     private String pid = "-1";
     private String thread = "-1";
-    private Map metadata = new HashMap();
-    private List metaPrefix = new ArrayList();
+    private Map<String, String> metadata = new HashMap<String, String>();
+    private List<String> metaPrefix = new ArrayList<String>();
     private boolean inMetadata = false;
     private int cacheIndex = 0;
 
@@ -155,15 +155,15 @@ public class PSRunLoadHandler extends DefaultHandler {
             index = next2;
         }
 
-        String seqString = (String) attribMap.get("seq");
+        String seqString = attribMap.get("seq");
         sequence = Integer.parseInt(seqString);
         Thread thread = dataSource.getThread();
         thread.addSnapshots(sequence + 1);
 
-        String snapName = (String) attribMap.get("phase");
+        String snapName = attribMap.get("phase");
         Snapshot snapshot = (Snapshot) thread.getSnapshots().get(sequence);
         snapshot.setName(snapName);
-        long timestamp = Long.parseLong((String) attribMap.get("timestamp"));
+        long timestamp = Long.parseLong(attribMap.get("timestamp"));
         snapshot.setTimestamp(timestamp);
         thread.getMetaData().put("Starting Timestamp", attribMap.get("start"));
     }
@@ -239,13 +239,13 @@ public class PSRunLoadHandler extends DefaultHandler {
             fp.setExclusive(0, 0);
             fp.setInclusive(0, totalProfileValue);
             // end of the report
-            Iterator iter = metadata.keySet().iterator();
+            Iterator<String> iter = metadata.keySet().iterator();
             String mName;
             String value;
             // get the explicit values in the file
             while (iter.hasNext()) {
-                mName = (String) iter.next();
-                value = (String) metadata.get(mName);
+                mName = iter.next();
+                value = metadata.get(mName);
                 dataSource.getThread().getMetaData().put(mName, value.trim());
             }
         } else if (name.equalsIgnoreCase("multihwpcprofilereport")) {} else if (name.equalsIgnoreCase("executioninfo")) {
@@ -267,11 +267,11 @@ public class PSRunLoadHandler extends DefaultHandler {
 
     }
 
-    public Map getAttributes() {
+    public Map<String, String> getAttributes() {
         return attribMap;
     }
 
-    public Hashtable getMetricHash() {
+    public Hashtable<String, String> getMetricHash() {
         return metricHash;
     }
 

@@ -15,7 +15,7 @@ public class WindowPlacer {
 
     private static Point lastLocation;
 
-    private static List visibleWindows = new ArrayList();
+    private static List<JFrame> visibleWindows = new ArrayList<JFrame>();
 
     private static int lastXOffset;
 

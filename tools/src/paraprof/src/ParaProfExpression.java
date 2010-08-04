@@ -56,7 +56,7 @@ public class ParaProfExpression {
 		}
 		for(int i=0;i<trials.size();i++){
 		ParaProfTrial trial= (ParaProfTrial)trials.get(i);
-			ArrayList 	expressArray =  infixToPostfix(expression);
+			ArrayList<Object> 	expressArray =  infixToPostfix(expression);
 			evaluate(newName,trial,expressArray);
 		}
 
@@ -79,7 +79,7 @@ public class ParaProfExpression {
 			}
 		}
 
-		ArrayList 	expressArray =  infixToPostfix(text);
+		ArrayList<Object> 	expressArray =  infixToPostfix(text);
 		if(newName ==null){
 			text.trim();
 			text = text.replace('\"', ' ');
@@ -127,7 +127,7 @@ public class ParaProfExpression {
 	}*/
 public static boolean validate(String expression){
 	try {
-		ArrayList equation = infixToPostfix(expression);
+		ArrayList<Object> equation = infixToPostfix(expression);
 		if (equation.size()<2){
 			return false;
 			
@@ -168,10 +168,10 @@ public static boolean validate(String expression){
 	 * @return
 	 * @throws ParsingException 
 	 */
-	private static ArrayList infixToPostfix(String input) throws ParsingException {
-		ArrayList out = new ArrayList();
+	private static ArrayList<Object> infixToPostfix(String input) throws ParsingException {
+		ArrayList<Object> out = new ArrayList<Object>();
 		String name = "";
-		Stack stack = new Stack();
+		Stack<Character> stack = new Stack<Character>();
 		char[] in = input.toCharArray();
 		for (int i=0;i<in.length;i++) {
 			char current = in[i];
@@ -189,7 +189,7 @@ public static boolean validate(String expression){
 					out.add(name + "");	
 				name = "";
 				try {
-					while (((Character)stack.peek()).charValue() != '(')
+					while (stack.peek().charValue() != '(')
 						out.add(stack.pop() + "");
 				} catch (EmptyStackException ex) {}
 				stack.push(new Character('+'));
@@ -199,7 +199,7 @@ public static boolean validate(String expression){
 					out.add(name + "");	
 				name = "";
 				try {
-					while (((Character)stack.peek()).charValue()!= '(')
+					while (stack.peek().charValue()!= '(')
 						out.add(stack.pop() + "");
 				} catch (EmptyStackException ex) {}
 				stack.push(new Character('-'));
@@ -209,7 +209,7 @@ public static boolean validate(String expression){
 					out.add(name + "");	
 				name = "";
 				try {
-					while (((Character)stack.peek()).charValue() != '(' && ((Character)stack.peek()).charValue() != '-' && ((Character)stack.peek()).charValue() != '+')
+					while (stack.peek().charValue() != '(' && stack.peek().charValue() != '-' && stack.peek().charValue() != '+')
 						out.add(stack.pop() + "");
 				} catch (EmptyStackException ex) {}
 				stack.push(new Character('/'));
@@ -219,7 +219,7 @@ public static boolean validate(String expression){
 					out.add(name + "");
 				name = "";
 				try {
-					while (((Character)stack.peek()).charValue() != '(' && ((Character)stack.peek()).charValue() != '-' && ((Character)stack.peek()).charValue() != '+')
+					while (stack.peek().charValue() != '(' && stack.peek().charValue() != '-' && stack.peek().charValue() != '+')
 						out.add(stack.pop() + "");
 				} catch (EmptyStackException ex) {}
 				stack.push(new Character('*'));
@@ -232,7 +232,7 @@ public static boolean validate(String expression){
 					out.add(name + "");
 				name = "";
 				try {
-					while (((Character)stack.peek()).charValue() != '(')
+					while (stack.peek().charValue() != '(')
 						out.add(stack.pop() + "");
 					stack.pop();
 				} catch (EmptyStackException ex) {
@@ -322,7 +322,7 @@ public static boolean validate(String expression){
 			throw new RuntimeException("Exception while sleeping");
 		}
 	}
-	private ParaProfMetric evaluate(String newName,ParaProfTrial trial,ArrayList equation) throws ParsingException, MetricNotFoundException{
+	private ParaProfMetric evaluate(String newName,ParaProfTrial trial,ArrayList<Object> equation) throws ParsingException, MetricNotFoundException{
 		if(trial==null) throw new ParsingException("Null trial");
 		if(newName != null) newName = newName.trim();
 		if(equation.size()==1){
@@ -365,7 +365,7 @@ public static boolean validate(String expression){
                 FunctionProfile functionProfile = (FunctionProfile) l.next();
                 
                 if (functionProfile != null) {
-                    ArrayList newEquation = new ArrayList();
+                    ArrayList<Object> newEquation = new ArrayList<Object>();
              		for(int x=0;x<equation.size();x++){
              			Object current = equation.get(x);
              			if(current instanceof ParaProfMetric){
@@ -396,7 +396,7 @@ public static boolean validate(String expression){
 
         return newMetric;
 	}
-	private Double[] eval(ArrayList equation) throws ParsingException{
+	private Double[] eval(ArrayList<Object> equation) throws ParsingException{
 		int i = 0;
 		
 		while (equation.size() > 1 && equation.size() > i) {

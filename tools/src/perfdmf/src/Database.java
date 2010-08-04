@@ -8,7 +8,11 @@ import java.util.List;
 import edu.uoregon.tau.perfdmf.database.ParseConfig;
 
 public class Database implements Serializable {
-    private String name;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -563600652298777970L;
+	private String name;
     private int id;
     private ParseConfig config;
 
@@ -109,10 +113,10 @@ public class Database implements Serializable {
         return database;
     }
 
-    public static List getDatabases() {
+    public static List<Database> getDatabases() {
         File paraprofDirectory = new File(System.getProperty("user.home") + File.separator + ".ParaProf");
         String[] fileNames = paraprofDirectory.list();
-        List perfdmfConfigs = new ArrayList();
+        List<Database> perfdmfConfigs = new ArrayList<Database>();
         if (fileNames == null) {
             return perfdmfConfigs;
         }

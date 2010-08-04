@@ -54,7 +54,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     // hold on to these two for 'menuSelected'
     private JMenu unitsSubMenu = null;
 
-    private List data = null;
+    private List<PPFunctionProfile> data = null;
 
     private int units = ParaProf.preferences.getUnits();
 
@@ -350,7 +350,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         }
     }
 
-    public List getData() {
+    public List<PPFunctionProfile> getData() {
         return data;
     }
 
@@ -405,7 +405,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         boolean start = true;
 
         for (int i = 0; i < data.size(); i++) {
-            PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) data.get(i);
+            PPFunctionProfile ppFunctionProfile = data.get(i);
             double value = ppFunctionProfile.getValue();
             if (start) {
                 minValue = value;
@@ -417,7 +417,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
         double[] values = new double[data.size()];
         for (int i = 0; i < data.size(); i++) {
-            PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) data.get(i);
+            PPFunctionProfile ppFunctionProfile = data.get(i);
             values[i] = ppFunctionProfile.getValue();
         }
 

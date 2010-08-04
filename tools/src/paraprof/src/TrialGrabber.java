@@ -2,11 +2,19 @@ package edu.uoregon.tau.paraprof;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 import edu.uoregon.tau.common.AlphanumComparator;
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.DBDataSource;
+import edu.uoregon.tau.perfdmf.DataSource;
+import edu.uoregon.tau.perfdmf.DatabaseAPI;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.PackedProfileDataSource;
+import edu.uoregon.tau.perfdmf.Trial;
 
 class PPKFileFilter implements FilenameFilter {
     public PPKFileFilter() {}
@@ -21,13 +29,13 @@ class PPKFileFilter implements FilenameFilter {
 
 public class TrialGrabber {
 
-    public static void getExperiments(String path, List exps, List expnames) {
+    public static void getExperiments(String path, List<List<ParaProfTrial>> exps, List<String> expnames) {
         exps.clear();
         expnames.clear();
 
         File expdirs[] = (new File(path)).listFiles();
 
-        List sorted = new ArrayList();
+        List sorted = new ArrayList<File>();
 
         for (int i = 0; i < expdirs.length; i++) {
             if (expdirs[i].isDirectory()) {
@@ -37,13 +45,13 @@ public class TrialGrabber {
         Collections.sort(sorted, new AlphanumComparator());
 
         for (int i = 0; i < sorted.size(); i++) {
-            File exp = (File) sorted.get(i);
+            File exp = (File)sorted.get(i);
             String name = exp.toString();
             name = name.substring(name.lastIndexOf('/') + 1);
             expnames.add(name);
             File ppkfiles[] = exp.listFiles();
 
-            List trials = new ArrayList();
+            List<ParaProfTrial> trials = new ArrayList<ParaProfTrial>();
             for (int j = 0; j < ppkfiles.length; j++) {
                 trials.add(getTrial(ppkfiles[j]));
             }
@@ -72,12 +80,12 @@ public class TrialGrabber {
         return ppTrial;
     }
 
-    public static List getTrials(String path) {
-        List trials = new ArrayList();
+    public static List<ParaProfTrial> getTrials(String path) {
+        List<ParaProfTrial> trials = new ArrayList<ParaProfTrial>();
         File directory = new File(path);
 
         File files[] = directory.listFiles(new PPKFileFilter());
-        List sorted = new ArrayList();
+        List sorted = new ArrayList<File>();
         if (files == null) {
             System.out.println("Could not find any .ppk files in directory '"+directory+"'\n");
             return null;
@@ -88,14 +96,14 @@ public class TrialGrabber {
         Collections.sort(sorted, new AlphanumComparator());
 
         for (int i = 0; i < sorted.size(); i++) {
-            trials.add(getTrial((File) sorted.get(i)));
+            trials.add(getTrial((String) sorted.get(i)));
         }
 
         return trials;
     }
 
-    public static List getTrialsFromDatabase(String config, String appname, String expname) {
-        List trials = new ArrayList();
+    public static List<ParaProfTrial> getTrialsFromDatabase(String config, String appname, String expname) {
+        List<ParaProfTrial> trials = new ArrayList<ParaProfTrial>();
 
         DatabaseAPI dbApi = new DatabaseAPI();
         try {
@@ -117,9 +125,9 @@ public class TrialGrabber {
 
         dbApi.setApplication(app);
         dbApi.setExperiment(exp);
-        List list = dbApi.getTrialList(true);
-        for (Iterator it = list.iterator(); it.hasNext();) {
-            Trial trial = (Trial) it.next();
+        List<Trial> list = dbApi.getTrialList(true);
+        for (Iterator<Trial> it = list.iterator(); it.hasNext();) {
+            Trial trial = it.next();
             dbApi.setTrial(trial.getID(),true);//TODO: Do these really need xml metadata?
             DataSource dataSource = new DBDataSource(dbApi);
             try {

@@ -22,7 +22,7 @@ public class ParaProfApplication extends Application implements ParaProfTreeNode
     private DefaultMutableTreeNode defaultMutableTreeNode = null;
     private TreePath treePath = null;
     private boolean dBApplication = false;
-    private Vector experiments = new Vector();
+    private Vector<ParaProfExperiment> experiments = new Vector<ParaProfExperiment>();
 
     public ParaProfApplication() {
         super();
@@ -59,14 +59,14 @@ public class ParaProfApplication extends Application implements ParaProfTreeNode
     }
 
     public ParaProfExperiment getExperiment(int experimentID) {
-        return (ParaProfExperiment) experiments.elementAt(experimentID);
+        return experiments.elementAt(experimentID);
     }
 
-    public Vector getExperiments() {
+    public Vector<ParaProfExperiment> getExperiments() {
         return experiments;
     }
 
-    public ListIterator getExperimentList() {
+    public ListIterator<ParaProfExperiment> getExperimentList() {
         return experiments.listIterator();
     }
 

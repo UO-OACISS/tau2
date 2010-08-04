@@ -143,10 +143,10 @@ public class ColorDefaultsWindow extends JFrame implements ActionListener, Mouse
     
 
     private void updateTrials() {
-        Vector trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
+        Vector<ParaProfTrial> trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
         
-        for (Iterator it = trials.iterator(); it.hasNext();) {
-            ParaProfTrial ppTrial = (ParaProfTrial) it.next();
+        for (Iterator<ParaProfTrial> it = trials.iterator(); it.hasNext();) {
+            ParaProfTrial ppTrial = it.next();
             
             colorChooser.setColors(ppTrial, -1);
             //Update the listeners.
@@ -293,13 +293,13 @@ public class ColorDefaultsWindow extends JFrame implements ActionListener, Mouse
 
     void populateColorList() {
         Color color;
-        for (Enumeration e = (colorChooser.getColors()).elements(); e.hasMoreElements();) {
-            color = (Color) e.nextElement();
+        for (Enumeration<Color> e = (colorChooser.getColors()).elements(); e.hasMoreElements();) {
+            color = e.nextElement();
             listModel.addElement(color);
         }
 
-        for (Enumeration e = (colorChooser.getGroupColors()).elements(); e.hasMoreElements();) {
-            color = (Color) e.nextElement();
+        for (Enumeration<Color> e = (colorChooser.getGroupColors()).elements(); e.hasMoreElements();) {
+            color = e.nextElement();
             listModel.addElement(color);
         }
 

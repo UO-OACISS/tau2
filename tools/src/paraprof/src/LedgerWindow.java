@@ -33,7 +33,7 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
     private ParaProfTrial ppTrial = null;
     private JScrollPane sp = null;
     private LedgerWindowPanel panel = null;
-    private Vector list = new Vector();
+    private Vector<LedgerDataElement> list = new Vector<LedgerDataElement>();
 
     public LedgerWindow(ParaProfTrial ppTrial, int windowType, Component parent) {
         this.ppTrial = ppTrial;
@@ -168,7 +168,7 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
 
     //Updates this window's data copy.
     private void sortLocalData() {
-        list = new Vector();
+        list = new Vector<LedgerDataElement>();
         if (this.windowType == FUNCTION_LEGEND) {
             for (Iterator it = ppTrial.getDataSource().getFunctions(); it.hasNext();) {
                 list.addElement(new LedgerDataElement((Function) it.next()));
@@ -192,7 +192,7 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
         }
     }
 
-    public Vector getData() {
+    public Vector<LedgerDataElement> getData() {
         return list;
     }
 

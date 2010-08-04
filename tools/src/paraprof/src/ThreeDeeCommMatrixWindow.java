@@ -95,7 +95,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
     private int heightMetric = VOLUME;
     private int colorMetric = MAX;
 
-    private List threadNames;
+    private List<String> threadNames;
 
     // 3D elements
     private BarPlot barPlot;
@@ -192,7 +192,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         int x = selections[1];
 
         double heightValue = mapData.get(x, y, currentPath, heightMetric);
-        double colorValue = mapData.get(x, y, currentPath, colorMetric);
+        //double colorValue = mapData.get(x, y, currentPath, colorMetric);
         return heightValue;
 
     }
@@ -206,7 +206,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         int y = selections[0];
         int x = selections[1];
 
-        double heightValue = mapData.get(x, y, currentPath, heightMetric);
+        //double heightValue = mapData.get(x, y, currentPath, heightMetric);
         double colorValue = mapData.get(x, y, currentPath, colorMetric);
         return colorValue;
 
@@ -222,7 +222,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         int x = selections[1];
 
         double heightValue = mapData.get(x, y, currentPath, heightMetric);
-        double colorValue = mapData.get(x, y, currentPath, colorMetric);
+        //double colorValue = mapData.get(x, y, currentPath, colorMetric);
 
         int units = 0;
 
@@ -247,7 +247,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         return retval;
     }
 
-    private JPanel createSelectorPanel(int min, int max, final List names, final int index) {
+    private JPanel createSelectorPanel(int min, int max, final List<String> names, final int index) {
 
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
@@ -267,7 +267,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
 
         if (selections[index] >= 0) {
             if (names != null) {
-                textField.setText((String) names.get(selections[index]));
+                textField.setText(names.get(selections[index]));
             }
         }
 
@@ -279,7 +279,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
                 int selection = scrollBar.getValue();
                 selections[index] = selection;
                 if (selection >= 0 && names != null) {
-                    textField.setText((String) names.get(selection));
+                    textField.setText(names.get(selection));
                 } else {
                     textField.setText("<none>");
                 }
@@ -323,9 +323,9 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
     }
 
     float getSelectedHeightRatio() {
-        float minColorValue = (float) mapData.getMin(currentPath, colorMetric);
-        float maxColorValue = (float) mapData.getMax(currentPath, colorMetric);
-        float minHeightValue = (float) mapData.getMin(currentPath, heightMetric);
+        //float minColorValue = (float) mapData.getMin(currentPath, colorMetric);
+        //float maxColorValue = (float) mapData.getMax(currentPath, colorMetric);
+        //float minHeightValue = (float) mapData.getMin(currentPath, heightMetric);
         float maxHeightValue = (float) mapData.getMax(currentPath, heightMetric);
 
         float heightRatio = (float) getSelectedHeightValue() / maxHeightValue;
@@ -333,10 +333,10 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
     }
 
     float getSelectedColorRatio() {
-        float minColorValue = (float) mapData.getMin(currentPath, colorMetric);
+        //float minColorValue = (float) mapData.getMin(currentPath, colorMetric);
         float maxColorValue = (float) mapData.getMax(currentPath, colorMetric);
-        float minHeightValue = (float) mapData.getMin(currentPath, heightMetric);
-        float maxHeightValue = (float) mapData.getMax(currentPath, heightMetric);
+        //float minHeightValue = (float) mapData.getMin(currentPath, heightMetric);
+        //float maxHeightValue = (float) mapData.getMax(currentPath, heightMetric);
         float colorRatio = (float) getSelectedColorValue() / maxColorValue;
         return colorRatio;
     }
@@ -345,9 +345,9 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         String mins[] = new String[2];
         String maxs[] = new String[2];
 
-        float minColorValue = (float) mapData.getMin(currentPath, colorMetric);
+        //float minColorValue = (float) mapData.getMin(currentPath, colorMetric);
         float maxColorValue = (float) mapData.getMax(currentPath, colorMetric);
-        float minHeightValue = (float) mapData.getMin(currentPath, heightMetric);
+        //float minHeightValue = (float) mapData.getMin(currentPath, heightMetric);
         float maxHeightValue = (float) mapData.getMax(currentPath, heightMetric);
 
         mins[0] = "0";
@@ -472,11 +472,11 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         // declare the heatmap data object
         HeatMapData mapData = new HeatMapData(size);
 
-        for (Iterator it = dataSource.getAllThreads().iterator(); it.hasNext();) {
-            Thread thread = (Thread) it.next();
+        for (Iterator<Thread> it = dataSource.getAllThreads().iterator(); it.hasNext();) {
+            Thread thread = it.next();
             if (thread.getThreadID() == 0 && thread.getContextID() == 0) {
-                for (Iterator it2 = thread.getUserEventProfiles(); it2.hasNext();) {
-                    UserEventProfile uep = (UserEventProfile) it2.next();
+                for (Iterator<UserEventProfile> it2 = thread.getUserEventProfiles(); it2.hasNext();) {
+                    UserEventProfile uep = it2.next();
                     if (uep != null && uep.getNumSamples() > 0) {
                         String event = uep.getName();
                         if (event.startsWith("Message size sent to node ") && event.indexOf("=>") == -1) {
@@ -513,7 +513,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
     }
 
     private static void extractData(HeatMapData mapData, UserEventProfile uep, int selectedSnapshot, int thread, String event, String first, String path) {
-        double numEvents, eventMax, eventMin, eventMean, eventSumSqr, stdev, volume = 0;
+        double numEvents, eventMax, eventMin, eventMean, eventSumSqr, volume = 0;// stdev,
         double[] empty = { 0, 0, 0, 0, 0, 0 };
 
         StringTokenizer st = new StringTokenizer(first, "Message size sent to node ");
@@ -660,10 +660,10 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
 
         float minColorValue = (float) mapData.getMin(currentPath, colorMetric);
         float maxColorValue = (float) mapData.getMax(currentPath, colorMetric);
-        float minHeightValue = (float) mapData.getMin(currentPath, heightMetric);
+        //float minHeightValue = (float) mapData.getMin(currentPath, heightMetric);
         float maxHeightValue = (float) mapData.getMax(currentPath, heightMetric);
 
-        List heightAxisStrings = new ArrayList();
+        List<String> heightAxisStrings = new ArrayList<String>();
         heightAxisStrings.add("0");
         heightAxisStrings.add(PlotFactory.getSaneDoubleString(maxHeightValue * .25));
         heightAxisStrings.add(PlotFactory.getSaneDoubleString(maxHeightValue * .50));
@@ -674,7 +674,8 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         axes.setOnEdge(true);
 
         //colorScale.setStrings(Float.toString(minColorValue), Float.toString(maxColorValue), metricStrings[colorMetric]);
-        String foobar = UtilFncs.formatDouble(minColorValue, 6, true);
+        //String foobar = 
+        	UtilFncs.formatDouble(minColorValue, 6, true);
 
         colorScale.setStrings(UtilFncs.formatDouble(minColorValue, 6, true).trim(),
                 UtilFncs.formatDouble(maxColorValue, 6, true).trim(), metricStrings[colorMetric]);
@@ -717,7 +718,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
                 private float ratio = 0.0f;
                 private float scaleZTarget = 1.0f;
                 private long duration = 350;
-                private float sleepAmount = 0;
+                //private float sleepAmount = 0;
 
                 public void run() {
                     try {
@@ -826,7 +827,12 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         visRenderer.addShape(colorScale);
 
         JPanel panel = new JPanel() {
-            public Dimension getMinimumSize() {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = 4335157098523851633L;
+
+			public Dimension getMinimumSize() {
                 return new Dimension(10, 10);
             }
         };

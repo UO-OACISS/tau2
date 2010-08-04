@@ -123,7 +123,7 @@ public class TreeTableExample {
             return cNames[column];
         }
 
-        public Class getColumnClass(int column) {
+        public Class<Object> getColumnClass(int column) {
             return cTypes[column];
         }
 

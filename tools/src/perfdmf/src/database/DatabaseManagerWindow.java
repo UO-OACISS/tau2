@@ -27,7 +27,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
 
     private static final long serialVersionUID = 1L;
     private String lastDirectory;
-    private JList configList = new JList((Vector) ConfigureFiles.getConfigurationNames());
+    private JList configList = new JList((Vector<String>) ConfigureFiles.getConfigurationNames());
     private JButton saveConfig = new JButton("Save Configuration");
     private JButton removeConfig = new JButton("Remove Configuration");
     private JTextField name = new JTextField(15);
@@ -78,7 +78,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
         this.schemaLocation = schemaLocation;
 
         if (ConfigureFiles.getConfigurations().size() > 0) {
-            selectedConfig = (ParseConfig) (ConfigureFiles.getConfigurations().get(0));
+            selectedConfig = (ConfigureFiles.getConfigurations().get(0));
         } else {
             selectedConfig = null;
         }
@@ -324,7 +324,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                 //???
                 String filename = writeConfig(name.getText());
                 configList.clearSelection();
-                configList.setListData((Vector) ConfigureFiles.getConfigurationNames());
+                configList.setListData((Vector<String>) ConfigureFiles.getConfigurationNames());
                 ConfigureTest config = new ConfigureTest();
                 config.initialize(filename);
                 //config.setDBSchemaFile("dbschema." + adapter.getSelectedItem().toString() + ".txt");
@@ -344,7 +344,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                 //System.out.println(removeFile.exists() + "File path: " + removeFile.getAbsolutePath());
                 removeFile.delete();
                 configList.clearSelection();
-                configList.setListData((Vector) ConfigureFiles.getConfigurationNames());
+                configList.setListData((Vector<String>) ConfigureFiles.getConfigurationNames());
                 mainWindow.refreshDatabases();
             } else if (arg.equals("Download")) {
                 JFileChooser jFileChooser = new JFileChooser(lastDirectory);
@@ -517,7 +517,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     public void valueChanged(ListSelectionEvent arg0) {
         //configList.clearSelection();
         if (configList.getSelectedIndex() != -1)
-            selectedConfig = (ParseConfig) ConfigureFiles.getConfigurations().get(configList.getSelectedIndex());
+            selectedConfig = ConfigureFiles.getConfigurations().get(configList.getSelectedIndex());
         switchAdapter((String) adapter.getSelectedItem());
         this.updateFields();
 

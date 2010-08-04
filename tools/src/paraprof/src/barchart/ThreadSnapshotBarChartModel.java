@@ -6,7 +6,10 @@ import java.util.List;
 
 import javax.swing.JComponent;
 
-import edu.uoregon.tau.paraprof.*;
+import edu.uoregon.tau.paraprof.DataSorter;
+import edu.uoregon.tau.paraprof.ParaProfTrial;
+import edu.uoregon.tau.paraprof.ParaProfUtils;
+import edu.uoregon.tau.paraprof.SnapshotThreadWindow;
 import edu.uoregon.tau.paraprof.util.ObjectFilter;
 import edu.uoregon.tau.perfdmf.FunctionProfile;
 import edu.uoregon.tau.perfdmf.Snapshot;
@@ -14,19 +17,19 @@ import edu.uoregon.tau.perfdmf.Thread;
 
 
 public class ThreadSnapshotBarChartModel extends AbstractBarChartModel {
-    private SnapshotThreadWindow window;
+    //private SnapshotThreadWindow window;
     private DataSorter dataSorter;
     private ParaProfTrial ppTrial;
 
-    private List snapshots;
+    private List<Object> snapshots;
     
     private Thread thread;
     private ObjectFilter filter;
     
-    private List list;
+    private List<FunctionProfile> list;
     
     public ThreadSnapshotBarChartModel(SnapshotThreadWindow window, DataSorter dataSorter, ParaProfTrial ppTrial, Thread thread) {
-        this.window = window;
+        //this.window = window;
         this.dataSorter = dataSorter;
         this.ppTrial = ppTrial;
         this.thread = thread;
@@ -75,7 +78,7 @@ public class ThreadSnapshotBarChartModel extends AbstractBarChartModel {
 
     public double getValue(int row, int subIndex) {
         //FunctionProfile fp = (FunctionProfile) thread.getFunctionProfiles().get(subIndex);
-        FunctionProfile fp = (FunctionProfile) list.get(subIndex);
+        FunctionProfile fp = list.get(subIndex);
         if (fp == null) {
             return 0;
         }
@@ -95,7 +98,7 @@ public class ThreadSnapshotBarChartModel extends AbstractBarChartModel {
 
     public Color getValueColor(int row, int subIndex) {
         //FunctionProfile fp = (FunctionProfile) thread.getFunctionProfiles().get(subIndex);
-        FunctionProfile fp = (FunctionProfile) list.get(subIndex);
+        FunctionProfile fp = list.get(subIndex);
         if (fp == null) {
             return Color.black;
         }
@@ -115,7 +118,7 @@ public class ThreadSnapshotBarChartModel extends AbstractBarChartModel {
 
     public String getValueToolTipText(int row, int subIndex) {
         //FunctionProfile fp = (FunctionProfile) thread.getFunctionProfiles().get(subIndex);
-        FunctionProfile fp = (FunctionProfile) list.get(subIndex);
+        FunctionProfile fp = list.get(subIndex);
         if (fp == null) {
             return "";
         }

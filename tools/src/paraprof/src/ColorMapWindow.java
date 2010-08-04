@@ -95,10 +95,10 @@ public class ColorMapWindow extends JFrame implements ActionListener, Observer {
 
         JMenu jMenu = new JMenu("Assign defaults from...");
 
-        Vector trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
+        Vector<ParaProfTrial> trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
         int idx = 0;
-        for (Iterator it = trials.iterator(); it.hasNext();) {
-            ParaProfTrial ppTrial = (ParaProfTrial) it.next();
+        for (Iterator<ParaProfTrial> it = trials.iterator(); it.hasNext();) {
+            ParaProfTrial ppTrial = it.next();
 
             String name = ppTrial.getTrial().getApplicationID() + ":" + ppTrial.getTrial().getExperimentID() + ":"
                     + ppTrial.getTrial().getID() + " - " + ppTrial.getName();
@@ -128,8 +128,8 @@ public class ColorMapWindow extends JFrame implements ActionListener, Observer {
     public void reload() {
 
         listModel.clear();
-        for (Iterator it = ParaProf.colorMap.getFunctions(); it.hasNext();) {
-            String functionName = (String) it.next();
+        for (Iterator<String> it = ParaProf.colorMap.getFunctions(); it.hasNext();) {
+            String functionName = it.next();
 
             listModel.addElement(functionName);
 
@@ -153,8 +153,8 @@ public class ColorMapWindow extends JFrame implements ActionListener, Observer {
                     int index = colorList.getSelectedIndex();
 
                     String toRemove = null;
-                    for (Iterator it = ParaProf.colorMap.getFunctions(); it.hasNext();) {
-                        String functionName = (String) it.next();
+                    for (Iterator<String> it = ParaProf.colorMap.getFunctions(); it.hasNext();) {
+                        String functionName = it.next();
                         if (index == 0) {
                             toRemove = functionName;
                         }
@@ -175,12 +175,12 @@ public class ColorMapWindow extends JFrame implements ActionListener, Observer {
                     ParaProf.exitParaProf(0);
                 } else {
 
-                    Vector trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
+                    Vector<ParaProfTrial> trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
 
                     int idx = Integer.parseInt(arg);
 
-                    for (Iterator it = trials.iterator(); it.hasNext();) {
-                        ParaProfTrial ppTrial = (ParaProfTrial) it.next();
+                    for (Iterator<ParaProfTrial> it = trials.iterator(); it.hasNext();) {
+                        ParaProfTrial ppTrial = it.next();
 
                         if (idx == 0) { // this is the trial that was selected
                             ParaProf.colorMap.assignColorsFromTrial(ppTrial);

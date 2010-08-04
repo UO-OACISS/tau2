@@ -27,12 +27,12 @@ import java.util.*;
 
 public class FileMonitor {
     private Timer timer;
-    private HashMap fileMap; // File -> Long
-    private Collection listeners; // of WeakReference(FileListener)
+    private HashMap<File, Long> fileMap; // File -> Long
+    private Collection<WeakReference<FileMonitorListener>> listeners; // of WeakReference(FileListener)
 
     public FileMonitor(long pollingInterval) {
-        fileMap = new HashMap();
-        listeners = new ArrayList();
+        fileMap = new HashMap<File, Long>();
+        listeners = new ArrayList<WeakReference<FileMonitorListener>>();
 
         timer = new Timer(true);
         timer.schedule(new FileMonitorNotifier(), 0, pollingInterval);
@@ -57,8 +57,8 @@ public class FileMonitor {
 
     public void addListener(FileMonitorListener fileListener) {
         // Don't add if its already there
-        for (Iterator i = listeners.iterator(); i.hasNext();) {
-            WeakReference reference = (WeakReference) i.next();
+        for (Iterator<WeakReference<FileMonitorListener>> i = listeners.iterator(); i.hasNext();) {
+            WeakReference reference = i.next();
             FileMonitorListener listener = (FileMonitorListener) reference.get();
             if (listener == fileListener)
                 return;
@@ -66,12 +66,12 @@ public class FileMonitor {
 
         // Use WeakReference to avoid memory leak if this becomes the
         // sole reference to the object.
-        listeners.add(new WeakReference(fileListener));
+        listeners.add(new WeakReference<FileMonitorListener>(fileListener));
     }
 
     public void removeListener(FileMonitorListener fileListener) {
-        for (Iterator i = listeners.iterator(); i.hasNext();) {
-            WeakReference reference = (WeakReference) i.next();
+        for (Iterator<WeakReference<FileMonitorListener>> i = listeners.iterator(); i.hasNext();) {
+            WeakReference reference = i.next();
             FileMonitorListener listener = (FileMonitorListener) reference.get();
             if (listener == fileListener) {
                 i.remove();
@@ -90,12 +90,12 @@ public class FileMonitor {
             // Loop over the registered files and see which have changed.
             // Use a copy of the list in case listener wants to alter the
             // list within its fileChanged method.
-            Collection files = new ArrayList(fileMap.keySet());
+            Collection<File> files = new ArrayList<File>(fileMap.keySet());
 
-            for (Iterator i = files.iterator(); i.hasNext();) {
-                File file = (File) i.next();
+            for (Iterator<File> i = files.iterator(); i.hasNext();) {
+                File file = i.next();
 
-                long lastModifiedTime = ((Long) fileMap.get(file)).longValue();
+                long lastModifiedTime = fileMap.get(file).longValue();
                 long newModifiedTime = file.exists() ? file.lastModified() : -1;
 
                 //                System.out.println("checking : " + file);
@@ -109,8 +109,8 @@ public class FileMonitor {
                     fileMap.put(file, new Long(newModifiedTime));
 
                     // Notify listeners
-                    for (Iterator j = listeners.iterator(); j.hasNext();) {
-                        WeakReference reference = (WeakReference) j.next();
+                    for (Iterator<WeakReference<FileMonitorListener>> j = listeners.iterator(); j.hasNext();) {
+                        WeakReference reference = j.next();
                         FileMonitorListener listener = (FileMonitorListener) reference.get();
 
                         // Remove from list if the back-end object has been GC'd

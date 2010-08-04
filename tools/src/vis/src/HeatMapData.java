@@ -8,12 +8,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import edu.uoregon.tau.vis.HeatMapData.NextValue;;
 
 /**
  * @author khuck
  *
  */
-public class HeatMapData implements Iterator {
+public class HeatMapData implements Iterator<NextValue> {
     /**
      * The whole data structure is:
      * senders: array of references to Map of receivers
@@ -101,7 +102,7 @@ public class HeatMapData implements Iterator {
         }
     }
 
-    public Object next() {
+    public NextValue next() {
         while (true) {
             // does the current receiver iterator still have data?
             if (receiverIndex != null && receiverIndex.hasNext())

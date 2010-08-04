@@ -31,7 +31,7 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Observer, Prin
     private static final int STDDEV = 4;
     private static final int VOLUME = 5;
     private HeatMapWindow window = null;
-    private int numEvents = 0;
+    //private int numEvents = 0;
     private ParaProfTrial ppTrial;
 
     private CommunicationMatrixWindow(ParaProfTrial ppTrial) {
@@ -74,11 +74,11 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Observer, Prin
         // declare the heatmap data object
         mapData = new HeatMapData(size);
 
-        for (Iterator it = dataSource.getAllThreads().iterator(); it.hasNext();) {
-            edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
+        for (Iterator<edu.uoregon.tau.perfdmf.Thread> it = dataSource.getAllThreads().iterator(); it.hasNext();) {
+            edu.uoregon.tau.perfdmf.Thread thread = it.next();
             if (thread.getThreadID() == 0 && thread.getContextID() == 0) {
-                for (Iterator it2 = thread.getUserEventProfiles(); it2.hasNext();) {
-                    UserEventProfile uep = (UserEventProfile) it2.next();
+                for (Iterator<UserEventProfile> it2 = thread.getUserEventProfiles(); it2.hasNext();) {
+                    UserEventProfile uep = it2.next();
                     if (uep != null && uep.getNumSamples(ppTrial.getSelectedSnapshot()) > 0) {
                         String event = uep.getName();
                         if (event.startsWith("Message size sent to node ") && event.indexOf("=>") == -1) {
@@ -130,7 +130,7 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Observer, Prin
     }
 
     private void extractData(UserEventProfile uep, int thread, String event, String first, String path) {
-        double numEvents, eventMax, eventMin, eventMean, eventSumSqr, stdev, volume = 0;
+        double numEvents, eventMax, eventMin, eventMean, eventSumSqr,volume = 0;// stdev
         double[] empty = { 0, 0, 0, 0, 0, 0 };
 
         StringTokenizer st = new StringTokenizer(first, "Message size sent to node ");

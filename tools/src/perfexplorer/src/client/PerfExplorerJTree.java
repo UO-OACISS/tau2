@@ -132,7 +132,7 @@ public class PerfExplorerJTree extends JTree {
 		List<RMIView> viewVector = server.getViews(Integer.parseInt(parent));
 		Iterator<RMIView> views = viewVector.iterator();
 		while (views.hasNext()) {
-			RMIView view = (RMIView) views.next();
+			RMIView view = views.next();
 			DefaultMutableTreeNode node = new PerfExplorerTreeNode (view);
 			addViewNodes(node, view.getField("ID"));
 			parentNode.add(node);
@@ -157,7 +157,7 @@ public class PerfExplorerJTree extends JTree {
 				// loop through all the applications, and print out some info
 				while(applications.hasNext())
 				{
-					app = (Application) applications.next();
+					app = applications.next();
 					node = new PerfExplorerTreeNode (app);
 					//addExperimentNodes(node, app, true);
 					parent.add(node);
@@ -178,7 +178,7 @@ public class PerfExplorerJTree extends JTree {
 		// loop through all the experiments, and print out some info
 		while(experiments.hasNext())
 		{
-			exp = (Experiment) experiments.next();
+			exp = experiments.next();
 			expNode = new PerfExplorerTreeNode (exp);
 			//if (getTrials) addTrialNodes(expNode, exp);
 			node.add(expNode);
@@ -196,7 +196,7 @@ public class PerfExplorerJTree extends JTree {
 		// loop through all the trials, and print out some info
 		while(trials.hasNext())
 		{
-			trial = (Trial) trials.next();
+			trial = trials.next();
 			trialNode = new PerfExplorerTreeNode (trial);
 			//addMetricNodes(trialNode, trial);
 			node.add(trialNode);
@@ -230,7 +230,7 @@ public class PerfExplorerJTree extends JTree {
 			// loop through all the trials, and print out some info
 			while(trials.hasNext())
 			{
-				trial = (Trial) trials.next();
+				trial = trials.next();
 				trialNode = new PerfExplorerTreeNode (trial);
 				//addMetricNodes(trialNode, trial);
 				node.add(trialNode);
@@ -272,7 +272,7 @@ public class PerfExplorerJTree extends JTree {
 		// loop through all the events, and print out some info
 		while(events.hasNext())
 		{
-			event = (IntervalEvent) events.next();
+			event = events.next();
 			eventNode = new PerfExplorerTreeNode (event, false);
 			node.add(eventNode);
 		}

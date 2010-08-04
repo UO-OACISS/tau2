@@ -99,7 +99,7 @@ public class PackedProfileDataSource extends DataSource {
                     + "2");
         }
 
-        metaData = new TreeMap();
+        metaData = new TreeMap<String, String>();
         if (version >= 2) {
             int metadataHeaderSize = p.readInt(); // older versions will skip over this many bytes
 

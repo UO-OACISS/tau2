@@ -28,7 +28,11 @@ import edu.uoregon.tau.common.Utility;
 public class TauDataSource extends DataSource {
 
     public class CorruptFileException extends RuntimeException {
-        private String message;
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = 3505483745617386975L;
+		private String message;
 
         public CorruptFileException(String message) {
             this.message = message;
@@ -60,12 +64,12 @@ public class TauDataSource extends DataSource {
 
         if (dirs.size() > 0) {
             if (dirs.get(0) instanceof File[]) {
-                File[] files = (File[]) dirs.get(0);
+                File[] files = (File[])dirs.get(0);
                 if (files.length > 0) {
                     fileToMonitor = files[0];
                 }
             } else {
-                this.dirs = new ArrayList();
+                this.dirs = new ArrayList<File[]>();
                 File[] files = new File[1];
                 files[0] = (File) dirs.get(0);
                 this.dirs.add(files);
@@ -86,8 +90,8 @@ public class TauDataSource extends DataSource {
         return 0;
     }
 
-    public List getFiles() {
-        List list = new ArrayList();
+    public List<File> getFiles() {
+        List<File> list = new ArrayList<File>();
         list.add(fileToMonitor);
         return list;
     }
@@ -104,8 +108,8 @@ public class TauDataSource extends DataSource {
         }
 
         // first count the files (for progressbar)
-        for (Iterator e = dirs.iterator(); e.hasNext();) {
-            File[] files = (File[]) e.next();
+        for (Iterator<File[]> e = dirs.iterator(); e.hasNext();) {
+            File[] files = e.next();
             for (int i = 0; i < files.length; i++) {
                 totalFiles++;
             }
@@ -131,8 +135,8 @@ public class TauDataSource extends DataSource {
         StringTokenizer genericTokenizer;
 
         // iterate through the vector of File arrays (each directory)
-        for (Iterator e = dirs.iterator(); e.hasNext();) {
-            File[] files = (File[]) e.next();
+        for (Iterator<File[]> e = dirs.iterator(); e.hasNext();) {
+            File[] files = e.next();
 
             //Reset metricNameProcessed flag.
             metricNameProcessed = false;

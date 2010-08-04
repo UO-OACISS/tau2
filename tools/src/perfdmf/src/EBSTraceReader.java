@@ -33,7 +33,7 @@ public class EBSTraceReader {
     private void addSample(String callstack, String callpath) {
         Map<String, Integer> map = sampleMap.get(callpath);
         if (map != null) {
-            Integer count = (Integer) map.get(callstack);
+            Integer count = map.get(callstack);
             if (count != null) {
                 map.put(callstack, new Integer(count.intValue() + 1));
             } else {
@@ -204,7 +204,7 @@ public class EBSTraceReader {
                 }
 
                 for (String callstack : callstacks.keySet()) {
-                    int count = ((Integer) callstacks.get(callstack)).intValue();
+                    int count = callstacks.get(callstack).intValue();
                     double value = chunk * count;
 
                     String resolvedCallpath = callpath + " => " + callstack;
