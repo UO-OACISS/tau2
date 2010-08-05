@@ -5225,7 +5225,7 @@ if [ $scorep = yes ] ; then
 
     fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
     fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
-    fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/silc"
+    fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/silc#-I$scorepdir/include/silc_utility"
 fi
 
 if [ $epilog = yes ] ; then
