@@ -33,11 +33,11 @@ public class PSRunDataSource extends DataSource {
     private int threadID = -1;
     private int threadCounter = 0;
     PSRunLoadHandler handler;
-    private Hashtable nodeHash = new Hashtable();
+    private Hashtable<String, Integer> nodeHash = new Hashtable<String, Integer>();
 
     public PSRunDataSource(Object initializeObject) {
         super();
-        this.setMetrics(new Vector());
+        this.setMetrics(new Vector<Metric>());
         this.initializeObject = initializeObject;
     }
 
@@ -85,8 +85,8 @@ public class PSRunDataSource extends DataSource {
                         try {
                             threadID = Integer.parseInt(tid);
                             String nid = st.nextToken();
-                            Hashtable nodeHash = new Hashtable();
-                            Integer tmpID = (Integer) nodeHash.get(nid);
+                            Hashtable<String, Integer> nodeHash = new Hashtable<String, Integer>();
+                            Integer tmpID = nodeHash.get(nid);
                             if (tmpID == null) {
                                 nodeID = nodeHash.size();
                                 nodeHash.put(nid, new Integer(nodeID));
@@ -177,7 +177,7 @@ public class PSRunDataSource extends DataSource {
 
     public void incrementThread(String tid, String nid) {
         threadID = Integer.parseInt(tid);
-        Integer tmpID = (Integer) nodeHash.get(nid);
+        Integer tmpID = nodeHash.get(nid);
         if (tmpID == null) {
             nodeID = nodeHash.size();
             nodeHash.put(nid, new Integer(nodeID));

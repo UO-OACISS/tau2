@@ -510,9 +510,9 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
 
         this.font = null;
         setSavedPreferences();
-        Vector trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
-        for (Iterator it = trials.iterator(); it.hasNext();) {
-            ParaProfTrial ppTrial = (ParaProfTrial) it.next();
+        Vector<ParaProfTrial> trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
+        for (Iterator<ParaProfTrial> it = trials.iterator(); it.hasNext();) {
+            ParaProfTrial ppTrial = it.next();
             ppTrial.updateRegisteredObjects("prefEvent");
             ppTrial.updateRegisteredObjects("dataEvent");
         }

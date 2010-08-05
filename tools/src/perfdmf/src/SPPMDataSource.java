@@ -30,7 +30,7 @@ public class SPPMDataSource extends DataSource {
     private BufferedReader br = null;
     private int deltaCount = 0;
     private int timestepCount = 0;
-    private Hashtable methodIndexes = null;
+    private Hashtable<String, Integer> methodIndexes = null;
     private double cpuTime[] = null;
     private double wallTime[] = null;
     private int calls[] = null;
@@ -40,7 +40,7 @@ public class SPPMDataSource extends DataSource {
     private LineData lineData = new LineData();
     public SPPMDataSource(Object initializeObject) {
         super();
-        this.setMetrics(new Vector());
+        this.setMetrics(new Vector<Metric>());
         this.initializeObject = initializeObject;
     }
 
@@ -65,7 +65,7 @@ public class SPPMDataSource extends DataSource {
                 long time = System.currentTimeMillis();
 
                 // initialize our data structures
-                methodIndexes = new Hashtable();
+                methodIndexes = new Hashtable<String, Integer>();
                 cpuTime = new double[20];
                 wallTime = new double[20];
                 calls = new int[20];
@@ -242,7 +242,7 @@ public class SPPMDataSource extends DataSource {
             if (subroutineCount == 0)
                 inclusiveEqualsExclusive = true;
 
-            Integer index = (Integer) methodIndexes.get(lineData.s0);
+            Integer index = methodIndexes.get(lineData.s0);
             if (index == null) {
                 index = new Integer(methodIndexes.size());
                 methodIndexes.put(lineData.s0, index);
@@ -264,10 +264,10 @@ public class SPPMDataSource extends DataSource {
 
     private void saveFunctions() {
         try {
-            Enumeration e = methodIndexes.keys();
+            Enumeration<String> e = methodIndexes.keys();
             while (e.hasMoreElements()) {
-                eventName = (String) e.nextElement();
-                Integer index = (Integer) methodIndexes.get(eventName);
+                eventName = e.nextElement();
+                Integer index = methodIndexes.get(eventName);
                 boolean inclusiveEqualsExclusive = false;
                 if (subroutines[index.intValue()] == 0)
                     inclusiveEqualsExclusive = true;

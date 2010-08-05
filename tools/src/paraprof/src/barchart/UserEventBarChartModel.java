@@ -23,7 +23,7 @@ public class UserEventBarChartModel extends AbstractBarChartModel {
     private DataSorter dataSorter;
     private UserEvent userEvent;
 
-    private List list;
+    private List<PPUserEventProfile> list;
 
     public UserEventBarChartModel(UserEventWindow window, DataSorter dataSorter, UserEvent userEvent) {
         this.window = window;
@@ -37,12 +37,12 @@ public class UserEventBarChartModel extends AbstractBarChartModel {
     }
 
     public String getRowLabel(int row) {
-        PPUserEventProfile ppUserEventProfile = (PPUserEventProfile) list.get(row);
+        PPUserEventProfile ppUserEventProfile = list.get(row);
         return ParaProfUtils.getThreadLabel(ppUserEventProfile.getThread());
     }
 
     public String getValueLabel(int row, int subIndex) {
-        PPUserEventProfile ppUserEventProfile = (PPUserEventProfile) list.get(row);
+        PPUserEventProfile ppUserEventProfile = list.get(row);
 
         double value = window.getValueType().getValue(ppUserEventProfile.getUserEventProfile(),dataSorter.getSelectedSnapshot());
 
@@ -50,12 +50,12 @@ public class UserEventBarChartModel extends AbstractBarChartModel {
     }
 
     public double getValue(int row, int subIndex) {
-        PPUserEventProfile ppUserEventProfile = (PPUserEventProfile) list.get(row);
+        PPUserEventProfile ppUserEventProfile = list.get(row);
         return window.getValueType().getValue(ppUserEventProfile.getUserEventProfile(),dataSorter.getSelectedSnapshot());
     }
 
     public Color getValueColor(int row, int subIndex) {
-        PPUserEventProfile ppUserEventProfile = (PPUserEventProfile) list.get(row);
+        PPUserEventProfile ppUserEventProfile = list.get(row);
         return ppUserEventProfile.getColor();
     }
 
@@ -71,7 +71,7 @@ public class UserEventBarChartModel extends AbstractBarChartModel {
     }
 
     public void fireRowLabelClick(int row, MouseEvent e, JComponent owner) {
-        PPUserEventProfile ppUserEventProfile = (PPUserEventProfile) list.get(row);
+        PPUserEventProfile ppUserEventProfile = list.get(row);
 
         ppUserEventProfile.getThread();
         if (ParaProfUtils.rightClick(e)) {

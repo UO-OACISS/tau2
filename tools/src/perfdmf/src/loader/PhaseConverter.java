@@ -98,7 +98,7 @@ public class PhaseConverter {
         
         InputStreamReader inReader = new InputStreamReader(fis);
         BufferedReader br = new BufferedReader(inReader);
-        List phases = new ArrayList();
+        List<String> phases = new ArrayList<String>();
         try {
             String line = br.readLine();
             while (line != null) {

@@ -51,18 +51,18 @@ public class GAMESSDataSource extends DataSource {
 	private String inputString;
 	private StringBuffer phaseName;
 	private double elapsedTime;
-	private List events = new ArrayList();
+	private List<MyEvent> events = new ArrayList<MyEvent>();
 	private double cpuTime;
 	private double totalCpuTime = 0;
 	private double totalWallClockTime = 0;
 	private double currentWallClockTime = 0;
 	private FunctionProfile fp;
-	private Map metadata = new HashMap();
-	private Map atomCounts = new HashMap();
+	private Map<String, String> metadata = new HashMap<String, String>();
+	private Map<String, Integer> atomCounts = new HashMap<String, Integer>();
 
     public GAMESSDataSource(File file) {
         super();
-        this.setMetrics(new Vector());
+        this.setMetrics(new Vector<Metric>());
 		this.file = file;
     }
 
@@ -141,7 +141,7 @@ public class GAMESSDataSource extends DataSource {
 						} else {
     						StringTokenizer st = new StringTokenizer(inputString, " ");
     						String atom = st.nextToken(); // ATOM NAME
-							Integer counter = (Integer)atomCounts.get(atom);
+							Integer counter = atomCounts.get(atom);
 							if (counter == null) {
 								counter = new Integer(0);
 							}
@@ -157,9 +157,9 @@ public class GAMESSDataSource extends DataSource {
 				for (threadID = 0 ; threadID < this.coreCount ; threadID++) {
 					this.initializeThread();
 					this.createFunction(this.thread, mainEvent, false);
-					Iterator iter = this.events.iterator();
+					Iterator<MyEvent> iter = this.events.iterator();
 					while (iter.hasNext()) {
-						MyEvent tmp = (MyEvent)iter.next();
+						MyEvent tmp = iter.next();
 						this.createFunction(this.thread, tmp, false);
 						this.createFunction(this.thread, tmp, true);
 					}
@@ -361,13 +361,13 @@ public class GAMESSDataSource extends DataSource {
 	}
     
     private void setMetadata() {
-		Iterator iter = metadata.keySet().iterator();
+		Iterator<String> iter = metadata.keySet().iterator();
 		String name;
 		String value;
 		// get the explicit values in the file
 		while (iter.hasNext()) {
-			name = (String)iter.next();
-			value = (String)metadata.get(name);
+			name = iter.next();
+			value = metadata.get(name);
    			this.getThread().getMetaData().put(name, value);
 		}
 		// get the counters
@@ -375,8 +375,8 @@ public class GAMESSDataSource extends DataSource {
 		String atom;
 		Integer count;
 		while (iter.hasNext()) {
-			atom = (String)iter.next();
-			count = (Integer)atomCounts.get(atom);
+			atom = iter.next();
+			count = atomCounts.get(atom);
    			this.getThread().getMetaData().put("NUMBER OF ATOMS: " + atom, count.toString());
 		}
 		iter = atomCounts.keySet().iterator();

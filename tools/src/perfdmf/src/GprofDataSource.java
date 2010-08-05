@@ -76,9 +76,9 @@ public class GprofDataSource extends DataSource {
 
             boolean callPathSection = false;
             boolean parent = true;
-            Vector parents = new Vector();
+            Vector<LineData> parents = new Vector<LineData>();
             LineData self = null;
-            Vector children = new Vector();
+            Vector<LineData> children = new Vector<LineData>();
 
             fixLengths = true;
             linenumber = 1;
@@ -124,7 +124,7 @@ public class GprofDataSource extends DataSource {
 
                             int numSubr = 0;
                             for (int i = 0; i < children.size(); i++) {
-                                LineData lineDataChild = (LineData) children.get(i);
+                                LineData lineDataChild = children.get(i);
                                 numSubr += lineDataChild.i0;
                             }
 
@@ -132,7 +132,7 @@ public class GprofDataSource extends DataSource {
                             //functionProfile.setInclusivePerCall(0, (self.d1 + self.d2) / self.i0);
 
                             for (int i = 0; i < parents.size(); i++) {
-                                LineData lineDataParent = (LineData) parents.elementAt(i);
+                                LineData lineDataParent = parents.elementAt(i);
                                 function = this.addFunction(lineDataParent.s0, 1);
                                 function.addGroup(addGroup("TAU_DEFAULT"));
                                 String s = lineDataParent.s0 + " => " + self.s0 + "  ";
@@ -153,7 +153,7 @@ public class GprofDataSource extends DataSource {
                             parents.clear();
 
                             for (int i = 0; i < children.size(); i++) {
-                                LineData lineDataChild = (LineData) children.elementAt(i);
+                                LineData lineDataChild = children.elementAt(i);
                                 function = this.addFunction(lineDataChild.s0, 1);
                                 function.addGroup(addGroup("TAU_DEFAULT"));
                                 String s = self.s0 + " => " + lineDataChild.s0 + "  ";

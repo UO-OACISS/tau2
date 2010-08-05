@@ -15,21 +15,21 @@ public class MetricTableModel extends AbstractTableModel {
     private ParaProfMetric metric;
     private String[] columnNames = { "MetricField", "Value" };
     private DefaultTreeModel defaultTreeModel;
-    private List fieldNames;
-    private List fieldValues;
+    private List<String> fieldNames;
+    private List<Comparable> fieldValues;
 
     public MetricTableModel(ParaProfManagerWindow paraProfManager, ParaProfMetric metric, DefaultTreeModel defaultTreeModel) {
         this.metric = metric;
         this.defaultTreeModel = defaultTreeModel;
 
-        fieldNames = new ArrayList();
+        fieldNames = new ArrayList<String>();
         fieldNames.add("Name");
         fieldNames.add("Application ID");
         fieldNames.add("Experiment ID");
         fieldNames.add("Trial ID");
         fieldNames.add("Metric ID");
 
-        fieldValues = new ArrayList();
+        fieldValues = new ArrayList<Comparable>();
         fieldValues.add(metric.getName());
         fieldValues.add(new Integer(metric.getApplicationID()));
         fieldValues.add(new Integer(metric.getExperimentID()));

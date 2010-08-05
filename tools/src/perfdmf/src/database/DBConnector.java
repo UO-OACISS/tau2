@@ -35,7 +35,7 @@ public class DBConnector implements DB {
     private Database database;
 
     
-    private static Map passwordMap = new HashMap();
+    private static Map<String, String> passwordMap = new HashMap<String, String>();
     
     private static PasswordCallback passwordCallback;
     
@@ -140,7 +140,7 @@ public class DBConnector implements DB {
     private static String findPassword(ParseConfig config) {
 
         //System.out.println("finding password, path: " + config.getPath());
-    	String password = (String) passwordMap.get(config.getPath());
+    	String password = passwordMap.get(config.getPath());
         if (password == null && passwordCallback != null) {
             password = passwordCallback.getPassword(config);
             passwordMap.put(config.getPath(), password);

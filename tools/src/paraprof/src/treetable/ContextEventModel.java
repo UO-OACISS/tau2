@@ -1,12 +1,20 @@
 package edu.uoregon.tau.paraprof.treetable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import edu.uoregon.tau.common.treetable.AbstractTreeTableModel;
 import edu.uoregon.tau.common.treetable.TreeTableModel;
-import edu.uoregon.tau.paraprof.*;
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.paraprof.DataSorter;
+import edu.uoregon.tau.paraprof.PPUserEventProfile;
+import edu.uoregon.tau.paraprof.ParaProfTrial;
 import edu.uoregon.tau.perfdmf.Thread;
+import edu.uoregon.tau.perfdmf.UserEventProfile;
+import edu.uoregon.tau.perfdmf.UtilFncs;
 
 public class ContextEventModel extends AbstractTreeTableModel {
 
@@ -46,12 +54,12 @@ public class ContextEventModel extends AbstractTreeTableModel {
         dataSorter = new DataSorter(ppTrial);
 
         // don't ask the thread for its functions directly, since we want group masking to work
-        List uepList = dataSorter.getUserEventProfiles(thread);
+        List<Comparable> uepList = dataSorter.getUserEventProfiles(thread);
 
         Map<String,Integer> rootNames = new HashMap<String,Integer>();
 
         if (window.getTreeMode()) {
-            for (Iterator it = uepList.iterator(); it.hasNext();) {
+            for (Iterator<Comparable> it = uepList.iterator(); it.hasNext();) {
                 // Find all the rootNames (as strings)
                 PPUserEventProfile ppUserEventProfile = (PPUserEventProfile) it.next();
                 UserEventProfile uep = ppUserEventProfile.getUserEventProfile();
@@ -178,8 +186,8 @@ public class ContextEventModel extends AbstractTreeTableModel {
         sortAscending = ascending;
 
         Collections.sort(roots);
-        for (Iterator it = roots.iterator(); it.hasNext();) {
-            ContextEventTreeNode node = (ContextEventTreeNode) it.next();
+        for (Iterator<ContextEventTreeNode> it = roots.iterator(); it.hasNext();) {
+            ContextEventTreeNode node = it.next();
             node.sortChildren();
         }
     }

@@ -71,7 +71,7 @@ public class ParaProf implements ActionListener {
     public static boolean usePathNameInTrial = false;
     public static FunctionBarChartWindow theComparisonWindow;
     public static boolean JNLP = false;
-    public static List scripts = new ArrayList();
+    public static List<ParaProfScript> scripts = new ArrayList<ParaProfScript>();
     public static String scriptFile;
 
     public static boolean insideEclipse;
@@ -116,6 +116,7 @@ public class ParaProf implements ActionListener {
                 + "                                    profiles (default), pprof, dynaprof, mpip,\n"
                 + "                                    gprof, psrun, hpm, packed, cube, hpc, ompp\n"
                 + "                                    snap, perixml, gptl, ipm\n"
+//                + "  --range <, or - seperated #'s>  Load only profiles from the given range(s) of processes\n"
                 + "  -h, --help                      Display this help message\n" + "\n"
                 + "The following options will run only from the console (no GUI will launch):\n" + "\n"
                 + "  --merge <file.gz>               Merges snapshot profiles\n"
@@ -308,9 +309,9 @@ public class ParaProf implements ActionListener {
 
         ParaProf.colorMap.setMap(ParaProf.preferences.getAssignedColors());
 
-        List trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
-        for (Iterator it = trials.iterator(); it.hasNext();) {
-            ParaProfTrial ppTrial = (ParaProfTrial) it.next();
+        List<ParaProfTrial> trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
+        for (Iterator<ParaProfTrial> it = trials.iterator(); it.hasNext();) {
+            ParaProfTrial ppTrial = it.next();
             ParaProf.colorChooser.setColors(ppTrial, -1);
             ppTrial.updateRegisteredObjects("colorEvent");
             ppTrial.updateRegisteredObjects("prefEvent");
@@ -375,6 +376,7 @@ public class ParaProf implements ActionListener {
         CmdLineParser.Option jarLocationOpt = parser.addStringOption('j', "jardir");
         CmdLineParser.Option schemaLocationOpt = parser.addStringOption('c', "schemadir");
         CmdLineParser.Option controlOpt = parser.addBooleanOption('y', "control");
+        CmdLineParser.Option rangeOpt = parser.addStringOption('a', "range");
 
         try {
             parser.parse(args);
@@ -403,6 +405,7 @@ public class ParaProf implements ActionListener {
         Boolean control = (Boolean) parser.getOptionValue(controlOpt);
         ParaProf.jarLocation = (String) parser.getOptionValue(jarLocationOpt);
         ParaProf.schemaLocation = (String) parser.getOptionValue(schemaLocationOpt);
+        String range = (String) parser.getOptionValue(rangeOpt);
 
         controlMode = control != null && control.booleanValue();
         demoMode = demo != null && demo.booleanValue();

@@ -1,26 +1,42 @@
 package edu.uoregon.tau.vis;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.text.DecimalFormat;
-import java.util.Map;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 
 import edu.uoregon.tau.common.ImageExport;
 
 public class HeatMapWindow extends JFrame implements ActionListener, ImageExport {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1145260294561992529L;
 	private SteppedComboBox pathSelector = null;
 	private SteppedComboBox figureSelector = null;
 	private JPanel mainPanel = null;
 	private JPanel mapPanel;
-	private Map/*<String, double[][][]>*/ maps = null;
-	private Map/*<String, double[]>*/ maxs = null;
-	private Map/*<String, double[]>*/ mins = null;
+	//private Map<String, double[][][]> maps = null;
+	//private Map<String, double[]> maxs = null;
+	//private Map<String, double[]> mins = null;
 	private HeatMapData mapData = null;
 	private final static String allPaths = "All Paths";
 	private final static String CALLS = "NUMBER OF CALLS";
@@ -38,12 +54,20 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 	public final static int maxCells = 256;   // the number of heatmap cells, max, to show
 	public final static int viewRatio = 2;   // the ratio between those two
 	private HeatMap heatMap = null;
-
+	private JSplitPane splitPane;
+	private int dataIndex = 0;
+	
+	public void setMapData(HeatMapData mapData){
+		this.mapData = mapData;
+		mapPanel = buildMapPanel(dataIndex, currentFigure);
+		splitPane.setLeftComponent(mapPanel);
+	}
+	
 	public HeatMapWindow(String title, HeatMapData mapData) {
 		super(title);
 		this.mapData = mapData;
-		this.maxs = mapData.getMaxs();
-		this.mins = mapData.getMins();
+		//this.maxs = mapData.getMaxs();
+		//this.mins = mapData.getMins();
 		this.size = mapData.getSize();
 		pathSelector = new SteppedComboBox(mapData.getPaths().toArray());
 		Dimension d = pathSelector.getPreferredSize();
@@ -69,7 +93,7 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 
 	private void drawFigures(boolean centerWindow) {
 		// which figure type is requested?
-		int dataIndex = 0;
+		//int dataIndex = 0;
 		for (dataIndex = 0 ; dataIndex < figures.length ; dataIndex++) {
 			if (figures[dataIndex].equals(currentFigure)) {
 				break;
@@ -77,7 +101,8 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
 		}
 
 		// build the split pane
-		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+		//JSplitPane 
+		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		splitPane.setResizeWeight(1);
 		splitPane.setOneTouchExpandable(true);
 		mapPanel = buildMapPanel(dataIndex, currentFigure);
@@ -299,12 +324,12 @@ public class HeatMapWindow extends JFrame implements ActionListener, ImageExport
         return mapPanel.getSize();
     }
 
-	private static void printMemoryStats(String header) {
-		DecimalFormat f = new DecimalFormat("#.## MB");
-		System.out.print(header + " - ");
-		System.out.print("Memory - Free: " + f.format(java.lang.Runtime.getRuntime().freeMemory()/1000000.0));
-		System.out.print("\tTotal: " + f.format(java.lang.Runtime.getRuntime().totalMemory()/1000000.0));
-		System.out.println("\tMax: " + f.format(java.lang.Runtime.getRuntime().maxMemory()/1000000.0));
-	}
+//	private static void printMemoryStats(String header) {
+//		DecimalFormat f = new DecimalFormat("#.## MB");
+//		System.out.print(header + " - ");
+//		System.out.print("Memory - Free: " + f.format(java.lang.Runtime.getRuntime().freeMemory()/1000000.0));
+//		System.out.print("\tTotal: " + f.format(java.lang.Runtime.getRuntime().totalMemory()/1000000.0));
+//		System.out.println("\tMax: " + f.format(java.lang.Runtime.getRuntime().maxMemory()/1000000.0));
+//	}
 	
 }

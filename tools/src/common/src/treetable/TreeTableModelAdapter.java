@@ -89,7 +89,7 @@ public class TreeTableModelAdapter extends AbstractTableModel implements SortTab
         return treeTableModel.getColumnName(column);
     }
 
-    public Class getColumnClass(int column) {
+    public Class<Object> getColumnClass(int column) {
         return treeTableModel.getColumnClass(column);
     }
 

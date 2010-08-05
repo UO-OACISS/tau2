@@ -50,7 +50,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
     private int decimals = -1; // -1 = auto, -2 = full
 
 
-    private List columns;
+    private List<TreeTableColumn> columns;
     private ColumnChooser columnChooser;
 
     private final JMenuItem showAsTreeMenuItem = new JCheckBoxMenuItem("Show as Call Tree");
@@ -114,13 +114,13 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
         // reset the cell rendereres
         for (int i = 0; i < columns.size(); i++) {
-            treeTable.setDefaultRenderer(columns.get(i).getClass(), ((TreeTableColumn) columns.get(i)).getCellRenderer());
+            treeTable.setDefaultRenderer(columns.get(i).getClass(), columns.get(i).getCellRenderer());
         }
     }
 
     // get the chosen columns from the columnChooser and setup the 'columns' List
     private void setColumns() {
-        columns = new ArrayList();
+        columns = new ArrayList<TreeTableColumn>();
 
         ListModel metricModel = columnChooser.getMetricModel();
         ListModel valueModel = columnChooser.getValueModel();
@@ -239,7 +239,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         scrollPane = new JScrollPane(treeTable);
 
         for (int i = 0; i < columns.size(); i++) {
-            treeTable.setDefaultRenderer(columns.get(i).getClass(), ((TreeTableColumn) columns.get(i)).getCellRenderer());
+            treeTable.setDefaultRenderer(columns.get(i).getClass(), columns.get(i).getCellRenderer());
         }
 
         gbc.fill = GridBagConstraints.BOTH;
@@ -531,7 +531,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         return units;
     }
 
-    public List getColumns() {
+    public List<TreeTableColumn> getColumns() {
         return columns;
     }
 

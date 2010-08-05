@@ -26,11 +26,11 @@ public class HPCToolkitXMLHandler extends DefaultHandler {
     
     private String currentFile;
     
-    private Map metricMap = new HashMap();
+    private Map<String, Metric> metricMap = new HashMap<String, Metric>();
     
     private Thread theThread;
     
-    private Stack nameStack = new Stack();
+    private Stack<String> nameStack = new Stack<String>();
 
     private Group defaultGroup;
     private Group callpathGroup;
@@ -68,7 +68,7 @@ public class HPCToolkitXMLHandler extends DefaultHandler {
         String origName = name;
 
         
-        Stack stackCopy = (Stack) nameStack.clone();
+        Stack<String> stackCopy = (Stack<String>) nameStack.clone();
         while (stackCopy.size() != 0) {
             name = stackCopy.pop() + " => " + name;
         }
@@ -143,7 +143,7 @@ public class HPCToolkitXMLHandler extends DefaultHandler {
             stackName(attributes.getValue("n"));
         } else if (localName.equalsIgnoreCase("M")) {
             String metricID = attributes.getValue("n");
-            Metric metric = (Metric) metricMap.get(metricID);
+            Metric metric = metricMap.get(metricID);
             double value = Double.parseDouble(attributes.getValue("v"));
 
             FunctionProfile fp = createFunctionProfile(theThread, currentFunction);

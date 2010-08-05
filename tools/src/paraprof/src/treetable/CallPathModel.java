@@ -55,14 +55,14 @@ public class CallPathModel extends AbstractTreeTableModel {
         DataSorter dataSorter = new DataSorter(ppTrial);
 
         // don't ask the thread for its functions directly, since we want group masking to work
-        List functionProfileList = dataSorter.getCallPathFunctionProfiles(thread);
+        List<Comparable> functionProfileList = dataSorter.getCallPathFunctionProfiles(thread);
 
         Map<String, String> rootNames = new HashMap<String, String>();
 
         Group derived = ppTrial.getGroup("TAU_CALLPATH_DERIVED");
 
         if (window.getTreeMode()) {
-            for (Iterator it = functionProfileList.iterator(); it.hasNext();) {
+            for (Iterator<Comparable> it = functionProfileList.iterator(); it.hasNext();) {
                 // Find all the rootNames (as strings)
                 PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next();
                 FunctionProfile fp = ppFunctionProfile.getFunctionProfile();
@@ -106,7 +106,7 @@ public class CallPathModel extends AbstractTreeTableModel {
             }
 
         } else {
-            for (Iterator it = functionProfileList.iterator(); it.hasNext();) {
+            for (Iterator<Comparable> it = functionProfileList.iterator(); it.hasNext();) {
                 PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next();
                 FunctionProfile fp = ppFunctionProfile.getFunctionProfile();
 
@@ -213,8 +213,8 @@ public class CallPathModel extends AbstractTreeTableModel {
         sortAscending = ascending;
 
         Collections.sort(roots);
-        for (Iterator it = roots.iterator(); it.hasNext();) {
-            TreeTableNode node = (TreeTableNode) it.next();
+        for (Iterator<TreeTableNode> it = roots.iterator(); it.hasNext();) {
+            TreeTableNode node = it.next();
             node.sortChildren();
         }
 

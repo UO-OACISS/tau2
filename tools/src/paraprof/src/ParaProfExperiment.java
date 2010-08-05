@@ -25,7 +25,7 @@ public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUs
     private DefaultMutableTreeNode defaultMutableTreeNode = null;
     private TreePath treePath = null;
     private boolean dBExperiment = false;
-    private Vector trials = new Vector();
+    private Vector<ParaProfTrial> trials = new Vector<ParaProfTrial>();
 
     public ParaProfExperiment() {
         super();
@@ -77,16 +77,16 @@ public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUs
         return dBExperiment;
     }
 
-    public Vector getTrials() {
+    public Vector<ParaProfTrial> getTrials() {
         return trials;
     }
 
-    public ListIterator getTrialList() {
+    public ListIterator<ParaProfTrial> getTrialList() {
         return trials.listIterator();
     }
 
     public ParaProfTrial getTrial(int trialID) {
-        return (ParaProfTrial) trials.elementAt(trialID);
+        return trials.elementAt(trialID);
     }
 
     public void addTrial(ParaProfTrial ppTrial) {
@@ -100,8 +100,8 @@ public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUs
     }
 
     public boolean isTrialPresent(String name) {
-        for (Enumeration e = trials.elements(); e.hasMoreElements();) {
-            ParaProfTrial ppTrial = (ParaProfTrial) e.nextElement();
+        for (Enumeration<ParaProfTrial> e = trials.elements(); e.hasMoreElements();) {
+            ParaProfTrial ppTrial = e.nextElement();
             if (name.equals(ppTrial.toString()))
                 return true;
         }

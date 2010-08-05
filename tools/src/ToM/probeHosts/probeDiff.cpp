@@ -1,5 +1,7 @@
 #include <mpi.h>
 
+#include <stdlib.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <assert.h>
 
@@ -23,7 +25,15 @@ int main(int argc, char **argv)
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
   FILE *fullHostFile;
-  fullHostFile = fopen("allhosts.txt", "r");
+  char *outdirName;
+  outdirName = getenv("PROFILEDIR");
+  if (outdirName == NULL) {
+    outdirName = (char *)malloc((strlen(".")+1)*sizeof(char));
+    strcpy(outdirName,".");
+  }
+  char infileString[512];
+  sprintf(infileString,"%s/allhosts.txt",outdirName);
+  fullHostFile = fopen(infileString, "r");
 
   // Building hash table counts for hosts in a full job reservation
   if (rank == 0) {
@@ -73,7 +83,9 @@ int main(int argc, char **argv)
 
   if (rank == 0) {
     FILE *outfile;
-    outfile = fopen("mrnethosts.txt","w");
+    char outfileString[512];
+    sprintf(outfileString,"%s/mrnethosts.txt",outdirName);
+    outfile = fopen(outfileString,"w");
     for (it=hostHash.begin(); it!=hostHash.end(); it++) {
       // remove all references to hosts completely consumed by the MPI
       //   process space.

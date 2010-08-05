@@ -91,8 +91,8 @@ public class Application implements Serializable {
                 resultSet = dbMeta.getColumns(null, null, "application", "%");
             }
 
-            Vector nameList = new Vector();
-            Vector typeList = new Vector();
+            Vector<String> nameList = new Vector<String>();
+            Vector<Integer> typeList = new Vector<Integer>();
             boolean seenID = false;
 
             while (resultSet.next() != false) {
@@ -124,8 +124,8 @@ public class Application implements Serializable {
             int[] fieldTypes = new int[typeList.size()];
 
             for (int i = 0; i < typeList.size(); i++) {
-                fieldNames[i] = (String) nameList.get(i);
-                fieldTypes[i] = ((Integer) typeList.get(i)).intValue();
+                fieldNames[i] = nameList.get(i);
+                fieldTypes[i] = typeList.get(i).intValue();
             }
 
             database.setAppFieldNames(fieldNames);
@@ -236,14 +236,14 @@ public class Application implements Serializable {
         this.name = name;
     }
 
-    public static Vector getApplicationList(DB db, String whereClause) {
+    public static Vector<Application> getApplicationList(DB db, String whereClause) {
         StringBuffer buf = null;
         try {
             Database database = db.getDatabase();
             Application.getMetaData(db);
 
             ResultSet resultSet = null;
-            Vector applications = new Vector();
+            Vector<Application> applications = new Vector<Application>();
 
             buf = new StringBuffer("select id, name");
 

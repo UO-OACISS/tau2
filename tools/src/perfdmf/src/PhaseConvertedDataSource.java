@@ -9,7 +9,7 @@ import java.util.List;
 public class PhaseConvertedDataSource extends DataSource {
 
 
-    public PhaseConvertedDataSource(DataSource callpathDataSource, List phases) {
+    public PhaseConvertedDataSource(DataSource callpathDataSource, List<String> phases) {
 
         if (callpathDataSource.getCallPathDataPresent() == false) {
             throw new IllegalArgumentException("Can't make phase profile without callpath data");
@@ -121,7 +121,7 @@ public class PhaseConvertedDataSource extends DataSource {
     }
 
     
-    private boolean match(String needle, List haystack) {
+    private boolean match(String needle, List<String> haystack) {
         return haystack.contains(needle);
     }
 

@@ -1,6 +1,14 @@
 package edu.uoregon.tau.paraprof.treetable;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -10,9 +18,11 @@ import java.awt.print.PrinterException;
 import java.util.Observable;
 import java.util.Observer;
 
-import javax.swing.*;
-import javax.swing.event.TreeExpansionEvent;
-import javax.swing.event.TreeExpansionListener;
+import javax.swing.JFrame;
+import javax.swing.JMenuBar;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTree;
 import javax.swing.table.TableColumn;
 import javax.swing.tree.DefaultTreeCellRenderer;
 
@@ -20,15 +30,20 @@ import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.common.treetable.AbstractTreeTableModel;
 import edu.uoregon.tau.common.treetable.JTreeTable;
-import edu.uoregon.tau.paraprof.*;
-import edu.uoregon.tau.paraprof.barchart.BarChart;
+import edu.uoregon.tau.paraprof.ParaProf;
+import edu.uoregon.tau.paraprof.ParaProfTrial;
+import edu.uoregon.tau.paraprof.ParaProfUtils;
+import edu.uoregon.tau.paraprof.WindowPlacer;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
-import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 import edu.uoregon.tau.perfdmf.Thread;
 
 public class ContextEventWindow extends JFrame implements Observer, ParaProfWindow, Printable, ImageExport {
 
-    private ParaProfTrial ppTrial;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1234017079628001497L;
+	private ParaProfTrial ppTrial;
     private Thread thread;
 
     private ContextEventModel model;
@@ -100,7 +115,8 @@ public class ContextEventWindow extends JFrame implements Observer, ParaProfWind
     private void createTreeTable(AbstractTreeTableModel model) {
         treeTable = new JTreeTable(model, true, true);
 
-        final JTree tree = treeTable.getTree();
+       //final JTree tree = 
+        	treeTable.getTree();
 
         // Add a mouse listener for this tree.
         MouseListener ml = new MouseAdapter() {
@@ -131,7 +147,12 @@ public class ContextEventWindow extends JFrame implements Observer, ParaProfWind
 
         DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer() {
 
-            public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded,
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = 2780103869814842355L;
+
+			public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded,
                     boolean leaf, int row, boolean hasFocus) {
                 super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
 

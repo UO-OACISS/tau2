@@ -1,13 +1,20 @@
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
 
-import edu.uoregon.tau.common.AlphanumComparator;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.FunctionProfile;
+import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Thread;
+import edu.uoregon.tau.perfdmf.UserEvent;
+import edu.uoregon.tau.perfdmf.UserEventProfile;
 
 /**
  * DataSorter.java
@@ -19,7 +26,7 @@ import edu.uoregon.tau.perfdmf.Thread;
  * @author	Alan Morris, Robert Bell
  * @version	$Revision: 1.18 $
  */
-public class DataSorter implements Comparator {
+public class DataSorter implements Comparator<FunctionProfile> {
 
     private ParaProfTrial ppTrial = null;
 
@@ -66,13 +73,13 @@ public class DataSorter implements Comparator {
         return selectedMetric.getDerivedMetric();
     }
 
-    public List getUserEventProfiles(Thread thread) {
+    public List<Comparable> getUserEventProfiles(Thread thread) {
 
         UserEventProfile userEventProfile = null;
 
-        List newList = new ArrayList();
+        List<Comparable> newList = new ArrayList<Comparable>();
 
-        for (Iterator e1 = thread.getUserEventProfiles(); e1.hasNext();) {
+        for (Iterator<UserEventProfile> e1 = thread.getUserEventProfiles(); e1.hasNext();) {
             userEventProfile = (UserEventProfile) e1.next();
             if (userEventProfile != null) {
                 PPUserEventProfile ppUserEventProfile = new PPUserEventProfile(this, thread, userEventProfile);
@@ -83,11 +90,11 @@ public class DataSorter implements Comparator {
         return newList;
     }
 
-    private List createFunctionProfileList(Thread thread, boolean callpath) {
-        List newList = null;
+    private List<Comparable> createFunctionProfileList(Thread thread, boolean callpath) {
+        List<Comparable> newList = null;
 
-        List functionList = thread.getFunctionProfiles();
-        newList = new ArrayList();
+        List<FunctionProfile> functionList = thread.getFunctionProfiles();
+        newList = new ArrayList<Comparable>();
 
         for (int i = 0; i < functionList.size(); i++) {
             FunctionProfile functionProfile = (FunctionProfile) functionList.get(i);
@@ -110,20 +117,20 @@ public class DataSorter implements Comparator {
         return newList;
     }
 
-    public List getCallPathFunctionProfiles(Thread thread) {
+    public List<Comparable> getCallPathFunctionProfiles(Thread thread) {
         return createFunctionProfileList(thread, true);
     }
 
-    public List getFunctionProfiles(Thread thread) {
+    public List<Comparable> getFunctionProfiles(Thread thread) {
         return createFunctionProfileList(thread, false);
     }
 
-    public List getBasicFunctionProfiles(Thread thread) {
+    public List<FunctionProfile> getBasicFunctionProfiles(Thread thread) {
 
-        List newList = null;
+        List<FunctionProfile> newList = null;
 
         List functionList = thread.getFunctionProfiles();
-        newList = new ArrayList();
+        newList = new ArrayList<FunctionProfile>();
 
         for (int i = 0; i < functionList.size(); i++) {
             FunctionProfile functionProfile = (FunctionProfile) functionList.get(i);
@@ -135,10 +142,10 @@ public class DataSorter implements Comparator {
         return newList;
     }
 
-    public List getAllFunctionProfiles() {
+    public List<PPThread> getAllFunctionProfiles() {
         long time = System.currentTimeMillis();
 
-        List threads = new ArrayList();
+        List<PPThread> threads = new ArrayList<PPThread>();
         Thread thread;
         PPThread ppThread;
 
@@ -148,7 +155,7 @@ public class DataSorter implements Comparator {
         if (ppTrial.getDataSource().getAllThreads().size() > 1) {
             thread = ppTrial.getDataSource().getStdDevData();
             ppThread = new PPThread(thread, this.ppTrial);
-            for (Iterator it = thread.getFunctionProfiles().iterator(); it.hasNext();) {
+            for (Iterator<FunctionProfile> it = thread.getFunctionProfiles().iterator(); it.hasNext();) {
                 FunctionProfile functionProfile = (FunctionProfile) it.next();
                 if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())
                         && functionProfile.getFunction().isPhaseMember(phase)) {
@@ -161,7 +168,7 @@ public class DataSorter implements Comparator {
 
             thread = ppTrial.getDataSource().getMeanData();
             ppThread = new PPThread(thread, this.ppTrial);
-            for (Iterator it = thread.getFunctionProfiles().iterator(); it.hasNext();) {
+            for (Iterator<FunctionProfile> it = thread.getFunctionProfiles().iterator(); it.hasNext();) {
                 FunctionProfile functionProfile = (FunctionProfile) it.next();
                 if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())
                         && functionProfile.getFunction().isPhaseMember(phase)) {
@@ -189,12 +196,12 @@ public class DataSorter implements Comparator {
 
         }
 
-        for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+        for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
             thread = (Thread) it.next();
 
             ppThread = new PPThread(thread, this.ppTrial);
-            for (Iterator it2 = order.getFunctionListIterator(); it2.hasNext();) {
-                PPFunctionProfile orderfp = (PPFunctionProfile) it2.next();
+            for (Iterator<PPFunctionProfile> it2 = order.getFunctionListIterator(); it2.hasNext();) {
+                PPFunctionProfile orderfp = it2.next();
 
                 FunctionProfile fp = thread.getFunctionProfile(orderfp.getFunction());
 
@@ -249,12 +256,12 @@ public class DataSorter implements Comparator {
         return threads;
     }
 
-    private void addThread(List threads, List order, Thread thread) {
+    private void addThread(List<List<FunctionProfile>> threads, List<FunctionProfile> order, Thread thread) {
 
-        List list = new ArrayList();
+        List<FunctionProfile> list = new ArrayList<FunctionProfile>();
 
         for (int i = 0, n = order.size(); i < n; i++) {
-            FunctionProfile orderfp = (FunctionProfile) order.get(i);
+            FunctionProfile orderfp = order.get(i);
 
             FunctionProfile fp = thread.getFunctionProfile(orderfp.getFunction());
 
@@ -273,16 +280,16 @@ public class DataSorter implements Comparator {
      *
      * @return a list of lists of FunctionProfiles
      */
-    public List getAllFunctionProfilesMinimal() {
+    public List<List<FunctionProfile>> getAllFunctionProfilesMinimal() {
         long time = System.currentTimeMillis();
 
         // a list of lists of FunctionProfiles
-        List threads = new ArrayList();
+        List<List<FunctionProfile>> threads = new ArrayList<List<FunctionProfile>>();
 
         // a list of FunctionProfiles that represents the ordering
-        List order = new ArrayList();
+        List<FunctionProfile> order = new ArrayList<FunctionProfile>();
 
-        List meanProfiles = ppTrial.getDataSource().getMeanData().getFunctionProfiles();
+        List<FunctionProfile> meanProfiles = ppTrial.getDataSource().getMeanData().getFunctionProfiles();
 
         for (int i = 0, n = meanProfiles.size(); i < n; i++) {
             FunctionProfile functionProfile = (FunctionProfile) meanProfiles.get(i);
@@ -305,7 +312,7 @@ public class DataSorter implements Comparator {
         threads.add(order);
 
         // add all the other threads
-        for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+        for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
             Thread thread = (Thread) it.next();
             addThread(threads, order, thread);
         }
@@ -319,9 +326,9 @@ public class DataSorter implements Comparator {
     public FunctionOrdering getOrdering() {
         long time = System.currentTimeMillis();
 
-        List order = new ArrayList();
+        List<FunctionProfile> order = new ArrayList<FunctionProfile>();
 
-        List meanProfiles = ppTrial.getDataSource().getMeanData().getFunctionProfiles();
+        List<FunctionProfile> meanProfiles = ppTrial.getDataSource().getMeanData().getFunctionProfiles();
 
         for (int i = 0, n = meanProfiles.size(); i < n; i++) {
             FunctionProfile functionProfile = (FunctionProfile) meanProfiles.get(i);
@@ -335,7 +342,7 @@ public class DataSorter implements Comparator {
 
         Function functions[] = new Function[order.size()];
         for (int i = 0, n = order.size(); i < n; i++) {
-            functions[i] = ((FunctionProfile) order.get(i)).getFunction();
+            functions[i] = order.get(i).getFunction();
         }
 
         FunctionOrdering fo = new FunctionOrdering(this);
@@ -347,8 +354,8 @@ public class DataSorter implements Comparator {
         return fo;
     }
 
-    public List getThreads() {
-        ArrayList threads = new ArrayList();
+    public List<Thread> getThreads() {
+        ArrayList<Thread> threads = new ArrayList<Thread>();
         if (ppTrial.getDataSource().getAllThreads().size() > 1) {
             threads.add(ppTrial.getDataSource().getStdDevData());
             //threads.add(ppTrial.getDataSource().getTotalData());
@@ -356,15 +363,15 @@ public class DataSorter implements Comparator {
         }
 
         // add all the other threads
-        for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+        for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
             Thread thread = (Thread) it.next();
             threads.add(thread);
         }
         return threads;
     }
 
-    public List getFunctionData(Function function, boolean includeMean, boolean includeStdDev) {
-        List newList = new ArrayList();
+    public List<PPFunctionProfile> getFunctionData(Function function, boolean includeMean, boolean includeStdDev) {
+        List<PPFunctionProfile> newList = new ArrayList<PPFunctionProfile>();
 
         Thread thread;
 
@@ -398,7 +405,7 @@ public class DataSorter implements Comparator {
 
             }
         }
-        for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+        for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
             thread = (Thread) it.next();
             FunctionProfile functionProfile = thread.getFunctionProfile(function);
             if (functionProfile != null) {
@@ -412,15 +419,15 @@ public class DataSorter implements Comparator {
         return newList;
     }
 
-    public List getFunctionAcrossPhases(Function function, Thread thread) {
-        List newList = new ArrayList();
+    public List<PPFunctionProfile> getFunctionAcrossPhases(Function function, Thread thread) {
+        List<PPFunctionProfile> newList = new ArrayList<PPFunctionProfile>();
 
         String functionName = function.getName();
         if (function.isCallPathFunction()) {
             functionName = functionName.substring(functionName.indexOf("=>") + 2).trim();
         }
 
-        for (Iterator it = thread.getFunctionProfileIterator(); it.hasNext();) {
+        for (Iterator<FunctionProfile> it = thread.getFunctionProfileIterator(); it.hasNext();) {
             FunctionProfile functionProfile = (FunctionProfile) it.next();
             if (functionProfile != null) {
 
@@ -438,8 +445,8 @@ public class DataSorter implements Comparator {
         return newList;
     }
 
-    public List getUserEventData(UserEvent userEvent) {
-        List newList = new ArrayList();
+    public List<PPUserEventProfile> getUserEventData(UserEvent userEvent) {
+        List<PPUserEventProfile> newList = new ArrayList<PPUserEventProfile>();
 
         UserEventProfile userEventProfile;
 
@@ -459,7 +466,7 @@ public class DataSorter implements Comparator {
             newList.add(ppUserEventProfile);
         }
 
-        for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+        for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
             thread = (Thread) it.next();
 
             userEventProfile = thread.getUserEventProfile(userEvent);
@@ -476,7 +483,7 @@ public class DataSorter implements Comparator {
     // Comparison stuff
     //////////////////////////////////////////////////////////////////////////
 
-    public int compare(Object arg0, Object arg1) {
+    public int compare(FunctionProfile arg0, FunctionProfile arg1) {
         FunctionProfile left = (FunctionProfile) arg0;
         FunctionProfile right = (FunctionProfile) arg1;
         if (descendingOrder) {

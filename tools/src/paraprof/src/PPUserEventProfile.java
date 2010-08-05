@@ -22,11 +22,13 @@ import java.awt.Color;
 
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
-import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.Thread;
+import edu.uoregon.tau.perfdmf.UserEvent;
+import edu.uoregon.tau.perfdmf.UserEventProfile;
+import edu.uoregon.tau.perfdmf.UtilFncs;
 
 
-public class PPUserEventProfile implements Comparable {
+public class PPUserEventProfile implements Comparable<PPUserEventProfile> {
 
     //Instance data.
 
@@ -99,14 +101,30 @@ public class PPUserEventProfile implements Comparable {
     }
 
     public String getUserEventStatString(int precision) {
-        int initialBufferLength = 90;
+        int initialBufferLength = 108;
         int position = 0;
         char[] statStringArray = new char[initialBufferLength];
         char[] tmpArray;
         String tmpString;
 
-        PPUserEventProfile.insertSpaces(statStringArray, 0, 90);
+        PPUserEventProfile.insertSpaces(statStringArray, 0, 108);
 
+        String name = this.getUserEventName();
+        if (name.startsWith("Memory Utilization (heap, in KB)") || name.contains("/s)"))
+        {
+        	tmpString = "-";
+        }
+        else{
+        	tmpString = UtilFncs.getOutputString(0, this.getNumSamples()*this.getMeanValue(), precision, false);
+        }
+        
+        tmpArray = tmpString.toCharArray();
+        for (int i = 0; i < tmpArray.length; i++) {
+            statStringArray[position] = tmpArray[i];
+            position++;
+        }
+        
+        position = 18;
         tmpString = UtilFncs.getOutputString(0, this.getNumSamples(), precision, false);
         tmpArray = tmpString.toCharArray();
         for (int i = 0; i < tmpArray.length; i++) {
@@ -114,7 +132,7 @@ public class PPUserEventProfile implements Comparable {
             position++;
         }
 
-        position = 18;
+        position = 36;
         tmpString = UtilFncs.getOutputString(0, this.getMaxValue(), precision, false);
         tmpArray = tmpString.toCharArray();
         for (int i = 0; i < tmpArray.length; i++) {
@@ -122,7 +140,7 @@ public class PPUserEventProfile implements Comparable {
             position++;
         }
 
-        position = 36;
+        position = 54;
         tmpString = UtilFncs.getOutputString(0, this.getMinValue(), precision, false);
         tmpArray = tmpString.toCharArray();
         for (int i = 0; i < tmpArray.length; i++) {
@@ -130,7 +148,7 @@ public class PPUserEventProfile implements Comparable {
             position++;
         }
 
-        position = 54;
+        position = 72;
         tmpString = UtilFncs.getOutputString(0, this.getMeanValue(), precision, false);
         tmpArray = tmpString.toCharArray();
         for (int i = 0; i < tmpArray.length; i++) {
@@ -138,7 +156,7 @@ public class PPUserEventProfile implements Comparable {
             position++;
         }
 
-        position = 72;
+        position = 90;
         tmpString = UtilFncs.getOutputString(0, this.getStdDev(), precision, false);
         tmpArray = tmpString.toCharArray();
         for (int i = 0; i < tmpArray.length; i++) {
@@ -164,7 +182,7 @@ public class PPUserEventProfile implements Comparable {
         return value;
     }
 
-    public int compareTo(Object inObject) {
+    public int compareTo(PPUserEventProfile inObject) {
         UserEventValueType valueType = dataSorter.getUserEventValueType();
 
         PPUserEventProfile other = (PPUserEventProfile) inObject;
@@ -186,6 +204,11 @@ public class PPUserEventProfile implements Comparable {
             //                    dataSorter.getSelectedMetricID())));
             //
         } else if (dataSorter.getSortType() == SortType.VALUE || dataSorter.getSortType() == SortType.MEAN_VALUE) {
+        	
+        	if(valueType.toString().equals("Total")&&!dataSorter.getDescendingOrder()){
+        		return compareTotalHelper(valueType.getValue(this.getUserEventProfile()), valueType.getValue(other.getUserEventProfile()));
+        	}
+        	
             return checkDescending(compareToHelper(valueType.getValue(this.getUserEventProfile()),
                     valueType.getValue(other.getUserEventProfile())));
 
@@ -263,6 +286,27 @@ public class PPUserEventProfile implements Comparable {
     //        }
     //    }
     private int compareToHelper(double d1, double d2) {
+        double result = d1 - d2;
+        if (result < 0.00)
+            return -1;
+        else if (result == 0.00)
+            return 0;
+        else
+            return 1;
+    }
+    
+    private int compareTotalHelper(double d1, double d2) {
+    	
+    	if(d1==-1&&d2==-1)
+    		return 0;
+    	if(d1==-1){
+    		return 1;
+    	}
+    	if(d2==-1)
+    	{
+    		return -1;
+    	}
+    	
         double result = d1 - d2;
         if (result < 0.00)
             return -1;

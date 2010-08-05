@@ -30,8 +30,8 @@ public class ObjectFilter extends Observable {
         showAll();
     }
 
-    public List getFilteredObjects() {
-        List list = new ArrayList();
+    public List<Object> getFilteredObjects() {
+        List<Object> list = new ArrayList<Object>();
         for (int i = 0; i < objects.length; i++) {
             if (filter[i]) {
                 list.add(objects[i]);

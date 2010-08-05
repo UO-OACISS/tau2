@@ -43,8 +43,8 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
     private FontMetrics fontMetrics = null;
 
     //Some drawing details.
-    private Vector drawObjectsComplete = null;
-    private Vector drawObjects = null;
+    private Vector<CallPathDrawObject> drawObjectsComplete = null;
+    private Vector<CallPathDrawObject> drawObjects = null;
 
     private int base = 20;
     private int startPosition = 0;
@@ -108,14 +108,14 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
     }
 
     private void createDrawObjectsComplete() {
-        drawObjectsComplete = new Vector();
+        drawObjectsComplete = new Vector<CallPathDrawObject>();
         //Add five spacer objects representing the column headings.
         drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
         drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
         drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
         drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
 
-        Iterator l1 = window.getDataIterator();
+        Iterator<Comparable> l1 = window.getDataIterator();
         while (l1.hasNext()) {
             PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) l1.next();
             //Don't draw callpath functions, only nodes
@@ -175,14 +175,14 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
     }
 
     private void createDrawObjects() {
-        drawObjects = new Vector();
-        Vector holdingPattern = new Vector();
+        drawObjects = new Vector<CallPathDrawObject>();
+        Vector<CallPathDrawObject> holdingPattern = new Vector<CallPathDrawObject>();
         boolean adding = false;
         int state = -1;
         int size = -1;
         if (window.showCollapsedView()) {
-            for (Enumeration e = drawObjectsComplete.elements(); e.hasMoreElements();) {
-                CallPathDrawObject callPathDrawObject = (CallPathDrawObject) e.nextElement();
+            for (Enumeration<CallPathDrawObject> e = drawObjectsComplete.elements(); e.hasMoreElements();) {
+                CallPathDrawObject callPathDrawObject = e.nextElement();
                 if (callPathDrawObject.isSpacer())
                     state = 0;
                 else if (callPathDrawObject.isParent()) {
@@ -257,10 +257,10 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
 
     private void setSearchLines() {
         if (searcher.getSearchLines() == null) {
-            Vector searchLines = new Vector();
+            Vector<String> searchLines = new Vector<String>();
             for (int i = 0; i < drawObjects.size(); i++) {
                 String line;
-                CallPathDrawObject callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(i);
+                CallPathDrawObject callPathDrawObject = drawObjects.elementAt(i);
                 if (i == 1) {
                     line = normalHeader;
                 } else if (i == 2) {
@@ -343,8 +343,8 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
 
             int maxNameLength = 0;
             yHeightNeeded = 0;
-            for (Enumeration e = drawObjects.elements(); e.hasMoreElements();) {
-                callPathDrawObject = (CallPathDrawObject) e.nextElement();
+            for (Enumeration<CallPathDrawObject> e = drawObjects.elements(); e.hasMoreElements();) {
+                callPathDrawObject = e.nextElement();
                 yHeightNeeded = yHeightNeeded + rowHeight;
 
                 if (!callPathDrawObject.isSpacer()) {
@@ -405,7 +405,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
             searcher.drawHighlights(g2D, base, yCoord, i);
             g2D.setColor(Color.black);
 
-            callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(i);
+            callPathDrawObject = drawObjects.elementAt(i);
             if (i == 1) {
                 String header = normalHeader;
                 g2D.drawString(header, base, yCoord);
@@ -465,7 +465,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
             int index = (yCoord - 1) / (rowHeight);
 
             if (index < drawObjects.size()) {
-                final CallPathDrawObject callPathDrawObject = (CallPathDrawObject) drawObjects.elementAt(index);
+                final CallPathDrawObject callPathDrawObject = drawObjects.elementAt(index);
                 if (!callPathDrawObject.isSpacer()) {
                     if (ParaProfUtils.rightClick(evt)) {
                         JPopupMenu popup = ParaProfUtils.createFunctionClickPopUp(ppTrial, callPathDrawObject.getFunction(),
@@ -481,7 +481,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
                                     Function function = callPathDrawObject.getFunction();
                                     int size = drawObjects.size();
                                     for (int i = 0; i < size; i++) {
-                                        CallPathDrawObject callPathDrawObject2 = (CallPathDrawObject) drawObjects.elementAt(i);
+                                        CallPathDrawObject callPathDrawObject2 = drawObjects.elementAt(i);
                                         if ((callPathDrawObject2.getFunction() == function)
                                                 && (!callPathDrawObject2.isParentChild())) {
                                             Dimension dimension = window.getViewportSize();

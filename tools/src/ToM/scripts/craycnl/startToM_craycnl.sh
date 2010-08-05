@@ -2,18 +2,39 @@
 
 RUN=aprun
 
+#0
+profiledir=$1
+shift
+#1
 nprocs=$1
-feName=$2
-numBE=$3
-fanout=$4
-depth=$5
+shift
+#2
+feName=$1
+shift
+#3
+numBE=$1
+shift
+#4
+fanout=$1
+shift
+#5
+numTreeNodes=$1
+shift
+#command (rest of the arguments)
+command=$*
 
-hostfile=tophosts.txt
-topfile=topology.txt
-logdir=mrnlog
+export PROFILEDIR=$profiledir
+echo $PROFILEDIR
+
+mrnethostfile=$PROFILEDIR/mrnethosts.txt
+hostfile=$PROFILEDIR/tophosts.txt
+topfile=$PROFILEDIR/topology.txt
+logdir=$PROFILEDIR/mrnlog
 
 # echo $CRAY_ROOTFS
 
+# clear the atomic file before proceeding.
+rm -f $PROFILEDIR/ToM_FE_Atomic
 mkdir -p $logdir
 
 # probe ranks to generate host file for MRNet topology
@@ -25,15 +46,13 @@ export MRNET_DEBUG_LOG_DIRECTORY="${logdir}"
 # XPLAT_RESOLVE_HOSTS=0 is essential for Cray CNL operations.
 export XPLAT_RESOLVE_HOSTS=0
 
-# Cray CNL requires the front-end process to be executed on the login
-#   node.
 cat /proc/cray_xt/nid | awk '{printf("nid%05u\n", $1); }' > $hostfile
 
-cat mrnethosts.txt >> $hostfile
+cat $mrnethostfile >> $hostfile
 
 # generate the MRNet topology
-mrnet_topgen -b $fanout^$depth $hostfile $topfile
+mrnet_topgen -k $fanout@$numTreeNodes $hostfile $topfile
 
 # feed generated topology file to the designated front-end
 $feName $topfile $numBE &
-
+$RUN -n $numBE $command

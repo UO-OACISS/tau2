@@ -57,7 +57,7 @@ public class XMLModel extends AbstractTreeTableModel implements TreeTableModel {
         return cNames[column];
     }
 
-    public Class<?> getColumnClass(int column) {
+    public Class getColumnClass(int column) {
         return cTypes[column];
     }
 

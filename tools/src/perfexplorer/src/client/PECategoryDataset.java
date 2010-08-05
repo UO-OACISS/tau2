@@ -128,7 +128,7 @@ public class PECategoryDataset extends AbstractDataset
      *
      * @return The keys.
      */
-    public List getRowKeys() {
+    public List<Comparable> getRowKeys() {
         return this.data.getRowKeys();
     }
 

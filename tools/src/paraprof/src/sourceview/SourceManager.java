@@ -19,10 +19,10 @@ public class SourceManager extends JFrame {
     private JList dirList;
     private SourceRegion toFind;
 
-    private Map sourceViewers = new TreeMap();
+    private Map<File, SourceViewer> sourceViewers = new TreeMap<File, SourceViewer>();
 
-    public ArrayList getCurrentElements() {
-        ArrayList list = new ArrayList();
+    public ArrayList<Object> getCurrentElements() {
+        ArrayList<Object> list = new ArrayList<Object>();
         for (int i = 0; i < listModel.getSize(); i++) {
             list.add(listModel.getElementAt(i));
         }
@@ -42,7 +42,7 @@ public class SourceManager extends JFrame {
         for (int j = 0; j < list.length; j++) {
             if (match(region.getFilename(), list[j].getName())) {
                 //System.out.println("found it");
-                SourceViewer sourceViewer = (SourceViewer) sourceViewers.get(list[j]);
+                SourceViewer sourceViewer = sourceViewers.get(list[j]);
                 if (sourceViewer == null) {
                     sourceViewer = new SourceViewer(list[j]);
                     sourceViewers.put(list[j], sourceViewer);
@@ -100,7 +100,7 @@ public class SourceManager extends JFrame {
         }
     }
 
-    public SourceManager(List initialElements) {
+    public SourceManager(List<Object> initialElements) {
 
         Container contentPane = getContentPane();
         contentPane.setLayout(new GridBagLayout());

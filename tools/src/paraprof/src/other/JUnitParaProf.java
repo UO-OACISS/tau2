@@ -22,7 +22,7 @@ import edu.uoregon.tau.perfdmf.*;
 
 public class JUnitParaProf extends JFCTestCase {
 
-    private Vector trials = new Vector();
+    private Vector<ParaProfTrial> trials = new Vector<ParaProfTrial>();
 
     public void wildDerivedMetrics(ParaProfTrial ppTrial) {
 
@@ -64,9 +64,9 @@ public class JUnitParaProf extends JFCTestCase {
 
         ParaProf.paraProfManagerWindow.addTrial(application, experiment, files, type, false, false);
 
-        Vector trials = experiment.getTrials();
+        Vector<ParaProfTrial> trials = experiment.getTrials();
 
-        ParaProfTrial ppTrial = (ParaProfTrial) trials.get(0);
+        ParaProfTrial ppTrial = trials.get(0);
 
         while (ppTrial.loading()) {
             sleep(500);
@@ -88,7 +88,7 @@ public class JUnitParaProf extends JFCTestCase {
 
         for (int i = 0; i < trials.size(); i++) {
             int count = limit;
-            ParaProfTrial ppTrial = (ParaProfTrial) trials.get(i);
+            ParaProfTrial ppTrial = trials.get(i);
             System.out.println("Trial:" + ppTrial.getName());
 
             for (Iterator it = ppTrial.getDataSource().getFunctions(); it.hasNext() && count-- != 0;) {
@@ -250,7 +250,7 @@ public class JUnitParaProf extends JFCTestCase {
 
         for (int i = 0; i < trials.size(); i++) {
 
-            ParaProfTrial ppTrial = (ParaProfTrial) trials.get(i);
+            ParaProfTrial ppTrial = trials.get(i);
             System.out.println("Trial:" + ppTrial.getName());
 
             wildDerivedMetrics(ppTrial);
@@ -349,7 +349,7 @@ public class JUnitParaProf extends JFCTestCase {
         try {
             for (int i = 0; i < trials.size(); i++) {
                 int count = limit;
-                ParaProfTrial ppTrial = (ParaProfTrial) trials.get(i);
+                ParaProfTrial ppTrial = trials.get(i);
                 System.out.println("Trial:" + ppTrial.getName());
 
                 for (Iterator it = ppTrial.getDataSource().getFunctions(); it.hasNext() && count-- != 0;) {

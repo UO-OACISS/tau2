@@ -121,8 +121,8 @@ public class Machine implements Serializable {
                 resultSet = dbMeta.getColumns(null, null, "machine_thread_map", "%");
             }
 
-            List nameList = new ArrayList();
-            List typeList = new ArrayList();
+            List<String> nameList = new ArrayList<String>();
+            List<Integer> typeList = new ArrayList<Integer>();
 			boolean seenID = false;
 
             while (resultSet.next() != false) {
@@ -160,8 +160,8 @@ public class Machine implements Serializable {
             Machine.fieldTypes = new int[typeList.size()];
 
             for (int i = 0; i < typeList.size(); i++) {
-                Machine.fieldNames[i] = (String) nameList.get(i);
-                Machine.fieldTypes[i] = ((Integer) typeList.get(i)).intValue();
+                Machine.fieldNames[i] = nameList.get(i);
+                Machine.fieldTypes[i] = typeList.get(i).intValue();
             }
 
         } catch (SQLException e) {
@@ -322,7 +322,7 @@ public class Machine implements Serializable {
         return fieldNames;
     }
 
-    public static List getMachineList(DB db, String whereClause) throws DatabaseException {
+    public static List<Machine> getMachineList(DB db, String whereClause) throws DatabaseException {
         try {
             Machine.getMetaData(db);
 
@@ -343,7 +343,7 @@ public class Machine implements Serializable {
             buf.append(" order by trial, node, context, thread asc ");
 
             // get the results
-            List Machines = new ArrayList();
+            List<Machine> Machines = new ArrayList<Machine>();
 
             ResultSet resultSet = db.executeQuery(buf.toString());
             while (resultSet.next() != false) {

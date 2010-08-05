@@ -22,7 +22,7 @@ import edu.uoregon.tau.perfdmf.Metric;
 public class DataSorterWrapper extends DataSorter {
 
     private DataSorter parentDataSorter;
-    private Map metricMap;
+    private Map<Metric, Metric> metricMap;
     private ParaProfTrial ppTrial;
 
     public DataSorterWrapper(DataSorter dataSorter, ParaProfTrial ppTrial) {
@@ -32,7 +32,7 @@ public class DataSorterWrapper extends DataSorter {
 
         ParaProfTrial parentTrial = dataSorter.getPpTrial();
 
-        metricMap = new HashMap();
+        metricMap = new HashMap<Metric, Metric>();
 
         for (Iterator it = parentTrial.getMetrics().iterator(); it.hasNext();) {
             Metric parentMetric = (Metric)it.next();
@@ -76,7 +76,7 @@ public class DataSorterWrapper extends DataSorter {
     public Metric getSelectedMetric() {
         // map to parent
         Metric parentMetric = parentDataSorter.getSelectedMetric();
-        Metric metric = (Metric) metricMap.get(parentMetric);
+        Metric metric = metricMap.get(parentMetric);
         if (metric == null) {
             return (Metric)ppTrial.getMetrics().get(0);
         }
@@ -86,7 +86,7 @@ public class DataSorterWrapper extends DataSorter {
     public Metric getSortMetric() {
         // map to parent
         Metric parentMetric = parentDataSorter.getSortMetric();
-        Metric metric = (Metric) metricMap.get(parentMetric);
+        Metric metric = metricMap.get(parentMetric);
         if (metric == null) {
             return (Metric)ppTrial.getMetrics().get(0);
         }
