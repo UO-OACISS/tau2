@@ -13,29 +13,27 @@ package edu.uoregon.tau.perfdmf;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.StringReader;
-import java.util.*;
+import java.util.Vector;
 
-import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
 public class IPMDataSource extends DataSource {
-    private int metric = 0;
-    private Function function = null;
-    private FunctionProfile functionProfile = null;
+    //private int metric = 0;
+    //private Function function = null;
+    //private FunctionProfile functionProfile = null;
     private Node node = null;
     private Context context = null;
     private Thread thread = null;
     private int nodeID = -1;
     private int contextID = -1;
     private int threadID = -1;
-    private List v = null;
+    //private List v = null;
     boolean initialized = false;
-    private Hashtable nodeHash = new Hashtable();
-    private int threadCounter = 0;
+    //private Hashtable nodeHash = new Hashtable();
+    //private int threadCounter = 0;
 	private File file = null;
 
     public IPMDataSource(File file) {
@@ -69,7 +67,7 @@ public class IPMDataSource extends DataSource {
             // parse the next file
             xmlreader.parse(new InputSource(new FileInputStream(file)));
 
-            IPMXMLHandler tmpHandler = (IPMXMLHandler) handler;
+            //IPMXMLHandler tmpHandler = (IPMXMLHandler) handler;
 
             time = (System.currentTimeMillis()) - time;
             //System.out.println("Time to process file (in milliseconds): " + time);

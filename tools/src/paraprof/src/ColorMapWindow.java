@@ -1,11 +1,34 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.*;
+import java.util.Iterator;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListCellRenderer;
+import javax.swing.ListSelectionModel;
 
 /**
  * @author amorris
@@ -14,7 +37,11 @@ import javax.swing.*;
  */
 public class ColorMapWindow extends JFrame implements ActionListener, Observer {
 
-    private DefaultListModel listModel;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -7013360998404726801L;
+	private DefaultListModel listModel;
     private JList colorList;
 
     public ColorMapWindow(Component invoker) {
@@ -206,7 +233,12 @@ class ColorMapCellRenderer implements ListCellRenderer {
     public Component getListCellRendererComponent(final JList list, final Object value, final int index,
             final boolean isSelected, final boolean cellHasFocus) {
         return new JPanel() {
-            public void paintComponent(Graphics g) {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = -95023677667807279L;
+
+			public void paintComponent(Graphics g) {
                 super.paintComponent(g);
 
                 String functionName = (String) value;
@@ -215,10 +247,10 @@ class ColorMapCellRenderer implements ListCellRenderer {
                 int xSize = 0;
                 int ySize = 0;
                 int maxXNumFontSize = 0;
-                int maxXFontSize = 0;
-                int maxYFontSize = 0;
-                int thisXFontSize = 0;
-                int thisYFontSize = 0;
+                //int maxXFontSize = 0;
+                //int maxYFontSize = 0;
+               // thisXFontSize = 0;
+                //int thisYFontSize = 0;
                 int barHeight = 0;
 
                 //For this, I will not allow changes in font size.
@@ -229,8 +261,8 @@ class ColorMapCellRenderer implements ListCellRenderer {
                 g.setFont(font);
                 FontMetrics fmFont = g.getFontMetrics(font);
 
-                maxYFontSize = fmFont.getAscent();
-                maxXFontSize = fmFont.stringWidth("0000,0000,0000");
+                //maxYFontSize = fmFont.getAscent();
+                //maxXFontSize = fmFont.stringWidth("0000,0000,0000");
 
                 xSize = getWidth();
                 ySize = getHeight();
@@ -238,9 +270,9 @@ class ColorMapCellRenderer implements ListCellRenderer {
                 String tmpString1 = new String("00" + (ParaProf.colorChooser.getNumberOfColors()));
                 maxXNumFontSize = fmFont.stringWidth(tmpString1);
 
-                String tmpString2 = new String(inColor.getRed() + "," + inColor.getGreen() + "," + inColor.getBlue());
-                thisXFontSize = fmFont.stringWidth(tmpString2);
-                thisYFontSize = maxYFontSize;
+                //String tmpString2 = new String(inColor.getRed() + "," + inColor.getGreen() + "," + inColor.getBlue());
+                //thisXFontSize = fmFont.stringWidth(tmpString2);
+                //thisYFontSize = maxYFontSize;
 
                 g.setColor(isSelected ? list.getSelectionBackground() : list.getBackground());
                 g.fillRect(0, 0, xSize, ySize);
@@ -259,8 +291,7 @@ class ColorMapCellRenderer implements ListCellRenderer {
 
                 g.setColor(isSelected ? list.getSelectionForeground() : list.getForeground());
 
-                int totalNumberOfColors = (ParaProf.colorChooser.getNumberOfColors())
-                        + (ParaProf.colorChooser.getNumberOfGroupColors());
+                //int totalNumberOfColors = (ParaProf.colorChooser.getNumberOfColors())  + (ParaProf.colorChooser.getNumberOfGroupColors());
 
                 g.drawString(functionName, xStringPos1, yStringPos1);
             }

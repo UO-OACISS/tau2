@@ -1,6 +1,10 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.Shape;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.Transferable;
@@ -255,7 +259,7 @@ public class Searcher implements Searchable, MouseListener, MouseMotionListener,
 
     public void drawHighlights(Graphics2D g2D, int x, int y, int line) {
         String text = searchLines.get(line);
-        String originalText = searchLines.get(line);
+        //String originalText = searchLines.get(line);
 
         if (text.length() < 1) {
             return;

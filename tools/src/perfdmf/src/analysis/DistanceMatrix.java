@@ -159,7 +159,7 @@ public class DistanceMatrix {
 		// multiply the matrix value by 128.0 and convert to 
 		// an integer.
 		double factor = scaledRange ? 255.0 / maxDistance : 127.5;
-		int i, j, k, l;
+		int i, j;//, k, l;
 		int idx = 0;
 
 		if (triangle) {
@@ -192,7 +192,7 @@ public class DistanceMatrix {
 		// multiply the matrix value by 22.5 and convert to 
 		// an integer.
 		double factor = scaledRange ? 45.0 / maxDistance : 22.5;
-		int i, j, k, l;
+		int i, j;//, k, l;
 		int idx = 0;
 
 		if (triangle) {

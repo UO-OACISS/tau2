@@ -1,12 +1,36 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JColorChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListCellRenderer;
+import javax.swing.ListSelectionModel;
 import javax.swing.colorchooser.ColorSelectionModel;
 
 /**
@@ -16,7 +40,11 @@ import javax.swing.colorchooser.ColorSelectionModel;
  */
 public class ColorDefaultsWindow extends JFrame implements ActionListener, MouseListener {
 
-    private ColorChooser colorChooser;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -552939062619209145L;
+	private ColorChooser colorChooser;
     private ColorSelectionModel clrModel;
     private JColorChooser clrChooser;
     private DefaultListModel listModel;
@@ -324,17 +352,22 @@ class CustomCellRenderer implements ListCellRenderer {
     public Component getListCellRendererComponent(final JList list, final Object value, final int index,
             final boolean isSelected, final boolean cellHasFocus) {
         return new JPanel() {
-            public void paintComponent(Graphics g) {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = -1614728767463124603L;
+
+			public void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Color inColor = (Color) value;
 
                 int xSize = 0;
                 int ySize = 0;
                 int maxXNumFontSize = 0;
-                int maxXFontSize = 0;
-                int maxYFontSize = 0;
-                int thisXFontSize = 0;
-                int thisYFontSize = 0;
+                //int maxXFontSize = 0;
+                //int maxYFontSize = 0;
+                //int thisXFontSize = 0;
+                //int thisYFontSize = 0;
                 int barHeight = 0;
 
                 //For this, I will not allow changes in font size.
@@ -345,8 +378,8 @@ class CustomCellRenderer implements ListCellRenderer {
                 g.setFont(font);
                 FontMetrics fmFont = g.getFontMetrics(font);
 
-                maxYFontSize = fmFont.getAscent();
-                maxXFontSize = fmFont.stringWidth("0000,0000,0000");
+                //maxYFontSize = fmFont.getAscent();
+                //maxXFontSize = fmFont.stringWidth("0000,0000,0000");
 
                 xSize = getWidth();
                 ySize = getHeight();
@@ -354,10 +387,9 @@ class CustomCellRenderer implements ListCellRenderer {
                 String tmpString1 = new String("00" + (ParaProf.colorChooser.getNumberOfColors()));
                 maxXNumFontSize = fmFont.stringWidth(tmpString1);
 
-                String tmpString2 = new String(inColor.getRed() + "," + inColor.getGreen() + ","
-                        + inColor.getBlue());
-                thisXFontSize = fmFont.stringWidth(tmpString2);
-                thisYFontSize = maxYFontSize;
+                //String tmpString2 = new String(inColor.getRed() + "," + inColor.getGreen() + "," + inColor.getBlue());
+                //thisXFontSize = fmFont.stringWidth(tmpString2);
+                //thisYFontSize = maxYFontSize;
 
                 g.setColor(isSelected ? list.getSelectionBackground() : list.getBackground());
                 g.fillRect(0, 0, xSize, ySize);

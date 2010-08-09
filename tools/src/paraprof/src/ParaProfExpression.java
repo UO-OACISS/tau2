@@ -10,10 +10,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
-import javax.swing.JOptionPane;
-
-
-import edu.uoregon.tau.perfdmf.Function;
 import edu.uoregon.tau.perfdmf.FunctionProfile;
 import edu.uoregon.tau.perfdmf.Thread;
 
@@ -35,7 +31,7 @@ public class ParaProfExpression {
 	 * @throws ParsingException
 	 * @throws MetricNotFoundException 
 	 */
-	public  void evaluateExpression(String expression, List trials) throws ParsingException, MetricNotFoundException{
+	public  void evaluateExpression(String expression, List<ParaProfTrial> trials) throws ParsingException, MetricNotFoundException{
 		char[] array = expression.toCharArray();
 		String newName = null;
 		//check for =
@@ -93,14 +89,14 @@ public class ParaProfExpression {
 	}
 
 
-	public  String evaluateExpressions(String expressions, List trials) throws ParsingException, IOException, MetricNotFoundException{
+	public  String evaluateExpressions(String expressions, List<ParaProfTrial> trials) throws ParsingException, IOException, MetricNotFoundException{
 		return evaluateMany(new LineNumberReader(new CharArrayReader(expressions.toCharArray())),trials);
 	}
-	public  String evaluateFile(String file, List trials) throws ParsingException, IOException, MetricNotFoundException{
+	public  String evaluateFile(String file, List<ParaProfTrial> trials) throws ParsingException, IOException, MetricNotFoundException{
 		LineNumberReader scan = new LineNumberReader(new FileReader(new File(file)));
 		return evaluateMany(scan,trials);
 	}
-	private  String evaluateMany(LineNumberReader scan, List trials) throws ParsingException, IOException, MetricNotFoundException{
+	private  String evaluateMany(LineNumberReader scan, List<ParaProfTrial> trials) throws ParsingException, IOException, MetricNotFoundException{
 		String line = scan.readLine();
 
 		while(line !=null){
@@ -139,9 +135,12 @@ public static boolean validate(String expression){
 
 				if (isOperation(equation.get(i))) {
 					try{
-						Object oper = equation.remove(i);
-						 Object second = equation.remove(i - 1);
-						 Object first = equation.remove(i - 2);
+						//Object oper = 
+							equation.remove(i);
+						 //Object second = 
+							 equation.remove(i - 1);
+						 //Object first = 
+							 equation.remove(i - 2);
 						i = i - 2;
 						
 						equation.add(i, "Intermedate");
@@ -355,9 +354,9 @@ public static boolean validate(String expression){
         int metric = newMetric.getID();
         //            trialOpA.setSelectedMetricID(metric);
 
-        Iterator l = trial.getDataSource().getFunctions();
+        Iterator<FunctionProfile> l;// = trial.getDataSource().getFunctions();
 
-        for (Iterator it = trial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+        for (Iterator<Thread> it = trial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
             Thread thread = (Thread) it.next();
             thread.addMetric();
             l = thread.getFunctionProfileIterator();

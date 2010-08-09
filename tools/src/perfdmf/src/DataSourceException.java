@@ -2,7 +2,11 @@ package edu.uoregon.tau.perfdmf;
 
 public class DataSourceException extends RuntimeException {
 
-    private Exception exception;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -5113639805189179923L;
+	private Exception exception;
     private String message;
     private String filename;
 

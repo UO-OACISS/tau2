@@ -1,15 +1,23 @@
  package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
+import java.util.StringTokenizer;
 
 import edu.uoregon.tau.common.TrackerInputStream;
 
 public class GPTLDataSource extends DataSource {
 
-	private int linenumber = 0;
-	private int currentProcess = 0;
-	private int currentThread = 0;
+	//private int linenumber = 0;
+	//private int currentProcess = 0;
+	//private int currentThread = 0;
 	private File file = null;
 	private GlobalData globalData = null;
     
@@ -40,7 +48,7 @@ public class GPTLDataSource extends DataSource {
         Node node = null;
         Context context = null;
         Thread thread = null;
-        int nodeID = -1;
+        //int nodeID = -1;
 
 
 		//System.out.println("Processing " + file + ", please wait ......");
@@ -413,6 +421,7 @@ public class GPTLDataSource extends DataSource {
 	}
 
 	private class GlobalData {
+		@SuppressWarnings("unused")
 		public int numTasks = 0;
 		public List<String> metrics = new ArrayList<String>();
 	}
@@ -459,6 +468,7 @@ public class GPTLDataSource extends DataSource {
 			}
 			return exclusive;
 		}
+		@SuppressWarnings("unused")
 		public boolean hasChildren() {
 			if (children.size() > 0) return true;
 			return false;

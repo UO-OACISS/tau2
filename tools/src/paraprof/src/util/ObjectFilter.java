@@ -9,10 +9,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JFrame;
+import javax.swing.JScrollPane;
 
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.ParaProfUtils;
+import edu.uoregon.tau.perfdmf.Snapshot;
 
 public class ObjectFilter extends Observable {
     private Object objects[];
@@ -24,7 +28,7 @@ public class ObjectFilter extends Observable {
 
     private JFrame frame;
 
-    public ObjectFilter(List objects) {
+    public ObjectFilter(List<Snapshot> objects) {
         this.objects = objects.toArray();
         filter = new boolean[this.objects.length];
         showAll();

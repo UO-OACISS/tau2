@@ -1,26 +1,52 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.Iterator;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
 import edu.uoregon.tau.common.TauRuntimeException;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfdmf.FunctionProfile;
 import edu.uoregon.tau.perfdmf.Group;
-import edu.uoregon.tau.perfdmf.UtilFncs;
 
 public class SelectiveFileGenerator extends JFrame {
 
-    private JCheckBox excludeThrottled = new JCheckBox("Exclude Throttled Routines", true);
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 363488285988461673L;
+	private JCheckBox excludeThrottled = new JCheckBox("Exclude Throttled Routines", true);
     private JCheckBox excludeLightweight = new JCheckBox("Exclude Lightweight Routines", true);
     private JTextField percall = new JTextField("10");
     private JTextField numcalls = new JTextField("100000");
-    private JTextArea includedFunctions = new JTextArea();
+    //private JTextArea includedFunctions = new JTextArea();
     private JTextArea excludedFunctions = new JTextArea();
 
     private JLabel location = new JLabel("Output File:");
@@ -266,12 +292,12 @@ public class SelectiveFileGenerator extends JFrame {
         }
     }
 
-    private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
-        gbc.gridx = x;
-        gbc.gridy = y;
-        gbc.gridwidth = w;
-        gbc.gridheight = h;
-        getContentPane().add(c, gbc);
-    }
+//    private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
+//        gbc.gridx = x;
+//        gbc.gridy = y;
+//        gbc.gridwidth = w;
+//        gbc.gridheight = h;
+//        getContentPane().add(c, gbc);
+//    }
 
 }

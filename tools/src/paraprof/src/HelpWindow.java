@@ -9,20 +9,35 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Observable;
 import java.util.Observer;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.border.Border;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
 public class HelpWindow extends JFrame implements ActionListener, Observer {
 
-    //General.
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -3689599495979927735L;
+	//General.
     int windowWidth = 750;
     int windowHeight = 500;
 

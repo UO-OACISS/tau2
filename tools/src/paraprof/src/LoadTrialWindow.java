@@ -1,11 +1,24 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JTextField;
 
 import edu.uoregon.tau.perfdmf.DataSource;
 
@@ -18,7 +31,12 @@ import edu.uoregon.tau.perfdmf.DataSource;
  */
 public class LoadTrialWindow extends JFrame implements ActionListener {
 
-    private static int defaultIndex;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 6863218330000263005L;
+
+	private static int defaultIndex;
 
     static String lastDirectory;
 

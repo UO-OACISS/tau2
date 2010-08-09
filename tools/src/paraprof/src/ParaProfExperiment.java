@@ -15,13 +15,16 @@ import java.util.Vector;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
-import edu.uoregon.tau.perfdmf.Database;
 import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.database.DB;
 
 public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUserObject {
-    private ParaProfApplication application = null;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 8687758673657262802L;
+	private ParaProfApplication application = null;
     private DefaultMutableTreeNode defaultMutableTreeNode = null;
     private TreePath treePath = null;
     private boolean dBExperiment = false;

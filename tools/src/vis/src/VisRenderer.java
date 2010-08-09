@@ -6,8 +6,17 @@
  */
 package edu.uoregon.tau.vis;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -17,7 +26,13 @@ import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.glu.GLU;
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -63,7 +78,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
 
     // conversion to/from degress/radians
     private final static float DTOR = 0.0174532925f;
-    private final static float RTOD = 57.2957795f;
+    //private final static float RTOD = 57.2957795f;
 
     // sensitivity settings
     private final static float lateralSense = 1 * DTOR;
@@ -81,7 +96,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     private float camera_far = 500.0f;
     private float camera_focallength = 50.0f;
 
-    private List shapes = new ArrayList(); // The list of shapes to draw
+    private List<Shape> shapes = new ArrayList<Shape>(); // The list of shapes to draw
 
     private float fps; // Frames per Second
     private int framesRendered;
@@ -526,7 +541,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
             }
 
             for (int i = 0; i < shapes.size(); i++) {
-                Shape shape = (Shape) shapes.get(i);
+                Shape shape = shapes.get(i);
                 shape.render(this);
             }
 
@@ -620,10 +635,10 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
     public void mouseDragged(MouseEvent e) {
         int x = e.getX();
         int y = e.getY();
-        Dimension size = e.getComponent().getSize();
+        //Dimension size = e.getComponent().getSize();
 
-        float thetaY = 360.0f * ((float) (x - prevMouseX) / (float) size.width);
-        float thetaX = 360.0f * ((float) (prevMouseY - y) / (float) size.height);
+        //float thetaY = 360.0f * ((float) (x - prevMouseX) / (float) size.width);
+        //float thetaX = 360.0f * ((float) (prevMouseY - y) / (float) size.height);
 
         float dy, dx;
         dx = x - prevMouseX;
@@ -991,7 +1006,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
             }
             
             for (int i = 0; i < shapes.size(); i++) {
-                Shape shape = (Shape) shapes.get(i);
+                Shape shape = shapes.get(i);
                 shape.resetCanvas();
             }
             redraw();

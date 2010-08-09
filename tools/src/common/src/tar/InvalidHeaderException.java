@@ -26,6 +26,11 @@ public class
 InvalidHeaderException extends IOException
 	{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 989484746781024398L;
+
 	public
 	InvalidHeaderException()
 		{

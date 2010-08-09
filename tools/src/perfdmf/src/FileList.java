@@ -54,11 +54,12 @@ class ProfileFileFilter implements FilenameFilter {
 
 class RangeProfileFilter implements FilenameFilter{
 	String prefix;
-	String range;
+	RangeBox rb;
 	
 	public RangeProfileFilter(String prefix, String range){
 		this.prefix=prefix;
-		this.range=range;
+		
+		this.rb=parseRange(range);
 	}
 	
     static class RangeBox{
@@ -93,11 +94,11 @@ class RangeProfileFilter implements FilenameFilter{
     }
     
     private static RangeBox parseRange(String range){
-    	String[] rangecut = range.split(",");
+    	String[] rangecut = range.split(":");
     	String check=null;
     	RangeBox rb = new RangeBox();
     	for(int i=0;i<rangecut.length;i++){
-    		check=null;
+    		//check=null;
     		check=rangecut[i].trim();
     		if(check.length()>0){
     			if(check.indexOf('-')>=0){
@@ -119,9 +120,6 @@ class RangeProfileFilter implements FilenameFilter{
 
             // try to parse into n,c,t, if it craps out, it must not be a valid name
             try {
-            	
-            	RangeBox rb = parseRange(range);
-            	
                 String nctPart = name.substring(name.indexOf(".") + 1);
                 String n = nctPart.substring(0, nctPart.indexOf("."));
                 String c = nctPart.substring(nctPart.indexOf(".") + 1, nctPart.lastIndexOf("."));
@@ -175,6 +173,19 @@ class TimeSeriesFileFilter implements FilenameFilter {
 }
 
 public class FileList {
+	
+	boolean useRange=false;
+	String range=null;
+	public FileList(String range){
+		this.range=range;
+		if(range!=null&&range.trim().length()>0){
+			useRange=true;
+		}
+	}
+	
+	public FileList(){
+		
+	}
 
     public List<File[]> helperFindProfilesPrefixMulti(String path, String prefix) {
 
@@ -186,7 +197,12 @@ public class FileList {
             return v;
         }
         //FilenameFilter prefixFilter = new FileFilter(prefix);
-        FilenameFilter prefixFilter = new ProfileFileFilter(prefix);
+        FilenameFilter prefixFilter;
+        if(useRange){
+        	prefixFilter=new RangeProfileFilter(prefix,range);
+        }
+        else
+         prefixFilter= new ProfileFileFilter(prefix);
         File files[] = file.listFiles(prefixFilter);
 
         if (files.length == 0) {
@@ -215,7 +231,12 @@ public class FileList {
         if (file.isDirectory() == false) {
             return new File[0];
         }
-        FilenameFilter prefixFilter = new ProfileFileFilter(prefix);
+        FilenameFilter prefixFilter;
+        if(useRange){
+        	prefixFilter=new RangeProfileFilter(prefix,range);
+        }
+        else
+         prefixFilter = new ProfileFileFilter(prefix);
         File files[] = file.listFiles(prefixFilter);
         return files;
     }
@@ -228,7 +249,12 @@ public class FileList {
         if (file.isDirectory() == false) {
             return v;
         }
-        FilenameFilter prefixFilter = new ProfileFileFilter(prefix);
+        FilenameFilter prefixFilter ;
+        if(useRange){
+        	prefixFilter=new RangeProfileFilter(prefix,range);
+        }
+        else
+         prefixFilter= new ProfileFileFilter(prefix);
         File files[] = file.listFiles(prefixFilter);
 
         if (files.length == 0) {

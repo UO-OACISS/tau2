@@ -19,7 +19,6 @@ import java.util.Observable;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLAutoDrawable;
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -27,8 +26,6 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-
-import com.sun.opengl.util.GLUT;
 
 /**
  * Draws a 3d bar plot.
@@ -39,7 +36,7 @@ import com.sun.opengl.util.GLUT;
  */
 public class BarPlot implements Plot {
 
-    private final GLUT glut = new GLUT();
+    //private final GLUT glut = new GLUT();
 
     // settings that the user can tweak
     private float xSize, ySize, zSize;
@@ -60,7 +57,7 @@ public class BarPlot implements Plot {
     private int ncols;
     private float[][] heightValues, colorValues;
     private boolean dirty = true;
-    private List displayLists = new ArrayList();
+    private List<Integer> displayLists = new ArrayList<Integer>();
 
     private int translucentDisplayListsXplus;
     private int translucentDisplayListsXminus;
@@ -409,7 +406,7 @@ public class BarPlot implements Plot {
         // delete displaylists
         if (displayLists != null) {
             for (int i = 0; i < displayLists.size(); i++) {
-                gl.glDeleteLists(((Integer) displayLists.get(i)).intValue(), 1);
+                gl.glDeleteLists(displayLists.get(i).intValue(), 1);
             }
             displayLists.clear();
             displayLists = null;
@@ -425,11 +422,11 @@ public class BarPlot implements Plot {
             if (displayLists != null) {
                 // delete old displaylists
                 for (int i = 0; i < displayLists.size(); i++) {
-                    gl.glDeleteLists(((Integer) displayLists.get(i)).intValue(), 1);
+                    gl.glDeleteLists(displayLists.get(i).intValue(), 1);
                 }
-                displayLists = new ArrayList();
+                displayLists = new ArrayList<Integer>();
             } else {
-                displayLists = new ArrayList();
+                displayLists = new ArrayList<Integer>();
             }
 
             Integer displayList = new Integer(gl.glGenLists(1));
@@ -564,7 +561,7 @@ public class BarPlot implements Plot {
         }
 
         for (int i = 0; i < displayLists.size(); i++) {
-            gl.glCallList(((Integer) displayLists.get(i)).intValue());
+            gl.glCallList(displayLists.get(i).intValue());
         }
 
         renderSelection(gl);

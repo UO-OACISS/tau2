@@ -2,19 +2,20 @@ package edu.uoregon.tau.perfdmf.database;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.net.URL;
 
-import edu.uoregon.tau.common.TauRuntimeException;
-
 /* This class is intended to read in config.txt file and parse the parameters. */
 
 public class ParseConfig implements Serializable {
-    private String perfdmfHome;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -22449977900556139L;
+	private String perfdmfHome;
     private String jdbcJarFile;
     private String jdbcDriver;
     private String dbType;

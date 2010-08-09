@@ -13,9 +13,17 @@
 
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.StringTokenizer;
 
 public class MpiPDataSource extends DataSource {
 
@@ -371,19 +379,19 @@ public class MpiPDataSource extends DataSource {
 
             function = this.addFunction(".MpiP.Application", 1);
 
-            for (Iterator it = this.getNodes(); it.hasNext();) {
-                Node node = (Node) it.next();
-                for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-                    Context context = (Context) it2.next();
-                    for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                        edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it3.next();
+            for (Iterator<Node> it = this.getNodes(); it.hasNext();) {
+                Node node = it.next();
+                for (Iterator<Context> it2 = node.getContexts(); it2.hasNext();) {
+                    Context context = it2.next();
+                    for (Iterator<Thread> it3 = context.getThreads(); it3.hasNext();) {
+                        edu.uoregon.tau.perfdmf.Thread thread = it3.next();
 
-                        List functions = thread.getFunctionProfiles();
+                        List<FunctionProfile> functions = thread.getFunctionProfiles();
 
                         double exclusive = inclusive;
                         double numSubroutines = 0;
-                        for (Iterator e4 = functions.iterator(); e4.hasNext();) {
-                            FunctionProfile fp = (FunctionProfile) e4.next();
+                        for (Iterator<FunctionProfile> e4 = functions.iterator(); e4.hasNext();) {
+                            FunctionProfile fp = e4.next();
                             if (fp != null) {
                                 numSubroutines = numSubroutines + fp.getNumCalls();
                                 exclusive = exclusive - fp.getExclusive(metric);
@@ -395,7 +403,7 @@ public class MpiPDataSource extends DataSource {
                             exclusive = 0;
                         }
 
-                        double exclusivePercent = exclusive / inclusive;
+                        //double exclusivePercent = exclusive / inclusive;
 
                         functionProfile = new FunctionProfile(function);
 

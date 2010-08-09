@@ -12,7 +12,10 @@ import java.awt.Component;
 import java.awt.Rectangle;
 import java.io.Serializable;
 
-import javax.swing.*;
+import javax.swing.Icon;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.ListCellRenderer;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 
@@ -55,12 +58,16 @@ import edu.uoregon.tau.paraprof.GroupChangerWindow.GroupListBlob;
 public class GroupListCellRenderer extends JLabel implements ListCellRenderer, Serializable {
 
     /**
+	 * 
+	 */
+	private static final long serialVersionUID = 5097029342987849814L;
+	/**
      * An empty <code>Border</code>. This field might not be used. To change the
      * <code>Border</code> used by this renderer override the 
      * <code>getListCellRendererComponent</code> method and set the border
      * of the returned component directly.
      */
-    private static final Border SAFE_NO_FOCUS_BORDER = new EmptyBorder(1, 1, 1, 1);
+    //private static final Border SAFE_NO_FOCUS_BORDER = new EmptyBorder(1, 1, 1, 1);
     private static final Border DEFAULT_NO_FOCUS_BORDER = new EmptyBorder(1, 1, 1, 1);
     protected static Border noFocusBorder = DEFAULT_NO_FOCUS_BORDER;
 
@@ -82,8 +89,8 @@ public class GroupListCellRenderer extends JLabel implements ListCellRenderer, S
     public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
         setComponentOrientation(list.getComponentOrientation());
 
-        Color bg = null;
-        Color fg = null;
+        //Color bg = null;
+        //Color fg = null;
 
         if (isSelected) {
             setBackground(list.getSelectionBackground());
@@ -277,5 +284,5 @@ public class GroupListCellRenderer extends JLabel implements ListCellRenderer, S
      * has been added to the <code>java.beans</code> package.
      * Please see {@link java.beans.XMLEncoder}.
      */
-    public static class UIResource extends DefaultListCellRenderer implements javax.swing.plaf.UIResource {}
+    //public static class UIResource extends DefaultListCellRenderer implements javax.swing.plaf.UIResource {}
 }

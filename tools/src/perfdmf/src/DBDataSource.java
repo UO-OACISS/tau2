@@ -251,7 +251,7 @@ public class DBDataSource extends DataSource {
         List<IntervalEvent> intervalEvents = databaseAPI.getIntervalEvents();
         ListIterator<IntervalEvent> lIE = intervalEvents.listIterator();
         while (lIE.hasNext()) {
-            IntervalEvent ie = (IntervalEvent) lIE.next();
+            IntervalEvent ie = lIE.next();
             Function function = this.addFunction(ie.getName(), numberOfMetrics);
             addGroups(ie.getGroup(), function);
             ieMap.put(new Integer(ie.getID()), function);
@@ -265,14 +265,14 @@ public class DBDataSource extends DataSource {
 
         ListIterator<AtomicEvent> lAE = databaseAPI.getAtomicEvents().listIterator();
         while (lAE.hasNext()) {
-            AtomicEvent atomicEvent = (AtomicEvent) lAE.next();
+            AtomicEvent atomicEvent = lAE.next();
             UserEvent userEvent = addUserEvent(atomicEvent.getName());
             aeMap.put(new Integer(atomicEvent.getID()), userEvent);
         }
 
         ListIterator<AtomicLocationProfile> lAD = databaseAPI.getAtomicEventData().listIterator();
         while (lAD.hasNext()) {
-            AtomicLocationProfile alp = (AtomicLocationProfile) lAD.next();
+            AtomicLocationProfile alp = lAD.next();
             Thread thread = addThread(alp.getNode(), alp.getContext(), alp.getThread());
             UserEvent userEvent = aeMap.get(new Integer(alp.getAtomicEventID()));
             UserEventProfile userEventProfile = thread.getUserEventProfile(userEvent);

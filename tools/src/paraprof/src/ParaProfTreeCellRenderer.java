@@ -23,11 +23,16 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import edu.uoregon.tau.common.Utility;
 
 public class ParaProfTreeCellRenderer extends DefaultTreeCellRenderer {
-    public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded,
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -903882363241486249L;
+
+	public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded,
             boolean leaf, int row, boolean hasFocus) {
         super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
-        DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
+        //DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
         Object userObject = node.getUserObject();
 
         

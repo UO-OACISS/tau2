@@ -20,7 +20,11 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
 
 public class ParaProfManagerTableModel extends AbstractTableModel {
 
-    private int type = -1; //0-application table model,1-experiment table model,2-trial table model, 3-metric table model
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -559405678666345440L;
+	private int type = -1; //0-application table model,1-experiment table model,2-trial table model, 3-metric table model
     private ParaProfApplication application = null;
     private ParaProfExperiment experiment = null;
     private ParaProfTrial ppTrial = null;

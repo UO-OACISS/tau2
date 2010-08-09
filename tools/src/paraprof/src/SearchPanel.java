@@ -1,9 +1,19 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Color;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.interfaces.Searchable;
@@ -20,11 +30,15 @@ import edu.uoregon.tau.paraprof.interfaces.SearchableOwner;
  */
 public class SearchPanel extends JPanel {
 
-    private Searchable searchable;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 8136473488409647519L;
+	//private Searchable searchable;
     private JTextField searchField;
 
     public SearchPanel(final SearchableOwner owner, final Searchable searchable) {
-        this.searchable = searchable;
+        //this.searchable = searchable;
 
         searchable.setSearchHighlight(false);
         searchable.setSearchMatchCase(false);

@@ -8,7 +8,11 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 
 import edu.uoregon.tau.perfdmf.FunctionProfile;
 import edu.uoregon.tau.perfdmf.Thread;
@@ -99,11 +103,11 @@ public class PPThread {
         List<PPFunctionProfile> newList = null;
       
 
-        List functionList = thread.getFunctionProfiles();
+        List<FunctionProfile> functionList = thread.getFunctionProfiles();
         newList = new ArrayList<PPFunctionProfile>();
 
-        for (Iterator e1 = functionList.iterator(); e1.hasNext();) {
-            FunctionProfile functionProfile = (FunctionProfile) e1.next();
+        for (Iterator<FunctionProfile> e1 = functionList.iterator(); e1.hasNext();) {
+            FunctionProfile functionProfile = e1.next();
             if (functionProfile != null) {
                 if (getAll || ppTrial.displayFunction(functionProfile.getFunction()) && functionProfile.getFunction().isPhaseMember(dataSorter.getPhase())) {
                     PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(dataSorter, thread, functionProfile);

@@ -1,23 +1,34 @@
 package edu.uoregon.tau.vis;
 
-import java.awt.*;
-import java.awt.image.*;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
+import java.awt.image.ImageObserver;
 import java.io.File;
 import java.io.IOException;
-import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.text.DecimalFormat;
+
+import javax.imageio.ImageIO;
+import javax.swing.JPanel;
 
 public class HeatMap extends JPanel implements ImageObserver {
 
-    BufferedImage img = null;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -2201072741534481423L;
+	BufferedImage img = null;
     StringBuffer description = null;
-    private static final int idealSize = 128;
+    //private static final int idealSize = 128;
     private static final ColorScale scale = new ColorScale(ColorScale.ColorSet.RAINBOW);
     public static final String TMPDIR = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "tmp"
             + File.separator;
     private HeatMapScanner scanner = null; // for tool tips
-    private double[][] map = null;
+    //private double[][] map = null;
     private HeatMapData mapData = null;
     private DecimalFormat f = new DecimalFormat("0");
     private int size = 128;

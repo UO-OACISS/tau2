@@ -1,6 +1,11 @@
 package edu.uoregon.tau.paraprof.treetable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
@@ -10,7 +15,11 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 
 public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comparable<ContextEventTreeNode> {
 
-    private List<ContextEventTreeNode> children;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 8704255864552442447L;
+	private List<ContextEventTreeNode> children;
     private String displayName;
     private ContextEventModel model;
     private UserEventProfile userEventProfile;

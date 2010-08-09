@@ -1,6 +1,10 @@
 package edu.uoregon.tau.paraprof.barchart;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.MouseEvent;
@@ -8,7 +12,11 @@ import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 
-import javax.swing.*;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 
 import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.paraprof.DataSorter;
@@ -25,7 +33,11 @@ import edu.uoregon.tau.paraprof.interfaces.ScrollBarController;
  */
 public class BarChartPanel extends JScrollPane implements Printable, ImageExport, ScrollBarController {
 
-    BarChart barChart;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 4417813804029452411L;
+	BarChart barChart;
 
     //BarChartHeader barChartHeader;
 
@@ -132,7 +144,8 @@ public class BarChartPanel extends JScrollPane implements Printable, ImageExport
 
     
     public static void main(String[] args) {
-        final ParaProf paraProf = new ParaProf();
+        //final ParaProf paraProf = 
+    	new ParaProf();
         ParaProf.initialize();
 
         

@@ -12,7 +12,11 @@ import edu.uoregon.tau.perfdmf.DatabaseAPI;
 
 public class ApplicationTableModel extends AbstractTableModel {
 
-    private ParaProfApplication application;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 8379814794176096620L;
+	private ParaProfApplication application;
     private String[] columnNames = { "AppField", "Value" };
     private ParaProfManagerWindow paraProfManager;
     private DefaultTreeModel defaultTreeModel;

@@ -6,14 +6,17 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.tree.DefaultTreeModel;
 
-import edu.uoregon.tau.paraprof.ParaProfApplication;
 import edu.uoregon.tau.paraprof.ParaProfExperiment;
 import edu.uoregon.tau.paraprof.ParaProfManagerWindow;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 
 public class ExperimentTableModel extends AbstractTableModel {
 
-    private ParaProfExperiment experiment;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 7691740386199068018L;
+	private ParaProfExperiment experiment;
     private String[] columnNames = { "ExpField", "Value" };
     private ParaProfManagerWindow paraProfManager;
     private DefaultTreeModel defaultTreeModel;

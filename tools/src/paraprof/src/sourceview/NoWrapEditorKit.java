@@ -1,9 +1,23 @@
 package edu.uoregon.tau.paraprof.sourceview;
 
-import javax.swing.text.*;
-
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.BoxView;
+import javax.swing.text.ComponentView;
+import javax.swing.text.Element;
+import javax.swing.text.IconView;
+import javax.swing.text.LabelView;
+import javax.swing.text.ParagraphView;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledEditorKit;
+import javax.swing.text.TabExpander;
+import javax.swing.text.View;
+import javax.swing.text.ViewFactory;
 public class NoWrapEditorKit extends StyledEditorKit {
-    private static final ViewFactory defaultFactory = new MyViewFactory();
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 2502198775876837363L;
+	private static final ViewFactory defaultFactory = new MyViewFactory();
 
     public ViewFactory getViewFactory() {
         return defaultFactory;
