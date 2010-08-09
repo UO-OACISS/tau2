@@ -11,16 +11,21 @@ import edu.uoregon.tau.paraprof.ParaProfUtils;
 
 public class MapViewer extends JFrame {
 
-    public MapViewer(String title, Map map) {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -3534612098086026146L;
+
+	public MapViewer(String title, Map<String,String> map) {
         JTable table;
 
         int num = map.size();
         String[][] items = new String[num][2];
 
         int index = 0;
-        for (Iterator it = map.keySet().iterator(); it.hasNext();) {
-            String key = (String) it.next();
-            String value = (String) map.get(key);
+        for (Iterator<String> it = map.keySet().iterator(); it.hasNext();) {
+            String key = it.next();
+            String value = map.get(key);
             items[index][0] = key;
             items[index][1] = value;
             index++;

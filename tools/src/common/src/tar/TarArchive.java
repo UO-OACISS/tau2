@@ -15,7 +15,13 @@
 
 package edu.uoregon.tau.common.tar;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 
 /**
  * The TarArchive class implements the concept of a
@@ -331,20 +337,20 @@ public class TarArchive extends Object {
      * @return The temporary file's path.
      */
 
-    private String getTempFilePath(File eFile) {
-        String pathStr = this.tempPath + File.separator + eFile.getName() + ".tmp";
-
-        for (int i = 1; i < 5; ++i) {
-            File f = new File(pathStr);
-
-            if (!f.exists())
-                break;
-
-            pathStr = this.tempPath + File.separator + eFile.getName() + "-" + i + ".tmp";
-        }
-
-        return pathStr;
-    }
+//    private String getTempFilePath(File eFile) {
+//        String pathStr = this.tempPath + File.separator + eFile.getName() + ".tmp";
+//
+//        for (int i = 1; i < 5; ++i) {
+//            File f = new File(pathStr);
+//
+//            if (!f.exists())
+//                break;
+//
+//            pathStr = this.tempPath + File.separator + eFile.getName() + "-" + i + ".tmp";
+//        }
+//
+//        return pathStr;
+//    }
 
     /**
      * Close the archive. This simply calls the underlying
@@ -498,7 +504,7 @@ public class TarArchive extends Object {
     public void writeEntry(TarEntry oldEntry, boolean recurse) throws IOException {
         boolean unixArchiveFormat = oldEntry.isUnixTarFormat();
 
-        File tFile = null;
+        //File tFile = null;
         File eFile = oldEntry.getFile();
 
         // Work on a copy of the entry so we can manipulate it.
@@ -558,9 +564,9 @@ public class TarArchive extends Object {
 
             in.close();
 
-            if (tFile != null) {
-                tFile.delete();
-            }
+//            if (tFile != null) {
+//                tFile.delete();
+//            }
 
             this.tarOut.closeEntry();
         }

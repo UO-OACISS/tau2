@@ -11,9 +11,18 @@
 
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.StringReader;
 import java.net.URL;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
@@ -35,13 +44,13 @@ public class PSRunDataSource extends DataSource {
     PSRunLoadHandler handler;
     private Hashtable<String, Integer> nodeHash = new Hashtable<String, Integer>();
 
-    public PSRunDataSource(Object initializeObject) {
+    public PSRunDataSource(List<File[]> initializeObject) {
         super();
         this.setMetrics(new Vector<Metric>());
         this.initializeObject = initializeObject;
     }
 
-    private Object initializeObject;
+    private List<File[]> initializeObject;
 
     public void cancelLoad() {
         return;
@@ -55,7 +64,7 @@ public class PSRunDataSource extends DataSource {
         //Debug.dataSource = this;
 
         try {
-            List v = (List) initializeObject;
+            List<File[]> v = initializeObject;
             XMLReader xmlreader = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
 
             handler = new PSRunLoadHandler(this);
@@ -63,9 +72,9 @@ public class PSRunDataSource extends DataSource {
             xmlreader.setErrorHandler(handler);
 
             xmlreader.setEntityResolver(new NoOpEntityResolver());
-            for (Iterator e = v.iterator(); e.hasNext();) {
+            for (Iterator<File[]> e = v.iterator(); e.hasNext();) {
 
-                File files[] = (File[]) e.next();
+                File files[] = e.next();
                 for (int i = 0; i < files.length; i++) {
                     long time = System.currentTimeMillis();
 
@@ -118,10 +127,10 @@ public class PSRunDataSource extends DataSource {
                     //Debug.foo("IT-AFTER");
 
                     if (!handler.getIsProfile()) {
-                        Hashtable metricHash = handler.getMetricHash();
-                        for (Enumeration keys = metricHash.keys(); keys.hasMoreElements();) {
-                            String key = (String) keys.nextElement();
-                            String value = (String) metricHash.get(key);
+                        Hashtable<String,String> metricHash = handler.getMetricHash();
+                        for (Enumeration<String> keys = metricHash.keys(); keys.hasMoreElements();) {
+                            String key = keys.nextElement();
+                            String value = metricHash.get(key);
                             processHardwareCounter(key, value);
                         }
                     }
@@ -145,11 +154,11 @@ public class PSRunDataSource extends DataSource {
     }
 
     private void processSnapshots() {
-        for (Iterator it = getThreads().iterator(); it.hasNext();) {
-            Thread thread = (Thread) it.next();
+        for (Iterator<Thread> it = getThreads().iterator(); it.hasNext();) {
+            Thread thread = it.next();
             for (int i = 1; i < thread.getNumSnapshots(); i++) {
-                for (Iterator it2 = getFunctions(); it2.hasNext();) {
-                    Function function = (Function) it2.next();
+                for (Iterator<Function> it2 = getFunctions(); it2.hasNext();) {
+                    Function function = it2.next();
                     FunctionProfile fp = thread.getFunctionProfile(function);
                     if (fp != null) {
                         double prevEx = fp.getExclusive(i - 1, 0);
@@ -189,8 +198,8 @@ public class PSRunDataSource extends DataSource {
     
     public Thread getThread() {
         if (thread == null) {
-            Map attribMap = handler.getAttributes();
-            String nct = (String) attribMap.get("nct");
+            Map<String,String> attribMap = handler.getAttributes();
+            String nct = attribMap.get("nct");
             if (nct != null) {
                 String[] nums = nct.split(":");
                 nodeID = Integer.parseInt(nums[0]);

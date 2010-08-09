@@ -14,7 +14,6 @@ import java.util.Observable;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.glu.GLU;
 import javax.media.opengl.glu.GLUquadric;
 import javax.swing.BorderFactory;
@@ -219,7 +218,7 @@ public class ScatterPlot implements Plot {
 
     public void render(VisRenderer visRenderer) {
         GLAutoDrawable glDrawable = visRenderer.getGLAutoDrawable();
-        Vec direction = visRenderer.getViewDirection();
+        //Vec direction = visRenderer.getViewDirection();
 
 //    public void render(GLAutoDrawable glDrawable, Vec direction) {
         if (axes != null) {

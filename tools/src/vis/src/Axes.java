@@ -6,7 +6,10 @@
  */
 package edu.uoregon.tau.vis;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -15,7 +18,14 @@ import java.util.StringTokenizer;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -38,9 +48,9 @@ public class Axes implements Shape {
 
     private int xTickSkip, yTickSkip, zTickSkip;
     private int xLabelSkip, yLabelSkip, zLabelSkip;
-    private List xStrings;
-    private List yStrings;
-    private List zStrings;
+    private List<String> xStrings;
+    private List<String> yStrings;
+    private List<String> zStrings;
 
     private boolean autoSkip = true;
     private boolean onEdge;
@@ -134,7 +144,7 @@ public class Axes implements Shape {
      * @param yStrings List of strings for the y axis
      * @param zStrings List of strings for the z axis
      */
-    public void setStrings(String xlabel, String ylabel, String zlabel, List xStrings, List yStrings, List zStrings) {
+    public void setStrings(String xlabel, String ylabel, String zlabel, List<String> xStrings, List<String> yStrings, List<String> zStrings) {
         this.xlabel = xlabel;
         this.ylabel = ylabel;
         this.zlabel = zlabel;
@@ -143,13 +153,13 @@ public class Axes implements Shape {
         this.zStrings = zStrings;
 
         if (this.xStrings == null)
-            this.xStrings = new ArrayList();
+            this.xStrings = new ArrayList<String>();
 
         if (this.yStrings == null)
-            this.yStrings = new ArrayList();
+            this.yStrings = new ArrayList<String>();
 
         if (this.zStrings == null)
-            this.zStrings = new ArrayList();
+            this.zStrings = new ArrayList<String>();
 
         setAutoTickSkip();
         this.dirty = true;
@@ -405,16 +415,16 @@ public class Axes implements Shape {
         gl.glCallList(displayList);
     }
 
-    private void setTickSkipping(int xTicSkip, int yTicSkip, int zTicSkip, int xLabelSkip, int yLabelSkip, int zLabelSkip) {
-
-        this.xTickSkip = xTicSkip;
-        this.yTickSkip = yTicSkip;
-        this.zTickSkip = zTicSkip;
-
-        this.xLabelSkip = xLabelSkip;
-        this.yLabelSkip = yLabelSkip;
-        this.zLabelSkip = zLabelSkip;
-    }
+//    private void setTickSkipping(int xTicSkip, int yTicSkip, int zTicSkip, int xLabelSkip, int yLabelSkip, int zLabelSkip) {
+//
+//        this.xTickSkip = xTicSkip;
+//        this.yTickSkip = yTicSkip;
+//        this.zTickSkip = zTicSkip;
+//
+//        this.xLabelSkip = xLabelSkip;
+//        this.yLabelSkip = yLabelSkip;
+//        this.zLabelSkip = zLabelSkip;
+//    }
 
     private void setAutoTickSkip() {
         if (xStrings == null) {
@@ -521,16 +531,16 @@ public class Axes implements Shape {
         int numy = this.yStrings.size();
         int numz = this.zStrings.size();
 
-        int xOffset = 0;
-        int yOffset = 0;
+        //int xOffset = 0;
+        //int yOffset = 0;
         if (onEdge) {
             numx += 2;
             numy += 2;
-            xOffset = 1;
-            yOffset = 1;
+            //xOffset = 1;
+            //yOffset = 1;
         }
 
-        int zOffset = 0;
+        //int zOffset = 0;
 
         gl.glDisable(GL.GL_LIGHTING);
 
@@ -664,7 +674,7 @@ public class Axes implements Shape {
         gl.glEnable(GL.GL_LIGHTING);
     }
 
-    private void drawLabels(VisRenderer visRenderer, String label, List strings, float increment, int labelSkip, int tickSkip,
+    private void drawLabels(VisRenderer visRenderer, String label, List<String> strings, float increment, int labelSkip, int tickSkip,
             boolean leftJustified, int selected) {
         // Draw the strings for an axis
 
@@ -681,7 +691,7 @@ public class Axes implements Shape {
                     VisTools.glSetColor(gl, highlightColor);
                 }
 
-                String string = (String) strings.get(i);
+                String string = strings.get(i);
                 double width = glut.glutStrokeLengthf(font, string);
 
                 gl.glPushMatrix();
@@ -796,16 +806,16 @@ public class Axes implements Shape {
 
     }
 
-    private void renderStrokeString(GL gl, int font, String string) {
-        // Center Our Text On The Screen
-        float width = glut.glutStrokeLength(font, string);
-        gl.glTranslatef(-width / 2f, 0, 0);
-        // Render The Text
-        for (int i = 0; i < string.length(); i++) {
-            char c = string.charAt(i);
-            glut.glutStrokeCharacter(font, c);
-        }
-    }
+//    private void renderStrokeString(GL gl, int font, String string) {
+//        // Center Our Text On The Screen
+//        float width = glut.glutStrokeLength(font, string);
+//        gl.glTranslatef(-width / 2f, 0, 0);
+//        // Render The Text
+//        for (int i = 0; i < string.length(); i++) {
+//            char c = string.charAt(i);
+//            glut.glutStrokeCharacter(font, c);
+//        }
+//    }
 
     /**
      * Retrieves the autoSkip setting.

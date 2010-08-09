@@ -6,19 +6,27 @@
 
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.StringTokenizer;
 
 public class HPMToolkitDataSource extends DataSource {
 
-    private Object initializeObject;
+    private List<File[]> initializeObject;
 
     //Frequently used items.
     private int metric = 0;
     private Function function = null;
     private FunctionProfile functionProfile = null;
-    private Node node = null;
-    private Context context = null;
+    //private Node node = null;
+    //private Context context = null;
     private edu.uoregon.tau.perfdmf.Thread thread = null;
     private int nodeID = -1;
     private int contextID = -1;
@@ -35,7 +43,7 @@ public class HPMToolkitDataSource extends DataSource {
     private LineData header3 = new LineData();
     private LineData header4 = new LineData();
     
-    public HPMToolkitDataSource(Object initializeObject) {
+    public HPMToolkitDataSource(List<File[]> initializeObject) {
         super();
         this.initializeObject = initializeObject;
     }
@@ -51,9 +59,9 @@ public class HPMToolkitDataSource extends DataSource {
 
     public void load() throws FileNotFoundException, IOException {
 
-        boolean firstFile = true;
-        List v = (List) initializeObject;
-        for (Iterator e = v.iterator(); e.hasNext();) {
+        //boolean firstFile = true;
+        List<File[]> v =  initializeObject;
+        for (Iterator<File[]> e = v.iterator(); e.hasNext();) {
             File files[] = (File[]) e.next();
             for (int i = 0; i < files.length; i++) {
                 long time = System.currentTimeMillis();
@@ -390,11 +398,11 @@ public class HPMToolkitDataSource extends DataSource {
         metricName = "Time";
 
         String tmpStr = st1.nextToken().trim();
-        int metricCount = 0, newMetricCount = 0;
+        //int metricCount = 0, newMetricCount = 0;
         // need to clean stuff out of the value, like % and M and whatnot
         st1 = new StringTokenizer(tmpStr, " ");
         double dEventValue = 0.0;
-        int iEventValue = 0;
+        //int iEventValue = 0;
         tmpStr = st1.nextToken().trim();
 
         try {
@@ -454,19 +462,19 @@ public class HPMToolkitDataSource extends DataSource {
 
     }
 
-    private String getMetricName(String inString) {
-        String tmpString = null;
-        int tmpInt = inString.indexOf("_MULTI_");
-
-        if (tmpInt > 0) {
-            //We are reading data from a multiple counter run.
-            //Grab the counter name.
-            tmpString = inString.substring(tmpInt + 7);
-            return tmpString;
-        }
-        //We are not reading data from a multiple counter run.
-        return tmpString;
-    }
+//    private String getMetricName(String inString) {
+//        String tmpString = null;
+//        int tmpInt = inString.indexOf("_MULTI_");
+//
+//        if (tmpInt > 0) {
+//            //We are reading data from a multiple counter run.
+//            //Grab the counter name.
+//            tmpString = inString.substring(tmpInt + 7);
+//            return tmpString;
+//        }
+//        //We are not reading data from a multiple counter run.
+//        return tmpString;
+//    }
 
     //####################################
     //End - Private Section.

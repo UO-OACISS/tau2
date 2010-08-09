@@ -1,6 +1,10 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * This class represents a single function profile on a single thread.
@@ -319,14 +323,14 @@ public class FunctionProfile {
         return new UtilFncs.EmptyIterator();
     }
 
-    public Iterator getParentProfileCallPathIterator(FunctionProfile parent) {
+    public Iterator<FunctionProfile> getParentProfileCallPathIterator(FunctionProfile parent) {
         CallPathData callPathData = getCallPathData();
         if (callPathData.parentProfileCallPathSets == null)
             return new UtilFncs.EmptyIterator();
         return callPathData.parentProfileCallPathSets.get(parent).iterator();
     }
 
-    public Iterator getChildProfileCallPathIterator(FunctionProfile child) {
+    public Iterator<FunctionProfile> getChildProfileCallPathIterator(FunctionProfile child) {
         CallPathData callPathData = getCallPathData();
         if (callPathData.childProfileCallPathSets == null)
             return new UtilFncs.EmptyIterator();

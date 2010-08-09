@@ -64,7 +64,8 @@ public class HPCToolkitXMLHandler extends DefaultHandler {
     }
 
     
-    private void stackName(String name) {
+    @SuppressWarnings("unchecked")
+	private void stackName(String name) {
         String origName = name;
 
         
@@ -84,7 +85,8 @@ public class HPCToolkitXMLHandler extends DefaultHandler {
         }
 
         // create the flat profile now
-        FunctionProfile flat = getFlatFunctionProfile(theThread, f);
+        //FunctionProfile flat = 
+        	getFlatFunctionProfile(theThread, f);
 
     }
     
@@ -114,7 +116,7 @@ public class HPCToolkitXMLHandler extends DefaultHandler {
             String displayName = attributes.getValue("displayName");
             String shortName = attributes.getValue("shortName");
 
-            String nativeName = attributes.getValue("nativeName");
+            //String nativeName = attributes.getValue("nativeName");
 
             // match PAPI_FP_INS-0, PAPI_FP_INS-1
             //RE r = new RE("*-[0-9]+");

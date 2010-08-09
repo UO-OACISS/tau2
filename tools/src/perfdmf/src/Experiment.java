@@ -1,7 +1,13 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
-import java.sql.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Vector;
 
@@ -26,9 +32,13 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * @see		Application
  * @see		Trial
  */
-public class Experiment implements Serializable, Comparable {
+public class Experiment implements Serializable, Comparable<Experiment> {
 
-    private int experimentID;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -4969749132403637020L;
+	private int experimentID;
     private int applicationID;
     private String name;
     private String fields[];
@@ -67,8 +77,8 @@ public class Experiment implements Serializable, Comparable {
         try {
             ResultSet resultSet = null;
 
-            String expFieldNames[] = null;
-            int expFieldTypes[] = null;
+            //String expFieldNames[] = null;
+            //int expFieldTypes[] = null;
 
             DatabaseMetaData dbMeta = db.getMetaData();
 
@@ -87,7 +97,7 @@ public class Experiment implements Serializable, Comparable {
 
                 int ctype = resultSet.getInt("DATA_TYPE");
                 String cname = resultSet.getString("COLUMN_NAME");
-                String typename = resultSet.getString("TYPE_NAME");
+                //String typename = resultSet.getString("TYPE_NAME");
                 //System.out.println ("column: " + cname + ", type: " + ctype + ", typename: " + typename);
 
                 // only integer and string types (for now)
@@ -150,7 +160,8 @@ public class Experiment implements Serializable, Comparable {
 
         if (DBConnector.isIntegerType(database.getExpFieldTypes()[idx]) && field != null) {
             try {
-                int test = Integer.parseInt(field);
+                //int test = 
+                	Integer.parseInt(field);
             } catch (java.lang.NumberFormatException e) {
                 return;
             }
@@ -158,7 +169,8 @@ public class Experiment implements Serializable, Comparable {
 
         if (DBConnector.isFloatingPointType(database.getExpFieldTypes()[idx]) && field != null) {
             try {
-                double test = Double.parseDouble(field);
+                //double test = 
+                	Double.parseDouble(field);
             } catch (java.lang.NumberFormatException e) {
                 return;
             }
@@ -419,7 +431,7 @@ public class Experiment implements Serializable, Comparable {
         fields = new String[database.getExpFieldNames().length];
     }
 
-    public int compareTo(Object arg0) {
+    public int compareTo(Experiment arg0) {
         return alphanum.compare(this.getName(), ((Experiment)arg0).getName());
     }
 }

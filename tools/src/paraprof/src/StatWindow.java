@@ -78,7 +78,8 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     private JScrollPane jScrollpane = null;
     private StatWindowPanel panel = null;
 
-    private List<Comparable> list = new ArrayList<Comparable>();
+    private List<PPUserEventProfile> uepList = new ArrayList<PPUserEventProfile>();
+    private List<PPFunctionProfile>  fpList = new ArrayList<PPFunctionProfile>();
 
     private int units = ParaProf.preferences.getUnits();
 
@@ -491,16 +492,20 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         dataSorter.setDescendingOrder(descendingOrder.isSelected());
 
         if (userEventWindow) {
-            list = dataSorter.getUserEventProfiles(thread);
+            uepList = dataSorter.getUserEventProfiles(thread);
         } else {
-            list = dataSorter.getFunctionProfiles(thread);
+            fpList = dataSorter.getFunctionProfiles(thread);
         }
 
         panel.resetStringSize();
     }
 
-    public List<Comparable> getData() {
-        return list;
+    public List<PPFunctionProfile> getFunctionProfileData() {
+        return fpList;
+    }
+    
+    public List<PPUserEventProfile> getUserEventProfileData() {
+        return uepList;
     }
 
     public int units() {

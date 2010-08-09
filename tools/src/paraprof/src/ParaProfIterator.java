@@ -11,13 +11,13 @@ import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 
-public class ParaProfIterator implements ListIterator{
+public class ParaProfIterator implements ListIterator<Object>{
 
-    public ParaProfIterator(Vector inVector){
+    public ParaProfIterator(Vector<Object> inVector){
 				
 	//Check to make sure that the Vector is not null.
 	if(inVector == null)
-	    listData = new Vector(); 				
+	    listData = new Vector<Object>(); 				
 	else
 	    listData = inVector;
 	
@@ -114,7 +114,7 @@ public class ParaProfIterator implements ListIterator{
     }
 
 
-    private Vector listData = null;
+    private Vector<Object> listData = null;
     private int size = 0;
 		
     //We maintain the concept of the ListIterator.  That is, there is no

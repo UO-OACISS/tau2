@@ -1,6 +1,11 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
+import java.util.StringTokenizer;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -122,7 +127,8 @@ public class CubeXMLHandler extends DefaultHandler {
     /* (non-Javadoc)
      * @see org.xml.sax.ContentHandler#startElement(java.lang.String, java.lang.String, java.lang.String, org.xml.sax.Attributes)
      */
-    public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+    @SuppressWarnings("unchecked")
+	public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         accumulator.setLength(0);
 
         // after development is done here this should be changed to if/else if's at least
@@ -207,7 +213,8 @@ public class CubeXMLHandler extends DefaultHandler {
     /* (non-Javadoc)
      * @see org.xml.sax.ContentHandler#endElement(java.lang.String, java.lang.String, java.lang.String)
      */
-    public void endElement(String uri, String localName, String qName) throws SAXException {
+    @SuppressWarnings("unchecked")
+	public void endElement(String uri, String localName, String qName) throws SAXException {
 
         if (localName.equalsIgnoreCase("process")) {
             cubeProcess.rank = Integer.parseInt(rank);

@@ -19,7 +19,6 @@ import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
 import edu.uoregon.tau.common.Utility;
-import edu.uoregon.tau.perfdmf.Function;
 
 /**
  * Function selector dialog.  Nothing in it is "function" specific except the title.
@@ -86,7 +85,7 @@ public class FunctionSelectorDialog extends JDialog {
         return true;
     }
 
-    public FunctionSelectorDialog(JFrame owner, boolean modal, Iterator functions, Object initialSelection, boolean allowNone,
+    public FunctionSelectorDialog(JFrame owner, boolean modal, Iterator<?> functions, Object initialSelection, boolean allowNone,
             boolean allowMultiple) {
 
         super(owner, modal);
@@ -104,7 +103,7 @@ public class FunctionSelectorDialog extends JDialog {
             items.add("   <none>");
             index++;
         }
-        for (Iterator<Function> it = functions; it.hasNext();) {
+        for (Iterator<?> it = functions; it.hasNext();) {
             Object object = it.next();
             if (object == initialSelection) {
                 selectedIndex = index;

@@ -1,6 +1,10 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -22,7 +26,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
 
     private ThreadData currentThread;
     private Snapshot currentSnapshot;
-    private Date currentDate;
+    //private Date currentDate;
 
     private int currentMetrics[];
 
@@ -242,7 +246,8 @@ public class SnapshotXMLHandler extends DefaultHandler {
             currentValue = accumulator.toString();
         } else if (localName.equals("utc_date")) {
             try {
-                currentDate = DataSource.dateTime.parse(accumulator.toString());
+                //currentDate = 
+                	DataSource.dateTime.parse(accumulator.toString());
             } catch (java.text.ParseException e) {}
         } else if (localName.equals("timestamp")) {
             currentTimestamp = Long.parseLong(accumulator.toString());

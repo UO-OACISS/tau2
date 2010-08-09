@@ -1,9 +1,16 @@
 package edu.uoregon.tau.paraprof.util;
 
-import javax.swing.*;
-import javax.swing.border.*;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Component;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
+import javax.swing.JCheckBox;
+import javax.swing.JList;
+import javax.swing.ListCellRenderer;
+import javax.swing.ListSelectionModel;
+import javax.swing.UIManager;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
 
 /* This code is from:
  * 
@@ -12,7 +19,11 @@ import java.awt.event.*;
  */
 
 public class CheckBoxList extends JList {
-    protected static Border noFocusBorder = new EmptyBorder(1, 1, 1, 1);
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 6218047873657776659L;
+	protected static Border noFocusBorder = new EmptyBorder(1, 1, 1, 1);
 
     public CheckBoxList(Object[] listData) {
         super(listData);

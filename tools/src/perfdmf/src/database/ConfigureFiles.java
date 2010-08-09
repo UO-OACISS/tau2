@@ -1,7 +1,6 @@
 package edu.uoregon.tau.perfdmf.database;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 

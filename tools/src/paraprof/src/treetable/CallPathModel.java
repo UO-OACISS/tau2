@@ -1,14 +1,23 @@
 package edu.uoregon.tau.paraprof.treetable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import edu.uoregon.tau.common.treetable.AbstractTreeTableModel;
 import edu.uoregon.tau.common.treetable.TreeTableModel;
 import edu.uoregon.tau.paraprof.DataSorter;
 import edu.uoregon.tau.paraprof.PPFunctionProfile;
 import edu.uoregon.tau.paraprof.ParaProfTrial;
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.DataSource;
+import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.FunctionProfile;
+import edu.uoregon.tau.perfdmf.Group;
 import edu.uoregon.tau.perfdmf.Thread;
+import edu.uoregon.tau.perfdmf.UtilFncs;
 
 /**
  * Data model for treetable using callpaths
@@ -55,16 +64,16 @@ public class CallPathModel extends AbstractTreeTableModel {
         DataSorter dataSorter = new DataSorter(ppTrial);
 
         // don't ask the thread for its functions directly, since we want group masking to work
-        List<Comparable> functionProfileList = dataSorter.getCallPathFunctionProfiles(thread);
+        List<PPFunctionProfile> functionProfileList = dataSorter.getCallPathFunctionProfiles(thread);
 
         Map<String, String> rootNames = new HashMap<String, String>();
 
         Group derived = ppTrial.getGroup("TAU_CALLPATH_DERIVED");
 
         if (window.getTreeMode()) {
-            for (Iterator<Comparable> it = functionProfileList.iterator(); it.hasNext();) {
+            for (Iterator<PPFunctionProfile> it = functionProfileList.iterator(); it.hasNext();) {
                 // Find all the rootNames (as strings)
-                PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next();
+                PPFunctionProfile ppFunctionProfile = it.next();
                 FunctionProfile fp = ppFunctionProfile.getFunctionProfile();
 
                 if (fp != null && fp.isCallPathFunction()) {
@@ -106,12 +115,12 @@ public class CallPathModel extends AbstractTreeTableModel {
             }
 
         } else {
-            for (Iterator<Comparable> it = functionProfileList.iterator(); it.hasNext();) {
-                PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next();
+            for (Iterator<PPFunctionProfile> it = functionProfileList.iterator(); it.hasNext();) {
+                PPFunctionProfile ppFunctionProfile = it.next();
                 FunctionProfile fp = ppFunctionProfile.getFunctionProfile();
 
                 if (fp != null && ppTrial.displayFunction(fp.getFunction())) {
-                    String fname = fp.getName();
+                    //String fname = fp.getName();
 
                     TreeTableNode node = new TreeTableNode(fp, this, null);
                     roots.add(node);
@@ -162,7 +171,8 @@ public class CallPathModel extends AbstractTreeTableModel {
     /**
      * Returns the class for the particular column.
      */
-    public Class getColumnClass(int column) {
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	public Class getColumnClass(int column) {
         if (column == 0)
             return TreeTableModel.class;
         return window.getColumns().get(column - 1).getClass();

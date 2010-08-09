@@ -1,14 +1,41 @@
 package edu.uoregon.tau.perfdmf.database;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
 
-import javax.swing.*;
-import javax.swing.event.*;
+import javax.swing.BorderFactory;
+import javax.swing.DefaultListSelectionModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JProgressBar;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import edu.uoregon.tau.common.Common;
 import edu.uoregon.tau.common.Utility;
@@ -355,7 +382,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                 if ((jFileChooser.showOpenDialog(this)) != JFileChooser.APPROVE_OPTION) {
                     return;
                 }
-                JProgressBar bar = new JProgressBar();
+               // JProgressBar bar = new JProgressBar();
                 //bar.setIndeterminate(true);
 
                 this.bar.setVisible(true);
@@ -445,7 +472,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
 
     public class DownloadThread extends Thread {
         private JProgressBar bar;
-        private JLabel label;
+        //private JLabel label;
         private String url;
         private String destinationFile;
         private String jar;
@@ -454,7 +481,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
         public DownloadThread(JProgressBar b, JLabel lab, String u, String file, String jar, String destination) {
             super();
             bar = b;
-            label = lab;
+            //label = lab;
             url = u;
             this.file = file;
             this.jar = jar;

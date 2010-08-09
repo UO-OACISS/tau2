@@ -1,30 +1,38 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
-import java.util.*;
-import java.lang.*;
-import java.text.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
 
 import edu.uoregon.tau.common.TrackerInputStream;
 
 public class ParaverDataSource extends DataSource {
 
-	private int linenumber = 0;
-	private int currentProcess = 0;
-	private int currentThread = 0;
+	//private int linenumber = 0;
+	//private int currentProcess = 0;
+	//private int currentThread = 0;
 	private File file = null;
     
     private volatile long totalBytes = 0;
     private volatile TrackerInputStream tracker;
-	private double beginTime = 0.0;
-	private double endTime = 0.0;
+	//private double beginTime = 0.0;
+	//private double endTime = 0.0;
 	private double duration = 0.0;
 	private double exclusiveDuration = 0.0;
 	private double durationMicrosecondsPercent = 0.0;
 	private String fileIndex = "";
 	private String metricName = "";
 	private String selectedFunction = "";
-	private String windowName = "";
+	//private String windowName = "";
 	private String shortMetric = null;
 	private int metricIndex = 0;
 	private boolean doingBursts = false;
@@ -38,7 +46,7 @@ public class ParaverDataSource extends DataSource {
 	private static final double HOURS = 3600000000.0; // to convert to microseconds
 
 	private List<String> functionNames = null;
-	private TreeMap functions = new TreeMap();
+	//private TreeMap functions = new TreeMap();
 
     public ParaverDataSource(File[] files) {
         super();
@@ -304,14 +312,16 @@ public class ParaverDataSource extends DataSource {
         			tmp = st.nextToken(); // value, microseconds
 					getMetaData().put("Begin Time" + fileIndex, tmp);
 					try {
-						beginTime = nfDLocal.parse(tmp).doubleValue();
+						//beginTime = 
+							nfDLocal.parse(tmp).doubleValue();
 					} catch (ParseException pe) {System.err.println("Error parsing: " + tmp);}
         			tmp = st.nextToken(); // End
         			tmp = st.nextToken(); // Time
         			tmp = st.nextToken(); // value, microseconds
 					getMetaData().put("End Time" + fileIndex, tmp);
 					try {
-						endTime = nfDLocal.parse(tmp).doubleValue();
+						//endTime = 
+							nfDLocal.parse(tmp).doubleValue();
 					} catch (ParseException pe) {System.err.println("Error parsing: " + tmp);}
         			tmp = st.nextToken(); // Duration
         			tmp = st.nextToken(); // value, microseconds
@@ -372,7 +382,7 @@ public class ParaverDataSource extends DataSource {
 						endString = true;
 					}
 					String value = tmp.replaceAll("\"","");
-					String newMetric = null;
+					//String newMetric = null;
 					while (st.hasMoreTokens() && !endString) {
         				tmp = st.nextToken(); // "value"
 						if (tmp.endsWith("\"")) {

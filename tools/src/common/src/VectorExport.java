@@ -2,11 +2,10 @@ package edu.uoregon.tau.common;
 
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.ClipboardOwner;
-import java.awt.datatransfer.StringSelection;
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;

@@ -13,9 +13,9 @@ public class CallPathUtilFuncs {
     private CallPathUtilFuncs() {
     }
 
-    public static boolean checkCallPathsPresent(Iterator l) {
+    public static boolean checkCallPathsPresent(Iterator<Function> l) {
         while (l.hasNext()) {
-            Function function = (Function) l.next();
+            Function function = l.next();
             
             if (function.isCallPathFunction()) {
                 return true;
@@ -45,8 +45,8 @@ public class CallPathUtilFuncs {
         // we want to skip the TAU_CALLPATH_DERIVED data
         Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
         
-        for (Iterator it = thread.getFunctionProfileIterator(); it.hasNext();) {
-            FunctionProfile callPath = (FunctionProfile) it.next();
+        for (Iterator<FunctionProfile> it = thread.getFunctionProfileIterator(); it.hasNext();) {
+            FunctionProfile callPath = it.next();
             if (callPath != null && callPath.isCallPathFunction() && !callPath.getFunction().isGroupMember(derived)) {
 
                 String s = callPath.getName();

@@ -14,18 +14,34 @@ package edu.uoregon.tau.common.treetable;
  * you entered into with Sun.
  */
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.text.NumberFormat;
 import java.util.Enumeration;
 import java.util.EventObject;
 
-import javax.swing.*;
+import javax.swing.JLabel;
+import javax.swing.JTable;
+import javax.swing.JTree;
+import javax.swing.ListSelectionModel;
+import javax.swing.LookAndFeel;
+import javax.swing.UIManager;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.table.*;
-import javax.swing.tree.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumnModel;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.DefaultTreeSelectionModel;
+import javax.swing.tree.TreeCellRenderer;
+import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
 
 /**
  * This example shows how to create a simple JTreeTable component, 
@@ -45,7 +61,12 @@ import javax.swing.tree.*;
  * @author Alan Morris
  */
 public class JTreeTable extends JTable implements MouseListener {
-    /** A subclass of JTree. */
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1842755199922110622L;
+
+	/** A subclass of JTree. */
     protected TreeTableCellRenderer tree;
 
     private int sortedColumnIndex = 0;
@@ -198,7 +219,11 @@ public class JTreeTable extends JTable implements MouseListener {
     }
 
     static class NumberCellRenderer extends DefaultTableCellRenderer {
-        NumberFormat formatter;
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = -3743019745018879319L;
+		NumberFormat formatter;
 
         public NumberCellRenderer() {
             super();
@@ -232,7 +257,11 @@ public class JTreeTable extends JTable implements MouseListener {
      * A TreeCellRenderer that displays a JTree.
      */
     public class TreeTableCellRenderer extends JTree implements TableCellRenderer {
-        /** Last table/tree row asked to renderer. */
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = 8697212346742320464L;
+		/** Last table/tree row asked to renderer. */
         protected int visibleRow;
 
         public TreeTableCellRenderer(TreeModel model) {
@@ -352,7 +381,11 @@ public class JTreeTable extends JTable implements MouseListener {
      * in the DefaultTreeSelectionModel.
      */
     class ListToTreeSelectionModelWrapper extends DefaultTreeSelectionModel {
-        /** Set to true when we are updating the ListSelectionModel. */
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = -1832472620252386869L;
+		/** Set to true when we are updating the ListSelectionModel. */
         protected boolean updatingListSelectionModel;
 
         public ListToTreeSelectionModelWrapper() {
@@ -457,12 +490,13 @@ public class JTreeTable extends JTable implements MouseListener {
         expandAll(tree, new TreePath(root), expand);
     }
 
-    private void expandAll(JTree tree, TreePath parent, boolean expand) {
+    @SuppressWarnings("unchecked")
+	private void expandAll(JTree tree, TreePath parent, boolean expand) {
         // Traverse children
         TreeNode node = (TreeNode) parent.getLastPathComponent();
         if (node.getChildCount() >= 0) {
-            for (Enumeration e = node.children(); e.hasMoreElements();) {
-                TreeNode n = (TreeNode) e.nextElement();
+            for (Enumeration<TreeNode> e = node.children(); e.hasMoreElements();) {
+                TreeNode n = e.nextElement();
                 TreePath path = parent.pathByAddingChild(n);
                 expandAll(tree, path, expand);
             }

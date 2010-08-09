@@ -11,12 +11,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.Map;
 import java.util.HashMap;
-import java.util.Set;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -27,30 +25,30 @@ import java.util.Vector;
  *
  */
 public class GAMESSDataSource extends DataSource {
-    private int metric = 0;
+    //private int metric = 0;
     private Function function = null;
-    private FunctionProfile functionProfile = null;
+    //private FunctionProfile functionProfile = null;
     private Node node = null;
     private Context context = null;
     private Thread thread = null;
     private int nodeID = -1;
     private int contextID = -1;
     private int threadID = -1;
-    private List v = null;
+    //private List v = null;
     boolean initialized = false;
-    private Hashtable nodeHash = new Hashtable();
-    private int threadCounter = 0;
+    //private Hashtable nodeHash = new Hashtable();
+    //private int threadCounter = 0;
 	private File file = null;
 	private int nodeCount = 1;
 	private int coreCount = 1;
-	private String moleculeName;
-	private String basisSet;
-	private String runType;
-	private String scfType;
-	private String accuracy;
+	//private String moleculeName;
+	//private String basisSet;
+	//private String runType;
+	//private String scfType;
+	//private String accuracy;
 	private String inputString;
 	private StringBuffer phaseName;
-	private double elapsedTime;
+	//private double elapsedTime;
 	private List<MyEvent> events = new ArrayList<MyEvent>();
 	private double cpuTime;
 	private double totalCpuTime = 0;
@@ -185,13 +183,19 @@ public class GAMESSDataSource extends DataSource {
     private void parseNodeCount() {
     	//  PARALLEL VERSION RUNNING ON    32 PROCESSORS IN     8 NODES.
     	StringTokenizer st = new StringTokenizer(inputString, " ");
-    	String dummy = st.nextToken(); // PARALLEL
-    	dummy = st.nextToken(); // VERSION
-    	dummy = st.nextToken(); // RUNNING
-    	dummy = st.nextToken(); // ON
+    	//String dummy = 
+    		st.nextToken(); // PARALLEL
+    	//dummy = 
+    		st.nextToken(); // VERSION
+    	//dummy = 
+    		st.nextToken(); // RUNNING
+    	//dummy = 
+    		st.nextToken(); // ON
     	int tmp = Integer.parseInt(st.nextToken());
-    	dummy = st.nextToken(); // PROCESSORS
-    	dummy = st.nextToken(); // IN
+    	//dummy = 
+    		st.nextToken(); // PROCESSORS
+    	//dummy = 
+    		st.nextToken(); // IN
     	this.nodeCount = Integer.parseInt(st.nextToken());
     	this.coreCount = tmp / this.nodeCount;
 	}
@@ -203,10 +207,14 @@ public class GAMESSDataSource extends DataSource {
 
 	private void parseTime() {
     	StringTokenizer st = new StringTokenizer(inputString, " ");
-    	String dummy = st.nextToken(); // TOTAL
-    	dummy = st.nextToken(); // WALL
-    	dummy = st.nextToken(); // CLOCK
-    	dummy = st.nextToken(); // TIME=
+    	//String dummy = 
+    		st.nextToken(); // TOTAL
+    	//dummy = 
+    		st.nextToken(); // WALL
+    	//dummy = 
+    		st.nextToken(); // CLOCK
+    	//dummy = 
+    		st.nextToken(); // TIME=
     	double tmp = Double.parseDouble(st.nextToken());
     	this.currentWallClockTime = tmp - this.totalWallClockTime;
        	this.totalWallClockTime = tmp;
@@ -214,37 +222,50 @@ public class GAMESSDataSource extends DataSource {
 
 	private void parseStepTime(boolean mpi) {
     	StringTokenizer st = new StringTokenizer(inputString, " ");
-    	String dummy = null;
+    	//String dummy = null;
     	if (mpi) {
-	    	dummy = st.nextToken(); // ON
-	    	dummy = st.nextToken(); // NODE
-	    	dummy = st.nextToken(); // 0
+	    	//dummy = 
+	    		st.nextToken(); // ON
+	    	//dummy = 
+	    		st.nextToken(); // NODE
+	    	//dummy = 
+	    		st.nextToken(); // 0
     	}
-    	dummy = st.nextToken(); // STEP
-    	dummy = st.nextToken(); // CPU
-    	dummy = st.nextToken(); // TIME or TIME=
+    	//dummy = 
+    		st.nextToken(); // STEP
+    	//dummy = 
+    		st.nextToken(); // CPU
+    	//dummy = 
+    		st.nextToken(); // TIME or TIME=
     	if (!mpi) {
-    		dummy = st.nextToken(); // =
+    		//dummy = 
+    			st.nextToken(); // =
     	}
     	this.cpuTime = Double.parseDouble(st.nextToken());
-    	dummy = st.nextToken(); // TOTAL
-    	dummy = st.nextToken(); // CPU
-    	dummy = st.nextToken(); // TIME or TIME=
+    	//dummy = 
+    		st.nextToken(); // TOTAL
+    	//dummy = 
+    		st.nextToken(); // CPU
+    	//dummy = 
+    		st.nextToken(); // TIME or TIME=
     	if (!mpi) {
-    		dummy = st.nextToken(); // =
+    		//dummy = 
+    			st.nextToken(); // =
     	}
     	this.totalCpuTime = Double.parseDouble(st.nextToken());
 	}
 
 	private void parsePhaseName() {
     	StringTokenizer st = new StringTokenizer(inputString, " ");
-    	String dummy = st.nextToken(); // "....."
+    	//String dummy = 
+    		//st.nextToken(); // "....."
     	String key = st.nextToken(); // "DONE" or "END"
     	this.phaseName = new StringBuffer();
     	if (key.equals("DONE")) {
     		// do nothing
     	} else { // key.equals("END")
-    		String tmp = st.nextToken(); // "OF"
+    		//String tmp = 
+    			st.nextToken(); // "OF"
     	}
 		while (st.hasMoreTokens()) {
 			String tmp = st.nextToken();
@@ -258,11 +279,16 @@ public class GAMESSDataSource extends DataSource {
 
 	private void parseAccuracy() {
     	StringTokenizer st = new StringTokenizer(inputString, " ");
-    	String dummy = st.nextToken(); // FINAL
-    	dummy = st.nextToken(); // RHF
-    	dummy = st.nextToken(); // ENERGY
-    	dummy = st.nextToken(); // IS
-    	this.accuracy = st.nextToken();
+    	//String dummy = 
+    		st.nextToken(); // FINAL
+    	//dummy = 
+    		st.nextToken(); // RHF
+    	//dummy = 
+    		//st.nextToken(); // ENERGY
+    	//dummy = 
+    		st.nextToken(); // IS
+    	//this.accuracy = 
+    		st.nextToken();
 	}
 
 	public void initializeThread() {

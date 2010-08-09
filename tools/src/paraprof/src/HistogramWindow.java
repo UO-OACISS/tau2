@@ -1,6 +1,14 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.print.PageFormat;
@@ -10,8 +18,19 @@ import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
-import javax.swing.*;
-import javax.swing.event.*;
+import javax.swing.ButtonGroup;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JSlider;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -45,7 +64,11 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 public class HistogramWindow extends JFrame implements ActionListener, MenuListener, Observer, ChangeListener, ParaProfWindow,
         UnitListener, Printable, ImageExport {
 
-    private ParaProfTrial ppTrial;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 7469676193580067451L;
+	private ParaProfTrial ppTrial;
     private DataSorter dataSorter;
     private Function function;
 
@@ -450,7 +473,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
         // create the tooltip generator
         XYItemRenderer renderer = chart.getXYPlot().getRenderer();
-        renderer.setToolTipGenerator(new XYToolTipGenerator() {
+        renderer.setBaseToolTipGenerator(new XYToolTipGenerator() {
             public String generateToolTip(XYDataset dataset, int arg1, int arg2) {
                 String minString = UtilFncs.getOutputString(units(), dataset.getXValue(arg1, arg2) - (binWidth / 2), 5, ppTrial.getDefaultMetric().isTimeDenominator());
                 String maxString = UtilFncs.getOutputString(units(), dataset.getXValue(arg1, arg2) + (binWidth / 2), 5, ppTrial.getDefaultMetric().isTimeDenominator());
@@ -465,7 +488,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
             ((XYBarRenderer) chart.getXYPlot().getRenderer()).setMargin(0.10);
         }
 
-        ((XYBarRenderer) chart.getXYPlot().getRenderer()).setOutlinePaint(Color.black);
+        ((XYBarRenderer) chart.getXYPlot().getRenderer()).setBaseOutlinePaint(Color.black);
 
         return chart;
     }

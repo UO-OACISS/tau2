@@ -16,25 +16,25 @@ public class Scalability {
 		this.db = session.db();
 	}
 
-	public ScalabilityResults exclusive(Vector inTrials, String function) {
+	public ScalabilityResults exclusive(Vector<Trial> inTrials, String function) {
 		return trials(inTrials, "exclusive", function);
 	}
 
-	public ScalabilityResults exclusivePercentage(Vector inTrials, String function) {
+	public ScalabilityResults exclusivePercentage(Vector<Trial> inTrials, String function) {
 		return trials(inTrials, "exclusive_percentage", function);
 	}
 
-	public ScalabilityResults inclusive(Vector inTrials, String function) {
+	public ScalabilityResults inclusive(Vector<Trial> inTrials, String function) {
 		return trials(inTrials, "inclusive", function);
 	}
 
-	public ScalabilityResults inclusivePercentage(Vector inTrials, String function) {
+	public ScalabilityResults inclusivePercentage(Vector<Trial> inTrials, String function) {
 		return trials(inTrials, "inclusive_percentage", function);
 	}
 
-	public ScalabilityResults trials (Vector inTrials, String measurement, String function) {
+	public ScalabilityResults trials (Vector<Trial> inTrials, String measurement, String function) {
 		ScalabilityResults results = new ScalabilityResults();
-		ListIterator trials = inTrials.listIterator();
+		ListIterator<Trial> trials = inTrials.listIterator();
 
 		StringBuffer buf = new StringBuffer();
 		buf.append("select e.name, e.trial, t.node_count * ");
@@ -54,7 +54,7 @@ public class Scalability {
 		// loop through the trials, and get their IDs for the select statement
 		int i = 0;
 		while (trials.hasNext()) {
-			Trial trial = (Trial)trials.next();
+			Trial trial = trials.next();
 			if (i++ > 0) {
 				buf.append(",");
 			}
