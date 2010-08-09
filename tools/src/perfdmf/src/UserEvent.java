@@ -3,8 +3,12 @@ package edu.uoregon.tau.perfdmf;
 import java.awt.Color;
 import java.io.Serializable;
 
-public class UserEvent implements Serializable, Comparable {
-    private String name;
+public class UserEvent implements Serializable, Comparable<UserEvent> {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 2315924747862094461L;
+	private String name;
     private int id;
     private Color color;
     private Color specificColor;
@@ -85,8 +89,8 @@ public class UserEvent implements Serializable, Comparable {
         return maxUserEventStdDev;
     }
 
-    public int compareTo(Object inObject) {
-        return name.compareTo(((UserEvent) inObject).getName());
+    public int compareTo(UserEvent inObject) {
+        return name.compareTo(( inObject).getName());
     }
 
     // Color Stuff

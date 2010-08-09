@@ -1,12 +1,24 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
-import java.io.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Insets;
+import java.awt.ScrollPane;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import javax.swing.*;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -22,7 +34,11 @@ import edu.uoregon.tau.perfdmf.Function;
 import edu.uoregon.tau.perfdmf.Thread;
 
 public class PreCompHistogramWindow extends JFrame {
-    private ParaProfTrial ppTrial;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 7567591935260297563L;
+	//private ParaProfTrial ppTrial;
     private Function function;
     private Thread thread;
 
@@ -32,11 +48,15 @@ public class PreCompHistogramWindow extends JFrame {
     private int numHistogramsPerEvent;
 
     public static class ScrollFlowLayout extends FlowLayout {
-        public final static int LEFT_TO_RIGHT = 0;
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = -6745516606462710969L;
+		public final static int LEFT_TO_RIGHT = 0;
         public final static int RIGHT_TO_LEFT = 1;
         public final static int TOP_TO_BOTTOM = 2;
 
-        private int orientation = LEFT_TO_RIGHT, rows, cols;
+        private int orientation = LEFT_TO_RIGHT;//, rows, cols;
         private ScrollPane sp = null;
 
         public ScrollFlowLayout() {
@@ -160,7 +180,12 @@ public class PreCompHistogramWindow extends JFrame {
      * @author Babu Kalakrishnan
      */
     public static class ModifiedFlowLayout extends FlowLayout {
-        public ModifiedFlowLayout() {
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = -8833423063395605627L;
+
+		public ModifiedFlowLayout() {
             super();
         }
 
@@ -292,7 +317,7 @@ public class PreCompHistogramWindow extends JFrame {
     }
 
     private void addHistograms() {
-        Container contentPane = this.getContentPane();
+        //Container contentPane = this.getContentPane();
         //contentPane.setLayout(new FlowLayout());
 
         JPanel panel = new JPanel();
@@ -303,10 +328,10 @@ public class PreCompHistogramWindow extends JFrame {
             SimpleHistogramDataset dataset = new SimpleHistogramDataset("foo");
             double binWidth = (histogram.maxValue - histogram.minValue) / numBins;
 
-            boolean timeMetric = false;
+            //boolean timeMetric = false;
             double divisor = 1;
             if (histogram.name.contains("TIME")) {
-                timeMetric = true;
+                //timeMetric = true;
                 histogram.name = histogram.name + " (seconds)";
                 divisor = 1e6;
             }
@@ -336,7 +361,7 @@ public class PreCompHistogramWindow extends JFrame {
             //        dataset.addSeries(function.getName() + " : " + histogram.name, values, numBins, minValue, maxValue);
 
             ((XYBarRenderer) chart.getXYPlot().getRenderer()).setMargin(0.10);
-            ((XYBarRenderer) chart.getXYPlot().getRenderer()).setOutlinePaint(Color.black);
+            ((XYBarRenderer) chart.getXYPlot().getRenderer()).setBaseOutlinePaint(Color.black); //Changed from deprecated setOutlinePaint
 
             Utility.applyDefaultChartTheme(chart);
 
@@ -372,7 +397,7 @@ public class PreCompHistogramWindow extends JFrame {
     }
 
     private PreCompHistogramWindow(ParaProfTrial ppTrial, Function function, Thread thread, Component invoker) throws Exception {
-        this.ppTrial = ppTrial;
+        //this.ppTrial = ppTrial;
         this.function = function;
         this.thread = thread;
 

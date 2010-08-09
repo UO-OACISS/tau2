@@ -29,7 +29,8 @@ class PPKFileFilter implements FilenameFilter {
 
 public class TrialGrabber {
 
-    public static void getExperiments(String path, List<List<ParaProfTrial>> exps, List<String> expnames) {
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	public static void getExperiments(String path, List<List<ParaProfTrial>> exps, List<String> expnames) {
         exps.clear();
         expnames.clear();
 
@@ -80,7 +81,8 @@ public class TrialGrabber {
         return ppTrial;
     }
 
-    public static List<ParaProfTrial> getTrials(String path) {
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	public static List<ParaProfTrial> getTrials(String path) {
         List<ParaProfTrial> trials = new ArrayList<ParaProfTrial>();
         File directory = new File(path);
 

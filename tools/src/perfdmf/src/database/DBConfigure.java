@@ -6,17 +6,36 @@
 
 package edu.uoregon.tau.perfdmf.database;
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+import javax.swing.UIManager;
 
 public class DBConfigure extends JFrame implements ActionListener {
 
-    //Some statics.
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -823454855564091450L;
+	//Some statics.
     static boolean debugIsOn = false;
     private static String USAGE = "DBConfigure (help | debug)";
 

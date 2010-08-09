@@ -2,11 +2,10 @@ package edu.uoregon.tau.perfdmf.loader;
 
 import jargs.gnu.CmdLineParser;
 import edu.uoregon.tau.perfdmf.database.ConnectionManager;
-import edu.uoregon.tau.perfdmf.database.DB;
 
 public class LoadApplication {
     private Load load = null;
-    private DB db = null;
+    //private DB db = null;
 
     private static String APP_USAGE = "usage: perfdmf_loadapp [{-h,--help}] {-x,--xmlfile} -c configure filename\n";
 
@@ -101,12 +100,12 @@ public class LoadApplication {
             System.exit(0);
         }
 
-        int exitval = 0;
+        //int exitval = 0;
 
         /***** Load appliation into PerfDMF *********/
         String appid = loadApp.storeApp(xmlFile);
         if (appid != null)
-            exitval = Integer.parseInt(appid);
+            //exitval = Integer.parseInt(appid);
 
         loadApp.getConnector().dbclose();
         // System.exit(exitval);

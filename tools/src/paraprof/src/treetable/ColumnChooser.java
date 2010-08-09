@@ -1,11 +1,28 @@
 package edu.uoregon.tau.paraprof.treetable;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.*;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListCellRenderer;
+import javax.swing.ListModel;
 
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.ParaProfMetric;
@@ -15,7 +32,13 @@ import edu.uoregon.tau.perfdmf.Metric;
 
 public class ColumnChooser extends JFrame {
 
-    private ParaProfTrial ppTrial;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1252523707923133716L;
+
+
+	//private ParaProfTrial ppTrial;
 
  
     private List<String> statistics = new ArrayList<String>();
@@ -41,7 +64,7 @@ public class ColumnChooser extends JFrame {
         this.setTitle("Choose Columns");
         this.setSize(500, 400);
 
-        this.ppTrial = ppTrial;
+        //this.ppTrial = ppTrial;
 
         numCalls = new ParaProfMetric();
         numCalls.setName("Calls");
@@ -69,7 +92,7 @@ public class ColumnChooser extends JFrame {
             selectedMetric = ppTrial.getDefaultMetric();
         }
 
-        List metrics = ppTrial.getMetrics();
+        List<Metric> metrics = ppTrial.getMetrics();
         
         // create the metric JList
         metricModel = new DefaultListModel();
@@ -239,7 +262,12 @@ public class ColumnChooser extends JFrame {
     }
 
     static class CheckBoxCellRenderer extends JCheckBox implements ListCellRenderer {
-        public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = -262593527091777147L;
+
+		public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
                 boolean cellHasFocus) {
             setBackground(list.getBackground());
             CheckBoxListItem checkBox = (CheckBoxListItem) value;

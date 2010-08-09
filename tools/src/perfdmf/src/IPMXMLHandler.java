@@ -1,13 +1,11 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Set;
-import java.util.Iterator;
-import java.util.TreeMap;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.TreeMap;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;

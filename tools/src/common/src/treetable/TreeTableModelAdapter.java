@@ -18,7 +18,10 @@ import java.util.Vector;
 
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
-import javax.swing.event.*;
+import javax.swing.event.TreeExpansionEvent;
+import javax.swing.event.TreeExpansionListener;
+import javax.swing.event.TreeModelEvent;
+import javax.swing.event.TreeModelListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
@@ -35,7 +38,11 @@ import javax.swing.tree.TreePath;
  * @author Scott Violet
  */
 public class TreeTableModelAdapter extends AbstractTableModel implements SortTableModel {
-    private JTree tree;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -2121699681828347799L;
+	private JTree tree;
     private AbstractTreeTableModel treeTableModel;
     private JTreeTable jTreeTable;
 
@@ -119,10 +126,10 @@ public class TreeTableModelAdapter extends AbstractTableModel implements SortTab
      * re-open the paths in a tree after a call to 'treeStructureChanged'
      * (which causes all open paths to collapse)
      */
-    public Vector getExpandedPaths() {
-        Enumeration expanded = tree.getExpandedDescendants(getRootPath());
+    public Vector<TreePath> getExpandedPaths() {
+        Enumeration<TreePath> expanded = tree.getExpandedDescendants(getRootPath());
 
-        Vector paths = new Vector();
+        Vector<TreePath> paths = new Vector<TreePath>();
         if (expanded != null) {
             while (expanded.hasMoreElements()) {
                 paths.add(expanded.nextElement());
@@ -136,10 +143,10 @@ public class TreeTableModelAdapter extends AbstractTableModel implements SortTab
      * Restores the given open paths on the treeModel.
      * @param paths a Vector of TreePaths which are going to be opened.
      */
-    public void restoreExpandedPaths(Vector paths) {
-        Enumeration e = paths.elements();
+    public void restoreExpandedPaths(Vector<TreePath> paths) {
+        Enumeration<TreePath> e = paths.elements();
         while (e.hasMoreElements()) {
-            TreePath path = (TreePath) e.nextElement();
+            TreePath path = e.nextElement();
             tree.expandPath(path);
         }
     }
@@ -168,7 +175,7 @@ public class TreeTableModelAdapter extends AbstractTableModel implements SortTab
     public void updateTreeTable() {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                Vector pathState = getExpandedPaths();
+                Vector<TreePath> pathState = getExpandedPaths();
 
                 treeTableModel.fireTreeStructureChanged(this, ((DefaultMutableTreeNode) treeTableModel.getRoot()).getPath(), null, null);
 

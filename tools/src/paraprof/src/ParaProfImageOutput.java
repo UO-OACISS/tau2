@@ -9,13 +9,19 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
-import javax.imageio.*;
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -122,7 +128,7 @@ public class ParaProfImageOutput {
 
         //Now write the image to file.
         ImageWriter writer = null;
-        Iterator iter = ImageIO.getImageWritersByFormatName(extension.toUpperCase());
+        Iterator<ImageWriter> iter = ImageIO.getImageWritersByFormatName(extension.toUpperCase());
         if (iter.hasNext()) {
             writer = (ImageWriter) iter.next();
         }
@@ -222,7 +228,7 @@ public class ParaProfImageOutput {
 
             //Now write the image to file.
             ImageWriter writer = null;
-            Iterator iter = ImageIO.getImageWritersByFormatName(extensionString);
+            Iterator<ImageWriter> iter = ImageIO.getImageWritersByFormatName(extensionString);
             if (iter.hasNext()) {
                 writer = (ImageWriter) iter.next();
             }

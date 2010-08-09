@@ -8,7 +8,6 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.util.Enumeration;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -19,7 +18,11 @@ import edu.uoregon.tau.perfdmf.Application;
 
 public class ParaProfApplication extends Application implements ParaProfTreeNodeUserObject {
 
-    private DefaultMutableTreeNode defaultMutableTreeNode = null;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1662692425763662408L;
+	private DefaultMutableTreeNode defaultMutableTreeNode = null;
     private TreePath treePath = null;
     private boolean dBApplication = false;
     private Vector<ParaProfExperiment> experiments = new Vector<ParaProfExperiment>();

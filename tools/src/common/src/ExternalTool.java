@@ -276,6 +276,7 @@ public class ExternalTool {
 		return prop;
 	}
 	
+	@SuppressWarnings("rawtypes")
 	public String dump() {
 		StringBuffer buf = new StringBuffer();
 		for (Iterator iter2 = properties.keySet().iterator(); iter2.hasNext(); ) {
@@ -372,7 +373,8 @@ public class ExternalTool {
 			}
 		}
 
-		ToolRunner tool = new ToolRunner(command.tool.workingDirectory, command.tool.environmentVariables, commandString);
+		//ToolRunner tool = 
+			new ToolRunner(command.tool.workingDirectory, command.tool.environmentVariables, commandString);
 	}
 	
 	private static String removeCallpath(String function) {
@@ -487,7 +489,7 @@ public class ExternalTool {
 	class ToolRunner extends Thread {
 		private String commandString = null;
 		private String workingDirectory = null;
-		private String[] environmentVariables = null;
+		//private String[] environmentVariables = null;
 		
 		ToolRunner(String commandString) {
 			this.commandString = commandString;
@@ -497,7 +499,7 @@ public class ExternalTool {
 		ToolRunner(String workingDirectory, String[] environmentVariables, String commandString) {
 			this.commandString = commandString;
 			this.workingDirectory = workingDirectory;
-			this.environmentVariables = environmentVariables;
+			//this.environmentVariables = environmentVariables;
 			this.start();
 		}
 		

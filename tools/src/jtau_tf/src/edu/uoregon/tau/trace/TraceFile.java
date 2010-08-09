@@ -182,8 +182,9 @@ public class TraceFile {
 	int thread;
 	String EdfFile;//Name of the edf file being read or written
 	//Map NidTidMap;//=new HashMap();
-	Map EventIdMap;//=new HashMap();;
-	Map GroupIdMap;//=new HashMap();
+	Map<Integer, EventDescr> EventIdMap;//=new HashMap();;
+	Map<String, Integer> GroupIdMap;//=new HashMap();
+	Map<Integer, String> IdGroupMap;
 	//long FirstTimestamp;
 	//boolean ClkInitialized;
 	//boolean subtractFirstTimestamp;

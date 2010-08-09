@@ -6,9 +6,13 @@
 
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.StringTokenizer;
-import java.util.Vector;
 
 public class DynaprofDataSource extends DataSource {
 
@@ -41,14 +45,14 @@ public class DynaprofDataSource extends DataSource {
         int threadID = -1;
 
         String inputString = null;
-        String s1 = null;
-        String s2 = null;
+        //String s1 = null;
+        //String s2 = null;
 
         String tokenString;
-        String groupNamesString = null;
+        //String groupNamesString = null;
         StringTokenizer genericTokenizer;
 
-        int numberOfLines = 0;
+        //int numberOfLines = 0;
 
         //System.out.println("Processing data, please wait ......");
         long time = System.currentTimeMillis();
@@ -117,7 +121,7 @@ public class DynaprofDataSource extends DataSource {
                     metric++;
                 }
 
-                double inclusivePerCall = functionDataLine.d3 / functionDataLine.i1;
+                //double inclusivePerCall = functionDataLine.d3 / functionDataLine.i1;
                 if (!totalLine && functionDataLine.i1 != 0) {
                     function = this.addFunction(functionDataLine.s0, this.getNumberOfMetrics());
 
@@ -205,7 +209,7 @@ public class DynaprofDataSource extends DataSource {
 
     private int[] getNCT(String string) {
         int[] nct = new int[3];
-        Vector tokens = new Vector();
+        //Vector tokens = new Vector();
         StringTokenizer st = new StringTokenizer(string, ".\t\n\r");
         int numberOfTokens = st.countTokens();
         nct[0] = 0;

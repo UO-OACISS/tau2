@@ -1,6 +1,11 @@
 package edu.uoregon.tau.paraprof.barchart;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 
 import javax.swing.JPanel;
 
@@ -9,7 +14,12 @@ import edu.uoregon.tau.paraprof.ParaProfUtils;
 
 public class LegendPanel extends JPanel {
 
-    private LegendModel model;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -7605496344675426707L;
+
+	private LegendModel model;
 
     private int xPanelSize;
     private int yPanelSize;

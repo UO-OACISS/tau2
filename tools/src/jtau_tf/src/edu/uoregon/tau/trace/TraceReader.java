@@ -38,8 +38,8 @@ public class TraceReader extends TraceFile{
 	long totalRead=0;
 	//int eventSize;
 	
-	HashSet nidTidSeen = new HashSet();
-	HashSet nidTidDone = new HashSet();
+	HashSet<Integer> nidTidSeen = new HashSet<Integer>();
+	HashSet<Integer> nidTidDone = new HashSet<Integer>();
 	
 	public TraceReader(String trace, String edf){
 		
@@ -77,9 +77,9 @@ public class TraceReader extends TraceFile{
 			/* Allocate space for nodeid, thread id map */
 			//tFile.NidTidMap=new HashMap();
 			/* Allocate space for event id map */
-			EventIdMap = new HashMap();
+			EventIdMap = new HashMap<Integer, EventDescr>();
 			/* Allocate space for group id map */
-			GroupIdMap = new HashMap();
+			GroupIdMap = new HashMap<String, Integer>();
 			/* initialize clock */
 			ClkInitialized = false;
 			/* initialize the first timestamp for the trace */
@@ -329,7 +329,7 @@ public class TraceReader extends TraceFile{
 					}
 					else
 					{ /* retrieve the stored group id token */
-						groupid = ((Integer)GroupIdMap.get(eventDescr.getGroup())).intValue();
+						groupid = GroupIdMap.get(eventDescr.getGroup()).intValue();
 					}
 					/* invoke callback for registering a new state */
 					if (eventDescr.getParameter().equals("TriggerValue"))//||eventDescr.Param.equals("none")
@@ -535,7 +535,7 @@ public class TraceReader extends TraceFile{
 			//parameter = traceBuffer[i].getParameter();//event_GetPar(traceBuffer, i);
 			/* Get param entry from EventIdMap */
 			
-			EventDescr eventDescr = (EventDescr)EventIdMap.get(new Integer(evt.evid));
+			EventDescr eventDescr = EventIdMap.get(new Integer(evt.evid));
 			if(eventDescr==null){
 				System.out.println("Warning: no event definiton for event ID "+evt.evid);
 				continue;

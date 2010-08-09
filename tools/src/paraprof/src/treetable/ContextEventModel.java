@@ -19,7 +19,7 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 public class ContextEventModel extends AbstractTreeTableModel {
 
     private static String[] cNames = { "Name", "Total", "NumSamples", "MaxValue", "MinValue", "MeanValue", "Std. Dev." };
-    private static Class[] cTypes = { TreeTableModel.class, Double.class, Double.class, Double.class, Double.class, Double.class,
+    private static Class<?>[] cTypes = { TreeTableModel.class, Double.class, Double.class, Double.class, Double.class, Double.class,
             Double.class };
 
     private List<ContextEventTreeNode> roots;
@@ -54,14 +54,14 @@ public class ContextEventModel extends AbstractTreeTableModel {
         dataSorter = new DataSorter(ppTrial);
 
         // don't ask the thread for its functions directly, since we want group masking to work
-        List<Comparable> uepList = dataSorter.getUserEventProfiles(thread);
+        List<PPUserEventProfile> uepList = dataSorter.getUserEventProfiles(thread);
 
         Map<String,Integer> rootNames = new HashMap<String,Integer>();
 
         if (window.getTreeMode()) {
-            for (Iterator<Comparable> it = uepList.iterator(); it.hasNext();) {
+            for (Iterator<PPUserEventProfile> it = uepList.iterator(); it.hasNext();) {
                 // Find all the rootNames (as strings)
-                PPUserEventProfile ppUserEventProfile = (PPUserEventProfile) it.next();
+                PPUserEventProfile ppUserEventProfile = it.next();
                 UserEventProfile uep = ppUserEventProfile.getUserEventProfile();
 
                 if (uep.getUserEvent().isContextEvent()) {
@@ -109,7 +109,8 @@ public class ContextEventModel extends AbstractTreeTableModel {
         return cNames[column];
     }
 
-    public Class getColumnClass(int column) {
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	public Class getColumnClass(int column) {
         return cTypes[column];
     }
 

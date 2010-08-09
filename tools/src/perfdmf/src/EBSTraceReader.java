@@ -1,7 +1,17 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import edu.uoregon.tau.common.Utility;
 
@@ -19,15 +29,15 @@ public class EBSTraceReader {
 
     private static boolean showCallSites = false;
 
-    private Group callpathGroup;
-    private Group sampleGroup;
+    //private Group callpathGroup;
+    //private Group sampleGroup;
 
-    private Thread thread;
+    //private Thread thread;
 
     public EBSTraceReader(DataSource dataSource) {
         this.dataSource = dataSource;
-        callpathGroup = dataSource.getGroup("TAU_CALLPATH");
-        sampleGroup = dataSource.addGroup("TAU_SAMPLE");
+        //callpathGroup = dataSource.getGroup("TAU_CALLPATH");
+        //sampleGroup = dataSource.addGroup("TAU_SAMPLE");
     }
 
     private void addSample(String callstack, String callpath) {
@@ -46,87 +56,87 @@ public class EBSTraceReader {
         }
     }
 
-    private boolean stackMatch(String cpNode, String csNode) {
-        //        System.out.println("Checking '" + cpNode + "' vs '" + csNode + "'");
+//    private boolean stackMatch(String cpNode, String csNode) {
+//        //        System.out.println("Checking '" + cpNode + "' vs '" + csNode + "'");
+//
+//        String fields[] = csNode.split(":");
+//        String csRoutine = fields[0];
+//        if (csRoutine.endsWith("()")) {
+//            csRoutine = csRoutine.substring(0, csRoutine.length() - 2);
+//        }
+//
+//        //        System.out.println("csRoutine = '" + csRoutine + "'");
+//        if (cpNode.equals(csRoutine)) {
+//            //            System.out.println("TRUE");
+//            return true;
+//        }
+//
+//        //        System.out.println("FALSE");
+//        return false;
+//    }
 
-        String fields[] = csNode.split(":");
-        String csRoutine = fields[0];
-        if (csRoutine.endsWith("()")) {
-            csRoutine = csRoutine.substring(0, csRoutine.length() - 2);
-        }
-
-        //        System.out.println("csRoutine = '" + csRoutine + "'");
-        if (cpNode.equals(csRoutine)) {
-            //            System.out.println("TRUE");
-            return true;
-        }
-
-        //        System.out.println("FALSE");
-        return false;
-    }
-
-    private String resolveCallpath(String callpath, String callstack) {
-
-        String cp[] = callpath.split("=>");
-        for (int i = 0; i < cp.length; i++) {
-            cp[i] = cp[i].trim();
-        }
-
-        String cs[] = callstack.split("=>");
-        for (int i = 0; i < cs.length; i++) {
-            cs[i] = cs[i].trim();
-        }
-
-        //int csIdx = cs.length-1;
-        //int cpIdx = cp.length-1;;
-
-        int matchCsIdx = 0, matchCpIdx = 0;
-
-        done: for (int cpIdx = cp.length - 1; cpIdx >= 0; cpIdx--) {
-            for (int csIdx = cs.length - 1; csIdx >= 0; csIdx--) {
-                if (stackMatch(cp[cpIdx], cs[csIdx])) {
-                    matchCsIdx = csIdx;
-                    matchCpIdx = cpIdx;
-                    break done;
-                }
-            }
-        }
-
-        //String result = callpath + " => " + callstack;
-
-        String result = null;
-
-        for (int i = 0; i < cp.length; i++) {
-            if (result == null) {
-                result = cp[i];
-            } else {
-                result = result + " => " + cp[i];
-            }
-        }
-
-        //        for (int i = 0; i <= matchCpIdx; i++) {
-        //            if (result == null) {
-        //                result = cp[i];
-        //            } else {
-        //                result = result + " => " + cp[i];
-        //            }
-        //        }
-
-        for (int i = matchCsIdx; i < cs.length; i++) {
-            if (result == null) {
-                result = cs[i];
-            } else {
-                result = result + " => " + cs[i];
-            }
-        }
-        //
-        //                System.out.println("callpath = " + callpath);
-        //                System.out.println("callstack = " + callstack);
-        //                System.out.println("result = " + result);
-        //                System.out.println("--------------------");
-
-        return result;
-    }
+//    private String resolveCallpath(String callpath, String callstack) {
+//
+//        String cp[] = callpath.split("=>");
+//        for (int i = 0; i < cp.length; i++) {
+//            cp[i] = cp[i].trim();
+//        }
+//
+//        String cs[] = callstack.split("=>");
+//        for (int i = 0; i < cs.length; i++) {
+//            cs[i] = cs[i].trim();
+//        }
+//
+//        //int csIdx = cs.length-1;
+//        //int cpIdx = cp.length-1;;
+//
+//        int matchCsIdx = 0;//, matchCpIdx = 0;
+//
+//        done: for (int cpIdx = cp.length - 1; cpIdx >= 0; cpIdx--) {
+//            for (int csIdx = cs.length - 1; csIdx >= 0; csIdx--) {
+//                if (stackMatch(cp[cpIdx], cs[csIdx])) {
+//                    matchCsIdx = csIdx;
+//                    //matchCpIdx = cpIdx;
+//                    break done;
+//                }
+//            }
+//        }
+//
+//        //String result = callpath + " => " + callstack;
+//
+//        String result = null;
+//
+//        for (int i = 0; i < cp.length; i++) {
+//            if (result == null) {
+//                result = cp[i];
+//            } else {
+//                result = result + " => " + cp[i];
+//            }
+//        }
+//
+//        //        for (int i = 0; i <= matchCpIdx; i++) {
+//        //            if (result == null) {
+//        //                result = cp[i];
+//        //            } else {
+//        //                result = result + " => " + cp[i];
+//        //            }
+//        //        }
+//
+//        for (int i = matchCsIdx; i < cs.length; i++) {
+//            if (result == null) {
+//                result = cs[i];
+//            } else {
+//                result = result + " => " + cs[i];
+//            }
+//        }
+//        //
+//        //                System.out.println("callpath = " + callpath);
+//        //                System.out.println("callstack = " + callstack);
+//        //                System.out.println("result = " + result);
+//        //                System.out.println("--------------------");
+//
+//        return result;
+//    }
 
     private void addIntermediateNodes(Thread thread, String callpath, int metric, double chunk, Group callpathGroup, Group sampleGroup) {
 
@@ -305,23 +315,23 @@ public class EBSTraceReader {
                         String node_text = inputString.substring(8);
                         node = Integer.parseInt(node_text);
                         if (tid != -1) {
-                            thread = dataSource.getThread(node, 0, tid);
+                            //thread = dataSource.getThread(node, 0, tid);
                         }
                     }
                     if (inputString.startsWith("# thread:")) {
                         String tid_text = inputString.substring(10);
                         tid = Integer.parseInt(tid_text);
                         if (node != -1) {
-                            thread = dataSource.getThread(node, 0, tid);
+                            //thread = dataSource.getThread(node, 0, tid);
                         }
                     }
                 } else {
 
                     String fields[] = inputString.split("\\|");
-                    long timestamp = Long.parseLong(fields[0].trim());
-                    long deltaBegin = Long.parseLong(fields[1].trim());
-                    long deltaEnd = Long.parseLong(fields[2].trim());
-                    String metrics = fields[3].trim();
+                    //long timestamp = Long.parseLong(fields[0].trim());
+                    //long deltaBegin = Long.parseLong(fields[1].trim());
+                    //long deltaEnd = Long.parseLong(fields[2].trim());
+                    //String metrics = fields[3].trim();
                     String callpath = fields[4].trim();
                     String callstack = fields[5].trim();
 

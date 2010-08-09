@@ -6,19 +6,24 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.tree.DefaultTreeModel;
 
-import edu.uoregon.tau.paraprof.ParaProfApplication;
 import edu.uoregon.tau.paraprof.ParaProfManagerWindow;
 import edu.uoregon.tau.paraprof.ParaProfMetric;
 
 public class MetricTableModel extends AbstractTableModel {
 
-    private ParaProfMetric metric;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -3629553461005668109L;
+	private ParaProfMetric metric;
     private String[] columnNames = { "MetricField", "Value" };
     private DefaultTreeModel defaultTreeModel;
     private List<String> fieldNames;
-    private List<Comparable> fieldValues;
+    @SuppressWarnings("rawtypes")
+	private List<Comparable> fieldValues;
 
-    public MetricTableModel(ParaProfManagerWindow paraProfManager, ParaProfMetric metric, DefaultTreeModel defaultTreeModel) {
+    @SuppressWarnings("rawtypes")
+	public MetricTableModel(ParaProfManagerWindow paraProfManager, ParaProfMetric metric, DefaultTreeModel defaultTreeModel) {
         this.metric = metric;
         this.defaultTreeModel = defaultTreeModel;
 

@@ -1,17 +1,41 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.List;
-import java.applet.*;
-import javax.swing.*;
+import java.util.ListIterator;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.ButtonGroup;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JTextArea;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
-import edu.uoregon.tau.paraprof.interfaces.*;
+import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
+import edu.uoregon.tau.paraprof.interfaces.ScrollBarController;
+import edu.uoregon.tau.paraprof.interfaces.SearchableOwner;
+import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 import edu.uoregon.tau.perfdmf.Thread;
 import edu.uoregon.tau.perfdmf.UtilFncs;
 
@@ -27,7 +51,11 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 public class CallPathTextWindow extends JFrame implements ActionListener, MenuListener, Observer, SearchableOwner,
         ScrollBarController, KeyListener, ParaProfWindow, UnitListener {
 
-    private ParaProfTrial ppTrial = null;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -8482671835939047124L;
+	private ParaProfTrial ppTrial = null;
     private DataSorter dataSorter = null;
 
     private JMenu optionsMenu = null;
@@ -36,18 +64,18 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     private boolean sortByName;
     private JCheckBoxMenuItem descendingOrder = null;
     private JCheckBoxMenuItem collapsedView = null;
-    private JCheckBoxMenuItem showPathTitleInReverse = null;
+    //private JCheckBoxMenuItem showPathTitleInReverse = null;
     private JCheckBoxMenuItem showMetaData = null;
     private JCheckBoxMenuItem showFindPanelBox;
 
     private JScrollPane sp;
     private CallPathTextWindowPanel panel;
 
-    private List<Comparable> list;
+    private List<PPFunctionProfile> list;
 
     private SearchPanel searchPanel;
 
-    private int order = 0;
+    //private int order = 0;
     private int units = ParaProf.preferences.getUnits();
 
     private Thread thread;
@@ -126,7 +154,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         //Options menu.
         optionsMenu = new JMenu("Options");
 
-        JCheckBoxMenuItem box = null;
+        //JCheckBoxMenuItem box = null;
         ButtonGroup group = null;
         JRadioButtonMenuItem button = null;
 
@@ -218,10 +246,10 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
                     panel.resetAllDrawObjects();
                     panel.repaint();
                 } else if (arg.equals("Descending Order")) {
-                    if (descendingOrder.isSelected())
-                        order = 0;
-                    else
-                        order = 1;
+                    //if (descendingOrder.isSelected())
+                        //order = 0;
+                    //else
+                        //order = 1;
                     sortLocalData();
                     panel.resetAllDrawObjects();
                     panel.repaint();
@@ -355,11 +383,11 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
         list = dataSorter.getFunctionProfiles(thread);
     }
 
-    public List<Comparable> getData() {
+    public List<PPFunctionProfile> getData() {
         return list;
     }
 
-    public ListIterator<Comparable> getDataIterator() {
+    public ListIterator<PPFunctionProfile> getDataIterator() {
         return list.listIterator();
     }
 

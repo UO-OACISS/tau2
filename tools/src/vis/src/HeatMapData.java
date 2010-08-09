@@ -37,7 +37,8 @@ public class HeatMapData implements Iterator<NextValue> {
     private int senderIndex = -1;
     private Iterator<Integer> receiverIndex = null;
 
-    public HeatMapData(int size) {
+    @SuppressWarnings("unchecked")
+	public HeatMapData(int size) {
         this.size = size;
         this.senders = new Map[this.size];
     }

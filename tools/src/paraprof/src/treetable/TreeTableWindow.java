@@ -1,14 +1,39 @@
 package edu.uoregon.tau.paraprof.treetable;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 
-import javax.swing.*;
+import javax.swing.ButtonGroup;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTree;
+import javax.swing.ListModel;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
@@ -19,11 +44,25 @@ import javax.swing.tree.TreePath;
 import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.common.treetable.AbstractTreeTableModel;
 import edu.uoregon.tau.common.treetable.JTreeTable;
-import edu.uoregon.tau.paraprof.*;
+import edu.uoregon.tau.paraprof.ColorBar;
+import edu.uoregon.tau.paraprof.ParaProf;
+import edu.uoregon.tau.paraprof.ParaProfTrial;
+import edu.uoregon.tau.paraprof.ParaProfUtils;
+import edu.uoregon.tau.paraprof.WindowPlacer;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 import edu.uoregon.tau.paraprof.treetable.ColumnChooser.CheckBoxListItem;
-import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.*;
+import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.ExclusiveColumn;
+import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.ExclusivePerCallColumn;
+import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.ExclusivePercentColumn;
+import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.InclusiveColumn;
+import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.InclusivePerCallColumn;
+import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.InclusivePercentColumn;
+import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.NumCallsColumn;
+import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.NumSubrColumn;
+import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.RegularMetricColumn;
+import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.RegularPerCallMetricColumn;
+import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.RegularPercentMetricColumn;
 import edu.uoregon.tau.perfdmf.Thread;
 
 /**
@@ -40,7 +79,11 @@ import edu.uoregon.tau.perfdmf.Thread;
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
         ImageExport {
 
-    private ParaProfTrial ppTrial;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 4726597182083786681L;
+	private ParaProfTrial ppTrial;
     private Thread thread;
 
     private CallPathModel model;
@@ -402,7 +445,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         MouseListener ml = new MouseAdapter() {
             public void mousePressed(MouseEvent evt) {
                 try {
-                    int selRow = tree.getRowForLocation(evt.getX(), evt.getY());
+                    //int selRow = tree.getRowForLocation(evt.getX(), evt.getY());
                     TreePath path = tree.getPathForLocation(evt.getX(), evt.getY());
                     if (path != null) {
                         TreeTableNode node = (TreeTableNode) path.getLastPathComponent();

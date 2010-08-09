@@ -283,7 +283,11 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
 
       // Then receive request for stats. No need to unpack.
       int tag;
+#ifdef MRNET_LIGHTWEIGHT
       Network_recv(net, &tag, p, &stream);
+#else /* MRNET_LIGHTWEIGHT */
+      net->recv(&tag, p, &stream);
+#endif /* MRNET_LIGHTWEIGHT */
       assert(tag == PROT_BASESTATS);
 
       double *out_sums;

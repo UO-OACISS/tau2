@@ -1,28 +1,32 @@
 package edu.uoregon.tau.paraprof.sourceview;
 
-import java.awt.*;
-import java.awt.print.PageFormat;
-import java.awt.print.Printable;
-import java.awt.print.PrinterException;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Point;
 
-import javax.swing.*;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextPane;
 import javax.swing.text.Document;
-
-import edu.uoregon.tau.common.ImageExport;
-import edu.uoregon.tau.paraprof.ParaProfUtils;
 
 /**
  * A class illustrating running line number count on JTextPane. Nothing
  is painted on the pane itself,
  * but a separate JPanel handles painting the line numbers.<br>
  *
- * @author Daniel Sjöblom<br>
+ * @author Daniel Sjï¿½blom<br>
  * Created on Mar 3, 2004<br>
  * Copyright (c) 2004<br>
  * @version 1.0<br>
  */
 public class LineNumberedTextPanel extends JPanel  {
-    // for this simple experiment, we keep the pane + scrollpane as members.
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -6759346836912947146L;
+	// for this simple experiment, we keep the pane + scrollpane as members.
     JTextPane pane;
     JScrollPane scrollPane;
 
@@ -32,7 +36,12 @@ public class LineNumberedTextPanel extends JPanel  {
         setPreferredSize(new Dimension(30, 30));
         setMinimumSize(new Dimension(30, 30));
         pane = new NoWrapTextPane() {
-            // we need to override paint so that the linenumbers stay in sync
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = -6548022852077257728L;
+
+			// we need to override paint so that the linenumbers stay in sync
             public void paint(Graphics g) {
                 super.paint(g);
                 LineNumberedTextPanel.this.repaint();

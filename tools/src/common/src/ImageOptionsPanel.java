@@ -8,13 +8,26 @@
 
 package edu.uoregon.tau.common;
 
-import java.awt.*;
-import javax.swing.*;
-import java.beans.*;
+import java.awt.Component;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 
 public class ImageOptionsPanel extends JPanel implements PropertyChangeListener {
 
-    private JCheckBox fullScreen = new JCheckBox("Full Window", true);
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -4236392653580823777L;
+	private JCheckBox fullScreen = new JCheckBox("Full Window", true);
     private JCheckBox prependHeader = new JCheckBox("Show Meta-Data", true);
     private JLabel imageQualityLabel = new JLabel("Image Quality");
     private String imageQualityStrings[] = { "1.0", "0.75", "0.5", "0.25", "0.15", "0.1" };

@@ -1,17 +1,30 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
+import java.awt.Container;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.*;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JRadioButton;
+import javax.swing.JTextField;
 
 import edu.uoregon.tau.common.Utility;
 
 
 public class FunctionFilterDialog extends JDialog {
 
-    private static String CASE_SENSITIVE = "case sensitive";
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 7908435194643432602L;
+	private static String CASE_SENSITIVE = "case sensitive";
     private ButtonGroup group = new ButtonGroup();
 
     private JRadioButton hideExcept = createRadioButton("hide all except matching", true, group);

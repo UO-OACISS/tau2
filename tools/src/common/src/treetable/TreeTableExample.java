@@ -70,7 +70,8 @@ public class TreeTableExample {
         String[] cNames = { "Name", "Size", "Type", "Modified" };
 
         // Types of the columns.
-        Class[] cTypes = { TreeTableModel.class, Integer.class, String.class, Date.class };
+        @SuppressWarnings("rawtypes")
+		Class[] cTypes = { TreeTableModel.class, Integer.class, String.class, Date.class };
 
         // The the returned file length for directories. 
         final Integer ZERO = new Integer(0);
@@ -123,7 +124,8 @@ public class TreeTableExample {
             return cNames[column];
         }
 
-        public Class<Object> getColumnClass(int column) {
+        @SuppressWarnings("unchecked")
+		public Class<Object> getColumnClass(int column) {
             return cTypes[column];
         }
 
@@ -157,7 +159,11 @@ public class TreeTableExample {
      * to the underlying file system during rendering. 
      */
     static class FileNode extends DefaultMutableTreeNode {
-        File file;
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = 5674303205543895393L;
+		File file;
         Object[] children;
 
         public FileNode(File file) {

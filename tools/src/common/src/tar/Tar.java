@@ -15,9 +15,14 @@
 
 package edu.uoregon.tau.common.tar;
 
-import java.io.*;
-import java.net.*;
-import java.util.zip.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * The tar class implements a weak reproduction of the
@@ -106,7 +111,7 @@ public class Tar extends Object implements TarProgressDisplay {
     /**
      * True if a MIME file has been loaded with the '--mime' option.
      */
-    private boolean mimeFileLoaded;
+//    private boolean mimeFileLoaded;
 
     /**
      * The archive name provided on the command line, null if stdio.

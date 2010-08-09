@@ -16,11 +16,18 @@
 
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
-import java.lang.reflect.Method;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
 
 import edu.uoregon.tau.common.LineCountBufferedReader;
 import edu.uoregon.tau.common.Utility;
@@ -48,22 +55,23 @@ public class TauDataSource extends DataSource {
     private volatile int filesRead = 0;
     private boolean profileStatsPresent = false;
     private boolean groupCheck = false;
-    private List dirs; // list of directories (e.g. MULTI__PAPI_FP_INS, MULTI__PAPI_L1_DCM)
-    private int currFunction = 0;
+    private List<File[]> dirs; // list of directories (e.g. MULTI__PAPI_FP_INS, MULTI__PAPI_L1_DCM)
+    //private int currFunction = 0;
 
     private File fileToMonitor;
 
     private File currentFile;
-    private int currentLine;
+    //private int currentLine;
 
     private LineCountBufferedReader br;
 
-    public TauDataSource(List dirs) {
+    @SuppressWarnings("unchecked")
+	public TauDataSource(List<?> dirs) {
         super();
-        this.dirs = dirs;
 
         if (dirs.size() > 0) {
             if (dirs.get(0) instanceof File[]) {
+            	this.dirs=(List<File[]>)dirs;
                 File[] files = (File[])dirs.get(0);
                 if (files.length > 0) {
                     fileToMonitor = files[0];
@@ -101,7 +109,8 @@ public class TauDataSource extends DataSource {
 
         boolean modernJava = false;
         try {
-            Method m = FileInputStream.class.getMethod("getChannel", (Class[]) null);
+            //Method m = 
+            	FileInputStream.class.getMethod("getChannel", (Class[]) null);
             modernJava = true;
         } catch (NoSuchMethodException nsme) {
             // way to go java 1.3
@@ -183,7 +192,7 @@ public class TauDataSource extends DataSource {
 
                         FileInputStream fileIn = new FileInputStream(files[i]);
                         currentFile = files[i];
-                        currentLine = 0;
+                        //currentLine = 0;
                         FileChannel channel;
                         FileLock lock = null;
 
@@ -265,7 +274,7 @@ public class TauDataSource extends DataSource {
                             }
 
                             for (int j = 0; j < numFunctions; j++) {
-                                this.currFunction = j;
+                                //this.currFunction = j;
 
                                 inputString = br.readLine();
                                 if (inputString == null) {
@@ -376,8 +385,8 @@ public class TauDataSource extends DataSource {
                             finished = true;
                         } else {
                             if (thread != null) {
-                                for (Iterator it2 = thread.getFunctionProfileIterator(); it2.hasNext();) {
-                                    FunctionProfile fp = (FunctionProfile) it2.next();
+                                for (Iterator<FunctionProfile> it2 = thread.getFunctionProfileIterator(); it2.hasNext();) {
+                                    FunctionProfile fp = it2.next();
                                     if (fp != null) {
                                         for (int m = 0; m < this.getNumberOfMetrics(); m++) {
                                             fp.setExclusive(m, 0);
@@ -403,7 +412,7 @@ public class TauDataSource extends DataSource {
                     "Didn't find any valid files.\nAre you sure these are TAU profiles? (e.g. profile.*.*.*)");
         }
 
-        long thistime = (System.currentTimeMillis()) - time;
+        //long thistime = (System.currentTimeMillis()) - time;
         //System.out.println("Time to process (in milliseconds): " + thistime);
         //System.out.print(thistime + ", ");
 
@@ -475,8 +484,8 @@ public class TauDataSource extends DataSource {
         double numsubr;
         double exclusive;
         double inclusive;
-        double profileCalls;
-        double sumExclSqr;
+        //double profileCalls;
+        //double sumExclSqr;
 
         String groupNames = this.getGroupNames(string);
 
@@ -523,10 +532,10 @@ public class TauDataSource extends DataSource {
         exclusive = Double.parseDouble(st2.nextToken()); //Exclusive
         inclusive = Double.parseDouble(st2.nextToken()); //Inclusive
         if (this.getProfileStatsPresent()) {
-            sumExclSqr = Double.parseDouble(st2.nextToken()); //SumExclSqr
+            //sumExclSqr = Double.parseDouble(st2.nextToken()); //SumExclSqr
         }
 
-        profileCalls = Integer.parseInt(st2.nextToken()); //ProfileCalls
+        //profileCalls = Integer.parseInt(st2.nextToken()); //ProfileCalls
 
         if (inclusive < 0) {
             System.err.println("File '" + currentFile + "' is corrupt (at line " + br.getCurrentLine()

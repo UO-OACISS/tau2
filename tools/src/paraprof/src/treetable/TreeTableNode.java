@@ -1,7 +1,12 @@
 package edu.uoregon.tau.paraprof.treetable;
 
 import java.awt.Color;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
@@ -20,7 +25,11 @@ import edu.uoregon.tau.perfdmf.FunctionProfile;
  * @version $Revision: 1.13 $
  */
 public class TreeTableNode extends DefaultMutableTreeNode implements Comparable<TreeTableNode> {
-    private List<TreeTableNode> children;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -3499993765860892169L;
+	private List<TreeTableNode> children;
     private FunctionProfile functionProfile;
     private String displayName;
     private boolean expanded;
@@ -72,7 +81,7 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable<
         if (children == null) {
             children = new ArrayList<TreeTableNode>();
 
-            List functionProfileList = model.getThread().getFunctionProfiles();
+            List<FunctionProfile> functionProfileList = model.getThread().getFunctionProfiles();
 
             boolean foundAsInternal = false;
             // If we are B, this will be true if there is "A => B => C", but there is
@@ -83,8 +92,8 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable<
 
             boolean foundActual = false;
 
-            for (Iterator it = functionProfileList.iterator(); it.hasNext();) {
-                FunctionProfile fp = (FunctionProfile) it.next();
+            for (Iterator<FunctionProfile> it = functionProfileList.iterator(); it.hasNext();) {
+                FunctionProfile fp = it.next();
                 if (fp == this.functionProfile)
                     continue;
 
@@ -240,7 +249,8 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable<
         }
     }
 
-    public int compareTo(TreeTableNode o) {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	public int compareTo(TreeTableNode o) {
 
         int result = -99;
         if (model.getSortColumn() == 0) {

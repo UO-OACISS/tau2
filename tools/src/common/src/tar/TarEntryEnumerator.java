@@ -24,7 +24,7 @@ import java.util.NoSuchElementException;
 
 public
 class		TarEntryEnumerator
-implements	Enumeration
+implements	Enumeration<TarEntry>
 	{
 	/**
 	 * The instance on which the enumeration works.
@@ -67,7 +67,7 @@ implements	Enumeration
 	 * @exception <B>NoSuchElementException</B> should an attempt be made to
 	 *  read beyond EOF
 	 */
-	public Object
+	public TarEntry
 	nextElement()
 		throws NoSuchElementException
 		{

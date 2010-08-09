@@ -8,15 +8,30 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
 
 public class DBConfiguration extends JFrame implements ActionListener {
 
-    public DBConfiguration(ParaProfManagerWindow paraProfManager) {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -3357587639366720895L;
+	public DBConfiguration(ParaProfManagerWindow paraProfManager) {
         this.paraProfManager = paraProfManager;
 
         String password = ParaProf.preferences.getDatabasePassword();
@@ -115,7 +130,7 @@ public class DBConfiguration extends JFrame implements ActionListener {
 
     public void actionPerformed(ActionEvent evt) {
         try {
-            Object EventSrc = evt.getSource();
+            //Object EventSrc = evt.getSource();
             String arg = evt.getActionCommand();
             if (arg.equals("Config File")) {
                 JFileChooser jFileChooser = null;
