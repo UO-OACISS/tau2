@@ -16,7 +16,7 @@ import javax.swing.text.Document;
  is painted on the pane itself,
  * but a separate JPanel handles painting the line numbers.<br>
  *
- * @author Daniel Sj�blom<br>
+ * @author Daniel Sjoblom<br>
  * Created on Mar 3, 2004<br>
  * Copyright (c) 2004<br>
  * @version 1.0<br>
