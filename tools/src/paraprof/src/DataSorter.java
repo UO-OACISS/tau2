@@ -73,14 +73,14 @@ public class DataSorter implements Comparator<FunctionProfile> {
         return selectedMetric.getDerivedMetric();
     }
 
-    public List<Comparable> getUserEventProfiles(Thread thread) {
+    public List<PPUserEventProfile> getUserEventProfiles(Thread thread) {
 
         UserEventProfile userEventProfile = null;
 
-        List<Comparable> newList = new ArrayList<Comparable>();
+        List<PPUserEventProfile> newList = new ArrayList<PPUserEventProfile>();
 
         for (Iterator<UserEventProfile> e1 = thread.getUserEventProfiles(); e1.hasNext();) {
-            userEventProfile = (UserEventProfile) e1.next();
+            userEventProfile = e1.next();
             if (userEventProfile != null) {
                 PPUserEventProfile ppUserEventProfile = new PPUserEventProfile(this, thread, userEventProfile);
                 newList.add(ppUserEventProfile);
@@ -90,14 +90,14 @@ public class DataSorter implements Comparator<FunctionProfile> {
         return newList;
     }
 
-    private List<Comparable> createFunctionProfileList(Thread thread, boolean callpath) {
-        List<Comparable> newList = null;
+    private List<PPFunctionProfile> createFunctionProfileList(Thread thread, boolean callpath) {
+        List<PPFunctionProfile> newList = null;
 
         List<FunctionProfile> functionList = thread.getFunctionProfiles();
-        newList = new ArrayList<Comparable>();
+        newList = new ArrayList<PPFunctionProfile>();
 
         for (int i = 0; i < functionList.size(); i++) {
-            FunctionProfile functionProfile = (FunctionProfile) functionList.get(i);
+            FunctionProfile functionProfile = functionList.get(i);
             if (functionProfile != null) {
                 if (callpath) {
                     if (functionProfile.getFunction().isPhaseMember(phase)) {
@@ -117,11 +117,11 @@ public class DataSorter implements Comparator<FunctionProfile> {
         return newList;
     }
 
-    public List<Comparable> getCallPathFunctionProfiles(Thread thread) {
+    public List<PPFunctionProfile> getCallPathFunctionProfiles(Thread thread) {
         return createFunctionProfileList(thread, true);
     }
 
-    public List<Comparable> getFunctionProfiles(Thread thread) {
+    public List<PPFunctionProfile> getFunctionProfiles(Thread thread) {
         return createFunctionProfileList(thread, false);
     }
 
@@ -129,11 +129,11 @@ public class DataSorter implements Comparator<FunctionProfile> {
 
         List<FunctionProfile> newList = null;
 
-        List functionList = thread.getFunctionProfiles();
+        List<FunctionProfile> functionList = thread.getFunctionProfiles();
         newList = new ArrayList<FunctionProfile>();
 
         for (int i = 0; i < functionList.size(); i++) {
-            FunctionProfile functionProfile = (FunctionProfile) functionList.get(i);
+            FunctionProfile functionProfile = functionList.get(i);
             if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())) {
                 newList.add(functionProfile);
             }
@@ -156,7 +156,7 @@ public class DataSorter implements Comparator<FunctionProfile> {
             thread = ppTrial.getDataSource().getStdDevData();
             ppThread = new PPThread(thread, this.ppTrial);
             for (Iterator<FunctionProfile> it = thread.getFunctionProfiles().iterator(); it.hasNext();) {
-                FunctionProfile functionProfile = (FunctionProfile) it.next();
+                FunctionProfile functionProfile = it.next();
                 if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())
                         && functionProfile.getFunction().isPhaseMember(phase)) {
                     PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
@@ -169,7 +169,7 @@ public class DataSorter implements Comparator<FunctionProfile> {
             thread = ppTrial.getDataSource().getMeanData();
             ppThread = new PPThread(thread, this.ppTrial);
             for (Iterator<FunctionProfile> it = thread.getFunctionProfiles().iterator(); it.hasNext();) {
-                FunctionProfile functionProfile = (FunctionProfile) it.next();
+                FunctionProfile functionProfile = it.next();
                 if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())
                         && functionProfile.getFunction().isPhaseMember(phase)) {
                     PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
@@ -197,7 +197,7 @@ public class DataSorter implements Comparator<FunctionProfile> {
         }
 
         for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
-            thread = (Thread) it.next();
+            thread = it.next();
 
             ppThread = new PPThread(thread, this.ppTrial);
             for (Iterator<PPFunctionProfile> it2 = order.getFunctionListIterator(); it2.hasNext();) {
@@ -292,7 +292,7 @@ public class DataSorter implements Comparator<FunctionProfile> {
         List<FunctionProfile> meanProfiles = ppTrial.getDataSource().getMeanData().getFunctionProfiles();
 
         for (int i = 0, n = meanProfiles.size(); i < n; i++) {
-            FunctionProfile functionProfile = (FunctionProfile) meanProfiles.get(i);
+            FunctionProfile functionProfile = meanProfiles.get(i);
             if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())
                     && functionProfile.getFunction().isPhaseMember(phase)) {
                 order.add(functionProfile);
@@ -313,7 +313,7 @@ public class DataSorter implements Comparator<FunctionProfile> {
 
         // add all the other threads
         for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
-            Thread thread = (Thread) it.next();
+            Thread thread = it.next();
             addThread(threads, order, thread);
         }
 
@@ -331,7 +331,7 @@ public class DataSorter implements Comparator<FunctionProfile> {
         List<FunctionProfile> meanProfiles = ppTrial.getDataSource().getMeanData().getFunctionProfiles();
 
         for (int i = 0, n = meanProfiles.size(); i < n; i++) {
-            FunctionProfile functionProfile = (FunctionProfile) meanProfiles.get(i);
+            FunctionProfile functionProfile = meanProfiles.get(i);
             if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())
                     && functionProfile.getFunction().isPhaseMember(phase)) {
                 order.add(functionProfile);
@@ -364,7 +364,7 @@ public class DataSorter implements Comparator<FunctionProfile> {
 
         // add all the other threads
         for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
-            Thread thread = (Thread) it.next();
+            Thread thread = it.next();
             threads.add(thread);
         }
         return threads;
@@ -406,7 +406,7 @@ public class DataSorter implements Comparator<FunctionProfile> {
             }
         }
         for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
-            thread = (Thread) it.next();
+            thread = it.next();
             FunctionProfile functionProfile = thread.getFunctionProfile(function);
             if (functionProfile != null) {
                 //Create a new thread data object.
@@ -428,7 +428,7 @@ public class DataSorter implements Comparator<FunctionProfile> {
         }
 
         for (Iterator<FunctionProfile> it = thread.getFunctionProfileIterator(); it.hasNext();) {
-            FunctionProfile functionProfile = (FunctionProfile) it.next();
+            FunctionProfile functionProfile = it.next();
             if (functionProfile != null) {
 
                 if (functionProfile.isCallPathFunction()) {
@@ -467,7 +467,7 @@ public class DataSorter implements Comparator<FunctionProfile> {
         }
 
         for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
-            thread = (Thread) it.next();
+            thread = it.next();
 
             userEventProfile = thread.getUserEventProfile(userEvent);
             if (userEventProfile != null) {

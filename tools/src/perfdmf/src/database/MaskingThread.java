@@ -6,7 +6,7 @@ package edu.uoregon.tau.perfdmf.database;
 
 class MaskingThread extends Thread {
    private boolean stop = false;
-   private int index;
+   //private int index;
    private String prompt;
 
 

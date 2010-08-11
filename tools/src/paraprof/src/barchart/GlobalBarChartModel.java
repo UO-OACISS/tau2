@@ -8,9 +8,18 @@ import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 
 import edu.uoregon.tau.common.Common;
-import edu.uoregon.tau.paraprof.*;
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.paraprof.DataSorter;
+import edu.uoregon.tau.paraprof.FunctionBarChartWindow;
+import edu.uoregon.tau.paraprof.FunctionOrdering;
+import edu.uoregon.tau.paraprof.GlobalDataWindow;
+import edu.uoregon.tau.paraprof.ParaProf;
+import edu.uoregon.tau.paraprof.ParaProfTrial;
+import edu.uoregon.tau.paraprof.ParaProfUtils;
+import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.FunctionProfile;
+import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Thread;
+import edu.uoregon.tau.perfdmf.UtilFncs;
 
 /**
  * A BarChartModel for doing the GlobalDataWindow
@@ -146,9 +155,9 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
     //        return null;
     //    }
     public Color getValueHighlightColor(int row, int subIndex) {
-        Thread thread = theThreads.get(row);
+        //Thread thread = theThreads.get(row);
         Function function = functionOrder.getOrder()[subIndex];
-        FunctionProfile fp = thread.getFunctionProfile(function);
+        //FunctionProfile fp = thread.getFunctionProfile(function);
         if (function == (ppTrial.getHighlightedFunction())) {
             return ppTrial.getColorChooser().getHighlightColor();
         } else if (function.isGroupMember(ppTrial.getHighlightedGroup())) {

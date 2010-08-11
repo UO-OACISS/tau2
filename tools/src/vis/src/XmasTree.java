@@ -1,23 +1,32 @@
 package edu.uoregon.tau.vis;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Observable;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.glu.GLU;
 import javax.media.opengl.glu.GLUquadric;
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import com.sun.opengl.util.GLUT;
 
 public class XmasTree implements Plot {
-    private List levels;
+    private List<List<Ornament>> levels;
 
     // rendering details
     private int displayList;
@@ -29,8 +38,8 @@ public class XmasTree implements Plot {
     private ColorScale colorScale;
 
     private GLUT glut = new GLUT();
-    private int font = GLUT.STROKE_MONO_ROMAN;
-    private float stringSize = 3;
+    //private int font = GLUT.STROKE_MONO_ROMAN;
+    //private float stringSize = 3;
 
     private boolean showLabels = true;
 
@@ -40,8 +49,8 @@ public class XmasTree implements Plot {
     public static class Ornament {
         private Object userObject;
 
-        private List parents;
-        private List children;
+        private List<Ornament> parents;
+        private List<Ornament> children;
 
         //private Vec position;
         private float size;
@@ -60,8 +69,8 @@ public class XmasTree implements Plot {
         public Ornament(String label, Object userObject) {
             this.label = label;
             this.userObject = userObject;
-            children = new ArrayList();
-            parents = new ArrayList();
+            children = new ArrayList<Ornament>();
+            parents = new ArrayList<Ornament>();
         }
 
         public void addChild(Ornament child) {
@@ -69,7 +78,7 @@ public class XmasTree implements Plot {
             //child.getParents().add(this);
         }
 
-        public List getChildren() {
+        public List<Ornament> getChildren() {
             return children;
         }
 
@@ -85,11 +94,11 @@ public class XmasTree implements Plot {
             this.color = color;
         }
 
-        public List getParents() {
+        public List<Ornament> getParents() {
             return parents;
         }
 
-        public void setParents(List parents) {
+        public void setParents(List<Ornament> parents) {
             this.parents = parents;
         }
 
@@ -117,7 +126,7 @@ public class XmasTree implements Plot {
             this.userObject = userObject;
         }
 
-        public void setChildren(List children) {
+        public void setChildren(List<Ornament> children) {
             this.children = children;
         }
 
@@ -131,7 +140,7 @@ public class XmasTree implements Plot {
 
     }
 
-    public XmasTree(List levels) {
+    public XmasTree(List<List<Ornament>> levels) {
         this.levels = levels;
     }
 
@@ -176,30 +185,30 @@ public class XmasTree implements Plot {
 
     }
 
-    private void drawText(GL gl, double x, double y, String text) {
-        gl.glColor3f(1, 1, 1);
-        gl.glPushMatrix();
-        gl.glScalef(stringSize / 1000, stringSize / 1000, stringSize / 1000);
-        // the text seems to be about 100 in height, so move to the middle
-        gl.glTranslatef(0.0f, -50.0f, 0.0f);
+//    private void drawText(GL gl, double x, double y, String text) {
+//        gl.glColor3f(1, 1, 1);
+//        gl.glPushMatrix();
+//        gl.glScalef(stringSize / 1000, stringSize / 1000, stringSize / 1000);
+//        // the text seems to be about 100 in height, so move to the middle
+//        gl.glTranslatef(0.0f, -50.0f, 0.0f);
+//
+//        // Render The Text
+//        for (int c = 0; c < text.length(); c++) {
+//            char ch = text.charAt(c);
+//            glut.glutStrokeCharacter(font, ch);
+//        }
+//        gl.glPopMatrix();
+//    }
 
-        // Render The Text
-        for (int c = 0; c < text.length(); c++) {
-            char ch = text.charAt(c);
-            glut.glutStrokeCharacter(font, ch);
-        }
-        gl.glPopMatrix();
-    }
-
-    private double setRingPosition(List nodes, float z, double radius) {
+    private double setRingPosition(List<Ornament> nodes, float z, double radius) {
         double ringsize = nodes.size() - 1;
         ringsize *= radiusMultiple;
         if (ringsize <= radius) {
             ringsize = radius + 5;
         }
         int c = 0;
-        for (Iterator it2 = nodes.iterator(); it2.hasNext();) {
-            Ornament o = (Ornament) it2.next();
+        for (Iterator<Ornament> it2 = nodes.iterator(); it2.hasNext();) {
+            Ornament o = it2.next();
 
             Vec pos = new Vec(ringsize * 0.5f, 0f, 0f);
 
@@ -216,7 +225,7 @@ public class XmasTree implements Plot {
 
     public void privateRender(VisRenderer visRenderer) {
         GLAutoDrawable glDrawable = visRenderer.getGLAutoDrawable();
-        Vec direction = visRenderer.getViewDirection();
+        //Vec direction = visRenderer.getViewDirection(); //TODO: No side effects?
 
         GL gl = glDrawable.getGL();
 
@@ -224,14 +233,14 @@ public class XmasTree implements Plot {
         //            gl.glVertex3f(i,i,i);
         //        }
         float z = 10;
-        for (Iterator it = levels.iterator(); it.hasNext();) {
-            List level = (List) it.next();
+        for (Iterator<List<Ornament>> it = levels.iterator(); it.hasNext();) {
+            List<Ornament> level = it.next();
 
-            List nodes = new ArrayList();
-            List leaves = new ArrayList();
+            List<Ornament> nodes = new ArrayList<Ornament>();
+            List<Ornament> leaves = new ArrayList<Ornament>();
 
-            for (Iterator it2 = level.iterator(); it2.hasNext();) {
-                Ornament o = (Ornament) it2.next();
+            for (Iterator<Ornament> it2 = level.iterator(); it2.hasNext();) {
+                Ornament o = it2.next();
                 if (level.size() > 5) {
                     // split into two levels
                     if (o.children.size() > 0) {
@@ -266,10 +275,10 @@ public class XmasTree implements Plot {
         glu.gluQuadricOrientation(qobj, GLU.GLU_OUTSIDE);
         glu.gluQuadricNormals(qobj, GLU.GLU_SMOOTH);
 
-        for (Iterator it = levels.iterator(); it.hasNext();) {
-            List level = (List) it.next();
-            for (Iterator it2 = level.iterator(); it2.hasNext();) {
-                Ornament o = (Ornament) it2.next();
+        for (Iterator<List<Ornament>> it = levels.iterator(); it.hasNext();) {
+            List<Ornament> level = it.next();
+            for (Iterator<Ornament> it2 = level.iterator(); it2.hasNext();) {
+                Ornament o = it2.next();
                 Vec pos = o.getVec();
 
                 gl.glPushMatrix();
@@ -304,14 +313,14 @@ public class XmasTree implements Plot {
         gl.glColor3f(108 / 255.0f, 108 / 255.0f, 108 / 255.0f);
 
         gl.glBegin(GL.GL_LINES);
-        for (Iterator it = levels.iterator(); it.hasNext();) {
-            List level = (List) it.next();
-            for (Iterator it2 = level.iterator(); it2.hasNext();) {
-                Ornament o = (Ornament) it2.next();
+        for (Iterator<List<Ornament>> it = levels.iterator(); it.hasNext();) {
+            List<Ornament> level = it.next();
+            for (Iterator<Ornament> it2 = level.iterator(); it2.hasNext();) {
+                Ornament o = it2.next();
                 Vec source = o.getVec();
 
-                for (Iterator it3 = o.getChildren().iterator(); it3.hasNext();) {
-                    Ornament child = (Ornament) it3.next();
+                for (Iterator<Ornament> it3 = o.getChildren().iterator(); it3.hasNext();) {
+                    Ornament child = it3.next();
                     Vec dest = child.getVec();
                     gl.glVertex3f(source.x, source.y, source.z);
                     gl.glVertex3f(dest.x, dest.y, dest.z);
@@ -323,15 +332,15 @@ public class XmasTree implements Plot {
         if (showLabels) {
             gl.glDisable(GL.GL_DEPTH_TEST);
             gl.glDisable(GL.GL_LIGHTING);
-            for (Iterator it = levels.iterator(); it.hasNext();) {
-                List level = (List) it.next();
-                for (Iterator it2 = level.iterator(); it2.hasNext();) {
-                    Ornament o = (Ornament) it2.next();
+            for (Iterator<List<Ornament>> it = levels.iterator(); it.hasNext();) {
+                List<Ornament> level = it.next();
+                for (Iterator<Ornament> it2 = level.iterator(); it2.hasNext();) {
+                    Ornament o = it2.next();
                     Vec pos = o.getVec();
 
                     gl.glPushMatrix();
                     gl.glTranslatef(pos.x, pos.y, pos.z);
-                    Color c = colorScale.getColor(o.getColor());
+                    //Color c = colorScale.getColor(o.getColor());
                     //gl.glColor3f(c.getRed() / 255.0f, c.getGreen() / 255.0f, c.getBlue() / 255.0f);
 
                     // draw the label

@@ -233,7 +233,7 @@ public class ColorScale extends Observable implements Shape {
         //        VisTools.addCompItem(controlPanel, new JLabel("ColorScale Selection"), gbc, 0, 1, 1, 1);
         ButtonGroup group = new ButtonGroup();
 
-        final Map colorScaleMap = new HashMap();
+        final Map<JRadioButton, ColorSet> colorScaleMap = new HashMap<JRadioButton, ColorSet>();
 
         int x = 0;
         int y = 2;
@@ -244,7 +244,7 @@ public class ColorScale extends Observable implements Shape {
             colorScaleMap.put(jrb, colorSet);
             jrb.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
-                    ColorScale.this.colorSet = (ColorSet) colorScaleMap.get(evt.getSource());
+                    ColorScale.this.colorSet = colorScaleMap.get(evt.getSource());
                     ColorScale.this.dirty = true;
 
                     // notify anyone watching the colorScale

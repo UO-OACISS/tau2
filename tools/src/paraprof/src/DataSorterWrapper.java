@@ -34,10 +34,10 @@ public class DataSorterWrapper extends DataSorter {
 
         metricMap = new HashMap<Metric, Metric>();
 
-        for (Iterator it = parentTrial.getMetrics().iterator(); it.hasNext();) {
-            Metric parentMetric = (Metric)it.next();
-            for (Iterator it2 = ppTrial.getMetrics().iterator(); it2.hasNext();) {
-                Metric childMetric = (Metric) it2.next();
+        for (Iterator<Metric> it = parentTrial.getMetrics().iterator(); it.hasNext();) {
+            Metric parentMetric = it.next();
+            for (Iterator<Metric> it2 = ppTrial.getMetrics().iterator(); it2.hasNext();) {
+                Metric childMetric = it2.next();
                 if (parentMetric.getName().compareTo(childMetric.getName()) == 0) {
                     metricMap.put(parentMetric, childMetric);
                 }

@@ -1,20 +1,53 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 
-import javax.swing.*;
-import javax.swing.event.*;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JScrollBar;
+import javax.swing.JSeparator;
+import javax.swing.JSlider;
+import javax.swing.JTextArea;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 
 import edu.uoregon.tau.common.Utility;
-import edu.uoregon.tau.paraprof.barchart.*;
+import edu.uoregon.tau.paraprof.barchart.BarChartModel;
+import edu.uoregon.tau.paraprof.barchart.BarChartPanel;
+import edu.uoregon.tau.paraprof.barchart.ComparisonBarChartModel;
+import edu.uoregon.tau.paraprof.barchart.FunctionBarChartModel;
+import edu.uoregon.tau.paraprof.barchart.LegendPanel;
+import edu.uoregon.tau.paraprof.barchart.ThreadBarChartModel;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
-import edu.uoregon.tau.paraprof.interfaces.*;
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
+import edu.uoregon.tau.paraprof.interfaces.SearchableOwner;
+import edu.uoregon.tau.paraprof.interfaces.SortListener;
+import edu.uoregon.tau.paraprof.interfaces.UnitListener;
+import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Thread;
+import edu.uoregon.tau.perfdmf.UtilFncs;
 
 /**
  * The FunctionBarChartWindow displays performance data in many ways.  
@@ -33,7 +66,11 @@ import edu.uoregon.tau.perfdmf.Thread;
 public class FunctionBarChartWindow extends JFrame implements KeyListener, SearchableOwner, ActionListener, MenuListener,
         Observer, ChangeListener, ParaProfWindow, UnitListener, SortListener {
 
-    private ParaProfTrial ppTrial;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 3984568716635957738L;
+	private ParaProfTrial ppTrial;
     private DataSorter dataSorter;
 
     private Function function;
@@ -209,7 +246,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(2, 2, 2, 2);
 
-        BarChart barChart = panel.getBarChart();
+        //BarChart barChart = panel.getBarChart();
 
         //        if (function != null) {
         //            barChart.setLeftJustified(true);

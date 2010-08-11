@@ -1,6 +1,11 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -135,7 +140,7 @@ public class GprofDataSource extends DataSource {
                                 LineData lineDataParent = parents.elementAt(i);
                                 function = this.addFunction(lineDataParent.s0, 1);
                                 function.addGroup(addGroup("TAU_DEFAULT"));
-                                String s = lineDataParent.s0 + " => " + self.s0 + "  ";
+                                //String s = lineDataParent.s0 + " => " + self.s0 + "  ";
                                 callPathFunction = this.addFunction(lineDataParent.s0 + " => " + self.s0 + "  ", 1);
                                 callPathFunction.addGroup(addGroup("TAU_DEFAULT"));
                                 callPathFunction.addGroup(addGroup("TAU_CALLPATH"));
@@ -156,7 +161,7 @@ public class GprofDataSource extends DataSource {
                                 LineData lineDataChild = children.elementAt(i);
                                 function = this.addFunction(lineDataChild.s0, 1);
                                 function.addGroup(addGroup("TAU_DEFAULT"));
-                                String s = self.s0 + " => " + lineDataChild.s0 + "  ";
+                                //String s = self.s0 + " => " + lineDataChild.s0 + "  ";
                                 callPathFunction = this.addFunction(self.s0 + " => " + lineDataChild.s0 + "  ", 1);
                                 callPathFunction.addGroup(addGroup("TAU_DEFAULT"));
                                 callPathFunction.addGroup(addGroup("TAU_CALLPATH"));
@@ -249,7 +254,7 @@ public class GprofDataSource extends DataSource {
         //the number of calls for the top level function (usually main).
         //Check the number of tokens to see if we are in this case. If so,
         //by default, we assume a number of calls value of 1.
-        int numberOfTokens = st.countTokens();
+        //int numberOfTokens = st.countTokens();
 
         // Skip the first token.
         // Entries are numbered with consecutive integers.
@@ -310,7 +315,8 @@ public class GprofDataSource extends DataSource {
         boolean hasCalls;
         String str = st.nextToken();
         try {
-            int foo = Integer.parseInt(str);
+            //int foo = 
+            	Integer.parseInt(str);
             hasCalls = true;
         } catch (NumberFormatException nfe) {
             hasCalls = false;
@@ -470,32 +476,32 @@ public class GprofDataSource extends DataSource {
         return lineData;
     }
 
-    private LineData getSummaryLineData(String string) {
-        LineData lineData = new LineData();
-        StringTokenizer st = new StringTokenizer(string, " \t\n\r");
-
-        lineData.d0 = Double.parseDouble(st.nextToken());
-        lineData.d1 = 1000.0 * Double.parseDouble(st.nextToken());
-        lineData.d2 = 1000.0 * Double.parseDouble(st.nextToken());
-        if (st.countTokens() > 5) {
-            lineData.i0 = Integer.parseInt(st.nextToken());
-            lineData.d3 = Double.parseDouble(st.nextToken());
-            lineData.d4 = Double.parseDouble(st.nextToken());
-        } else {
-            lineData.i0 = 1;
-            lineData.d3 = lineData.d2;
-            lineData.d4 = lineData.d2;
-        }
-
-        lineData.s0 = st.nextToken(); //Name
-        while (st.hasMoreTokens()) {
-            String tmp = st.nextToken();
-            if ((tmp.indexOf("[") != 0) && (!tmp.endsWith("]")))
-                lineData.s0 += " " + tmp; //Name
-        }
-        lineData.s0 = fix(lineData.s0);
-        return lineData;
-    }
+//    private LineData getSummaryLineData(String string) {
+//        LineData lineData = new LineData();
+//        StringTokenizer st = new StringTokenizer(string, " \t\n\r");
+//
+//        lineData.d0 = Double.parseDouble(st.nextToken());
+//        lineData.d1 = 1000.0 * Double.parseDouble(st.nextToken());
+//        lineData.d2 = 1000.0 * Double.parseDouble(st.nextToken());
+//        if (st.countTokens() > 5) {
+//            lineData.i0 = Integer.parseInt(st.nextToken());
+//            lineData.d3 = Double.parseDouble(st.nextToken());
+//            lineData.d4 = Double.parseDouble(st.nextToken());
+//        } else {
+//            lineData.i0 = 1;
+//            lineData.d3 = lineData.d2;
+//            lineData.d4 = lineData.d2;
+//        }
+//
+//        lineData.s0 = st.nextToken(); //Name
+//        while (st.hasMoreTokens()) {
+//            String tmp = st.nextToken();
+//            if ((tmp.indexOf("[") != 0) && (!tmp.endsWith("]")))
+//                lineData.s0 += " " + tmp; //Name
+//        }
+//        lineData.s0 = fix(lineData.s0);
+//        return lineData;
+//    }
 
     /*
      * when C and Fortran code are mixed, the C routines have to be mapped to

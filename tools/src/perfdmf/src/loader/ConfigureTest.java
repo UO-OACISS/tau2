@@ -11,8 +11,11 @@ package edu.uoregon.tau.perfdmf.loader;
 
 import jargs.gnu.CmdLineParser;
 
-import java.io.*;
-import java.sql.ResultSet;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.SQLException;
 
 import edu.uoregon.tau.perfdmf.Database;
@@ -55,8 +58,8 @@ public class ConfigureTest {
      **/
 
     public void initialize(String configFileNameIn) {
-        // Create a reader to parse the input
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        // Create a reader to parse the input TODO: It doesn't look like this reader does anything...
+        //BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
         // Welcome the user to the program
         System.out.println(Greeting);
@@ -225,7 +228,8 @@ public class ConfigureTest {
 
         try {
             String query = new String("SELECT * FROM " + db.getSchemaPrefix() + "application");
-            ResultSet resultSet = db.executeQuery(query);
+            //ResultSet resultSet = 
+            	db.executeQuery(query);
         } catch (SQLException e) {
             // this is our method of determining that no 'application' table exists
             return false;
@@ -273,7 +277,8 @@ public class ConfigureTest {
 
         try {
             String query = new String("SELECT * FROM " + db.getSchemaPrefix() + "application");
-            ResultSet resultSet = db.executeQuery(query);
+            //ResultSet resultSet = 
+            	db.executeQuery(query);
         } catch (SQLException e) {
             // this is our method of determining that no 'application' table exists
             String input = "";

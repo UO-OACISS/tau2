@@ -1,18 +1,33 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 
 import edu.uoregon.tau.common.ImageExport;
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.CallPathUtilFuncs;
+import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.FunctionProfile;
 import edu.uoregon.tau.perfdmf.Thread;
+import edu.uoregon.tau.perfdmf.UtilFncs;
 
 /**
  * CallPathTextWindowPanel: This is the panel for the CallPathTextWindow
@@ -31,7 +46,11 @@ import edu.uoregon.tau.perfdmf.Thread;
  */
 public class CallPathTextWindowPanel extends JPanel implements MouseListener, Printable, ImageExport {
 
-    private int xPanelSize = 625;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 9057128779288350787L;
+	private int xPanelSize = 625;
     private int yPanelSize = 0;
     private boolean calculatePanelSize = true;
 
@@ -115,15 +134,15 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
         drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
         drawObjectsComplete.add(new CallPathDrawObject(null, false, false, true));
 
-        Iterator<Comparable> l1 = window.getDataIterator();
+        Iterator<PPFunctionProfile> l1 = window.getDataIterator();
         while (l1.hasNext()) {
-            PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) l1.next();
+            PPFunctionProfile ppFunctionProfile = l1.next();
             //Don't draw callpath functions, only nodes
             if (!(ppFunctionProfile.isCallPathObject())) {
-                Iterator l2 = ppFunctionProfile.getParentProfiles();
+                Iterator<FunctionProfile> l2 = ppFunctionProfile.getParentProfiles();
                 while (l2.hasNext()) {
                     FunctionProfile parent = (FunctionProfile) l2.next();
-                    Iterator l3 = ppFunctionProfile.getFunctionProfile().getParentProfileCallPathIterator(parent);
+                    Iterator<FunctionProfile> l3 = ppFunctionProfile.getFunctionProfile().getParentProfileCallPathIterator(parent);
                     double d1 = 0.0;
                     double d2 = 0.0;
                     double d3 = 0.0;
@@ -149,12 +168,12 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
                 callPathDrawObject.setNumberOfCalls(ppFunctionProfile.getNumberOfCalls());
                 drawObjectsComplete.add(callPathDrawObject);
 
-                for (Iterator it2 = ppFunctionProfile.getChildProfiles(); it2.hasNext();) {
+                for (Iterator<FunctionProfile> it2 = ppFunctionProfile.getChildProfiles(); it2.hasNext();) {
                     FunctionProfile child = (FunctionProfile) it2.next();
                     double d1 = 0.0;
                     double d2 = 0.0;
                     double d3 = 0.0;
-                    for (Iterator it3 = ppFunctionProfile.getFunctionProfile().getChildProfileCallPathIterator(child); it3.hasNext();) {
+                    for (Iterator<FunctionProfile> it3 = ppFunctionProfile.getFunctionProfile().getChildProfileCallPathIterator(child); it3.hasNext();) {
                         FunctionProfile callPath = (FunctionProfile) it3.next();
                         d1 = d1 + callPath.getExclusive(ppTrial.getDefaultMetric().getID());
                         d2 = d2 + callPath.getInclusive(ppTrial.getDefaultMetric().getID());
@@ -267,7 +286,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
                     line = normalDashString;
                 } else if (!callPathDrawObject.isParentChild() && !callPathDrawObject.isSpacer()) {
 
-                    Function function = callPathDrawObject.getFunction();
+                    //Function function = callPathDrawObject.getFunction();
 
                     line = "--> " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 11, ppTrial.getDefaultMetric().isTimeDenominator())
                             + "      " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 11, ppTrial.getDefaultMetric().isTimeDenominator())
@@ -279,7 +298,7 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
                     line = " ";
                 } else {
 
-                    Function function = callPathDrawObject.getFunction();
+                    //Function function = callPathDrawObject.getFunction();
 
                     line = "    " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getExclusiveValue(), 11, ppTrial.getDefaultMetric().isTimeDenominator())
                             + "      " + UtilFncs.getOutputString(window.units(), callPathDrawObject.getInclusiveValue(), 11, ppTrial.getDefaultMetric().isTimeDenominator())
@@ -305,8 +324,8 @@ public class CallPathTextWindowPanel extends JPanel implements MouseListener, Pr
 
         monoFont = new Font("Monospaced", ppTrial.getPreferencesWindow().getFontStyle(), ParaProf.preferencesWindow.getFontSize());
         fontMetrics = g2D.getFontMetrics(monoFont);
-        int maxFontAscent = fontMetrics.getMaxAscent();
-        int maxFontDescent = fontMetrics.getMaxDescent();
+        //int maxFontAscent = fontMetrics.getMaxAscent();
+        //int maxFontDescent = fontMetrics.getMaxDescent();
 
         g2D.setFont(monoFont);
 

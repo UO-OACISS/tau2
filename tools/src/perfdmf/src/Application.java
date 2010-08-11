@@ -1,7 +1,13 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
-import java.sql.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Vector;
 
 import edu.uoregon.tau.perfdmf.database.DB;
@@ -24,7 +30,11 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  */
 public class Application implements Serializable {
 
-    private int applicationID;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -2031253072892944002L;
+	private int applicationID;
     private String name;
     private String fields[];
 
@@ -79,8 +89,8 @@ public class Application implements Serializable {
             Database database = db.getDatabase();
             ResultSet resultSet = null;
 
-            String appFieldNames[] = null;
-            int appFieldTypes[] = null;
+            //String appFieldNames[] = null;
+            //int appFieldTypes[] = null;
 
             DatabaseMetaData dbMeta = db.getMetaData();
 
@@ -99,7 +109,7 @@ public class Application implements Serializable {
 
                 int ctype = resultSet.getInt("DATA_TYPE");
                 String cname = resultSet.getString("COLUMN_NAME");
-                String typename = resultSet.getString("TYPE_NAME");
+                //String typename = resultSet.getString("TYPE_NAME");
 
                 // this code is because of a bug in derby...
                 if (cname.equals("ID")) {
@@ -198,7 +208,8 @@ public class Application implements Serializable {
     public void setField(int idx, String field) {
         if (DBConnector.isIntegerType(database.getAppFieldTypes()[idx]) && field != null) {
             try {
-                int test = Integer.parseInt(field);
+                //int test = 
+                	Integer.parseInt(field);
             } catch (java.lang.NumberFormatException e) {
                 return;
             }
@@ -206,7 +217,8 @@ public class Application implements Serializable {
 
         if (DBConnector.isFloatingPointType(database.getAppFieldTypes()[idx]) && field != null) {
             try {
-                double test = Double.parseDouble(field);
+                //double test = 
+                	Double.parseDouble(field);
             } catch (java.lang.NumberFormatException e) {
                 return;
             }
@@ -273,7 +285,7 @@ public class Application implements Serializable {
                 application.setID(resultSet.getInt(1));
                 application.setName(resultSet.getString(2));
 
-                String tmp = resultSet.getString(3);
+                //String tmp = resultSet.getString(3);
 
                 for (int i = 0; i < database.getAppFieldNames().length; i++) {
                     application.setField(i, resultSet.getString(i + 3));
@@ -371,23 +383,23 @@ public class Application implements Serializable {
 
     }
 
-    private boolean exists(DB db) {
-        boolean retval = false;
-        try {
-            PreparedStatement statement = db.prepareStatement("SELECT name FROM application WHERE id = ?");
-            statement.setInt(1, applicationID);
-            ResultSet results = statement.executeQuery();
-            while (results.next() != false) {
-                retval = true;
-                break;
-            }
-            results.close();
-        } catch (SQLException e) {
-            System.out.println("An error occurred while saving the application.");
-            e.printStackTrace();
-        }
-        return retval;
-    }
+//    private boolean exists(DB db) {
+//        boolean retval = false;
+//        try {
+//            PreparedStatement statement = db.prepareStatement("SELECT name FROM application WHERE id = ?");
+//            statement.setInt(1, applicationID);
+//            ResultSet results = statement.executeQuery();
+//            while (results.next() != false) {
+//                retval = true;
+//                break;
+//            }
+//            results.close();
+//        } catch (SQLException e) {
+//            System.out.println("An error occurred while saving the application.");
+//            e.printStackTrace();
+//        }
+//        return retval;
+//    }
 
     public static void deleteApplication(DB db, int applicationID) {
         try {

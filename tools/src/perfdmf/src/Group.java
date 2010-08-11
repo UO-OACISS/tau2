@@ -4,9 +4,13 @@ package edu.uoregon.tau.perfdmf;
 import java.awt.Color;
 import java.io.Serializable;
 
-public class Group implements Serializable, Comparable {
+public class Group implements Serializable, Comparable<Group> {
 
-    private String name;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1073298395018154627L;
+	private String name;
     private int id;
     
     private boolean colorFlag = false;
@@ -36,8 +40,8 @@ public class Group implements Serializable, Comparable {
     {
     	return time;
     }
-    public int compareTo(Object inObject) {
-        return name.compareTo(((Group) inObject).getName());
+    public int compareTo(Group inObject) {
+        return name.compareTo(inObject.getName());
     }
 
     public void setColor(Color color) {

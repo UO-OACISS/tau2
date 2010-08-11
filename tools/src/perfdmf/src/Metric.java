@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Vector;
 
 import edu.uoregon.tau.perfdmf.database.DB;
-import edu.uoregon.tau.perfdmf.database.DBConnector;
 
 /**
  * Holds all the data for a metric in the database.
@@ -21,7 +20,11 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * @since	0.1
  */
 public class Metric implements Serializable {
-    private int metricID;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 3475626853258503810L;
+	private int metricID;
     private int trialID;
     private String name;
     private int dbMetricID;
@@ -160,8 +163,8 @@ public class Metric implements Serializable {
         try {
             ResultSet resultSet = null;
 
-            String trialFieldNames[] = null;
-            int trialFieldTypes[] = null;
+            //String trialFieldNames[] = null;
+            //int trialFieldTypes[] = null;
 
             DatabaseMetaData dbMeta = db.getMetaData();
 

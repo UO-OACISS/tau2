@@ -2,11 +2,10 @@ package edu.uoregon.tau.perfdmf.loader;
 
 import jargs.gnu.CmdLineParser;
 import edu.uoregon.tau.perfdmf.database.ConnectionManager;
-import edu.uoregon.tau.perfdmf.database.DB;
 
 public class LoadExperiment {
     private Load load = null;
-    private DB db = null;
+    //private DB db = null;
     
     private static String EXP_USAGE = 
         "USAGE: LoadExperiment [{-h,--help}] -c configure {-a,--applicationid} applicationID {-x,--xmlfile} filename\n";
@@ -108,10 +107,10 @@ public class LoadExperiment {
 	    e.printStackTrace();
 	    System.exit(0);
 	}
-	int exitval = 0;
+	//int exitval = 0;
 	String expid = loadExp.storeExp(applicationID, xmlFile);
 	if (expid != null) 
-	    exitval = Integer.parseInt(expid);
+	    //exitval = Integer.parseInt(expid);
 	loadExp.getConnector().dbclose();
 	// System.exit(exitval);
     }

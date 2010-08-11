@@ -160,10 +160,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         DataSorter dataSorter = new DataSorter(ppTrial);
         dataSorter.setSelectedMetric(ppTrial.getDefaultMetric());
         dataSorter.setDescendingOrder(true);
-        List<Comparable> stdDevList = dataSorter.getFunctionProfiles(dataSource.getStdDevData());
+        List<PPFunctionProfile> stdDevList = dataSorter.getFunctionProfiles(dataSource.getStdDevData());
         int count = 0;
-        for (Iterator<Comparable> it = stdDevList.iterator(); it.hasNext() && count < 4;) {
-            PPFunctionProfile fp = (PPFunctionProfile) it.next();
+        for (Iterator<PPFunctionProfile> it = stdDevList.iterator(); it.hasNext() && count < 4;) {
+            PPFunctionProfile fp = it.next();
             if (!fp.isCallPathObject()) {
                 settings.setScatterFunction(fp.getFunction(), count);
                 count++;
@@ -309,7 +309,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         plot = scatterPlot;
     }
 
-    private List<ArrayList> createGraph(DataSource dataSource, ThreeDeeSettings settings) {
+    private List<List<Vertex>> createGraph(DataSource dataSource, ThreeDeeSettings settings) {
         List<BackEdge> backEdges;
         Map<FunctionProfile, Vertex> vertexMap;
 
@@ -472,7 +472,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
         }
 
-        List<ArrayList> levels = new ArrayList<ArrayList>();
+        List<List<Vertex>> levels = new ArrayList<List<Vertex>>();
 
         // Fill Levels
         for (int i = 0; i < roots.size(); i++) {
@@ -486,7 +486,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         return levels;
     }
 
-    private List<List<Ornament>> decorateTree(List<ArrayList> graphLevels, DataSource dataSource, ThreeDeeSettings settings) {
+    private List<List<Ornament>> decorateTree(List<List<Vertex>> graphLevels, DataSource dataSource, ThreeDeeSettings settings) {
         Map<Vertex, Ornament> omap = new HashMap<Vertex, Ornament>();
         List<List<Ornament>> treeLevels = new ArrayList<List<Ornament>>();
 
@@ -496,7 +496,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         }
 
         for (int i = 0; i < graphLevels.size(); i++) {
-            List level = graphLevels.get(i);
+            List<Vertex> level = graphLevels.get(i);
             List<Ornament> treeLevel = new ArrayList<Ornament>();
             int count = 0;
 
@@ -535,7 +535,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         }
 
         for (int i = 0; i < graphLevels.size(); i++) {
-            List level = graphLevels.get(i);
+            List<Vertex> level = graphLevels.get(i);
 
             for (int j = 0; j < level.size(); j++) {
                 Vertex v = (Vertex) level.get(j);
@@ -569,7 +569,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         if (plot != null) {
             plot.cleanUp();
         }
-        List<ArrayList> levels = createGraph(ppTrial.getDataSource(), settings);
+        List<List<Vertex>> levels = createGraph(ppTrial.getDataSource(), settings);
         List<List<Ornament>> treeLevels = decorateTree(levels, ppTrial.getDataSource(), settings);
         XmasTree xmasTree = new XmasTree(treeLevels);
         xmasTree.setColorScale(colorScale);
@@ -604,7 +604,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         int numFunctions = 0;
 
         // get the 'mean' thread's functions to sort by
-        List<Comparable> list = dataSorter.getFunctionProfiles(ppTrial.getDataSource().getMeanData());
+        List<PPFunctionProfile> list = dataSorter.getFunctionProfiles(ppTrial.getDataSource().getMeanData());
 
         numFunctions = list.size();
 
@@ -630,7 +630,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
         int funcIndex = 0;
         for (int i = 0; i < list.size(); i++) {
-            PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) list.get(i);
+            PPFunctionProfile ppFunctionProfile = list.get(i);
             Function function = ppFunctionProfile.getFunction();
 
             //for (Iterator funcIter = ppTrial.getDataSource().getFunctions(); funcIter.hasNext();) {
@@ -1205,7 +1205,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         return valueType.getSuffix(units, ppMetric);
     }
 
-    private void setAxisStrings() {
+    @SuppressWarnings("unchecked")
+	private void setAxisStrings() {
 
         if (settings.getVisType() == VisType.SCATTER_PLOT) {
 
@@ -1232,7 +1233,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
                 }
             }
 
-            List<String>[] axisStrings = new ArrayList[4];
+            List<String>[] axisStrings = new List[4];
 
             for (int i = 0; i < 4; i++) {
                 if (minScatterValues[i] == Float.MAX_VALUE) {
@@ -1362,7 +1363,12 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         visCanvas.addKeyListener(this);
 
         JPanel panel = new JPanel() {
-            public Dimension getMinimumSize() {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = 2151986610100360208L;
+
+			public Dimension getMinimumSize() {
                 return new Dimension(10, 10);
             }
         };

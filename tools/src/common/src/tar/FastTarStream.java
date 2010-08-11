@@ -14,8 +14,9 @@
 */
 
 package edu.uoregon.tau.common.tar;
-
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -177,7 +178,7 @@ class		FastTarStream
 		boolean debug = false;
 		InputStream in = null;
 
-		String fileName = args[0];
+		//String fileName = args[0];
 
 		try {
 			int idx = 0;

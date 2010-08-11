@@ -23,7 +23,12 @@ package edu.uoregon.tau.paraprof.util;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class FileMonitor {
     private Timer timer;
@@ -58,8 +63,8 @@ public class FileMonitor {
     public void addListener(FileMonitorListener fileListener) {
         // Don't add if its already there
         for (Iterator<WeakReference<FileMonitorListener>> i = listeners.iterator(); i.hasNext();) {
-            WeakReference reference = i.next();
-            FileMonitorListener listener = (FileMonitorListener) reference.get();
+            WeakReference<FileMonitorListener> reference = i.next();
+            FileMonitorListener listener = reference.get();
             if (listener == fileListener)
                 return;
         }
@@ -71,8 +76,8 @@ public class FileMonitor {
 
     public void removeListener(FileMonitorListener fileListener) {
         for (Iterator<WeakReference<FileMonitorListener>> i = listeners.iterator(); i.hasNext();) {
-            WeakReference reference = i.next();
-            FileMonitorListener listener = (FileMonitorListener) reference.get();
+            WeakReference<FileMonitorListener> reference = i.next();
+            FileMonitorListener listener = reference.get();
             if (listener == fileListener) {
                 i.remove();
                 break;
@@ -110,8 +115,8 @@ public class FileMonitor {
 
                     // Notify listeners
                     for (Iterator<WeakReference<FileMonitorListener>> j = listeners.iterator(); j.hasNext();) {
-                        WeakReference reference = j.next();
-                        FileMonitorListener listener = (FileMonitorListener) reference.get();
+                        WeakReference<FileMonitorListener> reference = j.next();
+                        FileMonitorListener listener = reference.get();
 
                         // Remove from list if the back-end object has been GC'd
                         if (listener == null) {

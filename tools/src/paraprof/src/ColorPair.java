@@ -10,7 +10,7 @@ package edu.uoregon.tau.paraprof;
 
 import java.awt.Color;
 
-public class ColorPair implements Comparable {
+public class ColorPair implements Comparable<ColorPair> {
 
     private String name = null;
     private Color color = null;
@@ -28,8 +28,8 @@ public class ColorPair implements Comparable {
         return color;
     }
 
-    public int compareTo(Object inObject) {
-        String tmpString = ((ColorPair) inObject).getName();
+    public int compareTo(ColorPair inObject) {
+        String tmpString = inObject.getName();
         return name.compareTo(tmpString);
     }
 }

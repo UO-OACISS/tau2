@@ -1,13 +1,16 @@
 package edu.uoregon.tau.paraprof;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 import edu.uoregon.tau.common.PrintfFormat;
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.DataSource;
+import edu.uoregon.tau.perfdmf.FunctionProfile;
+import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Thread;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.UtilFncs;
 
 public class OSSWriter {
     public static void writeOSS(DataSource dataSource, boolean summary) {
@@ -66,12 +69,12 @@ public class OSSWriter {
             header = header + "     calls  function";
             System.out.println(header);
 
-            List<Comparable> l = ds.getFunctionProfiles(thread);
+            List<PPFunctionProfile> l = ds.getFunctionProfiles(thread);
 
             double cumulative = 0;
 
-            for (Iterator<Comparable> it = l.iterator(); it.hasNext();) {
-                PPFunctionProfile p = (PPFunctionProfile) it.next();
+            for (Iterator<PPFunctionProfile> it = l.iterator(); it.hasNext();) {
+                PPFunctionProfile p = it.next();
                 FunctionProfile fp = p.getFunctionProfile();
 
                 double exclSec = fp.getExclusive(timeMetric) / 1000 / 1000;

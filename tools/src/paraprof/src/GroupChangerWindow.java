@@ -1,14 +1,29 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.swing.*;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -19,7 +34,11 @@ import edu.uoregon.tau.perfdmf.Group;
 
 public class GroupChangerWindow extends JFrame implements ParaProfWindow, ActionListener {
 
-    private ParaProfTrial ppTrial;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 6095352344200700777L;
+	private ParaProfTrial ppTrial;
     private DefaultListModel listModel;
     private JList regionList;
 
@@ -112,7 +131,7 @@ public class GroupChangerWindow extends JFrame implements ParaProfWindow, Action
         currentGroupList.setCellRenderer(new GroupListCellRenderer());
         currentGroupList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
-        DefaultListCellRenderer foo = new DefaultListCellRenderer();
+        //DefaultListCellRenderer foo = new DefaultListCellRenderer();
 
         JScrollPane currentListSP = new JScrollPane(currentGroupList);
         gbc.weightx = 0.3;
@@ -219,7 +238,7 @@ public class GroupChangerWindow extends JFrame implements ParaProfWindow, Action
 
             Pattern pattern = Pattern.compile(text);
 
-            for (Iterator it = ppTrial.getFunctions(); it.hasNext();) {
+            for (Iterator<Function> it = ppTrial.getFunctions(); it.hasNext();) {
                 Function function = (Function) it.next();
                 if (filterTextField.getText().equals("")) {
                     listModel.add(idx++, function);
@@ -244,7 +263,7 @@ public class GroupChangerWindow extends JFrame implements ParaProfWindow, Action
         Object[] selectedValues = regionList.getSelectedValues();
         for (int i = 0; i < selectedValues.length; i++) {
             Function function = (Function) selectedValues[i];
-            for (Iterator grIt = function.getGroups().iterator(); grIt.hasNext();) {
+            for (Iterator<Group> grIt = function.getGroups().iterator(); grIt.hasNext();) {
                 Group group = (Group) grIt.next();
                 Integer count = map.get(group);
                 if (count == null) {
@@ -276,7 +295,7 @@ public class GroupChangerWindow extends JFrame implements ParaProfWindow, Action
             currentGroupListModel.add(idx++, blob);
         }
 
-        for (Iterator it = ppTrial.getDataSource().getGroups(); it.hasNext();) {
+        for (Iterator<Group> it = ppTrial.getDataSource().getGroups(); it.hasNext();) {
             Group group = (Group) it.next();
             if (map.get(group) == null) {
                 GroupListBlob blob = new GroupListBlob();

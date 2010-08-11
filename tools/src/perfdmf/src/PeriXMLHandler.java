@@ -14,10 +14,10 @@ public class PeriXMLHandler extends DefaultHandler {
 
     private String procedure;
     private String type;
-    private int startline;
+    //private int startline;
     private String module;
     private String name;
-    private String description;
+    //private String description;
     private int id;
 
     private Thread thread;
@@ -84,9 +84,10 @@ public class PeriXMLHandler extends DefaultHandler {
         } else if (localName.equalsIgnoreCase("type")) {
             type = accumulator.toString();
         } else if (localName.equalsIgnoreCase("startline")) {
-            startline = -1;
+            //startline = -1;
             if (!accumulator.toString().equals("")) {
-                startline = Integer.parseInt(accumulator.toString());
+                //startline = 
+                	Integer.parseInt(accumulator.toString());
             }
         } else if (localName.equalsIgnoreCase("module")) {
             module = accumulator.toString();

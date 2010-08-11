@@ -3,12 +3,26 @@ package edu.uoregon.tau.paraprof.barchart;
 import java.awt.Color;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
 
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 
-import edu.uoregon.tau.paraprof.*;
+import edu.uoregon.tau.paraprof.DataSorter;
+import edu.uoregon.tau.paraprof.DataSorterWrapper;
+import edu.uoregon.tau.paraprof.FunctionBarChartWindow;
+import edu.uoregon.tau.paraprof.PPFunctionProfile;
+import edu.uoregon.tau.paraprof.ParaProf;
+import edu.uoregon.tau.paraprof.ParaProfApplication;
+import edu.uoregon.tau.paraprof.ParaProfExperiment;
+import edu.uoregon.tau.paraprof.ParaProfTrial;
+import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.perfdmf.Thread;
@@ -36,8 +50,12 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
 
     // A RowBlob is the data needed for one row.  If we're comparing trial A to trial B, then
     // a single RowBlob will contain two PPFunctionProfiles, one for each trial.
-    private class RowBlob extends ArrayList implements Comparable {
-        String functionName;
+    private class RowBlob extends ArrayList<PPFunctionProfile> implements Comparable<RowBlob> {
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = 8555913184400646137L;
+		String functionName;
 
         public RowBlob(String functionName) {
             this.functionName = functionName;
@@ -47,7 +65,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
             return functionName;
         }
 
-        public void add(int index, Object element) {
+        public void add(int index, PPFunctionProfile element) {
 
             while (index >= this.size()) {
                 this.add(null);
@@ -55,7 +73,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
             super.set(index, element);
         }
 
-        public Object get(int index) {
+        public PPFunctionProfile get(int index) {
             if (index >= size()) {
                 return null;
             } else {
@@ -81,7 +99,7 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
             return (int) (other.getSortMax() - getSortMax());
         }
 
-        public int compareTo(Object arg0) {
+        public int compareTo(RowBlob arg0) {
             if (dataSorter.getDescendingOrder()) {
                 return privateCompare((RowBlob) arg0);
             } else {
@@ -134,9 +152,9 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
 
         dataSorter.setPpTrial(selectedTrial);
         DataSorter newDataSorter = new DataSorterWrapper(dataSorter, selectedTrial);
-        List<Comparable> list = newDataSorter.getFunctionProfiles(selectedThread);
-        for (Iterator<Comparable> it = list.iterator(); it.hasNext();) {
-            PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next();
+        List<PPFunctionProfile> list = newDataSorter.getFunctionProfiles(selectedThread);
+        for (Iterator<PPFunctionProfile> it = list.iterator(); it.hasNext();) {
+            PPFunctionProfile ppFunctionProfile = it.next();
             RowBlob blob = new RowBlob(ppFunctionProfile.getDisplayName());
             rows.add(blob);
             blob.add(ppFunctionProfile);
@@ -153,8 +171,8 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
             newDataSorter = new DataSorterWrapper(dataSorter, ppTrial);
             list = newDataSorter.getFunctionProfiles(thread);
 
-            for (Iterator<Comparable> it = list.iterator(); it.hasNext();) {
-                PPFunctionProfile fp = (PPFunctionProfile) it.next();
+            for (Iterator<PPFunctionProfile> it = list.iterator(); it.hasNext();) {
+                PPFunctionProfile fp = it.next();
                 if (ppTrial.displayFunction(fp.getFunction())) {
                     RowBlob blob = rowMap.get(fp.getDisplayName());
                     if (blob != null) {
@@ -245,8 +263,8 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
     public void fireRowLabelClick(int row, MouseEvent e, JComponent owner) {
         if (ParaProfUtils.rightClick(e)) {
             RowBlob blob = rows.get(row);
-            for (Iterator it = blob.iterator(); it.hasNext();) {
-                PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) it.next();
+            for (Iterator<PPFunctionProfile> it = blob.iterator(); it.hasNext();) {
+                PPFunctionProfile ppFunctionProfile = it.next();
                 if (ppFunctionProfile != null) {
                     JPopupMenu popup = ParaProfUtils.createFunctionClickPopUp(ppFunctionProfile.getPPTrial(),
                             ppFunctionProfile.getFunction(), ppFunctionProfile.getThread(), owner);

@@ -253,10 +253,10 @@ public class ColorChooser implements WindowListener {
             DataSorter dataSorter = new DataSorter(ppTrial);
             dataSorter.setSortType(SortType.MEAN_VALUE);
             dataSorter.setDescendingOrder(true);
-            List<Comparable> list = dataSorter.getFunctionProfiles(ppTrial.getDataSource().getMeanData());
+            List<PPFunctionProfile> list = dataSorter.getFunctionProfiles(ppTrial.getDataSource().getMeanData());
 
             for (int i = 0; i < list.size(); i++) {
-                Function func = ((PPFunctionProfile) list.get(i)).getFunction();
+                Function func = list.get(i).getFunction();
 
                 Color color = ParaProf.colorMap.getColor(func);
                 if (color != null) {
@@ -276,16 +276,16 @@ public class ColorChooser implements WindowListener {
 
         if ((selection == -1) || (selection == 1)) {
             int numberOfColors = this.getNumberOfGroupColors();
-            for (Iterator i = ppTrial.getDataSource().getGroups(); i.hasNext();) {
-                Group group = (Group) i.next();
+            for (Iterator<Group> i = ppTrial.getDataSource().getGroups(); i.hasNext();) {
+                Group group = i.next();
                 group.setColor(this.getGroupColor((group.getID()) % numberOfColors));
             }
         }
 
         if ((selection == -1) || (selection == 2)) {
             int numberOfColors = this.getNumberOfColors();
-            for (Iterator i = ppTrial.getDataSource().getUserEvents(); i.hasNext();) {
-                UserEvent userEvent = (UserEvent) i.next();
+            for (Iterator<UserEvent> i = ppTrial.getDataSource().getUserEvents(); i.hasNext();) {
+                UserEvent userEvent = i.next();
                 userEvent.setColor(this.getColor((userEvent.getID()) % numberOfColors));
             }
         }

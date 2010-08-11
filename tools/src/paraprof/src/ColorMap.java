@@ -9,7 +9,11 @@ package edu.uoregon.tau.paraprof;
 import java.awt.Color;
 import java.awt.Component;
 import java.io.Serializable;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Observable;
+import java.util.Vector;
 
 import javax.swing.JColorChooser;
 
@@ -17,7 +21,11 @@ import edu.uoregon.tau.perfdmf.Function;
 
 public class ColorMap extends Observable implements Serializable {
 
-    private Map<String, Color> colors = new HashMap<String, Color>();
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -381806020540973756L;
+	private Map<String, Color> colors = new HashMap<String, Color>();
 
     public Map<String, Color> getMap() {
         return colors;
@@ -97,8 +105,8 @@ public class ColorMap extends Observable implements Serializable {
     }
 
     public void assignColorsFromTrial(ParaProfTrial ppTrial) {
-        for (Iterator it = ppTrial.getDataSource().getFunctions(); it.hasNext();) {
-            Function f = (Function) it.next();
+        for (Iterator<Function> it = ppTrial.getDataSource().getFunctions(); it.hasNext();) {
+            Function f = it.next();
             colors.put(f.getName(), f.getColor());
         }
 

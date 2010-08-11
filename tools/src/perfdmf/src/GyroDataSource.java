@@ -11,18 +11,27 @@
 
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 public class GyroDataSource extends DataSource {
 
-    public GyroDataSource(Object initializeObject){
+    public GyroDataSource(List<File[]> initializeObject){
 		super();
 		this.setMetrics(new Vector<Metric>());
 		this.initializeObject = initializeObject;
     }
 
-	private Object initializeObject;
+	private List<File[]> initializeObject;
 
     public void cancelLoad() {
         return;
@@ -33,8 +42,8 @@ public class GyroDataSource extends DataSource {
     }
 
     public void load () throws FileNotFoundException, IOException{
-		boolean firstFile = true;
-    	v = (java.util.List) initializeObject;
+		//boolean firstFile = true;
+    	v =  initializeObject;
 		System.out.println(v.size() + " files");
     	for(int index = 0 ; index < v.size() ; index++){
 			files = (File[]) v.get(index);
@@ -321,13 +330,13 @@ public class GyroDataSource extends DataSource {
 	private int contextID = -1;
 	private int threadID = -1;
 	private String inputString = null;
-	private String s1 = null;
-	private String s2 = null;
-	private String tokenString;
-	private String groupNamesString = null;
-	private StringTokenizer genericTokenizer;
-	private int mappingID = -1;
-	private java.util.List v = null;
+	//private String s1 = null;
+	//private String s2 = null;
+	//private String tokenString;
+	//private String groupNamesString = null;
+	//private StringTokenizer genericTokenizer;
+	//private int mappingID = -1;
+	private List<File[]> v = null;
 	private File[] files = null;
 	private BufferedReader br = null;
 	private Hashtable<String, Integer> methodIndexes = null;
@@ -346,7 +355,7 @@ public class GyroDataSource extends DataSource {
     //####################################
     //Instance data.
     //####################################
-    private LineData lineData = new LineData();
+    //private LineData lineData = new LineData();
     //####################################
     //End - Instance data.
     //####################################

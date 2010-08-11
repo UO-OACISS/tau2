@@ -8,11 +8,19 @@ package edu.uoregon.tau.perfdmf.loader;
 
 import jargs.gnu.CmdLineParser;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.DataSource;
+import edu.uoregon.tau.perfdmf.DataSourceExport;
+import edu.uoregon.tau.perfdmf.PhaseConvertedDataSource;
+import edu.uoregon.tau.perfdmf.UtilFncs;
 
 /**
  * Creates a phase profile from a callpath profile.
@@ -113,7 +121,7 @@ public class PhaseConverter {
 
         // handle the input profile
         int fileType = 0;
-        String filePrefix = null;
+        //String filePrefix = null;
         if (fileTypeString != null) {
             if (fileTypeString.equals("profiles")) {
                 fileType = 0;
