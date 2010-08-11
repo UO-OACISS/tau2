@@ -1,10 +1,18 @@
 package edu.uoregon.tau.paraprof.treetable;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Graphics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
-import javax.swing.*;
+import javax.swing.Icon;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 
@@ -121,7 +129,11 @@ abstract public class TreeTableColumn {
     }
 
     static class ParaProfCellRenderer extends DefaultTableCellRenderer {
-        private NumberFormat formatter;
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = 5459926803089862887L;
+		private NumberFormat formatter;
         private TreeTableWindow window;
 
         public ParaProfCellRenderer(TreeTableWindow window) {
@@ -143,7 +155,7 @@ abstract public class TreeTableColumn {
             }
 
             column = table.convertColumnIndexToModel(column) - 1;
-            TreeTableColumn ttColumn = (TreeTableColumn) window.getColumns().get(column);
+            TreeTableColumn ttColumn = window.getColumns().get(column);
             Object result = ttColumn.getValueFor((TreeTableNode) value, false);
 
             setHorizontalAlignment(JLabel.RIGHT);
@@ -173,7 +185,11 @@ abstract public class TreeTableColumn {
     }
 
     static class RegularMetricCellRenderer extends JPanel implements TableCellRenderer {
-        private NumberFormat formatter;
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = -4911710251628231833L;
+		private NumberFormat formatter;
         private TreeTableWindow window;
 
         private JLabel iconLabel = new JLabel();

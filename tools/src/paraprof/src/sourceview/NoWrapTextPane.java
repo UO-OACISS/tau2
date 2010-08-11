@@ -7,7 +7,12 @@ import javax.swing.text.EditorKit;
 
 public class NoWrapTextPane extends JTextPane {
 
-    public boolean getScrollableTracksViewportWidth() {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 4797000387881016553L;
+
+	public boolean getScrollableTracksViewportWidth() {
         //should not allow text to be wrapped
         return false;
     }

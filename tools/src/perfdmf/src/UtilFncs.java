@@ -6,15 +6,25 @@
 
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Vector;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public class UtilFncs {
 
-    public static class EmptyIterator implements ListIterator, Iterator {
+    public static class EmptyIterator implements ListIterator<FunctionProfile>, Iterator<FunctionProfile> {
 
         public int nextIndex() {
             return 0;
@@ -34,17 +44,17 @@ public class UtilFncs {
             return false;
         }
 
-        public Object next() {
+        public FunctionProfile next() {
             return null;
         }
 
-        public Object previous() {
+        public FunctionProfile previous() {
             return null;
         }
 
-        public void add(Object o) {}
+        public void add(FunctionProfile o) {}
 
-        public void set(Object o) {}
+        public void set(FunctionProfile o) {}
     }
 
     // left pad : pad string 's' up to length plen, but put the whitespace on
@@ -106,7 +116,17 @@ public class UtilFncs {
 
         // first check if the regular toString is in exponential form
         boolean exp = false;
-        String str = Double.toString(d);
+        String str;
+        
+        if(d<0){
+        	str="-";
+        	 if (pad) {
+                 return lpad(str, width);
+             } else {
+                 return str;
+             }
+        }
+        	str= Double.toString(d);
         for (int i = 0; i < str.length(); i++) {
             if (str.charAt(i) == 'E') {
                 exp = true;
@@ -336,14 +356,14 @@ public class UtilFncs {
     //        return -1;
     //    }
 
-    public static int exists(Vector ref, int i) {
+    public static int exists(Vector<Integer> ref, int i) {
         //Assuming a vector of Integers.
         if (ref == null)
             return -1;
         Integer current = null;
         int test = ref.size();
         for (int j = 0; j < test; j++) {
-            current = (Integer) ref.elementAt(j);
+            current = ref.elementAt(j);
             if ((current.intValue()) == i)
                 return j;
         }
@@ -468,15 +488,23 @@ public class UtilFncs {
         return DataSource.TAUPROFILE; // default
     }
 
-    public static DataSource initializeDataSource(File[] sourceFiles, int fileType, boolean fixGprofNames)
+    public static DataSource initializeDataSource(File[] sourceFiles, int fileType, boolean fixGprofNames){
+    	return initializeDataSource(sourceFiles,fileType,fixGprofNames,null);
+    }
+    
+    public static DataSource initializeDataSource(File[] sourceFiles, int fileType, boolean fixGprofNames, String range)
             throws DataSourceException {
         DataSource dataSource = null;
 
-        List v = new ArrayList();
-        File filelist[];
+        List<File[]> v = new ArrayList<File[]>();
+        //File filelist[];
         switch (fileType) {
         case DataSource.TAUPROFILE: // TAU Profiles
-            FileList fl = new FileList();
+            FileList fl;
+            if(range!=null)
+            	fl= new FileList(range);
+            else
+            	fl = new FileList();
 
             if (sourceFiles.length < 1) {
                 v = fl.helperFindProfiles(System.getProperty("user.dir"));
@@ -553,7 +581,8 @@ public class UtilFncs {
             }
 
             try {
-                Class c = Class.forName("org.xml.sax.SAXException");
+                //Class c = 
+                	Class.forName("org.xml.sax.SAXException");
             } catch (ClassNotFoundException cnfe) {
                 throw new DataSourceException("Sorry, cube format requires Java 1.4");
             }
@@ -569,7 +598,8 @@ public class UtilFncs {
             }
 
             try {
-                Class c = Class.forName("org.xml.sax.SAXException");
+                //Class c = 
+                	Class.forName("org.xml.sax.SAXException");
             } catch (ClassNotFoundException cnfe) {
                 throw new DataSourceException("Sorry, HPCToolkit format requires Java 1.4");
             }

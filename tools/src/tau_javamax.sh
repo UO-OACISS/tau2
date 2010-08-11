@@ -23,12 +23,11 @@ if [ $(uname) = "Darwin" ]; then
 	memtotal=`sysctl -a | grep "hw.memsize:" | awk '{print $2}'`
 else
 	memtotal=`cat /proc/meminfo | head -1 | awk '{print $2}'`
-fi
-
-if [ $(uname -m) = "i686" ]; then
-    if [ $memtotal -gt 2300000 ] ; then
-	memtotal="2300000"
-    fi
+        if [ $(uname -m) = "i686" ]; then
+          if [ $memtotal -gt 2300000 ] ; then
+	     memtotal="2300000"
+          fi
+        fi
 fi
 
 trymem=$(($memtotal/1000*7/8))

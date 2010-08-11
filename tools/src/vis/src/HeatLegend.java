@@ -1,18 +1,19 @@
 package edu.uoregon.tau.vis;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
-import java.io.File;
-import java.io.IOException;
-import javax.imageio.ImageIO;
+
 import javax.swing.JPanel;
 
 public class HeatLegend extends JPanel implements ImageObserver {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 400630116102952987L;
 	int[] pixels = null;
 	BufferedImage img = null;
 	private static final ColorScale scale = new ColorScale(ColorScale.ColorSet.RAINBOW);

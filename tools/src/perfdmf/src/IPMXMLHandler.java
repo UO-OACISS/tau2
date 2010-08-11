@@ -1,13 +1,11 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Set;
-import java.util.Iterator;
-import java.util.TreeMap;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.TreeMap;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -187,23 +185,23 @@ public class IPMXMLHandler extends DefaultHandler {
 			this.function.addGroup(dataSource.addGroup("MPI"));
 		}
 		// always get it from the current parent region
-		Set keys = this.region.measurements.keySet();
+		Set<String> keys = this.region.measurements.keySet();
 		this.fp = new FunctionProfile (function, keys.size());
 		thread.addFunctionProfile(this.fp);
 		fp.setNumCalls(data.numCalls);
 		fp.setNumSubr(data.functions.size());
-		for (Iterator iter = keys.iterator() ; iter.hasNext() ; ) {
-			String metric = (String) iter.next();
+		for (Iterator<String> iter = keys.iterator() ; iter.hasNext() ; ) {
+			String metric = iter.next();
 			Metric m = dataSource.addMetric(metric, thread);
-			String value = (String)data.measurements.get(metric);
+			String value = data.measurements.get(metric);
 			if (value != null) {
-				double d = Double.parseDouble((String)data.measurements.get(metric));
+				double d = Double.parseDouble(data.measurements.get(metric));
 				fp.setInclusive(m.getID(), d);
 				fp.setExclusive(m.getID(), d);
 			}
 		}
-		for (Iterator iter = data.functions.iterator() ; iter.hasNext() ; ) {
-			RegionData func = (RegionData)iter.next();
+		for (Iterator<RegionData> iter = data.functions.iterator() ; iter.hasNext() ; ) {
+			RegionData func = iter.next();
 			createFunction(dataSource.getThread(), func, "");
 			createFunction(dataSource.getThread(), func, data.name + " => " );
 		}
@@ -214,12 +212,12 @@ public class IPMXMLHandler extends DefaultHandler {
 		public String name;
 
 		// the metric name / value map
-		public TreeMap measurements = new TreeMap();
+		public TreeMap<String, String> measurements = new TreeMap<String, String>();
 
 		public int numCalls = 1;
 
 		// the list of functions in this region
-		public List functions = new ArrayList();
+		public List<RegionData> functions = new ArrayList<RegionData>();
 
 		public RegionData (String name) {
 			this.name = name;

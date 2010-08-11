@@ -5,9 +5,18 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
 
 import edu.uoregon.tau.common.Utility;
 
@@ -25,11 +34,15 @@ import edu.uoregon.tau.common.Utility;
  */
 public class FunctionSelectorDialog extends JDialog {
 
-    private Vector items = new Vector();
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -4743553292070955890L;
+	private Vector<Object> items = new Vector<Object>();
     private JList list;
     private boolean selected;
     private Object selectedObject;
-    private List selectedObjects;
+    private List<Object> selectedObjects;
     private boolean allowNone;
     private boolean allowMultiple;
 
@@ -57,7 +70,7 @@ public class FunctionSelectorDialog extends JDialog {
 
         if (allowMultiple) {
             list.getSelectedIndices();
-            selectedObjects = new ArrayList();
+            selectedObjects = new ArrayList<Object>();
             for (int i = 0; i < list.getSelectedIndices().length; i++) {
                 selectedObjects.add(items.get(list.getSelectedIndices()[i]));
             }
@@ -72,7 +85,7 @@ public class FunctionSelectorDialog extends JDialog {
         return true;
     }
 
-    public FunctionSelectorDialog(JFrame owner, boolean modal, Iterator functions, Object initialSelection, boolean allowNone,
+    public FunctionSelectorDialog(JFrame owner, boolean modal, Iterator<?> functions, Object initialSelection, boolean allowNone,
             boolean allowMultiple) {
 
         super(owner, modal);
@@ -90,7 +103,7 @@ public class FunctionSelectorDialog extends JDialog {
             items.add("   <none>");
             index++;
         }
-        for (Iterator it = functions; it.hasNext();) {
+        for (Iterator<?> it = functions; it.hasNext();) {
             Object object = it.next();
             if (object == initialSelection) {
                 selectedIndex = index;
@@ -157,7 +170,7 @@ public class FunctionSelectorDialog extends JDialog {
         return selectedObject;
     }
 
-    public List getSelectedObjects() {
+    public List<Object> getSelectedObjects() {
         return selectedObjects;
     }
 }

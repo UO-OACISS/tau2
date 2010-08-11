@@ -81,7 +81,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         assignDefaultMetric();
     }
 
-    public Iterator getFunctions() {
+    public Iterator<Function> getFunctions() {
         return getDataSource().getFunctions();
     }
 
@@ -270,7 +270,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     //Override this function.
-    public List getMetrics() {
+    public List<Metric> getMetrics() {
         if (trial == null) {
             return null;
         }
@@ -333,11 +333,11 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     // return a vector of only those functions that are currently "displayed" (i.e. group masks, etc)
-    public List getDisplayedFunctions() {
-        List displayedFunctions = new ArrayList();
+    public List<Function> getDisplayedFunctions() {
+        List<Function> displayedFunctions = new ArrayList<Function>();
 
-        for (Iterator it = this.getDataSource().getFunctions(); it.hasNext();) {
-            Function function = (Function) it.next();
+        for (Iterator<Function> it = this.getDataSource().getFunctions(); it.hasNext();) {
+            Function function = it.next();
             if (this.displayFunction(function)) {
                 displayedFunctions.add(function);
             }
@@ -354,8 +354,8 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     public void showGroup(Group group) {
-        for (Iterator it = getDataSource().getFunctions(); it.hasNext();) {
-            Function function = (Function) it.next();
+        for (Iterator<Function> it = getDataSource().getFunctions(); it.hasNext();) {
+            Function function = it.next();
             if (function.isGroupMember(group)) {
                 functionMask[function.getID()] = true;
             }
@@ -366,8 +366,8 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     public void hideGroup(Group group) {
-        for (Iterator it = getDataSource().getFunctions(); it.hasNext();) {
-            Function function = (Function) it.next();
+        for (Iterator<Function> it = getDataSource().getFunctions(); it.hasNext();) {
+            Function function = it.next();
             if (function.isGroupMember(group)) {
                 functionMask[function.getID()] = false;
             }
@@ -378,8 +378,8 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     public void showGroupOnly(Group group) {
-        for (Iterator it = getDataSource().getFunctions(); it.hasNext();) {
-            Function function = (Function) it.next();
+        for (Iterator<Function> it = getDataSource().getFunctions(); it.hasNext();) {
+            Function function = it.next();
             if (function.isGroupMember(group)) {
                 functionMask[function.getID()] = true;
             } else {
@@ -392,8 +392,8 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     public void showAllExcept(Group group) {
-        for (Iterator it = getDataSource().getFunctions(); it.hasNext();) {
-            Function function = (Function) it.next();
+        for (Iterator<Function> it = getDataSource().getFunctions(); it.hasNext();) {
+            Function function = it.next();
             if (function.isGroupMember(group)) {
                 functionMask[function.getID()] = false;
             } else {
@@ -442,8 +442,8 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
             }
         }
 
-        for (Iterator it = getDataSource().getFunctions(); it.hasNext();) {
-            Function function = (Function) it.next();
+        for (Iterator<Function> it = getDataSource().getFunctions(); it.hasNext();) {
+            Function function = it.next();
             String name = function.getName();
             if (caseSensitive) {
                 name = name.toUpperCase();
@@ -479,8 +479,8 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         }
 
         // set the default metric to the first time based metric (if it exists)
-        for (Iterator it = getMetrics().iterator(); it.hasNext();) {
-            Metric metric = (Metric) it.next();
+        for (Iterator<Metric> it = getMetrics().iterator(); it.hasNext();) {
+            Metric metric = it.next();
             if (metric.isTimeMetric()) {
                 setDefaultMetric(metric);
                 break;
@@ -488,8 +488,8 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         }
 
         // set the default metric to the first metric named "Time" (if it exists), higher priority than above
-        for (Iterator it = getMetrics().iterator(); it.hasNext();) {
-            Metric metric = (Metric) it.next();
+        for (Iterator<Metric> it = getMetrics().iterator(); it.hasNext();) {
+            Metric metric = it.next();
             if (metric.getName().equalsIgnoreCase(("time"))) {
                 setDefaultMetric(metric);
                 break;
@@ -507,7 +507,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         // Inside ParaProf, these need to be ParaProfMetrics.
 
         int numberOfMetrics = trial.getDataSource().getNumberOfMetrics();
-        Vector ppMetrics = new Vector();
+        Vector<Metric> ppMetrics = new Vector<Metric>();
         for (int i = 0; i < numberOfMetrics; i++) {
             ParaProfMetric ppMetric = new ParaProfMetric();
             ppMetric.setName(trial.getDataSource().getMetricName(i));
@@ -541,7 +541,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
         // run any scripts
         for (int i = 0; i < ParaProf.scripts.size(); i++) {
-            ParaProfScript pps = (ParaProfScript) ParaProf.scripts.get(i);
+            ParaProfScript pps = ParaProf.scripts.get(i);
             if (pps instanceof ParaProfTrialScript) {
                 try {
                     ((ParaProfTrialScript) pps).trialLoaded(this);
@@ -625,10 +625,10 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
             FileMonitor fileMonitor = new FileMonitor(1000);
 
-            List files = trial.getDataSource().getFiles();
+            List<File> files = trial.getDataSource().getFiles();
 
-            for (Iterator it = files.iterator(); it.hasNext();) {
-                File file = (File) it.next();
+            for (Iterator<File> it = files.iterator(); it.hasNext();) {
+                File file = it.next();
                 fileMonitor.addFile(file);
             }
 
@@ -728,15 +728,15 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         return experiment.getDatabase();
     }
 
-    public List getThreads() {
+    public List<Thread> getThreads() {
         return getDataSource().getAllThreads();
     }
 
-    public List getThreadNames() {
-        List threadNames = new ArrayList();
+    public List<String> getThreadNames() {
+        List<String> threadNames = new ArrayList<String>();
 
-        for (Iterator it = getDataSource().getAllThreads().iterator(); it.hasNext();) {
-            Thread thread = (Thread) it.next();
+        for (Iterator<Thread> it = getDataSource().getAllThreads().iterator(); it.hasNext();) {
+            Thread thread = it.next();
             if (getDataSource().getExecutionType() == DataSource.EXEC_TYPE_MPI) {
                 threadNames.add(Integer.toString(thread.getNodeID()));
             } else if (getDataSource().getExecutionType() == DataSource.EXEC_TYPE_HYBRID) {
@@ -761,8 +761,8 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
         int count = 0;
 
-        for (Iterator it = getMetrics().iterator(); it.hasNext();) {
-            Metric metric = (Metric) it.next();
+        for (Iterator<Metric> it = getMetrics().iterator(); it.hasNext();) {
+            Metric metric = it.next();
             if (metric == null) {
                 continue;
             }
@@ -773,8 +773,8 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
         int idx = 0;
 
-        for (Iterator it = getMetrics().iterator(); it.hasNext();) {
-            Metric metric = (Metric) it.next();
+        for (Iterator<Metric> it = getMetrics().iterator(); it.hasNext();) {
+            Metric metric = it.next();
             if (metric == null) {
                 continue;
             }

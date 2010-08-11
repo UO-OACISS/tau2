@@ -27,8 +27,6 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import com.sun.opengl.util.GLUT;
-
 /**
  * Draws a 3d triangle mesh.
  * 
@@ -44,14 +42,14 @@ public class TriangleMeshPlot implements Plot {
     private float[][] heightValues;
     private float[][] colorValues;
 
-    private GLUT glut = new GLUT();
+    //private GLUT glut = new GLUT(); //TODO: Side Effects?
 
     private int nrows;
     private int ncols;
     private float xSize, ySize, zSize;
     private boolean dirty = true;
 
-    private List displayLists;
+    private List<Integer> displayLists;
 
     private ColorScale colorScale;
     private Axes axes;
@@ -230,7 +228,7 @@ public class TriangleMeshPlot implements Plot {
         if (displayLists != null) {
             // delete old displaylists
             for (int i = 0; i < displayLists.size(); i++) {
-                gl.glDeleteLists(((Integer) displayLists.get(i)).intValue(), 1);
+                gl.glDeleteLists(displayLists.get(i).intValue(), 1);
             }
             displayLists = null;
         }
@@ -238,7 +236,7 @@ public class TriangleMeshPlot implements Plot {
 
     public void render(VisRenderer visRenderer) {
         GLAutoDrawable glDrawable = visRenderer.getGLAutoDrawable();
-        Vec direction = visRenderer.getViewDirection();
+        //Vec direction = visRenderer.getViewDirection();
 
         //    public void render(GLAutoDrawable glDrawable, Vec direction) {
 
@@ -315,11 +313,11 @@ public class TriangleMeshPlot implements Plot {
             if (displayLists != null) {
                 // delete old displaylists
                 for (int i = 0; i < displayLists.size(); i++) {
-                    gl.glDeleteLists(((Integer) displayLists.get(i)).intValue(), 1);
+                    gl.glDeleteLists(displayLists.get(i).intValue(), 1);
                 }
-                displayLists = new ArrayList();
+                displayLists = new ArrayList<Integer>();
             } else {
-                displayLists = new ArrayList();
+                displayLists = new ArrayList<Integer>();
             }
 
             Integer displayList = new Integer(gl.glGenLists(1));
@@ -406,113 +404,113 @@ public class TriangleMeshPlot implements Plot {
         }
 
         for (int i = 0; i < displayLists.size(); i++) {
-            gl.glCallList(((Integer) displayLists.get(i)).intValue());
+            gl.glCallList(displayLists.get(i).intValue());
         }
     }
 
-    private void renderDLX(GL gl) {
-
-        if (dirty || displayLists == null) {
-
-            if (displayLists != null) {
-                // delete old displaylists
-                for (int i = 0; i < displayLists.size(); i++) {
-                    gl.glDeleteLists(((Integer) displayLists.get(i)).intValue(), 1);
-                }
-                displayLists = new ArrayList();
-            } else {
-                displayLists = new ArrayList();
-            }
-
-            Integer displayList = new Integer(gl.glGenLists(1));
-            displayLists.add(displayList);
-
-            gl.glNewList(displayList.intValue(), GL.GL_COMPILE);
-
-            gl.glFrontFace(GL.GL_CW);
-            gl.glEnable(GL.GL_LIGHTING);
-
-            gl.glEnable(GL.GL_CULL_FACE);
-            gl.glDisable(GL.GL_CULL_FACE);
-
-            //gl.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL);
-            //gl.glEnable(GL.GL_NORMALIZE);
-            gl.glPushMatrix();
-
-            gl.glShadeModel(GL.GL_SMOOTH);
-
-            if (translucent) {
-                gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
-                gl.glEnable(GL.GL_BLEND);
-            } else {
-                gl.glBlendFunc(GL.GL_ONE, GL.GL_ZERO);
-                gl.glDisable(GL.GL_BLEND);
-            }
-
-            float xIncrement = xSize / (ncols - 1);
-            float yIncrement = ySize / (nrows - 1);
-
-            int vertexCount = 0;
-
-            for (int x = 0; x < ncols - 1; x++) {
-                gl.glBegin(GL.GL_TRIANGLE_STRIP);
-                //gl.glBegin(GL.GL_LINES);
-
-                for (int y = 0; y < nrows; y++) {
-
-                    float xPosition = x * xIncrement;
-                    float yPosition = y * yIncrement;
-
-                    float v1 = heightValues[y][x];
-                    float v2 = heightValues[y][x + 1];
-
-                    float c1 = colorValues[y][x];
-                    float c2 = colorValues[y][x + 1];
-
-                    Vec n1 = (Vec) normals[y][x];
-                    Vec n2 = (Vec) normals[y][x + 1];
-
-                    Color color = colorScale.getColor(c1);
-                    gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, translucency);
-
-                    gl.glNormal3f(n1.x(), n1.y(), n1.z());
-                    gl.glVertex3f(xPosition, yPosition, v1);
-
-                    color = colorScale.getColor(c2);
-                    gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, translucency);
-
-                    gl.glNormal3f(n2.x(), n2.y(), n2.z());
-                    gl.glVertex3f(xPosition + xIncrement, yPosition, v2);
-
-                    vertexCount += 2;
-                }
-                gl.glEnd();
-
-                if (vertexCount > 5000) {
-                    vertexCount = 0;
-                    gl.glEndList();
-                    displayList = new Integer(gl.glGenLists(1));
-                    displayLists.add(displayList);
-                    gl.glNewList(displayList.intValue(), GL.GL_COMPILE);
-                }
-            }
-
-            gl.glPopMatrix();
-
-            gl.glShadeModel(GL.GL_FLAT);
-            gl.glDisable(GL.GL_BLEND);
-            gl.glDisable(GL.GL_LIGHTING);
-
-            gl.glEndList();
-
-            VisTools.vout(this, "Created " + displayLists.size() + " display lists");
-            dirty = false;
-        }
-
-        for (int i = 0; i < displayLists.size(); i++) {
-            gl.glCallList(((Integer) displayLists.get(i)).intValue());
-        }
-    }
+//    private void renderDLX(GL gl) {
+//
+//        if (dirty || displayLists == null) {
+//
+//            if (displayLists != null) {
+//                // delete old displaylists
+//                for (int i = 0; i < displayLists.size(); i++) {
+//                    gl.glDeleteLists(displayLists.get(i).intValue(), 1);
+//                }
+//                displayLists = new ArrayList<Integer>();
+//            } else {
+//                displayLists = new ArrayList<Integer>();
+//            }
+//
+//            Integer displayList = new Integer(gl.glGenLists(1));
+//            displayLists.add(displayList);
+//
+//            gl.glNewList(displayList.intValue(), GL.GL_COMPILE);
+//
+//            gl.glFrontFace(GL.GL_CW);
+//            gl.glEnable(GL.GL_LIGHTING);
+//
+//            gl.glEnable(GL.GL_CULL_FACE);
+//            gl.glDisable(GL.GL_CULL_FACE);
+//
+//            //gl.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL);
+//            //gl.glEnable(GL.GL_NORMALIZE);
+//            gl.glPushMatrix();
+//
+//            gl.glShadeModel(GL.GL_SMOOTH);
+//
+//            if (translucent) {
+//                gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
+//                gl.glEnable(GL.GL_BLEND);
+//            } else {
+//                gl.glBlendFunc(GL.GL_ONE, GL.GL_ZERO);
+//                gl.glDisable(GL.GL_BLEND);
+//            }
+//
+//            float xIncrement = xSize / (ncols - 1);
+//            float yIncrement = ySize / (nrows - 1);
+//
+//            int vertexCount = 0;
+//
+//            for (int x = 0; x < ncols - 1; x++) {
+//                gl.glBegin(GL.GL_TRIANGLE_STRIP);
+//                //gl.glBegin(GL.GL_LINES);
+//
+//                for (int y = 0; y < nrows; y++) {
+//
+//                    float xPosition = x * xIncrement;
+//                    float yPosition = y * yIncrement;
+//
+//                    float v1 = heightValues[y][x];
+//                    float v2 = heightValues[y][x + 1];
+//
+//                    float c1 = colorValues[y][x];
+//                    float c2 = colorValues[y][x + 1];
+//
+//                    Vec n1 = (Vec) normals[y][x];
+//                    Vec n2 = (Vec) normals[y][x + 1];
+//
+//                    Color color = colorScale.getColor(c1);
+//                    gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, translucency);
+//
+//                    gl.glNormal3f(n1.x(), n1.y(), n1.z());
+//                    gl.glVertex3f(xPosition, yPosition, v1);
+//
+//                    color = colorScale.getColor(c2);
+//                    gl.glColor4f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, translucency);
+//
+//                    gl.glNormal3f(n2.x(), n2.y(), n2.z());
+//                    gl.glVertex3f(xPosition + xIncrement, yPosition, v2);
+//
+//                    vertexCount += 2;
+//                }
+//                gl.glEnd();
+//
+//                if (vertexCount > 5000) {
+//                    vertexCount = 0;
+//                    gl.glEndList();
+//                    displayList = new Integer(gl.glGenLists(1));
+//                    displayLists.add(displayList);
+//                    gl.glNewList(displayList.intValue(), GL.GL_COMPILE);
+//                }
+//            }
+//
+//            gl.glPopMatrix();
+//
+//            gl.glShadeModel(GL.GL_FLAT);
+//            gl.glDisable(GL.GL_BLEND);
+//            gl.glDisable(GL.GL_LIGHTING);
+//
+//            gl.glEndList();
+//
+//            VisTools.vout(this, "Created " + displayLists.size() + " display lists");
+//            dirty = false;
+//        }
+//
+//        for (int i = 0; i < displayLists.size(); i++) {
+//            gl.glCallList(displayLists.get(i).intValue());
+//        }
+//    }
 
     private void renderSelectionTranslucent(GL gl) {
         if (selectedRow < 0 || selectedCol < 0)
@@ -614,7 +612,7 @@ public class TriangleMeshPlot implements Plot {
 
             float v1 = heightValues[y][x];
 
-            float c1 = colorValues[y][x];
+            //float c1 = colorValues[y][x];
 
             //Vec n1 = (Vec) normals[y][x];
 
@@ -643,7 +641,7 @@ public class TriangleMeshPlot implements Plot {
 
             float v1 = heightValues[y][x];
 
-            float c1 = colorValues[y][x];
+            //float c1 = colorValues[y][x];
 
             //Vec n1 = (Vec) normals[y][x];
 

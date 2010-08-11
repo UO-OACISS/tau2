@@ -20,22 +20,42 @@
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
+#include <assert.h>
 
 #include <mpi.h>
-#include "mrnet/MRNet.h"
 
+#ifdef MRNET_LIGHTWEIGHT
+extern "C" {
+#endif /* MRNET_LIGHTWEIGHT */
+
+#ifdef MRNET_LIGHTWEIGHT
+#include "mrnet_lightweight/MRNet.h"
+#else /* MRNET_LIGHTWEIGHT */
+#include "mrnet/MRNet.h"
+#endif /* MRNET_LIGHTWEIGHT */
+
+#ifndef MRNET_LIGHTWEIGHT
 using namespace MRN;
 using namespace std;
+#endif
 
 // Back-end rank
 int rank;
 
 // Using a global for now. Could make it object-based like Aroon's old
 //   codes later.
+#ifdef MRNET_LIGHTWEIGHT
+Network_t *net;
+Stream_t *ctrl_stream = (Stream_t *)malloc(sizeof(Stream_t));
+#else /* MRNET_LIGHTWEIGHT */
 Network *net;
 Stream *ctrl_stream;
+#endif /* MRNET_LIGHTWEIGHT */
+
 // Determine whether to extend protocol to receive results from the FE.
 bool broadcastResults;
+
+  const char *profiledir;
 
 // Unification structures
 FunctionEventLister *mrnetFuncEventLister;
@@ -44,6 +64,8 @@ AtomicEventLister *mrnetAtomEventLister;
 Tau_unify_object_t *mrnetAtomUnifier;
 
 extern "C" void Tau_mon_connect() {
+
+  //  printf("Mon Connect called\n");
   
   int size;
 
@@ -53,6 +75,7 @@ extern "C" void Tau_mon_connect() {
   char myHostName[64];
 
   gethostname(myHostName, sizeof(myHostName));
+  profiledir = TauEnv_get_profiledir();
 
   int targetRank;
   int beRank, mrnetPort, mrnetRank;
@@ -66,7 +89,18 @@ extern "C" void Tau_mon_connect() {
   if (rank == 0) {
     TAU_VERBOSE("Connecting to ToM\n");
 
-    FILE *connections = fopen("attachBE_connections","r");
+    // Do not proceed until front-end has written the atomic probe file.
+    char atomicFileName[512];
+    sprintf(atomicFileName,"%s/ToM_FE_Atomic",profiledir);
+    FILE *atomicFile;
+    while ((atomicFile = fopen(atomicFileName,"r")) == NULL) {
+      sleep(1);
+    }
+    fclose(atomicFile);
+
+    char connectionName[512];
+    sprintf(connectionName,"%s/attachBE_connections",profiledir);
+    FILE *connections = fopen(connectionName,"r");
     // assume there are exactly size entries in the connection file.
     for (int i=0; i<size; i++) {
       fscanf(connections, "%d %d %d %d %s\n",
@@ -112,15 +146,27 @@ extern "C" void Tau_mon_connect() {
   mrnet_argv[4] = myHostName;
   mrnet_argv[5] = beRankString;
 
+#ifdef MRNET_LIGHTWEIGHT
+  net = Network_CreateNetworkBE(mrnet_argc, mrnet_argv);
+  assert(net);
+#else /* MRNET_LIGHTWEIGHT */
   net = Network::CreateNetworkBE(mrnet_argc, mrnet_argv);
+#endif /* MRNET_LIGHTWEIGHT */
 
   int tag;
-  PacketPtr p;
   int data;
 
-  // Do not proceed until control stream is established with front-end
+// Do not proceed until control stream is established with front-end
+#ifdef MRNET_LIGHTWEIGHT
+  Packet_t *p = (Packet_t *)malloc(sizeof(Packet_t));
+  Network_recv(net, &tag, p, &ctrl_stream);
+  Packet_unpack(p, "%d", &data);
+#else /* MRNET_LIGHTWEIGHT */
+  PacketPtr p;
   net->recv(&tag, p, &ctrl_stream);
   p->unpack("%d", &data);
+#endif /* MRNET_LIGHTWEIGHT */
+
   if (data == 1) {
     broadcastResults = true;
   } else if (data == 0) {
@@ -144,7 +190,7 @@ extern "C" void Tau_mon_disconnect() {
     TAU_VERBOSE("Disconnecting from ToM\n");
   }
   // Tell front-end to tear down network and exit
-  STREAM_FLUSHSEND(ctrl_stream, TOM_CONTROL, "%d", TOM_EXIT);
+  STREAM_FLUSHSEND_BE(ctrl_stream, TOM_CONTROL, "%d", TOM_EXIT);
 }
 
 extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
@@ -152,8 +198,13 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
   // receive from the network so that ToM will always know which stream to
   //   respond to.
   int protocolTag;
+#ifdef MRNET_LIGHTWEIGHT
+  Packet_t *p = (Packet_t *)malloc(sizeof(Packet_t));
+  Stream_t *stream = (Stream_t *)malloc(sizeof(Stream_t));
+#else /* MRNET_LIGHTWEIGHT */
   PacketPtr p;
   Stream *stream;
+#endif /* MRNET_LIGHTWEIGHT */
 
   bool processProtocol = true;
 
@@ -168,19 +219,30 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
   int numCounters = Tau_Global_numCounters;
 
   while (processProtocol) {
+#ifdef MRNET_LIGHTWEIGHT
+    Network_recv(net, &protocolTag, p, &stream);
+#else /* MRNET_LIGHTWEIGHT */
     net->recv(&protocolTag, p, &stream);
-    
+#endif /* MRNET_LIGHTWEIGHT */
+
     switch (protocolTag) {
     case PROT_UNIFY: {
       // Rank 0 additionally responds to the front-end with all global
       //   function name strings.
       if (rank == 0) {
 	int tag;
+#ifdef MRNET_LIGHTWEIGHT
+	Packet_t *p = (Packet_t *)malloc(sizeof(Packet_t));    
+#else /* MRNET_LIGHTWEIGHT */
 	PacketPtr p;
-	
+#endif /* MRNET_LIGHTWEIGHT */
 	printf("Num Global = %d\n", numGlobal);
-	net->recv(&tag, p, &stream);
-	STREAM_FLUSHSEND(stream, PROT_UNIFY, "%as",
+#ifdef MRNET_LIGHTWEIGHT
+	Network_recv(net, &tag, p, &stream);
+#else /* MRNET_LIGHTWEIGHT */
+        net->recv(&tag, p, &stream);
+#endif /* MRNET_LIGHTWEIGHT */
+	STREAM_FLUSHSEND_BE(stream, PROT_UNIFY, "%as",
 			 mrnetFuncUnifier->globalStrings, numGlobal);
       }
       break;
@@ -190,6 +252,43 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
       if (rank == 0) {
 	printf("BE: Instructed by FE to report events and counters.\n");
       }
+
+      // First message is a request for names
+
+      // Invoke Unification
+      FunctionEventLister *functionEventLister = new FunctionEventLister();
+      Tau_unify_object_t *functionUnifier = 
+	Tau_unify_unifyEvents(functionEventLister);
+      // Send Names of events.
+      char **funcNames;
+      if (rank == 0) {
+	// send the array of event name strings.
+	funcNames = (char **)malloc(numGlobal*sizeof(char*));
+	for (int i=0; i<numGlobal; i++) {
+	  funcNames[i] = 
+	    (char *)malloc((strlen(functionUnifier->globalStrings[i])+1)*
+			   sizeof(char));
+	  strcpy(funcNames[i],functionUnifier->globalStrings[i]);
+	}
+	STREAM_FLUSHSEND_BE(stream, PROT_BASESTATS, "%d %as",
+			    rank, funcNames, numGlobal);
+      } else {
+	// send a single null string over.
+	funcNames = (char **)malloc(sizeof(char*));
+	funcNames[0] = (char *)malloc(sizeof(char));
+	strcpy(funcNames[0],"");
+	STREAM_FLUSHSEND_BE(stream, PROT_BASESTATS, "%d %as",
+			    rank, funcNames, 1);
+      }
+
+      // Then receive request for stats. No need to unpack.
+      int tag;
+#ifdef MRNET_LIGHTWEIGHT
+      Network_recv(net, &tag, p, &stream);
+#else /* MRNET_LIGHTWEIGHT */
+      net->recv(&tag, p, &stream);
+#endif /* MRNET_LIGHTWEIGHT */
+      assert(tag == PROT_BASESTATS);
 
       double *out_sums;
       double *out_sumsofsqr;
@@ -273,7 +372,7 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
 	}
       }
       */
-      STREAM_FLUSHSEND(stream, protocolTag, "%d %d %alf %alf %alf %alf %ad %d",
+      STREAM_FLUSHSEND_BE(stream, protocolTag, "%d %d %alf %alf %alf %alf %ad %d",
 		       numGlobal, numCounters,
 		       out_sums, numGlobal*numCounters,
 		       out_sumsofsqr, numGlobal*numCounters,
@@ -286,10 +385,18 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
       // Get results of the protocol from the front-end.
       if (broadcastResults) {
 	int numMeans, numStdDevs, numMins, numMaxes;
-	net->recv(&protocolTag, p, &stream);
-	p->unpack("%alf %alf",
+#ifdef MRNET_LIGHTWEIGHT
+	Network_recv(net, &protocolTag, p, &stream);
+	Packet_unpack(p, "%alf %alf",
 		  &means, &numMeans, &std_devs, &numStdDevs,
 		  &mins, &numMins, &maxes, &numMaxes);
+#else /* MRNET_LIGHTWEIGHT */
+        net->recv(&protocolTag, p, &stream);
+        p->unpack("%alf %alf",
+                  &means, &numMeans, &std_devs, &numStdDevs,
+                  &mins, &numMins, &maxes, &numMaxes);
+#endif /* MRNET_LIGHTWEIGHT */
+
 	/* DEBUG
 	printf("BE: Received %d values from FE\n", numMeans);
 	for (int val=0; val<numMeans; val++) {
@@ -310,7 +417,11 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
       //   is sent by the front-end to determine the threshold for
       //   exclusive execution time duration. Any event not satisfying
       //   the threshold will be filtered off.
+#ifdef MRNET_LIGHTWEIGHT
+      Packet_unpack(p, "%ad %d %d", &keepItem, &numItems, &numKeep, &numBins);
+#else /* MRNET_LIGHTWEIGHT */
       p->unpack("%ad %d %d", &keepItem, &numItems, &numKeep, &numBins);
+#endif /* MRNET_LIGHTWEIGHT */
 
       /* DEBUG
       printf("BE: Received filtered events from FE %d %d %d\n",
@@ -365,7 +476,7 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
 	}
       }
 
-      STREAM_FLUSHSEND(stream, protocolTag, "%ad", histBins, numKeep*numBins);
+      STREAM_FLUSHSEND_BE(stream, protocolTag, "%ad", histBins, numKeep*numBins);
       break;
     }
     case PROT_CLASSIFIER: {
@@ -438,11 +549,15 @@ extern "C" void Tau_mon_onlineDump() {
 
   // Tell the MRNet front-end that the data is ready and wait for
   //   protocol instructions.
-  STREAM_FLUSHSEND(ctrl_stream, TOM_CONTROL, "%d", PROT_DATA_READY);
+  STREAM_FLUSHSEND_BE(ctrl_stream, TOM_CONTROL, "%d", PROT_DATA_READY);
 
   // Start the protocol loop.
   protocolLoop(globalToLocal, numGlobal);
 }
+
+#ifdef MRNET_LIGHTWEIGHT
+} /* extern "C" */
+#endif /* MRNET_LIGHTWEIGHT */
 
 #endif /* TAU_EXP_UNIFY */
 #endif /* TAU_MONITORING */

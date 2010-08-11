@@ -223,8 +223,8 @@ public class AtomicEvent {
     }
 
     // returns a Vector of AtomicEvents
-    public static Vector getAtomicEvents(DatabaseAPI dataSession, DB db, String whereClause) {
-        Vector atomicEvents = new Vector();
+    public static Vector<AtomicEvent> getAtomicEvents(DatabaseAPI dataSession, DB db, String whereClause) {
+        Vector<AtomicEvent> atomicEvents = new Vector<AtomicEvent>();
         // create a string to hit the database
         StringBuffer buf = new StringBuffer();
         buf.append("select u.id, u.trial, u.name, ");
@@ -239,7 +239,7 @@ public class AtomicEvent {
         // get the results
         try {
             ResultSet resultSet = db.executeQuery(buf.toString());
-            AtomicEvent tmpAtomicEvent = null;
+            //AtomicEvent tmpAtomicEvent = null;
             while (resultSet.next() != false) {
                 AtomicEvent ue = new AtomicEvent(dataSession);
                 ue.setID(resultSet.getInt(1));
@@ -304,10 +304,10 @@ public class AtomicEvent {
                 resultSet = dbMeta.getColumns(null, null, "atomic_event", "%");
             }
 
-            Vector nameList = new Vector();
-            Vector typeList = new Vector();
-            List typeNames = new ArrayList();
-            List columnSizes = new ArrayList();
+            Vector<String> nameList = new Vector<String>();
+            Vector<Integer> typeList = new Vector<Integer>();
+            List<String> typeNames = new ArrayList<String>();
+            List<Integer> columnSizes = new ArrayList<Integer>();
             boolean seenID = false;
 
             ResultSetMetaData md = resultSet.getMetaData();
@@ -341,12 +341,12 @@ public class AtomicEvent {
             int[] fieldTypes = new int[typeList.size()];
             String[] fieldTypeNames = new String[typeList.size()];
             for (int i = 0; i < typeList.size(); i++) {
-                fieldNames[i] = (String) nameList.get(i);
-                fieldTypes[i] = ((Integer) typeList.get(i)).intValue();
-                if (((Integer)columnSizes.get(i)).intValue() > 255) {
-                    fieldTypeNames[i] = (String) typeNames.get(i) + "(" + columnSizes.get(i).toString() + ")";
+                fieldNames[i] = nameList.get(i);
+                fieldTypes[i] = typeList.get(i).intValue();
+                if (columnSizes.get(i).intValue() > 255) {
+                    fieldTypeNames[i] = typeNames.get(i) + "(" + columnSizes.get(i).toString() + ")";
                 } else {
-                    fieldTypeNames[i] = (String) typeNames.get(i);
+                    fieldTypeNames[i] = typeNames.get(i);
                 }
             }
 

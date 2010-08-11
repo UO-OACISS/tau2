@@ -33,14 +33,15 @@ public class Tau2Slog2
     private static boolean  enable_endtime_check;
     private static boolean  continue_when_violation;
 
-    public static void main( String[] args )
+    @SuppressWarnings("unchecked")
+	public static void main( String[] args )
     {
         InputLog							dobj_ins;
         logformat.slog2.output.OutputLog    slog_outs;
         Kind                                next_kind;
         Topology                            topo;
         CategoryMap                         objdefs;   // Drawable def'n
-        Map                                 shadefs;   // Shadow   def'n
+        Map<Topology,Category>                                 shadefs;   // Shadow   def'n
         Category                            objdef;
         LineIDMapList                       lineIDmaps;
         LineIDMap                           lineIDmap;
@@ -73,7 +74,7 @@ public class Tau2Slog2
            
 
         objdefs       = new CategoryMap();
-        shadefs       = new HashMap();
+        shadefs       = new HashMap<Topology,Category>();
         lineIDmaps    = new LineIDMapList();
         Nobjs         = 0;
 

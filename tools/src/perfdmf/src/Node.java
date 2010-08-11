@@ -11,10 +11,10 @@ import java.util.*;
  * @see		DataSource
  * @see		Context
  */
-public class Node implements Comparable {
+public class Node implements Comparable<Node> {
 
     private int nodeID = -1;
-    private Map contexts = new TreeMap();
+    private Map<Integer, Context> contexts = new TreeMap<Integer, Context>();
     private DataSource dataSource;
 
     /**
@@ -58,7 +58,7 @@ public class Node implements Comparable {
      * Returns an iterator over the Contexts.
      * @return				Iterator over this Node's Contexts 
      */
-    public Iterator getContexts() {
+    public Iterator<Context> getContexts() {
         return contexts.values().iterator();
     }
 
@@ -68,7 +68,7 @@ public class Node implements Comparable {
      * @return				Requested Context, or null if not found
      */
     public Context getContext(int contextID) {
-        return (Context) contexts.get(new Integer(contextID));
+        return contexts.get(new Integer(contextID));
     }
 
     /**
@@ -82,16 +82,16 @@ public class Node implements Comparable {
     /**
      * Compares this Node to another Node or Integer.
      */
-    public int compareTo(Object obj) {
-        return nodeID - ((Node) obj).getNodeID();
+    public int compareTo(Node obj) {
+        return nodeID -  obj.getNodeID();
     }
 
-    public List getThreads() {
-        List list = new ArrayList();
-        for (Iterator it = getContexts(); it.hasNext();) {
-            Context context = (Context) it.next();
-            for (Iterator it2 = context.getThreads(); it2.hasNext();) {
-                Thread thread = (Thread) it2.next();
+    public List<Thread> getThreads() {
+        List<Thread> list = new ArrayList<Thread>();
+        for (Iterator<Context> it = getContexts(); it.hasNext();) {
+            Context context = it.next();
+            for (Iterator<Thread> it2 = context.getThreads(); it2.hasNext();) {
+                Thread thread = it2.next();
                 list.add(thread);
             }
         }

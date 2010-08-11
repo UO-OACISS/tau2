@@ -1,10 +1,18 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.*;
+import javax.swing.JCheckBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -16,7 +24,11 @@ import edu.uoregon.tau.perfdmf.Snapshot;
 
 public class SnapshotControlWindow extends JFrame {
 
-    private ParaProfTrial ppTrial;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 4729291331179383482L;
+	private ParaProfTrial ppTrial;
     private DataSource dataSource;
 
     private JSlider slider;
@@ -34,7 +46,7 @@ public class SnapshotControlWindow extends JFrame {
     private Animator animator;
     private volatile float rotateSpeed = 0.5f;
 
-    private long lastTime;
+    //private long lastTime;
     private class Animator extends Thread {
 
         public void run() {
@@ -48,9 +60,9 @@ public class SnapshotControlWindow extends JFrame {
                             public void run() {
                                 if (slider.getValue() >= slider.getMaximum()) {
                                     slider.setValue(0);
-                                    long time = System.currentTimeMillis();
-                                    double duration = ((double)time - lastTime) / 1000;
-                                    lastTime = time;
+                                    //long time = System.currentTimeMillis();
+                                    //double duration = ((double)time - lastTime) / 1000;
+                                    //lastTime = time;
 //                                    System.out.println("Duration: " + duration);
                                 } else {
                                     slider.setValue(slider.getValue() + 2);

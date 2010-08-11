@@ -1,6 +1,12 @@
 package edu.uoregon.tau.paraprof.graph;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import edu.uoregon.tau.perfdmf.FunctionProfile;
 
 public class Layout {
 
@@ -8,43 +14,43 @@ public class Layout {
     private static final int MARGIN = 20;
 
     // part one of Sugiyama's graph layout algorithm 
-    public static void runSugiyama(List levels) {
+    public static void runSugiyama(List<List<Vertex>> levels) {
         runPhaseOne(levels);
         //runPhaseTwo(levels);
     }
 
-    private static void runPhaseOne(List levels) {
+    private static void runPhaseOne(List<List<Vertex>> levels) {
 
         int numIterations = 100;
 
         while (numIterations > 0) {
             for (int i = 0; i < levels.size() - 1; i++) {
-                assignBaryCenters((List) levels.get(i), (List) levels.get(i + 1), true);
-                Collections.sort((List) levels.get(i));
+                assignBaryCenters(levels.get(i), levels.get(i + 1), true);
+                Collections.sort(levels.get(i));
             }
 
             for (int i = levels.size() - 1; i > 0; i--) {
-                assignBaryCenters((List) levels.get(i), (List) levels.get(i - 1), false);
-                Collections.sort((List) levels.get(i));
+                assignBaryCenters(levels.get(i), levels.get(i - 1), false);
+                Collections.sort(levels.get(i));
             }
 
             numIterations--;
         }
     }
 
-    private static void assignBaryCenters(List level, List level2, boolean down) {
+    private static void assignBaryCenters(List<Vertex> level, List<Vertex> level2, boolean down) {
 
         for (int j = 0; j < level2.size(); j++) {
-            Vertex v = (Vertex) level2.get(j);
+            Vertex v = level2.get(j);
             v.setLevelIndex(j);
         }
 
         for (int i = 0; i < level.size(); i++) {
-            Vertex v = (Vertex) level.get(i);
+            Vertex v = level.get(i);
             if (down) {
                 int sum = 0;
                 for (int j = 0; j < v.getChildren().size(); j++) {
-                    sum += ((Vertex) v.getChildren().get(j)).getLevelIndex();
+                    sum += v.getChildren().get(j).getLevelIndex();
                 }
 
                 // don't re-assign baryCenter if no children (keep old value, based on parents)
@@ -55,7 +61,7 @@ public class Layout {
             } else {
                 int sum = 0;
                 for (int j = 0; j < v.getParents().size(); j++) {
-                    sum += ((Vertex) v.getParents().get(j)).getLevelIndex();
+                    sum += v.getParents().get(j).getLevelIndex();
                 }
 
                 // don't re-assign baryCenter if no parents (keep old value, based on children)
@@ -68,13 +74,13 @@ public class Layout {
 
     }
 
-    private static void assignGridBaryCenters(List level, boolean down, boolean finalPass) {
+    private static void assignGridBaryCenters(List<Vertex> level, boolean down, boolean finalPass) {
 
         //        boolean combined = false;
         //
         //        if (!combined) {
         for (int i = 0; i < level.size(); i++) {
-            Vertex v = (Vertex) level.get(i);
+            Vertex v = level.get(i);
 
             //if (finalPass && v.children.size() == 0)
             //    down = false;
@@ -86,7 +92,7 @@ public class Layout {
 
                 float sum = 0;
                 for (int j = 0; j < v.getChildren().size(); j++) {
-                    sum += ((Vertex) v.getChildren().get(j)).getPosition();
+                    sum += v.getChildren().get(j).getPosition();
                 }
 
                 v.setGridBaryCenter(sum / v.getChildren().size());
@@ -98,7 +104,7 @@ public class Layout {
 
                 float sum = 0;
                 for (int j = 0; j < v.getParents().size(); j++) {
-                    sum += ((Vertex) v.getParents().get(j)).getPosition();
+                    sum += v.getParents().get(j).getPosition();
                 }
 
                 v.setGridBaryCenter(sum / v.getParents().size());
@@ -124,13 +130,13 @@ public class Layout {
         //        }
     }
 
-    private static void improvePositions(List levels, int index, boolean down, boolean finalPass) {
-        List level = (List) levels.get(index);
+    private static void improvePositions(List<List<Vertex>> levels, int index, boolean down, boolean finalPass) {
+        List<Vertex> level = levels.get(index);
 
         assignGridBaryCenters(level, down, finalPass);
 
         for (int i = 0; i < level.size(); i++) {
-            Vertex v = (Vertex) level.get(i);
+            Vertex v = level.get(i);
 
             int desiredPosition = (int) v.getGridBaryCenter();
 
@@ -153,9 +159,9 @@ public class Layout {
 
     }
 
-    private static int moveRight(List level, int index, int amount, boolean down, int priority) {
+    private static int moveRight(List<Vertex> level, int index, int amount, boolean down, int priority) {
 
-        Vertex v = (Vertex) level.get(index);
+        Vertex v = level.get(index);
 
         int j = index + 1;
 
@@ -164,7 +170,7 @@ public class Layout {
             return amount;
         }
 
-        Vertex u = (Vertex) level.get(j);
+        Vertex u = level.get(j);
 
         int myRightSide = v.getPosition() + (v.getWidth() / 2);
         int neighborLeftSide = u.getPosition() - (u.getWidth() / 2);
@@ -195,8 +201,8 @@ public class Layout {
         return amountMoved;
     }
 
-    private static int moveLeft(List level, int index, int amount, boolean down, int priority) {
-        Vertex v = (Vertex) level.get(index);
+    private static int moveLeft(List<Vertex> level, int index, int amount, boolean down, int priority) {
+        Vertex v = level.get(index);
 
         int j = index - 1;
 
@@ -205,7 +211,7 @@ public class Layout {
             return amount;
         }
 
-        Vertex u = (Vertex) level.get(j);
+        Vertex u = level.get(j);
 
         int myLeftSide = v.getPosition() - (v.getWidth() / 2);
         int neighborRightSide = u.getPosition() + (u.getWidth() / 2);
@@ -235,17 +241,17 @@ public class Layout {
         return amountMoved;
     }
 
-    public static void assignPositions(List levels) {
+    public static void assignPositions(List<List<Vertex>> levels) {
 
         // assign initial positions
         for (int i = 0; i < levels.size(); i++) {
-            List level = (List) levels.get(i);
+            List<Vertex> level = levels.get(i);
 
             int lastPosition = 0;
-            ((Vertex) level.get(0)).setPosition(0);
+            level.get(0).setPosition(0);
             for (int j = 1; j < level.size(); j++) {
-                Vertex v = (Vertex) level.get(j);
-                v.setPosition(lastPosition + HORIZONTAL_SPACING + (((Vertex) level.get(j - 1)).getWidth() + v.getWidth()) / 2);
+                Vertex v = level.get(j);
+                v.setPosition(lastPosition + HORIZONTAL_SPACING + (level.get(j - 1).getWidth() + v.getWidth()) / 2);
                 lastPosition = v.getPosition();
 
                 v.setDownPriority(v.getChildren().size());
@@ -265,15 +271,15 @@ public class Layout {
             int middle;
 
             if (level.size() % 2 == 0) {
-                int left = ((Vertex) level.get((level.size() - 2) / 2)).getPosition();
-                int right = ((Vertex) level.get(level.size() / 2)).getPosition();
+                int left = level.get((level.size() - 2) / 2).getPosition();
+                int right = level.get(level.size() / 2).getPosition();
                 middle = (left + right) / 2;
             } else {
-                middle = ((Vertex) level.get((level.size() - 1) / 2)).getPosition();
+                middle = level.get((level.size() - 1) / 2).getPosition();
             }
 
             for (int j = 0; j < level.size(); j++) {
-                Vertex v = (Vertex) level.get(j);
+                Vertex v = level.get(j);
                 v.setPosition(v.getPosition() - middle);
             }
 
@@ -303,10 +309,10 @@ public class Layout {
 
         int minValue = 0;
         for (int i = 0; i < levels.size(); i++) {
-            List level = (List) levels.get(i);
+            List<Vertex> level = levels.get(i);
 
             for (int j = 0; j < level.size(); j++) {
-                Vertex v = (Vertex) level.get(j);
+                Vertex v = level.get(j);
                 if (v.getPosition() - (v.getWidth() / 2) < minValue) {
                     minValue = v.getPosition() - (v.getWidth() / 2);
                 }
@@ -314,10 +320,10 @@ public class Layout {
         }
 
         for (int i = 0; i < levels.size(); i++) {
-            List level = (List) levels.get(i);
+            List<Vertex> level = levels.get(i);
 
             for (int j = 0; j < level.size(); j++) {
-                Vertex v = (Vertex) level.get(j);
+                Vertex v = level.get(j);
                 v.setPosition(v.getPosition() + (-minValue + MARGIN));
             }
         }
@@ -327,7 +333,7 @@ public class Layout {
 
         int maxLevel = 0;
         for (int i = 0; i < v.getParents().size(); i++) {
-            Vertex parent = (Vertex) v.getParents().get(i);
+            Vertex parent = v.getParents().get(i);
             if (parent.getLevel() == -1)
                 assignLevel(parent);
             if (parent.getLevel() > maxLevel)
@@ -336,7 +342,7 @@ public class Layout {
         v.setLevel(maxLevel + 1);
     }
 
-    public static void fillLevels(Vertex v, List levels, int level) {
+    public static void fillLevels(Vertex v, List<List<Vertex>> levels, int level) {
 
         if (v.getVisited() == true)
             return;
@@ -344,16 +350,16 @@ public class Layout {
         v.setVisited(true);
 
         if (levels.size() == level) {
-            levels.add(new ArrayList());
+            levels.add(new ArrayList<Vertex>());
         }
 
         v.setLevel(level);
 
-        List currentLevel = (List) levels.get(level);
+        List<Vertex> currentLevel = levels.get(level);
         currentLevel.add(v);
 
         for (int i = 0; i < v.getChildren().size(); i++) {
-            Vertex child = (Vertex) v.getChildren().get(i);
+            Vertex child = v.getChildren().get(i);
             fillLevels(child, levels, level + 1);
         }
     }
@@ -361,7 +367,7 @@ public class Layout {
     public static void insertDummies(Vertex v) {
 
         for (int i = 0; i < v.getChildren().size(); i++) {
-            Vertex child = (Vertex) v.getChildren().get(i);
+            Vertex child = v.getChildren().get(i);
             if (child.getLevel() - v.getLevel() > 1) {
 
                 // break both edges
@@ -382,24 +388,24 @@ public class Layout {
         }
     }
     
-    public static List findRoots(Map vertexMap) {
-        List roots = new ArrayList();
+    public static List<Vertex> findRoots(Map<FunctionProfile, Vertex> vertexMap) {
+        List<Vertex> roots = new ArrayList<Vertex>();
 
-        for (Iterator it = vertexMap.values().iterator(); it.hasNext();) {
-            Vertex v = (Vertex) it.next();
+        for (Iterator<Vertex> it = vertexMap.values().iterator(); it.hasNext();) {
+            Vertex v = it.next();
             v.setVisited(false);
         }
 
-        for (Iterator it = vertexMap.values().iterator(); it.hasNext();) {
-            Vertex v = (Vertex) it.next();
+        for (Iterator<Vertex> it = vertexMap.values().iterator(); it.hasNext();) {
+            Vertex v = it.next();
             for (int i = 0; i < v.getChildren().size(); i++) {
-                Vertex child = (Vertex) v.getChildren().get(i);
+                Vertex child = v.getChildren().get(i);
                 child.setVisited(true);
             }
         }
 
-        for (Iterator it = vertexMap.values().iterator(); it.hasNext();) {
-            Vertex v = (Vertex) it.next();
+        for (Iterator<Vertex> it = vertexMap.values().iterator(); it.hasNext();) {
+            Vertex v = it.next();
             if (v.getVisited() == false)
                 roots.add(v);
         }

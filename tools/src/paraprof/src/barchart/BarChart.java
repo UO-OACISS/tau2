@@ -1,6 +1,12 @@
 package edu.uoregon.tau.paraprof.barchart;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -24,7 +30,12 @@ import edu.uoregon.tau.paraprof.Searcher;
  */
 public class BarChart extends JPanel implements MouseListener, MouseMotionListener, BarChartModelListener {
 
-    private BarChartModel model;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -3802185389413109398L;
+
+	private BarChartModel model;
 
     // internal variables for lazy evaluation
     private int maxRowLabelStringWidth;
@@ -62,9 +73,9 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
     private int rowEnd;
 
     // list of row label draw objects (only the ones on the screen)
-    private ArrayList rowLabelDrawObjects = new ArrayList();
+    private ArrayList<DrawObject> rowLabelDrawObjects = new ArrayList<DrawObject>();
     // list of value label draw objects (only the ones on the screen)
-    private ArrayList valueDrawObjects = new ArrayList();
+    private ArrayList<ArrayList<DrawObject>> valueDrawObjects = new ArrayList<ArrayList<DrawObject>>();
 
     private BarChartPanel panel;
     private Searcher searcher;
@@ -172,7 +183,7 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
         // search the row labels
         int size = rowLabelDrawObjects.size();
         for (int i = 0; i < size; i++) {
-            DrawObject drawObject = (DrawObject) rowLabelDrawObjects.get(i);
+            DrawObject drawObject = rowLabelDrawObjects.get(i);
             if (x >= drawObject.getXBeg() && x <= drawObject.getXEnd() && y >= drawObject.getYBeg() && y <= drawObject.getYEnd()) {
                 return model.getRowLabelToolTipText(i + rowStart);
             }
@@ -181,11 +192,11 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
         // search the values
         size = valueDrawObjects.size();
         for (int i = 0; i < size; i++) {
-            ArrayList subList = (ArrayList) valueDrawObjects.get(i);
+            ArrayList<DrawObject> subList = valueDrawObjects.get(i);
 
             int size2 = subList.size();
             for (int j = 0; j < size2; j++) {
-                DrawObject drawObject = (DrawObject) subList.get(j);
+                DrawObject drawObject = subList.get(j);
                 if (drawObject != null) {
                     if (x >= drawObject.getXBeg() && x <= drawObject.getXEnd() && y >= drawObject.getYBeg()
                             && y <= drawObject.getYEnd()) {
@@ -224,7 +235,7 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
         // search the row labels
         int size = rowLabelDrawObjects.size();
         for (int i = 0; i < size; i++) {
-            DrawObject drawObject = (DrawObject) rowLabelDrawObjects.get(i);
+            DrawObject drawObject = rowLabelDrawObjects.get(i);
             if (x >= drawObject.getXBeg() && x <= drawObject.getXEnd() && y >= drawObject.getYBeg() && y <= drawObject.getYEnd()) {
                 model.fireRowLabelClick(i + rowStart, e, this);
                 return;
@@ -234,11 +245,11 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
         // search the values
         size = valueDrawObjects.size();
         for (int i = 0; i < size; i++) {
-            ArrayList subList = (ArrayList) valueDrawObjects.get(i);
+            ArrayList<DrawObject> subList = valueDrawObjects.get(i);
 
             int size2 = subList.size();
             for (int j = 0; j < size2; j++) {
-                DrawObject drawObject = (DrawObject) subList.get(j);
+                DrawObject drawObject = subList.get(j);
                 if (drawObject != null) {
                     if (x >= drawObject.getXBeg() && x <= drawObject.getXEnd() && y >= drawObject.getYBeg()
                             && y <= drawObject.getYEnd()) {
@@ -342,7 +353,7 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
                     maxWidth = leftMargin + getMaxRowLabelStringWidth() + horizSpacing + barLengthMultiple + rightMargin;
                 } else {
                     maxWidth = leftMargin + getMaxRowLabelStringWidth() + horizSpacing + rightMargin;
-                    double otherValues = 0;
+                    //double otherValues = 0;
                     for (int i = 0; i < model.getSubSize(); i++) {
                         int subIndexMaxWidth = (int) (maxSubValues[i] / maxRowSum * barLengthMultiple);
                         if (subIndexMaxWidth >= threshold) {
@@ -475,7 +486,7 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
             String rowLabel = model.getRowLabel(row);
             int rowLabelStringWidth = fontMetrics.stringWidth(rowLabel);
 
-            ArrayList subDrawObjects = new ArrayList();
+            ArrayList<DrawObject> subDrawObjects = new ArrayList<DrawObject>();
             valueDrawObjects.add(subDrawObjects);
 
             String valueLabel = model.getValueLabel(row, 0);
@@ -526,7 +537,7 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
             String rowLabel = model.getRowLabel(row);
             int rowLabelStringWidth = fontMetrics.stringWidth(rowLabel);
 
-            ArrayList subDrawObjects = new ArrayList();
+            ArrayList<DrawObject> subDrawObjects = new ArrayList<DrawObject>();
             valueDrawObjects.add(subDrawObjects);
 
             int barStartX;
@@ -644,7 +655,7 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
             String rowLabel = model.getRowLabel(row);
             int rowLabelStringWidth = fontMetrics.stringWidth(rowLabel);
 
-            ArrayList subDrawObjects = new ArrayList();
+            ArrayList<DrawObject> subDrawObjects = new ArrayList<DrawObject>();
             valueDrawObjects.add(subDrawObjects);
             int barStartX;
             int rowLabelPosition;
@@ -840,7 +851,7 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
     }
 
     private void setSearchLines() {
-        ArrayList searchLines = new ArrayList();
+        ArrayList<String> searchLines = new ArrayList<String>();
         for (int i = 0; i < model.getNumRows(); i++) {
             searchLines.add(model.getRowLabel(i));
         }
@@ -953,11 +964,11 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
         // search the values
         size = valueDrawObjects.size();
         for (int i = 0; i < size; i++) {
-            ArrayList subList = (ArrayList) valueDrawObjects.get(i);
+            ArrayList<DrawObject> subList = valueDrawObjects.get(i);
 
             int size2 = subList.size();
             for (int j = 0; j < size2; j++) {
-                DrawObject drawObject = (DrawObject) subList.get(j);
+                DrawObject drawObject = subList.get(j);
                 if (drawObject != null) {
                     int minx = drawObject.getXBeg();
                     int maxx = drawObject.getXEnd();

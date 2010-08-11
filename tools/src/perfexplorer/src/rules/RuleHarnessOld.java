@@ -3,15 +3,13 @@
  */
 package edu.uoregon.tau.perfexplorer.rules;
 
-import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.HashMap;
 
 import org.drools.RuleBase;
 import org.drools.RuleBaseFactory;
@@ -19,9 +17,6 @@ import org.drools.WorkingMemory;
 import org.drools.compiler.PackageBuilder;
 import org.drools.rule.Package;
 
-
-import edu.uoregon.tau.perfdmf.Application;
-import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.IntervalLocationProfile;
 import edu.uoregon.tau.perfdmf.Metric;
@@ -96,13 +91,12 @@ public class RuleHarnessOld {
 		// member variables
 		private final int type;
 		private Trial trial;
-		private List<String> metrics;
+		private List<Metric> metrics;
 		private HashMap<IntervalEvent, IntervalLocationProfile> events;
 		private HashMap<String, IntervalEvent> eventNames;
 		private IntervalEvent main;
 		private int timeIndex;
 		
-		@SuppressWarnings("unchecked")
 		public RelativeTrial (Trial trial, int type) {
 			this.trial = trial;
 			this.type = type;
@@ -119,7 +113,7 @@ public class RuleHarnessOld {
 			int timeIndex = this.timeIndex==-1?0:this.timeIndex;
 			double inclusive = 0.0;
 			while (events.hasNext()) {
-				IntervalEvent event = (IntervalEvent)events.next();
+				IntervalEvent event = events.next();
 				this.eventNames.put(event.getName(), event);
 				try {
 					IntervalLocationProfile ilp =event.getMeanSummary();
@@ -140,8 +134,8 @@ public class RuleHarnessOld {
 		    int i = 0;
 		    if (findme.equalsIgnoreCase("TIME")) {
 		        // look for the usual "WALL_CLOCK_TIME" from PAPI/TAU
-		        for (ListIterator iter = metrics.listIterator(); iter.hasNext(); ) {
-		        	Metric metric = (Metric)iter.next();
+		        for (ListIterator<Metric> iter = metrics.listIterator(); iter.hasNext(); ) {
+		        	Metric metric = iter.next();
 		        	String name = metric.getName();
 		            if (name.indexOf("WALL_CLOCK_TIME") > -1) {
 		                return i;
@@ -150,8 +144,8 @@ public class RuleHarnessOld {
 		        }
 		        i = 0;
 		        // look for the usual "GET_TIME_OF_DAY" from PAPI/TAU
-		        for (ListIterator iter = metrics.listIterator(); iter.hasNext(); ) {
-		        	Metric metric = (Metric)iter.next();
+		        for (ListIterator<Metric> iter = metrics.listIterator(); iter.hasNext(); ) {
+		        	Metric metric = iter.next();
 		        	String name = metric.getName();
 		            if (name.indexOf("GET_TIME_OF_DAY") > -1) {
 		                return i;
@@ -161,8 +155,8 @@ public class RuleHarnessOld {
 		        i = 0;
 		    }
 		    // otherwise, just look for a match
-	        for (ListIterator iter = metrics.listIterator(); iter.hasNext(); ) {
-	        	Metric metric = (Metric)iter.next();
+	        for (ListIterator<Metric> iter = metrics.listIterator(); iter.hasNext(); ) {
+	        	Metric metric = iter.next();
 	        	String name = metric.getName();
 	            if (name.equalsIgnoreCase(findme)) {
 	                return i;
@@ -196,7 +190,7 @@ public class RuleHarnessOld {
 			return this.eventNames.get(name);
 		}
 	
-		public List getMetrics () {
+		public List<Metric> getMetrics () {
 			return metrics;
 		}
 	}
@@ -257,9 +251,9 @@ public class RuleHarnessOld {
 				buf.append("Event, Baseline, Comparison, Difference, Percent,\n");
 				buf.append("main, ");
 			}
-			buf.append((baseline / this.million) + ", " + (comparison / this.million) + ", "
-					+ (this.type == this.FASTER ? "-" : "") + 
-					+ (difference / this.million) + ", " 
+			buf.append((baseline / Difference.million) + ", " + (comparison / Difference.million) + ", "
+					+ (this.type == Difference.FASTER ? "-" : "") + 
+					+ (difference / Difference.million) + ", " 
 					//+ (this.type == this.FASTER ? "-" : "") + 
 					+ (percent * 100.0) + "%");
 			return buf.toString();

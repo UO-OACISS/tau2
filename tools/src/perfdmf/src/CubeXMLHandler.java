@@ -1,6 +1,11 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
+import java.util.StringTokenizer;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -21,7 +26,7 @@ public class CubeXMLHandler extends DefaultHandler {
     private StringBuffer accumulator;
 
     private String metricID;
-    private Stack metricIDStack = new Stack();
+    private Stack<String> metricIDStack = new Stack<String>();
 
     private String regionID;
     private String csiteID;
@@ -31,22 +36,22 @@ public class CubeXMLHandler extends DefaultHandler {
     private String uom;
 
     private String rank;
-    private Stack rankStack = new Stack();
+    private Stack<String> rankStack = new Stack<String>();
 
-    private Map metricMap = new HashMap(); // map cube metricId Strings to PerfDMF Metric classes
-    private Map regionMap = new HashMap(); // map cube regionId Strings to Function names (Strings)
-    private Map csiteMap = new HashMap(); // map cube csiteId Strings to regionId Strings 
-    private Map cnodeMap = new HashMap(); // map cube cnodeId Strings to csiteId Strings
-    private Map uomMap = new HashMap(); // map cube metricId Strings to uom (unit of measure) Strings
+    private Map<String, Metric> metricMap = new HashMap<String, Metric>(); // map cube metricId Strings to PerfDMF Metric classes
+    private Map<String, String> regionMap = new HashMap<String, String>(); // map cube regionId Strings to Function names (Strings)
+    private Map<String, String> csiteMap = new HashMap<String, String>(); // map cube csiteId Strings to regionId Strings 
+    private Map<String, Function> cnodeMap = new HashMap<String, Function>(); // map cube cnodeId Strings to csiteId Strings
+    private Map<Metric, String> uomMap = new HashMap<Metric, String>(); // map cube metricId Strings to uom (unit of measure) Strings
 
     private CubeDataSource cubeDataSource;
 
     private String name;
-    private Stack nameStack = new Stack();
+    private Stack<String> nameStack = new Stack<String>();
 
-    private Stack cnodeStack = new Stack();
+    private Stack<String> cnodeStack = new Stack<String>();
 
-    private List threads = new ArrayList();
+    private List<Thread> threads = new ArrayList<Thread>();
     private Metric metric;
 
     // changed to 3 if detected, some things are different
@@ -54,7 +59,7 @@ public class CubeXMLHandler extends DefaultHandler {
 
     private Metric calls = new Metric();
 
-    private List cubeProcesses = new ArrayList();
+    private List<CubeProcess> cubeProcesses = new ArrayList<CubeProcess>();
     private CubeProcess cubeProcess;
 
     private Group defaultGroup;
@@ -65,12 +70,12 @@ public class CubeXMLHandler extends DefaultHandler {
     private volatile int currentMetric = 0;
 
     // these maps were added to speed up the lookup of flat and parent profiles
-    private Map parentMap = new HashMap(); // map functions to their parent functions ("A=>B=>C" -> "A=>B")
-    private Map flatMap = new HashMap(); // map functions to their flat functions ("A=>B=>C" -> "C")
+    private Map<Function, Function> parentMap = new HashMap<Function, Function>(); // map functions to their parent functions ("A=>B=>C" -> "A=>B")
+    private Map<Function, Function> flatMap = new HashMap<Function, Function>(); // map functions to their flat functions ("A=>B=>C" -> "C")
 
     private static class CubeProcess {
         public int rank;
-        public List threads = new ArrayList();
+        public List<CubeThread> threads = new ArrayList<CubeThread>();
 
         public CubeProcess(int rank) {
             this.rank = rank;
@@ -104,9 +109,9 @@ public class CubeXMLHandler extends DefaultHandler {
 
     private String getFunctionName(Object callSiteID) {
         if (version == 3) {
-            return (String) regionMap.get(callSiteID);
+            return regionMap.get(callSiteID);
         } else {
-            return (String) regionMap.get(csiteMap.get(callSiteID));
+            return regionMap.get(csiteMap.get(callSiteID));
         }
     }
 
@@ -122,7 +127,8 @@ public class CubeXMLHandler extends DefaultHandler {
     /* (non-Javadoc)
      * @see org.xml.sax.ContentHandler#startElement(java.lang.String, java.lang.String, java.lang.String, org.xml.sax.Attributes)
      */
-    public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+    @SuppressWarnings("unchecked")
+	public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         accumulator.setLength(0);
 
         // after development is done here this should be changed to if/else if's at least
@@ -163,7 +169,7 @@ public class CubeXMLHandler extends DefaultHandler {
                 functionName = getFunctionName(csiteID);
             }
 
-            Stack stackCopy = (Stack) cnodeStack.clone();
+            Stack<String> stackCopy = (Stack<String>) cnodeStack.clone();
 
             while (stackCopy.size() != 0) {
                 functionName = getFunctionName(stackCopy.pop()) + " => " + functionName;
@@ -185,7 +191,7 @@ public class CubeXMLHandler extends DefaultHandler {
             }
         } else if (localName.equalsIgnoreCase("matrix")) {
             metricID = getInsensitiveValue(attributes, "metricid");
-            metric = (Metric) metricMap.get(metricID);
+            metric = metricMap.get(metricID);
             currentMetric++;
         } else if (localName.equalsIgnoreCase("row")) {
             cnodeID = getInsensitiveValue(attributes, "cnodeid");
@@ -201,28 +207,29 @@ public class CubeXMLHandler extends DefaultHandler {
     }
 
     private void popName() {
-        name = (String) nameStack.pop();
+        name = nameStack.pop();
     }
 
     /* (non-Javadoc)
      * @see org.xml.sax.ContentHandler#endElement(java.lang.String, java.lang.String, java.lang.String)
      */
-    public void endElement(String uri, String localName, String qName) throws SAXException {
+    @SuppressWarnings("unchecked")
+	public void endElement(String uri, String localName, String qName) throws SAXException {
 
         if (localName.equalsIgnoreCase("process")) {
             cubeProcess.rank = Integer.parseInt(rank);
-            rank = (String) rankStack.pop();
+            rank = rankStack.pop();
         } else if (localName.equalsIgnoreCase("thread")) {
             CubeThread cubeThread = new CubeThread(Integer.parseInt(rank), threadID);
             cubeProcess.threads.add(cubeThread);
-            rank = (String) rankStack.pop();
+            rank = rankStack.pop();
         } else if (localName.equalsIgnoreCase("locations") || localName.equalsIgnoreCase("system")) {
             for (int i = 0; i < cubeProcesses.size(); i++) {
-                CubeProcess cubeProcess = (CubeProcess) cubeProcesses.get(i);
+                CubeProcess cubeProcess = cubeProcesses.get(i);
                 Node node = cubeDataSource.addNode(cubeProcess.rank);
                 Context context = node.addContext(0);
                 for (int j = 0; j < cubeProcess.threads.size(); j++) {
-                    CubeThread cubeThread = (CubeThread) cubeProcess.threads.get(j);
+                    CubeThread cubeThread = cubeProcess.threads.get(j);
                     Thread thread = context.addThread(cubeThread.rank, cubeDataSource.getNumberOfMetrics());
 
                     while (cubeThread.id >= threads.size()) {
@@ -250,9 +257,9 @@ public class CubeXMLHandler extends DefaultHandler {
             } else {
 
                 String treeName = name;
-                Stack stackCopy = (Stack) nameStack.clone();
+                Stack<String> stackCopy = (Stack<String>) nameStack.clone();
                 while (stackCopy.size() > 0) {
-                    String next = (String) stackCopy.pop();
+                    String next = stackCopy.pop();
                     if (next != null) {
                         treeName = next + " => " + treeName;
                     }
@@ -270,7 +277,7 @@ public class CubeXMLHandler extends DefaultHandler {
                 uomMap.put(metric, uom);
             }
 
-            metricID = (String) metricIDStack.pop();
+            metricID = metricIDStack.pop();
 
             popName();
         } else if (localName.equalsIgnoreCase("region")) {
@@ -284,7 +291,7 @@ public class CubeXMLHandler extends DefaultHandler {
             cnodeStack.pop();
         } else if (localName.equalsIgnoreCase("row")) {
 
-            Function function = (Function) cnodeMap.get(cnodeID);
+            Function function = cnodeMap.get(cnodeID);
 
             String data = accumulator.toString();
 
@@ -294,7 +301,7 @@ public class CubeXMLHandler extends DefaultHandler {
             while (tokenizer.hasMoreTokens()) {
                 String line = tokenizer.nextToken();
 
-                Thread thread = (Thread) threads.get(index);
+                Thread thread = threads.get(index);
                 FunctionProfile fp = thread.getFunctionProfile(function);
                 if (fp == null) {
                     fp = new FunctionProfile(function, cubeDataSource.getNumberOfMetrics());
@@ -310,7 +317,7 @@ public class CubeXMLHandler extends DefaultHandler {
                     fp.setNumCalls(value);
 
                 } else {
-                    String unitsOfMeasure = (String) uomMap.get(metric);
+                    String unitsOfMeasure = uomMap.get(metric);
                     if (unitsOfMeasure.equalsIgnoreCase("sec")) {
                         value = value * 1000 * 1000;
                     }
@@ -355,7 +362,7 @@ public class CubeXMLHandler extends DefaultHandler {
             return null;
         }
 
-        Function childFunction = (Function) flatMap.get(function);
+        Function childFunction = flatMap.get(function);
 
         if (childFunction == null) {
             String childName = function.getName().substring(function.getName().lastIndexOf("=>") + 2).trim();
@@ -378,7 +385,7 @@ public class CubeXMLHandler extends DefaultHandler {
             return null;
         }
 
-        Function parentFunction = (Function) parentMap.get(function);
+        Function parentFunction = parentMap.get(function);
         if (parentFunction == null) {
             String functionName = function.getName();
             String parentName = functionName.substring(0, functionName.lastIndexOf("=>"));

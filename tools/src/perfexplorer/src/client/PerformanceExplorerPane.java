@@ -84,7 +84,7 @@ public class PerformanceExplorerPane extends JScrollPane implements ActionListen
 			}
 
 			for (int i = iStart ; i < imageCount ; i++) {
-				ImageIcon icon = new ImageIcon((byte[])(thumbnails.get(i)));
+				ImageIcon icon = new ImageIcon((thumbnails.get(i)));
 				String description = (String)(descriptions.get(i));
 				PerfExplorerImageButton button = new PerfExplorerImageButton(icon, i, description);
 				button.addActionListener(this);

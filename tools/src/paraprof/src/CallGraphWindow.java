@@ -1,21 +1,68 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Stack;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JScrollPane;
+import javax.swing.JSlider;
+import javax.swing.ToolTipManager;
 import javax.swing.border.BevelBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.jgraph.JGraph;
-import org.jgraph.graph.*;
+import org.jgraph.graph.CellView;
+import org.jgraph.graph.ConnectionSet;
+import org.jgraph.graph.DefaultEdge;
+import org.jgraph.graph.DefaultGraphCell;
+import org.jgraph.graph.DefaultGraphModel;
+import org.jgraph.graph.DefaultGraphSelectionModel;
+import org.jgraph.graph.DefaultPort;
+import org.jgraph.graph.Edge;
+import org.jgraph.graph.GraphConstants;
+import org.jgraph.graph.GraphModel;
+import org.jgraph.graph.Port;
 
 import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.paraprof.enums.CallGraphOption;
@@ -23,7 +70,10 @@ import edu.uoregon.tau.paraprof.graph.Layout;
 import edu.uoregon.tau.paraprof.graph.Vertex;
 import edu.uoregon.tau.paraprof.graph.Vertex.BackEdge;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.CallPathUtilFuncs;
+import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.FunctionProfile;
+import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Thread;
 
 /**
@@ -38,11 +88,15 @@ import edu.uoregon.tau.perfdmf.Thread;
  * @author	Alan Morris
  * @version	$Revision: 1.15 $
  */
-public class CallGraphWindow extends JFrame implements ActionListener, KeyListener, ChangeListener, Observer, ImageExport,
+public class CallGraphWindow extends JFrame implements ActionListener, KeyListener, MouseWheelListener, ChangeListener, Observer, ImageExport,
         Printable, ParaProfWindow {
 
-    private static final int MARGIN = 20;
-    private static final int HORIZONTAL_SPACING = 10;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -8532506804592254096L;
+	private static final int MARGIN = 20;
+    //private static final int HORIZONTAL_SPACING = 10;
     private static final int VERTICAL_SPACING = 120;
 
     private ParaProfTrial ppTrial;
@@ -63,13 +117,13 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
     private JLabel boxWidthLabel = new JLabel("Box width");
     private JSlider boxWidthSlider = new JSlider(0, 500, boxWidth);
 
-    private List functionProfileList;
+    private List<FunctionProfile> functionProfileList;
     private DefaultGraphModel model;
-    private List graphCellList;
+    private List<GraphCell> graphCellList;
     private Object[] cells;
-    private List levels;
-    private List backEdges;
-    private Map vertexMap;
+    private List<List<Vertex>> levels;
+    private List<BackEdge> backEdges;
+    private Map<FunctionProfile, Vertex> vertexMap;
 
     private Metric widthMetric;
     private Metric colorMetric;
@@ -79,7 +133,12 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
     private static class GraphSelectionModel extends DefaultGraphSelectionModel {
 
-        GraphSelectionModel(JGraph graph) {
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = -5718582372004816966L;
+
+		GraphSelectionModel(JGraph graph) {
             super(graph);
         }
 
@@ -93,9 +152,9 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         public Object[] getSelectables() {
             //            return null;
             if (isChildrenSelectable()) {
-                ArrayList result = new ArrayList();
+                ArrayList<Object> result = new ArrayList<Object>();
                 // Roots Are Always Selectable
-                Stack s = new Stack();
+                Stack<Object> s = new Stack<Object>();
                 GraphModel model = this.graph.getModel();
                 for (int i = 0; i < model.getRootCount(); i++)
                     s.add(model.getRootAt(i));
@@ -117,7 +176,11 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
     public class GraphCell extends DefaultGraphCell {
 
-        private final Function function;
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = -8524078198153715353L;
+		private final Function function;
         private final FunctionProfile functionProfile;
         private final Vertex vertex;
 
@@ -163,7 +226,12 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
     private class Graph extends JGraph implements MouseListener {
 
-        public String getToolTipText(MouseEvent event) {
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = 5752402574670873205L;
+
+		public String getToolTipText(MouseEvent event) {
             double x = event.getX() / this.getScale();
             double y = event.getY() / this.getScale();
 
@@ -334,8 +402,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         } else {
             JMenu subSubMenu = new JMenu(option.toString() + "...");
 
-            for (Iterator it = ppTrial.getMetrics().iterator(); it.hasNext();) {
-                Metric metric = (Metric) it.next();
+            for (Iterator<Metric> it = ppTrial.getMetrics().iterator(); it.hasNext();) {
+                Metric metric = it.next();
 
                 if (metric == this.widthMetric && enabled) {
                     button = new JRadioButtonMenuItem(metric.getName(), true);
@@ -377,8 +445,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         } else {
             JMenu subSubMenu = new JMenu(option.toString() + "...");
 
-            for (Iterator it = ppTrial.getMetrics().iterator(); it.hasNext();) {
-                Metric metric = (Metric) it.next();
+            for (Iterator<Metric> it = ppTrial.getMetrics().iterator(); it.hasNext();) {
+                Metric metric = it.next();
 
                 if (metric == this.widthMetric && enabled) {
                     button = new JRadioButtonMenuItem(metric.getName(), true);
@@ -597,16 +665,16 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         return width;
     }
 
-    private List constructGraph() {
+    private List<List<Vertex>> constructGraph() {
 
-        vertexMap = new HashMap();
-        backEdges = new ArrayList();
+        vertexMap = new HashMap<FunctionProfile, Vertex>();
+        backEdges = new ArrayList<BackEdge>();
 
         double maxWidthValue = getMaxValue(this.widthOption, widthMetric);
         double maxColorValue = getMaxValue(this.colorOption, colorMetric);
 
         for (int i = 0; i < functionProfileList.size(); i++) {
-            FunctionProfile fp = (FunctionProfile) functionProfileList.get(i);
+            FunctionProfile fp = functionProfileList.get(i);
             if (fp == null) // skip it if this thread didn't call this function
                 continue;
 
@@ -619,18 +687,18 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         }
 
         // now we follow the call paths and eliminate back edges
-        Stack toVisit = new Stack();
-        Stack currentPath = new Stack();
+        Stack<FunctionProfile> toVisit = new Stack<FunctionProfile>();
+        Stack<FunctionProfile> currentPath = new Stack<FunctionProfile>();
 
         for (int i = 0; i < functionProfileList.size(); i++) {
-            FunctionProfile fp = (FunctionProfile) functionProfileList.get(i);
+            FunctionProfile fp = functionProfileList.get(i);
             if (fp == null) // skip it if this thread didn't call this function
                 continue;
 
             if (!fp.isCallPathFunction()) { // skip callpath functions (we only want the actual functions)
 
                 // get the vertex for this FunctionProfile 
-                Vertex root = (Vertex) vertexMap.get(fp);
+                Vertex root = vertexMap.get(fp);
 
                 if (!root.getVisited()) {
 
@@ -638,13 +706,13 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
                     toVisit.add(null); // null in the toVisit stack marks the end of a set of children (they must get pushed into the stack prior to the children)
 
                     // add all the children to the toVisit list
-                    for (Iterator it = fp.getChildProfiles(); it.hasNext();) {
-                        FunctionProfile childFp = (FunctionProfile) it.next();
+                    for (Iterator<FunctionProfile> it = fp.getChildProfiles(); it.hasNext();) {
+                        FunctionProfile childFp = it.next();
                         toVisit.add(childFp);
                     }
 
                     while (!toVisit.empty()) {
-                        FunctionProfile childFp = (FunctionProfile) toVisit.pop();
+                        FunctionProfile childFp = toVisit.pop();
 
                         if (childFp == null) {
                             // this marks the end of a set of children, so pop the current path
@@ -653,15 +721,15 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
                             continue;
                         }
 
-                        Vertex child = (Vertex) vertexMap.get(childFp);
-                        FunctionProfile parentFp = (FunctionProfile) currentPath.peek();
+                        Vertex child = vertexMap.get(childFp);
+                        FunctionProfile parentFp = currentPath.peek();
 
-                        Vertex parent = (Vertex) vertexMap.get(parentFp);
+                        Vertex parent = vertexMap.get(parentFp);
 
                         // run through the currentPath and see if childFp is in it, if so, this is a backedge
                         boolean back = false;
-                        for (Iterator it = currentPath.iterator(); it.hasNext();) {
-                            if ((FunctionProfile) it.next() == childFp) {
+                        for (Iterator<FunctionProfile> it = currentPath.iterator(); it.hasNext();) {
+                            if (it.next() == childFp) {
                                 back = true;
                                 break;
                             }
@@ -694,8 +762,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
                                 currentPath.add(childFp);
 
                                 toVisit.add(null);
-                                for (Iterator it = childFp.getChildProfiles(); it.hasNext();) {
-                                    FunctionProfile grandChildFunction = (FunctionProfile) it.next();
+                                for (Iterator<FunctionProfile> it = childFp.getChildProfiles(); it.hasNext();) {
+                                    FunctionProfile grandChildFunction = it.next();
 
                                     toVisit.add(grandChildFunction);
                                 }
@@ -709,16 +777,16 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         // now we should have a DAG, now find the roots
 
         // Find Roots
-        List roots = Layout.findRoots(vertexMap);
+        List<Vertex> roots = Layout.findRoots(vertexMap);
 
         // Assigning Levels
         for (int i = 0; i < functionProfileList.size(); i++) {
-            FunctionProfile fp = (FunctionProfile) functionProfileList.get(i);
+            FunctionProfile fp = functionProfileList.get(i);
             if (fp == null)
                 continue;
 
             if (!fp.isCallPathFunction()) {
-                Vertex vertex = (Vertex) vertexMap.get(fp);
+                Vertex vertex = vertexMap.get(fp);
 
                 if (vertex.getLevel() == -1) {
                     Layout.assignLevel(vertex);
@@ -729,12 +797,12 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
         // Insert Dummies
         for (int i = 0; i < functionProfileList.size(); i++) {
-            FunctionProfile fp = (FunctionProfile) functionProfileList.get(i);
+            FunctionProfile fp = functionProfileList.get(i);
             if (fp == null)
                 continue;
 
             if (!fp.isCallPathFunction()) {
-                Vertex vertex = (Vertex) vertexMap.get(fp);
+                Vertex vertex = vertexMap.get(fp);
                 Layout.insertDummies(vertex);
             }
 
@@ -742,22 +810,22 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
         // fill level lists
         for (int i = 0; i < functionProfileList.size(); i++) {
-            FunctionProfile fp = (FunctionProfile) functionProfileList.get(i);
+            FunctionProfile fp = functionProfileList.get(i);
             if (fp == null)
                 continue;
 
             if (!fp.isCallPathFunction()) {
-                Vertex vertex = (Vertex) vertexMap.get(fp);
+                Vertex vertex = vertexMap.get(fp);
                 vertex.setVisited(false);
             }
 
         }
 
-        List levels = new ArrayList();
+        List<List<Vertex>> levels = new ArrayList<List<Vertex>>();
 
         // Fill Levels
         for (int i = 0; i < roots.size(); i++) {
-            Vertex root = (Vertex) roots.get(i);
+            Vertex root = roots.get(i);
             Layout.fillLevels(root, levels, 0);
         }
 
@@ -776,6 +844,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         graph = new Graph(model, this);
         graph.addMouseListener(graph);
         graph.addKeyListener(this);
+	graph.addMouseWheelListener(this);
 
         //graph.setAntiAliased(true);
         ToolTipManager.sharedInstance().registerComponent(graph);
@@ -796,7 +865,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
     void recreateGraph() {
 
         for (int i = 0; i < graphCellList.size(); i++) {
-            DefaultGraphCell dgc = (DefaultGraphCell) graphCellList.get(i);
+            DefaultGraphCell dgc = graphCellList.get(i);
             dgc.removeAllChildren();
         }
 
@@ -808,16 +877,16 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         createCustomGraph(levels, backEdges);
     }
 
-    void reassignWidths(List levels) {
+    void reassignWidths(List<List<Vertex>> levels) {
 
         double maxWidthValue = getMaxValue(this.widthOption, widthMetric);
         double maxColorValue = getMaxValue(this.colorOption, colorMetric);
 
         for (int i = 0; i < levels.size(); i++) {
-            List level = (List) levels.get(i);
+            List<Vertex> level = levels.get(i);
 
             for (int j = 0; j < level.size(); j++) {
-                Vertex v = (Vertex) level.get(j);
+                Vertex v = level.get(j);
 
                 if (v.getUserObject() != null) {
                     FunctionProfile fp = (FunctionProfile) v.getUserObject();
@@ -836,18 +905,19 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         }
     }
 
-    void createCustomGraph(List levels, List backEdges) {
+    @SuppressWarnings("rawtypes")
+	void createCustomGraph(List<List<Vertex>> levels, List<BackEdge> backEdges) {
 
-        Map attributes = new HashMap();
+        Map<DefaultGraphCell, Map> attributes = new HashMap<DefaultGraphCell, Map>();
 
-        graphCellList = new ArrayList();
-        List cellList = new ArrayList();
+        graphCellList = new ArrayList<GraphCell>();
+        List<DefaultGraphCell> cellList = new ArrayList<DefaultGraphCell>();
 
         for (int i = 0; i < levels.size(); i++) {
-            List level = (List) levels.get(i);
+            List<Vertex> level = levels.get(i);
 
             for (int j = 0; j < level.size(); j++) {
-                Vertex v = (Vertex) level.get(j);
+                Vertex v = level.get(j);
 
                 GraphCell dgc = null;
 
@@ -866,19 +936,19 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         }
 
         ConnectionSet cs = new ConnectionSet();
-        List edgeList = new ArrayList();
+        List<DefaultEdge> edgeList = new ArrayList<DefaultEdge>();
 
         for (int i = 0; i < levels.size(); i++) {
-            List level = (List) levels.get(i);
+            List<Vertex> level = levels.get(i);
 
             for (int j = 0; j < level.size(); j++) {
-                Vertex v = (Vertex) level.get(j);
+                Vertex v = level.get(j);
 
                 if (v.getUserObject() != null) {
                     GraphCell dgcParent = v.getGraphCell();
 
-                    for (Iterator it = v.getChildren().iterator(); it.hasNext();) {
-                        Vertex child = (Vertex) it.next();
+                    for (Iterator<Vertex> it = v.getChildren().iterator(); it.hasNext();) {
+                        Vertex child = it.next();
 
                         if (child.getUserObject() != null) {
                             // simply connect the GraphCells
@@ -890,7 +960,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
                         } else {
                             // follow the chain of vertices whose functions are null to find the real
                             // child vertex.  All of these inbetween vertices are "dummy nodes"
-                            ArrayList points = new ArrayList();
+                            ArrayList<Point> points = new ArrayList<Point>();
                             int l = 1; // how many levels down this dummy node is
 
                             points.add(new Point(3000, 3000)); // this point's position doesn't matter because of the connect call
@@ -898,7 +968,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
                             while (child.getUserObject() == null) {
                                 points.add(new Point(child.getPosition(), MARGIN + ((i + l) * VERTICAL_SPACING) + (boxHeight / 2)));
                                 // find the end of the dummy chain
-                                child = (Vertex) child.getChildren().get(0); // there can only be exactly one child
+                                child = child.getChildren().get(0); // there can only be exactly one child
                                 l++;
                             }
 
@@ -915,9 +985,9 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
         // Now create the back edges
         for (int i = 0; i < backEdges.size(); i++) {
-            BackEdge backEdge = (BackEdge) backEdges.get(i);
+            BackEdge backEdge = backEdges.get(i);
 
-            ArrayList points = new ArrayList();
+            ArrayList<Point> points = new ArrayList<Point>();
 
             // this point's position doesn't matter because of the connect call
             points.add(new Point(3000, 3000));
@@ -943,7 +1013,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         moveDownToVisible(cellList, edgeList);
     }
 
-    private void moveDownToVisible(List cellList, List edgeList) {
+    @SuppressWarnings("rawtypes")
+	private void moveDownToVisible(List<DefaultGraphCell> cellList, List<DefaultEdge> edgeList) {
         // find the minimum y value of any edge point and shift everything down by that much
         int minY = 0;
 
@@ -957,10 +1028,10 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
         if (minY != 0) {
             minY -= 5; // shift by a minimum of 5
-            Map attributeMap = new HashMap();
+            Map<Object, Map> attributeMap = new HashMap<Object, Map>();
 
             for (int i = 0; i < cellList.size(); i++) {
-                DefaultGraphCell dgc = (DefaultGraphCell) cellList.get(i);
+                DefaultGraphCell dgc = cellList.get(i);
                 Map attrib = dgc.getAttributes();
                 translate(attrib, 0, -minY);
                 attributeMap.put(dgc, attrib);
@@ -969,7 +1040,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         }
     }
 
-    public static void translate(Map map, double dx, double dy) {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	public static void translate(Map map, double dx, double dy) {
         // Translate Bounds 
         if (GraphConstants.isMoveable(map)) {
 
@@ -985,7 +1057,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
                 GraphConstants.setBounds(map, bounds);
             }
             // Translate Points 
-            java.util.List points = GraphConstants.getPoints(map);
+            java.util.List<Point> points = GraphConstants.getPoints(map);
             if (points != null) {
                 for (int i = 0; i < points.size(); i++) {
                     Object obj = points.get(i);
@@ -999,7 +1071,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         }
     }
 
-    public GraphCell createGraphCell(Vertex v, int x, int y, int height, int width, float color, Map attributes) {
+    @SuppressWarnings("rawtypes")
+	public GraphCell createGraphCell(Vertex v, int x, int y, int height, int width, float color, Map<DefaultGraphCell, Map> attributes) {
         // Create Hello Vertex
         GraphCell vertex = new GraphCell(v);
 
@@ -1045,7 +1118,8 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         return vertex;
     }
 
-    public DefaultEdge createEdge(DefaultGraphCell v1, DefaultGraphCell v2, Map attributes, ConnectionSet cs, ArrayList points) {
+    @SuppressWarnings("rawtypes")
+	public DefaultEdge createEdge(DefaultGraphCell v1, DefaultGraphCell v2, Map<DefaultGraphCell, Map> attributes, ConnectionSet cs, ArrayList<Point> points) {
 
         // Create Edge
         DefaultEdge edge = new DefaultEdge();
@@ -1122,17 +1196,18 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         validate();
     }
 
-    public Edge getEdge(FunctionProfile p, FunctionProfile c) {
+    @SuppressWarnings("unchecked")
+	public Edge getEdge(FunctionProfile p, FunctionProfile c) {
 
-        Vertex parent = (Vertex) vertexMap.get(p);
-        Vertex child = (Vertex) vertexMap.get(c);
+        Vertex parent = vertexMap.get(p);
+        Vertex child = vertexMap.get(c);
 
         int portCount = child.getGraphCell().getChildCount();
         for (int j = 0; j < portCount; j++) {
             Port port = (Port) child.getGraphCell().getChildAt(j);
 
-            for (Iterator itrEdges = port.edges(); itrEdges.hasNext();) {
-                Edge edge = (Edge) itrEdges.next();
+            for (Iterator<Edge> itrEdges = port.edges(); itrEdges.hasNext();) {
+                Edge edge = itrEdges.next();
 
                 if (edge.getTarget() == port) {
                     Port sourcePort = (Port) edge.getSource();
@@ -1164,12 +1239,13 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         recreateGraph();
     }
 
-    public void handleColorEvent() {
-        Map attributeMap = new Hashtable();
+    @SuppressWarnings("rawtypes")
+	public void handleColorEvent() {
+        Map<Object, Map> attributeMap = new Hashtable<Object, Map>();
 
         // color all edges black and reset pathHighlight to false
         for (int i = 0; i < graphCellList.size(); i++) {
-            GraphCell dgc = (GraphCell) graphCellList.get(i);
+            GraphCell dgc = graphCellList.get(i);
             Vertex v = dgc.getVertex();
             v.setPathHighlight(false);
 
@@ -1192,13 +1268,13 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
         // run through each vertex and find the "highlighted" one
         for (int i = 0; i < graphCellList.size(); i++) {
-            GraphCell dgc = (GraphCell) graphCellList.get(i);
+            GraphCell dgc = graphCellList.get(i);
 
             if (dgc.function == ppTrial.getHighlightedFunction()) { // this is the one
 
                 // now iterate through each function and check for callpaths that contain it, highlight those edges and vertices
                 for (int j = 0; j < functionProfileList.size(); j++) {
-                    FunctionProfile fp = (FunctionProfile) functionProfileList.get(j);
+                    FunctionProfile fp = functionProfileList.get(j);
                     if (fp == null)
                         continue;
                     Function f = fp.getFunction();
@@ -1228,9 +1304,9 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
                                 FunctionProfile childFunction = thread.getFunctionProfile(ppTrial.getDataSource().getFunction(
                                         childString));
 
-                                Vertex v = (Vertex) vertexMap.get(parentFunction);
+                                Vertex v = vertexMap.get(parentFunction);
                                 v.setPathHighlight(true);
-                                v = (Vertex) vertexMap.get(childFunction);
+                                v = vertexMap.get(childFunction);
                                 v.setPathHighlight(true);
 
                                 Edge e = getEdge(parentFunction, childFunction);
@@ -1257,7 +1333,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         // now do the final coloring
         for (int i = 0; i < graphCellList.size(); i++) {
 
-            GraphCell dgc = (GraphCell) graphCellList.get(i);
+            GraphCell dgc = graphCellList.get(i);
             Map attrib = new HashMap();
 
             if (dgc.function == ppTrial.getHighlightedFunction()) {
@@ -1346,9 +1422,10 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         dispose();
     }
 
-    public GraphCell getGraphCellForLocation(int x, int y) {
+    @SuppressWarnings("rawtypes")
+	public GraphCell getGraphCellForLocation(int x, int y) {
         for (int i = 0; i < graphCellList.size(); i++) {
-            GraphCell gc = (GraphCell) graphCellList.get(i);
+            GraphCell gc = graphCellList.get(i);
 
             Map attrib = gc.getAttributes();
             Rectangle2D bounds = GraphConstants.getBounds(attrib);
@@ -1367,6 +1444,20 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
+    }
+
+    public void mouseWheelMoved(MouseWheelEvent event) {
+	// numClicks is negative if scrolling up
+	int numClicks = 0;
+	numClicks = event.getWheelRotation();
+	scale = scale + 0.10*numClicks;
+	if (scale > 5.0) {
+	    scale = 5.0;
+	}
+	if (scale < 0.10) {
+	    scale = 0.10;
+	}
+	graph.setScale(scale);
     }
 
     public void keyTyped(KeyEvent evt) {

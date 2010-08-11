@@ -8,37 +8,34 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.Component;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.io.CharArrayReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.ListIterator;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreeNode;
-import javax.swing.tree.TreePath;
-
-import edu.uoregon.tau.perfdmf.DBDataSource;
-import edu.uoregon.tau.perfdmf.DataSource;
-import edu.uoregon.tau.perfdmf.DatabaseAPI;
-import edu.uoregon.tau.perfdmf.Experiment;
-import edu.uoregon.tau.perfdmf.Trial;
 
 public class DerivedMetricPanel extends JPanel implements ActionListener {
 
-   private ParaProfManagerWindow paraProfManager = null;
+   /**
+	 * 
+	 */
+	private static final long serialVersionUID = -7689602756381821252L;
+private ParaProfManagerWindow paraProfManager = null;
    private JTextField arg1Field = new JTextField("", 30);
 
 
@@ -180,46 +177,46 @@ public class DerivedMetricPanel extends JPanel implements ActionListener {
       return arg1Field.getText().trim();
    }
 
-   private void copy(){
+//   private void copy(){
+//
+//      String expressions= arg1Field.getText();
+//      setClipboard(expressions);
+//   }
+//   private void paste() throws IOException{
+//      String clip = getFromClipboard();
+//      arg1Field.setText(clip);
+//   }
 
-      String expressions= arg1Field.getText();
-      setClipboard(expressions);
-   }
-   private void paste() throws IOException{
-      String clip = getFromClipboard();
-      arg1Field.setText(clip);
-   }
 
-
-   private void setClipboard(String in){
-      StringSelection stringSelection = new StringSelection( in );
-      Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-      clipboard.setContents( stringSelection, stringSelection );
-   }
-   private String getFromClipboard(){
-      String result = "";
-      Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-      Transferable contents = clipboard.getContents(null);
-      boolean hasTransferableText =
-         (contents != null) &&
-         contents.isDataFlavorSupported(DataFlavor.stringFlavor);
-      if ( hasTransferableText ) {
-         try {
-            result = (String)contents.getTransferData(DataFlavor.stringFlavor);
-         }
-         catch (UnsupportedFlavorException ex){
-            //highly unlikely since we are using a standard DataFlavor
-            System.out.println(ex);
-            ex.printStackTrace();
-         }
-         catch (IOException ex) {
-            System.out.println(ex);
-            ex.printStackTrace();
-         }
-      }
-      return result;
-
-   }
+//   private void setClipboard(String in){
+//      StringSelection stringSelection = new StringSelection( in );
+//      Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+//      clipboard.setContents( stringSelection, stringSelection );
+//   }
+//   private String getFromClipboard(){
+//      String result = "";
+//      Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+//      Transferable contents = clipboard.getContents(null);
+//      boolean hasTransferableText =
+//         (contents != null) &&
+//         contents.isDataFlavorSupported(DataFlavor.stringFlavor);
+//      if ( hasTransferableText ) {
+//         try {
+//            result = (String)contents.getTransferData(DataFlavor.stringFlavor);
+//         }
+//         catch (UnsupportedFlavorException ex){
+//            //highly unlikely since we are using a standard DataFlavor
+//            System.out.println(ex);
+//            ex.printStackTrace();
+//         }
+//         catch (IOException ex) {
+//            System.out.println(ex);
+//            ex.printStackTrace();
+//         }
+//      }
+//      return result;
+//
+//   }
 
 
 
@@ -267,9 +264,9 @@ public class DerivedMetricPanel extends JPanel implements ActionListener {
          return;
       }
 
-      ArrayList collectTrials = collectTrials(sel); 
+      ArrayList<Object> collectTrials = collectTrials(sel); 
 
-      ArrayList errors = new ArrayList();
+      ArrayList<Object> errors = new ArrayList<Object>();
       for (int i=0;i<collectTrials.size();i++){
          try {
             applyToTrial((ParaProfTrial) collectTrials.get(i), arg1Field.getText());
@@ -285,10 +282,11 @@ public class DerivedMetricPanel extends JPanel implements ActionListener {
       }
 
    }
-   private ArrayList collectTrials(DefaultMutableTreeNode sel) {
+   @SuppressWarnings("unchecked")
+private ArrayList<Object> collectTrials(DefaultMutableTreeNode sel) {
 
       Object selected = paraProfManager.getSelectedObject().getUserObject();
-      ArrayList collectTrials = new ArrayList();
+      ArrayList<Object> collectTrials = new ArrayList<Object>();
       if(selected instanceof ParaProfMetric){
          ParaProfMetric met = (ParaProfMetric) selected;
          collectTrials .add(met.getParaProfTrial());
@@ -296,7 +294,7 @@ public class DerivedMetricPanel extends JPanel implements ActionListener {
          collectTrials.add(sel.getUserObject());
       }else if(selected instanceof ParaProfExperiment){
          paraProfManager.expand(sel);
-         Enumeration trials = sel.children();
+         Enumeration<DefaultMutableTreeNode> trials = sel.children();
          while(trials.hasMoreElements()){
             DefaultMutableTreeNode next = (DefaultMutableTreeNode)trials.nextElement();
             paraProfManager.expand(next);
@@ -304,11 +302,11 @@ public class DerivedMetricPanel extends JPanel implements ActionListener {
          }
       }else if(selected instanceof ParaProfApplication){
          paraProfManager.expand( sel);
-         Enumeration exps = sel.children();
+         Enumeration<DefaultMutableTreeNode> exps = sel.children();
          while(exps.hasMoreElements()){
             DefaultMutableTreeNode next = (DefaultMutableTreeNode)exps.nextElement();
             paraProfManager.expand(next);
-            Enumeration trls = next.children();
+            Enumeration<DefaultMutableTreeNode> trls = next.children();
             while(trls.hasMoreElements()){
                DefaultMutableTreeNode node = (DefaultMutableTreeNode) trls.nextElement();
                paraProfManager.expand(node);
@@ -408,7 +406,7 @@ public class DerivedMetricPanel extends JPanel implements ActionListener {
 
    public void applyExpressionFile(LineNumberReader scan) throws IOException {
       String expression = scan.readLine();
-      ArrayList errors = new ArrayList();
+      ArrayList<Object> errors = new ArrayList<Object>();
 
       DefaultMutableTreeNode sel = paraProfManager.getSelectedObject();
 
@@ -434,7 +432,7 @@ public class DerivedMetricPanel extends JPanel implements ActionListener {
                      "Expression Error", JOptionPane.ERROR_MESSAGE);
             }else{
 
-               ArrayList collectTrials = collectTrials(sel); 
+               ArrayList<Object> collectTrials = collectTrials(sel); 
 
                for (int i=0;i<collectTrials.size();i++){
                   try {

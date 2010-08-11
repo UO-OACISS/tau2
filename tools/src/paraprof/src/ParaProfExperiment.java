@@ -15,17 +15,20 @@ import java.util.Vector;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
-import edu.uoregon.tau.perfdmf.Database;
 import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.database.DB;
 
 public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUserObject {
-    private ParaProfApplication application = null;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 8687758673657262802L;
+	private ParaProfApplication application = null;
     private DefaultMutableTreeNode defaultMutableTreeNode = null;
     private TreePath treePath = null;
     private boolean dBExperiment = false;
-    private Vector trials = new Vector();
+    private Vector<ParaProfTrial> trials = new Vector<ParaProfTrial>();
 
     public ParaProfExperiment() {
         super();
@@ -77,16 +80,16 @@ public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUs
         return dBExperiment;
     }
 
-    public Vector getTrials() {
+    public Vector<ParaProfTrial> getTrials() {
         return trials;
     }
 
-    public ListIterator getTrialList() {
+    public ListIterator<ParaProfTrial> getTrialList() {
         return trials.listIterator();
     }
 
     public ParaProfTrial getTrial(int trialID) {
-        return (ParaProfTrial) trials.elementAt(trialID);
+        return trials.elementAt(trialID);
     }
 
     public void addTrial(ParaProfTrial ppTrial) {
@@ -100,8 +103,8 @@ public class ParaProfExperiment extends Experiment implements ParaProfTreeNodeUs
     }
 
     public boolean isTrialPresent(String name) {
-        for (Enumeration e = trials.elements(); e.hasMoreElements();) {
-            ParaProfTrial ppTrial = (ParaProfTrial) e.nextElement();
+        for (Enumeration<ParaProfTrial> e = trials.elements(); e.hasMoreElements();) {
+            ParaProfTrial ppTrial = e.nextElement();
             if (name.equals(ppTrial.toString()))
                 return true;
         }

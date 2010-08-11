@@ -127,7 +127,8 @@ TAU_LIB_DIR=$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 #IBM64LINUX#IBM_XLC_ABI	     = -q64 		  #ENDIF#
 #IBM64LINUX#IBM_GNU_ABI	     = -m64 		  #ENDIF#
 #SUNX86_64#SUN_GNU_ABI       = -m64		  #ENDIF#
-#SUNX86_64#SUN_CC_ABI        = -xarch=amd64       #ENDIF#
+#SUNX86_64#SUN_CC_ABI        = -m64 -xarch=amd64       #ENDIF#
+#SUNX86_64#SUN_CC_ABI        = -m64 #ENDIF#
 #MIPS32LINUX#SC_GNU_ABI	     = -mabi=n32 	  #ENDIF#
 #MIPS32LINUX#SC_PATH_ABI     = -mabi=n32          #ENDIF#
 #MIPS64LINUX#SC_GNU_ABI	     = -mabi=64 	  #ENDIF#
@@ -433,9 +434,10 @@ PROFILEOPT24 =
 #TAU_TR1_HASH_MAP#PROFILEOPT79 = -DHAVE_TR1_HASH_MAP #ENDIF#
 
 MRNET_ROOT=
+MRNET_LW_OPTS=
 MRNET_INCLUDE=
 MRNET_LIBS=
-#MRNET#PROFILEOPT80 = -DTAU_EXP_UNIFY -DTAU_MONITORING #ENDIF#
+#MRNET#PROFILEOPT80 = -DTAU_EXP_UNIFY -DTAU_MONITORING ${MRNET_LW_OPTS} #ENDIF#
 
 
 ############# RENCI Scalable Trace Lib Options #############
@@ -736,6 +738,8 @@ TAU_LINKER_OPT4 = $(LEXTRA1)
 ##############################################
 # Flags to build a shared object: TAU_SHFLAGS
 #GNU#AR_SHFLAGS 		= -shared  	        #ENDIF#
+#SUNX86_64#AR_SHFLAGS              = -shared       #ENDIF#
+#SOL2CC#AR_SHFLAGS              = -G    #ENDIF#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
 #APPLEPGI#AR_SHFLAGS 		= -shared               #ENDIF#
@@ -819,7 +823,7 @@ BFDLIBS=
 #COMPINST_PGI#TAU_COMPINST_CRAY_HACK=$(UPCC_LINK_PREFIX)-Mprof=func $(EXTRADIR)/lib/libpgnod_prof.a#ENDIF#
 #CRAYCNL#TAU_COMPINST_LINKING=$(TAU_COMPINST_CRAY_HACK) #ENDIF#
 #COMPINST_XL#TAU_COMPINST_LINKING=$(UPCC_C_PREFIX)-qdebug=function_trace #ENDIF#
-#MRNET#TAU_LINKER_OPT15=$(MRNET_LIBS)#ENDIF#
+#MRNET#TAU_LINKER_OPT15=$(MRNET_LIBS) #ENDIF#
 ##############################################
 
 

@@ -33,7 +33,8 @@ public class PlotFactory {
      * @param colorScale the ColorScale to use.
      * @return the ScatterPlot created.
      */
-    public static ScatterPlot createScatterPlot(String xLabel, String yLabel, String zLabel, String colorLabel, float values[][],
+    @SuppressWarnings("unchecked")
+	public static ScatterPlot createScatterPlot(String xLabel, String yLabel, String zLabel, String colorLabel, float values[][],
             boolean normalized, ColorScale colorScale) {
 
         ScatterPlot scatterPlot = new ScatterPlot();
@@ -54,7 +55,7 @@ public class PlotFactory {
             }
         }
 
-        List[] axisStrings = new ArrayList[4];
+        List<String>[] axisStrings = new ArrayList[4];
 
         for (int i = 0; i < 4; i++) {
             if (minScatterValues[i] == Float.MAX_VALUE) {
@@ -64,7 +65,7 @@ public class PlotFactory {
                 maxScatterValues[i] = 0;
             }
 
-            axisStrings[i] = new ArrayList();
+            axisStrings[i] = new ArrayList<String>();
 
             if (scatterPlot.getNormalized()) {
                 axisStrings[i].add(getSaneDoubleString(minScatterValues[i]));

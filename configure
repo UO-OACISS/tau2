@@ -322,6 +322,7 @@ mpiinc=
 mpilib=
 mpilibrary=no
 mrnet=no
+mrnet_use_lightweight=no
 mrnet_root=
 mrnet_lib=
 ibmmpi=no
@@ -696,6 +697,11 @@ for arg in "$@"; do
       echo "Error: Cannot access MRNet library directory $mrnet_lib"
       exit 1
     fi
+    shift
+    ;;
+
+  -mrnet_use_lightweight)
+    mrnet_use_lightweight=yes
     shift
     ;;
 
@@ -1895,7 +1901,7 @@ case $machine in
     crayxmt)
         cxx_compiler=c++
         c_compiler=cc
-	fixmakeargs="$fixmakeargs CRAYXMT"
+	fixmakeargs="$fixmakeargs CRAYXMT NOSHARED"
         if [ $pdt_cxx_compiler = default ] ; then
 	    pdt_cxx_full_path=/usr/bin/g++
 	    pdt_cxx_compiler=/usr/bin/g++
@@ -2085,7 +2091,7 @@ fi
 
 if [ $machine = hitachi ]
   then
-    fixmakeargs="$fixmakeargs HITACHI"
+    fixmakeargs="$fixmakeargs HITACHI NOSHARED"
 fi
    
 if [ $machine = t3e -a $cxx_compiler = CC ] 
@@ -2095,7 +2101,7 @@ fi
 
 if [ $machine = crayx1 -o $machine = craysv1 -a $cxx_compiler = CC ]
   then
-    fixmakeargs="$fixmakeargs CRAYX1CC"
+    fixmakeargs="$fixmakeargs CRAYX1CC NOSHARED"
 fi
 
 ######################################################################
@@ -2535,7 +2541,7 @@ case $cxx_compiler in
         if [ $machine = nec ]
 	then
           echo "Default C++ compiler will be NEC c++ compiler"
-          fixmakeargs="$fixmakeargs USE_NECCXX"
+          fixmakeargs="$fixmakeargs USE_NECCXX NOSHARED"
           tauoptions="${tauoptions}-cxx"
           if [ $fortran_compiler = no ]
           then 
@@ -2735,7 +2741,7 @@ case $fortran_compiler in
    nec)
       echo "Default Fortran compiler will be NEC f90"
       extradir=`which f90 | sed s/f90/../`
-      fixmakeargs="$fixmakeargs NEC_FORTRAN"
+      fixmakeargs="$fixmakeargs NEC_FORTRAN NOSHARED"
       ;;
 
    lahey)
@@ -3454,7 +3460,7 @@ fi
 if [ $catamount = yes ] 
 then
   #echo "This looks like a CATAMOUNT Cray RS system..."
-  fixmakeargs="$fixmakeargs CATAMOUNT"
+  fixmakeargs="$fixmakeargs CATAMOUNT NOSHARED"
 
   if [ $fortran_compiler = pgi ] 
   then
@@ -3538,7 +3544,7 @@ case $machine in
         ;; 
      bgl)
 	echo "Found an IBM PPC-64 BGL Linux configuration definition"
-	fixmakeargs="arch=$machine BGL $fixmakeargs"
+	fixmakeargs="arch=$machine BGL NOSHARED $fixmakeargs"
 	if [ $papi = yes ] ; then
 	    p=$papidir/lib
 	    if [ -f $p/libpapi.a ] ; then
@@ -5219,7 +5225,7 @@ if [ $scorep = yes ] ; then
 
     fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
     fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
-    fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include"
+    fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/silc#-I$scorepdir/include/silc_utility"
 fi
 
 if [ $epilog = yes ] ; then
@@ -5533,9 +5539,12 @@ fi
 if [ $mrnet = yes ] ; then
   if [ $mpi = yes ] ; then 
        fixmakeargs="$fixmakeargs MRNET"
+       if [ $mrnet_use_lightweight = yes ] ; then
+            fixmakeargs="$fixmakeargs mrnet_lw=-DMRNET_LIGHTWEIGHT"
+       fi
        fixmakeargs="$fixmakeargs mrnet_root=${mrnet_root}"
-       fixmakeargs="$fixmakeargs mrnet_inc=-I${mrnet_root}/include#-I${mrnet_root}/xplat/include"
-       fixmakeargs="$fixmakeargs mrnet_lib=-L${mrnet_lib}#-lmrnet#-lxplat#-ldl#-lm"
+       fixmakeargs="$fixmakeargs mrnet_inc=-I${mrnet_root}/include#-I${mrnet_root}/xplat/include#-I${mrnet_root}/lightweight/include"
+       fixmakeargs="$fixmakeargs mrnet_lib=-L${mrnet_lib}#-lmrnet#-lxplat#-lmrnet_lightweight#-lxplat_lightweight#-ldl#-lm"
   else
        echo "ERROR: MRNet TAUmon transport requires MPI support"
        exit 1

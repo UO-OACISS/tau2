@@ -1,6 +1,12 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.TreeMap;
@@ -20,9 +26,9 @@ import edu.uoregon.tau.common.TrackerInputStream;
 public class PackedProfileDataSource extends DataSource {
 
     private File file;
-    private volatile boolean abort = false;
+    //private volatile boolean abort = false;
     private volatile long totalBytes = 0;
-    private volatile long bytesRead = 0;
+    //private volatile long bytesRead = 0;
     private volatile TrackerInputStream tracker;
 
     /**
@@ -40,7 +46,7 @@ public class PackedProfileDataSource extends DataSource {
      * @see edu.uoregon.tau.perfdmf.DataSource#cancelLoad()
      */
     public void cancelLoad() {
-        abort = true;
+        //abort = true;
         return;
     }
 
@@ -99,9 +105,10 @@ public class PackedProfileDataSource extends DataSource {
                     + "2");
         }
 
-        metaData = new TreeMap();
+        metaData = new TreeMap<String, String>();
         if (version >= 2) {
-            int metadataHeaderSize = p.readInt(); // older versions will skip over this many bytes
+            //int metadataHeaderSize = 
+            	p.readInt(); // older versions will skip over this many bytes
 
             // skip over next section (future capability)
             int bytesToSkip = p.readInt();

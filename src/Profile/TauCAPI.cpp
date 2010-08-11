@@ -154,22 +154,26 @@ extern "C" int Tau_global_incr_insideTAU() {
   Tau_stack_checkInit();
   int tid = RtsLayer::myThread();
   Tau_global_insideTAU[tid]++;
+  return Tau_global_insideTAU[tid];
 }
 
 extern "C" int Tau_global_decr_insideTAU() {
   Tau_stack_checkInit();
   int tid = RtsLayer::myThread();
   Tau_global_insideTAU[tid]--;
+  return Tau_global_insideTAU[tid];
 }
 
 extern "C" int Tau_global_incr_insideTAU_tid(int tid) {
   Tau_stack_checkInit();
   Tau_global_insideTAU[tid]++;
+  return Tau_global_insideTAU[tid];
 }
 
 extern "C" int Tau_global_decr_insideTAU_tid(int tid) {
   Tau_stack_checkInit();
   Tau_global_insideTAU[tid]--;
+  return Tau_global_insideTAU[tid];
 }
 
 extern "C" Profiler *TauInternal_CurrentProfiler(int tid) {
@@ -231,7 +235,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #endif
 
 #ifdef TAU_SILC
-  SILC_EnterRegion(fi->GetFunctionId());
+  SILC_Tau_EnterRegion(fi->GetFunctionId());
 #endif
 
 
@@ -381,7 +385,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 #endif
 
 #ifdef TAU_SILC
-  SILC_ExitRegion(fi->GetFunctionId());
+  SILC_Tau_ExitRegion(fi->GetFunctionId());
 #endif
 
 

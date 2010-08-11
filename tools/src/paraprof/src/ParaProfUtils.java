@@ -1,17 +1,49 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.print.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.Frame;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.MouseEvent;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.awt.print.PrinterException;
+import java.awt.print.PrinterJob;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.net.URL;
-import java.text.*;
-import java.util.*;
+import java.text.FieldPosition;
+import java.text.NumberFormat;
+import java.text.ParsePosition;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
-import javax.swing.*;
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
+import javax.swing.JColorChooser;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JSeparator;
+import javax.swing.JToolBar;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
@@ -20,10 +52,12 @@ import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.common.VectorExport;
 import edu.uoregon.tau.paraprof.barchart.BarChart;
-import edu.uoregon.tau.paraprof.barchart.BarChartModel;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
-import edu.uoregon.tau.paraprof.interfaces.*;
+import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
+import edu.uoregon.tau.paraprof.interfaces.SortListener;
+import edu.uoregon.tau.paraprof.interfaces.ToolBarListener;
+import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 import edu.uoregon.tau.paraprof.script.ParaProfFunctionScript;
 import edu.uoregon.tau.paraprof.script.ParaProfScript;
 import edu.uoregon.tau.paraprof.script.ParaProfTrialScript;
@@ -31,8 +65,15 @@ import edu.uoregon.tau.paraprof.sourceview.SourceViewer;
 import edu.uoregon.tau.paraprof.treetable.ContextEventWindow;
 import edu.uoregon.tau.paraprof.treetable.TreeTableWindow;
 import edu.uoregon.tau.paraprof.util.MapViewer;
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.DataSource;
+import edu.uoregon.tau.perfdmf.DataSourceExport;
+import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.PhaseConvertedDataSource;
+import edu.uoregon.tau.perfdmf.Snapshot;
 import edu.uoregon.tau.perfdmf.Thread;
+import edu.uoregon.tau.perfdmf.UserEvent;
+import edu.uoregon.tau.perfdmf.UtilFncs;
 import edu.uoregon.tau.vis.HeatMapWindow;
 
 /**
@@ -339,7 +380,7 @@ public class ParaProfUtils {
                 menu.add(menuitem);
                 //menu.add
                 for (int i = 0; i < ParaProf.scripts.size(); i++) {
-                    final ParaProfScript pps = (ParaProfScript) ParaProf.scripts.get(i);
+                    final ParaProfScript pps = ParaProf.scripts.get(i);
                     if (pps instanceof ParaProfTrialScript) {
                         JMenuItem menuItem = new JMenuItem("[Script] " + pps.getName());
                         menuItem.addActionListener(new ActionListener() {
@@ -369,10 +410,58 @@ public class ParaProfUtils {
     }
 
     public static void show3dCommMatrix(ParaProfTrial ppTrial, JFrame parentFrame) {
-        JFrame window = ThreeDeeCommMatrixWindow.createCommunicationMatrixWindow(ppTrial, parentFrame);
+    	
+        JFrame window = null; 
+        try {
+        	window = ThreeDeeCommMatrixWindow.createCommunicationMatrixWindow(ppTrial, parentFrame);
+        } catch (UnsatisfiedLinkError e) {
+            JOptionPane.showMessageDialog(parentFrame, "Unable to load jogl library.  Possible reasons:\n"
+                    + "libjogl.so is not in your LD_LIBRARY_PATH.\n"
+                    + "Jogl is not built for this platform.\nOpenGL is not installed\n\n"
+                    + "Jogl is available at jogl.dev.java.net\n\n" + "Message : " + e.getMessage());
+        } catch (UnsupportedClassVersionError e) {
+            JOptionPane.showMessageDialog(parentFrame,
+                    "Unsupported class version.  Are you sure you're using Java 1.4 or above?");
+        } catch (Exception gle) {
+            new ParaProfErrorDialog("Unable to initialize OpenGL: ", gle);
+        }
+        
+        
         if (window != null) {
             window.setVisible(true);
         }
+    }
+    
+    public static void show3dVisualization(ParaProfTrial ppTrial,JFrame parentFrame){
+        if (JVMDependent.version.equals("1.3")) {
+            JOptionPane.showMessageDialog(parentFrame, "3D Visualization requires Java 1.4 or above\n"
+                    + "Please make sure Java 1.4 is in your path, then reconfigure TAU and re-run ParaProf");
+            return;
+        }
+
+        //Gears.main(null);
+        //(new Gears()).show();
+
+        JFrame window = null;
+        
+        try {
+            window = ThreeDeeWindow.createThreeDeeWindow(ppTrial, parentFrame);//new ThreeDeeWindow(ppTrial, parentFrame);
+        } catch (UnsatisfiedLinkError e) {
+            JOptionPane.showMessageDialog(parentFrame, "Unable to load jogl library.  Possible reasons:\n"
+                    + "libjogl.so is not in your LD_LIBRARY_PATH.\n"
+                    + "Jogl is not built for this platform.\nOpenGL is not installed\n\n"
+                    + "Jogl is available at jogl.dev.java.net\n\n" + "Message : " + e.getMessage());
+        } catch (UnsupportedClassVersionError e) {
+            JOptionPane.showMessageDialog(parentFrame,
+                    "Unsupported class version.  Are you sure you're using Java 1.4 or above?");
+        } catch (Exception gle) {
+            new ParaProfErrorDialog("Unable to initialize OpenGL: ", gle);
+        }
+
+        if (window != null) {
+            window.setVisible(true);
+        }
+        
     }
 
     public static JMenu createWindowsMenu(final ParaProfTrial ppTrial, final JFrame owner) {
@@ -404,32 +493,7 @@ public class ParaProfUtils {
                     } else if (arg.equals("3D Communication Matrix")) {
                         ParaProfUtils.show3dCommMatrix(ppTrial, owner);
                     } else if (arg.equals("3D Visualization")) {
-
-                        if (JVMDependent.version.equals("1.3")) {
-                            JOptionPane.showMessageDialog(owner, "3D Visualization requires Java 1.4 or above\n"
-                                    + "Please make sure Java 1.4 is in your path, then reconfigure TAU and re-run ParaProf");
-                            return;
-                        }
-
-                        //Gears.main(null);
-                        //(new Gears()).show();
-
-                        try {
-
-                            (new ThreeDeeWindow(ppTrial, owner)).setVisible(true);
-                            //(new ThreeDeeWindow()).show();
-                        } catch (UnsatisfiedLinkError e) {
-                            JOptionPane.showMessageDialog(owner, "Unable to load jogl library.  Possible reasons:\n"
-                                    + "libjogl.so is not in your LD_LIBRARY_PATH.\n"
-                                    + "Jogl is not built for this platform.\nOpenGL is not installed\n\n"
-                                    + "Jogl is available at jogl.dev.java.net\n\n" + "Message : " + e.getMessage());
-                        } catch (UnsupportedClassVersionError e) {
-                            JOptionPane.showMessageDialog(owner,
-                                    "Unsupported class version.  Are you sure you're using Java 1.4 or above?");
-                        } catch (Exception gle) {
-                            new ParaProfErrorDialog("Unable to initialize OpenGL: ", gle);
-                        }
-
+                    	ParaProfUtils.show3dVisualization(ppTrial, owner);
                     } else if (arg.equals("Close All Sub-Windows")) {
                         ppTrial.updateRegisteredObjects("subWindowCloseEvent");
                     }
@@ -507,7 +571,7 @@ public class ParaProfUtils {
             public void actionPerformed(ActionEvent evt) {
                 String arg = evt.getActionCommand();
 
-                List list = new ArrayList(ppTrial.getDataSource().getAllThreads());
+                List<Thread> list = new ArrayList<Thread>(ppTrial.getDataSource().getAllThreads());
                 if (ppTrial.getDataSource().getAllThreads().size() > 1 && arg.equals("User Event Statistics") == false) {
                     list.add(0, ppTrial.getDataSource().getStdDevData());
                     list.add(1, ppTrial.getDataSource().getMeanData());
@@ -552,6 +616,54 @@ public class ParaProfUtils {
         threadWindows.add(createMenuItem("User Event Statistics", tActionListener, ppTrial.userEventsPresent()));
 
         windowsMenu.add(threadWindows);
+
+        ActionListener mActionListener = new ActionListener() {
+        	public void actionPerformed(ActionEvent evt) {
+        		String arg = evt.getActionCommand();
+        		if (arg.equals("Summary")) {
+        			JFrame hw = 
+        				MonSummaryWindow.createMonSummaryWindow(ppTrial, 
+        						owner);
+        			hw.setVisible(true);
+
+        		} else if (arg.equals("Clusters")) {
+        			System.out.println("Clusters");
+        		}
+        	}
+        };
+        final JMenu monWindows = new JMenu("Monitoring");
+        monWindows.getPopupMenu().setLightWeightPopupEnabled(false);
+        monWindows.add(createMenuItem("Summary", mActionListener, true));
+        monWindows.add(createMenuItem("Clusters", mActionListener, true));
+
+        ActionListener fmActionListener = new ActionListener() {
+        	public void actionPerformed(ActionEvent evt) {	
+        		FunctionSelectorDialog fSelector = new FunctionSelectorDialog(owner, true,
+        				ppTrial.getDataSource().getFunctions(), null, false, false);
+        		if (fSelector.choose()) {
+        			Function selectedFunction = (Function) fSelector.getSelectedObject();
+
+        			String arg = evt.getActionCommand();
+        			if (arg.equals("Base Statistics")) {
+        				System.out.println("Monitoring: Base Statistics");
+       				// JFrame hw = MonStatisticsWindow.createMonStatisticsWindow(ppTrial, selectedFunction, owner);
+//        				hw.setVisible(true);
+        			} else if (arg.equals("Histograms")) {
+        				System.out.println("Monitoring: Histograms");
+        			}
+        		}
+        	}
+	    };
+
+	    final JMenu monFunctionWindows = new JMenu("Function");
+	    monFunctionWindows.getPopupMenu().setLightWeightPopupEnabled(false);
+	    monFunctionWindows.add(createMenuItem("Base Statistics",
+	    		fmActionListener, true));
+	    monFunctionWindows.add(createMenuItem("Histograms",
+	    		fmActionListener, true));
+	    monWindows.add(monFunctionWindows);
+
+	    windowsMenu.add(monWindows);
 
         windowsMenu.add(new JSeparator());
 
@@ -606,8 +718,8 @@ public class ParaProfUtils {
     public static void scaleForPrint(Graphics g, PageFormat pageFormat, int width, int height) {
         double pageWidth = pageFormat.getImageableWidth();
         double pageHeight = pageFormat.getImageableHeight();
-        int cols = (int) (width / pageWidth) + 1;
-        int rows = (int) (height / pageHeight) + 1;
+        //int cols = (int) (width / pageWidth) + 1;
+        //int rows = (int) (height / pageHeight) + 1;
         double xScale = pageWidth / width;
         double yScale = pageHeight / height;
         double scale = Math.min(xScale, yScale);
@@ -687,14 +799,14 @@ public class ParaProfUtils {
                             BarChart tmp = (BarChart) owner;
                             metricName = tmp.getBarChartModel().getDataSorter().getSelectedMetric().getName();
                         }
-                        List tools = ExternalTool.findMatchingTools((String) ppTrial.getTrial().getMetaData().get(
-                                DataSource.FILE_TYPE_NAME), (String) ppTrial.getTrial().getName());
+                        List<ExternalTool> tools = ExternalTool.findMatchingTools(ppTrial.getTrial().getMetaData().get(
+                                DataSource.FILE_TYPE_NAME), ppTrial.getTrial().getName());
                         ExternalTool.CommandParameters params = new ExternalTool.CommandParameters();
                         params.function = function.getName();
                         params.metric = metricName;
                         params.nodeID = thread.getNodeID();
                         params.threadID = thread.getThreadID();
-                        Map map = new TreeMap();
+                        Map<String,String> map = new TreeMap<String,String>();
                         map.putAll(thread.getMetaData());
                         map.putAll(ppTrial.getDataSource().getMetaData());
                         params.metadata = map;
@@ -752,7 +864,7 @@ public class ParaProfUtils {
         }
 
         if ((thread.getNodeID() >= 0)
-                && (ExternalTool.matchingToolExists((String) ppTrial.getTrial().getMetaData().get(DataSource.FILE_TYPE_NAME),
+                && (ExternalTool.matchingToolExists(ppTrial.getTrial().getMetaData().get(DataSource.FILE_TYPE_NAME),
                         (String) ppTrial.getTrial().getName()))) {
             JMenuItem toolMenuItem = new JMenuItem("Launch External Tool for this Function & Metric");
             toolMenuItem.addActionListener(actionListener);
@@ -762,7 +874,7 @@ public class ParaProfUtils {
         // count function scripts
         int functionScripts = 0;
         for (int i = 0; i < ParaProf.scripts.size(); i++) {
-            ParaProfScript pps = (ParaProfScript) ParaProf.scripts.get(i);
+            ParaProfScript pps = ParaProf.scripts.get(i);
             if (pps instanceof ParaProfFunctionScript) {
                 functionScripts++;
             }
@@ -771,7 +883,7 @@ public class ParaProfUtils {
             functionPopup.add(new JSeparator());
         }
         for (int i = 0; i < ParaProf.scripts.size(); i++) {
-            final ParaProfScript pps = (ParaProfScript) ParaProf.scripts.get(i);
+            final ParaProfScript pps = ParaProf.scripts.get(i);
             if (pps instanceof ParaProfFunctionScript) {
                 JMenuItem menuItem = new JMenuItem("[Script] " + pps.getName());
                 menuItem.addActionListener(new ActionListener() {
@@ -893,7 +1005,7 @@ public class ParaProfUtils {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                Map map = new TreeMap();
+                Map<String,String> map = new TreeMap<String,String>();
                 map.putAll(thread.getMetaData());
                 map.putAll(ppTrial.getDataSource().getMetaData());
                 Frame w = new MapViewer("Metadata for " + thread, map);
@@ -1143,10 +1255,10 @@ public class ParaProfUtils {
         fSelector.setTitle("Choose Phases");
 
         if (fSelector.choose()) {
-            List phases = fSelector.getSelectedObjects();
+            List<Object> phases = fSelector.getSelectedObjects();
 
-            List phaseStrings = new ArrayList();
-            for (Iterator it = phases.iterator(); it.hasNext();) {
+            List<String> phaseStrings = new ArrayList<String>();
+            for (Iterator<Object> it = phases.iterator(); it.hasNext();) {
                 Function f = (Function) it.next();
                 phaseStrings.add(f.getName());
             }
@@ -1362,7 +1474,12 @@ public class ParaProfUtils {
     public static NumberFormat createNumberFormatter(final int units, final boolean timeDenominator) {
         return new NumberFormat() {
 
-            public Number parse(String source, ParsePosition parsePosition) {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = 3533959839796773891L;
+
+			public Number parse(String source, ParsePosition parsePosition) {
                 // TODO Auto-generated method stub
                 return null;
             }
@@ -1432,8 +1549,8 @@ public class ParaProfUtils {
         } else {
             JMenu subSubMenu = new JMenu(valueType.toString() + "...");
             subSubMenu.getPopupMenu().setLightWeightPopupEnabled(false);
-            for (Iterator it = ppTrial.getMetrics().iterator(); it.hasNext();) {
-                Metric metric = (Metric) it.next();
+            for (Iterator<Metric> it = ppTrial.getMetrics().iterator(); it.hasNext();) {
+                Metric metric =  it.next();
                 if (metric == null) {
                     continue;
                 }

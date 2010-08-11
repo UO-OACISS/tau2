@@ -9,13 +9,17 @@ import javax.swing.table.DefaultTableCellRenderer;
 
 public class TrialCellRenderer extends DefaultTableCellRenderer {
 
-    private Color grey = new Color(235, 235, 235);
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -7147446002751695053L;
+	private Color grey = new Color(235, 235, 235);
     private Color green = new Color(0, 185, 0);
     private Color red = new Color(215, 0, 0);
 
-    private Map common, other;
+    private Map<String, String> common, other;
 
-    public TrialCellRenderer(Map common, Map other) {
+    public TrialCellRenderer(Map<String, String> common, Map<String, String> other) {
         this.common = common;
         this.other = other;
     }

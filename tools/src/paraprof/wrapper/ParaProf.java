@@ -22,11 +22,11 @@ import edu.uoregon.tau.perfdmf.*;
  * ParaProf This is the 'main' for paraprof
  * 
  * <P>
- * CVS $Id: ParaProf.java,v 1.35 2009/11/09 21:34:30 wspear Exp $
+ * CVS $Id: ParaProf.java,v 1.90 2009/12/12 01:47:40 amorris Exp $
  * </P>
  * 
  * @author Robert Bell, Alan Morris
- * @version $Revision: 1.35 $
+ * @version $Revision: 1.90 $
  */
 public class ParaProf implements ActionListener {
 
@@ -44,7 +44,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    private final static String VERSION = "Mon Nov  9 13:33:15 PST 2009";
+    private final static String VERSION = "Mon Aug  2 19:02:12 PDT 2010";
 
     public static int defaultNumberPrecision = 6;
 
@@ -67,6 +67,7 @@ public class ParaProf implements ActionListener {
     private static String configFile;
 
     public static boolean demoMode;
+    public static boolean controlMode;
     public static boolean usePathNameInTrial = false;
     public static FunctionBarChartWindow theComparisonWindow;
     public static boolean JNLP = false;
@@ -155,9 +156,7 @@ public class ParaProf implements ActionListener {
         experiment.setName("Default Exp");
 
         ParaProf.paraProfManagerWindow.setVisible(true);
-
         try {
-
             if (fileType == DataSource.PPK) {
                 for (int i = 0; i < sourceFiles.length; i++) {
                     File files[] = new File[1];
@@ -327,8 +326,9 @@ public class ParaProf implements ActionListener {
         } catch (Exception e) {
             // we'll get an exception here if running under Java Web Start
         }
-        if (!insideEclipse) {
+        if (!insideEclipse && !controlMode) {
             // never call System.exit when invoked by the eclipse plugin, it will close the whole JVM, including the user's eclipse!
+            // also, don't call when in control mode, which is the new mechanism used by eclipse
             System.exit(exitValue);
         }
     }
@@ -374,6 +374,7 @@ public class ParaProf implements ActionListener {
         CmdLineParser.Option demoOpt = parser.addBooleanOption('z', "demo");
         CmdLineParser.Option jarLocationOpt = parser.addStringOption('j', "jardir");
         CmdLineParser.Option schemaLocationOpt = parser.addStringOption('c', "schemadir");
+        CmdLineParser.Option controlOpt = parser.addBooleanOption('y', "control");
 
         try {
             parser.parse(args);
@@ -399,14 +400,18 @@ public class ParaProf implements ActionListener {
         Boolean summary = (Boolean) parser.getOptionValue(summaryOpt);
         Boolean monitor = (Boolean) parser.getOptionValue(monitorOpt);
         Boolean demo = (Boolean) parser.getOptionValue(demoOpt);
+        Boolean control = (Boolean) parser.getOptionValue(controlOpt);
         ParaProf.jarLocation = (String) parser.getOptionValue(jarLocationOpt);
         ParaProf.schemaLocation = (String) parser.getOptionValue(schemaLocationOpt);
 
+        controlMode = control != null && control.booleanValue();
         demoMode = demo != null && demo.booleanValue();
+
         if (configFile != "") {
             //System.out.println("commandline db config: " + configFile);
             ParaProf.preferences.setDatabaseConfigurationFile(configFile);
         }
+
         if (monitor != null) {
             monitorProfiles = monitor.booleanValue();
         }
@@ -569,16 +574,22 @@ public class ParaProf implements ActionListener {
             System.exit(0);
         }
 
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                try {
-                    ParaProf.initialize();
-                    ParaProf.loadScripts();
-                    ParaProf.loadDefaultTrial();
-                } catch (Exception e) {
-                    ParaProfUtils.handleException(e);
+        if (controlMode) {
+            ParaProf.initialize();
+            ParaProf.loadScripts();
+            ExternalController.runController();
+        } else {
+            javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    try {
+                        ParaProf.initialize();
+                        ParaProf.loadScripts();
+                        ParaProf.loadDefaultTrial();
+                    } catch (Exception e) {
+                        ParaProfUtils.handleException(e);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 }

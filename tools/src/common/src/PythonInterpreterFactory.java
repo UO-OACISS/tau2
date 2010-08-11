@@ -9,10 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.python.core.Py;
-import org.python.core.PyException;
-import org.python.core.PyInteger;
 import org.python.core.PyModule;
-import org.python.core.PyObject;
 import org.python.core.PySystemState;
 import org.python.core.imp;
 import org.python.util.PythonInterpreter;
@@ -37,11 +34,11 @@ public class PythonInterpreterFactory {
 
     /** List of Java packages to preload into the delivered Jython interpreter
      * environments. */
-    private List packages;
+    private List<String> packages;
 
     /** Create a new interpreter factory with an empty list. */
     public PythonInterpreterFactory() {
-        packages = new LinkedList();
+        packages = new LinkedList<String>();
     }
 
     /** Add a single java package name into the internal package list.
@@ -80,11 +77,11 @@ public class PythonInterpreterFactory {
         }
     }
 
-    public void addPackagesFromList(List packages) {
+    public void addPackagesFromList(List<String> packages) {
         if (packages == null) {
             return;
         }
-        for (Iterator i = packages.iterator(); i.hasNext();) {
+        for (Iterator<String> i = packages.iterator(); i.hasNext();) {
             this.packages.add(i.next());
         }
     }
@@ -102,9 +99,10 @@ public class PythonInterpreterFactory {
         PythonInterpreter pythoninterpreter = new PythonInterpreter();
         PyModule mainmodule = imp.addModule("__main__");
         pythoninterpreter.setLocals(mainmodule.__dict__);
-        PySystemState sys = Py.getSystemState();
-        for (Iterator i = packages.iterator(); i.hasNext();) {
-            PySystemState.add_package((String) i.next());
+        //PySystemState sys = 
+        	Py.getSystemState();
+        for (Iterator<String> i = packages.iterator(); i.hasNext();) {
+            PySystemState.add_package(i.next());
         }
         // set standard out and standard error for the interpreter
         pythoninterpreter.setErr(System.err);

@@ -10,7 +10,11 @@ package edu.uoregon.tau.common;
  */
 public class TauRuntimeException extends RuntimeException {
 
-    private String message;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -230488640608256159L;
+	private String message;
     private Exception exception;
     
     public TauRuntimeException(Exception e) {

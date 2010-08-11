@@ -13,11 +13,11 @@ import java.util.TreeMap;
  * @see		Node
  * @see		Thread
  */
-public class Context implements Comparable {
+public class Context implements Comparable<Context> {
 
     private int nodeID = -1;
     private int contextID = -1;
-    private Map threads = new TreeMap();
+    private Map<Integer, Thread> threads = new TreeMap<Integer, Thread>();
     private DataSource dataSource;
 
     /**
@@ -86,7 +86,7 @@ public class Context implements Comparable {
      * Returns an iterator over the Threads.
      * @return				Iterator over this Context's Threads 
      */
-    public Iterator getThreads() {
+    public Iterator<Thread> getThreads() {
         return threads.values().iterator();
     }
 
@@ -96,7 +96,7 @@ public class Context implements Comparable {
      * @return				Requested Thread, or null if not found
      */
     public Thread getThread(int threadID) {
-        return (Thread) threads.get(new Integer(threadID));
+        return threads.get(new Integer(threadID));
     }
 
     /**
@@ -110,7 +110,7 @@ public class Context implements Comparable {
     /**
      * Compares this Context to another Context or Integer.
      */
-    public int compareTo(Object obj) {
-        return contextID - ((Context) obj).getContextID();
+    public int compareTo(Context obj) {
+        return contextID - obj.getContextID();
     }
 }

@@ -1,6 +1,8 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
 
 import javax.swing.JComponent;
 
@@ -12,7 +14,11 @@ import javax.swing.JComponent;
  * @version $Revision: 1.1 $
  */
 public class ScaleBar extends JComponent {
-    private float ratio; // 0 to 1
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -100192286463526198L;
+	private float ratio; // 0 to 1
 
     public ScaleBar() {
         int height = 18;

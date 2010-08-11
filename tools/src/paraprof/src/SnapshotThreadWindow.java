@@ -7,7 +7,11 @@ import java.awt.event.ActionListener;
 import java.util.Observable;
 import java.util.Observer;
 
-import javax.swing.*;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JSeparator;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -15,13 +19,16 @@ import edu.uoregon.tau.paraprof.barchart.AbstractBarChartModel;
 import edu.uoregon.tau.paraprof.barchart.BarChartPanel;
 import edu.uoregon.tau.paraprof.barchart.ThreadSnapshotBarChartModel;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
-import edu.uoregon.tau.paraprof.util.ObjectFilter;
 import edu.uoregon.tau.perfdmf.Thread;
 
 public class SnapshotThreadWindow extends JFrame implements ActionListener, Observer, ChangeListener, ParaProfWindow {
 
-    private ParaProfTrial ppTrial;
-    private Thread thread;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -4212196607612676127L;
+	private ParaProfTrial ppTrial;
+    //private Thread thread;
 
     private BarChartPanel panel;
     private AbstractBarChartModel model;
@@ -40,7 +47,7 @@ public class SnapshotThreadWindow extends JFrame implements ActionListener, Obse
 
     public SnapshotThreadWindow(ParaProfTrial ppTrial, Thread thread, Component owner) {
         this.ppTrial = ppTrial;
-        this.thread = thread;
+        //this.thread = thread;
 
         PPThread ppThread = new PPThread(thread, ppTrial);
 

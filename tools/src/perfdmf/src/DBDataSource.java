@@ -24,9 +24,9 @@ import edu.uoregon.tau.perfdmf.database.DB;
 public class DBDataSource extends DataSource {
 
     private DatabaseAPI databaseAPI;
-    private volatile boolean abort = false;
-    private volatile int totalItems = 0;
-    private volatile int itemsDone = 0;
+    //private volatile boolean abort = false;
+    //private volatile int totalItems = 0;
+    //private volatile int itemsDone = 0;
 
     private class XMLParser extends DefaultHandler {
         private StringBuffer accumulator = new StringBuffer();
@@ -66,7 +66,7 @@ public class DBDataSource extends DataSource {
 
     public DBDataSource(DatabaseAPI dbAPI) {
         super();
-        this.setMetrics(new Vector());
+        this.setMetrics(new Vector<Metric>());
         this.databaseAPI = dbAPI;
     }
 
@@ -76,11 +76,11 @@ public class DBDataSource extends DataSource {
     }
 
     public void cancelLoad() {
-        abort = true;
+        //abort = true;
         return;
     }
 
-    private void fastGetIntervalEventData(Map ieMap, Map metricMap) throws SQLException {
+    private void fastGetIntervalEventData(Map<Integer, Function> ieMap, Map<Integer, Metric> metricMap) throws SQLException {
         int numMetrics = getNumberOfMetrics();
         DB db = databaseAPI.getDb();
 
@@ -91,8 +91,8 @@ public class DBDataSource extends DataSource {
         }
             
         where.append(" WHERE p.metric in (");
-        for (Iterator it = metricMap.keySet().iterator(); it.hasNext();) {
-            int metricID = ((Integer) it.next()).intValue();
+        for (Iterator<Integer> it = metricMap.keySet().iterator(); it.hasNext();) {
+            int metricID = it.next().intValue();
             where.append(metricID);
             if (it.hasNext()) {
                 where.append(", ");
@@ -155,7 +155,7 @@ public class DBDataSource extends DataSource {
         while (resultSet.next() != false) {
 
             int intervalEventID = resultSet.getInt(1);
-            Function function = (Function) ieMap.get(new Integer(intervalEventID));
+            Function function = ieMap.get(new Integer(intervalEventID));
 
             int nodeID = resultSet.getInt(3);
             int contextID = resultSet.getInt(4);
@@ -169,7 +169,7 @@ public class DBDataSource extends DataSource {
                 thread.addFunctionProfile(functionProfile);
             }
 
-            int metricIndex = ((Metric) metricMap.get(new Integer(resultSet.getInt(2)))).getID();
+            int metricIndex = metricMap.get(new Integer(resultSet.getInt(2))).getID();
             double inclusive, exclusive;
 
             inclusive = resultSet.getDouble(6);
@@ -230,7 +230,7 @@ public class DBDataSource extends DataSource {
         joe.append(databaseAPI.getTrial().getID());
         joe.append(" ORDER BY id ");
 
-        Map metricMap = new HashMap();
+        Map<Integer, Metric> metricMap = new HashMap<Integer, Metric>();
 
         ResultSet resultSet = db.executeQuery(joe.toString());
         int numberOfMetrics = 0;
@@ -245,13 +245,13 @@ public class DBDataSource extends DataSource {
         resultSet.close();
 
         // map Interval Event ID's to Function objects
-        Map ieMap = new HashMap();
+        Map<Integer, Function> ieMap = new HashMap<Integer, Function>();
 
         // iterate over interval events (functions), create the function objects and add them to the map
-        List intervalEvents = databaseAPI.getIntervalEvents();
-        ListIterator l = intervalEvents.listIterator();
-        while (l.hasNext()) {
-            IntervalEvent ie = (IntervalEvent) l.next();
+        List<IntervalEvent> intervalEvents = databaseAPI.getIntervalEvents();
+        ListIterator<IntervalEvent> lIE = intervalEvents.listIterator();
+        while (lIE.hasNext()) {
+            IntervalEvent ie = lIE.next();
             Function function = this.addFunction(ie.getName(), numberOfMetrics);
             addGroups(ie.getGroup(), function);
             ieMap.put(new Integer(ie.getID()), function);
@@ -261,20 +261,20 @@ public class DBDataSource extends DataSource {
         fastGetIntervalEventData(ieMap, metricMap);
 
         // map Interval Event ID's to Function objects
-        Map aeMap = new HashMap();
+        Map<Integer, UserEvent> aeMap = new HashMap<Integer, UserEvent>();
 
-        l = databaseAPI.getAtomicEvents().listIterator();
-        while (l.hasNext()) {
-            AtomicEvent atomicEvent = (AtomicEvent) l.next();
+        ListIterator<AtomicEvent> lAE = databaseAPI.getAtomicEvents().listIterator();
+        while (lAE.hasNext()) {
+            AtomicEvent atomicEvent = lAE.next();
             UserEvent userEvent = addUserEvent(atomicEvent.getName());
             aeMap.put(new Integer(atomicEvent.getID()), userEvent);
         }
 
-        l = databaseAPI.getAtomicEventData().listIterator();
-        while (l.hasNext()) {
-            AtomicLocationProfile alp = (AtomicLocationProfile) l.next();
+        ListIterator<AtomicLocationProfile> lAD = databaseAPI.getAtomicEventData().listIterator();
+        while (lAD.hasNext()) {
+            AtomicLocationProfile alp = lAD.next();
             Thread thread = addThread(alp.getNode(), alp.getContext(), alp.getThread());
-            UserEvent userEvent = (UserEvent) aeMap.get(new Integer(alp.getAtomicEventID()));
+            UserEvent userEvent = aeMap.get(new Integer(alp.getAtomicEventID()));
             UserEventProfile userEventProfile = thread.getUserEventProfile(userEvent);
 
             if (userEventProfile == null) {

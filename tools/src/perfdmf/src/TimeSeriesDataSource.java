@@ -1,13 +1,21 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
 
 public class TimeSeriesDataSource extends DataSource {
 
     
-    private List dirlist;
+    private List<File[]> dirlist;
     private boolean profileStatsPresent = false;
     private boolean groupCheck = false;
 
@@ -25,7 +33,7 @@ public class TimeSeriesDataSource extends DataSource {
     public void load() throws FileNotFoundException, IOException, DataSourceException, SQLException {
 
         int snapshot = -1;
-        for (Iterator it = dirlist.iterator(); it.hasNext();) {
+        for (Iterator<File[]> it = dirlist.iterator(); it.hasNext();) {
             File[] files = (File[]) it.next();
 
             snapshot++;
@@ -176,8 +184,8 @@ public class TimeSeriesDataSource extends DataSource {
         double numsubr;
         double exclusive;
         double inclusive;
-        double profileCalls;
-        double sumExclSqr;
+        //double profileCalls;
+        //double sumExclSqr;
 
         String groupNames = this.getGroupNames(string);
 
@@ -222,10 +230,10 @@ public class TimeSeriesDataSource extends DataSource {
         exclusive = Double.parseDouble(st2.nextToken()); //Exclusive
         inclusive = Double.parseDouble(st2.nextToken()); //Inclusive
         if (profileStatsPresent) {
-            sumExclSqr = Double.parseDouble(st2.nextToken()); //SumExclSqr
+            //sumExclSqr = Double.parseDouble(st2.nextToken()); //SumExclSqr
         }
 
-        profileCalls = Integer.parseInt(st2.nextToken()); //ProfileCalls
+        //profileCalls = Integer.parseInt(st2.nextToken()); //ProfileCalls
 
         if (inclusive < 0) {
             System.err.println("Warning, negative values found in profile, ignoring!");

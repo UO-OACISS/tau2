@@ -193,6 +193,61 @@ int kill(pid_t pid, int sig) {
 #endif /* TAU_DISABLE_SYSCALL_WRAPPER */
 
 
+#ifdef TAU_PTHREAD_PRELOAD
+
+static int (*_pthread_create) (pthread_t* thread, const pthread_attr_t* attr, 
+			       void *(*start_routine)(void*), void* arg) = NULL;
+static void (*_pthread_exit) (void *value_ptr) = NULL;
+extern void *tau_pthread_function (void *arg);
+typedef struct tau_pthread_pack {
+  void *(*start_routine) (void *);
+  void *arg;
+  int id;
+} tau_pthread_pack;
+
+
+#ifdef TAU_PTHREAD_BARRIER_AVAILABLE
+static int (*_pthread_barrier_wait) (pthread_barrier_t *barrier) = NULL;
+#endif /* TAU_PTHREAD_BARRIER_AVAILABLE */
+
+extern int pthread_create (pthread_t* thread, const pthread_attr_t* attr, 
+		    void *(*start_routine)(void*), void* arg) {
+  if (_pthread_create == NULL) {
+    _pthread_create = (int (*) (pthread_t* thread, const pthread_attr_t* attr, void *(*start_routine)(void*), void* arg)) dlsym(RTLD_NEXT, "pthread_create");
+  }
+
+  tau_pthread_pack *pack = (tau_pthread_pack*) malloc (sizeof(tau_pthread_pack));
+  pack->start_routine = start_routine;
+  pack->arg = arg;
+  pack->id = -1;
+  return _pthread_create(thread, (pthread_attr_t*) attr, tau_pthread_function, (void*)pack);
+}
+
+extern void pthread_exit (void *value_ptr) {
+
+  if (_pthread_exit == NULL) {
+    _pthread_exit = (void (*) (void *value_ptr)) dlsym(RTLD_NEXT, "pthread_exit");
+  }
+  TAU_PROFILE_EXIT("pthread_exit");
+  _pthread_exit(value_ptr);
+}
+
+#ifdef TAU_PTHREAD_BARRIER_AVAILABLE
+extern "C" int pthread_barrier_wait(pthread_barrier_t *barrier) {
+  int retval;
+  if (_pthread_barrier_wait == NULL) {
+    _pthread_barrier_wait = (int (*) (pthread_barrier_t *barrier)) dlsym(RTLD_NEXT, "pthread_barrier_wait");
+  }
+  TAU_PROFILE_TIMER(timer, "pthread_barrier_wait", "", TAU_DEFAULT);
+  TAU_PROFILE_START(timer);
+  retval = _pthread_barrier_wait (barrier);
+  TAU_PROFILE_STOP(timer);
+  return retval;
+}
+#endif /* TAU_PTHREAD_BARRIER_AVAILABLE */
+#endif /* TAU_PTHREAD_PRELOAD */
+
+
 /***************************************************************************
  * $RCSfile: TauWrapSyscalls.cpp,v $   $Author: sameer $
  * $Revision: 1.6 $   $Date: 2010/06/10 12:46:53 $

@@ -66,7 +66,7 @@
 
 #include <tau_internal.h>
 
-#ifdef TAU_CRAYXMT 
+#if (defined(TAU_CRAYXMT) || defined(TAU_BGL) || defined(TAU_DISABLE_SAMPLING))
 
 #define Tau_sampling_init(tid) 
 #define Tau_sampling_finalize(tid)

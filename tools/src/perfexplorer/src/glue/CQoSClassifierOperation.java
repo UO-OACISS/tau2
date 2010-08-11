@@ -49,7 +49,7 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 	private WekaClassifierWrapper wrapper = null;
 	private String classifierType = MULTILAYER_PERCEPTRON;
 	private int trainingSize = 0;
-	protected List<Map<String,String>> trainingData = null;
+	protected List<Map> trainingData = null;
 	private Map<String,Set<String>> validation = new HashMap<String,Set<String>>();
 		
 	/**
@@ -159,7 +159,7 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 		}
 		
 		System.out.println("Done.");
-		this.trainingData = new ArrayList<Map<String,String>>();
+		this.trainingData = new ArrayList<Map>();
 
 		FileWriter fstream = new FileWriter("/tmp/data.csv");
 		BufferedWriter out = new BufferedWriter(fstream);

@@ -157,6 +157,12 @@ case $1 in
 	echo "s,^MRNET_ROOT=.*$,MRNET_ROOT=$mrnet_root,g" >> $sedout
 	;;
 
+     mrnet_lw=*)
+	echo "NOTE:  TauOverMRNet -- will use MRNet Lightweight Interface."
+	mrnet_lw=`echo $1 | sed -e 's/^mrnet_lw=//'`
+	echo "s,^MRNET_LW_OPTS=.*$,MRNET_LW_OPTS=$mrnet_lw,g" >> $sedout
+	;;
+
      mrnet_inc=*)
         mrnet_inc=`echo $1 | sed -e 's/^mrnet_inc=//' -e 's/#/ /g'`
         echo "s@^MRNET_INCLUDE=.*\$@MRNET_INCLUDE=$mrnet_inc@g" >> $sedout

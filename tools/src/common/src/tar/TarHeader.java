@@ -403,7 +403,7 @@ public class TarHeader extends Object implements Cloneable {
      * @return The integer value of the octal bytes.
      */
     public static int getOctalBytes(long value, byte[] buf, int offset, int length) {
-        byte[] result = new byte[length];
+        //byte[] result = new byte[length];
 
         int idx = length - 1;
 

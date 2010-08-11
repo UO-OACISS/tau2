@@ -67,7 +67,7 @@ public class ThreeDeeScalePanel {
             scaleBars[i] = new ScaleBar();
             scaleBars[i].setPosition(-1);
             scaleBars[i].setBorder(BorderFactory.createLoweredBevelBorder());
-            JTextField textField = new JTextField("");
+            //JTextField textField = new JTextField("");
 
             gbc.weightx = 1.0;
 

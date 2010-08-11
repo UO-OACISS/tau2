@@ -339,7 +339,7 @@ static int updateMaps() {
   char line[4096];
   while (!feof(mapsfile)) {
     fgets(line, 4096, mapsfile);
-    //printf ("=> %s", line);
+    printf ("=> %s", line);
     unsigned long start, end, offset;
     char module[4096];
     char perms[5];
@@ -383,6 +383,28 @@ static addrmap *getAddressMap(unsigned long addr) {
 }
 
 
+int tauPrintAddr(int i, char *token, unsigned long addr) {
+  static int flag = 0;
+  if (flag == 0) { 
+    updateMaps();
+    flag = 1;
+  }
+  char field[2048];
+  char metadata[256];
+  addrmap *map = getAddressMap(addr);
+  if (map && map->loaded == 0) {
+    //printf("map = %p, map->start = %p, name = %s\n", map, map->start, map->name);
+    sprintf(field, "[%s] [%s]", token, map->name);
+  } else {
+    sprintf(field, "[%s] ", token);
+  }
+  sprintf(metadata, "BACKTRACE %3d", i-1);
+  TAU_METADATA(metadata, field);
+  return 0;
+}
+
+
+   
 static HashNode *createHashNode(long addr) {
   addrmap *map = getAddressMap(addr);
 
@@ -440,9 +462,9 @@ void runOnExit() {
 }
 
 
-#ifdef TAU_SICORTEX
+#if (defined(TAU_SICORTEX) || defined(TAU_SILC))
 #pragma weak __cyg_profile_func_enter
-#endif
+#endif /* SICORTEX || TAU_SILC */
 extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
   int i;
   int tid;
@@ -553,9 +575,9 @@ extern "C" void _cyg_profile_func_enter(void* func, void* callsite) {
 }
 
 
-#ifdef TAU_SICORTEX
+#if (defined(TAU_SICORTEX) || defined(TAU_SILC))
 #pragma weak __cyg_profile_func_exit
-#endif
+#endif /* SICORTEX || TAU_SILC */
 extern "C" void __cyg_profile_func_exit(void* func, void* callsite) {
   int tid;
 

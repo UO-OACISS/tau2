@@ -1,16 +1,39 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
-import java.util.List;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.util.Observable;
+import java.util.Observer;
 
-import javax.swing.*;
+import javax.swing.ButtonGroup;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JScrollBar;
+import javax.swing.JSeparator;
+import javax.swing.JSlider;
+import javax.swing.JTextArea;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MenuEvent;
 
-import edu.uoregon.tau.paraprof.barchart.*;
+import edu.uoregon.tau.paraprof.barchart.BarChartModel;
+import edu.uoregon.tau.paraprof.barchart.BarChartPanel;
+import edu.uoregon.tau.paraprof.barchart.GlobalBarChartModel;
+import edu.uoregon.tau.paraprof.barchart.UserEventBarChartModel;
+import edu.uoregon.tau.paraprof.barchart.UserEventThreadBarChartModel;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
@@ -29,7 +52,11 @@ import edu.uoregon.tau.perfdmf.UserEvent;
 public class UserEventWindow extends JFrame implements ActionListener, KeyListener, Observer, ChangeListener, ParaProfWindow,
         SearchableOwner {
 
-    private ParaProfTrial ppTrial;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 3965446181069651733L;
+	private ParaProfTrial ppTrial;
     private DataSorter dataSorter;
     private UserEvent userEvent;
     private Thread thread;
@@ -54,7 +81,7 @@ public class UserEventWindow extends JFrame implements ActionListener, KeyListen
 
     private SearchPanel searchPanel;
 
-    private List list = new ArrayList();
+    //private List list = new ArrayList();
 
     private UserEventValueType userEventValueType = UserEventValueType.NUMSAMPLES;
 
@@ -236,6 +263,11 @@ public class UserEventWindow extends JFrame implements ActionListener, KeyListen
         subMenu = new JMenu("Select Value Type");
         group = new ButtonGroup();
 
+        button = new JRadioButtonMenuItem("Total", false);
+        button.addActionListener(this);
+        group.add(button);
+        subMenu.add(button);
+        
         button = new JRadioButtonMenuItem("Number of Samples", true);
         button.addActionListener(this);
         group.add(button);
@@ -280,7 +312,12 @@ public class UserEventWindow extends JFrame implements ActionListener, KeyListen
             if (EventSrc instanceof JMenuItem) {
                 String arg = evt.getActionCommand();
 
-                if (arg.equals("Number of Samples")) {
+                if (arg.equals("Total")) {
+                    userEventValueType = UserEventValueType.TOTAL;
+                    sortLocalData();
+                    this.setHeader();
+                    panel.repaint();
+                } else if (arg.equals("Number of Samples")) {
                     userEventValueType = UserEventValueType.NUMSAMPLES;
                     sortLocalData();
                     this.setHeader();
@@ -400,9 +437,9 @@ public class UserEventWindow extends JFrame implements ActionListener, KeyListen
         model.reloadData();
     }
 
-    public List getData() {
-        return list;
-    }
+//    public List getData() {
+//        return list;
+//    }
 
     public UserEventValueType getValueType() {
         return userEventValueType;
@@ -506,7 +543,7 @@ public class UserEventWindow extends JFrame implements ActionListener, KeyListen
     }
 
     public void showSearchPanel(boolean show) {
-        System.out.println("showSearchPanel = " + show);
+        //System.out.println("showSearchPanel = " + show);
         if (show) {
             if (searchPanel == null) {
                 searchPanel = new SearchPanel(this, panel.getBarChart().getSearcher());

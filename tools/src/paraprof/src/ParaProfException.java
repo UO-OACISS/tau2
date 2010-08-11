@@ -11,7 +11,11 @@ package edu.uoregon.tau.paraprof;
  */
 public class ParaProfException extends RuntimeException {
 
-    String message;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 6687072967974232250L;
+	String message;
     public ParaProfException(String message) {
         this.message = message;
     }

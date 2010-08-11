@@ -1,11 +1,23 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.*;
+import java.util.Iterator;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
 
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.perfdmf.Function;
@@ -24,7 +36,11 @@ import edu.uoregon.tau.perfdmf.UserEvent;
  */
 public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
 
-    public static final int FUNCTION_LEGEND = 0;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -4036339202824194028L;
+	public static final int FUNCTION_LEGEND = 0;
     public static final int GROUP_LEGEND = 1;
     public static final int USEREVENT_LEGEND = 2;
     public static final int PHASE_LEGEND = 3;
@@ -33,7 +49,7 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
     private ParaProfTrial ppTrial = null;
     private JScrollPane sp = null;
     private LedgerWindowPanel panel = null;
-    private Vector list = new Vector();
+    private Vector<LedgerDataElement> list = new Vector<LedgerDataElement>();
 
     public LedgerWindow(ParaProfTrial ppTrial, int windowType, Component parent) {
         this.ppTrial = ppTrial;
@@ -168,23 +184,23 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
 
     //Updates this window's data copy.
     private void sortLocalData() {
-        list = new Vector();
+        list = new Vector<LedgerDataElement>();
         if (this.windowType == FUNCTION_LEGEND) {
-            for (Iterator it = ppTrial.getDataSource().getFunctions(); it.hasNext();) {
-                list.addElement(new LedgerDataElement((Function) it.next()));
+            for (Iterator<Function> it = ppTrial.getDataSource().getFunctions(); it.hasNext();) {
+                list.addElement(new LedgerDataElement(it.next()));
             }
         } else if (this.windowType == GROUP_LEGEND) {
-            for (Iterator it = ppTrial.getDataSource().getGroups(); it.hasNext();) {
-                list.addElement(new LedgerDataElement((Group) it.next()));
+            for (Iterator<Group> it = ppTrial.getDataSource().getGroups(); it.hasNext();) {
+                list.addElement(new LedgerDataElement(it.next()));
             }
         } else if (this.windowType == USEREVENT_LEGEND) {
-            for (Iterator it = ppTrial.getDataSource().getUserEvents(); it.hasNext();) {
-                list.addElement(new LedgerDataElement((UserEvent) it.next()));
+            for (Iterator<UserEvent> it = ppTrial.getDataSource().getUserEvents(); it.hasNext();) {
+                list.addElement(new LedgerDataElement(it.next()));
             }
         } else if (this.windowType == PHASE_LEGEND) {
             Group group = ppTrial.getDataSource().getGroup("TAU_PHASE");
-            for (Iterator it = ppTrial.getDataSource().getFunctions(); it.hasNext();) {
-                Function function = (Function) it.next();
+            for (Iterator<Function> it = ppTrial.getDataSource().getFunctions(); it.hasNext();) {
+                Function function = it.next();
                 if (function.isGroupMember(group)) {
                     list.addElement(new LedgerDataElement(function));
                 }
@@ -192,7 +208,7 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
         }
     }
 
-    public Vector getData() {
+    public Vector<LedgerDataElement> getData() {
         return list;
     }
 

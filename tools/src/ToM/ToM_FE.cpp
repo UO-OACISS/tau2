@@ -6,9 +6,12 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <vector>
+#include <sys/time.h>
 
 #include <stdint.h>
+#include <string.h>
 
 #include "mrnet/MRNet.h"
 #include "Profile/TauMonMrnet.h"
@@ -25,6 +28,7 @@ Stream *zero_stream;
 
 int unifyFilterId;
 int baseStatsFilterId;
+int baseStatsNameFilterId;
 int histogramFilterId;
 
 bool broadcastResults;
@@ -32,15 +36,26 @@ bool broadcastResults;
 // *CWL* General purpose filters?
 int syncFilterId;
 
+char *profiledir;
+
 // Shared information between Base Stats and Histogram protocols
 // *CWL* - find a better way of implementing this, probably through
 //    object-based interfaces. 
 int numEvents, numCounters;
 double *means;
 char **eventNames;
+char **funcNames;
 char **counterNames;
 // map from BE ranks to MPI ranks
 int *rankMap;
+
+int invocationIndex;
+
+// Timer variables
+double time_aggregate;
+double time_hist;
+
+double ToM_getTimeOfDay();
 
 void controlLoop();
 
@@ -61,7 +76,9 @@ void write_be_connections(vector<NetworkTopology::Node *>& leaves,
 			  int num_be)
 {
    FILE *f;
-   const char* connfile = "./attachBE_connections";
+
+   char connfile[512];
+   sprintf(connfile,"%s/attachBE_connections",profiledir);
    if ((f = fopen(connfile, (const char *)"w+")) == NULL)
    {
       perror("fopen");
@@ -99,6 +116,13 @@ int main(int argc, char **argv)
       fprintf(stderr, "Usage: %s <topology_file> <num_backends>\n", argv[0]);
       exit(-1);
     }
+
+    profiledir = getenv("PROFILEDIR");
+    if (profiledir == NULL) {
+      profiledir = (char *)malloc((strlen(".")+1)*sizeof(char));
+      strcpy(profiledir,".");
+    }
+
     char* topology_file = argv[1];
     int num_backends = atoi(argv[2]);
 
@@ -130,6 +154,17 @@ int main(int argc, char **argv)
     printf("FE: MRNet network successfully created.\n");
     printf("FE: Waiting for %u backends to connect.\n", num_backends );
     fflush(stdout);
+
+    // Write an atomic probe file for Backends to wait on.
+    FILE *atomicFile;
+    char atomicFilename[512];
+    sprintf(atomicFilename,"%s/ToM_FE_Atomic",profiledir);
+    if ((atomicFile = fopen(atomicFilename,"w")) == NULL) {
+      perror("Failed to create ToM_FE_Atomic\n");
+      exit(-1);
+    } else {
+      fclose(atomicFile);
+    }
 
     set<NetworkTopology::Node *> be_nodes;
     do {
@@ -167,6 +202,7 @@ void controlLoop() {
 
   bool processProtocol = true;
 
+  invocationIndex = 0;
   while (processProtocol) {
     // Check only on the Control stream. No other packets should come
     //   up the tree outside of their individual protocol channels.
@@ -191,6 +227,7 @@ void controlLoop() {
     case PROT_DATA_READY: {
       printf("FE: Data ready at application backends. Start protocols.\n");
       monitoringProtocol();
+      invocationIndex++;
       break;
     }
     default: {
@@ -215,6 +252,8 @@ void registerUnify() {
 void registerBaseStats() {
   baseStatsFilterId = net->load_FilterFunc("ToM_Stats_Filter.so",
 					   "ToM_Stats_Filter");
+  baseStatsNameFilterId = net->load_FilterFunc("ToM_Name_Filter.so",
+					       "ToM_Name_Filter");
 }
 
 void registerHistogram() {
@@ -260,7 +299,12 @@ void protocolUnify() {
 void protocolBaseStats() {
   // set up the appropriate streams. ToM will respond using the streams
   //   it receives.
+  time_aggregate = 0.0;
+  double start_aggregate = ToM_getTimeOfDay();
+  double end_aggregate;
+
   Stream *statStream;
+  Stream *nameStream;
 
   int tag;
   PacketPtr p;
@@ -282,6 +326,24 @@ void protocolBaseStats() {
 
   int totalThreads = 0;
 
+  // Ask for the names first
+  int threadId = -1;
+  int numFunc = 0;
+  nameStream = net->new_Stream(comm_BC, baseStatsNameFilterId);
+  STREAM_FLUSHSEND(nameStream, PROT_BASESTATS, "%d", PROT_BASESTATS);
+  nameStream->recv(&tag, p);
+  p->unpack("%d %as",
+	    &threadId, &funcNames, &numFunc);
+  // sanity checks
+  assert(threadId == 0);
+  //  printf("Num events = %d\n",numFunc);
+  /*
+  for (int i=0; i<numFunc; i++) {
+    printf("%s\n",funcNames[i]);
+  }
+  */
+  
+  // Then Ask for the Stats
   statStream = net->new_Stream(comm_BC, baseStatsFilterId);
 
   STREAM_FLUSHSEND(statStream, PROT_BASESTATS, "%d", PROT_BASESTATS);
@@ -300,6 +362,7 @@ void protocolBaseStats() {
   contrib_means = new double[numEvents*numCounters];
   contrib_std_devs = new double[numEvents*numCounters];
 
+  /*
   printf("FE: %d %d %d %d %d\n", num_sums, num_sumofsqr, num_mins,
 	 num_maxes, num_contrib_len);
 
@@ -312,9 +375,9 @@ void protocolBaseStats() {
 	     mins[aIdx], maxes[aIdx], numContrib[evt]);
     }
   }
-
+  */
   for (int evt=0; evt<numEvents; evt++) {
-    printf("FE: [event %d]\n", evt);
+    //printf("FE: [event %d]\n", evt);
     //    printf("FE: [%s]\n", eventNames[evt]);
     for (int ctr=0; ctr<numCounters; ctr++) {
       int aIdx = evt*numCounters+ctr;
@@ -330,6 +393,7 @@ void protocolBaseStats() {
 	sqrt((sumofsqr[aIdx]/numContrib[evt]) - 
 	     (((2*contrib_means[aIdx])/numContrib[evt])*sums[aIdx]) +
 	     (contrib_means[aIdx]*contrib_means[aIdx]));
+      /*
       printf("FE: Counter %d\n", ctr);
       printf("FE: mean:%f stddev:%f cmean:%f cstddev:%f\n",
 	     means[aIdx], std_devs[aIdx],
@@ -337,6 +401,7 @@ void protocolBaseStats() {
       printf("    sum:%f min:%f max:%f\n",
 	     sums[aIdx], mins[aIdx], maxes[aIdx]);
       fflush(stdout);
+      */
     }
   }
 
@@ -356,13 +421,34 @@ void protocolBaseStats() {
 		     mins, numValues,
 		     maxes, numValues);
   }
-
+  end_aggregate = ToM_getTimeOfDay();
+  time_aggregate = end_aggregate - start_aggregate;
   // Protocol effectively over at this point.
 
   // *CWL* - Consider a modular way of transfering the derived data out 
   //         from the front-end:
   //   1. an external client
   //   2. file output
+  // Profile format output
+  char profileName[512];
+  char profileNameTmp[512];
+  char aggregateMeta[512];
+  sprintf(profileNameTmp, "%s/.temp.mean.%d.0.0",profiledir,
+	  invocationIndex);
+  sprintf(profileName, "%s/mean.%d.0.0",profiledir, invocationIndex);
+  sprintf(aggregateMeta,"<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
+	  "Mean Aggregation Time",time_aggregate/1000000.0f);
+  FILE *profile = fopen(profileNameTmp,"w");
+  fprintf(profile, "%d templated_functions_MULTI_TIME\n", numEvents);
+  fprintf(profile, "# Name Calls Subrs Excl Incl ProfileCalls % <metadata><attribute><name>TAU Monitoring Transport</name><value>MRNet</value></attribute>%s</metadata>\n",
+	   aggregateMeta);
+  for (int i=0; i<numEvents; i++) { 
+    fprintf (profile, "\"%s\" %.16G %.16G %.16G %.16G 0 GROUP=\"TAU_DEFAULT\"\n", funcNames[i],
+	     1.0, 1.0, means[i], means[i]);
+  }
+  fprintf(profile, "0 aggregates\n");
+  fclose(profile);
+  rename(profileNameTmp, profileName);
 }
 
 void protocolHistogram() {
@@ -373,10 +459,15 @@ void protocolHistogram() {
   double max;
   double min;
 
+  // Get start timestamp here.
+  time_hist = 0.0;
+  double start_hist = ToM_getTimeOfDay();
+  double end_hist;
+
   // *CWL* temporary hardcode of 0.01%
   double threshold = 0.01; 
   // *CWL* temporary hardcode of 20 bins
-  int numBins = 10;
+  int numBins = 20;
 
   int numDataItems;
   int *histBins;
@@ -388,27 +479,35 @@ void protocolHistogram() {
 
   for (int ctr=0; ctr<numCounters; ctr++) {
     double totalMeans = 0.0;
-    printf("FE: Histogram calculations for Counter %d\n", ctr);
+    // printf("FE: Histogram calculations for Counter %d\n", ctr);
     for (int evt=0; evt<numEvents; evt++) {
       totalMeans += means[evt*numCounters+ctr];
     }
     for (int evt=0; evt<numEvents; evt++) {
       int aIdx = evt*numCounters+ctr;
       // printf("FE: [%s]\n", eventNames[evt]);
-      printf("FE: [event %d]\n", evt);
-      printf("FE: Total:%f Event:%f Prop:%f\n",
-	     totalMeans, means[aIdx], means[aIdx]/totalMeans);
+      // printf("FE: [event %d]\n", evt);
+      // printf("FE: Total:%f Event:%f Prop:%f\n",
+      //     totalMeans, means[aIdx], means[aIdx]/totalMeans);
       keepItem[aIdx] = (means[aIdx]/totalMeans)<threshold?0:1;
       numKeep += keepItem[aIdx];
     }
   }
-  printf("FE: Sending results to back-ends for binning.\n");
+  // printf("FE: Sending results to back-ends for binning.\n");
 
   STREAM_FLUSHSEND(histStream, PROT_HIST, "%ad %d %d", 
 		   keepItem, numEvents*numCounters, numKeep, numBins);
   histStream->recv(&tag, p);
   p->unpack("%ad", &histBins, &numDataItems);
 
+  // Get end timestamp here and calculate time_hist.
+  end_hist = ToM_getTimeOfDay();
+  time_hist = end_hist - start_hist;
+  printf("FE: Histogramming took %.4G seconds\n", time_hist/1000000.0f);
+
+  // Output. Modularize eventually.
+  //   Options can include output to file.
+  /*
   printf("FE: Histograms Bins *** \n");
   int histIdx = 0;
   for (int evt=0; evt<numEvents; evt++) {
@@ -425,4 +524,42 @@ void protocolHistogram() {
     }
   }
   printf("\n");
+  */
+  FILE *histoFile;
+  char histFileNameTmp[512];
+  char histFileName[512];
+  sprintf (histFileName, "%s/tau.histograms.%d", profiledir,
+	   invocationIndex);
+  sprintf (histFileNameTmp, "%s/.temp.tau.histograms.%d", profiledir,
+	   invocationIndex);
+  int numGlobalCounters = 1;
+  histoFile = fopen(histFileNameTmp, "w");
+  fprintf (histoFile, "%d\n", numEvents);
+  fprintf (histoFile, "%d\n", numGlobalCounters);
+  fprintf (histoFile, "%d\n", numBins);
+  for (int i=0; i<numGlobalCounters; i++) {
+    // this should be for each metric type.
+    fprintf (histoFile, "Exclusive %s\n", "TIME");
+    fprintf (histoFile, "Inclusive %s\n", "TIME");
+  }
+  fprintf (histoFile, "Number of calls\n");
+  fprintf (histoFile, "Child calls\n");
+  
+  for (int e=0; e<numEvents; e++) {
+    fprintf(histoFile, "%s\n", funcNames[e]);
+  }
+  fclose(histoFile);
+  rename(histFileNameTmp, histFileName);
+}
+
+double ToM_getTimeOfDay() {
+  double timestamp;
+
+  struct timeval tp;
+  gettimeofday(&tp, 0);
+  timestamp = 
+    (double)(((unsigned long long)tp.tv_sec * 
+	      (unsigned long long)1e6 + 
+	      (unsigned long long)tp.tv_usec)*1.0);
+  return timestamp;
 }

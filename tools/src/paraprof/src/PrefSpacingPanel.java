@@ -9,7 +9,12 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 
 import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
@@ -17,7 +22,12 @@ import javax.swing.event.ChangeListener;
 
 public class PrefSpacingPanel extends JPanel implements ChangeListener {
 
-    public PrefSpacingPanel() {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -6551921675313830683L;
+
+	public PrefSpacingPanel() {
         setSize(new java.awt.Dimension(xPanelSize, yPanelSize));
         setPreferredSize(new java.awt.Dimension(xPanelSize, yPanelSize));
         //Set the default tool tip for this panel.

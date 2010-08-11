@@ -108,7 +108,7 @@ public class LinearOptimizerOperation extends AbstractPerformanceOperation {
 			}
 		}
 		
-		List<Map<String,String>> trainingData = new ArrayList<Map<String,String>>();
+		List<Map> trainingData = new ArrayList<Map>();
 
 		// ok, we have the set of "optimal" methods for each unique tuple.  Convert them to Instances.
 		for (Hashtable<String,String> tmp : tuples.keySet()) {

@@ -9,7 +9,7 @@ import java.util.List;
 public class PhaseConvertedDataSource extends DataSource {
 
 
-    public PhaseConvertedDataSource(DataSource callpathDataSource, List phases) {
+    public PhaseConvertedDataSource(DataSource callpathDataSource, List<String> phases) {
 
         if (callpathDataSource.getCallPathDataPresent() == false) {
             throw new IllegalArgumentException("Can't make phase profile without callpath data");
@@ -21,15 +21,15 @@ public class PhaseConvertedDataSource extends DataSource {
             this.addMetric(callpathDataSource.getMetricName(i));
         }
 
-        for (Iterator thrd = callpathDataSource.getAllThreads().iterator(); thrd.hasNext();) {
-            Thread srcThread = (Thread) thrd.next();
+        for (Iterator<Thread> thrd = callpathDataSource.getAllThreads().iterator(); thrd.hasNext();) {
+            Thread srcThread = thrd.next();
 
             Node node = this.addNode(srcThread.getNodeID());
             Context context = node.addContext(srcThread.getContextID());
             Thread thread = context.addThread(srcThread.getThreadID(), numMetrics);
 
-            for (Iterator it = srcThread.getFunctionProfileIterator(); it.hasNext();) {
-                FunctionProfile srcFp = (FunctionProfile) it.next();
+            for (Iterator<FunctionProfile> it = srcThread.getFunctionProfileIterator(); it.hasNext();) {
+                FunctionProfile srcFp = it.next();
                 if (srcFp == null) {
                     continue;
                 }
@@ -37,8 +37,8 @@ public class PhaseConvertedDataSource extends DataSource {
                     Function function = this.addFunction(srcFp.getName(), numMetrics);
 
                     // copy the group over
-                    for (Iterator gr = srcFp.getFunction().getGroups().iterator(); gr.hasNext(); ) {
-                        Group srcGroup = (Group) gr.next();
+                    for (Iterator<Group> gr = srcFp.getFunction().getGroups().iterator(); gr.hasNext(); ) {
+                        Group srcGroup = gr.next();
                         Group group = this.addGroup(srcGroup.getName());
                         function.addGroup(group);
                     }
@@ -75,8 +75,8 @@ public class PhaseConvertedDataSource extends DataSource {
                     Function function = this.addFunction(timer);
 
                     // copy the group over
-                    for (Iterator gr = srcFp.getFunction().getGroups().iterator(); gr.hasNext(); ) {
-                        Group srcGroup = (Group) gr.next();
+                    for (Iterator<Group> gr = srcFp.getFunction().getGroups().iterator(); gr.hasNext(); ) {
+                        Group srcGroup = gr.next();
                         Group group = this.addGroup(srcGroup.getName());
                         function.addGroup(group);
                     }
@@ -121,7 +121,7 @@ public class PhaseConvertedDataSource extends DataSource {
     }
 
     
-    private boolean match(String needle, List haystack) {
+    private boolean match(String needle, List<String> haystack) {
         return haystack.contains(needle);
     }
 
