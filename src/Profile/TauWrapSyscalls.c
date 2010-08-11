@@ -138,7 +138,7 @@ pid_t fork(void) {
 int kill(pid_t pid, int sig) {
 
   static int (*_kill) (pid_t pid, int sig) = NULL;
-
+  TAU_PROFILE_TIMER(t,"sleep inside kill timer","" ,TAU_DEFAULT);
   int ret;
 
   /* Search for kill */  
@@ -148,6 +148,9 @@ int kill(pid_t pid, int sig) {
 
   if(sig==SIGKILL||sig==SIGTERM){
   ret = _kill(pid, SIGUSR1);
+   TAU_PROFILE_START(t);
+   sleep(5);
+   TAU_PROFILE_STOP(t);
   }
   else{
     ret = 0;
