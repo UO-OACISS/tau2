@@ -61,12 +61,11 @@ extern "C" {
 		   &in_activethreads, &in_active_len, &in_totalThreads);
 
       // local sanity check
-      int in_items = in_events*in_counters;
+      int in_items = in_events*in_counters*TOM_NUM_VALUES;
       assert((in_items == in_sums_len) &&
 	     (in_items == in_sumsofsqr_len) &&
 	     (in_items == in_mins_len) &&
 	     (in_items == in_maxes_len) &&
-	     (in_items == in_active_len) &&
 	     (in_items > 0));
       
       if (i == 0) {
@@ -79,51 +78,32 @@ extern "C" {
 	numEvents = in_events;
 	numCounters = in_counters;
 	numItems = in_items;
-
-	/* DEBUG 
-	printf("COMM: Incoming item:\n");
-	for (int evt=0; evt<numEvents; evt++) {
-	  for (int ctr=0; ctr<numCounters; ctr++) {
-	    int aIdx = evt*numCounters+ctr;
-	    printf("COMM [%d,%d] %f %f %f %f %d\n", evt, ctr,
-		   sums[aIdx], sumsofsqr[aIdx], mins[aIdx], maxes[aIdx],
-		   activeThreads[evt]);
-	  }
-	}
-	*/
       } else {
 	// global sanity check
 	assert((numEvents == in_events) &&
 	       (numCounters == in_counters));
 	for (int evt=0; evt<numEvents; evt++) {
 	  for (int ctr=0; ctr<numCounters; ctr++) {
-	    int aIdx = evt*numCounters+ctr;
-	    sums[aIdx] += in_sums[aIdx];
-	    sumsofsqr[aIdx] += in_sumsofsqr[aIdx];
-	    if (mins[aIdx] > in_mins[aIdx]) {
-	      mins[aIdx] = in_mins[aIdx];
+	    for (int i=0; i<TOM_NUM_VALUES; i++) {
+	      int aIdx = 
+		evt*numCounters*TOM_NUM_VALUES+
+		ctr*TOM_NUM_VALUES+
+		i;
+	      sums[aIdx] += in_sums[aIdx];
+	      sumsofsqr[aIdx] += in_sumsofsqr[aIdx];
+	      if (mins[aIdx] > in_mins[aIdx]) {
+		mins[aIdx] = in_mins[aIdx];
+	      }
+	      if (maxes[aIdx] < in_maxes[aIdx]) {
+		maxes[aIdx] = in_maxes[aIdx];
+	      }
 	    }
-	    if (maxes[aIdx] < in_maxes[aIdx]) {
-	      maxes[aIdx] = in_maxes[aIdx];
-	    }
+	    activeThreads[evt] += in_activethreads[evt];
 	  }
-	  activeThreads[evt] += in_activethreads[evt];
 	}
       }
       totalThreads += in_totalThreads;
     }
-
-    /* DEBUG 
-    printf("COMM: Outgoing item:\n");
-    for (int evt=0; evt<numEvents; evt++) {
-      for (int ctr=0; ctr<numCounters; ctr++) {
-	int aIdx = evt*numCounters+ctr;
-	printf("COMM [%d,%d] %f %f %f %f %d\n", evt, ctr,
-	       sums[aIdx], sumsofsqr[aIdx], mins[aIdx], maxes[aIdx],
-	       activeThreads[evt]);
-      }
-    }
-    */
 
     PacketPtr new_packet (new Packet(pin[0]->get_StreamId(),
 				     pin[0]->get_Tag(),

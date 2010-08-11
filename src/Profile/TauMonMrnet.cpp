@@ -39,6 +39,11 @@ using namespace MRN;
 using namespace std;
 #endif
 
+extern "C" int getTomFlattenedIdx(int numCounters, int numTypes,
+				  int evtIdx, int ctrIdx, int typeIdx) {
+  return evtIdx*numCounters*numTypes + ctrIdx*numTypes + typeIdx;
+}
+
 // Back-end rank
 int rank;
 
@@ -55,7 +60,7 @@ Stream *ctrl_stream;
 // Determine whether to extend protocol to receive results from the FE.
 bool broadcastResults;
 
-  const char *profiledir;
+const char *profiledir;
 
 // Unification structures
 FunctionEventLister *mrnetFuncEventLister;
@@ -63,14 +68,19 @@ Tau_unify_object_t *mrnetFuncUnifier;
 AtomicEventLister *mrnetAtomEventLister;
 Tau_unify_object_t *mrnetAtomUnifier;
 
+extern "C" void calculateStats(double *sum, double *sumofsqr, 
+			       double *max, double *min,
+			       int numThreads, int dataType,
+			       FunctionInfo *fi, int ctr);
+
 extern "C" void Tau_mon_connect() {
 
   //  printf("Mon Connect called\n");
   
   int size;
 
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_size(MPI_COMM_WORLD, &size);
 
   char myHostName[64];
 
@@ -112,20 +122,20 @@ extern "C" void Tau_mon_connect() {
 	mrnetRank = in_mrnetRank;
 	strncpy(mrnetHostName, in_mrnetHostName, 64);
       } else {
-	MPI_Send(&in_beRank, 1, MPI_INT, targetRank, 0, MPI_COMM_WORLD);
-	MPI_Send(&in_mrnetPort, 1, MPI_INT, targetRank, 0, MPI_COMM_WORLD);
-	MPI_Send(&in_mrnetRank, 1, MPI_INT, targetRank, 0, MPI_COMM_WORLD);
-	MPI_Send(in_mrnetHostName, 64, MPI_CHAR, targetRank, 0, 
+	PMPI_Send(&in_beRank, 1, MPI_INT, targetRank, 0, MPI_COMM_WORLD);
+	PMPI_Send(&in_mrnetPort, 1, MPI_INT, targetRank, 0, MPI_COMM_WORLD);
+	PMPI_Send(&in_mrnetRank, 1, MPI_INT, targetRank, 0, MPI_COMM_WORLD);
+	PMPI_Send(in_mrnetHostName, 64, MPI_CHAR, targetRank, 0, 
 		 MPI_COMM_WORLD);
       }
     }
     fclose(connections);
   } else {
     MPI_Status status;
-    MPI_Recv(&beRank, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
-    MPI_Recv(&mrnetPort, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
-    MPI_Recv(&mrnetRank, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
-    MPI_Recv(mrnetHostName, 64, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &status);
+    PMPI_Recv(&beRank, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+    PMPI_Recv(&mrnetPort, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+    PMPI_Recv(&mrnetRank, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+    PMPI_Recv(mrnetHostName, 64, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &status);
   }
 
   int mrnet_argc = 6;
@@ -252,33 +262,38 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
       if (rank == 0) {
 	printf("BE: Instructed by FE to report events and counters.\n");
       }
-
       // First message is a request for names
-
       // Invoke Unification
       FunctionEventLister *functionEventLister = new FunctionEventLister();
       Tau_unify_object_t *functionUnifier = 
 	Tau_unify_unifyEvents(functionEventLister);
       // Send Names of events.
-      char **funcNames;
+      char **tomNames;
       if (rank == 0) {
 	// send the array of event name strings.
-	funcNames = (char **)malloc(numGlobal*sizeof(char*));
-	for (int i=0; i<numGlobal; i++) {
-	  funcNames[i] = 
-	    (char *)malloc((strlen(functionUnifier->globalStrings[i])+1)*
+	tomNames = (char **)malloc((numCounters+numGlobal)*sizeof(char*));
+	for (int m=0; m<numCounters; m++) {
+	  tomNames[m] =
+	    (char *)malloc((strlen(TauMetrics_getMetricName(m))+1)*
 			   sizeof(char));
-	  strcpy(funcNames[i],functionUnifier->globalStrings[i]);
+	  strcpy(tomNames[m],TauMetrics_getMetricName(m));
 	}
-	STREAM_FLUSHSEND_BE(stream, PROT_BASESTATS, "%d %as",
-			    rank, funcNames, numGlobal);
+	for (int f=0; f<numGlobal; f++) {
+	  tomNames[f+numCounters] = 
+	    (char *)malloc((strlen(functionUnifier->globalStrings[f])+1)*
+			   sizeof(char));
+	  strcpy(tomNames[f+numCounters],functionUnifier->globalStrings[f]);
+	}
+	STREAM_FLUSHSEND_BE(stream, PROT_BASESTATS, "%d %d %as",
+			    rank, numCounters, tomNames, 
+			    numCounters+numGlobal);
       } else {
 	// send a single null string over.
-	funcNames = (char **)malloc(sizeof(char*));
-	funcNames[0] = (char *)malloc(sizeof(char));
-	strcpy(funcNames[0],"");
-	STREAM_FLUSHSEND_BE(stream, PROT_BASESTATS, "%d %as",
-			    rank, funcNames, 1);
+	tomNames = (char **)malloc(sizeof(char*));
+	tomNames[0] = (char *)malloc(sizeof(char));
+	strcpy(tomNames[0],"");
+	STREAM_FLUSHSEND_BE(stream, PROT_BASESTATS, "%d %d %as",
+			    rank, 0, tomNames, 1);
       }
 
       // Then receive request for stats. No need to unpack.
@@ -290,18 +305,17 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
 #endif /* MRNET_LIGHTWEIGHT */
       assert(tag == PROT_BASESTATS);
 
+      int numItems = numGlobal*numCounters*TOM_NUM_VALUES;
+
       double *out_sums;
       double *out_sumsofsqr;
       double *out_mins;
       double *out_maxes;
-      out_sums = (double *)TAU_UTIL_MALLOC(numGlobal*numCounters*
-					   sizeof(double));
-      out_sumsofsqr = (double *)TAU_UTIL_MALLOC(numGlobal*numCounters*
-						sizeof(double));
-      out_mins = (double *)TAU_UTIL_MALLOC(numGlobal*numCounters*
-					   sizeof(double));
-      out_maxes = (double *)TAU_UTIL_MALLOC(numGlobal*numCounters*
-					    sizeof(double));
+      out_sums = (double *)TAU_UTIL_MALLOC(numItems*sizeof(double));
+      out_sumsofsqr = (double *)TAU_UTIL_MALLOC(numItems*sizeof(double));
+      out_mins = (double *)TAU_UTIL_MALLOC(numItems*sizeof(double));
+      out_maxes = (double *)TAU_UTIL_MALLOC(numItems*sizeof(double));
+
       // For each event, how many threads contribute values 
       //   from this node?
       int *threads;
@@ -310,77 +324,50 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
       // Construct the data arrays to be sent.
       for (int evt=0; evt<numGlobal; evt++) {
 	if (globalToLocal[evt] != -1) {
+
 	  FunctionInfo *fi = TheFunctionDB()[globalToLocal[evt]];
+
 	  for (int ctr=0; ctr<numCounters; ctr++) {
-	    double sum = 0.0;
-	    double sumofsqr = 0.0;
-	    double min, max;
-
-	    int aIdx = evt*numCounters+ctr;
-
 	    // accumulate for threads but contribute as a node
-	    for (int tid=0; tid<numThreads; tid++) {
-	      // going to work only with exclusive values for now.
-	      double val = fi->getDumpExclusiveValues(tid)[ctr];
-	      sum += val;
-	      sumofsqr += val*val;
-	      if (tid == 0) {
-		min = val;
-		max = val;
-	      } else {
-		if (min > val) {
-		  min = val;
-		}
-		if (max < val) {
-		max = val;
-		}
-	      }
-	    }
-
 	    // Write thread-accumulated values into the appropriate arrays
-	    out_sums[aIdx] = sum;
-	    out_sumsofsqr[aIdx] = sumofsqr;
-	    out_mins[aIdx] = min;
-	    out_maxes[aIdx] = max;
+	    for (int i=0; i<TOM_NUM_VALUES; i++) {
+	      int aIdx = getTomFlattenedIdx(numCounters, TOM_NUM_VALUES,
+					    evt, ctr, i);
+	      calculateStats(&out_sums[aIdx],
+			     &out_sumsofsqr[aIdx],
+			     &out_mins[aIdx],
+			     &out_maxes[aIdx],
+			     numThreads, 
+			     i, fi, ctr);
+	    }
 	  }
 	  threads[evt] = numThreads;
 	} else { /* globalToLocal[evt] != -1 */
 	  // send a null contribution for each counter associated with
 	  //   the function for this node
 	  for (int ctr=0; ctr<numCounters; ctr++) {
-	    int aIdx = evt*numCounters+ctr;
-	    out_sums[aIdx] = 0.0;
-	    out_sumsofsqr[aIdx] = 0.0;
-	    out_mins[aIdx] = 0.0;
-	    out_maxes[aIdx] = 0.0;
+	    for (int i=0; i<TOM_NUM_VALUES; i++) {
+	      int aIdx = getTomFlattenedIdx(numCounters, TOM_NUM_VALUES,
+					    evt, ctr, i);
+	      out_sums[aIdx] = 0.0;
+	      out_sumsofsqr[aIdx] = 0.0;
+	      out_mins[aIdx] = 0.0;
+	      out_maxes[aIdx] = 0.0;
+	    }
 	  }
 	  threads[evt] = 0;
 	} /* globalToLocal[evt] != -1 */
       }
 
-      /* DEBUG 
-      printf("[%d] BE: Sending out %d events, %d counters:\n", rank,
-	     numGlobal, numCounters);
-      for (int evt=0; evt<numGlobal; evt++) {
-	for (int ctr=0; ctr<numCounters; ctr++) {
-	  int aIdx = evt*numCounters+ctr;
-	  printf("[%d] BE [%d,%d]: %f %f %f %f %d\n", rank, 
-		 evt, ctr,
-		 out_sums[aIdx], out_sumsofsqr[aIdx], 
-		 out_mins[aIdx], out_maxes[aIdx],
-		 threads[evt]);
-	}
-      }
-      */
-      STREAM_FLUSHSEND_BE(stream, protocolTag, "%d %d %alf %alf %alf %alf %ad %d",
-		       numGlobal, numCounters,
-		       out_sums, numGlobal*numCounters,
-		       out_sumsofsqr, numGlobal*numCounters,
-		       out_mins, numGlobal*numCounters,
-		       out_maxes, numGlobal*numCounters,
-		       threads, numGlobal,
-		       numThreads);
-      
+      STREAM_FLUSHSEND_BE(stream, protocolTag, 
+			  "%d %d %alf %alf %alf %alf %ad %d",
+			  numGlobal, numCounters,
+			  out_sums, numItems,
+			  out_sumsofsqr, numItems,
+			  out_mins, numItems,
+			  out_maxes, numItems,
+			  threads, numGlobal,
+			  numThreads);
 
       // Get results of the protocol from the front-end.
       if (broadcastResults) {
@@ -388,22 +375,14 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
 #ifdef MRNET_LIGHTWEIGHT
 	Network_recv(net, &protocolTag, p, &stream);
 	Packet_unpack(p, "%alf %alf",
-		  &means, &numMeans, &std_devs, &numStdDevs,
-		  &mins, &numMins, &maxes, &numMaxes);
+		      &means, &numMeans, &std_devs, &numStdDevs,
+		      &mins, &numMins, &maxes, &numMaxes);
 #else /* MRNET_LIGHTWEIGHT */
         net->recv(&protocolTag, p, &stream);
         p->unpack("%alf %alf",
                   &means, &numMeans, &std_devs, &numStdDevs,
                   &mins, &numMins, &maxes, &numMaxes);
 #endif /* MRNET_LIGHTWEIGHT */
-
-	/* DEBUG
-	printf("BE: Received %d values from FE\n", numMeans);
-	for (int val=0; val<numMeans; val++) {
-	  printf("BE: [%d] Mean:%f StdDev:%f\n", val, 
-		 means[val], std_devs[val]);
-	}
-	*/
       }
       break;
     }
@@ -423,16 +402,6 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
       p->unpack("%ad %d %d", &keepItem, &numItems, &numKeep, &numBins);
 #endif /* MRNET_LIGHTWEIGHT */
 
-      /* DEBUG
-      printf("BE: Received filtered events from FE %d %d %d\n",
-	     numItems, numKeep, numBins);
-      for (int i=0; i<numItems; i++) {
-	if (keepItem[i] == 1) {
-	  printf("Keeping item %d\n", i);
-	}
-      }
-      */
-
       // We send a set of bins for each counter + event combo that has
       //    not been filtered out.
       int *histBins;
@@ -440,7 +409,6 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
       for (int i=0; i<numBins*numKeep; i++) {
 	histBins[i] = 0;
       }
-
 
       int keepIdx = 0;
       for (int ctr=0; ctr<numCounters; ctr++) {
@@ -457,11 +425,6 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
 		double val = fi->getDumpExclusiveValues(tid)[ctr];
 		int histIdx = (int)floor((val-mins[aIdx])/interval);
 		// hackish way of dealing with rounding problems.
-		/*
-		printf("BE: %f %f %f %f %d\n", 
-		       interval, range, mins[aIdx], val, 
-		       histIdx);
-		*/
 		if (histIdx < 0) {
 		  histIdx = 0;
 		}
@@ -534,25 +497,59 @@ extern "C" void Tau_mon_onlineDump() {
     // set reverse unsorted mapping
     globalToLocal[mrnetFuncUnifier->mapping[i]] = mrnetFuncUnifier->sortMap[i];
   }
-
-  /* DEBUG  
-  for (int i=0; i<numGlobal; i++) {
-    if (globalToLocal[i] == -1) {
-      printf("No local event for global id %d\n", i);
-    } else {
-      FunctionInfo *fi = TheFunctionDB()[globalToLocal[i]];
-      printf("Found idx %d: [%s] ExcT:%f\n", i, fi->GetName(),
-	     fi->getDumpExclusiveValues(0)[0]);
-    }
-  }
-  */
-
   // Tell the MRNet front-end that the data is ready and wait for
   //   protocol instructions.
   STREAM_FLUSHSEND_BE(ctrl_stream, TOM_CONTROL, "%d", PROT_DATA_READY);
 
   // Start the protocol loop.
   protocolLoop(globalToLocal, numGlobal);
+}
+
+void calculateStats(double *sum, double *sumofsqr, 
+		    double *max, double *min,
+		    int numThreads, int dataType,
+		    FunctionInfo *fi, int ctr) {
+  *sum = 0.0;
+  *sumofsqr = 0.0;
+  
+  for (int tid=0; tid<numThreads; tid++) {
+    double val;
+    switch (dataType) {
+    case TOM_VAL_INCL: {
+      val = fi->getDumpInclusiveValues(tid)[ctr];
+      break;
+    }
+    case TOM_VAL_EXCL: {
+      val = fi->getDumpExclusiveValues(tid)[ctr];
+      break;
+    }
+    case TOM_VAL_CALL: {
+      val = fi->GetCalls(tid)*1.0;
+      break;
+    }
+    case TOM_VAL_SUBR: {
+      val = fi->GetSubrs(tid)*1.0;
+      break;
+    }
+    default: {
+      // *CWL* Do something about this error condition.
+    }
+    };
+
+    *sum += val;
+    *sumofsqr += val*val;
+    if (tid == 0) {
+      *min = val;
+      *max = val;
+    } else {
+      if (*min > val) {
+	*min = val;
+      }
+      if (*max < val) {
+	*max = val;
+      }
+    }
+  }
 }
 
 #ifdef MRNET_LIGHTWEIGHT

@@ -511,6 +511,9 @@ extern "C" int Tau_collate_writeProfile() {
     sprintf(monitoringMeta,"<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
 	    "Total Monitoring Time", ((double)((double)end-start))/1000000.0f);
     FILE *profile = fopen(profileNameTmp, "w");
+    // *CWL* - templated_functions_MULTI_<metric name> should be the
+    //         general output format. This should be added in subsequent
+    //         revisions of the TauMon infrastructure.
     fprintf (profile, "%d templated_functions_MULTI_TIME\n", numItems);
     fprintf (profile, "# Name Calls Subrs Excl Incl ProfileCalls % <metadata><attribute><name>TAU Monitoring Transport</name><value>MPI</value></attribute>%s%s%s%s</metadata>\n", 
 	     unifyMeta, aggregateMeta, histogramMeta, monitoringMeta);

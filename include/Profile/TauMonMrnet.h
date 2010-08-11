@@ -27,6 +27,13 @@
     exit(-1);						   \
   }
 
+// TOM (TAU) VALUE TYPES
+const int TOM_NUM_VALUES = 4;
+const int TOM_VAL_INCL = 0;
+const int TOM_VAL_EXCL = 1;
+const int TOM_VAL_CALL = 2;
+const int TOM_VAL_SUBR = 3;
+
 // Protocol definitions to be shared between any C++ ToM front-ends and the
 //   application back-ends.
 

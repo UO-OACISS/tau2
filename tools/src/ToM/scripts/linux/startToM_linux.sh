@@ -2,21 +2,53 @@
 
 RUN=mpirun
 
+#0
+profiledir=$1
+shift
+#1
 nprocs=$1
-feName=$2
-numBE=$3
-fanout=$4
-depth=$5
+shift
+#2
+feName=$1
+shift
+#3
+numBE=$1
+shift
+#4
+fanout=$1
+shift
+#5
+numTreeNodes=$1
+shift
+#command (rest of the arguments)
+command=$*
 
-hostfile=mrnethosts.txt
-topfile=topology.txt
+# For now, we are making it a requirement for PROFILEDIR to exist before
+#   this would work. 
+export PROFILEDIR=$profiledir
+if [ ! -f "$PROFILEDIR" ]
+  export PROFILEDIR="."
+fi
+
+mrnethostfile=$PROFILEDIR/mrnethosts.txt
+hostfile=$PROFILEDIR/tophosts.txt
+topfile=$PROFILEDIR/topology.txt
+logdir=$PROFILEDIR/mrnlog
+
+# clear the atomic file before proceeding.                                      
+rm -f $PROFILEDIR/ToM_FE_Atomic
+mkdir -p $logdir
 
 # probe ranks to generate host file for MRNet topology
 $RUN -n $nprocs probe
 $RUN -n $numBE probeDiff
 
+export MRNET_OUTPUT_LEVEL=1
+export MRNET_DEBUG_LOG_DIRECTORY="${logdir}"
+
 # generate the MRNet topology
-mrnet_topgen -b $fanout^$depth $hostfile $topfile
+mrnet_topgen -k $fanout@$numTreeNodes $hostfile $topfile
 
 # feed generated topology file to the designated front-end
 $feName $topfile $numBE &
+$RUN -n $numBE $command
