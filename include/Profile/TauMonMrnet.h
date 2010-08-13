@@ -29,8 +29,8 @@
 
 // TOM (TAU) VALUE TYPES
 const int TOM_NUM_VALUES = 4;
-const int TOM_VAL_INCL = 0;
-const int TOM_VAL_EXCL = 1;
+const int TOM_VAL_EXCL = 0;
+const int TOM_VAL_INCL = 1;
 const int TOM_VAL_CALL = 2;
 const int TOM_VAL_SUBR = 3;
 
@@ -49,7 +49,6 @@ enum {
   PROT_UNIFY,       // event unification protocol
   PROT_BASESTATS,   // basic statistics protocol
   PROT_HIST,        // histogramming protocol
-
   PROT_CLASSIFIER,  // classification protocol
   PROT_CLUST_KMEANS // k-means clustering protocol
 };

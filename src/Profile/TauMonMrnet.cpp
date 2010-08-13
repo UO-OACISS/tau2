@@ -44,6 +44,12 @@ extern "C" int getTomFlattenedIdx(int numCounters, int numTypes,
   return evtIdx*numCounters*numTypes + ctrIdx*numTypes + typeIdx;
 }
 
+int calcCtrHistBinIdx(int tomIdx, int tomType, int numBins, 
+		      int numThreads, int ctr,
+		      FunctionInfo *fi, double *maxes, double *mins);
+int calcHistBinIdx(int tomIdx, int tomType, int numBins, int numThreads,
+	           FunctionInfo *fi, double *maxes, double *mins);
+
 // Back-end rank
 int rank;
 
@@ -185,11 +191,6 @@ extern "C" void Tau_mon_connect() {
     fprintf(stderr,"Warning: Invalid initial control signal %d.\n",
 	    data);
   }
-
-  /* DEBUG 
-  printf("[%d] Got ToM control stream. Proceeding with application code\n",
-	 rank);
-  */
 }
 
 // more like a "last call" for protocol action than an
@@ -388,64 +389,66 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
     }
     case PROT_HIST: {
       int numBins;
-      int numKeep;
-      int numItems;
-      int *keepItem;
+      int numHistogramsPerEvent = numCounters*2+2;
+      int numItems = numGlobal*numHistogramsPerEvent;
 
       // in the case of the Histogramming Protocol, a percentage value
       //   is sent by the front-end to determine the threshold for
       //   exclusive execution time duration. Any event not satisfying
       //   the threshold will be filtered off.
 #ifdef MRNET_LIGHTWEIGHT
-      Packet_unpack(p, "%ad %d %d", &keepItem, &numItems, &numKeep, &numBins);
+      Packet_unpack(p, "%d", &numBins);
 #else /* MRNET_LIGHTWEIGHT */
-      p->unpack("%ad %d %d", &keepItem, &numItems, &numKeep, &numBins);
+      p->unpack("%d", &numBins);
 #endif /* MRNET_LIGHTWEIGHT */
 
-      // We send a set of bins for each counter + event combo that has
-      //    not been filtered out.
       int *histBins;
-      histBins = new int[numBins*numKeep];
-      for (int i=0; i<numBins*numKeep; i++) {
+      histBins = new int[numBins*numItems];
+      for (int i=0; i<numBins*numItems; i++) {
 	histBins[i] = 0;
       }
 
-      int keepIdx = 0;
-      for (int ctr=0; ctr<numCounters; ctr++) {
-	for (int evt=0; evt<numGlobal; evt++) {
-	  int aIdx = evt*numCounters+ctr;
-	  if (keepItem[aIdx] == 1) {
-	    if (globalToLocal[evt] != -1) {
-	      FunctionInfo *fi = TheFunctionDB()[globalToLocal[evt]];
-	      double range = maxes[aIdx] - mins[aIdx];
-	      double interval = range/numBins;
-	      // accumulate for threads but contribute as a node
-	      for (int tid=0; tid<numThreads; tid++) {
-		// going to work only with exclusive values for now.
-		double val = fi->getDumpExclusiveValues(tid)[ctr];
-		int histIdx = (int)floor((val-mins[aIdx])/interval);
-		// hackish way of dealing with rounding problems.
-		if (histIdx < 0) {
-		  histIdx = 0;
-		}
-		if (histIdx >= numBins) {
-		  histIdx = numBins-1;
-		}
-		histBins[keepIdx*numBins+histIdx]++;
-	      }
-	    }
-	    keepIdx++;
-	  } 
+      for (int evt=0; evt<numGlobal; evt++) {
+	FunctionInfo *fi = TheFunctionDB()[globalToLocal[evt]];
+	for (int ctr=0; ctr<numCounters; ctr++) {
+	  int tomIdx = (evt*numCounters + ctr)*TOM_NUM_VALUES;
+	  int histIdx = evt*numHistogramsPerEvent + ctr*2;
+	    
+	  if (globalToLocal[evt] != -1) {
+	    int binIdx;
+	    // Exclusive Time
+	    binIdx = calcCtrHistBinIdx(tomIdx, TOM_VAL_EXCL, numBins,
+				       numThreads, ctr, fi, maxes, mins);
+	    histBins[(histIdx+TOM_VAL_EXCL)*numBins+binIdx]++;
+	    // Inclusive Time
+	    binIdx = calcCtrHistBinIdx(tomIdx, TOM_VAL_INCL, numBins,
+				       numThreads, ctr, fi, maxes, mins);
+	    histBins[(histIdx+TOM_VAL_INCL)*numBins+binIdx]++;
+	  }
 	}
+	// plug in calls and subrs (applicable only to TIME)
+	int tomIdx = evt*numCounters*TOM_NUM_VALUES;
+	int histIdx = evt*numHistogramsPerEvent + numCounters*2;
+	int binIdx;
+	// Calls. *CWL* - find elegant way to deal with hardcoded offsets
+	binIdx = calcHistBinIdx(tomIdx, TOM_VAL_CALL, numBins, numThreads,
+				fi, maxes, mins);
+	histBins[(histIdx*numBins)+binIdx]++;
+	// Subrs
+	binIdx = calcHistBinIdx(tomIdx, TOM_VAL_SUBR, numBins, numThreads,
+				fi, maxes, mins);
+	histBins[((histIdx+1)*numBins)+binIdx]++;
       }
-
-      STREAM_FLUSHSEND_BE(stream, protocolTag, "%ad", histBins, numKeep*numBins);
+      STREAM_FLUSHSEND_BE(stream, protocolTag, "%ad", histBins, 
+			  numItems*numBins);
       break;
     }
     case PROT_CLASSIFIER: {
       break;
     }
     case PROT_CLUST_KMEANS: {
+      // react to frontend
+      // exchange information
       break;
     }
     case PROT_EXIT: {
@@ -549,6 +552,68 @@ void calculateStats(double *sum, double *sumofsqr,
 	*max = val;
       }
     }
+  }
+}
+
+int calcCtrHistBinIdx(int tomIdx, int tomType, int numBins, int numThreads,
+		      int ctr, FunctionInfo *fi, double *maxes, double *mins) {
+  double range = 
+    maxes[tomIdx+tomType] - mins[tomIdx+tomType];
+  double interval = range/numBins;
+  // accumulate for threads but contribute as a node
+  for (int tid=0; tid<numThreads; tid++) {
+    double val;
+    switch (tomType) {
+    case TOM_VAL_EXCL: {
+      val = fi->getDumpExclusiveValues(tid)[ctr];
+      break;
+    }
+    case TOM_VAL_INCL: {
+      val = fi->getDumpInclusiveValues(tid)[ctr];
+      break;
+    }
+    }
+    int binIdx = 
+      (int)floor((val-mins[tomIdx+tomType])/interval);
+    // hackish way of dealing with rounding problems.
+    if (binIdx < 0) {
+      binIdx = 0;
+    }
+    if (binIdx >= numBins) {
+      binIdx = numBins-1;
+    }
+    return binIdx;
+  }
+}
+
+int calcHistBinIdx(int tomIdx, int tomType, int numBins, int numThreads,
+		   FunctionInfo *fi, double *maxes, double *mins) {
+  double range = 
+    maxes[tomIdx+tomType] - mins[tomIdx+tomType];
+  double interval = range/numBins;
+  // accumulate for threads but contribute as a node
+  for (int tid=0; tid<numThreads; tid++) {
+    double val;
+    switch (tomType) {
+    case TOM_VAL_CALL: {
+      val = fi->GetCalls(tid)*1.0;
+      break;
+    }
+    case TOM_VAL_SUBR: {
+      val = fi->GetSubrs(tid)*1.0;
+      break;
+    }
+    }
+    int binIdx = 
+      (int)floor((val-mins[tomIdx+tomType])/interval);
+    // hackish way of dealing with rounding problems.
+    if (binIdx < 0) {
+      binIdx = 0;
+    }
+    if (binIdx >= numBins) {
+      binIdx = numBins-1;
+    }
+    return binIdx;
   }
 }
 

@@ -28,6 +28,7 @@ int unifyFilterId;
 int baseStatsFilterId;
 int baseStatsNameFilterId;
 int histogramFilterId;
+int clusterFilterId;
 
 bool broadcastResults;
 
@@ -41,6 +42,8 @@ char *profiledir;
 //    object-based interfaces. 
 int numEvents, numCounters;
 double *means;
+double *mins;
+double *maxes;
 char **eventNames;
 char **tomNames;
 int numMetrics;
@@ -64,12 +67,14 @@ void registerProtocols();
 void registerUnify();
 void registerBaseStats();
 void registerHistogram();
+void registerClustering();
 
 void monitoringProtocol();
 void builtInProtocols();
 void protocolUnify();
 void protocolBaseStats();
 void protocolHistogram();
+void protocolClustering();
 
 void write_be_connections(vector<NetworkTopology::Node *>& leaves, 
 			  int num_net_nodes,
@@ -251,6 +256,7 @@ void registerProtocols() {
   // registerUnify();
   registerBaseStats();
   registerHistogram();
+  // registerClustering();
 }
 
 void registerUnify() {
@@ -271,6 +277,11 @@ void registerHistogram() {
 					   "ToM_Histogram_Filter");
 }
 
+void registerClustering() {
+  clusterFilterId = net->load_FilterFunc("ToM_Cluster_Filter.so",
+					 "ToM_Cluster_Filter");
+}
+
 void monitoringProtocol() {
   // basically activate all desired protocols on ready signal 
   // from application
@@ -283,6 +294,7 @@ void builtInProtocols() {
   // **CWL** Consider a way to turn them on or off, even dynamically.
   protocolBaseStats();
   protocolHistogram();
+  // protocolClustering();
 }
 
 void protocolUnify() {
@@ -319,9 +331,7 @@ void protocolBaseStats() {
   int num_sums = 0;
   double *sumofsqr;
   int num_sumofsqr = 0;
-  double *mins;
   int num_mins = 0;
-  double *maxes;
   int num_maxes = 0;
   int *numContrib;
   int num_contrib_len = 0;
@@ -424,7 +434,7 @@ void protocolBaseStats() {
   //   filter unimportant events from histogramming and clustering
   //   operations.
   if (broadcastResults) {
-    int numValues = numEvents*numCounters;
+    int numValues = numEvents*numCounters*TOM_NUM_VALUES;
     printf("FE: Broadcasting %d results back to BE\n", numValues);
     STREAM_FLUSHSEND(statStream, PROT_BASESTATS,
 		     "%alf %alf %alf %alf", 
@@ -490,39 +500,18 @@ void protocolHistogram() {
   double start_hist = ToM_getTimeOfDay();
   double end_hist;
 
-  // *CWL* temporary hardcode of 0.01%
-  double threshold = 0.01; 
-  // *CWL* temporary hardcode of 20 bins
+  // *CWL* temporary hardcode for mean/totalMean ratio of 0.01%
+  double threshold = 0.0001; 
+  // *CWL* temporary hardcode for 20 bins
   int numBins = 20;
 
   int numDataItems;
   int *histBins;
 
-  int keepItem[numEvents*numCounters];
-  int numKeep = 0;
-
   histStream = net->new_Stream(comm_BC, histogramFilterId);
 
-  for (int ctr=0; ctr<numCounters; ctr++) {
-    double totalMeans = 0.0;
-    // printf("FE: Histogram calculations for Counter %d\n", ctr);
-    for (int evt=0; evt<numEvents; evt++) {
-      totalMeans += means[evt*numCounters+ctr];
-    }
-    for (int evt=0; evt<numEvents; evt++) {
-      int aIdx = evt*numCounters+ctr;
-      // printf("FE: [%s]\n", eventNames[evt]);
-      // printf("FE: [event %d]\n", evt);
-      // printf("FE: Total:%f Event:%f Prop:%f\n",
-      //     totalMeans, means[aIdx], means[aIdx]/totalMeans);
-      keepItem[aIdx] = (means[aIdx]/totalMeans)<threshold?0:1;
-      numKeep += keepItem[aIdx];
-    }
-  }
-  // printf("FE: Sending results to back-ends for binning.\n");
-
-  STREAM_FLUSHSEND(histStream, PROT_HIST, "%ad %d %d", 
-		   keepItem, numEvents*numCounters, numKeep, numBins);
+  // printf("FE: Instructing back-ends to bin with %d bins.\n",numBins);
+  STREAM_FLUSHSEND(histStream, PROT_HIST, "%d", numBins);
   histStream->recv(&tag, p);
   p->unpack("%ad", &histBins, &numDataItems);
 
@@ -558,15 +547,14 @@ void protocolHistogram() {
 	   invocationIndex);
   sprintf (histFileNameTmp, "%s/.temp.tau.histograms.%d", profiledir,
 	   invocationIndex);
-  int numGlobalCounters = 1;
+  int numHistogramsPerEvent = (numCounters * 2) + 2;
   histoFile = fopen(histFileNameTmp, "w");
   fprintf (histoFile, "%d\n", numEvents);
-  fprintf (histoFile, "%d\n", numGlobalCounters);
+  fprintf (histoFile, "%d\n", numHistogramsPerEvent);
   fprintf (histoFile, "%d\n", numBins);
-  for (int i=0; i<numGlobalCounters; i++) {
-    // this should be for each metric type.
-    fprintf (histoFile, "Exclusive %s\n", "TIME");
-    fprintf (histoFile, "Inclusive %s\n", "TIME");
+  for (int i=0; i<numCounters; i++) {
+    fprintf (histoFile, "Exclusive %s\n", tomNames[i]);
+    fprintf (histoFile, "Inclusive %s\n", tomNames[i]);
   }
   fprintf (histoFile, "Number of calls\n");
   fprintf (histoFile, "Child calls\n");
@@ -575,9 +563,48 @@ void protocolHistogram() {
 
   for (int e=0; e<numEvents; e++) {
     fprintf(histoFile, "%s\n", funcNames[e]);
+    for (int m=0; m<numCounters; m++) {
+      int tomIdx = (e*numCounters + m)*TOM_NUM_VALUES;
+      int histIdx = e*numHistogramsPerEvent + m*2;
+      
+      fprintf(histoFile, "%.16G %.16G ", 
+	      mins[tomIdx+TOM_VAL_EXCL], maxes[tomIdx+TOM_VAL_EXCL]);
+      for (int b=0; b<numBins; b++) {
+	fprintf(histoFile, "%d ", 
+		histBins[(histIdx+TOM_VAL_EXCL)*numBins + b]);
+      }
+      fprintf(histoFile, "\n");
+      fprintf(histoFile, "%.16G %.16G ", 
+	      mins[tomIdx+TOM_VAL_INCL], maxes[tomIdx+TOM_VAL_INCL]);
+      for (int b=0; b<numBins; b++) {
+	fprintf(histoFile, "%d ", 
+		histBins[(histIdx+TOM_VAL_INCL)*numBins + b]);
+      }
+      fprintf(histoFile, "\n");
+    }
+    int tomIdx = e*numCounters*TOM_NUM_VALUES;
+    int histIdx = e*numHistogramsPerEvent + numCounters*2;
+    fprintf(histoFile, "%.16G %.16G ", 
+	    mins[tomIdx+TOM_VAL_CALL], maxes[tomIdx+TOM_VAL_CALL]);
+    for (int b=0; b<numBins; b++) {
+	fprintf(histoFile, "%d ", histBins[histIdx*numBins + b]);
+    }
+    fprintf(histoFile, "\n");
+    fprintf(histoFile, "%.16G %.16G ", 
+	    mins[tomIdx+TOM_VAL_SUBR], maxes[tomIdx+TOM_VAL_SUBR]);
+    for (int b=0; b<numBins; b++) {
+      fprintf(histoFile, "%d ", histBins[(histIdx+1)*numBins + b]);
+    }
+    fprintf(histoFile, "\n");
   }
   fclose(histoFile);
   rename(histFileNameTmp, histFileName);
+}
+
+void protocolClustering() {
+  // activate backends
+  // exchange information
+  // output
 }
 
 double ToM_getTimeOfDay() {
