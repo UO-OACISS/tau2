@@ -21,15 +21,14 @@ using namespace std;
 
 Network *net = NULL;
 Communicator *comm_BC;
-Communicator *comm_zero;
 
 Stream *ctrl_stream;
-Stream *zero_stream;
 
 int unifyFilterId;
 int baseStatsFilterId;
 int baseStatsNameFilterId;
 int histogramFilterId;
+int clusterFilterId;
 
 bool broadcastResults;
 
@@ -43,8 +42,12 @@ char *profiledir;
 //    object-based interfaces. 
 int numEvents, numCounters;
 double *means;
+double *mins;
+double *maxes;
 char **eventNames;
-char **funcNames;
+char **tomNames;
+int numMetrics;
+int globalNumThreads;
 char **counterNames;
 // map from BE ranks to MPI ranks
 int *rankMap;
@@ -64,12 +67,14 @@ void registerProtocols();
 void registerUnify();
 void registerBaseStats();
 void registerHistogram();
+void registerClustering();
 
 void monitoringProtocol();
 void builtInProtocols();
 void protocolUnify();
 void protocolBaseStats();
 void protocolHistogram();
+void protocolClustering();
 
 void write_be_connections(vector<NetworkTopology::Node *>& leaves, 
 			  int num_net_nodes,
@@ -178,16 +183,8 @@ int main(int argc, char **argv)
     comm_BC = net->get_BroadcastCommunicator();
     ctrl_stream = net->new_Stream(comm_BC, syncFilterId);
 
-    // FE-to-rank-0 communicator
-    comm_zero = net->new_Communicator();
-    comm_zero->add_EndPoint((MRN::Rank)0);
-    // comm_zero->add_EndPoint((MRN::Rank)rankMap[0]);
-    /*
-    zero_stream = net->new_Stream(comm_zero, TFILTER_NULL,
-				  SFILTER_DONTWAIT);
-    */
     // should backends go away?
-    net->set_TerminateBackEndsOnShutdown(false);
+    net->set_TerminateBackEndsOnShutdown(true);
 
     printf("FE: Inform back-ends of the control streams to use\n");
     STREAM_FLUSHSEND(ctrl_stream, TOM_CONTROL, "%d", broadcastResults?1:0);
@@ -195,6 +192,7 @@ int main(int argc, char **argv)
     // control loop
     controlLoop();
 
+    printf("FE: Done.\n");
     return 0;
 }
 
@@ -219,8 +217,24 @@ void controlLoop() {
     switch (protocolTag) {
     case TOM_EXIT: {
       // The Network destructor causes internal and leaf nodes to exit
-      printf("FE: Shutting down ToM front-end\n");
+      // Wait for all backends to go away before initiating the teardown
+      //   of the network.
+      NetworkTopology *topology = net->get_NetworkTopology();
+      set<NetworkTopology::Node *> be_nodes;
+
+      // This is hackish. Give the backends some time to complete
+      //   (after MPI_Finalize) before attempting to tear down
+      //   the MRNet network (which is supposed to terminate the
+      //   backends as part of the process).
+      sleep(10);
+      printf("FE: Tearing down MRNet network.\n");
       delete net;
+
+      // This is hackish. Give the comm nodes some time to properly
+      //    shutdown before letting the front-end process die.
+      sleep(10);
+      printf("FE: Shutdown after net delete.\n");
+
       processProtocol = false;
       break;
     }
@@ -242,6 +256,7 @@ void registerProtocols() {
   // registerUnify();
   registerBaseStats();
   registerHistogram();
+  // registerClustering();
 }
 
 void registerUnify() {
@@ -262,6 +277,11 @@ void registerHistogram() {
 					   "ToM_Histogram_Filter");
 }
 
+void registerClustering() {
+  clusterFilterId = net->load_FilterFunc("ToM_Cluster_Filter.so",
+					 "ToM_Cluster_Filter");
+}
+
 void monitoringProtocol() {
   // basically activate all desired protocols on ready signal 
   // from application
@@ -274,6 +294,7 @@ void builtInProtocols() {
   // **CWL** Consider a way to turn them on or off, even dynamically.
   protocolBaseStats();
   protocolHistogram();
+  // protocolClustering();
 }
 
 void protocolUnify() {
@@ -283,12 +304,9 @@ void protocolUnify() {
   // ask application for name strings. These can be acquired from
   //   Rank 0 after MPI-based unification.
   int numRecvEvents;
-  STREAM_FLUSHSEND(zero_stream, PROT_UNIFY, "%d", PROT_UNIFY);
-  zero_stream->recv(&tag, p);
   p->unpack("%as", &eventNames, &numRecvEvents);
   printf("FE: numEvents %d, receivedEvents %d\n", numEvents, numRecvEvents);
   assert(numRecvEvents == numEvents);
-
 }
 
 // BaseStats - MRNet has built-in stats filters now: 
@@ -313,9 +331,7 @@ void protocolBaseStats() {
   int num_sums = 0;
   double *sumofsqr;
   int num_sumofsqr = 0;
-  double *mins;
   int num_mins = 0;
-  double *maxes;
   int num_maxes = 0;
   int *numContrib;
   int num_contrib_len = 0;
@@ -329,11 +345,12 @@ void protocolBaseStats() {
   // Ask for the names first
   int threadId = -1;
   int numFunc = 0;
+  numMetrics = 0;
   nameStream = net->new_Stream(comm_BC, baseStatsNameFilterId);
   STREAM_FLUSHSEND(nameStream, PROT_BASESTATS, "%d", PROT_BASESTATS);
   nameStream->recv(&tag, p);
-  p->unpack("%d %as",
-	    &threadId, &funcNames, &numFunc);
+  p->unpack("%d %d %as",
+	    &threadId, &numMetrics, &tomNames, &numFunc);
   // sanity checks
   assert(threadId == 0);
   //  printf("Num events = %d\n",numFunc);
@@ -357,10 +374,10 @@ void protocolBaseStats() {
 	    &numContrib, &num_contrib_len,
 	    &totalThreads);
 
-  means = new double[numEvents*numCounters];
-  std_devs = new double[numEvents*numCounters];
-  contrib_means = new double[numEvents*numCounters];
-  contrib_std_devs = new double[numEvents*numCounters];
+  means = new double[numEvents*numCounters*TOM_NUM_VALUES];
+  std_devs = new double[numEvents*numCounters*TOM_NUM_VALUES];
+  contrib_means = new double[numEvents*numCounters*TOM_NUM_VALUES];
+  contrib_std_devs = new double[numEvents*numCounters*TOM_NUM_VALUES];
 
   /*
   printf("FE: %d %d %d %d %d\n", num_sums, num_sumofsqr, num_mins,
@@ -380,28 +397,33 @@ void protocolBaseStats() {
     //printf("FE: [event %d]\n", evt);
     //    printf("FE: [%s]\n", eventNames[evt]);
     for (int ctr=0; ctr<numCounters; ctr++) {
-      int aIdx = evt*numCounters+ctr;
-
-      // Compute derived statistics.
-      means[aIdx] = sums[aIdx]/totalThreads;
-      contrib_means[aIdx] = sums[aIdx]/numContrib[evt];
-      std_devs[aIdx] = 
-	sqrt((sumofsqr[aIdx]/totalThreads) - 
-	     (((2*means[aIdx])/totalThreads)*sums[aIdx]) +
-	     (means[aIdx]*means[aIdx]));
-      contrib_std_devs[aIdx] =
-	sqrt((sumofsqr[aIdx]/numContrib[evt]) - 
-	     (((2*contrib_means[aIdx])/numContrib[evt])*sums[aIdx]) +
-	     (contrib_means[aIdx]*contrib_means[aIdx]));
-      /*
-      printf("FE: Counter %d\n", ctr);
-      printf("FE: mean:%f stddev:%f cmean:%f cstddev:%f\n",
-	     means[aIdx], std_devs[aIdx],
-	     contrib_means[aIdx], contrib_std_devs[aIdx]);
-      printf("    sum:%f min:%f max:%f\n",
-	     sums[aIdx], mins[aIdx], maxes[aIdx]);
-      fflush(stdout);
-      */
+      for (int i=0; i<TOM_NUM_VALUES; i++) {
+	int aIdx = 
+	  evt*numCounters*TOM_NUM_VALUES+
+	  ctr*TOM_NUM_VALUES+
+	  i;
+	
+	// Compute derived statistics.
+	means[aIdx] = sums[aIdx]/totalThreads;
+	contrib_means[aIdx] = sums[aIdx]/numContrib[evt];
+	std_devs[aIdx] = 
+	  sqrt((sumofsqr[aIdx]/totalThreads) - 
+	       (((2*means[aIdx])/totalThreads)*sums[aIdx]) +
+	       (means[aIdx]*means[aIdx]));
+	contrib_std_devs[aIdx] =
+	  sqrt((sumofsqr[aIdx]/numContrib[evt]) - 
+	       (((2*contrib_means[aIdx])/numContrib[evt])*sums[aIdx]) +
+	       (contrib_means[aIdx]*contrib_means[aIdx]));
+	/*
+	  printf("FE: Counter %d\n", ctr);
+	  printf("FE: mean:%f stddev:%f cmean:%f cstddev:%f\n",
+	  means[aIdx], std_devs[aIdx],
+	  contrib_means[aIdx], contrib_std_devs[aIdx]);
+	  printf("    sum:%f min:%f max:%f\n",
+	  sums[aIdx], mins[aIdx], maxes[aIdx]);
+	  fflush(stdout);
+	*/
+      }
     }
   }
 
@@ -412,7 +434,7 @@ void protocolBaseStats() {
   //   filter unimportant events from histogramming and clustering
   //   operations.
   if (broadcastResults) {
-    int numValues = numEvents*numCounters;
+    int numValues = numEvents*numCounters*TOM_NUM_VALUES;
     printf("FE: Broadcasting %d results back to BE\n", numValues);
     STREAM_FLUSHSEND(statStream, PROT_BASESTATS,
 		     "%alf %alf %alf %alf", 
@@ -439,12 +461,26 @@ void protocolBaseStats() {
   sprintf(aggregateMeta,"<attribute><name>%s</name><value>%.4G seconds</value></attribute>",
 	  "Mean Aggregation Time",time_aggregate/1000000.0f);
   FILE *profile = fopen(profileNameTmp,"w");
+  // *CWL* - templated_functions_MULTI_<metric name> should be the            
+  //         general output format. (See TauCollate.cpp).
   fprintf(profile, "%d templated_functions_MULTI_TIME\n", numEvents);
   fprintf(profile, "# Name Calls Subrs Excl Incl ProfileCalls % <metadata><attribute><name>TAU Monitoring Transport</name><value>MRNet</value></attribute>%s</metadata>\n",
 	   aggregateMeta);
-  for (int i=0; i<numEvents; i++) { 
-    fprintf (profile, "\"%s\" %.16G %.16G %.16G %.16G 0 GROUP=\"TAU_DEFAULT\"\n", funcNames[i],
-	     1.0, 1.0, means[i], means[i]);
+  for (int m=0; m<numCounters; m++) {
+    for (int f=0; f<numEvents; f++) {
+      int aIdx = f*numCounters*TOM_NUM_VALUES + m*TOM_NUM_VALUES;
+      // *CWL* use a hard-code for now. Proper solution is to loop through
+      //    the data types (which seems like an overkill).
+      fprintf(profile, 
+	      "\"%s\" %.16G %.16G %.16G %.16G 0 GROUP=\"TAU_DEFAULT\"\n", 
+	      tomNames[f+numCounters], 
+	      means[aIdx+TOM_VAL_CALL], 
+	      means[aIdx+TOM_VAL_SUBR], 
+	      means[aIdx+TOM_VAL_EXCL], 
+	      means[aIdx+TOM_VAL_INCL]);
+    }
+    // where there is more than 1 metric (TIME), we will write multiple
+    //   blocks.
   }
   fprintf(profile, "0 aggregates\n");
   fclose(profile);
@@ -464,39 +500,18 @@ void protocolHistogram() {
   double start_hist = ToM_getTimeOfDay();
   double end_hist;
 
-  // *CWL* temporary hardcode of 0.01%
-  double threshold = 0.01; 
-  // *CWL* temporary hardcode of 20 bins
+  // *CWL* temporary hardcode for mean/totalMean ratio of 0.01%
+  double threshold = 0.0001; 
+  // *CWL* temporary hardcode for 20 bins
   int numBins = 20;
 
   int numDataItems;
   int *histBins;
 
-  int keepItem[numEvents*numCounters];
-  int numKeep = 0;
-
   histStream = net->new_Stream(comm_BC, histogramFilterId);
 
-  for (int ctr=0; ctr<numCounters; ctr++) {
-    double totalMeans = 0.0;
-    // printf("FE: Histogram calculations for Counter %d\n", ctr);
-    for (int evt=0; evt<numEvents; evt++) {
-      totalMeans += means[evt*numCounters+ctr];
-    }
-    for (int evt=0; evt<numEvents; evt++) {
-      int aIdx = evt*numCounters+ctr;
-      // printf("FE: [%s]\n", eventNames[evt]);
-      // printf("FE: [event %d]\n", evt);
-      // printf("FE: Total:%f Event:%f Prop:%f\n",
-      //     totalMeans, means[aIdx], means[aIdx]/totalMeans);
-      keepItem[aIdx] = (means[aIdx]/totalMeans)<threshold?0:1;
-      numKeep += keepItem[aIdx];
-    }
-  }
-  // printf("FE: Sending results to back-ends for binning.\n");
-
-  STREAM_FLUSHSEND(histStream, PROT_HIST, "%ad %d %d", 
-		   keepItem, numEvents*numCounters, numKeep, numBins);
+  // printf("FE: Instructing back-ends to bin with %d bins.\n",numBins);
+  STREAM_FLUSHSEND(histStream, PROT_HIST, "%d", numBins);
   histStream->recv(&tag, p);
   p->unpack("%ad", &histBins, &numDataItems);
 
@@ -532,24 +547,64 @@ void protocolHistogram() {
 	   invocationIndex);
   sprintf (histFileNameTmp, "%s/.temp.tau.histograms.%d", profiledir,
 	   invocationIndex);
-  int numGlobalCounters = 1;
+  int numHistogramsPerEvent = (numCounters * 2) + 2;
   histoFile = fopen(histFileNameTmp, "w");
   fprintf (histoFile, "%d\n", numEvents);
-  fprintf (histoFile, "%d\n", numGlobalCounters);
+  fprintf (histoFile, "%d\n", numHistogramsPerEvent);
   fprintf (histoFile, "%d\n", numBins);
-  for (int i=0; i<numGlobalCounters; i++) {
-    // this should be for each metric type.
-    fprintf (histoFile, "Exclusive %s\n", "TIME");
-    fprintf (histoFile, "Inclusive %s\n", "TIME");
+  for (int i=0; i<numCounters; i++) {
+    fprintf (histoFile, "Exclusive %s\n", tomNames[i]);
+    fprintf (histoFile, "Inclusive %s\n", tomNames[i]);
   }
   fprintf (histoFile, "Number of calls\n");
   fprintf (histoFile, "Child calls\n");
   
+  char **funcNames = &tomNames[numMetrics];
+
   for (int e=0; e<numEvents; e++) {
     fprintf(histoFile, "%s\n", funcNames[e]);
+    for (int m=0; m<numCounters; m++) {
+      int tomIdx = (e*numCounters + m)*TOM_NUM_VALUES;
+      int histIdx = e*numHistogramsPerEvent + m*2;
+      
+      fprintf(histoFile, "%.16G %.16G ", 
+	      mins[tomIdx+TOM_VAL_EXCL], maxes[tomIdx+TOM_VAL_EXCL]);
+      for (int b=0; b<numBins; b++) {
+	fprintf(histoFile, "%d ", 
+		histBins[(histIdx+TOM_VAL_EXCL)*numBins + b]);
+      }
+      fprintf(histoFile, "\n");
+      fprintf(histoFile, "%.16G %.16G ", 
+	      mins[tomIdx+TOM_VAL_INCL], maxes[tomIdx+TOM_VAL_INCL]);
+      for (int b=0; b<numBins; b++) {
+	fprintf(histoFile, "%d ", 
+		histBins[(histIdx+TOM_VAL_INCL)*numBins + b]);
+      }
+      fprintf(histoFile, "\n");
+    }
+    int tomIdx = e*numCounters*TOM_NUM_VALUES;
+    int histIdx = e*numHistogramsPerEvent + numCounters*2;
+    fprintf(histoFile, "%.16G %.16G ", 
+	    mins[tomIdx+TOM_VAL_CALL], maxes[tomIdx+TOM_VAL_CALL]);
+    for (int b=0; b<numBins; b++) {
+	fprintf(histoFile, "%d ", histBins[histIdx*numBins + b]);
+    }
+    fprintf(histoFile, "\n");
+    fprintf(histoFile, "%.16G %.16G ", 
+	    mins[tomIdx+TOM_VAL_SUBR], maxes[tomIdx+TOM_VAL_SUBR]);
+    for (int b=0; b<numBins; b++) {
+      fprintf(histoFile, "%d ", histBins[(histIdx+1)*numBins + b]);
+    }
+    fprintf(histoFile, "\n");
   }
   fclose(histoFile);
   rename(histFileNameTmp, histFileName);
+}
+
+void protocolClustering() {
+  // activate backends
+  // exchange information
+  // output
 }
 
 double ToM_getTimeOfDay() {

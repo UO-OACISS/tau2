@@ -12,7 +12,7 @@ extern "C" {
   // This is really a hack filter. Takes only the strings from
   //   Rank 0 since 0 gets the unified ordered-name list.
   const char *ToM_Name_Filter_format_string = 
-    "%d %as";
+    "%d %d %as";
 
   void ToM_Name_Filter(std::vector<PacketPtr>& pin,
 			std::vector<PacketPtr>& pout,
@@ -22,6 +22,7 @@ extern "C" {
 			const TopologyLocalInfo&) {
 
     int in_rank = -1;
+    int in_numMetrics = 0;
     char **in_name_strings;
     int in_num_strings = 0;
 
@@ -31,7 +32,7 @@ extern "C" {
       PacketPtr curr = pin[i];
       
       curr->unpack(ToM_Name_Filter_format_string, &in_rank, 
-		   &in_name_strings, &in_num_strings);
+		   &in_numMetrics, &in_name_strings, &in_num_strings);
 
       if (in_rank == 0) {
 	// done. break the loop and copy the data for this rank
@@ -43,6 +44,7 @@ extern "C" {
 
     if (in_rank != 0) {
       in_num_strings = 1;
+      in_numMetrics = 0;
       in_name_strings = (char **)malloc(sizeof(char *));
       in_name_strings[0] = (char *)malloc(sizeof(char));
       strcpy(in_name_strings[0],"");
@@ -50,7 +52,8 @@ extern "C" {
     PacketPtr new_packet (new Packet(pin[0]->get_StreamId(),
 				     pin[0]->get_Tag(),
 				     ToM_Name_Filter_format_string, 
-				     in_rank, in_name_strings,
+				     in_rank, in_numMetrics, 
+				     in_name_strings,
 				     in_num_strings));
 
     pout.push_back(new_packet);

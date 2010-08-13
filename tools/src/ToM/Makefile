@@ -12,7 +12,7 @@ MRNET_LIBS=
 #   because on some platforms like craycnl, the MRNet filters have to be
 #   built using g++ instead of CC. Consequently, because CXX is divorced
 #   from TAU's, CXXFLAGS cannot also make use of TAU's defintions.
-INSTALL_ROOT = ${LUSTRE_HOME}/software
+INSTALL_ROOT = ${HOME}/software
 CXX = g++
 CXXFLAGS = -O2 -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -Dcompiler_gnu -fno-default-inline $(TOM_EXTRA_DEF) $(INCLUDE)
 

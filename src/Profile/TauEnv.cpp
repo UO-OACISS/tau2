@@ -312,11 +312,11 @@ const char *TauEnv_get_metrics() {
   return env_metrics;
 }
 
-const char *TauEnv_get_profiledir() {
+extern "C" const char *TauEnv_get_profiledir() {
   return env_profiledir;
 }
 
-const char *TauEnv_get_tracedir() {
+extern "C" const char *TauEnv_get_tracedir() {
   return env_tracedir;
 }
 
