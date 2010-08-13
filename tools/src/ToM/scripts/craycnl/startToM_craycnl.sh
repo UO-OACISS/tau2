@@ -26,7 +26,7 @@ command=$*
 # For now, we are making it a requirement for PROFILEDIR to exist before
 #   this would work.
 export PROFILEDIR=$profiledir
-if [ ! -d $PROFILEDIR ]
+if [ ! -d $PROFILEDIR ] ; then
   export PROFILEDIR="."
 fi
 
