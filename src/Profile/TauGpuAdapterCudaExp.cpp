@@ -1,6 +1,7 @@
 #include "TauGpuAdapterCudaExp.h"
 #include<dlfcn.h>
-
+#include<stdio.h>
+#include<string.h>
 ToolsAPI gs_toolsapi;
 
 int global_thread_id=0;

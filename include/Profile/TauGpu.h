@@ -26,10 +26,6 @@ public:
 class eventId {
 
 };
-#else
-struct eventId;
-struct gpuId;
-#endif // __cplusplus
 
 /************************************************************************
  * Performance Hooks. The following routines are hooks into the executaion
@@ -37,34 +33,35 @@ struct gpuId;
  */
 
 /* Initialization to be executed at the start of the application */
- int Tau_gpu_init(void);
+extern "C" int Tau_gpu_init(void);
 
 /* Stuff to be performed at the end of the application */
- void Tau_gpu_exit(void);
+extern "C" void Tau_gpu_exit(void);
 
 /* Entry point for CPU routines */
- void Tau_gpu_enter_event(const char *functionName, eventId *id);
+extern "C" void Tau_gpu_enter_event(const char *functionName, eventId *id);
 
 /* Entry point for CPU routines that initiate a memory copy to the GPU */
- void Tau_gpu_enter_memcpy_event(const char *functionName, eventId *id,
+extern "C" void Tau_gpu_enter_memcpy_event(const char *functionName, eventId *id,
 gpuId *device, bool memcpyType);
 
 /* Exit point for CPU routines */
- void Tau_gpu_exit_event(const char *functionName, eventId *id);
+extern "C" void Tau_gpu_exit_event(const char *functionName, eventId *id);
 
 /* Exit point for CPU routines that initiate a memory copy to the GPU */
- void Tau_gpu_exit_memcpy_event(const char *functionName, eventId *id,
+extern "C" void Tau_gpu_exit_memcpy_event(const char *functionName, eventId *id,
 gpuId *device, bool memcpyType);
 
 /* Callback for a GPU event that occurred earlier in the execution of the
  * program. Times are pre-aligned to the CPU clock. */
- void Tau_gpu_register_gpu_event(const char *functionName, eventId *id, double startTime, double
+extern "C" void Tau_gpu_register_gpu_event(const char *functionName, eventId *id, double startTime, double
 endTime);
 
 /* Callback for a Memcpy event that occurred earlier in the execution of the
  * program. Times are pre-aligned to the CPU clock. */
- void Tau_gpu_register_memcpy_event(eventId *id, gpuId *device, double startTime, double
+extern "C" void Tau_gpu_register_memcpy_event(eventId *id, gpuId *device, double startTime, double
 endTime, int transferSize, bool memcpyType);
 
+#endif // __cplusplus
 #endif // _TAU_GPU_INTERFACE
 

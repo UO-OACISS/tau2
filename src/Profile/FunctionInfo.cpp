@@ -54,13 +54,6 @@ using namespace std;
 #include <Profile/TauTrace.h>
 #include <Profile/TauInit.h>
 #include <Profile/TauUtil.h>
-<<<<<<< HEAD:src/Profile/FunctionInfo.cpp
-
-map<long int, SILC_RegionHandle> regionMap;
-
-map<long int, SILC_RegionHandle> regionMap;
-=======
->>>>>>> bf51ce2a5cbc1beda88529267d9daf63e78bec7e:src/Profile/FunctionInfo.cpp
 
 //////////////////////////////////////////////////////////////////////
 // The purpose of this subclass of vector is to give us a chance to execute
