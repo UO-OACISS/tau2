@@ -305,7 +305,7 @@ void protocolUnify() {
   //   Rank 0 after MPI-based unification.
   int numRecvEvents;
   p->unpack("%as", &eventNames, &numRecvEvents);
-  printf("FE: numEvents %d, receivedEvents %d\n", numEvents, numRecvEvents);
+  //  printf("FE: numEvents %d, receivedEvents %d\n", numEvents, numRecvEvents);
   assert(numRecvEvents == numEvents);
 }
 
@@ -393,9 +393,10 @@ void protocolBaseStats() {
     }
   }
   */
+  char **funcNames = &tomNames[numMetrics];
   for (int evt=0; evt<numEvents; evt++) {
-    //printf("FE: [event %d]\n", evt);
-    //    printf("FE: [%s]\n", eventNames[evt]);
+    // printf("FE: [event %d]\n", evt);
+    //    printf("FE: [%s]\n", funcNames[evt]);
     for (int ctr=0; ctr<numCounters; ctr++) {
       for (int i=0; i<TOM_NUM_VALUES; i++) {
 	int aIdx = 
@@ -415,14 +416,14 @@ void protocolBaseStats() {
 	       (((2*contrib_means[aIdx])/numContrib[evt])*sums[aIdx]) +
 	       (contrib_means[aIdx]*contrib_means[aIdx]));
 	/*
-	  printf("FE: Counter %d\n", ctr);
-	  printf("FE: mean:%f stddev:%f cmean:%f cstddev:%f\n",
-	  means[aIdx], std_devs[aIdx],
-	  contrib_means[aIdx], contrib_std_devs[aIdx]);
-	  printf("    sum:%f min:%f max:%f\n",
-	  sums[aIdx], mins[aIdx], maxes[aIdx]);
-	  fflush(stdout);
+	printf("FE: Counter %d\n", ctr);
+	printf("FE: mean:%f stddev:%f cmean:%f cstddev:%f\n",
+	       means[aIdx], std_devs[aIdx],
+	       contrib_means[aIdx], contrib_std_devs[aIdx]);
+	printf("    sum:%f min:%f max:%f\n",
+	       sums[aIdx], mins[aIdx], maxes[aIdx]);
 	*/
+	fflush(stdout);
       }
     }
   }
@@ -435,7 +436,7 @@ void protocolBaseStats() {
   //   operations.
   if (broadcastResults) {
     int numValues = numEvents*numCounters*TOM_NUM_VALUES;
-    printf("FE: Broadcasting %d results back to BE\n", numValues);
+    //    printf("FE: Broadcasting %d results back to BE\n", numValues);
     STREAM_FLUSHSEND(statStream, PROT_BASESTATS,
 		     "%alf %alf %alf %alf", 
 		     means, numValues,
@@ -510,7 +511,7 @@ void protocolHistogram() {
 
   histStream = net->new_Stream(comm_BC, histogramFilterId);
 
-  // printf("FE: Instructing back-ends to bin with %d bins.\n",numBins);
+  //  printf("FE: Instructing back-ends to bin with %d bins.\n",numBins);
   STREAM_FLUSHSEND(histStream, PROT_HIST, "%d", numBins);
   histStream->recv(&tag, p);
   p->unpack("%ad", &histBins, &numDataItems);

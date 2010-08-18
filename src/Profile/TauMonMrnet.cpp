@@ -44,11 +44,8 @@ extern "C" int getTomFlattenedIdx(int numCounters, int numTypes,
   return evtIdx*numCounters*numTypes + ctrIdx*numTypes + typeIdx;
 }
 
-int calcCtrHistBinIdx(int tomIdx, int tomType, int numBins, 
-		      int numThreads, int ctr,
-		      FunctionInfo *fi, double *maxes, double *mins);
-int calcHistBinIdx(int tomIdx, int tomType, int numBins, int numThreads,
-	           FunctionInfo *fi, double *maxes, double *mins);
+int calcHistBinIdx(int tomIdx, int tomType, int numBins,
+	           double val, double *maxes, double *mins);
 
 // Back-end rank
 int rank;
@@ -370,20 +367,29 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
 			  threads, numGlobal,
 			  numThreads);
 
+      //      printf("Waiting for broadcast\n");
+
       // Get results of the protocol from the front-end.
       if (broadcastResults) {
 	int numMeans, numStdDevs, numMins, numMaxes;
+	/*
+	means = (double *)malloc(numGlobal*numCounters*TOM_NUM_VALUES*sizeof(double));
+	std_devs = (double *)malloc(numGlobal*numCounters*TOM_NUM_VALUES*sizeof(double));
+	mins = (double *)malloc(numGlobal*numCounters*TOM_NUM_VALUES*sizeof(double));
+	maxes = (double *)malloc(numGlobal*numCounters*TOM_NUM_VALUES*sizeof(double));
+	*/
 #ifdef MRNET_LIGHTWEIGHT
 	Network_recv(net, &protocolTag, p, &stream);
-	Packet_unpack(p, "%alf %alf",
+	Packet_unpack(p, "%alf %alf %alf %alf",
 		      &means, &numMeans, &std_devs, &numStdDevs,
 		      &mins, &numMins, &maxes, &numMaxes);
 #else /* MRNET_LIGHTWEIGHT */
         net->recv(&protocolTag, p, &stream);
-        p->unpack("%alf %alf",
+        p->unpack("%alf %alf %alf %alf",
                   &means, &numMeans, &std_devs, &numStdDevs,
                   &mins, &numMins, &maxes, &numMaxes);
 #endif /* MRNET_LIGHTWEIGHT */
+	//	printf("Received %d broadcast results\n",numMeans);
       }
       break;
     }
@@ -408,37 +414,50 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
 	histBins[i] = 0;
       }
 
+      //      printf("Starting Histogram operation\n");
       for (int evt=0; evt<numGlobal; evt++) {
 	FunctionInfo *fi = TheFunctionDB()[globalToLocal[evt]];
 	for (int ctr=0; ctr<numCounters; ctr++) {
 	  int tomIdx = (evt*numCounters + ctr)*TOM_NUM_VALUES;
 	  int histIdx = evt*numHistogramsPerEvent + ctr*2;
-	    
 	  if (globalToLocal[evt] != -1) {
 	    int binIdx;
-	    // Exclusive Time
-	    binIdx = calcCtrHistBinIdx(tomIdx, TOM_VAL_EXCL, numBins,
-				       numThreads, ctr, fi, maxes, mins);
-	    histBins[(histIdx+TOM_VAL_EXCL)*numBins+binIdx]++;
-	    // Inclusive Time
-	    binIdx = calcCtrHistBinIdx(tomIdx, TOM_VAL_INCL, numBins,
-				       numThreads, ctr, fi, maxes, mins);
-	    histBins[(histIdx+TOM_VAL_INCL)*numBins+binIdx]++;
+	    double val = 0.0;
+	    for (int tid=0; tid<numThreads; tid++) {
+	      // Exclusive Time
+	      val = fi->getDumpExclusiveValues(tid)[ctr];
+	      binIdx = calcHistBinIdx(tomIdx, TOM_VAL_EXCL, numBins,
+				      val, maxes, mins);
+	      histBins[(histIdx+TOM_VAL_EXCL)*numBins+binIdx]++;
+	      // Inclusive Time
+	      val = fi->getDumpInclusiveValues(tid)[ctr];
+	      binIdx = calcHistBinIdx(tomIdx, TOM_VAL_INCL, numBins,
+				      val, maxes, mins);
+	      histBins[(histIdx+TOM_VAL_INCL)*numBins+binIdx]++;
+	    }
 	  }
 	}
-	// plug in calls and subrs (applicable only to TIME)
-	int tomIdx = evt*numCounters*TOM_NUM_VALUES;
-	int histIdx = evt*numHistogramsPerEvent + numCounters*2;
-	int binIdx;
-	// Calls. *CWL* - find elegant way to deal with hardcoded offsets
-	binIdx = calcHistBinIdx(tomIdx, TOM_VAL_CALL, numBins, numThreads,
-				fi, maxes, mins);
-	histBins[(histIdx*numBins)+binIdx]++;
-	// Subrs
-	binIdx = calcHistBinIdx(tomIdx, TOM_VAL_SUBR, numBins, numThreads,
-				fi, maxes, mins);
-	histBins[((histIdx+1)*numBins)+binIdx]++;
+	if (globalToLocal[evt] != -1) {
+	  // plug in calls and subrs (applicable only to TIME)
+	  int tomIdx = evt*numCounters*TOM_NUM_VALUES;
+	  int histIdx = evt*numHistogramsPerEvent + numCounters*2;
+	  int binIdx;
+	  double val = 0.0;
+	  for (int tid=0; tid<numThreads; tid++) {
+	    // Calls. *CWL* - find elegant way to deal with hardcoded offsets
+	    val = fi->GetCalls(tid)*1.0;
+	    binIdx = calcHistBinIdx(tomIdx, TOM_VAL_CALL, numBins,
+				    val, maxes, mins);
+	    histBins[(histIdx*numBins)+binIdx]++;
+	    // Subrs
+	    val = fi->GetSubrs(tid)*1.0;
+	    binIdx = calcHistBinIdx(tomIdx, TOM_VAL_SUBR, numBins,
+				    val, maxes, mins);
+	    histBins[((histIdx+1)*numBins)+binIdx]++;
+	  }
+	}
       }
+      //      printf("Sending Histogram results\n");
       STREAM_FLUSHSEND_BE(stream, protocolTag, "%ad", histBins, 
 			  numItems*numBins);
       break;
@@ -555,66 +574,21 @@ void calculateStats(double *sum, double *sumofsqr,
   }
 }
 
-int calcCtrHistBinIdx(int tomIdx, int tomType, int numBins, int numThreads,
-		      int ctr, FunctionInfo *fi, double *maxes, double *mins) {
+int calcHistBinIdx(int tomIdx, int tomType, int numBins,
+		   double val, double *maxes, double *mins) {
   double range = 
     maxes[tomIdx+tomType] - mins[tomIdx+tomType];
   double interval = range/numBins;
-  // accumulate for threads but contribute as a node
-  for (int tid=0; tid<numThreads; tid++) {
-    double val;
-    switch (tomType) {
-    case TOM_VAL_EXCL: {
-      val = fi->getDumpExclusiveValues(tid)[ctr];
-      break;
-    }
-    case TOM_VAL_INCL: {
-      val = fi->getDumpInclusiveValues(tid)[ctr];
-      break;
-    }
-    }
-    int binIdx = 
-      (int)floor((val-mins[tomIdx+tomType])/interval);
-    // hackish way of dealing with rounding problems.
-    if (binIdx < 0) {
-      binIdx = 0;
-    }
-    if (binIdx >= numBins) {
-      binIdx = numBins-1;
-    }
-    return binIdx;
+  int binIdx = 
+    (int)floor((val-mins[tomIdx+tomType])/interval);
+  // hackish way of dealing with rounding problems.
+  if (binIdx < 0) {
+    binIdx = 0;
   }
-}
-
-int calcHistBinIdx(int tomIdx, int tomType, int numBins, int numThreads,
-		   FunctionInfo *fi, double *maxes, double *mins) {
-  double range = 
-    maxes[tomIdx+tomType] - mins[tomIdx+tomType];
-  double interval = range/numBins;
-  // accumulate for threads but contribute as a node
-  for (int tid=0; tid<numThreads; tid++) {
-    double val;
-    switch (tomType) {
-    case TOM_VAL_CALL: {
-      val = fi->GetCalls(tid)*1.0;
-      break;
-    }
-    case TOM_VAL_SUBR: {
-      val = fi->GetSubrs(tid)*1.0;
-      break;
-    }
-    }
-    int binIdx = 
-      (int)floor((val-mins[tomIdx+tomType])/interval);
-    // hackish way of dealing with rounding problems.
-    if (binIdx < 0) {
-      binIdx = 0;
-    }
-    if (binIdx >= numBins) {
-      binIdx = numBins-1;
-    }
-    return binIdx;
+  if (binIdx >= numBins) {
+    binIdx = numBins-1;
   }
+  return binIdx;
 }
 
 #ifdef MRNET_LIGHTWEIGHT
