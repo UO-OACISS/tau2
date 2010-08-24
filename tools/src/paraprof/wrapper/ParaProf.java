@@ -4,7 +4,13 @@ import jargs.gnu.CmdLineParser;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -16,7 +22,11 @@ import edu.uoregon.tau.common.TauScripter;
 import edu.uoregon.tau.paraprof.interfaces.EclipseHandler;
 import edu.uoregon.tau.paraprof.script.ParaProfScript;
 import edu.uoregon.tau.paraprof.sourceview.SourceManager;
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.DataSource;
+import edu.uoregon.tau.perfdmf.DataSourceExport;
+import edu.uoregon.tau.perfdmf.FileList;
+import edu.uoregon.tau.perfdmf.Node;
+import edu.uoregon.tau.perfdmf.UtilFncs;
 
 /**
  * ParaProf This is the 'main' for paraprof
@@ -44,7 +54,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    private final static String VERSION = "Mon Aug  2 19:02:12 PDT 2010";
+    private final static String VERSION = "Mon Aug  9 16:22:39 PDT 2010";
 
     public static int defaultNumberPrecision = 6;
 
@@ -71,7 +81,7 @@ public class ParaProf implements ActionListener {
     public static boolean usePathNameInTrial = false;
     public static FunctionBarChartWindow theComparisonWindow;
     public static boolean JNLP = false;
-    public static List scripts = new ArrayList();
+    public static List<ParaProfScript> scripts = new ArrayList<ParaProfScript>();
     public static String scriptFile;
 
     public static boolean insideEclipse;
@@ -79,6 +89,7 @@ public class ParaProf implements ActionListener {
     public static SourceManager directoryManager;
     public static String jarLocation;
     public static String schemaLocation;
+    private static String range;
 
     // static initializer block
     static {
@@ -116,6 +127,8 @@ public class ParaProf implements ActionListener {
                 + "                                    profiles (default), pprof, dynaprof, mpip,\n"
                 + "                                    gprof, psrun, hpm, packed, cube, hpc, ompp\n"
                 + "                                    snap, perixml, gptl, ipm\n"
+                + "  --range a-b:c                   Load only profiles from the given range(s) of processes\n"
+                + "                                    Seperate individual ids or dash-defined ranges with colons\n"
                 + "  -h, --help                      Display this help message\n" + "\n"
                 + "The following options will run only from the console (no GUI will launch):\n" + "\n"
                 + "  --merge <file.gz>               Merges snapshot profiles\n"
@@ -145,7 +158,11 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    public static void loadDefaultTrial() {
+    public static void loadDefaultTrial(){
+    	loadDefaultTrial(null);
+    }
+    
+    public static void loadDefaultTrial(String range) {
 
         // Create a default application.
         ParaProfApplication app = ParaProf.applicationManager.addApplication();
@@ -164,7 +181,7 @@ public class ParaProf implements ActionListener {
                     paraProfManagerWindow.addTrial(app, experiment, files, fileType, fixNames, monitorProfiles);
                 }
             } else {
-                paraProfManagerWindow.addTrial(app, experiment, sourceFiles, fileType, fixNames, monitorProfiles);
+                paraProfManagerWindow.addTrial(app, experiment, sourceFiles, fileType, fixNames, monitorProfiles, range);
             }
         } catch (java.security.AccessControlException ace) {
             // running as Java Web Start without permission
@@ -308,9 +325,9 @@ public class ParaProf implements ActionListener {
 
         ParaProf.colorMap.setMap(ParaProf.preferences.getAssignedColors());
 
-        List trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
-        for (Iterator it = trials.iterator(); it.hasNext();) {
-            ParaProfTrial ppTrial = (ParaProfTrial) it.next();
+        List<ParaProfTrial> trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
+        for (Iterator<ParaProfTrial> it = trials.iterator(); it.hasNext();) {
+            ParaProfTrial ppTrial = it.next();
             ParaProf.colorChooser.setColors(ppTrial, -1);
             ppTrial.updateRegisteredObjects("colorEvent");
             ppTrial.updateRegisteredObjects("prefEvent");
@@ -375,6 +392,7 @@ public class ParaProf implements ActionListener {
         CmdLineParser.Option jarLocationOpt = parser.addStringOption('j', "jardir");
         CmdLineParser.Option schemaLocationOpt = parser.addStringOption('c', "schemadir");
         CmdLineParser.Option controlOpt = parser.addBooleanOption('y', "control");
+        CmdLineParser.Option rangeOpt = parser.addStringOption('a', "range");
 
         try {
             parser.parse(args);
@@ -403,7 +421,11 @@ public class ParaProf implements ActionListener {
         Boolean control = (Boolean) parser.getOptionValue(controlOpt);
         ParaProf.jarLocation = (String) parser.getOptionValue(jarLocationOpt);
         ParaProf.schemaLocation = (String) parser.getOptionValue(schemaLocationOpt);
-
+        range = (String) parser.getOptionValue(rangeOpt);//TODO: Implement range value for profile input
+        if(range!=null&&fileTypeString==null){
+        	fileTypeString="profiles";
+        }
+        
         controlMode = control != null && control.booleanValue();
         demoMode = demo != null && demo.booleanValue();
 
@@ -547,7 +569,7 @@ public class ParaProf implements ActionListener {
             try {
 
                 FileList fl = new FileList();
-                List v = fl.helperFindProfiles(".");
+                List<File[]> v = fl.helperFindProfiles(".");
 
                 if (overwrite == null) {
                     if (v.size() != 0) {
@@ -584,7 +606,7 @@ public class ParaProf implements ActionListener {
                     try {
                         ParaProf.initialize();
                         ParaProf.loadScripts();
-                        ParaProf.loadDefaultTrial();
+                        ParaProf.loadDefaultTrial(range);
                     } catch (Exception e) {
                         ParaProfUtils.handleException(e);
                     }
