@@ -25,7 +25,7 @@ SOFLAGS = -fPIC -shared -rdynamic
 # Development definitions for ToM to build correctly
 BINARIES = ToM_FE
 TOM_FILTERS = ToM_Sync_Filter.so ToM_Stats_Filter.so ToM_Histogram_Filter.so \
-	ToM_Name_Filter.so
+	ToM_Name_Filter.so ToM_Cluster_Filter.so
 EXPR_FILTERS = ToM_Test_Filter.so ToM_StatsSingle_Filter.so 
 FILTERS = ${TOM_FILTERS} ${EXPR_FILTERS}
 
@@ -54,6 +54,9 @@ ToM_Name_Filter.so:	ToM_Name_Filter.cpp
 
 ToM_Histogram_Filter.so:	ToM_Histogram_Filter.cpp
 	$(CXX) $(CXXFLAGS) $(SOFLAGS) -o $@ ToM_Histogram_Filter.cpp ${INCLUDE}
+
+ToM_Cluster_Filter.so:	ToM_Cluster_Filter.cpp
+	$(CXX) $(CXXFLAGS) $(SOFLAGS) -o $@ ToM_Cluster_Filter.cpp ${INCLUDE}
 
 install: ${BINARIES} ${FILTERS}
 	cp ${BINARIES} ${INSTALL_ROOT}/bin/
