@@ -256,7 +256,7 @@ public class DeriveMetricsPane extends JScrollPane implements ActionListener {
    private JPanel createCreateExpressionMenu() {
       JPanel panel = new JPanel();
 
-      TitledBorder tb = BorderFactory.createTitledBorder("Create Dervied Metric Expression");
+      TitledBorder tb = BorderFactory.createTitledBorder("Create Derived Metric Expression");
       panel.setBorder(tb);
       panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
    
