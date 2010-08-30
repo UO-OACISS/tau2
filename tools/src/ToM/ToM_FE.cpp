@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <vector>
 #include <sys/time.h>
+#include <sys/stat.h>
 
 #include <stdint.h>
 #include <string.h>
@@ -55,6 +56,7 @@ int invocationIndex;
 // Timer variables
 double time_aggregate;
 double time_hist;
+double time_cluster;
 
 double ToM_getTimeOfDay();
 bool vectorModified(double *changeVector, int numK, int numEvents);
@@ -528,6 +530,11 @@ void protocolHistogram() {
 void protocolClustering() {
   Stream *clusterStream;
   int numK = 5; // default;
+
+  time_cluster = 0.0;
+  double start_cluster = ToM_getTimeOfDay();
+  double end_cluster;
+
   char *numKString = getenv("TOM_CLUSTER_K");
   if (numKString != NULL) {
     numK = atoi(numKString); // user specification
@@ -580,7 +587,7 @@ void protocolClustering() {
   int *choices = new int[numK];
   while (choiceCount < numK) {
     int choice = (int)(floor((rand()*1.0/RAND_MAX)*num_backends));
-    printf("Picking %d\n", choice);
+    // printf("Picking %d\n", choice);
     // paranoia
     assert((choice >= 0) && (choice < num_backends));
     if (nodeHash.count(choice) > 0) {
@@ -593,12 +600,13 @@ void protocolClustering() {
   }
 
   printf("FE: Random initial centroids determined.\n");
+  /*
   printf("[");
   for (int i=0; i<numK; i++) {
     printf("%d ", choices[i]);
   }
   printf("]\n");
-
+  */
   // broadcast the choices and receive the initial vectors
   //   from the designated participants. Results can return in the
   //   form of the standard change vector, but interpreted differently.
@@ -611,13 +619,14 @@ void protocolClustering() {
 	    &clusterCentroidVectors, &centroidDataLength,
 	    &clusterNumMembers, &numMember);
 
-  printf("FE: Received %d Initial Centroids\n", centroidDataLength);
-
+  // printf("FE: Received %d Initial Centroids\n", centroidDataLength);
+  /*
   for (int i=0; i<centroidDataLength; i++) {
     printf("%.16G ", clusterCentroidVectors[i]);
   }
   printf("\n");
-  
+  */
+
   // broadcast the initial cluster centroids reported by participants
   //   to everyone. These initial centroids have exactly 1 member, so
   //   there is no need for the vectors to be converted into actual
@@ -641,9 +650,9 @@ void protocolClustering() {
 	      &changeVector, &changeVectorDataLength, 
 	      &changeNumMembers, &numChangeNumMembers);
 
-    printf("FE: Cluster Iteration %d, received new change vector\n",
-	   iterationCount);
-
+    //    printf("FE: Cluster Iteration %d, received new change vector\n",
+    //	   iterationCount);
+    /*
     for (int i=0; i<changeVectorDataLength; i++) {
       printf("%.16G ",changeVector[i]);
     }
@@ -652,15 +661,16 @@ void protocolClustering() {
       printf("%d ",changeNumMembers[i]);
     }
     printf("\n");
-    
+    */
     if (!vectorModified(changeVector, numK, numEvents)) {
       stop = 1;
-      printf("FE: Informing Backends convergence attained\n");
+      printf("FE: Informing Backends convergence attained after %d steps\n",
+	     iterationCount+1);
       STREAM_FLUSHSEND(ctrl_stream, PROT_CLUST_KMEANS, "%d",
 		       stop);    
       ctrl_stream->recv(&tag, p);
       p->unpack("%d", &ackVal);
-      printf("FE: Backends acknowledged Convergence\n");
+      // printf("FE: Backends acknowledged Convergence\n");
       break;
     }
 
@@ -671,12 +681,12 @@ void protocolClustering() {
       bool populateK = false;
       if ((clusterNumMembers[k] == -changeNumMembers[k]) &&
 	  (changeNumMembers[k] < 0)) {
-	printf("FE: vacating %d\n", k);
+	// printf("FE: vacating %d\n", k);
 	vacateK = true;
       }
       if ((clusterNumMembers[k] == 0) &&
 	  (changeNumMembers[k] > 0)) {
-	printf("FE: populating %d\n", k);
+	// printf("FE: populating %d\n", k);
 	populateK = true;
       }
       clusterNumMembers[k] += changeNumMembers[k];
@@ -706,34 +716,43 @@ void protocolClustering() {
       }
     }
 
-    printf("FE: Informing Backends no convergence\n");
+    // printf("FE: Informing Backends no convergence\n");
     STREAM_FLUSHSEND(ctrl_stream, PROT_CLUST_KMEANS, "%d",
 		     stop);
     ctrl_stream->recv(&tag, p);
     p->unpack("%d", &ackVal);
-    printf("FE: Backends acknowledged No Convergence\n");
+    // printf("FE: Backends acknowledged No Convergence\n");
 
-    printf("FE: Broadcasting updated centroids\n");
+    iterationCount++;
+
+    // printf("FE: Broadcasting updated centroids\n");
     //   - broadcast updated centroids.
     STREAM_FLUSHSEND(clusterStream, PROT_CLUST_KMEANS, "%alf",
 		     clusterCentroids, numK*numItemsPerK);
     // Stop when modification vector is zero.
   } while (true);
 
+  // Get end timestamp here and calculate time_hist.
+  end_cluster = ToM_getTimeOfDay();
+  time_cluster = end_cluster - start_cluster;
+  printf("FE: Clustering took %.4G seconds\n", time_cluster/1000000.0f);
+
   // output profile fakery. K profiles are written per frame. The
   //   frame number is captured in the filename.
   FILE *clusterFile;
+  char clusterDirName[512];
   char clusterFileNameTmp[512];
   char clusterFileName[512];
   char clusterMeta[4096];
+  sprintf(clusterDirName, "%s/cluster_%d",profiledir, invocationIndex);
+  mkdir(clusterDirName,0755);
   for (int k=0; k<numK; k++) {
-    sprintf(clusterFileNameTmp, "%s/.temp.cluster_%d.%d.0.0",profiledir,
-	    invocationIndex, k);
-    sprintf(clusterFileName, "%s/cluster_%d.%d.0.0",profiledir, 
-	    invocationIndex, k);
-    sprintf(clusterMeta,"<attribute><name>%s</name><value>%.4G seconds</value></attribute><attribute><name>%s</name><value>%d</value></attribute>",
-	    "Cluster Aggregation Time",time_aggregate/1000000.0f,
-	    "cluster-membership", clusterNumMembers[k]);
+    sprintf(clusterFileNameTmp, "%s/.temp.profile.%d.0.0",clusterDirName,k);
+    sprintf(clusterFileName, "%s/profile.%d.0.0",clusterDirName,k);
+    sprintf(clusterMeta,"<attribute><name>%s</name><value>%.4G seconds</value></attribute><attribute><name>%s</name><value>%d</value></attribute><attribute><name>%s</name><value>%d</value></attribute>",
+	    "Clustering Time",time_cluster/1000000.0f,
+	    "cluster-membership", clusterNumMembers[k],
+	    "Clustering Convergence Steps", iterationCount);
     FILE *clusterFile = fopen(clusterFileNameTmp,"w");
     fprintf(clusterFile, "%d templated_functions_MULTI_TIME\n", numEvents);
     fprintf(clusterFile, "# Name Calls Subrs Excl Incl ProfileCalls % <metadata><attribute><name>TAU Monitoring Transport</name><value>MRNet</value></attribute>%s</metadata>\n",

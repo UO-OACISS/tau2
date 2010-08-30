@@ -31,10 +31,10 @@ extern "C" {
 		     &changeVector, &numCentroidItems,
 		     &changeMembers, &numMemberItems);
       } else {
-	// sanity check
 	curr->unpack(ToM_Cluster_Filter_format_string,
 		     &in_changeVector, &in_numCentroidItems,
 		     &in_changeMembers, &in_numMemberItems);
+	// sanity check
 	assert((in_numCentroidItems == numCentroidItems) &&
 	       (in_numMemberItems == numMemberItems));
 	for (int i=0; i<in_numCentroidItems; i++) {

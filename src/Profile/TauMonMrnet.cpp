@@ -506,6 +506,8 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
       p->unpack("%ad", &choices, &numInItems);
 #endif /* MRNET_LIGHTWEIGHT */
 
+      //      int testRank = 7;
+
       // Decide if I am one of the selected k participants.
       myK = -1;  // out-of-band value
       newK = -1;
@@ -515,6 +517,12 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
 	}
       }
 
+      /*
+      if (rank == testRank) {
+	printf("[%d] I am chosen as centroid for cluster %d\n", rank, myK);
+      }
+      */
+
       // Update change vectors. This special initial case handles myK
       //   as out-of-band values. Note that numMembers does not matter
       //   in this case, so set all values to 0.
@@ -523,11 +531,30 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
       for (int k=0; k<numK; k++) {
 	numMembers[k] = 0;
 	for (int evt=0; evt<numGlobal; evt++) {
-	  changeVectors[k*numGlobal+evt] =
-	    (myK == k) ? myVectors[evt] : 0.0;
+	  changeVectors[k*numGlobal+evt] = 0.0;
 	}
       }
-      
+      // I was chosen
+      if (myK != -1) {
+	for (int evt=0; evt<numGlobal; evt++) {
+	  changeVectors[myK*numGlobal+evt] = myVectors[evt];
+	}
+      }
+
+      /*      
+      if (rank == testRank) {
+	printf("[%d] My Change contribution: ", rank);
+	for (int i=0; i<numK*numItemsPerK; i++) {
+	  printf("%.16G ", changeVectors[i]);
+	}
+	printf("\n");
+	for (int i=0; i<numK*numItemsPerEvent; i++) {
+	  printf("%d ", numMembers[i]);
+	}
+	printf("\n");
+      }
+      */
+
       // Report change vectors back to root.
       STREAM_FLUSHSEND_BE(stream, protocolTag, "%alf %ad", 
 			  changeVectors, numK*numItemsPerK,
@@ -549,7 +576,7 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
 	// sanity check
 	assert(numInItems == dataLength);
 
-	int testRank = 2;
+	/*
 	if (rank == testRank) {
 	  printf("[%d] Centroids = ", rank);
 	  for (int i=0; i<numInItems; i++) {
@@ -562,6 +589,7 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
 	  }
 	  printf("\n");
 	}
+	*/
 
 	// decide which k the node's vector belongs to.
 	double minDist = 0.0;
@@ -578,9 +606,11 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
 	      newK = k;
 	    }
 	  }
+	  /*
 	  if (rank == testRank) {
 	    printf("Curr %d: %.16G newK=%d\n",k, distance, newK);
 	  }
+	  */
 	}
 	
 	// Update change vectors.
@@ -607,6 +637,7 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
 	  }
 	}
 
+	/*
 	if (rank == testRank) {
 	  printf("[%d] My Change contribution: ", rank);
 	  for (int i=0; i<numK*numItemsPerK; i++) {
@@ -618,6 +649,7 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
 	  }
 	  printf("\n");
 	}
+	*/
 
 	// modify myK
 	myK = newK;
