@@ -175,8 +175,10 @@ public class DrawMetadataGraph extends AbstractPerformanceOperation {
 
 	  
 	    metadatavalues = getclusterData(input.getTrial());
+	    int i= 0;
 	    for(Double c: metadatavalues){
-		dataset.addValue(c, "Threads", metadatavalues.indexOf(c)+"");
+		dataset.addValue(c, "Threads", i+"");
+		i++;
 	    }
 
 
