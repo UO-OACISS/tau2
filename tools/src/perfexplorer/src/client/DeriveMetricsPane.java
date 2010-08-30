@@ -18,6 +18,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import java.util.Enumeration;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Scanner;
@@ -40,7 +41,10 @@ import javax.swing.border.TitledBorder;
 import javax.swing.plaf.basic.BasicComboPopup;
 import javax.swing.plaf.basic.ComboPopup;
 import javax.swing.plaf.metal.MetalComboBoxUI;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
 
+import edu.uoregon.tau.common.PythonInterpreterFactory;
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Metric;
@@ -736,7 +740,20 @@ public class DeriveMetricsPane extends JScrollPane implements ActionListener {
          if(selectExp != null)  ex = selectExp.getName();
          if(selectTrial != null)  trial = selectTrial.getName();
          script = exp.getScriptFromExpressions(app,ex,trial,expressions);   
-         new ScriptThread(script,true);
+         PythonInterpreterFactory.defaultfactory.getPythonInterpreter().exec(script);
+         
+	 PerfExplorerJTree tree = PerfExplorerJTree.getTree();
+	 TreePath path = tree.getSelectionPath();
+	 TreeNode node = (TreeNode)path.getLastPathComponent();
+	 if(((PerfExplorerTreeNode)node.getParent()).getUserObject() instanceof Experiment){
+	     tree.collapsePath(path);
+	     tree.collapsePath(path.getParentPath());
+	     //tree.expandToMetricsAll(path.getParentPath());
+	     expandExp(path.getParentPath(), ((Trial)((PerfExplorerTreeNode)node).getUserObject()).getName());
+ 
+	 }else{
+	 tree.expandToMetricsAll(path);
+	 }
       }catch(ParsingException ex){
 
          JOptionPane.showMessageDialog(this, 
@@ -744,4 +761,30 @@ public class DeriveMetricsPane extends JScrollPane implements ActionListener {
                "Parse Error", JOptionPane.ERROR_MESSAGE);
       }
    }
+
+private void expandExp(TreePath parentPath, String name) {
+    PerfExplorerJTree tree = PerfExplorerJTree.getTree();
+    TreeNode node = (TreeNode)parentPath.getLastPathComponent();
+	if(((PerfExplorerTreeNode)node).getUserObject() instanceof Metric){
+	    return;
+	}else if(((PerfExplorerTreeNode)node).getUserObject() instanceof Experiment){
+	   // collapsePath(parent);
+	}
+	    tree.expandPath(parentPath);
+
+
+	if (node.getChildCount() >= 0) {
+	    
+	    for (Enumeration e=node.children(); e.hasMoreElements(); ) {
+		TreeNode n = (TreeNode)e.nextElement();
+		if(((PerfExplorerTreeNode)n).getUserObject() instanceof Trial){
+		   Trial t = (Trial) ((PerfExplorerTreeNode)n).getUserObject() ; 
+		   if(t.getName().equals(name)){
+		       TreePath path = parentPath.pathByAddingChild(n);
+		       tree.expandToMetricsAll(path);
+		   }
+		}
+	    }
+	}
+}
 }
