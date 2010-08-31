@@ -170,7 +170,7 @@ extern "C" int Tau_init_initializeTAU() {
 #ifdef TAU_SILC
   /* no more initialization necessary if using SILC */
   initialized = 1;
-  SILC_InitMeasurement();
+  SILC_Tau_InitMeasurement();
   return 0;
 #endif
 
