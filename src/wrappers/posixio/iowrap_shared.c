@@ -1148,7 +1148,7 @@ int socketpair(int d, int type, int protocol, int sv[2]) {
   return ret;
 }
 
-#ifndef TAU_BGP
+#if (!(defined(TAU_BGP) || defined(TAU_XLC)))
 /*********************************************************************
  * bind 
  ********************************************************************/
@@ -1445,7 +1445,7 @@ ssize_t recvfrom (int fd, void *buf, size_t count, int flags, struct sockaddr *f
   return ret;
 }
 #endif /* _AIX */
-#endif /* TAU_BGP */
+#endif /* !(TAU_BGP || TAU_XLC) */
 
 /*********************************************************************
  * dup

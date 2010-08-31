@@ -13,7 +13,7 @@ extern "C" {
   //      2. There are k counters.
   //   For each counter, we have 1 set of statistics.
   const char *ToM_Stats_Filter_format_string = 
-    "%d %d %alf %alf %alf %alf %ad %d";
+    "%d %d %alf %alf %alf %alf %d";
 
   // Get Sum, Sum of Squares, Count, Min and Max
   //    - Avg, Variance, Std Dev can be derived from these values.
@@ -30,7 +30,6 @@ extern "C" {
     double *sumsofsqr;
     double *mins;
     double *maxes;
-    int *activeThreads;
     int totalThreads = 0;
 
     int numEvents = 0;
@@ -51,22 +50,20 @@ extern "C" {
       int in_mins_len = 0;
       double *in_maxes;
       int in_maxes_len= 0;
-      int *in_activethreads;
-      int in_active_len = 0;
       int in_totalThreads = 0;
 
       curr->unpack(ToM_Stats_Filter_format_string, &in_events, &in_counters,
 		   &in_sums, &in_sums_len, &in_sumsofsqr, &in_sumsofsqr_len,
 		   &in_mins, &in_mins_len, &in_maxes, &in_maxes_len,
-		   &in_activethreads, &in_active_len, &in_totalThreads);
+		   &in_totalThreads);
 
       // local sanity check
-      int in_items = in_events*in_counters;
+      int in_items = 
+	in_events*(in_counters*TOM_NUM_CTR_VAL+TOM_NUM_FUN_VAL);
       assert((in_items == in_sums_len) &&
 	     (in_items == in_sumsofsqr_len) &&
 	     (in_items == in_mins_len) &&
 	     (in_items == in_maxes_len) &&
-	     (in_items == in_active_len) &&
 	     (in_items > 0));
       
       if (i == 0) {
@@ -74,56 +71,35 @@ extern "C" {
 	sumsofsqr = in_sumsofsqr;
 	mins = in_mins;
 	maxes = in_maxes;
-	activeThreads = in_activethreads;
 
 	numEvents = in_events;
 	numCounters = in_counters;
 	numItems = in_items;
-
-	/* DEBUG 
-	printf("COMM: Incoming item:\n");
-	for (int evt=0; evt<numEvents; evt++) {
-	  for (int ctr=0; ctr<numCounters; ctr++) {
-	    int aIdx = evt*numCounters+ctr;
-	    printf("COMM [%d,%d] %f %f %f %f %d\n", evt, ctr,
-		   sums[aIdx], sumsofsqr[aIdx], mins[aIdx], maxes[aIdx],
-		   activeThreads[evt]);
-	  }
-	}
-	*/
       } else {
 	// global sanity check
 	assert((numEvents == in_events) &&
 	       (numCounters == in_counters));
 	for (int evt=0; evt<numEvents; evt++) {
 	  for (int ctr=0; ctr<numCounters; ctr++) {
-	    int aIdx = evt*numCounters+ctr;
-	    sums[aIdx] += in_sums[aIdx];
-	    sumsofsqr[aIdx] += in_sumsofsqr[aIdx];
-	    if (mins[aIdx] > in_mins[aIdx]) {
-	      mins[aIdx] = in_mins[aIdx];
-	    }
-	    if (maxes[aIdx] < in_maxes[aIdx]) {
-	      maxes[aIdx] = in_maxes[aIdx];
+	    for (int i=0; i<TOM_NUM_VALUES; i++) {
+	      int aIdx = 
+		evt*numCounters*TOM_NUM_VALUES+
+		ctr*TOM_NUM_VALUES+
+		i;
+	      sums[aIdx] += in_sums[aIdx];
+	      sumsofsqr[aIdx] += in_sumsofsqr[aIdx];
+	      if (mins[aIdx] > in_mins[aIdx]) {
+		mins[aIdx] = in_mins[aIdx];
+	      }
+	      if (maxes[aIdx] < in_maxes[aIdx]) {
+		maxes[aIdx] = in_maxes[aIdx];
+	      }
 	    }
 	  }
-	  activeThreads[evt] += in_activethreads[evt];
 	}
       }
       totalThreads += in_totalThreads;
     }
-
-    /* DEBUG 
-    printf("COMM: Outgoing item:\n");
-    for (int evt=0; evt<numEvents; evt++) {
-      for (int ctr=0; ctr<numCounters; ctr++) {
-	int aIdx = evt*numCounters+ctr;
-	printf("COMM [%d,%d] %f %f %f %f %d\n", evt, ctr,
-	       sums[aIdx], sumsofsqr[aIdx], mins[aIdx], maxes[aIdx],
-	       activeThreads[evt]);
-      }
-    }
-    */
 
     PacketPtr new_packet (new Packet(pin[0]->get_StreamId(),
 				     pin[0]->get_Tag(),
@@ -133,7 +109,6 @@ extern "C" {
 				     sumsofsqr, numItems,
 				     mins, numItems,
 				     maxes, numItems,
-				     activeThreads, numEvents,
 				     totalThreads));
 
     pout.push_back(new_packet);

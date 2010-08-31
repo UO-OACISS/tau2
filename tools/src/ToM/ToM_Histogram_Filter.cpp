@@ -17,6 +17,7 @@ extern "C" {
 			    const TopologyLocalInfo&) {
     int numDataItems;
     int *histBins;
+
     for (int i=0; i<pin.size(); i++) {
       PacketPtr curr = pin[i];
 

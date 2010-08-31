@@ -23,8 +23,12 @@ shift
 #command (rest of the arguments)
 command=$*
 
+# For now, we are making it a requirement for PROFILEDIR to exist before
+#   this would work.
 export PROFILEDIR=$profiledir
-echo $PROFILEDIR
+if [ ! -d $PROFILEDIR ] ; then
+  export PROFILEDIR="."
+fi
 
 mrnethostfile=$PROFILEDIR/mrnethosts.txt
 hostfile=$PROFILEDIR/tophosts.txt
@@ -46,6 +50,7 @@ export MRNET_DEBUG_LOG_DIRECTORY="${logdir}"
 # XPLAT_RESOLVE_HOSTS=0 is essential for Cray CNL operations.
 export XPLAT_RESOLVE_HOSTS=0
 
+# CRAY CNL requires the front-end to be rooted at a login node.
 cat /proc/cray_xt/nid | awk '{printf("nid%05u\n", $1); }' > $hostfile
 
 cat $mrnethostfile >> $hostfile
