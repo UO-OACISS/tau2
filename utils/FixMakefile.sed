@@ -78,4 +78,5 @@ s@^MRNET_ROOT=\(.*\)@MRNET_ROOT=@g
 s@^MRNET_LW_OPTS=\(.*\)@MRNET_LW_OPTS=@g
 s@^MRNET_INCLUDE=\(.*\)@MRNET_INCLUDE=@g
 s@^MRNET_LIBS=\(.*\)@MRNET_LIBS=@g
+s@^TAU_GPU_INC=\(.*\)@TAU_GPU_INC=@g
 

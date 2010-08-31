@@ -309,15 +309,16 @@ $(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS) $(MPI_WRAPPER) $(TAU_FORCE_MPI) 
 		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_SHLIB) $(OBJS) $(SHARED_OBJS) $(SHARED_LIBS) $(EXTRAOBJS) $(TAU_MPI_FOR_SHARED) $(EXTRA_LIBS) $(LEXTRA1) $(TAU_PAPI_EXTRA_FLAGS) $(TAU_EXTRA_LIBRARY_FLAGS) $(TAUEXTRASHLIBOPTS)
 		$(TAU_CREATE_SYMLINKS)
 
-$(TAU_NULL)$(TAU_GPU_LIB): $(TAU_GPU_OBJS)
+$(TAU_NULL)$(TAU_GPU_LIB): $(TAU_GPU_OBJS) $(TAU_DSO)
 		$(PRELINK_PHASE)
-		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_SHLIB) $(TAU_GPU_OBJS) -o $(TAU_GPU_LIB) \
-		-L$(TAU_LIB_DIR) -lTAU 
+		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_GPU_LIB) $(TAU_GPU_OBJS) \
+		-L$(TAU_LIB_DIR) $(TAU_DSO)
 		$(TAU_RANLIB) $(TAU_GPU_LIB)
 
 $(TAU_DISABLE): TauDisable.o $(TAU_DISABLE_SHARED) TauKojakOpariDisable.o
 		$(AR) $(ARFLAGS) $(TAU_DISABLE) TauDisable.o TauKojakOpariDisable.o
 		$(TAU_RANLIB) $(TAU_DISABLE)
+		$(TAU_CREATE_SYMLINKS)
 
 $(TAU_DISABLE_SHARED) : TauDisable.o TauKojakOpariDisable.o
 		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_DISABLE_SHARED) TauDisable.o TauKojakOpariDisable.o
@@ -366,10 +367,10 @@ $(INSTALLDEST)/libTauShmem$(TAU_CONFIG)$(LSX): libTauShmem$(TAU_CONFIG)$(LSX)
 		$(MAKE) -f Makefile.shmem install 
 
 $(INSTALLDEST)/$(TAU_GPU_LIB): $(TAU_GPU_LIB)
-		@echo Installing $? in $(INSTALLDEST)
-		@if [ -d $(INSTALLDEST) ] ; then true; \
-                   else mkdir $(INSTALLDEST) ;fi
-		$(TAU_INSTALL) $? $(INSTALLDEST)
+		@echo Installing $? in $(TAU_SHAREDDIR)
+		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
+                   else mkdir $(TAU_SHAREDDIR) ;fi
+		$(TAU_INSTALL) $? $(TAU_SHAREDDIR)
 
 $(TAU_JAVA_INSTALLDIR)/Profile.class: Profile.class
 		@echo Installing $? in $(TAU_JAVA_INSTALLDIR)
