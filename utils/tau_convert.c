@@ -1823,11 +1823,12 @@ int main (int argc, char *argv[])
       fprintf(pcffp,"LOOK_BACK           100\n");
       fprintf(pcffp,"SPEED               1\n");
       fprintf(pcffp,"FLAG_ICONS          ENABLED\n");
-      fprintf(pcffp,"NUM_OF_STATE_COLORS 1\n");
+      fprintf(pcffp,"NUM_OF_STATE_COLORS 1000\n");
       fprintf(pcffp,"YMAX_SCALE          %d\n\n\n",intrc.numrec);
       fprintf(pcffp,"DEFAULT_SEMANTIC\n\n");
-      fprintf(pcffp,"COMPOSE1_FUNC       As Is\n");
-      fprintf(pcffp,"THREAD_FUNC         Last Evt Val\n\n\n");
+      //fprintf(pcffp,"COMPOSE1_FUNC       As Is\n");
+      //fprintf(pcffp,"THREAD_FUNC         Last Evt Val\n\n\n");
+      fprintf(pcffp,"THREAD_FUNC         State As Is\n\n\n");
       fprintf(pcffp,"STATES\n");
       fprintf(pcffp,"0    Idle\n");
       fprintf(pcffp,"1    Running\n");
@@ -2187,13 +2188,13 @@ int main (int argc, char *argv[])
 				  }
 
                   //printf("1:%d:1:%d:%d:%llu:%llu:5 %s EXIT\n",  // back to running state
-                  fprintf(outfp,"1:%d:1:%d:%d:%llu:%llu:%d\n",  // FIX ME! SOMETHING MORE MEANINGFUL THAN 0 (idle)
+                  fprintf(outfp,"1:%d:1:%d:%d:%llu:%llu:%d\n",  
 			          (event_GetNid(&intrc,erec,0))+1, // cpu_id
 				      (event_GetNid(&intrc,erec,0))+1, // task_id
 				      (event_GetTid(&intrc,erec,0))+1, // thread_id
 					  // FIX ME!  This code assmes all nodes have the same number of threads
 				      currentTime[index], // begin_time
-				      event_GetTi(&intrc,erec,0), 0); // end_time
+				      event_GetTi(&intrc,erec,0), eventState); // end_time
 				  currentTime[index] = event_GetTi(&intrc,erec,0);
 				}
 			  }
