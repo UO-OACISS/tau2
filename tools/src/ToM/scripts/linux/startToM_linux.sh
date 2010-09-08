@@ -47,7 +47,7 @@ export MRNET_OUTPUT_LEVEL=1
 export MRNET_DEBUG_LOG_DIRECTORY="${logdir}"
 
 # generate the MRNet topology
-mrnet_topgen -k $fanout@$numTreeNodes $hostfile $topfile
+mrnet_topgen -k $fanout@$numTreeNodes $mrnethostfile $topfile
 
 # feed generated topology file to the designated front-end
 $feName $topfile $numBE &

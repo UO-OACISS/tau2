@@ -539,6 +539,11 @@ void protocolClustering() {
   if (numKString != NULL) {
     numK = atoi(numKString); // user specification
   }
+  if (numK > num_backends) {
+    numK = num_backends;
+    printf("FE: Warning - K larger than number of backends %d. Set to %d\n", 
+	   num_backends, numK);
+  }
   printf("FE: Start Clustering with K=%d\n",numK);
 
   // We are clustering across functions only. It might
