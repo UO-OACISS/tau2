@@ -18,6 +18,7 @@
 #include <TAU.h>
 #include <Profile/TauInit.h>
 #include <Profile/TauIoWrap.h>
+#include <stdio.h>
 
 #include <vector>
 using namespace std;
@@ -87,8 +88,15 @@ extern "C" void Tau_iowrap_registerEvents(int fid, const char *pathname) {
       }
     }
     void *event = 0;
+#ifdef TAU_PGI
+    char ename[1024];
+    sprintf(ename,"%s <file=%s>", iowrap_event_names[i], pathname);
+    Tau_get_context_userevent(&event, (char*)ename);
+#else
     string name = string(iowrap_event_names[i]) + " <file=\"" + pathname + "\">";
     Tau_get_context_userevent(&event, strdup((char*)name.c_str()));
+#endif /* TAU_PGI */
+
     TheIoWrapEvents()[i][fid] = (TauUserEvent*)event;
   }
   dprintf ("Registering %d with %s\n", fid-1, pathname);
