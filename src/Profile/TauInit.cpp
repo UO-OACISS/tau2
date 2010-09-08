@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
+#include <unistd.h>
 
 #include <Profile/TauEnv.h>
 #include <Profile/TauMetrics.h>
@@ -226,6 +227,9 @@ extern "C" int Tau_init_initializeTAU() {
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init(0);
   }
+#ifdef TAU_PGI
+  sbrk(102400);
+#endif /* TAU_PGI */
 
   Tau_global_decr_insideTAU();
   return 0;
