@@ -108,7 +108,9 @@ void Tau_metadata_register(char *name, int value) {
 }
 
 void Tau_metadata_register(char *name, const char *value) {
+  Tau_global_incr_insideTAU();
   Tau_metadata(name, value);
+  Tau_global_decr_insideTAU();
 }
 
 
@@ -119,6 +121,7 @@ int Tau_metadata_fillMetaData() {
     return 0;
   }
   filled = 1;
+
 
 #ifdef TAU_WINDOWS
   const char *timeFormat = "%I64d";
