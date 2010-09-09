@@ -132,6 +132,10 @@ pid_t fork(void) {
   if (pid_ret == 0) {
     TAU_REGISTER_FORK(getpid(), TAU_EXCLUDE_PARENT_DATA);
 
+   int catch_fork = TauEnv_get_child_forkdirs();
+   if(catch_fork!=0)
+   {
+
      int flag=0;
      if(TauEnv_get_profiledir() != (char *)NULL){
         sprintf(newdirname, "%s/tau_child_data_%d",TauEnv_get_profiledir(),getpid());
@@ -150,7 +154,9 @@ pid_t fork(void) {
 
     setenv("PROFILEDIR",newdirname,1);
     setenv("TRACEDIR",newdirname,1);
+   }
     dprintf ("[%d] Registered Fork!\n", getpid());
+   
   }
   return pid_ret;
 
