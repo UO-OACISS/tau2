@@ -198,6 +198,13 @@ extern "C" void Tau_mon_disconnect() {
   }
   // Tell front-end to tear down network and exit
   STREAM_FLUSHSEND_BE(ctrl_stream, TOM_CONTROL, "%d", TOM_EXIT);
+#ifdef MRNET_LIGHTWEIGHT
+  Network_waitfor_ShutDown(net);
+  delete_Network_t(net);
+#else /* MRNET_LIGHTWEIGHT */
+  net->waitfor_ShutDown();
+  delete net;
+#endif /* MRNET_LIGHTWEIGHT */
 }
 
 extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {

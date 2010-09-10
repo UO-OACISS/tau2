@@ -35,7 +35,8 @@ hostfile=$PROFILEDIR/tophosts.txt
 topfile=$PROFILEDIR/topology.txt
 logdir=$PROFILEDIR/mrnlog
 
-# clear the atomic file before proceeding.                                      
+# clear the atomic file before proceeding.
+
 rm -f $PROFILEDIR/ToM_FE_Atomic
 mkdir -p $logdir
 
@@ -47,7 +48,7 @@ export MRNET_OUTPUT_LEVEL=1
 export MRNET_DEBUG_LOG_DIRECTORY="${logdir}"
 
 # generate the MRNet topology
-mrnet_topgen -k $fanout@$numTreeNodes $mrnethostfile $topfile
+mrnet_topgen -h $mrnethostfile -o $topfile -t k:$fanout@$numTreeNodes
 
 # feed generated topology file to the designated front-end
 $feName $topfile $numBE &
