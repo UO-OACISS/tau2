@@ -1,7 +1,7 @@
 This example shows the use of PAPI Hardware Performance Counters API with 
 pthreads and TAU. It has been tested under Linux. 
 
-% setenv PAPI_EVENT PAPI_FP_INS
+% setenv TAU_METRICS TIME:PAPI_FP_INS
 % make; simple
 % pprof
 

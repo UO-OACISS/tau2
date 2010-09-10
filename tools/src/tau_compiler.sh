@@ -620,7 +620,7 @@ for arg in "$@" ; do
 		groupType=$group_upc
                 ;;
 
-	    *.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95)
+	    *.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95|*.for)
 		fileName=$arg
 		arrFileName[$numFiles]=$arg
 		arrFileNameDirectory[$numFiles]=`dirname $arg`
@@ -922,6 +922,10 @@ while [ $tempCounter -lt $numFiles ]; do
 	if [ "x$defaultParser" = "xcxxparse" -a "x$suf" = "x.c" ] ; then
             newFile=${arrFileName[$tempCounter]}.pdb
 	fi
+        if [ "x$groupType" = "x$group_f_F" -a "x$suf" = "x.for" ] ; then
+            newFile=${arrFileName[$tempCounter]}.pdb
+        fi
+
     else
 	newFile=$optPDBFile; 
     fi

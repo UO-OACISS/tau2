@@ -49,6 +49,7 @@ extern "C" {
   int  TAUDECL TauEnv_get_ebs_enabled();
   int  TAUDECL TauEnv_get_ebs_frequency();
   int  TAUDECL TauEnv_get_ebs_inclusive();
+  int  TAUDECL TauEnv_get_child_forkdirs();
 
   const char* TAUDECL TauEnv_get_ebs_source();
   double      TAUDECL TauEnv_get_throttle_numcalls();
