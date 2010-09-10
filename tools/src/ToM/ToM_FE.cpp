@@ -20,6 +20,7 @@ Communicator *comm_BC;
 
 Stream *ctrl_stream;
 
+int num_callbacks;
 int num_backends;
 
 int unifyFilterId;
@@ -76,6 +77,13 @@ void protocolUnify();
 void protocolBaseStats();
 void protocolHistogram();
 void protocolClustering();
+
+void BE_Add_Callback( Event* evt, void* )
+{
+  if ((evt->get_Class() == Event::TOPOLOGY_EVENT) &&
+      (evt->get_Type() == TopologyEvent::TOPOL_ADD_BE))
+    num_callbacks++;
+}
 
 void write_be_connections(vector<NetworkTopology::Node *>& leaves, 
 			  int num_net_nodes,
@@ -140,7 +148,14 @@ int main(int argc, char **argv)
     // If backend_exe (2nd arg) and backend_args (3rd arg) are both NULL,
     // then all nodes specified in the topology are internal tree nodes.
     net = Network::CreateNetworkFE(topology_file, NULL, NULL);
-
+    bool cbOK = net->register_EventCallback(Event::TOPOLOGY_EVENT,
+					    TopologyEvent::TOPOL_ADD_BE,
+					    BE_Add_Callback, NULL);
+    if (cbOK == false) {
+      fprintf(stdout, "Failed to register callback for back-end add topology event\n");
+      delete net;
+      return -1;
+    }
     printf("FE: Network created\n");
 
     // Load filter functions now (need more elegant way later)
@@ -158,7 +173,7 @@ int main(int argc, char **argv)
     write_be_connections(internal_leaves, num_mrnet_nodes, num_backends);
 
     printf("FE: MRNet network successfully created.\n");
-    printf("FE: Waiting for %u backends to connect.\n", num_backends );
+    printf("FE: Waiting for %u backends to connect.\n", num_backends);
     fflush(stdout);
 
     // Write an atomic probe file for Backends to wait on.
@@ -172,11 +187,9 @@ int main(int argc, char **argv)
       fclose(atomicFile);
     }
 
-    set<NetworkTopology::Node *> be_nodes;
     do {
-        sleep(1);
-	topology->get_BackEndNodes(be_nodes);
-    } while (be_nodes.size() < num_backends);
+      sleep(1);
+    } while (num_callbacks != num_backends);
     printf("FE: All application backends connected!\n");
 
     // Specialized stream construction
@@ -185,7 +198,7 @@ int main(int argc, char **argv)
     ctrl_stream = net->new_Stream(comm_BC, syncFilterId);
 
     // should backends go away?
-    net->set_TerminateBackEndsOnShutdown(true);
+    // net->set_TerminateBackEndsOnShutdown(true);
 
     printf("FE: Inform back-ends of the control streams to use\n");
     STREAM_FLUSHSEND(ctrl_stream, TOM_CONTROL, "%d", broadcastResults?1:0);
@@ -223,17 +236,13 @@ void controlLoop() {
       NetworkTopology *topology = net->get_NetworkTopology();
       set<NetworkTopology::Node *> be_nodes;
 
-      // This is hackish. Give the backends some time to complete
-      //   (after MPI_Finalize) before attempting to tear down
-      //   the MRNet network (which is supposed to terminate the
-      //   backends as part of the process).
-      sleep(10);
+      // This is hackish. Give the backends some time to successfully
+      //   complete the call to waitfor_Shutdown before a network
+      //   delete. This sleep can probabaly go away unless there are
+      //   race conditions that are not handled correctly by MRNet.
+      sleep(1);
       printf("FE: Tearing down MRNet network.\n");
       delete net;
-
-      // This is hackish. Give the comm nodes some time to properly
-      //    shutdown before letting the front-end process die.
-      sleep(10);
       printf("FE: Shutdown after net delete.\n");
 
       processProtocol = false;
