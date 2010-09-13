@@ -23,6 +23,7 @@
 // This class is used for supporting pthreads in RtsLayer class.
 //////////////////////////////////////////////////////////////////////
 
+#ifndef TAU_JVMTI
 #ifdef JAVA
 #include <jvmpi.h>
 class  JavaThreadLayer
@@ -55,6 +56,7 @@ class  JavaThreadLayer
 	static JVMPI_RawMonitor     tauEnvMutex; // second mutex
 };
 #endif // JAVA 
+#endif // TAU_JVMTI
 
 #endif // _JAVATHREADLAYER_H_
 
