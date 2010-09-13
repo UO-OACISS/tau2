@@ -1063,6 +1063,10 @@ case $1 in
 	echo "NOTE: Using Java Virtual Machine Instrumentation ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     JVMTI)
+	echo "NOTE: Using Java Virtual Machine Tool Interface (JVMTI) Instrumentation ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      OPENMP)
 	echo "NOTE: Using OpenMP Threads ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
