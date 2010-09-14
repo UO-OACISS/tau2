@@ -46,7 +46,6 @@
 #include "Profile/Profiler.h"
 
 //Supporting Libraries
-#include "java_crw_demo.h"
 #include <limits.h>
 
 #include "TauJVMTI.h"
@@ -303,13 +302,10 @@ TAUJVMTI_native_entry(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint
             if ( interested((char*)cp->name, (char*)mp->name,
                             gdata->include, gdata->exclude)  ) {
 	      long unique_method_id;
-	      int tid =0;
+	      int tid = JavaThreadLayer::GetThreadId(thread);
 	      mp->calls++;
 	      cp->calls++;
 
-	      //updated to my new functions
-	      //	      int tid = JavaThreadLayer::GetThreadId(event->env_id);
-	      
 	      unique_method_id = make_unique_method_id(mnum, cnum);
 
 	      //Define a new mapping object TauMethodName
@@ -341,7 +337,7 @@ TAUJVMTI_native_exit(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint 
             ClassInfo  *cp;
             MethodInfo *mp;
 	    long unique_method_id;
-	    int tid = 0;
+	    int tid = JavaThreadLayer::GetThreadId(thread);
 
             if ( cnum >= gdata->ccount ) {
                 fatal_error("ERROR: Class number out of range\n");
@@ -534,6 +530,7 @@ cbThreadStart(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
 
             get_thread_name(jvmti, thread, tname, sizeof(tname));
             stdout_message("ThreadStart %s\n", tname);
+	    JavaThreadLayer::RegisterThread(thread);
         }
     } exit_critical_section(jvmti);
 }
@@ -549,6 +546,11 @@ cbThreadEnd(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
 
             get_thread_name(jvmti, thread, tname, sizeof(tname));
             stdout_message("ThreadEnd %s\n", tname);
+	    
+	    //Dealloc the thread local storage
+	    JavaThreadLayer::ThreadEnd(jthread);
+	    //Inform Tau that the thread has ended.
+	    TAU_MAPPING_PROFILE_EXIT("END...", tid);
         }
     } exit_critical_section(jvmti);
 }
@@ -805,7 +807,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 
     /* Here we save the jvmtiEnv* for Agent_OnUnload(). */
     gdata->jvmti = jvmti;
-
+    JavaThreadLayer::jvmti = jvmti;
     /* Parse any options supplied on java command line */
     parse_agent_options(options);
 

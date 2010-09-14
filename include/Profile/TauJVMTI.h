@@ -52,9 +52,8 @@
 #include "jvmti.h"
 
 /* Utility functions */
-
 #include "agent_util.h"
-
+#include "java_crw_demo.h"
 /* Agent library externals to export. */
 
 JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved);
