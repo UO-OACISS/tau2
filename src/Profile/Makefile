@@ -627,6 +627,12 @@ TauGASPU.o : TauGASPU.upc $(HDRS)
 ktau_syscall.o : ktau_syscall.c $(HDRS)
 	$(CC) $(CXXFLAGS) -c $(@:.o=.c)
 
+agent_utils.o : agent_utils.c $(HDRS)
+	$(CC) $(CFLAGS) -c $(@:.o=.c)
+
+java_crw_demo.o : java_crw_demo.c $(HDRS)
+	$(CC) $(CFLAGS) -c $(@:.o=.c)
+
 $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
 
