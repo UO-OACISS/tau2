@@ -35,6 +35,7 @@ void TauSyncFinalClocks();
 int Tau_mergeProfiles();
 void TAUDECL Tau_set_usesMPI(int value);
 int TAUDECL tau_totalnodes(int set_or_get, int value);
+char * Tau_printRanks(void * comm_ptr);
 
 
 /* This file uses the MPI Profiling Interface with TAU instrumentation.
@@ -628,6 +629,7 @@ MPI_Comm comm;
   int   returnVal;
   int   typesize;
   unsigned long long volume;
+  char *ranks; 
 #ifdef TAU_MPI_BCAST_HISTOGRAM
   TAU_REGISTER_CONTEXT_EVENT(c1, "Message size in MPI_Bcast [0, 1KB)");
   TAU_REGISTER_CONTEXT_EVENT(c2, "Message size in MPI_Bcast [1KB, 10KB)");
@@ -640,7 +642,13 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Bcast()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
-  
+#ifdef TAU_EXP_TRACK_COMM
+  void *commhandle;
+  commhandle = (void*)comm;
+  TAU_PROFILE_PARAM1L((long)commhandle, "comm");
+#endif /* TAU_EXP_TRACK_COMM */
+
+
   returnVal = PMPI_Bcast( buffer, count, datatype, root, comm );
   PMPI_Type_size( datatype, &typesize );
   volume = typesize * count; 
@@ -3414,11 +3422,32 @@ int TauGetMpiRank(void)
   return rank;
 }
 
-int Tau_setupCommunicatorInfo(MPI_Comm comm) {
+#ifndef TAU_MAX_MPI_RANKS
+#define TAU_MAX_MPI_RANKS 8
+#endif /* ifndef */
+
+char * Tau_printRanks(void *comm_ptr) {
   /* Create an array of ranks and fill it in using MPI_Group_translate_ranks*/
   /* Fill in a character array that we can append to the name and make it accessible using a map */
    
+  MPI_Comm comm = (MPI_Comm) comm_ptr;
+  int i, limit, size;
+  char name[16384];
+  char rankbuffer[256];
+  int worldrank;
+  memset(name, 0, 16384);
+  MPI_Comm_size(comm, &size);
+  limit = (size < TAU_MAX_MPI_RANKS) ? size : TAU_MAX_MPI_RANKS;
+  for ( i = 0; i < limit; i++) {
+    worldrank = translateRankToWorld(comm, i);
+    sprintf(rankbuffer, "%d ", worldrank);
+    strcat(name, rankbuffer);
+  }
+  return strdup(name);
+
 
 }
 
+int Tau_setupCommunicatorInfo(MPI_Comm comm)  { 
+}
 /* EOF TauMpi.c */
