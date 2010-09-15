@@ -91,7 +91,7 @@ int * JavaThreadLayer::RegisterThread(jthread this_thread=NULL)
 // ThreadEnd Cleans up the thread.
 // Needs to be issued before the thread is killed.
 ////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::ThreadEnd(jtread this_threadf=NULL){
+int JavaThreadLayer::ThreadEnd(jthread this_threadf=NULL){
   // int *tid;
   // jvmti->GetThreadLocalStorage(this_Thread, &tid);
   // delete *tid;
@@ -240,7 +240,7 @@ int JavaThreadLayer::TotalThreads(void)
 
 // Use JVMPI to get per thread cpu time (microseconds)
 jlong JavaThreadLayer::getCurrentThreadCpuTime(void) {
-  return tau_jvmpi_interface->GetCurrentThreadCpuTime() / 1000;
+  return jvmti->GetCurrentThreadCpuTime() / 1000;
 }
   
 // EOF JavaThreadLayer.cpp 

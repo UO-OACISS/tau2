@@ -49,7 +49,7 @@
 #include <limits.h>
 
 #include "TauJVMTI.h"
-
+#include "JavaThreadLayer.h"
 
 /* ------------------------------------------------------------------- */
 /* Some constant maximum sizes */
@@ -548,7 +548,7 @@ cbThreadEnd(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
             stdout_message("ThreadEnd %s\n", tname);
 	    
 	    //Dealloc the thread local storage
-	    JavaThreadLayer::ThreadEnd(jthread);
+	    JavaThreadLayer::ThreadEnd(thread);
 	    //Inform Tau that the thread has ended.
 	    TAU_MAPPING_PROFILE_EXIT("END...", tid);
         }
