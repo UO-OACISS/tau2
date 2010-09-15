@@ -3441,7 +3441,7 @@ char * Tau_printRanks(void *comm_ptr) {
   for ( i = 0; i < limit; i++) {
     worldrank = translateRankToWorld(comm, i);
     if (i == 0) { 
-      sprintf(rankbuffer, "%d", worldrank);
+      sprintf(rankbuffer, "ranks: %d", worldrank);
     } else {
       sprintf(rankbuffer, ", %d", worldrank);
     }
@@ -3450,6 +3450,8 @@ char * Tau_printRanks(void *comm_ptr) {
   if (limit < size) {
     strcat(name, " ...");
   }
+  sprintf(rankbuffer,"> <addr=%p", comm);
+  strcat(name, rankbuffer);
   return strdup(name);
 
 
