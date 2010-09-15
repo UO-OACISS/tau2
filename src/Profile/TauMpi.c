@@ -3440,8 +3440,15 @@ char * Tau_printRanks(void *comm_ptr) {
   limit = (size < TAU_MAX_MPI_RANKS) ? size : TAU_MAX_MPI_RANKS;
   for ( i = 0; i < limit; i++) {
     worldrank = translateRankToWorld(comm, i);
-    sprintf(rankbuffer, "%d ", worldrank);
+    if (i == 0) { 
+      sprintf(rankbuffer, "%d", worldrank);
+    } else {
+      sprintf(rankbuffer, ", %d", worldrank);
+    }
     strcat(name, rankbuffer);
+  }
+  if (limit < size) {
+    strcat(name, " ...");
   }
   return strdup(name);
 
