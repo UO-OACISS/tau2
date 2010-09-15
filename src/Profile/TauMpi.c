@@ -627,12 +627,44 @@ MPI_Comm comm;
 {
   int   returnVal;
   int   typesize;
+  unsigned long long volume;
+#ifdef TAU_MPI_BCAST_HISTOGRAM
+  TAU_REGISTER_CONTEXT_EVENT(c1, "Message size in MPI_Bcast [0, 1KB)");
+  TAU_REGISTER_CONTEXT_EVENT(c2, "Message size in MPI_Bcast [1KB, 10KB)");
+  TAU_REGISTER_CONTEXT_EVENT(c3, "Message size in MPI_Bcast [10KB, 100KB)");
+  TAU_REGISTER_CONTEXT_EVENT(c4, "Message size in MPI_Bcast [100KB, 1000KB)");
+  TAU_REGISTER_CONTEXT_EVENT(c5, "Message size in MPI_Bcast [1000KB+]");
+ 
+#endif
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Bcast()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+
   
   returnVal = PMPI_Bcast( buffer, count, datatype, root, comm );
   PMPI_Type_size( datatype, &typesize );
+  volume = typesize * count; 
+
+#ifdef TAU_MPI_BCAST_HISTOGRAM
+  if (volume  < 1024) { 
+    TAU_CONTEXT_EVENT(c1, volume);
+  } else {
+    if (volume < 10240) {
+      TAU_CONTEXT_EVENT(c2, volume);
+    } else {
+      if (volume < 102400) {
+        TAU_CONTEXT_EVENT(c3, volume);
+      } else {
+        if (volume < 1024000) {
+            TAU_CONTEXT_EVENT(c4, volume);
+        } else {
+          TAU_CONTEXT_EVENT(c5, volume);
+        }
+      }
+    }
+  }
+#endif
+
   TAU_BCAST_DATA(typesize*count);
 
   TAU_PROFILE_STOP(tautimer);
@@ -930,6 +962,7 @@ MPI_Comm * comm_out;
   
   returnVal = PMPI_Comm_create( comm, group, comm_out );
 
+  Tau_setupCommunicatorInfo(comm_out);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -3381,5 +3414,11 @@ int TauGetMpiRank(void)
   return rank;
 }
 
+int Tau_setupCommunicatorInfo(MPI_Comm comm) {
+  /* Create an array of ranks and fill it in using MPI_Group_translate_ranks*/
+  /* Fill in a character array that we can append to the name and make it accessible using a map */
+   
+
+}
 
 /* EOF TauMpi.c */
