@@ -5,13 +5,9 @@ package edu.uoregon.tau.perfexplorer.glue;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import edu.uoregon.tau.perfdmf.Trial;
 
@@ -26,6 +22,10 @@ import edu.uoregon.tau.perfdmf.Trial;
  */
 public class TopXEvents extends AbstractPerformanceOperation implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7519155141247887223L;
 	protected Double threshold = 0.0;
 	protected String metric = null;
 	protected Integer type = 0;

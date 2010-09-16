@@ -7,12 +7,10 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 
-
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.clustering.LinearRegressionInterface;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
-import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 /**
  * @author khuck
@@ -20,6 +18,10 @@ import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
  */
 public class CorrelateEventsWithMetadata extends AbstractPerformanceOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7728642909863765823L;
 	private PerformanceResult trialData = null;
 	private TrialThreadMetadata trialMetadata = null;
 	private List<TrialMetadata> metadatas = null;

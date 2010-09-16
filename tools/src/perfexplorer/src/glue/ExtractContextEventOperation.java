@@ -16,6 +16,11 @@ import edu.uoregon.tau.perfdmf.Trial;
  */
 public class ExtractContextEventOperation extends ExtractUserEventOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1587353522169092579L;
+
 	public ExtractContextEventOperation(PerformanceResult input) {
 		super(input, buildListOfEvents(input));
 	}

@@ -1,7 +1,8 @@
 package edu.uoregon.tau.perfexplorer.server;
 
 import java.util.Iterator;
-import javax.xml.*;
+
+import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
 
 public class TauNamespaceContext implements NamespaceContext {
@@ -19,7 +20,7 @@ public class TauNamespaceContext implements NamespaceContext {
     }
 
     // This method isn't necessary for XPath processing either.
-    public Iterator getPrefixes(String uri) {
+    public Iterator<Object> getPrefixes(String uri) {
         throw new UnsupportedOperationException();
     }
 

@@ -3,18 +3,9 @@
  */
 package edu.uoregon.tau.perfexplorer.glue.psl;
 
-import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
-import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
-import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
-import edu.uoregon.tau.perfexplorer.glue.TopXPercentEvents;
-import edu.uoregon.tau.perfexplorer.glue.TrialMeanResult;
+import junit.framework.TestCase;
 import edu.uoregon.tau.perfexplorer.glue.TrialResult;
 import edu.uoregon.tau.perfexplorer.glue.Utilities;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import junit.framework.TestCase;
 
 /**
  * @author khuck

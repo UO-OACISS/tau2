@@ -35,6 +35,11 @@ import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 import edu.uoregon.tau.perfexplorer.common.ScriptThread;
 
 public class PerfExplorerClient extends JFrame implements ImageExport {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2320242528462409027L;
+
 	private static String USAGE = "\nPerfExplorer\n****************************************************************************\nUsage: perfexplorer [OPTIONS]\nwhere [OPTIONS] are:\n[{-h,--help}]  ............................................ print this help.\n[{-g,--configfile}=<config_file>] .. specify one PerfDMF configuration file.\n[{-c,--config}=<config_name>] ........... specify one PerfDMF configuration.\n[{-n,--nogui}] ..................................................... no GUI.\n[{-i,--script}=<script_name>] ................ execute script <script_name>.\n";
 
 	private ActionListener listener = null;
@@ -253,7 +258,8 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		 */
 		if (noGUI.booleanValue()) {
 			//System.out.println("no gui");
-			PerfExplorerNoGUI test = new PerfExplorerNoGUI(
+			//PerfExplorerNoGUI test = 
+				new PerfExplorerNoGUI(
 				configFile, quiet.booleanValue());
 			if (scriptName != null) {
 				//System.out.println("running script, no gui");
@@ -284,7 +290,8 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 				PerfExplorerActionListener listener = (PerfExplorerActionListener)frame.getListener();
 				listener.setScriptName(scriptName);
 				//PythonInterpreterFactory.defaultfactory.getPythonInterpreter().execfile(scriptName);
-				ScriptThread scripter = new ScriptThread(scriptName);
+				//ScriptThread scripter = 
+					new ScriptThread(scriptName);
 			}
 		}
 	}

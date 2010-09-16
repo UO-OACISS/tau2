@@ -16,17 +16,29 @@ public class RegionSummary {
 	// measured fields
 	private double inclusiveTime = 0.0;
 	private double exclusiveTime = 0.0;
+	public double getExclusiveTime() {
+		return exclusiveTime;
+	}
+
+	public double getTotalInstructions() {
+		return totalInstructions;
+	}
+
+	public double getFloatingPointInstructions() {
+		return floatingPointInstructions;
+	}
+
 	private double totalInstructions = 0.0;
 	private double floatingPointInstructions = 0.0;
 	private double[] cacheMisses = {0.0, 0.0, 0.0};
 	private double[] cacheAccesses = {0.0, 0.0, 0.0};
 	
 	// derived fields
-	private double overhead = -1.0;
-	private double synchronizationTime = -1.0;
-	private double receiveTime = -1.0;
-	private double lossOfParallelism = -1.0;
-	private double controlOfParallelism = -1.0;
+	//private double overhead = -1.0;
+	//private double synchronizationTime = -1.0;
+	//private double receiveTime = -1.0;
+	//private double lossOfParallelism = -1.0;
+	//private double controlOfParallelism = -1.0;
 	
 	/**
 	 * 

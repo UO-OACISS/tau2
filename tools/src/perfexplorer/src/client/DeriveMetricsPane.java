@@ -3,31 +3,15 @@ package edu.uoregon.tau.perfexplorer.client;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
-import java.awt.Rectangle;
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
-import java.util.List;
 import java.util.ListIterator;
-import java.util.Scanner;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -35,11 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-
 import javax.swing.border.TitledBorder;
-import javax.swing.plaf.basic.BasicComboPopup;
-import javax.swing.plaf.basic.ComboPopup;
-import javax.swing.plaf.metal.MetalComboBoxUI;
 
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
@@ -53,11 +33,11 @@ public class DeriveMetricsPane extends JScrollPane implements ActionListener {
     * 
     */
 
-   private static final String IDEAL="Ideal";
+   //private static final String IDEAL="Ideal";
 
    private static final long serialVersionUID = -8971827392560223964L;
    private static DeriveMetricsPane thePane = null;
-   private PerfExplorerConnection server = null;
+   //private PerfExplorerConnection server = null;
 
    private JPanel mainPanel = null;
 
@@ -67,9 +47,9 @@ public class DeriveMetricsPane extends JScrollPane implements ActionListener {
 
    private JButton derive = new JButton("Apply");
    private JLabel trialsSelected = new JLabel("<html><p>No Trials Selected<br/ <br/ <br/ </p> ");
-   private JButton saveScript = new JButton("Save as Script");
+   //private JButton saveScript = new JButton("Save as Script");
 
-   private JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
+   //private JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
 
 
 
@@ -93,7 +73,12 @@ public class DeriveMetricsPane extends JScrollPane implements ActionListener {
    private JButton validate = new JButton("Validate");
    JList expression = new JList(expressionList)
    {//This allows the tool tip to display the expression
-      //the mouse is over.
+      /**
+	 * 
+	 */
+	private static final long serialVersionUID = 6244520599949851468L;
+
+	//the mouse is over.
       public String getToolTipText(MouseEvent e) {
          int index = locationToIndex(e.getPoint());
          if (-1 < index) {
@@ -127,7 +112,8 @@ public class DeriveMetricsPane extends JScrollPane implements ActionListener {
    private DeriveMetricsPane (JPanel mainPanel) {
       super(mainPanel);
 
-      this.server = PerfExplorerConnection.getConnection();
+      //this.server = 
+    	  PerfExplorerConnection.getConnection();
       this.mainPanel = mainPanel;
 
       JScrollBar jScrollBar = this.getVerticalScrollBar();
@@ -175,7 +161,12 @@ public class DeriveMetricsPane extends JScrollPane implements ActionListener {
 
       expression = new JList(expressionList)
       {//This allows the tool tip to display the expression
-         //the mouse is over.
+         /**
+		 * 
+		 */
+		private static final long serialVersionUID = -8046524611330812275L;
+
+		//the mouse is over.
          public String getToolTipText(MouseEvent e) {
             int index = locationToIndex(e.getPoint());
             if (-1 < index) {
@@ -362,10 +353,10 @@ public class DeriveMetricsPane extends JScrollPane implements ActionListener {
    public void refreshDynamicControls(boolean getMetrics, boolean getEvents, boolean getXML) {
       PerfExplorerModel theModel = PerfExplorerModel.getModel();
       Object selection = theModel.getCurrentSelection();
-      String oldMetric = "";
-      String oldXML = "";
-      String oldSXML="";
-      Object obj = null;
+      //String oldMetric = "";
+      //String oldXML = "";
+     // String oldSXML="";
+     // Object obj = null;
 
       PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 
@@ -375,8 +366,8 @@ public class DeriveMetricsPane extends JScrollPane implements ActionListener {
          trialsSelected.setText("<html><p>The selected expressions will be applied to \n "
 
                +"<br/ all the trials in the all of the experiment <br/ in the \"" +selectApp.getName()+"\" application.</p>");
-         this.selectExp = null;
-         this.selectTrial = null;
+         DeriveMetricsPane.selectExp = null;
+         DeriveMetricsPane.selectTrial = null;
       }else if(selection instanceof Experiment){
          selectExp = (Experiment) selection;
          ListIterator<Application> apps = server.getApplicationList();
@@ -386,7 +377,7 @@ public class DeriveMetricsPane extends JScrollPane implements ActionListener {
                break;
             }
          }
-         this.selectTrial = null;
+         DeriveMetricsPane.selectTrial = null;
          trialsSelected.setText("<html> <p> The selected expressions will be applied to \n "+
                "<br/all the trials in the \""+selectExp.getName()
                +"\" experiment \n<br/in the \""+selectApp.getName()+"\" application. \n </p> ");
@@ -562,140 +553,140 @@ public class DeriveMetricsPane extends JScrollPane implements ActionListener {
       }
       return result;
    }
-   private void cut (){
-      copy();
-      remove();
-   }
+//   private void cut (){
+//      copy();
+//      remove();
+//   }
+//
+//   private void addExpression(){
+//      addExpression("");
+//   }
+//   private void addExpression(String expression) {
+//      String text = addExpression.getText();
+//
+//      if(text == null){         JOptionPane.showMessageDialog(this,
+//            "You cannot add a blank expression.",
+//            "Warning",JOptionPane.WARNING_MESSAGE);
+//      }
+//      else if(text.trim().equals("")){
+//         JOptionPane.showMessageDialog(this,
+//               "You cannot add a blank expression.",
+//               "Warning",JOptionPane.WARNING_MESSAGE);
+//      }else{
+//         boolean isvalid = validate(text);
+//         if(isvalid){
+//            expressionList.addElement(text.trim());
+//         }
+//      }
+//   }
+//   private void copy(){
+//      Object[] selectedExp = expression.getSelectedValues();
+//      String expressions="";
+//      for(Object express:selectedExp)   {
+//         expressions+=express+"\n";
+//      }
+//      setClipboard(expressions);
+//   }
+//   private void paste(){
+//      String clip = getFromClipboard();
+//      addExpressions(new Scanner(clip));
+//   }
+//   private void setClipboard(String in){
+//      StringSelection stringSelection = new StringSelection( in );
+//      Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+//      clipboard.setContents( stringSelection, stringSelection );
+//   }
+//   private String getFromClipboard(){
+//      String result = "";
+//      Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+//      Transferable contents = clipboard.getContents(null);
+//      boolean hasTransferableText =
+//         (contents != null) &&
+//         contents.isDataFlavorSupported(DataFlavor.stringFlavor);
+//      if ( hasTransferableText ) {
+//         try {
+//            result = (String)contents.getTransferData(DataFlavor.stringFlavor);
+//         }
+//         catch (UnsupportedFlavorException ex){
+//            //highly unlikely since we are using a standard DataFlavor
+//            System.out.println(ex);
+//            ex.printStackTrace();
+//         }
+//         catch (IOException ex) {
+//            System.out.println(ex);
+//            ex.printStackTrace();
+//         }
+//      }
+//      return result;
+//
+//   }
+//   private void openFile() throws FileNotFoundException {
+//      int returnVal = fc.showOpenDialog(this);
+//      if (returnVal == JFileChooser.APPROVE_OPTION) {
+//         addExpressions (new Scanner(fc.getSelectedFile()));
+//      }
+//
+//   }
+//   private void addExpressions(Scanner scan){
+//      while(scan.hasNextLine()){
+//         String line = scan.nextLine().trim();
+//         if(!line.equals("")){
+//            if(Expression.validate(line))
+//               expressionList.addElement(line);
+//            else
+//               addExpression(line);
+//         }
+//      }
+//   }
+//   private void saveFile() throws IOException {
+//      if(getFiletoSave()){
+//         File savefile =  fc.getSelectedFile();
+//         FileOutputStream write =new FileOutputStream(savefile);
+//         String out = "";
+//
+//         for(Object i: expressionList.toArray()){
+//            out += i.toString() + "\n";
+//         }
+//         write.write(out.getBytes());
+//      }
+//
+//   }
+//   private boolean getFiletoSave() {
+//      int returnVal = fc.showSaveDialog(this);
+//      if (returnVal == JFileChooser.APPROVE_OPTION) {
+//         File savefile =  fc.getSelectedFile();
+//         if(savefile.exists()){
+//            int result =    JOptionPane.showOptionDialog(this, 
+//                  "\""+savefile.getName()+"\" already exists. Do you want to replace it? ", "Replace File"
+//                  ,JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE, null, null, null);
+//            if(result ==JOptionPane.NO_OPTION) 
+//               return getFiletoSave();
+//         }
+//         return true;
+//      }else 
+//         return false;//user hit cancel 
+//   }
 
-   private void addExpression(){
-      addExpression("");
-   }
-   private void addExpression(String expression) {
-      String text = addExpression.getText();
-
-      if(text == null){         JOptionPane.showMessageDialog(this,
-            "You cannot add a blank expression.",
-            "Warning",JOptionPane.WARNING_MESSAGE);
-      }
-      else if(text.trim().equals("")){
-         JOptionPane.showMessageDialog(this,
-               "You cannot add a blank expression.",
-               "Warning",JOptionPane.WARNING_MESSAGE);
-      }else{
-         boolean isvalid = validate(text);
-         if(isvalid){
-            expressionList.addElement(text.trim());
-         }
-      }
-   }
-   private void copy(){
-      Object[] selectedExp = expression.getSelectedValues();
-      String expressions="";
-      for(Object express:selectedExp)   {
-         expressions+=express+"\n";
-      }
-      setClipboard(expressions);
-   }
-   private void paste(){
-      String clip = getFromClipboard();
-      addExpressions(new Scanner(clip));
-   }
-   private void setClipboard(String in){
-      StringSelection stringSelection = new StringSelection( in );
-      Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-      clipboard.setContents( stringSelection, stringSelection );
-   }
-   private String getFromClipboard(){
-      String result = "";
-      Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-      Transferable contents = clipboard.getContents(null);
-      boolean hasTransferableText =
-         (contents != null) &&
-         contents.isDataFlavorSupported(DataFlavor.stringFlavor);
-      if ( hasTransferableText ) {
-         try {
-            result = (String)contents.getTransferData(DataFlavor.stringFlavor);
-         }
-         catch (UnsupportedFlavorException ex){
-            //highly unlikely since we are using a standard DataFlavor
-            System.out.println(ex);
-            ex.printStackTrace();
-         }
-         catch (IOException ex) {
-            System.out.println(ex);
-            ex.printStackTrace();
-         }
-      }
-      return result;
-
-   }
-   private void openFile() throws FileNotFoundException {
-      int returnVal = fc.showOpenDialog(this);
-      if (returnVal == JFileChooser.APPROVE_OPTION) {
-         addExpressions (new Scanner(fc.getSelectedFile()));
-      }
-
-   }
-   private void addExpressions(Scanner scan){
-      while(scan.hasNextLine()){
-         String line = scan.nextLine().trim();
-         if(!line.equals("")){
-            if(Expression.validate(line))
-               expressionList.addElement(line);
-            else
-               addExpression(line);
-         }
-      }
-   }
-   private void saveFile() throws IOException {
-      if(getFiletoSave()){
-         File savefile =  fc.getSelectedFile();
-         FileOutputStream write =new FileOutputStream(savefile);
-         String out = "";
-
-         for(Object i: expressionList.toArray()){
-            out += i.toString() + "\n";
-         }
-         write.write(out.getBytes());
-      }
-
-   }
-   private boolean getFiletoSave() {
-      int returnVal = fc.showSaveDialog(this);
-      if (returnVal == JFileChooser.APPROVE_OPTION) {
-         File savefile =  fc.getSelectedFile();
-         if(savefile.exists()){
-            int result =    JOptionPane.showOptionDialog(this, 
-                  "\""+savefile.getName()+"\" already exists. Do you want to replace it? ", "Replace File"
-                  ,JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE, null, null, null);
-            if(result ==JOptionPane.NO_OPTION) 
-               return getFiletoSave();
-         }
-         return true;
-      }else 
-         return false;//user hit cancel 
-   }
-
-   private void saveSelected() throws IOException {
-      if(expression.isSelectionEmpty()){
-         JOptionPane.showMessageDialog(this,
-               "Please select an expression.",
-               "Warning",
-               JOptionPane.WARNING_MESSAGE);
-         return;
-      }
-
-      if(getFiletoSave()){
-         File savefile =  fc.getSelectedFile();
-         FileOutputStream write =new FileOutputStream(savefile);
-         String out = "";
-         int[] indexs = expression.getSelectedIndices();
-         for(int i: indexs){
-            out += expressionList.get(i) + "\n";
-         }
-         write.write(out.getBytes());
-      }
-   }
+//   private void saveSelected() throws IOException {
+//      if(expression.isSelectionEmpty()){
+//         JOptionPane.showMessageDialog(this,
+//               "Please select an expression.",
+//               "Warning",
+//               JOptionPane.WARNING_MESSAGE);
+//         return;
+//      }
+//
+//      if(getFiletoSave()){
+//         File savefile =  fc.getSelectedFile();
+//         FileOutputStream write =new FileOutputStream(savefile);
+//         String out = "";
+//         int[] indexs = expression.getSelectedIndices();
+//         for(int i: indexs){
+//            out += expressionList.get(i) + "\n";
+//         }
+//         write.write(out.getBytes());
+//      }
+//   }
    private void deriveMetric() {
       Object[] selectedExp = expression.getSelectedValues();
       String expressions="";

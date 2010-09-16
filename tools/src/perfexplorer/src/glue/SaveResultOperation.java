@@ -10,8 +10,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.Vector;
-
 
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
@@ -24,8 +22,12 @@ import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
  */
 public class SaveResultOperation extends AbstractPerformanceOperation {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1285952458769047610L;
 	private boolean forceOverwrite = false;
-	private int maxNodes = 1;
+	//private int maxNodes = 1;
 	private int maxContexts = 1;
 	private int maxThreads = 1;
 	private int curNode = 0;
@@ -84,7 +86,7 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 					
 					// get the list of metrics - we are likely to have derived some metrics
 					Set<String> oldMetricSet = new HashSet<String>();
-					Iterator iter = trial.getMetrics().iterator();
+					Iterator<Metric> iter = trial.getMetrics().iterator();
 					while (iter.hasNext()) {
 						Metric tmpMetric = (Metric)iter.next();
 						oldMetricSet.add(tmpMetric.getName());
@@ -149,7 +151,7 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 		//System.out.println(statement);
 		ResultSet results = statement.executeQuery();
 		if (results.next() != false) {
-			this.maxNodes = results.getInt(1);
+			//this.maxNodes = results.getInt(1);
 			this.maxContexts = results.getInt(2);
 			this.maxThreads = results.getInt(3);
 		}

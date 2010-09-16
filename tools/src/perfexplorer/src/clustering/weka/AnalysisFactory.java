@@ -9,7 +9,6 @@ package edu.uoregon.tau.perfexplorer.clustering.weka;
 import java.util.List;
 
 import edu.uoregon.tau.perfexplorer.clustering.ClassifierInterface;
-import edu.uoregon.tau.perfexplorer.clustering.ClusterInterface;
 import edu.uoregon.tau.perfexplorer.clustering.DBScanClusterInterface;
 import edu.uoregon.tau.perfexplorer.clustering.DataNormalizer;
 import edu.uoregon.tau.perfexplorer.clustering.HierarchicalCluster;

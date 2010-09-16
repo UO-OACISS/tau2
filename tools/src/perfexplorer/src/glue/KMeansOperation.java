@@ -19,6 +19,11 @@ import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
 public class KMeansOperation extends ClusterOperation {
 
 	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2359623910545814404L;
+
+	/**
 	 * @param input
 	 */
 	public KMeansOperation(PerformanceResult input, String metric, int type, int maxClusters) {

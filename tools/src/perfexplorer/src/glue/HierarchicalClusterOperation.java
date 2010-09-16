@@ -18,6 +18,11 @@ import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
 public class HierarchicalClusterOperation extends ClusterOperation {
 
 	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7653937125923376512L;
+
+	/**
 	 * @param input
 	 */
 	public HierarchicalClusterOperation(PerformanceResult input, String metric, int type, int maxClusters) {

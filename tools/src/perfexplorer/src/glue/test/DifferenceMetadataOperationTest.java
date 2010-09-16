@@ -1,10 +1,10 @@
 package edu.uoregon.tau.perfexplorer.glue.test;
 
+import junit.framework.TestCase;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.glue.DifferenceMetadataOperation;
 import edu.uoregon.tau.perfexplorer.glue.TrialMetadata;
 import edu.uoregon.tau.perfexplorer.glue.Utilities;
-import junit.framework.TestCase;
 
 public class DifferenceMetadataOperationTest extends TestCase {
 

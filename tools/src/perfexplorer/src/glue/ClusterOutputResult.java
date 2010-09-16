@@ -13,8 +13,12 @@ import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
  */
 public class ClusterOutputResult extends DefaultResult {
 
-	private String metric;
-	private int type;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2148570165460990664L;
+	//private String metric;
+	//private int type;
 	
 	/**
 	 * 
@@ -32,8 +36,8 @@ public class ClusterOutputResult extends DefaultResult {
 
 	public ClusterOutputResult(RawDataInterface rawData, String metric, int type) {
 		super();
-		this.metric = metric;
-		this.type = type;
+		//this.metric = metric;
+		//this.type = type;
 		for (int threadIndex = 0 ; threadIndex < rawData.numVectors(); threadIndex++) {
 			List<String> events = rawData.getEventNames();
 			int eventIndex = 0;

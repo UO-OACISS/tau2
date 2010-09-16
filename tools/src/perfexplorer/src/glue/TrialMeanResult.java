@@ -17,6 +17,10 @@ import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
  */
 public class TrialMeanResult extends AbstractResult {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3739854995183107332L;
 	private Integer originalThreads = 0;
 	private boolean callPath = true;
 

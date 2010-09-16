@@ -1,5 +1,10 @@
 package edu.uoregon.tau.perfexplorer.glue.test;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import junit.framework.TestCase;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
@@ -7,12 +12,6 @@ import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
 import edu.uoregon.tau.perfexplorer.glue.TopXPercentEvents;
 import edu.uoregon.tau.perfexplorer.glue.TrialMeanResult;
 import edu.uoregon.tau.perfexplorer.glue.Utilities;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import junit.framework.TestCase;
 
 public class TopXPercentEventsTest extends TestCase {
 

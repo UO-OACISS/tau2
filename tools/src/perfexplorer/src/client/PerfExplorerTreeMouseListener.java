@@ -3,18 +3,15 @@ package edu.uoregon.tau.perfexplorer.client;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
-import javax.swing.tree.DefaultMutableTreeNode;
-
 import edu.uoregon.tau.perfdmf.Metric;
-import edu.uoregon.tau.perfdmf.Trial;
 
 public class PerfExplorerTreeMouseListener implements MouseListener {
 
-	private PerfExplorerJTree tree;
+	//private PerfExplorerJTree tree;
 
 	public PerfExplorerTreeMouseListener(PerfExplorerJTree tree) {
 		super();
-		this.tree = tree;
+		//this.tree = tree;
 	}
 
 	public void mouseClicked(MouseEvent e) {

@@ -1,18 +1,21 @@
 package edu.uoregon.tau.perfexplorer.glue;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.List;
-import java.util.Scanner;
 
 import edu.uoregon.tau.perfdmf.Trial;
 
 public class DeriveMetricsFileOperation extends AbstractPerformanceOperation {
 
-    private PerformanceResult input = null;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1530523733671075551L;
+
+	private PerformanceResult input = null;
 
     private String filename;
 

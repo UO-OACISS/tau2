@@ -28,6 +28,10 @@ import edu.uoregon.tau.perfexplorer.common.RMIView;
  */
 public class ChartData extends RMIChartData {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4066428857538615268L;
 	private RMIPerfExplorerModel model;
 	private String metricName = null;
 	private String groupName = null;
@@ -81,7 +85,7 @@ public class ChartData extends RMIChartData {
 		PreparedStatement statement = null;
 		try {
 			String groupingName = null;
-			String threadName = null;
+			//String threadName = null;
 			double value = 0.0;
 			double numThreads = 0;
 			String currentExperiment = "";
@@ -124,12 +128,12 @@ public class ChartData extends RMIChartData {
 				groupingName = results.getString(1);
 				if (dataType == ChartDataType.IQR_DATA || dataType == ChartDataType.DISTRIBUTION_DATA) {
 					numThreads = results.getDouble(2);
-					threadName = Double.toString(numThreads);
+					//threadName = Double.toString(numThreads);
 					value = results.getDouble(3);
 				} else {
 					numThreads = results.getDouble(2) * results.getDouble(3) *
 						results.getDouble(4);
-					threadName = Double.toString(numThreads);
+					//threadName = Double.toString(numThreads);
 					value = results.getDouble(5);
 				}
 				if ((metricName.toLowerCase().indexOf("time") != -1) 
@@ -172,7 +176,7 @@ public class ChartData extends RMIChartData {
 					groupingName = "other";
 					numThreads = results.getDouble(1) * results.getDouble(2) *
 						results.getDouble(3);
-					threadName = Double.toString(numThreads);
+					//threadName = Double.toString(numThreads);
 					value = results.getDouble(4);
 					if ((metricName.toLowerCase().indexOf("time") != -1) 
 						&& (dataType != ChartDataType.FRACTION_OF_TOTAL))
@@ -279,7 +283,7 @@ public class ChartData extends RMIChartData {
 			// The user wants to know the relative efficiency or speedup
 			// of one or more experiments, as the number of threads of 
 			// execution increases.
-			List selections = model.getMultiSelection();
+			List<Object> selections = model.getMultiSelection();
 			buf.append("select ");
 			StringBuilder tmpBuf = new StringBuilder();
 			if (object instanceof RMIView) {
@@ -372,7 +376,7 @@ public class ChartData extends RMIChartData {
 				buf.append(model.getViewSelectionPath(true, false, db.getDBType()));
 			} else {
 				buf.append("where t.experiment in (");
-				List selections = model.getMultiSelection();
+				List<Object> selections = model.getMultiSelection();
 				if (selections == null) {
 					// just one selection
 					buf.append (model.getExperiment().getID());
@@ -580,7 +584,7 @@ public class ChartData extends RMIChartData {
 			} else {
 				buf.append("inner join experiment e on t.experiment = e.id ");
 				buf.append("where t.experiment in (");
-				List selections = model.getMultiSelection();
+				List<Object> selections = model.getMultiSelection();
 				if (selections == null) {
 					// just one selection
 					buf.append (model.getExperiment().getID());
@@ -789,7 +793,7 @@ public class ChartData extends RMIChartData {
 			buf.append("where ie.trial = ? ");
 			buf.append("and p.metric = ? ");
 			buf.append("and ie.id in (");
-			List selections = model.getMultiSelection();
+			List<Object> selections = model.getMultiSelection();
 			if (selections == null) {
 				// just one selection
 				buf.append (model.getEvent().getID());

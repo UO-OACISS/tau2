@@ -1,15 +1,16 @@
 package edu.uoregon.tau.perfexplorer.common;
 
-import edu.uoregon.tau.perfdmf.Application;
-import edu.uoregon.tau.perfdmf.Experiment;
-import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfdmf.Metric;
-import edu.uoregon.tau.perfdmf.IntervalEvent;
 import java.io.Serializable;
-import java.util.Map;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Map;
+
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.IntervalEvent;
+import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.Trial;
 
 /**
  * This RMI object defines the state of the client model when an analysis
@@ -22,6 +23,10 @@ import java.util.ArrayList;
  *
  */
 public class RMIPerfExplorerModel implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 544071368610204750L;
 	public final static int MAX_CLUSTERS = 10;
 	public final static double X_PERCENT = 1.0;
 

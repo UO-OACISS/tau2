@@ -30,6 +30,7 @@ public abstract class Metaproperty {
 		// TODO
 	}
 
+	@SuppressWarnings("rawtypes")
 	public void add(Class[] propertyClasses, Object[] arguments) {
 		// TODO
 	}

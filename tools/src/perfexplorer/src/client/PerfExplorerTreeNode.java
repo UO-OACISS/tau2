@@ -4,15 +4,17 @@
  */
 package edu.uoregon.tau.perfexplorer.client;
 
-import java.awt.*;
-import javax.swing.*;
-import javax.swing.tree.*;
+import javax.swing.tree.DefaultMutableTreeNode;
 
 import edu.uoregon.tau.perfexplorer.common.RMIView;
 
 
 public class PerfExplorerTreeNode extends DefaultMutableTreeNode {
-    private boolean _allowsChildren = true;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -4747248940980600950L;
+	private boolean _allowsChildren = true;
 
     public PerfExplorerTreeNode(Object nodeObject) {
         super(nodeObject);

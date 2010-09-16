@@ -641,7 +641,7 @@ public class ParaProfUtils {
         		FunctionSelectorDialog fSelector = new FunctionSelectorDialog(owner, true,
         				ppTrial.getDataSource().getFunctions(), null, false, false);
         		if (fSelector.choose()) {
-        			Function selectedFunction = (Function) fSelector.getSelectedObject();
+        			//Function selectedFunction = (Function) fSelector.getSelectedObject();
 
         			String arg = evt.getActionCommand();
         			if (arg.equals("Base Statistics")) {

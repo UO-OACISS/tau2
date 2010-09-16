@@ -4,18 +4,11 @@
  */
 package edu.uoregon.tau.perfexplorer.clustering.weka;
 
-import edu.uoregon.tau.perfexplorer.clustering.ClusterDescription;
-import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
-import edu.uoregon.tau.perfexplorer.clustering.DendrogramTree;
-import edu.uoregon.tau.perfexplorer.clustering.DistanceMatrix;
-import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
-import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
-import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 import weka.clusterers.SimpleKMeans;
-import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
-import weka.attributeSelection.PrincipalComponents;
+import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
+import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
 
 /**
  * This class is used as a list of names and values to describe 

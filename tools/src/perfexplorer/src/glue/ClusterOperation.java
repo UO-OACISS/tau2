@@ -8,7 +8,6 @@ import java.util.Set;
 
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.clustering.ClusterInterface;
-import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
 
 /**
  * @author khuck
@@ -16,6 +15,10 @@ import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
  */
 public abstract class ClusterOperation extends AbstractPerformanceOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 432943010443795674L;
 	protected Integer maxClusters = 2;
 	protected String metric;
 	protected int type;
