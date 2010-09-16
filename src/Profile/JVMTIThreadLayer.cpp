@@ -28,7 +28,7 @@ using namespace std;
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 #include <Profile/Profiler.h>
-#include <Profile/TauJava.h>
+#include <Profile/TauJVMTI.h>
 #include <stdlib.h>
 
 
@@ -43,12 +43,11 @@ using namespace std;
 // Define the static private members of JavaThreadLayer  
 /////////////////////////////////////////////////////////////////////////
 
-JavaVM 	* JavaThreadLayer::tauVM;
 int 	  JavaThreadLayer::tauThreadCount = 0; 
-JVMPI_RawMonitor JavaThreadLayer::tauNumThreadsLock ;
-JVMPI_RawMonitor JavaThreadLayer::tauDBMutex ;
-JVMPI_RawMonitor JavaThreadLayer::tauEnvMutex ;
-JVMPI_Interface  * JavaThreadLayer::tau_jvmpi_interface = NULL;
+jrawMonitorID JavaThreadLayer::tauNumThreadsLock ;
+jrawMonitorID JavaThreadLayer::tauDBMutex ;
+jrawMonitorID JavaThreadLayer::tauEnvMutex ;
+jvmtiEnv  * JavaThreadLayer::jvmti = NULL;
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -56,16 +55,15 @@ JVMPI_Interface  * JavaThreadLayer::tau_jvmpi_interface = NULL;
 // invoked. This routine sets the thread id that is used by the code in
 // FunctionInfo and Profiler classes. 
 ////////////////////////////////////////////////////////////////////////
-int * JavaThreadLayer::RegisterThread(JNIEnv *env_id)
+int * JavaThreadLayer::RegisterThread(jthread this_thread=NULL)
 {
   static int initflag = JavaThreadLayer::InitializeThreadData();
   // if its in here the first time, setup mutexes etc.
 
-  //THIS IS CURRENTLY LEAKING!
   int *threadId = new int;
 
   // Lock the mutex guarding the thread count before incrementing it.
-  tau_jvmpi_interface->RawMonitorEnter(tauNumThreadsLock); 
+  jvmti->RawMonitorEnter(tauNumThreadsLock); 
 
   if (tauThreadCount == TAU_MAX_THREADS)
   {
@@ -73,84 +71,50 @@ int * JavaThreadLayer::RegisterThread(JNIEnv *env_id)
     fprintf(stderr, "Change TAU_MAX_THREADS parameter in <tau>/include/Profile/Profiler.h\n");
     fprintf(stderr, "And make install. Current value is %d\n", tauThreadCount);
     fprintf(stderr, "******************************************************************\n");
-    tau_jvmpi_interface->ProfilerExit(1);
+    jvmti->ProfilerExit(1);//FIXME
   }
 
-  // Increment the number of threads present
+  // Increment the number of threads present (after assignment)
   (*threadId) = tauThreadCount ++;
 
   DEBUGPROFMSG("Thread id "<< tauThreadCount<< " Created! "<<endl;);
   // Unlock it now 
-  tau_jvmpi_interface->RawMonitorExit(tauNumThreadsLock); 
+  jvmti->RawMonitorExit(tauNumThreadsLock); 
   // A thread should call this routine exactly once. 
 
-  // Make this a thread specific data structure wrt the thread environment
-  tau_jvmpi_interface->SetThreadLocalStorage(env_id, threadId); 
-  
+  // Make this a thread specific data structure with the thread environment.
+  jvmti->SetThreadLocalStorage(jvmti, this_thread, (void * )threadId); 
 
   return threadId;
 }
-
-
 ////////////////////////////////////////////////////////////////////////
-// GetThreadId wrapper to be used when we don't have the environment 
-// pointer (JNIEnv *) that we get from JVMPI. Typically called by entry/exit
-// of a non-Java layer. 
+// ThreadEnd Cleans up the thread.
+// Needs to be issued before the thread is killed.
 ////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::GetThreadId(void) 
-{
-  // First get the environment id of the thread using the JVM
-  JNIEnv *env_id;
-
-  int res = tauVM->GetEnv( (void **) &env_id, JNI_VERSION_1_2 );
-  if (res < 0) {
-    printf("JavaThreadLayer::GetThreadId() gets -ve GetEnv result \n");
-    return -1;
-  }
-  if (env_id == (JNIEnv *) NULL)
-  {
-    printf("JavaThreadLayer::GetThreadId(): env_id is null! res = %d\n", res);
-    return -1;
-  }
-
-  // We now have a valid env_id, call the other overloaded version of the 
-  // the GetThreadId member
-  return GetThreadId(env_id);
-
+int JavaThreadLayer::ThreadEnd(jthread this_threadf=NULL){
+  // int *tid;
+  // jvmti->GetThreadLocalStorage(this_Thread, &tid);
+  // delete *tid;
 }
 
 ////////////////////////////////////////////////////////////////////////
 // GetThreadId returns an id in the range 0..N-1 by looking at the 
 // thread specific data.
 ////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::GetThreadId(JNIEnv *env_id) 
+int JavaThreadLayer::GetThreadId(jthread this_thread=NULL) 
 {
   int *tid ;
    
-  tid = (int *) tau_jvmpi_interface->GetThreadLocalStorage(env_id);
+  jvmti->GetThreadLocalStorage(this_thread, &tid);
   // The thread id is stored in a thread specific storage
 
   if (tid == (int *) NULL)
   { // This thread needs to be registered
-    tid = RegisterThread(env_id);
-    if ((*tid) == 0) 
-    { // Main JVM thread has tid 0, others have tid > 0 
-      TauJavaLayer::CreateTopLevelRoutine(
-	"THREAD=JVM-MainThread; THREAD GROUP=system", " ", "THREAD", (*tid));
-    }
-    else
-    { // Internal thread that was just registered.
-      TauJavaLayer::CreateTopLevelRoutine(
-        "THREAD=JVM-InternalThread; THREAD GROUP=system"," ", "THREAD", (*tid));
-    }
-
+    tid = RegisterThread(jvmti);
   }
   return (*tid); 
 
 }
-
-  
-
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -161,7 +125,8 @@ int JavaThreadLayer::GetThreadId(JNIEnv *env_id)
 int JavaThreadLayer::InitializeThreadData(void)
 {
   // Initialize the mutex
-  tauNumThreadsLock = tau_jvmpi_interface->RawMonitorCreate("num threads lock");
+  error = jvmti->RawMonitorCreate("num threads lock", &tauNumThreadsLock);
+  check_jvmti_error(jvmti, error, "Cannot Create raw monitor");
   
   //cout <<" Initialized the thread Mutex data " <<endl;
   return 1;
@@ -170,9 +135,11 @@ int JavaThreadLayer::InitializeThreadData(void)
 ////////////////////////////////////////////////////////////////////////
 int JavaThreadLayer::InitializeDBMutexData(void)
 {
+  jvmtiError error;
   // For locking functionDB 
-  tauDBMutex =  tau_jvmpi_interface->RawMonitorCreate("FuncDB lock");
-  
+  error = jvmti->CreateRawMonitor("FuncDB lock", &tauDBMutex);
+  check_jvmti_error(jvmti, error, "Cannot create raw monitor");
+				 
   //cout <<" Initialized the functionDB Mutex data " <<endl;
   return 1;
 }
@@ -186,9 +153,13 @@ int JavaThreadLayer::InitializeDBMutexData(void)
 ////////////////////////////////////////////////////////////////////////
 int JavaThreadLayer::LockDB(void)
 {
+  jvmtiError error;
   static int initflag=InitializeDBMutexData();
   // Lock the functionDB mutex
-  tau_jvmpi_interface->RawMonitorEnter(tauDBMutex);
+  error = jvmti->RawMonitorEnter(tauDBMutex);
+  check_jvmti_error(jvmti, error, "Cannot enter with raw monitor");
+				 
+  //cout <<" Initialized the functionDB Mutex data " <<endl;
   return 1;
 }
 
@@ -197,21 +168,25 @@ int JavaThreadLayer::LockDB(void)
 ////////////////////////////////////////////////////////////////////////
 int JavaThreadLayer::UnLockDB(void)
 {
+  jvmtiError error;
+
   // Unlock the functionDB mutex
-  tau_jvmpi_interface->RawMonitorExit(tauDBMutex);
+  error = jvmti->RawMonitorExit(tauDBMutex);
+  check_jvmti_error(jvmti, error, "Cannot exit with raw monitor");
   return 1;
 }  
 
 ////////////////////////////////////////////////////////////////////////
 int JavaThreadLayer::InitializeEnvMutexData(void)
 {
-  if (tau_jvmpi_interface == NULL) {
+  if (jvmti == NULL) {
     fprintf (stderr,"Error, TAU's jvmpi interface was not initialized properly (java -XrunTAU ...)\n");
     fprintf (stderr,"When TAU is configured with -jdk=<dir>, it can only profile Java Programs!\n");
     exit(-1);
   }
   // For locking functionDB 
-  tauEnvMutex =  tau_jvmpi_interface->RawMonitorCreate("Env lock");
+  error = jvmti->CreateRawMonitor("Env lock", &tauEnvMutex);
+  check_jvmti_error(jvmti, error, "Cannot create raw monitor");
   
   //cout <<" Initialized the Env Mutex data " <<endl;
   return 1;
@@ -226,9 +201,11 @@ int JavaThreadLayer::InitializeEnvMutexData(void)
 ////////////////////////////////////////////////////////////////////////
 int JavaThreadLayer::LockEnv(void)
 {
+  jvmtiError error;
   static int initflag=InitializeEnvMutexData();
   // Lock the Env mutex
-  tau_jvmpi_interface->RawMonitorEnter(tauEnvMutex);
+  error = jvmti->RawMonitorEnter(tauEnvMutex);
+  check_jvmti_error(jvmti, error, "Cannot enter tauEnv with raw monitor");
   return 1;
 }
 
@@ -237,8 +214,11 @@ int JavaThreadLayer::LockEnv(void)
 ////////////////////////////////////////////////////////////////////////
 int JavaThreadLayer::UnLockEnv(void)
 {
+  jvmtiError error;
   // Unlock the Env mutex
-  tau_jvmpi_interface->RawMonitorExit(tauEnvMutex);
+  error = jvmti->RawMonitorExit(tauEnvMutex);
+  check_jvmti_error(jvmti, error, "Cannot exit with raw monitor");
+
   return 1;
 }  
 ////////////////////////////////////////////////////////////////////////
@@ -251,16 +231,16 @@ int JavaThreadLayer::TotalThreads(void)
   // set and increment operation, we wouldn't need this. Optimization for
   // the future.
 
-  tau_jvmpi_interface->RawMonitorEnter(tauNumThreadsLock);
+  jvmti->RawMonitorEnter(tauNumThreadsLock);
   count = tauThreadCount;
-  tau_jvmpi_interface->RawMonitorExit(tauNumThreadsLock);
+  jvmti->RawMonitorExit(tauNumThreadsLock);
 
   return count;
 }
 
 // Use JVMPI to get per thread cpu time (microseconds)
 jlong JavaThreadLayer::getCurrentThreadCpuTime(void) {
-  return tau_jvmpi_interface->GetCurrentThreadCpuTime() / 1000;
+  return jvmti->GetCurrentThreadCpuTime() / 1000;
 }
   
 // EOF JavaThreadLayer.cpp 
