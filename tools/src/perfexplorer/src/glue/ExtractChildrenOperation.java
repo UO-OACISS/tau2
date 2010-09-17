@@ -15,6 +15,10 @@ import edu.uoregon.tau.perfdmf.Trial;
  */
 public class ExtractChildrenOperation extends AbstractPerformanceOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 8950813803391484504L;
 	private String parentEvent = null;
 	
 	/**

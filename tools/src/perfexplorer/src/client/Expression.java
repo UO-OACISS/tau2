@@ -263,6 +263,11 @@ if(newName != null) newName = newName.trim();
 }
 class ParsingException extends Exception{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -181559529147300232L;
+
 	public ParsingException() {
 		super();
 		// TODO Auto-generated constructor stub

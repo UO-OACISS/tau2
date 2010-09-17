@@ -17,6 +17,11 @@ import edu.uoregon.tau.perfdmf.Trial;
 public class TopXPercentEvents extends TopXEvents {
 
 	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8866264929579290819L;
+
+	/**
 	 * @param input
 	 * @param metric
 	 * @param type

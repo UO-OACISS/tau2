@@ -3,9 +3,8 @@
  */
 package edu.uoregon.tau.perfexplorer.glue;
 
-import java.util.HashSet;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 import edu.uoregon.tau.perfdmf.Trial;
 
@@ -15,6 +14,10 @@ import edu.uoregon.tau.perfdmf.Trial;
  */
 public class LinearRegressionOperation extends AbstractPerformanceOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5637184166539288294L;
 	String metric = null;
 	String metadata = null;
 	Double value = null;

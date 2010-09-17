@@ -56,7 +56,9 @@ cat /proc/cray_xt/nid | awk '{printf("nid%05u\n", $1); }' > $hostfile
 cat $mrnethostfile >> $hostfile
 
 # generate the MRNet topology
-mrnet_topgen -k $fanout@$numTreeNodes $hostfile $topfile
+# Pre-3.0:
+# mrnet_topgen -k $fanout@$numTreeNodes $hostfile $topfile
+mrnet_topgen -h $hostfile -o $topfile -t k$fanout@$numTreeNodes 
 
 # feed generated topology file to the designated front-end
 $feName $topfile $numBE &

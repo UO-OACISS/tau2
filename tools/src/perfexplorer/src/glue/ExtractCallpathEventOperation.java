@@ -16,6 +16,11 @@ import edu.uoregon.tau.perfdmf.Trial;
  */
 public class ExtractCallpathEventOperation extends ExtractEventOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2739406660489427516L;
+
 	public ExtractCallpathEventOperation(PerformanceResult input) {
 		super(input, buildListOfEvents(input));
 	}

@@ -5,15 +5,18 @@
 package edu.uoregon.tau.perfexplorer.clustering.weka;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Arrays;
+import java.util.List;
 
-import edu.uoregon.tau.perfexplorer.clustering.*;
-import edu.uoregon.tau.perfexplorer.common.*;
+import weka.clusterers.DBScan;
 import weka.core.Instance;
 import weka.core.Instances;
-import weka.attributeSelection.PrincipalComponents;
-import weka.clusterers.DBScan;
+import edu.uoregon.tau.perfexplorer.clustering.ClusterDescription;
+import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
+import edu.uoregon.tau.perfexplorer.clustering.DBScanClusterInterface;
+import edu.uoregon.tau.perfexplorer.clustering.DistanceMatrix;
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 
 
 /**
@@ -125,6 +128,7 @@ public class WekaDBScanCluster extends WekaAbstractCluster implements DBScanClus
 		return finalPoints;
 	}
 
+	@SuppressWarnings("unchecked")
 	private void generateStats() throws Exception {
 		if (this.instances == null) {
 			this.instances = (Instances)this.inputData.getData();

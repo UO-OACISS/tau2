@@ -61,6 +61,7 @@ int * JavaThreadLayer::RegisterThread(JNIEnv *env_id)
   static int initflag = JavaThreadLayer::InitializeThreadData();
   // if its in here the first time, setup mutexes etc.
 
+  //THIS IS CURRENTLY LEAKING!
   int *threadId = new int;
 
   // Lock the mutex guarding the thread count before incrementing it.
@@ -226,7 +227,7 @@ int JavaThreadLayer::InitializeEnvMutexData(void)
 int JavaThreadLayer::LockEnv(void)
 {
   static int initflag=InitializeEnvMutexData();
-  // Lock the functionDB mutex
+  // Lock the Env mutex
   tau_jvmpi_interface->RawMonitorEnter(tauEnvMutex);
   return 1;
 }

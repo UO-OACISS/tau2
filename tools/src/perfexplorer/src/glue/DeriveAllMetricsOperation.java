@@ -5,7 +5,6 @@ package edu.uoregon.tau.perfexplorer.glue;
 
 import java.util.List;
 
-
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.rules.RuleHarness;
 
@@ -16,6 +15,10 @@ import edu.uoregon.tau.perfexplorer.rules.RuleHarness;
  */
 public class DeriveAllMetricsOperation extends AbstractPerformanceOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 702531200054894002L;
 	private int type = AbstractResult.EXCLUSIVE;
 	
 	/**
@@ -48,7 +51,7 @@ public class DeriveAllMetricsOperation extends AbstractPerformanceOperation {
 	public List<PerformanceResult> processData() {
 		for (PerformanceResult input : inputs) {
 			PerformanceResult output = new DefaultResult(input, false);
-			for (String event : input.getEvents()) {
+			for (@SuppressWarnings("unused") String event : input.getEvents()) {
 				String timeMetric = input.getTimeMetric();
 				String FPMetric = input.getFPMetric();
 				String L1AccessMetric = input.getL1AccessMetric();

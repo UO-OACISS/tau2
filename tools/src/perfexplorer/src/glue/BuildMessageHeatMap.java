@@ -1,27 +1,27 @@
 package edu.uoregon.tau.perfexplorer.glue;
 
-import java.awt.*;
-
-import javax.swing.*;
-
-import java.lang.Math;
-
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Toolkit;
 import java.net.URL;
 import java.text.DecimalFormat;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.TreeMap;
+
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerClient;
-import edu.uoregon.tau.vis.HeatMapWindow;
 import edu.uoregon.tau.vis.HeatMapData;
+import edu.uoregon.tau.vis.HeatMapWindow;
 
 public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3737895345670546137L;
 	private HeatMapData mapData = null;
 	private int size = 0;
 	private final static String allPaths = "All Paths";
@@ -97,7 +97,7 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 	}
 
 	private void extractData(PerformanceResult input, Integer thread, String event, String first, String path) {
-		double numEvents, eventMax, eventMin, eventMean, eventSumSqr, stdev, volume = 0;
+		double numEvents, eventMax, eventMin, eventMean, eventSumSqr, volume = 0;//stdev, 
 		double[] empty = {0,0,0,0,0,0};
 
 		StringTokenizer st = new StringTokenizer(first, "Message size sent to node ");

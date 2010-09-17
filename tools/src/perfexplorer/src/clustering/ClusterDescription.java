@@ -4,8 +4,8 @@
  */
 package edu.uoregon.tau.perfexplorer.clustering;
 
-import java.util.LinkedHashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 
 /**
  * This class is used as a list of names and values to describe 
@@ -17,7 +17,7 @@ import java.util.Iterator;
  */
 public class ClusterDescription {
 
-	private LinkedHashMap attributes = null;
+	private LinkedHashMap<String,Double> attributes = null;
 	// set some defaults for the linked hash map - see java doc for details
 	private final int defaultSize = 16;
 	private final float floatFactor = 0.75F;
@@ -27,14 +27,14 @@ public class ClusterDescription {
 	 * Default constructor
 	 */
 	public ClusterDescription() {
-		attributes = new LinkedHashMap(defaultSize, floatFactor, accessOrder);
+		attributes = new LinkedHashMap<String, Double>(defaultSize, floatFactor, accessOrder);
 	}
 
 	/**
 	 * Constructor which specifies the number of attributes in this cluster
 	 */
 	public ClusterDescription(int numAttributes) {
-		attributes = new LinkedHashMap(numAttributes, floatFactor, accessOrder);
+		attributes = new LinkedHashMap<String, Double>(numAttributes, floatFactor, accessOrder);
 	}
 	
 	/**
@@ -42,7 +42,7 @@ public class ClusterDescription {
 	 * 
 	 * @return
 	 */
-	public Iterator getAttributeNames() {
+	public Iterator<String> getAttributeNames() {
 		return attributes.keySet().iterator();
 	}
 	
@@ -53,7 +53,7 @@ public class ClusterDescription {
 	 * @return
 	 */
 	public double getValue(String key) {
-		Double temp = (Double) attributes.get(key);
+		Double temp = attributes.get(key);
 		return temp.doubleValue();
 	}
 }

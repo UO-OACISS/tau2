@@ -3,14 +3,8 @@
  */
 package edu.uoregon.tau.perfexplorer.glue;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.ObjectOutput;
-import java.io.OutputStream;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,12 +12,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import weka.core.*;
-import weka.classifiers.Classifier;
-import weka.filters.Filter;
-import weka.filters.unsupervised.attribute.StringToNominal;
-import java.io.*;
 
 import edu.uoregon.tau.perfexplorer.cqos.WekaClassifierWrapper;
 
@@ -33,6 +21,10 @@ import edu.uoregon.tau.perfexplorer.cqos.WekaClassifierWrapper;
  */
 public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3400888131847759109L;
 	public static final String SUPPORT_VECTOR_MACHINE = WekaClassifierWrapper.SUPPORT_VECTOR_MACHINE;
 	//public static final String SUPPORT_VECTOR_MACHINE2 = WekaClassifierWrapper.SUPPORT_VECTOR_MACHINE2;
 	public static final String NAIVE_BAYES = WekaClassifierWrapper.NAIVE_BAYES;
@@ -49,7 +41,7 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 	private WekaClassifierWrapper wrapper = null;
 	private String classifierType = MULTILAYER_PERCEPTRON;
 	private int trainingSize = 0;
-	protected List<Map> trainingData = null;
+	protected List<Map<String,String>> trainingData = null;
 	private Map<String,Set<String>> validation = new HashMap<String,Set<String>>();
 		
 	/**
@@ -159,7 +151,7 @@ public class CQoSClassifierOperation extends AbstractPerformanceOperation {
 		}
 		
 		System.out.println("Done.");
-		this.trainingData = new ArrayList<Map>();
+		this.trainingData = new ArrayList<Map<String,String>>();
 
 		FileWriter fstream = new FileWriter("/tmp/data.csv");
 		BufferedWriter out = new BufferedWriter(fstream);

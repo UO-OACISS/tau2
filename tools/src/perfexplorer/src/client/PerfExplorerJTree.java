@@ -1,14 +1,22 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import java.util.ListIterator;
-import javax.swing.*;
-import javax.swing.tree.*;
-
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
-import edu.uoregon.tau.perfdmf.*;
+import java.util.ListIterator;
+
+import javax.swing.JTree;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
+
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.IntervalEvent;
+import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
 import edu.uoregon.tau.perfexplorer.common.RMIView;
 
@@ -65,7 +73,7 @@ public class PerfExplorerJTree extends JTree {
 
 	public static void refreshDatabases () {
 		DefaultMutableTreeNode root = PerfExplorerJTree.root;
-        DefaultMutableTreeNode treeNode;
+        //DefaultMutableTreeNode treeNode;
         
 		root.removeAllChildren();
 
@@ -84,7 +92,7 @@ public class PerfExplorerJTree extends JTree {
 
 		// add new nodes
 		for (int i = 0 ; i < strings.size() ; i++ ) {
-			String tmp = (String)strings.get(i);
+			String tmp = strings.get(i);
 			DefaultMutableTreeNode top = new PerfExplorerTreeNode(new ConnectionNodeObject(tmp, i));
 			root.add(top);
 		}
@@ -109,7 +117,7 @@ public class PerfExplorerJTree extends JTree {
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		List<String> strings = server.getConnectionStrings();
 		for (int i = 0 ; i < strings.size() ; i++ ) {
-			String tmp = (String)strings.get(i);
+			String tmp = strings.get(i);
 			DefaultMutableTreeNode top = new PerfExplorerTreeNode(new ConnectionNodeObject(tmp, i));
 			root.add(top);
 		}
@@ -239,13 +247,12 @@ public class PerfExplorerJTree extends JTree {
 	}
 
 
-	@SuppressWarnings("unchecked") // for trial.getMetrics() call
 	public static void addMetricNodes (DefaultMutableTreeNode node, Trial trial) {
 		setConnectionIndex(node);
 		//System.out.println("metric nodes...");
 		// get the metrics
 		List<Metric> metricVector = trial.getMetrics();
-		int metricIndex = 0;
+		//int metricIndex = 0;
 		if (metricVector != null) {
 			ListIterator<Metric> metrics = metricVector.listIterator();
 			Metric metric = null;
@@ -312,6 +319,7 @@ public class PerfExplorerJTree extends JTree {
         expandAll(new TreePath(root), expand);
     }
     
+	@SuppressWarnings("unchecked")
 	public void expandAll(TreePath parent, boolean expand) {
 		
         // Expand current node (or else there won't be children)
@@ -322,8 +330,8 @@ public class PerfExplorerJTree extends JTree {
         // Traverse children
         TreeNode node = (TreeNode)parent.getLastPathComponent();
         if (node.getChildCount() >= 0) {
-            for (Enumeration e=node.children(); e.hasMoreElements(); ) {
-                TreeNode n = (TreeNode)e.nextElement();
+            for (Enumeration<TreeNode> e=node.children(); e.hasMoreElements(); ) {
+                TreeNode n = e.nextElement();
                 TreePath path = parent.pathByAddingChild(n);
                 expandAll(path, expand);
             }
@@ -345,6 +353,7 @@ public class PerfExplorerJTree extends JTree {
         expandLastAdded(new TreePath(root), expand);
     }
 
+	@SuppressWarnings("unchecked")
 	public void expandLastAdded(TreePath parent, boolean expand) {
 		
         PerfExplorerTreeNode node = (PerfExplorerTreeNode)parent.getLastPathComponent();
@@ -386,8 +395,8 @@ public class PerfExplorerJTree extends JTree {
 
         // Traverse children
         if (node.getChildCount() >= 0) {
-            for (Enumeration e=node.children(); e.hasMoreElements(); ) {
-                TreeNode n = (TreeNode)e.nextElement();
+            for (Enumeration<TreeNode> e=node.children(); e.hasMoreElements(); ) {
+                TreeNode n = e.nextElement();
                 TreePath path = parent.pathByAddingChild(n);
                 expandLastAdded(path, expand);
             }

@@ -5,6 +5,7 @@ import java.util.List;
 
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.database.DB;
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerException;
 
 public class QueryManager {
 	/**
@@ -12,7 +13,6 @@ public class QueryManager {
 	 * 
 	 * @throws PerfExplorerException
 	 */
-	@SuppressWarnings("unchecked")  // for Trial.getTrialList() call
 	public static List<Trial> getTrialList (String criteria, boolean getXMLMetadata) {
 		PerfExplorerServer server = PerfExplorerServer.getServer();
 		List<Trial> list = null;

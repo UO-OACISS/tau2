@@ -26,6 +26,10 @@ import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 public class TrialResult extends AbstractResult {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7164598771800856462L;
 	private boolean callPath = true;
 
 	public TrialResult() {
@@ -166,7 +170,7 @@ public class TrialResult extends AbstractResult {
 			elapsedTimeSec = elapsedTimeMillis/1000F;
 			System.out.println("Time to query counter data: " + elapsedTimeSec + " seconds");
 			while (results.next() != false) {
-				Integer threadID = results.getInt(2);
+//				Integer threadID = results.getInt(2);
 				this.putUsereventNumevents(results.getInt(2), results.getString(1), results.getDouble(3));
 				this.putUsereventMax(results.getInt(2), results.getString(1), results.getDouble(4));
 				this.putUsereventMin(results.getInt(2), results.getString(1), results.getDouble(5));

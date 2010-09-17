@@ -1,14 +1,23 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import javax.swing.*;
-
-import java.awt.*;
-import java.util.List;
-import java.util.Hashtable;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import edu.uoregon.tau.perfdmf.*;
-import edu.uoregon.tau.perfexplorer.common.*;
+import java.util.Hashtable;
+import java.util.List;
+
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+
+import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfexplorer.common.RMIPerformanceResults;
 
 public class PerformanceExplorerPane extends JScrollPane implements ActionListener {
 

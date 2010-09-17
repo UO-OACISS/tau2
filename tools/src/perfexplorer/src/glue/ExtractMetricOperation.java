@@ -14,6 +14,10 @@ import edu.uoregon.tau.perfdmf.Trial;
  */
 public class ExtractMetricOperation extends AbstractPerformanceOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3545212529943079604L;
 	List<String> metrics = null;
 	
 	/**

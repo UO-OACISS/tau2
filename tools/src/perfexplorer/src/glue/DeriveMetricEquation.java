@@ -9,20 +9,20 @@ import java.util.List;
 import java.util.Stack;
 import java.util.regex.Pattern;
 
-
+import sun.security.pkcs.ParsingException;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerExpression;
-import edu.uoregon.tau.perfexplorer.glue.AbstractPerformanceOperation;
-import edu.uoregon.tau.perfexplorer.glue.DeriveMetricOperation;
-import edu.uoregon.tau.perfexplorer.glue.MergeTrialsOperation;
-import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
 
 /**
  * @author smillst
  * 
  */
 public class DeriveMetricEquation extends AbstractPerformanceOperation {
-   private ArrayList<String> equation = null;
+   /**
+	 * 
+	 */
+	private static final long serialVersionUID = 2874115882488110455L;
+private ArrayList<String> equation = null;
    private PerformanceResult input = null;
    private String newName = null;
    private boolean correctEquation = true;

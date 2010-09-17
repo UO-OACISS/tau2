@@ -16,6 +16,10 @@ import edu.uoregon.tau.perfdmf.Trial;
  */
 public class LoadImbalanceOperation extends	AbstractPerformanceOperation {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3765199846343102905L;
 	public static String COMPUTATION = "Computation";
 	public static String KERNEL_COMPUTATION = "Kernel Computation";
 	public static String COMMUNICATION = "MPI";
@@ -58,6 +62,7 @@ public class LoadImbalanceOperation extends	AbstractPerformanceOperation {
 	/* (non-Javadoc)
 	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation#processData()
 	 */
+	@SuppressWarnings("deprecation")
 	public List<PerformanceResult> processData() {
 		// iterate over inputs
 		for (PerformanceResult input : inputs) {

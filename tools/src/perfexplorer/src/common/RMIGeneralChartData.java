@@ -1,8 +1,8 @@
 package edu.uoregon.tau.perfexplorer.common;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class represents the data to be used to create a scalability or
@@ -16,10 +16,15 @@ import java.util.ArrayList;
  */
 public class RMIGeneralChartData implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5430395494124130200L;
+
 	protected ChartDataType dataType = ChartDataType.FRACTION_OF_TOTAL;
 
 	protected List<CategoryDataRow> data = null;
-	protected Class categoryType = Integer.class;
+	protected Class<?> categoryType = Integer.class;
 	protected int xMinimum = -1;
 	protected int xMaximum = -1;
 	
@@ -87,14 +92,18 @@ public class RMIGeneralChartData implements Serializable {
 	 *
 	 * @return
 	 */
-	public Class getCategoryType() { return this.categoryType; }
+	public Class<?> getCategoryType() { return this.categoryType; }
 
 	public class CategoryDataRow implements Serializable {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -5571689459430495190L;
 		public String series = null;
 		public String categoryString = null;
 		public Integer categoryInteger = null;
 		public double value = 0.0;
-		public Class categoryType = Integer.class;
+		public Class<?> categoryType = Integer.class;
 
 		public CategoryDataRow (String series, String category, double value) {
 			this.series = series;

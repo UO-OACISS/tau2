@@ -17,6 +17,11 @@ import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
 public class CorrelationOperation extends DefaultOperation {
 
 	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7970275023917032653L;
+
+	/**
 	 * @param inputs
 	 */
 	public CorrelationOperation(List<PerformanceResult> inputs) {

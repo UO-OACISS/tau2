@@ -18,6 +18,11 @@ import java.io.Serializable;
 public final class ChartType implements Serializable {
 
     /**
+	 * 
+	 */
+	private static final long serialVersionUID = -7558040081827033537L;
+
+	/**
      * One attribute, the name - it is transient so it is not serialized
      */
     private final transient int _value;

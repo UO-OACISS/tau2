@@ -3,11 +3,7 @@
  */
 package edu.uoregon.tau.perfexplorer.glue;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.lang.Math;
 
 import edu.uoregon.tau.perfdmf.Trial;
 
@@ -16,6 +12,11 @@ import edu.uoregon.tau.perfdmf.Trial;
  *
  */
 public class NormalizeOperation extends AbstractPerformanceOperation {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1383799654279373763L;
 
 	/**
 	 * @param input

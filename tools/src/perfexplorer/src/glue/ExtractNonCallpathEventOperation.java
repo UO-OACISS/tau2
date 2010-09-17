@@ -3,18 +3,23 @@
  */
 package edu.uoregon.tau.perfexplorer.glue;
 
-import edu.uoregon.tau.perfdmf.Trial;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import edu.uoregon.tau.perfdmf.Trial;
 
 /**
  * @author khuck
  *
  */
 public class ExtractNonCallpathEventOperation extends ExtractEventOperation {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 737893750945834332L;
 
 	public ExtractNonCallpathEventOperation(PerformanceResult input) {
 		super(input, buildListOfEvents(input));
