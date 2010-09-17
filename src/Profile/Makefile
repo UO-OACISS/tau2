@@ -541,7 +541,7 @@ PapiThreadLayer.o   : PapiThreadLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 JavaThreadLayer.o   : JavaThreadLayer.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX)  $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauCAPI.o   : TauCAPI.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -624,7 +624,6 @@ TauGASP.o : TauGASP.c $(HDRS)
 TauGASPU.o : TauGASPU.upc $(HDRS)
 	$(TAU_UPCC) $(UPCFLAGS) -c $(@:.o=.upc)
 
-
 ktau_syscall.o : ktau_syscall.c $(HDRS)
 	$(CC) $(CXXFLAGS) -c $(@:.o=.c)
 
@@ -637,6 +636,9 @@ java_crw_demo.o : java_crw_demo.c $(HDRS)
 $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
 
+JVMTIThreadLayer.o: JVMTIThreadLayer.cpp
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
+
 TauJVMTI.o :	TauJVMTI.cpp
 	$(CXX) $(CXXFLAGS) -c TauJVMTI.cpp
 
@@ -647,7 +649,7 @@ TauJVMTI.jar:  TauJVMTI.java
 	(cd classes; $(JDKDIR)/bin/jar cf ../$@ *)
 
 test_java: all
-	LD_LIBRARY_PATH=`pwd` $(JDKDIR)bin/java -agentlib:TAUsh-jdk -Xbootclasspath/a:./TauJVMTI.jar -version
+	LD_LIBRARY_PATH=`pwd` $(JDKDIR)bin/java -agentlib:TAUsh-jdk -Xbootclasspath/a:./TauJVMTI.jar Pi
 
 clean : 
 	$(RM) *.ii *.ti ti_files cxx_repository ii_files rii_files *.a *.o *$(TAU_SHLIBX)

@@ -38,17 +38,21 @@
 
 #include "stdlib.h"
 
-//Enable TAU!
-//#define PROFILING_ON
-//#define JAVA
-
+//Enable TAU! Done through compiler directives
+//#undef PROFILING_ON
+//#undef JAVA
+#define DEBUG_PROF
 //TAU
 #include "Profile/Profiler.h"
 
 //Supporting Libraries
 #include <limits.h>
+#include <iostream>
+using namespace std;
 
 #include "TauJVMTI.h"
+#define JAVA
+#define TAU_JVMTI
 #include "JavaThreadLayer.h"
 
 /* ------------------------------------------------------------------- */
@@ -118,19 +122,20 @@ typedef struct ClassInfo {
 /* Global agent data structure */
 
 typedef struct {
-    /* JVMTI Environment */
-    jvmtiEnv      *jvmti;
-    jboolean       vm_is_dead;
-    jboolean       vm_is_started;
-    /* Data access Lock */
-    jrawMonitorID  lock;
-    /* Options */
-    char           *include;
-    char           *exclude;
-    int             max_count;
-    /* ClassInfo Table */
-    ClassInfo      *classes;
-    jint            ccount;
+  /* JVMTI Environment */
+  jvmtiEnv      *jvmti;
+  jboolean       vm_is_dead;
+  jboolean       vm_is_started;
+  jboolean       vm_is_initialized;
+  /* Data access Lock */
+  jrawMonitorID  lock;
+  /* Options */
+  char           *include;
+  char           *exclude;
+  int             max_count;
+  /* ClassInfo Table */
+  ClassInfo      *classes;
+  jint            ccount;
 } GlobalAgentData;
 
 static GlobalAgentData *gdata;
@@ -299,14 +304,19 @@ TAUJVMTI_native_entry(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint
                 fatal_error("ERROR: Method number out of range\n");
             }
             mp = cp->methods + mnum;
-            if ( interested((char*)cp->name, (char*)mp->name,
+
+            if (gdata->vm_is_initialized and  interested((char*)cp->name, (char*)mp->name,
                             gdata->include, gdata->exclude)  ) {
-	      long unique_method_id;
 	      int tid = JavaThreadLayer::GetThreadId(thread);
+	      long unique_method_id;
 	      mp->calls++;
 	      cp->calls++;
 
 	      unique_method_id = make_unique_method_id(mnum, cnum);
+
+#ifdef DEBUG_PROF_METHOD
+	      printf("TAU> Method Entry %s, unique_method_id:%s", mp->name, unique_method_id);
+#endif /* DEBUG_PROF_METHOD */
 
 	      //Define a new mapping object TauMethodName
 	      TAU_MAPPING_OBJECT(TauMethodName=NULL);
@@ -316,12 +326,6 @@ TAUJVMTI_native_entry(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint
 		
 	      TAU_MAPPING_PROFILE_TIMER(TauTimer, TauMethodName, tid);
 	      TAU_MAPPING_PROFILE_START(TauTimer,  tid);
-
-#ifdef DEBUG_PROF 
-		fprintf(stdout, "TAU> Method Entry %s %s:%ld TID = %d\n", 
-			TauMethodName->GetName(), TauMethodName->GetType(), 
-			(long) event->u.method.method_id, tid);
-#endif /* DEBUG_PROF */
             }
         }
     } exit_critical_section(gdata->jvmti);
@@ -337,7 +341,6 @@ TAUJVMTI_native_exit(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint 
             ClassInfo  *cp;
             MethodInfo *mp;
 	    long unique_method_id;
-	    int tid = JavaThreadLayer::GetThreadId(thread);
 
             if ( cnum >= gdata->ccount ) {
                 fatal_error("ERROR: Class number out of range\n");
@@ -347,19 +350,18 @@ TAUJVMTI_native_exit(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint 
                 fatal_error("ERROR: Method number out of range\n");
             }
             mp = cp->methods + mnum;
-            if ( interested((char*)cp->name, (char*)mp->name,
+            if (gdata->vm_is_initialized and interested((char*)cp->name, (char*)mp->name,
                             gdata->include, gdata->exclude)  ) {
+		int tid = JavaThreadLayer::GetThreadId(thread);
                 mp->returns++;
-            }
-	    unique_method_id = make_unique_method_id(mnum, cnum);
-	    TAU_MAPPING_OBJECT(TauMethodName=NULL);
-	    TAU_MAPPING_LINK(TauMethodName, unique_method_id);
-	    TAU_MAPPING_PROFILE_STOP(tid);
-#ifdef DEBUG_PROF
-              fprintf(stdout, "TAU> Method Exit : %ld, TID = %d\n",
-            	    (long) event->u.method.method_id, tid);
+		unique_method_id = make_unique_method_id(mnum, cnum);
+#ifdef DEBUG_PROF_METHOD
+		printf("TAU> Method Exit %s, unique_method_id:%s", mp->name, unique_method_id);
 #endif /* DEBUG_PROF */
-
+		TAU_MAPPING_OBJECT(TauMethodName=NULL);
+		TAU_MAPPING_LINK(TauMethodName, unique_method_id);
+		TAU_MAPPING_PROFILE_STOP(tid);
+            }
         }
     } exit_critical_section(gdata->jvmti);
 }
@@ -382,7 +384,9 @@ cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
         };
 
         /* The VM has started. */
+#ifdef DEBUG_PROF
         stdout_message("VMStart\n");
+#endif /* DEBUG_PROF */
 
         /* Register Natives for class whose methods we use */
         klass = env->FindClass(STRING(TAUJVMTI_class));
@@ -408,6 +412,9 @@ cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
         gdata->vm_is_started = JNI_TRUE;
 
     } exit_critical_section(jvmti);
+#ifdef DEBUG_PROF
+        stdout_message("VMStart Finished\n");
+#endif /* DEBUG_PROF */
 }
 
 /* Callback for JVMTI_EVENT_VM_INIT */
@@ -422,7 +429,10 @@ cbVMInit(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
 
         /* The VM has started. */
         get_thread_name(jvmti, thread, tname, sizeof(tname));
+#ifdef DEBUG_PROF
         stdout_message("VMInit %s\n", tname);
+#endif /* DEBUG_PROF */
+
 
         /* The VM is now initialized, at this time we make our requests
          *   for additional events.
@@ -436,7 +446,10 @@ cbVMInit(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
                                   events[i], (jthread)NULL);
             check_jvmti_error(jvmti, error, "Cannot set event notification");
         }
-
+#ifdef DEBUG_PROF
+        stdout_message("VMInit end %s\n", tname);
+#endif /* DEBUG_PROF */
+	gdata->vm_is_initialized = JNI_TRUE;
     } exit_critical_section(jvmti);
 }
 
@@ -477,43 +490,43 @@ cbVMDeath(jvmtiEnv *jvmti, JNIEnv *env)
          */
         gdata->vm_is_dead = JNI_TRUE;
 
-        /* Dump out stats */
-        stdout_message("Begin Class Stats\n");
-        if ( gdata->ccount > 0 ) {
-            int cnum;
+        // /* Dump out stats */
+        // stdout_message("Begin Class Stats\n");
+        // if ( gdata->ccount > 0 ) {
+        //     int cnum;
 
-            /* Sort table (in place) by number of method calls into class. */
-            /*  Note: Do not use this table after this qsort! */
-            qsort(gdata->classes, gdata->ccount, sizeof(ClassInfo),
-                        &class_compar);
+        //     /* Sort table (in place) by number of method calls into class. */
+        //     /*  Note: Do not use this table after this qsort! */
+        //     qsort(gdata->classes, gdata->ccount, sizeof(ClassInfo),
+        //                 &class_compar);
 
-            /* Dump out gdata->max_count most called classes */
-            for ( cnum=gdata->ccount-1 ;
-                  cnum >= 0 && cnum >= gdata->ccount - gdata->max_count;
-                  cnum-- ) {
-                ClassInfo *cp;
-                int        mnum;
+        //     /* Dump out gdata->max_count most called classes */
+        //     for ( cnum=gdata->ccount-1 ;
+        //           cnum >= 0 && cnum >= gdata->ccount - gdata->max_count;
+        //           cnum-- ) {
+        //         ClassInfo *cp;
+        //         int        mnum;
 
-                cp = gdata->classes + cnum;
-                stdout_message("Class %s %d calls\n", cp->name, cp->calls);
-                if ( cp->calls==0 ) continue;
+        //         cp = gdata->classes + cnum;
+        //         stdout_message("Class %s %d calls\n", cp->name, cp->calls);
+        //         if ( cp->calls==0 ) continue;
 
-                /* Sort method table (in place) by number of method calls. */
-                /*  Note: Do not use this table after this qsort! */
-                qsort(cp->methods, cp->mcount, sizeof(MethodInfo),
-                            &method_compar);
-                for ( mnum=cp->mcount-1 ; mnum >= 0 ; mnum-- ) {
-                    MethodInfo *mp;
+        //         /* Sort method table (in place) by number of method calls. */
+        //         /*  Note: Do not use this table after this qsort! */
+        //         qsort(cp->methods, cp->mcount, sizeof(MethodInfo),
+        //                     &method_compar);
+        //         for ( mnum=cp->mcount-1 ; mnum >= 0 ; mnum-- ) {
+        //             MethodInfo *mp;
 
-                    mp = cp->methods + mnum;
-                    if ( mp->calls==0 ) continue;
-                    stdout_message("\tMethod %s %s %d calls %d returns\n",
-                        mp->name, mp->signature, mp->calls, mp->returns);
-                }
-            }
-        }
-        stdout_message("End Class Stats\n");
-        (void)fflush(stdout);
+        //             mp = cp->methods + mnum;
+        //             if ( mp->calls==0 ) continue;
+        //             stdout_message("\tMethod %s %s %d calls %d returns\n",
+        //                 mp->name, mp->signature, mp->calls, mp->returns);
+        //         }
+        //     }
+        // }
+        // stdout_message("End Class Stats\n");
+        // (void)fflush(stdout);
 
     } exit_critical_section(jvmti);
 
@@ -777,6 +790,9 @@ parse_agent_options(char *options)
 JNIEXPORT jint JNICALL
 Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 {
+#ifdef DEBUG_PROF
+    printf("Start of Agent_OnLoad\n");
+#endif /* DEBUG_PROF */
     static GlobalAgentData data;
     jvmtiEnv              *jvmti;
     jvmtiError             error;
@@ -862,8 +878,9 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
     error = jvmti->CreateRawMonitor("agent data", &(gdata->lock));
     check_jvmti_error(jvmti, error, "Cannot create raw monitor");
 
-    /* Add demo jar file to boot classpath */
-    //add_demo_jar_to_bootclasspath(jvmti, "taujava");
+#ifdef DEBUG_PROF
+    printf("End of Agent_OnLoad\n");
+#endif /* DEBUG_PROF */
 
     /* We return JNI_OK to signify success */
     return JNI_OK;

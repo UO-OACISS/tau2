@@ -2157,10 +2157,12 @@ method_write_all(CrwClassImage *ci)
     }
 
     for (i = 0; i < count; ++i) {
+      //TODO Method Level Gaurd
         method_write(ci, i);
     }
 
     if ( ci->mnum_callback != NULL ) {
+      //TODO Only callback methods have been written over....
       (*(ci->mnum_callback))(ci->number, ci->method_name, ci->method_descr,
                          count);
     }
