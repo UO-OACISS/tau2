@@ -1217,10 +1217,16 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             List<String> axisNames = new ArrayList<String>();
             for (int f = 0; f < scatterFunctions.length; f++) {
                 if (scatterFunctions[f] != null) {
-                    String toDisplay = ParaProfUtils.getDisplayName(scatterFunctions[f]);
-                    if (toDisplay.length() > 30) {
-                        toDisplay = toDisplay.substring(0, 30) + "...";
+                	String toDisplay;
+                	if(f==3){
+                		toDisplay = ParaProfUtils.getDisplayName(scatterFunctions[f]);
+                		if (toDisplay.length() > 30) {
+                			toDisplay = toDisplay.substring(0, 30) + "...";
+                		}
                     }
+                	else{
+                		toDisplay=scatterFunctions[f].getName();
+                	}
                     // e.g. "MPI_Recv()\n(Exclusive, Time)"
                     if (scatterValueTypes[f] == ValueType.NUMCALLS || scatterValueTypes[f] == ValueType.NUMSUBR) {
                         axisNames.add(toDisplay + "\n(" + scatterValueTypes[f].toString() + ")");
