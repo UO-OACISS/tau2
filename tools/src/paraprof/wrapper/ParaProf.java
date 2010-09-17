@@ -54,7 +54,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    private final static String VERSION = "Mon Aug  9 16:22:39 PDT 2010";
+    private final static String VERSION = "Fri Sep 17 16:17:29 PDT 2010";
 
     public static int defaultNumberPrecision = 6;
 
@@ -492,6 +492,8 @@ public class ParaProf implements ActionListener {
                 ParaProf.fileType = DataSource.PARAVER;
             } else if (fileTypeString.equals("ipm")) {
                 ParaProf.fileType = DataSource.IPM;
+            } else if (fileTypeString.equals("google")) {
+                ParaProf.fileType = DataSource.GOOGLE;
             } else {
                 System.err.println("Please enter a valid file type.");
                 ParaProf.usage();

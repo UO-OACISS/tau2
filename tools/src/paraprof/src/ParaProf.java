@@ -492,6 +492,8 @@ public class ParaProf implements ActionListener {
                 ParaProf.fileType = DataSource.PARAVER;
             } else if (fileTypeString.equals("ipm")) {
                 ParaProf.fileType = DataSource.IPM;
+            } else if (fileTypeString.equals("google")) {
+                ParaProf.fileType = DataSource.GOOGLE;
             } else {
                 System.err.println("Please enter a valid file type.");
                 ParaProf.usage();

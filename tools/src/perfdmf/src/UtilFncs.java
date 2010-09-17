@@ -559,6 +559,9 @@ public class UtilFncs {
         case DataSource.GPROF:
             dataSource = new GprofDataSource(sourceFiles, fixGprofNames);
             break;
+        case DataSource.GOOGLE:
+            dataSource = new GoogleDataSource(sourceFiles);
+            break;
         case DataSource.PSRUN:
             v.add(sourceFiles);
             dataSource = new PSRunDataSource(v);
