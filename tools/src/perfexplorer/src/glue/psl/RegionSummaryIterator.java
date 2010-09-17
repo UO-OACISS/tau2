@@ -10,7 +10,7 @@ import java.util.Set;
  * @author khuck
  *
  */
-public class RegionSummaryIterator implements Iterator {
+public class RegionSummaryIterator implements Iterator<RegionSummary> {
 
 	private RegionSummaryFilter filter = null;
 	private Iterator<RegionSummary> summaries = null;

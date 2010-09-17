@@ -1,5 +1,8 @@
 package edu.uoregon.tau.perfexplorer.glue.test;
 
+import java.util.List;
+
+import junit.framework.TestCase;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.glue.CopyOperation;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
@@ -8,10 +11,6 @@ import edu.uoregon.tau.perfexplorer.glue.TrialMeanResult;
 import edu.uoregon.tau.perfexplorer.glue.TrialResult;
 import edu.uoregon.tau.perfexplorer.glue.TrialTotalResult;
 import edu.uoregon.tau.perfexplorer.glue.Utilities;
-
-import java.util.List;
-
-import junit.framework.TestCase;
 
 public class CopyOperationTest extends TestCase {
 

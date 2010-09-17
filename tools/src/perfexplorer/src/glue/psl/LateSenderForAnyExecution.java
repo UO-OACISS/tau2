@@ -15,7 +15,7 @@ public class LateSenderForAnyExecution extends OverheadForAnyExecution {
 	 * @param rankBasis
 	 * @param r
 	 */
-	public LateSenderForAnyExecution(Class property, Experiment parallelExp,
+	public LateSenderForAnyExecution(Class<Inefficiency> property, Experiment parallelExp,
 			RegionSummary rankBasis, CodeRegion r) {
 		super(property, parallelExp, rankBasis, r);
 	}

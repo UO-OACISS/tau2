@@ -14,6 +14,10 @@ import edu.uoregon.tau.perfdmf.Trial;
  */
 public class ExtractRankOperation extends AbstractPerformanceOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3488438379441540749L;
 	private Integer threadIndex;
 	/**
 	 * @param input

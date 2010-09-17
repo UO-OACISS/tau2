@@ -13,11 +13,15 @@ import edu.uoregon.tau.perfdmf.Trial;
  */
 public class SmartKMeansOperation extends AbstractPerformanceOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4012041148374200416L;
 	private Integer maxClusters = 2;
 	private String metric;
 	private int type;
-	private double evaluation = 0.0;
-	private double adjustedEvaluation = 0.0;
+//	private double evaluation = 0.0;
+//	private double adjustedEvaluation = 0.0;
 
 	/**
 	 * @param input

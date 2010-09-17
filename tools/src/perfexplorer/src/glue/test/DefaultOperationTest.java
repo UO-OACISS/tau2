@@ -1,15 +1,14 @@
 package edu.uoregon.tau.perfexplorer.glue.test;
 
+import java.util.List;
+
+import junit.framework.TestCase;
 import edu.uoregon.tau.perfexplorer.glue.AbstractPerformanceOperation;
 import edu.uoregon.tau.perfexplorer.glue.DefaultOperation;
 import edu.uoregon.tau.perfexplorer.glue.DefaultResult;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
 import edu.uoregon.tau.perfexplorer.glue.Provenance;
-
-import java.util.List;
-
-import junit.framework.TestCase;
 
 /**
  * This class is a JUnit test for the default operation class.

@@ -3,10 +3,7 @@
  */
 package edu.uoregon.tau.perfexplorer.glue.psl;
 
-import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
-
 import java.util.List;
-import java.lang.Math;
 /**
  * @author khuck
  *

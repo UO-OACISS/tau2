@@ -5,18 +5,15 @@
 package edu.uoregon.tau.perfexplorer.clustering.weka;
 
 
-import weka.core.Instances;
-import weka.core.Instance;
-import weka.core.FastVector;
-import weka.core.Attribute;
-
-import java.util.List;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 
-
-import java.io.Serializable;
-
+import weka.core.Attribute;
+import weka.core.FastVector;
+import weka.core.Instance;
+import weka.core.Instances;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 
 /**
@@ -29,6 +26,10 @@ import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
  */
 public class WekaRawData implements RawDataInterface, Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2898797823766558128L;
 	private Instances instances = null;
 	private int vectors = 0;
 	private int dimensions = 0;
@@ -164,8 +165,9 @@ public class WekaRawData implements RawDataInterface, Serializable {
 	/* (non-Javadoc)
 	 * @see clustering.RawDataInterface#getEventNames()
 	 */
+	@SuppressWarnings("unchecked")
 	public List<String> getEventNames() {
-		Enumeration e = instances.enumerateAttributes();
+		Enumeration<Attribute> e = instances.enumerateAttributes();
 		List<String> names = new ArrayList<String> (instances.numDistinctValues(0));
 		while (e.hasMoreElements()) {
 			Attribute tmp = (Attribute) e.nextElement();
@@ -222,7 +224,7 @@ public class WekaRawData implements RawDataInterface, Serializable {
 		double yAvg = 0.0;
 		double xStDev = 0.0;
 		double yStDev = 0.0;
-		double sum = 0.0;
+		//double sum = 0.0;
 
 		for (int i = 0 ; i < vectors ; i++ ) {
 			xAvg += instances.instance(i).value(x);

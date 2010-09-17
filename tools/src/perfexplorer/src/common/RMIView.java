@@ -1,17 +1,19 @@
 package edu.uoregon.tau.perfexplorer.common;
 
-import edu.uoregon.tau.perfdmf.database.DB;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.io.Serializable;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
+
 import javax.swing.tree.DefaultMutableTreeNode;
+
+import edu.uoregon.tau.perfdmf.database.DB;
 
 /**
  * This class is the RMI class which contains the tree of views to be 
@@ -25,6 +27,10 @@ import javax.swing.tree.DefaultMutableTreeNode;
  */
 public class RMIView implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7198343642137106238L;
 	private static List<String> fieldNames = null;
 	private List<String> fields = null;
 	private DefaultMutableTreeNode node = null;

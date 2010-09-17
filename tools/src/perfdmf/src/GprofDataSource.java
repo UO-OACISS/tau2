@@ -125,16 +125,16 @@ public class GprofDataSource extends DataSource {
 
                             functionProfile.setInclusive(0, self.d1 + self.d2);
                             functionProfile.setExclusive(0, self.d1);
-                            functionProfile.setNumCalls(self.i0);
+                            functionProfile.setNumCalls(self.d3);
 
-                            int numSubr = 0;
+                            double numSubr = 0;
                             for (int i = 0; i < children.size(); i++) {
                                 LineData lineDataChild = children.get(i);
-                                numSubr += lineDataChild.i0;
+                                numSubr += lineDataChild.d3;
                             }
 
                             functionProfile.setNumSubr(numSubr);
-                            //functionProfile.setInclusivePerCall(0, (self.d1 + self.d2) / self.i0);
+                            //functionProfile.setInclusivePerCall(0, (self.d1 + self.d2) / self.d3);
 
                             for (int i = 0; i < parents.size(); i++) {
                                 LineData lineDataParent = parents.elementAt(i);
@@ -149,10 +149,10 @@ public class GprofDataSource extends DataSource {
                                 thread.addFunctionProfile(functionProfile);
                                 functionProfile.setInclusive(0, lineDataParent.d0 + lineDataParent.d1);
                                 functionProfile.setExclusive(0, lineDataParent.d0);
-                                functionProfile.setNumCalls(lineDataParent.i0);
+                                functionProfile.setNumCalls(lineDataParent.d3);
 
                                 //  functionProfile.setInclusivePerCall(0,
-                                //         (lineDataParent.d0 + lineDataParent.d1) / lineDataParent.i0);
+                                //         (lineDataParent.d0 + lineDataParent.d1) / lineDataParent.d3);
 
                             }
                             parents.clear();
@@ -170,7 +170,7 @@ public class GprofDataSource extends DataSource {
                                 thread.addFunctionProfile(functionProfile);
                                 functionProfile.setInclusive(0, lineDataChild.d0 + lineDataChild.d1);
                                 functionProfile.setExclusive(0, lineDataChild.d0);
-                                functionProfile.setNumCalls(lineDataChild.i0);
+                                functionProfile.setNumCalls(lineDataChild.d3);
                             }
                             children.clear();
                             parent = true;
@@ -314,6 +314,9 @@ public class GprofDataSource extends DataSource {
 
         boolean hasCalls;
         String str = st.nextToken();
+//        if(str.contains("CSRMatrix2")){
+//        	System.out.println("Hey!");
+//        }
         try {
             //int foo = 
             	Integer.parseInt(str);
@@ -324,14 +327,14 @@ public class GprofDataSource extends DataSource {
 
         if (!hasCalls) {
             // if the number of calls is absent, assume 1.
-            lineData.i0 = 1;
+            lineData.d3 = 1;
             lineData.s0 = str;
         } else {
             if (str.indexOf("+") < 0) {
                 StringTokenizer st2 = new StringTokenizer(str, "+");
-                lineData.i0 = Integer.parseInt(st2.nextToken());
+                lineData.d3 = Double.parseDouble(st2.nextToken());
                 // do this?
-                // lineData.i0 += Integer.parseInt(st2.nextToken());
+                // lineData.d3 += Integer.parseInt(st2.nextToken());
             }
             lineData.s0 = st.nextToken(); //Name
         }
@@ -444,14 +447,25 @@ public class GprofDataSource extends DataSource {
         // check for a ratio
         if (tmpStr.indexOf("/") >= 0) {
             StringTokenizer st2 = new StringTokenizer(tmpStr, "/");
+            
+            
+            try{
+            
             // the number of times self was called from parent
-            lineData.i0 = Integer.parseInt(st2.nextToken());
+            lineData.d3 = Double.parseDouble(st2.nextToken());
             // the total number of nonrecursive calls to self from all
-            // its parents
-            lineData.i1 = Integer.parseInt(st2.nextToken());
+            // its parents (This is currently not used, and may be bigger than an int!)
+            //lineData.i1 = Integer.parseInt();
+            st2.nextToken();
+            }catch( NumberFormatException e){
+            	e.printStackTrace();
+            }
         } else {
-            lineData.i0 = Integer.parseInt(tmpStr);
-            lineData.i1 = lineData.i0;
+        	if(tmpStr.indexOf('+')>=0){
+        		tmpStr=tmpStr.split("\\+")[0];
+        	}
+            lineData.d3 = Double.parseDouble(tmpStr);
+            lineData.d4 = lineData.d3;
         }
 
         // the rest is the name
@@ -484,11 +498,11 @@ public class GprofDataSource extends DataSource {
 //        lineData.d1 = 1000.0 * Double.parseDouble(st.nextToken());
 //        lineData.d2 = 1000.0 * Double.parseDouble(st.nextToken());
 //        if (st.countTokens() > 5) {
-//            lineData.i0 = Integer.parseInt(st.nextToken());
+//            lineData.d3 = Integer.parseInt(st.nextToken());
 //            lineData.d3 = Double.parseDouble(st.nextToken());
 //            lineData.d4 = Double.parseDouble(st.nextToken());
 //        } else {
-//            lineData.i0 = 1;
+//            lineData.d3 = 1;
 //            lineData.d3 = lineData.d2;
 //            lineData.d4 = lineData.d2;
 //        }

@@ -1,14 +1,12 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import java.io.FileWriter;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.InputStream;
-import java.util.List;
+import java.io.FileWriter;
 
+import edu.uoregon.tau.common.ExternalTool;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfexplorer.common.RMICubeData;
-import edu.uoregon.tau.common.ExternalTool;
 
 public class PerfExplorerWekaLauncher {
 	

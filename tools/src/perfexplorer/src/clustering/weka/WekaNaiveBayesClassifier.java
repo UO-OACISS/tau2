@@ -8,7 +8,6 @@ import java.util.List;
 
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
-import weka.classifiers.bayes.NaiveBayes;
 import weka.core.Instance;
 import weka.core.Instances;
 import edu.uoregon.tau.perfexplorer.clustering.ClassifierInterface;

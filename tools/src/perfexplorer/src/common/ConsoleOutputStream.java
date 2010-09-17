@@ -8,7 +8,7 @@ import java.io.IOException;
  */
 class ConsoleOutputStream extends ByteArrayOutputStream {
     
-    private String lineSeparator;
+    //private String lineSeparator;
     
 	private boolean error = false;
 	private Console console = null;
@@ -22,7 +22,7 @@ class ConsoleOutputStream extends ByteArrayOutputStream {
         super();
         this.console = console;
         this.error = error;
-        lineSeparator = System.getProperty("line.separator");
+        //lineSeparator = System.getProperty("line.separator");
     }
     
     /**

@@ -1,16 +1,25 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.net.URL;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
-import java.net.URL;
+
 import edu.uoregon.tau.common.Utility;
-
-
 import edu.uoregon.tau.perfexplorer.common.RMICubeData;
-import edu.uoregon.tau.vis.*;
+import edu.uoregon.tau.vis.ColorScale;
+import edu.uoregon.tau.vis.PlotFactory;
+import edu.uoregon.tau.vis.ScatterPlot;
+import edu.uoregon.tau.vis.Vec;
+import edu.uoregon.tau.vis.VisCanvas;
+import edu.uoregon.tau.vis.VisRenderer;
 
 public class PerfExplorerCube {
 

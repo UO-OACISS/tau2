@@ -4,8 +4,16 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
-import edu.uoregon.tau.perfdmf.*;
-import edu.uoregon.tau.perfexplorer.common.*;
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.UtilFncs;
+import edu.uoregon.tau.perfexplorer.common.AnalysisType;
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
+import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
+import edu.uoregon.tau.perfexplorer.common.RMIVarianceData;
+import edu.uoregon.tau.perfexplorer.common.TransformationType;
 
 /**
  * The facade interface to the application for scripting purpose. This facade
@@ -138,8 +146,7 @@ public class ScriptFacade {
 	 * 
 	 * @param name
 	 */
-    @SuppressWarnings("unchecked") // for getMetrics() call
-	public void setMetric(String name) {
+    public void setMetric(String name) {
         // check the argument
         if (name == null)
             throw new IllegalArgumentException("Metric name cannot be null.");

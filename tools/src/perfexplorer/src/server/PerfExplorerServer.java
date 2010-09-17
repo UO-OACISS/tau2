@@ -1701,7 +1701,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param trialID
 	 * @return List of PerfDMF IntervalEvent objects.
 	 */
-	@SuppressWarnings("unchecked")
 	public List<RMISortableIntervalEvent> getEventList(int trialID, int metricIndex) {
 		try {
 			this.session.setTrial(trialID, false);

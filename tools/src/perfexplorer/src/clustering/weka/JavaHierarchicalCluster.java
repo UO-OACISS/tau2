@@ -5,13 +5,12 @@
 package edu.uoregon.tau.perfexplorer.clustering.weka;
 
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.ArrayList;
 
 import weka.core.Instance;
 import weka.core.Instances;
-
 import edu.uoregon.tau.perfexplorer.clustering.ClusterDescription;
 import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
 import edu.uoregon.tau.perfexplorer.clustering.DendrogramTree;
@@ -84,7 +83,7 @@ public class JavaHierarchicalCluster implements HierarchicalCluster {
 		}
 		
 		DendrogramTree newTree = null;
-		int newline = 0;
+		//int newline = 0;
 		while (remainingIndices.size() > 1) {
 			boolean first = true;
 			double min = 0.0;
@@ -310,6 +309,7 @@ public class JavaHierarchicalCluster implements HierarchicalCluster {
 		return minimums;
 	}
 
+	@SuppressWarnings("unchecked")
 	public int[] getClusterSizes() {
 		if (this.clusterSizes == null) {
 			clusterSizes = new int[this.clusters.length];

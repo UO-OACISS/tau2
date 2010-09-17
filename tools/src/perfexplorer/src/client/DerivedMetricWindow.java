@@ -1,13 +1,25 @@
 package edu.uoregon.tau.perfexplorer.client;
 
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -17,14 +29,27 @@ import java.util.ListIterator;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import javax.swing.*;
-import javax.swing.event.*;
-import javax.swing.plaf.ComponentUI;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JList;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.JTextPane;
+import javax.swing.KeyStroke;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
-import javax.swing.plaf.basic.BasicToolTipUI;
 
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
@@ -144,9 +169,10 @@ ChangeListener {
 				yPosition = yPosition - 50;
 
 			this.setLocation(xPosition, yPosition);
-		} else {
-			this.setLocation(savedPosition);
-		}
+		} 
+//		else {
+//			this.setLocation(savedPosition);
+//		}
 
 
 		//**********************************************************************	
@@ -201,6 +227,11 @@ ChangeListener {
 
 		expression = new JList(expressionList)
 		{//This allows the tool tip to display the expression
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = -789541234065276141L;
+
 			//the mouse is over.
 			public String getToolTipText(MouseEvent e) {
 				int index = locationToIndex(e.getPoint());
@@ -669,6 +700,11 @@ ChangeListener {
 	}
 }
 class MyComboBoxRenderer extends BasicComboBoxRenderer {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1788895816143895038L;
+
 	public Component getListCellRendererComponent(JList list, Object value,
 			int index, boolean isSelected, boolean cellHasFocus) {
 

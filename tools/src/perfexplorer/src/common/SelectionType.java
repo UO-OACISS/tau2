@@ -18,6 +18,11 @@ import java.io.Serializable;
 public final class SelectionType implements Serializable {
 
     /**
+	 * 
+	 */
+	private static final long serialVersionUID = 5092210401141326214L;
+
+	/**
      * One attribute, the value - it is transient so it is not serialized
      */
     private final transient int _value;
@@ -42,7 +47,11 @@ public final class SelectionType implements Serializable {
         this._value = value;
     }
     
-    // The following declarations are necessary for serialization
+    public int get_value() {
+		return _value;
+	}
+
+	// The following declarations are necessary for serialization
     private static int nextOrdinal = 0;
     private final int ordinal = nextOrdinal++;
     private static final SelectionType[] VALUES = 

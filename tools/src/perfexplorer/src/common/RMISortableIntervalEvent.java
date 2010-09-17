@@ -1,18 +1,13 @@
 package edu.uoregon.tau.perfexplorer.common;
 
+import java.io.Serializable;
+import java.sql.SQLException;
+import java.text.DecimalFormat;
+import java.text.FieldPosition;
+
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.IntervalLocationProfile;
-import java.io.Serializable;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
-import java.text.DecimalFormat;
-import java.text.FieldPosition;
 
 
 /**
@@ -25,7 +20,11 @@ import java.text.FieldPosition;
  * @since   0.1
  *
  */
-public class RMISortableIntervalEvent extends IntervalEvent implements Serializable, Comparable {
+public class RMISortableIntervalEvent extends IntervalEvent implements Serializable, Comparable<IntervalEvent> {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4062837640988586241L;
 	public int metricIndex;
 	public RMISortableIntervalEvent (IntervalEvent e, DatabaseAPI dataSession, int metricIndex) {
 		super(dataSession);
@@ -54,7 +53,7 @@ public class RMISortableIntervalEvent extends IntervalEvent implements Serializa
 		return buf.toString();
 	}
 
-    public int compareTo(Object o) {
+    public int compareTo(IntervalEvent o) {
         IntervalEvent e = (IntervalEvent) o;
         IntervalLocationProfile ms1 = null;
         IntervalLocationProfile ms2 = null;

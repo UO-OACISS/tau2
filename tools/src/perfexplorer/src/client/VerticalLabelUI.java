@@ -1,13 +1,17 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import java.awt.*;
-import java.util.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.border.*;
+import java.awt.Dimension;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Insets;
+import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
 
-import javax.swing.plaf.basic.*;
-import java.awt.geom.*;
+import javax.swing.Icon;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.plaf.basic.BasicLabelUI;
 
 
 public class VerticalLabelUI extends BasicLabelUI

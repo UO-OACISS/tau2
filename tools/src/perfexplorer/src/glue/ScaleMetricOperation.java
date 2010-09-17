@@ -13,6 +13,10 @@ import edu.uoregon.tau.perfdmf.Trial;
  */
 public class ScaleMetricOperation extends AbstractPerformanceOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2410741879318876211L;
 	public static final String ADD = "+";
 	public static final String SUBTRACT = "-";
 	public static final String MULTIPLY = "*";

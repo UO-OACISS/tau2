@@ -8,14 +8,22 @@
 
 package edu.uoregon.tau.perfexplorer.client;
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
 
-import javax.swing.*;
-import javax.swing.tree.TreeNode;
-import javax.swing.tree.TreePath;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JProgressBar;
 
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfdmf.DataSource;
@@ -26,7 +34,11 @@ import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 public class LoadTrialProgressWindow extends JFrame implements ActionListener {
 
-    private PerfExplorerClient mainWindow = null;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 4116870609160780629L;
+	//private PerfExplorerClient mainWindow = null;
     private JProgressBar progressBar = null;
     private DataSource dataSource = null;
     private Trial ppTrial = null;
@@ -40,7 +52,7 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener {
 
         this.dataSource = dataSource;
         this.ppTrial = ppTrial;
-        this.mainWindow = mainWindow;
+        //this.mainWindow = mainWindow;
 
         //Window Stuff.
         int windowWidth = 300;
