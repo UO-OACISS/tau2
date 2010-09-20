@@ -54,7 +54,7 @@ public class ParaProf implements ActionListener {
         }
     }
 
-    private final static String VERSION = "Fri Sep 17 16:17:29 PDT 2010";
+    private final static String VERSION = "Mon Sep 20 10:59:20 PDT 2010";
 
     public static int defaultNumberPrecision = 6;
 
@@ -126,7 +126,7 @@ public class ParaProf implements ActionListener {
                 + "  -f, --filetype <filetype>       Specify type of performance data, options are:\n"
                 + "                                    profiles (default), pprof, dynaprof, mpip,\n"
                 + "                                    gprof, psrun, hpm, packed, cube, hpc, ompp\n"
-                + "                                    snap, perixml, gptl, ipm\n"
+                + "                                    snap, perixml, gptl, ipm, google\n"
                 + "  --range a-b:c                   Load only profiles from the given range(s) of processes\n"
                 + "                                    Seperate individual ids or dash-defined ranges with colons\n"
                 + "  -h, --help                      Display this help message\n" + "\n"
