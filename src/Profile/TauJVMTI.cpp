@@ -39,9 +39,10 @@
 #include "stdlib.h"
 
 //Enable TAU! Done through compiler directives
-//#undef PROFILING_ON
-//#undef JAVA
+#undef PROFILING_ON
+#undef JAVA
 #define DEBUG_PROF
+#define DEBUG_PROF_METHOD
 //TAU
 #include "Profile/Profiler.h"
 
@@ -163,15 +164,17 @@ exit_critical_section(jvmtiEnv *jvmti)
 /* Create a unique method_id based on method number and class number */
 static long
 make_unique_method_id(unsigned cnum, unsigned mnum){
-  //may seem silly, but ANSI spec only says that long => int
-  //especially since we're frequently running on unusual architectures.
+  //ANSI spec only says that long => int, so we may run into problems on certian architectures 
+  //with really large projects (lots of classes/methods). May be eventually remedied by changes
+  //to java_crw_demo.
   if(cnum > ULONG_MAX/2){
     fatal_error("class number is too large for use in method id.\n");
   }
   if(mnum > ULONG_MAX/2){
     fatal_error("method number is too large for use in method id.\n");
   }
-  return cnum << (sizeof(unsigned long) >> 1) && mnum;
+  //shift cnum into the top half of the return, and place mnum int he bottom.
+  return (cnum << 4*(sizeof(unsigned long) >> 1)) + mnum;
 }
 
 /* Extract method and class number from unique method_id */
@@ -315,7 +318,7 @@ TAUJVMTI_native_entry(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint
 	      unique_method_id = make_unique_method_id(mnum, cnum);
 
 #ifdef DEBUG_PROF_METHOD
-	      printf("TAU> Method Entry %s, unique_method_id:%s", mp->name, unique_method_id);
+	      printf("TAU> Method Entry %s %s %s, unique_method_id:%d, Thread ID:%d\n", cp->name, mp->name, mp->signature, unique_method_id, tid);
 #endif /* DEBUG_PROF_METHOD */
 
 	      //Define a new mapping object TauMethodName
@@ -356,7 +359,7 @@ TAUJVMTI_native_exit(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint 
                 mp->returns++;
 		unique_method_id = make_unique_method_id(mnum, cnum);
 #ifdef DEBUG_PROF_METHOD
-		printf("TAU> Method Exit %s, unique_method_id:%s", mp->name, unique_method_id);
+		printf("TAU> Method Exit %s %s %s, unique_method_id:%d, Thread ID:%d\n", cp->name, mp->name, mp->signature, unique_method_id, tid);
 #endif /* DEBUG_PROF */
 		TAU_MAPPING_OBJECT(TauMethodName=NULL);
 		TAU_MAPPING_LINK(TauMethodName, unique_method_id);
@@ -385,7 +388,7 @@ cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
 
         /* The VM has started. */
 #ifdef DEBUG_PROF
-        stdout_message("VMStart\n");
+        stdout_message("DEBUGPROF:: VMStart\n");
 #endif /* DEBUG_PROF */
 
         /* Register Natives for class whose methods we use */
@@ -413,7 +416,7 @@ cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
 
     } exit_critical_section(jvmti);
 #ifdef DEBUG_PROF
-        stdout_message("VMStart Finished\n");
+        stdout_message("DEBUGPROF:: VMStart Finished\n");
 #endif /* DEBUG_PROF */
 }
 
@@ -430,7 +433,7 @@ cbVMInit(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
         /* The VM has started. */
         get_thread_name(jvmti, thread, tname, sizeof(tname));
 #ifdef DEBUG_PROF
-        stdout_message("VMInit %s\n", tname);
+        stdout_message("DEBUGPROF:: VMInit %s\n", tname);
 #endif /* DEBUG_PROF */
 
 
@@ -447,7 +450,7 @@ cbVMInit(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
             check_jvmti_error(jvmti, error, "Cannot set event notification");
         }
 #ifdef DEBUG_PROF
-        stdout_message("VMInit end %s\n", tname);
+        stdout_message("DEBUGPROF:: VMInit end %s\n", tname);
 #endif /* DEBUG_PROF */
 	gdata->vm_is_initialized = JNI_TRUE;
     } exit_critical_section(jvmti);
@@ -791,7 +794,7 @@ JNIEXPORT jint JNICALL
 Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 {
 #ifdef DEBUG_PROF
-    printf("Start of Agent_OnLoad\n");
+    printf("DEBUG_PROF:: Start of Agent_OnLoad\n");
 #endif /* DEBUG_PROF */
     static GlobalAgentData data;
     jvmtiEnv              *jvmti;
@@ -823,7 +826,21 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 
     /* Here we save the jvmtiEnv* for Agent_OnUnload(). */
     gdata->jvmti = jvmti;
+
+    /*Give our threading layer the handel it needs */
     JavaThreadLayer::jvmti = jvmti;
+
+    /*Set up the necessary threading locks now, since they can only
+     * be set up during the Onload and Running phases of the JVM
+     */
+    JavaThreadLayer::InitializeDBMutexData();
+    JavaThreadLayer::InitializeEnvMutexData();
+
+    /* Register the current thread, since the JVM makes calls with the first thread, before
+     * calling cbThreadStart and we need to create the necessary locks and set it's thread ID.
+     */
+    JavaThreadLayer::RegisterThread();
+
     /* Parse any options supplied on java command line */
     parse_agent_options(options);
 
@@ -879,7 +896,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
     check_jvmti_error(jvmti, error, "Cannot create raw monitor");
 
 #ifdef DEBUG_PROF
-    printf("End of Agent_OnLoad\n");
+    printf("DEBUG_PROF:: End of Agent_OnLoad\n");
 #endif /* DEBUG_PROF */
 
     /* We return JNI_OK to signify success */
