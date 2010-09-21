@@ -15,7 +15,7 @@
 #**      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
 #****************************************************************************
 
-TAUROOT=
+TAUROOT=/mnt/netapp/home1/wsvoorhees/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -185,7 +185,7 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 ##############################################
 # For making libTAU.so Dynamic Shared Object
 ##############################################
-#GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
+AR_SHFLAGS 		= -shared  	#ENDIF##GNU#
 #SUNX86_64#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SOL2CC#AR_SHFLAGS 		= -G  	#ENDIF#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
@@ -239,11 +239,11 @@ TAU_SHLIB	= libTAUsh$(TAU_CONFIG)$(TAU_SHLIBX)
 ##############################################
 # If JAVA or DYNINST is defined, TAU_DSO is defined
 ##############################################
-#JAVA#TAU_DSO   		= $(TAU_SHLIB)  #ENDIF#
+TAU_DSO   		= $(TAU_SHLIB)  #ENDIF##JAVA#
 #DYNINST#TAU_DSO   		= $(TAU_SHLIB)  #ENDIF#
-#JAVA#TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB) #ENDIF#
-#JAVA#TAU_JAVA_INSTALLDIR = $(INSTALLDEST)/TAU #ENDIF#
-#JAVA#TAU_JAVA_CLASS1 = $(TAU_JAVA_INSTALLDIR)/Profile.class #ENDIF#
+TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB) #ENDIF##JAVA#
+TAU_JAVA_INSTALLDIR = $(INSTALLDEST)/TAU #ENDIF##JAVA#
+TAU_JAVA_CLASS1 = $(TAU_JAVA_INSTALLDIR)/Profile.class #ENDIF##JAVA#
 #DYNINST# TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB) #ENDIF#
 #USE_DECCXX# EXTRAOBJS=cxx_repository/*.o #ENDIF#
 #PYTHON#TAUPYTHON = pytau$(TAU_SHLIBX) #ENDIF#
@@ -639,17 +639,17 @@ $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 JVMTIThreadLayer.o: JVMTIThreadLayer.cpp
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
 
-TauJVMTI.o :	TauJVMTI.cpp
+TauJVMTI.o :	TauJVMTI.cpp TauJVMTI.jar
 	$(CXX) $(CXXFLAGS) -c TauJVMTI.cpp
 
 TauJVMTI.jar:  TauJVMTI.java
 	rm -f -r classes
 	mkdir -p classes
-	$(JDKDIR)/bin/javac -d classes TauJVMTI.java 
+	$(JDKDIR)/bin/javac -d classes TauJVMTI.java
 	(cd classes; $(JDKDIR)/bin/jar cf ../$@ *)
 
 test_java: all
-	LD_LIBRARY_PATH=`pwd` $(JDKDIR)bin/java -agentlib:TAUsh-jdk -Xbootclasspath/a:./TauJVMTI.jar Pi
+	LD_LIBRARY_PATH=`pwd` $(JDKDIR)/bin/java -agentlib:TAUsh-jdk -Xbootclasspath/a:./TauJVMTI.jar Pi
 
 clean : 
 	$(RM) *.ii *.ti ti_files cxx_repository ii_files rii_files *.a *.o *$(TAU_SHLIBX)
