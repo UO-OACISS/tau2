@@ -1317,7 +1317,7 @@ for arg in "$@"; do
     if [ -f "$gpuinclude/cuda.h" ] ; then
 			gputype="cuda"
       #echo "TAU GPU: Using CUDA for GPU analysis, source in $gpuinclude"
-    elif [ -f "$gpuinclude/OpenCL.h" ] ; then
+    elif [ -f "$gpuinclude/cl.h" ] ; then
 			gputype="opencl"
       #echo "TAU GPU: Using OpenCL for GPU analysis, source in $gpuinclude"
 		else
