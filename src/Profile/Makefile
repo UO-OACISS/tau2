@@ -82,7 +82,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(TAUROOT)/include/tau_internal.h $(INCDIR)/TauSampling.h $(INCDIR)/TauMetaData.h \
 		$(INCDIR)/TauSnapshot.h  $(INCDIR)/TauGASP.h          \
 	 	$(INCDIR)/TauUtil.h $(INCDIR)/TauXML.h $(INCDIR)/TauUnify.h \
-		$(INCDIR)/TauCollate.h $(INCDIR)/TauGpu.h $(INCDIR)/TauGpuAdapterCudaExp.h \
+		$(INCDIR)/TauCollate.h $(INCDIR)/TauGpu.h \
 
 LDFLAGS	      =
 
