@@ -1,4 +1,4 @@
-#include "TauGpuAdaperOpenCLExp.h"
+#include "TauGpuAdapterOpenCLExp.h"
 
 class openCLGpuId : public gpuId {
 
@@ -56,7 +56,7 @@ void Tau_opencl_exit()
 void Tau_opencl_enter_memcpy_event(int id, bool MemcpyType)
 {
 	openCLEventId *evId = new openCLEventId(id);
-	openCLEventGpuId *gId = new openCLEventGpuId(0);
+	openCLGpuId *gId = new openCLGpuId(0);
 	if (MemcpyType == MemcpyHtoD) 
 		Tau_gpu_enter_memcpy_event("Memcpy Host to Device (CPU)", evId, gId, MemcpyType);
 	else
@@ -66,7 +66,7 @@ void Tau_opencl_enter_memcpy_event(int id, bool MemcpyType)
 void Tau_opencl_exit_memcpy_event(int id, bool MemcpyType)
 {
 	openCLEventId *evId = new openCLEventId(id);
-	openCLEventGpuId *gId = new openCLEventGpuId(0);
+	openCLGpuId *gId = new openCLGpuId(0);
 	if (MemcpyType == MemcpyHtoD) 
 		Tau_gpu_exit_memcpy_event("Memcpy Host to Device (CPU)", evId, gId, MemcpyType);
 	else
@@ -85,7 +85,7 @@ void Tau_opencl_register_memcpy_event(int id, double start, double stop, int
 transferSize, bool MemcpyType)
 {
 	openCLEventId *evId = new openCLEventId(id);
-	openCLEventGpuId *gId = new openCLEventGpuId(0);
-		Tau_gpu_register_memcpy_event(evId, gId, start, stop, tranferSize, MemcpyType);
+	openCLGpuId *gId = new openCLGpuId(0);
+		Tau_gpu_register_memcpy_event(evId, gId, start, stop, transferSize, MemcpyType);
 
 }
