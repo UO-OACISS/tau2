@@ -616,8 +616,8 @@ case $1 in
           
         elif [ "x`echo $gpu_type | tr [:upper:] [:lower:]`" = "xopencl" ]; then
           echo "NOTE: Using GPU type: OpenCL."
-          echo "s/#OPENCL_GPU#\(.*)#ENDIF#/\1#ENDIF##OPENCL_GPU#//" >> $sedout
-          echo "s/#GPU#\(.*\)#ENDIF/\1#ENDIF##GPU#/" >> $sedout
+          echo "s/.*#OPENCL_GPU#//" >> $sedout
+          echo "s/#GPU#//" >> $sedout
 
         else
           echo "ERROR: UNKNOW GPU type, supported types: CUDA, OpenCL."
