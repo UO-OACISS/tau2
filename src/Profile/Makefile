@@ -649,7 +649,7 @@ TauJVMTI.jar:  TauJVMTI.java
 	(cd classes; $(JDKDIR)/bin/jar cf ../$@ *)
 
 test_java: all
-	LD_LIBRARY_PATH=`pwd` $(JDKDIR)bin/java -agentlib:TAUsh-jdk -Xbootclasspath/a:./TauJVMTI.jar Pi
+	LD_LIBRARY_PATH=`pwd` $(JDKDIR)/bin/java -agentlib:TAUsh-jdk=exclude=java -Xbootclasspath/a:./TauJVMTI.jar Pi
 
 clean : 
 	$(RM) *.ii *.ti ti_files cxx_repository ii_files rii_files *.a *.o *$(TAU_SHLIBX)

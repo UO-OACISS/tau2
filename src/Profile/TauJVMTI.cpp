@@ -38,13 +38,9 @@
 
 #include "stdlib.h"
 
-//Enable TAU! Done through compiler directives
-#undef PROFILING_ON
-#undef JAVA
-#define DEBUG_PROF
-#define DEBUG_PROF_METHOD
 //TAU
 #include "Profile/Profiler.h"
+#include "Profile/TauInit.h"
 
 //Supporting Libraries
 #include <limits.h>
@@ -52,8 +48,6 @@
 using namespace std;
 
 #include "TauJVMTI.h"
-#define JAVA
-#define TAU_JVMTI
 #include "JavaThreadLayer.h"
 
 /* ------------------------------------------------------------------- */
@@ -102,44 +96,13 @@ using namespace std;
 #define _STRING(s) #s
 #define STRING(s) _STRING(s)
 
-/* ------------------------------------------------------------------- */
 
-/* Data structure to hold method and class information in agent */
-
-typedef struct MethodInfo {
-    const char *name;          /* Method name */
-    const char *signature;     /* Method signature */
-    int         calls;         /* Method call count */
-    int         returns;       /* Method return count */
-} MethodInfo;
-
-typedef struct ClassInfo {
-    const char *name;          /* Class name */
-    int         mcount;        /* Method count */
-    MethodInfo *methods;       /* Method information */
-    int         calls;         /* Method call count for this class */
-} ClassInfo;
-
-/* Global agent data structure */
-
-typedef struct {
-  /* JVMTI Environment */
-  jvmtiEnv      *jvmti;
-  jboolean       vm_is_dead;
-  jboolean       vm_is_started;
-  jboolean       vm_is_initialized;
-  /* Data access Lock */
-  jrawMonitorID  lock;
-  /* Options */
-  char           *include;
-  char           *exclude;
-  int             max_count;
-  /* ClassInfo Table */
-  ClassInfo      *classes;
-  jint            ccount;
-} GlobalAgentData;
-
+//Get rid of the nasty globals!
 static GlobalAgentData *gdata;
+
+GlobalAgentData * get_global_data(){
+  return gdata;
+}
 
 /* Enter a critical section by doing a JVMTI Raw Monitor Enter */
 static void
@@ -174,7 +137,7 @@ make_unique_method_id(unsigned cnum, unsigned mnum){
     fatal_error("method number is too large for use in method id.\n");
   }
   //shift cnum into the top half of the return, and place mnum int he bottom.
-  return (cnum << 4*(sizeof(unsigned long) >> 1)) + mnum;
+  return (cnum << 4*sizeof(unsigned long)) + mnum;
 }
 
 /* Extract method and class number from unique method_id */
@@ -319,6 +282,7 @@ TAUJVMTI_native_entry(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint
 
 #ifdef DEBUG_PROF_METHOD
 	      printf("TAU> Method Entry %s %s %s, unique_method_id:%d, Thread ID:%d\n", cp->name, mp->name, mp->signature, unique_method_id, tid);
+	      fflush(stdout);
 #endif /* DEBUG_PROF_METHOD */
 
 	      //Define a new mapping object TauMethodName
@@ -360,9 +324,8 @@ TAUJVMTI_native_exit(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint 
 		unique_method_id = make_unique_method_id(mnum, cnum);
 #ifdef DEBUG_PROF_METHOD
 		printf("TAU> Method Exit %s %s %s, unique_method_id:%d, Thread ID:%d\n", cp->name, mp->name, mp->signature, unique_method_id, tid);
+		fflush(stdout);
 #endif /* DEBUG_PROF */
-		TAU_MAPPING_OBJECT(TauMethodName=NULL);
-		TAU_MAPPING_LINK(TauMethodName, unique_method_id);
 		TAU_MAPPING_PROFILE_STOP(tid);
             }
         }
@@ -492,6 +455,8 @@ cbVMDeath(jvmtiEnv *jvmti, JNIEnv *env)
          *   callback code.
          */
         gdata->vm_is_dead = JNI_TRUE;
+	TAU_PROFILE_EXIT("OK!");
+
 
         // /* Dump out stats */
         // stdout_message("Begin Class Stats\n");
@@ -535,18 +500,36 @@ cbVMDeath(jvmtiEnv *jvmti, JNIEnv *env)
 
 }
 
+void CreateTopLevelRoutine(char *name, char *type, char *groupname, int tid) {
+#ifdef DEBUG_PROF
+  DEBUGPROFMSG("Inside CreateTopLevelRoutine: name = " << name << ", type = " << type << ", group = " << groupname << ", tid = " << tid << "\n";); 
+#endif
+  /* Create a top-level routine that is always called. Use the thread name in it */
+  TAU_MAPPING_CREATE(name, type, 1, groupname, tid); 
+  
+  TAU_MAPPING_OBJECT(TauMethodName);
+  TAU_MAPPING_LINK(TauMethodName, (long) 1);
+  
+  TAU_MAPPING_PROFILE_TIMER(TauTimer, TauMethodName, tid);
+  TAU_MAPPING_PROFILE_START(TauTimer, tid);
+}
+
+
+
+
 /* Callback for JVMTI_EVENT_THREAD_START */
 static void JNICALL
 cbThreadStart(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
 {
-    enter_critical_section(jvmti); {
+  int * tid;
+  enter_critical_section(jvmti); {
         /* It's possible we get here right after VmDeath event, be careful */
         if ( !gdata->vm_is_dead ) {
             char  tname[MAX_THREAD_NAME_LENGTH];
 
             get_thread_name(jvmti, thread, tname, sizeof(tname));
-            stdout_message("ThreadStart %s\n", tname);
-	    JavaThreadLayer::RegisterThread(thread);
+	    tid = JavaThreadLayer::RegisterThread(thread);
+	    CreateTopLevelRoutine(tname, " ", "THREAD", *tid); 
         }
     } exit_critical_section(jvmti);
 }
@@ -566,7 +549,8 @@ cbThreadEnd(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
 	    //Dealloc the thread local storage
 	    JavaThreadLayer::ThreadEnd(thread);
 	    //Inform Tau that the thread has ended.
-	    TAU_MAPPING_PROFILE_EXIT("END...", tid);
+	    printf("Thread Death\n");
+	    TAU_MAPPING_PROFILE_EXIT("END...", tid); 
         }
     } exit_critical_section(jvmti);
 }
@@ -795,6 +779,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 {
 #ifdef DEBUG_PROF
     printf("DEBUG_PROF:: Start of Agent_OnLoad\n");
+    fflush(stdout);
 #endif /* DEBUG_PROF */
     static GlobalAgentData data;
     jvmtiEnv              *jvmti;
@@ -833,8 +818,11 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
     /*Set up the necessary threading locks now, since they can only
      * be set up during the Onload and Running phases of the JVM
      */
-    JavaThreadLayer::InitializeDBMutexData();
-    JavaThreadLayer::InitializeEnvMutexData();
+    //    JavaThreadLayer::InitializeDBMutexData();
+    //    JavaThreadLayer::InitializeEnvMutexData();
+
+    Tau_init_initializeTAU();
+    TAU_PROFILE_SET_NODE(0);
 
     /* Register the current thread, since the JVM makes calls with the first thread, before
      * calling cbThreadStart and we need to create the necessary locks and set it's thread ID.
@@ -897,6 +885,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 
 #ifdef DEBUG_PROF
     printf("DEBUG_PROF:: End of Agent_OnLoad\n");
+    fflush(stdout);
 #endif /* DEBUG_PROF */
 
     /* We return JNI_OK to signify success */

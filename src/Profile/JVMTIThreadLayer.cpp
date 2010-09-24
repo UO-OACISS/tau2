@@ -19,12 +19,6 @@
 // Include Files 
 //////////////////////////////////////////////////////////////////////
 
-#define DEBUG_PROF
-
-//TODO Remove this!
-#define TAU_MAX_THREADS 128
-
-
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
 using namespace std;
@@ -32,16 +26,10 @@ using namespace std;
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
+#include <Profile/Profiler.h>
 #include <Profile/JavaThreadLayer.h>
 #include <Profile/TauJVMTI.h>
 #include <stdlib.h>
-
-
-
-/////////////////////////////////////////////////////////////////////////
-// Member Function Definitions For class JavaThreadLayer
-// This allows us to get thread ids from 0..N-1 
-/////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -55,6 +43,7 @@ jrawMonitorID JavaThreadLayer::tauEnvMutex ;
 jvmtiEnv  * JavaThreadLayer::jvmti = NULL;
 
 
+extern GlobalAgentData * get_global_data();
 ////////////////////////////////////////////////////////////////////////
 // RegisterThread() should be called before any profiling routines are
 // invoked. This routine sets the thread id that is used by the code in
@@ -89,24 +78,22 @@ int * JavaThreadLayer::RegisterThread(jthread this_thread)
   // Make this a thread specific data structure with the thread environment.
   jvmti->SetThreadLocalStorage(this_thread, (void * )threadId); 
 
-#ifdef DEBUG_PROF
-  printf("DEBUGPROF:: Thread id %d Created!\n", *threadId);
-  fflush(stdout);
-#endif /* DEBUG_PROF */
+  DEBUGPROFMSG("Thread id " <<  *threadId << " Created!\n";);
 
   return threadId;
 }
+
 ////////////////////////////////////////////////////////////////////////
 // ThreadEnd Cleans up the thread.
 // Needs to be issued before the thread is killed.
 ////////////////////////////////////////////////////////////////////////
 int JavaThreadLayer::ThreadEnd(jthread this_thread){
-  int tid = GetThreadId(this_thread);
-#ifdef DEBUG_PROF
-  printf("DEBUGPROF:: Thread id %d Deleted!\n", tid);
-#endif
-  //TODO I think this needs to be done...
-  // delete *tid;
+  int * tidp;
+  jvmti->GetThreadLocalStorage(this_thread, (void **) &tidp);
+
+  DEBUGPROFMSG("Thread id " << *tidp << " End!\n";);
+  //It seems that the threadLocalStorage is automatically deallocated by the JVM.
+  //delete tidp;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -115,20 +102,24 @@ int JavaThreadLayer::ThreadEnd(jthread this_thread){
 ////////////////////////////////////////////////////////////////////////
 int JavaThreadLayer::GetThreadId(jthread this_thread) 
 {
-  int *tid ;
+  int *tidp ;
+  static GlobalAgentData * gdata = get_global_data();
+
+  //The ThreadLocalStorage is not properly initialized to zero
+  //during shutdown/startup.
+  if(!gdata->vm_is_initialized or gdata->vm_is_dead)
+    return 0;
    
-  jvmti->GetThreadLocalStorage(this_thread, (void **) &tid);
+  jvmti->GetThreadLocalStorage(this_thread, (void **) &tidp);
   // The thread id is stored in a thread specific storage
 
-  if (tid == (int *) NULL)
+  if (tidp == (int *) NULL)
   { // This thread needs to be registered
-#ifdef DEBUG_PROF
-    printf("DEBUGPROF:: This thread dosn't apear to be registered.\n");
-    fflush(stdout);
-#endif
-    tid = JavaThreadLayer::RegisterThread(this_thread);
+    DEBUGPROFMSG("This thread dosn't apear to be registered.\n";);
+
+    tidp = JavaThreadLayer::RegisterThread(this_thread);
   }
-  return (*tid); 
+  return (*tidp);
 
 }
 
@@ -158,9 +149,8 @@ int JavaThreadLayer::InitializeDBMutexData(void)
   jvmtiError error;
   static bool initialized = false;
   // For locking functionDB 
-#ifdef DEBUG_PROF
-  printf("DEBUGPROF:: InitializeDBMutexData.\n");
-#endif
+  DEBUGPROFMSG("InitializeDBMutexData.\n";);
+
   if(!initialized){
     error = jvmti->CreateRawMonitor("FuncDB lock", &tauDBMutex);
     check_jvmti_error(jvmti, error, "Cannot create raw monitor");
@@ -180,7 +170,7 @@ int JavaThreadLayer::InitializeDBMutexData(void)
 int JavaThreadLayer::LockDB(void)
 {
   jvmtiError error;
-  static int initflag=InitializeDBMutexData();
+  InitializeDBMutexData();
 
   // Lock the functionDB mutex
   error = jvmti->RawMonitorEnter(tauDBMutex);
@@ -212,10 +202,8 @@ int JavaThreadLayer::InitializeEnvMutexData(void)
     fprintf (stderr,"When TAU is configured with -jdk=<dir>, it can only profile Java Programs!\n");
     exit(-1);
   }
-  // For locking functionDB 
-#ifdef DEBUG_PROF
-  printf("DEBUGPROF:: InitializeEnvMutex.\n");
-#endif
+  //For locking LockEnv
+  DEBUGPROFMSG("InitializeEnvMutex.\n";);
 
   if(!initialized){
     error = jvmti->CreateRawMonitor("Env lock", &tauEnvMutex);
@@ -236,7 +224,7 @@ int JavaThreadLayer::InitializeEnvMutexData(void)
 int JavaThreadLayer::LockEnv(void)
 {
   jvmtiError error;
-  static int initflag=InitializeEnvMutexData();
+  InitializeEnvMutexData();
   // Lock the Env mutex
   error = jvmti->RawMonitorEnter(tauEnvMutex);
   check_jvmti_error(jvmti, error, "Cannot enter tauEnv with raw monitor");
@@ -272,7 +260,7 @@ int JavaThreadLayer::TotalThreads(void)
   return count;
 }
 
-// Use JVMPI to get per thread cpu time (microseconds)
+// Use JVMTI to get per thread cpu time (microseconds)
 jlong JavaThreadLayer::getCurrentThreadCpuTime(void) {
   jlong thread_time;
   jvmti->GetCurrentThreadCpuTime(&thread_time);
