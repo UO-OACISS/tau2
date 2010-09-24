@@ -225,7 +225,6 @@ TAUJVMTI_native_entry(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint
         /* It's possible we get here right after VmDeath event, be careful */
         if ( !gdata->vm_is_dead ) {
             ClassInfo  *cp;
-            MethodInfo *mp;
 
             if ( cnum >= gdata->ccount ) {
                 fatal_error("ERROR: Class number out of range\n");
