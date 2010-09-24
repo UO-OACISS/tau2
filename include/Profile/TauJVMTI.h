@@ -59,20 +59,8 @@
 JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved);
 JNIEXPORT void JNICALL Agent_OnUnload(JavaVM *vm);
 
-
-
-typedef struct MethodInfo {
-    const char *name;          /* Method name */
-    const char *signature;     /* Method signature */
-    int         calls;         /* Method call count */
-    int         returns;       /* Method return count */
-} MethodInfo;
-
 typedef struct ClassInfo {
     const char *name;          /* Class name */
-    int         mcount;        /* Method count */
-    MethodInfo *methods;       /* Method information */
-    int         calls;         /* Method call count for this class */
 } ClassInfo;
 
 /* Global agent data structure */

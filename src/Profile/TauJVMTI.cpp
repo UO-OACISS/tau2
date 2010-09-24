@@ -179,28 +179,6 @@ get_thread_name(jvmtiEnv *jvmti, jthread thread, char *tname, int maxlen)
     }
 }
 
-/* Qsort class compare routine */
-static int
-class_compar(const void *e1, const void *e2)
-{
-    ClassInfo *c1 = (ClassInfo*)e1;
-    ClassInfo *c2 = (ClassInfo*)e2;
-    if ( c1->calls > c2->calls ) return  1;
-    if ( c1->calls < c2->calls ) return -1;
-    return 0;
-}
-
-/* Qsort method compare routine */
-static int
-method_compar(const void *e1, const void *e2)
-{
-    MethodInfo *m1 = (MethodInfo*)e1;
-    MethodInfo *m2 = (MethodInfo*)e2;
-    if ( m1->calls > m2->calls ) return  1;
-    if ( m1->calls < m2->calls ) return -1;
-    return 0;
-}
-
 /* Callback from java_crw_demo() that gives us mnum mappings */
 static void
 mnum_callbacks(unsigned cnum, const char **names, const char**sigs, int mcount)
@@ -219,36 +197,23 @@ mnum_callbacks(unsigned cnum, const char **names, const char**sigs, int mcount)
         return;
     }
 
-    cp           = gdata->classes + (int)cnum;
-    cp->calls    = 0;
-    cp->mcount   = mcount;
-    cp->methods  = (MethodInfo*)calloc(mcount, sizeof(MethodInfo));
-    if ( cp->methods == NULL ) {
-        fatal_error("ERROR: Out of malloc memory\n");
-    }
-
+    cp = gdata->classes + (int)cnum;
     for ( mnum = 0 ; mnum < mcount ; mnum++ ) {
-        MethodInfo *mp;
+      const char * mname = (const char *)strdup(names[mnum]);
+      const char * msig = (const char *)strdup(sigs[mnum]);
 
-        mp            = cp->methods + mnum;
-        mp->name      = (const char *)strdup(names[mnum]);
-        if ( mp->name == NULL ) {
-            fatal_error("ERROR: Out of malloc memory\n");
-        }
-        mp->signature = (const char *)strdup(sigs[mnum]);
-        if ( mp->signature == NULL ) {
-            fatal_error("ERROR: Out of malloc memory\n");
-        }
-	
-	//Create TAU Mapping
-	sprintf(funcname, "%s %s %s", cp->name, mp->name, mp->signature);
-	
-	unique_method_id = make_unique_method_id(mnum, cnum);
-	//Use of dummy TID is fine, library doesn't use it anyways.
-	TAU_MAPPING_CREATE(funcname, " ",
+      if ((mname == NULL) or (msig == NULL))
+	fatal_error("ERROR: Out of malloc memory\n");
+      
+      //Create TAU Mapping
+      sprintf(funcname, "%s %s %s", cp->name, mname, msig);
+      
+      unique_method_id = make_unique_method_id(mnum, cnum);
+      //Use of dummy TID is fine, library doesn't use it anyways.
+      TAU_MAPPING_CREATE(funcname, " ",
 			 unique_method_id , 
 			 cp->name, tid);
-	//func name automatically freed.
+      //func name automatically freed.
     }
 }
 
@@ -266,24 +231,12 @@ TAUJVMTI_native_entry(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint
                 fatal_error("ERROR: Class number out of range\n");
             }
             cp = gdata->classes + cnum;
-            if ( mnum >= cp->mcount ) {
-                fatal_error("ERROR: Method number out of range\n");
-            }
-            mp = cp->methods + mnum;
 
-            if (gdata->vm_is_initialized and  interested((char*)cp->name, (char*)mp->name,
-                            gdata->include, gdata->exclude)  ) {
+            if (gdata->vm_is_initialized) {
 	      int tid = JavaThreadLayer::GetThreadId(thread);
 	      long unique_method_id;
-	      mp->calls++;
-	      cp->calls++;
 
 	      unique_method_id = make_unique_method_id(mnum, cnum);
-
-#ifdef DEBUG_PROF_METHOD
-	      printf("TAU> Method Entry %s %s %s, unique_method_id:%d, Thread ID:%d\n", cp->name, mp->name, mp->signature, unique_method_id, tid);
-	      fflush(stdout);
-#endif /* DEBUG_PROF_METHOD */
 
 	      //Define a new mapping object TauMethodName
 	      TAU_MAPPING_OBJECT(TauMethodName=NULL);
@@ -306,26 +259,15 @@ TAUJVMTI_native_exit(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint 
         /* It's possible we get here right after VmDeath event, be careful */
         if ( !gdata->vm_is_dead ) {
             ClassInfo  *cp;
-            MethodInfo *mp;
 	    long unique_method_id;
 
             if ( cnum >= gdata->ccount ) {
                 fatal_error("ERROR: Class number out of range\n");
             }
             cp = gdata->classes + cnum;
-            if ( mnum >= cp->mcount ) {
-                fatal_error("ERROR: Method number out of range\n");
-            }
-            mp = cp->methods + mnum;
-            if (gdata->vm_is_initialized and interested((char*)cp->name, (char*)mp->name,
-                            gdata->include, gdata->exclude)  ) {
+            if (gdata->vm_is_initialized) {
 		int tid = JavaThreadLayer::GetThreadId(thread);
-                mp->returns++;
 		unique_method_id = make_unique_method_id(mnum, cnum);
-#ifdef DEBUG_PROF_METHOD
-		printf("TAU> Method Exit %s %s %s, unique_method_id:%d, Thread ID:%d\n", cp->name, mp->name, mp->signature, unique_method_id, tid);
-		fflush(stdout);
-#endif /* DEBUG_PROF */
 		TAU_MAPPING_PROFILE_STOP(tid);
             }
         }
@@ -456,54 +398,13 @@ cbVMDeath(jvmtiEnv *jvmti, JNIEnv *env)
          */
         gdata->vm_is_dead = JNI_TRUE;
 	TAU_PROFILE_EXIT("OK!");
-
-
-        // /* Dump out stats */
-        // stdout_message("Begin Class Stats\n");
-        // if ( gdata->ccount > 0 ) {
-        //     int cnum;
-
-        //     /* Sort table (in place) by number of method calls into class. */
-        //     /*  Note: Do not use this table after this qsort! */
-        //     qsort(gdata->classes, gdata->ccount, sizeof(ClassInfo),
-        //                 &class_compar);
-
-        //     /* Dump out gdata->max_count most called classes */
-        //     for ( cnum=gdata->ccount-1 ;
-        //           cnum >= 0 && cnum >= gdata->ccount - gdata->max_count;
-        //           cnum-- ) {
-        //         ClassInfo *cp;
-        //         int        mnum;
-
-        //         cp = gdata->classes + cnum;
-        //         stdout_message("Class %s %d calls\n", cp->name, cp->calls);
-        //         if ( cp->calls==0 ) continue;
-
-        //         /* Sort method table (in place) by number of method calls. */
-        //         /*  Note: Do not use this table after this qsort! */
-        //         qsort(cp->methods, cp->mcount, sizeof(MethodInfo),
-        //                     &method_compar);
-        //         for ( mnum=cp->mcount-1 ; mnum >= 0 ; mnum-- ) {
-        //             MethodInfo *mp;
-
-        //             mp = cp->methods + mnum;
-        //             if ( mp->calls==0 ) continue;
-        //             stdout_message("\tMethod %s %s %d calls %d returns\n",
-        //                 mp->name, mp->signature, mp->calls, mp->returns);
-        //         }
-        //     }
-        // }
-        // stdout_message("End Class Stats\n");
-        // (void)fflush(stdout);
-
     } exit_critical_section(jvmti);
 
 }
 
 void CreateTopLevelRoutine(char *name, char *type, char *groupname, int tid) {
-#ifdef DEBUG_PROF
-  DEBUGPROFMSG("Inside CreateTopLevelRoutine: name = " << name << ", type = " << type << ", group = " << groupname << ", tid = " << tid << "\n";); 
-#endif
+  DEBUGPROFMSG("Inside CreateTopLevelRoutine: name = " << name << ", type = " << type ", group = " << groupane << ", tid = " << tid "\n";);
+
   /* Create a top-level routine that is always called. Use the thread name in it */
   TAU_MAPPING_CREATE(name, type, 1, groupname, tid); 
   
@@ -513,8 +414,6 @@ void CreateTopLevelRoutine(char *name, char *type, char *groupname, int tid) {
   TAU_MAPPING_PROFILE_TIMER(TauTimer, TauMethodName, tid);
   TAU_MAPPING_PROFILE_START(TauTimer, tid);
 }
-
-
 
 
 /* Callback for JVMTI_EVENT_THREAD_START */
@@ -615,10 +514,6 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* env,
                 if ( cp->name == NULL ) {
                     fatal_error("ERROR: Out of malloc memory\n");
                 }
-                cp->calls    = 0;
-                cp->mcount   = 0;
-                cp->methods  = NULL;
-
                 /* Is it a system class? If the class load is before VmStart
                  *   then we will consider it a system class that should
                  *   be treated carefully. (See java_crw_demo)
@@ -915,18 +810,6 @@ Agent_OnUnload(JavaVM *vm)
 
             cp = gdata->classes + cnum;
             (void)free((void*)cp->name);
-            if ( cp->mcount > 0 ) {
-                int mnum;
-
-                for ( mnum = 0 ; mnum < cp->mcount ; mnum++ ) {
-                    MethodInfo *mp;
-
-                    mp = cp->methods + mnum;
-                    (void)free((void*)mp->name);
-                    (void)free((void*)mp->signature);
-                }
-                (void)free((void*)cp->methods);
-            }
         }
         (void)free((void*)gdata->classes);
         gdata->classes = NULL;

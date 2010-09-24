@@ -639,13 +639,13 @@ $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 JVMTIThreadLayer.o: JVMTIThreadLayer.cpp
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
 
-TauJVMTI.o :	TauJVMTI.cpp
+TauJVMTI.o :	TauJVMTI.cpp TauJVMTI.jar
 	$(CXX) $(CXXFLAGS) -c TauJVMTI.cpp
 
 TauJVMTI.jar:  TauJVMTI.java
 	rm -f -r classes
 	mkdir -p classes
-	$(JDKDIR)/bin/javac -d classes TauJVMTI.java 
+	$(JDKDIR)/bin/javac -d classes TauJVMTI.java
 	(cd classes; $(JDKDIR)/bin/jar cf ../$@ *)
 
 test_java: all
