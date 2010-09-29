@@ -143,7 +143,7 @@ int MPI_Type_get_contents( MPI_Datatype datatype, int max_integers, int max_addr
 /******************************************************
 ***      MPI_Type_get_contents wrapper function 
 ******************************************************/
-void MPI_TYPE_GET_CONTENTS( MPI_Fint *  datatype, MPI_Fint *  max_integers, MPI_Fint *  max_addresses, MPI_Fint *  max_datatypes, MPI_Fint *  array_of_integers, MPI_Aint * array_of_addresses, MPI_Aint * array_of_datatypes, MPI_Fint * ierr)
+void MPI_TYPE_GET_CONTENTS( MPI_Fint *  datatype, MPI_Fint *  max_integers, MPI_Fint *  max_addresses, MPI_Fint *  max_datatypes, MPI_Fint *  array_of_integers, MPI_Aint * array_of_addresses, MPI_Fint * array_of_datatypes, MPI_Fint * ierr)
 {
   TAU_DECL_ALLOC_LOCAL(MPI_Datatype, local_types, *max_datatypes);
   *ierr = MPI_Type_get_contents( MPI_Type_f2c(*datatype), *max_integers, *max_addresses, *max_datatypes, array_of_integers, array_of_addresses, local_types) ; 
@@ -154,7 +154,7 @@ void MPI_TYPE_GET_CONTENTS( MPI_Fint *  datatype, MPI_Fint *  max_integers, MPI_
 /******************************************************
 ***      MPI_Type_get_contents wrapper function 
 ******************************************************/
-void mpi_type_get_contents( MPI_Fint *  datatype, MPI_Fint *  max_integers, MPI_Fint *  max_addresses, MPI_Fint *  max_datatypes, MPI_Fint *  array_of_integers, MPI_Aint * array_of_addresses, MPI_Aint * array_of_datatypes, MPI_Fint * ierr)
+void mpi_type_get_contents( MPI_Fint *  datatype, MPI_Fint *  max_integers, MPI_Fint *  max_addresses, MPI_Fint *  max_datatypes, MPI_Fint *  array_of_integers, MPI_Aint * array_of_addresses, MPI_Fint * array_of_datatypes, MPI_Fint * ierr)
 {
   MPI_TYPE_GET_CONTENTS( datatype, max_integers, max_addresses, max_datatypes, array_of_integers, array_of_addresses, array_of_datatypes, ierr) ; 
   return ; 
@@ -163,7 +163,7 @@ void mpi_type_get_contents( MPI_Fint *  datatype, MPI_Fint *  max_integers, MPI_
 /******************************************************
 ***      MPI_Type_get_contents wrapper function 
 ******************************************************/
-void mpi_type_get_contents_( MPI_Fint *  datatype, MPI_Fint *  max_integers, MPI_Fint *  max_addresses, MPI_Fint *  max_datatypes, MPI_Fint *  array_of_integers, MPI_Aint * array_of_addresses, MPI_Aint * array_of_datatypes, MPI_Fint * ierr)
+void mpi_type_get_contents_( MPI_Fint *  datatype, MPI_Fint *  max_integers, MPI_Fint *  max_addresses, MPI_Fint *  max_datatypes, MPI_Fint *  array_of_integers, MPI_Aint * array_of_addresses, MPI_Fint * array_of_datatypes, MPI_Fint * ierr)
 {
   MPI_TYPE_GET_CONTENTS( datatype, max_integers, max_addresses, max_datatypes, array_of_integers, array_of_addresses, array_of_datatypes, ierr) ; 
   return ; 
@@ -172,7 +172,7 @@ void mpi_type_get_contents_( MPI_Fint *  datatype, MPI_Fint *  max_integers, MPI
 /******************************************************
 ***      MPI_Type_get_contents wrapper function 
 ******************************************************/
-void mpi_type_get_contents__( MPI_Fint *  datatype, MPI_Fint *  max_integers, MPI_Fint *  max_addresses, MPI_Fint *  max_datatypes, MPI_Fint *  array_of_integers, MPI_Aint * array_of_addresses, MPI_Aint * array_of_datatypes, MPI_Fint * ierr)
+void mpi_type_get_contents__( MPI_Fint *  datatype, MPI_Fint *  max_integers, MPI_Fint *  max_addresses, MPI_Fint *  max_datatypes, MPI_Fint *  array_of_integers, MPI_Aint * array_of_addresses, MPI_Fint * array_of_datatypes, MPI_Fint * ierr)
 {
   MPI_TYPE_GET_CONTENTS( datatype, max_integers, max_addresses, max_datatypes, array_of_integers, array_of_addresses, array_of_datatypes, ierr) ; 
   return ; 
@@ -637,7 +637,7 @@ int MPI_Type_create_struct( int count, int * array_of_blocklengths, MPI_Aint * a
 /******************************************************
 ***      MPI_Type_create_struct wrapper function 
 ******************************************************/
-void MPI_TYPE_CREATE_STRUCT( MPI_Fint *  count, MPI_Fint *  array_of_blocklengths, MPI_Aint * array_of_displacements, MPI_Aint * array_of_types, MPI_Fint * newtype, MPI_Fint * ierr)
+void MPI_TYPE_CREATE_STRUCT( MPI_Fint *  count, MPI_Fint *  array_of_blocklengths, MPI_Aint * array_of_displacements, MPI_Fint * array_of_types, MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_Datatype local_type;
   TAU_DECL_ALLOC_LOCAL(MPI_Datatype, ary_local_types, *count);
@@ -650,7 +650,7 @@ void MPI_TYPE_CREATE_STRUCT( MPI_Fint *  count, MPI_Fint *  array_of_blocklength
 /******************************************************
 ***      MPI_Type_create_struct wrapper function 
 ******************************************************/
-void mpi_type_create_struct( MPI_Fint *  count, MPI_Fint *  array_of_blocklengths, MPI_Aint * array_of_displacements, MPI_Aint * array_of_types, MPI_Fint * newtype, MPI_Fint * ierr)
+void mpi_type_create_struct( MPI_Fint *  count, MPI_Fint *  array_of_blocklengths, MPI_Aint * array_of_displacements, MPI_Fint * array_of_types, MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_TYPE_CREATE_STRUCT( count, array_of_blocklengths, array_of_displacements, array_of_types, newtype, ierr) ; 
   return ; 
@@ -659,7 +659,7 @@ void mpi_type_create_struct( MPI_Fint *  count, MPI_Fint *  array_of_blocklength
 /******************************************************
 ***      MPI_Type_create_struct wrapper function 
 ******************************************************/
-void mpi_type_create_struct_( MPI_Fint *  count, MPI_Fint *  array_of_blocklengths, MPI_Aint * array_of_displacements, MPI_Aint * array_of_types, MPI_Fint * newtype, MPI_Fint * ierr)
+void mpi_type_create_struct_( MPI_Fint *  count, MPI_Fint *  array_of_blocklengths, MPI_Aint * array_of_displacements, MPI_Fint * array_of_types, MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_TYPE_CREATE_STRUCT( count, array_of_blocklengths, array_of_displacements, array_of_types, newtype, ierr) ; 
   return ; 
@@ -668,7 +668,7 @@ void mpi_type_create_struct_( MPI_Fint *  count, MPI_Fint *  array_of_blocklengt
 /******************************************************
 ***      MPI_Type_create_struct wrapper function 
 ******************************************************/
-void mpi_type_create_struct__( MPI_Fint *  count, MPI_Fint *  array_of_blocklengths, MPI_Aint * array_of_displacements, MPI_Aint * array_of_types, MPI_Fint * newtype, MPI_Fint * ierr)
+void mpi_type_create_struct__( MPI_Fint *  count, MPI_Fint *  array_of_blocklengths, MPI_Aint * array_of_displacements, MPI_Fint * array_of_types, MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_TYPE_CREATE_STRUCT( count, array_of_blocklengths, array_of_displacements, array_of_types, newtype, ierr) ; 
   return ; 
@@ -2772,7 +2772,7 @@ int MPI_Alloc_mem( MPI_Aint size, MPI_Info info, void * baseptr)
 /******************************************************
 ***      MPI_Alloc_mem wrapper function 
 ******************************************************/
-void MPI_ALLOC_MEM( MPI_Fint *  size, MPI_Fint *  info, MPI_Aint * baseptr, MPI_Fint * ierr)
+void MPI_ALLOC_MEM( MPI_Aint *  size, MPI_Fint *  info, MPI_Aint * baseptr, MPI_Fint * ierr)
 {
   *ierr = MPI_Alloc_mem( *size, MPI_Info_f2c(*info), baseptr) ; 
   return ; 
@@ -2781,7 +2781,7 @@ void MPI_ALLOC_MEM( MPI_Fint *  size, MPI_Fint *  info, MPI_Aint * baseptr, MPI_
 /******************************************************
 ***      MPI_Alloc_mem wrapper function 
 ******************************************************/
-void mpi_alloc_mem( MPI_Fint *  size, MPI_Fint *  info, MPI_Aint * baseptr, MPI_Fint * ierr)
+void mpi_alloc_mem( MPI_Aint *  size, MPI_Fint *  info, MPI_Aint * baseptr, MPI_Fint * ierr)
 {
   MPI_ALLOC_MEM( size, info, baseptr, ierr) ; 
   return ; 
@@ -2790,7 +2790,7 @@ void mpi_alloc_mem( MPI_Fint *  size, MPI_Fint *  info, MPI_Aint * baseptr, MPI_
 /******************************************************
 ***      MPI_Alloc_mem wrapper function 
 ******************************************************/
-void mpi_alloc_mem_( MPI_Fint *  size, MPI_Fint *  info, MPI_Aint * baseptr, MPI_Fint * ierr)
+void mpi_alloc_mem_( MPI_Aint *  size, MPI_Fint *  info, MPI_Aint * baseptr, MPI_Fint * ierr)
 {
   MPI_ALLOC_MEM( size, info, baseptr, ierr) ; 
   return ; 
@@ -2799,7 +2799,7 @@ void mpi_alloc_mem_( MPI_Fint *  size, MPI_Fint *  info, MPI_Aint * baseptr, MPI
 /******************************************************
 ***      MPI_Alloc_mem wrapper function 
 ******************************************************/
-void mpi_alloc_mem__( MPI_Fint *  size, MPI_Fint *  info, MPI_Aint * baseptr, MPI_Fint * ierr)
+void mpi_alloc_mem__( MPI_Aint *  size, MPI_Fint *  info, MPI_Aint * baseptr, MPI_Fint * ierr)
 {
   MPI_ALLOC_MEM( size, info, baseptr, ierr) ; 
   return ; 
@@ -3154,7 +3154,7 @@ int MPI_File_get_group( MPI_File fh, MPI_Group * group)
 /******************************************************
 ***      MPI_File_get_group wrapper function 
 ******************************************************/
-void MPI_FILE_GET_GROUP( MPI_Fint *  fh, MPI_Aint * group, MPI_Fint * ierr)
+void MPI_FILE_GET_GROUP( MPI_Fint *  fh, MPI_Fint * group, MPI_Fint * ierr)
 {
   MPI_File local_file;
   MPI_Group local_group;
@@ -3167,7 +3167,7 @@ void MPI_FILE_GET_GROUP( MPI_Fint *  fh, MPI_Aint * group, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_File_get_group wrapper function 
 ******************************************************/
-void mpi_file_get_group( MPI_Fint *  fh, MPI_Aint * group, MPI_Fint * ierr)
+void mpi_file_get_group( MPI_Fint *  fh, MPI_Fint * group, MPI_Fint * ierr)
 {
   MPI_FILE_GET_GROUP( fh, group, ierr) ; 
   return ; 
@@ -3176,7 +3176,7 @@ void mpi_file_get_group( MPI_Fint *  fh, MPI_Aint * group, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_File_get_group wrapper function 
 ******************************************************/
-void mpi_file_get_group_( MPI_Fint *  fh, MPI_Aint * group, MPI_Fint * ierr)
+void mpi_file_get_group_( MPI_Fint *  fh, MPI_Fint * group, MPI_Fint * ierr)
 {
   MPI_FILE_GET_GROUP( fh, group, ierr) ; 
   return ; 
@@ -3185,7 +3185,7 @@ void mpi_file_get_group_( MPI_Fint *  fh, MPI_Aint * group, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_File_get_group wrapper function 
 ******************************************************/
-void mpi_file_get_group__( MPI_Fint *  fh, MPI_Aint * group, MPI_Fint * ierr)
+void mpi_file_get_group__( MPI_Fint *  fh, MPI_Fint * group, MPI_Fint * ierr)
 {
   MPI_FILE_GET_GROUP( fh, group, ierr) ; 
   return ; 
@@ -3317,7 +3317,7 @@ int MPI_File_get_info( MPI_File fh, MPI_Info * info_used)
 /******************************************************
 ***      MPI_File_get_info wrapper function 
 ******************************************************/
-void MPI_FILE_GET_INFO( MPI_Fint *  fh, MPI_Aint * info_used, MPI_Fint * ierr)
+void MPI_FILE_GET_INFO( MPI_Fint *  fh, MPI_Fint * info_used, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Info local_info;
@@ -3332,7 +3332,7 @@ void MPI_FILE_GET_INFO( MPI_Fint *  fh, MPI_Aint * info_used, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_File_get_info wrapper function 
 ******************************************************/
-void mpi_file_get_info( MPI_Fint *  fh, MPI_Aint * info_used, MPI_Fint * ierr)
+void mpi_file_get_info( MPI_Fint *  fh, MPI_Fint * info_used, MPI_Fint * ierr)
 {
   MPI_FILE_GET_INFO( fh, info_used, ierr) ; 
   return ; 
@@ -3341,7 +3341,7 @@ void mpi_file_get_info( MPI_Fint *  fh, MPI_Aint * info_used, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_File_get_info wrapper function 
 ******************************************************/
-void mpi_file_get_info_( MPI_Fint *  fh, MPI_Aint * info_used, MPI_Fint * ierr)
+void mpi_file_get_info_( MPI_Fint *  fh, MPI_Fint * info_used, MPI_Fint * ierr)
 {
   MPI_FILE_GET_INFO( fh, info_used, ierr) ; 
   return ; 
@@ -3350,7 +3350,7 @@ void mpi_file_get_info_( MPI_Fint *  fh, MPI_Aint * info_used, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_File_get_info wrapper function 
 ******************************************************/
-void mpi_file_get_info__( MPI_Fint *  fh, MPI_Aint * info_used, MPI_Fint * ierr)
+void mpi_file_get_info__( MPI_Fint *  fh, MPI_Fint * info_used, MPI_Fint * ierr)
 {
   MPI_FILE_GET_INFO( fh, info_used, ierr) ; 
   return ; 
@@ -3439,7 +3439,7 @@ int MPI_File_get_view( MPI_File fh, MPI_Offset * disp, MPI_Datatype * etype, MPI
 /******************************************************
 ***      MPI_File_get_view wrapper function 
 ******************************************************/
-void MPI_FILE_GET_VIEW( MPI_Fint *  fh, MPI_Offset * disp, MPI_Aint * etype, MPI_Aint * filetype, char * datarep, MPI_Fint * ierr)
+void MPI_FILE_GET_VIEW( MPI_Fint *  fh, MPI_Offset * disp, MPI_Fint * etype, MPI_Fint * filetype, char * datarep, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Datatype local_etype;
@@ -3455,7 +3455,7 @@ void MPI_FILE_GET_VIEW( MPI_Fint *  fh, MPI_Offset * disp, MPI_Aint * etype, MPI
 /******************************************************
 ***      MPI_File_get_view wrapper function 
 ******************************************************/
-void mpi_file_get_view( MPI_Fint *  fh, MPI_Offset * disp, MPI_Aint * etype, MPI_Aint * filetype, char * datarep, MPI_Fint * ierr)
+void mpi_file_get_view( MPI_Fint *  fh, MPI_Offset * disp, MPI_Fint * etype, MPI_Fint * filetype, char * datarep, MPI_Fint * ierr)
 {
   MPI_FILE_GET_VIEW( fh, disp, etype, filetype, datarep, ierr) ; 
   return ; 
@@ -3464,7 +3464,7 @@ void mpi_file_get_view( MPI_Fint *  fh, MPI_Offset * disp, MPI_Aint * etype, MPI
 /******************************************************
 ***      MPI_File_get_view wrapper function 
 ******************************************************/
-void mpi_file_get_view_( MPI_Fint *  fh, MPI_Offset * disp, MPI_Aint * etype, MPI_Aint * filetype, char * datarep, MPI_Fint * ierr)
+void mpi_file_get_view_( MPI_Fint *  fh, MPI_Offset * disp, MPI_Fint * etype, MPI_Fint * filetype, char * datarep, MPI_Fint * ierr)
 {
   MPI_FILE_GET_VIEW( fh, disp, etype, filetype, datarep, ierr) ; 
   return ; 
@@ -3473,7 +3473,7 @@ void mpi_file_get_view_( MPI_Fint *  fh, MPI_Offset * disp, MPI_Aint * etype, MP
 /******************************************************
 ***      MPI_File_get_view wrapper function 
 ******************************************************/
-void mpi_file_get_view__( MPI_Fint *  fh, MPI_Offset * disp, MPI_Aint * etype, MPI_Aint * filetype, char * datarep, MPI_Fint * ierr)
+void mpi_file_get_view__( MPI_Fint *  fh, MPI_Offset * disp, MPI_Fint * etype, MPI_Fint * filetype, char * datarep, MPI_Fint * ierr)
 {
   MPI_FILE_GET_VIEW( fh, disp, etype, filetype, datarep, ierr) ; 
   return ; 
@@ -3757,7 +3757,7 @@ int MPI_File_iread_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MP
 /******************************************************
 ***      MPI_File_iread_at wrapper function 
 ******************************************************/
-void MPI_FILE_IREAD_AT( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void MPI_FILE_IREAD_AT( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Datatype local_type; 
@@ -3773,7 +3773,7 @@ void MPI_FILE_IREAD_AT( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MP
 /******************************************************
 ***      MPI_File_iread_at wrapper function 
 ******************************************************/
-void mpi_file_iread_at( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iread_at( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IREAD_AT( fh, offset, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -3782,7 +3782,7 @@ void mpi_file_iread_at( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MP
 /******************************************************
 ***      MPI_File_iread_at wrapper function 
 ******************************************************/
-void mpi_file_iread_at_( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iread_at_( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IREAD_AT( fh, offset, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -3791,7 +3791,7 @@ void mpi_file_iread_at_( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, M
 /******************************************************
 ***      MPI_File_iread_at wrapper function 
 ******************************************************/
-void mpi_file_iread_at__( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iread_at__( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IREAD_AT( fh, offset, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -3817,7 +3817,7 @@ int MPI_File_iwrite_at( MPI_File fh, MPI_Offset offset, void * buf, int count, M
 /******************************************************
 ***      MPI_File_iwrite_at wrapper function 
 ******************************************************/
-void MPI_FILE_IWRITE_AT( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void MPI_FILE_IWRITE_AT( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Datatype local_type; 
@@ -3833,7 +3833,7 @@ void MPI_FILE_IWRITE_AT( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, M
 /******************************************************
 ***      MPI_File_iwrite_at wrapper function 
 ******************************************************/
-void mpi_file_iwrite_at( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iwrite_at( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IWRITE_AT( fh, offset, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -3842,7 +3842,7 @@ void mpi_file_iwrite_at( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, M
 /******************************************************
 ***      MPI_File_iwrite_at wrapper function 
 ******************************************************/
-void mpi_file_iwrite_at_( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iwrite_at_( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IWRITE_AT( fh, offset, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -3851,7 +3851,7 @@ void mpi_file_iwrite_at_( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, 
 /******************************************************
 ***      MPI_File_iwrite_at wrapper function 
 ******************************************************/
-void mpi_file_iwrite_at__( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iwrite_at__( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IWRITE_AT( fh, offset, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -3878,7 +3878,7 @@ int MPI_File_iread_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MP
 /******************************************************
 ***      MPI_File_iread_at wrapper function 
 ******************************************************/
-void MPI_FILE_IREAD_AT( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void MPI_FILE_IREAD_AT( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Datatype local_type; 
@@ -3894,7 +3894,7 @@ void MPI_FILE_IREAD_AT( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MP
 /******************************************************
 ***      MPI_File_iread_at wrapper function 
 ******************************************************/
-void mpi_file_iread_at( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iread_at( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IREAD_AT( fh, offset, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -3903,7 +3903,7 @@ void mpi_file_iread_at( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MP
 /******************************************************
 ***      MPI_File_iread_at wrapper function 
 ******************************************************/
-void mpi_file_iread_at_( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iread_at_( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IREAD_AT( fh, offset, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -3912,7 +3912,7 @@ void mpi_file_iread_at_( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, M
 /******************************************************
 ***      MPI_File_iread_at wrapper function 
 ******************************************************/
-void mpi_file_iread_at__( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iread_at__( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IREAD_AT( fh, offset, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -3938,7 +3938,7 @@ int MPI_File_iwrite_at( MPI_File fh, MPI_Offset offset, void * buf, int count, M
 /******************************************************
 ***      MPI_File_iwrite_at wrapper function 
 ******************************************************/
-void MPI_FILE_IWRITE_AT( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void MPI_FILE_IWRITE_AT( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Datatype local_type; 
@@ -3954,7 +3954,7 @@ void MPI_FILE_IWRITE_AT( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, M
 /******************************************************
 ***      MPI_File_iwrite_at wrapper function 
 ******************************************************/
-void mpi_file_iwrite_at( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iwrite_at( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IWRITE_AT( fh, offset, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -3963,7 +3963,7 @@ void mpi_file_iwrite_at( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, M
 /******************************************************
 ***      MPI_File_iwrite_at wrapper function 
 ******************************************************/
-void mpi_file_iwrite_at_( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iwrite_at_( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IWRITE_AT( fh, offset, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -3972,7 +3972,7 @@ void mpi_file_iwrite_at_( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, 
 /******************************************************
 ***      MPI_File_iwrite_at wrapper function 
 ******************************************************/
-void mpi_file_iwrite_at__( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iwrite_at__( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IWRITE_AT( fh, offset, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -4107,7 +4107,7 @@ int MPI_Type_create_subarray( int ndims, int * array_of_sizes, int * array_of_su
 /******************************************************
 ***      MPI_Type_create_subarray wrapper function 
 ******************************************************/
-void MPI_TYPE_CREATE_SUBARRAY( MPI_Fint *  ndims, MPI_Fint *  array_of_sizes, MPI_Fint *  array_of_subsizes, MPI_Fint *  array_of_starts, MPI_Fint *  order, MPI_Fint *  oldtype, MPI_Aint * newtype, MPI_Fint * ierr)
+void MPI_TYPE_CREATE_SUBARRAY( MPI_Fint *  ndims, MPI_Fint *  array_of_sizes, MPI_Fint *  array_of_subsizes, MPI_Fint *  array_of_starts, MPI_Fint *  order, MPI_Fint *  oldtype, MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_Datatype local_oldtype;
   MPI_Datatype local_newtype; 
@@ -4120,7 +4120,7 @@ void MPI_TYPE_CREATE_SUBARRAY( MPI_Fint *  ndims, MPI_Fint *  array_of_sizes, MP
 /******************************************************
 ***      MPI_Type_create_subarray wrapper function 
 ******************************************************/
-void mpi_type_create_subarray( MPI_Fint *  ndims, MPI_Fint *  array_of_sizes, MPI_Fint *  array_of_subsizes, MPI_Fint *  array_of_starts, MPI_Fint *  order, MPI_Fint *  oldtype, MPI_Aint * newtype, MPI_Fint * ierr)
+void mpi_type_create_subarray( MPI_Fint *  ndims, MPI_Fint *  array_of_sizes, MPI_Fint *  array_of_subsizes, MPI_Fint *  array_of_starts, MPI_Fint *  order, MPI_Fint *  oldtype, MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_TYPE_CREATE_SUBARRAY( ndims, array_of_sizes, array_of_subsizes, array_of_starts, order, oldtype, newtype, ierr) ; 
   return ; 
@@ -4129,7 +4129,7 @@ void mpi_type_create_subarray( MPI_Fint *  ndims, MPI_Fint *  array_of_sizes, MP
 /******************************************************
 ***      MPI_Type_create_subarray wrapper function 
 ******************************************************/
-void mpi_type_create_subarray_( MPI_Fint *  ndims, MPI_Fint *  array_of_sizes, MPI_Fint *  array_of_subsizes, MPI_Fint *  array_of_starts, MPI_Fint *  order, MPI_Fint *  oldtype, MPI_Aint * newtype, MPI_Fint * ierr)
+void mpi_type_create_subarray_( MPI_Fint *  ndims, MPI_Fint *  array_of_sizes, MPI_Fint *  array_of_subsizes, MPI_Fint *  array_of_starts, MPI_Fint *  order, MPI_Fint *  oldtype, MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_TYPE_CREATE_SUBARRAY( ndims, array_of_sizes, array_of_subsizes, array_of_starts, order, oldtype, newtype, ierr) ; 
   return ; 
@@ -4138,7 +4138,7 @@ void mpi_type_create_subarray_( MPI_Fint *  ndims, MPI_Fint *  array_of_sizes, M
 /******************************************************
 ***      MPI_Type_create_subarray wrapper function 
 ******************************************************/
-void mpi_type_create_subarray__( MPI_Fint *  ndims, MPI_Fint *  array_of_sizes, MPI_Fint *  array_of_subsizes, MPI_Fint *  array_of_starts, MPI_Fint *  order, MPI_Fint *  oldtype, MPI_Aint * newtype, MPI_Fint * ierr)
+void mpi_type_create_subarray__( MPI_Fint *  ndims, MPI_Fint *  array_of_sizes, MPI_Fint *  array_of_subsizes, MPI_Fint *  array_of_starts, MPI_Fint *  order, MPI_Fint *  oldtype, MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_TYPE_CREATE_SUBARRAY( ndims, array_of_sizes, array_of_subsizes, array_of_starts, order, oldtype, newtype, ierr) ; 
   return ; 
@@ -4164,7 +4164,7 @@ int MPI_Type_create_darray( int size, int rank, int ndims, int * array_of_gsizes
 /******************************************************
 ***      MPI_Type_create_darray wrapper function 
 ******************************************************/
-void MPI_TYPE_CREATE_DARRAY( MPI_Fint *  size, MPI_Fint *  rank, MPI_Fint *  ndims, MPI_Fint *  array_of_gsizes, MPI_Fint *  array_of_distribs, MPI_Fint *  array_of_dargs, MPI_Fint *  array_of_psizes, MPI_Fint *  order, MPI_Fint *  oldtype, MPI_Aint * newtype, MPI_Fint * ierr)
+void MPI_TYPE_CREATE_DARRAY( MPI_Fint *  size, MPI_Fint *  rank, MPI_Fint *  ndims, MPI_Fint *  array_of_gsizes, MPI_Fint *  array_of_distribs, MPI_Fint *  array_of_dargs, MPI_Fint *  array_of_psizes, MPI_Fint *  order, MPI_Fint *  oldtype, MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_Datatype local_newtype;
   *ierr = MPI_Type_create_darray( *size, *rank, *ndims, array_of_gsizes, array_of_distribs, array_of_dargs, array_of_psizes, *order, MPI_Type_f2c(*oldtype), &local_newtype) ; 
@@ -4175,7 +4175,7 @@ void MPI_TYPE_CREATE_DARRAY( MPI_Fint *  size, MPI_Fint *  rank, MPI_Fint *  ndi
 /******************************************************
 ***      MPI_Type_create_darray wrapper function 
 ******************************************************/
-void mpi_type_create_darray( MPI_Fint *  size, MPI_Fint *  rank, MPI_Fint *  ndims, MPI_Fint *  array_of_gsizes, MPI_Fint *  array_of_distribs, MPI_Fint *  array_of_dargs, MPI_Fint *  array_of_psizes, MPI_Fint *  order, MPI_Fint *  oldtype, MPI_Aint * newtype, MPI_Fint * ierr)
+void mpi_type_create_darray( MPI_Fint *  size, MPI_Fint *  rank, MPI_Fint *  ndims, MPI_Fint *  array_of_gsizes, MPI_Fint *  array_of_distribs, MPI_Fint *  array_of_dargs, MPI_Fint *  array_of_psizes, MPI_Fint *  order, MPI_Fint *  oldtype, MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_TYPE_CREATE_DARRAY( size, rank, ndims, array_of_gsizes, array_of_distribs, array_of_dargs, array_of_psizes, order, oldtype, newtype, ierr) ; 
   return ; 
@@ -4184,7 +4184,7 @@ void mpi_type_create_darray( MPI_Fint *  size, MPI_Fint *  rank, MPI_Fint *  ndi
 /******************************************************
 ***      MPI_Type_create_darray wrapper function 
 ******************************************************/
-void mpi_type_create_darray_( MPI_Fint *  size, MPI_Fint *  rank, MPI_Fint *  ndims, MPI_Fint *  array_of_gsizes, MPI_Fint *  array_of_distribs, MPI_Fint *  array_of_dargs, MPI_Fint *  array_of_psizes, MPI_Fint *  order, MPI_Fint *  oldtype, MPI_Aint * newtype, MPI_Fint * ierr)
+void mpi_type_create_darray_( MPI_Fint *  size, MPI_Fint *  rank, MPI_Fint *  ndims, MPI_Fint *  array_of_gsizes, MPI_Fint *  array_of_distribs, MPI_Fint *  array_of_dargs, MPI_Fint *  array_of_psizes, MPI_Fint *  order, MPI_Fint *  oldtype, MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_TYPE_CREATE_DARRAY( size, rank, ndims, array_of_gsizes, array_of_distribs, array_of_dargs, array_of_psizes, order, oldtype, newtype, ierr) ; 
   return ; 
@@ -4193,7 +4193,7 @@ void mpi_type_create_darray_( MPI_Fint *  size, MPI_Fint *  rank, MPI_Fint *  nd
 /******************************************************
 ***      MPI_Type_create_darray wrapper function 
 ******************************************************/
-void mpi_type_create_darray__( MPI_Fint *  size, MPI_Fint *  rank, MPI_Fint *  ndims, MPI_Fint *  array_of_gsizes, MPI_Fint *  array_of_distribs, MPI_Fint *  array_of_dargs, MPI_Fint *  array_of_psizes, MPI_Fint *  order, MPI_Fint *  oldtype, MPI_Aint * newtype, MPI_Fint * ierr)
+void mpi_type_create_darray__( MPI_Fint *  size, MPI_Fint *  rank, MPI_Fint *  ndims, MPI_Fint *  array_of_gsizes, MPI_Fint *  array_of_distribs, MPI_Fint *  array_of_dargs, MPI_Fint *  array_of_psizes, MPI_Fint *  order, MPI_Fint *  oldtype, MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_TYPE_CREATE_DARRAY( size, rank, ndims, array_of_gsizes, array_of_distribs, array_of_dargs, array_of_psizes, order, oldtype, newtype, ierr) ; 
   return ; 
@@ -4329,7 +4329,7 @@ int MPI_File_get_errhandler( MPI_File fh, MPI_Errhandler * errhandler)
 /******************************************************
 ***      MPI_File_get_errhandler wrapper function 
 ******************************************************/
-void MPI_FILE_GET_ERRHANDLER( MPI_Fint *  fh, MPI_Aint * errhandler, MPI_Fint * ierr)
+void MPI_FILE_GET_ERRHANDLER( MPI_Fint *  fh, MPI_Fint * errhandler, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Errhandler local_errhandler; 
@@ -4343,7 +4343,7 @@ void MPI_FILE_GET_ERRHANDLER( MPI_Fint *  fh, MPI_Aint * errhandler, MPI_Fint * 
 /******************************************************
 ***      MPI_File_get_errhandler wrapper function 
 ******************************************************/
-void mpi_file_get_errhandler( MPI_Fint *  fh, MPI_Aint * errhandler, MPI_Fint * ierr)
+void mpi_file_get_errhandler( MPI_Fint *  fh, MPI_Fint * errhandler, MPI_Fint * ierr)
 {
   MPI_FILE_GET_ERRHANDLER( fh, errhandler, ierr) ; 
   return ; 
@@ -4352,7 +4352,7 @@ void mpi_file_get_errhandler( MPI_Fint *  fh, MPI_Aint * errhandler, MPI_Fint * 
 /******************************************************
 ***      MPI_File_get_errhandler wrapper function 
 ******************************************************/
-void mpi_file_get_errhandler_( MPI_Fint *  fh, MPI_Aint * errhandler, MPI_Fint * ierr)
+void mpi_file_get_errhandler_( MPI_Fint *  fh, MPI_Fint * errhandler, MPI_Fint * ierr)
 {
   MPI_FILE_GET_ERRHANDLER( fh, errhandler, ierr) ; 
   return ; 
@@ -4361,7 +4361,7 @@ void mpi_file_get_errhandler_( MPI_Fint *  fh, MPI_Aint * errhandler, MPI_Fint *
 /******************************************************
 ***      MPI_File_get_errhandler wrapper function 
 ******************************************************/
-void mpi_file_get_errhandler__( MPI_Fint *  fh, MPI_Aint * errhandler, MPI_Fint * ierr)
+void mpi_file_get_errhandler__( MPI_Fint *  fh, MPI_Fint * errhandler, MPI_Fint * ierr)
 {
   MPI_FILE_GET_ERRHANDLER( fh, errhandler, ierr) ; 
   return ; 
@@ -4615,7 +4615,7 @@ int MPI_File_iread( MPI_File fh, void * buf, int count, MPI_Datatype datatype, M
 /******************************************************
 ***      MPI_File_iread wrapper function 
 ******************************************************/
-void MPI_FILE_IREAD( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void MPI_FILE_IREAD( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_File local_fh; 
   MPI_Datatype local_type; 
@@ -4631,7 +4631,7 @@ void MPI_FILE_IREAD( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint
 /******************************************************
 ***      MPI_File_iread wrapper function 
 ******************************************************/
-void mpi_file_iread( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iread( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IREAD( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -4640,7 +4640,7 @@ void mpi_file_iread( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint
 /******************************************************
 ***      MPI_File_iread wrapper function 
 ******************************************************/
-void mpi_file_iread_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iread_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IREAD( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -4649,7 +4649,7 @@ void mpi_file_iread_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fin
 /******************************************************
 ***      MPI_File_iread wrapper function 
 ******************************************************/
-void mpi_file_iread__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iread__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IREAD( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -4675,7 +4675,7 @@ int MPI_File_iread_shared( MPI_File fh, void * buf, int count, MPI_Datatype data
 /******************************************************
 ***      MPI_File_iread_shared wrapper function 
 ******************************************************/
-void MPI_FILE_IREAD_SHARED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void MPI_FILE_IREAD_SHARED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Datatype local_type;
@@ -4692,7 +4692,7 @@ void MPI_FILE_IREAD_SHARED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, M
 /******************************************************
 ***      MPI_File_iread_shared wrapper function 
 ******************************************************/
-void mpi_file_iread_shared( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iread_shared( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IREAD_SHARED( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -4701,7 +4701,7 @@ void mpi_file_iread_shared( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, M
 /******************************************************
 ***      MPI_File_iread_shared wrapper function 
 ******************************************************/
-void mpi_file_iread_shared_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iread_shared_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IREAD_SHARED( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -4710,7 +4710,7 @@ void mpi_file_iread_shared_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, 
 /******************************************************
 ***      MPI_File_iread_shared wrapper function 
 ******************************************************/
-void mpi_file_iread_shared__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iread_shared__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IREAD_SHARED( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -4736,7 +4736,7 @@ int MPI_File_iwrite( MPI_File fh, void * buf, int count, MPI_Datatype datatype, 
 /******************************************************
 ***      MPI_File_iwrite wrapper function 
 ******************************************************/
-void MPI_FILE_IWRITE( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void MPI_FILE_IWRITE( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPIO_Request local_request;
@@ -4750,7 +4750,7 @@ void MPI_FILE_IWRITE( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fin
 /******************************************************
 ***      MPI_File_iwrite wrapper function 
 ******************************************************/
-void mpi_file_iwrite( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iwrite( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IWRITE( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -4759,7 +4759,7 @@ void mpi_file_iwrite( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fin
 /******************************************************
 ***      MPI_File_iwrite wrapper function 
 ******************************************************/
-void mpi_file_iwrite_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iwrite_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IWRITE( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -4768,7 +4768,7 @@ void mpi_file_iwrite_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fi
 /******************************************************
 ***      MPI_File_iwrite wrapper function 
 ******************************************************/
-void mpi_file_iwrite__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iwrite__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IWRITE( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -4794,7 +4794,7 @@ int MPI_File_iwrite_shared( MPI_File fh, void * buf, int count, MPI_Datatype dat
 /******************************************************
 ***      MPI_File_iwrite_shared wrapper function 
 ******************************************************/
-void MPI_FILE_IWRITE_SHARED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void MPI_FILE_IWRITE_SHARED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPIO_Request local_request;
@@ -4808,7 +4808,7 @@ void MPI_FILE_IWRITE_SHARED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, 
 /******************************************************
 ***      MPI_File_iwrite_shared wrapper function 
 ******************************************************/
-void mpi_file_iwrite_shared( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iwrite_shared( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IWRITE_SHARED( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -4817,7 +4817,7 @@ void mpi_file_iwrite_shared( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, 
 /******************************************************
 ***      MPI_File_iwrite_shared wrapper function 
 ******************************************************/
-void mpi_file_iwrite_shared_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iwrite_shared_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IWRITE_SHARED( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -4826,7 +4826,7 @@ void mpi_file_iwrite_shared_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count,
 /******************************************************
 ***      MPI_File_iwrite_shared wrapper function 
 ******************************************************/
-void mpi_file_iwrite_shared__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iwrite_shared__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IWRITE_SHARED( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -4853,7 +4853,7 @@ int MPI_File_iread( MPI_File fh, void * buf, int count, MPI_Datatype datatype, M
 /******************************************************
 ***      MPI_File_iread wrapper function 
 ******************************************************/
-void MPI_FILE_IREAD( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void MPI_FILE_IREAD( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_File local_fh; 
   MPI_Datatype local_type; 
@@ -4869,7 +4869,7 @@ void MPI_FILE_IREAD( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint
 /******************************************************
 ***      MPI_File_iread wrapper function 
 ******************************************************/
-void mpi_file_iread( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iread( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IREAD( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -4878,7 +4878,7 @@ void mpi_file_iread( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint
 /******************************************************
 ***      MPI_File_iread wrapper function 
 ******************************************************/
-void mpi_file_iread_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iread_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IREAD( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -4887,7 +4887,7 @@ void mpi_file_iread_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fin
 /******************************************************
 ***      MPI_File_iread wrapper function 
 ******************************************************/
-void mpi_file_iread__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iread__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IREAD( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -4913,7 +4913,7 @@ int MPI_File_iread_shared( MPI_File fh, void * buf, int count, MPI_Datatype data
 /******************************************************
 ***      MPI_File_iread_shared wrapper function 
 ******************************************************/
-void MPI_FILE_IREAD_SHARED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void MPI_FILE_IREAD_SHARED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Datatype local_type;
@@ -4930,7 +4930,7 @@ void MPI_FILE_IREAD_SHARED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, M
 /******************************************************
 ***      MPI_File_iread_shared wrapper function 
 ******************************************************/
-void mpi_file_iread_shared( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iread_shared( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IREAD_SHARED( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -4939,7 +4939,7 @@ void mpi_file_iread_shared( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, M
 /******************************************************
 ***      MPI_File_iread_shared wrapper function 
 ******************************************************/
-void mpi_file_iread_shared_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iread_shared_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IREAD_SHARED( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -4948,7 +4948,7 @@ void mpi_file_iread_shared_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, 
 /******************************************************
 ***      MPI_File_iread_shared wrapper function 
 ******************************************************/
-void mpi_file_iread_shared__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iread_shared__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IREAD_SHARED( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -4974,7 +4974,7 @@ int MPI_File_iwrite( MPI_File fh, void * buf, int count, MPI_Datatype datatype, 
 /******************************************************
 ***      MPI_File_iwrite wrapper function 
 ******************************************************/
-void MPI_FILE_IWRITE( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void MPI_FILE_IWRITE( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Request local_request;
@@ -4988,7 +4988,7 @@ void MPI_FILE_IWRITE( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fin
 /******************************************************
 ***      MPI_File_iwrite wrapper function 
 ******************************************************/
-void mpi_file_iwrite( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iwrite( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IWRITE( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -4997,7 +4997,7 @@ void mpi_file_iwrite( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fin
 /******************************************************
 ***      MPI_File_iwrite wrapper function 
 ******************************************************/
-void mpi_file_iwrite_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iwrite_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IWRITE( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -5006,7 +5006,7 @@ void mpi_file_iwrite_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fi
 /******************************************************
 ***      MPI_File_iwrite wrapper function 
 ******************************************************/
-void mpi_file_iwrite__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iwrite__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IWRITE( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -5032,7 +5032,7 @@ int MPI_File_iwrite_shared( MPI_File fh, void * buf, int count, MPI_Datatype dat
 /******************************************************
 ***      MPI_File_iwrite_shared wrapper function 
 ******************************************************/
-void MPI_FILE_IWRITE_SHARED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void MPI_FILE_IWRITE_SHARED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_File local_fh;
   MPI_Request local_request;
@@ -5047,7 +5047,7 @@ void MPI_FILE_IWRITE_SHARED( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, 
 /******************************************************
 ***      MPI_File_iwrite_shared wrapper function 
 ******************************************************/
-void mpi_file_iwrite_shared( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iwrite_shared( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IWRITE_SHARED( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -5056,7 +5056,7 @@ void mpi_file_iwrite_shared( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, 
 /******************************************************
 ***      MPI_File_iwrite_shared wrapper function 
 ******************************************************/
-void mpi_file_iwrite_shared_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iwrite_shared_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IWRITE_SHARED( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -5065,7 +5065,7 @@ void mpi_file_iwrite_shared_( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count,
 /******************************************************
 ***      MPI_File_iwrite_shared wrapper function 
 ******************************************************/
-void mpi_file_iwrite_shared__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_file_iwrite_shared__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_FILE_IWRITE_SHARED( fh, buf, count, datatype, request, ierr) ; 
   return ; 
@@ -6528,7 +6528,7 @@ int MPI_Info_create( MPI_Info * info)
 /******************************************************
 ***      MPI_Info_create wrapper function 
 ******************************************************/
-void MPI_INFO_CREATE( MPI_Aint * info, MPI_Fint * ierr)
+void MPI_INFO_CREATE( MPI_Fint * info, MPI_Fint * ierr)
 {
   MPI_Info local_info;
   *ierr = MPI_Info_create( &local_info) ; 
@@ -6539,7 +6539,7 @@ void MPI_INFO_CREATE( MPI_Aint * info, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Info_create wrapper function 
 ******************************************************/
-void mpi_info_create( MPI_Aint * info, MPI_Fint * ierr)
+void mpi_info_create( MPI_Fint * info, MPI_Fint * ierr)
 {
   MPI_INFO_CREATE( info, ierr) ; 
   return ; 
@@ -6548,7 +6548,7 @@ void mpi_info_create( MPI_Aint * info, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Info_create wrapper function 
 ******************************************************/
-void mpi_info_create_( MPI_Aint * info, MPI_Fint * ierr)
+void mpi_info_create_( MPI_Fint * info, MPI_Fint * ierr)
 {
   MPI_INFO_CREATE( info, ierr) ; 
   return ; 
@@ -6557,7 +6557,7 @@ void mpi_info_create_( MPI_Aint * info, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Info_create wrapper function 
 ******************************************************/
-void mpi_info_create__( MPI_Aint * info, MPI_Fint * ierr)
+void mpi_info_create__( MPI_Fint * info, MPI_Fint * ierr)
 {
   MPI_INFO_CREATE( info, ierr) ; 
   return ; 
@@ -6965,7 +6965,7 @@ int MPI_Info_free( MPI_Info * info)
 /******************************************************
 ***      MPI_Info_free wrapper function 
 ******************************************************/
-void MPI_INFO_FREE( MPI_Aint * info, MPI_Fint * ierr)
+void MPI_INFO_FREE( MPI_Fint * info, MPI_Fint * ierr)
 {
   MPI_Info local_info = MPI_Info_f2c(*info);
   *ierr = MPI_Info_free( &local_info) ; 
@@ -6976,7 +6976,7 @@ void MPI_INFO_FREE( MPI_Aint * info, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Info_free wrapper function 
 ******************************************************/
-void mpi_info_free( MPI_Aint * info, MPI_Fint * ierr)
+void mpi_info_free( MPI_Fint * info, MPI_Fint * ierr)
 {
   MPI_INFO_FREE( info, ierr) ; 
   return ; 
@@ -6985,7 +6985,7 @@ void mpi_info_free( MPI_Aint * info, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Info_free wrapper function 
 ******************************************************/
-void mpi_info_free_( MPI_Aint * info, MPI_Fint * ierr)
+void mpi_info_free_( MPI_Fint * info, MPI_Fint * ierr)
 {
   MPI_INFO_FREE( info, ierr) ; 
   return ; 
@@ -6994,7 +6994,7 @@ void mpi_info_free_( MPI_Aint * info, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Info_free wrapper function 
 ******************************************************/
-void mpi_info_free__( MPI_Aint * info, MPI_Fint * ierr)
+void mpi_info_free__( MPI_Fint * info, MPI_Fint * ierr)
 {
   MPI_INFO_FREE( info, ierr) ; 
   return ; 
@@ -7840,7 +7840,7 @@ int MPI_Grequest_start( MPI_Grequest_query_function * grequest_query_fn, MPI_Gre
 /******************************************************
 ***      MPI_Grequest_start wrapper function 
 ******************************************************/
-void MPI_GREQUEST_START( MPI_Grequest_query_function * grequest_query_fn, MPI_Grequest_free_function * grequest_free_fn, MPI_Grequest_cancel_function * grequest_cancel_fn, MPI_Aint * extra_state, MPI_Aint * request, MPI_Fint * ierr)
+void MPI_GREQUEST_START( MPI_Grequest_query_function * grequest_query_fn, MPI_Grequest_free_function * grequest_free_fn, MPI_Grequest_cancel_function * grequest_cancel_fn, MPI_Aint * extra_state, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_Request local_request;
   *ierr = MPI_Grequest_start( grequest_query_fn, grequest_free_fn, grequest_cancel_fn, extra_state, &local_request) ; 
@@ -7851,7 +7851,7 @@ void MPI_GREQUEST_START( MPI_Grequest_query_function * grequest_query_fn, MPI_Gr
 /******************************************************
 ***      MPI_Grequest_start wrapper function 
 ******************************************************/
-void mpi_grequest_start( MPI_Grequest_query_function * grequest_query_fn, MPI_Grequest_free_function * grequest_free_fn, MPI_Grequest_cancel_function * grequest_cancel_fn, MPI_Aint * extra_state, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_grequest_start( MPI_Grequest_query_function * grequest_query_fn, MPI_Grequest_free_function * grequest_free_fn, MPI_Grequest_cancel_function * grequest_cancel_fn, MPI_Aint * extra_state, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_GREQUEST_START( grequest_query_fn, grequest_free_fn, grequest_cancel_fn, extra_state, request, ierr) ; 
   return ; 
@@ -7860,7 +7860,7 @@ void mpi_grequest_start( MPI_Grequest_query_function * grequest_query_fn, MPI_Gr
 /******************************************************
 ***      MPI_Grequest_start wrapper function 
 ******************************************************/
-void mpi_grequest_start_( MPI_Grequest_query_function * grequest_query_fn, MPI_Grequest_free_function * grequest_free_fn, MPI_Grequest_cancel_function * grequest_cancel_fn, MPI_Aint * extra_state, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_grequest_start_( MPI_Grequest_query_function * grequest_query_fn, MPI_Grequest_free_function * grequest_free_fn, MPI_Grequest_cancel_function * grequest_cancel_fn, MPI_Aint * extra_state, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_GREQUEST_START( grequest_query_fn, grequest_free_fn, grequest_cancel_fn, extra_state, request, ierr) ; 
   return ; 
@@ -7869,7 +7869,7 @@ void mpi_grequest_start_( MPI_Grequest_query_function * grequest_query_fn, MPI_G
 /******************************************************
 ***      MPI_Grequest_start wrapper function 
 ******************************************************/
-void mpi_grequest_start__( MPI_Grequest_query_function * grequest_query_fn, MPI_Grequest_free_function * grequest_free_fn, MPI_Grequest_cancel_function * grequest_cancel_fn, MPI_Aint * extra_state, MPI_Aint * request, MPI_Fint * ierr)
+void mpi_grequest_start__( MPI_Grequest_query_function * grequest_query_fn, MPI_Grequest_free_function * grequest_free_fn, MPI_Grequest_cancel_function * grequest_cancel_fn, MPI_Aint * extra_state, MPI_Fint * request, MPI_Fint * ierr)
 {
   MPI_GREQUEST_START( grequest_query_fn, grequest_free_fn, grequest_cancel_fn, extra_state, request, ierr) ; 
   return ; 
@@ -8116,7 +8116,7 @@ int MPI_Type_create_indexed_block( int count, int blocklength, int * array_of_di
 /******************************************************
 ***      MPI_Type_create_indexed_block wrapper function 
 ******************************************************/
-void MPI_TYPE_CREATE_INDEXED_BLOCK( MPI_Fint *  count, MPI_Fint *  blocklength, MPI_Fint *  array_of_displacements, MPI_Fint *  oldtype, MPI_Aint * newtype, MPI_Fint * ierr)
+void MPI_TYPE_CREATE_INDEXED_BLOCK( MPI_Fint *  count, MPI_Fint *  blocklength, MPI_Fint *  array_of_displacements, MPI_Fint *  oldtype, MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_Datatype local_type;
   *ierr = MPI_Type_create_indexed_block( *count, *blocklength, array_of_displacements, MPI_Type_f2c(*oldtype), &local_type) ; 
@@ -8127,7 +8127,7 @@ void MPI_TYPE_CREATE_INDEXED_BLOCK( MPI_Fint *  count, MPI_Fint *  blocklength, 
 /******************************************************
 ***      MPI_Type_create_indexed_block wrapper function 
 ******************************************************/
-void mpi_type_create_indexed_block( MPI_Fint *  count, MPI_Fint *  blocklength, MPI_Fint *  array_of_displacements, MPI_Fint *  oldtype, MPI_Aint * newtype, MPI_Fint * ierr)
+void mpi_type_create_indexed_block( MPI_Fint *  count, MPI_Fint *  blocklength, MPI_Fint *  array_of_displacements, MPI_Fint *  oldtype, MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_TYPE_CREATE_INDEXED_BLOCK( count, blocklength, array_of_displacements, oldtype, newtype, ierr) ; 
   return ; 
@@ -8136,7 +8136,7 @@ void mpi_type_create_indexed_block( MPI_Fint *  count, MPI_Fint *  blocklength, 
 /******************************************************
 ***      MPI_Type_create_indexed_block wrapper function 
 ******************************************************/
-void mpi_type_create_indexed_block_( MPI_Fint *  count, MPI_Fint *  blocklength, MPI_Fint *  array_of_displacements, MPI_Fint *  oldtype, MPI_Aint * newtype, MPI_Fint * ierr)
+void mpi_type_create_indexed_block_( MPI_Fint *  count, MPI_Fint *  blocklength, MPI_Fint *  array_of_displacements, MPI_Fint *  oldtype, MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_TYPE_CREATE_INDEXED_BLOCK( count, blocklength, array_of_displacements, oldtype, newtype, ierr) ; 
   return ; 
@@ -8145,7 +8145,7 @@ void mpi_type_create_indexed_block_( MPI_Fint *  count, MPI_Fint *  blocklength,
 /******************************************************
 ***      MPI_Type_create_indexed_block wrapper function 
 ******************************************************/
-void mpi_type_create_indexed_block__( MPI_Fint *  count, MPI_Fint *  blocklength, MPI_Fint *  array_of_displacements, MPI_Fint *  oldtype, MPI_Aint * newtype, MPI_Fint * ierr)
+void mpi_type_create_indexed_block__( MPI_Fint *  count, MPI_Fint *  blocklength, MPI_Fint *  array_of_displacements, MPI_Fint *  oldtype, MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_TYPE_CREATE_INDEXED_BLOCK( count, blocklength, array_of_displacements, oldtype, newtype, ierr) ; 
   return ; 
@@ -8279,7 +8279,7 @@ int MPI_Type_create_resized( MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,
 /******************************************************
 ***      MPI_Type_create_resized wrapper function 
 ******************************************************/
-void MPI_TYPE_CREATE_RESIZED( MPI_Fint *  oldtype, MPI_Aint *  lb, MPI_Aint *  extent, MPI_Aint * newtype, MPI_Fint * ierr)
+void MPI_TYPE_CREATE_RESIZED( MPI_Fint *  oldtype, MPI_Aint *  lb, MPI_Aint *  extent, MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_Datatype local_type; 
   *ierr = MPI_Type_create_resized( MPI_Type_f2c(*oldtype), *lb, *extent, &local_type) ; 
@@ -8290,7 +8290,7 @@ void MPI_TYPE_CREATE_RESIZED( MPI_Fint *  oldtype, MPI_Aint *  lb, MPI_Aint *  e
 /******************************************************
 ***      MPI_Type_create_resized wrapper function 
 ******************************************************/
-void mpi_type_create_resized( MPI_Fint *  oldtype, MPI_Aint *  lb, MPI_Aint *  extent, MPI_Aint * newtype, MPI_Fint * ierr)
+void mpi_type_create_resized( MPI_Fint *  oldtype, MPI_Aint *  lb, MPI_Aint *  extent, MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_TYPE_CREATE_RESIZED( oldtype, lb, extent, newtype, ierr) ; 
   return ; 
@@ -8299,7 +8299,7 @@ void mpi_type_create_resized( MPI_Fint *  oldtype, MPI_Aint *  lb, MPI_Aint *  e
 /******************************************************
 ***      MPI_Type_create_resized wrapper function 
 ******************************************************/
-void mpi_type_create_resized_( MPI_Fint *  oldtype, MPI_Aint *  lb, MPI_Aint *  extent, MPI_Aint * newtype, MPI_Fint * ierr)
+void mpi_type_create_resized_( MPI_Fint *  oldtype, MPI_Aint *  lb, MPI_Aint *  extent, MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_TYPE_CREATE_RESIZED( oldtype, lb, extent, newtype, ierr) ; 
   return ; 
@@ -8308,7 +8308,7 @@ void mpi_type_create_resized_( MPI_Fint *  oldtype, MPI_Aint *  lb, MPI_Aint *  
 /******************************************************
 ***      MPI_Type_create_resized wrapper function 
 ******************************************************/
-void mpi_type_create_resized__( MPI_Fint *  oldtype, MPI_Aint *  lb, MPI_Aint *  extent, MPI_Aint * newtype, MPI_Fint * ierr)
+void mpi_type_create_resized__( MPI_Fint *  oldtype, MPI_Aint *  lb, MPI_Aint *  extent, MPI_Fint * newtype, MPI_Fint * ierr)
 {
   MPI_TYPE_CREATE_RESIZED( oldtype, lb, extent, newtype, ierr) ; 
   return ; 
@@ -8391,7 +8391,7 @@ int MPI_Pack_external( char * datarep, void * inbuf, int incount, MPI_Datatype d
 /******************************************************
 ***      MPI_Pack_external wrapper function 
 ******************************************************/
-void MPI_PACK_EXTERNAL( char * datarep, MPI_Aint * inbuf, MPI_Fint *  incount, MPI_Fint *  datatype, MPI_Aint * outbuf, MPI_Fint *  outsize, MPI_Aint * position, MPI_Fint * ierr)
+void MPI_PACK_EXTERNAL( char * datarep, MPI_Aint * inbuf, MPI_Fint *  incount, MPI_Fint *  datatype, MPI_Aint * outbuf, MPI_Aint *  outsize, MPI_Aint * position, MPI_Fint * ierr)
 {
   *ierr = MPI_Pack_external( datarep, inbuf, *incount, MPI_Type_f2c(*datatype), outbuf, *outsize, position) ; 
   return ; 
@@ -8400,7 +8400,7 @@ void MPI_PACK_EXTERNAL( char * datarep, MPI_Aint * inbuf, MPI_Fint *  incount, M
 /******************************************************
 ***      MPI_Pack_external wrapper function 
 ******************************************************/
-void mpi_pack_external( char * datarep, MPI_Aint * inbuf, MPI_Fint *  incount, MPI_Fint *  datatype, MPI_Aint * outbuf, MPI_Fint *  outsize, MPI_Aint * position, MPI_Fint * ierr)
+void mpi_pack_external( char * datarep, MPI_Aint * inbuf, MPI_Fint *  incount, MPI_Fint *  datatype, MPI_Aint * outbuf, MPI_Aint *  outsize, MPI_Aint * position, MPI_Fint * ierr)
 {
   MPI_PACK_EXTERNAL( datarep, inbuf, incount, datatype, outbuf, outsize, position, ierr) ; 
   return ; 
@@ -8409,7 +8409,7 @@ void mpi_pack_external( char * datarep, MPI_Aint * inbuf, MPI_Fint *  incount, M
 /******************************************************
 ***      MPI_Pack_external wrapper function 
 ******************************************************/
-void mpi_pack_external_( char * datarep, MPI_Aint * inbuf, MPI_Fint *  incount, MPI_Fint *  datatype, MPI_Aint * outbuf, MPI_Fint *  outsize, MPI_Aint * position, MPI_Fint * ierr)
+void mpi_pack_external_( char * datarep, MPI_Aint * inbuf, MPI_Fint *  incount, MPI_Fint *  datatype, MPI_Aint * outbuf, MPI_Aint *  outsize, MPI_Aint * position, MPI_Fint * ierr)
 {
   MPI_PACK_EXTERNAL( datarep, inbuf, incount, datatype, outbuf, outsize, position, ierr) ; 
   return ; 
@@ -8418,7 +8418,7 @@ void mpi_pack_external_( char * datarep, MPI_Aint * inbuf, MPI_Fint *  incount, 
 /******************************************************
 ***      MPI_Pack_external wrapper function 
 ******************************************************/
-void mpi_pack_external__( char * datarep, MPI_Aint * inbuf, MPI_Fint *  incount, MPI_Fint *  datatype, MPI_Aint * outbuf, MPI_Fint *  outsize, MPI_Aint * position, MPI_Fint * ierr)
+void mpi_pack_external__( char * datarep, MPI_Aint * inbuf, MPI_Fint *  incount, MPI_Fint *  datatype, MPI_Aint * outbuf, MPI_Aint *  outsize, MPI_Aint * position, MPI_Fint * ierr)
 {
   MPI_PACK_EXTERNAL( datarep, inbuf, incount, datatype, outbuf, outsize, position, ierr) ; 
   return ; 
@@ -8444,7 +8444,7 @@ int MPI_Unpack_external( char * datarep, void * inbuf, MPI_Aint insize, MPI_Aint
 /******************************************************
 ***      MPI_Unpack_external wrapper function 
 ******************************************************/
-void MPI_UNPACK_EXTERNAL( char * datarep, MPI_Aint * inbuf, MPI_Fint *  insize, MPI_Aint * position, MPI_Aint * outbuf, MPI_Fint *  outcount, MPI_Fint *  datatype, MPI_Fint * ierr)
+void MPI_UNPACK_EXTERNAL( char * datarep, MPI_Aint * inbuf, MPI_Aint *  insize, MPI_Aint * position, MPI_Aint * outbuf, MPI_Fint *  outcount, MPI_Fint *  datatype, MPI_Fint * ierr)
 {
   *ierr = MPI_Unpack_external( datarep, inbuf, *insize, position, outbuf, *outcount, MPI_Type_f2c(*datatype)) ; 
   return ; 
@@ -8453,7 +8453,7 @@ void MPI_UNPACK_EXTERNAL( char * datarep, MPI_Aint * inbuf, MPI_Fint *  insize, 
 /******************************************************
 ***      MPI_Unpack_external wrapper function 
 ******************************************************/
-void mpi_unpack_external( char * datarep, MPI_Aint * inbuf, MPI_Fint *  insize, MPI_Aint * position, MPI_Aint * outbuf, MPI_Fint *  outcount, MPI_Fint *  datatype, MPI_Fint * ierr)
+void mpi_unpack_external( char * datarep, MPI_Aint * inbuf, MPI_Aint *  insize, MPI_Aint * position, MPI_Aint * outbuf, MPI_Fint *  outcount, MPI_Fint *  datatype, MPI_Fint * ierr)
 {
   MPI_UNPACK_EXTERNAL( datarep, inbuf, insize, position, outbuf, outcount, datatype, ierr) ; 
   return ; 
@@ -8462,7 +8462,7 @@ void mpi_unpack_external( char * datarep, MPI_Aint * inbuf, MPI_Fint *  insize, 
 /******************************************************
 ***      MPI_Unpack_external wrapper function 
 ******************************************************/
-void mpi_unpack_external_( char * datarep, MPI_Aint * inbuf, MPI_Fint *  insize, MPI_Aint * position, MPI_Aint * outbuf, MPI_Fint *  outcount, MPI_Fint *  datatype, MPI_Fint * ierr)
+void mpi_unpack_external_( char * datarep, MPI_Aint * inbuf, MPI_Aint *  insize, MPI_Aint * position, MPI_Aint * outbuf, MPI_Fint *  outcount, MPI_Fint *  datatype, MPI_Fint * ierr)
 {
   MPI_UNPACK_EXTERNAL( datarep, inbuf, insize, position, outbuf, outcount, datatype, ierr) ; 
   return ; 
@@ -8471,7 +8471,7 @@ void mpi_unpack_external_( char * datarep, MPI_Aint * inbuf, MPI_Fint *  insize,
 /******************************************************
 ***      MPI_Unpack_external wrapper function 
 ******************************************************/
-void mpi_unpack_external__( char * datarep, MPI_Aint * inbuf, MPI_Fint *  insize, MPI_Aint * position, MPI_Aint * outbuf, MPI_Fint *  outcount, MPI_Fint *  datatype, MPI_Fint * ierr)
+void mpi_unpack_external__( char * datarep, MPI_Aint * inbuf, MPI_Aint *  insize, MPI_Aint * position, MPI_Aint * outbuf, MPI_Fint *  outcount, MPI_Fint *  datatype, MPI_Fint * ierr)
 {
   MPI_UNPACK_EXTERNAL( datarep, inbuf, insize, position, outbuf, outcount, datatype, ierr) ; 
   return ; 
