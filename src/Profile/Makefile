@@ -15,7 +15,7 @@
 #**      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
 #****************************************************************************
 
-TAUROOT=/home/scottb/tau2
+TAUROOT=
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -118,8 +118,8 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
 STATIC_OBJS   = Comp_gnu.o $(PGIACC_STATIC_O)
 SHARED_OBJS   = $(PGIACC_O)
 #SICORTEX#SHARED_OBJS = Comp_gnu.o #ENDIF#
-SHARED_OBJS = Comp_gnu.o #ENDIF##TAU_BFDSHAREDLINK#
-SHARED_LIBS = $(BFDLINK) -lbfd -liberty #ENDIF##TAU_BFDSHAREDLINK#
+#TAU_BFDSHAREDLINK#SHARED_OBJS = Comp_gnu.o #ENDIF#
+#TAU_BFDSHAREDLINK#SHARED_LIBS = $(BFDLINK) -lbfd -liberty #ENDIF#
 
 PRINT	      = pr
 
@@ -180,7 +180,7 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 ##############################################
 # For making libTAU.so Dynamic Shared Object
 ##############################################
-AR_SHFLAGS 		= -shared  	#ENDIF##GNU#
+#GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
 #APPLEPGI#AR_SHFLAGS 		= -shared #ENDIF#
@@ -631,7 +631,7 @@ $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 TauGpu.o : TauGpu.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
-TauGpuAdapterCudaExp.o : TauGpuAdapterCudaExp.cpp $(HDRS)
+TauGpuAdapterCupti.o : TauGpuAdapterCupti.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -I$(TAU_GPU_INC) -c $(@:.o=.cpp)
 
 TauGpuAdapterOpenCL.o : TauGpuAdapterOpenCL.cpp $(HDRS)
