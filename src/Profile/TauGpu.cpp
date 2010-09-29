@@ -77,11 +77,11 @@ void Tau_gpu_enter_event(const char* name, eventId *id)
 #endif
 	TAU_START(name);
 }
-void Tau_gpu_enter_memcpy_event(const char* name, eventId *id, gpuId *device, bool
+void Tau_gpu_enter_memcpy_event(eventId *id, gpuId *device, bool
 memcpyType)
 {
 #ifdef DEBUG_PROF
-	printf("entering cuMemcpy event: %s.\n", name);
+	//printf("entering cuMemcpy event: %s.\n", name);
 #endif
 
 	// Place the Message into the trace in when the memcpy in entered if this
@@ -91,14 +91,18 @@ memcpyType)
 
 	if (memcpyType == MemcpyHtoD) {
 		TauTraceOneSidedMsg(MESSAGE_SEND, device, -1, 0);
+		TAU_START("Memory copy Host to Device");
 	}
-	TAU_START(name);
+	else
+	{
+		TAU_START("Memory copy Device to Host");
+	}
 }
-void Tau_gpu_exit_memcpy_event(const char* name, eventId *id, gpuId *device, bool
+void Tau_gpu_exit_memcpy_event(eventId *id, gpuId *device, bool
 memcpyType)
 {
 #ifdef DEBUG_PROF
-	printf("exiting cuMemcpy event: %s.\n", name);
+	//printf("exiting cuMemcpy event: %s.\n", name);
 #endif
 
 	// Place the Message into the trace in when the memcpy in exited if this
@@ -108,8 +112,12 @@ memcpyType)
 
 	if (memcpyType == MemcpyDtoH) {
 		TauTraceOneSidedMsg(MESSAGE_RECV, device, -1, 0);
+		TAU_STOP("Memory copy Device to Host");
 	}
-	TAU_STOP(name);
+	else
+	{
+		TAU_STOP("Memory copy Host to Device");
+	}
 }
 
 void Tau_gpu_exit_event(const char *name, eventId *id)

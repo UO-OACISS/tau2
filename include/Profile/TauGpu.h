@@ -42,14 +42,14 @@ extern "C" void Tau_gpu_exit(void);
 extern "C" void Tau_gpu_enter_event(const char *functionName, eventId *id);
 
 /* Entry point for CPU routines that initiate a memory copy to the GPU */
-extern "C" void Tau_gpu_enter_memcpy_event(const char *functionName, eventId *id,
+extern "C" void Tau_gpu_enter_memcpy_event(eventId *id,
 gpuId *device, bool memcpyType);
 
 /* Exit point for CPU routines */
 extern "C" void Tau_gpu_exit_event(const char *functionName, eventId *id);
 
 /* Exit point for CPU routines that initiate a memory copy to the GPU */
-extern "C" void Tau_gpu_exit_memcpy_event(const char *functionName, eventId *id,
+extern "C" void Tau_gpu_exit_memcpy_event(eventId *id,
 gpuId *device, bool memcpyType);
 
 /* Callback for a GPU event that occurred earlier in the execution of the

@@ -44,7 +44,69 @@ void __attribute__ ((destructor)) Tau_cuda_onunload(void);
 void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CUpti_CallbackId id, const void *params)
 {
   const CUpti_RuntimeTraceApi *cbInfo = (CUpti_RuntimeTraceApi*)params;
-	printf("in callback: %s.\n", cbInfo->functionName);
+  RuntimeApiTrace_t *traceData = (RuntimeApiTrace_t*)userdata;
+
+	//Do not instrument cudaTheadExit.	
+	/*if (cbInfo->functionId == 123)
+	{
+		return;
+	}*/
+
+	if (cbInfo->callbacksite == CUPTI_API_ENTER)
+	{
+		printf("Enter: %s:%d.\n", cbInfo->functionName, cbInfo->functionId);
+		if (cbInfo->functionId == 31)
+		{
+			cudaMemcpy_params params;
+			memcpy(&params, (cudaMemcpy_params *) cbInfo->params,
+			sizeof(cudaMemcpy_params));
+			printf("Enter Memcpy: dest: %d, src: %d, count: %llu, kind: %d.\n",
+			params.dst, params.src,
+			params.count, params.kind);
+			//TODO: sort out GPU ids
+			//TODO: memory copies from device to device.
+
+			if (params.kind == 1)
+			{
+				Tau_gpu_enter_memcpy_event(
+				&cudaEventId(cbInfo->functionId), &cudaGpuId(0,0), MemcpyHtoD);
+			}
+			else if (params.kind == 2)
+			{
+				Tau_gpu_enter_memcpy_event(
+				&cudaEventId(cbInfo->functionId), &cudaGpuId(0,0), MemcpyDtoH);
+			}
+		}
+		else 
+		{
+			Tau_gpu_enter_event(cbInfo->functionName, &cudaEventId(cbInfo->functionId));
+		}
+	}
+	else if (cbInfo->callbacksite == CUPTI_API_EXIT)
+	{
+		if (cbInfo->functionId == 31)
+		{
+			cudaMemcpy_params params;
+			memcpy(&params, (cudaMemcpy_params *) cbInfo->params,
+			sizeof(cudaMemcpy_params));
+			if (params.kind == 1)
+			{
+				Tau_gpu_exit_memcpy_event(
+				&cudaEventId(cbInfo->functionId), &cudaGpuId(0,0), MemcpyHtoD);
+			}
+			else if (params.kind == 2)
+			{
+				Tau_gpu_exit_memcpy_event(
+				&cudaEventId(cbInfo->functionId), &cudaGpuId(0,0), MemcpyDtoH);
+			}
+			
+		}
+		else
+		{
+			Tau_gpu_exit_event(cbInfo->functionName, &cudaEventId(cbInfo->functionId));
+		}
+		printf("Exit: %s:%d.\n", cbInfo->functionName, cbInfo->functionId);
+	}
 }
 
 CUpti_SubscriberHandle subscriber;
@@ -74,6 +136,7 @@ void Tau_cuda_onload(void)
 	err = cuptiEnableDomain(1, subscriber,CUPTI_CB_DOMAIN_RUNTIME_API_TRACE);
 	CUDA_CHECK_ERROR(err, "Cannot set Domain.\n");
 
+	//Tau_gpu_init();
 }
 
 void Tau_cuda_onunload(void)
@@ -82,4 +145,6 @@ void Tau_cuda_onunload(void)
   CUresult err;
   err = cuptiUnsubscribe(subscriber);
   CUDA_CHECK_ERROR(err, "Cannot unsubscribe.\n");
+	
+	//Tau_gpu_exit();
 }
