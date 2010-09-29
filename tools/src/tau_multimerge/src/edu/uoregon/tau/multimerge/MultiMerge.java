@@ -1,6 +1,7 @@
 package edu.uoregon.tau.multimerge;
 
-import java.awt.Point;
+
+
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
@@ -24,14 +25,14 @@ class TotID{
 	 * The name of the trace file
 	 */
 	public String filename;
-	/**
-	 * The id of the thread as contained in the trace file
-	 */
-	public int thread;
-	/**
-	 * The id of the node as contained in the trace file
-	 */
-	public int node;
+//	/**
+//	 * The id of the thread as contained in the trace file
+//	 */
+//	public int thread;
+//	/**
+//	 * The id of the node as contained in the trace file
+//	 */
+//	public int node;
 
 	/**
 	 * The map from the local state id (the id in this trace file) to the global state id (the id used in the merged trace)
@@ -84,8 +85,8 @@ class TotID{
 	TotID(String fname){
 		filename=fname;
 		locToGlobStates=new HashMap<Integer, Integer>();
-		thread=-1;
-		node=-1;
+//		thread=-1;
+//		node=-1;
 	}
 }
 
@@ -156,7 +157,7 @@ class TraceNameComparitor implements Comparator<String>{
 class TraceFilter implements FilenameFilter{
 
 	public boolean accept(File arg0, String arg1) {
-		if((arg1.startsWith("tautrace.")||arg1.startsWith("taucudatrace."))&&arg1.endsWith(".trc"))
+		if(arg1.startsWith("tautrace.")&&arg1.endsWith(".trc"))
 			return true;
 		return false;
 	}
@@ -189,6 +190,22 @@ class DoublePair{
 	}
 }
 
+
+class ToFrom{
+	public int toNode,toThread,fromNode,fromThread;
+
+	public ToFrom(int toNode, int toThread, int fromNode, int fromThread) {
+		super();
+		this.toNode = toNode;
+		this.toThread = toThread;
+		this.fromNode = fromNode;
+		this.fromThread = fromThread;
+	}
+	
+	
+	
+}
+
 public class MultiMerge {
 
 	private static final int ONESIDED_MESSAGE_SEND=70000;
@@ -213,19 +230,19 @@ public class MultiMerge {
 	 * Keeps track of the number of state and user-events seen so far.  The global ids are set by the current value (ids are sequential in the order seen)
 	 */
 	static int numStates=0;
+//	/**
+//	 * Keeps track of the last global node id recorded.  This allows the global node ids to be generated sequentially.
+//	 */
+//	static int lastNode=-1;
 	/**
-	 * Keeps track of the last global node id recorded.  This allows the global node ids to be generated sequentially.
-	 */
-	static int lastNode=-1;
-	/**
-	 * The map from the node id associated with the old trace file to the new global node id that will be used in the merged trace
-	 */
-	static Map<Integer,Integer> oldNewDest;
+//	 * The map from the node id associated with the old trace file to the new global node id that will be used in the merged trace
+//	 */
+//	static Map<Integer,Integer> oldNewDest;
 
 	/**
 	 * The map from the unique cuda communication id string to the point (node/thread id pair) that is associated with that unique id
 	 */
-	static Map<String,Point> idNodes;
+	static Map<String,ToFrom> idNodes;
 
 	//	/**
 	//	 * This set contains all filename/timestamp combinations that are associated with mpi communication events.  If the string is not in here then it is cuda communication.
@@ -328,58 +345,58 @@ public class MultiMerge {
 		return newname;
 	}
 
-	/**
-	 * Does extra initialization on the given TotID object
-	 * @param tot
-	 * @return
-	 */
-	private static TotID initTotLoc(TotID tot){
-
-		//boolean isCuda=tot.filename.contains("cuda");
-
-		int[]fn=getNCT(tot.filename);
-		int threadToken=-1;
-//		if(isCuda)
-//		{
-//			threadToken=0;
+//	/**
+//	 * Does extra initialization on the given TotID object
+//	 * @param tot
+//	 * @return
+//	 */
+//	private static TotID initTotLoc(TotID tot){
+//
+//		//boolean isCuda=tot.filename.contains("cuda");
+//
+//		int[]fn=getNCT(tot.filename);
+//		int threadToken=-1;
+////		if(isCuda)
+////		{
+////			threadToken=0;
+////		}else{
+//			threadToken=fn[2];
+//		//}
+//
+//		/*
+//		 * If this is a threaded trace file we are on the same node as before, just update the thread
+//		 */
+//		/*if(threadToken>0){
+//			tot.node=lastNode;
+//			tot.thread=threadToken;
+//		}*/
+//		/*
+//		 * If this is not a threaded entry we're on a new node so increment and set thread to 0.  If this is not a cuda tracefile we need to map the local node ID to the global nodeID.
+//		 */
+//		//else{
+////			lastNode++;
+////			tot.node=lastNode;
+////			tot.thread=0;
+////			if(threadToken==0){
+////				oldNewDest.put(new Integer(fn[0]), new Integer(lastNode));
+//			//}	
+////		}
+//
+//
+//		/*
+//		 * Identify the threads based on the n/c/t in the file names.
+//		 */
+//		if(threadToken==1){//!tot.filename.startsWith("tautrace")){
+//
+//			String threadName="Node"+fn[0]+" CUDA Stream "+fn[1]+" Device "+fn[2];
+//			tw.defThread(tot.node, tot.thread, threadName);
 //		}else{
-			threadToken=fn[2];
-		//}
-
-		/*
-		 * If this is a threaded trace file we are on the same node as before, just update the thread
-		 */
-		/*if(threadToken>0){
-			tot.node=lastNode;
-			tot.thread=threadToken;
-		}*/
-		/*
-		 * If this is not a threaded entry we're on a new node so increment and set thread to 0.  If this is not a cuda tracefile we need to map the local node ID to the global nodeID.
-		 */
-		//else{
-			lastNode++;
-			tot.node=lastNode;
-			tot.thread=0;
-			if(threadToken==0){
-				oldNewDest.put(new Integer(fn[0]), new Integer(lastNode));
-			//}	
-		}
-
-
-		/*
-		 * Identify the threads based on the n/c/t in the file names.
-		 */
-		if(threadToken==1){//!tot.filename.startsWith("tautrace")){
-
-			String threadName="Node"+fn[0]+" CUDA Stream "+fn[1]+" Device "+fn[2];
-			tw.defThread(tot.node, tot.thread, threadName);
-		}else{
-			String threadName="Node"+fn[0]+" Thread "+fn[2];
-			tw.defThread(tot.node, tot.thread, threadName);
-		}
-
-		return tot;
-	}
+//			String threadName="Node"+fn[0]+" Thread "+fn[2];
+//			tw.defThread(tot.node, tot.thread, threadName);
+//		}
+//
+//		return tot;
+//	}
 
 	/**
 	 * Returns a sorted list of all trace files in the current directory
@@ -414,7 +431,7 @@ public class MultiMerge {
 			initReaders[rs].setDefsOnly(false);
 			initReaders[rs].setSubtractFirstTimestamp(false);
 			TotID t = new TotID(initReaders[rs].getTraceFile());
-			t=initTotLoc(t);
+//			t=initTotLoc(t);
 			totIDs[rs]=t;
 			recs_read=0;
 			do{
@@ -511,8 +528,8 @@ public class MultiMerge {
 	public static void main(String[] args) {
 
 		//mpiCom=new HashSet<String>();
-		oldNewDest=new HashMap<Integer,Integer>();
-		idNodes=new HashMap<String,Point>();
+		//oldNewDest=new HashMap<Integer,Integer>();
+		idNodes=new HashMap<String,ToFrom>();
 		stateMap=new HashMap<String,Integer>();
 		ueMap=new HashMap<String,Integer>();
 		tw = new TraceWriter("tau.trc", "tau.edf");
@@ -646,12 +663,13 @@ public class MultiMerge {
 			if(userEventToken==ONESIDED_MESSAGE_ID_TriggerValueT2){
 				tot.dp.l2=userEventValue;
 				
-				Point p =idNodes.get(tot.dp.toString());
+				ToFrom p =idNodes.get(tot.dp.toString());
 				if(p==null){
-					p=new Point(tot.node,-1);
+					p=new ToFrom(nodeToken,threadToken,-1,-1);
 					idNodes.put(tot.dp.toString(), p);
-				}else if(p.x!=tot.node){
-					p.y=tot.node;
+				}else if(p.toNode!=nodeToken||p.toThread!=threadToken){
+					p.fromNode=nodeToken;
+					p.fromThread=threadToken;
 				}
 			}
 			
@@ -739,7 +757,7 @@ public class MultiMerge {
 			}
 			int actualID=tot.locToGlobStates.get(new Integer(stateToken)).intValue();
 
-			tw.enterState(time, tot.node, tot.thread, actualID);
+			tw.enterState(time, nodeToken, threadToken, actualID);
 			return 0;
 		}
 		public int leaveState(Object userData, long time, int nodeToken, int threadToken, int stateToken){
@@ -747,7 +765,7 @@ public class MultiMerge {
 			if(synch){
 				time+=tot.offset;
 			}
-			tw.leaveState(time, tot.node, tot.thread, tot.locToGlobStates.get(new Integer(stateToken)).intValue());
+			tw.leaveState(time, nodeToken, threadToken, tot.locToGlobStates.get(new Integer(stateToken)).intValue());
 			return 0;
 		}
 
@@ -760,14 +778,14 @@ public class MultiMerge {
 				time+=tot.offset;
 			}
 
-			Integer transNode=oldNewDest.get(new Integer(destinationNodeToken));
-			if(transNode==null)
-			{
-				System.out.println("Bad Dest Node ID: "+destinationNodeToken);
-				return 0;
-			}
+//			Integer transNode=oldNewDest.get(new Integer(destinationNodeToken));
+//			if(transNode==null)
+//			{
+//				System.out.println("Bad Dest Node ID: "+destinationNodeToken);
+//				return 0;
+//			}
 
-			tw.sendMessage(time, tot.node, tot.thread, transNode.intValue(), destinationThreadToken, messageSize, messageTag, messageComm);
+			tw.sendMessage(time, sourceNodeToken, sourceThreadToken, destinationNodeToken, destinationThreadToken, messageSize, messageTag, messageComm);
 
 			return 0;
 		}
@@ -781,18 +799,19 @@ public class MultiMerge {
 			}
 
 
-			Integer transNode=oldNewDest.get(new Integer(sourceNodeToken));
-			if(transNode==null)
-			{
-				System.out.println("Bad Source Node ID: "+sourceNodeToken);
-				return 0;
-			}
-			tw.recvMessage(time, transNode.intValue(), sourceThreadToken, tot.node, tot.thread, messageSize, messageTag, messageCom);
+			//Integer transNode=oldNewDest.get(new Integer(sourceNodeToken));
+//			if(transNode==null)
+//			{
+//				System.out.println("Bad Source Node ID: "+sourceNodeToken);
+//				return 0;
+//			}
+			tw.recvMessage(time, sourceNodeToken, sourceThreadToken, destinationNodeToken, destinationThreadToken, messageSize, messageTag, messageCom);
 
 			return 0;
 		}
 
-
+		boolean defRemThread=true;
+		
 		public int eventTrigger(Object userData, long time, int nodeToken, int threadToken, int userEventToken, double userEventValue) {
 			TotID tot = (TotID)userData;
 			if(synch){
@@ -811,40 +830,48 @@ public class MultiMerge {
 			if(userEventToken==ONESIDED_MESSAGE_ID_TriggerValueT2)
 			{
 				tot.dp.l2=userEventValue;
-				Point p = idNodes.get(tot.dp.toString());
+				ToFrom p = idNodes.get(tot.dp.toString());
 				if(p==null){
 					System.out.println("Bad Recv: "+tot.dp);
 					return 0;
 				}
-
-				if(p.x!=tot.node&&p.y!=tot.node){
-					System.out.println(tot.dp+" not for "+tot.node);
+				int remoteNode,remoteThread;
+				if(p.toNode==nodeToken&&p.toThread==threadToken){
+					remoteNode=p.fromNode;
+					remoteThread=p.fromThread;
+				}
+				else if(p.fromNode==nodeToken&&p.fromThread==threadToken){
+					remoteNode=p.toNode;
+					remoteThread=p.toThread;
+				}	
+				else{
+					System.out.println(tot.dp+" not for node: "+nodeToken+" thread: "+threadToken);
+					return 0;
 				}
 				//tot.uniR.setLength(0);
-				int remote;
-				if(p.x==tot.node)
+				if(defRemThread)
 				{
-					remote=p.y;
-				}else{
-					remote=p.x;
+					tw.defUserEvent(7004, "RemoteMessageThreadID", 1);
+					defRemThread=false;
 				}
+				tw.eventTrigger(time, nodeToken, threadToken, 7004, remoteThread);
 				if(tot.oneSideType==ONESIDED_MESSAGE_SEND)
 				{
-					tw.sendMessage(time,  tot.node, tot.thread, remote, 0, (int)userEventValue, 0, 0);
+					tw.sendMessage(time,  nodeToken, threadToken, remoteNode, remoteThread, (int)userEventValue, 0, 0);
 				}
 				else{
-					tw.recvMessage(time,  remote, 0, tot.node, tot.thread, (int)userEventValue, 0, 0);
+					tw.recvMessage(time,  remoteNode, remoteThread, nodeToken, threadToken, (int)userEventValue, 0, 0);
 				}
 
 				return 0;
 			}
 
-			if(tot.thread>0)
-			{
-				System.out.println("Event from node!");
-			}
+//			if(tot.thread>0)
+//			{
+//				System.out.println("Event from node!");
+//			}
 
-			tw.eventTrigger(time, tot.node, tot.thread, tot.locToGlobStates.get(new Integer(userEventToken)).intValue(), (long)userEventValue);
+			tw.eventTrigger(time, nodeToken, threadToken, tot.locToGlobStates.get(new Integer(userEventToken)).intValue(), (long)userEventValue);
 			return 0;}
 
 		public int endTrace(Object userData, int nodeToken, int threadToken){
