@@ -2879,7 +2879,7 @@ int MPI_File_open( MPI_Comm comm, char * filename, int amode, MPI_Info info, MPI
 /******************************************************
 ***      MPI_File_open wrapper function 
 ******************************************************/
-void MPI_FILE_OPEN( MPI_Fint *  comm, char * filename, MPI_Fint *  amode, MPI_Fint *  info, MPI_Aint * fh, MPI_Fint * ierr)
+void MPI_FILE_OPEN( MPI_Fint *  comm, char * filename, MPI_Fint *  amode, MPI_Fint *  info, MPI_Fint * fh, MPI_Fint * ierr)
 {
   MPI_Comm local_comm;
   MPI_Info local_info; 
@@ -2895,7 +2895,7 @@ void MPI_FILE_OPEN( MPI_Fint *  comm, char * filename, MPI_Fint *  amode, MPI_Fi
 /******************************************************
 ***      MPI_File_open wrapper function 
 ******************************************************/
-void mpi_file_open( MPI_Fint *  comm, char * filename, MPI_Fint *  amode, MPI_Fint *  info, MPI_Aint * fh, MPI_Fint * ierr)
+void mpi_file_open( MPI_Fint *  comm, char * filename, MPI_Fint *  amode, MPI_Fint *  info, MPI_Fint * fh, MPI_Fint * ierr)
 {
   MPI_FILE_OPEN( comm, filename, amode, info, fh, ierr) ; 
   return ; 
@@ -2904,7 +2904,7 @@ void mpi_file_open( MPI_Fint *  comm, char * filename, MPI_Fint *  amode, MPI_Fi
 /******************************************************
 ***      MPI_File_open wrapper function 
 ******************************************************/
-void mpi_file_open_( MPI_Fint *  comm, char * filename, MPI_Fint *  amode, MPI_Fint *  info, MPI_Aint * fh, MPI_Fint * ierr)
+void mpi_file_open_( MPI_Fint *  comm, char * filename, MPI_Fint *  amode, MPI_Fint *  info, MPI_Fint * fh, MPI_Fint * ierr)
 {
   MPI_FILE_OPEN( comm, filename, amode, info, fh, ierr) ; 
   return ; 
@@ -2913,7 +2913,7 @@ void mpi_file_open_( MPI_Fint *  comm, char * filename, MPI_Fint *  amode, MPI_F
 /******************************************************
 ***      MPI_File_open wrapper function 
 ******************************************************/
-void mpi_file_open__( MPI_Fint *  comm, char * filename, MPI_Fint *  amode, MPI_Fint *  info, MPI_Aint * fh, MPI_Fint * ierr)
+void mpi_file_open__( MPI_Fint *  comm, char * filename, MPI_Fint *  amode, MPI_Fint *  info, MPI_Fint * fh, MPI_Fint * ierr)
 {
   MPI_FILE_OPEN( comm, filename, amode, info, fh, ierr) ; 
   return ; 
@@ -2939,7 +2939,7 @@ int MPI_File_close( MPI_File * fh)
 /******************************************************
 ***      MPI_File_close wrapper function 
 ******************************************************/
-void MPI_FILE_CLOSE( MPI_Aint * fh, MPI_Fint * ierr)
+void MPI_FILE_CLOSE( MPI_Fint * fh, MPI_Fint * ierr)
 {
   MPI_File local_fh = MPI_File_f2c(*fh);
   *ierr = MPI_File_close( &local_fh) ; 
@@ -2950,7 +2950,7 @@ void MPI_FILE_CLOSE( MPI_Aint * fh, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_File_close wrapper function 
 ******************************************************/
-void mpi_file_close( MPI_Aint * fh, MPI_Fint * ierr)
+void mpi_file_close( MPI_Fint * fh, MPI_Fint * ierr)
 {
   MPI_FILE_CLOSE( fh, ierr) ; 
   return ; 
@@ -2959,7 +2959,7 @@ void mpi_file_close( MPI_Aint * fh, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_File_close wrapper function 
 ******************************************************/
-void mpi_file_close_( MPI_Aint * fh, MPI_Fint * ierr)
+void mpi_file_close_( MPI_Fint * fh, MPI_Fint * ierr)
 {
   MPI_FILE_CLOSE( fh, ierr) ; 
   return ; 
@@ -2968,7 +2968,7 @@ void mpi_file_close_( MPI_Aint * fh, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_File_close wrapper function 
 ******************************************************/
-void mpi_file_close__( MPI_Aint * fh, MPI_Fint * ierr)
+void mpi_file_close__( MPI_Fint * fh, MPI_Fint * ierr)
 {
   MPI_FILE_CLOSE( fh, ierr) ; 
   return ; 
