@@ -5225,27 +5225,27 @@ fi
 if [ $scorep = yes ] ; then
     fixmakeargs="$fixmakeargs SCOREP scorepdir=$scorepdir"
     tauoptions="${tauoptions}-scorep"
-    scorepCommonLibs="-lbfd#-liberty#-lotf2#-lsilc_utilities"
+    scorepCommonLibs="-lbfd#-liberty#-lotf2#-lscorep_utilities"
     if [ $mpi = yes ] ; then 
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SCOREPOMPI" 
-	scorepLibs="-L${scorepdir}/lib#-lsilc_mpi#$scorepCommonLibs"
+	scorepLibs="-L${scorepdir}/lib#-lscorep_mpi#$scorepCommonLibs"
       else
         fixmakeargs="$fixmakeargs SCOREPMPI"
-	scorepLibs="-L${scorepdir}/lib#-lsilc_mpi#$scorepCommonLibs"
+	scorepLibs="-L${scorepdir}/lib#-lscorep_mpi#$scorepCommonLibs"
       fi 
     else
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SCOREPOMP" 
-	scorepLibs="-L${scorepdir}/lib#-lsilc_serial#$scorepCommonLibs"
+	scorepLibs="-L${scorepdir}/lib#-lscorep_serial#$scorepCommonLibs"
       else
-	scorepLibs="-L${scorepdir}/lib#-lsilc_serial#$scorepCommonLibs"
+	scorepLibs="-L${scorepdir}/lib#-lscorep_serial#$scorepCommonLibs"
       fi
     fi
 
     fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
     fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
-    fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/silc#-I$scorepdir/include/silc_utility"
+    fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep#-I$scorepdir/include/scorep_utility"
 fi
 
 if [ $epilog = yes ] ; then
