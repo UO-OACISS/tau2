@@ -65,7 +65,7 @@ class  JavaThreadLayer
  	JavaThreadLayer () { }  // defaults
 	~JavaThreadLayer () { } 
 
-	static int * RegisterThread(jthread this_thread); 
+	static int * RegisterThread(jthread this_thread=NULL); 
 	static int ThreadEnd(jthread this_thread);
         static int InitializeThreadData(void);     // init thread mutexes
         static int InitializeDBMutexData(void);     // init tauDB mutex

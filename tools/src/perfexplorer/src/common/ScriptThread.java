@@ -1,7 +1,6 @@
 package edu.uoregon.tau.perfexplorer.common;
 
 import edu.uoregon.tau.common.PythonInterpreterFactory;
-import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 /**
  * This is the main server thread which processes long-executing analysis 

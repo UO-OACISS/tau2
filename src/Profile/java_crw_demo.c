@@ -169,7 +169,8 @@ typedef struct CrwClassImage {
 
     /* Callback functions */
     FatalErrorHandler           fatal_error_handler;
-    MethodNumberRegister        mnum_callback;
+    CBMethodMapping             mnum_callback;
+    CBInstrumentMethod          instrument_callback;
 
     /* Table of method names and descr's */
     int                         method_count;
@@ -2133,13 +2134,22 @@ method_write(CrwClassImage *ci, unsigned mnum)
         CrwCpoolIndex name_index;
 
         name_index = copyU2(ci);
-        if ( attribute_match(ci, name_index, "Code") ) {
-            method_write_bytecodes(ci, mnum, access_flags);
-        } else {
-            unsigned len;
-            len = copyU4(ci);
-            copy(ci, len);
-        }
+        if( attribute_match(ci, name_index, "Code") && ((ci->instrument_callback == NULL) || (*(ci->instrument_callback))(ci->name, ci->method_name[mnum], ci->method_descr[mnum]))){
+	  //Insturment
+	  method_write_bytecodes(ci, mnum, access_flags);
+	  if ( ci->mnum_callback != NULL ) {
+	    (*(ci->mnum_callback))(ci->number,
+				   mnum,
+				   ci->name,
+				   ci->method_name[mnum],
+				   ci->method_descr[mnum]);
+	  }
+	} else {
+	  //Don't instrutment
+	  unsigned len;
+	  len = copyU4(ci);
+	  copy(ci, len);
+	}
     }
 }
 
@@ -2148,21 +2158,15 @@ method_write_all(CrwClassImage *ci)
 {
     unsigned i;
     unsigned count;
-
     count = copyU2(ci);
     ci->method_count = count;
     if ( count > 0 ) {
-        ci->method_name = (const char **)allocate_clean(ci, count*(int)sizeof(const char*));
-        ci->method_descr = (const char **)allocate_clean(ci, count*(int)sizeof(const char*));
+      ci->method_name = (const char **)allocate_clean(ci, count*(int)sizeof(const char*));
+      ci->method_descr = (const char **)allocate_clean(ci, count*(int)sizeof(const char*));
     }
 
     for (i = 0; i < count; ++i) {
         method_write(ci, i);
-    }
-
-    if ( ci->mnum_callback != NULL ) {
-      (*(ci->mnum_callback))(ci->number, ci->method_name, ci->method_descr,
-                         count);
     }
 }
 
@@ -2326,7 +2330,8 @@ java_crw_demo(unsigned class_number,
          unsigned char **pnew_file_image,
          long *pnew_file_len,
          FatalErrorHandler fatal_error_handler,
-         MethodNumberRegister mnum_callback)
+	 CBMethodMapping mnum_callback,
+	 CBInstrumentMethod instrument_callback)
 {
     CrwClassImage ci;
     long          max_length;
@@ -2338,6 +2343,7 @@ java_crw_demo(unsigned class_number,
     (void)memset(&ci, 0, (int)sizeof(CrwClassImage));
     ci.fatal_error_handler = fatal_error_handler;
     ci.mnum_callback       = mnum_callback;
+    ci.instrument_callback = instrument_callback;
 
     /* Do some interface error checks */
     if ( pnew_file_image==NULL ) {
