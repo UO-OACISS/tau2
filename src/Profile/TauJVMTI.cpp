@@ -179,43 +179,27 @@ get_thread_name(jvmtiEnv *jvmti, jthread thread, char *tname, int maxlen)
     }
 }
 
-/* Callback from java_crw_demo() that gives us mnum mappings */
+/* Callback from java_crw_demo() that gives us mnum mappings for TAU */
 static void
-mnum_callbacks(unsigned cnum, const char **names, const char**sigs, int mcount)
-{
-    ClassInfo  *cp;
-    int         mnum;
+mnum_callback(const unsigned cnum, const unsigned mnum, const char *class_name, const char *method_name, const char* method_sig){
     char funcname[2048];
     int tid = 0;
     long unique_method_id;
-    //    char classname[1024];
-
-    if ( cnum >= (unsigned)gdata->ccount ) {
-        fatal_error("ERROR: Class number out of range\n");
-    }
-    if ( mcount == 0 ) {
-        return;
-    }
-
-    cp = gdata->classes + (int)cnum;
-    for ( mnum = 0 ; mnum < mcount ; mnum++ ) {
-      const char * mname = (const char *)strdup(names[mnum]);
-      const char * msig = (const char *)strdup(sigs[mnum]);
-
-      if ((mname == NULL) or (msig == NULL))
-	fatal_error("ERROR: Out of malloc memory\n");
-      
-      //Create TAU Mapping
-      sprintf(funcname, "%s %s %s", cp->name, mname, msig);
-      
-      unique_method_id = make_unique_method_id(mnum, cnum);
-      //Use of dummy TID is fine, library doesn't use it anyways.
-      TAU_MAPPING_CREATE(funcname, " ",
-			 unique_method_id , 
-			 cp->name, tid);
-      //func name automatically freed.
-    }
+    sprintf(funcname, "%s %s %s", class_name, method_name, method_sig);
+    unique_method_id = make_unique_method_id(mnum, cnum);
+    //Use of dummy TID is fine, library doesn't use it anyways.
+    TAU_MAPPING_CREATE(funcname, " ",
+		       unique_method_id , 
+		       class_name, tid);
 }
+
+
+/* Wraps agent_util.c's interested function */
+static int
+instrument_callback(char const * class_name, char const* method_name, char const* method_sig){
+  return interested(class_name, method_name, gdata->include, gdata->exclude);
+}
+
 
 /* Java Native Method for entry */
 static void
@@ -539,7 +523,8 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* env,
                     &new_image,
                     &new_length,
                     NULL,
-                    &mnum_callbacks);
+		    &mnum_callback,
+		    &instrument_callback);
 
                 /* If we got back a new class image, return it back as "the"
                  *   new class image. This must be JVMTI Allocate space.
