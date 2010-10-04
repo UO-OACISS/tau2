@@ -312,7 +312,7 @@ $(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS) $(MPI_WRAPPER) $(TAU_FORCE_MPI) 
 $(TAU_NULL)$(TAU_GPU_LIB): $(TAU_GPU_OBJS) $(TAU_DSO)
 		$(PRELINK_PHASE)
 		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_GPU_LIB) $(TAU_GPU_OBJS) \
-		-L$(TAU_LIB_DIR) $(TAU_DSO)
+		-L$(TAU_LIB_DIR) $(TAU_DSO) -lcupti
 		$(TAU_RANLIB) $(TAU_GPU_LIB)
 
 $(TAU_DISABLE): TauDisable.o $(TAU_DISABLE_SHARED) TauKojakOpariDisable.o
@@ -632,10 +632,10 @@ TauGpu.o : TauGpu.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauGpuAdapterCupti.o : TauGpuAdapterCupti.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -I$(TAU_GPU_INC) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -g -I$(TAU_GPU_INC) -I$(TAU_CUDA_INC) -c $(@:.o=.cpp)
 
 TauGpuAdapterOpenCL.o : TauGpuAdapterOpenCL.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -I$(TAU_GPU_INC) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -I$(TAU_GPU_INC) -g -c $(@:.o=.cpp)
 
 
 clean : 
