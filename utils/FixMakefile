@@ -607,26 +607,15 @@ case $1 in
 ###############################################################
 # Set the TAU_GPU variables.
 ###############################################################
-     gputype=*)
-        gpu_type=`echo $1 | sed -e 's/^gputype=//' -e 's/#/ /g'`
-        if [ "x`echo $gpu_type | tr [:upper:] [:lower:]`" = "xcuda" ]; then
-          echo "NOTE: Using GPU type: CUDA."
-          echo "s/#CUDA_GPU#\(.*\)#ENDIF#/\1#ENDIF##CUDA_GPU#/" >> $sedout
-          echo "s/#GPU#//" >> $sedout
-          
-        elif [ "x`echo $gpu_type | tr [:upper:] [:lower:]`" = "xopencl" ]; then
-          echo "NOTE: Using GPU type: OpenCL."
-          echo "s/.*#OPENCL_GPU#//" >> $sedout
-          echo "s/#GPU#//" >> $sedout
-
-        else
-          echo "ERROR: UNKNOW GPU type, supported types: CUDA, OpenCL."
-        fi
-    ;;  
-		gpuinclude=*)
-        gpuinclude=`echo $1 | sed -e 's/^gpuinclude=//' -e 's/#/ /g'`
-			echo "NOTE: GPU headers found in $gpuinclude."
-			echo "s@^TAU_GPU_INC=\(.*\)@TAU_GPU_INC=$gpuinclude@g" >> $sedout
+		cudainclude=*)
+        cudainclude=`echo $1 | sed -e 's/^cudainclude=//' -e 's/#/ /g'`
+      echo "NOTE: Using CUDA for GPU analysis, source in $cudainclude"
+			echo "s@^TAU_CUDA_INC=\(.*\)@TAU_CUDA_INC=$cudainclude@g" >> $sedout
+		;;	
+		openclinclude=*)
+        openclinclude=`echo $1 | sed -e 's/^openclinclude=//' -e 's/#/ /g'`
+      echo "NOTE: Using OPENCL for GPU analysis, source in $openclinclude"
+			echo "s@^TAU_OPENCL_INC=\(.*\)@TAU_OPENCL_INC=$openclinclude@g" >> $sedout
 		;;	
 
 ###############################################################
