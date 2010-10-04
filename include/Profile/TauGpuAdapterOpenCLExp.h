@@ -1,6 +1,6 @@
 #include "TauGpu.h"
 #include <stdio.h>
-
+#include <CL/opencl.h>
 
 void Tau_opencl_init();
 
@@ -15,4 +15,15 @@ double stop);
 
 void Tau_opencl_register_memcpy_event(int id, double start, double stop, int
 transferSize, bool MemcpyType);
+
+
+//Memcpy event callback
+
+void Tau_opencl_callback_memcpy(cl_event event, cl_int command_stat, void
+*memcpy_type);
+
+//Enqueue events
+
+enum EnqueueEvents { ENQUEUE_READ_BUFFER, ENQUEUE_WRITE_BUFFER };
+
 
