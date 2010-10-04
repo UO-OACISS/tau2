@@ -2,23 +2,27 @@ TAUROOT=
 include $(TAUROOT)/include/Makefile
 
 CC=$(TAU_CC) 
-CFLAGS=$(TAU_DEFS) $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE)  -I.. 
+CFLAGS=$(TAU_DEFS) $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE)
 
 INSTALLDEST = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 TAU_OPENCL_SHARED=libTAU-OpenCL$(TAU_SHLIBX)
-#NOSHARED#TAU_PRELOAD_SHARED= #ENDIF#
+#NOSHARED#TAU_OPENCL_SHARED= #ENDIF#
 
 TAU_OPENCL_INSTALL_CMD=cp $(TAU_OPENCL_SHARED) $(INSTALLDEST)/shared$(TAU_CONFIG)
-#NOSHARED#TAU_PRELOAD_INSTALL_CMD=@echo "NOTE: Not building TAU's opencl DSO" #ENDIF#
+#NOSHARED#TAU_OPENCL_INSTALL_CMD=@echo "NOTE: Not building TAU's opencl DSO" #ENDIF#
 
+ifneq ($(TAU_OPENCL_INC), )
 install:$(TAU_OPENCL_SHARED)
 	$(TAU_OPENCL_INSTALL_CMD) 
+else
+install:
+endif
 
-libTAU-OpenCL$(TAU_SHLIBX): cl_wrap.o 
-	$(CC) $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl
+$(TAU_OPENCL_SHARED): cl_wrap.o 
+	$(TAU_CXX) -g $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl -L$(INSTALLDEST)/shared -lTAU_openCL
 
 cl_wrap.o: cl_wrap.cpp
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(TAU_CXX) $(CFLAGS) -I$(TAU_OPENCL_INC) -c $< -o $@
 clean:
 	/bin/rm -f cl_wrap.o libcl_wrap.so
 
