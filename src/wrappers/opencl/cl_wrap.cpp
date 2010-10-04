@@ -1,7 +1,7 @@
 #include <Profile/Profiler.h>
 #include <dlfcn.h>
 #include <stdio.h>
-#include "Profile/TauGpuAdapterOpenCLExp.h"
+#include <CL/cl.h>
 
 const char * tau_orig_libname = "libOpenCL.so";
 static void *tau_handle = NULL;
@@ -1358,7 +1358,7 @@ cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4
   typedef cl_int (*clEnqueueReadBuffer_p) (cl_command_queue, cl_mem, cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *);
   static clEnqueueReadBuffer_p clEnqueueReadBuffer_h = NULL;
   cl_int retval;
-  //TAU_PROFILE_TIMER(t,"cl_int clEnqueueReadBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cl_int clEnqueueReadBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *) C", "", TAU_USER);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1373,17 +1373,9 @@ cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-  //TAU_PROFILE_START(t);
-	printf("in clEnqueueReadBuffer.\n");
-	printf("registering callback!\n");
-	bool mem_type = MemcpyDtoH;
-	void (*callback)(cl_event, cl_int, void *);
-	callback = Tau_opencl_callback_memcpy;
-	clSetEventCallback(*a9, CL_COMPLETE, callback, NULL);
-	Tau_opencl_enter_memcpy_event(ENQUEUE_READ_BUFFER, MemcpyDtoH);
+  TAU_PROFILE_START(t);
   retval  =  (*clEnqueueReadBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
-  //TAU_PROFILE_STOP(t);
-	Tau_opencl_exit_memcpy_event(ENQUEUE_READ_BUFFER, MemcpyDtoH);
+  TAU_PROFILE_STOP(t);
   }
   return retval;
 
@@ -1394,7 +1386,7 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
   typedef cl_int (*clEnqueueWriteBuffer_p) (cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *);
   static clEnqueueWriteBuffer_p clEnqueueWriteBuffer_h = NULL;
   cl_int retval;
-  //TAU_PROFILE_TIMER(t,"cl_int clEnqueueWriteBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cl_int clEnqueueWriteBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *) C", "", TAU_USER);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1409,12 +1401,9 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-  //TAU_PROFILE_START(t);
-	printf("in clEnqueueWriteBuffer.\n");
-	Tau_opencl_enter_memcpy_event(ENQUEUE_WRITE_BUFFER, MemcpyHtoD);
+  TAU_PROFILE_START(t);
   retval  =  (*clEnqueueWriteBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
-	Tau_opencl_exit_memcpy_event(ENQUEUE_WRITE_BUFFER, MemcpyHtoD);
-  //TAU_PROFILE_STOP(t);
+  TAU_PROFILE_STOP(t);
   }
   return retval;
 
