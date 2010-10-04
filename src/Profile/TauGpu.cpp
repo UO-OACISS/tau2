@@ -253,7 +253,7 @@ int Tau_gpu_init(void)
 		printf("Created user clock.\n");
 #endif
 			
-		TAU_PROFILER_START(main_ptr);	
+		//TAU_PROFILER_START(main_ptr);	
 
 		
 #ifdef DEBUG_PROF
@@ -276,9 +276,9 @@ void Tau_gpu_exit(void)
 #ifdef DEBUG_PROF
 		printf("stopping level 1.\n");
 #endif
-		TAU_PROFILER_STOP(main_ptr);
+		//TAU_PROFILER_STOP(main_ptr);
 #ifdef DEBUG_PROF
 		printf("stopping level 2.\n");
 #endif
-	  TAU_PROFILE_EXIT("tau_gpu");
+	  //TAU_PROFILE_EXIT("tau_gpu");
 }
