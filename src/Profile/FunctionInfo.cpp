@@ -46,9 +46,8 @@ using namespace std;
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
 
-#ifdef TAU_SILC
-//#include <Profile/TauSilc.h>
-#include "SILC_User_Types.h"
+#ifdef TAU_SCOREP
+#include <Profile/TauSCOREP.h>
 #endif
 
 #include <Profile/TauTrace.h>
@@ -200,17 +199,17 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 			      ELG_NO_LNO, GroupName, ELG_FUNCTION);
   DEBUGPROFMSG("elg_def_region: "<<tau_elg_name<<": returns "<<FunctionId<<endl;);
 #else
-#ifdef TAU_SILC
+#ifdef TAU_SCOREP
   string tau_silc_name(string(Name)+" "+string(Type));
-  FunctionId =  (long) SILC_DefineRegion( tau_silc_name.c_str(),
-				   SILC_INVALID_SOURCE_FILE,
-				   SILC_INVALID_LINE_NO,
-				   SILC_INVALID_LINE_NO,
-				   SILC_ADAPTER_COMPILER,
-				   SILC_REGION_FUNCTION
+  FunctionId =  SCOREP_Tau_DefineRegion( tau_silc_name.c_str(),
+				   SCOREP_TAU_INVALID_SOURCE_FILE,
+				   SCOREP_TAU_INVALID_LINE_NO,
+				   SCOREP_TAU_INVALID_LINE_NO,
+				   SCOREP_TAU_ADAPTER_COMPILER,
+				   SCOREP_TAU_REGION_FUNCTION
 				   );
 
-#endif /* TAU_SILC */
+#endif /* TAU_SCOREP */
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
 

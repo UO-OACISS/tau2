@@ -77,7 +77,7 @@ for arg in "$@" ; do
 	      makefile_specified=yes
 	      ;;
 	  -tau_options=*)
-	      TAUCOMPILER_OPTIONS=`echo $arg | sed -e 's/-tau_options=//'`
+	      TAUCOMPILER_OPTIONS=`echo $arg | sed -e 's/\^/ /g' | sed -e 's/-tau_options=//'`
 	      options_specified=yes
 	      ;;
 	  -show)
@@ -122,11 +122,21 @@ for arg in "$@" ; do
               # these arguments should only go to the non-tau invocation
 	      NON_TAUARGS="$NON_TAUARGS $modarg"
 	      ;;
-	  -M | -MM | -V | -v | --version | -print-prog-name=ld | -print-search-dirs | -dumpversion)
+	  -M | -MM | -V | --version | -print-prog-name=ld | -print-search-dirs | -dumpversion)
               # if any of these are specified, we invoke the regular compiler only
 	      invoke_without_tau=yes
 	      invoke_with_tau=no
 	      NON_TAUARGS="$NON_TAUARGS $modarg"
+	      ;;
+	  -v)
+	      if [ "$#" -eq 1 ] ; then
+	      	invoke_without_tau=yes
+	      	invoke_with_tau=no
+	      	NON_TAUARGS="$NON_TAUARGS $modarg"
+	      else
+	         TAUARGS="$TAUARGS $modarg"
+	         NON_TAUARGS="$NON_TAUARGS $modarg"
+	      fi
 	      ;;
 	  *)
 	      TAUARGS="$TAUARGS $modarg"

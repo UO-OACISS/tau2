@@ -1,6 +1,10 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -18,11 +22,11 @@ public class SnapshotXMLHandler extends DefaultHandler {
 
     private SnapshotDataSource dataSource;
 
-    private Map threadMap = new HashMap();
+    private Map<String, ThreadData> threadMap = new HashMap<String, ThreadData>();
 
     private ThreadData currentThread;
     private Snapshot currentSnapshot;
-    private Date currentDate;
+    //private Date currentDate;
 
     private int currentMetrics[];
 
@@ -39,9 +43,9 @@ public class SnapshotXMLHandler extends DefaultHandler {
 
     private static class ThreadData {
         public Thread thread;
-        public List metricMap = new ArrayList();
-        public List eventMap = new ArrayList();
-        public List userEventMap = new ArrayList();
+        public List<Metric> metricMap = new ArrayList<Metric>();
+        public List<Function> eventMap = new ArrayList<Function>();
+        public List<UserEvent> userEventMap = new ArrayList<UserEvent>();
     }
 
     public SnapshotXMLHandler(SnapshotDataSource source) {
@@ -114,13 +118,13 @@ public class SnapshotXMLHandler extends DefaultHandler {
             unifiedDefinitions = new ThreadData();
             currentThread = unifiedDefinitions;
         } else {
-            currentThread = (ThreadData) threadMap.get(threadID);
+            currentThread = threadMap.get(threadID);
         }
     }
 
     private void handleProfile(Attributes attributes) {
         String threadID = attributes.getValue("thread");
-        currentThread = (ThreadData) threadMap.get(threadID);
+        currentThread = threadMap.get(threadID);
         currentSnapshot = currentThread.thread.addSnapshot("");
     }
 
@@ -144,7 +148,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
 
         while (tokenizer.hasMoreTokens()) {
             int eventID = Integer.parseInt(tokenizer.nextToken());
-            UserEvent userEvent = (UserEvent) currentThread.userEventMap.get(eventID);
+            UserEvent userEvent = currentThread.userEventMap.get(eventID);
 
             UserEventProfile uep = currentThread.thread.getUserEventProfile(userEvent);
             if (uep == null) {
@@ -173,7 +177,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
         while (tokenizer.hasMoreTokens()) {
             int eventID = Integer.parseInt(tokenizer.nextToken());
 
-            Function function = (Function) currentThread.eventMap.get(eventID);
+            Function function = currentThread.eventMap.get(eventID);
 
             FunctionProfile fp = currentThread.thread.getFunctionProfile(function);
             if (fp == null) {
@@ -186,7 +190,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
 
             for (int i = 0; i < currentMetrics.length; i++) {
                 int metricID = currentMetrics[i];
-                Metric metric = (Metric) currentThread.metricMap.get(metricID);
+                Metric metric = currentThread.metricMap.get(metricID);
                 double exclusive = Double.parseDouble(tokenizer.nextToken());
                 double inclusive = Double.parseDouble(tokenizer.nextToken());
                 fp.setExclusive(metric.getID(), exclusive);
@@ -242,7 +246,8 @@ public class SnapshotXMLHandler extends DefaultHandler {
             currentValue = accumulator.toString();
         } else if (localName.equals("utc_date")) {
             try {
-                currentDate = DataSource.dateTime.parse(accumulator.toString());
+                //currentDate = 
+                	DataSource.dateTime.parse(accumulator.toString());
             } catch (java.text.ParseException e) {}
         } else if (localName.equals("timestamp")) {
             currentTimestamp = Long.parseLong(accumulator.toString());

@@ -1,6 +1,9 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 
 import javax.swing.JComponent;
 
@@ -16,7 +19,11 @@ import javax.swing.JComponent;
  */
 public class ColorBar extends JComponent {
 
-    private static final double colorsR[] = { 0, 0, 0, 1, 1, 1 };
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -3922523142677845945L;
+	private static final double colorsR[] = { 0, 0, 0, 1, 1, 1 };
     private static final double colorsG[] = { 0, 1, 1, 1, 0.5, 0 };
     private static final double colorsB[] = { 1, 1, 0, 0, 0, 0 };
 
@@ -38,7 +45,7 @@ public class ColorBar extends JComponent {
 
             int numBoxes = ((width - 1) / 11);
 
-            int lastx = 0;
+            //int lastx = 0;
             for (int i = 0; i < numBoxes; i++) {
                 g2D.setColor(getColor(i / (float) numBoxes));
                 g2D.fillRect((i * 11) + 1, 1, 10, 18);

@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import java.lang.Math;
 
 /**
  * @author khuck
@@ -15,6 +14,10 @@ import java.lang.Math;
  */
 public class LogarithmicOperation extends AbstractPerformanceOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8739506883974331396L;
 	private double base = 2;
 	
 	/**

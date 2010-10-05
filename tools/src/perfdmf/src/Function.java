@@ -20,12 +20,16 @@ import java.util.List;
  *
  * TODO ...
  */
-public class Function implements Serializable, Comparable {
+public class Function implements Serializable, Comparable<Function> {
 
-    private String name;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 362090098221172924L;
+	private String name;
     private String reversedName;
     private int id = -1;
-    private List groups = new ArrayList();
+    private List<Group> groups = new ArrayList<Group>();
     private boolean phase = false;
     private Function actualPhase;
     private Function parentPhase;
@@ -249,14 +253,14 @@ public class Function implements Serializable, Comparable {
         return groups.contains(group);
     }
 
-    public List getGroups() {
+    public List<Group> getGroups() {
         return groups;
     }
 
     public String getGroupString() {
         String groupString = "";
         for (int i = 0; i < groups.size(); i++) {
-            Group group = (Group) groups.get(i);
+            Group group = groups.get(i);
             if (i == 0) {
                 groupString = group.getName();
             } else {
@@ -291,8 +295,8 @@ public class Function implements Serializable, Comparable {
     }
 
     public boolean isGroupMember(String groupName) {
-        for (Iterator it = this.groups.iterator(); it.hasNext();) {
-            Group group = (Group) it.next();
+        for (Iterator<Group> it = this.groups.iterator(); it.hasNext();) {
+            Group group = it.next();
             if (group.getName().equals(groupName)) {
                 return true;
             }
@@ -457,8 +461,8 @@ public class Function implements Serializable, Comparable {
         return totalProfile;
     }
 
-    public int compareTo(Object o) {
-        return this.id - ((Function) o).getID();
+    public int compareTo(Function o) {
+        return this.id -  o.getID();
     }
 
     public boolean isPhase() {

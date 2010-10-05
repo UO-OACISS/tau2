@@ -8,7 +8,6 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.util.Enumeration;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -19,10 +18,14 @@ import edu.uoregon.tau.perfdmf.Application;
 
 public class ParaProfApplication extends Application implements ParaProfTreeNodeUserObject {
 
-    private DefaultMutableTreeNode defaultMutableTreeNode = null;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1662692425763662408L;
+	private DefaultMutableTreeNode defaultMutableTreeNode = null;
     private TreePath treePath = null;
     private boolean dBApplication = false;
-    private Vector experiments = new Vector();
+    private Vector<ParaProfExperiment> experiments = new Vector<ParaProfExperiment>();
 
     public ParaProfApplication() {
         super();
@@ -59,14 +62,14 @@ public class ParaProfApplication extends Application implements ParaProfTreeNode
     }
 
     public ParaProfExperiment getExperiment(int experimentID) {
-        return (ParaProfExperiment) experiments.elementAt(experimentID);
+        return experiments.elementAt(experimentID);
     }
 
-    public Vector getExperiments() {
+    public Vector<ParaProfExperiment> getExperiments() {
         return experiments;
     }
 
-    public ListIterator getExperimentList() {
+    public ListIterator<ParaProfExperiment> getExperimentList() {
         return experiments.listIterator();
     }
 

@@ -6,18 +6,21 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.tree.DefaultTreeModel;
 
-import edu.uoregon.tau.paraprof.ParaProfApplication;
 import edu.uoregon.tau.paraprof.ParaProfExperiment;
 import edu.uoregon.tau.paraprof.ParaProfManagerWindow;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 
 public class ExperimentTableModel extends AbstractTableModel {
 
-    private ParaProfExperiment experiment;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 7691740386199068018L;
+	private ParaProfExperiment experiment;
     private String[] columnNames = { "ExpField", "Value" };
     private ParaProfManagerWindow paraProfManager;
     private DefaultTreeModel defaultTreeModel;
-    private List fieldNames;
+    private List<String> fieldNames;
     
     public ExperimentTableModel(ParaProfManagerWindow paraProfManager, ParaProfExperiment exp, DefaultTreeModel defaultTreeModel) {
         this.experiment = exp;
@@ -25,7 +28,7 @@ public class ExperimentTableModel extends AbstractTableModel {
         this.paraProfManager = paraProfManager;
         this.defaultTreeModel = defaultTreeModel;
         
-        fieldNames = new ArrayList();
+        fieldNames = new ArrayList<String>();
         fieldNames.add("Name");
         fieldNames.add("Application ID");
         fieldNames.add("Experiment ID");
@@ -37,7 +40,7 @@ public class ExperimentTableModel extends AbstractTableModel {
     {
     	if (exp != null)
     	{
-    		fieldNames = new ArrayList();
+    		fieldNames = new ArrayList<String>();
     		
 	        fieldNames.add("Name");
 	        fieldNames.add("Application ID");

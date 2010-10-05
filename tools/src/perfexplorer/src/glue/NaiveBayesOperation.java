@@ -8,13 +8,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.clustering.ClassifierInterface;
-import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
-import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 /**
  * @author khuck
@@ -22,6 +19,10 @@ import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
  */
 public class NaiveBayesOperation extends AbstractPerformanceOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -297831384487936229L;
 	protected String metric = null;
 	protected int type = AbstractResult.EXCLUSIVE;
     protected ClassifierInterface classifier = null;

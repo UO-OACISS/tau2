@@ -9,20 +9,49 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GraphicsEnvironment;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.*;
+import java.util.Iterator;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSlider;
+import javax.swing.SwingConstants;
 
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfdmf.DataSource;
 
 public class PreferencesWindow extends JFrame implements ActionListener, Observer {
 
-    private boolean mShown = false;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -6093110017884286088L;
+
+	private boolean mShown = false;
 
     //References for some of the components for this frame.
     private PrefSpacingPanel prefSpacingPanel;
@@ -493,26 +522,26 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
     }
 
     private void apply() {
-        boolean needDataEvent = false;
+        //boolean needDataEvent = false;
         if (reverseCallPathsBox.isSelected() != ParaProf.preferences.getReversedCallPaths()) {
-            needDataEvent = true;
+            //needDataEvent = true;
         }
 
         if (autoLabelsBox.isSelected() != ParaProf.preferences.getAutoLabels()) {
-            needDataEvent = true;
+            //needDataEvent = true;
         }
 
         if (meanIncludeNullBox.isSelected() == ParaProf.preferences.getComputeMeanWithoutNulls()) {
-            needDataEvent = true;
+            //needDataEvent = true;
             DataSource.setMeanIncludeNulls(meanIncludeNullBox.isSelected());
             ParaProf.paraProfManagerWindow.recomputeStats();
         }
 
         this.font = null;
         setSavedPreferences();
-        Vector trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
-        for (Iterator it = trials.iterator(); it.hasNext();) {
-            ParaProfTrial ppTrial = (ParaProfTrial) it.next();
+        Vector<ParaProfTrial> trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
+        for (Iterator<ParaProfTrial> it = trials.iterator(); it.hasNext();) {
+            ParaProfTrial ppTrial = it.next();
             ppTrial.updateRegisteredObjects("prefEvent");
             ppTrial.updateRegisteredObjects("dataEvent");
         }

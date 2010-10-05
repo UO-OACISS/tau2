@@ -9,7 +9,6 @@ import java.util.Set;
 
 import org.drools.FactHandle;
 
-
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.rules.FactWrapper;
 import edu.uoregon.tau.perfexplorer.rules.RuleHarness;
@@ -26,7 +25,7 @@ public class DifferenceMetadataOperation implements SelfAsserting {
 	double expectedRatio = 1.0;
 	Hashtable<String,FactHandle> assertedFacts = new Hashtable<String,FactHandle>();
 	public final static String NAME = edu.uoregon.tau.perfexplorer.glue.DifferenceMetadataOperation.class.getName();
-	private RuleHarness ruleHarness = null;
+	//private RuleHarness ruleHarness = null;
 	
 	public double getExpectedRatio() {
 		return expectedRatio;
@@ -119,14 +118,14 @@ public class DifferenceMetadataOperation implements SelfAsserting {
 
 	public String differencesAsString() {
 		StringBuilder buf = new StringBuilder();
-		Hashtable diff = getDifferences();
+		Hashtable<String,String[]> diff = getDifferences();
 		
-		Set keys = diff.keySet();
+		Set<String> keys = diff.keySet();
 		
-		for (Iterator iter = keys.iterator() ; iter.hasNext() ; ) {
-			String key = (String)iter.next();
+		for (Iterator<String> iter = keys.iterator() ; iter.hasNext() ; ) {
+			String key = iter.next();
 			if (!key.startsWith("buildenv:") && !key.startsWith("runenv:") && !key.startsWith("build:")) {
-			String[] values = (String[])diff.get(key);
+			String[] values = diff.get(key);
 			buf.append(key + " " + values[0] + " " + values[1] + "\n");
 			}
 		}
@@ -139,7 +138,7 @@ public class DifferenceMetadataOperation implements SelfAsserting {
 	}
 	
 	public void assertFacts(RuleHarness ruleHarness) {
-		this.ruleHarness = ruleHarness;
+		//this.ruleHarness = ruleHarness;
 		Set<String> keys = differences.keySet();
 		for (Iterator<String> iter = keys.iterator() ; iter.hasNext() ; ) {
 			String key = iter.next();

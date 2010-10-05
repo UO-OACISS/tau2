@@ -1,0 +1,225 @@
+gcc    -DPROFILING_ON                        -DTAU_GNU -DTAU_DOT_H_LESS_HEADERS                      -DTAU_LINUX_TIMERS                                 -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE                    -DTAU_BFD   -DHAVE_GNU_DEMANGLE   -DHAVE_TR1_HASH_MAP     -fPIC  -I/home/scottb/tau2/include  -I..  -c cl.cpp -o cl_wrap.o
+cl.cpp: In function ‘cl_int clGetPlatformIDs(cl_uint, _cl_platform_id**, cl_uint*)’:
+cl.cpp:19: error: ‘perror’ was not declared in this scope
+cl.cpp:26: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clGetPlatformInfo(_cl_platform_id*, cl_platform_info, size_t, void*, size_t*)’:
+cl.cpp:47: error: ‘perror’ was not declared in this scope
+cl.cpp:54: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clGetDeviceIDs(_cl_platform_id*, cl_device_type, cl_uint, _cl_device_id**, cl_uint*)’:
+cl.cpp:75: error: ‘perror’ was not declared in this scope
+cl.cpp:82: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clGetDeviceInfo(_cl_device_id*, cl_device_info, size_t, void*, size_t*)’:
+cl.cpp:103: error: ‘perror’ was not declared in this scope
+cl.cpp:110: error: ‘perror’ was not declared in this scope
+cl.cpp: At global scope:
+cl.cpp:121: error: expected ‘,’ or ‘...’ before ‘C’
+cl.cpp: In function ‘_cl_context* clCreateContext(const cl_context_properties*, cl_uint, _cl_device_id* const*, void (*)(const char*, const void*, size_t, void*))’:
+cl.cpp:123: error: expected ‘,’ or ‘...’ before ‘C’
+cl.cpp:131: error: ‘perror’ was not declared in this scope
+cl.cpp:138: error: ‘perror’ was not declared in this scope
+cl.cpp:142: error: ‘a5’ was not declared in this scope
+cl.cpp:142: error: ‘a6’ was not declared in this scope
+cl.cpp: At global scope:
+cl.cpp:149: error: expected ‘,’ or ‘...’ before ‘C’
+cl.cpp: In function ‘_cl_context* clCreateContextFromType(const cl_context_properties*, cl_device_type, void (*)(const char*, const void*, size_t, void*))’:
+cl.cpp:151: error: expected ‘,’ or ‘...’ before ‘C’
+cl.cpp:159: error: ‘perror’ was not declared in this scope
+cl.cpp:166: error: ‘perror’ was not declared in this scope
+cl.cpp:170: error: ‘a4’ was not declared in this scope
+cl.cpp:170: error: ‘a5’ was not declared in this scope
+cl.cpp: In function ‘cl_int clRetainContext(_cl_context*)’:
+cl.cpp:187: error: ‘perror’ was not declared in this scope
+cl.cpp:194: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clReleaseContext(_cl_context*)’:
+cl.cpp:215: error: ‘perror’ was not declared in this scope
+cl.cpp:222: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clGetContextInfo(_cl_context*, cl_context_info, size_t, void*, size_t*)’:
+cl.cpp:243: error: ‘perror’ was not declared in this scope
+cl.cpp:250: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘_cl_command_queue* clCreateCommandQueue(_cl_context*, _cl_device_id*, cl_command_queue_properties, cl_int*)’:
+cl.cpp:271: error: ‘perror’ was not declared in this scope
+cl.cpp:278: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clRetainCommandQueue(_cl_command_queue*)’:
+cl.cpp:299: error: ‘perror’ was not declared in this scope
+cl.cpp:306: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clReleaseCommandQueue(_cl_command_queue*)’:
+cl.cpp:327: error: ‘perror’ was not declared in this scope
+cl.cpp:334: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clGetCommandQueueInfo(_cl_command_queue*, cl_command_queue_info, size_t, void*, size_t*)’:
+cl.cpp:355: error: ‘perror’ was not declared in this scope
+cl.cpp:362: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clSetCommandQueueProperty(_cl_command_queue*, cl_command_queue_properties, cl_bool, cl_command_queue_properties*)’:
+cl.cpp:383: error: ‘perror’ was not declared in this scope
+cl.cpp:390: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘_cl_mem* clCreateBuffer(_cl_context*, cl_mem_flags, size_t, void*, cl_int*)’:
+cl.cpp:411: error: ‘perror’ was not declared in this scope
+cl.cpp:418: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘_cl_mem* clCreateImage2D(_cl_context*, cl_mem_flags, const cl_image_format*, size_t, size_t, size_t, void*, cl_int*)’:
+cl.cpp:439: error: ‘perror’ was not declared in this scope
+cl.cpp:446: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘_cl_mem* clCreateImage3D(_cl_context*, cl_mem_flags, const cl_image_format*, size_t, size_t, size_t, size_t, size_t, void*, cl_int*)’:
+cl.cpp:467: error: ‘perror’ was not declared in this scope
+cl.cpp:474: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clRetainMemObject(_cl_mem*)’:
+cl.cpp:495: error: ‘perror’ was not declared in this scope
+cl.cpp:502: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clReleaseMemObject(_cl_mem*)’:
+cl.cpp:523: error: ‘perror’ was not declared in this scope
+cl.cpp:530: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clGetSupportedImageFormats(_cl_context*, cl_mem_flags, cl_mem_object_type, cl_uint, cl_image_format*, cl_uint*)’:
+cl.cpp:551: error: ‘perror’ was not declared in this scope
+cl.cpp:558: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clGetMemObjectInfo(_cl_mem*, cl_mem_info, size_t, void*, size_t*)’:
+cl.cpp:579: error: ‘perror’ was not declared in this scope
+cl.cpp:586: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clGetImageInfo(_cl_mem*, cl_image_info, size_t, void*, size_t*)’:
+cl.cpp:607: error: ‘perror’ was not declared in this scope
+cl.cpp:614: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘_cl_sampler* clCreateSampler(_cl_context*, cl_bool, cl_addressing_mode, cl_filter_mode, cl_int*)’:
+cl.cpp:635: error: ‘perror’ was not declared in this scope
+cl.cpp:642: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clRetainSampler(_cl_sampler*)’:
+cl.cpp:663: error: ‘perror’ was not declared in this scope
+cl.cpp:670: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clReleaseSampler(_cl_sampler*)’:
+cl.cpp:691: error: ‘perror’ was not declared in this scope
+cl.cpp:698: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clGetSamplerInfo(_cl_sampler*, cl_sampler_info, size_t, void*, size_t*)’:
+cl.cpp:719: error: ‘perror’ was not declared in this scope
+cl.cpp:726: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘_cl_program* clCreateProgramWithSource(_cl_context*, cl_uint, const char**, const size_t*, cl_int*)’:
+cl.cpp:747: error: ‘perror’ was not declared in this scope
+cl.cpp:754: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘_cl_program* clCreateProgramWithBinary(_cl_context*, cl_uint, _cl_device_id* const*, const size_t*, const unsigned char**, cl_int*, cl_int*)’:
+cl.cpp:775: error: ‘perror’ was not declared in this scope
+cl.cpp:782: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clRetainProgram(_cl_program*)’:
+cl.cpp:803: error: ‘perror’ was not declared in this scope
+cl.cpp:810: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clReleaseProgram(_cl_program*)’:
+cl.cpp:831: error: ‘perror’ was not declared in this scope
+cl.cpp:838: error: ‘perror’ was not declared in this scope
+cl.cpp: At global scope:
+cl.cpp:849: error: expected ‘,’ or ‘...’ before ‘C’
+cl.cpp: In function ‘cl_int clBuildProgram(_cl_program*, cl_uint, _cl_device_id* const*, const char*, void (*)(_cl_program*, void*))’:
+cl.cpp:851: error: expected ‘,’ or ‘...’ before ‘C’
+cl.cpp:859: error: ‘perror’ was not declared in this scope
+cl.cpp:866: error: ‘perror’ was not declared in this scope
+cl.cpp:870: error: ‘a6’ was not declared in this scope
+cl.cpp: In function ‘cl_int clUnloadCompiler()’:
+cl.cpp:887: error: ‘perror’ was not declared in this scope
+cl.cpp:894: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clGetProgramInfo(_cl_program*, cl_program_info, size_t, void*, size_t*)’:
+cl.cpp:915: error: ‘perror’ was not declared in this scope
+cl.cpp:922: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clGetProgramBuildInfo(_cl_program*, _cl_device_id*, cl_program_build_info, size_t, void*, size_t*)’:
+cl.cpp:943: error: ‘perror’ was not declared in this scope
+cl.cpp:950: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘_cl_kernel* clCreateKernel(_cl_program*, const char*, cl_int*)’:
+cl.cpp:971: error: ‘perror’ was not declared in this scope
+cl.cpp:978: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clCreateKernelsInProgram(_cl_program*, cl_uint, _cl_kernel**, cl_uint*)’:
+cl.cpp:999: error: ‘perror’ was not declared in this scope
+cl.cpp:1006: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clRetainKernel(_cl_kernel*)’:
+cl.cpp:1027: error: ‘perror’ was not declared in this scope
+cl.cpp:1034: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clReleaseKernel(_cl_kernel*)’:
+cl.cpp:1055: error: ‘perror’ was not declared in this scope
+cl.cpp:1062: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clSetKernelArg(_cl_kernel*, cl_uint, size_t, const void*)’:
+cl.cpp:1083: error: ‘perror’ was not declared in this scope
+cl.cpp:1090: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clGetKernelInfo(_cl_kernel*, cl_kernel_info, size_t, void*, size_t*)’:
+cl.cpp:1111: error: ‘perror’ was not declared in this scope
+cl.cpp:1118: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clGetKernelWorkGroupInfo(_cl_kernel*, _cl_device_id*, cl_kernel_work_group_info, size_t, void*, size_t*)’:
+cl.cpp:1139: error: ‘perror’ was not declared in this scope
+cl.cpp:1146: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clWaitForEvents(cl_uint, _cl_event* const*)’:
+cl.cpp:1167: error: ‘perror’ was not declared in this scope
+cl.cpp:1174: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clGetEventInfo(_cl_event*, cl_event_info, size_t, void*, size_t*)’:
+cl.cpp:1195: error: ‘perror’ was not declared in this scope
+cl.cpp:1202: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clRetainEvent(_cl_event*)’:
+cl.cpp:1223: error: ‘perror’ was not declared in this scope
+cl.cpp:1230: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clReleaseEvent(_cl_event*)’:
+cl.cpp:1251: error: ‘perror’ was not declared in this scope
+cl.cpp:1258: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clGetEventProfilingInfo(_cl_event*, cl_profiling_info, size_t, void*, size_t*)’:
+cl.cpp:1279: error: ‘perror’ was not declared in this scope
+cl.cpp:1286: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clFlush(_cl_command_queue*)’:
+cl.cpp:1307: error: ‘perror’ was not declared in this scope
+cl.cpp:1314: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clFinish(_cl_command_queue*)’:
+cl.cpp:1335: error: ‘perror’ was not declared in this scope
+cl.cpp:1342: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clEnqueueReadBuffer(_cl_command_queue*, _cl_mem*, cl_bool, size_t, size_t, void*, cl_uint, _cl_event* const*, _cl_event**)’:
+cl.cpp:1363: error: ‘perror’ was not declared in this scope
+cl.cpp:1370: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clEnqueueWriteBuffer(_cl_command_queue*, _cl_mem*, cl_bool, size_t, size_t, const void*, cl_uint, _cl_event* const*, _cl_event**)’:
+cl.cpp:1391: error: ‘perror’ was not declared in this scope
+cl.cpp:1398: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clEnqueueCopyBuffer(_cl_command_queue*, _cl_mem*, _cl_mem*, size_t, size_t, size_t, cl_uint, _cl_event* const*, _cl_event**)’:
+cl.cpp:1419: error: ‘perror’ was not declared in this scope
+cl.cpp:1426: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clEnqueueReadImage(_cl_command_queue*, _cl_mem*, cl_bool, const size_t*, const size_t*, size_t, size_t, void*, cl_uint, _cl_event* const*, _cl_event**)’:
+cl.cpp:1447: error: ‘perror’ was not declared in this scope
+cl.cpp:1454: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clEnqueueWriteImage(_cl_command_queue*, _cl_mem*, cl_bool, const size_t*, const size_t*, size_t, size_t, const void*, cl_uint, _cl_event* const*, _cl_event**)’:
+cl.cpp:1475: error: ‘perror’ was not declared in this scope
+cl.cpp:1482: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clEnqueueCopyImage(_cl_command_queue*, _cl_mem*, _cl_mem*, const size_t*, const size_t*, const size_t*, cl_uint, _cl_event* const*, _cl_event**)’:
+cl.cpp:1503: error: ‘perror’ was not declared in this scope
+cl.cpp:1510: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clEnqueueCopyImageToBuffer(_cl_command_queue*, _cl_mem*, _cl_mem*, const size_t*, const size_t*, size_t, cl_uint, _cl_event* const*, _cl_event**)’:
+cl.cpp:1531: error: ‘perror’ was not declared in this scope
+cl.cpp:1538: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clEnqueueCopyBufferToImage(_cl_command_queue*, _cl_mem*, _cl_mem*, size_t, const size_t*, const size_t*, cl_uint, _cl_event* const*, _cl_event**)’:
+cl.cpp:1559: error: ‘perror’ was not declared in this scope
+cl.cpp:1566: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘void* clEnqueueMapBuffer(_cl_command_queue*, _cl_mem*, cl_bool, cl_map_flags, size_t, size_t, cl_uint, _cl_event* const*, _cl_event**, cl_int*)’:
+cl.cpp:1587: error: ‘perror’ was not declared in this scope
+cl.cpp:1594: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘void* clEnqueueMapImage(_cl_command_queue*, _cl_mem*, cl_bool, cl_map_flags, const size_t*, const size_t*, size_t*, size_t*, cl_uint, _cl_event* const*, _cl_event**, cl_int*)’:
+cl.cpp:1615: error: ‘perror’ was not declared in this scope
+cl.cpp:1622: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clEnqueueUnmapMemObject(_cl_command_queue*, _cl_mem*, void*, cl_uint, _cl_event* const*, _cl_event**)’:
+cl.cpp:1643: error: ‘perror’ was not declared in this scope
+cl.cpp:1650: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clEnqueueNDRangeKernel(_cl_command_queue*, _cl_kernel*, cl_uint, const size_t*, const size_t*, const size_t*, cl_uint, _cl_event* const*, _cl_event**)’:
+cl.cpp:1671: error: ‘perror’ was not declared in this scope
+cl.cpp:1678: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clEnqueueTask(_cl_command_queue*, _cl_kernel*, cl_uint, _cl_event* const*, _cl_event**)’:
+cl.cpp:1699: error: ‘perror’ was not declared in this scope
+cl.cpp:1706: error: ‘perror’ was not declared in this scope
+cl.cpp: At global scope:
+cl.cpp:1717: error: expected ‘,’ or ‘...’ before ‘C’
+cl.cpp: In function ‘cl_int clEnqueueNativeKernel(_cl_command_queue*, void (*)(void*))’:
+cl.cpp:1719: error: expected ‘,’ or ‘...’ before ‘C’
+cl.cpp:1727: error: ‘perror’ was not declared in this scope
+cl.cpp:1734: error: ‘perror’ was not declared in this scope
+cl.cpp:1738: error: ‘a3’ was not declared in this scope
+cl.cpp:1738: error: ‘a4’ was not declared in this scope
+cl.cpp:1738: error: ‘a5’ was not declared in this scope
+cl.cpp:1738: error: ‘a6’ was not declared in this scope
+cl.cpp:1738: error: ‘a7’ was not declared in this scope
+cl.cpp:1738: error: ‘a8’ was not declared in this scope
+cl.cpp:1738: error: ‘a9’ was not declared in this scope
+cl.cpp:1738: error: ‘a10’ was not declared in this scope
+cl.cpp: In function ‘cl_int clEnqueueMarker(_cl_command_queue*, _cl_event**)’:
+cl.cpp:1755: error: ‘perror’ was not declared in this scope
+cl.cpp:1762: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clEnqueueWaitForEvents(_cl_command_queue*, cl_uint, _cl_event* const*)’:
+cl.cpp:1783: error: ‘perror’ was not declared in this scope
+cl.cpp:1790: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘cl_int clEnqueueBarrier(_cl_command_queue*)’:
+cl.cpp:1811: error: ‘perror’ was not declared in this scope
+cl.cpp:1818: error: ‘perror’ was not declared in this scope
+cl.cpp: In function ‘void* clGetExtensionFunctionAddress(const char*)’:
+cl.cpp:1839: error: ‘perror’ was not declared in this scope
+cl.cpp:1846: error: ‘perror’ was not declared in this scope
+make: *** [cl_wrap.o] Error 1

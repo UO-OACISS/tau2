@@ -14,7 +14,7 @@ public class XMLSupport {
     }
 
     public XMLSupport(Trial trial) {
-        this.trial = trial;
+//        this.trial = trial;
     }
 
     //public void writeXmlFiles(int metricID, File file) {
@@ -508,31 +508,31 @@ public class XMLSupport {
     //####################################
     //Instance data.
     //####################################
-    private Trial trial = null;
-
-    private String[] lookupBegin = { "\t\t<inclperc>", "\t\t<inclutime>",
-            "\t\t<exclperc>", "\t\t<exclutime>", //0,1,2,3
-            "\t\t<inclutimePcall>", //4
-            "\t\t<call>", "\t\t<subrs>", //5,6
-            "\t\t<maxvalue>", "\t\t<minvalue>", "\t\t<meanvalue>",
-            "\t\t<stddevvalue>", //7,8,9,10
-            "\t\t<funID>", "\t\t<ueID>", "\t\t<numofsamples>", //11,12,13
-            "\t\t<fungroup>", "\t\t<uename>", //14,15
-            "\t   <instrumentedobj>", "\t   <userevent>",
-            "\t   <totalfunction>", //16,17,18
-            "\t   <meanfunction>", //19
-            "\t   <funnameidmap>", "\t   <uenameidmap>" }; //20,21
-    private String[] lookupEnd = { "</inclperc>", "</inclutime>",
-            "</exclperc>", "</exclutime>", //0,1,2,3
-            "</inclutimePcall>", //4
-            "</call>", "</subrs>", //5,6
-            "</maxvalue>", "</minvalue>", "</meanvalue>", "</stddevvalue>", //7,8,9,10
-            "</funID>", "</ueID>", "</numofsamples>", //11,12,13
-            "<fungroup>", "<uename>", //14,15
-            "\t   </instrumentedobj>", "\t   </userevent>",
-            "\t   </totalfunction>", //16,17,18
-            "\t   </meanfunction>", //19
-            "\t   </funnameidmap>", "\t   </uenameidmap>" }; //20,21
+//    private Trial trial = null;
+//
+//    private String[] lookupBegin = { "\t\t<inclperc>", "\t\t<inclutime>",
+//            "\t\t<exclperc>", "\t\t<exclutime>", //0,1,2,3
+//            "\t\t<inclutimePcall>", //4
+//            "\t\t<call>", "\t\t<subrs>", //5,6
+//            "\t\t<maxvalue>", "\t\t<minvalue>", "\t\t<meanvalue>",
+//            "\t\t<stddevvalue>", //7,8,9,10
+//            "\t\t<funID>", "\t\t<ueID>", "\t\t<numofsamples>", //11,12,13
+//            "\t\t<fungroup>", "\t\t<uename>", //14,15
+//            "\t   <instrumentedobj>", "\t   <userevent>",
+//            "\t   <totalfunction>", //16,17,18
+//            "\t   <meanfunction>", //19
+//            "\t   <funnameidmap>", "\t   <uenameidmap>" }; //20,21
+//    private String[] lookupEnd = { "</inclperc>", "</inclutime>",
+//            "</exclperc>", "</exclutime>", //0,1,2,3
+//            "</inclutimePcall>", //4
+//            "</call>", "</subrs>", //5,6
+//            "</maxvalue>", "</minvalue>", "</meanvalue>", "</stddevvalue>", //7,8,9,10
+//            "</funID>", "</ueID>", "</numofsamples>", //11,12,13
+//            "<fungroup>", "<uename>", //14,15
+//            "\t   </instrumentedobj>", "\t   </userevent>",
+//            "\t   </totalfunction>", //16,17,18
+//            "\t   </meanfunction>", //19
+//            "\t   </funnameidmap>", "\t   </uenameidmap>" }; //20,21
 
     //######
     //Error outupt.

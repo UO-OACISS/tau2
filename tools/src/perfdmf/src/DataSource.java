@@ -46,6 +46,7 @@ public abstract class DataSource {
     public static final int GPTL = 13; // General Purpose Timing Library - Jim Rosinski
     public static final int PARAVER = 14; // Statistical output from Paraver - Jesus LeBarta
     public static final int IPM = 15; // Data from IPM/NERSC
+    public static final int GOOGLE = 16; //Google PerfTools
     public static final int GYRO = 100;
     public static final int GAMESS = 101; // application log data
     public static final String FILE_TYPE_INDEX = "File Type Index";
@@ -53,7 +54,7 @@ public abstract class DataSource {
 
     public static String formatTypeStrings[] = { "ParaProf Packed Profile", "Tau profiles", "Dynaprof", "MpiP", "HPMToolkit",
             "Gprof", "PSRun", "Tau pprof.dat", "Cube", "HPCToolkit", "TAU Snapshot", "ompP", "PERI-XML",
-            "General Purpose Timing Library (GPTL)", "Paraver", "IPM" };
+            "General Purpose Timing Library (GPTL)", "Paraver", "IPM", "Google PerfTools" };
 
     private static boolean meanIncludeNulls = true;
 
@@ -64,15 +65,15 @@ public abstract class DataSource {
     private Function topLevelPhase;
 
     // data structures
-    protected List metrics = null;
+    protected List<Metric> metrics = null;
     protected Thread meanData = null;
     protected Thread totalData = null;
     protected Thread stddevData = null;
-    private Map nodes = new TreeMap();
+    private Map<Integer, Node> nodes = new TreeMap<Integer, Node>();
     private Map<String, Function> functions = new TreeMap<String, Function>();
-    private Map groups = new TreeMap();
-    private Map userEvents = new TreeMap();
-    private List allThreads;
+    private Map<String, Group> groups = new TreeMap<String, Group>();
+    private Map<String, UserEvent> userEvents = new TreeMap<String, UserEvent>();
+    private List<Thread> allThreads;
 
     private boolean generateIntermediateCallPathData;
     private boolean reverseDataAvailable;
@@ -88,8 +89,8 @@ public abstract class DataSource {
 
     protected volatile boolean reloading;
 
-    protected Map metaData = new TreeMap();
-    protected Map uncommonMetaData = new TreeMap();
+    protected Map<String, String> metaData = new TreeMap<String, String>();
+    protected Map<String, String> uncommonMetaData = new TreeMap<String, String>();
 
     private File metadataFile;
     private StringBuffer metadataString = new StringBuffer();
@@ -117,8 +118,8 @@ public abstract class DataSource {
     }
 
     // by default no files
-    public List getFiles() {
-        return new ArrayList();
+    public List<File> getFiles() {
+        return new ArrayList<File>();
     }
 
     public boolean isReloading() {
@@ -139,10 +140,10 @@ public abstract class DataSource {
     }
 
     protected void cleanData() {
-        for (Iterator it = this.getAllThreads().iterator(); it.hasNext();) {
-            Thread thread = (Thread) it.next();
-            for (Iterator it2 = thread.getFunctionProfileIterator(); it2.hasNext();) {
-                FunctionProfile fp = (FunctionProfile) it2.next();
+        for (Iterator<Thread> it = this.getAllThreads().iterator(); it.hasNext();) {
+            Thread thread = it.next();
+            for (Iterator<FunctionProfile> it2 = thread.getFunctionProfileIterator(); it2.hasNext();) {
+                FunctionProfile fp = it2.next();
                 if (fp != null) {
                     for (int m = 0; m < this.getNumberOfMetrics(); m++) {
                         fp.setExclusive(m, 0);
@@ -201,7 +202,7 @@ public abstract class DataSource {
 
     public Function addFunction(String name, int numMetrics) {
         name = name.trim();
-        Function function = (Function) functions.get(name);
+        Function function = functions.get(name);
 
         // return the function if found
         if (function != null) {
@@ -215,14 +216,14 @@ public abstract class DataSource {
     }
 
     public Function getFunction(String name) {
-        return (Function) functions.get(name.trim());
+        return functions.get(name.trim());
     }
 
     public int getNumFunctions() {
         return functions.size();
     }
 
-    public Iterator getFunctions() {
+    public Iterator<Function> getFunctions() {
         return functions.values().iterator();
     }
 
@@ -240,19 +241,19 @@ public abstract class DataSource {
     }
 
     public UserEvent getUserEvent(String name) {
-        return (UserEvent) userEvents.get(name);
+        return userEvents.get(name);
     }
 
     public int getNumUserEvents() {
         return userEvents.size();
     }
 
-    public Iterator getUserEvents() {
+    public Iterator<UserEvent> getUserEvents() {
         return userEvents.values().iterator();
     }
 
     public Group getGroup(String name) {
-        return (Group) groups.get(name);
+        return groups.get(name);
     }
 
     public Group addGroup(String name) {
@@ -290,7 +291,7 @@ public abstract class DataSource {
         return groups.size();
     }
 
-    public Iterator getGroups() {
+    public Iterator<Group> getGroups() {
         return groups.values().iterator();
     }
 
@@ -304,14 +305,14 @@ public abstract class DataSource {
         if (maxNCT == null) {
             maxNCT = new int[3];
 
-            for (Iterator it = this.getNodes(); it.hasNext();) {
-                Node node = (Node) it.next();
+            for (Iterator<Node> it = this.getNodes(); it.hasNext();) {
+                Node node = it.next();
                 maxNCT[0] = Math.max(maxNCT[0], node.getNodeID());
-                for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-                    Context context = (Context) it2.next();
+                for (Iterator<Context> it2 = node.getContexts(); it2.hasNext();) {
+                    Context context = it2.next();
                     maxNCT[1] = Math.max(maxNCT[1], context.getContextID());
-                    for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                        Thread thread = (Thread) it3.next();
+                    for (Iterator<Thread> it3 = context.getThreads(); it3.hasNext();) {
+                        Thread thread = it3.next();
                         maxNCT[2] = Math.max(maxNCT[2], thread.getThreadID());
                     }
                 }
@@ -322,11 +323,11 @@ public abstract class DataSource {
 
     public int getNumThreads() {
         int numThreads = 0;
-        for (Iterator it = this.getNodes(); it.hasNext();) {
-            Node node = (Node) it.next();
-            for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-                Context context = (Context) it2.next();
-                for (Iterator it3 = context.getThreads(); it3.hasNext();) {
+        for (Iterator<Node> it = this.getNodes(); it.hasNext();) {
+            Node node = it.next();
+            for (Iterator<Context> it2 = node.getContexts(); it2.hasNext();) {
+                Context context = it2.next();
+                for (Iterator<Thread> it3 = context.getThreads(); it3.hasNext();) {
                     it3.next();
                     numThreads++;
                 }
@@ -341,7 +342,7 @@ public abstract class DataSource {
      * @param metrics
      *            List of Metrics
      */
-    public void setMetrics(List metrics) {
+    public void setMetrics(List<Metric> metrics) {
         this.metrics = metrics;
     }
 
@@ -353,10 +354,10 @@ public abstract class DataSource {
      */
     public void addMetric(Metric metric) {
         if (this.metrics == null) {
-            this.metrics = new ArrayList();
+            this.metrics = new ArrayList<Metric>();
         } else {
-            for (Iterator it = getAllThreads().iterator(); it.hasNext();) {
-                Thread thread = (Thread) it.next();
+            for (Iterator<Thread> it = getAllThreads().iterator(); it.hasNext();) {
+                Thread thread = it.next();
                 thread.addMetric();
             }
 
@@ -379,8 +380,8 @@ public abstract class DataSource {
      */
     public Metric addMetric(String metricName) {
         if (metrics != null) {
-            for (Iterator it = metrics.iterator(); it.hasNext();) {
-                Metric metric = (Metric) it.next();
+            for (Iterator<Metric> it = metrics.iterator(); it.hasNext();) {
+                Metric metric = it.next();
                 if (metric.getName().equals(metricName)) {
                     return metric;
                 }
@@ -415,10 +416,10 @@ public abstract class DataSource {
         Metric metric = null;
         // if the metric list exists, and has values, search for this metric
         if (metrics == null) {
-            metrics = new ArrayList();
+            metrics = new ArrayList<Metric>();
         } else {
-            for (Iterator it = metrics.iterator(); it.hasNext();) {
-                Metric tmp = (Metric) it.next();
+            for (Iterator<Metric> it = metrics.iterator(); it.hasNext();) {
+                Metric tmp = it.next();
                 if (tmp.getName().equals(metricName)) {
                     metric = tmp;
                     break;
@@ -447,7 +448,7 @@ public abstract class DataSource {
      * 
      * @return List of Metrics
      */
-    public List getMetrics() {
+    public List<Metric> getMetrics() {
         return metrics;
     }
 
@@ -460,8 +461,8 @@ public abstract class DataSource {
     }
 
     public Metric getMetric(String name) {
-        for (Iterator it = metrics.iterator(); it.hasNext();) {
-            Metric metric = (Metric) it.next();
+        for (Iterator<Metric> it = metrics.iterator(); it.hasNext();) {
+            Metric metric = it.next();
             if (metric.getName().equals(name)) {
                 return metric;
             }
@@ -479,7 +480,7 @@ public abstract class DataSource {
      */
     public Metric getMetric(int metricID) {
         if ((this.metrics != null) && (metricID < this.metrics.size())) {
-            return (Metric) this.metrics.get(metricID);
+            return this.metrics.get(metricID);
         } else {
             return null;
         }
@@ -497,7 +498,7 @@ public abstract class DataSource {
      */
     public String getMetricName(int metricID) {
         if ((this.metrics != null) && (metricID < this.metrics.size())) {
-            return ((Metric) this.metrics.get(metricID)).getName();
+            return this.metrics.get(metricID).getName();
         } else {
             return null;
         }
@@ -540,10 +541,10 @@ public abstract class DataSource {
             return;
         }
 
-        List functions = new ArrayList();
+        List<Function> functions = new ArrayList<Function>();
 
-        for (Iterator l = this.getFunctions(); l.hasNext();) {
-            Function function = (Function) l.next();
+        for (Iterator<Function> l = this.getFunctions(); l.hasNext();) {
+            Function function = l.next();
             functions.add(function);
         }
 
@@ -555,8 +556,8 @@ public abstract class DataSource {
         Group derivedGroup = this.addGroup("TAU_CALLPATH_DERIVED");
         reverseDataAvailable = true;
 
-        for (Iterator l = functions.iterator(); l.hasNext();) {
-            Function function = (Function) l.next();
+        for (Iterator<Function> l = functions.iterator(); l.hasNext();) {
+            Function function = l.next();
 
             if (function.isCallPathFunction() && CallPathUtilFuncs.containsDoublePath(function.getName())) {
 
@@ -567,15 +568,15 @@ public abstract class DataSource {
                     Function bonusFunction = this.getFunction(bonusName);
                     if (bonusFunction == null) {
                         bonusFunction = addFunction(bonusName);
-                        for (Iterator g = function.getGroups().iterator(); g.hasNext();) {
-                            bonusFunction.addGroup((Group) g.next());
+                        for (Iterator<Group> g = function.getGroups().iterator(); g.hasNext();) {
+                            bonusFunction.addGroup(g.next());
                         }
                     }
                     bonusFunction.addGroup(derivedGroup);
                     bonusName = bonusName.substring(bonusName.indexOf("=>") + 2);
 
                     for (int i = 0; i < numThreads; i++) {
-                        Thread thread = (Thread) allThreads.get(i);
+                        Thread thread = allThreads.get(i);
 
                         FunctionProfile functionProfile = thread.getFunctionProfile(function);
                         if (functionProfile != null) {
@@ -606,8 +607,8 @@ public abstract class DataSource {
 
             derivedThread.setStartTime(avgStartTime);
 
-            for (Iterator it = thread.getSnapshots().iterator(); it.hasNext();) {
-                Snapshot snapshot = (Snapshot) it.next();
+            for (Iterator<Snapshot> it = thread.getSnapshots().iterator(); it.hasNext();) {
+                Snapshot snapshot = it.next();
                 Snapshot derivedSnapshot = derivedThread.addSnapshot(snapshot.getName());
                 derivedSnapshot.setTimestamp(snapshot.getTimestamp());
             }
@@ -634,12 +635,14 @@ public abstract class DataSource {
 
         checkForPhases();
 
+        
+        
         // initialize to the first thread
-        int numDerivedSnapshots = ((Thread) this.getAllThreads().get(0)).getNumSnapshots();
+        int numDerivedSnapshots = this.getAllThreads().get(0).getNumSnapshots();
 
         long sumStartTime = 0;
-        for (Iterator it = this.getAllThreads().iterator(); it.hasNext();) {
-            Thread thread = (Thread) it.next();
+        for (Iterator<Thread> it = this.getAllThreads().iterator(); it.hasNext();) {
+            Thread thread = it.next();
             thread.setThreadDataAllMetrics();
 
             int numSnapshots = thread.getNumSnapshots();
@@ -700,9 +703,9 @@ public abstract class DataSource {
         for (int snapshot = 0; snapshot < numSnapshots; snapshot++) {
 
             for (int i = 0; i < numThreads; i++) { // for each thread
-                Thread thread = (Thread) allThreads.get(i);
-                for (Iterator it = thread.getUserEventProfiles(); it.hasNext();) {
-                    UserEventProfile uep = (UserEventProfile) it.next();
+                Thread thread = allThreads.get(i);
+                for (Iterator<UserEventProfile> it = thread.getUserEventProfiles(); it.hasNext();) {
+                    UserEventProfile uep = it.next();
                     UserEvent ue = uep.getUserEvent();
 
                     // get/create the userEventProfile for mean
@@ -748,8 +751,8 @@ public abstract class DataSource {
                 }
             }
 
-            for (Iterator it = this.getUserEvents(); it.hasNext();) {
-                UserEvent ue = (UserEvent) it.next();
+            for (Iterator<UserEvent> it = this.getUserEvents(); it.hasNext();) {
+                UserEvent ue = it.next();
 
                 UserEventProfile meanProfile = meanData.getUserEventProfile(ue);
                 UserEventProfile totalProfile = totalData.getUserEventProfile(ue);
@@ -814,7 +817,7 @@ public abstract class DataSource {
          */
 
         int numMetrics = this.getNumberOfMetrics();
-        Thread firstThread = (Thread) getAllThreads().get(0);
+        Thread firstThread = getAllThreads().get(0);
         if (meanData == null) {
             meanData = new Thread(-1, -1, -1, numMetrics, this);
             addDerivedSnapshots(firstThread, meanData);
@@ -843,8 +846,8 @@ public abstract class DataSource {
             // must always iterate through all metrics regardless to find the top level timers, I think???
             for (int i = startMetric; i <= endMetric; i++) { // for each metric
                 double topLevelInclSum[] = new double[numMetrics];
-                for (Iterator it = allThreads.iterator(); it.hasNext();) { // for each thread
-                    Thread thread = (Thread) it.next();
+                for (Iterator<Thread> it = allThreads.iterator(); it.hasNext();) { // for each thread
+                    Thread thread = it.next();
                     if (wellBehavedSnapshots) {
                         topLevelInclSum[i] += thread.getMaxInclusive(i, snapshot);
                     } else { // pick the last from each thread
@@ -857,8 +860,8 @@ public abstract class DataSource {
                 stddevData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
             }
 
-            for (Iterator l = this.getFunctions(); l.hasNext();) { // for each function
-                Function function = (Function) l.next();
+            for (Iterator<Function> l = this.getFunctions(); l.hasNext();) { // for each function
+                Function function = l.next();
 
                 // get/create the FunctionProfile for mean
                 FunctionProfile meanProfile = meanData.getFunctionProfile(function);
@@ -899,7 +902,7 @@ public abstract class DataSource {
                 int numThreads = allThreads.size();
 
                 for (int i = 0; i < numThreads; i++) { // for each thread
-                    Thread thread = (Thread) allThreads.get(i);
+                    Thread thread = allThreads.get(i);
                     FunctionProfile functionProfile = thread.getFunctionProfile(function);
 
                     int s = snapshot;
@@ -1037,7 +1040,7 @@ public abstract class DataSource {
      * @return    The node found (or null if it was not).
      */
     public Node getNode(int nodeID) {
-        return (Node) nodes.get(new Integer(nodeID));
+        return nodes.get(new Integer(nodeID));
     }
 
     /**
@@ -1054,19 +1057,19 @@ public abstract class DataSource {
      *
      * @return    An Iterator over node objects.
      */
-    public Iterator getNodes() {
+    public Iterator<Node> getNodes() {
         return nodes.values().iterator();
     }
 
-    public Map getNodeMap() {
+    public Map<Integer, Node> getNodeMap() {
         return nodes;
     }
 
     //Returns the total number of contexts in this trial.
     public int getTotalNumberOfContexts() {
         int totalNumberOfContexts = -1;
-        for (Iterator it = this.getNodes(); it.hasNext();) {
-            Node node = (Node) it.next();
+        for (Iterator<Node> it = this.getNodes(); it.hasNext();) {
+            Node node = it.next();
             totalNumberOfContexts += (node.getNumberOfContexts());
         }
         return totalNumberOfContexts;
@@ -1078,7 +1081,7 @@ public abstract class DataSource {
     }
 
     //Returns all the contexts on the specified node.
-    public Iterator getContexts(int nodeID) {
+    public Iterator<Context> getContexts(int nodeID) {
         Node node = getNode(nodeID);
         if (node != null) {
             return node.getContexts();
@@ -1098,10 +1101,10 @@ public abstract class DataSource {
     //Returns the total number of threads in this trial.
     public int getTotalNumberOfThreads() {
         int totalNumberOfThreads = 0;
-        for (Iterator it = this.getNodes(); it.hasNext();) {
-            Node node = (Node) it.next();
-            for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-                Context context = (Context) it2.next();
+        for (Iterator<Node> it = this.getNodes(); it.hasNext();) {
+            Node node = it.next();
+            for (Iterator<Context> it2 = node.getContexts(); it2.hasNext();) {
+                Context context = it2.next();
                 totalNumberOfThreads += (context.getNumberOfThreads());
             }
         }
@@ -1113,14 +1116,14 @@ public abstract class DataSource {
         return (this.getContext(nodeID, contextID)).getNumberOfThreads();
     }
 
-    public List getThreads() {
-        List list = new ArrayList();
-        for (Iterator it = this.getNodes(); it.hasNext();) {
-            Node node = (Node) it.next();
-            for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-                Context context = (Context) it2.next();
-                for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                    Thread thread = (Thread) it3.next();
+    public List<Thread> getThreads() {
+        List<Thread> list = new ArrayList<Thread>();
+        for (Iterator<Node> it = this.getNodes(); it.hasNext();) {
+            Node node = it.next();
+            for (Iterator<Context> it2 = node.getContexts(); it2.hasNext();) {
+                Context context = it2.next();
+                for (Iterator<Thread> it3 = context.getThreads(); it3.hasNext();) {
+                    Thread thread = it3.next();
                     list.add(thread);
                 }
             }
@@ -1143,20 +1146,20 @@ public abstract class DataSource {
     }
 
     private void initAllThreadsList() {
-        allThreads = new ArrayList();
-        for (Iterator it = this.getNodes(); it.hasNext();) {
-            Node node = (Node) it.next();
-            for (Iterator it2 = node.getContexts(); it2.hasNext();) {
-                Context context = (Context) it2.next();
-                for (Iterator it3 = context.getThreads(); it3.hasNext();) {
-                    Thread thread = (Thread) it3.next();
+        allThreads = new ArrayList<Thread>();
+        for (Iterator<Node> it = this.getNodes(); it.hasNext();) {
+            Node node = it.next();
+            for (Iterator<Context> it2 = node.getContexts(); it2.hasNext();) {
+                Context context = it2.next();
+                for (Iterator<Thread> it3 = context.getThreads(); it3.hasNext();) {
+                    Thread thread = it3.next();
                     allThreads.add(thread);
                 }
             }
         }
     }
 
-    public List getAllThreads() {
+    public List<Thread> getAllThreads() {
         if (allThreads == null) {
             initAllThreadsList();
         }
@@ -1182,8 +1185,8 @@ public abstract class DataSource {
         if (tau_phase != null) {
             phasesPresent = true;
 
-            for (Iterator it = this.getFunctions(); it.hasNext();) {
-                Function function = (Function) it.next();
+            for (Iterator<Function> it = this.getFunctions(); it.hasNext();) {
+                Function function = it.next();
 
                 if (function.isGroupMember(tau_phase)) {
                     function.setPhase(true);
@@ -1191,8 +1194,8 @@ public abstract class DataSource {
                 }
             }
 
-            for (Iterator it = this.getFunctions(); it.hasNext();) {
-                Function function = (Function) it.next();
+            for (Iterator<Function> it = this.getFunctions(); it.hasNext();) {
+                Function function = it.next();
 
                 int location = function.getName().indexOf("=>");
 
@@ -1218,10 +1221,10 @@ public abstract class DataSource {
 
         if (phasesPresent) {
             Group tau_phase = this.getGroup("TAU_PHASE");
-            ArrayList phases = new ArrayList();
+            ArrayList<Function> phases = new ArrayList<Function>();
 
-            for (Iterator it = this.getFunctions(); it.hasNext();) {
-                Function function = (Function) it.next();
+            for (Iterator<Function> it = this.getFunctions(); it.hasNext();) {
+                Function function = it.next();
                 if (function.isGroupMember(tau_phase)) {
                     phases.add(function);
                 }
@@ -1233,9 +1236,9 @@ public abstract class DataSource {
             }
 
             // try to find the "top level phase", usually 'main'
-            topLevelPhase = (Function) phases.get(0);
-            for (Iterator it = phases.iterator(); it.hasNext();) {
-                Function function = (Function) it.next();
+            topLevelPhase = phases.get(0);
+            for (Iterator<Function> it = phases.iterator(); it.hasNext();) {
+                Function function = it.next();
                 if (function.getMeanInclusive(0) > topLevelPhase.getMeanInclusive(0)) {
                     topLevelPhase = function;
                 }
@@ -1268,11 +1271,11 @@ public abstract class DataSource {
         return reverseDataAvailable;
     }
 
-    public Map getMetaData() {
+    public Map<String, String> getMetaData() {
         return metaData;
     }
 
-    public void setMetaData(Map metaData) {
+    public void setMetaData(Map<String, String> metaData) {
         this.metaData = metaData;
     }
 
@@ -1291,8 +1294,8 @@ public abstract class DataSource {
             document.appendChild(root);
 
             Element master = null;
-            List nodeProfiles = new ArrayList();
-            List profilesAdded = new ArrayList();
+            List<Element> nodeProfiles = new ArrayList<Element>();
+            List<Boolean> profilesAdded = new ArrayList<Boolean>();
 
             // create the common attribute node
             if (metaData.size() > 0) {
@@ -1301,9 +1304,9 @@ public abstract class DataSource {
 
                 // output the first thread of name / value pairs, like this:
                 // <attribute><name>xxx</name><value>yyy</value></attribute>
-                for (Iterator it2 = metaData.keySet().iterator(); it2.hasNext();) {
-                    String name = (String) it2.next();
-                    String value = (String) metaData.get(name);
+                for (Iterator<String> it2 = metaData.keySet().iterator(); it2.hasNext();) {
+                    String name = it2.next();
+                    String value = metaData.get(name);
                     Element attribute = (Element) document.createElement("tau:attribute");
                     master.appendChild(attribute);
                     Element attrName = (Element) document.createElement("tau:name");
@@ -1317,8 +1320,8 @@ public abstract class DataSource {
 
             // for all threads of execution, output the attributes
             // that are different for one or more threads
-            for (Iterator it = getAllThreads().iterator(); it.hasNext();) {
-                Thread thread = (Thread) it.next();
+            for (Iterator<Thread> it = getAllThreads().iterator(); it.hasNext();) {
+                Thread thread = it.next();
                 // output the first thread of name / value pairs, like this:
                 // <attribute><name>xxx</name><value>yyy</value></attribute>
                 Element delta = (Element) document.createElement("tau:ProfileAttributes");
@@ -1330,8 +1333,8 @@ public abstract class DataSource {
 
                 boolean addit = false;
 
-                for (Iterator it2 = thread.getMetaData().keySet().iterator(); it2.hasNext();) {
-                    String name = (String) it2.next();
+                for (Iterator<String> it2 = thread.getMetaData().keySet().iterator(); it2.hasNext();) {
+                    String name = it2.next();
                     String value = (String) thread.getMetaData().get(name);
                     // if this name/value pair is not in the master, then 
                     // append it to the tree.
@@ -1397,8 +1400,8 @@ public abstract class DataSource {
                             //root.appendChild(cpa);
                         } else if (cpa.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
                                 && cpa.getNodeName().equals("tau:ProfileAttributes")) {
-                            Element currentDelta = (Element) nodeProfiles.get(nodeIndex);
-                            if (((Boolean) profilesAdded.get(nodeIndex)).booleanValue()) {
+                            Element currentDelta = nodeProfiles.get(nodeIndex);
+                            if (profilesAdded.get(nodeIndex).booleanValue()) {
 
                                 NodeList attrs = cpa.getChildNodes();
                                 // System.out.println("length: " + attrs.getLength());
@@ -1448,7 +1451,7 @@ public abstract class DataSource {
     }
 
     public void aggregateMetaData() {
-        Thread node0 = (Thread) getAllThreads().get(0);
+        Thread node0 = getAllThreads().get(0);
 
         // must have at least one thread
         if (node0 == null) {
@@ -1456,20 +1459,20 @@ public abstract class DataSource {
         }
 
         // First, add all name/value pairs from the first node (any node, really)
-        for (Iterator it = node0.getMetaData().keySet().iterator(); it.hasNext();) {
-            String name = (String) it.next();
+        for (Iterator<String> it = node0.getMetaData().keySet().iterator(); it.hasNext();) {
+            String name = it.next();
             String value = (String) node0.getMetaData().get(name);
             metaData.put(name, value);
         }
 
         // Now iterate through all nodes and remove from the master set (metaData) any that differ
-        for (Iterator it = getAllThreads().iterator(); it.hasNext();) {
-            Thread thread = (Thread) it.next();
-            for (Iterator it2 = thread.getMetaData().keySet().iterator(); it2.hasNext();) {
-                String name = (String) it2.next();
+        for (Iterator<Thread> it = getAllThreads().iterator(); it.hasNext();) {
+            Thread thread = it.next();
+            for (Iterator<String> it2 = thread.getMetaData().keySet().iterator(); it2.hasNext();) {
+                String name = it2.next();
                 String value = (String) thread.getMetaData().get(name);
 
-                String trialValue = (String) metaData.get(name);
+                String trialValue = metaData.get(name);
                 if (trialValue == null || !value.equals(trialValue)) {
                     metaData.remove(name);
                     uncommonMetaData.put(name, value);
@@ -1478,10 +1481,10 @@ public abstract class DataSource {
         }
 
         // Now remove the normalized name/value pairs from the thread-specific structures
-        for (Iterator it = getAllThreads().iterator(); it.hasNext();) {
-            Thread thread = (Thread) it.next();
-            for (Iterator it2 = metaData.keySet().iterator(); it2.hasNext();) {
-                String name = (String) it2.next();
+        for (Iterator<Thread> it = getAllThreads().iterator(); it.hasNext();) {
+            Thread thread = it.next();
+            for (Iterator<String> it2 = metaData.keySet().iterator(); it2.hasNext();) {
+                String name = it2.next();
                 thread.getMetaData().remove(name);
             }
         }
@@ -1513,7 +1516,7 @@ public abstract class DataSource {
         return wellBehavedSnapshots;
     }
 
-    public Map getUncommonMetaData() {
+    public Map<String, String> getUncommonMetaData() {
         return uncommonMetaData;
     }
 
@@ -1530,6 +1533,8 @@ public abstract class DataSource {
     public final static int EXEC_TYPE_THREADED = 2;
     public final static int EXEC_TYPE_HYBRID = 3;
     public final static int EXEC_TYPE_OTHER = 4;
+
+    
 
     public int getExecutionType() {
         if (getAllThreads().size() == 1) {

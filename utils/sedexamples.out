@@ -1,0 +1,1 @@
+s@include \(.*\)TAUROOTDIR\(.*\)@include $\(TAUROOTDIR\)/include/Makefile@g

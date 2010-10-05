@@ -17,7 +17,7 @@ public class UserEventThreadBarChartModel extends AbstractBarChartModel {
     private DataSorter dataSorter;
     private Thread thread;
 
-    private List list;
+    private List<PPUserEventProfile> list;
 
     public UserEventThreadBarChartModel(UserEventWindow window, DataSorter dataSorter, Thread thread) {
         this.window = window;

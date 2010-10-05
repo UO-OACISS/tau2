@@ -14,7 +14,11 @@ import javax.swing.tree.TreePath;
 import edu.uoregon.tau.perfdmf.Metric;
 
 public class ParaProfMetric extends Metric implements ParaProfTreeNodeUserObject {
-    private ParaProfTrial ppTrial = null;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -4822746725956313713L;
+	private ParaProfTrial ppTrial = null;
     private DefaultMutableTreeNode defaultMutableTreeNode = null;
     private TreePath treePath = null;
 

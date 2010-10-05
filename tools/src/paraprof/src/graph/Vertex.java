@@ -5,7 +5,7 @@ import java.util.List;
 
 import edu.uoregon.tau.paraprof.CallGraphWindow.GraphCell;
 
-public class Vertex implements Comparable {
+public class Vertex implements Comparable<Vertex> {
 
     // A simple structure to hold pairs of vertices
     public static class BackEdge {
@@ -17,8 +17,8 @@ public class Vertex implements Comparable {
         }
     }
 
-    private List children = new ArrayList();
-    private List parents = new ArrayList();
+    private List<Vertex> children = new ArrayList<Vertex>();
+    private List<Vertex> parents = new ArrayList<Vertex>();
     private Object userObject;
     private boolean visited;
 
@@ -55,10 +55,10 @@ public class Vertex implements Comparable {
         }
     }
 
-    public int compareTo(Object compare) {
-        if (this.getBaryCenter() < ((Vertex) compare).getBaryCenter())
+    public int compareTo(Vertex compare) {
+        if (this.getBaryCenter() < compare.getBaryCenter())
             return -1;
-        if (this.getBaryCenter() > ((Vertex) compare).getBaryCenter())
+        if (this.getBaryCenter() > compare.getBaryCenter())
             return 1;
         return 0;
     }
@@ -79,19 +79,19 @@ public class Vertex implements Comparable {
         return pathHighlight;
     }
 
-    public void setChildren(List children) {
+    public void setChildren(List<Vertex> children) {
         this.children = children;
     }
 
-    public List getChildren() {
+    public List<Vertex> getChildren() {
         return children;
     }
 
-    public void setParents(List parents) {
+    public void setParents(List<Vertex> parents) {
         this.parents = parents;
     }
 
-    public List getParents() {
+    public List<Vertex> getParents() {
         return parents;
     }
 

@@ -15,6 +15,11 @@ import edu.uoregon.tau.perfdmf.Trial;
 public class MergeTrialsOperation extends AbstractPerformanceOperation {
 
 	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1966703630287861118L;
+
+	/**
 	 * @param input
 	 */
 	public MergeTrialsOperation(PerformanceResult input) {

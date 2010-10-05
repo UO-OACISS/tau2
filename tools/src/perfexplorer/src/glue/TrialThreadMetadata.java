@@ -5,11 +5,10 @@ package edu.uoregon.tau.perfexplorer.glue;
 
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.Set;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
-
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -29,7 +28,11 @@ import edu.uoregon.tau.perfexplorer.server.TauNamespaceContext;
  */
 public class TrialThreadMetadata extends AbstractResult {
 
-    protected Map<Integer, Map<String, String>> stringData =
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 2805778968974861504L;
+	protected Map<Integer, Map<String, String>> stringData =
 	            new HashMap<Integer, Map<String, String>>();
     protected Set<String> fields = new TreeSet<String>();
 
@@ -67,8 +70,8 @@ public class TrialThreadMetadata extends AbstractResult {
 			InputSource source = new InputSource(reader);
 			Document metadata = builder.parse(source);
 	
-			NodeList names = null;
-			NodeList values = null;
+			//NodeList names = null;
+			//NodeList values = null;
 	
 			// build the xpath object to jump around in that document
 			javax.xml.xpath.XPath xpath = javax.xml.xpath.XPathFactory.newInstance().newXPath();
@@ -82,8 +85,8 @@ public class TrialThreadMetadata extends AbstractResult {
 //				System.out.println("Got profile attributes..." + i);
 				NamedNodeMap attributes = profileAttributes.item(i).getAttributes();
 				String node = attributes.getNamedItem("node").getNodeValue();
-				String context = attributes.getNamedItem("context").getNodeValue();
-				String thread = attributes.getNamedItem("thread").getNodeValue();
+				//String context = attributes.getNamedItem("context").getNodeValue();
+				//String thread = attributes.getNamedItem("thread").getNodeValue();
 				// TODO - calcluate the thread id properly from the node, context, thread values
 				NodeList children = profileAttributes.item(i).getChildNodes();
 				// TODO : this is a hack for sweep3d support - REMOVE IT!
@@ -98,8 +101,9 @@ public class TrialThreadMetadata extends AbstractResult {
 					while (value.getFirstChild() == null || value.getFirstChild().getNodeValue() == null) {
 						value = value.getNextSibling();
 					}
-					if (value == null) { // if there is no value
-					} else {
+//					if (value == null) { // if there is no value
+//					} else 
+					{
 						String tmp = value.getFirstChild().getNodeValue();
 						String tmpName = name.getFirstChild().getNodeValue();
 						if (tmp != null && tmpName != null && !tmpName.equals("pid") && !tmpName.toLowerCase().contains("time")) {

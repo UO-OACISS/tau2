@@ -1,7 +1,12 @@
 package edu.uoregon.tau.paraprof.treetable;
 
 import java.awt.Color;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
@@ -20,7 +25,11 @@ import edu.uoregon.tau.perfdmf.FunctionProfile;
  * @version $Revision: 1.13 $
  */
 public class TreeTableNode extends DefaultMutableTreeNode implements Comparable<TreeTableNode> {
-    private List children;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -3499993765860892169L;
+	private List<TreeTableNode> children;
     private FunctionProfile functionProfile;
     private String displayName;
     private boolean expanded;
@@ -58,7 +67,7 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable<
         return functionProfile;
     }
 
-    public List getChildren() {
+    public List<TreeTableNode> getChildren() {
         checkInitChildren();
         return children;
     }
@@ -70,21 +79,21 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable<
 
     private void checkInitChildren() {
         if (children == null) {
-            children = new ArrayList();
+            children = new ArrayList<TreeTableNode>();
 
-            List functionProfileList = model.getThread().getFunctionProfiles();
+            List<FunctionProfile> functionProfileList = model.getThread().getFunctionProfiles();
 
             boolean foundAsInternal = false;
             // If we are B, this will be true if there is "A => B => C", but there is
             // no "A => B".  This should never happen with TAU, but will happen all the time
             // with multi-level mpiP data.
 
-            Map potentialChildren = new HashMap();
+            Map<Object, Object> potentialChildren = new HashMap<Object, Object>();
 
             boolean foundActual = false;
 
-            for (Iterator it = functionProfileList.iterator(); it.hasNext();) {
-                FunctionProfile fp = (FunctionProfile) it.next();
+            for (Iterator<FunctionProfile> it = functionProfileList.iterator(); it.hasNext();) {
+                FunctionProfile fp = it.next();
                 if (fp == this.functionProfile)
                     continue;
 
@@ -156,7 +165,7 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable<
             }
 
             if (!foundActual && foundAsInternal) {
-                for (Iterator it = potentialChildren.keySet().iterator(); it.hasNext();) {
+                for (Iterator<Object> it = potentialChildren.keySet().iterator(); it.hasNext();) {
                     Object obj = it.next();
                     TreeTableNode node;
 
@@ -199,8 +208,8 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable<
             if (expanded) {
                 value = 0;
             } else {
-                for (Iterator it = getChildren().iterator(); it.hasNext();) {
-                    TreeTableNode child = (TreeTableNode) it.next();
+                for (Iterator<TreeTableNode> it = getChildren().iterator(); it.hasNext();) {
+                    TreeTableNode child = it.next();
                     value += child.getColorValue(metricID, false);
                 }
             }
@@ -233,23 +242,24 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable<
     public void sortChildren() {
         if (children != null) {
             Collections.sort(children);
-            for (Iterator it = children.iterator(); it.hasNext();) {
-                TreeTableNode treeTableNode = (TreeTableNode) it.next();
+            for (Iterator<TreeTableNode> it = children.iterator(); it.hasNext();) {
+                TreeTableNode treeTableNode = it.next();
                 treeTableNode.sortChildren();
             }
         }
     }
 
-    public int compareTo(TreeTableNode o) {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	public int compareTo(TreeTableNode o) {
 
         int result = -99;
         if (model.getSortColumn() == 0) {
             // Compare with the alphanumeric comparator
             result = cmp.compare(this.toString(), o.toString());
         } else {
-            TreeTableColumn column = (TreeTableColumn) model.getWindow().getColumns().get(model.getSortColumn() - 1);
+            TreeTableColumn column = model.getWindow().getColumns().get(model.getSortColumn() - 1);
 
-            Comparable a = (Comparable) column.getValueFor(this, true);
+            Comparable<Comparable> a = (Comparable<Comparable>) column.getValueFor(this, true);
             Comparable b = (Comparable) column.getValueFor((TreeTableNode) o, true);
             try {
                 result = a.compareTo(b);

@@ -113,7 +113,12 @@ extern "C" long TauUserEvent_GetEventId(TauUserEvent *evt) {
 TauUserEvent::TauUserEvent(const char * EName, bool increasing) {
   DEBUGPROFMSG("Inside ctor of TauUserEvent EName = "<< EName << endl;);
 
-  EventName 	= EName;
+  //EventName 	= EName;
+#ifdef TAU_PGI
+  EventName.assign(EName, 1024);
+#else
+  EventName = EName;
+#endif /* TAU_PGI */
   // Assign event name and then set the default values
   DisableMin 	= false; 	// Min 	    is calculated 
   DisableMax 	= false; 	// Max      is calculated 

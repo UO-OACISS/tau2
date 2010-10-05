@@ -17,9 +17,9 @@ public class MetaDataParser {
 
         private String currentName = "";
 
-        private Map metadataMap;
+        private Map<String, String> metadataMap;
 
-        public XMLParser(Map metadataMap) {
+        public XMLParser(Map<String, String> metadataMap) {
             this.metadataMap = metadataMap;
         }
 
@@ -51,7 +51,7 @@ public class MetaDataParser {
 
   
 
-    public static void parse(Map metadataMap, String string) {
+    public static void parse(Map<String, String> metadataMap, String string) {
         //        System.out.println("parse: " + string);
         try {
 

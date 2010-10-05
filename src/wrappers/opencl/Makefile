@@ -19,7 +19,7 @@ install:
 endif
 
 $(TAU_OPENCL_SHARED): cl_wrap.o 
-	$(TAU_CXX) -g $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl -L$(INSTALLDEST)/shared -lTAU_openCL
+	$(TAU_CXX) -g $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl
 
 cl_wrap.o: cl_wrap.cpp
 	$(TAU_CXX) $(CFLAGS) -I$(TAU_OPENCL_INC) -c $< -o $@

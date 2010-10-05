@@ -6,9 +6,13 @@
  */
 package edu.uoregon.tau.perfexplorer.client;
 
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.Insets;
+import java.awt.image.ImageObserver;
+
 import javax.swing.JPanel;
-import java.awt.*;
-import java.awt.image.*;
 
 /**
  * Description

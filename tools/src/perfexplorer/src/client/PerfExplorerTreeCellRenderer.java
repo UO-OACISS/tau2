@@ -1,11 +1,21 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import java.awt.*;
-import javax.swing.*;
-import javax.swing.tree.*;
-import edu.uoregon.tau.perfdmf.*;
+import java.awt.Component;
+
+import javax.swing.ImageIcon;
+import javax.swing.JTree;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
+
+import edu.uoregon.tau.perfdmf.IntervalEvent;
+import edu.uoregon.tau.perfdmf.Metric;
 
 public class PerfExplorerTreeCellRenderer extends DefaultTreeCellRenderer{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7301783435132823652L;
+
 	public Component getTreeCellRendererComponent(JTree tree,
 						  Object value,
 						  boolean selected,

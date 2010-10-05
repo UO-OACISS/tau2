@@ -17,7 +17,11 @@ import java.sql.SQLException;
  * @version $Revision: 1.4 $
  */
 public class DatabaseException extends RuntimeException {
-    private String message;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 4162680546921973767L;
+	private String message;
     private SQLException exception;
 
     public DatabaseException(String s, SQLException sqlException) {

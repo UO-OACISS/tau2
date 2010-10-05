@@ -1,17 +1,36 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.net.URL;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JTextField;
 
 import edu.uoregon.tau.common.FileFilter;
 import edu.uoregon.tau.common.Utility;
-import edu.uoregon.tau.common.FileFilter;
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.DataSource;
+import edu.uoregon.tau.perfdmf.DataSourceException;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.FileList;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.UtilFncs;
 
 /**
  * A window that lets the user select a profile format and launch a JFileChooser
@@ -22,11 +41,16 @@ import edu.uoregon.tau.perfdmf.*;
  */
 public class LoadTrialWindow extends JFrame implements ActionListener {
 
-    private static int defaultIndex;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 6761005460483136321L;
+
+	private static int defaultIndex;
 
     static String lastDirectory;
 
-    private PerfExplorerClient mainWindow = null;
+    //private PerfExplorerClient mainWindow = null;
     private Application application = null;
     private Experiment experiment = null;
     private boolean newExperiment;
@@ -42,7 +66,7 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
 
     public LoadTrialWindow(PerfExplorerClient mainWindow, PerfExplorerActionListener listener, Application application, Experiment experiment,
             boolean newApplication, boolean newExperiment) {
-        this.mainWindow = mainWindow;
+        //this.mainWindow = mainWindow;
         this.listener = listener;
         this.application = application;
         this.experiment = experiment;
@@ -309,7 +333,7 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
 
         LoadTrialProgressWindow lpw = new LoadTrialProgressWindow(PerfExplorerClient.getMainFrame(), dataSource, ppTrial, false);
 		PerfExplorerModel.getModel().setCurrentSelection(ppTrial);
-        lpw.show();		
+        lpw.setVisible(true);//show();		
 	}
 
 	private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {

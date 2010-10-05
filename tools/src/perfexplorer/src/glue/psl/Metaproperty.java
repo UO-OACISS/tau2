@@ -26,10 +26,11 @@ public abstract class Metaproperty {
 		// TODO Auto-generated constructor stub
 	}
 	
-	public void add(Class propertyClass, Object[] arguments) {
+	public void add(Class<Inefficiency> propertyClass, Object[] arguments) {
 		// TODO
 	}
 
+	@SuppressWarnings("rawtypes")
 	public void add(Class[] propertyClasses, Object[] arguments) {
 		// TODO
 	}

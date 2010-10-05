@@ -1,6 +1,9 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Toolkit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +18,7 @@ public class WindowPlacer {
 
     private static Point lastLocation;
 
-    private static List visibleWindows = new ArrayList();
+    private static List<JFrame> visibleWindows = new ArrayList<JFrame>();
 
     private static int lastXOffset;
 
@@ -101,15 +104,15 @@ public class WindowPlacer {
         return new Point(getProperXPosition(parent), 0);
     }
 
-    private static Dimension getParentSize(Component parent) {
-        while (parent != null && !(parent instanceof JFrame)) {
-            parent = parent.getParent();
-        }
-        if (parent instanceof JFrame) {
-            return parent.getSize();
-        }
-        return new Dimension(50, 50);
-    }
+//    private static Dimension getParentSize(Component parent) {
+//        while (parent != null && !(parent instanceof JFrame)) {
+//            parent = parent.getParent();
+//        }
+//        if (parent instanceof JFrame) {
+//            return parent.getSize();
+//        }
+//        return new Dimension(50, 50);
+//    }
 
     public static void sanityCheck(JFrame frame, Point p) {
         int x = p.x;

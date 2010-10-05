@@ -1,13 +1,26 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.JColorChooser;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JSeparator;
 
 import edu.uoregon.tau.common.ImageExport;
 
@@ -25,7 +38,11 @@ import edu.uoregon.tau.common.ImageExport;
  */
 public class LedgerWindowPanel extends JPanel implements ActionListener, MouseListener, Printable, ImageExport {
 
-    private int xPanelSize = 300;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -3708637652568786073L;
+	private int xPanelSize = 300;
     private int yPanelSize = 400;
 
     private int barHeight = -1;
@@ -38,7 +55,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
     private JPopupMenu popup = new JPopupMenu();
     private Object clickedOnObject = null;
 
-    private Vector list = new Vector();
+    private Vector<LedgerDataElement> list = new Vector<LedgerDataElement>();
 
     private boolean widthSet = false;
     private int windowType = -1;
@@ -148,7 +165,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
 
         if (!widthSet) { // only do this once
             for (int i = 0; i < list.size(); i++) {
-                LedgerDataElement lde = (LedgerDataElement) list.get(i);
+                LedgerDataElement lde = list.get(i);
                 if (lde.getName() != null) {
                     int tmpWidth = 5 + barHeight + (fmFont.stringWidth(lde.getName()));
 
@@ -176,7 +193,7 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
         xCoord = 5;
 
         for (int i = startElement; i <= endElement; i++) {
-            LedgerDataElement lde = (LedgerDataElement) list.get(i);
+            LedgerDataElement lde = list.get(i);
 
             if (lde.getName() != null) {
 
@@ -310,10 +327,10 @@ public class LedgerWindowPanel extends JPanel implements ActionListener, MouseLi
             int yCoord = evt.getY();
 
             //Get the number of times clicked.
-            int clickCount = evt.getClickCount();
+            //int clickCount = evt.getClickCount();
 
-            for (Enumeration e1 = list.elements(); e1.hasMoreElements();) {
-                LedgerDataElement lde = (LedgerDataElement) e1.nextElement();
+            for (Enumeration<LedgerDataElement> e1 = list.elements(); e1.hasMoreElements();) {
+                LedgerDataElement lde = e1.nextElement();
 
                 if (yCoord <= (lde.getYEnd())) {
                     if ((yCoord >= (lde.getYBeg())) && (xCoord >= (lde.getXBeg())) && (xCoord <= (lde.getXEnd()))) {

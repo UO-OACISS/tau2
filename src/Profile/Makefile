@@ -81,8 +81,10 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/TauTrace.h     $(INCDIR)/TauSilc.h          \
 		$(TAUROOT)/include/tau_internal.h $(INCDIR)/TauSampling.h $(INCDIR)/TauMetaData.h \
 		$(INCDIR)/TauSnapshot.h  $(INCDIR)/TauGASP.h          \
-	 	$(INCDIR)/TauUtil.h $(INCDIR)/TauXML.h $(INCDIR)/TauUnify.h \
-		$(INCDIR)/TauCollate.h $(INCDIR)/TauGpu.h \
+	 	$(INCDIR)/TauUtil.h $(INCDIR)/TauXML.h $(INCDIR)/TauUnify.h $(INCDIR)/TauCollate.h \
+		$(INCDIR)/TauMonMrnet.h $(INCDIR)/TauMon.h \
+		$(INCDIR)/TauMemoryWrap.h $(INCDIR)/TauIoWrap.h		\
+		$(INCDIR)/agent_util.h	$(INCDIR)/java_crw_demo.h
 
 LDFLAGS	      =
 
@@ -181,6 +183,8 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 # For making libTAU.so Dynamic Shared Object
 ##############################################
 #GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
+#SUNX86_64#AR_SHFLAGS 		= -shared  	#ENDIF#
+#SOL2CC#AR_SHFLAGS 		= -G  	#ENDIF#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
 #APPLEPGI#AR_SHFLAGS 		= -shared #ENDIF#
@@ -535,7 +539,7 @@ PapiThreadLayer.o   : PapiThreadLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 JavaThreadLayer.o   : JavaThreadLayer.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX)  $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauCAPI.o   : TauCAPI.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -621,9 +625,14 @@ TauGASP.o : TauGASP.c $(HDRS)
 TauGASPU.o : TauGASPU.upc $(HDRS)
 	$(TAU_UPCC) $(UPCFLAGS) -c $(@:.o=.upc)
 
-
 ktau_syscall.o : ktau_syscall.c $(HDRS)
 	$(CC) $(CXXFLAGS) -c $(@:.o=.c)
+
+agent_util.o : agent_util.c $(HDRS)
+	$(CC) $(CFLAGS) -c $(@:.o=.c)
+
+java_crw_demo.o : java_crw_demo.c $(HDRS)
+	$(CC) $(CFLAGS) -c $(@:.o=.c)
 
 $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
@@ -637,6 +646,20 @@ TauGpuAdapterCupti.o : TauGpuAdapterCupti.cpp $(HDRS)
 TauGpuAdapterOpenCL.o : TauGpuAdapterOpenCL.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -I$(TAU_GPU_INC) -g -c $(@:.o=.cpp)
 
+JVMTIThreadLayer.o: JVMTIThreadLayer.cpp
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
+
+TauJVMTI.o :	TauJVMTI.cpp TauJVMTI.jar
+	$(CXX) $(CXXFLAGS) -c TauJVMTI.cpp
+
+TauJVMTI.jar:  TauJVMTI.java
+	rm -f -r classes
+	mkdir -p classes
+	$(JDKDIR)/bin/javac -d classes TauJVMTI.java
+	(cd classes; $(JDKDIR)/bin/jar cf ../$@ *)
+
+test_java: all
+	LD_LIBRARY_PATH=`pwd` $(JDKDIR)/bin/java -agentlib:TAUsh-jdk=exclude=java -Xbootclasspath/a:./TauJVMTI.jar Pi
 
 clean : 
 	$(RM) *.ii *.ti ti_files cxx_repository ii_files rii_files *.a *.o *$(TAU_SHLIBX) $(TAU_GPU_LIB)

@@ -9,20 +9,20 @@ import java.util.List;
 import java.util.Stack;
 import java.util.regex.Pattern;
 
-
+import sun.security.pkcs.ParsingException;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerExpression;
-import edu.uoregon.tau.perfexplorer.glue.AbstractPerformanceOperation;
-import edu.uoregon.tau.perfexplorer.glue.DeriveMetricOperation;
-import edu.uoregon.tau.perfexplorer.glue.MergeTrialsOperation;
-import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
 
 /**
  * @author smillst
  * 
  */
 public class DeriveMetricEquation extends AbstractPerformanceOperation {
-   private ArrayList<String> equation = null;
+   /**
+	 * 
+	 */
+	private static final long serialVersionUID = 2874115882488110455L;
+private ArrayList<String> equation = null;
    private PerformanceResult input = null;
    private String newName = null;
    private boolean correctEquation = true;
@@ -148,7 +148,7 @@ public boolean noErrors(){
                out.add(name + "");   
             name = "";
             try {
-               while (((Character)stack.peek()).charValue() != '(')
+               while (stack.peek().charValue() != '(')
                   out.add(stack.pop() + "");
             } catch (EmptyStackException ex) {}
             stack.push(new Character('+'));
@@ -158,7 +158,7 @@ public boolean noErrors(){
                out.add(name + "");   
             name = "";
             try {
-               while (((Character)stack.peek()).charValue()!= '(')
+               while (stack.peek().charValue()!= '(')
                   out.add(stack.pop() + "");
             } catch (EmptyStackException ex) {}
             stack.push(new Character('-'));
@@ -168,7 +168,7 @@ public boolean noErrors(){
                out.add(name + "");   
             name = "";
             try {
-               while (((Character)stack.peek()).charValue() != '(' && ((Character)stack.peek()).charValue() != '-' && ((Character)stack.peek()).charValue() != '+')
+               while (stack.peek().charValue() != '(' && stack.peek().charValue() != '-' && stack.peek().charValue() != '+')
                   out.add(stack.pop() + "");
             } catch (EmptyStackException ex) {}
             stack.push(new Character('/'));
@@ -178,7 +178,7 @@ public boolean noErrors(){
                out.add(name + "");
             name = "";
             try {
-               while (((Character)stack.peek()).charValue() != '(' && ((Character)stack.peek()).charValue() != '-' && ((Character)stack.peek()).charValue() != '+')
+               while (stack.peek().charValue() != '(' && stack.peek().charValue() != '-' && stack.peek().charValue() != '+')
                   out.add(stack.pop() + "");
             } catch (EmptyStackException ex) {}
             stack.push(new Character('*'));
@@ -191,7 +191,7 @@ public boolean noErrors(){
                out.add(name + "");
             name = "";
             try {
-               while (((Character)stack.peek()).charValue() != '(')
+               while (stack.peek().charValue() != '(')
                   out.add(stack.pop() + "");
                stack.pop();
             } catch (EmptyStackException ex) {
@@ -364,7 +364,7 @@ public boolean noErrors(){
       }
       return d;
    }
-   private double[] eval(ArrayList equation) {
+   private double[] eval(ArrayList<Object> equation) {
       int i = 0;
       
       while (equation.size() > 1 && equation.size() > i) {

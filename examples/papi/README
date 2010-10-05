@@ -7,9 +7,9 @@ secondary data cache misses as shown below. To use papi, configure TAU
 with 
 % configure -papi=<dir>
 
-pyros [tau2/examples/papi]% setenv PAPI_EVENT PAPI_FP_INS
+pyros [tau2/examples/papi]% setenv TAU_METRICS TIME:PAPI_FP_INS
 pyros [tau2/examples/papi]% simple
-pyros [tau2/examples/papi]% pprof
+pyros [tau2/examples/papi]% pprof -f MULTI__PAPI_FP_INS/profile
 Reading Profile files in profile.*
 
 NODE 0;CONTEXT 0;THREAD 0:
@@ -21,9 +21,9 @@ NODE 0;CONTEXT 0;THREAD 0:
 100.0   9.001E+04   5.409E+07           1           2   54090013 multiply void (void)
  49.9     2.7E+07     2.7E+07           1           0   27000001 multiply-with-strip-mining-optimization void (void)
  49.9     2.7E+07     2.7E+07           1           0   27000001 multiply-regular void (void)
-pyros [tau2/examples/papi]% setenv PAPI_EVENT PAPI_L2_DCM
+pyros [tau2/examples/papi]% setenv TAU_METRICS TIME:PAPI_L2_DCM
 pyros [tau2/examples/papi]% simple
-pyros [tau2/examples/papi]% pprof
+pyros [tau2/examples/papi]% pprof -f MULTI__PAPI_L2_DCM/profile
 Reading Profile files in profile.*
 
 NODE 0;CONTEXT 0;THREAD 0:

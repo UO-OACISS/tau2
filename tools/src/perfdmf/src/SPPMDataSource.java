@@ -10,8 +10,16 @@
 
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 public class SPPMDataSource extends DataSource {
 
@@ -25,12 +33,12 @@ public class SPPMDataSource extends DataSource {
     private int contextID = -1;
     private int threadID = -1;
     private String inputString = null;
-    private Vector v = null;
+    private Vector<File[]> v = null;
     private File[] files = null;
     private BufferedReader br = null;
     private int deltaCount = 0;
     private int timestepCount = 0;
-    private Hashtable methodIndexes = null;
+    private Hashtable<String, Integer> methodIndexes = null;
     private double cpuTime[] = null;
     private double wallTime[] = null;
     private int calls[] = null;
@@ -38,13 +46,13 @@ public class SPPMDataSource extends DataSource {
     private String eventName = null;
    
     private LineData lineData = new LineData();
-    public SPPMDataSource(Object initializeObject) {
+    public SPPMDataSource(Vector<File[]> initializeObject) {
         super();
-        this.setMetrics(new Vector());
+        this.setMetrics(new Vector<Metric>());
         this.initializeObject = initializeObject;
     }
 
-    private Object initializeObject;
+    private Vector<File[]> initializeObject;
 
     public void cancelLoad() {
         return;
@@ -55,17 +63,17 @@ public class SPPMDataSource extends DataSource {
     }
 
     public void load() throws FileNotFoundException, IOException {
-        boolean firstFile = true;
-        v = (Vector) initializeObject;
+        //boolean firstFile = true;
+        v =  initializeObject;
         System.out.println(v.size() + " files");
-        for (Enumeration e = v.elements(); e.hasMoreElements();) {
-            files = (File[]) e.nextElement();
+        for (Enumeration<File[]> e = v.elements(); e.hasMoreElements();) {
+            files = e.nextElement();
             for (int i = 0; i < files.length; i++) {
                 System.out.println("Processing data file, please wait ......");
                 long time = System.currentTimeMillis();
 
                 // initialize our data structures
-                methodIndexes = new Hashtable();
+                methodIndexes = new Hashtable<String, Integer>();
                 cpuTime = new double[20];
                 wallTime = new double[20];
                 calls = new int[20];
@@ -238,11 +246,11 @@ public class SPPMDataSource extends DataSource {
                 lineData.s0 += " " + tmpToken; // add to procedure name
             }
 
-            boolean inclusiveEqualsExclusive = false;
-            if (subroutineCount == 0)
-                inclusiveEqualsExclusive = true;
+            //boolean inclusiveEqualsExclusive = false;
+            //if (subroutineCount == 0)
+            //    inclusiveEqualsExclusive = true;
 
-            Integer index = (Integer) methodIndexes.get(lineData.s0);
+            Integer index = methodIndexes.get(lineData.s0);
             if (index == null) {
                 index = new Integer(methodIndexes.size());
                 methodIndexes.put(lineData.s0, index);
@@ -264,10 +272,10 @@ public class SPPMDataSource extends DataSource {
 
     private void saveFunctions() {
         try {
-            Enumeration e = methodIndexes.keys();
+            Enumeration<String> e = methodIndexes.keys();
             while (e.hasMoreElements()) {
-                eventName = (String) e.nextElement();
-                Integer index = (Integer) methodIndexes.get(eventName);
+                eventName = e.nextElement();
+                Integer index = methodIndexes.get(eventName);
                 boolean inclusiveEqualsExclusive = false;
                 if (subroutines[index.intValue()] == 0)
                     inclusiveEqualsExclusive = true;

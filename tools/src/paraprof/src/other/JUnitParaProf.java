@@ -7,7 +7,10 @@ import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 
 import junit.extensions.jfcunit.JFCTestCase;
 import junit.extensions.jfcunit.JFCTestHelper;
@@ -16,13 +19,27 @@ import junit.extensions.jfcunit.finder.ComponentFinder;
 import junit.extensions.jfcunit.finder.JMenuItemFinder;
 import junit.extensions.jfcunit.finder.NamedComponentFinder;
 import junit.framework.Assert;
-import edu.uoregon.tau.paraprof.*;
+import edu.uoregon.tau.paraprof.CallGraphWindow;
+import edu.uoregon.tau.paraprof.DerivedMetrics;
+import edu.uoregon.tau.paraprof.FunctionBarChartWindow;
+import edu.uoregon.tau.paraprof.HistogramWindow;
+import edu.uoregon.tau.paraprof.ParaProf;
+import edu.uoregon.tau.paraprof.ParaProfApplication;
+import edu.uoregon.tau.paraprof.ParaProfExperiment;
+import edu.uoregon.tau.paraprof.ParaProfMetric;
+import edu.uoregon.tau.paraprof.ParaProfTrial;
+import edu.uoregon.tau.paraprof.StatWindow;
 import edu.uoregon.tau.paraprof.treetable.TreeTableWindow;
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.DBDataSource;
+import edu.uoregon.tau.perfdmf.DatabaseAPI;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.Trial;
 
 public class JUnitParaProf extends JFCTestCase {
 
-    private Vector trials = new Vector();
+    private Vector<ParaProfTrial> trials = new Vector<ParaProfTrial>();
 
     public void wildDerivedMetrics(ParaProfTrial ppTrial) {
 
@@ -64,9 +81,9 @@ public class JUnitParaProf extends JFCTestCase {
 
         ParaProf.paraProfManagerWindow.addTrial(application, experiment, files, type, false, false);
 
-        Vector trials = experiment.getTrials();
+        Vector<ParaProfTrial> trials = experiment.getTrials();
 
-        ParaProfTrial ppTrial = (ParaProfTrial) trials.get(0);
+        ParaProfTrial ppTrial = trials.get(0);
 
         while (ppTrial.loading()) {
             sleep(500);
@@ -88,10 +105,10 @@ public class JUnitParaProf extends JFCTestCase {
 
         for (int i = 0; i < trials.size(); i++) {
             int count = limit;
-            ParaProfTrial ppTrial = (ParaProfTrial) trials.get(i);
+            ParaProfTrial ppTrial = trials.get(i);
             System.out.println("Trial:" + ppTrial.getName());
 
-            for (Iterator it = ppTrial.getDataSource().getFunctions(); it.hasNext() && count-- != 0;) {
+            for (Iterator<Function> it = ppTrial.getDataSource().getFunctions(); it.hasNext() && count-- != 0;) {
 
                 Function f = (Function) it.next();
                 HistogramWindow hw = new HistogramWindow(ppTrial, f, null);
@@ -165,7 +182,8 @@ public class JUnitParaProf extends JFCTestCase {
 
     JFCTestHelper helper = new JFCTestHelper();
 
-    private Component getMenuItem(JMenu menu, String menuItemName) throws Exception {
+    @SuppressWarnings("deprecation")
+	private Component getMenuItem(JMenu menu, String menuItemName) throws Exception {
         Component comp = TestHelper.findComponent(new JMenuItemFinder(menuItemName), menu.getPopupMenu(), 0);
         assertNotNull("Could not find menu item: " + menuItemName, comp);
         return comp;
@@ -181,7 +199,8 @@ public class JUnitParaProf extends JFCTestCase {
 
         JMenuBar jMenuBar = (JMenuBar) crapFinder.find(fw, 0);
 
-        NamedComponentFinder menuFinder = new NamedComponentFinder(JMenu.class, "Options");
+        //NamedComponentFinder menuFinder = 
+        	new NamedComponentFinder(JMenu.class, "Options");
 
         //JMenu optionsMenu = (JMenu) menuFinder.find(jMenuBar.getRootPane(), 0);
 
@@ -250,7 +269,7 @@ public class JUnitParaProf extends JFCTestCase {
 
         for (int i = 0; i < trials.size(); i++) {
 
-            ParaProfTrial ppTrial = (ParaProfTrial) trials.get(i);
+            ParaProfTrial ppTrial = trials.get(i);
             System.out.println("Trial:" + ppTrial.getName());
 
             wildDerivedMetrics(ppTrial);
@@ -266,7 +285,8 @@ public class JUnitParaProf extends JFCTestCase {
 
         System.out.println("---Setting up ParaProf---");
 
-        final ParaProf paraProf = new ParaProf();
+        //final ParaProf paraProf = 
+        	new ParaProf();
         ParaProf.initialize();
 
         //String args[] = new String[0];
@@ -318,15 +338,15 @@ public class JUnitParaProf extends JFCTestCase {
             dbApi.initialize(ParaProf.preferences.getDatabaseConfigurationFile(), false);
 
             dbApi.getApplicationList();
-            ListIterator apps = dbApi.getApplicationList().listIterator();
+            ListIterator<Application> apps = dbApi.getApplicationList().listIterator();
 
             while (apps.hasNext()) {
                 Application app = (Application) apps.next();
                 dbApi.setApplication(app);
-                for (Iterator exps = dbApi.getExperimentList().listIterator(); exps.hasNext();) {
+                for (Iterator<Experiment> exps = dbApi.getExperimentList().listIterator(); exps.hasNext();) {
                     Experiment exp = (Experiment) exps.next();
                     dbApi.setExperiment(exp);
-                    for (Iterator trls = dbApi.getTrialList(true).listIterator(); trls.hasNext();) {
+                    for (Iterator<Trial> trls = dbApi.getTrialList(true).listIterator(); trls.hasNext();) {
                         Trial trial = (Trial) trls.next();
 
                         dbApi.setTrial(trial.getID(), true);
@@ -349,10 +369,10 @@ public class JUnitParaProf extends JFCTestCase {
         try {
             for (int i = 0; i < trials.size(); i++) {
                 int count = limit;
-                ParaProfTrial ppTrial = (ParaProfTrial) trials.get(i);
+                ParaProfTrial ppTrial = trials.get(i);
                 System.out.println("Trial:" + ppTrial.getName());
 
-                for (Iterator it = ppTrial.getDataSource().getFunctions(); it.hasNext() && count-- != 0;) {
+                for (Iterator<Function> it = ppTrial.getDataSource().getFunctions(); it.hasNext() && count-- != 0;) {
                     Function f = (Function) it.next();
 
                     checkHistogram(ppTrial, f);
@@ -360,7 +380,7 @@ public class JUnitParaProf extends JFCTestCase {
                 }
 
                 count = limit;
-                for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext() && count-- != 0;) {
+                for (Iterator<edu.uoregon.tau.perfdmf.Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext() && count-- != 0;) {
                     edu.uoregon.tau.perfdmf.Thread thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
 
                     checkStatWindow(ppTrial, thread, false);

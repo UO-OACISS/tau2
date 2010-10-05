@@ -1,6 +1,11 @@
 package edu.uoregon.tau.paraprof.treetable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
@@ -10,7 +15,11 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 
 public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comparable<ContextEventTreeNode> {
 
-    private List<ContextEventTreeNode> children;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 8704255864552442447L;
+	private List<ContextEventTreeNode> children;
     private String displayName;
     private ContextEventModel model;
     private UserEventProfile userEventProfile;
@@ -80,7 +89,7 @@ public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comp
             }
 
             for (Iterator<String> it = internalMap.keySet().iterator(); it.hasNext();) {
-                String child = (String) it.next();
+                String child = it.next();
                 ContextEventTreeNode node = new ContextEventTreeNode(child, model);
                 children.add(node);
             }
@@ -96,7 +105,7 @@ public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comp
         if (children != null) {
             Collections.sort(children);
             for (Iterator<ContextEventTreeNode> it = children.iterator(); it.hasNext();) {
-                ContextEventTreeNode node = (ContextEventTreeNode) it.next();
+                ContextEventTreeNode node = it.next();
                 node.sortChildren();
             }
         }

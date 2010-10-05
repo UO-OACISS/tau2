@@ -1,8 +1,8 @@
 
 package edu.uoregon.tau.perfexplorer.clustering.weka;
 
-import edu.uoregon.tau.perfexplorer.clustering.Utilities;
 import weka.core.Utils;
+import edu.uoregon.tau.perfexplorer.clustering.Utilities;
 
 public class WekaUtilities implements Utilities {
 

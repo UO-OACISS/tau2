@@ -1,0 +1,41 @@
+create table analysis_settings (
+	id					SERIAL			NOT NULL	PRIMARY KEY,
+	application			INTEGER			NOT NULL,
+	experiment			INTEGER			NOT NULL,
+	trial				INTEGER			NOT NULL,
+	metric				INTEGER			NULL,
+	method				VARCHAR(255)	NOT NULL,
+	dimension_reduction	VARCHAR(255)	NOT NULL,
+	normalization		VARCHAR(255)	NOT NULL,
+	FOREIGN KEY (application) REFERENCES application(id) 
+		ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KEY (experiment) REFERENCES experiment(id) 
+		ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KEY (trial) REFERENCES trial(id) 
+		ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KEY (metric) REFERENCES metric(id) 
+		ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+create table analysis_result (
+	id					SERIAL			NOT NULL	PRIMARY KEY,
+	analysis_settings	INTEGER			NOT NULL,
+	description			VARCHAR(255)	NOT NULL,
+	thumbnail_size		INTEGER			NULL,
+	image_size			INTEGER			NULL,
+	thumbnail			BYTEA			NULL,
+	image				BYTEA			NULL,
+	result_type			INTEGER			NOT NULL
+);
+
+create table trial_view (
+	id					SERIAL			NOT NULL	PRIMARY KEY,
+	parent				INTEGER			NULL,
+	name				TEXT	NOT NULL,
+	table_name			TEXT	NOT NULL,
+	column_name			TEXT	NOT NULL,
+	operator			TEXT	NOT NULL,
+	value				TEXT	NOT NULL,
+	FOREIGN KEY (parent) REFERENCES trial_view(id) 
+		ON DELETE CASCADE ON UPDATE CASCADE
+);

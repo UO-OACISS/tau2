@@ -1,13 +1,22 @@
 package edu.uoregon.tau.paraprof.sourceview;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.io.File;
 import java.net.URL;
 
-import javax.swing.*;
+import javax.swing.JEditorPane;
+import javax.swing.JFrame;
+import javax.swing.JMenuBar;
+import javax.swing.JTextPane;
+import javax.swing.SwingUtilities;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Element;
 
@@ -19,7 +28,11 @@ import edu.uoregon.tau.perfdmf.SourceRegion;
 
 public class SourceViewer extends JFrame implements ParaProfWindow, Printable, ImageExport {
 
-    LineNumberedTextPanel textPanel;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -2846266110144742135L;
+	LineNumberedTextPanel textPanel;
     JTextPane ed = null;
 
     public int getLineStartOffset(JEditorPane ed, int line) throws BadLocationException {

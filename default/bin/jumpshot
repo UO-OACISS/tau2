@@ -1,0 +1,57 @@
+#!/bin/sh
+TAUROOT=/home/scottb/tau2
+MACHINE=default
+GUI_LIBDIR=${TAUROOT}/${MACHINE}/lib
+TAUBIN=${TAUROOT}/${MACHINE}/bin
+
+# Set PATH to various jar's needed by the GUI
+MAIN_LIB=${GUI_LIBDIR}/jumpshot.jar
+
+
+if [ -z "${GUI_LIBDIR}" -o "${GUI_LIBDIR}" = "/lib" ]; then
+    echo "GUI_LIBDIR is NOT set!"
+    exit 1
+else
+    echo "GUI_LIBDIR is set. GUI_LIBDIR = "${GUI_LIBDIR}
+fi
+
+INPUT="$@"
+
+if [ "$1" == "-merge" ] ; then
+	echo "Generating merged trace files tau.trc and tau.edf from avilable trace data."
+	${TAUBIN}/tau_treemerge.pl
+	
+	echo "Generating slog2 trace file tau.slog2 from generated trace files"
+	${TAUBIN}/tau2slog2 tau.trc tau.edf -o tau.slog2
+	INPUT="tau.slog2"
+	echo "Displaying tau.slog2"
+else
+	if [ "$1" == "-convert" ] ; then
+	
+	INPUT="tau.slog2"
+	
+	if [ "$4" == "-o" ] ; then
+		INPUT="$5"	
+	fi
+	
+	echo "Generating slog2 trace file ${INPUT} from specified trace files"
+	
+	${TAUBIN}/tau2slog2 "$2" "$3" -o "${INPUT}"
+
+	echo "Displaying ${INPUT}"
+	fi
+fi
+
+
+if [ "$1" == "-h" ] || [ "$1" == "-help" ] || [ "$1" == "--help" ]; then
+	echo "
+TAU Options:
+	[-merge]	Merge local .trc and .edf files and convert 
+	                merged files to tau.slog2 for display
+	[-convert <.trc file> <.edf file> {-o <.slog2 file>}] 	Convert 
+	                the given .trc and .edf files to tau.slog2 or the 
+			file specified after -o for display
+	"
+fi
+
+java -Xmx500m -Xms32m -jar ${MAIN_LIB} $INPUT

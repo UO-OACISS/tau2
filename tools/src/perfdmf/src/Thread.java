@@ -17,23 +17,23 @@ import edu.uoregon.tau.common.TauRuntimeException;
  * @see		FunctionProfile
  * @see		UserEventProfile
  */
-public class Thread implements Comparable {
+public class Thread implements Comparable<Thread> {
 
     private int nodeID, contextID, threadID;
-    private List functionProfiles = new ArrayList();
-    private Map userEventProfiles = new HashMap();
+    private List<FunctionProfile> functionProfiles = new ArrayList<FunctionProfile>();
+    private Map<Integer, UserEventProfile> userEventProfiles = new HashMap<Integer, UserEventProfile>();
     private boolean trimmed;
     private boolean relationsBuilt;
     private int numMetrics;
 
-    private Hashtable foo = new Hashtable();
+    //private Hashtable foo = new Hashtable();
     
     public static final int MEAN = -1;
     public static final int TOTAL = -2;
     public static final int STDDEV = -3;
 
-    private List snapshots = new ArrayList();
-    private Map metaData = new TreeMap();
+    private List<Snapshot> snapshots = new ArrayList<Snapshot>();
+    private Map<String,String> metaData = new TreeMap<String,String>();
 
     private boolean firstSnapshotFound;
 
@@ -111,8 +111,8 @@ public class Thread implements Comparable {
 
         recreateData();
 
-        for (Iterator it = getFunctionProfiles().iterator(); it.hasNext();) {
-            FunctionProfile fp = (FunctionProfile) it.next();
+        for (Iterator<FunctionProfile> it = getFunctionProfiles().iterator(); it.hasNext();) {
+            FunctionProfile fp = it.next();
             if (fp != null) { // fp == null would mean this thread didn't call this function
                 fp.addMetric();
             }
@@ -122,7 +122,7 @@ public class Thread implements Comparable {
     public Snapshot addSnapshot(String name) {
         if (!firstSnapshotFound) {
             firstSnapshotFound = true;
-            Snapshot snapshot = (Snapshot) snapshots.get(0);
+            Snapshot snapshot = snapshots.get(0);
             snapshot.setName(name);
             return snapshot;
         }
@@ -130,14 +130,14 @@ public class Thread implements Comparable {
         snapshots.add(snapshot);
 
         if (snapshots.size() > 1) {
-            for (Iterator e6 = functionProfiles.iterator(); e6.hasNext();) {
-                FunctionProfile fp = (FunctionProfile) e6.next();
+            for (Iterator<FunctionProfile> e6 = functionProfiles.iterator(); e6.hasNext();) {
+                FunctionProfile fp = e6.next();
                 if (fp != null) { // fp == null would mean this thread didn't call this function
                     fp.addSnapshot();
                 }
             }
-            for (Iterator it = userEventProfiles.values().iterator(); it.hasNext();) {
-                UserEventProfile uep = (UserEventProfile) it.next();
+            for (Iterator<UserEventProfile> it = userEventProfiles.values().iterator(); it.hasNext();) {
+                UserEventProfile uep = it.next();
                 if (uep != null) {
                     uep.addSnapshot();
                 }
@@ -164,7 +164,7 @@ public class Thread implements Comparable {
         }
     }
 
-    public List getSnapshots() {
+    public List<Snapshot> getSnapshots() {
         return snapshots;
     }
 
@@ -193,7 +193,7 @@ public class Thread implements Comparable {
 
     public FunctionProfile getFunctionProfile(Function function) {
         if ((functionProfiles != null) && (function.getID() < functionProfiles.size())) {
-            return (FunctionProfile) functionProfiles.get(function.getID());
+            return functionProfiles.get(function.getID());
         }
         return null;
     }
@@ -209,16 +209,16 @@ public class Thread implements Comparable {
         }
     }
 
-    public List getFunctionProfiles() {
+    public List<FunctionProfile> getFunctionProfiles() {
         return functionProfiles;
     }
 
-    public Iterator getFunctionProfileIterator() {
+    public Iterator<FunctionProfile> getFunctionProfileIterator() {
         return functionProfiles.iterator();
     }
 
     public UserEventProfile getUserEventProfile(UserEvent userEvent) {
-        return (UserEventProfile) userEventProfiles.get(new Integer(userEvent.getID()));
+        return userEventProfiles.get(new Integer(userEvent.getID()));
     }
 
     public Iterator<UserEventProfile> getUserEventProfiles() {
@@ -243,8 +243,8 @@ public class Thread implements Comparable {
         return relationsBuilt;
     }
 
-    public int compareTo(Object obj) {
-        return threadID - ((Thread) obj).getThreadID();
+    public int compareTo(Thread obj) {
+        return threadID -  obj.getThreadID();
     }
 
     public void setThreadData(int metric) {
@@ -277,8 +277,8 @@ public class Thread implements Comparable {
                 double maxNumCalls = 0;
                 double maxNumSubr = 0;
 
-                for (Iterator it = this.getFunctionProfileIterator(); it.hasNext();) {
-                    FunctionProfile fp = (FunctionProfile) it.next();
+                for (Iterator<FunctionProfile> it = this.getFunctionProfileIterator(); it.hasNext();) {
+                    FunctionProfile fp = it.next();
                     if (fp == null) {
                         continue;
                     }
@@ -314,8 +314,8 @@ public class Thread implements Comparable {
 
                 double maxInclusivePercent = 0;
                 double maxExclusivePercent = 0;
-                for (Iterator it = this.getFunctionProfileIterator(); it.hasNext();) {
-                    FunctionProfile fp = (FunctionProfile) it.next();
+                for (Iterator<FunctionProfile> it = this.getFunctionProfileIterator(); it.hasNext();) {
+                    FunctionProfile fp = it.next();
                     if (fp == null) {
                         continue;
                     }
@@ -329,7 +329,7 @@ public class Thread implements Comparable {
         }
     }
 
-    public Map getMetaData() {
+    public Map<String,String> getMetaData() {
         return metaData;
     }
 
@@ -365,7 +365,7 @@ public class Thread implements Comparable {
     }
 
     public double getPercentDivider(int metric, int snapshot) {
-        double val = threadData[snapshot][metric].percentDivider;
+        //double val = threadData[snapshot][metric].percentDivider;
         return threadData[snapshot][metric].percentDivider;
     }
 

@@ -1,7 +1,13 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
-import java.sql.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +31,11 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  */
 public class Machine implements Serializable {
 
-    private static String fieldNames[];
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 6366627604549775329L;
+	private static String fieldNames[];
     private static int fieldTypes[];
 
     private int machineID;
@@ -121,15 +131,15 @@ public class Machine implements Serializable {
                 resultSet = dbMeta.getColumns(null, null, "machine_thread_map", "%");
             }
 
-            List nameList = new ArrayList();
-            List typeList = new ArrayList();
+            List<String> nameList = new ArrayList<String>();
+            List<Integer> typeList = new ArrayList<Integer>();
 			boolean seenID = false;
 
             while (resultSet.next() != false) {
 
                 int ctype = resultSet.getInt("DATA_TYPE");
                 String cname = resultSet.getString("COLUMN_NAME");
-                String typename = resultSet.getString("TYPE_NAME");
+                //String typename = resultSet.getString("TYPE_NAME");
                 //System.out.println ("column: " + cname + ", type: " + ctype + ", typename: " + typename);
 
                 // only integer and string types (for now)
@@ -160,8 +170,8 @@ public class Machine implements Serializable {
             Machine.fieldTypes = new int[typeList.size()];
 
             for (int i = 0; i < typeList.size(); i++) {
-                Machine.fieldNames[i] = (String) nameList.get(i);
-                Machine.fieldTypes[i] = ((Integer) typeList.get(i)).intValue();
+                Machine.fieldNames[i] = nameList.get(i);
+                Machine.fieldTypes[i] = typeList.get(i).intValue();
             }
 
         } catch (SQLException e) {
@@ -190,7 +200,8 @@ public class Machine implements Serializable {
 
         if (DBConnector.isIntegerType(fieldTypes[idx]) && field != null) {
             try {
-                int test = Integer.parseInt(field);
+                //int test = 
+                	Integer.parseInt(field);
             } catch (java.lang.NumberFormatException e) {
                 return;
             }
@@ -198,7 +209,8 @@ public class Machine implements Serializable {
 
         if (DBConnector.isFloatingPointType(fieldTypes[idx]) && field != null) {
             try {
-                double test = Double.parseDouble(field);
+                //double test = 
+                	Double.parseDouble(field);
             } catch (java.lang.NumberFormatException e) {
                 return;
             }
@@ -322,7 +334,7 @@ public class Machine implements Serializable {
         return fieldNames;
     }
 
-    public static List getMachineList(DB db, String whereClause) throws DatabaseException {
+    public static List<Machine> getMachineList(DB db, String whereClause) throws DatabaseException {
         try {
             Machine.getMetaData(db);
 
@@ -343,7 +355,7 @@ public class Machine implements Serializable {
             buf.append(" order by trial, node, context, thread asc ");
 
             // get the results
-            List Machines = new ArrayList();
+            List<Machine> Machines = new ArrayList<Machine>();
 
             ResultSet resultSet = db.executeQuery(buf.toString());
             while (resultSet.next() != false) {

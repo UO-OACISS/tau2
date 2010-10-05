@@ -13,7 +13,7 @@ import java.util.*;
  */
 public class ApplicationManager extends Observable {
 
-    private List applications = new ArrayList();
+    private List<ParaProfApplication> applications = new ArrayList<ParaProfApplication>();
 
     public ParaProfApplication addApplication() {
         ParaProfApplication application = new ParaProfApplication();
@@ -26,7 +26,7 @@ public class ApplicationManager extends Observable {
         applications.remove(application);
     }
 
-    public List getApplications() {
+    public List<ParaProfApplication> getApplications() {
         return applications;
     }
 
@@ -38,7 +38,7 @@ public class ApplicationManager extends Observable {
     }
 
     public ParaProfApplication getApplication(int applicationID) {
-        return (ParaProfApplication) applications.get(applicationID);
+        return applications.get(applicationID);
     }
 
     public ParaProfExperiment getExperiment(int applicationID, int experimentID) {
@@ -50,8 +50,8 @@ public class ApplicationManager extends Observable {
     }
 
     public boolean isApplicationPresent(String name) {
-        for (Iterator it = applications.iterator(); it.hasNext();) {
-            ParaProfApplication application = (ParaProfApplication) it.next();
+        for (Iterator<ParaProfApplication> it = applications.iterator(); it.hasNext();) {
+            ParaProfApplication application = it.next();
             if (name.compareTo(application.getName()) == 0)
                 return true;
         }

@@ -1,0 +1,6260 @@
+#include <cuda.h>
+#include <Profile/Profiler.h>
+#include <dlfcn.h>
+
+const char * tau_orig_libname = "libTAU-CUDA.so";
+static void *tau_handle = NULL;
+
+
+int select(int a1, fd_set * a2, fd_set * a3, fd_set * a4, struct timeval * a5) {
+
+  typedef int (*select_p) (int, fd_set *, fd_set *, fd_set *, struct timeval *);
+  static select_p select_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int select(int, fd_set *, fd_set *, fd_set *, struct timeval *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (select_h == NULL)
+	select_h = (select_p) dlsym(tau_handle,"select"); 
+    if (select_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*select_h)( a1,  a2,  a3,  a4,  a5);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int pselect(int a1, fd_set * a2, fd_set * a3, fd_set * a4, const struct timespec * a5, const __sigset_t * a6) {
+
+  typedef int (*pselect_p) (int, fd_set *, fd_set *, fd_set *, const struct timespec *, const __sigset_t *);
+  static pselect_p pselect_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int pselect(int, fd_set *, fd_set *, fd_set *, const struct timespec *, const __sigset_t *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (pselect_h == NULL)
+	pselect_h = (pselect_p) dlsym(tau_handle,"pselect"); 
+    if (pselect_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*pselect_h)( a1,  a2,  a3,  a4,  a5,  a6);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+unsigned int gnu_dev_major(unsigned long long a1) {
+
+  typedef unsigned int (*gnu_dev_major_p) (unsigned long long);
+  static gnu_dev_major_p gnu_dev_major_h = NULL;
+  unsigned int retval;
+  TAU_PROFILE_TIMER(t,"unsigned int gnu_dev_major(unsigned long long) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (gnu_dev_major_h == NULL)
+	gnu_dev_major_h = (gnu_dev_major_p) dlsym(tau_handle,"gnu_dev_major"); 
+    if (gnu_dev_major_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*gnu_dev_major_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+unsigned int gnu_dev_minor(unsigned long long a1) {
+
+  typedef unsigned int (*gnu_dev_minor_p) (unsigned long long);
+  static gnu_dev_minor_p gnu_dev_minor_h = NULL;
+  unsigned int retval;
+  TAU_PROFILE_TIMER(t,"unsigned int gnu_dev_minor(unsigned long long) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (gnu_dev_minor_h == NULL)
+	gnu_dev_minor_h = (gnu_dev_minor_p) dlsym(tau_handle,"gnu_dev_minor"); 
+    if (gnu_dev_minor_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*gnu_dev_minor_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+unsigned long long gnu_dev_makedev(unsigned int a1, unsigned int a2) {
+
+  typedef unsigned long long (*gnu_dev_makedev_p) (unsigned int, unsigned int);
+  static gnu_dev_makedev_p gnu_dev_makedev_h = NULL;
+  unsigned long long retval;
+  TAU_PROFILE_TIMER(t,"unsigned long long gnu_dev_makedev(unsigned int, unsigned int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (gnu_dev_makedev_h == NULL)
+	gnu_dev_makedev_h = (gnu_dev_makedev_p) dlsym(tau_handle,"gnu_dev_makedev"); 
+    if (gnu_dev_makedev_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*gnu_dev_makedev_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+void * alloca(size_t a1) {
+
+  typedef void * (*alloca_p) (size_t);
+  static alloca_p alloca_h = NULL;
+  void * retval;
+  TAU_PROFILE_TIMER(t,"void *alloca(size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (alloca_h == NULL)
+	alloca_h = (alloca_p) dlsym(tau_handle,"alloca"); 
+    if (alloca_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*alloca_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+size_t __ctype_get_mb_cur_max() {
+
+  typedef size_t (*__ctype_get_mb_cur_max_p) ();
+  static __ctype_get_mb_cur_max_p __ctype_get_mb_cur_max_h = NULL;
+  size_t retval;
+  TAU_PROFILE_TIMER(t,"size_t __ctype_get_mb_cur_max(void) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (__ctype_get_mb_cur_max_h == NULL)
+	__ctype_get_mb_cur_max_h = (__ctype_get_mb_cur_max_p) dlsym(tau_handle,"__ctype_get_mb_cur_max"); 
+    if (__ctype_get_mb_cur_max_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*__ctype_get_mb_cur_max_h)();
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+double atof(const char * a1) {
+
+  typedef double (*atof_p) (const char *);
+  static atof_p atof_h = NULL;
+  double retval;
+  TAU_PROFILE_TIMER(t,"double atof(const char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (atof_h == NULL)
+	atof_h = (atof_p) dlsym(tau_handle,"atof"); 
+    if (atof_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*atof_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int atoi(const char * a1) {
+
+  typedef int (*atoi_p) (const char *);
+  static atoi_p atoi_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int atoi(const char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (atoi_h == NULL)
+	atoi_h = (atoi_p) dlsym(tau_handle,"atoi"); 
+    if (atoi_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*atoi_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+long atol(const char * a1) {
+
+  typedef long (*atol_p) (const char *);
+  static atol_p atol_h = NULL;
+  long retval;
+  TAU_PROFILE_TIMER(t,"long atol(const char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (atol_h == NULL)
+	atol_h = (atol_p) dlsym(tau_handle,"atol"); 
+    if (atol_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*atol_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+long long atoll(const char * a1) {
+
+  typedef long long (*atoll_p) (const char *);
+  static atoll_p atoll_h = NULL;
+  long long retval;
+  TAU_PROFILE_TIMER(t,"long long atoll(const char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (atoll_h == NULL)
+	atoll_h = (atoll_p) dlsym(tau_handle,"atoll"); 
+    if (atoll_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*atoll_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+double strtod(const char * a1, char ** a2) {
+
+  typedef double (*strtod_p) (const char *, char **);
+  static strtod_p strtod_h = NULL;
+  double retval;
+  TAU_PROFILE_TIMER(t,"double strtod(const char *, char **) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (strtod_h == NULL)
+	strtod_h = (strtod_p) dlsym(tau_handle,"strtod"); 
+    if (strtod_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*strtod_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+float strtof(const char * a1, char ** a2) {
+
+  typedef float (*strtof_p) (const char *, char **);
+  static strtof_p strtof_h = NULL;
+  float retval;
+  TAU_PROFILE_TIMER(t,"float strtof(const char *, char **) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (strtof_h == NULL)
+	strtof_h = (strtof_p) dlsym(tau_handle,"strtof"); 
+    if (strtof_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*strtof_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+long double strtold(const char * a1, char ** a2) {
+
+  typedef long double (*strtold_p) (const char *, char **);
+  static strtold_p strtold_h = NULL;
+  long double retval;
+  TAU_PROFILE_TIMER(t,"long double strtold(const char *, char **) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (strtold_h == NULL)
+	strtold_h = (strtold_p) dlsym(tau_handle,"strtold"); 
+    if (strtold_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*strtold_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+long strtol(const char * a1, char ** a2, int a3) {
+
+  typedef long (*strtol_p) (const char *, char **, int);
+  static strtol_p strtol_h = NULL;
+  long retval;
+  TAU_PROFILE_TIMER(t,"long strtol(const char *, char **, int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (strtol_h == NULL)
+	strtol_h = (strtol_p) dlsym(tau_handle,"strtol"); 
+    if (strtol_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*strtol_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+unsigned long strtoul(const char * a1, char ** a2, int a3) {
+
+  typedef unsigned long (*strtoul_p) (const char *, char **, int);
+  static strtoul_p strtoul_h = NULL;
+  unsigned long retval;
+  TAU_PROFILE_TIMER(t,"unsigned long strtoul(const char *, char **, int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (strtoul_h == NULL)
+	strtoul_h = (strtoul_p) dlsym(tau_handle,"strtoul"); 
+    if (strtoul_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*strtoul_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+long long strtoq(const char * a1, char ** a2, int a3) {
+
+  typedef long long (*strtoq_p) (const char *, char **, int);
+  static strtoq_p strtoq_h = NULL;
+  long long retval;
+  TAU_PROFILE_TIMER(t,"long long strtoq(const char *, char **, int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (strtoq_h == NULL)
+	strtoq_h = (strtoq_p) dlsym(tau_handle,"strtoq"); 
+    if (strtoq_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*strtoq_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+unsigned long long strtouq(const char * a1, char ** a2, int a3) {
+
+  typedef unsigned long long (*strtouq_p) (const char *, char **, int);
+  static strtouq_p strtouq_h = NULL;
+  unsigned long long retval;
+  TAU_PROFILE_TIMER(t,"unsigned long long strtouq(const char *, char **, int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (strtouq_h == NULL)
+	strtouq_h = (strtouq_p) dlsym(tau_handle,"strtouq"); 
+    if (strtouq_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*strtouq_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+long long strtoll(const char * a1, char ** a2, int a3) {
+
+  typedef long long (*strtoll_p) (const char *, char **, int);
+  static strtoll_p strtoll_h = NULL;
+  long long retval;
+  TAU_PROFILE_TIMER(t,"long long strtoll(const char *, char **, int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (strtoll_h == NULL)
+	strtoll_h = (strtoll_p) dlsym(tau_handle,"strtoll"); 
+    if (strtoll_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*strtoll_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+unsigned long long strtoull(const char * a1, char ** a2, int a3) {
+
+  typedef unsigned long long (*strtoull_p) (const char *, char **, int);
+  static strtoull_p strtoull_h = NULL;
+  unsigned long long retval;
+  TAU_PROFILE_TIMER(t,"unsigned long long strtoull(const char *, char **, int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (strtoull_h == NULL)
+	strtoull_h = (strtoull_p) dlsym(tau_handle,"strtoull"); 
+    if (strtoull_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*strtoull_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+char * l64a(long a1) {
+
+  typedef char * (*l64a_p) (long);
+  static l64a_p l64a_h = NULL;
+  char * retval;
+  TAU_PROFILE_TIMER(t,"char *l64a(long) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (l64a_h == NULL)
+	l64a_h = (l64a_p) dlsym(tau_handle,"l64a"); 
+    if (l64a_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*l64a_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+long a64l(const char * a1) {
+
+  typedef long (*a64l_p) (const char *);
+  static a64l_p a64l_h = NULL;
+  long retval;
+  TAU_PROFILE_TIMER(t,"long a64l(const char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (a64l_h == NULL)
+	a64l_h = (a64l_p) dlsym(tau_handle,"a64l"); 
+    if (a64l_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*a64l_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+long random() {
+
+  typedef long (*random_p) ();
+  static random_p random_h = NULL;
+  long retval;
+  TAU_PROFILE_TIMER(t,"long random(void) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (random_h == NULL)
+	random_h = (random_p) dlsym(tau_handle,"random"); 
+    if (random_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*random_h)();
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+void srandom(unsigned int a1) {
+
+  typedef void (*srandom_p) (unsigned int);
+  static srandom_p srandom_h = NULL;
+  TAU_PROFILE_TIMER(t,"void srandom(unsigned int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return;
+  } 
+  else { 
+    if (srandom_h == NULL)
+	srandom_h = (srandom_p) dlsym(tau_handle,"srandom"); 
+    if (srandom_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return;
+    }
+  TAU_PROFILE_START(t);
+  (*srandom_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+
+}
+
+char * initstate(unsigned int a1, char * a2, size_t a3) {
+
+  typedef char * (*initstate_p) (unsigned int, char *, size_t);
+  static initstate_p initstate_h = NULL;
+  char * retval;
+  TAU_PROFILE_TIMER(t,"char *initstate(unsigned int, char *, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (initstate_h == NULL)
+	initstate_h = (initstate_p) dlsym(tau_handle,"initstate"); 
+    if (initstate_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*initstate_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+char * setstate(char * a1) {
+
+  typedef char * (*setstate_p) (char *);
+  static setstate_p setstate_h = NULL;
+  char * retval;
+  TAU_PROFILE_TIMER(t,"char *setstate(char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (setstate_h == NULL)
+	setstate_h = (setstate_p) dlsym(tau_handle,"setstate"); 
+    if (setstate_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*setstate_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int random_r(struct random_data * a1, int32_t * a2) {
+
+  typedef int (*random_r_p) (struct random_data *, int32_t *);
+  static random_r_p random_r_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int random_r(struct random_data *, int32_t *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (random_r_h == NULL)
+	random_r_h = (random_r_p) dlsym(tau_handle,"random_r"); 
+    if (random_r_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*random_r_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int srandom_r(unsigned int a1, struct random_data * a2) {
+
+  typedef int (*srandom_r_p) (unsigned int, struct random_data *);
+  static srandom_r_p srandom_r_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int srandom_r(unsigned int, struct random_data *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (srandom_r_h == NULL)
+	srandom_r_h = (srandom_r_p) dlsym(tau_handle,"srandom_r"); 
+    if (srandom_r_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*srandom_r_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int initstate_r(unsigned int a1, char * a2, size_t a3, struct random_data * a4) {
+
+  typedef int (*initstate_r_p) (unsigned int, char *, size_t, struct random_data *);
+  static initstate_r_p initstate_r_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int initstate_r(unsigned int, char *, size_t, struct random_data *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (initstate_r_h == NULL)
+	initstate_r_h = (initstate_r_p) dlsym(tau_handle,"initstate_r"); 
+    if (initstate_r_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*initstate_r_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int setstate_r(char * a1, struct random_data * a2) {
+
+  typedef int (*setstate_r_p) (char *, struct random_data *);
+  static setstate_r_p setstate_r_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int setstate_r(char *, struct random_data *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (setstate_r_h == NULL)
+	setstate_r_h = (setstate_r_p) dlsym(tau_handle,"setstate_r"); 
+    if (setstate_r_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*setstate_r_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int rand() {
+
+  typedef int (*rand_p) ();
+  static rand_p rand_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int rand(void) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (rand_h == NULL)
+	rand_h = (rand_p) dlsym(tau_handle,"rand"); 
+    if (rand_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*rand_h)();
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+void srand(unsigned int a1) {
+
+  typedef void (*srand_p) (unsigned int);
+  static srand_p srand_h = NULL;
+  TAU_PROFILE_TIMER(t,"void srand(unsigned int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return;
+  } 
+  else { 
+    if (srand_h == NULL)
+	srand_h = (srand_p) dlsym(tau_handle,"srand"); 
+    if (srand_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return;
+    }
+  TAU_PROFILE_START(t);
+  (*srand_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+
+}
+
+int rand_r(unsigned int * a1) {
+
+  typedef int (*rand_r_p) (unsigned int *);
+  static rand_r_p rand_r_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int rand_r(unsigned int *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (rand_r_h == NULL)
+	rand_r_h = (rand_r_p) dlsym(tau_handle,"rand_r"); 
+    if (rand_r_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*rand_r_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+double drand48() {
+
+  typedef double (*drand48_p) ();
+  static drand48_p drand48_h = NULL;
+  double retval;
+  TAU_PROFILE_TIMER(t,"double drand48(void) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (drand48_h == NULL)
+	drand48_h = (drand48_p) dlsym(tau_handle,"drand48"); 
+    if (drand48_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*drand48_h)();
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+double erand48(unsigned short * a1) {
+
+  typedef double (*erand48_p) (unsigned short *);
+  static erand48_p erand48_h = NULL;
+  double retval;
+  TAU_PROFILE_TIMER(t,"double erand48(unsigned short *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (erand48_h == NULL)
+	erand48_h = (erand48_p) dlsym(tau_handle,"erand48"); 
+    if (erand48_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*erand48_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+long lrand48() {
+
+  typedef long (*lrand48_p) ();
+  static lrand48_p lrand48_h = NULL;
+  long retval;
+  TAU_PROFILE_TIMER(t,"long lrand48(void) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (lrand48_h == NULL)
+	lrand48_h = (lrand48_p) dlsym(tau_handle,"lrand48"); 
+    if (lrand48_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*lrand48_h)();
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+long nrand48(unsigned short * a1) {
+
+  typedef long (*nrand48_p) (unsigned short *);
+  static nrand48_p nrand48_h = NULL;
+  long retval;
+  TAU_PROFILE_TIMER(t,"long nrand48(unsigned short *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (nrand48_h == NULL)
+	nrand48_h = (nrand48_p) dlsym(tau_handle,"nrand48"); 
+    if (nrand48_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*nrand48_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+long mrand48() {
+
+  typedef long (*mrand48_p) ();
+  static mrand48_p mrand48_h = NULL;
+  long retval;
+  TAU_PROFILE_TIMER(t,"long mrand48(void) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (mrand48_h == NULL)
+	mrand48_h = (mrand48_p) dlsym(tau_handle,"mrand48"); 
+    if (mrand48_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*mrand48_h)();
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+long jrand48(unsigned short * a1) {
+
+  typedef long (*jrand48_p) (unsigned short *);
+  static jrand48_p jrand48_h = NULL;
+  long retval;
+  TAU_PROFILE_TIMER(t,"long jrand48(unsigned short *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (jrand48_h == NULL)
+	jrand48_h = (jrand48_p) dlsym(tau_handle,"jrand48"); 
+    if (jrand48_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*jrand48_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+void srand48(long a1) {
+
+  typedef void (*srand48_p) (long);
+  static srand48_p srand48_h = NULL;
+  TAU_PROFILE_TIMER(t,"void srand48(long) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return;
+  } 
+  else { 
+    if (srand48_h == NULL)
+	srand48_h = (srand48_p) dlsym(tau_handle,"srand48"); 
+    if (srand48_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return;
+    }
+  TAU_PROFILE_START(t);
+  (*srand48_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+
+}
+
+unsigned short * seed48(unsigned short * a1) {
+
+  typedef unsigned short * (*seed48_p) (unsigned short *);
+  static seed48_p seed48_h = NULL;
+  unsigned short * retval;
+  TAU_PROFILE_TIMER(t,"unsigned short *seed48(unsigned short *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (seed48_h == NULL)
+	seed48_h = (seed48_p) dlsym(tau_handle,"seed48"); 
+    if (seed48_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*seed48_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+void lcong48(unsigned short * a1) {
+
+  typedef void (*lcong48_p) (unsigned short *);
+  static lcong48_p lcong48_h = NULL;
+  TAU_PROFILE_TIMER(t,"void lcong48(unsigned short *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return;
+  } 
+  else { 
+    if (lcong48_h == NULL)
+	lcong48_h = (lcong48_p) dlsym(tau_handle,"lcong48"); 
+    if (lcong48_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return;
+    }
+  TAU_PROFILE_START(t);
+  (*lcong48_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+
+}
+
+int drand48_r(struct drand48_data * a1, double * a2) {
+
+  typedef int (*drand48_r_p) (struct drand48_data *, double *);
+  static drand48_r_p drand48_r_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int drand48_r(struct drand48_data *, double *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (drand48_r_h == NULL)
+	drand48_r_h = (drand48_r_p) dlsym(tau_handle,"drand48_r"); 
+    if (drand48_r_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*drand48_r_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int erand48_r(unsigned short * a1, struct drand48_data * a2, double * a3) {
+
+  typedef int (*erand48_r_p) (unsigned short *, struct drand48_data *, double *);
+  static erand48_r_p erand48_r_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int erand48_r(unsigned short *, struct drand48_data *, double *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (erand48_r_h == NULL)
+	erand48_r_h = (erand48_r_p) dlsym(tau_handle,"erand48_r"); 
+    if (erand48_r_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*erand48_r_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int lrand48_r(struct drand48_data * a1, long * a2) {
+
+  typedef int (*lrand48_r_p) (struct drand48_data *, long *);
+  static lrand48_r_p lrand48_r_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int lrand48_r(struct drand48_data *, long *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (lrand48_r_h == NULL)
+	lrand48_r_h = (lrand48_r_p) dlsym(tau_handle,"lrand48_r"); 
+    if (lrand48_r_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*lrand48_r_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int nrand48_r(unsigned short * a1, struct drand48_data * a2, long * a3) {
+
+  typedef int (*nrand48_r_p) (unsigned short *, struct drand48_data *, long *);
+  static nrand48_r_p nrand48_r_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int nrand48_r(unsigned short *, struct drand48_data *, long *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (nrand48_r_h == NULL)
+	nrand48_r_h = (nrand48_r_p) dlsym(tau_handle,"nrand48_r"); 
+    if (nrand48_r_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*nrand48_r_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int mrand48_r(struct drand48_data * a1, long * a2) {
+
+  typedef int (*mrand48_r_p) (struct drand48_data *, long *);
+  static mrand48_r_p mrand48_r_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int mrand48_r(struct drand48_data *, long *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (mrand48_r_h == NULL)
+	mrand48_r_h = (mrand48_r_p) dlsym(tau_handle,"mrand48_r"); 
+    if (mrand48_r_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*mrand48_r_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int jrand48_r(unsigned short * a1, struct drand48_data * a2, long * a3) {
+
+  typedef int (*jrand48_r_p) (unsigned short *, struct drand48_data *, long *);
+  static jrand48_r_p jrand48_r_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int jrand48_r(unsigned short *, struct drand48_data *, long *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (jrand48_r_h == NULL)
+	jrand48_r_h = (jrand48_r_p) dlsym(tau_handle,"jrand48_r"); 
+    if (jrand48_r_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*jrand48_r_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int srand48_r(long a1, struct drand48_data * a2) {
+
+  typedef int (*srand48_r_p) (long, struct drand48_data *);
+  static srand48_r_p srand48_r_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int srand48_r(long, struct drand48_data *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (srand48_r_h == NULL)
+	srand48_r_h = (srand48_r_p) dlsym(tau_handle,"srand48_r"); 
+    if (srand48_r_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*srand48_r_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int seed48_r(unsigned short * a1, struct drand48_data * a2) {
+
+  typedef int (*seed48_r_p) (unsigned short *, struct drand48_data *);
+  static seed48_r_p seed48_r_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int seed48_r(unsigned short *, struct drand48_data *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (seed48_r_h == NULL)
+	seed48_r_h = (seed48_r_p) dlsym(tau_handle,"seed48_r"); 
+    if (seed48_r_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*seed48_r_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int lcong48_r(unsigned short * a1, struct drand48_data * a2) {
+
+  typedef int (*lcong48_r_p) (unsigned short *, struct drand48_data *);
+  static lcong48_r_p lcong48_r_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int lcong48_r(unsigned short *, struct drand48_data *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (lcong48_r_h == NULL)
+	lcong48_r_h = (lcong48_r_p) dlsym(tau_handle,"lcong48_r"); 
+    if (lcong48_r_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*lcong48_r_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+void * malloc(size_t a1) {
+
+  typedef void * (*malloc_p) (size_t);
+  static malloc_p malloc_h = NULL;
+  void * retval;
+  TAU_PROFILE_TIMER(t,"void *malloc(size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (malloc_h == NULL)
+	malloc_h = (malloc_p) dlsym(tau_handle,"malloc"); 
+    if (malloc_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*malloc_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+void * calloc(size_t a1, size_t a2) {
+
+  typedef void * (*calloc_p) (size_t, size_t);
+  static calloc_p calloc_h = NULL;
+  void * retval;
+  TAU_PROFILE_TIMER(t,"void *calloc(size_t, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (calloc_h == NULL)
+	calloc_h = (calloc_p) dlsym(tau_handle,"calloc"); 
+    if (calloc_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*calloc_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+void * realloc(void * a1, size_t a2) {
+
+  typedef void * (*realloc_p) (void *, size_t);
+  static realloc_p realloc_h = NULL;
+  void * retval;
+  TAU_PROFILE_TIMER(t,"void *realloc(void *, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (realloc_h == NULL)
+	realloc_h = (realloc_p) dlsym(tau_handle,"realloc"); 
+    if (realloc_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*realloc_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+void free(void * a1) {
+
+  typedef void (*free_p) (void *);
+  static free_p free_h = NULL;
+  TAU_PROFILE_TIMER(t,"void free(void *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return;
+  } 
+  else { 
+    if (free_h == NULL)
+	free_h = (free_p) dlsym(tau_handle,"free"); 
+    if (free_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return;
+    }
+  TAU_PROFILE_START(t);
+  (*free_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+
+}
+
+void cfree(void * a1) {
+
+  typedef void (*cfree_p) (void *);
+  static cfree_p cfree_h = NULL;
+  TAU_PROFILE_TIMER(t,"void cfree(void *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return;
+  } 
+  else { 
+    if (cfree_h == NULL)
+	cfree_h = (cfree_p) dlsym(tau_handle,"cfree"); 
+    if (cfree_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return;
+    }
+  TAU_PROFILE_START(t);
+  (*cfree_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+
+}
+
+void * valloc(size_t a1) {
+
+  typedef void * (*valloc_p) (size_t);
+  static valloc_p valloc_h = NULL;
+  void * retval;
+  TAU_PROFILE_TIMER(t,"void *valloc(size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (valloc_h == NULL)
+	valloc_h = (valloc_p) dlsym(tau_handle,"valloc"); 
+    if (valloc_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*valloc_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int posix_memalign(void ** a1, size_t a2, size_t a3) {
+
+  typedef int (*posix_memalign_p) (void **, size_t, size_t);
+  static posix_memalign_p posix_memalign_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int posix_memalign(void **, size_t, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (posix_memalign_h == NULL)
+	posix_memalign_h = (posix_memalign_p) dlsym(tau_handle,"posix_memalign"); 
+    if (posix_memalign_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*posix_memalign_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+void abort() {
+
+  typedef void (*abort_p) ();
+  static abort_p abort_h = NULL;
+  TAU_PROFILE_TIMER(t,"void abort(void) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return;
+  } 
+  else { 
+    if (abort_h == NULL)
+	abort_h = (abort_p) dlsym(tau_handle,"abort"); 
+    if (abort_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return;
+    }
+  TAU_PROFILE_START(t);
+  (*abort_h)();
+  TAU_PROFILE_STOP(t);
+  }
+
+}
+
+int atexit(void (*a1)(void)) {
+
+  typedef int (*atexit_p) (void (*)(void));
+  static atexit_p atexit_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int atexit(void (*)(void)) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (atexit_h == NULL)
+	atexit_h = (atexit_p) dlsym(tau_handle,"atexit"); 
+    if (atexit_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*atexit_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int on_exit(void (*a1)(int, void *), void * a2) {
+
+  typedef int (*on_exit_p) (void (*)(int, void *), void *);
+  static on_exit_p on_exit_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int on_exit(void (*)(int, void *), void *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (on_exit_h == NULL)
+	on_exit_h = (on_exit_p) dlsym(tau_handle,"on_exit"); 
+    if (on_exit_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*on_exit_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+void exit(int a1) {
+
+  typedef void (*exit_p) (int);
+  static exit_p exit_h = NULL;
+  TAU_PROFILE_TIMER(t,"void exit(int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return;
+  } 
+  else { 
+    if (exit_h == NULL)
+	exit_h = (exit_p) dlsym(tau_handle,"exit"); 
+    if (exit_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return;
+    }
+  TAU_PROFILE_START(t);
+  (*exit_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+
+}
+
+void _Exit(int a1) {
+
+  typedef void (*_Exit_p) (int);
+  static _Exit_p _Exit_h = NULL;
+  TAU_PROFILE_TIMER(t,"void _Exit(int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return;
+  } 
+  else { 
+    if (_Exit_h == NULL)
+	_Exit_h = (_Exit_p) dlsym(tau_handle,"_Exit"); 
+    if (_Exit_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return;
+    }
+  TAU_PROFILE_START(t);
+  (*_Exit_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+
+}
+
+char * getenv(const char * a1) {
+
+  typedef char * (*getenv_p) (const char *);
+  static getenv_p getenv_h = NULL;
+  char * retval;
+  TAU_PROFILE_TIMER(t,"char *getenv(const char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (getenv_h == NULL)
+	getenv_h = (getenv_p) dlsym(tau_handle,"getenv"); 
+    if (getenv_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*getenv_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+char * __secure_getenv(const char * a1) {
+
+  typedef char * (*__secure_getenv_p) (const char *);
+  static __secure_getenv_p __secure_getenv_h = NULL;
+  char * retval;
+  TAU_PROFILE_TIMER(t,"char *__secure_getenv(const char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (__secure_getenv_h == NULL)
+	__secure_getenv_h = (__secure_getenv_p) dlsym(tau_handle,"__secure_getenv"); 
+    if (__secure_getenv_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*__secure_getenv_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int putenv(char * a1) {
+
+  typedef int (*putenv_p) (char *);
+  static putenv_p putenv_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int putenv(char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (putenv_h == NULL)
+	putenv_h = (putenv_p) dlsym(tau_handle,"putenv"); 
+    if (putenv_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*putenv_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int setenv(const char * a1, const char * a2, int a3) {
+
+  typedef int (*setenv_p) (const char *, const char *, int);
+  static setenv_p setenv_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int setenv(const char *, const char *, int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (setenv_h == NULL)
+	setenv_h = (setenv_p) dlsym(tau_handle,"setenv"); 
+    if (setenv_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*setenv_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int unsetenv(const char * a1) {
+
+  typedef int (*unsetenv_p) (const char *);
+  static unsetenv_p unsetenv_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int unsetenv(const char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (unsetenv_h == NULL)
+	unsetenv_h = (unsetenv_p) dlsym(tau_handle,"unsetenv"); 
+    if (unsetenv_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*unsetenv_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int clearenv() {
+
+  typedef int (*clearenv_p) ();
+  static clearenv_p clearenv_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int clearenv(void) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (clearenv_h == NULL)
+	clearenv_h = (clearenv_p) dlsym(tau_handle,"clearenv"); 
+    if (clearenv_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*clearenv_h)();
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+char * mktemp(char * a1) {
+
+  typedef char * (*mktemp_p) (char *);
+  static mktemp_p mktemp_h = NULL;
+  char * retval;
+  TAU_PROFILE_TIMER(t,"char *mktemp(char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (mktemp_h == NULL)
+	mktemp_h = (mktemp_p) dlsym(tau_handle,"mktemp"); 
+    if (mktemp_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*mktemp_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int mkstemp(char * a1) {
+
+  typedef int (*mkstemp_p) (char *);
+  static mkstemp_p mkstemp_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int mkstemp(char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (mkstemp_h == NULL)
+	mkstemp_h = (mkstemp_p) dlsym(tau_handle,"mkstemp"); 
+    if (mkstemp_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*mkstemp_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int mkstemps(char * a1, int a2) {
+
+  typedef int (*mkstemps_p) (char *, int);
+  static mkstemps_p mkstemps_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int mkstemps(char *, int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (mkstemps_h == NULL)
+	mkstemps_h = (mkstemps_p) dlsym(tau_handle,"mkstemps"); 
+    if (mkstemps_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*mkstemps_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+char * mkdtemp(char * a1) {
+
+  typedef char * (*mkdtemp_p) (char *);
+  static mkdtemp_p mkdtemp_h = NULL;
+  char * retval;
+  TAU_PROFILE_TIMER(t,"char *mkdtemp(char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (mkdtemp_h == NULL)
+	mkdtemp_h = (mkdtemp_p) dlsym(tau_handle,"mkdtemp"); 
+    if (mkdtemp_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*mkdtemp_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int system(const char * a1) {
+
+  typedef int (*system_p) (const char *);
+  static system_p system_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int system(const char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (system_h == NULL)
+	system_h = (system_p) dlsym(tau_handle,"system"); 
+    if (system_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*system_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+char * realpath(const char * a1, char * a2) {
+
+  typedef char * (*realpath_p) (const char *, char *);
+  static realpath_p realpath_h = NULL;
+  char * retval;
+  TAU_PROFILE_TIMER(t,"char *realpath(const char *, char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (realpath_h == NULL)
+	realpath_h = (realpath_p) dlsym(tau_handle,"realpath"); 
+    if (realpath_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*realpath_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+void * bsearch(const void * a1, const void * a2, size_t a3, size_t a4, __compar_fn_t a5) {
+
+  typedef void * (*bsearch_p) (const void *, const void *, size_t, size_t, __compar_fn_t);
+  static bsearch_p bsearch_h = NULL;
+  void * retval;
+  TAU_PROFILE_TIMER(t,"void *bsearch(const void *, const void *, size_t, size_t, __compar_fn_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (bsearch_h == NULL)
+	bsearch_h = (bsearch_p) dlsym(tau_handle,"bsearch"); 
+    if (bsearch_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*bsearch_h)( a1,  a2,  a3,  a4,  a5);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+void qsort(void * a1, size_t a2, size_t a3, __compar_fn_t a4) {
+
+  typedef void (*qsort_p) (void *, size_t, size_t, __compar_fn_t);
+  static qsort_p qsort_h = NULL;
+  TAU_PROFILE_TIMER(t,"void qsort(void *, size_t, size_t, __compar_fn_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return;
+  } 
+  else { 
+    if (qsort_h == NULL)
+	qsort_h = (qsort_p) dlsym(tau_handle,"qsort"); 
+    if (qsort_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return;
+    }
+  TAU_PROFILE_START(t);
+  (*qsort_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+
+}
+
+int abs(int a1) {
+
+  typedef int (*abs_p) (int);
+  static abs_p abs_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int abs(int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (abs_h == NULL)
+	abs_h = (abs_p) dlsym(tau_handle,"abs"); 
+    if (abs_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*abs_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+long labs(long a1) {
+
+  typedef long (*labs_p) (long);
+  static labs_p labs_h = NULL;
+  long retval;
+  TAU_PROFILE_TIMER(t,"long labs(long) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (labs_h == NULL)
+	labs_h = (labs_p) dlsym(tau_handle,"labs"); 
+    if (labs_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*labs_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+long long llabs(long long a1) {
+
+  typedef long long (*llabs_p) (long long);
+  static llabs_p llabs_h = NULL;
+  long long retval;
+  TAU_PROFILE_TIMER(t,"long long llabs(long long) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (llabs_h == NULL)
+	llabs_h = (llabs_p) dlsym(tau_handle,"llabs"); 
+    if (llabs_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*llabs_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+div_t div(int a1, int a2) {
+
+  typedef div_t (*div_p) (int, int);
+  static div_p div_h = NULL;
+  div_t retval;
+  TAU_PROFILE_TIMER(t,"div_t div(int, int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (div_h == NULL)
+	div_h = (div_p) dlsym(tau_handle,"div"); 
+    if (div_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*div_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+ldiv_t ldiv(long a1, long a2) {
+
+  typedef ldiv_t (*ldiv_p) (long, long);
+  static ldiv_p ldiv_h = NULL;
+  ldiv_t retval;
+  TAU_PROFILE_TIMER(t,"ldiv_t ldiv(long, long) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (ldiv_h == NULL)
+	ldiv_h = (ldiv_p) dlsym(tau_handle,"ldiv"); 
+    if (ldiv_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*ldiv_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+lldiv_t lldiv(long long a1, long long a2) {
+
+  typedef lldiv_t (*lldiv_p) (long long, long long);
+  static lldiv_p lldiv_h = NULL;
+  lldiv_t retval;
+  TAU_PROFILE_TIMER(t,"lldiv_t lldiv(long long, long long) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (lldiv_h == NULL)
+	lldiv_h = (lldiv_p) dlsym(tau_handle,"lldiv"); 
+    if (lldiv_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*lldiv_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+char * ecvt(double a1, int a2, int * a3, int * a4) {
+
+  typedef char * (*ecvt_p) (double, int, int *, int *);
+  static ecvt_p ecvt_h = NULL;
+  char * retval;
+  TAU_PROFILE_TIMER(t,"char *ecvt(double, int, int *, int *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (ecvt_h == NULL)
+	ecvt_h = (ecvt_p) dlsym(tau_handle,"ecvt"); 
+    if (ecvt_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*ecvt_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+char * fcvt(double a1, int a2, int * a3, int * a4) {
+
+  typedef char * (*fcvt_p) (double, int, int *, int *);
+  static fcvt_p fcvt_h = NULL;
+  char * retval;
+  TAU_PROFILE_TIMER(t,"char *fcvt(double, int, int *, int *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (fcvt_h == NULL)
+	fcvt_h = (fcvt_p) dlsym(tau_handle,"fcvt"); 
+    if (fcvt_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*fcvt_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+char * gcvt(double a1, int a2, char * a3) {
+
+  typedef char * (*gcvt_p) (double, int, char *);
+  static gcvt_p gcvt_h = NULL;
+  char * retval;
+  TAU_PROFILE_TIMER(t,"char *gcvt(double, int, char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (gcvt_h == NULL)
+	gcvt_h = (gcvt_p) dlsym(tau_handle,"gcvt"); 
+    if (gcvt_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*gcvt_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+char * qecvt(long double a1, int a2, int * a3, int * a4) {
+
+  typedef char * (*qecvt_p) (long double, int, int *, int *);
+  static qecvt_p qecvt_h = NULL;
+  char * retval;
+  TAU_PROFILE_TIMER(t,"char *qecvt(long double, int, int *, int *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (qecvt_h == NULL)
+	qecvt_h = (qecvt_p) dlsym(tau_handle,"qecvt"); 
+    if (qecvt_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*qecvt_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+char * qfcvt(long double a1, int a2, int * a3, int * a4) {
+
+  typedef char * (*qfcvt_p) (long double, int, int *, int *);
+  static qfcvt_p qfcvt_h = NULL;
+  char * retval;
+  TAU_PROFILE_TIMER(t,"char *qfcvt(long double, int, int *, int *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (qfcvt_h == NULL)
+	qfcvt_h = (qfcvt_p) dlsym(tau_handle,"qfcvt"); 
+    if (qfcvt_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*qfcvt_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+char * qgcvt(long double a1, int a2, char * a3) {
+
+  typedef char * (*qgcvt_p) (long double, int, char *);
+  static qgcvt_p qgcvt_h = NULL;
+  char * retval;
+  TAU_PROFILE_TIMER(t,"char *qgcvt(long double, int, char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (qgcvt_h == NULL)
+	qgcvt_h = (qgcvt_p) dlsym(tau_handle,"qgcvt"); 
+    if (qgcvt_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*qgcvt_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int ecvt_r(double a1, int a2, int * a3, int * a4, char * a5, size_t a6) {
+
+  typedef int (*ecvt_r_p) (double, int, int *, int *, char *, size_t);
+  static ecvt_r_p ecvt_r_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int ecvt_r(double, int, int *, int *, char *, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (ecvt_r_h == NULL)
+	ecvt_r_h = (ecvt_r_p) dlsym(tau_handle,"ecvt_r"); 
+    if (ecvt_r_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*ecvt_r_h)( a1,  a2,  a3,  a4,  a5,  a6);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int fcvt_r(double a1, int a2, int * a3, int * a4, char * a5, size_t a6) {
+
+  typedef int (*fcvt_r_p) (double, int, int *, int *, char *, size_t);
+  static fcvt_r_p fcvt_r_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int fcvt_r(double, int, int *, int *, char *, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (fcvt_r_h == NULL)
+	fcvt_r_h = (fcvt_r_p) dlsym(tau_handle,"fcvt_r"); 
+    if (fcvt_r_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*fcvt_r_h)( a1,  a2,  a3,  a4,  a5,  a6);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int qecvt_r(long double a1, int a2, int * a3, int * a4, char * a5, size_t a6) {
+
+  typedef int (*qecvt_r_p) (long double, int, int *, int *, char *, size_t);
+  static qecvt_r_p qecvt_r_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int qecvt_r(long double, int, int *, int *, char *, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (qecvt_r_h == NULL)
+	qecvt_r_h = (qecvt_r_p) dlsym(tau_handle,"qecvt_r"); 
+    if (qecvt_r_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*qecvt_r_h)( a1,  a2,  a3,  a4,  a5,  a6);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int qfcvt_r(long double a1, int a2, int * a3, int * a4, char * a5, size_t a6) {
+
+  typedef int (*qfcvt_r_p) (long double, int, int *, int *, char *, size_t);
+  static qfcvt_r_p qfcvt_r_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int qfcvt_r(long double, int, int *, int *, char *, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (qfcvt_r_h == NULL)
+	qfcvt_r_h = (qfcvt_r_p) dlsym(tau_handle,"qfcvt_r"); 
+    if (qfcvt_r_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*qfcvt_r_h)( a1,  a2,  a3,  a4,  a5,  a6);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int mblen(const char * a1, size_t a2) {
+
+  typedef int (*mblen_p) (const char *, size_t);
+  static mblen_p mblen_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int mblen(const char *, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (mblen_h == NULL)
+	mblen_h = (mblen_p) dlsym(tau_handle,"mblen"); 
+    if (mblen_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*mblen_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int mbtowc(wchar_t * a1, const char * a2, size_t a3) {
+
+  typedef int (*mbtowc_p) (wchar_t *, const char *, size_t);
+  static mbtowc_p mbtowc_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int mbtowc(wchar_t *, const char *, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (mbtowc_h == NULL)
+	mbtowc_h = (mbtowc_p) dlsym(tau_handle,"mbtowc"); 
+    if (mbtowc_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*mbtowc_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int wctomb(char * a1, wchar_t a2) {
+
+  typedef int (*wctomb_p) (char *, wchar_t);
+  static wctomb_p wctomb_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int wctomb(char *, wchar_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (wctomb_h == NULL)
+	wctomb_h = (wctomb_p) dlsym(tau_handle,"wctomb"); 
+    if (wctomb_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*wctomb_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+size_t mbstowcs(wchar_t * a1, const char * a2, size_t a3) {
+
+  typedef size_t (*mbstowcs_p) (wchar_t *, const char *, size_t);
+  static mbstowcs_p mbstowcs_h = NULL;
+  size_t retval;
+  TAU_PROFILE_TIMER(t,"size_t mbstowcs(wchar_t *, const char *, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (mbstowcs_h == NULL)
+	mbstowcs_h = (mbstowcs_p) dlsym(tau_handle,"mbstowcs"); 
+    if (mbstowcs_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*mbstowcs_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+size_t wcstombs(char * a1, const wchar_t * a2, size_t a3) {
+
+  typedef size_t (*wcstombs_p) (char *, const wchar_t *, size_t);
+  static wcstombs_p wcstombs_h = NULL;
+  size_t retval;
+  TAU_PROFILE_TIMER(t,"size_t wcstombs(char *, const wchar_t *, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (wcstombs_h == NULL)
+	wcstombs_h = (wcstombs_p) dlsym(tau_handle,"wcstombs"); 
+    if (wcstombs_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*wcstombs_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int rpmatch(const char * a1) {
+
+  typedef int (*rpmatch_p) (const char *);
+  static rpmatch_p rpmatch_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int rpmatch(const char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (rpmatch_h == NULL)
+	rpmatch_h = (rpmatch_p) dlsym(tau_handle,"rpmatch"); 
+    if (rpmatch_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*rpmatch_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int posix_openpt(int a1) {
+
+  typedef int (*posix_openpt_p) (int);
+  static posix_openpt_p posix_openpt_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int posix_openpt(int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (posix_openpt_h == NULL)
+	posix_openpt_h = (posix_openpt_p) dlsym(tau_handle,"posix_openpt"); 
+    if (posix_openpt_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*posix_openpt_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+int getloadavg(double * a1, int a2) {
+
+  typedef int (*getloadavg_p) (double *, int);
+  static getloadavg_p getloadavg_h = NULL;
+  int retval;
+  TAU_PROFILE_TIMER(t,"int getloadavg(double *, int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (getloadavg_h == NULL)
+	getloadavg_h = (getloadavg_p) dlsym(tau_handle,"getloadavg"); 
+    if (getloadavg_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*getloadavg_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuInit(unsigned int a1) {
+
+  typedef CUresult (*cuInit_p) (unsigned int);
+  static cuInit_p cuInit_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuInit(unsigned int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuInit_h == NULL)
+	cuInit_h = (cuInit_p) dlsym(tau_handle,"cuInit"); 
+    if (cuInit_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuInit_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuDriverGetVersion(int * a1) {
+
+  typedef CUresult (*cuDriverGetVersion_p) (int *);
+  static cuDriverGetVersion_p cuDriverGetVersion_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuDriverGetVersion(int *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuDriverGetVersion_h == NULL)
+	cuDriverGetVersion_h = (cuDriverGetVersion_p) dlsym(tau_handle,"cuDriverGetVersion"); 
+    if (cuDriverGetVersion_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuDriverGetVersion_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuDeviceGet(CUdevice * a1, int a2) {
+
+  typedef CUresult (*cuDeviceGet_p) (CUdevice *, int);
+  static cuDeviceGet_p cuDeviceGet_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuDeviceGet(CUdevice *, int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuDeviceGet_h == NULL)
+	cuDeviceGet_h = (cuDeviceGet_p) dlsym(tau_handle,"cuDeviceGet"); 
+    if (cuDeviceGet_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuDeviceGet_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuDeviceGetCount(int * a1) {
+
+  typedef CUresult (*cuDeviceGetCount_p) (int *);
+  static cuDeviceGetCount_p cuDeviceGetCount_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuDeviceGetCount(int *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuDeviceGetCount_h == NULL)
+	cuDeviceGetCount_h = (cuDeviceGetCount_p) dlsym(tau_handle,"cuDeviceGetCount"); 
+    if (cuDeviceGetCount_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuDeviceGetCount_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuDeviceGetName(char * a1, int a2, CUdevice a3) {
+
+  typedef CUresult (*cuDeviceGetName_p) (char *, int, CUdevice);
+  static cuDeviceGetName_p cuDeviceGetName_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuDeviceGetName(char *, int, CUdevice) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuDeviceGetName_h == NULL)
+	cuDeviceGetName_h = (cuDeviceGetName_p) dlsym(tau_handle,"cuDeviceGetName"); 
+    if (cuDeviceGetName_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuDeviceGetName_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuDeviceComputeCapability(int * a1, int * a2, CUdevice a3) {
+
+  typedef CUresult (*cuDeviceComputeCapability_p) (int *, int *, CUdevice);
+  static cuDeviceComputeCapability_p cuDeviceComputeCapability_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuDeviceComputeCapability(int *, int *, CUdevice) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuDeviceComputeCapability_h == NULL)
+	cuDeviceComputeCapability_h = (cuDeviceComputeCapability_p) dlsym(tau_handle,"cuDeviceComputeCapability"); 
+    if (cuDeviceComputeCapability_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuDeviceComputeCapability_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuDeviceTotalMem_v2(size_t * a1, CUdevice a2) {
+
+  typedef CUresult (*cuDeviceTotalMem_v2_p) (size_t *, CUdevice);
+  static cuDeviceTotalMem_v2_p cuDeviceTotalMem_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuDeviceTotalMem_v2(size_t *, CUdevice) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuDeviceTotalMem_v2_h == NULL)
+	cuDeviceTotalMem_v2_h = (cuDeviceTotalMem_v2_p) dlsym(tau_handle,"cuDeviceTotalMem_v2"); 
+    if (cuDeviceTotalMem_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuDeviceTotalMem_v2_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuDeviceGetProperties(CUdevprop * a1, CUdevice a2) {
+
+  typedef CUresult (*cuDeviceGetProperties_p) (CUdevprop *, CUdevice);
+  static cuDeviceGetProperties_p cuDeviceGetProperties_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuDeviceGetProperties(CUdevprop *, CUdevice) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuDeviceGetProperties_h == NULL)
+	cuDeviceGetProperties_h = (cuDeviceGetProperties_p) dlsym(tau_handle,"cuDeviceGetProperties"); 
+    if (cuDeviceGetProperties_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuDeviceGetProperties_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuDeviceGetAttribute(int * a1, CUdevice_attribute a2, CUdevice a3) {
+
+  typedef CUresult (*cuDeviceGetAttribute_p) (int *, CUdevice_attribute, CUdevice);
+  static cuDeviceGetAttribute_p cuDeviceGetAttribute_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuDeviceGetAttribute(int *, CUdevice_attribute, CUdevice) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuDeviceGetAttribute_h == NULL)
+	cuDeviceGetAttribute_h = (cuDeviceGetAttribute_p) dlsym(tau_handle,"cuDeviceGetAttribute"); 
+    if (cuDeviceGetAttribute_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuDeviceGetAttribute_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuCtxCreate_v2(CUcontext * a1, unsigned int a2, CUdevice a3) {
+
+  typedef CUresult (*cuCtxCreate_v2_p) (CUcontext *, unsigned int, CUdevice);
+  static cuCtxCreate_v2_p cuCtxCreate_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxCreate_v2(CUcontext *, unsigned int, CUdevice) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuCtxCreate_v2_h == NULL)
+	cuCtxCreate_v2_h = (cuCtxCreate_v2_p) dlsym(tau_handle,"cuCtxCreate_v2"); 
+    if (cuCtxCreate_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuCtxCreate_v2_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuCtxDestroy(CUcontext a1) {
+
+  typedef CUresult (*cuCtxDestroy_p) (CUcontext);
+  static cuCtxDestroy_p cuCtxDestroy_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxDestroy(CUcontext) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuCtxDestroy_h == NULL)
+	cuCtxDestroy_h = (cuCtxDestroy_p) dlsym(tau_handle,"cuCtxDestroy"); 
+    if (cuCtxDestroy_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuCtxDestroy_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuCtxAttach(CUcontext * a1, unsigned int a2) {
+
+  typedef CUresult (*cuCtxAttach_p) (CUcontext *, unsigned int);
+  static cuCtxAttach_p cuCtxAttach_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxAttach(CUcontext *, unsigned int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuCtxAttach_h == NULL)
+	cuCtxAttach_h = (cuCtxAttach_p) dlsym(tau_handle,"cuCtxAttach"); 
+    if (cuCtxAttach_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuCtxAttach_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuCtxDetach(CUcontext a1) {
+
+  typedef CUresult (*cuCtxDetach_p) (CUcontext);
+  static cuCtxDetach_p cuCtxDetach_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxDetach(CUcontext) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuCtxDetach_h == NULL)
+	cuCtxDetach_h = (cuCtxDetach_p) dlsym(tau_handle,"cuCtxDetach"); 
+    if (cuCtxDetach_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuCtxDetach_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuCtxPushCurrent(CUcontext a1) {
+
+  typedef CUresult (*cuCtxPushCurrent_p) (CUcontext);
+  static cuCtxPushCurrent_p cuCtxPushCurrent_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxPushCurrent(CUcontext) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuCtxPushCurrent_h == NULL)
+	cuCtxPushCurrent_h = (cuCtxPushCurrent_p) dlsym(tau_handle,"cuCtxPushCurrent"); 
+    if (cuCtxPushCurrent_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuCtxPushCurrent_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuCtxPopCurrent(CUcontext * a1) {
+
+  typedef CUresult (*cuCtxPopCurrent_p) (CUcontext *);
+  static cuCtxPopCurrent_p cuCtxPopCurrent_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxPopCurrent(CUcontext *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuCtxPopCurrent_h == NULL)
+	cuCtxPopCurrent_h = (cuCtxPopCurrent_p) dlsym(tau_handle,"cuCtxPopCurrent"); 
+    if (cuCtxPopCurrent_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuCtxPopCurrent_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuCtxGetDevice(CUdevice * a1) {
+
+  typedef CUresult (*cuCtxGetDevice_p) (CUdevice *);
+  static cuCtxGetDevice_p cuCtxGetDevice_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxGetDevice(CUdevice *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuCtxGetDevice_h == NULL)
+	cuCtxGetDevice_h = (cuCtxGetDevice_p) dlsym(tau_handle,"cuCtxGetDevice"); 
+    if (cuCtxGetDevice_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuCtxGetDevice_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuCtxSynchronize() {
+
+  typedef CUresult (*cuCtxSynchronize_p) ();
+  static cuCtxSynchronize_p cuCtxSynchronize_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxSynchronize(void) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuCtxSynchronize_h == NULL)
+	cuCtxSynchronize_h = (cuCtxSynchronize_p) dlsym(tau_handle,"cuCtxSynchronize"); 
+    if (cuCtxSynchronize_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuCtxSynchronize_h)();
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuCtxSetLimit(CUlimit a1, size_t a2) {
+
+  typedef CUresult (*cuCtxSetLimit_p) (CUlimit, size_t);
+  static cuCtxSetLimit_p cuCtxSetLimit_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxSetLimit(CUlimit, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuCtxSetLimit_h == NULL)
+	cuCtxSetLimit_h = (cuCtxSetLimit_p) dlsym(tau_handle,"cuCtxSetLimit"); 
+    if (cuCtxSetLimit_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuCtxSetLimit_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuCtxGetLimit(size_t * a1, CUlimit a2) {
+
+  typedef CUresult (*cuCtxGetLimit_p) (size_t *, CUlimit);
+  static cuCtxGetLimit_p cuCtxGetLimit_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxGetLimit(size_t *, CUlimit) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuCtxGetLimit_h == NULL)
+	cuCtxGetLimit_h = (cuCtxGetLimit_p) dlsym(tau_handle,"cuCtxGetLimit"); 
+    if (cuCtxGetLimit_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuCtxGetLimit_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuCtxGetCacheConfig(CUfunc_cache * a1) {
+
+  typedef CUresult (*cuCtxGetCacheConfig_p) (CUfunc_cache *);
+  static cuCtxGetCacheConfig_p cuCtxGetCacheConfig_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxGetCacheConfig(CUfunc_cache *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuCtxGetCacheConfig_h == NULL)
+	cuCtxGetCacheConfig_h = (cuCtxGetCacheConfig_p) dlsym(tau_handle,"cuCtxGetCacheConfig"); 
+    if (cuCtxGetCacheConfig_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuCtxGetCacheConfig_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuCtxSetCacheConfig(CUfunc_cache a1) {
+
+  typedef CUresult (*cuCtxSetCacheConfig_p) (CUfunc_cache);
+  static cuCtxSetCacheConfig_p cuCtxSetCacheConfig_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxSetCacheConfig(CUfunc_cache) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuCtxSetCacheConfig_h == NULL)
+	cuCtxSetCacheConfig_h = (cuCtxSetCacheConfig_p) dlsym(tau_handle,"cuCtxSetCacheConfig"); 
+    if (cuCtxSetCacheConfig_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuCtxSetCacheConfig_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuCtxGetApiVersion(CUcontext a1, unsigned int * a2) {
+
+  typedef CUresult (*cuCtxGetApiVersion_p) (CUcontext, unsigned int *);
+  static cuCtxGetApiVersion_p cuCtxGetApiVersion_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxGetApiVersion(CUcontext, unsigned int *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuCtxGetApiVersion_h == NULL)
+	cuCtxGetApiVersion_h = (cuCtxGetApiVersion_p) dlsym(tau_handle,"cuCtxGetApiVersion"); 
+    if (cuCtxGetApiVersion_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuCtxGetApiVersion_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuModuleLoad(CUmodule * a1, const char * a2) {
+
+  typedef CUresult (*cuModuleLoad_p) (CUmodule *, const char *);
+  static cuModuleLoad_p cuModuleLoad_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuModuleLoad(CUmodule *, const char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuModuleLoad_h == NULL)
+	cuModuleLoad_h = (cuModuleLoad_p) dlsym(tau_handle,"cuModuleLoad"); 
+    if (cuModuleLoad_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuModuleLoad_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuModuleLoadData(CUmodule * a1, const void * a2) {
+
+  typedef CUresult (*cuModuleLoadData_p) (CUmodule *, const void *);
+  static cuModuleLoadData_p cuModuleLoadData_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuModuleLoadData(CUmodule *, const void *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuModuleLoadData_h == NULL)
+	cuModuleLoadData_h = (cuModuleLoadData_p) dlsym(tau_handle,"cuModuleLoadData"); 
+    if (cuModuleLoadData_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuModuleLoadData_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuModuleLoadDataEx(CUmodule * a1, const void * a2, unsigned int a3, CUjit_option * a4, void ** a5) {
+
+  typedef CUresult (*cuModuleLoadDataEx_p) (CUmodule *, const void *, unsigned int, CUjit_option *, void **);
+  static cuModuleLoadDataEx_p cuModuleLoadDataEx_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuModuleLoadDataEx(CUmodule *, const void *, unsigned int, CUjit_option *, void **) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuModuleLoadDataEx_h == NULL)
+	cuModuleLoadDataEx_h = (cuModuleLoadDataEx_p) dlsym(tau_handle,"cuModuleLoadDataEx"); 
+    if (cuModuleLoadDataEx_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuModuleLoadDataEx_h)( a1,  a2,  a3,  a4,  a5);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuModuleLoadFatBinary(CUmodule * a1, const void * a2) {
+
+  typedef CUresult (*cuModuleLoadFatBinary_p) (CUmodule *, const void *);
+  static cuModuleLoadFatBinary_p cuModuleLoadFatBinary_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuModuleLoadFatBinary(CUmodule *, const void *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuModuleLoadFatBinary_h == NULL)
+	cuModuleLoadFatBinary_h = (cuModuleLoadFatBinary_p) dlsym(tau_handle,"cuModuleLoadFatBinary"); 
+    if (cuModuleLoadFatBinary_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuModuleLoadFatBinary_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuModuleUnload(CUmodule a1) {
+
+  typedef CUresult (*cuModuleUnload_p) (CUmodule);
+  static cuModuleUnload_p cuModuleUnload_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuModuleUnload(CUmodule) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuModuleUnload_h == NULL)
+	cuModuleUnload_h = (cuModuleUnload_p) dlsym(tau_handle,"cuModuleUnload"); 
+    if (cuModuleUnload_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuModuleUnload_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuModuleGetFunction(CUfunction * a1, CUmodule a2, const char * a3) {
+
+  typedef CUresult (*cuModuleGetFunction_p) (CUfunction *, CUmodule, const char *);
+  static cuModuleGetFunction_p cuModuleGetFunction_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuModuleGetFunction(CUfunction *, CUmodule, const char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuModuleGetFunction_h == NULL)
+	cuModuleGetFunction_h = (cuModuleGetFunction_p) dlsym(tau_handle,"cuModuleGetFunction"); 
+    if (cuModuleGetFunction_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuModuleGetFunction_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuModuleGetGlobal_v2(CUdeviceptr * a1, size_t * a2, CUmodule a3, const char * a4) {
+
+  typedef CUresult (*cuModuleGetGlobal_v2_p) (CUdeviceptr *, size_t *, CUmodule, const char *);
+  static cuModuleGetGlobal_v2_p cuModuleGetGlobal_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuModuleGetGlobal_v2(CUdeviceptr *, size_t *, CUmodule, const char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuModuleGetGlobal_v2_h == NULL)
+	cuModuleGetGlobal_v2_h = (cuModuleGetGlobal_v2_p) dlsym(tau_handle,"cuModuleGetGlobal_v2"); 
+    if (cuModuleGetGlobal_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuModuleGetGlobal_v2_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuModuleGetTexRef(CUtexref * a1, CUmodule a2, const char * a3) {
+
+  typedef CUresult (*cuModuleGetTexRef_p) (CUtexref *, CUmodule, const char *);
+  static cuModuleGetTexRef_p cuModuleGetTexRef_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuModuleGetTexRef(CUtexref *, CUmodule, const char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuModuleGetTexRef_h == NULL)
+	cuModuleGetTexRef_h = (cuModuleGetTexRef_p) dlsym(tau_handle,"cuModuleGetTexRef"); 
+    if (cuModuleGetTexRef_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuModuleGetTexRef_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuModuleGetSurfRef(CUsurfref * a1, CUmodule a2, const char * a3) {
+
+  typedef CUresult (*cuModuleGetSurfRef_p) (CUsurfref *, CUmodule, const char *);
+  static cuModuleGetSurfRef_p cuModuleGetSurfRef_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuModuleGetSurfRef(CUsurfref *, CUmodule, const char *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuModuleGetSurfRef_h == NULL)
+	cuModuleGetSurfRef_h = (cuModuleGetSurfRef_p) dlsym(tau_handle,"cuModuleGetSurfRef"); 
+    if (cuModuleGetSurfRef_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuModuleGetSurfRef_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemGetInfo_v2(size_t * a1, size_t * a2) {
+
+  typedef CUresult (*cuMemGetInfo_v2_p) (size_t *, size_t *);
+  static cuMemGetInfo_v2_p cuMemGetInfo_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemGetInfo_v2(size_t *, size_t *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemGetInfo_v2_h == NULL)
+	cuMemGetInfo_v2_h = (cuMemGetInfo_v2_p) dlsym(tau_handle,"cuMemGetInfo_v2"); 
+    if (cuMemGetInfo_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemGetInfo_v2_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemAlloc_v2(CUdeviceptr * a1, size_t a2) {
+
+  typedef CUresult (*cuMemAlloc_v2_p) (CUdeviceptr *, size_t);
+  static cuMemAlloc_v2_p cuMemAlloc_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemAlloc_v2(CUdeviceptr *, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemAlloc_v2_h == NULL)
+	cuMemAlloc_v2_h = (cuMemAlloc_v2_p) dlsym(tau_handle,"cuMemAlloc_v2"); 
+    if (cuMemAlloc_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemAlloc_v2_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemAllocPitch_v2(CUdeviceptr * a1, size_t * a2, size_t a3, size_t a4, unsigned int a5) {
+
+  typedef CUresult (*cuMemAllocPitch_v2_p) (CUdeviceptr *, size_t *, size_t, size_t, unsigned int);
+  static cuMemAllocPitch_v2_p cuMemAllocPitch_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemAllocPitch_v2(CUdeviceptr *, size_t *, size_t, size_t, unsigned int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemAllocPitch_v2_h == NULL)
+	cuMemAllocPitch_v2_h = (cuMemAllocPitch_v2_p) dlsym(tau_handle,"cuMemAllocPitch_v2"); 
+    if (cuMemAllocPitch_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemAllocPitch_v2_h)( a1,  a2,  a3,  a4,  a5);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemFree_v2(CUdeviceptr a1) {
+
+  typedef CUresult (*cuMemFree_v2_p) (CUdeviceptr);
+  static cuMemFree_v2_p cuMemFree_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemFree_v2(CUdeviceptr) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemFree_v2_h == NULL)
+	cuMemFree_v2_h = (cuMemFree_v2_p) dlsym(tau_handle,"cuMemFree_v2"); 
+    if (cuMemFree_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemFree_v2_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemGetAddressRange_v2(CUdeviceptr * a1, size_t * a2, CUdeviceptr a3) {
+
+  typedef CUresult (*cuMemGetAddressRange_v2_p) (CUdeviceptr *, size_t *, CUdeviceptr);
+  static cuMemGetAddressRange_v2_p cuMemGetAddressRange_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemGetAddressRange_v2(CUdeviceptr *, size_t *, CUdeviceptr) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemGetAddressRange_v2_h == NULL)
+	cuMemGetAddressRange_v2_h = (cuMemGetAddressRange_v2_p) dlsym(tau_handle,"cuMemGetAddressRange_v2"); 
+    if (cuMemGetAddressRange_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemGetAddressRange_v2_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemAllocHost_v2(void ** a1, size_t a2) {
+
+  typedef CUresult (*cuMemAllocHost_v2_p) (void **, size_t);
+  static cuMemAllocHost_v2_p cuMemAllocHost_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemAllocHost_v2(void **, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemAllocHost_v2_h == NULL)
+	cuMemAllocHost_v2_h = (cuMemAllocHost_v2_p) dlsym(tau_handle,"cuMemAllocHost_v2"); 
+    if (cuMemAllocHost_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemAllocHost_v2_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemFreeHost(void * a1) {
+
+  typedef CUresult (*cuMemFreeHost_p) (void *);
+  static cuMemFreeHost_p cuMemFreeHost_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemFreeHost(void *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemFreeHost_h == NULL)
+	cuMemFreeHost_h = (cuMemFreeHost_p) dlsym(tau_handle,"cuMemFreeHost"); 
+    if (cuMemFreeHost_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemFreeHost_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemHostAlloc(void ** a1, size_t a2, unsigned int a3) {
+
+  typedef CUresult (*cuMemHostAlloc_p) (void **, size_t, unsigned int);
+  static cuMemHostAlloc_p cuMemHostAlloc_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemHostAlloc(void **, size_t, unsigned int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemHostAlloc_h == NULL)
+	cuMemHostAlloc_h = (cuMemHostAlloc_p) dlsym(tau_handle,"cuMemHostAlloc"); 
+    if (cuMemHostAlloc_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemHostAlloc_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemHostGetDevicePointer_v2(CUdeviceptr * a1, void * a2, unsigned int a3) {
+
+  typedef CUresult (*cuMemHostGetDevicePointer_v2_p) (CUdeviceptr *, void *, unsigned int);
+  static cuMemHostGetDevicePointer_v2_p cuMemHostGetDevicePointer_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemHostGetDevicePointer_v2(CUdeviceptr *, void *, unsigned int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemHostGetDevicePointer_v2_h == NULL)
+	cuMemHostGetDevicePointer_v2_h = (cuMemHostGetDevicePointer_v2_p) dlsym(tau_handle,"cuMemHostGetDevicePointer_v2"); 
+    if (cuMemHostGetDevicePointer_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemHostGetDevicePointer_v2_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemHostGetFlags(unsigned int * a1, void * a2) {
+
+  typedef CUresult (*cuMemHostGetFlags_p) (unsigned int *, void *);
+  static cuMemHostGetFlags_p cuMemHostGetFlags_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemHostGetFlags(unsigned int *, void *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemHostGetFlags_h == NULL)
+	cuMemHostGetFlags_h = (cuMemHostGetFlags_p) dlsym(tau_handle,"cuMemHostGetFlags"); 
+    if (cuMemHostGetFlags_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemHostGetFlags_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemcpyHtoD_v2(CUdeviceptr a1, const void * a2, size_t a3) {
+
+  typedef CUresult (*cuMemcpyHtoD_v2_p) (CUdeviceptr, const void *, size_t);
+  static cuMemcpyHtoD_v2_p cuMemcpyHtoD_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyHtoD_v2(CUdeviceptr, const void *, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemcpyHtoD_v2_h == NULL)
+	cuMemcpyHtoD_v2_h = (cuMemcpyHtoD_v2_p) dlsym(tau_handle,"cuMemcpyHtoD_v2"); 
+    if (cuMemcpyHtoD_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemcpyHtoD_v2_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemcpyDtoH_v2(void * a1, CUdeviceptr a2, size_t a3) {
+
+  typedef CUresult (*cuMemcpyDtoH_v2_p) (void *, CUdeviceptr, size_t);
+  static cuMemcpyDtoH_v2_p cuMemcpyDtoH_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyDtoH_v2(void *, CUdeviceptr, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemcpyDtoH_v2_h == NULL)
+	cuMemcpyDtoH_v2_h = (cuMemcpyDtoH_v2_p) dlsym(tau_handle,"cuMemcpyDtoH_v2"); 
+    if (cuMemcpyDtoH_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemcpyDtoH_v2_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemcpyDtoD_v2(CUdeviceptr a1, CUdeviceptr a2, size_t a3) {
+
+  typedef CUresult (*cuMemcpyDtoD_v2_p) (CUdeviceptr, CUdeviceptr, size_t);
+  static cuMemcpyDtoD_v2_p cuMemcpyDtoD_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyDtoD_v2(CUdeviceptr, CUdeviceptr, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemcpyDtoD_v2_h == NULL)
+	cuMemcpyDtoD_v2_h = (cuMemcpyDtoD_v2_p) dlsym(tau_handle,"cuMemcpyDtoD_v2"); 
+    if (cuMemcpyDtoD_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemcpyDtoD_v2_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemcpyDtoA_v2(CUarray a1, size_t a2, CUdeviceptr a3, size_t a4) {
+
+  typedef CUresult (*cuMemcpyDtoA_v2_p) (CUarray, size_t, CUdeviceptr, size_t);
+  static cuMemcpyDtoA_v2_p cuMemcpyDtoA_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyDtoA_v2(CUarray, size_t, CUdeviceptr, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemcpyDtoA_v2_h == NULL)
+	cuMemcpyDtoA_v2_h = (cuMemcpyDtoA_v2_p) dlsym(tau_handle,"cuMemcpyDtoA_v2"); 
+    if (cuMemcpyDtoA_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemcpyDtoA_v2_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemcpyAtoD_v2(CUdeviceptr a1, CUarray a2, size_t a3, size_t a4) {
+
+  typedef CUresult (*cuMemcpyAtoD_v2_p) (CUdeviceptr, CUarray, size_t, size_t);
+  static cuMemcpyAtoD_v2_p cuMemcpyAtoD_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyAtoD_v2(CUdeviceptr, CUarray, size_t, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemcpyAtoD_v2_h == NULL)
+	cuMemcpyAtoD_v2_h = (cuMemcpyAtoD_v2_p) dlsym(tau_handle,"cuMemcpyAtoD_v2"); 
+    if (cuMemcpyAtoD_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemcpyAtoD_v2_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemcpyHtoA_v2(CUarray a1, size_t a2, const void * a3, size_t a4) {
+
+  typedef CUresult (*cuMemcpyHtoA_v2_p) (CUarray, size_t, const void *, size_t);
+  static cuMemcpyHtoA_v2_p cuMemcpyHtoA_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyHtoA_v2(CUarray, size_t, const void *, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemcpyHtoA_v2_h == NULL)
+	cuMemcpyHtoA_v2_h = (cuMemcpyHtoA_v2_p) dlsym(tau_handle,"cuMemcpyHtoA_v2"); 
+    if (cuMemcpyHtoA_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemcpyHtoA_v2_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemcpyAtoH_v2(void * a1, CUarray a2, size_t a3, size_t a4) {
+
+  typedef CUresult (*cuMemcpyAtoH_v2_p) (void *, CUarray, size_t, size_t);
+  static cuMemcpyAtoH_v2_p cuMemcpyAtoH_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyAtoH_v2(void *, CUarray, size_t, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemcpyAtoH_v2_h == NULL)
+	cuMemcpyAtoH_v2_h = (cuMemcpyAtoH_v2_p) dlsym(tau_handle,"cuMemcpyAtoH_v2"); 
+    if (cuMemcpyAtoH_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemcpyAtoH_v2_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemcpyAtoA_v2(CUarray a1, size_t a2, CUarray a3, size_t a4, size_t a5) {
+
+  typedef CUresult (*cuMemcpyAtoA_v2_p) (CUarray, size_t, CUarray, size_t, size_t);
+  static cuMemcpyAtoA_v2_p cuMemcpyAtoA_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyAtoA_v2(CUarray, size_t, CUarray, size_t, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemcpyAtoA_v2_h == NULL)
+	cuMemcpyAtoA_v2_h = (cuMemcpyAtoA_v2_p) dlsym(tau_handle,"cuMemcpyAtoA_v2"); 
+    if (cuMemcpyAtoA_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemcpyAtoA_v2_h)( a1,  a2,  a3,  a4,  a5);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemcpy2D_v2(const CUDA_MEMCPY2D * a1) {
+
+  typedef CUresult (*cuMemcpy2D_v2_p) (const CUDA_MEMCPY2D *);
+  static cuMemcpy2D_v2_p cuMemcpy2D_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpy2D_v2(const CUDA_MEMCPY2D *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemcpy2D_v2_h == NULL)
+	cuMemcpy2D_v2_h = (cuMemcpy2D_v2_p) dlsym(tau_handle,"cuMemcpy2D_v2"); 
+    if (cuMemcpy2D_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemcpy2D_v2_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemcpy2DUnaligned_v2(const CUDA_MEMCPY2D * a1) {
+
+  typedef CUresult (*cuMemcpy2DUnaligned_v2_p) (const CUDA_MEMCPY2D *);
+  static cuMemcpy2DUnaligned_v2_p cuMemcpy2DUnaligned_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpy2DUnaligned_v2(const CUDA_MEMCPY2D *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemcpy2DUnaligned_v2_h == NULL)
+	cuMemcpy2DUnaligned_v2_h = (cuMemcpy2DUnaligned_v2_p) dlsym(tau_handle,"cuMemcpy2DUnaligned_v2"); 
+    if (cuMemcpy2DUnaligned_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemcpy2DUnaligned_v2_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemcpy3D_v2(const CUDA_MEMCPY3D * a1) {
+
+  typedef CUresult (*cuMemcpy3D_v2_p) (const CUDA_MEMCPY3D *);
+  static cuMemcpy3D_v2_p cuMemcpy3D_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpy3D_v2(const CUDA_MEMCPY3D *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemcpy3D_v2_h == NULL)
+	cuMemcpy3D_v2_h = (cuMemcpy3D_v2_p) dlsym(tau_handle,"cuMemcpy3D_v2"); 
+    if (cuMemcpy3D_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemcpy3D_v2_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemcpyHtoDAsync_v2(CUdeviceptr a1, const void * a2, size_t a3, CUstream a4) {
+
+  typedef CUresult (*cuMemcpyHtoDAsync_v2_p) (CUdeviceptr, const void *, size_t, CUstream);
+  static cuMemcpyHtoDAsync_v2_p cuMemcpyHtoDAsync_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyHtoDAsync_v2(CUdeviceptr, const void *, size_t, CUstream) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemcpyHtoDAsync_v2_h == NULL)
+	cuMemcpyHtoDAsync_v2_h = (cuMemcpyHtoDAsync_v2_p) dlsym(tau_handle,"cuMemcpyHtoDAsync_v2"); 
+    if (cuMemcpyHtoDAsync_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemcpyHtoDAsync_v2_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemcpyDtoHAsync_v2(void * a1, CUdeviceptr a2, size_t a3, CUstream a4) {
+
+  typedef CUresult (*cuMemcpyDtoHAsync_v2_p) (void *, CUdeviceptr, size_t, CUstream);
+  static cuMemcpyDtoHAsync_v2_p cuMemcpyDtoHAsync_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyDtoHAsync_v2(void *, CUdeviceptr, size_t, CUstream) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemcpyDtoHAsync_v2_h == NULL)
+	cuMemcpyDtoHAsync_v2_h = (cuMemcpyDtoHAsync_v2_p) dlsym(tau_handle,"cuMemcpyDtoHAsync_v2"); 
+    if (cuMemcpyDtoHAsync_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemcpyDtoHAsync_v2_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemcpyDtoDAsync_v2(CUdeviceptr a1, CUdeviceptr a2, size_t a3, CUstream a4) {
+
+  typedef CUresult (*cuMemcpyDtoDAsync_v2_p) (CUdeviceptr, CUdeviceptr, size_t, CUstream);
+  static cuMemcpyDtoDAsync_v2_p cuMemcpyDtoDAsync_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyDtoDAsync_v2(CUdeviceptr, CUdeviceptr, size_t, CUstream) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemcpyDtoDAsync_v2_h == NULL)
+	cuMemcpyDtoDAsync_v2_h = (cuMemcpyDtoDAsync_v2_p) dlsym(tau_handle,"cuMemcpyDtoDAsync_v2"); 
+    if (cuMemcpyDtoDAsync_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemcpyDtoDAsync_v2_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemcpyHtoAAsync_v2(CUarray a1, size_t a2, const void * a3, size_t a4, CUstream a5) {
+
+  typedef CUresult (*cuMemcpyHtoAAsync_v2_p) (CUarray, size_t, const void *, size_t, CUstream);
+  static cuMemcpyHtoAAsync_v2_p cuMemcpyHtoAAsync_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyHtoAAsync_v2(CUarray, size_t, const void *, size_t, CUstream) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemcpyHtoAAsync_v2_h == NULL)
+	cuMemcpyHtoAAsync_v2_h = (cuMemcpyHtoAAsync_v2_p) dlsym(tau_handle,"cuMemcpyHtoAAsync_v2"); 
+    if (cuMemcpyHtoAAsync_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemcpyHtoAAsync_v2_h)( a1,  a2,  a3,  a4,  a5);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemcpyAtoHAsync_v2(void * a1, CUarray a2, size_t a3, size_t a4, CUstream a5) {
+
+  typedef CUresult (*cuMemcpyAtoHAsync_v2_p) (void *, CUarray, size_t, size_t, CUstream);
+  static cuMemcpyAtoHAsync_v2_p cuMemcpyAtoHAsync_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyAtoHAsync_v2(void *, CUarray, size_t, size_t, CUstream) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemcpyAtoHAsync_v2_h == NULL)
+	cuMemcpyAtoHAsync_v2_h = (cuMemcpyAtoHAsync_v2_p) dlsym(tau_handle,"cuMemcpyAtoHAsync_v2"); 
+    if (cuMemcpyAtoHAsync_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemcpyAtoHAsync_v2_h)( a1,  a2,  a3,  a4,  a5);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemcpy2DAsync_v2(const CUDA_MEMCPY2D * a1, CUstream a2) {
+
+  typedef CUresult (*cuMemcpy2DAsync_v2_p) (const CUDA_MEMCPY2D *, CUstream);
+  static cuMemcpy2DAsync_v2_p cuMemcpy2DAsync_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpy2DAsync_v2(const CUDA_MEMCPY2D *, CUstream) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemcpy2DAsync_v2_h == NULL)
+	cuMemcpy2DAsync_v2_h = (cuMemcpy2DAsync_v2_p) dlsym(tau_handle,"cuMemcpy2DAsync_v2"); 
+    if (cuMemcpy2DAsync_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemcpy2DAsync_v2_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemcpy3DAsync_v2(const CUDA_MEMCPY3D * a1, CUstream a2) {
+
+  typedef CUresult (*cuMemcpy3DAsync_v2_p) (const CUDA_MEMCPY3D *, CUstream);
+  static cuMemcpy3DAsync_v2_p cuMemcpy3DAsync_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpy3DAsync_v2(const CUDA_MEMCPY3D *, CUstream) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemcpy3DAsync_v2_h == NULL)
+	cuMemcpy3DAsync_v2_h = (cuMemcpy3DAsync_v2_p) dlsym(tau_handle,"cuMemcpy3DAsync_v2"); 
+    if (cuMemcpy3DAsync_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemcpy3DAsync_v2_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemsetD8_v2(CUdeviceptr a1, unsigned char a2, size_t a3) {
+
+  typedef CUresult (*cuMemsetD8_v2_p) (CUdeviceptr, unsigned char, size_t);
+  static cuMemsetD8_v2_p cuMemsetD8_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD8_v2(CUdeviceptr, unsigned char, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemsetD8_v2_h == NULL)
+	cuMemsetD8_v2_h = (cuMemsetD8_v2_p) dlsym(tau_handle,"cuMemsetD8_v2"); 
+    if (cuMemsetD8_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemsetD8_v2_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemsetD16_v2(CUdeviceptr a1, unsigned short a2, size_t a3) {
+
+  typedef CUresult (*cuMemsetD16_v2_p) (CUdeviceptr, unsigned short, size_t);
+  static cuMemsetD16_v2_p cuMemsetD16_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD16_v2(CUdeviceptr, unsigned short, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemsetD16_v2_h == NULL)
+	cuMemsetD16_v2_h = (cuMemsetD16_v2_p) dlsym(tau_handle,"cuMemsetD16_v2"); 
+    if (cuMemsetD16_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemsetD16_v2_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemsetD32_v2(CUdeviceptr a1, unsigned int a2, size_t a3) {
+
+  typedef CUresult (*cuMemsetD32_v2_p) (CUdeviceptr, unsigned int, size_t);
+  static cuMemsetD32_v2_p cuMemsetD32_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD32_v2(CUdeviceptr, unsigned int, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemsetD32_v2_h == NULL)
+	cuMemsetD32_v2_h = (cuMemsetD32_v2_p) dlsym(tau_handle,"cuMemsetD32_v2"); 
+    if (cuMemsetD32_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemsetD32_v2_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemsetD2D8_v2(CUdeviceptr a1, size_t a2, unsigned char a3, size_t a4, size_t a5) {
+
+  typedef CUresult (*cuMemsetD2D8_v2_p) (CUdeviceptr, size_t, unsigned char, size_t, size_t);
+  static cuMemsetD2D8_v2_p cuMemsetD2D8_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD2D8_v2(CUdeviceptr, size_t, unsigned char, size_t, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemsetD2D8_v2_h == NULL)
+	cuMemsetD2D8_v2_h = (cuMemsetD2D8_v2_p) dlsym(tau_handle,"cuMemsetD2D8_v2"); 
+    if (cuMemsetD2D8_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemsetD2D8_v2_h)( a1,  a2,  a3,  a4,  a5);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemsetD2D16_v2(CUdeviceptr a1, size_t a2, unsigned short a3, size_t a4, size_t a5) {
+
+  typedef CUresult (*cuMemsetD2D16_v2_p) (CUdeviceptr, size_t, unsigned short, size_t, size_t);
+  static cuMemsetD2D16_v2_p cuMemsetD2D16_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD2D16_v2(CUdeviceptr, size_t, unsigned short, size_t, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemsetD2D16_v2_h == NULL)
+	cuMemsetD2D16_v2_h = (cuMemsetD2D16_v2_p) dlsym(tau_handle,"cuMemsetD2D16_v2"); 
+    if (cuMemsetD2D16_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemsetD2D16_v2_h)( a1,  a2,  a3,  a4,  a5);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemsetD2D32_v2(CUdeviceptr a1, size_t a2, unsigned int a3, size_t a4, size_t a5) {
+
+  typedef CUresult (*cuMemsetD2D32_v2_p) (CUdeviceptr, size_t, unsigned int, size_t, size_t);
+  static cuMemsetD2D32_v2_p cuMemsetD2D32_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD2D32_v2(CUdeviceptr, size_t, unsigned int, size_t, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemsetD2D32_v2_h == NULL)
+	cuMemsetD2D32_v2_h = (cuMemsetD2D32_v2_p) dlsym(tau_handle,"cuMemsetD2D32_v2"); 
+    if (cuMemsetD2D32_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemsetD2D32_v2_h)( a1,  a2,  a3,  a4,  a5);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemsetD8Async(CUdeviceptr a1, unsigned char a2, size_t a3, CUstream a4) {
+
+  typedef CUresult (*cuMemsetD8Async_p) (CUdeviceptr, unsigned char, size_t, CUstream);
+  static cuMemsetD8Async_p cuMemsetD8Async_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD8Async(CUdeviceptr, unsigned char, size_t, CUstream) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemsetD8Async_h == NULL)
+	cuMemsetD8Async_h = (cuMemsetD8Async_p) dlsym(tau_handle,"cuMemsetD8Async"); 
+    if (cuMemsetD8Async_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemsetD8Async_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemsetD16Async(CUdeviceptr a1, unsigned short a2, size_t a3, CUstream a4) {
+
+  typedef CUresult (*cuMemsetD16Async_p) (CUdeviceptr, unsigned short, size_t, CUstream);
+  static cuMemsetD16Async_p cuMemsetD16Async_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD16Async(CUdeviceptr, unsigned short, size_t, CUstream) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemsetD16Async_h == NULL)
+	cuMemsetD16Async_h = (cuMemsetD16Async_p) dlsym(tau_handle,"cuMemsetD16Async"); 
+    if (cuMemsetD16Async_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemsetD16Async_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemsetD32Async(CUdeviceptr a1, unsigned int a2, size_t a3, CUstream a4) {
+
+  typedef CUresult (*cuMemsetD32Async_p) (CUdeviceptr, unsigned int, size_t, CUstream);
+  static cuMemsetD32Async_p cuMemsetD32Async_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD32Async(CUdeviceptr, unsigned int, size_t, CUstream) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemsetD32Async_h == NULL)
+	cuMemsetD32Async_h = (cuMemsetD32Async_p) dlsym(tau_handle,"cuMemsetD32Async"); 
+    if (cuMemsetD32Async_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemsetD32Async_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemsetD2D8Async(CUdeviceptr a1, size_t a2, unsigned char a3, size_t a4, size_t a5, CUstream a6) {
+
+  typedef CUresult (*cuMemsetD2D8Async_p) (CUdeviceptr, size_t, unsigned char, size_t, size_t, CUstream);
+  static cuMemsetD2D8Async_p cuMemsetD2D8Async_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD2D8Async(CUdeviceptr, size_t, unsigned char, size_t, size_t, CUstream) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemsetD2D8Async_h == NULL)
+	cuMemsetD2D8Async_h = (cuMemsetD2D8Async_p) dlsym(tau_handle,"cuMemsetD2D8Async"); 
+    if (cuMemsetD2D8Async_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemsetD2D8Async_h)( a1,  a2,  a3,  a4,  a5,  a6);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemsetD2D16Async(CUdeviceptr a1, size_t a2, unsigned short a3, size_t a4, size_t a5, CUstream a6) {
+
+  typedef CUresult (*cuMemsetD2D16Async_p) (CUdeviceptr, size_t, unsigned short, size_t, size_t, CUstream);
+  static cuMemsetD2D16Async_p cuMemsetD2D16Async_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD2D16Async(CUdeviceptr, size_t, unsigned short, size_t, size_t, CUstream) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemsetD2D16Async_h == NULL)
+	cuMemsetD2D16Async_h = (cuMemsetD2D16Async_p) dlsym(tau_handle,"cuMemsetD2D16Async"); 
+    if (cuMemsetD2D16Async_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemsetD2D16Async_h)( a1,  a2,  a3,  a4,  a5,  a6);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuMemsetD2D32Async(CUdeviceptr a1, size_t a2, unsigned int a3, size_t a4, size_t a5, CUstream a6) {
+
+  typedef CUresult (*cuMemsetD2D32Async_p) (CUdeviceptr, size_t, unsigned int, size_t, size_t, CUstream);
+  static cuMemsetD2D32Async_p cuMemsetD2D32Async_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD2D32Async(CUdeviceptr, size_t, unsigned int, size_t, size_t, CUstream) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemsetD2D32Async_h == NULL)
+	cuMemsetD2D32Async_h = (cuMemsetD2D32Async_p) dlsym(tau_handle,"cuMemsetD2D32Async"); 
+    if (cuMemsetD2D32Async_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemsetD2D32Async_h)( a1,  a2,  a3,  a4,  a5,  a6);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuArrayCreate_v2(CUarray * a1, const CUDA_ARRAY_DESCRIPTOR * a2) {
+
+  typedef CUresult (*cuArrayCreate_v2_p) (CUarray *, const CUDA_ARRAY_DESCRIPTOR *);
+  static cuArrayCreate_v2_p cuArrayCreate_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuArrayCreate_v2(CUarray *, const CUDA_ARRAY_DESCRIPTOR *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuArrayCreate_v2_h == NULL)
+	cuArrayCreate_v2_h = (cuArrayCreate_v2_p) dlsym(tau_handle,"cuArrayCreate_v2"); 
+    if (cuArrayCreate_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuArrayCreate_v2_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuArrayGetDescriptor_v2(CUDA_ARRAY_DESCRIPTOR * a1, CUarray a2) {
+
+  typedef CUresult (*cuArrayGetDescriptor_v2_p) (CUDA_ARRAY_DESCRIPTOR *, CUarray);
+  static cuArrayGetDescriptor_v2_p cuArrayGetDescriptor_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuArrayGetDescriptor_v2(CUDA_ARRAY_DESCRIPTOR *, CUarray) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuArrayGetDescriptor_v2_h == NULL)
+	cuArrayGetDescriptor_v2_h = (cuArrayGetDescriptor_v2_p) dlsym(tau_handle,"cuArrayGetDescriptor_v2"); 
+    if (cuArrayGetDescriptor_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuArrayGetDescriptor_v2_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuArrayDestroy(CUarray a1) {
+
+  typedef CUresult (*cuArrayDestroy_p) (CUarray);
+  static cuArrayDestroy_p cuArrayDestroy_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuArrayDestroy(CUarray) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuArrayDestroy_h == NULL)
+	cuArrayDestroy_h = (cuArrayDestroy_p) dlsym(tau_handle,"cuArrayDestroy"); 
+    if (cuArrayDestroy_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuArrayDestroy_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuArray3DCreate_v2(CUarray * a1, const CUDA_ARRAY3D_DESCRIPTOR * a2) {
+
+  typedef CUresult (*cuArray3DCreate_v2_p) (CUarray *, const CUDA_ARRAY3D_DESCRIPTOR *);
+  static cuArray3DCreate_v2_p cuArray3DCreate_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuArray3DCreate_v2(CUarray *, const CUDA_ARRAY3D_DESCRIPTOR *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuArray3DCreate_v2_h == NULL)
+	cuArray3DCreate_v2_h = (cuArray3DCreate_v2_p) dlsym(tau_handle,"cuArray3DCreate_v2"); 
+    if (cuArray3DCreate_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuArray3DCreate_v2_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuArray3DGetDescriptor_v2(CUDA_ARRAY3D_DESCRIPTOR * a1, CUarray a2) {
+
+  typedef CUresult (*cuArray3DGetDescriptor_v2_p) (CUDA_ARRAY3D_DESCRIPTOR *, CUarray);
+  static cuArray3DGetDescriptor_v2_p cuArray3DGetDescriptor_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuArray3DGetDescriptor_v2(CUDA_ARRAY3D_DESCRIPTOR *, CUarray) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuArray3DGetDescriptor_v2_h == NULL)
+	cuArray3DGetDescriptor_v2_h = (cuArray3DGetDescriptor_v2_p) dlsym(tau_handle,"cuArray3DGetDescriptor_v2"); 
+    if (cuArray3DGetDescriptor_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuArray3DGetDescriptor_v2_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuStreamCreate(CUstream * a1, unsigned int a2) {
+
+  typedef CUresult (*cuStreamCreate_p) (CUstream *, unsigned int);
+  static cuStreamCreate_p cuStreamCreate_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuStreamCreate(CUstream *, unsigned int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuStreamCreate_h == NULL)
+	cuStreamCreate_h = (cuStreamCreate_p) dlsym(tau_handle,"cuStreamCreate"); 
+    if (cuStreamCreate_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuStreamCreate_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuStreamWaitEvent(CUstream a1, CUevent a2, unsigned int a3) {
+
+  typedef CUresult (*cuStreamWaitEvent_p) (CUstream, CUevent, unsigned int);
+  static cuStreamWaitEvent_p cuStreamWaitEvent_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuStreamWaitEvent(CUstream, CUevent, unsigned int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuStreamWaitEvent_h == NULL)
+	cuStreamWaitEvent_h = (cuStreamWaitEvent_p) dlsym(tau_handle,"cuStreamWaitEvent"); 
+    if (cuStreamWaitEvent_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuStreamWaitEvent_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuStreamQuery(CUstream a1) {
+
+  typedef CUresult (*cuStreamQuery_p) (CUstream);
+  static cuStreamQuery_p cuStreamQuery_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuStreamQuery(CUstream) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuStreamQuery_h == NULL)
+	cuStreamQuery_h = (cuStreamQuery_p) dlsym(tau_handle,"cuStreamQuery"); 
+    if (cuStreamQuery_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuStreamQuery_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuStreamSynchronize(CUstream a1) {
+
+  typedef CUresult (*cuStreamSynchronize_p) (CUstream);
+  static cuStreamSynchronize_p cuStreamSynchronize_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuStreamSynchronize(CUstream) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuStreamSynchronize_h == NULL)
+	cuStreamSynchronize_h = (cuStreamSynchronize_p) dlsym(tau_handle,"cuStreamSynchronize"); 
+    if (cuStreamSynchronize_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuStreamSynchronize_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuStreamDestroy(CUstream a1) {
+
+  typedef CUresult (*cuStreamDestroy_p) (CUstream);
+  static cuStreamDestroy_p cuStreamDestroy_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuStreamDestroy(CUstream) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuStreamDestroy_h == NULL)
+	cuStreamDestroy_h = (cuStreamDestroy_p) dlsym(tau_handle,"cuStreamDestroy"); 
+    if (cuStreamDestroy_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuStreamDestroy_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuEventCreate(CUevent * a1, unsigned int a2) {
+
+  typedef CUresult (*cuEventCreate_p) (CUevent *, unsigned int);
+  static cuEventCreate_p cuEventCreate_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuEventCreate(CUevent *, unsigned int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuEventCreate_h == NULL)
+	cuEventCreate_h = (cuEventCreate_p) dlsym(tau_handle,"cuEventCreate"); 
+    if (cuEventCreate_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuEventCreate_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuEventRecord(CUevent a1, CUstream a2) {
+
+  typedef CUresult (*cuEventRecord_p) (CUevent, CUstream);
+  static cuEventRecord_p cuEventRecord_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuEventRecord(CUevent, CUstream) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuEventRecord_h == NULL)
+	cuEventRecord_h = (cuEventRecord_p) dlsym(tau_handle,"cuEventRecord"); 
+    if (cuEventRecord_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuEventRecord_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuEventQuery(CUevent a1) {
+
+  typedef CUresult (*cuEventQuery_p) (CUevent);
+  static cuEventQuery_p cuEventQuery_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuEventQuery(CUevent) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuEventQuery_h == NULL)
+	cuEventQuery_h = (cuEventQuery_p) dlsym(tau_handle,"cuEventQuery"); 
+    if (cuEventQuery_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuEventQuery_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuEventSynchronize(CUevent a1) {
+
+  typedef CUresult (*cuEventSynchronize_p) (CUevent);
+  static cuEventSynchronize_p cuEventSynchronize_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuEventSynchronize(CUevent) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuEventSynchronize_h == NULL)
+	cuEventSynchronize_h = (cuEventSynchronize_p) dlsym(tau_handle,"cuEventSynchronize"); 
+    if (cuEventSynchronize_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuEventSynchronize_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuEventDestroy(CUevent a1) {
+
+  typedef CUresult (*cuEventDestroy_p) (CUevent);
+  static cuEventDestroy_p cuEventDestroy_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuEventDestroy(CUevent) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuEventDestroy_h == NULL)
+	cuEventDestroy_h = (cuEventDestroy_p) dlsym(tau_handle,"cuEventDestroy"); 
+    if (cuEventDestroy_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuEventDestroy_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuEventElapsedTime(float * a1, CUevent a2, CUevent a3) {
+
+  typedef CUresult (*cuEventElapsedTime_p) (float *, CUevent, CUevent);
+  static cuEventElapsedTime_p cuEventElapsedTime_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuEventElapsedTime(float *, CUevent, CUevent) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuEventElapsedTime_h == NULL)
+	cuEventElapsedTime_h = (cuEventElapsedTime_p) dlsym(tau_handle,"cuEventElapsedTime"); 
+    if (cuEventElapsedTime_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuEventElapsedTime_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuFuncSetBlockShape(CUfunction a1, int a2, int a3, int a4) {
+
+  typedef CUresult (*cuFuncSetBlockShape_p) (CUfunction, int, int, int);
+  static cuFuncSetBlockShape_p cuFuncSetBlockShape_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuFuncSetBlockShape(CUfunction, int, int, int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuFuncSetBlockShape_h == NULL)
+	cuFuncSetBlockShape_h = (cuFuncSetBlockShape_p) dlsym(tau_handle,"cuFuncSetBlockShape"); 
+    if (cuFuncSetBlockShape_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuFuncSetBlockShape_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuFuncSetSharedSize(CUfunction a1, unsigned int a2) {
+
+  typedef CUresult (*cuFuncSetSharedSize_p) (CUfunction, unsigned int);
+  static cuFuncSetSharedSize_p cuFuncSetSharedSize_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuFuncSetSharedSize(CUfunction, unsigned int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuFuncSetSharedSize_h == NULL)
+	cuFuncSetSharedSize_h = (cuFuncSetSharedSize_p) dlsym(tau_handle,"cuFuncSetSharedSize"); 
+    if (cuFuncSetSharedSize_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuFuncSetSharedSize_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuFuncGetAttribute(int * a1, CUfunction_attribute a2, CUfunction a3) {
+
+  typedef CUresult (*cuFuncGetAttribute_p) (int *, CUfunction_attribute, CUfunction);
+  static cuFuncGetAttribute_p cuFuncGetAttribute_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuFuncGetAttribute(int *, CUfunction_attribute, CUfunction) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuFuncGetAttribute_h == NULL)
+	cuFuncGetAttribute_h = (cuFuncGetAttribute_p) dlsym(tau_handle,"cuFuncGetAttribute"); 
+    if (cuFuncGetAttribute_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuFuncGetAttribute_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuFuncSetCacheConfig(CUfunction a1, CUfunc_cache a2) {
+
+  typedef CUresult (*cuFuncSetCacheConfig_p) (CUfunction, CUfunc_cache);
+  static cuFuncSetCacheConfig_p cuFuncSetCacheConfig_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuFuncSetCacheConfig(CUfunction, CUfunc_cache) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuFuncSetCacheConfig_h == NULL)
+	cuFuncSetCacheConfig_h = (cuFuncSetCacheConfig_p) dlsym(tau_handle,"cuFuncSetCacheConfig"); 
+    if (cuFuncSetCacheConfig_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuFuncSetCacheConfig_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuParamSetSize(CUfunction a1, unsigned int a2) {
+
+  typedef CUresult (*cuParamSetSize_p) (CUfunction, unsigned int);
+  static cuParamSetSize_p cuParamSetSize_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuParamSetSize(CUfunction, unsigned int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuParamSetSize_h == NULL)
+	cuParamSetSize_h = (cuParamSetSize_p) dlsym(tau_handle,"cuParamSetSize"); 
+    if (cuParamSetSize_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuParamSetSize_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuParamSeti(CUfunction a1, int a2, unsigned int a3) {
+
+  typedef CUresult (*cuParamSeti_p) (CUfunction, int, unsigned int);
+  static cuParamSeti_p cuParamSeti_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuParamSeti(CUfunction, int, unsigned int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuParamSeti_h == NULL)
+	cuParamSeti_h = (cuParamSeti_p) dlsym(tau_handle,"cuParamSeti"); 
+    if (cuParamSeti_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuParamSeti_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuParamSetf(CUfunction a1, int a2, float a3) {
+
+  typedef CUresult (*cuParamSetf_p) (CUfunction, int, float);
+  static cuParamSetf_p cuParamSetf_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuParamSetf(CUfunction, int, float) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuParamSetf_h == NULL)
+	cuParamSetf_h = (cuParamSetf_p) dlsym(tau_handle,"cuParamSetf"); 
+    if (cuParamSetf_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuParamSetf_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuParamSetv(CUfunction a1, int a2, void * a3, unsigned int a4) {
+
+  typedef CUresult (*cuParamSetv_p) (CUfunction, int, void *, unsigned int);
+  static cuParamSetv_p cuParamSetv_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuParamSetv(CUfunction, int, void *, unsigned int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuParamSetv_h == NULL)
+	cuParamSetv_h = (cuParamSetv_p) dlsym(tau_handle,"cuParamSetv"); 
+    if (cuParamSetv_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuParamSetv_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuLaunch(CUfunction a1) {
+
+  typedef CUresult (*cuLaunch_p) (CUfunction);
+  static cuLaunch_p cuLaunch_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuLaunch(CUfunction) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuLaunch_h == NULL)
+	cuLaunch_h = (cuLaunch_p) dlsym(tau_handle,"cuLaunch"); 
+    if (cuLaunch_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuLaunch_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuLaunchGrid(CUfunction a1, int a2, int a3) {
+
+  typedef CUresult (*cuLaunchGrid_p) (CUfunction, int, int);
+  static cuLaunchGrid_p cuLaunchGrid_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuLaunchGrid(CUfunction, int, int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuLaunchGrid_h == NULL)
+	cuLaunchGrid_h = (cuLaunchGrid_p) dlsym(tau_handle,"cuLaunchGrid"); 
+    if (cuLaunchGrid_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuLaunchGrid_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuLaunchGridAsync(CUfunction a1, int a2, int a3, CUstream a4) {
+
+  typedef CUresult (*cuLaunchGridAsync_p) (CUfunction, int, int, CUstream);
+  static cuLaunchGridAsync_p cuLaunchGridAsync_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuLaunchGridAsync(CUfunction, int, int, CUstream) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuLaunchGridAsync_h == NULL)
+	cuLaunchGridAsync_h = (cuLaunchGridAsync_p) dlsym(tau_handle,"cuLaunchGridAsync"); 
+    if (cuLaunchGridAsync_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuLaunchGridAsync_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuParamSetTexRef(CUfunction a1, int a2, CUtexref a3) {
+
+  typedef CUresult (*cuParamSetTexRef_p) (CUfunction, int, CUtexref);
+  static cuParamSetTexRef_p cuParamSetTexRef_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuParamSetTexRef(CUfunction, int, CUtexref) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuParamSetTexRef_h == NULL)
+	cuParamSetTexRef_h = (cuParamSetTexRef_p) dlsym(tau_handle,"cuParamSetTexRef"); 
+    if (cuParamSetTexRef_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuParamSetTexRef_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuTexRefSetArray(CUtexref a1, CUarray a2, unsigned int a3) {
+
+  typedef CUresult (*cuTexRefSetArray_p) (CUtexref, CUarray, unsigned int);
+  static cuTexRefSetArray_p cuTexRefSetArray_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefSetArray(CUtexref, CUarray, unsigned int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuTexRefSetArray_h == NULL)
+	cuTexRefSetArray_h = (cuTexRefSetArray_p) dlsym(tau_handle,"cuTexRefSetArray"); 
+    if (cuTexRefSetArray_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuTexRefSetArray_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuTexRefSetAddress_v2(size_t * a1, CUtexref a2, CUdeviceptr a3, size_t a4) {
+
+  typedef CUresult (*cuTexRefSetAddress_v2_p) (size_t *, CUtexref, CUdeviceptr, size_t);
+  static cuTexRefSetAddress_v2_p cuTexRefSetAddress_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefSetAddress_v2(size_t *, CUtexref, CUdeviceptr, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuTexRefSetAddress_v2_h == NULL)
+	cuTexRefSetAddress_v2_h = (cuTexRefSetAddress_v2_p) dlsym(tau_handle,"cuTexRefSetAddress_v2"); 
+    if (cuTexRefSetAddress_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuTexRefSetAddress_v2_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuTexRefSetAddress2D_v2(CUtexref a1, const CUDA_ARRAY_DESCRIPTOR * a2, CUdeviceptr a3, size_t a4) {
+
+  typedef CUresult (*cuTexRefSetAddress2D_v2_p) (CUtexref, const CUDA_ARRAY_DESCRIPTOR *, CUdeviceptr, size_t);
+  static cuTexRefSetAddress2D_v2_p cuTexRefSetAddress2D_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefSetAddress2D_v2(CUtexref, const CUDA_ARRAY_DESCRIPTOR *, CUdeviceptr, size_t) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuTexRefSetAddress2D_v2_h == NULL)
+	cuTexRefSetAddress2D_v2_h = (cuTexRefSetAddress2D_v2_p) dlsym(tau_handle,"cuTexRefSetAddress2D_v2"); 
+    if (cuTexRefSetAddress2D_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuTexRefSetAddress2D_v2_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuTexRefSetFormat(CUtexref a1, CUarray_format a2, int a3) {
+
+  typedef CUresult (*cuTexRefSetFormat_p) (CUtexref, CUarray_format, int);
+  static cuTexRefSetFormat_p cuTexRefSetFormat_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefSetFormat(CUtexref, CUarray_format, int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuTexRefSetFormat_h == NULL)
+	cuTexRefSetFormat_h = (cuTexRefSetFormat_p) dlsym(tau_handle,"cuTexRefSetFormat"); 
+    if (cuTexRefSetFormat_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuTexRefSetFormat_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuTexRefSetAddressMode(CUtexref a1, int a2, CUaddress_mode a3) {
+
+  typedef CUresult (*cuTexRefSetAddressMode_p) (CUtexref, int, CUaddress_mode);
+  static cuTexRefSetAddressMode_p cuTexRefSetAddressMode_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefSetAddressMode(CUtexref, int, CUaddress_mode) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuTexRefSetAddressMode_h == NULL)
+	cuTexRefSetAddressMode_h = (cuTexRefSetAddressMode_p) dlsym(tau_handle,"cuTexRefSetAddressMode"); 
+    if (cuTexRefSetAddressMode_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuTexRefSetAddressMode_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuTexRefSetFilterMode(CUtexref a1, CUfilter_mode a2) {
+
+  typedef CUresult (*cuTexRefSetFilterMode_p) (CUtexref, CUfilter_mode);
+  static cuTexRefSetFilterMode_p cuTexRefSetFilterMode_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefSetFilterMode(CUtexref, CUfilter_mode) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuTexRefSetFilterMode_h == NULL)
+	cuTexRefSetFilterMode_h = (cuTexRefSetFilterMode_p) dlsym(tau_handle,"cuTexRefSetFilterMode"); 
+    if (cuTexRefSetFilterMode_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuTexRefSetFilterMode_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuTexRefSetFlags(CUtexref a1, unsigned int a2) {
+
+  typedef CUresult (*cuTexRefSetFlags_p) (CUtexref, unsigned int);
+  static cuTexRefSetFlags_p cuTexRefSetFlags_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefSetFlags(CUtexref, unsigned int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuTexRefSetFlags_h == NULL)
+	cuTexRefSetFlags_h = (cuTexRefSetFlags_p) dlsym(tau_handle,"cuTexRefSetFlags"); 
+    if (cuTexRefSetFlags_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuTexRefSetFlags_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuTexRefGetAddress_v2(CUdeviceptr * a1, CUtexref a2) {
+
+  typedef CUresult (*cuTexRefGetAddress_v2_p) (CUdeviceptr *, CUtexref);
+  static cuTexRefGetAddress_v2_p cuTexRefGetAddress_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefGetAddress_v2(CUdeviceptr *, CUtexref) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuTexRefGetAddress_v2_h == NULL)
+	cuTexRefGetAddress_v2_h = (cuTexRefGetAddress_v2_p) dlsym(tau_handle,"cuTexRefGetAddress_v2"); 
+    if (cuTexRefGetAddress_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuTexRefGetAddress_v2_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuTexRefGetArray(CUarray * a1, CUtexref a2) {
+
+  typedef CUresult (*cuTexRefGetArray_p) (CUarray *, CUtexref);
+  static cuTexRefGetArray_p cuTexRefGetArray_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefGetArray(CUarray *, CUtexref) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuTexRefGetArray_h == NULL)
+	cuTexRefGetArray_h = (cuTexRefGetArray_p) dlsym(tau_handle,"cuTexRefGetArray"); 
+    if (cuTexRefGetArray_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuTexRefGetArray_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuTexRefGetAddressMode(CUaddress_mode * a1, CUtexref a2, int a3) {
+
+  typedef CUresult (*cuTexRefGetAddressMode_p) (CUaddress_mode *, CUtexref, int);
+  static cuTexRefGetAddressMode_p cuTexRefGetAddressMode_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefGetAddressMode(CUaddress_mode *, CUtexref, int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuTexRefGetAddressMode_h == NULL)
+	cuTexRefGetAddressMode_h = (cuTexRefGetAddressMode_p) dlsym(tau_handle,"cuTexRefGetAddressMode"); 
+    if (cuTexRefGetAddressMode_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuTexRefGetAddressMode_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuTexRefGetFilterMode(CUfilter_mode * a1, CUtexref a2) {
+
+  typedef CUresult (*cuTexRefGetFilterMode_p) (CUfilter_mode *, CUtexref);
+  static cuTexRefGetFilterMode_p cuTexRefGetFilterMode_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefGetFilterMode(CUfilter_mode *, CUtexref) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuTexRefGetFilterMode_h == NULL)
+	cuTexRefGetFilterMode_h = (cuTexRefGetFilterMode_p) dlsym(tau_handle,"cuTexRefGetFilterMode"); 
+    if (cuTexRefGetFilterMode_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuTexRefGetFilterMode_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuTexRefGetFormat(CUarray_format * a1, int * a2, CUtexref a3) {
+
+  typedef CUresult (*cuTexRefGetFormat_p) (CUarray_format *, int *, CUtexref);
+  static cuTexRefGetFormat_p cuTexRefGetFormat_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefGetFormat(CUarray_format *, int *, CUtexref) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuTexRefGetFormat_h == NULL)
+	cuTexRefGetFormat_h = (cuTexRefGetFormat_p) dlsym(tau_handle,"cuTexRefGetFormat"); 
+    if (cuTexRefGetFormat_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuTexRefGetFormat_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuTexRefGetFlags(unsigned int * a1, CUtexref a2) {
+
+  typedef CUresult (*cuTexRefGetFlags_p) (unsigned int *, CUtexref);
+  static cuTexRefGetFlags_p cuTexRefGetFlags_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefGetFlags(unsigned int *, CUtexref) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuTexRefGetFlags_h == NULL)
+	cuTexRefGetFlags_h = (cuTexRefGetFlags_p) dlsym(tau_handle,"cuTexRefGetFlags"); 
+    if (cuTexRefGetFlags_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuTexRefGetFlags_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuTexRefCreate(CUtexref * a1) {
+
+  typedef CUresult (*cuTexRefCreate_p) (CUtexref *);
+  static cuTexRefCreate_p cuTexRefCreate_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefCreate(CUtexref *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuTexRefCreate_h == NULL)
+	cuTexRefCreate_h = (cuTexRefCreate_p) dlsym(tau_handle,"cuTexRefCreate"); 
+    if (cuTexRefCreate_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuTexRefCreate_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuTexRefDestroy(CUtexref a1) {
+
+  typedef CUresult (*cuTexRefDestroy_p) (CUtexref);
+  static cuTexRefDestroy_p cuTexRefDestroy_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefDestroy(CUtexref) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuTexRefDestroy_h == NULL)
+	cuTexRefDestroy_h = (cuTexRefDestroy_p) dlsym(tau_handle,"cuTexRefDestroy"); 
+    if (cuTexRefDestroy_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuTexRefDestroy_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuSurfRefSetArray(CUsurfref a1, CUarray a2, unsigned int a3) {
+
+  typedef CUresult (*cuSurfRefSetArray_p) (CUsurfref, CUarray, unsigned int);
+  static cuSurfRefSetArray_p cuSurfRefSetArray_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuSurfRefSetArray(CUsurfref, CUarray, unsigned int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuSurfRefSetArray_h == NULL)
+	cuSurfRefSetArray_h = (cuSurfRefSetArray_p) dlsym(tau_handle,"cuSurfRefSetArray"); 
+    if (cuSurfRefSetArray_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuSurfRefSetArray_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuSurfRefGetArray(CUarray * a1, CUsurfref a2) {
+
+  typedef CUresult (*cuSurfRefGetArray_p) (CUarray *, CUsurfref);
+  static cuSurfRefGetArray_p cuSurfRefGetArray_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuSurfRefGetArray(CUarray *, CUsurfref) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuSurfRefGetArray_h == NULL)
+	cuSurfRefGetArray_h = (cuSurfRefGetArray_p) dlsym(tau_handle,"cuSurfRefGetArray"); 
+    if (cuSurfRefGetArray_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuSurfRefGetArray_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuGraphicsUnregisterResource(CUgraphicsResource a1) {
+
+  typedef CUresult (*cuGraphicsUnregisterResource_p) (CUgraphicsResource);
+  static cuGraphicsUnregisterResource_p cuGraphicsUnregisterResource_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuGraphicsUnregisterResource(CUgraphicsResource) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuGraphicsUnregisterResource_h == NULL)
+	cuGraphicsUnregisterResource_h = (cuGraphicsUnregisterResource_p) dlsym(tau_handle,"cuGraphicsUnregisterResource"); 
+    if (cuGraphicsUnregisterResource_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuGraphicsUnregisterResource_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuGraphicsSubResourceGetMappedArray(CUarray * a1, CUgraphicsResource a2, unsigned int a3, unsigned int a4) {
+
+  typedef CUresult (*cuGraphicsSubResourceGetMappedArray_p) (CUarray *, CUgraphicsResource, unsigned int, unsigned int);
+  static cuGraphicsSubResourceGetMappedArray_p cuGraphicsSubResourceGetMappedArray_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuGraphicsSubResourceGetMappedArray(CUarray *, CUgraphicsResource, unsigned int, unsigned int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuGraphicsSubResourceGetMappedArray_h == NULL)
+	cuGraphicsSubResourceGetMappedArray_h = (cuGraphicsSubResourceGetMappedArray_p) dlsym(tau_handle,"cuGraphicsSubResourceGetMappedArray"); 
+    if (cuGraphicsSubResourceGetMappedArray_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuGraphicsSubResourceGetMappedArray_h)( a1,  a2,  a3,  a4);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuGraphicsResourceGetMappedPointer_v2(CUdeviceptr * a1, size_t * a2, CUgraphicsResource a3) {
+
+  typedef CUresult (*cuGraphicsResourceGetMappedPointer_v2_p) (CUdeviceptr *, size_t *, CUgraphicsResource);
+  static cuGraphicsResourceGetMappedPointer_v2_p cuGraphicsResourceGetMappedPointer_v2_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuGraphicsResourceGetMappedPointer_v2(CUdeviceptr *, size_t *, CUgraphicsResource) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuGraphicsResourceGetMappedPointer_v2_h == NULL)
+	cuGraphicsResourceGetMappedPointer_v2_h = (cuGraphicsResourceGetMappedPointer_v2_p) dlsym(tau_handle,"cuGraphicsResourceGetMappedPointer_v2"); 
+    if (cuGraphicsResourceGetMappedPointer_v2_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuGraphicsResourceGetMappedPointer_v2_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuGraphicsResourceSetMapFlags(CUgraphicsResource a1, unsigned int a2) {
+
+  typedef CUresult (*cuGraphicsResourceSetMapFlags_p) (CUgraphicsResource, unsigned int);
+  static cuGraphicsResourceSetMapFlags_p cuGraphicsResourceSetMapFlags_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuGraphicsResourceSetMapFlags(CUgraphicsResource, unsigned int) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuGraphicsResourceSetMapFlags_h == NULL)
+	cuGraphicsResourceSetMapFlags_h = (cuGraphicsResourceSetMapFlags_p) dlsym(tau_handle,"cuGraphicsResourceSetMapFlags"); 
+    if (cuGraphicsResourceSetMapFlags_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuGraphicsResourceSetMapFlags_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuGraphicsMapResources(unsigned int a1, CUgraphicsResource * a2, CUstream a3) {
+
+  typedef CUresult (*cuGraphicsMapResources_p) (unsigned int, CUgraphicsResource *, CUstream);
+  static cuGraphicsMapResources_p cuGraphicsMapResources_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuGraphicsMapResources(unsigned int, CUgraphicsResource *, CUstream) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuGraphicsMapResources_h == NULL)
+	cuGraphicsMapResources_h = (cuGraphicsMapResources_p) dlsym(tau_handle,"cuGraphicsMapResources"); 
+    if (cuGraphicsMapResources_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuGraphicsMapResources_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuGraphicsUnmapResources(unsigned int a1, CUgraphicsResource * a2, CUstream a3) {
+
+  typedef CUresult (*cuGraphicsUnmapResources_p) (unsigned int, CUgraphicsResource *, CUstream);
+  static cuGraphicsUnmapResources_p cuGraphicsUnmapResources_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuGraphicsUnmapResources(unsigned int, CUgraphicsResource *, CUstream) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuGraphicsUnmapResources_h == NULL)
+	cuGraphicsUnmapResources_h = (cuGraphicsUnmapResources_p) dlsym(tau_handle,"cuGraphicsUnmapResources"); 
+    if (cuGraphicsUnmapResources_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuGraphicsUnmapResources_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuGetExportTable(const void ** a1, const CUuuid * a2) {
+
+  typedef CUresult (*cuGetExportTable_p) (const void **, const CUuuid *);
+  static cuGetExportTable_p cuGetExportTable_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuGetExportTable(const void **, const CUuuid *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuGetExportTable_h == NULL)
+	cuGetExportTable_h = (cuGetExportTable_p) dlsym(tau_handle,"cuGetExportTable"); 
+    if (cuGetExportTable_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuGetExportTable_h)( a1,  a2);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+

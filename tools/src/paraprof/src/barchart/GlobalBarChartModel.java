@@ -8,9 +8,18 @@ import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 
 import edu.uoregon.tau.common.Common;
-import edu.uoregon.tau.paraprof.*;
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.paraprof.DataSorter;
+import edu.uoregon.tau.paraprof.FunctionBarChartWindow;
+import edu.uoregon.tau.paraprof.FunctionOrdering;
+import edu.uoregon.tau.paraprof.GlobalDataWindow;
+import edu.uoregon.tau.paraprof.ParaProf;
+import edu.uoregon.tau.paraprof.ParaProfTrial;
+import edu.uoregon.tau.paraprof.ParaProfUtils;
+import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.FunctionProfile;
+import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Thread;
+import edu.uoregon.tau.perfdmf.UtilFncs;
 
 /**
  * A BarChartModel for doing the GlobalDataWindow
@@ -28,7 +37,7 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
     //private List threads = new ArrayList();
 
     private FunctionOrdering functionOrder;
-    private List theThreads;
+    private List<Thread> theThreads;
 
     public GlobalBarChartModel(GlobalDataWindow window, DataSorter dataSorter, ParaProfTrial ppTrial) {
         this.window = window;
@@ -74,7 +83,7 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
     //    }
 
     public String getRowLabel(int row) {
-        Thread thread = (Thread) theThreads.get(row);
+        Thread thread = theThreads.get(row);
         return getName(thread);
     }
 
@@ -96,7 +105,7 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
     //    }
 
     public double getValue(int row, int subIndex) {
-        Thread thread = (Thread) theThreads.get(row);
+        Thread thread = theThreads.get(row);
         Function function = functionOrder.getOrder()[subIndex];
         FunctionProfile fp = thread.getFunctionProfile(function);
         if (fp == null) {
@@ -120,7 +129,7 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
     //        }
     //    }
     public Color getValueColor(int row, int subIndex) {
-        Thread thread = (Thread) theThreads.get(row);
+        Thread thread = theThreads.get(row);
         Function function = functionOrder.getOrder()[subIndex];
         FunctionProfile fp = thread.getFunctionProfile(function);
         if (fp == null) {
@@ -146,9 +155,9 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
     //        return null;
     //    }
     public Color getValueHighlightColor(int row, int subIndex) {
-        Thread thread = (Thread) theThreads.get(row);
+        //Thread thread = theThreads.get(row);
         Function function = functionOrder.getOrder()[subIndex];
-        FunctionProfile fp = thread.getFunctionProfile(function);
+        //FunctionProfile fp = thread.getFunctionProfile(function);
         if (function == (ppTrial.getHighlightedFunction())) {
             return ppTrial.getColorChooser().getHighlightColor();
         } else if (function.isGroupMember(ppTrial.getHighlightedGroup())) {
@@ -158,7 +167,7 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
     }
 
     public void fireValueClick(int row, int subIndex, MouseEvent e, JComponent owner) {
-        Thread thread = (Thread) theThreads.get(row);
+        Thread thread = theThreads.get(row);
         Function function = functionOrder.getOrder()[subIndex];
         FunctionProfile fp = thread.getFunctionProfile(function);
         //       List fpList = (List) threads.get(row);
@@ -177,7 +186,7 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
     public void fireRowLabelClick(int row, MouseEvent e, JComponent owner) {
         //        List fpList = (List) threads.get(row);
         //        Thread thread = ((FunctionProfile)fpList.get(0)).getThread();
-        Thread thread = (Thread) theThreads.get(row);
+        Thread thread = theThreads.get(row);
 
         if (ParaProfUtils.rightClick(e)) { // Bring up context menu
             ParaProfUtils.handleThreadClick(ppTrial, window.getPhase(), thread, owner, e);
@@ -200,7 +209,7 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
     public String getValueToolTipText(int row, int subIndex) {
         //        List fpList = (List) threads.get(row);
         //        FunctionProfile fp = (FunctionProfile) fpList.get(subIndex);
-        Thread thread = (Thread) theThreads.get(row);
+        Thread thread = theThreads.get(row);
         Function function = functionOrder.getOrder()[subIndex];
         FunctionProfile fp = thread.getFunctionProfile(function);
 
@@ -238,7 +247,7 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
     }
 
     public String getRowLabelToolTipText(int row) {
-        Thread thread = (Thread) theThreads.get(row);
+        Thread thread = theThreads.get(row);
 
         //        List fpList = (List) threads.get(row);
         //        edu.uoregon.tau.perfdmf.Thread thread = ((FunctionProfile)fpList.get(0)).getThread();
@@ -314,7 +323,7 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
         return "Misc function section ... see help window for details";
     }
 
-    public List getThreads() {
+    public List<Thread> getThreads() {
         return theThreads;
     }
 

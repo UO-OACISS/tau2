@@ -6,7 +6,7 @@ public class FunctionOrdering {
 
     private Function functions[];
     private boolean mask[];
-    private Function order[];
+    //private Function order[];
     
     public FunctionOrdering(DataSorter dataSorter) {
         
@@ -34,9 +34,9 @@ public class FunctionOrdering {
         return functions;
     }
 
-    public void setOrder(Function[] order) {
-        this.order = order;
-    }
+//    public void setOrder(Function[] order) {
+//        this.order = order;
+//    }
     
     
     

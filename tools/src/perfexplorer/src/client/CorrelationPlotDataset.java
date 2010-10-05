@@ -31,7 +31,7 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 	private int x = 0;
 	private int y = 1;
 	private boolean main = false;
-	private int maxLabels = 0;
+	//private int maxLabels = 0;
 	
 	/**
 	 * Constructor.
@@ -105,7 +105,7 @@ public class CorrelationPlotDataset extends AbstractXYDataset implements XYDatas
 		// get the mth column from that row
 		try {
 			double[] values = row.get(arg1);
-			this.maxLabels = values.length;
+			//this.maxLabels = values.length;
 			//return new Double(java.lang.Math.log(values[x])/java.lang.Math.log(2));
 			return new Double(values[x]);
 		} catch (Exception e) {

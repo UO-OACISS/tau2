@@ -1,14 +1,45 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
 
-import javax.swing.*;
-import javax.swing.event.*;
+import javax.swing.BorderFactory;
+import javax.swing.DefaultListSelectionModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JProgressBar;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import edu.uoregon.tau.common.Common;
 import edu.uoregon.tau.common.Wget;
@@ -29,7 +60,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
 	private static final String fileLoc = ""; //Was http://spaceghost.cs.uoregon.edu/PerfExplorer/
     private static final long serialVersionUID = 1L;
     private String lastDirectory = "";
-    private JList configList = new JList((Vector) ConfigureFiles.getConfigurationNames());
+    private JList configList = new JList((Vector<String>) ConfigureFiles.getConfigurationNames());
     private JButton saveConfig = new JButton("Save Configuration");
     private JButton removeConfig = new JButton("Remove Configuration");
     private JTextField name = new JTextField(15);
@@ -258,9 +289,10 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                 yPosition = yPosition - 50;
 
             this.setLocation(xPosition, yPosition);
-        } else {
-            this.setLocation(savedPosition);
-        }
+        } 
+//        else {  //TODO: Make sure we don't want to save positions
+//            this.setLocation(savedPosition);
+//        }
 
         //configurations.setLayout(new GridBagLayout());
         addCompItem(this, configurations, gbc, 0, 0, 1, 1);
@@ -345,7 +377,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             } else if (arg.equals("Save Configuration")) {
                 String filename = writeConfig(name.getText());
                 configList.clearSelection();
-                configList.setListData((Vector) ConfigureFiles.getConfigurationNames());
+                configList.setListData((Vector<String>) ConfigureFiles.getConfigurationNames());
                 ConfigureTest config = new ConfigureTest();
                 config.initialize(filename);
                 //config.setDBSchemaFile("dbschema." + adapter.getSelectedItem().toString() + ".txt");
@@ -371,7 +403,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                 //System.out.println(removeFile.exists() + "File path: " + removeFile.getAbsolutePath());
                 removeFile.delete();
                 configList.clearSelection();
-                configList.setListData((Vector) ConfigureFiles.getConfigurationNames());
+                configList.setListData((Vector<String>) ConfigureFiles.getConfigurationNames());
                 mainWindow.refreshDatabases();
             } else if (arg.equals("Download")) {
                 JFileChooser jFileChooser = new JFileChooser(lastDirectory);

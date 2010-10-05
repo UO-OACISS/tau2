@@ -1581,12 +1581,14 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
                     match_char = inbuf[k];
 		    //printf("Found match_char: inbuf[k] = %c\n", inbuf[k]);
 		    k++;
-                    do {
-		      current_char = inbuf[k];
-		      ret_expression.append(&current_char, 1);
-		      //printf("Pushing %c...\n", inbuf[k]);
-                      k++;
-                    } while ((inbuf[k] != match_char) && (k < inbufLength));
+                    if (!((inbuf[k] == '\'') || (inbuf[k] == '\"'))) {
+                      do {
+		        current_char = inbuf[k];
+		        ret_expression.append(&current_char, 1);
+		        //printf("Pushing %c...\n", inbuf[k]);
+                        k++;
+                      } while ((inbuf[k] != match_char) && (k < inbufLength));
+                    }
 		    //printf("Now: inbuf[k] = %c\n", inbuf[k]);
 		    if (inbuf[k] == match_char) {
 		      //printf("Match: inbuf[k] = %c\n", inbuf[k]);

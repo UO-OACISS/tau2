@@ -84,7 +84,8 @@ public class CreateApplication {
         int exitval = 0;
 
         /***** Load appliation into PerfDMF *********/
-        int appid = create.createApp(name);
+        //int appid = 
+        	create.createApp(name);
 
         System.exit(exitval);
     }

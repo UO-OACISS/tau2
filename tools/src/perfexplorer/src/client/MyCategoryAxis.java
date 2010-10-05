@@ -141,7 +141,7 @@ public class MyCategoryAxis extends CategoryAxis {
     private CategoryLabelPositions categoryLabelPositions;
     
     /** Storage for the category label tooltips (if any). */
-    private Map<Comparable, String> categoryLabelToolTips;
+    private Map<Comparable<Object>, String> categoryLabelToolTips;
     
     /** Access to logging facilities. */
     protected static final LogContext logger = Log.createContext(MyCategoryAxis.class);
@@ -193,7 +193,7 @@ public class MyCategoryAxis extends CategoryAxis {
         
         this.categoryLabelPositionOffset = 4;
         this.categoryLabelPositions = CategoryLabelPositions.STANDARD;
-        this.categoryLabelToolTips = new HashMap<Comparable, String>();
+        this.categoryLabelToolTips = new HashMap<Comparable<Object>, String>();
         
     }
 
@@ -354,7 +354,8 @@ public class MyCategoryAxis extends CategoryAxis {
      * @param category  the category (<code>null<code> not permitted).
      * @param tooltip  the tooltip text (<code>null</code> permitted).
      */
-    public void addCategoryLabelToolTip(Comparable category, String tooltip) {
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	public void addCategoryLabelToolTip(Comparable category, String tooltip) {
         if (category == null) {
             throw new IllegalArgumentException("Null 'category' argument.");   
         }
@@ -368,7 +369,8 @@ public class MyCategoryAxis extends CategoryAxis {
      * 
      * @param category  the category (<code>null<code> not permitted).
      */
-    public void removeCategoryLabelToolTip(Comparable category) {
+    @SuppressWarnings("rawtypes")
+	public void removeCategoryLabelToolTip(Comparable category) {
         if (category == null) {
             throw new IllegalArgumentException("Null 'category' argument.");   
         }
@@ -788,7 +790,8 @@ public class MyCategoryAxis extends CategoryAxis {
      * 
      * @return A list of ticks.
      */
-    public List<Tick> refreshTicks(Graphics2D g2, 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	public List<Tick> refreshTicks(Graphics2D g2, 
                              AxisState state,
                              Rectangle2D plotArea, 
                              Rectangle2D dataArea,
@@ -802,7 +805,7 @@ public class MyCategoryAxis extends CategoryAxis {
         }
 
         CategoryPlot plot = (CategoryPlot) getPlot();
-        List categories = plot.getCategories();
+        List<Comparable> categories = plot.getCategories();
         double max = 0.0;
                 
         if (categories != null) {
@@ -825,7 +828,7 @@ public class MyCategoryAxis extends CategoryAxis {
                 }
             }
             int categoryIndex = 0;
-            Iterator iterator = categories.iterator();
+            Iterator<Comparable> iterator = categories.iterator();
             while (iterator.hasNext()) {
                 Comparable category = (Comparable) iterator.next();
                 TextBlock label = createLabel(category, l * r, edge, g2);
@@ -858,7 +861,8 @@ public class MyCategoryAxis extends CategoryAxis {
      *
      * @return a label.
      */
-    protected TextBlock createLabel(Comparable category, float width, 
+    @SuppressWarnings("rawtypes")
+	protected TextBlock createLabel(Comparable category, float width, 
                                     RectangleEdge edge, Graphics2D g2) {
         TextBlock label = TextUtilities.createTextBlock(
             category.toString(), getTickLabelFont(), getTickLabelPaint(), 

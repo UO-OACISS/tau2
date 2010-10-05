@@ -400,7 +400,7 @@ int tauPrintAddr(int i, char *token, unsigned long addr) {
   }
   sprintf(metadata, "BACKTRACE %3d", i-1);
   TAU_METADATA(metadata, field);
-
+  return 0;
 }
 
 
@@ -462,9 +462,9 @@ void runOnExit() {
 }
 
 
-#if (defined(TAU_SICORTEX) || defined(TAU_SILC))
+#if (defined(TAU_SICORTEX) || defined(TAU_SCOREP))
 #pragma weak __cyg_profile_func_enter
-#endif /* SICORTEX || TAU_SILC */
+#endif /* SICORTEX || TAU_SCOREP */
 extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
   int i;
   int tid;
@@ -575,9 +575,9 @@ extern "C" void _cyg_profile_func_enter(void* func, void* callsite) {
 }
 
 
-#if (defined(TAU_SICORTEX) || defined(TAU_SILC))
+#if (defined(TAU_SICORTEX) || defined(TAU_SCOREP))
 #pragma weak __cyg_profile_func_exit
-#endif /* SICORTEX || TAU_SILC */
+#endif /* SICORTEX || TAU_SCOREP */
 extern "C" void __cyg_profile_func_exit(void* func, void* callsite) {
   int tid;
 

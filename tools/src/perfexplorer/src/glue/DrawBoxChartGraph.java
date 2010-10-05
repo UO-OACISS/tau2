@@ -16,8 +16,8 @@ import org.jfree.chart.renderer.category.BoxAndWhiskerRenderer;
 import org.jfree.chart.renderer.category.CategoryItemRenderer;
 import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
 
-import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.common.Utility;
+import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerChart;
 
 /**
@@ -184,7 +184,8 @@ public class DrawBoxChartGraph extends DrawGraph {
 
         rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
 
-		PerfExplorerChart chartWindow = new PerfExplorerChart(chart, "General Chart");
+		//PerfExplorerChart chartWindow = 
+			new PerfExplorerChart(chart, "General Chart");
 		return null;
 	}
 

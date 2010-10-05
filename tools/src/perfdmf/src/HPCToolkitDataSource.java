@@ -1,6 +1,9 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Iterator;
 
@@ -58,8 +61,8 @@ public class HPCToolkitDataSource extends DataSource {
             // now subract out children inclusive values from parent exclusive values
             for (int i = 0; i < this.getNumberOfMetrics(); i++) {
                 Thread thread = this.getThread(0, 0, 0);
-                for (Iterator it = this.getFunctions(); it.hasNext();) {
-                    Function function = (Function) it.next();
+                for (Iterator<Function> it = this.getFunctions(); it.hasNext();) {
+                    Function function = it.next();
 
                     FunctionProfile fp = thread.getFunctionProfile(function);
 
@@ -80,8 +83,8 @@ public class HPCToolkitDataSource extends DataSource {
 
             // Set flat profile data (D is combined from A=>D, B=>D, etc)
             Thread thread = this.getThread(0, 0, 0);
-            for (Iterator it = this.getFunctions(); it.hasNext();) {
-                Function function = (Function) it.next();
+            for (Iterator<Function> it = this.getFunctions(); it.hasNext();) {
+                Function function = it.next();
                 FunctionProfile fp = thread.getFunctionProfile(function);
                 if (fp != null) {
                     FunctionProfile flat = getFlatFunctionProfile(thread, function);

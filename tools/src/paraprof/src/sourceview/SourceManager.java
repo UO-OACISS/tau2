@@ -1,13 +1,29 @@
 package edu.uoregon.tau.paraprof.sourceview;
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
-import javax.swing.*;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
 
 import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.paraprof.WindowPlacer;
@@ -15,14 +31,18 @@ import edu.uoregon.tau.perfdmf.SourceRegion;
 
 public class SourceManager extends JFrame {
 
-    private DefaultListModel listModel;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -2806416317097108083L;
+	private DefaultListModel listModel;
     private JList dirList;
     private SourceRegion toFind;
 
-    private Map sourceViewers = new TreeMap();
+    private Map<File, SourceViewer> sourceViewers = new TreeMap<File, SourceViewer>();
 
-    public ArrayList getCurrentElements() {
-        ArrayList list = new ArrayList();
+    public ArrayList<Object> getCurrentElements() {
+        ArrayList<Object> list = new ArrayList<Object>();
         for (int i = 0; i < listModel.getSize(); i++) {
             list.add(listModel.getElementAt(i));
         }
@@ -42,7 +62,7 @@ public class SourceManager extends JFrame {
         for (int j = 0; j < list.length; j++) {
             if (match(region.getFilename(), list[j].getName())) {
                 //System.out.println("found it");
-                SourceViewer sourceViewer = (SourceViewer) sourceViewers.get(list[j]);
+                SourceViewer sourceViewer = sourceViewers.get(list[j]);
                 if (sourceViewer == null) {
                     sourceViewer = new SourceViewer(list[j]);
                     sourceViewers.put(list[j], sourceViewer);
@@ -100,7 +120,7 @@ public class SourceManager extends JFrame {
         }
     }
 
-    public SourceManager(List initialElements) {
+    public SourceManager(List<Object> initialElements) {
 
         Container contentPane = getContentPane();
         contentPane.setLayout(new GridBagLayout());

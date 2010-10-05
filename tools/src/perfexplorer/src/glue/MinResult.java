@@ -3,16 +3,17 @@
  */
 package edu.uoregon.tau.perfexplorer.glue;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import edu.uoregon.tau.perfdmf.Trial;
 
 /**
  * @author khuck
  *
  */
 public class MinResult extends DefaultResult {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6738142437360961201L;
 
 	/**
 	 * 

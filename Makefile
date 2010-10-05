@@ -75,13 +75,21 @@ TRACE2PROFILE=utils/trace2profile
 #IOWRAPPER#IOWRAPPER=src/wrappers/posixio#ENDIF#
 
 TAUPRELOAD=src/wrappers/taupreload
+<<<<<<< HEAD
+=======
+TAUCUDA=src/wrappers/cuda
+>>>>>>> origin/master
 TAUOPENCL=src/wrappers/opencl
 MEMORYWRAPPER=src/wrappers/memory
 
 # Subdirectories to make resursively
 SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) \
           $(ELGCONVERTER) $(TRACE2PROFILE) $(IOWRAPPER) $(TAUPRELOAD) \
+<<<<<<< HEAD
 					$(MEMORYWRAPPER) $(TAUOPENCL)
+=======
+					$(MEMORYWRAPPER) $(TAUCUDA) $(TAUOPENCL)
+>>>>>>> origin/master
 
 all:
 	@echo "At the installation root, use \"make install\" "

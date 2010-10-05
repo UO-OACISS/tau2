@@ -45,12 +45,16 @@ import edu.uoregon.tau.perfexplorer.common.TransformationType;
  */
 public class GeneralChartData extends RMIGeneralChartData {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6775990055590146350L;
 	private RMIPerfExplorerModel model;
-	private String metricName = null;
-	private String groupName = null;
-	private String eventName = null;
-	private String groupByColumn = null;
-	private List columnValues = null;
+	//private String metricName = null;
+	//private String groupName = null;
+	//private String eventName = null;
+	//private String groupByColumn = null;
+	//private List columnValues = null;
 	private StringBuilder buf = null;
 	
 	/**
@@ -62,9 +66,9 @@ public class GeneralChartData extends RMIGeneralChartData {
 	public GeneralChartData (RMIPerfExplorerModel model, ChartDataType dataType) {
 		super (dataType);
 		this.model = model;
-		this.metricName = model.getMetricName();
-		this.groupName = model.getGroupName();
-		this.eventName = model.getEventName();
+		//this.metricName = model.getMetricName();
+		//this.groupName = model.getGroupName();
+		//this.eventName = model.getEventName();
 	}
 
 	/**
@@ -103,7 +107,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 		try {
 			db = PerfExplorerServer.getServer().getDB();
 
-			Object object = model.getCurrentSelection();
+			//Object object = model.getCurrentSelection();
 
 ////////////////////////////////
 
@@ -845,7 +849,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 		try {
 			db = PerfExplorerServer.getServer().getDB();
 
-			Object object = model.getCurrentSelection();
+			//Object object = model.getCurrentSelection();
 
 			// check to make sure the database has XML data
 			Trial.getMetaData(db, true);

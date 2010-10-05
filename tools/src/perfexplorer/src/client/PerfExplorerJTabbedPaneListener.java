@@ -1,6 +1,7 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import javax.swing.event.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 public class PerfExplorerJTabbedPaneListener implements ChangeListener {
 

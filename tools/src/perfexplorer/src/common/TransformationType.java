@@ -18,6 +18,11 @@ import java.io.Serializable;
 public final class TransformationType implements Serializable {
 
     /**
+	 * 
+	 */
+	private static final long serialVersionUID = 6319821230629921757L;
+
+	/**
      * One attribute, the name - it is transient so it is not serialized
      */
     private final transient String _name;

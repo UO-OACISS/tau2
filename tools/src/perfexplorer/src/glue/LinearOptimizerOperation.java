@@ -3,14 +3,6 @@
  */
 package edu.uoregon.tau.perfexplorer.glue;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.ObjectOutput;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -19,10 +11,6 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.uoregon.tau.perfexplorer.cqos.WekaClassifierWrapper;
-import weka.core.*;
-import weka.classifiers.Classifier;
-import weka.filters.Filter;
-import weka.filters.unsupervised.attribute.StringToNominal;
 
 /**
  * @author khuck
@@ -30,6 +18,10 @@ import weka.filters.unsupervised.attribute.StringToNominal;
  */
 public class LinearOptimizerOperation extends AbstractPerformanceOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1526009436637311668L;
 	public static final String SUPPORT_VECTOR_MACHINE = WekaClassifierWrapper.SUPPORT_VECTOR_MACHINE;
 	public static final String NAIVE_BAYES = WekaClassifierWrapper.NAIVE_BAYES;
     public static final String MULTILAYER_PERCEPTRON = WekaClassifierWrapper.MULTILAYER_PERCEPTRON;

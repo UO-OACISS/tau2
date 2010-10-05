@@ -18,31 +18,92 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.Frame;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.FileReader;
 import java.io.LineNumberReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Vector;
 
-import javax.swing.*;
-import javax.swing.event.*;
-import javax.swing.tree.*;
+import javax.swing.ImageIcon;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.JTree;
+import javax.swing.event.TreeExpansionEvent;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.event.TreeWillExpandListener;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
+import javax.swing.tree.TreeSelectionModel;
 
 import edu.uoregon.tau.common.TauRuntimeException;
 import edu.uoregon.tau.common.Utility;
-import edu.uoregon.tau.paraprof.tablemodel.*;
-import edu.uoregon.tau.perfdmf.*;
-import edu.uoregon.tau.perfdmf.database.*;
+import edu.uoregon.tau.paraprof.tablemodel.ApplicationTableModel;
+import edu.uoregon.tau.paraprof.tablemodel.ExperimentTableModel;
+import edu.uoregon.tau.paraprof.tablemodel.MetricTableModel;
+import edu.uoregon.tau.paraprof.tablemodel.TrialCellRenderer;
+import edu.uoregon.tau.paraprof.tablemodel.TrialTableModel;
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.DBDataSource;
+import edu.uoregon.tau.perfdmf.DataSource;
+import edu.uoregon.tau.perfdmf.DataSourceException;
+import edu.uoregon.tau.perfdmf.DataSourceExport;
+import edu.uoregon.tau.perfdmf.Database;
+import edu.uoregon.tau.perfdmf.DatabaseAPI;
+import edu.uoregon.tau.perfdmf.DatabaseException;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.UtilFncs;
+import edu.uoregon.tau.perfdmf.database.DBConnector;
+import edu.uoregon.tau.perfdmf.database.DBManagerListener;
+import edu.uoregon.tau.perfdmf.database.DatabaseManagerWindow;
+import edu.uoregon.tau.perfdmf.database.ParseConfig;
+import edu.uoregon.tau.perfdmf.database.PasswordCallback;
 
 public class ParaProfManagerWindow extends JFrame implements ActionListener, TreeSelectionListener, TreeWillExpandListener,
 DBManagerListener {
 
-   private DefaultMutableTreeNode root;
+   /**
+	 * 
+	 */
+	private static final long serialVersionUID = 8355033122352555258L;
+private DefaultMutableTreeNode root;
    private JTree tree = null;
    private DefaultTreeModel treeModel = null;
    private DefaultMutableTreeNode standard = null;
@@ -56,10 +117,10 @@ DBManagerListener {
 
    private JScrollPane treeScrollPane;
 
-   private Vector loadedDBTrials = new Vector();
-   private Vector loadedTrials = new Vector();
+   private Vector<ParaProfTrial> loadedDBTrials = new Vector<ParaProfTrial>();
+   private Vector<ParaProfTrial> loadedTrials = new Vector<ParaProfTrial>();
 
-   private boolean metaDataRetrieved;
+   //private boolean metaDataRetrieved;
 
    //Popup menu stuff.
    private JPopupMenu popup1 = new JPopupMenu();
@@ -81,7 +142,7 @@ DBManagerListener {
 
    private String dbDisplayName;
 
-   private List databases;
+   private List<Database> databases;
    private JFileChooser expressionFileC =  new JFileChooser();
    private static String commandLineConfig;
 
@@ -95,28 +156,29 @@ DBManagerListener {
    }
 
 
-   public void refreshDatabases() {
+   @SuppressWarnings("unchecked")
+public void refreshDatabases() {
       //System.out.println("refreshing databases...");
       //System.out.println("LOAD cfg file: " + commandLineConfig);
       databases = Database.getDatabases();
       if (commandLineConfig != null) {
          databases.add(new Database("Portal", commandLineConfig));
       }
-      Iterator dbs = databases.iterator();
+      Iterator<Database> dbs = databases.iterator();
 
       DefaultMutableTreeNode treeNode;
-      Enumeration nodes = root.children();
+      Enumeration<DefaultMutableTreeNode> nodes = root.children();
       while (nodes.hasMoreElements() && dbs.hasNext()) {
-         treeNode = (DefaultMutableTreeNode) nodes.nextElement();
+         treeNode = nodes.nextElement();
          if (treeNode.getUserObject() != "Standard Applications") {
             Object obj = dbs.next();
             treeNode.setUserObject(obj);
          }
       }
 
-      List toRemove = new ArrayList();
+      List<DefaultMutableTreeNode> toRemove = new ArrayList<DefaultMutableTreeNode>();
       while (nodes.hasMoreElements()) {
-         treeNode = (DefaultMutableTreeNode) nodes.nextElement();
+         treeNode = nodes.nextElement();
          toRemove.add(treeNode);
       }
 
@@ -126,7 +188,7 @@ DBManagerListener {
       }
 
       for (int i = 0; i < toRemove.size(); i++) {
-         treeNode = (DefaultMutableTreeNode) toRemove.get(i);
+         treeNode = toRemove.get(i);
          treeNode.removeFromParent();
       }
       getTreeModel().reload();
@@ -204,8 +266,8 @@ DBManagerListener {
       if (commandLineConfig != null) {
          databases.add(new Database("Portal", commandLineConfig));
       }
-      for (Iterator it = databases.iterator(); it.hasNext();) {
-         Database database = (Database) it.next();
+      for (Iterator<Database> it = databases.iterator(); it.hasNext();) {
+         Database database = it.next();
          DefaultMutableTreeNode dbNode = new DefaultMutableTreeNode(database);
          root.add(dbNode);
       }
@@ -251,7 +313,7 @@ DBManagerListener {
                if (paths.length > 1) {
                   clickedOnObject = paths;
                   if (ParaProfUtils.rightClick(evt)) {
-                     TreePath path = paths[0];
+                     //TreePath path = paths[0];
                      multiPopup.show(tree, evt.getX(), evt.getY());
                   }
                }
@@ -556,7 +618,7 @@ DBManagerListener {
 
    public void recomputeStats() {
       for (int i = 0; i < loadedTrials.size(); i++) {
-         ParaProfTrial ppTrial = (ParaProfTrial) loadedTrials.get(i);
+         ParaProfTrial ppTrial = loadedTrials.get(i);
          ppTrial.getDataSource().generateDerivedData();
       }
    }
@@ -580,8 +642,8 @@ DBManagerListener {
                databaseAPI.deleteApplication(application.getID());
                databaseAPI.terminate();
                //Remove any loaded trials associated with this application.
-               for (Enumeration e = loadedDBTrials.elements(); e.hasMoreElements();) {
-                  ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+               for (Enumeration<ParaProfTrial> e = loadedDBTrials.elements(); e.hasMoreElements();) {
+                  ParaProfTrial loadedTrial = e.nextElement();
                   if (loadedTrial.getApplicationID() == application.getID() && loadedTrial.loading() == false) {
                      loadedDBTrials.remove(loadedTrial);
                   }
@@ -602,8 +664,8 @@ DBManagerListener {
                databaseAPI.deleteExperiment(experiment.getID());
                databaseAPI.terminate();
                //Remove any loaded trials associated with this application.
-               for (Enumeration e = loadedDBTrials.elements(); e.hasMoreElements();) {
-                  ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+               for (Enumeration<ParaProfTrial> e = loadedDBTrials.elements(); e.hasMoreElements();) {
+                  ParaProfTrial loadedTrial = e.nextElement();
                   if (loadedTrial.getApplicationID() == experiment.getApplicationID()
                         && loadedTrial.getExperimentID() == experiment.getID() && loadedTrial.loading() == false) {
                      loadedDBTrials.remove(loadedTrial);
@@ -627,8 +689,8 @@ DBManagerListener {
                databaseAPI.deleteTrial(ppTrial.getID());
                databaseAPI.terminate();
                //Remove any loaded trials associated with this application.
-               for (Enumeration e = loadedDBTrials.elements(); e.hasMoreElements();) {
-                  ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+               for (Enumeration<ParaProfTrial> e = loadedDBTrials.elements(); e.hasMoreElements();) {
+                  ParaProfTrial loadedTrial = e.nextElement();
                   if (loadedTrial.getApplicationID() == ppTrial.getApplicationID()
                         && loadedTrial.getExperimentID() == ppTrial.getID() && loadedTrial.getID() == ppTrial.getID()
                         && loadedTrial.loading() == false) {
@@ -651,8 +713,8 @@ DBManagerListener {
       boolean loaded = true;
       if (ppTrial.dBTrial()) {
          loaded = false;
-         for (Enumeration e = loadedDBTrials.elements(); e.hasMoreElements();) {
-            ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+         for (Enumeration<ParaProfTrial> e = loadedDBTrials.elements(); e.hasMoreElements();) {
+            ParaProfTrial loadedTrial = e.nextElement();
             if ((ppTrial.getID() == loadedTrial.getID()) && (ppTrial.getExperimentID() == loadedTrial.getExperimentID())
                   && (ppTrial.getApplicationID() == loadedTrial.getApplicationID())) {
                loaded = true;
@@ -916,24 +978,26 @@ DBManagerListener {
                DatabaseAPI databaseAPI = this.getDatabaseAPI(dbApp.getDatabase());
                if (databaseAPI != null) {
 
-                  boolean found = false;
+                  //boolean found = false;
                   //ListIterator l = databaseAPI.getApplicationList().listIterator();
                   //while (l.hasNext()) {
                   //    ParaProfApplication dbApp = new ParaProfApplication((Application) l.next());
 
                   String appname = dbApp.getName().replace('/', '%');
-                  boolean success = (new File(appname).mkdir());
+                  //boolean success = 
+                	  new File(appname).mkdir();
 
                   databaseAPI.setApplication(dbApp);
-                  for (Iterator it = databaseAPI.getExperimentList().iterator(); it.hasNext();) {
-                     ParaProfExperiment dbExp = new ParaProfExperiment((Experiment) it.next());
+                  for (Iterator<Experiment> it = databaseAPI.getExperimentList().iterator(); it.hasNext();) {
+                     ParaProfExperiment dbExp = new ParaProfExperiment(it.next());
 
                      String expname = appname + File.separator + dbExp.getName().replace('/', '%');
-                     success = (new File(expname).mkdir());
+                     //success = (
+                    		 new File(expname).mkdir();
 
                      databaseAPI.setExperiment(dbExp);
-                     for (Iterator it2 = databaseAPI.getTrialList(true).iterator(); it2.hasNext();) {
-                        Trial trial = (Trial) it2.next();
+                     for (Iterator<Trial> it2 = databaseAPI.getTrialList(true).iterator(); it2.hasNext();) {
+                        Trial trial = it2.next();
 
                         databaseAPI.setTrial(trial.getID(), true);//TODO: Do these really require xml metadata?
                         DBDataSource dbDataSource = new DBDataSource(databaseAPI);
@@ -1050,8 +1114,8 @@ DBManagerListener {
 
          if (ppTrial.dBTrial()) {
             loaded = false;
-            for (Enumeration e = loadedDBTrials.elements(); e.hasMoreElements();) {
-               ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+            for (Enumeration<ParaProfTrial> e = loadedDBTrials.elements(); e.hasMoreElements();) {
+               ParaProfTrial loadedTrial = e.nextElement();
                if ((ppTrial.getID() == loadedTrial.getID()) && (ppTrial.getExperimentID() == loadedTrial.getExperimentID())
                      && (ppTrial.getApplicationID() == loadedTrial.getApplicationID())) {
                   ppTrial = loadedTrial;
@@ -1093,10 +1157,10 @@ DBManagerListener {
       if (databaseAPI != null) {
 
          boolean found = false;
-         ListIterator l = databaseAPI.getApplicationList().listIterator();
+         ListIterator<Application> l = databaseAPI.getApplicationList().listIterator();
 
          while (l.hasNext()) {
-            ParaProfApplication dbApp = new ParaProfApplication((Application) l.next());
+            ParaProfApplication dbApp = new ParaProfApplication(l.next());
 
             if (dbApp.getName().equals(ppApp.getName())) {
                found = true;
@@ -1121,8 +1185,8 @@ DBManagerListener {
                      }
 
                      if (uploadChildren) {
-                        for (Iterator it2 = ppApp.getExperimentList(); it2.hasNext();) {
-                           ParaProfExperiment ppExp = (ParaProfExperiment) it2.next();
+                        for (Iterator<ParaProfExperiment> it2 = ppApp.getExperimentList(); it2.hasNext();) {
+                           ParaProfExperiment ppExp = it2.next();
                            uploadExperiment(dbApp, ppExp, true, true);
                         }
                      }
@@ -1141,8 +1205,8 @@ DBManagerListener {
             application.setID(databaseAPI.saveApplication(application));
 
             if (uploadChildren) {
-               for (Iterator it2 = ppApp.getExperimentList(); it2.hasNext();) {
-                  ParaProfExperiment ppExp = (ParaProfExperiment) it2.next();
+               for (Iterator<ParaProfExperiment> it2 = ppApp.getExperimentList(); it2.hasNext();) {
+                  ParaProfExperiment ppExp = it2.next();
                   uploadExperiment(application, ppExp, true, true);
                }
             }
@@ -1167,9 +1231,9 @@ DBManagerListener {
 
       boolean found = false;
       databaseAPI.setApplication(dbApp);
-      ListIterator l = databaseAPI.getExperimentList().listIterator();
+      ListIterator<Experiment> l = databaseAPI.getExperimentList().listIterator();
       while (l.hasNext()) {
-         ParaProfExperiment dbExp = new ParaProfExperiment((Experiment) l.next());
+         ParaProfExperiment dbExp = new ParaProfExperiment(l.next());
 
          if (dbExp.getName().equals(ppExp.getName())) {
             found = true;
@@ -1192,8 +1256,8 @@ DBManagerListener {
                   }
 
                   if (uploadChildren) {
-                     for (Iterator it2 = ppExp.getTrialList(); it2.hasNext();) {
-                        ParaProfTrial ppTrial = (ParaProfTrial) it2.next();
+                     for (Iterator<ParaProfTrial> it2 = ppExp.getTrialList(); it2.hasNext();) {
+                        ParaProfTrial ppTrial = it2.next();
                         uploadTrial(dbExp, ppTrial);
                      }
                   }
@@ -1214,8 +1278,8 @@ DBManagerListener {
          experiment.setID(databaseAPI.saveExperiment(experiment));
 
          if (uploadChildren) {
-            for (Iterator it2 = ppExp.getTrialList(); it2.hasNext();) {
-               ParaProfTrial ppTrial = (ParaProfTrial) it2.next();
+            for (Iterator<ParaProfTrial> it2 = ppExp.getTrialList(); it2.hasNext();) {
+               ParaProfTrial ppTrial = it2.next();
                uploadTrial(experiment, ppTrial);
             }
          }
@@ -1336,7 +1400,8 @@ DBManagerListener {
    public void expand (DefaultMutableTreeNode node){
       try{
          TreePath t = new TreePath(node);
-         TreeExpansionEvent event = new TreeExpansionEvent(this.tree,t);
+         //TreeExpansionEvent event = 
+        	 new TreeExpansionEvent(this.tree,t);
          DefaultMutableTreeNode selectedNode = node;
          Object userObject = node.getUserObject();
          if (userObject instanceof ParaProfApplication) {
@@ -1351,7 +1416,7 @@ DBManagerListener {
                DatabaseAPI databaseAPI = this.getDatabaseAPI(application.getDatabase());
                if (databaseAPI != null) {
                   databaseAPI.setApplication(application.getID());
-                  ListIterator l = databaseAPI.getExperimentList().listIterator();
+                  ListIterator<Experiment> l = databaseAPI.getExperimentList().listIterator();
                   while (l.hasNext()) {
                      ParaProfExperiment experiment = new ParaProfExperiment((Experiment) l.next());
                      experiment.setDBExperiment(true);
@@ -1367,9 +1432,9 @@ DBManagerListener {
                for (int i = selectedNode.getChildCount(); i > 0; i--) {
                   getTreeModel().removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i - 1)));
                }
-               ListIterator l = application.getExperimentList();
+               ListIterator<ParaProfExperiment> l = application.getExperimentList();
                while (l.hasNext()) {
-                  ParaProfExperiment experiment = (ParaProfExperiment) l.next();
+                  ParaProfExperiment experiment = l.next();
                   DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
                   experiment.setDMTN(experimentNode);
                   getTreeModel().insertNodeInto(experimentNode, selectedNode, selectedNode.getChildCount());
@@ -1392,7 +1457,7 @@ DBManagerListener {
                if (databaseAPI != null) {
                   databaseAPI.setExperiment(experiment.getID());
                   if (databaseAPI.getTrialList(false) != null) {
-                     ListIterator l = databaseAPI.getTrialList(true).listIterator();//TODO: Is xml metadata required here?
+                     ListIterator<Trial> l = databaseAPI.getTrialList(true).listIterator();//TODO: Is xml metadata required here?
                      while (l.hasNext()) {
                         ParaProfTrial ppTrial = new ParaProfTrial((Trial) l.next());
                         ppTrial.setDBTrial(true);
@@ -1408,9 +1473,9 @@ DBManagerListener {
                for (int i = selectedNode.getChildCount(); i > 0; i--) {
                   getTreeModel().removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i - 1)));
                }
-               ListIterator l = experiment.getTrialList();
+               ListIterator<ParaProfTrial> l = experiment.getTrialList();
                while (l.hasNext()) {
-                  ParaProfTrial ppTrial = (ParaProfTrial) l.next();
+                  ParaProfTrial ppTrial = l.next();
                   DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(ppTrial);
                   ppTrial.setDMTN(trialNode);
                   getTreeModel().insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
@@ -1452,9 +1517,9 @@ DBManagerListener {
                for (int i = standard.getChildCount(); i > 0; i--) {
                   getTreeModel().removeNodeFromParent(((DefaultMutableTreeNode) standard.getChildAt(i - 1)));
                }
-               Iterator l = ParaProf.applicationManager.getApplications().iterator();
+               Iterator<ParaProfApplication> l = ParaProf.applicationManager.getApplications().iterator();
                while (l.hasNext()) {
-                  ParaProfApplication application = (ParaProfApplication) l.next();
+                  ParaProfApplication application = l.next();
                   DefaultMutableTreeNode applicationNode = new DefaultMutableTreeNode(application);
                   application.setDMTN(applicationNode);
                   getTreeModel().insertNodeInto(applicationNode, standard, standard.getChildCount());
@@ -1472,7 +1537,7 @@ DBManagerListener {
                Database database = (Database) userObject;
                DatabaseAPI databaseAPI = getDatabaseAPI(database);
                if (databaseAPI != null) {
-                  ListIterator l = databaseAPI.getApplicationList().listIterator();
+                  ListIterator<Application> l = databaseAPI.getApplicationList().listIterator();
                   while (l.hasNext()) {
                      ParaProfApplication application = new ParaProfApplication((Application) l.next());
                      application.setDBApplication(true);
@@ -1500,7 +1565,7 @@ DBManagerListener {
                DatabaseAPI databaseAPI = this.getDatabaseAPI(application.getDatabase());
                if (databaseAPI != null) {
                   databaseAPI.setApplication(application.getID());
-                  ListIterator l = databaseAPI.getExperimentList().listIterator();
+                  ListIterator<Experiment> l = databaseAPI.getExperimentList().listIterator();
                   while (l.hasNext()) {
                      ParaProfExperiment experiment = new ParaProfExperiment((Experiment) l.next());
                      experiment.setDBExperiment(true);
@@ -1516,9 +1581,9 @@ DBManagerListener {
                for (int i = selectedNode.getChildCount(); i > 0; i--) {
                   getTreeModel().removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i - 1)));
                }
-               ListIterator l = application.getExperimentList();
+               ListIterator<ParaProfExperiment> l = application.getExperimentList();
                while (l.hasNext()) {
-                  ParaProfExperiment experiment = (ParaProfExperiment) l.next();
+                  ParaProfExperiment experiment = l.next();
                   DefaultMutableTreeNode experimentNode = new DefaultMutableTreeNode(experiment);
                   experiment.setDMTN(experimentNode);
                   getTreeModel().insertNodeInto(experimentNode, selectedNode, selectedNode.getChildCount());
@@ -1541,7 +1606,7 @@ DBManagerListener {
                if (databaseAPI != null) {
                   databaseAPI.setExperiment(experiment.getID());
                   if (databaseAPI.getTrialList(false) != null) {
-                     ListIterator l = databaseAPI.getTrialList(true).listIterator();//TODO: Is xml metadata required here?
+                     ListIterator<Trial> l = databaseAPI.getTrialList(true).listIterator();//TODO: Is xml metadata required here?
                      while (l.hasNext()) {
                         ParaProfTrial ppTrial = new ParaProfTrial((Trial) l.next());
                         ppTrial.setDBTrial(true);
@@ -1557,9 +1622,9 @@ DBManagerListener {
                for (int i = selectedNode.getChildCount(); i > 0; i--) {
                   getTreeModel().removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i - 1)));
                }
-               ListIterator l = experiment.getTrialList();
+               ListIterator<ParaProfTrial> l = experiment.getTrialList();
                while (l.hasNext()) {
-                  ParaProfTrial ppTrial = (ParaProfTrial) l.next();
+                  ParaProfTrial ppTrial = l.next();
                   DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(ppTrial);
                   ppTrial.setDMTN(trialNode);
                   getTreeModel().insertNodeInto(trialNode, selectedNode, selectedNode.getChildCount());
@@ -1588,8 +1653,8 @@ DBManagerListener {
          // if so, we re-associate the ParaProfTrial with the DMTN since
          // the old one is gone
          boolean loaded = false;
-         for (Enumeration e = loadedDBTrials.elements(); e.hasMoreElements();) {
-            ParaProfTrial loadedTrial = (ParaProfTrial) e.nextElement();
+         for (Enumeration<ParaProfTrial> e = loadedDBTrials.elements(); e.hasMoreElements();) {
+            ParaProfTrial loadedTrial = e.nextElement();
             if ((ppTrial.getID() == loadedTrial.getID()) && (ppTrial.getExperimentID() == loadedTrial.getExperimentID())
                   && (ppTrial.getApplicationID() == loadedTrial.getApplicationID())) {
                selectedNode.setUserObject(loadedTrial);
@@ -1650,7 +1715,7 @@ DBManagerListener {
          for (int i = selectedNode.getChildCount(); i > 0; i--) {
             getTreeModel().removeNodeFromParent(((DefaultMutableTreeNode) selectedNode.getChildAt(i - 1)));
          }
-         Iterator l = ppTrial.getMetrics().iterator();
+         Iterator<Metric> l = ppTrial.getMetrics().iterator();
          while (l.hasNext()) {
             ParaProfMetric metric = (ParaProfMetric) l.next();
             DefaultMutableTreeNode metricNode = new DefaultMutableTreeNode(metric, false);
@@ -1872,64 +1937,69 @@ DBManagerListener {
    }
 
    public void addTrial(ParaProfApplication application, ParaProfExperiment experiment, File files[], int fileType,
+	         boolean fixGprofNames, boolean monitorProfiles, String range){
+	   ParaProfTrial ppTrial = null;
+	      DataSource dataSource = null;
+
+	      try {
+	         dataSource = UtilFncs.initializeDataSource(files, fileType, fixGprofNames,range);
+	         if (dataSource == null) {
+	            throw new RuntimeException("Error creating dataSource!");
+	         }
+	         dataSource.setGenerateIntermediateCallPathData(ParaProf.preferences.getGenerateIntermediateCallPathData());
+	      } catch (DataSourceException e) {
+
+	         if (files == null || files.length != 0) // We don't output an error message if paraprof was just invoked with no parameters.
+	            ParaProfUtils.handleException(e);
+
+	         return;
+	      }
+
+	      ppTrial = new ParaProfTrial();
+	      // this must be done before setting the monitored flag
+	      ppTrial.getTrial().setDataSource(dataSource);
+	      ppTrial.setLoading(true);
+	      dataSource.setMonitored(monitorProfiles);
+	      ppTrial.setMonitored(monitorProfiles);
+
+	      ppTrial.setExperiment(experiment);
+	      ppTrial.setApplicationID(experiment.getApplicationID());
+	      ppTrial.setExperimentID(experiment.getID());
+	      if (files.length != 0) {
+	         ppTrial.setPaths(files[0].getPath());
+	      } else {
+	         ppTrial.setPaths(System.getProperty("user.dir"));
+	      }
+	      if (!ParaProf.usePathNameInTrial && files.length == 1) {
+	         ppTrial.getTrial().setName(files[0].toString());
+	         ppTrial.setPaths(files[0].toString());
+	      } else {
+	         ppTrial.getTrial().setName(ppTrial.getPathReverse());
+	      }
+	      if (experiment.dBExperiment()) {
+	         loadedDBTrials.add(ppTrial);
+	         ppTrial.setUpload(true); // This trial is not set to a db trial until after it has finished loading.
+	      } else {
+	         experiment.addTrial(ppTrial);
+	      }
+
+	      //        if (experiment.dBExperiment()) // Check needs to occur on the experiment as trial 
+	      //            // not yet a recognized db trial.
+	      //            this.expandTrial(2, ppTrial.getApplicationID(), ppTrial.getExperimentID(), ppTrial.getID(),
+	      //                    application, experiment, ppTrial);
+	      //        else
+	      //            this.expandTrial(0, ppTrial.getApplicationID(), ppTrial.getExperimentID(), ppTrial.getID(),
+	      //                    application, experiment, ppTrial);
+	      //  
+	      //        
+	      LoadTrialProgressWindow lpw = new LoadTrialProgressWindow(this, dataSource, ppTrial, false);
+	      lpw.setVisible(true);
+   }
+   
+   public void addTrial(ParaProfApplication application, ParaProfExperiment experiment, File files[], int fileType,
          boolean fixGprofNames, boolean monitorProfiles) {
 
-      ParaProfTrial ppTrial = null;
-      DataSource dataSource = null;
-
-      try {
-         dataSource = UtilFncs.initializeDataSource(files, fileType, fixGprofNames);
-         if (dataSource == null) {
-            throw new RuntimeException("Error creating dataSource!");
-         }
-         dataSource.setGenerateIntermediateCallPathData(ParaProf.preferences.getGenerateIntermediateCallPathData());
-      } catch (DataSourceException e) {
-
-         if (files == null || files.length != 0) // We don't output an error message if paraprof was just invoked with no parameters.
-            ParaProfUtils.handleException(e);
-
-         return;
-      }
-
-      ppTrial = new ParaProfTrial();
-      // this must be done before setting the monitored flag
-      ppTrial.getTrial().setDataSource(dataSource);
-      ppTrial.setLoading(true);
-      dataSource.setMonitored(monitorProfiles);
-      ppTrial.setMonitored(monitorProfiles);
-
-      ppTrial.setExperiment(experiment);
-      ppTrial.setApplicationID(experiment.getApplicationID());
-      ppTrial.setExperimentID(experiment.getID());
-      if (files.length != 0) {
-         ppTrial.setPaths(files[0].getPath());
-      } else {
-         ppTrial.setPaths(System.getProperty("user.dir"));
-      }
-      if (!ParaProf.usePathNameInTrial && files.length == 1) {
-         ppTrial.getTrial().setName(files[0].toString());
-         ppTrial.setPaths(files[0].toString());
-      } else {
-         ppTrial.getTrial().setName(ppTrial.getPathReverse());
-      }
-      if (experiment.dBExperiment()) {
-         loadedDBTrials.add(ppTrial);
-         ppTrial.setUpload(true); // This trial is not set to a db trial until after it has finished loading.
-      } else {
-         experiment.addTrial(ppTrial);
-      }
-
-      //        if (experiment.dBExperiment()) // Check needs to occur on the experiment as trial 
-      //            // not yet a recognized db trial.
-      //            this.expandTrial(2, ppTrial.getApplicationID(), ppTrial.getExperimentID(), ppTrial.getID(),
-      //                    application, experiment, ppTrial);
-      //        else
-      //            this.expandTrial(0, ppTrial.getApplicationID(), ppTrial.getExperimentID(), ppTrial.getID(),
-      //                    application, experiment, ppTrial);
-      //  
-      //        
-      LoadTrialProgressWindow lpw = new LoadTrialProgressWindow(this, dataSource, ppTrial, false);
-      lpw.setVisible(true);
+     addTrial(application,experiment,files,fileType,fixGprofNames,monitorProfiles,null);
 
    }
 
@@ -1957,14 +2027,14 @@ DBManagerListener {
       }
    }
 
-   private void recurseExpand(DefaultMutableTreeNode node) {
-      if (node == null || node.isRoot()) {
-         return;
-      }
-      recurseExpand((DefaultMutableTreeNode) node.getParent());
-      tree.expandPath(new TreePath(node));
-
-   }
+//   private void recurseExpand(DefaultMutableTreeNode node) {
+//      if (node == null || node.isRoot()) {
+//         return;
+//      }
+//      recurseExpand((DefaultMutableTreeNode) node.getParent());
+//      tree.expandPath(new TreePath(node));
+//
+//   }
 
    public DefaultMutableTreeNode expandApplicationType(int type, int applicationID, ParaProfApplication application) {
       switch (type) {
@@ -1991,13 +2061,14 @@ DBManagerListener {
       case 2:
 
          DefaultMutableTreeNode dbNode = null;
-         Database db = null;
+         //Database db = null;
          try {
             for (int i = 0; i < root.getChildCount(); i++) {
                DefaultMutableTreeNode node = (DefaultMutableTreeNode) root.getChildAt(i);
                if (node.getUserObject() == application.getDatabase()) {
                   dbNode = node;
-                  db = (Database) node.getUserObject();
+                  //db = (Database) 
+                  node.getUserObject();
                }
             }
          } catch (Exception e) {
@@ -2054,13 +2125,14 @@ DBManagerListener {
       } else {
 
          DefaultMutableTreeNode dbNode = null;
-         Database db = null;
+         //Database db = null;
          for (int i = 0; i < root.getChildCount(); i++) {
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) root.getChildAt(i);
             if ((node.getUserObject() instanceof Database)
                   && (((Database) node.getUserObject()).getConfig().getPath()).compareTo((application.getDatabase()).getConfig().getPath()) == 0) {
                dbNode = node;
-               db = (Database) node.getUserObject();
+               //db = (Database) 
+               node.getUserObject();
             }
          }
 
@@ -2234,7 +2306,7 @@ DBManagerListener {
    }
 
    public Database getDefaultDatabase() {
-      return (Database) databases.get(0);
+      return databases.get(0);
       //ParseConfig config = new ParseConfig(ParaProf.preferences.getDatabaseConfigurationFile());
       //return new Database("default", config);
    }
@@ -2360,7 +2432,7 @@ DBManagerListener {
     * Returns all the loaded trials
     * @return the loaded trials
     */
-   public Vector getLoadedTrials() {
+   public Vector<ParaProfTrial> getLoadedTrials() {
       return loadedTrials;
    }
 

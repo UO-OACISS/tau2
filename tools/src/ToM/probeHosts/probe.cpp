@@ -1,5 +1,7 @@
 #include <mpi.h>
 
+#include <stdlib.h>
+#include <unistd.h>
 #include <iostream>
 #include <map>
 #include <string>
@@ -40,7 +42,14 @@ int main(int argc, char **argv)
 
   if (rank == 0) {
     FILE *outfile;
-    outfile = fopen("allhosts.txt","w");
+    char *outname = getenv("PROFILEDIR");
+    if (outname == NULL) {
+      outname = (char *)malloc((strlen(".")+1)*sizeof(char));
+      strcpy(outname,".");
+    }
+    char outfileString[512];
+    sprintf(outfileString,"%s/allhosts.txt",outname);
+    outfile = fopen(outfileString,"w");
     for (it=hostHash.begin(); it!=hostHash.end(); it++) {
       fprintf(outfile,"%d:%s\n",(*it).second,(*it).first.c_str());
     }

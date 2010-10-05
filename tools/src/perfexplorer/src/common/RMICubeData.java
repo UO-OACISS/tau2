@@ -1,8 +1,8 @@
 package edu.uoregon.tau.perfexplorer.common;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This object contains the data necessary to generate an OpenGL 3D cube of
@@ -16,6 +16,11 @@ import java.util.ArrayList;
  *
  */
 public class RMICubeData implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 57014019656871136L;
+
 	int dimensions = 0;
 
 	String[] names = null;

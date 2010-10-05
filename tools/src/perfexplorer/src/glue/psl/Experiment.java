@@ -9,10 +9,7 @@ import java.util.Set;
 
 import edu.uoregon.tau.perfdmf.Function;
 import edu.uoregon.tau.perfdmf.SourceRegion;
-import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.glue.TrialResult;
-
-import java.util.Iterator;
 
 /**
  * @author khuck
@@ -246,7 +243,7 @@ public class Experiment {
 			regionSummary.setTotalInstructions(trialResult.getExclusive(thread, parentEvent, trialResult.getTotalInstructionMetric()));
 			regionSummary.setFloatingPointInstructions(trialResult.getExclusive(thread, parentEvent, trialResult.getFPMetric()));
 			double[] cacheMisses = {0.0, 0.0, 0.0};
-			double[] cacheHits = {0.0, 0.0, 0.0};
+			//double[] cacheHits = {0.0, 0.0, 0.0};
 			double[] cacheAccesses = {0.0, 0.0, 0.0};
 			cacheMisses[0] = trialResult.getExclusive(thread, parentEvent, trialResult.getL1MissMetric());
 			cacheMisses[1] = trialResult.getExclusive(thread, parentEvent, trialResult.getL2MissMetric());

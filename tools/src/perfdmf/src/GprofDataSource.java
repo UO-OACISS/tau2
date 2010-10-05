@@ -1,6 +1,11 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -76,9 +81,9 @@ public class GprofDataSource extends DataSource {
 
             boolean callPathSection = false;
             boolean parent = true;
-            Vector parents = new Vector();
+            Vector<LineData> parents = new Vector<LineData>();
             LineData self = null;
-            Vector children = new Vector();
+            Vector<LineData> children = new Vector<LineData>();
 
             fixLengths = true;
             linenumber = 1;
@@ -120,22 +125,22 @@ public class GprofDataSource extends DataSource {
 
                             functionProfile.setInclusive(0, self.d1 + self.d2);
                             functionProfile.setExclusive(0, self.d1);
-                            functionProfile.setNumCalls(self.i0);
+                            functionProfile.setNumCalls(self.d3);
 
-                            int numSubr = 0;
+                            double numSubr = 0;
                             for (int i = 0; i < children.size(); i++) {
-                                LineData lineDataChild = (LineData) children.get(i);
-                                numSubr += lineDataChild.i0;
+                                LineData lineDataChild = children.get(i);
+                                numSubr += lineDataChild.d3;
                             }
 
                             functionProfile.setNumSubr(numSubr);
-                            //functionProfile.setInclusivePerCall(0, (self.d1 + self.d2) / self.i0);
+                            //functionProfile.setInclusivePerCall(0, (self.d1 + self.d2) / self.d3);
 
                             for (int i = 0; i < parents.size(); i++) {
-                                LineData lineDataParent = (LineData) parents.elementAt(i);
+                                LineData lineDataParent = parents.elementAt(i);
                                 function = this.addFunction(lineDataParent.s0, 1);
                                 function.addGroup(addGroup("TAU_DEFAULT"));
-                                String s = lineDataParent.s0 + " => " + self.s0 + "  ";
+                                //String s = lineDataParent.s0 + " => " + self.s0 + "  ";
                                 callPathFunction = this.addFunction(lineDataParent.s0 + " => " + self.s0 + "  ", 1);
                                 callPathFunction.addGroup(addGroup("TAU_DEFAULT"));
                                 callPathFunction.addGroup(addGroup("TAU_CALLPATH"));
@@ -144,19 +149,19 @@ public class GprofDataSource extends DataSource {
                                 thread.addFunctionProfile(functionProfile);
                                 functionProfile.setInclusive(0, lineDataParent.d0 + lineDataParent.d1);
                                 functionProfile.setExclusive(0, lineDataParent.d0);
-                                functionProfile.setNumCalls(lineDataParent.i0);
+                                functionProfile.setNumCalls(lineDataParent.d3);
 
                                 //  functionProfile.setInclusivePerCall(0,
-                                //         (lineDataParent.d0 + lineDataParent.d1) / lineDataParent.i0);
+                                //         (lineDataParent.d0 + lineDataParent.d1) / lineDataParent.d3);
 
                             }
                             parents.clear();
 
                             for (int i = 0; i < children.size(); i++) {
-                                LineData lineDataChild = (LineData) children.elementAt(i);
+                                LineData lineDataChild = children.elementAt(i);
                                 function = this.addFunction(lineDataChild.s0, 1);
                                 function.addGroup(addGroup("TAU_DEFAULT"));
-                                String s = self.s0 + " => " + lineDataChild.s0 + "  ";
+                                //String s = self.s0 + " => " + lineDataChild.s0 + "  ";
                                 callPathFunction = this.addFunction(self.s0 + " => " + lineDataChild.s0 + "  ", 1);
                                 callPathFunction.addGroup(addGroup("TAU_DEFAULT"));
                                 callPathFunction.addGroup(addGroup("TAU_CALLPATH"));
@@ -165,7 +170,7 @@ public class GprofDataSource extends DataSource {
                                 thread.addFunctionProfile(functionProfile);
                                 functionProfile.setInclusive(0, lineDataChild.d0 + lineDataChild.d1);
                                 functionProfile.setExclusive(0, lineDataChild.d0);
-                                functionProfile.setNumCalls(lineDataChild.i0);
+                                functionProfile.setNumCalls(lineDataChild.d3);
                             }
                             children.clear();
                             parent = true;
@@ -249,7 +254,7 @@ public class GprofDataSource extends DataSource {
         //the number of calls for the top level function (usually main).
         //Check the number of tokens to see if we are in this case. If so,
         //by default, we assume a number of calls value of 1.
-        int numberOfTokens = st.countTokens();
+        //int numberOfTokens = st.countTokens();
 
         // Skip the first token.
         // Entries are numbered with consecutive integers.
@@ -309,8 +314,12 @@ public class GprofDataSource extends DataSource {
 
         boolean hasCalls;
         String str = st.nextToken();
+//        if(str.contains("CSRMatrix2")){
+//        	System.out.println("Hey!");
+//        }
         try {
-            int foo = Integer.parseInt(str);
+            //int foo = 
+            	Integer.parseInt(str);
             hasCalls = true;
         } catch (NumberFormatException nfe) {
             hasCalls = false;
@@ -318,14 +327,14 @@ public class GprofDataSource extends DataSource {
 
         if (!hasCalls) {
             // if the number of calls is absent, assume 1.
-            lineData.i0 = 1;
+            lineData.d3 = 1;
             lineData.s0 = str;
         } else {
             if (str.indexOf("+") < 0) {
                 StringTokenizer st2 = new StringTokenizer(str, "+");
-                lineData.i0 = Integer.parseInt(st2.nextToken());
+                lineData.d3 = Double.parseDouble(st2.nextToken());
                 // do this?
-                // lineData.i0 += Integer.parseInt(st2.nextToken());
+                // lineData.d3 += Integer.parseInt(st2.nextToken());
             }
             lineData.s0 = st.nextToken(); //Name
         }
@@ -438,14 +447,25 @@ public class GprofDataSource extends DataSource {
         // check for a ratio
         if (tmpStr.indexOf("/") >= 0) {
             StringTokenizer st2 = new StringTokenizer(tmpStr, "/");
+            
+            
+            try{
+            
             // the number of times self was called from parent
-            lineData.i0 = Integer.parseInt(st2.nextToken());
+            lineData.d3 = Double.parseDouble(st2.nextToken());
             // the total number of nonrecursive calls to self from all
-            // its parents
-            lineData.i1 = Integer.parseInt(st2.nextToken());
+            // its parents (This is currently not used, and may be bigger than an int!)
+            //lineData.i1 = Integer.parseInt();
+            st2.nextToken();
+            }catch( NumberFormatException e){
+            	e.printStackTrace();
+            }
         } else {
-            lineData.i0 = Integer.parseInt(tmpStr);
-            lineData.i1 = lineData.i0;
+        	if(tmpStr.indexOf('+')>=0){
+        		tmpStr=tmpStr.split("\\+")[0];
+        	}
+            lineData.d3 = Double.parseDouble(tmpStr);
+            lineData.d4 = lineData.d3;
         }
 
         // the rest is the name
@@ -470,32 +490,32 @@ public class GprofDataSource extends DataSource {
         return lineData;
     }
 
-    private LineData getSummaryLineData(String string) {
-        LineData lineData = new LineData();
-        StringTokenizer st = new StringTokenizer(string, " \t\n\r");
-
-        lineData.d0 = Double.parseDouble(st.nextToken());
-        lineData.d1 = 1000.0 * Double.parseDouble(st.nextToken());
-        lineData.d2 = 1000.0 * Double.parseDouble(st.nextToken());
-        if (st.countTokens() > 5) {
-            lineData.i0 = Integer.parseInt(st.nextToken());
-            lineData.d3 = Double.parseDouble(st.nextToken());
-            lineData.d4 = Double.parseDouble(st.nextToken());
-        } else {
-            lineData.i0 = 1;
-            lineData.d3 = lineData.d2;
-            lineData.d4 = lineData.d2;
-        }
-
-        lineData.s0 = st.nextToken(); //Name
-        while (st.hasMoreTokens()) {
-            String tmp = st.nextToken();
-            if ((tmp.indexOf("[") != 0) && (!tmp.endsWith("]")))
-                lineData.s0 += " " + tmp; //Name
-        }
-        lineData.s0 = fix(lineData.s0);
-        return lineData;
-    }
+//    private LineData getSummaryLineData(String string) {
+//        LineData lineData = new LineData();
+//        StringTokenizer st = new StringTokenizer(string, " \t\n\r");
+//
+//        lineData.d0 = Double.parseDouble(st.nextToken());
+//        lineData.d1 = 1000.0 * Double.parseDouble(st.nextToken());
+//        lineData.d2 = 1000.0 * Double.parseDouble(st.nextToken());
+//        if (st.countTokens() > 5) {
+//            lineData.d3 = Integer.parseInt(st.nextToken());
+//            lineData.d3 = Double.parseDouble(st.nextToken());
+//            lineData.d4 = Double.parseDouble(st.nextToken());
+//        } else {
+//            lineData.d3 = 1;
+//            lineData.d3 = lineData.d2;
+//            lineData.d4 = lineData.d2;
+//        }
+//
+//        lineData.s0 = st.nextToken(); //Name
+//        while (st.hasMoreTokens()) {
+//            String tmp = st.nextToken();
+//            if ((tmp.indexOf("[") != 0) && (!tmp.endsWith("]")))
+//                lineData.s0 += " " + tmp; //Name
+//        }
+//        lineData.s0 = fix(lineData.s0);
+//        return lineData;
+//    }
 
     /*
      * when C and Fortran code are mixed, the C routines have to be mapped to

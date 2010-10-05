@@ -5,9 +5,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringTokenizer;
 import java.util.NoSuchElementException;
-
+import java.util.StringTokenizer;
 
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.Metric;
@@ -26,9 +25,10 @@ public class DataUtils {
 	 * @throws PerfExplorerException
 	 */
 	public static RawDataInterface getRawData (DatabaseAPI session, RMIPerfExplorerModel modelData) throws PerfExplorerException {
-		PerfExplorerServer server = PerfExplorerServer.getServer();
+		//PerfExplorerServer server = 
+			PerfExplorerServer.getServer();
 		PerfExplorerOutput.print("Getting raw data...");
-	    int numRows = 0;
+	    //int numRows = 0;
 	    int numTotalThreads = 0;
 	    int numEvents = 0;
 	    int nodes = 0;
@@ -38,7 +38,7 @@ public class DataUtils {
 	    double maximum = 0.0;
 	    List<String> eventIDs = null;
 	    String clusterType=modelData.getClusterValueType();
-		String clusterPerType="inclusive_percentage";
+		//String clusterPerType="inclusive_percentage";
 		
 		PerfExplorerOutput.print("Getting constants...");
 		try {
@@ -51,7 +51,7 @@ public class DataUtils {
 				else{
 					clusterType="exclusive";
 				}
-				clusterPerType="exclusive_percentage";
+				//clusterPerType="exclusive_percentage";
 			}
 			
 			PreparedStatement statement = null;
@@ -89,7 +89,7 @@ public class DataUtils {
 			// PerfExplorerOutput.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 			if (results.next() != false) {
-				numRows = results.getInt(1);
+				//numRows = results.getInt(1);
 			}
 			results.close();
 			statement.close();

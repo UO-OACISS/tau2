@@ -3,15 +3,15 @@
  */
 package edu.uoregon.tau.perfexplorer.glue.test;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import junit.framework.TestCase;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.glue.DrawGraph;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
 import edu.uoregon.tau.perfexplorer.glue.TrialResult;
 import edu.uoregon.tau.perfexplorer.glue.Utilities;
-
-import java.util.HashSet;
-import java.util.Set;
-import junit.framework.TestCase;
 
 /**
  * @author khuck

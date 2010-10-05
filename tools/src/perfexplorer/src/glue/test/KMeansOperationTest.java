@@ -3,23 +3,16 @@
  */
 package edu.uoregon.tau.perfexplorer.glue.test;
 
-import edu.uoregon.tau.perfdmf.Trial;
+import java.util.ArrayList;
+import java.util.List;
+
+import junit.framework.TestCase;
 import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
-import edu.uoregon.tau.perfexplorer.glue.ClusterOutputResult;
 import edu.uoregon.tau.perfexplorer.glue.DataSourceResult;
 import edu.uoregon.tau.perfexplorer.glue.ExtractEventOperation;
 import edu.uoregon.tau.perfexplorer.glue.KMeansOperation;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
-import edu.uoregon.tau.perfexplorer.glue.TopXEvents;
-import edu.uoregon.tau.perfexplorer.glue.TopXPercentEvents;
-import edu.uoregon.tau.perfexplorer.glue.TrialResult;
-import edu.uoregon.tau.perfexplorer.glue.Utilities;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import junit.framework.TestCase;
 
 /**
  * @author khuck
@@ -64,9 +57,9 @@ public class KMeansOperationTest extends TestCase {
 //				}
 				PerformanceAnalysisOperation kmeans = new KMeansOperation(reduced, metric, type, i);
 				List<PerformanceResult> outputs = kmeans.processData();
-				ClusterOutputResult first = (ClusterOutputResult)outputs.get(0); 
-				ClusterOutputResult second = (ClusterOutputResult)outputs.get(1);
-				Integer thread = 0;
+				//ClusterOutputResult first = (ClusterOutputResult)outputs.get(0); 
+				//ClusterOutputResult second = (ClusterOutputResult)outputs.get(1);
+				//Integer thread = 0;
 //				String event = "void do_nonbonded(t_commrec *, t_forcerec *, rvec *, rvec *, t_mdatoms *, real *, real *, real *, t_nrnb *, real, real *, int, int, int, int) C [{nonbonded.c} {271,1}-{517,1}]";
 				for (String event : tmpEvents) {
 					System.out.println(event);

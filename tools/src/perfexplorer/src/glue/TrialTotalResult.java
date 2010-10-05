@@ -17,6 +17,10 @@ import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
  */
 public class TrialTotalResult extends AbstractResult {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1769201735460058547L;
 	private Integer originalThreads = 0;
 
 	/**
