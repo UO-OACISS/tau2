@@ -47,6 +47,9 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
   RuntimeApiTrace_t *traceData = (RuntimeApiTrace_t*)userdata;
 
 	CUptiResult err;
+	char *name = new char[strlen(cbInfo->functionName) + 13];
+	sprintf(name, "%s (%s)",cbInfo->functionName, (domain ==
+	CUPTI_CB_DOMAIN_RUNTIME_API_TRACE ? "RuntimeAPI" : "DriverAPI"));
 	if (cbInfo->callbacksite == CUPTI_API_ENTER)
 	{
 		printf("Enter: %s:%d.\n", cbInfo->functionName, cbInfo->functionId);
@@ -64,18 +67,18 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 
 			if (params.kind == 1)
 			{
-				Tau_gpu_enter_memcpy_event(
-				&cudaEventId(cbInfo->functionId), &cudaGpuId(0,0), MemcpyHtoD);
+				Tau_gpu_enter_memcpy_event(name, 
+				&cudaEventId(cbInfo->functionId), &cudaGpuId(0,0), params.count, MemcpyHtoD);
 			}
 			else if (params.kind == 2)
 			{
-				Tau_gpu_enter_memcpy_event(
-				&cudaEventId(cbInfo->functionId), &cudaGpuId(0,0), MemcpyDtoH);
+				Tau_gpu_enter_memcpy_event(name,
+				&cudaEventId(cbInfo->functionId), &cudaGpuId(0,0), params.count, MemcpyDtoH);
 			}
 		}
 		else 
 		{
-			Tau_gpu_enter_event(cbInfo->functionName, &cudaEventId(cbInfo->functionId));
+			Tau_gpu_enter_event(name, &cudaEventId(cbInfo->functionId));
 		}
 	}
 	else if (cbInfo->callbacksite == CUPTI_API_EXIT)
@@ -87,18 +90,18 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 			sizeof(cudaMemcpy_params));
 			if (params.kind == 1)
 			{
-				Tau_gpu_exit_memcpy_event(
+				Tau_gpu_exit_memcpy_event(name,
 				&cudaEventId(cbInfo->functionId), &cudaGpuId(0,0), MemcpyHtoD);
 			}
 			else if (params.kind == 2)
 			{
-				Tau_gpu_exit_memcpy_event(
+				Tau_gpu_exit_memcpy_event(name,
 				&cudaEventId(cbInfo->functionId), &cudaGpuId(0,0), MemcpyDtoH);
 			}
 		}
 		else
 		{
-			Tau_gpu_exit_event(cbInfo->functionName, &cudaEventId(cbInfo->functionId));
+			Tau_gpu_exit_event(name, &cudaEventId(cbInfo->functionId));
 			//	Shutdown at Thread Exit
 			if (cbInfo->functionId == 123)
 			{
@@ -110,7 +113,8 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 	}
 }
 
-CUpti_SubscriberHandle subscriber;
+CUpti_SubscriberHandle rtSubscriber;
+CUpti_SubscriberHandle drSubscriber;
 
 void Tau_cuda_onload(void)
 {
@@ -131,11 +135,12 @@ void Tau_cuda_onload(void)
 			printf("cupti supported only for Tesla\n");
 			exit(1);
 	}*/
-	err = cuptiSubscribe(&subscriber, (CUpti_CallbackFunc)Tau_cuda_timestamp_callback , &trace);
+	err = cuptiSubscribe(&rtSubscriber, (CUpti_CallbackFunc)Tau_cuda_timestamp_callback , &trace);
+	err = cuptiSubscribe(&drSubscriber, (CUpti_CallbackFunc)Tau_cuda_timestamp_callback , &trace);
 	CUDA_CHECK_ERROR(err, "Cannot Subscribe.\n");
 
-	//err = cuptiEnableDomain(1, subscriber,CUPTI_CB_DOMAIN_DRIVER_API_TRACE);
-	err = cuptiEnableDomain(1, subscriber,CUPTI_CB_DOMAIN_RUNTIME_API_TRACE);
+	err = cuptiEnableDomain(1, rtSubscriber,CUPTI_CB_DOMAIN_RUNTIME_API_TRACE);
+	err = cuptiEnableDomain(1, drSubscriber,CUPTI_CB_DOMAIN_DRIVER_API_TRACE);
 	CUDA_CHECK_ERROR(err, "Cannot set Domain.\n");
 
 	Tau_gpu_init();
@@ -145,7 +150,8 @@ void Tau_cuda_onunload(void)
 {
 	printf("in Tau_cuda_onunload.\n");
   CUresult err;
-  err = cuptiUnsubscribe(subscriber);
+  err = cuptiUnsubscribe(rtSubscriber);
+  err = cuptiUnsubscribe(drSubscriber);
   CUDA_CHECK_ERROR(err, "Cannot unsubscribe.\n");
 	
 }

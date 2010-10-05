@@ -299,6 +299,13 @@ TAU_MPI_FOR_SHARED=$(TAU_MPI_WRAPPER)
 CRAY_PGI_HACK=
 #CRAYCNL#CRAY_PGI_HACK=$(INSTALLDEST)/libpgnod_prof.a #ENDIF#
 
+ifneq ($(TAU_CUDA_INC), )
+	TAU_GPU_LIB=libTAU-CUpti.so
+	TAU_GPU_OBJS=TauGpuAdapterCupti.o TauGpu.o
+else
+	TAU_GPU_LIB=
+	TAU_GPU_OBJS=
+endif
 
 all:		$(TAU_TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) $(TAUPYTHON) $(SHMEM_WRAPPER) $(POELIB) $(TAU_GPU_LIB)
 
@@ -641,7 +648,7 @@ TauGpu.o : TauGpu.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauGpuAdapterCupti.o : TauGpuAdapterCupti.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -g -I$(TAU_GPU_INC) -I$(TAU_CUDA_INC) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -g -I$(TAU_CUPTI)/include -I$(TAU_CUDA_INC) -c $(@:.o=.cpp)
 
 TauGpuAdapterOpenCL.o : TauGpuAdapterOpenCL.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -I$(TAU_GPU_INC) -g -c $(@:.o=.cpp)

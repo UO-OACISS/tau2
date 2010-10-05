@@ -617,6 +617,11 @@ case $1 in
       echo "NOTE: Using OPENCL for GPU analysis, source in $openclinclude"
 			echo "s@^TAU_OPENCL_INC=\(.*\)@TAU_OPENCL_INC=$openclinclude@g" >> $sedout
 		;;	
+		cupti=*)
+        cupti=`echo $1 | sed -e 's/^cupti=//' -e 's/#/ /g'`
+      echo "NOTE: Using CUPTI for GPU analysis, source in $cupti"
+			echo "s@^TAU_CUPTI=\(.*\)@TAU_CUPTI=$cupti@g" >> $sedout
+		;;	
 
 ###############################################################
 # Set the CONFIG_ARCH=<machine-name> in the Makefiles.

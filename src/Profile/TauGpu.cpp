@@ -23,11 +23,15 @@
 
 void *main_ptr, *gpu_ptr;
 
-TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventHtoD, "Memory copied from Host to Device");
-TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
+TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventHtoD, "Bytes copied from Host to Device");
+TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventDtoH, "Bytes copied from Device to Host");
 
 int gpuTask;
 bool firstEvent = true;
+
+//The number of Memcpys called with unknown transfer size which should be given
+//on the GPU thread.
+int counted_memcpys = 0;
 
 #include <linux/unistd.h>
 
@@ -77,12 +81,23 @@ void Tau_gpu_enter_event(const char* name, eventId *id)
 #endif
 	TAU_START(name);
 }
-void Tau_gpu_enter_memcpy_event(eventId *id, gpuId *device, bool
-memcpyType)
+void Tau_gpu_enter_memcpy_event(const char *functionName, eventId *id, gpuId
+*device, int transferSize, bool memcpyType)
 {
 #ifdef DEBUG_PROF
 	//printf("entering cuMemcpy event: %s.\n", name);
 #endif
+
+	if (functionName == TAU_GPU_USE_DEFAULT_NAME)
+	{
+		if (memcpyType == MemcpyHtoD) {
+			functionName = "Memory copy Host to Device";
+		}
+		else
+		{
+			functionName = "Memory copy Device to Host";
+		}
+	}
 
 	// Place the Message into the trace in when the memcpy in entered if this
 	// thread initiates the send otherwise wait until this event is exited.
@@ -90,20 +105,47 @@ memcpyType)
 	// time.
 
 	if (memcpyType == MemcpyHtoD) {
-		TauTraceOneSidedMsg(MESSAGE_SEND, device, -1, 0);
-		TAU_START("Memory copy Host to Device");
+		TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, 0);
+		if (transferSize != TAU_GPU_UNKNOW_TRANSFER_SIZE)
+		{
+			TAU_EVENT(MemoryCopyEventHtoD(), transferSize);
+		}
+		else
+		{
+			counted_memcpys--;
+		}
 	}
 	else
 	{
-		TAU_START("Memory copy Device to Host");
+		if (transferSize != TAU_GPU_UNKNOW_TRANSFER_SIZE)
+		{
+			TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
+		}
+		else
+		{
+			counted_memcpys--;
+		}
 	}
+	
+	TAU_START(functionName);
 }
-void Tau_gpu_exit_memcpy_event(eventId *id, gpuId *device, bool
+void Tau_gpu_exit_memcpy_event(const char * functionName, eventId *id, gpuId *device, bool
 memcpyType)
 {
 #ifdef DEBUG_PROF
 	//printf("exiting cuMemcpy event: %s.\n", name);
 #endif
+
+	if (functionName == TAU_GPU_USE_DEFAULT_NAME)
+	{
+		if (memcpyType == MemcpyHtoD) {
+			functionName = "Memory copy Host to Device";
+		}
+		else
+		{
+			functionName = "Memory copy Device to Host";
+		}
+	}
 
 	// Place the Message into the trace in when the memcpy in exited if this
 	// thread receives the message otherwise do it when this event is entered.
@@ -112,12 +154,10 @@ memcpyType)
 
 	if (memcpyType == MemcpyDtoH) {
 		TauTraceOneSidedMsg(MESSAGE_RECV, device, -1, 0);
-		TAU_STOP("Memory copy Device to Host");
 	}
-	else
-	{
-		TAU_STOP("Memory copy Host to Device");
-	}
+	
+	TAU_STOP(functionName);
+
 }
 
 void Tau_gpu_exit_event(const char *name, eventId *id)
@@ -209,7 +249,11 @@ endTime, int transferSize, bool memcpyType)
 		stage_gpu_event("Memory copy Host to Device", 
 				startTime);
 		//TAU_REGISTER_EVENT(MemoryCopyEventHtoD, "Memory copied from Host to Device");
-		TAU_EVENT(MemoryCopyEventHtoD(), transferSize);
+		if (transferSize != TAU_GPU_UNKNOW_TRANSFER_SIZE)
+		{
+			counted_memcpys++;
+			TAU_EVENT(MemoryCopyEventHtoD(), transferSize);
+		}
 		//TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread()); 
 #ifdef DEBUG_PROF		
 		printf("[%f] onesided event mem recv: %f, id: %s.\n", startTime, transferSize,
@@ -223,7 +267,11 @@ endTime, int transferSize, bool memcpyType)
 		stage_gpu_event("Memory copy Device to Host", 
 				startTime);
 		//TAU_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
-		TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
+		if (transferSize != TAU_GPU_UNKNOW_TRANSFER_SIZE)
+		{
+			counted_memcpys++;
+			TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
+		}
 		//TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread()); 
 #ifdef DEBUG_PROF		
 		printf("[%f] onesided event mem send: %f, id: %s\n", startTime, transferSize,
@@ -268,6 +316,10 @@ int Tau_gpu_init(void)
 */
 void Tau_gpu_exit(void)
 {
+		if (counted_memcpys != 0)
+		{
+			cerr << "TAU: warning not all bytes tranfered between CPU and GPU were recorded, some data maybe be incorrect." << endl;
+		}
 #ifdef DEBUG_PROF
 		cerr << "stopping first gpu event.\n" << endl;
 		printf("stopping level 0.\n");

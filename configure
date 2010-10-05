@@ -1339,6 +1339,19 @@ for arg in "$@"; do
     shift
     ;;
   
+  -cupti=*)
+    cupti=`echo $arg | sed -e 's/-cupti=//' -e 's/ /#/g'`
+    if [ ! -d $cupti ] ; then
+      echo "Error: Cannot access CUPTI include directory $cupti"
+      exit 1
+    fi
+		if [ -f "$cupti/include/cupti_events.h" ] ; then
+      fixmakeargs="$fixmakeargs cupti=$cupti useropt=-DTAU_MAX_THREADS=3"
+		else
+			echo "Error: Cannot find CUPTI headers."
+    fi
+    shift
+    ;;
 	default)
     echo "Fixing Makefiles"
     ;;	
