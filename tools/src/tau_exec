@@ -221,12 +221,10 @@ fi
 if [ $track_cuda = "true" ] ; then
     # Add the memory wrapper library to the LD_PRELOAD list
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDA.so:$TAUEX_LD_PRELOAD
-    export TAU_METRICS=TAUGPU_TIME
 fi
 if [ $track_opencl = "true" ] ; then
     # Add the memory wrapper library to the LD_PRELOAD list
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OpenCL.so:$TAUEX_LD_PRELOAD
-    export TAU_METRICS=TAUGPU_TIME
 fi
 
 
@@ -321,9 +319,6 @@ else
     if [ $dryrun = "true" ]; then
 	if [ $track_memory = "true" ] ; then
 	    echo "export TAU_MEMORY_WRAPPER_ENABLED=1"
-	fi
-	if [ $track_memory = "true" ] ; then
-	    echo "export TAU_METRICS=TAUGPU_TIME"
 	fi
 	if [ $apple = 1 ]; then
 	    echo "export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
