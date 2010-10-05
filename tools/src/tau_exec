@@ -96,7 +96,7 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -opencl)
-	      track_cuda=true
+	      track_opencl=true
 	      shift
 	      ;;
 		-qsub)
