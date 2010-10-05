@@ -4,18 +4,26 @@
  * From: http://forum.java.sun.com/thread.jspa?forumID=257&threadID=300107
  */
 package edu.uoregon.tau.vis;
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.util.Vector;
 
-import java.awt.*;
-import java.util.*;
-import javax.swing.*;
-import javax.swing.plaf.metal.*;
-import javax.swing.plaf.basic.*;
+import javax.swing.ComboBoxModel;
+import javax.swing.JComboBox;
+import javax.swing.plaf.basic.BasicComboPopup;
+import javax.swing.plaf.basic.ComboPopup;
+import javax.swing.plaf.metal.MetalComboBoxUI;
 
 class SteppedComboBoxUI extends MetalComboBoxUI {
     protected ComboPopup createPopup() {
         BasicComboPopup popup = new BasicComboPopup(comboBox) {
 
-            public void show() {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = -3621394671720754645L;
+
+			public void show() {
                 Dimension popupSize = ((SteppedComboBox) comboBox).getPopupSize();
                 popupSize.setSize(popupSize.width, getPopupHeightForRowCount(comboBox.getMaximumRowCount()));
                 Rectangle popupBounds = computePopupBounds(0, comboBox.getBounds().height, popupSize.width, popupSize.height);
@@ -41,7 +49,11 @@ class SteppedComboBoxUI extends MetalComboBoxUI {
 }
 
 public class SteppedComboBox extends JComboBox {
-    protected int popupWidth;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1598797528422088084L;
+	protected int popupWidth;
 
     public SteppedComboBox(ComboBoxModel aModel) {
         super(aModel);
@@ -55,7 +67,8 @@ public class SteppedComboBox extends JComboBox {
         popupWidth = 0;
     }
 
-    public SteppedComboBox(Vector items) {
+    @SuppressWarnings("rawtypes")
+	public SteppedComboBox(Vector items) {
         super(items);
         setUI(new SteppedComboBoxUI());
         popupWidth = 0;

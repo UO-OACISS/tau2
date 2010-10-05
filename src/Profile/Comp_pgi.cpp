@@ -123,6 +123,7 @@ extern "C" void ___rouent2(struct s1 *p) {
 }
 
 // called at the end of each profiled routine
+#pragma save_all_regs
 extern "C" void ___rouret2(void) {
   TAU_MAPPING_PROFILE_STOP(0);
 }

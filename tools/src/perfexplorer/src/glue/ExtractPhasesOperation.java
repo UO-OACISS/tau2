@@ -16,6 +16,10 @@ import edu.uoregon.tau.perfdmf.Trial;
  */
 public class ExtractPhasesOperation extends AbstractPerformanceOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1775154091500218639L;
 	private String phaseNamePrefix = null;
 	
 	/**
@@ -53,7 +57,8 @@ public class ExtractPhasesOperation extends AbstractPerformanceOperation {
 			Set<String> foundIterations = new HashSet<String>();
 			for (String event : input.getEvents()) {
 				if (event.startsWith(phaseNamePrefix)) {
-					String phaseID = event.replaceAll(phaseNamePrefix, "").trim();
+					//String phaseID = 
+						event.replaceAll(phaseNamePrefix, "").trim();
 					for (String metric : input.getMetrics()) {
 						for (Integer threadIndex : input.getThreads()) {
 							output.putExclusive(foundIterations.size(), phaseNamePrefix + " measurement", metric,

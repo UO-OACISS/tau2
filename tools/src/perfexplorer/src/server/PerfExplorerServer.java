@@ -24,9 +24,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Queue;
-import java.util.StringTokenizer;
 
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
@@ -36,7 +34,6 @@ import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.database.DB;
-import edu.uoregon.tau.perfdmf.loader.*;
 import edu.uoregon.tau.perfexplorer.common.AnalysisType;
 import edu.uoregon.tau.perfexplorer.common.ChartDataType;
 import edu.uoregon.tau.perfexplorer.common.ChartType;
@@ -52,7 +49,6 @@ import edu.uoregon.tau.perfexplorer.common.RMIPerformanceResults;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
 import edu.uoregon.tau.perfexplorer.common.RMIVarianceData;
 import edu.uoregon.tau.perfexplorer.common.RMIView;
-import edu.uoregon.tau.perfexplorer.common.Configure;
 import edu.uoregon.tau.perfexplorer.constants.Constants;
 
 /**
@@ -275,7 +271,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * 
 	 * @return List of PerfDMF Application objects.
 	 */
-	@SuppressWarnings("unchecked")  // for getApplicationList() call
 	public List<Application> getApplicationList() {
 		//PerfExplorerOutput.println("getApplicationList()...");
 		List<Application> applications = this.session.getApplicationList();
@@ -289,7 +284,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param applicationID
 	 * @return List of PerfDMF Experiment objects.
 	 */
-	@SuppressWarnings("unchecked")  // for getExperimentList() call
 	public List<Experiment> getExperimentList(int applicationID) {
 		//PerfExplorerOutput.println("getExperimentList(" + applicationID + ")...");
 		this.session.setApplication(applicationID);
@@ -308,7 +302,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param experimentID
 	 * @return List of PerfDMF Trial objects.
 	 */
-	@SuppressWarnings("unchecked")  // for getTrialList() call
 	public List<Trial> getTrialList(int experimentID, boolean getXMLMetadata) {
 		//PerfExplorerOutput.println("getTrialList(" + experimentID + ")...");
 		try {
@@ -420,11 +413,13 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				int thumbSize = results.getInt(3);
 				InputStream thumbStream = results.getBinaryStream(4);
 				byte[] thumbData = new byte[thumbSize];
-				int bytesRead = thumbStream.read(thumbData);
+				//int bytesRead = 
+				thumbStream.read(thumbData);
 				int imageSize = results.getInt(5);
 				InputStream imageStream = results.getBinaryStream(6);
 				byte[] imageData = new byte[imageSize];
-				bytesRead = imageStream.read(imageData);
+				//bytesRead = 
+				imageStream.read(imageData);
 				//String k = results.getString(8);
 				analysisResults.getDescriptions().add(description);
 				analysisResults.getIDs().add(id);
@@ -551,11 +546,13 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				int thumbSize = results.getInt(3);
 				InputStream thumbStream = results.getBinaryStream(4);
 				byte[] thumbData = new byte[thumbSize];
-				int bytesRead = thumbStream.read(thumbData);
+				//int bytesRead = 
+					thumbStream.read(thumbData);
 				int imageSize = results.getInt(5);
 				InputStream imageStream = results.getBinaryStream(6);
 				byte[] imageData = new byte[imageSize];
-				bytesRead = imageStream.read(imageData);
+				//bytesRead = 
+					imageStream.read(imageData);
 				//String k = results.getString(8);
 				analysisResults.getDescriptions().add(description);
 				analysisResults.getIDs().add(id);
@@ -621,7 +618,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 */
 	public void taskFinished (int connectionIndex) {
 		Queue<RMIPerfExplorerModel> requestQueue = requestQueues.get(connectionIndex);
-		RMIPerfExplorerModel model = requestQueue.poll();
+		//RMIPerfExplorerModel model = 
+		requestQueue.poll();
 		//PerfExplorerOutput.println(model.toString() + " finished!");
 		// endRSession();
 	}
@@ -1127,19 +1125,19 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		return events;
 	}
 
-	private static String shortName(String longName) {
-		StringTokenizer st = new StringTokenizer(longName, "(");
-		String shorter = null;
-		try {
-			shorter = st.nextToken();
-			if (shorter.length() < longName.length()) {
-				shorter = shorter + "()";
-			}
-		} catch (NoSuchElementException e) {
-			shorter = longName;
-		}
-		return shorter;
-	}
+//	private static String shortName(String longName) {
+//		StringTokenizer st = new StringTokenizer(longName, "(");
+//		String shorter = null;
+//		try {
+//			shorter = st.nextToken();
+//			if (shorter.length() < longName.length()) {
+//				shorter = shorter + "()";
+//			}
+//		} catch (NoSuchElementException e) {
+//			shorter = longName;
+//		}
+//		return shorter;
+//	}
 
 	/**
 	 * This method will request the column names for the application, 
@@ -1341,10 +1339,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param views
 	 * @return List
 	 */
-	/* (non-Javadoc)
-	 * @see common.RMIPerfExplorer#getTrialsForView(java.util.List)
-	 */
-	@SuppressWarnings("unchecked")  // for Trial.getTrialList() call
 	public List<Trial> getTrialsForView (List<RMIView> views, boolean getXMLMetadata) {
 		//PerfExplorerOutput.println("getTrialsForView()...");
 		List<Trial> trials = new ArrayList<Trial>();
@@ -1707,7 +1701,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param trialID
 	 * @return List of PerfDMF IntervalEvent objects.
 	 */
-	@SuppressWarnings("unchecked")
 	public List<RMISortableIntervalEvent> getEventList(int trialID, int metricIndex) {
 		try {
 			this.session.setTrial(trialID, false);

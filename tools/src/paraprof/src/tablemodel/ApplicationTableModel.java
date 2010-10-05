@@ -12,11 +12,15 @@ import edu.uoregon.tau.perfdmf.DatabaseAPI;
 
 public class ApplicationTableModel extends AbstractTableModel {
 
-    private ParaProfApplication application;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 8379814794176096620L;
+	private ParaProfApplication application;
     private String[] columnNames = { "AppField", "Value" };
     private ParaProfManagerWindow paraProfManager;
     private DefaultTreeModel defaultTreeModel;
-    private List fieldNames;
+    private List<String> fieldNames;
     
     public ApplicationTableModel(ParaProfManagerWindow paraProfManager, ParaProfApplication app, DefaultTreeModel defaultTreeModel) {
         this.application = app;
@@ -24,7 +28,7 @@ public class ApplicationTableModel extends AbstractTableModel {
         this.paraProfManager = paraProfManager;
         this.defaultTreeModel = defaultTreeModel;
         
-        fieldNames = new ArrayList();
+        fieldNames = new ArrayList<String>();
         fieldNames.add("Name");
         fieldNames.add("Application ID");
         for (int i=0; i<application.getNumFields(); i++) {
@@ -35,7 +39,7 @@ public class ApplicationTableModel extends AbstractTableModel {
     {
     	if (app != null)
     	{
-    		fieldNames = new ArrayList();
+    		fieldNames = new ArrayList<String>();
     		
 	        fieldNames.add("Name");
 	        fieldNames.add("Application ID");

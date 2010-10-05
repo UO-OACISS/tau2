@@ -16,7 +16,7 @@ public class SynchronizationOverheadForAnyExecution extends
 	 * @param rankBasis
 	 * @param r
 	 */
-	public SynchronizationOverheadForAnyExecution(Class property,
+	public SynchronizationOverheadForAnyExecution(Class<Inefficiency> property,
 			Experiment parallelExp, RegionSummary rankBasis, CodeRegion r) {
 		super(property, parallelExp, rankBasis, r);
 	}

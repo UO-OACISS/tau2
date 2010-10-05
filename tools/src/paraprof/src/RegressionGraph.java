@@ -4,14 +4,28 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.io.File;
-import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.swing.JFrame;
 
-import org.jfree.chart.*;
-import org.jfree.chart.axis.*;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.CategoryLabelPositions;
+import org.jfree.chart.axis.LogarithmicAxis;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.TickUnitSource;
+import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.labels.StandardXYItemLabelGenerator;
 import org.jfree.chart.labels.XYItemLabelGenerator;
 import org.jfree.chart.plot.CategoryPlot;
@@ -58,17 +72,17 @@ public class RegressionGraph {
     public Font smallFont = new Font("SansSerif", Font.BOLD, 14);
     public Font tickFont = new Font("SansSerif", Font.PLAIN, 12);
 
-    public List trials;
-    public List exps;
-    public List expnames;
+    public List<ParaProfTrial> trials;
+    public List<List<ParaProfTrial>> exps;
+    public List<String> expnames;
 
     private RegressionGraph() {};
 
-    public void setTrials(List trials) {
+    public void setTrials(List<ParaProfTrial> trials) {
         this.trials = trials;
-        this.exps = new ArrayList();
+        this.exps = new ArrayList<List<ParaProfTrial>>();
         this.exps.add(trials);
-        this.expnames = new ArrayList();
+        this.expnames = new ArrayList<String>();
         this.expnames.add("wallclock");
     }
 
@@ -78,25 +92,25 @@ public class RegressionGraph {
     }
 
     public static RegressionGraph createChart(ParaProfTrial trial) {
-        List trials = new ArrayList();
+        List<ParaProfTrial> trials = new ArrayList<ParaProfTrial>();
         trials.add(trial);
         return createBasicChart(trials);
     }
 
-    public static RegressionGraph createBasicChart(List trials) {
+    public static RegressionGraph createBasicChart(List<ParaProfTrial> trials) {
         RegressionGraph chart = new RegressionGraph();
         chart.trials = trials;
-        chart.exps = new ArrayList();
+        chart.exps = new ArrayList<List<ParaProfTrial>>();
         chart.exps.add(trials);
-        chart.expnames = new ArrayList();
+        chart.expnames = new ArrayList<String>();
         chart.expnames.add("wallclock");
         return chart;
     }
 
-    public static RegressionGraph createExperimentChart(List exps, List expnames) {
+    public static RegressionGraph createExperimentChart(List<List<ParaProfTrial>> exps, List<String> expnames) {
         RegressionGraph chart = new RegressionGraph();
         chart.exps = exps;
-        chart.trials = (List) chart.exps.get(0);
+        chart.trials = chart.exps.get(0);
         chart.expnames = expnames;
         return chart;
     }
@@ -106,7 +120,7 @@ public class RegressionGraph {
         dataSorter.setSortType(SortType.VALUE);
         dataSorter.setSortValueType(ValueType.INCLUSIVE);
         dataSorter.setValueType(ValueType.INCLUSIVE);
-        List fps = dataSorter.getFunctionProfiles(ppTrial.getMeanThread());
+        List<PPFunctionProfile> fps = dataSorter.getFunctionProfiles(ppTrial.getMeanThread());
         PPFunctionProfile topfp = (PPFunctionProfile) fps.get(0);
         return topfp;
     }
@@ -119,8 +133,8 @@ public class RegressionGraph {
         double maxProcCount = Double.MIN_VALUE;
         double minProcCount = Double.MAX_VALUE;
         for (int e = 0; e < exps.size(); e++) {
-            List trials = (List) exps.get(e);
-            XYSeries series = new XYSeries((String) expnames.get(e));
+            List<ParaProfTrial> trials = exps.get(e);
+            XYSeries series = new XYSeries(expnames.get(e));
 
             double rootProcCount = Double.MAX_VALUE;
             double rootValue = Double.MAX_VALUE;
@@ -163,15 +177,15 @@ public class RegressionGraph {
         return dataSet;
     }
 
-    private static class NCTComparator implements Comparator {
-        public int compare(Object arg0, Object arg1) {
+    private static class NCTComparator implements Comparator<List<ParaProfTrial>> {
+        public int compare(List<ParaProfTrial> arg0, List<ParaProfTrial> arg1) {
             if (arg0 instanceof ParaProfTrial) {
                 ParaProfTrial t1 = (ParaProfTrial) arg0;
                 ParaProfTrial t2 = (ParaProfTrial) arg1;
                 return t1.getMaxNCTNumbers()[0] - t2.getMaxNCTNumbers()[0];
             } else {
-                List e1 = (List) arg0;
-                List e2 = (List) arg1;
+                List<ParaProfTrial> e1 = arg0;
+                List<ParaProfTrial> e2 = arg1;
                 ParaProfTrial t1 = (ParaProfTrial) e1.get(0);
                 ParaProfTrial t2 = (ParaProfTrial) e2.get(0);
                 return t1.getMaxNCTNumbers()[0] - t2.getMaxNCTNumbers()[0];
@@ -179,27 +193,28 @@ public class RegressionGraph {
         }
     }
 
-    private CategoryDataset getMainOnlyDataSet() {
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	private CategoryDataset getMainOnlyDataSet() {
 
         DefaultCategoryDataset dataSet = new DefaultCategoryDataset();
 
-        TreeMap map = new TreeMap();
+        TreeMap<String, String> map = new TreeMap<String, String>();
 
         // So that the trials come in order
         for (int e = 0; e < exps.size(); e++) {
-            List trials = (List) exps.get(e);
+            List<ParaProfTrial> trials = exps.get(e);
             for (int i = 0; i < trials.size(); i++) {
                 ParaProfTrial ppTrial = (ParaProfTrial) trials.get(i);
                 map.put(ppTrial.getName(), ppTrial.getName());
             }
         }
-        for (Iterator it = map.keySet().iterator(); it.hasNext();) {
-            String string = (String) it.next();
+        for (Iterator<String> it = map.keySet().iterator(); it.hasNext();) {
+            String string = it.next();
             dataSet.addValue(42, "@@@", string);
         }
 
         for (int e = 0; e < exps.size(); e++) {
-            List trials = (List) exps.get(e);
+            List trials = exps.get(e);
             Collections.sort(trials, new NCTComparator());
             for (int i = 0; i < trials.size(); i++) {
                 ParaProfTrial ppTrial = (ParaProfTrial) trials.get(i);
@@ -207,10 +222,10 @@ public class RegressionGraph {
                 dataSorter.setSortType(SortType.VALUE);
                 dataSorter.setSortValueType(ValueType.INCLUSIVE);
                 dataSorter.setValueType(ValueType.INCLUSIVE);
-                List fps = dataSorter.getFunctionProfiles(ppTrial.getMeanThread());
+                List<PPFunctionProfile> fps = dataSorter.getFunctionProfiles(ppTrial.getMeanThread());
                 PPFunctionProfile topfp = (PPFunctionProfile) fps.get(0);
                 double value = ValueType.INCLUSIVE.getValue(topfp.getFunctionProfile(), metric) * unitMultiple;
-                dataSet.addValue(value, (String) expnames.get(e), ppTrial.getName());
+                dataSet.addValue(value, expnames.get(e), ppTrial.getName());
             }
         }
 
@@ -221,23 +236,23 @@ public class RegressionGraph {
 
     private CategoryDataset getDataSet() {
 
-        Map functionMap = new HashMap();
+        Map<String, Integer> functionMap = new HashMap<String, Integer>();
 
         int funcCount = 0;
 
-        for (Iterator it = trials.iterator(); it.hasNext();) {
-            ParaProfTrial ppTrial = (ParaProfTrial) it.next();
+        for (Iterator<ParaProfTrial> it = trials.iterator(); it.hasNext();) {
+            ParaProfTrial ppTrial = it.next();
             DataSorter dataSorter = new DataSorter(ppTrial);
             dataSorter.setSortType(SortType.VALUE);
             dataSorter.setSortValueType(ValueType.INCLUSIVE);
             dataSorter.setValueType(ValueType.INCLUSIVE);
 
-            List fps = dataSorter.getFunctionProfiles(ppTrial.getMeanThread());
+            List<PPFunctionProfile> fps = dataSorter.getFunctionProfiles(ppTrial.getMeanThread());
 
             PPFunctionProfile topfp = getTopLevelTimer(ppTrial);
             double topValue = topfp.getInclusiveValue();
             double threshhold = topValue * percent;
-            for (Iterator it2 = fps.iterator(); it2.hasNext();) {
+            for (Iterator<PPFunctionProfile> it2 = fps.iterator(); it2.hasNext();) {
                 PPFunctionProfile fp = (PPFunctionProfile) it2.next();
                 if (fp.getExclusiveValue() > threshhold) {
                     String displayName = fp.getDisplayName();
@@ -248,20 +263,20 @@ public class RegressionGraph {
             }
         }
         functionMap.put("other", new Integer(funcCount++));
-        int otherIndex = ((Integer) functionMap.get("other")).intValue();
+        int otherIndex = functionMap.get("other").intValue();
 
         int trialcount = trials.size();
 
         double[][] data = new double[funcCount][trialcount];
 
         for (int idx = 0; idx < trials.size(); idx++) {
-            ParaProfTrial ppTrial = (ParaProfTrial) trials.get(idx);
+            ParaProfTrial ppTrial = trials.get(idx);
             DataSorter dataSorter = new DataSorter(ppTrial);
-            List fps = dataSorter.getFunctionProfiles(ppTrial.getMeanThread());
-            for (Iterator it2 = fps.iterator(); it2.hasNext();) {
+            List<PPFunctionProfile> fps = dataSorter.getFunctionProfiles(ppTrial.getMeanThread());
+            for (Iterator<PPFunctionProfile> it2 = fps.iterator(); it2.hasNext();) {
                 PPFunctionProfile fp = (PPFunctionProfile) it2.next();
                 String displayName = fp.getDisplayName();
-                Integer integer = (Integer) functionMap.get(displayName);
+                Integer integer = functionMap.get(displayName);
                 double value = valueType.getValue(fp.getFunctionProfile(), metric) * unitMultiple;
                 if (integer != null) {
                     data[integer.intValue()][idx] = value;
@@ -273,7 +288,7 @@ public class RegressionGraph {
 
         String trialnames[] = new String[trialcount];
         for (int idx = 0; idx < trials.size(); idx++) {
-            ParaProfTrial ppTrial = (ParaProfTrial) trials.get(idx);
+            ParaProfTrial ppTrial = trials.get(idx);
             if (useProcCountAsTrialName) {
                 trialnames[idx] = Integer.toString(ppTrial.getDataSource().getNumberOfNodes());
             } else {
@@ -282,9 +297,9 @@ public class RegressionGraph {
         }
 
         String funcnames[] = new String[funcCount];
-        for (Iterator it = functionMap.keySet().iterator(); it.hasNext();) {
-            String string = (String) it.next();
-            Integer integer = (Integer) functionMap.get(string);
+        for (Iterator<String> it = functionMap.keySet().iterator(); it.hasNext();) {
+            String string = it.next();
+            Integer integer = functionMap.get(string);
             if (string.length() > stringLimit) {
                 string = string.substring(0, stringLimit) + "...";
             }
@@ -305,7 +320,7 @@ public class RegressionGraph {
 
     private CategoryDataset getSingleDataSet() {
 
-        ParaProfTrial ppTrial = (ParaProfTrial) trials.get(0);
+        ParaProfTrial ppTrial = trials.get(0);
 
         PPFunctionProfile topfp = getTopLevelTimer(ppTrial);
         double topValue = topfp.getInclusiveValue();
@@ -317,9 +332,9 @@ public class RegressionGraph {
         dataSorter.setSortValueType(valueType);
         dataSorter.setValueType(valueType);
 
-        List fps = dataSorter.getFunctionProfiles(ppTrial.getMeanThread());
+        List<PPFunctionProfile> fps = dataSorter.getFunctionProfiles(ppTrial.getMeanThread());
 
-        for (Iterator it2 = fps.iterator(); it2.hasNext();) {
+        for (Iterator<PPFunctionProfile> it2 = fps.iterator(); it2.hasNext();) {
             PPFunctionProfile fp = (PPFunctionProfile) it2.next();
             if (fp.getExclusiveValue() > threshhold) {
                 String displayName = fp.getDisplayName();
@@ -677,10 +692,10 @@ public class RegressionGraph {
         this.tickFont = tickFont;
     }
 
-    public void setExps(List exps, List expnames) {
+    public void setExps(List<List<ParaProfTrial>> exps, List<String> expnames) {
         this.exps = exps;
         this.expnames = expnames;
-        this.trials = (List) this.exps.get(0);
+        this.trials = this.exps.get(0);
     }
 
     public void setSingleTrial(boolean singleTrial) {

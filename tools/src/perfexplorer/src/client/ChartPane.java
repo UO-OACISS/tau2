@@ -2,7 +2,6 @@ package edu.uoregon.tau.perfexplorer.client;
 
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Rectangle;
@@ -19,7 +18,6 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
-import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -47,6 +45,7 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.general.SeriesException;
 import org.jfree.data.xy.DefaultTableXYDataset;
 import org.jfree.data.xy.XYSeries;
 
@@ -56,8 +55,8 @@ import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.common.ChartDataType;
 import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData;
-import edu.uoregon.tau.perfexplorer.common.TransformationType;
 import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow;
+import edu.uoregon.tau.perfexplorer.common.TransformationType;
 
 public class ChartPane extends JScrollPane implements ActionListener {
 
@@ -149,9 +148,9 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	private static final String ATOMIC_EVENT_NAME = "atomic_event.name";
 	private static final String INTERVAL_EVENT_NAME = "interval_event.name";
 	private static final String INTERVAL_EVENT_GROUP_NAME = "interval_event.group_name";
-	private static final String MEAN_INCLUSIVE = "mean.inclusive";
-	private static final String MEAN_EXCLUSIVE = "mean.exclusive";
-	private static final String ATOMIC_MEAN_VALUE = "atomic.mean_value";
+	//private static final String MEAN_INCLUSIVE = "mean.inclusive";
+	//private static final String MEAN_EXCLUSIVE = "mean.exclusive";
+	//private static final String ATOMIC_MEAN_VALUE = "atomic.mean_value";
 
 	private static final String TOTAL="total";
 	private static final String MEAN="mean";
@@ -867,7 +866,24 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		facade.setShowZero(this.showZero.isSelected()?1:0);
 
 		// create the Chart
+		
+		try{
+		
 		doGeneralChart();
+		}
+		catch (SeriesException e) {
+			// this shouldn't happen, but if it does, handle it gracefully.
+			StringBuilder sb = new StringBuilder();
+			sb.append("Two or more trials in this selection have the same total number of threads of execution, and an error occurred.\n");
+			sb.append("To create a scalability chart, please ensure the trials selected have different numbers of threads.\n");
+			//sb.append("To create a different parametric chart, please use the custom chart interface.");	
+			//TODO: Check if threads of execution is the x axis, if so suggest switching to categorical
+			JOptionPane.showMessageDialog(PerfExplorerClient.getMainFrame(), sb.toString(),
+					"Selection Warning", JOptionPane.ERROR_MESSAGE);
+		} catch (Exception e) {
+			System.err.println("actionPerformed Exception: " + e.getMessage());
+			e.printStackTrace();
+		} 
 	}
 
 	private void setEvents(String all){
@@ -1015,6 +1031,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	 * the x-axis, and some measurement on the y-axis.
 	 *
 	 */
+	@SuppressWarnings("unchecked")
 	private PerfExplorerChart doGeneralChart () {
 
 		// get the data
@@ -1103,7 +1120,6 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				ideal=new XYSeries(IDEAL, true, false);
 
 				// create an "ideal" line.
-				@SuppressWarnings("unchecked")
 				List<Integer> keys = dataset.getColumnKeys();
 				for (int i = 0 ; i < keys.size() ; i++) {
 					Integer key = keys.get(i);
@@ -1142,8 +1158,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				//labelMap.put(IDEAL,s);
 
 				// create an "ideal" line.
-				@SuppressWarnings("unchecked")
-				List keys = dataset.getColumnKeys();
+				List<Integer> keys = dataset.getColumnKeys();
 				for (int i = 0 ; i < keys.size() ; i++) {
 					Integer key = (Integer)keys.get(i);
 					dataset.addValue(1.0, IDEAL, key);
@@ -1347,7 +1362,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		return shorter;
 	}
 	
-	private class MyJTextField extends javax.swing.JTextField
+	class MyJTextField extends javax.swing.JTextField
 	{   
 		/**
 		 * 
@@ -1385,7 +1400,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		}
 	}
 
-	private class MyJComboBox extends javax.swing.JComboBox
+	class MyJComboBox extends javax.swing.JComboBox
 	{   
 		/**
 		 * 
@@ -1470,7 +1485,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	/**
 	 * from http://www.codeguru.com/java/articles/163.shtml
 	 */
-	private class SteppedComboBox extends JComboBox {
+	class SteppedComboBox extends JComboBox {
 		/**
 		 * 
 		 */

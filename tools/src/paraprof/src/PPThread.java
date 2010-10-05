@@ -8,7 +8,11 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 
 import edu.uoregon.tau.perfdmf.FunctionProfile;
 import edu.uoregon.tau.perfdmf.Thread;
@@ -17,8 +21,8 @@ public class PPThread {
 
     private ParaProfTrial ppTrial;
     private Thread thread = null;
-    private List functions = new ArrayList();
-    private List userevents = new ArrayList();
+    private List<PPFunctionProfile> functions = new ArrayList<PPFunctionProfile>();
+    private List<PPFunctionProfile> userevents = new ArrayList<PPFunctionProfile>();
 
 
     public PPThread(Thread thread, ParaProfTrial ppTrial) {
@@ -78,32 +82,32 @@ public class PPThread {
         userevents.add(ppFunctionProfile);
     }
 
-    public List getFunctionList() {
+    public List<PPFunctionProfile> getFunctionList() {
         return functions;
     }
 
-    public ListIterator getFunctionListIterator() {
+    public ListIterator<PPFunctionProfile> getFunctionListIterator() {
         return functions.listIterator();
     }
 
-    public List getUsereventList() {
+    public List<PPFunctionProfile> getUsereventList() {
         return userevents;
     }
 
-    public ListIterator getUsereventListIterator() {
+    public ListIterator<PPFunctionProfile> getUsereventListIterator() {
         return userevents.listIterator();
     }
 
 
-    public List getSortedFunctionProfiles(DataSorter dataSorter, boolean getAll) {
-        List newList = null;
+    public List<PPFunctionProfile> getSortedFunctionProfiles(DataSorter dataSorter, boolean getAll) {
+        List<PPFunctionProfile> newList = null;
       
 
-        List functionList = thread.getFunctionProfiles();
-        newList = new ArrayList();
+        List<FunctionProfile> functionList = thread.getFunctionProfiles();
+        newList = new ArrayList<PPFunctionProfile>();
 
-        for (Iterator e1 = functionList.iterator(); e1.hasNext();) {
-            FunctionProfile functionProfile = (FunctionProfile) e1.next();
+        for (Iterator<FunctionProfile> e1 = functionList.iterator(); e1.hasNext();) {
+            FunctionProfile functionProfile = e1.next();
             if (functionProfile != null) {
                 if (getAll || ppTrial.displayFunction(functionProfile.getFunction()) && functionProfile.getFunction().isPhaseMember(dataSorter.getPhase())) {
                     PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(dataSorter, thread, functionProfile);

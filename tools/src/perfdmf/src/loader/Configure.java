@@ -2,7 +2,14 @@ package edu.uoregon.tau.perfdmf.loader;
 
 import jargs.gnu.CmdLineParser;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -12,7 +19,10 @@ import edu.uoregon.tau.common.Wget;
 import edu.uoregon.tau.common.tar.Tar;
 import edu.uoregon.tau.perfdmf.Database;
 import edu.uoregon.tau.perfdmf.DatabaseException;
-import edu.uoregon.tau.perfdmf.database.*;
+import edu.uoregon.tau.perfdmf.database.ConnectionManager;
+import edu.uoregon.tau.perfdmf.database.DB;
+import edu.uoregon.tau.perfdmf.database.ParseConfig;
+import edu.uoregon.tau.perfdmf.database.PasswordField;
 
 public class Configure {
     private static String Usage = "Usage: configure [{-h,--help}] --create-default [{-g,--configfile} filename] [{-c --config} configuration_name] [{-t,--tauroot} path]";
@@ -39,7 +49,7 @@ public class Configure {
     private String xml_parser = "xerces.jar";
     private ParseConfig parser;
     private boolean configFileFound = false;
-    private String etc = File.separator + "etc" + File.separator;
+    //private String etc = File.separator + "etc" + File.separator;
 
     private String configFileName;
 
@@ -122,7 +132,7 @@ public class Configure {
     }
 
     public void useDefaults() {
-        String os = System.getProperty("os.name").toLowerCase();
+        //String os = System.getProperty("os.name").toLowerCase();
         jdbc_db_jarfile = jardir + File.separator + "derby.jar";
         db_dbname = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf";
         jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
@@ -208,7 +218,7 @@ public class Configure {
                     db_dbname = "perfdmf";
                 } else if (jdbc_db_type.compareTo("derby") == 0 && old_jdbc_db_type.compareTo("derby") != 0) {
                     // if the user has chosen derby and the config file is not already set for it
-                    String os = System.getProperty("os.name").toLowerCase();
+                    //String os = System.getProperty("os.name").toLowerCase();
                     jdbc_db_jarfile = jardir + File.separator + "derby.jar";
                     jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
                     db_schemafile = schemadir + File.separator + "dbschema.derby.txt";

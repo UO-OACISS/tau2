@@ -201,8 +201,8 @@ public class IntervalEvent {
     }
 
     // returns a Vector of IntervalEvents
-    public static Vector getIntervalEvents(DatabaseAPI dataSession, DB db, String whereClause) {
-        Vector events = new Vector();
+    public static Vector<IntervalEvent> getIntervalEvents(DatabaseAPI dataSession, DB db, String whereClause) {
+        Vector<IntervalEvent> events = new Vector<IntervalEvent>();
         // create a string to hit the database
         StringBuffer buf = new StringBuffer();
         buf.append("select id, name, group_name, trial ");
@@ -225,7 +225,7 @@ public class IntervalEvent {
         try {
             ResultSet resultSet = db.executeQuery(buf.toString());
 
-            IntervalEvent tmpIntervalEvent = null;
+            //IntervalEvent tmpIntervalEvent = null;
             while (resultSet.next() != false) {
                 IntervalEvent event = new IntervalEvent(dataSession);
                 event.setID(resultSet.getInt(1));
@@ -243,7 +243,7 @@ public class IntervalEvent {
         return events;
     }
 
-    public int saveIntervalEvent(DB db, int newTrialID, Hashtable newMetHash, int saveMetricIndex)
+    public int saveIntervalEvent(DB db, int newTrialID, Hashtable<Integer, Integer> newMetHash, int saveMetricIndex)
             throws SQLException {
         int newIntervalEventID = -1;
 
@@ -317,8 +317,8 @@ public class IntervalEvent {
         try {
             ResultSet resultSet = null;
 
-            String trialFieldNames[] = null;
-            int trialFieldTypes[] = null;
+            //String trialFieldNames[] = null;
+            //int trialFieldTypes[] = null;
 
             DatabaseMetaData dbMeta = db.getMetaData();
 
@@ -329,10 +329,10 @@ public class IntervalEvent {
                 resultSet = dbMeta.getColumns(null, null, "interval_event", "%");
             }
 
-            Vector nameList = new Vector();
-            Vector typeList = new Vector();
-            List typeNames = new ArrayList();
-            List columnSizes = new ArrayList();
+            Vector<String> nameList = new Vector<String>();
+            Vector<Integer> typeList = new Vector<Integer>();
+            List<String> typeNames = new ArrayList<String>();
+            List<Integer> columnSizes = new ArrayList<Integer>();
             boolean seenID = false;
 
             ResultSetMetaData md = resultSet.getMetaData();
@@ -366,12 +366,12 @@ public class IntervalEvent {
             int[] fieldTypes = new int[typeList.size()];
             String[] fieldTypeNames = new String[typeList.size()];
             for (int i = 0; i < typeList.size(); i++) {
-                fieldNames[i] = (String) nameList.get(i);
-                fieldTypes[i] = ((Integer) typeList.get(i)).intValue();
-                if (((Integer)columnSizes.get(i)).intValue() > 255) {
-                    fieldTypeNames[i] = (String) typeNames.get(i) + "(" + columnSizes.get(i).toString() + ")";
+                fieldNames[i] = nameList.get(i);
+                fieldTypes[i] = typeList.get(i).intValue();
+                if (columnSizes.get(i).intValue() > 255) {
+                    fieldTypeNames[i] = typeNames.get(i) + "(" + columnSizes.get(i).toString() + ")";
                 } else {
-                    fieldTypeNames[i] = (String) typeNames.get(i);
+                    fieldTypeNames[i] = typeNames.get(i);
                 }
             }
 

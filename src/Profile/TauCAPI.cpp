@@ -56,12 +56,8 @@ void esd_exit (elg_ui4 rid);
 #include "Profile/TauVampirTrace.h"
 #endif /* TAU_VAMPIRTRACE */
 
-#ifdef TAU_SILC
-//#include <Profile/TauSilc.h>
-#include "SILC_User_Types.h"
-#include "SILC_PublicTypes.h"
-#include "SILC_User.h"
-#include "SILC_User_Functions.h"
+#ifdef TAU_SCOREP
+#include <Profile/TauSCOREP.h>
 #endif
 
 
@@ -158,22 +154,26 @@ extern "C" int Tau_global_incr_insideTAU() {
   Tau_stack_checkInit();
   int tid = RtsLayer::myThread();
   Tau_global_insideTAU[tid]++;
+  return Tau_global_insideTAU[tid];
 }
 
 extern "C" int Tau_global_decr_insideTAU() {
   Tau_stack_checkInit();
   int tid = RtsLayer::myThread();
   Tau_global_insideTAU[tid]--;
+  return Tau_global_insideTAU[tid];
 }
 
 extern "C" int Tau_global_incr_insideTAU_tid(int tid) {
   Tau_stack_checkInit();
   Tau_global_insideTAU[tid]++;
+  return Tau_global_insideTAU[tid];
 }
 
 extern "C" int Tau_global_decr_insideTAU_tid(int tid) {
   Tau_stack_checkInit();
   Tau_global_insideTAU[tid]--;
+  return Tau_global_insideTAU[tid];
 }
 
 extern "C" Profiler *TauInternal_CurrentProfiler(int tid) {
@@ -234,8 +234,8 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   return;
 #endif
 
-#ifdef TAU_SILC
-  SILC_EnterRegion((SILC_Region_Definition_Movable *)(fi->GetFunctionId()));
+#ifdef TAU_SCOREP
+  SCOREP_Tau_EnterRegion(fi->GetFunctionId());
 #endif
 
 
@@ -384,21 +384,8 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   return 0;
 #endif
 
-#ifdef TAU_SILC
-<<<<<<< HEAD:src/Profile/TauCAPI.cpp
-	map<long int, SILC_RegionHandle>::iterator handle = regionMap.find(fi->GetFunctionId());
-	if (handle == regionMap.end())
-	{
-		printf("ERROR: Attempting to EXIT a SILC Region that has not been initialized, Region ENTER must be missing.");
-		exit(1);
-	}
-	else
-	{
-  	SILC_User_RegionEnd(handle->second);
-	}
-=======
-  SILC_ExitRegion((SILC_Region_Definition_Movable *)(fi->GetFunctionId()));
->>>>>>> bf51ce2a5cbc1beda88529267d9daf63e78bec7e:src/Profile/TauCAPI.cpp
+#ifdef TAU_SCOREP
+  SCOREP_Tau_ExitRegion(fi->GetFunctionId());
 #endif
 
 

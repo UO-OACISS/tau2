@@ -1,11 +1,5 @@
 package edu.uoregon.tau.perfexplorer.common;
 
-import edu.uoregon.tau.perfdmf.Database;
-import edu.uoregon.tau.perfdmf.database.ConnectionManager;
-import edu.uoregon.tau.perfdmf.Database;
-import edu.uoregon.tau.perfdmf.database.DB;
-import edu.uoregon.tau.perfdmf.database.ParseConfig;
-
 import jargs.gnu.CmdLineParser;
 
 import java.io.BufferedReader;
@@ -13,9 +7,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import edu.uoregon.tau.perfdmf.Database;
+import edu.uoregon.tau.perfdmf.database.ConnectionManager;
+import edu.uoregon.tau.perfdmf.database.DB;
+import edu.uoregon.tau.perfdmf.database.ParseConfig;
 
 /**
  * This class is used as a main class for configuring PerfExplorer.

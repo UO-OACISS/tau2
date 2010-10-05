@@ -23,9 +23,10 @@
 #endif
 
 #include <dlfcn.h>
-
+#include <stdio.h>
 #include <TAU.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <signal.h>
 #include <Profile/TauEnv.h>
@@ -108,8 +109,15 @@ void _exit(int status) {
 // Define the fork wrapper
 /////////////////////////////////////////////////////////////////////////
 #ifndef TAU_DISABLE_SYSCALL_WRAPPER
+//const char *TauEnv_get_tracedir(void); 
+
+//const char *TauEnv_get_profiledir(void);
+
+
 pid_t fork(void) {
   static pid_t (*_fork) (void) = NULL;
+
+  char newdirname[1024];
 
   pid_t pid_ret;
   
@@ -123,7 +131,32 @@ pid_t fork(void) {
 
   if (pid_ret == 0) {
     TAU_REGISTER_FORK(getpid(), TAU_EXCLUDE_PARENT_DATA);
+
+   int catch_fork = TauEnv_get_child_forkdirs();
+   if(catch_fork!=0)
+   {
+
+     int flag=0;
+     if(TauEnv_get_profiledir() != (char *)NULL){
+        sprintf(newdirname, "%s/tau_child_data_%d",TauEnv_get_profiledir(),getpid());
+        flag=1;
+     } 
+     TAU_VERBOSE("Tau Fork Wrapper");
+     if(TauEnv_get_tracedir() != (char *)NULL){
+        sprintf(newdirname, "%s/tau_child_data_%d",TauEnv_get_tracedir(),getpid());
+        flag=1; 
+     }
+
+
+     if(flag==0)
+         sprintf(newdirname, "./tau_child_data_%d",getpid());
+     mkdir(newdirname, S_IRWXU | S_IRGRP | S_IXGRP);
+
+    setenv("PROFILEDIR",newdirname,1);
+    setenv("TRACEDIR",newdirname,1);
+   }
     dprintf ("[%d] Registered Fork!\n", getpid());
+   
   }
   return pid_ret;
 
@@ -138,16 +171,19 @@ pid_t fork(void) {
 int kill(pid_t pid, int sig) {
 
   static int (*_kill) (pid_t pid, int sig) = NULL;
-
+  TAU_PROFILE_TIMER(t,"sleep inside kill timer","" ,TAU_DEFAULT);
   int ret;
 
   /* Search for kill */  
   if (_kill == NULL) {
     _kill = (int (*) (pid_t pid, int sig)) dlsym(RTLD_NEXT, "kill");
   }
-
+  TAU_VERBOSE("TAU Kill Wrapper");
   if(sig==SIGKILL||sig==SIGTERM){
   ret = _kill(pid, SIGUSR1);
+   TAU_PROFILE_START(t);
+   sleep(5);
+   TAU_PROFILE_STOP(t);
   }
   else{
     ret = 0;

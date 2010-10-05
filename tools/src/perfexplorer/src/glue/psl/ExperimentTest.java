@@ -14,7 +14,8 @@ public class ExperimentTest extends TestCase {
 
 		Application app = new Application("test");
 		Version version = new Version(app, "test");
-		Experiment exp = new Experiment(version, baseResult);
+		//Experiment exp = 
+			new Experiment(version, baseResult);
 		for (SourceFile file : version.getSourceFiles()) {
 			System.out.println(file.getName());
 		}

@@ -13,7 +13,6 @@ import java.util.Iterator;
 
 import javax.swing.JOptionPane;
 
-import edu.uoregon.tau.perfdmf.Function;
 import edu.uoregon.tau.perfdmf.FunctionProfile;
 import edu.uoregon.tau.perfdmf.Thread;
 
@@ -84,7 +83,7 @@ public class DerivedMetrics {
             int metric = newMetric.getID();
             //            trialOpA.setSelectedMetricID(metric);
 
-            Iterator l = trialOpA.getDataSource().getFunctions();
+            Iterator<FunctionProfile> l;// = trialOpA.getDataSource().getFunctions();
 
             //######
             //Calculate the raw values.
@@ -94,14 +93,14 @@ public class DerivedMetrics {
             //of the latter.
             //######
 
-            for (Iterator it = trialOpA.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+            for (Iterator<Thread> it = trialOpA.getDataSource().getAllThreads().iterator(); it.hasNext();) {
                 Thread thread = (Thread) it.next();
                 thread.addMetric();
                 l = thread.getFunctionProfileIterator();
                 while (l.hasNext()) {
                     FunctionProfile functionProfile = (FunctionProfile) l.next();
                     if (functionProfile != null) {
-                        Function function = functionProfile.getFunction();
+                        //Function function = functionProfile.getFunction();
 
                         double d1 = 0.0;
                         double d2 = 0.0;

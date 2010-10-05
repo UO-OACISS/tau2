@@ -1,5 +1,9 @@
 package edu.uoregon.tau.perfexplorer.glue.test;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import junit.framework.TestCase;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
 import edu.uoregon.tau.perfexplorer.glue.CorrelationOperation;
@@ -9,11 +13,6 @@ import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
 import edu.uoregon.tau.perfexplorer.glue.TrialResult;
 import edu.uoregon.tau.perfexplorer.glue.Utilities;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import junit.framework.TestCase;
 
 public class CorrelationOperationTest extends TestCase {
 

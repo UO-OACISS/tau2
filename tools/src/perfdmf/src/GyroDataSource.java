@@ -11,18 +11,27 @@
 
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 public class GyroDataSource extends DataSource {
 
-    public GyroDataSource(Object initializeObject){
+    public GyroDataSource(List<File[]> initializeObject){
 		super();
-		this.setMetrics(new Vector());
+		this.setMetrics(new Vector<Metric>());
 		this.initializeObject = initializeObject;
     }
 
-	private Object initializeObject;
+	private List<File[]> initializeObject;
 
     public void cancelLoad() {
         return;
@@ -33,8 +42,8 @@ public class GyroDataSource extends DataSource {
     }
 
     public void load () throws FileNotFoundException, IOException{
-		boolean firstFile = true;
-    	v = (java.util.List) initializeObject;
+		//boolean firstFile = true;
+    	v =  initializeObject;
 		System.out.println(v.size() + " files");
     	for(int index = 0 ; index < v.size() ; index++){
 			files = (File[]) v.get(index);
@@ -43,10 +52,10 @@ public class GyroDataSource extends DataSource {
 				long time = System.currentTimeMillis();
 
 				// initialize our data structures
-				methodIndexes = new Hashtable();
-				methodNames = new Vector();
+				methodIndexes = new Hashtable<String, Integer>();
+				methodNames = new Vector<String>();
 				wallTime = new double[20];
-				phaseValues = new Hashtable();
+				phaseValues = new Hashtable<String, double[]>();
 
 				// get the number of processes
 				parseThreadsFromFilename(files[i].getName());
@@ -189,7 +198,7 @@ public class GyroDataSource extends DataSource {
 						phaseTotal += value;
 						values[0] = value;
 						values[1] = value;
-						String tmp = (String) methodNames.elementAt(counter);
+						String tmp = methodNames.elementAt(counter);
 						phaseValues.put(new String(name + " => " + tmp), values);
 					}
 					// the ninth (zero indexed) column is a phase aggregate
@@ -219,15 +228,15 @@ public class GyroDataSource extends DataSource {
 
 	private void saveMappings() {
 		try{
-			Enumeration e = methodIndexes.keys();
+			Enumeration<String> e = methodIndexes.keys();
 			while (e.hasMoreElements()) {
-				eventName = (String)e.nextElement();
+				eventName = e.nextElement();
 				if (!saveMappingsInner(false))
 					continue;
 			}
 			e = phaseValues.keys();
 			while (e.hasMoreElements()) {
-				eventName = (String)e.nextElement();
+				eventName = e.nextElement();
 				if (!saveMappingsInner(true))
 					continue;
 			}
@@ -240,7 +249,7 @@ public class GyroDataSource extends DataSource {
 	private boolean saveMappingsInner(boolean doingPhases) throws Exception {
 		Integer index = null;
 		if (!doingPhases)
-			index = (Integer)methodIndexes.get(eventName);
+			index = methodIndexes.get(eventName);
 		boolean inclusiveEqualsExclusive = true;
 
 		if (eventName.toUpperCase().equals("STEP"))
@@ -264,7 +273,7 @@ public class GyroDataSource extends DataSource {
 					saveMappingData ("Time", (wallTime[index.intValue()]), tmpVal);
 				}
 			} else {
-				double[] values = (double[])(phaseValues.get(eventName));
+				double[] values = (phaseValues.get(eventName));
 				saveMappingData ("Time", values[0], values[1]);
 			}
 			// save the data common to all metrics
@@ -321,23 +330,23 @@ public class GyroDataSource extends DataSource {
 	private int contextID = -1;
 	private int threadID = -1;
 	private String inputString = null;
-	private String s1 = null;
-	private String s2 = null;
-	private String tokenString;
-	private String groupNamesString = null;
-	private StringTokenizer genericTokenizer;
-	private int mappingID = -1;
-	private java.util.List v = null;
+	//private String s1 = null;
+	//private String s2 = null;
+	//private String tokenString;
+	//private String groupNamesString = null;
+	//private StringTokenizer genericTokenizer;
+	//private int mappingID = -1;
+	private List<File[]> v = null;
 	private File[] files = null;
 	private BufferedReader br = null;
-	private Hashtable methodIndexes = null;
-	private Vector methodNames = null;
+	private Hashtable<String, Integer> methodIndexes = null;
+	private Vector<String> methodNames = null;
 	private double wallTime[] = null;
 	private String eventName = null;
 	private double runningTotal = 0.0;
 	private double runningTotal2 = 0.0;
 	private int phaseCounter = 0;
-	private Hashtable phaseValues = null;
+	private Hashtable<String, double[]> phaseValues = null;
 	private int numThreads = 1;
 	//######
 	//End - Frequently used items.
@@ -346,7 +355,7 @@ public class GyroDataSource extends DataSource {
     //####################################
     //Instance data.
     //####################################
-    private LineData lineData = new LineData();
+    //private LineData lineData = new LineData();
     //####################################
     //End - Instance data.
     //####################################

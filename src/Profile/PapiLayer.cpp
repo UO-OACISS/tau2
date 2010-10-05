@@ -197,6 +197,9 @@ int PapiLayer::initializeThread(int tid) {
   }
 
 
+#if (defined(TAU_CRAYXMT) || defined(TAU_BGL) || defined(TAU_DISABLE_SAMPLING))
+
+#else
   if (TauEnv_get_ebs_enabled()) {
     if (tauSampEvent != 0) {
       int comp = PAPI_COMPONENT_INDEX (tauSampEvent);
@@ -209,6 +212,7 @@ int PapiLayer::initializeThread(int tid) {
       }
     }
   }
+#endif /* TAU_CRAYXMT || TAU_BGL || TAU_DISABLE_SAMPLING */
 
 
 

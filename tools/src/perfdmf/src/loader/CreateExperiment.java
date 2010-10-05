@@ -109,7 +109,8 @@ public class CreateExperiment {
         int exitval = 0;
 
         /***** Load appliation into PerfDMF *********/
-        int expid = create.createExp(name, appid);
+        //int expid = 
+        	create.createExp(name, appid);
 
         System.exit(exitval);
     }

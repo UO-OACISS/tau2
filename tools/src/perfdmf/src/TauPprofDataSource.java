@@ -7,7 +7,12 @@
 
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -23,12 +28,12 @@ public class TauPprofDataSource extends DataSource {
     protected boolean firstMetric;
     protected boolean groupCheck = false;
 
-    public TauPprofDataSource(Object initializeObject) {
+    public TauPprofDataSource(List<File[]> initializeObject) {
         super();
         this.initializeObject = initializeObject;
     }
 
-    private Object initializeObject;
+    private List<File[]> initializeObject;
 
     public void cancelLoad() {
         abort = true;
@@ -74,10 +79,10 @@ public class TauPprofDataSource extends DataSource {
         //######
         //End - Frequently used items.
         //######
-        List v = (List) initializeObject;
+        List<File[]> v = (List<File[]>) initializeObject;
         this.setFirstMetric(true);
         
-        for (Iterator e = v.iterator(); e.hasNext();) {
+        for (Iterator<File[]> e = v.iterator(); e.hasNext();) {
             File files[] = (File[]) e.next();
             long time = System.currentTimeMillis();
 
@@ -458,7 +463,7 @@ public class TauPprofDataSource extends DataSource {
                 quoteCount++;
         }
 
-        StringTokenizer st2;
+        //StringTokenizer st2;
 
         String tmpString;
         if (quoteCount == 2 || quoteCount == 4) { // assume all is well
@@ -581,7 +586,8 @@ public class TauPprofDataSource extends DataSource {
 
         if (quoteCount == 2) { // proceed as usual
             StringTokenizer st1 = new StringTokenizer(string, "\"");
-            String trash = st1.nextToken();
+            //String trash = 
+            	st1.nextToken();
             usereventDataLine.s0 = st1.nextToken();
             st2 = new StringTokenizer(st1.nextToken(), " \t\n\r");
         } else {

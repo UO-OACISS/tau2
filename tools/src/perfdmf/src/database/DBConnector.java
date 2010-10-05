@@ -3,7 +3,15 @@ package edu.uoregon.tau.perfdmf.database;
 import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.DriverPropertyInfo;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -26,8 +34,8 @@ public class DBConnector implements DB {
 
     private String dbaddress;
     // it looks like "jdbc:postgresql://zeta:5432/perfdmf;" in PostgreSQL.
-    private String dbUser;
-    private String dbPassword;
+    //private String dbUser;
+    //private String dbPassword;
 
     private String driverName;
     private String JDBCjarFileName;
@@ -35,7 +43,7 @@ public class DBConnector implements DB {
     private Database database;
 
     
-    private static Map passwordMap = new HashMap();
+    private static Map<String, String> passwordMap = new HashMap<String, String>();
     
     private static PasswordCallback passwordCallback;
     
@@ -140,7 +148,7 @@ public class DBConnector implements DB {
     private static String findPassword(ParseConfig config) {
 
         //System.out.println("finding password, path: " + config.getPath());
-    	String password = (String) passwordMap.get(config.getPath());
+    	String password = passwordMap.get(config.getPath());
         if (password == null && passwordCallback != null) {
             password = passwordCallback.getPassword(config);
             passwordMap.put(config.getPath(), password);
@@ -280,7 +288,8 @@ public class DBConnector implements DB {
     }
 
     //registers the driver
-    public void register() {
+    @SuppressWarnings("rawtypes")
+	public void register() {
         try {
             // We now load the jar file dynamically based on the filename
             // in the perfdmf configuration
@@ -289,12 +298,12 @@ public class DBConnector implements DB {
 
             if (JDBCjarFileName.toLowerCase().startsWith("http:")) {
                 // When it gets converted from a String to a File http:// turns into http:/
-                String url_string = "";
+                //String url_string = "";
               if (JDBCjarFileName.toLowerCase().startsWith("http://")) {
-                url_string = "http://" + JDBCjarFileName.toString().substring(7).replace('\\', '/');
+                //url_string = "http://" + JDBCjarFileName.toString().substring(7).replace('\\', '/');
                 }
               else if (JDBCjarFileName.toLowerCase().startsWith("http:/")) {
-                url_string = "http://" + JDBCjarFileName.toString().substring(6).replace('\\', '/');
+                //url_string = "http://" + JDBCjarFileName.toString().substring(6).replace('\\', '/');
               }
               urls[0] = new URL(JDBCjarFileName);
             }  else {
@@ -465,7 +474,7 @@ public class DBConnector implements DB {
 
             int ctype = resultSet.getInt("DATA_TYPE");
             String cname = resultSet.getString("COLUMN_NAME");
-            String typename = resultSet.getString("TYPE_NAME");
+            //String typename = resultSet.getString("TYPE_NAME");
 
             //System.out.println ("table: " + tableName + ", found: " + cname + ", type: " + ctype + ", typename = " + typename);
 
@@ -492,7 +501,7 @@ public class DBConnector implements DB {
 
     public int checkSchema() throws SQLException {
 
-        ResultSet resultSet = null;
+        //ResultSet resultSet = null;
         DatabaseMetaData dbMeta = this.getMetaData();
 
         String appColumns[] = { "ID", "NAME" };

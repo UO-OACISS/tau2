@@ -9,7 +9,6 @@ import java.util.Set;
 
 import org.drools.FactHandle;
 
-
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.rules.FactWrapper;
 import edu.uoregon.tau.perfexplorer.rules.RuleHarness;
@@ -116,14 +115,14 @@ public class MetadataClusterOperation implements SelfAsserting {
 
 	public String differencesAsString() {
 		StringBuilder buf = new StringBuilder();
-		Hashtable diff = getDifferences();
+		Hashtable<String,String[]> diff = getDifferences();
 		
-		Set keys = diff.keySet();
+		Set<String> keys = diff.keySet();
 		
-		for (Iterator iter = keys.iterator() ; iter.hasNext() ; ) {
-			String key = (String)iter.next();
+		for (Iterator<String> iter = keys.iterator() ; iter.hasNext() ; ) {
+			String key = iter.next();
 			if (!key.startsWith("buildenv:") && !key.startsWith("runenv:") && !key.startsWith("build:")) {
-			String[] values = (String[])diff.get(key);
+			String[] values = diff.get(key);
 			buf.append(key + " " + values[0] + " " + values[1] + "\n");
 			}
 		}

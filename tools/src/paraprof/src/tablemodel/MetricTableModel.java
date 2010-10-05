@@ -6,30 +6,35 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.tree.DefaultTreeModel;
 
-import edu.uoregon.tau.paraprof.ParaProfApplication;
 import edu.uoregon.tau.paraprof.ParaProfManagerWindow;
 import edu.uoregon.tau.paraprof.ParaProfMetric;
 
 public class MetricTableModel extends AbstractTableModel {
 
-    private ParaProfMetric metric;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -3629553461005668109L;
+	private ParaProfMetric metric;
     private String[] columnNames = { "MetricField", "Value" };
     private DefaultTreeModel defaultTreeModel;
-    private List fieldNames;
-    private List fieldValues;
+    private List<String> fieldNames;
+    @SuppressWarnings("rawtypes")
+	private List<Comparable> fieldValues;
 
-    public MetricTableModel(ParaProfManagerWindow paraProfManager, ParaProfMetric metric, DefaultTreeModel defaultTreeModel) {
+    @SuppressWarnings("rawtypes")
+	public MetricTableModel(ParaProfManagerWindow paraProfManager, ParaProfMetric metric, DefaultTreeModel defaultTreeModel) {
         this.metric = metric;
         this.defaultTreeModel = defaultTreeModel;
 
-        fieldNames = new ArrayList();
+        fieldNames = new ArrayList<String>();
         fieldNames.add("Name");
         fieldNames.add("Application ID");
         fieldNames.add("Experiment ID");
         fieldNames.add("Trial ID");
         fieldNames.add("Metric ID");
 
-        fieldValues = new ArrayList();
+        fieldValues = new ArrayList<Comparable>();
         fieldValues.add(metric.getName());
         fieldValues.add(new Integer(metric.getApplicationID()));
         fieldValues.add(new Integer(metric.getExperimentID()));

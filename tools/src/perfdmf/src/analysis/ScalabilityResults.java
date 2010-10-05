@@ -2,7 +2,12 @@ package edu.uoregon.tau.perfdmf.analysis;
 
 import java.util.Vector;
 
-public class ScalabilityResults extends Vector {
+public class ScalabilityResults extends Vector<ScalabilityResult> {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8157675547698994075L;
 
 	public String toString(boolean speedup) {
 		// loop through the results, and print them out CSV style

@@ -19,7 +19,11 @@ import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.ColorIcon;
  */
 public class TreePortionCellRenderer extends DefaultTreeCellRenderer {
 
-    private static ColorIcon colorIcon = new ColorIcon();
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 7914281444748384284L;
+	private static ColorIcon colorIcon = new ColorIcon();
 
     public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf,
             int row, boolean hasFocus) {

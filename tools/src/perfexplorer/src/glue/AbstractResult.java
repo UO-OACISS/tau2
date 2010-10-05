@@ -4,11 +4,11 @@
 package edu.uoregon.tau.perfexplorer.glue;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Set;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 
 import edu.uoregon.tau.perfdmf.DataSource;
@@ -26,6 +26,10 @@ import edu.uoregon.tau.perfdmf.Trial;
  * @since   2.0
  */
 public abstract class AbstractResult implements PerformanceResult, Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3937052262151788760L;
 	protected Set<Integer> threads = new TreeSet<Integer>();
 	protected Set<String> events = new TreeSet<String>();
 	protected Set<String> metrics = new TreeSet<String>();

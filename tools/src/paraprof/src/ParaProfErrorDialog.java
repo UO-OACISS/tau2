@@ -1,12 +1,21 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Insets;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 
 import org.xml.sax.SAXParseException;
 
@@ -16,7 +25,12 @@ import edu.uoregon.tau.perfdmf.DatabaseException;
 
 public class ParaProfErrorDialog extends JFrame implements ActionListener {
 
-    public ParaProfErrorDialog(String message) {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 52282821462429676L;
+
+	public ParaProfErrorDialog(String message) {
         this(message, null);
     }
 
@@ -142,7 +156,7 @@ public class ParaProfErrorDialog extends JFrame implements ActionListener {
 
         JPanel panel = new JPanel(new BorderLayout());
         JPanel headerPanel = new JPanel();
-        JPanel errorPanel = new JPanel();
+        //JPanel errorPanel = new JPanel();
         JPanel buttonPanel = new JPanel();
 
         //errorPanel.setBorder(BorderFactory.createLineBorder(Color.black));
@@ -224,12 +238,12 @@ public class ParaProfErrorDialog extends JFrame implements ActionListener {
         }
     }
 
-    private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
-        gbc.gridx = x;
-        gbc.gridy = y;
-        gbc.gridwidth = w;
-        gbc.gridheight = h;
-        getContentPane().add(c, gbc);
-    }
+//    private void addCompItem(Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
+//        gbc.gridx = x;
+//        gbc.gridy = y;
+//        gbc.gridwidth = w;
+//        gbc.gridheight = h;
+//        getContentPane().add(c, gbc);
+//    }
 
 }

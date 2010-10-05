@@ -21,7 +21,7 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  */
 public class ThreadBarChartModel extends AbstractBarChartModel {
 
-    private List list;
+    private List<PPFunctionProfile> list;
 
     private FunctionBarChartWindow window;
     private DataSorter dataSorter;
@@ -41,7 +41,7 @@ public class ThreadBarChartModel extends AbstractBarChartModel {
     }
 
     public String getRowLabel(int row) {
-        PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) list.get(row);
+        PPFunctionProfile ppFunctionProfile = list.get(row);
 
         if (window.getPhase() != null) {
             // we can't use PPFunctionProfile's getFunctionName since the callpath might be reversed
@@ -54,13 +54,13 @@ public class ThreadBarChartModel extends AbstractBarChartModel {
 
 
     public double getValue(int row, int subIndex) {
-        PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) list.get(row);
+        PPFunctionProfile ppFunctionProfile = list.get(row);
 
         return ppFunctionProfile.getValue();
     }
 
     public String getValueLabel(int row, int subIndex) {
-        PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) list.get(row);
+        PPFunctionProfile ppFunctionProfile = list.get(row);
         double value = ppFunctionProfile.getValue();
         if (window.getDataSorter().getValueType() == ValueType.EXCLUSIVE_PERCENT
                 || window.getDataSorter().getValueType() == ValueType.INCLUSIVE_PERCENT) {
@@ -74,13 +74,13 @@ public class ThreadBarChartModel extends AbstractBarChartModel {
     }
 
     public Color getValueColor(int row, int subIndex) {
-        PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) list.get(row);
+        PPFunctionProfile ppFunctionProfile = list.get(row);
 
         return ppFunctionProfile.getColor();
     }
 
     public Color getValueHighlightColor(int row, int subIndex) {
-        PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) list.get(row);
+        PPFunctionProfile ppFunctionProfile = list.get(row);
 
         Function function = ppFunctionProfile.getFunction();
         if (function == (ppTrial.getHighlightedFunction())) {
@@ -98,7 +98,7 @@ public class ThreadBarChartModel extends AbstractBarChartModel {
 
   
     public void fireRowLabelClick(int row, MouseEvent e, JComponent owner) {
-        PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) list.get(row);
+        PPFunctionProfile ppFunctionProfile = list.get(row);
 
         if (ParaProfUtils.rightClick(e)) {
             JPopupMenu popup = ParaProfUtils.createFunctionClickPopUp(ppTrial, ppFunctionProfile.getFunction(),
@@ -111,7 +111,7 @@ public class ThreadBarChartModel extends AbstractBarChartModel {
     }
 
     public void fireValueClick(int row, int subIndex, MouseEvent e, JComponent owner) {
-        PPFunctionProfile ppFunctionProfile = (PPFunctionProfile) list.get(row);
+        PPFunctionProfile ppFunctionProfile = list.get(row);
         Function function = ppFunctionProfile.getFunction();
         if (ParaProfUtils.rightClick(e)) {
 

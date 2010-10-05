@@ -1,15 +1,15 @@
 package edu.uoregon.tau.perfexplorer.glue.test;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import junit.framework.TestCase;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.glue.ExtractMetricOperation;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
 import edu.uoregon.tau.perfexplorer.glue.TrialMeanResult;
 import edu.uoregon.tau.perfexplorer.glue.Utilities;
-
-import java.util.List;
-import java.util.ArrayList;
-import junit.framework.TestCase;
 
 public class ExtractMetricOperationTest extends TestCase {
 

@@ -8,11 +8,21 @@
 
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JProgressBar;
 
 import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
@@ -20,7 +30,11 @@ import edu.uoregon.tau.perfdmf.DatabaseException;
 
 public class LoadTrialProgressWindow extends JFrame implements ActionListener {
 
-    private ParaProfManagerWindow paraProfManager = null;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 7442413865642013151L;
+	//private ParaProfManagerWindow paraProfManager = null;
     private JProgressBar progressBar = null;
     private DataSource dataSource = null;
     private ParaProfTrial ppTrial = null;
@@ -34,7 +48,7 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener {
 
         this.dataSource = dataSource;
         this.ppTrial = ppTrial;
-        this.paraProfManager = paraProfManager;
+        //this.paraProfManager = paraProfManager;
 
         //Window Stuff.
         int windowWidth = 300;

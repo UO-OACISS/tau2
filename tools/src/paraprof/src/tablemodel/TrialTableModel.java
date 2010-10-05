@@ -2,7 +2,11 @@ package edu.uoregon.tau.paraprof.tablemodel;
 
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
@@ -10,21 +14,24 @@ import javax.swing.tree.DefaultTreeModel;
 
 import edu.uoregon.tau.paraprof.ParaProfManagerWindow;
 import edu.uoregon.tau.paraprof.ParaProfTrial;
-import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.database.DBConnector;
 
 public class TrialTableModel extends AbstractTableModel {
 
-    private ParaProfTrial ppTrial;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -5610815635456731795L;
+	private ParaProfTrial ppTrial;
     private Trial trial;
     private String[] columnNames = { "TrialField", "Value" };
     private ParaProfManagerWindow paraProfManager;
     private DefaultTreeModel defaultTreeModel;
-    private List fieldNames;
+    private List<String> fieldNames;
 
-    private Map metaData = new TreeMap();
+    private Map<String, String> metaData = new TreeMap<String, String>();
 
     public TrialTableModel(ParaProfManagerWindow paraProfManager, ParaProfTrial ppTrial, DefaultTreeModel defaultTreeModel) {
         this.ppTrial = ppTrial;
@@ -32,7 +39,7 @@ public class TrialTableModel extends AbstractTableModel {
         this.paraProfManager = paraProfManager;
         this.defaultTreeModel = defaultTreeModel;
 
-        fieldNames = new ArrayList();
+        fieldNames = new ArrayList<String>();
         fieldNames.add("Name");
         fieldNames.add("Application ID");
         fieldNames.add("Experiment ID");
@@ -44,8 +51,8 @@ public class TrialTableModel extends AbstractTableModel {
         metaData.putAll(ppTrial.getTrial().getMetaData());
         metaData.putAll(ppTrial.getTrial().getUncommonMetaData());
 
-        for (Iterator it = metaData.keySet().iterator(); it.hasNext();) {
-            String string = (String) it.next();
+        for (Iterator<String> it = metaData.keySet().iterator(); it.hasNext();) {
+            String string = it.next();
             fieldNames.add(string);
         }
     }
@@ -141,11 +148,11 @@ public class TrialTableModel extends AbstractTableModel {
         return new MouseListener() {
 
             public void mouseClicked(MouseEvent e) {
-                if (ParaProfUtils.rightClick(e)) {
-                    int row = table.rowAtPoint(e.getPoint());
-                    int column = table.columnAtPoint(e.getPoint());
-                    //System.out.println("you clicked on (" + column + "," + row + ") = " + getValueAt(row, column));
-                }
+//                if (ParaProfUtils.rightClick(e)) {
+//                    int row = table.rowAtPoint(e.getPoint());
+//                    int column = table.columnAtPoint(e.getPoint());
+//                    //System.out.println("you clicked on (" + column + "," + row + ") = " + getValueAt(row, column));
+//                }
             }
 
             public void mouseEntered(MouseEvent e) {

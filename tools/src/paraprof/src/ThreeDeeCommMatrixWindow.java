@@ -1,24 +1,62 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Image;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.StringTokenizer;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollBar;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextField;
 
 import edu.uoregon.tau.common.StoppableThread;
 import edu.uoregon.tau.common.Utility;
-import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.Thread;
-import edu.uoregon.tau.vis.*;
+import edu.uoregon.tau.perfdmf.UserEventProfile;
+import edu.uoregon.tau.perfdmf.UtilFncs;
+import edu.uoregon.tau.vis.Axes;
+import edu.uoregon.tau.vis.BarPlot;
+import edu.uoregon.tau.vis.ColorScale;
+import edu.uoregon.tau.vis.HeatMapData;
+import edu.uoregon.tau.vis.PlotFactory;
+import edu.uoregon.tau.vis.SteppedComboBox;
+import edu.uoregon.tau.vis.Vec;
+import edu.uoregon.tau.vis.VisCanvas;
+import edu.uoregon.tau.vis.VisCanvasListener;
+import edu.uoregon.tau.vis.VisRenderer;
+import edu.uoregon.tau.vis.VisTools;
 
 /**
  * 3D Communication Matrix Window 
@@ -27,10 +65,14 @@ import edu.uoregon.tau.vis.*;
  * @author Alan Morris, Kevin Huck
  * @version $Revision: 1.11 $
  */
-public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, ActionListener, ThreeDeeImageProvider,
+public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, Observer, ActionListener, ThreeDeeImageProvider,
         VisCanvasListener, Printable {
 
-    private ParaProfTrial ppTrial;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -6148136561801423543L;
+	private ParaProfTrial ppTrial;
     private SteppedComboBox pathSelector;
     private SteppedComboBox heightComboBox;
     private SteppedComboBox colorComboBox;
@@ -53,7 +95,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
     private int heightMetric = VOLUME;
     private int colorMetric = MAX;
 
-    private List threadNames;
+    private List<String> threadNames;
 
     // 3D elements
     private BarPlot barPlot;
@@ -113,6 +155,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
             help(false);
         }
 
+        
         ParaProf.incrementNumWindows();
 
         setSize(ParaProfUtils.checkSize(new Dimension(1000, 750)));
@@ -122,11 +165,14 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         ParaProfUtils.setFrameIcon(this);
         this.setTitle("TAU: ParaProf: 3D Communication Matrix: "
                 + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+        
+        
+        ppTrial.addObserver(this);
     }
 
     public static ThreeDeeCommMatrixWindow createCommunicationMatrixWindow(ParaProfTrial ppTrial, JFrame parentFrame) {
 
-        HeatMapData mapData = generateData(ppTrial.getDataSource(), parentFrame);
+        HeatMapData mapData = generateData(ppTrial.getDataSource(),  parentFrame, ppTrial.getSelectedSnapshot());
         if (mapData == null) {
             return null;
         }
@@ -146,7 +192,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         int x = selections[1];
 
         double heightValue = mapData.get(x, y, currentPath, heightMetric);
-        double colorValue = mapData.get(x, y, currentPath, colorMetric);
+        //double colorValue = mapData.get(x, y, currentPath, colorMetric);
         return heightValue;
 
     }
@@ -160,7 +206,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         int y = selections[0];
         int x = selections[1];
 
-        double heightValue = mapData.get(x, y, currentPath, heightMetric);
+        //double heightValue = mapData.get(x, y, currentPath, heightMetric);
         double colorValue = mapData.get(x, y, currentPath, colorMetric);
         return colorValue;
 
@@ -176,7 +222,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         int x = selections[1];
 
         double heightValue = mapData.get(x, y, currentPath, heightMetric);
-        double colorValue = mapData.get(x, y, currentPath, colorMetric);
+        //double colorValue = mapData.get(x, y, currentPath, colorMetric);
 
         int units = 0;
 
@@ -201,7 +247,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         return retval;
     }
 
-    private JPanel createSelectorPanel(int min, int max, final List names, final int index) {
+    private JPanel createSelectorPanel(int min, int max, final List<String> names, final int index) {
 
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
@@ -221,7 +267,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
 
         if (selections[index] >= 0) {
             if (names != null) {
-                textField.setText((String) names.get(selections[index]));
+                textField.setText(names.get(selections[index]));
             }
         }
 
@@ -233,7 +279,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
                 int selection = scrollBar.getValue();
                 selections[index] = selection;
                 if (selection >= 0 && names != null) {
-                    textField.setText((String) names.get(selection));
+                    textField.setText(names.get(selection));
                 } else {
                     textField.setText("<none>");
                 }
@@ -277,9 +323,9 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
     }
 
     float getSelectedHeightRatio() {
-        float minColorValue = (float) mapData.getMin(currentPath, colorMetric);
-        float maxColorValue = (float) mapData.getMax(currentPath, colorMetric);
-        float minHeightValue = (float) mapData.getMin(currentPath, heightMetric);
+        //float minColorValue = (float) mapData.getMin(currentPath, colorMetric);
+        //float maxColorValue = (float) mapData.getMax(currentPath, colorMetric);
+        //float minHeightValue = (float) mapData.getMin(currentPath, heightMetric);
         float maxHeightValue = (float) mapData.getMax(currentPath, heightMetric);
 
         float heightRatio = (float) getSelectedHeightValue() / maxHeightValue;
@@ -287,10 +333,10 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
     }
 
     float getSelectedColorRatio() {
-        float minColorValue = (float) mapData.getMin(currentPath, colorMetric);
+        //float minColorValue = (float) mapData.getMin(currentPath, colorMetric);
         float maxColorValue = (float) mapData.getMax(currentPath, colorMetric);
-        float minHeightValue = (float) mapData.getMin(currentPath, heightMetric);
-        float maxHeightValue = (float) mapData.getMax(currentPath, heightMetric);
+        //float minHeightValue = (float) mapData.getMin(currentPath, heightMetric);
+        //float maxHeightValue = (float) mapData.getMax(currentPath, heightMetric);
         float colorRatio = (float) getSelectedColorValue() / maxColorValue;
         return colorRatio;
     }
@@ -299,9 +345,9 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         String mins[] = new String[2];
         String maxs[] = new String[2];
 
-        float minColorValue = (float) mapData.getMin(currentPath, colorMetric);
+        //float minColorValue = (float) mapData.getMin(currentPath, colorMetric);
         float maxColorValue = (float) mapData.getMax(currentPath, colorMetric);
-        float minHeightValue = (float) mapData.getMin(currentPath, heightMetric);
+        //float minHeightValue = (float) mapData.getMin(currentPath, heightMetric);
         float maxHeightValue = (float) mapData.getMax(currentPath, heightMetric);
 
         mins[0] = "0";
@@ -414,24 +460,29 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         ParaProf.getHelpWindow().writeText("This window shows communication data between nodes.");
     }
 
-    private static HeatMapData generateData(DataSource dataSource, JFrame mainFrame) {
+    
+    private static HeatMapData generateData(DataSource dataSource, int selectedSnapshot) {
+    	return generateData(dataSource, null, selectedSnapshot);
+    }
+    
+    private static HeatMapData generateData(DataSource dataSource, JFrame mainFrame, int selectedSnapshot) {
         boolean foundData = false;
         int threadID = 0;
         int size = dataSource.getNodeMap().size();
         // declare the heatmap data object
         HeatMapData mapData = new HeatMapData(size);
 
-        for (Iterator it = dataSource.getAllThreads().iterator(); it.hasNext();) {
-            Thread thread = (Thread) it.next();
+        for (Iterator<Thread> it = dataSource.getAllThreads().iterator(); it.hasNext();) {
+            Thread thread = it.next();
             if (thread.getThreadID() == 0 && thread.getContextID() == 0) {
-                for (Iterator it2 = thread.getUserEventProfiles(); it2.hasNext();) {
-                    UserEventProfile uep = (UserEventProfile) it2.next();
+                for (Iterator<UserEventProfile> it2 = thread.getUserEventProfiles(); it2.hasNext();) {
+                    UserEventProfile uep = it2.next();
                     if (uep != null && uep.getNumSamples() > 0) {
                         String event = uep.getName();
                         if (event.startsWith("Message size sent to node ") && event.indexOf("=>") == -1) {
                             foundData = true;
                             // split the string
-                            extractData(mapData, uep, threadID, event, event, allPaths);
+                            extractData(mapData, uep, selectedSnapshot, threadID, event, event, allPaths);
                         } else if (event.startsWith("Message size sent to node ") && event.indexOf("=>") >= 0) {
                             foundData = true;
                             StringTokenizer st = new StringTokenizer(event, ":");
@@ -442,7 +493,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
                             String tmp = null;
                             while (st2.hasMoreTokens()) {
                                 tmp = st2.nextToken().trim();
-                                extractData(mapData, uep, threadID, event, first, tmp);
+                                extractData(mapData, uep, selectedSnapshot, threadID, event, first, tmp);
                             }
                         }
                     }
@@ -461,8 +512,8 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         return mapData;
     }
 
-    private static void extractData(HeatMapData mapData, UserEventProfile uep, int thread, String event, String first, String path) {
-        double numEvents, eventMax, eventMin, eventMean, eventSumSqr, stdev, volume = 0;
+    private static void extractData(HeatMapData mapData, UserEventProfile uep, int selectedSnapshot, int thread, String event, String first, String path) {
+        double numEvents, eventMax, eventMin, eventMean, eventSumSqr, volume = 0;// stdev,
         double[] empty = { 0, 0, 0, 0, 0, 0 };
 
         StringTokenizer st = new StringTokenizer(first, "Message size sent to node ");
@@ -474,13 +525,13 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
                 pointData = empty;
             }
 
-            numEvents = uep.getNumSamples();
+            numEvents = uep.getNumSamples(selectedSnapshot);
             pointData[CALLS] += numEvents;
 
-            eventMax = uep.getMaxValue();
+            eventMax = uep.getMaxValue(selectedSnapshot);
             pointData[MAX] = Math.max(eventMax, pointData[MAX]);
 
-            eventMin = uep.getMinValue();
+            eventMin = uep.getMinValue(selectedSnapshot);
             if (pointData[MIN] > 0) {
                 pointData[MIN] = Math.min(pointData[MIN], eventMin);
             } else {
@@ -488,11 +539,11 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
             }
 
             // we'll recompute this later.
-            eventMean = uep.getMeanValue();
+            eventMean = uep.getMeanValue(selectedSnapshot);
             pointData[MEAN] += eventMean;
 
             // we'll recompute this later.
-            eventSumSqr = uep.getStdDev();
+            eventSumSqr = uep.getStdDev(selectedSnapshot);
             pointData[STDDEV] += eventSumSqr;
 
             volume = numEvents * eventMean;
@@ -609,10 +660,10 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
 
         float minColorValue = (float) mapData.getMin(currentPath, colorMetric);
         float maxColorValue = (float) mapData.getMax(currentPath, colorMetric);
-        float minHeightValue = (float) mapData.getMin(currentPath, heightMetric);
+        //float minHeightValue = (float) mapData.getMin(currentPath, heightMetric);
         float maxHeightValue = (float) mapData.getMax(currentPath, heightMetric);
 
-        List heightAxisStrings = new ArrayList();
+        List<String> heightAxisStrings = new ArrayList<String>();
         heightAxisStrings.add("0");
         heightAxisStrings.add(PlotFactory.getSaneDoubleString(maxHeightValue * .25));
         heightAxisStrings.add(PlotFactory.getSaneDoubleString(maxHeightValue * .50));
@@ -623,7 +674,8 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         axes.setOnEdge(true);
 
         //colorScale.setStrings(Float.toString(minColorValue), Float.toString(maxColorValue), metricStrings[colorMetric]);
-        String foobar = UtilFncs.formatDouble(minColorValue, 6, true);
+        //String foobar = 
+        	UtilFncs.formatDouble(minColorValue, 6, true);
 
         colorScale.setStrings(UtilFncs.formatDouble(minColorValue, 6, true).trim(),
                 UtilFncs.formatDouble(maxColorValue, 6, true).trim(), metricStrings[colorMetric]);
@@ -666,7 +718,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
                 private float ratio = 0.0f;
                 private float scaleZTarget = 1.0f;
                 private long duration = 350;
-                private float sleepAmount = 0;
+                //private float sleepAmount = 0;
 
                 public void run() {
                     try {
@@ -775,7 +827,12 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         visRenderer.addShape(colorScale);
 
         JPanel panel = new JPanel() {
-            public Dimension getMinimumSize() {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = 4335157098523851633L;
+
+			public Dimension getMinimumSize() {
                 return new Dimension(10, 10);
             }
         };
@@ -886,4 +943,27 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
     public JFrame getFrame() {
         return this;
     }
+
+	public void update(Observable o, Object arg) {
+        String tmpString = (String) arg;
+
+        if (tmpString.equals("subWindowCloseEvent")) {
+            closeThisWindow();
+        } else if (tmpString.equals("prefEvent")) {
+
+        } else if (tmpString.equals("colorEvent")) {
+
+        } else if (tmpString.equals("dataEvent")) {
+        	
+        	HeatMapData mapData = generateData(ppTrial.getDataSource(), ppTrial.getSelectedSnapshot());
+            if (mapData == null) {
+                return;
+            }
+        	
+        	this.mapData = mapData;
+        	processData();
+        }
+
+		
+	}
 }

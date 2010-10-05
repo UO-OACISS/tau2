@@ -10,12 +10,14 @@
  *
  * Version 3.0
  * Revision Jan 1998 Author Sameer Shende, (sameer@cs.uoregon.edu)
+ * Revision Sep 2010 Author Kevin Huck, (kevin.huck@bsc.es)
  */
 
 # include <stdio.h>
 # include <stdlib.h>
 # include <sys/types.h>
 # include <fcntl.h>
+# include <stdbool.h>
 
 #ifdef TAU_WINDOWS
   #include <io.h>
@@ -87,11 +89,11 @@ static struct trcdescr
 
 struct trcrecv
 {
-  int      fd;        			  /* -- input file descriptor         			-- */
-/*   TAU_EV  *buffer;   		      /\* -- input buffer                  			-- *\/ */
-/*   TAU_EV  *erec;     			  /\* -- current event record         			-- *\/ */
-/*   TAU_EV  *prev;       		  /\* -- prev available event record in buffer   -- *\/ */
-/*   TAU_EV  *first;    			  /\* -- first event record in buffer            -- *\/ */
+  int      fd;                                  /* -- input file descriptor                                 -- */
+/*   TAU_EV  *buffer;                         /\* -- input buffer                                          -- *\/ */
+/*   TAU_EV  *erec;                               /\* -- current event record                                 -- *\/ */
+/*   TAU_EV  *prev;                         /\* -- prev available event record in buffer   -- *\/ */
+/*   TAU_EV  *first;                              /\* -- first event record in buffer            -- *\/ */
 
 
   void  *buffer;    /* -- input buffer                              -- */
@@ -107,6 +109,7 @@ struct trcrecv
 
 void *tmpbuffer; /* for threaded program */
 
+static x_uint64 currentTime[TAU_MAX_NODES] = {0};  /* -- timestamp of previous event record for this thread, used for computing duration of running states   -- */
 
 static enum format_t { alog, SDDF, pv, dump, paraver } outFormat = pv;
 static enum pvmode_t { user, pvclass, all } pvMode = user;
@@ -149,7 +152,7 @@ static int evno;
 static int numEvent;
 static int numUsedEvent;
 
-
+#include "paraver_mpi_mapping.h"
 
 /* copied from TAU_tf_decl.h  */
 
@@ -636,7 +639,7 @@ static void AddEventDynamic (int id, char *name, char *p, char *state, int tag)
 
 #ifdef DEBUG
   printf("Adding id %d name %s par %s state %s tag %d\n",
-	id, name, p, state, tag);
+        id, name, p, state, tag);
 #endif /* DEBUG */
   newev = (EVDESCR *) malloc (sizeof(EVDESCR));
   if (newev == (EVDESCR *) NULL) {
@@ -752,9 +755,9 @@ static int IsDoubleParam(int id) {
   while ( ev ) {
     if ( ev->id == id ) { 
       if (strncmp(ev->param,"TriggerValue",strlen("TriggerValue")) == 0) {
-	return 1;
+        return 1;
       } else {
-	return 0;
+        return 0;
       }
     }
     ev = ev->next;
@@ -790,15 +793,15 @@ static void PrintEventDescr (FILE *out)
           fprintf (out, "\tint\t\"Thread Id\";\n");
 
           if ( ev->param[0] ) fprintf (out, "\tint\t\"%s\";\n", ev->param);
-	  /* OLD Code. Why have the name? There's no %s. */
-	  /*
+          /* OLD Code. Why have the name? There's no %s. */
+          /*
           fprintf (out, "};;\n\n", ev->name);
-	  */
+          */
           fprintf (out, "};;\n\n");
         }
-	  else if ( outFormat == pv ){
-	  if (! dynamictrace)
-	  {
+          else if ( outFormat == pv ){
+          if (! dynamictrace)
+          {
             if ( ev->tag > 0 || ev->tag < -9 )
             {
               ev->name[strlen(ev->name)-6] = '\0';
@@ -806,12 +809,12 @@ static void PrintEventDescr (FILE *out)
               fprintf (out, "SYMBOL %s %d %s\n", ev->state, ev->no, ev->name);
               ev->name[strlen(ev->name)] = '-';
             }
-	  }
-	  else /* don't do anything special for dynamic trace */
-	  {
+          }
+          else /* don't do anything special for dynamic trace */
+          {
               fprintf (out, "SYMBOL %s %d %s\n", ev->state, ev->no, ev->name);
 
-	  }
+          }
 
         }
       }
@@ -821,7 +824,7 @@ static void PrintEventDescr (FILE *out)
 }
 
 /* -------------------------------------------------------------------------- */
-/* -- is it an INIT event ? 						   -- */
+/* -- is it an INIT event ?                                                    -- */
 /* -------------------------------------------------------------------------- */
 
 int isInitEvent(struct trcdescr *trc, void *erecord)
@@ -845,7 +848,7 @@ int isInitEvent(struct trcdescr *trc, void *erecord)
   else
   { /* old traces use events determined by fixed #define nos. */
     if  ( (event_GetEv(trc,erecord,0) == TAU_EV_INIT) || 
-	  (event_GetEv(trc,erecord,0) == TAU_EV_INITM) )
+          (event_GetEv(trc,erecord,0) == TAU_EV_INITM) )
     {
       return TRUE;
     }
@@ -892,11 +895,11 @@ static void *get_next_rec (struct trcdescr *tdes) {
     if ( (no = read (tdes->fd, tdes->buffer, INMAX * tdes->eventSize))
          != (INMAX * tdes->eventSize) ) {
       if ( no == 0 ) {
-	/* no more records */
+        /* no more records */
         return NULL;
       } else if ( (no % tdes->eventSize) != 0 ) {
         /* -- read error: --------------------------------------------------- */
-	printf("Read error: %ld and %ld\n",no,tdes->eventSize);
+        printf("Read error: %ld and %ld\n",no,tdes->eventSize);
         fprintf (stderr, "%s: read error\n", tdes->name);
         exit (1);
       }
@@ -963,7 +966,7 @@ int GetNodeId(struct trcdescr *trc, void *rec)
     return rec->tid;
     */
     return offset[event_GetNid(trc,rec,0)] + event_GetTid(trc,rec,0);
-	/* CPUID ranges from 0..N-1: N is sum(threads on all nodes ) */
+        /* CPUID ranges from 0..N-1: N is sum(threads on all nodes ) */
   }
   else {
     return event_GetNid(trc,rec,0);
@@ -976,12 +979,12 @@ int GetNodeId(struct trcdescr *trc, void *rec)
 int GetMatchingRecv(struct trcdescr trcdes, int msgtag,
     int myid, int otherid, int msglen, int *other_tid, int *other_nodeid)
 /* parameters: trcdes:    input trace file descriptor.
-	       msgtag:     message tag that we're searching for
-	       msglen: 	   message length that we're searching for
-	       myid:       id encoded in the parameter. Not +1.
-	       otherid:    rank of the other process
-	       other_tid:  thread id of the matching ipc call
-	       other_nodeid: node id of the matching ipc call
+               msgtag:     message tag that we're searching for
+               msglen:            message length that we're searching for
+               myid:       id encoded in the parameter. Not +1.
+               otherid:    rank of the other process
+               other_tid:  thread id of the matching ipc call
+               other_nodeid: node id of the matching ipc call
 */
 {
   off_t last_position;
@@ -992,7 +995,7 @@ int GetMatchingRecv(struct trcdescr trcdes, int msgtag,
   trcdes.buffer    = tmpbuffer;
 #ifdef DEBUG
   printf("GetMatchingRecv: SEND, tag=%d, len=%d, myid=%d, otherid=%d\n",
-	msgtag, msglen, myid, otherid);
+        msgtag, msglen, myid, otherid);
 #endif /* DEBUG */
 
 
@@ -1033,7 +1036,7 @@ int GetMatchingRecv(struct trcdescr trcdes, int msgtag,
        *other_nodeid = event_GetNid(&trcdes,curr_rec,0);
 #ifdef DEBUG
        printf("PERFECT MATCH! other tid = %d, nid = %d\n",
-	 *other_tid, *other_nodeid);
+         *other_tid, *other_nodeid);
 #endif /* DEBUG */
        /* Reset trace file */
        lseek(trcdes.fd, last_position, SEEK_SET);
@@ -1070,10 +1073,10 @@ int GetMatchingSend(struct trcdescr trcdes, int msgtag,
   struct trcrecv *ted; 
 
   rcvdes.buffer    = tmpbuffer;
-  rcvdes.erec	   = trcdes.erec;
-  rcvdes.fd 	   = trcdes.fd;
-  rcvdes.first 	   = trcdes.buffer;
-  rcvdes.prev	   = (char*)trcdes.erec - trcdes.eventSize;
+  rcvdes.erec           = trcdes.erec;
+  rcvdes.fd            = trcdes.fd;
+  rcvdes.first            = trcdes.buffer;
+  rcvdes.prev           = (char*)trcdes.erec - trcdes.eventSize;
   rcvdes.eventSize = trcdes.eventSize;
 
 
@@ -1145,12 +1148,12 @@ int GetMatchingSend(struct trcdescr trcdes, int msgtag,
 x_int64 GetMatchingRecvPRV(struct trcdescr trcdes, int msgtag,
     int myid, int otherid, int msglen, int *other_tid, int *other_nodeid)
 /* parameters: trcdes:    input trace file descriptor.
-	       msgtag:     message tag that we're searching for
-	       msglen: 	   message length that we're searching for
-	       myid:       id encoded in the parameter. Not +1.
-	       otherid:    rank of the other process
-	       other_tid:  thread id of the matching ipc call
-	       other_nodeid: node id of the matching ipc call
+               msgtag:     message tag that we're searching for
+               msglen:            message length that we're searching for
+               myid:       id encoded in the parameter. Not +1.
+               otherid:    rank of the other process
+               other_tid:  thread id of the matching ipc call
+               other_nodeid: node id of the matching ipc call
 */
 {
   x_int64 phRecv = 0;
@@ -1161,7 +1164,7 @@ x_int64 GetMatchingRecvPRV(struct trcdescr trcdes, int msgtag,
   trcdes.buffer    = tmpbuffer;
 #ifdef DEBUG
   printf("GetMatchingRecv: SEND, tag=%d, len=%d, myid=%d, otherid=%d\n",
-	msgtag, msglen, myid, otherid);
+        msgtag, msglen, myid, otherid);
 #endif /* DEBUG */
 
 
@@ -1201,7 +1204,7 @@ x_int64 GetMatchingRecvPRV(struct trcdescr trcdes, int msgtag,
        phRecv = event_GetTi(&trcdes,curr_rec,0) - intrc.firsttime;
 #ifdef DEBUG
        printf("PERFECT MATCH! other tid = %d, nid = %d\n",
-	 *other_tid, *other_nodeid);
+         *other_tid, *other_nodeid);
 #endif /* DEBUG */
        /* Reset trace file */
        lseek(trcdes.fd, last_position, SEEK_SET);
@@ -1325,11 +1328,11 @@ int main (int argc, char *argv[])
     i = 2;
     while( argv[i][0] == '-' )
       {
-	if( strcmp (argv[i], "-t") == 0 ){
-	  threads = TRUE;
-	}
-	else break;
-	i++;
+        if( strcmp (argv[i], "-t") == 0 ){
+          threads = TRUE;
+        }
+        else break;
+        i++;
       }
     fileIdx = i;
 
@@ -1422,7 +1425,7 @@ int main (int argc, char *argv[])
       intrc.numrec    = 1L;
       if (threads)
       { /* Don't call GetNodeId here as it uses offset, maxthreads */
-	intrc.numproc = event_GetNid(&intrc,erec,0);
+        intrc.numproc = event_GetNid(&intrc,erec,0);
       }
       else
       { /* No threads */
@@ -1493,13 +1496,13 @@ int main (int argc, char *argv[])
       printf("Got num %d state %s tag %d\n", num, state, tag);
 #endif /* DEBUG */
       for(j=0; linebuf[j] !='"'; j++)
-	;
+        ;
       name[0] = linebuf[j];
       j++;
       /* skip over till name begins */
       for (k=j; linebuf[k] != '"'; k++)
       {
-	name[k-j+1] = linebuf[k];
+        name[k-j+1] = linebuf[k];
       }
       name[k-j+1] = '"';
       name[k-j+2] = '\0'; /* terminate name */
@@ -1508,8 +1511,8 @@ int main (int argc, char *argv[])
 
       /* Fix 13/10 to 10 for event files generated with windows */
 /*       if (param[strlen(param)-2] == 13) { */
-/*  	param[strlen(param)-2] = 10; */
-/*  	param[strlen(param)-1] = 0; */
+/*          param[strlen(param)-2] = 10; */
+/*          param[strlen(param)-1] = 0; */
 /*       } */
 
 #ifdef DEBUG
@@ -1577,9 +1580,9 @@ int main (int argc, char *argv[])
 
         /* totalnodes has node id in the range 0..N-1 */
 
-	if ( maxtid[event_GetNid(&intrc,erec,0)] < event_GetTi(&intrc,erec,0) ) maxtid[event_GetNid(&intrc,erec,0)] = event_GetTi(&intrc,erec,0);
-	/* Update the max thread id vector for this node for each record */
- 	/* printf("maxtid[%d] = %d\n", totalnodes, maxtid[totalnodes]); */
+        if ( maxtid[event_GetNid(&intrc,erec,0)] < event_GetTi(&intrc,erec,0) ) maxtid[event_GetNid(&intrc,erec,0)] = event_GetTi(&intrc,erec,0);
+        /* Update the max thread id vector for this node for each record */
+         /* printf("maxtid[%d] = %d\n", totalnodes, maxtid[totalnodes]); */
       }
       else
       { /* no threads */
@@ -1603,8 +1606,8 @@ int main (int argc, char *argv[])
       offset[nodeId] = offset[nodeId - 1] + maxtid[nodeId - 1] + 1;
       /* printf("offset[%d] = %d\n", nodeId, offset[nodeId]); */
       /* So if node 0 has 2 threads, 1 has 3 and 2 has 3, then
-	 maxtid[0] = 1, maxtid[1] = 2, maxtid[2] = 2 and
-	 offset[0] = 0, offset[1] = 2, offset[2] = 5 */
+         maxtid[0] = 1, maxtid[1] = 2, maxtid[2] = 2 and
+         offset[0] = 0, offset[1] = 2, offset[2] = 5 */
     }
     intrc.numproc = offset[totalnodes] + maxtid[totalnodes];
   }
@@ -1653,13 +1656,13 @@ int main (int argc, char *argv[])
       fprintf(outfp,"NCPUS");
       for(l=0; l < totalnodes+1; l++)
       {
-	fprintf(outfp," %d", maxtid[l]+1);
+        fprintf(outfp," %d", maxtid[l]+1);
       }
       fprintf(outfp,"\n");
       fprintf(outfp, "CPUNAMES");
       for(l=0; l < totalnodes+1; l++)
       {
-	fprintf(outfp," \"Node %d\"", l);
+        fprintf(outfp," \"Node %d\"", l);
       }
       fprintf(outfp,"\n");
     }
@@ -1735,13 +1738,13 @@ int main (int argc, char *argv[])
       strftime (date, 50, "%d/%m/%y at %H:%M", ptm);
 #endif
       /*Allocate space for the taskList portion of the header
-	/if using threads, then numCpus = totalnodes.  Otherwise
-	/use intrc.numproc.*/
+        /if using threads, then numCpus = totalnodes.  Otherwise
+        /use intrc.numproc.*/
       if(threads){
-	myNodeNum = totalnodes + 1;
+        myNodeNum = totalnodes + 1;
       }
       else{
-	myNodeNum = intrc.numproc + 1;
+        myNodeNum = intrc.numproc + 1;
       }
       
       size = ((myNodeNum) * 5);
@@ -1749,70 +1752,70 @@ int main (int argc, char *argv[])
       taskList = (char*)malloc(size * sizeof (char));
       tempList = (char*)malloc(size * sizeof (char));
       if(taskList == (char*)NULL){
-	perror("Malloc error\n");
+        perror("Malloc error\n");
       }
       if(tempList == (char*)NULL){
-	perror("Malloc error\n");
+        perror("Malloc error\n");
       }
       taskList[0] = '\0';
       
       /*Write the taskList portion of the header in the form
-	/ "numThreads:onCpuId n,numThreads:onCpuId n+1"*/
+        / "numThreads:onCpuId n,numThreads:onCpuId n+1"*/
       for(i = 0; i < myNodeNum; i++){
-	if(myNodeNum - i != 1){
-	  if(tempList == (char*)NULL){
-	    perror("Malloc error-Paraver Header Var. tempList");
-	  }
-	  sprintf(tempList,"%d:%d,",maxtid[i]+1,i+1);
-	  if(taskList == (char*)NULL){
-	    perror("Malloc error-Paraver Header Var. taskList");
-	  }	  
-	  taskList = strcat(taskList,tempList);
-	}
-	
-	else{
-	  sprintf(tempList,"%d:%d",maxtid[i]+1,i+1);
-	  taskList = strcat(taskList,tempList);
-	}
-	
+        if(myNodeNum - i != 1){
+          if(tempList == (char*)NULL){
+            perror("Malloc error-Paraver Header Var. tempList");
+          }
+          sprintf(tempList,"%d:%d,",maxtid[i]+1,i+1);
+          if(taskList == (char*)NULL){
+            perror("Malloc error-Paraver Header Var. taskList");
+          }          
+          taskList = strcat(taskList,tempList);
+        }
+        
+        else{
+          sprintf(tempList,"%d:%d",maxtid[i]+1,i+1);
+          taskList = strcat(taskList,tempList);
+        }
+        
       }
      
 
       /* create the first part of the pcf File to be loaded
-	 automatically with the .prv file in paraver
+         automatically with the .prv file in paraver
          change the file extension of outFile from prv to pcf
       */
 
       if(! outFile){
-	outfp = stdout;
-	pcfFile = (char*)malloc(30 * sizeof(char));
-	strcpy(pcfFile,"config.pcf");
+        outfp = stdout;
+        pcfFile = (char*)malloc(30 * sizeof(char));
+        strcpy(pcfFile,"config.pcf");
       }
       else{
-	if(strlen(outFile) < 5){
-	  printf("Outfile must be of form *.prv\n");
-	  exit(1);
-	}
+        if(strlen(outFile) < 5){
+          printf("Outfile must be of form *.prv\n");
+          exit(1);
+        }
 
 
-	pcfFile = (char*)malloc((strlen(outFile)+1) * sizeof (char));
-	pcfFile = (strcpy(pcfFile,outFile));
-	pcfFile[strlen(outFile) - 3] = '\0';
-	pcfFile = (strcat(pcfFile,"pcf"));
+        pcfFile = (char*)malloc((strlen(outFile)+1) * sizeof (char));
+        pcfFile = (strcpy(pcfFile,outFile));
+        pcfFile[strlen(outFile) - 3] = '\0';
+        pcfFile = (strcat(pcfFile,"pcf"));
       }
       if ( pcfFile ){
-	if ( access ("pcfFile", F_EXISTS) == 0  && isatty(2) ){
-	  fprintf (stderr, "%s exists; override [y]? ", pcfFile);
-	  if ( getchar() == 'n' ) exit (1);
-	}
+        if ( access ("pcfFile", F_EXISTS) == 0  && isatty(2) ){
+          fprintf (stderr, "%s exists; override [y]? ", pcfFile);
+          if ( getchar() == 'n' ) exit (1);
+        }
 
-	if ( (pcffp = fopen (pcfFile, "wb")) == NULL ){
-	  perror (pcfFile);
-	  exit (1);
-	}
+        if ( (pcffp = fopen (pcfFile, "wb")) == NULL ){
+          perror (pcfFile);
+          exit (1);
+        }
       }
       else{
-	pcffp = stdout;
+        pcffp = stdout;
       }
       fprintf(pcffp,"DEFAULT_OPTIONS\n\n");
       fprintf(pcffp,"LEVEL               THREAD\n");
@@ -1820,63 +1823,126 @@ int main (int argc, char *argv[])
       fprintf(pcffp,"LOOK_BACK           100\n");
       fprintf(pcffp,"SPEED               1\n");
       fprintf(pcffp,"FLAG_ICONS          ENABLED\n");
-      fprintf(pcffp,"NUM_OF_STATE_COLORS 1\n");
+      fprintf(pcffp,"NUM_OF_STATE_COLORS 1000\n");
       fprintf(pcffp,"YMAX_SCALE          %d\n\n\n",intrc.numrec);
       fprintf(pcffp,"DEFAULT_SEMANTIC\n\n");
-      fprintf(pcffp,"COMPOSE1_FUNC       As Is\n");
-      fprintf(pcffp,"THREAD_FUNC         Last Evt Val\n\n\n");
+      //fprintf(pcffp,"COMPOSE1_FUNC       As Is\n");
+      //fprintf(pcffp,"THREAD_FUNC         Last Evt Val\n\n\n");
+      fprintf(pcffp,"THREAD_FUNC         State As Is\n\n\n");
       fprintf(pcffp,"STATES\n");
-      fprintf(pcffp,"0    NOT USED\n");
-      fprintf(pcffp,"1    RUNNING\n");
-      fprintf(pcffp,"2    NOT USED\n");
-      fprintf(pcffp,"3    NOT USED\n");
-      fprintf(pcffp,"4    NOT USED\n");
-      fprintf(pcffp,"5    NOT USED\n");
-      fprintf(pcffp,"6    NOT USED\n");
-      fprintf(pcffp,"7    NOT USED\n");
-      fprintf(pcffp,"8    NOT USED\n");
-      fprintf(pcffp,"9    NOT USED\n");
-      fprintf(pcffp,"4    NOT USED\n");
-      fprintf(pcffp,"10    NOT USED\n");
-      fprintf(pcffp,"11    NOT USED\n");
-      fprintf(pcffp,"12    NOT USED\n");
-      fprintf(pcffp,"13    NOT USED\n\n");
+      fprintf(pcffp,"0    Idle\n");
+      fprintf(pcffp,"1    Running\n");
+      fprintf(pcffp,"2    Not created\n");
+      fprintf(pcffp,"3    Waiting a message\n");
+      fprintf(pcffp,"4    Bloking Send\n");
+      fprintf(pcffp,"5    Synchronization\n");
+      fprintf(pcffp,"6    Test/Probe\n");
+      fprintf(pcffp,"7    Scheduling and Fork/Join\n");
+      fprintf(pcffp,"8    Wait/WaitAll\n");
+      fprintf(pcffp,"9    Blocked\n");
+      fprintf(pcffp,"10    Immediate Send\n");
+      fprintf(pcffp,"11    Immediate Receive\n");
+      fprintf(pcffp,"12    I/O\n");
+      fprintf(pcffp,"13    Group Communication\n");
+      fprintf(pcffp,"14    Tracing Disabled\n");
+      fprintf(pcffp,"15    Others\n");
+      fprintf(pcffp,"16    Send Receive\n\n");
+
       fprintf(pcffp,"STATES_COLOR\n");
-      fprintf(pcffp,"1    {117,195,255}\n");
+      fprintf(pcffp,"0    {117,195,255}\n");
+      fprintf(pcffp,"1    {0,0,255}\n");
+      fprintf(pcffp,"2    {255,255,255}\n");
+      fprintf(pcffp,"3    {255,0,0}\n");
+      fprintf(pcffp,"4    {255,0,174}\n");
+      fprintf(pcffp,"5    {179,0,0}\n");
+      fprintf(pcffp,"6    {0,255,0}\n");
+      fprintf(pcffp,"7    {255,255,0}\n");
+      fprintf(pcffp,"8    {235,0,0}\n");
+      fprintf(pcffp,"9    {0,162,0}\n");
+      fprintf(pcffp,"10    {255,0,255}\n");
+      fprintf(pcffp,"11    {100,100,177}\n");
+      fprintf(pcffp,"12    {172,174,41}\n");
+      fprintf(pcffp,"13    {255,144,26}\n");
+      fprintf(pcffp,"14    {2,255,177}\n");
+      fprintf(pcffp,"15    {192,224,0}\n");
+      fprintf(pcffp,"16    {66,66,66}\n\n");
+
+      // output the MPI functions
       fprintf(pcffp,"EVENT_TYPE\n");
-      fprintf(pcffp,"0    5    METHOD entry/exit:\n");
+      fprintf(pcffp,"9    %d    MPI Point-to-point\n", MPITYPE_PTOP);
+      fprintf(pcffp,"VALUES\n");
+      for (i = 0 ; i < NUM_MPI_FUNCTIONS ; i++) {
+	    if (MPI_FUNCTION_MAP[i].type == MPITYPE_PTOP) {
+		  fprintf(pcffp,"%d   %s\n", MPI_FUNCTION_MAP[i].value, MPI_FUNCTION_MAP[i].name);
+		}
+      }
+      fprintf(pcffp,"\n\n");
+
+      fprintf(pcffp,"EVENT_TYPE\n");
+      fprintf(pcffp,"9    %d    MPI Collective Comm\n", MPITYPE_COLLECTIVE);
+      fprintf(pcffp,"VALUES\n");
+      for (i = 0 ; i < NUM_MPI_FUNCTIONS ; i++) {
+	    if (MPI_FUNCTION_MAP[i].type == MPITYPE_COLLECTIVE) {
+		  fprintf(pcffp,"%d   %s\n", MPI_FUNCTION_MAP[i].value, MPI_FUNCTION_MAP[i].name);
+		}
+      }
+      fprintf(pcffp,"\n\n");
+
+      fprintf(pcffp,"EVENT_TYPE\n");
+      fprintf(pcffp,"9    %d    MPI Other\n", MPITYPE_OTHER);
+      fprintf(pcffp,"VALUES\n");
+      for (i = 0 ; i < NUM_MPI_FUNCTIONS ; i++) {
+	    if (MPI_FUNCTION_MAP[i].type == MPITYPE_OTHER) {
+		  fprintf(pcffp,"%d   %s\n", MPI_FUNCTION_MAP[i].value, MPI_FUNCTION_MAP[i].name);
+		}
+      }
+      fprintf(pcffp,"\n\n");
+
+      fprintf(pcffp,"EVENT_TYPE\n");
+      fprintf(pcffp,"9    %d    MPI One-sided\n", MPITYPE_RMA);
+      fprintf(pcffp,"VALUES\n");
+      for (i = 0 ; i < NUM_MPI_FUNCTIONS ; i++) {
+	    if (MPI_FUNCTION_MAP[i].type == MPITYPE_RMA) {
+		  fprintf(pcffp,"%d   %s\n", MPI_FUNCTION_MAP[i].value, MPI_FUNCTION_MAP[i].name);
+		}
+      }
+      fprintf(pcffp,"\n\n");
+
+      fprintf(pcffp,"EVENT_TYPE\n");
+      fprintf(pcffp,"0    %d    METHOD entry/exit:\n", PARAVER_USER_FUNCTION_TYPE);
       fprintf(pcffp,"VALUES\n");
       
 
       prvPCF = (int*)malloc(intrc.numevent * sizeof(int));
       for(i = 0; i < intrc.numevent; i++){
-	prvPCF[i] = 0;
+        prvPCF[i] = 0;
       }
       
       fprintf (outfp, "#Paraver (%s):%llu:%d:1:%d(%s)\n", date,
-	       (intrc.lasttime - intrc.firsttime),myNodeNum,myNodeNum,taskList);
-      /*for each thread on each node write at the beginning of the
-	/ trace file a state record indicating "RUNNING" state*/
+               (intrc.lasttime - intrc.firsttime),myNodeNum,myNodeNum,taskList);
+
+      // initialize the current time for each thread - used for switching states
+      int index = 0;
       for(i = 0; i < myNodeNum; i++){
-	for(j = 0; j <= maxtid[i]; j++){
-	  fprintf(outfp,"1:%d:1:%d:%d:0:%llu:1\n",i+1,i+1,j+1,(intrc.lasttime-intrc.firsttime));
-	}
+        for(j = 0; j <= maxtid[i]; j++){
+          currentTime[index++] = 0LL;
+        }
       }
     
       /* -- initialize state stacks -- */
       statestk = (struct stkitem **)
-	malloc ((intrc.numproc+1)*sizeof(struct stkitem *));
+        malloc ((intrc.numproc+1)*sizeof(struct stkitem *));
       stkptr   = (struct stkitem **)
-	malloc ((intrc.numproc+1)*sizeof(struct stkitem *));
+        malloc ((intrc.numproc+1)*sizeof(struct stkitem *));
       
 
       for (i=0; i<=intrc.numproc; i++)
-	{
-	  stkptr[i] = statestk[i] = (struct stkitem *)
-	    malloc (STACKSIZE * sizeof(struct stkitem));
-	  stkptr[i]->state = "IDLE";
-	  stkptr[i]->tag = -99;
-	}
+        {
+          stkptr[i] = statestk[i] = (struct stkitem *)
+            malloc (STACKSIZE * sizeof(struct stkitem));
+          stkptr[i]->state = "IDLE";
+          stkptr[i]->tag = -99;
+        }
 
   }
 
@@ -1888,7 +1954,7 @@ int main (int argc, char *argv[])
     for (i=0; i<=intrc.numproc; i++)
     {
       fprintf (outfp, "0 EXCHANGE ON CPUID %d DOWNTO IDLE -99 CLUSTER 1\n",
-		      i+1);
+                      i+1);
     }
   }
 
@@ -2008,308 +2074,390 @@ int main (int argc, char *argv[])
     else if( outFormat == paraver ){
       x_int64 phRecv = 0;
       ev = GetEventStruct (event_GetEv(&intrc,erec,0));
+	  int eventType = PARAVER_USER_FUNCTION_TYPE; // User Function by default - if MPI, change later
+	  int eventValue = 0;
+	  int eventState = 0;
+	  bool isMPIEvent = false;
       if ((ev->tag != 0) || (dynamictrace))
-	{
-	  if( (ev->tag == SEND_EVENT) && pvComm )
-	    {
-	      myid 	= GetNodeId(&intrc,erec) + 1;
+        {
+          if( (ev->tag == SEND_EVENT) && pvComm )
+            {
+              myid         = GetNodeId(&intrc,erec) + 1;
 
-	      decodeParameter(event_GetPar(&intrc,erec,0), &otherid, &msglen, &msgtag, &comm);
-	      otherid = otherid+1;
-	      
-	      phRecv = GetMatchingRecvPRV(intrc, msgtag, GetNodeId(&intrc,erec),
-					  otherid -1 , msglen, &other_tid, &other_nodeid);
+              decodeParameter(event_GetPar(&intrc,erec,0), &otherid, &msglen, &msgtag, &comm);
+              otherid = otherid+1;
+              
+              phRecv = GetMatchingRecvPRV(intrc, msgtag, GetNodeId(&intrc,erec),
+                                          otherid -1 , msglen, &other_tid, &other_nodeid);
 
-	      
-	      
+              
+              
 #ifdef DEBUG
-	      printf ("\n\n%llu SENDMSG %d FROM %d TO %d LEN %d\n\n\n",
-		      event_GetTi(&intrc,erec,0) - intrc.firsttime,
-		      msgtag, myid , otherid , msglen);
+              printf ("\n\n%llu SENDMSG %d FROM %d TO %d LEN %d\n\n\n",
+                      event_GetTi(&intrc,erec,0) - intrc.firsttime,
+                      msgtag, myid , otherid , msglen);
 #endif /* DEBUG */
-	      
-	      /*Print the record in the form:
-		RecordType(3)for Communication:SendNodeId:SendPTaskID:
-		SendTaskID:SendThreadID:logicalSendTime:PhysicalSendTime:
-		RecvNodeID:RecvPTaskID:RecvTaskID:RecvThreadID:
-		:LogicalRecvTime:PhysicalRecvTime:MessageLength:MessageTag
-	      */
+              
+              /*Print the record in the form:
+                RecordType(3)for Communication:SendNodeId:SendPTaskID:
+                SendTaskID:SendThreadID:logicalSendTime:PhysicalSendTime:
+                RecvNodeID:RecvPTaskID:RecvTaskID:RecvThreadID:
+                :LogicalRecvTime:PhysicalRecvTime:MessageLength:MessageTag
+              */
 
-/* 	      fprintf(outfp,"3:%d:1:%d:%d:%llu:%llu:%d:1:%d:%d:%llu:%llu:%lld:%lld\n",myid,myid,event_GetTid(&intrc,erec,0)+1,event_GetTi(&intrc,erec,0)-intrc.firsttime,event_GetTi(&intrc,erec,0) - intrc.firsttime,otherid,otherid,other_tid+1,phRecv,phRecv,msglen,msgtag); */
+/*               fprintf(outfp,"3:%d:1:%d:%d:%llu:%llu:%d:1:%d:%d:%llu:%llu:%lld:%lld\n",myid,myid,event_GetTid(&intrc,erec,0)+1,event_GetTi(&intrc,erec,0)-intrc.firsttime,event_GetTi(&intrc,erec,0) - intrc.firsttime,otherid,otherid,other_tid+1,phRecv,phRecv,msglen,msgtag); */
 
 
-	      fprintf(outfp,"3:%d:1:%d:%d:%llu:%llu:%d:1:%d:%d:%llu:%llu:%d:%d\n",
-		      myid,
-		      myid,
-		      event_GetTid(&intrc,erec,0),
-		      (x_uint64)(event_GetTi(&intrc,erec,0) - intrc.firsttime),
-		      (x_uint64)(event_GetTi(&intrc,erec,0) - intrc.firsttime),
-		      otherid,
-		      otherid,
-		      other_tid+1,
-		      phRecv,
-		      phRecv,
-		      msglen,
-		      msgtag);
+              fprintf(outfp,"3:%d:1:%d:%d:%llu:%llu:%d:1:%d:%d:%llu:%llu:%d:%d\n",
+                      myid,
+                      myid,
+                      event_GetTid(&intrc,erec,0)+1,
+                      (x_uint64)(event_GetTi(&intrc,erec,0) - intrc.firsttime),
+                      (x_uint64)(event_GetTi(&intrc,erec,0) - intrc.firsttime),
+                      otherid,
+                      otherid,
+                      other_tid+1,
+                      phRecv,
+                      phRecv,
+                      msglen,
+                      msgtag);
 
-	   
-	    }
-	  else if ( (ev->tag == RECV_EVENT ) && pvComm )
-	    {
-	      /* receive message */
-	      /* In dynamic trace the format for par is
-		 31 ..... 24 23 ......16 15..............0
-		 other       type          length
-		 So, mynode is the receiver and its in GetNodeId(&intrc,erec)
-		 RECVMSG <type> BY <receiver> FROM <sender> LEN <length>
-	      */
-	      /* extract the information from the parameter */
-	      myid 		= GetNodeId(&intrc,erec)+1;
+           
+            }
+          else if ( (ev->tag == RECV_EVENT ) && pvComm )
+            {
+              /* receive message */
+              /* In dynamic trace the format for par is
+                 31 ..... 24 23 ......16 15..............0
+                 other       type          length
+                 So, mynode is the receiver and its in GetNodeId(&intrc,erec)
+                 RECVMSG <type> BY <receiver> FROM <sender> LEN <length>
+              */
+              /* extract the information from the parameter */
+              myid                 = GetNodeId(&intrc,erec)+1;
 
-	      decodeParameter(event_GetPar(&intrc,erec,0), &otherid, &msglen, &msgtag, &comm);
-	      otherid = otherid+1;
-	      
-	      
-		  if (GetMatchingSend(intrc, msgtag, GetNodeId(&intrc,erec),
-				      otherid - 1 , msglen, &other_tid, &other_nodeid))
-		    { /* call was successful, we've the other_tid and other_nodeid */
-		   
+              decodeParameter(event_GetPar(&intrc,erec,0), &otherid, &msglen, &msgtag, &comm);
+              otherid = otherid+1;
+              
+              
+                  if (GetMatchingSend(intrc, msgtag, GetNodeId(&intrc,erec),
+                                      otherid - 1 , msglen, &other_tid, &other_nodeid))
+                    { /* call was successful, we've the other_tid and other_nodeid */
+                   
 #ifdef DEBUG
-		      printf("Calculated senderid = %d\n", otherid);
+                      printf("Calculated senderid = %d\n", otherid);
 #endif /* DEBUG */
-		      
-		    }
+                      
+                    }
 
-	      
+              
 #ifdef DEBUG
-	      printf ("%llu RECVMSG %d BY %d FROM %d LEN %d\n",
-		      event_GetTi(&intrc,erec,0) - intrc.firsttime,
-		      msgtag, myid , otherid , msglen);
+              printf ("%llu RECVMSG %d BY %d FROM %d LEN %d\n",
+                      event_GetTi(&intrc,erec,0) - intrc.firsttime,
+                      msgtag, myid , otherid , msglen);
 #endif /* DEBUG */
-	      
-	    }
-	  else if (( ev->tag == -9 ) || ( event_GetPar(&intrc,erec,0) == -1))
-	    { /* In dynamic tracing, 1/-1 par values are for Entry/Exit resp. */
-	      /* exit state */
-	      /* PARVis needs time values relative to the start of the program! */
-	      stkptr[GetNodeId(&intrc,erec)]--;
-	      if ( stkptr[GetNodeId(&intrc,erec)] < statestk[GetNodeId(&intrc,erec)] )
-		{
-		  fprintf (stderr, "ERROR: stack underflow on node %d\n", GetNodeId(&intrc,erec));
-		  fprintf (stderr, "       event %s at %llu\n", ev->name, event_GetTi(&intrc,erec,0));
-		  exit (1);
-		}
+              
+            }
+          else if (( ev->tag == -9 ) || ( event_GetPar(&intrc,erec,0) == -1))
+            { /* In dynamic tracing, 1/-1 par values are for Entry/Exit resp. */
+              /* exit state */
+              /* PARVis needs time values relative to the start of the program! */
+              stkptr[GetNodeId(&intrc,erec)]--;
+              if ( stkptr[GetNodeId(&intrc,erec)] < statestk[GetNodeId(&intrc,erec)] )
+                {
+                  fprintf (stderr, "ERROR: stack underflow on node %d\n", GetNodeId(&intrc,erec));
+                  fprintf (stderr, "       event %s at %llu\n", ev->name, event_GetTi(&intrc,erec,0));
+                  exit (1);
+                }
 
-	      /*Print the record in the form:
-		RecordType(2)for event:NodeID:PTaskID:TaskID:ThreadID:
-		:event time:eventType(5) for method entry/exit:event tag(to
-		distinguish between events of the same type, 0 for exit and
-		event_GetEv(&intrc,erec,0) for entry
-	      */
-	 
-	      fprintf (outfp, "2:%d:1:%d:%d:%llu:5:0\n",(event_GetNid(&intrc,erec,0))+1,(event_GetNid(&intrc,erec,0))+1,event_GetTid(&intrc,erec,0)+1,event_GetTi(&intrc,erec,0)-intrc.firsttime);
-	      
-	      /*Upon exit of a method, write another record indicating
-		entry into the previous method on the stack for that
-		particular node and thread
-	      */
-	      if(stkptr[GetNodeId(&intrc,erec)]->tag != -99)
-		fprintf(outfp,"2:%d:1:%d:%d:%llu:5:%d\n",(event_GetNid(&intrc,erec,0))+1,(event_GetNid(&intrc,erec,0))+1,event_GetTid(&intrc,erec,0)+1,event_GetTi(&intrc,erec,0)-intrc.firsttime,stkptr[GetNodeId(&intrc,erec)]->tag);
-	      if(prvPCF[event_GetEv(&intrc,erec,0)-1] == 0){
-		fprintf(pcffp,"%d       %s\n",event_GetEv(&intrc,erec,0),GetEventName(event_GetEv(&intrc,erec,0),&hasParam));
-		prvPCF[event_GetEv(&intrc,erec,0)-1] = 1;
-	      }
-	    }
-	  else if (event_GetPar(&intrc,erec,0) == 1)
-	    {
-	      /* enter new state */
-	      stkptr[GetNodeId(&intrc,erec)]++;
-	      if ( stkptr[GetNodeId(&intrc,erec)] > (statestk[GetNodeId(&intrc,erec)] + STACKSIZE) )
-		{
-		  fprintf (stderr, "ERROR: stack overflow on node %d\n", GetNodeId(&intrc,erec));
-		  fprintf (stderr, "       event %s at %llu\n", ev->name, event_GetTi(&intrc,erec,0));
-		  exit (1);
-		}
-	      stkptr[GetNodeId(&intrc,erec)]->tag = event_GetEv(&intrc,erec,0);
+              /* Output a MPI state event, for the time during this MPI call */
 
-	      /*Print the record in the form:
-		/RecordType(2)for event:NodeID:PTaskID:TaskID:ThreadID:
-		:event time:eventType(5) for method entry/exit:event tag(to
-		distinguish between events of the same type, 0 for exit and
-		event_GetEv(&intrc,erec,0) for entry
-	      */
+              if (strncmp(ev->name, "\"MPI_", 5) == 0) {
+				// get the MPI event type and value
+				mapMPINameToTypeValue(ev->name, &eventType, &eventValue, &eventState);
+				eventValue = 0;  // we are exiting, remember?
+			    isMPIEvent = true;
 
-	      fprintf (outfp, "2:%d:1:%d:%d:%llu:5:%d\n",(event_GetNid(&intrc,erec,0))+1,(event_GetNid(&intrc,erec,0))+1,event_GetTid(&intrc,erec,0)+1,event_GetTi(&intrc,erec,0)-intrc.firsttime,event_GetEv(&intrc,erec,0));
-	      if(prvPCF[event_GetEv(&intrc,erec,0)-1] == 0){
-		fprintf(pcffp,"%d       %s\n",event_GetEv(&intrc,erec,0),GetEventName(event_GetEv(&intrc,erec,0),&hasParam));
-		prvPCF[event_GetEv(&intrc,erec,0)-1] = 1;
-	      }
-	    }
-	}
+			    if (event_GetTi(&intrc,erec,0) > 0LL) {
+			      isMPIEvent = true;
+			      int index = 0;
+			      if (threads) {
+                    index = offset[event_GetNid(&intrc,erec,0)] + event_GetTid(&intrc,erec,0);
+				  } else {
+				    index = event_GetNid(&intrc,erec,0);
+				  }
+
+                  //printf("1:%d:1:%d:%d:%llu:%llu:5 %s EXIT\n",  // back to running state
+                  fprintf(outfp,"1:%d:1:%d:%d:%llu:%llu:%d\n",  
+			          (event_GetNid(&intrc,erec,0))+1, // cpu_id
+				      (event_GetNid(&intrc,erec,0))+1, // task_id
+				      (event_GetTid(&intrc,erec,0))+1, // thread_id
+					  // FIX ME!  This code assmes all nodes have the same number of threads
+				      currentTime[index], // begin_time
+				      event_GetTi(&intrc,erec,0), eventState); // end_time
+				  currentTime[index] = event_GetTi(&intrc,erec,0);
+				}
+			  }
+
+              /*Print the record in the form:
+                RecordType(2)for event:NodeID:PTaskID:TaskID:ThreadID:
+                :event time:eventType(5) for method entry/exit:event tag(to
+                distinguish between events of the same type, 0 for exit and
+                event_GetEv(&intrc,erec,0) for entry
+              */
+         
+              fprintf (outfp, "2:%d:1:%d:%d:%llu:%d:0\n",
+			    (event_GetNid(&intrc,erec,0))+1,
+				(event_GetNid(&intrc,erec,0))+1,
+				event_GetTid(&intrc,erec,0)+1,
+				event_GetTi(&intrc,erec,0)-intrc.firsttime,
+				eventType);
+              
+              /*Upon exit of a method, write another record indicating
+                entry into the previous method on the stack for that
+                particular node and thread
+              */
+			  /*  NOOOOOO!!! THIS IS A BUG
+              if(stkptr[GetNodeId(&intrc,erec)]->tag != -99)
+                fprintf(outfp,"2:%d:1:%d:%d:%llu:%d:%d\n",
+				  (event_GetNid(&intrc,erec,0))+1,
+				  (event_GetNid(&intrc,erec,0))+1,
+				  event_GetTid(&intrc,erec,0)+1,
+				  event_GetTi(&intrc,erec,0)-intrc.firsttime,
+				  stkptr[GetNodeId(&intrc,erec)]->tag,
+				  eventType);
+			  */
+              if(prvPCF[event_GetEv(&intrc,erec,0)-1] == 0 && !isMPIEvent){
+                fprintf(pcffp,"%d       %s\n",event_GetEv(&intrc,erec,0),GetEventName(event_GetEv(&intrc,erec,0),&hasParam));
+                prvPCF[event_GetEv(&intrc,erec,0)-1] = 1;
+              }
+            }
+          else if (event_GetPar(&intrc,erec,0) == 1)
+            {
+              /* enter new state */
+              stkptr[GetNodeId(&intrc,erec)]++;
+              if ( stkptr[GetNodeId(&intrc,erec)] > (statestk[GetNodeId(&intrc,erec)] + STACKSIZE) )
+                {
+                  fprintf (stderr, "ERROR: stack overflow on node %d\n", GetNodeId(&intrc,erec));
+                  fprintf (stderr, "       event %s at %llu\n", ev->name, event_GetTi(&intrc,erec,0));
+                  exit (1);
+                }
+              stkptr[GetNodeId(&intrc,erec)]->tag = event_GetEv(&intrc,erec,0);
+
+              /* Output a running state event, for the time leading up to this MPI call */
+
+              //if (strncmp(ev->name, "MPI_", 4)) {
+              if (strncmp(ev->name, "\"MPI_", 5) == 0) {
+				// get the MPI event type and value
+				mapMPINameToTypeValue(ev->name, &eventType, &eventValue, &eventState);
+			    isMPIEvent = true;
+
+                if (event_GetTi(&intrc,erec,0) > 0LL) {
+			      isMPIEvent = true;
+			      int index = 0;
+			      if (threads) {
+                    index = offset[event_GetNid(&intrc,erec,0)] + event_GetTid(&intrc,erec,0);
+				  } else {
+				    index = event_GetNid(&intrc,erec,0);
+				  }
+
+                  //printf("1:%d:1:%d:%d:%llu:%llu:1 %s ENTER\n",  // back to running state
+                  fprintf(outfp,"1:%d:1:%d:%d:%llu:%llu:1\n",  // back to running state
+			          (event_GetNid(&intrc,erec,0))+1, // cpu_id
+				      (event_GetNid(&intrc,erec,0))+1, // task_id
+				      (event_GetTid(&intrc,erec,0))+1, // thread_id
+				      currentTime[index], // begin_time
+				      event_GetTi(&intrc,erec,0), ev->name); // end_time
+				  currentTime[index] = event_GetTi(&intrc,erec,0);
+				}
+              } else {
+				eventValue = event_GetEv(&intrc,erec,0);
+			  }
+
+              /*Print the record in the form:
+                /RecordType(2)for event:NodeID:PTaskID:TaskID:ThreadID:
+                :event time:eventType(5) for method entry/exit:event tag(to
+                distinguish between events of the same type, 0 for exit and
+                event_GetEv(&intrc,erec,0) for entry
+              */
+
+              fprintf (outfp, "2:%d:1:%d:%d:%llu:%d:%d\n",
+			    (event_GetNid(&intrc,erec,0))+1,
+				(event_GetNid(&intrc,erec,0))+1,
+				event_GetTid(&intrc,erec,0)+1,
+				event_GetTi(&intrc,erec,0)-intrc.firsttime,
+				eventType,
+				eventValue);
+              if(prvPCF[event_GetEv(&intrc,erec,0)-1] == 0 && !isMPIEvent){
+                fprintf(pcffp,"%d       %s\n",event_GetEv(&intrc,erec,0),GetEventName(event_GetEv(&intrc,erec,0),&hasParam));
+                prvPCF[event_GetEv(&intrc,erec,0)-1] = 1;
+              }
+            }
+        }
     }
 
     else if ( outFormat == pv )
       {
-	ev = GetEventStruct (event_GetEv(&intrc,erec,0));
-	if ((ev!= 0) &&( ( ev->tag != 0 ) || (dynamictrace))) /* dynamic trace doesn't use tag*/
-	  {
-	    if ( (ev->tag == SEND_EVENT) && pvComm )
+        ev = GetEventStruct (event_GetEv(&intrc,erec,0));
+        if ((ev!= 0) &&( ( ev->tag != 0 ) || (dynamictrace))) /* dynamic trace doesn't use tag*/
+          {
+            if ( (ev->tag == SEND_EVENT) && pvComm )
 
-	      {
-	      /* send message */
-		/* In dynamic trace the format for par is
-		   31 ..... 24 23 ......16 15..............0
-       	           other       type          length
-		So, mynode is the sender and its in GetNodeId(&intrc,erec)
-		SENDMSG <type> FROM <sender> TO <receiver> LEN <length>
-		*/
-		/* extract the information from the parameter */
+              {
+              /* send message */
+                /* In dynamic trace the format for par is
+                   31 ..... 24 23 ......16 15..............0
+                          other       type          length
+                So, mynode is the sender and its in GetNodeId(&intrc,erec)
+                SENDMSG <type> FROM <sender> TO <receiver> LEN <length>
+                */
+                /* extract the information from the parameter */
 
-		myid 	= GetNodeId(&intrc,erec) + 1;
+                myid         = GetNodeId(&intrc,erec) + 1;
 
-		decodeParameter(event_GetPar(&intrc,erec,0), &otherid, &msglen, &msgtag, &comm);
-		otherid = otherid+1;
+                decodeParameter(event_GetPar(&intrc,erec,0), &otherid, &msglen, &msgtag, &comm);
+                otherid = otherid+1;
 
 
-		if (threads)
-		  {
-		    if (GetMatchingRecv(intrc, msgtag, GetNodeId(&intrc,erec),
-					otherid -1 , msglen, &other_tid, &other_nodeid))
-		      { /* call was successful, we've the other_tid and other_nodeid */
-			otherid = offset[other_nodeid] + other_tid + 1;
+                if (threads)
+                  {
+                    if (GetMatchingRecv(intrc, msgtag, GetNodeId(&intrc,erec),
+                                        otherid -1 , msglen, &other_tid, &other_nodeid))
+                      { /* call was successful, we've the other_tid and other_nodeid */
+                        otherid = offset[other_nodeid] + other_tid + 1;
 #ifdef DEBUG
-			printf("Calculated otherid = %d\n", otherid);
+                        printf("Calculated otherid = %d\n", otherid);
 #endif /* DEBUG */
 
-		      }
-		    else
-		      { /* call was unsuccessful, we couldn't locate a matching ipc call */
-			printf("Matching IPC call not found. Assumption in place...\n");
+                      }
+                    else
+                      { /* call was unsuccessful, we couldn't locate a matching ipc call */
+                        printf("Matching IPC call not found. Assumption in place...\n");
 
-			/* ASSUMPTION: Thread 4 in a node can comm with thread 4 on another
-			   node. True for MPI+JAVA. In future, do a matching algo. */
-			otherid	= offset[otherid-1] + event_GetTid(&intrc,erec,0) + 1;
-			/* THIS ABOVE IS TRUE ONLY WHEN SAME THREADS COMMUNICATE !! */
+                        /* ASSUMPTION: Thread 4 in a node can comm with thread 4 on another
+                           node. True for MPI+JAVA. In future, do a matching algo. */
+                        otherid        = offset[otherid-1] + event_GetTid(&intrc,erec,0) + 1;
+                        /* THIS ABOVE IS TRUE ONLY WHEN SAME THREADS COMMUNICATE !! */
 #ifdef DEBUG
-			printf("ASSUMPTION: SAME THREADIDS ON DIFF NODES COMMUNICATE!!\n");
-			printf("SEND: OTHER %d, myid %d len %d tag %d: PAR: %lx\n",
-			       otherid, myid, msglen, msgtag, event_GetPar(&intrc,erec,0));
+                        printf("ASSUMPTION: SAME THREADIDS ON DIFF NODES COMMUNICATE!!\n");
+                        printf("SEND: OTHER %d, myid %d len %d tag %d: PAR: %lx\n",
+                               otherid, myid, msglen, msgtag, event_GetPar(&intrc,erec,0));
 #endif /* DEBUG */
-		      }
-		  }
-
-#ifdef DEBUG
-		printf ("\n\n%llu SENDMSG %d FROM %d TO %d LEN %d\n\n\n",
-			event_GetTi(&intrc,erec,0) - intrc.firsttime,
-			msgtag, myid , otherid , msglen);
-#endif /* DEBUG */
-
-		fprintf (outfp, "%llu SENDMSG %d FROM %d TO %d LEN %d\n",
-			 event_GetTi(&intrc,erec,0) - intrc.firsttime,
-			 msgtag, myid , otherid , msglen);
-	      }
-	    else if ( (ev->tag == RECV_EVENT ) && pvComm )
-	      {
-		/* receive message */
-		/* In dynamic trace the format for par is
-		   31 ..... 24 23 ......16 15..............0
-       	           other       type          length
-		   So, mynode is the receiver and its in GetNodeId(&intrc,erec)
-		   RECVMSG <type> BY <receiver> FROM <sender> LEN <length>
-		*/
-		/* extract the information from the parameter */
-
-		myid 	= GetNodeId(&intrc,erec) + 1;
-
-		decodeParameter(event_GetPar(&intrc,erec,0), &otherid, &msglen, &msgtag, &comm);
-		otherid = otherid+1;
-
-		if (threads)
-		  {
-		    if (GetMatchingSend(intrc, msgtag, GetNodeId(&intrc,erec),
-					otherid - 1 , msglen, &other_tid, &other_nodeid))
-		      { /* call was successful, we've the other_tid and other_nodeid */
-			otherid = offset[other_nodeid] + other_tid + 1;
-#ifdef DEBUG
-			printf("Calculated senderid = %d\n", otherid);
-#endif /* DEBUG */
-
-		      }
-		    else
-		      { /* call was unsuccessful, we couldn't locate a matching ipc call */
-			printf("Matching IPC call not found. Assumption in place...\n");
-			/* ASSUMPTION: Thread 4 in a node can comm with thread 4 on another
-			   node. True for MPI+JAVA. In future, do a matching algo. */
-			otherid	= offset[otherid-1] + event_GetTid(&intrc,erec,0) + 1;
-			/* THIS ABOVE IS TRUE ONLY WHEN SAME THREADS COMMUNICATE !! */
-#ifdef DEBUG
-			printf("ASSUMPTION: SAME THREADIDS ON DIFF NODES COMMUNICATE!!\n");
-			printf("RECV: OTHER %d, myid %d len %d tag %d: PAR: %lx\n",
-			       otherid, myid, msglen, msgtag, event_GetPar(&intrc,erec,0));
-#endif /* DEBUG */
-		      }
-		  }
+                      }
+                  }
 
 #ifdef DEBUG
-		printf ("%llu RECVMSG %d BY %d FROM %d LEN %d\n",
-			event_GetTi(&intrc,erec,0) - intrc.firsttime,
-			msgtag, myid , otherid , msglen);
+                printf ("\n\n%llu SENDMSG %d FROM %d TO %d LEN %d\n\n\n",
+                        event_GetTi(&intrc,erec,0) - intrc.firsttime,
+                        msgtag, myid , otherid , msglen);
 #endif /* DEBUG */
 
-		fprintf (outfp, "%llu RECVMSG %d BY %d FROM %d LEN %d\n",
-			 event_GetTi(&intrc,erec,0) - intrc.firsttime,
-			 msgtag, myid , otherid , msglen);
-	      }
-	    else if (( ev->tag == -9 ) || ( event_GetPar(&intrc,erec,0) == -1))
-	      { /* In dynamic tracing, 1/-1 par values are for Entry/Exit resp. */
-		/* exit state */
-		/* PARVis needs time values relative to the start of the program! */
-		stkptr[GetNodeId(&intrc,erec)]--;
-		if ( stkptr[GetNodeId(&intrc,erec)] < statestk[GetNodeId(&intrc,erec)] )
-		  {
-		    fprintf (stderr, "ERROR: stack underflow on node %d\n", GetNodeId(&intrc,erec));
-		    fprintf (stderr, "       event %s at %llu\n", ev->name, event_GetTi(&intrc,erec,0));
-		    exit (1);
-		  }
-		if ( pvCompact )
-		  fprintf (outfp, "%llu EXCH %d 1 1 %s %d\n",
-			   event_GetTi(&intrc,erec,0) - intrc.firsttime, GetNodeId(&intrc,erec)+1,
-			   stkptr[GetNodeId(&intrc,erec)]->state, stkptr[GetNodeId(&intrc,erec)]->tag);
-		else
-		  fprintf (outfp, "%llu EXCHANGE ON CPUID %d UPTO %s %d CLUSTER 1\n",
-			   event_GetTi(&intrc,erec,0) - intrc.firsttime, GetNodeId(&intrc,erec)+1,
-			   stkptr[GetNodeId(&intrc,erec)]->state, stkptr[GetNodeId(&intrc,erec)]->tag);
-	      }
-	    else if (event_GetPar(&intrc,erec,0) == 1)
-	      {
-		/* enter new state */
-		stkptr[GetNodeId(&intrc,erec)]++;
-		if ( stkptr[GetNodeId(&intrc,erec)] > (statestk[GetNodeId(&intrc,erec)] + STACKSIZE) )
-		  {
-		    fprintf (stderr, "ERROR: stack overflow on node %d\n", GetNodeId(&intrc,erec));
-		    fprintf (stderr, "       event %s at %llu\n", ev->name, event_GetTi(&intrc,erec,0));
-		    exit (1);
-		  }
-		if ( pvCompact )
-		  fprintf (outfp, "%llu EXCH %d 1 1 %s %d\n",
-			   /*???event_GetTi(&intrc,erec,0), GetNodeId(&intrc,erec)+1, ev->state, ev->tag);*/
-			   event_GetTi(&intrc,erec,0) - intrc.firsttime, GetNodeId(&intrc,erec)+1, ev->state, ev->no);
-		else
-		  fprintf (outfp, "%llu EXCHANGE ON CPUID %d DOWNTO %s %d CLUSTER 1\n",
-			   /*???event_GetTi(&intrc,erec,0), GetNodeId(&intrc,erec)+1, ev->state, ev->tag);*/
-			   event_GetTi(&intrc,erec,0) - intrc.firsttime, GetNodeId(&intrc,erec)+1, ev->state, ev->no);
-		stkptr[GetNodeId(&intrc,erec)]->state = ev->state;
-		/*???stkptr[GetNodeId(&intrc,erec)]->tag = ev->tag;*/
-		stkptr[GetNodeId(&intrc,erec)]->tag = ev->no;
-	      }
-	  }
+                fprintf (outfp, "%llu SENDMSG %d FROM %d TO %d LEN %d\n",
+                         event_GetTi(&intrc,erec,0) - intrc.firsttime,
+                         msgtag, myid , otherid , msglen);
+              }
+            else if ( (ev->tag == RECV_EVENT ) && pvComm )
+              {
+                /* receive message */
+                /* In dynamic trace the format for par is
+                   31 ..... 24 23 ......16 15..............0
+                          other       type          length
+                   So, mynode is the receiver and its in GetNodeId(&intrc,erec)
+                   RECVMSG <type> BY <receiver> FROM <sender> LEN <length>
+                */
+                /* extract the information from the parameter */
+
+                myid         = GetNodeId(&intrc,erec) + 1;
+
+                decodeParameter(event_GetPar(&intrc,erec,0), &otherid, &msglen, &msgtag, &comm);
+                otherid = otherid+1;
+
+                if (threads)
+                  {
+                    if (GetMatchingSend(intrc, msgtag, GetNodeId(&intrc,erec),
+                                        otherid - 1 , msglen, &other_tid, &other_nodeid))
+                      { /* call was successful, we've the other_tid and other_nodeid */
+                        otherid = offset[other_nodeid] + other_tid + 1;
+#ifdef DEBUG
+                        printf("Calculated senderid = %d\n", otherid);
+#endif /* DEBUG */
+
+                      }
+                    else
+                      { /* call was unsuccessful, we couldn't locate a matching ipc call */
+                        printf("Matching IPC call not found. Assumption in place...\n");
+                        /* ASSUMPTION: Thread 4 in a node can comm with thread 4 on another
+                           node. True for MPI+JAVA. In future, do a matching algo. */
+                        otherid        = offset[otherid-1] + event_GetTid(&intrc,erec,0) + 1;
+                        /* THIS ABOVE IS TRUE ONLY WHEN SAME THREADS COMMUNICATE !! */
+#ifdef DEBUG
+                        printf("ASSUMPTION: SAME THREADIDS ON DIFF NODES COMMUNICATE!!\n");
+                        printf("RECV: OTHER %d, myid %d len %d tag %d: PAR: %lx\n",
+                               otherid, myid, msglen, msgtag, event_GetPar(&intrc,erec,0));
+#endif /* DEBUG */
+                      }
+                  }
+
+#ifdef DEBUG
+                printf ("%llu RECVMSG %d BY %d FROM %d LEN %d\n",
+                        event_GetTi(&intrc,erec,0) - intrc.firsttime,
+                        msgtag, myid , otherid , msglen);
+#endif /* DEBUG */
+
+                fprintf (outfp, "%llu RECVMSG %d BY %d FROM %d LEN %d\n",
+                         event_GetTi(&intrc,erec,0) - intrc.firsttime,
+                         msgtag, myid , otherid , msglen);
+              }
+            else if (( ev->tag == -9 ) || ( event_GetPar(&intrc,erec,0) == -1))
+              { /* In dynamic tracing, 1/-1 par values are for Entry/Exit resp. */
+                /* exit state */
+                /* PARVis needs time values relative to the start of the program! */
+                stkptr[GetNodeId(&intrc,erec)]--;
+                if ( stkptr[GetNodeId(&intrc,erec)] < statestk[GetNodeId(&intrc,erec)] )
+                  {
+                    fprintf (stderr, "ERROR: stack underflow on node %d\n", GetNodeId(&intrc,erec));
+                    fprintf (stderr, "       event %s at %llu\n", ev->name, event_GetTi(&intrc,erec,0));
+                    exit (1);
+                  }
+                if ( pvCompact )
+                  fprintf (outfp, "%llu EXCH %d 1 1 %s %d\n",
+                           event_GetTi(&intrc,erec,0) - intrc.firsttime, GetNodeId(&intrc,erec)+1,
+                           stkptr[GetNodeId(&intrc,erec)]->state, stkptr[GetNodeId(&intrc,erec)]->tag);
+                else
+                  fprintf (outfp, "%llu EXCHANGE ON CPUID %d UPTO %s %d CLUSTER 1\n",
+                           event_GetTi(&intrc,erec,0) - intrc.firsttime, GetNodeId(&intrc,erec)+1,
+                           stkptr[GetNodeId(&intrc,erec)]->state, stkptr[GetNodeId(&intrc,erec)]->tag);
+              }
+            else if (event_GetPar(&intrc,erec,0) == 1)
+              {
+                /* enter new state */
+                stkptr[GetNodeId(&intrc,erec)]++;
+                if ( stkptr[GetNodeId(&intrc,erec)] > (statestk[GetNodeId(&intrc,erec)] + STACKSIZE) )
+                  {
+                    fprintf (stderr, "ERROR: stack overflow on node %d\n", GetNodeId(&intrc,erec));
+                    fprintf (stderr, "       event %s at %llu\n", ev->name, event_GetTi(&intrc,erec,0));
+                    exit (1);
+                  }
+                if ( pvCompact )
+                  fprintf (outfp, "%llu EXCH %d 1 1 %s %d\n",
+                           /*???event_GetTi(&intrc,erec,0), GetNodeId(&intrc,erec)+1, ev->state, ev->tag);*/
+                           event_GetTi(&intrc,erec,0) - intrc.firsttime, GetNodeId(&intrc,erec)+1, ev->state, ev->no);
+                else
+                  fprintf (outfp, "%llu EXCHANGE ON CPUID %d DOWNTO %s %d CLUSTER 1\n",
+                           /*???event_GetTi(&intrc,erec,0), GetNodeId(&intrc,erec)+1, ev->state, ev->tag);*/
+                           event_GetTi(&intrc,erec,0) - intrc.firsttime, GetNodeId(&intrc,erec)+1, ev->state, ev->no);
+                stkptr[GetNodeId(&intrc,erec)]->state = ev->state;
+                /*???stkptr[GetNodeId(&intrc,erec)]->tag = ev->tag;*/
+                stkptr[GetNodeId(&intrc,erec)]->tag = ev->no;
+              }
+          }
       }
     else if ( outFormat == dump )
     {
       ptr = GetEventName (event_GetEv(&intrc,erec,0), &hasParam);
       if ( hasParam ) {
 
-	if (IsDoubleParam(event_GetEv(&intrc,erec,0))) { /* user events parameter is a double */
+        if (IsDoubleParam(event_GetEv(&intrc,erec,0))) { /* user events parameter is a double */
 #ifdef TAU_WINDOWS
         fprintf (outfp, "%5ld %30.30s %12I64u %6d %6d %12G\n",
                  intrc.numrec, ptr, event_GetTi(&intrc,erec,0), GetNodeId(&intrc,erec), event_GetTid(&intrc,erec,0), event_GetPar(&intrc,erec,0));
@@ -2317,7 +2465,7 @@ int main (int argc, char *argv[])
         fprintf (outfp, "%5ld %30.30s %12llu %6d %6d %12G\n",
                  intrc.numrec, ptr, event_GetTi(&intrc,erec,0), GetNodeId(&intrc,erec), event_GetTid(&intrc,erec,0), event_GetPar(&intrc,erec,0));
 #endif
-	} else {
+        } else {
 #ifdef TAU_WINDOWS
         fprintf (outfp, "%5ld %30.30s %12I64u %6d %6d %12I64d\n",
                  intrc.numrec, ptr, event_GetTi(&intrc,erec,0), GetNodeId(&intrc,erec), event_GetTid(&intrc,erec,0), event_GetPar(&intrc,erec,0));
@@ -2325,7 +2473,7 @@ int main (int argc, char *argv[])
         fprintf (outfp, "%5ld %30.30s %12llu %6d %6d %12lld\n",
                  intrc.numrec, ptr, event_GetTi(&intrc,erec,0), GetNodeId(&intrc,erec), event_GetTid(&intrc,erec,0), event_GetPar(&intrc,erec,0));
 #endif
-	}
+        }
 
 
       } else {
@@ -2336,7 +2484,7 @@ int main (int argc, char *argv[])
         fprintf (outfp, "%5ld %30.30s %12llu %6d %6d\n",
                  intrc.numrec, ptr, event_GetTi(&intrc,erec,0), GetNodeId(&intrc,erec), event_GetTid(&intrc,erec,0));
 #endif
-	/* Changed 12lu to 12llu for unsigned long long time */
+        /* Changed 12lu to 12llu for unsigned long long time */
       }
     }
 
@@ -2368,3 +2516,5 @@ int main (int argc, char *argv[])
   fclose (outfp);
   exit (0);
 }
+
+

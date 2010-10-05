@@ -3,7 +3,6 @@
  */
 package edu.uoregon.tau.perfexplorer.glue.psl;
 
-import java.lang.Math;
 
 /**
  * @author khuck

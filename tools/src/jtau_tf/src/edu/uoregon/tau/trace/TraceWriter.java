@@ -50,8 +50,8 @@ public class TraceWriter extends TraceFile {
 	
 	//private static final int TAU_MAX_RECORDS = 64*1024;
 	
-	private HashSet checkInit = new HashSet();
-	private HashMap nidTidNames = new HashMap();
+	private HashSet<Integer> checkInit = new HashSet<Integer>();
+	private HashMap<Integer, String> nidTidNames = new HashMap<Integer, String>();
 	long lastTimestamp;
 	//boolean needsEdfFlush;
 	
@@ -83,9 +83,9 @@ public class TraceWriter extends TraceFile {
 		//tFile.NidTidMap = new HashMap();
 
 		/* Allocate space for maps */
-		EventIdMap = new TreeMap();//Tree map for output ordered by id.
+		EventIdMap = new TreeMap<Integer, EventDescr>();//Tree map for output ordered by id.
 
-		GroupIdMap = new HashMap();
+		IdGroupMap = new HashMap<Integer, String>();
 
 		//tFile.groupNameMap = new HashMap();
 
@@ -172,12 +172,12 @@ public class TraceWriter extends TraceFile {
 			int numEvents = EventIdMap.size();
 			out.write(numEvents+" dynamic_trace_events\n");
 			out.write("# FunctionId Group Tag \"Name Type\" Parameters\n");
-			Iterator it = EventIdMap.values().iterator(); //entrySet().iterator();
+			Iterator<EventDescr> it = EventIdMap.values().iterator(); //entrySet().iterator();
 			int id;
 			EventDescr eventDesc;
 			while(it.hasNext())
 			{
-				eventDesc=(EventDescr)it.next();
+				eventDesc=it.next();
 				id = eventDesc.getEventId();
 				out.write(id+" "+eventDesc.getGroup()+" "+eventDesc.getTag()+" \""+eventDesc.getEventName()+"\" "+eventDesc.getParameter()+"\n");
 			}
@@ -219,18 +219,18 @@ public class TraceWriter extends TraceFile {
 
 	  // returns stateGroupToken
 	public int defStateGroup(String stateGroupName, int stateGroupToken) {
-		GroupIdMap.put(new Integer(stateGroupToken),stateGroupName);
+		IdGroupMap.put(new Integer(stateGroupToken),stateGroupName);
 		return 0;
 	}
 
 	public int defState(int stateToken, String stateName, int stateGroupToken){
 		
-		if(!GroupIdMap.containsKey(new Integer(stateGroupToken))){
+		if(!IdGroupMap.containsKey(new Integer(stateGroupToken))){
 			//throw new Exception("Ttf_DefState: Have not seen"+stateGroupToken+"stateGroupToken before, please define it first\n");
 			return -1;
 		}
 
-		EventDescr newEventDesc = new EventDescr(stateToken,(String)GroupIdMap.get(new Integer(stateGroupToken)),stateName,0,"EntryExit");
+		EventDescr newEventDesc = new EventDescr(stateToken,IdGroupMap.get(new Integer(stateGroupToken)),stateName,0,"EntryExit");
 		/*newEventDesc.Eid = stateToken;
 		newEventDesc.Group = (String)groupNameMap.get(new Integer(stateGroupToken));
 		newEventDesc.EventName = stateName;
@@ -320,14 +320,14 @@ public class TraceWriter extends TraceFile {
 	  }*/
 
 	public int closeTrace(){
-		Set keyset = nidTidNames.keySet();// .iterator();
-		Iterator it=keyset.iterator();
+		Set<Integer> keyset = nidTidNames.keySet();// .iterator();
+		Iterator<Integer> it=keyset.iterator();
 		int nidtid;
 		char first;
 		char second;
 		while(it.hasNext())
 		{
-			nidtid=((Integer)it.next()).intValue();
+			nidtid=it.next().intValue();
 			//System.out.println(nidtid.first().getClass().getSimpleName());
 			first=(char)(nidtid>>>16);//  (char)Integer.parseInt(nidtid.substring(0, nidtid.indexOf(':'))); //first();//(((Integer)nidtid.first()).intValue());
 			second=(char)nidtid;//(char)Integer.parseInt(nidtid.substring(nidtid.indexOf(':')+1));//nidtid.second();//(((Integer)nidtid.second()).intValue());

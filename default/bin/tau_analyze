@@ -1,0 +1,6 @@
+#!/bin/sh
+TAUROOT=/home/scottb/tau2
+MACHINE=default
+LIBDIR=${TAUROOT}/${MACHINE}/lib
+
+java -Xmx500m -cp ${LIBDIR}/TauIL.jar:${LIBDIR}/ParaProf.jar:${LIBDIR}/ParaProf-Old.jar:${LIBDIR}/java_cup.jar:${LIBDIR}/perfdmf.jar TauIL.Tool $@

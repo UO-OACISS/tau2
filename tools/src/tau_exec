@@ -24,6 +24,7 @@ usage()
     echo "        -io      track I/O"
     echo "        -memory  track memory"
     echo "        -cuda    track GPU events via CUDA"
+    echo "        -opencl  track GPU events via OpenCL"
     options=`tau-config --list-options`
     echo "        -T <$options> : specify TAU option"
     echo "        -loadlib=<file.so>   : specify additional load library"
@@ -60,6 +61,7 @@ binding_options=""
 track_io=false
 track_memory=false
 track_cuda=false
+track_opencl=false
 qsub_mode=false
 TAU_PAPI_DEFAULT_DOMAIN=PAPI_DOM_USER
 extraloadlibs=""
@@ -93,8 +95,12 @@ for arg in "$@" ; do
 	      track_cuda=true
 	      shift
 	      ;;
-          -qsub)
-              qsub_mode=true
+	  -opencl)
+	      track_opencl=true
+	      shift
+	      ;;
+		-qsub)
+				qsub_mode=true
 	      shift
 	      ;;
 	  -s)
@@ -214,9 +220,13 @@ if [ $track_memory = "true" ] ; then
 fi
 if [ $track_cuda = "true" ] ; then
     # Add the memory wrapper library to the LD_PRELOAD list
-    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU_CUDA.so:$TAUEX_LD_PRELOAD
-    export TAU_METRICS=TAUGPU_TIME
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDA.so:$TAUEX_LD_PRELOAD
 fi
+if [ $track_opencl = "true" ] ; then
+    # Add the memory wrapper library to the LD_PRELOAD list
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OpenCL.so:$TAUEX_LD_PRELOAD
+fi
+
 
 # add libraries specified by -loadlib=<foo.so>
 TAUEX_LD_PRELOAD=${TAUEX_LD_PRELOAD}${extraloadlibs}
@@ -310,9 +320,7 @@ else
 	if [ $track_memory = "true" ] ; then
 	    echo "export TAU_MEMORY_WRAPPER_ENABLED=1"
 	fi
-	if [ $track_memory = "true" ] ; then
-	    echo "export TAU_METRICS=TAUGPU_TIME"
-	fi
+
 	if [ $apple = 1 ]; then
 	    echo "export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
 	    echo "export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD"

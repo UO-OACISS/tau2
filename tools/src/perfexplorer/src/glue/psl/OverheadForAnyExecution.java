@@ -12,7 +12,7 @@ public abstract class OverheadForAnyExecution extends Metaproperty {
 	/**
 	 * 
 	 */
-	protected OverheadForAnyExecution(Class property, Experiment parallelExp, RegionSummary rankBasis, CodeRegion r) {
+	protected OverheadForAnyExecution(Class<Inefficiency> property, Experiment parallelExp, RegionSummary rankBasis, CodeRegion r) {
 		RegionSummaryIterator it = parallelExp.summaryIterator(new CodeRegionFilter(r));
 		while (it.hasNext()) {
 			RegionSummary parSummary = it.next();

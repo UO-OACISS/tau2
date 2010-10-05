@@ -3,7 +3,9 @@
  */
 package edu.uoregon.tau.perfexplorer.cqos;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.StringTokenizer;
 
 /**
  * @author khuck
@@ -36,7 +38,7 @@ public class CQoSClassifier {
 		WekaClassifierWrapper wrapper = WekaClassifierWrapper.readClassifier(fileName);
 		//System.out.println("Done.");
 
-		Map/*<String,String>*/ inputFields = new HashMap/*<String,String>*/();
+		Map<String,String> inputFields = new HashMap<String,String>();
 
 		// the remaining parameters are name/value pairs to test the classifier.
 		for (int i = 1 ; i < args.length ; i++) {

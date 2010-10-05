@@ -7,19 +7,18 @@
 package edu.uoregon.tau.perfexplorer.client;
 
 
-import java.awt.Point;
 import java.awt.Dimension;
+import java.awt.Point;
 import java.awt.Toolkit;
+import java.net.URL;
 
 import javax.swing.JFrame;
-import javax.swing.JTable;
-import javax.swing.JScrollPane;
 import javax.swing.JScrollBar;
-import java.net.URL;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfexplorer.common.RMIVarianceData;
-
-import java.awt.Toolkit;
 
 /**
  * @author khuck

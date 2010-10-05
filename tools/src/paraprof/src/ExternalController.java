@@ -68,7 +68,7 @@ public class ExternalController {
         int trialID = Integer.parseInt(tokenizer.nextToken());
 
         DatabaseAPI databaseAPI = new DatabaseAPI();
-        databaseAPI.initialize((Database) Database.getDatabases().get(dbID));
+        databaseAPI.initialize(Database.getDatabases().get(dbID));
         databaseAPI.setTrial(trialID, false);
         DBDataSource dbDataSource = new DBDataSource(databaseAPI);
         dbDataSource.load();
@@ -100,7 +100,7 @@ public class ExternalController {
         trial.setDataSource(dataSource);
 
         DatabaseAPI databaseAPI = new DatabaseAPI();
-        databaseAPI.initialize((Database) Database.getDatabases().get(dbID));
+        databaseAPI.initialize(Database.getDatabases().get(dbID));
 
         Experiment exp = databaseAPI.getExperiment(appName, expName, true);
         trial.setName(trialName);
@@ -113,13 +113,13 @@ public class ExternalController {
 
     static public void listApplications(String databaseID) throws SQLException {
         int id = Integer.parseInt(databaseID);
-        List databases = Database.getDatabases();
+        List<Database> databases = Database.getDatabases();
 
         DatabaseAPI databaseAPI = new DatabaseAPI();
-        databaseAPI.initialize((Database) databases.get(id));
-        List apps = databaseAPI.getApplicationList();
-        for (Iterator it = apps.iterator(); it.hasNext();) {
-            Application app = (Application) it.next();
+        databaseAPI.initialize(databases.get(id));
+        List<Application> apps = databaseAPI.getApplicationList();
+        for (Iterator<Application> it = apps.iterator(); it.hasNext();) {
+            Application app = it.next();
             outputCommand("return " + app.getID() + " " + app.getName());
         }
         outputCommand("endreturn");
@@ -133,12 +133,12 @@ public class ExternalController {
         int appID = Integer.parseInt(tokenizer.nextToken());
 
         DatabaseAPI databaseAPI = new DatabaseAPI();
-        databaseAPI.initialize((Database) Database.getDatabases().get(dbID));
+        databaseAPI.initialize(Database.getDatabases().get(dbID));
         databaseAPI.setApplication(appID);
 
-        List exps = databaseAPI.getExperimentList();
-        for (Iterator it = exps.iterator(); it.hasNext();) {
-            Experiment exp = (Experiment) it.next();
+        List<Experiment> exps = databaseAPI.getExperimentList();
+        for (Iterator<Experiment> it = exps.iterator(); it.hasNext();) {
+            Experiment exp = it.next();
             outputCommand("return " + exp.getID() + " " + exp.getName());
         }
         outputCommand("endreturn");
@@ -152,22 +152,22 @@ public class ExternalController {
         int expID = Integer.parseInt(tokenizer.nextToken());
 
         DatabaseAPI databaseAPI = new DatabaseAPI();
-        databaseAPI.initialize((Database) Database.getDatabases().get(dbID));
+        databaseAPI.initialize(Database.getDatabases().get(dbID));
         databaseAPI.setExperiment(expID);
 
-        List trials = databaseAPI.getTrialList(false);
-        for (Iterator it = trials.iterator(); it.hasNext();) {
-            Trial trial = (Trial) it.next();
+        List<Trial> trials = databaseAPI.getTrialList(false);
+        for (Iterator<Trial> it = trials.iterator(); it.hasNext();) {
+            Trial trial = it.next();
             outputCommand("return " + trial.getID() + " " + trial.getName());
         }
         outputCommand("endreturn");
     }
 
     static public void listDatabases() {
-        List databases = Database.getDatabases();
+        List<Database> databases = Database.getDatabases();
         int id = 0;
-        for (Iterator it = databases.iterator(); it.hasNext();) {
-            Database db = (Database) it.next();
+        for (Iterator<Database> it = databases.iterator(); it.hasNext();) {
+            Database db = it.next();
             outputCommand("return " + id + " " + db.getName());
             id++;
         }

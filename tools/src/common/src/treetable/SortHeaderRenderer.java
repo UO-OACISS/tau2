@@ -28,7 +28,12 @@ import javax.swing.table.JTableHeader;
  * @author Vincent Vollers
  */
 public class SortHeaderRenderer extends DefaultTableCellRenderer {
-    /***
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -7236758094424816775L;
+
+	/***
      * The icon which is put next to an unsorted column (empty)
      */
     public static Icon NONSORTED = new ArrowIcon(ArrowIcon.NONE);

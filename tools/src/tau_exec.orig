@@ -1,0 +1,367 @@
+#!/bin/sh 
+
+export LANG=C
+
+eval `tau-config`
+
+
+echoIfVerbose () {
+    if [ $verbose = "true" ] ; then
+	echo -e "$1"
+    fi
+}
+
+usage()
+{
+    echo ""
+    echo "Usage: tau_exec [options] [--] <exe> <exe options>"
+    echo ""
+# Common options first
+    echo "Options:"
+
+    echo "        -v       verbose mode"
+    echo "        -qsub    Use qsub mode (BG/P only, see below)"
+    echo "        -io      track I/O"
+    echo "        -memory  track memory"
+    echo "        -cuda    track GPU events via CUDA"
+<<<<<<< HEAD
+=======
+    echo "        -opencl  track GPU events via OpenCL"
+>>>>>>> origin/master
+    options=`tau-config --list-options`
+    echo "        -T <$options> : specify TAU option"
+    echo "        -loadlib=<file.so>   : specify additional load library"
+    echo "        -XrunTAUsh-<options> : specify TAU library directly"
+    echo ""
+    echo "Notes:"
+    echo "	Defaults if unspecified: -T MPI"
+    echo "	MPI is assumed unless SERIAL is specified"
+    echo ""
+    echo "Example:"
+    echo "    mpirun -np 2 tau_exec -io ./ring"
+    echo ""
+    echo "qsub mode (IBM BG/P only):"
+    echo "    Original:"
+    echo "      qsub -n 1 --mode smp -t 10 ./a.out"
+    echo "    With TAU:"
+    echo "      tau_exec -qsub -io -memory -- qsub -n 1 --mode smp -t 10 ./a.out"
+    echo ""
+    exit
+}
+
+if [ $# = 0 ] ; then
+    usage
+fi
+
+
+dryrun=false
+processT=false
+TauOptions=""
+TauOptionsExclude=""
+verbose=false
+binding_specified=""
+binding_options=""
+track_io=false
+track_memory=false
+track_cuda=false
+<<<<<<< HEAD
+=======
+track_opencl=false
+>>>>>>> origin/master
+qsub_mode=false
+TAU_PAPI_DEFAULT_DOMAIN=PAPI_DOM_USER
+extraloadlibs=""
+
+for arg in "$@" ; do
+  # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
+  modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
+
+  if [ "$processT" = true ] ; then
+      binding_options=`echo $binding_options $arg | sed -e 's/,/ /g' | tr '[A-Z]' '[a-z]'`
+      processT="false"
+      shift
+  else
+      case $arg in 
+	  -v|-d|-verbose|--verbose)
+	      verbose=true
+	      shift
+	      ;;
+	  -h|-help|--help)
+	      usage
+	      ;;
+	  -io)
+	      track_io=true
+	      shift
+	      ;;
+	  -memory)
+	      track_memory=true
+	      shift
+	      ;;
+	  -cuda)
+	      track_cuda=true
+	      shift
+	      ;;
+<<<<<<< HEAD
+          -qsub)
+              qsub_mode=true
+=======
+	  -opencl)
+	      track_opencl=true
+	      shift
+	      ;;
+		-qsub)
+				qsub_mode=true
+>>>>>>> origin/master
+	      shift
+	      ;;
+	  -s)
+	      dryrun=true
+	      shift
+	      ;;
+	  -V)
+	      echo '$Id: tau_exec,v 1.19 2010/06/09 18:11:25 amorris Exp $';
+	      exit 0;
+	      ;;
+	  -T)
+	      processT=true
+	      shift
+	      ;;
+	  -tau:*)
+              binding_options="$binding_options `echo $arg | sed -e 's/-tau://' -e 's/,/ /g'`"
+	      shift
+              ;;
+	  -loadlib=*)
+	      myarg=`echo $arg | sed 's/-loadlib=//'`
+              extraloadlibs="$extraloadlibs:$myarg"
+	      shift
+              ;;
+	  -XrunTAU-*)
+	      myarg=`echo $arg | sed 's/-XrunTAU-//'`
+	      binding_specified="shared-$myarg"
+	      shift
+	      ;;
+	  -XrunTAUsh-*)
+	      myarg=`echo $arg | sed 's/-XrunTAUsh-//'`
+	      binding_specified="shared-$myarg"
+	      shift
+	      ;;
+	  --)
+	      shift
+	      break
+	      ;;
+	  -*)
+	      echo "Unknown option: $arg" >&2
+	      exit 1
+# First non-option signifies end of options. This would be much easier with getopt()
+	      ;;
+	  *)
+	      break
+	      ;;
+      esac
+  fi
+done
+
+
+# choose TAU library
+new_binding_options=""
+if [ "x$binding_options" != "x" ]; then
+    for i in $binding_options ; do
+      case $i in 
+	  *)
+	      new_binding_options="$new_binding_options $i"
+	      ;;
+      esac
+    done
+fi
+binding_options="$new_binding_options"
+
+
+if [ "x$binding_specified" = "x" ] ; then
+    if [ "x$binding_options" = "x" ]; then
+	binding_options=$DEFAULT_BINDING
+    else
+        # Add MPI by default
+	serial=`echo $binding_options | grep serial`
+	if [ $? != 0 ] ; then
+	    binding_options="$binding_options mpi"
+	fi
+    fi
+    theBinding=`tau-config --binding $binding_options`
+    if [ $? != 0 ] ; then
+	exit 1
+    fi
+else
+    theBinding=$binding_specified
+fi
+
+
+
+if [ $verbose = "true" ] ; then
+    echo ""
+    echo "Program to run : $@"
+    echo ""
+fi
+
+
+if [ `uname -s ` = Darwin ]; then
+  apple=1
+  TAU_SHLIBX=.dylib
+else
+  apple=0
+  TAU_SHLIBX=.so
+fi
+
+TAUEX_LD_LIBRARY_PATH=$BASEDIR/lib/$theBinding:$LD_LIBRARY_PATH
+if [ $apple = 1 ]; then
+  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
+else
+  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX:$LD_PRELOAD
+fi
+
+
+if [ $track_io = "true" ] ; then
+    # Add the io wrapper library to the LD_PRELOAD list
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-iowrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+fi
+
+if [ $track_memory = "true" ] ; then
+    # Add the memory wrapper library to the LD_PRELOAD list
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-memorywrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+    export TAU_MEMORY_WRAPPER_ENABLED=1
+fi
+if [ $track_cuda = "true" ] ; then
+    # Add the memory wrapper library to the LD_PRELOAD list
+<<<<<<< HEAD
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU_CUDA.so:$TAUEX_LD_PRELOAD
+    export TAU_METRICS=TAUGPU_TIME
+fi
+=======
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDA.so:$TAUEX_LD_PRELOAD
+fi
+if [ $track_opencl = "true" ] ; then
+    # Add the memory wrapper library to the LD_PRELOAD list
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OpenCL.so:$TAUEX_LD_PRELOAD
+fi
+
+>>>>>>> origin/master
+
+# add libraries specified by -loadlib=<foo.so>
+TAUEX_LD_PRELOAD=${TAUEX_LD_PRELOAD}${extraloadlibs}
+
+# remove double colons
+TAUEX_LD_PRELOAD=`echo $TAUEX_LD_PRELOAD | sed -e "s/::/:/g" -e "s/:$//"`
+
+if [ $apple = 1 ]; then
+  TAU_LDD='otool -L'
+else
+  TAU_LDD=ldd
+fi
+
+
+if [ $qsub_mode = false ]; then
+    prog="$1"
+    if [ ! -x "$prog" ] ; then
+	prog=`which $prog 2>/dev/null`
+    fi
+    
+    if [ ! -x "$prog" ] ; then
+	echo "tau_exec: $1: command not found"
+	exit
+    fi 
+
+    # always use the basic preload library now
+    TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libTAU-preload$TAU_SHLIBX
+fi
+
+
+if [ $verbose = "true" ] ; then
+    echo "Matching bindings:"
+    tau-config --list-matching $binding_options
+    echo ""
+    echo "Using:"
+    echo "$theBinding"
+    echo ""
+    echo "Configuration:"
+    echo ""
+    echo "Setting LD_LIBRARY_PATH to $TAUEX_LD_LIBRARY_PATH"
+    echo "Setting LD_PRELOAD to $TAUEX_LD_PRELOAD"
+    echo ""
+fi
+
+
+
+if [ $qsub_mode = true ] ; then
+
+    # gather all TAU_* environment variabls, but skip TAU_OPTIONS since it often has spaces, 
+    # and the ACLF staff tells us that it's impossible to pass env vars with spaces through qsub
+    tau_vars=`env | grep TAU_ | grep -v TAU_OPTIONS | tr '\n' ':'`
+    cmd="$@"
+    # don't use the current LD_LIBRARY_PATH or it will screw things up for the backend
+    TAUEX_LD_LIBRARY_PATH=$BASEDIR/lib/$theBinding
+    envs="LD_PRELOAD=$TAUEX_LD_PRELOAD:LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH:$tau_vars"
+
+    prevEnv=""
+    processEnv=false
+    newCmd=""
+    for arg in $cmd ; do
+        # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
+	modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
+	if [ "$processEnv" = true ] ; then
+	    prevEnv="$arg"
+	    processEnv=false
+	else
+	    case $arg in 
+	  --env)
+	      processEnv=true
+	      ;;
+	  *)
+              newCmd="$newCmd $arg"
+	      ;;
+	    esac
+	fi
+    done
+
+    envs="$envs:$prevEnv"
+    envs=`echo $envs | sed -e "s/::/:/g" -e "s/:$//"`
+    env_option="--env $envs"
+
+    newCmd=`echo $newCmd | sed -e 's/^qsub //'`
+    if [ $dryrun = "true" ]; then
+	echo qsub $env_option $newCmd
+    else
+	qsub $env_option $newCmd
+    fi
+else
+
+    if [ $dryrun = "true" ]; then
+	if [ $track_memory = "true" ] ; then
+	    echo "export TAU_MEMORY_WRAPPER_ENABLED=1"
+	fi
+	if [ $track_memory = "true" ] ; then
+	    echo "export TAU_METRICS=TAUGPU_TIME"
+	fi
+	if [ $apple = 1 ]; then
+	    echo "export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
+	    echo "export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD"
+	    echo "export DYLD_FORCE_FLAT_NAMESPACE="
+	else
+	    echo "export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
+	    echo "export LD_PRELOAD=$TAUEX_LD_PRELOAD"
+	fi
+	echo "$@"
+	exit 0;
+    else
+	if [ $apple = 1 ]; then
+	    export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
+	    export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD
+	    export DYLD_FORCE_FLAT_NAMESPACE=""
+	else
+	    export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
+	    export LD_PRELOAD=$TAUEX_LD_PRELOAD
+	fi
+	"$@"
+	retval=$?
+	unset LD_PRELOAD
+	exit $retval
+    fi
+fi

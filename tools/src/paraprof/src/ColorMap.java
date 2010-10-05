@@ -9,7 +9,11 @@ package edu.uoregon.tau.paraprof;
 import java.awt.Color;
 import java.awt.Component;
 import java.io.Serializable;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Observable;
+import java.util.Vector;
 
 import javax.swing.JColorChooser;
 
@@ -17,21 +21,25 @@ import edu.uoregon.tau.perfdmf.Function;
 
 public class ColorMap extends Observable implements Serializable {
 
-    private Map colors = new HashMap();
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -381806020540973756L;
+	private Map<String, Color> colors = new HashMap<String, Color>();
 
-    public Map getMap() {
+    public Map<String, Color> getMap() {
         return colors;
     }
 
-    public void setMap(Map map) {
+    public void setMap(Map<String, Color> map) {
         if (map == null) {
             colors.clear();
         } else {
             colors = map;
             if (ParaProf.paraProfManagerWindow != null) {
-                Vector trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
-                for (Iterator it = trials.iterator(); it.hasNext();) {
-                    ParaProfTrial ppTrial = (ParaProfTrial) it.next();
+                Vector<ParaProfTrial> trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
+                for (Iterator<ParaProfTrial> it = trials.iterator(); it.hasNext();) {
+                    ParaProfTrial ppTrial = it.next();
                     ParaProf.colorChooser.setColors(ppTrial, -1);
                     ppTrial.updateRegisteredObjects("colorEvent");
                 }
@@ -42,11 +50,11 @@ public class ColorMap extends Observable implements Serializable {
     }
 
     public Color getColor(Function f) {
-        return (Color) colors.get(f.getName());
+        return colors.get(f.getName());
     }
 
     public Color getColor(String functionName) {
-        return (Color) colors.get(functionName);
+        return colors.get(functionName);
     }
 
     void putColor(Function f, Color c) {
@@ -75,7 +83,7 @@ public class ColorMap extends Observable implements Serializable {
         }
     }
 
-    public Iterator getFunctions() {
+    public Iterator<String> getFunctions() {
         return colors.keySet().iterator();
     }
 
@@ -87,9 +95,9 @@ public class ColorMap extends Observable implements Serializable {
     }
 
     public void reassignColors() {
-        Vector trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
-        for (Iterator it = trials.iterator(); it.hasNext();) {
-            ParaProfTrial ppTrial = (ParaProfTrial) it.next();
+        Vector<ParaProfTrial> trials = ParaProf.paraProfManagerWindow.getLoadedTrials();
+        for (Iterator<ParaProfTrial> it = trials.iterator(); it.hasNext();) {
+            ParaProfTrial ppTrial = it.next();
             ParaProf.colorChooser.setColors(ppTrial, -1);
             ppTrial.updateRegisteredObjects("colorEvent");
         }
@@ -97,8 +105,8 @@ public class ColorMap extends Observable implements Serializable {
     }
 
     public void assignColorsFromTrial(ParaProfTrial ppTrial) {
-        for (Iterator it = ppTrial.getDataSource().getFunctions(); it.hasNext();) {
-            Function f = (Function) it.next();
+        for (Iterator<Function> it = ppTrial.getDataSource().getFunctions(); it.hasNext();) {
+            Function f = it.next();
             colors.put(f.getName(), f.getColor());
         }
 

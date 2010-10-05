@@ -3,7 +3,6 @@
  */
 package edu.uoregon.tau.perfexplorer.glue.psl;
 
-import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
 
 /**
  * @author khuck

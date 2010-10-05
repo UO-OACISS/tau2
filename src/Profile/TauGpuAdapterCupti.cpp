@@ -59,11 +59,6 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 			params.dst, params.src,
 			params.count, params.kind);
 
-      err = cuptiDeviceGetTimestamp(cbInfo->ctx, &traceData->startTimestamp);
-			CUDA_CHECK_ERROR(err, "Cannot Access Timestamp.\n");
-		
-			printf("GPU Timestamp: %llu.\n", traceData->startTimestamp);
-
 			//TODO: sort out GPU ids
 			//TODO: memory copies from device to device.
 
@@ -80,12 +75,6 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 		}
 		else 
 		{
-			if (cbInfo->functionId == 13)
-			{
-				err = cuptiDeviceGetTimestamp(cbInfo->ctx, &traceData->startTimestamp);
-				CUDA_CHECK_ERROR(err, "Cannot Access Timestamp.\n");
-			  printf("GPU Timestamp: %llu.\n", traceData->startTimestamp);
-			}
 			Tau_gpu_enter_event(cbInfo->functionName, &cudaEventId(cbInfo->functionId));
 		}
 	}
@@ -93,12 +82,6 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 	{
 		if (cbInfo->functionId == 31)
 		{
-      
-			err = cuptiDeviceGetTimestamp(cbInfo->ctx, &traceData->endTimestamp);
-			CUDA_CHECK_ERROR(err, "Cannot Access Timestamp.\n");
-			
-			printf("GPU Timestamp: %llu.\n", traceData->endTimestamp);
-			
 			cudaMemcpy_params params;
 			memcpy(&params, (cudaMemcpy_params *) cbInfo->params,
 			sizeof(cudaMemcpy_params));
@@ -106,33 +89,15 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 			{
 				Tau_gpu_exit_memcpy_event(
 				&cudaEventId(cbInfo->functionId), &cudaGpuId(0,0), MemcpyHtoD);
-				Tau_gpu_register_memcpy_event(&cudaEventId(cbInfo->functionId), &cudaGpuId(0,0),
-				(double) traceData->startTimestamp/1000, (double)
-				traceData->endTimestamp/1000, params.count,
-				MemcpyHtoD);
 			}
 			else if (params.kind == 2)
 			{
 				Tau_gpu_exit_memcpy_event(
 				&cudaEventId(cbInfo->functionId), &cudaGpuId(0,0), MemcpyDtoH);
-				Tau_gpu_register_memcpy_event(&cudaEventId(cbInfo->functionId), &cudaGpuId(0,0),
-				(double) traceData->startTimestamp/1000, (double)
-				traceData->endTimestamp/1000, params.count,
-				MemcpyDtoH);
 			}
-			
 		}
 		else
 		{
-			if (cbInfo->functionId == 13)
-			{
-				err = cuptiDeviceGetTimestamp(cbInfo->ctx, &traceData->endTimestamp);
-				CUDA_CHECK_ERROR(err, "Cannot Access Timestamp.\n");
-			  printf("GPU Timestamp: %llu.\n", traceData->endTimestamp);
-				Tau_gpu_register_gpu_event(cbInfo->functionName,
-				&cudaEventId(cbInfo->functionId), (double) traceData->startTimestamp/1000,
-				(double)traceData->endTimestamp/1000);
-			}
 			Tau_gpu_exit_event(cbInfo->functionName, &cudaEventId(cbInfo->functionId));
 			//	Shutdown at Thread Exit
 			if (cbInfo->functionId == 123)

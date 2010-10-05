@@ -1,10 +1,21 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 
-import java.awt.event.*;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JSeparator;
+import javax.swing.KeyStroke;
 
 public class PerfExplorerMainJMenuBar extends JMenuBar {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2299863533254533256L;
 
 	public PerfExplorerMainJMenuBar(ActionListener listener) {
 		super();

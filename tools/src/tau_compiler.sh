@@ -620,7 +620,7 @@ for arg in "$@" ; do
 		groupType=$group_upc
                 ;;
 
-	    *.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95)
+	    *.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95|*.for|*.FOR)
 		fileName=$arg
 		arrFileName[$numFiles]=$arg
 		arrFileNameDirectory[$numFiles]=`dirname $arg`
@@ -883,7 +883,11 @@ while [ $tempCounter -lt $numFiles ]; do
 	    ;;
 	esac
 	evalWithDebugMessage "$pdtParserCmd" "Parsing with PDT for OpenMP directives verification:" 
-	pdbcommentCmd="$optPdtDir/pdbcomment -o ${base}.comment.pdb ${base}.pdb"
+	if [ "x$defaultParser" = "xcxxparse" -a "x$suf" = "x.c" ] ; then
+	    pdbcommentCmd="$optPdtDir/pdbcomment -o ${base}.comment.pdb ${base}.c.pdb"
+        else
+	    pdbcommentCmd="$optPdtDir/pdbcomment -o ${base}.comment.pdb ${base}.pdb"
+	fi
 	
 	evalWithDebugMessage "$pdbcommentCmd" "Using pdbcomment:" 
 
@@ -918,6 +922,13 @@ while [ $tempCounter -lt $numFiles ]; do
 	if [ "x$defaultParser" = "xcxxparse" -a "x$suf" = "x.c" ] ; then
             newFile=${arrFileName[$tempCounter]}.pdb
 	fi
+        if [ "x$groupType" = "x$group_f_F" -a "x$suf" = "x.for" ] ; then
+            newFile=${arrFileName[$tempCounter]}.pdb
+        fi
+        if [ "x$groupType" = "x$group_f_F" -a "x$suf" = "x.FOR" ] ; then
+            newFile=${arrFileName[$tempCounter]}.pdb
+        fi
+
     else
 	newFile=$optPDBFile; 
     fi

@@ -103,10 +103,10 @@ public class PerfExplorerHistogramChart extends PerfExplorerChartWindow {
 
     private static IntervalXYDataset createDataset(RMIChartData inData) {
         HistogramDataset dataset = new HistogramDataset();
-        List names = inData.getRowLabels();
+        List<String> names = inData.getRowLabels();
         double[] values = null;
 		for (int i = 0 ; i < inData.getRows(); i++) {
-			List doubles = inData.getRowData(i);
+			List<double[]> doubles = inData.getRowData(i);
 			values = new double[doubles.size()];
     		double min = ((double[])(doubles.get(0)))[1];
      		double max = min;  
@@ -116,7 +116,7 @@ public class PerfExplorerHistogramChart extends PerfExplorerChartWindow {
     			if (max < ((double[])(doubles.get(j)))[1])
     				max = ((double[])(doubles.get(j)))[1];
     		}
-    		double range = max - min;
+    		//double range = max - min;
     		//System.out.println("Min: " + min + ", Max: " + max + ", Range: " + range);
     		for (int j = 0; j < doubles.size(); j++) {
     			//values[j] = (((double[])(doubles.get(j)))[1]-min)/range;   
@@ -140,12 +140,12 @@ public class PerfExplorerHistogramChart extends PerfExplorerChartWindow {
      * 
      * @return the dataset.
      */
-    private static IntervalXYDataset createDataset() {
-        HistogramDataset dataset = new HistogramDataset();
-        double[] values = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0};
-        dataset.addSeries("H1", values, 10, 0.0, 10.0);
-        return dataset;     
-    }
+//    private static IntervalXYDataset createDataset() {
+//        HistogramDataset dataset = new HistogramDataset();
+//        double[] values = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0};
+//        dataset.addSeries("H1", values, 10, 0.0, 10.0);
+//        return dataset;     
+//    }
 
     /**
      * Creates a chart.

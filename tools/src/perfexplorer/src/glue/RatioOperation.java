@@ -15,6 +15,10 @@ import edu.uoregon.tau.perfdmf.Trial;
  */
 public class RatioOperation extends AbstractPerformanceOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2888299960993392491L;
 	private boolean straightRatio = true;
 	private String metricSuffix = "";
 

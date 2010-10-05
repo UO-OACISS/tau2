@@ -1,6 +1,11 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.util.StringTokenizer;
 
@@ -34,7 +39,8 @@ public class OmppDataSource extends DataSource {
 
     public void load() throws FileNotFoundException, IOException, DataSourceException, SQLException {
 
-        Metric time = addMetric("Time");
+        //Metric time = 
+        	addMetric("Time");
 
         Group callpathGroup = addGroup("TAU_CALLPATH");
         FileInputStream fileIn = new FileInputStream(file);
@@ -57,7 +63,8 @@ public class OmppDataSource extends DataSource {
                         String metricName = inputString.substring(comma + 1).trim();
                         if (!metricName.equals("not set")) {
 //                             System.out.println("Found Metric: " + metricName);
-                            Metric metric = addMetric(metricName);
+                            //Metric metric = 
+                            	addMetric(metricName);
                         }
                     }
                     if (inputString.startsWith("Thread Count")) {
@@ -75,9 +82,11 @@ public class OmppDataSource extends DataSource {
                 inputString = br.readLine();
                 inputString = br.readLine();
                 double inclusive = getDouble(inputString, 0);
-                double inclusivePercent = getDouble(inputString, 1);
+                //double inclusivePercent = 
+                	getDouble(inputString, 1);
                 double exclusive = getDouble(inputString, 2);
-                double exclusivePercent = getDouble(inputString, 3);
+                //double exclusivePercent = 
+                	getDouble(inputString, 3);
 
                 String topString = inputString.substring(inputString.lastIndexOf(',') + 1).trim();
                 Function function = addFunction(topString);
@@ -110,7 +119,8 @@ public class OmppDataSource extends DataSource {
                             if (trimmed.startsWith("R")) {
                                 try {
                                     StringTokenizer st = new StringTokenizer(trimmed, ",");
-                                    String region = st.nextToken();
+                                    //String region = 
+                                    	st.nextToken();
                                     String location = st.nextToken();
                                     String type = st.nextToken();
                                     //System.out.println("Region = " + region);
@@ -200,11 +210,13 @@ public class OmppDataSource extends DataSource {
                                 fp.setNumCalls(execC);
 
                             } else if (leafName.indexOf("SINGLE") != -1) {
-                                double execT = getDouble(inputString, 1);
+                                //double execT = 
+                                	getDouble(inputString, 1);
                                 double execC = getDouble(inputString, 2);
                                 double bodyTinclusive = getDouble(inputString, 3);
                                 double bodyTexclusive = getDouble(inputString, 4);
-                                double exitBarT = getDouble(inputString, 5);
+                                //double exitBarT = 
+                                	getDouble(inputString, 5);
 
                                 fp.setExclusive(0, bodyTexclusive * 1e6);
                                 fp.setInclusive(0, bodyTinclusive * 1e6);
@@ -224,12 +236,15 @@ public class OmppDataSource extends DataSource {
                                 }
 
                             } else if ((leafName.indexOf("CRITICAL") != -1) || (leafName.indexOf("LOCK") != -1)) {
-                                double execT = getDouble(inputString, 1);
+                                //double execT = 
+                                	getDouble(inputString, 1);
                                 double execC = getDouble(inputString, 2);
                                 double bodyTinclusive = getDouble(inputString, 3);
                                 double bodyTexclusive = getDouble(inputString, 4);
-                                double enterT = getDouble(inputString, 5);
-                                double exitBarT = getDouble(inputString, 6);
+                                //double enterT = 
+                                	getDouble(inputString, 5);
+                                //double exitBarT = 
+                                	getDouble(inputString, 6);
 
                                 fp.setExclusive(0, bodyTexclusive * 1e6);
                                 fp.setInclusive(0, bodyTinclusive * 1e6);
@@ -255,7 +270,8 @@ public class OmppDataSource extends DataSource {
                                 FunctionProfile bfp = thread.getOrCreateFunctionProfile(barrierFunction, getNumberOfMetrics());
                                 double execT = getDouble(inputString, 1);
                                 double execC = getDouble(inputString, 2);
-                                double bodyTinclusive = getDouble(inputString, 3);
+                                //double bodyTinclusive = 
+                                	getDouble(inputString, 3);
                                 double bodyTexclusive = getDouble(inputString, 4);
                                 double exitBarT = getDouble(inputString, 5);
 

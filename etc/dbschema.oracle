@@ -1,0 +1,86 @@
+
+CREATE TABLE analysis_settings (
+	id			NUMBER PRIMARY KEY,
+	application		INT NOT NULL,
+	experiment		INT NOT NULL,
+	trial			INT NOT NULL,
+	metric			INT NULL,
+	method			VARCHAR2(255) NOT NULL,
+	dimension_reduction	VARCHAR2(255) NOT NULL,
+	normalization		VARCHAR2(255) NOT NULL,
+	FOREIGN KEY (application) REFERENCES application(id) ON DELETE CASCADE,
+	FOREIGN KEY (experiment) REFERENCES experiment(id) ON DELETE CASCADE,
+	FOREIGN KEY (trial) REFERENCES trial(id) ON DELETE CASCADE,
+	FOREIGN KEY (metric) REFERENCES metric(id) ON DELETE CASCADE
+)
+/
+
+
+CREATE SEQUENCE as_id_seq
+ start with 1
+ increment by 1
+ nomaxvalue
+/
+
+create trigger as_id_seq_trigger
+ before insert on analysis_settings
+ for each row
+ begin
+ select as_id_seq.nextval into :new.id from dual;
+ end;
+/
+
+
+CREATE TABLE analysis_result (
+	id			NUMBER PRIMARY KEY,
+	analysis_settings	INT			NOT NULL,
+	description			VARCHAR2(255)	NOT NULL,
+	thumbnail_size		INT			NULL,
+	image_size			INT			NULL,
+	thumbnail			BLOB			NULL,
+	image				BLOB			NULL,
+	result_type			INT			NOT NULL
+)
+/
+
+CREATE SEQUENCE ar_id_seq
+ start with 1
+ increment by 1
+ nomaxvalue
+/
+
+CREATE TRIGGER ar_id_seq_trigger
+ before insert on analysis_result
+ for each row
+ begin
+ select ar_id_seq.nextval into :new.id from dual;
+ end;
+/
+
+
+CREATE TABLE trial_view (
+	id				NUMBER PRIMARY KEY,
+	parent				INT			NULL,
+	name				VARCHAR2(4000)	NOT NULL,
+	table_name			VARCHAR2(4000)	NOT NULL,
+	column_name			VARCHAR2(4000)	NOT NULL,
+	operator			VARCHAR2(4000)	NOT NULL,
+	value				VARCHAR2(4000)	NOT NULL,
+	FOREIGN KEY (parent) REFERENCES trial_view(id) ON DELETE CASCADE
+)
+/
+
+
+CREATE SEQUENCE tv_id_seq
+ start with 1
+ increment by 1
+ nomaxvalue
+/
+
+CREATE TRIGGER tv_id_seq_trigger
+ before insert on trial_view
+ for each row
+ begin
+ select tv_id_seq.nextval into :new.id from dual;
+ end;
+/
