@@ -221,6 +221,7 @@ fi
 if [ $track_cuda = "true" ] ; then
     # Add the memory wrapper library to the LD_PRELOAD list
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDA.so:$TAUEX_LD_PRELOAD
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti.so:$TAUEX_LD_PRELOAD
 fi
 if [ $track_opencl = "true" ] ; then
     # Add the memory wrapper library to the LD_PRELOAD list

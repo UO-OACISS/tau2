@@ -14,12 +14,12 @@
 #######################################################################
  
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=x86_64
+CONFIG_ARCH=default
 CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
-USER_OPT=-DTAU_MAX_THREADS=3
-TAUROOT=/home/scottb/tau2
+USER_OPT=-g
+TAUROOT=
 #######################################################################
  
 include include/Makefile
