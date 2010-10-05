@@ -14,12 +14,12 @@
 #######################################################################
  
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=default
+CONFIG_ARCH=x86_64
 CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
-USER_OPT=-g
-TAUROOT=
+USER_OPT=-DTAU_MAX_THREADS=3
+TAUROOT=/home/scottb/tau2
 #######################################################################
  
 include include/Makefile
@@ -75,21 +75,14 @@ TRACE2PROFILE=utils/trace2profile
 #IOWRAPPER#IOWRAPPER=src/wrappers/posixio#ENDIF#
 
 TAUPRELOAD=src/wrappers/taupreload
-<<<<<<< HEAD
-=======
 TAUCUDA=src/wrappers/cuda
->>>>>>> origin/master
 TAUOPENCL=src/wrappers/opencl
 MEMORYWRAPPER=src/wrappers/memory
 
 # Subdirectories to make resursively
 SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) \
           $(ELGCONVERTER) $(TRACE2PROFILE) $(IOWRAPPER) $(TAUPRELOAD) \
-<<<<<<< HEAD
-					$(MEMORYWRAPPER) $(TAUOPENCL)
-=======
 					$(MEMORYWRAPPER) $(TAUCUDA) $(TAUOPENCL)
->>>>>>> origin/master
 
 all:
 	@echo "At the installation root, use \"make install\" "
