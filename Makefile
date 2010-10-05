@@ -75,7 +75,7 @@ TRACE2PROFILE=utils/trace2profile
 #IOWRAPPER#IOWRAPPER=src/wrappers/posixio#ENDIF#
 
 TAUPRELOAD=src/wrappers/taupreload
-TAUCUDA=src/wrappers/opencl
+TAUCUDA=src/wrappers/cuda
 TAUOPENCL=src/wrappers/opencl
 MEMORYWRAPPER=src/wrappers/memory
 
