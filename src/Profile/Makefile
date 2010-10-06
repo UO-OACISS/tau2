@@ -83,7 +83,8 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/TauSnapshot.h  $(INCDIR)/TauGASP.h          \
 	 	$(INCDIR)/TauUtil.h $(INCDIR)/TauXML.h $(INCDIR)/TauUnify.h $(INCDIR)/TauCollate.h \
 		$(INCDIR)/TauMonMrnet.h $(INCDIR)/TauMon.h \
-		$(INCDIR)/TauMemoryWrap.h $(INCDIR)/TauIoWrap.h
+		$(INCDIR)/TauMemoryWrap.h $(INCDIR)/TauIoWrap.h		\
+		$(INCDIR)/agent_util.h	$(INCDIR)/java_crw_demo.h
 
 LDFLAGS	      =
 
@@ -540,7 +541,7 @@ PapiThreadLayer.o   : PapiThreadLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 JavaThreadLayer.o   : JavaThreadLayer.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX)  $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauCAPI.o   : TauCAPI.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -623,7 +624,6 @@ TauGASP.o : TauGASP.c $(HDRS)
 TauGASPU.o : TauGASPU.upc $(HDRS)
 	$(TAU_UPCC) $(UPCFLAGS) -c $(@:.o=.upc)
 
-
 ktau_syscall.o : ktau_syscall.c $(HDRS)
 	$(CC) $(CXXFLAGS) -c $(@:.o=.c)
 
@@ -636,6 +636,20 @@ java_crw_demo.o : java_crw_demo.c $(HDRS)
 $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
 
+JVMTIThreadLayer.o: JVMTIThreadLayer.cpp
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
+
+TauJVMTI.o :	TauJVMTI.cpp TauJVMTI.jar
+	$(CXX) $(CXXFLAGS) -c TauJVMTI.cpp
+
+TauJVMTI.jar:  TauJVMTI.java
+	rm -f -r classes
+	mkdir -p classes
+	$(JDKDIR)/bin/javac -d classes TauJVMTI.java
+	(cd classes; $(JDKDIR)/bin/jar cf ../$@ *)
+
+test_java: all
+	LD_LIBRARY_PATH=`pwd` $(JDKDIR)/bin/java -agentlib:TAUsh-jdk=exclude=java -Xbootclasspath/a:./TauJVMTI.jar Pi
 
 clean : 
 	$(RM) *.ii *.ti ti_files cxx_repository ii_files rii_files *.a *.o *$(TAU_SHLIBX)
