@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import edu.uoregon.tau.common.AlphanumComparator;
 
+import edu.uoregon.tau.common.AlphanumComparator;
 import edu.uoregon.tau.perfdmf.Trial;
 
 /**
@@ -16,6 +16,10 @@ import edu.uoregon.tau.perfdmf.Trial;
  *
  */
 public class SplitTrialPhasesOperation extends AbstractPerformanceOperation {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3994182597522257286L;
 	final String phasePrefix;
 
 	/**
@@ -83,7 +87,7 @@ public class SplitTrialPhasesOperation extends AbstractPerformanceOperation {
 			
 			// now, iterate through the phase events
 			for (String currentPhase : phases) {
-				String currentPhasePrefix = "";
+//				String currentPhasePrefix = "";
 /*				if (nestedPhases) {  // changed by Kevin, Oct. 27, 3:18 PM - to fix accuracy of classifier
 					int start = currentPhase.indexOf("_", phasePrefix.length());
 					currentPhasePrefix = currentPhase.substring(0, start);

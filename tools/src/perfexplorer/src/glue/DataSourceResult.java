@@ -26,6 +26,10 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
  */
 public class DataSourceResult extends AbstractResult {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1446658362802536887L;
 	public static final int PPK = DataSource.PPK;
 	public static final int TAUPROFILE = DataSource.TAUPROFILE;
 	public static final int DYNAPROF = DataSource.DYNAPROF;
@@ -42,6 +46,7 @@ public class DataSourceResult extends AbstractResult {
 	public static final int GPTL = DataSource.GPTL;
 	public static final int PARAVER = DataSource.PARAVER;
 	public static final int IPM = DataSource.IPM;
+	public static final int GOOGLE = DataSource.GOOGLE;
 	public static final int GYRO = DataSource.GYRO;
 	public static final int GAMESS = DataSource.GAMESS;
 
@@ -51,7 +56,6 @@ public class DataSourceResult extends AbstractResult {
 
 	protected Map<Integer, String> eventMap = new HashMap<Integer, String>();
 
-	@SuppressWarnings("unchecked")
 	public DataSourceResult(int fileType, String[] sourceFiles, boolean fixNames) {
 		File[] files = new File[sourceFiles.length];
 		for (int i = 0; i < sourceFiles.length; i++) {
@@ -233,9 +237,9 @@ public class DataSourceResult extends AbstractResult {
 	public Set<String> getUserEvents(Integer thread) {
 		Set<String> ues = new TreeSet<String>();
 		Thread t = threadList.get(thread.intValue());
-		Iterator iter = t.getUserEventProfiles();
+		Iterator<UserEventProfile> iter = t.getUserEventProfiles();
 		while (iter.hasNext()) {
-			UserEventProfile uep = (UserEventProfile) iter.next();
+			UserEventProfile uep = iter.next();
 			ues.add(uep.getUserEvent().getName());
 		}
 		return ues;

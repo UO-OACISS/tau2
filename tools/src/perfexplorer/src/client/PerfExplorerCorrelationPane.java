@@ -1,15 +1,28 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import javax.swing.*;
-import java.awt.*;
-import java.util.List;
-import java.util.Hashtable;
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import edu.uoregon.tau.perfdmf.*;
-import edu.uoregon.tau.perfexplorer.common.*;
+import java.util.Hashtable;
+import java.util.List;
+
+import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+
+import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfexplorer.common.RMIPerformanceResults;
 
 public class PerfExplorerCorrelationPane extends JScrollPane implements ActionListener {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1776096417971557334L;
 
 	private static PerfExplorerCorrelationPane thePane = null;
 
@@ -54,8 +67,8 @@ public class PerfExplorerCorrelationPane extends JScrollPane implements ActionLi
 				return;
 			}
 			int iStart = 0;
-			List descriptions = results.getDescriptions();
-			List thumbnails = results.getThumbnails();
+			List<String> descriptions = results.getDescriptions();
+			List<byte[]> thumbnails = results.getThumbnails();
 			int imageCount = descriptions.size();
 			resultsHash.put(model.toString(), results);
 			JPanel imagePanel2 = null;
@@ -63,8 +76,8 @@ public class PerfExplorerCorrelationPane extends JScrollPane implements ActionLi
 			imagePanel2 = new JPanel(new GridLayout(results.getResultCount()/sqrt, sqrt));
 
 			for (int i = iStart ; i < imageCount ; i++) {
-				ImageIcon icon = new ImageIcon((byte[])(thumbnails.get(i)));
-				String description = (String)(descriptions.get(i));
+				ImageIcon icon = new ImageIcon((thumbnails.get(i)));
+				String description = (descriptions.get(i));
 				PerfExplorerImageButton button = new PerfExplorerImageButton(icon, i, description);
 				button.addActionListener(this);
 				imagePanel2.add(button);

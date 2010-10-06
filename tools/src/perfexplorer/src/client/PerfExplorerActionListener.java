@@ -14,7 +14,6 @@ import java.util.ListIterator;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JTree;
@@ -348,7 +347,8 @@ public class PerfExplorerActionListener implements ActionListener {
 
 	private void createChartDialogBox() {
 		System.out.println("Opening Dialog Box to create charts");
-		JFrame dialogBox = ChartGUI.getInstance(true);
+		//JFrame dialogBox = 
+			ChartGUI.getInstance(true);
 	}
 
 	private void updateAll (Container container) {
@@ -524,7 +524,6 @@ public class PerfExplorerActionListener implements ActionListener {
 			PerfExplorerModel.getModel().setNumberOfClusters(reply);
 	}
 
-	@SuppressWarnings("unchecked") // for trial.getMetricS() call
 	public void createDoClusteringWindow() {
 		PerfExplorerModel theModel = PerfExplorerModel.getModel();
 		Object selection = theModel.getCurrentSelection();
@@ -997,7 +996,8 @@ public class PerfExplorerActionListener implements ActionListener {
 			String script;
 			try {
 				script = new PerfExplorerExpression().getScriptFromFile(app,exp,trial,expressionFilename);
-				ScriptThread runner = new ScriptThread(script,true);
+				//ScriptThread runner = 
+					new ScriptThread(script,true);
 			} catch (FileNotFoundException e) {
 				JOptionPane.showMessageDialog(mainFrame, 
 						"",
@@ -1026,7 +1026,8 @@ public class PerfExplorerActionListener implements ActionListener {
 		} else {
 			// run the script
 			//PythonInterpreterFactory.defaultfactory.getPythonInterpreter().execfile(scriptName);
-			ScriptThread runner = new ScriptThread(scriptName);
+			//ScriptThread runner = 
+				new ScriptThread(scriptName);
 			return true;
 		}
 	}

@@ -1,15 +1,18 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import javax.swing.*;
-import javax.swing.tree.*;
-import javax.swing.event.*;
-
+import java.awt.EventQueue;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Set;
-import java.lang.Thread;
-import java.awt.EventQueue;
+
+import javax.swing.JOptionPane;
+import javax.swing.JTree;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
+
 import edu.uoregon.tau.perfdmf.Trial;
 
 public class PerfExplorerTreeSelectionListener implements TreeSelectionListener {

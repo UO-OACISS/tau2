@@ -1,22 +1,30 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import edu.uoregon.tau.perfdmf.*;
-import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
-import edu.uoregon.tau.perfexplorer.common.RMIView;
-import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
-
-import javax.swing.table.*;
-import javax.swing.*;
-
-
-import java.awt.Dimension;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.FieldPosition;
 
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.table.AbstractTableModel;
+
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.IntervalLocationProfile;
+import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
+import edu.uoregon.tau.perfexplorer.common.RMIView;
+import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
+
 public class PerfExplorerTableModel extends AbstractTableModel {
 
-    private Application application = null;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -8929532025416520825L;
+	private Application application = null;
     private Experiment experiment = null;
     private Trial trial = null;
     private Metric metric = null;

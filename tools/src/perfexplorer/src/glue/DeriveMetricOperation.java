@@ -13,6 +13,10 @@ import edu.uoregon.tau.perfdmf.Trial;
  */
 public class DeriveMetricOperation extends AbstractPerformanceOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 8570470654069226204L;
 	public static final String ADD = "+";
 	public static final String SUBTRACT = "-";
 	public static final String MULTIPLY = "*";

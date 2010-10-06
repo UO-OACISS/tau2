@@ -1,23 +1,19 @@
 package edu.uoregon.tau.perfexplorer.glue.test;
 
-import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfexplorer.cqos.WekaClassifierWrapper;
-import edu.uoregon.tau.perfexplorer.glue.CQoSClassifierOperation;
-import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
-import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
-import edu.uoregon.tau.perfexplorer.glue.SplitTrialPhasesOperation;
-import edu.uoregon.tau.perfexplorer.glue.TrialMeanResult;
-import edu.uoregon.tau.perfexplorer.glue.Utilities;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
-
 import junit.framework.TestCase;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfexplorer.glue.CQoSClassifierOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
+import edu.uoregon.tau.perfexplorer.glue.SplitTrialPhasesOperation;
+import edu.uoregon.tau.perfexplorer.glue.TrialMeanResult;
+import edu.uoregon.tau.perfexplorer.glue.Utilities;
 
 public class CQoSClassifierOperationTest extends TestCase {
 

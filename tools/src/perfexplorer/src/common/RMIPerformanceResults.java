@@ -1,9 +1,8 @@
 package edu.uoregon.tau.perfexplorer.common;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.io.File;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class is the main RMI object which contains the performance analysis
@@ -17,6 +16,10 @@ import java.io.Serializable;
  *
  */
 public class RMIPerformanceResults implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6208964420786943561L;
 	protected List<byte[]> images = null;  // of File objects
 	protected List<byte[]> thumbnails = null;  // of File objects
 	protected List<String> ids = null; // of Strings

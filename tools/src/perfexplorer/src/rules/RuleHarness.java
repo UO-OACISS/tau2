@@ -113,10 +113,10 @@ public class RuleHarness {
 			}
 		}
 
-		if (source == null) {
-			System.err.println("Unable to read rules...");
-			return;
-		}
+//		if (source == null) {
+//			System.err.println("Unable to read rules...");
+//			return;
+//		}
 		
 		if (this.builder == null) {
 			this.builder = new PackageBuilder();

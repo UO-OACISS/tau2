@@ -39,7 +39,6 @@ public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDatas
 	 * @param data
 	 * @param seriesNames
 	 */
-	@SuppressWarnings("unchecked") // for Collections.sort() call
 	public ProbabilityPlotDataset(RMIChartData data) {
 		super();
 		this.seriesNames = data.getRowLabels();
@@ -54,7 +53,7 @@ public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDatas
 			// put the values in a sortable list, and capture the min and max
 			List<Point> points = new ArrayList<Point>();
 			double max = 0.0, min = 0.0;
-			double normalizedMax = 0.0, normalizedMin = 0.0;
+			//double normalizedMax = 0.0, normalizedMin = 0.0;
 
 			// initialize min and max
 			double[] tmp = (row.get(0));
@@ -93,8 +92,8 @@ public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDatas
 				//System.out.print(p.n + ", ");
 			}
 			//System.out.println("");
-			normalizedMax = 1.0;
-			normalizedMin = 0.0;
+			//normalizedMax = 1.0;
+			//normalizedMin = 0.0;
 
 			// get the average
 			avg = avg / points.size();
@@ -274,8 +273,8 @@ public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDatas
 		List<Point> row = dataset.get(series);
 
 		// solve for r
-		double tmp1 = 0.0;
-		double tmp2 = 0.0;
+		//double tmp1 = 0.0;
+		//double tmp2 = 0.0;
 		for (int i = 0 ; i < row.size() ; i++ ) {
 			Point p = row.get(i);
 			r += p.z * p.y;
@@ -289,7 +288,7 @@ public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDatas
 		return s.toString();
 	}
 
-	static class Point implements Comparable {
+	static class Point implements Comparable<Point> {
 		public double x = 0.0; // original values
 		public double m = 0.0; // expected ordered statistic medians
 		public double y = 0.0; // expected ordered statistic medians
@@ -304,7 +303,7 @@ public class ProbabilityPlotDataset extends AbstractXYDataset implements XYDatas
 			this.y = y;
 			this.m = y;
 		}
-		public int compareTo(Object o) {
+		public int compareTo(Point o) {
 			Point p = (Point)o;
 			if (this.y < p.y) {
 				return -1;

@@ -2,6 +2,7 @@ package edu.uoregon.tau.perfexplorer.client;
 
 import java.awt.Color;
 import java.awt.Component;
+
 import javax.swing.JTree;
 import javax.swing.tree.DefaultTreeCellRenderer;
 

@@ -603,7 +603,20 @@ case $1 in
 	echo "s@^TAU_SHMEM_LIB=\(.*\)@TAU_SHMEM_LIB=$shmemlib@g" >> $sedout
         #echo "SHMEMLIB=$shmemlib" 
         ;;
-     
+
+###############################################################
+# Set the TAU_GPU variables.
+###############################################################
+		cudainclude=*)
+        cudainclude=`echo $1 | sed -e 's/^cudainclude=//' -e 's/#/ /g'`
+      echo "NOTE: Using CUDA for GPU analysis, source in $cudainclude"
+			echo "s@^TAU_CUDA_INC=\(.*\)@TAU_CUDA_INC=$cudainclude@g" >> $sedout
+		;;	
+		openclinclude=*)
+        openclinclude=`echo $1 | sed -e 's/^openclinclude=//' -e 's/#/ /g'`
+      echo "NOTE: Using OPENCL for GPU analysis, source in $openclinclude"
+			echo "s@^TAU_OPENCL_INC=\(.*\)@TAU_OPENCL_INC=$openclinclude@g" >> $sedout
+		;;	
 
 ###############################################################
 # Set the CONFIG_ARCH=<machine-name> in the Makefiles.
@@ -972,7 +985,7 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      TAU_CHARM)
-	echo "NOTE: Using charm++ (converse) threads"
+				echo "NOTE: Using charm++ (converse) threads"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PTHREAD_AVAILABLE)

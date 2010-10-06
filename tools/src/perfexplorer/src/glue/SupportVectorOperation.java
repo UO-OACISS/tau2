@@ -5,7 +5,6 @@ package edu.uoregon.tau.perfexplorer.glue;
 
 import java.util.List;
 
-
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
@@ -16,7 +15,11 @@ import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
  */
 public class SupportVectorOperation extends NaiveBayesOperation {
 
-    protected final String trainString = "Support Vector Training";
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = -2091072848664608345L;
+	protected final String trainString = "Support Vector Training";
     protected final String testString = "Support Vector Test";
 
 	/**

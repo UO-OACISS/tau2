@@ -18,9 +18,9 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
 
+import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.common.VectorExport;
 import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfexplorer.client.MyCategoryAxis;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerChart;
 

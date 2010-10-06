@@ -23,7 +23,8 @@ import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 public class WekaDataNormalizer implements DataNormalizer {
     private RawDataInterface _normalizedData = null;
 
-    private WekaDataNormalizer() {}
+    @SuppressWarnings("unused")
+	private WekaDataNormalizer() {}
     
     /**
      * Constructor restricted to package private.

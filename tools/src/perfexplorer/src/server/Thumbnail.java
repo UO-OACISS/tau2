@@ -1,12 +1,6 @@
 package edu.uoregon.tau.perfexplorer.server;
 
 
-import com.sun.image.codec.jpeg.JPEGCodec;
-import com.sun.image.codec.jpeg.JPEGEncodeParam;
-import com.sun.image.codec.jpeg.JPEGImageEncoder;
-
-import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
-
 import java.awt.Container;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -14,9 +8,12 @@ import java.awt.MediaTracker;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
-
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
+
+import com.sun.image.codec.jpeg.JPEGCodec;
+import com.sun.image.codec.jpeg.JPEGEncodeParam;
+import com.sun.image.codec.jpeg.JPEGImageEncoder;
 
 /**
  * This code generates a thumbnail image from a larger JPG or PNG file.

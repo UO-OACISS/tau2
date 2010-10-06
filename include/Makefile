@@ -127,8 +127,7 @@ TAU_LIB_DIR=$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 #IBM64LINUX#IBM_XLC_ABI	     = -q64 		  #ENDIF#
 #IBM64LINUX#IBM_GNU_ABI	     = -m64 		  #ENDIF#
 #SUNX86_64#SUN_GNU_ABI       = -m64		  #ENDIF#
-#SUNX86_64#SUN_CC_ABI        = -m64 -xarch=amd64       #ENDIF#
-#SUNX86_64#SUN_CC_ABI        = -m64 #ENDIF#
+#SUNX86_64#SUN_CC_ABI        = -xarch=amd64       #ENDIF#
 #MIPS32LINUX#SC_GNU_ABI	     = -mabi=n32 	  #ENDIF#
 #MIPS32LINUX#SC_PATH_ABI     = -mabi=n32          #ENDIF#
 #MIPS64LINUX#SC_GNU_ABI	     = -mabi=64 	  #ENDIF#
@@ -738,8 +737,6 @@ TAU_LINKER_OPT4 = $(LEXTRA1)
 ##############################################
 # Flags to build a shared object: TAU_SHFLAGS
 #GNU#AR_SHFLAGS 		= -shared  	        #ENDIF#
-#SUNX86_64#AR_SHFLAGS              = -shared       #ENDIF#
-#SOL2CC#AR_SHFLAGS              = -G    #ENDIF#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
 #APPLEPGI#AR_SHFLAGS 		= -shared               #ENDIF#
@@ -960,6 +957,18 @@ TAU_CCOMPILER     = $(TAU_CC)
 #SHMEM#TAU_SHMEM_INCLUDE	= $(TAU_SHMEM_INC) #ENDIF#
 
 #SHMEM#TAU_SHMEM_LIBS	= -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/ -lTauShmem$(TAU_CONFIG) $(TAU_SHMEM_LIB) #ENDIF#
+
+#############################################
+# TAU GPU LIBRARIES
+#############################################
+TAU_CUDA_INC=
+TAU_OPENCL_INC=
+#############################################
+
+
+
+
+
 #############################################
 # TAU COMPILER SHELL SCRIPT OPTIONS
 TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\

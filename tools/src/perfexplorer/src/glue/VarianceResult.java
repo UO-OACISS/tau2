@@ -3,13 +3,17 @@
  */
 package edu.uoregon.tau.perfexplorer.glue;
 
-import edu.uoregon.tau.perfdmf.Trial;
 
 /**
  * @author khuck
  *
  */
 public class VarianceResult extends DefaultResult {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3180885146491602231L;
 
 	/**
 	 * 

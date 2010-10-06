@@ -92,6 +92,10 @@ long * TauCreateProfileParamArray(long FuncId, long key) {
   return retary;
 }
 
+#ifdef TAU_MPI
+extern "C" char *Tau_printRanks(void *comm_ptr);
+#endif /* TAU_MPI */
+
 FunctionInfo * TauGetProfileParamFI(int tid, long key, string& keyname) {
   /* Get the FunctionInfo Object of the current Profiler */
   Profiler *current = TauInternal_CurrentProfiler(tid);
@@ -111,7 +115,13 @@ FunctionInfo * TauGetProfileParamFI(int tid, long key, string& keyname) {
   if (it == TheTimerProfileParamMap().end()) {
     /* Couldn't find it */
     char keystr[256]; 
+#ifdef TAU_EXP_TRACK_COMM
+    memset(keystr, 0, 256);
+    sprintf(keystr, "%s", Tau_printRanks((void *)key));
+    //strcpy(keystr, Tau_printRanks(key));
+#else
     sprintf(keystr, "%ld", key); 
+#endif /* TAU_EXP_TRACK_COMM */
     
     string name ( f->GetName() + string(" ") + f->GetType()+ string(" [ <")
 		  +keyname+ string("> = <")+ keystr + string("> ]")); 

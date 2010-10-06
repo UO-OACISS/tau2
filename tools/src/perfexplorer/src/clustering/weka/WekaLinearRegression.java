@@ -3,15 +3,14 @@
  */
 package edu.uoregon.tau.perfexplorer.clustering.weka;
 
-import java.util.List;
 import java.util.ArrayList;
-
-import edu.uoregon.tau.perfexplorer.clustering.LinearRegressionInterface;
-import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import java.util.List;
 
 import weka.classifiers.functions.LinearRegression;
 import weka.core.Instances;
 import weka.core.SelectedTag;
+import edu.uoregon.tau.perfexplorer.clustering.LinearRegressionInterface;
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 
 /**
  * @author khuck

@@ -21,8 +21,8 @@ import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
 
 import edu.uoregon.tau.common.AlphanumComparator;
-import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.common.Utility;
+import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.client.MyCategoryAxis;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerChart;
 
@@ -99,15 +99,13 @@ public class DrawMMMGraph extends DrawGraph {
        			if (categoryType == TRIALNAME) {
 					// do nothing
        			} else if (categoryType == EVENTNAME) {
-       				@SuppressWarnings("unchecked")
-   					Set<String> tmpSet = new TreeSet<String>(new AlphanumComparator());
+       				Set<String> tmpSet = new TreeSet<String>(new AlphanumComparator());
 					for (String event : events) {
 						tmpSet.add(event);
 					}
 					events = tmpSet;
        			} else if (categoryType == METRICNAME) {
-       				@SuppressWarnings("unchecked")
-   					Set<String> tmpSet = new TreeSet<String>(new AlphanumComparator());
+       				Set<String> tmpSet = new TreeSet<String>(new AlphanumComparator());
 					for (String metric : metrics) {
 						tmpSet.add(metric);
 					}
@@ -230,7 +228,8 @@ public class DrawMMMGraph extends DrawGraph {
 
         // create categories label...
         
-		PerfExplorerChart chartWindow = new PerfExplorerChart(chart, "General Chart");
+		//PerfExplorerChart chartWindow = 
+			new PerfExplorerChart(chart, "General Chart");
 		return null;
 	}
 

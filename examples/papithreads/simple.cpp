@@ -4,7 +4,9 @@ algorithm dramatically reduce when we employ a strip mining optimization. */
 #include <Profile/Profiler.h>
 #include <pthread.h>
 #include <sched.h>
-#include <iostream.h>
+#include <iostream>
+using namespace std;
+#include <stdlib.h>
 
 #define SIZE 50
 #define CACHE 64

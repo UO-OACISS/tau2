@@ -103,7 +103,8 @@ public class SAXTreeViewer extends JFrame {
      * @param filename <code>String</code> path to XML document.
      */
     public void init(String xml) throws IOException, SAXException {
-        DefaultMutableTreeNode base = new DefaultMutableTreeNode("XML String");
+        //DefaultMutableTreeNode base = 
+        	new DefaultMutableTreeNode("XML String");
         
         // Construct the tree hierarchy
         buildTree(xml);
@@ -114,7 +115,7 @@ public class SAXTreeViewer extends JFrame {
     }
 
     public JTreeTable getTreeTable(String xml) throws IOException, SAXException {
-        DefaultMutableTreeNode base = null; 
+        //DefaultMutableTreeNode base = null; 
             // new DefaultMutableTreeNode("XML Metadata");
         
         // Construct the tree hierarchy
@@ -240,7 +241,7 @@ public class SAXTreeViewer extends JFrame {
 class JTreeContentHandler implements ContentHandler {
 
     /** Hold onto the locator for location information */
-    private Locator locator;
+    //private Locator locator;
 
     /** Store URI to prefix mappings */
     private Map<String, String> namespaceMappings;
@@ -278,7 +279,7 @@ class JTreeContentHandler implements ContentHandler {
      */
     public void setDocumentLocator(Locator locator) {
         // Save this for later use
-        this.locator = locator;
+        //this.locator = locator;
     }
 
     /**
@@ -506,9 +507,9 @@ class JTreeContentHandler implements ContentHandler {
         return itrim(ltrim(rtrim(source)));
     }
 
-    private static String lrtrim(String source){
-        return ltrim(rtrim(source));
-    }
+//    private static String lrtrim(String source){
+//        return ltrim(rtrim(source));
+//    }
 
     /**
      * <p>

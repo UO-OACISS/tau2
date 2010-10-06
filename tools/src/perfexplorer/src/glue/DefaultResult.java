@@ -5,8 +5,6 @@ package edu.uoregon.tau.perfexplorer.glue;
 
 import java.io.Serializable;
 
-import edu.uoregon.tau.perfdmf.Trial;
-
 /**
  * This is a default implementation of the AbstractResult class.
  * 
@@ -17,6 +15,11 @@ import edu.uoregon.tau.perfdmf.Trial;
  */
 public class DefaultResult extends AbstractResult implements Serializable {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5346276631826597627L;
+
 	/**
 	 * 
 	 */
