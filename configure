@@ -1426,6 +1426,15 @@ sed -e 's,@TAUROOTDIR@,'$targetdir',' \
  > ${targetdir}/${architecture}/bin/perfexplorer_configure
 chmod a+rx ${targetdir}/${architecture}/bin/perfexplorer_configure
 
+cat ${tauroot}/tools/src/java-1.4/configure-1.4.skel | 
+sed -e 's,@TAUROOTDIR@,'$targetdir',' \
+-e 's,@SHELL@,'$taushell',' \
+-e 's,@ARCH@,'$architecture',' \
+-e 's,@TARGETDIR@,'$targetdir',' \
+ > ${targetdir}/${architecture}/bin/configure-1.4
+chmod a+rx ${targetdir}/${architecture}/bin/configure-1.4
+
+
 if [ ! -d ${targetdir}/etc ] ; then
     mkdir -p ${targetdir}/etc
 fi

@@ -1,0 +1,165 @@
+#!/bin/@SHELL@
+
+# $Name:  $
+
+rm -f .last_config
+echo $* > .last_config
+echo $* >> .all_configs
+
+# Record all the arguments
+arguments=$*
+
+# Default compilers and options
+tauroot=@TAUROOTDIR@
+architecture=@ARCH@
+taushell=@SHELL@
+targetdir=@TARGETDIR@
+engine=weka
+engine_upper=WEKA
+rroot=/usr/lib/R
+serverhostname=localhost
+objectport=9999
+registryport=1099
+#configfile=$HOME/.ParaProf/petcerfdmf.cfg
+configdir=$HOME/.ParaProf
+tmpdir=/tmp
+LIBDIR=${tauroot}/${architecture}/lib/lib-1.4
+PERFEXPLORER_JAR=${LIBDIR}/perfexplorer.jar
+
+# -- set up portable echo command
+case "`echo 'x\c'`" in
+'x\c')  echo="echo -n"  nnl= ;;     #BSD
+x)      echo="echo"     nnl="\c";;  #SysV
+*)      echo 'Cannot setup echo. What weird machine do you have?' 1>2&
+        exit 1;;
+esac
+
+# check for right java version
+JAVA_VERSION=`java -version 2>&1 | head -1 | cut -d '.' -f2`
+if [ $JAVA_VERSION -gt "4" ] ; then
+	echo ""
+	echo "This is an old version that should only be used if Java 1.5 or later is "
+	echo "not available.  It is recommended that you use the newer version.  "
+
+	HIBERNATE_JARS=
+	JBOSS_RULES_JARS=
+	PERFEXPLORER_JAR=${LIBDIR}/perfexplorer-1.4.jar
+	echo ""
+        exit
+fi
+
+LIB4="${targetdir}/${architecture}/lib/lib-1.4"
+if [ ! -d ${LIB4} ]; then
+    echo ""
+    echo "The java 1.4 jar files were not found."
+
+        while [ "x$RESPONSE" = "x" ]; do
+            $echo "Would you like to attempt to automatically download the Java 1.4 jar files? (y/n) ${nnl}"
+	    read RESPONSE
+            case $RESPONSE in
+                [yY]|[Yy][Ee][Ss]) RESPONSE=y ;;
+                [nN]|[Nn][Oo]) RESPONSE=n ;;            esac
+        done
+
+
+        if [ "${RESPONSE}" == "y" ]; then
+
+                FILE=java-1.4_jars.tgz
+                URL=http://www.cs.uoregon.edu/research/paracomp/tau/java-1.4_jars.tgz
+                /bin/rm -f $FILE
+                echo "Getting $FILE... please be patient..."
+                java -cp ${targetdir}/tools/src/java-1.4/tau-common.jar edu.uoregon.tau.common.Wget "$URL" "$FILE" true
+                mv "$FILE" ${targetdir}/${architecture}/lib/.
+                cd ${targetdir}/${architecture}/lib/.
+                java -cp ${targetdir}/tools/src/java-1.4/tau-common.jar edu.uoregon.tau.common.tar.Tar -xvzf ${FILE}
+                /bin/rm -f $FILE
+
+        else
+            if [ ! -d ${LIB4} ]; then
+                echo ""
+                echo "Please download this file manually: "
+                echo "http://www.cs.uoregon.edu/research/paracomp/tau/java-1.4_jars.tgz"
+                RESPONSE=""
+                while [ "x$RESPONSE" = "x" ]; do
+                    $echo "Have you already downloaded the file? (y/n) ${nnl}"
+                    read RESPONSE
+                    case $RESPONSE in
+                        [yY]|[Yy][Ee][Ss]) RESPONSE=y ;;
+                        [nN]|[Nn][Oo]) RESPONSE=n ;;            esac
+                done
+
+                if [ "${RESPONSE}" == "y" ]; then
+                    $echo "Where is java-1.4_jars.tgz? ${nnl}"
+                    read FILE1
+                    cp ${FILE1}/java-1.4_jars.tgz ${targetdir}/${architecture}/lib/.
+                    cd ${targetdir}/${architecture}/lib
+                    FILE="${targetdir}/${architecture}/lib/java-1.4_jars.tgz"
+                    java -cp ${targetdir}/tools/src/java-1.4/tau-common.jar edu.uoregon.tau.common.tar.Tar -xvzf ${FILE}
+                    /bin/rm -f $FILE
+                else
+                   $echo "Please download the file and then run this again."
+                   exit
+                fi
+            fi
+        fi
+fi
+
+
+if [ ! -d ${targetdir}/${architecture}/bin/bin-1.4 ] ; then
+
+    mkdir -p ${targetdir}/${architecture}/bin/bin-1.4
+fi
+
+
+
+cat ${tauroot}/${architecture}/lib/lib-1.4/perfexplorer_configure.skel |
+sed -e 's,@TROOTDIR@,'$targetdir',' \
+-e 's,@TSHELL@,'$taushell',' \
+-e 's,@TARCH@,'$architecture',' \
+-e 's,@TARGET@,'$targetdir',' \
+ > ${targetdir}/${architecture}/bin/bin-1.4/perfexplorer_configure
+chmod a+rx ${targetdir}/${architecture}/bin/bin-1.4/perfexplorer_configure
+
+  # install paraprof
+cat ${tauroot}/${architecture}/lib/lib-1.4/paraprof.skel | 
+sed -e 's,@TROOTDIR@,'$targetdir','  -e 's,@TSHELL@,'$taushell',' -e 's,@TARCH@,'$architecture',' > ${targetdir}/${architecture}/bin/bin-1.4/paraprof
+chmod a+rx ${targetdir}/${architecture}/bin/bin-1.4/paraprof
+
+cat ${tauroot}/${architecture}/lib/lib-1.4/configure.skel | 
+sed -e 's,@TROOTDIR@,'$targetdir','  -e 's,@TSHELL@,'$taushell',' -e 's,@TARCH@,'$architecture',' \
+ > ${targetdir}/${architecture}/bin/bin-1.4/perfdmf_configure
+chmod a+rx ${targetdir}/${architecture}/bin/bin-1.4/perfdmf_configure
+
+cat ${tauroot}/${architecture}/lib/lib-1.4/createapp.skel | 
+sed -e 's,@TROOTDIR@,'$targetdir','  -e 's,@TSHELL@,'$taushell',' -e 's,@TARCH@,'$architecture',' \
+ > ${targetdir}/${architecture}/bin/bin-1.4/perfdmf_createapp
+chmod a+rx ${targetdir}/${architecture}/bin/bin-1.4/perfdmf_createapp
+
+cat ${tauroot}/${architecture}/lib/lib-1.4/createexp.skel | 
+sed -e 's,@TROOTDIR@,'$targetdir','  -e 's,@TSHELL@,'$taushell',' -e 's,@TARCH@,'$architecture',' \
+ > ${targetdir}/${architecture}/bin/bin-1.4/perfdmf_createexp
+chmod a+rx ${targetdir}/${architecture}/bin/bin-1.4/perfdmf_createexp
+
+cat ${tauroot}/${architecture}/lib/lib-1.4/loadtrial.skel | 
+sed -e 's,@TROOTDIR@,'$targetdir','  -e 's,@TSHELL@,'$taushell',' -e 's,@TARCH@,'$architecture',' \
+ > ${targetdir}/${architecture}/bin/bin-1.4/perfdmf_loadtrial
+chmod a+rx ${targetdir}/${architecture}/bin/bin-1.4/perfdmf_loadtrial
+
+cat ${tauroot}/${architecture}/lib/lib-1.4/phaseconvert.skel | 
+sed -e 's,@TROOTDIR@,'$targetdir','  -e 's,@TSHELL@,'$taushell',' -e 's,@TARCH@,'$architecture',' \
+ > ${targetdir}/${architecture}/bin/bin-1.4/phaseconvert
+chmod a+rx ${targetdir}/${architecture}/bin/bin-1.4/phaseconvert
+
+
+# bye bye
+echo 
+echo "Configuration complete!"
+
+exit 0
+
+
+
+
+
+
+

@@ -1,4 +1,4 @@
-TAUROOT=/home/scottb/tau2
+TAUROOT=
 include $(TAUROOT)/include/Makefile
 
 CC=$(TAU_CC) 
