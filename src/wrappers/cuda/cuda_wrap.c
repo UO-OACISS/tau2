@@ -1446,10 +1446,10 @@ cudaError_t cudaMemcpy(void * a1, const void * a2, size_t a3, enum cudaMemcpyKin
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
+  TAU_PROFILE_START(t);
 #ifdef TRACK_MEMORY
 	tau_track_memory(a4, a3);
 #endif //TRACK_MEMORY
-  TAU_PROFILE_START(t);
   retval  =  (*cudaMemcpy_h)( a1,  a2,  a3,  a4);
   TAU_PROFILE_STOP(t);
   }
@@ -1477,10 +1477,10 @@ cudaError_t cudaMemcpyToArray(struct cudaArray * a1, size_t a2, size_t a3, const
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
+  TAU_PROFILE_START(t);
 #ifdef TRACK_MEMORY
 	tau_track_memory(a6, a5);
 #endif //TRACK_MEMORY
-  TAU_PROFILE_START(t);
   retval  =  (*cudaMemcpyToArray_h)( a1,  a2,  a3,  a4,  a5,  a6);
   TAU_PROFILE_STOP(t);
   }
@@ -1685,10 +1685,10 @@ cudaError_t cudaMemcpyToSymbol(const char * a1, const void * a2, size_t a3, size
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
+  TAU_PROFILE_START(t);
 #ifdef TRACK_MEMORY
 	tau_track_memory(a5, a3);
 #endif //TRACK_MEMORY
-  TAU_PROFILE_START(t);
   retval  =  (*cudaMemcpyToSymbol_h)( a1,  a2,  a3,  a4,  a5);
   TAU_PROFILE_STOP(t);
   }
@@ -1716,10 +1716,10 @@ cudaError_t cudaMemcpyFromSymbol(void * a1, const char * a2, size_t a3, size_t a
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
+  TAU_PROFILE_START(t);
 #ifdef TRACK_MEMORY
 	tau_track_memory(a5, a3);
 #endif //TRACK_MEMORY
-  TAU_PROFILE_START(t);
   retval  =  (*cudaMemcpyFromSymbol_h)( a1,  a2,  a3,  a4,  a5);
   TAU_PROFILE_STOP(t);
   }
@@ -1747,10 +1747,10 @@ cudaError_t cudaMemcpyAsync(void * a1, const void * a2, size_t a3, enum cudaMemc
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
+  TAU_PROFILE_START(t);
 #ifdef TRACK_MEMORY
 	tau_track_memory(a4, a3);
 #endif //TRACK_MEMORY
-  TAU_PROFILE_START(t);
   retval  =  (*cudaMemcpyAsync_h)( a1,  a2,  a3,  a4,  a5);
   TAU_PROFILE_STOP(t);
   }
