@@ -41,6 +41,18 @@ void __attribute__ ((constructor)) Tau_cuda_onload(void);
 void __attribute__ ((destructor)) Tau_cuda_onunload(void);
 
 
+bool functionIsMemcpy(int id)
+{
+	return		(//runtime API
+						id == 31  || id == 41 ||
+						id == 39  || id == 40 ||
+						id == 32  || id == 33 ||
+						//driver API
+						id == 276 || id == 279 ||
+						id == 278 || id == 290
+					  );
+}
+
 void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CUpti_CallbackId id, const void *params)
 {
   const CUpti_RuntimeTraceApi *cbInfo = (CUpti_RuntimeTraceApi*)params;
@@ -52,8 +64,8 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 	CUPTI_CB_DOMAIN_RUNTIME_API_TRACE ? "RuntimeAPI" : "DriverAPI"));
 	if (cbInfo->callbacksite == CUPTI_API_ENTER)
 	{
-		printf("Enter: %s:%d.\n", cbInfo->functionName, cbInfo->functionId);
-		if (cbInfo->functionId == 31)
+		printf("Enter: %s:%d.\n", name, cbInfo->functionId);
+		if (functionIsMemcpy(cbInfo->functionId))
 		{
 			cudaMemcpy_params params;
 			memcpy(&params, (cudaMemcpy_params *) cbInfo->params,
@@ -64,16 +76,20 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 
 			//TODO: sort out GPU ids
 			//TODO: memory copies from device to device.
-
-			if (params.kind == 1)
+			printf("cuda D2D is: %d.\n", cudaMemcpyDeviceToDevice);
+			if (params.kind == cudaMemcpyHostToDevice)
 			{
 				Tau_gpu_enter_memcpy_event(name, 
 				&cudaEventId(cbInfo->functionId), &cudaGpuId(0,0), params.count, MemcpyHtoD);
 			}
-			else if (params.kind == 2)
+			else if (params.kind == cudaMemcpyDeviceToHost)
 			{
 				Tau_gpu_enter_memcpy_event(name,
 				&cudaEventId(cbInfo->functionId), &cudaGpuId(0,0), params.count, MemcpyDtoH);
+			}
+			else if (params.kind == cudaMemcpyDeviceToDevice)
+			{
+				printf("TODO: track DeviceToDevice MemCpys.\n");
 			}
 		}
 		else 
@@ -83,20 +99,24 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 	}
 	else if (cbInfo->callbacksite == CUPTI_API_EXIT)
 	{
-		if (cbInfo->functionId == 31)
+		if (functionIsMemcpy(cbInfo->functionId))
 		{
 			cudaMemcpy_params params;
 			memcpy(&params, (cudaMemcpy_params *) cbInfo->params,
 			sizeof(cudaMemcpy_params));
-			if (params.kind == 1)
+			if (params.kind == cudaMemcpyHostToDevice)
 			{
 				Tau_gpu_exit_memcpy_event(name,
 				&cudaEventId(cbInfo->functionId), &cudaGpuId(0,0), MemcpyHtoD);
 			}
-			else if (params.kind == 2)
+			else if (params.kind == cudaMemcpyDeviceToHost)
 			{
 				Tau_gpu_exit_memcpy_event(name,
 				&cudaEventId(cbInfo->functionId), &cudaGpuId(0,0), MemcpyDtoH);
+			}
+			else if (params.kind == cudaMemcpyDeviceToDevice)
+			{
+				printf("TODO: track DeviceToDevice MemCpys.\n");
 			}
 		}
 		else
