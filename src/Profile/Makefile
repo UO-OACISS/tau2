@@ -15,7 +15,7 @@
 #**      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
 #****************************************************************************
 
-TAUROOT=
+TAUROOT=/home/users/scottb/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -182,7 +182,7 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 ##############################################
 # For making libTAU.so Dynamic Shared Object
 ##############################################
-#GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
+AR_SHFLAGS 		= -shared  	#ENDIF##GNU#
 #SUNX86_64#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SOL2CC#AR_SHFLAGS 		= -G  	#ENDIF#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
@@ -323,7 +323,7 @@ $(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS) $(MPI_WRAPPER) $(TAU_FORCE_MPI) 
 $(TAU_NULL)$(TAU_GPU_LIB): $(TAU_GPU_OBJS) $(TAU_DSO)
 		$(PRELINK_PHASE)
 		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_GPU_LIB) $(TAU_GPU_OBJS) \
-		-L$(TAU_LIB_DIR) $(TAU_DSO) -lcupti
+		-L$(TAU_LIB_DIR) $(TAU_DSO) -L$(TAU_CUPTI)/lib -lcupti
 		$(TAU_RANLIB) $(TAU_GPU_LIB)
 
 $(TAU_DISABLE): TauDisable.o $(TAU_DISABLE_SHARED) TauKojakOpariDisable.o
