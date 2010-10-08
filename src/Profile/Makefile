@@ -160,9 +160,9 @@ TAU_DISABLE   = libTauDisable$(LSX)
 TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 
 ##############################################
-#MPI#MPI_WRAPPER   = libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
-#MPI#TAU_MPI_OBJS = TauMpi.o ClockSync.o TauProfileMerge.o TauMetaDataMerge.o $(FWRAPPER) $(MPI2EXTENSIONS)  #ENDIF#
-#MPI#MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
+MPI_WRAPPER   = libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF##MPI#
+TAU_MPI_OBJS = TauMpi.o ClockSync.o TauProfileMerge.o TauMetaDataMerge.o $(FWRAPPER) $(MPI2EXTENSIONS)  #ENDIF##MPI#
+MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF##MPI#
 ##############################################
 
 ##############################################
@@ -271,7 +271,7 @@ TAU_SHAREDDIR = $(INSTALLDEST)/shared$(TAU_CONFIG)
 TAU_DISABLE_SHAREDDIR = $(INSTALLDEST)/shared-disable
 
 # MPI Wrappers
-#MPI#TAU_FORCE_MPI_OBJECT=TauForceMPI.o #ENDIF#
+TAU_FORCE_MPI_OBJECT=TauForceMPI.o #ENDIF##MPI#
 
 # TAU MPI Wrapper
 TAU_MPI_WRAPPER=$(TAU_MPI_OBJS)
@@ -299,7 +299,7 @@ TAU_MPI_FOR_SHARED=$(TAU_MPI_WRAPPER)
 CRAY_PGI_HACK=
 #CRAYCNL#CRAY_PGI_HACK=$(INSTALLDEST)/libpgnod_prof.a #ENDIF#
 
-ifneq ($(TAU_CUDA_INC), )
+ifneq ($(TAU_CUPTI_INC), )
 	TAU_GPU_LIB=libTAU-CUpti.so
 	TAU_GPU_OBJS=TauGpuAdapterCupti.o TauGpu.o
 else
