@@ -24,6 +24,9 @@ usage()
     echo "        -io      track I/O"
     echo "        -memory  track memory"
     echo "        -cuda    track GPU events via CUDA"
+    echo "        -cupti-rt    track GPU events via CUPTI (Runtime)"
+    echo "        -cupti-dr    track GPU events via CUPTI (Driver)"
+    echo "        -cupti-all   track GPU events via CUPTI (All)"
     echo "        -opencl  track GPU events via OpenCL"
     options=`tau-config --list-options`
     echo "        -T <$options> : specify TAU option"
@@ -61,6 +64,9 @@ binding_options=""
 track_io=false
 track_memory=false
 track_cuda=false
+track_cupti_rt=false
+track_cupti_dr=false
+track_cupti_alalll=false
 track_opencl=false
 qsub_mode=false
 TAU_PAPI_DEFAULT_DOMAIN=PAPI_DOM_USER
@@ -93,6 +99,18 @@ for arg in "$@" ; do
 	      ;;
 	  -cuda)
 	      track_cuda=true
+	      shift
+	      ;;
+	  -cupti-rt)
+	      track_cupti_rt=true
+	      shift
+	      ;;
+	  -cupti-dr)
+	      track_cupti_dr=true
+	      shift
+	      ;;
+	  -cupti-all)
+	      track_cupti_all=true
 	      shift
 	      ;;
 	  -opencl)
@@ -221,6 +239,17 @@ fi
 if [ $track_cuda = "true" ] ; then
     # Add the memory wrapper library to the LD_PRELOAD list
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDA.so:$TAUEX_LD_PRELOAD
+fi
+if [ $track_cupti_rt = "true" ] ; then
+    # Add the memory wrapper library to the LD_PRELOAD list
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti-rt.so:$TAUEX_LD_PRELOAD
+fi
+if [ $track_cupti_dr = "true" ] ; then
+    # Add the memory wrapper library to the LD_PRELOAD list
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti-dr.so:$TAUEX_LD_PRELOAD
+fi
+if [ $track_cupti_all = "true" ] ; then
+    # Add the memory wrapper library to the LD_PRELOAD list
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti.so:$TAUEX_LD_PRELOAD
 fi
 if [ $track_opencl = "true" ] ; then
