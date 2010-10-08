@@ -16,7 +16,7 @@ public class CommunicationOverheadForAnyExecution extends
 	 * @param rankBasis
 	 * @param r
 	 */
-	public CommunicationOverheadForAnyExecution(Class property,
+	public CommunicationOverheadForAnyExecution(Class<Inefficiency> property,
 			Experiment parallelExp, RegionSummary rankBasis, CodeRegion r) {
 		super(property, parallelExp, rankBasis, r);
 	}

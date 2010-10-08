@@ -1,19 +1,22 @@
 package edu.uoregon.tau.perfexplorer.client;
 
+import java.util.List;
+
+import javax.swing.JTree;
+import javax.swing.event.TreeExpansionEvent;
+import javax.swing.event.TreeExpansionListener;
+import javax.swing.event.TreeWillExpandListener;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreePath;
+
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
-import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
+import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.common.RMIView;
-
-import java.util.List;
-import javax.swing.*;
-import javax.swing.event.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreePath;
-import javax.swing.tree.TreeModel;
-import javax.swing.tree.DefaultTreeModel;
 
 
 public class PerfExplorerTreeExpansionListener implements TreeExpansionListener, TreeWillExpandListener {
@@ -63,7 +66,6 @@ public class PerfExplorerTreeExpansionListener implements TreeExpansionListener,
 				object = pNode.getUserObject();
 				Trial trial = (Trial)object;
 				// find the metric index
-				@SuppressWarnings("unchecked") // for trial.getMetrics() call
 				List<Metric> metrics = trial.getMetrics();
 				for (int i = 0; i < metrics.size() ; i++) {
 					Metric m = metrics.get(i);

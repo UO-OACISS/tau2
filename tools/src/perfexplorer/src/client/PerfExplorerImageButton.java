@@ -1,10 +1,14 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import javax.swing.JButton;
 import javax.swing.Icon;
+import javax.swing.JButton;
 
 public class PerfExplorerImageButton extends JButton {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3741062834668426286L;
 	int id = 0;
 	String description = null;
 

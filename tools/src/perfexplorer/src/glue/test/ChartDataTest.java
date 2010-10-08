@@ -3,11 +3,10 @@
  */
 package edu.uoregon.tau.perfexplorer.glue.test;
 
-import javax.swing.JFrame;
-
-import edu.uoregon.tau.perfexplorer.glue.ChartData;
 import junit.framework.TestCase;
-import edu.uoregon.tau.perfexplorer.client.*;
+import edu.uoregon.tau.perfexplorer.client.PerfExplorerClient;
+import edu.uoregon.tau.perfexplorer.client.PerfExplorerHistogramChart;
+import edu.uoregon.tau.perfexplorer.glue.ChartData;
 
 /**
  * @author khuck

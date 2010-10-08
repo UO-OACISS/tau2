@@ -3,21 +3,15 @@
  */
 package edu.uoregon.tau.perfexplorer.client;
 
-import java.awt.Component;
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.Frame;
 import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.HeadlessException;
 import java.awt.Insets;
-import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.GridBagLayout;
-
 import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
@@ -27,22 +21,14 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 
 import org.jfree.data.general.SeriesException;
 
 import edu.uoregon.tau.common.Utility;
-import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
-import edu.uoregon.tau.perfdmf.Metric;
-import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfexplorer.common.Console;
-import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 import edu.uoregon.tau.perfexplorer.common.RMIView;
 import edu.uoregon.tau.perfexplorer.common.TransformationType;
 
@@ -51,7 +37,11 @@ import edu.uoregon.tau.perfexplorer.common.TransformationType;
  *
  */
 public class ChartGUI extends JFrame implements ActionListener {
-	private ActionListener listener = null;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6582089978240977545L;
+	//private ActionListener listener = null;
 	private JPanel panel = null;
 	private final int windowWidth = 480;
 	private final int windowHeight = 400;
@@ -84,7 +74,7 @@ public class ChartGUI extends JFrame implements ActionListener {
 	private ChartGUI(String title, ActionListener listener) throws HeadlessException {
 		super(title);
 		this.server = PerfExplorerConnection.getConnection();
-		this.listener = listener;
+		//this.listener = listener;
 		setListeners();
 		this.panel = new JPanel(new GridBagLayout());
 		

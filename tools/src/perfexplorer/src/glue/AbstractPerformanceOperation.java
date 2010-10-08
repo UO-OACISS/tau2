@@ -7,8 +7,8 @@
 package edu.uoregon.tau.perfexplorer.glue;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 import edu.uoregon.tau.perfdmf.Trial;
 
@@ -24,6 +24,11 @@ import edu.uoregon.tau.perfdmf.Trial;
  * @since   2.0 */
 
 public abstract class AbstractPerformanceOperation implements PerformanceAnalysisOperation, Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5196938552813017628L;
 
 	private Long id;
 	

@@ -23,6 +23,11 @@ public class ClusterException extends Exception {
 	/**
 	 * 
 	 */
+	private static final long serialVersionUID = -2353858209996638736L;
+
+	/**
+	 * 
+	 */
 	public ClusterException() {
 		super();
 		// TODO Auto-generated constructor stub

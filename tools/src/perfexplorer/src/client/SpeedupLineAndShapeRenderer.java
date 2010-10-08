@@ -1,6 +1,7 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import java.awt.*;
+import java.awt.Color;
+
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 
 public class SpeedupLineAndShapeRenderer extends LineAndShapeRenderer {

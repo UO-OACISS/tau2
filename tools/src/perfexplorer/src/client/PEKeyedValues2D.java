@@ -45,19 +45,19 @@
 
 package edu.uoregon.tau.perfexplorer.client;
 
-import org.jfree.data.*;
-
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+
+import org.jfree.data.DefaultKeyedValues;
+import org.jfree.data.KeyedValues2D;
 
 
 /**
  * A data structure that stores zero, one or many values, where each value is associated with
  * two keys (a 'row' key and a 'column' key).
  */
-@SuppressWarnings("unchecked")  // because JFreeChart doesn't use generics!
 public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
 
     /**
@@ -66,10 +66,10 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
 	private static final long serialVersionUID = 4248823134357439655L;
 
 	/** The row keys. */
-	private List rowKeys;
+	private List<Comparable<Object>> rowKeys;
 
     /** The column keys. */
-    private List columnKeys;
+    private List<Comparable<Object>> columnKeys;
 
     /** The row data. */
     private List<DefaultKeyedValues> rows;
@@ -89,8 +89,8 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
      * @param sortRowKeys if the row keys should be sorted.
      */
     public PEKeyedValues2D(final boolean sortRowKeys) {
-        this.rowKeys = new java.util.ArrayList<String>();
-        this.columnKeys = new java.util.ArrayList();
+        this.rowKeys = new java.util.ArrayList<Comparable<Object>>();
+        this.columnKeys = new java.util.ArrayList<Comparable<Object>>();
         this.rows = new java.util.ArrayList<DefaultKeyedValues>();
         this.sortRowKeys = sortRowKeys;
     }
@@ -126,7 +126,7 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
         Number result = null;
         final DefaultKeyedValues rowData = this.rows.get(row);
         if (rowData != null) {
-            final Comparable columnKey = (Comparable) this.columnKeys.get(column);
+            final Comparable<Object> columnKey = this.columnKeys.get(column);
             if (columnKey != null) {
             	try{
                 result = rowData.getValue(columnKey);
@@ -147,8 +147,8 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
      *
      * @return the row index.
      */
-    public Comparable getRowKey(final int row) {
-        return (Comparable) this.rowKeys.get(row);
+    public Comparable<Object> getRowKey(final int row) {
+        return this.rowKeys.get(row);
     }
 
     /**
@@ -158,7 +158,8 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
      *
      * @return the row index.
      */
-    public int getRowIndex(final Comparable key) {
+    @SuppressWarnings("rawtypes")
+	public int getRowIndex(final Comparable key) {
         if (this.sortRowKeys) {
             return Collections.binarySearch(this.rowKeys, key);
         }
@@ -172,7 +173,7 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
      *
      * @return the row keys.
      */
-    public List<Comparable> getRowKeys() {
+    public List<Comparable<Object>> getRowKeys() {
         return Collections.unmodifiableList(this.rowKeys);
     }
 
@@ -183,8 +184,8 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
      *
      * @return the key.
      */
-    public Comparable getColumnKey(final int column) {
-        return (Comparable) this.columnKeys.get(column);
+    public Comparable<Object> getColumnKey(final int column) {
+        return this.columnKeys.get(column);
     }
 
     /**
@@ -194,7 +195,8 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
      *
      * @return the column index.
      */
-    public int getColumnIndex(final Comparable key) {
+    @SuppressWarnings("rawtypes")
+	public int getColumnIndex(final Comparable key) {
         return this.columnKeys.indexOf(key);
     }
 
@@ -203,7 +205,7 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
      *
      * @return the column keys.
      */
-    public List getColumnKeys() {
+    public List<Comparable<Object>> getColumnKeys() {
         return Collections.unmodifiableList(this.columnKeys);
     }
 
@@ -215,7 +217,8 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
      *
      * @return the value.
      */
-    public Number getValue(final Comparable rowKey, final Comparable columnKey) {
+    @SuppressWarnings("rawtypes")
+	public Number getValue(final Comparable rowKey, final Comparable columnKey) {
 
         Number result = null;
         final int row = getRowIndex(rowKey);
@@ -235,7 +238,7 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
      * @param rowKey  the row key.
      * @param columnKey  the column key.
      */
-    public void addValue(Number value, Comparable rowKey, Comparable columnKey) {
+    public void addValue(Number value, Comparable<Object> rowKey, Comparable<Object> columnKey) {
         setValue(value, rowKey, columnKey);
     }
 
@@ -246,7 +249,7 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
      * @param rowKey  the row key.
      * @param columnKey  the column key.
      */
-    public void setValue(Number value, Comparable rowKey, Comparable columnKey) {
+    public void setValue(Number value, Comparable<Object> rowKey, Comparable<Object> columnKey) {
 
         final DefaultKeyedValues row;
         int rowIndex = getRowIndex(rowKey);
@@ -281,7 +284,7 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
      * @param rowKey  the row key.
      * @param columnKey  the column key.
      */
-    public void removeValue(final Comparable rowKey, final Comparable columnKey) {
+    public void removeValue(final Comparable<Object> rowKey, final Comparable<Object> columnKey) {
         setValue(null, rowKey, columnKey);
         
         // 1. check wether the row is now empty.
@@ -337,7 +340,7 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
      *
      * @param rowKey  the row key.
      */
-    public void removeRow(final Comparable rowKey) {
+    public void removeRow(final Comparable<Object> rowKey) {
         removeRow(getRowIndex(rowKey));
     }
 
@@ -347,7 +350,7 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
      * @param columnIndex  the column index.
      */
     public void removeColumn(final int columnIndex) {
-        final Comparable columnKey = getColumnKey(columnIndex);
+        final Comparable<Object> columnKey = getColumnKey(columnIndex);
         removeColumn(columnKey);
     }
 
@@ -356,7 +359,7 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
      *
      * @param columnKey  the column key.
      */
-    public void removeColumn(final Comparable columnKey) {
+    public void removeColumn(final Comparable<Object> columnKey) {
         final Iterator<DefaultKeyedValues> iterator = this.rows.iterator();
         while (iterator.hasNext()) {
             final DefaultKeyedValues rowData = iterator.next();

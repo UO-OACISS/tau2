@@ -2,7 +2,6 @@ package edu.uoregon.tau.perfexplorer.common;
 
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
 
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.ValueAxis;
@@ -14,14 +13,18 @@ import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.CategoryItemRendererState;
 import org.jfree.chart.renderer.category.StackedBarRenderer;
-import org.jfree.data.DataUtilities;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.TextAnchor;
 
 public class AlignedStackedBarRenderer extends StackedBarRenderer{
 	
-    /** A flag that controls whether the bars display values or percentages. */
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 6965888551746557717L;
+
+	/** A flag that controls whether the bars display values or percentages. */
     private boolean renderAsPercentages;
     
     /**

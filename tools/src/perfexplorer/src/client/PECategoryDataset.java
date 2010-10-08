@@ -43,17 +43,16 @@
 
 package edu.uoregon.tau.perfexplorer.client;
 
-import org.jfree.data.category.*;
 import java.io.Serializable;
 import java.util.List;
 
+import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.general.AbstractDataset;
 import org.jfree.data.general.DatasetChangeEvent;
 
 /**
  * A default implementation of the {@link CategoryDataset} interface.
  */
-@SuppressWarnings("unchecked")  // because JFreeChart doesn't use generics!
 public class PECategoryDataset extends AbstractDataset
                                     implements CategoryDataset, Serializable {
 
@@ -108,7 +107,7 @@ public class PECategoryDataset extends AbstractDataset
      *
      * @return The row key.
      */
-    public Comparable getRowKey(int row) {
+    public Comparable<Object> getRowKey(int row) {
         return this.data.getRowKey(row);
     }
 
@@ -119,7 +118,8 @@ public class PECategoryDataset extends AbstractDataset
      *
      * @return The row index.
      */
-    public int getRowIndex(Comparable key) {
+    @SuppressWarnings("rawtypes")
+	public int getRowIndex(Comparable key) {
         return this.data.getRowIndex(key);
     }
 
@@ -128,7 +128,8 @@ public class PECategoryDataset extends AbstractDataset
      *
      * @return The keys.
      */
-    public List<Comparable> getRowKeys() {
+    @SuppressWarnings("rawtypes")
+	public List getRowKeys() {
         return this.data.getRowKeys();
     }
 
@@ -139,7 +140,7 @@ public class PECategoryDataset extends AbstractDataset
      *
      * @return The column key.
      */
-    public Comparable getColumnKey(int column) {
+    public Comparable<Object> getColumnKey(int column) {
         return this.data.getColumnKey(column);
     }
 
@@ -150,7 +151,8 @@ public class PECategoryDataset extends AbstractDataset
      *
      * @return The column index.
      */
-    public int getColumnIndex(Comparable key) {
+    @SuppressWarnings("rawtypes")
+	public int getColumnIndex(Comparable key) {
         return this.data.getColumnIndex(key);
     }
 
@@ -159,7 +161,8 @@ public class PECategoryDataset extends AbstractDataset
      *
      * @return The keys.
      */
-    public List getColumnKeys() {
+    @SuppressWarnings("rawtypes")
+	public List getColumnKeys() {
         return this.data.getColumnKeys();
     }
 
@@ -173,7 +176,8 @@ public class PECategoryDataset extends AbstractDataset
      *
      * @return The value.
      */
-    public Number getValue(Comparable rowKey, Comparable columnKey) {
+    @SuppressWarnings("rawtypes")
+	public Number getValue(Comparable rowKey, Comparable columnKey) {
         return this.data.getValue(rowKey, columnKey);
     }
 
@@ -184,7 +188,7 @@ public class PECategoryDataset extends AbstractDataset
      * @param rowKey  the row key.
      * @param columnKey  the column key.
      */
-    public void addValue(Number value, Comparable rowKey, Comparable columnKey) {
+    public void addValue(Number value, Comparable<Object> rowKey, Comparable<Object> columnKey) {
         this.data.addValue(value, rowKey, columnKey);
         fireDatasetChanged();
     }
@@ -196,7 +200,8 @@ public class PECategoryDataset extends AbstractDataset
      * @param rowKey  the row key.
      * @param columnKey  the column key.
      */
-    public void addValue(double value, Comparable rowKey, Comparable columnKey) {
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	public void addValue(double value, Comparable rowKey, Comparable columnKey) {
         addValue(new Double(value), rowKey, columnKey);
     }
 
@@ -207,7 +212,7 @@ public class PECategoryDataset extends AbstractDataset
      * @param rowKey  the row key.
      * @param columnKey  the column key.
      */
-    public void setValue(Number value, Comparable rowKey, Comparable columnKey) {
+    public void setValue(Number value, Comparable<Object> rowKey, Comparable<Object> columnKey) {
         this.data.setValue(value, rowKey, columnKey);
         fireDatasetChanged();
     }
@@ -219,7 +224,7 @@ public class PECategoryDataset extends AbstractDataset
      * @param rowKey  the row key.
      * @param columnKey  the column key.
      */
-    public void setValue(double value, Comparable rowKey, Comparable columnKey) {
+    public void setValue(double value, Comparable<Object> rowKey, Comparable<Object> columnKey) {
         setValue(new Double(value), rowKey, columnKey);
     }
 
@@ -232,8 +237,8 @@ public class PECategoryDataset extends AbstractDataset
      * @param columnKey  the column key.
      */
     public void incrementValue(double value, 
-                               Comparable rowKey, 
-                               Comparable columnKey) {
+                               Comparable<Object> rowKey, 
+                               Comparable<Object> columnKey) {
         double existing = 0.0;
         final Number n = getValue(rowKey, columnKey);
         if (n != null) {
@@ -248,7 +253,7 @@ public class PECategoryDataset extends AbstractDataset
      * @param rowKey  the row key.
      * @param columnKey  the column key.
      */
-    public void removeValue(Comparable rowKey, Comparable columnKey) {
+    public void removeValue(Comparable<Object> rowKey, Comparable<Object> columnKey) {
         this.data.removeValue(rowKey, columnKey);
         fireDatasetChanged();
     }
@@ -268,7 +273,7 @@ public class PECategoryDataset extends AbstractDataset
      *
      * @param rowKey  the row key.
      */
-    public void removeRow(Comparable rowKey) {
+    public void removeRow(Comparable<Object> rowKey) {
         this.data.removeRow(rowKey);
         fireDatasetChanged();
     }
@@ -288,7 +293,7 @@ public class PECategoryDataset extends AbstractDataset
      *
      * @param columnKey  the column key.
      */
-    public void removeColumn(Comparable columnKey) {
+    public void removeColumn(Comparable<Object> columnKey) {
         this.data.removeColumn(columnKey);
         fireDatasetChanged();
     }

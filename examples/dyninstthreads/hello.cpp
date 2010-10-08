@@ -7,8 +7,10 @@
 #include <pthread.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <Profile/Profiler.h>
+#include <iostream>
+#include <stdlib.h>
 
+using namespace std;
 
 int fourth(void)
 {
@@ -53,8 +55,6 @@ int work (void)
 
 void * threaded_func(void *data)
 {
-  TAU_REGISTER_THREAD();
-  TAU_PROFILE("threaded_func()", "int ()", TAU_DEFAULT);
   work(); // work done by this thread 
   fifth(); 
   return NULL;

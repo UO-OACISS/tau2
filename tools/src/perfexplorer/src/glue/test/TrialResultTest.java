@@ -3,6 +3,7 @@
  */
 package edu.uoregon.tau.perfexplorer.glue.test;
 
+import junit.framework.TestCase;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
@@ -10,7 +11,6 @@ import edu.uoregon.tau.perfexplorer.glue.TrialMeanResult;
 import edu.uoregon.tau.perfexplorer.glue.TrialResult;
 import edu.uoregon.tau.perfexplorer.glue.TrialTotalResult;
 import edu.uoregon.tau.perfexplorer.glue.Utilities;
-import junit.framework.TestCase;
 
 /**
  * This class is a JUnit test case for the TrialResult class.

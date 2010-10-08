@@ -5,14 +5,10 @@ package edu.uoregon.tau.perfexplorer.glue;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import org.drools.FactHandle;
 
-import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfexplorer.rules.FactWrapper;
 import edu.uoregon.tau.perfexplorer.rules.RuleHarness;
 import edu.uoregon.tau.perfexplorer.rules.SelfAsserting;
 
@@ -23,6 +19,10 @@ import edu.uoregon.tau.perfexplorer.rules.SelfAsserting;
  */
 public class CorrelationResult extends DefaultResult implements SelfAsserting {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7362707779938777066L;
 	private String baselineMetric = null;
 	private String comparisonMetric = null;
 	private String baselineEvent = null;
@@ -34,7 +34,7 @@ public class CorrelationResult extends DefaultResult implements SelfAsserting {
 	private Double correlation = 0.0;
 	Hashtable<String,FactHandle> assertedFacts = new Hashtable<String,FactHandle>();
 	public final static String NAME = edu.uoregon.tau.perfexplorer.glue.CorrelationResult.class.getName();
-	private RuleHarness ruleHarness = null;
+	//private RuleHarness ruleHarness = null;
 	
 	public static final int CORRELATION = AbstractResult.USEREVENT_SUMSQR + 1;
 	public static final int SLOPE = CORRELATION + 1;
@@ -174,7 +174,7 @@ public class CorrelationResult extends DefaultResult implements SelfAsserting {
 	}
 	
 	public void assertFact(String event, String metric, int type, String event2, String metric2, int type2, double correlation, double slope, double intercept) {
-		String key = event + ":" + metric + ":" + event2 + ":" + metric2;
+		//String key = event + ":" + metric + ":" + event2 + ":" + metric2;
 		FactData data = new FactData(event, metric, type, event2, metric2, type2, correlation, slope, intercept);
 		RuleHarness.assertObject(data);
 	}

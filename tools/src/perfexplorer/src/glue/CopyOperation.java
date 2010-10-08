@@ -5,15 +5,18 @@ package edu.uoregon.tau.perfexplorer.glue;
 
 import java.util.List;
 
-
 import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
 
 /**
  * @author khuck
  *
  */
 public class CopyOperation extends AbstractPerformanceOperation {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7822580615462283457L;
 
 	/**
 	 * @param input

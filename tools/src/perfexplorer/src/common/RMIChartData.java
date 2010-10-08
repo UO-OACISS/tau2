@@ -1,8 +1,8 @@
 package edu.uoregon.tau.perfexplorer.common;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class represents the data to be used to create a scalability or

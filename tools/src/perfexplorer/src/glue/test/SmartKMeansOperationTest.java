@@ -3,27 +3,19 @@
  */
 package edu.uoregon.tau.perfexplorer.glue.test;
 
-import edu.uoregon.tau.perfdmf.Trial;
+import java.util.ArrayList;
+import java.util.List;
+
+import junit.framework.TestCase;
 import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
 import edu.uoregon.tau.perfexplorer.glue.BasicStatisticsOperation;
 import edu.uoregon.tau.perfexplorer.glue.DataSourceResult;
-import edu.uoregon.tau.perfexplorer.glue.DefaultResult;
 import edu.uoregon.tau.perfexplorer.glue.ExtractEventOperation;
 import edu.uoregon.tau.perfexplorer.glue.NormalizeOperation;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
 import edu.uoregon.tau.perfexplorer.glue.SmartKMeansOperation;
 import edu.uoregon.tau.perfexplorer.glue.TopXEvents;
-import edu.uoregon.tau.perfexplorer.glue.TrialResult;
-import edu.uoregon.tau.perfexplorer.glue.Utilities;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
-
-import junit.framework.TestCase;
 
 /**
  * @author khuck
@@ -43,7 +35,7 @@ public class SmartKMeansOperationTest extends TestCase {
 	 */
 	public final void testProcessData() {
 		
-		Trial trial = null;
+		//Trial trial = null;
 		int type = AbstractResult.EXCLUSIVE;
 		String metric = "P_WALL_CLOCK_TIME";
 		PerformanceResult result = null;

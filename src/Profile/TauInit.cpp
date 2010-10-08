@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
+#include <unistd.h>
 
 #include <Profile/TauEnv.h>
 #include <Profile/TauMetrics.h>
@@ -37,8 +38,8 @@
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
 
-#ifdef TAU_SILC
-#include <Profile/TauSilc.h>
+#ifdef TAU_SCOREP
+#include <Profile/TauSCOREP.h>
 #endif
 
 
@@ -167,10 +168,10 @@ extern "C" int Tau_init_initializeTAU() {
 #endif
 
 
-#ifdef TAU_SILC
-  /* no more initialization necessary if using SILC */
+#ifdef TAU_SCOREP
+  /* no more initialization necessary if using SCOREP */
   initialized = 1;
-  SILC_InitMeasurement();
+  SCOREP_Tau_InitMeasurement();
   return 0;
 #endif
 
@@ -226,6 +227,9 @@ extern "C" int Tau_init_initializeTAU() {
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init(0);
   }
+#ifdef TAU_PGI
+  sbrk(102400);
+#endif /* TAU_PGI */
 
   Tau_global_decr_insideTAU();
   return 0;

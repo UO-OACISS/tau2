@@ -7,11 +7,16 @@
 package edu.uoregon.tau.vis;
 
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Observable;
@@ -20,6 +25,7 @@ import java.util.StringTokenizer;
 import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -89,11 +95,89 @@ public class ColorScale extends Observable implements Shape {
 
     }
 
+    
+    public class ColorPan extends JPanel {
+    	  /**
+		 * 
+		 */
+		private static final long serialVersionUID = -3355829427807565800L;
+		BufferedImage image;
+
+		
+		ColorPan(){
+			super();
+			Dimension d = new Dimension();
+			d.setSize(50, 50);
+			this.setSize(d);
+			this.setPreferredSize(d);
+			this.setMinimumSize(d);
+			
+			
+			this.addComponentListener(new ComponentListener() 
+			{  
+
+					public void componentResized(ComponentEvent e) {
+						initialize();
+						
+					}
+
+					public void componentMoved(ComponentEvent e) {
+						
+					}
+
+					public void componentShown(ComponentEvent e) {
+						
+					}
+
+					public void componentHidden(ComponentEvent e) {
+						
+					}
+			});
+			
+		}
+		
+    	  public void initialize() {
+    	    int width = getSize().width;
+    	    int height = getSize().height;
+    	    if(height<=0||width<=0)
+    	    	return;
+    	    int[] data = new int[width * height];
+    	    int index = (width*height)-1;
+    	    
+    	    int nBlocks=height;
+    	    
+    	    for(float i = 0; i< nBlocks; i++){
+    	    	Color c1 = getColor((float)(i)/(float)nBlocks);
+    	    	Color c2 = getColor((float)(i+1)/nBlocks);
+    	    	
+    	    for (int h = 0; h < height/nBlocks; h++) {
+    	    	
+    	      for (int w = 0; w < width; w++) {
+    	    	  Color use=c1;
+                  if((h%2==0 && w%2==0)||(h%2!=0 && w%2!=0))
+    	    	    use=c2;
+    	        data[index--] = (use.getRed() << 16) | (use.getGreen() << 8) | use.getBlue();
+    	      }
+    	    }
+    	    }
+    	    image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+    	    image.setRGB(0, 0, width, height, data, 0, width);
+    	  }
+
+    	  public void paint(Graphics g) {
+    	    if (image == null)
+    	      initialize();
+    	    g.drawImage(image, 0, 0, this);
+    	  }
+
+    	}
+
+    
     private Color textColor = Color.white;
     private int font = GLUT.STROKE_MONO_ROMAN;
     private GLUT glut = new GLUT();
     private boolean dirty = true;
-    private boolean enabled = true;
+    private boolean enabled = false;
     private ColorSet colorSet = ColorSet.RAINBOW;
     private String lowString, highString, label;
     private double fontScale = 0.12;
@@ -134,6 +218,9 @@ public class ColorScale extends Observable implements Shape {
         this.highString = high;
         this.label = label;
         this.dirty = true;
+        if(highLabel!=null)
+        highLabel.setText(highString);
+        lowLabel.setText("<html>"+lowString+"<br>"+label+"</html>");
     }
 
     /**
@@ -177,6 +264,11 @@ public class ColorScale extends Observable implements Shape {
         return new Color((float) r, (float) g, (float) b);
     }
 
+    
+    JLabel highLabel=new JLabel();
+    JLabel lowLabel=new JLabel();
+    ColorPan cp;
+    
     /**
      * Creates a Swing JPanel with controls for this object.  These controls will 
      * change the state of the axes and automatically call visRenderer.redraw()
@@ -203,8 +295,33 @@ public class ColorScale extends Observable implements Shape {
         gbc.weightx = 0.2;
         gbc.weighty = 0.2;
 
-        JCheckBox enabledCheckBox = new JCheckBox("Show ColorScale", true);
-        VisTools.addCompItem(controlPanel, enabledCheckBox, gbc, 0, 0, 1, 1);
+        int defAnchor = gbc.anchor;
+        
+        JPanel ckPanel = new JPanel();
+        ckPanel.setLayout(new BoxLayout(ckPanel, BoxLayout.Y_AXIS));
+        
+        gbc.anchor=GridBagConstraints.LAST_LINE_START;
+        gbc.fill=GridBagConstraints.HORIZONTAL;
+        gbc.weighty=0;
+        VisTools.addCompItem(controlPanel, highLabel, gbc, 0, 0, 3, 1);
+        gbc.weighty=1;
+        cp = new ColorPan();
+        ckPanel.add(cp);
+        gbc.anchor=defAnchor;
+        
+        gbc.fill=GridBagConstraints.VERTICAL;
+        VisTools.addCompItem(controlPanel, ckPanel, gbc, 0, 1, 1, 5);
+        gbc.fill=GridBagConstraints.NONE;
+        gbc.weighty=0;
+        
+        gbc.anchor=GridBagConstraints.FIRST_LINE_START;
+        gbc.fill=GridBagConstraints.HORIZONTAL;
+        VisTools.addCompItem(controlPanel, lowLabel, gbc, 0, 6, 3, 1);
+        gbc.fill=GridBagConstraints.NONE;
+        gbc.weighty=0.2;
+        gbc.anchor=defAnchor;
+        JCheckBox enabledCheckBox = new JCheckBox("Show ColorScale", false);
+        VisTools.addCompItem(controlPanel, enabledCheckBox, gbc, 1, 1, 1, 1);
         enabledCheckBox.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 ColorScale.this.enabled = ((JCheckBox) evt.getSource()).isSelected();
@@ -225,18 +342,19 @@ public class ColorScale extends Observable implements Shape {
             }
         });
 
-        VisTools.addCompItem(controlPanel, new JLabel("Font Size"), gbc, 0, 1, 1, 1);
+        VisTools.addCompItem(controlPanel, new JLabel("Font Size"), gbc, 1, 2, 1, 1);
         gbc.fill = GridBagConstraints.BOTH;
-        VisTools.addCompItem(controlPanel, fontScaleSlider, gbc, 1, 1, 1, 1);
+        VisTools.addCompItem(controlPanel, fontScaleSlider, gbc, 2, 2, 1, 1);
         gbc.fill = GridBagConstraints.NONE;
+        
 
         //        VisTools.addCompItem(controlPanel, new JLabel("ColorScale Selection"), gbc, 0, 1, 1, 1);
         ButtonGroup group = new ButtonGroup();
 
         final Map<JRadioButton, ColorSet> colorScaleMap = new HashMap<JRadioButton, ColorSet>();
 
-        int x = 0;
-        int y = 2;
+        int x = 1;
+        int y = 3;
         for (int i = 0; i < ColorSet.VALUES.length; i++) {
             ColorSet colorSet = ColorSet.VALUES[i];
             JRadioButton jrb = new JRadioButton(colorSet.toString(), this.colorSet == colorSet);
@@ -252,15 +370,17 @@ public class ColorScale extends Observable implements Shape {
                     ColorScale.this.notifyObservers();
 
                     visRenderer.redraw();
+                    cp.initialize();
+                    cp.repaint();
                 }
             });
 
             VisTools.addCompItem(controlPanel, jrb, gbc, x, y, 1, 1);
 
-            if (x == 0) {
+            if (x == 1) {
                 x++;
             } else {
-                x = 0;
+                x = 1;
                 y++;
             }
         }
@@ -500,7 +620,6 @@ public class ColorScale extends Observable implements Shape {
 
         gl.glEnable(GL.GL_LIGHTING);
         gl.glEnable(GL.GL_DEPTH_TEST);
-
     }
 
     public double getFontScale() {

@@ -3,6 +3,7 @@ package edu.uoregon.tau.perfexplorer.client;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Toolkit;
+
 import javax.swing.JFrame;
 
 public class PerfExplorerWindowUtility {
@@ -29,8 +30,9 @@ public class PerfExplorerWindowUtility {
             xPosition += offsetX;
             yPosition += offsetY;
             frame.setLocation(xPosition, yPosition);
-        } else {
-            frame.setLocation(savedPosition);
-        }
+        } 
+//        else {
+//            frame.setLocation(savedPosition);
+//        }
 	}
 }

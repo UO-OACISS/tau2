@@ -15,6 +15,11 @@ public class ChartData extends RMIChartData {
 	/**
 	 * 
 	 */
+	private static final long serialVersionUID = -7268395554709950361L;
+
+	/**
+	 * 
+	 */
 	public ChartData() {
 		super(ChartDataType.CUSTOM);
 		// TODO Auto-generated constructor stub

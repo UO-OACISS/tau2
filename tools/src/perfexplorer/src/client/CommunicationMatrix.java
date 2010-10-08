@@ -1,6 +1,8 @@
 
 package edu.uoregon.tau.perfexplorer.client;
 
+import java.awt.Toolkit;
+import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -8,14 +10,10 @@ import java.util.StringTokenizer;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
-import java.lang.Math;
-import java.net.URL;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.vis.HeatMapData;
 import edu.uoregon.tau.vis.HeatMapWindow;
-
-import java.awt.Toolkit;
 
 public class CommunicationMatrix {
 
@@ -29,7 +27,7 @@ public class CommunicationMatrix {
 	private static final int STDDEV = 4;
 	private static final int VOLUME = 5;
 	private JFrame window = null;
-	private int numEvents = 0;
+	//private int numEvents = 0;
 
 	public CommunicationMatrix() {
 		super();
@@ -55,7 +53,7 @@ public class CommunicationMatrix {
 	    long start = System.currentTimeMillis();
 	    
 	    // get the list of user events
-	    numEvents = userEvents.keySet().size();
+	    //numEvents = userEvents.keySet().size();
 	    
 	    // if data is not found, terminate early and issue a warning
 	    boolean foundData = false;

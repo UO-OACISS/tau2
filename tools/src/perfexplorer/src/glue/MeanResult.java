@@ -3,13 +3,17 @@
  */
 package edu.uoregon.tau.perfexplorer.glue;
 
-import edu.uoregon.tau.perfdmf.Trial;
 
 /**
  * @author khuck
  *
  */
 public class MeanResult extends DefaultResult {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8264599953003122282L;
 
 	/**
 	 * 

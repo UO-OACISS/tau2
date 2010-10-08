@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
 import edu.uoregon.tau.perfexplorer.clustering.PrincipalComponentsAnalysisInterface;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
@@ -20,6 +19,10 @@ import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
  */
 public class PCAOperation extends AbstractPerformanceOperation {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7122252507773375487L;
 	private String metric = null;
 	private int type = AbstractResult.EXCLUSIVE;
 	private int maxComponents = -1;  // include all
@@ -53,8 +56,9 @@ public class PCAOperation extends AbstractPerformanceOperation {
 	 * @see glue.PerformanceAnalysisOperation#processData()
 	 */
 	public List<PerformanceResult> processData() {
-	    PerfExplorerServer server = null;
-        server = PerfExplorerServer.getServer();
+//	    PerfExplorerServer server = null;
+//        server = 
+        	PerfExplorerServer.getServer();
 
         for (PerformanceResult input : inputs) {
         	List<String> eventList = new ArrayList<String>(input.getEvents());

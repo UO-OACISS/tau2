@@ -15,6 +15,10 @@ import edu.uoregon.tau.perfdmf.Trial;
  *
  */
 public class SplitCommunicationComputationOperation extends	AbstractPerformanceOperation {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7423086277837025258L;
 	public final static int COMMUNICATION = 0;
 	public final static int COMPUTATION = 1;
 

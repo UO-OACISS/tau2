@@ -42,7 +42,7 @@ class XMLNode extends DefaultMutableTreeNode {
         }
 	}
 	
-	public List getChildren() {
+	public List<?> getChildren() {
 		return children;
 	}
 }

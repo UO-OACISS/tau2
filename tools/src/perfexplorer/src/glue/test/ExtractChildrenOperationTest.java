@@ -1,7 +1,10 @@
 package edu.uoregon.tau.perfexplorer.glue.test;
 
 import junit.framework.TestCase;
-import edu.uoregon.tau.perfexplorer.glue.*;
+import edu.uoregon.tau.perfexplorer.glue.DataSourceResult;
+import edu.uoregon.tau.perfexplorer.glue.ExtractChildrenOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
+import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
 
 public class ExtractChildrenOperationTest extends TestCase {
 

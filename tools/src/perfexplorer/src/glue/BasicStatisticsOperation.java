@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.lang.Math;
 
 import edu.uoregon.tau.perfdmf.Trial;
 
@@ -16,6 +15,10 @@ import edu.uoregon.tau.perfdmf.Trial;
  *
  */
 public class BasicStatisticsOperation extends AbstractPerformanceOperation {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8588116451997706355L;
 	public static int TOTAL = 0;
 	public static int MEAN = 1;
 	public static int VARIANCE = 2;

@@ -944,11 +944,11 @@ public class DatabaseAPI {
             if (saveMetric == null) { // this means save the whole thing???
                 newTrialID = trial.saveTrial(db);
                 trial.setID(newTrialID);
-                metricHash = saveMetrics(newTrialID, trial, saveMetricIndex);
+                metricHash = saveMetrics(newTrialID, trial, saveMetricIndex);//Commit here
 
                 if (intervalEvents != null && intervalEvents.size() > 0) {
                     Hashtable<Integer, Integer> functionHash = saveIntervalEvents(newTrialID, metricHash, saveMetricIndex);
-                    saveIntervalLocationProfiles(db, functionHash, intervalEventData.elements(), metricHash, saveMetricIndex);
+                    saveIntervalLocationProfiles(db, functionHash, intervalEventData.elements(), metricHash, saveMetricIndex);//Commit here, internally per process/thread
                 }
                 if (atomicEvents != null && atomicEvents.size() > 0) {
                     Hashtable<Integer, Integer> atomicEventHash = saveAtomicEvents(newTrialID);

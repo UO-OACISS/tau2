@@ -3,10 +3,9 @@ package edu.uoregon.tau.perfexplorer.glue.psl;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uoregon.tau.perfdmf.Trial;
+import junit.framework.TestCase;
 import edu.uoregon.tau.perfexplorer.glue.TrialResult;
 import edu.uoregon.tau.perfexplorer.glue.Utilities;
-import junit.framework.TestCase;
 
 public class NonScalabilityTest extends TestCase {
 
