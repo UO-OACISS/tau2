@@ -108,7 +108,14 @@ for arg in "$@"; do
     echo "-epilogbin=<dir> ........... Specify full path to EPILOG bin directory."
     echo "-epiloginc=<dir> ....... Specify full path to EPILOG include directory."
     echo "-vampirtrace=<dir>  .. Specify location of VampirTrace Tracing package."
-    echo "-scorep=<dir>  ........................ Specify location of SCOREP package."
+    echo "-mon-mpi ..... Specify MPI as TAU monitoring transport layer.          "
+    echo "-mon-mrnet=<dir> .. Specify location to MRNet package as TAU monitoring"
+    echo "                    transport layer (ToM).                             "
+    echo "-mon-mrnet-lib=<dir> ............... Specify full path to MRNet library"
+    echo "                                     installation.                     "
+    echo "-mon-mrnet-use-lightweight ..... Instructs ToM to use MRNet lightweight"
+    echo "                                 interface.                            "
+    echo "-scorep=<dir>  .................... Specify location of SCOREP package."
     echo "-python .. Automatically choose python options based on Python in path."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
@@ -207,7 +214,14 @@ for arg in "$@"; do
     echo "-epilogbin=<dir> ........... Specify full path to EPILOG bin directory."
     echo "-epiloginc=<dir> ....... Specify full path to EPILOG include directory."
     echo "-vampirtrace=<dir>  .. Specify location of VampirTrace Tracing package."
-    echo "-scorep=<dir>  ........................ Specify location of SCOREP package."
+    echo "-mon-mpi ..... Specify MPI as TAU monitoring transport layer.          "
+    echo "-mon-mrnet=<dir> .. Specify location to MRNet package as TAU monitoring"
+    echo "                    transport layer (ToM).                             "
+    echo "-mon-mrnet-lib=<dir> ............... Specify full path to MRNet library"
+    echo "                                     installation.                     "
+    echo "-mon-mrnet-use-lightweight ..... Instructs ToM to use MRNet lightweight"
+    echo "                                 interface.                            "
+    echo "-scorep=<dir>  .................... Specify location of SCOREP package."
     echo "-upcnetwork=<value> .. Specify network (mpi, udp,...) for Berkeley UPC."
     echo "-python .. Automatically choose python options based on Python in path."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
@@ -321,6 +335,7 @@ mpiio=no
 mpiinc=
 mpilib=
 mpilibrary=no
+mon_mpi=no
 mrnet=no
 mrnet_use_lightweight=no
 mrnet_root=
@@ -678,9 +693,14 @@ for arg in "$@"; do
     shift
     ;;
 
-  -mrnet=*)
+  -mon-mpi)
+    mon_mpi=yes
+    shift
+    ;;
+
+  -mon-mrnet=*)
     mrnet=yes
-    mrnet_root=`echo $arg | sed -e 's/-mrnet=//' -e 's/ /#/g'`
+    mrnet_root=`echo $arg | sed -e 's/-mon-mrnet=//' -e 's/ /#/g'`
     if [ ! -e $mrnet_root ]
     then
       echo "Error: Cannot access MRNet root directory $mrnet_root"
@@ -689,9 +709,9 @@ for arg in "$@"; do
     shift
     ;;
 
-  -mrnetlib=*)
+  -mon-mrnet-lib=*)
     mrnet=yes
-    mrnet_lib=`echo $arg | sed -e 's/-mrnetlib=//' -e 's/ /#/g'`
+    mrnet_lib=`echo $arg | sed -e 's/-mon-mrnet-lib=//' -e 's/ /#/g'`
     if [ ! -e $mrnet_lib ]
     then
       echo "Error: Cannot access MRNet library directory $mrnet_lib"
@@ -700,7 +720,7 @@ for arg in "$@"; do
     shift
     ;;
 
-  -mrnet_use_lightweight)
+  -mon-mrnet-use-lightweight)
     mrnet_use_lightweight=yes
     shift
     ;;
@@ -5576,9 +5596,27 @@ if [ $hpctoolkit = yes ] ; then
     fixmakeargs="$fixmakeargs HPCTOOLKIT hpctoolkit_include=${hpctoolkit_include} hpctoolkit_link=${hpctoolkit_link}"
 fi
 
-# TAUmon MRNet
+# TAUmon MPI                                                                                
+if [ $mon_mpi = yes ] ; then
+  if [ $mrnet = yes ] ; then
+       echo "ERROR: MRNet and MPI cannot simultaneously be used as TAUmon transport"
+       exit 1
+  fi
+  if [ $mpi = yes ] ; then
+       fixmakeargs="$fixmakeargs MON_MPI"
+  else
+       echo "ERROR: MPI TAUmon transport requires MPI support"
+       exit 1
+  fi
+fi
+
+# TAUmon MRNet                                                                              
 if [ $mrnet = yes ] ; then
-  if [ $mpi = yes ] ; then 
+  if [ $mon_mpi = yes ] ; then
+       echo "ERROR: MRNet and MPI cannot simultaneously be used as TAUmon transport"
+       exit 1
+  fi
+  if [ $mpi = yes ] ; then
        fixmakeargs="$fixmakeargs MRNET"
        if [ $mrnet_use_lightweight = yes ] ; then
             fixmakeargs="$fixmakeargs mrnet_lw=-DMRNET_LIGHTWEIGHT"

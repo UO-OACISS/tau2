@@ -1088,6 +1088,10 @@ case $1 in
 	echo "NOTE: Using KOJAK's Opari implementation ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     MON_MPI)
+        echo "NOTE: Using MPI as TAUmon transport ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      MRNET)
 	echo "NOTE: Using MRNet as TAUmon transport ***"
 	echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
