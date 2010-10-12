@@ -15,7 +15,7 @@
 #**      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
 #****************************************************************************
 
-TAUROOT=
+TAUROOT=/home/users/scottb/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -160,9 +160,9 @@ TAU_DISABLE   = libTauDisable$(LSX)
 TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 
 ##############################################
-#MPI#MPI_WRAPPER   = libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
-#MPI#TAU_MPI_OBJS = TauMpi.o ClockSync.o TauProfileMerge.o TauMetaDataMerge.o $(FWRAPPER) $(MPI2EXTENSIONS)  #ENDIF#
-#MPI#MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
+MPI_WRAPPER   = libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF##MPI#
+TAU_MPI_OBJS = TauMpi.o ClockSync.o TauProfileMerge.o TauMetaDataMerge.o $(FWRAPPER) $(MPI2EXTENSIONS)  #ENDIF##MPI#
+MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF##MPI#
 ##############################################
 
 ##############################################
@@ -182,7 +182,7 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 ##############################################
 # For making libTAU.so Dynamic Shared Object
 ##############################################
-#GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
+AR_SHFLAGS 		= -shared  	#ENDIF##GNU#
 #SUNX86_64#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SOL2CC#AR_SHFLAGS 		= -G  	#ENDIF#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
@@ -271,7 +271,7 @@ TAU_SHAREDDIR = $(INSTALLDEST)/shared$(TAU_CONFIG)
 TAU_DISABLE_SHAREDDIR = $(INSTALLDEST)/shared-disable
 
 # MPI Wrappers
-#MPI#TAU_FORCE_MPI_OBJECT=TauForceMPI.o #ENDIF#
+TAU_FORCE_MPI_OBJECT=TauForceMPI.o #ENDIF##MPI#
 
 # TAU MPI Wrapper
 TAU_MPI_WRAPPER=$(TAU_MPI_OBJS)
@@ -299,7 +299,7 @@ TAU_MPI_FOR_SHARED=$(TAU_MPI_WRAPPER)
 CRAY_PGI_HACK=
 #CRAYCNL#CRAY_PGI_HACK=$(INSTALLDEST)/libpgnod_prof.a #ENDIF#
 
-ifneq ($(TAU_CUDA_INC), )
+ifneq ($(TAU_CUPTI_INC), )
 	TAU_GPU_LIB=libTAU-CUpti.so
 	TAU_GPU_OBJS=TauGpuAdapterCupti.o TauGpu.o
 else
@@ -323,7 +323,7 @@ $(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS) $(MPI_WRAPPER) $(TAU_FORCE_MPI) 
 $(TAU_NULL)$(TAU_GPU_LIB): $(TAU_GPU_OBJS) $(TAU_DSO)
 		$(PRELINK_PHASE)
 		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_GPU_LIB) $(TAU_GPU_OBJS) \
-		-L$(TAU_LIB_DIR) $(TAU_DSO) -lcupti
+		-L$(TAU_LIB_DIR) $(TAU_DSO) -L$(TAU_CUPTI)/lib -lcupti
 		$(TAU_RANLIB) $(TAU_GPU_LIB)
 
 $(TAU_DISABLE): TauDisable.o $(TAU_DISABLE_SHARED) TauKojakOpariDisable.o
