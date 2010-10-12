@@ -8,19 +8,30 @@
 const char * tau_orig_libname = "libcudart.so";
 static void *tau_handle = NULL;
 
-TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventHtoD, "Bytes copied from Host to Device");
-TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventDtoH, "Bytes copied from Device to Host");
-TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventDtoD, "Bytes copied from Device to Device");
-	
 void tau_track_memory(int kind, int count)
 {
+	static bool init = false;
+	static TauUserEvent *MemoryCopyEventHtoD;
+	static TauUserEvent *MemoryCopyEventDtoH;
+	static TauUserEvent *MemoryCopyEventDtoD;
+	if (!init)
+	{
+		MemoryCopyEventHtoD = (TauUserEvent *) Tau_get_userevent("Bytes copied from Host to Device");
+		MemoryCopyEventDtoH = (TauUserEvent *) Tau_get_userevent("Bytes copied from Device to Host");
+		MemoryCopyEventDtoD = (TauUserEvent *) Tau_get_userevent("Bytes copied from Device to Device");
+		init = true;
+	}
+	/*printf("initalize counters. Number of events: %ld, %ld, %ld.\n", 
+	MemoryCopyEventHtoD->GetNumEvents(0),
+	MemoryCopyEventDtoH->GetNumEvents(0),
+	MemoryCopyEventDtoD->GetNumEvents(0));*/
 	//printf("tracking memory.... %ld.\n", count);
 	if (kind == cudaMemcpyHostToDevice)
-		TAU_EVENT(MemoryCopyEventHtoD(), count);
+		TAU_EVENT(MemoryCopyEventHtoD, count);
 	if (kind == cudaMemcpyDeviceToHost)
-		TAU_EVENT(MemoryCopyEventDtoH(), count);
+		TAU_EVENT(MemoryCopyEventDtoH, count);
 	if (kind == cudaMemcpyDeviceToDevice)
-		TAU_EVENT(MemoryCopyEventDtoD(), count);
+		TAU_EVENT(MemoryCopyEventDtoD, count);
 }	
 
 cudaError_t cudaThreadExit() {
