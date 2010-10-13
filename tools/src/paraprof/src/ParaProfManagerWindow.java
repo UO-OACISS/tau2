@@ -2447,6 +2447,9 @@ DBManagerListener {
     public Vector<ParaProfTrial> getLoadedTrials() {
 	return loadedTrials;
     }
+    public Vector<ParaProfTrial> getLoadedDBTrials(){
+	return loadedDBTrials;
+    }
 
 
     public void setTreeModel(DefaultTreeModel treeModel) {
