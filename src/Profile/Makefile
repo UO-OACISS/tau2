@@ -15,7 +15,7 @@
 #**      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
 #****************************************************************************
 
-TAUROOT=/home/users/scottb/tau2
+TAUROOT=
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -160,9 +160,9 @@ TAU_DISABLE   = libTauDisable$(LSX)
 TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 
 ##############################################
-MPI_WRAPPER   = libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF##MPI#
-TAU_MPI_OBJS = TauMpi.o ClockSync.o TauProfileMerge.o TauMetaDataMerge.o $(FWRAPPER) $(MPI2EXTENSIONS)  #ENDIF##MPI#
-MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF##MPI#
+#MPI#MPI_WRAPPER   = libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
+#MPI#TAU_MPI_OBJS = TauMpi.o ClockSync.o TauProfileMerge.o TauMetaDataMerge.o $(FWRAPPER) $(MPI2EXTENSIONS)  #ENDIF#
+#MPI#MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
 ##############################################
 
 ##############################################
@@ -182,7 +182,7 @@ MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF##MPI#
 ##############################################
 # For making libTAU.so Dynamic Shared Object
 ##############################################
-AR_SHFLAGS 		= -shared  	#ENDIF##GNU#
+#GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SUNX86_64#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SOL2CC#AR_SHFLAGS 		= -G  	#ENDIF#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
@@ -271,7 +271,7 @@ TAU_SHAREDDIR = $(INSTALLDEST)/shared$(TAU_CONFIG)
 TAU_DISABLE_SHAREDDIR = $(INSTALLDEST)/shared-disable
 
 # MPI Wrappers
-TAU_FORCE_MPI_OBJECT=TauForceMPI.o #ENDIF##MPI#
+#MPI#TAU_FORCE_MPI_OBJECT=TauForceMPI.o #ENDIF#
 
 # TAU MPI Wrapper
 TAU_MPI_WRAPPER=$(TAU_MPI_OBJS)
@@ -299,6 +299,7 @@ TAU_MPI_FOR_SHARED=$(TAU_MPI_WRAPPER)
 CRAY_PGI_HACK=
 #CRAYCNL#CRAY_PGI_HACK=$(INSTALLDEST)/libpgnod_prof.a #ENDIF#
 
+TAU_CUPTI_INC=$(TAU_CUPTI)/include
 ifneq ($(TAU_CUPTI_INC), )
 	TAU_GPU_LIB=libTAU-CUpti.so
 	TAU_GPU_OBJS=TauGpuAdapterCupti.o TauGpu.o
