@@ -1368,12 +1368,12 @@ cudaError_t cudaMemcpy3D(const struct cudaMemcpy3DParms * a1) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
+
+  TAU_PROFILE_START(t);
 /* cannot find example of cudaMemcpy3D to test memory tracking
 #ifdef TRACK_MEMORY
 #endif //TRACK_MEMORY
 */
-
-  TAU_PROFILE_START(t);
   retval  =  (*cudaMemcpy3D_h)( a1);
   TAU_PROFILE_STOP(t);
   }
@@ -1520,6 +1520,9 @@ cudaError_t cudaMemcpyFromArray(void * a1, const struct cudaArray * a2, size_t a
       return retval;
     }
   TAU_PROFILE_START(t);
+#ifdef TAU_TRACK_MEMORY
+	tau_track_memory(a6, a5);
+#endif // TAU_TRACK_MEMORY
   retval  =  (*cudaMemcpyFromArray_h)( a1,  a2,  a3,  a4,  a5,  a6);
   TAU_PROFILE_STOP(t);
   }
@@ -1548,6 +1551,9 @@ cudaError_t cudaMemcpyArrayToArray(struct cudaArray * a1, size_t a2, size_t a3, 
       return retval;
     }
   TAU_PROFILE_START(t);
+#ifdef TAU_TRACK_MEMORY
+	tau_track_memory(a8, a7);
+#endif // TAU_TRACK_MEMORY
   retval  =  (*cudaMemcpyArrayToArray_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8);
   TAU_PROFILE_STOP(t);
   }
@@ -1578,7 +1584,7 @@ cudaError_t cudaMemcpy2D(void * a1, size_t a2, const void * a3, size_t a4, size_
 #ifdef TRACK_MEMORY
 	//Seg fault in UserEvent::~UserEvent when tracking this event
 	//printf("array size: %d, by %dx%d.\n", sizeof(a3), a5, a6);
-	//tau_track_memory(a7, sizeof(a3)*a5*a6);
+	tau_track_memory(a7, sizeof(a3)*a5*a6);
 #endif //TRACK_MEMORY
   TAU_PROFILE_START(t);
   retval  =  (*cudaMemcpy2D_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
@@ -1610,7 +1616,7 @@ cudaError_t cudaMemcpy2DToArray(struct cudaArray * a1, size_t a2, size_t a3, con
     }
 #ifdef TRACK_MEMORY
 	//Seg fault in UserEvent::~UserEvent when tracking this event
-	//tau_track_memory(a8, sizeof(a4)*a6*a7);
+	tau_track_memory(a8, sizeof(a4)*a6*a7);
 #endif //TRACK_MEMORY
   TAU_PROFILE_START(t);
   retval  =  (*cudaMemcpy2DToArray_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8);
@@ -1790,6 +1796,9 @@ cudaError_t cudaMemcpyToArrayAsync(struct cudaArray * a1, size_t a2, size_t a3, 
       return retval;
     }
   TAU_PROFILE_START(t);
+#ifdef TAU_TRACK_MEMORY
+	tau_track_memory(a6, a5);
+#endif // TAU_TRACK_MEMORY
   retval  =  (*cudaMemcpyToArrayAsync_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
   TAU_PROFILE_STOP(t);
   }
@@ -1818,6 +1827,9 @@ cudaError_t cudaMemcpyFromArrayAsync(void * a1, const struct cudaArray * a2, siz
       return retval;
     }
   TAU_PROFILE_START(t);
+#ifdef TAU_TRACK_MEMORY
+	tau_track_memory(a6, a5);
+#endif // TAU_TRACK_MEMORY
   retval  =  (*cudaMemcpyFromArrayAsync_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
   TAU_PROFILE_STOP(t);
   }
@@ -1930,6 +1942,9 @@ cudaError_t cudaMemcpyToSymbolAsync(const char * a1, const void * a2, size_t a3,
       return retval;
     }
   TAU_PROFILE_START(t);
+#ifdef TAU_TRACK_MEMORY
+	tau_track_memory(a5, a3);
+#endif // TAU_TRACK_MEMORY
   retval  =  (*cudaMemcpyToSymbolAsync_h)( a1,  a2,  a3,  a4,  a5,  a6);
   TAU_PROFILE_STOP(t);
   }
@@ -1958,6 +1973,9 @@ cudaError_t cudaMemcpyFromSymbolAsync(void * a1, const char * a2, size_t a3, siz
       return retval;
     }
   TAU_PROFILE_START(t);
+#ifdef TAU_TRACK_MEMORY
+	tau_track_memory(a5, a3);
+#endif // TAU_TRACK_MEMORY
   retval  =  (*cudaMemcpyFromSymbolAsync_h)( a1,  a2,  a3,  a4,  a5,  a6);
   TAU_PROFILE_STOP(t);
   }
