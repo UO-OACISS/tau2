@@ -77,9 +77,9 @@ extern "C" {
 
   void TAUDECL TauTraceSendMsg(int type, int destination, int length);
   void TAUDECL TauTraceRecvMsg(int type, int source, int length);
-
+#if TAU_GPU
   void TAUDECL TauTraceOneSidedMsg(bool type, gpuId *gpu, int length, int thread);
-
+#endif // TAU_GPU
   /* Returns a pointer to the (singleton) offset info struct */
   TauTraceOffsetInfo* TAUDECL TheTauTraceOffsetInfo();
 

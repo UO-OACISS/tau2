@@ -1335,9 +1335,9 @@ for arg in "$@"; do
       exit 1
     fi
     if [ -f "$cudainclude/cuda.h" ] ; then
-    	fixmakeargs="$fixmakeargs cudainclude=$cudainclude useropt=-DTAU_MAX_THREADS=3"
+    	fixmakeargs="$fixmakeargs cudainclude=$cudainclude useropt=$useropt -DTAU_MAX_THREADS=3"
 			if [ -f "$cudainclude/CL/cl.h" ] ; then
-    		fixmakeargs="$fixmakeargs cudainclude=$cudainclude openclinclude=$cudainclude useropt=-DTAU_MAX_THREADS=3"
+    		fixmakeargs="$fixmakeargs cudainclude=$cudainclude openclinclude=$cudainclude useropt=$useropt -DTAU_MAX_THREADS=3"
 			fi
 		else
 			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
@@ -1352,7 +1352,7 @@ for arg in "$@"; do
       exit 1
     fi
 		if [ -f "$openclinclude/CL/cl.h" ] ; then
-      fixmakeargs="$fixmakeargs openclinclude=$openclinclude useropt=-DTAU_MAX_THREADS=3"
+      fixmakeargs="$fixmakeargs openclinclude=$openclinclude useropt=$useropt -DTAU_MAX_THREADS=3"
 		else
 			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
     fi

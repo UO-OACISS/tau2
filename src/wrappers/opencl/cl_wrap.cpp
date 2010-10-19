@@ -1,4 +1,5 @@
 #include <Profile/Profiler.h>
+#include <Profile/TauGpuAdapterOpenCL.h>
 #include <dlfcn.h>
 #include <stdio.h>
 #include <CL/cl.h>
@@ -22,6 +23,7 @@ void check_memory_init()
 		init = true;
 	}
 }
+
 
 cl_int clGetPlatformIDs(cl_uint a1, cl_platform_id * a2, cl_uint * a3) {
 
@@ -858,6 +860,7 @@ cl_int clReleaseProgram(cl_program a1) {
   TAU_PROFILE_START(t);
   retval  =  (*clReleaseProgram_h)( a1);
   TAU_PROFILE_STOP(t);
+	Tau_opencl_exit();
   }
   return retval;
 
@@ -1312,6 +1315,31 @@ cl_int clGetEventProfilingInfo(cl_event a1, cl_profiling_info a2, size_t a3, voi
   return retval;
 
 }
+cl_int clGetEventProfilingInfo_noinst(cl_event a1, cl_profiling_info a2, size_t a3, void * a4, size_t * a5) {
+
+  typedef cl_int (*clGetEventProfilingInfo_p) (cl_event, cl_profiling_info, size_t, void *, size_t *);
+  static clGetEventProfilingInfo_p clGetEventProfilingInfo_h = NULL;
+  cl_int retval;
+  TAU_PROFILE_TIMER(t,"cl_int clGetEventProfilingInfo(cl_event, cl_profiling_info, size_t, void *, size_t *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (clGetEventProfilingInfo_h == NULL)
+	clGetEventProfilingInfo_h = (clGetEventProfilingInfo_p) dlsym(tau_handle,"clGetEventProfilingInfo"); 
+    if (clGetEventProfilingInfo_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  retval  =  (*clGetEventProfilingInfo_h)( a1,  a2,  a3,  a4,  a5);
+  }
+  return retval;
+
+}
 
 cl_int clFlush(cl_command_queue a1) {
 
@@ -1712,8 +1740,17 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
+
+
+	if (a9 == NULL)
+	{
+		printf("cl_event is null.\n");
+		cl_event new_event;
+		a9 = &new_event;
+	}
   TAU_PROFILE_START(t);
   retval  =  (*clEnqueueNDRangeKernel_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_kernel_callback, NULL);
   TAU_PROFILE_STOP(t);
   }
   return retval;
