@@ -64,20 +64,20 @@ public class TreeDropTarget implements DropTargetListener {
 	    dtde.rejectDrag();
 	} else {
 	    // start by supporting move operations
-	    //dtde.acceptDrag(DnDConstants.ACTION_MOVE);
+	    // dtde.acceptDrag(DnDConstants.ACTION_MOVE);
 	    dtde.acceptDrag(dtde.getDropAction());
 	}
     }
 
     public void dragOver(DropTargetDragEvent dtde) {
 	TreeNode node = getNodeForEvent(dtde);
-	//	if (node.isLeaf()) {
-	//	    dtde.rejectDrag();
-	//	} else {
+	// if (node.isLeaf()) {
+	// dtde.rejectDrag();
+	// } else {
 	// start by supporting move operations
-	//dtde.acceptDrag(DnDConstants.ACTION_MOVE);
+	// dtde.acceptDrag(DnDConstants.ACTION_MOVE);
 	dtde.acceptDrag(dtde.getDropAction());
-	//	}
+	// }
     }
 
     public void dragExit(DropTargetEvent dte) {
@@ -91,10 +91,8 @@ public class TreeDropTarget implements DropTargetListener {
 	DropTargetContext dtc = dtde.getDropTargetContext();
 	JTree tree = (JTree) dtc.getComponent();
 	TreePath parentpath = tree.getClosestPathForLocation(pt.x, pt.y);
-	DefaultMutableTreeNode newParent = (DefaultMutableTreeNode) parentpath.getLastPathComponent();
-
-
-
+	DefaultMutableTreeNode newParent = (DefaultMutableTreeNode) parentpath
+	.getLastPathComponent();
 
 	try {
 	    Transferable tr = dtde.getTransferable();
@@ -102,98 +100,114 @@ public class TreeDropTarget implements DropTargetListener {
 	    for (int i = 0; i < flavors.length; i++) {
 		if (tr.isDataFlavorSupported(flavors[i])) {
 		    dtde.acceptDrop(dtde.getDropAction());
-		    DefaultMutableTreeNode node = (DefaultMutableTreeNode) tr.getTransferData(flavors[i]);
+		    DefaultMutableTreeNode node = (DefaultMutableTreeNode) tr
+		    .getTransferData(flavors[i]);
 		    Object object = node.getUserObject();
-		    if(node.getParent() == newParent){
-			//dtde.rejectDrop();
+		    if (node.getParent() == newParent) {
+			// dtde.rejectDrop();
 			return;
 		    }
 
-		    if(object instanceof ParaProfApplication)
-		    {
-			if(!(newParent.getUserObject() instanceof Database)){
+		    if (object instanceof ParaProfApplication) {
+			if (!(newParent.getUserObject() instanceof Database)) {
 			    return;
 			}
-			if(JOptionPane.showConfirmDialog(ParaProf.paraProfManagerWindow, 
-				"Are you sure you want to move this?", "Move Trial",JOptionPane.YES_NO_OPTION)
-				== JOptionPane.NO_OPTION){
+			if (JOptionPane.showConfirmDialog(ParaProf.paraProfManagerWindow,
+				"Are you sure you want to move this?", "Move Trial",
+				JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
 			    return;
 			}
 
 			ParaProfApplication app = (ParaProfApplication) object;
-			DatabaseAPI newDB = new DatabaseAPI();
-			newDB.initialize((Database) newParent.getUserObject());
+			DatabaseAPI newDB = ParaProf.paraProfManagerWindow
+			.getDatabaseAPI((Database) newParent.getUserObject());
 			expand(node);
 
 			uploadApplication(newDB, app, node.children());
 
 			deleteObject(node.getUserObject());
-			//ParaProf.paraProfManagerWindow.expand(newParent);
-
-
+			TreePath path = new TreePath(newParent.getPath());
+			if (targetTree.isExpanded(path))
+			    targetTree.collapsePath(path);
+			targetTree.expandPath(path);
 
 		    }
 
-		    else if(object instanceof ParaProfExperiment)
-		    {
-			if(!(newParent.getUserObject() instanceof ParaProfApplication)){
+		    else if (object instanceof ParaProfExperiment) {
+			if (!(newParent.getUserObject() instanceof ParaProfApplication)) {
 			    return;
 			}
-			if(JOptionPane.showConfirmDialog(ParaProf.paraProfManagerWindow, 
-				"Are you sure you want to move this?", "Move Trial",JOptionPane.YES_NO_OPTION)
-				== JOptionPane.NO_OPTION){
-			    return;
-			}
-
 			ParaProfExperiment exp = (ParaProfExperiment) object;
 			ParaProfApplication app = (ParaProfApplication) newParent.getUserObject();
-			DatabaseAPI newDB = new DatabaseAPI();
-			newDB.initialize((Database) ((DefaultMutableTreeNode) newParent.getParent()).getUserObject());
-			expand(node);
-
-			uploadExperiment(app,exp, newDB, node.children());
-
-			tree.setSelectionPath(null);
-			deleteObject(node.getUserObject());
-
-
-		    }
-		    else if(object instanceof ParaProfTrial)
-		    {
-			if(!(newParent.getUserObject() instanceof ParaProfExperiment)){
+			if(!app.dBApplication() && exp.dBExperiment())
 			    return;
-			}
-			if(JOptionPane.showConfirmDialog(ParaProf.paraProfManagerWindow, 
-				"Are you sure you want to move this?", "Move Trial",JOptionPane.YES_NO_OPTION)
-				== JOptionPane.NO_OPTION){
+			if (JOptionPane.showConfirmDialog(ParaProf.paraProfManagerWindow,
+				"Are you sure you want to move this?", "Move Trial",
+				JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
 			    return;
 			}
 
-			//ParaProf.paraProfManagerWindow.expand(node);
+
 			expand(node);
+			if(!app.dBApplication()){
+			    ParaProfApplication oldapp = exp.getApplication();
+			    DefaultMutableTreeNode oldDMTN = exp.getDMTN();
+			    
+			    uploadExperment(app, exp, node.children());
+			    ParaProf.paraProfManagerWindow.getTreeModel().removeNodeFromParent(oldDMTN);
+			    oldapp.removeExperiment(exp);
+
+			}else{
+			    DatabaseAPI newDB = ParaProf.paraProfManagerWindow
+			    .getDatabaseAPI((Database) ((DefaultMutableTreeNode) newParent
+				    .getParent()).getUserObject());
+
+
+			    uploadExperiment(app, exp, newDB, node.children());
+			    deleteObject(node.getUserObject());
+			}
+			TreePath path = new TreePath(newParent.getPath());
+			if (targetTree.isExpanded(path))
+			    targetTree.collapsePath(path);
+			targetTree.expandPath(path);
+
+
+		    } else if (object instanceof ParaProfTrial) {
+			if (!(newParent.getUserObject() instanceof ParaProfExperiment)) {
+			    return;
+			}
 			ParaProfTrial trial = (ParaProfTrial) node.getUserObject();
-//			while(trial.loading()){
-//			    //If the trial is in the middle of loading, we can't move it
-//			    Thread.sleep(10);
-//			}
 			ParaProfExperiment exp = (ParaProfExperiment) newParent.getUserObject();
-//
-//			//If there is not a metadata string build one
-//			if(trial.getTrial().getDataSource().getMetadataString().equals("")) 
-//			    trial.getTrial().getDataSource().buildXMLMetaData();
-			DatabaseAPI newDB = new DatabaseAPI();
-			newDB.initialize((Database) ((DefaultMutableTreeNode) newParent.getParent().getParent()).getUserObject());
+			if(!exp.dBExperiment() && trial.dBTrial())
+			    return;
 
-			uploadTrial(trial,exp, newDB);
+			if (JOptionPane.showConfirmDialog(ParaProf.paraProfManagerWindow,
+				"Are you sure you want to move this?", "Move Trial",
+				JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
+			    return;
+			}
 
-			deleteObject(node.getUserObject());
+			expand(node);
+			if(!exp.dBExperiment()){
+			    ParaProfExperiment oldexp = trial.getExperiment();
+			    ParaProf.paraProfManagerWindow.getTreeModel().removeNodeFromParent(trial.getDMTN());
+			    uploadTrial(trial, exp);
+			    oldexp.removeTrial(trial);
+			}else{
+			    DatabaseAPI newDB = ParaProf.paraProfManagerWindow
+			    .getDatabaseAPI((Database) ((DefaultMutableTreeNode) newParent
+				    .getParent().getParent()).getUserObject());
+			    uploadTrial(trial, exp, newDB);
+			    deleteObject(node.getUserObject());
+			}
+			TreePath path = new TreePath(newParent.getPath());
+			if (targetTree.isExpanded(path))
+			    targetTree.collapsePath(path);
+			targetTree.expandPath(path);
 
-		    }
-		    else
-		    {
+		    } else {
 			return;
 		    }
-		    //deleteObject(node.getUserObject());
 
 		    dtde.dropComplete(true);
 		    return;
@@ -206,55 +220,82 @@ public class TreeDropTarget implements DropTargetListener {
 	}
     }
 
+    private void uploadExperment(ParaProfApplication app, ParaProfExperiment exp,
+	    Enumeration<DefaultMutableTreeNode> children) throws FileNotFoundException, DataSourceException, InterruptedException, IOException, SQLException {
+	ParaProfExperiment newExp = app.addExperiment();
+	newExp.setName(exp.getName());
+	if (children != null) {
+	    while (children.hasMoreElements()) {
+		DefaultMutableTreeNode child = children.nextElement();
+		expand(child);
+		uploadTrial((ParaProfTrial) child.getUserObject(), newExp);
+	    }
+	}
 
-    private void expand(DefaultMutableTreeNode node) throws InterruptedException {
-	
-	if(node.getUserObject() instanceof ParaProfTrial){
-	   // ParaProf.paraProfManagerWindow.expandTrial((ParaProfTrial) node.getUserObject());
+
+    }
+
+
+    private void uploadTrial(ParaProfTrial trial, ParaProfExperiment exp) {
+	exp.addTrial(trial);
+	trial.setApplicationID(exp.getApplicationID());
+	trial.setExperimentID(exp.getID());
+	//trial.setDBTrial(false);
+
+    }
+
+    private void expand(DefaultMutableTreeNode node) throws InterruptedException,
+    FileNotFoundException, DataSourceException, IOException, SQLException {
+
+	if (node.getUserObject() instanceof ParaProfTrial) {
 	    trialWillExpand(node);
 	    waitForLoad((ParaProfTrial) node.getUserObject());
-	}else {
+	} else {
 	    targetTree.expandPath(new TreePath(node.getPath()));
 	}
 	Enumeration<DefaultMutableTreeNode> children = node.children();
 
-	if(children!= null){
-	    while(children.hasMoreElements()){
+	if (children != null) {
+	    while (children.hasMoreElements()) {
 		DefaultMutableTreeNode child = children.nextElement();
 		expand(child);
-		
+
 	    }
 	}
 
     }
 
-    private void uploadApplication(DatabaseAPI newDB, ParaProfApplication app, 
-	    Enumeration<DefaultMutableTreeNode> childern) throws DatabaseException, SQLException, InterruptedException, FileNotFoundException, DataSourceException, IOException {
+    private void uploadApplication(DatabaseAPI newDB, ParaProfApplication app,
+	    Enumeration<DefaultMutableTreeNode> childern) throws DatabaseException, SQLException,
+	    InterruptedException, FileNotFoundException, DataSourceException, IOException {
 	Application newApp = new Application(app);
-	newApp.setID(-1); // must set the ID to -1 to indicate that this is a new application (bug found by Sameer on 2005-04-19)
+	newApp.setID(-1); // must set the ID to -1 to indicate that this is a
+	// new application (bug found by Sameer on 2005-04-19)
 	ParaProfApplication application = new ParaProfApplication(newApp);
 	application.setID(-1);
 	application.setDBApplication(true);
 	application.setID(newDB.saveApplication(application));
 
-	for (;childern.hasMoreElements();) {
+	for (; childern.hasMoreElements();) {
 	    DefaultMutableTreeNode node = childern.nextElement();
 	    ParaProfExperiment ppExp = (ParaProfExperiment) node.getUserObject();
 	    uploadExperiment(application, ppExp, newDB, node.children());
 	}
     }
-    private void uploadTrial(ParaProfTrial ppTrial, ParaProfExperiment dbExp, DatabaseAPI dbAPI) throws FileNotFoundException, DataSourceException, IOException, SQLException, InterruptedException{
-	 waitForLoad(ppTrial);
 
-	    if(ppTrial.getTrial().getDataSource().getMetadataString().equals("")) 
-		ppTrial.getTrial().getDataSource().buildXMLMetaData();
-	    while(ppTrial.loading()){
-		//If the trial is in the middle of loading, we can't move it
-		Thread.sleep(10);
-	    }
-	    ppTrial.setExperiment(dbExp);
-	
-	
+    private void uploadTrial(ParaProfTrial ppTrial, ParaProfExperiment dbExp, DatabaseAPI dbAPI)
+    throws FileNotFoundException, DataSourceException, IOException, SQLException,
+    InterruptedException {
+	waitForLoad(ppTrial);
+
+	if (ppTrial.getTrial().getDataSource().getMetadataString().equals(""))
+	    ppTrial.getTrial().getDataSource().buildXMLMetaData();
+	while (ppTrial.loading()) {
+	    // If the trial is in the middle of loading, we can't move it
+	    Thread.sleep(10);
+	}
+	ppTrial.setExperiment(dbExp);
+
 	ParaProfTrial dbTrial = new ParaProfTrial(ppTrial.getTrial());
 	dbTrial.setID(-1);
 	dbTrial.setExperimentID(dbExp.getID());
@@ -267,19 +308,22 @@ public class TreeDropTarget implements DropTargetListener {
 	dbTrial.setDatabaseAPI(dbAPI);
 	dbTrial.getTrial().setID(-1);
 	if (dbAPI != null) {
-	    // this call will block until the entire thing is uploaded (could be a while)
+	    // this call will block until the entire thing is uploaded (could be
+	    // a while)
 	    dbTrial.setID(dbAPI.uploadTrial(dbTrial.getTrial()));
-	    dbAPI.terminate();
+	    // dbAPI.terminate();
 	}
 
-	//Now safe to set this to be a dbTrial.
+	// Now safe to set this to be a dbTrial.
 	dbTrial.setDBTrial(true);
-	//ParaProf.paraProfManagerWindow.populateTrialMetrics(ppTrial);
-
+	// ParaProf.paraProfManagerWindow.populateTrialMetrics(ppTrial);
 
     }
-    private void uploadExperiment(ParaProfApplication app, ParaProfExperiment exp, 
-	    DatabaseAPI databaseAPI, Enumeration<DefaultMutableTreeNode> childern) throws DatabaseException, SQLException, InterruptedException, FileNotFoundException, DataSourceException, IOException {
+
+    private void uploadExperiment(ParaProfApplication app, ParaProfExperiment exp,
+	    DatabaseAPI databaseAPI, Enumeration<DefaultMutableTreeNode> childern)
+    throws DatabaseException, SQLException, InterruptedException, FileNotFoundException,
+    DataSourceException, IOException {
 	Experiment newExp = new Experiment(exp);
 	ParaProfExperiment experiment = new ParaProfExperiment(newExp);
 	newExp.setID(-1);
@@ -289,51 +333,39 @@ public class TreeDropTarget implements DropTargetListener {
 	experiment.setApplication(app);
 	experiment.setID(databaseAPI.saveExperiment(experiment));
 
-
 	for (; childern.hasMoreElements();) {
 	    DefaultMutableTreeNode node = childern.nextElement();
 	    ParaProfTrial ppTrial = (ParaProfTrial) node.getUserObject();
-	   
+	    DatabaseAPI newDB = ParaProf.paraProfManagerWindow.getDatabaseAPI(experiment
+		    .getDatabase());
 	    uploadTrial(ppTrial, experiment, databaseAPI);
 	}
-
 
     }
 
     private void waitForLoad(ParaProfTrial ppTrial) throws InterruptedException {
-//	if(ppTrial.dBTrial()){
-//	    boolean loaded =false;
-//	    while(!loaded ){
-//		for (Enumeration<ParaProfTrial> e = ParaProf.paraProfManagerWindow.getLoadedDBTrials().elements(); e.hasMoreElements();) {
-//		    ParaProfTrial loadedTrial = e.nextElement();
-//		    if ((ppTrial.getID() == loadedTrial.getID()) && (ppTrial.getExperimentID() == loadedTrial.getExperimentID())
-//			    && (ppTrial.getApplicationID() == loadedTrial.getApplicationID())) {
-//			loaded = true;
-//			break;
-//		    }
-//		}
-//		if(!loaded) Thread.sleep(10);
-//	    }
-//	}
-	while(ppTrial.loading()){
+	while (ppTrial.loading()) {
 	    Thread.sleep(10);
 	}
 
     }
-    
-    private void trialWillExpand(DefaultMutableTreeNode selectedNode) {
+
+    private void trialWillExpand(DefaultMutableTreeNode selectedNode) throws FileNotFoundException,
+    DataSourceException, IOException, SQLException {
 	Object userObject = selectedNode.getUserObject();
 
-	 ParaProfTrial trial = (ParaProfTrial) userObject;
+	ParaProfTrial trial = (ParaProfTrial) userObject;
 	if (trial.dBTrial()) {
 
 	    // test to see if trial has already been loaded
 	    // if so, we re-associate the ParaProfTrial with the DMTN since
 	    // the old one is gone
 	    boolean loaded = false;
-	    for (Enumeration<ParaProfTrial> e = ParaProf.paraProfManagerWindow.getLoadedDBTrials().elements(); e.hasMoreElements();) {
+	    for (Enumeration<ParaProfTrial> e = ParaProf.paraProfManagerWindow.getLoadedDBTrials()
+		    .elements(); e.hasMoreElements();) {
 		ParaProfTrial loadedTrial = e.nextElement();
-		if ((trial.getID() == loadedTrial.getID()) && (trial.getExperimentID() == loadedTrial.getExperimentID())
+		if ((trial.getID() == loadedTrial.getID())
+			&& (trial.getExperimentID() == loadedTrial.getExperimentID())
 			&& (trial.getApplicationID() == loadedTrial.getApplicationID())) {
 		    selectedNode.setUserObject(loadedTrial);
 		    loadedTrial.setDMTN(selectedNode);
@@ -352,43 +384,29 @@ public class TreeDropTarget implements DropTargetListener {
 		// load the trial in from the db
 		ppTrial.setLoading(true);
 
-		DatabaseAPI databaseAPI = ParaProf.paraProfManagerWindow.getDatabaseAPI(ppTrial.getDatabase());
+		DatabaseAPI databaseAPI = ParaProf.paraProfManagerWindow.getDatabaseAPI(ppTrial
+			.getDatabase());
 		if (databaseAPI != null) {
 		    databaseAPI.setApplication(ppTrial.getApplicationID());
 		    databaseAPI.setExperiment(ppTrial.getExperimentID());
-		    databaseAPI.setTrial(ppTrial.getID(), true);//TODO: Is XML metadata required here?
-
+		    databaseAPI.setTrial(ppTrial.getID(), true);
 		    DBDataSource dbDataSource = new DBDataSource(databaseAPI);
-		    dbDataSource.setGenerateIntermediateCallPathData(ParaProf.preferences.getGenerateIntermediateCallPathData());
+		    dbDataSource.setGenerateIntermediateCallPathData(ParaProf.preferences
+			    .getGenerateIntermediateCallPathData());
 		    ppTrial.getTrial().setDataSource(dbDataSource);
 		    final DataSource dataSource = dbDataSource;
 		    final ParaProfTrial theTrial = ppTrial;
-		    java.lang.Thread thread = new java.lang.Thread(new Runnable() {
 
-			public void run() {
-			    try {
-				dataSource.load();
-				theTrial.finishLoad();
-				ParaProf.paraProfManagerWindow.getLoadedTrials().add(ppTrial);
+		    dataSource.load();
+		    theTrial.finishLoad();
+		    ParaProf.paraProfManagerWindow.getLoadedTrials().add(ppTrial);
 
-			    } catch (final Exception e) {
-				EventQueue.invokeLater(new Runnable() {
-				    public void run() {
-					ParaProfUtils.handleException(e);
-				    }
-				});
-			    }
-			}
-		    });
-		    thread.start();
-
-		    //Add to the list of loaded trials.
+		    // Add to the list of loaded trials.
 		    ParaProf.paraProfManagerWindow.getLoadedDBTrials().add(ppTrial);
 		}
 	    }
 	}
     }
-
 
     private void deleteObject(Object ppTrial) {
 
