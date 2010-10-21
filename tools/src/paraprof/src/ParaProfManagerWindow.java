@@ -65,11 +65,14 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.event.TreeExpansionEvent;
+import javax.swing.event.TreeModelEvent;
+import javax.swing.event.TreeModelListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.TreeWillExpandListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
@@ -277,7 +280,19 @@ DBManagerListener {
 	}
 	//root.add(dbApps);
 
-	setTreeModel(new DefaultTreeModel(root));
+	setTreeModel(new DefaultTreeModel(root){
+
+	    private static final long serialVersionUID = 1L;
+
+	    public void valueForPathChanged(TreePath path,
+		    Object newValue){
+		MutableTreeNode   aNode = (MutableTreeNode)path.getLastPathComponent();
+		handleRename((DefaultMutableTreeNode) aNode, newValue);
+		nodeChanged(aNode);
+
+	    }
+	} );
+
 	getTreeModel().setAsksAllowsChildren(true);
 
 	tree = new JTree(getTreeModel());
@@ -286,6 +301,7 @@ DBManagerListener {
 	tree.getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
 	ParaProfTreeCellRenderer renderer = new ParaProfTreeCellRenderer();
 	tree.setCellRenderer(renderer);
+	tree.setEditable(true);
 
 
 
@@ -326,55 +342,55 @@ DBManagerListener {
 
 		    if (paths.length == 1) { // only one item is selected
 			TreePath path = paths[0];
-		    DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
-		    Object userObject = selectedNode.getUserObject();
+			DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
+			Object userObject = selectedNode.getUserObject();
 
-		    if (ParaProfUtils.rightClick(evt)) {
-			if (userObject instanceof ParaProfApplication) {
-			    clickedOnObject = userObject;
-			    if (((ParaProfApplication) userObject).dBApplication()) {
-				dbAppPopup.show(tree, evt.getX(), evt.getY());
-			    } else {
-				stdAppPopup.show(tree, evt.getX(), evt.getY());
-			    }
-			} else if (userObject instanceof ParaProfExperiment) {
-			    clickedOnObject = userObject;
-			    if (((ParaProfExperiment) userObject).dBExperiment()) {
-				dbExpPopup.show(tree, evt.getX(), evt.getY());
-			    } else {
-				stdExpPopup.show(tree, evt.getX(), evt.getY());
-			    }
-
-			} else if (userObject instanceof ParaProfTrial) {
-			    clickedOnObject = userObject;
-			    if (((ParaProfTrial) userObject).dBTrial()) {
-				dbTrialPopup.show(tree, evt.getX(), evt.getY());
-			    } else {
-				stdTrialPopup.show(tree, evt.getX(), evt.getY());
-			    }
-			} else if (userObject instanceof ParaProfMetric) {
-			    clickedOnObject = userObject;
-			    metricPopup.show(tree, evt.getX(), evt.getY());
-			} else {
-			    // standard or database
-			    clickedOnObject = selectedNode;
-			    popup1.show(tree, evt.getX(), evt.getY());
-
-			}
-		    } else {
-
-			if (userObject instanceof ParaProfMetric) {
-			    ParaProfMetric ppMetric = (ParaProfMetric) userObject;
-			    if (evt.getClickCount() == 2) {
-				showMetric(ppMetric);
-				if (showApplyOperationItem.isSelected()){
-				    derivedMetricPanel.removeMetric(ppMetric);
+			if (ParaProfUtils.rightClick(evt)) {
+			    if (userObject instanceof ParaProfApplication) {
+				clickedOnObject = userObject;
+				if (((ParaProfApplication) userObject).dBApplication()) {
+				    dbAppPopup.show(tree, evt.getX(), evt.getY());
+				} else {
+				    stdAppPopup.show(tree, evt.getX(), evt.getY());
 				}
-			    }else if (showApplyOperationItem.isSelected()){
-				derivedMetricPanel.insertMetric(ppMetric);
+			    } else if (userObject instanceof ParaProfExperiment) {
+				clickedOnObject = userObject;
+				if (((ParaProfExperiment) userObject).dBExperiment()) {
+				    dbExpPopup.show(tree, evt.getX(), evt.getY());
+				} else {
+				    stdExpPopup.show(tree, evt.getX(), evt.getY());
+				}
+
+			    } else if (userObject instanceof ParaProfTrial) {
+				clickedOnObject = userObject;
+				if (((ParaProfTrial) userObject).dBTrial()) {
+				    dbTrialPopup.show(tree, evt.getX(), evt.getY());
+				} else {
+				    stdTrialPopup.show(tree, evt.getX(), evt.getY());
+				}
+			    } else if (userObject instanceof ParaProfMetric) {
+				clickedOnObject = userObject;
+				metricPopup.show(tree, evt.getX(), evt.getY());
+			    } else {
+				// standard or database
+				clickedOnObject = selectedNode;
+				popup1.show(tree, evt.getX(), evt.getY());
+
 			    }
-			}
-		    }}
+			} else {
+
+			    if (userObject instanceof ParaProfMetric) {
+				ParaProfMetric ppMetric = (ParaProfMetric) userObject;
+				if (evt.getClickCount() == 2) {
+				    showMetric(ppMetric);
+				    if (showApplyOperationItem.isSelected()){
+					derivedMetricPanel.removeMetric(ppMetric);
+				    }
+				}else if (showApplyOperationItem.isSelected()){
+				    derivedMetricPanel.insertMetric(ppMetric);
+				}
+			    }
+			}}
 		} catch (Exception e) {
 		    ParaProfUtils.handleException(e);
 		}
@@ -385,8 +401,9 @@ DBManagerListener {
 	//Add tree listeners.
 	tree.addTreeSelectionListener(this);
 	tree.addTreeWillExpandListener(this);
-	
-	
+
+
+
 	TreeDragSource ds =new TreeDragSource(tree,DnDConstants.ACTION_MOVE);
 	TreeDropTarget dropTarget = new TreeDropTarget(tree);
 	//don't do this because it will cause the swing DnD to be activated which will conflict with the AWT 
@@ -436,6 +453,50 @@ DBManagerListener {
 
 	ParaProf.incrementNumWindows();
     }
+
+    protected void handleRename(DefaultMutableTreeNode aNode, Object newValue) {
+	if(newValue instanceof String){
+	    String name = (String)newValue;
+	    if( aNode.getUserObject() instanceof ParaProfApplication){
+		ParaProfApplication application = (ParaProfApplication) aNode.getUserObject();
+		application.setName(name);
+
+		if (application.dBApplication()) {
+		    DatabaseAPI databaseAPI = getDatabaseAPI(application.getDatabase());
+		    if (databaseAPI != null) {
+			databaseAPI.saveApplication(application);
+			databaseAPI.terminate();
+		    }
+		}
+
+
+	    }else if( aNode.getUserObject() instanceof ParaProfExperiment){
+		ParaProfExperiment experiment = (ParaProfExperiment) aNode.getUserObject();
+		experiment.setName(name);
+
+		if (experiment.dBExperiment()) {
+		    DatabaseAPI databaseAPI = getDatabaseAPI(experiment.getDatabase());
+		    if (databaseAPI != null) {
+			databaseAPI.saveExperiment(experiment);
+			databaseAPI.terminate();
+		    }
+		}
+
+	    }else if( aNode.getUserObject() instanceof ParaProfTrial){
+		ParaProfTrial ppTrial = (ParaProfTrial) aNode.getUserObject();
+		ppTrial.getTrial().setName(name);
+		  if (ppTrial.dBTrial()) {
+		            DatabaseAPI databaseAPI = getDatabaseAPI(ppTrial.getDatabase());
+		            if (databaseAPI != null) {
+		                databaseAPI.saveTrial(ppTrial.getTrial());
+		                databaseAPI.terminate();
+		            }
+		        }
+	    }
+	}
+
+    }
+
 
     void setupMenus() {
 	JMenuBar mainMenu = new JMenuBar();
@@ -522,6 +583,9 @@ DBManagerListener {
 	jMenuItem = new JMenuItem("Delete");
 	jMenuItem.addActionListener(this);
 	stdAppPopup.add(jMenuItem);
+	jMenuItem = new JMenuItem("Rename");
+	jMenuItem.addActionListener(this);
+	stdAppPopup.add(jMenuItem);
 
 	// DB application popup
 	jMenuItem = new JMenuItem("Add Experiment");
@@ -534,6 +598,9 @@ DBManagerListener {
 	//        jMenuItem.addActionListener(this);
 	//        dbAppPopup.add(jMenuItem);
 	jMenuItem = new JMenuItem("Delete");
+	jMenuItem.addActionListener(this);
+	dbAppPopup.add(jMenuItem);
+	jMenuItem = new JMenuItem("Rename");
 	jMenuItem.addActionListener(this);
 	dbAppPopup.add(jMenuItem);
 
@@ -550,6 +617,10 @@ DBManagerListener {
 	jMenuItem = new JMenuItem("Delete");
 	jMenuItem.addActionListener(this);
 	stdExpPopup.add(jMenuItem);
+	jMenuItem = new JMenuItem("Rename");
+	jMenuItem.addActionListener(this);
+	stdExpPopup.add(jMenuItem);
+
 
 	// DB experiment popup
 	jMenuItem = new JMenuItem("Add Trial");
@@ -560,6 +631,9 @@ DBManagerListener {
 	//dbExpPopup.add(jMenuItem);
 
 	jMenuItem = new JMenuItem("Delete");
+	jMenuItem.addActionListener(this);
+	dbExpPopup.add(jMenuItem);
+	jMenuItem = new JMenuItem("Rename");
 	jMenuItem.addActionListener(this);
 	dbExpPopup.add(jMenuItem);
 
@@ -582,6 +656,9 @@ DBManagerListener {
 	jMenuItem = new JMenuItem("Delete");
 	jMenuItem.addActionListener(this);
 	stdTrialPopup.add(jMenuItem);
+	jMenuItem = new JMenuItem("Rename");
+	jMenuItem.addActionListener(this);
+	stdTrialPopup.add(jMenuItem);
 
 	jMenuItem = new JMenuItem("Show metric in new window");
 	jMenuItem.addActionListener(this);
@@ -592,6 +669,7 @@ DBManagerListener {
 	jMenuItem = new JMenuItem("Delete");
 	jMenuItem.addActionListener(this);
 	metricPopup.add(jMenuItem);
+
 
 	// DB trial popup
 	jMenuItem = new JMenuItem("Export Profile");
@@ -607,6 +685,9 @@ DBManagerListener {
 	jMenuItem.addActionListener(this);
 	dbTrialPopup.add(jMenuItem);
 	jMenuItem = new JMenuItem("Delete");
+	jMenuItem.addActionListener(this);
+	dbTrialPopup.add(jMenuItem);
+	jMenuItem = new JMenuItem("Rename");
 	jMenuItem.addActionListener(this);
 	dbTrialPopup.add(jMenuItem);
 
@@ -888,7 +969,6 @@ DBManagerListener {
 		    ParaProf.getHelpWindow().writeText("");
 		} else if (arg.equals("Delete")) {
 		    handleDelete(clickedOnObject);
-
 		} else if (arg.equals("Add Application")) {
 		    if (clickedOnObject == standard) {
 			ParaProfApplication application = addApplication(false, standard);
@@ -1117,6 +1197,9 @@ DBManagerListener {
 	    ParaProfUtils.handleException(e);
 	}
     }
+
+
+
 
     private void addMeanToComparisonWindow(ParaProfTrial ppTrial) {
 	if (ppTrial.loading()) {
