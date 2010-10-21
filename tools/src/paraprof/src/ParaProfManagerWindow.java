@@ -26,7 +26,9 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
+import java.awt.dnd.Autoscroll;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DragSource;
 import java.awt.event.ActionEvent;
@@ -295,7 +297,7 @@ DBManagerListener {
 
 	getTreeModel().setAsksAllowsChildren(true);
 
-	tree = new JTree(getTreeModel());
+	tree = new AutoScrollingJTree(getTreeModel() );
 	//tree = new JTree(new DataManagerTreeModel());
 	//tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 	tree.getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
@@ -2543,5 +2545,43 @@ DBManagerListener {
     public DefaultTreeModel getTreeModel() {
 	return treeModel;
     }
+    public class AutoScrollingJTree extends JTree implements Autoscroll {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2307960353540807206L;
+	/**
+	 * 
+	 */
+	private int margin = 12;
+	
+	public AutoScrollingJTree() {
+		super();
+	}
+	
+	public AutoScrollingJTree(DefaultTreeModel treeModel) {
+	    super(treeModel);
+	}
+
+	public void autoscroll(Point p) {
+		int realrow = getRowForLocation(p.x, p.y);
+		Rectangle outer = getBounds();
+		realrow = (p.y + outer.y <= margin ? realrow < 1 ? 0 : realrow - 1
+				   : realrow < getRowCount() - 1 ? realrow + 1 : realrow);
+		scrollRowToVisible(realrow);
+	}
+	
+	public Insets getAutoscrollInsets() {
+		Rectangle outer = getBounds();
+		Rectangle inner = getParent().getBounds();
+		return new Insets(inner.y - outer.y + margin, inner.x - outer.x
+						  + margin, outer.height - inner.height - inner.y + outer.y
+						  + margin, outer.width - inner.width - inner.x + outer.x
+						  + margin);
+	}
+
+	
+}
+
 
 }
