@@ -978,8 +978,8 @@ for arg in "$@"; do
       jv=`$jdkdir/bin/java -version 2>&1 | grep version | awk '{ print $3; }'| sed -e s/\"//g`
     if [ `echo $jv | sed -e s/1.6\.*// | wc -c` -eq 1 ] || [ `echo $jv | sed -e s/1.7\.*// | wc -c` -eq 1 ]
     then
-	echo "Using JVMTI"
-        fixmakeargs="$fixmakeargs JVMTI jdkdir=$jdkdir"
+        echo "Error: Specify a JDK of version 1.5 or earlier"
+        exit 1
     fi
     shift
     ;;
@@ -1328,7 +1328,38 @@ for arg in "$@"; do
     shift
     ;;
 
-  default)
+  -cudainc=*)
+    cudainclude=`echo $arg | sed -e 's/-cudainc=//' -e 's/ /#/g'`
+    if [ ! -d $cudainclude ] ; then
+      echo "Error: Cannot access GPU include directory $cudainclude"
+      exit 1
+    fi
+    if [ -f "$cudainclude/cuda.h" ] ; then
+    	fixmakeargs="$fixmakeargs cudainclude=$cudainclude useropt=-DTAU_MAX_THREADS=3"
+			if [ -f "$cudainclude/CL/cl.h" ] ; then
+    		fixmakeargs="$fixmakeargs cudainclude=$cudainclude openclinclude=$cudainclude useropt=-DTAU_MAX_THREADS=3"
+			fi
+		else
+			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
+    fi
+    shift
+    ;;
+
+  -openclinc=*)
+    openclinclude=`echo $arg | sed -e 's/-openclinc=//' -e 's/ /#/g'`
+    if [ ! -d $openclinclude ] ; then
+      echo "Error: Cannot access GPU include directory $openclinclude"
+      exit 1
+    fi
+		if [ -f "$openclinclude/CL/cl.h" ] ; then
+      fixmakeargs="$fixmakeargs openclinclude=$openclinclude useropt=-DTAU_MAX_THREADS=3"
+		else
+			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
+    fi
+    shift
+    ;;
+  
+	default)
     echo "Fixing Makefiles"
     ;;	
   '')
@@ -1414,6 +1445,15 @@ sed -e 's,@TAUROOTDIR@,'$targetdir',' \
 -e 's,@TARGETDIR@,'$targetdir',' \
  > ${targetdir}/${architecture}/bin/perfexplorer_configure
 chmod a+rx ${targetdir}/${architecture}/bin/perfexplorer_configure
+
+cat ${tauroot}/tools/src/java-1.4/configure-1.4.skel | 
+sed -e 's,@TAUROOTDIR@,'$targetdir',' \
+-e 's,@SHELL@,'$taushell',' \
+-e 's,@ARCH@,'$architecture',' \
+-e 's,@TARGETDIR@,'$targetdir',' \
+ > ${targetdir}/${architecture}/bin/configure-1.4
+chmod a+rx ${targetdir}/${architecture}/bin/configure-1.4
+
 
 if [ ! -d ${targetdir}/etc ] ; then
     mkdir -p ${targetdir}/etc
@@ -1921,7 +1961,7 @@ case $machine in
     crayxmt)
         cxx_compiler=c++
         c_compiler=cc
-	fixmakeargs="$fixmakeargs CRAYXMT NOSHARED"
+	fixmakeargs="$fixmakeargs CRAYXMT"
         if [ $pdt_cxx_compiler = default ] ; then
 	    pdt_cxx_full_path=/usr/bin/g++
 	    pdt_cxx_compiler=/usr/bin/g++
@@ -2111,7 +2151,7 @@ fi
 
 if [ $machine = hitachi ]
   then
-    fixmakeargs="$fixmakeargs HITACHI NOSHARED"
+    fixmakeargs="$fixmakeargs HITACHI"
 fi
    
 if [ $machine = t3e -a $cxx_compiler = CC ] 
@@ -2121,7 +2161,7 @@ fi
 
 if [ $machine = crayx1 -o $machine = craysv1 -a $cxx_compiler = CC ]
   then
-    fixmakeargs="$fixmakeargs CRAYX1CC NOSHARED"
+    fixmakeargs="$fixmakeargs CRAYX1CC"
 fi
 
 ######################################################################
@@ -2561,7 +2601,7 @@ case $cxx_compiler in
         if [ $machine = nec ]
 	then
           echo "Default C++ compiler will be NEC c++ compiler"
-          fixmakeargs="$fixmakeargs USE_NECCXX NOSHARED"
+          fixmakeargs="$fixmakeargs USE_NECCXX"
           tauoptions="${tauoptions}-cxx"
           if [ $fortran_compiler = no ]
           then 
@@ -2761,7 +2801,7 @@ case $fortran_compiler in
    nec)
       echo "Default Fortran compiler will be NEC f90"
       extradir=`which f90 | sed s/f90/../`
-      fixmakeargs="$fixmakeargs NEC_FORTRAN NOSHARED"
+      fixmakeargs="$fixmakeargs NEC_FORTRAN"
       ;;
 
    lahey)
@@ -3480,7 +3520,7 @@ fi
 if [ $catamount = yes ] 
 then
   #echo "This looks like a CATAMOUNT Cray RS system..."
-  fixmakeargs="$fixmakeargs CATAMOUNT NOSHARED"
+  fixmakeargs="$fixmakeargs CATAMOUNT"
 
   if [ $fortran_compiler = pgi ] 
   then
@@ -3564,7 +3604,7 @@ case $machine in
         ;; 
      bgl)
 	echo "Found an IBM PPC-64 BGL Linux configuration definition"
-	fixmakeargs="arch=$machine BGL NOSHARED $fixmakeargs"
+	fixmakeargs="arch=$machine BGL $fixmakeargs"
 	if [ $papi = yes ] ; then
 	    p=$papidir/lib
 	    if [ -f $p/libpapi.a ] ; then
@@ -3843,6 +3883,7 @@ case $machine in
 	;;
 
      default)
+	echo "fix make args $fixmakeargs"
 	fixmakeargs="arch=$machine $fixmakeargs"
 	;;
 
@@ -5245,7 +5286,7 @@ if [ $scorep = yes ] ; then
 
     fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
     fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
-    fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/silc#-I$scorepdir/include/silc_utility"
+    fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/silc"
 fi
 
 if [ $epilog = yes ] ; then
@@ -5555,7 +5596,7 @@ if [ $hpctoolkit = yes ] ; then
     fixmakeargs="$fixmakeargs HPCTOOLKIT hpctoolkit_include=${hpctoolkit_include} hpctoolkit_link=${hpctoolkit_link}"
 fi
 
-# TAUmon MPI
+# TAUmon MPI                                                                                
 if [ $mon_mpi = yes ] ; then
   if [ $mrnet = yes ] ; then
        echo "ERROR: MRNet and MPI cannot simultaneously be used as TAUmon transport"
@@ -5569,13 +5610,13 @@ if [ $mon_mpi = yes ] ; then
   fi
 fi
 
-# TAUmon MRNet
+# TAUmon MRNet                                                                              
 if [ $mrnet = yes ] ; then
   if [ $mon_mpi = yes ] ; then
        echo "ERROR: MRNet and MPI cannot simultaneously be used as TAUmon transport"
        exit 1
   fi
-  if [ $mpi = yes ] ; then 
+  if [ $mpi = yes ] ; then
        fixmakeargs="$fixmakeargs MRNET"
        if [ $mrnet_use_lightweight = yes ] ; then
             fixmakeargs="$fixmakeargs mrnet_lw=-DMRNET_LIGHTWEIGHT"

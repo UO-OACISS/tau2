@@ -59,4 +59,27 @@
 JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved);
 JNIEXPORT void JNICALL Agent_OnUnload(JavaVM *vm);
 
+typedef struct ClassInfo {
+    const char *name;          /* Class name */
+} ClassInfo;
+
+/* Global agent data structure */
+
+typedef struct {
+  /* JVMTI Environment */
+  jvmtiEnv      *jvmti;
+  jboolean       vm_is_dead;
+  jboolean       vm_is_started;
+  jboolean       vm_is_initialized;
+  /* Data access Lock */
+  jrawMonitorID  lock;
+  /* Options */
+  char           *include;
+  char           *exclude;
+  int             max_count;
+  /* ClassInfo Table */
+  ClassInfo      *classes;
+  jint            ccount;
+} GlobalAgentData;
+
 #endif

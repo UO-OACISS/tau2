@@ -46,6 +46,7 @@ public abstract class DataSource {
     public static final int GPTL = 13; // General Purpose Timing Library - Jim Rosinski
     public static final int PARAVER = 14; // Statistical output from Paraver - Jesus LeBarta
     public static final int IPM = 15; // Data from IPM/NERSC
+    public static final int GOOGLE = 16; //Google PerfTools
     public static final int GYRO = 100;
     public static final int GAMESS = 101; // application log data
     public static final String FILE_TYPE_INDEX = "File Type Index";
@@ -53,7 +54,7 @@ public abstract class DataSource {
 
     public static String formatTypeStrings[] = { "ParaProf Packed Profile", "Tau profiles", "Dynaprof", "MpiP", "HPMToolkit",
             "Gprof", "PSRun", "Tau pprof.dat", "Cube", "HPCToolkit", "TAU Snapshot", "ompP", "PERI-XML",
-            "General Purpose Timing Library (GPTL)", "Paraver", "IPM" };
+            "General Purpose Timing Library (GPTL)", "Paraver", "IPM", "Google PerfTools" };
 
     private static boolean meanIncludeNulls = true;
 
@@ -1532,6 +1533,8 @@ public abstract class DataSource {
     public final static int EXEC_TYPE_THREADED = 2;
     public final static int EXEC_TYPE_HYBRID = 3;
     public final static int EXEC_TYPE_OTHER = 4;
+
+    
 
     public int getExecutionType() {
         if (getAllThreads().size() == 1) {
