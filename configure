@@ -2950,7 +2950,8 @@ then
 	mpiinc=/opt/xt-mpt/default/mpich2-64/P2/include
 	;;
   craycnl)
-	mpiinc=/opt/xt-mpt/default/mpich2-64/P/include
+#	mpiinc=/opt/xt-mpt/default/mpich2-64/P/include
+	mpiinc=$MPICH_DIR/include
         if [ ! -r $mpiinc ] ; then
             if [ $default_fortran = gfortran ] ; then
                 mpiinc=/opt/mpt/$MPT_VERSION/xt/mpich2-gnu/include
@@ -2961,6 +2962,7 @@ then
                 mpiinc=/opt/mpt/default/xt/mpich2-pgi/include
 	    fi
         fi
+        echo "Using MPI INCLUDE dir from $mpiinc"
 	;;
   solaris2*)
 	mpiinc=/opt/SUNWhpc/include
@@ -3061,7 +3063,7 @@ then
 	mpilib=/opt/xt-mpt/default/mpich2-64/P2/lib
 	;;
   craycnl)
-	mpilib=
+	mpilib=$MPICH_DIR/lib
 	;;
   solaris2*)
 	mpilib=/opt/SUNWhpc/lib
