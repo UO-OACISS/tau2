@@ -2720,7 +2720,9 @@ case $fortran_compiler in
           fixmakeargs="$fixmakeargs SC_GFORTRAN"
       else
 	  gfortran=`which gfortran 2>&1`
-	  if [ "x$gfortran" != "x" ] ; then
+          retval=$?
+# when gfortran is not found, it returns a value of 1, otherwise it returns 0. 
+	  if [ "x$gfortran" != "x" -a "x$retval" != "x1" ] ; then
 	      if [ -x $gfortran ] ; then
 		  taugfortranlibdir=`gfortran -print-libgcc-file-name | sed s/libgcc.a//`
 	    fi
@@ -5466,7 +5468,7 @@ EOF
       
       $cxx_compiler -c f1.cpp
       icc -c f2.c
-      if icc f1.o f2.o -o foo -lcprts 1>/dev/null 2>&1 ; then
+      if icc f1.o f2.o -o foo.exe -lcprts 1>/dev/null 2>&1 ; then
           echo "Intel v8.0 compilers used"
       else
           $cxx_compiler -c -cxxlib-icc f1.cpp 1>/dev/null 2>&1
@@ -5481,7 +5483,7 @@ EOF
           taugcclibdir=`g++ $tau_opt_bits -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
           taugcclib=`g++ $tau_opt_bits -print-libgcc-file-name `
           taugcclib2dir=`which g++ | sed s/g++/../`         
-          if icc f1.o f2.o -o foo -L$taugcclib2dir/lib -L$taugcclibdir -lstdc++ $taugcclib 1>/dev/null 2>&1 ; then
+          if icc f1.o f2.o -o foo.exe -L$taugcclib2dir/lib -L$taugcclibdir -lstdc++ $taugcclib 1>/dev/null 2>&1 ; then
 #          echo "Confirmed  - links with gcc libs"
               echo "Intel v8.1+ compilers used"
               if [ "x$taugcclib2dir" != "x/usr/bin/../lib" ] ; then
@@ -5495,7 +5497,7 @@ EOF
               fixmakeargs="$fixmakeargs $tauextralibopts taugcclibdir=$taugcclibdir INTEL81FIX" 
           fi
       fi
-      /bin/rm -f f1.o f2.o f1.cpp f2.c foo
+      /bin/rm -f f1.o f2.o f1.cpp f2.c foo.exe
       # Check over!
 fi
 
