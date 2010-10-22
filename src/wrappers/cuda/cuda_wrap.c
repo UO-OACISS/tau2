@@ -78,7 +78,7 @@ cudaError_t cudaThreadSynchronize() {
   return retval;
 
 }
-
+/* Not in cuda 2.3
 cudaError_t cudaThreadSetLimit(enum cudaLimit a1, size_t a2) {
 
   typedef cudaError_t (*cudaThreadSetLimit_p) (enum cudaLimit, size_t);
@@ -190,7 +190,7 @@ cudaError_t cudaThreadSetCacheConfig(enum cudaFuncCache a1) {
   return retval;
 
 }
-
+*/
 cudaError_t cudaGetLastError() {
 
   typedef cudaError_t (*cudaGetLastError_p) ();
@@ -862,7 +862,7 @@ cudaError_t cudaSetupArgument(const void * a1, size_t a2, size_t a3) {
   return retval;
 
 }
-
+/* Not in cuda 2.3
 cudaError_t cudaFuncSetCacheConfig(const char * a1, enum cudaFuncCache a2) {
 
   typedef cudaError_t (*cudaFuncSetCacheConfig_p) (const char *, enum cudaFuncCache);
@@ -889,7 +889,7 @@ cudaError_t cudaFuncSetCacheConfig(const char * a1, enum cudaFuncCache a2) {
   }
   return retval;
 
-}
+}*/
 
 cudaError_t cudaLaunch(const char * a1) {
 
@@ -2177,7 +2177,7 @@ cudaError_t cudaGetSymbolSize(size_t * a1, const char * a2) {
   return retval;
 
 }
-
+/* Not in cuda 2.3
 cudaError_t cudaGraphicsUnregisterResource(cudaGraphicsResource_t a1) {
 
   typedef cudaError_t (*cudaGraphicsUnregisterResource_p) (cudaGraphicsResource_t);
@@ -2344,7 +2344,7 @@ cudaError_t cudaGraphicsSubResourceGetMappedArray(struct cudaArray ** a1, cudaGr
   }
   return retval;
 
-}
+}*/
 
 cudaError_t cudaGetChannelDesc(struct cudaChannelFormatDesc * a1, const struct cudaArray * a2) {
 
@@ -2681,6 +2681,7 @@ cudaError_t cudaRuntimeGetVersion(int * a1) {
   return retval;
 
 }
+/* Not cuda 2.3
 cudaError_t cudaGetExportTable(const void ** a1, const cudaUUID_t * a2) {
 
   typedef cudaError_t (*cudaGetExportTable_p) (const void **, const cudaUUID_t *);
@@ -2707,4 +2708,4 @@ cudaError_t cudaGetExportTable(const void ** a1, const cudaUUID_t * a2) {
   }
   return retval;
 
-}
+}*/

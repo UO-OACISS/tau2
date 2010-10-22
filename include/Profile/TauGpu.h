@@ -62,8 +62,7 @@ endTime);
 
 /* Callback for a Memcpy event that occurred earlier in the execution of the
  * program. Times are pre-aligned to the CPU clock. */
-extern "C" void Tau_gpu_register_memcpy_event(eventId *id, gpuId *device, double startTime, double
-endTime, int transferSize, bool memcpyType);
+extern "C" void Tau_gpu_register_memcpy_event(const char *name, eventId *id, gpuId *device, double startTime, double endTime, int transferSize, bool memcpyType);
 
 #endif // __cplusplus
 #endif // _TAU_GPU_INTERFACE

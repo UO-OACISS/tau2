@@ -1,6 +1,6 @@
 #include "TauGpuAdapterOpenCL.h"
 #include <stdlib.h>
-
+#include <string.h>
 void __attribute__ ((constructor)) Tau_opencl_init(void);
 //void __attribute__ ((destructor)) Tau_opencl_exit(void);
 
@@ -23,9 +23,10 @@ public:
 
 char* openCLGpuId::printId() 
 {
-		char *r;
+		/*char *r;
 		sprintf(r, "%d", id);
-		return r;
+		return r;*/
+		return "";
 }
 
 /* CUDA Event are uniquely identified as the pair of two other ids:
@@ -89,54 +90,54 @@ double stop)
 {
 	openCLEventId *evId = new openCLEventId(id);
 	
-	Tau_gpu_register_gpu_event(name, evId, start, stop);
+	Tau_gpu_register_gpu_event(name, evId, start/1e3, stop/1e3);
 }
 
-void Tau_opencl_register_memcpy_event(int id, double start, double stop, int
+void Tau_opencl_register_memcpy_event(const char *name, int id, double start, double stop, int
 transferSize, bool MemcpyType)
 {
+	//printf("in Tau_open.\n");
 	openCLEventId *evId = new openCLEventId(id);
 	openCLGpuId *gId = new openCLGpuId(0);
-		Tau_gpu_register_memcpy_event(evId, gId, start, stop, transferSize, MemcpyType);
+		Tau_gpu_register_memcpy_event(name, evId, gId, start/1e3, stop/1e3, transferSize, MemcpyType);
 
 }
 
 void CL_CALLBACK Tau_opencl_memcpy_callback(cl_event event, cl_int command_stat, void
-*memcpy_type)
+*data)
 {
-	printf("in memcpy callback!\n");
-	/*cl_ulong startTime, endTime;
+	memcpy_callback_data *memcpy_data = (memcpy_callback_data*) malloc(memcpy_data_size);
+	memcpy(memcpy_data, data, memcpy_data_size);
+	//printf("in memcpy callback!\n");
+	//printf("in TauGpuAdapt, name: %s", memcpy_data->name);
+	cl_ulong startTime, endTime;
 	cl_int err;
-  err = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START,
+  err = clGetEventProfilingInfo_noinst(event, CL_PROFILING_COMMAND_START,
 															 sizeof(cl_ulong), &startTime, NULL);
 	if (err != CL_SUCCESS)
 	{
 		printf("Cannot get start time for Memcpy event.\n");
 	  exit(1);	
 	}
-  err = clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END,
+  err = clGetEventProfilingInfo_noinst(event, CL_PROFILING_COMMAND_END,
 															 sizeof(cl_ulong), &endTime, NULL);
 	if (err != CL_SUCCESS)
 	{
 		printf("Cannot get end time for Memcpy event.\n");
 	  exit(1);	
 	}
-	if (*(bool*)memcpy_type == MemcpyDtoH)
-	{
-		Tau_opencl_register_memcpy_event(0, (double) startTime,
-		(double) endTime, 0, MemcpyDtoH);
-	}
-	else if (*(bool*)memcpy_type == MemcpyHtoD)
-	{
-		Tau_opencl_register_memcpy_event(1, (double) startTime,
-		(double) endTime, 0, MemcpyHtoD);
-	}*/
+	//printf("DtoH calling Tau_open.\n");
+	Tau_opencl_register_memcpy_event(memcpy_data->name, 0, (double) startTime,
+	(double) endTime, 0 /*TAU_GPU_UNKNOW_TRANSFER_SIZE*/, memcpy_data->memcpy_type);
 }
 
 void CL_CALLBACK Tau_opencl_kernel_callback(cl_event event, cl_int command_stat, void
-*kernel_type)
+*data)
 {
-	printf("in kernel callback!\n");
+	kernel_callback_data *kernel_data = (kernel_callback_data*) malloc(kernel_data_size);
+	//printf("memcpy size  %d.\n", kernel_data_size);
+	memcpy(kernel_data, data, kernel_data_size);
+	//printf("in kernel callback!\n");
 	cl_ulong startTime, endTime;
 	cl_int err;
   err = clGetEventProfilingInfo_noinst(event, CL_PROFILING_COMMAND_START,
@@ -153,8 +154,9 @@ void CL_CALLBACK Tau_opencl_kernel_callback(cl_event event, cl_int command_stat,
 		printf("Cannot get end time for Kernel event.\n");
 	  exit(1);	
 	}
-		printf("OpenCL.cpp: start timestamp: %.7f stop time %.7f.", (double) startTime, (double)endTime);
-		Tau_opencl_register_gpu_event("NDRangeKernel", 0, (double) startTime,
+		//printf("OpenCL.cpp: start timestamp: %.7f stop time %.7f.", (double) startTime, (double)endTime);
+	  //printf("in TauGpuAdapt name: %s.\n", kernel_data->name);
+		Tau_opencl_register_gpu_event(kernel_data->name, 0, (double) startTime,
 		(double) endTime);
 }
 
