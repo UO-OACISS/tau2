@@ -23,6 +23,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
     private SnapshotDataSource dataSource;
 
     private Map<String, ThreadData> threadMap = new HashMap<String, ThreadData>();
+   // private Map<String, ThreadData> entityMap = new HashMap<String, ThreadData>();
 
     private ThreadData currentThread;
     private Snapshot currentSnapshot;
@@ -104,12 +105,93 @@ public class SnapshotXMLHandler extends DefaultHandler {
         if (unified) {
             data.eventMap = unifiedDefinitions.eventMap;
             data.userEventMap = unifiedDefinitions.userEventMap;
+            data.metricMap = unifiedDefinitions.metricMap;//TODO: Make sure this works with the older versions
         }
         data.thread = dataSource.addThread(nodeID, contextID, threadID);
         threadMap.put(threadName, data);
         currentThread = data;
     }
 
+    private boolean mSet=false;
+    private boolean mNNSet=false;
+    private boolean tSet=false;
+    private boolean sDSet=false;
+    private boolean sDNNSet=false;
+    private void handleDerivedEntity(Attributes attributes){
+    	String entityName = attributes.getValue("id");
+    	if(entityName.equals("mean_all")){
+    		ThreadData data = new ThreadData();
+    		//It is unified so:
+    		{
+    			data.eventMap = unifiedDefinitions.eventMap;
+                data.userEventMap = unifiedDefinitions.userEventMap;
+                data.metricMap = unifiedDefinitions.metricMap;
+    		}
+    		data.thread = dataSource.meanDataAll = new Thread(-1, -1, -1, dataSource.getNumberOfMetrics(), dataSource); //dataSource.addThread(-1, -1, -1);
+            threadMap.put(entityName, data);
+            currentThread = data;
+            mSet=true;
+    	}
+    	else if(entityName.equals("mean_no_null")){
+    		ThreadData data = new ThreadData();
+    		//It is unified so:
+    		{
+    			data.eventMap = unifiedDefinitions.eventMap;
+                data.userEventMap = unifiedDefinitions.userEventMap;
+                data.metricMap = unifiedDefinitions.metricMap;
+    		}
+    		data.thread = dataSource.meanDataNoNull = new Thread(-1, -1, -1, dataSource.getNumberOfMetrics(), dataSource); //dataSource.addThread(-1, -1, -1);
+            threadMap.put(entityName, data);
+            currentThread = data;
+            mNNSet=true;
+    	}
+    	else
+    	if(entityName.equals("total")){
+    		ThreadData data = new ThreadData();
+    		//It is unified so:
+    		{
+    			data.eventMap = unifiedDefinitions.eventMap;
+                data.userEventMap = unifiedDefinitions.userEventMap;
+                data.metricMap = unifiedDefinitions.metricMap;
+    		}
+    		data.thread = dataSource.totalData = new Thread(-2, -2, -2, dataSource.getNumberOfMetrics(), dataSource); //dataSource.addThread(-2, -2, -2);
+            threadMap.put(entityName, data);
+            currentThread = data;
+            tSet=true;
+    	}
+    	else
+        	if(entityName.equals("stddev_all")){
+        		ThreadData data = new ThreadData();
+        		//It is unified so:
+        		{
+        			data.eventMap = unifiedDefinitions.eventMap;
+                    data.userEventMap = unifiedDefinitions.userEventMap;
+                    data.metricMap = unifiedDefinitions.metricMap;
+        		}
+        		data.thread = dataSource.stddevDataAll = new Thread(-3, -3, -3, dataSource.getNumberOfMetrics(), dataSource); //dataSource.addThread(-3, -3, -3);
+                threadMap.put(entityName, data);
+                currentThread = data;
+                sDSet=true;
+        	}
+        	else
+            	if(entityName.equals("stddev_no_null")){
+            		ThreadData data = new ThreadData();
+            		//It is unified so:
+            		{
+            			data.eventMap = unifiedDefinitions.eventMap;
+                        data.userEventMap = unifiedDefinitions.userEventMap;
+                        data.metricMap = unifiedDefinitions.metricMap;
+            		}
+            		data.thread = dataSource.stddevDataNoNull = new Thread(-3, -3, -3, dataSource.getNumberOfMetrics(), dataSource); //dataSource.addThread(-3, -3, -3);
+                    threadMap.put(entityName, data);
+                    currentThread = data;
+                    sDNNSet=true;
+            	}
+    	if(mSet&&tSet&&sDSet&&sDNNSet&&mNNSet)
+    		dataSource.derivedProvided=true;
+    }
+    
+    
     private void handleDefinitions(Attributes attributes) {
         String threadID = attributes.getValue("thread");
         if (threadID.equals("*")) {
@@ -124,6 +206,12 @@ public class SnapshotXMLHandler extends DefaultHandler {
 
     private void handleProfile(Attributes attributes) {
         String threadID = attributes.getValue("thread");
+        currentThread = threadMap.get(threadID);
+        currentSnapshot = currentThread.thread.addSnapshot("");
+    }
+    
+    private void handleDerivedProfile(Attributes attributes) {
+        String threadID = attributes.getValue("derivedentity");
         currentThread = threadMap.get(threadID);
         currentSnapshot = currentThread.thread.addSnapshot("");
     }
@@ -227,11 +315,15 @@ public class SnapshotXMLHandler extends DefaultHandler {
             currentId = Integer.parseInt(attributes.getValue("id"));
         } else if (localName.equals("profile")) {
             handleProfile(attributes);
-        } else if (localName.equals("interval_data")) {
+        } else if (localName.equals("interval_data")||localName.equals("derivedinterval_data")) {
             handleIntervalData(attributes);
             accumulator = new StringBuffer();
-        } else if (localName.equals("atomic_data")) {
+        } else if (localName.equals("atomic_data")||localName.equals("derivedatomic_data")) {
             accumulator = new StringBuffer();
+        } else if(localName.equals("derivedentity")){
+        	handleDerivedEntity(attributes);
+        }else if(localName.equals("derivedprofile")){
+        	handleDerivedProfile(attributes);
         }
 
     }
@@ -264,9 +356,9 @@ public class SnapshotXMLHandler extends DefaultHandler {
             handleUserEvent(currentName);
         } else if (localName.equals("attribute")) {
             currentThread.thread.getMetaData().put(currentName, currentValue);
-        } else if (localName.equals("interval_data")) {
+        } else if (localName.equals("interval_data")||localName.equals("derivedinterval_data")) {
             handleIntervalDataEnd();
-        } else if (localName.equals("atomic_data")) {
+        } else if (localName.equals("atomic_data")||localName.equals("derivedatomic_data")) {
             handleAtomicDataEnd();
         }
 
