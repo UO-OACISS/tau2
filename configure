@@ -1986,6 +1986,7 @@ case $machine in
 	elif [ "x$PE_ENV" = xPATHSCALE ] ; then
 	    tauoptions="${tauoptions}-pathscale"
 	    default_fortran=pathscale
+            pathscale=yes
 	    fixmakeargs="$fixmakeargs COMPINST_GNU"
 	fi
 	if [ $fortran_compiler = no ] ; then
@@ -2016,7 +2017,8 @@ case $machine in
 	elif [ "x$PE_ENV" = xPATHSCALE ] ; then
 	    tauoptions="${tauoptions}-pathscale"
 	    default_fortran=pathscale
-	    fixmakeargs="$fixmakeargs COMPINST_GNU"
+            pathscale=yes
+	    fixmakeargs="$fixmakeargs COMPINST_GNU USE_PATHCC"
 	elif [ "x$PE_ENV" = xINTEL ] ; then
 	    tauoptions="${tauoptions}-intel"
 	    default_fortran=intel
@@ -4696,7 +4698,12 @@ fi
 if [ $mpi = yes ] ; then
     if [ "x$machine" = "xxt3" -o "x$machine" = "xcraycnl" ] ; then
 	if [ $epilog = no -a $vampirtrace = no ] ; then
+# On Crays, Pathscale compilers require  a -lmpichcxx for C and Fortran
+	  if [ $pathscale = yes ] ; then
+	    mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#-lmpichcxx"
+          else
 	    mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)"
+          fi
 	    mpiflibargs=$mpilibargs
 	    fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
 	else
