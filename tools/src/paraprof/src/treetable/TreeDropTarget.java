@@ -112,16 +112,22 @@ public class TreeDropTarget implements DropTargetListener {
 			if (!(newParent.getUserObject() instanceof Database)) {
 			    return;
 			}
-			if (JOptionPane.showConfirmDialog(ParaProf.paraProfManagerWindow,
-				"Are you sure you want to move this?", "Move Trial",
-				JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
-			    return;
-			}
 
 			ParaProfApplication app = (ParaProfApplication) object;
 			DatabaseAPI newDB = ParaProf.paraProfManagerWindow
 			.getDatabaseAPI((Database) newParent.getUserObject());
+			
 			expand(node);
+			
+			String appName = getAppName(app);
+			String dbName =((Database) newParent.getUserObject()).getName();
+			
+			if (JOptionPane.showConfirmDialog(ParaProf.paraProfManagerWindow,
+				"Are you sure you want to move "+appName+" to "+dbName+" ?", "Move Application",
+				JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
+			    return;
+			}
+
 
 			uploadApplication(newDB, app, node.children());
 
@@ -141,8 +147,11 @@ public class TreeDropTarget implements DropTargetListener {
 			ParaProfApplication app = (ParaProfApplication) newParent.getUserObject();
 			if(!app.dBApplication() && exp.dBExperiment())
 			    return;
+			String expName =getAppName(exp.getApplication())+":" +exp.getName();
+			String appName = getAppName(app);
+			
 			if (JOptionPane.showConfirmDialog(ParaProf.paraProfManagerWindow,
-				"Are you sure you want to move this?", "Move Trial",
+				"Are you sure you want to move "+expName+" to "+appName+"?", "Move Experiment",
 				JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
 			    return;
 			}
@@ -180,9 +189,12 @@ public class TreeDropTarget implements DropTargetListener {
 			ParaProfExperiment exp = (ParaProfExperiment) newParent.getUserObject();
 			if(!exp.dBExperiment() && trial.dBTrial())
 			    return;
+			String trialName = getAppName(trial.getExperiment().getApplication())+":"+
+			trial.getExperiment().getName()+":"+trial.getName();
+			String expName =getAppName(exp.getApplication())+":" +exp.getName();
 
 			if (JOptionPane.showConfirmDialog(ParaProf.paraProfManagerWindow,
-				"Are you sure you want to move this?", "Move Trial",
+				"Are you sure you want to move "+trialName+" to "+expName+"?", "Move Trial",
 				JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) {
 			    return;
 			}
@@ -218,6 +230,13 @@ public class TreeDropTarget implements DropTargetListener {
 	    e.printStackTrace();
 
 	}
+    }
+
+    private String getAppName(ParaProfApplication app) {
+	if(app.getDatabase() != null)
+	   return  app.getDatabase().getName()+":"+app.getName();
+	else
+	   return "Standard Applications:"+app.getName();
     }
 
     private void uploadExperment(ParaProfApplication app, ParaProfExperiment exp,

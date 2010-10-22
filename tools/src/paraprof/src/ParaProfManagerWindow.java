@@ -592,6 +592,9 @@ DBManagerListener {
 	jMenuItem = new JMenuItem("Delete");
 	jMenuItem.addActionListener(this);
 	stdAppPopup.add(jMenuItem);
+	jMenuItem = new JMenuItem("Rename");
+	jMenuItem.addActionListener(this);
+	stdAppPopup.add(jMenuItem);
 
 
 	// DB application popup
@@ -605,6 +608,9 @@ DBManagerListener {
 	//        jMenuItem.addActionListener(this);
 	//        dbAppPopup.add(jMenuItem);
 	jMenuItem = new JMenuItem("Delete");
+	jMenuItem.addActionListener(this);
+	dbAppPopup.add(jMenuItem);
+	jMenuItem = new JMenuItem("Rename");
 	jMenuItem.addActionListener(this);
 	dbAppPopup.add(jMenuItem);
 
@@ -622,6 +628,9 @@ DBManagerListener {
 	jMenuItem = new JMenuItem("Delete");
 	jMenuItem.addActionListener(this);
 	stdExpPopup.add(jMenuItem);
+	jMenuItem = new JMenuItem("Rename");
+	jMenuItem.addActionListener(this);
+	stdExpPopup.add(jMenuItem);
 
 
 
@@ -634,6 +643,9 @@ DBManagerListener {
 	//dbExpPopup.add(jMenuItem);
 
 	jMenuItem = new JMenuItem("Delete");
+	jMenuItem.addActionListener(this);
+	dbExpPopup.add(jMenuItem);
+	jMenuItem = new JMenuItem("Rename");
 	jMenuItem.addActionListener(this);
 	dbExpPopup.add(jMenuItem);
 
@@ -657,6 +669,9 @@ DBManagerListener {
 	jMenuItem = new JMenuItem("Delete");
 	jMenuItem.addActionListener(this);
 	stdTrialPopup.add(jMenuItem);
+	jMenuItem = new JMenuItem("Rename");
+	jMenuItem.addActionListener(this);
+	stdTrialPopup.add(jMenuItem);
 
 
 	jMenuItem = new JMenuItem("Show metric in new window");
@@ -666,6 +681,9 @@ DBManagerListener {
 	jMenuItem.addActionListener(this);
 	metricPopup.add(jMenuItem);
 	jMenuItem = new JMenuItem("Delete");
+	jMenuItem.addActionListener(this);
+	metricPopup.add(jMenuItem);
+	jMenuItem = new JMenuItem("Rename");
 	jMenuItem.addActionListener(this);
 	metricPopup.add(jMenuItem);
 
@@ -684,6 +702,9 @@ DBManagerListener {
 	jMenuItem.addActionListener(this);
 	dbTrialPopup.add(jMenuItem);
 	jMenuItem = new JMenuItem("Delete");
+	jMenuItem.addActionListener(this);
+	dbTrialPopup.add(jMenuItem);
+	jMenuItem = new JMenuItem("Rename");
 	jMenuItem.addActionListener(this);
 	dbTrialPopup.add(jMenuItem);
 
@@ -967,7 +988,15 @@ DBManagerListener {
 		    ParaProf.getHelpWindow().writeText("");
 		} else if (arg.equals("Delete")) {
 		    handleDelete(clickedOnObject);
-		} else if (arg.equals("Add Application")) {
+		} else if (arg.equals("Rename")) {
+		    if(clickedOnObject instanceof ParaProfApplication){
+			tree.startEditingAtPath(new TreePath(((ParaProfApplication) clickedOnObject).getDMTN().getPath()));
+		    }else if(clickedOnObject instanceof ParaProfExperiment){
+			tree.startEditingAtPath(new TreePath(((ParaProfExperiment) clickedOnObject).getDMTN().getPath()));
+		    }else if(clickedOnObject instanceof ParaProfTrial){
+			tree.startEditingAtPath(new TreePath(((ParaProfTrial) clickedOnObject).getDMTN().getPath()));
+		    }
+		}else if (arg.equals("Add Application")) {
 		    if (clickedOnObject == standard) {
 			ParaProfApplication application = addApplication(false, standard);
 			this.expandApplicationType(0, application.getID(), application);
