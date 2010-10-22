@@ -15,7 +15,7 @@
 #**      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
 #****************************************************************************
 
-TAUROOT=/mnt/netapp/home1/wsvoorhees/tau2
+TAUROOT=
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -185,7 +185,7 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 ##############################################
 # For making libTAU.so Dynamic Shared Object
 ##############################################
-AR_SHFLAGS 		= -shared  	#ENDIF##GNU#
+#GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SUNX86_64#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SOL2CC#AR_SHFLAGS 		= -G  	#ENDIF#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
@@ -239,11 +239,11 @@ TAU_SHLIB	= libTAUsh$(TAU_CONFIG)$(TAU_SHLIBX)
 ##############################################
 # If JAVA or DYNINST is defined, TAU_DSO is defined
 ##############################################
-TAU_DSO   		= $(TAU_SHLIB)  #ENDIF##JAVA#
+#JAVA#TAU_DSO   		= $(TAU_SHLIB)  #ENDIF#
 #DYNINST#TAU_DSO   		= $(TAU_SHLIB)  #ENDIF#
-TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB) #ENDIF##JAVA#
-TAU_JAVA_INSTALLDIR = $(INSTALLDEST)/TAU #ENDIF##JAVA#
-TAU_JAVA_CLASS1 = $(TAU_JAVA_INSTALLDIR)/Profile.class #ENDIF##JAVA#
+#JAVA#TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB) #ENDIF#
+#JAVA#TAU_JAVA_INSTALLDIR = $(INSTALLDEST)/TAU #ENDIF#
+#JAVA#TAU_JAVA_CLASS1 = $(TAU_JAVA_INSTALLDIR)/Profile.class #ENDIF#
 #DYNINST# TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB) #ENDIF#
 #USE_DECCXX# EXTRAOBJS=cxx_repository/*.o #ENDIF#
 #PYTHON#TAUPYTHON = pytau$(TAU_SHLIBX) #ENDIF#
