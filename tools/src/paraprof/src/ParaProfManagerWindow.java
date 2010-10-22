@@ -373,10 +373,17 @@ DBManagerListener {
 			    } else if (userObject instanceof ParaProfMetric) {
 				clickedOnObject = userObject;
 				metricPopup.show(tree, evt.getX(), evt.getY());
-			    } else {
+			    } else if(userObject instanceof Database){
 				// standard or database
 				clickedOnObject = selectedNode;
 				popup1.show(tree, evt.getX(), evt.getY());
+
+			    }else if(userObject instanceof String){
+				// standard or database
+				clickedOnObject = selectedNode;
+				if(((String)userObject).indexOf("Standard") != -1){
+				popup1.show(tree, evt.getX(), evt.getY());
+				}
 
 			    }
 			} else {
@@ -585,9 +592,7 @@ DBManagerListener {
 	jMenuItem = new JMenuItem("Delete");
 	jMenuItem.addActionListener(this);
 	stdAppPopup.add(jMenuItem);
-	jMenuItem = new JMenuItem("Rename");
-	jMenuItem.addActionListener(this);
-	stdAppPopup.add(jMenuItem);
+
 
 	// DB application popup
 	jMenuItem = new JMenuItem("Add Experiment");
@@ -602,9 +607,7 @@ DBManagerListener {
 	jMenuItem = new JMenuItem("Delete");
 	jMenuItem.addActionListener(this);
 	dbAppPopup.add(jMenuItem);
-	jMenuItem = new JMenuItem("Rename");
-	jMenuItem.addActionListener(this);
-	dbAppPopup.add(jMenuItem);
+
 
 	// Standard experiment popup
 	jMenuItem = new JMenuItem("Upload Experiment to DB");
@@ -619,9 +622,7 @@ DBManagerListener {
 	jMenuItem = new JMenuItem("Delete");
 	jMenuItem.addActionListener(this);
 	stdExpPopup.add(jMenuItem);
-	jMenuItem = new JMenuItem("Rename");
-	jMenuItem.addActionListener(this);
-	stdExpPopup.add(jMenuItem);
+
 
 
 	// DB experiment popup
@@ -635,9 +636,7 @@ DBManagerListener {
 	jMenuItem = new JMenuItem("Delete");
 	jMenuItem.addActionListener(this);
 	dbExpPopup.add(jMenuItem);
-	jMenuItem = new JMenuItem("Rename");
-	jMenuItem.addActionListener(this);
-	dbExpPopup.add(jMenuItem);
+
 
 	// Standard trial popup
 	jMenuItem = new JMenuItem("Export Profile");
@@ -658,9 +657,7 @@ DBManagerListener {
 	jMenuItem = new JMenuItem("Delete");
 	jMenuItem.addActionListener(this);
 	stdTrialPopup.add(jMenuItem);
-	jMenuItem = new JMenuItem("Rename");
-	jMenuItem.addActionListener(this);
-	stdTrialPopup.add(jMenuItem);
+
 
 	jMenuItem = new JMenuItem("Show metric in new window");
 	jMenuItem.addActionListener(this);
@@ -689,9 +686,7 @@ DBManagerListener {
 	jMenuItem = new JMenuItem("Delete");
 	jMenuItem.addActionListener(this);
 	dbTrialPopup.add(jMenuItem);
-	jMenuItem = new JMenuItem("Rename");
-	jMenuItem.addActionListener(this);
-	dbTrialPopup.add(jMenuItem);
+
 
 	//        jMenuItem = new JMenuItem("Copy");
 	//        jMenuItem.addActionListener(this);
@@ -743,6 +738,7 @@ DBManagerListener {
 			    loadedDBTrials.remove(loadedTrial);
 			}
 		    }
+		    if(application.getDMTN() != null)
 		    getTreeModel().removeNodeFromParent(application.getDMTN());
 		}
 
