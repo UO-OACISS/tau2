@@ -50,7 +50,10 @@ typedef void (*FatalErrorHandler)(const char*message, const char*file, int line)
  *   the array of names, array of signatures, and the count of methods.
  */
 
-typedef void (*MethodNumberRegister)(unsigned, const char**, const char**, int);
+typedef void (*CBMethodMapping)(const unsigned cnum,const unsigned mnum,char const * class_name,char const * method_name,char const * method_sig);
+
+/*This callback is used see if the method should be intsrumented our not */
+typedef int (*CBInstrumentMethod)(char const * classname,char const * method_name,char const * method_sig);
 
 /* Class file reader/writer interface. Basic input is a classfile image
  *     and details about what to inject. The output is a new classfile image
@@ -91,7 +94,8 @@ typedef void (JNICALL *JavaCrwDemo)(
          unsigned char **pnew_file_image,
          long *pnew_file_len,
          FatalErrorHandler fatal_error_handler,
-         MethodNumberRegister mnum_callback
+         CBMethodMapping mnum_callback,
+	 CBInstrumentMethod instrument_callback
 );
 
 /* Function export (should match typedef above) */
@@ -150,12 +154,13 @@ JNIEXPORT void JNICALL java_crw_demo(
          FatalErrorHandler
            fatal_error_handler, /* Pointer to function to call on any */
                                 /*  fatal error. NULL sends error to stderr */
-
-         MethodNumberRegister
-           mnum_callback        /* Pointer to function that gets called */
+         CBMethodMapping
+	   mnum_callback,        /* Pointer to function that gets called */
                                 /*   with all details on methods in this */
                                 /*   class. NULL means skip this call. */
-
+	 CBInstrumentMethod
+	   instrument_callback  /*Pointer to function that gets called to determine */
+				  /* if this method should be instrumented */
            );
 
 
