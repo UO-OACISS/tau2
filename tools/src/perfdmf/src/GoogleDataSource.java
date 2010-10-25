@@ -137,8 +137,6 @@ public class GoogleDataSource extends DataSource {
 
 			    functionProfile = new FunctionProfile(function);
 			    thread.addFunctionProfile(functionProfile);
-			    
-
 			    functionProfile.setInclusive(0, self.d1);
 			    functionProfile.setExclusive(0, self.d0);
 			    functionProfile.setNumCalls(1);
