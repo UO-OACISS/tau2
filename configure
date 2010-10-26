@@ -327,6 +327,7 @@ pdt_cxx_compiler=default
 fixmakeargs=""
 useropt=-g#-O2
 tag=no
+pathscale=no
 tautag=
 orig_useropt="-g -O2"
 mpi=no
