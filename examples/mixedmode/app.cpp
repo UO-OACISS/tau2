@@ -4,6 +4,8 @@
 
 void * threaded_func(void *data);
 
+pthread_barrier_t bar;
+
 int main (int argc, char **argv)
 {
 MPI_Status status;
@@ -28,11 +30,15 @@ int count, destination_tid;
   pthread_attr_init(&attr);
 
 
+  pthread_barrier_init(&bar, NULL, 2);
+
   if (ret = pthread_create(&tid, NULL, threaded_func, &rank) )
   {
     perror("pthread_create fails");
     return 1;
   }
+
+  pthread_barrier_wait(&bar);
 
   if (rank == 0)
     { /* send data */
@@ -56,6 +62,7 @@ int count, destination_tid;
     perror("pthread_join failed");
     return ret;
   }
+  pthread_barrier_destroy(&bar);
 }
  
 
