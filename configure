@@ -6000,6 +6000,8 @@ if [ "y$1"  = "ydefault" ] ; then
     sed -f $sedex < ${i} > ${i}~~0
     mv ${i}~~0 ${i}
   done
+	
+	echo "" > include/tauroot.h
 
   STUB="default"
 else
