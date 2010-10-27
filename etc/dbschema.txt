@@ -1,0 +1,189 @@
+
+
+CREATE TABLE application (
+    id                      SERIAL	NOT NULL	PRIMARY KEY,
+    name                    TEXT,
+    version		    TEXT,
+    usage                   TEXT, 
+    description		    TEXT,
+    language                TEXT,
+    paradigm                TEXT,
+    algorithms              TEXT,
+    lines_of_code	    TEXT,
+    big_lil_endian	    TEXT,
+    directives		    TEXT,
+    memory_intensity	    TEXT,
+    communication_intensity TEXT,
+    cpu_intensity	    TEXT,
+    os_requirements	    TEXT,
+    other_requirements	    TEXT,
+    spectral_or_physical_mesh	TEXT,
+    static_or_adaptive_mesh	TEXT,
+    structured_or_unstructured_mesh	TEXT,
+    code_history	    TEXT,    
+    primary_industry	    TEXT,
+    primary_technology_area TEXT,
+    rib_entry		    TEXT
+);
+
+CREATE TABLE experiment (
+    id                      SERIAL      NOT NULL	PRIMARY KEY,
+    application             INT         NOT NULL,
+    name                    TEXT,
+    sysinfo                 TEXT,
+    configinfo		    TEXT,
+    instruinfo		    TEXT,
+    compilerinfo	    TEXT,
+    FOREIGN KEY(application) REFERENCES application(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE trial (
+    id                      SERIAL	NOT NULL	PRIMARY KEY,
+    name                    TEXT,
+    experiment              INT         NOT NULL,
+    date                    TIMESTAMP   WITHOUT TIME ZONE,
+    collectorid		    INT,
+    node_count              INT,
+    contexts_per_node       INT,
+    threads_per_context     INT,
+    FOREIGN KEY(experiment) REFERENCES experiment(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE metric (
+    id                      SERIAL      NOT NULL	PRIMARY KEY,
+    name                    TEXT        NOT NULL,
+    trial                   INT		NOT NULL,
+    FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE interval_event (
+    id                      SERIAL      NOT NULL	PRIMARY KEY,
+    trial                   INT         NOT NULL,
+    name                    TEXT        NOT NULL,
+    group_name              TEXT,
+    source_file		    TEXT,
+    line_number		    INT,
+    line_number_end	    INT,
+    FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE atomic_event (
+    id                      SERIAL      NOT NULL	PRIMARY KEY,
+    trial                   INT         NOT NULL,
+    name                    TEXT        NOT NULL,
+    group_name              TEXT,
+    source_file		    TEXT,
+    line_number		    INT,
+    FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE interval_location_profile (
+    interval_event          INT         NOT NULL,
+    node                    INT         NOT NULL,             
+    context                 INT         NOT NULL,
+    thread                  INT         NOT NULL,
+    metric                  INT		NOT NULL,
+    inclusive_percentage    DOUBLE PRECISION,
+    inclusive               DOUBLE PRECISION,
+    exclusive_percentage    DOUBLE PRECISION,
+    exclusive               DOUBLE PRECISION,
+    call                    DOUBLE PRECISION,
+    subroutines             DOUBLE PRECISION,
+    inclusive_per_call      DOUBLE PRECISION,
+    sum_exclusive_squared   DOUBLE PRECISION,
+    FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE atomic_location_profile (
+    atomic_event            INT         NOT NULL,
+    node                    INT         NOT NULL,             
+    context                 INT         NOT NULL,
+    thread                  INT         NOT NULL,
+    sample_count            INT,         
+    maximum_value           DOUBLE PRECISION,
+    minimum_value           DOUBLE PRECISION,
+    mean_value              DOUBLE PRECISION,
+    standard_deviation	    DOUBLE PRECISION,
+    FOREIGN KEY(atomic_event) REFERENCES atomic_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE interval_total_summary (
+    interval_event          INT         NOT NULL,
+    metric                  INT		NOT NULL,
+    inclusive_percentage    DOUBLE PRECISION,
+    inclusive               DOUBLE PRECISION,
+    exclusive_percentage    DOUBLE PRECISION,
+    exclusive               DOUBLE PRECISION,
+    call                    DOUBLE PRECISION,
+    subroutines             DOUBLE PRECISION,
+    inclusive_per_call      DOUBLE PRECISION,
+    sum_exclusive_squared   DOUBLE PRECISION,
+    FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE interval_mean_summary (
+    interval_event          INT         NOT NULL,
+    metric                  INT		NOT NULL,
+    inclusive_percentage    DOUBLE PRECISION,
+    inclusive               DOUBLE PRECISION,
+    exclusive_percentage    DOUBLE PRECISION,
+    exclusive               DOUBLE PRECISION,
+    call                    DOUBLE PRECISION,
+    subroutines             DOUBLE PRECISION,
+    inclusive_per_call      DOUBLE PRECISION,
+    sum_exclusive_squared   DOUBLE PRECISION,
+	FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
+	FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE machine_thread_map (
+    id                        SERIAL NOT NULL PRIMARY KEY,
+    trial                     INTEGER       NOT NULL,
+    node                      INTEGER       NOT NULL,
+    context                   INTEGER       NOT NULL,
+    thread                    INTEGER       NOT NULL,
+    process_id                INTEGER,
+    thread_id                 INTEGER,
+    cpu_index                 INTEGER,
+    operating_system_name     TEXT,
+    operating_system_version  TEXT,
+    system_nodename           TEXT,
+    system_architecthure      TEXT,
+    system_num_processors     INTEGER,
+    cpu_type                  TEXT,
+    cpu_mhz                   TEXT,
+    cpu_cache_size            INTEGER,
+    cpu_cache_alignment       INTEGER,
+    cpu_num_cores             INTEGER,
+    FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+
+CREATE TABLE trace (
+    trialid		    INT		NOT NULL,
+    tracetype		    TEXT,
+    tracefilename	    TEXT,
+    nodeid		    INT,
+    contextid		    INT,
+    threadid		    INT,
+    FOREIGN KEY(trialid) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE tracesum (
+    trialid	            INT		NOT NULL,
+    tracetype		    TEXT,
+    tracefilename	    TEXT,
+    FOREIGN KEY(trialid) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+
+CREATE INDEX experiment_application_index on experiment (application);
+CREATE INDEX trial_experiment_index on trial (experiment);
+CREATE INDEX interval_event_trial_index on interval_event (trial);
+CREATE INDEX interval_loc_interval_event_metric_index on interval_location_profile (interval_event, metric);
+CREATE INDEX interval_total_interval_event_metric_index on interval_total_summary (interval_event, metric);
+CREATE INDEX interval_mean_interval_event_metric_index on interval_mean_summary (interval_event, metric);
+CREATE INDEX interval_loc_f_m_n_c_t_index on interval_location_profile (interval_event, metric, node, context, thread);
+CREATE INDEX interval_loc_metric_index on interval_location_profile (metric);

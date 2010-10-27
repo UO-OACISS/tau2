@@ -1,0 +1,42 @@
+create table analysis_settings (
+	id					INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT
+	ANALYSIS_SETTINGS_PK PRIMARY KEY,
+	application			INTEGER			NOT NULL CONSTRAINT
+	application_foreign_key REFERENCES application ON DELETE CASCADE ON UPDATE
+	RESTRICT,
+	experiment			INTEGER			NOT NULL CONSTRAINT
+	experiment_foreign_key REFERENCES experiment ON DELETE CASCADE ON UPDATE
+	RESTRICT,
+	trial				INTEGER			NOT NULL CONSTRAINT trial_foreign_key
+	REFERENCES trial ON DELETE CASCADE ON UPDATE RESTRICT,
+	metric				INTEGER			CONSTRAINT metric_foreign_key
+	REFERENCES metric ON DELETE CASCADE ON UPDATE RESTRICT,
+	method				VARCHAR(255)	NOT NULL,
+	dimension_reduction	VARCHAR(255)	NOT NULL,
+	normalization		VARCHAR(255)	NOT NULL
+);
+
+create table analysis_result (
+	id					INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT ANALYSIS_RESULT_PK PRIMARY KEY,
+	analysis_settings	INTEGER			NOT NULL,
+	description			VARCHAR(255)	NOT NULL,
+	thumbnail_size		INTEGER,
+	image_size			INTEGER,
+	thumbnail			BLOB,
+	image				BLOB,
+	result_type			INTEGER			NOT NULL
+);
+
+create table trial_view (
+	id					INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT
+	TRIAL_VIEW_PK PRIMARY KEY CONSTRAINT trial_view_foreign_key REFERENCES
+	trial_view ON DELETE CASCADE ON UPDATE RESTRICT,
+	parent				INTEGER,
+	name				VARCHAR(4000)	NOT NULL,
+	table_name			VARCHAR(4000)	NOT NULL,
+	column_name			VARCHAR(4000)	NOT NULL,
+	operator			VARCHAR(4000)	NOT NULL,
+	value				VARCHAR(4000)	NOT NULL,
+	FOREIGN KEY (parent) REFERENCES trial_view(id) 
+		ON DELETE CASCADE ON UPDATE RESTRICT
+);
