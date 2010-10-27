@@ -66,6 +66,7 @@ for arg in "$@"; do
     echo "-arch=<architecture> ................... Specify a target architecture."
     echo "       options          [xt3|craycnl|bgp|bgl|ibm64|ibm64linux|sunx86_64"
     echo "                        crayxmt|solaris2-64|mips32|sgin32|sgi64|sgio32]"
+    echo "-bfd=<dir | download> ............ Specify a BFD directory or download."
     echo ""
     echo "MPI Options:"
     echo "-mpi .......................... Specify use of TAU MPI wrapper library."
@@ -189,6 +190,7 @@ for arg in "$@"; do
     echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
     echo "-dyninst=<dir> ................... Specify location of DynInst Package."
     echo "-dwarf=<dir> ................ Specify location of the libdwarf Package."
+    echo "-bfd=<dir | download> ............ Specify a BFD directory or download."
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
     echo "-mpi .......................... Specify use of TAU MPI wrapper library."
@@ -420,6 +422,7 @@ tautoplevel=
 tauoptions=
 pdt_root_dir="."
 pdt=no
+armci=no
 vtf=no
 otf=no
 opari=no
@@ -912,6 +915,16 @@ for arg in "$@"; do
       pdtdir=`echo $arg | sed -e 's/-pdt=//'`
       if [ ! -d $pdtdir ] ; then
           echo "Error: Cannot access PDT directory $pdtdir"
+          exit 1
+      fi
+      shift
+      ;;
+
+  -armci=*)
+      armci=yes
+      armcidir=`echo $arg | sed -e 's/-armci=//'`
+      if [ ! -d $armcidir ] ; then
+          echo "Error: Cannot access ARMCI directory $armcidir"
           exit 1
       fi
       shift
@@ -5220,6 +5233,29 @@ EOF
   /bin/rm -f checkpdt.o checkpdt.cpp
 fi
 
+if [ $armci = yes ]; then
+   cat <<EOF>armcitest.c
+#include <stdio.h>
+#include <sys/types.h>
+#include "parmci.h"
+#include "armci.h"
+
+int
+ARMCI_AccV (int op, void *scale, armci_giov_t * darr, int len, int proc)
+{
+  int rval;
+  rval = PARMCI_AccV (op, scale, darr, len, proc);
+  return rval;
+}
+EOF
+    if $cxx_compiler $orig_useropt -I$armcidir/include -c armcitest.c 1> /dev/null 2>&1 ; then
+	echo "ARMCI check successful"
+	fixmakeargs="$fixmakeargs ARMCI armcidir=$armcidir"
+    else
+	echo "ARMCI check unsuccessful. Does not support PARMCI interface found in GA 5.0+."
+    fi
+    /bin/rm -f armcitest.c armcitest.o
+fi
 
 if [ $vampirtrace = yes ]; then
     cat <<EOF>vttest.cpp
