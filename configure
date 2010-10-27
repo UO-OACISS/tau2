@@ -66,6 +66,7 @@ for arg in "$@"; do
     echo "-arch=<architecture> ................... Specify a target architecture."
     echo "       options          [xt3|craycnl|bgp|bgl|ibm64|ibm64linux|sunx86_64"
     echo "                        crayxmt|solaris2-64|mips32|sgin32|sgi64|sgio32]"
+    echo "-bfd=<dir | download> ............ Specify a BFD directory or download."
     echo ""
     echo "MPI Options:"
     echo "-mpi .......................... Specify use of TAU MPI wrapper library."
@@ -189,6 +190,7 @@ for arg in "$@"; do
     echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
     echo "-dyninst=<dir> ................... Specify location of DynInst Package."
     echo "-dwarf=<dir> ................ Specify location of the libdwarf Package."
+    echo "-bfd=<dir | download> ............ Specify a BFD directory or download."
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
     echo "-mpi .......................... Specify use of TAU MPI wrapper library."
@@ -327,6 +329,7 @@ pdt_cxx_compiler=default
 fixmakeargs=""
 useropt=-g#-O2
 tag=no
+pathscale=no
 tautag=
 orig_useropt="-g -O2"
 mpi=no
@@ -419,6 +422,7 @@ tautoplevel=
 tauoptions=
 pdt_root_dir="."
 pdt=no
+armci=no
 vtf=no
 otf=no
 opari=no
@@ -916,6 +920,16 @@ for arg in "$@"; do
       shift
       ;;
 
+  -armci=*)
+      armci=yes
+      armcidir=`echo $arg | sed -e 's/-armci=//'`
+      if [ ! -d $armcidir ] ; then
+          echo "Error: Cannot access ARMCI directory $armcidir"
+          exit 1
+      fi
+      shift
+      ;;
+
   -vtf=*)
       vtf=yes
       trace=yes
@@ -1335,9 +1349,9 @@ for arg in "$@"; do
       exit 1
     fi
     if [ -f "$cudainclude/cuda.h" ] ; then
-    	fixmakeargs="$fixmakeargs cudainclude=$cudainclude useropt=-DTAU_MAX_THREADS=3"
+    	fixmakeargs="$fixmakeargs cudainclude=$cudainclude useropt=$useropt -DTAU_MAX_THREADS=3"
 			if [ -f "$cudainclude/CL/cl.h" ] ; then
-    		fixmakeargs="$fixmakeargs cudainclude=$cudainclude openclinclude=$cudainclude useropt=-DTAU_MAX_THREADS=3"
+    		fixmakeargs="$fixmakeargs cudainclude=$cudainclude openclinclude=$cudainclude useropt=$useropt -DTAU_MAX_THREADS=3"
 			fi
 		else
 			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
@@ -1352,7 +1366,7 @@ for arg in "$@"; do
       exit 1
     fi
 		if [ -f "$openclinclude/CL/cl.h" ] ; then
-      fixmakeargs="$fixmakeargs openclinclude=$openclinclude useropt=-DTAU_MAX_THREADS=3"
+      fixmakeargs="$fixmakeargs openclinclude=$openclinclude useropt=$useropt -DTAU_MAX_THREADS=3"
 		else
 			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
     fi
@@ -1986,6 +2000,7 @@ case $machine in
 	elif [ "x$PE_ENV" = xPATHSCALE ] ; then
 	    tauoptions="${tauoptions}-pathscale"
 	    default_fortran=pathscale
+            pathscale=yes
 	    fixmakeargs="$fixmakeargs COMPINST_GNU"
 	fi
 	if [ $fortran_compiler = no ] ; then
@@ -2016,7 +2031,8 @@ case $machine in
 	elif [ "x$PE_ENV" = xPATHSCALE ] ; then
 	    tauoptions="${tauoptions}-pathscale"
 	    default_fortran=pathscale
-	    fixmakeargs="$fixmakeargs COMPINST_GNU"
+            pathscale=yes
+	    fixmakeargs="$fixmakeargs COMPINST_GNU USE_PATHCC"
 	elif [ "x$PE_ENV" = xINTEL ] ; then
 	    tauoptions="${tauoptions}-intel"
 	    default_fortran=intel
@@ -2031,7 +2047,7 @@ case $machine in
 	    rm -f conf_test.c
 
 	    # not implemented yet
-#	    fixmakeargs="$fixmakeargs COMPINST_CRAY"
+#	    fixmakeargs="$fixmakeargs COMPINST_CRAYCC"
 	fi
 	if [ $fortran_compiler = no ] ; then
 	    fortran_compiler=$default_fortran
@@ -2718,7 +2734,9 @@ case $fortran_compiler in
           fixmakeargs="$fixmakeargs SC_GFORTRAN"
       else
 	  gfortran=`which gfortran 2>&1`
-	  if [ "x$gfortran" != "x" ] ; then
+          retval=$?
+# when gfortran is not found, it returns a value of 1, otherwise it returns 0. 
+	  if [ "x$gfortran" != "x" -a "x$retval" != "x1" ] ; then
 	      if [ -x $gfortran ] ; then
 		  taugfortranlibdir=`gfortran -print-libgcc-file-name | sed s/libgcc.a//`
 	    fi
@@ -2948,7 +2966,8 @@ then
 	mpiinc=/opt/xt-mpt/default/mpich2-64/P2/include
 	;;
   craycnl)
-	mpiinc=/opt/xt-mpt/default/mpich2-64/P/include
+#	mpiinc=/opt/xt-mpt/default/mpich2-64/P/include
+	mpiinc=$MPICH_DIR/include
         if [ ! -r $mpiinc ] ; then
             if [ $default_fortran = gfortran ] ; then
                 mpiinc=/opt/mpt/$MPT_VERSION/xt/mpich2-gnu/include
@@ -2959,6 +2978,7 @@ then
                 mpiinc=/opt/mpt/default/xt/mpich2-pgi/include
 	    fi
         fi
+        echo "Using MPI INCLUDE dir from $mpiinc"
 	;;
   solaris2*)
 	mpiinc=/opt/SUNWhpc/include
@@ -3059,7 +3079,7 @@ then
 	mpilib=/opt/xt-mpt/default/mpich2-64/P2/lib
 	;;
   craycnl)
-	mpilib=
+	mpilib=$MPICH_DIR/lib
 	;;
   solaris2*)
 	mpilib=/opt/SUNWhpc/lib
@@ -4696,7 +4716,12 @@ fi
 if [ $mpi = yes ] ; then
     if [ "x$machine" = "xxt3" -o "x$machine" = "xcraycnl" ] ; then
 	if [ $epilog = no -a $vampirtrace = no ] ; then
+# On Crays, Pathscale compilers require  a -lmpichcxx for C and Fortran
+	  if [ $pathscale = yes ] ; then
+	    mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#-lmpichcxx"
+          else
 	    mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)"
+          fi
 	    mpiflibargs=$mpilibargs
 	    fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
 	else
@@ -5208,6 +5233,29 @@ EOF
   /bin/rm -f checkpdt.o checkpdt.cpp
 fi
 
+if [ $armci = yes ]; then
+   cat <<EOF>armcitest.c
+#include <stdio.h>
+#include <sys/types.h>
+#include "parmci.h"
+#include "armci.h"
+
+int
+ARMCI_AccV (int op, void *scale, armci_giov_t * darr, int len, int proc)
+{
+  int rval;
+  rval = PARMCI_AccV (op, scale, darr, len, proc);
+  return rval;
+}
+EOF
+    if $cxx_compiler $orig_useropt -I$armcidir/include -c armcitest.c 1> /dev/null 2>&1 ; then
+	echo "ARMCI check successful"
+	fixmakeargs="$fixmakeargs ARMCI armcidir=$armcidir"
+    else
+	echo "ARMCI check unsuccessful. Does not support PARMCI interface found in GA 5.0+."
+    fi
+    /bin/rm -f armcitest.c armcitest.o
+fi
 
 if [ $vampirtrace = yes ]; then
     cat <<EOF>vttest.cpp
@@ -5457,7 +5505,7 @@ EOF
       
       $cxx_compiler -c f1.cpp
       icc -c f2.c
-      if icc f1.o f2.o -o foo -lcprts 1>/dev/null 2>&1 ; then
+      if icc f1.o f2.o -o foo.exe -lcprts 1>/dev/null 2>&1 ; then
           echo "Intel v8.0 compilers used"
       else
           $cxx_compiler -c -cxxlib-icc f1.cpp 1>/dev/null 2>&1
@@ -5472,7 +5520,7 @@ EOF
           taugcclibdir=`g++ $tau_opt_bits -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
           taugcclib=`g++ $tau_opt_bits -print-libgcc-file-name `
           taugcclib2dir=`which g++ | sed s/g++/../`         
-          if icc f1.o f2.o -o foo -L$taugcclib2dir/lib -L$taugcclibdir -lstdc++ $taugcclib 1>/dev/null 2>&1 ; then
+          if icc f1.o f2.o -o foo.exe -L$taugcclib2dir/lib -L$taugcclibdir -lstdc++ $taugcclib 1>/dev/null 2>&1 ; then
 #          echo "Confirmed  - links with gcc libs"
               echo "Intel v8.1+ compilers used"
               if [ "x$taugcclib2dir" != "x/usr/bin/../lib" ] ; then
@@ -5486,7 +5534,7 @@ EOF
               fixmakeargs="$fixmakeargs $tauextralibopts taugcclibdir=$taugcclibdir INTEL81FIX" 
           fi
       fi
-      /bin/rm -f f1.o f2.o f1.cpp f2.c foo
+      /bin/rm -f f1.o f2.o f1.cpp f2.c foo.exe
       # Check over!
 fi
 
@@ -5952,6 +6000,8 @@ if [ "y$1"  = "ydefault" ] ; then
     sed -f $sedex < ${i} > ${i}~~0
     mv ${i}~~0 ${i}
   done
+	
+	echo "" > include/tauroot.h
 
   STUB="default"
 else

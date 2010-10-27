@@ -283,6 +283,24 @@ public class PerfExplorerExpression /*extends Expression*/{
 
     private static String initScript() {
 	String out = "from edu.uoregon.tau.perfexplorer.glue import *\n";
+	out+= "from java.util import HashSet\n"; 
+out+= "from java.util import ArrayList\n";
+out+= "from edu.uoregon.tau.perfdmf import Trial\n";
+out+= "from edu.uoregon.tau.perfdmf import Metric\n";
+out+= "from edu.uoregon.tau.perfexplorer.glue import PerformanceResult\n";
+out+= "from edu.uoregon.tau.perfexplorer.glue import PerformanceAnalysisOperation\n";
+out+= "from edu.uoregon.tau.perfexplorer.glue import ExtractEventOperation\n";
+out+= "from edu.uoregon.tau.perfexplorer.glue import Utilities\n";
+out+= "from edu.uoregon.tau.perfexplorer.glue import BasicStatisticsOperation\n";
+out+= "from edu.uoregon.tau.perfexplorer.glue import DeriveMetricOperation\n";
+out+= "from edu.uoregon.tau.perfexplorer.glue import ScaleMetricOperation\n";
+out+= "from edu.uoregon.tau.perfexplorer.glue import DeriveMetricEquation\n";
+out+= "from edu.uoregon.tau.perfexplorer.glue import DeriveMetricsFileOperation\n";
+out+= "from edu.uoregon.tau.perfexplorer.glue import MergeTrialsOperation\n";
+out+= "from edu.uoregon.tau.perfexplorer.glue import TrialResult\n";
+out+= "from edu.uoregon.tau.perfexplorer.glue import AbstractResult\n";
+out+= "from edu.uoregon.tau.perfexplorer.glue import DrawGraph\n";
+out+= "from edu.uoregon.tau.perfexplorer.glue import SaveResultOperation\n";
 	out += loadMethod();
 	out += addDerivedOperation();
 	out += computeDerived();
