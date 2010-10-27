@@ -1,0 +1,174 @@
+
+CREATE TABLE @DATABASE_PREFIX@application ( 
+	id						INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, 
+	name					CLOB NOT NULL, 
+	version					CLOB DEFAULT '1.0', 
+	description				CLOB, 
+	language				CLOB, 
+	paradigm				CLOB, 
+    algorithms              CLOB, 
+    lines_of_code	    	CLOB, 
+    big_lil_endian	    	CLOB, 
+    directives		    	CLOB, 
+    memory_intensity	    CLOB, 
+    communication_intensity CLOB, 
+    cpu_intensity	    	CLOB, 
+    os_requirements	    	CLOB, 
+    other_requirements	    CLOB, 
+    spectral_or_physical_mesh	CLOB, 
+    static_or_adaptive_mesh	CLOB, 
+    structured_unstructured_mesh	CLOB, 
+    code_history	    	CLOB,     
+    primary_industry	    CLOB, 
+    primary_technology_area CLOB, 
+    rib_entry		    	CLOB 
+);
+
+CREATE TABLE @DATABASE_PREFIX@experiment ( 
+    id                      INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, 
+    application             INT             NOT NULL, 
+    name                    CLOB, 
+    sysinfo                 CLOB, 
+    configinfo		    	CLOB, 
+    instruinfo		    	CLOB, 
+    compilerinfo	    	CLOB, 
+ 	FOREIGN KEY(application) REFERENCES @DATABASE_PREFIX@application(id) ON DELETE NO ACTION 
+);
+
+CREATE TABLE @DATABASE_PREFIX@trial ( 
+    id                      INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, 
+    name                    VARCHAR(100), 
+    experiment              INT             NOT NULL, 
+    date                    TIMESTAMP,       
+    collectorid		    	INT, 
+    node_count              INT, 
+    contexts_per_node       INT, 
+    threads_per_context     INT, 
+	FOREIGN KEY(experiment) REFERENCES @DATABASE_PREFIX@experiment(id) ON DELETE NO ACTION 
+);
+
+CREATE TABLE @DATABASE_PREFIX@metric ( 
+    id                      INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, 
+    name                    CLOB            NOT NULL, 
+    trial                   INT				NOT NULL, 
+	FOREIGN KEY(trial) REFERENCES @DATABASE_PREFIX@trial(id) ON DELETE NO ACTION 
+);
+
+CREATE TABLE @DATABASE_PREFIX@interval_event ( 
+    id                      INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, 
+    trial                   INT             NOT NULL, 
+    name                    CLOB            NOT NULL, 
+    group_name              CLOB, 
+    source_file		    CLOB, 
+    line_number		    INT, 
+    line_number_end	    INT, 
+ 	FOREIGN KEY(trial) REFERENCES @DATABASE_PREFIX@trial(id) ON DELETE NO ACTION 
+);
+
+CREATE TABLE @DATABASE_PREFIX@atomic_event ( 
+    id                      INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, 
+    trial                   INT              NOT NULL, 
+    name                    CLOB             NOT NULL, 
+    group_name              CLOB, 
+    source_file		        CLOB, 
+    line_number		        INT, 
+	FOREIGN KEY(trial) REFERENCES @DATABASE_PREFIX@trial(id) ON DELETE NO ACTION 
+);
+
+CREATE TABLE @DATABASE_PREFIX@interval_location_profile ( 
+    interval_event          INT              NOT NULL, 
+    node                    INT              NOT NULL, 
+    context                 INT              NOT NULL, 
+    thread                  INT              NOT NULL, 
+    metric                  INT				 NOT NULL, 
+    inclusive_percentage    DOUBLE, 
+    inclusive               DOUBLE, 
+    exclusive_percentage    DOUBLE, 
+    exclusive               DOUBLE, 
+    call                    DOUBLE, 
+    subroutines             DOUBLE, 
+    inclusive_per_call      DOUBLE, 
+    sum_exclusive_squared   DOUBLE, 
+	FOREIGN KEY(interval_event) REFERENCES @DATABASE_PREFIX@interval_event(id) ON DELETE NO ACTION, 
+	FOREIGN KEY(metric) REFERENCES @DATABASE_PREFIX@metric(id) ON DELETE NO ACTION 
+);
+
+CREATE TABLE @DATABASE_PREFIX@atomic_location_profile ( 
+    atomic_event            INT              NOT NULL, 
+    node                    INT              NOT NULL, 
+    context                 INT              NOT NULL, 
+    thread                  INT              NOT NULL, 
+    sample_count            INT    ,          
+    maximum_value           DOUBLE, 
+    minimum_value           DOUBLE, 
+    mean_value              DOUBLE, 
+    standard_deviation      DOUBLE, 
+	FOREIGN KEY(atomic_event) REFERENCES @DATABASE_PREFIX@atomic_event(id) ON DELETE NO ACTION 
+);
+
+CREATE TABLE @DATABASE_PREFIX@interval_total_summary ( 
+    interval_event          INT              NOT NULL, 
+    metric                  INT				 NOT NULL, 
+    inclusive_percentage    DOUBLE, 
+    inclusive               DOUBLE, 
+    exclusive_percentage    DOUBLE, 
+    exclusive               DOUBLE, 
+    call                    DOUBLE, 
+    subroutines             DOUBLE, 
+    inclusive_per_call      DOUBLE, 
+    sum_exclusive_squared   DOUBLE, 
+	FOREIGN KEY(interval_event) REFERENCES @DATABASE_PREFIX@interval_event(id) ON DELETE NO ACTION, 
+	FOREIGN KEY(metric) REFERENCES @DATABASE_PREFIX@metric(id) ON DELETE NO ACTION 
+);
+
+CREATE TABLE @DATABASE_PREFIX@interval_mean_summary ( 
+    interval_event          INT              NOT NULL, 
+    metric                  INT				 NOT NULL, 
+    inclusive_percentage    DOUBLE, 
+    inclusive               DOUBLE, 
+    exclusive_percentage    DOUBLE, 
+    exclusive               DOUBLE, 
+    call                    DOUBLE, 
+    subroutines             DOUBLE, 
+    inclusive_per_call      DOUBLE, 
+    sum_exclusive_squared   DOUBLE, 
+	FOREIGN KEY(interval_event) REFERENCES @DATABASE_PREFIX@interval_event(id) ON DELETE NO ACTION, 
+	FOREIGN KEY(metric) REFERENCES @DATABASE_PREFIX@metric(id) ON DELETE NO ACTION 
+);
+
+CREATE TABLE @DATABASE_PREFIX@machine_thread_map (
+    id                      INT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY, 
+    trial                     INT       not null,
+    node                      INT       not null,
+    context                   INT       not null,
+    thread                    INT       not null,
+    process_id                INT,
+    thread_id                 INT,
+    cpu_index                 INT,
+    operating_system_name     CLOB,
+    operating_system_version  CLOB,
+    system_nodename           CLOB,
+    system_architecthure      CLOB,
+    system_num_processors     INT,
+    cpu_type                  CLOB,
+    cpu_mhz                   CLOB,
+    cpu_cache_size            INT,
+    cpu_cache_alignment       INT,
+    cpu_num_cores             INT,
+	FOREIGN KEY(trial) REFERENCES @DATABASE_PREFIX@trial(id) ON DELETE NO ACTION
+);
+
+CREATE INDEX @DATABASE_PREFIX@exp_app_idx on @DATABASE_PREFIX@experiment (application);
+CREATE INDEX @DATABASE_PREFIX@trial_exp_idx on @DATABASE_PREFIX@trial (experiment);
+CREATE INDEX @DATABASE_PREFIX@ie_trial_idx on @DATABASE_PREFIX@interval_event (trial);
+CREATE INDEX @DATABASE_PREFIX@ilf_met_idx on @DATABASE_PREFIX@interval_location_profile (interval_event, metric);
+CREATE INDEX @DATABASE_PREFIX@its_fun_met_idx on @DATABASE_PREFIX@interval_total_summary (interval_event, metric);
+CREATE INDEX @DATABASE_PREFIX@ims_fun_met_idx on @DATABASE_PREFIX@interval_mean_summary (interval_event, metric);
+CREATE INDEX @DATABASE_PREFIX@ilp_f_m_n_c_t_idx on @DATABASE_PREFIX@interval_location_profile (interval_event, metric, node, context, thread);
+CREATE INDEX @DATABASE_PREFIX@ilp_met_idx on @DATABASE_PREFIX@interval_location_profile (metric);
+
+
+
+
+
+

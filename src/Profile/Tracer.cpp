@@ -549,7 +549,7 @@ int TauTraceMergeAndConvertTracesIfNecessary(void) {
   return 0;
 }
 
-#ifdef TAU_CUDA
+#ifdef TAU_GPU
 
 void TauTraceOneSidedMsg(bool type, gpuId *gpu, int length, int threadId)
 {
