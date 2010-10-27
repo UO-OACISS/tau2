@@ -6,12 +6,12 @@
 
 
 int work(int data);
+extern pthread_barrier_t bar;
 
 void * threaded_func(void *data)
 {
-  TAU_REGISTER_THREAD();
-  TAU_PROFILE("threaded_func()", "int ()", TAU_DEFAULT);
   work((int) *((int *) data)); /* work done by this thread */
+  pthread_barrier_wait(&bar);
   return NULL;
 }
 

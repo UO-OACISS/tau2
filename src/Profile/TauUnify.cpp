@@ -410,6 +410,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
 }
 
 /** We store a unifier for the functions and atomic events for use externally */
+/* *CWL* 2010-10-11: Is this safe? Are threads not used here? */
 Tau_unify_object_t *functionUnifier=0, *atomicUnifier=0;
 extern "C" Tau_unify_object_t *Tau_unify_getFunctionUnifier() {
   return functionUnifier;

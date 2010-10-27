@@ -1596,13 +1596,14 @@ int  MPI_Finalize(  )
   Tau_metadataMerge_mergeMetaData();
 
   /* Create a merged profile if requested */
-  if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
-
+  /* *CWL* This might be generalized to perform a final monitoring dump.
+     For now, we should let merging handle the data.
 #ifdef TAU_EXP_COLLATE
     Tau_collate_writeProfile();
 #else
+  */
+  if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
     Tau_mergeProfiles();
-#endif
   }
 
   Tau_mon_disconnect();
