@@ -3,13 +3,13 @@
  */
 package edu.uoregon.tau.perfexplorer.glue.test;
 
+import junit.framework.TestCase;
 import edu.uoregon.tau.perfexplorer.glue.DeriveMetricOperation;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
 import edu.uoregon.tau.perfexplorer.glue.SaveResultOperation;
 import edu.uoregon.tau.perfexplorer.glue.TrialResult;
 import edu.uoregon.tau.perfexplorer.glue.Utilities;
-import junit.framework.TestCase;
 
 /**
  * @author khuck

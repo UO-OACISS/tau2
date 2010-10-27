@@ -140,6 +140,10 @@ printError() {
     echo -e "Error: Full Command attempted is -- $2"
     if [ $revertOnError == $TRUE ]; then
 	echo -e "Error: Reverting to a Regular Make"
+      if [ $revertForced == $FALSE ]; then
+        echo -e "To suppress this message and revert automatically, please add -optRevert to your TAU_OPTIONS environment variable"
+        echo -e "Press Enter to continue" ; read
+      fi
     fi
     echo " "
 }
@@ -620,7 +624,7 @@ for arg in "$@" ; do
 		groupType=$group_upc
                 ;;
 
-	    *.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95)
+	    *.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95|*.for|*.FOR)
 		fileName=$arg
 		arrFileName[$numFiles]=$arg
 		arrFileNameDirectory[$numFiles]=`dirname $arg`
@@ -922,6 +926,13 @@ while [ $tempCounter -lt $numFiles ]; do
 	if [ "x$defaultParser" = "xcxxparse" -a "x$suf" = "x.c" ] ; then
             newFile=${arrFileName[$tempCounter]}.pdb
 	fi
+        if [ "x$groupType" = "x$group_f_F" -a "x$suf" = "x.for" ] ; then
+            newFile=${arrFileName[$tempCounter]}.pdb
+        fi
+        if [ "x$groupType" = "x$group_f_F" -a "x$suf" = "x.FOR" ] ; then
+            newFile=${arrFileName[$tempCounter]}.pdb
+        fi
+
     else
 	newFile=$optPDBFile; 
     fi

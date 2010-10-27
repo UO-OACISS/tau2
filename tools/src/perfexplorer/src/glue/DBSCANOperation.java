@@ -9,7 +9,6 @@ import java.util.List;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.clustering.ClusterInterface;
 import edu.uoregon.tau.perfexplorer.clustering.DBScanClusterInterface;
-import edu.uoregon.tau.perfexplorer.clustering.KMeansClusterInterface;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
 import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
 
@@ -19,6 +18,10 @@ import edu.uoregon.tau.perfexplorer.clustering.weka.AnalysisFactory;
  */
 public class DBSCANOperation extends ClusterOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5632054318526909240L;
 	private double epsilon = 1.0;
 
 	/**

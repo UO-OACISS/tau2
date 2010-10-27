@@ -96,6 +96,13 @@ public class DatabaseAPI {
             System.err.println("Could not find file: " + configFile);
         }
     }
+    public void initialize(String configFile, boolean prompt, String dbName) throws SQLException {
+        if (configFile.startsWith("http") || (new java.io.File(configFile).exists())) {
+            initialize(new Database(dbName,configFile), prompt);
+        } else {
+            System.err.println("Could not find file: " + configFile);
+        }
+    }
 
     public void initialize(Database database, boolean prompt) throws SQLException {
         this.database = database;
@@ -944,11 +951,11 @@ public class DatabaseAPI {
             if (saveMetric == null) { // this means save the whole thing???
                 newTrialID = trial.saveTrial(db);
                 trial.setID(newTrialID);
-                metricHash = saveMetrics(newTrialID, trial, saveMetricIndex);
+                metricHash = saveMetrics(newTrialID, trial, saveMetricIndex);//Commit here
 
                 if (intervalEvents != null && intervalEvents.size() > 0) {
                     Hashtable<Integer, Integer> functionHash = saveIntervalEvents(newTrialID, metricHash, saveMetricIndex);
-                    saveIntervalLocationProfiles(db, functionHash, intervalEventData.elements(), metricHash, saveMetricIndex);
+                    saveIntervalLocationProfiles(db, functionHash, intervalEventData.elements(), metricHash, saveMetricIndex);//Commit here, internally per process/thread
                 }
                 if (atomicEvents != null && atomicEvents.size() > 0) {
                     Hashtable<Integer, Integer> atomicEventHash = saveAtomicEvents(newTrialID);

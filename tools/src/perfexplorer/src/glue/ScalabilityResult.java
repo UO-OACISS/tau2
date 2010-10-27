@@ -3,15 +3,17 @@
  */
 package edu.uoregon.tau.perfexplorer.glue;
 
-import java.math.*;
-
-import edu.uoregon.tau.perfdmf.Trial;
 
 /**
  * @author khuck
  *
  */
 public class ScalabilityResult extends AbstractResult {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1074585379058715620L;
 
 	public enum Scaling {WEAK, STRONG};
 	public enum Measure {SPEEDUP, EFFICIENCY};
@@ -21,8 +23,8 @@ public class ScalabilityResult extends AbstractResult {
 	private double actualRatio = 0.0;
 	private String mainEvent = null;
 	private String timeMetric = null;
-	private Measure measure = Measure.SPEEDUP;
-	private Scaling scaling = Scaling.STRONG;
+//	private Measure measure = Measure.SPEEDUP;
+//	private Scaling scaling = Scaling.STRONG;
 		
 	/**
 	 * 

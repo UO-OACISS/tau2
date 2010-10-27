@@ -3,6 +3,7 @@
  */
 package edu.uoregon.tau.perfexplorer.cqos;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -12,26 +13,25 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Random;
+import java.util.Set;
 
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
+import weka.classifiers.functions.LinearRegression;
+import weka.classifiers.functions.PaceRegression;
 import weka.core.Attribute;
 import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.SelectedTag;
-import weka.classifiers.functions.LinearRegression;
-import weka.classifiers.functions.PaceRegression;
 import weka.core.converters.CSVLoader;
 
 /**
@@ -80,7 +80,7 @@ public class WekaClassifierWrapper implements Serializable {
     // member variables.
 	private String classifierType = WekaClassifierWrapper.MULTILAYER_PERCEPTRON;
 	private String[] metadataFields = null; 	// array of independent variables
-	private List/*<Map<String,String>>*/<Map> trainingData = null;  	// incoming map of training data
+	private List<Map<String,String>> trainingData = null;  	// incoming map of training data
 	private int fieldCount = 0;               // convenience variable <== metadataFields.length
 	private String classLabel = null;         // the label of the "dependent" variable
 	private Classifier cls = null;            // the Weka classifier.
@@ -89,7 +89,7 @@ public class WekaClassifierWrapper implements Serializable {
 	private Attribute[] attArray = null;      // local array of attributes, so we don't have to cast (using java 1.4)
 	private double confidence = 0.0;          // the confidence of the class prediction
 	private String className = null;          // the class prediction
-	private Set[]/*String*/ nominalAttributes = null;    // this helps us figure out what's a numeric variable and what isn't
+	private Set<String>[]/*String*/ nominalAttributes = null;    // this helps us figure out what's a numeric variable and what isn't
 	private Instances train = null;
 	private String csvFile = null;
 
@@ -101,7 +101,8 @@ public class WekaClassifierWrapper implements Serializable {
 	 * @param classLabel The key in the maps which identifies the class of each instance
 	 * @throws Exception If you don't pass in the right data...
 	 */
-	public WekaClassifierWrapper (List/*<Map<String,String>>*/<Map> trainingData, String classLabel) throws Exception {
+	@SuppressWarnings("unchecked")
+	public WekaClassifierWrapper (List<Map<String,String>> trainingData, String classLabel) throws Exception {
 		this.trainingData = trainingData;
 		this.classLabel = classLabel;
 		
@@ -110,7 +111,7 @@ public class WekaClassifierWrapper implements Serializable {
 
 		// check the type, just to be sure...
 		if (tmpMap instanceof HashMap) {
-			HashMap hashMap = (HashMap) tmpMap;
+			HashMap<String,String> hashMap = (HashMap<String,String>) tmpMap;
 			// get the set of keys from the hash map
 			this.metadataFields = new String[hashMap.keySet().size()];
 			
@@ -118,9 +119,9 @@ public class WekaClassifierWrapper implements Serializable {
 			this.metadataFields[this.fieldCount++] = classLabel;
 			
 			// save the keys from the map into our local array.
-	        Iterator keyIter = hashMap.keySet().iterator();
+	        Iterator<String> keyIter = hashMap.keySet().iterator();
 	        while (keyIter.hasNext()) {
-	        	String key = (String) keyIter.next();
+	        	String key = keyIter.next();
 	        	if (!key.equals(classLabel))
 	        		this.metadataFields[this.fieldCount++] = key;
 	        }
@@ -138,6 +139,7 @@ public class WekaClassifierWrapper implements Serializable {
 	 * This method will build the classifier, using the data passed in to the constructor.
 	 *
 	 */
+	@SuppressWarnings("unchecked")
 	public void buildClassifier () {
 
 		if (csvFile != null) {
@@ -151,8 +153,8 @@ public class WekaClassifierWrapper implements Serializable {
 				return;
 			}
 			int i = 0;
-			for (Enumeration e = train.enumerateAttributes() ; e.hasMoreElements() ; i++) {
-				Attribute attr = (Attribute)e.nextElement();
+			for (Enumeration<Attribute> e = train.enumerateAttributes() ; e.hasMoreElements() ; i++) {
+				Attribute attr = e.nextElement();
 				if (attr.name().equals(classLabel)) {
 					train.setClassIndex(i);
 					break;
@@ -178,7 +180,7 @@ public class WekaClassifierWrapper implements Serializable {
 					FastVector classes = new FastVector();
 				
 					// iterate through them, and put them in the FastVector
-					Iterator classIter = this.nominalAttributes[index].iterator();
+					Iterator<String> classIter = this.nominalAttributes[index].iterator();
 					while(classIter.hasNext()) {
 						Object tmp = classIter.next();
 						if (tmp != null) {
@@ -214,18 +216,18 @@ public class WekaClassifierWrapper implements Serializable {
         	train.setClass(classAttr);
         
         	// iterate over the training data
-        	Iterator<Map> dataIter = trainingData.iterator();
+        	Iterator<Map<String,String>> dataIter = trainingData.iterator();
         	while (dataIter.hasNext()) {
         	
         		// get the set of name/value pairs for this instance
-        		Map/*<String,String>*/ tmpMap = dataIter.next();
+        		Map<String,String> tmpMap = dataIter.next();
         	
         		// create the Weka Instance
 				Instance inst = new Instance(this.fieldCount);
 			
 				// set the attributes in the Instance
 				for (int i = 0 ; i < attArray.length ; i++) {
-					String value = (String)tmpMap.get(attArray[i].name());
+					String value = tmpMap.get(attArray[i].name());
 					try {
 						inst.setValue(attArray[i], Double.parseDouble(value));
 					} catch (Exception e) {
@@ -264,19 +266,21 @@ public class WekaClassifierWrapper implements Serializable {
 	 * of potential values.
 	 *
 	 */
+	@SuppressWarnings("unchecked")
 	private void checkForNominalAttributes() {
         this.nominalAttributes = new Set[this.fieldCount];
         
         // iterate over the training data, and test if the data can be parsed as a double
-        Iterator<Map> dataIter = trainingData.iterator();
+        Iterator<Map<String,String>> dataIter = trainingData.iterator();
         while (dataIter.hasNext()) {
-        	Map/*<String,String>*/ tmpMap = dataIter.next();
+        	Map<String,String> tmpMap = dataIter.next();
 			for (int i = 0 ; i < this.metadataFields.length ; i++) {
-				String value = (String)tmpMap.get(this.metadataFields[i]);
+				String value = tmpMap.get(this.metadataFields[i]);
 				try {
-					double test = Double.parseDouble(value);
+					//double test = 
+						Double.parseDouble(value);
 				} catch (Exception e) {
-					nominalAttributes[i] = new HashSet();
+					nominalAttributes[i] = new HashSet<String>();
 				}
 			}
 		}
@@ -284,9 +288,9 @@ public class WekaClassifierWrapper implements Serializable {
         // ok, we know which fields are nominal, so now get their potential values.
         dataIter = trainingData.iterator();
         while (dataIter.hasNext()) {
-        	Map/*<String,String>*/ tmpMap = dataIter.next();
+        	Map<String,String> tmpMap = dataIter.next();
 			for (int i = 0 ; i < this.metadataFields.length ; i++) {
-				String value = (String)tmpMap.get(this.metadataFields[i]);
+				//String value = tmpMap.get(this.metadataFields[i]);
 				if (nominalAttributes[i] != null) {
 					nominalAttributes[i].add(tmpMap.get(this.metadataFields[i]));
 				}
@@ -301,7 +305,7 @@ public class WekaClassifierWrapper implements Serializable {
 	 * @param inputFields
 	 * @return the class of the instance, based on the classification of the input fields.
 	 */
-	public String getClass(Map/*<String,String>*/ inputFields) {
+	public String getClass(Map/*<String,String>*/<String, String> inputFields) {
 		
 		// create the weka data structures - this looks silly that we create an "Instances"
 		// object with one instance, but initializing it with the array of Weka Attributes
@@ -312,7 +316,7 @@ public class WekaClassifierWrapper implements Serializable {
     	// iterate over the input fields, and set the Weka Attributes in the Weka Instance
     	int classIndex = 0;
 		for (int i = 0 ; i < attArray.length ; i++) {
-			String tmp = (String)inputFields.get(attArray[i].name());
+			String tmp = inputFields.get(attArray[i].name());
 			if (tmp != null) {
 				try {
 					if (attArray[i].isNumeric())
@@ -434,7 +438,7 @@ public class WekaClassifierWrapper implements Serializable {
 		return coeffs;
 	}
 
-	public double classifyInstance(Map/*<String,String>*/ inputFields) {
+	public double classifyInstance(Map<String,String> inputFields) {
 		
 		// create the weka data structures - this looks silly that we create an "Instances"
 		// object with one instance, but initializing it with the array of Weka Attributes
@@ -445,7 +449,7 @@ public class WekaClassifierWrapper implements Serializable {
     	// iterate over the input fields, and set the Weka Attributes in the Weka Instance
     	int classIndex = 0;
 		for (int i = 0 ; i < attArray.length ; i++) {
-			String tmp = (String)inputFields.get(attArray[i].name());
+			String tmp = inputFields.get(attArray[i].name());
 			if (tmp != null) {
 				try {
 					if (attArray[i].isNumeric())
@@ -524,6 +528,7 @@ public class WekaClassifierWrapper implements Serializable {
 	 * 
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public List<String> testClassifier(String testingData) {
 		List<String> classes = new ArrayList<String>();
 		// this sucks.  We have to tell the new instances object that
@@ -535,21 +540,21 @@ public class WekaClassifierWrapper implements Serializable {
 			loader.setSource(new File(testingData));
 			tmpTest = loader.getDataSet();
 			int a = 0;
-			for (Enumeration e = tmpTest.enumerateAttributes() ; e.hasMoreElements() ; a++) {
-				Attribute attr = (Attribute)e.nextElement();
+			for (Enumeration<Attribute> e = tmpTest.enumerateAttributes() ; e.hasMoreElements() ; a++) {
+				Attribute attr = e.nextElement();
 				if (attr.name().equals(classLabel)) {
 					tmpTest.setClassIndex(a);
 					break;
 				}
 			}
 			// iterate over the temporary instances
-			for (Enumeration e = tmpTest.enumerateInstances() ; e.hasMoreElements() ; ) {
-				Instance inst = (Instance)e.nextElement();
+			for (Enumeration<Instance> e = tmpTest.enumerateInstances() ; e.hasMoreElements() ; ) {
+				Instance inst = e.nextElement();
 				Instance newInst = new Instance(train.numAttributes());
 				newInst.setDataset(inTest);
 				// iterate over the independent attributes
-				for (Enumeration e2 = inTest.enumerateAttributes() ; e2.hasMoreElements() ; ) {
-					Attribute attr = (Attribute)e2.nextElement();
+				for (Enumeration<Attribute> e2 = inTest.enumerateAttributes() ; e2.hasMoreElements() ; ) {
+					Attribute attr = e2.nextElement();
 					//System.out.println(attr.name());
 					newInst.setValue(inTest.attribute(attr.name()).index(), inst.value(tmpTest.attribute(attr.name())));
 				}
@@ -561,13 +566,13 @@ public class WekaClassifierWrapper implements Serializable {
 			System.err.println(e.getMessage());
 			e.printStackTrace();
 			System.out.println("Expected attributes:");
-			for (Enumeration en = train.enumerateAttributes() ; en.hasMoreElements() ; ) {
-				Attribute attr = (Attribute)en.nextElement();
+			for (Enumeration<Attribute> en = train.enumerateAttributes() ; en.hasMoreElements() ; ) {
+				Attribute attr = en.nextElement();
 				System.out.print(attr.name() + ", ");
 			}
 			System.out.println("\nFound attributes:");
-			for (Enumeration en = tmpTest.enumerateAttributes() ; en.hasMoreElements() ; ) {
-				Attribute attr = (Attribute)en.nextElement();
+			for (Enumeration<Attribute> en = tmpTest.enumerateAttributes() ; en.hasMoreElements() ; ) {
+				Attribute attr = en.nextElement();
 				System.out.print(attr.name() + ", ");
 			}
 			System.out.println("\n");
@@ -579,8 +584,8 @@ public class WekaClassifierWrapper implements Serializable {
 			}
 			System.out.println();*/
 			int index = 0;
-			for (Enumeration e = inTest.enumerateInstances() ; e.hasMoreElements() ; index++) {
-				Instance inst = (Instance)e.nextElement();
+			for (Enumeration<Instance> e = inTest.enumerateInstances() ; e.hasMoreElements() ; index++) {
+				Instance inst = e.nextElement();
         		// get the classification, which comes back as probabilities for each class.
 	        	double[] dist = cls.distributionForInstance(inst);
 	        	
@@ -671,14 +676,14 @@ public class WekaClassifierWrapper implements Serializable {
 			System.out.println("Writing...");
 			
 			// create a list for our training data
-			List<Map> trainingData = new ArrayList<Map>();
+			List<Map<String,String>> trainingData = new ArrayList<Map<String,String>>();
 			
 			// this is the attribute that we want as our dependent variable.  All the others
 			// will be used as independent variables for the classification.
 			String classLabel = "method name";
 			
 			// first instance
-			Map myMap = new HashMap();
+			Map<String,String> myMap = new HashMap<String, String>();
 			myMap.put("method name", "method 1");   // the class for this instance
 			myMap.put("sleep value", "0");          // the "real" independent variable
 			myMap.put("bogus", "A");                // a "bogus" variable (noise, really)
@@ -687,7 +692,7 @@ public class WekaClassifierWrapper implements Serializable {
 			trainingData.add(myMap);
 			
 			// second instance
-			myMap = new HashMap();
+			myMap = new HashMap<String, String>();
 			myMap.put("method name", "method 1");
 			myMap.put("sleep value", "1");
 			myMap.put("bogus", "A");
@@ -696,7 +701,7 @@ public class WekaClassifierWrapper implements Serializable {
 			trainingData.add(myMap);
 			
 			// third instance
-			myMap = new HashMap();
+			myMap = new HashMap<String, String>();
 			myMap.put("method name", "method 1");
 			myMap.put("sleep value", "2");
 			myMap.put("bogus", "B");
@@ -705,7 +710,7 @@ public class WekaClassifierWrapper implements Serializable {
 			trainingData.add(myMap);
 			
 			// fourth instance
-			myMap = new HashMap();
+			myMap = new HashMap<String, String>();
 			myMap.put("method name", "method 2");
 			myMap.put("sleep value", "3");
 			myMap.put("bogus", "B");
@@ -714,7 +719,7 @@ public class WekaClassifierWrapper implements Serializable {
 			trainingData.add(myMap);
 			
 			// fifth instance
-			myMap = new HashMap();
+			myMap = new HashMap<String, String>();
 			myMap.put("method name", "method 2");
 			myMap.put("sleep value", "4");
 			myMap.put("bogus", "B");
@@ -732,7 +737,7 @@ public class WekaClassifierWrapper implements Serializable {
 			// do some classifying with it
 			System.out.println("\n" + wrapper.getClassifierType());
 	        for (int i = 0 ; i < 5 ; i++) {
-	    		Map/*<String,String>*/ inputFields = new HashMap/*<String,String>*/();
+	    		Map/*<String,String>*/<String, String> inputFields = new HashMap/*<String,String>*/<String, String>();
 	        	inputFields.put("sleep value", Integer.toString(i));
 	        	inputFields.put("bogus", (i<2?"A":"B"));
 	        	// notice there's no noise fields!  We don't need ALL the training data...
@@ -748,7 +753,7 @@ public class WekaClassifierWrapper implements Serializable {
 			// do some classifying with it
 			System.out.println("\n" + wrapper.getClassifierType());
 	        for (int i = 0 ; i < 5 ; i++) {
-	    		Map/*<String,String>*/ inputFields = new HashMap/*<String,String>*/();
+	    		Map/*<String,String>*/<String, String> inputFields = new HashMap/*<String,String>*/<String, String>();
 	        	inputFields.put("sleep value", Integer.toString(i));
 	        	inputFields.put("bogus", (i<2?"A":"B"));
 	        	// this test does have the noise variables
@@ -766,7 +771,7 @@ public class WekaClassifierWrapper implements Serializable {
 			// do some classifying with it
 			System.out.println("\n" + wrapper.getClassifierType());
 	        for (int i = 0 ; i < 5 ; i++) {
-	    		Map/*<String,String>*/ inputFields = new HashMap/*<String,String>*/();
+	    		Map/*<String,String>*/<String, String> inputFields = new HashMap/*<String,String>*/<String, String>();
 	        	inputFields.put("sleep value", Integer.toString(i));
 	        	inputFields.put("bogus", (i<2?"A":"B"));
 				inputFields.put("noise", "A");
@@ -787,7 +792,7 @@ public class WekaClassifierWrapper implements Serializable {
 			// do some classifying with it
 			System.out.println("\n" + wrapper.getClassifierType());
 	        for (int i = 0 ; i < 5 ; i++) {
-	    		Map/*<String,String>*/ inputFields = new HashMap/*<String,String>*/();
+	    		Map/*<String,String>*/<String, String> inputFields = new HashMap/*<String,String>*/<String, String>();
 	        	inputFields.put("sleep value", Integer.toString(i));
 	        	inputFields.put("bogus", (i<2?"A":i<4?"B":"C"));    /// one bad value - C wasn't used in training
 				inputFields.put("noise", (i==0?"A":i==1?"B":i==2?"C":i==3?"D":"E"));  // four bad values!

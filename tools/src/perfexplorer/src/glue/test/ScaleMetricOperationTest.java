@@ -3,12 +3,12 @@
  */
 package edu.uoregon.tau.perfexplorer.glue.test;
 
+import junit.framework.TestCase;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
 import edu.uoregon.tau.perfexplorer.glue.ScaleMetricOperation;
 import edu.uoregon.tau.perfexplorer.glue.TrialResult;
 import edu.uoregon.tau.perfexplorer.glue.Utilities;
-import junit.framework.TestCase;
 
 
 /**

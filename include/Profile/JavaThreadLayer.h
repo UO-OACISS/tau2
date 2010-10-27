@@ -24,6 +24,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #ifdef JAVA
+#ifndef TAU_JVMTI
 #include <jvmpi.h>
 class  JavaThreadLayer
 { // Layer for JavaThreadLayer to interact with Java Threads 
@@ -54,8 +55,39 @@ class  JavaThreadLayer
 	static JVMPI_RawMonitor     tauDBMutex; // to protect counter
 	static JVMPI_RawMonitor     tauEnvMutex; // second mutex
 };
-#endif // JAVA 
 
+#else //TAU_JVMTI
+#include <jvmti.h>
+class  JavaThreadLayer
+{ // Layer for JavaThreadLayer to interact with Java Threads 
+  public:
+ 	
+ 	JavaThreadLayer () { }  // defaults
+	~JavaThreadLayer () { } 
+
+	static int * RegisterThread(jthread this_thread=NULL); 
+	static int ThreadEnd(jthread this_thread);
+        static int InitializeThreadData(void);     // init thread mutexes
+        static int InitializeDBMutexData(void);     // init tauDB mutex
+        static int InitializeEnvMutexData(void);     // init tauEnv mutex
+	static int GetThreadId(jthread this_thread=NULL); 	 	 // gets 0..N-1 thread id
+	static int LockDB(void);	 // locks the tauDBMutex
+	static int UnLockDB(void);	 // unlocks the tauDBMutex
+	static int LockEnv(void);	 // locks the tauEnvMutex
+	static int UnLockEnv(void);	 // unlocks the tauEnvMutex
+	static int TotalThreads(void); 	 // returns the thread count
+        // return the current thread's cpu time, in nanoseconds (as reported by jvmpi)
+        static jlong getCurrentThreadCpuTime(void); 
+	static jvmtiEnv 	    *jvmti;
+  private:
+        static int		    tauThreadCount;  // Number of threads
+	static jrawMonitorID     tauNumThreadsLock; // to protect counter
+	static jrawMonitorID     tauDBMutex; // to protect counter
+	static jrawMonitorID     tauEnvMutex; // second mutex
+};
+
+#endif // TAU_JVMTI
+#endif // JAVA 
 #endif // _JAVATHREADLAYER_H_
 
 	

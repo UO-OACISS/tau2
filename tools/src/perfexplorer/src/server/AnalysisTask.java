@@ -12,8 +12,6 @@ import java.io.FileInputStream;
 import java.sql.PreparedStatement;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.TimerTask;
 
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
@@ -133,7 +131,7 @@ public class AnalysisTask extends TimerTask {
 	 * @param outfile
 	 * @throws PerfExplorerException
 	 */
-	public void saveAnalysisResult (RawDataInterface centroids, RawDataInterface deviations, File thumbnail, File outfile) throws PerfExplorerException {
+	public void saveAnalysisResult (RawDataInterface centroids, RawDataInterface deviations, File thumbnail, File outfile, int i, int j) throws PerfExplorerException {
 		// save the image in the database
 		DB db = session.db();
 		try {
@@ -146,7 +144,13 @@ public class AnalysisTask extends TimerTask {
 			buf.append(" (analysis_settings, description, thumbnail_size, thumbnail, image_size, image, result_type) values (?, ?, ?, ?, ?, ?, ?)");
 			statement = db.prepareStatement(buf.toString());
 			statement.setInt(1, analysisID);
-			statement.setString(2, new String("analysis_result"));
+			if(i>=0 && j>=0){
+			List<String> s= centroids.getEventNames();
+			
+			statement.setString(2, new String(s.get(i).substring(0, Math.min(s.get(i).length(),120))+" vs "+s.get(j).substring(0,Math.min(s.get(j).length(),120))));
+			}
+			else statement.setString(2, "analysis_result");
+			
        		FileInputStream inStream = new FileInputStream(thumbnail);
        		statement.setInt(3,(int)outfile.length());
        		statement.setBinaryStream(4,inStream,(int)thumbnail.length());
@@ -250,9 +254,9 @@ public class AnalysisTask extends TimerTask {
 					int maxClusters = (numTotalThreads <= modelData.getNumberOfClusters()) ? (numTotalThreads-1) : modelData.getNumberOfClusters();
 					// create a cluster engine
 					HierarchicalCluster clusterer = AnalysisFactory.createHierarchicalClusteringEngine();
-					long start = System.currentTimeMillis();
+					//long start = System.currentTimeMillis();
 					clusterer.setInputData(reducedData);
-					long end = System.currentTimeMillis();
+					//long end = System.currentTimeMillis();
 					for (int i = 2 ; i <= maxClusters ; i++) {
 						PerfExplorerOutput.println("Doing " + i + " clusters:" + modelData.toString());
 						// because all we are doing is changing the cut in the tree, we don't
@@ -267,12 +271,12 @@ public class AnalysisTask extends TimerTask {
 				} else if (modelData.getClusterMethod().equals(AnalysisType.DBSCAN)) {
 					// create a cluster engine
 					DBScanClusterInterface clusterer = AnalysisFactory.createDBScanEngine();
-					long start = System.currentTimeMillis();
+					//long start = System.currentTimeMillis();
 					// force normalization for DBSCAN, it seems to work better when guessing epsilon
 					DataNormalizer normalizer = AnalysisFactory.createDataNormalizer(reducedData);
 					reducedData=normalizer.getNormalizedData();
 					clusterer.setInputData(reducedData);
-					long end = System.currentTimeMillis();
+					//long end = System.currentTimeMillis();
 
 					double[] kDistances = clusterer.getKDistances();
 					int epsilonIndex = clusterer.guessEpsilonIndex();
@@ -331,7 +335,7 @@ public class AnalysisTask extends TimerTask {
 							rCorrelation = reducedData.getCorrelation(i,j);
 							File thumbnail = ImageUtils.generateCorrelationScatterplotThumbnail(chartType, modelData, reducedData, i, j, correlateToMain);
 							File chart = ImageUtils.generateCorrelationScatterplotImage(chartType, modelData, reducedData, i, j, correlateToMain, rCorrelation);
-							saveAnalysisResult(reducedData, reducedData, thumbnail, chart);	
+							saveAnalysisResult(reducedData, reducedData, thumbnail, chart, i, j);	
 						}
 						PerfExplorerOutput.println("Finished: " + (i+1) + " of " + reducedData.numDimensions());
 					}
@@ -365,7 +369,7 @@ public class AnalysisTask extends TimerTask {
 		File thumbnail = ImageUtils.generateClusterSizeThumbnail(modelData, clusterSizes);//, eventIDs //TODO: These aren't used.
 		File chart = ImageUtils.generateClusterSizeImage(modelData, clusterSizes);//, eventIDs
 		chartType = ChartType.HISTOGRAM;
-		saveAnalysisResult(centroids, deviations, thumbnail, chart);
+		saveAnalysisResult(centroids, deviations, thumbnail, chart, -1,-1);
 		
 		if (modelData.getCurrentSelection() instanceof Metric) {
 			// do PCA breakdown
@@ -384,7 +388,7 @@ public class AnalysisTask extends TimerTask {
 			if (clusterer instanceof DBScanClusterInterface) 
 				hasNoise = true;
 			chart = ImageUtils.generateClusterScatterplotImage(ChartType.PCA_SCATTERPLOT, modelData, components, clusters, hasNoise);
-			saveAnalysisResult(components, components, thumbnail, chart);
+			saveAnalysisResult(components, components, thumbnail, chart, -1, -1);
 		}
 		
 		// do virtual topology
@@ -397,17 +401,17 @@ public class AnalysisTask extends TimerTask {
 		chartType = ChartType.CLUSTER_MINIMUMS;
 		thumbnail = ImageUtils.generateBreakdownThumbnail(modelData, clusterer.getClusterMinimums(), deviations, eventIDs);
 		chart = ImageUtils.generateBreakdownImage(chartType, modelData, clusterer.getClusterMinimums(), deviations, eventIDs);
-		saveAnalysisResult(clusterer.getClusterMinimums(), deviations, thumbnail, chart);
+		saveAnalysisResult(clusterer.getClusterMinimums(), deviations, thumbnail, chart, -1,-1);
 		// do averages
 		chartType = ChartType.CLUSTER_AVERAGES;
 		thumbnail = ImageUtils.generateBreakdownThumbnail(modelData, centroids, deviations, eventIDs);
 		chart = ImageUtils.generateBreakdownImage(chartType, modelData, centroids, deviations, eventIDs);
-		saveAnalysisResult(centroids, deviations, thumbnail, chart);
+		saveAnalysisResult(centroids, deviations, thumbnail, chart, -1,-1);
 		// do maxes
 		chartType = ChartType.CLUSTER_MAXIMUMS;
 		thumbnail = ImageUtils.generateBreakdownThumbnail(modelData, clusterer.getClusterMaximums(), deviations, eventIDs);
 		chart = ImageUtils.generateBreakdownImage(chartType, modelData, clusterer.getClusterMaximums(), deviations, eventIDs);
-		saveAnalysisResult(clusterer.getClusterMaximums(), deviations, thumbnail, chart);
+		saveAnalysisResult(clusterer.getClusterMaximums(), deviations, thumbnail, chart, -1,-1);
 	}
 }
 

@@ -186,6 +186,11 @@ public class TranslateScript {
 
 class EquationParseException extends Exception {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5359545769052001459L;
+
 	public EquationParseException() {
 		super();
 		// TODO Auto-generated constructor stub

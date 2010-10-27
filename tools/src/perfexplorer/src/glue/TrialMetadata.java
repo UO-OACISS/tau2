@@ -163,9 +163,9 @@ public class TrialMetadata {
 						if (eventName == null || 
 								(eventName != null && this.performanceResult.getEvents().contains(eventName)) ||
 								(eventName != null && this.performanceResult.getEvents().contains(this.performanceResult.getMainEvent() + "  => " + eventName))) {
-							String categoryName = results.getString(2);
+//							String categoryName = results.getString(2);
 							String parameterName = results.getString(3);
-							String parameterType = results.getString(4);
+//							String parameterType = results.getString(4);
 							String parameterValue = results.getString(5);
 							commonAttributes.put(parameterName, parameterValue);
 //							if (eventName==null)

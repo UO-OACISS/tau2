@@ -25,5 +25,17 @@ CLASSPATH=$PERFEXPLORER_JAR:$PERFDMF_JAR:$JDBC_JAR:$OMEGAHAT_JARS:$JFREECHART_JA
 
 $BINDIR/tau_user_setup.sh
 
+# Test for java 1.4+
+JAVA_VERSION=`java -version 2>&1 | head -1 | cut -d '.' -f2`
+if [ $JAVA_VERSION = "4" ] ; then
+        echo ""
+        echo "Java 1.5 or newer is required to run ppscript"
+        echo "Please update your Java SDK to a newer version."
+        echo ""
+
+        exit 0
+fi
+
+
 java -Xmx800m -Dderby.system.home=${LIBDIR} -Dpython.home=${JYTHON_HOME} -Dpython.verbose=warning -Djava.library.path=${LIBDIR} \
 -cp ${LIBDIR}/paraprof.jar:${LIBDIR}/perfdmf.jar:${LIBDIR}/tau-common.jar:${LIBDIR}/vis.jar:${LIBDIR}/jogl.jar:${LIBDIR}/jatha.jar:${LIBDIR}/jgraph.jar:${LIBDIR}/xerces.jar:${JDBC_JAR}:${LIBDIR}/jargs.jar:${LIBDIR}/batik-combined.jar:${LIBDIR}/jfreechart-1.0.12.jar:${LIBDIR}/jcommon-1.0.15.jar:${LIBDIR}/jython.jar:${CLASSPATH} org.python.util.jython "$@" 

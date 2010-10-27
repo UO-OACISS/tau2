@@ -16,6 +16,12 @@ import java.util.List;
  */
 public class DefaultOperation extends AbstractPerformanceOperation implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 8652096782512097060L;
+
+
 	public DefaultOperation(List<PerformanceResult> inputs) {
 		super(inputs);
 		// TODO Auto-generated constructor stub

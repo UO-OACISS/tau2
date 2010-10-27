@@ -1,6 +1,5 @@
 package edu.uoregon.tau.perfexplorer.common;
 
-import java.lang.Exception;
 
 /**
  * Base exception class for the PerfExplorer application.
@@ -12,6 +11,10 @@ import java.lang.Exception;
  *
  */
 public class PerfExplorerException extends Exception {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6281807743123468173L;
 	/**
 	 * Constructor.
 	 * 

@@ -78,7 +78,7 @@ for arg in "$@" ; do
 	      makefile_specified=yes
 	      ;;
 	  -tau_options=*)
-	      TAUCOMPILER_OPTIONS=`echo $arg | sed -e 's/-tau_options=//'`
+	      TAUCOMPILER_OPTIONS=`echo $arg | sed -e 's/\^/ /g' | sed -e 's/-tau_options=//'`
 	      options_specified=yes
 	      ;;
 	  -show)

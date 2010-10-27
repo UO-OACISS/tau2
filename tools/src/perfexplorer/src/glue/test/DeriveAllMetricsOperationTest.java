@@ -1,5 +1,8 @@
 package edu.uoregon.tau.perfexplorer.glue.test;
 
+import java.util.List;
+
+import junit.framework.TestCase;
 import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
 import edu.uoregon.tau.perfexplorer.glue.DeriveAllMetricsOperation;
 import edu.uoregon.tau.perfexplorer.glue.ExtractEventOperation;
@@ -9,11 +12,7 @@ import edu.uoregon.tau.perfexplorer.glue.TrialMeanResult;
 import edu.uoregon.tau.perfexplorer.glue.Utilities;
 import edu.uoregon.tau.perfexplorer.rules.RuleHarness;
 
-import java.util.List;
-
-
-import junit.framework.TestCase;
-
+@SuppressWarnings("deprecation")
 public class DeriveAllMetricsOperationTest extends TestCase {
 
 	public final void testProcessData() {

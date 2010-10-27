@@ -8,6 +8,7 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
@@ -26,6 +27,10 @@ import edu.uoregon.tau.perfexplorer.constants.Constants;
  *
  */
 public class VirtualTopology extends JPanel {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1637232710147718976L;
 	RMIPerfExplorerModel modelData = null;
 	ClusterInterface clusterer = null;
 	int[] pixels = null;

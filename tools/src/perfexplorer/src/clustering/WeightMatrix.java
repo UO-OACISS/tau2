@@ -32,7 +32,8 @@ public class WeightMatrix {
      * Default constructor for the matrix, shouldn't be called, 
      * so make it private.
      */
-    private WeightMatrix() {};
+    @SuppressWarnings("unused")
+	private WeightMatrix() {};
     
     /**
      * Constructor for the matrix.

@@ -1,15 +1,23 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import javax.swing.*;
+import java.awt.Dimension;
 
-import java.awt.*;
-//import java.awt.event.*;
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 
 /**
  Borrowed from http://java.sun.com/docs/books/tutorial/uiswing/components/example-1dot4/TabbedPaneDemo.java
  */
 public class PerfExplorerJTabbedPane extends JTabbedPane {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6293521497147789139L;
 	private static PerfExplorerJTabbedPane thePane = null;
 	private JComponent panel1 = null;
 	private JComponent panel2 = null;

@@ -6,10 +6,8 @@
  */
 package edu.uoregon.tau.perfexplorer.glue;
 
-import java.util.List;
 import java.util.ArrayList;
-
-import edu.uoregon.tau.perfdmf.Trial;
+import java.util.List;
 
 /**
  * @author khuck
@@ -17,6 +15,10 @@ import edu.uoregon.tau.perfdmf.Trial;
  */
 public class SplitTrialClusters extends	AbstractPerformanceOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7815535603874537215L;
 	private List<PerformanceResult> clusterResults = null;
 	private boolean includeNoisePoints = false;
 

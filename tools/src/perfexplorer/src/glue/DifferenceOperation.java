@@ -14,6 +14,10 @@ import edu.uoregon.tau.perfdmf.Trial;
  */
 public class DifferenceOperation extends AbstractPerformanceOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7845440472736625443L;
 	private PerformanceDifferenceType differenceType = PerformanceDifferenceType.SAME;
 	private double performanceRatio = 1.0;
 	

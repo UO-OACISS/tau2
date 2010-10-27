@@ -6,18 +6,18 @@
  */
 package edu.uoregon.tau.perfexplorer.clustering.weka;
 
-import weka.core.Instances;
-import weka.core.Instance;
 import java.util.ArrayList;
 
+import weka.attributeSelection.PrincipalComponents;
+import weka.core.Instance;
+import weka.core.Instances;
 import edu.uoregon.tau.perfexplorer.clustering.ClusterDescription;
 import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
 import edu.uoregon.tau.perfexplorer.clustering.ClusterInterface;
+import edu.uoregon.tau.perfexplorer.clustering.DBScanClusterInterface;
 import edu.uoregon.tau.perfexplorer.clustering.PrincipalComponentsAnalysisInterface;
 import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
-import edu.uoregon.tau.perfexplorer.clustering.DBScanClusterInterface;
 import edu.uoregon.tau.perfexplorer.common.RMICubeData;
-import weka.attributeSelection.PrincipalComponents;
 
 /**
  * This class will perform PCA on weka data.

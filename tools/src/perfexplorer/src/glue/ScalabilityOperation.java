@@ -3,11 +3,10 @@
  */
 package edu.uoregon.tau.perfexplorer.glue;
 
-import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfdmf.analysis.Scalability;
-
 import java.util.List;
 import java.util.Set;
+
+import edu.uoregon.tau.perfdmf.Trial;
 
 /**
  * @author khuck
@@ -15,6 +14,10 @@ import java.util.Set;
  */
 public class ScalabilityOperation extends AbstractPerformanceOperation {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2643250836211731594L;
 	// TODO: fix this, so that the RULES figure out what kind of scaling it is.
 	private ScalabilityResult.Measure measure = ScalabilityResult.Measure.SPEEDUP;
 	private ScalabilityResult.Scaling scaling = ScalabilityResult.Scaling.STRONG;

@@ -1,7 +1,7 @@
 package edu.uoregon.tau.perfexplorer.server;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The DendrogramTree class exists to store the results of the hierarchical

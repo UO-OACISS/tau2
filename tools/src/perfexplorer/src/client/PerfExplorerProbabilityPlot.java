@@ -89,15 +89,15 @@ public class PerfExplorerProbabilityPlot extends PerfExplorerChartWindow {
 		return window;
     }
 
-	private static double SND(double r) {
-		// standard normal distribution
-		double firstTerm = java.lang.Math.sqrt(2 * java.lang.Math.PI);
-		double secondTerm = 0.0 - ((r*r)/2);
-		double y = java.lang.Math.pow(java.lang.Math.E, secondTerm) / firstTerm;
-		return y;
-	}
+//	private static double SND(double r) {
+//		// standard normal distribution
+//		double firstTerm = java.lang.Math.sqrt(2 * java.lang.Math.PI);
+//		double secondTerm = 0.0 - ((r*r)/2);
+//		double y = java.lang.Math.pow(java.lang.Math.E, secondTerm) / firstTerm;
+//		return y;
+//	}
 
-	static class Point implements Comparable {
+	static class Point implements Comparable<Point> {
 		public double x = 0.0;
 		public double y = 0.0;
 		public double n = 0.0; // normalized y
@@ -107,7 +107,7 @@ public class PerfExplorerProbabilityPlot extends PerfExplorerChartWindow {
 			this.x = x;
 			this.y = y;
 		}
-		public int compareTo(Object o) {
+		public int compareTo(Point o) {
 			Point p = (Point)o;
 			if (this.y < p.y) {
 				return -1;

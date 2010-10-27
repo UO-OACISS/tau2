@@ -38,17 +38,13 @@ extern "C" {
 using namespace MRN;
 using namespace std;
 #endif
-
-extern "C" int getTomFlattenedIdx(int numCounters, int numTypes,
-				  int evtIdx, int ctrIdx, int typeIdx) {
-  return evtIdx*numCounters*numTypes + ctrIdx*numTypes + typeIdx;
-}
-
-int calcCtrHistBinIdx(int tomIdx, int tomType, int numBins, 
-		      int numThreads, int ctr,
-		      FunctionInfo *fi, double *maxes, double *mins);
-int calcHistBinIdx(int tomIdx, int tomType, int numBins, int numThreads,
-	           FunctionInfo *fi, double *maxes, double *mins);
+double tomGetData(int tomType, FunctionInfo *fi, int counter, int tid);
+double tomGetFunData(int tomType, FunctionInfo *fi, int tid);
+double tomGetCtrData(int tomType, FunctionInfo *fi, int counter, int tid);
+int calcHistBinIdx(int numBins, double val, double max, double min);
+	           
+double calcEuclideanDistance(double *vector, double *centroids,
+			     int numEvents, int k);
 
 // Back-end rank
 int rank;
@@ -76,8 +72,7 @@ Tau_unify_object_t *mrnetAtomUnifier;
 
 extern "C" void calculateStats(double *sum, double *sumofsqr, 
 			       double *max, double *min,
-			       int numThreads, int dataType,
-			       FunctionInfo *fi, int ctr);
+			       double value);
 
 extern "C" void Tau_mon_connect() {
 
@@ -155,7 +150,8 @@ extern "C" void Tau_mon_connect() {
   sprintf(mrnetPortString, "%d", mrnetPort);
   sprintf(mrnetRankString, "%d", mrnetRank);
 
-  mrnet_argv[0] = ""; // dummy process name string
+  mrnet_argv[0] = (char *)malloc(strlen("")*sizeof(char));
+  mrnet_argv[0] = strcpy(mrnet_argv[0],""); // dummy process name string
   mrnet_argv[1] = mrnetHostName;
   mrnet_argv[2] = mrnetPortString;
   mrnet_argv[3] = mrnetRankString;
@@ -202,6 +198,13 @@ extern "C" void Tau_mon_disconnect() {
   }
   // Tell front-end to tear down network and exit
   STREAM_FLUSHSEND_BE(ctrl_stream, TOM_CONTROL, "%d", TOM_EXIT);
+#ifdef MRNET_LIGHTWEIGHT
+  Network_waitfor_ShutDown(net);
+  delete_Network_t(net);
+#else /* MRNET_LIGHTWEIGHT */
+  net->waitfor_ShutDown();
+  delete net;
+#endif /* MRNET_LIGHTWEIGHT */
 }
 
 extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
@@ -306,68 +309,74 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
 #endif /* MRNET_LIGHTWEIGHT */
       assert(tag == PROT_BASESTATS);
 
-      int numItems = numGlobal*numCounters*TOM_NUM_VALUES;
+      int numItems = numCounters*TOM_NUM_CTR_VAL+TOM_NUM_FUN_VAL;
+      int dataLength = numGlobal*numItems;
 
       double *out_sums;
       double *out_sumsofsqr;
       double *out_mins;
       double *out_maxes;
-      out_sums = (double *)TAU_UTIL_MALLOC(numItems*sizeof(double));
-      out_sumsofsqr = (double *)TAU_UTIL_MALLOC(numItems*sizeof(double));
-      out_mins = (double *)TAU_UTIL_MALLOC(numItems*sizeof(double));
-      out_maxes = (double *)TAU_UTIL_MALLOC(numItems*sizeof(double));
-
-      // For each event, how many threads contribute values 
-      //   from this node?
-      int *threads;
-      threads = (int *)TAU_UTIL_MALLOC(numGlobal*sizeof(int));
+      out_sums = (double *)TAU_UTIL_MALLOC(dataLength*sizeof(double));
+      out_sumsofsqr = (double *)TAU_UTIL_MALLOC(dataLength*sizeof(double));
+      out_mins = (double *)TAU_UTIL_MALLOC(dataLength*sizeof(double));
+      out_maxes = (double *)TAU_UTIL_MALLOC(dataLength*sizeof(double));
+      for (int i=0; i<dataLength; i++) {
+	out_sums[i] = 0.0;
+	out_sumsofsqr[i] = 0.0;
+	out_mins[i] = 0.0;
+	out_maxes[i] = 0.0;
+      }
 
       // Construct the data arrays to be sent.
       for (int evt=0; evt<numGlobal; evt++) {
 	if (globalToLocal[evt] != -1) {
-
 	  FunctionInfo *fi = TheFunctionDB()[globalToLocal[evt]];
-
-	  for (int ctr=0; ctr<numCounters; ctr++) {
+	  // CALL and SUBR values are event-specific, not counter-related.
+	  int offset = evt*numItems;
+	  for (int type=0; type<TOM_NUM_FUN_VAL; type++) {
+	    int finalIdx = offset+type;
+	    for (int tid=0; tid<numThreads; tid++) {
+	      double val = tomGetFunData(type, fi, tid);
+	      if (tid == 0) {
+		out_mins[finalIdx] = val;
+		out_maxes[finalIdx] = val;
+	      }
+	      // the counter value is ignored in this case.
+	      calculateStats(&out_sums[finalIdx], &out_sumsofsqr[finalIdx],
+			     &out_mins[finalIdx], &out_maxes[finalIdx],
+			     val);
+	    }
+	  }
+	  // Each counter has EXCL and INCL values
+	  for (int counter=0; counter<numCounters; counter++) {
 	    // accumulate for threads but contribute as a node
 	    // Write thread-accumulated values into the appropriate arrays
-	    for (int i=0; i<TOM_NUM_VALUES; i++) {
-	      int aIdx = getTomFlattenedIdx(numCounters, TOM_NUM_VALUES,
-					    evt, ctr, i);
-	      calculateStats(&out_sums[aIdx],
-			     &out_sumsofsqr[aIdx],
-			     &out_mins[aIdx],
-			     &out_maxes[aIdx],
-			     numThreads, 
-			     i, fi, ctr);
+	    int offset = 
+	      evt*numItems + TOM_NUM_FUN_VAL + counter*TOM_NUM_CTR_VAL;
+	    for (int type=0; type<TOM_NUM_CTR_VAL; type++) {
+	      int finalIdx = offset+type;
+	      for (int tid=0; tid<numThreads; tid++) {
+		double val = tomGetCtrData(type, fi, counter, tid);
+		if (tid == 0) {
+		  out_mins[finalIdx] = val;
+		  out_maxes[finalIdx] = val;
+		}
+		calculateStats(&out_sums[finalIdx], &out_sumsofsqr[finalIdx],
+			       &out_mins[finalIdx], &out_maxes[finalIdx],
+			       val);
+	      }
 	    }
 	  }
-	  threads[evt] = numThreads;
-	} else { /* globalToLocal[evt] != -1 */
-	  // send a null contribution for each counter associated with
-	  //   the function for this node
-	  for (int ctr=0; ctr<numCounters; ctr++) {
-	    for (int i=0; i<TOM_NUM_VALUES; i++) {
-	      int aIdx = getTomFlattenedIdx(numCounters, TOM_NUM_VALUES,
-					    evt, ctr, i);
-	      out_sums[aIdx] = 0.0;
-	      out_sumsofsqr[aIdx] = 0.0;
-	      out_mins[aIdx] = 0.0;
-	      out_maxes[aIdx] = 0.0;
-	    }
-	  }
-	  threads[evt] = 0;
 	} /* globalToLocal[evt] != -1 */
       }
 
       STREAM_FLUSHSEND_BE(stream, protocolTag, 
-			  "%d %d %alf %alf %alf %alf %ad %d",
+			  "%d %d %alf %alf %alf %alf %d",
 			  numGlobal, numCounters,
-			  out_sums, numItems,
-			  out_sumsofsqr, numItems,
-			  out_mins, numItems,
-			  out_maxes, numItems,
-			  threads, numGlobal,
+			  out_sums, dataLength,
+			  out_sumsofsqr, dataLength,
+			  out_mins, dataLength,
+			  out_maxes, dataLength,
 			  numThreads);
 
       // Get results of the protocol from the front-end.
@@ -375,23 +384,21 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
 	int numMeans, numStdDevs, numMins, numMaxes;
 #ifdef MRNET_LIGHTWEIGHT
 	Network_recv(net, &protocolTag, p, &stream);
-	Packet_unpack(p, "%alf %alf",
+	Packet_unpack(p, "%alf %alf %alf %alf",
 		      &means, &numMeans, &std_devs, &numStdDevs,
 		      &mins, &numMins, &maxes, &numMaxes);
 #else /* MRNET_LIGHTWEIGHT */
         net->recv(&protocolTag, p, &stream);
-        p->unpack("%alf %alf",
+        p->unpack("%alf %alf %alf %alf",
                   &means, &numMeans, &std_devs, &numStdDevs,
                   &mins, &numMins, &maxes, &numMaxes);
 #endif /* MRNET_LIGHTWEIGHT */
+	//	printf("Received %d broadcast results\n",numMeans);
       }
       break;
     }
     case PROT_HIST: {
       int numBins;
-      int numHistogramsPerEvent = numCounters*2+2;
-      int numItems = numGlobal*numHistogramsPerEvent;
-
       // in the case of the Histogramming Protocol, a percentage value
       //   is sent by the front-end to determine the threshold for
       //   exclusive execution time duration. Any event not satisfying
@@ -402,53 +409,282 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
       p->unpack("%d", &numBins);
 #endif /* MRNET_LIGHTWEIGHT */
 
+      int numHistogramsPerEvent = 
+	numCounters*TOM_NUM_CTR_VAL+TOM_NUM_FUN_VAL;
+      int numItems = numGlobal*numHistogramsPerEvent;
+      int dataLength = numBins*numItems;
+
       int *histBins;
-      histBins = new int[numBins*numItems];
-      for (int i=0; i<numBins*numItems; i++) {
+      histBins = new int[dataLength];
+      for (int i=0; i<dataLength; i++) {
 	histBins[i] = 0;
       }
 
       for (int evt=0; evt<numGlobal; evt++) {
 	FunctionInfo *fi = TheFunctionDB()[globalToLocal[evt]];
-	for (int ctr=0; ctr<numCounters; ctr++) {
-	  int tomIdx = (evt*numCounters + ctr)*TOM_NUM_VALUES;
-	  int histIdx = evt*numHistogramsPerEvent + ctr*2;
-	    
-	  if (globalToLocal[evt] != -1) {
-	    int binIdx;
-	    // Exclusive Time
-	    binIdx = calcCtrHistBinIdx(tomIdx, TOM_VAL_EXCL, numBins,
-				       numThreads, ctr, fi, maxes, mins);
-	    histBins[(histIdx+TOM_VAL_EXCL)*numBins+binIdx]++;
-	    // Inclusive Time
-	    binIdx = calcCtrHistBinIdx(tomIdx, TOM_VAL_INCL, numBins,
-				       numThreads, ctr, fi, maxes, mins);
-	    histBins[(histIdx+TOM_VAL_INCL)*numBins+binIdx]++;
+	if (globalToLocal[evt] != -1) {
+	  // CALL and SUBR applies only to events
+	  int dataIdx = evt*numHistogramsPerEvent;
+	  for (int type=0; type<TOM_NUM_FUN_VAL; type++) {
+	    int finalDataIdx = dataIdx + type;
+	    for (int tid=0; tid<numThreads; tid++) {
+	      double val = tomGetFunData(type, fi, tid);
+	      int binIdx = 
+		calcHistBinIdx(numBins, val, 
+			       maxes[finalDataIdx], mins[finalDataIdx]);
+	      histBins[(finalDataIdx*numBins)+binIdx]++;
+	    }
+	  }
+	  // EXCL and INCL values for each counter
+	  for (int counter=0; counter<numCounters; counter++) {
+	    int dataIdx = 
+	      evt*numHistogramsPerEvent + TOM_NUM_FUN_VAL +
+	      counter*TOM_NUM_CTR_VAL;
+	    int histIdx = evt*numHistogramsPerEvent + counter*2;
+	    for (int type=0; type<TOM_NUM_CTR_VAL; type++) {
+	      int finalDataIdx = dataIdx + type;
+	      for (int tid=0; tid<numThreads; tid++) {
+		double val = tomGetCtrData(type, fi, counter, tid);
+		int binIdx = 
+		  calcHistBinIdx(numBins, val, 
+				 maxes[finalDataIdx], mins[finalDataIdx]);
+		histBins[(finalDataIdx*numBins)+binIdx]++;
+	      }
+	    }
 	  }
 	}
-	// plug in calls and subrs (applicable only to TIME)
-	int tomIdx = evt*numCounters*TOM_NUM_VALUES;
-	int histIdx = evt*numHistogramsPerEvent + numCounters*2;
-	int binIdx;
-	// Calls. *CWL* - find elegant way to deal with hardcoded offsets
-	binIdx = calcHistBinIdx(tomIdx, TOM_VAL_CALL, numBins, numThreads,
-				fi, maxes, mins);
-	histBins[(histIdx*numBins)+binIdx]++;
-	// Subrs
-	binIdx = calcHistBinIdx(tomIdx, TOM_VAL_SUBR, numBins, numThreads,
-				fi, maxes, mins);
-	histBins[((histIdx+1)*numBins)+binIdx]++;
       }
+      //      printf("Sending Histogram results\n");
       STREAM_FLUSHSEND_BE(stream, protocolTag, "%ad", histBins, 
-			  numItems*numBins);
+			  dataLength);
       break;
     }
     case PROT_CLASSIFIER: {
       break;
     }
     case PROT_CLUST_KMEANS: {
+      int numK;
       // react to frontend
-      // exchange information
+#ifdef MRNET_LIGHTWEIGHT
+      Packet_unpack(p, "%d", &numK);
+#else /* MRNET_LIGHTWEIGHT */
+      p->unpack("%d", &numK);
+#endif /* MRNET_LIGHTWEIGHT */
+
+      // send acknowledgement via received stream (control stream)
+      STREAM_FLUSHSEND_BE(stream, protocolTag, "%d", numK);
+
+      // For now, work with only Exclusive TIME WITHOUT threads.
+      // int numItemsPerEvent = (numCounters*TOM_NUM_CTR_VAL)+TOM_NUM_FUN_VAL;
+      int numItemsPerEvent = 1;
+      int numItemsPerK = numGlobal*numItemsPerEvent;
+      int dataLength = numK*numItemsPerK;
+
+      double *globalClusterCentroids;
+
+      double *myVectors; // of size numItemsPerK
+      int myK;
+      int newK;
+      double *changeVectors; // of size numK*numItemsPerK
+      int *numMembers; // of size numK*numItemsPerEvent
+
+      // Collect performance information on each thread.
+      //    When pertinent, apply normalization factors to the vectors.
+      // Note that threads have to be dealt with separately here. 
+      myVectors = new double[numItemsPerK];
+      for (int i=0; i<numItemsPerK; i++) {
+	myVectors[i] = 0.0;
+      }
+      for (int evt=0; evt<numGlobal; evt++) {
+	if (globalToLocal[evt] != -1) {
+	  FunctionInfo *fi = TheFunctionDB()[globalToLocal[evt]];
+	  myVectors[evt] = tomGetCtrData(TOM_CTR_EXCL, fi, 0, 0);
+	}
+      }
+
+      // receive initial k choices.
+      int numInItems;
+      int *choices;
+#ifdef MRNET_LIGHTWEIGHT
+      Network_recv(net, &protocolTag, p, &stream);
+      Packet_unpack(p, "%ad", &choices, &numInItems);
+#else /* MRNET_LIGHTWEIGHT */
+      net->recv(&protocolTag, p, &stream);
+      p->unpack("%ad", &choices, &numInItems);
+#endif /* MRNET_LIGHTWEIGHT */
+
+      //      int testRank = 7;
+
+      // Decide if I am one of the selected k participants.
+      myK = -1;  // out-of-band value
+      newK = -1;
+      for (int k=0; k<numK; k++) {
+	if (choices[k] == rank) {
+	  myK = k;
+	}
+      }
+
+      /*
+      if (rank == testRank) {
+	printf("[%d] I am chosen as centroid for cluster %d\n", rank, myK);
+      }
+      */
+
+      // Update change vectors. This special initial case handles myK
+      //   as out-of-band values. Note that numMembers does not matter
+      //   in this case, so set all values to 0.
+      changeVectors = new double[numK*numItemsPerK];
+      numMembers = new int[numK*numItemsPerEvent];
+      for (int k=0; k<numK; k++) {
+	numMembers[k] = 0;
+	for (int evt=0; evt<numGlobal; evt++) {
+	  changeVectors[k*numGlobal+evt] = 0.0;
+	}
+      }
+      // I was chosen
+      if (myK != -1) {
+	for (int evt=0; evt<numGlobal; evt++) {
+	  changeVectors[myK*numGlobal+evt] = myVectors[evt];
+	}
+      }
+
+      /*      
+      if (rank == testRank) {
+	printf("[%d] My Change contribution: ", rank);
+	for (int i=0; i<numK*numItemsPerK; i++) {
+	  printf("%.16G ", changeVectors[i]);
+	}
+	printf("\n");
+	for (int i=0; i<numK*numItemsPerEvent; i++) {
+	  printf("%d ", numMembers[i]);
+	}
+	printf("\n");
+      }
+      */
+
+      // Report change vectors back to root.
+      STREAM_FLUSHSEND_BE(stream, protocolTag, "%alf %ad", 
+			  changeVectors, numK*numItemsPerK,
+			  numMembers, numK*numItemsPerEvent);
+
+      // Loop until done.
+      bool initial = true; // for handling special conditions
+      bool stop = false;
+      int stopTag;
+      do {
+#ifdef MRNET_LIGHTWEIGHT
+	Network_recv(net, &protocolTag, p, &stream);
+	Packet_unpack(p, "%alf", &globalClusterCentroids, &numInItems);
+#else /* MRNET_LIGHTWEIGHT */
+	net->recv(&protocolTag, p, &stream);
+	p->unpack("%alf", &globalClusterCentroids, &numInItems);
+#endif /* MRNET_LIGHTWEIGHT */
+	
+	// sanity check
+	assert(numInItems == dataLength);
+
+	/*
+	if (rank == testRank) {
+	  printf("[%d] Centroids = ", rank);
+	  for (int i=0; i<numInItems; i++) {
+	    printf("%.16G ",globalClusterCentroids[i]);
+	  }
+	  printf("\n");
+	  printf("[%d] My vector = ", rank);
+	  for (int i=0; i<numItemsPerK; i++) {
+	    printf("%.16G ",myVectors[i]);
+	  }
+	  printf("\n");
+	}
+	*/
+
+	// decide which k the node's vector belongs to.
+	double minDist = 0.0;
+	for (int k=0; k<numK; k++) {
+	  double distance =
+	    calcEuclideanDistance(myVectors, globalClusterCentroids,
+				  numGlobal, k);
+	  if (k == 0) {
+	    minDist = distance;
+	    newK = k;
+	  } else {
+	    if (distance < minDist) {
+	      minDist = distance;
+	      newK = k;
+	    }
+	  }
+	  /*
+	  if (rank == testRank) {
+	    printf("Curr %d: %.16G newK=%d\n",k, distance, newK);
+	  }
+	  */
+	}
+	
+	// Update change vectors.
+	for (int k=0; k<numK; k++) {
+	  numMembers[k] = 0;
+	  for (int evt=0; evt<numGlobal; evt++) {
+	    changeVectors[k*numGlobal+evt] = 0.0;
+	  }
+	}
+	// did anything change?
+	if (!initial) {
+	  if (myK != newK) {
+	    numMembers[myK] = -1;
+	    numMembers[newK] = 1;
+	    for (int evt=0; evt<numGlobal; evt++) {
+	      changeVectors[myK*numGlobal+evt] = -myVectors[evt];
+	      changeVectors[newK*numGlobal+evt] = myVectors[evt];
+	    }
+	  }
+	} else {
+	  numMembers[newK] = 1;
+	  for (int evt=0; evt<numGlobal; evt++) {
+	    changeVectors[newK*numGlobal+evt] = myVectors[evt];
+	  }
+	}
+
+	/*
+	if (rank == testRank) {
+	  printf("[%d] My Change contribution: ", rank);
+	  for (int i=0; i<numK*numItemsPerK; i++) {
+	    printf("%.16G ", changeVectors[i]);
+	  }
+	  printf("\n");
+	  for (int i=0; i<numK*numItemsPerEvent; i++) {
+	    printf("%d ", numMembers[i]);
+	  }
+	  printf("\n");
+	}
+	*/
+
+	// modify myK
+	myK = newK;
+	newK = -1; // extra insurance against error
+	if (initial) {
+	  initial = false;
+	}
+
+	// - send the change-vector
+	STREAM_FLUSHSEND_BE(stream, protocolTag, "%alf %ad", 
+			    changeVectors, numK*numItemsPerK,
+			    numMembers, numK*numItemsPerEvent);
+
+	//   - receive confirmation we can stop.
+#ifdef MRNET_LIGHTWEIGHT
+	Network_recv(net, &protocolTag, p, &stream);
+	Packet_unpack(p, "%d", &stopTag);
+#else /* MRNET_LIGHTWEIGHT */
+	net->recv(&protocolTag, p, &stream);
+	p->unpack("%d", &stopTag);
+#endif /* MRNET_LIGHTWEIGHT */
+	//  Acknowledge convergence flag
+	STREAM_FLUSHSEND_BE(stream, protocolTag, "%d", stopTag);
+
+	if (stopTag != 0) {
+	  stop = true;
+	}
+      } while (!stop);
       break;
     }
     case PROT_EXIT: {
@@ -510,111 +746,101 @@ extern "C" void Tau_mon_onlineDump() {
 
 void calculateStats(double *sum, double *sumofsqr, 
 		    double *max, double *min,
-		    int numThreads, int dataType,
-		    FunctionInfo *fi, int ctr) {
-  *sum = 0.0;
-  *sumofsqr = 0.0;
-  
-  for (int tid=0; tid<numThreads; tid++) {
-    double val;
-    switch (dataType) {
-    case TOM_VAL_INCL: {
-      val = fi->getDumpInclusiveValues(tid)[ctr];
-      break;
-    }
-    case TOM_VAL_EXCL: {
-      val = fi->getDumpExclusiveValues(tid)[ctr];
-      break;
-    }
-    case TOM_VAL_CALL: {
-      val = fi->GetCalls(tid)*1.0;
-      break;
-    }
-    case TOM_VAL_SUBR: {
-      val = fi->GetSubrs(tid)*1.0;
-      break;
-    }
-    default: {
-      // *CWL* Do something about this error condition.
-    }
-    };
-
-    *sum += val;
-    *sumofsqr += val*val;
-    if (tid == 0) {
-      *min = val;
-      *max = val;
-    } else {
-      if (*min > val) {
-	*min = val;
-      }
-      if (*max < val) {
-	*max = val;
-      }
-    }
+		    double val) {
+  *sum += val;
+  *sumofsqr += val*val;
+  if (*min > val) {
+    *min = val;
+  }
+  if (*max < val) {
+    *max = val;
   }
 }
 
-int calcCtrHistBinIdx(int tomIdx, int tomType, int numBins, int numThreads,
-		      int ctr, FunctionInfo *fi, double *maxes, double *mins) {
-  double range = 
-    maxes[tomIdx+tomType] - mins[tomIdx+tomType];
-  double interval = range/numBins;
-  // accumulate for threads but contribute as a node
-  for (int tid=0; tid<numThreads; tid++) {
-    double val;
-    switch (tomType) {
-    case TOM_VAL_EXCL: {
-      val = fi->getDumpExclusiveValues(tid)[ctr];
-      break;
-    }
-    case TOM_VAL_INCL: {
-      val = fi->getDumpInclusiveValues(tid)[ctr];
-      break;
-    }
-    }
-    int binIdx = 
-      (int)floor((val-mins[tomIdx+tomType])/interval);
-    // hackish way of dealing with rounding problems.
-    if (binIdx < 0) {
-      binIdx = 0;
-    }
-    if (binIdx >= numBins) {
-      binIdx = numBins-1;
-    }
-    return binIdx;
+double tomGetFunData(int tomType, FunctionInfo *fi, int tid) {
+  double val = -1.0; // out-of-band value
+  switch (tomType) {
+  case TOM_FUN_CALL: {
+    val = fi->GetCalls(tid)*1.0;
+    break;
   }
+  case TOM_FUN_SUBR: {
+    val = fi->GetSubrs(tid)*1.0;
+    break;
+  }
+  }
+  return val;
 }
 
-int calcHistBinIdx(int tomIdx, int tomType, int numBins, int numThreads,
-		   FunctionInfo *fi, double *maxes, double *mins) {
-  double range = 
-    maxes[tomIdx+tomType] - mins[tomIdx+tomType];
-  double interval = range/numBins;
-  // accumulate for threads but contribute as a node
-  for (int tid=0; tid<numThreads; tid++) {
-    double val;
-    switch (tomType) {
-    case TOM_VAL_CALL: {
-      val = fi->GetCalls(tid)*1.0;
-      break;
-    }
-    case TOM_VAL_SUBR: {
-      val = fi->GetSubrs(tid)*1.0;
-      break;
-    }
-    }
-    int binIdx = 
-      (int)floor((val-mins[tomIdx+tomType])/interval);
-    // hackish way of dealing with rounding problems.
-    if (binIdx < 0) {
-      binIdx = 0;
-    }
-    if (binIdx >= numBins) {
-      binIdx = numBins-1;
-    }
-    return binIdx;
+double tomGetCtrData(int tomType, FunctionInfo *fi, int counter, int tid) {
+  double val = -1.0; // out-of-band value
+  switch (tomType) {
+  case TOM_CTR_INCL: {
+    val = fi->getDumpInclusiveValues(tid)[counter];
+    break;
   }
+  case TOM_CTR_EXCL: {
+    val = fi->getDumpExclusiveValues(tid)[counter];
+    break;
+  }
+  }
+  return val;
+}
+
+double tomGetData(int tomType, FunctionInfo *fi, int counter, int tid) {
+  double val = -1.0; // out-of-band value
+  switch (tomType) {
+  case TOM_VAL_INCL: {
+    val = fi->getDumpInclusiveValues(tid)[counter];
+    break;
+  }
+  case TOM_VAL_EXCL: {
+    val = fi->getDumpExclusiveValues(tid)[counter];
+    break;
+  }
+  case TOM_VAL_CALL: {
+    val = fi->GetCalls(tid)*1.0;
+    break;
+  }
+  case TOM_VAL_SUBR: {
+    val = fi->GetSubrs(tid)*1.0;
+    break;
+  }
+  }
+  return val;
+}
+
+int calcHistBinIdx(int numBins, double val, double max, double min) {
+  double range = max - min;
+  double interval = range/numBins;
+  int binIdx = 
+    (int)floor((val-min)/interval);
+  // hackish way of dealing with rounding problems.
+  if (binIdx < 0) {
+    binIdx = 0;
+  }
+  if (binIdx >= numBins) {
+    binIdx = numBins-1;
+  }
+  return binIdx;
+}
+
+void updateChangeVector(double **changeVector, double *myVectors,
+			int oldK, int newK,
+			int tid, int ctr, int type,
+			int numThreads, int numEvents, 
+			int numCounters, int numK) {
+  int numItemsPerEvent = numCounters*TOM_NUM_CTR_VAL+TOM_NUM_FUN_VAL;
+}
+
+double calcEuclideanDistance(double *vector, double *centroids,
+			     int numEvents, int k) {
+  double distance = 0.0;
+  for (int evt=0; evt<numEvents; evt++) {
+    distance += pow(vector[evt] - 
+		    centroids[k*numEvents+evt], 2.0);
+  }  
+  return sqrt(distance);
 }
 
 #ifdef MRNET_LIGHTWEIGHT

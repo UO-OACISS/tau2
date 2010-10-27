@@ -6,8 +6,9 @@
  */
 package edu.uoregon.tau.perfexplorer.server;
 
-import org.jfree.chart.ChartColor;
 import java.awt.Color;
+
+import org.jfree.chart.ChartColor;
 
 /**
  * Description
@@ -20,6 +21,11 @@ import java.awt.Color;
  */
 public class PEChartColor extends ChartColor {
     /**
+	 * 
+	 */
+	private static final long serialVersionUID = 381728458851268718L;
+
+	/**
      * Creates a Color with an opaque sRGB with red, green and blue values in range 0-255.
      *
      * @param r  the red component in range 0x00-0xFF.

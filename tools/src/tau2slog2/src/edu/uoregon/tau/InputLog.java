@@ -271,20 +271,31 @@ public class InputLog implements base.drawable.InputAPI
 		tFileEvRead.closeTrace();
 		return true;
 	}
+	
+	private int popCategory(){
+		statedef = categories.remove(categories.size()-1);// .get(new Integer(maxcats));//[maxcats];
+		//maxcats++;
+		return Kind.CATEGORY_ID;
+	}
 
 	public int peekNextKindIndex()
 	{
+		
 		if(categories.size()>0)//maxcats<categories.size())//numcats)
 		{
-			statedef = categories.remove(categories.size()-1);// .get(new Integer(maxcats));//[maxcats];
-			//maxcats++;
-			return Kind.CATEGORY_ID;
+			return popCategory();
 		}
 
 		if(!doneReading)
 		{
 			while(!eventReady)
 			{
+				
+				if(categories.size()>0)//maxcats<categories.size())//numcats)
+				{
+					return popCategory();
+				}
+				
 				if(tFileEvRead.readNumEvents(ev_cb, 1, null)==0)
 				{
 					doneReading=true;
@@ -453,6 +464,10 @@ public class InputLog implements base.drawable.InputAPI
 		
 		public int defUserEvent(Object userData, int userEventToken, String userEventName, int monotonicallyIncreasing){
 			
+			if(userEventToken==7004){
+				return 0;
+			}
+			
 			if(monotonicallyIncreasing==0)
 			{
 				noMonEvents.add(new Integer(userEventToken));
@@ -533,7 +548,13 @@ public class InputLog implements base.drawable.InputAPI
 		public int sendMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, 
 				int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageComm){
 
-			destinationThreadToken=0;
+			if(remoteThread>-1)
+			{
+				destinationThreadToken=remoteThread;
+				remoteThread=-1;
+			}
+			else
+				destinationThreadToken=0;
 			/*
 			 * The 'tag space' and 'eventId space' may overlap and overwrite each other
 			 * So add the highest tag ID+1, to be sure all IDs sent to jumpshot are unique.
@@ -593,7 +614,13 @@ public class InputLog implements base.drawable.InputAPI
 				int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageComm){
 			
 			int messageTagShift=messageTag+maxEvtId+1;
-			sourceThreadToken=0;
+			
+			if(remoteThread>-1)
+			{
+				sourceThreadToken=remoteThread;
+			}
+			else
+				sourceThreadToken=0;
 			int sourceGlob = GlobalID(sourceNodeToken,sourceThreadToken);
 			int destGlob = GlobalID(destinationNodeToken,destinationThreadToken);
 			Long srcDst=new Long(SourceDest(sourceGlob,destGlob));
@@ -619,8 +646,15 @@ public class InputLog implements base.drawable.InputAPI
 			return 0;
 		}
 		
+		int remoteThread=-1;
+		
 		public int eventTrigger(Object userData, long time, int nodeToken, int threadToken, int userEventToken,
 				double userEventValue){
+			
+			if(userEventToken==7004){
+				remoteThread=(int) userEventValue;
+			}
+			
 			//System.out.println("EventTrigger: time "+time+", nid "+nodeToken+" tid "+threadToken+" event id "+userEventToken+" triggered value "+userEventValue);
 			if(noMonEvents.contains(new Integer(userEventToken)))
 			{

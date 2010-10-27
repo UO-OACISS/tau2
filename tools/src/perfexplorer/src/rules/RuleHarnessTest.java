@@ -2,10 +2,8 @@ package edu.uoregon.tau.perfexplorer.rules;
 
 import junit.framework.TestCase;
 import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfexplorer.client.ScriptFacade;
 import edu.uoregon.tau.perfexplorer.glue.DifferenceMetadataOperation;
 import edu.uoregon.tau.perfexplorer.glue.DifferenceOperation;
-import edu.uoregon.tau.perfexplorer.glue.TrialResult;
 import edu.uoregon.tau.perfexplorer.glue.Utilities;
 
 public class RuleHarnessTest extends TestCase {
@@ -32,8 +30,8 @@ public class RuleHarnessTest extends TestCase {
 	    RuleHarness ruleHarness = new RuleHarness(samplerules);
 	    ruleHarness.addRules("rules/ApplicationRules.drl");
 	    ruleHarness.addRules("rules/MachineRules.drl");
-	    ruleHarness.assertObject(metaDiff);
-	    ruleHarness.assertObject(diff);
+	    RuleHarness.assertObject(metaDiff);
+	    RuleHarness.assertObject(diff);
 	    ruleHarness.processRules();
 //	    System.out.println(ruleHarness.getLog());
 }

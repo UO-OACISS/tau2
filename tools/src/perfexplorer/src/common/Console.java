@@ -1,21 +1,35 @@
 
 package edu.uoregon.tau.perfexplorer.common;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
-import javax.swing.*;
-import javax.swing.event.*;
-import javax.swing.text.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.net.URL;
+
+import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.JTextPane;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+
 import edu.uoregon.tau.common.Utility;
     
     public class Console extends JFrame {
-        JTextPane textPane = new JTextPane();
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = -592613353230989839L;
+		JTextPane textPane = new JTextPane();
 		private PrintStream out = null;
 		private PrintStream err = null;
-		private PrintStream oldOut = null;
-		private PrintStream oldErr = null;
+//		private PrintStream oldOut = null;
+//		private PrintStream oldErr = null;
 		private Document doc = null;
 		private SimpleAttributeSet errorStyle = null;
 		private SimpleAttributeSet outputStyle = null;
@@ -24,8 +38,8 @@ import edu.uoregon.tau.common.Utility;
 			super("PerfExplorer Console");
 
 			// preserve the old out and err
-			oldOut = System.out;
-			oldErr = System.err;
+//			oldOut = System.out;
+//			oldErr = System.err;
 
             // Set up System.out
             ConsoleOutputStream consoleOut = new ConsoleOutputStream(this, false);

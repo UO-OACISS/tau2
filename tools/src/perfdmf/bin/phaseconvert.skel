@@ -14,8 +14,20 @@ machine=`uname -m`
 if [ "x$machine" = "xx86_64" ] ; then
     MEMORY=-Xmx2000m
 fi
+java $MEMORY \VA_VERSION=`java -version 2>&1 | head -1 | cut -d '.' -f2`
+if [ $JAVA_VERSION = "4" ] ; then
+        echo ""
+        echo "Java 1.5 or newer is required to run perfdmf_configure."
+        echo "Please update your Java SDK to a newer version to use the newest version."
+        echo "You will still be able to use the version from the TAU v2.19.1 release."
+        echo ""
+        if [ ! -d ${TAUROOT}/${MACHINE}/bin/bin-1.4 ] ; then
+                ${TAUROOT}/${MACHINE}/bin/configure-1.4
+        fi
+  :%      ${TAUROOT}/${MACHINE}/bin/bin-1.4/perfdmf_configure
 
-java $MEMORY \
+        exit 0
+fi
 -Dderby.system.home=${HOME}/.ParaProf \
 -cp ${JARS} \
 edu.uoregon.tau.perfdmf.loader.PhaseConverter \

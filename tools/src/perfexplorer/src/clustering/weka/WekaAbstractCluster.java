@@ -4,17 +4,15 @@
  */
 package edu.uoregon.tau.perfexplorer.clustering.weka;
 
-import edu.uoregon.tau.perfexplorer.clustering.ClusterDescription;
-import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
-import edu.uoregon.tau.perfexplorer.clustering.DendrogramTree;
-import edu.uoregon.tau.perfexplorer.clustering.DistanceMatrix;
-import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
-import edu.uoregon.tau.perfexplorer.clustering.ClusterInterface;
-import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
+import weka.attributeSelection.PrincipalComponents;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
-import weka.attributeSelection.PrincipalComponents;
+import edu.uoregon.tau.perfexplorer.clustering.ClusterDescription;
+import edu.uoregon.tau.perfexplorer.clustering.ClusterException;
+import edu.uoregon.tau.perfexplorer.clustering.ClusterInterface;
+import edu.uoregon.tau.perfexplorer.clustering.RawDataInterface;
+import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 
 /**
  * This class is used as a list of names and values to describe 
@@ -123,15 +121,14 @@ public abstract class WekaAbstractCluster implements ClusterInterface {
 	// this method is by Calinski & Harabasz(1974)
 	protected void evaluateCluster() {
 		try {
-			double betweenError = getBetweenError();
+			//double betweenError = getBetweenError();
 			//PerfExplorerOutput.println("Between Squared Error: " + betweenError);
-			double withinError = getSquaredError();
+			//double withinError = getSquaredError();
 			//PerfExplorerOutput.println("Within Squared Error: " + withinError);
 			//PerfExplorerOutput.println("k-1: " + (k-1));
 			//PerfExplorerOutput.println("n-k: " + (instances.numInstances()-k));
-			int nc = clusterCentroids.numInstances();
-			double maximizeMe = (betweenError * (nc-1)) / 
-				(withinError * (instances.numInstances() - nc));
+			//int nc = clusterCentroids.numInstances();
+			//double maximizeMe = (betweenError * (nc-1)) / (withinError * (instances.numInstances() - nc));
 			//PerfExplorerOutput.println("Maximize Me: " + maximizeMe);
 		} catch (Exception e) {
 			PerfExplorerOutput.println ("EXCEPTION: " + e.getMessage());

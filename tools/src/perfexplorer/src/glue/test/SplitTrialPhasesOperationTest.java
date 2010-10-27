@@ -3,6 +3,9 @@
  */
 package edu.uoregon.tau.perfexplorer.glue.test;
 
+import java.util.List;
+
+import junit.framework.TestCase;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceResult;
@@ -10,10 +13,6 @@ import edu.uoregon.tau.perfexplorer.glue.SplitTrialPhasesOperation;
 import edu.uoregon.tau.perfexplorer.glue.TrialMeanResult;
 import edu.uoregon.tau.perfexplorer.glue.TrialMetadata;
 import edu.uoregon.tau.perfexplorer.glue.Utilities;
-
-import java.util.List;
-
-import junit.framework.TestCase;
 
 /**
  * @author khuck

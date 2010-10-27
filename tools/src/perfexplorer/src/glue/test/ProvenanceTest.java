@@ -1,5 +1,6 @@
 package edu.uoregon.tau.perfexplorer.glue.test;
 
+import junit.framework.TestCase;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
 import edu.uoregon.tau.perfexplorer.glue.PerformanceAnalysisOperation;
@@ -8,8 +9,6 @@ import edu.uoregon.tau.perfexplorer.glue.Provenance;
 import edu.uoregon.tau.perfexplorer.glue.TopXEvents;
 import edu.uoregon.tau.perfexplorer.glue.TrialMeanResult;
 import edu.uoregon.tau.perfexplorer.glue.Utilities;
-
-import junit.framework.TestCase;
 
 public class ProvenanceTest extends TestCase {
 

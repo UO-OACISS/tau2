@@ -44,6 +44,8 @@ Version 2.19 changes (from 2.18):
 31. Added support for Cray XMT (-arch=crayxmt)
 32. Added support for ScoreP (aka silc).
 33. ParaProf 2D and 3D communication matrices show nodes and not threads. 
+34. Totals for context events and atomic events are now accessible in paraprof.
+35. Refined the support for event based sampling (EBS). 
 
 
 
