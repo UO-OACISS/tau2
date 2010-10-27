@@ -252,7 +252,7 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
 #endif /* TAU_VAMPIRTRACE */
 
 #ifdef PROFILING_ON
-  // Record this value  
+  // Record this value
   LastValueRecorded[tid] = data;
 
   // Increment number of events
