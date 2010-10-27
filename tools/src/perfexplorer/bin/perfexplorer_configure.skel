@@ -26,18 +26,21 @@ PERFEXPLORER_JAR=${LIBDIR}/perfexplorer.jar
 redirectfile=weka-redirect-3-6-1.html
 redirect=http://www.cs.uoregon.edu/research/paracomp/tau/${redirectfile}
 
-# check for right java version
+# Test for java 1.4+
+JAVA_VERSION=`java -version 2>&1 | head -1 | cut -d '.' -f2`
+if [ $JAVA_VERSION = "4" ] ; then
+        echo ""
+        echo "Java 1.5 or newer is required to run PerfExplorer."
+        echo "Please update your Java SDK to a newer version to use PerfExplorer 2.0."
+        echo "You will still be able to use PerfExplorer 1.0, from the TAU v2.17 release."
+        echo ""
+        if [ ! -r ${tauroot}/${architecture}/bin/bin-1.4/perfexplorer_configure ] ; then
+                ${tauroot}/${architecture}/bin/configure-1.4
+        fi
+        ${tauroot}/${architecture}/bin/bin-1.4/perfexplorer_configure
 
-test=`java -cp $LIBDIR/tau-common.jar edu.uoregon.tau.common.VersionTester 1.5`
-if [ $test = "failed" ] ; then
-	echo ""
-	echo "Java 1.5 or newer is required to run PerfExplorer."
-	echo "Please update your Java SDK to a newer version to use PerfExplorer."
-	echo "You will still be able to use PerfExplorer 1.0, from the TAU v2.17 release."
-#	HIBERNATE_JARS=
-	JBOSS_RULES_JARS=
-	PERFEXPLORER_JAR=${LIBDIR}/perfexplorer-1.4.jar
-	echo ""
+
+        exit 0
 fi
 
 # PARSE COMMAND LINE SWITCHES
@@ -233,13 +236,31 @@ if [ ! -r ${WEKA_JAR} ]; then
 	    fi
 	else
 		echo ""
-		echo "Please acquire your Weka jar file manually from:"
-		echo "	http://www.cs.waikato.ac.nz/ml/weka/"
-		echo "or use the following redirection link (recommended):"
-		echo "--->	$redirect"
-		echo "Download and unzip the specified URL in the redirect file, and place the weka.jar file in $configdir"
-		echo "and rename it to weka-3-6-1.jar"
-        echo ""
+		echo "Please acquire your Weka jar file manually from"
+		echo "the following redirection link (recommended):"
+                echo " ${redirect} "
+                RESPONSE=""
+                while [ "x$RESPONSE" = "x" ]; do
+                   $echo "Have you already download the jar file? (y/n) ${nnl}"
+                   read RESPONSE
+                   case $RESPONSE in
+                     [yY]|[Yy][Ee][Ss]) RESPONSE=y ;;
+                     [nN]|[Nn][Oo]) RESPONSE=n ;;
+                   esac
+                done
+
+                if [ "${RESPONSE}" = "y" ]; then
+                   $echo "Please give the full name to the jar file: ${nnl}"
+                   read FILE
+		   cp "$FILE" ${WEKA_ZIP_DIR}/.
+		   cd ${WEKA_ZIP_DIR}/.
+		   java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Zip weka-3-6-1.zip
+		   mv weka-3-6-1/weka.jar ./weka-3-6-1.jar
+                   /bin/rm -rf weka-3-6-1/
+                   /bin/rm -rf weka-3-6-1.zip
+                fi
+
+
 	fi
 fi
 
@@ -288,11 +309,28 @@ if [ ! -r ${JBOSS_JAR} ]; then
 		echo ""
 		echo "Please manually download the required jar files using the following link:"
 		echo "--->	$URL"
-		echo "and expand the compressed tar file in $configdir"
 		echo ""
-		echo "Please re-run perfexplorer_configure when these files have been installed."
-		echo ""
-	    exit
+            RESPONSE=
+            while [ "x$RESPONSE" = "x" ]; do
+              $echo "Have you already downloaded the file?[y/n]  ${nnl}"
+              read RESPONSE
+              case $RESPONSE in
+                [yY]|[Yy][Ee][Ss]) RESPONSE=y ;;
+                [nN]|[Nn][Oo]) RESPONSE=n ;;
+              esac
+            done
+	    if [ "${RESPONSE}" = "y" ]; then 
+              $echo "Please enter the location of the file: ${nnl}"
+              read FILE
+                cp "$FILE" ${JBOSS_TAR_DIR}/.
+                cd ${JBOSS_TAR_DIR}/.
+                java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.tar.Tar -xvzf ${FILE}
+                mv jbossrules/*.jar .
+                mv jbossrules/lib/*.jar .
+                rm -rf jbossrules
+            else 
+	      exit
+            fi
 	fi
 fi
 

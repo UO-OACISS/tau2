@@ -23,6 +23,9 @@ usage()
     echo "        -qsub    Use qsub mode (BG/P only, see below)"
     echo "        -io      track I/O"
     echo "        -memory  track memory"
+    echo "        -cuda    track GPU events via CUDA"
+    echo "        -opencl  track GPU events via OpenCL"
+    echo "        -armci   track ARMCI events via PARMCI"
     options=`tau-config --list-options`
     echo "        -T <$options> : specify TAU option"
     echo "        -loadlib=<file.so>   : specify additional load library"
@@ -58,6 +61,9 @@ binding_specified=""
 binding_options=""
 track_io=false
 track_memory=false
+track_cuda=false
+track_opencl=false
+track_armci=false
 qsub_mode=false
 TAU_PAPI_DEFAULT_DOMAIN=PAPI_DOM_USER
 extraloadlibs=""
@@ -87,8 +93,20 @@ for arg in "$@" ; do
 	      track_memory=true
 	      shift
 	      ;;
-          -qsub)
-              qsub_mode=true
+	  -cuda)
+	      track_cuda=true
+	      shift
+	      ;;
+	  -opencl)
+	      track_opencl=true
+	      shift
+	      ;;
+	  -armci)
+	      track_armci=true
+	      shift
+	      ;;
+	  -qsub)
+	      qsub_mode=true
 	      shift
 	      ;;
 	  -s)
@@ -206,6 +224,22 @@ if [ $track_memory = "true" ] ; then
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-memorywrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
     export TAU_MEMORY_WRAPPER_ENABLED=1
 fi
+if [ $track_cuda = "true" ] ; then
+    # Add the CUDA wrapper library to the LD_PRELOAD list
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDA.so:$TAUEX_LD_PRELOAD
+fi
+if [ $track_opencl = "true" ] ; then
+    # Add the OpenCL wrapper library to the LD_PRELOAD list
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OpenCL.so:$TAUEX_LD_PRELOAD
+    #TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OCLci.so:$TAUEX_LD_PRELOAD
+		#export TAU_METRICS=TAUGPU_TIME
+fi
+
+if [ $track_armci = "true" ] ; then
+    # Add the ARMCI wrapper library to the LD_PRELOAD list
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-armciwrap.so:$TAUEX_LD_PRELOAD
+fi
+
 
 # add libraries specified by -loadlib=<foo.so>
 TAUEX_LD_PRELOAD=${TAUEX_LD_PRELOAD}${extraloadlibs}

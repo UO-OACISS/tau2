@@ -46,6 +46,7 @@ public class DataSourceResult extends AbstractResult {
 	public static final int GPTL = DataSource.GPTL;
 	public static final int PARAVER = DataSource.PARAVER;
 	public static final int IPM = DataSource.IPM;
+	public static final int GOOGLE = DataSource.GOOGLE;
 	public static final int GYRO = DataSource.GYRO;
 	public static final int GAMESS = DataSource.GAMESS;
 

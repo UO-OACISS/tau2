@@ -56,8 +56,8 @@ void esd_exit (elg_ui4 rid);
 #include "Profile/TauVampirTrace.h"
 #endif /* TAU_VAMPIRTRACE */
 
-#ifdef TAU_SILC
-#include <Profile/TauSilc.h>
+#ifdef TAU_SCOREP
+#include <Profile/TauSCOREP.h>
 #endif
 
 
@@ -234,8 +234,8 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   return;
 #endif
 
-#ifdef TAU_SILC
-  SILC_Tau_EnterRegion(fi->GetFunctionId());
+#ifdef TAU_SCOREP
+  SCOREP_Tau_EnterRegion(fi->GetFunctionId());
 #endif
 
 
@@ -384,8 +384,8 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   return 0;
 #endif
 
-#ifdef TAU_SILC
-  SILC_Tau_ExitRegion(fi->GetFunctionId());
+#ifdef TAU_SCOREP
+  SCOREP_Tau_ExitRegion(fi->GetFunctionId());
 #endif
 
 
