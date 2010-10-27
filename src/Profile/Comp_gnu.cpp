@@ -339,7 +339,7 @@ static int updateMaps() {
   char line[4096];
   while (!feof(mapsfile)) {
     fgets(line, 4096, mapsfile);
-    printf ("=> %s", line);
+    //printf ("=> %s", line);
     unsigned long start, end, offset;
     char module[4096];
     char perms[5];
