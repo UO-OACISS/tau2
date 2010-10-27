@@ -39,8 +39,8 @@
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
 
-#ifdef TAU_SILC
-#include <Profile/TauSilc.h>
+#ifdef TAU_SCOREP
+#include <Profile/TauSCOREP.h>
 #endif
 
 
@@ -177,10 +177,10 @@ extern "C" int Tau_init_initializeTAU() {
 #endif
 
 
-#ifdef TAU_SILC
-  /* no more initialization necessary if using SILC */
+#ifdef TAU_SCOREP
+  /* no more initialization necessary if using SCOREP */
   initialized = 1;
-  SILC_InitMeasurement();
+  SCOREP_Tau_InitMeasurement();
   return 0;
 #endif
 

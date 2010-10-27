@@ -140,6 +140,10 @@ printError() {
     echo -e "Error: Full Command attempted is -- $2"
     if [ $revertOnError == $TRUE ]; then
 	echo -e "Error: Reverting to a Regular Make"
+      if [ $revertForced == $FALSE ]; then
+        echo -e "To suppress this message and revert automatically, please add -optRevert to your TAU_OPTIONS environment variable"
+        echo -e "Press Enter to continue" ; read
+      fi
     fi
     echo " "
 }

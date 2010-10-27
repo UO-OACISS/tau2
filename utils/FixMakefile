@@ -173,6 +173,11 @@ case $1 in
 	echo "s@^MRNET_LIBS=.*\$@MRNET_LIBS=$mrnet_lib@g" >> $sedout
 	;;
 
+     armcidir=*)
+	armcidir=`echo $1 | sed -e 's/^armcidir=//' -e 's/#/ /g'`
+	echo "s,^ARMCIDIR=.*$,ARMCIDIR=$armcidir,g" >> $sedout
+	;;
+
      vampirtracedir=*)
 	vampirtracedir=`echo $1 | sed -e 's/^vampirtracedir=//' -e 's/#/ /g'`
 	echo "s,^VAMPIRTRACEDIR=.*$,VAMPIRTRACEDIR=$vampirtracedir,g" >> $sedout
@@ -603,7 +608,20 @@ case $1 in
 	echo "s@^TAU_SHMEM_LIB=\(.*\)@TAU_SHMEM_LIB=$shmemlib@g" >> $sedout
         #echo "SHMEMLIB=$shmemlib" 
         ;;
-     
+
+###############################################################
+# Set the TAU_GPU variables.
+###############################################################
+		cudainclude=*)
+        cudainclude=`echo $1 | sed -e 's/^cudainclude=//' -e 's/#/ /g'`
+      echo "NOTE: Using CUDA for GPU analysis, source in $cudainclude"
+			echo "s@^TAU_CUDA_INC=\(.*\)@TAU_CUDA_INC=$cudainclude@g" >> $sedout
+		;;	
+		openclinclude=*)
+        openclinclude=`echo $1 | sed -e 's/^openclinclude=//' -e 's/#/ /g'`
+      echo "NOTE: Using OPENCL for GPU analysis, source in $openclinclude"
+			echo "s@^TAU_OPENCL_INC=\(.*\)@TAU_OPENCL_INC=$openclinclude@g" >> $sedout
+		;;	
 
 ###############################################################
 # Set the CONFIG_ARCH=<machine-name> in the Makefiles.
@@ -692,6 +710,10 @@ case $1 in
         ;;
      IOWRAPPER)
 	echo NOTE: Building POSIX I/O wrapper
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     ARMCI)
+	echo NOTE: Building ARMCI wrapper
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      KTAU)
@@ -972,7 +994,7 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      TAU_CHARM)
-	echo "NOTE: Using charm++ (converse) threads"
+				echo "NOTE: Using charm++ (converse) threads"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PTHREAD_AVAILABLE)
@@ -1063,10 +1085,6 @@ case $1 in
 	echo "NOTE: Using Java Virtual Machine Instrumentation ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     JVMTI)
-	echo "NOTE: Using Java Virtual Machine Tool Interface (JVMTI) Instrumentation ***"
-        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-	;;
      OPENMP)
 	echo "NOTE: Using OpenMP Threads ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1080,8 +1098,8 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      MON_MPI)
-	echo "NOTE: Using MPI as TAUmon transport ***"
-	echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        echo "NOTE: Using MPI as TAUmon transport ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      MRNET)
 	echo "NOTE: Using MRNet as TAUmon transport ***"
@@ -1531,6 +1549,9 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      COMPINST_GNU)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     COMPINST_CRAYCC)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      COMPINST_PGI)

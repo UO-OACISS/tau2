@@ -339,7 +339,7 @@ static int updateMaps() {
   char line[4096];
   while (!feof(mapsfile)) {
     fgets(line, 4096, mapsfile);
-    printf ("=> %s", line);
+    //printf ("=> %s", line);
     unsigned long start, end, offset;
     char module[4096];
     char perms[5];
@@ -462,9 +462,9 @@ void runOnExit() {
 }
 
 
-#if (defined(TAU_SICORTEX) || defined(TAU_SILC))
+#if (defined(TAU_SICORTEX) || defined(TAU_SCOREP))
 #pragma weak __cyg_profile_func_enter
-#endif /* SICORTEX || TAU_SILC */
+#endif /* SICORTEX || TAU_SCOREP */
 extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
   int i;
   int tid;
@@ -574,10 +574,21 @@ extern "C" void _cyg_profile_func_enter(void* func, void* callsite) {
   __cyg_profile_func_enter(func, callsite);
 }
 
+extern "C" void __pat_tp_func_entry(const void *ea, const void *ra) {
+  printf("__pat_tp_func_entry: ea = %p, ra = %p\n", ea, ra);
+  __cyg_profile_func_enter((void *)ea, (void *)ra);
+  
+}
 
-#if (defined(TAU_SICORTEX) || defined(TAU_SILC))
+extern "C" void __pat_tp_func_return(const void *ea, const void *ra) {
+  printf("__pat_tp_func_return: ea = %p, ra = %p\n", ea, ra);
+  __cyg_profile_func_enter((void *)ea, (void *)ra);
+}
+
+
+#if (defined(TAU_SICORTEX) || defined(TAU_SCOREP))
 #pragma weak __cyg_profile_func_exit
-#endif /* SICORTEX || TAU_SILC */
+#endif /* SICORTEX || TAU_SCOREP */
 extern "C" void __cyg_profile_func_exit(void* func, void* callsite) {
   int tid;
 

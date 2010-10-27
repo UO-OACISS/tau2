@@ -1,0 +1,17 @@
+grant {
+    permission java.net.SocketPermission "*:1024-65535", "connect,accept";
+    permission java.net.SocketPermission "*:80", "connect";
+	permission java.io.FilePermission "@CONFIGDIR@", "read";
+	permission java.io.FilePermission "@CONFIGDIR2@/-", "read";
+	permission java.io.FilePermission "@TAULIBDIR@", "read";
+	permission java.io.FilePermission "@TAULIBDIR@/-", "read";
+	permission java.io.FilePermission "@TMPDIR@/*", "read,write,delete";
+	permission java.lang.RuntimePermission "loadLibrary.SJava";
+	permission java.lang.RuntimePermission "loadLibrary.RInterpreter";
+	permission java.lang.RuntimePermission "loadLibrary.jogl";
+	permission java.util.PropertyPermission "OMEGA_CONFIG_FILE", "read";
+	permission java.lang.RuntimePermission "createClassLoader";
+	permission java.util.PropertyPermission "*", "read,write";
+	permission java.lang.RuntimePermission "shutdownHooks";
+};
+
