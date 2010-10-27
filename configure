@@ -66,6 +66,7 @@ for arg in "$@"; do
     echo "-arch=<architecture> ................... Specify a target architecture."
     echo "       options          [xt3|craycnl|bgp|bgl|ibm64|ibm64linux|sunx86_64"
     echo "                        crayxmt|solaris2-64|mips32|sgin32|sgi64|sgio32]"
+    echo "-bfd=<dir | download> ............ Specify a BFD directory or download."
     echo ""
     echo "MPI Options:"
     echo "-mpi .......................... Specify use of TAU MPI wrapper library."
@@ -108,7 +109,14 @@ for arg in "$@"; do
     echo "-epilogbin=<dir> ........... Specify full path to EPILOG bin directory."
     echo "-epiloginc=<dir> ....... Specify full path to EPILOG include directory."
     echo "-vampirtrace=<dir>  .. Specify location of VampirTrace Tracing package."
-    echo "-scorep=<dir>  ........................ Specify location of SCOREP package."
+    echo "-mon-mpi ..... Specify MPI as TAU monitoring transport layer.          "
+    echo "-mon-mrnet=<dir> .. Specify location to MRNet package as TAU monitoring"
+    echo "                    transport layer (ToM).                             "
+    echo "-mon-mrnet-lib=<dir> ............... Specify full path to MRNet library"
+    echo "                                     installation.                     "
+    echo "-mon-mrnet-use-lightweight ..... Instructs ToM to use MRNet lightweight"
+    echo "                                 interface.                            "
+    echo "-scorep=<dir>  .................... Specify location of SCOREP package."
     echo "-python .. Automatically choose python options based on Python in path."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
@@ -182,6 +190,7 @@ for arg in "$@"; do
     echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
     echo "-dyninst=<dir> ................... Specify location of DynInst Package."
     echo "-dwarf=<dir> ................ Specify location of the libdwarf Package."
+    echo "-bfd=<dir | download> ............ Specify a BFD directory or download."
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
     echo "-mpi .......................... Specify use of TAU MPI wrapper library."
@@ -207,7 +216,14 @@ for arg in "$@"; do
     echo "-epilogbin=<dir> ........... Specify full path to EPILOG bin directory."
     echo "-epiloginc=<dir> ....... Specify full path to EPILOG include directory."
     echo "-vampirtrace=<dir>  .. Specify location of VampirTrace Tracing package."
-    echo "-scorep=<dir>  ........................ Specify location of SCOREP package."
+    echo "-mon-mpi ..... Specify MPI as TAU monitoring transport layer.          "
+    echo "-mon-mrnet=<dir> .. Specify location to MRNet package as TAU monitoring"
+    echo "                    transport layer (ToM).                             "
+    echo "-mon-mrnet-lib=<dir> ............... Specify full path to MRNet library"
+    echo "                                     installation.                     "
+    echo "-mon-mrnet-use-lightweight ..... Instructs ToM to use MRNet lightweight"
+    echo "                                 interface.                            "
+    echo "-scorep=<dir>  .................... Specify location of SCOREP package."
     echo "-upcnetwork=<value> .. Specify network (mpi, udp,...) for Berkeley UPC."
     echo "-python .. Automatically choose python options based on Python in path."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
@@ -313,6 +329,7 @@ pdt_cxx_compiler=default
 fixmakeargs=""
 useropt=-g#-O2
 tag=no
+pathscale=no
 tautag=
 orig_useropt="-g -O2"
 mpi=no
@@ -321,6 +338,7 @@ mpiio=no
 mpiinc=
 mpilib=
 mpilibrary=no
+mon_mpi=no
 mrnet=no
 mrnet_use_lightweight=no
 mrnet_root=
@@ -404,6 +422,7 @@ tautoplevel=
 tauoptions=
 pdt_root_dir="."
 pdt=no
+armci=no
 vtf=no
 otf=no
 opari=no
@@ -678,9 +697,14 @@ for arg in "$@"; do
     shift
     ;;
 
-  -mrnet=*)
+  -mon-mpi)
+    mon_mpi=yes
+    shift
+    ;;
+
+  -mon-mrnet=*)
     mrnet=yes
-    mrnet_root=`echo $arg | sed -e 's/-mrnet=//' -e 's/ /#/g'`
+    mrnet_root=`echo $arg | sed -e 's/-mon-mrnet=//' -e 's/ /#/g'`
     if [ ! -e $mrnet_root ]
     then
       echo "Error: Cannot access MRNet root directory $mrnet_root"
@@ -689,9 +713,9 @@ for arg in "$@"; do
     shift
     ;;
 
-  -mrnetlib=*)
+  -mon-mrnet-lib=*)
     mrnet=yes
-    mrnet_lib=`echo $arg | sed -e 's/-mrnetlib=//' -e 's/ /#/g'`
+    mrnet_lib=`echo $arg | sed -e 's/-mon-mrnet-lib=//' -e 's/ /#/g'`
     if [ ! -e $mrnet_lib ]
     then
       echo "Error: Cannot access MRNet library directory $mrnet_lib"
@@ -700,7 +724,7 @@ for arg in "$@"; do
     shift
     ;;
 
-  -mrnet_use_lightweight)
+  -mon-mrnet-use-lightweight)
     mrnet_use_lightweight=yes
     shift
     ;;
@@ -891,6 +915,16 @@ for arg in "$@"; do
       pdtdir=`echo $arg | sed -e 's/-pdt=//'`
       if [ ! -d $pdtdir ] ; then
           echo "Error: Cannot access PDT directory $pdtdir"
+          exit 1
+      fi
+      shift
+      ;;
+
+  -armci=*)
+      armci=yes
+      armcidir=`echo $arg | sed -e 's/-armci=//'`
+      if [ ! -d $armcidir ] ; then
+          echo "Error: Cannot access ARMCI directory $armcidir"
           exit 1
       fi
       shift
@@ -1966,6 +2000,7 @@ case $machine in
 	elif [ "x$PE_ENV" = xPATHSCALE ] ; then
 	    tauoptions="${tauoptions}-pathscale"
 	    default_fortran=pathscale
+            pathscale=yes
 	    fixmakeargs="$fixmakeargs COMPINST_GNU"
 	fi
 	if [ $fortran_compiler = no ] ; then
@@ -1996,7 +2031,8 @@ case $machine in
 	elif [ "x$PE_ENV" = xPATHSCALE ] ; then
 	    tauoptions="${tauoptions}-pathscale"
 	    default_fortran=pathscale
-	    fixmakeargs="$fixmakeargs COMPINST_GNU"
+            pathscale=yes
+	    fixmakeargs="$fixmakeargs COMPINST_GNU USE_PATHCC"
 	elif [ "x$PE_ENV" = xINTEL ] ; then
 	    tauoptions="${tauoptions}-intel"
 	    default_fortran=intel
@@ -2011,7 +2047,7 @@ case $machine in
 	    rm -f conf_test.c
 
 	    # not implemented yet
-#	    fixmakeargs="$fixmakeargs COMPINST_CRAY"
+#	    fixmakeargs="$fixmakeargs COMPINST_CRAYCC"
 	fi
 	if [ $fortran_compiler = no ] ; then
 	    fortran_compiler=$default_fortran
@@ -2698,7 +2734,9 @@ case $fortran_compiler in
           fixmakeargs="$fixmakeargs SC_GFORTRAN"
       else
 	  gfortran=`which gfortran 2>&1`
-	  if [ "x$gfortran" != "x" ] ; then
+          retval=$?
+# when gfortran is not found, it returns a value of 1, otherwise it returns 0. 
+	  if [ "x$gfortran" != "x" -a "x$retval" != "x1" ] ; then
 	      if [ -x $gfortran ] ; then
 		  taugfortranlibdir=`gfortran -print-libgcc-file-name | sed s/libgcc.a//`
 	    fi
@@ -2928,7 +2966,8 @@ then
 	mpiinc=/opt/xt-mpt/default/mpich2-64/P2/include
 	;;
   craycnl)
-	mpiinc=/opt/xt-mpt/default/mpich2-64/P/include
+#	mpiinc=/opt/xt-mpt/default/mpich2-64/P/include
+	mpiinc=$MPICH_DIR/include
         if [ ! -r $mpiinc ] ; then
             if [ $default_fortran = gfortran ] ; then
                 mpiinc=/opt/mpt/$MPT_VERSION/xt/mpich2-gnu/include
@@ -2939,6 +2978,7 @@ then
                 mpiinc=/opt/mpt/default/xt/mpich2-pgi/include
 	    fi
         fi
+        echo "Using MPI INCLUDE dir from $mpiinc"
 	;;
   solaris2*)
 	mpiinc=/opt/SUNWhpc/include
@@ -3039,7 +3079,7 @@ then
 	mpilib=/opt/xt-mpt/default/mpich2-64/P2/lib
 	;;
   craycnl)
-	mpilib=
+	mpilib=$MPICH_DIR/lib
 	;;
   solaris2*)
 	mpilib=/opt/SUNWhpc/lib
@@ -4676,7 +4716,12 @@ fi
 if [ $mpi = yes ] ; then
     if [ "x$machine" = "xxt3" -o "x$machine" = "xcraycnl" ] ; then
 	if [ $epilog = no -a $vampirtrace = no ] ; then
+# On Crays, Pathscale compilers require  a -lmpichcxx for C and Fortran
+	  if [ $pathscale = yes ] ; then
+	    mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#-lmpichcxx"
+          else
 	    mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)"
+          fi
 	    mpiflibargs=$mpilibargs
 	    fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
 	else
@@ -5188,6 +5233,29 @@ EOF
   /bin/rm -f checkpdt.o checkpdt.cpp
 fi
 
+if [ $armci = yes ]; then
+   cat <<EOF>armcitest.c
+#include <stdio.h>
+#include <sys/types.h>
+#include "parmci.h"
+#include "armci.h"
+
+int
+ARMCI_AccV (int op, void *scale, armci_giov_t * darr, int len, int proc)
+{
+  int rval;
+  rval = PARMCI_AccV (op, scale, darr, len, proc);
+  return rval;
+}
+EOF
+    if $cxx_compiler $orig_useropt -I$armcidir/include -c armcitest.c 1> /dev/null 2>&1 ; then
+	echo "ARMCI check successful"
+	fixmakeargs="$fixmakeargs ARMCI armcidir=$armcidir"
+    else
+	echo "ARMCI check unsuccessful. Does not support PARMCI interface found in GA 5.0+."
+    fi
+    /bin/rm -f armcitest.c armcitest.o
+fi
 
 if [ $vampirtrace = yes ]; then
     cat <<EOF>vttest.cpp
@@ -5437,7 +5505,7 @@ EOF
       
       $cxx_compiler -c f1.cpp
       icc -c f2.c
-      if icc f1.o f2.o -o foo -lcprts 1>/dev/null 2>&1 ; then
+      if icc f1.o f2.o -o foo.exe -lcprts 1>/dev/null 2>&1 ; then
           echo "Intel v8.0 compilers used"
       else
           $cxx_compiler -c -cxxlib-icc f1.cpp 1>/dev/null 2>&1
@@ -5452,7 +5520,7 @@ EOF
           taugcclibdir=`g++ $tau_opt_bits -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
           taugcclib=`g++ $tau_opt_bits -print-libgcc-file-name `
           taugcclib2dir=`which g++ | sed s/g++/../`         
-          if icc f1.o f2.o -o foo -L$taugcclib2dir/lib -L$taugcclibdir -lstdc++ $taugcclib 1>/dev/null 2>&1 ; then
+          if icc f1.o f2.o -o foo.exe -L$taugcclib2dir/lib -L$taugcclibdir -lstdc++ $taugcclib 1>/dev/null 2>&1 ; then
 #          echo "Confirmed  - links with gcc libs"
               echo "Intel v8.1+ compilers used"
               if [ "x$taugcclib2dir" != "x/usr/bin/../lib" ] ; then
@@ -5466,7 +5534,7 @@ EOF
               fixmakeargs="$fixmakeargs $tauextralibopts taugcclibdir=$taugcclibdir INTEL81FIX" 
           fi
       fi
-      /bin/rm -f f1.o f2.o f1.cpp f2.c foo
+      /bin/rm -f f1.o f2.o f1.cpp f2.c foo.exe
       # Check over!
 fi
 
@@ -5576,9 +5644,27 @@ if [ $hpctoolkit = yes ] ; then
     fixmakeargs="$fixmakeargs HPCTOOLKIT hpctoolkit_include=${hpctoolkit_include} hpctoolkit_link=${hpctoolkit_link}"
 fi
 
-# TAUmon MRNet
+# TAUmon MPI                                                                                
+if [ $mon_mpi = yes ] ; then
+  if [ $mrnet = yes ] ; then
+       echo "ERROR: MRNet and MPI cannot simultaneously be used as TAUmon transport"
+       exit 1
+  fi
+  if [ $mpi = yes ] ; then
+       fixmakeargs="$fixmakeargs MON_MPI"
+  else
+       echo "ERROR: MPI TAUmon transport requires MPI support"
+       exit 1
+  fi
+fi
+
+# TAUmon MRNet                                                                              
 if [ $mrnet = yes ] ; then
-  if [ $mpi = yes ] ; then 
+  if [ $mon_mpi = yes ] ; then
+       echo "ERROR: MRNet and MPI cannot simultaneously be used as TAUmon transport"
+       exit 1
+  fi
+  if [ $mpi = yes ] ; then
        fixmakeargs="$fixmakeargs MRNET"
        if [ $mrnet_use_lightweight = yes ] ; then
             fixmakeargs="$fixmakeargs mrnet_lw=-DMRNET_LIGHTWEIGHT"

@@ -6,6 +6,8 @@
 const char * tau_orig_libname = "libOpenCL.so";
 static void *tau_handle = NULL;
 
+TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventHtoD, "Bytes copied from Host to Device");
+TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventDtoH, "Bytes copied from Device to Host");
 
 cl_int clGetPlatformIDs(cl_uint a1, cl_platform_id * a2, cl_uint * a3) {
 
@@ -1374,6 +1376,7 @@ cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4
       return retval;
     }
   TAU_PROFILE_START(t);
+	TAU_EVENT(MemoryCopyEventDtoH(), a5);
   retval  =  (*clEnqueueReadBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
   TAU_PROFILE_STOP(t);
   }
@@ -1402,13 +1405,14 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
       return retval;
     }
   TAU_PROFILE_START(t);
+	TAU_EVENT(MemoryCopyEventHtoD(), a5);
   retval  =  (*clEnqueueWriteBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
   TAU_PROFILE_STOP(t);
   }
   return retval;
 
 }
-
+/* specification is unclear as to the direction of this memcpy. */
 cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4, size_t a5, size_t a6, cl_uint a7, const cl_event * a8, cl_event * a9) {
 
   typedef cl_int (*clEnqueueCopyBuffer_p) (cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *);
@@ -1437,6 +1441,7 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
 
 }
 
+//No example found -- not implemented.
 cl_int clEnqueueReadImage(cl_command_queue a1, cl_mem a2, cl_bool a3, const size_t * a4, const size_t * a5, size_t a6, size_t a7, void * a8, cl_uint a9, const cl_event * a10, cl_event * a11) {
 
   typedef cl_int (*clEnqueueReadImage_p) (cl_command_queue, cl_mem, cl_bool, const size_t *, const size_t *, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *);
@@ -1465,6 +1470,7 @@ cl_int clEnqueueReadImage(cl_command_queue a1, cl_mem a2, cl_bool a3, const size
 
 }
 
+//No example found -- not implemented.
 cl_int clEnqueueWriteImage(cl_command_queue a1, cl_mem a2, cl_bool a3, const size_t * a4, const size_t * a5, size_t a6, size_t a7, const void * a8, cl_uint a9, const cl_event * a10, cl_event * a11) {
 
   typedef cl_int (*clEnqueueWriteImage_p) (cl_command_queue, cl_mem, cl_bool, const size_t *, const size_t *, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *);
@@ -1493,6 +1499,7 @@ cl_int clEnqueueWriteImage(cl_command_queue a1, cl_mem a2, cl_bool a3, const siz
 
 }
 
+//No example found -- not implemented.
 cl_int clEnqueueCopyImage(cl_command_queue a1, cl_mem a2, cl_mem a3, const size_t * a4, const size_t * a5, const size_t * a6, cl_uint a7, const cl_event * a8, cl_event * a9) {
 
   typedef cl_int (*clEnqueueCopyImage_p) (cl_command_queue, cl_mem, cl_mem, const size_t *, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *);
@@ -1521,6 +1528,7 @@ cl_int clEnqueueCopyImage(cl_command_queue a1, cl_mem a2, cl_mem a3, const size_
 
 }
 
+//No example found -- not implemented.
 cl_int clEnqueueCopyImageToBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, const size_t * a4, const size_t * a5, size_t a6, cl_uint a7, const cl_event * a8, cl_event * a9) {
 
   typedef cl_int (*clEnqueueCopyImageToBuffer_p) (cl_command_queue, cl_mem, cl_mem, const size_t *, const size_t *, size_t, cl_uint, const cl_event *, cl_event *);
@@ -1549,6 +1557,7 @@ cl_int clEnqueueCopyImageToBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, con
 
 }
 
+//No example found -- not implemented.
 cl_int clEnqueueCopyBufferToImage(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4, const size_t * a5, const size_t * a6, cl_uint a7, const cl_event * a8, cl_event * a9) {
 
   typedef cl_int (*clEnqueueCopyBufferToImage_p) (cl_command_queue, cl_mem, cl_mem, size_t, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *);
@@ -1598,6 +1607,8 @@ void * clEnqueueMapBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_fla
       return retval;
     }
   TAU_PROFILE_START(t);
+	//Seg. fault when tracked.
+	//TAU_EVENT(MemoryCopyEventDtoH(), a5);
   retval  =  (*clEnqueueMapBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9,  a10);
   TAU_PROFILE_STOP(t);
   }
@@ -1605,6 +1616,7 @@ void * clEnqueueMapBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_fla
 
 }
 
+//No example found -- not implemented.
 void * clEnqueueMapImage(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_flags a4, const size_t * a5, const size_t * a6, size_t * a7, size_t * a8, cl_uint a9, const cl_event * a10, cl_event * a11, cl_int * a12) {
 
   typedef void * (*clEnqueueMapImage_p) (cl_command_queue, cl_mem, cl_bool, cl_map_flags, const size_t *, const size_t *, size_t *, size_t *, cl_uint, const cl_event *, cl_event *, cl_int *);

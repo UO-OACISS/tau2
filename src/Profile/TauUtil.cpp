@@ -149,7 +149,7 @@ char *Tau_util_removeRuns(char *str) {
 void *Tau_util_malloc(size_t size, const char *file, int line) {
   void *ptr = malloc (size);
   if (!ptr) {
-    TAU_ABORT("TAU: Abort: Unable to allocation memory at %s:%d\n", file, line);
+    TAU_ABORT("TAU: Abort: Unable to allocate memory (malloc) at %s:%d\n", file, line);
   }
   return ptr;
 }
@@ -157,7 +157,7 @@ void *Tau_util_malloc(size_t size, const char *file, int line) {
 void *Tau_util_calloc(size_t size, const char *file, int line) {
   void *ptr = calloc (1,size);
   if (!ptr) {
-    TAU_ABORT("TAU: Abort: Unable to allocation memory at %s:%d\n", file, line);
+    TAU_ABORT("TAU: Abort: Unable to allocate memory (calloc) at %s:%d\n", file, line);
   }
   return ptr;
 }
