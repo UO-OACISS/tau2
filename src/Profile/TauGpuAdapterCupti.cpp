@@ -52,15 +52,15 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 	CUPTI_CB_DOMAIN_RUNTIME_API_TRACE ? "RuntimeAPI" : "DriverAPI"));
 	if (cbInfo->callbacksite == CUPTI_API_ENTER)
 	{
-		printf("Enter: %s:%d.\n", cbInfo->functionName, cbInfo->functionId);
+		//printf("Enter: %s:%d.\n", cbInfo->functionName, cbInfo->functionId);
 		if (cbInfo->functionId == 31)
 		{
 			cudaMemcpy_params params;
 			memcpy(&params, (cudaMemcpy_params *) cbInfo->params,
 			sizeof(cudaMemcpy_params));
-			printf("Enter Memcpy: dest: %d, src: %d, count: %llu, kind: %d.\n",
-			params.dst, params.src,
-			params.count, params.kind);
+			//printf("Enter Memcpy: dest: %d, src: %d, count: %llu, kind: %d.\n",
+			//params.dst, params.src,
+			//params.count, params.kind);
 
 			//TODO: sort out GPU ids
 			//TODO: memory copies from device to device.
@@ -109,7 +109,7 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 				return;
 			}
 		}
-		printf("Exit: %s:%d.\n", cbInfo->functionName, cbInfo->functionId);
+		//printf("Exit: %s:%d.\n", cbInfo->functionName, cbInfo->functionId);
 	}
 }
 
@@ -118,7 +118,7 @@ CUpti_SubscriberHandle drSubscriber;
 
 void Tau_cuda_onload(void)
 {
-	printf("in Tau_cuda_onload.\n");
+	//printf("in Tau_cuda_onload.\n");
 	RuntimeApiTrace_t trace[LAUNCH_LAST];
   CUdevice device = 0;
 	int computeCapabilityMajor=0;
@@ -148,7 +148,7 @@ void Tau_cuda_onload(void)
 
 void Tau_cuda_onunload(void)
 {
-	printf("in Tau_cuda_onunload.\n");
+	//printf("in Tau_cuda_onunload.\n");
   CUresult err;
   err = cuptiUnsubscribe(rtSubscriber);
   err = cuptiUnsubscribe(drSubscriber);
