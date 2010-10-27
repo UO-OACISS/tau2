@@ -254,7 +254,6 @@ endTime, int transferSize, bool memcpyType)
 		}
 	}
 
-	printf("in Tau_gpu recording memcopy event.\n");
 #ifdef DEBUG_PROF		
 	printf("recording memcopy event.\n");
 	printf("time is: %f:%f.\n", startTime, endTime);
