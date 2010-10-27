@@ -2703,6 +2703,10 @@ cudaError_t cudaRuntimeGetVersion(int * a1) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
+  Tau_global_incr_insideTAU();
+  Tau_create_top_level_timer_if_necessary();
+  Tau_global_decr_insideTAU();
+
   TAU_PROFILE_START(t);
   retval  =  (*cudaRuntimeGetVersion_h)( a1);
   TAU_PROFILE_STOP(t);
