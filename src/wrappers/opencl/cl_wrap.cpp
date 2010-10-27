@@ -246,7 +246,9 @@ cl_int clReleaseContext(cl_context a1) {
   TAU_PROFILE_START(t);
   retval  =  (*clReleaseContext_h)( a1);
   TAU_PROFILE_STOP(t);
+#ifdef TAU_OPENCL_SPEC_11
 	Tau_opencl_exit();
+#endif
   }
   return retval;
 
@@ -868,7 +870,9 @@ cl_int clReleaseProgram(cl_program a1) {
   TAU_PROFILE_START(t);
   retval  =  (*clReleaseProgram_h)( a1);
   TAU_PROFILE_STOP(t);
+#ifdef TAU_OPENCL_SPEC_11
 	Tau_opencl_exit();
+#endif
   }
   return retval;
 
