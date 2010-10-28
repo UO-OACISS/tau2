@@ -89,7 +89,7 @@ cudaError_t cudaThreadSynchronize() {
   return retval;
 
 }
-
+/*
 cudaError_t cudaThreadSetLimit(enum cudaLimit a1, size_t a2) {
 
   typedef cudaError_t (*cudaThreadSetLimit_p) (enum cudaLimit, size_t);
@@ -201,7 +201,7 @@ cudaError_t cudaThreadSetCacheConfig(enum cudaFuncCache a1) {
   return retval;
 
 }
-
+*/
 cudaError_t cudaGetLastError() {
 
   typedef cudaError_t (*cudaGetLastError_p) ();
@@ -873,7 +873,7 @@ cudaError_t cudaSetupArgument(const void * a1, size_t a2, size_t a3) {
   return retval;
 
 }
-
+/*
 cudaError_t cudaFuncSetCacheConfig(const char * a1, enum cudaFuncCache a2) {
 
   typedef cudaError_t (*cudaFuncSetCacheConfig_p) (const char *, enum cudaFuncCache);
@@ -901,7 +901,7 @@ cudaError_t cudaFuncSetCacheConfig(const char * a1, enum cudaFuncCache a2) {
   return retval;
 
 }
-
+*/
 cudaError_t cudaLaunch(const char * a1) {
 
   typedef cudaError_t (*cudaLaunch_p) (const char *);
@@ -2206,7 +2206,7 @@ cudaError_t cudaGetSymbolSize(size_t * a1, const char * a2) {
   return retval;
 
 }
-
+/*
 cudaError_t cudaGraphicsUnregisterResource(cudaGraphicsResource_t a1) {
 
   typedef cudaError_t (*cudaGraphicsUnregisterResource_p) (cudaGraphicsResource_t);
@@ -2374,7 +2374,7 @@ cudaError_t cudaGraphicsSubResourceGetMappedArray(struct cudaArray ** a1, cudaGr
   return retval;
 
 }
-
+*/
 cudaError_t cudaGetChannelDesc(struct cudaChannelFormatDesc * a1, const struct cudaArray * a2) {
 
   typedef cudaError_t (*cudaGetChannelDesc_p) (struct cudaChannelFormatDesc *, const struct cudaArray *);
@@ -2703,10 +2703,6 @@ cudaError_t cudaRuntimeGetVersion(int * a1) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-  Tau_global_incr_insideTAU();
-  Tau_create_top_level_timer_if_necessary();
-  Tau_global_decr_insideTAU();
-
   TAU_PROFILE_START(t);
   retval  =  (*cudaRuntimeGetVersion_h)( a1);
   TAU_PROFILE_STOP(t);
@@ -2714,6 +2710,7 @@ cudaError_t cudaRuntimeGetVersion(int * a1) {
   return retval;
 
 }
+/*
 cudaError_t cudaGetExportTable(const void ** a1, const cudaUUID_t * a2) {
 
   typedef cudaError_t (*cudaGetExportTable_p) (const void **, const cudaUUID_t *);
@@ -2740,4 +2737,4 @@ cudaError_t cudaGetExportTable(const void ** a1, const cudaUUID_t * a2) {
   }
   return retval;
 
-}
+}*/
