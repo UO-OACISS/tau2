@@ -1,3 +1,5 @@
+#define TAU_OPENCL_SPEC_11
+
 #include <Profile/Profiler.h>
 #ifdef TAU_OPENCL_SPEC_11
 #include <Profile/TauGpuAdapterOpenCL.h>
@@ -871,7 +873,7 @@ cl_int clReleaseProgram(cl_program a1) {
   retval  =  (*clReleaseProgram_h)( a1);
   TAU_PROFILE_STOP(t);
 #ifdef TAU_OPENCL_SPEC_11
-	Tau_opencl_exit();
+	//Tau_opencl_exit();
 #endif
   }
   return retval;
@@ -1445,10 +1447,10 @@ cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4
 	check_memory_init();
 	TAU_EVENT(MemoryCopyEventDtoH, a5);
   retval  =  (*clEnqueueReadBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+  TAU_PROFILE_STOP(t);
 #ifdef TAU_OPENCL_SPEC_11
 	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_memcpy_callback, mem_data);
 #endif 
-  TAU_PROFILE_STOP(t);
 	//free(mem_data);
   }
   return retval;
@@ -1490,10 +1492,10 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
 	check_memory_init();
 	TAU_EVENT(MemoryCopyEventHtoD, a5);
   retval  =  (*clEnqueueWriteBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+  TAU_PROFILE_STOP(t);
 #ifdef TAU_OPENCL_SPEC_11
 	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_memcpy_callback, mem_data);
 #endif
-  TAU_PROFILE_STOP(t);
   }
   return retval;
 
@@ -1534,10 +1536,10 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
 	check_memory_init();
 	TAU_EVENT(MemoryCopyEventDtoD, a6);
   retval  =  (*clEnqueueCopyBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+  TAU_PROFILE_STOP(t);
 #ifdef TAU_OPENCL_SPEC_11
 	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_memcpy_callback, mem_data);
 #endif
-  TAU_PROFILE_STOP(t);
 	//free(mem_data);
   }
   return retval;
@@ -1719,16 +1721,18 @@ void * clEnqueueMapBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_fla
 	memcpy_callback_data *mem_data = (memcpy_callback_data*) malloc(memcpy_data_size);
 	strcpy(mem_data->name, "MapBuffer");
 	mem_data->memcpy_type = MemcpyDtoH;
-	printf("name %s.\n", mem_data->name);
+	//printf("name %s.\n", mem_data->name);
 #endif
   TAU_PROFILE_START(t);
 	check_memory_init();
 	TAU_EVENT(MemoryCopyEventDtoH, a5);
   retval  =  (*clEnqueueMapBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9,  a10);
+  TAU_PROFILE_STOP(t);
 #ifdef TAU_OPENCL_SPEC_11
 	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_memcpy_callback, mem_data);
 #endif
-  TAU_PROFILE_STOP(t);
+
+	//free(mem_data);
   }
   return retval;
 
@@ -1835,10 +1839,10 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
 #endif
   TAU_PROFILE_START(t);
   retval  =  (*clEnqueueNDRangeKernel_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+  TAU_PROFILE_STOP(t);
 #ifdef TAU_OPENCL_SPEC_11
 	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_kernel_callback, kernel_data);
 #endif
-  TAU_PROFILE_STOP(t);
 	//free(kernel_data);
   }
   return retval;
