@@ -1,12 +1,10 @@
+//if callbacks are supported make sure do locking in the callbacks.
+#ifdef TAU_ENABLE_CL_CALLBACK
+#define TAU_OPENCL_LOCKING
+#endif
 #include "TauGpuAdapterOpenCL.h"
 #include <stdlib.h>
 #include <string.h>
-
-//if callbacks are supported make sure do locking in the callbacks.
-#ifdef CL_VERSION_1_1
-#pragma message ("Compiling with OPENCL SPEC 1.1 support.")
-#define TAU_OPENCL_LOCKING
-#endif
 #ifdef TAU_OPENCL_LOCKING
 #include <pthread.h>
 #else
