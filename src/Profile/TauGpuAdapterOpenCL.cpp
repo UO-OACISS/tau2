@@ -1,6 +1,16 @@
+//if callbacks are supported make sure do locking in the callbacks.
+#ifdef TAU_ENABLE_CL_CALLBACK
+#define TAU_OPENCL_LOCKING
+#endif
 #include "TauGpuAdapterOpenCL.h"
 #include <stdlib.h>
 #include <string.h>
+#ifdef TAU_OPENCL_LOCKING
+#include <pthread.h>
+#else
+#pragma message ("Warning: Compiling without pthread support, callbacks may give \
+overlapping timers errors.")
+#endif
 void __attribute__ ((constructor)) Tau_opencl_init(void);
 //void __attribute__ ((destructor)) Tau_opencl_exit(void);
 
@@ -50,18 +60,44 @@ class openCLEventId : public eventId
 extern cl_int clGetEventProfilingInfo_noinst(cl_event a1, cl_profiling_info a2, size_t
 a3, void * a4, size_t * a5);
 
+//Lock for the callbacks
+pthread_mutex_t callback_lock;
 
+int init_callback() 
+{
+#ifdef TAU_OPENCL_LOCKING
+	printf("initalize pthread locking.\n");
+	pthread_mutexattr_t lock_attr;
+	pthread_mutexattr_init(&lock_attr);
+	pthread_mutex_init(&callback_lock, &lock_attr);
+	return 1;
+#endif
+}
 
+void lock_callback()
+{
+#ifdef TAU_OPENCL_LOCKING
+  static int initflag = init_callback();
+	pthread_mutex_lock(&callback_lock);
+#endif
+}
+
+void release_callback()
+{
+#ifdef TAU_OPENCL_LOCKING
+	pthread_mutex_unlock(&callback_lock);
+#endif
+}
 
 void Tau_opencl_init()
 {
-	printf("in Tau_opencl_init().\n");
+	//printf("in Tau_opencl_init().\n");
 	Tau_gpu_init();
 }
 
 void Tau_opencl_exit()
 {
-	printf("in Tau_opencl_exit().\n");
+	//printf("in Tau_opencl_exit().\n");
 	Tau_gpu_exit();
 }
 
@@ -89,8 +125,11 @@ void Tau_opencl_register_gpu_event(const char *name, int id, double start,
 double stop)
 {
 	openCLEventId *evId = new openCLEventId(id);
-	
+	lock_callback();
+	//printf("locked for: %s.\n", name);
 	Tau_gpu_register_gpu_event(name, evId, start/1e3, stop/1e3);
+	//printf("released for: %s.\n", name);
+	release_callback();
 }
 
 void Tau_opencl_register_memcpy_event(const char *name, int id, double start, double stop, int
@@ -99,7 +138,11 @@ transferSize, bool MemcpyType)
 	//printf("in Tau_open.\n");
 	openCLEventId *evId = new openCLEventId(id);
 	openCLGpuId *gId = new openCLGpuId(0);
-		Tau_gpu_register_memcpy_event(name, evId, gId, start/1e3, stop/1e3, transferSize, MemcpyType);
+	lock_callback();
+	//printf("locked for: %s.\n", name);
+	Tau_gpu_register_memcpy_event(name, evId, gId, start/1e3, stop/1e3, transferSize, MemcpyType);
+	//printf("released for: %s.\n", name);
+	release_callback();
 
 }
 
@@ -128,7 +171,9 @@ void CL_CALLBACK Tau_opencl_memcpy_callback(cl_event event, cl_int command_stat,
 	}
 	//printf("DtoH calling Tau_open.\n");
 	Tau_opencl_register_memcpy_event(memcpy_data->name, 0, (double) startTime,
-	(double) endTime, 0 /*TAU_GPU_UNKNOW_TRANSFER_SIZE*/, memcpy_data->memcpy_type);
+	(double) endTime, TAU_GPU_UNKNOW_TRANSFER_SIZE, memcpy_data->memcpy_type);
+	
+	free(data);
 }
 
 void CL_CALLBACK Tau_opencl_kernel_callback(cl_event event, cl_int command_stat, void
@@ -158,5 +203,6 @@ void CL_CALLBACK Tau_opencl_kernel_callback(cl_event event, cl_int command_stat,
 	  //printf("in TauGpuAdapt name: %s.\n", kernel_data->name);
 		Tau_opencl_register_gpu_event(kernel_data->name, 0, (double) startTime,
 		(double) endTime);
+	free(data);
 }
 

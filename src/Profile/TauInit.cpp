@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <unistd.h>
+#include <execinfo.h>
 
 #include <Profile/TauEnv.h>
 #include <Profile/TauMetrics.h>
@@ -62,7 +63,15 @@ extern "C" int Tau_profiler_initialization();
 static SIGNAL_TYPE (*sighdlr[NSIG])(SIGNAL_ARG_TYPE);
 
 static void wrap_up(int sig) {
+  void *array[10];
+  size_t size;
+
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 10);
+
+  // print out all the frames to stderr
   fprintf (stderr, "TAU: signal %d on %d - calling TAU_PROFILE_EXIT()...\n", sig, RtsLayer::myNode());
+  backtrace_symbols_fd(array, size, 2);
   TAU_PROFILE_EXIT("signal");
   fprintf (stderr, "TAU: done.\n");
   exit (1);
