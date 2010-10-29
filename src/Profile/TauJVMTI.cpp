@@ -224,7 +224,6 @@ TAUJVMTI_native_entry(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint
 	      //Define a new mapping object TauMethodName
 	      TAU_MAPPING_OBJECT(TauMethodName=NULL);
 	      //Create a key for this mapping object corrisponding to the method_id
-	      //need to get a legit method_id
 	      TAU_MAPPING_LINK(TauMethodName, unique_method_id);
 		
 	      TAU_MAPPING_PROFILE_TIMER(TauTimer, TauMethodName, tid);
@@ -275,9 +274,7 @@ cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
         };
 
         /* The VM has started. */
-#ifdef DEBUG_PROF
-        stdout_message("DEBUGPROF:: VMStart\n");
-#endif /* DEBUG_PROF */
+        DEBUGPROFMSG("DEBUGPROF:: VMStart\n");
 
         /* Register Natives for class whose methods we use */
         klass = env->FindClass(STRING(TAUJVMTI_class));
@@ -303,9 +300,7 @@ cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
         gdata->vm_is_started = JNI_TRUE;
 
     } exit_critical_section(jvmti);
-#ifdef DEBUG_PROF
-        stdout_message("DEBUGPROF:: VMStart Finished\n");
-#endif /* DEBUG_PROF */
+    DEBUGPROFMSG("DEBUGPROF:: VMStart Finished\n");
 }
 
 /* Callback for JVMTI_EVENT_VM_INIT */
@@ -320,9 +315,7 @@ cbVMInit(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
 
         /* The VM has started. */
         get_thread_name(jvmti, thread, tname, sizeof(tname));
-#ifdef DEBUG_PROF
-        stdout_message("DEBUGPROF:: VMInit %s\n", tname);
-#endif /* DEBUG_PROF */
+        DEBUGPROFMSG("DEBUGPROF:: VMInit " <<  tname << endl;);
 
 
         /* The VM is now initialized, at this time we make our requests
@@ -337,9 +330,8 @@ cbVMInit(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
                                   events[i], (jthread)NULL);
             check_jvmti_error(jvmti, error, "Cannot set event notification");
         }
-#ifdef DEBUG_PROF
-        stdout_message("DEBUGPROF:: VMInit end %s\n", tname);
-#endif /* DEBUG_PROF */
+        DEBUGPROFMSG("DEBUGPROF:: VMInit end " << tname << endl;);
+
 	gdata->vm_is_initialized = JNI_TRUE;
     } exit_critical_section(jvmti);
 }
@@ -353,7 +345,7 @@ cbVMDeath(jvmtiEnv *jvmti, JNIEnv *env)
         jfieldID field;
 
         /* The VM has died. */
-        stdout_message("VMDeath\n");
+        DEBUGPROFMSG("VMDeath\n");
 
         /* Disengage calls in TAUJVMTI_class. */
         klass = env->FindClass(STRING(TAUJVMTI_class));
@@ -386,7 +378,7 @@ cbVMDeath(jvmtiEnv *jvmti, JNIEnv *env)
 }
 
 void CreateTopLevelRoutine(char *name, char *type, char *groupname, int tid) {
-  DEBUGPROFMSG("Inside CreateTopLevelRoutine: name = " << name << ", type = " << type ", group = " << groupane << ", tid = " << tid "\n";);
+  DEBUGPROFMSG("Inside CreateTopLevelRoutine: name = " << name << ", type = " << type  << ", group = " << groupname << ", tid = " << tid  << endl;);
 
   /* Create a top-level routine that is always called. Use the thread name in it */
   TAU_MAPPING_CREATE(name, type, 1, groupname, tid); 
@@ -426,13 +418,11 @@ cbThreadEnd(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
             char  tname[MAX_THREAD_NAME_LENGTH];
 
             get_thread_name(jvmti, thread, tname, sizeof(tname));
-            stdout_message("ThreadEnd %s\n", tname);
-	    
-	    //Dealloc the thread local storage
+            DEBUGPROFMSG("ThreadEnd " << tname << endl;);
+
 	    JavaThreadLayer::ThreadEnd(thread);
 	    //Inform Tau that the thread has ended.
-	    printf("Thread Death\n");
-	    TAU_MAPPING_PROFILE_EXIT("END...", tid); 
+	    TAU_PROFILE_EXIT("END..."); 
         }
     } exit_critical_section(jvmti);
 }
@@ -656,10 +646,8 @@ parse_agent_options(char *options)
 JNIEXPORT jint JNICALL
 Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 {
-#ifdef DEBUG_PROF
-    printf("DEBUG_PROF:: Start of Agent_OnLoad\n");
-    fflush(stdout);
-#endif /* DEBUG_PROF */
+
+    DEBUGPROFMSG("DEBUG_PROF:: Start of Agent_OnLoad\n";);
     static GlobalAgentData data;
     jvmtiEnv              *jvmti;
     jvmtiError             error;
@@ -762,10 +750,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
     error = jvmti->CreateRawMonitor("agent data", &(gdata->lock));
     check_jvmti_error(jvmti, error, "Cannot create raw monitor");
 
-#ifdef DEBUG_PROF
-    printf("DEBUG_PROF:: End of Agent_OnLoad\n");
-    fflush(stdout);
-#endif /* DEBUG_PROF */
+    DEBUGPROFMSG("DEBUG_PROF:: End of Agent_OnLoad\n");
 
     /* We return JNI_OK to signify success */
     return JNI_OK;
@@ -777,7 +762,9 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 JNIEXPORT void JNICALL
 Agent_OnUnload(JavaVM *vm)
 {
-    /* Make sure all malloc/calloc/strdup space is freed */
+  //FIXME include necessary headers to run this
+  //Tau_profile_exit_all_threads();
+      /* Make sure all malloc/calloc/strdup space is freed */
     if ( gdata->include != NULL ) {
         (void)free((void*)gdata->include);
         gdata->include = NULL;
