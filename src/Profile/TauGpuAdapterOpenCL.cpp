@@ -168,6 +168,8 @@ void CL_CALLBACK Tau_opencl_memcpy_callback(cl_event event, cl_int command_stat,
 	//printf("DtoH calling Tau_open.\n");
 	Tau_opencl_register_memcpy_event(memcpy_data->name, 0, (double) startTime,
 	(double) endTime, TAU_GPU_UNKNOW_TRANSFER_SIZE, memcpy_data->memcpy_type);
+	
+	free(data);
 }
 
 void CL_CALLBACK Tau_opencl_kernel_callback(cl_event event, cl_int command_stat, void
@@ -197,5 +199,6 @@ void CL_CALLBACK Tau_opencl_kernel_callback(cl_event event, cl_int command_stat,
 	  //printf("in TauGpuAdapt name: %s.\n", kernel_data->name);
 		Tau_opencl_register_gpu_event(kernel_data->name, 0, (double) startTime,
 		(double) endTime);
+	free(data);
 }
 
