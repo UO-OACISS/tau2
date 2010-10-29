@@ -1,7 +1,8 @@
 #include "TauGpu.h"
 #include <stdio.h>
-#include <CL/opencl.h>
+#include <CL/cl.h>
 #include <string.h>
+
 
 #define TAU_MAX_FUNCTIONNAME 200
 
@@ -42,6 +43,9 @@ typedef struct kernel_callback_data_t
 	char name[TAU_MAX_FUNCTIONNAME];
 } kernel_callback_data;
 int kernel_data_size = sizeof(kernel_callback_data);
+
+
+bool Tau_opencl_is_callbacks_supported();
 
 //Enqueue events
 
