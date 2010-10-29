@@ -231,8 +231,8 @@ fi
 if [ $track_opencl = "true" ] ; then
     # Add the OpenCL wrapper library to the LD_PRELOAD list
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OpenCL.so:$TAUEX_LD_PRELOAD
-    #TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OCLci.so:$TAUEX_LD_PRELOAD
-		#export TAU_METRICS=TAUGPU_TIME
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OCLci.so:$TAUEX_LD_PRELOAD
+		export TAU_METRICS=TAUGPU_TIME
 fi
 
 if [ $track_armci = "true" ] ; then

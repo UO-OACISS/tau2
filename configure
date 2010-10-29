@@ -478,6 +478,7 @@ for i in include/Makefile ; do
     mv ${i}~~0 ${i}
 done
 
+
 ###############################################################
 # PARSE OPTIONS
 ###############################################################
@@ -1349,16 +1350,17 @@ for arg in "$@"; do
     shift
     ;;
 
-  -cudainc=*)
-    cudainclude=`echo $arg | sed -e 's/-cudainc=//' -e 's/ /#/g'`
+  -cuda=*)
+    cudainclude=`echo $arg | sed -e 's/-cuda=//' -e 's/ /#/g'`/include
     if [ ! -d $cudainclude ] ; then
       echo "Error: Cannot access GPU include directory $cudainclude"
       exit 1
     fi
     if [ -f "$cudainclude/cuda.h" ] ; then
-    	fixmakeargs="$fixmakeargs cudainclude=$cudainclude useropt=$useropt -DTAU_MAX_THREADS=3"
+    	fixmakeargs="$fixmakeargs cudainclude=$cudainclude useropt=$useropt#-DTAU_MAX_THREADS=3"
 			if [ -f "$cudainclude/CL/cl.h" ] ; then
-    		fixmakeargs="$fixmakeargs cudainclude=$cudainclude openclinclude=$cudainclude useropt=$useropt -DTAU_MAX_THREADS=3"
+    		fixmakeargs="$fixmakeargs openclinclude=$cudainclude \
+				useropt=$useropt#-DTAU_MAX_THREADS=3"
 			fi
 		else
 			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
@@ -1366,14 +1368,15 @@ for arg in "$@"; do
     shift
     ;;
 
-  -openclinc=*)
-    openclinclude=`echo $arg | sed -e 's/-openclinc=//' -e 's/ /#/g'`
+  -opencl=*)
+    openclinclude=`echo $arg | sed -e 's/-opencl=//' -e 's/ /#/g'`/include
     if [ ! -d $openclinclude ] ; then
       echo "Error: Cannot access GPU include directory $openclinclude"
       exit 1
     fi
 		if [ -f "$openclinclude/CL/cl.h" ] ; then
-      fixmakeargs="$fixmakeargs openclinclude=$openclinclude useropt=$useropt -DTAU_MAX_THREADS=3"
+      fixmakeargs="$fixmakeargs openclinclude=$openclinclude \
+			useropt=$useropt#-DTAU_MAX_THREADS=3"
 		else
 			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
     fi

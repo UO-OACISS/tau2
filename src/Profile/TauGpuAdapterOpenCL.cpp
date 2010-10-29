@@ -1,12 +1,17 @@
-#define TAU_OPENCL_LOCKING
 #include "TauGpuAdapterOpenCL.h"
 #include <stdlib.h>
 #include <string.h>
+
+//if callbacks are supported make sure do locking in the callbacks.
+#ifdef CL_VERSION_1_1
+#pragma message ("Compiling with OPENCL SPEC 1.1 support.")
+#define TAU_OPENCL_LOCKING
+#endif
 #ifdef TAU_OPENCL_LOCKING
 #include <pthread.h>
 #else
-#pragma message ("Warning: Compiling with pthread support, callbacks may give \
-                  overlapping timers errors.")
+#pragma message ("Warning: Compiling without pthread support, callbacks may give \
+overlapping timers errors.")
 #endif
 void __attribute__ ((constructor)) Tau_opencl_init(void);
 //void __attribute__ ((destructor)) Tau_opencl_exit(void);
@@ -63,6 +68,7 @@ pthread_mutex_t callback_lock;
 int init_callback() 
 {
 #ifdef TAU_OPENCL_LOCKING
+	printf("initalize pthread locking.\n");
 	pthread_mutexattr_t lock_attr;
 	pthread_mutexattr_init(&lock_attr);
 	pthread_mutex_init(&callback_lock, &lock_attr);

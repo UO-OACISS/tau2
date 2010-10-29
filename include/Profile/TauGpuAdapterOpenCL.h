@@ -1,6 +1,6 @@
 #include "TauGpu.h"
 #include <stdio.h>
-#include <CL/opencl.h>
+#include <CL/cl.h>
 #include <string.h>
 
 #define TAU_MAX_FUNCTIONNAME 200
