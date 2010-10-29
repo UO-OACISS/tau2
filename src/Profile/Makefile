@@ -302,9 +302,11 @@ CRAY_PGI_HACK=
 ifneq ($(TAU_OPENCL_INC), )
 	TAU_GPU_LIB=libTAU-OCLci.so
 	TAU_GPU_OBJS=TauGpuAdapterOpenCL.o TauGpu.o
+	TAU_GPU_DEP=TauGpuAdapterOpenCL.d
 else
 	TAU_GPU_LIB=
 	TAU_GPU_OBJS=
+	TAU_GPU_DEP=
 endif
 
 all:		$(TAU_TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) $(TAUPYTHON) $(SHMEM_WRAPPER) $(POELIB) $(TAU_GPU_LIB)
@@ -320,10 +322,13 @@ $(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS) $(MPI_WRAPPER) $(TAU_FORCE_MPI) 
 		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_SHLIB) $(OBJS) $(SHARED_OBJS) $(SHARED_LIBS) $(EXTRAOBJS) $(TAU_MPI_FOR_SHARED) $(EXTRA_LIBS) $(LEXTRA1) $(TAU_PAPI_EXTRA_FLAGS) $(TAU_EXTRA_LIBRARY_FLAGS) $(TAUEXTRASHLIBOPTS)
 		$(TAU_CREATE_SYMLINKS)
 
-$(TAU_NULL)$(TAU_GPU_LIB): $(TAU_GPU_OBJS) $(TAU_DSO)
+$(TAU_GPU_DEP) : TauGpuAdapterOpenCL.cpp
+	$(CXX) -M $(CXXFLAGS) -I$(TAU_OPENCL_INC) -c TauGpuAdapterOpenCL.cpp > $@
+
+$(TAU_NULL)$(TAU_GPU_LIB): $(TAU_GPU_OBJS) $(TAU_DSO) $(TAU_GPU_DEP)
 		$(PRELINK_PHASE)
 		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_GPU_LIB) $(TAU_GPU_OBJS) \
-		-L$(TAU_LIB_DIR) $(TAU_DSO) 
+		-L$(TAU_LIB_DIR) $(TAU_DSO) $(if $(shell grep pthread.h $(TAU_GPU_DEP)), -lpthread,)
 		$(TAU_RANLIB) $(TAU_GPU_LIB)
 
 $(TAU_DISABLE): TauDisable.o $(TAU_DISABLE_SHARED) TauKojakOpariDisable.o
@@ -666,6 +671,6 @@ test_java: all
 	LD_LIBRARY_PATH=`pwd` $(JDKDIR)/bin/java -agentlib:TAUsh-jdk=exclude=java -Xbootclasspath/a:./TauJVMTI.jar Pi
 
 clean : 
-	$(RM) *.ii *.ti ti_files cxx_repository ii_files rii_files *.a *.o *$(TAU_SHLIBX) $(TAU_GPU_LIB)
+	$(RM) *.ii *.ti ti_files cxx_repository ii_files rii_files *.a *.o *$(TAU_SHLIBX) $(TAU_GPU_LIB) $(TAU_GPU_DEP)
 
 

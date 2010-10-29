@@ -346,4 +346,5 @@ void Tau_gpu_exit(void)
 		printf("stopping level 2.\n");
 #endif
 	  //TAU_PROFILE_EXIT("tau_gpu");
+    //Tau_stop_top_level_timer_if_necessary();
 }

@@ -352,6 +352,9 @@ void TauJavaLayer::ShutDown(JVMPI_Event *event) {
   fprintf(stdout, "TAU> JVM SHUT DOWN : id = %d \n", tid);
 #endif 
 
+  //This call is bogus and should be removed..
+  //TAU_MAPPING_PROFILE_EXIT only exits the current thread regardless
+  //of the value of i. See TauCAPI.cpp:460.
   CALL(RawMonitorEnter)(shutdown_lock);
   for(int i = 0; i < JavaThreadLayer::TotalThreads(); i++) {
     TAU_MAPPING_PROFILE_EXIT("Forcing Shutdown of Performance Data",i);
