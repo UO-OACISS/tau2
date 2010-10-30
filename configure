@@ -4919,6 +4919,11 @@ fi
 ######################################################################
   cat <<EOF > conftest_bfd.c
 #include <bfd.h>
+#ifdef __APPLE__
+#include <crt_externs.h>
+char *** environ(void) { return (*_NSGetEnviron()); }
+#endif
+
 void foo() {
    bfd_init();
    bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
@@ -5013,6 +5018,10 @@ cat <<EOF > conftest_bfd.c
 #    include <demangle.h>
 #  endif /* HAVE_GNU_DEMANGLE */
 
+#ifdef __APPLE__
+#include <crt_externs.h>
+char *** environ(void) { return (*_NSGetEnviron()); }
+#endif
 void foo() {
    bfd_init();
    bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
