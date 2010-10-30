@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 
 declare -i numpass
 declare -i numfail
@@ -12,6 +12,14 @@ numrun=0;
 CC=gcc
 CXX=g++
 
+if [ `uname -s` = Darwin ] ; then
+  extralib=-ldl
+  export TAU_OPTIONS="-optCompInst -optShared -optRevert"
+# Under Mac OS X, it gets many other malloc events if it doesn't use -optShared
+else
+  extralib=-lrt
+  export TAU_OPTIONS="-optCompInst -optRevert"
+fi
 
 cleanup()
 {
@@ -50,7 +58,6 @@ check_output()
 export TAU_METRICS=TIME
 unset TAU_VERBOSE
 
-export TAU_OPTIONS="-optCompInst"
 
 for i in test_*.c ; do
 #for i in test_multiple.c ; do
@@ -63,22 +70,22 @@ for i in test_*.c ; do
     check_output
 
 
-    echo -n "  link with -lrt -lpthread...  "
+    echo -n "  link with $extralib -lpthread...  "
     cleanup
-    $CC -o simple $i -lrt -lpthread
+    $CC -o simple $i $extralib -lpthread
     tau_exec -memory -T serial ./simple
     check_output
 
 
     echo -n "  built with TAU...  "
     cleanup
-    tau_cc.sh -o simple $i &> /dev/null
+    tau_cc.sh -g -o simple $i &> /dev/null
     tau_exec -memory -T serial ./simple
     check_output
 
-    echo -n "  built with TAU and linked with -lrt -lpthread...  "
+    echo -n "  built with TAU and linked with $extralib -lpthread...  "
     cleanup
-    tau_cc.sh -o simple $i -lrt -lpthread  &> /dev/null
+    tau_cc.sh -g -o simple $i $extralib -lpthread  &> /dev/null
     tau_exec -memory -T serial ./simple
     check_output
 
