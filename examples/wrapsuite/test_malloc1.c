@@ -1,7 +1,11 @@
 #include <stdlib.h>
 
-int main(int argc, char **argv) {
-  int *p = malloc(500);
+int foo(int x) {
+  int *p = (int *) malloc(x);
   free(p);
+}
+
+int main(int argc, char **argv) {
+  foo(500);
   return 0;
 }
