@@ -286,6 +286,7 @@ static void get_symtab(void) {
 
 #ifndef TAU_BFD
   fprintf(stderr, "TAU: Warning! BFD not found, symbols will not be resolved\n");
+  fprintf(stderr, "Please re-configure TAU with -bfd=download to support runtime symbol resolution using the BFD library.\n");
   return;
 #endif
 
@@ -585,6 +586,10 @@ extern "C" void __pat_tp_func_return(const void *ea, const void *ra) {
   __cyg_profile_func_enter((void *)ea, (void *)ra);
 }
 
+extern "C" void ___cyg_profile_func_enter(void* func, void* callsite) {
+  __cyg_profile_func_enter(func, callsite);
+}
+
 
 #if (defined(TAU_SICORTEX) || defined(TAU_SCOREP))
 #pragma weak __cyg_profile_func_exit
@@ -624,6 +629,10 @@ extern "C" void __cyg_profile_func_exit(void* func, void* callsite) {
 }
 
 extern "C" void _cyg_profile_func_exit(void* func, void* callsite) {
+  __cyg_profile_func_exit(func, callsite);
+}
+
+extern "C" void ___cyg_profile_func_exit(void* func, void* callsite) {
   __cyg_profile_func_exit(func, callsite);
 }
 
