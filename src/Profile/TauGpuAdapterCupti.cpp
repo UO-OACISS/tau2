@@ -71,31 +71,37 @@ template<class APItype> int functionId(const APItype &info)
 	return info->functionId;
 }
 
-#define CAST_TO_MEMCPY_TYPE_AND_CALL(name, id, info, params, member) \
-	if ((id) == CUPTI_RUNTIME_TRACE_CBID_##name##_v3020) \
-	{ \
-		printf("id match: %d,\n", id ); \
-		member = ((name##_params *) info->params)->member; \
-	}
-			
+template<class APItype> void get_value_from_memcpy(const APItype &info,
+																									CUpti_CallbackId id,
+																									int &kind,
+																									int &count)
+{
+	CAST_TO_MEMCPY_TYPE_AND_CALL(cudaMemcpy, id, info, kind, count)
+	CAST_TO_MEMCPY_TYPE_AND_CALL(cudaMemcpyToArray, id, info, kind, count)
+	
+	//printf("[1] kind is %d.\n", kind);
+
+}
 
 template<class APItype> int kind(const APItype &info, CUpti_CallbackId id)
 {
 	//if (id == CUPTI_RUNTIME_TRACE_cudaMemcpy_v3020)
 //		return ((cudaMemcpy_params *) info->params)->kind;
 	//return info->kind;
-	void *params;
 	int kind = -1;
-	CAST_TO_MEMCPY_TYPE_AND_CALL(cudaMemcpy, id, info, params, kind)
-	CAST_TO_MEMCPY_TYPE_AND_CALL(cudaMemcpyToArray, id, info, params, kind)
-
-	printf("kind is %d.\n", kind);
+	int count = 0;
+	get_value_from_memcpy(info, id, kind, count);
+	//printf("[2] kind is %d.\n", kind);
 	return kind;
 
 }
 template<class APItype> int count(const APItype &info, CUpti_CallbackId id)
 {
-	return ((cudaMemcpy_params *) info->params)->count;
+	int kind = -1;
+	int count = 0;
+	get_value_from_memcpy(info, id, kind, count);
+	//printf("[2] kind is %d.\n", kind);
+	return count;
 	//return info->count;
 }
 template<class APItype> bool isMemcpy(const APItype &info)
