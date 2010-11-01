@@ -1,0 +1,165 @@
+
+CREATE TABLE version (
+    version		    TEXT     
+);
+
+INSERT INTO version values('2.13.7');
+
+CREATE TABLE application (
+    id                      INT		NOT NULL	PRIMARY KEY AUTO_INCREMENT,
+    name                    TEXT,
+    description             TEXT, 
+    userdata                TEXT
+);
+
+CREATE TABLE experiment (
+    id                      INT         NOT NULL	PRIMARY KEY AUTO_INCREMENT,
+    application             INT         NOT NULL,
+    name                    TEXT,
+    description             TEXT, 
+    userdata                TEXT,
+    CONSTRAINT eafkey FOREIGN KEY(application) REFERENCES application(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE trial (
+    id                      INT         NOT NULL	PRIMARY KEY AUTO_INCREMENT,
+    name                    TEXT,
+    experiment              INT         NOT NULL,
+    time                    TIMESTAMP,
+    description             TEXT, 
+    system_name             TEXT,
+    system_arch             TEXT,
+    system_os               TEXT,
+    system_memory_size      TEXT,
+    system_processor_amt    TEXT,
+    system_userdata         TEXT,
+    compiler                TEXT,
+    node_count              INT,
+    contexts_per_node       INT,
+    threads_per_context     INT,
+    userdata                TEXT,
+    CONSTRAINT tefkey FOREIGN KEY(experiment) REFERENCES experiment(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE metric (
+    id                      INT         NOT NULL	PRIMARY KEY AUTO_INCREMENT,
+    name                    TEXT        NOT NULL,
+    trial                   INT		NOT NULL,
+    CONSTRAINT mtfkey FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE interval_event (
+    id                      INT         NOT NULL	PRIMARY KEY AUTO_INCREMENT,
+    trial                   INT         NOT NULL,
+    name                    TEXT        NOT NULL,
+    group_name              TEXT,
+    source_file		    TEXT,
+    line_number		    INT,
+    line_number_end	    INT,
+    CONSTRAINT itfkey FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE atomic_event (
+    id                      INT         NOT NULL	PRIMARY KEY AUTO_INCREMENT,
+    trial                   INT         NOT NULL,
+    name                    TEXT        NOT NULL,
+    group_name              TEXT,
+    source_file		    TEXT,
+    line_number		    INT,
+    CONSTRAINT atfkey FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE interval_location_profile (
+    interval_event          INT	        NOT NULL,
+    node                    INT         NOT NULL,             
+    context                 INT         NOT NULL,
+    thread                  INT         NOT NULL,
+    metric                  INT		NOT NULL,
+    inclusive_percentage    DOUBLE PRECISION,
+    inclusive               DOUBLE PRECISION,
+    exclusive_percentage    DOUBLE PRECISION,
+    exclusive               DOUBLE PRECISION,
+    `call`                    DOUBLE PRECISION,
+    subroutines             DOUBLE PRECISION,
+    inclusive_per_call      DOUBLE PRECISION,
+    sum_exclusive_squared   DOUBLE PRECISION,
+    CONSTRAINT iifkey FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT imfkey FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE atomic_location_profile (
+    atomic_event            INT         NOT NULL,
+    node                    INT         NOT NULL,             
+    context                 INT         NOT NULL,
+    thread                  INT         NOT NULL,
+    sample_count            INT,         
+    maximum_value           DOUBLE PRECISION,
+    minimum_value           DOUBLE PRECISION,
+    mean_value              DOUBLE PRECISION,
+    standard_deviation	    DOUBLE PRECISION,
+    CONSTRAINT aafkey FOREIGN KEY(atomic_event) REFERENCES atomic_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE interval_total_summary (
+    interval_event          INT         NOT NULL,
+    metric                  INT		NOT NULL,
+    inclusive_percentage    DOUBLE PRECISION,
+    inclusive               DOUBLE PRECISION,
+    exclusive_percentage    DOUBLE PRECISION,
+    exclusive               DOUBLE PRECISION,
+    `call`                    DOUBLE PRECISION,
+    subroutines             DOUBLE PRECISION,
+    inclusive_per_call      DOUBLE PRECISION,
+    sum_exclusive_squared   DOUBLE PRECISION,
+    CONSTRAINT tifkey FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT tmfkey FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE interval_mean_summary (
+    interval_event          INT         NOT NULL,
+    metric                  INT		NOT NULL,
+    inclusive_percentage    DOUBLE PRECISION,
+    inclusive               DOUBLE PRECISION,
+    exclusive_percentage    DOUBLE PRECISION,
+    exclusive               DOUBLE PRECISION,
+    `call`                    DOUBLE PRECISION,
+    subroutines             DOUBLE PRECISION,
+    inclusive_per_call      DOUBLE PRECISION,
+    CONSTRAINT mifkey FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT mmfkey FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE machine_thread_map (
+    id                      INT		NOT NULL	PRIMARY KEY AUTO_INCREMENT,
+    trial                     INT       NOT NULL,
+    node                      INT       NOT NULL,
+    context                   INT       NOT NULL,
+    thread                    INT       NOT NULL,
+    process_id                INT,
+    thread_id                 INT,
+    cpu_index                 INT,
+    operating_system_name     TEXT,
+    operating_system_version  TEXT,
+    system_nodename           TEXT,
+    system_architecthure      TEXT,
+    system_num_processors     INT,
+    cpu_type                  TEXT,
+    cpu_mhz                   TEXT,
+    cpu_cache_size            INT,
+    cpu_cache_alignment       INT,
+    cpu_num_cores             INT,
+    CONSTRAINT mtmtfkey FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+
+CREATE INDEX experiment_application_index on experiment (application);
+CREATE INDEX trial_experiment_index on trial (experiment);
+CREATE INDEX interval_event_trial_index on interval_event (trial);
+CREATE INDEX interval_loc_interval_event_metric_index on interval_location_profile (interval_event, metric);
+CREATE INDEX interval_total_interval_event_metric_index on interval_total_summary (interval_event, metric);
+CREATE INDEX interval_mean_interval_event_metric_index on interval_mean_summary (interval_event, metric);
+CREATE INDEX interval_loc_f_m_n_c_t_index on interval_location_profile (interval_event, metric, node, context, thread);
+CREATE INDEX interval_loc_metric_index on interval_location_profile (metric);
+
+
+

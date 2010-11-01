@@ -71,6 +71,7 @@ PDTCOMPDIR=
 DYNINSTDIR=
 JDKDIR=
 OPARIDIR=
+ARMCIDIR=
 EPILOGDIR=
 EPILOGBINDIR=
 EPILOGINCDIR=
@@ -796,6 +797,7 @@ HPCTOOLKIT_LINK=
 # Extra linker args (e.g. -Wl,-export-dynamic)
 ##############################################
 EXTRA_LINKER_ARGS= -Wl,--export-dynamic
+#APPLECXX#EXTRA_LINKER_ARGS= -rdynamic #ENDIF#
 TAU_LINKER_OPT14=$(EXTRA_LINKER_ARGS)
 
 

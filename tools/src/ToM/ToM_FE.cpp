@@ -387,7 +387,6 @@ void protocolBaseStats() {
       means[aIdx] = sums[aIdx]/totalThreads;
       std_devs[aIdx] = 
 	sqrt((sumofsqr[aIdx]/totalThreads) - 
-	     (((2*means[aIdx])/totalThreads)*sums[aIdx]) +
 	     (means[aIdx]*means[aIdx]));
     }
   }
