@@ -3,6 +3,9 @@
 #include <CL/cl.h>
 #include <string.h>
 
+#ifndef CL_CALLBACK
+#define CL_CALLBACK
+#endif
 
 #define TAU_MAX_FUNCTIONNAME 200
 
