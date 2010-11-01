@@ -53,77 +53,200 @@ bool functionIsMemcpy(int id)
 					  );
 }
 
+template<class APItype> int callbacksite(const APItype &info)
+{
+	return info->callbacksite;
+}
+template<class APItype> const char* functionName(const APItype &info,
+																								 CUpti_CallbackDomain domain)
+{
+	const char *orig_name = info->functionName;
+	char *name = new char[strlen(orig_name) + 13];
+	sprintf(name, "%s (%s)",orig_name, (domain ==
+	CUPTI_CB_DOMAIN_RUNTIME_API_TRACE ? "RuntimeAPI" : "DriverAPI"));
+	return name;
+}
+template<class APItype> int functionId(const APItype &info)
+{
+	return info->functionId;
+}
+
+#define CAST_TO_MEMCPY_TYPE_AND_CALL(name, id, info, params, member) \
+	if ((id) == CUPTI_RUNTIME_TRACE_CBID_##name##_v3020) \
+	{ \
+		printf("id match: %d,\n", id ); \
+		member = ((name##_params *) info->params)->member; \
+	}
+			
+
+template<class APItype> int kind(const APItype &info, CUpti_CallbackId id)
+{
+	//if (id == CUPTI_RUNTIME_TRACE_cudaMemcpy_v3020)
+//		return ((cudaMemcpy_params *) info->params)->kind;
+	//return info->kind;
+	void *params;
+	int kind = -1;
+	CAST_TO_MEMCPY_TYPE_AND_CALL(cudaMemcpy, id, info, params, kind)
+	CAST_TO_MEMCPY_TYPE_AND_CALL(cudaMemcpyToArray, id, info, params, kind)
+
+	printf("kind is %d.\n", kind);
+	return kind;
+
+}
+template<class APItype> int count(const APItype &info, CUpti_CallbackId id)
+{
+	return ((cudaMemcpy_params *) info->params)->count;
+	//return info->count;
+}
+template<class APItype> bool isMemcpy(const APItype &info)
+{
+  return functionIsMemcpy(functionId(info));
+}
+
+/*
+class CBInfo
+{
+public:
+	int callbacksite;
+	const char *functionName;
+	int functionId;
+	int kind;
+	int count;
+
+	CBInfo()
+	{
+		callbacksite = 0; 
+		functionName = "";
+		functionId = 0;
+		kind = 0;
+		count = 0;
+	}
+};
+
+class CBInfoRuntime
+{
+
+  CUpti_RuntimeTraceApi *cbInfo;
+	CUpti_CallbackDomain domain;
+
+public:
+
+	CBInfoRuntime(const void *params)
+	{
+		cbInfo = (CUpti_RuntimeTraceApi*)params;
+	}
+
+	int callbacksite()
+	{
+		return cbInfo->callbacksite;
+	}
+
+	bool isMemcpy()
+	{
+		return functionIsMemcpy(cbInfo->functionId);
+	}
+
+};*/
+
+
+
+
 void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CUpti_CallbackId id, const void *params)
 {
-  const CUpti_RuntimeTraceApi *cbInfo = (CUpti_RuntimeTraceApi*)params;
-  RuntimeApiTrace_t *traceData = (RuntimeApiTrace_t*)userdata;
+	//const CBInfo *cbInfo = new CBInfo();
+
+	const CUpti_RuntimeTraceApi *cbInfo = (CUpti_RuntimeTraceApi *) params;
+
+	const char *name = functionName(cbInfo, domain);
+	int site = callbacksite(cbInfo);
+	bool memcpy = isMemcpy(cbInfo);
+
+	/*if (domain == CUPTI_CB_DOMAIN_RUNTIME_API_TRACE)
+	{
+  	cbInfo = static_cast<const CBInfo*>(params);
+  	RuntimeApiTrace_t *traceData = (RuntimeApiTrace_t*)userdata;
+	}
+	else
+	{
+		const CBInfoDriver *cbInfo = new CBInfoRuntime(params);
+	}*/
 
 	CUptiResult err;
-	char *name = new char[strlen(cbInfo->functionName) + 13];
-	sprintf(name, "%s (%s)",cbInfo->functionName, (domain ==
-	CUPTI_CB_DOMAIN_RUNTIME_API_TRACE ? "RuntimeAPI" : "DriverAPI"));
-	if (cbInfo->callbacksite == CUPTI_API_ENTER)
+	//const char *name = new char[strlen(cbInfo->functionName) + 13];
+	//sprintf(name, "%s (%s)",cbInfo->functionName, (domain ==
+	//CUPTI_CB_DOMAIN_RUNTIME_API_TRACE ? "RuntimeAPI" : "DriverAPI"));
+
+	//if (cbInfo->site == CUPTI_API_ENTER)
+	if (site == CUPTI_API_ENTER)
 	{
-		//printf("Enter: %s:%d.\n", name, cbInfo->functionId);
-		if (functionIsMemcpy(cbInfo->functionId))
+		printf("Enter: %s.\n", name);
+		//if (functionmemcpy(cbInfo->functionId))
+		if (memcpy)
 		{
-			cudaMemcpy_params params;
-			memcpy(&params, (cudaMemcpy_params *) cbInfo->params,
-			sizeof(cudaMemcpy_params));
+			int memcpyKind = kind(cbInfo, id);
+			int memcpyCount = count(cbInfo, id);
+
+			printf("Is memcpy.\n");
+			//cudaMemcpy_params params;
+			//memcpy(&params, (cudaMemcpy_params *) cbInfo->params,
+			//sizeof(cudaMemcpy_params));
 			//printf("Enter Memcpy: dest: %d, src: %d, count: %llu, kind: %d.\n",
 			//params.dst, params.src,
 			//params.count, params.kind);
 
 			//TODO: sort out GPU ids
 			//TODO: memory copies from device to device.
-			printf("cuda D2D is: %d.\n", cudaMemcpyDeviceToDevice);
-			if (params.kind == cudaMemcpyHostToDevice)
+			//printf("cuda D2D is: %d.\n", cudaMemcpyDeviceToDevice);
+			if (memcpyKind == cudaMemcpyHostToDevice)
 			{
 				Tau_gpu_enter_memcpy_event(name, 
-				&cudaEventId(cbInfo->functionId), &cudaGpuId(0,0), params.count, MemcpyHtoD);
+				&cudaEventId(functionId(cbInfo)), &cudaGpuId(0,0), memcpyCount, MemcpyHtoD);
 			}
-			else if (params.kind == cudaMemcpyDeviceToHost)
+			else if (memcpyKind == cudaMemcpyDeviceToHost)
 			{
 				Tau_gpu_enter_memcpy_event(name,
-				&cudaEventId(cbInfo->functionId), &cudaGpuId(0,0), params.count, MemcpyDtoH);
+				&cudaEventId(functionId(cbInfo)), &cudaGpuId(0,0), memcpyCount, MemcpyDtoH);
 			}
-			else if (params.kind == cudaMemcpyDeviceToDevice)
+			else if (memcpyKind == cudaMemcpyDeviceToDevice)
 			{
 				printf("TODO: track DeviceToDevice MemCpys.\n");
 			}
 		}
 		else 
 		{
-			Tau_gpu_enter_event(name, &cudaEventId(cbInfo->functionId));
+			Tau_gpu_enter_event(name, &cudaEventId(functionId(cbInfo)));
 		}
 	}
-	else if (cbInfo->callbacksite == CUPTI_API_EXIT)
+	else if (site == CUPTI_API_EXIT)
 	{
-		if (functionIsMemcpy(cbInfo->functionId))
+		if (memcpy)
 		{
+			int memcpyKind = kind(cbInfo, id);
+			int memcpyCount = count(cbInfo, id);
+			/*
 			cudaMemcpy_params params;
 			memcpy(&params, (cudaMemcpy_params *) cbInfo->params,
-			sizeof(cudaMemcpy_params));
-			if (params.kind == cudaMemcpyHostToDevice)
+			sizeof(cudaMemcpy_params));*/
+			if (memcpyKind == cudaMemcpyHostToDevice)
 			{
 				Tau_gpu_exit_memcpy_event(name,
-				&cudaEventId(cbInfo->functionId), &cudaGpuId(0,0), MemcpyHtoD);
+				&cudaEventId(functionId(cbInfo)), &cudaGpuId(0,0), MemcpyHtoD);
 			}
-			else if (params.kind == cudaMemcpyDeviceToHost)
+			else if (memcpyKind == cudaMemcpyDeviceToHost)
 			{
 				Tau_gpu_exit_memcpy_event(name,
-				&cudaEventId(cbInfo->functionId), &cudaGpuId(0,0), MemcpyDtoH);
+				&cudaEventId(functionId(cbInfo)), &cudaGpuId(0,0), MemcpyDtoH);
 			}
-			else if (params.kind == cudaMemcpyDeviceToDevice)
+			else if (memcpyKind == cudaMemcpyDeviceToDevice)
 			{
 				printf("TODO: track DeviceToDevice MemCpys.\n");
 			}
 		}
 		else
 		{
-			Tau_gpu_exit_event(name, &cudaEventId(cbInfo->functionId));
+			Tau_gpu_exit_event(name, &cudaEventId(functionId(cbInfo)));
 			//	Shutdown at Thread Exit
-			if (cbInfo->functionId == 123)
+			if (functionId(cbInfo) == 123)
 			{
 				Tau_gpu_exit();
 				return;
