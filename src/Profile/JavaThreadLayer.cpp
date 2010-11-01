@@ -79,7 +79,7 @@ int * JavaThreadLayer::RegisterThread(JNIEnv *env_id)
   // Increment the number of threads present
   (*threadId) = tauThreadCount ++;
 
-  DEBUGPROFMSG("Thread id "<< tauThreadCount<< " Created! "<<endl;);
+  DEBUGPROFMSG("Thread id "<< tauThreadCount<< " Created! "<<endl);
   // Unlock it now 
   tau_jvmpi_interface->RawMonitorExit(tauNumThreadsLock); 
   // A thread should call this routine exactly once. 
@@ -104,7 +104,8 @@ int JavaThreadLayer::GetThreadId(void)
 
   int res = tauVM->GetEnv( (void **) &env_id, JNI_VERSION_1_2 );
   if (res < 0) {
-    printf("JavaThreadLayer::GetThreadId() gets -ve GetEnv result \n");
+    //printf("JavaThreadLayer::GetThreadId() gets -ve GetEnv result \n");
+    DEBUGPROFMSG("JavaThreadLayer::GetThreadId() gets -ve GetEnv result \n");
     return -1;
   }
   if (env_id == (JNIEnv *) NULL)
