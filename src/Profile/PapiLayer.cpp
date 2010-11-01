@@ -203,7 +203,7 @@ int PapiLayer::initializeThread(int tid) {
   if (TauEnv_get_ebs_enabled()) {
     if (tauSampEvent != 0) {
       int comp = PAPI_COMPONENT_INDEX (tauSampEvent);
-      int threshold = TauEnv_get_ebs_frequency();
+      int threshold = TauEnv_get_ebs_period();
       TAU_VERBOSE("TAU: Setting PAPI overflow handler\n");
       rc = PAPI_overflow(ThreadList[tid]->EventSet[comp], tauSampEvent, threshold, 0, Tau_sampling_papi_overflow_handler);
       if (rc != PAPI_OK) {
