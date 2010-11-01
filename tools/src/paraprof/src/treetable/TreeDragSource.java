@@ -39,7 +39,6 @@ public class TreeDragSource implements DragSourceListener, DragGestureListener {
 	}
 	transferable = new TransferableTreeNode(oldNode);
 	source.startDrag(dge, DragSource.DefaultMoveDrop, transferable, this);
-	
 
 	// If you support dropping the node anywhere, you should probably
 	// start with a valid move cursor:
