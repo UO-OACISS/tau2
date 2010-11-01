@@ -1,13 +1,30 @@
-#include <Profile/Profiler.h>
 #include <dlfcn.h>
 #include <stdio.h>
 #include <CL/cl.h>
 
+#include <Profile/Profiler.h>
+#include <Profile/TauGpuAdapterOpenCL.h>
+
 const char * tau_orig_libname = "libOpenCL.so";
 static void *tau_handle = NULL;
 
-TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventHtoD, "Bytes copied from Host to Device");
-TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventDtoH, "Bytes copied from Device to Host");
+static TauUserEvent *MemoryCopyEventHtoD;
+static TauUserEvent *MemoryCopyEventDtoH;
+static TauUserEvent *MemoryCopyEventDtoD;
+
+void check_memory_init()
+{
+
+	static bool init = false;
+	if (!init)
+	{
+		MemoryCopyEventHtoD = (TauUserEvent *) Tau_get_userevent("Bytes copied from Host to Device");
+		MemoryCopyEventDtoH = (TauUserEvent *) Tau_get_userevent("Bytes copied from Device to Host");
+		MemoryCopyEventDtoD = (TauUserEvent *) Tau_get_userevent("Bytes copied from Device to Device");
+		init = true;
+	}
+}
+
 
 cl_int clGetPlatformIDs(cl_uint a1, cl_platform_id * a2, cl_uint * a3) {
 
@@ -228,6 +245,9 @@ cl_int clReleaseContext(cl_context a1) {
   TAU_PROFILE_START(t);
   retval  =  (*clReleaseContext_h)( a1);
   TAU_PROFILE_STOP(t);
+#ifdef TAU_ENABLE_CL_CALLBACK
+	Tau_opencl_exit();
+#endif
   }
   return retval;
 
@@ -281,9 +301,14 @@ cl_command_queue clCreateCommandQueue(cl_context a1, cl_device_id a2, cl_command
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
+
+	//Need to make sure that this command queue allows profiling:
+	a3 |= CL_QUEUE_PROFILING_ENABLE;
+
   TAU_PROFILE_START(t);
   retval  =  (*clCreateCommandQueue_h)( a1,  a2,  a3,  a4);
   TAU_PROFILE_STOP(t);
+
   }
   return retval;
 
@@ -512,7 +537,7 @@ cl_int clRetainMemObject(cl_mem a1) {
   return retval;
 
 }
-
+/*
 cl_int clReleaseMemObject(cl_mem a1) {
 
   typedef cl_int (*clReleaseMemObject_p) (cl_mem);
@@ -539,7 +564,7 @@ cl_int clReleaseMemObject(cl_mem a1) {
   }
   return retval;
 
-}
+}*/
 
 cl_int clGetSupportedImageFormats(cl_context a1, cl_mem_flags a2, cl_mem_object_type a3, cl_uint a4, cl_image_format * a5, cl_uint * a6) {
 
@@ -844,6 +869,9 @@ cl_int clReleaseProgram(cl_program a1) {
   TAU_PROFILE_START(t);
   retval  =  (*clReleaseProgram_h)( a1);
   TAU_PROFILE_STOP(t);
+#ifdef TAU_ENABLE_CL_CALLBACK
+	//Tau_opencl_exit();
+#endif
   }
   return retval;
 
@@ -1298,6 +1326,31 @@ cl_int clGetEventProfilingInfo(cl_event a1, cl_profiling_info a2, size_t a3, voi
   return retval;
 
 }
+cl_int clGetEventProfilingInfo_noinst(cl_event a1, cl_profiling_info a2, size_t a3, void * a4, size_t * a5) {
+
+  typedef cl_int (*clGetEventProfilingInfo_p) (cl_event, cl_profiling_info, size_t, void *, size_t *);
+  static clGetEventProfilingInfo_p clGetEventProfilingInfo_h = NULL;
+  cl_int retval;
+  TAU_PROFILE_TIMER(t,"cl_int clGetEventProfilingInfo(cl_event, cl_profiling_info, size_t, void *, size_t *) C", "", TAU_USER);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (clGetEventProfilingInfo_h == NULL)
+	clGetEventProfilingInfo_h = (clGetEventProfilingInfo_p) dlsym(tau_handle,"clGetEventProfilingInfo"); 
+    if (clGetEventProfilingInfo_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  retval  =  (*clGetEventProfilingInfo_h)( a1,  a2,  a3,  a4,  a5);
+  }
+  return retval;
+
+}
 
 cl_int clFlush(cl_command_queue a1) {
 
@@ -1375,10 +1428,27 @@ cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
+	if (a9 == NULL)
+	{
+		//printf("cl_event is null.\n");
+		cl_event new_event;
+		a9 = &new_event;
+	}
+#ifdef TAU_ENABLE_CL_CALLBACK
+	memcpy_callback_data *mem_data = (memcpy_callback_data*) malloc(memcpy_data_size);
+	strcpy(mem_data->name, "ReadBuffer");
+	mem_data->memcpy_type = MemcpyDtoH;
+	//printf("name %s.\n", mem_data->name);
+#endif
   TAU_PROFILE_START(t);
-	TAU_EVENT(MemoryCopyEventDtoH(), a5);
+	check_memory_init();
+	TAU_EVENT(MemoryCopyEventDtoH, a5);
   retval  =  (*clEnqueueReadBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
   TAU_PROFILE_STOP(t);
+#ifdef TAU_ENABLE_CL_CALLBACK
+	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_memcpy_callback, mem_data);
+#endif 
+	//free(mem_data);
   }
   return retval;
 
@@ -1404,15 +1474,30 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
+#ifdef TAU_ENABLE_CL_CALLBACK
+	memcpy_callback_data *mem_data = (memcpy_callback_data*) malloc(memcpy_data_size);
+	strcpy(mem_data->name, "WriteBuffer");
+	mem_data->memcpy_type = MemcpyHtoD;
+#endif
+	if (a9 == NULL)
+	{
+		//printf("cl_event is null.\n");
+		cl_event new_event;
+		a9 = &new_event;
+	}
   TAU_PROFILE_START(t);
-	TAU_EVENT(MemoryCopyEventHtoD(), a5);
+	check_memory_init();
+	TAU_EVENT(MemoryCopyEventHtoD, a5);
   retval  =  (*clEnqueueWriteBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
   TAU_PROFILE_STOP(t);
+#ifdef TAU_ENABLE_CL_CALLBACK
+	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_memcpy_callback, mem_data);
+#endif
   }
   return retval;
 
 }
-/* specification is unclear as to the direction of this memcpy. */
+/* Assuming copy is between two devices. */
 cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4, size_t a5, size_t a6, cl_uint a7, const cl_event * a8, cl_event * a9) {
 
   typedef cl_int (*clEnqueueCopyBuffer_p) (cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *);
@@ -1433,9 +1518,26 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
+#ifdef TAU_ENABLE_CL_CALLBACK
+	memcpy_callback_data *mem_data = (memcpy_callback_data*) malloc(memcpy_data_size);
+	strcpy(mem_data->name, "CopyBuffer");
+	mem_data->memcpy_type = MemcpyHtoD;
+#endif
+	if (a9 == NULL)
+	{
+		//printf("cl_event is null.\n");
+		cl_event new_event;
+		a9 = &new_event;
+	}
   TAU_PROFILE_START(t);
+	check_memory_init();
+	TAU_EVENT(MemoryCopyEventDtoD, a6);
   retval  =  (*clEnqueueCopyBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
   TAU_PROFILE_STOP(t);
+#ifdef TAU_ENABLE_CL_CALLBACK
+	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_memcpy_callback, mem_data);
+#endif
+	//free(mem_data);
   }
   return retval;
 
@@ -1606,11 +1708,28 @@ void * clEnqueueMapBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_fla
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
+	if (a9 == NULL)
+	{
+		//printf("cl_event is null.\n");
+		cl_event new_event;
+		a9 = &new_event;
+	}
+#ifdef TAU_ENABLE_CL_CALLBACK
+	memcpy_callback_data *mem_data = (memcpy_callback_data*) malloc(memcpy_data_size);
+	strcpy(mem_data->name, "MapBuffer");
+	mem_data->memcpy_type = MemcpyDtoH;
+	//printf("name %s.\n", mem_data->name);
+#endif
   TAU_PROFILE_START(t);
-	//Seg. fault when tracked.
-	//TAU_EVENT(MemoryCopyEventDtoH(), a5);
+	check_memory_init();
+	TAU_EVENT(MemoryCopyEventDtoH, a5);
   retval  =  (*clEnqueueMapBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9,  a10);
   TAU_PROFILE_STOP(t);
+#ifdef TAU_ENABLE_CL_CALLBACK
+	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_memcpy_callback, mem_data);
+#endif
+
+	//free(mem_data);
   }
   return retval;
 
@@ -1693,9 +1812,35 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
+
+
+	if (a9 == NULL)
+	{
+		//printf("cl_event is null.\n");
+		cl_event new_event;
+		a9 = &new_event;
+	}
+#ifdef TAU_ENABLE_CL_CALLBACK
+	kernel_callback_data *kernel_data = (kernel_callback_data*) malloc(kernel_data_size);
+	int err;
+	err = clGetKernelInfo(a2, CL_KERNEL_FUNCTION_NAME,
+	sizeof(char[TAU_MAX_FUNCTIONNAME]), kernel_data->name, NULL);
+	if (err != CL_SUCCESS)
+	{
+		printf("Cannot get Kernel name.\n");
+	  exit(1);	
+	}
+	//printf("name returned from KernelInfo: %s.\n", name_returned);
+	//kernel_data.name = "NDRangeKernel";
+	//printf("name: %s.\n", kernel_data->name);
+#endif
   TAU_PROFILE_START(t);
   retval  =  (*clEnqueueNDRangeKernel_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
   TAU_PROFILE_STOP(t);
+#ifdef TAU_ENABLE_CL_CALLBACK
+	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_kernel_callback, kernel_data);
+#endif
+	//free(kernel_data);
   }
   return retval;
 

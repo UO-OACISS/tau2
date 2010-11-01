@@ -754,7 +754,7 @@ int Tau_sampling_init(int tid) {
   // }
 
   //int threshold = 1000;
-  int threshold = TauEnv_get_ebs_frequency();
+  int threshold = TauEnv_get_ebs_period();
 
   samplingEnabled[tid] = 0;
 

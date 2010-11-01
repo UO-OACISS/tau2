@@ -2,7 +2,7 @@ TAUROOT=
 include $(TAUROOT)/include/Makefile
 
 CC=$(TAU_CC) 
-CFLAGS=$(TAU_DEFS) $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE)
+CFLAGS=$(TAU_DEFS) $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE) $(USER_OPT)
 
 INSTALLDEST = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 TAU_OPENCL_SHARED=libTAU-OpenCL$(TAU_SHLIBX)
@@ -19,10 +19,10 @@ install:
 endif
 
 $(TAU_OPENCL_SHARED): cl_wrap.o 
-	$(TAU_CXX) -g $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl
+	$(TAU_CXX) $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl
 
-cl_wrap.o: cl_wrap.cpp
-	$(TAU_CXX) $(CFLAGS) -I$(TAU_OPENCL_INC) -c $< -o $@
+cl_wrap.o: cl_wrap.cpp $(TAU_INC_DIR)/Profile/TauGpuAdapterOpenCL.h
+	$(TAU_CXX) -g $(CFLAGS) -I$(TAU_OPENCL_INC) -c $< -o $@
 clean:
 	/bin/rm -f cl_wrap.o libcl_wrap.so
 

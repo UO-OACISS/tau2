@@ -273,7 +273,7 @@ public class EBSTraceReader {
 
             String filename = path.substring(path.lastIndexOf("/") + 1);
 
-            return routine + ":" + filename + ":" + lineno;
+            return routine + "[{" + filename + "} {" + lineno + ",1}]";
         } catch (Exception e) {
             System.out.println("Location = " + location);
             e.printStackTrace();
