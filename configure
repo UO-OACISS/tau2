@@ -998,8 +998,7 @@ for arg in "$@"; do
       then
         if [ $minor -lt 5 ]
         then
-          echo "Error: Specify a JDK of version 1.5 or later"
-          exit 1
+          echo "Error: Please specify a JDK version 1.5 or later to use JVMTI based instrumentation"
         fi
       fi
 
