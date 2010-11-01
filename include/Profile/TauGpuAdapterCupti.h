@@ -29,6 +29,16 @@ typedef struct cudaMemcpyToArray_params_st {
     unsigned int kind;
 }cudaMemcpyToArray_params;
 
+
+#define CAST_TO_MEMCPY_TYPE_AND_CALL(name, id, info, kind, count) \
+	if ((id) == CUPTI_RUNTIME_TRACE_CBID_##name##_v3020) \
+	{ \
+		kind = ((name##_params *) info->params)->kind; \
+		count = ((name##_params *) info->params)->count; \
+	}
+			
+
+
 // Structure to hold data collected by callback
 typedef struct RuntimeApiTrace_st {
     CUpti_RuntimeTraceApi traceInfo;
