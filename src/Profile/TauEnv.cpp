@@ -60,9 +60,9 @@
 #define TAU_EBS_SOURCE_DEFAULT "itimer"
 
 /* Experimental feature - pre-computation of statistics */
-#if (defined(TAU_EXP_UNIFY) && defined(TAU_MPI))
-#define TAU_PRECOMPUTE_DEFAULT 0
-#endif /* TAU_EXP_UNIFY && TAU_MPI */
+#if (defined(TAU_UNIFY) && defined(TAU_MPI))
+#define TAU_PRECOMPUTE_DEFAULT 1
+#endif /* TAU_UNIFY && TAU_MPI */
 
 #ifdef TAU_COMPENSATE
 # define TAU_COMPENSATE_DEFAULT 1
@@ -759,14 +759,14 @@ void TauEnv_initialize() {
       TAU_VERBOSE("TAU: EBS Overriding callpath settings, callpath enabled, depth = 300\n");
     }
 
-#if (defined(TAU_EXP_UNIFY) && defined(TAU_MPI))
-    tmp = getconf("TAU_EXP_STAT_PRECOMPUTE");
+#if (defined(TAU_UNIFY) && defined(TAU_MPI))
+    tmp = getconf("TAU_STAT_PRECOMPUTE");
     if (parse_bool(tmp, TAU_PRECOMPUTE_DEFAULT)) {
       env_stat_precompute = 1;
       TAU_VERBOSE("TAU: Precomputation of statistics Enabled\n");
       TAU_METADATA("TAU_PRECOMPUTE", "on");
     }
-#endif /* TAU_EXP_UNIFY && TAU_MPI */
+#endif /* TAU_UNIFY && TAU_MPI */
 
     /* child fork directory */
     tmp = getconf("TAU_CHILD_FORKDIRS");
