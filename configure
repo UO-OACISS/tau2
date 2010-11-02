@@ -1558,6 +1558,9 @@ cp ${tauroot}/tools/src/contrib/postgresql.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/xerces.jar $JARTARGET
 cp ${tauroot}/tools/src/common/resources/tau16x16.gif $JARTARGET
 
+# install the perl script for ebs post-processing in the bin dir
+cp ${tauroot}/tools/src/tau_ebs_process.pl $BINTARGET
+
 case $machine in
     
     apple)
