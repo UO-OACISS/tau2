@@ -3,6 +3,9 @@
 #include <CL/cl.h>
 #include <string.h>
 
+#ifndef CL_CALLBACK
+#define CL_CALLBACK
+#endif
 
 #define TAU_MAX_FUNCTIONNAME 200
 
@@ -12,9 +15,9 @@ void Tau_opencl_init();
 
 void Tau_opencl_exit();
 
-void Tau_opencl_enter_memcpy_event(int id, bool MemcpyType);
+void Tau_opencl_enter_memcpy_event(const char *name, int id, int size, bool MemcpyType);
 
-void Tau_opencl_exit_memcpy_event(int id, bool MemcpyType);
+void Tau_opencl_exit_memcpy_event(const char *name, int id, bool MemcpyType);
 
 void Tau_opencl_register_gpu_event(const char *name, int id, double start,
 double stop);
@@ -44,6 +47,8 @@ typedef struct kernel_callback_data_t
 } kernel_callback_data;
 int kernel_data_size = sizeof(kernel_callback_data);
 
+
+double Tau_opencl_sync_clocks(cl_command_queue commandQueue, cl_context context);
 
 bool Tau_opencl_is_callbacks_supported();
 
