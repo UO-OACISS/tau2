@@ -998,8 +998,7 @@ for arg in "$@"; do
       then
         if [ $minor -lt 5 ]
         then
-          echo "Error: Specify a JDK of version 1.5 or later"
-          exit 1
+          echo "Error: Please specify a JDK version 1.5 or later to use JVMTI based instrumentation"
         fi
       fi
 
@@ -1326,6 +1325,9 @@ for arg in "$@"; do
   -arch=*)
     tauarch=`echo $arg | sed -e 's/-arch=//' -e 's/ /_/g'`
     shift
+    if [ $tauarch = i386_linux ]; then
+      orig_useropt="$orig_useropt -m32"
+    fi
     ;;
 
   -pdtcompdir=*)
@@ -1558,6 +1560,9 @@ cp ${tauroot}/tools/src/contrib/postgresql.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/xerces.jar $JARTARGET
 cp ${tauroot}/tools/src/common/resources/tau16x16.gif $JARTARGET
 
+# install the perl script for ebs post-processing in the bin dir
+cp ${tauroot}/tools/src/tau_ebs_process.pl $BINTARGET
+
 case $machine in
     
     apple)
@@ -1571,6 +1576,7 @@ case $machine in
 	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
 	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
 	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+
 	;;
     
     crayxmt)
@@ -4919,6 +4925,11 @@ fi
 ######################################################################
   cat <<EOF > conftest_bfd.c
 #include <bfd.h>
+#ifdef __APPLE__
+#include <crt_externs.h>
+char *** environ(void) { return (*_NSGetEnviron()); }
+#endif
+
 void foo() {
    bfd_init();
    bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
@@ -4969,6 +4980,9 @@ fi
 if [ $bfd_worked = "no" ] ; then
     echo "failed"
     BFDLIBS="-lbfd -liberty"
+    if [ $tauarch = i386_linux ]; then 
+      BFDLIBS=""
+    fi
 else
     echo $BFDLIBS
 fi
@@ -5013,6 +5027,10 @@ cat <<EOF > conftest_bfd.c
 #    include <demangle.h>
 #  endif /* HAVE_GNU_DEMANGLE */
 
+#ifdef __APPLE__
+#include <crt_externs.h>
+char *** environ(void) { return (*_NSGetEnviron()); }
+#endif
 void foo() {
    bfd_init();
    bfd *BfdImage = bfd_openr("/proc/self/exe", 0);

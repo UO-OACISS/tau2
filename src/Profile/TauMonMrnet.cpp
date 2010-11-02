@@ -6,10 +6,10 @@
 #include "Profile/TauMon.h"
 #include "Profile/TauMonMrnet.h"
 
-// for now, TAU_MONITORING will need to rely on TAU_EXP_UNIFY. This will
+// for now, TAU_MONITORING will need to rely on TAU_UNIFY. This will
 //   not be the case once event unification is implemented on every
 //   available monitoring transport.
-#ifdef TAU_EXP_UNIFY
+#ifdef TAU_UNIFY
 
 #include <TAU.h>
 #include <tau_types.h>
@@ -847,5 +847,5 @@ double calcEuclideanDistance(double *vector, double *centroids,
 } /* extern "C" */
 #endif /* MRNET_LIGHTWEIGHT */
 
-#endif /* TAU_EXP_UNIFY */
+#endif /* TAU_UNIFY */
 #endif /* TAU_MONITORING */
