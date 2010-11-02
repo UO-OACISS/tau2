@@ -88,6 +88,7 @@ void* &TheTauMapFI(TauGroup_t key=TAU_DEFAULT);
 
 /* TAU_MAPPING_PROFILE_STOP acts like TAU_PROFILE_STOP by stopping the timer */
 #define TAU_MAPPING_PROFILE_STOP(tid) TAU_GLOBAL_TIMER_STOP();
+#define TAU_MAPPING_PROFILE_STOP_TIMER(timer, tid) Tau_stop_timer(timer, tid);
 
 
 

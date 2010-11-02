@@ -998,8 +998,7 @@ for arg in "$@"; do
       then
         if [ $minor -lt 5 ]
         then
-          echo "Error: Specify a JDK of version 1.5 or later"
-          exit 1
+          echo "Error: Please specify a JDK version 1.5 or later to use JVMTI based instrumentation"
         fi
       fi
 
@@ -1326,6 +1325,9 @@ for arg in "$@"; do
   -arch=*)
     tauarch=`echo $arg | sed -e 's/-arch=//' -e 's/ /_/g'`
     shift
+    if [ $tauarch = i386_linux ]; then
+      orig_useropt="$orig_useropt -m32"
+    fi
     ;;
 
   -pdtcompdir=*)
@@ -1574,6 +1576,7 @@ case $machine in
 	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
 	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
 	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+
 	;;
     
     crayxmt)
@@ -4977,6 +4980,9 @@ fi
 if [ $bfd_worked = "no" ] ; then
     echo "failed"
     BFDLIBS="-lbfd -liberty"
+    if [ $tauarch = i386_linux ]; then 
+      BFDLIBS=""
+    fi
 else
     echo $BFDLIBS
 fi
