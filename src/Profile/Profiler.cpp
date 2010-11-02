@@ -563,6 +563,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
       /* Putting AddInclFlag means we can't throttle recursive calls */
       ThisFunction->SetProfileGroup(TAU_DISABLE, tid);
       ThisFunction->SetPrimaryGroupName("TAU_DISABLE");
+      const char *func_type = ThisFunction->GetType();
+      string ftype(func_type+string("[THROTTLED]"));
+      ThisFunction->SetType(ftype);
       //cout <<"TAU<"<<RtsLayer::myNode()<<">: Throttle: Disabling "<<ThisFunction->GetName()<<endl;
       TAU_VERBOSE("TAU<%d,%d>: Throttle: Disabling %s\n", RtsLayer::myNode(), RtsLayer::myThread(), ThisFunction->GetName());
       RtsLayer::UnLockDB();
