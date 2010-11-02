@@ -230,7 +230,7 @@ static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer) {
    return 0;
 }
 
-#ifdef TAU_EXP_UNIFY
+#ifdef TAU_UNIFY
 int Tau_snapshot_writeUnifiedBuffer() {
   int tid = RtsLayer::myThread();
   int i, c;
@@ -344,7 +344,7 @@ int Tau_snapshot_writeUnifiedBuffer() {
    
    return 0;
 }
-#endif /* TAU_EXP_UNIFY */
+#endif /* TAU_UNIFY */
 
 
 static int startNewSnapshotFile(char *threadid, int tid, int to_buffer) {

@@ -35,7 +35,7 @@
 extern "C" int TAUDECL Tau_RtsLayer_myThread();
 
 
-#ifdef TAU_EXP_UNIFY
+#ifdef TAU_UNIFY
 void Tau_profileMerge_writeDefinitions(FILE *f) {
 
   Tau_unify_object_t *functionUnifier, *atomicUnifier;
@@ -92,7 +92,7 @@ int Tau_mergeProfiles() {
   x_uint64 start, end;
   const char *profiledir = TauEnv_get_profiledir();
 
-#ifdef TAU_EXP_UNIFY
+#ifdef TAU_UNIFY
   Tau_unify_unifyDefinitions();
   Tau_snapshot_writeUnifiedBuffer();
 #else
@@ -118,7 +118,7 @@ int Tau_mergeProfiles() {
   int maxBuflen;
   MPI_Reduce(&buflen, &maxBuflen, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
 
-#ifdef TAU_EXP_UNIFY
+#ifdef TAU_UNIFY
   Tau_unify_object_t *functionUnifier;
   Tau_unify_object_t *atomicUnifier;
   int numEvents;
@@ -164,7 +164,7 @@ int Tau_mergeProfiles() {
 				   &gExcl, &gIncl, &gNumCalls, &gNumSubr,
 				   &sExcl, &sIncl, &sNumCalls, &sNumSubr);
   }
-#endif /* TAU_EXP_UNIFY */
+#endif /* TAU_UNIFY */
       
   if (rank == 0) {
     char *recv_buf = (char *) malloc (maxBuflen);
@@ -182,7 +182,7 @@ int Tau_mergeProfiles() {
       perror(errormsg);
     }
 
-#ifdef TAU_EXP_UNIFY
+#ifdef TAU_UNIFY
     Tau_profileMerge_writeDefinitions(f);
 #endif
 
@@ -211,7 +211,7 @@ int Tau_mergeProfiles() {
     buflen = Tau_snapshot_getBufferLength();
     fwrite (buf, buflen, 1, f);
 
-#ifdef TAU_EXP_UNIFY
+#ifdef TAU_UNIFY
     int envval = TauEnv_get_stat_precompute();
     if (envval == 1) {
       if (rank == 0) {
@@ -298,7 +298,7 @@ int Tau_mergeProfiles() {
 	}
       }
     }
-#endif /* TAU_EXP_UNIFY */
+#endif /* TAU_UNIFY */
 
     fclose(f);
 
