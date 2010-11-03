@@ -794,6 +794,10 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 				topos.add(key.split(" ")[0]);
 			}
 		}
+		if(topos.size()==0){
+			return new String[]{null};
+		}
+		
 		String[] a = new String[topos.size()];
 		return topos.toArray(a);
 	}

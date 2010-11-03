@@ -127,6 +127,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         settings.setScatterMetric(ppTrial.getDefaultMetric(), 2);
         settings.setScatterMetric(ppTrial.getDefaultMetric(), 3);
         settings.setTopoMetric(ppTrial.getDefaultMetric());
+        
+        String topoc = ppTrial.getTopologyArray()[0];
+        if(topoc!=null)
+        	settings.setTopoCart(topoc);
 
         dataSorter = new DataSorter(ppTrial);
         dataSorter.setSortType(SortType.NAME);
@@ -356,14 +360,14 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     	float[][] values = new float[numThreads][4];
     	
     	 
-    	 String prefix  = null;
-    	 for(Iterator<String > it = ppTrial.getDataSource().getMetaData().keySet().iterator();it.hasNext();){
-    		 String key = it.next();
-    		 if(key.contains(" Size")){
-    			 prefix=key.split(" ")[0];
-    			 break;
-    		 }
-    	 }
+    	 String prefix  = settings.getTopoCart();//null;
+//    	 for(Iterator<String > it = ppTrial.getDataSource().getMetaData().keySet().iterator();it.hasNext();){
+//    		 String key = it.next();
+//    		 if(key.contains(" Size")){
+//    			 prefix=key.split(" ")[0];
+//    			 break;
+//    		 }
+//    	 }
         
     	 String coord_key=prefix+" Coords";
     	 String size_key=prefix+" Size";
@@ -428,74 +432,74 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     }
     
     
-    private float[][] customTopology(int numThreads){
-    	
-        Function[] scatterFunctions = settings.getScatterFunctions();
-
-        ValueType[] scatterValueTypes = settings.getScatterValueTypes();
-        Metric[] scatterMetricIDs = settings.getScatterMetrics();
-        
-        int[] topoValues = settings.getTopoValues();
-            
-       
-
-        float[][] values = new float[numThreads][4];
-
-        int threadIndex = 0;
-    	
-        for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
-            Thread thread = it.next();
-            
-            int xdim = topoValues[0];
-            if(xdim<=0){
-            	xdim=1;
-            }
-            int ydim = topoValues[1];
-            if(ydim<=0){
-            	ydim=1;
-            }
-            int zdim = topoValues[2];
-            if(ydim<=0){
-            	ydim=1;
-            }
-            if(xdim*ydim*zdim<numThreads){
-            	zdim=(int)Math.ceil((double)numThreads/(double)xdim/(double)ydim);
-            }
-            
-            for (int f = 0; f < 4; f++) {
-                if(f==0){
-                	values[threadIndex][f] = threadIndex%xdim;
-                }
-                if(f==1)
-                {
-                	values[threadIndex][f] = (threadIndex/xdim)%ydim;// ycor;
-                }
-                else if(f==2)
-                {
-                	values[threadIndex][f] = (threadIndex/xdim/ydim)%zdim;
-                }
-                else if(f==3)
-                {
-                	
-            	if (scatterFunctions[f] != null) {
-                    FunctionProfile functionProfile = thread.getFunctionProfile(scatterFunctions[f]);
-
-                    if (functionProfile != null) {
-                        values[threadIndex][f] = (float) scatterValueTypes[f].getValue(functionProfile, scatterMetricIDs[f],
-                                ppTrial.getSelectedSnapshot());
-                    }
-                    else
-                    	break;
-                }
-            	else break;
-                }
-            	maxScatterValues[f] = Math.max(maxScatterValues[f], values[threadIndex][f]);
-                minScatterValues[f] = Math.min(minScatterValues[f], values[threadIndex][f]);
-            }
-            threadIndex++;
-        }
-        return values;
-    }
+//    private float[][] customTopology(int numThreads){
+//    	
+//        Function[] scatterFunctions = settings.getScatterFunctions();
+//
+//        ValueType[] scatterValueTypes = settings.getScatterValueTypes();
+//        Metric[] scatterMetricIDs = settings.getScatterMetrics();
+//        
+//        int[] topoValues = settings.getTopoValues();
+//            
+//       
+//
+//        float[][] values = new float[numThreads][4];
+//
+//        int threadIndex = 0;
+//    	
+//        for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+//            Thread thread = it.next();
+//            
+//            int xdim = topoValues[0];
+//            if(xdim<=0){
+//            	xdim=1;
+//            }
+//            int ydim = topoValues[1];
+//            if(ydim<=0){
+//            	ydim=1;
+//            }
+//            int zdim = topoValues[2];
+//            if(ydim<=0){
+//            	ydim=1;
+//            }
+//            if(xdim*ydim*zdim<numThreads){
+//            	zdim=(int)Math.ceil((double)numThreads/(double)xdim/(double)ydim);
+//            }
+//            
+//            for (int f = 0; f < 4; f++) {
+//                if(f==0){
+//                	values[threadIndex][f] = threadIndex%xdim;
+//                }
+//                if(f==1)
+//                {
+//                	values[threadIndex][f] = (threadIndex/xdim)%ydim;// ycor;
+//                }
+//                else if(f==2)
+//                {
+//                	values[threadIndex][f] = (threadIndex/xdim/ydim)%zdim;
+//                }
+//                else if(f==3)
+//                {
+//                	
+//            	if (scatterFunctions[f] != null) {
+//                    FunctionProfile functionProfile = thread.getFunctionProfile(scatterFunctions[f]);
+//
+//                    if (functionProfile != null) {
+//                        values[threadIndex][f] = (float) scatterValueTypes[f].getValue(functionProfile, scatterMetricIDs[f],
+//                                ppTrial.getSelectedSnapshot());
+//                    }
+//                    else
+//                    	break;
+//                }
+//            	else break;
+//                }
+//            	maxScatterValues[f] = Math.max(maxScatterValues[f], values[threadIndex][f]);
+//                minScatterValues[f] = Math.min(minScatterValues[f], values[threadIndex][f]);
+//            }
+//            threadIndex++;
+//        }
+//        return values;
+//    }
     
 
     private List<List<Vertex>> createGraph(DataSource dataSource, ThreeDeeSettings settings) {

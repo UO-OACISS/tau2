@@ -125,10 +125,12 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         group.add(jrb);
         addCompItem(this, jrb, gbc, 0, 3, 1, 1);
         
+        if(this.ppTrial.getTopologyArray()!=null&&ppTrial.getTopologyArray()[0]!=null){
       jrb = new JRadioButton(VisType.TOPO_PLOT.toString(), settings.getVisType() == VisType.TOPO_PLOT);
       jrb.addActionListener(this);
       group.add(jrb);
       addCompItem(this, jrb, gbc, 0, 4, 1, 1);//TODO: Do not enable this
+        }
 
 //                jrb = new JRadioButton(VisType.CALLGRAPH.toString(), settings.getVisType() == VisType.CALLGRAPH);
 //                jrb.addActionListener(this);
