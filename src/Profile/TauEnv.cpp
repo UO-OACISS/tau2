@@ -50,9 +50,9 @@
 # define TAU_CALLPATH_DEFAULT 0
 #endif
 
-/* if we are doing EBS sampling, set the default sampling frequency */
+/* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
-#define TAU_EBS_FREQUENCY_DEFAULT 1000
+#define TAU_EBS_PERIOD_DEFAULT 1000
 /* if we are doing EBS sampling, set whether we want inclusive samples */
 /* that is, main->foo->mpi_XXX is a sample for main, foo and mpi_xxx */
 #define TAU_EBS_INCLUSIVE_DEFAULT 0
@@ -60,9 +60,9 @@
 #define TAU_EBS_SOURCE_DEFAULT "itimer"
 
 /* Experimental feature - pre-computation of statistics */
-#if (defined(TAU_EXP_UNIFY) && defined(TAU_MPI))
-#define TAU_PRECOMPUTE_DEFAULT 0
-#endif /* TAU_EXP_UNIFY && TAU_MPI */
+#if (defined(TAU_UNIFY) && defined(TAU_MPI))
+#define TAU_PRECOMPUTE_DEFAULT 1
+#endif /* TAU_UNIFY && TAU_MPI */
 
 #ifdef TAU_COMPENSATE
 # define TAU_COMPENSATE_DEFAULT 1
@@ -263,7 +263,7 @@ static int env_track_memory_heap = 0;
 static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
 static int env_extras = 0;
-static int env_ebs_frequency = 0;
+static int env_ebs_period = 0;
 static int env_ebs_inclusive = 0;
 static int env_ebs_enabled = 0;
 static const char *env_ebs_source = "itimer";
@@ -402,8 +402,8 @@ int TauEnv_get_profile_format() {
   return env_profile_format;
 }
 
-int TauEnv_get_ebs_frequency() {
-  return env_ebs_frequency;
+int TauEnv_get_ebs_period() {
+  return env_ebs_period;
 }
 
 int TauEnv_get_ebs_inclusive() {
@@ -723,18 +723,18 @@ void TauEnv_initialize() {
 
     if (TauEnv_get_ebs_enabled()) {
 
-      /* TAU sampling frequency */
-      const char *ebs_frequency = getconf("TAU_EBS_FREQUENCY");
-      env_ebs_frequency = TAU_EBS_FREQUENCY_DEFAULT;
-      if (ebs_frequency) {
-	env_ebs_frequency = atoi(ebs_frequency);
-	if (env_ebs_frequency < 0) {
-	  env_ebs_frequency = TAU_EBS_FREQUENCY_DEFAULT;
+      /* TAU sampling period */
+      const char *ebs_period = getconf("TAU_EBS_PERIOD");
+      env_ebs_period = TAU_EBS_PERIOD_DEFAULT;
+      if (ebs_period) {
+	env_ebs_period = atoi(ebs_period);
+	if (env_ebs_period < 0) {
+	  env_ebs_period = TAU_EBS_PERIOD_DEFAULT;
 	}
       }
-      TAU_VERBOSE("TAU: EBS frequency = %d usec\n", env_ebs_frequency);
-      sprintf(tmpstr, "%d usec", env_ebs_frequency);
-      TAU_METADATA("TAU_EBS_FREQUENCY", tmpstr);
+      TAU_VERBOSE("TAU: EBS period = %d \n", env_ebs_period);
+      sprintf(tmpstr, "%d", env_ebs_period);
+      TAU_METADATA("TAU_EBS_PERIOD", tmpstr);
       
       const char *ebs_inclusive = getconf("TAU_EBS_INCLUSIVE");
       env_ebs_inclusive = TAU_EBS_INCLUSIVE_DEFAULT;
@@ -759,14 +759,14 @@ void TauEnv_initialize() {
       TAU_VERBOSE("TAU: EBS Overriding callpath settings, callpath enabled, depth = 300\n");
     }
 
-#if (defined(TAU_EXP_UNIFY) && defined(TAU_MPI))
-    tmp = getconf("TAU_EXP_STAT_PRECOMPUTE");
+#if (defined(TAU_UNIFY) && defined(TAU_MPI))
+    tmp = getconf("TAU_STAT_PRECOMPUTE");
     if (parse_bool(tmp, TAU_PRECOMPUTE_DEFAULT)) {
       env_stat_precompute = 1;
       TAU_VERBOSE("TAU: Precomputation of statistics Enabled\n");
       TAU_METADATA("TAU_PRECOMPUTE", "on");
     }
-#endif /* TAU_EXP_UNIFY && TAU_MPI */
+#endif /* TAU_UNIFY && TAU_MPI */
 
     /* child fork directory */
     tmp = getconf("TAU_CHILD_FORKDIRS");

@@ -1,0 +1,187 @@
+
+
+CREATE TABLE application (
+    id                      INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT APPLICATION_PK PRIMARY KEY,
+    name                    VARCHAR(4000),
+    version		    VARCHAR(4000),
+    usage                   VARCHAR(4000), 
+    description		    VARCHAR(4000),
+    language                VARCHAR(4000),
+    paradigm                VARCHAR(4000),
+    algorithms              VARCHAR(4000),
+    lines_of_code	    VARCHAR(4000),
+    big_lil_endian	    VARCHAR(4000),
+    directives		    VARCHAR(4000),
+    memory_intensity	    VARCHAR(4000),
+    communication_intensity VARCHAR(4000),
+    cpu_intensity	    VARCHAR(4000),
+    os_requirements	    VARCHAR(4000),
+    other_requirements	    VARCHAR(4000),
+    spectral_or_physical_mesh	VARCHAR(4000),
+    static_or_adaptive_mesh	VARCHAR(4000),
+    structured_or_unstructured_mesh	VARCHAR(4000),
+    code_history	    VARCHAR(4000),    
+    primary_industry	    VARCHAR(4000),
+    primary_technology_area VARCHAR(4000),
+    rib_entry		    VARCHAR(4000)
+);
+
+CREATE TABLE experiment (
+    id                      INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT EXPERIMENT_PK PRIMARY KEY,
+    application             INT         NOT NULL,
+    name                    VARCHAR(4000),
+    sysinfo                 VARCHAR(4000),
+    configinfo		    VARCHAR(4000),
+    instruinfo		    VARCHAR(4000),
+    compilerinfo	    VARCHAR(4000),
+    FOREIGN KEY(application) REFERENCES application(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE trial (
+    id                      INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT TRIAL_PK PRIMARY KEY,
+    name                    VARCHAR(4000),
+    experiment              INT         NOT NULL,
+    date                    TIMESTAMP   ,
+    collectorid		    INT,
+    node_count              INT,
+    contexts_per_node       INT,
+    threads_per_context     INT,
+    FOREIGN KEY(experiment) REFERENCES experiment(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE metric (
+    id                      INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT METRIC_PK PRIMARY KEY,
+    name                    VARCHAR(4000)        NOT NULL,
+    trial                   INT		NOT NULL,
+    FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE interval_event (
+    id                      INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT INTERVAL_EVENT_PK PRIMARY KEY,
+    trial                   INT         NOT NULL,
+    name                    VARCHAR(4000)        NOT NULL,
+    group_name              VARCHAR(4000),
+    source_file		    VARCHAR(4000),
+    line_number		    INT,
+    line_number_end	    INT,
+    FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE atomic_event (
+    id                      INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT ATOMIC_EVENT_PK PRIMARY KEY,
+    trial                   INT         NOT NULL,
+    name                    VARCHAR(4000)        NOT NULL,
+    group_name              VARCHAR(4000),
+    source_file		    VARCHAR(4000),
+    line_number		    INT,
+    FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE interval_location_profile (
+    interval_event          INT         NOT NULL,
+    node                    INT         NOT NULL,             
+    context                 INT         NOT NULL,
+    thread                  INT         NOT NULL,
+    metric                  INT		NOT NULL,
+    inclusive_percentage    DOUBLE PRECISION,
+    inclusive               DOUBLE PRECISION,
+    exclusive_percentage    DOUBLE PRECISION,
+    exclusive               DOUBLE PRECISION,
+    num_calls               DOUBLE PRECISION,
+    subroutines             DOUBLE PRECISION,
+    inclusive_per_call      DOUBLE PRECISION,
+    sum_exclusive_squared   DOUBLE PRECISION,
+    FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE atomic_location_profile (
+    atomic_event            INT         NOT NULL,
+    node                    INT         NOT NULL,             
+    context                 INT         NOT NULL,
+    thread                  INT         NOT NULL,
+    sample_count            INT,         
+    maximum_value           DOUBLE PRECISION,
+    minimum_value           DOUBLE PRECISION,
+    mean_value              DOUBLE PRECISION,
+    standard_deviation	    DOUBLE PRECISION,
+    FOREIGN KEY(atomic_event) REFERENCES atomic_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE interval_total_summary (
+    interval_event          INT         NOT NULL,
+    metric                  INT		NOT NULL,
+    inclusive_percentage    DOUBLE PRECISION,
+    inclusive               DOUBLE PRECISION,
+    exclusive_percentage    DOUBLE PRECISION,
+    exclusive               DOUBLE PRECISION,
+    num_calls               DOUBLE PRECISION,
+    subroutines             DOUBLE PRECISION,
+    inclusive_per_call      DOUBLE PRECISION,
+    sum_exclusive_squared   DOUBLE PRECISION,
+    FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE interval_mean_summary (
+    interval_event          INT         NOT NULL,
+    metric                  INT		NOT NULL,
+    inclusive_percentage    DOUBLE PRECISION,
+    inclusive               DOUBLE PRECISION,
+    exclusive_percentage    DOUBLE PRECISION,
+    exclusive               DOUBLE PRECISION,
+    num_calls               DOUBLE PRECISION,
+    subroutines             DOUBLE PRECISION,
+    inclusive_per_call      DOUBLE PRECISION,
+    sum_exclusive_squared   DOUBLE PRECISION,
+	FOREIGN KEY(interval_event) REFERENCES interval_event(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
+	FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+
+CREATE TABLE trace (
+    trialid		    INT		NOT NULL,
+    tracetype		    VARCHAR(4000),
+    tracefilename	    VARCHAR(4000),
+    nodeid		    INT,
+    contextid		    INT,
+    threadid		    INT,
+    FOREIGN KEY(trialid) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE tracesum (
+    trialid	            INT		NOT NULL,
+    tracetype		    VARCHAR(4000),
+    tracefilename	    VARCHAR(4000),
+    FOREIGN KEY(trialid) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+CREATE TABLE machine_thread_map (
+    id                      INT NOT NULL GENERATED ALWAYS AS IDENTITY CONSTRAINT MACHINE_THREAD_PK PRIMARY KEY,
+    trial                     INT       NOT NULL,
+    node                      INT       NOT NULL,
+    context                   INT       NOT NULL,
+    thread                    INT       NOT NULL,
+    process_id                INT,
+    thread_id                 INT,
+    cpu_index                 INT,
+    operating_system_name     VARCHAR(4000),
+    operating_system_version  VARCHAR(4000),
+    system_nodename           VARCHAR(4000),
+    system_architecthure      VARCHAR(4000),
+    system_num_processors     INT,
+    cpu_type                  VARCHAR(4000),
+    cpu_mhz                   VARCHAR(4000),
+    cpu_cache_size            INT,
+    cpu_cache_alignment       INT,
+    cpu_num_cores             INT,
+    FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+
+CREATE INDEX interval_loc_interval_event_metric_index on interval_location_profile (interval_event, metric);
+CREATE INDEX interval_total_interval_event_metric_index on interval_total_summary (interval_event, metric);
+CREATE INDEX interval_mean_interval_event_metric_index on interval_mean_summary (interval_event, metric);
+CREATE INDEX interval_loc_f_m_n_c_t_index on interval_location_profile (interval_event, metric, node, context, thread);
+CREATE INDEX interval_loc_metric_index on interval_location_profile (metric);
+

@@ -29,6 +29,8 @@
 
 #define CALL(routine) (JavaThreadLayer::tau_jvmpi_interface->routine)
 
+extern "C" void Tau_profile_exit_all_threads(void);
+extern "C" int Tau_stop_timer(void* function_info, int tid);
 // Should we exclude all methods using -XrunTAU:nomethods flag? 
 bool& TheTauExcludeMethodsFlag()
 {
@@ -283,9 +285,10 @@ void TauJavaLayer::MethodEntry(JVMPI_Event *event) {
     TAU_MAPPING_PROFILE_START(TauTimer, tid);
 
 #ifdef DEBUG_PROF 
-  fprintf(stdout, "TAU> Method Entry %s %s:%ld TID = %d\n", 
-  		TauMethodName->GetName(), TauMethodName->GetType(), 
+  /*fprintf(stdout, "TAU> Method Entry %s %s:%ld TID = %d\n", 
+  		TauMethodName->ThisFunction()->GetName(), TauMethodName->ThisFunction()->GetType(), 
 	 	(long) event->u.method.method_id, tid);
+*/
 #endif /* DEBUG_PROF */
   }
 }
@@ -297,7 +300,7 @@ void TauJavaLayer::MethodExit(JVMPI_Event *event) {
   TAU_MAPPING_LINK(TauMethodName, (long) event->u.method.method_id);
   
   if (TauMethodName) { // stop only if it has a finite group 
-    TAU_MAPPING_PROFILE_STOP(tid);
+    TAU_MAPPING_PROFILE_STOP_TIMER(TauMethodName,tid);
 #ifdef DEBUG_PROF
     fprintf(stdout, "TAU> Method Exit : %ld, TID = %d\n",
 	    (long) event->u.method.method_id, tid);
@@ -352,10 +355,16 @@ void TauJavaLayer::ShutDown(JVMPI_Event *event) {
   fprintf(stdout, "TAU> JVM SHUT DOWN : id = %d \n", tid);
 #endif 
 
+  //This call is bogus and should be removed..
+  //TAU_MAPPING_PROFILE_EXIT only exits the current thread regardless
+  //of the value of i. See TauCAPI.cpp:460.
   CALL(RawMonitorEnter)(shutdown_lock);
+  Tau_profile_exit_all_threads();
+/*
   for(int i = 0; i < JavaThreadLayer::TotalThreads(); i++) {
     TAU_MAPPING_PROFILE_EXIT("Forcing Shutdown of Performance Data",i);
   }
+*/
   CALL(RawMonitorExit)(shutdown_lock);
 }
 

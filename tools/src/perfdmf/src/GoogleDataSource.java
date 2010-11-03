@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -43,7 +44,29 @@ public class GoogleDataSource extends DataSource {
 
     public GoogleDataSource(File[] files) {
 	super();
-	this.files = files;
+	if(files ==null ){
+	    this.files = findTxtFiles();
+	}else{ 
+	    if(files.length ==0)
+		this.files = findTxtFiles();
+	    else
+		this.files = files;
+	}
+    }
+
+    private File[] findTxtFiles() {
+	  //Look in the current directory of *.txt files.
+	    String currentdir = System.getProperty("user.dir");	
+	    File dir = new File(currentdir);
+	    String[] fileName = dir.list();
+	    ArrayList<File> filelist = new ArrayList<File>();
+	    for(String file: fileName){
+		if(file.endsWith(".txt")){
+		    filelist.add(new File(file));
+		}
+	    }
+	    File[] files= new File[filelist.size()];
+	    return  (File[]) filelist.toArray(files);
     }
 
     private File files[];
@@ -114,9 +137,9 @@ public class GoogleDataSource extends DataSource {
 
 			    functionProfile = new FunctionProfile(function);
 			    thread.addFunctionProfile(functionProfile);
-
 			    functionProfile.setInclusive(0, self.d1);
 			    functionProfile.setExclusive(0, self.d0);
+			    functionProfile.setNumCalls(1);
 			
 		    }
 		    linenumber++;

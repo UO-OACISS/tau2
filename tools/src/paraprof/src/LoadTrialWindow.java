@@ -221,13 +221,12 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
                 }
             } else if (arg.equals("Cancel")) {
                 // note that these are null if they're not top level (so this won't delete an application that has other experiments)
-
-                if (newExperiment) {
+        	   if (newApplication) {
+                       paraProfManagerWindow.handleDelete(application);
+                   }else if (newExperiment) {
                     paraProfManagerWindow.handleDelete(experiment);
                 }
-                if (newApplication) {
-                    paraProfManagerWindow.handleDelete(application);
-                }
+             
                 closeThisWindow();
             } else if (arg.equals("Ok")) {
                 if (trialTypes.getSelectedIndex() == 0) {

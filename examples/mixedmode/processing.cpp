@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
-#include "TauWrapper.h" /* For syscalls */
+//#include "TauWrapper.h" /* For syscalls */
 
 
 int work(int rank)

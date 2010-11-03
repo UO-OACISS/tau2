@@ -96,6 +96,13 @@ public class DatabaseAPI {
             System.err.println("Could not find file: " + configFile);
         }
     }
+    public void initialize(String configFile, boolean prompt, String dbName) throws SQLException {
+        if (configFile.startsWith("http") || (new java.io.File(configFile).exists())) {
+            initialize(new Database(dbName,configFile), prompt);
+        } else {
+            System.err.println("Could not find file: " + configFile);
+        }
+    }
 
     public void initialize(Database database, boolean prompt) throws SQLException {
         this.database = database;
