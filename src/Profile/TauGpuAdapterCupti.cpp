@@ -71,35 +71,126 @@ template<class APItype> int functionId(const APItype &info)
 	return info->functionId;
 }
 
+/*template<class MemcpyParam> void get_kind(const MemcpyParam &param, int &kind)
+{
+	kind = params->kind;
+
+}*/
+
 template<class APItype> void get_value_from_memcpy(const APItype &info,
 																									CUpti_CallbackId id,
+																									CUpti_CallbackDomain domain,
 																									int &kind,
 																									int &count)
 {
-	CAST_TO_MEMCPY_TYPE_AND_CALL(cudaMemcpy, id, info, kind, count)
-	CAST_TO_MEMCPY_TYPE_AND_CALL(cudaMemcpyToArray, id, info, kind, count)
 	
-	//printf("[1] kind is %d.\n", kind);
+	if (domain == CUPTI_CB_DOMAIN_RUNTIME_API_TRACE)
+	{
+		//CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(info->functionName, id, info, kind, count)
+    CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpy, id, info, kind, count)
+    CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpyToArray, id, info, kind, count)
+    CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpyFromArray, id, info, kind, count)
+    CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpyArrayToArray, id, info, kind, count)
+    CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpyToSymbol, id, info, kind, count)
+    CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpyFromSymbol, id, info, kind, count)
+    CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpyAsync, id, info, kind, count)
+    CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpyToArrayAsync, id, info, kind, count)
+    CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpyFromArrayAsync, id, info, kind, count)
+    CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpyToSymbolAsync, id, info, kind, count)
+    CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpyFromSymbolAsync, id, info, kind, count)
+		/* these calls do not have count member.
+    CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpy2D, id, info, kind, count)
+    CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpy2DToArray, id, info, kind, count)
+    CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpy2DFromArray, id, info, kind, count)
+    CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpy2DArrayToArray, id, info, kind, count)
+    CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpy2DAsync, id, info, kind, count)
+    CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpy2DToArrayAsync, id, info, kind, count)
+    CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpy2DFromArrayAsync, id, info, kind, count)
+    CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpy3D, id, info, kind, count)
+    CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpy3DAsync, id, info, kind, count)
+		*/
+	}
+	else
+	{
+		//CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(info->functionName, id, info, kind, count)
+		CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyHtoD_v2, id, info, kind, count)
+		CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyHtoDAsync_v2, id, info, kind, count)
+		CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyDtoH_v2, id, info, kind, count)
+		CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyDtoHAsync_v2, id, info, kind, count)
+		CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyDtoD_v2, id, info, kind, count)
+		CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyDtoDAsync_v2, id, info, kind, count)
+		CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyAtoH_v2, id, info, kind, count)
+		CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyAtoHAsync_v2, id, info, kind, count)
+		CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyAtoD_v2, id, info, kind, count)
+		CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyDtoA_v2, id, info, kind, count)
+		CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyAtoA_v2, id, info, kind, count)
+		//These structors do not have ByteCount.
+		//CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpy2D_v2, id, info, kind, count)
+		//CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpy2DUnaligned_v2, id, info, kind, count)
+		//CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpy2DAsync_v2, id, info, kind, count)
+		//CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpy3D_v2, id, info, kind, count)
+		//CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpy3DAsync_v2, id, info, kind, count)
+		CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyHtoA_v2, id, info, kind, count)
+		CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyHtoAAsync_v2, id, info, kind, count)
 
+    CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyHtoD, id, info, kind, count)
+    CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyDtoH, id, info, kind, count)
+    CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyDtoD, id, info, kind, count)
+    CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyDtoA, id, info, kind, count)
+    CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyAtoD, id, info, kind, count)
+    CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyHtoA, id, info, kind, count)
+    CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyAtoH, id, info, kind, count)
+    CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyAtoA, id, info, kind, count)
+		//These structors do not have ByteCount.
+    //CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpy2D, id, info, kind, count)
+    //CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpy2DUnaligned, id, info, kind, count)
+    //CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpy3D, id, info, kind, count)
+    CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyHtoDAsync, id, info, kind, count)
+    CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyDtoHAsync, id, info, kind, count)
+    CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyDtoDAsync, id, info, kind, count)
+    CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyHtoAAsync, id, info, kind, count)
+    CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpyAtoHAsync, id, info, kind, count)
+		//These structors do not have ByteCount.
+    //CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpy2DAsync, id, info, kind, count)
+    //CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpy3DAsync, id, info, kind, count)
+		//No struct.
+    //CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(cuMemcpy_v2, id, info, kind, count)
+
+
+	}
+	//printf("[1] kind is %d.\n", kind);
 }
 
-template<class APItype> int kind(const APItype &info, CUpti_CallbackId id)
+template<class APItype> int kind(const APItype &info, CUpti_CallbackId id, 
+																 CUpti_CallbackDomain domain) 
 {
 	//if (id == CUPTI_RUNTIME_TRACE_cudaMemcpy_v3020)
 //		return ((cudaMemcpy_params *) info->params)->kind;
 	//return info->kind;
+
 	int kind = -1;
 	int count = 0;
-	get_value_from_memcpy(info, id, kind, count);
+
+	if (domain == CUPTI_CB_DOMAIN_RUNTIME_API_TRACE)
+	{
+		get_value_from_memcpy(info, id, domain, kind, count);
+	}
+	else
+	{
+		//TODO: parse name
+		kind = 1;	
+	}
+
 	//printf("[2] kind is %d.\n", kind);
 	return kind;
 
 }
-template<class APItype> int count(const APItype &info, CUpti_CallbackId id)
+template<class APItype> int count(const APItype &info, CUpti_CallbackId id,
+																  CUpti_CallbackDomain domain)
 {
 	int kind = -1;
 	int count = 0;
-	get_value_from_memcpy(info, id, kind, count);
+	get_value_from_memcpy(info, id, domain, kind, count);
 	//printf("[2] kind is %d.\n", kind);
 	return count;
 	//return info->count;
@@ -160,12 +251,41 @@ public:
 void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CUpti_CallbackId id, const void *params)
 {
 	//const CBInfo *cbInfo = new CBInfo();
+	const char *name;
+	int site;
+	bool memcpy;
+	int memcpyKind;
+	int memcpyCount;
+	int funcId;
 
-	const CUpti_RuntimeTraceApi *cbInfo = (CUpti_RuntimeTraceApi *) params;
+	if (domain == CUPTI_CB_DOMAIN_RUNTIME_API_TRACE)
+	{
+		const CUpti_RuntimeTraceApi *cbInfo = (CUpti_RuntimeTraceApi *) params;
 
-	const char *name = functionName(cbInfo, domain);
-	int site = callbacksite(cbInfo);
-	bool memcpy = isMemcpy(cbInfo);
+		funcId = functionId(cbInfo);
+		name = functionName(cbInfo, domain);
+		site = callbacksite(cbInfo);
+		memcpy = isMemcpy(cbInfo);
+		if (memcpy)
+		{
+			memcpyKind = kind(cbInfo, id, domain);
+			memcpyCount = count(cbInfo, id, domain);
+		}
+	}
+	else
+	{
+		const CUpti_DriverTraceApi *cbInfo = (CUpti_DriverTraceApi *) params;
+
+		funcId = functionId(cbInfo);
+		name = functionName(cbInfo, domain);
+		site = callbacksite(cbInfo);
+		memcpy = isMemcpy(cbInfo);
+		if (memcpy)
+		{
+			memcpyKind = kind(cbInfo, id, domain);
+			memcpyCount = count(cbInfo, id, domain);
+		}
+	}
 
 	/*if (domain == CUPTI_CB_DOMAIN_RUNTIME_API_TRACE)
 	{
@@ -185,14 +305,11 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 	//if (cbInfo->site == CUPTI_API_ENTER)
 	if (site == CUPTI_API_ENTER)
 	{
-		printf("Enter: %s.\n", name);
+		//printf("Enter: %s.\n", name);
 		//if (functionmemcpy(cbInfo->functionId))
 		if (memcpy)
 		{
-			int memcpyKind = kind(cbInfo, id);
-			int memcpyCount = count(cbInfo, id);
-
-			printf("Is memcpy.\n");
+			//printf("Is memcpy: %d.\n", memcpyKind);
 			//cudaMemcpy_params params;
 			//memcpy(&params, (cudaMemcpy_params *) cbInfo->params,
 			//sizeof(cudaMemcpy_params));
@@ -206,12 +323,12 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 			if (memcpyKind == cudaMemcpyHostToDevice)
 			{
 				Tau_gpu_enter_memcpy_event(name, 
-				&cudaEventId(functionId(cbInfo)), &cudaGpuId(0,0), memcpyCount, MemcpyHtoD);
+				&cudaEventId(funcId), &cudaGpuId(0,0), memcpyCount, MemcpyHtoD);
 			}
 			else if (memcpyKind == cudaMemcpyDeviceToHost)
 			{
 				Tau_gpu_enter_memcpy_event(name,
-				&cudaEventId(functionId(cbInfo)), &cudaGpuId(0,0), memcpyCount, MemcpyDtoH);
+				&cudaEventId(funcId), &cudaGpuId(0,0), memcpyCount, MemcpyDtoH);
 			}
 			else if (memcpyKind == cudaMemcpyDeviceToDevice)
 			{
@@ -220,15 +337,13 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 		}
 		else 
 		{
-			Tau_gpu_enter_event(name, &cudaEventId(functionId(cbInfo)));
+			Tau_gpu_enter_event(name, &cudaEventId(funcId));
 		}
 	}
 	else if (site == CUPTI_API_EXIT)
 	{
 		if (memcpy)
 		{
-			int memcpyKind = kind(cbInfo, id);
-			int memcpyCount = count(cbInfo, id);
 			/*
 			cudaMemcpy_params params;
 			memcpy(&params, (cudaMemcpy_params *) cbInfo->params,
@@ -236,12 +351,12 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 			if (memcpyKind == cudaMemcpyHostToDevice)
 			{
 				Tau_gpu_exit_memcpy_event(name,
-				&cudaEventId(functionId(cbInfo)), &cudaGpuId(0,0), MemcpyHtoD);
+				&cudaEventId(funcId), &cudaGpuId(0,0), MemcpyHtoD);
 			}
 			else if (memcpyKind == cudaMemcpyDeviceToHost)
 			{
 				Tau_gpu_exit_memcpy_event(name,
-				&cudaEventId(functionId(cbInfo)), &cudaGpuId(0,0), MemcpyDtoH);
+				&cudaEventId(funcId), &cudaGpuId(0,0), MemcpyDtoH);
 			}
 			else if (memcpyKind == cudaMemcpyDeviceToDevice)
 			{
@@ -250,9 +365,9 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 		}
 		else
 		{
-			Tau_gpu_exit_event(name, &cudaEventId(functionId(cbInfo)));
+			Tau_gpu_exit_event(name, &cudaEventId(funcId));
 			//	Shutdown at Thread Exit
-			if (functionId(cbInfo) == 123)
+			if (funcId == 123)
 			{
 				Tau_gpu_exit();
 				return;
@@ -288,8 +403,22 @@ void Tau_cuda_onload(void)
 	err = cuptiSubscribe(&drSubscriber, (CUpti_CallbackFunc)Tau_cuda_timestamp_callback , &trace);
 	CUDA_CHECK_ERROR(err, "Cannot Subscribe.\n");
 
-	err = cuptiEnableDomain(1, rtSubscriber,CUPTI_CB_DOMAIN_RUNTIME_API_TRACE);
-	err = cuptiEnableDomain(1, drSubscriber,CUPTI_CB_DOMAIN_DRIVER_API_TRACE);
+	//Get env variables
+	char *runtime_api, *driver_api;
+	runtime_api = getenv("TAU_CUPTI_RUNTIME");
+	driver_api = getenv("TAU_CUPTI_DRIVER");
+	//printf("ENV: %s.\n", runtime_api);
+	//printf("ENV: %s.\n", driver_api);
+	if (runtime_api != NULL)
+	{
+		printf("TAU: Subscribing to RUNTIME API.\n");
+		err = cuptiEnableDomain(1, rtSubscriber,CUPTI_CB_DOMAIN_RUNTIME_API_TRACE);
+	}
+	if (driver_api != NULL)
+	{
+		printf("TAU: Subscribing to DRIVER API.\n");
+		err = cuptiEnableDomain(1, drSubscriber,CUPTI_CB_DOMAIN_DRIVER_API_TRACE);
+	}
 	CUDA_CHECK_ERROR(err, "Cannot set Domain.\n");
 
 	Tau_gpu_init();
