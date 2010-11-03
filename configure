@@ -1000,6 +1000,8 @@ for arg in "$@"; do
         if [ $minor -lt 5 ]
         then
           echo "Error: Please specify a JDK version 1.5 or later to use JVMTI based instrumentation"
+	else
+	  fixmakeargs="$fixmakeargs JVMTI jdkdir=$jdkdir"
         fi
       fi
 
