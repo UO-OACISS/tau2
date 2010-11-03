@@ -11,14 +11,17 @@ static void *tau_handle = NULL;
 void tau_track_memory(int kind, int count)
 {
 	static bool init = false;
-	static TauUserEvent *MemoryCopyEventHtoD;
+	/*static TauUserEvent *MemoryCopyEventHtoD;
 	static TauUserEvent *MemoryCopyEventDtoH;
-	static TauUserEvent *MemoryCopyEventDtoD;
+	static TauUserEvent *MemoryCopyEventDtoD;*/
+	static TauContextUserEvent *MemoryCopyEvent;
 	if (!init)
 	{
+		/*
 		MemoryCopyEventHtoD = (TauUserEvent *) Tau_get_userevent("Bytes copied from Host to Device");
 		MemoryCopyEventDtoH = (TauUserEvent *) Tau_get_userevent("Bytes copied from Device to Host");
-		MemoryCopyEventDtoD = (TauUserEvent *) Tau_get_userevent("Bytes copied from Device to Device");
+		MemoryCopyEventDtoD = (TauUserEvent *) Tau_get_userevent("Bytes copied from Device to Device");*/
+		Tau_get_context_userevent((void **) &MemoryCopyEvent, "Bytes copied");
 		init = true;
 	}
 	/*printf("initalize counters. Number of events: %ld, %ld, %ld.\n", 
@@ -26,12 +29,15 @@ void tau_track_memory(int kind, int count)
 	MemoryCopyEventDtoH->GetNumEvents(0),
 	MemoryCopyEventDtoD->GetNumEvents(0));*/
 	//printf("tracking memory.... %ld.\n", count);
+	/*
 	if (kind == cudaMemcpyHostToDevice)
 		TAU_EVENT(MemoryCopyEventHtoD, count);
 	if (kind == cudaMemcpyDeviceToHost)
 		TAU_EVENT(MemoryCopyEventDtoH, count);
 	if (kind == cudaMemcpyDeviceToDevice)
 		TAU_EVENT(MemoryCopyEventDtoD, count);
+	*/
+	TAU_CONTEXT_EVENT(MemoryCopyEvent, count);
 }	
 
 cudaError_t cudaThreadExit() {
@@ -89,7 +95,7 @@ cudaError_t cudaThreadSynchronize() {
   return retval;
 
 }
-/*
+
 cudaError_t cudaThreadSetLimit(enum cudaLimit a1, size_t a2) {
 
   typedef cudaError_t (*cudaThreadSetLimit_p) (enum cudaLimit, size_t);
@@ -201,7 +207,7 @@ cudaError_t cudaThreadSetCacheConfig(enum cudaFuncCache a1) {
   return retval;
 
 }
-*/
+
 cudaError_t cudaGetLastError() {
 
   typedef cudaError_t (*cudaGetLastError_p) ();
@@ -873,7 +879,7 @@ cudaError_t cudaSetupArgument(const void * a1, size_t a2, size_t a3) {
   return retval;
 
 }
-/*
+
 cudaError_t cudaFuncSetCacheConfig(const char * a1, enum cudaFuncCache a2) {
 
   typedef cudaError_t (*cudaFuncSetCacheConfig_p) (const char *, enum cudaFuncCache);
@@ -901,7 +907,7 @@ cudaError_t cudaFuncSetCacheConfig(const char * a1, enum cudaFuncCache a2) {
   return retval;
 
 }
-*/
+
 cudaError_t cudaLaunch(const char * a1) {
 
   typedef cudaError_t (*cudaLaunch_p) (const char *);
@@ -2206,7 +2212,7 @@ cudaError_t cudaGetSymbolSize(size_t * a1, const char * a2) {
   return retval;
 
 }
-/*
+
 cudaError_t cudaGraphicsUnregisterResource(cudaGraphicsResource_t a1) {
 
   typedef cudaError_t (*cudaGraphicsUnregisterResource_p) (cudaGraphicsResource_t);
@@ -2374,7 +2380,7 @@ cudaError_t cudaGraphicsSubResourceGetMappedArray(struct cudaArray ** a1, cudaGr
   return retval;
 
 }
-*/
+
 cudaError_t cudaGetChannelDesc(struct cudaChannelFormatDesc * a1, const struct cudaArray * a2) {
 
   typedef cudaError_t (*cudaGetChannelDesc_p) (struct cudaChannelFormatDesc *, const struct cudaArray *);
@@ -2710,7 +2716,6 @@ cudaError_t cudaRuntimeGetVersion(int * a1) {
   return retval;
 
 }
-/*
 cudaError_t cudaGetExportTable(const void ** a1, const cudaUUID_t * a2) {
 
   typedef cudaError_t (*cudaGetExportTable_p) (const void **, const cudaUUID_t *);
@@ -2737,4 +2742,4 @@ cudaError_t cudaGetExportTable(const void ** a1, const cudaUUID_t * a2) {
   }
   return retval;
 
-}*/
+}
