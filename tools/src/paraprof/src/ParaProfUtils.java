@@ -617,6 +617,7 @@ public class ParaProfUtils {
 
         windowsMenu.add(threadWindows);
 
+	/*
         ActionListener mActionListener = new ActionListener() {
         	public void actionPerformed(ActionEvent evt) {
         		String arg = evt.getActionCommand();
@@ -664,7 +665,7 @@ public class ParaProfUtils {
 	    monWindows.add(monFunctionWindows);
 
 	    windowsMenu.add(monWindows);
-
+	*/
         windowsMenu.add(new JSeparator());
 
         menuItem = new JMenuItem("Function Legend");

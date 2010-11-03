@@ -1,0 +1,37 @@
+create table analysis_settings (
+	id				INT	NOT NULL	PRIMARY KEY AUTO_INCREMENT,
+	application			INT			NOT NULL,
+	experiment			INT			NOT NULL,
+	trial				INT			NOT NULL,
+	metric				INT			NULL,
+	method				VARCHAR(255)	NOT NULL,
+	dimension_reduction	VARCHAR(255)	NOT NULL,
+	normalization		VARCHAR(255)	NOT NULL,
+	CONSTRAINT asakey FOREIGN KEY (application) REFERENCES application(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	CONSTRAINT asekey FOREIGN KEY (experiment) REFERENCES experiment(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	CONSTRAINT astkey FOREIGN KEY (trial) REFERENCES trial(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	CONSTRAINT asmkey FOREIGN KEY (metric) REFERENCES metric(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+create table analysis_result (
+	id				INT	NOT NULL	PRIMARY KEY AUTO_INCREMENT,
+	analysis_settings	INT			NOT NULL,
+	description			VARCHAR(255)	NOT NULL,
+	thumbnail_size		INT			NULL,
+	image_size			INTEGER			NULL,
+	thumbnail			BLOB			NULL,
+	image				BLOB			NULL,
+	result_type			INTEGER			NOT NULL
+);
+
+create table trial_view (
+	id				INT	NOT NULL	PRIMARY KEY AUTO_INCREMENT,
+	parent				INTEGER			NULL,
+	name				TEXT	NOT NULL,
+	table_name			TEXT	NOT NULL,
+	column_name			TEXT	NOT NULL,
+	operator			TEXT	NOT NULL,
+	value				TEXT	NOT NULL,
+	CONSTRAINT tvtvkey FOREIGN KEY (parent) REFERENCES trial_view(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+

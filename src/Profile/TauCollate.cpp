@@ -19,7 +19,7 @@
 #ifdef TAU_MPI
 // The subsequent guards are for existing dependencies. These may go away as we
 //   expand TAUmon MPI capabilities.
-#ifdef TAU_EXP_UNIFY
+#ifdef TAU_UNIFY
 
 #include <mpi.h>
 #include <TAU.h>
@@ -717,5 +717,5 @@ extern "C" void Tau_collate_onlineDump() {
 
 #endif /* TAU_EXP_COLLATE */
 
-#endif /* TAU_EXP_UNIFY */
+#endif /* TAU_UNIFY */
 #endif /* TAU_MPI */

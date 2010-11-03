@@ -16,7 +16,7 @@
 #include "BPatch.h"
 #include "BPatch_Vector.h"
 #include "BPatch_function.h"
-#include "BPatch_thread.h"
+#include "BPatch_process.h"
 #include "BPatch_snippet.h" 
 #include "BPatch_statement.h" 
 
@@ -165,7 +165,7 @@ BPatch_function * tauFindFunction (BPatch_image *appImage, const char * function
 // invokeRoutineInFunction calls routine "callee" with no arguments when 
 // Function "function" is invoked at the point given by location
 //
-BPatchSnippetHandle *invokeRoutineInFunction(BPatch_thread *appThread,
+BPatchSnippetHandle *invokeRoutineInFunction(BPatch_process *appThread,
 	BPatch_image *appImage, BPatch_function *function, 
 	BPatch_procedureLocation loc, BPatch_function *callee, 
 	BPatch_Vector<BPatch_snippet *> *callee_args){
@@ -198,7 +198,7 @@ BPatchSnippetHandle *invokeRoutineInFunction(BPatch_thread *appThread,
 // invokeRoutineInFunction calls routine "callee" with no arguments when 
 // Function "function" is invoked at the point given by location
 //
-BPatchSnippetHandle *invokeRoutineInFunction(BPatch_thread *appThread,
+BPatchSnippetHandle *invokeRoutineInFunction(BPatch_process *appThread,
         BPatch_image *appImage, BPatch_Vector<BPatch_point *> points,
 	BPatch_function *callee, 
 	BPatch_Vector<BPatch_snippet *> *callee_args){
@@ -221,7 +221,7 @@ BPatchSnippetHandle *invokeRoutineInFunction(BPatch_thread *appThread,
 // Initialize calls TauInitCode, the initialization routine in the user
 // application. It is executed exactly once, before any other routine.
 //
-void Initialize(BPatch_thread *appThread, BPatch_image *appImage, 
+void Initialize(BPatch_process *appThread, BPatch_image *appImage, 
 	BPatch_Vector<BPatch_snippet *>& initArgs){
   // Find the initialization function and call it
   BPatch_function *call_func = tauFindFunction(appImage,"TauInitCode");
@@ -765,7 +765,7 @@ int main(int argc, char **argv){
   char fname[FUNCNAMELEN], libname[FUNCNAMELEN]; //function name and library name variables
   char staticlibname[FUNCNAMELEN];
   char staticmpilibname[FUNCNAMELEN];
-  BPatch_thread *appThread;                      //application thread
+  BPatch_process *appThread;                      //application thread
   BPatch_Vector<BPatch_point *> mpiinit;                      
   BPatch_function *mpiinitstub;
   bpatch = new BPatch;                           //create a new version. 
@@ -885,7 +885,7 @@ int main(int argc, char **argv){
     return 0; // exit from the application 
   }
 #ifdef TAU_DYNINST41PLUS
-  appThread = bpatch->createProcess(argv[optind], (const char **)&argv[optind] , NULL);
+  appThread = bpatch->processCreate(argv[optind], (const char **)&argv[optind] , NULL);
 #else
   appThread = bpatch->createProcess(argv[optind], &argv[optind] , NULL);
 #endif /* TAU_DYNINST41PLUS */
