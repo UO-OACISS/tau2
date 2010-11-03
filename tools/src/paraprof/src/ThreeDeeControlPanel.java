@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicComboPopup;
 import javax.swing.plaf.basic.ComboPopup;
 import javax.swing.plaf.metal.MetalComboBoxUI;
@@ -122,6 +124,11 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         jrb.addActionListener(this);
         group.add(jrb);
         addCompItem(this, jrb, gbc, 0, 3, 1, 1);
+        
+      jrb = new JRadioButton(VisType.TOPO_PLOT.toString(), settings.getVisType() == VisType.TOPO_PLOT);
+      jrb.addActionListener(this);
+      group.add(jrb);
+      addCompItem(this, jrb, gbc, 0, 4, 1, 1);//TODO: Do not enable this
 
 //                jrb = new JRadioButton(VisType.CALLGRAPH.toString(), settings.getVisType() == VisType.CALLGRAPH);
 //                jrb.addActionListener(this);
@@ -139,9 +146,11 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        if (settings.getVisType() == VisType.SCATTER_PLOT) {
+        if (settings.getVisType() == VisType.SCATTER_PLOT ) {
             subPanel = createScatterPanel();
-        } else if (settings.getVisType() == VisType.CALLGRAPH) {
+        }else if(settings.getVisType() == VisType.TOPO_PLOT){
+        	subPanel = createTopoPanel();
+        }else if (settings.getVisType() == VisType.CALLGRAPH) {
             subPanel = createCallGraphPanel();
         } else {
             subPanel = createFullDataPanel();
@@ -265,7 +274,264 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
         return panel;
     }
+    
+    
+    private JPanel createTopoColorSelectionPanel(String name) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridBagLayout());
+        //        panel.setBorder(BorderFactory.createLoweredBevelBorder());
+        GridBagConstraints gbc = new GridBagConstraints();
 
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 0.1;
+        gbc.weighty = 0.1;
+
+        //addCompItem(panel, new JLabel(name), gbc, 0, 0, 1, 2);
+
+        final JTextField functionField;
+
+        String fname = "   <none>";
+        if (settings.getTopoFunction() != null) {
+            fname = settings.getTopoFunction().getName();
+        }
+
+        functionField = new JTextField(fname);
+        functionField.setToolTipText(fname);
+        functionField.setEditable(false);
+        functionField.setBorder(BorderFactory.createLoweredBevelBorder());
+        functionField.setCaretPosition(0);
+
+        Dimension d;
+        final SteppedComboBox valueBox = new SteppedComboBox(ValueType.VALUES);
+        d = valueBox.getPreferredSize();
+        valueBox.setMinimumSize(new Dimension(50, valueBox.getMinimumSize().height));
+        valueBox.setPopupWidth(d.width);
+
+        final SteppedComboBox metricBox = new SteppedComboBox(ppTrial.getMetricArray());
+        d = metricBox.getPreferredSize();
+        metricBox.setMinimumSize(new Dimension(50, metricBox.getMinimumSize().height));
+        metricBox.setPopupWidth(d.width);
+
+        valueBox.setSelectedItem(settings.getTopoValueType());
+        metricBox.setSelectedItem(settings.getTopoMetric());
+
+        ActionListener metricSelector = new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                try {
+                    settings.setTopoValueType((ValueType) valueBox.getSelectedItem());
+                    settings.setTopoMetric((Metric) metricBox.getSelectedItem());
+                    window.redraw();
+                } catch (Exception e) {
+                    ParaProfUtils.handleException(e);
+                }
+            }
+        };
+
+        valueBox.addActionListener(metricSelector);
+        metricBox.addActionListener(metricSelector);
+
+        JButton functionButton = new JButton("...");
+        functionButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                try {
+
+                    FunctionSelectorDialog fSelector = new FunctionSelectorDialog(window, true,
+                            ppTrial.getDisplayedFunctions().iterator(), settings.getTopoFunction(), true, false);
+
+                    if (fSelector.choose()) {
+                        Function selectedFunction = (Function) fSelector.getSelectedObject();
+                        settings.setTopoFunction(selectedFunction);
+
+                        String fname = "   <none>";
+                        if (settings.getTopoFunction() != null) {
+                            fname = ParaProfUtils.getDisplayName(settings.getTopoFunction());
+                        }
+                        functionField.setText(fname);
+                        functionField.setToolTipText(fname);
+                        window.redraw();
+                    }
+
+                } catch (Exception e) {
+                    ParaProfUtils.handleException(e);
+                }
+            }
+        });
+
+        JPanel subPanel = new JPanel();
+        subPanel.setLayout(new GridBagLayout());
+
+        gbc.insets = new Insets(1, 1, 1, 1);
+
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        addCompItem(subPanel, functionField, gbc, 0, 0, 1, 1);
+        gbc.weightx = 0.0;
+        gbc.weighty = 0.0;
+        gbc.fill = GridBagConstraints.NONE;
+        addCompItem(subPanel, functionButton, gbc, 1, 0, 1, 1);
+
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        addCompItem(panel, subPanel, gbc, 1, 0, 2, 1);
+        gbc.weightx = 0.5;
+        gbc.weighty = 0.5;
+        addCompItem(panel, valueBox, gbc, 1, 1, 1, 1);
+        addCompItem(panel, metricBox, gbc, 2, 1, 1, 1);
+
+        return panel;
+    }
+
+    
+    private JPanel createTopoSelectionPanel(String name) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridBagLayout());
+        //        panel.setBorder(BorderFactory.createLoweredBevelBorder());
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 0.1;
+        gbc.weighty = 0.1;
+
+        //addCompItem(panel, new JLabel(name), gbc, 0, 0, 1, 2);
+
+       
+
+        Dimension d;
+        final SteppedComboBox valueBox = new SteppedComboBox(ppTrial.getTopologyArray());
+        d = valueBox.getPreferredSize();
+        valueBox.setMinimumSize(new Dimension(100, valueBox.getMinimumSize().height));
+        valueBox.setPopupWidth(d.width);
+
+        valueBox.setSelectedItem(settings.getTopoValueType());
+
+        ActionListener topoSelector = new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                try {
+                    settings.setTopoCart((String)valueBox.getSelectedItem());
+                    window.redraw();
+                } catch (Exception e) {
+                    ParaProfUtils.handleException(e);
+                }
+            }
+        };
+
+        valueBox.addActionListener(topoSelector);
+
+        
+
+        JPanel subPanel = new JPanel();
+        subPanel.setLayout(new GridBagLayout());
+
+        gbc.insets = new Insets(1, 1, 1, 1);
+
+
+
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        gbc.weightx = 0.5;
+        gbc.weighty = 0.5;
+        addCompItem(panel, valueBox, gbc, 1, 1, 1, 1);
+
+        return panel;
+    }
+    
+    private JPanel createTopoDimSelectionPanel(String name, final int index) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridBagLayout());
+        //        panel.setBorder(BorderFactory.createLoweredBevelBorder());
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 0.1;
+        gbc.weighty = 0.1;
+
+        //addCompItem(panel, new JLabel(name), gbc, 0, 0, 1, 2);
+
+        //final JTextField functionField;
+
+//        String fname = "   <none>";
+//        if (settings.getScatterFunctions()[index] != null) {
+//            fname = settings.getScatterFunctions()[index].getName();
+//        }
+//
+//        functionField = new JTextField(fname);
+//        functionField.setToolTipText(fname);
+//        functionField.setEditable(false);
+//        functionField.setBorder(BorderFactory.createLoweredBevelBorder());
+//        functionField.setCaretPosition(0);
+        final JSlider topoValue = new JSlider(JSlider.HORIZONTAL,1,50,10);
+        
+
+        //Dimension d;
+        //final SteppedComboBox valueBox = new SteppedComboBox(ValueType.VALUES);
+        //d = valueBox.getPreferredSize();
+        //valueBox.setMinimumSize(new Dimension(50, valueBox.getMinimumSize().height));
+        //valueBox.setPopupWidth(d.width);
+
+        //final SteppedComboBox metricBox = new SteppedComboBox(ppTrial.getMetricArray());
+        //d = metricBox.getPreferredSize();
+        //metricBox.setMinimumSize(new Dimension(50, metricBox.getMinimumSize().height));
+        //metricBox.setPopupWidth(d.width);
+
+        //valueBox.setSelectedItem(settings.getScatterValueTypes()[index]);
+        //metricBox.setSelectedItem(settings.getScatterMetrics()[index]);
+        topoValue.setValue(settings.getTopoValues()[index]);
+        ChangeListener topoSelector = new ChangeListener() {
+  
+
+			public void stateChanged(ChangeEvent e) {
+				 try {
+	                    //settings.setScatterValueType((ValueType) valueBox.getSelectedItem(), index);
+	                    //settings.setScatterMetric((Metric) metricBox.getSelectedItem(), index);
+	                    settings.setTopoValues(topoValue.getValue(), index);
+	                    window.redraw();
+	                } catch (Exception evt) {
+	                    ParaProfUtils.handleException(evt);
+	                }
+				
+			}
+        };
+
+        //valueBox.addActionListener(metricSelector);
+        //metricBox.addActionListener(metricSelector);
+        
+        topoValue.addChangeListener(topoSelector);
+
+//        JPanel subPanel = new JPanel();
+//        subPanel.setLayout(new GridBagLayout());
+
+        gbc.insets = new Insets(1, 1, 1, 1);
+
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        addCompItem(panel, topoValue, gbc, 0, 0, 1, 1);
+//        gbc.weightx = 0.0;
+//        gbc.weighty = 0.0;
+//        gbc.fill = GridBagConstraints.NONE;
+//        addCompItem(subPanel, functionButton, gbc, 1, 0, 1, 1);
+
+//        gbc.insets = new Insets(5, 5, 5, 5);
+//
+//        gbc.weightx = 1.0;
+//        gbc.weighty = 1.0;
+//        gbc.fill = GridBagConstraints.HORIZONTAL;
+//        addCompItem(panel, subPanel, gbc, 1, 0, 2, 1);
+//        gbc.weightx = 0.5;
+//        gbc.weighty = 0.5;
+//        addCompItem(panel, valueBox, gbc, 1, 1, 1, 1);
+//        addCompItem(panel, metricBox, gbc, 2, 1, 1, 1);
+
+        return panel;
+    }
+    
     private JPanel createCallGraphPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
@@ -362,6 +628,64 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         gbc.weighty = 0.5;
 
         addCompItem(panel, tabbedPane, gbc, 0, 4, 2, 1);
+
+        return panel;
+
+    }
+    
+    
+    private JPanel createTopoPanel() {
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridBagLayout());
+        panel.setBorder(BorderFactory.createRaisedBevelBorder());
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 0.1;
+        gbc.weighty = 0.1;
+
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 0.1;
+        gbc.weighty = 0.1;
+
+        gbc.weightx = 0;
+        addCompItem(panel, new JLabel("Width/X"), gbc, 0, 0, 1, 1);
+        addCompItem(panel, createTopoDimSelectionPanel("Width", 0), gbc, 1, 0, 1, 1);
+        gbc.weightx = 0;
+        addCompItem(panel, new JLabel("Depth/Y"), gbc, 0, 1, 1, 1);
+        addCompItem(panel, createTopoDimSelectionPanel("Depth", 1), gbc, 1, 1, 1, 1);
+        gbc.weightx = 0;
+        addCompItem(panel, new JLabel("Height/Z"), gbc, 0, 2, 1, 1);
+        addCompItem(panel, createTopoDimSelectionPanel("Height", 2), gbc, 1, 2, 1, 1);
+        gbc.weightx = 0;
+        addCompItem(panel, new JLabel("Color"), gbc, 0, 3, 1, 1);
+        addCompItem(panel, createTopoColorSelectionPanel("Color"), gbc, 1, 3, 1, 1);
+        
+        gbc.weightx = 0;
+        addCompItem(panel, new JLabel("Topology"), gbc, 0, 4, 1, 1);
+        addCompItem(panel, createTopoSelectionPanel("Topology"), gbc, 1, 4, 1, 1);
+
+        tabbedPane = new JTabbedPane();
+
+        Plot plot = window.getPlot();
+        tabbedPane.addTab(plot.getName(), plot.getControlPanel(visRenderer));
+        tabbedPane.addTab("Axes", plot.getAxes().getControlPanel(visRenderer));
+        tabbedPane.addTab("ColorScale", window.getColorScale().getControlPanel(visRenderer));
+        tabbedPane.addTab("Render", visRenderer.getControlPanel());
+        tabbedPane.setMinimumSize(new Dimension(300, 160));
+        selectedTab = Math.min(selectedTab, tabbedPane.getTabCount()-1);
+        tabbedPane.setSelectedIndex(selectedTab);
+
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 0.5;
+        gbc.weighty = 0.5;
+
+        addCompItem(panel, tabbedPane, gbc, 0, 5, 2, 1);
 
         return panel;
 
@@ -606,7 +930,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                     settings.setSize((int) plot.getWidth(), (int) plot.getDepth(), (int) plot.getHeight());
                     settings.setRegularAim(visRenderer.getAim());
                     settings.setRegularEye(visRenderer.getEye());
-                } else if (settings.getVisType() == VisType.SCATTER_PLOT) {
+                } else if (settings.getVisType() == VisType.SCATTER_PLOT || settings.getVisType() == VisType.TOPO_PLOT) {
                     //                    settings.setSize((int) plot.getWidth(), (int) plot.getDepth(), (int) plot.getHeight());
                     settings.setScatterAim(visRenderer.getAim());
                     settings.setScatterEye(visRenderer.getEye());
@@ -620,7 +944,8 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                     settings.setVisType(VisType.SCATTER_PLOT);
                 } else if (arg.equals(VisType.CALLGRAPH.toString())) {
                     settings.setVisType(VisType.CALLGRAPH);
-                }
+                }else if (arg.equals(VisType.TOPO_PLOT.toString())) {
+                    settings.setVisType(VisType.TOPO_PLOT);}
 
                 window.resetSplitPane();
                 createSubPanel();

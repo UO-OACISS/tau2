@@ -18,6 +18,7 @@ import java.awt.EventQueue;
 import java.io.File;
 import java.util.*;
 
+import javax.swing.ComboBoxModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
@@ -783,5 +784,18 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
         return items;
     }
+
+	public String[] getTopologyArray() {
+		Set<String> keys = getDataSource().getMetaData().keySet();
+		List<String> topos = new ArrayList<String>();
+		for(Iterator<String> it = keys.iterator(); it.hasNext();){
+			String key = it.next();
+			if(key.contains(" isTorus")){
+				topos.add(key.split(" ")[0]);
+			}
+		}
+		String[] a = new String[topos.size()];
+		return topos.toArray(a);
+	}
 
 }

@@ -38,8 +38,42 @@ public class ThreeDeeSettings implements Cloneable {
     private Metric[] scatterMetrics = { null, null, null, null };
     private ValueType[] scatterValueTypes = { ValueType.EXCLUSIVE, ValueType.EXCLUSIVE, ValueType.EXCLUSIVE, ValueType.EXCLUSIVE };
     private Function[] scatterFunctions = new Function[4];
+    private int[] topoValues = new int[3];
+    
+    private Metric topoMetric=null;
+    private ValueType topoValueType = ValueType.EXCLUSIVE;
+    private Function topoFunction = null;
+    private String topoCart = null;
 
-    private Thread selectedThread;
+    public Metric getTopoMetric() {
+		return topoMetric;
+	}
+
+	public void setTopoMetric(Metric topoMetric) {
+		this.topoMetric = topoMetric;
+	}
+
+	public ValueType getTopoValueType() {
+		return topoValueType;
+	}
+
+	public void setTopoValueType(ValueType topoValueType) {
+		this.topoValueType = topoValueType;
+	}
+
+	public String getTopoCart() {
+		return topoCart;
+	}
+
+	public void setTopoCart(String topoCart) {
+		this.topoCart = topoCart;
+	}
+
+	public void setTopoValues(int[] topoValues) {
+		this.topoValues = topoValues;
+	}
+
+	private Thread selectedThread;
 
     // the function and thread selected by the two scrollbars
     private int[] selections = { -1, 0 };
@@ -142,7 +176,12 @@ public class ThreeDeeSettings implements Cloneable {
         newSettings.scatterMetrics = (Metric[]) this.scatterMetrics.clone();
         newSettings.scatterValueTypes = (ValueType[]) this.scatterValueTypes.clone();
         newSettings.scatterFunctions = (Function[]) this.scatterFunctions.clone();
+        newSettings.topoValues = (int[]) this.topoValues.clone();
 
+        newSettings.topoMetric= this.topoMetric;
+        newSettings.topoCart=this.topoCart;
+        newSettings.topoValueType=this.topoValueType;
+        
         newSettings.regularAim = this.regularAim;
         newSettings.regularEye = this.regularEye;
 
@@ -183,6 +222,20 @@ public class ThreeDeeSettings implements Cloneable {
         this.axesEnabled = axesEnabled;
     }
 
+    public int[] getTopoValues(){
+        return topoValues;
+    }
+    public void setTopoValues(int value, int index) {
+        this.topoValues[index] = value;
+    }
+    
+    public Function getTopoFunction(){
+    	return topoFunction;
+    }
+    public void setTopoFunction(Function f){
+    	topoFunction=f;
+    }
+    
     public Function[] getScatterFunctions() {
         return scatterFunctions;
     }
