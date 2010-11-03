@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # don't want the user to see glibc errors (on Franklin)
 export MALLOC_CHECK_=0
@@ -34,6 +34,11 @@ trymem=$(($memtotal/1000*7/8))
 while [ $trymem -gt 250 ] ; do
     oldmem=$trymem
     trymem=$(($trymem*3/4))
+
+    java -Xmx${oldmem}m -version 2&>1 /dev/null
+    if [ $? != 0  ] ; then
+       continue;
+    fi    
 
     check=`java -Xmx${oldmem}m foobar 2>&1 | head -2`
     check1=`echo "$check" | head -1`
