@@ -184,7 +184,7 @@ public class ScatterPlot implements Plot {
         gbc.weighty = 0.2;
 
         final JSlider sphereSizeSlider = new JSlider(0, 20, (int) (sphereSize * 10));
-        final JSlider sphereDetailSlider = new JSlider(3, 30, sphereDetail);
+        final JSlider sphereDetailSlider = new JSlider(2, 30, sphereDetail);
 
         sphereSizeSlider.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent event) {
@@ -284,9 +284,13 @@ public class ScatterPlot implements Plot {
         // Set to red, in case there is no colorScale
         gl.glColor3f(1.0f, 0, 0);
 
-        if (sphereSize < 0.1f) {
+        if (sphereSize < 0.1f||sphereDetail<3) {
             gl.glDisable(GL.GL_LIGHTING);
-            gl.glPointSize(2.5f);
+            float actualSize=2.5f;
+            if(sphereSize>=0.1f){
+            	actualSize=sphereSize*30;
+            }
+            gl.glPointSize(actualSize);
             gl.glBegin(GL.GL_POINTS);
             for (int i = 0; i < values.length; i++) {
                 if (colorScale != null) {

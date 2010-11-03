@@ -360,14 +360,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     	float[][] values = new float[numThreads][4];
     	
     	 
-    	 String prefix  = settings.getTopoCart();//null;
-//    	 for(Iterator<String > it = ppTrial.getDataSource().getMetaData().keySet().iterator();it.hasNext();){
-//    		 String key = it.next();
-//    		 if(key.contains(" Size")){
-//    			 prefix=key.split(" ")[0];
-//    			 break;
-//    		 }
-//    	 }
+    	 String prefix  = settings.getTopoCart();
         
     	 String coord_key=prefix+" Coords";
     	 String size_key=prefix+" Size";
